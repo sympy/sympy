@@ -1,4 +1,4 @@
-from rv import P, E, Density, Where, Given, pspace, CDF, Sample
+from rv import P, E, Density, Where, Given, pspace, CDF, Sample, sample_iter
 from sympy import sqrt
 
 def variance(X, given=None, **kwargs):

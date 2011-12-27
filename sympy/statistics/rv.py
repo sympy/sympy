@@ -14,6 +14,7 @@ class Domain(Basic):
     is_ProductDomain = False
     is_Finite = False
     is_Continuous = False
+
     def __new__(cls, symbols, *args):
         symbols = FiniteSet(*symbols)
         return Basic.__new__(cls, symbols, *args)
@@ -21,12 +22,14 @@ class Domain(Basic):
     @property
     def symbols(self):
         return self.args[0]
+
     @property
     def set(self):
         return self.args[1]
 
     def __contains__(self, other):
         raise NotImplementedError()
+
     def integrate(self, expr):
         raise NotImplementedError()
 
@@ -70,6 +73,7 @@ class ConditionalDomain(Domain):
     @property
     def fulldomain(self):
         return self.args[1]
+
     @property
     def condition(self):
         return self.args[2]
@@ -97,31 +101,41 @@ class PSpace(Basic):
 
     is_Finite = None
     is_Continuous = None
+
     @property
     def domain(self):
         return self.args[0]
+
     @property
     def density(self):
         return self.args[1]
+
     @property
     def values(self):
         return frozenset(RandomSymbol(self, sym) for sym in self.domain.symbols)
+
     @property
     def symbols(self):
         return self.domain.symbols
+
     def where(self, condition):
         raise NotImplementedError()
+
     def compute_density(self, expr):
         raise NotImplementedError()
+
     def sample(self):
         raise NotImplementedError()
+
     def P(self, condition):
         raise NotImplementedError()
+
     def integrate(self, expr):
         raise NotImplementedError()
 
     _count = 0
     _name = 'space'
+
     @classmethod
     def create_symbol(cls):
         cls._count += 1
@@ -151,27 +165,23 @@ class RandomSymbol(Symbol):
 
     is_bounded=True
     is_finite=True
+
     def __new__(cls, *args):
         obj = Basic.__new__(cls)
         obj.pspace = args[0]
         obj.symbol = args[1]
         return obj
-#    @property
-#    def pspace(self):
-#        return self.args[0]
-#    @property
-#    def symbol(self):
-#        return self.args[1]
+
     @property
     def name(self):
         return self.symbol.name
+
     @property
     def is_commutative(self):
         return self.symbol.is_commutative
+
     def _hashable_content(self):
         return self.pspace, self.symbol
-
-
 
 class ProductPSpace(PSpace):
     """
@@ -182,20 +192,22 @@ class ProductPSpace(PSpace):
     """
 
     def __new__(cls, *spaces):
-        from sympy.statistics.frv import ProductFinitePSpace
-        from sympy.statistics.crv import ProductContinuousPSpace
         rs_space_dict = {}
         for space in spaces:
             for value in space.values:
                 rs_space_dict[value] = space
+
         symbols = FiniteSet(val.symbol for val in rs_space_dict.keys())
+
         # Overlapping symbols
         if len(symbols) < sum(len(space.symbols) for space in spaces):
             raise ValueError("Overlapping Random Variables")
 
         if all(space.is_Finite for space in spaces):
+            from sympy.statistics.frv import ProductFinitePSpace
             cls = ProductFinitePSpace
         if all(space.is_Continuous for space in spaces):
+            from sympy.statistics.crv import ProductContinuousPSpace
             cls = ProductContinuousPSpace
 
         obj = Basic.__new__(cls, symbols, FiniteSet(*spaces))
@@ -221,6 +233,7 @@ class ProductPSpace(PSpace):
     @property
     def domain(self):
         return ProductDomain(*[space.domain for space in self.spaces])
+
     @property
     def density(self):
         raise NotImplementedError("Density not available for ProductSpaces")
@@ -258,12 +271,14 @@ class ProductDomain(Domain):
         for domain in domains2:
             for symbol in domain.symbols:
                 sym_domain_dict[symbol] = domain
+
         if all(domain.is_Finite for domain in domains2):
             from sympy.statistics.frv import ProductFiniteDomain
             cls = ProductFiniteDomain
         if all(domain.is_Continuous for domain in domains2):
             from sympy.statistics.crv import ProductContinuousDomain
             cls = ProductContinuousDomain
+
         obj = Domain.__new__(cls, symbols, domains2)
         obj.sym_domain_dict = sym_domain_dict
         return obj
@@ -293,6 +308,7 @@ class ProductDomain(Domain):
 
 def is_random(x):
     return isinstance(x, RandomSymbol)
+
 def random_symbols(expr):
     """
     Returns all RandomSymbols within a SymPy Expression
@@ -301,7 +317,6 @@ def random_symbols(expr):
         return [s for s in expr.free_symbols if is_random(s)]
     except:
         return []
-
 
 def pspace(expr):
     """
@@ -375,7 +390,7 @@ def Given(expr, given=None, **kwargs):
     expr = expr.subs(swapdict)
     return expr
 
-def E(expr, given=None, **kwargs):
+def E(expr, given=None, numsamples=None, **kwargs):
     """
     Returns the expected value of a random expression (optionally given a
     condition)
@@ -393,6 +408,9 @@ def E(expr, given=None, **kwargs):
 
     if not random_symbols(expr): # expr isn't random?
         return expr
+    if numsamples: # Computing by monte carlo sampling?
+        return sampling_E(expr, given, numsamples=numsamples, **kwargs)
+
     # Create new expr and recompute E
     if given is not None: # If there is a condition
         return E(Given(expr, given, **kwargs), **kwargs)
@@ -405,7 +423,7 @@ def E(expr, given=None, **kwargs):
     return pspace(expr).integrate(expr, **kwargs)
 
 
-def P(condition, given=None, samples=None,  **kwargs):
+def P(condition, given=None, numsamples=None,  **kwargs):
     """
     Probability that a condition is true, optionally given a second condition
 
@@ -421,8 +439,8 @@ def P(condition, given=None, samples=None,  **kwargs):
 
     """
 
-    if samples:
-        return sampling_P(condition, given, samples=samples, **kwargs)
+    if numsamples:
+        return sampling_P(condition, given, numsamples=numsamples, **kwargs)
     if given is not None: # If there is a condition
         # Recompute on new conditional expr
         return P(Given(condition, given, **kwargs), **kwargs)
@@ -531,26 +549,49 @@ def Sample(expr, given=None, **kwargs):
     d = ps.sample()
     return expr.subs(d)
 
-def sampling_P(condition, given=None, samples=1, **kwargs):
-    count_true = S.Zero
-    count_false = 0
-    #ps = pspace(Tuple(condition, given))
-    ps = pspace(condition)
-    while count_true + count_false < samples:
-        d = ps.sample()
-        if given:
+def sample_iter(expr, given=None, numsamples=S.Infinity, **kwargs):
+    if given:
+        ps = pspace(Tuple(expr, given))
+    else:
+        ps = pspace(expr)
+
+    count = 0
+    while count < numsamples:
+        d = ps.sample() # a dictionary that maps RVs to values
+
+        if given: # Check that these values satisfy the condition
             gd = given.subs(d)
             if not isinstance(gd, bool):
                 raise ValueError("Conditions must not contain free symbols")
-            if gd == False:
+            if gd == False: # If the values don't satisfy then try again
                 continue
 
-        cd = condition.subs(d)
-        if not isinstance(cd, bool):
+        ed = expr.subs(d)
+
+        yield ed
+        count += 1
+
+def sampling_P(condition, given=None, numsamples=1, **kwargs):
+    count_true = 0
+    count_false = 0
+
+    samples = sample_iter(condition, given, numsamples=numsamples, **kwargs)
+
+    for x in samples:
+        if not isinstance(x, bool):
             raise ValueError("Conditions must not contain free symbols")
-        if cd == True:
+
+        if x==True:
             count_true += 1
         else:
             count_false += 1
 
-    return count_true / samples
+    return S(count_true) / numsamples
+
+def sampling_E(condition, given=None, numsamples=1, **kwargs):
+
+    samples = sample_iter(condition, given, numsamples=numsamples, **kwargs)
+
+    return Add(*samples) / numsamples
+
+

@@ -1,10 +1,11 @@
 from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
-        And, Or)
+        And, Or, Tuple)
 from sympy.core.sets import FiniteSet
 from rv import (Domain,  ProductDomain, ConditionalDomain, PSpace,
         ProductPSpace, random_symbols, sumsets)
 import itertools
 from sympy.core.containers import Dict
+import random
 
 class FiniteDomain(Domain):
     """
@@ -127,6 +128,7 @@ class FinitePSpace(PSpace):
             d[val] = d.get(val, 0) + prob
         return d
 
+    @cacheit
     def compute_cdf(self, expr):
         d = self.compute_density(expr)
         cum_prob = 0
@@ -154,6 +156,19 @@ class FinitePSpace(PSpace):
         density = dict((key, val / prob)
                 for key, val in self._density.items() if key in domain)
         return FinitePSpace(domain, density)
+
+    def sample(self):
+        expr = Tuple(*self.values)
+        cdf = self.compute_cdf(expr).items()
+        cdf.sort(key=lambda kv : kv[1]) # sort by values (probabilities)
+
+        x = random.uniform(0,1)
+        for value, cum_prob in cdf:
+            if x < cum_prob:
+                # return dictionary mapping RV to value
+                return dict(zip(expr, value))
+
+        assert False, "We should never have gotten to this point"
 
 class SingleFinitePSpace(FinitePSpace):
     _count = 0
