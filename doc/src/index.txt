@@ -21,7 +21,6 @@ Contents:
    gotchas.txt
    guide.txt
    modules/index.txt
-   pickling.txt
    python-comparisons.txt
    wiki.txt
    outreach.txt
