@@ -1,7 +1,7 @@
 """Geometrical Points.
 
 Contains
---------
+========
 Point
 
 """
@@ -18,7 +18,7 @@ class Point(GeometryEntity):
     """A point in a 2-dimensional Euclidean space.
 
     Parameters
-    ----------
+    ==========
     coords : sequence of 2 coordinate values.
 
     Attributes
@@ -28,7 +28,7 @@ class Point(GeometryEntity):
         self[1] is the second coordinate value.
 
     Raises
-    ------
+    ======
     NotImplementedError
         When trying to create a point with more than two dimensions.
         When `intersection` is called with object other than a Point.
@@ -40,11 +40,11 @@ class Point(GeometryEntity):
     Currently only 2-dimensional points are supported.
 
     See Also
-    --------
+    ========
     class:`Segment` : Connects two Points
 
     Examples
-    --------
+    ========
     >>> from sympy.geometry import Point
     >>> from sympy.abc import x
     >>> Point(1, 2)
@@ -86,11 +86,11 @@ class Point(GeometryEntity):
         the set of points are collinear, or False otherwise.
 
         Parameters
-        ----------
+        ==========
         points : sequence of Point
 
         Returns
-        -------
+        =======
         is_collinear : boolean
 
         Notes
@@ -114,11 +114,11 @@ class Point(GeometryEntity):
         point in the list, and if all pass then they are collinear.
 
         See Also
-        --------
+        ========
         class:`Line`
 
         Examples
-        --------
+        ========
         >>> from sympy import Point
         >>> from sympy.abc import x
         >>> p1, p2 = Point(0, 0), Point(1, 1)
@@ -156,16 +156,16 @@ class Point(GeometryEntity):
         on a circle).
 
         Parameters
-        ----------
+        ==========
         points : sequence of Points
 
         Returns
-        -------
+        =======
         is_concyclic : boolean
             True if points are concyclic, False otherwise.
 
         See Also
-        --------
+        ========
         class:`Circle`
 
         Notes
@@ -181,7 +181,7 @@ class Point(GeometryEntity):
         in the circle.
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Point
         >>> p1, p2 = Point(-1, 0), Point(1, 0)
         >>> p3, p4 = Point(0, 1), Point(-1, 2)
@@ -238,19 +238,19 @@ class Point(GeometryEntity):
         """The Euclidean distance from self to point p.
 
         Parameters
-        ----------
+        ==========
         p : Point
 
         Returns
-        -------
+        =======
         distance : number or symbolic expression.
 
         See Also
-        --------
+        ========
         sympy.geometry.Segment.length : Returns length of a Segment
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Point
         >>> p1, p2 = Point(1, 1), Point(4, 5)
         >>> p1.distance(p2)
@@ -268,19 +268,19 @@ class Point(GeometryEntity):
         """The midpoint between self and point p.
 
         Parameters
-        ----------
+        ==========
         p : Point
 
         Returns
-        -------
+        =======
         midpoint : Point
 
         See Also
-        --------
+        ========
         sympy.geometry.Segment.midpoint : Returns midpoint of a Segment
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Point
         >>> p1, p2 = Point(1, 1), Point(13, 5)
         >>> p1.midpoint(p2)
@@ -296,11 +296,11 @@ class Point(GeometryEntity):
         where the coordinates are evaluated as floating point numbers.
 
         Returns
-        -------
+        =======
         point : Point
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Rational
         >>> p1 = Point(Rational(1, 2), Rational(3, 2))
         >>> p1
@@ -315,11 +315,11 @@ class Point(GeometryEntity):
         """The intersection between this point and another point.
 
         Parameters
-        ----------
+        ==========
         other : Point
 
         Returns
-        -------
+        =======
         intersection : list of Points
 
         Notes
@@ -328,7 +328,7 @@ class Point(GeometryEntity):
         intersection, otherwise it will contain this point.
 
         Examples
-        --------
+        ========
         >>> from sympy import Point
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(0, 0)
         >>> p1.intersection(p2)

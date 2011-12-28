@@ -1,7 +1,7 @@
 """Line-like geometrical entities.
 
 Contains
---------
+========
 LinearEntity
 Line
 Ray
@@ -26,7 +26,7 @@ class LinearEntity(GeometryEntity):
     in a 2-dimensional Euclidean space.
 
     Attributes
-    ----------
+    ==========
     p1
     p2
     coefficients
@@ -42,7 +42,7 @@ class LinearEntity(GeometryEntity):
         * __contains__
 
     See Also
-    --------
+    ========
     class:`GeometryEntity`
 
     """
@@ -61,11 +61,11 @@ class LinearEntity(GeometryEntity):
         """The first defining point of a linear entity.
 
         See Also
-        --------
+        ========
         class:`Point`
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(5, 3)
         >>> l = Line(p1, p2)
@@ -80,11 +80,11 @@ class LinearEntity(GeometryEntity):
         """The second defining point of a linear entity.
 
         See Also
-        --------
+        ========
         class:`Point`
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(5, 3)
         >>> l = Line(p1, p2)
@@ -100,11 +100,11 @@ class LinearEntity(GeometryEntity):
         ax + by + c = 0.
 
         See Also
-        --------
+        ========
         sympy.geometry.Line.equation : Returns equation of a Line
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> from sympy.abc import x, y
         >>> p1, p2 = Point(0, 0), Point(5, 3)
@@ -134,11 +134,11 @@ class LinearEntity(GeometryEntity):
         intersect at a single point.
 
         Parameters
-        ----------
+        ==========
         lines : a sequence of linear entities.
 
         Returns
-        -------
+        =======
         True if the set of linear entities are concurrent, False
         otherwise.
 
@@ -152,11 +152,11 @@ class LinearEntity(GeometryEntity):
         the rest of the lines. If so, the lines are concurrent.
 
         See Also
-        --------
+        ========
         intersection : Returns intersection of two entities
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(3, 5)
         >>> p3, p4 = Point(-2, -2), Point(0, 2)
@@ -192,20 +192,20 @@ class LinearEntity(GeometryEntity):
         """Are two linear entities parallel?
 
         Parameters
-        ----------
+        ==========
         l1 : LinearEntity
         l2 : LinearEntity
 
         Returns
-        -------
+        =======
         True if l1 and l2 are parallel, False otherwise.
 
         See Also
-        --------
+        ========
         coefficients : Returns equation coefficients of line
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(1, 1)
         >>> p3, p4 = Point(3, 4), Point(6, 7)
@@ -230,20 +230,20 @@ class LinearEntity(GeometryEntity):
         """Are two linear entities parallel?
 
         Parameters
-        ----------
+        ==========
         l1 : LinearEntity
         l2 : LinearEntity
 
         Returns
-        -------
+        =======
         True if l1 and l2 are perpendicular, False otherwise.
 
         See Also
-        --------
+        ========
         coefficients : Returns equation coefficients of line
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(-1, 1)
         >>> l1, l2 = Line(p1, p2), Line(p1, p3)
@@ -267,12 +267,12 @@ class LinearEntity(GeometryEntity):
         """The angle formed between the two linear entities.
 
         Parameters
-        ----------
+        ==========
         l1 : LinearEntity
         l2 : LinearEntity
 
         Returns
-        -------
+        =======
         angle : angle in radians
 
         Notes
@@ -286,11 +286,11 @@ class LinearEntity(GeometryEntity):
         find the angle between the two using the above formula.
 
         See Also
-        --------
+        ========
         is_perpendicular : Returns true if angle is equal to 90 degrees
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(0, 4), Point(2, 0)
         >>> l1, l2 = Line(p1, p2), Line(p1, p3)
@@ -307,19 +307,19 @@ class LinearEntity(GeometryEntity):
         through the point `p`.
 
         Parameters
-        ----------
+        ==========
         p : Point
 
         Returns
-        -------
+        =======
         line : Line
 
         See Also
-        --------
+        ========
         is_parallel : Returns true if two lines are parallel
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
         >>> l1 = Line(p1, p2)
@@ -338,20 +338,20 @@ class LinearEntity(GeometryEntity):
         through the point `p`.
 
         Parameters
-        ----------
+        ==========
         p : Point
 
         Returns
-        -------
+        =======
         line : Line
 
         See Also
-        --------
-        is_perpendicular : Returns true if two lines are perpendicular. In other words, angle equal to 90 degrees or pi/2
-        perpendicular_segment : Creates a segment from point to line perpendicular to line
+        ========
+        is_perpendicular
+        perpendicular_segment : Creates a segment from point to line perpendicular to the line
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
         >>> l1 = Line(p1, p2)
@@ -378,11 +378,11 @@ class LinearEntity(GeometryEntity):
         """Create a perpendicular line segment from `p` to this line.
 
         Parameters
-        ----------
+        ==========
         p : Point
 
         Returns
-        -------
+        =======
         segment : Segment
 
         Notes
@@ -390,11 +390,11 @@ class LinearEntity(GeometryEntity):
         Returns `p` itself if `p` is on this linear entity.
 
         See Also
-        --------
-        perpendicular_line : Creates a new line from point to line perpendicular to original line
+        ========
+        perpendicular_line : Creates a line perpendicular to the original line which passes through the given point
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(0, 2)
         >>> l1 = Line(p1, p2)
@@ -420,15 +420,15 @@ class LinearEntity(GeometryEntity):
         """The slope of this linear entity, or infinity if vertical.
 
         Returns
-        -------
+        =======
         slope : number or sympy expression
 
         See Also
-        --------
+        ========
         coefficients : Returns equation coefficients of line.
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(3, 5)
         >>> l1 = Line(p1, p2)
@@ -451,15 +451,15 @@ class LinearEntity(GeometryEntity):
         """The two points used to define this linear entity.
 
         Returns
-        -------
+        =======
         points : tuple of Points
 
         See Also
-        --------
+        ========
         class:`Point`
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(5, 11)
         >>> l1 = Line(p1, p2)
@@ -473,16 +473,16 @@ class LinearEntity(GeometryEntity):
         """Project a point, line, ray, or segment onto this linear entity.
 
         Parameters
-        ----------
+        ==========
         other : Point or LinearEntity (Line, Ray, Segment)
 
         Returns
-        -------
+        =======
         projection : Point or LinearEntity (Line, Ray, Segment)
             The return type matches the type of the parameter `other`.
 
         Raises
-        ------
+        ======
         GeometryError
             When method is unable to perform projection.
 
@@ -498,12 +498,12 @@ class LinearEntity(GeometryEntity):
         intersection with L.
 
         See Also
-        --------
+        ========
         class:`Point`
         perpendicular_line : Creates a new line from point to line perpendicular to original line
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line, Segment, Rational
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(Rational(1, 2), 0)
         >>> l1 = Line(p1, p2)
@@ -548,19 +548,19 @@ class LinearEntity(GeometryEntity):
         """The intersection with another geometrical entity.
 
         Parameters
-        ----------
+        ==========
         o : Point or LinearEntity
 
         Returns
-        -------
+        =======
         intersection : list of geometrical entities
 
         See Also
-        --------
+        ========
         class:`Point`
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line, Segment
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(7, 7)
         >>> l1 = Line(p1, p2)
@@ -668,15 +668,15 @@ class LinearEntity(GeometryEntity):
         """A random point on a LinearEntity.
 
         Returns
-        -------
+        =======
         point : Point
 
         See Also
-        --------
+        ========
         class:`Point`
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(5, 3)
         >>> l1 = Line(p1, p2)
@@ -752,17 +752,17 @@ class Line(LinearEntity):
     Points can be defined only for 2D spaces.
 
     Parameters
-    ----------
+    ==========
     p1 : Point
     pt : Point
     slope: sympy expression
 
     See Also
-    --------
+    ========
     class:`Point`
 
     Examples
-    --------
+    ========
     >>> import sympy
     >>> from sympy import Point
     >>> from sympy.abc import L
@@ -810,26 +810,26 @@ class Line(LinearEntity):
         """A parameterized point on the Line.
 
         Parameters
-        ----------
+        ==========
         parameter : str, optional
             The name of the parameter which will be used for the parametric
             point. The default value is 't'.
 
         Returns
-        -------
+        =======
         point : Point
 
         Raises
-        ------
+        ======
         ValueError
             When `parameter` already appears in the Line's definition.
 
         See Also
-        --------
+        ========
         class:`Point`
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(1, 0), Point(5, 3)
         >>> l1 = Line(p1, p2)
@@ -848,17 +848,17 @@ class Line(LinearEntity):
         """The plot interval for the default geometric plot of line.
 
         Parameters
-        ----------
+        ==========
         parameter : str, optional
             Default value is 't'.
 
         Returns
-        -------
+        =======
         plot_interval : list (plot interval)
             [parameter, lower_bound, upper_bound]
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(5, 3)
         >>> l1 = Line(p1, p2)
@@ -873,22 +873,22 @@ class Line(LinearEntity):
         """The equation of the line: ax + by + c.
 
         Parameters
-        ----------
+        ==========
         x : str, optional
             The name to use for the x-axis, default value is 'x'.
         y : str, optional
             The name to use for the y-axis, default value is 'y'.
 
         Returns
-        -------
+        =======
         equation : sympy expression
 
         See Also
-        --------
+        ========
         coefficients : Returns equation coefficients of line.
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(1, 0), Point(5, 3)
         >>> l1 = Line(p1, p2)
@@ -934,7 +934,7 @@ class Ray(LinearEntity):
     A Ray is a semi-line in the space with a source point and a direction.
 
     Parameters
-    ----------
+    ==========
     p1 : Point
         The source of the Ray
     p2 : Point or radian value
@@ -943,13 +943,13 @@ class Ray(LinearEntity):
         direction being ccw.
 
     Attributes
-    ----------
+    ==========
     source
     xdirection
     ydirection
 
     See Also
-    --------
+    ========
     class:`Point`
     class:`Line`
 
@@ -959,7 +959,7 @@ class Ray(LinearEntity):
     Points can be defined only for 2D spaces.
 
     Examples
-    --------
+    ========
     >>> import sympy
     >>> from sympy import Point, pi
     >>> from sympy.abc import r
@@ -1024,11 +1024,11 @@ class Ray(LinearEntity):
         """The point from which the ray emanates.
 
         See Also
-        --------
+        ========
         class:`Point`
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Ray
         >>> p1, p2 = Point(0, 0), Point(4, 1)
         >>> r1 = Ray(p1, p2)
@@ -1047,11 +1047,11 @@ class Ray(LinearEntity):
         or 0 if the ray is vertical.
 
         See Also
-        --------
+        ========
         ydirection : Vertical direction of ray
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Ray
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(0, -1)
         >>> r1, r2 = Ray(p1, p2), Ray(p1, p3)
@@ -1077,11 +1077,11 @@ class Ray(LinearEntity):
         or 0 if the ray is horizontal.
 
         See Also
-        --------
+        ========
         xdirection : Horizontal direction of ray
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Ray
         >>> p1, p2, p3 = Point(0, 0), Point(-1, -1), Point(-1, 0)
         >>> r1, r2 = Ray(p1, p2), Ray(p1, p3)
@@ -1102,26 +1102,26 @@ class Ray(LinearEntity):
         """A parameterized point on the Ray.
 
         Parameters
-        ----------
+        ==========
         parameter : str, optional
             The name of the parameter which will be used for the parametric
             point. The default value is 't'.
 
         Returns
-        -------
+        =======
         point : Point
 
         Raises
-        ------
+        ======
         ValueError
             When `parameter` already appears in the Ray's definition.
 
         See Also
-        --------
+        ========
         class:`Point`
 
         Examples
-        --------
+        ========
         >>> from sympy import Ray, Point, Segment, S, simplify, solve
         >>> from sympy.abc import t
         >>> r = Ray(Point(0, 0), Point(2, 3))
@@ -1176,17 +1176,17 @@ class Ray(LinearEntity):
         """The plot interval for the default geometric plot of the Ray.
 
         Parameters
-        ----------
+        ==========
         parameter : str, optional
             Default value is 't'.
 
         Returns
-        -------
+        =======
         plot_interval : list
             [parameter, lower_bound, upper_bound]
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Ray, pi
         >>> r = Ray((0, 0), angle=pi/4)
         >>> r.plot_interval()
@@ -1246,17 +1246,17 @@ class Segment(LinearEntity):
     """An undirected line segment in space.
 
     Parameters
-    ----------
+    ==========
     p1 : Point
     p2 : Point
 
     Attributes
-    ----------
+    ==========
     length : number or sympy expression
     midpoint : Point
 
     See Also
-    --------
+    ========
     class:`Point`
     class:`Line`
 
@@ -1266,7 +1266,7 @@ class Segment(LinearEntity):
     Points can be defined only for 2D spaces.
 
     Examples
-    --------
+    ========
     >>> import sympy
     >>> from sympy import Point
     >>> from sympy.abc import s
@@ -1305,37 +1305,37 @@ class Segment(LinearEntity):
         """A parameterized point on the Segment.
 
         Parameters
-        ----------
+        ==========
         parameter : str, optional
             The name of the parameter which will be used for the parametric
             point. The default value is 't'.
 
         Returns
-        -------
+        =======
         point : Point
 
 
         Parameters
-        ----------
+        ==========
         parameter : str, optional
             The name of the parameter which will be used for the parametric
             point. The default value is 't'.
 
         Returns
-        -------
+        =======
         point : Point
 
         Raises
-        ------
+        ======
         ValueError
             When `parameter` already appears in the Segment's definition.
 
         See Also
-        --------
+        ========
         class:`Point`
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(1, 0), Point(5, 3)
         >>> s1 = Segment(p1, p2)
@@ -1354,17 +1354,17 @@ class Segment(LinearEntity):
         """The plot interval for the default geometric plot of the Segment.
 
         Parameters
-        ----------
+        ==========
         parameter : str, optional
             Default value is 't'.
 
         Returns
-        -------
+        =======
         plot_interval : list
             [parameter, lower_bound, upper_bound]
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(0, 0), Point(5, 3)
         >>> s1 = Segment(p1, p2)
@@ -1384,19 +1384,19 @@ class Segment(LinearEntity):
         intersection of the bisector and the segment.
 
         Parameters
-        ----------
+        ==========
         p : Point
 
         Returns
-        -------
+        =======
         bisector : Line or Segment
 
         See Also
-        --------
+        ========
         perpendicular_segment : Creates a segment from point to line perpendicular to line
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Segment
         >>> p1, p2, p3 = Point(0, 0), Point(6, 6), Point(5, 1)
         >>> s1 = Segment(p1, p2)
@@ -1418,11 +1418,11 @@ class Segment(LinearEntity):
         """The length of the line segment.
 
         See Also
-        --------
+        ========
         sympy.geometry.Point.distance
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(0, 0), Point(4, 3)
         >>> s1 = Segment(p1, p2)
@@ -1437,11 +1437,11 @@ class Segment(LinearEntity):
         """The midpoint of the line segment.
 
         See Also
-        --------
+        ========
         sympy.geometry.Point.midpoint
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(0, 0), Point(4, 3)
         >>> s1 = Segment(p1, p2)

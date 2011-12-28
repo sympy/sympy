@@ -1,7 +1,7 @@
 """Utility functions for geometrical entities.
 
 Contains
---------
+========
 intersection
 convex_hull
 are_similar
@@ -24,7 +24,7 @@ def idiff(eq, y, x, dep=None):
     -Derivative(a, x) - 1
 
     See Also
-    --------
+    ========
     class:`Derivative`
 
     """
@@ -64,7 +64,7 @@ def _symbol(s, matching_symbol=None):
     name defined elsewhere as a result of different assumptions.
 
     See Also
-    --------
+    ========
     class:`Symbol`
 
     """
@@ -81,15 +81,15 @@ def intersection(*entities):
     """The intersection of a collection of GeometryEntity instances.
 
     Parameters
-    ----------
+    ==========
     entities : sequence of GeometryEntity
 
     Returns
-    -------
+    =======
     intersection : list of GeometryEntity
 
     Raises
-    ------
+    ======
     NotImplementedError
         When unable to calculate intersection.
 
@@ -106,11 +106,11 @@ def intersection(*entities):
     or else failures due to floating point issues may result.
       
     See Also
-    --------
+    ========
     sympy.geometry.GeometryEntity.intersection
 
     Examples
-    --------
+    ========
     >>> from sympy.geometry import Point, Line, Circle, intersection
     >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(-1, 5)
     >>> l1, l2 = Line(p1, p2), Line(p3, p2)
@@ -153,11 +153,11 @@ def convex_hull(*args):
     """The convex hull surrounding the Points contained in the list of entities.
 
     Parameters
-    ----------
+    ==========
     args : a collection of Points, Segments and/or Polygons
 
     Returns
-    -------
+    =======
     convex_hull : Polygon
 
     Notes
@@ -165,7 +165,7 @@ def convex_hull(*args):
     This can only be performed on a set of non-symbolic points.
 
     References
-    ----------
+    ==========
     [1] http://en.wikipedia.org/wiki/Graham_scan
 
     [2] Andrew's Monotone Chain Algorithm
@@ -173,12 +173,12 @@ def convex_hull(*args):
     http://softsurfer.com/Archive/algorithm_0109/algorithm_0109.htm
 
     See Also
-    --------
+    ========
     class:`Point`
     class:`Polygon`
 
     Examples
-    --------
+    ========
     >>> from sympy.geometry import Point, convex_hull
     >>> points = [(1,1), (1,2), (3,1), (-5,2), (15,4)]
     >>> convex_hull(*points)
@@ -242,16 +242,16 @@ def are_similar(e1, e2):
     Can one geometrical entity be uniformly scaled to the other?
 
     Parameters
-    ----------
+    ==========
     e1 : GeometryEntity
     e2 : GeometryEntity
 
     Returns
-    -------
+    =======
     are_similar : boolean
 
     Raises
-    ------
+    ======
     GeometryError
         When `e1` and `e2` cannot be compared.
 
@@ -260,11 +260,11 @@ def are_similar(e1, e2):
     If the two objects are equal then they are similar.
 
     See Also
-    --------
+    ========
     sympy.geometry.GeometryEntity.is_similar
 
     Examples
-    --------
+    ========
     >>> from sympy import Point, Circle, Triangle, are_similar
     >>> c1, c2 = Circle(Point(0, 0), 4), Circle(Point(1, 4), 3)
     >>> t1 = Triangle(Point(0, 0), Point(1, 0), Point(0, 1))
@@ -299,7 +299,7 @@ def centroid(*args):
     If there are no objects (or a mixture of objects) then None is returned.
 
     See Also
-    --------
+    ========
     class:`Point`
     class:`Segment`
     class:`Polygon`
