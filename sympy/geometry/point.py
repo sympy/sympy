@@ -41,7 +41,7 @@ class Point(GeometryEntity):
 
     See Also
     ========
-    class:`Segment` : Connects two Points
+    Segment : Connects two Points
 
     Examples
     ========
@@ -94,7 +94,7 @@ class Point(GeometryEntity):
         is_collinear : boolean
 
         Notes
-        -----
+        =====
         Slope is preserved everywhere on a line, so the slope between
         any two points on the line should be the same. Take the first
         two points, p1 and p2, and create a translated point v1
@@ -115,7 +115,7 @@ class Point(GeometryEntity):
 
         See Also
         ========
-        class:`Line`
+        Line
 
         Examples
         ========
@@ -166,10 +166,10 @@ class Point(GeometryEntity):
 
         See Also
         ========
-        class:`Circle`
+        Circle
 
         Notes
-        -----
+        =====
         No points are not considered to be concyclic. One or two points
         are definitely concyclic and three points are conyclic iff they
         are not collinear.
@@ -323,7 +323,7 @@ class Point(GeometryEntity):
         intersection : list of Points
 
         Notes
-        -----
+        =====
         The return value will either be an empty list if there is no
         intersection, otherwise it will contain this point.
 

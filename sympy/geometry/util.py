@@ -25,7 +25,7 @@ def idiff(eq, y, x, dep=None):
 
     See Also
     ========
-    class:`Derivative`
+    Derivative
 
     """
     if not dep:
@@ -65,7 +65,7 @@ def _symbol(s, matching_symbol=None):
 
     See Also
     ========
-    class:`Symbol`
+    Symbol
 
     """
     if isinstance(s, basestring):
@@ -94,7 +94,7 @@ def intersection(*entities):
         When unable to calculate intersection.
 
     Notes
-    -----
+    =====
     The intersection of any geometrical entity with itself should return
     a list with one item: the entity in question.
     An intersection requires two or more entities. If only a single
@@ -107,7 +107,7 @@ def intersection(*entities):
       
     See Also
     ========
-    sympy.geometry.GeometryEntity.intersection
+    sympy.geometry.entity.GeometryEntity.intersection
 
     Examples
     ========
@@ -161,7 +161,7 @@ def convex_hull(*args):
     convex_hull : Polygon
 
     Notes
-    -----
+    =====
     This can only be performed on a set of non-symbolic points.
 
     References
@@ -174,8 +174,8 @@ def convex_hull(*args):
 
     See Also
     ========
-    class:`Point`
-    class:`Polygon`
+    Point
+    Polygon
 
     Examples
     ========
@@ -256,12 +256,12 @@ def are_similar(e1, e2):
         When `e1` and `e2` cannot be compared.
 
     Notes
-    -----
+    =====
     If the two objects are equal then they are similar.
 
     See Also
     ========
-    sympy.geometry.GeometryEntity.is_similar
+    sympy.geometry.entity.GeometryEntity.is_similar
 
     Examples
     ========
@@ -300,9 +300,9 @@ def centroid(*args):
 
     See Also
     ========
-    class:`Point`
-    class:`Segment`
-    class:`Polygon`
+    Point
+    Segment
+    Polygon
 
     Examples
     ========

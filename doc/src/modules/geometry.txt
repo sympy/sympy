@@ -201,6 +201,15 @@ Utils
 
 .. automethod:: sympy.geometry.util.are_similar
 
+.. automethod:: sympy.geometry.util.centroid
+
+
+Entities
+~~~~~~~~
+
+.. autoclass:: sympy.geometry.entity.GeometryEntity
+   :members:
+
 Points
 ~~~~~~
 
@@ -248,4 +257,3 @@ Polygons
 
 .. autoclass:: Triangle
    :members:
-

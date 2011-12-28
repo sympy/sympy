@@ -39,7 +39,7 @@ class Curve(GeometryEntity):
 
     See Also
     ========
-    class:`Function`
+    sympy.core.function.Function
 
     Examples
     ========
@@ -164,7 +164,7 @@ class Curve(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========

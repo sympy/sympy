@@ -55,7 +55,7 @@ class Ellipse(GeometryEntity):
 
     See Also
     ========
-    class:`Circle`
+    Circle
 
     Notes
     -----
@@ -132,7 +132,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -155,9 +155,9 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        vradius : Returns vertical axis length
-        major : Returns semimajor axis length as number or expression
-        minor : Returns semiminor axis length as number or expression
+        vradius
+        major
+        minor
 
         Examples
         ========
@@ -180,9 +180,9 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        hradius : Returns horizontal axis length
-        major : Returns semimajor axis length as number or expression
-        minor : Returns semiminor axis length as number or expression
+        hradius
+        major
+        minor
 
         Examples
         ========
@@ -205,9 +205,9 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        hradius : Returns horizontal axis length
-        vradius : Returns vertical axis length
-        major : Returns semimajor axis length as number or expression
+        hradius
+        vradius
+        major
 
         Examples
         ========
@@ -245,9 +245,9 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        hradius : Returns horizontal axis length
-        vradius : Returns vertical axis length
-        minor : Returns semiminor axis length as number or expression
+        hradius
+        vradius
+        minor
 
         Examples
         ========
@@ -425,7 +425,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
         focus_distance : Returns the distance between foci and center
 
         Examples
@@ -470,7 +470,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -522,8 +522,8 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
-        class:`Line`
+        Point
+        Line
 
         Examples
         ========
@@ -649,7 +649,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -698,7 +698,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
         arbitrary_point : Returns parameterized point on ellipse
 
         Note
@@ -866,7 +866,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        class:`GeometryEntity`
+        sympy.geometry.entity.GeometryEntity
 
         Examples
         ========
@@ -964,8 +964,8 @@ class Circle(Ellipse):
 
     See Also
     ========
-    class:`Ellipse`
-    class:`Point`
+    Ellipse
+    Point
 
     Examples
     ========
@@ -1011,11 +1011,10 @@ class Circle(Ellipse):
 
         See Also
         ========
-        class:`Circle`
-        sympy.geometry.Ellipse.major : Synonymous with radius
-        sympy.geometry.Ellipse.minor : Synonymous with radius
-        sympy.geometry.Ellipse.hradius : Synonymous with radius
-        sympy.geometry.Ellipse.vradius : Synonymous with radius
+        major : Synonymous with radius
+        minor : Synonymous with radius
+        hradius : Synonymous with radius
+        vradius : Synonymous with radius
 
         Examples
         ========

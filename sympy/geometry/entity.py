@@ -49,7 +49,7 @@ class GeometryEntity(tuple):
         Returns a list of all of the intersections of self with o.
 
         Notes
-        -----
+        =====
         An entity is not required to implement this method.
 
         If two different types of entities can intersect, the item with
@@ -58,8 +58,7 @@ class GeometryEntity(tuple):
 
         See Also
         ========
-        sympy.geometry.util.intersection : computes the intersection
-        between more than 2 objects.
+        sympy.geometry.util.intersection : computes the intersection of GeometryEntities
 
         """
         raise NotImplementedError()
@@ -185,7 +184,8 @@ class GeometryEntity(tuple):
           
         See Also
         ========
-        encloses_point : Tests whether entity encloses a point in various subclasses
+        sympy.geometry.Ellipse.encloses_point : Tests whether entity encloses a point in various subclasses
+        sympy.geometry.Polygon.encloses_point : See above
 
         """
         from sympy.geometry.point import Point
@@ -215,7 +215,7 @@ class GeometryEntity(tuple):
         shrinking) of one of the entities will allow one to obtain the other.
 
         Notes
-        -----
+        =====
         This method is not intended to be used directly but rather
         through the `are_similar` function found in util.py.
         An entity is not required to implement this method.

@@ -34,7 +34,7 @@ class LinearEntity(GeometryEntity):
     points
 
     Notes
-    -----
+    =====
     This is an abstract class and is not meant to be instantiated.
     Subclasses should implement the following methods:
 
@@ -43,7 +43,7 @@ class LinearEntity(GeometryEntity):
 
     See Also
     ========
-    class:`GeometryEntity`
+    sympy.geometry.entity.GeometryEntity
 
     """
 
@@ -62,7 +62,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -81,7 +81,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -143,7 +143,7 @@ class LinearEntity(GeometryEntity):
         otherwise.
 
         Notes
-        -----
+        =====
         Simply take the first two lines and find their intersection.
         If there is no intersection, then the first two lines were
         parallel and had no intersection so concurrency is impossible
@@ -153,7 +153,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        intersection : Returns intersection of two entities
+        sympy.geometry.util.intersection : Returns intersection of GeometryEntities
 
         Examples
         ========
@@ -276,7 +276,7 @@ class LinearEntity(GeometryEntity):
         angle : angle in radians
 
         Notes
-        -----
+        =====
         From the dot product of vectors v1 and v2 it is known that:
 
             dot(v1, v2) = |v1|*|v2|*cos(A)
@@ -386,7 +386,7 @@ class LinearEntity(GeometryEntity):
         segment : Segment
 
         Notes
-        -----
+        =====
         Returns `p` itself if `p` is on this linear entity.
 
         See Also
@@ -456,7 +456,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -487,7 +487,7 @@ class LinearEntity(GeometryEntity):
             When method is unable to perform projection.
 
         Notes
-        -----
+        =====
         A projection involves taking the two points that define
         the linear entity and projecting those points onto a
         Line and then reforming the linear entity using these
@@ -499,7 +499,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
         perpendicular_line : Creates a new line from point to line perpendicular to original line
 
         Examples
@@ -557,7 +557,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -673,7 +673,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -759,7 +759,7 @@ class Line(LinearEntity):
 
     See Also
     ========
-    class:`Point`
+    Point
 
     Examples
     ========
@@ -826,7 +826,7 @@ class Line(LinearEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -950,11 +950,11 @@ class Ray(LinearEntity):
 
     See Also
     ========
-    class:`Point`
-    class:`Line`
+    Point
+    Line
 
     Notes
-    -----
+    =====
     At the moment only rays in a 2D space can be declared, because
     Points can be defined only for 2D spaces.
 
@@ -1025,7 +1025,7 @@ class Ray(LinearEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -1118,7 +1118,7 @@ class Ray(LinearEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -1257,11 +1257,11 @@ class Segment(LinearEntity):
 
     See Also
     ========
-    class:`Point`
-    class:`Line`
+    Point
+    Line
 
     Notes
-    -----
+    =====
     At the moment only segments in a 2D space can be declared, because
     Points can be defined only for 2D spaces.
 
@@ -1332,7 +1332,7 @@ class Segment(LinearEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========

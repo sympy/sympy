@@ -40,12 +40,12 @@ class Polygon(GeometryEntity):
 
     See Also
     ========
-    class:`Point`
-    class:`Segment`
-    class:`Triangle`
+    Point
+    Segment
+    Triangle
 
     Notes
-    -----
+    =====
     Polygons are treated as closed paths rather than 2D areas so
     some calculations can be be negative or positive (e.g., area)
     based on the orientation of the points.
@@ -183,7 +183,7 @@ class Polygon(GeometryEntity):
         The area of the polygon.
 
         Notes
-        -----
+        =====
         The area calculation can be positive or negative based on the
         orientation of the points.
 
@@ -220,8 +220,8 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
-        sympy.geometry.LinearEntity.angle_between : Returns angle between two LinearEntities
+        Point
+        sympy.geometry.line.LinearEntity.angle_between : Returns angle between two LinearEntities
 
         Examples
         ========
@@ -287,7 +287,7 @@ class Polygon(GeometryEntity):
         vertices : tuple of Points
 
         Notes
-        -----
+        =====
         When iterating over the vertices, it is more efficient to index self
         rather than to request the vertices and index them. Only use the
         vertices when you want to process all of them at once. This is even
@@ -295,7 +295,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -320,7 +320,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
         sympy.geometry.util.centroid : Utility that returns centroid of a GeometryEntity
 
         Examples
@@ -359,8 +359,8 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
-        class:`Segment`
+        Point
+        Segment
 
         Examples
         ========
@@ -421,7 +421,7 @@ class Polygon(GeometryEntity):
         Return True if p is enclosed by (is inside of) self.
 
         Notes
-        -----
+        =====
         Being on the border of self is considered False.
 
         Parameters
@@ -434,7 +434,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
         sympy.geometry.Ellipse.encloses_point
 
         Examples
@@ -525,7 +525,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -595,8 +595,8 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        class:`Point`
-        class:`Segment`
+        Point
+        Segment
 
         Examples
         ========
@@ -638,7 +638,7 @@ class Polygon(GeometryEntity):
         which does such checks.
 
         Notes
-        -----
+        =====
             - Prints a warning if the two polygons possibly intersect as the return
               value will not be valid in such a case. For a more through test of
               intersection use intersection().
@@ -849,7 +849,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.GeometryEntity.encloses : Tests whether a GeometryEntity encloses another
+        sympy.geometry.entity.GeometryEntity.encloses : Tests whether a GeometryEntity encloses another
 
         Examples
         ========
@@ -926,8 +926,8 @@ class RegularPolygon(Polygon):
 
     See Also
     ========
-    class:`Point`
-    class:`Polygon`
+    Point
+    Polygon
 
     Examples
     ========
@@ -977,7 +977,7 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        class:`Point`
+        Point
         sympy.geometry.Ellipse.center : Returns center of an ellipse
 
         Examples
@@ -1087,7 +1087,7 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        sympy.geometry.LinearEntity.angle_between : Returns angle between two LinearEntities
+        sympy.geometry.line.LinearEntity.angle_between : Returns angle between two LinearEntities
 
         Examples
         ========
@@ -1109,7 +1109,7 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        sympy.geometry.LinearEntity.angle_between
+        sympy.geometry.line.LinearEntity.angle_between
 
         Examples
         ========
@@ -1132,7 +1132,7 @@ class RegularPolygon(Polygon):
         See Also
         ========
         circumcenter : Returns center of circumcircle
-        class:`Circle`
+        Circle
 
         Examples
         ========
@@ -1155,7 +1155,7 @@ class RegularPolygon(Polygon):
         See Also
         ========
         inradius : Returns radius of incircle
-        class:`Circle`
+        Circle
 
         Examples
         ========
@@ -1180,7 +1180,7 @@ class RegularPolygon(Polygon):
         Return True if p is enclosed by (is inside of) self.
 
         Notes
-        -----
+        =====
         Being on the border of self is considered False.
 
         The general Polygon.encloses_point method is called only if
@@ -1281,7 +1281,7 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -1359,8 +1359,8 @@ class Triangle(Polygon):
 
     See Also
     ========
-    class:`Point`
-    class:`Polygon`
+    Point
+    Polygon
 
     Examples
     ========
@@ -1415,7 +1415,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -1442,7 +1442,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        sympy.geometry.GeometryEntity.is_similar
+        sympy.geometry.entity.GeometryEntity.is_similar
 
         Examples
         ========
@@ -1485,8 +1485,8 @@ class Triangle(Polygon):
 
         See Also
         ========
-        sympy.geometry.GeometryEntity.is_similar
-        class:`RegularPolygon`
+        sympy.geometry.entity.GeometryEntity.is_similar
+        RegularPolygon
 
         Examples
         ========
@@ -1513,7 +1513,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        sympy.geometry.LinearEntity.is_perpendicular : Tests whether two linear figures are perpendicular
+        sympy.geometry.line.LinearEntity.is_perpendicular : Tests whether two linear figures are perpendicular
 
         Examples
         ========
@@ -1543,7 +1543,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        class:`Point`
+        Point
         sympy.geometry.Segment.length
 
         Examples
@@ -1574,7 +1574,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -1601,7 +1601,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -1650,7 +1650,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        class:`Circle`
+        Circle
 
         Examples
         ========
@@ -1677,8 +1677,8 @@ class Triangle(Polygon):
 
         See Also
         ========
-        class:`Point`
-        class:`Segment`
+        Point
+        Segment
 
         Examples
         ========
@@ -1712,7 +1712,7 @@ class Triangle(Polygon):
         See Also
         ========
         incircle: Returns incircle of figure
-        class:`Point`
+        Point
 
         Examples
         ========
@@ -1768,7 +1768,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        class:`Circle`
+        Circle
 
         Examples
         ========
@@ -1797,8 +1797,8 @@ class Triangle(Polygon):
 
         See Also
         ========
-        class:`Point`
-        class:`Segment`
+        Point
+        Segment
         sympy.geometry.Segment.midpoint
 
         Examples
