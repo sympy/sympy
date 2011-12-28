@@ -876,3 +876,8 @@ def test_check_assumptions():
 
 def test_solve_abs():
     assert solve(abs(x - 7) - 8) == [-1, 15]
+    
+@XFAIL
+def test_issue_2678():
+    b = Eq(x2(t).diff(t), x1(t) - 3*x2(t))
+    assert solve(b, x2(t)) == (x1 - x2(t).diff(t))/3    
