@@ -1,6 +1,6 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify)
-from sympy.statistics import (Die, Bernoulli, Coin, P, E, var, covar, skewness,
+from sympy.stats import (Die, Bernoulli, Coin, P, E, var, covar, skewness,
         Density, Given, independent, dependent, Where, FiniteRV, pspace, CDF)
 from sympy.utilities.pytest import raises
 

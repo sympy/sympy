@@ -1,4 +1,4 @@
-from sympy.statistics.frv import SingleFinitePSpace, create_SingleFinitePSpace
+from sympy.stats.frv import SingleFinitePSpace, create_SingleFinitePSpace
 from sympy import S, sympify, Rational
 
 def FiniteRV(density, symbol=None):
@@ -6,7 +6,7 @@ def FiniteRV(density, symbol=None):
     Create a Finite Random Variable given a dict representing the density
     Returns a RandomSymbol
 
-    >>> from sympy.statistics import FiniteRV, P, E
+    >>> from sympy.stats import FiniteRV, P, E
 
     >>> density = {0: .1, 1: .2, 2: .3, 3: .4}
     >>> X = FiniteRV(density)
@@ -28,7 +28,7 @@ class DiePSpace(SingleFinitePSpace):
 
     Create Dice Random Symbols using Die function
 
-    >>> from sympy.statistics import Die, Density
+    >>> from sympy.stats import Die, Density
 
     >>> X = Die(6) # Six sided Die
     >>> Density(X)
@@ -50,7 +50,7 @@ def Die(sides=6, symbol=None):
     Create a Finite Random Varible representing a fair die
     Returns a RandomSymbol
 
-    >>> from sympy.statistics import Die, Density
+    >>> from sympy.stats import Die, Density
 
     >>> X = Die(6) # Six sided Die
     >>> Density(X)
@@ -73,7 +73,7 @@ class BernoulliPSpace(SingleFinitePSpace):
 
     Create Bernoulli Random Symbols using Bernoulli function
 
-    >>> from sympy.statistics import Bernoulli, Density
+    >>> from sympy.stats import Bernoulli, Density
     >>> from sympy import S
 
     >>> X = Bernoulli(S(3)/4, 1, 0) # 1-0 Bernoulli variable, probability = 3/4
@@ -98,7 +98,7 @@ def Bernoulli(p, a, b, symbol=None):
     Create a Finite Random Varible representing a Bernoulli process
     Returns a RandomSymbol
 
-    >>> from sympy.statistics import Bernoulli, Density
+    >>> from sympy.stats import Bernoulli, Density
     >>> from sympy import S
 
     >>> X = Bernoulli(S(3)/4, 1, 0) # 1-0 Bernoulli variable, probability = 3/4
@@ -122,7 +122,7 @@ class CoinPSpace(BernoulliPSpace):
 
     Create Coin's using Coin function
 
-    >>> from sympy.statistics import Coin, Density
+    >>> from sympy.stats import Coin, Density
     >>> from sympy import Rational
 
     >>> X = Coin() # A fair coin toss
@@ -146,7 +146,7 @@ def Coin(p=S.Half, symbol=None):
 
     Returns a RandomSymbol
 
-    >>> from sympy.statistics import Coin, Density
+    >>> from sympy.stats import Coin, Density
     >>> from sympy import Rational
 
     >>> X = Coin() # A fair coin toss

@@ -204,10 +204,10 @@ class ProductPSpace(PSpace):
             raise ValueError("Overlapping Random Variables")
 
         if all(space.is_Finite for space in spaces):
-            from sympy.statistics.frv import ProductFinitePSpace
+            from sympy.stats.frv import ProductFinitePSpace
             cls = ProductFinitePSpace
         if all(space.is_Continuous for space in spaces):
-            from sympy.statistics.crv import ProductContinuousPSpace
+            from sympy.stats.crv import ProductContinuousPSpace
             cls = ProductContinuousPSpace
 
         obj = Basic.__new__(cls, symbols, FiniteSet(*spaces))
@@ -273,10 +273,10 @@ class ProductDomain(Domain):
                 sym_domain_dict[symbol] = domain
 
         if all(domain.is_Finite for domain in domains2):
-            from sympy.statistics.frv import ProductFiniteDomain
+            from sympy.stats.frv import ProductFiniteDomain
             cls = ProductFiniteDomain
         if all(domain.is_Continuous for domain in domains2):
-            from sympy.statistics.crv import ProductContinuousDomain
+            from sympy.stats.crv import ProductContinuousDomain
             cls = ProductContinuousDomain
 
         obj = Domain.__new__(cls, symbols, domains2)
@@ -321,8 +321,8 @@ def random_symbols(expr):
 def pspace(expr):
     """
     Returns the underlying Probability Space of a random expression
-    >>> from sympy.statistics import pspace, Normal
-    >>> from sympy.statistics.rv import ProductPSpace
+    >>> from sympy.stats import pspace, Normal
+    >>> from sympy.stats.rv import ProductPSpace
     >>> X, Y = Normal(0, 1), Normal(0, 1)
     >>> pspace(2*X + 1) == X.pspace
     True
@@ -368,7 +368,7 @@ def Given(expr, given=None, **kwargs):
     probability space from the condition and returns the same expression on that
     conditional probability space.
 
-    >>> from sympy.statistics import Given, Density, Die
+    >>> from sympy.stats import Given, Density, Die
     >>> X = Die(6)
     >>> Y = Given(X, X>3)
     >>> Density(Y)
@@ -395,7 +395,7 @@ def E(expr, given=None, numsamples=None, **kwargs):
     Returns the expected value of a random expression (optionally given a
     condition)
 
-    >>> from sympy.statistics import E, Die
+    >>> from sympy.stats import E, Die
     >>> X = Die(6)
     >>> E(X)
     7/2
@@ -427,7 +427,7 @@ def P(condition, given=None, numsamples=None,  **kwargs):
     """
     Probability that a condition is true, optionally given a second condition
 
-    >>> from sympy.statistics import P, Die
+    >>> from sympy.stats import P, Die
     >>> from sympy import Eq
     >>> X, Y = Die(6), Die(6)
     >>> P(X>3)
@@ -459,7 +459,7 @@ def Density(expr, given=None, **kwargs):
     Continuous RV's produce a Tuple with expression representing the PDF and
     a symbol designating the active variable
 
-    >>> from sympy.statistics import Density, Die, Normal
+    >>> from sympy.stats import Density, Die, Normal
     >>> from sympy import Symbol
 
     >>> D = Die(6)
@@ -491,7 +491,7 @@ def CDF(expr, given=None, **kwargs):
     Continuous RV's produce a Tuple with expression representing the PDF and
     a symbol designating the active variable
 
-    >>> from sympy.statistics import Density, Die, Normal
+    >>> from sympy.stats import Density, Die, Normal, CDF
     >>> from sympy import Symbol
 
     >>> D = Die(6)
@@ -519,7 +519,7 @@ def Where(condition, given=None, **kwargs):
     """
     Returns the domain where a condition is True
 
-    >>> from sympy.statistics import Where, Die, Normal
+    >>> from sympy.stats import Where, Die, Normal
     >>> from sympy import symbols, And
 
     >>> x, a, b = symbols('x a b')

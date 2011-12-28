@@ -6,7 +6,7 @@ def variance(X, given=None, **kwargs):
 
     Expectation of (X-E(X))**2
 
-    >>> from sympy.statistics import Die, E, Bernoulli, var
+    >>> from sympy.stats import Die, E, Bernoulli, var
     >>> from sympy import simplify, Symbol
 
     >>> X = Die(6)
@@ -29,7 +29,7 @@ def standard_deviation(X, given=None, **kwargs):
 
     Square root of the Expectation of (X-E(X))**2
 
-    >>> from sympy.statistics import Bernoulli, std
+    >>> from sympy.stats import Bernoulli, std
     >>> from sympy import Symbol
 
     >>> p = Symbol('p')
@@ -50,7 +50,7 @@ def covariance(X, Y, given=None, **kwargs):
     Covariance(X,Y) = E( (X-E(X)) * (Y-E(Y)) )
 
 
-    >>> from sympy.statistics import Exponential, covar
+    >>> from sympy.stats import Exponential, covar
     >>> from sympy import Symbol
 
     >>> rate = Symbol('lambda', positive=True, real=True, bounded = True)
@@ -81,7 +81,7 @@ def dependent(a, b):
     Two expressions are independent if knowledge of one does not change
     computations on the other
 
-    >>> from sympy.statistics import Die, dependent, Given
+    >>> from sympy.stats import Die, dependent, Given
     >>> from sympy import Tuple
 
     >>> X, Y = Die(6), Die(6)
@@ -106,7 +106,7 @@ def independent(a, b):
     Two expressions are independent if knowledge of one does not change
     computations on the other
 
-    >>> from sympy.statistics import Die, independent, Given
+    >>> from sympy.stats import Die, independent, Given
     >>> from sympy import Tuple
 
     >>> X, Y = Die(6), Die(6)

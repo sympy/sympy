@@ -25,7 +25,7 @@ def Normal(mean, std, symbol=None):
     Create a Continuous Random Varible with a Normal Distribution
     Returns a RandomSymbol
 
-    >>> from sympy.statistics import Normal, Density, E, std
+    >>> from sympy.stats import Normal, Density, E, std
     >>> from sympy import Symbol
 
     >>> X = Normal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
@@ -60,7 +60,7 @@ def Exponential(rate, symbol=None):
     Create a Continuous Random Varible with an Exponential Distribution
     Returns a RandomSymbol
 
-    >>> from sympy.statistics import Exponential, Density, E, std
+    >>> from sympy.stats import Exponential, Density, E, std
     >>> from sympy import Symbol
 
     >>> X = Exponential(rate=10, symbol=Symbol('x')) # Decay rate equals 10

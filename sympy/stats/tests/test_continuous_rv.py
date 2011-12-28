@@ -1,4 +1,4 @@
-from sympy.statistics import (Normal, Exponential, P, E, Where,
+from sympy.stats import (Normal, Exponential, P, E, Where,
         Density, var, covar, skewness, Gamma, Pareto, Beta, Given, pspace, CDF)
 from sympy import (Symbol, exp, S, pi, simplify, Interval, erf, Eq, symbols,
         sqrt, And, gamma, beta)

@@ -1,9 +1,9 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple)
-from sympy.statistics import (Die, Normal, Exponential , P, E, var, covar,
+from sympy.stats import (Die, Normal, Exponential , P, E, var, covar,
         skewness, Density, Given, independent, dependent, Where, pspace,
         random_symbols, Sample)
-from sympy.statistics.rv import ProductPSpace, rs_swap
+from sympy.stats.rv import ProductPSpace, rs_swap
 
 def test_where():
     X, Y = Die(), Die()
