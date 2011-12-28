@@ -2,7 +2,7 @@ from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple)
 from sympy.statistics import (Die, Normal, Exponential , P, E, var, covar,
         skewness, Density, Given, independent, dependent, Where, pspace,
-        random_symbols)
+        random_symbols, Sample)
 from sympy.statistics.rv import ProductPSpace, rs_swap
 
 def test_where():
@@ -12,7 +12,7 @@ def test_where():
     assert Where(Z**2<=1).set == Interval(-1, 1)
     assert Where(Z**2<1).as_boolean() == And(Z.symbol<1, Z.symbol>-1)
     assert len(Where(X<3).set) == 2
-    assert frozenset(((X.symbol, 1), )) in Where(X<3).set
+    assert 1 in Where(X<3).set
 
 def test_random_symbols():
     X, Y = Normal(0,1), Normal(0,1)
@@ -59,3 +59,13 @@ def test_ProductPSpace():
 def test_E():
     assert E(5) == 5
 
+def test_Sample():
+    X = Die(6)
+    Y = Normal(0,1)
+
+    assert Sample(X) in [1,2,3,4,5,6]
+    assert Sample(X+Y).is_Float
+
+    assert P(X+Y>0, Y<0, numsamples=10).is_Rational
+    assert E(X+Y, numsamples=10).is_Float
+    assert var(X+Y, numsamples=10).is_Float

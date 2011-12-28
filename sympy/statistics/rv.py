@@ -529,9 +529,11 @@ def Where(condition, given=None, **kwargs):
     >>> Where(X**2<1)
     Domain: And(-1 < x, x < 1)
 
+    >>> Where(X**2<1).set
+    (-1, 1)
+
     >>> Where(And(D1<=D2 , D2<3))
     Domain: Or(And(a == 1, b == 1), And(a == 1, b == 2), And(a == 2, b == 2))
-
 
     """
     if given is not None: # If there is a condition
@@ -542,9 +544,25 @@ def Where(condition, given=None, **kwargs):
     return pspace(condition).where(condition, **kwargs)
 
 def Sample(expr, given=None, **kwargs):
+    """
+    A realization of the random expression
+    """
     return sample_iter(expr, given, numsamples=1).next()
 
 def sample_iter(expr, given=None, numsamples=S.Infinity, **kwargs):
+    """
+    Returns an iterator of realizations from the expression given a condition
+
+    expr: Random expression to be realized
+    given: A conditional expression (optional)
+    numsamples: Length of the iterator (defaults to infinity)
+
+    See Also:
+        Sample
+        sampling_P
+        sampling_E
+    """
+
     if given:
         ps = pspace(Tuple(expr, given))
     else:
@@ -567,6 +585,14 @@ def sample_iter(expr, given=None, numsamples=S.Infinity, **kwargs):
         count += 1
 
 def sampling_P(condition, given=None, numsamples=1, **kwargs):
+    """
+    Sampling version of P
+
+    See Also:
+        P
+        sampling_E
+    """
+
     count_true = 0
     count_false = 0
 
@@ -584,6 +610,13 @@ def sampling_P(condition, given=None, numsamples=1, **kwargs):
     return S(count_true) / numsamples
 
 def sampling_E(condition, given=None, numsamples=1, **kwargs):
+    """
+    Sampling version of E
+
+    See Also:
+        P
+        sampling_P
+    """
 
     samples = sample_iter(condition, given, numsamples=numsamples, **kwargs)
 

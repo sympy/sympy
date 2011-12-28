@@ -219,6 +219,13 @@ class SingleContinuousPSpace(ContinuousPSpace):
 
     @cacheit
     def _inverse_cdf_expression(self):
+        """
+        Inverse of the CDF
+
+        See Also:
+            compute_cdf
+            sample
+        """
         x,d = self.compute_cdf(self.value)
         z = Dummy('z', real=True, positive=True)
         # Invert CDF
@@ -229,6 +236,10 @@ class SingleContinuousPSpace(ContinuousPSpace):
         return z, inverse_cdf[0]
 
     def sample(self):
+        """
+        Internal sample method.
+        Returns dictionary mapping RandomSymbol to realization value
+        """
         z, icdf = self._inverse_cdf_expression()
         return {self.value: icdf.subs(z, random.uniform(0,1))}
 
