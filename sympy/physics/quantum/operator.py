@@ -9,16 +9,10 @@ TODO:
   AntiCommutator, represent, apply_operators.
 """
 
-from itertools import count
-
-from sympy import Expr, Symbol, diff, Integer, Function, Tuple, Derivative
-from sympy.core.function import UndefinedFunction
+from sympy import Derivative, Expr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-
-from sympy.physics.quantum.qexpr import (
-    QExpr, dispatch_method
-)
+from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 
 __all__ = [
     'Operator',
