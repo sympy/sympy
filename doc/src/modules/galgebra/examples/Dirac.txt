@@ -1,7 +1,0 @@
-=====
-Dirac
-=====
-
-.. automodule:: sympy.galgebra.examples.Dirac
-   :members:
-

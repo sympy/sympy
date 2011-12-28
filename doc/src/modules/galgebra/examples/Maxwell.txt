@@ -1,7 +1,0 @@
-=======
-Maxwell
-=======
-
-.. automodule:: sympy.galgebra.examples.Maxwell
-   :members:
-
