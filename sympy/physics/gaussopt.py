@@ -14,7 +14,7 @@ The conventions for the distances are as follows:
     image distance - positive for real images
 """
 
-from sympy import sympify, Matrix, Expr, re, im, expand, together, sqrt, atan2, pi, I, oo
+from sympy import atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify, together
 
 ###
 # A,B,C,D matrices

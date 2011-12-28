@@ -2,9 +2,9 @@ __all__ = ['Kane']
 
 from sympy import Symbol, zeros, Matrix, diff, solve_linear_system_LU, eye
 from sympy.physics.mechanics.essential import ReferenceFrame, dynamicsymbols
+from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.point import Point
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.mechanics.particle import Particle
 
 class Kane(object):
     """Kane's method object.
@@ -391,7 +391,6 @@ class Kane(object):
         if not isinstance(fl, (list, tuple)):
             raise TypeError('Forces must be supplied in a list of: lists or '
                             'tuples.')
-        t = dynamicsymbols._t
         N = self._inertial
         self._forcelist = fl[:]
         u = self._u
@@ -448,7 +447,6 @@ class Kane(object):
         o = len(u)
         p = o - len(udep)
         udot = self._udot
-        udots = []
         udotzero = dict(zip(udot, [0] * len(udot)))
         uaux = self._uaux
         uauxdot = [diff(i, t) for i in uaux]
