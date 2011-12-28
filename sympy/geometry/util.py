@@ -174,8 +174,8 @@ def convex_hull(*args):
 
     See Also
     ========
-    Point
-    Polygon
+    sympy.geometry.point.Point
+    sympy.geometry.polygon.Polygon
 
     Examples
     ========
@@ -300,9 +300,9 @@ def centroid(*args):
 
     See Also
     ========
-    Point
-    Segment
-    Polygon
+    sympy.geometry.point.Point
+    sympy.geometry.line.Segment
+    sympy.geometry.polygon.Polygon
 
     Examples
     ========

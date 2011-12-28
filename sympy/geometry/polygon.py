@@ -40,8 +40,8 @@ class Polygon(GeometryEntity):
 
     See Also
     ========
-    Point
-    Segment
+    sympy.geometry.point.Point
+    sympy.geometry.line.Segment
     Triangle
 
     Notes
@@ -189,7 +189,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.Ellipse.area : Returns area of an Ellipse
+        sympy.geometry.ellipse.Ellipse.area : Returns area of an Ellipse
 
         Examples
         ========
@@ -220,7 +220,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        Point
+        sympy.geometry.point.Point
         sympy.geometry.line.LinearEntity.angle_between : Returns angle between two LinearEntities
 
         Examples
@@ -263,7 +263,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.Segment.length : Returns length of a Segment
+        sympy.geometry.line.Segment.length : Returns length of a Segment
 
         Examples
         ========
@@ -295,7 +295,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        Point
+        sympy.geometry.point.Point
 
         Examples
         ========
@@ -320,7 +320,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        Point
+        sympy.geometry.point.Point
         sympy.geometry.util.centroid : Utility that returns centroid of a GeometryEntity
 
         Examples
@@ -359,8 +359,8 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        Point
-        Segment
+        sympy.geometry.point.Point
+        sympy.geometry.line.Segment
 
         Examples
         ========
@@ -435,7 +435,7 @@ class Polygon(GeometryEntity):
         See Also
         ========
         Point
-        sympy.geometry.Ellipse.encloses_point
+        sympy.geometry.ellipse.Ellipse.encloses_point
 
         Examples
         ========
@@ -525,7 +525,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        Point
+        sympy.geometry.point.Point
 
         Examples
         ========
@@ -595,8 +595,8 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        Point
-        Segment
+        sympy.geometry.point.Point
+        sympy.geometry.line.Segment
 
         Examples
         ========
@@ -645,7 +645,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.Point.distance : Returns distance between two points
+        sympy.geometry.point.Point.distance : Returns distance between two points
 
         Examples
         =======
@@ -926,7 +926,7 @@ class RegularPolygon(Polygon):
 
     See Also
     ========
-    Point
+    sympy.geometry.point.Point
     Polygon
 
     Examples
@@ -977,8 +977,8 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        Point
-        sympy.geometry.Ellipse.center : Returns center of an ellipse
+        sympy.geometry.point.Point
+        sympy.geometry.ellipse.Ellipse.center : Returns center of an ellipse
 
         Examples
         ========
@@ -1007,8 +1007,8 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        sympy.geometry.Segment.length : Returns length of a Segment
-        sympy.geometry.Circle.radius : Returns radius of a Circle
+        sympy.geometry.line.Segment.length : Returns length of a Segment
+        sympy.geometry.ellipse.Circle.radius : Returns radius of a Circle
 
         Examples
         ========
@@ -1057,8 +1057,8 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        sympy.geometry.Segment.length : Returns length of a Segment
-        sympy.geometry.Circle.radius : Returns radius of a Circle
+        sympy.geometry.line.Segment.length : Returns length of a Segment
+        sympy.geometry.ellipse.Circle.radius : Returns radius of a Circle
 
         Examples
         ========
@@ -1132,7 +1132,7 @@ class RegularPolygon(Polygon):
         See Also
         ========
         circumcenter : Returns center of circumcircle
-        Circle
+        sympy.geometry.ellipse.Circle
 
         Examples
         ========
@@ -1155,7 +1155,7 @@ class RegularPolygon(Polygon):
         See Also
         ========
         inradius : Returns radius of incircle
-        Circle
+        sympy.geometry.ellipse.Circle
 
         Examples
         ========
@@ -1197,7 +1197,7 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        sympy.geometry.Ellipse.encloses_point
+        sympy.geometry.ellipse.Ellipse.encloses_point
 
         Examples
         ========
@@ -1281,7 +1281,7 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        Point
+        sympy.geometry.point.Point
 
         Examples
         ========
@@ -1359,7 +1359,7 @@ class Triangle(Polygon):
 
     See Also
     ========
-    Point
+    sympy.geometry.point.Point
     Polygon
 
     Examples
@@ -1415,7 +1415,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        Point
+        sympy.geometry.point.Point
 
         Examples
         ========
@@ -1543,8 +1543,8 @@ class Triangle(Polygon):
 
         See Also
         ========
-        Point
-        sympy.geometry.Segment.length
+        sympy.geometry.point.Point
+        sympy.geometry.line.Segment.length
 
         Examples
         ========
@@ -1574,7 +1574,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        Point
+        sympy.geometry.point.Point
 
         Examples
         ========
@@ -1601,7 +1601,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        Point
+        sympy.geometry.point.Point
 
         Examples
         ========
@@ -1625,7 +1625,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        sympy.geometry.Circle.radius
+        sympy.geometry.ellipse.Circle.radius
 
         Examples
         ========
@@ -1650,7 +1650,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        Circle
+        sympy.geometry.ellipse.Circle
 
         Examples
         ========
@@ -1677,8 +1677,8 @@ class Triangle(Polygon):
 
         See Also
         ========
-        Point
-        Segment
+        sympy.geometry.point.Point
+        sympy.geometry.line.Segment
 
         Examples
         ========
@@ -1712,7 +1712,7 @@ class Triangle(Polygon):
         See Also
         ========
         incircle: Returns incircle of figure
-        Point
+        sympy.geometry.point.Point
 
         Examples
         ========
@@ -1742,7 +1742,7 @@ class Triangle(Polygon):
         See Also
         ========
         incircle : Returns incircle of figure
-        sympy.geometry.Circle.radius
+        sympy.geometry.ellipse.Circle.radius
 
         Examples
         ========
@@ -1768,7 +1768,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        Circle
+        sympy.geometry.ellipse.Circle
 
         Examples
         ========
@@ -1797,9 +1797,8 @@ class Triangle(Polygon):
 
         See Also
         ========
-        Point
-        Segment
-        sympy.geometry.Segment.midpoint
+        sympy.geometry.point.Point.midpoint
+        sympy.geometry.line.Segment.midpoint
 
         Examples
         ========
@@ -1828,7 +1827,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        sympy.geometry.Segment.midpoint
+        sympy.geometry.line.Segment.midpoint
 
         Examples
         ========

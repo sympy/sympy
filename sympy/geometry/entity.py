@@ -184,8 +184,8 @@ class GeometryEntity(tuple):
           
         See Also
         ========
-        sympy.geometry.Ellipse.encloses_point : Tests whether entity encloses a point in various subclasses
-        sympy.geometry.Polygon.encloses_point : See above
+        sympy.geometry.ellipse.Ellipse.encloses_point : Tests whether entity encloses a point in various subclasses
+        sympy.geometry.polygon.Polygon.encloses_point : See above
 
         """
         from sympy.geometry.point import Point

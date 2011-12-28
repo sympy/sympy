@@ -41,7 +41,7 @@ class Point(GeometryEntity):
 
     See Also
     ========
-    Segment : Connects two Points
+    sympy.geometry.line.Segment : Connects two Points
 
     Examples
     ========
@@ -115,7 +115,7 @@ class Point(GeometryEntity):
 
         See Also
         ========
-        Line
+        sympy.geometry.line.Line
 
         Examples
         ========
@@ -166,7 +166,7 @@ class Point(GeometryEntity):
 
         See Also
         ========
-        Circle
+        sympy.geometry.ellipse.Circle
 
         Notes
         =====
@@ -247,7 +247,7 @@ class Point(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.Segment.length : Returns length of a Segment
+        sympy.geometry.line.Segment.length : Returns length of a Segment
 
         Examples
         ========
@@ -277,7 +277,7 @@ class Point(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.Segment.midpoint : Returns midpoint of a Segment
+        sympy.geometry.line.Segment.midpoint : Returns midpoint of a Segment
 
         Examples
         ========

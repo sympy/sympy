@@ -164,7 +164,7 @@ class Curve(GeometryEntity):
 
         See Also
         ========
-        Point
+        sympy.geometry.point.Point
 
         Examples
         ========
