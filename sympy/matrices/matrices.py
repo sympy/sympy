@@ -4350,8 +4350,10 @@ def rot_axis3(theta):
 
     See Also
     ========
-    rot_axis1: Returns a rotation matrix for a rotation of theta (in radians) about the 1-axis
-    rot_axis2: Returns a rotation matrix for a rotation of theta (in radians) about the 2-axis
+    rot_axis1: Returns a rotation matrix for a rotation of theta (in radians) 
+        about the 1-axis
+    rot_axis2: Returns a rotation matrix for a rotation of theta (in radians) 
+        about the 2-axis
     """
     ct = cos(theta)
     st = sin(theta)
@@ -4387,8 +4389,10 @@ def rot_axis2(theta):
 
     See Also
     ========
-    rot_axis1: Returns a rotation matrix for a rotation of theta (in radians) about the 1-axis
-    rot_axis3: Returns a rotation matrix for a rotation of theta (in radians) about the 3-axis
+    rot_axis1: Returns a rotation matrix for a rotation of theta (in radians) 
+        about the 1-axis
+    rot_axis3: Returns a rotation matrix for a rotation of theta (in radians) 
+        about the 3-axis
     """
     ct = cos(theta)
     st = sin(theta)
@@ -4424,8 +4428,10 @@ def rot_axis1(theta):
 
     See Also
     ========
-    rot_axis2: Returns a rotation matrix for a rotation of theta (in radians) about the 2-axis
-    rot_axis3: Returns a rotation matrix for a rotation of theta (in radians) about the 3-axis
+    rot_axis2: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 2-axis
+    rot_axis3: Returns a rotation matrix for a rotation of theta (in radians) 
+        about the 3-axis
     """
     ct = cos(theta)
     st = sin(theta)
