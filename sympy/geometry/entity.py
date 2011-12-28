@@ -2,7 +2,7 @@
 derived geometrical entities.
 
 Contains
---------
+========
 GeometryEntity
 
 """
@@ -49,7 +49,7 @@ class GeometryEntity(tuple):
         Returns a list of all of the intersections of self with o.
 
         Notes
-        -----
+        =====
         An entity is not required to implement this method.
 
         If two different types of entities can intersect, the item with
@@ -57,9 +57,8 @@ class GeometryEntity(tuple):
         intersections with anything having a lower index.
 
         See Also
-        --------
-        intersection function in geometry/util.py which computes the
-        intersection between more than 2 objects.
+        ========
+        sympy.geometry.util.intersection : computes the intersection of GeometryEntities
 
         """
         raise NotImplementedError()
@@ -72,6 +71,13 @@ class GeometryEntity(tuple):
         XXX geometry needs a modify_points method which operates
         on only the points of the object
 
+        See Also
+        ========
+        scale : Changes size of entity via coordinate multiplication
+        translate : Changes position of entity via coordinate addition
+
+        Examples
+        ========
         >>> from sympy import Point, RegularPolygon, Polygon, pi
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t # vertex on x axis
@@ -106,6 +112,13 @@ class GeometryEntity(tuple):
     def scale(self, x=1, y=1):
         """Scale the object by multiplying the x,y-coordinates by x and y.
 
+        See Also
+        ========
+        rotate : Rotates an entity about a point
+        translate : Changes position of entity via coordinate addition
+
+        Examples
+        ========
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t
@@ -130,6 +143,13 @@ class GeometryEntity(tuple):
     def translate(self, x=0, y=0):
         """Shift the object by adding to the x,y-coordinates the values x and y.
 
+        See Also
+        ========
+        rotate : Rotates an entity about a point
+        scale : Changes size of entity via coordinate multiplication
+
+        Examples
+        ========
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t
@@ -161,6 +181,12 @@ class GeometryEntity(tuple):
 
         The object will be decomposed into Points and individual Entities need
         only define an encloses_point method for their class.
+          
+        See Also
+        ========
+        sympy.geometry.Ellipse.encloses_point : Tests whether entity encloses a point in various subclasses
+        sympy.geometry.Polygon.encloses_point : See above
+
         """
         from sympy.geometry.point import Point
         from sympy.geometry.line import Segment, Ray, Line
@@ -189,12 +215,16 @@ class GeometryEntity(tuple):
         shrinking) of one of the entities will allow one to obtain the other.
 
         Notes
-        -----
+        =====
         This method is not intended to be used directly but rather
         through the `are_similar` function found in util.py.
         An entity is not required to implement this method.
         If two different types of entities can be similar, it is only
         required that one of them be able to determine this.
+
+        See Also
+        ========
+        scale : Changes size of entity via coordinate multiplication
 
         """
         raise NotImplementedError()

@@ -19,11 +19,11 @@ class Polygon(GeometryEntity):
     or from a center, radius, number of sides and rotation angle.
 
     Parameters
-    ----------
+    ==========
     vertices : sequence of Points
 
     Attributes
-    ----------
+    ==========
     area
     angles
     perimeter
@@ -32,20 +32,20 @@ class Polygon(GeometryEntity):
     sides
 
     Raises
-    ------
+    ======
     GeometryError
         If all parameters are not Points.
 
         If the Polygon has intersecting sides.
 
     See Also
-    --------
+    ========
     Point
     Segment
     Triangle
 
     Notes
-    -----
+    =====
     Polygons are treated as closed paths rather than 2D areas so
     some calculations can be be negative or positive (e.g., area)
     based on the orientation of the points.
@@ -58,7 +58,7 @@ class Polygon(GeometryEntity):
     fewer points provided.
 
     Examples
-    --------
+    ========
     >>> from sympy import Point, Polygon, pi
     >>> p1, p2, p3, p4, p5 = [(0, 0), (1, 0), (5, 1), (0, 1), (3, 0)]
     >>> Polygon(p1, p2, p3, p4)
@@ -183,12 +183,16 @@ class Polygon(GeometryEntity):
         The area of the polygon.
 
         Notes
-        -----
+        =====
         The area calculation can be positive or negative based on the
         orientation of the points.
 
+        See Also
+        ========
+        sympy.geometry.Ellipse.area : Returns area of an Ellipse
+
         Examples
-        --------
+        ========
         >>> from sympy import Point, Polygon
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
@@ -208,18 +212,19 @@ class Polygon(GeometryEntity):
         """The internal angle at each vertex.
 
         Returns
-        -------
+        =======
         angles : dict
             A dictionary where each key is a vertex and each value is the
             internal angle at that vertex. The vertices are represented as
             Points.
 
         See Also
-        --------
+        ========
         Point
+        sympy.geometry.line.LinearEntity.angle_between : Returns angle between two LinearEntities
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Polygon
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
@@ -253,11 +258,15 @@ class Polygon(GeometryEntity):
         """The perimeter of the polygon.
 
         Returns
-        -------
+        =======
         perimeter : number or Basic instance
 
+        See Also
+        ========
+        sympy.geometry.Segment.length : Returns length of a Segment
+
         Examples
-        --------
+        ========
         >>> from sympy import Point, Polygon
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
@@ -274,22 +283,22 @@ class Polygon(GeometryEntity):
         """The vertices of the polygon.
 
         Returns
-        -------
+        =======
         vertices : tuple of Points
 
-        See Also
-        --------
-        Point
-
         Notes
-        -----
+        =====
         When iterating over the vertices, it is more efficient to index self
         rather than to request the vertices and index them. Only use the
         vertices when you want to process all of them at once. This is even
         more important with RegularPolygons that calculate each vertex.
 
+        See Also
+        ========
+        Point
+
         Examples
-        --------
+        ========
         >>> from sympy import Point, Polygon
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
@@ -306,15 +315,16 @@ class Polygon(GeometryEntity):
         """The centroid of the polygon.
 
         Returns
-        -------
+        =======
         centroid : Point
 
         See Also
-        --------
+        ========
         Point
+        sympy.geometry.util.centroid : Utility that returns centroid of a GeometryEntity
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Polygon
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
@@ -337,7 +347,7 @@ class Polygon(GeometryEntity):
         """The line segments that form the sides of the polygon.
 
         Returns
-        -------
+        =======
         sides : list of sides
             Each side is a Segment.
 
@@ -348,12 +358,12 @@ class Polygon(GeometryEntity):
         the polygon.
 
         See Also
-        --------
+        ========
         Point
         Segment
 
         Examples
-        --------
+        ========
         >>> from sympy import Point, Polygon
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
@@ -375,12 +385,16 @@ class Polygon(GeometryEntity):
         degrees.
 
         Returns
-        -------
+        =======
         is_convex : boolean
             True if this polygon is convex, False otherwise.
 
+        See Also
+        ========
+        sympy.geometry.util.convex_hull : Utility that calculates the convex hull of Points
+
         Examples
-        --------
+        ========
         >>> from sympy import Point, Polygon
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
@@ -407,19 +421,24 @@ class Polygon(GeometryEntity):
         Return True if p is enclosed by (is inside of) self.
 
         Notes
-        -----
+        =====
         Being on the border of self is considered False.
 
         Parameters
-        ----------
+        ==========
         p : Point
 
         Returns
-        -------
+        =======
         encloses_point : True, False or None
 
+        See Also
+        ========
+        Point
+        sympy.geometry.Ellipse.encloses_point
+
         Examples
-        --------
+        ========
         >>> from sympy import Polygon, Point
         >>> from sympy.abc import t
         >>> p = Polygon((0, 0),(4, 0), (4, 4))
@@ -431,7 +450,7 @@ class Polygon(GeometryEntity):
         False
 
         References
-        ----------
+        ==========
         [1] http://www.ariel.com.au/a/python-point-int-poly.html
         [2] http://local.wasp.uwa.edu.au/~pbourke/geometry/insidepoly/
 
@@ -491,25 +510,25 @@ class Polygon(GeometryEntity):
         that is 1/2 way around the polygon.
 
         Parameters
-        ----------
+        ==========
         parameter : str, optional
             Default value is 't'.
 
         Returns
-        -------
+        =======
         arbitrary_point : Point
 
         Raises
-        ------
+        ======
         ValueError
             When `parameter` already appears in the Polygon's definition.
 
         See Also
-        --------
+        ========
         Point
 
         Examples
-        --------
+        ========
         >>> from sympy import Polygon, S, Symbol
         >>> t = Symbol('t', real=True)
         >>> tri = Polygon((0, 0), (1, 0), (1, 1))
@@ -539,17 +558,17 @@ class Polygon(GeometryEntity):
         """The plot interval for the default geometric plot of the polygon.
 
         Parameters
-        ----------
+        ==========
         parameter : str, optional
             Default value is 't'.
 
         Returns
-        -------
+        =======
         plot_interval : list (plot interval)
             [parameter, lower_bound, upper_bound]
 
         Examples
-        --------
+        ========
         >>> from sympy import Polygon
         >>> p = Polygon((0, 0), (1, 0), (1, 1))
         >>> p.plot_interval()
@@ -566,16 +585,21 @@ class Polygon(GeometryEntity):
         complete Line Segments.
 
         Parameters
-        ----------
+        ==========
         other: Polygon
 
         Returns
-        -------
+        =======
         intersection : list
             The list of Segments and Points
 
+        See Also
+        ========
+        Point
+        Segment
+
         Examples
-        --------
+        ========
         >>> from sympy import Point, Polygon
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly1 = Polygon(p1, p2, p3, p4)
@@ -614,13 +638,17 @@ class Polygon(GeometryEntity):
         which does such checks.
 
         Notes
-        -----
+        =====
             - Prints a warning if the two polygons possibly intersect as the return
               value will not be valid in such a case. For a more through test of
               intersection use intersection().
 
+        See Also
+        ========
+        sympy.geometry.Point.distance : Returns distance between two points
+
         Examples
-        -------
+        =======
             >>> from sympy.geometry import Point, Polygon
             >>> square = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
             >>> triangle = Polygon(Point(1, 2), Point(2, 2), Point(2, 1))
@@ -628,7 +656,7 @@ class Polygon(GeometryEntity):
             sqrt(2)/2
 
         Description of method used
-        --------------------------
+        ==========================
         Method:
         [1] http://cgm.cs.mcgill.ca/~orm/mind2p.html
         Uses rotating calipers:
@@ -811,20 +839,20 @@ class Polygon(GeometryEntity):
         Return True if o is contained within the boundary lines of self.altitudes
 
         Parameters
-        ----------
+        ==========
         other : GeometryEntity
 
         Returns
-        -------
+        =======
         contained in : bool
             The points (and sides, if applicable) are contained in self.
 
         See Also
-        --------
-        encloses
+        ========
+        sympy.geometry.entity.GeometryEntity.encloses : Tests whether a GeometryEntity encloses another
 
         Examples
-        --------
+        ========
         >>> from sympy import Line, Segment, Point
         >>> p = Point(0, 0)
         >>> q = Point(1, 1)
@@ -862,7 +890,7 @@ class RegularPolygon(Polygon):
     Such a polygon has all internal angles equal and all sides the same length.
 
     Parameters
-    ----------
+    ==========
     center : Point
     radius : number or Basic instance
         The distance from the center to a vertex
@@ -870,7 +898,7 @@ class RegularPolygon(Polygon):
         The number of sides
 
     Attributes
-    ----------
+    ==========
     vertices
     center
     radius
@@ -883,14 +911,10 @@ class RegularPolygon(Polygon):
     angles
 
     Raises
-    ------
+    ======
     GeometryError
         If the `center` is not a Point, or the `radius` is not a number or Basic
         instance, or the number of sides, `n`, is less than three.
-
-    See Also
-    --------
-    Point
 
     Note
     ----
@@ -900,8 +924,13 @@ class RegularPolygon(Polygon):
     and a rotation angle. They return a vertex when indexed rather than the
     argument at that index.
 
+    See Also
+    ========
+    Point
+    Polygon
+
     Examples
-    --------
+    ========
     >>> from sympy.geometry import RegularPolygon, Point
     >>> r = RegularPolygon(Point(0, 0), 5, 3)
     >>> r
@@ -943,15 +972,16 @@ class RegularPolygon(Polygon):
         This is also the center of the circumscribing circle.
 
         Returns
-        -------
+        =======
         center : Point
 
         See Also
-        --------
+        ========
         Point
+        sympy.geometry.Ellipse.center : Returns center of an ellipse
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 5, 4)
         >>> rp.center
@@ -972,11 +1002,16 @@ class RegularPolygon(Polygon):
         This is also the radius of the circumscribing circle.
 
         Returns
-        -------
+        =======
         radius : number or instance of Basic
 
+        See Also
+        ========
+        sympy.geometry.Segment.length : Returns length of a Segment
+        sympy.geometry.Circle.radius : Returns radius of a Circle
+
         Examples
-        --------
+        ========
         >>> from sympy import Symbol
         >>> from sympy.geometry import RegularPolygon, Point
         >>> radius = Symbol('r')
@@ -997,11 +1032,11 @@ class RegularPolygon(Polygon):
         """CCW angle by which the RegularPolygon is rotated
 
         Returns
-        -------
+        =======
         rotation : number or instance of Basic
 
         Examples
-        --------
+        ========
         >>> from sympy import pi
         >>> from sympy.geometry import RegularPolygon, Point
         >>> RegularPolygon(Point(0, 0), 3, 4, pi).rotation
@@ -1017,11 +1052,16 @@ class RegularPolygon(Polygon):
         The apothem/inradius is the radius of the inscribed circle.
 
         Returns
-        -------
+        =======
         apothem : number or instance of Basic
 
+        See Also
+        ========
+        sympy.geometry.Segment.length : Returns length of a Segment
+        sympy.geometry.Circle.radius : Returns radius of a Circle
+
         Examples
-        --------
+        ========
         >>> from sympy import Symbol
         >>> from sympy.geometry import RegularPolygon, Point
         >>> radius = Symbol('r')
@@ -1042,11 +1082,15 @@ class RegularPolygon(Polygon):
         """Measure of the interior angles.
 
         Returns
-        -------
+        =======
         interior_angle : number
 
+        See Also
+        ========
+        sympy.geometry.line.LinearEntity.angle_between : Returns angle between two LinearEntities
+
         Examples
-        --------
+        ========
         >>> from sympy.geometry import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 4, 8)
         >>> rp.interior_angle
@@ -1060,11 +1104,15 @@ class RegularPolygon(Polygon):
         """Measure of the exterior angles.
 
         Returns
-        -------
+        =======
         exterior_angle : number
 
+        See Also
+        ========
+        sympy.geometry.line.LinearEntity.angle_between
+
         Examples
-        --------
+        ========
         >>> from sympy.geometry import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 4, 8)
         >>> rp.exterior_angle
@@ -1078,15 +1126,16 @@ class RegularPolygon(Polygon):
         """The circumcircle of the RegularPolygon.
 
         Returns
-        -------
+        =======
         circumcircle : Circle
 
         See Also
-        --------
+        ========
+        circumcenter : Returns center of circumcircle
         Circle
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 4, 8)
         >>> rp.circumcircle
@@ -1100,15 +1149,16 @@ class RegularPolygon(Polygon):
         """The incircle of the RegularPolygon.
 
         Returns
-        -------
+        =======
         incircle : Circle
 
         See Also
-        --------
+        ========
+        inradius : Returns radius of incircle
         Circle
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 4, 8)
         >>> rp.incircle
@@ -1130,7 +1180,7 @@ class RegularPolygon(Polygon):
         Return True if p is enclosed by (is inside of) self.
 
         Notes
-        -----
+        =====
         Being on the border of self is considered False.
 
         The general Polygon.encloses_point method is called only if
@@ -1138,15 +1188,19 @@ class RegularPolygon(Polygon):
         respectively.
 
         Parameters
-        ----------
+        ==========
         p : Point
 
         Returns
-        -------
+        =======
         encloses_point : True, False or None
 
+        See Also
+        ========
+        sympy.geometry.Ellipse.encloses_point
+
         Examples
-        --------
+        ========
         >>> from sympy import RegularPolygon, S, Point, Symbol
         >>> p = RegularPolygon((0, 0), 3, 4)
         >>> p.encloses_point(Point(0, 0))
@@ -1187,6 +1241,10 @@ class RegularPolygon(Polygon):
         >>> r[0]
         Point(sqrt(3)/2, 1/2)
 
+        See Also
+        ========
+        rotation : Angle by which the RegularPolygon is rotated around its center
+
         """
         self._rot += angle
 
@@ -1200,6 +1258,12 @@ class RegularPolygon(Polygon):
         Point(2, 0)
         >>> t.rotate(pi/2).vertices[0] # vertex on y axis now
         Point(0, 2)
+
+        See Also
+        ========
+        rotation : Angle by which the RegularPolygon is rotated around its center
+        spin : Rotates figure in place
+
         """
 
         r = type(self)(*self.args) # need a copy or else changes are in-place
@@ -1211,16 +1275,16 @@ class RegularPolygon(Polygon):
         """The vertices of the RegularPolygon.
 
         Returns
-        -------
+        =======
         vertices : list
             Each vertex is a Point.
 
         See Also
-        --------
+        ========
         Point
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 5, 4)
         >>> rp.vertices
@@ -1271,11 +1335,11 @@ class Triangle(Polygon):
     A polygon with three vertices and three sides.
 
     Parameters
-    ----------
+    ==========
     points : sequence of Points
 
     Attributes
-    ----------
+    ==========
     vertices
     altitudes
     orthocenter
@@ -1288,17 +1352,18 @@ class Triangle(Polygon):
     medial
 
     Raises
-    ------
+    ======
     GeometryError
         If the number of vertices is not equal to three, or one of the vertices
         is not a Point.
 
     See Also
-    --------
+    ========
     Point
+    Polygon
 
     Examples
-    --------
+    ========
     >>> from sympy.geometry import Triangle, Point
     >>> Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
     Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
@@ -1344,16 +1409,16 @@ class Triangle(Polygon):
         """The triangle's vertices
 
         Returns
-        -------
+        =======
         vertices : tuple
             Each element in the tuple is a Point
 
         See Also
-        --------
+        ========
         Point
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Triangle, Point
         >>> t = Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
         >>> t.vertices
@@ -1368,15 +1433,19 @@ class Triangle(Polygon):
         Two triangles are similar if one can be uniformly scaled to the other.
 
         Parameters
-        ----------
+        ==========
         other: Triangle
 
         Returns
-        -------
+        =======
         is_similar : boolean
 
+        See Also
+        ========
+        sympy.geometry.entity.GeometryEntity.is_similar
+
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Triangle, Point
         >>> t1 = Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
         >>> t2 = Triangle(Point(0, 0), Point(-4, 0), Point(-4, -3))
@@ -1411,11 +1480,16 @@ class Triangle(Polygon):
         """Is the triangle equilateral
 
         Returns
-        -------
+        =======
         is_equilateral : boolean
 
+        See Also
+        ========
+        sympy.geometry.entity.GeometryEntity.is_similar
+        RegularPolygon
+
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Triangle, Point
         >>> t1 = Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
         >>> t1.is_equilateral()
@@ -1434,11 +1508,15 @@ class Triangle(Polygon):
         """Is the triangle right-angled.
 
         Returns
-        -------
+        =======
         is_right : boolean
 
+        See Also
+        ========
+        sympy.geometry.line.LinearEntity.is_perpendicular : Tests whether two linear figures are perpendicular
+
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Triangle, Point
         >>> t1 = Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
         >>> t1.is_right()
@@ -1458,18 +1536,18 @@ class Triangle(Polygon):
         perpendicular to the opposite side.
 
         Returns
-        -------
+        =======
         altitudes : dict
             The dictionary consists of keys which are vertices and values
             which are Segments.
 
         See Also
-        --------
+        ========
         Point
-        Segment
+        sympy.geometry.Segment.length
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
@@ -1491,15 +1569,15 @@ class Triangle(Polygon):
         It may lie inside, outside or on the triangle.
 
         Returns
-        -------
+        =======
         orthocenter : Point
 
         See Also
-        --------
+        ========
         Point
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
@@ -1518,15 +1596,15 @@ class Triangle(Polygon):
         The circumcenter is the center of the circumcircle.
 
         Returns
-        -------
+        =======
         circumcenter : Point
 
         See Also
-        --------
+        ========
         Point
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
@@ -1542,11 +1620,15 @@ class Triangle(Polygon):
         """The radius of the circumcircle of the triangle.
 
         Returns
-        -------
+        =======
         circumradius : number of Basic instance
 
+        See Also
+        ========
+        sympy.geometry.Circle.radius
+
         Examples
-        --------
+        ========
         >>> from sympy import Symbol
         >>> from sympy.geometry import Point, Triangle
         >>> a = Symbol('a')
@@ -1563,15 +1645,15 @@ class Triangle(Polygon):
         """The circle which passes through the three vertices of the triangle.
 
         Returns
-        -------
+        =======
         circumcircle : Circle
 
         See Also
-        --------
+        ========
         Circle
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
@@ -1588,18 +1670,18 @@ class Triangle(Polygon):
         which cuts the corresponding angle in half.
 
         Returns
-        -------
+        =======
         bisectors : dict
             Each key is a vertex (Point) and each value is the corresponding
             bisector (Segment).
 
         See Also
-        --------
+        ========
         Point
         Segment
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Point, Triangle, Segment
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
@@ -1624,16 +1706,16 @@ class Triangle(Polygon):
         all three sides.
 
         Returns
-        -------
+        =======
         incenter : Point
 
         See Also
-        --------
-        incircle
+        ========
+        incircle: Returns incircle of figure
         Point
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
@@ -1654,15 +1736,16 @@ class Triangle(Polygon):
         """The radius of the incircle.
 
         Returns
-        -------
+        =======
         inradius : number of Basic instance
 
         See Also
-        --------
-        incircle
+        ========
+        incircle : Returns incircle of figure
+        sympy.geometry.Circle.radius
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(4, 0), Point(0, 3)
         >>> t = Triangle(p1, p2, p3)
@@ -1680,15 +1763,15 @@ class Triangle(Polygon):
         all three sides.
 
         Returns
-        -------
+        =======
         incircle : Circle
 
         See Also
-        --------
+        ========
         Circle
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(2, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
@@ -1707,18 +1790,19 @@ class Triangle(Polygon):
         equal areas.
 
         Returns
-        -------
+        =======
         medians : dict
             Each key is a vertex (Point) and each value is the median (Segment)
             at that point.
 
         See Also
-        --------
+        ========
         Point
         Segment
+        sympy.geometry.Segment.midpoint
 
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
@@ -1739,11 +1823,15 @@ class Triangle(Polygon):
         The triangle which is formed from the midpoints of the three sides.
 
         Returns
-        -------
+        =======
         medial : Triangle
 
+        See Also
+        ========
+        sympy.geometry.Segment.midpoint
+
         Examples
-        --------
+        ========
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
