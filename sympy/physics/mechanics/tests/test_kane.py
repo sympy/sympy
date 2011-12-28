@@ -1,5 +1,4 @@
-from sympy import (symbols, Matrix, sin, cos, tan, expand,
-                   solve_linear_system_LU)
+from sympy import cos, expand, Matrix, sin, symbols, tan
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, Kane, inertia, Particle)
 
@@ -212,7 +211,6 @@ def test_aux():
     KM.coords([q1, q2, q3])
     KM.speeds([u1, u2, u3, u4, u5])
     KM.kindiffeq(kd)
-    kdd = KM.kindiffdict()
     (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
     fr = fr.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})
     frstar = frstar.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})

@@ -1,19 +1,16 @@
 from sympy.physics.secondquant import (
     Dagger, Bd, VarBosonicBasis, BBra, B, BKet, FixedBosonicBasis,
     matrix_rep, apply_operators, InnerProduct, Commutator, KroneckerDelta,
-    FockState, AnnihilateBoson, CreateBoson, BosonicOperator,
-    F, Fd, FKet, FBra, BosonState, CreateFermion, AnnihilateFermion,
+    AnnihilateBoson, CreateBoson, BosonicOperator,
+    F, Fd, FKet, BosonState, CreateFermion, AnnihilateFermion,
     evaluate_deltas, AntiSymmetricTensor, contraction, NO, wicks,
     PermutationOperator, simplify_index_permutations,
     _sort_anticommuting_fermions, _get_ordered_dummies,
     substitute_dummies
         )
 
-from sympy import (
-    symbols, Symbol, sympify,
-    sqrt, Rational, Sum, I, simplify,
-    expand, Function, Dummy
-)
+from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
+                   Symbol, symbols)
 
 from sympy.utilities.pytest import XFAIL
 
@@ -125,6 +122,7 @@ def test_basic_state():
 @XFAIL
 def Xtest_move1():
     i, j = symbols('i,j')
+    A, C = symbols('A,C', cls=Function)
     o = A(i)*C(j)
     # This almost works, but has a minus sign wrong
     assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
@@ -132,6 +130,7 @@ def Xtest_move1():
 @XFAIL
 def Xtest_move2():
     i, j = symbols('i,j')
+    A, C = symbols('A,C', cls=Function)
     o = C(j)*A(i)
     # This almost works, but has a minus sign wrong
     assert move(o, 0, 1) == -KroneckerDelta(i, j) + A(i)*C(j)
@@ -597,7 +596,6 @@ def test_equivalent_internal_lines_VT1T1():
     i,j,k,l = symbols('i j k l',below_fermi=True, cls=Dummy)
     a,b,c,d = symbols('a b c d',above_fermi=True, cls=Dummy)
 
-    f = Function('f')
     v = Function('v')
     t = Function('t')
     dums = _get_ordered_dummies
@@ -722,7 +720,6 @@ def test_equivalent_internal_lines_VT2():
     i,j,k,l = symbols('i j k l',below_fermi=True, cls=Dummy)
     a,b,c,d = symbols('a b c d',above_fermi=True, cls=Dummy)
 
-    f = Function('f')
     v = Function('v')
     t = Function('t')
     dums = _get_ordered_dummies
@@ -892,7 +889,6 @@ def test_dummy_order_ambiguous():
 
     A = Function('A')
     B = Function('B')
-    dums = _get_ordered_dummies
 
     from sympy.utilities.iterables import variations
 
@@ -1119,8 +1115,6 @@ def test_internal_external_VT2T2_AT():
     aa, bb = symbols('a b',above_fermi=True)
     k, l = symbols('k l'  ,below_fermi=True, cls=Dummy)
     c, d = symbols('c d'  ,above_fermi=True, cls=Dummy)
-
-    dums = _get_ordered_dummies
 
     exprs = [
             atv(k,l,c,d)*att(aa, c, ii, k)*att(bb, d, jj, l),

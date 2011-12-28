@@ -12,8 +12,8 @@ Todo:
 """
 
 from sympy import Mul
-from sympy.physics.quantum.gate import Gate
 from sympy.external import import_module
+from sympy.physics.quantum.gate import Gate
 
 __all__ = [
     'CircuitPlot',

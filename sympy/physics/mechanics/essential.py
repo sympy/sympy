@@ -1179,7 +1179,7 @@ class Vector(object):
                     return True
                 else:
                     return False
-        check = True
+
         frame = self.args[0][1]
         for v in frame:
             if expand((self - other) & v) != 0:
@@ -1356,6 +1356,8 @@ class Vector(object):
         if isinstance(other, (int, type(Zero()))):
             if (other == 0):
                 return 0
+
+        ol = 0
         for i, v in enumerate(other.args):
             for i2, v2 in enumerate(self.args):
                 # it looks this way because if we are in the same frame and

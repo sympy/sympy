@@ -1,15 +1,15 @@
-from sympy.physics.quantum.qubit import (measure_all, measure_partial,
-        matrix_to_qubit, qubit_to_matrix, IntQubit, IntQubitBra, QubitBra)
-from sympy.physics.quantum.gate import (HadamardGate, CNOT, XGate, ZGate,
-        YGate, PhaseGate)
-from sympy.physics.quantum.represent import represent
-from sympy.physics.quantum.qapply import qapply
-from sympy import symbols, Rational, sqrt
-from sympy.core.numbers import Integer
-from sympy.physics.quantum.shor import Qubit
-from sympy.core.containers import Tuple
-from sympy.matrices.matrices import Matrix
 import random
+
+from sympy import Integer, Matrix, Rational, sqrt, symbols
+from sympy.physics.quantum.qubit import (measure_all, measure_partial,
+                                         matrix_to_qubit, qubit_to_matrix,
+                                         IntQubit, IntQubitBra, QubitBra)
+from sympy.physics.quantum.gate import (HadamardGate, CNOT, XGate, YGate,
+                                        ZGate, PhaseGate)
+from sympy.physics.quantum.qapply import qapply
+from sympy.physics.quantum.represent import represent
+from sympy.physics.quantum.shor import Qubit
+
 x, y = symbols('x,y')
 
 epsilon = .000001

@@ -5,17 +5,12 @@ TODO:
 
 """
 
-from sympy import I, S, sqrt, pi
-from sympy import exp
-from sympy import Interval, DiracDelta
-from sympy import Symbol
+from sympy import DiracDelta, exp, I, Interval, pi, S, sqrt
 
-from sympy.physics.quantum.operator import HermitianOperator, DifferentialOperator
-from sympy.physics.quantum.state import Ket, Bra, State
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import L2
-
-
+from sympy.physics.quantum.operator import DifferentialOperator, HermitianOperator
+from sympy.physics.quantum.state import Ket, Bra, State
 
 __all__ = [
     'XOp',

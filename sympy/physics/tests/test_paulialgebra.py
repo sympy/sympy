@@ -2,11 +2,11 @@ from sympy import I
 from sympy.physics.paulialgebra import Pauli
 from sympy.utilities.pytest import XFAIL
 
-def test_Pauli():
-    sigma1=Pauli(1)
-    sigma2=Pauli(2)
-    sigma3=Pauli(3)
+sigma1 = Pauli(1)
+sigma2 = Pauli(2)
+sigma3 = Pauli(3)
 
+def test_Pauli():
     assert sigma1 == sigma1
     assert sigma1 != sigma2
 
@@ -25,7 +25,6 @@ def test_Pauli():
     assert sigma1**4 == 1
 
     assert sigma3**2 == 1
-
 
     assert sigma1*2*sigma1 == 2
 

@@ -1,5 +1,6 @@
-from sympy import I, symbols, sqrt, Add, Mul, Rational, Pow, Symbol, sympify, S
-from sympy import Integer, conjugate, pretty, latex, oo, sin, pi, diff
+from sympy import (Add, conjugate, diff, I, Integer, latex, Mul, oo, pi, Pow,
+                   pretty, Rational, sin, sqrt, Symbol, symbols, sympify)
+from sympy.utilities.pytest import raises
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr
@@ -8,9 +9,8 @@ from sympy.physics.quantum.state import (
     KetBase, BraBase, StateBase, Wavefunction
 )
 from sympy.physics.quantum.hilbert import HilbertSpace
-from sympy.utilities.pytest import raises
 
-x,y,t = symbols('x,y,t')
+x, y, t = symbols('x,y,t')
 
 class TestKet(Ket):
     @classmethod

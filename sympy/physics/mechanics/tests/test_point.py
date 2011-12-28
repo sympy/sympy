@@ -1,6 +1,4 @@
-from sympy import symbols, Matrix, sin, cos
-from sympy.physics.mechanics import (Vector, ReferenceFrame, dot, cross,
-                                     dynamicsymbols, Point)
+from sympy.physics.mechanics import dynamicsymbols, Point, ReferenceFrame
 
 def test_point_v1pt_theorys():
     q, q2 = dynamicsymbols('q q2')
@@ -106,5 +104,4 @@ def test_point_pos():
     assert Q.pos_from(P) == 10 * N.y + 5 * B.y
     assert Q.pos_from(O) == 10 * N.x + 10 * N.y + 5 * B.x + 5 * B.y
     assert O.pos_from(Q) == -10 * N.x - 10 * N.y - 5 * B.x - 5 * B.y
-
 

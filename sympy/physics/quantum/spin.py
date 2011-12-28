@@ -1,16 +1,13 @@
 """Quantum mechanical angular momemtum."""
 
-from sympy import (
-        Add, binomial, cos, diff, exp, Expr, factorial, I, Integer, Matrix, Mul, N, pi,
-        Rational, S, sin, simplify, sqrt, Sum, Symbol, symbols, sympify
-)
+from sympy import (Add, binomial, cos, exp, Expr, factorial, I, Integer, pi,
+                   Rational, S, sin, simplify, sqrt, Sum, symbols, sympify)
 from sympy.matrices.matrices import zeros
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.physics.quantum.qexpr import QExpr
-from sympy.physics.quantum.operator import (
-    HermitianOperator, Operator, UnitaryOperator
-)
+from sympy.physics.quantum.operator import (HermitianOperator, Operator,
+                                            UnitaryOperator)
 from sympy.physics.quantum.state import Bra, Ket, State
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.constants import hbar
@@ -961,7 +958,6 @@ class SpinState(State):
             else:
                 state = evect(j, mi)
                 lt = Rotation.D(j, mi, self.m, *angles)
-                result = lt * state
                 return Sum(lt * state, (mi,-j,j))
 
     def _eval_innerproduct_JxBra(self, bra, **hints):

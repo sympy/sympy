@@ -6,15 +6,14 @@ Todo:
 * Implement _represent_ZGate in OracleGate
 """
 
-from sympy import sqrt, pi, floor, sympify
+from sympy import floor, pi, sqrt, sympify
+from sympy.core.compatibility import callable
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.operator import UnitaryOperator
-from sympy.physics.quantum.gate import Gate, HadamardGate
+from sympy.physics.quantum.gate import Gate
 from sympy.physics.quantum.qubit import IntQubit
-
-from sympy.core.compatibility import callable
 
 __all__ = [
     'OracleGate',
