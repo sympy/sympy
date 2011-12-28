@@ -77,39 +77,50 @@ class LatexPrinter(Printer):
 
         1. Variable and function names can now encode multiple Greek symbols,
            number, Greek, and roman super and subscripts and accents plus bold
-           math in an alphanumeric ASCII string consisting of [A-Za-z0-9_]
+           math in an alphanumeric ASCII string consisting of ``[A-Za-z0-9_]``
            symbols
+
             1 - Accents and bold math are implemented in reverse notation. For
-                example if you wished the LaTeX output to be '\bm{\hat{\sigma}}'
+                example if you wished the LaTeX output to be ``\bm{\hat{\sigma}}``
                 you would give the variable the name sigmahatbm.
             2 - Subscripts are denoted by a single underscore and superscripts
-                by a double underscore so that A_{\rho\beta}^{25} would be
+                by a double underscore so that A_{\\rho\\beta}^{25} would be
                 input as A_rhobeta__25.
+
         2. Some standard function names have been improved such as asin is now
            denoted by Sin^{-1} and log by ln.
+
         3. Several LaTeX formats for multivectors are available:
             1 - Print multivector on one line
+
             2 - Print each grade of multivector on one line
+
             3 - Print each base of multivector on one line
+
         4. A LaTeX output for numpy arrays containing sympy expressions is
            implemented for up to a three dimensional array.
+
         5. LaTeX formatting for raw LaTeX, eqnarray, and array is available
            in simple output strings.
+
             1 - The delimiter for raw LaTeX input is '%'.  The raw input starts
                 on the line where '%' is first encountered and continues until
                 the next line where '%' is encountered. It does not matter where
                 '%' is in the line.
             2 - The delimiter for eqnarray input is '@'. The rules are the same
                 as for raw input except that '=' in the first line is replaced
-                be '&=&' and '\begin{eqnarray*}' is added before the first line
+                be '&=&' and '\\begin{eqnarray*}' is added before the first line
                 and '\end{eqnarray*}' to after the last line in the group of
                 lines.
             3 - The delimiter for array input is '#'. The rules are the same
-                as for raw input except that '\begin{equation*}' is added before
+                as for raw input except that '\\begin{equation*}' is added before
                 the first line and '\end{equation*}' to after the last line in
                 the group of lines.
+
         6. Additional formats for partial derivatives:
+
             0 - Same as sympy latex module
+
             1 - Use subscript notation with partial symbol to indicate which
                 variable the differentiation is with respect to.  Symbol is of
                 form \partial_{differentiation variable}
@@ -1182,7 +1193,9 @@ def xdvi(filename='tmplatex.tex',debug=False):
 def MV_format(mv_fmt):
     """
     0 or 1 - Print multivector on one line
+
     2      - Print each multivector grade on one line
+
     3      - Print each multivector base on one line
     """
     if LatexPrinter.LaTeX_flg:
@@ -1192,10 +1205,12 @@ def MV_format(mv_fmt):
 def fct_format(fct_fmt):
     """
     0 - Default sympy latex format
+
     1 - Do not print arguments of arbitrary functions.
         Use symbol font for arbitrary functions.
         Use enhanced symbol naming for arbitrary functions.
         Use new names for standard functions (acos -> Cos^{-1})
+
     """
     if LatexPrinter.LaTeX_flg:
         LatexPrinter.fct = fct_fmt
@@ -1204,6 +1219,7 @@ def fct_format(fct_fmt):
 def pdiff_format(pdiff_fmt):
     """
     0 - Use default sympy partial derivative format
+
     1 - Contracted derivative format (no fraction symbols)
     """
     if LatexPrinter.LaTeX_flg:
@@ -1213,9 +1229,11 @@ def pdiff_format(pdiff_fmt):
 def sym_format(sym_fmt):
     """
     0 - Use default sympy format
+
     1 - Use extended symbol format including multiple Greek letters in
         basic symbol (symbol preceding sub and superscripts)and in
         sub and superscripts of basic symbol and accents in basic symbol
+
     """
     if LatexPrinter.LaTeX_flg:
         LatexPrinter.fmt_dict['sym'] = sym_fmt
@@ -1224,9 +1242,11 @@ def sym_format(sym_fmt):
 def str_format(str_fmt):
     """
     0 - Use default sympy format
+
     1 - Use extended symbol format including multiple Greek letters in
         basic symbol (symbol preceding sub and superscripts)and in
         sub and superscripts of basic symbol and accents in basic symbol
+
     """
     if LatexPrinter.LaTeX_flg:
         LatexPrinter.fmt_dict['str'] = str_fmt
