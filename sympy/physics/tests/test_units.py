@@ -1,6 +1,6 @@
-from sympy import Rational, Symbol, integrate, pprint, sqrt
-from sympy.physics.units import m, s, day, km, foot, meter, au, \
-        speed_of_light, minute, joule, find_unit, charge
+from sympy import integrate, Rational, sqrt, Symbol
+from sympy.physics.units import (au, charge, day, find_unit, foot, km, m,
+                                 meter, minute, s, speed_of_light)
 
 def test_units():
     assert (5*m/s * day) / km == 432

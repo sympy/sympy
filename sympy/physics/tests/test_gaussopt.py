@@ -1,8 +1,8 @@
-from sympy import N, Symbol, Matrix, symbols, factor, I, pi, oo, Float, sqrt, atan2
+from sympy import atan2, factor, Float, I, Matrix, N, oo, pi, sqrt, symbols
 
 from sympy.physics.gaussopt import (BeamParameter, CurvedMirror,
   CurvedRefraction, FlatMirror, FlatRefraction, FreeSpace, GeometricRay,
-  FreeSpace, RayTransferMatrix, ThinLens, ThinLens, conjugate_gauss_beams,
+  RayTransferMatrix, ThinLens, conjugate_gauss_beams,
   gaussian_conj , geometric_conj_ab, geometric_conj_af, geometric_conj_bf,
   rayleigh2waist, waist2rayleigh)
 
@@ -15,20 +15,15 @@ def test_gauss_opt():
     assert mat == RayTransferMatrix( Matrix([[1,2],[3,4]]) )
     assert [mat.A, mat.B, mat.C, mat.D] == [1, 2, 3, 4]
 
-    f = Symbol('f')
+    d, f, h, n1, n2, R = symbols('d f h n1 n2 R')
     lens = ThinLens(f)
     assert lens == Matrix([[   1, 0], [-1/f, 1]])
     assert lens.C == -1/f
-    d = symbols('d')
     assert FreeSpace(d) == Matrix([[ 1, d], [0, 1]])
-    n1, n2 = symbols('n1 n2')
     assert FlatRefraction(n1, n2) == Matrix([[1,     0], [0, n1/n2]])
-    R, n1, n2 = symbols('R n1 n2')
     assert CurvedRefraction(R, n1, n2) == Matrix([[1, 0], [(n1 - n2)/(R*n2), n1/n2]])
     assert FlatMirror() == Matrix([[1, 0], [0, 1]])
-    R = symbols('R')
     assert CurvedMirror(R) == Matrix([[   1, 0], [-2/R, 1]])
-    f = symbols('f')
     assert ThinLens(f) == Matrix([[   1, 0], [-1/f, 1]])
 
     mul = CurvedMirror(R)*FreeSpace(d)
@@ -38,7 +33,7 @@ def test_gauss_opt():
     assert mul.C == mul_mat[1,0]
     assert mul.D == mul_mat[1,1]
 
-    d,h,angle = symbols('d,h,angle')
+    angle = symbols('angle')
     assert GeometricRay(h,angle) == Matrix([[    h], [angle]])
     assert FreeSpace(d)*GeometricRay(h,angle) == Matrix([[angle*d + h], [angle]])
     assert GeometricRay( Matrix( ((h,),(angle,)) ) ) == Matrix([[h], [angle]])
@@ -60,9 +55,8 @@ def test_gauss_opt():
     z_r, wavelen = symbols('z_r wavelen')
     assert rayleigh2waist(z_r, wavelen) == sqrt(wavelen*z_r)/sqrt(pi)
 
-    a, b = symbols('a b')
-    assert geometric_conj_ab(a, b) == a*b/(a + b)
     a, b, f = symbols('a b f')
+    assert geometric_conj_ab(a, b) == a*b/(a + b)
     assert geometric_conj_af(a, f) == a*f/(a - f)
     assert geometric_conj_bf(b, f) == b*f/(b - f)
     assert geometric_conj_ab(oo, b) == b
