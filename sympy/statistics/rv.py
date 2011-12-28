@@ -542,12 +542,7 @@ def Where(condition, given=None, **kwargs):
     return pspace(condition).where(condition, **kwargs)
 
 def Sample(expr, given=None, **kwargs):
-
-    assert given == None
-    ps = pspace(expr)
-
-    d = ps.sample()
-    return expr.subs(d)
+    return sample_iter(expr, given, numsamples=1).next()
 
 def sample_iter(expr, given=None, numsamples=S.Infinity, **kwargs):
     if given:

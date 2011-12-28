@@ -139,6 +139,13 @@ class FinitePSpace(PSpace):
 
         return dict(cdf)
 
+    @cacheit
+    def sorted_cdf(self, expr, python_float=False):
+        cdf = sorted(self.compute_cdf(expr).items(), key=lambda x: x[1])
+        if python_float:
+            cdf = [(v, float(cum_prob)) for v, cum_prob in cdf]
+        return cdf
+
     def integrate(self, expr, rvs=None):
         rvs = rvs or self.values
         expr = expr.subs(dict((rs, rs.symbol) for rs in rvs))
@@ -159,8 +166,7 @@ class FinitePSpace(PSpace):
 
     def sample(self):
         expr = Tuple(*self.values)
-        cdf = self.compute_cdf(expr).items()
-        cdf.sort(key=lambda kv : kv[1]) # sort by values (probabilities)
+        cdf = self.sorted_cdf(expr, python_float=True)
 
         x = random.uniform(0,1)
         for value, cum_prob in cdf:
