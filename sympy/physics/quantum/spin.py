@@ -253,7 +253,7 @@ class SpinOpBase(object):
         state = ket.rewrite(self.basis)
         # If the state has only one term
         if isinstance(state, State):
-            return self._apply_operator(state, **options)
+            return self._apply_operator(state, **options).rewrite(orig_basis)
         # state is a linear combination of states
         return qapply(self*state).rewrite(orig_basis)
 
@@ -952,7 +952,10 @@ class SpinState(State):
         else:
             # TODO: better way to get angles of rotation
             mi = symbols('mi')
-            angles = represent(self.__class__(0,mi),basis=basis)[0].args[3:6]
+            if isinstance(self, Ket):
+                angles = represent(self.__class__(0,mi),basis=basis)[0].args[3:6]
+            else:
+                angles = represent(self.__class__(0,mi),basis=basis)[0].args[0].args[3:6]
             if angles == (0,0,0):
                 return self
             else:
