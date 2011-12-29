@@ -1937,5 +1937,6 @@ def test_invertible_check():
     
 @XFAIL
 def test_issue_860():
+    x, y=symbols('x, y')
     e = x*y
     assert e.subs(x, Matrix([3, 5, 3])) == Matrix([3, 5, 3])*y
