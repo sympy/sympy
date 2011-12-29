@@ -218,3 +218,7 @@ def test_eval():
 
 def test_oseries():
     assert Order(x).oseries(x) == Order(x)
+@XFAIL
+def test_issue_1180():
+    var('a, b')
+	assert O(a+b,a,b)+O(1,a,b) == O(1, a, b)
