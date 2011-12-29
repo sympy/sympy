@@ -149,4 +149,5 @@ def test_issue_1756():
     x = Symbol('x')
     f = Function('f')
     g = Function('g')
-   assert 1/g(x) = O(1/f(x))    
+   assert 1/g(x) == O(1/f(x))    
+   
