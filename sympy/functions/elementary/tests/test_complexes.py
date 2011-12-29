@@ -275,4 +275,5 @@ def test_principal_branch():
     assert principal_branch(x, zoo).func is principal_branch
 @XFAIL
 def test_issue_2453():
-        assert abs(sympy.I * sympy.pi) == pi
+        assert abs(I * pi) == pi
+        
