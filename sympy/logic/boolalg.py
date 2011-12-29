@@ -71,12 +71,28 @@ class Or(LatticeOp, BooleanFunction):
 class Xor(BooleanFunction):
     """
     Logical XOR (exclusive OR) function.
-
-    returns True if an odd number of the arguments are True, and the rest are False.
-    returns False if an even number of the arguments are True, and the rest are False.
     """
     @classmethod
     def eval(cls, *args):
+        """
+        Logical XOR (exclusive OR) function.
+
+        Returns True if an odd number of the arguments are True, and the rest are False.
+        Returns False if an even number of the arguments are True, and the rest are False.
+
+        Examples
+        ========
+        >>> from sympy.logic.boolalg import Xor
+        >>> Xor(True, False)
+        True
+        >>> Xor(True, True)
+        False
+
+        >>> Xor(True, False, True, True, False)
+        True
+        >>> Xor(True, False, True, False)
+        False
+        """
         if not args: return False
         args = list(args)
         A = args.pop()
@@ -96,6 +112,31 @@ class Not(BooleanFunction):
 
     @classmethod
     def eval(cls, *args):
+        """
+        Logical Not function (negation)
+
+        Returns True if the statement is False
+        Returns False if the statement is True
+
+        Examples
+        ========
+        >>> from sympy.logic.boolalg import Not
+        >>> Not(True)
+        False
+        >>> Not(False)
+        True
+        >>> Not(True and False)
+        True
+        >>> Not(True or False)
+        False
+
+        If multiple statements are given, returns an array of each result
+
+        >>> Not(True, False)
+        [False, True]
+        >>> Not(True and False, True or False, True)
+        [True, False, False]
+        """
         if len(args) > 1:
             return map(cls, args)
         arg = args[0]
@@ -118,6 +159,20 @@ class Nand(BooleanFunction):
     """
     @classmethod
     def eval(cls, *args):
+        """
+        Logical NAND function.
+
+        Returns True if any of the arguements are False
+        Returns False if all arguements are True
+
+        Examples
+        ========
+        >>> from sympy.logic.boolalg import Nand
+        >>> Nand(False, True)
+        True
+        >>> Nand(True, True)
+        False
+        """
         return Not(And(*args))
 
 class Nor(BooleanFunction):
@@ -129,6 +184,24 @@ class Nor(BooleanFunction):
     """
     @classmethod
     def eval(cls, *args):
+        """
+        Logical NOR function.
+
+        Returns False if any arguement is True
+        Returns True if any arguement is False
+
+        Examples
+        ========
+        >>> from sympy.logic.boolalg import Nor
+        >>> Nor(True, False)
+        False
+        >>> Nor(True, True)
+        False
+        >>> Nor(False, True)
+        False
+        >>> Nor(False, False)
+        True
+        """
         return Not(Or(*args))
 
 class Implies(BooleanFunction):
@@ -139,6 +212,25 @@ class Implies(BooleanFunction):
     """
     @classmethod
     def eval(cls, *args):
+        """
+        Logical implication.
+
+        Accepts two Boolean arguements; A and B.
+        If A is True, return B
+        If A is False, return True
+
+        Examples
+        ========
+        >>> from sympy.logic.boolalg import Implies
+        >>> Implies(True, False)
+        False
+        >>> Implies(False, False)
+        True
+        >>> Implies(True, True)
+        True
+        >>> Implies(False, True)
+        True
+        """
         try:
             A, B = args
         except ValueError:
@@ -156,6 +248,22 @@ class Equivalent(BooleanFunction):
     """
     @classmethod
     def eval(cls, *args):
+        """
+        Equivalence relation.
+
+        Returns True if all of the arguements are True
+        Returns False otherwise.
+
+        Examples
+        ========
+        >>> from sympy.logic.boolalg import Equivalent
+        >>> Equivalent(False, False, False)
+        True
+        >>> Equivalent(True, False, False)
+        False
+
+        """
+
         argset = set(args)
         if len(argset) <= 1:
             return True
@@ -170,25 +278,27 @@ class Equivalent(BooleanFunction):
 class ITE(BooleanFunction):
     """
     If then else clause.
-
-    ITE(A, B, C) evaluates and returns the result of B if A is true
-    else it returns the result of C
-
-    Examples
-    ========
-    >>> from sympy.logic.boolalg import ITE, And, Xor, Or
-    >>> from sympy.abc import x,y,z
-    >>> x = True
-    >>> y = False
-    >>> z = True
-    >>> ITE(x,y,z)
-    False
-    >>> ITE(Or(x, y), And(x, z), Xor(z, x))
-    True
-
     """
     @classmethod
     def eval(cls, *args):
+        """
+        If then else clause
+
+        ITE(A, B, C) evaluates and returns the result of B if A is true
+        else it returns the result of C
+
+        Examples
+        ========
+        >>> from sympy.logic.boolalg import ITE, And, Xor, Or
+        >>> from sympy.abc import x,y,z
+        >>> x = True
+        >>> y = False
+        >>> z = True
+        >>> ITE(x,y,z)
+        False
+        >>> ITE(Or(x, y), And(x, z), Xor(z, x))
+        True
+        """
         args = list(args)
         if len(args) == 3:
             return Or(And(args[0], args[1]), And(Not(args[0]), args[2]))
@@ -251,6 +361,13 @@ def distribute_and_over_or(expr):
     """
     Given a sentence s consisting of conjunctions and disjunctions
     of literals, return an equivalent sentence in CNF.
+
+    Examples
+    ========
+    >>> from sympy.logic.boolalg import distribute_and_over_or, And, Or, Not
+    >>> from sympy.abc import A, B, C
+    >>> distribute_and_over_or(Or(A, And(Not(B), Not(C))))
+    And(Or(A, Not(B)), Or(A, Not(C)))
     """
     if expr.func is Or:
         for arg in expr.args:
@@ -350,6 +467,15 @@ def eliminate_implications(expr):
     Change >>, <<, and Equivalent into &, |, and ~. That is, return an
     expression that is equivalent to s, but has only &, |, and ~ as logical
     operators.
+
+    Examples
+    ========
+    >>> from sympy.logic.boolalg import Implies, Equivalent, eliminate_implications
+    >>> from sympy.abc import A, B, C
+    >>> eliminate_implications(Implies(A, B))
+    Or(B, Not(A))
+    >>> eliminate_implications(Equivalent(A, B))
+    And(Or(B, Not(A)), Or(A, Not(B)))
     """
     expr = sympify(expr)
     if expr.is_Atom:
@@ -371,6 +497,14 @@ def compile_rule(s):
     See sympy.assumptions.known_facts for examples of rules
 
     TODO: can this be replaced by sympify ?
+
+    Examples
+    ========
+    >>> from sympy.logic.boolalg import compile_rule
+    >>> compile_rule('A & B')
+    And(A, B)
+    >>> compile_rule('(~B & ~C)|A')
+    Or(A, And(Not(B), Not(C)))
     """
     import re
     from sympy.core import Symbol

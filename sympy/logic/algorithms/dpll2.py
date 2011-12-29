@@ -19,6 +19,9 @@ def dpll_satisfiable(expr):
     """
     Check satisfiability of a propositional sentence.
     It returns a model rather than True when it succeeds
+
+    Examples
+    ========
     >>> from sympy import symbols
     >>> from sympy.abc import A, B
     >>> from sympy.logic.algorithms.dpll import dpll_satisfiable
@@ -136,6 +139,14 @@ class SATSolver(object):
         True or False. If a solution is not found with this setting,
         the opposite is chosen and the search continues. The solver
         halts when every variable has a setting.
+
+        Examples
+        ========
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> SATSolver([set([-1]), set([1])], set([1]), set([])).find_model()
+        False
+        >>> SATSolver([set([1]), set([-2])], set([-2, 3]), set([])).find_model()
+        True
         """
 
         # We use this variable to keep track of if we should flip a
@@ -205,18 +216,58 @@ class SATSolver(object):
     ########################
     @property
     def current_level(self):
-        """The current decision level data structure"""
+        """The current decision level data structure
+
+        Examples
+        ========
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> l = SATSolver([set([1]), set([2])], set([1, 2]), set([]))
+        >>> l.find_model()
+        True
+        >>> l.current_level.decision
+        0
+        >>> l.current_level.flipped
+        False
+        >>> l.current_level.var_settings
+        set([1, 2])
+        """
         return self.levels[-1]
 
     def clause_sat(self, cls):
-        """Check if a clause is satisfied by the current variable setting."""
+        """Check if a clause is satisfied by the current variable setting.
+
+        Examples
+        ========
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> l = SATSolver([set([1]), set([-1])], set([1]), set([]))
+        >>> l.find_model()
+        False
+        >>> l.clause_sat(0)
+        False
+        >>> l.clause_sat(1)
+        True
+        """
         for lit in self.clauses[cls]:
             if lit in self.var_settings:
                 return True
         return False
 
     def is_sentinel(self, lit, cls):
-        """Check if a literal is a sentinel of a given clause."""
+        """Check if a literal is a sentinel of a given clause.
+
+        Examples
+        ========
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
+        ... set([3, -2])], set([1, 2, 3]), set([]))
+        >>> l.find_model()
+        True
+
+        >>> l.is_sentinel(2, 3)
+        True
+        >>> l.is_sentinel(-3, 1)
+        False
+        """
         return cls in self.sentinels[lit]
 
     def assign_literal(self, lit):
@@ -227,6 +278,25 @@ class SATSolver(object):
         sentinel of any clause, then a new sentinel must be chosen. If
         this is not possible, then unit propagation is triggered and
         another literal is added to the queue to be set in the future.
+
+        Examples
+        ========
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
+        ... set([3, -2])], set([1, 2, 3]), set([]))
+        >>> l.find_model()
+        True
+
+        >>> l.var_settings
+        set([-3, -2, 1])
+
+        >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
+        ... set([3, -2])], set([1, 2, 3]), set([]))
+        >>> l.assign_literal(-1)
+        >>> l.find_model()
+        False
+        >>> l.var_settings
+        set([-1])
         """
         self.var_settings.add(lit)
         self.current_level.var_settings.add(lit)
@@ -255,6 +325,24 @@ class SATSolver(object):
     def undo(self):
         """
         Undo the changes of the most recent decision level.
+
+        Examples
+        ========
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
+        ... set([3, -2])], set([1, 2, 3]), set([]))
+        >>> l.find_model()
+        True
+
+        >>> level = l.current_level
+        >>> level.decision, level.var_settings, level.flipped
+        (-3, set([-3, -2]), False)
+
+        >>> l.undo()
+
+        >>> level = l.current_level
+        >>> level.decision, level.var_settings, level.flipped
+        (0, set([1]), False)
         """
         # Undo the variable settings
         for lit in self.current_level.var_settings:
@@ -275,7 +363,26 @@ class SATSolver(object):
       otherwise.
     """
     def simplify(self):
-        """Iterate over the various forms of propagation to simplify the theory."""
+        """Iterate over the various forms of propagation to simplify the theory.
+
+        Examples
+        ========
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
+        ... set([3, -2])], set([1, 2, 3]), set([]))
+        >>> l.variable_set
+        [False, False, False, False]
+        >>> l.sentinels
+        {-3: set([0, 2]), -2: set([3, 4]), 2: set([0, 3]), 3: set([2, 4])}
+
+        >>> l.simplify()
+
+        >>> l.variable_set
+        [False, True, False, False]
+        >>> l.sentinels
+        {-3: set([0, 2]), -2: set([3, 4]), -1: set(), 2: set([0, 3]),
+        ...3: set([2, 4])}
+        """
         changed = True
         while changed:
             changed = False
@@ -285,7 +392,6 @@ class SATSolver(object):
     def unit_prop(self):
         """Perform unit propagation on the current theory."""
         result = len(self.unit_prop_queue) > 0
-
         while self.unit_prop_queue:
             next_lit = self.unit_prop_queue.pop()
             if -next_lit in self.var_settings:
@@ -315,7 +421,22 @@ class SATSolver(object):
             heappush(self.lit_heap, (self.lit_scores[-var], -var))
 
     def vsids_decay(self):
-        """Decay the VSIDS scores for every literal."""
+        """Decay the VSIDS scores for every literal.
+
+        Examples
+        ========
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
+        ... set([3, -2])], set([1, 2, 3]), set([]))
+
+        >>> l.lit_scores
+        {-3: -2.0, -2: -2.0, -1: -0.0, 1: -0.0, 2: -2.0, 3: -2.0}
+
+        >>> l.vsids_decay()
+
+        >>> l.lit_scores
+        {-3: -1.0, -2: -1.0, -1: -0.0, 1: -0.0, 2: -1.0, 3: -1.0}
+        """
         # We divide every literal score by 2 for a decay factor
         #  Note: This doesn't change the heap property
         for lit in self.lit_scores.keys():
@@ -324,6 +445,21 @@ class SATSolver(object):
     def vsids_calculate(self):
         """
             VSIDS Heuristic Calculation
+
+        Examples
+        ========
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
+        ... set([3, -2])], set([1, 2, 3]), set([]))
+
+        >>> l.lit_heap
+        [(-2.0, -3), (-2.0, 2), (-2.0, -2), (-0.0, 1), (-2.0, 3), (-0.0, -1)]
+
+        >>> l.vsids_calculate()
+        -3
+
+        >>> l.lit_heap
+        [(-2.0, -2), (-2.0, 2), (-0.0, -1), (-0.0, 1), (-2.0, 3)]
         """
         if len(self.lit_heap) == 0:
             return 0
@@ -341,13 +477,47 @@ class SATSolver(object):
         pass
 
     def vsids_lit_unset(self, lit):
-        """Handle the unsetting of a literal for the VSIDS heuristic."""
+        """Handle the unsetting of a literal for the VSIDS heuristic.
+
+        Examples
+        ========
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
+        ... set([3, -2])], set([1, 2, 3]), set([]))
+        >>> l.lit_heap
+        [(-2.0, -3), (-2.0, 2), (-2.0, -2), (-0.0, 1), (-2.0, 3), (-0.0, -1)]
+
+        >>> l.vsids_lit_unset(2)
+
+        >>> l.lit_heap
+        [(-2.0, -3), (-2.0, -2), (-2.0, -2), (-2.0, 2), (-2.0, 3), (-0.0, -1),
+        ...(-2.0, 2), (-0.0, 1)]
+        """
         var = abs(lit)
         heappush(self.lit_heap, (self.lit_scores[var], var))
         heappush(self.lit_heap, (self.lit_scores[-var], -var))
 
     def vsids_clause_added(self, cls):
-        """Handle the addition of a new clause for the VSIDS heuristic."""
+        """Handle the addition of a new clause for the VSIDS heuristic.
+
+        Examples
+        ========
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
+        ... set([3, -2])], set([1, 2, 3]), set([]))
+
+        >>> l.num_learned_clauses
+        0
+        >>> l.lit_scores
+        {-3: -2.0, -2: -2.0, -1: -0.0, 1: -0.0, 2: -2.0, 3: -2.0}
+
+        >>> l.vsids_clause_added(set([2, -3]))
+
+        >>> l.num_learned_clauses
+        1
+        >>> l.lit_scores
+        {-3: -1.0, -2: -2.0, -1: -0.0, 1: -0.0, 2: -1.0, 3: -2.0}
+        """
         self.num_learned_clauses += 1
         for lit in cls:
             self.lit_scores[lit] += 1
@@ -358,8 +528,28 @@ class SATSolver(object):
     ########################
 
     def simple_add_learned_clause(self, cls):
-        """Add a new clause to the theory."""
+        """Add a new clause to the theory.
 
+        Examples
+        ========
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
+        ... set([3, -2])], set([1, 2, 3]), set([]))
+
+        >>> l.num_learned_clauses
+        0
+        >>> l.clauses
+        [[2, -3], [1], [3, -3], [2, -2], [3, -2]]
+        >>> l.sentinels
+        {-3: set([0, 2]), -2: set([3, 4]), 2: set([0, 3]), 3: set([2, 4])}
+
+        >>> l.simple_add_learned_clause([3])
+
+        >>> l.clauses
+        [[2, -3], [1], [3, -3], [2, -2], [3, -2], [3]]
+        >>> l.sentinels
+        {-3: set([0, 2]), -2: set([3, 4]), 2: set([0, 3]), 3: set([2, 4, 5])}
+        """
         cls_num = len(self.clauses)
         self.clauses.append(cls)
 
@@ -374,6 +564,16 @@ class SATSolver(object):
     def simple_compute_conflict(self):
         """ Build a clause representing the fact that at least one decision made
         so far is wrong.
+
+        Examples
+        ========
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
+        ... set([3, -2])], set([1, 2, 3]), set([]))
+        >>> l.find_model()
+        True
+        >>> l.simple_compute_conflict()
+        [3]
         """
         return [-(level.decision) for level in self.levels[1:]]
 
