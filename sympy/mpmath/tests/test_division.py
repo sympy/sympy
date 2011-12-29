@@ -3,6 +3,8 @@ from sympy.mpmath import mpf, mp
 
 from random import randint, choice, seed
 
+from sympy.utilities.pytest import XFAIL, raises
+
 all_modes = [round_floor, round_ceiling, round_down, round_up, round_nearest]
 
 fb = from_bstr
@@ -141,3 +143,9 @@ def test_div_negative_rnd_bug():
     mp.dps = 15
     assert (-3) / mpf('0.1531879017645047') == mpf('-19.583791966887116')
     assert mpf('-2.6342475750861301') / mpf('0.35126216427941814') == mpf('-7.4993775104985909')
+    
+@XFAIL
+def test_issue():
+    x = Symbol('x')
+    f(x) = O(g(x))
+   assert 1/g(x) = O(1/f(x))    
