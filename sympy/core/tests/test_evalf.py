@@ -256,5 +256,4 @@ def test_subs_bugs():
 @XFAIL
 def test_issue_1724():
     a = S("(-29/54 + 93**(1/2)/18)**(1/3)")
-    a.conjugate().evalf() ==  a.evalf().conjugate()
-    
+    a.conjugate().evalf() ==  a.evalf().conjugate()    
