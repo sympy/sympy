@@ -45,8 +45,7 @@ class Wigner3j(Expr):
         >>> from sympy.physics.quantum.cg import Wigner3j
         >>> w3j = Wigner3j(6,0,4,0,2,0)
         >>> w3j
-        (6, 4, 2)
-        (0, 0, 0)
+        Wigner3j(6,4,2,0,0,0)
         >>> w3j.doit()
         sqrt(715)/143
 
