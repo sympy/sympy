@@ -1,6 +1,7 @@
 from sympy import sqrt, root, S, Symbol, sqrtdenest, Integral, cos
 from sympy.utilities.pytest import XFAIL
-from sympy.simplify.sqrtdenest import _sqrt_four_terms_denest
+from sympy.simplify.sqrtdenest import _sqrt_four_terms_denest, subsets
+from sympy.simplify.simplify import radsimp
 
 r2, r3, r5, r6, r7, r29 = [sqrt(x) for x in [2, 3, 5, 6, 7, 29]]
 
@@ -65,7 +66,7 @@ def test_sqrtdenest_fail():
 def test_sqrtdenest_four_terms():
     assert sqrtdenest(sqrt(-4*sqrt(14) - 2*r6 + 4*sqrt(21) + 33)) == \
       -r2 + r3 + 2*r7
-    assert sqrtdenest(sqrt(468*r3 + 3024*r2 + 2912*r6 + 19735)) == \
+    assert radsimp(sqrtdenest(sqrt(468*r3 + 3024*r2 + 2912*r6 + 19735))) == \
       9*r3 + 26 + 56*r6
     assert sqrtdenest(sqrt(-28*r7 - 14*r5 + 4*sqrt(35) + 82)) == \
       -7 + r5 + 2*r7
