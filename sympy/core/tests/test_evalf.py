@@ -252,9 +252,4 @@ def test_subs_bugs():
            '-4.92535585957223e-10'
     assert NS('Piecewise((x, x>0)) + Piecewise((1-x, x>0))', subs={x:0.1}) == \
            '1.00000000000000'
-
-@XFAIL
-def test_issue_1724():
-    a = S("(-29/54 + 93**(1/2)/18)**(1/3)")
-    a.conjugate().evalf() ==  a.evalf().conjugate()    
     
