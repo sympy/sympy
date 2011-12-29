@@ -218,8 +218,6 @@ def primitive_element(extension, x=None, **args):
     else:
         return g, coeffs, H
 
-primelt = primitive_element
-
 def is_isomorphism_possible(a, b):
     """Returns `True` if there is a chance for isomorphism. """
     n = a.minpoly.degree()
@@ -461,11 +459,11 @@ class AlgebraicNumber(Expr):
 
     @property
     def is_aliased(self):
-        """Returns `True` if `alias` was set. """
+        """Returns ``True`` if ``alias`` was set. """
         return self.alias is not None
 
     def as_poly(self, x=None):
-        """Create a Poly instance from `self`. """
+        """Create a Poly instance from ``self``. """
         if x is not None:
             return Poly.new(self.rep, x)
         else:
@@ -475,7 +473,7 @@ class AlgebraicNumber(Expr):
                 return PurePoly.new(self.rep, Dummy('x'))
 
     def as_expr(self, x=None):
-        """Create a Basic expression from `self`. """
+        """Create a Basic expression from ``self``. """
         return self.as_poly(x or self.root).as_expr().expand()
 
     def coeffs(self):
@@ -487,7 +485,7 @@ class AlgebraicNumber(Expr):
         return self.rep.all_coeffs()
 
     def to_algebraic_integer(self):
-        """Convert `self` to an algebraic integer. """
+        """Convert ``self`` to an algebraic integer. """
         f = self.minpoly
 
         if f.LC() == 1:
