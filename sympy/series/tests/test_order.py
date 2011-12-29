@@ -222,3 +222,11 @@ def test_oseries():
 def test_issue_1180():
     var('a, b')
 	assert O(a+b,a,b)+O(1,a,b) == O(1, a, b)
+    
+@XFAIL
+def test_issue_1756():
+    x = Symbol('x')
+    f = Function('f')
+    g = Function('g')
+   assert 1/g(x) == O(1/f(x))   
+   
