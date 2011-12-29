@@ -295,31 +295,27 @@ def is_scalar_sparse_matrix(circuit, numqubits, identity_only):
     # If represent returns a matrix, check if the matrix is diagonal
     # and if every item along the diagonal is the same
     else:
-        # NEED TO INVESTIGATE:
-        # Elements with nonzero imaginaries in the matrix
-        # may be considered to be in between the epsilons if
-        # the real part is in between the epsilon - can result
-        # in falsely zeroing out elements
-
         # Due to floating pointing operations, must zero out
         # elements that are "very" small in the dense matrix
         # Epsilon value
         eps = 1e-11
         # Get the ndarray version of the dense matrix
         dense_matrix = matrix.todense().getA()
-        # Get the first element of the matrix
-        first_element = dense_matrix[0][0]
-
-        # If element at top left of matrix is zero, then not diagonal
-        if (first_element == 0):
-            return False
-
-        adj_ndarray = dense_matrix/first_element
-        # Find the values in between -eps and eps
-        bool_dense_matrix = numpy.logical_and(adj_ndarray > -eps,
-                                adj_ndarray < eps)
+        # Since complex values can be compared, must split
+        # the matrix into real and imaginary components
+        # Find the real values in between -eps and eps
+        bool_real = numpy.logical_and(dense_matrix.real > -eps,
+                                      dense_matrix.real < eps)
+        # Find the imaginary values between -eps and eps
+        bool_imag = numpy.logical_and(dense_matrix.imag > -eps,
+                                      dense_matrix.imag < eps)
         # Replaces values between -eps and eps with 0
-        corrected_dense = numpy.where(bool_dense_matrix, 0.0, adj_ndarray)
+        corrected_real = numpy.where(bool_real, 0.0, dense_matrix.real)
+        corrected_imag = numpy.where(bool_imag, 0.0, dense_matrix.imag)
+        # Convert the matrix with real values into imaginary values
+        corrected_imag = corrected_imag * numpy.complex(1j)
+        # Recombine the real and imaginary components
+        corrected_dense = corrected_real + corrected_imag
 
         # Check if it's diagonal
         row_indices = corrected_dense.nonzero()[0]
@@ -329,10 +325,16 @@ def is_scalar_sparse_matrix(circuit, numqubits, identity_only):
         bool_indices = row_indices == col_indices
         is_diagonal = bool_indices.all()
 
+        first_element = corrected_dense[0][0]
+        # If the first element is a zero, then can't rescale matrix
+        # and definitely not diagonal
+        if (first_element == 0.0+0.0j):
+            return False
+
         # The dimensions of the dense matrix should still
         # be 2^numqubits if there are elements all along the
         # the main diagonal
-        trace_of_corrected = corrected_dense.trace()
+        trace_of_corrected = (corrected_dense/first_element).trace()
         expected_trace = pow(2, numqubits)
         has_correct_trace = trace_of_corrected == expected_trace
 
