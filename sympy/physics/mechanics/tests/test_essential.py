@@ -1,9 +1,8 @@
-from sympy import symbols, Matrix, sin, cos
-from sympy.physics.mechanics import (Vector, ReferenceFrame, dot, cross,
-                                     dynamicsymbols)
+from sympy import cos, Matrix, sin
+from sympy.abc import x, y, z
+from sympy.physics.mechanics import Vector, ReferenceFrame, dot, dynamicsymbols
 
 Vector.simp = True
-phi, x, y, z = symbols('phi x y z')
 A = ReferenceFrame('A')
 
 def test_dyadic():
@@ -32,7 +31,6 @@ def test_dyadic():
     assert d1.dt(A) == 0
     q = dynamicsymbols('q')
     qd = dynamicsymbols('q', 1)
-    qdd = dynamicsymbols('q', 2)
     B = A.orientnew('B', 'Axis', [q, A.z])
     assert d1.express(B) == d1.express(B, B)
     assert d1.express(B) == ((cos(q)**2) * (B.x | B.x) + (-sin(q) * cos(q)) *

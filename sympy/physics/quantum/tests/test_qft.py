@@ -1,12 +1,11 @@
+from sympy import exp, I, Matrix, pi, sqrt, Symbol
+
 from sympy.physics.quantum.qft import QFT, IQFT, RkGate
 from sympy.physics.quantum.gate import (ZGate, SwapGate, HadamardGate, CGate,
-        PhaseGate, TGate)
+                                        PhaseGate, TGate)
 from sympy.physics.quantum.qubit import Qubit
-from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.qapply import qapply
-from sympy.matrices.matrices import Matrix, eye
-from sympy.core.symbol import Symbol
-from sympy import exp, I, pi, sqrt
+from sympy.physics.quantum.represent import represent
 
 
 def test_RkGate():

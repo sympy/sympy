@@ -1,8 +1,8 @@
-from sympy import var, sqrt, exp, simplify, S, integrate, oo, Symbol
+from sympy import exp, integrate, oo, S, simplify, sqrt, symbols
 from sympy.physics.hydrogen import R_nl, E_nl, E_nl_dirac
 from sympy.utilities.pytest import raises
 
-var("r Z")
+n, r, Z = symbols('n r Z')
 
 def feq(a, b, max_relative_error=1e-12, max_absolute_error=1e-12):
     a = float(a)
@@ -49,7 +49,6 @@ def test_norm():
             assert integrate(R_nl(n, l, r)**2 * r**2, (r, 0, oo)) == 1
 
 def test_hydrogen_energies():
-    n = Symbol("n")
     assert E_nl(n, Z) == -Z**2/(2*n**2)
     assert E_nl(n) == -1/(2*n**2)
 

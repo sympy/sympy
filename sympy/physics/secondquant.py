@@ -6,17 +6,12 @@ of Many-Particle Systems."
 """
 from collections import defaultdict
 
-from sympy import (
-    Basic, Expr, Function, Mul, sympify, Integer, Add, sqrt,
-    zeros, Pow, I, S, Symbol, Tuple, Dummy, KroneckerDelta
-)
-
-from sympy.core.sympify import sympify
-from sympy.core.cache import cacheit
-from sympy.core.symbol import Dummy
+from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
+                   KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
+                   zeros)
+from sympy.core.compatibility import reduce
 from sympy.printing.str import StrPrinter
 
-from sympy.core.compatibility import reduce
 from sympy.physics.quantum.qexpr import split_commutative_parts
 
 __all__ = [

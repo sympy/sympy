@@ -1,6 +1,6 @@
 from sympy import sqrt
 from sympy.physics.quantum.qapply import qapply
-from sympy.physics.quantum.qubit import Qubit, IntQubit
+from sympy.physics.quantum.qubit import IntQubit
 from sympy.physics.quantum.grover import (apply_grover, superposition_basis,
         OracleGate, grover_iteration, WGate)
 
