@@ -218,8 +218,6 @@ def primitive_element(extension, x=None, **args):
     else:
         return g, coeffs, H
 
-primelt = primitive_element
-
 def is_isomorphism_possible(a, b):
     """Returns `True` if there is a chance for isomorphism. """
     n = a.minpoly.degree()

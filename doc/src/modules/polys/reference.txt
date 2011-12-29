@@ -98,7 +98,6 @@ Algebraic number fields
 .. autofunction:: minimal_polynomial
 .. autofunction:: minpoly
 .. autofunction:: primitive_element
-.. autofunction:: primelt
 .. autofunction:: field_isomorphism
 .. autofunction:: to_number_field
 .. autofunction:: isolate
