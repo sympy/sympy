@@ -145,7 +145,7 @@ def test_div_negative_rnd_bug():
     assert mpf('-2.6342475750861301') / mpf('0.35126216427941814') == mpf('-7.4993775104985909')
     
 @XFAIL
-def test_issue():
+def test_issue_1756():
     x = Symbol('x')
     f = Function('f')
     g = Function('g')
