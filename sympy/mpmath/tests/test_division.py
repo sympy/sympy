@@ -147,4 +147,5 @@ def test_div_negative_rnd_bug():
 @XFAIL
 def test_issue():
     x = Symbol('x')
+    f(x) = O(g(x))
    assert 1/g(x) = O(1/f(x))    
