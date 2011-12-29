@@ -183,6 +183,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Natalia Nawara: Fixes to Product()
 #. vishal: Update the Czech tutorial translation to use a .po file
 #. Shruti Mangipudi: added See Also documentation to Matrices
+#. Davy Mao: Documentation
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
