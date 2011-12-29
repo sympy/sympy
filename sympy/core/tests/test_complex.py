@@ -138,3 +138,8 @@ def test_real_imag():
     x = Symbol('x')
     a = Symbol('a', real=True)
     assert (2*a*x).as_real_imag() == (2*a*re(x), 2*a*im(x))
+
+@XFAIL
+def test_issue_1724():
+    a = S("(-29/54 + 93**(1/2)/18)**(1/3)")
+    a.conjugate().evalf() ==  a.evalf().conjugate()    
