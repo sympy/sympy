@@ -253,23 +253,32 @@ class SpinOpBase(object):
         state = ket.rewrite(self.basis)
         # If the state has only one term
         if isinstance(state, State):
-            return self._apply_operator(state, **options).rewrite(orig_basis)
+            ret = (hbar*state.m) * state
         # state is a linear combination of states
-        if isinstance(state, Sum):
+        elif isinstance(state, Sum):
             ret = self._apply_operator_Sum(state, **options)
         else:
             ret = qapply(self*state)
         if ret == self*state:
             raise NotImplementedError
-        return qapply(self*state).rewrite(orig_basis)
+        return ret.rewrite(orig_basis)
 
     def _apply_operator_JxKet(self, ket, **options):
+        return self._apply_op(ket, 'Jx', **options)
+
+    def _apply_operator_JxKetCoupled(self, ket, **options):
         return self._apply_op(ket, 'Jx', **options)
 
     def _apply_operator_JyKet(self, ket, **options):
         return self._apply_op(ket, 'Jy', **options)
 
+    def _apply_operator_JyKetCoupled(self, ket, **options):
+        return self._apply_op(ket, 'Jy', **options)
+
     def _apply_operator_JzKet(self, ket, **options):
+        return self._apply_op(ket, 'Jz', **options)
+
+    def _apply_operator_JzKetCoupled(self, ket, **options):
         return self._apply_op(ket, 'Jz', **options)
 
     def _apply_operator_TensorProduct(self, tp, **options):
@@ -309,6 +318,15 @@ class JplusOp(SpinOpBase, Operator):
                 return S.Zero
         return hbar*sqrt(j*(j+S.One)-m*(m+S.One))*JzKet(j, m+S.One)
 
+    def _apply_operator_JzKetCoupled(self, ket, **options):
+        j = ket.j
+        m = ket.m
+        jvals = ket.jvals
+        if m.is_Number and j.is_Number:
+            if m >= j:
+                return S.Zero
+        return hbar*sqrt(j*(j+S.One)-m*(m+S.One))*JzKetCoupled(j, m+S.One,*jvals)
+
     def matrix_element(self, j, m, jp, mp):
         result = hbar*sqrt(j*(j+S.One)-mp*(mp+S.One))
         result *= KroneckerDelta(m, mp+1)
@@ -340,6 +358,15 @@ class JminusOp(SpinOpBase, Operator):
                 return S.Zero
         return hbar*sqrt(j*(j+S.One)-m*(m-S.One))*JzKet(j, m-S.One)
 
+    def _apply_operator_JzKetCoupled(self, ket, **options):
+        j = ket.j
+        m = ket.m
+        jvals = ket.jvals
+        if m.is_Number and j.is_Number:
+            if m <= -j:
+                return S.Zero
+        return hbar*sqrt(j*(j+S.One)-m*(m-S.One))*JzKetCoupled(j, m-S.One,*jvals)
+
     def matrix_element(self, j, m, jp, mp):
         result = hbar*sqrt(j*(j+S.One)-mp*(mp-S.One))
         result *= KroneckerDelta(m, mp-1)
@@ -369,12 +396,14 @@ class JxOp(SpinOpBase, HermitianOperator):
     def _eval_commutator_JzOp(self, other):
         return -I*hbar*JyOp(self.name)
 
-    def _apply_operator_JxKet(self, ket, **options):
-        return (hbar*ket.m)*ket
-
     def _apply_operator_JzKet(self, ket, **options):
         jp = JplusOp(self.name)._apply_operator_JzKet(ket, **options)
         jm = JminusOp(self.name)._apply_operator_JzKet(ket, **options)
+        return (jp + jm)/Integer(2)
+
+    def _apply_operator_JzKetCoupled(self, ket, **options):
+        jp = JplusOp(self.name)._apply_operator_JzKetCoupled(ket, **options)
+        jm = JminusOp(self.name)._apply_operator_JzKetCoupled(ket, **options)
         return (jp + jm)/Integer(2)
 
     def _represent_default_basis(self, **options):
@@ -402,12 +431,14 @@ class JyOp(SpinOpBase, HermitianOperator):
     def _eval_commutator_JxOp(self, other):
         return -I*hbar*J2Op(self.name)
 
-    def _apply_operator_JyKet(self, ket, **options):
-        return (hbar*ket.m)*ket
-
     def _apply_operator_JzKet(self, ket, **options):
         jp = JplusOp(self.name)._apply_operator_JzKet(ket, **options)
         jm = JminusOp(self.name)._apply_operator_JzKet(ket, **options)
+        return (jp - jm)/(Integer(2)*I)
+
+    def _apply_operator_JzKetCoupled(self, ket, **options):
+        jp = JplusOp(self.name)._apply_operator_JzKetCoupled(ket, **options)
+        jm = JminusOp(self.name)._apply_operator_JzKetCoupled(ket, **options)
         return (jp - jm)/(Integer(2)*I)
 
     def _represent_default_basis(self, **options):
@@ -440,9 +471,6 @@ class JzOp(SpinOpBase, HermitianOperator):
 
     def _eval_commutator_JminusOp(self, other):
         return -hbar*JminusOp(self.name)
-
-    def _apply_operator_JzKet(self, ket, **options):
-        return (hbar*ket.m)*ket
 
     def matrix_element(self, j, m, jp, mp):
         result = hbar*mp
@@ -959,10 +987,21 @@ class SpinState(State):
 
     def _rewrite_basis(self, basis, evect, **options):
         from sympy.physics.quantum.represent import represent
-        j = sympify(self.j)
+        j = self.j
+        args = self.args[2:]
         if j.is_number:
+            if isinstance(self, CoupledSpinState):
+                if j == int(j):
+                    start = j**2
+                else:
+                    start = (2*j-1)*(2*j+1)/4
+            else:
+                start = 0
             vect = represent(self, basis=basis, **options)
-            return Add(*[vect[i] * evect(j,j-i) for i in range(2*j+1)])
+            result = Add(*[vect[start+i] * evect(j,j-i,*args) for i in range(2*j+1)])
+            if isinstance(self, CoupledSpinState) and options.get('coupled') is False:
+                return uncouple(result)
+            return result
         else:
             i = 0
             mi = symbols('mi')
@@ -972,14 +1011,18 @@ class SpinState(State):
                 mi = symbols('mi%d' % i)
                 break
             # TODO: better way to get angles of rotation
-            if isinstance(self, Ket):
-                angles = represent(self.__class__(0,mi),basis=basis)[0].args[3:6]
+            if isinstance(self, CoupledSpinState):
+                test_args = (0,mi,0)
             else:
-                angles = represent(self.__class__(0,mi),basis=basis)[0].args[0].args[3:6]
+                test_args = (0,mi)
+            if isinstance(self, Ket):
+                angles = represent(self.__class__(*test_args),basis=basis)[0].args[3:6]
+            else:
+                angles = represent(self.__class__(*test_args),basis=basis)[0].args[0].args[3:6]
             if angles == (0,0,0):
                 return self
             else:
-                state = evect(j, mi)
+                state = evect(j, mi, *args)
                 lt = Rotation.D(j, mi, self.m, *angles)
                 return Sum(lt * state, (mi,-j,j))
 
@@ -1280,32 +1323,6 @@ class CoupledSpinState(SpinState):
         if isinstance(self, Bra):
             return self._rewrite_basis(Jz, JzBraCoupled, **options)
         return self._rewrite_basis(Jz, JzKetCoupled, **options)
-
-    def _rewrite_basis(self, basis, evect, **options):
-        from sympy.physics.quantum.represent import represent
-        j = sympify(self.j)
-        jvals = self.jvals
-        if j.is_number:
-            if j == int(j):
-                start = j**2
-            else:
-                start = (2*j-1)*(2*j+1)/4
-            vect = represent(self, basis=basis, **options)
-            result = Add(*[vect[start+i] * evect(j,j-i,*jvals) for i in range(2*j+1)])
-            if options.get('coupled') is False:
-                return uncouple(result)
-            return result
-        else:
-            # TODO: better way to get angles of rotation
-            mi = symbols('mi')
-            angles = represent(self.__class__(0,mi),basis=basis)[0].args[3:6]
-            if angles == (0,0,0):
-                return self
-            else:
-                state = evect(j, mi, *jvals)
-                lt = Rotation.D(j, mi, self.m, *angles)
-                result = lt * state
-                return Sum(lt * state, (mi,-j,j))
 
 
 class JxKetCoupled(CoupledSpinState, Ket):
