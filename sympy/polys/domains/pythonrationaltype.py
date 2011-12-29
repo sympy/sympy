@@ -25,23 +25,8 @@ class PythonRationalType(object):
 
     def __init__(self, p, q=None):
         if q is None:
-            # PythonRationalType(a) for a PythonRationalType,string
-            # or other admissible convertions
-            if isinstance(p,PythonRationalType):
-                self.p = p.p
-                self.q = p.q
-            elif isinstance(p,basestring):
-                    a = p.split('/')
-                    if len(a) == 2:
-                        p = PythonRationalType(int(a[0]),int(a[1]))
-                        self.p = p.p
-                        self.q = p.q
-                    else:
-                        self.p = self.p = int(a[0])
-                        self.q = 1
-            else:
-                self.p = p
-                self.q = 1
+            self.p = p
+            self.q = 1
         else:
             if not q:
                 raise ZeroDivisionError('rational number')
@@ -138,6 +123,7 @@ class PythonRationalType(object):
             q = self.q
         else:
             return NotImplemented
+
         return self.__class__(p, q)
 
     def __rmul__(self, other):

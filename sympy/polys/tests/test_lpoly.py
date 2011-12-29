@@ -1,6 +1,8 @@
 """Tests for distributed polynomials and series using lpoly"""
 
-from sympy import Symbol, Rational, sympify, QQ, sqrt
+from sympy import Symbol, Rational, sympify, sqrt
+from sympy.polys.domains import QQ
+#from sympy.core.numbers import Rational as QQ
 from sympy.series import series
 from sympy.core.function import expand
 from sympy.polys.lpoly import LPoly, lgens, LPolySubs
@@ -17,26 +19,26 @@ def test_str():
     # for QQ(n, 1); in this test these quantities do not appear
     lp = LPoly(list('xyz'), QQ, lex)
     x, y, z = lp.gens()
-    p = lp('  +z^4 +1/2*z^2 -1/4')
-    assert str(p) == ' +z^4 +1/2*z^2 -1/4'
-    p = lp('z^4 -1/2')
-    assert str(p) == ' +z^4 -1/2'
+    p = lp('  +z**4 +1/2*z**2 -1/4')
+    assert str(p) == 'z**4 + 1/2*z**2 - 1/4'
+    p = lp('z**4 -1/2')
+    assert str(p) == 'z**4 - 1/2'
 
 def test_read_monom():
     lp = LPoly(list('xyz'), QQ, lex)
-    s = 'x^2*y^3*z'
+    s = 'x**2*y**3*z'
     assert lp.read_monom(s) == monomial_from_sequence((2, 3, 1))
 
 def test_mon_eval():
     lp = LPoly(list('xyz'), QQ, lex)
-    s = '31*x^2*y^3*z'
+    s = '31*x**2*y**3*z'
     assert lp.mon_eval(s) == ((2, 3, 1), QQ(31))
 
 def test_gens():
     lp = LPoly(list('xy'), QQ, lex)
     x, y = lp.gens()
     assert x == lp('x')
-    #assert x**4 == lp('x^4')
+    #assert x**4 == lp('x**4')
 
 def test_zero():
     lp = LPoly('x, y', QQ, lex)
@@ -47,16 +49,17 @@ def test_zero():
 def test_from_mon():
     lp = LPoly('x, y', QQ, lex)
     p = lp.from_mon((1, 4, QQ(7, 3)))
-    assert p == lp('7/3*y^4')
+    assert lp('7/3*y**4') == p
+    assert p == lp('7/3*y**4')
 
 def test_variables():
     lp = LPoly('z, y, x', QQ, lex)
     z, y, x = lp.gens()
-    p = lp('x*y + 3*y^2')
+    p = lp('x*y + 3*y**2')
     assert p.variables() == (1, 2)
     lp = LPoly('x, y, z', QQ, lex)
     x, y, z = lp.gens()
-    p = lp('x*y + 3*y^2')
+    p = lp('x*y + 3*y**2')
     assert p.variables() == (0, 1)
 
 def test_eq():
@@ -103,35 +106,35 @@ def test_add():
     assert p1+p2 == zero
     assert p1+p1 == lp('-4*x')
 
-    p2 = lp('3/7*y^2')
+    p2 = lp('3/7*y**2')
     p3 = p1 + p2
-    assert p3 == lp('-2*x+3/7*y^2')
+    assert p3 == lp('-2*x+3/7*y**2')
     p4 = p3
     p3 = p3 + 1
-    assert p3 == lp('-2*x+3/7*y^2 + 1')
-    assert p4 == lp('-2*x+3/7*y^2')
+    assert p3 == lp('-2*x+3/7*y**2 + 1')
+    assert p4 == lp('-2*x+3/7*y**2')
 
 def test_iadd():
     lp, x, y = lgens('x, y', QQ, lex)
-    p3 = lp('-2*x+3/7*y^2')
+    p3 = lp('-2*x+3/7*y**2')
     # check that p3 is mutable
     p4 = p3
     p3 += 1
-    assert p3 == lp('-2*x+3/7*y^2 + 1')
-    assert p4 == lp('-2*x+3/7*y^2 + 1')
+    assert p3 == lp('-2*x+3/7*y**2 + 1')
+    assert p4 == lp('-2*x+3/7*y**2 + 1')
     p3 = p3 - 1
-    assert p3 == lp('-2*x+3/7*y^2')
+    assert p3 == lp('-2*x+3/7*y**2')
     p3 -= lp('1')
-    assert p3 == lp('-2*x+3/7*y^2-1')
+    assert p3 == lp('-2*x+3/7*y**2-1')
     p3 -= 1
-    assert p3 == lp('-2*x+3/7*y^2-2')
-    assert p3 - lp('3/7*y^2') == lp('-2*x-2')
+    assert p3 == lp('-2*x+3/7*y**2-2')
+    assert p3 - lp('3/7*y**2') == lp('-2*x-2')
     p4 = 2 - p3
-    assert p4 == lp('2*x-3/7*y^2+4')
+    assert p4 == lp('2*x-3/7*y**2+4')
     p4 -= 1
-    assert p4 == lp('2*x-3/7*y^2+3')
+    assert p4 == lp('2*x-3/7*y**2+3')
     p4 -= lp('2*x')
-    assert p4 == lp('-3/7*y^2+3')
+    assert p4 == lp('-3/7*y**2+3')
 
 def test_mul():
     lp, x, y = lgens('x, y', QQ, lex)
@@ -140,26 +143,26 @@ def test_mul():
     #assert 0*p1 == lp(0)
     assert p1 * 1 == p1
     #assert 1 * p1 == p1
-    p2 = lp('x + x^2')
-    assert p1*p2 == lp('x^3 + x^4')
-    assert 2*p2 == lp('2*x + 2*x^2')
-    p3 = lp('y + 2/3*y^2')
-    p4 = lp('2/3*x^2*y^2 + x^2*y + 2/3*x*y^2 + x*y')
+    p2 = lp('x + x**2')
+    assert p1*p2 == lp('x**3 + x**4')
+    assert 2*p2 == lp('2*x + 2*x**2')
+    p3 = lp('y + 2/3*y**2')
+    p4 = lp('2/3*x**2*y**2 + x**2*y + 2/3*x*y**2 + x*y')
     assert p2*p3 == p4
 
 def test_square():
     lp, x, y = lgens('x, y', QQ, lex)
     p1 = x.square()
-    assert p1 == lp('x^2')
+    assert p1 == lp('x**2')
     p2 = (x + y).square()
     assert p2 == x*x + 2*x*y + y*y
-    p3 = lp('3/7*x + x^3*y + 8*y^2')
-    assert p3.square() == lp('x^6*y^2 + 16*x^3*y^3 + 6/7*x^4*y + 64*y^4 + 48/7*x*y^2 + 9/49*x^2')
+    p3 = lp('3/7*x + x**3*y + 8*y**2')
+    assert p3.square() == lp('x**6*y**2 + 16*x**3*y**3 + 6/7*x**4*y + 64*y**4 + 48/7*x*y**2 + 9/49*x**2')
 
 
 def test_mul_iadd():
     lp, x, y = lgens('x, y', QQ, lex)
-    p = lp('x^2 + y^2 - 1')
+    p = lp('x**2 + y**2 - 1')
     p1 = x + y
     p2 = x - y
     p.mul_iadd(p1, p2)
@@ -170,41 +173,41 @@ def test_iadd_mon():
     p1 = x*x + y*y
     m = monomial_from_sequence((1, 2))
     p1.iadd_mon((m, QQ(2)))
-    assert p1 == lp('x^2 + y^2 + 2*x*y^2')
+    assert p1 == lp('x**2 + y**2 + 2*x*y**2')
 
 def test_iadd_m_mul_q():
     lp, x, y = lgens('x, y', QQ, lex)
-    p1 = lp('x^2 + y^2')
-    p2 = lp('x^3 + y^3')
+    p1 = lp('x**2 + y**2')
+    p2 = lp('x**3 + y**3')
     m = x*y
     expva = m.keys()[0]
     c = m[expva]
     p1.iadd_m_mul_q(p2, (expva, c))
-    assert p1 == lp('x^2 + y^2 + x^4*y + x*y^4')
+    assert p1 == lp('x**2 + y**2 + x**4*y + x*y**4')
 
 def test_leading_expv():
     lp, x, y = lgens('x, y', QQ, lex)
-    p = lp('2*x^2 + 3*y^3')
+    p = lp('2*x**2 + 3*y**3')
     assert p.leading_expv() == monomial_from_sequence((2, 0))
     lp, y, x = lgens('y, x', QQ, lex)
-    p = lp('2*x^2 + 3*y^3 + x^2*y^2')
+    p = lp('2*x**2 + 3*y**3 + x**2*y**2')
     assert p.leading_expv() == monomial_from_sequence((3, 0))
     lp, y, x = lgens('y, x', QQ, grlex)
-    p = lp('2*x^2 + 3*y^3 + x^2*y^2')
+    p = lp('2*x**2 + 3*y**3 + x**2*y**2')
     assert p.leading_expv() == monomial_from_sequence((2, 2))
 
 def test_leading_term():
     lp, x, y = lgens('x, y', QQ, lex)
-    p = lp('2*x^2 + 3*y^3')
-    assert p.leading_term() == lp('2*x^2')
+    p = lp('2*x**2 + 3*y**3')
+    assert p.leading_term() == lp('2*x**2')
 
 def test_div():
     lp, x, y = lgens('x, y', QQ, lex)
     p = y**2/4
     assert 4*p == y**2
-    p1 = lp('x^2 + y^2 - 1')
+    p1 = lp('x**2 + y**2 - 1')
     p2 = p1/7
-    assert p2 == lp('1/7*x^2 + 1/7*y^2 - 1/7')
+    assert p2 == lp('1/7*x**2 + 1/7*y**2 - 1/7')
 
 def test_pow():
     lp, x, y = lgens('x, y', QQ, lex)
@@ -327,19 +330,19 @@ def test_inversion():
 def test_derivative():
     gens=['x%d' % i for i in range(11)]
     lp = LPoly(gens, QQ, lex)
-    p = lp('288/5*x0^8*x1^6*x4^3*x10^2 + 8*x0^2*x2^3*x4^3 +2*x0^2-2*x1^2')
+    p = lp('288/5*x0**8*x1**6*x4**3*x10**2 + 8*x0**2*x2**3*x4**3 +2*x0**2-2*x1**2')
     p1 = p.derivative(0)
-    assert p1 == lp('2304/5*x0^7*x1^6*x4^3*x10^2 + 16*x0*x2^3*x4^3 + 4*x0')
+    assert p1 == lp('2304/5*x0**7*x1**6*x4**3*x10**2 + 16*x0*x2**3*x4**3 + 4*x0')
     p1 = p.derivative('x0')
-    assert p1 == lp('2304/5*x0^7*x1^6*x4^3*x10^2 + 16*x0*x2^3*x4^3 + 4*x0')
+    assert p1 == lp('2304/5*x0**7*x1**6*x4**3*x10**2 + 16*x0*x2**3*x4**3 + 4*x0')
 
 def test_integrate():
     lp, x, y = lgens('x, y', QQ, lex)
     p = x**2 * y**5 + x + y
     p1 = p.integrate('x')
-    assert p1 == lp('1/3*x^3*y^5 +1/2*x^2 + x*y')
+    assert p1 == lp('1/3*x**3*y**5 +1/2*x**2 + x*y')
     p1 = p.integrate('y')
-    assert p1 == lp('1/6*x^2*y^6 + x*y + 1/2*y^2')
+    assert p1 == lp('1/6*x**2*y**6 + x*y + 1/2*y**2')
 
 def test_nth_root():
     lp, x, y = lgens('x, y', QQ, lex)
@@ -367,16 +370,16 @@ def test_log():
     p = 1 + x
     p1 = p.log('x', 4)
     assert p1 == x - x**2/2 + x**3/3
-    p = lp('1+x+2/3*x^2')
+    p = lp('1+x+2/3*x**2')
     p1 = p.log('x', 9)
-    assert p1 == lp('-17/648*x^8 + 13/189*x^7 - 11/162*x^6 - 1/45*x^5 + 7/36*x^4 - 1/3*x^3 + 1/6*x^2 + x')
+    assert p1 == lp('-17/648*x**8 + 13/189*x**7 - 11/162*x**6 - 1/45*x**5 + 7/36*x**4 - 1/3*x**3 + 1/6*x**2 + x')
     p2 = p.series_inversion('x', 9)
     p3 = p2.log('x', 9)
     assert p3 == -p1
     lp, x, y = lgens('x, y', QQ, lex)
-    p = lp('1+x+2*y*x^2')
+    p = lp('1+x+2*y*x**2')
     p1 = p.log('x', 6)
-    assert p1 == lp('4*x^5*y^2 - 2*x^5*y - 2*x^4*y^2 + 1/5*x^5 + 2*x^4*y - 1/4*x^4 - 2*x^3*y + 1/3*x^3 + 2*x^2*y - 1/2*x^2 + x')
+    assert p1 == lp('4*x**5*y**2 - 2*x**5*y - 2*x**4*y**2 + 1/5*x**5 + 2*x**4*y - 1/4*x**4 - 2*x**3*y + 1/3*x**3 + 2*x**2*y - 1/2*x**2 + x')
 
 def test_atan():
     lp, x, y = lgens('x, y', QQ, lex)
@@ -388,13 +391,13 @@ def test_atanh():
     lp, x, y = lgens('x, y', QQ, lex)
     p = x*y + x**2
     p1 = p.atanh('x', 6)
-    assert p1 == lp('1/5*x^5*y^5 + x^5*y + x^4*y^2 + 1/3*x^3*y^3 + x^2 + x*y')
+    assert p1 == lp('1/5*x**5*y**5 + x**5*y + x**4*y**2 + 1/3*x**3*y**3 + x**2 + x*y')
 
 def test_tanh():
     lp, x, y = lgens('x, y', QQ, lex)
     p = x*y
     p1 = p.tanh('x', 8)
-    assert p1 == lp('-17/315*x^7*y^7 + 2/15*x^5*y^5 - 1/3*x^3*y^3 + x*y')
+    assert p1 == lp('-17/315*x**7*y**7 + 2/15*x**5*y**5 - 1/3*x**3*y**3 + x*y')
     p = x*y + x
 
 def test_exp():
@@ -417,7 +420,7 @@ def test_sin():
     p = 1 + x*y + x**4
     p = p.series_inversion('x', h) - 1
     p1 = p.sin('x', h)
-    assert p1 == lp('224179/72576*x^9*y^9 - 1591/720*x^8*y^8 - 15/4*x^9*y^5 + 6931/5040*x^7*y^7 - 1/24*x^8*y^4 - 5/8*x^6*y^6 - 5/2*x^9*y + 2*x^7*y^3 - 1/120*x^5*y^5 + x^8 - 5/2*x^6*y^2 + 1/2*x^4*y^4 + 2*x^5*y - 5/6*x^3*y^3 - x^4 + x^2*y^2 - x*y')
+    assert p1 == lp('224179/72576*x**9*y**9 - 1591/720*x**8*y**8 - 15/4*x**9*y**5 + 6931/5040*x**7*y**7 - 1/24*x**8*y**4 - 5/8*x**6*y**6 - 5/2*x**9*y + 2*x**7*y**3 - 1/120*x**5*y**5 + x**8 - 5/2*x**6*y**2 + 1/2*x**4*y**4 + 2*x**5*y - 5/6*x**3*y**3 - x**4 + x**2*y**2 - x*y')
 
 def test_cos():
     lp, x, y = lgens('x, y', QQ, lex)
@@ -425,7 +428,7 @@ def test_cos():
     p = 1 + x*y + x**4
     p = p.series_inversion('x', h) - 1
     p1 = p.cos('x', h)
-    assert p1 == lp('8791/5040*x^9*y^9 - 16699/8064*x^8*y^8 - 1501/120*x^9*y^5 + 87/40*x^7*y^7 + 55/6*x^8*y^4 - 1501/720*x^6*y^6 + 3*x^9*y - 35/6*x^7*y^3 + 11/6*x^5*y^5 - 1/2*x^8 + 3*x^6*y^2 - 35/24*x^4*y^4 - x^5*y + x^3*y^3 - 1/2*x^2*y^2 + 1')
+    assert p1 == lp('8791/5040*x**9*y**9 - 16699/8064*x**8*y**8 - 1501/120*x**9*y**5 + 87/40*x**7*y**7 + 55/6*x**8*y**4 - 1501/720*x**6*y**6 + 3*x**9*y - 35/6*x**7*y**3 + 11/6*x**5*y**5 - 1/2*x**8 + 3*x**6*y**2 - 35/24*x**4*y**4 - x**5*y + x**3*y**3 - 1/2*x**2*y**2 + 1')
 
 def test_cos_sin():
     lp, x, y = lgens('x, y', QQ, lex)
@@ -438,28 +441,28 @@ def test_sinh():
     lp, x, y = lgens('x, y', QQ, lex)
     p = x*y
     p1 = p.sinh('x', 8)
-    assert p1 == lp('1/5040*x^7*y^7 + 1/120*x^5*y^5 + 1/6*x^3*y^3 + x*y')
+    assert p1 == lp('1/5040*x**7*y**7 + 1/120*x**5*y**5 + 1/6*x**3*y**3 + x*y')
 
 def test_cosh():
     lp, x, y = lgens('x, y', QQ, lex)
     p = x*y
     p1 = p.cosh('x', 8)
-    assert p1 == lp('1/720*x^6*y^6 + 1/24*x^4*y^4 + 1/2*x^2*y^2 + 1')
+    assert p1 == lp('1/720*x**6*y**6 + 1/24*x**4*y**4 + 1/2*x**2*y**2 + 1')
 
 def test_lambert():
     lp, x = lgens('x', QQ, lex)
     p1 = x.lambert('x', 10)
-    assert p1 == lp('531441/4480*x^9 - 16384/315*x^8 + 16807/720*x^7 - 54/5*x^6 + 125/24*x^5 - 8/3*x^4 + 3/2*x^3 - x^2 + x')
+    assert p1 == lp('531441/4480*x**9 - 16384/315*x**8 + 16807/720*x**7 - 54/5*x**6 + 125/24*x**5 - 8/3*x**4 + 3/2*x**3 - x**2 + x')
 
 def test_asin():
     lp, x = lgens('x', QQ, lex)
     p1 = x.asin('x', 12)
-    assert p1 == lp('63/2816*x^11 + 35/1152*x^9 + 5/112*x^7 + 3/40*x^5 + 1/6*x^3 + x')
+    assert p1 == lp('63/2816*x**11 + 35/1152*x**9 + 5/112*x**7 + 3/40*x**5 + 1/6*x**3 + x')
 
 def test_asinh():
     lp, x = lgens('x', QQ, lex)
     p1 = x.asinh('x', 12)
-    assert p1 == lp('-63/2816*x^11 + 35/1152*x^9 - 5/112*x^7 + 3/40*x^5 - 1/6*x^3 + x')
+    assert p1 == lp('-63/2816*x**11 + 35/1152*x**9 - 5/112*x**7 + 3/40*x**5 - 1/6*x**3 + x')
 
 def test_basic():
     lp, _x, _y = lgens('_x, _y', QQ, lex)
@@ -507,7 +510,7 @@ def test_subs():
     lp, x, y = lgens('x, y', QQ, lex)
     p = (1+x)**4
     p1 = p.subs(x=(1+y)**5)
-    assert p1.coefficient(y**20) == lp('1')
+    assert p1.coefficient(y**20) == lp(1)
 
     p = 1 + x**2 + 2*y**2
     p1 = p.subs(x=1+y**2, y=1+x)
