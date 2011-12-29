@@ -255,6 +255,12 @@ class SpinOpBase(object):
         if isinstance(state, State):
             return self._apply_operator(state, **options).rewrite(orig_basis)
         # state is a linear combination of states
+        if isinstance(state, Sum):
+            ret = self._apply_operator_Sum(state, **options)
+        else:
+            ret = qapply(self*state)
+        if ret == self*state:
+            raise NotImplementedError
         return qapply(self*state).rewrite(orig_basis)
 
     def _apply_operator_JxKet(self, ket, **options):
@@ -277,6 +283,12 @@ class SpinOpBase(object):
             arg.extend(tp.args[n+1:])
             result.append(tp.__class__(*arg))
         return Add(*result).expand()
+
+    def _apply_operator_Sum(self, s, **options):
+        new_func = qapply(self * s.function)
+        if new_func == self*s.function:
+            raise NotImplementedError
+        return Sum(new_func, *s.limits)
 
 
 class JplusOp(SpinOpBase, Operator):
@@ -745,6 +757,8 @@ class WignerD(Expr):
     [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
 
+    is_commutative = True
+
     def __new__(cls, *args, **hints):
         if not len(args) == 6:
             raise ValueError('6 parameters expected, got %s' % args)
@@ -950,8 +964,14 @@ class SpinState(State):
             vect = represent(self, basis=basis, **options)
             return Add(*[vect[i] * evect(j,j-i) for i in range(2*j+1)])
         else:
-            # TODO: better way to get angles of rotation
+            i = 0
             mi = symbols('mi')
+            # make sure not to introduce a symbol already in the state
+            while self.subs(mi,0) != self:
+                i += 1
+                mi = symbols('mi%d' % i)
+                break
+            # TODO: better way to get angles of rotation
             if isinstance(self, Ket):
                 angles = represent(self.__class__(0,mi),basis=basis)[0].args[3:6]
             else:
