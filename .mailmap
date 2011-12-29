@@ -4,6 +4,9 @@
 # Name that should be used <email that should be used> Bad name <bad email>
 #
 # You can skip Bad name if it is the same as the one that should be used, and is unique.
+#
+# This file is up-to-date if the command git log --format="%aN <%aE>" | sort
+# -u gives no duplicates.
 Ondřej Čertík <ondrej@certik.cz> Ondrej Certik <ondrej@certik.cz>
 Ondřej Čertík <ondrej@certik.cz> ondrej.certik <devnull@localhost>
 Fredrik Johansson <fredrik.johansson@gmail.com> fredrik.johansson <devnull@localhost>
