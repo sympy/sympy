@@ -153,7 +153,9 @@ def prime(n):
 
         See Also
         ========
-        sympy.ntheory.primetest.isprime, primerange, primepi
+        sympy.ntheory.primetest.isprime : Test if n is a prime number (True) or not (False)
+        primerange : Generate a list of all prime numbers in the range [a, b)
+        primepi : Return the value of the prime counting function pi(n)
     """
 
     assert n > 0
@@ -172,7 +174,9 @@ def primepi(n):
 
         See Also
         ========
-        sympy.ntheory.primetest.isprime, primerange, prime
+        sympy.ntheory.primetest.isprime : Test if n is a prime number (True) of not (False)
+        primerange : Generate a list of all the prime numbers in the range [a, b)
+        prime : Return the nth prime returned by function prime(n)
     """
 
     if n < 2:
@@ -194,7 +198,9 @@ def nextprime(n, i=1):
 
         See Also
         ========
-        prevprime, primerange
+        prevprime : Return the value of the prime counting function pi(n)
+        primerange : Generate a list of all prime numbers in the range [a, b).
+
     """
 
     if i > 1:
@@ -244,7 +250,8 @@ def prevprime(n):
 
         See Also
         ========
-        nextprime, primerange
+        nextprime : Return the ith prime greater than n
+        primerange : Generate a list of all prime numbers in the range [a, b)
     """
 
     n = int(n)
@@ -302,7 +309,10 @@ def primerange(a, b):
 
         See Also
         ========
-        nextprime, prevprime, randprime, primorial
+        nextprime : Generate a list of all prime numbers in the range [a, b)
+        prevprime : Return the largest prime smaller than n
+        randprime : Return a random prime number in the range [a, b)
+        primorial
     """
     assert a <= b
     a -= 1
@@ -333,7 +343,8 @@ def randprime(a, b):
 
         See Also
         ========
-        primerange
+        primerange : Generate a list of all prime numbers in the range [a, b)
+
     """
 
     n = random.randint(a-1, b)
@@ -376,7 +387,8 @@ def primorial(n, nth=True):
 
     See Also
     ========
-    primerange
+    primerange : Generate a list of all prime numbers in the range [a, b)
+
     """
 
     if n < 1:
