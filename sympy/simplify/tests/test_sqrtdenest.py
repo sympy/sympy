@@ -81,6 +81,7 @@ def test_sqrtdenest_four_terms():
     assert sqrtdenest(sqrt(8*r2/3 + 14*r5/3 + S(154)/9)) == -sqrt(10)/3 + r2 + r5 + 3
     assert sqrtdenest(sqrt(sqrt(2*r6 + 5) + sqrt(2*r7 + 8))) == \
       sqrt(1 + r2 + r3 + r7)
+    assert _sqrt_four_terms_denest(S.One) == S.One
     assert _sqrt_four_terms_denest(sqrt(4*sqrt(15) + 8*r5 + 12*r3 + 24)) == \
       1 + r3 + r5 + sqrt(15)
 
