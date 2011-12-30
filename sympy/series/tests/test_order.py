@@ -222,7 +222,7 @@ def test_oseries():
 def test_issue_1180():
     a, b = symbols('a b')
     assert O(a+b,a,b)+O(1,a,b) == O(1, a, b)
-    
+
 @XFAIL
 def test_issue_1756():
     x = Symbol('x')
@@ -230,5 +230,4 @@ def test_issue_1756():
     g = Function('g')
     assert 1/O(1) != O(1)
     assert 1/O(x) != O(1/x)
-    assert 1/O(f(x)) != O(1/x)  
-   
+    assert 1/O(f(x)) != O(1/x)
