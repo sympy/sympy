@@ -228,5 +228,7 @@ def test_issue_1756():
     x = Symbol('x')
     f = Function('f')
     g = Function('g')
-   assert 1/g(x) == O(1/f(x))   
+    assert 1/O(1) != O(1)
+    assert 1/O(x) != O(1/x)
+    assert 1/O(f(x)) != O(1/x)  
    
