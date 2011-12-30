@@ -101,7 +101,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.line.Line.equation : Returns equation of a Line
+        sympy.geometry.line.Line.equation
 
         Examples
         ========
@@ -153,7 +153,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.util.intersection : Returns intersection of GeometryEntities
+        sympy.geometry.util.intersection
 
         Examples
         ========
@@ -202,7 +202,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        coefficients : Returns equation coefficients of line
+        coefficients
 
         Examples
         ========
@@ -240,7 +240,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        coefficients : Returns equation coefficients of line
+        coefficients
 
         Examples
         ========
@@ -287,7 +287,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        is_perpendicular : Returns true if angle is equal to 90 degrees
+        is_perpendicular
 
         Examples
         ========
@@ -316,7 +316,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        is_parallel : Returns true if two lines are parallel
+        is_parallel
 
         Examples
         ========
@@ -348,7 +348,7 @@ class LinearEntity(GeometryEntity):
         See Also
         ========
         is_perpendicular
-        perpendicular_segment : Creates a segment from point to line perpendicular to the line
+        perpendicular_segment
 
         Examples
         ========
@@ -391,7 +391,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        perpendicular_line : Creates a line perpendicular to the original line which passes through the given point
+        perpendicular_line
 
         Examples
         ========
@@ -425,7 +425,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        coefficients : Returns equation coefficients of line.
+        coefficients
 
         Examples
         ========
@@ -500,7 +500,7 @@ class LinearEntity(GeometryEntity):
         See Also
         ========
         sympy.geometry.point.Point
-        perpendicular_line : Creates a new line from point to line perpendicular to original line
+        perpendicular_line
 
         Examples
         ========
@@ -885,7 +885,7 @@ class Line(LinearEntity):
 
         See Also
         ========
-        LinearEntity.coefficients : Returns equation coefficients of line.
+        LinearEntity.coefficients
 
         Examples
         ========
@@ -1048,7 +1048,7 @@ class Ray(LinearEntity):
 
         See Also
         ========
-        ydirection : Vertical direction of ray
+        ydirection
 
         Examples
         ========
@@ -1078,7 +1078,7 @@ class Ray(LinearEntity):
 
         See Also
         ========
-        xdirection : Horizontal direction of ray
+        xdirection
 
         Examples
         ========
@@ -1393,7 +1393,7 @@ class Segment(LinearEntity):
 
         See Also
         ========
-        LinearEntity.perpendicular_segment : Creates a segment from point to line perpendicular to line
+        LinearEntity.perpendicular_segment
 
         Examples
         ========

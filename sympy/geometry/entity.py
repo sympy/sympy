@@ -58,7 +58,7 @@ class GeometryEntity(tuple):
 
         See Also
         ========
-        sympy.geometry.util.intersection : computes the intersection of GeometryEntities
+        sympy.geometry.util.intersection
 
         """
         raise NotImplementedError()
@@ -73,8 +73,8 @@ class GeometryEntity(tuple):
 
         See Also
         ========
-        scale : Changes size of entity via coordinate multiplication
-        translate : Changes position of entity via coordinate addition
+        scale
+        translate
 
         Examples
         ========
@@ -114,8 +114,8 @@ class GeometryEntity(tuple):
 
         See Also
         ========
-        rotate : Rotates an entity about a point
-        translate : Changes position of entity via coordinate addition
+        rotate
+        translate
 
         Examples
         ========
@@ -145,8 +145,8 @@ class GeometryEntity(tuple):
 
         See Also
         ========
-        rotate : Rotates an entity about a point
-        scale : Changes size of entity via coordinate multiplication
+        rotate
+        scale
 
         Examples
         ========
@@ -184,8 +184,8 @@ class GeometryEntity(tuple):
           
         See Also
         ========
-        sympy.geometry.ellipse.Ellipse.encloses_point : Tests whether entity encloses a point in various subclasses
-        sympy.geometry.polygon.Polygon.encloses_point : See above
+        sympy.geometry.ellipse.Ellipse.encloses_point
+        sympy.geometry.polygon.Polygon.encloses_point
 
         """
         from sympy.geometry.point import Point
@@ -224,7 +224,7 @@ class GeometryEntity(tuple):
 
         See Also
         ========
-        scale : Changes size of entity via coordinate multiplication
+        scale
 
         """
         raise NotImplementedError()

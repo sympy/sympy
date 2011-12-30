@@ -82,7 +82,7 @@ class Curve(GeometryEntity):
 
         See Also
         ========
-        parameter : Variable serving as parameter of functions
+        parameter
 
         Examples
         ========
@@ -105,7 +105,7 @@ class Curve(GeometryEntity):
 
         See Also
         ========
-        functions : Functions using parameter to generate curve
+        functions
 
         Examples
         ========
@@ -129,7 +129,7 @@ class Curve(GeometryEntity):
 
         See Also
         ========
-        plot_interval : Returns interval of a parameter
+        plot_interval
 
         Examples
         ========

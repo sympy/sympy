@@ -397,7 +397,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        foci : Returns the location of all foci of ellipse
+        foci
 
         Examples
         ========
@@ -598,7 +598,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        tangent_lines : Returns the lines passing through a point which are tangent to the ellipse
+        tangent_lines
 
         Examples
         ========

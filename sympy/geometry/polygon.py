@@ -189,7 +189,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.ellipse.Ellipse.area : Returns area of an Ellipse
+        sympy.geometry.ellipse.Ellipse.area
 
         Examples
         ========
@@ -221,7 +221,7 @@ class Polygon(GeometryEntity):
         See Also
         ========
         sympy.geometry.point.Point
-        sympy.geometry.line.LinearEntity.angle_between : Returns angle between two LinearEntities
+        sympy.geometry.line.LinearEntity.angle_between
 
         Examples
         ========
@@ -263,7 +263,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.line.Segment.length : Returns length of a Segment
+        sympy.geometry.line.Segment.length
 
         Examples
         ========
@@ -321,7 +321,7 @@ class Polygon(GeometryEntity):
         See Also
         ========
         sympy.geometry.point.Point
-        sympy.geometry.util.centroid : Utility that returns centroid of a GeometryEntity
+        sympy.geometry.util.centroid
 
         Examples
         ========
@@ -391,7 +391,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.util.convex_hull : Utility that calculates the convex hull of Points
+        sympy.geometry.util.convex_hull
 
         Examples
         ========
@@ -434,7 +434,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        Point
+        sympy.geometry.point.Point
         sympy.geometry.ellipse.Ellipse.encloses_point
 
         Examples
@@ -645,7 +645,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.point.Point.distance : Returns distance between two points
+        sympy.geometry.point.Point.distance
 
         Examples
         =======
@@ -849,7 +849,7 @@ class Polygon(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.entity.GeometryEntity.encloses : Tests whether a GeometryEntity encloses another
+        sympy.geometry.entity.GeometryEntity.encloses
 
         Examples
         ========
@@ -978,7 +978,7 @@ class RegularPolygon(Polygon):
         See Also
         ========
         sympy.geometry.point.Point
-        sympy.geometry.ellipse.Ellipse.center : Returns center of an ellipse
+        sympy.geometry.ellipse.Ellipse.center
 
         Examples
         ========
@@ -1007,8 +1007,8 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        sympy.geometry.line.Segment.length : Returns length of a Segment
-        sympy.geometry.ellipse.Circle.radius : Returns radius of a Circle
+        sympy.geometry.line.Segment.length
+        sympy.geometry.ellipse.Circle.radius
 
         Examples
         ========
@@ -1057,8 +1057,8 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        sympy.geometry.line.Segment.length : Returns length of a Segment
-        sympy.geometry.ellipse.Circle.radius : Returns radius of a Circle
+        sympy.geometry.line.Segment.length
+        sympy.geometry.ellipse.Circle.radius
 
         Examples
         ========
@@ -1087,7 +1087,7 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        sympy.geometry.line.LinearEntity.angle_between : Returns angle between two LinearEntities
+        sympy.geometry.line.LinearEntity.angle_between
 
         Examples
         ========
@@ -1131,7 +1131,7 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        circumcenter : Returns center of circumcircle
+        circumcenter
         sympy.geometry.ellipse.Circle
 
         Examples
@@ -1154,7 +1154,7 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        inradius : Returns radius of incircle
+        inradius
         sympy.geometry.ellipse.Circle
 
         Examples
@@ -1243,7 +1243,8 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        rotation : Angle by which the RegularPolygon is rotated around its center
+        rotation
+        rotate : Creates a copy of the RegularPolygon rotated about a Point
 
         """
         self._rot += angle
@@ -1261,8 +1262,8 @@ class RegularPolygon(Polygon):
 
         See Also
         ========
-        rotation : Angle by which the RegularPolygon is rotated around its center
-        spin : Rotates figure in place
+        rotation
+        spin : Rotates a RegularPolygon in place
 
         """
 
@@ -1513,7 +1514,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        sympy.geometry.line.LinearEntity.is_perpendicular : Tests whether two linear figures are perpendicular
+        sympy.geometry.line.LinearEntity.is_perpendicular
 
         Examples
         ========
@@ -1741,7 +1742,7 @@ class Triangle(Polygon):
 
         See Also
         ========
-        incircle : Returns incircle of figure
+        incircle
         sympy.geometry.ellipse.Circle.radius
 
         Examples

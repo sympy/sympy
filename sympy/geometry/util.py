@@ -25,7 +25,7 @@ def idiff(eq, y, x, dep=None):
 
     See Also
     ========
-    Derivative
+    sympy.core.function.Derivative
 
     """
     if not dep:
@@ -65,7 +65,7 @@ def _symbol(s, matching_symbol=None):
 
     See Also
     ========
-    Symbol
+    sympy.core.symbol.Symbol
 
     """
     if isinstance(s, basestring):

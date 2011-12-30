@@ -247,7 +247,7 @@ class Point(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.line.Segment.length : Returns length of a Segment
+        sympy.geometry.line.Segment.length
 
         Examples
         ========
@@ -277,7 +277,7 @@ class Point(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.line.Segment.midpoint : Returns midpoint of a Segment
+        sympy.geometry.line.Segment.midpoint
 
         Examples
         ========
