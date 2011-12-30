@@ -287,4 +287,3 @@ def test_Limit_dir():
 def test_issue_1202():
     x = Symbol('x')
     assert Limit(sin(x)/x, x, 0) == Limit(1/x*sin(x), x, 0, dir='+')
-	
