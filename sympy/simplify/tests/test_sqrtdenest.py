@@ -1,6 +1,6 @@
 from sympy import sqrt, root, S, Symbol, sqrtdenest, Integral, cos
 from sympy.utilities.pytest import XFAIL
-from sympy.simplify.sqrtdenest import _sqrt_four_terms_denest
+from sympy.simplify.sqrtdenest import _sqrt_four_terms_denest, subsets
 
 r2, r3, r5, r6, r7, r29 = [sqrt(x) for x in [2, 3, 5, 6, 7, 29]]
 
@@ -126,3 +126,14 @@ def test_issue_2758():
     assert sqrtdenest(1 + z) == 1 + ans
     assert sqrtdenest(Integral(z + 1, (x, 1, 2))) == Integral(1 + ans, (x, 1, 2))
     assert sqrtdenest(x + sqrt(y)) == x + sqrt(y)
+    ans = (r2 + r6)/(r3 + 2)
+    assert sqrtdenest(z) == ans
+    assert sqrtdenest(1 + z) == 1 + ans
+    assert sqrtdenest(Integral(z + 1, (x, 1, 2))) == Integral(1 + ans, (x, 1, 2))
+    assert sqrtdenest(x + sqrt(y)) == x + sqrt(y)
+
+def test_subsets():
+    assert subsets(1) == [[1]]
+    assert subsets(4) == [[1,0,0,0], [0,1,0,0], [1,1,0,0], [0,0,1,0], \
+      [1,0,1,0], [0,1,1,0], [1,1,1,0], [0,0,0,1], [1,0,0,1], [0,1,0,1], \
+      [1,1,0,1], [0,0,1,1], [1,0,1,1], [0,1,1,1], [1,1,1,1]]
