@@ -84,7 +84,7 @@ class LatexPrinter(Printer):
                 example if you wished the LaTeX output to be ``\bm{\hat{\sigma}}``
                 you would give the variable the name sigmahatbm.
             2 - Subscripts are denoted by a single underscore and superscripts
-                by a double underscore so that A_{\\rho\\beta}^{25} would be
+                by a double underscore so that ``A_{\\rho\\beta}^{25}`` would be
                 input as A_rhobeta__25.
 
         2. Some standard function names have been improved such as asin is now
