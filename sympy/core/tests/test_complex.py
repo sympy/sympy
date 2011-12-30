@@ -1,5 +1,5 @@
 from sympy import Symbol, sqrt, I, Integer, Rational, cos, sin, im, re, \
-        exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi, expand_complex
+        exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi, S, expand_complex
 
 
 def test_complex():
