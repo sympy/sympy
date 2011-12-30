@@ -3,7 +3,6 @@ from sympy.mpmath import mpf, mp
 
 from random import randint, choice, seed
 
-from sympy.utilities.pytest import XFAIL
 
 all_modes = [round_floor, round_ceiling, round_down, round_up, round_nearest]
 
