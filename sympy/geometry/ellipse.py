@@ -426,7 +426,7 @@ class Ellipse(GeometryEntity):
         See Also
         ========
         sympy.geometry.point.Point
-        focus_distance : Returns the distance between foci and center
+        focus_distance : Returns the distance between focus and center
 
         Examples
         ========
@@ -857,7 +857,7 @@ class Ellipse(GeometryEntity):
 
         Returns
         =======
-        intersection : list of GeometryEntities
+        intersection : list of GeometryEntity objects
 
         Notes
         -----
