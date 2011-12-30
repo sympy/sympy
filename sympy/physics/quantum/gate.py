@@ -262,16 +262,16 @@ class Gate(UnitaryOperator):
     # Print methods
     #-------------------------------------------------------------------------
 
-    def _print_contents(self, printer, *args):
+    def _sympystr(self, printer, *args):
         label = self._print_label(printer, *args)
         return '%s(%s)' % (self.gate_name, label)
 
-    def _print_contents_pretty(self, printer, *args):
+    def _pretty(self, printer, *args):
         a = stringPict(unicode(self.gate_name))
         b = self._print_label_pretty(printer, *args)
         return self._print_subscript_pretty(a, b)
 
-    def _print_contents_latex(self, printer, *args):
+    def _latex(self, printer, *args):
         label = self._print_label(printer, *args)
         return '%s_{%s}' % (self.gate_name_latex, label)
 
@@ -392,13 +392,13 @@ class CGate(Gate):
     # Print methods
     #-------------------------------------------------------------------------
 
-    def _print_contents(self, printer, *args):
+    def _print_label(self, printer, *args):
         controls = self._print_sequence(self.controls, ',', printer, *args)
         gate = printer._print(self.gate, *args)
-        return '%s((%s),%s)' %\
-            (self.gate_name, controls, gate)
+        return '(%s),%s' %\
+            (controls, gate)
 
-    def _print_contents_pretty(self, printer, *args):
+    def _pretty(self, printer, *args):
         controls = self._print_sequence_pretty(self.controls, ',', printer, *args)
         gate = printer._print(self.gate)
         gate_name = stringPict(unicode(self.gate_name))
@@ -407,7 +407,7 @@ class CGate(Gate):
         final = prettyForm(*first.right((gate)))
         return final
 
-    def _print_contents_latex(self, printer, *args):
+    def _latex(self, printer, *args):
         controls = self._print_sequence(self.controls, ',', printer, *args)
         gate = printer._print(self.gate, *args)
         return r'%s_{%s}{\left(%s\right)}' %\
@@ -489,16 +489,16 @@ class UGate(Gate):
     # Print methods
     #-------------------------------------------------------------------------
 
-    def _print_contents(self, printer, *args):
+    def _print_label(self, printer, *args):
         targets = self._print_targets(printer, *args)
         return '%s(%s)' % (self.gate_name, targets)
 
-    def _print_contents_pretty(self, printer, *args):
+    def _pretty(self, printer, *args):
         targets = self._print_sequence_pretty(self.targets, ',', printer, *args)
         gate_name = stringPict(unicode(self.gate_name))
         return self._print_subscript_pretty(gate_name, targets)
 
-    def _print_contents_latex(self, printer, *args):
+    def _latex(self, printer, *args):
         targets = self._print_sequence(self.targets, ',', printer, *args)
         return r'%s_{%s}' % (self.gate_name_latex, targets)
 
@@ -831,14 +831,14 @@ class CNotGate(CGate, TwoQubitGate):
     # The default printing of Gate works better than those of CGate, so we
     # go around the overridden methods in CGate.
 
-    def _print_contents(self, printer, *args):
-        return Gate._print_contents(self, printer, *args)
+    def _print_label(self, printer, *args):
+        return Gate._print_label(self, printer, *args)
 
-    def _print_contents_pretty(self, printer, *args):
-        return Gate._print_contents_pretty(self, printer, *args)
+    def _pretty(self, printer, *args):
+        return Gate._pretty(self, printer, *args)
 
-    def _print_contents_latex(self, printer, *args):
-        return Gate._print_contents_latex(self, printer, *args)
+    def _latex(self, printer, *args):
+        return Gate._latex(self, printer, *args)
 
     #-------------------------------------------------------------------------
     # Commutator/AntiCommutator

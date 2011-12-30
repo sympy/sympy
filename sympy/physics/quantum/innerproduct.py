@@ -105,11 +105,11 @@ class InnerProduct(Expr):
 
     def _pretty(self, printer, *args):
         pform = prettyForm(_lbracket)
-        pform = prettyForm(*pform.right(self.bra._print_label_pretty(printer, *args)))
+        pform = prettyForm(*pform.right(self.bra._print_contents_pretty(printer, *args)))
         return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
 
     def _latex(self, printer, *args):
-        bra_label = self.bra._print_label_latex(printer, *args)
+        bra_label = self.bra._print_contents_latex(printer, *args)
         ket = printer._print(self.ket, *args)
         return r'\left\langle %s \right. %s' % (bra_label, ket)
 

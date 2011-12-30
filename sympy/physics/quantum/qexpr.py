@@ -225,7 +225,7 @@ class QExpr(Expr):
     def _print_parens_pretty(self, pform, left='(', right=')'):
         return prettyForm(*pform.parens(left=left, right=right))
 
-    # Printing of labels
+    # Printing of labels (i.e. args)
 
     def _print_label(self, printer, *args):
         return self._print_sequence(
@@ -247,13 +247,10 @@ class QExpr(Expr):
             self.label, self._label_separator, printer, *args
         )
 
-    # Printing of contents
+    # Printing of contents (default to label)
 
     def _print_contents(self, printer, *args):
         return self._print_label(printer, *args)
-
-    def _print_contents_repr(self, printer, *args):
-        return self._print_label_repr(printer, *args)
 
     def _print_contents_pretty(self, printer, *args):
         return self._print_label_pretty(printer, *args)
@@ -268,8 +265,8 @@ class QExpr(Expr):
 
     def _sympyrepr(self, printer, *args):
         classname = self.__class__.__name__
-        contents = self._print_contents_repr(printer, *args)
-        return '%s(%s)' % (classname, contents)
+        label = self._print_label_repr(printer, *args)
+        return '%s(%s)' % (classname, label)
 
     def _pretty(self, printer, *args):
         pform = self._print_contents_pretty(printer, *args)

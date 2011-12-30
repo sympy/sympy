@@ -81,6 +81,7 @@ u"""\
 
 def test_cg():
     cg = CG(1,2,3,4,5,6)
+    wigner3j = Wigner3j(1,2,3,4,5,6)
     assert str(cg) == 'CG(1, 2, 3, 4, 5, 6)'
     ascii_str = \
 """\
@@ -98,7 +99,6 @@ C       \n\
     assert upretty(cg) == ucode_str
     assert latex(cg) == r'C^{5,6}_{1,2,3,4}'
     sT(cg, "CG(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6))")
-    wigner3j = Wigner3j(1,2,3,4,5,6)
     assert str(wigner3j) == 'Wigner3j(1,3,5,2,4,6)'
     ascii_str = \
 """\
@@ -120,8 +120,8 @@ u"""\
 def test_commutator():
     A = Operator('A')
     B = Operator('B')
-    c = Commutator(A,B)
-    c_tall = Commutator(A**2,B)
+    c = Commutator(A, B)
+    c_tall = Commutator(A**2, B)
     assert str(c) == '[A,B]'
     assert pretty(c) == '[A,B]'
     assert upretty(c) == u'[A,B]'
@@ -357,9 +357,9 @@ def test_innerproduct():
     assert latex(ip1) == r'\left\langle \psi \right. {\left|\psi\right\rangle }'
     sT(ip1, "InnerProduct(Bra(Symbol('psi')),Ket(Symbol('psi')))")
     assert str(ip2) == '<psi;t|psi;t>'
-    assert pretty(ip2) == u'⟨psi❘psi;t⟩'
-    assert upretty(ip2) == u'⟨ψ❘ψ;t⟩'
-    assert latex(ip2) == r'\left\langle \psi \right. {\left|\psi;t\right\rangle }'
+    assert pretty(ip2) == u'⟨psi;t❘psi;t⟩'
+    assert upretty(ip2) == u'⟨ψ;t❘ψ;t⟩'
+    assert latex(ip2) == r'\left\langle \psi;t \right. {\left|\psi;t\right\rangle }'
     sT(ip2, "InnerProduct(TimeDepBra(Symbol('psi'),Symbol('t')),TimeDepKet(Symbol('psi'),Symbol('t')))")
     assert str(ip3) == "<1,1|1,1>"
     assert pretty(ip3) == u'⟨1,1❘1,1⟩'

@@ -425,11 +425,6 @@ class SpinOpBase(object):
     def _print_contents(self, printer, *args):
         return '%s%s' % (unicode(self.name), self._coord)
 
-    # def _sympyrepr(self, printer, *args):
-    #     return '%s(%s)' % (
-    #         self.__class__.__name__, printer._print(self.label,*args)
-    #
-
     def _print_contents_pretty(self, printer, *args):
         a = stringPict(unicode(self.name))
         b = stringPict(self._coord)
@@ -745,14 +740,12 @@ class J2Op(SpinOpBase, HermitianOperator):
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
-    def _pretty(self, printer, *args):
-        a = stringPict('J')
-        b = stringPict('2')
-        top = stringPict(*b.left(' '*a.width()))
-        bot = stringPict(*a.right(' '*b.width()))
-        return prettyForm(binding=prettyForm.POW, *bot.above(top))
+    def _print_contents_pretty(self, printer, *args):
+        a = prettyForm(unicode(self.name))
+        b = prettyForm(u'2')
+        return a**b
 
-    def _latex(self, printer, *args):
+    def _print_contents_latex(self, printer, *args):
         return r'%s^2' % str(self.name)
 
     def _eval_rewrite_as_xyz(self, *args):
