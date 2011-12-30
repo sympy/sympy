@@ -23,6 +23,7 @@ def _sqrt_symbolic_denest(a, b, r):
     sqrt(ca*(sqrt(r) + cb/(2*ca))**2). XXX a simple example would be nice
 
     Examples
+    ========
     >>> from sympy.simplify.sqrtdenest import _sqrt_symbolic_denest, sqrtdenest
     >>> from sympy import sqrt, Symbol
     >>> from sympy.abc import x
@@ -49,7 +50,7 @@ def _sqrt_symbolic_denest(a, b, r):
     sqrt(sqrt(sqrt(x + 3) + 1) + 1) + 1 + sqrt(2)
     """
 
-    a, b, r = S(a), S(b), S(r)
+    a, b, r = sympify([a, b, r])
     rval = sqrt_match(r)
     if not rval:
         return None
@@ -89,18 +90,22 @@ def sqrt_numeric_denest(a, b, r, d2):
 
 
 def _sqrt_four_terms_denest(expr):
-    """Denest the square root of three or four surds
-
-    See D.J.Jeffrey and A.D.Rich
-    'Symplifying Square Roots of Square Roots by Denesting'
+    """Denest the square root of three or four surds.
 
     Examples
+    ========
     >>> from sympy import sqrt
     >>> from sympy.simplify.sqrtdenest import _sqrt_four_terms_denest
     >>> _sqrt_four_terms_denest(sqrt(-72*sqrt(2) + 158*sqrt(5) + 498))
     -sqrt(10) + sqrt(2) + 9 + 9*sqrt(5)
     >>> _sqrt_four_terms_denest(sqrt(12+2*sqrt(6)+2*sqrt(14)+2*sqrt(21)))
     sqrt(2) + sqrt(3) + sqrt(7)
+
+    References
+    ==========
+    - D. J. Jeffrey and A. D. Rich, 'Symplifying Square Roots of Square Roots
+      by Denesting'
+
     """
     from sympy.simplify.simplify import radsimp
     if not is_sqrt(expr):
@@ -128,10 +133,8 @@ def _sqrt_four_terms_denest(expr):
 def sqrtdenest(expr, max_iter=3):
     """
     Denests sqrts in an expression that contain other square roots
-    if possible, otherwise return the expr unchanged.
-
-    This algorithm is based on
-    <http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
+    if possible, otherwise return the expr unchanged. This is based on the
+    algorithm of [1].
 
     Examples
     ========
@@ -141,7 +144,13 @@ def sqrtdenest(expr, max_iter=3):
     >>> sqrtdenest(sqrt(5 + 2 * sqrt(6)))
     sqrt(2) + sqrt(3)
 
-    See also: unrad in sympy.solvers.solvers
+    See Also
+    ========
+    sympy.solvers.solvers.unrad
+
+    References
+    ==========
+    [1] http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf
 
     """
     expr = expand_mul(sympify(expr))
@@ -154,6 +163,8 @@ def sqrtdenest(expr, max_iter=3):
 
 
 def sqrtdenest0(expr):
+    """XXX docstring needed"""
+
     if is_sqrt(expr):
         n, d = expr.as_numer_denom()
         if d is S.One:
@@ -173,6 +184,8 @@ def sqrtdenest0(expr):
     return expr
 
 def _sqrtdenest(expr):
+    """XXX docstring needed"""
+
     from sympy.simplify.simplify import radsimp
     if not is_sqrt(expr):
         val = None
@@ -225,6 +238,8 @@ def _sqrtdenest(expr):
 
 def sqrt_depth(p):
     """
+    XXX docstring needed
+
     >>> from sympy.functions.elementary.miscellaneous import sqrt
     >>> from sympy.simplify.sqrtdenest import sqrt_depth
     >>> sqrt_depth(1 + sqrt(2)*(1 + sqrt(3)))
@@ -243,6 +258,7 @@ def sqrt_depth(p):
 
 def is_algebraic(p):
     """
+    XXX docstring needed
     >>> from sympy.functions.elementary.miscellaneous import sqrt
     >>> from sympy.simplify.sqrtdenest import is_algebraic
     >>> from sympy import cos
@@ -263,12 +279,13 @@ def is_algebraic(p):
         return False
 
 def sqrt_match(p):
-    """return [a, b, r] for match p = a + b*sqrt(r) where
-    sqrt(r) has maximal nested sqrt among addends of p
+    """Return [a, b, r] for match p = a + b*sqrt(r) where
+    sqrt(r) has maximal nested sqrt among addends of p.
 
     # FIXME should one count also fourth roots, or maybe any root?
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.functions.elementary.miscellaneous import sqrt
     >>> from sympy.simplify.sqrtdenest import sqrt_match
     >>> sqrt_match(1 + sqrt(2) + sqrt(2)*sqrt(3) +  2*sqrt(1+sqrt(5)))
