@@ -576,7 +576,7 @@ J \n\
     assert str(rot) == 'R(1,2,3)'
     assert pretty(rot) == u'ℛ (1,2,3)'
     assert upretty(rot) == u'ℛ (1,2,3)'
-    assert latex(rot) == r'Rotation(1,2,3)'
+    assert latex(rot) == r'\mathcal{R}(1,2,3)'
     sT(rot, "Rotation(Integer(1),Integer(2),Integer(3))")
     assert str(bigd) == 'WignerD(1, 2, 3, 4, 5, 6)'
     ascii_str = \

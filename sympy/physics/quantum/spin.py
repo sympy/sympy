@@ -846,6 +846,9 @@ class Rotation(UnitaryOperator):
     def _print_operator_name_pretty(self, printer, *args):
         return prettyForm(u"\u211B" + u" ")
 
+    def _print_operator_name_latex(self, printer, *args):
+        return r'\mathcal{R}'
+
     def _eval_inverse(self):
         return Rotation(-self.gamma, -self.beta, -self.alpha)
 
