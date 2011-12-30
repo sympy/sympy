@@ -1,5 +1,5 @@
-from sympy.functions import sqrt, sign
-from sympy.core import S, Wild, Rational, sympify, Mul, Add, Expr
+from sympy.functions import sqrt, sign, root
+from sympy.core import S, Wild, sympify, Mul, Add, Expr
 from sympy.core.function import expand_multinomial, expand_mul
 from sympy.core.symbol import Dummy
 from sympy.polys import Poly, PolynomialError
@@ -215,7 +215,7 @@ def _sqrtdenest(expr):
                 if dr.is_Rational:
                     z = sqrt_numeric_denest(_mexpand(b*r), a, r, dr2)
                     if z != None:
-                        return z/r**Rational(1,4)
+                        return z/root(r, 4)
 
         else:
             z = _sqrt_symbolic_denest(a, b, r)
@@ -400,8 +400,8 @@ def _denester (nested, av0, h, max_depth_level):
             p = Mul(*[nested[i] for i in range(len(nested)) if f[i]])
             v = sqrt_match(p)
             if 1 in f and f.index(1) < len(nested) - 1 and f[len(nested) - 1]:
-                v[0] = -1 * v[0]
-                v[1] = -1 * v[1]
+                v[0] = -v[0]
+                v[1] = -v[1]
             if not f[len(nested)]: #Solution denests with square roots
                 vad = _mexpand(v[0] + d)
                 if vad <= 0:
@@ -416,7 +416,7 @@ def _denester (nested, av0, h, max_depth_level):
                 s2 = _mexpand(v[1]*R) + d
                 if s2 <= 0:
                     return sqrt(nested[-1]), [0]*len(nested)
-                FR, s = (_mexpand(R)**Rational(1,4)), sqrt(s2)
+                FR, s = root(_mexpand(R), 4), sqrt(s2)
                 return _mexpand(s/(sqrt(2)*FR) + v[0]*FR/(sqrt(2)*s)), f
 
 def subsets(n):
