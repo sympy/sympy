@@ -155,7 +155,7 @@ def prime(n):
         ========
         sympy.ntheory.primetest.isprime : Test if n is a prime number (True) or not (False)
         primerange : Generate a list of all prime numbers in the range [a, b)
-        primepi : Return the value of the prime counting function pi(n)
+        primepi : Return the number of prime numbers less than or equal to n
     """
 
     assert n > 0
@@ -198,8 +198,8 @@ def nextprime(n, i=1):
 
         See Also
         ========
-        prevprime : Return the value of the prime counting function pi(n)
-        primerange : Generate a list of all prime numbers in the range [a, b).
+        prevprime : Return the largest prime smaller than n
+        primerange : Generate a list of all prime numbers in the range [a, b)
 
     """
 
@@ -309,10 +309,10 @@ def primerange(a, b):
 
         See Also
         ========
-        nextprime : Generate a list of all prime numbers in the range [a, b)
+        nextprime : Return the ith prime greater than n
         prevprime : Return the largest prime smaller than n
         randprime : Return a random prime number in the range [a, b)
-        primorial
+        primorial : Returns the product of primes based on condition
     """
     assert a <= b
     a -= 1
