@@ -90,7 +90,7 @@ def sqrt_numeric_denest(a, b, r, d2):
 
 
 def _sqrt_four_terms_denest(expr):
-    """Denest the square root of three or four surds.
+    """Helper that denests the square root of three or four surds.
 
     Examples
     ========
@@ -108,8 +108,7 @@ def _sqrt_four_terms_denest(expr):
 
     """
     from sympy.simplify.simplify import radsimp
-    if not is_sqrt(expr):
-        return expr
+    assert is_sqrt(expr)
     if expr.base < 0:
         return sqrt(-1)*_sqrt_four_terms_denest(sqrt(-expr.base))
     a = Add(*expr.base.args[:2])
