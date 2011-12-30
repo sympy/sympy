@@ -194,9 +194,9 @@ def isprime(n):
 
     See Also
     ========
-    sympy.ntheory.generate.primerange : Generate a list of all prime numbers in the range [a, b)
-    sympy.ntheory.generate.primepi : Return the value of the prime counting function pi(n)
-    sympy.ntheory.generate.prime : Return the nth prime by function prime(n)
+    sympy.ntheory.generate.primerange : Generates all primes in a given range
+    sympy.ntheory.generate.primepi : Return the number of primes less than or equal to n
+    sympy.ntheory.generate.prime : Return the nth prime
     """
     n = int(n)
     if n < 2:
