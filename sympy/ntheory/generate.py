@@ -153,8 +153,8 @@ def prime(n):
 
         See Also
         ========
-        sympy.ntheory.primetest.isprime : Test if n is a prime number (True) or not (False)
-        primerange : Generate a list of all prime numbers in the range [a, b)
+        sympy.ntheory.primetest.isprime : Test if n is prime
+        primerange : Generate all primes in a given range
         primepi : Return the number of prime numbers less than or equal to n
     """
 
@@ -174,8 +174,8 @@ def primepi(n):
 
         See Also
         ========
-        sympy.ntheory.primetest.isprime : Test if n is a prime number (True) of not (False)
-        primerange : Generate a list of all the prime numbers in the range [a, b)
+        sympy.ntheory.primetest.isprime : Test if n is prime
+        primerange : Generate all primes in a given range
         prime : Return the nth prime returned by function prime(n)
     """
 
@@ -199,7 +199,7 @@ def nextprime(n, i=1):
         See Also
         ========
         prevprime : Return the largest prime smaller than n
-        primerange : Generate a list of all prime numbers in the range [a, b)
+        primerange : Generate all primes in a given range
 
     """
 
@@ -251,7 +251,7 @@ def prevprime(n):
         See Also
         ========
         nextprime : Return the ith prime greater than n
-        primerange : Generate a list of all prime numbers in the range [a, b)
+        primerange : Generates all primes in a given range
     """
 
     n = int(n)
@@ -343,7 +343,7 @@ def randprime(a, b):
 
         See Also
         ========
-        primerange : Generate a list of all prime numbers in the range [a, b)
+        primerange : Generate all primes in a given range
 
     """
 
@@ -387,7 +387,7 @@ def primorial(n, nth=True):
 
     See Also
     ========
-    primerange : Generate a list of all prime numbers in the range [a, b)
+    primerange : Generate all primes in a given range
 
     """
 
