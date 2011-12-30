@@ -283,7 +283,3 @@ def test_issue2337():
 def test_Limit_dir():
     raises(TypeError, "Limit(x, x, 0, dir=0)")
     raises(ValueError, "Limit(x, x, 0, dir='0')")
-@XFAIL
-def test_issue_1202():
-    x = Symbol('x')
-    assert Limit(sin(x)/x, x, 0) == Limit(1/x*sin(x), x, 0, dir='+')
