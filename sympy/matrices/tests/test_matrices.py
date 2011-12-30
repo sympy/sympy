@@ -1934,7 +1934,7 @@ def test_invertible_check():
     raises(ValueError, 'm.inv(method="ADJ")')
     raises(ValueError, 'm.inv(method="GE")')
     raises(ValueError, 'm.inv(method="LU")')
-    
+
 @XFAIL
 def test_issue_860():
     x, y=symbols('x, y')
