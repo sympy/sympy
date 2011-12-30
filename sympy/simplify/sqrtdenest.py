@@ -299,11 +299,7 @@ def sqrt_match(p):
         v = [(sqrt_depth(x), i) for i, x in enumerate(pargs)]
         nmax = max(v)
         if nmax[0] == 0:
-            b, r = p.as_coeff_Mul()
-            if is_sqrt(p):
-                res = (S.Zero, b, p.base)
-            else:
-                res = []
+            res = []
         else:
             depth = nmax[0]
             n = nmax[1]
