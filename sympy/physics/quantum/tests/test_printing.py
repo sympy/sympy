@@ -373,15 +373,17 @@ def test_innerproduct():
     assert str(ip_tall1) == '<x/2|x/2>'
     ascii_str = \
 """\
- x x \n\
-<-|->\n\
- 2 2 \
+ / | \\ \n\
+/ x|x \\\n\
+\\ -|- /\n\
+ \\2|2/ \
 """
     ucode_str = \
 u"""\
- x x \n\
-⟨─❘─⟩\n\
- 2 2 \
+ ╱ │ ╲ \n\
+╱ x│x ╲\n\
+╲ ─│─ ╱\n\
+ ╲2│2╱ \
 """
     assert pretty(ip_tall1) == ascii_str
     assert upretty(ip_tall1) == ucode_str
@@ -390,15 +392,17 @@ u"""\
     assert str(ip_tall2) == '<x|x/2>'
     ascii_str = \
 """\
-   x \n\
-<x|->\n\
-   2 \
+ / | \\ \n\
+/  |x \\\n\
+\\ x|- /\n\
+ \\ |2/ \
 """
     ucode_str = \
 u"""\
-   x \n\
-⟨x❘─⟩\n\
-   2 \
+ ╱ │ ╲ \n\
+╱  │x ╲\n\
+╲ x│─ ╱\n\
+ ╲ │2╱ \
 """
     assert pretty(ip_tall2) == ascii_str
     assert upretty(ip_tall2) == ucode_str
@@ -407,15 +411,17 @@ u"""\
     assert str(ip_tall3) == '<x/2|x>'
     ascii_str = \
 """\
- x   \n\
-<-|x>\n\
- 2   \
+ / | \\ \n\
+/ x|  \\\n\
+\\ -|x /\n\
+ \\2| / \
 """
     ucode_str = \
 u"""\
- x   \n\
-⟨─❘x⟩\n\
- 2   \
+ ╱ │ ╲ \n\
+╱ x│  ╲\n\
+╲ ─│x ╱\n\
+ ╲2│ ╱ \
 """
     assert pretty(ip_tall3) == ascii_str
     assert upretty(ip_tall3) == ucode_str
@@ -633,15 +639,17 @@ def test_state():
     assert str(bra_tall) == '<x/2|'
     ascii_str = \
 """\
- x \n\
-<-|\n\
- 2 \
+ / |\n\
+/ x|\n\
+\\ -|\n\
+ \\2|\
 """
     ucode_str = \
 u"""\
- x \n\
-⟨─❘\n\
- 2 \
+ ╱ │\n\
+╱ x│\n\
+╲ ─│\n\
+ ╲2│\
 """
     assert pretty(bra_tall) == ascii_str
     assert upretty(bra_tall) == ucode_str
@@ -650,15 +658,17 @@ u"""\
     assert str(ket_tall) == '|x/2>'
     ascii_str = \
 """\
- x \n\
-|->\n\
- 2 \
+| \\ \n\
+|x \\\n\
+|- /\n\
+|2/ \
 """
     ucode_str = \
 u"""\
- x \n\
-❘─⟩\n\
- 2 \
+│ ╲ \n\
+│x ╲\n\
+│─ ╱\n\
+│2╱ \
 """
     assert pretty(ket_tall) == ascii_str
     assert upretty(ket_tall) == ucode_str

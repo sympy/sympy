@@ -3,7 +3,7 @@
 
 from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
                    Tuple)
-from sympy.printing.pretty.stringpict import prettyForm
+from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 
 __all__ = [
@@ -25,7 +25,7 @@ __all__ = [
 #-----------------------------------------------------------------------------
 # Unicode brackets
 # LIGHT VERTICAL BAR
-_straight_bracket = "|"
+_straight_bracket_ucode = u"\u2758"
 
 # MATHEMATICAL ANGLE BRACKETS
 _lbracket_ucode = u"\u27E8"
@@ -34,7 +34,7 @@ _rbracket_ucode = u"\u27E9"
 # ASCII brackets
 _lbracket = "<"
 _rbracket = ">"
-_straight_bracket_ucode = u"\u2758"
+_straight_bracket = "|"
 
 # Other options for unicode printing of <, > and | for Dirac notation.
 
@@ -122,19 +122,49 @@ class StateBase(QExpr):
     # Printing
     #-------------------------------------------------------------------------
 
+    def _pretty_print_tall_brackets(self, bracket, height, printer, *args):
+        # This is a nasty hack job that just works
+        # Ideally, this could be done by pform.parens
+        # but it does not support the angled < and >
+        if height % 2 == 1:
+            height += 1
+        if printer._use_unicode:
+            slash = u'\u2571'
+            bslash = u'\u2572'
+            vert = u'\u2502'
+        else:
+            slash = '/'
+            bslash = '\\'
+            vert = '|'
+        if bracket == '<':
+            bracket_args = [ ' '*(height/2-i-1) + slash for i in range(height/2)]
+            bracket_args.extend([ ' '*i + bslash for i in range(height/2)])
+        elif bracket == '>':
+            bracket_args = [ ' '*i + bslash for i in range(height/2)]
+            bracket_args.extend([ ' '*(height/2-i-1) + slash for i in range(height/2)])
+        elif bracket == '|':
+            bracket_args = [vert for i in range(height)]
+        return stringPict('\n'.join(bracket_args), baseline=height/2)
+
     def _sympystr(self, printer, *args):
-        label = self._print_contents(printer, *args)
-        return '%s%s%s' % (self.lbracket, label, self.rbracket)
+        contents = self._print_contents(printer, *args)
+        return '%s%s%s' % (self.lbracket, contents, self.rbracket)
 
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = self._print_contents_pretty(printer, *args)
-        if printer._use_unicode:
-            pform = prettyForm(*pform.left((self.lbracket_pretty_ucode)))
-            pform = prettyForm(*pform.right((self.rbracket_pretty_ucode)))
+        if pform.height() == 1:
+            if printer._use_unicode:
+                lbracket = self.lbracket_pretty_ucode
+                rbracket = self.rbracket_pretty_ucode
+            else:
+                lbracket = self.lbracket_pretty
+                rbracket = self.rbracket_pretty
         else:
-            pform = prettyForm(*pform.left((self.lbracket_pretty)))
-            pform = prettyForm(*pform.right((self.rbracket_pretty)))
+            lbracket = self._pretty_print_tall_brackets(self.lbracket_pretty_tall, pform.height(), printer)
+            rbracket = self._pretty_print_tall_brackets(self.rbracket_pretty_tall, pform.height(), printer)
+        pform = prettyForm(*pform.left(lbracket))
+        pform = prettyForm(*pform.right(rbracket))
         return pform
 
     def _latex(self, printer, *args):
@@ -158,6 +188,8 @@ class KetBase(StateBase):
     rbracket_pretty = prettyForm(_rbracket)
     lbracket_pretty_ucode = prettyForm(_straight_bracket_ucode)
     rbracket_pretty_ucode = prettyForm(_rbracket_ucode)
+    lbracket_pretty_tall = lbracket
+    rbracket_pretty_tall = rbracket
     lbracket_latex = r'\left|'
     rbracket_latex = r'\right\rangle '
 
@@ -238,6 +270,8 @@ class BraBase(StateBase):
     rbracket_pretty = prettyForm(_straight_bracket)
     lbracket_pretty_ucode = prettyForm(_lbracket_ucode)
     rbracket_pretty_ucode = prettyForm(_straight_bracket_ucode)
+    lbracket_pretty_tall = lbracket
+    rbracket_pretty_tall = rbracket
     lbracket_latex = r'\left\langle '
     rbracket_latex = r'\right|'
 
