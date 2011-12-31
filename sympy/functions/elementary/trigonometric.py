@@ -631,7 +631,8 @@ class tan(TrigonometricFunction):
     See Also
     ========
 
-    sin, cos, atan
+    L{sin}, L{csc}, L{cos}, L{sec}, L{cot}
+    L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
 
     References
     ==========
@@ -639,20 +640,6 @@ class tan(TrigonometricFunction):
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
 
     """
-
-    nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex==1:
-            return S.One + self**2
-        else:
-            raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        """
-        Returns the inverse of this function.
-        """
-        return atan
 
     @classmethod
     def eval(cls, arg):
@@ -733,6 +720,18 @@ class tan(TrigonometricFunction):
             x = arg.args[0]
             return 1 / x
 
+    def fdiff(self, argindex=1):
+        if argindex==1:
+            return sec(self.args[0])**2
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return atan
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -740,13 +739,19 @@ class tan(TrigonometricFunction):
             return S.Zero
         else:
             x = sympify(x)
+            k = n // 2 + 1
+            return (-1)**(k-1) * 2**(2*k) * (2**(2*k)-1) * C.bernoulli(2*k) / C.factorial(2*k) * x**(2*k-1)
 
-            a, b = ((n-1)//2), 2**(n+1)
-
-            B = C.bernoulli(n+1)
-            F = C.factorial(n+1)
-
-            return (-1)**a * b*(b-1) * B/F * x**n
+    def _eval_aseries(self, n, args0, x, logx):
+        if C.im(args0[0]) > 0:
+            return S.ImaginaryUnit - 2*S.ImaginaryUnit*C.exp(2*S.ImaginaryUnit*x)*C.hyper([1],[],-C.exp(2*S.ImaginaryUnit*x))
+        elif C.im(args0[0]) < 0:
+            return -S.ImaginaryUnit + 2*S.ImaginaryUnit*C.exp(-2*S.ImaginaryUnit*x)*C.hyper([1],[],-C.exp(-2*S.ImaginaryUnit*x))
+        elif C.im(args0[0]) == 0:
+            # No asymptotic series expansion along the real line
+            return tan(x)
+        else:
+            return super(tan, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_nseries(self, x, n, logx):
         i = self.args[0].limit(x, 0)*2/S.Pi
@@ -777,10 +782,6 @@ class tan(TrigonometricFunction):
         denom = cos(re)**2 + C.sinh(im)**2
         return (sin(re)*cos(re)/denom, C.sinh(im)*C.cosh(im)/denom)
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
     def _eval_expand_trig(self, deep=True, **hints):
         return self
 
@@ -791,14 +792,20 @@ class tan(TrigonometricFunction):
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(neg_exp-pos_exp)/(neg_exp+pos_exp)
 
-    def _eval_rewrite_as_sin(self, x):
-        return 2*sin(x)**2/sin(2*x)
+    def _eval_rewrite_as_sin(self, arg):
+        return sin(arg) / sin(S.Pi/2 + arg)
 
-    def _eval_rewrite_as_cos(self, x):
-        return -cos(x + S.Pi/2)/cos(x)
+    def _eval_rewrite_as_cos(self, arg):
+        return -cos(arg + S.Pi/2)/cos(arg)
 
     def _eval_rewrite_as_cot(self, arg):
         return 1/cot(arg)
+
+    def _eval_rewrite_as_sec(self, arg):
+        return -sec(arg) / sec(S.Pi/2 + arg)
+
+    def _eval_rewrite_as_csc(self, arg):
+        return csc(S.Pi/2 + arg) / csc(arg)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
