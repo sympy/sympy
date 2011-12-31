@@ -715,7 +715,7 @@ u"""\
 """
     assert pretty(e1) == ascii_str
     assert upretty(e1) == ucode_str
-    assert latex(e1) == r'{\left(J_z\right)^{2}}\otimes \left({A^{\dag} + B^{\dag}}\right) \left{}\left(DifferentialOperator(\frac{\partial}{\partial x} \operatorname{f}{\left (x \right )},\operatorname{f}{\left (x \right )})^{\dag}\right)^{3},A^{\dag} + B^{\dag}\right} \left({\left\langle 1,0\right|} + {\left\langle 1,1\right|}\right) \left({\left|0,0\right\rangle } + {\left|1,-1\right\rangle }\right)'
+    assert latex(e1) == r'{\left(J_z\right)^{2}}\otimes \left({A^{\dag} + B^{\dag}}\right) \left\{\left(DifferentialOperator(\frac{\partial}{\partial x} \operatorname{f}{\left (x \right )},\operatorname{f}{\left (x \right )})^{\dag}\right)^{3},A^{\dag} + B^{\dag}\right\} \left({\left\langle 1,0\right|} + {\left\langle 1,1\right|}\right) \left({\left|0,0\right\rangle } + {\left|1,-1\right\rangle }\right)'
     #sT(e1, '')
     assert e1 == eval("Mul(TensorProduct(Pow(JzOp(Symbol('J')), Integer(2)), Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), AntiCommutator(Dagger(DifferentialOperator(Derivative(Function('f')(Symbol('x')), Symbol('x')),Function('f')(Symbol('x'))))**3,Dagger(Operator('A')) + Dagger(Operator('B'))), Add(JzBra(Integer(1),Integer(0)), JzBra(Integer(1),Integer(1))), Add(JzKet(Integer(0),Integer(0)), JzKet(Integer(1),Integer(-1))))")
     assert str(e2) == '[Jz**2,A + B]*{E**(-2),Dagger(D)*Dagger(C)}*[J2,Jz]'
@@ -733,7 +733,7 @@ u"""\
 """
     assert pretty(e2) == ascii_str
     assert upretty(e2) == ucode_str
-    assert latex(e2) == r'\left[\left(J_z\right)^{2},A + B\right] \left{}\left(E\right)^{-2},D^{\dag} C^{\dag}\right} \left[J^2,J_z\right]'
+    assert latex(e2) == r'\left[\left(J_z\right)^{2},A + B\right] \left\{\left(E\right)^{-2},D^{\dag} C^{\dag}\right\} \left[J^2,J_z\right]'
     #sT(e2, '')
     assert e2 == eval("Mul(Commutator(JzOp(Symbol('J'))**2,Operator(Symbol('A')) + Operator(Symbol('B'))), AntiCommutator(Operator(Symbol('E'))**(-2),Dagger(Operator(Symbol('D')))*Dagger(Operator(Symbol('C')))), Commutator(J2Op(Symbol('J')),JzOp(Symbol('J'))))")
     # Broken, see test_big_expr_failing_str
