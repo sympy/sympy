@@ -837,7 +837,10 @@ class Rotation(UnitaryOperator):
         return 'R'
 
     def _print_operator_name_pretty(self, printer, *args):
-        return prettyForm(u"\u211B" + u" ")
+        if printer._use_unicode:
+            return prettyForm(u"\u211B" + u" ")
+        else:
+            return prettyForm("R ")
 
     def _print_operator_name_latex(self, printer, *args):
         return r'\mathcal{R}'

@@ -23,13 +23,18 @@ __all__ = [
 #-----------------------------------------------------------------------------
 # States, bras and kets.
 #-----------------------------------------------------------------------------
-
+# Unicode brackets
 # LIGHT VERTICAL BAR
-_straight_bracket = u"\u2758"
+_straight_bracket = "|"
 
-# MATHEMATICAL LEFT ANGLE BRACKET
-_lbracket = u"\u27E8"
-_rbracket = u"\u27E9"
+# MATHEMATICAL ANGLE BRACKETS
+_lbracket_ucode = u"\u27E8"
+_rbracket_ucode = u"\u27E9"
+
+# ASCII brackets
+_lbracket = "<"
+_rbracket = ">"
+_straight_bracket_ucode = u"\u2758"
 
 # Other options for unicode printing of <, > and | for Dirac notation.
 
@@ -124,8 +129,12 @@ class StateBase(QExpr):
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = self._print_contents_pretty(printer, *args)
-        pform = prettyForm(*pform.left((self.lbracket_pretty)))
-        pform = prettyForm(*pform.right((self.rbracket_pretty)))
+        if printer._use_unicode:
+            pform = prettyForm(*pform.left((self.lbracket_pretty_ucode)))
+            pform = prettyForm(*pform.right((self.rbracket_pretty_ucode)))
+        else:
+            pform = prettyForm(*pform.left((self.lbracket_pretty)))
+            pform = prettyForm(*pform.right((self.rbracket_pretty)))
         return pform
 
     def _latex(self, printer, *args):
@@ -147,6 +156,8 @@ class KetBase(StateBase):
     rbracket = '>'
     lbracket_pretty = prettyForm(_straight_bracket)
     rbracket_pretty = prettyForm(_rbracket)
+    lbracket_pretty_ucode = prettyForm(_straight_bracket_ucode)
+    rbracket_pretty_ucode = prettyForm(_rbracket_ucode)
     lbracket_latex = r'\left|'
     rbracket_latex = r'\right\rangle '
 
@@ -225,6 +236,8 @@ class BraBase(StateBase):
     rbracket = '|'
     lbracket_pretty = prettyForm(_lbracket)
     rbracket_pretty = prettyForm(_straight_bracket)
+    lbracket_pretty_ucode = prettyForm(_lbracket_ucode)
+    rbracket_pretty_ucode = prettyForm(_straight_bracket_ucode)
     lbracket_latex = r'\left\langle '
     rbracket_latex = r'\right|'
 

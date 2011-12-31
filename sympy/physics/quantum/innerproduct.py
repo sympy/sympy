@@ -4,7 +4,7 @@
 from sympy import Expr, conjugate
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.state import KetBase, BraBase, _lbracket
+from sympy.physics.quantum.state import KetBase, BraBase
 
 __all__ = [
     'InnerProduct'
@@ -104,8 +104,11 @@ class InnerProduct(Expr):
         return '%s|%s' % (sbra[:-1], sket[1:])
 
     def _pretty(self, printer, *args):
-        pform = prettyForm(_lbracket)
-        pform = prettyForm(*pform.right(self.bra._print_contents_pretty(printer, *args)))
+        pform = self.bra._print_contents_pretty(printer, *args)
+        if printer._use_unicode:
+            pform = prettyForm(*pform.left(self.bra.lbracket_pretty_ucode))
+        else:
+            pform = prettyForm(*pform.left(self.bra.lbracket_pretty))
         return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
 
     def _latex(self, printer, *args):

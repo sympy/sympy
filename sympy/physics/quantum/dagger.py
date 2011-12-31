@@ -139,7 +139,10 @@ class Dagger(Expr):
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
-        pform = pform**prettyForm(u'\u2020')
+        if printer._use_unicode:
+            pform = pform**prettyForm(u'\u2020')
+        else:
+            pform = pform**prettyForm('+')
         return pform
 
     def _latex(self, printer, *args):
