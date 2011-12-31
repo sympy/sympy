@@ -10,11 +10,11 @@ oo = S.Infinity
 
 def integrate(*args, **kwargs):
     """
-    Wrap around sympy integrate function to include a lazy flag
-    if lazy==True then just return the Integral object
+    Wrap around sympy integrate function to include a evaluate flag
+    if evaluate==False then just return the Integral object
     """
-    lazy = kwargs.get('lazy', False)
-    if not lazy:
+    evaluate = kwargs.get('evaluate', True)
+    if evaluate:
         return sympy_integrate(*args)
     else:
         return Integral(*args)
@@ -70,9 +70,9 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
         if not variables:
             return expr
         # Extract the full integral
-        fullintegral = self.fulldomain.integrate(expr, variables, lazy=True)
+        fullintgrl = self.fulldomain.integrate(expr, variables, evaluate=False)
         # separate into integrand and limits
-        integrand, limits = fullintegral.function, list(fullintegral.limits)
+        integrand, limits = fullintgrl.function, list(fullintgrl.limits)
 
         conditions = [self.condition]
         while conditions:
