@@ -192,6 +192,14 @@ the plotting module entry.
 API Reference
 -------------
 
+Entities
+~~~~~~~~
+
+.. module:: sympy.geometry.entity
+
+.. autoclass:: sympy.geometry.entity.GeometryEntity
+   :members:
+
 Utils
 ~~~~~
 
@@ -202,6 +210,8 @@ Utils
 .. autofunction:: convex_hull
 
 .. autofunction:: are_similar
+
+.. autofunction:: centroid
 
 Points
 ~~~~~~
@@ -260,4 +270,3 @@ Polygons
 
 .. autoclass:: Triangle
    :members:
-
