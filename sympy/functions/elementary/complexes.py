@@ -444,7 +444,7 @@ class polar_lift(Function):
 
     See Also
     ========
-    periodic_argument, polar_lift
+    periodic_argument, polar_lift, exp_polar
 
     """
 
@@ -509,7 +509,7 @@ class periodic_argument(Function):
 
     See Also
     ========
-    polar_lift, principal_branch
+    polar_lift, principal_branch, exp_polar
 
     """
 
@@ -595,7 +595,7 @@ class principal_branch(Function):
 
     See Also
     ========
-    polar_lift, periodic_argument
+    polar_lift, periodic_argument, exp_polar
 
     """
 

@@ -110,7 +110,7 @@ class exp_polar(ExpBase):
 
     See also
     ========
-    powsimp
+    periodic_argument, principle_branch, powsimp
     class:`polar_lift`
 
     """
