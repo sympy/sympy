@@ -876,3 +876,4 @@ def test_check_assumptions():
 
 def test_solve_abs():
     assert solve(abs(x - 7) - 8) == [-1, 15]
+
