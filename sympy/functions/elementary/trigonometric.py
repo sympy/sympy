@@ -1529,7 +1529,12 @@ class cot(TrigonometricFunction):
 ###############################################################################
 
 
-class asin(Function):
+class InverseTrigonometricFunction(Function):
+    """Base class for inverse trigonometric functions."""
+    nargs = 1
+
+
+class asin(InverseTrigonometricFunction):
     """
     asin(x) -> Returns the arc sine of x (measured in radians)
 
@@ -1670,7 +1675,7 @@ class asin(Function):
         return sage.asin(self.args[0]._sage_())
 
 
-class acos(Function):
+class acos(InverseTrigonometricFunction):
     """
     acos(x) -> Returns the arc cosine of x (measured in radians)
 
@@ -1797,7 +1802,7 @@ class acos(Function):
         return sage.acos(self.args[0]._sage_())
 
 
-class atan(Function):
+class atan(InverseTrigonometricFunction):
     """
     atan(x) -> Returns the arc tangent of x (measured in radians)
 
@@ -1927,7 +1932,7 @@ class atan(Function):
         return sage.atan(self.args[0]._sage_())
 
 
-class acot(Function):
+class acot(InverseTrigonometricFunction):
     """
     acot(x) -> Returns the arc cotangent of x (measured in radians)
     """
@@ -2040,7 +2045,7 @@ class acot(Function):
         return sage.acot(self.args[0]._sage_())
 
 
-class atan2(Function):
+class atan2(InverseTrigonometricFunction):
     r"""
     The function ``atan2(y, x)`` computes `\operatorname{atan}(y/x)` taking
     two arguments `y` and `x`.  Signs of both `y` and `x` are considered to

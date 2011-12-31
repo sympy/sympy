@@ -1150,6 +1150,10 @@ def test_sympy__functions__elementary__trigonometric__TrigonometricFunction():
 def test_sympy__functions__elementary__trigonometric__ReciprocalTrigonometricFunction():
     pass
 
+@SKIP("abstract class")
+def test_sympy__functions__elementary__trigonometric__InverseTrigonometricFunction():
+    pass
+
 def test_sympy__functions__elementary__trigonometric__acos():
     from sympy.functions.elementary.trigonometric import acos
     assert _test_args(acos(2))
