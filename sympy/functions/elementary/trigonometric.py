@@ -1004,19 +1004,14 @@ class cot(TrigonometricFunction):
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(pos_exp+neg_exp)/(pos_exp-neg_exp)
 
-<<<<<<< HEAD
     def _eval_rewrite_as_Pow(self, arg):
         if arg.func is log:
             I = S.ImaginaryUnit
             x = arg.args[0]
             return -I*(x**-I + x**I)/(x**-I - x**I)
 
-    def _eval_rewrite_as_sin(self, x):
-        return 2*sin(2*x)/sin(x)**2
-=======
     def _eval_rewrite_as_sin(self, arg):
         return sin(arg + S.Pi/2) / sin(arg)
->>>>>>> 4bc942a... Enhancements of the cot function
 
     def _eval_rewrite_as_cos(self, arg):
         return -cos(arg) / cos(arg + S.Pi/2)
@@ -1041,8 +1036,6 @@ class cot(TrigonometricFunction):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-<<<<<<< HEAD
-=======
     def _eval_is_bounded(self):
         arg = self.args[0]
         if arg.is_imaginary:
@@ -1057,7 +1050,6 @@ class cot(TrigonometricFunction):
             return S.NaN
         return cot(argnew)
 
->>>>>>> 4bc942a... Enhancements of the cot function
     def _sage_(self):
         import sage.all as sage
         return sage.cot(self.args[0]._sage_())
