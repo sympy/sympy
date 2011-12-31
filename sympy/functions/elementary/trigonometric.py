@@ -16,6 +16,13 @@ class TrigonometricFunction(Function):
 
     unbranched = True
 
+    nargs = 1
+
+    def _eval_expand_complex(self, deep=True, **hints):
+        re_part, im_part = self.as_real_imag(deep=deep, **hints)
+        return re_part + im_part*S.ImaginaryUnit
+
+
 def _peeloff_pi(arg):
     """
     Split ARG into two parts, a "rest" and a multiple of pi/2.
@@ -142,7 +149,8 @@ class sin(TrigonometricFunction):
     See Also
     ========
 
-    cos, tan, asin
+    L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+    L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
 
     References
     ==========
@@ -150,20 +158,6 @@ class sin(TrigonometricFunction):
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
 
     """
-
-    nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return cos(self.args[0])
-        else:
-            raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        """
-        Returns the inverse of this function.
-        """
-        return asin
 
     @classmethod
     def eval(cls, arg):
@@ -256,6 +250,18 @@ class sin(TrigonometricFunction):
             x = arg.args[0]
             return 1 / (sqrt(1 + 1 / x**2) * x)
 
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return cos(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return asin
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -263,12 +269,19 @@ class sin(TrigonometricFunction):
             return S.Zero
         else:
             x = sympify(x)
+            k = n // 2
+            return (-1)**k*x**(2*k+1)/C.factorial(2*k+1)
 
-            if len(previous_terms) > 2:
-                p = previous_terms[-2]
-                return -p * x**2 / (n*(n-1))
-            else:
-                return (-1)**(n//2) * x**(n)/C.factorial(n)
+    def _eval_aseries(self, n, args0, x, logx):
+        if C.im(args0[0]) > 0:
+            return S.ImaginaryUnit * C.exp(-S.ImaginaryUnit*x) / 2
+        elif C.im(args0[0]) < 0:
+            return -S.ImaginaryUnit * C.exp(S.ImaginaryUnit*x) / 2
+        elif C.im(args0[0]) == 0:
+            # No asymptotic series expansion along the real line
+            return sin(x)
+        else:
+            return super(sin, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
@@ -293,6 +306,12 @@ class sin(TrigonometricFunction):
         cot_half = cot(S.Half*arg)
         return 2*cot_half/(1 + cot_half**2)
 
+    def _eval_rewrite_as_sec(self, arg):
+        return -1 / sec(arg + S.Pi/2)
+
+    def _eval_rewrite_as_csc(self, arg):
+        return 1 / csc(arg)
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -308,10 +327,6 @@ class sin(TrigonometricFunction):
         else:
             re, im = self.args[0].as_real_imag()
         return (sin(re)*C.cosh(im), cos(re)*C.sinh(im))
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_expand_trig(self, deep=True, **hints):
         if deep:
