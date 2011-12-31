@@ -1646,19 +1646,12 @@ class atan(InverseTrigonometricFunction):
     >>> atan(oo)
     pi/2
 
-    See Also
+    See also
     ========
 
-    acos, asin, tan
+    L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+    L{asin}, L{acsc}, L{acos}, L{asec}, L{acot}
     """
-
-    nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return 1/(1+self.args[0]**2)
-        else:
-            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def eval(cls, arg):
@@ -1703,7 +1696,11 @@ class atan(InverseTrigonometricFunction):
         if i_coeff is not None:
             return S.ImaginaryUnit * C.atanh(i_coeff)
 
-
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return 1/(1+self.args[0]**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     @staticmethod
     @cacheit
@@ -1725,10 +1722,6 @@ class atan(InverseTrigonometricFunction):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_rewrite_as_log(self, x):
-        return S.ImaginaryUnit/2 * \
-               (C.log((S(1) - S.ImaginaryUnit * x)/(S(1) + S.ImaginaryUnit * x)))
-
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] == S.Infinity:
             return S.Pi/2 - atan(1/self.args[0])
@@ -1736,6 +1729,25 @@ class atan(InverseTrigonometricFunction):
             return -S.Pi/2 - atan(1/self.args[0])
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
+
+    def _eval_rewrite_as_log(self, arg):
+        I = S.ImaginaryUnit
+        return I/2*(C.log(1-I*arg)-C.log(1+I*arg))
+
+    def _eval_rewrite_as_asin(self, arg):
+        return sqrt(arg**2)/arg * (S.Pi/2 - asin(1/sqrt(1+arg**2)))
+
+    def _eval_rewrite_as_acos(self, arg):
+        return sqrt(arg**2)/arg * acos(1/sqrt(1+arg**2)))
+
+    def _eval_rewrite_as_acot(self, arg):
+        return acot(1/arg)
+
+    def _eval_rewrite_as_asec(self, arg):
+        return sqrt(arg**2)/arg * asec(sqrt(1+arg**2)))
+
+    def _eval_rewrite_as_acsc(self, arg):
+        return sqrt(arg**2)/arg * (S.Pi/2 - acsc(sqrt(1+arg**2)))
 
     def _sage_(self):
         import sage.all as sage
