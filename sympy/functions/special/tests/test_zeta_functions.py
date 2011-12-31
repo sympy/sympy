@@ -96,17 +96,17 @@ def test_derivatives():
 
 def myexpand(func, target):
     expanded = expand_func(func)
-    if target is not None and expanded != target:
-        return False
-    if expanded == func:
+    if target is not None:
+        return expanded == target
+    if expanded == func: # it didn't expand
         return False
 
+    # check to see that the expanded and original evaluate to the same value
     subs = {}
     for a in func.free_symbols:
         subs[a] = randcplx()
-
     return abs(func.subs(subs).n()
-               - expanded.replace(exp_polar, exp).subs(subs)).n() < 1e-10
+               - expanded.replace(exp_polar, exp).subs(subs).n()) < 1e-10
 
 def test_polylog_expansion():
     from sympy import factor, log
@@ -119,12 +119,9 @@ def test_polylog_expansion():
     assert myexpand(polylog(-1, z), z**2/(1 - z)**2 + z/(1 - z))
     assert myexpand(polylog(-5, z), None)
 
-@XFAIL
-def test_lerchphi_expansion_fail():
-    # XXX mpmath problem
-    assert myexpand(lerchphi(1, s, a), zeta(s, a))
 
 def test_lerchphi_expansion():
+    assert myexpand(lerchphi(1, s, a), zeta(s, a))
     assert myexpand(lerchphi(z, s, 1), polylog(s, z)/z)
 
     # direct summation
