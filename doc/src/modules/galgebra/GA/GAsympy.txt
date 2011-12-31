@@ -365,8 +365,7 @@ three vectors is given by (the coefficient of each psuedo base is enclosed with
 {} for clarity):
 
 
-.. include:: multable.dat
-   :literal:
+.. literalinclude:: multable.dat   
 
 
 Base Representation of Multivectors
@@ -1446,8 +1445,7 @@ required modules and also allow variables and certain multivectors to be
 broadcast from the :mod:`GA` module to the main program.
 
 
-.. include:: headerGAtest.py
-   :literal:
+.. literalinclude:: headerGAtest.py
 
 
 Basic Geometric Algebra Operations
@@ -1457,8 +1455,7 @@ Example of basic geometric algebra operation of geometric, outer, and inner
 products.
 
 
-.. include:: BasicGAtest.py
-   :literal:
+.. literalinclude:: BasicGAtest.py
 
 
 Examples of Conformal Geometry
@@ -1469,8 +1466,7 @@ basic geometric entities (lines, circles, planes, and spheres) in three
 dimensions can be represented by blades in a five dimensional (conformal) space.
 
 
-.. include:: conformalgeometryGAtest.py
-   :literal:
+.. literalinclude:: conformalgeometryGAtest.py
 
 
 Calculation of Reciprocal Frame
@@ -1481,8 +1477,7 @@ vectors and verifies that the calculated reciprocal vectors have the correct
 properties.
 
 
-.. include:: reciprocalframeGAtest.py
-   :literal:
+.. literalinclude:: reciprocalframeGAtest.py
 
 
 Hyperbolic Geometry
@@ -1494,8 +1489,7 @@ orthogonal. Note that most of the calculation is simplifying a scalar
 expression.
 
 
-.. include:: hyperbolicGAtest.py
-   :literal:
+.. literalinclude:: hyperbolicGAtest.py
 
 
 Calculus
@@ -1522,8 +1516,7 @@ correctly  (in our units:math:`c=1`) [Lasenby,pp229-231].
 ``Begin Program Maxwell.py``
 
 
-.. include:: Maxwell.py
-   :literal:
+.. literalinclude:: Maxwell.py
 
 ``End Program Maxwell.py``
 
@@ -1652,8 +1645,7 @@ real equation are explined in Doran and Lasenby [Lasenby,pp281-283].
 ``Begin Program Dirac.py``
 
 
-.. include:: Dirac.py
-   :literal:
+.. literalinclude:: Dirac.py
 
 ``End Program Dirac.py``
 
@@ -1714,8 +1706,7 @@ geometric algebra) to demonstrate the formulas derived in section :ref:`deriv`.
 ``Begin Program coords.py``
 
 
-.. include:: coords.py
-   :literal:
+.. literalinclude:: coords.py
 
 ``End Program coords.py``
 
