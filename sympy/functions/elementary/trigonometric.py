@@ -1376,7 +1376,6 @@ class InverseTrigonometricFunction(Function):
     """Base class for inverse trigonometric functions."""
     nargs = 1
 
-
 class asin(InverseTrigonometricFunction):
     """
     asin(x) -> Returns the arc sine of x (measured in radians)
@@ -1396,19 +1395,12 @@ class asin(InverseTrigonometricFunction):
     >>> asin(-1)
     -pi/2
 
-    See Also
+    See also
     ========
 
-    acos, atan, sin
+    L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+    L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
     """
-
-    nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return 1/sqrt(1 - self.args[0]**2)
-        else:
-            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def eval(cls, arg):
@@ -1458,6 +1450,12 @@ class asin(InverseTrigonometricFunction):
         if i_coeff is not None:
             return S.ImaginaryUnit * C.asinh(i_coeff)
 
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return 1/sqrt(1 - self.args[0]**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -1482,14 +1480,23 @@ class asin(InverseTrigonometricFunction):
         else:
             return self.func(arg)
 
-    def _eval_rewrite_as_acos(self, x):
-        return S.Pi/2 - acos(x)
+    def _eval_rewrite_as_log(self, arg):
+        return -S.ImaginaryUnit*C.log(S.ImaginaryUnit*arg + sqrt(1-arg**2))
 
-    def _eval_rewrite_as_atan(self, x):
-        return 2*atan(x/(1 + sqrt(1 - x**2)))
+    def _eval_rewrite_as_acos(self, arg):
+        return S.Pi/2 - acos(arg)
 
-    def _eval_rewrite_as_log(self, x):
-        return -S.ImaginaryUnit*C.log(S.ImaginaryUnit*x + sqrt(1-x**2))
+    def _eval_rewrite_as_atan(self, arg):
+        return 2*atan(arg/(1 + sqrt(1 - arg**2)))
+
+    def _eval_rewrite_as_acot(self, arg):
+        return 2*acot((1+sqrt(1-arg**2))/arg)
+
+    def _eval_rewrite_as_asec(self, arg):
+        return S.Pi/2 - asec(1/arg)
+
+    def _eval_rewrite_as_acsc(self, arg):
+        return acsc(1/arg)
 
     def _eval_is_real(self):
         return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
