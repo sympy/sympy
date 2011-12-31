@@ -1755,16 +1755,15 @@ class atan(InverseTrigonometricFunction):
 
 class acot(InverseTrigonometricFunction):
     """
+    Usage
+    =====
     acot(x) -> Returns the arc cotangent of x (measured in radians)
+
+    See also
+    ========
+    L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+    L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}
     """
-
-    nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return -1 / (1+self.args[0]**2)
-        else:
-            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def eval(cls, arg):
@@ -1812,6 +1811,12 @@ class acot(InverseTrigonometricFunction):
         if i_coeff is not None:
             return -S.ImaginaryUnit * C.acoth(i_coeff)
 
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -1 / (1+self.args[0]**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -1842,13 +1847,28 @@ class acot(InverseTrigonometricFunction):
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 
+    def _eval_rewrite_as_log(self, arg):
+        I = S.ImaginaryUnit
+        return I/2 * (C.log(1-I/arg) - C.log(1+I/arg))
+
+    def _eval_rewrite_as_asin(self, arg):
+        return arg*sqrt(1/arg**2)*(S.Pi/2-asin(sqrt(-arg**2)/sqrt(-arg**2-1)))
+
+    def _eval_rewrite_as_acos(self, arg):
+        return arg*sqrt(1/arg**2)*acos(sqrt(-arg**2)/sqrt(-arg**2-1))
+
+    def _eval_rewrite_as_atan(self, arg):
+        return atan(1/arg)
+
+    def _eval_rewrite_as_asec(self, arg):
+        return arg*sqrt(1/arg**2)*asec(sqrt((1+arg**2)/arg**2))
+
+    def _eval_rewrite_as_acsc(self, arg):
+        return arg*sqrt(1/arg**2)*(S.Pi/2-acsc(sqrt((1+arg**2)/arg**2)))
+
     def _sage_(self):
         import sage.all as sage
         return sage.acot(self.args[0]._sage_())
-
-    def _eval_rewrite_as_log(self, x):
-        return S.ImaginaryUnit/2 * \
-               (C.log((x - S.ImaginaryUnit)/(x + S.ImaginaryUnit)))
 
 class atan2(InverseTrigonometricFunction):
     """
