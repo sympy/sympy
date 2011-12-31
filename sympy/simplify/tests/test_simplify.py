@@ -149,8 +149,7 @@ def test_simplify():
     A = Matrix([[2*k-m*w**2, -k], [-k, k-m*w**2]]).inv()
 
     assert simplify((A*Matrix([0,f]))[1]) == \
-        f/(-k**2/(2*k - m*w**2) + k - m*w**2)
-
+        f*(2*k - m*w**2)/(k**2 - 3*k*m*w**2 + m**2*w**4)
     a, b, c, d, e, f, g, h, i = symbols('a,b,c,d,e,f,g,h,i')
 
     f_1 = x*a + y*b + z*c - 1

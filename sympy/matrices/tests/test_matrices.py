@@ -1921,16 +1921,14 @@ def test_invertible_check():
     # ... but sometimes it won't, so that is an insufficient test of
     # whether something is invertible.
     m = Matrix([
-    [0, -1,  0,  0,  0,  0, -1,  0,  0],
-    [-1, x, -1,  0,  0,  0,  0, -1,  0],
-    [ 0, -1, x,  0,  0,  0,  0,  0, -1],
-    [ 0,  0,  0, x, -1,  0, -1,  0,  0],
-    [ 0,  0,  0, -1, x, -1,  0, -1,  0],
-    [ 0,  0,  0,  0, -1,  0,  0,  0, -1],
-    [-1,  0,  0, -1,  0,  0, x, -1,  0],
-    [ 0, -1,  0,  0, -1,  0, -1,  0, -1],
-    [ 0,  0, -1,  0,  0, -1,  0, -1, x]])
+    [-1, -1,  0],
+    [ x,  1,  1],
+    [ 1,  x, -1],])
     assert len(m.rref()[1]) == m.rows
+    # in addition, unless simplified=True in the call to rref, the identity
+    # matrix will be returned even though m is not invertible
+    assert m.rref()[0] == eye(3)
+    assert m.rref(simplified=True)[0] != eye(3)
     raises(ValueError, 'm.inv(method="ADJ")')
     raises(ValueError, 'm.inv(method="GE")')
     raises(ValueError, 'm.inv(method="LU")')
@@ -1940,11 +1938,3 @@ def test_issue_860():
     x, y=symbols('x, y')
     e = x*y
     assert e.subs(x, Matrix([3, 5, 3])) == Matrix([3, 5, 3])*y
-
-@XFAIL
-def test_symbolic_not_invertible():
-    m = Matrix([
-    [-1, -1,  0],
-    [ x,  1,  1],
-    [ 1,  x, -1],])
-    raises(ValueError, 'm.inv()')
