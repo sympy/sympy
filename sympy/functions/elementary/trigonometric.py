@@ -2003,6 +2003,11 @@ class atan2(InverseTrigonometricFunction):
     atan2(y,x) -> Returns the atan(y/x) taking two arguments y and x.
     Signs of both y and x are considered to determine the appropriate
     quadrant of atan(y/x). The range is (-pi, pi].
+
+    See also
+    ========
+    L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+    L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
     """
 
     nargs = 2
@@ -2034,13 +2039,18 @@ class atan2(InverseTrigonometricFunction):
         return self.args[0].is_real and self.args[1].is_real
 
     def fdiff(self, argindex):
-        x, y = self.args
+        y, x = self.args
         if argindex == 1:
-            return y/(x**2 + y**2)
+            # Diff wrt to y
+            return x/(x**2 + y**2)
         elif argindex == 2:
-            return -x/(x**2 + y**2)
+            # Diff wrt to x
+            return -y/(x**2 + y**2)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_log(self, y, x):
+        return -S.ImaginaryUnit*C.log((x + S.ImaginaryUnit*y)/sqrt(x**2+y**2))
 
     def _sage_(self):
         import sage.all as sage
