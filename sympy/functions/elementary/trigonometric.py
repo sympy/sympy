@@ -149,13 +149,14 @@ class sin(TrigonometricFunction):
     See Also
     ========
 
-    L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
-    L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+    csc, cos, sec, tan, cot
+    asin, acsc, acos, asec, atan, acot, atan2
 
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Sin
 
     """
 
@@ -396,13 +397,14 @@ class cos(TrigonometricFunction):
     See Also
     ========
 
-    L{sin}, L{csc}, L{sec}, L{tan}, L{cot}
-    L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+    sin, csc, sec, tan, cot
+    asin, acsc, acos, asec, atan, acot, atan2
 
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Cos
 
     """
 
@@ -610,7 +612,9 @@ class cos(TrigonometricFunction):
 
 class tan(TrigonometricFunction):
     """
-    tan(x) -> Returns the tangent of x (measured in radians)
+    The tangent function.
+
+    * tan(x) -> Returns the tangent of x (measured in radians)
 
     Notes
     =====
@@ -631,13 +635,14 @@ class tan(TrigonometricFunction):
     See Also
     ========
 
-    L{sin}, L{csc}, L{cos}, L{sec}, L{cot}
-    L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+    sin, csc, cos, sec, cot
+    asin, acsc, acos, asec, atan, acot, atan2
 
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Tan
 
     """
 
@@ -830,7 +835,9 @@ class tan(TrigonometricFunction):
 
 class cot(TrigonometricFunction):
     """
-    cot(x) -> Returns the cotangent of x (measured in radians)
+    The cotangent function.
+
+    * cot(x) -> Returns the cotangent of x (measured in radians)
 
     Notes
     =====
@@ -840,6 +847,7 @@ class cot(TrigonometricFunction):
 
     Examples
     ========
+
     >>> from sympy import cot
     >>> from sympy.abc import x
     >>> cot(x**2).diff(x)
@@ -850,13 +858,14 @@ class cot(TrigonometricFunction):
     See Also
     ========
 
-    L{sin}, L{csc}, L{cos}, L{sec}, L{tan}
-    L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+    sin, csc, cos, sec, tan
+    asin, acsc, acos, asec, atan, acot, atan2
 
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Cot
 
     """
 
@@ -1056,15 +1065,19 @@ class cot(TrigonometricFunction):
 
 class sec(TrigonometricFunction):
     """
-    sec(x) -> Returns the secant of x (measured in radians)
+    The secant function.
+
+    * sec(x) -> Returns the secant of x (measured in radians)
 
     Notes
     =====
-    sec(x) will evaluate automatically in the case x is a
-    multiple of pi.
+
+    * sec(x) will evaluate automatically in the case x is a
+      multiple of pi.
 
     Examples
     ========
+
     >>> from sympy import sec
     >>> from sympy.abc import x
     >>> sec(x**2).diff(x)
@@ -1074,13 +1087,16 @@ class sec(TrigonometricFunction):
 
     See also
     ========
-    L{sin}, L{csc}, L{cos}, L{tan}, L{cot}
-    L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+
+    sin, csc, cos, tan, cot
+    asin, acsc, acos, asec, atan, acot, atan2
 
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Sec
+
     """
 
     @classmethod
@@ -1214,15 +1230,19 @@ class sec(TrigonometricFunction):
 
 class csc(TrigonometricFunction):
     """
-    csc(x) -> Returns the cosecant of x (measured in radians)
+    The cosecant function.
+
+    * csc(x) -> Returns the cosecant of x (measured in radians)
 
     Notes
     =====
-    csc(x) will evaluate automatically in the case x is a
-    multiple of pi.
+
+    * csc(x) will evaluate automatically in the case x is a
+      multiple of pi.
 
     Examples
     ========
+
     >>> from sympy import csc
     >>> from sympy.abc import x
     >>> csc(x**2).diff(x)
@@ -1232,13 +1252,16 @@ class csc(TrigonometricFunction):
 
     See also
     ========
-    L{sin}, L{cos}, L{sec}, L{tan}, L{cot}
-    L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+
+    sin, cos, sec, tan, cot
+    asin, acsc, acos, asec, atan, acot, atan2
 
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Csc
+
     """
 
     @classmethod
@@ -1378,7 +1401,9 @@ class InverseTrigonometricFunction(Function):
 
 class asin(InverseTrigonometricFunction):
     """
-    asin(x) -> Returns the arc sine of x (measured in radians)
+    The inverse sine function.
+
+    * asin(x) -> Returns the arc sine of x (measured in radians)
 
     Notes
     =====
@@ -1398,8 +1423,14 @@ class asin(InverseTrigonometricFunction):
     See also
     ========
 
-    L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
-    L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+    sin, csc, cos, sec, tan, cot
+    acsc, acos, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcSin
     """
 
     @classmethod
@@ -1507,7 +1538,9 @@ class asin(InverseTrigonometricFunction):
 
 class acos(InverseTrigonometricFunction):
     """
-    acos(x) -> Returns the arc cosine of x (measured in radians)
+    The inverse cosine function.
+
+    * acos(x) -> Returns the arc cosine of x (measured in radians)
 
     Notes
     =====
@@ -1529,9 +1562,14 @@ class acos(InverseTrigonometricFunction):
     See also
     ========
 
-    L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
-    L{asin}, L{acsc}, L{asec}, L{atan}, L{acot}
+    sin, csc, cos, sec, tan, cot
+    asin, acsc, asec, atan, acot, atan2
 
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcCos
     """
 
     @classmethod
@@ -1627,7 +1665,9 @@ class acos(InverseTrigonometricFunction):
 
 class atan(InverseTrigonometricFunction):
     """
-    atan(x) -> Returns the arc tangent of x (measured in radians)
+    The inverse tangent function.
+
+    * atan(x) -> Returns the arc tangent of x (measured in radians)
 
     Notes
     =====
@@ -1649,8 +1689,14 @@ class atan(InverseTrigonometricFunction):
     See also
     ========
 
-    L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
-    L{asin}, L{acsc}, L{acos}, L{asec}, L{acot}
+    sin, csc, cos, sec, tan, cot
+    asin, acsc, acos, asec, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcTan
     """
 
     @classmethod
@@ -1755,14 +1801,22 @@ class atan(InverseTrigonometricFunction):
 
 class acot(InverseTrigonometricFunction):
     """
-    Usage
-    =====
-    acot(x) -> Returns the arc cotangent of x (measured in radians)
+    The inverse cotangent function.
+
+    * acot(x) -> Returns the arc cotangent of x (measured in radians)
 
     See also
     ========
-    L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
-    L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}
+
+    sin, csc, cos, sec, tan, cot
+    asin, acsc, acos, asec, atan, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcCot
+
     """
 
     @classmethod
@@ -1872,15 +1926,19 @@ class acot(InverseTrigonometricFunction):
 
 class asec(InverseTrigonometricFunction):
     """
-    asec(x) -> Returns the arc secant of x (measured in radians)
+    The inverse secant function.
+
+    * asec(x) -> Returns the arc secant of x (measured in radians)
 
     Notes
     =====
+
     * asec(x) will evaluate automatically in the cases
       oo, -oo, 0, 1, -1
 
     Examples
     ========
+
     >>> from sympy import asec, oo, pi
     >>> asec(1)
     0
@@ -1889,8 +1947,16 @@ class asec(InverseTrigonometricFunction):
 
     See also
     ========
-    L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
-    L{asin}, L{acsc}, L{acos}, L{atan}, L{acot}
+
+    sin, csc, cos, sec, tan, cot
+    asin, acsc, acos, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcSec
+
     """
 
     @classmethod
@@ -1936,7 +2002,9 @@ class asec(InverseTrigonometricFunction):
 
 class acsc(InverseTrigonometricFunction):
     """
-    acsc(x) -> Returns the arc cosecant of x (measured in radians)
+    The inverse cosecant function.
+
+    * acsc(x) -> Returns the arc cosecant of x (measured in radians)
 
     Notes
     =====
@@ -1953,8 +2021,16 @@ class acsc(InverseTrigonometricFunction):
 
     See also
     ========
-    L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
-    L{asin}, L{acos}, L{asec}, L{atan}, L{acot}
+
+    sin, csc, cos, sec, tan, cot
+    asin, acos, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcCsc
+
     """
 
     @classmethod
@@ -2000,14 +2076,29 @@ class acsc(InverseTrigonometricFunction):
 
 class atan2(InverseTrigonometricFunction):
     """
-    atan2(y,x) -> Returns the atan(y/x) taking two arguments y and x.
-    Signs of both y and x are considered to determine the appropriate
-    quadrant of atan(y/x). The range is (-pi, pi].
+    The two-argument inverse tangent function.
+
+    * atan2(y,x) -> Returns the atan(y/x) taking two arguments y and x.
+
+    Notes
+    =====
+
+    * Signs of both y and x are considered to determine the appropriate
+      quadrant of atan(y/x). The range is (-pi, pi].
 
     See also
     ========
-    L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
-    L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+
+    sin, csc, cos, sec, tan, cot
+    asin, acsc, acos, asec, atan, acot
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://en.wikipedia.org/wiki/Atan2
+    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcTan2
+
     """
 
     nargs = 2
