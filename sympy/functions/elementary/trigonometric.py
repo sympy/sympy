@@ -1738,13 +1738,13 @@ class atan(InverseTrigonometricFunction):
         return sqrt(arg**2)/arg * (S.Pi/2 - asin(1/sqrt(1+arg**2)))
 
     def _eval_rewrite_as_acos(self, arg):
-        return sqrt(arg**2)/arg * acos(1/sqrt(1+arg**2)))
+        return sqrt(arg**2)/arg * acos(1/sqrt(1+arg**2))
 
     def _eval_rewrite_as_acot(self, arg):
         return acot(1/arg)
 
     def _eval_rewrite_as_asec(self, arg):
-        return sqrt(arg**2)/arg * asec(sqrt(1+arg**2)))
+        return sqrt(arg**2)/arg * asec(sqrt(1+arg**2))
 
     def _eval_rewrite_as_acsc(self, arg):
         return sqrt(arg**2)/arg * (S.Pi/2 - acsc(sqrt(1+arg**2)))
