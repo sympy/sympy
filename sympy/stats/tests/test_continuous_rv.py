@@ -1,5 +1,5 @@
 from sympy.stats import (Normal, Exponential, P, E, Where,
-        Density, var, covar, skewness, Gamma, Pareto, Beta, Given, pspace, CDF)
+        Density, Var, Covar, Skewness, Gamma, Pareto, Beta, Given, pspace, CDF)
 from sympy import (Symbol, exp, S, pi, simplify, Interval, erf, Eq, symbols,
         sqrt, And, gamma, beta)
 from sympy.utilities.pytest import raises
@@ -13,7 +13,7 @@ def test_single_normal():
     Y = X*sigma + mu
 
     assert simplify(E(Y)) == mu
-    assert simplify(var(Y)) == sigma**2
+    assert simplify(Var(Y)) == sigma**2
     x, pdf = Density(Y)
     assert pdf == 2**S.Half*exp(-(x - mu)**2/(2*sigma**2))/(2*pi**S.Half*sigma)
 
@@ -50,13 +50,13 @@ def test_multiple_normal():
     X, Y = Normal(0,1), Normal(0,1)
 
     assert E(X+Y) == 0
-    assert var(X+Y) == 2
-    assert var(X+X) == 4
-    assert covar(X, Y) == 0
-    assert covar(2*X + Y, -X) == -2*var(X)
+    assert Var(X+Y) == 2
+    assert Var(X+X) == 4
+    assert Covar(X, Y) == 0
+    assert Covar(2*X + Y, -X) == -2*Var(X)
 
     assert E(X, Eq(X+Y, 0)) == 0
-    assert var(X, Eq(X+Y, 0)) == S.Half
+    assert Var(X, Eq(X+Y, 0)) == S.Half
 
 def test_symbolic():
     mu1, mu2 = symbols('mu1 mu2', real=True, finite=True, bounded=True)
@@ -70,8 +70,8 @@ def test_symbolic():
     assert E(X) == mu1
     assert E(X+Y) == mu1+mu2
     assert E(a*X+b) == a*E(X)+b
-    assert var(X) == s1**2
-    assert simplify(var(X+a*Y+b)) == var(X) + a**2*var(Y)
+    assert Var(X) == s1**2
+    assert simplify(Var(X+a*Y+b)) == Var(X) + a**2*Var(Y)
 
     assert E(Z) == 1/rate
     assert E(a*Z+b) == a*E(Z)+b
@@ -102,8 +102,8 @@ def test_exponential():
     X = Exponential(rate)
 
     assert E(X) == 1/rate
-    assert var(X) == 1/rate**2
-    assert skewness(X) == 2
+    assert Var(X) == 1/rate**2
+    assert Skewness(X) == 2
     assert P(X>0) == S(1)
     assert P(X>1) == exp(-rate)
     assert P(X>10) == exp(-10*rate)
@@ -117,7 +117,7 @@ def test_pareto():
     X = Pareto(xm, alpha)
 
     assert simplify(E(X)) == alpha*xm/(alpha-1)
-    assert simplify(var(X)) == xm**2*alpha / ((alpha-1)**2*(alpha-2))
+    assert simplify(Var(X)) == xm**2*alpha / ((alpha-1)**2*(alpha-2))
 
 def test_gamma():
     k, theta = symbols('k theta', real=True, finite=True, positive=True)
@@ -125,8 +125,8 @@ def test_gamma():
 
     assert simplify(E(X)) == k*theta
     # can't get things to simplify on this one so we use subs
-    assert var(X).subs(k,5) == (k*theta**2).subs(k, 5)
-    assert simplify(skewness(X)).subs(k, 5) == (2/sqrt(k)).subs(k, 5)
+    assert Var(X).subs(k,5) == (k*theta**2).subs(k, 5)
+    assert simplify(Skewness(X)).subs(k, 5) == (2/sqrt(k)).subs(k, 5)
 
 def test_beta():
     a, b = symbols('alpha beta', positive=True)
@@ -139,7 +139,7 @@ def test_beta():
     assert dens == x**(a-1)*(1-x)**(b-1) / beta(a,b)
 
     assert E(B) == a / (a + b)
-    assert var(B) == (a*b) / ((a+b)**2 * (a+b+1))
+    assert Var(B) == (a*b) / ((a+b)**2 * (a+b+1))
 
 def test_uniform():
     l = Symbol('l', real=True, bounded=True)

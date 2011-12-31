@@ -21,7 +21,7 @@ def variance(X, given=None, **kwargs):
 
     """
     return E(X**2, given, **kwargs) - E(X, given, **kwargs)**2
-var = variance
+Var = variance
 
 
 def standard_deviation(X, given=None, **kwargs):
@@ -29,18 +29,18 @@ def standard_deviation(X, given=None, **kwargs):
 
     Square root of the Expectation of (X-E(X))**2
 
-    >>> from sympy.stats import Bernoulli, std
+    >>> from sympy.stats import Bernoulli, Std
     >>> from sympy import Symbol
 
     >>> p = Symbol('p')
     >>> B = Bernoulli(p, 1, 0)
 
-    >>> std(B)
+    >>> Std(B)
     (-p**2 + p)**(1/2)
 
     """
     return sqrt(variance(X, given, **kwargs))
-std = standard_deviation
+Std = standard_deviation
 
 def covariance(X, Y, given=None, **kwargs):
     """Covariance of two random expressions.
@@ -67,13 +67,14 @@ def covariance(X, Y, given=None, **kwargs):
 
     return E( (X-E(X, given, **kwargs)) * (Y-E(Y, given, **kwargs)),
             given, **kwargs)
-covar = covariance
+Covar = covariance
 
 def skewness(X, given=None, **kwargs):
 
     mu = E(X, given, **kwargs)
-    sigma = std(X, given, **kwargs)
+    sigma = Std(X, given, **kwargs)
     return E( ((X-mu)/sigma) ** 3 , given, **kwargs)
+Skewness = skewness
 
 def dependent(a, b):
     """Dependence of two random expressions

@@ -1,6 +1,6 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify)
-from sympy.stats import (Die, Bernoulli, Coin, P, E, var, covar, skewness,
+from sympy.stats import (Die, Bernoulli, Coin, P, E, Var, Covar,
         Density, Given, independent, dependent, Where, FiniteRV, pspace, CDF)
 from sympy.utilities.pytest import raises
 
@@ -14,14 +14,14 @@ def test_dice():
     a,b = symbols('a b')
 
     assert E(X) == 3+S.Half
-    assert var(X) == S(35)/12
+    assert Var(X) == S(35)/12
     assert E(X+Y) == 7
     assert E(X+X) == 7
     assert E(a*X+b) == a*E(X)+b
-    assert var(X+Y) == var(X) + var(Y)
-    assert var(X+X) == 4 * var(X)
-    assert covar(X,Y) == S.Zero
-    assert covar(X, X+Y) == var(X)
+    assert Var(X+Y) == Var(X) + Var(Y)
+    assert Var(X+X) == 4 * Var(X)
+    assert Covar(X,Y) == S.Zero
+    assert Covar(X, X+Y) == Var(X)
     assert Density(Eq(cos(X*S.Pi),1))[True] == S.Half
 
     assert P(X>3) == S.Half
@@ -92,9 +92,9 @@ def test_bernoulli():
     X = Bernoulli(p, 1, 0, symbol='B')
 
     assert E(X) == p
-    assert var(X) == -p**2 + p
+    assert Var(X) == -p**2 + p
     E(a*X+b) == a*E(X)+b
-    var(a*X+b) == a**2 * var(X)
+    Var(a*X+b) == a**2 * Var(X)
 
 def test_dependence():
     X, Y = Die(), Die()

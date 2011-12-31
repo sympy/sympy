@@ -1,7 +1,7 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple)
-from sympy.stats import (Die, Normal, Exponential , P, E, var, covar,
-        skewness, Density, Given, independent, dependent, Where, pspace,
+from sympy.stats import (Die, Normal, Exponential , P, E, Var, Covar,
+        Skewness, Density, Given, independent, dependent, Where, pspace,
         random_symbols, Sample)
 from sympy.stats.rv import ProductPSpace, rs_swap
 
@@ -68,4 +68,4 @@ def test_Sample():
 
     assert P(X+Y>0, Y<0, numsamples=10).is_Rational
     assert E(X+Y, numsamples=10).is_Float
-    assert var(X+Y, numsamples=10).is_Float
+    assert Var(X+Y, numsamples=10).is_Float
