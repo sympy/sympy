@@ -885,9 +885,43 @@ class sec(ReciprocalTrigonometricFunction):
 
 
 class csc(ReciprocalTrigonometricFunction):
+    """
+    The cosecant function.
+
+    Returns the cosecant of x (measured in radians).
+
+    Notes
+    =====
+
+    csc(x) will evaluate automatically in the case x is a
+    multiple of pi.
+
+    Examples
+    ========
+
+    >>> from sympy import csc
+    >>> from sympy.abc import x
+    >>> csc(x**2).diff(x)
+    -2*x*cot(x**2)*csc(x**2)
+    >>> csc(1).diff(x)
+    0
+
+    See Also
+    ========
+
+    sin, cos, sec, tan, cot
+    asin, acsc, acos, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Csc
+
+    """
+
     _reciprocal_of = sin
     _is_odd = True
-
 
     def _eval_rewrite_as_sin(self, arg):
         return (1/sin(arg))
@@ -895,13 +929,38 @@ class csc(ReciprocalTrigonometricFunction):
     def _eval_rewrite_as_sincos(self, arg):
         return cos(arg)/(sin(arg)*cos(arg))
 
+    def _eval_rewrite_as_cot(self, arg):
+        cot_half = cot(arg/2)
+        return (1 + cot_half**2)/(2*cot_half)
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             return -cot(self.args[0])*csc(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
-    # TODO def taylor_term(n, x, *previous_terms):
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n == 0:
+            return 1/sympify(x)
+        elif n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            k = n//2 + 1
+            return ((-1)**(k - 1)*2*(2**(2*k - 1) - 1)*
+                    C.bernoulli(2*k)*x**(2*k - 1)/C.factorial(2*k))
+
+    def _eval_aseries(self, n, args0, x, logx):
+        if C.im(args0[0]).is_positive:
+            return -(2*S.ImaginaryUnit*C.exp(S.ImaginaryUnit*x)*
+                     C.hyper([1], [], C.exp(2*S.ImaginaryUnit*x)))
+        elif C.im(args0[0]).is_negative:
+            return (2*S.ImaginaryUnit*C.exp(-S.ImaginaryUnit*x)*
+                    C.hyper([1], [], C.exp(-2*S.ImaginaryUnit*x)))
+        else:
+            return super(csc, self)._eval_aseries(n, args0, x, logx)
 
     def _sage_(self):
         import sage.all as sage
