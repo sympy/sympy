@@ -1699,9 +1699,8 @@ def expand_power_base(expr, deep=True):
     >>> expand_power_base((3*x)**y)
     3**y*x**y
     """
-    return expand(expr, deep=deep,
-                     power_base=True, mul=False, power_exp=False,
-                     basic=False, multinomial=False, log=False)
+    return sympify(expr).expand(deep=deep, complex=False, basic=False,\
+    log=False, mul=False, power_exp=False, power_base=True, multinomial=False)
 
 def count_ops(expr, visual=False):
     """

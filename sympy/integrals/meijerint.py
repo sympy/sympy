@@ -1488,7 +1488,7 @@ def meijerint_indefinite(f, x):
             return res.subs(x, x - a)
 
 def _meijerint_indefinite_1(f, x):
-    """ Helper thad does not attempt any substitution. """
+    """ Helper that does not attempt any substitution. """
     from sympy import Integral, piecewise_fold
     _debug('Trying to compute the indefinite integral of', f, 'wrt', x)
 

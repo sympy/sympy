@@ -216,13 +216,16 @@ def test_hyperrep():
         if abs(expr.subs(z, 1 + 1e-15).n() - expr.subs(z, 1 - 1e-15).n()) > 1e-10:
             return False
         # Finally check continuity of the big reps.
+        def dosubs(func, a, b):
+            rv = func.subs(z, exp_polar(a)*z).rewrite('nonrep')
+            return rv.subs(z, exp_polar(b)*z).replace(exp_polar, exp)
         for n in [0, 1, 2, 3, 4, -1, -2, -3, -4]:
-            expr1 = func.subs(z, exp_polar(2*I*pi*n)*z).rewrite('nonrep').subs(z, exp_polar(I*pi/2)*z).replace(exp_polar, exp)
-            expr2 = func.subs(z, exp_polar(2*I*pi*n + I*pi)*z).rewrite('nonrep').subs(z, exp_polar(-I*pi/2)*z).replace(exp_polar, exp)
+            expr1 = dosub(func, 2*I*pi*n, I*pi/2)
+            expr2 = dosub(func, 2*I*pi*n + I*pi, -I*pi/2)
             if not tn(expr1, expr2, z):
                 return False
-            expr1 = func.subs(z, exp_polar(2*I*pi*(n + 1))*z).rewrite('nonrep').subs(z, exp_polar(-I*pi/2)*z).replace(exp_polar, exp)
-            expr2 = func.subs(z, exp_polar(2*I*pi*n + I*pi)*z).rewrite('nonrep').subs(z, exp_polar(I*pi/2)*z).replace(exp_polar, exp)
+            expr1 = dosub(func, 2*I*pi*(n + 1), -I*pi/2)
+            expr2 = dosub(func, 2*I*pi*n + I*pi, I*pi/2)
             if not tn(expr1, expr2, z):
                 return False
         return True
