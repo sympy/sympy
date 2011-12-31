@@ -21,6 +21,8 @@ class TrigonometricFunction(Function):
 
     unbranched = True
 
+    nargs = 1
+
     def _eval_is_rational(self):
         s = self.func(*self.args)
         if s.func == self.func:
@@ -28,6 +30,10 @@ class TrigonometricFunction(Function):
                 return False
         else:
             return s.is_rational
+
+    def _eval_expand_complex(self, deep=True, **hints):
+        re_part, im_part = self.as_real_imag(deep=deep, **hints)
+        return re_part + im_part*S.ImaginaryUnit
 
 
 def _peeloff_pi(arg):
@@ -133,13 +139,13 @@ class sin(TrigonometricFunction):
     """
     The sine function.
 
-    * sin(x) -> Returns the sine of x (measured in radians)
+    Returns the sine of x (measured in radians).
 
     Notes
     =====
 
-    * sin(x) will evaluate automatically in the case x
-      is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
+    sin(x) will evaluate automatically in the case x
+    is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
 
     Examples
     ========
@@ -160,12 +166,14 @@ class sin(TrigonometricFunction):
     See Also
     ========
 
-    cos, tan, asin
+    csc, cos, sec, tan, cot
+    asin, acsc, acos, asec, atan, acot, atan2
 
     References
     ==========
 
-    .. [1] http://planetmath.org/DefinitionsInTrigonometry
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Sin
 
     """
 
@@ -260,6 +268,14 @@ class sin(TrigonometricFunction):
             else:
                 return (-1)**(n//2) * x**(n)/C.factorial(n)
 
+    def _eval_aseries(self, n, args0, x, logx):
+        if C.im(args0[0]).is_positive:
+            return S.ImaginaryUnit*C.exp(-S.ImaginaryUnit*x)/2
+        elif C.im(args0[0]).is_negative:
+            return -S.ImaginaryUnit*C.exp(S.ImaginaryUnit*x)/2
+        else:
+            return super(sin, self)._eval_aseries(n, args0, x, logx)
+
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
         if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
@@ -291,6 +307,9 @@ class sin(TrigonometricFunction):
 
     def _eval_rewrite_as_sqrt(self, arg):
         return self.rewrite(cos).rewrite(sqrt)
+
+    def _eval_rewrite_as_csc(self, arg):
+        return 1/csc(arg)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
