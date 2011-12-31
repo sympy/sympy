@@ -45,6 +45,12 @@ MPMATH_TRANSLATIONS = {
     "LambertW":"lambertw",
     "Matrix":"matrix",
     "conjugate":"conj",
+    "dirichlet_eta":"altzeta",
+    "Ei":"ei",
+    "Shi":"shi",
+    "Chi":"chi",
+    "Si":"si",
+    "Ci":"ci",
 }
 
 NUMPY_TRANSLATIONS = {

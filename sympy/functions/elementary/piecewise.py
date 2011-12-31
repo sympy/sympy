@@ -123,6 +123,7 @@ class Piecewise(Function):
 
     @classmethod
     def eval(cls, *args):
+        from sympy import Or
         # Check for situations where we can evaluate the Piecewise object.
         # 1) Hit an unevaluable cond (e.g. x<1) -> keep object
         # 2) Hit a true condition -> return that expr
@@ -130,6 +131,7 @@ class Piecewise(Function):
         all_conds_evaled = True    # Do all conds eval to a bool?
         piecewise_again = False    # Should we pass args to Piecewise again?
         non_false_ecpairs = []
+        or1 = Or(*[cond for (_, cond) in args if cond is not True])
         for expr, cond in args:
             # Check here if expr is a Piecewise and collapse if one of
             # the conds in expr matches cond. This allows the collapsing
@@ -140,10 +142,11 @@ class Piecewise(Function):
             # having different intervals, but this will probably require
             # using the new assumptions.
             if isinstance(expr, Piecewise):
+                or2 = Or(*[c for (_, c) in expr.args if c is not True])
                 for e, c in expr.args:
                     # Don't collapse if cond is "True" as this leads to
                     # incorrect simplifications with nested Piecewises.
-                    if c == cond and cond is not True:
+                    if c == cond and (or1 == or2 or cond is not True):
                         expr = e
                         piecewise_again = True
             cond_eval = cls.__eval_cond(cond)

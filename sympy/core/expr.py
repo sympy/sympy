@@ -1603,7 +1603,7 @@ class Expr(Basic, EvalfMixin):
             # As a last resort, we choose the one with greater value of .sort_key()
             return self.sort_key() < negative_self.sort_key()
 
-    def extract_branch_factor(self):
+    def extract_branch_factor(self, allow_half=False):
         """
         Try to write self as exp_polar(2*pi*I*n)*z in a nice way.
         Return (z, n).
@@ -1622,6 +1622,17 @@ class Expr(Basic, EvalfMixin):
         (y*exp_polar(2*pi*x), -1)
         >>> exp_polar(-I*pi/2).extract_branch_factor()
         (exp_polar(-I*pi/2), 0)
+
+        If allow_half is True, also extract exp_polar(I*pi):
+
+        >>> exp_polar(I*pi).extract_branch_factor(allow_half=True)
+        (1, 1/2)
+        >>> exp_polar(2*I*pi).extract_branch_factor(allow_half=True)
+        (1, 1)
+        >>> exp_polar(3*I*pi).extract_branch_factor(allow_half=True)
+        (1, 3/2)
+        >>> exp_polar(-I*pi).extract_branch_factor(allow_half=True)
+        (1, -1/2)
         """
         from sympy import exp_polar, pi, I, ceiling, Add
         n = S(0)
@@ -1652,7 +1663,13 @@ class Expr(Basic, EvalfMixin):
         coeff, tail = piimult.as_coeff_add()
         branchfact = ceiling(coeff/2-S(1)/2)*2
         n += branchfact/2
-        newexp = pi*I*Add(*((coeff - branchfact, ) + tail)) + Add(*extras)
+        c = coeff - branchfact
+        if allow_half:
+            nc = c.extract_additively(1)
+            if nc is not None:
+                n += S(1)/2
+                c = nc
+        newexp = pi*I*Add(*((c, ) + tail)) + Add(*extras)
         if newexp != 0:
             res *= exp_polar(newexp)
         return res, n

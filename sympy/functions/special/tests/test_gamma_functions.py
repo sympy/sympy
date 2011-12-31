@@ -67,7 +67,7 @@ def tn_branch(s, func):
     return abs(expr.n() - expr2.n()).n() < 1e-10
 
 def test_lowergamma():
-    from sympy import meijerg, exp_polar, I
+    from sympy import meijerg, exp_polar, I, expint
     assert lowergamma(x, y).diff(y) == y**(x-1)*exp(-y)
     assert td(lowergamma(randcplx(), y), y)
     assert lowergamma(x, y).diff(x) == \
@@ -95,8 +95,10 @@ def test_lowergamma():
     assert lowergamma(-2, exp_polar(5*pi*I)*x) == \
            lowergamma(-2, x*exp_polar(I*pi)) + 2*pi*I
 
+    assert lowergamma(x, y).rewrite(expint) == -y**x*expint(-x + 1, y) + gamma(x)
+
 def test_uppergamma():
-    from sympy import meijerg, exp_polar, I
+    from sympy import meijerg, exp_polar, I, expint
     assert uppergamma(4, 0) == 6
     assert uppergamma(x, y).diff(y) == -y**(x-1)*exp(-y)
     assert td(uppergamma(randcplx(), y), y)
@@ -125,7 +127,11 @@ def test_uppergamma():
     assert uppergamma(-2, exp_polar(5*pi*I)*x) == \
            uppergamma(-2, x*exp_polar(I*pi)) - 2*pi*I
 
+    assert uppergamma(-2, x) == expint(3, x)/x**2
+    assert uppergamma(x, y).rewrite(expint) == y**x*expint(-x + 1, y)
+
 def test_polygamma():
+    from sympy import I
 
     assert polygamma(n, nan) == nan
 
@@ -150,7 +156,37 @@ def test_polygamma():
     assert polygamma(3, 5) == 6*(Rational(-22369,20736) + pi**4/90)
     assert polygamma(5, 1) == 8 * pi**6 / 63
 
+    def t(m, n):
+        x = S(m)/n
+        r = polygamma(0, x)
+        if r.has(polygamma):
+            return False
+        return abs(polygamma(0, x.n()).n() - r.n()).n() < 1e-10
+    assert t(1, 2)
+    assert t(3, 2)
+    assert t(-1, 2)
+    assert t(1, 4)
+    assert t(-3, 4)
+    assert t(1, 3)
+    assert t(4, 3)
+    assert t(3, 4)
+    assert t(2, 3)
+
     assert polygamma(3, 7*x).diff(x) == 7*polygamma(4, 7*x)
+
+    # Polygamma of non-negative integer order is unbranched:
+    from sympy import exp_polar
+    k = Symbol('n', integer=True, nonnegative=True)
+    assert polygamma(k, exp_polar(2*I*pi)*x) == polygamma(k, x)
+
+    # Polygamma of order -1 is loggamma:
+    assert polygamma(-1, x) == loggamma(x)
+
+    # But smaller orders are iterated integrals and don't have a special name
+    assert polygamma(-2, x).func is polygamma
+
+    # Test a bug
+    assert polygamma(0, -x).expand(func=True) == polygamma(0, -x)
 
 def test_polygamma_expand_func():
     assert polygamma(0, x).expand(func=True) == polygamma(0, x)

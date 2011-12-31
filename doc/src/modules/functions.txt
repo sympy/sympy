@@ -453,38 +453,31 @@ erf
 .. autoclass:: sympy.functions.special.error_functions.erf
    :members:
 
-gamma
------
+Gamma and Related Functions
+---------------------------
 .. autoclass:: sympy.functions.special.gamma_functions.gamma
    :members:
-
-loggamma
---------
 .. autoclass:: sympy.functions.special.gamma_functions.loggamma
    :members:
-
-polygamma
----------
 .. autoclass:: sympy.functions.special.gamma_functions.polygamma
    :members:
-
-digamma
--------
 .. autofunction:: sympy.functions.special.gamma_functions.digamma
-
-trigamma
---------
 .. autofunction:: sympy.functions.special.gamma_functions.trigamma
-
-uppergamma
-----------
 .. autoclass:: sympy.functions.special.gamma_functions.uppergamma
    :members:
-
-lowergamma
-----------
 .. autoclass:: sympy.functions.special.gamma_functions.lowergamma
    :members:
+
+Special Cases of the Incomplete Gamma Functions
+-----------------------------------------------
+.. autoclass:: sympy.functions.special.error_functions.erf
+.. autoclass:: sympy.functions.special.error_functions.Ei
+.. autoclass:: sympy.functions.special.error_functions.expint
+.. autofunction:: sympy.functions.special.error_functions.E1
+.. autoclass:: sympy.functions.special.error_functions.Si
+.. autoclass:: sympy.functions.special.error_functions.Ci
+.. autoclass:: sympy.functions.special.error_functions.Shi
+.. autoclass:: sympy.functions.special.error_functions.Chi
 
 Bessel Type Functions
 ---------------------
@@ -508,6 +501,13 @@ B-Splines
 
 .. autofunction:: sympy.functions.special.bsplines.bspline_basis
 .. autofunction:: sympy.functions.special.bsplines.bspline_basis_set
+
+Riemann Zeta and Related Functions
+----------------------------------
+.. autoclass:: sympy.functions.special.zeta_functions.zeta
+.. autoclass:: sympy.functions.special.zeta_functions.dirichlet_eta
+.. autoclass:: sympy.functions.special.zeta_functions.polylog
+.. autoclass:: sympy.functions.special.zeta_functions.lerchphi
 
 Hypergeometric Functions
 ------------------------
