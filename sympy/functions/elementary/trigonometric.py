@@ -2225,6 +2225,89 @@ class asec(InverseTrigonometricFunction):
         return sage.arcsec(self.args[0]._sage_())
 
 
+class acsc(InverseTrigonometricFunction):
+    """
+    The inverse cosecant function.
+
+    Returns the arc cosecant of x (measured in radians).
+
+    Notes
+    =====
+
+    acsc(x) will evaluate automatically in the cases
+    oo, -oo, 0, 1, -1.
+
+    Examples
+    ========
+
+    >>> from sympy import acsc, oo, pi
+    >>> acsc(1)
+    pi/2
+    >>> acsc(-1)
+    -pi/2
+
+    See Also
+    ========
+
+    sin, csc, cos, sec, tan, cot
+    asin, acos, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcCsc
+
+    """
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.One:
+                return S.Pi/2
+            elif arg is S.NegativeOne:
+                return -S.Pi/2
+        if arg in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
+            return S.Zero
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -1/(self.args[0]**2*sqrt(1 - 1/self.args[0]**2))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+        if C.Order(1,x).contains(arg):
+            return C.log(arg)
+        else:
+            return self.func(arg)
+
+    def _eval_rewrite_as_log(self, arg):
+        return -S.ImaginaryUnit*C.log(S.ImaginaryUnit/arg + sqrt(1 - 1/arg**2))
+
+    def _eval_rewrite_as_asin(self, arg):
+        return asin(1/arg)
+
+    def _eval_rewrite_as_acos(self, arg):
+        return S.Pi/2 - acos(1/arg)
+
+    def _eval_rewrite_as_atan(self, arg):
+        return sqrt(arg**2)/arg*(S.Pi/2 - atan(sqrt(arg**2 - 1)))
+
+    def _eval_rewrite_as_acot(self, arg):
+        return sqrt(arg**2)/arg*(S.Pi/2 - acot(1/sqrt(arg**2 - 1)))
+
+    def _eval_rewrite_as_asec(self, arg):
+        return S.Pi/2 - asec(arg)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.arccsc(self.args[0]._sage_())
+
+
 class atan2(InverseTrigonometricFunction):
     r"""
     The function ``atan2(y, x)`` computes `\operatorname{atan}(y/x)` taking

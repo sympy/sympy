@@ -1174,6 +1174,11 @@ def test_sympy__functions__elementary__trigonometric__asec():
     assert _test_args(asec(2))
 
 
+def test_sympy__functions__elementary__trigonometric__acsc():
+    from sympy.functions.elementary.trigonometric import acsc
+    assert _test_args(acsc(2))
+
+
 def test_sympy__functions__elementary__trigonometric__atan():
     from sympy.functions.elementary.trigonometric import atan
     assert _test_args(atan(2))
