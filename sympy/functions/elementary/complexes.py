@@ -31,6 +31,10 @@ class re(Function):
        >>> re(im(x) + x*I + 2)
        2
 
+       See Also
+       ========
+       im
+
     """
     nargs = 1
 
@@ -109,6 +113,10 @@ class im(Function):
 
     >>> im(re(x) + y)
     im(y)
+
+    See Also
+    ========
+    re
 
     """
 
@@ -191,6 +199,10 @@ class sign(Function):
     >>> sign(0)
     0
 
+    See Also
+    ========
+    abs, conjugate
+
     """
 
     nargs = 1
@@ -263,6 +275,10 @@ class Abs(Function):
         <class 'sympy.core.numbers.One'>
 
     Abs will always return a sympy object.
+
+    See Also
+    ========
+    sign, conjugate
 
     """
 
@@ -380,6 +396,10 @@ class conjugate(Function):
     >>> conjugate(1 + I)
     1 - I
 
+    See Also
+    ========
+    sign, abs
+
     """
 
     nargs = 1
@@ -421,6 +441,11 @@ class polar_lift(Function):
     4*polar_lift(x)
     >>> polar_lift(4*p)
     4*p
+
+    See Also
+    ========
+    periodic_argument, polar_lift
+
     """
 
     nargs = 1
@@ -481,6 +506,11 @@ class periodic_argument(Function):
     -pi
     >>> periodic_argument(exp_polar(5*I*pi), pi)
     0
+
+    See Also
+    ========
+    polar_lift, principal_branch
+
     """
 
     nargs = 2
@@ -562,6 +592,11 @@ class principal_branch(Function):
     3*exp_polar(0)
     >>> principal_branch(exp_polar(2*pi*I)*3*z, 2*pi)
     3*principal_branch(z, 2*pi)
+
+    See Also
+    ========
+    polar_lift, periodic_argument
+
     """
 
     nargs = 2

@@ -90,7 +90,7 @@ def sqrt(arg):
 
     See Also
     ========
-    L{root}, L{RootOf}
+    root, RootOf
 
     References
     ==========
@@ -146,7 +146,7 @@ def root(arg, n):
     See Also
     ========
 
-    L{sqrt}, L{RootOf}, L{real_root}, L{integer_nthroot}
+    sqrt, RootOf, real_root, integer_nthroot
 
     References
     ==========
@@ -180,7 +180,7 @@ def real_root(arg, n=None):
     See Also
     ========
 
-    L{sqrt}, L{RootOf}, L{root}, L{integer_nthroot}
+    sqrt, RootOf, root, integer_nthroot
 
     """
     if n is not None:
@@ -407,7 +407,7 @@ class Max(MinMaxBase, Application, Basic):
     See Also
     ========
 
-    Min() : find minimum values
+    Min : find minimum values
 
     """
     zero = S.Infinity
@@ -457,7 +457,7 @@ class Min(MinMaxBase, Application, Basic):
     See Also
     ========
 
-    Max() : find maximum values
+    Max : find maximum values
 
     """
     zero = S.NegativeInfinity

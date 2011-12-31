@@ -132,8 +132,7 @@ class sin(TrigonometricFunction):
 
     See Also
     ========
-
-    L{cos}, L{tan}
+    cos, tan, asin
 
     References
     ==========
@@ -356,7 +355,7 @@ class cos(TrigonometricFunction):
     See Also
     ========
 
-    L{sin}, L{tan}
+    sin, tan, acos
 
     References
     ==========
@@ -569,7 +568,7 @@ class tan(TrigonometricFunction):
     See Also
     ========
 
-    L{sin}, L{tan}
+    sin, cos, atan
 
     References
     ==========
@@ -945,6 +944,10 @@ class asin(Function):
     >>> asin(-1)
     -pi/2
 
+    See Also
+    ========
+    acos, atan, sin
+
     """
 
     nargs = 1
@@ -1063,6 +1066,10 @@ class acos(Function):
     >>> acos(oo)
     oo*I
 
+    See Also
+    ========
+    asin, atan, cos
+
     """
 
     nargs = 1
@@ -1170,6 +1177,11 @@ class atan(Function):
     >>> atan(oo)
     pi/2
 
+    See Also
+    ========
+    acos, asin, tan
+
+ 
     """
 
     nargs = 1

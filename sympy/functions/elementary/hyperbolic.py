@@ -20,6 +20,10 @@ class sinh(HyperbolicFunction):
     =====
       sinh(x) -> Returns the hyperbolic sine of x
 
+    See Also
+    ========
+    cosh, tanh, asinh
+
     """
     nargs = 1
 
@@ -161,6 +165,11 @@ class cosh(HyperbolicFunction):
     Usage
     =====
       cosh(x) -> Returns the hyperbolic cosine of x
+
+    See Also
+    ========
+    sinh, tanh, acosh
+
     """
     nargs = 1
 
@@ -292,6 +301,11 @@ class tanh(HyperbolicFunction):
     Usage
     =====
       tanh(x) -> Returns the hyperbolic tangent of x
+
+    See Also
+    ========
+    sinh, cosh, atanh
+
     """
     nargs = 1
 
@@ -556,6 +570,11 @@ class asinh(Function):
     Usage
     =====
       asinh(x) -> Returns the inverse hyperbolic sine of x
+
+    See Also
+    ========
+    acosh, atanh, sinh
+
     """
     nargs = 1
 
@@ -631,6 +650,11 @@ class acosh(Function):
     Usage
     =====
       acosh(x) -> Returns the inverse hyperbolic cosine of x
+ 
+    See Also
+    ========
+    asinh, atanh, cosh
+
     """
     nargs = 1
 
@@ -737,6 +761,11 @@ class atanh(Function):
     Usage
     =====
       atanh(x) -> Returns the inverse hyperbolic tangent of x
+ 
+    See Also
+    ========
+    asinh, acosh, tanh
+
     """
     nargs = 1
 

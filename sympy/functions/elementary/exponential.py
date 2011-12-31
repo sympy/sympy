@@ -108,7 +108,11 @@ class exp_polar(ExpBase):
     >>> exp_polar(2)*exp_polar(3)
     exp_polar(5)
 
-    **See also:** :class:`polar_lift`, :func:`powsimp`.
+    See also
+    ========
+    powsimp
+    class:`polar_lift`
+
     """
 
     is_polar = True
@@ -261,6 +265,11 @@ class exp(ExpBase):
         (cos(1), sin(1))
         >>> exp(1+I).as_real_imag()
         (E*cos(1), E*sin(1))
+
+        See Also
+        ========
+        sympy.functions.elementary.complexes.re
+        sympy.functions.elementary.complexes.im
 
         """
         re, im = self.args[0].as_real_imag()
