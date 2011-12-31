@@ -1696,13 +1696,15 @@ class asin(InverseTrigonometricFunction):
 
 class acos(InverseTrigonometricFunction):
     """
-    acos(x) -> Returns the arc cosine of x (measured in radians)
+    The inverse cosine function.
+
+    Returns the arc cosine of x (measured in radians).
 
     Notes
     =====
 
-    * acos(x) will evaluate automatically in the cases
-      oo, -oo, 0, 1, -1
+    acos(x) will evaluate automatically in the cases
+    oo, -oo, 0, 1, -1.
 
     Examples
     ========
@@ -1718,7 +1720,15 @@ class acos(InverseTrigonometricFunction):
     See Also
     ========
 
-    asin, atan, cos
+    sin, csc, cos, sec, tan, cot
+    asin, acsc, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcCos
+
     """
 
     def fdiff(self, argindex=1):
@@ -1815,6 +1825,18 @@ class acos(InverseTrigonometricFunction):
         Returns the inverse of this function.
         """
         return cos
+
+    def _eval_rewrite_as_acot(self, arg):
+        return S.Pi/2 - 2*acot((1 + sqrt(1 - arg**2))/arg)
+
+    def _eval_rewrite_as_asec(self, arg):
+        return asec(1/arg)
+
+    def _eval_rewrite_as_acsc(self, arg):
+        return S.Pi/2 - acsc(1/arg)
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
 
     def _sage_(self):
         import sage.all as sage
