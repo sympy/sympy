@@ -1845,13 +1845,15 @@ class acos(InverseTrigonometricFunction):
 
 class atan(InverseTrigonometricFunction):
     """
-    atan(x) -> Returns the arc tangent of x (measured in radians)
+    The inverse tangent function.
+
+    Returns the arc tangent of x (measured in radians).
 
     Notes
     =====
 
-    * atan(x) will evaluate automatically in the cases
-      oo, -oo, 0, 1, -1
+    atan(x) will evaluate automatically in the cases
+    oo, -oo, 0, 1, -1.
 
     Examples
     ========
@@ -1867,7 +1869,15 @@ class atan(InverseTrigonometricFunction):
     See Also
     ========
 
-    acos, asin, tan
+    sin, csc, cos, sec, tan, cot
+    asin, acsc, acos, asec, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcTan
+
     """
 
     def fdiff(self, argindex=1):
@@ -1967,6 +1977,21 @@ class atan(InverseTrigonometricFunction):
         Returns the inverse of this function.
         """
         return tan
+
+    def _eval_rewrite_as_asin(self, arg):
+        return sqrt(arg**2)/arg*(S.Pi/2 - asin(1/sqrt(1 + arg**2)))
+
+    def _eval_rewrite_as_acos(self, arg):
+        return sqrt(arg**2)/arg*acos(1/sqrt(1 + arg**2))
+
+    def _eval_rewrite_as_acot(self, arg):
+        return acot(1/arg)
+
+    def _eval_rewrite_as_asec(self, arg):
+        return sqrt(arg**2)/arg*asec(sqrt(1 + arg**2))
+
+    def _eval_rewrite_as_acsc(self, arg):
+        return sqrt(arg**2)/arg*(S.Pi/2 - acsc(sqrt(1 + arg**2)))
 
     def _sage_(self):
         import sage.all as sage
