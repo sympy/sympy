@@ -70,12 +70,16 @@ htmli18n:
 	mkdir -p _build/html/
 	mkdir -p src/i18n/cs/LC_MESSAGES/
 	mkdir -p src/i18n/ru/LC_MESSAGES/
+	mkdir -p src/i18n/bg/LC_MESSAGES/
 	msgfmt src/tutorial.cs.po -o src/i18n/cs/LC_MESSAGES/tutorial.mo
 	msgfmt src/tutorial.ru.po -o src/i18n/ru/LC_MESSAGES/tutorial.mo
+	msgfmt src/tutorial.bg.po -o src/i18n/bg/LC_MESSAGES/tutorial.mo
 	$(SPHINXBUILD) -b html -D language=cs $(ALLSPHINXOPTS) _build/i18n/cs src/tutorial.txt
 	$(SPHINXBUILD) -b html -D language=ru $(ALLSPHINXOPTS) _build/i18n/ru src/tutorial.txt
+	$(SPHINXBUILD) -b html -D language=bg $(ALLSPHINXOPTS) _build/i18n/bg src/tutorial.txt
 	cp _build/i18n/cs/tutorial.html _build/html/tutorial.cs.html
 	cp _build/i18n/ru/tutorial.html _build/html/tutorial.ru.html
+	cp _build/i18n/bg/tutorial.html _build/html/tutorial.bg.html
 
 web:
 	mkdir -p _build/web _build/doctrees
