@@ -1536,13 +1536,15 @@ class InverseTrigonometricFunction(Function):
 
 class asin(InverseTrigonometricFunction):
     """
-    asin(x) -> Returns the arc sine of x (measured in radians)
+    The inverse sine function.
+
+    Returns the arc sine of x (measured in radians).
 
     Notes
     =====
 
-    * asin(x) will evaluate automatically in the cases
-      oo, -oo, 0, 1, -1
+    asin(x) will evaluate automatically in the cases
+    oo, -oo, 0, 1, -1.
 
     Examples
     ========
@@ -1556,7 +1558,15 @@ class asin(InverseTrigonometricFunction):
     See Also
     ========
 
-    acos, atan, sin
+    sin, csc, cos, sec, tan, cot
+    acsc, acos, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcSin
+
     """
 
     def fdiff(self, argindex=1):
@@ -1659,6 +1669,15 @@ class asin(InverseTrigonometricFunction):
 
     def _eval_rewrite_as_log(self, x):
         return -S.ImaginaryUnit*C.log(S.ImaginaryUnit*x + sqrt(1 - x**2))
+
+    def _eval_rewrite_as_acot(self, arg):
+        return 2*acot((1 + sqrt(1 - arg**2))/arg)
+
+    def _eval_rewrite_as_asec(self, arg):
+        return S.Pi/2 - asec(1/arg)
+
+    def _eval_rewrite_as_acsc(self, arg):
+        return acsc(1/arg)
 
     def _eval_is_real(self):
         x = self.args[0]
