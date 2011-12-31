@@ -910,13 +910,15 @@ class csc(ReciprocalTrigonometricFunction):
 
 class tan(TrigonometricFunction):
     """
-    tan(x) -> Returns the tangent of x (measured in radians)
+    The tangent function.
+
+    Returns the tangent of x (measured in radians).
 
     Notes
     =====
 
-    * tan(x) will evaluate automatically in the case x is a
-      multiple of pi.
+    tan(x) will evaluate automatically in the case x is a
+    multiple of pi.
 
     Examples
     ========
@@ -931,12 +933,14 @@ class tan(TrigonometricFunction):
     See Also
     ========
 
-    sin, cos, atan
+    sin, csc, cos, sec, cot
+    asin, acsc, acos, asec, atan, acot, atan2
 
     References
     ==========
 
-    .. [1] http://planetmath.org/DefinitionsInTrigonometry
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Tan
 
     """
 
@@ -1033,6 +1037,18 @@ class tan(TrigonometricFunction):
             F = C.factorial(n + 1)
 
             return (-1)**a * b*(b - 1) * B/F * x**n
+
+    def _eval_aseries(self, n, args0, x, logx):
+        if C.im(args0[0]).is_positive:
+            return (S.ImaginaryUnit - 2*S.ImaginaryUnit*
+                    C.exp(2*S.ImaginaryUnit*x)*
+                    C.hyper([1], [], -C.exp(2*S.ImaginaryUnit*x)))
+        elif C.im(args0[0]).is_negative:
+            return (-S.ImaginaryUnit + 2*S.ImaginaryUnit*
+                    C.exp(-2*S.ImaginaryUnit*x)*
+                    C.hyper([1], [], -C.exp(-2*S.ImaginaryUnit*x)))
+        else:
+            return super(tan, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_nseries(self, x, n, logx):
         i = self.args[0].limit(x, 0)*2/S.Pi
