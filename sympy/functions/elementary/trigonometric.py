@@ -381,13 +381,13 @@ class cos(TrigonometricFunction):
     """
     The cosine function.
 
-    * cos(x) -> Returns the cosine of x (measured in radians)
+    Returns the cosine of x (measured in radians).
 
     Notes
     =====
 
-    * cos(x) will evaluate automatically in the case x
-      is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
+    cos(x) will evaluate automatically in the case x
+    is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
 
     Examples
     ========
@@ -408,12 +408,14 @@ class cos(TrigonometricFunction):
     See Also
     ========
 
-    sin, tan, acos
+    sin, csc, sec, tan, cot
+    asin, acsc, acos, asec, atan, acot, atan2
 
     References
     ==========
 
-    .. [1] http://planetmath.org/DefinitionsInTrigonometry
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Cos
 
     """
 
@@ -540,6 +542,14 @@ class cos(TrigonometricFunction):
                 return -p * x**2 / (n*(n - 1))
             else:
                 return (-1)**(n//2)*x**(n)/C.factorial(n)
+
+    def _eval_aseries(self, n, args0, x, logx):
+        if C.im(args0[0]).is_positive:
+            return C.exp(-S.ImaginaryUnit*x)/2
+        elif C.im(args0[0]).is_negative:
+            return C.exp(S.ImaginaryUnit*x)/2
+        else:
+            return super(cos, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
@@ -669,6 +679,9 @@ class cos(TrigonometricFunction):
             X = [(x[1], x[0]*S.Pi) for x in zip(decomp, numbered_symbols('z'))]
             pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
             return pcls
+
+    def _eval_rewrite_as_sec(self, arg):
+        return 1/sec(arg)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
