@@ -1162,18 +1162,49 @@ class tan(TrigonometricFunction):
 
 class cot(TrigonometricFunction):
     """
-    cot(x) -> Returns the cotangent of x (measured in radians)
+    The cotangent function.
+
+    Returns the cotangent of x (measured in radians).
+
+    Notes
+    =====
+
+    cot(x) will evaluate automatically in the case x is a
+    multiple of pi.
+
+    Examples
+    ========
+
+    >>> from sympy import cot
+    >>> from sympy.abc import x
+    >>> cot(x**2).diff(x)
+    2*x*(-cot(x**2)**2 - 1)
+    >>> cot(1).diff(x)
+    0
+
+    See Also
+    ========
+
+    sin, csc, cos, sec, tan
+    asin, acsc, acos, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Cot
+
     """
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return S.NegativeOne - self**2
+            return -csc(self.args[0])**2
         else:
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
         """
-        Returns the inverse of this function.
+        Return the inverse of this function.
         """
         return acot
 
@@ -1263,6 +1294,18 @@ class cot(TrigonometricFunction):
 
             return (-1)**((n + 1)//2) * 2**(n + 1) * B/F * x**n
 
+    def _eval_aseries(self, n, args0, x, logx):
+        if C.im(args0[0]).is_positive:
+            return (-S.ImaginaryUnit - 2*S.ImaginaryUnit*
+                    C.exp(2*S.ImaginaryUnit*x)*
+                    C.hyper([1], [], C.exp(2*S.ImaginaryUnit*x)))
+        elif C.im(args0[0]).is_negative:
+            return (S.ImaginaryUnit + 2*S.ImaginaryUnit*
+                    C.exp(-2*S.ImaginaryUnit*x)*
+                    C.hyper([1], [], C.exp(-2*S.ImaginaryUnit*x)))
+        else:
+            return super(cot, self)._eval_aseries(n, args0, x, logx)
+
     def _eval_nseries(self, x, n, logx):
         i = self.args[0].limit(x, 0)/S.Pi
         if i and i.is_Integer:
@@ -1270,7 +1313,6 @@ class cot(TrigonometricFunction):
         return self.rewrite(tan)._eval_nseries(x, n=n, logx=logx)
 
     def _eval_conjugate(self):
-        assert len(self.args) == 1
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
@@ -1361,6 +1403,20 @@ class cot(TrigonometricFunction):
                 P = ((z + I)**coeff).expand()
                 return (C.re(P)/C.im(P)).subs([(z, cot(terms))])
         return cot(arg)
+
+    def _eval_is_bounded(self):
+        arg = self.args[0]
+        if arg.is_imaginary:
+            return True
+
+    def _eval_subs(self, old, new):
+        if self == old:
+            return new
+        arg = self.args[0]
+        argnew = arg.subs(old, new)
+        if arg != argnew and (argnew/S.Pi).is_integer:
+            return S.ComplexInfinity
+        return cot(argnew)
 
     def _sage_(self):
         import sage.all as sage
