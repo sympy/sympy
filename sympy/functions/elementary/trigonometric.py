@@ -2000,7 +2000,22 @@ class atan(InverseTrigonometricFunction):
 
 class acot(InverseTrigonometricFunction):
     """
-    acot(x) -> Returns the arc cotangent of x (measured in radians)
+    The inverse cotangent function.
+
+    Returns the arc cotangent of x (measured in radians).
+
+    See Also
+    ========
+
+    sin, csc, cos, sec, tan, cot
+    asin, acsc, acos, asec, atan, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcCot
+
     """
 
     def fdiff(self, argindex=1):
@@ -2105,6 +2120,22 @@ class acot(InverseTrigonometricFunction):
         Returns the inverse of this function.
         """
         return cot
+
+    def _eval_rewrite_as_asin(self, arg):
+        return (arg*sqrt(1/arg**2)*
+                (S.Pi/2 - asin(sqrt(-arg**2)/sqrt(-arg**2 - 1))))
+
+    def _eval_rewrite_as_acos(self, arg):
+        return arg*sqrt(1/arg**2)*acos(sqrt(-arg**2)/sqrt(-arg**2 - 1))
+
+    def _eval_rewrite_as_atan(self, arg):
+        return atan(1/arg)
+
+    def _eval_rewrite_as_asec(self, arg):
+        return arg*sqrt(1/arg**2)*asec(sqrt((1 + arg**2)/arg**2))
+
+    def _eval_rewrite_as_acsc(self, arg):
+        return arg*sqrt(1/arg**2)*(S.Pi/2 - acsc(sqrt((1 + arg**2)/arg**2)))
 
     def _sage_(self):
         import sage.all as sage
