@@ -299,7 +299,8 @@ def centroid(*args):
 
     See Also
     ========
-    sympy.geometry.point.Point, sympy.geometry.line.Segment, sympy.geometry.polygon.Polygon
+    sympy.geometry.point.Point, sympy.geometry.line.Segment,
+    sympy.geometry.polygon.Polygon
 
     Examples
     ========
