@@ -300,11 +300,11 @@ class sin(TrigonometricFunction):
         return -cos(arg + S.Pi/2)
 
     def _eval_rewrite_as_tan(self, arg):
-        tan_half = tan(S.Half*arg)
+        tan_half = tan(arg/2)
         return 2*tan_half/(1 + tan_half**2)
 
     def _eval_rewrite_as_cot(self, arg):
-        cot_half = cot(S.Half*arg)
+        cot_half = cot(arg/2)
         return 2*cot_half/(1 + cot_half**2)
 
     def _eval_rewrite_as_sec(self, arg):
@@ -545,18 +545,18 @@ class cos(TrigonometricFunction):
         return sin(arg + S.Pi/2)
 
     def _eval_rewrite_as_tan(self, arg):
-        tan_half = tan(S.Half*arg)**2
+        tan_half = tan(arg/2)**2
         return (1-tan_half)/(1+tan_half)
 
     def _eval_rewrite_as_cot(self, arg):
-        cot_half = cot(S.Half*arg)**2
+        cot_half = cot(arg/2)**2
         return (cot_half-1)/(cot_half+1)
 
     def _eval_rewrite_as_sec(self, arg):
         return 1 / sec(arg)
 
     def _eval_rewrite_as_csc(self, arg):
-        return 1 / csc(arg + s.Pi/2)
+        return 1 / csc(arg + S.Pi/2)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -1029,7 +1029,7 @@ class cot(TrigonometricFunction):
         return 1/tan(arg)
 
     def _eval_rewrite_as_sec(self, arg):
-        return sec(arg + S.Pi/2) / sec(arg)
+        return -sec(arg + S.Pi/2) / sec(arg)
 
     def _eval_rewrite_as_csc(self, arg):
         return csc(arg) / csc(arg + S.Pi/2)
@@ -1174,11 +1174,11 @@ class sec(TrigonometricFunction):
         return 1 / cos(arg)
 
     def _eval_rewrite_as_tan(self, arg):
-        tan_half_sq = tan(S.Half*arg)**2
+        tan_half_sq = tan(arg/2)**2
         return (1+tan_half_sq) / (1-tan_half_sq)
 
     def _eval_rewrite_as_cot(self, arg):
-        cot_half_sq = cot(S.Half*arg)**2
+        cot_half_sq = cot(arg/2)**2
         return (cot_half_sq+1) / (cot_half_sq-1)
 
     def _eval_rewrite_as_csc(self, arg):
@@ -1338,11 +1338,11 @@ class csc(TrigonometricFunction):
         return -1 / cos(arg + S.Pi/2)
 
     def _eval_rewrite_as_tan(self, arg):
-        tan_half = tan(S.Half*arg)
+        tan_half = tan(arg/2)
         return (1+tan_half**2) / (2*tan_half)
 
     def _eval_rewrite_as_cot(self, arg):
-        cot_half = cot(S.Half*arg)
+        cot_half = cot(arg/2)
         return (1+cot_half**2) / (2*cot_half)
 
     def _eval_rewrite_as_sec(self, arg):
