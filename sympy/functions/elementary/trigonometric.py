@@ -1526,19 +1526,13 @@ class acos(InverseTrigonometricFunction):
     >>> acos(oo)
     oo*I
 
-    See Also
+    See also
     ========
 
-    asin, atan, cos
+    L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+    L{asin}, L{acsc}, L{asec}, L{atan}, L{acot}
+
     """
-
-    nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return -1/sqrt(1 - self.args[0]**2)
-        else:
-            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def eval(cls, arg):
@@ -1571,6 +1565,11 @@ class acos(InverseTrigonometricFunction):
             if arg in cst_table:
                 return cst_table[arg]
 
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -1/sqrt(1 - self.args[0]**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     @staticmethod
     @cacheit
@@ -1601,17 +1600,26 @@ class acos(InverseTrigonometricFunction):
     def _eval_is_real(self):
         return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
 
-    def _eval_rewrite_as_log(self, x):
-        return S.Pi/2 + S.ImaginaryUnit * C.log(S.ImaginaryUnit * x + sqrt(1 - x**2))
+    def _eval_rewrite_as_log(self, arg):
+        return S.Pi/2 + S.ImaginaryUnit * C.log(S.ImaginaryUnit * arg + sqrt(1 - arg**2))
 
-    def _eval_rewrite_as_asin(self, x):
-        return S.Pi/2 - asin(x)
+    def _eval_rewrite_as_asin(self, arg):
+        return S.Pi/2 - asin(arg)
 
-    def _eval_rewrite_as_atan(self, x):
-        if x > -1 and x <= 1:
-            return 2 * atan(sqrt(1 - x**2)/(1 + x))
-        else:
-            raise ValueError("The argument must be bounded in the interval (-1,1]")
+    def _eval_rewrite_as_atan(self, arg):
+        return S.Pi/2 - 2*atan((1-sqrt(1 - arg**2))/arg)
+
+    def _eval_rewrite_as_acot(self, arg):
+        return S.Pi/2 - 2*acot((1+sqrt(1-arg**2))/arg)
+
+    def _eval_rewrite_as_asec(self, arg):
+        return asec(1/arg)
+
+    def _eval_rewrite_as_acsc(self, arg):
+        return S.Pi/2 - acsc(1/arg)
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
 
     def _sage_(self):
         import sage.all as sage
