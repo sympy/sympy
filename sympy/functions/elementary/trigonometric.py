@@ -396,7 +396,8 @@ class cos(TrigonometricFunction):
     See Also
     ========
 
-    sin, tan, acos
+    L{sin}, L{csc}, L{sec}, L{tan}, L{cot}
+    L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
 
     References
     ==========
@@ -404,17 +405,6 @@ class cos(TrigonometricFunction):
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
 
     """
-
-    nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return -sin(self.args[0])
-        else:
-            raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        return acos
 
     @classmethod
     def eval(cls, arg):
@@ -507,6 +497,15 @@ class cos(TrigonometricFunction):
             x = arg.args[0]
             return 1 / sqrt(1 + 1 / x**2)
 
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -sin(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        return acos
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -514,12 +513,19 @@ class cos(TrigonometricFunction):
             return S.Zero
         else:
             x = sympify(x)
+            k = n // 2
+            return (-1)**k*x**(2*k)/C.factorial(2*k)
 
-            if len(previous_terms) > 2:
-                p = previous_terms[-2]
-                return -p * x**2 / (n*(n-1))
-            else:
-                return (-1)**(n//2)*x**(n)/C.factorial(n)
+    def _eval_aseries(self, n, args0, x, logx):
+        if C.im(args0[0]) > 0:
+            return C.exp(-S.ImaginaryUnit*x) / 2
+        elif C.im(args0[0]) < 0:
+            return C.exp(S.ImaginaryUnit*x) / 2
+        elif C.im(args0[0]) == 0:
+            # No asymptotic series expansion along the real line
+            return cos(x)
+        else:
+            return super(cos, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
@@ -544,6 +550,12 @@ class cos(TrigonometricFunction):
         cot_half = cot(S.Half*arg)**2
         return (cot_half-1)/(cot_half+1)
 
+    def _eval_rewrite_as_sec(self, arg):
+        return 1 / sec(arg)
+
+    def _eval_rewrite_as_csc(self, arg):
+        return 1 / csc(arg + s.Pi/2)
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -559,10 +571,6 @@ class cos(TrigonometricFunction):
         else:
             re, im = self.args[0].as_real_imag()
         return (cos(re)*C.cosh(im), -sin(re)*C.sinh(im))
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_expand_trig(self, deep=True, **hints):
         if deep:
