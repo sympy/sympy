@@ -73,8 +73,7 @@ class GeometryEntity(tuple):
 
         See Also
         ========
-        scale
-        translate
+        scale, translate
 
         Examples
         ========
@@ -114,8 +113,7 @@ class GeometryEntity(tuple):
 
         See Also
         ========
-        rotate
-        translate
+        rotate, translate
 
         Examples
         ========
@@ -145,8 +143,7 @@ class GeometryEntity(tuple):
 
         See Also
         ========
-        rotate
-        scale
+        rotate, scale
 
         Examples
         ========
@@ -184,8 +181,7 @@ class GeometryEntity(tuple):
           
         See Also
         ========
-        sympy.geometry.ellipse.Ellipse.encloses_point
-        sympy.geometry.polygon.Polygon.encloses_point
+        sympy.geometry.ellipse.Ellipse.encloses_point, sympy.geometry.polygon.Polygon.encloses_point
 
         """
         from sympy.geometry.point import Point

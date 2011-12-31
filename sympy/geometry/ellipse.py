@@ -1,9 +1,8 @@
 """Elliptical geometrical entities.
 
 Contains
-========
-Ellipse
-Circle
+* Ellipse
+* Circle
 
 """
 
@@ -155,9 +154,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        vradius
-        major
-        minor
+        vradius, major, minor
 
         Examples
         ========
@@ -180,9 +177,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        hradius
-        major
-        minor
+        hradius, major, minor
 
         Examples
         ========
@@ -205,9 +200,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        hradius
-        vradius
-        major
+        hradius, vradius, major
 
         Examples
         ========
@@ -245,9 +238,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        hradius
-        vradius
-        minor
+        hradius, vradius, minor
 
         Examples
         ========
@@ -347,7 +338,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        apoapsis : Returns greatest distance between foci and contour
+        apoapsis : Returns greatest distance between focus and contour
 
         Examples
         ========
@@ -522,8 +513,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.point.Point
-        sympy.geometry.line.Line
+        sympy.geometry.point.Point, sympy.geometry.line.Line
 
         Examples
         ========
@@ -964,8 +954,7 @@ class Circle(Ellipse):
 
     See Also
     ========
-    Ellipse
-    sympy.geometry.point.Point
+    Ellipse, sympy.geometry.point.Point
 
     Examples
     ========
@@ -1011,10 +1000,7 @@ class Circle(Ellipse):
 
         See Also
         ========
-        Ellipse.major : Synonymous with radius
-        Ellipse.minor : Synonymous with radius
-        Ellipse.hradius : Synonymous with radius
-        Ellipse.vradius : Synonymous with radius
+        Ellipse.major, Ellipse.minor, Ellipse.hradius, Ellipse.vradius
 
         Examples
         ========

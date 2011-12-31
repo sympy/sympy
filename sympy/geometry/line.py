@@ -347,8 +347,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        is_perpendicular
-        perpendicular_segment
+        is_perpendicular, perpendicular_segment
 
         Examples
         ========
@@ -499,8 +498,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         ========
-        sympy.geometry.point.Point
-        perpendicular_line
+        sympy.geometry.point.Point, perpendicular_line
 
         Examples
         ========
@@ -950,8 +948,7 @@ class Ray(LinearEntity):
 
     See Also
     ========
-    sympy.geometry.point.Point
-    Line
+    sympy.geometry.point.Point, Line
 
     Notes
     =====
@@ -1257,8 +1254,7 @@ class Segment(LinearEntity):
 
     See Also
     ========
-    sympy.geometry.point.Point
-    Line
+    sympy.geometry.point.Point, Line
 
     Notes
     =====
