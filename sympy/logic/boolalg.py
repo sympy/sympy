@@ -120,14 +120,15 @@ class Not(BooleanFunction):
 
         Examples
         ========
-        >>> from sympy.logic.boolalg import Not
+        >>> from sympy.logic.boolalg import Not, And, Or
+        >>> from sympy.abc import x
         >>> Not(True)
         False
         >>> Not(False)
         True
-        >>> Not(True and False)
+        >>> Not(And(True, False))
         True
-        >>> Not(True or False)
+        >>> Not(Or(True, False))
         False
 
         If multiple statements are given, returns an array of each result
@@ -136,6 +137,9 @@ class Not(BooleanFunction):
         [False, True]
         >>> Not(True and False, True or False, True)
         [True, False, False]
+
+        >>> Not(And(And(True, x), Or(x, False)))
+        Not(x)
         """
         if len(args) > 1:
             return map(cls, args)
@@ -162,8 +166,8 @@ class Nand(BooleanFunction):
         """
         Logical NAND function.
 
-        Returns True if any of the arguements are False
-        Returns False if all arguements are True
+        Returns True if any of the arguments are False
+        Returns False if all arguments are True
 
         Examples
         ========
@@ -187,8 +191,8 @@ class Nor(BooleanFunction):
         """
         Logical NOR function.
 
-        Returns False if any arguement is True
-        Returns True if any arguement is False
+        Returns False if any argument is True
+        Returns True if all argument is False
 
         Examples
         ========
@@ -215,9 +219,9 @@ class Implies(BooleanFunction):
         """
         Logical implication.
 
-        Accepts two Boolean arguements; A and B.
-        If A is True, return B
-        If A is False, return True
+        Accepts two Boolean arguments; A and B.
+        Returns False if A is True and B is False
+        Returns True otherwise.
 
         Examples
         ========
@@ -251,16 +255,19 @@ class Equivalent(BooleanFunction):
         """
         Equivalence relation.
 
-        Returns True if all of the arguements are True
+        Returns True if all of the arguments are equal.
         Returns False otherwise.
 
         Examples
         ========
-        >>> from sympy.logic.boolalg import Equivalent
+        >>> from sympy.logic.boolalg import Equivalent, And
+        >>> from sympy.abc import x
         >>> Equivalent(False, False, False)
         True
         >>> Equivalent(True, False, False)
         False
+        >>> Equivalent(x, And(x, True))
+        True
 
         """
 
