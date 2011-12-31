@@ -2392,14 +2392,16 @@ class atan2(InverseTrigonometricFunction):
     See Also
     ========
 
-    sin, cos, sec, csc, tan, cot
-    asin, acos, atan
+    sin, csc, cos, sec, tan, cot
+    asin, acsc, acos, asec, atan, acot
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Atan2
-    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcTan2/
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://en.wikipedia.org/wiki/Atan2
+    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcTan2
+
     """
 
     @classmethod
