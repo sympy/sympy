@@ -445,7 +445,7 @@ def factor_terms(expr, radical=False):
         return expr.func(*[factor_terms(i, radical=radical) for i in expr.args])
 
     cont, p = expr.as_content_primitive(radical=radical)
-    list_args, nc = zip(*[ai.args_cnc(clist=True) for ai in Add.make_args(p)])
+    list_args, nc = zip(*[ai.args_cnc() for ai in Add.make_args(p)])
     list_args = list(list_args)
     nc = [((Dummy(), Mul._from_args(i)) if i else None) for i in nc]
     ncreps = dict([i for i in nc if i is not None])
