@@ -35,6 +35,19 @@ class TrigonometricFunction(Function):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)
         return re_part + im_part*S.ImaginaryUnit
 
+    def _as_real_imag(self, deep=True, **hints):
+        if self.args[0].is_real:
+            if deep:
+                hints['complex'] = False
+                return (self.expand(deep, **hints), S.Zero)
+            else:
+                return (self, S.Zero)
+        if deep:
+            re, im = self.args[0].expand(deep, **hints).as_real_imag()
+        else:
+            re, im = self.args[0].as_real_imag()
+        return (re, im)
+
 
 def _peeloff_pi(arg):
     """
@@ -315,16 +328,7 @@ class sin(TrigonometricFunction):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_real:
-            if deep:
-                hints['complex'] = False
-                return (self.expand(deep, **hints), S.Zero)
-            else:
-                return (self, S.Zero)
-        if deep:
-            re, im = self.args[0].expand(deep, **hints).as_real_imag()
-        else:
-            re, im = self.args[0].as_real_imag()
+        re, im = self._as_real_imag(deep=deep, **hints)
         return (sin(re)*C.cosh(im), cos(re)*C.sinh(im))
 
     def _eval_expand_trig(self, **hints):
@@ -687,16 +691,7 @@ class cos(TrigonometricFunction):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_real:
-            if deep:
-                hints['complex'] = False
-                return (self.expand(deep, **hints), S.Zero)
-            else:
-                return (self, S.Zero)
-        if deep:
-            re, im = self.args[0].expand(deep, **hints).as_real_imag()
-        else:
-            re, im = self.args[0].as_real_imag()
+        re, im = self._as_real_imag(deep=deep, **hints)
         return (cos(re)*C.cosh(im), -sin(re)*C.sinh(im))
 
     def _eval_expand_trig(self, **hints):
@@ -1168,18 +1163,9 @@ class tan(TrigonometricFunction):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_real:
-            if deep:
-                hints['complex'] = False
-                return (self.expand(deep, **hints), S.Zero)
-            else:
-                return (self, S.Zero)
-        if deep:
-            re, im = self.args[0].expand(deep, **hints).as_real_imag()
-        else:
-            re, im = self.args[0].as_real_imag()
-        denom = cos(re)**2 + C.sinh(im)**2
-        return (sin(re)*cos(re)/denom, C.sinh(im)*C.cosh(im)/denom)
+        re, im = self._as_real_imag(deep=deep, **hints)
+        denom = cos(2*re) + C.cosh(2*im)
+        return (sin(2*re)/denom, C.sinh(2*im)/denom)
 
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
@@ -1418,18 +1404,9 @@ class cot(TrigonometricFunction):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_real:
-            if deep:
-                hints['complex'] = False
-                return (self.expand(deep, **hints), S.Zero)
-            else:
-                return (self, S.Zero)
-        if deep:
-            re, im = self.args[0].expand(deep, **hints).as_real_imag()
-        else:
-            re, im = self.args[0].as_real_imag()
-        denom = sin(re)**2 + C.sinh(im)**2
-        return (sin(re)*cos(re)/denom, -C.sinh(im)*C.cosh(im)/denom)
+        re, im = self._as_real_imag(deep=deep, **hints)
+        denom = cos(2*re) - C.cosh(2*im)
+        return (-sin(2*re)/denom, -C.sinh(2*im)/denom)
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
