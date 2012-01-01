@@ -110,8 +110,10 @@ class exp_polar(ExpBase):
 
     See also
     ========
-    periodic_argument, principle_branch, powsimp
-    class:`polar_lift`
+    sympy.simplify.simplify.powsimp
+    sympy.functions.elementary.complexes.polar_lift
+    sympy.functions.elementary.complexes.periodic_argument
+    sympy.fucntions.elementary.complexes.principal_branch
     """
 
     is_polar = True

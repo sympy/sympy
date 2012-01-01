@@ -439,7 +439,7 @@ class polar_lift(Function):
 
     See Also
     ========
-    periodic_argument, polar_lift, exp_polar
+    sympy.functions.elementary.exponential, periodic_argument, polar_lift
     """
 
     nargs = 1
@@ -503,7 +503,7 @@ class periodic_argument(Function):
 
     See Also
     ========
-    polar_lift, principal_branch, exp_polar
+    sympy.functions.elementary.exp_polar, polar_lift, principal_branch
     """
 
     nargs = 2
@@ -588,7 +588,7 @@ class principal_branch(Function):
 
     See Also
     ========
-    polar_lift, periodic_argument, exp_polar
+    sympy.functions.elementary.exponential.exp_polar, polar_lift, periodic_argument
     """
 
     nargs = 2

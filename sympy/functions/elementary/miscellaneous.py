@@ -89,7 +89,7 @@ def sqrt(arg):
 
     See Also
     ========
-    root, RootOf
+    sympy.polys.rootoftools.RootOf, root
 
     References
     ==========
@@ -143,7 +143,7 @@ def root(arg, n):
 
     See Also
     ========
-    sqrt, RootOf, real_root, integer_nthroot
+    sympy.polys.rootoftools.RootOf, sympy.core.power.integer_nthroot, sqrt, real_root
 
     References
     ==========
@@ -175,7 +175,7 @@ def real_root(arg, n=None):
 
     See Also
     ========
-    sqrt, RootOf, root, integer_nthroot
+    sympy.polys.rootoftools.RootOf, sympy.core.power.integer_nthroot, root, sqrt
     """
     if n is not None:
         n = int_tested(n)
