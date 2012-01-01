@@ -50,33 +50,34 @@ def upretty(expr):
     """Unicode pretty-printing"""
     return xpretty(expr, use_unicode=True, wrap_line=False)
 
-A, B = symbols('A,B', commutative=False)
 
 def test_anticommutator():
+    A = Operator('A')
+    B = Operator('B')
     ac = AntiCommutator(A,B)
     ac_tall = AntiCommutator(A**2,B)
     assert str(ac) == '{A,B}'
     assert pretty(ac) == '{A,B}'
     assert upretty(ac) == u'{A,B}'
     assert latex(ac) == r'\left\{A,B\right\}'
-    sT(ac, "AntiCommutator(A,B)")
-    assert str(ac_tall) == '{B,A**2}'
+    sT(ac, "AntiCommutator(Operator(Symbol('A')),Operator(Symbol('B')))")
+    assert str(ac_tall) == '{A**2,B}'
     ascii_str = \
 """\
-/   2\\\n\
-<B,A >\n\
+/ 2  \\\n\
+<A ,B>\n\
 \\    /\
 """
     ucode_str = \
 u"""\
-⎧   2⎫\n\
-⎨B,A ⎬\n\
+⎧ 2  ⎫\n\
+⎨A ,B⎬\n\
 ⎩    ⎭\
 """
     assert pretty(ac_tall) == ascii_str
     assert upretty(ac_tall) == ucode_str
-    assert latex(ac_tall) == r'\left\{B,A^{2}\right\}'
-    sT(ac_tall, "AntiCommutator(B,A**2)")
+    assert latex(ac_tall) == r'\left\{\left(A\right)^{2},B\right\}'
+    sT(ac_tall, "AntiCommutator(Pow(Operator(Symbol('A')), Integer(2)),Operator(Symbol('B')))")
 
 def test_cg():
     cg = CG(1,2,3,4,5,6)
@@ -98,9 +99,7 @@ C       \n\
     assert latex(cg) == r'C^{5,6}_{1,2,3,4}'
     sT(cg, "CG(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6))")
     wigner3j = Wigner3j(1,2,3,4,5,6)
-    assert str(wigner3j) == '\
-(1, 3, 5)\n\
-(2, 4, 6)'
+    assert str(wigner3j) == 'Wigner3j(1,3,5,2,4,6)'
     ascii_str = \
 """\
 /1  3  5\\\n\
@@ -119,28 +118,30 @@ u"""\
     sT(wigner3j, "Wigner3j(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6))")
 
 def test_commutator():
+    A = Operator('A')
+    B = Operator('B')
     c = Commutator(A,B)
     c_tall = Commutator(A**2,B)
     assert str(c) == '[A,B]'
     assert pretty(c) == '[A,B]'
     assert upretty(c) == u'[A,B]'
     assert latex(c) == r'\left[A,B\right]'
-    sT(c, "Commutator(A,B)")
-    assert str(c_tall) == '-[B,A**2]'
+    sT(c, "Commutator(Operator(Symbol('A')),Operator(Symbol('B')))")
+    assert str(c_tall) == '[A**2,B]'
     ascii_str = \
 """\
- [   2]\n\
--[B,A ]\
+[ 2  ]\n\
+[A ,B]\
 """
     ucode_str = \
 u"""\
- ⎡   2⎤\n\
--⎣B,A ⎦\
+⎡ 2  ⎤\n\
+⎣A ,B⎦\
 """
     assert pretty(c_tall) == ascii_str
     assert upretty(c_tall) == ucode_str
-    assert latex(c_tall) == r'- \left[B,A^{2}\right]'
-    sT(c_tall, "Mul(Integer(-1), Commutator(B,A**2))")
+    assert latex(c_tall) == r'\left[\left(A\right)^{2},B\right]'
+    sT(c_tall, "Commutator(Pow(Operator(Symbol('A')), Integer(2)),Operator(Symbol('B')))")
 
 def test_constants():
     assert str(hbar) == 'hbar'
@@ -669,27 +670,7 @@ def test_tensorproduct():
     assert latex(tp) == r'{{\left|1,1\right\rangle }}\otimes {{\left|1,0\right\rangle }}'
     sT(tp, "TensorProduct(JzKet(Integer(1),Integer(1)), JzKet(Integer(1),Integer(0)))")
 
-@XFAIL
-def test_big_expr_failing_srepr():
-    f = Function('f')
-    x = symbols('x')
-    e1 = Dagger(AntiCommutator(Operator('A')+Operator('B'),Pow(DifferentialOperator(Derivative(f(x), x), f(x)),3))*TensorProduct(Jz**2,Operator('A')+Operator('B')))*(JzBra(1,0)+JzBra(1,1))*(JzKet(0,0)+JzKet(1,-1))
-    sT(e1,"Mul(TensorProduct(Pow(JzOp(Symbol('J')), Integer(2)), Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), AntiCommutator(Dagger(DifferentialOperator(Derivative(Function('f')(Symbol('x')), Symbol('x')),Function('f')(Symbol('x'))))**3,Dagger(Operator('A')) + Dagger(Operator('B'))), Add(JzBra(Integer(1),Integer(0)), JzBra(Integer(1),Integer(1))), Add(JzKet(Integer(0),Integer(0)), JzKet(Integer(1),Integer(-1))))")
-    e2 = Commutator(Jz**2,Operator('A')+Operator('B'))*AntiCommutator(Dagger(Operator('C')*Operator('D')),Operator('E').inv()**2)*Dagger(Commutator(Jz,J2))
-    sT(e2, "Mul(Commutator(JzOp(Symbol('J'))**2,Operator(Symbol('A')) + Operator(Symbol('B'))), AntiCommutator(Operator(Symbol('E'))**(-2),Dagger(Operator(Symbol('D')))*Dagger(Operator(Symbol('C')))), Commutator(J2Op(Symbol('J')),JzOp(Symbol('J'))))")
-    e3 = Wigner3j(1,2,3,4,5,6)*TensorProduct(Commutator(Operator('A')+Dagger(Operator('B')),Operator('C')+Operator('D')),Jz-J2)*Dagger(OuterProduct(Dagger(JzBra(1,1)),JzBra(1,0)))*TensorProduct(JzKetCoupled(1,1,1,1)+JzKetCoupled(1,0,1,1),JzKetCoupled(1,-1,1,1))
-    sT(e3,"Mul(Wigner3j(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6)), TensorProduct(Commutator(Dagger(Operator('B')) + Operator('A'),Operator('C') + Operator('D')), Add(Mul(Integer(-1), J2Op(Symbol('J'))), JzOp(Symbol('J')))), OuterProduct(JzKet(Integer(1),Integer(0)),JzBra(Integer(1),Integer(1))), TensorProduct(Add(JzKetCoupled(Integer(1),Integer(0),Integer(1),Integer(1)), JzKetCoupled(Integer(1),Integer(1),Integer(1),Integer(1))), JzKetCoupled(Integer(1),Integer(-1),Integer(1),Integer(1))))")
-
-@XFAIL
-def test_big_expr_failing_str():
-    e3 = Wigner3j(1,2,3,4,5,6)*TensorProduct(Commutator(Operator('A')+Dagger(Operator('B')),Operator('C')+Operator('D')),Jz-J2)*Dagger(OuterProduct(Dagger(JzBra(1,1)),JzBra(1,0)))*TensorProduct(JzKetCoupled(1,1,1,1)+JzKetCoupled(1,0,1,1),JzKetCoupled(1,-1,1,1))
-    assert str(e3) == "\
-(1, 3, 5)                                                                               \n\
-(2, 4, 6)*[Dagger(B) + A,C + D]x(-J2 + Jz)*|1,0><1,1|*(|1,0,1,1> + |1,1,1,1>)x|1,-1,1,1>"
-
 def test_big_expr():
-    # Some srepr stuff looks pretty broken, inner-most stuff is just being printed
-    #I've written what the srepr string should be and tested that it evaluates to the correct expression, see the above XFAIL test for commented out sT tests
     f = Function('f')
     x = symbols('x')
     e1 = Dagger(AntiCommutator(Operator('A')+Operator('B'),Pow(DifferentialOperator(Derivative(f(x), x), f(x)),3))*TensorProduct(Jz**2,Operator('A')+Operator('B')))*(JzBra(1,0)+JzBra(1,1))*(JzKet(0,0)+JzKet(1,-1))
@@ -716,8 +697,7 @@ u"""\
     assert pretty(e1) == ascii_str
     assert upretty(e1) == ucode_str
     assert latex(e1) == r'{\left(J_z\right)^{2}}\otimes \left({A^{\dag} + B^{\dag}}\right) \left\{\left(DifferentialOperator(\frac{\partial}{\partial x} \operatorname{f}{\left (x \right )},\operatorname{f}{\left (x \right )})^{\dag}\right)^{3},A^{\dag} + B^{\dag}\right\} \left({\left\langle 1,0\right|} + {\left\langle 1,1\right|}\right) \left({\left|0,0\right\rangle } + {\left|1,-1\right\rangle }\right)'
-    #sT(e1, '')
-    assert e1 == eval("Mul(TensorProduct(Pow(JzOp(Symbol('J')), Integer(2)), Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), AntiCommutator(Dagger(DifferentialOperator(Derivative(Function('f')(Symbol('x')), Symbol('x')),Function('f')(Symbol('x'))))**3,Dagger(Operator('A')) + Dagger(Operator('B'))), Add(JzBra(Integer(1),Integer(0)), JzBra(Integer(1),Integer(1))), Add(JzKet(Integer(0),Integer(0)), JzKet(Integer(1),Integer(-1))))")
+    sT(e1, "Mul(TensorProduct(Pow(JzOp(Symbol('J')), Integer(2)), Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), AntiCommutator(Pow(Dagger(DifferentialOperator(Derivative(Function('f')(Symbol('x')), Symbol('x')),Function('f')(Symbol('x')))), Integer(3)),Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), Add(JzBra(Integer(1),Integer(0)), JzBra(Integer(1),Integer(1))), Add(JzKet(Integer(0),Integer(0)), JzKet(Integer(1),Integer(-1))))")
     assert str(e2) == '[Jz**2,A + B]*{E**(-2),Dagger(D)*Dagger(C)}*[J2,Jz]'
     ascii_str = \
 u"""\
@@ -734,10 +714,8 @@ u"""\
     assert pretty(e2) == ascii_str
     assert upretty(e2) == ucode_str
     assert latex(e2) == r'\left[\left(J_z\right)^{2},A + B\right] \left\{\left(E\right)^{-2},D^{\dag} C^{\dag}\right\} \left[J^2,J_z\right]'
-    #sT(e2, '')
-    assert e2 == eval("Mul(Commutator(JzOp(Symbol('J'))**2,Operator(Symbol('A')) + Operator(Symbol('B'))), AntiCommutator(Operator(Symbol('E'))**(-2),Dagger(Operator(Symbol('D')))*Dagger(Operator(Symbol('C')))), Commutator(J2Op(Symbol('J')),JzOp(Symbol('J'))))")
-    # Broken, see test_big_expr_failing_str
-    #assert str(e3) == ""
+    sT(e2, "Mul(Commutator(Pow(JzOp(Symbol('J')), Integer(2)),Add(Operator(Symbol('A')), Operator(Symbol('B')))), AntiCommutator(Pow(Operator(Symbol('E')), Integer(-2)),Mul(Dagger(Operator(Symbol('D'))), Dagger(Operator(Symbol('C'))))), Commutator(J2Op(Symbol('J')),JzOp(Symbol('J'))))")
+    assert str(e3) == "Wigner3j(1,3,5,2,4,6)*[Dagger(B) + A,C + D]x(-J2 + Jz)*|1,0><1,1|*(|1,0,1,1> + |1,1,1,1>)x|1,-1,1,1>"
     ascii_str = \
 u"""\
           [ †          ]  /   2     \\                                               \n\
@@ -755,8 +733,7 @@ u"""\
     assert pretty(e3) == ascii_str
     assert upretty(e3) == ucode_str
     assert latex(e3) == r'\left(\begin{array}{ccc} 1 & 3 & 5 \\ 2 & 4 & 6 \end{array}\right) {\left[B^{\dag} + A,C + D\right]}\otimes \left({- J^2 + J_z}\right) {\left|1,0\right\rangle }{\left\langle 1,1\right|} \left({{\left|1,0,1,1\right\rangle } + {\left|1,1,1,1\right\rangle }}\right)\otimes {{\left|1,-1,1,1\right\rangle }}'
-    #sT(e3, '')
-    assert e3 == eval("Mul(Wigner3j(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6)), TensorProduct(Commutator(Dagger(Operator('B')) + Operator('A'),Operator('C') + Operator('D')), Add(Mul(Integer(-1), J2Op(Symbol('J'))), JzOp(Symbol('J')))), OuterProduct(JzKet(Integer(1),Integer(0)),JzBra(Integer(1),Integer(1))), TensorProduct(Add(JzKetCoupled(Integer(1),Integer(0),Integer(1),Integer(1)), JzKetCoupled(Integer(1),Integer(1),Integer(1),Integer(1))), JzKetCoupled(Integer(1),Integer(-1),Integer(1),Integer(1))))")
+    sT(e3, "Mul(Wigner3j(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6)), TensorProduct(Commutator(Add(Dagger(Operator(Symbol('B'))), Operator(Symbol('A'))),Add(Operator(Symbol('C')), Operator(Symbol('D')))), Add(Mul(Integer(-1), J2Op(Symbol('J'))), JzOp(Symbol('J')))), OuterProduct(JzKet(Integer(1),Integer(0)),JzBra(Integer(1),Integer(1))), TensorProduct(Add(JzKetCoupled(Integer(1),Integer(0),Integer(1),Integer(1)), JzKetCoupled(Integer(1),Integer(1),Integer(1),Integer(1))), JzKetCoupled(Integer(1),Integer(-1),Integer(1),Integer(1))))")
     assert str(e4) == '(C(1)*C(2)+F**2)*(L2([0, oo))+H)'
     ascii_str = \
 u"""\
