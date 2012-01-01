@@ -504,8 +504,9 @@ class periodic_argument(Function):
 
     See Also
     ========
-    sympy.functions.elementary.exp_polar, principal_branch
+    sympy.functions.elementary.exponential.exp_polar
     polar_lift : Lift argument to the riemann surface of the logarithm
+    principal_branch
     """
 
     nargs = 2
@@ -591,7 +592,8 @@ class principal_branch(Function):
     See Also
     ========
     sympy.functions.elementary.exponential.exp_polar
-    polar_lift, periodic_argument
+    polar_lift : Lift argument to the riemann surface of the logarithm
+    periodic_argument
     """
 
     nargs = 2
