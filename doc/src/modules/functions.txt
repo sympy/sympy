@@ -202,8 +202,6 @@ exp
 .. autoclass:: exp
    :members:
 
-.. seealso:: classes :py:class:`sympy.functions.elementary.exponential.log`
-
 ExprCondPair
 ------------
 
@@ -254,9 +252,6 @@ Examples::
 .. autoclass:: im
    :members:
 
-.. seealso::
-   :py:class:`sympy.functions.elementary.complexes.re`
-
 LambertW
 --------
 
@@ -272,8 +267,6 @@ log
 
 .. autoclass:: log
    :members:
-
-.. seealso:: classes :py:class:`sympy.functions.elementary.exponential.exp`
 
 Min
 ---
@@ -335,9 +328,6 @@ Examples::
 
 .. autoclass:: re
    :members:
-
-.. seealso::
-   :py:class:`sympy.functions.elementary.complexes.im`
 
 real_root
 ---------
