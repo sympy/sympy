@@ -34,7 +34,6 @@ class re(Function):
        See Also
        ========
        im
-
     """
     nargs = 1
 
@@ -117,7 +116,6 @@ class im(Function):
     See Also
     ========
     re
-
     """
 
     nargs = 1
@@ -201,8 +199,7 @@ class sign(Function):
 
     See Also
     ========
-    abs, conjugate
-
+    Abs, conjugate
     """
 
     nargs = 1
@@ -279,7 +276,6 @@ class Abs(Function):
     See Also
     ========
     sign, conjugate
-
     """
 
     nargs = 1
@@ -398,8 +394,7 @@ class conjugate(Function):
 
     See Also
     ========
-    sign, abs
-
+    sign, Abs
     """
 
     nargs = 1
@@ -445,7 +440,6 @@ class polar_lift(Function):
     See Also
     ========
     periodic_argument, polar_lift, exp_polar
-
     """
 
     nargs = 1
@@ -510,7 +504,6 @@ class periodic_argument(Function):
     See Also
     ========
     polar_lift, principal_branch, exp_polar
-
     """
 
     nargs = 2
@@ -596,7 +589,6 @@ class principal_branch(Function):
     See Also
     ========
     polar_lift, periodic_argument, exp_polar
-
     """
 
     nargs = 2

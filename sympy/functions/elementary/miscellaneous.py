@@ -87,7 +87,6 @@ def sqrt(arg):
     >>> [ RootOf(x**2-3,i) for i in (0,1) ]
     [-sqrt(3), sqrt(3)]
 
-
     See Also
     ========
     root, RootOf
@@ -142,10 +141,8 @@ def root(arg, n):
     >>> [ RootOf(x**4-1,i) for i in (0,1,2,3) ]
     [-1, 1, -I, I]
 
-
     See Also
     ========
-
     sqrt, RootOf, real_root, integer_nthroot
 
     References
@@ -176,12 +173,9 @@ def real_root(arg, n=None):
     >>> real_root(_)
     -2
 
-
     See Also
     ========
-
     sqrt, RootOf, root, integer_nthroot
-
     """
     if n is not None:
         n = int_tested(n)
@@ -406,9 +400,7 @@ class Max(MinMaxBase, Application, Basic):
 
     See Also
     ========
-
     Min : find minimum values
-
     """
     zero = S.Infinity
     identity = S.NegativeInfinity
@@ -456,9 +448,7 @@ class Min(MinMaxBase, Application, Basic):
 
     See Also
     ========
-
     Max : find maximum values
-
     """
     zero = S.NegativeInfinity
     identity = S.Infinity

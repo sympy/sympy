@@ -354,7 +354,6 @@ class cos(TrigonometricFunction):
 
     See Also
     ========
-
     sin, tan, acos
 
     References
@@ -567,7 +566,6 @@ class tan(TrigonometricFunction):
 
     See Also
     ========
-
     sin, cos, atan
 
     References
@@ -947,7 +945,6 @@ class asin(Function):
     See Also
     ========
     acos, atan, sin
-
     """
 
     nargs = 1
@@ -1069,7 +1066,6 @@ class acos(Function):
     See Also
     ========
     asin, atan, cos
-
     """
 
     nargs = 1
@@ -1180,8 +1176,6 @@ class atan(Function):
     See Also
     ========
     acos, asin, tan
-
- 
     """
 
     nargs = 1

@@ -23,7 +23,6 @@ class sinh(HyperbolicFunction):
     See Also
     ========
     cosh, tanh, asinh
-
     """
     nargs = 1
 
@@ -169,7 +168,6 @@ class cosh(HyperbolicFunction):
     See Also
     ========
     sinh, tanh, acosh
-
     """
     nargs = 1
 
@@ -305,7 +303,6 @@ class tanh(HyperbolicFunction):
     See Also
     ========
     sinh, cosh, atanh
-
     """
     nargs = 1
 
@@ -574,7 +571,6 @@ class asinh(Function):
     See Also
     ========
     acosh, atanh, sinh
-
     """
     nargs = 1
 
@@ -654,7 +650,6 @@ class acosh(Function):
     See Also
     ========
     asinh, atanh, cosh
-
     """
     nargs = 1
 
@@ -765,7 +760,6 @@ class atanh(Function):
     See Also
     ========
     asinh, acosh, tanh
-
     """
     nargs = 1
 

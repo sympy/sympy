@@ -93,7 +93,6 @@ class floor(RoundFunction):
     See Also
     ========
     ceiling
-
     """
     _dir = -1
 
@@ -146,7 +145,6 @@ class ceiling(RoundFunction):
     See Also
     ========
     floor
-
     """
     _dir = 1
 

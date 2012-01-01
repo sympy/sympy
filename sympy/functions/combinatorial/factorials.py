@@ -53,12 +53,9 @@ class factorial(CombinatorialFunction):
        >>> factorial(2*n)
        (2*n)!
 
-
        See Also
        ========
        factorial2, RisingFactorial, FallingFactorial
-
-
     """
 
     nargs = 1
@@ -186,7 +183,6 @@ class factorial2(CombinatorialFunction):
     See Also
     ========
     factorial, Risingfactorial, FallingFactorial
-
     """
     nargs = 1
 
@@ -236,7 +232,6 @@ class RisingFactorial(CombinatorialFunction):
        See Also
        ========
        factorial, factorial2, FallingFactorial
-
     """
 
     nargs = 2
@@ -300,12 +295,9 @@ class FallingFactorial(CombinatorialFunction):
        >>> ff(x, 5) == x*(x-1)*(x-2)*(x-3)*(x-4)
        True
 
-
        See Also
        ========
        factorial, factorial2, RisingFactorial
-
-
     """
 
     nargs = 2

@@ -112,7 +112,6 @@ class exp_polar(ExpBase):
     ========
     periodic_argument, principle_branch, powsimp
     class:`polar_lift`
-
     """
 
     is_polar = True
@@ -270,7 +269,6 @@ class exp(ExpBase):
         ========
         sympy.functions.elementary.complexes.re
         sympy.functions.elementary.complexes.im
-
         """
         re, im = self.args[0].as_real_imag()
         if deep:

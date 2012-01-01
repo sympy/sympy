@@ -64,7 +64,6 @@ class fibonacci(Function):
     See Also
     ========
     lucas
-
     """
 
     @staticmethod
@@ -116,7 +115,6 @@ class lucas(Function):
     See Also
     ========
     fibonacci
-
     """
 
     @classmethod
@@ -202,7 +200,6 @@ class bernoulli(Function):
     See Also
     ========
     euler, bell
-
     """
 
     # Calculates B_n for positive even n
@@ -334,7 +331,6 @@ class bell(Function):
     See Also
     ========
     euler, bernoulli
-
     """
 
     @staticmethod
@@ -599,7 +595,6 @@ class catalan(Function):
     See Also
     ========
     sympy.functions.combinatorial.factorials.binomial
-
     """
 
     @classmethod
