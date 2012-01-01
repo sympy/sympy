@@ -646,7 +646,7 @@ class acosh(Function):
     Usage
     =====
       acosh(x) -> Returns the inverse hyperbolic cosine of x
- 
+
     See Also
     ========
     asinh, atanh, cosh
@@ -756,7 +756,7 @@ class atanh(Function):
     Usage
     =====
       atanh(x) -> Returns the inverse hyperbolic tangent of x
- 
+
     See Also
     ========
     asinh, acosh, tanh
