@@ -182,7 +182,7 @@ class factorial2(CombinatorialFunction):
 
     See Also
     ========
-    factorial, Risingfactorial, FallingFactorial
+    factorial, RisingFactorial, FallingFactorial
     """
     nargs = 1
 
