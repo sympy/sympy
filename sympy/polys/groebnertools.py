@@ -178,7 +178,7 @@ def buchberger(f, u, O, K, gens='', verbose=False):
         G_new.add(ih)
 
         return G_new, B_new
-      # end of update ################################
+        # end of update ################################
 
     if not f:
         return []

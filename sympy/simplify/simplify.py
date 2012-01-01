@@ -1774,7 +1774,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     if e.is_Integer:
                         return (b, S.One), e
                     elif e.is_Rational:
-                       return (b, Integer(e.q)), Integer(e.p)
+                        return (b, Integer(e.q)), Integer(e.p)
                     else:
                         c, m = e.as_coeff_mul()
                         if c is not S.One:

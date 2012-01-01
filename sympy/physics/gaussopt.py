@@ -465,9 +465,9 @@ def geometric_conj_ab(a,b):
     """
     a, b = sympify((a, b))
     if abs(a) == oo or abs(b) == oo:
-       return a if abs(b) == oo else b
+        return a if abs(b) == oo else b
     else:
-       return a*b/(a+b)
+        return a*b/(a+b)
 
 def geometric_conj_af(a,f):
     """

@@ -451,7 +451,7 @@ def factor_terms(expr, radical=False):
     ncreps = dict([i for i in nc if i is not None])
     for i, a in enumerate(list_args):
         if nc[i] is not None:
-           a.append(nc[i][0])
+            a.append(nc[i][0])
         a = Mul._from_args(a) # gcd_terms will fix up ordering
         list_args[i] = gcd_terms(a, isprimitive=True)
         # cancel terms that may not have cancelled

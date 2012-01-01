@@ -619,7 +619,7 @@ class Rational(Number):
     def __new__(cls, p, q=None):
         if q is None:
             if isinstance(p, Rational):
-               return p
+                return p
             if isinstance(p, basestring):
                 try:
                     # we might have a Float

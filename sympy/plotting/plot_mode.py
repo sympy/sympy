@@ -275,13 +275,9 @@ class PlotMode(PlotObject):
             raise ValueError("Plot mode must provide a "
                              "default interval for each i_var.")
         for i in range(cls.i_var_count):
-            assert len(di[i]) == 3 # default intervals
-                                   # must be given
-                                   # [min,max,steps]
-                                   #
-                                   # (no var, but they
-                                   # must be in the same
-                                   # order as i_vars)
+            # default intervals must be given [min,max,steps]
+            # (no var, but they must be in the same order as i_vars)
+            assert len(di[i]) == 3
 
             # Initialize an incomplete interval,
             # to later be filled with a var when
