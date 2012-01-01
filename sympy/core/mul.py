@@ -37,7 +37,7 @@ class Mul(AssocOp):
         """Return commutative, noncommutative and order arguments by
         combining related terms.
 
-        ** Developer Notes **
+        ** Note **
             * In an expression like ``a*b*c``, python process this through sympy
               as ``Mul(Mul(a, b), c)``. This can have undesirable consequences.
 

@@ -224,8 +224,8 @@ class Prufer(Basic):
         labels should be, but all nodes from the smallest through the largest
         must be present.
 
-        Example
-        =======
+        Examples
+        ========
         >>> from sympy.combinatorics.prufer import Prufer
         >>> Prufer.edges([1, 2, 3], [2, 4, 5]) # a T
         ([[0, 1], [3, 4], [1, 2], [1, 3]], 5)

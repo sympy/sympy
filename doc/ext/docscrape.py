@@ -1,5 +1,5 @@
-"""Extract reference documentation from the NumPy source tree.
-
+"""
+Extract reference documentation from the NumPy source tree.
 """
 
 import inspect
@@ -10,8 +10,8 @@ from StringIO import StringIO
 from warnings import warn
 
 class Reader(object):
-    """A line-based string reader.
-
+    """
+    A line-based string reader.
     """
     def __init__(self, data):
         """
@@ -104,7 +104,17 @@ class NumpyDocString(object):
             'Warnings': [],
             'References': '',
             'Examples': '',
-            'index': {}
+            'index': {},
+            'Usage':[],
+            'Note':[],
+            'Arguments':[],
+            'Strategy':[],
+            'Definition':[],
+            'Properties':[],
+            'Syntax':[],
+            'Yields':[],
+            'Return':[],
+            'Notes On Hint Names':[]
             }
 
         self._parse()
