@@ -292,9 +292,9 @@ class Permutation(Basic):
         If one of the permutations is in a cyclic form then it is first
         converted to an array form and then multiplied. ::
 
-            >>> q = Permutation([[1,3,2],[0]])
-            >>> p*q
-            Permutation([1, 0, 2, 3])
+        >>> q = Permutation([[1,3,2],[0]])
+        >>> p*q
+        Permutation([1, 0, 2, 3])
 
         """
         a = self.array_form
@@ -320,7 +320,6 @@ don\'t match.")
         >>> b = Permutation([2,3,5,4,1,0])
         >>> a.commutes_with(b)
         False
-
         """
         a = self.array_form
         b = other.array_form
@@ -435,7 +434,8 @@ don\'t match.")
         """
         Returns all the elements of a permutation
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2, 3, 4, 5]).atoms()
         set([0, 1, 2, 3, 4, 5])
@@ -605,7 +605,7 @@ don\'t match.")
 
         The parity of a permutation reflects the parity of the
         number of inversions in the permutation, i.e., the
-        number of pairs of x and y such that x > y but p[x] < p[y].
+        number of pairs of x and y such that ``x > y`` but ``p[x] < p[y]``.
 
         Examples
         ========
@@ -661,7 +661,8 @@ don\'t match.")
         Checks to see if the permutation contains only one number
         Therefore there is only one possible permutation of this set of numbers
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0]).is_Singleton
         True
@@ -675,7 +676,8 @@ don\'t match.")
         """
         Checks to see if the permutation is a set with zero elements
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([]).is_Empty
         True
@@ -687,18 +689,18 @@ don\'t match.")
     @property
     def is_Identity(self):
         """
-        Examples::
-
-            >>> from sympy.combinatorics.permutations import Permutation
-            >>> p = Permutation([[0],[1],[2]])
-            >>> p.is_Identity
-            True
-            >>> p = Permutation([0,1,2])
-            >>> p.is_Identity
-            True
-            >>> p = Permutation([0,2,1])
-            >>> p.is_Identity
-            False
+        Examples
+        ========
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([[0],[1],[2]])
+        >>> p.is_Identity
+        True
+        >>> p = Permutation([0,1,2])
+        >>> p.is_Identity
+        True
+        >>> p = Permutation([0,2,1])
+        >>> p.is_Identity
+        False
 
         """
         if self._cyclic_form:
@@ -800,7 +802,7 @@ don\'t match.")
 
     def conjugate(self, x):
         """
-        Computes the conjugate Permutation `~x*p*x'
+        Computes the conjugate Permutation ``~x*p*x``
 
         Examples
         ========
@@ -866,7 +868,8 @@ don\'t match.")
         """
         Returns the number of integers moved by a permutation.
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 3, 2, 1]).length()
         2
@@ -885,7 +888,8 @@ don\'t match.")
         """
         Checks if the permutation is positive
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2]).is_Positive
         True
@@ -897,7 +901,8 @@ don\'t match.")
         """
         Checks if the permutation is negative
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2]).is_Negative
         False
@@ -910,7 +915,8 @@ don\'t match.")
         Returns the number of cycles that the permutation
         has been decomposed into.
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2]).cycles
         3
