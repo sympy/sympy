@@ -202,6 +202,14 @@ exp
 .. autoclass:: exp
    :members:
 
+exp_polar
+---------
+
+.. module:: sympy.functions.elementary.exponential
+
+.. autoclass:: exp_polar
+   :members:
+
 ExprCondPair
 ------------
 
@@ -302,6 +310,14 @@ It is named Max and not max to avoid conflicts with the built-in function max.
 .. autoclass:: Max
    :members:
 
+periodic_argument
+-----------------
+
+.. module:: sympy.functions.elementary.complexes
+
+.. autoclass:: periodic_argument
+   :members:
+
 Piecewise
 ---------
 
@@ -311,6 +327,22 @@ Piecewise
    :members:
 
 .. autofunction:: piecewise_fold
+
+polar_lift
+----------
+
+.. module:: sympy.functions.elementary.complexes
+
+.. autoclass:: polar_lift
+   :members:
+
+principal_branch
+----------------
+
+.. module:: sympy.functions.elementary.complexes
+
+.. autoclass:: principal_branch
+   :members:
 
 re
 --
