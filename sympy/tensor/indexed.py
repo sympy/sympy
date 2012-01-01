@@ -410,10 +410,10 @@ class Idx(Expr):
     ``range``
         Optionally you can specify a range as either
 
-            - Symbol or integer: This is interpreted as a dimension. Lower and
-              upper bounds are set to 0 and range - 1, respectively.
-            - tuple: The two elements are interpreted as the lower and upper
-            bounds of the range, respectively.
+    - Symbol or integer: This is interpreted as a dimension. Lower and
+      upper bounds are set to 0 and range - 1, respectively.
+    - tuple: The two elements are interpreted as the lower and upper
+      bounds of the range, respectively.
 
     Note: the Idx constructor is rather pedantic in that it only accepts
     integer arguments.  The only exception is that you can use oo and -oo to
