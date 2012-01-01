@@ -137,6 +137,10 @@ class exp_polar(ExpBase):
 class exp(ExpBase):
     """
     The exponential function, :math:`e^x`.
+
+    See Also
+    ========
+    log
     """
 
     def fdiff(self, argindex=1):
@@ -389,6 +393,10 @@ class exp(ExpBase):
 class log(Function):
     """
     The logarithmic function :math:`ln(x)` or :math:`log(x)`.
+
+    See Also
+    ========
+    exp
     """
 
     nargs = (1,2)
