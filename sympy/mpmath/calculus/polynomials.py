@@ -131,7 +131,8 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
     roots are sorted by real their parts so that conjugate roots end up
     next to each other.
 
-    **References**
+    References
+    ==========
 
     1. http://en.wikipedia.org/wiki/Durand-Kerner_method
 

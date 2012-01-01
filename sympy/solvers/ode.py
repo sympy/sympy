@@ -1818,7 +1818,8 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     log|----| + -------------- = 0
        \ C1 /         3
 
-    **References**
+    References
+    ==========
         - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
         - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
           Dover 1963, pp. 59

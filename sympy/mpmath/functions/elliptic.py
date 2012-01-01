@@ -54,7 +54,8 @@ For convenience, mpmath provides functions to convert
 between the various parameters (:func:`~mpmath.qfrom`, :func:`~mpmath.mfrom`,
 :func:`~mpmath.kfrom`, :func:`~mpmath.taufrom`, :func:`~mpmath.qbarfrom`).
 
-**References**
+References
+==========
 
 1. [AbramowitzStegun]_
 
@@ -652,7 +653,8 @@ def elliprf(ctx, x, y, z):
         >>> gamma('1/4')**2/(4*sqrt(2*pi))
         1.31102877714605990523242
 
-    **References**
+    References
+    ==========
 
     1. [Carlson]_
     2. [DLMF]_ Chapter 19. Elliptic Integrals

@@ -72,7 +72,8 @@ def richardson(ctx, seq):
         >>> nprint([v-pi, c])
         [1.09645e-9, 20833.3]
 
-    **References**
+    References
+    ==========
 
     1. [BenderOrszag]_ pp. 375-376
 
@@ -217,7 +218,8 @@ def shanks(ctx, seq, table=None, randomized=False):
         [4.0]
         [8.0, 1.0]
 
-    **References**
+    References
+    ==========
 
     1. [GravesMorris]_
 
@@ -932,7 +934,8 @@ def nsum(ctx, f, *intervals, **options):
         ...     ignore=True)
         (3.1512120021539 + 0.0j)
 
-    **References**
+    References
+    ==========
 
     1. [Weisstein]_ http://mathworld.wolfram.com/DoubleSeries.html,
     2. [Weisstein]_ http://mathworld.wolfram.com/MadelungConstants.html
@@ -1204,7 +1207,8 @@ def nprod(ctx, f, interval, nsum=False, **kwargs):
         >>> nprod(lambda k: (1-1/k**2.5), [2, inf], method='e')
         0.696155111336231052898125
 
-    **References**
+    References
+    ==========
 
     1. [Weisstein]_ http://mathworld.wolfram.com/InfiniteProduct.html
 

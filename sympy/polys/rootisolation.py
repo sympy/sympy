@@ -49,7 +49,8 @@ def dup_sturm(f, K):
     >>> dup_sturm(f, QQ)
     [[1/1, -2/1, 1/1, -3/1], [3/1, -4/1, 1/1], [2/9, 25/9], [-2079/4]]
 
-    **References**
+    References
+    ==========
 
     1. [Davenport88]_
 

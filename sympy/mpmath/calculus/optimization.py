@@ -697,7 +697,8 @@ def findroot(ctx, f, x0, solver=Secant, tol=None, verbose=False, verify=True, **
     If the found root does not satisfy `|f(x)^2 < \mathrm{tol}|`,
     an exception is raised (this can be disabled with *verify=False*).
 
-    **Arguments**
+    Arguments
+    =========
 
     *f*
         one dimensional function

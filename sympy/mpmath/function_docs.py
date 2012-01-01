@@ -1839,7 +1839,8 @@ Some related sums can be done in closed form::
     >>> phi-1
     0.618033988749895
 
-**References**
+References
+==========
 
 1. http://mathworld.wolfram.com/FibonacciNumber.html
 """
@@ -1910,7 +1911,8 @@ so from below rather than from above::
     >>> altzeta(1000, rounding='u')
     mpf('1.0')
 
-**References**
+References
+==========
 
 1. http://mathworld.wolfram.com/DirichletEtaFunction.html
 
@@ -2330,7 +2332,8 @@ Coffey [1], [2]:
 
 For some reference values with `a = 1`, see e.g. [4].
 
-**References**
+References
+==========
 
 1. O. R. Ainsworth & L. W. Howell, "An integral representation of
    the generalized Euler-Mascheroni constants", NASA Technical
@@ -2750,7 +2753,8 @@ A beautiful Ramanujan sum::
     >>> (gamma('9/8')/gamma('5/4')/gamma('7/8'))**2
     0.90917279454693
 
-**References**
+References
+==========
 
 1. http://functions.wolfram.com/GammaBetaErf/Factorial2/27/01/0002/
 
@@ -3995,7 +3999,8 @@ hypergeometric function `\,_2F_2`::
     >>> ei(z)
     0.769881289937359
 
-**References**
+References
+==========
 
 1. Relations between Ei and other functions:
    http://functions.wolfram.com/GammaBetaErf/ExpIntegralEi/27/01/
@@ -4099,7 +4104,8 @@ A definite integral is::
     >>> -ln(2)
     -0.693147180559945
 
-**References**
+References
+==========
 
 1. http://mathworld.wolfram.com/PrimeCountingFunction.html
 
@@ -4579,7 +4585,8 @@ Integrals of the Ai-function can be evaluated at limit points::
     -333333074513.7520264995733
     -inf
 
-**References**
+References
+==========
 
 1. [DLMF]_ Chapter 9: Airy and Related Functions
 2. [WolframFunctions]_ section: Bessel-Type Functions
@@ -6282,7 +6289,8 @@ a small imaginary part::
     >>> lambertw(-1/e+eps)
     -0.999999966242188
 
-**References**
+References
+==========
 
 1. [Corless]_
 """
@@ -6400,7 +6408,9 @@ precision::
     (2.43114569750291e+1026623 + 2.24851410674842e+1026623j)
 
 
-**References**
+References
+
+==========
 
 1. Whittaker & Watson, *A Course of Modern Analysis*,
    Cambridge University Press, 4th edition (1927), p.264
@@ -6458,7 +6468,8 @@ Evaluation is supported for arbitrary arguments::
     >>> diff(superfac, 1)
     0.2645072034016070205673056
 
-**References**
+References
+==========
 
 1. http://www.research.att.com/~njas/sequences/A000178
 
@@ -6562,7 +6573,8 @@ definition::
     >>> hyperfac(1/sqrt(2))
     0.89404818005227001975423476035729076375705084390942
 
-**References**
+References
+==========
 
 1. http://www.research.att.com/~njas/sequences/A002109
 2. http://mathworld.wolfram.com/Hyperfactorial.html
@@ -6805,7 +6817,8 @@ nonintegral `n`. There is a fixed point where `g(x) = x`::
     >>> findroot(lambda x: grampoint(x) - x, 10000)
     9146.698193171459265866198
 
-**References**
+References
+==========
 
 1. http://mathworld.wolfram.com/GramPoint.html
 
@@ -7134,7 +7147,8 @@ For large `\mathrm{Re}(s)`, `P(s)` is asymptotic to `2^{-s}`::
     >>> primezeta(1000+1000j)
     (-3.8565440833654995949e-302 - 8.4985390447553234305e-302j)
 
-**References**
+References
+==========
 
 Carl-Erik Froberg, "On the prime zeta function",
 BIT 8 (1968), pp. 187-202.
@@ -7286,7 +7300,8 @@ not too large in magnitude::
       ...
     NotImplementedError: polylog for arbitrary s and z
 
-**References**
+References
+==========
 
 1. Richard Crandall, "Note on fast polylogarithm computation"
    http://people.reed.edu/~crandall/papers/Polylog.pdf
@@ -7395,7 +7410,8 @@ A determinant identity satisfied by Bell numbers::
     >>> superfac(N-1)
     125411328000.0
 
-**References**
+References
+==========
 
 1. http://mathworld.wolfram.com/DobinskisFormula.html
 
@@ -7732,7 +7748,8 @@ In the following case, different series give different values::
     >>> chop(meijerg([[1],[0.25]],[[3],[0.5]],-2,series=2))
     -0.06417628097442437076207337
 
-**References**
+References
+==========
 
 1. http://en.wikipedia.org/wiki/Meijer_G-function
 
@@ -8422,7 +8439,8 @@ Also incomplete elliptic integrals fall into this category [1]::
     (1.057495752337234229715836 + 1.198140234735592207439922j)
     (1.057495752337234229715836 + 1.198140234735592207439922j)
 
-**References**
+References
+==========
 
 1. [WolframFunctions]_ http://functions.wolfram.com/EllipticIntegrals/EllipticE2/26/01/
 2. [SrivastavaKarlsson]_
@@ -8491,7 +8509,8 @@ Verifying the integral representation::
     >>> quad(lambda t: cos(v*t-z*sin(t))/pi, [0,pi])
     0.1145380759919333180900501
 
-**References**
+References
+==========
 
 1. [DLMF]_ section 11.10: Anger-Weber Functions
 """
@@ -8555,7 +8574,8 @@ Verifying the integral representation::
     >>> quad(lambda t: sin(v*t-z*sin(t))/pi, [0,pi])
     0.1486507351534283744485421
 
-**References**
+References
+==========
 
 1. [DLMF]_ section 11.10: Anger-Weber Functions
 """
@@ -8611,7 +8631,8 @@ Verifying the differential equation::
     >>> z**(u+1)
     0.6979536443265746992059141
 
-**References**
+References
+==========
 
 1. [GradshteynRyzhik]_
 2. [Weisstein]_ http://mathworld.wolfram.com/LommelFunction.html
@@ -8666,7 +8687,8 @@ Verifying the differential equation::
     >>> z**(u+1)
     0.6495190528383289850727924
 
-**References**
+References
+==========
 
 1. [GradshteynRyzhik]_
 2. [Weisstein]_ http://mathworld.wolfram.com/LommelFunction.html
@@ -8726,7 +8748,8 @@ A system of partial differential equations satisfied by F2::
     ...      a*b2*F(x,y))
     0.0
 
-**References**
+References
+==========
 
 See references for :func:`~mpmath.appellf1`.
 """
@@ -8797,7 +8820,8 @@ differential equations::
     ...     a2*b2*F(x,y))
     0.0
 
-**References**
+References
+==========
 
 See references for :func:`~mpmath.appellf1`.
 """
@@ -8855,7 +8879,8 @@ A system of partial differential equations satisfied by F4::
     ...      a*b*F(x,y))
     0.0
 
-**References**
+References
+==========
 
 See references for :func:`~mpmath.appellf1`.
 """
@@ -9051,7 +9076,8 @@ Evaluation at zero and for negative integer `s`::
     >>> diff(lambda s: zeta(s, 3+4j), -1+j, 2)
     (32.48985276392056641594055 - 51.11604466157397267043655j)
 
-**References**
+References
+==========
 
 1. http://mathworld.wolfram.com/RiemannZetaFunction.html
 
@@ -9257,7 +9283,8 @@ the precision::
     1 0.9935056752 0.3708676452
     0 1.143337392 0.2937960375
 
-**References**
+References
+==========
 
 1. I.J. Thompson & A.R. Barnett, "Coulomb and Bessel Functions of Complex
    Arguments and Order", J. Comp. Phys., vol 64, no. 2, June 1986.
@@ -9898,7 +9925,8 @@ Verifying the integral representation::
     >>> Bi(z)*(Ai(inf,-1)-Ai(z,-1)) + Ai(z)*(Bi(z,-1)-Bi(0,-1))
     0.2447210432765581976910539
 
-**References**
+References
+==========
 
 1. [DLMF]_ section 9.12: Scorer Functions
 

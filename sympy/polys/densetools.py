@@ -1063,7 +1063,8 @@ def dup_decompose(f, K):
     >>> dup_decompose(f, ZZ)
     [[1, 0, 0], [1, -1, 0]]
 
-    **References**
+    References
+    ==========
 
     1. [Kozen89]_
 

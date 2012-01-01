@@ -662,7 +662,8 @@ def gf_div(f, g, p, K):
        >>> gf_add_mul([1], [1, 1], [1, 1, 0], 2, ZZ)
        [1, 0, 1, 1]
 
-    **References**
+    References
+    ==========
 
     1. [Monagan93]_
     2. [Gathen99]_
@@ -868,7 +869,8 @@ def gf_pow_mod(f, n, g, p, K):
     >>> gf_pow_mod([3, 2, 4], 3, [1, 1], 5, ZZ)
     []
 
-    **References**
+    References
+    ==========
 
     1. [Gathen99]_
 
@@ -988,7 +990,8 @@ def gf_gcdex(f, g, p, K):
        >>> gf_add(S, T, 11, ZZ) == [1, 7]
        True
 
-    **References**
+    References
+    ==========
 
     1. [Gathen99]_
 
@@ -1198,7 +1201,8 @@ def gf_trace_map(a, b, c, n, f, p, K):
     >>> gf_trace_map([1, 2], [4, 4], [1, 1], 4, [3, 2, 4], 5, ZZ)
     ([1, 3], [1, 3])
 
-    **References**
+    References
+    ==========
 
     1. [Gathen92]_
 
@@ -1454,7 +1458,8 @@ def gf_sqf_list(f, p, K, all=False):
        >>> gf_pow([1, 1], 11, 11, ZZ) == f
        True
 
-    **References**
+    References
+    ==========
 
     1. [Geddes92]_
 
@@ -1679,7 +1684,8 @@ def gf_ddf_zassenhaus(f, p, K):
     factorization into irreducibles, use equal degree factorization
     procedure (EDF) with each of the factors.
 
-    **References**
+    References
+    ==========
 
     1. [Gathen99]_
     2. [Geddes92]_
@@ -1723,7 +1729,8 @@ def gf_edf_zassenhaus(f, n, p, K):
        >>> gf_edf_zassenhaus([1,1,1,1], 1, 5, ZZ)
        [[1, 1], [1, 2], [1, 3]]
 
-    **References**
+    References
+    ==========
 
     1. [Gathen99]_
     2. [Geddes92]_
@@ -1782,7 +1789,8 @@ def gf_ddf_shoup(f, p, K):
     >>> gf_ddf_shoup(f, 3, ZZ)
     [([1, 1, 0], 1), ([1, 1, 0, 1, 2], 2)]
 
-    **References**
+    References
+    ==========
 
     1. [Kaltofen98]_
     2. [Shoup95]_
@@ -1854,7 +1862,8 @@ def gf_edf_shoup(f, n, p, K):
     >>> gf_edf_shoup([1, 2837, 2277], 1, 2917, ZZ)
     [[1, 852], [1, 1985]]
 
-    **References**
+    References
+    ==========
 
     1. [Shoup91]_
     2. [Gathen92]_
@@ -2016,7 +2025,8 @@ def gf_factor(f, p, K):
     one, set ``GF_FACTOR_METHOD`` with one of ``berlekamp``, ``zassenhaus`` or
     ``shoup`` values.
 
-    **References**
+    References
+    ==========
 
     1. [Gathen99]_
 

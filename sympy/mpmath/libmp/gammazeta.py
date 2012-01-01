@@ -547,7 +547,8 @@ def bernfrac(n):
     In practice, :func:`~mpmath.bernfrac` appears to be about three times
     slower than the specialized program calcbn.exe [2]
 
-    **References**
+    References
+    ==========
 
     1. MathWorld, von Staudt-Clausen Theorem:
        http://mathworld.wolfram.com/vonStaudt-ClausenTheorem.html

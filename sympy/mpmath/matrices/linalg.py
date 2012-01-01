@@ -466,7 +466,8 @@ class LinearAlgebraMethods(object):
               ...
             ValueError: matrix is not positive-definite
 
-        **References**
+        References
+        ==========
 
         1. [Wikipedia]_ http://en.wikipedia.org/wiki/Cholesky_decomposition
 

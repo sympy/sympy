@@ -716,7 +716,8 @@ class QuadratureMethods:
             >>> quad(f, [-100, 0, 100])   # Also good
             3.12159332021646
 
-        **References**
+        References
+        ==========
 
         1. http://mathworld.wolfram.com/DoubleIntegral.html
 

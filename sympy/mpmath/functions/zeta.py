@@ -1003,7 +1003,8 @@ def secondzeta(ctx, s, a = 0.015, **kwargs):
     four terms are very different numbers but the cancellation gives
     the good value of Z(s).
 
-    **References**
+    References
+    ==========
 
     A. Voros, Zeta functions for the Riemann zeros, Ann. Institute Fourier,
     53, (2003) 665--699.
@@ -1112,7 +1113,8 @@ def lerchphi(ctx, z, s, a):
         >>> lerchphi(0,1,-2)
         -0.5
 
-    **References**
+    References
+    ==========
 
     1. [DLMF]_ section 25.14
 
