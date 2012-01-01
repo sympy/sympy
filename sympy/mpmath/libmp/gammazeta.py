@@ -491,7 +491,8 @@ def bernfrac(n):
     always reduced to lowest terms. Note that for `n > 1` and `n` odd,
     `B_n = 0`, and `(0, 1)` is returned.
 
-    **Examples**
+    Examples
+    ========
 
     The first few Bernoulli numbers are exactly::
 

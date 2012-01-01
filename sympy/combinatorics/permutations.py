@@ -435,7 +435,8 @@ don\'t match.")
         """
         Returns all the elements of a permutation
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2, 3, 4, 5]).atoms()
         set([0, 1, 2, 3, 4, 5])
@@ -661,7 +662,8 @@ don\'t match.")
         Checks to see if the permutation contains only one number
         Therefore there is only one possible permutation of this set of numbers
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0]).is_Singleton
         True
@@ -675,7 +677,8 @@ don\'t match.")
         """
         Checks to see if the permutation is a set with zero elements
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([]).is_Empty
         True
@@ -866,7 +869,8 @@ don\'t match.")
         """
         Returns the number of integers moved by a permutation.
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 3, 2, 1]).length()
         2
@@ -885,7 +889,8 @@ don\'t match.")
         """
         Checks if the permutation is positive
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2]).is_Positive
         True
@@ -897,7 +902,8 @@ don\'t match.")
         """
         Checks if the permutation is negative
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2]).is_Negative
         False
@@ -910,7 +916,8 @@ don\'t match.")
         Returns the number of cycles that the permutation
         has been decomposed into.
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2]).cycles
         3

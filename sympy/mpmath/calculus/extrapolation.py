@@ -169,7 +169,8 @@ def shanks(ctx, seq, table=None, randomized=False):
     replace the zero by a pseudorandom number close to zero.
     (TODO: find a better solution to this problem.)
 
-    **Examples**
+    Examples
+    ========
 
     We illustrate by applying Shanks transformation to the Leibniz
     series for `\pi`::
@@ -276,7 +277,8 @@ def sumap(ctx, f, interval, integral=None, error=False):
     it only works when `|f(it)-f(-it)|` does not
     increase too rapidly with `t`.
 
-    **Examples**
+    Examples
+    ========
 
     The Abel-Plana formula is particularly useful when the summand
     decreases like a power of `k`; for example when the sum is a pure
@@ -375,7 +377,8 @@ def sumem(ctx, f, interval, tol=None, reject=10, integral=None,
     should be given as iterables that yield
     `f(a), f'(a), f''(a), \ldots` (and the equivalent for `b`).
 
-    **Examples**
+    Examples
+    ========
 
     Summation of an infinite series, with automatic and symbolic
     integral and derivative values (the second should be much faster)::
@@ -1101,7 +1104,8 @@ def nprod(ctx, f, interval, nsum=False, **kwargs):
     also required (and used automatically) when Euler-Maclaurin
     summation is requested.
 
-    **Examples**
+    Examples
+    ========
 
     A simple finite product::
 
@@ -1280,7 +1284,8 @@ def limit(ctx, f, x, direction=1, exp=False, **kwargs):
     are extremely close to the limit point (or if infinite,
     very large arguments).
 
-    **Examples**
+    Examples
+    ========
 
     A basic evaluation of a removable singularity::
 

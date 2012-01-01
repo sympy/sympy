@@ -894,7 +894,8 @@ class PythonMPContext:
 
             \sum_{k=0} A_k \overline{B_k}
 
-        **Examples**
+        Examples
+        ========
 
             >>> from mpmath import *
             >>> mp.dps = 15; mp.pretty = False
@@ -1088,7 +1089,8 @@ class PythonMPContext:
         guaranteed that `m` is an optimal bound, but it will never
         be too large by more than 2 (and probably not more than 1).
 
-        **Examples**
+        Examples
+        ========
 
             >>> from mpmath import *
             >>> mp.pretty = True

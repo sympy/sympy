@@ -935,7 +935,8 @@ def secondzeta(ctx, s, a = 0.015, **kwargs):
     double pole at `s=1` and  simple poles at the points `-2n` for
     `n=0`,  1, 2, ...
 
-    **Examples**
+    Examples
+    ========
 
         >>> from mpmath import *
         >>> mp.pretty = True; mp.dps = 15
@@ -1073,7 +1074,8 @@ def lerchphi(ctx, z, s, a):
     The Lerch transcendent generalizes the Hurwitz zeta function :func:`zeta`
     (`z = 1`) and the polylogarithm :func:`polylog` (`a = 1`).
 
-    **Examples**
+    Examples
+    ========
 
     Several evaluations in terms of simpler functions::
 

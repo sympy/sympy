@@ -422,7 +422,8 @@ class LinearAlgebraMethods(object):
         The optional parameter ``tol`` determines the tolerance for
         verifying positive-definiteness.
 
-        **Examples**
+        Examples
+        ========
 
         Cholesky decomposition of a positive-definite symmetric matrix::
 

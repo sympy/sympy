@@ -1176,7 +1176,8 @@ def hyper2d(ctx, a, b, x, y, **kwargs):
     manually swapping `x` and `y` and the corresponding parameters
     can sometimes give better results.
 
-    **Examples**
+    Examples
+    ========
 
     Two separable cases: a product of two geometric series, and a
     product of two Gaussian hypergeometric functions::
@@ -1364,7 +1365,8 @@ def bihyper(ctx, a_s, b_s, z, **kwargs):
     functions. In order for the series to make sense, none of the
     parameters may be integers.
 
-    **Examples**
+    Examples
+    ========
 
     The value of `\,_2H_2` at `z = 1` is given by Dougall's formula::
 

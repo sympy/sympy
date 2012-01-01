@@ -568,7 +568,8 @@ def topological_sort(graph, key=None):
         (e.g. lexicographic) ordering is used (in this case the base type
         must implement ordering relations).
 
-    **Examples**
+    Examples
+    ========
 
     Consider a graph::
 

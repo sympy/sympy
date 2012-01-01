@@ -553,7 +553,8 @@ def mangoldt(ctx, n):
     Evaluates the von Mangoldt function `\Lambda(n) = \log p`
     if `n = p^k` a power of a prime, and `\Lambda(n) = 0` otherwise.
 
-    **Examples**
+    Examples
+    ========
 
         >>> from mpmath import *
         >>> mp.dps = 25; mp.pretty = True

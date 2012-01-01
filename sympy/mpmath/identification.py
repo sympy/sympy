@@ -28,7 +28,8 @@ def pslq(ctx, x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
     exists, :func:`~mpmath.pslq` returns ``None``. The tolerance defaults to
     3/4 of the working precision.
 
-    **Examples**
+    Examples
+    ========
 
     Find rational approximations for `\pi`::
 
@@ -324,7 +325,8 @@ def findpoly(ctx, x, n=1, **kwargs):
     For large values of `n`, it is recommended to run :func:`~mpmath.findpoly`
     at high precision; preferably 50 digits or more.
 
-    **Examples**
+    Examples
+    ========
 
     By default (degree `n = 1`), :func:`~mpmath.findpoly` simply finds a linear
     polynomial with a rational root::
@@ -566,7 +568,8 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
     In order not to produce spurious results, :func:`~mpmath.identify` should
     be used with high precision; preferably 50 digits or more.
 
-    **Examples**
+    Examples
+    ========
 
     Simple identifications can be performed safely at standard
     precision. Here the default recognition of rational, algebraic,

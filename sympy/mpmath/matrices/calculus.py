@@ -63,7 +63,8 @@ class MatrixCalculusMethods:
         using the Taylor series. With method='pade', Pade approximants
         are used instead.
 
-        **Examples**
+        Examples
+        ========
 
         Basic examples::
 
@@ -211,7 +212,8 @@ class MatrixCalculusMethods:
         a matrix `B = A^{1/2}` such that `B^2 = A`. The square root
         of a matrix, if it exists, is not unique.
 
-        **Examples**
+        Examples
+        ========
 
         Square roots of some simple matrices::
 
@@ -350,7 +352,8 @@ class MatrixCalculusMethods:
         a matrix `B = \log(A)` such that `\exp(B) = A`. The logarithm
         of a matrix, if it exists, is not unique.
 
-        **Examples**
+        Examples
+        ========
 
         Logarithms of some simple matrices::
 
@@ -463,7 +466,8 @@ class MatrixCalculusMethods:
         Computes `A^r = \exp(A \log r)` for a matrix `A` and complex
         number `r`.
 
-        **Examples**
+        Examples
+        ========
 
         Powers and inverse powers of a matrix::
 

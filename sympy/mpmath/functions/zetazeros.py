@@ -328,7 +328,8 @@ def zetazero(ctx, n, info=False, round=True):
     `s = \frac{1}{2} + ti` for which `\zeta(s) = 0`. Equivalently, the
     imaginary part `t` is a zero of the Z-function (:func:`~mpmath.siegelz`).
 
-    **Examples**
+    Examples
+    ========
 
     The first few zeros::
 
@@ -461,7 +462,8 @@ def nzeros(ctx, t):
     Computes the number of zeros of the Riemann zeta function in
     `(0,1) \times (0,t]`, usually denoted by `N(t)`.
 
-    **Examples**
+    Examples
+    ========
 
     The first zero has imaginary part between 14 and 15::
 
@@ -535,7 +537,8 @@ def backlunds(ctx, t):
 
     See Titchmarsh Section 9.3 for details of the definition.
 
-    **Examples**
+    Examples
+    ========
 
         >>> from mpmath import *
         >>> mp.dps = 15; mp.pretty = True

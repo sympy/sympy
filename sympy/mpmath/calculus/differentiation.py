@@ -241,7 +241,8 @@ def diffs(ctx, f, x, n=None, **options):
 
     Options are the same as for :func:`~mpmath.diff`.
 
-    **Examples**
+    Examples
+    ========
 
         >>> from mpmath import *
         >>> mp.dps = 15
@@ -318,7 +319,8 @@ def diffs_prod(ctx, factors):
     Note: This function does not increase the working precision internally,
     so guard digits may have to be added externally for full accuracy.
 
-    **Examples**
+    Examples
+    ========
 
         >>> from mpmath import *
         >>> mp.dps = 15; mp.pretty = True
@@ -403,7 +405,8 @@ def diffs_exp(ctx, fdiffs):
     Note: This function does not increase the working precision internally,
     so guard digits may have to be added externally for full accuracy.
 
-    **Examples**
+    Examples
+    ========
 
     The derivatives of the gamma function can be computed using
     logarithmic differentiation::
@@ -470,7 +473,8 @@ def differint(ctx, f, x, n=1, x0=0):
     iterated differentiation and iterated integration to a single
     operator with a continuous order parameter.
 
-    **Examples**
+    Examples
+    ========
 
     There is an exact formula for the fractional derivative of a
     monomial `x^p`, which may be used as a reference. For example,

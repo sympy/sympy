@@ -55,7 +55,8 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
     With *error=True*, :func:`~mpmath.polyroots` returns a tuple *(roots, err)* where
     *err* is an estimate of the maximum error among the computed roots.
 
-    **Examples**
+    Examples
+    ========
 
     Finding the three real roots of `x^3 - x^2 - 14x + 24`::
 

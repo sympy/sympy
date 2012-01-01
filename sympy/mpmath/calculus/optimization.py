@@ -733,7 +733,8 @@ def findroot(ctx, f, x0, solver=Secant, tol=None, verbose=False, verify=True, **
 
     See mpmath.optimization for their documentation.
 
-    **Examples**
+    Examples
+    ========
 
     The function :func:`~mpmath.findroot` locates a root of a given function using the
     secant method by default. A simple example use of the secant method is to

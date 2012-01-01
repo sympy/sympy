@@ -21,7 +21,8 @@ def qp(ctx, a, q=None, n=None, **kwargs):
     is also known as the Euler function, or (up to a factor `q^{-1/24}`)
     the Dirichlet eta function.
 
-    **Examples**
+    Examples
+    ========
 
     If `n` is a positive integer, the function amounts to a finite product::
 
@@ -137,7 +138,9 @@ def qgamma(ctx, z, q, **kwargs):
         \Gamma_q(z) = \frac{(q; q)_{\infty}}{(q^z; q)_{\infty}} (1-q)^{1-z}.
 
 
-    **Examples**
+    Examples
+
+    ========
 
     Evaluation for real and complex arguments::
 
@@ -181,7 +184,8 @@ def qfac(ctx, z, q, **kwargs):
 
         [z]_q! = \frac{(q;q)_z}{(1-q)^z}.
 
-    **Examples**
+    Examples
+    ========
 
         >>> from mpmath import *
         >>> mp.dps = 25; mp.pretty = True
@@ -219,7 +223,8 @@ def qhyper(ctx, a_s, b_s, q, z, **kwargs):
 
     where `(a;q)_n` denotes the q-Pochhammer symbol (see :func:`~mpmath.qp`).
 
-    **Examples**
+    Examples
+    ========
 
     Evaluation works for real and complex arguments::
 
