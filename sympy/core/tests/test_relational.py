@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 from sympy import symbols, oo
 from sympy.core.relational import Relational, Equality, StrictInequality, \
     Rel, Eq, Lt, Le, Gt, Ge, Ne
@@ -127,4 +127,4 @@ def test_doit():
 def test_relational_bool_output():
     # XFail test for issue:
     # http://code.google.com/p/sympy/issues/detail?id=2832
-    assert bool(x > 3) is not True
+    raises(ValueError, "bool(x > 3)")

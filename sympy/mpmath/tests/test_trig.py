@@ -1,6 +1,7 @@
 from sympy.mpmath import *
 from sympy.mpmath.libmp import *
 from sympy.utilities.pytest import XFAIL
+from sympy import oo, S
 
 def test_trig_misc_hard():
     mp.prec = 53
