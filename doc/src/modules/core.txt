@@ -41,19 +41,21 @@ S
 
    Note that when pickling a singleton (such as pi or e), the
    object.__getnewargs__() method applies, and this method is only used for
-   protocol 2. Therefore when the singleton is pickled with protocol of less than
-   2 (i.e. 0 or 1), the singleton will lose its type as a singleton and instead
-   functions as a symbol of an similar but inexact value. This is important when
-   attempting to perform operations on the aforementioned singletons, because the
-   default protocol when pickling is 0, and a regular simplification will not
-   evaluate the result with sufficient accuracy.
+   protocol 2 and above. Therefore when the singleton is pickled with protocol
+   of less than 2 (i.e. 0 or 1), the singleton will lose its type as a singleton
+   and instead functions as a symbol of an similar but inexact value.
+
+   This is important when attempting to perform operations on the aforementioned
+   singletons, especially because the default protocol when pickling in Python 2
+   is protocol 0, and a regular simplification will not evaluate the result with
+   sufficient accuracy.
    
    For example:
    
    >>> from sympy import sin, pi
    >>> from pickle import loads, dumps
    
-   >>> picklepi = loads(dumps(pi))  # Uses default protocol 0
+   >>> picklepi = loads(dumps(pi,0))  # Uses default protocol 0 in Python 2 with no parameter
    
    >>> sin(pi)
    0
@@ -72,11 +74,11 @@ S
    
    
    The optimal solution to this problem is to specify a protocol of 2 or higher
-   when pickling the singleton.
+   when pickling the singleton (Specification of protocol redundant in Python 3).
    
    For example:
    
-   >>> picklepi = loads(dumps(pi,-1))   # Defaults to highest protocol, i.e. 2
+   >>> picklepi = loads(dumps(pi,-1))   # Defaults to highest protocol, which is 2 in Python 2 and 3 in Python 3
    
    >>> pi is picklepi
    True
@@ -86,6 +88,12 @@ S
    
    >>> picklepi - pi
    0
+
+   However, this is not a problem when using Python 3 because the default protocol
+   of Python 3 when pickling is 3. Also note that the highest protocol in Python 3
+   is protocol 3, so a parameter of -1 when pickling will result in pickling with
+   protocol 3. The highest protocol available also can be checked with
+   pickle.HIGHEST_PROTOCOL
 
 Expr
 ----
