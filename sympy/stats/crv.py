@@ -1,3 +1,13 @@
+"""
+Continuous Random Variables Module
+
+See Also
+========
+sympy.stats.crv_examples
+sympy.stats.rv
+sympy.stats.frv
+"""
+
 from rv import (Domain, SingleDomain, ConditionalDomain, ProductDomain, PSpace,
         random_symbols, ProductPSpace)
 from sympy.functions.special.delta_functions import DiracDelta

@@ -1,3 +1,16 @@
+"""
+Continuous Random Variables - Prebuilt variables
+
+Contains
+========
+Normal
+Exponential
+Uniform
+Pareto
+Beta
+Gamma
+"""
+
 from sympy import exp, sqrt, pi, S, Dummy, Interval, S, sympify, gamma, Piecewise
 from sympy import beta as beta_fn
 from crv import SingleContinuousPSpace, integrate

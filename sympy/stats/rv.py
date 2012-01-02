@@ -1,3 +1,17 @@
+"""
+Main Random Variables Module
+
+Defines abstract random variable type.
+Contains interfaces for probability space object (PSpace) as well as standard
+operators, P, E, Sample, Density, Where
+
+See Also
+========
+sympy.stats.crv
+sympy.stats.frv
+sympy.stats.rv_interface
+"""
+
 from sympy import Basic, S, Expr, Symbol, Tuple, And, Add
 from sympy.core.sets import FiniteSet, ProductSet
 

@@ -1,3 +1,14 @@
+"""
+Finite Discrete Random Variables - Prebuilt variable types
+
+Contains
+========
+FiniteRV
+Die
+Bernoulli
+Coin
+"""
+
 from sympy.stats.frv import SingleFinitePSpace, create_SingleFinitePSpace
 from sympy import S, sympify, Rational
 

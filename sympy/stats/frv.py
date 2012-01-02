@@ -1,3 +1,14 @@
+"""
+Finite Discrete Random Variables Module
+
+See Also
+========
+sympy.stats.frv_examples
+sympy.stats.rv
+sympy.stats.crv
+"""
+
+
 from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
         And, Or, Tuple)
 from sympy.core.sets import FiniteSet
