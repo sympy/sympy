@@ -104,7 +104,7 @@ def intersection(*entities):
     simplified internally.
     Reals should be converted to Rationals, e.g. Rational(str(real_num))
     or else failures due to floating point issues may result.
-      
+
     See Also
     ========
     sympy.geometry.entity.GeometryEntity.intersection
