@@ -111,8 +111,8 @@ def _sqrt_four_terms_denest(expr):
     assert is_sqrt(expr)
     if expr.base < 0:
         return sqrt(-1)*_sqrt_four_terms_denest(sqrt(-expr.base))
-    a = Add(*expr.base.args[:2])
-    b = Add(*expr.base.args[2:])
+    a = Add._from_args(expr.base.args[:2])
+    b = Add._from_args(expr.base.args[2:])
     if a < 0:
         a, b = b, a
     d2 = _mexpand(a**2 - b**2)
@@ -379,7 +379,6 @@ def _denester (nested, av0, h, max_depth_level):
                         if R != v[2]:
                             av0[1] = None
                             return None, None
-                        #assert R == v[2] #All the 'r's should be the same.
                     else:
                         R = v[2]
             if R is None:
