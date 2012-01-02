@@ -330,7 +330,6 @@ def zetazero(ctx, n, info=False, round=True):
 
     Examples
     ========
-
     The first few zeros::
 
         >>> from mpmath import *
@@ -464,7 +463,6 @@ def nzeros(ctx, t):
 
     Examples
     ========
-
     The first zero has imaginary part between 14 and 15::
 
         >>> from mpmath import *
@@ -539,7 +537,6 @@ def backlunds(ctx, t):
 
     Examples
     ========
-
         >>> from mpmath import *
         >>> mp.dps = 15; mp.pretty = True
         >>> backlunds(217.3)

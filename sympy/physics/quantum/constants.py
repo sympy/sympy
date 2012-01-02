@@ -17,14 +17,12 @@ class HBar(NumberSymbol):
 
     Examples
     ========
-
         >>> from sympy.physics.quantum.constants import hbar
         >>> hbar.evalf()
         1.05457162000000e-34
 
     References
     ==========
-
     [1] http://en.wikipedia.org/wiki/Planck_constant
     """
 

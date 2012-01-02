@@ -120,7 +120,6 @@ def _mr_safe(n):
 
     References for the bounds:
     ==========================
-
     1. http://primes.utm.edu/prove/prove2_3.html
     2. http://www.trnicely.net/misc/mpzspsp.html
     3. http://en.wikipedia.org/wiki/Miller-Rabin_primality_test#
@@ -185,7 +184,6 @@ def isprime(n):
 
     Examples
     ========
-
     >>> from sympy.ntheory import isprime
     >>> isprime(13)
     True

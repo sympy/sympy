@@ -93,7 +93,6 @@ def sqrt(arg):
 
     References
     ==========
-
     * http://en.wikipedia.org/wiki/Square_root
     * http://en.wikipedia.org/wiki/Principal_value
 
@@ -149,7 +148,6 @@ def root(arg, n):
 
     References
     ==========
-
     * http://en.wikipedia.org/wiki/Square_root
     * http://en.wikipedia.org/wiki/real_root
     * http://en.wikipedia.org/wiki/Root_of_unity
@@ -398,7 +396,6 @@ class Max(MinMaxBase, Application, Basic):
 
     References
     ==========
-
     .. [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order
     .. [2] http://en.wikipedia.org/wiki/Lattice_(order)
 

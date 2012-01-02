@@ -86,7 +86,6 @@ class stringPict(object):
 
         Examples
         ========
-
         >>> from sympy.printing.pretty.stringpict import stringPict
         >>> print stringPict("10").right(" + ",stringPict("1\r-\r2",1))[0]
              1
@@ -148,7 +147,6 @@ class stringPict(object):
 
         Examples
         ========
-
         >>> from sympy.printing.pretty.stringpict import stringPict
         >>> print stringPict("x+3").below(stringPict.LINE, '3')[0] #doctest: +NORMALIZE_WHITESPACE
         x+3

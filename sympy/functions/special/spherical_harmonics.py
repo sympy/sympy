@@ -28,7 +28,6 @@ def Ylm(l, m, theta, phi):
 
     Examples
     ========
-
     >>> from sympy import symbols, Ylm
     >>> theta, phi = symbols("theta phi")
     >>> Ylm(0, 0, theta, phi)

@@ -1380,7 +1380,6 @@ def reduce_order(ip):
 
     Examples
     ========
-
     >>> from sympy.simplify.hyperexpand import reduce_order, IndexPair
     >>> reduce_order(IndexPair((1, 2), (3, 4)))
     (IndexPair((1, 2), (3, 4)), [])
@@ -1402,7 +1401,6 @@ def reduce_order_meijer(iq):
 
     Examples
     ========
-
     >>> from sympy.simplify.hyperexpand import reduce_order_meijer, IndexQuadruple
     >>> reduce_order_meijer(IndexQuadruple([3, 4], [5, 6], [3, 4], [1, 2]))[0]
     IndexQuadruple((4, 3), (5, 6), (3, 4), (2, 1))
@@ -2075,7 +2073,6 @@ def hyperexpand(f, allow_hyper=False):
 
     Examples
     ========
-
     >>> from sympy.simplify.hyperexpand import hyperexpand
     >>> from sympy.functions import hyper
     >>> from sympy.abc import z

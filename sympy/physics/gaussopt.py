@@ -35,7 +35,6 @@ class RayTransferMatrix(Matrix):
 
     Examples
     =======
-
     >>> from sympy.physics.gaussopt import RayTransferMatrix, ThinLens
     >>> from sympy import Symbol, Matrix
 
@@ -68,7 +67,6 @@ class RayTransferMatrix(Matrix):
 
     References
     ==========
-
     [1] http://en.wikipedia.org/wiki/Ray_transfer_matrix_analysis
     """
 
@@ -251,7 +249,6 @@ class GeometricRay(Matrix):
 
     Examples
     =======
-
     >>> from sympy.physics.gaussopt import GeometricRay, FreeSpace
     >>> from sympy import symbols, Matrix
     >>> d,h,angle = symbols('d,h,angle')

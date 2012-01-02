@@ -379,7 +379,6 @@ def fcode(expr, **settings):
 
        Parameters
        ==========
-
        expr : sympy.core.Expr
            a sympy expression to be converted
        assign_to : optional
@@ -402,7 +401,6 @@ def fcode(expr, **settings):
 
        Examples
        ========
-
        >>> from sympy import fcode, symbols, Rational, pi, sin
        >>> x, tau = symbols('x,tau')
        >>> fcode((2*tau)**Rational(7,2))

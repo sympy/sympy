@@ -25,7 +25,6 @@ def monomials(variables, degree):
 
     Examples
     ========
-
     Consider monomials in variables `x` and `y`::
 
         >>> from sympy import monomials
@@ -64,7 +63,6 @@ def monomial_count(V, N):
 
     Examples
     ========
-
     >>> from sympy import monomials, monomial_count
     >>> from sympy.abc import x, y
 

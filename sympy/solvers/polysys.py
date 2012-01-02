@@ -16,7 +16,6 @@ def solve_poly_system(seq, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import solve_poly_system
     >>> from sympy.abc import x, y
 
@@ -99,7 +98,6 @@ def solve_generic(polys, opt):
 
     References
     ==========
-
     .. [Buchberger01] B. Buchberger, Groebner Bases: A Short
     Introduction for Systems Theorists, In: R. Moreno-Diaz,
     B. Buchberger, J.L. Freire, Proceedings of EUROCAST'01,

@@ -47,7 +47,6 @@ def n_order(a, n):
 
     Examples
     ========
-
     >>> from sympy.ntheory import n_order
     >>> n_order(3, 7)
     6
@@ -151,7 +150,6 @@ def legendre_symbol(a, p):
     """
     Returns
     =======
-
     1. 0 if a is multiple of p
     2. 1 if a is a quadratic residue of p
     3. -1 otherwise
@@ -189,7 +187,6 @@ def jacobi_symbol(m, n):
 
     Returns
     =======
-
     1. 0 if m cong 0 mod(n)
     2. 1 if x**2 cong m mod(n) has a solution
     3. -1 otherwise

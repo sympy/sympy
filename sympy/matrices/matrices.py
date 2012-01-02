@@ -362,7 +362,6 @@ class Matrix(object):
 
         Parameters
         ==========
-
         key : slice
             The section of this matrix to replace.
         value : Matrix
@@ -370,7 +369,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> import sympy
         >>> M = sympy.matrices.Matrix([[0,1],[2,3]])
         >>> I = sympy.matrices.eye(5)
@@ -402,7 +400,6 @@ class Matrix(object):
 
         Parameters
         ==========
-
         key : slice
             The section of this matrix to replace.
         value : iterable
@@ -410,7 +407,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> import sympy
         >>> I = sympy.matrices.eye(5)
         >>> I.copyin_list((slice(0,2), slice(0,1)), [1,2])
@@ -1216,7 +1212,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix(4, 3, range(12))
         >>> m   #doctest: +NORMALIZE_WHITESPACE
@@ -1372,7 +1367,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix, matrices
         >>> m = Matrix(2,3,lambda i,j: i*3+j)
         >>> m           #doctest: +NORMALIZE_WHITESPACE
@@ -1441,7 +1435,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> a = Matrix([[4, 3], [6, 3]])
         >>> L, U, _ = a.LUdecomposition()
@@ -1634,7 +1627,6 @@ class Matrix(object):
 
         Examples
         ========
-
             >>> from sympy import sin, cos, Matrix
             >>> from sympy.abc import rho, phi
             >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
@@ -1680,7 +1672,6 @@ class Matrix(object):
 
         Examples
         ========
-
         This is the example from wikipedia:
 
         >>> from sympy import Matrix, eye
@@ -2047,7 +2038,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> import sympy
         >>> I = sympy.matrices.eye(4)
         >>> I.delRowCol(1,2)
@@ -2144,7 +2134,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix, zeros
         >>> a = Matrix([[0, 0], [0, 0]])
         >>> b = zeros(3, 4)
@@ -2170,7 +2159,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> a = Matrix([[0,0,0],[1,0,0],[1,1,0]])
         >>> a.is_nilpotent()
@@ -2193,7 +2181,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[1, 0, 0, 1])
         >>> m
@@ -2235,7 +2222,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[1, 0, 0, 1])
         >>> m
@@ -2281,7 +2267,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1,4,2,3],[3,4,1,7],[0,2,3,4],[0,0,1,3]])
         >>> a
@@ -2312,7 +2297,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1,2,0,0],[5,2,3,0],[3,4,3,7],[5,6,1,1]])
         >>> a
@@ -2340,7 +2324,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> import sympy
         >>> from sympy.abc import x, y
         >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
@@ -2361,7 +2344,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[0, 1, 1, 2])
         >>> m
@@ -2418,7 +2400,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix, diag
         >>> m = Matrix(2,2,[1, 0, 0, 2])
         >>> m
@@ -2971,7 +2952,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> import sympy
         >>> from sympy.abc import x, y
         >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
@@ -2995,7 +2975,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> import sympy
         >>> from sympy.abc import x, y
         >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
@@ -3016,7 +2995,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> import sympy
         >>> from sympy.abc import x, y
         >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
@@ -3108,7 +3086,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix, symbols
         >>> from sympy.abc import x, y, z
         >>> A = Matrix([[1, 3, 0, 0], [y, z*z, 0, 0], [0, 0, x, 0], [0, 0, 0, 0]])
@@ -3156,7 +3133,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
         >>> m
@@ -3212,7 +3188,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
         >>> m
@@ -3281,12 +3256,10 @@ class Matrix(object):
 
         Note
         ====
-
         Calculation of transformation P is not implemented yet
 
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
         >>> m
@@ -3327,7 +3300,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
         >>> m
@@ -3382,7 +3354,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix, Float
         >>> from sympy.abc import x, y
         >>> A = Matrix(((1, x), (0.2, 3)))
@@ -3404,7 +3375,6 @@ def matrix_multiply(A, B):
 
     Examples
     ========
-
     >>> from sympy import Matrix
     >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
     >>> B = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
@@ -3543,7 +3513,6 @@ def diag(*values):
 
     Examples
     ========
-
     >>> from sympy.matrices import diag, Matrix
     >>> diag(1, 2, 3)
     [1, 0, 0]
@@ -3596,7 +3565,6 @@ def jordan_cell(eigenval, n):
 
     Examples
     ========
-
     >>> from sympy.matrices.matrices import jordan_cell
     >>> from sympy.abc import x
     >>> jordan_cell(x, 4)
@@ -3620,7 +3588,6 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False):
 
     Examples
     ========
-
     >>> from sympy.matrices import randMatrix
     >>> randMatrix(3) # doctest:+SKIP
     [25, 45, 27]
@@ -3927,7 +3894,6 @@ class SparseMatrix(Matrix):
 
         Examples
         ========
-
         >>> import sympy
         >>> M = sympy.matrices.SparseMatrix([[0,0],[0,1]])
         >>> M
@@ -3959,7 +3925,6 @@ class SparseMatrix(Matrix):
 
         Examples
         ========
-
         >>> import sympy
         >>> M = sympy.matrices.SparseMatrix([[0,0],[0,1]])
         >>> M

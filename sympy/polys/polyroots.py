@@ -141,7 +141,6 @@ def roots_quartic(f):
 
     Examples
     ========
-
         >>> from sympy import Poly, symbols, I
         >>> from sympy.polys.polyroots import roots_quartic
 
@@ -153,7 +152,6 @@ def roots_quartic(f):
 
     References
     ==========
-
     1. http://mathforum.org/dr.math/faq/faq.cubic.equations.html
     2. http://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
     3. http://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
@@ -241,7 +239,6 @@ def _inv_totient_estimate(m):
 
     Examples
     ========
-
     >>> from sympy.polys.polyroots import _inv_totient_estimate
 
     >>> _inv_totient_estimate(192)
@@ -462,7 +459,6 @@ def roots(f, *gens, **flags):
 
     Examples
     ========
-
     >>> from sympy import Poly, roots
     >>> from sympy.abc import x, y
 
@@ -661,7 +657,6 @@ def root_factors(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy.abc import x, y
     >>> from sympy.polys.polyroots import root_factors
 

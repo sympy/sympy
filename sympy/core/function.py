@@ -165,7 +165,6 @@ class Function(Application, Expr):
 
         Examples
         ========
-
             >>> from sympy import Function, Symbol
             >>> f = Function('f')
             >>> x = Symbol('x')
@@ -346,7 +345,6 @@ class Function(Application, Expr):
         but the expansion is always in terms of *one* variable.
         Examples
         ========
-
         >>> from sympy import atan2, O
         >>> from sympy.abc import x, y
         >>> atan2(x, y).series(x, n=2)
@@ -767,7 +765,6 @@ class Derivative(Expr):
 
     Examples
     ========
-
     Some basic examples:
 
         >>> from sympy import Derivative, Symbol, Function
@@ -801,7 +798,6 @@ class Derivative(Expr):
 
         Examples
         ========
-
             >>> from sympy import Function, Symbol, Derivative
             >>> f = Function('f')
             >>> x = Symbol('x')
@@ -1368,7 +1364,6 @@ def diff(f, *symbols, **kwargs):
 
     Examples
     ========
-
     >>> from sympy import sin, cos, Function, diff
     >>> from sympy.abc import x, y
     >>> f = Function('f')
@@ -1525,7 +1520,6 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
 
     Examples
     ========
-
     >>> from sympy import expand_log, expand, expand_mul
     >>> x, y, z = symbols('x,y,z', positive=True)
 
@@ -1592,7 +1586,6 @@ def expand_mul(expr, deep=True):
 
     Examples
     ========
-
     >>> from sympy import symbols, expand_mul, exp, log
     >>> x, y = symbols('x,y', positive=True)
     >>> expand_mul(exp(x+y)*(x+y)*log(x*y**2))
@@ -1609,7 +1602,6 @@ def expand_multinomial(expr, deep=True):
 
     Examples
     ========
-
     >>> from sympy import symbols, expand_multinomial, exp
     >>> x, y = symbols('x y', positive=True)
     >>> expand_multinomial((x + exp(x + 1))**2)
@@ -1627,7 +1619,6 @@ def expand_log(expr, deep=True):
 
     Examples
     ========
-
     >>> from sympy import symbols, expand_log, exp, log
     >>> x, y = symbols('x,y', positive=True)
     >>> expand_log(exp(x+y)*(x+y)*log(x*y**2))
@@ -1644,7 +1635,6 @@ def expand_func(expr, deep=True):
 
     Examples
     ========
-
     >>> from sympy import expand_func, gamma
     >>> from sympy.abc import x
     >>> expand_func(gamma(x + 2))
@@ -1661,7 +1651,6 @@ def expand_trig(expr, deep=True):
 
     Examples
     ========
-
     >>> from sympy import expand_trig, sin, cos
     >>> from sympy.abc import x, y
     >>> expand_trig(sin(x+y)*(x+y))
@@ -1678,7 +1667,6 @@ def expand_complex(expr, deep=True):
 
     Examples
     ========
-
     >>> from sympy import expand_complex, I, im, re
     >>> from sympy.abc import z
     >>> expand_complex(z**(2*I))
@@ -1704,7 +1692,6 @@ def count_ops(expr, visual=False):
 
     Examples
     ========
-
     >>> from sympy.abc import a, b, x, y
     >>> from sympy import sin, count_ops
 
@@ -1869,7 +1856,6 @@ def nfloat(expr, n=15, exponent=False):
 
     Examples
     ========
-
     >>> from sympy.core.function import nfloat
     >>> from sympy.abc import x, y
     >>> from sympy import cos, pi, S, sqrt

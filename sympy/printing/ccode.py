@@ -246,7 +246,6 @@ def ccode(expr, assign_to=None, **settings):
 
         Examples
         ========
-
         >>> from sympy import ccode, symbols, Rational, sin
         >>> x, tau = symbols(["x", "tau"])
         >>> ccode((2*tau)**Rational(7,2))

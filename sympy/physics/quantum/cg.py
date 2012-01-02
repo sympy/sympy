@@ -30,14 +30,12 @@ class Wigner3j(Expr):
 
     Parameters
     ==========
-
     j1, m1, j2, m2, j3, m3 : Number, Symbol
         Terms determining the angular momentum of coupled angular momentum
         systems.
 
     Examples
     ========
-
     Declare a Wigner-3j coefficient and calcualte its value
 
         >>> from sympy.physics.quantum.cg import Wigner3j
@@ -50,7 +48,6 @@ class Wigner3j(Expr):
 
     References
     ==========
-
     [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
     def __new__(cls, j1, m1, j2, m2, j3, m3):
@@ -157,14 +154,12 @@ class CG(Wigner3j):
 
     Parameters
     ==========
-
     j1, m1, j2, m2, j3, m3 : Number, Symbol
         Terms determining the angular momentum of coupled angular momentum
         systems.
 
     Examples
     ========
-
     Define a Clebsch-Gordan coefficient and evaluate its value
 
         >>> from sympy.physics.quantum.cg import CG
@@ -177,7 +172,6 @@ class CG(Wigner3j):
 
     References
     ==========
-
     [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
 
@@ -232,7 +226,6 @@ def cg_simp(e):
 
     Examples
     ========
-
     Simplify the sum over CG(a,alpha,0,0,a,alpha) for all alpha to
     2*a+1
 
@@ -245,7 +238,6 @@ def cg_simp(e):
 
     References
     ==========
-
     [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
     if isinstance(e, Add):
@@ -372,7 +364,6 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
 
     Parameters
     ==========
-
     expr: expression
         The expression with Wild terms that will be matched to the terms in
         the sum

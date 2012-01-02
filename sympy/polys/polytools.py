@@ -216,7 +216,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -242,7 +241,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -272,7 +270,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -289,7 +286,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -325,7 +321,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -402,7 +397,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly, ZZ
         >>> from sympy.abc import x, y
 
@@ -440,7 +434,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -457,7 +450,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -491,7 +483,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import a, b, c, d, x
 
@@ -514,7 +505,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -547,7 +537,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -572,7 +561,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y, z
 
@@ -602,7 +590,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y, z
 
@@ -636,7 +623,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly, QQ
         >>> from sympy.abc import x
 
@@ -657,7 +643,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly, ZZ
         >>> from sympy.abc import x
 
@@ -678,7 +663,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly, RR
         >>> from sympy.abc import x
 
@@ -699,7 +683,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -738,7 +721,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -754,7 +736,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -770,7 +751,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -786,7 +766,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -802,7 +781,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -818,7 +796,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -834,7 +811,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -869,7 +845,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -885,7 +860,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -911,7 +885,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -947,7 +920,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly, I
         >>> from sympy.abc import x
 
@@ -968,7 +940,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -989,7 +960,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -1026,7 +996,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -1067,7 +1036,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -1088,7 +1056,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1109,7 +1076,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1130,7 +1096,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1151,7 +1116,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1175,7 +1139,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1201,7 +1164,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1222,7 +1184,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1246,7 +1207,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1277,7 +1237,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1308,7 +1267,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1339,7 +1297,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1363,7 +1320,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1389,7 +1345,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1412,7 +1367,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1435,7 +1389,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1461,7 +1414,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1492,7 +1444,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1531,7 +1482,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly, ZZ, QQ
         >>> from sympy.abc import x
 
@@ -1568,7 +1518,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1605,7 +1554,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1665,7 +1613,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -1688,7 +1635,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -1707,7 +1653,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -1733,7 +1678,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -1753,7 +1697,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1777,7 +1720,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1798,7 +1740,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1817,7 +1758,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -1840,7 +1780,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -1856,7 +1795,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -1872,7 +1810,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -1889,7 +1826,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -1906,7 +1842,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1927,7 +1862,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -1948,7 +1882,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly, S, QQ
         >>> from sympy.abc import x
 
@@ -1983,7 +1916,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -2020,7 +1952,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -2058,7 +1989,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -2093,7 +2023,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y, z
 
@@ -2162,7 +2091,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y, z
 
@@ -2186,7 +2114,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2217,7 +2144,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2248,7 +2174,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2288,7 +2213,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2313,7 +2237,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2336,7 +2259,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2361,7 +2283,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2386,7 +2307,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2409,7 +2329,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2432,7 +2351,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2455,7 +2373,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly, ZZ
         >>> from sympy.abc import x
 
@@ -2482,7 +2399,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2503,7 +2419,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2524,7 +2439,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2547,7 +2461,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2568,7 +2481,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2589,7 +2501,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2616,7 +2527,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2643,7 +2553,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly, sqrt
         >>> from sympy.abc import x
 
@@ -2670,7 +2579,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2691,7 +2599,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2720,7 +2627,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly, expand
         >>> from sympy.abc import x
 
@@ -2753,7 +2659,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -2780,7 +2685,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -2807,7 +2711,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2872,7 +2775,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -2909,7 +2811,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly, I
         >>> from sympy.abc import x
 
@@ -2972,7 +2873,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -3001,7 +2901,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -3024,7 +2923,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -3047,7 +2945,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -3096,7 +2993,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -3122,7 +3018,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -3161,7 +3056,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -3199,7 +3093,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -3218,7 +3111,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -3237,7 +3129,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -3256,7 +3147,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -3275,7 +3165,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -3294,7 +3183,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -3315,7 +3203,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -3334,7 +3221,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -3353,7 +3239,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -3377,7 +3262,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -3396,7 +3280,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -3415,7 +3298,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -3438,7 +3320,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
@@ -3461,7 +3342,6 @@ class Poly(Expr):
 
         Examples
         ========
-
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
@@ -3662,7 +3542,6 @@ class PurePoly(Poly):
 
         Examples
         ========
-
         >>> from sympy import PurePoly
         >>> from sympy.abc import x, y
 
@@ -3893,7 +3772,6 @@ def degree(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import degree
     >>> from sympy.abc import x, y
 
@@ -3918,7 +3796,6 @@ def degree_list(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import degree_list
     >>> from sympy.abc import x, y
 
@@ -3943,7 +3820,6 @@ def LC(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import LC
     >>> from sympy.abc import x, y
 
@@ -3966,7 +3842,6 @@ def LM(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import LM
     >>> from sympy.abc import x, y
 
@@ -3990,7 +3865,6 @@ def LT(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import LT
     >>> from sympy.abc import x, y
 
@@ -4014,7 +3888,6 @@ def pdiv(f, g, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import pdiv
     >>> from sympy.abc import x
 
@@ -4042,7 +3915,6 @@ def prem(f, g, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import prem
     >>> from sympy.abc import x
 
@@ -4070,7 +3942,6 @@ def pquo(f, g, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import pquo
     >>> from sympy.abc import x
 
@@ -4100,7 +3971,6 @@ def pexquo(f, g, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import pexquo
     >>> from sympy.abc import x
 
@@ -4133,7 +4003,6 @@ def div(f, g, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import div, ZZ, QQ
     >>> from sympy.abc import x
 
@@ -4163,7 +4032,6 @@ def rem(f, g, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import rem, ZZ, QQ
     >>> from sympy.abc import x
 
@@ -4193,7 +4061,6 @@ def quo(f, g, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import quo
     >>> from sympy.abc import x
 
@@ -4223,7 +4090,6 @@ def exquo(f, g, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import exquo
     >>> from sympy.abc import x
 
@@ -4258,7 +4124,6 @@ def half_gcdex(f, g, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import half_gcdex
     >>> from sympy.abc import x
 
@@ -4296,7 +4161,6 @@ def gcdex(f, g, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import gcdex
     >>> from sympy.abc import x
 
@@ -4332,7 +4196,6 @@ def invert(f, g, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import invert
     >>> from sympy.abc import x
 
@@ -4373,7 +4236,6 @@ def subresultants(f, g, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import subresultants
     >>> from sympy.abc import x
 
@@ -4401,7 +4263,6 @@ def resultant(f, g, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import resultant
     >>> from sympy.abc import x
 
@@ -4429,7 +4290,6 @@ def discriminant(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import discriminant
     >>> from sympy.abc import x
 
@@ -4461,7 +4321,6 @@ def cofactors(f, g, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import cofactors
     >>> from sympy.abc import x
 
@@ -4497,7 +4356,6 @@ def gcd_list(seq, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import gcd_list
     >>> from sympy.abc import x
 
@@ -4554,7 +4412,6 @@ def gcd(f, g=None, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import gcd
     >>> from sympy.abc import x
 
@@ -4596,7 +4453,6 @@ def lcm_list(seq, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import lcm_list
     >>> from sympy.abc import x
 
@@ -4647,7 +4503,6 @@ def lcm(f, g=None, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import lcm
     >>> from sympy.abc import x
 
@@ -4689,7 +4544,6 @@ def terms_gcd(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import terms_gcd
     >>> from sympy.abc import x, y
 
@@ -4727,7 +4581,6 @@ def trunc(f, p, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import trunc
     >>> from sympy.abc import x
 
@@ -4755,7 +4608,6 @@ def monic(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import monic
     >>> from sympy.abc import x
 
@@ -4783,7 +4635,6 @@ def content(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import content
     >>> from sympy.abc import x
 
@@ -4806,7 +4657,6 @@ def primitive(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy.polys.polytools import primitive
     >>> from sympy.abc import x, y
 
@@ -4851,7 +4701,6 @@ def compose(f, g, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import compose
     >>> from sympy.abc import x
 
@@ -4879,7 +4728,6 @@ def decompose(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import decompose
     >>> from sympy.abc import x
 
@@ -4907,7 +4755,6 @@ def sturm(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import sturm
     >>> from sympy.abc import x
 
@@ -4935,7 +4782,6 @@ def gff_list(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import gff_list, ff
     >>> from sympy.abc import x
 
@@ -4976,7 +4822,6 @@ def sqf_norm(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import sqf_norm, sqrt
     >>> from sympy.abc import x
 
@@ -5004,7 +4849,6 @@ def sqf_part(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import sqf_part
     >>> from sympy.abc import x
 
@@ -5164,7 +5008,6 @@ def sqf_list(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import sqf_list
     >>> from sympy.abc import x
 
@@ -5180,7 +5023,6 @@ def sqf(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import sqf
     >>> from sympy.abc import x
 
@@ -5196,7 +5038,6 @@ def factor_list(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import factor_list
     >>> from sympy.abc import x, y
 
@@ -5226,7 +5067,6 @@ def factor(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import factor, sqrt
     >>> from sympy.abc import x, y
 
@@ -5257,7 +5097,6 @@ def intervals(F, all=False, eps=None, inf=None, sup=None, strict=False, fast=Fal
 
     Examples
     ========
-
     >>> from sympy import intervals
     >>> from sympy.abc import x
 
@@ -5311,7 +5150,6 @@ def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
 
     Examples
     ========
-
     >>> from sympy import refine_root
     >>> from sympy.abc import x
 
@@ -5335,7 +5173,6 @@ def count_roots(f, inf=None, sup=None):
 
     Examples
     ========
-
     >>> from sympy import count_roots, I
     >>> from sympy.abc import x
 
@@ -5358,7 +5195,6 @@ def real_roots(f, multiple=True):
 
     Examples
     ========
-
     >>> from sympy import real_roots
     >>> from sympy.abc import x
 
@@ -5379,7 +5215,6 @@ def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
 
     Examples
     ========
-
     >>> from sympy import nroots
     >>> from sympy.abc import x
 
@@ -5402,7 +5237,6 @@ def ground_roots(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import ground_roots
     >>> from sympy.abc import x
 
@@ -5425,7 +5259,6 @@ def nth_power_roots_poly(f, n, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import nth_power_roots_poly, factor, roots
     >>> from sympy.abc import x
 
@@ -5462,7 +5295,6 @@ def cancel(f, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import cancel
     >>> from sympy.abc import x
 
@@ -5515,7 +5347,6 @@ def reduced(f, G, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import reduced
     >>> from sympy.abc import x, y
 
@@ -5571,7 +5402,6 @@ def groebner(F, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import groebner
     >>> from sympy.abc import x, y
 
@@ -5598,7 +5428,6 @@ def groebner(F, *gens, **args):
 
     References
     ==========
-
     1. [Buchberger01]_
     2. [Cox97]_
 
@@ -5614,7 +5443,6 @@ def is_zero_dimensional(F, *gens, **args):
 
     References
     ==========
-
     David A. Cox, John B. Little, Donal O'Shea. Ideals, Varieties and
     Algorithms, 3rd edition, p. 230
 
@@ -5731,7 +5559,6 @@ class GroebnerBasis(Basic):
 
         References
         ==========
-
         David A. Cox, John B. Little, Donal O'Shea. Ideals, Varieties and
         Algorithms, 3rd edition, p. 230
 
@@ -5764,7 +5591,6 @@ class GroebnerBasis(Basic):
 
         Examples
         ========
-
         >>> from sympy.abc import x, y
         >>> from sympy import groebner
 
@@ -5778,7 +5604,6 @@ class GroebnerBasis(Basic):
 
         References
         ==========
-
         J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
         Computation of Zero-dimensional Groebner Bases by Change of
         Ordering
@@ -5832,7 +5657,6 @@ class GroebnerBasis(Basic):
 
         Examples
         ========
-
         >>> from sympy import groebner, expand
         >>> from sympy.abc import x, y
 
@@ -5891,7 +5715,6 @@ class GroebnerBasis(Basic):
 
         Examples
         ========
-
         >>> from sympy import groebner
         >>> from sympy.abc import x, y
 
@@ -5912,7 +5735,6 @@ def poly(expr, *gens, **args):
 
     Examples
     ========
-
     >>> from sympy import poly
     >>> from sympy.abc import x
 

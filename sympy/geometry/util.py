@@ -304,7 +304,6 @@ def centroid(*args):
 
     Examples
     ========
-
     >>> from sympy import Point, Segment, Polygon
     >>> from sympy.geometry.util import centroid
     >>> p = Polygon((0, 0), (10, 0), (10, 10))

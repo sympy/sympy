@@ -175,7 +175,6 @@ class Integral(Expr):
 
         Examples
         ========
-
             >>> from sympy import Integral
             >>> from sympy.abc import x, y, z
             >>> Integral(1, (x, 1, 1)).is_zero
@@ -302,7 +301,6 @@ class Integral(Expr):
 
         Examples
         ========
-
             >>> from sympy.abc import a, b, c
             >>> from sympy import Integral, S
             >>> Integral(a*b + 2 + c, (c, -1, S(1)/2)).transform(a, c*2)
@@ -860,7 +858,6 @@ class Integral(Expr):
 
         Examples
         ========
-
             >>> from sympy import sqrt
             >>> from sympy.abc import x
             >>> from sympy.integrals import Integral
@@ -882,7 +879,6 @@ class Integral(Expr):
 
         Examples
         ========
-
             >>> from sympy import sqrt
             >>> from sympy.abc import x
             >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
@@ -994,7 +990,6 @@ def integrate(*args, **kwargs):
 
        Examples
        ========
-
        >>> from sympy import integrate, log, exp, oo
        >>> from sympy.abc import a, x, y
 

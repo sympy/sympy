@@ -33,7 +33,6 @@ def gosper_normal(f, g, n, polys=True):
 
     Examples
     ========
-
     >>> from sympy.concrete.gosper import gosper_normal
     >>> from sympy.abc import n
 
@@ -90,7 +89,6 @@ def gosper_term(f, n):
 
     Examples
     ========
-
     >>> from sympy.concrete.gosper import gosper_term
     >>> from sympy.functions import factorial
     >>> from sympy.abc import n
@@ -166,7 +164,6 @@ def gosper_sum(f, k):
 
     Examples
     ========
-
     >>> from sympy.concrete.gosper import gosper_sum
     >>> from sympy.functions import factorial
     >>> from sympy.abc import i, n, k
@@ -183,7 +180,6 @@ def gosper_sum(f, k):
 
     References
     ==========
-
     .. [1] Marko Petkovsek, Herbert S. Wilf, Doron Zeilberger, A = B,
            AK Peters, Ltd., Wellesley, MA, USA, 1997, pp. 73--100
 

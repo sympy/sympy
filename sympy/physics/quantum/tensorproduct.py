@@ -44,7 +44,6 @@ class TensorProduct(Expr):
 
     Examples
     ========
-
     Start with a simple tensor product of sympy matrices::
 
         >>> from sympy import I, Matrix, symbols
@@ -213,7 +212,6 @@ def tensor_product_simp_Mul(e):
 
     Examples
     ========
-
     This is an example of the type of simplification that this function
     performs::
 

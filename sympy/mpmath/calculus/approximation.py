@@ -57,7 +57,6 @@ def chebyfit(ctx, f, interval, N, error=False):
 
     Examples
     ========
-
     Here we use :func:`~mpmath.chebyfit` to generate a low-degree approximation
     of `f(x) = \cos(x)`, valid on the interval `[1, 2]`::
 
@@ -158,7 +157,6 @@ def fourier(ctx, f, interval, N):
 
     Examples
     ========
-
     The function `f(x) = x` has a simple Fourier series on the standard
     interval `[-\pi, \pi]`. The cosine coefficients are all zero (because
     the function has odd symmetry), and the sine coefficients are

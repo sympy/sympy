@@ -40,7 +40,6 @@ def dup_sturm(f, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rootisolation import dup_sturm
 
@@ -51,7 +50,6 @@ def dup_sturm(f, K):
 
     References
     ==========
-
     1. [Davenport88]_
 
     """

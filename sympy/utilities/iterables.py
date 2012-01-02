@@ -313,7 +313,6 @@ def variations(seq, n=None, repetition=False):
 
     Examples
     ========
-
     variations(seq, n) will return N! / (N - n)! permutations without
     repetition of seq's elements:
 
@@ -363,7 +362,6 @@ def subsets(seq, k=None, repetition=False):
 
        Examples
        ========
-
            >>> from sympy.utilities.iterables import subsets
 
        subsets(seq, k) will return the n!/k!/(n - k)! k-subsets (combinations)
@@ -523,7 +521,6 @@ def prefixes(seq):
 
     Examples
     ========
-
     >>> from sympy.utilities.iterables import prefixes
 
     >>> list(prefixes([1,2,3,4]))
@@ -541,7 +538,6 @@ def postfixes(seq):
 
     Examples
     ========
-
     >>> from sympy.utilities.iterables import postfixes
 
     >>> list(postfixes([1,2,3,4]))
@@ -570,7 +566,6 @@ def topological_sort(graph, key=None):
 
     Examples
     ========
-
     Consider a graph::
 
         +---+     +---+     +---+

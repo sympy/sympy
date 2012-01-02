@@ -20,7 +20,6 @@ def ratint(f, x, **flags):
 
        References
        ==========
-
        .. [Bro05] M. Bronstein, Symbolic Integration I: Transcendental
           Functions, Second Edition, Springer-Verlag, 2005, pp. 35-70
 
@@ -107,7 +106,6 @@ def ratint_ratpart(f, g, x):
 
     Examples
     ========
-
         >>> from sympy.integrals.rationaltools import ratint_ratpart
         >>> from sympy.abc import x, y
         >>> from sympy import Poly
@@ -166,7 +164,6 @@ def ratint_logpart(f, g, x, t=None):
 
     Examples
     ========
-
         >>> from sympy.integrals.rationaltools import ratint_logpart
         >>> from sympy.abc import x
         >>> from sympy import Poly
@@ -242,7 +239,6 @@ def log_to_atan(f, g):
 
     Examples
     ========
-
         >>> from sympy.integrals.rationaltools import log_to_atan
         >>> from sympy.abc import x
         >>> from sympy import Poly, sqrt, S
@@ -284,7 +280,6 @@ def log_to_real(h, q, x, t):
 
     Examples
     ========
-
         >>> from sympy.integrals.rationaltools import log_to_real
         >>> from sympy.abc import x, y
         >>> from sympy import Poly, sqrt, S

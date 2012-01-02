@@ -593,7 +593,6 @@ def classify_ode(eq, func=None, dict=False, prep=True):
 
     Notes on Hint Names
     ===================
-
     *"_Integral"*
 
         If a classification has "_Integral" at the end, it will return
@@ -1294,7 +1293,6 @@ def ode_sol_simplicity(sol, func, trysolving=True):
 
     Examples
     ========
-
     This function is designed to be passed to min as the key argument,
     such as min(listofsolutions, key=lambda i: ode_sol_simplicity(i, f(x))).
 

@@ -294,7 +294,6 @@ class Ket(State, KetBase):
 
     Examples
     ========
-
     Create a simple Ket and looking at its properties::
 
         >>> from sympy.physics.quantum import Ket, Bra
@@ -332,7 +331,6 @@ class Ket(State, KetBase):
 
     References
     ==========
-
     [1] http://en.wikipedia.org/wiki/Bra-ket_notation
     """
 
@@ -356,7 +354,6 @@ class Bra(State, BraBase):
 
     Examples
     ========
-
     Create a simple Bra and look at its properties::
 
         >>> from sympy.physics.quantum import Ket, Bra
@@ -391,7 +388,6 @@ class Bra(State, BraBase):
 
     References
     ==========
-
     [1] http://en.wikipedia.org/wiki/Bra-ket_notation
     """
 
@@ -500,7 +496,6 @@ class TimeDepKet(TimeDepState, KetBase):
 
     Examples
     ========
-
     Create a TimeDepKet and look at its attributes::
 
         >>> from sympy.physics.quantum import TimeDepKet
@@ -543,7 +538,6 @@ class TimeDepBra(TimeDepState, BraBase):
 
     Examples
     ========
-
         >>> from sympy.physics.quantum import TimeDepBra
         >>> from sympy import symbols, I
         >>> b = TimeDepBra('psi', 't')
@@ -572,7 +566,6 @@ class Wavefunction(Function):
 
     Parameters
     ==========
-
     expr : Expr
            The expression representing the functional form of the w.f.
 
@@ -581,7 +574,6 @@ class Wavefunction(Function):
 
     Examples
     ========
-
     Particle in a box, specifying bounds in the more primitive way of
     using Piecewise
 
@@ -731,7 +723,6 @@ class Wavefunction(Function):
 
         Examples
         ========
-
         >>> from sympy.physics.quantum.state import Wavefunction
         >>> from sympy import symbols
         >>> x,y = symbols('x,y')
@@ -754,7 +745,6 @@ class Wavefunction(Function):
 
         Examples
         ========
-
         >>> from sympy.physics.quantum.state import Wavefunction
         >>> from sympy import symbols
         >>> x, y = symbols('x, y')
@@ -781,7 +771,6 @@ class Wavefunction(Function):
 
         Examples
         ========
-
         >>> from sympy.physics.quantum.state import Wavefunction
         >>> from sympy import symbols
         >>> x, y = symbols('x, y')
@@ -799,7 +788,6 @@ class Wavefunction(Function):
 
         Examples
         ========
-
         >>> from sympy import symbols, pi
         >>> from sympy.functions import sqrt, sin
         >>> from sympy.physics.quantum.state import Wavefunction
@@ -825,7 +813,6 @@ class Wavefunction(Function):
 
         Examples
         ========
-
         >>> from sympy import symbols, pi
         >>> from sympy.functions import sqrt, sin
         >>> from sympy.physics.quantum.state import Wavefunction
@@ -858,7 +845,6 @@ class Wavefunction(Function):
 
         Examples
         ========
-
         >>> from sympy import symbols, pi
         >>> from sympy.functions import sqrt, sin
         >>> from sympy.physics.quantum.state import Wavefunction
@@ -883,7 +869,6 @@ class Wavefunction(Function):
 
         Examples
         ========
-
         >>> from sympy import symbols, pi
         >>> from sympy.functions import sqrt, sin
         >>> from sympy.physics.quantum.state import Wavefunction

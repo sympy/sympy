@@ -202,7 +202,6 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
 
     Examples
     ========
-
     >>> from sympy import S, collect, expand, factor, Wild
     >>> from sympy.abc import a, b, c, x, y, z
 
@@ -556,7 +555,6 @@ def rcollect(expr, *vars):
 
     Examples
     ========
-
     >>> from sympy.simplify import rcollect
     >>> from sympy.abc import x, y
 
@@ -748,7 +746,6 @@ def trigsimp(expr, deep=False, recursive=False):
 
     Notes
     =====
-
     deep:
     - Apply trigsimp inside functions
 
@@ -795,7 +792,6 @@ def trigsimp_nonrecursive(expr, deep=False):
 
     Notes
     =====
-
     deep -> apply trigsimp inside functions
 
     Examples
@@ -1518,7 +1514,6 @@ def powdenest(eq, force=False, polar=False):
 
     Examples
     ========
-
     >>> from sympy.abc import a, b, x, y, z
     >>> from sympy import Symbol, exp, log, sqrt, symbols, powdenest
 
@@ -2113,7 +2108,6 @@ def combsimp(expr):
 
     Examples
     ========
-
     >>> from sympy.simplify import combsimp
     >>> from sympy import factorial, binomial
     >>> from sympy.abc import n, k
@@ -2698,7 +2692,6 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
 
     Examples
     ========
-
         >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, exp, pi
         >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
         -2 + 2*GoldenRatio

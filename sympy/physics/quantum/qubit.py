@@ -127,7 +127,6 @@ class Qubit(QubitState, Ket):
 
     Examples
     ========
-
     Create a qubit in a couple of different ways and look at their attributes:
 
         >>> from sympy.physics.quantum.qubit import Qubit
@@ -291,7 +290,6 @@ class IntQubit(IntQubitState, Qubit):
 
     Examples
     ========
-
     Create a qubit for the integer 5:
 
         >>> from sympy.physics.quantum.qubit import IntQubit
@@ -440,7 +438,6 @@ def measure_all(qubit, format='sympy', normalize=True):
 
     Examples
     ========
-
         >>> from sympy.physics.quantum.qubit import Qubit, measure_all
         >>> from sympy.physics.quantum.gate import H, X, Y, Z
         >>> from sympy.physics.quantum.qapply import qapply
@@ -496,7 +493,6 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
 
     Examples
     ========
-
         >>> from sympy.physics.quantum.qubit import Qubit, measure_partial
         >>> from sympy.physics.quantum.gate import H, X, Y, Z
         >>> from sympy.physics.quantum.qapply import qapply

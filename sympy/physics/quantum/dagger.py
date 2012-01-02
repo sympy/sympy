@@ -25,7 +25,6 @@ class Dagger(Expr):
 
     Examples
     ========
-
     Daggering various quantum objects:
 
         >>> from sympy.physics.quantum.dagger import Dagger
@@ -70,7 +69,6 @@ class Dagger(Expr):
 
     References
     ==========
-
     [1] http://en.wikipedia.org/wiki/Hermitian_transpose
     """
 

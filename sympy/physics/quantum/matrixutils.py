@@ -157,7 +157,6 @@ def _sympy_tensor_product(*matrices):
 
     Examples
     ========
-
         >>> from sympy import I, Matrix, symbols
         >>> from sympy.physics.quantum.matrixutils import _sympy_tensor_product
 
@@ -176,7 +175,6 @@ def _sympy_tensor_product(*matrices):
 
     References
     ==========
-
     [1] http://en.wikipedia.org/wiki/Kronecker_product
     """
     # Make sure we have a sequence of Matrices

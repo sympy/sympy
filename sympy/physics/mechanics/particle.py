@@ -19,7 +19,6 @@ class Particle(object):
 
     Examples
     ========
-
     >>> from sympy.physics.mechanics import Particle, Point
     >>> from sympy import Symbol
     >>> po = Point('po')

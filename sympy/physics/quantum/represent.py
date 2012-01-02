@@ -231,7 +231,6 @@ def rep_innerproduct(expr, **options):
 
     Parameters
     ==========
-
     expr : KetBase or BraBase
         The expression to be represented
 
@@ -280,7 +279,6 @@ def rep_expectation(expr, **options):
 
     Parameters
     ==========
-
     expr : Operator
         Operator to be represented in the specified basis
 
@@ -333,7 +331,6 @@ def integrate_result(orig_expr, result, **options):
 
     Parameters
     ==========
-
     orig_expr : quantum expression
         The original expression which was to be represented
 
@@ -416,7 +413,6 @@ def get_basis(expr, **options):
 
     Parameters
     ==========
-
     expr : Operator or StateBase
         Expression whose basis is sought
 
@@ -495,7 +491,6 @@ def enumerate_states(*args, **options):
 
     Parameters
     ==========
-
     args : list
         See list of operation modes above for explanation
 

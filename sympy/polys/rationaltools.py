@@ -28,7 +28,6 @@ def together(expr, deep=False):
 
     Examples
     ========
-
     >>> from sympy import together, exp
     >>> from sympy.abc import x, y, z
 

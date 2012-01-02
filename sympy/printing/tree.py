@@ -6,7 +6,6 @@ def pprint_nodes(subtrees):
 
     Examples
     ========
-
     >>> from sympy.printing.tree import pprint_nodes
     >>> print pprint_nodes(["a", "b1\\nb2", "c"])
     +-a
@@ -64,7 +63,6 @@ def print_tree(node):
 
     Examples
     ========
-
     >>> from sympy.printing import print_tree
     >>> from sympy.abc import x
     >>> print_tree(x**2) # doctest: +SKIP

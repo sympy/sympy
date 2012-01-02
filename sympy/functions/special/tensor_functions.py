@@ -33,7 +33,6 @@ class LeviCivita(Function):
 
     Examples
     ========
-
     >>> from sympy import LeviCivita, symbols
     >>> LeviCivita(1,2,3)
     1
@@ -66,7 +65,6 @@ class KroneckerDelta(Function):
 
     Parameters
     ==========
-
     i : Number, Symbol
         The first index of the delta function.
     j : Number, Symbol
@@ -74,7 +72,6 @@ class KroneckerDelta(Function):
 
     Examples
     ========
-
     A simple example with integer indices::
 
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -98,7 +95,6 @@ class KroneckerDelta(Function):
 
     References
     ==========
-
     http://en.wikipedia.org/wiki/Kronecker_delta
     """
 
@@ -112,7 +108,6 @@ class KroneckerDelta(Function):
 
         Examples
         ========
-
         >>> from sympy import symbols
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> i, j, k = symbols('i,j,k')
@@ -152,7 +147,6 @@ class KroneckerDelta(Function):
 
         Examples
         ========
-
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> from sympy import Symbol
         >>> a = Symbol('a',above_fermi=True)
@@ -180,7 +174,6 @@ class KroneckerDelta(Function):
 
         Examples
         ========
-
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> from sympy import Symbol
         >>> a = Symbol('a',above_fermi=True)
@@ -208,7 +201,6 @@ class KroneckerDelta(Function):
 
         Examples
         ========
-
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> from sympy import Symbol
         >>> a = Symbol('a',above_fermi=True)
@@ -235,7 +227,6 @@ class KroneckerDelta(Function):
 
         Examples
         ========
-
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> from sympy import Symbol
         >>> a = Symbol('a',above_fermi=True)
@@ -262,7 +253,6 @@ class KroneckerDelta(Function):
 
         Examples
         ========
-
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> from sympy import Symbol
         >>> a = Symbol('a',above_fermi=True)
@@ -299,7 +289,6 @@ class KroneckerDelta(Function):
 
         Examples
         ========
-
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> from sympy import Symbol
         >>> a = Symbol('a',above_fermi=True)
@@ -330,7 +319,6 @@ class KroneckerDelta(Function):
 
         Examples
         ========
-
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> from sympy import Symbol
         >>> a = Symbol('a',above_fermi=True)

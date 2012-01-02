@@ -11,7 +11,6 @@ class PythonRationalType(PicklableWithSlots):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import PythonRationalType
 
     >>> PythonRationalType(1)

@@ -138,7 +138,6 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
 
     Examples
     ========
-
     >>> from sympy.ntheory.modular import solve_congruence
 
     What number is 2 mod 3, 3 mod 5 and 2 mod 7?

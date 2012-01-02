@@ -67,7 +67,6 @@ def bspline_basis(d, knots, n, x, close=True):
 
     References
     ==========
-
     [1] http://en.wikipedia.org/wiki/B-spline
 
     """
@@ -119,7 +118,6 @@ def bspline_basis_set(d, knots, x):
 
     Examples
     ========
-
     >>> from sympy import bspline_basis_set
     >>> from sympy.abc import x
     >>> d = 2

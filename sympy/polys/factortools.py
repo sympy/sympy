@@ -155,7 +155,6 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
 
     References
     ==========
-
     1. [Gathen99]_
 
     """
@@ -207,7 +206,6 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
 
     References
     ==========
-
     1. [Gathen99]_
 
     """
@@ -336,7 +334,6 @@ def dup_cyclotomic_p(f, K, irreducible=False):
 
     Examples
     ========
-
     >>> from sympy.polys.factortools import dup_cyclotomic_p
     >>> from sympy.polys.domains import ZZ
 
@@ -445,7 +442,6 @@ def dup_zz_cyclotomic_factor(f, K):
 
     References
     ==========
-
     1. [Weisstein09]_
 
     """
@@ -543,7 +539,6 @@ def dup_zz_factor(f, K):
 
     References
     ==========
-
     1. [Gathen99]_
 
     """
@@ -879,7 +874,6 @@ def dmp_zz_wang(f, u, K, mod=None):
 
     References
     ==========
-
     1. [Wang78]_
     2. [Geddes92]_
 
@@ -1022,7 +1016,6 @@ def dmp_zz_factor(f, u, K):
 
     References
     ==========
-
     1. [Gathen99]_
 
     """

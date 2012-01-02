@@ -73,14 +73,12 @@ def operators_to_state(operators, **options):
 
     Parameters
     ==========
-
     arg: Operator or set
          The class or instance of the operator or set of operators
          to be mapped to a state
 
     Examples
     ========
-
     >>> from sympy.physics.quantum.cartesian import XOp, PxOp
     >>> from sympy.physics.quantum.operatorset import operators_to_state
     >>> from sympy.physics.quantum.operator import Operator
@@ -175,14 +173,12 @@ def state_to_operators(state, **options):
 
     Parameters
     ==========
-
     arg: StateBase class or instance (or subclasses)
          The class or instance of the state to be mapped to an
          operator or set of operators
 
     Examples
     ========
-
     >>> from sympy.physics.quantum.cartesian import XKet, PxKet, XBra, PxBra
     >>> from sympy.physics.quantum.operatorset import state_to_operators
     >>> from sympy.physics.quantum.state import Ket, Bra

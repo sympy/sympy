@@ -398,7 +398,6 @@ def to_cnf(expr):
 
     Examples
     ========
-
     >>> from sympy.logic.boolalg import to_cnf
     >>> from sympy.abc import A, B, D
     >>> to_cnf(~(A | B) | D)
@@ -419,7 +418,6 @@ def is_cnf(expr):
 
     Examples
     ========
-
     >>> from sympy.logic.boolalg import is_cnf
     >>> from sympy.abc import A, B, C
     >>> is_cnf(A | B | C)

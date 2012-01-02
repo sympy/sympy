@@ -29,7 +29,6 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
-
             >>> from sympy import Expr
             >>> e = Expr()
             >>> e._diff_wrt
@@ -251,7 +250,6 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
-
         >>> from sympy import cos, sin, Sum, S, pi
         >>> from sympy.abc import a, n, x, y
         >>> x.is_constant()
@@ -442,7 +440,6 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
-
         >>> from sympy import sin, cos
         >>> from sympy.abc import x, y
 
@@ -461,7 +458,6 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
-
         >>> from sympy import sin, cos
         >>> from sympy.abc import x, y
 
@@ -565,7 +561,6 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
-
         >>> from sympy import O
         >>> from sympy.abc import x
         >>> (1 + x + O(x**2)).getn()
@@ -663,7 +658,6 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
-
         >>> from sympy import symbols
         >>> from sympy.abc import x, y, z
 
@@ -904,7 +898,6 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
-
         >>> from sympy import sin
         >>> from sympy.abc import x, y
 
@@ -978,7 +971,6 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
-
         -- self is an Add
 
         >>> from sympy import sin, cos, exp
@@ -1679,7 +1671,6 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
-
         >>> from sympy import Symbol
         >>> x = Symbol('x')
         >>> ((x**2 + 1)**4).is_polynomial(x)
@@ -1752,7 +1743,6 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
-
         >>> from sympy import Symbol, sin
         >>> from sympy.abc import x, y
 
@@ -2134,7 +2124,6 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
-
         >>> from sympy.abc import x
         >>> (1+x+x**2).as_leading_term(x)
         1
@@ -2185,7 +2174,6 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
-
         >>> from sympy.abc import x
         >>> (1+x+x**2).leadterm(x)
         (1, 0)

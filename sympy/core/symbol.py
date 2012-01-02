@@ -39,7 +39,6 @@ class Symbol(AtomicExpr, Boolean):
 
         Examples
         ========
-
             >>> from sympy import Symbol
             >>> x = Symbol('x')
             >>> x._diff_wrt

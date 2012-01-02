@@ -70,7 +70,6 @@ def buchberger(f, u, O, K, gens='', verbose=False):
 
     References
     ==========
-
     1. [Bose03]_
     2. [Giovini91]_
     3. [Ajwa95]_

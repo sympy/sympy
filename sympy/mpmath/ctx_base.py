@@ -175,7 +175,6 @@ class StandardBaseContext(Context,
 
         Examples
         ========
-
             >>> from mpmath import *
             >>> mp.dps = 15
             >>> almosteq(3.141592653589793, 3.141592653589790)
@@ -230,7 +229,6 @@ class StandardBaseContext(Context,
 
         Examples
         ========
-
             >>> from mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> arange(4)

@@ -12,7 +12,6 @@ class RigidBody(object):
 
     Attributes
     ==========
-
     mass : Sympifyable
         The body's mass
     inertia : (Dyadic, Point)

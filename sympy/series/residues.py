@@ -14,7 +14,6 @@ def residue(expr, x, x0):
 
     Examples
     ========
-
     >>> from sympy import Symbol, residue, sin
     >>> x = Symbol("x")
     >>> residue(1/x, x, 0)

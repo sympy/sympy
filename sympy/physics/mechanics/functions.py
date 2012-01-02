@@ -73,7 +73,6 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
 
     Examples
     ========
-
     >>> from sympy.physics.mechanics import ReferenceFrame, inertia
     >>> N = ReferenceFrame('N')
     >>> inertia(N, 1, 2, 3)
@@ -104,7 +103,6 @@ def mechanics_printing():
 
     Examples
     ========
-
     >>> # 2 lines below are for tests to function properly
     >>> import sys
     >>> sys.displayhook = sys.__displayhook__
@@ -145,7 +143,6 @@ def mprint(expr, **settings):
 
     Examples
     ========
-
     >>> from sympy.physics.mechanics import mprint, dynamicsymbols
     >>> u1 = dynamicsymbols('u1')
     >>> print(u1)
@@ -179,7 +176,6 @@ def mpprint(expr, **settings):
 
     Examples
     ========
-
     Use in the same way as pprint
 
     """
@@ -202,7 +198,6 @@ def mlatex(expr, **settings):
 
     Examples
     ========
-
     >>> from sympy.physics.mechanics import mlatex, ReferenceFrame
     >>> N = ReferenceFrame('N')
     >>> mlatex(N.x + N.y)
@@ -234,7 +229,6 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
 
     Examples
     ========
-
     >>> from sympy.physics.mechanics import dynamicsymbols
     >>> from sympy.physics.mechanics import kinematic_equations, mprint
     >>> u1, u2, u3 = dynamicsymbols('u1 u2 u3')

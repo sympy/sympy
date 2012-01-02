@@ -92,7 +92,6 @@ def checksol(f, symbol, sol=None, **flags):
 
     Examples
     ========
-
        >>> from sympy import symbols
        >>> from sympy.solvers import checksol
        >>> x, y = symbols('x,y')
@@ -255,7 +254,6 @@ def check_assumptions(expr, **assumptions):
 
     Examples
     ========
-
        >>> from sympy import Symbol, pi, I, exp
        >>> from sympy.solvers.solvers import check_assumptions
 
@@ -367,7 +365,6 @@ def solve(f, *symbols, **flags):
 
     Examples
     ========
-
     The output varies according to the input and can be seen by example::
 
         >>> from sympy import solve, Poly, Eq, Function, exp
@@ -509,7 +506,6 @@ def solve(f, *symbols, **flags):
 
     Notes
     =====
-
     assumptions aren't checked when `solve()` input involves
     relationals or bools.
 
@@ -1201,7 +1197,6 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
 
     Examples
     ========
-
     >>> from sympy.solvers.solvers import solve_linear
     >>> from sympy.abc import x, y, z
 
@@ -1810,7 +1805,6 @@ def _invert(eq, *symbols, **kwargs):
 
     Examples
     ========
-
     >>> from sympy.solvers.solvers import _invert as invert
     >>> from sympy import sqrt, cos
     >>> from sympy.abc import x, y
@@ -1997,7 +1991,6 @@ def unrad(eq, *syms, **flags):
 
     Examples
     ========
-
         >>> from sympy.solvers.solvers import unrad
         >>> from sympy.abc import x
         >>> from sympy import sqrt, Rational

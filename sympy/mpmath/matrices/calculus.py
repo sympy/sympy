@@ -65,7 +65,6 @@ class MatrixCalculusMethods:
 
         Examples
         ========
-
         Basic examples::
 
             >>> from mpmath import *
@@ -214,7 +213,6 @@ class MatrixCalculusMethods:
 
         Examples
         ========
-
         Square roots of some simple matrices::
 
             >>> from mpmath import *
@@ -354,7 +352,6 @@ class MatrixCalculusMethods:
 
         Examples
         ========
-
         Logarithms of some simple matrices::
 
             >>> from mpmath import *
@@ -468,7 +465,6 @@ class MatrixCalculusMethods:
 
         Examples
         ========
-
         Powers and inverse powers of a matrix::
 
             >>> from mpmath import *

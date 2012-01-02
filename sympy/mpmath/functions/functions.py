@@ -555,7 +555,6 @@ def mangoldt(ctx, n):
 
     Examples
     ========
-
         >>> from mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> [mangoldt(n) for n in range(-2,3)]

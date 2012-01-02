@@ -356,7 +356,6 @@ def sdp_div(f, G, u, O, K):
 
     References
     ==========
-
     1. [Cox97]_
     2. [Ajwa95]_
 
@@ -459,7 +458,6 @@ def sdp_lcm(f, g, u, O, K):
 
     References
     ==========
-
     1. [Cox97]_
 
     """

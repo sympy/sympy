@@ -91,7 +91,6 @@ def pde_separate_add(eq, fun, sep):
 
     Examples
     ========
-
     >>> from sympy import E, Eq, Function, pde_separate_add, Derivative as D
     >>> from sympy.abc import x, t
     >>> u, X, T = map(Function, 'uXT')
@@ -115,7 +114,6 @@ def pde_separate_mul(eq, fun, sep):
 
     Examples
     ========
-
     >>> from sympy import Function, Eq, pde_separate_mul, Derivative as D
     >>> from sympy.abc import x, y
     >>> u, X, Y = map(Function, 'uXY')

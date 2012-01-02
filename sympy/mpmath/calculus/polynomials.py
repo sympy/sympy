@@ -57,7 +57,6 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
 
     Examples
     ========
-
     Finding the three real roots of `x^3 - x^2 - 14x + 24`::
 
         >>> from mpmath import *
@@ -133,7 +132,6 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
 
     References
     ==========
-
     1. http://en.wikipedia.org/wiki/Durand-Kerner_method
 
     """

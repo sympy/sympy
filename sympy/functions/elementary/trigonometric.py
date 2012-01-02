@@ -111,7 +111,6 @@ class sin(TrigonometricFunction):
 
     Notes
     =====
-
     * sin(x) will evaluate automatically in the case x
       is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
 
@@ -136,7 +135,6 @@ class sin(TrigonometricFunction):
 
     References
     ==========
-
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
 
     """
@@ -333,7 +331,6 @@ class cos(TrigonometricFunction):
 
     Notes
     =====
-
     * cos(x) will evaluate automatically in the case x
       is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
 
@@ -358,7 +355,6 @@ class cos(TrigonometricFunction):
 
     References
     ==========
-
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
 
     """
@@ -551,7 +547,6 @@ class tan(TrigonometricFunction):
 
     Notes
     =====
-
     * tan(x) will evaluate automatically in the case x is a
       multiple of pi.
 
@@ -570,7 +565,6 @@ class tan(TrigonometricFunction):
 
     References
     ==========
-
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
 
     """
@@ -930,7 +924,6 @@ class asin(Function):
 
     Notes
     =====
-
     * asin(x) will evaluate automatically in the cases
       oo, -oo, 0, 1, -1
 
@@ -1049,7 +1042,6 @@ class acos(Function):
 
     Notes
     =====
-
     * acos(x) will evaluate automatically in the cases
       oo, -oo, 0, 1, -1
 
@@ -1159,7 +1151,6 @@ class atan(Function):
 
     Notes
     =====
-
     * atan(x) will evaluate automatically in the cases
       oo, -oo, 0, 1, -1
 

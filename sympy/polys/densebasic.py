@@ -18,7 +18,6 @@ def poly_LC(f, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import poly_LC
 
@@ -39,7 +38,6 @@ def poly_TC(f, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import poly_TC
 
@@ -64,7 +62,6 @@ def dmp_ground_LC(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_ground_LC
 
@@ -87,7 +84,6 @@ def dmp_ground_TC(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_ground_TC
 
@@ -110,7 +106,6 @@ def dmp_true_LT(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_true_LT
 
@@ -139,7 +134,6 @@ def dup_degree(f):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_degree
 
@@ -158,7 +152,6 @@ def dmp_degree(f, u):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_degree
 
@@ -193,7 +186,6 @@ def dmp_degree_in(f, j, u):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_degree_in
 
@@ -230,7 +222,6 @@ def dmp_degree_list(f, u):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_degree_list
 
@@ -251,7 +242,6 @@ def dup_strip(f):
 
     Examples
     ========
-
     >>> from sympy.polys.densebasic import dup_strip
 
     >>> dup_strip([0, 0, 1, 2, 3, 0])
@@ -278,7 +268,6 @@ def dmp_strip(f, u):
 
     Examples
     ========
-
     >>> from sympy.polys.densebasic import dmp_strip
 
     >>> dmp_strip([[], [0, 1, 2], [1]], 1)
@@ -339,7 +328,6 @@ def dmp_validate(f, K=None):
 
     Examples
     ========
-
     >>> from sympy.polys.densebasic import dmp_validate
 
     >>> dmp_validate([[], [0, 1, 2], [1]])
@@ -366,7 +354,6 @@ def dup_reverse(f):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_reverse
 
@@ -384,7 +371,6 @@ def dup_copy(f):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_copy
 
@@ -403,7 +389,6 @@ def dmp_copy(f, u):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_copy
 
@@ -428,7 +413,6 @@ def dup_to_tuple(f):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_copy
 
@@ -449,7 +433,6 @@ def dmp_to_tuple(f, u):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_to_tuple
 
@@ -471,7 +454,6 @@ def dup_normal(f, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_normal
 
@@ -488,7 +470,6 @@ def dmp_normal(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_normal
 
@@ -509,7 +490,6 @@ def dup_convert(f, K0, K1):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.polyclasses import DMP
     >>> from sympy.polys.densebasic import dup_convert
@@ -533,7 +513,6 @@ def dmp_convert(f, u, K0, K1):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.polyclasses import DMP
     >>> from sympy.polys.densebasic import dmp_convert
@@ -563,7 +542,6 @@ def dup_from_sympy(f, K):
 
     Examples
     ========
-
     >>> from sympy import S
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_from_sympy
@@ -581,7 +559,6 @@ def dmp_from_sympy(f, u, K):
 
     Examples
     ========
-
     >>> from sympy import S
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_from_sympy
@@ -604,7 +581,6 @@ def dup_nth(f, n, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_nth
 
@@ -655,7 +631,6 @@ def dmp_ground_nth(f, N, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_ground_nth
 
@@ -684,7 +659,6 @@ def dmp_zero_p(f, u):
 
     Examples
     ========
-
     >>> from sympy.polys.densebasic import dmp_zero_p
 
     >>> dmp_zero_p([[[[[]]]]], 4)
@@ -709,7 +683,6 @@ def dmp_zero(u):
 
     Examples
     ========
-
     >>> from sympy.polys.densebasic import dmp_zero
 
     >>> dmp_zero(4)
@@ -730,7 +703,6 @@ def dmp_one_p(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_one_p
 
@@ -747,7 +719,6 @@ def dmp_one(u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_one
 
@@ -764,7 +735,6 @@ def dmp_ground_p(f, c, u):
 
     Examples
     ========
-
     >>> from sympy.polys.densebasic import dmp_ground_p
 
     >>> dmp_ground_p([[[3]]], 3, 2)
@@ -794,7 +764,6 @@ def dmp_ground(c, u):
 
     Examples
     ========
-
     >>> from sympy.polys.densebasic import dmp_ground
 
     >>> dmp_ground(3, 5)
@@ -818,7 +787,6 @@ def dmp_zeros(n, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_zeros
 
@@ -843,7 +811,6 @@ def dmp_grounds(c, n, u):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_grounds
 
@@ -868,7 +835,6 @@ def dmp_negative_p(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_negative_p
 
@@ -887,7 +853,6 @@ def dmp_positive_p(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_positive_p
 
@@ -906,7 +871,6 @@ def dup_from_dict(f, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_from_dict
 
@@ -939,7 +903,6 @@ def dup_from_raw_dict(f, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_from_raw_dict
 
@@ -964,7 +927,6 @@ def dmp_from_dict(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_from_dict
 
@@ -1008,7 +970,6 @@ def dup_to_dict(f, K=None, zero=False):
 
     Examples
     ========
-
     >>> from sympy.polys.densebasic import dup_to_dict
 
     >>> dup_to_dict([1, 0, 5, 0, 7])
@@ -1035,7 +996,6 @@ def dup_to_raw_dict(f, K=None, zero=False):
 
     Examples
     ========
-
     >>> from sympy.polys.densebasic import dup_to_raw_dict
 
     >>> dup_to_raw_dict([1, 0, 5, 0, 7])
@@ -1060,7 +1020,6 @@ def dmp_to_dict(f, u, K=None, zero=False):
 
     Examples
     ========
-
     >>> from sympy.polys.densebasic import dmp_to_dict
 
     >>> dmp_to_dict([[1, 0], [], [2, 3]], 1)
@@ -1092,7 +1051,6 @@ def dmp_swap(f, i, j, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_swap
 
@@ -1127,7 +1085,6 @@ def dmp_permute(f, P, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_permute
 
@@ -1158,7 +1115,6 @@ def dmp_nest(f, l, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_nest
 
@@ -1181,7 +1137,6 @@ def dmp_raise(f, l, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_raise
 
@@ -1213,7 +1168,6 @@ def dup_deflate(f, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_deflate
 
@@ -1246,7 +1200,6 @@ def dmp_deflate(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_deflate
 
@@ -1290,7 +1243,6 @@ def dup_multi_deflate(polys, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_multi_deflate
 
@@ -1329,7 +1281,6 @@ def dmp_multi_deflate(polys, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_multi_deflate
 
@@ -1385,7 +1336,6 @@ def dup_inflate(f, m, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_inflate
 
@@ -1437,7 +1387,6 @@ def dmp_inflate(f, M, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_inflate
 
@@ -1464,7 +1413,6 @@ def dmp_exclude(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_exclude
 
@@ -1510,7 +1458,6 @@ def dmp_include(f, J, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_include
 
@@ -1544,7 +1491,6 @@ def dmp_inject(f, u, K, front=False):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_inject
 
@@ -1580,7 +1526,6 @@ def dmp_eject(f, u, K, front=False):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_eject
 
@@ -1617,7 +1562,6 @@ def dup_terms_gcd(f, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_terms_gcd
 
@@ -1647,7 +1591,6 @@ def dmp_terms_gcd(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_terms_gcd
 
@@ -1699,7 +1642,6 @@ def dmp_list_terms(f, u, K, order=None):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_list_terms
 
@@ -1728,7 +1670,6 @@ def dup_apply_pairs(f, g, h, args, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_apply_pairs
 
@@ -1760,7 +1701,6 @@ def dmp_apply_pairs(f, g, h, args, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_apply_pairs
 
@@ -1838,7 +1778,6 @@ def dup_random(n, a, b, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_random
 

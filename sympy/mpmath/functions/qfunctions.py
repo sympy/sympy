@@ -23,7 +23,6 @@ def qp(ctx, a, q=None, n=None, **kwargs):
 
     Examples
     ========
-
     If `n` is a positive integer, the function amounts to a finite product::
 
         >>> from mpmath import *
@@ -141,7 +140,6 @@ def qgamma(ctx, z, q, **kwargs):
     Examples
 
     ========
-
     Evaluation for real and complex arguments::
 
         >>> from mpmath import *
@@ -186,7 +184,6 @@ def qfac(ctx, z, q, **kwargs):
 
     Examples
     ========
-
         >>> from mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> qfac(0,0)
@@ -225,7 +222,6 @@ def qhyper(ctx, a_s, b_s, q, z, **kwargs):
 
     Examples
     ========
-
     Evaluation works for real and complex arguments::
 
         >>> from mpmath import *

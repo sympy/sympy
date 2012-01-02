@@ -87,7 +87,6 @@ class hyper(TupleParametersBase):
 
     Examples
     ========
-
     The parameters :math:`a_p` and :math:`b_q` can be passed as arbitrary
     iterables, for example:
 
@@ -153,7 +152,6 @@ class hyper(TupleParametersBase):
 
     References
     ==========
-
     - Luke, Y. L. (1969), The Special Functions and Their Approximations,
       Volume 1
     - http://en.wikipedia.org/wiki/Generalized_hypergeometric_function
@@ -316,7 +314,6 @@ class meijerg(TupleParametersBase):
 
     Examples
     ========
-
     You can pass the parameters either as four separate vectors:
 
     >>> from sympy.functions import meijerg
@@ -388,7 +385,6 @@ class meijerg(TupleParametersBase):
 
     References
     ==========
-
     - Luke, Y. L. (1969), The Special Functions and Their Approximations,
       Volume 1
     - http://en.wikipedia.org/wiki/Meijer_G-function

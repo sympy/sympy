@@ -27,7 +27,6 @@
 
     Examples
     ========
-
     To express the above matrix element example you would write:
 
     >>> from sympy.tensor import IndexedBase, Idx
@@ -427,7 +426,6 @@ class Idx(Expr):
 
     Examples
     ========
-
     >>> from sympy.tensor import IndexedBase, Idx
     >>> from sympy import symbols, oo
     >>> n, i, L, U = symbols('n i L U', integer=True)

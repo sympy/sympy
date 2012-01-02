@@ -183,7 +183,6 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
 
     Examples
     ========
-
     >>> from sympy.ntheory.multinomial import multinomial_coefficients_iterator
     >>> it = multinomial_coefficients_iterator(20,3)
     >>> it.next()

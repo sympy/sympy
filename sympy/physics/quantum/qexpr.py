@@ -40,7 +40,6 @@ def _qsympify_sequence(seq):
 
     Examples
     ========
-
     >>> from sympy.physics.quantum.qexpr import _qsympify_sequence
     >>> _qsympify_sequence((1,2,[3,4,[1,]]))
     (1, 2, (3, 4, (1,)))
@@ -98,7 +97,6 @@ class QExpr(Expr):
 
         Examples
         ========
-
         >>> from sympy.physics.quantum.qexpr import QExpr
         >>> q = QExpr(0)
         >>> q

@@ -134,7 +134,6 @@ class Point(object):
 
         Examples
         ========
-
         >>> from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
@@ -168,7 +167,6 @@ class Point(object):
 
         Examples
         ========
-
         >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
@@ -198,7 +196,6 @@ class Point(object):
 
         Examples
         ========
-
         >>> from sympy.physics.mechanics import ReferenceFrame, Point
         >>> N = ReferenceFrame('N')
         >>> P1 = Point('P1')
@@ -224,7 +221,6 @@ class Point(object):
 
         Examples
         ========
-
         >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
@@ -253,7 +249,6 @@ class Point(object):
 
         Examples
         ========
-
         >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
@@ -279,7 +274,6 @@ class Point(object):
 
         Examples
         ========
-
         >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
@@ -307,7 +301,6 @@ class Point(object):
 
         Examples
         ========
-
         >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
@@ -342,7 +335,6 @@ class Point(object):
 
         Examples
         ========
-
         >>> from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
@@ -391,7 +383,6 @@ class Point(object):
 
         Examples
         ========
-
         >>> from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
@@ -424,7 +415,6 @@ class Point(object):
 
         Examples
         ========
-
         >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')

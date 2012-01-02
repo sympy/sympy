@@ -38,7 +38,6 @@ def superposition_basis(nqubits):
 
     Examples
     ========
-
     Create an equal superposition of 2 qubits::
 
         >>> from sympy.physics.quantum.grover import superposition_basis
@@ -66,7 +65,6 @@ class OracleGate(Gate):
 
     Examples
     ========
-
     Apply an Oracle gate that flips the sign of |2> on different qubits::
 
         >>> from sympy.physics.quantum.qubit import IntQubit
@@ -227,7 +225,6 @@ def grover_iteration(qstate, oracle):
 
     Examples
     ========
-
     Perform one iteration of grover's algorithm to see a phase change::
 
         >>> from sympy.physics.quantum.qapply import qapply
@@ -262,7 +259,6 @@ def apply_grover(oracle, nqubits, iterations=None):
 
     Examples
     ========
-
     Apply grover's algorithm to an even superposition of 2 qubits::
 
         >>> from sympy.physics.quantum.qapply import qapply

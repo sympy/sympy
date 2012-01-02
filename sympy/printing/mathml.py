@@ -369,7 +369,6 @@ def print_mathml(expr, **settings):
 
     Examples
     ========
-
     >>> ##
     >>> from sympy.printing.mathml import print_mathml
     >>> from sympy.abc import x

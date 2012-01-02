@@ -34,7 +34,6 @@ class factorial(CombinatorialFunction):
 
        Examples
        ========
-
        >>> from sympy import Symbol, factorial
        >>> n = Symbol('n', integer=True)
 
@@ -169,7 +168,6 @@ class factorial2(CombinatorialFunction):
 
     Examples
     ========
-
     >>> from sympy import factorial2, var
     >>> var('n')
     n
@@ -216,7 +214,6 @@ class RisingFactorial(CombinatorialFunction):
 
        Examples
        ========
-
        >>> from sympy import rf
        >>> from sympy.abc import x
 
@@ -365,7 +362,6 @@ class binomial(CombinatorialFunction):
 
        Examples
        ========
-
        >>> from sympy import Symbol, Rational, binomial
        >>> n = Symbol('n', integer=True)
 

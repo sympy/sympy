@@ -17,7 +17,6 @@ class Prufer(Basic):
 
     References
     ==========
-
     .. [1] http://mathworld.wolfram.com/LabeledTree.html
 
     """

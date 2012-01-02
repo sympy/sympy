@@ -922,7 +922,6 @@ def besseljzero(ctx, v, m, derivative=0):
 
     Examples
     ========
-
     Initial zeros of the Bessel functions `J_0(z), J_1(z), J_2(z)`::
 
         >>> from mpmath import *
@@ -1030,7 +1029,6 @@ def besselyzero(ctx, v, m, derivative=0):
 
     Examples
     ========
-
     Initial zeros of the Bessel functions `Y_0(z), Y_1(z), Y_2(z)`::
 
         >>> from mpmath import *

@@ -30,7 +30,6 @@ class InnerProduct(Expr):
 
     Examples
     ========
-
     Create an InnerProduct and check its properties:
 
         >>> from sympy.physics.quantum import Bra, Ket, InnerProduct
@@ -67,7 +66,6 @@ class InnerProduct(Expr):
 
     References
     ==========
-
     http://en.wikipedia.org/wiki/Inner_product
     """
 

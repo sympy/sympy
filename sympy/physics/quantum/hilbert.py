@@ -39,7 +39,6 @@ class HilbertSpace(Basic):
 
     Examples
     ========
-
     >>> from sympy.physics.quantum.hilbert import HilbertSpace
     >>> hs = HilbertSpace()
     >>> hs
@@ -47,7 +46,6 @@ class HilbertSpace(Basic):
 
     References
     ==========
-
     [1] http://en.wikipedia.org/wiki/Hilbert_space
     """
 
@@ -116,7 +114,6 @@ class ComplexSpace(HilbertSpace):
 
     Examples
     ========
-
     >>> from sympy import symbols
     >>> from sympy.physics.quantum.hilbert import ComplexSpace
     >>> c1 = ComplexSpace(2)
@@ -187,7 +184,6 @@ class L2(HilbertSpace):
 
     Examples
     ========
-
     >>> from sympy import Interval, oo
     >>> from sympy.physics.quantum.hilbert import L2
     >>> hs = L2(Interval(0,oo))
@@ -240,7 +236,6 @@ class FockSpace(HilbertSpace):
 
     Examples
     ========
-
     >>> from sympy.physics.quantum.hilbert import FockSpace
     >>> hs = FockSpace()
     >>> hs
@@ -250,7 +245,6 @@ class FockSpace(HilbertSpace):
 
     References
     ==========
-
     [1] http://en.wikipedia.org/wiki/Fock_space
     """
 
@@ -290,7 +284,6 @@ class TensorProductHilbertSpace(HilbertSpace):
 
     Examples
     ========
-
     >>> from sympy.physics.quantum.hilbert import ComplexSpace, FockSpace
     >>> from sympy import symbols
 
@@ -315,7 +308,6 @@ class TensorProductHilbertSpace(HilbertSpace):
 
     References
     ==========
-
     [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
     """
 
@@ -442,7 +434,6 @@ class DirectSumHilbertSpace(HilbertSpace):
 
     Examples
     ========
-
     >>> from sympy.physics.quantum.hilbert import ComplexSpace, FockSpace
     >>> from sympy import symbols
 
@@ -458,7 +449,6 @@ class DirectSumHilbertSpace(HilbertSpace):
 
     References
     ==========
-
     [1] http://en.wikipedia.org/wiki/Hilbert_space#Direct_sums
     """
     def __new__(cls, *args):
@@ -551,7 +541,6 @@ class TensorPowerHilbertSpace(HilbertSpace):
 
     Examples
     ========
-
     >>> from sympy.physics.quantum.hilbert import ComplexSpace, FockSpace
     >>> from sympy import symbols
 
@@ -572,7 +561,6 @@ class TensorPowerHilbertSpace(HilbertSpace):
 
     References
     ==========
-
     [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
     """
 

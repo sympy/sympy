@@ -904,7 +904,6 @@ class MatrixMethods(object):
 
         Examples
         ========
-
             >>> from mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> x = matrix([-10, 2, 100])
@@ -961,7 +960,6 @@ class MatrixMethods(object):
 
         Examples
         ========
-
             >>> from mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> A = matrix([[1, -1000], [100, 50]])

@@ -57,7 +57,6 @@ class fibonacci(Function):
 
     References
     ==========
-
     * http://en.wikipedia.org/wiki/Fibonacci_number
     * http://mathworld.wolfram.com/FibonacciNumber.html
 
@@ -109,7 +108,6 @@ class lucas(Function):
 
     References
     ==========
-
     * http://en.wikipedia.org/wiki/Lucas_number
 
     See Also
@@ -193,7 +191,6 @@ class bernoulli(Function):
 
     References
     ==========
-
     * http://en.wikipedia.org/wiki/Bernoulli_number
     * http://en.wikipedia.org/wiki/Bernoulli_polynomial
 
@@ -306,7 +303,6 @@ class bell(Function):
 
     Notes
     =====
-
     Not to be confused with Bernoulli numbers and Bernoulli polynomials,
     which use the same notation.
 
@@ -323,7 +319,6 @@ class bell(Function):
 
     References
     ==========
-
     * http://en.wikipedia.org/wiki/Bell_number
     * http://mathworld.wolfram.com/BellNumber.html
     * http://mathworld.wolfram.com/BellPolynomial.html
@@ -402,7 +397,6 @@ class harmonic(Function):
 
     References
     ==========
-
     * http://en.wikipedia.org/wiki/Harmonic_number
 
     """
@@ -464,7 +458,6 @@ class euler(Function):
 
     References
     ==========
-
     * http://en.wikipedia.org/wiki/Euler_numbers
     * http://mathworld.wolfram.com/EulerNumber.html
     * http://en.wikipedia.org/wiki/Alternating_permutation
@@ -587,7 +580,6 @@ class catalan(Function):
 
     References
     ==========
-
     * http://en.wikipedia.org/wiki/Catalan_number
     * http://mathworld.wolfram.com/CatalanNumber.html
     * http://geometer.org/mathcircles/catalan.pdf

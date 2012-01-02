@@ -26,7 +26,6 @@ class Plot(object):
     """
     Plot Examples
     =============
-
     See examples/plotting.py for many more examples.
 
 
@@ -46,7 +45,6 @@ class Plot(object):
 
     Variable Intervals
     ==================
-
     The basic format is [var, min, max, steps], but the
     syntax is flexible and arguments left out are taken
     from the defaults for the current coordinate mode:
@@ -63,7 +61,6 @@ class Plot(object):
 
     Coordinate Modes
     ================
-
     Plot supports several curvilinear coordinate modes, and
     they independent for each plotted function. You can specify
     a coordinate mode explicitly with the 'mode' named argument,
@@ -88,7 +85,6 @@ class Plot(object):
 
     Calculator-like Interface
     =========================
-
     >>> p = Plot(visible=False)
     >>> f = x**2
     >>> p[1] = f
@@ -114,7 +110,6 @@ class Plot(object):
 
     Plot Window Keyboard Controls
     =============================
-
     Screen Rotation:
         X,Y axis      Arrow Keys, A,S,D,W, Numpad 4,6,8,2
         Z axis        Q,E, Numpad 7,9
@@ -147,7 +142,6 @@ class Plot(object):
         """
         Positional Arguments
         ====================
-
         Any given positional arguments are used to
         initialize a plot function at index 1. In
         other words...
@@ -170,7 +164,6 @@ class Plot(object):
 
         Named Arguments
         ===============
-
         axes
             An option string of the form
             "key1=value1; key2 = value2" which

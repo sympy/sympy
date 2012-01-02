@@ -548,7 +548,6 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
 
     References
     ==========
-
     - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
       A Computational Perspective", Springer, 2nd edition, 236-238
     - http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/
@@ -854,7 +853,6 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     Notes
     =====
-
     Algorithm:
 
     The function switches between multiple algorithms. Trial division
@@ -887,7 +885,6 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     See Also
     ========
-
     smoothness, smoothness_p, divisors
 
     """
@@ -1260,7 +1257,6 @@ def divisor_count(n, modulus=1):
 
     References
     ==========
-
     - http://www.mayer.dial.pipex.com/maths/formulae.htm
 
     >>> from sympy import divisor_count

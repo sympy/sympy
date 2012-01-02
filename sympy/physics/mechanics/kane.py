@@ -36,7 +36,6 @@ class Kane(object):
 
     Examples
     ========
-
     This is a simple example for a one defree of freedom translational
     spring-mass-damper.
 

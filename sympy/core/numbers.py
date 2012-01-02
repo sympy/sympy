@@ -565,7 +565,6 @@ class Rational(Number):
 
     Examples
     ========
-
     >>> from sympy import Rational
     >>> from sympy.abc import x, y
     >>> Rational(3)

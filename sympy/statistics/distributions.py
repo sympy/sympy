@@ -13,7 +13,6 @@ class Sample(tuple):
 
     Examples
     ========
-
         >>> from sympy.statistics.distributions import Sample
         >>> Sample([0, 1, 2, 3])
         Sample([0, 1, 2, 3])
@@ -58,7 +57,6 @@ class ContinuousProbability(object):
 
         Examples
         ========
-
             >>> from sympy.statistics import Normal
             >>> from sympy.core import oo
             >>> Normal(0, 1).probability(-1, 1)
@@ -76,7 +74,6 @@ class ContinuousProbability(object):
 
         Examples
         ========
-
             >>> from sympy.statistics import Uniform
             >>> x = Uniform(1, 5).random()
             >>> x < 5 and x > 1
@@ -105,7 +102,6 @@ class Normal(ContinuousProbability):
 
     Examples
     ========
-
         >>> from sympy.statistics import Normal
         >>> from sympy import oo
         >>> N = Normal(1, 2)
@@ -141,7 +137,6 @@ class Normal(ContinuousProbability):
 
         Examples
         ========
-
             >>> from sympy.statistics import Normal
             >>> Normal(1, 2).pdf(0)
             sqrt(2)*exp(-1/8)/(4*sqrt(pi))
@@ -159,7 +154,6 @@ class Normal(ContinuousProbability):
 
         Examples
         ========
-
             >>> from sympy.statistics import Normal
             >>> Normal(1, 2).cdf(0)
             -erf(sqrt(2)/4)/2 + 1/2
@@ -223,7 +217,6 @@ class Normal(ContinuousProbability):
 
         Examples
         ========
-
             >>> from sympy.statistics import Normal
             >>> Normal.fit([1,2,3,4,5])
             Normal(3, sqrt(2))
@@ -259,7 +252,6 @@ class Uniform(ContinuousProbability):
 
         Examples
         ========
-
             >>> from sympy.statistics import Uniform
             >>> Uniform(1, 5).pdf(1)
             1/4
@@ -281,7 +273,6 @@ class Uniform(ContinuousProbability):
 
         Examples
         ========
-
             >>> from sympy.statistics import Uniform
             >>> Uniform(1, 5).cdf(2)
             1/4
@@ -328,7 +319,6 @@ class Uniform(ContinuousProbability):
 
         Examples
         ========
-
             >>> from sympy.statistics import Uniform
             >>> Uniform.fit([1, 2, 3, 4, 5])
             Uniform(-sqrt(6) + 3, sqrt(6) + 3)
@@ -352,7 +342,6 @@ class PDF(ContinuousProbability):
 
     Examples
     ========
-
         >>> from sympy import Symbol, exp, oo
         >>> from sympy.statistics.distributions import PDF
         >>> from sympy.abc import x
@@ -391,7 +380,6 @@ class PDF(ContinuousProbability):
 
         Examples
         ========
-
             >>> from sympy import Symbol, exp, oo
             >>> from sympy.statistics.distributions import PDF
             >>> from sympy.abc import x
@@ -424,7 +412,6 @@ class PDF(ContinuousProbability):
 
         Examples
         ========
-
             >>> from sympy.statistics.distributions import PDF
             >>> from sympy import exp, oo
             >>> from sympy.abc import x, y
@@ -485,7 +472,6 @@ class PDF(ContinuousProbability):
 
         Examples
         ========
-
             >>> from sympy.statistics.distributions import PDF
             >>> from sympy import oo
             >>> from sympy.abc import x, y

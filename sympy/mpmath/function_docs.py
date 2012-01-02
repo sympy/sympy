@@ -6411,7 +6411,6 @@ precision::
 References
 
 ==========
-
 1. Whittaker & Watson, *A Course of Modern Analysis*,
    Cambridge University Press, 4th edition (1927), p.264
 2. http://en.wikipedia.org/wiki/Barnes_G-function

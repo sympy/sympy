@@ -27,7 +27,6 @@ class SymPyRationalField(RationalField):
 
         Examples
         =======
-
         >>> from sympy import Rational, Real
         >>> from sympy.polys.domains import QQ_sympy
         >>> QQ_sympy().of_type(Rational(3, 2))

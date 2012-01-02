@@ -21,7 +21,6 @@ def dup_add_term(f, c, i, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_add_term
 
@@ -52,7 +51,6 @@ def dmp_add_term(f, c, i, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_add_term
 
@@ -89,7 +87,6 @@ def dup_sub_term(f, c, i, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_sub_term
 
@@ -120,7 +117,6 @@ def dmp_sub_term(f, c, i, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_sub_term
 
@@ -157,7 +153,6 @@ def dup_mul_term(f, c, i, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_mul_term
 
@@ -179,7 +174,6 @@ def dmp_mul_term(f, c, i, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_mul_term
 
@@ -208,7 +202,6 @@ def dup_add_ground(f, c, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_add_ground
 
@@ -226,7 +219,6 @@ def dmp_add_ground(f, c, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_add_ground
 
@@ -244,7 +236,6 @@ def dup_sub_ground(f, c, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_sub_ground
 
@@ -262,7 +253,6 @@ def dmp_sub_ground(f, c, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_sub_ground
 
@@ -280,7 +270,6 @@ def dup_mul_ground(f, c, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_mul_ground
 
@@ -302,7 +291,6 @@ def dmp_mul_ground(f, c, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_mul_ground
 
@@ -325,7 +313,6 @@ def dup_quo_ground(f, c, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densearith import dup_quo_ground
 
@@ -356,7 +343,6 @@ def dmp_quo_ground(f, c, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densearith import dmp_quo_ground
 
@@ -383,7 +369,6 @@ def dup_exquo_ground(f, c, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densearith import dup_exquo_ground
 
@@ -407,7 +392,6 @@ def dmp_exquo_ground(f, c, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densearith import dmp_exquo_ground
 
@@ -431,7 +415,6 @@ def dup_lshift(f, n, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_lshift
 
@@ -453,7 +436,6 @@ def dup_rshift(f, n, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_rshift
 
@@ -475,7 +457,6 @@ def dup_abs(f, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_abs
 
@@ -494,7 +475,6 @@ def dmp_abs(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_abs
 
@@ -517,7 +497,6 @@ def dup_neg(f, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_neg
 
@@ -536,7 +515,6 @@ def dmp_neg(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_neg
 
@@ -560,7 +538,6 @@ def dup_add(f, g, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_add
 
@@ -598,7 +575,6 @@ def dmp_add(f, g, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_add
 
@@ -643,7 +619,6 @@ def dup_sub(f, g, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_sub
 
@@ -681,7 +656,6 @@ def dmp_sub(f, g, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_sub
 
@@ -725,7 +699,6 @@ def dup_add_mul(f, g, h, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_add_mul
 
@@ -746,7 +719,6 @@ def dmp_add_mul(f, g, h, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_add_mul
 
@@ -766,7 +738,6 @@ def dup_sub_mul(f, g, h, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_sub_mul
 
@@ -787,7 +758,6 @@ def dmp_sub_mul(f, g, h, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_sub_mul
 
@@ -808,7 +778,6 @@ def dup_mul(f, g, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_mul
 
@@ -847,7 +816,6 @@ def dmp_mul(f, g, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_mul
 
@@ -893,7 +861,6 @@ def dup_sqr(f, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_sqr
 
@@ -935,7 +902,6 @@ def dmp_sqr(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_sqr
 
@@ -985,7 +951,6 @@ def dup_pow(f, n, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_pow
 
@@ -1022,7 +987,6 @@ def dmp_pow(f, n, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_pow
 
@@ -1064,7 +1028,6 @@ def dup_pdiv(f, g, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_pdiv
 
@@ -1118,7 +1081,6 @@ def dup_prem(f, g, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_prem
 
@@ -1163,7 +1125,6 @@ def dup_pquo(f, g, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_pquo
 
@@ -1188,7 +1149,6 @@ def dup_pexquo(f, g, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_pexquo
 
@@ -1221,7 +1181,6 @@ def dmp_pdiv(f, g, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_pdiv
 
@@ -1279,7 +1238,6 @@ def dmp_prem(f, g, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_prem
 
@@ -1330,7 +1288,6 @@ def dmp_pquo(f, g, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_pquo
 
@@ -1353,7 +1310,6 @@ def dmp_pexquo(f, g, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_pexquo
 
@@ -1384,7 +1340,6 @@ def dup_rr_div(f, g, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_rr_div
 
@@ -1435,7 +1390,6 @@ def dmp_rr_div(f, g, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_rr_div
 
@@ -1491,7 +1445,6 @@ def dup_ff_div(f, g, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densearith import dup_ff_div
 
@@ -1542,7 +1495,6 @@ def dmp_ff_div(f, g, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densearith import dmp_ff_div
 
@@ -1597,7 +1549,6 @@ def dup_div(f, g, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densearith import dup_div
 
@@ -1625,7 +1576,6 @@ def dup_rem(f, g, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densearith import dup_rem
 
@@ -1650,7 +1600,6 @@ def dup_quo(f, g, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densearith import dup_quo
 
@@ -1675,7 +1624,6 @@ def dup_exquo(f, g, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_exquo
 
@@ -1708,7 +1656,6 @@ def dmp_div(f, g, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densearith import dmp_div
 
@@ -1737,7 +1684,6 @@ def dmp_rem(f, g, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densearith import dmp_rem
 
@@ -1763,7 +1709,6 @@ def dmp_quo(f, g, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densearith import dmp_quo
 
@@ -1789,7 +1734,6 @@ def dmp_exquo(f, g, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_exquo
 
@@ -1819,7 +1763,6 @@ def dup_max_norm(f, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_max_norm
 
@@ -1841,7 +1784,6 @@ def dmp_max_norm(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_max_norm
 
@@ -1864,7 +1806,6 @@ def dup_l1_norm(f, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_l1_norm
 
@@ -1886,7 +1827,6 @@ def dmp_l1_norm(f, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_l1_norm
 
@@ -1909,7 +1849,6 @@ def dup_expand(polys, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_expand
 
@@ -1938,7 +1877,6 @@ def dmp_expand(polys, u, K):
 
     Examples
     ========
-
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_expand
 
