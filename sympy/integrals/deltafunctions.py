@@ -18,7 +18,7 @@ def change_mul(node, x):
          o new node is either a simplified DiracDelta expressions or None (if it could not be simplified).
 
        Examples
-       --------
+       ========
 
        >>> from sympy import DiracDelta, cos
        >>> from sympy.integrals.deltafunctions import change_mul
@@ -30,6 +30,10 @@ def change_mul(node, x):
        >>> change_mul(x*y*DiracDelta(cos(x))*cos(x),x)
        (None, None)
 
+       See Also
+       ========
+       sympy.functions.special.delta_functions.DiracDelta
+       deltaintegrate
     """
     if not node.is_Mul:
         return node
@@ -114,6 +118,9 @@ def deltaintegrate(f, x):
         >>> deltaintegrate(y**2*DiracDelta(x - z)*DiracDelta(y - z), y)
         z**2*DiracDelta(x - z)*Heaviside(y - z)
 
+    See Also
+    ========
+    sympy.functions.special.delta_functions.DiracDelta, Integral
     """
     if not f.has(DiracDelta):
         return None

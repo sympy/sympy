@@ -106,6 +106,10 @@ class Integral(Expr):
         >>> from sympy.abc import x
         >>> Integral(x**2, (x,)).function
         x**2
+
+        See Also
+        ========
+        limits, variables, free_symbols
         """
         return self._args[0]
 
@@ -117,6 +121,10 @@ class Integral(Expr):
         >>> from sympy.abc import x, i
         >>> Integral(x**i, (i, 1, 3)).limits
         ((i, 1, 3),)
+
+        See Also
+        ========
+        function, variables, free_symbols
         """
         return self._args[1:]
 
@@ -128,6 +136,12 @@ class Integral(Expr):
         >>> from sympy.abc import x, i
         >>> Integral(x**i, (i, 1, 3)).variables
         [i]
+
+        See Also
+        ========
+        function, limits, free_symbols
+        as_dummy : Replace integration variables with dummy ones
+        transform : Perform mapping on the integration variable
         """
         return [l[0] for l in self.limits]
 
@@ -143,7 +157,11 @@ class Integral(Expr):
         >>> from sympy.abc import x, y
         >>> Integral(x, (x, y, 1)).free_symbols
         set([y])
-        """
+
+        See Also
+        ========
+        function, limits, variables
+       """
         function, limits = self.function, self.limits
         if function.is_zero:
             return set()
@@ -185,6 +203,9 @@ class Integral(Expr):
             >>> Integral(1, (x, 1, 2)).is_zero
             False
 
+        See Also
+        ========
+        is_number
         """
         if (self.function.is_zero or
             any(len(xab) == 3 and xab[1] == xab[2] for xab in self.limits)):
@@ -228,6 +249,10 @@ class Integral(Expr):
         True
         >>> Integral(1, x, (x, 1, 2)).is_number
         True
+
+        See Also
+        ========
+        is_zero
         """
 
         integrand, limits = self.function, self.limits
@@ -267,6 +292,10 @@ class Integral(Expr):
         output of this function will show which symbols cannot be
         changed by subs(), those with an underscore prefix.
 
+        See Also
+        ========
+        variables : Lists the integration variables
+        transform : Perform mapping on the integration variable
         """
         reps = {}
         f = self.function
@@ -310,6 +339,10 @@ class Integral(Expr):
             >>> Integral(a**2 + 1, (a, -1, 2)).transform(a, 1 + 2*a)
             Integral(2*(2*a + 1)**2 + 2, (a, -1, 1/2))
 
+        See Also
+        ========
+        variables : Lists the integration variables
+        as_dummy : Replace integration variables with dummy ones
         """
         if x not in self.variables:
             return self
@@ -360,6 +393,13 @@ class Integral(Expr):
         >>> from sympy.abc import x, i
         >>> Integral(x**i, (i, 1, 3)).doit()
         x**3/log(x) - x/log(x)
+
+        See Also
+        ========
+        sympy.integrals.trigonometry.trigintegrate
+        sympy.integrals.risch.heurisch
+        sympy.integrals.rationaltools.ratint
+        as_sum : Approximate the integral using a sum
         """
         if not hints.get('integrals', True):
             return self
@@ -895,6 +935,9 @@ class Integral(Expr):
             >>> e.n()
             124.616199194723
 
+        See Also
+        ========
+        doit : Perform the integration using any hints
         """
 
         limits = self.limits
@@ -1026,6 +1069,9 @@ def integrate(*args, **kwargs):
        >>> integrate(x**a*exp(-x), (x, 0, oo), conds='separate')
        (gamma(a + 1), -re(a) < 1)
 
+       See Also
+       ========
+       Integral, doit
     """
     meijerg = kwargs.pop('meijerg', None)
     conds = kwargs.pop('conds', 'piecewise')
@@ -1044,13 +1090,16 @@ def line_integrate(field, curve, vars):
        Compute the line integral.
 
        Examples
-       --------
+       ========
        >>> from sympy import Curve, line_integrate, E, ln
        >>> from sympy.abc import x, y, t
        >>> C = Curve([E**t + 1, E**t - 1], (t, 0, ln(2)))
        >>> line_integrate(x + y, C, [x, y])
         3*sqrt(2)
 
+       See Also
+       ========
+       integrate, Integral
     """
     F = sympify(field)
     if not F:
