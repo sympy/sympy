@@ -1219,10 +1219,3 @@ def test_equals():
 @XFAIL
 def test_equals_factorial():
     assert factorial(x + 1).diff(x).equals(((x + 1)*factorial(x)).diff(x))
-
-@XFAIL
-def test_poly_matching_consistency():
-    # Test for this issue:
-    # http://code.google.com/p/sympy/issues/detail?id=2415
-    assert I * Poly(x, x) == Poly(I*x, x)
-    assert Poly(x, x) * I == Poly(I*x, x)

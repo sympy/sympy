@@ -1,7 +1,5 @@
 from sympy.mpmath import *
 from sympy.mpmath.libmp import *
-from sympy.utilities.pytest import XFAIL
-from sympy import oo, S
 
 def test_trig_misc_hard():
     mp.prec = 53
@@ -142,10 +140,3 @@ if __name__ == '__main__':
         if f.startswith("test_"):
             print(f)
             globals()[f]()
-
-@XFAIL
-def test_sin_cos_with_infinity():
-    # Test for issue 2097
-    # http://code.google.com/p/sympy/issues/detail?id=2097
-    assert sin(oo) == S.NaN
-    assert cos(oo) == S.NaN

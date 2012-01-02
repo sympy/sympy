@@ -737,3 +737,10 @@ def test_real_imag():
         assert cos(a).as_real_imag(deep=deep) == (cos(a), 0)
         assert tan(a).as_real_imag(deep=deep) == (tan(a), 0)
         assert cot(a).as_real_imag(deep=deep) == (cot(a), 0)
+
+@XFAIL
+def test_sin_cos_with_infinity():
+    # Test for issue 2097
+    # http://code.google.com/p/sympy/issues/detail?id=2097
+    assert sin(oo) == S.NaN
+    assert cos(oo) == S.NaN
