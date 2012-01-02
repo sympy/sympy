@@ -12,13 +12,13 @@ sympy.stats.crv
 from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
         And, Or, Tuple)
 from sympy.core.sets import FiniteSet
-from rv import (Domain,  ProductDomain, ConditionalDomain, PSpace,
+from rv import (RandomDomain, ProductDomain, ConditionalDomain, PSpace,
         ProductPSpace, random_symbols, sumsets)
 import itertools
 from sympy.core.containers import Dict
 import random
 
-class FiniteDomain(Domain):
+class FiniteDomain(RandomDomain):
     """
     A domain with discrete finite support.
     Represented using a FiniteSet
@@ -28,7 +28,7 @@ class FiniteDomain(Domain):
     def __new__(cls, elements):
         elements = FiniteSet(*elements)
         symbols = FiniteSet(sym for sym, val in elements)
-        return Domain.__new__(cls, symbols, elements)
+        return RandomDomain.__new__(cls, symbols, elements)
 
     @property
     def elements(self):
@@ -49,7 +49,7 @@ class FiniteDomain(Domain):
 
 class SingleFiniteDomain(FiniteDomain):
     def __new__(cls, symbol, set):
-        return Domain.__new__(cls, (symbol, ), FiniteSet(*set))
+        return RandomDomain.__new__(cls, (symbol, ), FiniteSet(*set))
 
     @property
     def symbol(self):

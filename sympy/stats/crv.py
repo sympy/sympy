@@ -8,8 +8,8 @@ sympy.stats.rv
 sympy.stats.frv
 """
 
-from rv import (Domain, SingleDomain, ConditionalDomain, ProductDomain, PSpace,
-        random_symbols, ProductPSpace)
+from rv import (RandomDomain, SingleDomain, ConditionalDomain, ProductDomain,
+        PSpace, random_symbols, ProductPSpace)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (S, Interval, Dummy, FiniteSet, Mul, Integral, And, Or,
         Piecewise, solve, cacheit)
@@ -29,7 +29,7 @@ def integrate(*args, **kwargs):
     else:
         return Integral(*args)
 
-class ContinuousDomain(Domain):
+class ContinuousDomain(RandomDomain):
     """
     A domain with continuous support.
     Represented using symbols and Intervals
@@ -43,7 +43,7 @@ class SingleContinuousDomain(ContinuousDomain, SingleDomain):
     def __new__(cls, symbol, set):
         assert symbol.is_Symbol
         symbols = FiniteSet(symbol)
-        return Domain.__new__(cls, symbols, set)
+        return RandomDomain.__new__(cls, symbols, set)
 
     def integrate(self, expr, variables=None, **kwargs):
         if variables is None:

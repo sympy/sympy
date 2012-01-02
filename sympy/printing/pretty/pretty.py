@@ -1383,7 +1383,7 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.left('atan2'))
         return pform
 
-    def _print_Domain(self, d):
+    def _print_RandomDomain(self, d):
         try:
             pform = self._print('Domain: ')
             pform = prettyForm(*pform.right(self._print(d.as_boolean())))

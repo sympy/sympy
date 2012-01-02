@@ -994,7 +994,7 @@ class LatexPrinter(Printer):
     def _print_ProductSet(self, p):
         return r" \cross ".join(self._print(set) for set in p.sets)
 
-    def _print_Domain(self, d):
+    def _print_RandomDomain(self, d):
         try:
             return 'Domain: '+self._print(d.as_boolean())
         except:

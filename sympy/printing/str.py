@@ -99,7 +99,7 @@ class StrPrinter(Printer):
     def _print_Dict(self, expr):
         return self._print_dict(expr)
 
-    def _print_Domain(self, d):
+    def _print_RandomDomain(self, d):
         try:
             return 'Domain: '+self._print(d.as_boolean())
         except:

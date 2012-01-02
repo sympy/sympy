@@ -15,7 +15,7 @@ sympy.stats.rv_interface
 from sympy import Basic, S, Expr, Symbol, Tuple, And, Add
 from sympy.core.sets import FiniteSet, ProductSet
 
-class Domain(Basic):
+class RandomDomain(Basic):
     """
     Represents a set of variables and the values which they can take
 
@@ -47,7 +47,7 @@ class Domain(Basic):
     def integrate(self, expr):
         raise NotImplementedError()
 
-class SingleDomain(Domain):
+class SingleDomain(RandomDomain):
     """
     A single variable and its domain
 
@@ -59,7 +59,7 @@ class SingleDomain(Domain):
     def __new__(cls, symbol, set):
         assert symbol.is_Symbol
         symbols = FiniteSet(symbol)
-        return Domain.__new__(cls, symbols, set)
+        return RandomDomain.__new__(cls, symbols, set)
 
     @property
     def symbol(self):
@@ -71,9 +71,9 @@ class SingleDomain(Domain):
         sym, val = tuple(other)[0]
         return self.symbol == sym and val in self.set
 
-class ConditionalDomain(Domain):
+class ConditionalDomain(RandomDomain):
     """
-    A Domain with an attached condition
+    A RandomDomain with an attached condition
 
     Implemented by:
         ConditionalContinuousDomain
@@ -82,7 +82,8 @@ class ConditionalDomain(Domain):
     def __new__(cls, fulldomain, condition):
         condition = condition.subs(dict((rs,rs.symbol)
             for rs in random_symbols(condition)))
-        return Domain.__new__(cls, fulldomain.symbols, fulldomain, condition)
+        return RandomDomain.__new__(
+                cls, fulldomain.symbols, fulldomain, condition)
 
     @property
     def fulldomain(self):
@@ -256,7 +257,7 @@ class ProductPSpace(PSpace):
         return dict([(k,v) for space in self.spaces
             for k,v in space.sample().items()])
 
-class ProductDomain(Domain):
+class ProductDomain(RandomDomain):
     """
     A domain resulting from the merger of two independent domains
 
@@ -293,7 +294,7 @@ class ProductDomain(Domain):
             from sympy.stats.crv import ProductContinuousDomain
             cls = ProductContinuousDomain
 
-        obj = Domain.__new__(cls, symbols, domains2)
+        obj = RandomDomain.__new__(cls, symbols, domains2)
         obj.sym_domain_dict = sym_domain_dict
         return obj
 
