@@ -1506,8 +1506,11 @@ class CoupledSpinState(SpinState):
 
     def _print_label(self, printer, *args):
         label = [self.j, self.m]
-        for i, ji in enumerate(self.jn, start=1):
-            label.append('j%d=%s' % (i, ji) )
+        # After 2.5 is dropped:
+        #for i, ji in enumerate(self.jn, start=1):
+        #    label.append('j%d=%s' % (i, ji) )
+        for i, ji in enumerate(self.jn):
+            label.append('j%d=%s' % (i+1, ji) )
         for jn, (n1,n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             label.append('j(%s)=%s' % (','.join(str(i) for i in sorted(n1+n2)), printer._print(jn)) )
         return self._print_sequence(
@@ -1516,8 +1519,11 @@ class CoupledSpinState(SpinState):
 
     def _print_label_pretty(self, printer, *args):
         label = [self.j, self.m]
-        for i, ji in enumerate(self.jn, start=1):
-            n = '%d' % (i)
+        # After 2.5 is dropped:
+        #for i, ji in enumerate(self.jn, start=1):
+        #    n = '%d' % (i)
+        for i, ji in enumerate(self.jn):
+            n = '%d' % (i+1)
             j = self._print_subscript_pretty(
                 stringPict('j'), stringPict(n)
             )
@@ -1538,8 +1544,11 @@ class CoupledSpinState(SpinState):
 
     def _print_label_latex(self, printer, *args):
         label = [self.j, self.m]
-        for i, ji in enumerate(self.jn, start=1):
-            label.append('j_{%d}=%s' % (i, printer._print(ji)) )
+        # After 2.5 dropped
+        #for i, ji in enumerate(self.jn, start=1):
+        #    label.append('j_{%d}=%s' % (i, printer._print(ji)) )
+        for i, ji in enumerate(self.jn):
+            label.append('j_{%d}=%s' % (i+1, printer._print(ji)) )
         for jn, (n1,n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             n = ','.join(str(i) for i in sorted(n1+n2))
             label.append('j_{%s}=%s' % (n, printer._print(jn)) )
@@ -1563,7 +1572,7 @@ class CoupledSpinState(SpinState):
     def _eval_hilbert_space(cls, label):
         j = Add(*label[2])
         if j.is_number:
-            return DirectSumHilbertSpace(*[ ComplexSpace(2*x+1) for x in range(j+1)])
+            return DirectSumHilbertSpace(*[ ComplexSpace(x) for x in range(int(2*j+1),0,-2) ])
         else:
             # TODO: Need hilbert space fix, see issue 2633
             # Desired behavior:
