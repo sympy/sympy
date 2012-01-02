@@ -192,7 +192,7 @@ class Nor(BooleanFunction):
         Logical NOR function.
 
         Returns False if any argument is True
-        Returns True if all argument is False
+        Returns True if all arguments are False
 
         Examples
         ========
@@ -255,7 +255,7 @@ class Equivalent(BooleanFunction):
         """
         Equivalence relation.
 
-        Returns True if all of the arguments are equal.
+        Returns True if all of the arguments are logically equivalent.
         Returns False otherwise.
 
         Examples

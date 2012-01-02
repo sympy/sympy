@@ -358,12 +358,12 @@ class SATSolver(object):
     #      Propagation      #
     #########################
     """
-    Propagation methods should attempt to soundly _simplify the boolean
+    Propagation methods should attempt to soundly simplify the boolean
       theory, and return True if any simplification occurred and False
       otherwise.
     """
     def _simplify(self):
-        """Iterate over the various forms of propagation to _simplify the theory.
+        """Iterate over the various forms of propagation to simplify the theory.
 
         Examples
         ========
