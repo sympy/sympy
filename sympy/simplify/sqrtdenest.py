@@ -8,7 +8,8 @@ def _mexpand(expr):
     return expand_mul(expand_multinomial(expr))
 
 def is_sqrt(expr):
-    # XXX expr.exp.q == 2?
+    """Return True if expr is a sqrt, otherwise False."""
+
     return expr.is_Pow and expr.exp.is_Rational and abs(expr.exp) is S.Half
 
 def _sqrt_symbolic_denest(a, b, r):
@@ -17,19 +18,19 @@ def _sqrt_symbolic_denest(a, b, r):
     expression or None.
 
     Algorithm:
-    If r = ra + rb*sqrt(rr), try replacing sqrt(rr) in a with (y**2 - ra)/rb,
-    and if the result is a quadratic, ca*y**2 + cb*y + cc, and has a
-    discriminant of 0, then sqrt(a + b*sqrt(r)) can be rewritten as
-    sqrt(ca*(sqrt(r) + cb/(2*ca))**2). XXX a simple example would be nice
+    If r = ra + rb*sqrt(rr), try replacing sqrt(rr) in ``a`` with
+    (y**2 - ra)/rb, and if the result is a quadratic, ca*y**2 + cb*y + cc, and
+    (cb + b)**2 - 4*ca*cc is 0, then sqrt(a + b*sqrt(r)) can be rewritten as
+    sqrt(ca*(sqrt(r) + (cb + b)/(2*ca))**2).
 
     Examples
     ========
     >>> from sympy.simplify.sqrtdenest import _sqrt_symbolic_denest, sqrtdenest
-    >>> from sympy import sqrt, Symbol
+    >>> from sympy import sqrt, Symbol, Poly
     >>> from sympy.abc import x
 
-    >>> _sqrt_symbolic_denest(16 - 2*sqrt(29), 2, -10*sqrt(29) + 55)
-    sqrt(-2*sqrt(29) + 11) + sqrt(5)
+    >>> a, b, r = 16 - 2*sqrt(29), 2, -10*sqrt(29) + 55
+    >>> _sqrt_symbolic_denest(a, b, r)
 
     If the expression is numeric, it will be simplified:
 
