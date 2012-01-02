@@ -178,7 +178,7 @@ class GeometryEntity(tuple):
 
         The object will be decomposed into Points and individual Entities need
         only define an encloses_point method for their class.
-          
+
         See Also
         ========
         sympy.geometry.ellipse.Ellipse.encloses_point, sympy.geometry.polygon.Polygon.encloses_point
