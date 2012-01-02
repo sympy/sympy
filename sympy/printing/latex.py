@@ -621,8 +621,8 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_binomial(self, expr, exp=None):
-        tex = r"{{%s}\choose{%s}}" % (self._print(expr[0]),
-                                      self._print(expr[1]))
+        tex = r"{{%s}\choose{%s}}" % (self._print(expr.args[0]),
+                                      self._print(expr.args[1]))
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -631,13 +631,13 @@ class LatexPrinter(Printer):
 
     def _print_RisingFactorial(self, expr, exp=None):
         tex = r"{\left(%s\right)}^{\left(%s\right)}" % \
-            (self._print(expr[0]), self._print(expr[1]))
+            (self._print(expr.args[0]), self._print(expr.args[1]))
 
         return self._do_exponent(tex, exp)
 
     def _print_FallingFactorial(self, expr, exp=None):
         tex = r"{\left(%s\right)}_{\left(%s\right)}" % \
-            (self._print(expr[0]), self._print(expr[1]))
+            (self._print(expr.args[0]), self._print(expr.args[1]))
 
         return self._do_exponent(tex, exp)
 
