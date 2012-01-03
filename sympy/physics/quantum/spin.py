@@ -124,7 +124,7 @@ def couple(expr, jcoupling_list=None):
 
 def _couple(tp, jcoupling_list):
     states = tp.args
-    coupled_evect = states[0].__class__.coupled_class()
+    coupled_evect = states[0].coupled_class()
 
     # Define default coupling if none is specified
     if jcoupling_list is None:
@@ -148,6 +148,7 @@ def _couple(tp, jcoupling_list):
 
     # j values of states to be coupled together
     jn = [state.j for state in states]
+    mn = [state.m for state in states]
 
     # Create coupling_list, which defines all the couplings between all
     # the spaces from jcoupling_list
@@ -161,33 +162,20 @@ def _couple(tp, jcoupling_list):
         j2_n = list(n_list[n2-1])
         coupling_list.append( (j1_n, j2_n) )
         # Set new j_n to be coupling of all j_n in both first and second spaces
-        n_list[n1-1] = sorted(j1_n+j2_n)
-        n_list[n2-1] = []
+        n_list[ min(n1,n2) - 1 ] = sorted(j1_n+j2_n)
 
     if all(state.j.is_number and state.m.is_number for state in states):
         # Numerical coupling
         # Iterate over difference between maximum possible j value of each coupling and the actual value
-        diff_list = [0] * len(coupling_list)
-        diff_max = [ Add( *[ states[n-1].j-states[n-1].m for n in coupling[0]+coupling[1] ] ) for coupling in coupling_list ]
+        diff_max = [ Add( *[ jn[n-1]-mn[n-1] for n in coupling[0]+coupling[1] ] ) for coupling in coupling_list ]
         result = []
         for diff in range(diff_max[-1]+1):
             # Determine available configurations
-            m = diff
             n = len(coupling_list)
-            tot = Mul(*range(n,n+m)) // Mul(*range(1,m+1))
+            tot = binomial(diff+n-1, diff)
 
             for config_num in range(tot):
-                # Find configuration given by i
-                cur_diff = diff
-                for k in range(n):
-                    prev_diff = cur_diff
-                    rem_spots = n-k-1
-                    # The number of configurations with diff_list[k]==prev_diff-cur_diff is:
-                    # (rem_spots+cur_diff-1)! / cur_diff!(rem_spots-1)!
-                    while  config_num >= Mul(*range(rem_spots,rem_spots+cur_diff)) // Mul(*range(1,cur_diff+1)):
-                        config_num -= Mul(*range(rem_spots,rem_spots+cur_diff)) // Mul(*range(1,cur_diff+1))
-                        cur_diff -= 1
-                    diff_list[k] = prev_diff - cur_diff
+                diff_list = _confignum_to_difflist(config_num, diff, n)
 
                 # Skip the configuration if non-physical
                 if any( [ d > m for d, m in zip(diff_list, diff_max) ] ):
@@ -202,15 +190,15 @@ def _couple(tp, jcoupling_list):
                     j2 = coupled_j[ min(j2_n)-1 ]
                     j3 = j1 + j2 - coupling_diff
                     coupled_j[ min(j1_n+j2_n) - 1 ] = j3
-                    m1 = Add( *[ states[x-1].m for x in j1_n] )
-                    m2 = Add( *[ states[x-1].m for x in j2_n] )
+                    m1 = Add( *[ mn[x-1] for x in j1_n] )
+                    m2 = Add( *[ mn[x-1] for x in j2_n] )
                     m3 = m1 + m2
                     cg_terms.append( (j1, m1, j2, m2, j3, m3) )
                     jcoupling.append( (min(j1_n), min(j2_n), j3) )
                 coeff = Mul( *[ CG(*term).doit() for term in cg_terms] )
                 state = coupled_evect(j3, m3, jn, jcoupling)
                 result.append(coeff*state)
-        return Add(*result).doit()
+        return Add(*result)
     else:
         # Symbolic coupling
         cg_terms = []
@@ -226,8 +214,8 @@ def _couple(tp, jcoupling_list):
                 j3_name = 'j' + ''.join(["%s" % n for n in j1_n+j2_n])
                 j3 = symbols(j3_name)
             coupled_j[ min(j1_n+j2_n) - 1 ] = j3
-            m1 = Add( *[ states[x-1].m for x in j1_n] )
-            m2 = Add( *[ states[x-1].m for x in j2_n] )
+            m1 = Add( *[ mn[x-1] for x in j1_n] )
+            m2 = Add( *[ mn[x-1] for x in j2_n] )
             m3 = m1 + m2
             cg_terms.append( (j1, m1, j2, m2, j3, m3) )
             jcoupling.append( (min(j1_n), min(j2_n), j3) )
@@ -351,28 +339,15 @@ def _uncouple(state, jn, jcoupling_list):
         j_list[min(n1+n2)-1] = j3
 
     if j.is_number and m.is_number:
-        diff_list = [0] * len(jn)
         diff_max = [ 2*x for x in jn ]
         diff = Add(*jn) - m
 
-        p = diff
         n = len(jn)
-        tot = Mul(*range(n,n+p)) // Mul(*range(1,p+1))
+        tot = binomial(diff+n-1, diff)
 
         result = []
         for config_num in range(tot):
-            # Find configurations given by i
-            cur_diff = diff
-            for k in range(n):
-                prev_diff = cur_diff
-                rem_spots = n-k-1
-                # The number of configurations with diff_list[k]==prev_diff-cur_diff is:
-                # (rem_spots+cur_diff-1)! / cur_diff!(rem_spots-1)!
-                while config_num >= Mul(*range(rem_spots,rem_spots+cur_diff)) // Mul(*range(1,cur_diff+1)):
-                    config_num -= Mul(*range(rem_spots,rem_spots+cur_diff)) // Mul(*range(1,cur_diff+1))
-                    cur_diff -= 1
-                diff_list[k] = prev_diff - cur_diff
-
+            diff_list = _confignum_to_difflist(config_num, diff, n)
             if any( [ d > p for d, p in zip(diff_list, diff_max) ] ):
                 continue
 
@@ -386,7 +361,7 @@ def _uncouple(state, jn, jcoupling_list):
             coeff = Mul( *[ CG(*term).doit() for term in cg_terms ] )
             state = TensorProduct( *[ evect(j, j - d) for j,d in zip(jn,diff_list) ] )
             result.append(coeff*state)
-        return Add(*result).doit()
+        return Add(*result)
     else:
         # Symbolic coupling
         m_str = "m1:%d" % (len(jn)+1)
@@ -401,6 +376,23 @@ def _uncouple(state, jn, jcoupling_list):
         sum_terms = [ (m,-j,j) for j,m in zip(jn,mvals) ]
         state = TensorProduct( *[ evect(j,m) for j,m in zip(jn,mvals) ] )
         return Sum(cg_coeff*state,*sum_terms)
+
+
+def _confignum_to_difflist(config_num, diff, list_len):
+    # Determines configuration of diffs into list_len number of slots
+    diff_list = []
+    for n in range(list_len):
+        prev_diff = diff
+        # Number of spots after current one
+        rem_spots = list_len-n-1
+        # Number of configurations of distributing diff among the remaining spots
+        rem_configs = binomial(diff+rem_spots-1, diff)
+        while config_num >= rem_configs:
+            config_num -= rem_configs
+            diff -= 1
+            rem_configs = binomial(diff+rem_spots-1, diff)
+        diff_list.append(prev_diff-diff)
+    return diff_list
 
 
 #-----------------------------------------------------------------------------
