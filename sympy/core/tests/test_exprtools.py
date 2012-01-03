@@ -1,6 +1,6 @@
 """Tests for tools for manipulating of large commutative expressions. """
 
-from sympy import S, Add, sin, Mul, Symbol, oo, Integral, sqrt
+from sympy import S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, Interval
 from sympy.abc import a, b, t, x, y, z
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
                                   gcd_terms, factor_terms)
@@ -114,6 +114,12 @@ def test_factor_terms():
     eq = sqrt(2) + sqrt(10)
     assert factor_terms(eq) == eq
     assert factor_terms(eq, radical=True) == sqrt(2)*(1 + sqrt(5))
+    eq = [x + x*y]
+    ans = [x*(y + 1)]
+    for c in [list, tuple, set]:
+        assert factor_terms(c(eq)) == c(ans)
+    assert factor_terms(Tuple(x + x*y)) == Tuple(x*(y + 1))
+    assert factor_terms(Interval(0, 1)) == Interval(0, 1)
 
 def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)
