@@ -603,11 +603,14 @@ class Expr(Basic, EvalfMixin):
         from sympy import count_ops
         return count_ops(self, visual)
 
-    def args_cnc(self, clist=False):
-        """Treat self as a Mul and return the commutative and noncommutative
-        arguments in a tuple as (set, list); if ``clist`` is True the set
-        will contain the commutative arguments in the same order as they
-        appeared in self.
+    def args_cnc(self, cset=False, warn=True):
+        """Return [commutative factors, non-commutative factors] of self.
+
+        self is treated as a Mul and the ordering of the factors is maintained.
+        If ``cset`` is True the commutative factors will be returned in a set.
+        If there were repeated factors (as may happen with an unevaluated Mul)
+        then an error will be raised unless it is explicitly supressed by
+        setting ``warn`` to False.
 
         Note: -1 is always separated from a Rational.
 
@@ -615,16 +618,16 @@ class Expr(Basic, EvalfMixin):
         >>> A, B = symbols('A B', commutative=0)
         >>> x, y = symbols('x y')
         >>> (-2*x*y).args_cnc()
-        [set([-1, 2, x, y]), []]
-        >>> (-2*x*y).args_cnc(clist=True)
         [[-1, 2, x, y], []]
         >>> (-2*x*A*B*y).args_cnc()
-        [set([-1, 2, x, y]), [A, B]]
+        [[-1, 2, x, y], [A, B]]
+        >>> (-2*x*y).args_cnc(cset=True)
+        [set([-1, 2, x, y]), []]
 
         The arg is always treated as a Mul:
 
         >>> (-2 + x + A).args_cnc()
-        [set(), [x - 2 + A]]
+        [[], [x - 2 + A]]
         """
 
         if self.is_Mul:
@@ -643,9 +646,13 @@ class Expr(Basic, EvalfMixin):
         if c and c[0].is_Rational and c[0].is_negative and c[0] != S.NegativeOne:
             c[:1] = [S.NegativeOne, -c[0]]
 
-        if clist:
-            return [c, nc]
-        return [set(c), nc]
+        if cset:
+            clen = len(c)
+            c = set(c)
+            if clen and warn and len(c) != clen:
+                raise ValueError('repeated commutative arguments: %s' %
+                                 [ci for ci in c if list(self.args).count(ci) > 1])
+        return [c, nc]
 
     def coeff(self, x, right=False):
         """
@@ -820,7 +827,7 @@ class Expr(Basic, EvalfMixin):
         elif x_c:
             xargs = set(arglist(x))
             for a in args:
-                margs, nc = a.args_cnc()
+                margs, nc = a.args_cnc(cset=True)
                 if len(xargs) > len(margs):
                     continue
                 resid = margs.difference(xargs)
@@ -831,10 +838,10 @@ class Expr(Basic, EvalfMixin):
             elif co:
                 return Add(*co)
         else: # both nc
-            xargs, nx = x.args_cnc()
+            xargs, nx = x.args_cnc(cset=True)
             # find the parts that pass the commutative terms
             for a in args:
-                margs, nc = a.args_cnc()
+                margs, nc = a.args_cnc(cset=True)
                 if len(xargs) > len(margs):
                     continue
                 resid = margs.difference(xargs)
@@ -1147,6 +1154,12 @@ class Expr(Basic, EvalfMixin):
         return (C.re(self), C.im(self))
 
     def as_powers_dict(self):
+        """Return self as a dictionary of factors with each factor being
+        treated as a power. The keys are the bases of the factors and the
+        values, the corresponding exponents. The resulting dictionary should
+        be used with caution if the expression is a Mul and contains non-
+        commutative factors since the order that they appeared will be lost in
+        the dictionary."""
         d = defaultdict(int)
         d.update(dict([self.as_base_exp()]))
         return d

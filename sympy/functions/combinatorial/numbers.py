@@ -61,6 +61,9 @@ class fibonacci(Function):
     * http://en.wikipedia.org/wiki/Fibonacci_number
     * http://mathworld.wolfram.com/FibonacciNumber.html
 
+    See Also
+    ========
+    lucas
     """
 
     @staticmethod
@@ -109,6 +112,9 @@ class lucas(Function):
 
     * http://en.wikipedia.org/wiki/Lucas_number
 
+    See Also
+    ========
+    fibonacci
     """
 
     @classmethod
@@ -191,6 +197,9 @@ class bernoulli(Function):
     * http://en.wikipedia.org/wiki/Bernoulli_number
     * http://en.wikipedia.org/wiki/Bernoulli_polynomial
 
+    See Also
+    ========
+    euler, bell
     """
 
     # Calculates B_n for positive even n
@@ -319,6 +328,9 @@ class bell(Function):
     * http://mathworld.wolfram.com/BellNumber.html
     * http://mathworld.wolfram.com/BellPolynomial.html
 
+    See Also
+    ========
+    euler, bernoulli
     """
 
     @staticmethod
@@ -458,6 +470,9 @@ class euler(Function):
     * http://en.wikipedia.org/wiki/Alternating_permutation
     * http://mathworld.wolfram.com/AlternatingPermutation.html
 
+    See Also
+    ========
+    bernoulli, bell
     """
 
     nargs = 1
@@ -577,6 +592,9 @@ class catalan(Function):
     * http://mathworld.wolfram.com/CatalanNumber.html
     * http://geometer.org/mathcircles/catalan.pdf
 
+    See Also
+    ========
+    sympy.functions.combinatorial.factorials.binomial
     """
 
     @classmethod

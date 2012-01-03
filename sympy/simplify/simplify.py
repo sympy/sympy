@@ -957,8 +957,8 @@ def collect_sqrt(expr, evaluate=True):
         nrad = 0
         args = list(Add.make_args(d))
         for m in args:
-            cset, nc = m.args_cnc()
-            for ci in cset:
+            c, nc = m.args_cnc()
+            for ci in c:
                 if ci.is_Pow and ci.exp.is_Rational and ci.exp.q == 2 or \
                    ci is S.ImaginaryUnit:
                     nrad += 1
@@ -1450,7 +1450,7 @@ def _denest_pow(eq):
     def nc_gcd(aa, bb):
         a, b = [i.as_coeff_Mul() for i in [aa, bb]]
         c = gcd(a[0], b[0]).as_numer_denom()[0]
-        g = Mul(*(a[1].args_cnc()[0] & b[1].args_cnc()[0]))
+        g = Mul(*(a[1].args_cnc(cset=True)[0] & b[1].args_cnc(cset=True)[0]))
         return _keep_coeff(c, g)
 
     glogb = expand_log(log(b))

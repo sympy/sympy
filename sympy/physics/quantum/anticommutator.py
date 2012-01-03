@@ -89,7 +89,7 @@ class AntiCommutator(Expr):
         # from sympy.physics.qmul import QMul
         ca, nca = a.args_cnc()
         cb, ncb = b.args_cnc()
-        c_part = list(ca) + list(cb)
+        c_part = ca + cb
         if c_part:
             return Mul(Mul(*c_part), cls(Mul._from_args(nca), Mul._from_args(ncb)))
 

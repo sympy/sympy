@@ -350,7 +350,7 @@ def vector_fct(Fstr,x):
     the base name of each function while each function in the
     list is given the name Fstr+'__'+str(x[ix]) so that if
     Fstr = 'f' and str(x[1]) = 'theta' then the LaTeX output
-    of the second element in the output list would be 'f^{\theta}'.
+    of the second element in the output list would be 'f^{\\theta}'.
     """
     nx = len(x)
     Fvec = []
