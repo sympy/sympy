@@ -46,7 +46,6 @@ def test_curve():
     assert c.arbitrary_point(None) == Point(2*s, s**2)
     assert c.plot_interval() == [t, 0, 2]
     assert c.plot_interval(z) == [z, 0, 2]
-    
 
     raises(ValueError, 'Curve((s), (s, 1, 2))')
     raises(ValueError, 'Curve((x, x * 2), (1, x))')
@@ -158,7 +157,7 @@ def test_line():
 
     assert simplify(l1.equation()) in (x-y, y-x)
     assert simplify(l3.equation()) in (x-x1, x1-x)
-  
+
     assert Line(p1, p2).scale(2, 1) == Line(p1, p9)
 
     assert l2.arbitrary_point() in l2
