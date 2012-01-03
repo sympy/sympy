@@ -1605,7 +1605,7 @@ class Expr(Basic, EvalfMixin):
 
     def extract_branch_factor(self):
         """
-        Try to write self as exp_polar``(2*pi*I*n)*z`` in a nice way.
+        Try to write self as ``exp_polar(2*pi*I*n)*z`` in a nice way.
         Return (z, n).
 
         >>> from sympy import exp_polar, I, pi
