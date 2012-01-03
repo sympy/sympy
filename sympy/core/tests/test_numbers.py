@@ -2,6 +2,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple)
 from sympy.core.power import integer_nthroot
+from sympy.utilities.pytest import XFAIL
 
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache
 from sympy.utilities.pytest import raises
@@ -1022,3 +1023,10 @@ def test_as_content_primitive():
     assert (-S.Half).as_content_primitive() == (S.Half, -1)
     assert S(3).as_content_primitive() == (3, 1)
     assert S(3.1).as_content_primitive() == (1, 3.1)
+
+@XFAIL
+def test_hashing_sympy_integers():
+    # Test for issue #1973
+    # http://code.google.com/p/sympy/issues/detail?id=1973
+    assert hash(S(4)) == 4
+    assert hash(S(4)) == hash(int(4))
