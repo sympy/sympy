@@ -16,6 +16,7 @@ def solve_poly_system(seq, *gens, **args):
 
     Examples
     ========
+
     >>> from sympy import solve_poly_system
     >>> from sympy.abc import x, y
 
@@ -98,6 +99,7 @@ def solve_generic(polys, opt):
 
     References
     ==========
+
     .. [Buchberger01] B. Buchberger, Groebner Bases: A Short
     Introduction for Systems Theorists, In: R. Moreno-Diaz,
     B. Buchberger, J.L. Freire, Proceedings of EUROCAST'01,
@@ -190,6 +192,7 @@ def solve_triangulated(polys, *gens, **args):
 
     Examples
     ========
+
     >>> from sympy.solvers.polysys import solve_triangulated
     >>> from sympy.abc import x, y, z
 
@@ -200,6 +203,7 @@ def solve_triangulated(polys, *gens, **args):
 
     References
     ==========
+
     1. Patrizia Gianni, Teo Mora, Algebraic Solution of System of
     Polynomial Equations using Groebner Bases, AAECC-5 on Applied Algebra,
     Algebraic Algorithms and Error-Correcting Codes, LNCS 356 247--257, 1989

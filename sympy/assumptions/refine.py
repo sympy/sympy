@@ -12,6 +12,7 @@ def refine(expr, assumptions=True):
 
     Examples
     ========
+
         >>> from sympy import refine, sqrt, Q
         >>> from sympy.abc import x
         >>> refine(sqrt(x**2), Q.real(x))
@@ -38,6 +39,7 @@ def refine_abs(expr, assumptions):
 
     Examples
     ========
+
     >>> from sympy import Symbol, Q, refine, Abs
     >>> from sympy.assumptions.refine import refine_abs
     >>> from sympy.abc import x

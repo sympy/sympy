@@ -243,6 +243,7 @@ def diffs(ctx, f, x, n=None, **options):
 
     Examples
     ========
+
         >>> from mpmath import *
         >>> mp.dps = 15
         >>> nprint(list(diffs(cos, 1, 5)))
@@ -320,6 +321,7 @@ def diffs_prod(ctx, factors):
 
     Examples
     ========
+
         >>> from mpmath import *
         >>> mp.dps = 15; mp.pretty = True
         >>> f = lambda x: exp(x)*cos(x)*sin(x)
@@ -405,6 +407,7 @@ def diffs_exp(ctx, fdiffs):
 
     Examples
     ========
+
     The derivatives of the gamma function can be computed using
     logarithmic differentiation::
 
@@ -472,6 +475,7 @@ def differint(ctx, f, x, n=1, x0=0):
 
     Examples
     ========
+
     There is an exact formula for the fractional derivative of a
     monomial `x^p`, which may be used as a reference. For example,
     the following gives a half-derivative (order 0.5)::

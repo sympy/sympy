@@ -128,6 +128,7 @@ def test(*paths, **kwargs):
 
     Examples
     ========
+
     >> import sympy
 
     Run all tests:
@@ -214,6 +215,7 @@ def doctest(*paths, **kwargs):
 
     Examples
     ========
+
     >> import sympy
 
     Run all tests:

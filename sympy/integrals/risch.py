@@ -115,6 +115,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
 
        Examples
        ========
+
        >>> from sympy import tan
        >>> from sympy.integrals.risch import heurisch
        >>> from sympy.abc import x, y

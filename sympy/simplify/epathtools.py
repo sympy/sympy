@@ -156,6 +156,7 @@ class EPath(object):
 
         Examples
         ========
+
         >>> from sympy.simplify.epathtools import EPath
         >>> from sympy import sin, cos, E
         >>> from sympy.abc import x, y, z, t
@@ -225,6 +226,7 @@ class EPath(object):
 
         Examples
         ========
+
         >>> from sympy.simplify.epathtools import EPath
         >>> from sympy import sin, cos, E
         >>> from sympy.abc import x, y, z, t
@@ -292,6 +294,7 @@ def epath(path, expr=None, func=None, args=None, kwargs=None):
 
     Syntax
     ======
+
     select all : "/*"
         Equivalent of ``for arg in args:``.
     select slice : "/[0]" | "/[1:5]" | "/[1:5:2]"
@@ -303,6 +306,7 @@ def epath(path, expr=None, func=None, args=None, kwargs=None):
 
     Parameters
     ==========
+
     path : str | EPath
         A path as a string or a compiled EPath.
     expr : Basic | iterable
@@ -316,6 +320,7 @@ def epath(path, expr=None, func=None, args=None, kwargs=None):
 
     Examples
     ========
+
     >>> from sympy.simplify.epathtools import epath
     >>> from sympy import sin, cos, E
     >>> from sympy.abc import x, y, z, t

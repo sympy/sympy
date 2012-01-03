@@ -28,6 +28,7 @@ def iterable(i, exclude=(basestring, dict)):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import iterable
     >>> from sympy import Tuple
     >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
@@ -74,6 +75,7 @@ def is_sequence(i, include=None):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import is_sequence
     >>> from types import GeneratorType
     >>> is_sequence([])
@@ -164,6 +166,7 @@ except ImportError: # Python 2.5
 
         Examples
         ========
+
         >>> from sympy.core.compatibility import product
         >>> [''.join(p) for p in list(product('ABC', 'xy'))]
         ['Ax', 'Ay', 'Bx', 'By', 'Cx', 'Cy']
@@ -244,6 +247,7 @@ except ImportError: # < python 2.6
 
         Examples
         ========
+
         >>> from sympy.core.compatibility import combinations
         >>> list(combinations('ABC', 2))
         [('A', 'B'), ('A', 'C'), ('B', 'C')]
@@ -283,6 +287,7 @@ except ImportError: # < python 2.6
 
         Examples
         ========
+
         >>> from sympy.core.compatibility import combinations_with_replacement
         >>> list(combinations_with_replacement('AB', 2))
         [('A', 'A'), ('A', 'B'), ('B', 'B')]

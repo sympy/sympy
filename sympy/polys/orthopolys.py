@@ -203,6 +203,7 @@ def spherical_bessel_fn(n, x=None, **args):
 
     Examples
     ========
+
     >>> from sympy.polys.orthopolys import spherical_bessel_fn as fn
     >>> from sympy import Symbol
     >>> z = Symbol("z")

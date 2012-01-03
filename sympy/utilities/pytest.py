@@ -24,6 +24,7 @@ def raises(ExpectedException, code):
 
     Examples
     ========
+
     >>> from sympy.utilities.pytest import raises
     >>> raises(ZeroDivisionError, "1/0")
     >>> raises(ZeroDivisionError, "1/2")

@@ -47,6 +47,7 @@ class chebyshevt(PolynomialSequence):
 
     Examples
     ========
+
     >>> from sympy import chebyshevt
     >>> from sympy.abc import x
     >>> chebyshevt(0, x)
@@ -58,6 +59,7 @@ class chebyshevt(PolynomialSequence):
 
     References
     ==========
+
     * http://en.wikipedia.org/wiki/Chebyshev_polynomial
     """
 
@@ -77,6 +79,7 @@ class chebyshevu(PolynomialSequence):
 
     Examples
     ========
+
     >>> from sympy import chebyshevu
     >>> from sympy.abc import x
     >>> chebyshevu(0, x)
@@ -98,6 +101,7 @@ class chebyshevt_root(Function):
 
     Examples
     ========
+
     >>> from sympy import chebyshevt, chebyshevt_root
     >>> chebyshevt_root(3, 2)
     -sqrt(3)/2
@@ -122,6 +126,7 @@ class chebyshevu_root(Function):
 
     Examples
     ========
+
     >>> from sympy import chebyshevu, chebyshevu_root
     >>> chebyshevu_root(3, 2)
     -sqrt(2)/2
@@ -152,6 +157,7 @@ class legendre(PolynomialSequence):
 
     Examples
     ========
+
     >>> from sympy import legendre
     >>> from sympy.abc import x
     >>> legendre(0, x)
@@ -163,6 +169,7 @@ class legendre(PolynomialSequence):
 
     References
     ==========
+
     * http://en.wikipedia.org/wiki/Legendre_polynomial
 
     """
@@ -184,6 +191,7 @@ class assoc_legendre(Function):
 
     Examples
     ========
+
     >>> from sympy import assoc_legendre
     >>> from sympy.abc import x
     >>> assoc_legendre(0,0, x)
@@ -195,6 +203,7 @@ class assoc_legendre(Function):
 
     References
     ==========
+
     * http://en.wikipedia.org/wiki/Associated_Legendre_polynomials
 
     """
@@ -235,6 +244,7 @@ class hermite(PolynomialSequence):
 
     Examples
     ========
+
     >>> from sympy import hermite
     >>> from sympy.abc import x
     >>> hermite(0, x)
@@ -246,6 +256,7 @@ class hermite(PolynomialSequence):
 
     References
     ==========
+
     * http://mathworld.wolfram.com/HermitePolynomial.html
 
     """
@@ -258,6 +269,7 @@ def laguerre_l(n, alpha, x):
 
     Parameters
     ==========
+
     n : int
         Degree of Laguerre polynomial. Must be ``n >= 0``.
 
@@ -267,6 +279,7 @@ def laguerre_l(n, alpha, x):
 
     Examples
     ========
+
     To construct generalized Laguerre polynomials issue::
 
         >>> from sympy import laguerre_l, var

@@ -493,6 +493,7 @@ def bernfrac(n):
 
     Examples
     ========
+
     The first few Bernoulli numbers are exactly::
 
         >>> from mpmath import *
@@ -548,6 +549,7 @@ def bernfrac(n):
 
     References
     ==========
+
     1. MathWorld, von Staudt-Clausen Theorem:
        http://mathworld.wolfram.com/vonStaudt-ClausenTheorem.html
 

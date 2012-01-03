@@ -313,6 +313,7 @@ def variations(seq, n=None, repetition=False):
 
     Examples
     ========
+
     variations(seq, n) will return N! / (N - n)! permutations without
     repetition of seq's elements:
 
@@ -362,6 +363,7 @@ def subsets(seq, k=None, repetition=False):
 
        Examples
        ========
+
            >>> from sympy.utilities.iterables import subsets
 
        subsets(seq, k) will return the n!/k!/(n - k)! k-subsets (combinations)
@@ -521,6 +523,7 @@ def prefixes(seq):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import prefixes
 
     >>> list(prefixes([1,2,3,4]))
@@ -538,6 +541,7 @@ def postfixes(seq):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import postfixes
 
     >>> list(postfixes([1,2,3,4]))
@@ -566,6 +570,7 @@ def topological_sort(graph, key=None):
 
     Examples
     ========
+
     Consider a graph::
 
         +---+     +---+     +---+
@@ -664,6 +669,7 @@ def rotate_left(x, y):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import rotate_left
     >>> a = [0, 1, 2]
     >>> rotate_left(a, 1)
@@ -681,6 +687,7 @@ def rotate_right(x, y):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import rotate_right
     >>> a = [0, 1, 2]
     >>> rotate_right(a, 1)
@@ -702,6 +709,7 @@ def multiset_partitions(multiset, m):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import multiset_partitions
     >>> list(multiset_partitions([1,2,3,4], 2))
     [[[1, 2, 3], [4]], [[1, 3], [2, 4]], [[1], [2, 3, 4]], [[1, 2], \
@@ -922,6 +930,7 @@ def binary_partitions(n):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import binary_partitions
     >>> for i in binary_partitions(5):
     ...     print i
@@ -972,6 +981,7 @@ def uniq(seq):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import uniq
     >>> uniq([1,4,1,5,4,2,1,2])
     [1, 4, 5, 2]
@@ -1003,6 +1013,7 @@ def generate_bell(n):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import generate_bell
     >>> list(generate_bell(3))
     [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 0, 1), (2, 1, 0)]
@@ -1045,6 +1056,7 @@ def generate_involutions(n):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import generate_involutions
     >>> generate_involutions(3)
     [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 1, 0)]
@@ -1084,6 +1096,7 @@ def generate_derangements(perm):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import generate_derangements
     >>> list(generate_derangements([0,1,2]))
     [[1, 2, 0], [2, 0, 1]]
@@ -1115,6 +1128,7 @@ def unrestricted_necklace(n, k):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import unrestricted_necklace
     >>> [i[:] for i in unrestricted_necklace(3, 2)]
     [[0, 0, 0], [0, 1, 1]]
@@ -1154,6 +1168,7 @@ def generate_oriented_forest(n):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import generate_oriented_forest
     >>> list(generate_oriented_forest(4))
     [[0, 1, 2, 3], [0, 1, 2, 2], [0, 1, 2, 1], [0, 1, 2, 0], \

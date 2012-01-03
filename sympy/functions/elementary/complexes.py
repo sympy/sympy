@@ -33,6 +33,7 @@ class re(Function):
 
        See Also
        ========
+
        im
     """
     nargs = 1
@@ -97,6 +98,7 @@ class im(Function):
 
     Examples
     ========
+
     >>> from sympy import re, im, E, I
     >>> from sympy.abc import x, y
 
@@ -114,6 +116,7 @@ class im(Function):
 
     See Also
     ========
+
     re
     """
 
@@ -159,6 +162,7 @@ class im(Function):
 
         Examples
         ========
+
         >>> from sympy.functions import im
         >>> from sympy import I
         >>> im(2 + 3*I).as_real_imag()
@@ -188,6 +192,7 @@ class sign(Function):
 
     Examples
     ========
+
     >>> from sympy.functions import sign
     >>> sign(-1)
     -1
@@ -196,6 +201,7 @@ class sign(Function):
 
     See Also
     ========
+
     Abs, conjugate
     """
 
@@ -248,6 +254,7 @@ class Abs(Function):
 
     Examples
     ========
+
     >>> from sympy import Abs, Symbol, S
     >>> Abs(-1)
     1
@@ -271,6 +278,7 @@ class Abs(Function):
 
     See Also
     ========
+
     sign, conjugate
     """
 
@@ -285,6 +293,7 @@ class Abs(Function):
 
         Examples
         ========
+
         >>> from sympy.abc import x
         >>> from sympy.functions import Abs
         >>> Abs(-x).fdiff()
@@ -381,6 +390,7 @@ class conjugate(Function):
 
     Examples
     ========
+
     >>> from sympy import conjugate, I
 
     >>> conjugate(1 + I)
@@ -388,6 +398,7 @@ class conjugate(Function):
 
     See Also
     ========
+
     sign, Abs
     """
 
@@ -433,6 +444,7 @@ class polar_lift(Function):
 
     See Also
     ========
+
     sympy.functions.elementary.exponential.exp_polar
     periodic_argument
     """
@@ -498,6 +510,7 @@ class periodic_argument(Function):
 
     See Also
     ========
+
     sympy.functions.elementary.exponential.exp_polar
     polar_lift : Lift argument to the riemann surface of the logarithm
     principal_branch
@@ -585,6 +598,7 @@ class principal_branch(Function):
 
     See Also
     ========
+
     sympy.functions.elementary.exponential.exp_polar
     polar_lift : Lift argument to the riemann surface of the logarithm
     periodic_argument

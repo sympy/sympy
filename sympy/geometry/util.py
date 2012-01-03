@@ -25,6 +25,7 @@ def idiff(eq, y, x, dep=None):
 
     See Also
     ========
+
     sympy.core.function.Derivative
 
     """
@@ -65,6 +66,7 @@ def _symbol(s, matching_symbol=None):
 
     See Also
     ========
+
     sympy.core.symbol.Symbol
 
     """
@@ -82,19 +84,23 @@ def intersection(*entities):
 
     Parameters
     ==========
+
     entities : sequence of GeometryEntity
 
     Returns
     =======
+
     intersection : list of GeometryEntity
 
     Raises
     ======
+
     NotImplementedError
         When unable to calculate intersection.
 
     Notes
     =====
+
     The intersection of any geometrical entity with itself should return
     a list with one item: the entity in question.
     An intersection requires two or more entities. If only a single
@@ -107,10 +113,12 @@ def intersection(*entities):
 
     See Also
     ========
+
     sympy.geometry.entity.GeometryEntity.intersection
 
     Examples
     ========
+
     >>> from sympy.geometry import Point, Line, Circle, intersection
     >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(-1, 5)
     >>> l1, l2 = Line(p1, p2), Line(p3, p2)
@@ -154,18 +162,22 @@ def convex_hull(*args):
 
     Parameters
     ==========
+
     args : a collection of Points, Segments and/or Polygons
 
     Returns
     =======
+
     convex_hull : Polygon
 
     Notes
     =====
+
     This can only be performed on a set of non-symbolic points.
 
     References
     ==========
+
     [1] http://en.wikipedia.org/wiki/Graham_scan
 
     [2] Andrew's Monotone Chain Algorithm
@@ -174,10 +186,12 @@ def convex_hull(*args):
 
     See Also
     ========
+
     sympy.geometry.point.Point, sympy.geometry.polygon.Polygon
 
     Examples
     ========
+
     >>> from sympy.geometry import Point, convex_hull
     >>> points = [(1,1), (1,2), (3,1), (-5,2), (15,4)]
     >>> convex_hull(*points)
@@ -242,28 +256,34 @@ def are_similar(e1, e2):
 
     Parameters
     ==========
+
     e1 : GeometryEntity
     e2 : GeometryEntity
 
     Returns
     =======
+
     are_similar : boolean
 
     Raises
     ======
+
     GeometryError
         When `e1` and `e2` cannot be compared.
 
     Notes
     =====
+
     If the two objects are equal then they are similar.
 
     See Also
     ========
+
     sympy.geometry.entity.GeometryEntity.is_similar
 
     Examples
     ========
+
     >>> from sympy import Point, Circle, Triangle, are_similar
     >>> c1, c2 = Circle(Point(0, 0), 4), Circle(Point(1, 4), 3)
     >>> t1 = Triangle(Point(0, 0), Point(1, 0), Point(0, 1))
@@ -299,11 +319,13 @@ def centroid(*args):
 
     See Also
     ========
+
     sympy.geometry.point.Point, sympy.geometry.line.Segment,
     sympy.geometry.polygon.Polygon
 
     Examples
     ========
+
     >>> from sympy import Point, Segment, Polygon
     >>> from sympy.geometry.util import centroid
     >>> p = Polygon((0, 0), (10, 0), (10, 10))

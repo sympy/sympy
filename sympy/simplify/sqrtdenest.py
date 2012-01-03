@@ -12,6 +12,7 @@ def sqrtdenest(expr):
 
     Examples
     ========
+
     >>> from sympy.simplify.sqrtdenest import sqrtdenest
     >>> from sympy import sqrt
     >>> sqrtdenest(sqrt(5 + 2 * sqrt(6)))
@@ -99,6 +100,7 @@ def subsets(n):
 
     Examples
     ========
+
     >>> from sympy.simplify.sqrtdenest import subsets
     >>> subsets(3)
     [[0, 0, 1], [0, 1, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 0], [1, 1, 1]]

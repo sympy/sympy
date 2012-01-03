@@ -229,6 +229,7 @@ def ccode(expr, assign_to=None, **settings):
 
         Parameters
         ==========
+
         expr : sympy.core.Expr
             a sympy expression to be converted
         precision : optional
@@ -246,6 +247,7 @@ def ccode(expr, assign_to=None, **settings):
 
         Examples
         ========
+
         >>> from sympy import ccode, symbols, Rational, sin
         >>> x, tau = symbols(["x", "tau"])
         >>> ccode((2*tau)**Rational(7,2))

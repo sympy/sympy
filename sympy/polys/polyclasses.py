@@ -341,6 +341,7 @@ class DMP(PicklableWithSlots):
 
         Examples
         ========
+
         >>> from sympy.polys.polyclasses import DMP
         >>> from sympy.polys.domains import ZZ
 
@@ -357,6 +358,7 @@ class DMP(PicklableWithSlots):
 
         Examples
         ========
+
         >>> from sympy.polys.polyclasses import DMP
         >>> from sympy.polys.domains import ZZ
 

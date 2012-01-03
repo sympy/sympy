@@ -81,6 +81,7 @@ def fastlog(x):
 
     Examples
     ========
+
     >>> from sympy import log
     >>> from sympy.core.evalf import fastlog, bitcount
     >>> n=(-1)**0*5*2**1; n, (log(n)/log(2)).evalf(), fastlog((0,5,1,bitcount(5)))
@@ -1137,6 +1138,7 @@ def N(x, n=15, **options):
 
     Examples
     ========
+
     >>> from sympy import Sum, Symbol, oo, N
     >>> from sympy.abc import k
     >>> Sum(1/k**k, (k, 1, oo))

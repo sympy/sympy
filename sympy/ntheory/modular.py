@@ -70,6 +70,7 @@ def crt(m, v, symmetric=False, check=True):
 
     See Also
     ========
+
     solve_congruence
     sympy.polys.galoistools.gf_crt : low level crt routine used by this routine
     """
@@ -98,6 +99,7 @@ def crt1(m):
 
     Examples
     ========
+
     >>> from sympy.ntheory.modular import crt1
     >>> crt1([18, 42, 6])
     (4536, [252, 108, 756], [0, 2, 0])
@@ -110,6 +112,7 @@ def crt2(m, v, mm, e, s, symmetric=False):
 
     Examples
     ========
+
     >>> from sympy.ntheory.modular import crt1, crt2
     >>> mm, e, s = crt1([18, 42, 6])
     >>> crt2([18, 42, 6], [0, 0, 0], mm, e, s)
@@ -138,6 +141,7 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
 
     Examples
     ========
+
     >>> from sympy.ntheory.modular import solve_congruence
 
     What number is 2 mod 3, 3 mod 5 and 2 mod 7?
@@ -169,6 +173,7 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
 
     See Also
     ========
+
     crt : high level routine implementing the Chinese Remainder Theorem
 
     """
@@ -178,6 +183,7 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
 
         References
         ==========
+
         - http://en.wikipedia.org/wiki/Method_of_successive_substitution
         """
         from sympy.core.numbers import igcdex

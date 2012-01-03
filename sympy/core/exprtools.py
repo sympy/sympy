@@ -19,6 +19,7 @@ def decompose_power(expr):
 
     Examples
     ========
+
     >>> from sympy.core.exprtools import decompose_power
     >>> from sympy.abc import x, y
 
@@ -381,6 +382,7 @@ def gcd_terms(terms, isprimitive=False):
 
     Examples
     ========
+
     >>> from sympy.core import gcd_terms
     >>> from sympy.abc import x, y
 
@@ -421,6 +423,7 @@ def factor_terms(expr, radical=False):
 
     Examples
     ========
+
     >>> from sympy import factor_terms, Symbol
     >>> from sympy.abc import x, y
     >>> factor_terms(x + x*(2 + 4*y)**3)

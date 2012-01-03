@@ -34,6 +34,7 @@ def minimal_polynomial(ex, x=None, **args):
 
     Examples
     ========
+
     >>> from sympy import minimal_polynomial, sqrt
     >>> from sympy.abc import x
 

@@ -520,6 +520,7 @@ def sstr(expr, **settings):
 
     Examples
     ========
+
     >>> from sympy import symbols, Eq, sstr
     >>> a, b = symbols('a b')
     >>> sstr(Eq(a + b, 0))

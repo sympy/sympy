@@ -245,6 +245,7 @@ def find_unit(quantity):
 
     Examples
     ========
+
     >>> from sympy.physics import units as u
     >>> u.find_unit('charge')
     ['charge']

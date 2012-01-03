@@ -9,6 +9,7 @@ def default_sort_key(item, order=None):
 
     Examples
     ========
+
     >>> from sympy import Basic, S, I, default_sort_key
     >>> from sympy.abc import x
 

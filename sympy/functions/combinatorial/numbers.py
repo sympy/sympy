@@ -48,6 +48,7 @@ class fibonacci(Function):
 
     Examples
     ========
+
     >>> from sympy import fibonacci, Symbol
 
     >>> [fibonacci(x) for x in range(11)]
@@ -57,11 +58,13 @@ class fibonacci(Function):
 
     References
     ==========
+
     * http://en.wikipedia.org/wiki/Fibonacci_number
     * http://mathworld.wolfram.com/FibonacciNumber.html
 
     See Also
     ========
+
     lucas
     """
 
@@ -101,6 +104,7 @@ class lucas(Function):
 
     Examples
     ========
+
     >>> from sympy import lucas
 
     >>> [lucas(x) for x in range(11)]
@@ -108,10 +112,12 @@ class lucas(Function):
 
     References
     ==========
+
     * http://en.wikipedia.org/wiki/Lucas_number
 
     See Also
     ========
+
     fibonacci
     """
 
@@ -182,6 +188,7 @@ class bernoulli(Function):
 
     Examples
     ========
+
     >>> from sympy import bernoulli
 
     >>> [bernoulli(n) for n in range(11)]
@@ -191,11 +198,13 @@ class bernoulli(Function):
 
     References
     ==========
+
     * http://en.wikipedia.org/wiki/Bernoulli_number
     * http://en.wikipedia.org/wiki/Bernoulli_polynomial
 
     See Also
     ========
+
     euler, bell
     """
 
@@ -303,11 +312,13 @@ class bell(Function):
 
     Notes
     =====
+
     Not to be confused with Bernoulli numbers and Bernoulli polynomials,
     which use the same notation.
 
     Examples
     ========
+
     >>> from sympy import bell, Symbol
 
     >>> [bell(n) for n in range(11)]
@@ -319,12 +330,14 @@ class bell(Function):
 
     References
     ==========
+
     * http://en.wikipedia.org/wiki/Bell_number
     * http://mathworld.wolfram.com/BellNumber.html
     * http://mathworld.wolfram.com/BellPolynomial.html
 
     See Also
     ========
+
     euler, bernoulli
     """
 
@@ -386,6 +399,7 @@ class harmonic(Function):
 
     Examples
     ========
+
     >>> from sympy import harmonic, oo
 
     >>> [harmonic(n) for n in range(6)]
@@ -397,6 +411,7 @@ class harmonic(Function):
 
     References
     ==========
+
     * http://en.wikipedia.org/wiki/Harmonic_number
 
     """
@@ -449,6 +464,7 @@ class euler(Function):
 
     Examples
     ========
+
     >>> from sympy import Symbol, euler
     >>> [euler(n) for n in range(10)]
     [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
@@ -458,6 +474,7 @@ class euler(Function):
 
     References
     ==========
+
     * http://en.wikipedia.org/wiki/Euler_numbers
     * http://mathworld.wolfram.com/EulerNumber.html
     * http://en.wikipedia.org/wiki/Alternating_permutation
@@ -465,6 +482,7 @@ class euler(Function):
 
     See Also
     ========
+
     bernoulli, bell
     """
 
@@ -527,6 +545,7 @@ class catalan(Function):
 
     Examples
     ========
+
     >>> from sympy import (Symbol, binomial, gamma, hyper, polygamma,
     ...             catalan, diff, combsimp, Rational, I)
 
@@ -580,12 +599,14 @@ class catalan(Function):
 
     References
     ==========
+
     * http://en.wikipedia.org/wiki/Catalan_number
     * http://mathworld.wolfram.com/CatalanNumber.html
     * http://geometer.org/mathcircles/catalan.pdf
 
     See Also
     ========
+
     sympy.functions.combinatorial.factorials.binomial
     """
 

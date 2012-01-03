@@ -718,6 +718,7 @@ class QuadratureMethods:
 
         References
         ==========
+
         1. http://mathworld.wolfram.com/DoubleIntegral.html
 
         """

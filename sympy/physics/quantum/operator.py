@@ -34,12 +34,14 @@ class Operator(QExpr):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         operator. For time-dependent operators, this will include the time.
 
     Examples
     ========
+
     Create an operator and examine its attributes::
 
         >>> from sympy.physics.quantum import Operator
@@ -85,6 +87,7 @@ class Operator(QExpr):
 
     References
     ==========
+
     [1] http://en.wikipedia.org/wiki/Operator
     [2] http://en.wikipedia.org/wiki/Observable
     """
@@ -177,12 +180,14 @@ class HermitianOperator(Operator):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         operator. For time-dependent operators, this will include the time.
 
     Examples
     ========
+
     >>> from sympy.physics.quantum import Dagger, HermitianOperator
     >>> H = HermitianOperator('H')
     >>> Dagger(H)
@@ -214,12 +219,14 @@ class UnitaryOperator(Operator):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         operator. For time-dependent operators, this will include the time.
 
     Examples
     ========
+
     >>> from sympy.physics.quantum import Dagger, UnitaryOperator
     >>> U = UnitaryOperator('U')
     >>> U*Dagger(U)
@@ -239,6 +246,7 @@ class OuterProduct(Operator):
 
     Parameters
     ==========
+
     ket : KetBase
         The ket on the left side of the outer product.
     bar : BraBase
@@ -246,6 +254,7 @@ class OuterProduct(Operator):
 
     Examples
     ========
+
     Create a simple outer product by hand and take its dagger::
 
         >>> from sympy.physics.quantum import Ket, Bra, OuterProduct, Dagger
@@ -286,6 +295,7 @@ class OuterProduct(Operator):
 
     References
     ==========
+
     [1] http://en.wikipedia.org/wiki/Outer_product
     """
 
@@ -353,6 +363,7 @@ class DifferentialOperator(Operator):
 
     Parameters
     ==========
+
     expr : Expr
            The arbitrary expression which the appropriate Wavefunction
            is to be substituted into
@@ -363,6 +374,7 @@ class DifferentialOperator(Operator):
 
     Examples
     ========
+
     You can define a completely arbitrary expression and specify where
     the Wavefunction is to be substituted
 
@@ -391,6 +403,7 @@ class DifferentialOperator(Operator):
 
         Examples
         ========
+
         >>> from sympy.physics.quantum.operator import DifferentialOperator
         >>> from sympy import Symbol, Function, Derivative
         >>> x = Symbol('x')
@@ -414,6 +427,7 @@ class DifferentialOperator(Operator):
 
         Examples
         ========
+
         >>> from sympy.physics.quantum.operator import DifferentialOperator
         >>> from sympy import Function, Symbol, Derivative
         >>> x = Symbol('x')
@@ -438,6 +452,7 @@ class DifferentialOperator(Operator):
 
         Examples
         ========
+
         >>> from sympy.physics.quantum.operator import DifferentialOperator
         >>> from sympy import Function, Symbol, Derivative
         >>> x = Symbol('x')

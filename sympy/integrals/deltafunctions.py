@@ -105,6 +105,7 @@ def deltaintegrate(f, x):
 
     Examples
     ========
+
         >>> from sympy.abc import x, y, z
         >>> from sympy.integrals.deltafunctions import deltaintegrate
         >>> from sympy import sin, cos, DiracDelta, Heaviside

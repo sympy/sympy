@@ -8,6 +8,7 @@ def use(expr, func, level=0, args=(), kwargs={}):
 
     Examples
     ========
+
     >>> from sympy import use, expand
     >>> from sympy.abc import x, y
 

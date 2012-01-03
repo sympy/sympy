@@ -197,6 +197,7 @@ class Basic(PicklableWithSlots):
 
         Examples
         ========
+
         >>> from sympy.abc import x, y
         >>> x.compare(y)
         -1
@@ -271,6 +272,7 @@ class Basic(PicklableWithSlots):
 
         Examples
         ========
+
         >>> from sympy.abc import x
         >>> from sympy import Basic, Number
         >>> Basic._compare_pretty(x, x**2)
@@ -318,6 +320,7 @@ class Basic(PicklableWithSlots):
 
         Examples
         ========
+
         >>> from sympy import Tuple
         >>> Tuple.fromiter(i for i in xrange(5))
         (0, 1, 2, 3, 4)
@@ -337,6 +340,7 @@ class Basic(PicklableWithSlots):
 
         Examples
         ========
+
         >>> from sympy.core import Basic, S, I
         >>> from sympy.abc import x
 
@@ -416,6 +420,7 @@ class Basic(PicklableWithSlots):
 
         Examples
         ========
+
         >>> from sympy import Dummy
         >>> from sympy.abc import x, y
 
@@ -475,6 +480,7 @@ class Basic(PicklableWithSlots):
 
            Examples
            ========
+
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
            >>> (1 + x + 2*sin(y + I*pi)).atoms()
@@ -485,6 +491,7 @@ class Basic(PicklableWithSlots):
 
            Examples
            ========
+
            >>> from sympy import Number, NumberSymbol, Symbol
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
            set([x, y])
@@ -619,6 +626,7 @@ class Basic(PicklableWithSlots):
 
         Examples
         ========
+
         >>> from sympy.abc import x
         >>> a = 2*x
         >>> a.func
@@ -639,6 +647,7 @@ class Basic(PicklableWithSlots):
 
         Examples
         ========
+
         >>> from sympy import symbols, cot
         >>> from sympy.abc import x, y
 
@@ -668,6 +677,7 @@ class Basic(PicklableWithSlots):
 
         Examples
         ========
+
         >>> from sympy.abc import x
         >>> a = 2*x
         >>> a.iter_basic_args()
@@ -723,6 +733,7 @@ class Basic(PicklableWithSlots):
 
         Examples
         ========
+
         >>> from sympy import pi
         >>> from sympy.abc import x, y
         >>> (1 + x*y).subs(x, pi)
@@ -771,6 +782,7 @@ class Basic(PicklableWithSlots):
 
         Examples
         ========
+
         >>> from sympy.abc import x, y
         >>> (x+y)._subs_list( [(x, 3),     (y, x**2)] )
         x**2 + 3
@@ -898,6 +910,7 @@ class Basic(PicklableWithSlots):
 
         Examples
         ========
+
         >>> from sympy import sin, S
         >>> from sympy.abc import x, y, z
         >>> (x**2 + sin(x*y)).has(z)
@@ -1006,6 +1019,7 @@ class Basic(PicklableWithSlots):
 
         Examples
         ========
+
         >>> from sympy import log, sin, cos, tan, Wild
         >>> from sympy.abc import x
 
@@ -1185,6 +1199,7 @@ class Basic(PicklableWithSlots):
 
         Examples
         ========
+
         >>> from sympy import symbols, Wild
         >>> from sympy.abc import x, y
         >>> p = Wild("p")
@@ -1294,6 +1309,7 @@ class Atom(Basic):
 
     Examples
     ========
+
     Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """

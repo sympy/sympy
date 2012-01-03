@@ -63,11 +63,13 @@ def couple(tp):
 
     Parameters
     ==========
+
     tp: TensorProduct
         TensorProduct of spin states to be coupled
 
     Examples
     ========
+
     Couple a tensor product of numerical states:
 
         >>> from sympy.physics.quantum.spin import JzKet, couple
@@ -136,6 +138,7 @@ def uncouple(*args):
 
     Parameters
     ==========
+
     args: CoupledSpinState or SpinState
         The state that is to be coupled. If a subclass of SpinState is used,
         the state must be followed by the j values of the spaces that are to
@@ -143,6 +146,7 @@ def uncouple(*args):
 
     Examples
     ========
+
     Uncouple a numerical state using a CoupledSpinState state:
 
         >>> from sympy.physics.quantum.spin import JzKetCoupled, uncouple
@@ -511,6 +515,7 @@ class Rotation(UnitaryOperator):
 
     Parameters
     ==========
+
     alpha : Number, Symbol
         First Euler Angle
     beta : Number, Symbol
@@ -520,6 +525,7 @@ class Rotation(UnitaryOperator):
 
     Examples
     ========
+
     A simple example rotation operator:
 
         >>> from sympy import pi
@@ -539,6 +545,7 @@ class Rotation(UnitaryOperator):
 
     References
     ==========
+
     [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
 
@@ -584,6 +591,7 @@ class Rotation(UnitaryOperator):
 
         Parameters
         ===========
+
         j : Number
             Total angular momentum
         m : Number
@@ -599,6 +607,7 @@ class Rotation(UnitaryOperator):
 
         Examples
         ========
+
         Return the Wigner-D matrix element for a defined rotation, both
         numerical and symbolic:
 
@@ -621,6 +630,7 @@ class Rotation(UnitaryOperator):
 
         Parameters
         ===========
+
         j : Number
             Total angular momentum
         m : Number
@@ -632,6 +642,7 @@ class Rotation(UnitaryOperator):
 
         Examples
         ========
+
         Return the Wigner-D matrix element for a defined rotation, both
         numerical and symbolic:
 
@@ -693,6 +704,7 @@ class WignerD(Expr):
 
     Parameters
     ==========
+
     j : Number
         Total angular momentum
     m : Number
@@ -708,6 +720,7 @@ class WignerD(Expr):
 
     Examples
     ========
+
     Evaluate the Wigner-D matrix elements of a simple rotation:
 
         >>> from sympy.physics.quantum.spin import Rotation
@@ -728,6 +741,7 @@ class WignerD(Expr):
 
     References
     ==========
+
     [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
 
@@ -1066,6 +1080,7 @@ class JzKet(SpinState, Ket):
 
     Parameters
     ==========
+
     j : Number, Symbol
         Total spin angular momentum
     m : Number, Symbol
@@ -1073,6 +1088,7 @@ class JzKet(SpinState, Ket):
 
     Examples
     ========
+
     Normal States:
 
     Defining simple spin states, both numerical and symbolic:
@@ -1364,6 +1380,7 @@ class JzKetCoupled(CoupledSpinState, Ket):
 
     Parameters
     ==========
+
     j : Number, Symbol
         Total spin angular momentum
     m : Number, Symbol
@@ -1373,6 +1390,7 @@ class JzKetCoupled(CoupledSpinState, Ket):
 
     Examples
     ========
+
     Defining simple spin states, both numerical and symbolic:
 
         >>> from sympy.physics.quantum.spin import JzKetCoupled

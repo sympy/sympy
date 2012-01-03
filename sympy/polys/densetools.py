@@ -47,6 +47,7 @@ def dup_integrate(f, m, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densetools import dup_integrate
 
@@ -78,6 +79,7 @@ def dmp_integrate(f, m, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densetools import dmp_integrate
 
@@ -122,6 +124,7 @@ def dmp_integrate_in(f, m, j, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densetools import dmp_integrate_in
 
@@ -143,6 +146,7 @@ def dup_diff(f, m, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_diff
 
@@ -185,6 +189,7 @@ def dmp_diff(f, m, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_diff
 
@@ -241,6 +246,7 @@ def dmp_diff_in(f, m, j, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_diff_in
 
@@ -263,6 +269,7 @@ def dup_eval(f, a, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_eval
 
@@ -288,6 +295,7 @@ def dmp_eval(f, a, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_eval
 
@@ -328,6 +336,7 @@ def dmp_eval_in(f, a, j, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_eval_in
 
@@ -364,6 +373,7 @@ def dmp_eval_tail(f, A, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_eval_tail
 
@@ -405,6 +415,7 @@ def dmp_diff_eval_in(f, m, a, j, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_diff_eval_in
 
@@ -429,6 +440,7 @@ def dup_trunc(f, p, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_trunc
 
@@ -460,6 +472,7 @@ def dmp_trunc(f, p, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_trunc
 
@@ -479,6 +492,7 @@ def dmp_ground_trunc(f, p, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_ground_trunc
 
@@ -501,6 +515,7 @@ def dup_monic(f, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densetools import dup_monic
 
@@ -528,6 +543,7 @@ def dmp_ground_monic(f, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densetools import dmp_ground_monic
 
@@ -560,6 +576,7 @@ def dup_content(f, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densetools import dup_content
 
@@ -592,6 +609,7 @@ def dmp_ground_content(f, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densetools import dmp_ground_content
 
@@ -626,6 +644,7 @@ def dup_primitive(f, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densetools import dup_primitive
 
@@ -655,6 +674,7 @@ def dmp_ground_primitive(f, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densetools import dmp_ground_primitive
 
@@ -686,6 +706,7 @@ def dup_extract(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_extract
 
@@ -714,6 +735,7 @@ def dmp_ground_extract(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_ground_extract
 
@@ -741,6 +763,7 @@ def dup_real_imag(f, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_real_imag
 
@@ -787,6 +810,7 @@ def dup_mirror(f, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_mirror
 
@@ -808,6 +832,7 @@ def dup_scale(f, a, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_scale
 
@@ -829,6 +854,7 @@ def dup_shift(f, a, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_shift
 
@@ -851,6 +877,7 @@ def dup_transform(f, p, q, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_transform
 
@@ -884,6 +911,7 @@ def dup_compose(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_compose
 
@@ -915,6 +943,7 @@ def dmp_compose(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_compose
 
@@ -1025,6 +1054,7 @@ def dup_decompose(f, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_decompose
 
@@ -1035,6 +1065,7 @@ def dup_decompose(f, K):
 
     References
     ==========
+
     1. [Kozen89]_
 
     """
@@ -1058,6 +1089,7 @@ def dmp_lift(f, u, K):
 
     Examples
     ========
+
     >>> from sympy import I
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densetools import dmp_lift
@@ -1097,6 +1129,7 @@ def dup_sign_variations(f, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_sign_variations
 
@@ -1123,6 +1156,7 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ, ZZ
     >>> from sympy.polys.densetools import dup_clear_denoms
 
@@ -1174,6 +1208,7 @@ def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ, ZZ
     >>> from sympy.polys.densetools import dmp_clear_denoms
 
@@ -1213,6 +1248,7 @@ def dup_revert(f, n, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densetools import dup_revert
 
@@ -1241,6 +1277,7 @@ def dmp_revert(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densetools import dmp_revert
 

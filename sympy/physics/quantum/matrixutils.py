@@ -147,16 +147,19 @@ def _sympy_tensor_product(*matrices):
 
     Parameters
     ==========
+
     matrices : tuple of Matrix instances
         The matrices to take the tensor product of.
 
     Returns
     =======
+
     matrix : Matrix
         The tensor product matrix.
 
     Examples
     ========
+
         >>> from sympy import I, Matrix, symbols
         >>> from sympy.physics.quantum.matrixutils import _sympy_tensor_product
 
@@ -175,6 +178,7 @@ def _sympy_tensor_product(*matrices):
 
     References
     ==========
+
     [1] http://en.wikipedia.org/wiki/Kronecker_product
     """
     # Make sure we have a sequence of Matrices

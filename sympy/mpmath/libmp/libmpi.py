@@ -523,6 +523,7 @@ def mpi_to_str(x, dps, use_spaces=True, brackets='[]', mode='brackets', error_dp
 
     Arguments
     =========
+
     *dps*
         decimal places to use for printing
     *use_spaces*
@@ -539,6 +540,7 @@ def mpi_to_str(x, dps, use_spaces=True, brackets='[]', mode='brackets', error_dp
 
     Examples
     ========
+
         >>> from mpmath import mpi, mp
         >>> mp.dps = 30
         >>> x = mpi(1, 2)

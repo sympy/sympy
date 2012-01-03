@@ -60,6 +60,7 @@ def pl_true(expr, model={}):
 
     Examples
     ========
+
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import pl_true
     >>> pl_true( A & B, {A: True, B : True})
@@ -136,6 +137,7 @@ class PropKB(KB):
 
         Examples
         ========
+
         >>> from sympy.logic.inference import PropKB
         >>> from sympy.abc import x, y, z
         >>> l = PropKB()
@@ -158,6 +160,7 @@ class PropKB(KB):
 
         Examples
         ========
+
         >>> from sympy.logic.inference import PropKB
         >>> from sympy.abc import x, y
         >>> l = PropKB()
@@ -181,6 +184,7 @@ class PropKB(KB):
 
         Examples
         ========
+
         >>> from sympy.logic.inference import PropKB
         >>> from sympy.abc import x, y
         >>> l = PropKB()

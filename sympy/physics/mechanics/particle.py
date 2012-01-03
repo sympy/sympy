@@ -11,6 +11,7 @@ class Particle(object):
 
     Parameters
     ==========
+
     mass : sympifyable
         A SymPy expression representing the Particle's mass
     point : Point
@@ -19,6 +20,7 @@ class Particle(object):
 
     Examples
     ========
+
     >>> from sympy.physics.mechanics import Particle, Point
     >>> from sympy import Symbol
     >>> po = Point('po')

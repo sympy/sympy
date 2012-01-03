@@ -450,6 +450,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
 
     Examples
     ========
+
     >>> from sympy import Function, dsolve, Eq, Derivative, sin, cos
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -593,6 +594,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
 
     Notes on Hint Names
     ===================
+
     *"_Integral"*
 
         If a classification has "_Integral" at the end, it will return
@@ -659,6 +661,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
 
     Examples
     ========
+
     >>> from sympy import Function, classify_ode, Eq
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -910,6 +913,7 @@ def odesimp(eq, func, order, hint):
 
     Examples
     ========
+
     >>> from sympy import sin, symbols, dsolve, pprint, Function
     >>> from sympy.solvers.ode import odesimp
     >>> x , u2, C1= symbols('x,u2,C1')
@@ -1078,6 +1082,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
 
     Examples
     ========
+
     >>> from sympy import Eq, Function, checkodesol, symbols
     >>> x, C1 = symbols('x,C1')
     >>> f = Function('f')
@@ -1293,6 +1298,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
 
     Examples
     ========
+
     This function is designed to be passed to min as the key argument,
     such as min(listofsolutions, key=lambda i: ode_sol_simplicity(i, f(x))).
 
@@ -1412,6 +1418,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
 
     Examples
     ========
+
     >>> from sympy import symbols
     >>> from sympy.solvers.ode import constantsimp
     >>> C1, C2, C3, x, y = symbols('C1,C2,C3,x,y')
@@ -1571,6 +1578,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
 
     Examples
     ========
+
     >>> from sympy import symbols, Eq, pprint
     >>> from sympy.solvers.ode import constant_renumber
     >>> x, C0, C1, C2, C3, C4 = symbols('x,C:5')
@@ -1689,6 +1697,7 @@ def ode_order(expr, func):
 
     Examples
     ========
+
     >>> from sympy import Function, ode_order
     >>> from sympy.abc import x
     >>> f, g = map(Function, ['f', 'g'])
@@ -1758,6 +1767,7 @@ def ode_1st_exact(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import Function, dsolve, cos, sin
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -1767,6 +1777,7 @@ def ode_1st_exact(eq, func, order, match):
 
     References
     ==========
+
     - http://en.wikipedia.org/wiki/Exact_differential_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 73
@@ -1803,6 +1814,7 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import Function, dsolve, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -1818,6 +1830,7 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
 
     References
     ==========
+
         - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
         - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
           Dover 1963, pp. 59
@@ -1889,6 +1902,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import Function, dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -1904,6 +1918,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
 
     References
     ==========
+
     - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 59
@@ -1973,6 +1988,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import Function, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -1987,6 +2003,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
 
     References
     ==========
+
     - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 59
@@ -2030,6 +2047,7 @@ def homogeneous_order(eq, *symbols):
 
     Examples
     ========
+
     >>> from sympy import Function, homogeneous_order, sqrt
     >>> from sympy.abc import x, y
     >>> f = Function('f')
@@ -2122,6 +2140,7 @@ def ode_1st_linear(eq, func, order, match):
 
     Examples
     ========
+
     >>> f = Function('f')
     >>> pprint(dsolve(Eq(x*diff(f(x), x) - f(x), x**2*sin(x)),
     ... f(x), '1st_linear'))
@@ -2129,6 +2148,7 @@ def ode_1st_linear(eq, func, order, match):
 
     References
     ==========
+
     - http://en.wikipedia.org/wiki/Linear_differential_equation#First_order_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 92
@@ -2194,6 +2214,7 @@ def ode_Bernoulli(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import Function, dsolve, Eq, pprint, log
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -2208,6 +2229,7 @@ def ode_Bernoulli(eq, func, order, match):
 
     References
     ==========
+
     - http://en.wikipedia.org/wiki/Bernoulli_differential_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 95
@@ -2253,6 +2275,7 @@ def ode_Riccati_special_minus2(eq, func, order, match):
 
     References
     ==========
+
     1. http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
     2. http://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
        http://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
@@ -2299,6 +2322,7 @@ def ode_Liouville(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import Function, dsolve, Eq, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -2309,6 +2333,7 @@ def ode_Liouville(eq, func, order, match):
 
     References
     ==========
+
     - Goldstein and Braun, "Advanced Methods for the Solution of
       Differential Equations", pp. 98
     - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Liouville
@@ -2345,6 +2370,7 @@ def _nth_linear_match(eq, func, order):
 
     Examples
     ========
+
     >>> from sympy import Function, cos, sin
     >>> from sympy.abc import x
     >>> from sympy.solvers.ode import _nth_linear_match
@@ -2428,6 +2454,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
 
     Examples
     ========
+
     >>> from sympy import Function, dsolve, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -2439,6 +2466,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
 
     References
     ==========
+
     - http://en.wikipedia.org/wiki/Linear_differential_equation
         section: Nonhomogeneous_equation_with_constant_coefficients
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
@@ -2541,6 +2569,7 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
 
     Examples
     ========
+
     >>> from sympy import Function, dsolve, pprint, exp, cos
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -2554,6 +2583,7 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
 
     References
     ==========
+
     - http://en.wikipedia.org/wiki/Method_of_undetermined_coefficients
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 221
@@ -2685,6 +2715,7 @@ def _undetermined_coefficients_match(expr, x):
 
     Examples
     ========
+
     >>> from sympy import log, exp
     >>> from sympy.solvers.ode import _undetermined_coefficients_match
     >>> from sympy.abc import x
@@ -2846,6 +2877,7 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
 
     Examples
     ========
+
     >>> from sympy import Function, dsolve, pprint, exp, log
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -2858,6 +2890,7 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
 
     References
     ==========
+
     - http://en.wikipedia.org/wiki/Variation_of_parameters
     - http://planetmath.org/encyclopedia/VariationOfParameters.html
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
@@ -2957,6 +2990,7 @@ def ode_separable(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import Function, dsolve, Eq
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -2969,6 +3003,7 @@ def ode_separable(eq, func, order, match):
 
     References
     ==========
+
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 52
 

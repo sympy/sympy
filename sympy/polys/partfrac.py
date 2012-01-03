@@ -19,6 +19,7 @@ def apart(f, x=None, full=False, **options):
 
     Examples
     ========
+
     >>> from sympy.polys.partfrac import apart
     >>> from sympy.abc import x, y
 
@@ -117,6 +118,7 @@ def apart_full_decomposition(P, Q):
 
     References
     ==========
+
     1. [Bronstein93]_
 
     """

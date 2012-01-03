@@ -202,6 +202,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
 
     Examples
     ========
+
     >>> from sympy import S, collect, expand, factor, Wild
     >>> from sympy.abc import a, b, c, x, y, z
 
@@ -555,6 +556,7 @@ def rcollect(expr, *vars):
 
     Examples
     ========
+
     >>> from sympy.simplify import rcollect
     >>> from sympy.abc import x, y
 
@@ -598,6 +600,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
 
     Examples
     ========
+
     >>> from sympy.abc import x, y, z, alpha
     >>> from sympy import separatevars, sin
     >>> separatevars((x*y)**y)
@@ -726,6 +729,7 @@ def ratsimp(expr):
 
     Examples
     ========
+
     >>> from sympy import ratsimp
     >>> from sympy.abc import x, y
     >>> ratsimp(1/x + 1/y)
@@ -746,6 +750,7 @@ def trigsimp(expr, deep=False, recursive=False):
 
     Notes
     =====
+
     deep:
     - Apply trigsimp inside functions
 
@@ -756,6 +761,7 @@ def trigsimp(expr, deep=False, recursive=False):
 
     Examples
     ========
+
     >>> from sympy import trigsimp, sin, cos, log
     >>> from sympy.abc import x, y
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
@@ -792,10 +798,12 @@ def trigsimp_nonrecursive(expr, deep=False):
 
     Notes
     =====
+
     deep -> apply trigsimp inside functions
 
     Examples
     ========
+
     >>> from sympy import cos, sin, log
     >>> from sympy.simplify.simplify import trigsimp, trigsimp_nonrecursive
     >>> from sympy.abc import x, y
@@ -908,6 +916,7 @@ def collect_sqrt(expr, evaluate=True):
 
     Examples
     ========
+
     >>> from sympy import sqrt
     >>> from sympy.simplify.simplify import collect_sqrt
     >>> from sympy.abc import a, b
@@ -974,6 +983,7 @@ def collect_const(expr, *vars, **first):
 
     Examples
     ========
+
     >>> from sympy import sqrt
     >>> from sympy.abc import a, s
     >>> from sympy.simplify.simplify import collect_const
@@ -1069,6 +1079,7 @@ def radsimp(expr, symbolic=True):
 
     Examples
     ========
+
     >>> from sympy import radsimp, sqrt, Symbol, denom, pprint, I
     >>> from sympy.abc import a, b, c
 
@@ -1514,6 +1525,7 @@ def powdenest(eq, force=False, polar=False):
 
     Examples
     ========
+
     >>> from sympy.abc import a, b, x, y, z
     >>> from sympy import Symbol, exp, log, sqrt, symbols, powdenest
 
@@ -1591,6 +1603,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
     Notes
     =====
+
     If deep is True then powsimp() will also simplify arguments of
     functions. By default deep is set to False.
 
@@ -1622,6 +1635,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
     Examples
     ========
+
     >>> from sympy import powsimp, exp, log, symbols
     >>> from sympy.abc import x, y, z, n
     >>> powsimp(x**y*x**z*y**z, combine='all')
@@ -2108,6 +2122,7 @@ def combsimp(expr):
 
     Examples
     ========
+
     >>> from sympy.simplify import combsimp
     >>> from sympy import factorial, binomial
     >>> from sympy.abc import n, k
@@ -2692,6 +2707,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
 
     Examples
     ========
+
         >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, exp, pi
         >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
         -2 + 2*GoldenRatio
@@ -2792,6 +2808,7 @@ def logcombine(expr, force=False):
 
     Examples
     ========
+
     >>> from sympy import Symbol, symbols, log, logcombine
     >>> from sympy.abc import a, x, y, z
     >>> logcombine(a*log(x)+log(y)-log(z))
@@ -2820,6 +2837,7 @@ def _logcombine(expr, force=False):
 
         Examples
         ========
+
         _getlogargs(a*log(x*y))
         x*y
         """

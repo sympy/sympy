@@ -424,6 +424,7 @@ class LinearAlgebraMethods(object):
 
         Examples
         ========
+
         Cholesky decomposition of a positive-definite symmetric matrix::
 
             >>> from mpmath import *
@@ -467,6 +468,7 @@ class LinearAlgebraMethods(object):
 
         References
         ==========
+
         1. [Wikipedia]_ http://en.wikipedia.org/wiki/Cholesky_decomposition
 
         """

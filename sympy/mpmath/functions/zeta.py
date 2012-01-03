@@ -937,6 +937,7 @@ def secondzeta(ctx, s, a = 0.015, **kwargs):
 
     Examples
     ========
+
         >>> from mpmath import *
         >>> mp.pretty = True; mp.dps = 15
         >>> secondzeta(2)
@@ -1004,6 +1005,7 @@ def secondzeta(ctx, s, a = 0.015, **kwargs):
 
     References
     ==========
+
     A. Voros, Zeta functions for the Riemann zeros, Ann. Institute Fourier,
     53, (2003) 665--699.
 
@@ -1075,6 +1077,7 @@ def lerchphi(ctx, z, s, a):
 
     Examples
     ========
+
     Several evaluations in terms of simpler functions::
 
         >>> from mpmath import *
@@ -1112,6 +1115,7 @@ def lerchphi(ctx, z, s, a):
 
     References
     ==========
+
     1. [DLMF]_ section 25.14
 
     """

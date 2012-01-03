@@ -565,6 +565,7 @@ class Rational(Number):
 
     Examples
     ========
+
     >>> from sympy import Rational
     >>> from sympy.abc import x, y
     >>> Rational(3)
@@ -1020,6 +1021,7 @@ class Rational(Number):
 
         Examples
         ========
+
         >>> from sympy import S
         >>> (S(-3)/2).as_content_primitive()
         (3/2, -1)

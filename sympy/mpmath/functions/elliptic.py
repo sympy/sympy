@@ -373,6 +373,7 @@ def kleinj(ctx, tau=None, **kwargs):
 
     Examples
     ========
+
     Verifying the functional equation `J(\tau) = J(\tau+1) = J(-\tau^{-1})`::
 
         >>> from mpmath import *
@@ -574,6 +575,7 @@ def elliprf(ctx, x, y, z):
 
     Examples
     ========
+
     Some basic values and limits::
 
         >>> from mpmath import *
@@ -653,6 +655,7 @@ def elliprf(ctx, x, y, z):
 
     References
     ==========
+
     1. [Carlson]_
     2. [DLMF]_ Chapter 19. Elliptic Integrals
 
@@ -699,6 +702,7 @@ def elliprc(ctx, x, y, pv=True):
 
     Examples
     ========
+
     Some special values and limits::
 
         >>> from mpmath import *
@@ -763,6 +767,7 @@ def elliprj(ctx, x, y, z, p):
 
     Examples
     ========
+
     Some values and limits::
 
         >>> from mpmath import *
@@ -835,6 +840,7 @@ def elliprd(ctx, x, y, z):
 
     Examples
     ========
+
         >>> from mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> elliprd(1,2,3)
@@ -868,6 +874,7 @@ def elliprg(ctx, x, y, z):
 
     Examples
     ========
+
     Evaluation for real and complex arguments::
 
         >>> from mpmath import *
@@ -947,6 +954,7 @@ def ellipf(ctx, phi, m):
 
     Examples
     ========
+
     Basic values and limits::
 
         >>> from mpmath import *

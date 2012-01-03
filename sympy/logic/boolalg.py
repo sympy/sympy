@@ -50,6 +50,7 @@ class And(LatticeOp, BooleanFunction):
 
     Examples
     ========
+
         >>> from sympy.core import symbols
         >>> from sympy.abc import x, y
         >>> x & y
@@ -82,6 +83,7 @@ class Xor(BooleanFunction):
 
         Examples
         ========
+
         >>> from sympy.logic.boolalg import Xor
         >>> Xor(True, False)
         True
@@ -120,6 +122,7 @@ class Not(BooleanFunction):
 
         Examples
         ========
+
         >>> from sympy.logic.boolalg import Not, And, Or
         >>> from sympy.abc import x
         >>> Not(True)
@@ -171,6 +174,7 @@ class Nand(BooleanFunction):
 
         Examples
         ========
+
         >>> from sympy.logic.boolalg import Nand
         >>> Nand(False, True)
         True
@@ -196,6 +200,7 @@ class Nor(BooleanFunction):
 
         Examples
         ========
+
         >>> from sympy.logic.boolalg import Nor
         >>> Nor(True, False)
         False
@@ -225,6 +230,7 @@ class Implies(BooleanFunction):
 
         Examples
         ========
+
         >>> from sympy.logic.boolalg import Implies
         >>> Implies(True, False)
         False
@@ -260,6 +266,7 @@ class Equivalent(BooleanFunction):
 
         Examples
         ========
+
         >>> from sympy.logic.boolalg import Equivalent, And
         >>> from sympy.abc import x
         >>> Equivalent(False, False, False)
@@ -296,6 +303,7 @@ class ITE(BooleanFunction):
 
         Examples
         ========
+
         >>> from sympy.logic.boolalg import ITE, And, Xor, Or
         >>> from sympy.abc import x,y,z
         >>> x = True
@@ -371,6 +379,7 @@ def distribute_and_over_or(expr):
 
     Examples
     ========
+
     >>> from sympy.logic.boolalg import distribute_and_over_or, And, Or, Not
     >>> from sympy.abc import A, B, C
     >>> distribute_and_over_or(Or(A, And(Not(B), Not(C))))
@@ -398,6 +407,7 @@ def to_cnf(expr):
 
     Examples
     ========
+
     >>> from sympy.logic.boolalg import to_cnf
     >>> from sympy.abc import A, B, D
     >>> to_cnf(~(A | B) | D)
@@ -418,6 +428,7 @@ def is_cnf(expr):
 
     Examples
     ========
+
     >>> from sympy.logic.boolalg import is_cnf
     >>> from sympy.abc import A, B, C
     >>> is_cnf(A | B | C)
@@ -475,6 +486,7 @@ def eliminate_implications(expr):
 
     Examples
     ========
+
     >>> from sympy.logic.boolalg import Implies, Equivalent, eliminate_implications
     >>> from sympy.abc import A, B, C
     >>> eliminate_implications(Implies(A, B))
@@ -505,6 +517,7 @@ def compile_rule(s):
 
     Examples
     ========
+
     >>> from sympy.logic.boolalg import compile_rule
     >>> compile_rule('A & B')
     And(A, B)
@@ -522,6 +535,7 @@ def to_int_repr(clauses, symbols):
 
     Examples
     ========
+
         >>> from sympy.logic.boolalg import to_int_repr
         >>> from sympy.abc import x, y
         >>> to_int_repr([x | y, y], [x, y]) == [set([1, 2]), set([2])]

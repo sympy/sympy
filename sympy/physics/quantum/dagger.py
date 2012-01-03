@@ -20,11 +20,13 @@ class Dagger(Expr):
 
     Parameters
     ==========
+
     arg : Expr
         The sympy expression that we want to take the dagger of.
 
     Examples
     ========
+
     Daggering various quantum objects:
 
         >>> from sympy.physics.quantum.dagger import Dagger
@@ -69,6 +71,7 @@ class Dagger(Expr):
 
     References
     ==========
+
     [1] http://en.wikipedia.org/wiki/Hermitian_transpose
     """
 

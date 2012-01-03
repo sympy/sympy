@@ -40,6 +40,7 @@ def _qsympify_sequence(seq):
 
     Examples
     ========
+
     >>> from sympy.physics.quantum.qexpr import _qsympify_sequence
     >>> _qsympify_sequence((1,2,[3,4,[1,]]))
     (1, 2, (3, 4, (1,)))
@@ -90,6 +91,7 @@ class QExpr(Expr):
 
         Parameters
         ==========
+
         args : tuple
             The list of numbers or parameters that uniquely specify the
             quantum object. For a state, this will be its symbol or its
@@ -97,6 +99,7 @@ class QExpr(Expr):
 
         Examples
         ========
+
         >>> from sympy.physics.quantum.qexpr import QExpr
         >>> q = QExpr(0)
         >>> q
@@ -331,6 +334,7 @@ class QExpr(Expr):
 
         Parameters
         ==========
+
         basis : Operator
             The Operator whose basis functions will be used as the basis for
             representation.

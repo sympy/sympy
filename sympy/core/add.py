@@ -28,6 +28,7 @@ class Add(AssocOp):
 
         See also
         ========
+
         sympy.core.mul.Mul.flatten
 
         """
@@ -248,6 +249,7 @@ class Add(AssocOp):
 
         Examples
         ========
+
         >>> from sympy.abc import a, x
         >>> (3*x + a*x + 4).as_coefficients_dict()
         {1: 4, x: 3, a*x: 1}
@@ -278,6 +280,7 @@ class Add(AssocOp):
 
         Examples
         ========
+
         >>> from sympy.abc import x, y
         >>> (7 + 3*x).as_coeff_add()
         (7, (3*x,))
@@ -516,6 +519,7 @@ class Add(AssocOp):
 
         Examples
         ========
+
         >>> from sympy.abc import x
         >>> (x+1+1/x**5).extract_leading_order(x)
         ((x**(-5), O(x**(-5))),)
@@ -548,6 +552,7 @@ class Add(AssocOp):
 
         Examples
         ========
+
         >>> from sympy import I
         >>> (7 + 9*I).as_real_imag()
         (7, 9)
@@ -690,6 +695,7 @@ class Add(AssocOp):
 
         Examples
         ========
+
         >>> from sympy.abc import x, y
 
         >>> (2*x + 4*y).primitive()
@@ -769,6 +775,7 @@ class Add(AssocOp):
 
         Examples
         ========
+
         >>> from sympy import sqrt
         >>> (3 + 3*sqrt(2)).as_content_primitive()
         (3, 1 + sqrt(2))

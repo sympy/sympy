@@ -57,6 +57,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     Examples
     ========
+
     >>> from sympy import ask, Q, pi
     >>> from sympy.abc import x, y
     >>> ask(Q.rational(pi))

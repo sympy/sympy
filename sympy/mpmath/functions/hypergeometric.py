@@ -1178,6 +1178,7 @@ def hyper2d(ctx, a, b, x, y, **kwargs):
 
     Examples
     ========
+
     Two separable cases: a product of two geometric series, and a
     product of two Gaussian hypergeometric functions::
 
@@ -1239,6 +1240,7 @@ def hyper2d(ctx, a, b, x, y, **kwargs):
 
     References
     ==========
+
     1. [SrivastavaKarlsson]_
     2. [Weisstein]_ http://mathworld.wolfram.com/HornFunction.html
     3. [Weisstein]_ http://mathworld.wolfram.com/AppellHypergeometricFunction.html
@@ -1366,6 +1368,7 @@ def bihyper(ctx, a_s, b_s, z, **kwargs):
 
     Examples
     ========
+
     The value of `\,_2H_2` at `z = 1` is given by Dougall's formula::
 
         >>> from mpmath import *
@@ -1390,6 +1393,7 @@ def bihyper(ctx, a_s, b_s, z, **kwargs):
 
     References
     ==========
+
     1. [Slater]_ (chapter 6: "Bilateral Series", pp. 180-189)
     2. [Wikipedia]_ http://en.wikipedia.org/wiki/Bilateral_hypergeometric_series
 

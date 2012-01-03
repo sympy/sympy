@@ -77,6 +77,7 @@ def mr(n, bases):
 
     References
     ==========
+
     - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
       A Computational Perspective", Springer, 2nd edition, 135-138
 
@@ -85,6 +86,7 @@ def mr(n, bases):
 
     Examples
     ========
+
     >>> from sympy.ntheory.primetest import mr
     >>> mr(1373651, [2, 3])
     False
@@ -120,6 +122,7 @@ def _mr_safe(n):
 
     References for the bounds:
     ==========================
+
     1. http://primes.utm.edu/prove/prove2_3.html
     2. http://www.trnicely.net/misc/mpzspsp.html
     3. http://en.wikipedia.org/wiki/Miller-Rabin_primality_test#
@@ -184,6 +187,7 @@ def isprime(n):
 
     Examples
     ========
+
     >>> from sympy.ntheory import isprime
     >>> isprime(13)
     True
@@ -192,6 +196,7 @@ def isprime(n):
 
     See Also
     ========
+
     sympy.ntheory.generate.primerange : Generates all primes in a given range
     sympy.ntheory.generate.primepi : Return the number of primes less than or equal to n
     sympy.ntheory.generate.prime : Return the nth prime

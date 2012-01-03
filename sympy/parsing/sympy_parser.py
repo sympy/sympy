@@ -132,6 +132,7 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
 
     Examples
     ========
+
     >>> from sympy.parsing.sympy_parser import parse_expr
 
     >>> parse_expr("1/2")

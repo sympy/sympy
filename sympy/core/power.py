@@ -877,6 +877,7 @@ class Pow(Expr):
 
         Examples
         ========
+
         >>> from sympy import sqrt
         >>> sqrt(4 + 4*sqrt(2)).as_content_primitive()
         (2, sqrt(1 + sqrt(2)))

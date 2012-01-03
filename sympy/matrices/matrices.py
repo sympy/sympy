@@ -157,6 +157,7 @@ class Matrix(object):
 
         See Also
         ========
+
         conjugate: By-element conjugation
         """
         a = [0]*len(self)
@@ -171,6 +172,7 @@ class Matrix(object):
 
         See Also
         ========
+
         transpose: Matrix transposition
         H: Hermite conjugation
         D: Dirac conjugation
@@ -197,6 +199,7 @@ class Matrix(object):
 
         See Also
         ========
+
         conjugate: By-element conjugation
         D: Dirac conjugation
         """
@@ -209,6 +212,7 @@ class Matrix(object):
 
         See Also
         ========
+
         conjugate: By-element conjugation
         H: Hermite conjugation
         """
@@ -362,6 +366,7 @@ class Matrix(object):
 
         Parameters
         ==========
+
         key : slice
             The section of this matrix to replace.
         value : Matrix
@@ -369,6 +374,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> import sympy
         >>> M = sympy.matrices.Matrix([[0,1],[2,3]])
         >>> I = sympy.matrices.eye(5)
@@ -382,6 +388,7 @@ class Matrix(object):
 
         See Also
         ========
+
         copyin_list
         """
         rlo, rhi, clo, chi = self.key2bounds(key)
@@ -400,6 +407,7 @@ class Matrix(object):
 
         Parameters
         ==========
+
         key : slice
             The section of this matrix to replace.
         value : iterable
@@ -407,6 +415,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> import sympy
         >>> I = sympy.matrices.eye(5)
         >>> I.copyin_list((slice(0,2), slice(0,1)), [1,2])
@@ -419,6 +428,7 @@ class Matrix(object):
 
         See Also
         ========
+
         copyin_matrix
         """
         if not is_sequence(value):
@@ -508,6 +518,7 @@ class Matrix(object):
 
         See Also
         ========
+
         dot
         cross
         multiply_elementwise
@@ -593,6 +604,7 @@ class Matrix(object):
 
         See Also
         ========
+
         LDLdecomposition
         LUdecomposition
         QRdecomposition
@@ -643,6 +655,7 @@ class Matrix(object):
 
         See Also
         ========
+
         cholesky
         LUdecomposition
         QRdecomposition
@@ -675,6 +688,7 @@ class Matrix(object):
 
         See Also
         ========
+
         upper_triangular_solve
         cholesky_solve
         diagonal_solve
@@ -711,6 +725,7 @@ class Matrix(object):
 
         See Also
         ========
+
         lower_triangular_solve
         cholesky_solve
         diagonal_solve
@@ -747,6 +762,7 @@ class Matrix(object):
 
         See Also
         ========
+
         lower_triangular_solve
         upper_triangular_solve
         diagonal_solve
@@ -771,6 +787,7 @@ class Matrix(object):
 
         See Also
         ========
+
         lower_triangular_solve
         upper_triangular_solve
         cholesky_solve
@@ -801,6 +818,7 @@ class Matrix(object):
 
         See Also
         ========
+
         LDLdecomposition
         lower_triangular_solve
         upper_triangular_solve
@@ -842,6 +860,7 @@ class Matrix(object):
 
         See Also
         ========
+
         inverse_LU
         inverse_GE
         inverse_ADJ
@@ -892,6 +911,7 @@ class Matrix(object):
 
         See Also
         ========
+
         col
         row_swap
         row_del
@@ -923,6 +943,7 @@ class Matrix(object):
 
         See Also
         ========
+
         row
         col_swap
         col_del
@@ -951,6 +972,7 @@ class Matrix(object):
 
         See Also
         ========
+
         row
         col_swap
         """
@@ -973,6 +995,7 @@ class Matrix(object):
 
         See Also
         ========
+
         col
         row_swap
         """
@@ -992,6 +1015,7 @@ class Matrix(object):
 
         See Also
         ========
+
         row
         col_del
         """
@@ -1012,6 +1036,7 @@ class Matrix(object):
 
         See Also
         ========
+
         col
         row_del
         """
@@ -1033,6 +1058,7 @@ class Matrix(object):
 
         See Also
         ========
+
         row
         col_join
         """
@@ -1059,6 +1085,7 @@ class Matrix(object):
 
         See Also
         ========
+
         col
         row_join
         """
@@ -1091,6 +1118,7 @@ class Matrix(object):
 
         See Also
         ========
+
         row
         col_insert
         """
@@ -1134,6 +1162,7 @@ class Matrix(object):
 
         See Also
         ========
+
         col
         row_insert
         """
@@ -1195,6 +1224,7 @@ class Matrix(object):
 
         See Also
         ========
+
         extract
         """
         rlo, rhi, clo, chi = self.key2bounds(keys)
@@ -1212,6 +1242,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy import Matrix
         >>> m = Matrix(4, 3, range(12))
         >>> m   #doctest: +NORMALIZE_WHITESPACE
@@ -1239,6 +1270,7 @@ class Matrix(object):
 
         See Also
         ========
+
         submatrix
         """
         cols = self.cols
@@ -1254,6 +1286,7 @@ class Matrix(object):
 
         See Also
         ========
+
         key2ij
         slice2bounds
         """
@@ -1281,6 +1314,7 @@ class Matrix(object):
 
         See Also
         ========
+
         key2bounds
         slice2bounds
         """
@@ -1300,6 +1334,7 @@ class Matrix(object):
 
         See Also
         ========
+
         key2bounds
         key2ij
         """
@@ -1367,6 +1402,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy import Matrix, matrices
         >>> m = Matrix(2,3,lambda i,j: i*3+j)
         >>> m           #doctest: +NORMALIZE_WHITESPACE
@@ -1404,6 +1440,7 @@ class Matrix(object):
 
         See Also
         ========
+
         lower_triangular_solve
         upper_triangular_solve
         cholesky_solve
@@ -1435,6 +1472,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy import Matrix
         >>> a = Matrix([[4, 3], [6, 3]])
         >>> L, U, _ = a.LUdecomposition()
@@ -1447,6 +1485,7 @@ class Matrix(object):
 
         See Also
         ========
+
         cholesky
         LDLdecomposition
         QRdecomposition
@@ -1474,6 +1513,7 @@ class Matrix(object):
 
         See Also
         ========
+
         LUdecomposition
         LUdecompositionFF
         LUsolve
@@ -1523,6 +1563,7 @@ class Matrix(object):
 
         See Also
         ========
+
         LUdecomposition
         LUdecomposition_Simple
         LUsolve
@@ -1559,6 +1600,7 @@ class Matrix(object):
 
         See Also
         ========
+
         cofactor
         minorEntry
         minorMatrix
@@ -1574,6 +1616,7 @@ class Matrix(object):
 
         See Also
         ========
+
         minorMatrix
         cofactor
         cofactorMatrix
@@ -1589,6 +1632,7 @@ class Matrix(object):
 
         See Also
         ========
+
         minorEntry
         cofactor
         cofactorMatrix
@@ -1604,6 +1648,7 @@ class Matrix(object):
 
         See Also
         ========
+
         cofactorMatrix
         minorEntry
         minorMatrix
@@ -1627,6 +1672,7 @@ class Matrix(object):
 
         Examples
         ========
+
             >>> from sympy import sin, cos, Matrix
             >>> from sympy.abc import rho, phi
             >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
@@ -1642,6 +1688,7 @@ class Matrix(object):
 
         See Also
         ========
+
         hessian
         wronskian
         """
@@ -1672,6 +1719,7 @@ class Matrix(object):
 
         Examples
         ========
+
         This is the example from wikipedia:
 
         >>> from sympy import Matrix, eye
@@ -1703,6 +1751,7 @@ class Matrix(object):
 
         See Also
         ========
+
         cholesky
         LDLdecomposition
         LUdecomposition
@@ -1755,6 +1804,7 @@ class Matrix(object):
 
         See Also
         ========
+
         lower_triangular_solve
         upper_triangular_solve
         cholesky_solve
@@ -1788,6 +1838,7 @@ class Matrix(object):
 
         See Also
         ========
+
         sympy.simplify.simplify.simplify
         """
         for i in xrange(len(self.mat)):
@@ -1804,6 +1855,7 @@ class Matrix(object):
 
         See Also
         ========
+
         dot
         multiply
         multiply_elementwise
@@ -1841,6 +1893,7 @@ class Matrix(object):
 
         See Also
         ========
+
         cross
         multiply
         multiply_elementwise
@@ -1880,6 +1933,7 @@ class Matrix(object):
 
         See Also
         ========
+
         cross
         dot
         multiply
@@ -1923,6 +1977,7 @@ class Matrix(object):
 
         See Also
         ========
+
         normalized
         """
 
@@ -1971,6 +2026,7 @@ class Matrix(object):
 
         See Also
         ========
+
         norm
         """
         if self.rows != 1 and self.cols != 1:
@@ -2005,6 +2061,7 @@ class Matrix(object):
 
         See Also
         ========
+
         permuteFwd
         """
         copy = self[:,:]
@@ -2025,6 +2082,7 @@ class Matrix(object):
 
         See Also
         ========
+
         permuteBkwd
         """
         copy = self[:,:]
@@ -2038,6 +2096,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> import sympy
         >>> I = sympy.matrices.eye(4)
         >>> I.delRowCol(1,2)
@@ -2047,6 +2106,7 @@ class Matrix(object):
 
         See Also
         ========
+
         row_del
         col_del
         """
@@ -2061,6 +2121,7 @@ class Matrix(object):
 
         See Also
         ========
+
         matrix_multiply
         """
         if not self.is_square:
@@ -2080,6 +2141,7 @@ class Matrix(object):
 
         See Also
         ========
+
         ones
         fill
         """
@@ -2110,6 +2172,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy import Matrix
         >>> a = Matrix([[1, 2, 3], [4, 5, 6]])
         >>> b = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
@@ -2134,6 +2197,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy import Matrix, zeros
         >>> a = Matrix([[0, 0], [0, 0]])
         >>> b = zeros(3, 4)
@@ -2159,6 +2223,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy import Matrix
         >>> a = Matrix([[0,0,0],[1,0,0],[1,1,0]])
         >>> a.is_nilpotent()
@@ -2181,6 +2246,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[1, 0, 0, 1])
         >>> m
@@ -2206,6 +2272,7 @@ class Matrix(object):
 
         See Also
         ========
+
         is_lower
         is_diagonal
         is_upper_hessenberg
@@ -2222,6 +2289,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[1, 0, 0, 1])
         >>> m
@@ -2248,6 +2316,7 @@ class Matrix(object):
 
         See Also
         ========
+
         is_upper
         is_diagonal
         is_lower_hessenberg
@@ -2267,6 +2336,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1,4,2,3],[3,4,1,7],[0,2,3,4],[0,0,1,3]])
         >>> a
@@ -2279,6 +2349,7 @@ class Matrix(object):
 
         See Also
         ========
+
         is_lower_hessenberg
         is_upper
         """
@@ -2297,6 +2368,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1,2,0,0],[5,2,3,0],[3,4,3,7],[5,6,1,1]])
         >>> a
@@ -2309,6 +2381,7 @@ class Matrix(object):
 
         See Also
         ========
+
         is_upper_hessenberg
         is_lower
         """
@@ -2324,6 +2397,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> import sympy
         >>> from sympy.abc import x, y
         >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
@@ -2344,6 +2418,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[0, 1, 1, 2])
         >>> m
@@ -2400,6 +2475,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy import Matrix, diag
         >>> m = Matrix(2,2,[1, 0, 0, 2])
         >>> m
@@ -2425,6 +2501,7 @@ class Matrix(object):
 
         See Also
         ========
+
         is_lower
         is_upper
         is_diagonalizable
@@ -2452,6 +2529,7 @@ class Matrix(object):
 
         See Also
         ========
+
         det_bareis
         berkowitz_det
         """
@@ -2482,6 +2560,7 @@ class Matrix(object):
 
         See Also
         ========
+
         det
         berkowitz_det
         """
@@ -2539,6 +2618,7 @@ class Matrix(object):
 
         See Also
         ========
+
         cofactorMatrix
         transpose
         berkowitz
@@ -2553,6 +2633,7 @@ class Matrix(object):
 
         See Also
         ========
+
         inv
         inverse_GE
         inverse_ADJ
@@ -2572,6 +2653,7 @@ class Matrix(object):
 
         See Also
         ========
+
         inv
         inverse_LU
         inverse_ADJ
@@ -2592,6 +2674,7 @@ class Matrix(object):
 
         See Also
         ========
+
         inv
         inverse_LU
         inverse_GE
@@ -2725,6 +2808,7 @@ class Matrix(object):
 
         See Also
         ========
+
         berkowitz_det
         berkowitz_minors
         berkowitz_charpoly
@@ -2769,6 +2853,7 @@ class Matrix(object):
 
         See Also
         ========
+
         det
         berkowitz
         """
@@ -2785,6 +2870,7 @@ class Matrix(object):
 
         See Also
         ========
+
         berkowitz
         """
         sign, minors = S.NegativeOne, []
@@ -2825,6 +2911,7 @@ class Matrix(object):
 
         See Also
         ========
+
         berkowitz
         """
         return PurePoly(map(simplify, self.berkowitz()[-1]), x)
@@ -2836,6 +2923,7 @@ class Matrix(object):
 
         See Also
         ========
+
         berkowitz
         """
         return roots(self.berkowitz_charpoly(Dummy('x')), **flags)
@@ -2892,6 +2980,7 @@ class Matrix(object):
 
         See Also
         ========
+
         condition_number
         """
         # Compute eigenvalues of A.H A
@@ -2921,6 +3010,7 @@ class Matrix(object):
 
         See Also
         ========
+
         singular_values
         """
 
@@ -2932,6 +3022,7 @@ class Matrix(object):
 
         See Also
         ========
+
         zeros
         ones
         """
@@ -2952,6 +3043,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> import sympy
         >>> from sympy.abc import x, y
         >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
@@ -2964,6 +3056,7 @@ class Matrix(object):
 
         See Also
         ========
+
         limit
         diff
         """
@@ -2975,6 +3068,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> import sympy
         >>> from sympy.abc import x, y
         >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
@@ -2984,6 +3078,7 @@ class Matrix(object):
 
         See Also
         ========
+
         integrate
         diff
         """
@@ -2995,6 +3090,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> import sympy
         >>> from sympy.abc import x, y
         >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
@@ -3004,6 +3100,7 @@ class Matrix(object):
 
         See Also
         ========
+
         integrate
         limit
         """
@@ -3026,6 +3123,7 @@ class Matrix(object):
 
         See Also
         ========
+
         vech
         """
         return Matrix(len(self), 1, self.transpose().mat)
@@ -3053,6 +3151,7 @@ class Matrix(object):
 
         See Also
         ========
+
         vec
         """
         c = self.cols
@@ -3086,6 +3185,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy import Matrix, symbols
         >>> from sympy.abc import x, y, z
         >>> A = Matrix([[1, 3, 0, 0], [y, z*z, 0, 0], [0, 0, x, 0], [0, 0, 0, 0]])
@@ -3133,6 +3233,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy import Matrix
         >>> m = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
         >>> m
@@ -3155,6 +3256,7 @@ class Matrix(object):
 
         See Also
         ========
+
         is_diagonal
         is_diagonalizable
         """
@@ -3188,6 +3290,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy import Matrix
         >>> m = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
         >>> m
@@ -3213,6 +3316,7 @@ class Matrix(object):
 
         See Also
         ========
+
         is_diagonal
         diagonalize
         """
@@ -3256,10 +3360,12 @@ class Matrix(object):
 
         Note
         ====
+
         Calculation of transformation P is not implemented yet
 
         Examples
         ========
+
         >>> from sympy import Matrix
         >>> m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
         >>> m
@@ -3277,6 +3383,7 @@ class Matrix(object):
 
         See Also
         ========
+
         jordan_cells
         """
         (P, Jcells) = self.jordan_cells(calc_transformation)
@@ -3300,6 +3407,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy import Matrix
         >>> m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
         >>> m
@@ -3318,6 +3426,7 @@ class Matrix(object):
 
         See Also
         ========
+
         jordan_form
         """
         if not self.is_square:
@@ -3354,6 +3463,7 @@ class Matrix(object):
 
         Examples
         ========
+
         >>> from sympy import Matrix, Float
         >>> from sympy.abc import x, y
         >>> A = Matrix(((1, x), (0.2, 3)))
@@ -3375,6 +3485,7 @@ def matrix_multiply(A, B):
 
     Examples
     ========
+
     >>> from sympy import Matrix
     >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
     >>> B = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
@@ -3389,6 +3500,7 @@ def matrix_multiply(A, B):
 
     See Also
     ========
+
     matrix_multiply_elementwise
     matrix_add
     """
@@ -3428,6 +3540,7 @@ def matrix_multiply_elementwise(A, B):
 
     See Also
     ========
+
     matrix_multiply
     matrix_add
     """
@@ -3442,6 +3555,7 @@ def matrix_add(A, B):
 
     See Also
     ========
+
     matrix_multiply
     matrix_multiply_elementwise
     """
@@ -3460,6 +3574,7 @@ def zeros(r, c=None, cls=Matrix):
 
     See Also
     ========
+
     ones
     eye
     diag
@@ -3478,6 +3593,7 @@ def ones(r, c=None):
 
     See Also
     ========
+
     zeros
     eye
     diag
@@ -3496,6 +3612,7 @@ def eye(n, cls=Matrix):
 
     See Also
     ========
+
     diag
     zeros
     ones
@@ -3513,6 +3630,7 @@ def diag(*values):
 
     Examples
     ========
+
     >>> from sympy.matrices import diag, Matrix
     >>> diag(1, 2, 3)
     [1, 0, 0]
@@ -3534,6 +3652,7 @@ def diag(*values):
 
     See Also
     ========
+
     eye
     """
     rows = 0
@@ -3565,6 +3684,7 @@ def jordan_cell(eigenval, n):
 
     Examples
     ========
+
     >>> from sympy.matrices.matrices import jordan_cell
     >>> from sympy.abc import x
     >>> jordan_cell(x, 4)
@@ -3588,6 +3708,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False):
 
     Examples
     ========
+
     >>> from sympy.matrices import randMatrix
     >>> randMatrix(3) # doctest:+SKIP
     [25, 45, 27]
@@ -3638,6 +3759,7 @@ def hessian(f, varlist):
 
     See Also
     ========
+
     sympy.matrices.matrices.Matrix.jacobian
     wronskian
     """
@@ -3704,6 +3826,7 @@ def wronskian(functions, var, method='bareis'):
 
     See Also
     ========
+
     sympy.matrices.matrices.Matrix.jacobian
     hessian
     """
@@ -3770,6 +3893,7 @@ class SparseMatrix(Matrix):
 
     See Also
     ========
+
     :class:`Matrix`
     """
 
@@ -3894,6 +4018,7 @@ class SparseMatrix(Matrix):
 
         Examples
         ========
+
         >>> import sympy
         >>> M = sympy.matrices.SparseMatrix([[0,0],[0,1]])
         >>> M
@@ -3905,6 +4030,7 @@ class SparseMatrix(Matrix):
 
         See Also
         ========
+
         col_del
         """
         newD = {}
@@ -3925,6 +4051,7 @@ class SparseMatrix(Matrix):
 
         Examples
         ========
+
         >>> import sympy
         >>> M = sympy.matrices.SparseMatrix([[0,0],[0,1]])
         >>> M
@@ -3937,6 +4064,7 @@ class SparseMatrix(Matrix):
 
         See Also
         ========
+
         row_del
         """
         newD = {}
@@ -3980,6 +4108,7 @@ class SparseMatrix(Matrix):
 
         See Also
         ========
+
         col_list
         """
 
@@ -4006,6 +4135,7 @@ class SparseMatrix(Matrix):
 
         See Also
         ========
+
         row_list
         """
         new=[]
@@ -4078,6 +4208,7 @@ class SparseMatrix(Matrix):
 
         See Also
         ========
+
         multiply
         """
         if self.shape != other.shape:
@@ -4116,6 +4247,7 @@ class SparseMatrix(Matrix):
 
         See Also
         ========
+
         add
         """
 
@@ -4187,6 +4319,7 @@ def list2numpy(l):
 
     See Also
     ========
+
     matrix2numpy
     """
     from numpy import empty
@@ -4200,6 +4333,7 @@ def matrix2numpy(m):
 
     See Also
     ========
+
     list2numpy
     """
     from numpy import empty
@@ -4315,6 +4449,7 @@ def rot_axis3(theta):
 
     See Also
     ========
+
     rot_axis1: Returns a rotation matrix for a rotation of theta (in radians)
         about the 1-axis
     rot_axis2: Returns a rotation matrix for a rotation of theta (in radians)
@@ -4354,6 +4489,7 @@ def rot_axis2(theta):
 
     See Also
     ========
+
     rot_axis1: Returns a rotation matrix for a rotation of theta (in radians)
         about the 1-axis
     rot_axis3: Returns a rotation matrix for a rotation of theta (in radians)
@@ -4393,6 +4529,7 @@ def rot_axis1(theta):
 
     See Also
     ========
+
     rot_axis2: Returns a rotation matrix for a rotation of theta (in radians)
         about the 2-axis
     rot_axis3: Returns a rotation matrix for a rotation of theta (in radians)

@@ -70,6 +70,7 @@ def buchberger(f, u, O, K, gens='', verbose=False):
 
     References
     ==========
+
     1. [Bose03]_
     2. [Giovini91]_
     3. [Ajwa95]_
@@ -828,6 +829,7 @@ def matrix_fglm(F, u, O_from, O_to, K):
 
     References
     ==========
+
     J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
     Computation of Zero-dimensional Groebner Bases by Change of
     Ordering

@@ -75,6 +75,7 @@ class Dagger(Expr):
 
     Examples
     ========
+
     >>> from sympy import I
     >>> from sympy.physics.secondquant import Dagger, B, Bd
     >>> Dagger(2*I)
@@ -101,6 +102,7 @@ class Dagger(Expr):
 
         Examples
         ========
+
         >>> from sympy import I
         >>> from sympy.physics.secondquant import Dagger, B, Bd
         >>> Dagger(2*I)
@@ -154,6 +156,7 @@ class AntiSymmetricTensor(TensorSymbol):
 
     Examples
     ========
+
     >>> from sympy import symbols
     >>> from sympy.physics.secondquant import AntiSymmetricTensor
     >>> i, j = symbols('i j', below_fermi=True)
@@ -226,6 +229,7 @@ class AntiSymmetricTensor(TensorSymbol):
 
         Examples
         ========
+
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
         >>> i, j = symbols('i,j', below_fermi=True)
@@ -245,6 +249,7 @@ class AntiSymmetricTensor(TensorSymbol):
 
         Examples
         ========
+
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
         >>> i, j = symbols('i,j', below_fermi=True)
@@ -265,6 +270,7 @@ class AntiSymmetricTensor(TensorSymbol):
 
         Examples
         ========
+
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
         >>> i, j = symbols('i,j', below_fermi=True)
@@ -1957,6 +1963,7 @@ def evaluate_deltas(e):
 
     Examples
     ========
+
     We assume that
 
     >>> from sympy import symbols, Function, Dummy, KroneckerDelta

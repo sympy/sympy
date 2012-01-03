@@ -14,6 +14,7 @@ def limit(e, z, z0, dir="+"):
 
     Examples
     ========
+
     >>> from sympy import limit, sin, Symbol, oo
     >>> from sympy.abc import x
     >>> limit(sin(x)/x, x, 0)
@@ -27,6 +28,7 @@ def limit(e, z, z0, dir="+"):
 
     Strategy
     ========
+
     First we try some heuristics for easy and frequent cases like "x", "1/x",
     "x**2" and similar, so that it's fast. For all other cases, we use the
     Gruntz algorithm (see the gruntz() function).
@@ -222,6 +224,7 @@ class Limit(Expr):
 
     Examples
     ========
+
     >>> from sympy import Limit, sin, Symbol
     >>> from sympy.abc import x
     >>> Limit(sin(x)/x, x, 0)

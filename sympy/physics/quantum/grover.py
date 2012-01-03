@@ -28,16 +28,19 @@ def superposition_basis(nqubits):
 
     Parameters
     ==========
+
     nqubits : int
         The number of qubits.
 
     Return
     ======
+
     state : Qubit
         An equal superposition of the computational basis with nqubits.
 
     Examples
     ========
+
     Create an equal superposition of 2 qubits::
 
         >>> from sympy.physics.quantum.grover import superposition_basis
@@ -57,6 +60,7 @@ class OracleGate(Gate):
 
     Parameters
     ==========
+
     qubits : int
         Number of qubits.
 
@@ -65,6 +69,7 @@ class OracleGate(Gate):
 
     Examples
     ========
+
     Apply an Oracle gate that flips the sign of |2> on different qubits::
 
         >>> from sympy.physics.quantum.qubit import IntQubit
@@ -129,11 +134,13 @@ class OracleGate(Gate):
 
         Parameters
         ==========
+
         qubits : Qubit
             The qubit subclass to apply this operator to.
 
         Returns
         =======
+
         state : Expr
             The resulting quantum state.
         """
@@ -166,6 +173,7 @@ class WGate(Gate):
 
     Parameters
     ==========
+
     nqubits : int
         The number of qubits to operate on
 
@@ -214,6 +222,7 @@ def grover_iteration(qstate, oracle):
 
     Parameters
     ==========
+
     qstate : Qubit
         A superposition of qubits.
     oracle : OracleGate
@@ -221,10 +230,12 @@ def grover_iteration(qstate, oracle):
 
     Returns
     =======
+
     Qubit : The qubits after applying the Oracle and W gate.
 
     Examples
     ========
+
     Perform one iteration of grover's algorithm to see a phase change::
 
         >>> from sympy.physics.quantum.qapply import qapply
@@ -248,17 +259,20 @@ def apply_grover(oracle, nqubits, iterations=None):
 
     Parameters
     ==========
+
     oracle : callable
         The unknown callable function that returns true when applied to the
         desired qubits and false otherwise.
 
     Returns
     =======
+
     state : Expr
         The resulting state after Grover's algorithm has been iterated.
 
     Examples
     ========
+
     Apply grover's algorithm to an even superposition of 2 qubits::
 
         >>> from sympy.physics.quantum.qapply import qapply

@@ -12,6 +12,7 @@ try:
         """
         Plot Examples
         =============
+
         See examples/plotting.py for many more examples.
 
 
@@ -31,6 +32,7 @@ try:
 
         Variable Intervals
         ==================
+
         The basic format is [var, min, max, steps], but the
         syntax is flexible and arguments left out are taken
         from the defaults for the current coordinate mode:
@@ -47,6 +49,7 @@ try:
 
         Coordinate Modes
         ================
+
         Plot supports several curvilinear coordinate modes, and
         they independent for each plotted function. You can specify
         a coordinate mode explicitly with the 'mode' named argument,
@@ -71,6 +74,7 @@ try:
 
         Calculator-like Interface
         =========================
+
         >>> p = Plot(visible=False)
         >>> f = x**2
         >>> p[1] = f
@@ -96,6 +100,7 @@ try:
 
         Plot Window Keyboard Controls
         =============================
+
         Screen Rotation:
             X,Y axis      Arrow Keys, A,S,D,W, Numpad 4,6,8,2
             Z axis        Q,E, Numpad 7,9
@@ -122,6 +127,7 @@ try:
         Close Window:     ESCAPE
 
         =============================
+
         """
 
         import plot

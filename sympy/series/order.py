@@ -9,6 +9,7 @@ class Order(Expr):
 
     Definition
     ==========
+
     g(x) = O(f(x)) as x->0  if and only if
     |g(x)|<=M|f(x)| near x=0                     (1)
 
@@ -39,6 +40,7 @@ class Order(Expr):
 
     Examples
     ========
+
     >>> from sympy import O
     >>> from sympy.abc import x
     >>> O(x)
@@ -50,10 +52,12 @@ class Order(Expr):
 
     References
     ==========
+
     U{Big O notation<http://en.wikipedia.org/wiki/Big_O_notation>}
 
     Properties
     ==========
+
     g(x) = O(f(x)) as x->0  <->  |g(x)| <= M|f(x)| near x=0
                             <->  lim_{x->0}  |g(x)/f(x)| < oo
 
@@ -62,6 +66,7 @@ class Order(Expr):
 
     Notes
     =====
+
     In O(f(x), x) the expression f(x) is assumed to have a leading term.
     O(f(x), x) is automatically transformed to O(f(x).as_leading_term(x),x).
 

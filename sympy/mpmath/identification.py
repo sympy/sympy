@@ -30,6 +30,7 @@ def pslq(ctx, x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
 
     Examples
     ========
+
     Find rational approximations for `\pi`::
 
         >>> from mpmath import *
@@ -326,6 +327,7 @@ def findpoly(ctx, x, n=1, **kwargs):
 
     Examples
     ========
+
     By default (degree `n = 1`), :func:`~mpmath.findpoly` simply finds a linear
     polynomial with a rational root::
 
@@ -568,6 +570,7 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
 
     Examples
     ========
+
     Simple identifications can be performed safely at standard
     precision. Here the default recognition of rational, algebraic,
     and exp/log of algebraic numbers is demonstrated::

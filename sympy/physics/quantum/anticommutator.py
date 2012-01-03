@@ -27,6 +27,7 @@ class AntiCommutator(Expr):
 
     Parameters
     ==========
+
     A : Expr
         The first argument of the anticommutator {A,B}.
     B : Expr
@@ -34,6 +35,7 @@ class AntiCommutator(Expr):
 
     Examples
     ========
+
     >>> from sympy import symbols
     >>> from sympy.physics.quantum import AntiCommutator
     >>> from sympy.physics.quantum import Operator, Dagger
@@ -65,6 +67,7 @@ class AntiCommutator(Expr):
 
     References
     ==========
+
     [1] http://en.wikipedia.org/wiki/Commutator
     """
 

@@ -14,6 +14,7 @@ def residue(expr, x, x0):
 
     Examples
     ========
+
     >>> from sympy import Symbol, residue, sin
     >>> x = Symbol("x")
     >>> residue(1/x, x, 0)
@@ -27,6 +28,7 @@ def residue(expr, x, x0):
 
     References
     ==========
+
     1. http://en.wikipedia.org/wiki/Residue_theorem
     """
     # The current implementation uses series expansion to

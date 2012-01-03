@@ -174,6 +174,7 @@ def get_indices(expr):
 
     Examples
     ========
+
     >>> from sympy.tensor.index_methods import get_indices
     >>> from sympy import symbols
     >>> from sympy.tensor import IndexedBase, Idx
@@ -289,6 +290,7 @@ def get_contraction_structure(expr):
 
     Examples
     ========
+
     >>> from sympy.tensor.index_methods import get_contraction_structure
     >>> from sympy import symbols, default_sort_key
     >>> from sympy.tensor import IndexedBase, Idx

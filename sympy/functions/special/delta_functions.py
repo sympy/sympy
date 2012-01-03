@@ -65,6 +65,7 @@ class DiracDelta(Function):
 
            Examples
            ========
+
            >>> from sympy import DiracDelta
            >>> from sympy.abc import x, y
 
@@ -112,6 +113,7 @@ class DiracDelta(Function):
 
            Examples
            ========
+
            >>> from sympy import DiracDelta, cos
            >>> from sympy.abc import x, y
 

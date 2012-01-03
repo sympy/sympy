@@ -74,6 +74,7 @@ class besselj(BesselBase):
 
     Examples
     ========
+
     Create a bessel function object:
 
     >>> from sympy import besselj, jn
@@ -99,6 +100,7 @@ class besselj(BesselBase):
 
     References
     ==========
+
     - Abramowitz, Milton; Stegun, Irene A., eds. (1965), "Chapter 9",
       Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
       Tables
@@ -164,6 +166,7 @@ class bessely(BesselBase):
 
     Examples
     ========
+
     >>> from sympy import bessely, yn
     >>> from sympy.abc import z, n
     >>> b = bessely(n, z)
@@ -174,6 +177,7 @@ class bessely(BesselBase):
 
     See Also
     ========
+
     besselj
     """
 
@@ -213,6 +217,7 @@ class besseli(BesselBase):
 
     Examples
     ========
+
     >>> from sympy import besseli
     >>> from sympy.abc import z, n
     >>> besseli(n, z).diff(z)
@@ -220,6 +225,7 @@ class besseli(BesselBase):
 
     See Also
     ========
+
     besselj
 
     """
@@ -269,6 +275,7 @@ class besselk(BesselBase):
 
     Examples
     ========
+
     >>> from sympy import besselk
     >>> from sympy.abc import z, n
     >>> besselk(n, z).diff(z)
@@ -276,6 +283,7 @@ class besselk(BesselBase):
 
     See Also
     ========
+
     besselj
 
     """
@@ -299,6 +307,7 @@ class hankel1(BesselBase):
 
     Examples
     ========
+
     >>> from sympy import hankel1
     >>> from sympy.abc import z, n
     >>> hankel1(n, z).diff(z)
@@ -306,6 +315,7 @@ class hankel1(BesselBase):
 
     See Also
     ========
+
     besselj
 
     """
@@ -330,6 +340,7 @@ class hankel2(BesselBase):
 
     Examples
     ========
+
     >>> from sympy import hankel2
     >>> from sympy.abc import z, n
     >>> hankel2(n, z).diff(z)
@@ -337,6 +348,7 @@ class hankel2(BesselBase):
 
     See Also
     ========
+
     besselj
 
     """
@@ -400,6 +412,7 @@ class jn(SphericalBesselBase):
 
     Examples
     ========
+
     >>> from sympy import Symbol, jn, sin, cos, expand_func
     >>> z = Symbol("z")
     >>> print jn(0, z).expand(func=True)
@@ -419,6 +432,7 @@ class jn(SphericalBesselBase):
 
     See Also
     ========
+
     besselj
 
     """
@@ -448,6 +462,7 @@ class yn(SphericalBesselBase):
 
     Examples
     ========
+
     >>> from sympy import Symbol, yn, sin, cos, expand_func
     >>> z = Symbol("z")
     >>> print expand_func(yn(0, z))
@@ -461,6 +476,7 @@ class yn(SphericalBesselBase):
 
     See Also
     ========
+
     besselj, bessely, jn
 
     """
@@ -494,6 +510,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
 
     Examples
     ========
+
     >>> from sympy import jn_zeros
     >>> jn_zeros(2, 4, dps=5)
     [5.7635, 9.095, 12.323, 15.515]

@@ -74,6 +74,7 @@ def richardson(ctx, seq):
 
     References
     ==========
+
     1. [BenderOrszag]_ pp. 375-376
 
     """
@@ -171,6 +172,7 @@ def shanks(ctx, seq, table=None, randomized=False):
 
     Examples
     ========
+
     We illustrate by applying Shanks transformation to the Leibniz
     series for `\pi`::
 
@@ -218,6 +220,7 @@ def shanks(ctx, seq, table=None, randomized=False):
 
     References
     ==========
+
     1. [GravesMorris]_
 
     2. [BenderOrszag]_ pp. 368-375
@@ -278,6 +281,7 @@ def sumap(ctx, f, interval, integral=None, error=False):
 
     Examples
     ========
+
     The Abel-Plana formula is particularly useful when the summand
     decreases like a power of `k`; for example when the sum is a pure
     zeta function::
@@ -377,6 +381,7 @@ def sumem(ctx, f, interval, tol=None, reject=10, integral=None,
 
     Examples
     ========
+
     Summation of an infinite series, with automatic and symbolic
     integral and derivative values (the second should be much faster)::
 
@@ -931,6 +936,7 @@ def nsum(ctx, f, *intervals, **options):
 
     References
     ==========
+
     1. [Weisstein]_ http://mathworld.wolfram.com/DoubleSeries.html,
     2. [Weisstein]_ http://mathworld.wolfram.com/MadelungConstants.html
 
@@ -1103,6 +1109,7 @@ def nprod(ctx, f, interval, nsum=False, **kwargs):
 
     Examples
     ========
+
     A simple finite product::
 
         >>> from mpmath import *
@@ -1202,6 +1209,7 @@ def nprod(ctx, f, interval, nsum=False, **kwargs):
 
     References
     ==========
+
     1. [Weisstein]_ http://mathworld.wolfram.com/InfiniteProduct.html
 
     """
@@ -1282,6 +1290,7 @@ def limit(ctx, f, x, direction=1, exp=False, **kwargs):
 
     Examples
     ========
+
     A basic evaluation of a removable singularity::
 
         >>> from mpmath import *

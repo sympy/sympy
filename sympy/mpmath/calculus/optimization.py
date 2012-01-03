@@ -699,6 +699,7 @@ def findroot(ctx, f, x0, solver=Secant, tol=None, verbose=False, verify=True, **
 
     Arguments
     =========
+
     *f*
         one dimensional function
     *x0*
@@ -735,6 +736,7 @@ def findroot(ctx, f, x0, solver=Secant, tol=None, verbose=False, verify=True, **
 
     Examples
     ========
+
     The function :func:`~mpmath.findroot` locates a root of a given function using the
     secant method by default. A simple example use of the secant method is to
     compute `\pi` as the root of `\sin x` closest to `x_0 = 3`::

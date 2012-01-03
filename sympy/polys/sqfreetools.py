@@ -42,6 +42,7 @@ def dup_sqf_p(f, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.sqfreetools import dup_sqf_p
 
@@ -63,6 +64,7 @@ def dmp_sqf_p(f, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.sqfreetools import dmp_sqf_p
 
@@ -90,6 +92,7 @@ def dup_sqf_norm(f, K):
 
     Examples
     ========
+
     >>> from sympy import sqrt
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.sqfreetools import dup_sqf_norm
@@ -132,6 +135,7 @@ def dmp_sqf_norm(f, u, K):
 
     Examples
     ========
+
     >>> from sympy import I
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.sqfreetools import dmp_sqf_norm
@@ -187,6 +191,7 @@ def dup_sqf_part(f, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.sqfreetools import dup_sqf_part
 
@@ -218,6 +223,7 @@ def dmp_sqf_part(f, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.sqfreetools import dmp_sqf_part
 
@@ -270,6 +276,7 @@ def dup_sqf_list(f, K, all=False):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.sqfreetools import dup_sqf_list
 
@@ -326,6 +333,7 @@ def dup_sqf_list_include(f, K, all=False):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.sqfreetools import dup_sqf_list_include
 
@@ -354,6 +362,7 @@ def dmp_sqf_list(f, u, K, all=False):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.sqfreetools import dmp_sqf_list
 
@@ -414,6 +423,7 @@ def dmp_sqf_list_include(f, u, K, all=False):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.sqfreetools import dmp_sqf_list_include
 
@@ -444,6 +454,7 @@ def dup_gff_list(f, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.sqfreetools import dup_gff_list
 
@@ -481,6 +492,7 @@ def dmp_gff_list(f, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.sqfreetools import dmp_gff_list
 

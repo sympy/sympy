@@ -120,6 +120,7 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
 
         Examples
         ========
+
         >>> from sympy.polys.polyclasses import DMF
         >>> from sympy.polys.domains import ZZ, QQ
         >>> from sympy.abc import x

@@ -411,6 +411,7 @@ class MPContext(BaseMPContext, StandardBaseContext):
 
         Examples
         ========
+
         Many functions are sensitive to perturbations of the input arguments.
         If the arguments are decimal numbers, they may have to be converted
         to binary at a much higher precision. If the amount of required
@@ -713,6 +714,7 @@ maxterms, or set zeroprec."""
 
         Examples
         ========
+
         An mpmath number is returned::
 
             >>> from mpmath import *
@@ -775,6 +777,7 @@ maxterms, or set zeroprec."""
 
         Examples
         ========
+
         Using :func:`~mpmath.fadd` with precision and rounding control::
 
             >>> from mpmath import *
@@ -841,6 +844,7 @@ maxterms, or set zeroprec."""
 
         Examples
         ========
+
         Using :func:`~mpmath.fsub` with precision and rounding control::
 
             >>> from mpmath import *
@@ -907,6 +911,7 @@ maxterms, or set zeroprec."""
 
         Examples
         ========
+
         The result is an mpmath number::
 
             >>> from mpmath import *
@@ -976,6 +981,7 @@ maxterms, or set zeroprec."""
 
         Examples
         ========
+
         The result is an mpmath number::
 
             >>> from mpmath import *

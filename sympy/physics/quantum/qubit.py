@@ -122,11 +122,13 @@ class Qubit(QubitState, Ket):
 
     Parameters
     ==========
+
     values : list, str
         The qubit values as a list of ints ([0,0,0,1,1,]) or a string ('011').
 
     Examples
     ========
+
     Create a qubit in a couple of different ways and look at their attributes:
 
         >>> from sympy.physics.quantum.qubit import Qubit
@@ -210,11 +212,13 @@ class QubitBra(QubitState, Bra):
 
     Parameters
     ==========
+
     values : list, str
         The qubit values as a list of ints ([0,0,0,1,1,]) or a string ('011').
 
     Examples
     ========
+
     See ``Qubit`` for examples.
 
     """
@@ -281,6 +285,7 @@ class IntQubit(IntQubitState, Qubit):
 
     Parameters
     ==========
+
     values : int, tuple
         If a single argument, the integer we want to represent in the qubit
         values. This integer will be represented using the fewest possible
@@ -290,6 +295,7 @@ class IntQubit(IntQubitState, Qubit):
 
     Examples
     ========
+
     Create a qubit for the integer 5:
 
         >>> from sympy.physics.quantum.qubit import IntQubit
@@ -423,6 +429,7 @@ def measure_all(qubit, format='sympy', normalize=True):
 
     Parameters
     ==========
+
     qubit : Qubit, Add
         The qubit to measure. This can be any Qubit or a linear combination
         of them.
@@ -433,11 +440,13 @@ def measure_all(qubit, format='sympy', normalize=True):
 
     Returns
     =======
+
     result : list
         A list that consists of primitive states and their probabilities.
 
     Examples
     ========
+
         >>> from sympy.physics.quantum.qubit import Qubit, measure_all
         >>> from sympy.physics.quantum.gate import H, X, Y, Z
         >>> from sympy.physics.quantum.qapply import qapply
@@ -476,6 +485,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
 
     Parameters
     ==========
+
     qubits : Qubit
         The qubit to measure.  This can be any Qubit or a linear combination
         of them.
@@ -488,11 +498,13 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
 
     Returns
     =======
+
     result : list
         A list that consists of primitive states and their probabilities.
 
     Examples
     ========
+
         >>> from sympy.physics.quantum.qubit import Qubit, measure_partial
         >>> from sympy.physics.quantum.gate import H, X, Y, Z
         >>> from sympy.physics.quantum.qapply import qapply

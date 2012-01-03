@@ -211,6 +211,7 @@ class AssumeMixin(object):
 
     Examples
     ========
+
         - True, when we are sure about a property. For example, when we are
         working only with real numbers:
         >>> from sympy import Symbol
@@ -273,6 +274,7 @@ class AssumeMixin(object):
 
         Examples
         ========
+
         >>> from sympy import Symbol
         >>> from sympy.abc import x
         >>> x.assumptions0

@@ -27,6 +27,7 @@
 
     Examples
     ========
+
     To express the above matrix element example you would write:
 
     >>> from sympy.tensor import IndexedBase, Idx
@@ -146,6 +147,7 @@ class Indexed(Expr):
 
         Examples
         ========
+
         >>> from sympy.tensor import Indexed, IndexedBase, Idx
         >>> i, j = map(Idx, ['i', 'j'])
         >>> Indexed('A', i, j).base
@@ -164,6 +166,7 @@ class Indexed(Expr):
 
         Examples
         ========
+
         >>> from sympy.tensor import Indexed, Idx
         >>> i, j = map(Idx, ['i', 'j'])
         >>> Indexed('A', i, j).indices
@@ -179,6 +182,7 @@ class Indexed(Expr):
 
         Examples
         ========
+
         >>> from sympy.tensor import Indexed, Idx
         >>> i, j, k, l, m = map(Idx, ['i', 'j', 'k', 'l', 'm'])
         >>> Indexed('A', i, j).rank
@@ -235,6 +239,7 @@ class Indexed(Expr):
 
         Examples
         ========
+
         >>> from sympy import Indexed,Idx, symbols
         >>> Indexed('A', Idx('i', 2), Idx('j', 4), Idx('k', 8)).ranges
         [(0, 1), (0, 3), (0, 7)]
@@ -329,6 +334,7 @@ class IndexedBase(Expr):
 
         Examples
         ========
+
         >>> from sympy import IndexedBase
         >>> from sympy.abc import x, y
         >>> IndexedBase('A', shape=(x, y)).args
@@ -360,6 +366,7 @@ class IndexedBase(Expr):
 
         Examples
         ========
+
         >>> from sympy import IndexedBase, Idx, Symbol
         >>> from sympy.abc import x, y
         >>> IndexedBase('A', shape=(x, y)).shape
@@ -386,6 +393,7 @@ class IndexedBase(Expr):
 
         Examples
         ========
+
         >>> from sympy import IndexedBase
         >>> from sympy.abc import x, y
         >>> IndexedBase('A', shape=(x, y)).label
@@ -426,6 +434,7 @@ class Idx(Expr):
 
     Examples
     ========
+
     >>> from sympy.tensor import IndexedBase, Idx
     >>> from sympy import symbols, oo
     >>> n, i, L, U = symbols('n i L U', integer=True)
@@ -504,6 +513,7 @@ class Idx(Expr):
 
         Examples
         ========
+
         >>> from sympy import Idx, Symbol
         >>> Idx(2).label
         2
@@ -522,6 +532,7 @@ class Idx(Expr):
 
         Examples
         ========
+
         >>> from sympy import Idx
         >>> Idx('j', 2).lower
         0
@@ -542,6 +553,7 @@ class Idx(Expr):
 
         Examples
         ========
+
         >>> from sympy import Idx
         >>> Idx('j', 2).upper
         1

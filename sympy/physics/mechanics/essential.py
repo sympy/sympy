@@ -74,11 +74,13 @@ class Dyadic(object):
 
         Parameters
         ==========
+
         other : Dyadic or Vector
             The other Dyadic or Vector to take the inner product with
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, outer
         >>> N = ReferenceFrame('N')
         >>> D1 = outer(N.x, N.y)
@@ -131,11 +133,13 @@ class Dyadic(object):
 
         Parameters
         ==========
+
         other : Sympafiable
             The scalar to multiply this Dyadic with
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, outer
         >>> N = ReferenceFrame('N')
         >>> d = outer(N.x, N.x)
@@ -249,11 +253,13 @@ class Dyadic(object):
 
         Parameters
         ==========
+
         other : Vector
             The vector we are dotting with
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, dot, outer
         >>> N = ReferenceFrame('N')
         >>> d = outer(N.x, N.x)
@@ -281,11 +287,13 @@ class Dyadic(object):
 
         Parameters
         ==========
+
         other : Vector
             The Vector that we are crossing this Dyadic with
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, outer, cross
         >>> N = ReferenceFrame('N')
         >>> d = outer(N.x, N.x)
@@ -345,11 +353,13 @@ class Dyadic(object):
 
         Parameters
         ==========
+
         other : Vector
             The Vector that we are crossing this Dyadic with
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, outer, cross
         >>> N = ReferenceFrame('N')
         >>> d = outer(N.x, N.x)
@@ -401,6 +411,7 @@ class Dyadic(object):
 
         Parameters
         ==========
+
         frame1 : ReferenceFrame
             The frame to express the left side of the Dyadic in
         frame2 : ReferenceFrame
@@ -408,6 +419,7 @@ class Dyadic(object):
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, outer, dynamicsymbols
         >>> N = ReferenceFrame('N')
         >>> q = dynamicsymbols('q')
@@ -432,11 +444,13 @@ class Dyadic(object):
 
         Parameters
         ==========
+
         frame : ReferenceFrame
             The frame to take the time derivative in
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, outer, dynamicsymbols
         >>> N = ReferenceFrame('N')
         >>> q = dynamicsymbols('q')
@@ -461,6 +475,7 @@ class Dyadic(object):
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame
         >>> from sympy import Symbol
         >>> N = ReferenceFrame('N')
@@ -501,6 +516,7 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+
         indices : list (of strings)
             If custom indices are desired for console, pretty, and LaTeX
             printing, supply three as a list. The basis vectors can then be
@@ -511,6 +527,7 @@ class ReferenceFrame(object):
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, mlatex
         >>> N = ReferenceFrame('N')
         >>> N.x
@@ -662,11 +679,13 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+
         otherframe : ReferenceFrame
             The ReferenceFrame which the angular acceleration is returned in.
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
@@ -693,11 +712,13 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+
         otherframe : ReferenceFrame
             The ReferenceFrame which the angular velocity is returned in.
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
@@ -724,11 +745,13 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+
         otherframe : ReferenceFrame
             The otherframe which the DCM is generated to.
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
@@ -756,6 +779,7 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+
         parent : ReferenceFrame
             The frame that this ReferenceFrame will have its orientation matrix
             defined in relation to.
@@ -768,6 +792,7 @@ class ReferenceFrame(object):
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> from sympy import symbols
         >>> q0, q1, q2, q3, q4 = symbols('q0 q1 q2 q3 q4')
@@ -929,6 +954,7 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+
         newname : str
             The name for the new ReferenceFrame
         rot_type : str
@@ -941,6 +967,7 @@ class ReferenceFrame(object):
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
@@ -950,6 +977,7 @@ class ReferenceFrame(object):
 
         .orient() documentation:\n
         ========================
+
         """
 
         newframe = ReferenceFrame(newname, indices, latexs)
@@ -968,6 +996,7 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+
         otherframe : ReferenceFrame
             A ReferenceFrame to define the angular acceleration in
         value : Vector
@@ -975,6 +1004,7 @@ class ReferenceFrame(object):
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
@@ -1000,6 +1030,7 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+
         otherframe : ReferenceFrame
             A ReferenceFrame to define the angular velocity in
         value : Vector
@@ -1007,6 +1038,7 @@ class ReferenceFrame(object):
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
@@ -1046,6 +1078,7 @@ class Vector(object):
 
     Attributes
     ==========
+
     simp : Boolean
         Let certain methods use trigsimp on their outputs
 
@@ -1101,11 +1134,13 @@ class Vector(object):
 
         Parameters
         ==========
+
         other : Vector
             The Vector which we are dotting with
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dot
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
@@ -1173,11 +1208,13 @@ class Vector(object):
 
         Parameters
         ==========
+
         other : Sympifyable
             The scalar to multiply this Vector with
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> from sympy import Symbol
         >>> N = ReferenceFrame('N')
@@ -1206,11 +1243,13 @@ class Vector(object):
 
         Parameters
         ==========
+
         other : Vector
             The Vector to take the outer product with
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, outer
         >>> N = ReferenceFrame('N')
         >>> outer(N.x, N.x)
@@ -1320,11 +1359,13 @@ class Vector(object):
 
         Parameters
         ==========
+
         other : Vector
             The Vector to take the outer product with
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, outer
         >>> N = ReferenceFrame('N')
         >>> outer(N.x, N.x)
@@ -1400,11 +1441,13 @@ class Vector(object):
 
         Parameters
         ==========
+
         other : Vector
             The Vector which we are crossing with
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
@@ -1488,6 +1531,7 @@ class Vector(object):
 
         Parameters
         ==========
+
         wrt : Symbol
             What the partial derivative is taken with respect to.
         otherframe : ReferenceFrame
@@ -1495,6 +1539,7 @@ class Vector(object):
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dynamicsymbols
         >>> from sympy import Symbol
         >>> Vector.simp = True
@@ -1530,11 +1575,13 @@ class Vector(object):
 
         Parameters
         ==========
+
         otherframe : ReferenceFrame
             The ReferenceFrame that the partial derivative is taken in.
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dynamicsymbols
         >>> from sympy import Symbol
         >>> q1 = Symbol('q1')
@@ -1568,11 +1615,13 @@ class Vector(object):
 
         Parameters
         ==========
+
         otherframe : ReferenceFrame
             The frame for this Vector to be described in
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dynamicsymbols
         >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
@@ -1601,6 +1650,7 @@ class Vector(object):
 
         Examples
         ========
+
         >>> from sympy.physics.mechanics import ReferenceFrame
         >>> from sympy import Symbol
         >>> N = ReferenceFrame('N')
@@ -1884,6 +1934,7 @@ def dynamicsymbols(names, level=0):
 
     Parameters
     ==========
+
     names : str
         Names of the dynamic symbols you want to create; works the same way as
         inputs to symbols
@@ -1893,6 +1944,7 @@ def dynamicsymbols(names, level=0):
 
     Examples
     =======
+
     >>> from sympy.physics.mechanics import dynamicsymbols
     >>> from sympy import diff, Symbol
     >>> q1 = dynamicsymbols('q1')

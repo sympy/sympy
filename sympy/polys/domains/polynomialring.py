@@ -121,6 +121,7 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
 
         Examples
         ========
+
         >>> from sympy.polys.polyclasses import DMP, DMF
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.abc import x

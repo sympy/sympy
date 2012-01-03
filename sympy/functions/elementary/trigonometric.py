@@ -111,11 +111,13 @@ class sin(TrigonometricFunction):
 
     Notes
     =====
+
     * sin(x) will evaluate automatically in the case x
       is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
 
     Examples
     ========
+
     >>> from sympy import sin, pi
     >>> from sympy.abc import x
     >>> sin(x**2).diff(x)
@@ -131,10 +133,12 @@ class sin(TrigonometricFunction):
 
     See Also
     ========
+
     cos, tan, asin
 
     References
     ==========
+
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
 
     """
@@ -331,11 +335,13 @@ class cos(TrigonometricFunction):
 
     Notes
     =====
+
     * cos(x) will evaluate automatically in the case x
       is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
 
     Examples
     ========
+
     >>> from sympy import cos, pi
     >>> from sympy.abc import x
     >>> cos(x**2).diff(x)
@@ -351,10 +357,12 @@ class cos(TrigonometricFunction):
 
     See Also
     ========
+
     sin, tan, acos
 
     References
     ==========
+
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
 
     """
@@ -547,11 +555,13 @@ class tan(TrigonometricFunction):
 
     Notes
     =====
+
     * tan(x) will evaluate automatically in the case x is a
       multiple of pi.
 
     Examples
     ========
+
     >>> from sympy import tan
     >>> from sympy.abc import x
     >>> tan(x**2).diff(x)
@@ -561,10 +571,12 @@ class tan(TrigonometricFunction):
 
     See Also
     ========
+
     sin, cos, atan
 
     References
     ==========
+
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
 
     """
@@ -924,11 +936,13 @@ class asin(Function):
 
     Notes
     =====
+
     * asin(x) will evaluate automatically in the cases
       oo, -oo, 0, 1, -1
 
     Examples
     ========
+
     >>> from sympy import asin, oo, pi
     >>> asin(1)
     pi/2
@@ -937,6 +951,7 @@ class asin(Function):
 
     See Also
     ========
+
     acos, atan, sin
     """
 
@@ -1042,11 +1057,13 @@ class acos(Function):
 
     Notes
     =====
+
     * acos(x) will evaluate automatically in the cases
       oo, -oo, 0, 1, -1
 
     Examples
     ========
+
     >>> from sympy import acos, oo, pi
     >>> acos(1)
     0
@@ -1057,6 +1074,7 @@ class acos(Function):
 
     See Also
     ========
+
     asin, atan, cos
     """
 
@@ -1151,11 +1169,13 @@ class atan(Function):
 
     Notes
     =====
+
     * atan(x) will evaluate automatically in the cases
       oo, -oo, 0, 1, -1
 
     Examples
     ========
+
     >>> from sympy import atan, oo, pi
     >>> atan(0)
     0
@@ -1166,6 +1186,7 @@ class atan(Function):
 
     See Also
     ========
+
     acos, asin, tan
     """
 

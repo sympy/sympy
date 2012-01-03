@@ -118,12 +118,14 @@ class lowergamma(Function):
 
     See Also
     ========
+
     gamma
     uppergamma
     sympy.functions.special.hyper.hyper
 
     Examples
     ========
+
     >>> from sympy import lowergamma, S
     >>> from sympy.abc import s, x
     >>> lowergamma(s, x)
@@ -135,6 +137,7 @@ class lowergamma(Function):
 
     References
     ==========
+
     - Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
       Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
       Tables
@@ -235,6 +238,7 @@ class uppergamma(Function):
 
     Examples
     ========
+
     >>> from sympy import uppergamma, S
     >>> from sympy.abc import s, x
     >>> uppergamma(s, x)
@@ -246,12 +250,14 @@ class uppergamma(Function):
 
     See Also
     ========
+
     gamma
     lowergamma
     sympy.functions.special.hyper.hyper
 
     References
     ==========
+
     - Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
       Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
       Tables
@@ -463,6 +469,7 @@ class loggamma(Function):
 
     References
     ==========
+
     http://mathworld.wolfram.com/LogGammaFunction.html
 
     """

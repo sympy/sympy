@@ -12,6 +12,7 @@ class PlotWindow(ManagedWindow):
         """
         Named Arguments
         ===============
+
         antialiasing = True
             True OR False
         ortho = False

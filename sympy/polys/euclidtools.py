@@ -60,6 +60,7 @@ def dup_half_gcdex(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.euclidtools import dup_half_gcdex
 
@@ -91,6 +92,7 @@ def dmp_half_gcdex(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.euclidtools import dmp_half_gcdex
 
@@ -108,6 +110,7 @@ def dup_gcdex(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.euclidtools import dup_gcdex
 
@@ -131,6 +134,7 @@ def dmp_gcdex(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.euclidtools import dmp_gcdex
 
@@ -146,6 +150,7 @@ def dup_invert(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.euclidtools import dup_invert
 
@@ -175,6 +180,7 @@ def dmp_invert(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.euclidtools import dmp_invert
 
@@ -190,6 +196,7 @@ def dup_euclidean_prs(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.euclidtools import dup_euclidean_prs
 
@@ -228,6 +235,7 @@ def dmp_euclidean_prs(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.euclidtools import dmp_euclidean_prs
 
@@ -243,6 +251,7 @@ def dup_primitive_prs(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dup_primitive_prs
 
@@ -281,6 +290,7 @@ def dmp_primitive_prs(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_primitive_prs
 
@@ -302,6 +312,7 @@ def dup_inner_subresultants(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dup_inner_subresultants
 
@@ -363,6 +374,7 @@ def dup_subresultants(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dup_subresultants
 
@@ -382,6 +394,7 @@ def dup_prs_resultant(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dup_prs_resultant
 
@@ -434,6 +447,7 @@ def dup_resultant(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dup_resultant
 
@@ -453,6 +467,7 @@ def dmp_inner_subresultants(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_inner_subresultants
 
@@ -529,6 +544,7 @@ def dmp_subresultants(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_subresultants
 
@@ -551,6 +567,7 @@ def dmp_prs_resultant(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_prs_resultant
 
@@ -615,6 +632,7 @@ def dmp_zz_modular_resultant(f, g, p, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_zz_modular_resultant
 
@@ -691,6 +709,7 @@ def dmp_zz_collins_resultant(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_zz_collins_resultant
 
@@ -749,6 +768,7 @@ def dmp_qq_collins_resultant(f, g, u, K0):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.euclidtools import dmp_qq_collins_resultant
 
@@ -787,6 +807,7 @@ def dmp_resultant(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_resultant
 
@@ -816,6 +837,7 @@ def dup_discriminant(f, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dup_discriminant
 
@@ -842,6 +864,7 @@ def dmp_discriminant(f, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_discriminant
 
@@ -976,6 +999,7 @@ def dup_rr_prs_gcd(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dup_rr_prs_gcd
 
@@ -1018,6 +1042,7 @@ def dup_ff_prs_gcd(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.euclidtools import dup_ff_prs_gcd
 
@@ -1051,6 +1076,7 @@ def dmp_rr_prs_gcd(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_rr_prs_gcd
 
@@ -1096,6 +1122,7 @@ def dmp_ff_prs_gcd(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.euclidtools import dmp_ff_prs_gcd
 
@@ -1169,6 +1196,7 @@ def dup_zz_heu_gcd(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dup_zz_heu_gcd
 
@@ -1180,6 +1208,7 @@ def dup_zz_heu_gcd(f, g, K):
 
     References
     ==========
+
     1. [Liao95]_
 
     """
@@ -1295,6 +1324,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_zz_heu_gcd
 
@@ -1306,6 +1336,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
 
     References
     ==========
+
     1. [Liao95]_
 
     """
@@ -1384,6 +1415,7 @@ def dup_qq_heu_gcd(f, g, K0):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.euclidtools import dup_qq_heu_gcd
 
@@ -1432,6 +1464,7 @@ def dmp_qq_heu_gcd(f, g, u, K0):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.euclidtools import dmp_qq_heu_gcd
 
@@ -1479,6 +1512,7 @@ def dup_inner_gcd(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dup_inner_gcd
 
@@ -1536,6 +1570,7 @@ def dmp_inner_gcd(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_inner_gcd
 
@@ -1562,6 +1597,7 @@ def dup_gcd(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dup_gcd
 
@@ -1581,6 +1617,7 @@ def dmp_gcd(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_gcd
 
@@ -1599,6 +1636,7 @@ def dup_rr_lcm(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dup_rr_lcm
 
@@ -1625,6 +1663,7 @@ def dup_ff_lcm(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.euclidtools import dup_ff_lcm
 
@@ -1646,6 +1685,7 @@ def dup_lcm(f, g, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dup_lcm
 
@@ -1668,6 +1708,7 @@ def dmp_rr_lcm(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_rr_lcm
 
@@ -1695,6 +1736,7 @@ def dmp_ff_lcm(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.euclidtools import dmp_ff_lcm
 
@@ -1717,6 +1759,7 @@ def dmp_lcm(f, g, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_lcm
 
@@ -1742,6 +1785,7 @@ def dmp_content(f, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_content
 
@@ -1774,6 +1818,7 @@ def dmp_primitive(f, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_primitive
 
@@ -1796,6 +1841,7 @@ def dup_cancel(f, g, K, include=True):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dup_cancel
 
@@ -1814,6 +1860,7 @@ def dmp_cancel(f, g, u, K, include=True):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.euclidtools import dmp_cancel
 

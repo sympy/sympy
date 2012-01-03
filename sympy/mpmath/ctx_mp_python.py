@@ -896,6 +896,7 @@ class PythonMPContext:
 
         Examples
         ========
+
             >>> from mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> A = [2, 1.5, 3]
@@ -1090,6 +1091,7 @@ class PythonMPContext:
 
         Examples
         ========
+
             >>> from mpmath import *
             >>> mp.pretty = True
             >>> mag(10), mag(10.0), mag(mpf(10)), int(ceil(log(10,2)))
