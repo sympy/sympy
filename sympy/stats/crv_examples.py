@@ -13,7 +13,7 @@ Gamma
 
 from sympy import exp, sqrt, pi, S, Dummy, Interval, S, sympify, gamma, Piecewise
 from sympy import beta as beta_fn
-from crv import SingleContinuousPSpace, integrate
+from crv import SingleContinuousPSpace
 from sympy.core.decorators import _sympifyit
 import random
 

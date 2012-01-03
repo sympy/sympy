@@ -18,17 +18,6 @@ from sympy import integrate as sympy_integrate
 import random
 oo = S.Infinity
 
-def integrate(*args, **kwargs):
-    """
-    Wrap around sympy integrate function to include a evaluate flag
-    if evaluate==False then just return the Integral object
-    """
-    evaluate = kwargs.get('evaluate', True)
-    if evaluate:
-        return sympy_integrate(*args)
-    else:
-        return Integral(*args)
-
 class ContinuousDomain(RandomDomain):
     """
     A domain with continuous support.
