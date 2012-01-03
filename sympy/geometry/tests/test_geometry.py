@@ -333,14 +333,14 @@ def test_line():
     assert p1.x <= p_s1.x and p_s1.x <= p10.x and p1.y <= p_s1.y and p_s1.y <= p10.y
     s2 = Segment(p10, p1)
 
-    assert s1.__hash__() == s2.__hash__()
+    assert hash(s1) == hash(s2)
     p11 = p10.scale(2, 2)
     assert s1.is_similar(Segment(p10, p11))
     assert s1.is_similar(r1) == False
-    assert s1.__contains__(r1) == False
-    assert s1.__contains__(Segment(p1, p2))
+    assert (r1 in s1) == False
+    assert Segment(p1, p2) in s1
     assert s1.plot_interval() == [t, 0, 1]
-    assert Line(p1, p10).__contains__(s1)
+    assert s1 in Line(p1, p10)
     assert Line(p1, p10) == Line(p10, p1)
     assert Line(p1, p10) != p1
     assert Line(p1, p10).plot_interval() == [t, -5, 5]
@@ -383,10 +383,10 @@ def test_ellipse():
     assert c1.minor == 1
 
     # Private Functions
-    assert c1.__hash__() == Circle(Point(1, 0), Point(0, 1), Point(0, -1)).__hash__()
-    assert e1.__contains__(c1) == True
-    assert e1.__contains__(Line(p1, p2)) == False
-    assert e1.__cmp__(e1) == 0
+    assert hash(c1) == hash(Circle(Point(1, 0), Point(0, 1), Point(0, -1)))
+    assert c1 in e1
+    assert (Line(p1, p2) in e1) == False
+    assert cmp(e1, e1) == 0
     assert e1.__cmp__(Point(0, 0)) > 0
 
     # Encloses
@@ -603,11 +603,11 @@ def test_polygon():
     assert p5.distance(Polygon(Point(1, 8), Point(5, 8), Point(8, 12), Point(1, 12))) == 4
     raises(UserWarning,
            'Polygon(Point(0, 0), Point(1, 0), Point(1,1)).distance(Polygon(Point(0, 0), Point(0, 1), Point(1, 1)))')
-    assert p5.__hash__() == Polygon(Point(0, 0), Point(4, 4), Point(0, 4)).__hash__()
+    assert hash(p5) == hash(Polygon(Point(0, 0), Point(4, 4), Point(0, 4)))
     assert p5 == Polygon(Point(4, 4), Point(0, 4), Point(0, 0))
-    assert p5.__contains__(Polygon(Point(4, 4), Point(0, 4), Point(0, 0)))
+    assert Polygon(Point(4, 4), Point(0, 4), Point(0, 0)) in p5
     assert p5 != Point(0, 4)
-    assert p5.__contains__(Point(0, 1))
+    assert Point(0, 1) in p5
     assert p5.arbitrary_point('t').subs(Symbol('t', real=True), 0) == Point(0, 0)
     raises(ValueError, "Polygon(Point(x, 0), Point(0, y), Point(x, y)).arbitrary_point('x')")
 
@@ -639,7 +639,11 @@ def test_polygon():
     p1.spin(pi/3)
     assert p1.rotation == pi/3
     assert p1[0] == Point(5, 5*sqrt(3))
-    assert p1.__iter__().next() == Point(0, 0)
+    for var in p1:
+        if isinstance(var, Point):
+            assert var == Point(0, 0)
+        else:
+            assert var == 5 or var == 10 or var == pi / 3
     assert p1 != Point(0, 0)
     assert p1 != p5
     raises(IndexError, 'RegularPolygon(Point(0, 0), 1, 3)[4]')
@@ -650,7 +654,7 @@ def test_polygon():
     assert p1.rotate(pi/3) == RegularPolygon(Point(0, 0), 10, 5, 2*pi/3)
     assert p1 == p1_old
 
-    assert p1.__repr__() == str(p1)
+    assert `p1` == str(p1)
 
     #
     # Angles
