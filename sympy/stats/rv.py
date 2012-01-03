@@ -176,6 +176,11 @@ class RandomSymbol(Symbol):
     P - Probability of a condition
     Density - Probability Density of an expression
     Given - A new random expression (with new random symbols) given a condition
+
+    An object of the RandomSymbol type should almost never be created by the
+    user. They tend to be created instead by the PSpace class's value method.
+    Traditionally a user doesn't even do this but instead calls one of the
+    convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
     is_bounded=True
