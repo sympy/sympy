@@ -12,7 +12,7 @@ from rv import (RandomDomain, SingleDomain, ConditionalDomain, ProductDomain,
         PSpace, random_symbols, ProductPSpace)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (S, Interval, Dummy, FiniteSet, Mul, Integral, And, Or,
-        Piecewise, solve, cacheit)
+        Piecewise, solve, cacheit, integrate)
 from sympy.solvers.inequalities import reduce_poly_inequalities
 from sympy import integrate as sympy_integrate
 import random

@@ -490,7 +490,7 @@ def Density(expr, given=None, **kwargs):
     >>> Density(2*D)
     {2: 1/6, 4: 1/6, 6: 1/6, 8: 1/6, 10: 1/6, 12: 1/6}
     >>> Density(X)
-    (x, 2**(1/2)*exp(-x**2/2)/(2*pi**(1/2)))
+    (x, sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)))
 
     """
     if given is not None: # If there is a condition
@@ -525,7 +525,7 @@ def CDF(expr, given=None, **kwargs):
     {9: 1/4, 12: 1/2, 15: 3/4, 18: 1}
 
     >>> CDF(X)
-    (_z, erf(sqrt(2)*_z/2)/2 + 1/2)
+    (_z, erf(sqrt(2)*Abs(_z)/2)/2 + 1/2)
 
     """
     if given is not None: # If there is a condition

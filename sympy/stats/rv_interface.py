@@ -6,17 +6,17 @@ def variance(X, given=None, **kwargs):
 
     Expectation of (X-E(X))**2
 
-    >>> from sympy.stats import Die, E, Bernoulli, var
+    >>> from sympy.stats import Die, E, Bernoulli, Var
     >>> from sympy import simplify, Symbol
 
     >>> X = Die(6)
     >>> p = Symbol('p')
     >>> B = Bernoulli(p, 1, 0)
 
-    >>> var(2*X)
+    >>> Var(2*X)
     35/3
 
-    >>> simplify(var(B))
+    >>> simplify(Var(B))
     p*(-p + 1)
 
     """
@@ -36,7 +36,7 @@ def standard_deviation(X, given=None, **kwargs):
     >>> B = Bernoulli(p, 1, 0)
 
     >>> Std(B)
-    (-p**2 + p)**(1/2)
+    sqrt(-p**2 + p)
 
     """
     return sqrt(variance(X, given, **kwargs))
@@ -50,18 +50,18 @@ def covariance(X, Y, given=None, **kwargs):
     Covariance(X,Y) = E( (X-E(X)) * (Y-E(Y)) )
 
 
-    >>> from sympy.stats import Exponential, covar
+    >>> from sympy.stats import Exponential, Covar
     >>> from sympy import Symbol
 
     >>> rate = Symbol('lambda', positive=True, real=True, bounded = True)
     >>> X = Exponential(rate)
     >>> Y = Exponential(rate)
 
-    >>> covar(X, X)
+    >>> Covar(X, X)
     lambda**(-2)
-    >>> covar(X, Y)
+    >>> Covar(X, Y)
     0
-    >>> covar(X, Y + rate*X)
+    >>> Covar(X, Y + rate*X)
     1/lambda
     """
 
