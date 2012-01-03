@@ -740,6 +740,13 @@ def test_issue_1095():
     f = Function('f')
     assert simplify((4*x+6*f(y))/(2*x+3*f(y))) == 2
 
+@XFAIL
+def test_simplify_float_vs_integer():
+    # Test for issue 1374:
+    # http://code.google.com/p/sympy/issues/detail?id=1374
+    assert simplify(x**2.0-x**2) == 0
+    assert simplify(x**2-x**2.0) == 0
+
 def test_combsimp():
     from sympy.abc import n, k
 

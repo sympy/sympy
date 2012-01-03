@@ -2,6 +2,8 @@ from sympy import symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan, \
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos, \
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im
 
+from sympy.utilities.pytest import XFAIL
+
 def test_sin():
     x, y = symbols('x,y')
 
@@ -737,3 +739,10 @@ def test_real_imag():
         assert cos(a).as_real_imag(deep=deep) == (cos(a), 0)
         assert tan(a).as_real_imag(deep=deep) == (tan(a), 0)
         assert cot(a).as_real_imag(deep=deep) == (cot(a), 0)
+
+@XFAIL
+def test_sin_cos_with_infinity():
+    # Test for issue 2097
+    # http://code.google.com/p/sympy/issues/detail?id=2097
+    assert sin(oo) == S.NaN
+    assert cos(oo) == S.NaN
