@@ -385,8 +385,7 @@ The function thus has a branch cut along the negative half real axis.
 For all mpmath numbers ``x``, calling ``sqrt(x)`` is equivalent to
 performing ``x**0.5``.
 
-Examples
-========
+**Examples**
 
 Basic examples and limits::
 
@@ -1422,8 +1421,7 @@ the equivalent reciprocal for a non-principal root with `k \ne 0`) is computed.
 expensive than the regular exponentiation, `x^n`. For very large
 `n`, :func:`~mpmath.nthroot` falls back to use the exponential function.
 
-Examples
-========
+**Examples**
 
 :func:`~mpmath.nthroot`/:func:`~mpmath.root` is faster and more accurate than raising to a
 floating-point fraction::
@@ -1502,8 +1500,7 @@ roots for each `n` (`\zeta_k` and `\zeta_j` are the same when
 circle. They are ordered counterclockwise with increasing `k`, starting
 with `\zeta_0 = 1`.
 
-Examples
-========
+**Examples**
 
 The roots of unity up to `n = 4`::
 
@@ -1585,8 +1582,7 @@ The natural logarithm is real if `x > 0` and complex if `x < 0` or if
 `x` is complex. The principal branch of the complex logarithm is
 used, meaning that `\Im(\ln(x)) = -\pi < \arg(x) \le \pi`.
 
-Examples
-========
+**Examples**
 
 Some basic values and limits::
 
@@ -1839,8 +1835,7 @@ Some related sums can be done in closed form::
     >>> phi-1
     0.618033988749895
 
-References
-==========
+**References**
 
 1. http://mathworld.wolfram.com/FibonacciNumber.html
 """
@@ -1865,8 +1860,7 @@ as `\eta(s) = (1 - 2^{1-s}) \zeta(s)`. It can also be expressed
 in terms of the Hurwitz zeta function, for example using
 :func:`~mpmath.dirichlet` (see documentation for that function).
 
-Examples
-========
+**Examples**
 
 Some special values are::
 
@@ -1911,8 +1905,7 @@ so from below rather than from above::
     >>> altzeta(1000, rounding='u')
     mpf('1.0')
 
-References
-==========
+**References**
 
 1. http://mathworld.wolfram.com/DirichletEtaFunction.html
 
@@ -1924,8 +1917,7 @@ Computes the factorial, `x!`. For integers `n \ge 0`, we have
 `n! = 1 \cdot 2 \cdots (n-1) \cdot n` and more generally the factorial
 is defined for real or complex `x` by `x! = \Gamma(x+1)`.
 
-Examples
-========
+**Examples**
 
 Basic values and limits::
 
@@ -1982,8 +1974,7 @@ is defined by
 for any real or complex `x` with `\Re(x) > 0` and for `\Re(x) < 0`
 by analytic continuation.
 
-Examples
-========
+**Examples**
 
 Basic values and limits::
 
@@ -2055,8 +2046,7 @@ nonnegative integer, while the argument `z` may be an arbitrary
 complex number (with exception for the polygamma function's poles
 at `z = 0, -1, -2, \ldots`).
 
-Examples
-========
+**Examples**
 
 For various rational arguments, the polygamma function reduces to
 a combination of standard mathematical constants::
@@ -2209,8 +2199,7 @@ The Bernoulli numbers are rational numbers, but this function
 returns a floating-point approximation. To obtain an exact
 fraction, use :func:`~mpmath.bernfrac` instead.
 
-Examples
-========
+**Examples**
 
 Numerical values of the first few Bernoulli numbers::
 
@@ -2282,8 +2271,7 @@ More generally, ``stieltjes(n, a)`` gives the corresponding
 coefficient `\gamma_n(a)` for the Hurwitz zeta function
 `\zeta(s,a)` (with `\gamma_n = \gamma_n(1)`).
 
-Examples
-========
+**Examples**
 
 The zeroth Stieltjes constant is just Euler's constant `\gamma`::
 
@@ -2332,8 +2320,7 @@ Coffey [1], [2]:
 
 For some reference values with `a = 1`, see e.g. [4].
 
-References
-==========
+**References**
 
 1. O. R. Ainsworth & L. W. Howell, "An integral representation of
    the generalized Euler-Mascheroni constants", NASA Technical
@@ -2385,8 +2372,7 @@ In particular:
 * If there are more poles in the denominator, :func:`~mpmath.gammaprod`
   returns 0.
 
-Examples
-========
+**Examples**
 
 The reciprocal gamma function `1/\Gamma(x)` evaluated at `x = 0`::
 
@@ -2416,8 +2402,7 @@ representation
 
     B(x,y) = \int_0^1 t^{x-1} (1-t)^{y-1} \, dt
 
-Examples
-========
+**Examples**
 
 For integer and half-integer arguments where all three gamma
 functions are finite, the beta function becomes either rational
@@ -2497,8 +2482,7 @@ beta distribution with parameters `a`, `b`.
     three-argument incomplete beta integral (implicitly with `x1 = 0`), use
     ``betainc(a,b,0,x2,regularized=True)``.
 
-Examples
-========
+**Examples**
 
 Verifying that :func:`~mpmath.betainc` computes the integral in the
 definition::
@@ -2556,8 +2540,7 @@ can be chosen from a set of `n` items. More generally, the binomial
 coefficient is a well-defined function of arbitrary real or
 complex `n` and `k`, via the gamma function.
 
-Examples
-========
+**Examples**
 
 Generate Pascal's triangle::
 
@@ -2615,8 +2598,7 @@ Computes the rising factorial or Pochhammer symbol,
 
 where the rightmost expression is valid for nonintegral `n`.
 
-Examples
-========
+**Examples**
 
 For integral `n`, the rising factorial is a polynomial::
 
@@ -2646,8 +2628,7 @@ Computes the falling factorial,
 
 where the rightmost expression is valid for nonintegral `n`.
 
-Examples
-========
+**Examples**
 
 For integral `n`, the falling factorial is a polynomial::
 
@@ -2686,8 +2667,7 @@ and more generally by [1]
     x!! = 2^{x/2} \left(\frac{\pi}{2}\right)^{(\cos(\pi x)-1)/4}
           \Gamma\left(\frac{x}{2}+1\right).
 
-Examples
-========
+**Examples**
 
 The integer sequence of double factorials begins::
 
@@ -2753,8 +2733,7 @@ A beautiful Ramanujan sum::
     >>> (gamma('9/8')/gamma('5/4')/gamma('7/8'))**2
     0.90917279454693
 
-References
-==========
+**References**
 
 1. http://functions.wolfram.com/GammaBetaErf/Factorial2/27/01/0002/
 
@@ -2780,8 +2759,7 @@ integers and fractions more efficiently than arbitrary
 floating-point parameters (since rational parameters are by
 far the most common).
 
-Examples
-========
+**Examples**
 
 Verifying that :func:`~mpmath.hyper` gives the sum in the definition, by
 comparison with :func:`~mpmath.nsum`::
@@ -2936,8 +2914,7 @@ gamma factors ``alpha``, ``beta``, and hypergeometric coefficients
 ``a``, ``b`` each should be lists of numbers, and ``z`` should be a single
 number.
 
-Examples
-========
+**Examples**
 
 The following evaluates
 
@@ -2972,8 +2949,7 @@ and is related to the Bessel function of the first kind (see :func:`~mpmath.bess
 ``hyp0f1(a,z)`` is equivalent to ``hyper([],[a],z)``; see documentation for
 :func:`~mpmath.hyper` for more information.
 
-Examples
-========
+**Examples**
 
 Evaluation for arbitrary arguments::
 
@@ -3029,8 +3005,7 @@ functions (:func:`~mpmath.whitm`, :func:`~mpmath.whitw`).
 to ``hyper([a],[b],z)``; see documentation for :func:`~mpmath.hyper` for more
 information.
 
-Examples
-========
+**Examples**
 
 Evaluation for real and complex values of the argument `z`, with
 fixed parameters `a = 2, b = -1/3`::
@@ -3173,8 +3148,7 @@ The implementation supports the analytic continuation as well as evaluation
 close to the unit circle where `|z| \approx 1`. The syntax ``hyp2f1(a,b,c,z)``
 is equivalent to ``hyper([a,b],[c],z)``.
 
-Examples
-========
+**Examples**
 
 Evaluation with `z` inside, outside and on the unit circle, for
 fixed parameters::
@@ -3321,8 +3295,7 @@ function gives a second linearly independent solution to the confluent
 hypergeometric differential equation (the first is provided by `\,_1F_1`  --
 see :func:`~mpmath.hyp1f1`).
 
-Examples
-========
+**Examples**
 
 Evaluation for arbitrary complex arguments::
 
@@ -3381,8 +3354,7 @@ hypergeometric U function [1]. The series also converges when either `a` or `b`
 is a nonpositive integer, as it then terminates into a polynomial
 after `-a` or `-b` terms.
 
-Examples
-========
+**Examples**
 
 Evaluation is supported for arbitrary complex arguments::
 
@@ -3470,8 +3442,7 @@ function
 
   P(z,a,b) = \frac{\Gamma(z,a,b)}{\Gamma(z)}.
 
-Examples
-========
+**Examples**
 
 We can compare with numerical quadrature to verify that
 :func:`~mpmath.gammainc` computes the integral in the definition::
@@ -3674,8 +3645,7 @@ The functions are related as
 `\mathrm{erfi}(x) = -i\,\mathrm{erf}(ix)` for all complex
 numbers `x`.
 
-Examples
-========
+**Examples**
 
 Basic values and limits::
 
@@ -3731,8 +3701,7 @@ Computes the inverse error function, satisfying
 
 This function is defined only for `-1 \le x \le 1`.
 
-Examples
-========
+**Examples**
 
 Special values include::
 
@@ -3850,8 +3819,7 @@ or En-function,
 where `n` and `z` may both be complex numbers. The case with `n = 1` is
 also given by :func:`~mpmath.e1`.
 
-Examples
-========
+**Examples**
 
 Evaluation at real and complex arguments::
 
@@ -3891,8 +3859,7 @@ Computes the exponential integral `\mathrm{E}_1(z)`, given by
 
 This is equivalent to :func:`~mpmath.expint` with `n = 1`.
 
-Examples
-========
+**Examples**
 
 Two ways to evaluate this function::
 
@@ -3999,8 +3966,7 @@ hypergeometric function `\,_2F_2`::
     >>> ei(z)
     0.769881289937359
 
-References
-==========
+**References**
 
 1. Relations between Ei and other functions:
    http://functions.wolfram.com/GammaBetaErf/ExpIntegralEi/27/01/
@@ -4036,8 +4002,7 @@ The logarithmic integral should also not be confused with
 the polylogarithm (also denoted by Li), which is implemented
 as :func:`~mpmath.polylog`.
 
-Examples
-========
+**Examples**
 
 Some basic values and limits::
 
@@ -4104,8 +4069,7 @@ A definite integral is::
     >>> -ln(2)
     -0.693147180559945
 
-References
-==========
+**References**
 
 1. http://mathworld.wolfram.com/PrimeCountingFunction.html
 
@@ -4121,8 +4085,7 @@ Computes the cosine integral,
     \mathrm{Ci}(x) = -\int_x^{\infty} \frac{\cos t}{t}\,dt
     = \gamma + \log x + \int_0^x \frac{\cos t - 1}{t}\,dt
 
-Examples
-========
+**Examples**
 
 Some values and limits::
 
@@ -4191,8 +4154,7 @@ Computes the sine integral,
 The sine integral is thus the antiderivative of the sinc
 function (see :func:`~mpmath.sinc`).
 
-Examples
-========
+**Examples**
 
 Some values and limits::
 
@@ -4314,8 +4276,7 @@ Computes the Fresnel sine integral
 Note that some sources define this function
 without the normalization factor `\pi/2`.
 
-Examples
-========
+**Examples**
 
 Some basic values and limits::
 
@@ -4350,8 +4311,7 @@ Computes the Fresnel cosine integral
 Note that some sources define this function
 without the normalization factor `\pi/2`.
 
-Examples
-========
+**Examples**
 
 Some basic values and limits::
 
@@ -4585,8 +4545,7 @@ Integrals of the Ai-function can be evaluated at limit points::
     -333333074513.7520264995733
     -inf
 
-References
-==========
+**References**
 
 1. [DLMF]_ Chapter 9: Airy and Related Functions
 2. [WolframFunctions]_ section: Bessel-Type Functions
@@ -4784,8 +4743,7 @@ Optionally, with *derivative=1*, the corresponding
 zero `a'_k` of the derivative function, i.e.
 `\operatorname{Ai}'(a'_k) = 0`, is computed.
 
-Examples
-========
+**Examples**
 
 Some values of `a_k`::
 
@@ -4834,8 +4792,7 @@ zero `b'_k` or `\beta'_k` of the derivative function, i.e.
 `\operatorname{Bi}'(b'_k) = 0` or `\operatorname{Bi}'(\beta'_k) = 0`,
 is computed.
 
-Examples
-========
+**Examples**
 
 Some values of `b_k`::
 
@@ -4927,8 +4884,7 @@ not the modulus `k` which is sometimes used.
 .. literalinclude :: /modules/mpmath/plots/ellipk.py
 .. image :: /modules/mpmath/plots/ellipk.png
 
-Examples
-========
+**Examples**
 
 Values and limits include::
 
@@ -4985,8 +4941,7 @@ agm = r"""
 This function can be called with a single argument, computing
 `\mathrm{agm}(a,1) = \mathrm{agm}(1,a)`.
 
-Examples
-========
+**Examples**
 
 It is a well-known theorem that the geometric mean of
 two distinct positive numbers is less than the arithmetic
@@ -5095,8 +5050,7 @@ in `z` of degree `n`, but all parameters are permitted to be
 complex numbers. With `a = 1/2`, the Gegenbauer polynomial
 reduces to a Legendre polynomial.
 
-Examples
-========
+**Examples**
 
 Evaluation for arbitrary arguments::
 
@@ -5170,8 +5124,7 @@ The Laguerre polynomials are orthogonal with respect to the weight
 .. literalinclude :: /modules/mpmath/plots/laguerre.py
 .. image :: /modules/mpmath/plots/laguerre.png
 
-Examples
-========
+**Examples**
 
 Evaluation for arbitrary arguments::
 
@@ -5248,8 +5201,7 @@ for `\Re{z} > 0`, or generally
 .. literalinclude :: /modules/mpmath/plots/hermite.py
 .. image :: /modules/mpmath/plots/hermite.png
 
-Examples
-========
+**Examples**
 
 Evaluation for arbitrary arguments::
 
@@ -5559,8 +5511,7 @@ is given by `C_1 P_n^m(z) + C_2 Q_n^m(z)` for arbitrary constants
 `C_1`, `C_2`, where `Q_n^m(z)` is a Legendre function of the
 second kind as implemented by :func:`~mpmath.legenq`.
 
-Examples
-========
+**Examples**
 
 Evaluation for arbitrary parameters and arguments::
 
@@ -5632,8 +5583,7 @@ is essentially the same as the function defined in
 Abramowitz & Stegun (eq. 8.1.3) but with `(z+1)^{m/2}(z-1)^{m/2}` instead
 of `(z^2-1)^{m/2}`, giving slightly different branches.
 
-Examples
-========
+**Examples**
 
 Evaluation for arbitrary parameters and arguments::
 
@@ -5798,8 +5748,7 @@ is computed.
 .. literalinclude :: /modules/mpmath/plots/besselj_c.py
 .. image :: /modules/mpmath/plots/besselj_c.png
 
-Examples
-========
+**Examples**
 
 Evaluation is supported for arbitrary arguments, and at
 arbitrary precision::
@@ -5919,8 +5868,7 @@ is computed.
 .. literalinclude :: /modules/mpmath/plots/besseli_c.py
 .. image :: /modules/mpmath/plots/besseli_c.png
 
-Examples
-========
+**Examples**
 
 Some values of `I_n(x)`::
 
@@ -5995,8 +5943,7 @@ is computed.
 .. literalinclude :: /modules/mpmath/plots/bessely_c.py
 .. image :: /modules/mpmath/plots/bessely_c.png
 
-Examples
-========
+**Examples**
 
 Some values of `Y_n(x)`::
 
@@ -6059,8 +6006,7 @@ limit.
 .. literalinclude :: /modules/mpmath/plots/besselk_c.py
 .. image :: /modules/mpmath/plots/besselk_c.png
 
-Examples
-========
+**Examples**
 
 Evaluation is supported for arbitrary complex arguments::
 
@@ -6122,8 +6068,7 @@ which is the complex combination of Bessel functions given by
 .. literalinclude :: /modules/mpmath/plots/hankel1_c.py
 .. image :: /modules/mpmath/plots/hankel1_c.png
 
-Examples
-========
+**Examples**
 
 The Hankel function is generally complex-valued::
 
@@ -6150,8 +6095,7 @@ which is the complex combination of Bessel functions given by
 .. literalinclude :: /modules/mpmath/plots/hankel2_c.py
 .. image :: /modules/mpmath/plots/hankel2_c.png
 
-Examples
-========
+**Examples**
 
 The Hankel function is generally complex-valued::
 
@@ -6289,8 +6233,7 @@ a small imaginary part::
     >>> lambertw(-1/e+eps)
     -0.999999966242188
 
-References
-==========
+**References**
 
 1. [Corless]_
 """
@@ -6314,8 +6257,7 @@ product:
 For positive integers `n`, we have have relation to superfactorials
 `G(n) = \mathrm{sf}(n-2) = 0! \cdot 1! \cdots (n-2)!`.
 
-Examples
-========
+**Examples**
 
 Some elementary values and limits of the Barnes G-function::
 
@@ -6408,9 +6350,7 @@ precision::
     (2.43114569750291e+1026623 + 2.24851410674842e+1026623j)
 
 
-References
-
-==========
+**References**
 
 1. Whittaker & Watson, *A Course of Modern Analysis*,
    Cambridge University Press, 4th edition (1927), p.264
@@ -6430,8 +6370,7 @@ consecutive factorials
 For general complex `z`, `\mathrm{sf}(z)` is defined
 in terms of the Barnes G-function (see :func:`~mpmath.barnesg`).
 
-Examples
-========
+**Examples**
 
 The first few superfactorials are (OEIS A000178)::
 
@@ -6468,8 +6407,7 @@ Evaluation is supported for arbitrary arguments::
     >>> diff(superfac, 1)
     0.2645072034016070205673056
 
-References
-==========
+**References**
 
 1. http://www.research.att.com/~njas/sequences/A000178
 
@@ -6501,8 +6439,7 @@ the integral representation
         {z+1 \choose 2} + \int_0^z \log(t!)\,dt
         \right].
 
-Examples
-========
+**Examples**
 
 The rapidly-growing sequence of hyperfactorials begins
 (OEIS A002109)::
@@ -6573,8 +6510,7 @@ definition::
     >>> hyperfac(1/sqrt(2))
     0.89404818005227001975423476035729076375705084390942
 
-References
-==========
+**References**
 
 1. http://www.research.att.com/~njas/sequences/A002109
 2. http://mathworld.wolfram.com/Hyperfactorial.html
@@ -6586,8 +6522,7 @@ Computes the reciprocal of the gamma function, `1/\Gamma(z)`. This
 function evaluates to zero at the poles
 of the gamma function, `z = 0, -1, -2, \ldots`.
 
-Examples
-========
+**Examples**
 
 Basic examples::
 
@@ -6633,8 +6568,7 @@ They coincide for `z \in \mathbb{R}, z > 0`.
 Computationally, it is advantageous to use :func:`~mpmath.loggamma`
 instead of :func:`~mpmath.gamma` for extremely large arguments.
 
-Examples
-========
+**Examples**
 
 Comparing with `\ln(\Gamma(z))`::
 
@@ -6817,8 +6751,7 @@ nonintegral `n`. There is a fixed point where `g(x) = x`::
     >>> findroot(lambda x: grampoint(x) - x, 10000)
     9146.698193171459265866198
 
-References
-==========
+**References**
 
 1. http://mathworld.wolfram.com/GramPoint.html
 
@@ -6927,8 +6860,7 @@ estimate (see :func:`~mpmath.li`), which however is even faster to evaluate.
 It is orders of magnitude more accurate than the extremely
 fast `x/\log x` estimate.
 
-Examples
-========
+**Examples**
 
 For small arguments, the Riemann R function almost exactly
 gives the prime counting function if rounded to the nearest
@@ -7031,8 +6963,7 @@ based on Schoenfeld's inequality
 is returned. This estimate is rigorous assuming the truth of
 the Riemann hypothesis, and can be computed very quickly.
 
-Examples
-========
+**Examples**
 
 Exact values of the prime counting function for small `x`::
 
@@ -7090,8 +7021,7 @@ this sum only converges for `\mathrm{Re}(s) > 1`, the
 function is defined by analytic continuation in the
 half-plane `\mathrm{Re}(s) > 0`.
 
-Examples
-========
+**Examples**
 
 Arbitrary-precision evaluation for real and complex arguments is
 supported::
@@ -7147,8 +7077,7 @@ For large `\mathrm{Re}(s)`, `P(s)` is asymptotic to `2^{-s}`::
     >>> primezeta(1000+1000j)
     (-3.8565440833654995949e-302 - 8.4985390447553234305e-302j)
 
-References
-==========
+**References**
 
 Carl-Erik Froberg, "On the prime zeta function",
 BIT 8 (1968), pp. 187-202.
@@ -7204,8 +7133,7 @@ The polylogarithm should not be confused with the logarithmic
 integral (also denoted by Li or li), which is implemented
 as :func:`~mpmath.li`.
 
-Examples
-========
+**Examples**
 
 The polylogarithm satisfies a huge number of functional identities.
 A sample of polylogarithm evaluations is shown below::
@@ -7300,8 +7228,7 @@ not too large in magnitude::
       ...
     NotImplementedError: polylog for arbitrary s and z
 
-References
-==========
+**References**
 
 1. Richard Crandall, "Note on fast polylogarithm computation"
    http://people.reed.edu/~crandall/papers/Polylog.pdf
@@ -7342,8 +7269,7 @@ where the modification is the sinc term ensuring that `B_n(x)` is
 continuous in `n`; :func:`~mpmath.bell` can thus be evaluated,
 differentiated, etc for arbitrary complex arguments.
 
-Examples
-========
+**Examples**
 
 Simple evaluations::
 
@@ -7410,8 +7336,7 @@ A determinant identity satisfied by Bell numbers::
     >>> superfac(N-1)
     125411328000.0
 
-References
-==========
+**References**
 
 1. http://mathworld.wolfram.com/DobinskisFormula.html
 
@@ -7442,8 +7367,7 @@ Note that `B_n(x)` and `e^{-x} E_n(x)` are identical if `n`
 is a nonzero integer, but not otherwise. In particular, they differ
 at `n = 0`.
 
-Examples
-========
+**Examples**
 
 Evaluating a series::
 
@@ -7511,8 +7435,7 @@ written explicitly as
 
     \Phi_6(x) = x^2 - x + 1
 
-Examples
-========
+**Examples**
 
 The coefficients of low-order cyclotomic polynomials can be recovered
 using Taylor expansion::
@@ -7617,8 +7540,7 @@ be avoided by explicitly specifying a series.
 
 Keyword arguments are forwarded to :func:`~mpmath.hypercomb`.
 
-Examples
-========
+**Examples**
 
 Many standard functions are special cases of the Meijer G-function
 (possibly rescaled and/or with branch cut corrections). We define
@@ -7748,8 +7670,7 @@ In the following case, different series give different values::
     >>> chop(meijerg([[1],[0.25]],[[3],[0.5]],-2,series=2))
     -0.06417628097442437076207337
 
-References
-==========
+**References**
 
 1. http://en.wikipedia.org/wiki/Meijer_G-function
 
@@ -7784,8 +7705,7 @@ and this representation can be taken to provide the analytic continuation of the
 series. The complementary function :func:`~mpmath.clcos` gives the corresponding
 cosine sum.
 
-Examples
-========
+**Examples**
 
 Evaluation for arbitrarily chosen `s` and `z`::
 
@@ -7905,8 +7825,7 @@ This function is complementary to the Clausen sine function
 
     = \mathrm{Re}\left[\mathrm{Li}_s(e^{iz})\right] \quad (s, z \in \mathbb{R}).
 
-Examples
-========
+**Examples**
 
 Evaluation for arbitrarily chosen `s` and `z`::
 
@@ -8032,8 +7951,7 @@ They are alternate forms of the confluent hypergeometric functions
     W(k,m,z) = e^{-\frac{1}{2}z} z^{\frac{1}{2}+m}
         U(\tfrac{1}{2}+m-k, 1+2m, z).
 
-Examples
-========
+**Examples**
 
 Evaluation for arbitrary real and complex arguments is supported::
 
@@ -8083,8 +8001,7 @@ whitw = r"""
 Evaluates the Whittaker function `W(k,m,z)`, which gives a second
 solution to the Whittaker differential equation. (See :func:`~mpmath.whitm`.)
 
-Examples
-========
+**Examples**
 
 Evaluation for arbitrary real and complex arguments is supported::
 
@@ -8143,8 +8060,7 @@ The imaginary part is given by :func:`~mpmath.bei`.
 .. literalinclude :: /modules/mpmath/plots/ber.py
 .. image :: /modules/mpmath/plots/ber.png
 
-Examples
-========
+**Examples**
 
 Verifying the defining relation::
 
@@ -8189,8 +8105,7 @@ The imaginary part is given by :func:`~mpmath.kei`.
 .. literalinclude :: /modules/mpmath/plots/ker.py
 .. image :: /modules/mpmath/plots/ker.png
 
-Examples
-========
+**Examples**
 
 Verifying the defining relation::
 
@@ -8235,8 +8150,7 @@ which is a solution to the Struve differential equation
 
     z^2 f''(z) + z f'(z) + (z^2-n^2) f(z) = \frac{2 z^{n+1}}{\pi (2n-1)!!}.
 
-Examples
-========
+**Examples**
 
 Evaluation for arbitrary real and complex arguments::
 
@@ -8290,8 +8204,7 @@ which solves to the modified Struve differential equation
 
     z^2 f''(z) + z f'(z) - (z^2+n^2) f(z) = \frac{2 z^{n+1}}{\pi (2n-1)!!}.
 
-Examples
-========
+**Examples**
 
 Evaluation for arbitrary real and complex arguments::
 
@@ -8338,8 +8251,7 @@ This series is only generally convergent when `|x| < 1` and `|y| < 1`,
 although :func:`~mpmath.appellf1` can evaluate an analytic continuation
 with respecto to either variable, and sometimes both.
 
-Examples
-========
+**Examples**
 
 Evaluation is supported for real and complex parameters::
 
@@ -8439,8 +8351,7 @@ Also incomplete elliptic integrals fall into this category [1]::
     (1.057495752337234229715836 + 1.198140234735592207439922j)
     (1.057495752337234229715836 + 1.198140234735592207439922j)
 
-References
-==========
+**References**
 
 1. [WolframFunctions]_ http://functions.wolfram.com/EllipticIntegrals/EllipticE2/26/01/
 2. [SrivastavaKarlsson]_
@@ -8467,8 +8378,7 @@ equation
     f''(z) + \frac{1}{z}f'(z) + \left(1-\frac{\nu^2}{z^2}\right) f(z)
         = \frac{(z-\nu)}{\pi z^2} \sin(\pi \nu).
 
-Examples
-========
+**Examples**
 
 Evaluation for real and complex parameter and argument::
 
@@ -8509,8 +8419,7 @@ Verifying the integral representation::
     >>> quad(lambda t: cos(v*t-z*sin(t))/pi, [0,pi])
     0.1145380759919333180900501
 
-References
-==========
+**References**
 
 1. [DLMF]_ section 11.10: Anger-Weber Functions
 """
@@ -8532,8 +8441,7 @@ equation
     f''(z) + \frac{1}{z}f'(z) + \left(1-\frac{\nu^2}{z^2}\right) f(z)
         = -\frac{1}{\pi z^2} (z+\nu+(z-\nu)\cos(\pi \nu)).
 
-Examples
-========
+**Examples**
 
 Evaluation for real and complex parameter and argument::
 
@@ -8574,8 +8482,7 @@ Verifying the integral representation::
     >>> quad(lambda t: sin(v*t-z*sin(t))/pi, [0,pi])
     0.1486507351534283744485421
 
-References
-==========
+**References**
 
 1. [DLMF]_ section 11.10: Anger-Weber Functions
 """
@@ -8602,8 +8509,7 @@ A second solution is given by :func:`~mpmath.lommels2`.
 .. literalinclude :: /modules/mpmath/plots/lommels1.py
 .. image :: /modules/mpmath/plots/lommels1.png
 
-Examples
-========
+**Examples**
 
 An integral representation::
 
@@ -8631,8 +8537,7 @@ Verifying the differential equation::
     >>> z**(u+1)
     0.6979536443265746992059141
 
-References
-==========
+**References**
 
 1. [GradshteynRyzhik]_
 2. [Weisstein]_ http://mathworld.wolfram.com/LommelFunction.html
@@ -8659,8 +8564,7 @@ which solves the same differential equation as
 .. literalinclude :: /modules/mpmath/plots/lommels2.py
 .. image :: /modules/mpmath/plots/lommels2.png
 
-Examples
-========
+**Examples**
 
 For large `|z|`, `S_{\mu,\nu} \sim z^{\mu-1}`::
 
@@ -8687,8 +8591,7 @@ Verifying the differential equation::
     >>> z**(u+1)
     0.6495190528383289850727924
 
-References
-==========
+**References**
 
 1. [GradshteynRyzhik]_
 2. [Weisstein]_ http://mathworld.wolfram.com/LommelFunction.html
@@ -8705,8 +8608,7 @@ Gives the Appell F2 hypergeometric function of two variables
 
 The series is generally absolutely convergent for `|x| + |y| < 1`.
 
-Examples
-========
+**Examples**
 
 Evaluation for real and complex arguments::
 
@@ -8748,8 +8650,7 @@ A system of partial differential equations satisfied by F2::
     ...      a*b2*F(x,y))
     0.0
 
-References
-==========
+**References**
 
 See references for :func:`~mpmath.appellf1`.
 """
@@ -8765,8 +8666,7 @@ Gives the Appell F3 hypergeometric function of two variables
 
 The series is generally absolutely convergent for `|x| < 1, |y| < 1`.
 
-Examples
-========
+**Examples**
 
 Evaluation for various parameters and variables::
 
@@ -8820,8 +8720,7 @@ differential equations::
     ...     a2*b2*F(x,y))
     0.0
 
-References
-==========
+**References**
 
 See references for :func:`~mpmath.appellf1`.
 """
@@ -8838,8 +8737,7 @@ Gives the Appell F4 hypergeometric function of two variables
 The series is generally absolutely convergent for
 `\sqrt{|x|} + \sqrt{|y|} < 1`.
 
-Examples
-========
+**Examples**
 
 Evaluation for various parameters and arguments::
 
@@ -8879,8 +8777,7 @@ A system of partial differential equations satisfied by F4::
     ...      a*b*F(x,y))
     0.0
 
-References
-==========
+**References**
 
 See references for :func:`~mpmath.appellf1`.
 """
@@ -8922,8 +8819,7 @@ as such by passing an integer tuple `(p, q)`. Evaluation is supported for
 arbitrary complex `a`, but may be slow and/or inaccurate when `\Re(s) < 0` for
 nonrational `a` or when computing derivatives.
 
-Examples
-========
+**Examples**
 
 Some values of the Riemann zeta function::
 
@@ -9076,8 +8972,7 @@ Evaluation at zero and for negative integer `s`::
     >>> diff(lambda s: zeta(s, 3+4j), -1+j, 2)
     (32.48985276392056641594055 - 51.11604466157397267043655j)
 
-References
-==========
+**References**
 
 1. http://mathworld.wolfram.com/RiemannZetaFunction.html
 
@@ -9106,8 +9001,7 @@ the alternating zeta function (Dirichlet eta function).
 Also the derivative with respect to `s` (currently only a first
 derivative) can be evaluated.
 
-Examples
-========
+**Examples**
 
 The ordinary Riemann zeta function::
 
@@ -9196,8 +9090,7 @@ to be complex in this implementation (see references).
 .. literalinclude :: /modules/mpmath/plots/coulombf_c.py
 .. image :: /modules/mpmath/plots/coulombf_c.png
 
-Examples
-========
+**Examples**
 
 Evaluation is supported for arbitrary magnitudes of `z`::
 
@@ -9283,8 +9176,7 @@ the precision::
     1 0.9935056752 0.3708676452
     0 1.143337392 0.2937960375
 
-References
-==========
+**References**
 
 1. I.J. Thompson & A.R. Barnett, "Coulomb and Bessel Functions of Complex
    Arguments and Order", J. Comp. Phys., vol 64, no. 2, June 1986.
@@ -9313,8 +9205,7 @@ See :func:`~mpmath.coulombf` for additional information.
 .. literalinclude :: /modules/mpmath/plots/coulombg_c.py
 .. image :: /modules/mpmath/plots/coulombg_c.png
 
-Examples
-========
+**Examples**
 
 Evaluation is supported for arbitrary magnitudes of `z`::
 
@@ -9419,8 +9310,7 @@ and ``'cd'`` identifies the function
 If called with only the first argument, a function object
 evaluating the chosen function for given arguments is returned.
 
-Examples
-========
+**Examples**
 
 Basic evaluation::
 
@@ -9622,8 +9512,7 @@ The Euler numbers are closely related to Bernoulli numbers
 and Bernoulli polynomials. They can also be evaluated in terms of
 Euler polynomials (see :func:`~mpmath.eulerpoly`) as `E_n = 2^n E_n(1/2)`.
 
-Examples
-========
+**Examples**
 
 Computing the first few Euler numbers and verifying that they
 agree with the Taylor series::
@@ -9684,8 +9573,7 @@ example
 Special values include the Euler numbers `E_n = 2^n E_n(1/2)` (see
 :func:`~mpmath.eulernum`).
 
-Examples
-========
+**Examples**
 
 Computing the coefficients of the first few Euler polynomials::
 
@@ -9787,8 +9675,7 @@ are permitted to be complex numbers.
 
 .. image :: /modules/mpmath/plots/spherharm44.png
 
-Examples
-========
+**Examples**
 
 Some low-order spherical harmonics with reference values::
 
@@ -9856,8 +9743,7 @@ particular solution is given by the Scorer Hi-function
 .. literalinclude :: /modules/mpmath/plots/gi_c.py
 .. image :: /modules/mpmath/plots/gi_c.png
 
-Examples
-========
+**Examples**
 
 Some values and limits::
 
@@ -9925,8 +9811,7 @@ Verifying the integral representation::
     >>> Bi(z)*(Ai(inf,-1)-Ai(z,-1)) + Ai(z)*(Bi(z,-1)-Bi(0,-1))
     0.2447210432765581976910539
 
-References
-==========
+**References**
 
 1. [DLMF]_ section 9.12: Scorer Functions
 
@@ -9952,8 +9837,7 @@ differential equation `f''(z) - z f(z) = 1/\pi`. See also
 .. literalinclude :: /modules/mpmath/plots/hi_c.py
 .. image :: /modules/mpmath/plots/hi_c.png
 
-Examples
-========
+**Examples**
 
 Some values and limits::
 

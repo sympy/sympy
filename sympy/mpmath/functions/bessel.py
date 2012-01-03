@@ -920,8 +920,7 @@ def besseljzero(ctx, v, m, derivative=0):
 
         j_{\nu,1} < j_{\nu+1,2} < j_{\nu,2} < j_{\nu+1,2} < j_{\nu,3} < \cdots
 
-    Examples
-    ========
+    **Examples**
 
     Initial zeros of the Bessel functions `J_0(z), J_1(z), J_2(z)`::
 
@@ -1028,8 +1027,7 @@ def besselyzero(ctx, v, m, derivative=0):
 
         y_{\nu,1} < y_{\nu+1,2} < y_{\nu,2} < y_{\nu+1,2} < y_{\nu,3} < \cdots
 
-    Examples
-    ========
+    **Examples**
 
     Initial zeros of the Bessel functions `Y_0(z), Y_1(z), Y_2(z)`::
 

@@ -72,8 +72,7 @@ def richardson(ctx, seq):
         >>> nprint([v-pi, c])
         [1.09645e-9, 20833.3]
 
-    References
-    ==========
+    **References**
 
     1. [BenderOrszag]_ pp. 375-376
 
@@ -170,8 +169,7 @@ def shanks(ctx, seq, table=None, randomized=False):
     replace the zero by a pseudorandom number close to zero.
     (TODO: find a better solution to this problem.)
 
-    Examples
-    ========
+    **Examples**
 
     We illustrate by applying Shanks transformation to the Leibniz
     series for `\pi`::
@@ -218,8 +216,7 @@ def shanks(ctx, seq, table=None, randomized=False):
         [4.0]
         [8.0, 1.0]
 
-    References
-    ==========
+    **References**
 
     1. [GravesMorris]_
 
@@ -279,8 +276,7 @@ def sumap(ctx, f, interval, integral=None, error=False):
     it only works when `|f(it)-f(-it)|` does not
     increase too rapidly with `t`.
 
-    Examples
-    ========
+    **Examples**
 
     The Abel-Plana formula is particularly useful when the summand
     decreases like a power of `k`; for example when the sum is a pure
@@ -379,8 +375,7 @@ def sumem(ctx, f, interval, tol=None, reject=10, integral=None,
     should be given as iterables that yield
     `f(a), f'(a), f''(a), \ldots` (and the equivalent for `b`).
 
-    Examples
-    ========
+    **Examples**
 
     Summation of an infinite series, with automatic and symbolic
     integral and derivative values (the second should be much faster)::
@@ -934,8 +929,7 @@ def nsum(ctx, f, *intervals, **options):
         ...     ignore=True)
         (3.1512120021539 + 0.0j)
 
-    References
-    ==========
+    **References**
 
     1. [Weisstein]_ http://mathworld.wolfram.com/DoubleSeries.html,
     2. [Weisstein]_ http://mathworld.wolfram.com/MadelungConstants.html
@@ -1107,8 +1101,7 @@ def nprod(ctx, f, interval, nsum=False, **kwargs):
     also required (and used automatically) when Euler-Maclaurin
     summation is requested.
 
-    Examples
-    ========
+    **Examples**
 
     A simple finite product::
 
@@ -1207,8 +1200,7 @@ def nprod(ctx, f, interval, nsum=False, **kwargs):
         >>> nprod(lambda k: (1-1/k**2.5), [2, inf], method='e')
         0.696155111336231052898125
 
-    References
-    ==========
+    **References**
 
     1. [Weisstein]_ http://mathworld.wolfram.com/InfiniteProduct.html
 
@@ -1288,8 +1280,7 @@ def limit(ctx, f, x, direction=1, exp=False, **kwargs):
     are extremely close to the limit point (or if infinite,
     very large arguments).
 
-    Examples
-    ========
+    **Examples**
 
     A basic evaluation of a removable singularity::
 

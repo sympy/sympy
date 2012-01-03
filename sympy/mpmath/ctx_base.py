@@ -173,8 +173,7 @@ class StandardBaseContext(Context,
         to be used to check for mathematical equality
         in the presence of small rounding errors.
 
-        Examples
-        ========
+        **Examples**
 
             >>> from mpmath import *
             >>> mp.dps = 15
@@ -228,8 +227,7 @@ class StandardBaseContext(Context,
         produce ranges where the endpoint is included, :func:`~mpmath.linspace`
         is more convenient.
 
-        Examples
-        ========
+        **Examples**
 
             >>> from mpmath import *
             >>> mp.dps = 15; mp.pretty = False

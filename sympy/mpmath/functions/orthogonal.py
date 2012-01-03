@@ -84,8 +84,7 @@ def pcfd(ctx, n, z, **kwargs):
     .. literalinclude :: /modules/mpmath/plots/pcfd.py
     .. image :: /modules/mpmath/plots/pcfd.png
 
-    Examples
-    ========
+    **Examples**
 
         >>> from mpmath import *
         >>> mp.dps = 25; mp.pretty = True
@@ -141,8 +140,7 @@ def pcfu(ctx, a, z, **kwargs):
             U'(a,0) z \,_1F_1\left(-\tfrac{a}{2}+\tfrac{3}{4};
             \tfrac{3}{2}; -\tfrac{1}{2}z^2\right).
 
-    Examples
-    ========
+    **Examples**
 
     Connection to other functions::
 
@@ -176,8 +174,7 @@ def pcfv(ctx, a, z, **kwargs):
 
         V(a,z) = \frac{\Gamma(a+\tfrac{1}{2}) (U(a,-z)-\sin(\pi a) U(a,z)}{\pi}.
 
-    Examples
-    ========
+    **Examples**
 
     Wronskian relation between `U` and `V`::
 
@@ -245,8 +242,7 @@ def pcfw(ctx, a, z, **kwargs):
     r"""
     Gives the parabolic cylinder function `W(a,z)` defined in (DLMF 12.14).
 
-    Examples
-    ========
+    **Examples**
 
     Value at the origin::
 

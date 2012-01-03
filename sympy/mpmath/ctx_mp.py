@@ -409,8 +409,7 @@ class MPContext(BaseMPContext, StandardBaseContext):
         if catastrophic cancellation can occur. Therefore, :func:`~mpmath.autoprec`
         should be used judiciously.
 
-        Examples
-        ========
+        **Examples**
 
         Many functions are sensitive to perturbations of the input arguments.
         If the arguments are decimal numbers, they may have to be converted
@@ -712,8 +711,7 @@ maxterms, or set zeroprec."""
         See the documentation of :func:`~mpmath.fadd` for a detailed description
         of how to specify precision and rounding.
 
-        Examples
-        ========
+        **Examples**
 
         An mpmath number is returned::
 
@@ -775,8 +773,7 @@ maxterms, or set zeroprec."""
         nearest (default), ``'f'`` for floor, ``'c'`` for ceiling, ``'d'``
         for down, ``'u'`` for up.
 
-        Examples
-        ========
+        **Examples**
 
         Using :func:`~mpmath.fadd` with precision and rounding control::
 
@@ -842,8 +839,7 @@ maxterms, or set zeroprec."""
         See the documentation of :func:`~mpmath.fadd` for a detailed description
         of how to specify precision and rounding.
 
-        Examples
-        ========
+        **Examples**
 
         Using :func:`~mpmath.fsub` with precision and rounding control::
 
@@ -909,8 +905,7 @@ maxterms, or set zeroprec."""
         See the documentation of :func:`~mpmath.fadd` for a detailed description
         of how to specify precision and rounding.
 
-        Examples
-        ========
+        **Examples**
 
         The result is an mpmath number::
 
@@ -979,8 +974,7 @@ maxterms, or set zeroprec."""
         See the documentation of :func:`~mpmath.fadd` for a detailed description
         of how to specify precision and rounding.
 
-        Examples
-        ========
+        **Examples**
 
         The result is an mpmath number::
 

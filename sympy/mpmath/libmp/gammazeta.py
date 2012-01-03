@@ -491,8 +491,7 @@ def bernfrac(n):
     always reduced to lowest terms. Note that for `n > 1` and `n` odd,
     `B_n = 0`, and `(0, 1)` is returned.
 
-    Examples
-    ========
+    **Examples**
 
     The first few Bernoulli numbers are exactly::
 
@@ -547,8 +546,7 @@ def bernfrac(n):
     In practice, :func:`~mpmath.bernfrac` appears to be about three times
     slower than the specialized program calcbn.exe [2]
 
-    References
-    ==========
+    **References**
 
     1. MathWorld, von Staudt-Clausen Theorem:
        http://mathworld.wolfram.com/vonStaudt-ClausenTheorem.html

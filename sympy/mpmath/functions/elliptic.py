@@ -54,8 +54,7 @@ For convenience, mpmath provides functions to convert
 between the various parameters (:func:`~mpmath.qfrom`, :func:`~mpmath.mfrom`,
 :func:`~mpmath.kfrom`, :func:`~mpmath.taufrom`, :func:`~mpmath.qbarfrom`).
 
-References
-==========
+**References**
 
 1. [AbramowitzStegun]_
 
@@ -371,8 +370,7 @@ def kleinj(ctx, tau=None, **kwargs):
     .. literalinclude :: /modules/mpmath/plots/kleinj2.py
     .. image :: /modules/mpmath/plots/kleinj2.png
 
-    Examples
-    ========
+    **Examples**
 
     Verifying the functional equation `J(\tau) = J(\tau+1) = J(-\tau^{-1})`::
 
@@ -573,8 +571,7 @@ def elliprf(ctx, x, y, z):
     and as `t \to 0` non-principal branches are chosen as necessary so as to
     make the integrand continuous.
 
-    Examples
-    ========
+    **Examples**
 
     Some basic values and limits::
 
@@ -653,8 +650,7 @@ def elliprf(ctx, x, y, z):
         >>> gamma('1/4')**2/(4*sqrt(2*pi))
         1.31102877714605990523242
 
-    References
-    ==========
+    **References**
 
     1. [Carlson]_
     2. [DLMF]_ Chapter 19. Elliptic Integrals
@@ -700,8 +696,7 @@ def elliprc(ctx, x, y, pv=True):
             \cosh^{-1}\left(\sqrt{\dfrac{x}{y}}\right),  & x > y \\
         \end{cases}.
 
-    Examples
-    ========
+    **Examples**
 
     Some special values and limits::
 
@@ -765,8 +760,7 @@ def elliprj(ctx, x, y, z, p):
     is defined so as to be continuous along the path of integration for
     complex values of the arguments.
 
-    Examples
-    ========
+    **Examples**
 
     Some values and limits::
 
@@ -838,8 +832,7 @@ def elliprd(ctx, x, y, z):
 
     See :func:`~mpmath.elliprj` for additional information.
 
-    Examples
-    ========
+    **Examples**
 
         >>> from mpmath import *
         >>> mp.dps = 25; mp.pretty = True
@@ -872,8 +865,7 @@ def elliprg(ctx, x, y, z):
             \frac{t}{\sqrt{(t+x)(t+y)(t+z)}}
             \left( \frac{x}{t+x} + \frac{y}{t+y} + \frac{z}{t+z}\right) dt.
 
-    Examples
-    ========
+    **Examples**
 
     Evaluation for real and complex arguments::
 
@@ -952,8 +944,7 @@ def ellipf(ctx, phi, m):
     .. literalinclude :: /modules/mpmath/plots/ellipf.py
     .. image :: /modules/mpmath/plots/ellipf.png
 
-    Examples
-    ========
+    **Examples**
 
     Basic values and limits::
 

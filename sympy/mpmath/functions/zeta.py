@@ -935,8 +935,7 @@ def secondzeta(ctx, s, a = 0.015, **kwargs):
     double pole at `s=1` and  simple poles at the points `-2n` for
     `n=0`,  1, 2, ...
 
-    Examples
-    ========
+    **Examples**
 
         >>> from mpmath import *
         >>> mp.pretty = True; mp.dps = 15
@@ -1003,8 +1002,7 @@ def secondzeta(ctx, s, a = 0.015, **kwargs):
     four terms are very different numbers but the cancellation gives
     the good value of Z(s).
 
-    References
-    ==========
+    **References**
 
     A. Voros, Zeta functions for the Riemann zeros, Ann. Institute Fourier,
     53, (2003) 665--699.
@@ -1075,8 +1073,7 @@ def lerchphi(ctx, z, s, a):
     The Lerch transcendent generalizes the Hurwitz zeta function :func:`zeta`
     (`z = 1`) and the polylogarithm :func:`polylog` (`a = 1`).
 
-    Examples
-    ========
+    **Examples**
 
     Several evaluations in terms of simpler functions::
 
@@ -1113,8 +1110,7 @@ def lerchphi(ctx, z, s, a):
         >>> lerchphi(0,1,-2)
         -0.5
 
-    References
-    ==========
+    **References**
 
     1. [DLMF]_ section 25.14
 

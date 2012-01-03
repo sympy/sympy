@@ -902,8 +902,7 @@ class MatrixMethods(object):
         You can use the string 'inf' as well as float('inf') or mpf('inf')
         to specify the infinity norm.
 
-        Examples
-        ========
+        **Examples**
 
             >>> from mpmath import *
             >>> mp.dps = 15; mp.pretty = False
@@ -959,8 +958,7 @@ class MatrixMethods(object):
 
         For general elementwise `p`-norms, use :func:`~mpmath.norm` instead.
 
-        Examples
-        ========
+        **Examples**
 
             >>> from mpmath import *
             >>> mp.dps = 15; mp.pretty = False

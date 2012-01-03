@@ -521,8 +521,7 @@ def mpi_to_str(x, dps, use_spaces=True, brackets='[]', mode='brackets', error_dp
     """
     Convert a mpi interval to a string.
 
-    Arguments
-    =========
+    **Arguments**
 
     *dps*
         decimal places to use for printing
@@ -538,8 +537,7 @@ def mpi_to_str(x, dps, use_spaces=True, brackets='[]', mode='brackets', error_dp
     Additional keyword arguments are forwarded to the mpf-to-string conversion
     for the components of the output.
 
-    Examples
-    ========
+    **Examples**
 
         >>> from mpmath import mpi, mp
         >>> mp.dps = 30

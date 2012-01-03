@@ -55,8 +55,7 @@ def chebyfit(ctx, f, interval, N, error=False):
     example, it could be used to turn a slow mpmath function
     into a fast machine-precision version of the same.)
 
-    Examples
-    ========
+    **Examples**
 
     Here we use :func:`~mpmath.chebyfit` to generate a low-degree approximation
     of `f(x) = \cos(x)`, valid on the interval `[1, 2]`::
@@ -156,8 +155,7 @@ def fourier(ctx, f, interval, N):
     of `c_0`. The easiest way to evaluate the computed series correctly
     is to pass it to :func:`~mpmath.fourierval`.
 
-    Examples
-    ========
+    **Examples**
 
     The function `f(x) = x` has a simple Fourier series on the standard
     interval `[-\pi, \pi]`. The cosine coefficients are all zero (because

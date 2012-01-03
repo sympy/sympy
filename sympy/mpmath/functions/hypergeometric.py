@@ -1176,8 +1176,7 @@ def hyper2d(ctx, a, b, x, y, **kwargs):
     manually swapping `x` and `y` and the corresponding parameters
     can sometimes give better results.
 
-    Examples
-    ========
+    **Examples**
 
     Two separable cases: a product of two geometric series, and a
     product of two Gaussian hypergeometric functions::
@@ -1238,8 +1237,7 @@ def hyper2d(ctx, a, b, x, y, **kwargs):
         ...     x**m*y**n/fac(m)/fac(n), [0,inf], [0,inf])
         0.974479074
 
-    References
-    ==========
+    **References**
 
     1. [SrivastavaKarlsson]_
     2. [Weisstein]_ http://mathworld.wolfram.com/HornFunction.html
@@ -1366,8 +1364,7 @@ def bihyper(ctx, a_s, b_s, z, **kwargs):
     functions. In order for the series to make sense, none of the
     parameters may be integers.
 
-    Examples
-    ========
+    **Examples**
 
     The value of `\,_2H_2` at `z = 1` is given by Dougall's formula::
 
@@ -1391,8 +1388,7 @@ def bihyper(ctx, a_s, b_s, z, **kwargs):
         >>> hyper([a,1],[],z) + hyper([1],[2-a],-1/z)/z/(a-1)
         (0.2454393389657273841385582 + 0.2454393389657273841385582j)
 
-    References
-    ==========
+    **References**
 
     1. [Slater]_ (chapter 6: "Bilateral Series", pp. 180-189)
     2. [Wikipedia]_ http://en.wikipedia.org/wiki/Bilateral_hypergeometric_series
