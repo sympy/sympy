@@ -229,6 +229,7 @@ def ccode(expr, assign_to=None, **settings):
 
         Parameters
         ==========
+
         expr : sympy.core.Expr
             a sympy expression to be converted
         precision : optional

@@ -15,6 +15,7 @@ class IdentityFunction(Lambda):
 
     Examples
     ========
+
     >>> from sympy import Id, Symbol
     >>> x = Symbol('x')
     >>> Id(x)
@@ -41,6 +42,7 @@ def sqrt(arg):
 
     Examples
     ========
+
     >>> from sympy import sqrt, Symbol
     >>> x = Symbol('x')
 
@@ -89,6 +91,7 @@ def sqrt(arg):
 
     See Also
     ========
+
     sympy.polys.rootoftools.RootOf, root
 
     References
@@ -110,6 +113,7 @@ def root(arg, n):
 
     Examples
     ========
+
     >>> from sympy import root, Rational
     >>> from sympy.abc import x, n
 
@@ -143,6 +147,7 @@ def root(arg, n):
 
     See Also
     ========
+
     sympy.polys.rootoftools.RootOf
     sympy.core.power.integer_nthroot
     sqrt, real_root
@@ -165,6 +170,7 @@ def real_root(arg, n=None):
 
     Examples
     ========
+
     >>> from sympy import root, real_root, Rational
     >>> from sympy.abc import x, n
 
@@ -177,6 +183,7 @@ def real_root(arg, n=None):
 
     See Also
     ========
+
     sympy.polys.rootoftools.RootOf
     sympy.core.power.integer_nthroot
     root, sqrt
@@ -343,6 +350,7 @@ class Max(MinMaxBase, Application, Basic):
 
     Examples
     ========
+
     >>> from sympy import Max, Symbol, oo
     >>> from sympy.abc import x, y
     >>> p = Symbol('p', positive=True)
@@ -404,6 +412,7 @@ class Max(MinMaxBase, Application, Basic):
 
     See Also
     ========
+
     Min : find minimum values
     """
     zero = S.Infinity
@@ -430,6 +439,7 @@ class Min(MinMaxBase, Application, Basic):
 
     Examples
     ========
+
     >>> from sympy import Min, Symbol, oo
     >>> from sympy.abc import x, y
     >>> p = Symbol('p', positive=True)
@@ -452,6 +462,7 @@ class Min(MinMaxBase, Application, Basic):
 
     See Also
     ========
+
     Max : find maximum values
     """
     zero = S.NegativeInfinity

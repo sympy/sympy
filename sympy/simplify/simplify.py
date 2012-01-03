@@ -600,6 +600,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
 
     Examples
     ========
+
     >>> from sympy.abc import x, y, z, alpha
     >>> from sympy import separatevars, sin
     >>> separatevars((x*y)**y)
@@ -728,6 +729,7 @@ def ratsimp(expr):
 
     Examples
     ========
+
     >>> from sympy import ratsimp
     >>> from sympy.abc import x, y
     >>> ratsimp(1/x + 1/y)
@@ -759,6 +761,7 @@ def trigsimp(expr, deep=False, recursive=False):
 
     Examples
     ========
+
     >>> from sympy import trigsimp, sin, cos, log
     >>> from sympy.abc import x, y
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
@@ -800,6 +803,7 @@ def trigsimp_nonrecursive(expr, deep=False):
 
     Examples
     ========
+
     >>> from sympy import cos, sin, log
     >>> from sympy.simplify.simplify import trigsimp, trigsimp_nonrecursive
     >>> from sympy.abc import x, y
@@ -912,6 +916,7 @@ def collect_sqrt(expr, evaluate=True):
 
     Examples
     ========
+
     >>> from sympy import sqrt
     >>> from sympy.simplify.simplify import collect_sqrt
     >>> from sympy.abc import a, b
@@ -978,6 +983,7 @@ def collect_const(expr, *vars, **first):
 
     Examples
     ========
+
     >>> from sympy import sqrt
     >>> from sympy.abc import a, s
     >>> from sympy.simplify.simplify import collect_const
@@ -1073,6 +1079,7 @@ def radsimp(expr, symbolic=True):
 
     Examples
     ========
+
     >>> from sympy import radsimp, sqrt, Symbol, denom, pprint, I
     >>> from sympy.abc import a, b, c
 
@@ -1597,6 +1604,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
     Notes
     =====
+
     If deep is True then powsimp() will also simplify arguments of
     functions. By default deep is set to False.
 
@@ -1628,6 +1636,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
     Examples
     ========
+
     >>> from sympy import powsimp, exp, log, symbols
     >>> from sympy.abc import x, y, z, n
     >>> powsimp(x**y*x**z*y**z, combine='all')
@@ -2800,6 +2809,7 @@ def logcombine(expr, force=False):
 
     Examples
     ========
+
     >>> from sympy import Symbol, symbols, log, logcombine
     >>> from sympy.abc import a, x, y, z
     >>> logcombine(a*log(x)+log(y)-log(z))
@@ -2828,6 +2838,7 @@ def _logcombine(expr, force=False):
 
         Examples
         ========
+
         _getlogargs(a*log(x*y))
         x*y
         """

@@ -39,6 +39,7 @@ class TensorProduct(Expr):
 
     Parameters
     ==========
+
     args : tuple
         A sequence of the objects to take the tensor product of.
 
@@ -203,11 +204,13 @@ def tensor_product_simp_Mul(e):
 
     Parameters
     ==========
+
     e : Expr
         A ``Mul`` of ``TensorProduct``s to be simplified.
 
     Returns
     =======
+
     e : Expr
         A ``TensorProduct`` of ``Mul``s.
 
@@ -276,6 +279,7 @@ def tensor_product_simp(e, **hints):
 
     Examples
     ========
+
     >>> from sympy.physics.quantum import tensor_product_simp
     >>> from sympy.physics.quantum import TensorProduct
     >>> from sympy import Symbol

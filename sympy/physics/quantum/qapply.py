@@ -30,6 +30,7 @@ def qapply(e, **options):
 
     Parameters
     ==========
+
     e : Expr
         The expression containing operators and states. This expression tree
         will be walked to find operators acting on states symbolically.
@@ -45,6 +46,7 @@ def qapply(e, **options):
 
     Returns
     =======
+
     e : Expr
         The original expression, but with the operators applied to states.
     """

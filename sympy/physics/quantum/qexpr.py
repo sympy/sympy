@@ -91,6 +91,7 @@ class QExpr(Expr):
 
         Parameters
         ==========
+
         args : tuple
             The list of numbers or parameters that uniquely specify the
             quantum object. For a state, this will be its symbol or its
@@ -333,6 +334,7 @@ class QExpr(Expr):
 
         Parameters
         ==========
+
         basis : Operator
             The Operator whose basis functions will be used as the basis for
             representation.

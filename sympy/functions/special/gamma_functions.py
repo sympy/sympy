@@ -118,6 +118,7 @@ class lowergamma(Function):
 
     See Also
     ========
+
     gamma
     uppergamma
     sympy.functions.special.hyper.hyper
@@ -249,6 +250,7 @@ class uppergamma(Function):
 
     See Also
     ========
+
     gamma
     lowergamma
     sympy.functions.special.hyper.hyper

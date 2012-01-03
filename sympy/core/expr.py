@@ -927,6 +927,7 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
+
         >>> from sympy import E, pi, sin, I, symbols
         >>> from sympy.abc import x, y
 
@@ -1172,6 +1173,7 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
+
         >>> from sympy.abc import a, x
         >>> (3*x + a*x + 4).as_coefficients_dict()
         {1: 4, x: 3, a*x: 1}
@@ -1290,6 +1292,7 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
+
         >>> from sympy.abc import x
         >>> (3*(x + 1)**2).primitive()
         (3, (x + 1)**2)
@@ -1318,6 +1321,7 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
+
         >>> from sympy import sqrt
         >>> from sympy.abc import x, y, z
 
@@ -2394,6 +2398,7 @@ class AtomicExpr(Atom, Expr):
 
     Examples
     ========
+
     Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """

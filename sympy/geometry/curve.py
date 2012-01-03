@@ -21,28 +21,33 @@ class Curve(GeometryEntity):
 
     Parameters
     ==========
+
     function : list of functions
     limits : 3-tuple
         Function parameter and lower and upper bounds.
 
     Attributes
     ==========
+
     functions
     parameter
     limits
 
     Raises
     ======
+
     ValueError
         When `functions` are specified incorrectly.
         When `limits` are specified incorrectly.
 
     See Also
     ========
+
     sympy.core.function.Function
 
     Examples
     ========
+
     >>> from sympy import sin, cos, Symbol
     >>> from sympy.abc import t
     >>> from sympy.geometry import Curve
@@ -78,14 +83,17 @@ class Curve(GeometryEntity):
 
         Returns
         =======
+
         functions : list of parameterized coordinate functions.
 
         See Also
         ========
+
         parameter
 
         Examples
         ========
+
         >>> from sympy.abc import t
         >>> from sympy.geometry import Curve
         >>> C = Curve((t, t**2), (t, 0, 2))
@@ -101,14 +109,17 @@ class Curve(GeometryEntity):
 
         Returns
         =======
+
         parameter : sympy symbol
 
         See Also
         ========
+
         functions
 
         Examples
         ========
+
         >>> from sympy.abc import t
         >>> from sympy.geometry import Curve
         >>> C = Curve([t, t**2], (t, 0, 2))
@@ -124,15 +135,18 @@ class Curve(GeometryEntity):
 
         Returns
         =======
+
         limits : tuple
             Contains parameter and lower and upper limits.
 
         See Also
         ========
+
         plot_interval
 
         Examples
         ========
+
         >>> from sympy.abc import t
         >>> from sympy.geometry import Curve
         >>> C = Curve([t, t**3], (t, -2, 2))
@@ -148,6 +162,7 @@ class Curve(GeometryEntity):
 
         Parameters
         ==========
+
         parameter : str or Symbol, optional
             Default value is 't';
             the Curve's parameter is selected with None or self.parameter
@@ -155,19 +170,23 @@ class Curve(GeometryEntity):
 
         Returns
         =======
+
         arbitrary_point : Point
 
         Raises
         ======
+
         ValueError
             When `parameter` already appears in the functions.
 
         See Also
         ========
+
         sympy.geometry.point.Point
 
         Examples
         ========
+
         >>> from sympy import Symbol
         >>> from sympy.abc import s
         >>> from sympy.geometry import Curve
@@ -196,21 +215,25 @@ class Curve(GeometryEntity):
 
         Parameters
         ==========
+
         parameter : str or Symbol, optional
             Default value is 't';
             otherwise the provided symbol is used.
 
         Returns
         =======
+
         plot_interval : list (plot interval)
             [parameter, lower_bound, upper_bound]
 
         See Also
         ========
+
         limits : Returns limits of the parameter interval
 
         Examples
         ========
+
         >>> from sympy import Curve, sin
         >>> from sympy.abc import x, t, s
         >>> Curve((x, sin(x)), (x, 1, 2)).plot_interval()

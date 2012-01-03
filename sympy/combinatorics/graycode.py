@@ -33,6 +33,7 @@ class GrayCode(Basic):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.graycode import GrayCode
     >>> a = GrayCode(3)
     >>> list(a.generate_gray())
@@ -57,6 +58,7 @@ class GrayCode(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(3)
         >>> a
@@ -99,6 +101,7 @@ class GrayCode(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(3, start='110')
         >>> a.next().current
@@ -115,6 +118,7 @@ class GrayCode(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(3)
         >>> a.selections
@@ -129,6 +133,7 @@ class GrayCode(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(5)
         >>> a.n
@@ -145,6 +150,7 @@ class GrayCode(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(3)
         >>> list(a.generate_gray())
@@ -184,6 +190,7 @@ class GrayCode(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(3)
         >>> for i in a.generate_gray():
@@ -218,6 +225,7 @@ class GrayCode(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(3)
         >>> list(a.generate_gray())
@@ -260,6 +268,7 @@ class GrayCode(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> GrayCode(5, rank=3).current
         '00010'
@@ -281,6 +290,7 @@ def random_bitstring(n):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.graycode import random_bitstring
     >>> random_bitstring(3) # doctest: +SKIP
     100
@@ -295,6 +305,7 @@ def gray_to_bin(bin_list):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.graycode import gray_to_bin
     >>> gray_to_bin('100')
     '111'
@@ -312,6 +323,7 @@ def bin_to_gray(bin_list):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.graycode import bin_to_gray
     >>> bin_to_gray('111')
     '100'
@@ -327,6 +339,7 @@ def get_subset_from_bitstring(super_set, bitstring):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.graycode import get_subset_from_bitstring
     >>> get_subset_from_bitstring(['a','b','c','d'], '0011')
     ['c', 'd']
@@ -344,6 +357,7 @@ def graycode_subsets(gray_code_set):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.graycode import graycode_subsets
     >>> list(graycode_subsets(['a','b','c']))
     [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'], \

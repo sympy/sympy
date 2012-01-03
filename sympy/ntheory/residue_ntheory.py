@@ -7,6 +7,7 @@ def int_tested(*j):
 
     Examples
     ========
+
     >>> from sympy.ntheory.residue_ntheory import int_tested
     >>> int_tested(8, 9, 110)
     (8, 9, 110)
@@ -23,6 +24,7 @@ def totient_(n):
 
     Examples
     ========
+
     >>> from sympy.ntheory import totient_
     >>> totient_(6)
     2
@@ -83,6 +85,7 @@ def is_primitive_root(a, p):
 
     Examples
     ========
+
     >>> from sympy.ntheory import is_primitive_root, n_order, totient
     >>> is_primitive_root(3, 10)
     True
@@ -119,6 +122,7 @@ def is_quad_residue(a, p):
 
     See Also
     ========
+
     legendre_symbol, jacobi_symbol
     """
     a, p = int_tested(a, p)
@@ -160,6 +164,7 @@ def legendre_symbol(a, p):
 
     Examples
     ========
+
     >>> from sympy.ntheory import legendre_symbol
     >>> [legendre_symbol(i, 7) for i in range(7)]
     [0, 1, 1, -1, 1, -1, -1]
@@ -168,6 +173,7 @@ def legendre_symbol(a, p):
 
     See Also
     ========
+
     is_quad_residue, jacobi_symbol
 
     """
@@ -196,6 +202,7 @@ def jacobi_symbol(m, n):
 
     Examples
     ========
+
     >>> from sympy.ntheory import jacobi_symbol, legendre_symbol
     >>> from sympy import Mul, S
     >>> jacobi_symbol(45, 77)
@@ -214,6 +221,7 @@ def jacobi_symbol(m, n):
 
     See Also
     ========
+
     is_quad_residue, legendre_symbol
     """
     m, n = int_tested(m, n)

@@ -113,7 +113,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
               - hints = [ ]           --> try to figure out
               - hints = [f1, ..., fn] --> we know better
 
-       **Examples**
+       Examples
+       ========
 
        >>> from sympy import tan
        >>> from sympy.integrals.risch import heurisch

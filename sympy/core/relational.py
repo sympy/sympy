@@ -9,6 +9,7 @@ def Rel(a, b, op):
 
     Examples
     ========
+
     >>> from sympy import Rel
     >>> from sympy.abc import x, y
     >>> Rel(y, x+x**2, '==')
@@ -24,6 +25,7 @@ def Eq(a, b=0):
 
     Examples
     ========
+
     >>> from sympy import Eq
     >>> from sympy.abc import x, y
     >>> Eq(y, x+x**2)
@@ -39,6 +41,7 @@ def Ne(a, b):
 
     Examples
     ========
+
     >>> from sympy import Ne
     >>> from sympy.abc import x, y
     >>> Ne(y, x+x**2)
@@ -54,6 +57,7 @@ def Lt(a, b):
 
     Examples
     ========
+
     >>> from sympy import Lt
     >>> from sympy.abc import x, y
     >>> Lt(y, x+x**2)
@@ -69,6 +73,7 @@ def Le(a, b):
 
     Examples
     ========
+
     >>> from sympy import Le
     >>> from sympy.abc import x, y
     >>> Le(y, x+x**2)
@@ -84,6 +89,7 @@ def Gt(a, b):
 
     Examples
     ========
+
     >>> from sympy import Gt
     >>> from sympy.abc import x, y
     >>> Gt(y, x+x**2)
@@ -99,6 +105,7 @@ def Ge(a, b):
 
     Examples
     ========
+
     >>> from sympy import Ge
     >>> from sympy.abc import x, y
     >>> Ge(y, x+x**2)

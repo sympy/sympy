@@ -50,6 +50,7 @@ class GeometryEntity(tuple):
 
         Notes
         =====
+
         An entity is not required to implement this method.
 
         If two different types of entities can intersect, the item with
@@ -58,6 +59,7 @@ class GeometryEntity(tuple):
 
         See Also
         ========
+
         sympy.geometry.util.intersection
 
         """
@@ -73,10 +75,12 @@ class GeometryEntity(tuple):
 
         See Also
         ========
+
         scale, translate
 
         Examples
         ========
+
         >>> from sympy import Point, RegularPolygon, Polygon, pi
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t # vertex on x axis
@@ -113,10 +117,12 @@ class GeometryEntity(tuple):
 
         See Also
         ========
+
         rotate, translate
 
         Examples
         ========
+
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t
@@ -143,10 +149,12 @@ class GeometryEntity(tuple):
 
         See Also
         ========
+
         rotate, scale
 
         Examples
         ========
+
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t
@@ -181,6 +189,7 @@ class GeometryEntity(tuple):
 
         See Also
         ========
+
         sympy.geometry.ellipse.Ellipse.encloses_point, sympy.geometry.polygon.Polygon.encloses_point
 
         """
@@ -212,6 +221,7 @@ class GeometryEntity(tuple):
 
         Notes
         =====
+
         This method is not intended to be used directly but rather
         through the `are_similar` function found in util.py.
         An entity is not required to implement this method.
@@ -220,6 +230,7 @@ class GeometryEntity(tuple):
 
         See Also
         ========
+
         scale
 
         """

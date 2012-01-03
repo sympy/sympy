@@ -31,7 +31,8 @@ def gosper_normal(f, g, n, polys=True):
     This procedure will return a tuple containing elements of this
     factorization in the form ``(Z*A, B, C)``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.concrete.gosper import gosper_normal
     >>> from sympy.abc import n
@@ -87,7 +88,8 @@ def gosper_term(f, n):
     and `f_k` doesn't depend on `n`. Returns a hypergeometric
     term `g_n` such that `g_{n+1} - g_n = f_n`.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.concrete.gosper import gosper_term
     >>> from sympy.functions import factorial
@@ -162,7 +164,8 @@ def gosper_sum(f, k):
     `g_{n+1} - g_n = f_n`, or ``None`` if `s_n` can not be expressed
     in closed form as a sum of hypergeometric terms.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.concrete.gosper import gosper_sum
     >>> from sympy.functions import factorial
@@ -178,7 +181,8 @@ def gosper_sum(f, k):
     >>> _.subs(n, 5) == sum(f.subs(k, i) for i in [3, 4, 5])
     True
 
-    **References**
+    References
+    ==========
 
     .. [1] Marko Petkovsek, Herbert S. Wilf, Doron Zeilberger, A = B,
            AK Peters, Ltd., Wellesley, MA, USA, 1997, pp. 73--100

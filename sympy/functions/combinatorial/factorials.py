@@ -55,6 +55,7 @@ class factorial(CombinatorialFunction):
 
        See Also
        ========
+
        factorial2, RisingFactorial, FallingFactorial
     """
 
@@ -182,6 +183,7 @@ class factorial2(CombinatorialFunction):
 
     See Also
     ========
+
     factorial, RisingFactorial, FallingFactorial
     """
     nargs = 1
@@ -231,6 +233,7 @@ class RisingFactorial(CombinatorialFunction):
 
        See Also
        ========
+
        factorial, factorial2, FallingFactorial
     """
 
@@ -297,6 +300,7 @@ class FallingFactorial(CombinatorialFunction):
 
        See Also
        ========
+
        factorial, factorial2, RisingFactorial
     """
 

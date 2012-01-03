@@ -8,6 +8,7 @@ def textplot(expr, a, b, W=55, H=18):
 
     Examples
     ========
+
     textplot(sin(t)*t, 0, 15)
     """
 

@@ -34,6 +34,7 @@ class Operator(QExpr):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         operator. For time-dependent operators, this will include the time.
@@ -179,6 +180,7 @@ class HermitianOperator(Operator):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         operator. For time-dependent operators, this will include the time.
@@ -217,6 +219,7 @@ class UnitaryOperator(Operator):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         operator. For time-dependent operators, this will include the time.
@@ -243,6 +246,7 @@ class OuterProduct(Operator):
 
     Parameters
     ==========
+
     ket : KetBase
         The ket on the left side of the outer product.
     bar : BraBase

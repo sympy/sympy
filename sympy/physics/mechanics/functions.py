@@ -56,6 +56,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
 
     Parameters
     ==========
+
     frame : ReferenceFrame
         The frame the inertia is defined in
     ixx : Sympifyable
@@ -138,6 +139,7 @@ def mprint(expr, **settings):
 
     Parameters
     ==========
+
     expr : valid sympy object
         SymPy expression to print
     settings : args
@@ -172,6 +174,7 @@ def mpprint(expr, **settings):
 
     Parameters
     ==========
+
     expr : valid sympy object
         SymPy expression to pretty print
     settings : args
@@ -195,6 +198,7 @@ def mlatex(expr, **settings):
 
     Parameters
     ==========
+
     expr : valid sympy object
         SymPy expression to represent in LaTeX form
     settings : args
@@ -222,6 +226,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
 
     Parameters
     ==========
+
     speeds : list of length 3
         The body fixed angular velocity measure numbers.
     coords : list of length 3 or 4

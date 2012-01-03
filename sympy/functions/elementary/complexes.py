@@ -33,6 +33,7 @@ class re(Function):
 
        See Also
        ========
+
        im
     """
     nargs = 1
@@ -115,6 +116,7 @@ class im(Function):
 
     See Also
     ========
+
     re
     """
 
@@ -199,6 +201,7 @@ class sign(Function):
 
     See Also
     ========
+
     Abs, conjugate
     """
 
@@ -275,6 +278,7 @@ class Abs(Function):
 
     See Also
     ========
+
     sign, conjugate
     """
 
@@ -394,6 +398,7 @@ class conjugate(Function):
 
     See Also
     ========
+
     sign, Abs
     """
 
@@ -439,6 +444,7 @@ class polar_lift(Function):
 
     See Also
     ========
+
     sympy.functions.elementary.exponential.exp_polar
     periodic_argument
     """
@@ -504,6 +510,7 @@ class periodic_argument(Function):
 
     See Also
     ========
+
     sympy.functions.elementary.exponential.exp_polar
     polar_lift : Lift argument to the riemann surface of the logarithm
     principal_branch
@@ -591,6 +598,7 @@ class principal_branch(Function):
 
     See Also
     ========
+
     sympy.functions.elementary.exponential.exp_polar
     polar_lift : Lift argument to the riemann surface of the logarithm
     periodic_argument

@@ -87,6 +87,7 @@ class Piecewise(Function):
 
     See Also
     ========
+
     piecewise_fold
     """
 
@@ -306,6 +307,7 @@ def piecewise_fold(expr):
 
     See Also
     ========
+
     Piecewise
     """
     if not isinstance(expr, Basic) or not expr.has(Piecewise):

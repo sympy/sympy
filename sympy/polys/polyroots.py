@@ -151,7 +151,8 @@ def roots_quartic(f):
         >>> sorted(str(tmp.evalf(n=2)) for tmp in r)
         ['1.0 + 1.7*I', '1.0 - 1.7*I', '2.0 + 1.0*I', '2.0 - 1.0*I']
 
-    **References**
+    References
+    ==========
 
     1. http://mathforum.org/dr.math/faq/faq.cubic.equations.html
     2. http://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
