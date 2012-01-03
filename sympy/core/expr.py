@@ -1228,7 +1228,7 @@ class Expr(Basic, EvalfMixin):
         - if you don't want to process the arguments of the tail but need the
           tail then use self.as_two_terms() which gives the head and tail;
         - if you want to split self into an independent and dependent parts
-          use self.as_independent(\*deps)
+          use ``self.as_independent(*deps)``
 
         >>> from sympy import S
         >>> from sympy.abc import x, y
@@ -1263,7 +1263,7 @@ class Expr(Basic, EvalfMixin):
         - if you don't want to process the arguments of the tail but need the
           tail then use self.as_two_terms() which gives the head and tail.
         - if you want to split self into an independent and dependent parts
-          use self.as_independent(\*deps)
+          use ``self.as_independent(*deps)``
 
         >>> from sympy import S
         >>> from sympy.abc import x, y
@@ -1309,9 +1309,9 @@ class Expr(Basic, EvalfMixin):
         return c, r
 
     def as_content_primitive(self, radical=False):
-        r"""This method should recursively remove a Rational from all arguments
+        """This method should recursively remove a Rational from all arguments
         and return that (content) and the new self (primitive). The content
-        should always be positive and Mul(*foo.as_content_primitive()) == foo.
+        should always be positive and ``Mul(*foo.as_content_primitive()) == foo``.
         The primitive need no be in canonical form and should try to preserve
         the underlying structure if possible (i.e. expand_mul should not be
         applied to self).
@@ -1605,7 +1605,7 @@ class Expr(Basic, EvalfMixin):
 
     def extract_branch_factor(self):
         """
-        Try to write self as exp_polar(2*pi*I*n)*z in a nice way.
+        Try to write self as ``exp_polar(2*pi*I*n)*z`` in a nice way.
         Return (z, n).
 
         >>> from sympy import exp_polar, I, pi
@@ -2166,7 +2166,7 @@ class Expr(Basic, EvalfMixin):
         return self
 
     def as_coeff_exponent(self, x):
-        """ c*x**e -> c,e where x can be any symbolic expression.
+        """ ``c*x**e -> c,e`` where x can be any symbolic expression.
         """
         x = sympify(x)
         wc = Wild('wc')

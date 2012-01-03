@@ -1193,8 +1193,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
         or
 
         (symbol, solution) where symbol appears linearly in the numerator of
-        ``f``,
-            is in ``symbols`` (if given) and is not in ``exclude`` (if given).
+        ``f``, is in ``symbols`` (if given) and is not in ``exclude`` (if given).
 
         No simplification is done to ``f`` other than and mul=True expansion,
         so the solution will correspond strictly to a unique solution.

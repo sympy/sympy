@@ -47,7 +47,7 @@ When is this useful?
        in another project, the automatic python wrappers let you test the
        binaries immediately from within SymPy.
 
-    4) To create customized ufuncs for use with numpy arrays.  See :ref:`ufuncify`
+    4) To create customized ufuncs for use with numpy arrays.
 
 When is this module NOT the best approach?
 
@@ -407,7 +407,8 @@ def binary_function(symfunc, expr, **kwargs):
     return implemented_function(symfunc, binary)
 
 def ufuncify(args, expr, **kwargs):
-    """Generates a binary ufunc-like lambda function for numpy arrays
+    """
+    Generates a binary ufunc-like lambda function for numpy arrays
 
     ``args``
         Either a Symbol or a tuple of symbols. Specifies the argument sequence
@@ -426,7 +427,9 @@ def ufuncify(args, expr, **kwargs):
        casting and more.  The function returned here, may not qualify for
        numpy's definition of a ufunc.  That why we use the term ufunc-like.
 
-       See http://docs.scipy.org/doc/numpy/reference/ufuncs.html
+    References
+    ==========
+    [1] http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
     Examples
     ========

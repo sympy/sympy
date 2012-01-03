@@ -363,8 +363,7 @@ def subsets(seq, k=None, repetition=False):
 
        Examples
        ========
-
-           >>> from sympy.utilities.iterables import subsets
+       >>> from sympy.utilities.iterables import subsets
 
        subsets(seq, k) will return the n!/k!/(n - k)! k-subsets (combinations)
        without repetition, i.e. once an item has been removed, it can no
@@ -568,7 +567,8 @@ def topological_sort(graph, key=None):
         (e.g. lexicographic) ordering is used (in this case the base type
         must implement ordering relations).
 
-    **Examples**
+    Examples
+    ========
 
     Consider a graph::
 
