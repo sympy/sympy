@@ -237,6 +237,27 @@ class Kane(object):
         coneq : list
             List of expressions which are equal to zero; these are the
             configuration constraint equations
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, Particle, Kane
+        >>> q, u = dynamicsymbols('q u')
+        >>> qd, ud = dynamicsymbols('q u', 1)
+        >>> m, c, k = symbols('m c k')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_vel(N, u * N.x)
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle()
+        >>> pa.mass = m
+        >>> pa.point = P
+        >>> BL = [pa]
+        >>> KM = Kane(N)
+        >>> KM.coords([q])
+        >>> KM._q
+        [q(t)]
+
         """
 
         if not isinstance(qind, (list, tuple)):
@@ -274,8 +295,29 @@ class Kane(object):
             equations; again equal to zero, but define an acceleration
             constraint.
         u_auxiliary : list
-            An optional list of auxiliary speeds used for brining
+            An optional list of auxiliary speeds used for bringing
             non-contributing forces into evidence
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, Particle, Kane
+        >>> q, u = dynamicsymbols('q u')
+        >>> qd, ud = dynamicsymbols('q u', 1)
+        >>> m, c, k = symbols('m c k')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_vel(N, u * N.x)
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle()
+        >>> pa.mass = m
+        >>> pa.point = P
+        >>> BL = [pa]
+        >>> KM = Kane(N)
+        >>> KM.coords([q])
+        >>> KM.speeds([u])
+        >>> KM._u
+        [u(t)]
 
         """
 
@@ -332,7 +374,32 @@ class Kane(object):
             self._Ars = - self._mat_inv_mul(ml1, mr1)
 
     def kindiffdict(self):
-        """Returns the qdot's in a dictionary. """
+        """Returns the qdot's in a dictionary.
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, Particle, Kane
+        >>> q, u = dynamicsymbols('q u')
+        >>> qd, ud = dynamicsymbols('q u', 1)
+        >>> m, c, k = symbols('m c k')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_vel(N, u * N.x)
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle()
+        >>> pa.mass = m
+        >>> pa.point = P
+        >>> BL = [pa]
+        >>> KM = Kane(N)
+        >>> KM.coords([q])
+        >>> KM.speeds([u])
+        >>> KM.kindiffeq(kd)
+        >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+        >>> KM.kindiffdict()
+        {Derivative(q(t), t): u(t)}
+
+        """
         if self._k_kqdot == None:
             raise ValueError('Kin. diff. eqs need to be supplied first')
         sub_dict = solve_linear_system_LU(Matrix([self._k_kqdot.T,
@@ -349,6 +416,29 @@ class Kane(object):
         ==========
         kdeqs : list (of Expr)
             The listof kinematic differential equations
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, Particle, Kane
+        >>> q, u = dynamicsymbols('q u')
+        >>> qd, ud = dynamicsymbols('q u', 1)
+        >>> m, c, k = symbols('m c k')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_vel(N, u * N.x)
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle()
+        >>> pa.mass = m
+        >>> pa.point = P
+        >>> BL = [pa]
+        >>> KM = Kane(N)
+        >>> KM.coords([q])
+        >>> KM.speeds([u])
+        >>> KM.kindiffeq(kd)
+        >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+        >>> KM._k_d
+        [-m]
 
         """
         if len(self._q) != len(kdeqs):
@@ -619,6 +709,31 @@ class Kane(object):
         BL : list
             A list of all RigidBody's and Particle's in the system.
 
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, Particle, Kane
+        >>> q, u = dynamicsymbols('q u')
+        >>> qd, ud = dynamicsymbols('q u', 1)
+        >>> m, c, k = symbols('m c k')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_vel(N, u * N.x)
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle()
+        >>> pa.mass = m
+        >>> pa.point = P
+        >>> BL = [pa]
+        >>> KM = Kane(N)
+        >>> KM.coords([q])
+        >>> KM.speeds([u])
+        >>> KM.kindiffeq(kd)
+        >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+        >>> fr
+        [-c*u(t) - k*q(t)]
+        >>> frstar
+        [-m*Derivative(u(t), t)]
+
         """
 
         if (self._q == None) or (self._u == None):
@@ -644,6 +759,32 @@ class Kane(object):
 
     @property
     def auxiliary_eqs(self):
+        """Returns auxiliary equations
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, Particle, Kane
+        >>> q, u, aux = dynamicsymbols('q u aux')
+        >>> qd, ud, ad = dynamicsymbols('q u aux', 1)
+        >>> m, c, k = symbols('m c k')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_vel(N, u * N.x)
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle()
+        >>> pa.mass = m
+        >>> pa.point = P
+        >>> BL = [pa]
+        >>> KM = Kane(N)
+        >>> KM.coords([q])
+        >>> KM.speeds([u], u_auxiliary = [aux])
+        >>> KM.kindiffeq(kd)
+        >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+        >>> KM.auxiliary_eqs
+        [0]
+
+        """
         if (self._fr == None) or (self._frstar == None):
             raise ValueError('Need to compute Fr, Fr* first')
         if self._uaux == []:
@@ -663,6 +804,33 @@ class Kane(object):
         this is empty, an empty matrix is created
 
         A tuple of ("A", "B") is returned.
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, Particle, Kane
+        >>> q, u = dynamicsymbols('q u')
+        >>> qd, ud = dynamicsymbols('q u', 1)
+        >>> m, c, k = symbols('m c k')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_vel(N, u * N.x)
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle()
+        >>> pa.mass = m
+        >>> pa.point = P
+        >>> BL = [pa]
+        >>> KM = Kane(N)
+        >>> KM.coords([q])
+        >>> KM.speeds([u])
+        >>> KM.kindiffeq(kd)
+        >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+        >>> MM = KM.mass_matrix
+        >>> forcing = KM.forcing
+        >>> rhs = MM.inv() * forcing
+        >>> KM.linearize()[0]
+        [0, 1]
+        [k, c]
 
         """
 
@@ -814,15 +982,68 @@ class Kane(object):
 
     @property
     def mass_matrix(self):
-        # Returns the mass matrix, which is augmented by the differentiated non
-        # holonomic equations if necessary
+        """Returns the mass matrix, which is augmented by the differentiated non
+        holonomic equations if necessary
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, Particle, Kane
+        >>> q, u = dynamicsymbols('q u')
+        >>> qd, ud = dynamicsymbols('q u', 1)
+        >>> m, c, k = symbols('m c k')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_vel(N, u * N.x)
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle()
+        >>> pa.mass = m
+        >>> pa.point = P
+        >>> BL = [pa]
+        >>> KM = Kane(N)
+        >>> KM.coords([q])
+        >>> KM.speeds([u])
+        >>> KM.kindiffeq(kd)
+        >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+        >>> MM = KM.mass_matrix
+        >>> MM
+        [-m]
+
+        """
         if (self._frstar == None) & (self._fr == None):
             raise ValueError('Need to compute Fr, Fr* first')
         return Matrix([self._k_d, self._k_dnh])
 
     @property
     def mass_matrix_full(self):
-        # Returns the mass matrix from above, augmented by kin diff's k_kqdot
+        """Returns the mass matrix from above, augmented by kin diff's k_kqdot
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, Particle, Kane
+        >>> q, u = dynamicsymbols('q u')
+        >>> qd, ud = dynamicsymbols('q u', 1)
+        >>> m, c, k = symbols('m c k')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_vel(N, u * N.x)
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle()
+        >>> pa.mass = m
+        >>> pa.point = P
+        >>> BL = [pa]
+        >>> KM = Kane(N)
+        >>> KM.coords([q])
+        >>> KM.speeds([u])
+        >>> KM.kindiffeq(kd)
+        >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+        >>> MMF = KM.mass_matrix_full
+        >>> MMF
+        [1,  0]
+        [0, -m]
+
+        """
         if (self._frstar == None) & (self._fr == None):
             raise ValueError('Need to compute Fr, Fr* first')
         o = len(self._u)
@@ -832,16 +1053,71 @@ class Kane(object):
 
     @property
     def forcing(self):
-        # Returns the forcing vector, which is augmented by the differentiated
-        # non holonomic equations if necessary
+        """Returns the forcing vector, which is augmented by the differentiated
+        non holonomic equations if necessary
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, Particle, Kane
+        >>> q, u = dynamicsymbols('q u')
+        >>> qd, ud = dynamicsymbols('q u', 1)
+        >>> m, c, k = symbols('m c k')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_vel(N, u * N.x)
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle()
+        >>> pa.mass = m
+        >>> pa.point = P
+        >>> BL = [pa]
+        >>> KM = Kane(N)
+        >>> KM.coords([q])
+        >>> KM.speeds([u])
+        >>> KM.kindiffeq(kd)
+        >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+        >>> MM = KM.mass_matrix
+        >>> forcing = KM.forcing
+        >>> forcing
+        [c*u(t) + k*q(t)]
+
+        """
         if (self._frstar == None) & (self._fr == None):
             raise ValueError('Need to compute Fr, Fr* first')
         return -Matrix([self._f_d, self._f_dnh])
 
     @property
     def forcing_full(self):
-        # Returns the forcing vector, which is augmented by the differentiated
-        # non holonomic equations if necessary
+        """Returns the forcing vector, which is augmented by the differentiated
+        non holonomic equations if necessary
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, Particle, Kane
+        >>> q, u = dynamicsymbols('q u')
+        >>> qd, ud = dynamicsymbols('q u', 1)
+        >>> m, c, k = symbols('m c k')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_vel(N, u * N.x)
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle()
+        >>> pa.mass = m
+        >>> pa.point = P
+        >>> BL = [pa]
+        >>> KM = Kane(N)
+        >>> KM.coords([q])
+        >>> KM.speeds([u])
+        >>> KM.kindiffeq(kd)
+        >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+        >>> MM = KM.mass_matrix
+        >>> forcing_full = KM.forcing_full
+        >>> forcing_full
+        [           u(t)]
+        [c*u(t) + k*q(t)]
+
+        """
         if (self._frstar == None) & (self._fr == None):
             raise ValueError('Need to compute Fr, Fr* first')
         f1 = self._k_ku * Matrix(self._u) + self._f_k

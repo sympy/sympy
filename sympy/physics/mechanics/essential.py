@@ -202,6 +202,7 @@ class Dyadic(object):
         class Fake(object):
             baseline = 0
             def render(self, *args, **kwargs):
+                """Render for printing"""
                 self = e
                 ar = self.args # just to shorten things
                 mpp = MechanicsPrettyPrinter()
@@ -1041,17 +1042,38 @@ class ReferenceFrame(object):
 
     @property
     def x(self):
-        """The basis Vector for the ReferenceFrame, in the x direction. """
+        """The basis Vector for the ReferenceFrame, in the x direction.
+
+        >>> from sympy.physics.mechanics import ReferenceFrame
+        >>> N = ReferenceFrame('N')
+        >>> N.x
+        N.x
+
+        """
         return self._x
 
     @property
     def y(self):
-        """The basis Vector for the ReferenceFrame, in the y direction. """
+        """The basis Vector for the ReferenceFrame, in the y direction.
+
+        >>> from sympy.physics.mechanics import ReferenceFrame
+        >>> N = ReferenceFrame('N')
+        >>> N.y
+        N.y
+
+        """
         return self._y
 
     @property
     def z(self):
-        """The basis Vector for the ReferenceFrame, in the z direction. """
+        """The basis Vector for the ReferenceFrame, in the z direction.
+
+        >>> from sympy.physics.mechanics import ReferenceFrame
+        >>> N = ReferenceFrame('N')
+        >>> N.z
+        N.z
+
+        """
         return self._z
 
 
@@ -1298,6 +1320,7 @@ class Vector(object):
         class Fake(object):
             baseline = 0
             def render(self, *args, **kwargs):
+                """Render for printing"""
                 self = e
                 ar = self.args # just to shorten things
                 if len(ar) == 0:
@@ -1490,14 +1513,53 @@ class Vector(object):
     __rmul__ = __mul__
 
     def dot(self, other):
+        """Returns dot product of 2 vectors
+
+        >>> from sympy.physics.mechanics import Vector
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dot
+        >>> N = ReferenceFrame('N')
+        >>> dot(N.x, N.x)
+        1
+        >>> dot(N.x, N.y)
+        0
+
+        """
         return self & other
     dot.__doc__ = __and__.__doc__
 
     def cross(self, other):
+        """Returns cross product of 2 vectors
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer, cross
+        >>> N = ReferenceFrame('N')
+        >>> d = outer(N.x, N.x)
+        >>> cross(d, N.y)
+        (N.x|N.z)
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector, cross
+        >>> N = ReferenceFrame('N')
+        >>> cross(N.x, N.x)
+        0
+        >>> cross(N.y, N.y)
+        0
+
+        """
         return self ^ other
     cross.__doc__ = __xor__.__doc__
 
     def outer(self, other):
+        """Outer product between two Vectors
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer
+        >>> N = ReferenceFrame('N')
+        >>> d = outer(N.x, N.x)
+        >>> d
+        (N.x|N.x)
+
+        """
         return self | other
     outer.__doc__ = __or__.__doc__
 
@@ -1641,11 +1703,35 @@ class Vector(object):
         return ov
 
     def magnitude(self):
-        """Returns the magnitude (Euclidean norm) of self."""
+        """Returns the magnitude (Euclidean norm) of self.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector
+        >>> N = ReferenceFrame('N')
+        >>> Vector.magnitude(N.x)
+        1
+        >>> Vector.magnitude(N.y)
+        1
+        """
         return sqrt(self & self)
 
     def normalize(self):
-        """Returns a Vector of magnitude 1, codirectional with self."""
+        """Returns a Vector of magnitude 1, codirectional with self.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector
+        >>> N = ReferenceFrame('N')
+        >>> Vector.normalize(N.x)
+        N.x
+        >>> Vector.normalize(N.y)
+        N.y
+        >>> Vector.normalize(N.z)
+        N.z
+        """
         return Vector(self.args + []) / self.magnitude()
 
 

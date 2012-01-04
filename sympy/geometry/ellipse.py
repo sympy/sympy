@@ -715,6 +715,10 @@ class Ellipse(GeometryEntity):
         the end to see that they lie in o.
         """
         def dot(p1, p2):
+            """
+            Adds together the product of the corresponding
+            elements of p1 and p2.
+            """
             sum = 0
             for ind in xrange(len(p1.args)):
                 sum += p1[ind] * p2[ind]
@@ -961,18 +965,74 @@ class Circle(Ellipse):
 
     @property
     def major(self):
+        """The major axis of the circle
+
+        Returns
+        -------
+        radius : number or sympy expression
+
+        Examples
+        --------
+        >>> from sympy import Point, Circle
+        >>> c1 = Circle(Point(3, 4), 6)
+        >>> c1.major
+        6
+
+        """
         return self.radius
 
     @property
     def minor(self):
+        """The minor axis of the circle
+
+        Returns
+        -------
+        radius : number or sympy expression
+
+        Examples
+        --------
+        >>> from sympy import Point, Circle
+        >>> c1 = Circle(Point(3, 4), 6)
+        >>> c1.minor
+        6
+
+        """
         return self.radius
 
     @property
     def hradius(self):
+        """The hradius of the circle
+
+        Returns
+        -------
+        radius : number or sympy expression
+
+        Examples
+        --------
+        >>> from sympy import Point, Circle
+        >>> c1 = Circle(Point(3, 4), 6)
+        >>> c1.hradius
+        6
+
+        """
         return self.radius
 
     @property
     def vradius(self):
+        """The vradius of the circle
+
+        Returns
+        -------
+        radius : number or sympy expression
+
+        Examples
+        --------
+        >>> from sympy import Point, Circle
+        >>> c1 = Circle(Point(3, 4), 6)
+        >>> c1.vradius
+        6
+
+        """
         return self.radius
 
     @property

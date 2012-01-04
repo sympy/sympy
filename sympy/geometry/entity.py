@@ -39,6 +39,22 @@ class GeometryEntity(tuple):
 
     @property
     def free_symbols(self):
+        """
+        This method returns the symbols that will exist
+        when the entity is created. This is useful if one is
+        trying to determine whether an entity depends
+        on a certain symbol or not.
+
+        Examples
+        --------
+        >>> from sympy.abc import x,y
+        >>> from sympy import Point, RegularPolygon, Polygon
+        >>> y = 3
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), x, y).vertices)
+        >>> t.free_symbols
+        set([x])
+
+        """
         free = set()
         for a in self.args:
             free |= a.free_symbols
@@ -61,6 +77,11 @@ class GeometryEntity(tuple):
         intersection function in geometry/util.py which computes the
         intersection between more than 2 objects.
 
+        >>> from sympy import Point, RegularPolygon, Polygon
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> o = Polygon(*RegularPolygon(Point(1, 1), 1, 3).vertices)
+        >>> t.intersection(o)
+        [Point(1/2, sqrt(3)/6), Point(-sqrt(3)/2 + 3/2, -sqrt(3)/6 + 1/2)]
         """
         raise NotImplementedError()
 
@@ -161,6 +182,21 @@ class GeometryEntity(tuple):
 
         The object will be decomposed into Points and individual Entities need
         only define an encloses_point method for their class.
+
+        Examples
+        --------
+        >>> from sympy import Point, RegularPolygon, Polygon
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> o = Polygon(*RegularPolygon(Point(1, 1), 1, 3).vertices)
+        >>> t.encloses(o)
+        False
+
+        >>> from sympy import Point, RegularPolygon, Polygon
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> o = Polygon(*RegularPolygon(Point(0, 0), .5, 3).vertices)
+        >>> t.encloses(o)
+        True
+
         """
         from sympy.geometry.point import Point
         from sympy.geometry.line import Segment, Ray, Line
@@ -196,10 +232,27 @@ class GeometryEntity(tuple):
         If two different types of entities can be similar, it is only
         required that one of them be able to determine this.
 
+        Examples
+        --------
+        >>> from sympy import Point, RegularPolygon, Polygon
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> o = Polygon(*RegularPolygon(Point(1, 1), 1, 3).vertices)
+        >>> t.is_similar(o)
+        True
+
         """
         raise NotImplementedError()
 
     def subs(self, *args):
+        """
+        This method substitutes args for other properties.
+        >>> from sympy import Point, RegularPolygon, Polygon
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> o = Polygon(*RegularPolygon(Point(1, 1), 1, 3).vertices)
+        >>> t.subs(o)
+        Triangle(Point(1, 0), Point(-1/2, 3**(3**(-sqrt(3)/2 + 1)*(-sqrt(3)/2 + 1) + 1)*(3**(-sqrt(3)/2 + 1)*(-sqrt(3)/2 + 1) + 1)), Point(-1/2, -3**(3**(-sqrt(3)/2 + 1)*(-sqrt(3)/2 + 1) + 1)/2))
+
+        """
         return type(self)(*[a.subs(*args) for a in self.args])
 
     def _eval_subs(self, old, new):
@@ -211,6 +264,12 @@ class GeometryEntity(tuple):
 
         The contents will not necessarily be Points. This is also
         what will be returned when one does "for x in self".
+
+        >>> from sympy import Point, RegularPolygon, Polygon
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t.args
+        (Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
+
         """
 
         return tuple(self)

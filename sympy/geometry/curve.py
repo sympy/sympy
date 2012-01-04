@@ -63,6 +63,19 @@ class Curve(GeometryEntity):
 
     @property
     def free_symbols(self):
+        """
+        This method returns the symbols that will exist
+        when the curve is created. This is useful if one is
+        trying to determine whether a curve depends
+        on a certain symbol or not.
+
+        >>> from sympy.abc import x,y,t
+        >>> from sympy.geometry import Curve
+        >>> C = Curve((x, y), (t, 0, 2))
+        >>> C.free_symbols
+        set([x, y])
+
+        """
         free = set()
         for a in self.functions + self.limits[1:]:
             free |= a.free_symbols

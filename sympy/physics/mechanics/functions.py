@@ -17,21 +17,71 @@ from sympy.physics.mechanics.essential import (Vector, Dyadic, ReferenceFrame,
 from sympy import sympify, diff, sin, cos, Matrix
 
 def cross(vec1, vec2):
-    """Cross product convenience wrapper for Vector.cross(): \n"""
+    """Cross product convenience wrapper for Vector.cross(): \n
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import ReferenceFrame, outer, cross
+    >>> N = ReferenceFrame('N')
+    >>> d = outer(N.x, N.x)
+    >>> cross(d, N.y)
+    (N.x|N.z)
+
+    >>> from sympy.physics.mechanics import ReferenceFrame, Vector, cross
+    >>> N = ReferenceFrame('N')
+    >>> cross(N.x, N.x)
+    0
+    >>> cross(N.y, N.y)
+    0
+
+    """
     if not isinstance(vec1, (Vector, Dyadic)):
         raise TypeError('Cross product is between two vectors')
     return vec1 ^ vec2
 cross.__doc__ += Vector.cross.__doc__
 
 def dot(vec1, vec2):
-    """Dot product convenience wrapper for Vector.dot(): \n"""
+    """Dot product convenience wrapper for Vector.dot(): \n
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import functions, ReferenceFrame, Vector
+    >>> N = ReferenceFrame('N')
+    >>> functions.dot(N.x, N.x)
+    1
+    >>> functions.dot(N.x, N.y)
+    0
+
+    """
     if not isinstance(vec1, (Vector, Dyadic)):
         raise TypeError('Dot product is between two vectors')
     return vec1 & vec2
 dot.__doc__ += Vector.dot.__doc__
 
 def express(vec, frame, frame2=None):
-    """Express convenience wrapper for Vector.express(): \n"""
+    """Express convenience wrapper for Vector.express(): \n
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import functions, ReferenceFrame, Vector
+    >>> N = ReferenceFrame('N')
+    >>> functions.express(N.x, N)
+    N.x
+    >>> functions.express(N.y, N)
+    N.y
+
+    >>> from sympy.physics.mechanics import functions, ReferenceFrame, Vector
+    >>> O = ReferenceFrame('O')
+    >>> N = ReferenceFrame('N')
+    >>> functions.express(N.x, N, O)
+    N.x
+    >>> functions.express(N.y, N, O)
+    N.y
+
+    """
     if not isinstance(vec, (Vector, Dyadic)):
         raise TypeError('Can only express Vectors')
     if isinstance(vec, Vector):
@@ -42,7 +92,19 @@ def express(vec, frame, frame2=None):
 express.__doc__ += Vector.express.__doc__
 
 def outer(vec1, vec2):
-    """Outer prodcut convenience wrapper for Vector.outer():\n"""
+    """Outer prodcut convenience wrapper for Vector.outer():\n
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import functions, ReferenceFrame, Vector
+    >>> N = ReferenceFrame('N')
+    >>> functions.outer(N.x, N.x)
+    (N.x|N.x)
+    >>> functions.outer(N.x, N.y)
+    (N.x|N.y)
+
+    """
     if not isinstance(vec1, Vector):
         raise TypeError('Outer product is between two Vectors')
     return vec1 | vec2

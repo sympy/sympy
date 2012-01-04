@@ -376,6 +376,20 @@ class LinearEntity(GeometryEntity):
 
     @property
     def length(self):
+        """The length of a line
+
+        Returns
+        -------
+        infinity
+
+        Examples
+        --------
+        >>> from sympy import Point, Line
+        >>> p1, p2 = Point(0,0), Point(5,3)
+        >>> li = Line(p1,p2)
+        >>> li.length
+        oo
+        """
         return S.Infinity
 
     @property
@@ -676,8 +690,17 @@ class LinearEntity(GeometryEntity):
         return Point(x, y)
 
     def is_similar(self, other):
-        """Return True if self and other are contained in the same line."""
+        """Return True if self and other are contained in the same line.
+        >>> from sympy import Point, Line
+        >>> p1, p2 = Point(0, 0), Point(5, 3)
+        >>> l1 = Line(p1, p2)
+        >>> p3, p4 = Point(25, 15), Point(50, 30)
+        >>> l2 = Line(p3, p4)
+        >>> l1.is_similar(l2)
+        True
+        """
         def norm(a, b, c):
+            """Helper sub-method"""
             if a != 0:
                 return 1, b/a, c/a
             elif b != 0:
@@ -1376,7 +1399,15 @@ class Segment(LinearEntity):
         return Point.midpoint(self.p1, self.p2)
 
     def distance(self, o):
-        """Attempts to find the distance of the line segment to an object"""
+        """Attempts to find the distance of the line segment to an object
+
+        >>> from sympy import Point
+        >>> from sympy.abc import s
+        >>> from sympy.geometry import Segment
+        >>> s = Segment(Point(4, 3), Point(1, 1))
+        >>> s.distance(Point(0,0))
+        sqrt(2)
+        """
         if isinstance(o, Point):
             return self._do_point_distance(o)
         raise NotImplementedError()
@@ -1404,7 +1435,47 @@ class Segment(LinearEntity):
         return super(Segment, self).__hash__()
 
     def contains(self, other):
-        """Is the other GeometryEntity contained within this Ray?"""
+        """Is the other GeometryEntity contained within this Ray?
+
+        Examples
+        --------
+        >>> from sympy.geometry import Segment, Line, Point
+        >>> from sympy.abc import s
+        >>> p1, p2 = Point(0,0), Point(10,10)
+        >>> s = Segment(p1, p2)
+        >>> p3, p4 = Point(3,3), Point(6,6)
+        >>> s2 = Segment(p3, p4)
+        >>> s.contains(s2)
+        True
+
+        >>> from sympy.geometry import Segment, Line, Point
+        >>> from sympy.abc import s
+        >>> p1, p2 = Point(0,0), Point(10,10)
+        >>> s = Segment(p1, p2)
+        >>> p3, p4 = Point(3,3), Point(6,7)
+        >>> s2 = Segment(p3, p4)
+        >>> s.contains(s2)
+        False
+
+        >>> from sympy.geometry import Segment, Line, Point
+        >>> from sympy.abc import s
+        >>> p1, p2 = Point(0,0), Point(10,10)
+        >>> s = Segment(p1, p2)
+        >>> p3 = Point(6,7)
+        >>> s.contains(p3)
+        False
+        >>> p3 = Point(6,6)
+        >>> s.contains(p3)
+        True
+
+        >>> from sympy.geometry import Segment, Line, Point
+        >>> from sympy.abc import s
+        >>> p1, p2 = Point(0,0), Point(10,10)
+        >>> s = Segment(p1, p2)
+        >>> l = Line(p1, p2)
+        >>> s.contains(l)
+        False
+        """
         if isinstance(other, Segment):
             return other.p1 in self and other.p2 in self
         elif isinstance(other, Point):

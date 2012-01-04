@@ -35,19 +35,61 @@ class Particle(object):
         self._point = None
 
     def get_mass(self):
-        """Mass of the particle."""
+        """Mass of the particle.
+
+        >>> from sympy.physics.mechanics import Particle, Point
+        >>> from sympy import Symbol
+        >>> pa = Particle()
+        >>> m = Symbol('m')
+        >>> pa.mass = m
+        >>> pa.get_mass()
+        m
+
+        """
         return self._mass
 
     def set_mass(self, mass):
+        """Set the mass of a particle
+
+        >>> from sympy.physics.mechanics import Particle, Point
+        >>> from sympy import Symbol
+        >>> pa = Particle()
+        >>> m = Symbol('m')
+        >>> pa.set_mass(m)
+        >>> pa.get_mass()
+        m
+
+        """
         self._mass = sympify(mass)
 
     mass = property(get_mass, set_mass)
 
     def get_point(self):
-        """Point of the particle."""
+        """Point of the particle.
+
+        >>> from sympy.physics.mechanics import Particle, Point
+        >>> from sympy import Symbol
+        >>> pa = Particle()
+        >>> po = Point('po')
+        >>> pa.point = po
+        >>> pa.get_point()
+        po
+
+        """
         return self._point
 
     def set_point(self, p):
+        """Set the point of a particle
+
+        >>> from sympy.physics.mechanics import Particle, Point
+        >>> from sympy import Symbol
+        >>> pa = Particle()
+        >>> po = Point('po')
+        >>> pa.set_point(po)
+        >>> pa.get_point()
+        po
+
+        """
         if not isinstance(p, Point):
             raise TypeError("Particle point attribute must be a Point object.")
         self._point = p

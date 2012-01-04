@@ -593,6 +593,28 @@ class Polygon(GeometryEntity):
         return res
 
     def distance(self, o):
+        """
+        The distance between a Polygon and a point, or two convex polygons
+
+        Parameters
+        ----------
+        other: Point, Convex Polygon
+
+        Examples
+        --------
+        >>> from sympy import Point, RegularPolygon, Polygon
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> p1 = Point(4,3)
+        >>> t.distance(p1)
+        3*sqrt(2)
+
+        >>> from sympy import Point, RegularPolygon, Polygon
+        >>> poly1 = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> poly2 = Polygon(*RegularPolygon(Point(5, 5), 1, 3).vertices)
+        >>> poly1.distance(poly2)
+        sqrt(49/4 + (-5 + sqrt(3)/2)**2)
+
+        """
         if isinstance(o, Point):
             dist = oo
             for side in self.sides:
@@ -928,6 +950,22 @@ class RegularPolygon(Polygon):
 
     @property
     def args(self):
+        """
+        Returns
+        -------
+        center : Point
+        radius : number or instance of Basic
+        number of sides : number or instance of Basic
+        rotation angle : number or instance of Basic
+
+        Examples
+        --------
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> r = RegularPolygon(Point(0, 0), 5, 3)
+        >>> r.args
+        (Point(0, 0), 5, 3, 0)
+
+        """
         return self._center, self._radius, self._n, self._rot
 
     def __str__(self):
@@ -962,7 +1000,16 @@ class RegularPolygon(Polygon):
 
     @property
     def circumcenter(self):
-        """alias for center"""
+        """alias for center
+
+        Examples
+        --------
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> rp = RegularPolygon(Point(0, 0), 5, 4)
+        >>> rp.circumcenter
+        Point(0, 0)
+
+        """
         return self.center
 
     @property
@@ -989,7 +1036,27 @@ class RegularPolygon(Polygon):
 
     @property
     def circumradius(self):
-        """alias for radius"""
+        """alias for radius
+
+        Returns
+        -------
+        radius : number or instance of Basic
+
+        Examples
+        --------
+        >>> from sympy import Symbol
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> radius = Symbol('r')
+        >>> rp = RegularPolygon(Point(0, 0), radius, 4)
+        >>> rp.radius
+        r
+
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> rp = RegularPolygon(Point(0, 0), 5, 4)
+        >>> rp.circumradius
+        5
+
+        """
         return self.radius
 
     @property
@@ -1029,12 +1096,37 @@ class RegularPolygon(Polygon):
         >>> rp.apothem
         sqrt(2)*r/2
 
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> rp = RegularPolygon(Point(0, 0), 5, 4)
+        >>> rp.inradius
+        5*sqrt(2)/2
+
         """
         return self.radius * cos(S.Pi/self._n)
 
     @property
     def inradius(self):
-        """alias for apothem"""
+        """alias for apothem
+
+        Returns
+        -------
+        apothem : number or instance of Basic
+
+        Examples
+        --------
+        >>> from sympy import Symbol
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> radius = Symbol('r')
+        >>> rp = RegularPolygon(Point(0, 0), radius, 4)
+        >>> rp.apothem
+        sqrt(2)*r/2
+
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> rp = RegularPolygon(Point(0, 0), 5, 4)
+        >>> rp.inradius
+        5*sqrt(2)/2
+
+        """
         return self.apothem
 
     @property
@@ -1119,6 +1211,21 @@ class RegularPolygon(Polygon):
 
     @property
     def angles(self):
+        """
+        Returns
+        -------
+        Endpoint of RegularPolygon : Point
+        Angle : number or instance of Basic
+                : Dictionary
+
+        Examples
+        --------
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> r = RegularPolygon(Point(0, 0), 5, 3)
+        >>> r.angles
+        {Point(-5/2, -5*sqrt(3)/2): pi/3, Point(-5/2, 5*sqrt(3)/2): pi/3, Point(5, 0): pi/3}
+
+        """
         ret = {}
         ang = self.interior_angle
         for v in self.vertices:

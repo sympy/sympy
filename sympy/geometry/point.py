@@ -65,14 +65,46 @@ class Point(GeometryEntity):
 
     @property
     def x(self):
+        """X-coordinate of a Point.
+
+        >>> from sympy.geometry import Point
+        >>> p = Point(4,5)
+        >>> p.x
+        4
+        >>> p = Point(-9.4, 6)
+        >>> p.x
+        -9.40000000000000
+        """
         return self[0]
 
     @property
     def y(self):
+        """Y-coordinate of a Point.
+
+        >>> from sympy.geometry import Point
+        >>> p = Point(4,5)
+        >>> p.y
+        5
+        >>> p = Point(-9.4, 6.5)
+        >>> p.y
+        6.50000000000000
+        """
         return self[1]
 
     @property
     def free_symbols(self):
+        """
+        This method returns the symbols that will exist
+        when the Point is created. This is useful if one is
+        trying to determine whether a Point depends
+        on a certain symbol or not.
+
+        >>> from sympy.geometry import Point
+        >>> from sympy.abc import x,y
+        >>> p = Point(x,y)
+        >>> p.free_symbols
+        set([x, y])
+        """
         return self.x.free_symbols.union(self.y.free_symbols)
 
     def is_collinear(*points):
@@ -326,6 +358,13 @@ class Point(GeometryEntity):
 
     @property
     def length(self):
+        """Returns the length of a point => 0.
+
+        >>> from sympy.geometry import Point
+        >>> p = Point(3,3)
+        >>> p.length
+        0
+        """
         return S.Zero
 
     def __len__(self):
