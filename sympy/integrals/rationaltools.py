@@ -24,6 +24,11 @@ def ratint(f, x, **flags):
        .. [Bro05] M. Bronstein, Symbolic Integration I: Transcendental
           Functions, Second Edition, Springer-Verlag, 2005, pp. 35-70
 
+       See Also
+       ========
+
+       sympy.integrals.integrals.Integral.doit
+       ratint_logpart, ratint_ratpart
     """
     if type(f) is not tuple:
         p, q = f.as_numer_denom()
@@ -121,6 +126,10 @@ def ratint_ratpart(f, g, x):
         ... Poly(x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2, x, domain='ZZ'), x)
         ((12*x + 6)/(x**2 - 1), 12/(x**2 - x - 2))
 
+    See Also
+    ========
+
+    ratint, ratint_logpart
     """
     f = Poly(f, x)
     g = Poly(g, x)
@@ -179,6 +188,10 @@ def ratint_logpart(f, g, x, t=None):
         [(Poly(x - 3*_t/8 - 1/2, x, domain='QQ[_t]'),
         ...Poly(-_t**2 + 16, _t, domain='ZZ'))]
 
+    See Also
+    ========
+
+    ratint, ratint_ratpart
     """
     f, g = Poly(f, x), Poly(g, x)
 
@@ -252,6 +265,10 @@ def log_to_atan(f, g):
         ... Poly(sqrt(3)/2, x, domain='EX'))
         2*atan(2*sqrt(3)*x/3 + sqrt(3)/3)
 
+    See Also
+    ========
+
+    log_to_real
     """
     if f.degree() < g.degree():
         f, g = -g, f
@@ -295,6 +312,10 @@ def log_to_real(h, q, x, t):
         ... Poly(-2*y + 1, y, domain='ZZ'), x, y)
         log(x**2 - 1)/2
 
+    See Also
+    ========
+
+    log_to_atan
     """
     u, v = symbols('u,v')
 

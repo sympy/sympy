@@ -39,6 +39,12 @@ def trigintegrate(f, x):
        x/2 - sin(x)*cos(x)/2
 
        http://en.wikibooks.org/wiki/Calculus/Further_integration_techniques
+
+    See Also
+    ========
+
+    sympy.integrals.integrals.Integral.doit
+    sympy.integrals.integrals.Integral
     """
 
     pat, a,n,m = _pat_sincos(x)
