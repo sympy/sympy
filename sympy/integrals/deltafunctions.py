@@ -32,6 +32,7 @@ def change_mul(node, x):
 
        See Also
        ========
+
        sympy.functions.special.delta_functions.DiracDelta
        deltaintegrate
     """
@@ -120,7 +121,9 @@ def deltaintegrate(f, x):
 
     See Also
     ========
-    sympy.functions.special.delta_functions.DiracDelta, Integral
+
+    sympy.functions.special.delta_functions.DiracDelta
+    sympy.integrals.integrals.Integral
     """
     if not f.has(DiracDelta):
         return None

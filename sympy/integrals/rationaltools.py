@@ -26,6 +26,7 @@ def ratint(f, x, **flags):
 
        See Also
        ========
+
        sympy.integrals.integrals.Integral.doit
        ratint_logpart, ratint_ratpart
     """
@@ -127,6 +128,7 @@ def ratint_ratpart(f, g, x):
 
     See Also
     ========
+
     ratint, ratint_logpart
     """
     f = Poly(f, x)
@@ -188,6 +190,7 @@ def ratint_logpart(f, g, x, t=None):
 
     See Also
     ========
+
     ratint, ratint_ratpart
     """
     f, g = Poly(f, x), Poly(g, x)
@@ -264,6 +267,7 @@ def log_to_atan(f, g):
 
     See Also
     ========
+
     log_to_real
     """
     if f.degree() < g.degree():
@@ -310,6 +314,7 @@ def log_to_real(h, q, x, t):
 
     See Also
     ========
+
     log_to_atan
     """
     u, v = symbols('u,v')

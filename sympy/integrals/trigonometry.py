@@ -42,7 +42,9 @@ def trigintegrate(f, x):
 
     See Also
     ========
-    sympy.integrals.integrals.Integral.doit, Integral
+
+    sympy.integrals.integrals.Integral.doit
+    sympy.integrals.integrals.Integral
     """
 
     pat, a,n,m = _pat_sincos(x)

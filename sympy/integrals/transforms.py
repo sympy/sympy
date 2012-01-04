@@ -313,7 +313,8 @@ def mellin_transform(f, x, s, **hints):
 
     See Also
     ========
-    inverse_mellin_transform
+
+    inverse_mellin_transform, laplace_transform, fourier_transform
     """
     return MellinTransform(f, x, s).doit(**hints)
 
@@ -793,6 +794,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 
     See Also
     ========
+
     mellin_transform
     """
     return InverseMellinTransform(F, s, x, strip[0], strip[1]).doit(**hints)
@@ -923,7 +925,8 @@ def laplace_transform(f, t, s, **hints):
 
     See Also
     ========
-    inverse_laplace_transform
+
+    inverse_laplace_transform, mellin_transform, fourier_transform
     """
     return LaplaceTransform(f, t, s).doit(**hints)
 
@@ -1065,6 +1068,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
 
     See Also
     ========
+
     laplace_transform
     """
     return InverseLaplaceTransform(F, s, t, plane).doit(**hints)
@@ -1154,7 +1158,8 @@ def fourier_transform(f, x, k, **hints):
 
     See Also
     ========
-    inverse_fourier_transform
+
+    inverse_fourier_transform, mellin_transform, laplace_transform
     """
     return FourierTransform(f, x, k).doit(**hints)
 
@@ -1198,6 +1203,7 @@ def inverse_fourier_transform(F, k, x, **hints):
 
     See Also
     ========
+
     fourier_transform
     """
     return InverseFourierTransform(F, k, x).doit(**hints)

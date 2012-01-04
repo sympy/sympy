@@ -109,6 +109,7 @@ class Integral(Expr):
 
         See Also
         ========
+
         limits, variables, free_symbols
         """
         return self._args[0]
@@ -124,6 +125,7 @@ class Integral(Expr):
 
         See Also
         ========
+
         function, variables, free_symbols
         """
         return self._args[1:]
@@ -139,6 +141,7 @@ class Integral(Expr):
 
         See Also
         ========
+
         function, limits, free_symbols
         as_dummy : Replace integration variables with dummy ones
         transform : Perform mapping on the integration variable
@@ -160,6 +163,7 @@ class Integral(Expr):
 
         See Also
         ========
+
         function, limits, variables
        """
         function, limits = self.function, self.limits
@@ -205,6 +209,7 @@ class Integral(Expr):
 
         See Also
         ========
+
         is_number
         """
         if (self.function.is_zero or
@@ -252,6 +257,7 @@ class Integral(Expr):
 
         See Also
         ========
+
         is_zero
         """
 
@@ -294,6 +300,7 @@ class Integral(Expr):
 
         See Also
         ========
+
         variables : Lists the integration variables
         transform : Perform mapping on the integration variable
         """
@@ -341,6 +348,7 @@ class Integral(Expr):
 
         See Also
         ========
+
         variables : Lists the integration variables
         as_dummy : Replace integration variables with dummy ones
         """
@@ -396,6 +404,7 @@ class Integral(Expr):
 
         See Also
         ========
+
         sympy.integrals.trigonometry.trigintegrate
         sympy.integrals.risch.heurisch
         sympy.integrals.rationaltools.ratint
@@ -937,6 +946,7 @@ class Integral(Expr):
 
         See Also
         ========
+
         Integral.doit : Perform the integration using any hints
         """
 
@@ -1071,6 +1081,7 @@ def integrate(*args, **kwargs):
 
        See Also
        ========
+
        Integral, Integral.doit
     """
     meijerg = kwargs.pop('meijerg', None)
@@ -1099,6 +1110,7 @@ def line_integrate(field, curve, vars):
 
        See Also
        ========
+
        integrate, Integral
     """
     F = sympify(field)

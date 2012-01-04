@@ -36,6 +36,7 @@ def components(f, x):
 
     See Also
     ========
+
     heurisch
     """
     result = set()
@@ -147,8 +148,10 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
 
     See Also
     ========
+
     sympy.integrals.integrals.Integral.doit
-    Integral, components
+    sympy.integrals.integrals.Integral
+    components
     """
     f = sympify(f)
 
