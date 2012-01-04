@@ -351,6 +351,33 @@ class Integral(Expr):
                 newlimits.append(xab)
         return Integral(function, *newlimits)
 
+    def integrate_abs_x(self, limits):
+        """
+            There was only an issue when doing
+            examples like this:
+
+            >>>from sympy import *
+            >>>x = Symbol('x')
+            >>>Integral(Abs(x), (x,-1,1)).doit().n()
+            or
+            the integral of Abs(x) from a negative
+            bound to the positive bound
+
+            Since that integral is just 2 triangles
+            where the base and height are the abs(bounds),
+            the integral can be calculated as the sum of
+            the areas of the triangles
+
+            Example:
+            >>>from sympy import *
+            >>>x = Symbol('x')
+            >>>Integral(Abs(x), (x,-3,3)).doit()
+            = .5(3)(3) + .5(3)(3) = 4.5 + 4.5 = 9
+
+            and 9 = abs(-bound) * abs(+bound)
+        """
+        return abs(limits[0][1]) * abs(limits[0][2])
+
 
     def doit(self, **hints):
         """
@@ -361,6 +388,21 @@ class Integral(Expr):
         >>> Integral(x**i, (i, 1, 3)).doit()
         x**3/log(x) - x/log(x)
         """
+        #issue over integrating Abs(x), here is my fix
+        if str(self.function) == 'Abs(x)':
+            limits = self.limits
+            if str(limits) != '((x,),)':
+                if (limits[0][1] != None):
+                    lim1 = limits[0][1]
+                else:
+                    return self
+                if (limits[0][2] != None):
+                    lim2 = limits[0][2]
+                else:
+                    return self
+                if (abs(lim1) == abs(lim2)):
+                    return self.integrate_abs_x(limits)
+
         if not hints.get('integrals', True):
             return self
 
