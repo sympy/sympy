@@ -879,6 +879,11 @@ def test_solve_abs():
 
 def test_issue_2957():
     assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
+    assert solve(tanh(x - 1)*tanh(x + 1) + 1) == [
+        -log(2)/2 + log(-1 - I),
+        -log(2)/2 + log(-1 + I),
+        -log(2)/2 + log(1 - I),
+        -log(2)/2 + log(1 + I)]
     assert solve((tanh(x + 3)*tanh(x - 3) + 1)**2) == \
            [-log(2)/2 + log(-1 - I), -log(2)/2 + log(-1 + I),
             -log(2)/2 + log(1 - I), -log(2)/2 + log(1 + I)]

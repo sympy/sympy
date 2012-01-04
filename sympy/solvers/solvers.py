@@ -929,6 +929,7 @@ def _solve(f, *symbols, **flags):
 
             bases, qs = zip(*[_as_base_q(g) for g in gens])
             bases = set(bases)
+
             if len(bases) > 1:
                 funcs = set(b.func for b in bases if b.is_Function)
 
@@ -990,6 +991,20 @@ def _solve(f, *symbols, **flags):
                 #
                 inversion = _solve(cov - base, symbol, **flags)
                 result = [i.subs(p, s) for i in inversion for s in soln]
+
+            else: # len(bases) == 1 and all(q == 1 for q in qs):
+                # e.g. case where gens are exp(x), exp(-x)
+                u = bases.pop()
+                t = Dummy('t')
+                inv = _solve(u - t, symbol)
+                ftry = f_num.subs(u, t)
+                if not ftry.has(symbol):
+                    soln = _solve(ftry, t)
+                    sols = list()
+                    for sol in soln:
+                        for i in inv:
+                            sols.append(i.subs(t, sol))
+                    return sols
 
         elif len(gens) == 1:
 
