@@ -7,6 +7,7 @@ def symmetric(n):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.generators import symmetric
     >>> list(symmetric(3))
     [Permutation([0, 1, 2]), Permutation([0, 2, 1]), Permutation([1, 0, 2]), \
@@ -21,6 +22,7 @@ def cyclic(n):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.generators import cyclic
     >>> list(cyclic(5))
     [Permutation([0, 1, 2, 3, 4]), Permutation([1, 2, 3, 4, 0]), \
@@ -38,6 +40,7 @@ def alternating(n):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.generators import alternating
     >>> list(alternating(4))
     [Permutation([0, 1, 2, 3]), Permutation([0, 2, 3, 1]), \
@@ -58,6 +61,7 @@ def dihedral(n):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.generators import dihedral
     >>> list(dihedral(4))
     [Permutation([0, 1, 2, 3]), Permutation([3, 2, 1, 0]), \

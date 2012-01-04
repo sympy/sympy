@@ -166,6 +166,7 @@ except ImportError: # Python 2.5
 
         Examples
         ========
+
         >>> from sympy.core.compatibility import product
         >>> [''.join(p) for p in list(product('ABC', 'xy'))]
         ['Ax', 'Ay', 'Bx', 'By', 'Cx', 'Cy']
@@ -246,6 +247,7 @@ except ImportError: # < python 2.6
 
         Examples
         ========
+
         >>> from sympy.core.compatibility import combinations
         >>> list(combinations('ABC', 2))
         [('A', 'B'), ('A', 'C'), ('B', 'C')]
@@ -285,6 +287,7 @@ except ImportError: # < python 2.6
 
         Examples
         ========
+
         >>> from sympy.core.compatibility import combinations_with_replacement
         >>> list(combinations_with_replacement('AB', 2))
         [('A', 'A'), ('A', 'B'), ('B', 'B')]

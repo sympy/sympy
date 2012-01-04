@@ -41,7 +41,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2008, 2009, 2010, 2011 SymPy Development Team'
+copyright = '2008, 2009, 2010, 2011, 2012 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -96,6 +96,7 @@ html_static_path = ['_static']
 html_last_updated_fmt = '%b %d, %Y'
 
 html_logo = '_static/sympylogo.png'
+html_favicon = '../logo/SymPy-Favicon.ico'
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.

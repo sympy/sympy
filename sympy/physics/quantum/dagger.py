@@ -20,6 +20,7 @@ class Dagger(Expr):
 
     Parameters
     ==========
+
     arg : Expr
         The sympy expression that we want to take the dagger of.
 

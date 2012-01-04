@@ -24,6 +24,7 @@ class RigidBody(object):
 
     Examples
     ========
+
     >>> from sympy import Symbol
     >>> from sympy.physics.mechanics import ReferenceFrame, Point, RigidBody
     >>> from sympy.physics.mechanics import outer

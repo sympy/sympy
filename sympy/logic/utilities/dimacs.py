@@ -10,6 +10,21 @@ from sympy.logic.boolalg import And, Or
 import re
 
 def load(s):
+    """Loads a boolean expression from a string.
+
+    Examples
+    ========
+
+    >>> from sympy.logic.utilities.dimacs import load
+    >>> load('1')
+    cnf_1
+    >>> load('1 2')
+    Or(cnf_1, cnf_2)
+    >>> load('1 \\n 2')
+    And(cnf_1, cnf_2)
+    >>> load('1 2 \\n 3')
+    And(cnf_3, Or(cnf_1, cnf_2))
+    """
     clauses = []
 
     lines = s.split('\n')
@@ -44,6 +59,7 @@ def load(s):
     return And(*clauses)
 
 def load_file(location):
+    """Loads a boolean expression from a file."""
     with open(location) as f:
         s = f.read()
 

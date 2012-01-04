@@ -15,6 +15,7 @@ class IdentityFunction(Lambda):
 
     Examples
     ========
+
     >>> from sympy import Id, Symbol
     >>> x = Symbol('x')
     >>> Id(x)
@@ -41,6 +42,7 @@ def sqrt(arg):
 
     Examples
     ========
+
     >>> from sympy import sqrt, Symbol
     >>> x = Symbol('x')
 
@@ -87,10 +89,10 @@ def sqrt(arg):
     >>> [ RootOf(x**2-3,i) for i in (0,1) ]
     [-sqrt(3), sqrt(3)]
 
-
     See Also
     ========
-    L{root}, L{RootOf}
+
+    sympy.polys.rootoftools.RootOf, root
 
     References
     ==========
@@ -111,6 +113,7 @@ def root(arg, n):
 
     Examples
     ========
+
     >>> from sympy import root, Rational
     >>> from sympy.abc import x, n
 
@@ -142,11 +145,12 @@ def root(arg, n):
     >>> [ RootOf(x**4-1,i) for i in (0,1,2,3) ]
     [-1, 1, -I, I]
 
-
     See Also
     ========
 
-    L{sqrt}, L{RootOf}, L{real_root}, L{integer_nthroot}
+    sympy.polys.rootoftools.RootOf
+    sympy.core.power.integer_nthroot
+    sqrt, real_root
 
     References
     ==========
@@ -166,6 +170,7 @@ def real_root(arg, n=None):
 
     Examples
     ========
+
     >>> from sympy import root, real_root, Rational
     >>> from sympy.abc import x, n
 
@@ -176,12 +181,12 @@ def real_root(arg, n=None):
     >>> real_root(_)
     -2
 
-
     See Also
     ========
 
-    L{sqrt}, L{RootOf}, L{root}, L{integer_nthroot}
-
+    sympy.polys.rootoftools.RootOf
+    sympy.core.power.integer_nthroot
+    root, sqrt
     """
     if n is not None:
         n = int_tested(n)
@@ -345,6 +350,7 @@ class Max(MinMaxBase, Application, Basic):
 
     Examples
     ========
+
     >>> from sympy import Max, Symbol, oo
     >>> from sympy.abc import x, y
     >>> p = Symbol('p', positive=True)
@@ -407,8 +413,7 @@ class Max(MinMaxBase, Application, Basic):
     See Also
     ========
 
-    Min() : find minimum values
-
+    Min : find minimum values
     """
     zero = S.Infinity
     identity = S.NegativeInfinity
@@ -434,6 +439,7 @@ class Min(MinMaxBase, Application, Basic):
 
     Examples
     ========
+
     >>> from sympy import Min, Symbol, oo
     >>> from sympy.abc import x, y
     >>> p = Symbol('p', positive=True)
@@ -457,8 +463,7 @@ class Min(MinMaxBase, Application, Basic):
     See Also
     ========
 
-    Max() : find maximum values
-
+    Max : find maximum values
     """
     zero = S.NegativeInfinity
     identity = S.Infinity

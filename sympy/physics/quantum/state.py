@@ -206,6 +206,7 @@ class KetBase(StateBase):
 
         Parameters
         ==========
+
         op : Operator
             The Operator that is acting on the Ket.
         options : dict
@@ -287,6 +288,7 @@ class Ket(State, KetBase):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         ket. This will usually be its symbol or its quantum numbers. For
@@ -349,6 +351,7 @@ class Bra(State, BraBase):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         ket. This will usually be its symbol or its quantum numbers. For
@@ -413,6 +416,7 @@ class TimeDepState(StateBase):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         ket. This will usually be its symbol or its quantum numbers. For
@@ -492,6 +496,7 @@ class TimeDepKet(TimeDepState, KetBase):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         ket. This will usually be its symbol or its quantum numbers. For
@@ -535,6 +540,7 @@ class TimeDepBra(TimeDepState, BraBase):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         ket. This will usually be its symbol or its quantum numbers. For

@@ -1206,7 +1206,8 @@ def dup_zz_heu_gcd(f, g, K):
     >>> dup_zz_heu_gcd(f, g, ZZ)
     ([1, -1], [1, 1], [1, -2])
 
-    **References**
+    References
+    ==========
 
     1. [Liao95]_
 
@@ -1333,7 +1334,8 @@ def dmp_zz_heu_gcd(f, g, u, K):
     >>> dmp_zz_heu_gcd(f, g, 1, ZZ)
     ([[1], [1, 0]], [[1], [1, 0]], [[1], []])
 
-    **References**
+    References
+    ==========
 
     1. [Liao95]_
 

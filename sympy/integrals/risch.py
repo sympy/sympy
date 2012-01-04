@@ -34,6 +34,10 @@ def components(f, x):
        >>> components(sin(x)*cos(x)**2, x)
        set([x, sin(x), cos(x)])
 
+    See Also
+    ========
+
+    heurisch
     """
     result = set()
 
@@ -113,7 +117,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
               - hints = [ ]           --> try to figure out
               - hints = [f1, ..., fn] --> we know better
 
-       **Examples**
+       Examples
+       ========
 
        >>> from sympy import tan
        >>> from sympy.integrals.risch import heurisch
@@ -142,6 +147,12 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
            Algorithm (II), ACM Transactions on Mathematical
            Software 11 (1985), 356-362.
 
+    See Also
+    ========
+
+    sympy.integrals.integrals.Integral.doit
+    sympy.integrals.integrals.Integral
+    components
     """
     f = sympify(f)
 

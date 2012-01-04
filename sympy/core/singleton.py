@@ -29,6 +29,7 @@ class Singleton(WithAssumptions):
 
     Examples
     ========
+
         >>> from sympy import S, Basic
         >>> from sympy.core.singleton import Singleton
         >>> class MySingleton(Basic):

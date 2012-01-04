@@ -310,6 +310,11 @@ def mellin_transform(f, x, s, **hints):
     >>> from sympy.abc import x, s
     >>> mellin_transform(exp(-x), x, s)
     (gamma(s), (0, oo), True)
+
+    See Also
+    ========
+
+    inverse_mellin_transform, laplace_transform, fourier_transform
     """
     return MellinTransform(f, x, s).doit(**hints)
 
@@ -786,6 +791,11 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
     -x*Heaviside(-x + 1)/2 - Heaviside(x - 1)/(2*x)
     >>> inverse_mellin_transform(f, s, x, (1, oo))
     (-x**2/2 + 1/2)*Heaviside(-x + 1)/x
+
+    See Also
+    ========
+
+    mellin_transform
     """
     return InverseMellinTransform(F, s, x, strip[0], strip[1]).doit(**hints)
 
@@ -912,6 +922,11 @@ def laplace_transform(f, t, s, **hints):
     >>> from sympy.abc import t, s, a
     >>> laplace_transform(t**a, t, s)[0:2]
     (s**(-a - 1)*gamma(a + 1), 0)
+
+    See Also
+    ========
+
+    inverse_laplace_transform, mellin_transform, fourier_transform
     """
     return LaplaceTransform(f, t, s).doit(**hints)
 
@@ -1050,6 +1065,11 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     >>> a = Symbol('a', positive=True)
     >>> inverse_laplace_transform(exp(-a*s)/s, s, t)
     Heaviside(-a + t)
+
+    See Also
+    ========
+
+    laplace_transform
     """
     return InverseLaplaceTransform(F, s, t, plane).doit(**hints)
 
@@ -1135,6 +1155,11 @@ def fourier_transform(f, x, k, **hints):
     sqrt(pi)*exp(-pi**2*k**2)
     >>> fourier_transform(exp(-x**2), x, k, noconds=False)
     (sqrt(pi)*exp(-pi**2*k**2), True)
+
+    See Also
+    ========
+
+    inverse_fourier_transform, mellin_transform, laplace_transform
     """
     return FourierTransform(f, x, k).doit(**hints)
 
@@ -1175,5 +1200,10 @@ def inverse_fourier_transform(F, k, x, **hints):
     exp(-x**2)
     >>> inverse_fourier_transform(sqrt(pi)*exp(-(pi*k)**2), k, x, noconds=False)
     (exp(-x**2), True)
+
+    See Also
+    ========
+
+    fourier_transform
     """
     return InverseFourierTransform(F, k, x).doit(**hints)

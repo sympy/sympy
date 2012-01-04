@@ -11,6 +11,7 @@ class AssumptionsContext(set):
 
     Examples
     ========
+
         >>> from sympy import global_assumptions, AppliedPredicate, Q
         >>> global_assumptions
         AssumptionsContext()
@@ -57,6 +58,7 @@ class AppliedPredicate(Boolean):
 
         Examples
         ========
+
             >>> from sympy import Q, Symbol
             >>> x = Symbol('x')
             >>> a = Q.integer(x + 1)

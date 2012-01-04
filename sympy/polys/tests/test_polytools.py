@@ -2670,3 +2670,10 @@ def test_keep_coeff():
     assert _keep_coeff(S(2), x + 1) == u
     assert _keep_coeff(x, 1/x) == 1
     assert _keep_coeff(x + 1, S(2)) == u
+
+@XFAIL
+def test_poly_matching_consistency():
+    # Test for this issue:
+    # http://code.google.com/p/sympy/issues/detail?id=2415
+    assert I * Poly(x, x) == Poly(I*x, x)
+    assert Poly(x, x) * I == Poly(I*x, x)

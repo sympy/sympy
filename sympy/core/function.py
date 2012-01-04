@@ -19,6 +19,7 @@ There are two types of functions:
 
     Examples
     ========
+
     >>> import sympy
     >>> f = sympy.Function("f")
     >>> from sympy.abc import x

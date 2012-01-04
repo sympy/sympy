@@ -60,6 +60,7 @@ def pl_true(expr, model={}):
 
     Examples
     ========
+
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import pl_true
     >>> pl_true( A & B, {A: True, B : True})
@@ -132,12 +133,43 @@ class PropKB(KB):
     """A KB for Propositional Logic.  Inefficient, with no indexing."""
 
     def tell(self, sentence):
-        "Add the sentence's clauses to the KB"
+        """Add the sentence's clauses to the KB
+
+        Examples
+        ========
+
+        >>> from sympy.logic.inference import PropKB
+        >>> from sympy.abc import x, y, z
+        >>> l = PropKB()
+        >>> l.clauses
+        []
+
+        >>> l.tell(x | y)
+        >>> l.clauses
+        [Or(x, y)]
+
+        >>> l.tell(y & z)
+        >>> l.clauses
+        [Or(x, y), y, z]
+        """
         for c in conjuncts(to_cnf(sentence)):
             if not c in self.clauses: self.clauses.append(c)
 
     def ask(self, query):
-        """TODO: examples"""
+        """Checks if the query is true given the set of clauses.
+
+        Examples
+        ========
+
+        >>> from sympy.logic.inference import PropKB
+        >>> from sympy.abc import x, y
+        >>> l = PropKB()
+        >>> l.tell(x & ~y)
+        >>> l.ask(x)
+        True
+        >>> l.ask(y)
+        False
+        """
         if len(self.clauses) == 0: return False
         from sympy.logic.algorithms.dpll import dpll
         query_conjuncts = self.clauses[:]
@@ -148,7 +180,25 @@ class PropKB(KB):
         return bool(dpll(query_conjuncts, list(s), {}))
 
     def retract(self, sentence):
-        "Remove the sentence's clauses from the KB"
+        """Remove the sentence's clauses from the KB
+
+        Examples
+        ========
+
+        >>> from sympy.logic.inference import PropKB
+        >>> from sympy.abc import x, y
+        >>> l = PropKB()
+        >>> l.clauses
+        []
+
+        >>> l.tell(x | y)
+        >>> l.clauses
+        [Or(x, y)]
+
+        >>> l.retract(x | y)
+        >>> l.clauses
+        []
+        """
         for c in conjuncts(to_cnf(sentence)):
             if c in self.clauses:
                 self.clauses.remove(c)

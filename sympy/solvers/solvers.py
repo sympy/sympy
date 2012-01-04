@@ -515,6 +515,7 @@ def solve(f, *symbols, **flags):
 
     See Also
     ========
+
         - rsolve() for solving recurrence relationships
         - dsolve() for solving differential equations
 

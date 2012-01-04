@@ -1021,6 +1021,7 @@ class Rational(Number):
 
         Examples
         ========
+
         >>> from sympy import S
         >>> (S(-3)/2).as_content_primitive()
         (3/2, -1)

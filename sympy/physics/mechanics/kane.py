@@ -18,6 +18,7 @@ class Kane(object):
 
     Attributes
     ==========
+
     auxiliary : Matrix
         If applicable, the set of auxiliary Kane's
         equations used to solve for non-contributing
@@ -230,6 +231,7 @@ class Kane(object):
 
         Parameters
         ==========
+
         qind : list
             A list of independent generalized coords
         qdep : list
@@ -262,6 +264,7 @@ class Kane(object):
 
         Parameters
         ==========
+
         uind : list
             A list of independent generalized speeds
         udep : list
@@ -347,6 +350,7 @@ class Kane(object):
 
         Parameters
         ==========
+
         kdeqs : list (of Expr)
             The listof kinematic differential equations
 
@@ -382,6 +386,7 @@ class Kane(object):
 
         Parameters
         ==========
+
         fl : list
             Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)
             tuples which represent the force at a point or torque on a frame.
@@ -430,6 +435,7 @@ class Kane(object):
 
         Parameters
         ==========
+
         bl : list
             A list of all RigidBody's and Particle's in the system.
 
@@ -611,6 +617,7 @@ class Kane(object):
 
         Parameters
         ==========
+
         FL : list
             Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)
             tuples which represent the force at a point or torque on a frame.

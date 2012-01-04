@@ -177,6 +177,7 @@ class bessely(BesselBase):
 
     See Also
     ========
+
     besselj
     """
 
@@ -224,6 +225,7 @@ class besseli(BesselBase):
 
     See Also
     ========
+
     besselj
 
     """
@@ -281,6 +283,7 @@ class besselk(BesselBase):
 
     See Also
     ========
+
     besselj
 
     """
@@ -312,6 +315,7 @@ class hankel1(BesselBase):
 
     See Also
     ========
+
     besselj
 
     """
@@ -344,6 +348,7 @@ class hankel2(BesselBase):
 
     See Also
     ========
+
     besselj
 
     """
@@ -427,6 +432,7 @@ class jn(SphericalBesselBase):
 
     See Also
     ========
+
     besselj
 
     """
@@ -470,6 +476,7 @@ class yn(SphericalBesselBase):
 
     See Also
     ========
+
     besselj, bessely, jn
 
     """

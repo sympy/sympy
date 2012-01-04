@@ -57,6 +57,7 @@ def npartitions(n, verbose=False):
 
     Examples
     ========
+
     >>> from sympy.ntheory import npartitions
     >>> npartitions(25)
     1958

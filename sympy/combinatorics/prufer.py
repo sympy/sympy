@@ -36,6 +36,7 @@ class Prufer(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.prufer import Prufer
         >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]).prufer_repr
         [3, 3, 3, 4]
@@ -44,6 +45,7 @@ class Prufer(Basic):
 
         See Also
         ========
+
         to_prufer
 
         """
@@ -57,6 +59,7 @@ class Prufer(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.prufer import Prufer
         >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]).tree_repr
         [[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]
@@ -65,6 +68,7 @@ class Prufer(Basic):
 
         See Also
         ========
+
         to_tree
 
         """
@@ -78,6 +82,7 @@ class Prufer(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.prufer import Prufer
         >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]).nodes
         6
@@ -93,6 +98,7 @@ class Prufer(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.prufer import Prufer
         >>> p = Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]])
         >>> p.rank
@@ -104,6 +110,7 @@ class Prufer(Basic):
 
         See Also
         ========
+
         prufer_rank, next, prev, size
 
         """
@@ -117,12 +124,14 @@ class Prufer(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.prufer import Prufer
         >>> Prufer([0]*4).size == Prufer([6]*4).size == 1296
         True
 
         See Also
         ========
+
         prufer_rank, rank, next, prev
 
         """
@@ -135,6 +144,7 @@ class Prufer(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.prufer import Prufer
         >>> a = Prufer([[0, 1], [0, 2], [0, 3]])
         >>> a.prufer_repr
@@ -180,6 +190,7 @@ class Prufer(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.prufer import Prufer
         >>> a = Prufer([0, 2], 4)
         >>> a.tree_repr
@@ -189,6 +200,7 @@ class Prufer(Basic):
 
         References
         ==========
+
         - http://hamberg.no/erlend/2010/11/06/prufer-sequence/
 
         """
@@ -226,6 +238,7 @@ class Prufer(Basic):
 
         Example
         =======
+
         >>> from sympy.combinatorics.prufer import Prufer
         >>> Prufer.edges([1, 2, 3], [2, 4, 5]) # a T
         ([[0, 1], [3, 4], [1, 2], [1, 3]], 5)
@@ -273,6 +286,7 @@ class Prufer(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.prufer import Prufer
         >>> a = Prufer([[0, 1], [0, 2], [0, 3]])
         >>> a.prufer_rank()
@@ -280,6 +294,7 @@ class Prufer(Basic):
 
         See Also
         ========
+
         rank, next, prev, size
 
         """
@@ -296,6 +311,7 @@ class Prufer(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.prufer import Prufer
         >>> Prufer.unrank(0, 4)
         Prufer([0, 0])
@@ -314,6 +330,7 @@ class Prufer(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.prufer import Prufer
 
         A Prufer object can be constructed from a list of edges:
@@ -365,6 +382,7 @@ class Prufer(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.prufer import Prufer
         >>> a = Prufer([[0, 1], [0, 2], [0, 3]])
         >>> b = a.next(1) # == a.next()
@@ -375,6 +393,7 @@ class Prufer(Basic):
 
         See Also
         ========
+
         prufer_rank, rank, prev, size
 
         """
@@ -385,6 +404,7 @@ class Prufer(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.prufer import Prufer
         >>> a = Prufer([[0, 1], [1, 2], [2, 3], [1, 4]])
         >>> a.rank
@@ -397,6 +417,7 @@ class Prufer(Basic):
 
         See Also
         ========
+
         prufer_rank, rank, next, size
 
         """

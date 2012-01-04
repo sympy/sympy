@@ -141,6 +141,7 @@ class Plot(object):
     Close Window:     ESCAPE
 
     =============================
+
     """
 
     def __init__(self, *fargs, **win_args):

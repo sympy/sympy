@@ -1,6 +1,7 @@
 """Hypergeometric and Meijer G-functions"""
 
 from sympy import S
+from sympy.core.compatibility import iterable
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.containers import Tuple
 from sympy.core.sympify import sympify
@@ -9,25 +10,22 @@ from sympy.core.mul import Mul
 # TODO should __new__ accept **options?
 # TODO should constructors should check if parameters are sensible?
 
-# TODO when pull request #399 is in, this should be no longer necessary
-def _make_tuple(v):
+def _prep_tuple(v):
     """
-    Turn an iterable argument V into a Tuple.
-    Also unpolarify, since both hypergeometric and meijer g-functions are
-    unbranched in their parameters.
+    Turn an iterable argument V into a Tuple and unpolarify, since both
+    hypergeometric and meijer g-functions are unbranched in their parameters.
 
     Examples:
-    >>> from sympy.functions.special.hyper import _make_tuple as mt
-    >>> from sympy.core.containers import Tuple
-    >>> mt([1, 2, 3])
+    >>> from sympy.functions.special.hyper import _prep_tuple
+    >>> _prep_tuple([1, 2, 3])
     (1, 2, 3)
-    >>> mt((4, 5))
+    >>> _prep_tuple((4, 5))
     (4, 5)
-    >>> mt((7, 8, 9))
+    >>> _prep_tuple((7, 8, 9))
     (7, 8, 9)
     """
-    from sympy import unpolarify
-    return Tuple(*[unpolarify(sympify(x)) for x in v])
+    from sympy.simplify.simplify import unpolarify
+    return Tuple(*[unpolarify(x) for x in v])
 
 class TupleParametersBase(Function):
     """ Base class that takes care of differentiation, when some of
@@ -149,6 +147,7 @@ class hyper(TupleParametersBase):
 
     See Also
     ========
+
     sympy.simplify.hyperexpand
 
     References
@@ -163,7 +162,7 @@ class hyper(TupleParametersBase):
 
     def __new__(cls, ap, bq, z):
         # TODO should we check convergence conditions?
-        return Function.__new__(cls, _make_tuple(ap), _make_tuple(bq), z)
+        return Function.__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z)
 
     def fdiff(self, argindex=3):
         if argindex != 3:
@@ -177,7 +176,7 @@ class hyper(TupleParametersBase):
         from sympy import gamma, hyperexpand
         if len(self.ap) == 2 and len(self.bq) == 1 and self.argument == 1:
             a, b = self.ap
-            c    = self.bq[0]
+            c = self.bq[0]
             return gamma(c)*gamma(c - a - b)/gamma(c - a)/gamma(c - b)
         return hyperexpand(self)
 
@@ -384,6 +383,7 @@ class meijerg(TupleParametersBase):
 
     See Also
     ========
+
     sympy.simplify.hyperexpand
 
     References
@@ -406,7 +406,7 @@ class meijerg(TupleParametersBase):
         def tr(p):
             if len(p) != 2:
                 raise TypeError("wrong argument")
-            return Tuple(_make_tuple(p[0]), _make_tuple(p[1]))
+            return Tuple(_prep_tuple(p[0]), _prep_tuple(p[1]))
 
         # TODO should we check convergence conditions?
         return Function.__new__(cls, tr(args[0]), tr(args[1]), args[2])

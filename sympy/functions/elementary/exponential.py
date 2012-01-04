@@ -36,6 +36,7 @@ class ExpBase(Function):
 
         Examples
         ========
+
         >>> from sympy.functions import exp
         >>> from sympy.abc import x
         >>> exp(-x).as_numer_denom()
@@ -108,7 +109,13 @@ class exp_polar(ExpBase):
     >>> exp_polar(2)*exp_polar(3)
     exp_polar(5)
 
-    **See also:** :class:`polar_lift`, :func:`powsimp`.
+    See also
+    ========
+
+    sympy.simplify.simplify.powsimp
+    sympy.functions.elementary.complexes.polar_lift
+    sympy.functions.elementary.complexes.periodic_argument
+    sympy.fucntions.elementary.complexes.principal_branch
     """
 
     is_polar = True
@@ -132,6 +139,11 @@ class exp_polar(ExpBase):
 class exp(ExpBase):
     """
     The exponential function, :math:`e^x`.
+
+    See Also
+    ========
+
+    log
     """
 
     def fdiff(self, argindex=1):
@@ -250,6 +262,7 @@ class exp(ExpBase):
 
         Examples
         ========
+
         >>> from sympy import I
         >>> from sympy.abc import x
         >>> from sympy.functions import exp
@@ -262,6 +275,11 @@ class exp(ExpBase):
         >>> exp(1+I).as_real_imag()
         (E*cos(1), E*sin(1))
 
+        See Also
+        ========
+
+        sympy.functions.elementary.complexes.re
+        sympy.functions.elementary.complexes.im
         """
         re, im = self.args[0].as_real_imag()
         if deep:
@@ -380,6 +398,11 @@ class exp(ExpBase):
 class log(Function):
     """
     The logarithmic function :math:`ln(x)` or :math:`log(x)`.
+
+    See Also
+    ========
+
+    exp
     """
 
     nargs = (1,2)
@@ -518,6 +541,7 @@ class log(Function):
 
         Examples
         ========
+
         >>> from sympy import I
         >>> from sympy.abc import x
         >>> from sympy.functions import log

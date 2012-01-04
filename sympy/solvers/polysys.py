@@ -192,6 +192,7 @@ def solve_triangulated(polys, *gens, **args):
 
     Examples
     ========
+
     >>> from sympy.solvers.polysys import solve_triangulated
     >>> from sympy.abc import x, y, z
 
@@ -202,6 +203,7 @@ def solve_triangulated(polys, *gens, **args):
 
     References
     ==========
+
     1. Patrizia Gianni, Teo Mora, Algebraic Solution of System of
     Polynomial Equations using Groebner Bases, AAECC-5 on Applied Algebra,
     Algebraic Algorithms and Error-Correcting Codes, LNCS 356 247--257, 1989

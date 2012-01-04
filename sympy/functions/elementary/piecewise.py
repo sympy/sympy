@@ -85,6 +85,10 @@ class Piecewise(Function):
       >>> p.subs(x,5)
       log(5)
 
+    See Also
+    ========
+
+    piecewise_fold
     """
 
     nargs = None
@@ -301,6 +305,10 @@ def piecewise_fold(expr):
     >>> piecewise_fold(x*p)
     Piecewise((x**2, x < 1), (x, 1 <= x))
 
+    See Also
+    ========
+
+    Piecewise
     """
     if not isinstance(expr, Basic) or not expr.has(Piecewise):
         return expr

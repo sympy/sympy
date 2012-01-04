@@ -20,6 +20,7 @@ def R_nl(n, l, nu, r):
 
     Examples
     ========
+
     >>> from sympy.physics.sho import R_nl
     >>> from sympy import var
     >>> var("r nu l")

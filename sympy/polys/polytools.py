@@ -5596,7 +5596,8 @@ def groebner(F, *gens, **args):
     >>> groebner(F, x, y, method='f5b')
     GroebnerBasis([x**2 - x - 1, y - 55], x, y, domain='ZZ', order='lex')
 
-    **References**
+    References
+    ==========
 
     1. [Buchberger01]_
     2. [Cox97]_
@@ -5611,7 +5612,8 @@ def is_zero_dimensional(F, *gens, **args):
     The algorithm checks if the set of monomials not divisible by the
     leading monomial of any element of ``F`` is bounded.
 
-    **References**
+    References
+    ==========
 
     David A. Cox, John B. Little, Donal O'Shea. Ideals, Varieties and
     Algorithms, 3rd edition, p. 230
@@ -5727,7 +5729,8 @@ class GroebnerBasis(Basic):
         The algorithm checks if the set of monomials not divisible by the
         leading monomial of any element of ``F`` is bounded.
 
-        **References**
+        References
+        ==========
 
         David A. Cox, John B. Little, Donal O'Shea. Ideals, Varieties and
         Algorithms, 3rd edition, p. 230
@@ -5773,7 +5776,8 @@ class GroebnerBasis(Basic):
         >>> list(groebner(F, x, y, order='lex'))
         [2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7]
 
-        **References**
+        References
+        ==========
 
         J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
         Computation of Zero-dimensional Groebner Bases by Change of

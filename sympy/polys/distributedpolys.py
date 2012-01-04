@@ -354,7 +354,8 @@ def sdp_div(f, G, u, O, K):
     such that `f = q_1*f_1 + ... + q_n*f_n + r`, where `r = 0` or `r`
     is a completely reduced polynomial with respect to `g`.
 
-    **References**
+    References
+    ==========
 
     1. [Cox97]_
     2. [Ajwa95]_
@@ -456,7 +457,8 @@ def sdp_lcm(f, g, u, O, K):
     of `t*f` and `(1 - t)*g`, where `t` is an unrelated variable and
     then filtering out the solution that doesn't contain `t`.
 
-    **References**
+    References
+    ==========
 
     1. [Cox97]_
 

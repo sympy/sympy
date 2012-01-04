@@ -255,6 +255,7 @@ class ProductSet(Set):
 
     Examples
     ========
+
         >>> from sympy import Interval, FiniteSet, ProductSet
 
         >>> I = Interval(0, 5); S = FiniteSet(1, 2, 3)
@@ -407,6 +408,7 @@ class Interval(RealSet):
 
     Examples
     ========
+
     >>> from sympy import Symbol, Interval, sets
 
     >>> Interval(0, 1)
@@ -646,6 +648,7 @@ class Union(Set):
 
     Examples
     ========
+
         >>> from sympy import Union, Interval
 
         >>> Union(Interval(1, 2), Interval(3, 4))
@@ -946,6 +949,7 @@ class EmptySet(Set):
 
     Examples
     ========
+
         >>> from sympy import S, Interval
 
         >>> S.EmptySet
@@ -990,6 +994,7 @@ class FiniteSet(CountableSet):
 
     Examples
     ========
+
         >>> from sympy import Symbol, FiniteSet, sets
 
         >>> FiniteSet(1, 2, 3, 4)

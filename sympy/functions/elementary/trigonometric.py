@@ -117,6 +117,7 @@ class sin(TrigonometricFunction):
 
     Examples
     ========
+
     >>> from sympy import sin, pi
     >>> from sympy.abc import x
     >>> sin(x**2).diff(x)
@@ -133,7 +134,7 @@ class sin(TrigonometricFunction):
     See Also
     ========
 
-    L{cos}, L{tan}
+    cos, tan, asin
 
     References
     ==========
@@ -340,6 +341,7 @@ class cos(TrigonometricFunction):
 
     Examples
     ========
+
     >>> from sympy import cos, pi
     >>> from sympy.abc import x
     >>> cos(x**2).diff(x)
@@ -356,7 +358,7 @@ class cos(TrigonometricFunction):
     See Also
     ========
 
-    L{sin}, L{tan}
+    sin, tan, acos
 
     References
     ==========
@@ -559,6 +561,7 @@ class tan(TrigonometricFunction):
 
     Examples
     ========
+
     >>> from sympy import tan
     >>> from sympy.abc import x
     >>> tan(x**2).diff(x)
@@ -569,7 +572,7 @@ class tan(TrigonometricFunction):
     See Also
     ========
 
-    L{sin}, L{tan}
+    sin, cos, atan
 
     References
     ==========
@@ -939,12 +942,17 @@ class asin(Function):
 
     Examples
     ========
+
     >>> from sympy import asin, oo, pi
     >>> asin(1)
     pi/2
     >>> asin(-1)
     -pi/2
 
+    See Also
+    ========
+
+    acos, atan, sin
     """
 
     nargs = 1
@@ -1055,6 +1063,7 @@ class acos(Function):
 
     Examples
     ========
+
     >>> from sympy import acos, oo, pi
     >>> acos(1)
     0
@@ -1063,6 +1072,10 @@ class acos(Function):
     >>> acos(oo)
     oo*I
 
+    See Also
+    ========
+
+    asin, atan, cos
     """
 
     nargs = 1
@@ -1162,6 +1175,7 @@ class atan(Function):
 
     Examples
     ========
+
     >>> from sympy import atan, oo, pi
     >>> atan(0)
     0
@@ -1170,6 +1184,10 @@ class atan(Function):
     >>> atan(oo)
     pi/2
 
+    See Also
+    ========
+
+    acos, asin, tan
     """
 
     nargs = 1

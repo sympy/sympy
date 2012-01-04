@@ -1352,6 +1352,7 @@ class Mul(AssocOp):
 
         Examples
         ========
+
         >>> from sympy import sqrt
         >>> (-3*sqrt(2)*(2 - 2*sqrt(2))).as_content_primitive()
         (6, -sqrt(2)*(-sqrt(2) + 1))
@@ -1377,6 +1378,7 @@ def prod(a, start=1):
 
     Examples
     ========
+
     >>> from sympy import prod, S
     >>> prod(range(3))
     0
