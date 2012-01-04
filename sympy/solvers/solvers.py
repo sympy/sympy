@@ -1018,7 +1018,9 @@ def _solve(f, *symbols, **flags):
 
     # fallback if above fails
     if result is False:
-        result = _tsolve(f_num, symbol, **flags) or False
+        result = _tsolve(f_num, symbol, **flags)
+        if result is None:
+            result = False
 
     if result is False:
         raise NotImplementedError(msg +
@@ -1709,6 +1711,8 @@ def _tsolve(eq, sym, **flags):
         if lhs.exp.is_Integer:
             if lhs - rhs != eq:
                 return _solve(lhs - rhs, sym)
+            elif not rhs:
+                return _solve(lhs.base, sym)
         elif sym not in lhs.exp.free_symbols:
             return _solve(lhs.base - rhs**(1/lhs.exp), sym)
         elif not rhs and sym in lhs.exp.free_symbols:
@@ -1724,7 +1728,13 @@ def _tsolve(eq, sym, **flags):
             return _solve(lhs.exp*log(lhs.base) - log(rhs), sym)
 
     elif lhs.is_Mul and rhs.is_positive:
-        return _solve(expand_log(log(lhs)) - log(rhs), sym)
+        llhs = expand_log(log(lhs))
+        if llhs.is_Add:
+            return _solve(llhs - log(rhs), sym)
+
+    rewrite = lhs.rewrite(exp)
+    if rewrite != lhs:
+        return _solve(rewrite - rhs, sym)
 
     if flags.pop('force', True):
         flags['force'] = False

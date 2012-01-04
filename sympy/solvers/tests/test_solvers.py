@@ -2,7 +2,7 @@ from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
     sqrt, LambertW, pi, I, sin, asin, Function, diff, Derivative, symbols,
     S, sympify, sstr, Wild, solve_linear, Integral,
     And, Or, Lt, Gt, Q, re, im, expand, tan, Poly, cosh, sinh, atanh,
-    atan, Dummy, Float)
+    atan, Dummy, Float, tanh)
 from sympy.abc import a, b, c, d, x, y, z
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,\
@@ -878,4 +878,7 @@ def test_solve_abs():
     assert solve(abs(x - 7) - 8) == [-1, 15]
 
 def test_issue_2957():
-    raises(NotImplementedError, 'solve((tanh(x+3)*tanh(x-3)+1)**2)')
+    assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
+    assert solve((tanh(x + 3)*tanh(x - 3) + 1)**2) == \
+           [-log(2)/2 + log(-1 - I), -log(2)/2 + log(-1 + I),
+            -log(2)/2 + log(1 - I), -log(2)/2 + log(1 + I)]
