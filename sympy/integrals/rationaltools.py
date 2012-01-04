@@ -26,7 +26,7 @@ def ratint(f, x, **flags):
 
        See Also
        ========
-       sympy.integrals.integrals.doit
+       sympy.integrals.integrals.Integral.doit
        ratint_logpart, ratint_ratpart
     """
     if type(f) is not tuple:

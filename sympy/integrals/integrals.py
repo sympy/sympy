@@ -937,7 +937,7 @@ class Integral(Expr):
 
         See Also
         ========
-        doit : Perform the integration using any hints
+        Integral.doit : Perform the integration using any hints
         """
 
         limits = self.limits
@@ -1071,7 +1071,7 @@ def integrate(*args, **kwargs):
 
        See Also
        ========
-       Integral, doit
+       Integral, Integral.doit
     """
     meijerg = kwargs.pop('meijerg', None)
     conds = kwargs.pop('conds', 'piecewise')
