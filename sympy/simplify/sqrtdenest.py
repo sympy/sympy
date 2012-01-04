@@ -27,7 +27,7 @@ def sqrt_depth(p):
     >>> sqrt_depth(1 + sqrt(2)*(1 + sqrt(3)))
     1
 
-    The sqrt(3) is contained withing a square root so the depth is
+    The sqrt(3) is contained within a square root so the depth is
     2:
 
     >>> sqrt_depth(1 + sqrt(2)*sqrt(1 + sqrt(3)))
@@ -63,7 +63,7 @@ def is_algebraic(p):
         return True
     elif p.is_Atom:
         return False
-    elif is_sqrt(p):
+    elif is_sqrt(p) or p.is_Pow and p.exp.is_Integer:
         return is_algebraic(p.base)
     elif p.is_Add or p.is_Mul:
         return all(is_algebraic(x) for x in p.args)
@@ -212,7 +212,7 @@ def _sqrtdenest34(expr):
     >>> from sympy.simplify.sqrtdenest import _sqrtdenest34
     >>> _sqrtdenest34(sqrt(-72*sqrt(2) + 158*sqrt(5) + 498))
     -sqrt(10) + sqrt(2) + 9 + 9*sqrt(5)
-    >>> _sqrtdenest34(sqrt(12+2*sqrt(6)+2*sqrt(14)+2*sqrt(21)))
+    >>> _sqrtdenest34(sqrt(12 + 2*sqrt(6) + 2*sqrt(14) + 2*sqrt(21)))
     sqrt(2) + sqrt(3) + sqrt(7)
 
     References
@@ -224,11 +224,15 @@ def _sqrtdenest34(expr):
     from sympy.simplify.simplify import radsimp
     if not is_sqrt(expr):
         return expr
-    if expr.base < 0:
-        return sqrt(-1)*_sqrtdenest34(sqrt(-expr.base))
-    a = Add._from_args(expr.base.args[:2])
-    b = Add._from_args(expr.base.args[2:])
-    if a < b: # we want a > b > 0
+    a_plus_b = expr.base
+    if not (a_plus_b.is_Add and len(a_plus_b.args) > 2):
+        return expr
+    if a_plus_b < 0:
+        return sqrt(-1)*_sqrtdenest34(sqrt(-a_plus_b))
+    args = a_plus_b.args
+    a = Add._from_args(args[:2])
+    b = Add._from_args(args[2:])
+    if a < b: # we want a > b; since a + b > 0 then a**2 > b**2, too
         a, b = b, a
     c = _sqrtdenest1(sqrt(_mexpand(a**2 - b**2)))
     if sqrt_depth(c) > 1:
@@ -310,6 +314,7 @@ def _sqrt_symbolic_denest(a, b, r):
 
     >>> a, b, r = 16 - 2*sqrt(29), 2, -10*sqrt(29) + 55
     >>> _sqrt_symbolic_denest(a, b, r)
+    sqrt(-2*sqrt(29) + 11) + sqrt(5)
 
     If the expression is numeric, it will be simplified:
 
