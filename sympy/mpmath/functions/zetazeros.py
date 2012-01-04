@@ -141,11 +141,11 @@ def separate_my_zero(ctx, my_zero_number, zero_number_block, T, V, prec):
     for k in range(1,len(V)):
         v1 = V[k]
         if v0*v1 < 0:
-            variations +=1
-            if variations == my_zero_number:
-                k0 = k
-                leftv = v0
-                rightv = v1
+           variations +=1
+           if variations == my_zero_number:
+               k0 = k
+               leftv = v0
+               rightv = v1
         v0 = v1
     t1 = T[k0]
     t0 = T[k0-1]
