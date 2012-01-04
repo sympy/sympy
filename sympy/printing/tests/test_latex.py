@@ -123,7 +123,7 @@ def test_latex_functions():
     assert latex(factorial2(k)) == r"k!!"
     assert latex(factorial2(-k)) == r"\left(- k\right)!!"
 
-    assert latex(binomial(2,k)) == r"{{2}\choose{k}}"
+    assert latex(binomial(2,k)) == r"{\binom{2}{k}}"
 
     assert latex(FallingFactorial(3,k)) == r"{\left(3\right)}_{\left(k\right)}"
     assert latex(RisingFactorial(3,k)) == r"{\left(3\right)}^{\left(k\right)}"
