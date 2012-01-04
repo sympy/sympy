@@ -1,0 +1,58 @@
+SymPy Stats 
+===========
+
+.. automodule:: sympy.stats
+
+Interface
+^^^^^^^^^
+
+.. autofunction:: P
+.. autofunction:: E
+.. autofunction:: Density
+.. autofunction:: Given
+.. autofunction:: Where
+.. autofunction:: Var
+.. autofunction:: Std
+.. autofunction:: Sample
+.. autofunction:: sample_iter 
+
+Random Variable Examples
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: Die
+.. autofunction:: Bernoulli 
+.. autofunction:: Coin
+.. autofunction:: FiniteRV
+
+.. autofunction:: Normal
+.. autofunction:: Exponential
+.. autofunction:: Uniform
+.. autofunction:: Pareto
+.. autofunction:: Gamma 
+.. autofunction:: Beta
+
+Mechanics
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. module:: sympy.stats.rv
+
+.. autoclass:: RandomSymbol 
+   :members:
+
+.. autoclass:: PSpace 
+   :members:
+.. autoclass:: ProductPSpace 
+   :members:
+
+.. autoclass:: RandomDomain
+   :members:
+.. autoclass:: ProductDomain 
+   :members:
+.. autoclass:: ConditionalDomain
+   :members:
+
+.. autofunction:: random_symbols
+.. autofunction:: pspace 
+.. autofunction:: rs_swap
+.. autofunction:: random_symbols
+.. autofunction:: random_symbols
