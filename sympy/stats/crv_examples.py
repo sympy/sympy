@@ -19,6 +19,8 @@ import random
 
 oo = S.Infinity
 
+__all__ = ['Normal', 'Exponential', 'Pareto', 'Beta', 'Gamma', 'Uniform']
+
 class NormalPSpace(SingleContinuousPSpace):
     def __new__(cls, mean, std, symbol = None):
 

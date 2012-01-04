@@ -29,8 +29,16 @@ Where(condition) -- Domain of where the condition might be true
 -erf(sqrt(2)/2)/2 + 1/2
 """
 
-from rv import pspace, random_symbols
-from rv_interface import (P, E, Density, Where, Given, CDF, Var, Std, Covar,
-        Skewness, dependent, independent, Sample, sample_iter)
-from frv_examples import Die, Bernoulli, Coin, FiniteRV
-from crv_examples import Normal, Exponential, Gamma, Beta, Pareto, Uniform
+__all__ = []
+
+import rv_interface
+from rv_interface import *
+__all__.extend(rv_interface.__all__)
+
+import frv_examples
+from frv_examples import *
+__all__.extend(frv_examples.__all__)
+
+import crv_examples
+from crv_examples import *
+__all__.extend(crv_examples.__all__)

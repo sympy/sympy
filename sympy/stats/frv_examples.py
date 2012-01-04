@@ -12,6 +12,8 @@ Coin
 from sympy.stats.frv import SingleFinitePSpace, create_SingleFinitePSpace
 from sympy import S, sympify, Rational
 
+__all__ = ['FiniteRV', 'Die', 'Bernoulli', 'Coin']
+
 def FiniteRV(density, symbol=None):
     """
     Create a Finite Random Variable given a dict representing the density
@@ -170,6 +172,3 @@ def Coin(p=S.Half, symbol=None):
 
     """
     return CoinPSpace(p, symbol).value
-
-
-

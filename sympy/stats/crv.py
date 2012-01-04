@@ -260,4 +260,3 @@ def reduce_poly_inequalities_wrap(condition, var):
         for i in intervals:
             I = I.intersect(i)
         return I
-

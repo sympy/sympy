@@ -1,5 +1,9 @@
-from rv import P, E, Density, Where, Given, pspace, CDF, Sample, sample_iter
+from rv import (P, E, Density, Where, Given, pspace, CDF, Sample, sample_iter, random_symbols)
 from sympy import sqrt
+
+__all__ = ['P', 'E', 'Density', 'Where', 'Given', 'Sample', 'CDF', 'pspace',
+        'sample_iter', 'Var', 'Std', 'Skewness', 'Covar', 'dependent',
+        'independent', 'random_symbols']
 
 def variance(X, given=None, **kwargs):
     """Variance of a random expression.
