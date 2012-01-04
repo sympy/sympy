@@ -16,7 +16,8 @@ from sympy.core.compatibility import iterable, is_sequence, SymPyDeprecationWarn
 from sympy.core.sympify import sympify
 from sympy.core import C, S, Add, Symbol, Wild, Equality, Dummy, Basic
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
-                          Derivative, AppliedUndef, UndefinedFunction, nfloat)
+                          Derivative, AppliedUndef, UndefinedFunction, nfloat,
+                          count_ops)
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
@@ -929,7 +930,7 @@ def _solve(f, *symbols, **flags):
             bases, qs = zip(*[_as_base_q(g) for g in gens])
             bases = set(bases)
             if len(bases) > 1:
-                funcs = set(b.func for b in bases)
+                funcs = set(b.func for b in bases if b.is_Function)
 
                 trig = set([cos, sin, tan, cot])
                 other = funcs - trig
@@ -940,6 +941,28 @@ def _solve(f, *symbols, **flags):
                 other = funcs - trigh
                 if not other and len(funcs.intersection(trigh)) > 1:
                     return _solve(f_num.rewrite(tanh), symbol, **flags)
+
+                # just a simple case - see if replacement of single function
+                # clears all symbol-dependent functions, e.g.
+                # log(x) - log(log(x) - 1) - 3 can be solved even though it has
+                # two generators.
+
+                funcs = [f for f in bases if f.is_Function]
+                if funcs:
+                    funcs.sort(key=count_ops) # put shallowest function first
+                    f1 = funcs[0]
+                    t = Dummy('t')
+                    # perform the substitution
+                    ftry = f_num.subs(f1, t)
+
+                    # if no Functions left, we can proceed with usual solve
+                    if not ftry.has(symbol):
+                        cv_sols = _solve(ftry, t)
+                        cv_inv = _solve(t - f1, symbol)[0]
+                        sols = list()
+                        for sol in cv_sols:
+                            sols.append(cv_inv.subs(t, sol))
+                        return sols
 
                 msg = 'multiple generators %s' % gens
 
@@ -1677,37 +1700,6 @@ def _tsolve(eq, sym, **flags):
     rhs, lhs = _invert(eq, sym)
 
     if lhs.is_Add:
-        # just a simple case - we do variable substitution for first function,
-        # and if it removes all functions - let's call solve.
-        #      x    -x                   -1
-        # UC: e  + e   = y      ->  t + t   = y
-        t = Dummy('t')
-
-        # find first term which is a Function
-        for f1 in lhs.args:
-            if f1.is_Function:
-                ok = True
-                break
-        else:
-            ok = False # didn't find a function
-        if ok:
-            # perform the substitution
-            lhs_ = lhs.subs(f1, t)
-
-            # if no Functions left, we can proceed with usual solve
-            if not (lhs_.is_Function or
-                    any(term.is_Function for term in lhs_.args)):
-                cv_sols = _solve(lhs_ - rhs, t)
-                for sol in cv_sols:
-                    if sol.has(sym):
-                        # there is more than one function
-                        break
-                else:
-                    cv_inv = _solve(t - f1, sym)[0]
-                    sols = list()
-                    for sol in cv_sols:
-                        sols.append(cv_inv.subs(t, sol))
-                    return sols
         # it's time to try factoring
         fac = factor(lhs - rhs)
         if fac.is_Mul:
@@ -1715,7 +1707,8 @@ def _tsolve(eq, sym, **flags):
 
     elif lhs.is_Pow:
         if lhs.exp.is_Integer:
-            return _solve(lhs - rhs, sym)
+            if lhs - rhs != eq:
+                return _solve(lhs - rhs, sym)
         elif sym not in lhs.exp.free_symbols:
             return _solve(lhs.base - rhs**(1/lhs.exp), sym)
         elif not rhs and sym in lhs.exp.free_symbols:

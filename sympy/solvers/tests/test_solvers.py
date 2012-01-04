@@ -877,3 +877,5 @@ def test_check_assumptions():
 def test_solve_abs():
     assert solve(abs(x - 7) - 8) == [-1, 15]
 
+def test_issue_2957():
+    raises(NotImplementedError, 'solve((tanh(x+3)*tanh(x-3)+1)**2)')
