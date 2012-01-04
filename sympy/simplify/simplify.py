@@ -2662,6 +2662,8 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     function, we get a completely different result that is still different
     from the input expression by doing this.
     """
+    from sympy.simplify.hyperexpand import hyperexpand
+
     expr = sympify(expr)
 
     if not isinstance(expr, Basic): # XXX: temporary hack
@@ -2702,6 +2704,9 @@ def simplify(expr, ratio=1.7, measure=count_ops):
 
     if not isinstance(expr, Basic): # XXX: temporary hack
         return expr
+
+    # hyperexpand automatically only works on hypergeometric terms
+    expr = hyperexpand(expr)
 
     if expr.has(C.TrigonometricFunction):
         expr = trigsimp(expr)
