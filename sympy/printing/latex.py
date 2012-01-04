@@ -621,8 +621,8 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_binomial(self, expr, exp=None):
-        tex = r"{{%s}\choose{%s}}" % (self._print(expr.args[0]),
-                                      self._print(expr.args[1]))
+        tex = r"{\binom{%s}{%s}}" % (self._print(expr.args[0]),
+                                     self._print(expr.args[1]))
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
