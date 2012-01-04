@@ -668,7 +668,7 @@ class Union(Set):
         args = list(args)
         def flatten(arg):
             if arg == S.EmptySet:
-               return []
+                return []
             if isinstance(arg, Set):
                 if arg.is_Union:
                     return sum(map(flatten, arg.args), [])

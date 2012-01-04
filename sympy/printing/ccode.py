@@ -200,8 +200,8 @@ class CCodePrinter(CodePrinter):
         """Accepts a string of code or a list of code lines"""
 
         if isinstance(code, basestring):
-           code_lines = self.indent_code(code.splitlines(True))
-           return ''.join(code_lines)
+            code_lines = self.indent_code(code.splitlines(True))
+            return ''.join(code_lines)
 
         tab = "   "
         inc_token = ('{', '(', '{\n', '(\n')

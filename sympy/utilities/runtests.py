@@ -565,7 +565,7 @@ class SymPyTests(object):
                                                    inspect.getsourcefile(gl[f]) == pytestfile or
                                                    inspect.getsourcefile(gl[f]) == pytestfile2)]
             if slow:
-               funcs = [f for f in funcs if getattr(f, '_slow', False)]
+                funcs = [f for f in funcs if getattr(f, '_slow', False)]
             # Sorting of XFAILed functions isn't fixed yet :-(
             funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
             i = 0

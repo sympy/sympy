@@ -1628,8 +1628,8 @@ def _tsolve(eq, sym, **flags):
             inv = _solve(ieq, sym, **flags)
             result = []
             for s in sol:
-              for i in inv:
-                  result.append(i.subs(isym, s))
+                for i in inv:
+                    result.append(i.subs(isym, s))
             return result
         else:
             return _solve(eq, sym, **flags)

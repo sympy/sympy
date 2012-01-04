@@ -124,7 +124,7 @@ class IntegralTransform(Function):
                     x = [x]
                 ress.append(x[0])
                 if len(x) > 1:
-                   extra += [x[1:]]
+                    extra += [x[1:]]
             res = Add(*ress)
             if not extra:
                 return res
@@ -602,7 +602,7 @@ def _rewrite_gamma(f, s, a, b):
             args += [(sin(pi/2 - a, evaluate=False), is_numer),
                      (sin(a, evaluate=False), not is_numer)]
         else:
-           raise exception(fact)
+            raise exception(fact)
 
     fac *= Mul(*facs)/Mul(*dfacs)
 

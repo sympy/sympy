@@ -451,8 +451,9 @@ class LatexPrinter(Printer):
 
             if can_fold_brackets:
                 if func in accepted_latex_functions:
-                    name += r" {%s}" # Wrap argument safely to avoid parse-time conflicts
-                                     # with the function name itself
+                    # Wrap argument safely to avoid parse-time conflicts
+                    # with the function name itself
+                    name += r" {%s}"
                 else:
                     name += r"%s"
             else:

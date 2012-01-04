@@ -1092,17 +1092,17 @@ don\'t match.")
         n = self.size
         rank = 0
         for j in range(1, n):
-           k = 1
-           i = 0
-           while perm[i] != j:
-               if perm[i] < j:
-                   k += 1
-               i += 1
-           j1 = j + 1
-           if rank % 2 == 0:
-               rank = j1*rank + j1 - k
-           else:
-               rank = j1*rank + k - 1
+            k = 1
+            i = 0
+            while perm[i] != j:
+                if perm[i] < j:
+                    k += 1
+                i += 1
+            j1 = j + 1
+            if rank % 2 == 0:
+                rank = j1*rank + j1 - k
+            else:
+                rank = j1*rank + k - 1
         return rank
 
     @classmethod
@@ -1172,12 +1172,12 @@ don\'t match.")
                     pi[st+d], pi[st+d+1] = pi[st+d+1], pi[st+d]
                     done = True
             else:
-               if d == 0:
-                   m -= 1
-                   st += 1
-               else:
-                   pi[st+d], pi[st+d-1] = pi[st+d-1], pi[st+d]
-                   done = True
+                if d == 0:
+                    m -= 1
+                    st += 1
+                else:
+                    pi[st+d], pi[st+d-1] = pi[st+d-1], pi[st+d]
+                    done = True
         if m == 0:
             return None
         return _new_from_array_form(pi)

@@ -77,7 +77,7 @@ def _create_lookup_table(table):
     # 12
     def A1(r, sign, nu): return pi**(-S(1)/2)*(-sign*nu/2)**(1-2*r)
     def tmpadd(r, sgn):
-             # XXX the a**2 is bad for matching
+        # XXX the a**2 is bad for matching
         add((sqrt(a**2 + t) + sgn*a)**b/(a**2+t)**r,
             [(1 + b)/2, 1-2*r + b/2], [],
             [(b - sgn*b)/2], [(b + sgn*b)/2], t/a**2,
@@ -562,7 +562,7 @@ def _check_antecedents_1(g, x, helper=False):
     case_extra = []
     case_extra += [Eq(p, q), Eq(delta, 0), Eq(arg(eta), 0), Ne(eta, 0)]
     if not helper:
-       case_extra += [cond_3]
+        case_extra += [cond_3]
     s = []
     for a, b in zip(g.ap, g.bq):
         s += [b - a]
@@ -797,14 +797,14 @@ def _check_antecedents(g1, g2, x):
     for cond, i in [(c1, 1), (c2, 2), (c3, 3), (c4, 4), (c5, 5), (c6, 6),
                     (c7, 7), (c8, 8), (c9, 9), (c10, 10), (c11, 11),
                     (c12, 12), (c13, 13), (c14, 14), (c15, 15)]:
-       _debug('  c%s:' % i, cond)
+        _debug('  c%s:' % i, cond)
 
 
     # We will return Or(*conds)
     conds = []
 
     def pr(count):
-      _debug('  case %s:' % count, conds[-1])
+        _debug('  case %s:' % count, conds[-1])
     conds += [And(m*n*s*t != 0, bstar > 0, cstar > 0, c1, c2, c3, c10, c12)] #1
     pr(1)
     conds += [And(Eq(u, v), Eq(bstar, 0), cstar > 0, sigma > 0, re(rho) < 1,
@@ -1597,7 +1597,7 @@ def meijerint_inversion(f, x, t):
                     except ValueError:
                         b = 0
                     if b == 1:
-                       exponentials.append(a*log(arg.base))
+                        exponentials.append(a*log(arg.base))
                 newargs.append(arg)
             else:
                 newargs.append(arg)
