@@ -23,6 +23,7 @@ class InnerProduct(Expr):
 
     Parameters
     ==========
+
     bra : BraBase or subclass
         The bra on the left side of the inner product.
     ket : KetBase or subclass

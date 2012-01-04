@@ -42,6 +42,7 @@ def gf_crt(U, M, K=None):
 
     See Also
     ========
+
     sympy.ntheory.modular.crt : a higher level crt routine
     sympy.ntheory.modular.solve_congruence
 
@@ -62,6 +63,7 @@ def gf_crt1(M, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_crt1
 
@@ -84,6 +86,7 @@ def gf_crt2(U, M, p, E, S, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_crt2
 
@@ -110,6 +113,7 @@ def gf_int(a, p):
 
     Examples
     ========
+
     >>> from sympy.polys.galoistools import gf_int
 
     >>> gf_int(2, 7)
@@ -129,6 +133,7 @@ def gf_degree(f):
 
     Examples
     ========
+
     >>> from sympy.polys.galoistools import gf_degree
 
     >>> gf_degree([1, 1, 2, 0])
@@ -145,6 +150,7 @@ def gf_LC(f, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_LC
 
@@ -163,6 +169,7 @@ def gf_TC(f, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_TC
 
@@ -183,6 +190,7 @@ def gf_strip(f):
 
     Examples
     ========
+
     >>> from sympy.polys.galoistools import gf_strip
 
     >>> gf_strip([0, 0, 0, 3, 0, 1])
@@ -208,6 +216,7 @@ def gf_trunc(f, p):
 
     Examples
     ========
+
     >>> from sympy.polys.galoistools import gf_trunc
 
     >>> gf_trunc([7, -2, 3], 5)
@@ -222,6 +231,7 @@ def gf_normal(f, p, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_normal
 
@@ -238,6 +248,7 @@ def gf_convert(f, p, K0, K1):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.galoistools import gf_convert
 
@@ -254,6 +265,7 @@ def gf_from_dict(f, p, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_from_dict
 
@@ -281,6 +293,7 @@ def gf_to_dict(f, p, symmetric=True):
 
     Examples
     ========
+
     >>> from sympy.polys.galoistools import gf_to_dict
 
     >>> gf_to_dict([4, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4], 5)
@@ -307,6 +320,7 @@ def gf_from_int_poly(f, p):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_from_int_poly
 
@@ -323,6 +337,7 @@ def gf_to_int_poly(f, p, symmetric=True):
 
     Examples
     ========
+
     >>> from sympy.polys.galoistools import gf_to_int_poly
 
     >>> gf_to_int_poly([2, 3, 3], 5)
@@ -412,6 +427,7 @@ def gf_mul_ground(f, a, p, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_mul_ground
 
@@ -430,6 +446,7 @@ def gf_quo_ground(f, a, p, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_quo_ground
 
@@ -589,6 +606,7 @@ def gf_add_mul(f, g, h, p, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_add_mul
     >>> gf_add_mul([3, 2, 4], [2, 2, 2], [1, 4], 5, ZZ)
@@ -662,7 +680,8 @@ def gf_div(f, g, p, K):
        >>> gf_add_mul([1], [1, 1], [1, 1, 0], 2, ZZ)
        [1, 0, 1, 1]
 
-    **References**
+    References
+    ==========
 
     1. [Monagan93]_
     2. [Gathen99]_
@@ -868,7 +887,8 @@ def gf_pow_mod(f, n, g, p, K):
     >>> gf_pow_mod([3, 2, 4], 3, [1, 1], 5, ZZ)
     []
 
-    **References**
+    References
+    ==========
 
     1. [Gathen99]_
 
@@ -988,7 +1008,8 @@ def gf_gcdex(f, g, p, K):
        >>> gf_add(S, T, 11, ZZ) == [1, 7]
        True
 
-    **References**
+    References
+    ==========
 
     1. [Gathen99]_
 
@@ -1198,7 +1219,8 @@ def gf_trace_map(a, b, c, n, f, p, K):
     >>> gf_trace_map([1, 2], [4, 4], [1, 1], 4, [3, 2, 4], 5, ZZ)
     ([1, 3], [1, 3])
 
-    **References**
+    References
+    ==========
 
     1. [Gathen92]_
 
@@ -1454,7 +1476,8 @@ def gf_sqf_list(f, p, K, all=False):
        >>> gf_pow([1, 1], 11, 11, ZZ) == f
        True
 
-    **References**
+    References
+    ==========
 
     1. [Geddes92]_
 
@@ -1679,7 +1702,8 @@ def gf_ddf_zassenhaus(f, p, K):
     factorization into irreducibles, use equal degree factorization
     procedure (EDF) with each of the factors.
 
-    **References**
+    References
+    ==========
 
     1. [Gathen99]_
     2. [Geddes92]_
@@ -1723,7 +1747,8 @@ def gf_edf_zassenhaus(f, n, p, K):
        >>> gf_edf_zassenhaus([1,1,1,1], 1, 5, ZZ)
        [[1, 1], [1, 2], [1, 3]]
 
-    **References**
+    References
+    ==========
 
     1. [Gathen99]_
     2. [Geddes92]_
@@ -1782,7 +1807,8 @@ def gf_ddf_shoup(f, p, K):
     >>> gf_ddf_shoup(f, 3, ZZ)
     [([1, 1, 0], 1), ([1, 1, 0, 1, 2], 2)]
 
-    **References**
+    References
+    ==========
 
     1. [Kaltofen98]_
     2. [Shoup95]_
@@ -1854,7 +1880,8 @@ def gf_edf_shoup(f, n, p, K):
     >>> gf_edf_shoup([1, 2837, 2277], 1, 2917, ZZ)
     [[1, 852], [1, 1985]]
 
-    **References**
+    References
+    ==========
 
     1. [Shoup91]_
     2. [Gathen92]_
@@ -2016,7 +2043,8 @@ def gf_factor(f, p, K):
     one, set ``GF_FACTOR_METHOD`` with one of ``berlekamp``, ``zassenhaus`` or
     ``shoup`` values.
 
-    **References**
+    References
+    ==========
 
     1. [Gathen99]_
 

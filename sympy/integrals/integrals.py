@@ -992,7 +992,8 @@ def integrate(*args, **kwargs):
        or use all available methods (in order as described above). It defailts
        to None.
 
-       **Examples**
+       Examples
+       ========
 
        >>> from sympy import integrate, log, exp, oo
        >>> from sympy.abc import a, x, y

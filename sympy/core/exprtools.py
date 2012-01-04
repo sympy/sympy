@@ -423,6 +423,7 @@ def factor_terms(expr, radical=False):
 
     Examples
     ========
+
     >>> from sympy import factor_terms, Symbol
     >>> from sympy.abc import x, y
     >>> factor_terms(x + x*(2 + 4*y)**3)

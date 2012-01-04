@@ -28,6 +28,7 @@ class Add(AssocOp):
 
         See also
         ========
+
         sympy.core.mul.Mul.flatten
 
         """
@@ -248,6 +249,7 @@ class Add(AssocOp):
 
         Examples
         ========
+
         >>> from sympy.abc import a, x
         >>> (3*x + a*x + 4).as_coefficients_dict()
         {1: 4, x: 3, a*x: 1}
@@ -278,6 +280,7 @@ class Add(AssocOp):
 
         Examples
         ========
+
         >>> from sympy.abc import x, y
         >>> (7 + 3*x).as_coeff_add()
         (7, (3*x,))

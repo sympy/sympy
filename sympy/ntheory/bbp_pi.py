@@ -71,6 +71,7 @@ def pi_hex_digits(n):
 
     Examples
     ========
+
     >>> from sympy.ntheory.bbp_pi import pi_hex_digits
     >>> pi_hex_digits(0)
     '3243f6a8885a30'

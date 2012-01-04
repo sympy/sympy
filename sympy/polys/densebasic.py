@@ -630,6 +630,7 @@ def dmp_nth(f, n, u, K):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_nth
 

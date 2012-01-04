@@ -54,6 +54,7 @@ def __cacheit(func):
 
        Examples
        ========
+
        >>> from sympy.core.cache import cacheit
        >>> @cacheit
        ... def f(a,b):

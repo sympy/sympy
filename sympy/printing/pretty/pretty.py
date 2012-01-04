@@ -1383,6 +1383,7 @@ def pretty_print(expr, **settings):
 
     Parameters
     ==========
+
     expr : expression
         the expression to print
     wrap_line : bool, optional

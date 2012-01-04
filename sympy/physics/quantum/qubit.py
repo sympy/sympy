@@ -122,6 +122,7 @@ class Qubit(QubitState, Ket):
 
     Parameters
     ==========
+
     values : list, str
         The qubit values as a list of ints ([0,0,0,1,1,]) or a string ('011').
 
@@ -211,11 +212,13 @@ class QubitBra(QubitState, Bra):
 
     Parameters
     ==========
+
     values : list, str
         The qubit values as a list of ints ([0,0,0,1,1,]) or a string ('011').
 
     Examples
     ========
+
     See ``Qubit`` for examples.
 
     """
@@ -282,6 +285,7 @@ class IntQubit(IntQubitState, Qubit):
 
     Parameters
     ==========
+
     values : int, tuple
         If a single argument, the integer we want to represent in the qubit
         values. This integer will be represented using the fewest possible
@@ -425,6 +429,7 @@ def measure_all(qubit, format='sympy', normalize=True):
 
     Parameters
     ==========
+
     qubit : Qubit, Add
         The qubit to measure. This can be any Qubit or a linear combination
         of them.
@@ -435,6 +440,7 @@ def measure_all(qubit, format='sympy', normalize=True):
 
     Returns
     =======
+
     result : list
         A list that consists of primitive states and their probabilities.
 
@@ -479,6 +485,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
 
     Parameters
     ==========
+
     qubits : Qubit
         The qubit to measure.  This can be any Qubit or a linear combination
         of them.
@@ -491,6 +498,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
 
     Returns
     =======
+
     result : list
         A list that consists of primitive states and their probabilities.
 

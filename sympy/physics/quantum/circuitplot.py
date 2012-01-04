@@ -204,6 +204,7 @@ else:
 
         Parameters
         ==========
+
         c : circuit
             The circuit to plot. Should be a product of Gate instances.
         nqubits : int

@@ -36,6 +36,7 @@ class ExpBase(Function):
 
         Examples
         ========
+
         >>> from sympy.functions import exp
         >>> from sympy.abc import x
         >>> exp(-x).as_numer_denom()
@@ -110,6 +111,7 @@ class exp_polar(ExpBase):
 
     See also
     ========
+
     sympy.simplify.simplify.powsimp
     sympy.functions.elementary.complexes.polar_lift
     sympy.functions.elementary.complexes.periodic_argument
@@ -140,6 +142,7 @@ class exp(ExpBase):
 
     See Also
     ========
+
     log
     """
 
@@ -259,6 +262,7 @@ class exp(ExpBase):
 
         Examples
         ========
+
         >>> from sympy import I
         >>> from sympy.abc import x
         >>> from sympy.functions import exp
@@ -273,6 +277,7 @@ class exp(ExpBase):
 
         See Also
         ========
+
         sympy.functions.elementary.complexes.re
         sympy.functions.elementary.complexes.im
         """
@@ -396,6 +401,7 @@ class log(Function):
 
     See Also
     ========
+
     exp
     """
 
@@ -535,6 +541,7 @@ class log(Function):
 
         Examples
         ========
+
         >>> from sympy import I
         >>> from sympy.abc import x
         >>> from sympy.functions import log

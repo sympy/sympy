@@ -1309,6 +1309,7 @@ class Atom(Basic):
 
     Examples
     ========
+
     Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """

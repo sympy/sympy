@@ -19,6 +19,7 @@ class Point(GeometryEntity):
 
     Parameters
     ==========
+
     coords : sequence of 2 coordinate values.
 
     Attributes
@@ -29,6 +30,7 @@ class Point(GeometryEntity):
 
     Raises
     ======
+
     NotImplementedError
         When trying to create a point with more than two dimensions.
         When `intersection` is called with object other than a Point.
@@ -41,10 +43,12 @@ class Point(GeometryEntity):
 
     See Also
     ========
+
     sympy.geometry.line.Segment : Connects two Points
 
     Examples
     ========
+
     >>> from sympy.geometry import Point
     >>> from sympy.abc import x
     >>> Point(1, 2)
@@ -87,14 +91,17 @@ class Point(GeometryEntity):
 
         Parameters
         ==========
+
         points : sequence of Point
 
         Returns
         =======
+
         is_collinear : boolean
 
         Notes
         =====
+
         Slope is preserved everywhere on a line, so the slope between
         any two points on the line should be the same. Take the first
         two points, p1 and p2, and create a translated point v1
@@ -115,10 +122,12 @@ class Point(GeometryEntity):
 
         See Also
         ========
+
         sympy.geometry.line.Line
 
         Examples
         ========
+
         >>> from sympy import Point
         >>> from sympy.abc import x
         >>> p1, p2 = Point(0, 0), Point(1, 1)
@@ -157,19 +166,23 @@ class Point(GeometryEntity):
 
         Parameters
         ==========
+
         points : sequence of Points
 
         Returns
         =======
+
         is_concyclic : boolean
             True if points are concyclic, False otherwise.
 
         See Also
         ========
+
         sympy.geometry.ellipse.Circle
 
         Notes
         =====
+
         No points are not considered to be concyclic. One or two points
         are definitely concyclic and three points are conyclic iff they
         are not collinear.
@@ -182,6 +195,7 @@ class Point(GeometryEntity):
 
         Examples
         ========
+
         >>> from sympy.geometry import Point
         >>> p1, p2 = Point(-1, 0), Point(1, 0)
         >>> p3, p4 = Point(0, 1), Point(-1, 2)
@@ -239,18 +253,22 @@ class Point(GeometryEntity):
 
         Parameters
         ==========
+
         p : Point
 
         Returns
         =======
+
         distance : number or symbolic expression.
 
         See Also
         ========
+
         sympy.geometry.line.Segment.length
 
         Examples
         ========
+
         >>> from sympy.geometry import Point
         >>> p1, p2 = Point(1, 1), Point(4, 5)
         >>> p1.distance(p2)
@@ -269,18 +287,22 @@ class Point(GeometryEntity):
 
         Parameters
         ==========
+
         p : Point
 
         Returns
         =======
+
         midpoint : Point
 
         See Also
         ========
+
         sympy.geometry.line.Segment.midpoint
 
         Examples
         ========
+
         >>> from sympy.geometry import Point
         >>> p1, p2 = Point(1, 1), Point(13, 5)
         >>> p1.midpoint(p2)
@@ -297,10 +319,12 @@ class Point(GeometryEntity):
 
         Returns
         =======
+
         point : Point
 
         Examples
         ========
+
         >>> from sympy import Point, Rational
         >>> p1 = Point(Rational(1, 2), Rational(3, 2))
         >>> p1
@@ -316,19 +340,23 @@ class Point(GeometryEntity):
 
         Parameters
         ==========
+
         other : Point
 
         Returns
         =======
+
         intersection : list of Points
 
         Notes
         =====
+
         The return value will either be an empty list if there is no
         intersection, otherwise it will contain this point.
 
         Examples
         ========
+
         >>> from sympy import Point
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(0, 0)
         >>> p1.intersection(p2)

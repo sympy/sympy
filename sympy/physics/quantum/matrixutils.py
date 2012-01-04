@@ -147,11 +147,13 @@ def _sympy_tensor_product(*matrices):
 
     Parameters
     ==========
+
     matrices : tuple of Matrix instances
         The matrices to take the tensor product of.
 
     Returns
     =======
+
     matrix : Matrix
         The tensor product matrix.
 

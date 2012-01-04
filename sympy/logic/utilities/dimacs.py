@@ -14,6 +14,7 @@ def load(s):
 
     Examples
     ========
+
     >>> from sympy.logic.utilities.dimacs import load
     >>> load('1')
     cnf_1

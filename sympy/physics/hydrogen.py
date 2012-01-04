@@ -15,6 +15,7 @@ def R_nl(n, l, r, Z=1):
 
     Examples
     ========
+
     >>> from sympy.physics.hydrogen import R_nl
     >>> from sympy import var
     >>> var("r Z")
@@ -86,6 +87,7 @@ def E_nl(n, Z=1):
 
     Examples
     ========
+
     >>> from sympy import var
     >>> from sympy.physics.hydrogen import E_nl
     >>> var("n Z")
@@ -127,6 +129,7 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
 
     Examples
     ========
+
     >>> from sympy.physics.hydrogen import E_nl_dirac
     >>> E_nl_dirac(1, 0)
     -0.500006656595360

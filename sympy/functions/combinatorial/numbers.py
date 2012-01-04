@@ -48,6 +48,7 @@ class fibonacci(Function):
 
     Examples
     ========
+
     >>> from sympy import fibonacci, Symbol
 
     >>> [fibonacci(x) for x in range(11)]
@@ -63,6 +64,7 @@ class fibonacci(Function):
 
     See Also
     ========
+
     lucas
     """
 
@@ -102,6 +104,7 @@ class lucas(Function):
 
     Examples
     ========
+
     >>> from sympy import lucas
 
     >>> [lucas(x) for x in range(11)]
@@ -114,6 +117,7 @@ class lucas(Function):
 
     See Also
     ========
+
     fibonacci
     """
 
@@ -184,6 +188,7 @@ class bernoulli(Function):
 
     Examples
     ========
+
     >>> from sympy import bernoulli
 
     >>> [bernoulli(n) for n in range(11)]
@@ -199,6 +204,7 @@ class bernoulli(Function):
 
     See Also
     ========
+
     euler, bell
     """
 
@@ -312,6 +318,7 @@ class bell(Function):
 
     Examples
     ========
+
     >>> from sympy import bell, Symbol
 
     >>> [bell(n) for n in range(11)]
@@ -330,6 +337,7 @@ class bell(Function):
 
     See Also
     ========
+
     euler, bernoulli
     """
 
@@ -391,6 +399,7 @@ class harmonic(Function):
 
     Examples
     ========
+
     >>> from sympy import harmonic, oo
 
     >>> [harmonic(n) for n in range(6)]
@@ -455,6 +464,7 @@ class euler(Function):
 
     Examples
     ========
+
     >>> from sympy import Symbol, euler
     >>> [euler(n) for n in range(10)]
     [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
@@ -472,6 +482,7 @@ class euler(Function):
 
     See Also
     ========
+
     bernoulli, bell
     """
 
@@ -534,6 +545,7 @@ class catalan(Function):
 
     Examples
     ========
+
     >>> from sympy import (Symbol, binomial, gamma, hyper, polygamma,
     ...             catalan, diff, combsimp, Rational, I)
 
@@ -594,6 +606,7 @@ class catalan(Function):
 
     See Also
     ========
+
     sympy.functions.combinatorial.factorials.binomial
     """
 

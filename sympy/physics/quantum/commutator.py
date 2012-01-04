@@ -29,6 +29,7 @@ class Commutator(Expr):
 
     Parameters
     ==========
+
     A : Expr
         The first argument of the commutator [A,B].
     B : Expr
@@ -36,6 +37,7 @@ class Commutator(Expr):
 
     Examples
     ========
+
     >>> from sympy import symbols
     >>> from sympy.physics.quantum import Commutator, Dagger
     >>> x, y = symbols('x,y')

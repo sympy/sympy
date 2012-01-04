@@ -116,7 +116,8 @@ def apart_full_decomposition(P, Q):
     performed. The final decomposition is formed in terms of a sum of
     :class:`RootSum` instances.
 
-    **References**
+    References
+    ==========
 
     1. [Bronstein93]_
 

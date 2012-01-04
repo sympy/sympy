@@ -22,6 +22,7 @@ def dpll_satisfiable(expr):
 
     Examples
     ========
+
     >>> from sympy import symbols
     >>> from sympy.abc import A, B
     >>> from sympy.logic.algorithms.dpll import dpll_satisfiable
@@ -142,6 +143,7 @@ class SATSolver(object):
 
         Examples
         ========
+
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> SATSolver([set([-1]), set([1])], set([1]), set([]))._find_model()
         False
@@ -220,6 +222,7 @@ class SATSolver(object):
 
         Examples
         ========
+
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([set([1]), set([2])], set([1, 2]), set([]))
         >>> l._find_model()
@@ -238,6 +241,7 @@ class SATSolver(object):
 
         Examples
         ========
+
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([set([1]), set([-1])], set([1]), set([]))
         >>> l._find_model()
@@ -257,6 +261,7 @@ class SATSolver(object):
 
         Examples
         ========
+
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
         ... set([3, -2])], set([1, 2, 3]), set([]))
@@ -281,6 +286,7 @@ class SATSolver(object):
 
         Examples
         ========
+
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
         ... set([3, -2])], set([1, 2, 3]), set([]))
@@ -328,6 +334,7 @@ class SATSolver(object):
 
         Examples
         ========
+
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
         ... set([3, -2])], set([1, 2, 3]), set([]))
@@ -367,6 +374,7 @@ class SATSolver(object):
 
         Examples
         ========
+
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
         ... set([3, -2])], set([1, 2, 3]), set([]))
@@ -425,6 +433,7 @@ class SATSolver(object):
 
         Examples
         ========
+
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
         ... set([3, -2])], set([1, 2, 3]), set([]))
@@ -448,6 +457,7 @@ class SATSolver(object):
 
         Examples
         ========
+
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
         ... set([3, -2])], set([1, 2, 3]), set([]))
@@ -481,6 +491,7 @@ class SATSolver(object):
 
         Examples
         ========
+
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
         ... set([3, -2])], set([1, 2, 3]), set([]))
@@ -502,6 +513,7 @@ class SATSolver(object):
 
         Examples
         ========
+
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
         ... set([3, -2])], set([1, 2, 3]), set([]))
@@ -532,6 +544,7 @@ class SATSolver(object):
 
         Examples
         ========
+
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
         ... set([3, -2])], set([1, 2, 3]), set([]))
@@ -567,6 +580,7 @@ class SATSolver(object):
 
         Examples
         ========
+
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
         ... set([3, -2])], set([1, 2, 3]), set([]))

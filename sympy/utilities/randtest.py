@@ -44,6 +44,7 @@ def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
 
     Examples
     ========
+
     >>> from sympy import sin, cos
     >>> from sympy.abc import x
     >>> from sympy.utilities.randtest import test_derivative_numerically as td

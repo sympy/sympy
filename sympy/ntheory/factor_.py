@@ -35,6 +35,7 @@ def smoothness(n):
 
     See Also
     ========
+
     factorint, smoothness_p
     """
 
@@ -99,6 +100,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
 
     See Also
     ========
+
     factorint, smoothness
     """
     from sympy.utilities import flatten
@@ -146,6 +148,7 @@ def trailing(n):
 
     Examples
     ========
+
     >>> from sympy import trailing
     >>> trailing(128)
     7
@@ -181,6 +184,7 @@ def multiplicity(p, n):
 
     Examples
     ========
+
     >>> from sympy.ntheory import multiplicity
     >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
     [0, 1, 2, 3, 3]
@@ -234,6 +238,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
 
     Examples
     ========
+
     >>> from sympy import perfect_power
     >>> perfect_power(16)
     (2, 4)
@@ -375,6 +380,7 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
 
     Examples
     ========
+
     >>> from sympy import pollard_rho
     >>> n=16843009
     >>> F=lambda x:(2048*pow(x,2,n) + 32767) % n
@@ -393,6 +399,7 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
 
     References
     ==========
+
     - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
       A Computational Perspective", Springer, 2nd edition, 229-231
     - http://www.csh.rit.edu/~pat/math/quickies/rho/
@@ -501,6 +508,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
 
     Examples
     ========
+
     With the default smoothness bound, this number can't be cracked:
 
         >>> from sympy.ntheory import pollard_pm1, primefactors
@@ -1162,6 +1170,7 @@ def primefactors(n, limit=None, verbose=False):
 
     Examples
     ========
+
     >>> from sympy.ntheory import primefactors, factorint, isprime
     >>> primefactors(6)
     [2, 3]
@@ -1182,6 +1191,7 @@ def primefactors(n, limit=None, verbose=False):
 
     See Also
     ========
+
     divisors
     """
     n = int(n)
@@ -1223,6 +1233,7 @@ def divisors(n, generator=False):
 
     Examples
     ========
+
     >>> from sympy import divisors, divisor_count
     >>> divisors(24)
     [1, 2, 3, 4, 6, 8, 12, 24]
@@ -1237,6 +1248,7 @@ def divisors(n, generator=False):
 
     See Also
     ========
+
     primefactors, factorint, divisor_count
     """
 
@@ -1269,6 +1281,7 @@ def divisor_count(n, modulus=1):
 
     See Also
     ========
+
     factorint, divisors, totient
     """
 
@@ -1294,6 +1307,7 @@ def totient(n):
 
     See Also
     ========
+
     divisor_count
     """
     if n < 1:
