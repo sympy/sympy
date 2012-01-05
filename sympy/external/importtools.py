@@ -131,7 +131,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
             if warn_old_version:
                 # Attempt to create a pretty string version of the version
                 if isinstance(min_module_version, basestring):
-                   verstr = min_module_version
+                    verstr = min_module_version
                 elif isinstance(min_module_version, (tuple, list)):
                     verstr = '.'.join(map(str, min_module_version))
                 else:

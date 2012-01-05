@@ -100,9 +100,9 @@ class OracleGate(Gate):
         sub_args = args[0],
         sub_args = UnitaryOperator._eval_args(sub_args)
         if not sub_args[0].is_Integer:
-           raise TypeError('Integer expected, got: %r' % sub_args[0])
+            raise TypeError('Integer expected, got: %r' % sub_args[0])
         if not callable(args[1]):
-           raise TypeError('Callable expected, got: %r' % args[1])
+            raise TypeError('Callable expected, got: %r' % args[1])
         sub_args = UnitaryOperator._eval_args(tuple(range(args[0])))
         return (sub_args, args[1])
 
@@ -191,7 +191,7 @@ class WGate(Gate):
             )
         args = UnitaryOperator._eval_args(args)
         if not args[0].is_Integer:
-           raise TypeError('Integer expected, got: %r' % args[0])
+            raise TypeError('Integer expected, got: %r' % args[0])
         return sympify(tuple(reversed(range(args[0]))))
 
     #-------------------------------------------------------------------------

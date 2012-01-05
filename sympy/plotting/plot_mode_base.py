@@ -330,9 +330,9 @@ class PlotModeBase(PlotMode):
         self._style = v
         #except Exception, e:
             #raise RuntimeError(("Style change failed. "
-                             #"Reason: %s is not a valid "
-                             #"style. Use one of %s.") %
-                             #(str(v), ', '.join(self.styles.iterkeys())))
+            #                 "Reason: %s is not a valid "
+            #                 "style. Use one of %s.") %
+            #                 (str(v), ', '.join(self.styles.iterkeys())))
 
     def _get_color(self):
         return self._color

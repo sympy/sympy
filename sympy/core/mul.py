@@ -904,7 +904,7 @@ class Mul(AssocOp):
                 return l.__add__(0) == r.evalf().__add__(0)
             return False
         if check(lhs, rhs) or check(rhs, lhs):
-           return S.One
+            return S.One
         if lhs.is_Mul and rhs.is_Mul:
             a = list(lhs.args)
             b = [1]

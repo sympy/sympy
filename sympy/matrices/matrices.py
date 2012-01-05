@@ -253,7 +253,7 @@ class Matrix(object):
                 # a2idx inlined
                 if type(j) is not int:
                     try:
-                       j = j.__index__()
+                        j = j.__index__()
                     except AttributeError:
                         raise IndexError("Invalid index a[%r]" % (key,))
 

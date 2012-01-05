@@ -381,7 +381,7 @@ class PrettyPrinter(Printer):
             max_upper = max(max_upper, pretty_upper.height())
 
             if first:
-              sign_height = pretty_sign.height()
+                sign_height = pretty_sign.height()
 
             pretty_sign = prettyForm(*pretty_sign.above(pretty_upper))
             pretty_sign = prettyForm(*pretty_sign.below(pretty_lower))
@@ -429,11 +429,11 @@ class PrettyPrinter(Printer):
                 lines.append("_"*(w) + ' ')
                 lines.append("\%s`" % (' '*(w - 1)))
                 for i in range(1, d):
-                  lines.append('%s\\%s' % (' '*i, ' '*(w - i)))
+                    lines.append('%s\\%s' % (' '*i, ' '*(w - i)))
                 if more:
-                  lines.append('%s)%s' % (' '*(d), ' '*(w - d)))
+                    lines.append('%s)%s' % (' '*(d), ' '*(w - d)))
                 for i in reversed(range(1, d)):
-                  lines.append('%s/%s' % (' '*i, ' '*(w - i)))
+                    lines.append('%s/%s' % (' '*i, ' '*(w - i)))
                 lines.append("/" + "_"*(w - 1) + ',')
                 return d, h + more, lines, 0
             else:

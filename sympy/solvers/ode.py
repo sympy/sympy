@@ -2931,7 +2931,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
 
     if r.get('simplify', True):
         wr = simplify(wr) # We need much better simplification for some ODEs.
-                          # See issue 1563, for example.
+        #                   See issue 1563, for example.
 
         # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1  	
         wr = trigsimp(wr, deep=True, recursive=True)

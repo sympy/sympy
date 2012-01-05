@@ -1641,11 +1641,11 @@ def try_polynomial(ip, z):
     fac = 1
     res = S(1)
     for n in xrange(-a):
-       fac *= z
-       fac /= n + 1
-       for a in ip.ap: fac *= a + n
-       for b in ip.bq: fac /= b + n
-       res += fac
+        fac *= z
+        fac /= n + 1
+        for a in ip.ap: fac *= a + n
+        for b in ip.bq: fac /= b + n
+        res += fac
     return res
 
 collection = None
@@ -1786,11 +1786,13 @@ def devise_plan_meijer(fro, to, z):
             Return an operator if change was possible, else None.
         """
         for idx, (a, b) in enumerate(zip(f, t)):
-            if (a-b).is_integer and (b-a)/diff > 0 and \
-               all(a != x for x in counter):
-                   sh = shifter(idx)
-                   f[idx] += diff
-                   return sh
+            if (
+                (a-b).is_integer and (b-a)/diff > 0 and
+                all(a != x for x in counter)
+            ):
+                sh = shifter(idx)
+                f[idx] += diff
+                return sh
     fan = list(fro.an)
     fap = list(fro.ap)
     fbm = list(fro.bm)
@@ -1912,7 +1914,7 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                 if i in pap:
                     l = len(pap[i])
                 if l + 1 < len(pbm[i]):
-                   return False
+                    return False
         return True
 
     def do_slater(an, bm, ap, bq, z):
