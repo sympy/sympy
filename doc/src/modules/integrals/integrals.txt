@@ -55,14 +55,15 @@ even a few nonelementary integrals (in particular, some integrals involving the 
 Integral Transforms
 -------------------
 
+.. module:: sympy.integrals.transforms
 Sympy has special support for definite integrals, and integral transforms.
 
-.. autofunction:: sympy.integrals.transforms.mellin_transform
-.. autofunction:: sympy.integrals.transforms.inverse_mellin_transform
-.. autofunction:: sympy.integrals.transforms.laplace_transform
-.. autofunction:: sympy.integrals.transforms.inverse_laplace_transform
-.. autofunction:: sympy.integrals.transforms.fourier_transform
-.. autofunction:: sympy.integrals.transforms.inverse_fourier_transform
+.. autofunction:: mellin_transform
+.. autofunction:: inverse_mellin_transform
+.. autofunction:: laplace_transform
+.. autofunction:: inverse_laplace_transform
+.. autofunction:: fourier_transform
+.. autofunction:: inverse_fourier_transform
 
 
 Internals

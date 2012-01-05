@@ -1309,11 +1309,11 @@ def polarify(eq, subs=True, lift=False):
 
     Note also that this function does not promote exp(x) to exp_polar(x).
 
-    If `subs` is True, all symbols which are not already polar will be
+    If ``subs`` is True, all symbols which are not already polar will be
     substituted for polar dummies; in this case the function behaves much
     like posify.
 
-    If `lift` is True, both addition statements and non-polar symbols are
+    If ``lift`` is True, both addition statements and non-polar symbols are
     changed to their polar_lift()ed versions.
     Note that lift=True implies subs=False.
 

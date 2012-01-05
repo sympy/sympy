@@ -8,8 +8,14 @@ class Mod(Function):
     The convention used is the same as python's: the remainder always has the
     same sign as the divisor.
 
+    See Also
+    ========
+
+    sympy.simplify.hyperexpand.Mod1Effective: A specialised class to detect
+        'effective congruence modulo 1'.
+
     Examples
-    --------
+    ========
 
     >>> from sympy.abc import x, y
     >>> x**2 % y

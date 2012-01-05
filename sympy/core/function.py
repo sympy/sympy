@@ -1692,9 +1692,12 @@ def expand_complex(expr, deep=True):
 def expand_power_base(expr, deep=True):
     """
     Wrapper around expand that only uses the power_base hint.
+
     See the expand docstring for more information.
 
-    Example:
+    Examples
+    ========
+
     >>> from sympy import expand_power_base
     >>> from sympy.abc import x, y
     >>> expand_power_base((3*x)**y)

@@ -385,6 +385,7 @@ def _split_mul(f, x):
 def _mul_args(f):
     """
     Return a list ``L`` such that Mul(*L) == f.
+
     If f is not a Mul or Pow, L=[f].
     If f=g**n for an integer n, L=[g]*n.
     If f is a Mul, L comes from applying _mul_args to all factors of f.
@@ -518,6 +519,7 @@ def _is_analytic(f, x):
 def _condsimp(cond):
     """
     Do naive simplifications on ``cond``.
+
     Note that this routine is completely ad-hoc, simplification rules being
     added as need arises rather than following any logical pattern.
 

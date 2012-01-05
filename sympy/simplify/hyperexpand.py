@@ -314,6 +314,7 @@ def debug(*args):
 class Mod1Effective(object):
     """
     Represent an expression 'effectively mod 1'.
+
     This means that Mod1Effective(a) == Mod1Effective(b) if simplify() can
     establish that a-b is an Integer (e.g. 5 or -7, not ``k``).
 
@@ -367,6 +368,8 @@ class IndexPair(object):
 
     def compute_buckets(self, oabuckets=None, obbuckets=None):
         """
+        Partition ``ap`` and ``bq`` Mod1.
+
         Partition parameters ``ap``, ``bq`` into buckets, that is return two dicts
         abuckets, bbuckets such that every key in [ab]buckets is a rational in
         range [0, 1) and the corresponding items are items of ap/bq congruent to
@@ -425,7 +428,9 @@ class IndexPair(object):
 
     def build_invariants(self):
         """
-        Compute the invariant vector of (``ap``, ``bq``), that is:
+        Compute the invariant vector of (``ap``, ``bq``).
+
+        The invariant vector is:
             (gamma, ((s1, n1), ..., (sk, nk)), ((t1, m1), ..., (tr, mr)))
         where gamma is the number of integer a < 0,
               s1 < ... < sk
@@ -503,6 +508,7 @@ class IndexQuadruple(object):
     def compute_buckets(self):
         """
         Compute buckets for the fours sets of parameters.
+
         We guarantee that any two equal Mod1Effective objects returned are actually the
         same, and that the buckets are sorted by real part (an and bq
         descendending, bm and ap ascending).
