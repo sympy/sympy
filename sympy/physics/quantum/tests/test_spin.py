@@ -232,9 +232,38 @@ def test_represent():
 def test_rewrite():
     # Rewrite to same basis
     assert JxBra(1,1).rewrite('Jx') == JxBra(1,1)
+    assert JxBra(j,m).rewrite('Jx') == JxBra(j,m)
     assert JxKet(1,1).rewrite('Jx') == JxKet(1,1)
     assert JxKet(j,m).rewrite('Jx') == JxKet(j,m)
     # Rewriting a normal state
+    # Bra
+    # Numerical
+    assert JxBra(1,1).rewrite('Jy') == -I*JyBra(1,1)
+    assert JxBra(1,0).rewrite('Jy') == JyBra(1,0)
+    assert JxBra(1,-1).rewrite('Jy') == I*JyBra(1,-1)
+    assert JxBra(1,1).rewrite('Jz') == JzBra(1,1)/2+JzBra(1,0)/sqrt(2)+JzBra(1,-1)/2
+    assert JxBra(1,0).rewrite('Jz') == -sqrt(2)*JzBra(1,1)/2+sqrt(2)*JzBra(1,-1)/2
+    assert JxBra(1,-1).rewrite('Jz') == JzBra(1,1)/2-JzBra(1,0)/sqrt(2)+JzBra(1,-1)/2
+    assert JyBra(1,1).rewrite('Jx') == I*JxBra(1,1)
+    assert JyBra(1,0).rewrite('Jx') == JxBra(1,0)
+    assert JyBra(1,-1).rewrite('Jx') == -I*JxBra(1,-1)
+    assert JyBra(1,1).rewrite('Jz') == JzBra(1,1)/2-sqrt(2)*I*JzBra(1,0)/2-JzBra(1,-1)/2
+    assert JyBra(1,0).rewrite('Jz') == -sqrt(2)*I*JzBra(1,1)/2-sqrt(2)*I*JzBra(1,-1)/2
+    assert JyBra(1,-1).rewrite('Jz') == -JzBra(1,1)/2-sqrt(2)*I*JzBra(1,0)/2+JzBra(1,-1)/2
+    assert JzBra(1,1).rewrite('Jx') == JxBra(1,1)/2-sqrt(2)*JxBra(1,0)/2+JxBra(1,-1)/2
+    assert JzBra(1,0).rewrite('Jx') == sqrt(2)*JxBra(1,1)/2-sqrt(2)*JxBra(1,-1)/2
+    assert JzBra(1,-1).rewrite('Jx') == JxBra(1,1)/2+sqrt(2)*JxBra(1,0)/2+JxBra(1,-1)/2
+    assert JzBra(1,1).rewrite('Jy') == JyBra(1,1)/2+sqrt(2)*I*JyBra(1,0)/2-JyBra(1,-1)/2
+    assert JzBra(1,0).rewrite('Jy') == sqrt(2)*I*JyBra(1,1)/2+sqrt(2)*I*JyBra(1,-1)/2
+    assert JzBra(1,-1).rewrite('Jy') == -JyBra(1,1)/2+sqrt(2)*I*JyBra(1,0)/2+JyBra(1,-1)/2
+    # Symbolic
+    assert JxBra(j,m).rewrite('Jy') == Sum(WignerD(j,mi,m,3*pi/2,0,0) * JyBra(j,mi), (mi, -j, j))
+    assert JxBra(j,m).rewrite('Jz') == Sum(WignerD(j,mi,m,0,pi/2,0) * JzBra(j,mi), (mi, -j, j))
+    assert JyBra(j,m).rewrite('Jx') == Sum(WignerD(j,mi,m,0,0,pi/2) * JxBra(j,mi), (mi, -j, j))
+    assert JyBra(j,m).rewrite('Jz') == Sum(WignerD(j,mi,m,3*pi/2,-pi/2,pi/2) * JzBra(j,mi), (mi, -j, j))
+    assert JzBra(j,m).rewrite('Jx') == Sum(WignerD(j,mi,m,0,3*pi/2,0) * JxBra(j,mi), (mi, -j, j))
+    assert JzBra(j,m).rewrite('Jy') == Sum(WignerD(j,mi,m,3*pi/2,pi/2,pi/2) * JyBra(j,mi), (mi, -j, j))
+    # Kets
     # Numerical
     assert JxKet(1,1).rewrite('Jy') == I*JyKet(1,1)
     assert JxKet(1,0).rewrite('Jy') == JyKet(1,0)
@@ -425,10 +454,6 @@ def test_rewrite():
     assert qapply(JzBra(1,-1)*JzKet(1,0).rewrite('Jx')).doit() == 0
     assert qapply(JzBra(1,-1)*JzKet(1,1).rewrite('Jy')) == 0
     assert qapply(JzBra(1,-1)*JzKet(1,0).rewrite('Jy')).doit() == 0
-
-@XFAIL
-def test_rewrite_failing():
-    assert JxBra(j,m).rewrite('Jx') == JxBra(j,m)
 
 def test_uncouple():
     # Numerical
