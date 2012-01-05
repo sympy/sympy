@@ -459,7 +459,6 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
     if sys.version_info[0] < 3:
         text, filename = pdoctest._load_testfile(filename, package, module_relative)
     else:
-        # encoding = None
         text, filename = pdoctest._load_testfile(filename, package, module_relative, encoding)
 
     # If no name was given, then use the file's name.
@@ -482,7 +481,8 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
         runner = SymPyDocTestRunner(verbose=verbose, optionflags=optionflags)
 
     if encoding is not None:
-        text = text.decode(encoding)
+        if sys.version_info[0] < 3:
+            text = text.decode(encoding)
 
     # Read the file, convert it to a test, and run it.
     test = parser.get_doctest(text, globs, name, filename, 0)
