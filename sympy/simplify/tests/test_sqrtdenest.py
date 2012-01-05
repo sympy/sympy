@@ -29,7 +29,7 @@ def test_sqrtdenest2():
     e = sqrt(((1 + sqrt(1 + 2*sqrt(3 + r2 + r5)))**2).expand())
     assert sqrtdenest(e) == 1 + sqrt(1 + 2*sqrt(r2 + r5 + 3))
     assert sqrtdenest(sqrt(5*r3 + 6*r2)) == \
-        r2*root(3, 4) + root(3, 4)**3
+        root(3, 4)**3*(r6 + 3)/3
 
     assert sqrtdenest(sqrt(((1 + r5 + sqrt(1 + r3))**2).expand())) == \
          1 + r5 + sqrt(1 + r3)
@@ -68,12 +68,12 @@ def test_sqrtdenest_fail():
 def test_sqrtdenest_four_terms():
     assert sqrtdenest(sqrt(-4*sqrt(14) - 2*r6 + 4*sqrt(21) + 33)) == \
       -r2 + r3 + 2*r7
-    assert sqrtdenest(sqrt(468*r3 + 3024*r2 + 2912*r6 + 19735)) == \
-      9*r3 + 26 + 56*r6
     assert sqrtdenest(sqrt(-28*r7 - 14*r5 + 4*sqrt(35) + 82)) == \
       -7 + r5 + 2*r7
     assert sqrtdenest(sqrt(6*r2/11 + 2*sqrt(22)/11 + 6*sqrt(11)/11 + 2)) == \
       sqrt(11)*(r2 + 3 + sqrt(11))/11
+    assert sqrtdenest(sqrt(468*r3 + 3024*r2 + 2912*r6 + 19735)) == \
+      9*r3 + 26 + 56*r6
     z = sqrt(-490*r3 - 98*sqrt(115) - 98*sqrt(345) - 2107)
     assert sqrtdenest(z) == sqrt(-1)*(7*r5 + 7*sqrt(15) + 7*sqrt(23))
     z = sqrt(-4*sqrt(14) - 2*r6 + 4*sqrt(21) + 34)
