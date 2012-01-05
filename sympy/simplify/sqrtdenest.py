@@ -150,12 +150,15 @@ def _sqrt_match(p):
         res = (p, S.Zero, S.Zero)
     elif p.is_Add:
         pargs = list(p.args)
-        v = [(sqrt_depth(x), i) for i, x in enumerate(pargs)]
+        # to make the process canonical, the argument is included in the tuple
+        # so when the max is selected, it will be the largest arg having a
+        # given depth
+        v = [(sqrt_depth(x), x, i) for i, x in enumerate(pargs)]
         nmax = max(v)
         if nmax[0] == 0:
             res = []
         else:
-            depth, i = nmax
+            depth, _, i = nmax
             r = pargs.pop(i)
             a = Add._from_args(pargs)
             b = S.One
@@ -222,18 +225,12 @@ def _sqrtdenest34(expr):
 
     """
     from sympy.simplify.simplify import radsimp
-    if not is_sqrt(expr):
-        return expr
-    a_plus_b = expr.base
-    if not (a_plus_b.is_Add and len(a_plus_b.args) > 2):
-        return expr
-    if a_plus_b < 0:
-        return sqrt(-1)*_sqrtdenest34(sqrt(-a_plus_b))
-    args = a_plus_b.args
+    if expr.base < 0:
+        return sqrt(-1)*_sqrtdenest34(sqrt(-expr.base))
+    # a should be > b so we sort; this also makes the process canonical
+    args = sorted(expr.base.args, reverse=True)
     a = Add._from_args(args[:2])
     b = Add._from_args(args[2:])
-    if a < b: # we want a > b; since a + b > 0 then a**2 > b**2, too
-        a, b = b, a
     c = _sqrtdenest1(sqrt(_mexpand(a**2 - b**2)))
     if sqrt_depth(c) > 1:
         return expr
