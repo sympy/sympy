@@ -1715,7 +1715,7 @@ class JzKetCoupled(CoupledSpinState, Ket):
     a state has already been coupled, it is referenced by the smallest index
     that is coupled, so if j_2 and j_4 has already been coupled to some j24,
     then this value can be coupled by referencing it with index 2. The final
-    element of the sublist is the quantum number of the new quantum number. So
+    element of the sublist is the quantum number of the coupled state. So
     putting everything together, into a valid sublist for *jcoupling, if j_1 and
     j_2 are coupled to an angular momentum space with quantum number j12, the
     sublist would be (1,2,j12), N-1 of these sublists are used in the list for
