@@ -459,7 +459,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
     if sys.version_info[0] < 3:
         text, filename = pdoctest._load_testfile(filename, package, module_relative)
     else:
-        encoding = None
+        # encoding = None
         text, filename = pdoctest._load_testfile(filename, package, module_relative, encoding)
 
     # If no name was given, then use the file's name.
