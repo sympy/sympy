@@ -1245,3 +1245,10 @@ def test_polar():
     assert (p*q)**2 == p**2 * q**2
     assert (2*q)**2 == 4 * q**2
     assert ((p*q)**x).expand() == p**x * q**x
+
+def test_issue_2941():
+    a, b = Pow(1, 2, evaluate=False), S.One
+    assert a != b
+    assert b != a
+    assert not (a == b)
+    assert not (b == a)

@@ -490,27 +490,15 @@ class Float(Number):
         except SympifyError:
             return False    # sympy != other  -->  not ==
         if isinstance(other, NumberSymbol):
-            if other.is_irrational: return False
+            if other.is_irrational:
+                return False
             return other.__eq__(self)
-        if isinstance(other, FunctionClass): #cos as opposed to cos(x)
-            return False
         if isinstance(other, Number):
             return bool(mlib.mpf_eq(self._mpf_, other._as_mpf_val(self._prec)))
         return False    # Float != non-Number
 
     def __ne__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return True     # sympy != other
-        if isinstance(other, NumberSymbol):
-            if other.is_irrational: return True
-            return other.__ne__(self)
-        if isinstance(other, FunctionClass): #cos as opposed to cos(x)
-            return True
-        if isinstance(other, Number):
-            return bool(not mlib.mpf_eq(self._mpf_, other._as_mpf_val(self._prec)))
-        return True     # Float != non-Number
+        return not self.__eq__(other)
 
     def __lt__(self, other):
         try:
@@ -519,7 +507,8 @@ class Float(Number):
             return False    # sympy > other
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
-        if other.is_comparable: other = other.evalf()
+        if other.is_comparable:
+            other = other.evalf()
         if isinstance(other, Number):
             return bool(mlib.mpf_lt(self._mpf_, other._as_mpf_val(self._prec)))
         return Expr.__lt__(self, other)
@@ -531,7 +520,8 @@ class Float(Number):
             return False    # sympy > other  -->  ! <=
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
-        if other.is_comparable: other = other.evalf()
+        if other.is_comparable:
+            other = other.evalf()
         if isinstance(other, Number):
             return bool(mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec)))
         return Expr.__le__(self, other)
@@ -798,7 +788,8 @@ class Rational(Number):
         return Number.__rmod__(self, other)
 
     def _eval_power(b, e):
-        if (e is S.NaN): return S.NaN
+        if (e is S.NaN):
+            return S.NaN
         if isinstance(e, Number):
             if isinstance(e, Float):
                 return b._eval_evalf(e._prec) ** e
@@ -832,7 +823,7 @@ class Rational(Number):
                     # (4/3)**(5/6) -> 4**(5/6) * 3**(-5/6)
                     return Integer(b.p) ** e * Integer(b.q) ** (-e)
                 if b >= 0:
-                    return Integer(b.q)**Rational(e.p * (e.q-1), e.q) / ( Integer(b.q) ** Integer(e.p))
+                    return Integer(b.q)**Rational(e.p * (e.q-1), e.q) / (Integer(b.q) ** Integer(e.p))
                 else:
                     return (-1)**e * (-b)**e
 
@@ -860,12 +851,9 @@ class Rational(Number):
         except SympifyError:
             return False    # sympy != other  -->  not ==
         if isinstance(other, NumberSymbol):
-            if other.is_irrational: return False
+            if other.is_irrational:
+                return False
             return other.__eq__(self)
-        if isinstance(other, FunctionClass): #cos as opposed to cos(x)
-            return False
-        if other.is_comparable and not isinstance(other, Rational):
-            other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Float):
                 return mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_)
@@ -1060,11 +1048,11 @@ def _intcache_printinfo():
     print
     print ' #hit   #miss               #total'
     print
-    print '%5i   %5i (%7.5f %%)   %5i'    % (nhit, nmiss, miss_ratio*100, nhit+nmiss)
+    print '%5i   %5i (%7.5f %%)   %5i' % (nhit, nmiss, miss_ratio*100, nhit + nmiss)
     print
     print ints
 
-_intcache_hits   = 0
+_intcache_hits = 0
 _intcache_misses = 0
 
 def int_trace(f):
@@ -1079,7 +1067,7 @@ def int_trace(f):
             _intcache_hits += 1
             return _intcache[i]
         except KeyError:
-            _intcache_hits   -= 1
+            _intcache_hits -= 1
             _intcache_misses += 1
 
             return f(cls, i)
@@ -1119,9 +1107,12 @@ class Integer(Rational):
         except KeyError:
             # We only work with well-behaved integer types. This converts, for
             # example, numpy.int32 instances.
-            if ival == 0: obj = S.Zero
-            elif ival == 1: obj = S.One
-            elif ival == -1: obj = S.NegativeOne
+            if ival == 0:
+                obj = S.Zero
+            elif ival == 1:
+                obj = S.One
+            elif ival == -1:
+                obj = S.NegativeOne
             else:
                 obj = Expr.__new__(cls)
                 obj.p = ival
@@ -1224,24 +1215,20 @@ class Integer(Rational):
         return Rational.__eq__(a, b)
 
     def __ne__(a, b):
-        if isinstance(b, (int, long)):
-            return (a.p != b)
-        elif isinstance(b, Integer):
-            return (a.p != b.p)
-        return Rational.__ne__(a, b)
+        return not a.__eq__(b)
 
     def __gt__(a, b):
         if isinstance(b, (int, long)):
-            return (a.p >  b)
+            return (a.p > b)
         elif isinstance(b, Integer):
-            return (a.p >  b.p)
+            return (a.p > b.p)
         return Rational.__gt__(a, b)
 
     def __lt__(a, b):
         if isinstance(b, (int, long)):
-            return (a.p <  b)
+            return (a.p < b)
         elif isinstance(b, Integer):
-            return (a.p <  b.p)
+            return (a.p < b.p)
         return Rational.__lt__(a, b)
 
     def __ge__(a, b):
@@ -1564,8 +1551,10 @@ class NegativeOne(IntegerConstant):
         return S.One
 
     def _eval_power(b, e):
-        if e.is_odd: return S.NegativeOne
-        if e.is_even: return S.One
+        if e.is_odd:
+            return S.NegativeOne
+        if e.is_even:
+            return S.One
         if isinstance(e, Number):
             if isinstance(e, Float):
                 return Float(-1.0) ** e
@@ -2054,16 +2043,7 @@ class NumberSymbol(AtomicExpr):
         return False    # NumberSymbol != non-(Number|self)
 
     def __ne__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return True     # sympy != other
-        if self is other:
-            return False
-        if isinstance(other, Number) and self.is_irrational:
-            return True
-
-        return True     # NumberSymbol != non(Number|self)
+        return not self.__eq__(other)
 
     def __lt__(self, other):
         try:
@@ -2342,7 +2322,6 @@ _intcache[0] = S.Zero
 _intcache[1] = S.One
 _intcache[-1]= S.NegativeOne
 
-from function import FunctionClass
 from power import Pow, integer_nthroot
 from mul import Mul
 Mul.identity = One()

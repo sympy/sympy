@@ -177,8 +177,6 @@ class Pow(Expr):
         if b.is_Number and e.is_Number:
             # int**nonneg or rat**?
             check = Pow(*self.args)
-            if self == check:
-                return False
             return check.is_Integer
 
     def _eval_is_real(self):
