@@ -413,30 +413,15 @@ def _mul_as_two_parts(f):
     >>> from sympy import sin, exp
     >>> from sympy.abc import x
     >>> _mul_as_two_parts(x*sin(x)*exp(x))
-    [(x, exp(x)*sin(x)), (exp(x), x*sin(x)), (sin(x), x*exp(x))]
+    [(x*exp(x), sin(x)), (x, exp(x)*sin(x)), (x*sin(x), exp(x))]
     """
-    from sympy.core.compatibility import combinations
+    from sympy.utilities.iterables import multiset_partitions
 
     gs = _mul_args(f)
     if len(gs) < 2:
         return None
 
-    res = []
-    # we now try all ways to split gs into two subsequences
-    # TODO this code generates all splittings into two subsequences of equal
-    #      length twice!
-    for l in range(1, len(gs)//2 + 1):
-        for comb in combinations(range(len(gs)), l):
-            fac1 = S(1)
-            fac2 = S(1)
-            for i in range(len(gs)):
-                if i in comb:
-                    fac1 *= gs[i]
-                else:
-                    fac2 *= gs[i]
-            res += [(fac1, fac2)]
-
-    return res
+    return [(Mul(*x), Mul(*y)) for (x, y) in multiset_partitions(gs, 2)]
 
 def _inflate_g(g, n):
     """ Return C, h such that h is a G function of argument z**n and

@@ -323,14 +323,19 @@ class Mod1Effective(object):
     Code that creates Mod1Effective objects (like compute_buckets below) should be
     careful only to produce one instance of Mod1Effective for each class.
     """
-    # TODO this should be backported to any implementation of a Mod object
-    #      (c/f issue 2490)
 
-    def __new__(cls, r):
-        if r.is_Rational and not r.free_symbols:
-            return r - r.p//r.q
+    def __new__(cls, expr):
+        from sympy import expand_mul
+        expr = expand_mul(expr)
+        if expr.is_Rational:
+            return expr - expr.p//expr.q
+        elif expr.is_Add and expr.args[0].is_Number:
+            r, expr = expr.as_two_terms()
+        else:
+            r = S.Zero
+        expr += r - r.p//r.q
         res = object.__new__(cls)
-        res.expr = r
+        res.expr = expr
         return res
 
     def __repr__(self):
@@ -356,8 +361,8 @@ class IndexPair(object):
 
     def __init__(self, ap, bq):
         from sympy import expand, Tuple
-        self.ap = Tuple(*[expand(x) for x in sympify(ap)])
-        self.bq = Tuple(*[expand(x) for x in sympify(bq)])
+        self.ap = Tuple(*map(expand, ap))
+        self.bq = Tuple(*map(expand, bq))
 
     @property
     def sizes(self):
@@ -371,9 +376,10 @@ class IndexPair(object):
         Partition ``ap`` and ``bq`` Mod1.
 
         Partition parameters ``ap``, ``bq`` into buckets, that is return two dicts
-        abuckets, bbuckets such that every key in [ab]buckets is a rational in
-        range [0, 1) and the corresponding items are items of ap/bq congruent to
-        the key mod 1.
+        abuckets, bbuckets such that every key in (ab)buckets is a rational in the
+        range [0, 1) [represented either by a Rational or a Mod1Effective object],
+        and such that (ab)buckets[key] is a tuple of all elements of respectively
+        ``ap`` or ``bq`` that are congruent to ``key`` modulo 1.
 
         If oabuckets, obbuckets is specified, try to use the same Mod1Effective objects
         for parameters where possible.
@@ -499,7 +505,7 @@ class IndexQuadruple(object):
     """ Holds a quadruple of indices. """
     def __init__(self, an, ap, bm, bq):
         from sympy import expand, Tuple
-        def tr(l): return Tuple(*[expand(x) for x in sympify(l)])
+        def tr(l): return Tuple(*map(expand, l))
         self.an = tr(an)
         self.ap = tr(ap)
         self.bm = tr(bm)
@@ -517,7 +523,7 @@ class IndexQuadruple(object):
         >>> from sympy.abc import y
         >>> from sympy import S
         >>> IndexQuadruple([1, 3, 2, S(3)/2], [1 + y, y, 2, y + 3], [2], [y]).compute_buckets()
-        ({0: [3, 2, 1], 1/2: [3/2]}, {0: [2], y + 1 % 1: [y, y + 1, y + 3]}, {0: [2]}, {y + 1 % 1: [y]})
+        ({0: [3, 2, 1], 1/2: [3/2]}, {0: [2], y % 1: [y, y + 1, y + 3]}, {0: [2]}, {y % 1: [y]})
 
         """
         mod1s = []
@@ -619,8 +625,8 @@ class Formula(object):
         self.M = m.row_insert(n, -Matrix([l])/poly.all_coeffs()[0])
 
     def __init__(self, ap, bq, z, res, symbols, B=None, C=None, M=None):
-        ap = Tuple(*map(expand, sympify(ap)))
-        bq = Tuple(*map(expand, sympify(bq)))
+        ap = Tuple(*map(expand, ap))
+        bq = Tuple(*map(expand, bq))
         z  = sympify(z)
         res = sympify(res)
         symbols = filter(lambda x: ap.has(x) or bq.has(x), sympify(symbols))
@@ -860,10 +866,10 @@ class MeijerFormula(object):
     """
 
     def __init__(self, an, ap, bm, bq, z, symbols, B, C, M, matcher):
-        an = Tuple(*map(expand, sympify(an)))
-        ap = Tuple(*map(expand, sympify(ap)))
-        bm = Tuple(*map(expand, sympify(bm)))
-        bq = Tuple(*map(expand, sympify(bq)))
+        an = Tuple(*map(expand, an))
+        ap = Tuple(*map(expand, ap))
+        bm = Tuple(*map(expand, bm))
+        bq = Tuple(*map(expand, bq))
         self.indices = IndexQuadruple(an, ap, bm, bq)
         self.z = z
         self.symbols = symbols

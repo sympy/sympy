@@ -1641,10 +1641,7 @@ class Expr(Basic, EvalfMixin):
         from sympy import exp_polar, pi, I, ceiling, Add
         n = S(0)
         res = S(1)
-        if self.is_Mul:
-            args = self.args
-        else:
-            args = [self]
+        args = Mul.make_args(self)
         exps = []
         for arg in args:
             if arg.func is exp_polar:
@@ -1665,7 +1662,8 @@ class Expr(Basic, EvalfMixin):
                     continue
             extras += [exp]
         coeff, tail = piimult.as_coeff_add()
-        branchfact = ceiling(coeff/2-S(1)/2)*2
+        # round down to nearest multiple of 2
+        branchfact = ceiling(coeff/2 - S(1)/2)*2
         n += branchfact/2
         c = coeff - branchfact
         if allow_half:

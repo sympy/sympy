@@ -186,9 +186,9 @@ def test_meijerint():
     # Test a bug with argument 1/x
     alpha = symbols('alpha', positive=True)
     assert meijerint_definite((2-x)**alpha*sin(alpha/x), x, 0, 2) == \
-           (sqrt(pi)*alpha*gamma(alpha + 1) \
-            *meijerg([], [(alpha+1)/2, alpha/2 + 1], [0, 0, S(1)/2],
-                     [S(-1)/2], alpha**2/16) / 4, True)
+           (sqrt(pi)*gamma(alpha + 1) \
+            *meijerg([S(1)/2, 0, S(1)/2], [1], [],
+                     [-alpha/2, -alpha/2 - S(1)/2], 16/alpha**2), True)
 
 def test_bessel():
     from sympy import (besselj, Heaviside, besseli, polar_lift, exp_polar,
