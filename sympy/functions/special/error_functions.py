@@ -3,7 +3,7 @@
 
 from sympy.core import Add, S, C, sympify, cacheit, pi, I
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.complexes import polar_lift
 
 # TODO series expansions
@@ -910,6 +910,7 @@ class FresnelIntegral(Function):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)
         return re_part + im_part*S.ImaginaryUnit
 
+
 class fresnel_S(FresnelIntegral):
     r"""
     Fresnel integral S.
@@ -926,6 +927,13 @@ class fresnel_S(FresnelIntegral):
 
     def _eval_rewrite_as_erf(self, z):
         return (S.One+I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) - I*erf((S.One-I)/2*sqrt(pi)*z))
+
+    def _eval_aseries(self, n, args0, x, logx):
+        z = self.args[0]
+        e = S.Half*I*pi*z**2
+        h1 = C.hyper([S.One,S.Half],[],2*I/(pi*z**2))
+        h2 = C.hyper([S.One,S.Half],[],-2*I/(pi*z**2))
+        return root(z**4,4)/(2*z) - S.One/(2*pi*z)*(C.exp(-e)*h1 + C.exp(e)*h2)
 
 
 class fresnel_C(FresnelIntegral):
@@ -944,6 +952,13 @@ class fresnel_C(FresnelIntegral):
 
     def _eval_rewrite_as_erf(self, z):
         return (S.One-I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) + I*erf((S.One-I)/2*sqrt(pi)*z))
+
+    def _eval_aseries(self, n, args0, x, logx):
+        z = self.args[0]
+        e = S.Half*I*pi*z**2
+        h1 = C.hyper([S.One,S.Half],[],2*I/(pi*z**2))
+        h2 = C.hyper([S.One,S.Half],[],-2*I/(pi*z**2))
+        return (z**4)**C.Rational(3,4)/(2*z**3) + I/(2*pi*z)*(C.exp(-e)*h1 - C.exp(e)*h2)
 
 
 ###############################################################################
