@@ -198,7 +198,7 @@ def convex_hull(*args):
     elif len(p) == 2:
         return Segment(p[0], p[1])
 
-    def orientation(p, q, r):
+    def _orientation(p, q, r):
         '''Return positive if p-q-r are clockwise, neg if ccw, zero if
         collinear.'''
         return (q[1] - p[1])*(r[0] - p[0]) - (q[0] - p[0])*(r[1] - p[1])
@@ -208,9 +208,9 @@ def convex_hull(*args):
     L = []
     p.sort()
     for p_i in p:
-        while len(U) > 1 and orientation(U[-2], U[-1], p_i) <= 0:
+        while len(U) > 1 and _orientation(U[-2], U[-1], p_i) <= 0:
             U.pop()
-        while len(L) > 1 and orientation(L[-2], L[-1], p_i) >= 0:
+        while len(L) > 1 and _orientation(L[-2], L[-1], p_i) >= 0:
             L.pop()
         U.append(p_i)
         L.append(p_i)
