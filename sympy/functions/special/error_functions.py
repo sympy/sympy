@@ -943,6 +943,19 @@ class fresnel_S(FresnelIntegral):
         else:
             return self.func(arg)
 
+    def _eval_evalf(self, prec):
+        z = self.args[0]
+
+        if z.is_Number:
+            from sympy.mpmath import mp
+            from sympy import Expr
+            z = z._to_mpmath(prec)
+            oprec = mp.prec
+            mp.prec = prec
+            res = mp.fresnels(z)
+            mp.prec = oprec
+            return Expr._from_mpmath(res, prec)
+
 
 class fresnel_C(FresnelIntegral):
     r"""
@@ -975,6 +988,19 @@ class fresnel_C(FresnelIntegral):
             return arg
         else:
             return self.func(arg)
+
+    def _eval_evalf(self, prec):
+        z = self.args[0]
+
+        if z.is_Number:
+            from sympy.mpmath import mp
+            from sympy import Expr
+            z = z._to_mpmath(prec)
+            oprec = mp.prec
+            mp.prec = prec
+            res = mp.fresnelc(z)
+            mp.prec = oprec
+            return Expr._from_mpmath(res, prec)
 
 
 ###############################################################################
