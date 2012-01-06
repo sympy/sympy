@@ -566,6 +566,11 @@ def Where(condition, given=None, **kwargs):
 def Sample(expr, given=None, **kwargs):
     """
     A realization of the random expression
+
+    >>> from sympy.stats import Die, Sample
+    >>> X, Y, Z = Die(6), Die(6), Die(6)
+
+    >>> die_roll = Sample(X+Y+Z) # A random realization of three dice
     """
     return sample_iter(expr, given, numsamples=1).next()
 

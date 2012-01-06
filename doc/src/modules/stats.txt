@@ -1,4 +1,4 @@
-SymPy Stats 
+Stats 
 ===========
 
 .. automodule:: sympy.stats
@@ -54,5 +54,4 @@ Mechanics
 .. autofunction:: random_symbols
 .. autofunction:: pspace 
 .. autofunction:: rs_swap
-.. autofunction:: random_symbols
 .. autofunction:: random_symbols

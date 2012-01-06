@@ -37,7 +37,7 @@ class NormalPSpace(SingleContinuousPSpace):
 
 def Normal(mean, std, symbol=None):
     """
-    Create a Continuous Random Varible with a Normal Distribution
+    Create a Continuous Random Varible with a Normal distribution
     Returns a RandomSymbol
 
     >>> from sympy.stats import Normal, Density, E, Std
@@ -72,7 +72,7 @@ class ExponentialPSpace(SingleContinuousPSpace):
 
 def Exponential(rate, symbol=None):
     """
-    Create a Continuous Random Varible with an Exponential Distribution
+    Create a Continuous Random Varible with an Exponential distribution
     Returns a RandomSymbol
 
     >>> from sympy.stats import Exponential, Density, E, Std
@@ -107,6 +107,18 @@ class ParetoPSpace(SingleContinuousPSpace):
         return {self.value: random.paretovariate(self.alpha)}
 
 def Pareto(xm, alpha, symbol=None):
+    """
+    Create a Continuous Random Varible with the Pareto distribution
+    Returns a RandomSymbol
+
+    >>> from sympy.stats import Pareto, Density, E, Std
+    >>> from sympy import symbols
+
+    >>> x, xm, beta = symbols('x xm beta', positive=True)
+    >>> X = Pareto(xm, beta, symbol=x)
+    >>> Density(X)
+    (x, beta*x**(-beta - 1)*xm**beta)
+    """
     return ParetoPSpace(xm, alpha, symbol).value
 
 class BetaPSpace(SingleContinuousPSpace):
@@ -128,6 +140,18 @@ class BetaPSpace(SingleContinuousPSpace):
         return {self.value: random.betavariate(self.alpha, self.beta)}
 
 def Beta(alpha, beta, symbol=None):
+    """
+    Create a Continuous Random Varible with a Beta distribution
+    Returns a RandomSymbol
+
+    >>> from sympy.stats import Beta, Density, E, Std
+    >>> from sympy import symbols
+    >>> x, a, b = symbols('x a b', positive=True)
+
+    >>> X = Beta(a, b, symbol=x)
+    >>> Density(X)
+    (x, x**(a - 1)*(-x + 1)**(b - 1)*gamma(a + b)/(gamma(a)*gamma(b)))
+    """
     return BetaPSpace(alpha, beta, symbol).value
 
 class GammaPSpace(SingleContinuousPSpace):
@@ -144,6 +168,22 @@ class GammaPSpace(SingleContinuousPSpace):
         return obj
 
 def Gamma(k, theta, symbol=None):
+    """
+    Create a Continuous Random Varible with a Gamma distribution
+    Returns a RandomSymbol
+
+    >>> from sympy.stats import Gamma, Density, E, Std
+    >>> from sympy import symbols
+    >>> x, k, theta = symbols('x k theta', positive=True)
+
+    >>> X = Gamma(k, theta, symbol=x)
+    >>> Density(X)
+    (x, theta**(-k)*x**(k - 1)*exp(-x/theta)/gamma(k))
+
+    >>> E(X)
+    theta*gamma(k + 1)/gamma(k)
+    """
+
     return GammaPSpace(k, theta, symbol).value
 
 class UniformPSpace(SingleContinuousPSpace):
@@ -164,4 +204,24 @@ class UniformPSpace(SingleContinuousPSpace):
 
 
 def Uniform(left, right, symbol=None):
+    """
+    Create a Continuous Random Varible with a Uniform distribution
+    Returns a RandomSymbol
+
+    >>> from sympy.stats import Uniform, Density, E, Var
+    >>> from sympy import symbols, simplify
+    >>> x, l, r = symbols('x l r')
+
+    >>> X = Uniform(l, r, symbol=x)
+
+    >>> Density(X)
+    (x, Piecewise((0, x < l), (0, r < x), (1/(-l + r), True)))
+
+    >>> simplify(E(X))
+    l/2 + r/2
+
+    >>> simplify(Var(X))
+    l**2/12 - l*r/6 + r**2/12
+    """
+
     return UniformPSpace(left, right, symbol).value
