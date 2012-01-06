@@ -7,7 +7,6 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import polar_lift
 
 # TODO series expansions
-# TODO fresnel integrals
 # TODO see the "Note:" in Ei
 
 ###############################################################################
@@ -829,10 +828,104 @@ class Chi(TrigonometricIntegral):
         from sympy import exp_polar
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
 
+
+###############################################################################
+#################### FRESNEL INTEGRALS ########################################
+###############################################################################
+
+class FresnelIntegral(Function):
+    """ Base class for the Fresnel integrals."""
+
+    nargs = 1
+
+    _trigfunc = None
+    _sign = None
+
+    @classmethod
+    def eval(cls, z):
+        # Value at zero
+        if z is S.Zero:
+            return S(0)
+
+        # Try to pull out factors of -1 and I
+        prefact = S.One
+        newarg = z
+        changed = False
+
+        nz = newarg.extract_multiplicatively(-1)
+        if nz is not None:
+            prefact = -prefact
+            newarg = nz
+            changed = True
+
+        nz = newarg.extract_multiplicatively(I)
+        if nz is not None:
+            prefact = cls._sign*I*prefact
+            newarg = nz
+            changed = True
+
+        if changed:
+            return prefact*cls(newarg)
+
+        # Values at infinities
+        if z is S.Infinity:
+            return S.Half
+        #elif z is S.NegativeInfinity:
+        #    return -S.Half
+        elif z is I*S.Infinity:
+            return cls._sign*I*S.Half
+        #elif z is I*S.NegativeInfinity:
+        #    return -cls._sign*I*S.Half
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return self._trigfunc(S.Half*pi*self.args[0]**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+
+class fresnel_S(FresnelIntegral):
+    r"""
+    Fresnel integral S.
+
+    This function is defined by
+
+    .. math:: \operatorname{S}(z) = \int_0^z \sin{\frac{\pi}{2} t^2} \mathrm{d}t.
+
+    It is an entire function.
+    """
+
+    _trigfunc = C.sin
+    _sign = -S.One
+
+    def _eval_rewrite_as_erf(self, z):
+        return (S.One+I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) - I*erf((S.One-I)/2*sqrt(pi)*z))
+
+
+class fresnel_C(FresnelIntegral):
+    r"""
+    Fresnel integral C.
+
+    This function is defined by
+
+    .. math:: \operatorname{C}(z) = \int_0^z \cos{\frac{\pi}{2} t^2} \mathrm{d}t.
+
+    It is an entire function.
+    """
+
+    _trigfunc = C.cos
+    _sign = S.One
+
+    def _eval_rewrite_as_erf(self, z):
+        return (S.One-I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) + I*erf((S.One-I)/2*sqrt(pi)*z))
+
+
 ###############################################################################
 #################### HELPER FUNCTIONS #########################################
 ###############################################################################
-
 
 class _erfs(Function):
     """
