@@ -426,7 +426,7 @@ class Polygon(GeometryEntity):
         True
 
         """
-        
+
         def _tarea(a, b, c):
             return (b[0] - a[0])*(c[1] - a[1]) - (c[0] - a[0])*(b[1] - a[1])
 
@@ -1112,7 +1112,7 @@ class RegularPolygon(Polygon):
     def circumradius(self):
         """
         alias for radius
-        
+
         Examples
         ========
         >>> from sympy import Symbol
@@ -1177,7 +1177,7 @@ class RegularPolygon(Polygon):
     def inradius(self):
         """
         alias for apothem
-        
+
         Examples
         ========
         >>> from sympy import Symbol

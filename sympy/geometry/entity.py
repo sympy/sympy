@@ -267,7 +267,7 @@ class GeometryEntity(tuple):
         Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
         >>> t.subs(1, 4)
         Triangle(Point(4, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
-        
+
         """
         return type(self)(*[a.subs(*args) for a in self.args])
 
@@ -280,7 +280,7 @@ class GeometryEntity(tuple):
 
         The contents will not necessarily be Points. This is also
         what will be returned when one does "for x in self".
-        
+
         Example
         =======
         >>> from sympy import RegularPolygon, Point, Polygon

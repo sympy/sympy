@@ -792,7 +792,7 @@ class LinearEntity(GeometryEntity):
     def is_similar(self, other):
         """
         Return True if self and other are contained in the same line.
-        
+
         Example
         =======
         >>> from sympy import Point, Line
@@ -1626,7 +1626,7 @@ class Segment(LinearEntity):
     def contains(self, other):
         """
         Is the other GeometryEntity contained within this Ray?
-        
+
         Example
         =======
         >>> from sympy import Point, Segment
