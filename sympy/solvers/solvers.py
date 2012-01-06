@@ -2160,12 +2160,7 @@ def unrad(eq, *syms, **flags):
     lcm = reduce(ilcm, [r.exp.q for r in rads])
 
     # find the bases of the radicals
-    bases = set()
-    for r in rads:
-        b, e = r.as_base_exp()
-        if b.is_Pow and b.exp == -1: #XXX after numer_denom is this possible?
-            b = 1/b
-        bases.add(b)
+    bases = set([r.as_base_exp()[0] for r in rads])
 
     # get terms together that have common generators
     drad = dict(zip(rads, range(len(rads))))
