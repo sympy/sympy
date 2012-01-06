@@ -61,7 +61,7 @@ from sympy.functions.special.hyper import hyper
 from sympy import SYMPY_DEBUG
 
 from sympy.utilities.timeutils import timethis
-timeit = timethis('meijerg')
+_timeit = timethis('meijerg')
 
 def add_formulae(formulae):
     """ Create our knowledge base.
@@ -541,8 +541,8 @@ class IndexQuadruple(object):
         return 'IndexQuadruple(%s, %s, %s, %s)' % (self.an, self.ap,
                                                    self.bm, self.bq)
 
-# Dummy generator
-x = Dummy('x')
+# Dummy variable.
+_x = Dummy('x')
 
 class Formula(object):
     """
@@ -587,10 +587,10 @@ class Formula(object):
         """
         from sympy.matrices import Matrix, eye, zeros
 
-        afactors = map(lambda a: x + a, self.indices.ap)
-        bfactors = map(lambda b: x + b - 1, self.indices.bq)
-        expr = x*Mul(*bfactors) - self.z*Mul(*afactors)
-        poly = Poly(expr, x)
+        afactors = map(lambda a: _x + a, self.indices.ap)
+        bfactors = map(lambda b: _x + b - 1, self.indices.bq)
+        expr = _x*Mul(*bfactors) - self.z*Mul(*afactors)
+        poly = Poly(expr, _x)
 
         n = poly.degree() - 1
         b = [closed_form]
@@ -950,7 +950,7 @@ class MultOperator(Operator):
     """ Simply multiply by a "constant" """
 
     def __init__(self, p):
-        self._poly = Poly(p, x)
+        self._poly = Poly(p, _x)
 
 class ShiftA(Operator):
     """ Increment an upper index. """
@@ -959,7 +959,7 @@ class ShiftA(Operator):
         ai = sympify(ai)
         if ai == 0:
             raise ValueError('Cannot increment zero upper index.')
-        self._poly = Poly(x/ai + 1, x)
+        self._poly = Poly(_x/ai + 1, _x)
 
     def __str__(self):
         return '<Increment upper %s.>' % (1/self._poly.all_coeffs()[0])
@@ -971,7 +971,7 @@ class ShiftB(Operator):
         bi = sympify(bi)
         if bi == 1:
             raise ValueError('Cannot decrement unit lower index.')
-        self._poly = Poly(x/(bi - 1) + 1, x)
+        self._poly = Poly(_x/(bi - 1) + 1, _x)
 
     def __str__(self):
         return '<Decrement lower %s.>' % (1/self._poly.all_coeffs()[0] + 1)
@@ -994,9 +994,9 @@ class UnShiftA(Operator):
         if ai == 0:
             raise ValueError('Cannot decrement unit upper index.')
 
-        m = Poly(z*ai, x)
+        m = Poly(z*ai, _x)
         for a in ap:
-            m *= Poly(x + a, x)
+            m *= Poly(_x + a, _x)
         #print m
 
         A = Dummy('A')
@@ -1012,9 +1012,9 @@ class UnShiftA(Operator):
                                'cancels with lower')
         #print b0
 
-        n = Poly(Poly(n.all_coeffs()[:-1], A).as_expr().subs(A, x/ai + 1), x)
+        n = Poly(Poly(n.all_coeffs()[:-1], A).as_expr().subs(A, _x/ai + 1), _x)
 
-        self._poly = Poly((n-m)/b0, x)
+        self._poly = Poly((n-m)/b0, _x)
 
     def __str__(self):
         return '<Decrement upper index #%s of %s, %s.>' % (self._i,
@@ -1038,9 +1038,9 @@ class UnShiftB(Operator):
         if bi == 0:
             raise ValueError('Cannot increment -1 lower index.')
 
-        m = Poly(x*(bi-1), x)
+        m = Poly(_x*(bi-1), _x)
         for b in bq:
-            m *= Poly(x + b - 1, x)
+            m *= Poly(_x + b - 1, _x)
         #print m
 
         B = Dummy('B')
@@ -1057,10 +1057,10 @@ class UnShiftB(Operator):
                                'cancels with upper')
         #print b0
 
-        n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(B, x/(bi-1) + 1), x)
+        n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(B, _x/(bi-1) + 1), _x)
         #print n
 
-        self._poly = Poly((m-n)/b0, x)
+        self._poly = Poly((m-n)/b0, _x)
 
     def __str__(self):
         return '<Increment lower index #%s of %s, %s.>' % (self._i,
@@ -1071,7 +1071,7 @@ class MeijerShiftA(Operator):
 
     def __init__(self, bi):
         bi = sympify(bi)
-        self._poly = Poly(bi - x, x)
+        self._poly = Poly(bi - _x, _x)
 
     def __str__(self):
         return '<Increment upper b=%s.>' % (self._poly.all_coeffs()[1])
@@ -1081,7 +1081,7 @@ class MeijerShiftB(Operator):
 
     def __init__(self, bi):
         bi = sympify(bi)
-        self._poly = Poly(1 - bi + x, x)
+        self._poly = Poly(1 - bi + _x, _x)
 
     def __str__(self):
         return '<Decrement upper a=%s.>' % (1 - self._poly.all_coeffs()[1])
@@ -1091,7 +1091,7 @@ class MeijerShiftC(Operator):
 
     def __init__(self, bi):
         bi = sympify(bi)
-        self._poly = Poly(-bi + x, x)
+        self._poly = Poly(-bi + _x, _x)
 
     def __str__(self):
         return '<Increment lower b=%s.>' % (-self._poly.all_coeffs()[1])
@@ -1101,7 +1101,7 @@ class MeijerShiftD(Operator):
 
     def __init__(self, bi):
         bi = sympify(bi)
-        self._poly = Poly(bi - 1 - x, x)
+        self._poly = Poly(bi - 1 - _x, _x)
 
     def __str__(self):
         return '<Decrement lower a=%s.>' % (self._poly.all_coeffs()[1] + 1)
@@ -1125,11 +1125,11 @@ class MeijerUnShiftA(Operator):
         bq = list(bq)
         bi = bm.pop(i) - 1
 
-        m = Poly(1, x)
+        m = Poly(1, _x)
         for b in bm:
-            m *= Poly(b - x, x)
+            m *= Poly(b - _x, _x)
         for b in bq:
-            m *= Poly(x - b, x)
+            m *= Poly(_x - b, _x)
         #print m
 
         A = Dummy('A')
@@ -1147,10 +1147,10 @@ class MeijerUnShiftA(Operator):
             raise ValueError('Cannot decrement upper b index (cancels)')
         #print b0
 
-        n = Poly(Poly(n.all_coeffs()[:-1], A).as_expr().subs(A, bi - x), x)
+        n = Poly(Poly(n.all_coeffs()[:-1], A).as_expr().subs(A, bi - _x), _x)
         #print n
 
-        self._poly = Poly((m-n)/b0, x)
+        self._poly = Poly((m-n)/b0, _x)
 
     def __str__(self):
         return '<Decrement upper b index #%s of %s, %s, %s, %s.>' % (self._i,
@@ -1175,11 +1175,11 @@ class MeijerUnShiftB(Operator):
         bq = list(bq)
         ai = an.pop(i) + 1
 
-        m = Poly(z, x)
+        m = Poly(z, _x)
         for a in an:
-            m *= Poly(1 - a + x, x)
+            m *= Poly(1 - a + _x, _x)
         for a in ap:
-            m *= Poly(a - 1 - x, x)
+            m *= Poly(a - 1 - _x, _x)
         #print m
 
         B = Dummy('B')
@@ -1197,10 +1197,10 @@ class MeijerUnShiftB(Operator):
             raise ValueError('Cannot increment upper a index (cancels)')
         #print b0
 
-        n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(B, 1 - ai + x), x)
+        n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(B, 1 - ai + _x), _x)
         #print n
 
-        self._poly = Poly((m-n)/b0, x)
+        self._poly = Poly((m-n)/b0, _x)
 
     def __str__(self):
         return '<Increment upper a index #%s of %s, %s, %s, %s.>' % (self._i,
@@ -1230,11 +1230,11 @@ class MeijerUnShiftC(Operator):
         bq = list(bq)
         bi = bq.pop(i) - 1
 
-        m = Poly(1, x)
+        m = Poly(1, _x)
         for b in bm:
-            m *= Poly(b - x, x)
+            m *= Poly(b - _x, _x)
         for b in bq:
-            m *= Poly(x - b, x)
+            m *= Poly(_x - b, _x)
         #print m
 
         C = Dummy('C')
@@ -1252,10 +1252,10 @@ class MeijerUnShiftC(Operator):
             raise ValueError('Cannot decrement lower b index (cancels)')
         #print b0
 
-        n = Poly(Poly(n.all_coeffs()[:-1], C).as_expr().subs(C, x - bi), x)
+        n = Poly(Poly(n.all_coeffs()[:-1], C).as_expr().subs(C, _x - bi), _x)
         #print n
 
-        self._poly = Poly((m-n)/b0, x)
+        self._poly = Poly((m-n)/b0, _x)
 
     def __str__(self):
         return '<Decrement lower b index #%s of %s, %s, %s, %s.>' % (self._i,
@@ -1282,11 +1282,11 @@ class MeijerUnShiftD(Operator):
         bq = list(bq)
         ai = ap.pop(i) + 1
 
-        m = Poly(z, x)
+        m = Poly(z, _x)
         for a in an:
-            m *= Poly(1 - a + x, x)
+            m *= Poly(1 - a + _x, _x)
         for a in ap:
-            m *= Poly(a - 1 - x, x)
+            m *= Poly(a - 1 - _x, _x)
         #print m
 
         B = Dummy('B') # - this is the shift operator `D_I`
@@ -1304,10 +1304,10 @@ class MeijerUnShiftD(Operator):
             raise ValueError('Cannot increment lower a index (cancels)')
         #print b0
 
-        n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(B, ai - 1 - x), x)
+        n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(B, ai - 1 - _x), _x)
         #print n
 
-        self._poly = Poly((m-n)/b0, x)
+        self._poly = Poly((m-n)/b0, _x)
 
     def __str__(self):
         return '<Increment lower a index #%s of %s, %s, %s, %s.>' % (self._i,
@@ -1330,9 +1330,9 @@ class ReduceOrder(Operator):
 
         p = S(1)
         for k in xrange(n):
-            p *= (x + bj + k)/(bj + k)
+            p *= (_x + bj + k)/(bj + k)
 
-        self._poly = Poly(p, x)
+        self._poly = Poly(p, _x)
         self._a = ai
         self._b = bj
 
@@ -1353,9 +1353,9 @@ class ReduceOrder(Operator):
 
         p = S(1)
         for k in xrange(n):
-            p *= (sign*x + a + k)
+            p *= (sign*_x + a + k)
 
-        self._poly = Poly(p, x)
+        self._poly = Poly(p, _x)
         if sign == -1:
             self._a = b
             self._b = a
@@ -1833,10 +1833,10 @@ def build_hypergeometric_formula(nip):
     from sympy import zeros, Dummy, Matrix, hyper, eye, Mul
     z = Dummy('z')
     if nip.ap:
-        afactors = map(lambda a: x + a, nip.ap)
-        bfactors = map(lambda b: x + b - 1, nip.bq)
-        expr = x*Mul(*bfactors) - z*Mul(*afactors)
-        poly = Poly(expr, x)
+        afactors = map(lambda a: _x + a, nip.ap)
+        bfactors = map(lambda b: _x + b - 1, nip.bq)
+        expr = _x*Mul(*bfactors) - z*Mul(*afactors)
+        poly = Poly(expr, _x)
         n = poly.degree()
         basis = []
         M = zeros(n)
@@ -1913,8 +1913,8 @@ def hyperexpand_special(ap, bq, z):
     #      investigate what algorithms exist
     return hyper(ap, bq, z_)
 
-collection = None
-@timeit
+_collection = None
+@_timeit
 def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
                  rewrite='default'):
     """
@@ -1951,9 +1951,9 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     # *) PFD Duplication (see Kelly Roach's paper)
     # *) In a similar spirit, try_lerchphi() can be generalised considerably.
 
-    global collection
-    if collection is None:
-        collection = FormulaCollection()
+    global _collection
+    if _collection is None:
+        _collection = FormulaCollection()
 
     debug('Trying to expand hypergeometric function corresponding to', ip)
 
@@ -1994,7 +1994,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
             return r + p
 
     # Try to find a formula in our collection
-    f = collection.lookup_origin(nip)
+    f = _collection.lookup_origin(nip)
 
     # Now try a lerch phi formula
     if f is None:
@@ -2135,8 +2135,8 @@ def devise_plan_meijer(fro, to, z):
     ops.reverse()
     return ops
 
-meijercollection = None
-@timeit
+_meijercollection = None
+@_timeit
 def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
     """
     Try to find an expression for the Meijer G function specified
@@ -2146,9 +2146,9 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
     Currently this just does slater's theorem.
     """
     from sympy import hyper, Piecewise, meijerg, powdenest, re, polar_lift, oo
-    global meijercollection
-    if meijercollection is None:
-        meijercollection = MeijerFormulaCollection()
+    global _meijercollection
+    if _meijercollection is None:
+        _meijercollection = MeijerFormulaCollection()
     if rewrite == 'default':
         rewrite = None
 
@@ -2165,7 +2165,7 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
         debug('  Could not reduce order.')
 
     # Try to find a direct formula
-    f = meijercollection.lookup_origin(iq)
+    f = _meijercollection.lookup_origin(iq)
     if f is not None:
         debug('  Found a Meijer G formula:', f.indices)
         ops += devise_plan_meijer(f.indices, iq, z)
@@ -2303,7 +2303,7 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
 
     def tr(l): return [1 - x for x in l]
     for op in ops:
-        op._poly = Poly(op._poly.subs({z: 1/t, x: -x}), x)
+        op._poly = Poly(op._poly.subs({z: 1/t, _x: -_x}), _x)
     slater2, cond2 = do_slater(tr(iq.bm), tr(iq.an), tr(iq.bq), tr(iq.ap),
                                t, 1/z0)
 
