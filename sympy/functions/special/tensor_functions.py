@@ -11,6 +11,12 @@ def Eijk(*args, **kwargs):
     Represent the Levi-Civita symbol.
 
     This is just compatibility wrapper to LeviCivita().
+     
+    See Also
+    ========
+    
+    LeviCivita
+
     """
     return LeviCivita(*args, **kwargs)
 
@@ -46,7 +52,12 @@ class LeviCivita(Function):
     LeviCivita(i, j, k)
     >>> LeviCivita(i,j,i)
     0
+    
+    See Also
+    ========
 
+    Eijk
+  
     """
     @classmethod
     def eval(cls, *args):
@@ -95,6 +106,13 @@ class KroneckerDelta(Function):
         0
         >>> KroneckerDelta(i, i+1+k)
         KroneckerDelta(i, i + k + 1)
+
+    See Also
+    ========
+
+    eval
+    sympy.functions.special.delta_functions.Diracdelta
+    sympy.physics.secondquant.KroneckerDelta
 
     References
     ==========
@@ -166,6 +184,12 @@ class KroneckerDelta(Function):
         >>> KroneckerDelta(p,q).is_above_fermi
         True
 
+        See Also
+        ========
+
+        is_below_fermi, is_only_below_fermi, is_only_above_fermi
+        
+
         """
         if self.args[0].assumptions0.get("below_fermi"):
             return False
@@ -194,6 +218,11 @@ class KroneckerDelta(Function):
         >>> KroneckerDelta(p,q).is_below_fermi
         True
 
+        See Also
+        ========
+
+        is_above_fermi, is_only_above_fermi, is_only_below_fermi
+        
         """
         if self.args[0].assumptions0.get("above_fermi"):
             return False
@@ -312,7 +341,12 @@ class KroneckerDelta(Function):
         a
         >>> KroneckerDelta(i,j).preferred_index
         i
-
+        
+        See Also
+        ========
+        
+        killable_index, _get_preferred_index
+        
         """
         if self._get_preferred_index():
             return self.args[1]
@@ -343,6 +377,11 @@ class KroneckerDelta(Function):
         p
         >>> KroneckerDelta(i,j).killable_index
         j
+
+        See Also
+        ========
+        
+        preferred_index, _get_preferred_index
 
         """
         if self._get_preferred_index():

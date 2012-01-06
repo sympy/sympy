@@ -57,6 +57,12 @@ class chebyshevt(PolynomialSequence):
     >>> chebyshevt(2, x)
     2*x**2 - 1
 
+    See Also
+    ========
+  
+    chebysevt_root, chebyshevu, chebyshevu_root
+    legendre, assoc_legendre
+
     References
     ==========
 
@@ -88,6 +94,12 @@ class chebyshevu(PolynomialSequence):
     2*x
     >>> chebyshevu(2, x)
     4*x**2 - 1
+ 
+    See Also
+    ========
+
+    chebyshevu_root, chebyshevt, chebyshevt_root
+    legendre, assoc_legendre
 
     """
 
@@ -107,6 +119,12 @@ class chebyshevt_root(Function):
     -sqrt(3)/2
     >>> chebyshevt(3, chebyshevt_root(3, 2))
     0
+
+    See Also
+    ========
+ 
+    chebyshevt, chebyshevu, chebyshevu_root
+    legendre, assoc_legendre
 
     """
 
@@ -132,6 +150,12 @@ class chebyshevu_root(Function):
     -sqrt(2)/2
     >>> chebyshevu(3, chebyshevu_root(3, 2))
     0
+
+    See Also
+    ========
+
+    chebyshevu, chebyshevt, chebyshevt_root
+    legendre, assoc_legendre
 
     """
 
@@ -167,6 +191,12 @@ class legendre(PolynomialSequence):
     >>> legendre(2, x)
     3*x**2/2 - 1/2
 
+    See Also
+    ========
+
+    assoc_legendre
+    chebyshevu, chebyshevt, chebyshevt_root, chebyshevt_root
+    
     References
     ==========
 
@@ -201,6 +231,12 @@ class assoc_legendre(Function):
     >>> assoc_legendre(1,1, x)
     -sqrt(-x**2 + 1)
 
+    See Also
+    ========
+
+    assoc_legendre
+    chebyshevu, chebyshevt, chebyshevt_root, chebyshevt_root
+    
     References
     ==========
 
@@ -254,6 +290,11 @@ class hermite(PolynomialSequence):
     >>> hermite(2, x)
     4*x**2 - 2
 
+    See Also
+    ========
+ 
+    sympy.polys.orthopolys.hermite_poly
+
     References
     ==========
 
@@ -303,7 +344,12 @@ def laguerre_l(n, alpha, x):
         -x**3/6 + 3*x**2/2 - 3*x + 1
         >>> laguerre_l(4, 0, x)
         x**4/24 - 2*x**3/3 + 3*x**2 - 4*x + 1
+ 
+    See Also
+    ========
 
+    sympy.polys.orthopolys.laguerre_poly
+ 
     """
     return laguerre_poly(n, x, alpha)
 

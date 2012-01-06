@@ -22,7 +22,13 @@ class DiracDelta(Function):
 
     5) ``DiracDelta(x,k) = 0``, for all ``x != 0``
 
+    See Also
+    ========
 
+    Heaviside
+    simplify, is_simple
+    sympy.functions.special.tensor_functions.KroneckerDelta
+    
     For more information, see:
     http://mathworld.wolfram.com/DeltaFunction.html
     """
@@ -77,6 +83,11 @@ class DiracDelta(Function):
            >>> DiracDelta(x**2 + x - 2).simplify(x)
            DiracDelta(x - 1)/3 + DiracDelta(x + 2)/3
 
+           See Also
+           ========
+   
+           is_simple, Directdelta
+
         """
         from sympy.polys.polyroots import roots
 
@@ -127,6 +138,11 @@ class DiracDelta(Function):
 
            >>> DiracDelta(cos(x)).is_simple(x)
            False
+       
+           See Also
+           ========
+ 
+           simplify, Directdelta
 
         """
         p = self.args[0].as_poly(x)
@@ -173,6 +189,10 @@ class Heaviside(Function):
     and
     ``integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo) = 1``
 
+    See Also
+    ========
+    
+    Diracdelta
 
     For more information, see:
     http://mathworld.wolfram.com/HeavisideStepFunction.html
