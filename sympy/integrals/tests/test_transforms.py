@@ -30,6 +30,16 @@ def test_as_integral():
     f = Function('f')
     assert mellin_transform(f(x), x, s).rewrite('Integral') == \
            Integral(x**(s - 1)*f(x), (x, 0, oo))
+    assert fourier_transform(f(x), x, s).rewrite('Integral') == \
+           Integral(f(x)*exp(-2*I*pi*s*x), (x, -oo, oo))
+    assert laplace_transform(f(x), x, s).rewrite('Integral') == \
+           Integral(f(x)*exp(-s*x), (x, 0, oo))
+    assert str(inverse_mellin_transform(f(s), s, x, (a, b)).rewrite('Integral')) \
+           == "Integral(x**(-s)*f(s), (s, _c - oo*I, _c + oo*I))"
+    assert str(inverse_laplace_transform(f(s), s, x).rewrite('Integral')) \
+           == "Integral(f(s)*exp(s*x), (s, _c - oo*I, _c + oo*I))"
+    assert inverse_fourier_transform(f(s), s, x).rewrite('Integral') == \
+           Integral(f(s)*exp(2*I*pi*s*x), (s, -oo, oo))
 
 @XFAIL
 def test_mellin_transform_fail():
@@ -266,7 +276,7 @@ def test_expint():
 
 def test_inverse_mellin_transform():
     from sympy import (sin, simplify, expand_func, powsimp, Max, Min, expand,
-                       powdenest, powsimp, exp_polar, combsimp)
+                       powdenest, powsimp, exp_polar, combsimp, cos, cot)
     IMT = inverse_mellin_transform
 
     assert IMT(gamma(s), s, x, (0, oo)) == exp(-x)
@@ -343,7 +353,8 @@ def test_inverse_mellin_transform():
                       force=True).replace(exp_polar, exp)
     assert mysimp(mysimp(IMT(pi/(s*tan(pi*s)), s, x, (-1, 0)))) == \
            log(1-x)*Heaviside(1-x) + log(x-1)*Heaviside(x-1)
-    assert mysimp(IMT(pi/(s*tan(pi*s)), s, x, (0, 1))) == \
+    # test passing cot
+    assert mysimp(IMT(pi*cot(pi*s)/s, s, x, (0, 1))) == \
            log(1/x - 1)*Heaviside(1-x) + log(1 - 1/x)*Heaviside(x-1)
 
     # 8.4.14
@@ -387,6 +398,10 @@ def test_inverse_mellin_transform():
     # TODO these come out even messier, not worth testing for now
 
     # TODO the other bessel functions, when simplification is there
+
+    # for coverage
+
+    assert IMT(pi/cos(pi*s), s, x, (0, S(1)/2)) == sqrt(x)/(x + 1)
 
 def test_laplace_transform():
     LT = laplace_transform
