@@ -35,7 +35,7 @@ def test_hyperexpand():
     assert hyperexpand(hyper([S('1/2'), S('1/2')], [S('3/2')], z**2)*z) \
            == asin(z)
 
-def can_do(ap, bq, numerical=True, div=1):
+def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
     from sympy import exp_polar, exp
     r = hyperexpand(hyper(ap, bq, z))
     if r.has(hyper):
@@ -47,7 +47,11 @@ def can_do(ap, bq, numerical=True, div=1):
     repl = {}
     for n, a in enumerate(r.free_symbols - set([z])):
         repl[a] = randcplx(n)/div
-    return tn(hyper(ap, bq, z).subs(repl), r.replace(exp_polar, exp).subs(repl), z)
+    [a, b, c, d] = [2, -1, 3, 1]
+    if lowerplane:
+        [a, b, c, d] = [2, -2, 3, -1]
+    return tn(hyper(ap, bq, z).subs(repl), r.replace(exp_polar, exp).subs(repl), z,
+              a=a, b=b, c=c, d=d)
 
 def test_roach():
     # Kelly B. Roach.  Meijer G Function Representations.
@@ -425,9 +429,8 @@ def test_meijerg():
 
 def test_meijerg_shift_operators():
     # carefully set up the parameters. XXX this still fails sometimes
-    a1, a2 = map(lambda _: randcplx() - 5*I, range(2))
-    b1, b2 = map(lambda _: randcplx() + 5*I, range(2))
-    b3, b4, b5, a3, a4, a5 = map(lambda _: randcplx(), range(6))
+    a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = \
+        map(lambda n: randcplx(n), range(10))
     g = meijerg([a1], [a3, a4], [b1], [b3, b4], z)
 
     assert tn(MeijerShiftA(b1).apply(g, op),
@@ -578,7 +581,7 @@ def test_Mod1Effective():
 @slow
 def test_prudnikov_misc():
     assert can_do([1, (3 + I)/2, (3 - I)/2], [S(3)/2, 2])
-    assert can_do([S.Half, a - 1], [S(3)/2, a + 1])
+    assert can_do([S.Half, a - 1], [S(3)/2, a + 1], lowerplane=True)
     assert can_do([], [b + 1])
     assert can_do([a], [a - 1, b + 1])
 
@@ -594,8 +597,7 @@ def test_prudnikov_misc():
 
     assert can_do([a, a+S.Half], [2*a, b, 2*a - b + 1])
     assert can_do([a, a+S.Half], [S.Half, 2*a, 2*a + S.Half])
-    assert can_do([1, b], [b + 1]) # Lerch Phi
-    assert can_do([a], [a+1]) # lowergamma
+    assert can_do([a], [a+1], lowerplane=True) # lowergamma
 
 @slow
 def test_prudnikov_1():

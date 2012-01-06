@@ -391,44 +391,26 @@ class IndexPair(object):
         >>> IndexPair(ap, bq).compute_buckets()
         ({0: (-2,), 1/3: (1/3,), 1/2: (1/2, -1/2)}, {0: (1, 2)})
         """
+        from sympy.utilities.iterables import uniq
+
         # TODO this should probably be cached somewhere
         abuckets = {}
         bbuckets = {}
 
-        oaparametric = []
-        obparametric = []
+        parametrics = [Mod1Effective(x) for x in self.ap + self.bq]
         if oabuckets is not None:
-            for parametric, buckets in [(oaparametric, oabuckets),
-                                        (obparametric, obbuckets)]:
-                parametric += filter(lambda x: isinstance(x, Mod1Effective),
-                                     buckets.keys())
+            parametrics = oabuckets.keys() + obbuckets.keys() + parametrics
+        parametrics = uniq(filter(lambda x: isinstance(x, Mod1Effective), parametrics))
 
-        for params, bucket, oparametric in [(self.ap, abuckets, oaparametric),
-                                            (self.bq, bbuckets, obparametric)]:
-            parametric = []
+        for params, bucket in [(self.ap, abuckets), (self.bq, bbuckets)]:
             for p in params:
                 res = Mod1Effective(p)
                 if isinstance(res, Mod1Effective):
-                    parametric.append(p)
-                    continue
+                    res = parametrics[parametrics.index(res)]
                 if res in bucket:
                     bucket[res] += (p,)
                 else:
                     bucket[res] = (p,)
-            while parametric:
-                p0 = parametric[0]
-                p0mod1 = Mod1Effective(p0)
-                if oparametric.count(p0mod1):
-                    i = oparametric.index(p0mod1)
-                    p0mod1 = oparametric.pop(i)
-                bucket[p0mod1] = (p0,)
-                pos = []
-                for po in parametric[1:]:
-                    if Mod1Effective(po) == p0mod1:
-                        bucket[p0mod1] += (po,)
-                    else:
-                        pos.append(po)
-                parametric = pos
 
         return abuckets, bbuckets
 
