@@ -923,6 +923,66 @@ class fresnel_S(FresnelIntegral):
     .. math:: \operatorname{S}(z) = \int_0^z \sin{\frac{\pi}{2} t^2} \mathrm{d}t.
 
     It is an entire function.
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, fresnel_S
+    >>> from sympy.abc import z
+
+    Several special values are known:
+
+    >>> fresnel_S(0)
+    0
+    >>> fresnel_S(oo)
+    1/2
+    >>> fresnel_S(-oo)
+    -1/2
+    >>> fresnel_S(I*oo)
+    -I/2
+    >>> fresnel_S(-I*oo)
+    I/2
+
+    In general one can pull out factors of -1 and I from the argument:
+    >>> fresnel_S(-z)
+    -fresnel_S(z)
+
+    >>> fresnel_S(I*z)
+    -I*fresnel_S(z)
+
+    The Fresnel S integral obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(fresnel_S(z))
+    fresnel_S(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(fresnel_S(z), z)
+    sin(pi*z**2/2)
+
+    We can numerically evaluate the Fresnel integral to arbitrary precision
+    on the whole complex plane
+
+    >>> fresnel_S(2).evalf(30)
+    0.343415678363698242195300815958
+
+    >>> fresnel_S(-2*I).evalf(30)
+    0.343415678363698242195300815958*I
+
+    See Also
+    ========
+
+    fresnel_C
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Fresnel_integral
+    .. [2] http://dlmf.nist.gov/7
+    .. [3] http://mathworld.wolfram.com/FresnelIntegrals.html
+    .. [4] http://functions.wolfram.com/GammaBetaErf/FresnelS
     """
 
     _trigfunc = C.sin
@@ -972,6 +1032,66 @@ class fresnel_C(FresnelIntegral):
     .. math:: \operatorname{C}(z) = \int_0^z \cos{\frac{\pi}{2} t^2} \mathrm{d}t.
 
     It is an entire function.
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, fresnel_C
+    >>> from sympy.abc import z
+
+    Several special values are known:
+
+    >>> fresnel_C(0)
+    0
+    >>> fresnel_C(oo)
+    1/2
+    >>> fresnel_C(-oo)
+    -1/2
+    >>> fresnel_C(I*oo)
+    I/2
+    >>> fresnel_C(-I*oo)
+    -I/2
+
+    In general one can pull out factors of -1 and I from the argument:
+    >>> fresnel_C(-z)
+    -fresnel_C(z)
+
+    >>> fresnel_C(I*z)
+    I*fresnel_C(z)
+
+    The Fresnel C integral obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(fresnel_C(z))
+    fresnel_C(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(fresnel_C(z), z)
+    cos(pi*z**2/2)
+
+    We can numerically evaluate the Fresnel integral to arbitrary precision
+    on the whole complex plane
+
+    >>> fresnel_C(2).evalf(30)
+    0.488253406075340754500223503357
+
+    >>> fresnel_C(-2*I).evalf(30)
+    -0.488253406075340754500223503357*I
+
+    See Also
+    ========
+
+    fresnel_S
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Fresnel_integral
+    .. [2] http://dlmf.nist.gov/7
+    .. [3] http://mathworld.wolfram.com/FresnelIntegrals.html
+    .. [4] http://functions.wolfram.com/GammaBetaErf/FresnelC
     """
 
     _trigfunc = C.cos
