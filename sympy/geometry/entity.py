@@ -39,6 +39,18 @@ class GeometryEntity(tuple):
 
     @property
     def free_symbols(self):
+        """
+        Return all but any bound symbols that are used to define the Entity.
+
+        Examples
+        ========
+
+        >>> from sympy import Polygon, RegularPolygon, Point
+        >>> from sympy.abc import x, y
+        >>> t = Polygon(*RegularPolygon(Point(x, y), 1, 3).vertices)
+        >>> t.free_symbols
+        set([x, y])
+        """
         free = set()
         for a in self.args:
             free |= a.free_symbols
@@ -190,8 +202,19 @@ class GeometryEntity(tuple):
         See Also
         ========
 
-        sympy.geometry.ellipse.Ellipse.encloses_point, sympy.geometry.polygon.Polygon.encloses_point
+        sympy.geometry.ellipse.Ellipse.encloses_point
+        sympy.geometry.polygon.Polygon.encloses_point
 
+        Examples
+        ========
+
+        >>> from sympy import RegularPolygon, Point, Polygon
+        >>> t  = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t2 = Polygon(*RegularPolygon(Point(0, 0), 2, 3).vertices)
+        >>> t2.encloses(t)
+        True
+        >>> t.encloses(t2)
+        False
         """
         from sympy.geometry.point import Point
         from sympy.geometry.line import Segment, Ray, Line
@@ -237,6 +260,26 @@ class GeometryEntity(tuple):
         raise NotImplementedError()
 
     def subs(self, *args):
+        """
+        Substitues new for old in self.
+
+        See Also
+        ========
+
+        sympy.core.basic.subs
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Circle
+        >>> from sympy.abc import x, y, z
+        >>> c = Circle(Point(0, 0), 3)
+        >>> c.subs(0, 5)
+        Circle(Point(5, 5), 3)
+        >>> c.subs(3, z)
+        Circle(Point(0, 0), z)
+
+        """
         return type(self)(*[a.subs(*args) for a in self.args])
 
     def _eval_subs(self, old, new):
@@ -248,6 +291,14 @@ class GeometryEntity(tuple):
 
         The contents will not necessarily be Points. This is also
         what will be returned when one does "for x in self".
+
+        Examples
+        ========
+
+        >>> from sympy import RegularPolygon, Point, Polygon
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t.args
+        (Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
         """
 
         return tuple(self)

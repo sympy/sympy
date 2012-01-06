@@ -71,6 +71,19 @@ class Curve(GeometryEntity):
 
     @property
     def free_symbols(self):
+        """
+        Return a set of symbols other than the bound symbols used to parametrically define the Curve.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import t, a
+        >>> from sympy.geometry import Curve
+        >>> Curve((t, t**2), (t, 0, 2)).free_symbols
+        set()
+        >>> Curve((t, t**2), (t, a, 2)).free_symbols
+        set([a])
+        """
         free = set()
         for a in self.functions + self.limits[1:]:
             free |= a.free_symbols

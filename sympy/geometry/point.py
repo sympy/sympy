@@ -73,15 +73,33 @@ class Point(GeometryEntity):
 
     @property
     def x(self):
+        """
+        Returns the X coordinate of the Point.
+
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> p = Point(0, 1)
+        >>> p.x
+        0
+        """
         return self[0]
 
     @property
     def y(self):
-        return self[1]
+        """
+        Returns the Y coordinate of the Point.
 
-    @property
-    def free_symbols(self):
-        return self.x.free_symbols.union(self.y.free_symbols)
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> p = Point(0, 1)
+        >>> p.y
+        1
+        """
+        return self[1]
 
     def is_collinear(*points):
         """Is a sequence of points collinear?
@@ -374,6 +392,18 @@ class Point(GeometryEntity):
 
     @property
     def length(self):
+        """
+        The length of a Point.
+        This is needed for compatibility with line.
+
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> p = Point(0, 1)
+        >>> p.length
+        0
+        """
         return S.Zero
 
     def __len__(self):

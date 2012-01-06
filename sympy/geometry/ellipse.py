@@ -825,7 +825,7 @@ class Ellipse(GeometryEntity):
         the end to see that they lie in o.
 
         """
-        def dot(p1, p2):
+        def _dot(p1, p2):
             sum = 0
             for ind in xrange(len(p1.args)):
                 sum += p1[ind] * p2[ind]
@@ -840,9 +840,9 @@ class Ellipse(GeometryEntity):
         mdir = (ldir[0] / hr_sq, ldir[1] / vr_sq)
         mdiff = (diff[0] / hr_sq, diff[1] / vr_sq)
 
-        a = dot(ldir, mdir)
-        b = dot(ldir, mdiff)
-        c = dot(diff, mdiff) - 1
+        a = _dot(ldir, mdir)
+        b = _dot(ldir, mdiff)
+        c = _dot(diff, mdiff) - 1
         det = simplify(b*b - a*c);
 
         result = []
@@ -1092,18 +1092,62 @@ class Circle(Ellipse):
 
     @property
     def major(self):
+        """
+        This ellipse propert is an alias for radius
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Circle
+        >>> c1 = Circle(Point(3, 4), 6)
+        >>> c1.major
+        6
+        """
         return self.radius
 
     @property
     def minor(self):
+        """
+        This ellipse propert is an alias for radius
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Circle
+        >>> c1 = Circle(Point(3, 4), 6)
+        >>> c1.minor
+        6
+        """
         return self.radius
 
     @property
     def hradius(self):
+        """
+        This ellipse propert is an alias for radius
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Circle
+        >>> c1 = Circle(Point(3, 4), 6)
+        >>> c1.hradius
+        6
+        """
         return self.radius
 
     @property
     def vradius(self):
+        """
+        This ellipse property is an alias for radius
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Circle
+        >>> c1 = Circle(Point(3, 4), 6)
+        >>> c1.vradius
+        6
+        """
         return self.radius
 
     @property
