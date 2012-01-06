@@ -1,9 +1,11 @@
-from sympy.polys.lpoly import (lgens, LPoly, monomial_tobasic, TaylorEvalError)
+"""ltaylor taylor expansion sing lpoly
+"""
+
+from sympy.polys.lpoly import (LPoly, monomial_tobasic, TaylorEvalError)
 from sympy.series.order import O
 from sympy.core.singleton import S
 from sympy.polys.domains import QQ
 from sympy.polys.monomialtools import lex
-from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin, tan, asin, atan, acos, acot)
 from sympy.functions.elementary.exponential import (exp, log, LambertW)
 from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, atanh, asinh, acosh, acoth)
@@ -14,14 +16,35 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy import I
 from sympy.core.sympify import sympify
+from sympy.polys.domains import PythonRationalType
+
 
 # TODO cot(x), coth(x)
 
+def _round(prec):
+    if int(prec) != prec:
+        prec = int(prec) + 1
+    else:
+        prec = int(prec)
+    return prec
 
 def _is_monomial(p, var):
     """if p is a monomial c*var**n, where n is a real number,
     return the tuple (n, c)
     else return None
+
+    Examples
+    >>> from sympy.polys.ltaylor import _is_monomial
+    >>> from sympy import Symbol, log, S
+    >>> x = Symbol('x')
+    >>> _is_monomial(-x, x)
+    (1, -1)
+    >>> _is_monomial(log(2)*3*x**5, x)
+    (5, 3*log(2))
+    >>> _is_monomial(S(2), x)
+    (0, 2)
+    >>> _is_monomial(x + 1, x) == None
+    True
     """
     if p == var:
         return (1, 1)
@@ -65,6 +88,17 @@ def _is_monomial(p, var):
     return None
 
 def _split_constant_part(p, var):
+    """
+    Split a product in the part dependent on var and the indendent one;
+    else return (p, 1)
+
+    Examples
+    >>> from sympy import Symbol, log
+    >>> from sympy.polys.ltaylor import _split_constant_part
+    >>> x = Symbol('x')
+    >>> _split_constant_part(2*log(2)*x**2*log(x+1), x)
+    (x**2*log(x + 1), 2*log(2))
+    """
     c = 1
     if p.__class__ == Mul:
         p1 = 1
@@ -80,6 +114,15 @@ def _split_constant_part(p, var):
 def _get_var_from_term(p, var):
     """factor the negative power of var from a term
     e.g.  x**-4*sin(x)*cos(x) -> (-4, sin(x)*cos(x))
+
+    Examples
+    >>> from sympy import Symbol, sin, cos
+    >>> from sympy.polys.ltaylor import _get_var_from_term
+    >>> x = Symbol('x')
+    >>> _get_var_from_term(x**-4*sin(x)*cos(x), x)
+    (-4, sin(x)*cos(x))
+    >>> _get_var_from_term(x**4*sin(x)*cos(x), x)
+    (0, x**4*sin(x)*cos(x))
     """
     if p.__class__ == Mul:
         pw = 0
@@ -130,6 +173,22 @@ def _factor_var(q, var):
     >>> _factor_var(p, x)
     (-2, 2*x**2 + x)
     """
+    if q.__class__.is_Pow:
+        if q.base == var:
+            return (q.exp, S.One)
+    if q.__class__.is_Mul:
+        cv = []
+        pw = 0
+        for x in q.args:
+            if not x.has(var):
+                cv.append(x)
+            elif x.is_Pow:
+                pw += x.exp
+            else:
+                break
+        else:
+            c = Mul(*cv)
+            return (pw, c)
     if q.__class__ != Add:
         return (0, q)
     a = []
@@ -150,6 +209,29 @@ def _factor_var(q, var):
     return (pwn, num)
 
 def tobasic(num, tev, typn):
+    """
+    convert lpoly polynomial num to Sympy expression
+    tev list of TaylorEval objects
+    typn index ot tev
+
+    Examples
+    >>> from sympy.polys.ltaylor import TaylorEval, tobasic
+    >>> from sympy.polys.lpoly import LPoly
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.monomialtools import lex
+    >>> from sympy.polys.lpoly import lgens
+    >>> from sympy import Symbol, sympify, cos
+    >>> x = Symbol('x')
+    >>> lpq = LPoly('X', QQ, lex)
+    >>> lps = LPoly('X', sympify, lex)
+    >>> tev = (TaylorEval([x], lpq), TaylorEval([x], lps))
+    >>> X = lpq.gens()[0]
+    >>> tobasic(X**2 + X + 1, tev, 0)
+    x**2 + x + 1
+    >>> X = lps.gens()[0]
+    >>> tobasic(X**2 + cos(2)*X + 1, tev, 1)
+    x**2 + x*cos(2) + 1
+    """
     a = []
     gens = tev[typn].gens
     if typn == 0:
@@ -166,45 +248,60 @@ def tobasic(num, tev, typn):
 
 
 _PWMAX = [8, 4]
-def taylor_ev(p2, n, var, tev, typ):
+def taylor_decompose(p, var, tev, typ):
     """
-    decomposition p2**-n = p2r**-n * x**n0 * x**pw
-    so that p2r/x**n0 has constant limit different from 0
+    decompose p(x) in pr(x)/x**n0 * x**pw
+    where p2r is a regular taylor expandible function with tev[typ1],
+    and p2r**n/x**n0 has constant limit different from 0;
+    return None if the decomposition fails.
 
-    OUTPUT
-    None if the operation does not succeed
-    p2rest, typ2, pw, n0
+    Output: pr, typ1, pw, n0
+
+    Examples
+    >>> from sympy.polys.ltaylor import TaylorEval, taylor_decompose
+    >>> from sympy.polys.lpoly import LPoly
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.monomialtools import lex
+    >>> from sympy import Symbol, S, sympify, sin
+    >>> x = Symbol('x')
+    >>> lpq, lps = LPoly('X0', QQ, lex), LPoly('X0', sympify, lex)
+    >>> tev = (TaylorEval([x], lpq), TaylorEval([x], lps))
+    >>> taylor_decompose(1 + sin(x)/x**2, x, tev, 0)
+    (x**2 + sin(x), 0, -1, 1)
+    >>> taylor_decompose(x + sin(x)/x, x, tev, 0)
+    (x + sin(x)/x, 0, 0, 0)
+    >>> taylor_decompose(x**2 + sin(x), x, tev, 0)
+    (x**2 + sin(x), 0, 1, 1)
     """
+    # TODO
+    # >>> taylor_decompose(sqrt(x) + x**(S(3)/2), x, tev, 0)
+    # (x + 1, 0, S.Half, 0)
     pw = 0
-    s2, typ2 = taylor_eval(p2, _PWMAX[typ], tev, typ)
+    s2, typ2 = taylor_eval(p, _PWMAX[typ], tev, typ)
     n0 = 0
-    # if this fails factor 1/x terms in p2
+    # if this fails factor 1/x terms in p
     if not s2 or typ2 == 2:
-        # p = 1/(1 + sin(x)/x**2)
-        # p2pw, p2rest = -2, sin(x) + x**2
-        # maybe put a cutoff in _factor_var
-        p2pw, p2rest = _factor_var(p2, var)
-        n0 = p2pw*n
-        pw -= n0
-        p2 = p2rest
-        s2, typ2 = taylor_eval(p2, _PWMAX[typ], tev, typ)
-        # sin(x) + x**2->s2 = ... +-1/6*X0^3 +X0^2 +X, typ2=0
-        if not s2 or typ2 == 2 or not n0.is_integer:
+        # p = 1 + sin(x)/x**2
+        # pw, pr = -2, sin(x) + x**2
+        pw, pr = _factor_var(p, var)
+        s2, typ2 = taylor_eval(pr, _PWMAX[typ], tev, typ)
+        # pr = sin(x) + x**2->s2 = ... +X0^2 +X0, typ2=0
+        if not s2 or typ2 == 2:
             return None
-        n0 = min(s2.keys())[0]*(-n)
+        n0 = min(s2.keys())[0]
+        # 1 + sin(x)/x**2 = x**-2*(x**2 + sin(x)) = x**-1*(x**2 + sin(x))/x
+        # pw = -1, n0 = 1  p = x**pw * pr/x**n0
         pw += n0
     else:
-        n0 = min(s2.keys())[0]*(-n)
+        # p = x**2 + sin(x)
+        # p = x**pw * pr/x**n0, pr=p, n0 = 1, pw = 1
+        n0 = min(s2.keys())[0]
         pw = n0
-    if (pw.__class__ == int or pw.is_integer) and \
-        (n0.__class__ == int or n0.is_integer):
-        pw = int(pw)
-        n0 = int(n0)
-    else:
-        return None
-    return p2, typ2, pw, n0
+        pr = p
+    return pr, typ2, pw, n0
 
-def taylor(p, var=None, start=0, prec=6, dir="+", pol_pars=[]):
+
+def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False):
     """
     taylor series expansion of p
     kept the same arguments as series, with the addition
@@ -270,7 +367,8 @@ def taylor(p, var=None, start=0, prec=6, dir="+", pol_pars=[]):
     >>> taylor(sum(sin(sin(n*x)) for n in range(1, 4)), x, 0, 10)
     6*x - 12*x**3 + 138*x**5/5 - 6176*x**7/105 + 7293*x**9/70 + O(x**10)
     """
-
+    prec = n
+    start = x0
     p = sympify(p)
     # TODO deal with some of these cases within taylor
     if var == None or not prec or start != 0 or dir != "+" or \
@@ -288,7 +386,6 @@ def taylor(p, var=None, start=0, prec=6, dir="+", pol_pars=[]):
     # in the case in which p2=O(x**prec1), if prec1 < prec
     # series gives a value error
     if p.__class__ == Add:
-        addends = []
         orders = []
         # consider first the Order; in case the order is less than
         # prec series raises ValueError, so it is not necessary
@@ -323,11 +420,11 @@ def taylor(p, var=None, start=0, prec=6, dir="+", pol_pars=[]):
 
         lpq = LPoly(lpol_vars, QQ, lex)
         lps = LPoly(lpol_vars, sympify, lex)
-        tev = (TaylorEval(gens, lpq), TaylorEval(gens, lps))
+        tev = (TaylorEval(gens, lpq, analytic), TaylorEval(gens, lps, analytic))
 
         for p1 in non_pol_part:
             p1, c = _split_constant_part(p1, var)
-            p2, ord2 = taylor_term(p1, var, tev, 0, start, prec, dir, pol_pars)
+            p2, ord2 = _taylor_term(p1, var, tev, 0, start, prec, dir, pol_pars)
             if c == 1:
                 res += p2
             else:
@@ -343,14 +440,39 @@ def taylor(p, var=None, start=0, prec=6, dir="+", pol_pars=[]):
 
     lpq = LPoly(lpol_vars, QQ, lex)
     lps = LPoly(lpol_vars, sympify, lex)
-    tev = (TaylorEval(gens, lpq), TaylorEval(gens, lps))
+    tev = (TaylorEval(gens, lpq, analytic), TaylorEval(gens, lps, analytic))
+
+    if p.__class__ == log:
+        q = p.args[0]
+        rx = taylor_decompose(q, var, tev, 0)
+        if not rx:
+            p1 = p.series(var, start, prec, dir)
+            return p1
+
+        p2, typ, pw, n0 = rx
+        den, typd = taylor_eval(p2, prec+n0, tev, typ)
+        if typd == 2:
+            p1 = p.series(var, start, prec, dir)
+            return p1
+        den = den/den.lp.gens()[0]**n0
+        c = den[den.lp.zero_mon]
+        if c != 1:
+            den = den/c
+        num = den.log('X0', prec)
+        p2 = tobasic(num, tev, typd)
+        p2 = pw*log(var) + p2
+        if c != 1:
+              if isinstance(c, PythonRationalType):
+                  c = S(c.numerator)/S(c.denominator)
+              p2 += log(c)
+        return p2 + O(var**prec)  # TOFIX ?
 
     # factor out powers of log(x) and replace them with a polynomial
     # variable `tlog`
     # e.g. p = sin(x)**10 * log(x)*log(sin(x)+x) ->
     # sin(x)**10 * log((sin(x)+x)/x) * tlog**2
     classes = [q.__class__ for q in p.args]
-    if log in classes:
+    if p.__class__ == Mul and log in classes:
         lpl = LPoly('tlog', sympify, lex)
         tlog = lpl.gens()[0]
         p12 = lpl(1)
@@ -359,7 +481,12 @@ def taylor(p, var=None, start=0, prec=6, dir="+", pol_pars=[]):
                 p12 = p12*q
             else:
                 qarg = q.args[0]
-                p2, typ2, pw2, n2 = taylor_ev(qarg, -1, var, tev, 0)
+                rx = taylor_decompose(qarg, var, tev, 0)
+                if not rx:
+                    p1 = p.series(var, start, prec, dir)
+                    return p1
+
+                p2, typ2, pw2, n2 = rx
                 # if pw2=0 there is no log(x) factor
                 # q = sin(x) + x; pw2 = 1; replace q by q/x**pw2
                 # log(q) = log(q/x**pw2) + pw2*log(x) -> log(q/x**pw2) + pw2*tlog
@@ -371,8 +498,8 @@ def taylor(p, var=None, start=0, prec=6, dir="+", pol_pars=[]):
         #p11 = [p12[(i,)] for i in range(nlog+1)]
         p11 = [0]*(nlog+1)
         for i in range(nlog+1):
-            if (i,) in p12:
-                p11[i] = p12[(i,)]
+            if (i, ) in p12:
+                p11[i] = p12[(i, )]
     else:
         p11 = [p]
         nlog = 0
@@ -390,17 +517,17 @@ def taylor(p, var=None, start=0, prec=6, dir="+", pol_pars=[]):
             continue
         elif p.__class__ == Pow and \
             p.args[0] == var and var not in p.args[1].atoms():
-                n = p.args[1]
-                if n.is_number:
-                    if n < prec:
-                        ps = ps + c*var**n*logi
-                    else:
-                        ps += c*p*logi + O(var**prec*logi)
+            n = p.args[1]
+            if n.is_number:
+                if n < prec:
+                    ps = ps + c*var**n*logi
                 else:
-                    ps += c*p*logi
-                continue
+                    ps += c*p*logi + O(var**prec*logi)
+            else:
+                ps += c*p*logi
+            continue
         else:
-            p1, ord1 = taylor_term(p, var, tev, 0, start, prec, dir, pol_pars)
+            p1, ord1 = _taylor_term(p, var, tev, 0, start, prec, dir, pol_pars)
             if ord1:
                 if c == 1:
                     ps += p1*logi + ord1*logi
@@ -414,59 +541,108 @@ def taylor(p, var=None, start=0, prec=6, dir="+", pol_pars=[]):
             logi *= log(var)
     return ps
 
-
-def taylor_term(p, var, tev, typ=0, start=0, prec=6, dir="+", pol_pars=[]):
+def _taylor_term(p, var, tev, typ=0, start=0, prec=6, dir="+", pol_pars=[]):
     """taylor expansion of a single term p
     tev = (TaylorEval(gens, lpq), TaylorEval(gens, lps))
+    where lpq, lps have first variable name 'X0'
+    typ index of tev selected
     p.__class__ != Add
     if p.__class__ == Mul, p.args does not have terms independent of var
     e.g. p = sin(x)*cos(x)/x
          p = (1+x)**2
     return (p1, order)
+
+    Examples
+    >>> from sympy.polys.ltaylor import TaylorEval, _taylor_term
+    >>> from sympy.polys.lpoly import LPoly
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.monomialtools import lex
+    >>> from sympy import Symbol, sympify, cos, sin
+    >>> x = Symbol('x')
+    >>> lpq, lps = LPoly('X0', QQ, lex), LPoly('X0', sympify, lex)
+    >>> tev = (TaylorEval([x], lpq), TaylorEval([x], lps))
+    >>> p = sin(x)*cos(x)/x
+    >>> _taylor_term(p, x, tev, 0, 0, 6)
+    (2*x**4/15 - 2*x**2/3 + 1, O(x**6))
+    """
+
+    res = _taylor_term1(p, var, tev, typ, prec)
+    if res == None:
+       p1 = p.series(var, start, prec, dir)
+       return (p1.removeO(), p1.getO())
+
+    c, num, pw, typn = res
+    p2 = tobasic(num, tev, typn)
+    if c != 1:
+        if isinstance(c, PythonRationalType):
+            c = S(c.p)/S(c.q)
+        p2 = (p2*c).expand()
+    if pw:
+        p2 = (p2*var**pw).expand() # multinomial
+    return p2, O(var**prec)
+
+def _taylor_term1(p, var, tev, typ, prec):
+    """taylor expansion of a single term p
+    tev = (TaylorEval(gens, lpq), TaylorEval(gens, lps))
+    where lpq, lps have first variable name 'X0'
+    typ index of tev selected
+
+    Output: c, p2, pw, typ2
+    p2 LPolyElement
+    typ2 computed with tev[typ2]
+    The taylor expansion is tobasic(p2, tev, typ2) * c * var**pw
+
+    Examples
+    >>> from sympy.polys.ltaylor import TaylorEval, _taylor_term1
+    >>> from sympy.polys.lpoly import LPoly
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.monomialtools import lex
+    >>> from sympy import Symbol, sympify, cos, sin
+    >>> x = Symbol('x')
+    >>> lpq, lps = LPoly('X0', QQ, lex), LPoly('X0', sympify, lex)
+    >>> tev = (TaylorEval([x], lpq), TaylorEval([x], lps))
+    >>> p = (1/x + x**2)**2
+    >>> _taylor_term1(p, x, tev, 0, 6)
+    (1, X0**6 + 2*X0**3 + 1, -2, 0)
     """
 
     if p.__class__ == Pow:
         # x**a, where a is not real number, e.g. x**I, x**x, x**y
         n = p.args[1]
-        if p.args[0] == var:
+        p2 = p.args[0]
+        if p2 == var:
             if n.is_real and n.is_number:
-                raise ValueError('p should not be passed to taylor_term')
+                raise ValueError('p should not be passed to _taylor_term')
             else:
-                # case x**x, x**Rational(2, 3)
-                p1 = p.series(var, start, prec, dir)
-                return (p1.removeO(), p1.getO())
-        # case q**n, n < 0
-        if n.is_negative and n.is_integer:
-            #n = int(n)
+                # case x**x
+                return None
+        if n.is_negative or n.is_positive and n.is_Rational and not n.is_Integer:
             pw = 0
-            p2 = p.args[0]
-            n = p.args[1]
-
-            # to compute the taylor expansion of p2**n, n < 0, n integer
-            # rx = taylor_ev(p2, n, var, tev, typ)
-            # if rx is not None, then r2, typ2, pw0, n0 = rx, with
-            # p2**-n = r2**-n / x**n0 * x**pw
-            # taylor expansion of r2**-n starts with x**n0
-            # p + O(x**prec) =
-            # 1/(r2**-n / x**n0) * x**-pw + O(x**prec) =
-            # ( 1/(r2**-n / x**n0) + O(x**(prec+pw))) * x**-pw
-            # so that r2**-n must be computed with precision prec+pw+n0
-
-            rx = taylor_ev(p2, n, var, tev, typ)
+            rx = taylor_decompose(p2, var, tev, 0)
             if not rx:
-                p1 = p.series(var, start, prec, dir)
-                return (p1.removeO(), p1.getO())
+                return None
             p2, typ2, pw0, n0 = rx
-            pw += pw0
-
-            #decomposition p2**-n = p2r**-n * x**n0 * x**pw
-            den, typd = taylor_eval(p2**-n, prec+pw+n0, tev, typ2)
+            pw -= pw0*n
+            prec1 = _round(prec+pw+n0)
+            den, typd = taylor_eval(p2, prec1, tev, typ2)
+            if typd == 2:
+                return None
             den = den/den.lp.gens()[0]**n0
-            num = den.series_inversion('X0', prec+pw+n0)
-            p2 = tobasic(num, tev, typd)
-            if pw != 0:
-                p2 = (p2*var**-pw).expand()
-            return p2 , O(var**prec)
+            # TODO check similar code elsewere
+            prec1 = _round(prec + pw)
+            if not n.is_Integer:
+                c = den[den.lp.zero_mon]
+                if c != 1:
+                    den = den/c
+            else:
+                c = 1
+            num = den.pow_trunc(n, 'X0', prec1)
+            if c != 1:
+                if isinstance(c, PythonRationalType):
+                    c = S(c.p)/S(c.q)
+                c = S(c)**n
+            return c, num, -pw, typd
+
         if n.is_positive and n.is_integer:
             pw = 0
             p2 = p.args[0]
@@ -476,13 +652,9 @@ def taylor_term(p, var, tev, typ=0, start=0, prec=6, dir="+", pol_pars=[]):
             prec1 = int(prec-pw2*n)
             p2, typ2 = taylor_eval(r2**n, prec1, tev, typ)
             if typ2 == 2:
-                p1 = p.series(var, start, prec, dir)
-                return (p1.removeO(), p1.getO())
-            p2 = tobasic(p2, tev, typ2)
-            if pw2 != 0:
-                p2 = (p2*var**(pw2*n)).expand()
-            return p2 , O(var**prec)
-
+                return None
+            pw = pw2*n
+            return 1, p2, pw, typ2
 
     if p.__class__ == Mul:
         # product of terms depending on var
@@ -490,48 +662,37 @@ def taylor_term(p, var, tev, typ=0, start=0, prec=6, dir="+", pol_pars=[]):
         # collect positive and negative powers of the product
         # num = product of the positive powers
         # collect the negative powers in a list
-        # collect the leading terms of the negative powers in pwv
+        # collect the leading terms of the negative powers;
         # if the leading terms has power _PWMAX or greater,
         # fall back to the series method
-        # if there is a power which is not integer, use the series method
-
+        # if there is a power which is not integer, or a rational
+        # number under certain conditions (TODO), use the series method
         args = p.args
         num = 1  # numerator terms of p
         pw = 0   # factor var**-pw of p extracted from p; then
                  # p must be taylor expanded with precision prec+pw
-        denv = [] # list of denomianator terms to be taylor exanded
+        denv = [] # list of denominator terms to be taylor expanded
+        # (pr,typ,n0,n)
+        c = S.One
         pwn = 0   #
-        n0v = [] # denv[i] must be divided by var**n0v[i]; therefore
-                 # denv[i] must have an extra precision n0v[i]
-        dentyp = []  # dentyp[i] type of ring used for i-th element
         for q in args:
-            # case q = sin(x)**2  :  num = num*sin(x)**2
-            # case q = sin(x)**-2 :  denv.append(sin(x)**2); n0v.append(4)
             if q.__class__ == Pow:
+                # case q = sin(x)**2  :  num = num*sin(x)**2
+                # case q = sin(x)**-2 :  denv.append((...))
                 qargs = q.args
                 n = qargs[1]
-                if n.is_integer:
-                    if n.is_positive:
-                        num = num*q
-                    elif n.is_negative:
-                        p2 = qargs[0]
-                        if p2 == var:
-                            pw -= int(n)
-                        else:
-                            rx = taylor_ev(p2, n, var, tev, 0)
-                            if not rx:
-                                p1 = p.series(var, start, prec, dir)
-                                return (p1.removeO(), p1.getO())
-                            p2x, typ2x, pw0x, n0x = rx
-
-                            denv.append(p2x**-n)
-                            pw += pw0x
-                            n0v.append(n0x)
-                            dentyp.append(typ2x)
-                    else:
-                        # term with power 0; to play save go to series
-                        p1 = p.series(var, start, prec, dir)
-                        return (p1.removeO(), p1.getO())
+                if n.is_Integer and n.is_positive:
+                    num = num*q
+                elif n.is_negative or n.is_positive and n.is_Rational and not n.is_Integer:
+                    p2 = qargs[0]
+                    rx = taylor_decompose(p2, var, tev, 0)
+                    if not rx:
+                        return None
+                    p2x, typ2x, pw0x, n0x = rx
+                    denv.append((p2x, typ2x, n0x, n))
+                    pw -= pw0x*n
+                else:
+                    return None
             elif q.__class__ == Add:
                 # case (1 + 1/x**2)/cos(x) -> x**-2 * (x**2 + 1)/cos(x)
                 a = []
@@ -552,67 +713,80 @@ def taylor_term(p, var, tev, typ=0, start=0, prec=6, dir="+", pol_pars=[]):
             else:
                 # case q = cos(x)  :  num = num*q
                 num = num*q
-        pw += int(- pwn)
+        pw -= pwn
         den = 1
+        # for each term (pr,typ,n0,n) in denv make the taylor expansion and
+        # divide by var**n0, so that inversions can be done within lpoly
+        # A nice feature of this approach is that each term can be
+        # expanded in its proper ring, e.g. taking an extreme case
+        # taylor(1/(exp(log(2)*x**100)*sin(sin(x))), x, 0, 101)
+        # exp(log(2)*x**100) is expanded on SR
         if denv:
-            # for each term in denv make the taylor expansion and
-            # divide by var**n0, so that inversions can be done within lpoly
-            # A nice feature of this approach is that each term can be
-            # expanded in its proper ring, e.g. taking an extreme case
-            # taylor(1/(exp(log(2)*x**100)*sin(sin(x))), x, 0, 101)
-            # exp(log(2)*x**100) is expanded on SR
-            #
-            den, typd = taylor_eval(denv[0], prec+pw+n0v[0], tev, dentyp[0])
+            prec1 = _round(prec + pw)
+            px, typx, n0x, nx = denv[0]
+            den, typd = taylor_eval(px, prec1+n0x, tev, typx)
+            if typd == 2:
+                return None
             lp = den.lp
-            ring = lp.ring
-            lvar = lp.gens()[0]
-            if n0v[0]:
-                den = den/lvar**n0v[0]
+            ring, lvar = lp.ring, lp.gens()[0]
+            if n0x:
+                den = den/lvar**n0x
+            if not nx.is_Integer:
+                cx = den[den.lp.zero_mon]
+                if cx != 1:
+                    den = den/cx
+                    if isinstance(cx, PythonRationalType):
+                        cx = S(cx.p)/S(cx.q)
+                    c = c*cx**nx
+            den = den.pow_trunc(nx, 'X0', prec1)
             for i in range(1, len(denv)):
-                q1, typ1 = taylor_eval(denv[i], prec+pw+n0v[i], tev, dentyp[i])
-                q1.lp = lp
-                if n0v[i]:
-                    q1 = q1/lvar**n0v[i]
-                #if str(q1.lp.ring) != str(ring):
-                if typ1 != typd:
-                    if typ1 == 0:
-                        q1 = q1.toSR(tev[1].lp)
+                px, typx, n0x, nx = denv[i]
+                den1, typd1 = taylor_eval(px, prec1+n0x, tev, typx)
+                if typd1 == 2:
+                    return None
+                if n0x:
+                    den1 = den1/den1.lp.gens()[0]**n0x
+                if not nx.is_Integer:
+                    cx = den1[den1.lp.zero_mon]
+                    if cx != 1:
+                      den1 = den1/cx
+                      if isinstance(cx, PythonRationalType):
+                          cx = S(cx.p)/S(cx.q)
+                      c = c*cx**nx
+                den1 = den1.pow_trunc(nx, 'X0', prec1)
+                if typd1 != typd:
+                    if typd1 == 0:
+                        den1 = den1.toSR(tev[1].lp)
                     else:
-                        den = den.to_SR(tev[1].lp)
+                        den = den.toSR(tev[1].lp)
                         typd = 1
-                lp = tev[1].lp
-                den = den.mul_trunc(q1, 'X0', prec+pw+n0v[i])
-            den = den.series_inversion('X0', prec+pw)
-            num, typn = taylor_eval(num, prec+pw, tev, 0)
+                    lp = tev[1].lp  # TODO test this line
+                den = den.mul_trunc(den1, 'X0', prec1)
+
+            num, typn = taylor_eval(num, prec1, tev, 0)
             if typn == 2:
-                p1 = p.series(var, start, prec, dir)
-                return (p1.removeO(), p1.getO())
+                return None
             if den != 1:
                 if typn < typd:
                     num = num.toSR(tev[1].lp)
                     typn = 1
                 elif typn > typd:
                     den = den.toSR(tev[1].lp)
-                num = num.mul_trunc(den, 'X0', prec+pw)
-            num = tobasic(num, tev, typn)
-            if pw:
-                num = (var**-pw * num).expand()
-            return (num, O(var**prec))
+                num = num.mul_trunc(den, 'X0', prec1)
+            return c, num, -pw, typn
+        # end of denv clause
         elif pw:
-            num, typn = taylor_eval(num, prec+pw, tev, 0)
+            num, typn = taylor_eval(num, prec+pw, tev, typ)
             if typn == 2:
-                p1 = p.series(var, start, prec, dir)
-                return (p1.removeO(), p1.getO())
-            num = tobasic(num, tev, typn)
-            num = (var**-pw * num).expand()
-            return (num, O(var**prec))
+                return None
+            return 1, num, -pw, typn
 
-    s1, typ1 = taylor_eval(p, prec, tev, 0)
+    # end of p.__class__ == Mul
+
+    s1, typ1 = taylor_eval(p, prec, tev, typ)
     if typ1 == 2:
-        p1 = p.series(var, start, prec, dir)
-        return (p1.removeO(), p1.getO())
-    p1 = tobasic(s1, tev, typ1)
-    return (p1, O(var**prec))
+        return None
+    return 1, s1, 0, typ1
 
 
 def ev_args(te, a, prec):
@@ -627,7 +801,7 @@ def ev_args(te, a, prec):
         raise NotImplementedError
 
 def taylor_eval(p, prec, tev, typ):
-    """taylor expansion attemted with lpoly
+    """taylor expansion attempted with lpoly
 
     p Sympy expression
     tev tuple of TaylorEval objects of the form
@@ -647,6 +821,18 @@ def taylor_eval(p, prec, tev, typ):
     if it succeeds, it returns (res, typ), where res
     is a lpoly polynomial on lpq it typ=0, on lps if typ=1
     if it fails with SR, return (None, 2)
+
+    Examples
+    >>> from sympy.polys.ltaylor import TaylorEval, taylor_eval
+    >>> from sympy.polys.lpoly import LPoly
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.monomialtools import lex
+    >>> from sympy import Symbol, sympify, cos
+    >>> x = Symbol('x')
+    >>> lpq, lps = LPoly('X0', QQ, lex), LPoly('X0', sympify, lex)
+    >>> tev = (TaylorEval([x], lpq), TaylorEval([x], lps))
+    >>> taylor_eval(cos(x+1), 3, tev, 0)
+    ((-cos(1)/2)*X0**2 + (-sin(1))*X0 + (cos(1)), 1)
     """
     typ1 = typ
     for ring in [QQ, sympify][typ:]:
@@ -658,15 +844,12 @@ def taylor_eval(p, prec, tev, typ):
             typ1 += 1
             if typ1 == 2:
                 return (None, 2)
-            continue
         except NotImplementedError:
             return (None, 2)
-    print('ERROR got here')
-    return (None, 2)
 
 
 class TaylorEval:
-    def __init__(self, gens, lp):
+    def __init__(self, gens, lp, analytic=False):
         """
         prec  precision
         gens polynomial variables in Sympy (the series variable
@@ -692,6 +875,7 @@ class TaylorEval:
         self.lgens = lp.gens()
         self.lvar = self.lgens[0]
         self.dgens = dict(zip(self.gens, self.lgens))
+        self.analytic = analytic
 
     def coerce_number(self, a):
         ring = self.ring
@@ -852,178 +1036,57 @@ class TaylorEval:
                 raise TaylorEvalError
             q = ev_args(self, f.args, prec)
             if q == 0:
-                return arcoth(0)
+                return acoth(0)
             return I*pi/2 + q.re_acoth(self.lvname, prec)
         if head == LambertW:
             q = ev_args(self, f.args, prec)
             return q.lambert(self.lvname, prec)
-        raise NotImplementedError('case in __call__ not considered f=%s' % f)
 
-###############################################################
-# Expansion of polynomials done in a similar way to the above
+        if not self.analytic:
+            raise NotImplementedError('case in __call__ not considered f=%s' % f)
+        if len(f.args) > 1:
+            raise NotImplementedError
 
-class ExpandPolEvalError(TypeError):
-    pass
-
-def expand_pol(p, gens):
-    """
-    expansion of a polynomial
-
-    p polynomial
-    gens list of polynomial variables
-
-    ALGORITHM separate p in its addends; for each compute
-    the expansion first in the QQ ring; if this fails compute it
-    in the symbolic ring consisting of the sympy expressions which
-    do not depend on the polynomial variables in gens
-
-    analogous to `taylor`
-
-    Examples:
-    >>> from sympy import symbols
-    >>> from sympy.polys.ltaylor import expand_pol
-    >>> x,y = symbols('x,y')
-    >>> expand_pol(x*(x+1)*(x+2)**2, [x])
-    x**4 + 5*x**3 + 8*x**2 + 4*x
-    >>> expand_pol((1+x+y)*(x+y),[x,y])
-    x**2 + 2*x*y + x + y**2 + y
-    """
-    p = sympify(p)
-    ngens = len(gens)
-    lpol_vars = ['X%d' % i for i in range(ngens)]
-
-    # treat independently addends
-    # e.g. expand_pol((1 + 3*x + 2*x**2)**300 + (pi + x)**2)
-    # the first term is computed on the QQ ring, the second on SR
-    if p.__class__ == Add:
-        lpq = LPoly(lpol_vars, QQ, lex)
-        lps = LPoly(lpol_vars, sympify, lex)
-        tev = (ExpandPol(gens, lpq), ExpandPol(gens, lps))
-        p1 = 0
-        for q in p.args:
-            q1 = expand_pol_term(q, gens, tev, 0)
-            p1 += q1
-        return p1
-
-    lpq = LPoly(lpol_vars, QQ, lex)
-    lps = LPoly(lpol_vars, sympify, lex)
-    tev = (ExpandPol(gens, lpq), ExpandPol(gens, lps))
-    p1 = expand_pol_term(p, gens, tev, 0)
-    return p1
-
-def expand_pol_term(p, gens, tev, typ):
-    """
-    expansion of a single polynomial term
-
-    analogous to `taylor_term`
-    """
-    p1, typ = expand_pol_eval(p, gens, tev, typ)
-    p2 = tobasic(p1, tev, typ)
-    return p2
-
-def expand_pol_eval(p, gens, tev, typ):
-    """
-    polynomial expansion attempted by lpoly
-    analogous to `taylor_eval`
-    """
-    typ1 = typ
-    for ring in [QQ, sympify][typ:]:
-        te = tev[typ1]
-        try:
-            p1 = te(p)
-            return (p1, typ1)
-        except ExpandPolEvalError:
-            typ1 += 1
-            if typ1 == 2:
-                return (None, 2)
-            continue
-        except NotImplementedError:
-            return (None, 2)
-    print 'ERROR got here'
-    return (None, 2)
-
-class ExpandPol:
-    """
-    analogous to TaylorEval
-    """
-    def __init__(self, gens, lp):
-        self.gens = gens
-        self.ngens = len(gens)
-        # try first with ring QQ
-        self.ring = lp.ring
-        self.lp = lp
-        self.lgens = lp.gens()
-        self.dgens = dict(zip(self.gens, self.lgens))
-
-    def coerce_number(self, a):
-        ring = self.ring
-        if self.lp.SR:
-            return a
-        if isinstance(a, Rational):
-            if ring == QQ:
-                return QQ(a.p, a.q)
-            return a
-        else:
-            raise ExpandPolEvalError
-
-    def __call__(self, f):
-        if isinstance(f, (int, Number)):
-            return self.lp(self.coerce_number(f))
-        if f in self.gens:
-            return self.dgens[f]
-
-        head = f.__class__
-        if head == Add:
-            s = self.lp(0)
-            for q in f.args:
-                if q in self.gens:
-                    q = self.dgens[q]
-                elif any(y in self.gens for y in q.atoms()):
-                    q = self(q)
-                else:
-                    q = self.coerce_number(q)
-                s += q
-            return s
-        if head == Mul:
-            s = self.lp(1)
-            pws = [0]*self.ngens
-            rest = []
-            for q in f.args:
-                if q.__class__ == Pow:
-                    qb, qp = q.args
-                    if qb in self.gens:
-                        if qp.is_integer:
-                            s = s * self.dgens[qb]**int(qp)
-                        else:
-                            rest.append(q)
-                    else:
-                        rest.append(q)
-                else:
-                    rest.append(q)
-
-            for q in rest:
-                if q in self.gens:
-                    q = self.dgens[q]
-                    s = s*q
-                elif any(x in self.gens for x in q.atoms()):
-                    q = self(q)
-                    s = s*q
-                else:
-                    q = self.coerce_number(q)
-                    s = s*q
-            return s
-        if head == Pow:
-            args = f.args
-            pw = args[1]
-            # pw should be an integer
-            if pw.__class__ == Integer:
-                pw = int(pw)
-            x = args[0]
-            if x in self.gens:
-                x = self.dgens[x]
+        g = head(self.var)
+        q1a = self(f.args[0], prec)
+        if min(q1a)[0] <= 0:
+            raise NotImplementedError
+        f1 = g.series(self.var, 0, prec)
+        f1 = f1.removeO()
+        a = [QQ(0)]*prec
+        var = self.var
+        if not f1.args:
+            if f1 == var:
+                a[1] += 1
             else:
-                x = self(x)
-            x1 = x**pw
-            return x1
-
-        raise NotImplementedError('case in __call__ not considered f=%s' % f)
+                a[0] += self.coerce_number(f1)
+        for y in f1.args:
+            if y == var:
+                a[1] += 1
+            else:
+                if y.is_Pow:
+                    if y.base == var and y.exp.is_Integer and y.exp.is_positive:
+                        a[int(y.exp)] += 1
+                    else:
+                        raise NotImplementedError
+                elif y.is_Mul:
+                    cv = []
+                    i = None
+                    for yx in y.args:
+                        if not yx.has(var):
+                            cv.append(yx)
+                        else:
+                            if yx == var:
+                                i = 1
+                            elif yx.is_Pow and yx.base == var and yx.exp.is_Integer and yx.exp.is_positive:
+                                i = int(yx.exp)
+                            else:
+                                raise NotImplementedError
+                    c = Mul(*cv)
+                    c = self.coerce_number(c)
+                    if i != None:
+                        a[i] += c
+                else:
+                    raise NotImplementedError
+        q = q1a.series_from_list(a, 'X0', prec)
+        return q
