@@ -935,6 +935,14 @@ class fresnel_S(FresnelIntegral):
         h2 = C.hyper([S.One,S.Half],[],-2*I/(pi*z**2))
         return root(z**4,4)/(2*z) - S.One/(2*pi*z)*(C.exp(-e)*h1 + C.exp(e)*h2)
 
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if C.Order(1,x).contains(arg):
+            return pi/6*arg**3
+        else:
+            return self.func(arg)
+
 
 class fresnel_C(FresnelIntegral):
     r"""
@@ -959,6 +967,14 @@ class fresnel_C(FresnelIntegral):
         h1 = C.hyper([S.One,S.Half],[],2*I/(pi*z**2))
         h2 = C.hyper([S.One,S.Half],[],-2*I/(pi*z**2))
         return (z**4)**C.Rational(3,4)/(2*z**3) + I/(2*pi*z)*(C.exp(-e)*h1 - C.exp(e)*h2)
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if C.Order(1,x).contains(arg):
+            return arg
+        else:
+            return self.func(arg)
 
 
 ###############################################################################
