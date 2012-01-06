@@ -243,20 +243,21 @@ class Polygon(GeometryEntity):
         acos(-4*sqrt(17)/17)
 
         """
-        def tarea(a, b, c):
+
+        def _tarea(a, b, c):
             return (b[0] - a[0])*(c[1] - a[1]) - (c[0] - a[0])*(b[1] - a[1])
 
-        def isright(a, b, c):
-            return bool(tarea(a, b, c) <= 0)
+        def _isright(a, b, c):
+            return bool(_tarea(a, b, c) <= 0)
 
         # Determine orientation of points
-        cw = isright(self[-1], self[0], self[1])
+        cw = _isright(self[-1], self[0], self[1])
 
         ret = {}
         for i in xrange(len(self)):
             a, b, c = self[i-2], self[i-1], self[i]
             ang = Line.angle_between(Line(b, a), Line(b, c))
-            if cw ^ isright(a, b, c):
+            if cw ^ _isright(a, b, c):
                 ret[b] = 2*S.Pi - ang
             else:
                 ret[b] = ang
@@ -425,16 +426,17 @@ class Polygon(GeometryEntity):
         True
 
         """
-        def tarea(a, b, c):
+        
+        def _tarea(a, b, c):
             return (b[0] - a[0])*(c[1] - a[1]) - (c[0] - a[0])*(b[1] - a[1])
 
-        def isright(a, b, c):
-            return bool(tarea(a, b, c) <= 0)
+        def _isright(a, b, c):
+            return bool(_tarea(a, b, c) <= 0)
 
         # Determine orientation of points
-        cw = isright(self[-2], self[-1], self[0])
+        cw = _isright(self[-2], self[-1], self[0])
         for i in xrange(1, len(self)):
-            if cw ^ isright(self[i - 2], self[i - 1], self[i]):
+            if cw ^ _isright(self[i - 2], self[i - 1], self[i]):
                 return False
 
         return True
@@ -486,7 +488,7 @@ class Polygon(GeometryEntity):
         if p in self:
             return False
 
-        def concrete(p):
+        def _concrete(p):
             x, y = p
             return x.is_number and y.is_number
 
@@ -494,7 +496,7 @@ class Polygon(GeometryEntity):
         lit = []
         for v in self.vertices:
             lit.append(v - p)
-            if not concrete(lit[-1]):
+            if not _concrete(lit[-1]):
                 return None
         self = Polygon(*lit)
 
@@ -656,6 +658,17 @@ class Polygon(GeometryEntity):
         return res
 
     def distance(self, o):
+        """
+        Returns the distance from the point or other convex Polygon
+
+        Example
+        =======
+        >>> from sympy import Point, Polygon
+        >>> p1, p2, p3, p4, p5 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1), (10, 16)])
+        >>> poly = Polygon(p1, p2, p3, p4)
+        >>> poly.distance(p5)
+        5*sqrt(10)
+        """
         if isinstance(o, Point):
             dist = oo
             for side in self.sides:
@@ -1008,6 +1021,16 @@ class RegularPolygon(Polygon):
 
     @property
     def args(self):
+        """
+        Returns the center point, the radius, the number of sides, and the rotation
+
+        Example
+        =======
+        >>> from sympy import RegularPolygon, Point
+        >>> r = RegularPolygon(Point(0, 0), 5, 3)
+        >>> r.args
+        (Point(0, 0), 5, 3, 0)
+        """
         return self._center, self._radius, self._n, self._rot
 
     def __str__(self):
@@ -1039,13 +1062,21 @@ class RegularPolygon(Polygon):
         >>> rp = RegularPolygon(Point(0, 0), 5, 4)
         >>> rp.center
         Point(0, 0)
-
         """
         return self._center
 
     @property
     def circumcenter(self):
-        """alias for center"""
+        """
+        alias for center
+
+        Examples
+        ========
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> rp = RegularPolygon(Point(0, 0), 5, 4)
+        >>> rp.circumcenter
+        Point(0, 0)
+        """
         return self.center
 
     @property
@@ -1079,7 +1110,18 @@ class RegularPolygon(Polygon):
 
     @property
     def circumradius(self):
-        """alias for radius"""
+        """
+        alias for radius
+        
+        Examples
+        ========
+        >>> from sympy import Symbol
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> radius = Symbol('r')
+        >>> rp = RegularPolygon(Point(0, 0), radius, 4)
+        >>> rp.circumradius
+        r
+        """
         return self.radius
 
     @property
@@ -1133,7 +1175,18 @@ class RegularPolygon(Polygon):
 
     @property
     def inradius(self):
-        """alias for apothem"""
+        """
+        alias for apothem
+        
+        Examples
+        ========
+        >>> from sympy import Symbol
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> radius = Symbol('r')
+        >>> rp = RegularPolygon(Point(0, 0), radius, 4)
+        >>> rp.inradius
+        sqrt(2)*r/2
+        """
         return self.apothem
 
     @property
@@ -1238,6 +1291,16 @@ class RegularPolygon(Polygon):
 
     @property
     def angles(self):
+        """
+        Returns the angles in the Polygon
+
+        Example
+        =======
+        >>> from sympy import RegularPolygon, Point
+        >>> r = RegularPolygon(Point(0, 0), 5, 3)
+        >>> r.angles
+        {Point(-5/2, -5*sqrt(3)/2): pi/3, Point(-5/2, 5*sqrt(3)/2): pi/3, Point(5, 0): pi/3}
+        """
         ret = {}
         ang = self.interior_angle
         for v in self.vertices:
@@ -1714,7 +1777,6 @@ class Triangle(Polygon):
         >>> t = Triangle(p1, p2, p3)
         >>> t.circumcenter
         Point(1/2, 1/2)
-
         """
         a,b,c = [x.perpendicular_bisector() for x in self.sides]
         return a.intersection(b)[0]
@@ -1743,7 +1805,6 @@ class Triangle(Polygon):
         >>> t = Triangle(p1, p2, p3)
         >>> t.circumradius
         sqrt(a**2/4 + 1/4)
-
         """
         return Point.distance(self.circumcenter, self.vertices[0])
 
