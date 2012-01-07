@@ -1,9 +1,61 @@
 Installation
 ------------
 
-Go to the `Downloads`_ tab on SymPy's webpage for thourough instructions.
+The Sympy CAS can be installed on virtually any computer with Python 2.5 or above. Sympy does not require any special Python modules: let us know if you have any problems with Sympy on a standard Python install. The current recommended method of installation is via Git/source. Alternatively, packages are available for popular operating systems.
 
-You'll find there detailed explanation how to install SymPy using source,
-Git repository, Debian, Ubuntu, Gentoo, Windows and Sage.
+Git/Source
+==========
+Sympy currently recommends that users install directly from the source files. You will first have to download the source via the Zip archive or git. For the Zip archive, download the latest version from the link_ and decompress it with your operating system's standard Zip utility. To download from git, execute the following from the command line::
 
-.. _Downloads: http://code.google.com/p/sympy/wiki/DownloadInstallation?tm=2
+    $ git clone git://github.com/sympy/sympy.git
+
+After the download is complete, you should have a folder called "sympy". From your favorite command line terminal, change directory into that folder and execute the following::
+
+    $ python setup.py install
+
+Alternatively, if you don't want to install the sympy package onto your computer, you may run Sympy with the "isympy" console (which auto-imports sympy and defines symbols x, y, and z) in the sympy source by executing within the "sympy" folder::
+
+    $ ./bin/isympy
+
+You may now run Sympy statements directly within the Python shell::
+
+    >>> from __future__ import division
+    >>> from sympy import *
+    >>> x, y, z, t = symbols('x y z t')
+    >>> k, m, n = symbols('k m n', integer=True)
+    >>> f, g, h = symbols('f g h', cls=Function)
+    >>> print diff(x**2/2, x)
+    x
+
+Packages
+========
+Installation packages are available for many operating systems. Note, however, that these packages are not actively maintained and the source install should be used if possible. The benefits of installing from source include having the latest version and easier modification of Sympy for your personal use.
+
+Get the appropriate package_ and follow the instructions to install Sympy. Currently, we have packages for Windows, Mac OS X, and various Linux operating systems.
+
+Run Sympy
+=========
+After installation, it is best to verify that your freshly-installed Sympy works. To do this, start up Python and import the Sympy libraries::
+
+    $ python
+    >>> from sympy import *
+
+From here, execute some simple Sympy statements like the ones below::
+
+    >>> print limit(sin(x)/x, x, 0)
+    1
+    >>> print integrate(1/x, x)
+    log(x)
+
+For a starter guide on using Sympy effectively, refer to the tutorial_.
+
+Questions
+=========
+
+If you have a question about installation or Sympy in general, feel free to visit the IRC channel at irc.freenode.net, channel #sympy (webclient_). If you feel like there is an unresolvable problem with installation for your environment, you may post an `issue ticket`_.
+
+.. _link: https://github.com/sympy/sympy/zipball/master
+.. _package: code.google.com/p/sympy/wiki/DownloadInstallation?tm=2
+.. _tutorial: tutorial.txt
+.. _webclient: http://webchat.freenode.net/
+.. _issue ticket: http://code.google.com/p/sympy/issues/list
