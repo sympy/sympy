@@ -1,13 +1,11 @@
 Installation
 ------------
 
-The Sympy CAS can be installed on virtually any computer with Python 2.5 or above. Sympy does not require any special Python modules: let us know if you have any problems with Sympy on a standard Python install. The current recommended method of installation is via Git/source. Alternatively, packages are available for popular operating systems.
+The Sympy CAS can be installed on virtually any computer with Python 2.5 or above. Sympy does not require any special Python modules: let us know if you have any problems with Sympy on a standard Python install. The current recommended method of installation is directly from the source files. Alternatively, packages are available for popular operating systems.
 
 Git/Source
 ==========
-Sympy currently recommends that users install directly from the source files. You will first have to download the source via the Zip archive or git. For the Zip archive, download the latest version from the link_ and decompress it with your operating system's standard Zip utility. To download from git, execute the following from the command line::
-
-    $ git clone git://github.com/sympy/sympy.git
+Sympy currently recommends that users install directly from the source files. You will first have to download the source files via the Zip archive. Download the latest release from the link_ and decompress it with your operating system's standard Zip utility.
 
 After the download is complete, you should have a folder called "sympy". From your favorite command line terminal, change directory into that folder and execute the following::
 
@@ -26,6 +24,18 @@ You may now run Sympy statements directly within the Python shell::
     >>> f, g, h = symbols('f g h', cls=Function)
     >>> print diff(x**2/2, x)
     x
+
+Git
+===
+If you are a developer or like to get the latest updates as they come, be sure to install from git. To download the repository, execute the following from the command line::
+
+    $ git clone git://github.com/sympy/sympy.git
+
+Then, execute either the setup.py or the bin/isympy scripts as demonstrated above.
+
+If you would like to always have the newest version, go into your repository and execute::
+
+    $ git pull origin master
 
 Packages
 ========
