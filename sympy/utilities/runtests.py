@@ -33,6 +33,10 @@ from sympy.core.cache import clear_cache
 # it here to make utf8 files work in Python 2.5.
 pdoctest._encoding = getattr(sys.__stdout__, 'encoding', None) or 'utf-8'
 
+IS_PYTHON_3 = (sys.version_info[0] == 3)
+IS_WINDOWS = (os.name == 'nt')
+
+
 class Skipped(Exception):
         pass
 
@@ -51,6 +55,19 @@ def _indent(s, indent=4):
     return re.sub('(?m)^(?!$)', indent*' ', s)
 
 pdoctest._indent = _indent
+
+# ovverride reporter to maintain windows and python3
+def _report_failure(self, out, test, example, got):
+    """
+    Report that the given example failed.
+    """
+    s = self._checker.output_difference(example, got, self.optionflags)
+    s = s.encode('raw_unicode_escape').decode('utf8', 'ignore')
+    out(self._failure_header(test, example) + s)
+
+if IS_PYTHON_3 and IS_WINDOWS:
+    DocTestRunner.report_failure = _report_failure
+
 
 def sys_normcase(f):
     if sys_case_insensitive:
@@ -456,8 +473,10 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
                          "relative paths.")
 
     # Relativize the path
-    if sys.version_info[0] < 3:
+    if not IS_PYTHON_3:
         text, filename = pdoctest._load_testfile(filename, package, module_relative)
+        if encoding is not None:
+            text = text.decode(encoding)
     else:
         text, filename = pdoctest._load_testfile(filename, package, module_relative, encoding)
 
@@ -479,10 +498,6 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
         runner = pdoctest.DebugRunner(verbose=verbose, optionflags=optionflags)
     else:
         runner = SymPyDocTestRunner(verbose=verbose, optionflags=optionflags)
-
-    if encoding is not None:
-        if sys.version_info[0] < 3:
-            text = text.decode(encoding)
 
     # Read the file, convert it to a test, and run it.
     test = parser.get_doctest(text, globs, name, filename, 0)
