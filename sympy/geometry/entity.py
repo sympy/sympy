@@ -40,7 +40,7 @@ class GeometryEntity(tuple):
     @property
     def free_symbols(self):
         """
-        Returns a set of symbols where if changed the meaning of the entity wil not
+        Return a set of symbols other than the bound symbols used to parametrically define the Entity.
 
         Example
         =======
@@ -257,16 +257,21 @@ class GeometryEntity(tuple):
 
     def subs(self, *args):
         """
-        Substitutes a number for another number inside of a Points
+        Substitues new for old in self
+
+        See Also
+        ========
+        sympy.core.basic.subs
 
         Example
         =======
-        >>> from sympy import RegularPolygon, Point, Polygon
-        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
-        >>> t
-        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
-        >>> t.subs(1, 4)
-        Triangle(Point(4, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
+        >>> from sympy import Point, Circle
+        >>> from sympy.abc import x, y, z
+        >>> c = Circle(Point(x, y), 3)
+        >>> c.subs(x, 5)
+        Circle(Point(5, y), 3)
+        >>> c.subs(3, z)
+        Circle(Point(x, y), z)
 
         """
         return type(self)(*[a.subs(*args) for a in self.args])

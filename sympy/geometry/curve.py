@@ -72,16 +72,16 @@ class Curve(GeometryEntity):
     @property
     def free_symbols(self):
         """
-        Returns a set containing which symbols can not be changed and still have an equivalent curve
-        In Curve, all symbols except the parameter are free (i.e. the parameter property)
+        Return a set of symbols other than the bound symbols used to parametrically define the Curve.
 
         Example
         =======
-        >>> from sympy.abc import t
+        >>> from sympy.abc import t, a
         >>> from sympy.geometry import Curve
-        >>> C = Curve((t, t**2), (t, 0, 2))
-        >>> C.free_symbols
+        >>> Curve((t, t**2), (t, 0, 2)).free_symbols
         set()
+        >>> Curve((t, t**2), (t, t*a, 2)).free_symbols
+        set([a])
         """
         free = set()
         for a in self.functions + self.limits[1:]:

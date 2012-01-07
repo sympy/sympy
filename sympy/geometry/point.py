@@ -74,7 +74,7 @@ class Point(GeometryEntity):
     @property
     def x(self):
         """
-        Returns the X coordinate of the points
+        Returns the X coordinate of the Point
 
         Example
         =======
@@ -88,7 +88,7 @@ class Point(GeometryEntity):
     @property
     def y(self):
         """
-        Returns the Y coordinate of the points
+        Returns the Y coordinate of the Point
 
         Example
         =======
@@ -391,7 +391,7 @@ class Point(GeometryEntity):
     @property
     def length(self):
         """
-        The length of a points
+        The length of a Point
 
         Example
         =======

@@ -453,10 +453,10 @@ class LinearEntity(GeometryEntity):
     @property
     def length(self):
         """
-        The length of the line
+        The length of the line.
 
-        Example
-        =======
+        Examples
+        ========
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(3, 5)
         >>> l1 = Line(p1, p2)
@@ -1587,15 +1587,15 @@ class Segment(LinearEntity):
 
     def distance(self, o):
         """
-        Attempts to find the distance of the line segment to an object
+        Attempts to find the perpendicular distance of the line segment to an object
 
         Example
         =======
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(0, 1), Point(3, 4)
         >>> s = Segment(p1, p2)
-        >>> s.distance(Point(4, 3))
-        sqrt(2)
+        >>> s.distance(Point(10, 15))
+        sqrt(170)
         """
         if isinstance(o, Point):
             return self._do_point_distance(o)

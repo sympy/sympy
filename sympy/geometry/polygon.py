@@ -659,15 +659,15 @@ class Polygon(GeometryEntity):
 
     def distance(self, o):
         """
-        Returns the distance from the point or other convex Polygon
+        Returns the shortest distance from the point or other convex Polygon
 
         Example
         =======
-        >>> from sympy import Point, Polygon
-        >>> p1, p2, p3, p4, p5 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1), (10, 16)])
-        >>> poly = Polygon(p1, p2, p3, p4)
-        >>> poly.distance(p5)
-        5*sqrt(10)
+        >>> from sympy import Point, Polygon, RegularPolygon
+        >>> p1, p2 = map(Point, [(0, 0), (7, 5)])
+        >>> poly = Polygon(*RegularPolygon(p1, 1, 3).vertices)
+        >>> poly.distance(p2)
+        sqrt(61)
         """
         if isinstance(o, Point):
             dist = oo
@@ -1022,7 +1022,7 @@ class RegularPolygon(Polygon):
     @property
     def args(self):
         """
-        Returns the center point, the radius, the number of sides, and the rotation
+        Returns the center point, the radius, the number of sides, and the orientation angle
 
         Example
         =======
@@ -1292,8 +1292,7 @@ class RegularPolygon(Polygon):
     @property
     def angles(self):
         """
-        Returns the angles in the Polygon
-
+        Returns a dictionary with keys, the vertices of the Polygon, and values, the interior angle at each vertex
         Example
         =======
         >>> from sympy import RegularPolygon, Point

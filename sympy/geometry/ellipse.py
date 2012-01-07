@@ -1093,7 +1093,7 @@ class Circle(Ellipse):
     @property
     def major(self):
         """
-        The major radius of the circle
+        Radius of the Circle
 
         Example
         =======
@@ -1107,7 +1107,7 @@ class Circle(Ellipse):
     @property
     def minor(self):
         """
-        The minor radius of the circle
+        Radius of the Circle
 
         Example
         =======
@@ -1121,7 +1121,7 @@ class Circle(Ellipse):
     @property
     def hradius(self):
         """
-        The horizontal radius of the circle
+        Radius of the Circle
 
         Example
         =======
@@ -1135,7 +1135,7 @@ class Circle(Ellipse):
     @property
     def vradius(self):
         """
-        The vertical radius of the circle
+        Radius of the Circle
 
         Example
         =======
