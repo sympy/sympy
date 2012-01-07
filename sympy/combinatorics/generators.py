@@ -28,6 +28,10 @@ def cyclic(n):
     [Permutation([0, 1, 2, 3, 4]), Permutation([1, 2, 3, 4, 0]), \
     Permutation([2, 3, 4, 0, 1]), Permutation([3, 4, 0, 1, 2]), \
     Permutation([4, 0, 1, 2, 3])]
+
+    See Also
+    ========
+    dihedral
     """
     gen = range(n)
     for i in xrange(n):
@@ -68,6 +72,10 @@ def dihedral(n):
     Permutation([1, 2, 3, 0]), Permutation([0, 3, 2, 1]), \
     Permutation([2, 3, 0, 1]), Permutation([1, 0, 3, 2]), \
     Permutation([3, 0, 1, 2]), Permutation([2, 1, 0, 3])]
+
+    See Also
+    ========
+    cyclic
     """
     gen = range(n)
     for i in xrange(n):

@@ -152,6 +152,10 @@ class Prufer(Basic):
         >>> Prufer.to_prufer([[0, 1], [0, 2], [0, 3]], 4)
         [0, 0]
 
+        See Also
+        ========
+        prufer_repr: returns Prufer sequence of a Prufer object.
+
         """
         d = defaultdict(int)
         L = []
@@ -202,6 +206,10 @@ class Prufer(Basic):
         ==========
 
         - http://hamberg.no/erlend/2010/11/06/prufer-sequence/
+
+        See Also
+        ========
+        tree_repr: returns tree representation of a Prufer object.
 
         """
         tree = []
