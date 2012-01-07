@@ -996,10 +996,11 @@ class fresnel_S(FresnelIntegral):
 
     def _eval_aseries(self, n, args0, x, logx):
         z = self.args[0]
-        e = S.Half*I*pi*z**2
-        h1 = C.hyper([S.One,S.Half],[],2*I/(pi*z**2))
-        h2 = C.hyper([S.One,S.Half],[],-2*I/(pi*z**2))
-        return root(z**4,4)/(2*z) - S.One/(2*pi*z)*(C.exp(-e)*h1 + C.exp(e)*h2)
+        #e = S.Half*I*pi*z**2
+        #h1 = C.hyper([S.One,S.Half],[],2*I/(pi*z**2))
+        #h2 = C.hyper([S.One,S.Half],[],-2*I/(pi*z**2))
+        #return root(z**4,4)/(2*z) - S.One/(2*pi*z)*(C.exp(-e)*h1 + C.exp(e)*h2)
+        return S.Half - 1/(pi*z)*C.cos(S.Half*pi*z**2)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
@@ -1105,10 +1106,11 @@ class fresnel_C(FresnelIntegral):
 
     def _eval_aseries(self, n, args0, x, logx):
         z = self.args[0]
-        e = S.Half*I*pi*z**2
-        h1 = C.hyper([S.One,S.Half],[],2*I/(pi*z**2))
-        h2 = C.hyper([S.One,S.Half],[],-2*I/(pi*z**2))
-        return (z**4)**C.Rational(3,4)/(2*z**3) + I/(2*pi*z)*(C.exp(-e)*h1 - C.exp(e)*h2)
+        #e = S.Half*I*pi*z**2
+        #h1 = C.hyper([S.One,S.Half],[],2*I/(pi*z**2))
+        #h2 = C.hyper([S.One,S.Half],[],-2*I/(pi*z**2))
+        #return (z**4)**C.Rational(3,4)/(2*z**3) + I/(2*pi*z)*(C.exp(-e)*h1 - C.exp(e)*h2)
+        return S.Half + 1/(pi*z)*C.sin(S.Half*pi*z**2)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
