@@ -6,7 +6,7 @@ above. SymPy does not require any special Python modules: let us know if you
 have any problems with SymPy on a standard Python install. The current
 recommended method of installation is directly from the source files.
 Alternatively, executables are available for Windows, and some Linux
-distributions have SymPy installed by default.
+distributions have SymPy packages available.
 
 Source
 ======
@@ -54,16 +54,10 @@ To update to the latest version, go into your repository and execute::
 
 Other Methods
 =============
-An installation executable is available for Windows users. In addition, some
-Linux distributions may already have the SymPy package installed. To check if
-SymPy is present on your computer, execute::
-
-    $ python
-    >>> from sympy import *
-
-If you get an error, SymPy is not installed. Windows users may want to use the
-executable at the `downloads site`_ (.exe). Others are strongly encouraged to
-download from source (detailed above).
+An installation executable is available for Windows users at the
+`downloads site`_ (.exe). In addition, various Linux distributions have Sympy
+available as a package. Others are strongly encouraged to download from source
+(details above).
 
 Run SymPy
 =========
