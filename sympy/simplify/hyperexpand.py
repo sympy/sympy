@@ -57,6 +57,7 @@ It is described in great(er) detail in the Sphinx documentation.
 #   this reason, we use hand-built routines to match and instantiate formulas.
 #
 from sympy.core import S, Dummy, symbols, sympify, Tuple, expand, I, Mul
+from sympy.core.mod import Mod
 from sympy.functions.special.hyper import hyper
 from sympy import SYMPY_DEBUG
 
@@ -277,22 +278,21 @@ def add_meijerg_formulae(formulae):
         x = iq.an[0]
         y, z = iq.bm
         swapped = False
-        if Mod1Effective(x) == Mod1Effective(y):
+        if not Mod((x - y).simplify(), 1):
             swapped = True
             (y, z) = (z, y)
-        if Mod1Effective(x) != Mod1Effective(z) or x > z:
+        if Mod((x - z).simplify(), 1) or x > z:
             return None
         l = [y, x]
         if swapped:
             l = [x, y]
-        return {rho: y, a: x-y}, IndexQuadruple([x], [], l, [])
-    add([a+rho], [], [rho, a+rho], [],
+        return {rho: y, a: x - y}, IndexQuadruple([x], [], l, [])
+    add([a + rho], [], [rho, a + rho], [],
         Matrix([gamma(1 - a)*z**rho*exp(z)*uppergamma(a, z),
-                gamma(1-a)*z**(a+rho)]),
+                gamma(1 - a)*z**(a + rho)]),
         Matrix([[1, 0]]),
         Matrix([[rho+z, -1], [0, a+rho]]),
         detect_uppergamma)
-
 
 def make_simp(z):
     """ Create a function that simplifies rational functions in ``z``. """
@@ -309,52 +309,6 @@ def debug(*args):
         for a in args:
             print a,
         print
-
-
-class Mod1Effective(object):
-    """
-    Represent an expression 'effectively mod 1'.
-
-    This means that Mod1Effective(a) == Mod1Effective(b) if simplify() can
-    establish that a-b is an Integer (e.g. 5 or -7, not ``k``).
-
-    Beware: __eq__ and the hash are NOT compatible. (by design)
-    This means that m1 == m2 does not imply hash(m1) == hash(m2).
-    Code that creates Mod1Effective objects (like compute_buckets below) should be
-    careful only to produce one instance of Mod1Effective for each class.
-    """
-
-    def __new__(cls, expr):
-        from sympy import expand_mul
-        expr = expand_mul(expr)
-        if expr.is_Rational:
-            return expr - expr.p//expr.q
-        elif expr.is_Add and expr.args[0].is_Number:
-            r, expr = expr.as_two_terms()
-        else:
-            r = S.Zero
-        expr += r - r.p//r.q
-        res = object.__new__(cls)
-        res.expr = expr
-        return res
-
-    def __repr__(self):
-        return str(self.expr) + ' % 1'
-
-    #Needed to allow adding Mod1 objects to a dict in Python 3
-    def __hash__(self):
-        return super(Mod1Effective, self).__hash__()
-
-    def __eq__(self, other):
-        from sympy import simplify
-        if not isinstance(other, Mod1Effective):
-            return False
-        if simplify(self.expr - other.expr).is_Integer is True:
-            return True
-        return False
-
-    def __ne__(self, other):
-        return not self == other
 
 class IndexPair(object):
     """ Holds a pair of indices, and methods to compute their invariants. """
@@ -373,15 +327,15 @@ class IndexPair(object):
 
     def compute_buckets(self, oabuckets=None, obbuckets=None):
         """
-        Partition ``ap`` and ``bq`` Mod1.
+        Partition ``ap`` and ``bq`` mod 1.
 
         Partition parameters ``ap``, ``bq`` into buckets, that is return two dicts
         abuckets, bbuckets such that every key in (ab)buckets is a rational in the
-        range [0, 1) [represented either by a Rational or a Mod1Effective object],
+        range [0, 1) [represented either by a Rational or a Mod object],
         and such that (ab)buckets[key] is a tuple of all elements of respectively
         ``ap`` or ``bq`` that are congruent to ``key`` modulo 1.
 
-        If oabuckets, obbuckets is specified, try to use the same Mod1Effective objects
+        If oabuckets, obbuckets is specified, try to use the same Mod objects
         for parameters where possible.
 
         >>> from sympy.simplify.hyperexpand import IndexPair
@@ -397,15 +351,15 @@ class IndexPair(object):
         abuckets = {}
         bbuckets = {}
 
-        parametrics = [Mod1Effective(x) for x in self.ap + self.bq]
+        parametrics = [Mod(x, 1) for x in self.ap + self.bq]
         if oabuckets is not None:
             parametrics = oabuckets.keys() + obbuckets.keys() + parametrics
-        parametrics = uniq(filter(lambda x: isinstance(x, Mod1Effective), parametrics))
+        parametrics = uniq(filter(lambda x: isinstance(x, Mod), parametrics))
 
         for params, bucket in [(self.ap, abuckets), (self.bq, bbuckets)]:
             for p in params:
-                res = Mod1Effective(p)
-                if isinstance(res, Mod1Effective):
+                res = Mod(p, 1)
+                if isinstance(res, Mod):
                     res = parametrics[parametrics.index(res)]
                 if res in bucket:
                     bucket[res] += (p,)
@@ -450,7 +404,7 @@ class IndexPair(object):
 
         def tr(bucket):
             bucket = bucket.items()
-            if not any(isinstance(x[0], Mod1Effective) for x in bucket):
+            if not any(isinstance(x[0], Mod) for x in bucket):
                 bucket.sort(key=lambda x: x[0])
             bucket = tuple(map(lambda x: (x[0], len(x[1])), bucket))
             return bucket
@@ -497,7 +451,7 @@ class IndexQuadruple(object):
         """
         Compute buckets for the fours sets of parameters.
 
-        We guarantee that any two equal Mod1Effective objects returned are actually the
+        We guarantee that any two equal Mod objects returned are actually the
         same, and that the buckets are sorted by real part (an and bq
         descendending, bm and ap ascending).
 
@@ -508,18 +462,11 @@ class IndexQuadruple(object):
         ({0: [3, 2, 1], 1/2: [3/2]}, {0: [2], y % 1: [y, y + 1, y + 3]}, {0: [2]}, {y % 1: [y]})
 
         """
-        mod1s = []
         pan, pap, pbm, pbq = {}, {}, {}, {}
         for dic, lis in [(pan, self.an), (pap, self.ap), (pbm, self.bm),
                            (pbq, self.bq)]:
             for x in lis:
-                m = Mod1Effective(x)
-                if mod1s.count(m):
-                    i = mod1s.index(m)
-                    m = mod1s[i]
-                else:
-                    mod1s.append(m)
-                dic.setdefault(m, []).append(x)
+                dic.setdefault(Mod(x, 1), []).append(x)
 
         for dic, flip in [(pan, True), (pap, False), (pbm, False), (pbq, True)]:
             l = dic.items()
@@ -1696,7 +1643,7 @@ def try_lerchphi(nip):
     # First we need to figure out if the summation coefficient is a rational
     # function of the summation index, and construct that rational function.
     abuckets, bbuckets = nip.compute_buckets()
-    # Update all the keys in bbuckets to be the same Mod1Effective objects as abuckets.
+    # Update all the keys in bbuckets to be the same Mod objects as abuckets.
     akeys = abuckets.keys()
     bkeys = []
     for key in bbuckets.keys():

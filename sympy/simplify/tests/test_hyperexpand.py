@@ -571,7 +571,7 @@ def test_hyperexpand_special():
            gamma(1 - 2*z)*gamma(z + a/2 + b/2)/gamma(1 - z + a/2 - b/2) \
            /gamma(1 - z - a/2 + b/2)/gamma(1 - z + a/2 + b/2)
 
-def test_Mod1Effective():
+def test_Mod1_behavior():
     from sympy import Symbol, simplify, lowergamma
     n = Symbol('n', integer=True)
     # Note: this should not hang.
