@@ -27,7 +27,7 @@ def perm_af_parity(pi):
 
     See Also
     ========
-    class:Permutation
+    Permutation
     """
     n = len(pi)
     a = [0] * n
@@ -55,7 +55,7 @@ def perm_af_mul(a, b):
 
     See Also
     ========
-    class:Permutation
+    Permutation
     """
     if len(a) != len(b):
         raise ValueError("The number of elements in the permutations \
@@ -1041,7 +1041,7 @@ don\'t match.")
 
         See Also
         ========
-        is_Negative
+        is_Positive
         """
         return self.signature() < 0
 

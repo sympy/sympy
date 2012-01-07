@@ -300,7 +300,7 @@ class Subset(Basic):
 
         See Also
         ========
-        size, superset
+        superset, size, superset_size, cardinality
         """
         return self._subset
 
@@ -319,7 +319,7 @@ class Subset(Basic):
 
         See Also
         ========
-        subset
+        subset, superset, superset_size, cardinality
         """
         return len(self.subset)
 
@@ -338,7 +338,7 @@ class Subset(Basic):
 
         See Also
         ========
-        subset, superset_size
+        subset, size, superset_size, cardinality
         """
         return self._superset
 
@@ -357,7 +357,7 @@ class Subset(Basic):
 
         See Also
         ========
-        superset
+        subset, superset, size, cardinality
         """
         return len(self.superset)
 
@@ -376,7 +376,7 @@ class Subset(Basic):
 
         See Also
         ========
-        superset_size
+        subset, superset, size, superset_size
         """
         return 2**(self.superset_size)
 

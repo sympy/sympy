@@ -154,7 +154,7 @@ class Prufer(Basic):
 
         See Also
         ========
-        prufer_repr: returns Prufer sequence from a constructed prufer object.
+        prufer_repr: returns Prufer sequence of a Prufer object.
 
         """
         d = defaultdict(int)
@@ -209,7 +209,7 @@ class Prufer(Basic):
 
         See Also
         ========
-        tree_repr: returns tree representation from a prufer object.
+        tree_repr: returns tree representation of a Prufer object.
 
         """
         tree = []
