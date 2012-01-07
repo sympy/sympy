@@ -3,8 +3,8 @@ Installation
 
 The Sympy CAS can be installed on virtually any computer with Python 2.5 or above. Sympy does not require any special Python modules: let us know if you have any problems with Sympy on a standard Python install. The current recommended method of installation is directly from the source files. Alternatively, packages are available for popular operating systems.
 
-Git/Source
-==========
+Source
+======
 Sympy currently recommends that users install directly from the source files. You will first have to download the source files via the Zip archive. Download the latest release from the link_ and decompress it with your operating system's standard Zip utility.
 
 After the download is complete, you should have a folder called "sympy". From your favorite command line terminal, change directory into that folder and execute the following::
