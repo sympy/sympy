@@ -1,21 +1,33 @@
 Installation
 ------------
 
-The Sympy CAS can be installed on virtually any computer with Python 2.5 or above. Sympy does not require any special Python modules: let us know if you have any problems with Sympy on a standard Python install. The current recommended method of installation is directly from the source files. Alternatively, packages are available for popular operating systems.
+The SymPy CAS can be installed on virtually any computer with Python 2.5 or
+above. SymPy does not require any special Python modules: let us know if you
+have any problems with SymPy on a standard Python install. The current
+recommended method of installation is directly from the source files.
+Alternatively, executables are available for Windows, and some Linux
+distributions have SymPy installed by default.
 
 Source
 ======
-Sympy currently recommends that users install directly from the source files. You will first have to download the source files via the Zip archive. Download the latest release from the link_ and decompress it with your operating system's standard Zip utility.
+SymPy currently recommends that users install directly from the source files.
+You will first have to download the source files via the archive. Download the
+latest release from the link_ and open it with your operating system's standard
+decompression utility.
 
-After the download is complete, you should have a folder called "sympy". From your favorite command line terminal, change directory into that folder and execute the following::
+After the download is complete, you should have a folder called "sympy". From
+your favorite command line terminal, change directory into that folder and
+execute the following::
 
     $ python setup.py install
 
-Alternatively, if you don't want to install the sympy package onto your computer, you may run Sympy with the "isympy" console (which auto-imports sympy and defines symbols x, y, and z) in the sympy source by executing within the "sympy" folder::
+Alternatively, if you don't want to install the package onto your computer, you
+may run SymPy with the "isympy" console (which auto-imports SymPy and defines
+symbols x, y, and z) by executing within the "sympy" folder::
 
     $ ./bin/isympy
 
-You may now run Sympy statements directly within the Python shell::
+You may now run SymPy statements directly within the Python shell::
 
     >>> from __future__ import division
     >>> from sympy import *
@@ -27,45 +39,59 @@ You may now run Sympy statements directly within the Python shell::
 
 Git
 ===
-If you are a developer or like to get the latest updates as they come, be sure to install from git. To download the repository, execute the following from the command line::
+If you are a developer or like to get the latest updates as they come, be sure
+to install from git. To download the repository, execute the following from the
+command line::
 
     $ git clone git://github.com/sympy/sympy.git
 
-Then, execute either the setup.py or the bin/isympy scripts as demonstrated above.
+Then, execute either the setup.py or the bin/isympy scripts as demonstrated
+above.
 
-If you would like to always have the newest version, go into your repository and execute::
+To update to the latest version, go into your repository and execute::
 
     $ git pull origin master
 
-Packages
-========
-Installation packages are available for many operating systems. Note, however, that these packages are not actively maintained and the source install should be used if possible. The benefits of installing from source include having the latest version and easier modification of Sympy for your personal use.
-
-Get the appropriate package_ and follow the instructions to install Sympy. Currently, we have packages for Windows, Mac OS X, and various Linux operating systems.
-
-Run Sympy
-=========
-After installation, it is best to verify that your freshly-installed Sympy works. To do this, start up Python and import the Sympy libraries::
+Other Methods
+=============
+An installation executable is available for Windows users. In addition, some
+Linux distributions may already have the SymPy package installed. To check if
+SymPy is present on your computer, execute::
 
     $ python
     >>> from sympy import *
 
-From here, execute some simple Sympy statements like the ones below::
+If you get an error, SymPy is not installed. Windows users may want to use the
+executable_. Others are strongly encouraged to download from source (detailed
+above).
+
+Run SymPy
+=========
+After installation, it is best to verify that your freshly-installed SymPy
+works. To do this, start up Python and import the SymPy libraries::
+
+    $ python
+    >>> from sympy import *
+
+From here, execute some simple SymPy statements like the ones below::
 
     >>> print limit(sin(x)/x, x, 0)
     1
     >>> print integrate(1/x, x)
     log(x)
 
-For a starter guide on using Sympy effectively, refer to the tutorial_.
+For a starter guide on using SymPy effectively, refer to the tutorial_.
 
 Questions
 =========
 
-If you have a question about installation or Sympy in general, feel free to visit the IRC channel at irc.freenode.net, channel #sympy (webclient_). If you feel like there is an unresolvable problem with installation for your environment, you may post an `issue ticket`_.
+If you have a question about installation or SymPy in general, feel free to
+visit the IRC channel at irc.freenode.net, channel #sympy (webclient_). If you
+feel like there is an unresolvable problem with installation for your
+environment, you may post an `issue ticket`_.
 
-.. _link: https://github.com/sympy/sympy/zipball/master
-.. _package: code.google.com/p/sympy/wiki/DownloadInstallation?tm=2
+.. _link: http://code.google.com/p/sympy/downloads/detail?name=sympy-0.7.1.tar.gz&can=2&q=
 .. _tutorial: tutorial.txt
 .. _webclient: http://webchat.freenode.net/
 .. _issue ticket: http://code.google.com/p/sympy/issues/list
+.. _executable: http://code.google.com/p/sympy/downloads/detail?name=sympy-0.7.1.win32.exe&can=2&q=
