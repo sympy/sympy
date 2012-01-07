@@ -51,6 +51,8 @@ MPMATH_TRANSLATIONS = {
     "Chi":"chi",
     "Si":"si",
     "Ci":"ci",
+    "fresnel_S":"fresnels",
+    "fresnel_C":"fresnelc"
 }
 
 NUMPY_TRANSLATIONS = {
