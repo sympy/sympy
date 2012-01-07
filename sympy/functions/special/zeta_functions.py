@@ -156,11 +156,9 @@ class lerchphi(Function):
                    / (unpolarify(zet)**k*root)**m for k in xrange(n)])
 
         # TODO use minpoly instead of ad-hoc methods when issue 2789 is fixed
-        if z.func is exp and (z.args[0]/(pi*I)).is_Rational or z in [1, -1, I, -I]:
+        if z.func is exp and (z.args[0]/(pi*I)).is_Rational or z in [-1, I, -I]:
             # TODO reference?
-            if z == 1:
-                p, q = S([1, 1])
-            elif z == -1:
+            if z == -1:
                 p, q = S([1, 2])
             elif z == I:
                 p, q = S([1, 4])
