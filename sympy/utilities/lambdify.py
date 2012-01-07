@@ -50,9 +50,7 @@ MPMATH_TRANSLATIONS = {
     "Shi":"shi",
     "Chi":"chi",
     "Si":"si",
-    "Ci":"ci",
-    "fresnel_S":"fresnels",
-    "fresnel_C":"fresnelc"
+    "Ci":"ci"
 }
 
 NUMPY_TRANSLATIONS = {

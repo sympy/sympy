@@ -914,7 +914,7 @@ class FresnelIntegral(Function):
         return re_part + im_part*S.ImaginaryUnit
 
 
-class fresnel_S(FresnelIntegral):
+class fresnels(FresnelIntegral):
     r"""
     Fresnel integral S.
 
@@ -927,54 +927,54 @@ class fresnel_S(FresnelIntegral):
     Examples
     ========
 
-    >>> from sympy import I, oo, fresnel_S
+    >>> from sympy import I, oo, fresnels
     >>> from sympy.abc import z
 
     Several special values are known:
 
-    >>> fresnel_S(0)
+    >>> fresnels(0)
     0
-    >>> fresnel_S(oo)
+    >>> fresnels(oo)
     1/2
-    >>> fresnel_S(-oo)
+    >>> fresnels(-oo)
     -1/2
-    >>> fresnel_S(I*oo)
+    >>> fresnels(I*oo)
     -I/2
-    >>> fresnel_S(-I*oo)
+    >>> fresnels(-I*oo)
     I/2
 
     In general one can pull out factors of -1 and I from the argument:
-    >>> fresnel_S(-z)
-    -fresnel_S(z)
+    >>> fresnels(-z)
+    -fresnels(z)
 
-    >>> fresnel_S(I*z)
-    -I*fresnel_S(z)
+    >>> fresnels(I*z)
+    -I*fresnels(z)
 
     The Fresnel S integral obeys the mirror symmetry:
 
     >>> from sympy import conjugate
-    >>> conjugate(fresnel_S(z))
-    fresnel_S(conjugate(z))
+    >>> conjugate(fresnels(z))
+    fresnels(conjugate(z))
 
     Differentiation with respect to z is supported:
 
     >>> from sympy import diff
-    >>> diff(fresnel_S(z), z)
+    >>> diff(fresnels(z), z)
     sin(pi*z**2/2)
 
     We can numerically evaluate the Fresnel integral to arbitrary precision
     on the whole complex plane
 
-    >>> fresnel_S(2).evalf(30)
+    >>> fresnels(2).evalf(30)
     0.343415678363698242195300815958
 
-    >>> fresnel_S(-2*I).evalf(30)
+    >>> fresnels(-2*I).evalf(30)
     0.343415678363698242195300815958*I
 
     See Also
     ========
 
-    fresnel_C
+    fresnelc
 
     References
     ==========
@@ -1011,7 +1011,7 @@ class fresnel_S(FresnelIntegral):
             return self.func(arg)
 
 
-class fresnel_C(FresnelIntegral):
+class fresnelc(FresnelIntegral):
     r"""
     Fresnel integral C.
 
@@ -1024,54 +1024,54 @@ class fresnel_C(FresnelIntegral):
     Examples
     ========
 
-    >>> from sympy import I, oo, fresnel_C
+    >>> from sympy import I, oo, fresnelc
     >>> from sympy.abc import z
 
     Several special values are known:
 
-    >>> fresnel_C(0)
+    >>> fresnelc(0)
     0
-    >>> fresnel_C(oo)
+    >>> fresnelc(oo)
     1/2
-    >>> fresnel_C(-oo)
+    >>> fresnelc(-oo)
     -1/2
-    >>> fresnel_C(I*oo)
+    >>> fresnelc(I*oo)
     I/2
-    >>> fresnel_C(-I*oo)
+    >>> fresnelc(-I*oo)
     -I/2
 
     In general one can pull out factors of -1 and I from the argument:
-    >>> fresnel_C(-z)
-    -fresnel_C(z)
+    >>> fresnelc(-z)
+    -fresnelc(z)
 
-    >>> fresnel_C(I*z)
-    I*fresnel_C(z)
+    >>> fresnelc(I*z)
+    I*fresnelc(z)
 
     The Fresnel C integral obeys the mirror symmetry:
 
     >>> from sympy import conjugate
-    >>> conjugate(fresnel_C(z))
-    fresnel_C(conjugate(z))
+    >>> conjugate(fresnelc(z))
+    fresnelc(conjugate(z))
 
     Differentiation with respect to z is supported:
 
     >>> from sympy import diff
-    >>> diff(fresnel_C(z), z)
+    >>> diff(fresnelc(z), z)
     cos(pi*z**2/2)
 
     We can numerically evaluate the Fresnel integral to arbitrary precision
     on the whole complex plane
 
-    >>> fresnel_C(2).evalf(30)
+    >>> fresnelc(2).evalf(30)
     0.488253406075340754500223503357
 
-    >>> fresnel_C(-2*I).evalf(30)
+    >>> fresnelc(-2*I).evalf(30)
     -0.488253406075340754500223503357*I
 
     See Also
     ========
 
-    fresnel_S
+    fresnels
 
     References
     ==========
