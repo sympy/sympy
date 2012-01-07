@@ -72,8 +72,8 @@ class Curve(GeometryEntity):
     @property
     def free_symbols(self):
         """
-        Returns a set containing which symbols can be changed and still have an equivalent curve
-        In curve, all symbols except the parameter are free (I.E. the parameter property)
+        Returns a set containing which symbols can not be changed and still have an equivalent curve
+        In Curve, all symbols except the parameter are free (i.e. the parameter property)
 
         Example
         =======
