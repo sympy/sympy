@@ -64,24 +64,24 @@ from sympy import SYMPY_DEBUG
 from sympy.utilities.timeutils import timethis
 _timeit = timethis('meijerg')
 
+# leave this at the top for easy reference
 def add_formulae(formulae):
-    """ Create our knowledge base.
-        Leave this at the top for easy reference. """
-    z = Dummy('z')
-    a, b, c = symbols('a b c', cls=Dummy)
+    """ Create our knowledge base. """
+
+    a, b, c, z = symbols('a b c, z', cls=Dummy)
+
     def add(ap, bq, res):
         formulae.append(Formula(ap, bq, z, res, (a, b, c)))
+
     def addb(ap, bq, B, C, M):
         formulae.append(Formula(ap, bq, z, None, (a, b, c), B, C, M))
-
-    from sympy.matrices import diag, Matrix
 
     # Luke, Y. L. (1969), The Special Functions and Their Approximations,
     # Volume 1, section 6.2
 
     from sympy import (exp, sqrt, cosh, log, asin, atan, I, lowergamma, cos,
                        atanh, besseli, gamma, erf, pi, sin, besselj, Ei,
-                       EulerGamma, Shi, sinh, cosh, Chi)
+                       EulerGamma, Shi, sinh, cosh, Chi, diag, Matrix)
     from sympy.functions.special.hyper import (HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
@@ -264,15 +264,14 @@ def add_formulae(formulae):
                  [0, 0, 0, 0, 0]]))
 
 def add_meijerg_formulae(formulae):
-    z = Dummy('z')
-    a, b, c = map(Dummy, 'abc')
+    from sympy import Matrix, gamma, uppergamma, exp
+
+    a, b, c, z = map(Dummy, 'abcz')
     rho = Dummy('rho')
+
     def add(an, ap, bm, bq, B, C, M, matcher):
         formulae.append(MeijerFormula(an, ap, bm, bq, z, [a, b, c, rho],
                                       B, C, M, matcher))
-
-    from sympy import Matrix
-    from sympy import gamma, uppergamma, exp
 
     def detect_uppergamma(iq):
         x = iq.an[0]
@@ -287,6 +286,7 @@ def add_meijerg_formulae(formulae):
         if swapped:
             l = [x, y]
         return {rho: y, a: x - y}, IndexQuadruple([x], [], l, [])
+
     add([a + rho], [], [rho, a + rho], [],
         Matrix([gamma(1 - a)*z**rho*exp(z)*uppergamma(a, z),
                 gamma(1 - a)*z**(a + rho)]),
@@ -345,28 +345,17 @@ class IndexPair(object):
         >>> IndexPair(ap, bq).compute_buckets()
         ({0: (-2,), 1/3: (1/3,), 1/2: (1/2, -1/2)}, {0: (1, 2)})
         """
-        from sympy.utilities.iterables import uniq
+        from collections import defaultdict
 
         # TODO this should probably be cached somewhere
-        abuckets = {}
-        bbuckets = {}
-
-        parametrics = [Mod(x, 1) for x in self.ap + self.bq]
-        if oabuckets is not None:
-            parametrics = oabuckets.keys() + obbuckets.keys() + parametrics
-        parametrics = uniq(filter(lambda x: isinstance(x, Mod), parametrics))
+        abuckets = defaultdict(tuple)
+        bbuckets = defaultdict(tuple)
 
         for params, bucket in [(self.ap, abuckets), (self.bq, bbuckets)]:
             for p in params:
-                res = Mod(p, 1)
-                if isinstance(res, Mod):
-                    res = parametrics[parametrics.index(res)]
-                if res in bucket:
-                    bucket[res] += (p,)
-                else:
-                    bucket[res] = (p,)
+                bucket[Mod(p, 1)] += (p,)
 
-        return abuckets, bbuckets
+        return dict(abuckets), dict(bbuckets)
 
     def build_invariants(self):
         """
@@ -462,23 +451,23 @@ class IndexQuadruple(object):
         ({0: [3, 2, 1], 1/2: [3/2]}, {0: [2], y % 1: [y, y + 1, y + 3]}, {0: [2]}, {y % 1: [y]})
 
         """
-        pan, pap, pbm, pbq = {}, {}, {}, {}
+        from collections import defaultdict
+        pan, pap, pbm, pbq = defaultdict(list), defaultdict(list), \
+                             defaultdict(list), defaultdict(list)
         for dic, lis in [(pan, self.an), (pap, self.ap), (pbm, self.bm),
                            (pbq, self.bq)]:
             for x in lis:
-                dic.setdefault(Mod(x, 1), []).append(x)
+                dic[Mod(x, 1)].append(x)
 
         for dic, flip in [(pan, True), (pap, False), (pbm, False), (pbq, True)]:
-            l = dic.items()
-            dic.clear()
-            for m, items in l:
+            for m, items in dic.iteritems():
                 x0 = items[0]
-                items.sort(key=lambda x: x-x0)
+                items.sort(key=lambda x: x - x0)
                 if flip:
                     items.reverse()
                 dic[m] = items
 
-        return pan, pap, pbm, pbq
+        return tuple([dict(w) for w in [pan, pap, pbm, pbq]])
 
     @property
     def signature(self):
@@ -593,8 +582,8 @@ class Formula(object):
                 i += 1
             if len(isolating) == 0:
                 raise NotImplementedError('parameter is not isolated')
-            isolating.sort(key=lambda x:x[1])
-            isolating.sort(key=lambda x:-x[2])
+            isolating.sort(key=lambda x: x[1])
+            isolating.sort(key=lambda x: -x[2])
             isolation[a] = isolating[-1]
 
         self.lcms = lcms
@@ -701,7 +690,7 @@ class Formula(object):
             return None
         for a in self.indices.ap:
             for b in self.indices.bq:
-                if (a-b).is_integer and not a < b:
+                if (a - b).is_integer and not a < b:
                     return False
         for a in self.indices.ap:
             if a == 0:
@@ -780,7 +769,7 @@ class FormulaCollection(object):
             return None
 
         # find the nearest origin
-        possible.sort(key=lambda x:x[0])
+        possible.sort(key=lambda x: x[0])
         return possible[0][1]
 
 class MeijerFormula(object):
@@ -795,10 +784,7 @@ class MeijerFormula(object):
     """
 
     def __init__(self, an, ap, bm, bq, z, symbols, B, C, M, matcher):
-        an = Tuple(*map(expand, an))
-        ap = Tuple(*map(expand, ap))
-        bm = Tuple(*map(expand, bm))
-        bq = Tuple(*map(expand, bq))
+        an, ap, bm, bq = [Tuple(*map(expand, w)) for w in [an, ap, bm, bq]]
         self.indices = IndexQuadruple(an, ap, bm, bq)
         self.z = z
         self.symbols = symbols
@@ -1505,12 +1491,9 @@ def devise_plan(ip, nip, z):
             bk = bbuckets[r]
             nbk = nbbuckets[r]
         if len(al) != len(nal) or len(bk) != len(nbk):
-            raise ValueError('%s not reachable from %s' % ((ap, bq), (nap, nbq)))
+            raise ValueError('%s not reachable from %s' % ((ip.ap, ip.bq), (nip.ap, nip.bq)))
 
-        al = sorted(list(al))
-        nal = sorted(list(nal))
-        bk = sorted(list(bk))
-        nbk = sorted(list(nbk))
+        al, nal, bk, nbk = [sorted(list(w)) for w in [al, nal, bk, nbk]]
 
         def others(dic, key):
             l = []
@@ -1601,7 +1584,7 @@ def try_shifted_sum(ip, z):
 def try_polynomial(ip, z):
     """ Recognise polynomial cases. Returns None if not such a case.
         Requires order to be fully reduced. """
-    from sympy import oo, factorial, rf
+    from sympy import oo, factorial, rf, Expr
     abuckets, bbuckets = ip.compute_buckets()
     a0 = list(abuckets.get(S(0), []))
     b0 = list(bbuckets.get(S(0), []))
@@ -1618,11 +1601,13 @@ def try_polynomial(ip, z):
     a = al0[-1]
     fac = 1
     res = S(1)
-    for n in xrange(-a):
+    for n in Tuple(*range(-a)):
         fac *= z
         fac /= n + 1
-        for a in ip.ap: fac *= a + n
-        for b in ip.bq: fac /= b + n
+        for a in ip.ap:
+            fac *= a + n
+        for b in ip.bq:
+            fac /= b + n
         res += fac
     return res
 
