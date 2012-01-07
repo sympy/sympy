@@ -12,8 +12,8 @@ Source
 ======
 SymPy currently recommends that users install directly from the source files.
 You will first have to download the source files via the archive. Download the
-latest release from the link_ and open it with your operating system's standard
-decompression utility.
+latest release (tar.gz) from the `downloads site`_ and open it with your
+operating system's standard decompression utility.
 
 After the download is complete, you should have a folder called "sympy". From
 your favorite command line terminal, change directory into that folder and
@@ -62,8 +62,8 @@ SymPy is present on your computer, execute::
     >>> from sympy import *
 
 If you get an error, SymPy is not installed. Windows users may want to use the
-executable_. Others are strongly encouraged to download from source (detailed
-above).
+executable at the `downloads site`_ (.exe). Others are strongly encouraged to
+download from source (detailed above).
 
 Run SymPy
 =========
@@ -90,8 +90,7 @@ visit the IRC channel at irc.freenode.net, channel #sympy (webclient_). If you
 feel like there is an unresolvable problem with installation for your
 environment, you may post an `issue ticket`_.
 
-.. _link: http://code.google.com/p/sympy/downloads/detail?name=sympy-0.7.1.tar.gz&can=2&q=
+.. _downloads site: https://code.google.com/p/sympy/downloads/list
 .. _tutorial: tutorial.txt
 .. _webclient: http://webchat.freenode.net/
 .. _issue ticket: http://code.google.com/p/sympy/issues/list
-.. _executable: http://code.google.com/p/sympy/downloads/detail?name=sympy-0.7.1.win32.exe&can=2&q=
