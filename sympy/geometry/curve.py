@@ -76,6 +76,7 @@ class Curve(GeometryEntity):
 
         Example
         =======
+
         >>> from sympy.abc import t, a
         >>> from sympy.geometry import Curve
         >>> Curve((t, t**2), (t, 0, 2)).free_symbols

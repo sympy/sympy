@@ -457,6 +457,7 @@ class LinearEntity(GeometryEntity):
 
         Examples
         ========
+
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(3, 5)
         >>> l1 = Line(p1, p2)
@@ -795,6 +796,7 @@ class LinearEntity(GeometryEntity):
 
         Example
         =======
+        
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 1), Point(3, 4), Point(2, 3)
         >>> l1 = Line(p1, p2)
@@ -1591,6 +1593,7 @@ class Segment(LinearEntity):
 
         Example
         =======
+
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(0, 1), Point(3, 4)
         >>> s = Segment(p1, p2)
@@ -1629,6 +1632,7 @@ class Segment(LinearEntity):
 
         Example
         =======
+
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(0, 1), Point(3, 4)
         >>> s = Segment(p1, p2)

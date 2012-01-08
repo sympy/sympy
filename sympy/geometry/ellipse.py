@@ -1097,6 +1097,7 @@ class Circle(Ellipse):
 
         Example
         =======
+
         >>> from sympy import Point, Circle
         >>> c1 = Circle(Point(3, 4), 6)
         >>> c1.major
@@ -1111,6 +1112,7 @@ class Circle(Ellipse):
 
         Example
         =======
+
         >>> from sympy import Point, Circle
         >>> c1 = Circle(Point(3, 4), 6)
         >>> c1.minor
@@ -1125,6 +1127,7 @@ class Circle(Ellipse):
 
         Example
         =======
+
         >>> from sympy import Point, Circle
         >>> c1 = Circle(Point(3, 4), 6)
         >>> c1.hradius
@@ -1139,6 +1142,7 @@ class Circle(Ellipse):
 
         Example
         =======
+
         >>> from sympy import Point, Circle
         >>> c1 = Circle(Point(3, 4), 6)
         >>> c1.vradius

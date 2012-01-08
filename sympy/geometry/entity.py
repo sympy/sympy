@@ -44,6 +44,7 @@ class GeometryEntity(tuple):
 
         Example
         =======
+
         >>> from sympy import Polygon, RegularPolygon, Point
         >>> from sympy.abc import x, y
         >>> t = Polygon(*RegularPolygon(Point(x, y), 1, 3).vertices)
@@ -200,10 +201,12 @@ class GeometryEntity(tuple):
 
         See Also
         ========
+
         sympy.geometry.ellipse.Ellipse.encloses_point, sympy.geometry.polygon.Polygon.encloses_point
 
         Example
         =======
+        
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t  = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t2 = Polygon(*RegularPolygon(Point(0, 0), 2, 3).vertices)
@@ -261,10 +264,12 @@ class GeometryEntity(tuple):
 
         See Also
         ========
+
         sympy.core.basic.subs
 
         Example
         =======
+
         >>> from sympy import Point, Circle
         >>> from sympy.abc import x, y, z
         >>> c = Circle(Point(x, y), 3)
@@ -288,6 +293,7 @@ class GeometryEntity(tuple):
 
         Example
         =======
+
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t.args

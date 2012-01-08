@@ -663,6 +663,7 @@ class Polygon(GeometryEntity):
 
         Example
         =======
+
         >>> from sympy import Point, Polygon, RegularPolygon
         >>> p1, p2 = map(Point, [(0, 0), (7, 5)])
         >>> poly = Polygon(*RegularPolygon(p1, 1, 3).vertices)
@@ -1026,6 +1027,7 @@ class RegularPolygon(Polygon):
 
         Example
         =======
+
         >>> from sympy import RegularPolygon, Point
         >>> r = RegularPolygon(Point(0, 0), 5, 3)
         >>> r.args
@@ -1068,10 +1070,11 @@ class RegularPolygon(Polygon):
     @property
     def circumcenter(self):
         """
-        alias for center
+        Alias for center
 
         Examples
         ========
+        
         >>> from sympy.geometry import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 5, 4)
         >>> rp.circumcenter
@@ -1111,10 +1114,11 @@ class RegularPolygon(Polygon):
     @property
     def circumradius(self):
         """
-        alias for radius
+        Alias for radius
 
         Examples
         ========
+
         >>> from sympy import Symbol
         >>> from sympy.geometry import RegularPolygon, Point
         >>> radius = Symbol('r')
@@ -1176,10 +1180,11 @@ class RegularPolygon(Polygon):
     @property
     def inradius(self):
         """
-        alias for apothem
+        Alias for apothem
 
         Examples
         ========
+
         >>> from sympy import Symbol
         >>> from sympy.geometry import RegularPolygon, Point
         >>> radius = Symbol('r')
@@ -1293,8 +1298,10 @@ class RegularPolygon(Polygon):
     def angles(self):
         """
         Returns a dictionary with keys, the vertices of the Polygon, and values, the interior angle at each vertex
+
         Example
         =======
+
         >>> from sympy import RegularPolygon, Point
         >>> r = RegularPolygon(Point(0, 0), 5, 3)
         >>> r.angles
