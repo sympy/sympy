@@ -1,4 +1,4 @@
-from sympy import (symbols, erf, nan, oo, Float, sqrt, pi, O, Ei,
+from sympy import (symbols, erf, nan, oo, Float, conjugate, sqrt, exp, pi, O, I, Ei,
                    exp_polar, polar_lift, Symbol, I, exp, uppergamma, expint,
                    meijerg, gamma, S, Shi, Chi, Si, Ci, E1, sin, cos, sinh, cosh)
 
@@ -6,7 +6,7 @@ from sympy.core.function import ArgumentIndexError
 
 from sympy.utilities.pytest import raises
 
-x, y = symbols('x,y')
+x, y, z = symbols('x,y,z')
 
 def test_erf():
     assert erf(nan) == nan
@@ -16,6 +16,9 @@ def test_erf():
 
     assert erf(0) == 0
 
+    assert erf(I*oo) == oo*I
+    assert erf(-I*oo) == -oo*I
+
     assert erf(-2) == -erf(2)
     assert erf(-x*y) == -erf(x*y)
     assert erf(-x - y) == -erf(x + y)
@@ -23,8 +26,15 @@ def test_erf():
     assert erf(I).is_real == False
     assert erf(0).is_real == True
 
+    assert conjugate(erf(z)) == erf(conjugate(z))
+
     assert erf(x).as_leading_term(x) == x
     assert erf(1/x).as_leading_term(x) == erf(1/x)
+
+    assert erf(z)._eval_aseries(None, oo, z,0) == 1 - exp(-z**2)/(sqrt(pi)*z)
+    assert erf(z)._eval_aseries(None, -oo, z,0) == -1 - exp(-z**2)/(sqrt(pi)*z)
+
+    assert erf(z)._eval_rewrite_as_uppergamma(z) == sqrt(z**2)*erf(sqrt(z**2))/z
 
     raises(ArgumentIndexError, 'erf(x).fdiff(2)')
 
