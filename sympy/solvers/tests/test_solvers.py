@@ -670,10 +670,6 @@ def test_unrad():
     assert solve(sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))) == []
 
 @XFAIL
-def test_unrad2():
-    assert solve((x**3-3*x**2)**Rational(1,3)+1-x) == [S(1)/3] # b/c (-8/27)**(1/3) -> 2*(-1)**(1/3)/3 instead of -2/3
-
-@XFAIL
 def test_multivariate():
     assert solve((x**2 - 2*x + 1).subs(x, log(x) + 3*x)) == [LambertW(3*S.Exp1)/3]
     assert solve((x**2 - 2*x + 1).subs(x, (log(x) + 3*x)**2 - 1)) == \

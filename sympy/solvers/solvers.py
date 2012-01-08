@@ -26,6 +26,7 @@ from sympy.logic.boolalg import And, Or
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
                              sinh, tanh, coth, acos, asin, atan, acot, acosh,
                              asinh, atanh, acoth, Abs)
+from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify)
 from sympy.simplify.sqrtdenest import sqrt_depth
@@ -188,7 +189,7 @@ def checksol(f, symbol, sol=None, **flags):
     while 1:
         attempt += 1
         if attempt == 0:
-            val = f.subs(sol)
+            val = real_root(f.subs(sol))
             if val.atoms() & illegal:
                 return False
         elif attempt == 1:
@@ -2185,7 +2186,7 @@ def unrad(eq, *syms, **flags):
     # continue handling
     ok = True
     if len(rterms) == 1:
-        eq = rterms[0]**lcm - args**lcm
+        eq = rterms[0]**lcm - (-args)**lcm
 
     elif len(rterms) == 2 and not args:
         eq = rterms[0]**lcm - rterms[1]**lcm
