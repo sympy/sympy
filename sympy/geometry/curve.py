@@ -81,7 +81,7 @@ class Curve(GeometryEntity):
         >>> from sympy.geometry import Curve
         >>> Curve((t, t**2), (t, 0, 2)).free_symbols
         set()
-        >>> Curve((t, t**2), (t, t*a, 2)).free_symbols
+        >>> Curve((t, t**2), (t, a, 2)).free_symbols
         set([a])
         """
         free = set()
