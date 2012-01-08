@@ -28,6 +28,7 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
                              asinh, atanh, acoth, Abs)
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify)
+from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together, factor
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
@@ -2074,9 +2075,9 @@ def unrad(eq, *syms, **flags):
     """ Remove radicals with symbolic arguments and return (eq, cov, dens),
     None or raise an error:
 
-    None is returned if there are no radicals to remove
+    None is returned if there are no radicals to remove.
 
-    ValueError is raised if there are radicals and they cannot be removed
+    ValueError is raised if there are radicals and they cannot be removed.
 
     Otherwise
 
@@ -2155,6 +2156,8 @@ def unrad(eq, *syms, **flags):
     if not rads:
         return
 
+    depth = sqrt_depth(eq)
+
     # if all the bases are the same or all the radicals are in one
     # term, this is the lcm of the radical's exponent denominators
     lcm = reduce(ilcm, [r.exp.q for r in rads])
@@ -2175,8 +2178,6 @@ def unrad(eq, *syms, **flags):
         rterms.setdefault(key, []).append(t)
     args = Add(*rterms.pop(()))
     rterms = [Add(*rterms[k]) for k in rterms.keys()]
-    if nwas is not None and len(rterms) == nwas:
-        raise ValueError('Cannot remove all radicals from %s' % eq)
     # the output will depend on the order terms are processed, so
     # make it canonical quickly
     rterms.sort(key=default_sort_key)
@@ -2189,7 +2190,7 @@ def unrad(eq, *syms, **flags):
     elif len(rterms) == 2 and not args:
         eq = rterms[0]**lcm - rterms[1]**lcm
 
-    elif lcm == 2 and (not args and len(rterms) == 4 or len(rterms) < 4):
+    elif log(lcm, 2).is_Integer and (not args and len(rterms) == 4 or len(rterms) < 4):
         if len(rterms) == 4:
             # (r0+r1)**2 - (r2+r3)**2
             t1, t2, t3, t4 = [t**2 for t in rterms]
@@ -2228,7 +2229,8 @@ def unrad(eq, *syms, **flags):
     else:
         ok = False
 
-    if not ok:
+    new_depth = sqrt_depth(eq)
+    if not ok or (nwas is not None and len(rterms) == nwas and new_depth and new_depth == depth):
         # XXX: XFAIL tests indicate other cases that should be handled.
         raise ValueError('Cannot remove all radicals from %s' % eq)
 
