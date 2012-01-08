@@ -42,8 +42,8 @@ class GeometryEntity(tuple):
         """
         Return a set of symbols other than the bound symbols used to parametrically define the Entity.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import Polygon, RegularPolygon, Point
         >>> from sympy.abc import x, y
@@ -204,8 +204,8 @@ class GeometryEntity(tuple):
 
         sympy.geometry.ellipse.Ellipse.encloses_point, sympy.geometry.polygon.Polygon.encloses_point
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t  = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
@@ -260,23 +260,23 @@ class GeometryEntity(tuple):
 
     def subs(self, *args):
         """
-        Substitues new for old in self
+        Substitues new for old in self.
 
         See Also
         ========
 
         sympy.core.basic.subs
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import Point, Circle
         >>> from sympy.abc import x, y, z
-        >>> c = Circle(Point(x, y), 3)
-        >>> c.subs(x, 5)
-        Circle(Point(5, y), 3)
+        >>> c = Circle(Point(0, 0), 3)
+        >>> c.subs(0, 5)
+        Circle(Point(5, 5), 3)
         >>> c.subs(3, z)
-        Circle(Point(x, y), z)
+        Circle(Point(0, 0), z)
 
         """
         return type(self)(*[a.subs(*args) for a in self.args])
@@ -291,8 +291,8 @@ class GeometryEntity(tuple):
         The contents will not necessarily be Points. This is also
         what will be returned when one does "for x in self".
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)

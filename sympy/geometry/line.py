@@ -794,8 +794,8 @@ class LinearEntity(GeometryEntity):
         """
         Return True if self and other are contained in the same line.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 1), Point(3, 4), Point(2, 3)
@@ -1589,10 +1589,11 @@ class Segment(LinearEntity):
 
     def distance(self, o):
         """
-        Attempts to find the perpendicular distance of the line segment to an object
+        Finds the perpendicular distance of the line segment to an object.
+        Parameter o must be a point.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(0, 1), Point(3, 4)
@@ -1630,8 +1631,8 @@ class Segment(LinearEntity):
         """
         Is the other GeometryEntity contained within this Ray?
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(0, 1), Point(3, 4)

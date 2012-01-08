@@ -74,8 +74,8 @@ class Curve(GeometryEntity):
         """
         Return a set of symbols other than the bound symbols used to parametrically define the Curve.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.abc import t, a
         >>> from sympy.geometry import Curve

@@ -74,10 +74,10 @@ class Point(GeometryEntity):
     @property
     def x(self):
         """
-        Returns the X coordinate of the Point
+        Returns the X coordinate of the Point.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import Point
         >>> p = Point(0, 1)
@@ -89,10 +89,10 @@ class Point(GeometryEntity):
     @property
     def y(self):
         """
-        Returns the Y coordinate of the Point
+        Returns the Y coordinate of the Point.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import Point
         >>> p = Point(0, 1)
@@ -393,10 +393,11 @@ class Point(GeometryEntity):
     @property
     def length(self):
         """
-        The length of a Point
+        The length of a Point.
+        This is needed for compatibility with line.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import Point
         >>> p = Point(0, 1)

@@ -1093,10 +1093,10 @@ class Circle(Ellipse):
     @property
     def major(self):
         """
-        Radius of the Circle
+        Radius of the Circle.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import Point, Circle
         >>> c1 = Circle(Point(3, 4), 6)
@@ -1108,10 +1108,10 @@ class Circle(Ellipse):
     @property
     def minor(self):
         """
-        Radius of the Circle
+        Radius of the Circle.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import Point, Circle
         >>> c1 = Circle(Point(3, 4), 6)
@@ -1123,10 +1123,10 @@ class Circle(Ellipse):
     @property
     def hradius(self):
         """
-        Radius of the Circle
+        Radius of the Circle.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import Point, Circle
         >>> c1 = Circle(Point(3, 4), 6)
@@ -1138,10 +1138,10 @@ class Circle(Ellipse):
     @property
     def vradius(self):
         """
-        Radius of the Circle
+        Radius of the Circle.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import Point, Circle
         >>> c1 = Circle(Point(3, 4), 6)

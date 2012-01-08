@@ -659,10 +659,12 @@ class Polygon(GeometryEntity):
 
     def distance(self, o):
         """
-        Returns the shortest distance from the point or other convex Polygon
+        Returns the shortest distance from the point or other convex Polygon.
+        It checks the distance from each point in the polygon and whichever has the
+        shortest distance that is what it returns.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import Point, Polygon, RegularPolygon
         >>> p1, p2 = map(Point, [(0, 0), (7, 5)])
@@ -1023,10 +1025,11 @@ class RegularPolygon(Polygon):
     @property
     def args(self):
         """
-        Returns the center point, the radius, the number of sides, and the orientation angle
+        Returns the center point, the radius,
+        the number of sides, and the orientation angle.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import RegularPolygon, Point
         >>> r = RegularPolygon(Point(0, 0), 5, 3)
@@ -1070,7 +1073,7 @@ class RegularPolygon(Polygon):
     @property
     def circumcenter(self):
         """
-        Alias for center
+        Alias for center.
 
         Examples
         ========
@@ -1114,7 +1117,7 @@ class RegularPolygon(Polygon):
     @property
     def circumradius(self):
         """
-        Alias for radius
+        Alias for radius.
 
         Examples
         ========
@@ -1180,7 +1183,7 @@ class RegularPolygon(Polygon):
     @property
     def inradius(self):
         """
-        Alias for apothem
+        Alias for apothem.
 
         Examples
         ========
@@ -1297,10 +1300,11 @@ class RegularPolygon(Polygon):
     @property
     def angles(self):
         """
-        Returns a dictionary with keys, the vertices of the Polygon, and values, the interior angle at each vertex
+        Returns a dictionary with keys, the vertices of the Polygon,
+        and values, the interior angle at each vertex.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import RegularPolygon, Point
         >>> r = RegularPolygon(Point(0, 0), 5, 3)
