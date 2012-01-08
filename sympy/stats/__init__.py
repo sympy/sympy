@@ -35,10 +35,10 @@ import rv_interface
 from rv_interface import *
 __all__.extend(rv_interface.__all__)
 
-import frv_examples
-from frv_examples import *
-__all__.extend(frv_examples.__all__)
+import frv_types
+from frv_types import *
+__all__.extend(frv_types.__all__)
 
-import crv_examples
-from crv_examples import *
-__all__.extend(crv_examples.__all__)
+import crv_types
+from crv_types import *
+__all__.extend(crv_types.__all__)

@@ -3,7 +3,7 @@ Finite Discrete Random Variables Module
 
 See Also
 ========
-sympy.stats.frv_examples
+sympy.stats.frv_types
 sympy.stats.rv
 sympy.stats.crv
 """

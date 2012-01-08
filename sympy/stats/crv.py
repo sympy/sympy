@@ -3,7 +3,7 @@ Continuous Random Variables Module
 
 See Also
 ========
-sympy.stats.crv_examples
+sympy.stats.crv_types
 sympy.stats.rv
 sympy.stats.frv
 """
