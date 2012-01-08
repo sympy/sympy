@@ -206,7 +206,7 @@ class GeometryEntity(tuple):
 
         Example
         =======
-        
+
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t  = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t2 = Polygon(*RegularPolygon(Point(0, 0), 2, 3).vertices)

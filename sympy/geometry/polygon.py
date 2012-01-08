@@ -1074,7 +1074,7 @@ class RegularPolygon(Polygon):
 
         Examples
         ========
-        
+
         >>> from sympy.geometry import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 5, 4)
         >>> rp.circumcenter

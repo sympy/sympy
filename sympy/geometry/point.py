@@ -397,7 +397,7 @@ class Point(GeometryEntity):
 
         Example
         =======
-        
+
         >>> from sympy import Point
         >>> p = Point(0, 1)
         >>> p.length

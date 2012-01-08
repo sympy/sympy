@@ -796,7 +796,7 @@ class LinearEntity(GeometryEntity):
 
         Example
         =======
-        
+
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 1), Point(3, 4), Point(2, 3)
         >>> l1 = Line(p1, p2)
