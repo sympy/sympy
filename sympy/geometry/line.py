@@ -1590,7 +1590,11 @@ class Segment(LinearEntity):
     def distance(self, o):
         """
         Finds the perpendicular distance of the line segment to an object.
-        Parameter o must be a point.
+
+        Raises
+        ======
+
+        NotImplementedError is raised if o is not a Point
 
         Examples
         ========
