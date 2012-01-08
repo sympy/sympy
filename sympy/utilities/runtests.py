@@ -554,7 +554,13 @@ class SymPyTests(object):
         gl = {'__file__':filename}
         random.seed(self._seed)
         try:
-            execfile(filename, gl)
+            if IS_PYTHON_3 and IS_WINDOWS:
+                with open(filename, encoding="utf8") as f:
+                    source = f.read()
+                c = compile(source, filename, 'exec')
+                exec c in gl
+            else:
+                execfile(filename, gl)
         except (SystemExit, KeyboardInterrupt):
             raise
         except ImportError:
