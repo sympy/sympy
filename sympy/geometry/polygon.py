@@ -659,7 +659,9 @@ class Polygon(GeometryEntity):
 
     def distance(self, o):
         """
-        Returns the shortest distance from the point or other convex Polygon.
+        Returns the shortest distance to a point or other polygon
+        If o is a point, then self does not need to be convex
+        If o is another polygon self and o must be complex
         It checks the distance from each point in the polygon and whichever has the
         shortest distance that is what it returns.
 
