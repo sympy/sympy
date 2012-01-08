@@ -40,7 +40,7 @@ class GeometryEntity(tuple):
     @property
     def free_symbols(self):
         """
-        Return a set of symbols other than the bound symbols used to parametrically define the Entity.
+        Return all but any bound symbols that are used to define the Entity.
 
         Examples
         ========
