@@ -1186,6 +1186,9 @@ class PyTestReporter(Reporter):
             if text[0] != "\n":
                 sys.stdout.write("\n")
 
+        if IS_PYTHON_3 and IS_WINDOWS:
+            text = text.encode('raw_unicode_escape').decode('utf8', 'ignore')
+
         if color == "":
             sys.stdout.write(text)
         else:
