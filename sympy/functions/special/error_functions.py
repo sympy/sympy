@@ -36,7 +36,58 @@ class erf(Function):
               ____
             \/ pi
 
+    Examples
+    ========
 
+    >>> from sympy import I, oo, erf
+    >>> from sympy.abc import z
+
+    Several special values are known:
+
+    >>> erf(0)
+    0
+    >>> erf(oo)
+    1
+    >>> erf(-oo)
+    -1
+    >>> erf(I*oo)
+    oo*I
+    >>> erf(-I*oo)
+    -oo*I
+
+    In general one can pull out factors of -1 and I from the argument:
+
+    >>> erf(-z)
+    -erf(z)
+
+    The error function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(erf(z))
+    erf(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(erf(z),z)
+    2*exp(-z**2)/sqrt(pi)
+
+    We can numerically evaluate the error function to arbitrary precision
+    on the whole complex plane
+
+    >>> erf(4).evalf(30)
+    0.999999984582742099719981147840
+
+    >>> erf(-4*I).evalf(30)
+    -1296959.73071763923152794095062*I
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Error_function
+    .. [2] http://dlmf.nist.gov/7
+    .. [3] http://mathworld.wolfram.com/Erf.html
+    .. [4] http://functions.wolfram.com/GammaBetaErf/Erf
     """
 
     nargs = 1
@@ -59,9 +110,12 @@ class erf(Function):
                 return S.NegativeOne
             elif arg is S.Zero:
                 return S.Zero
-            elif arg.is_negative:
-                return -cls(-arg)
-        elif arg.could_extract_minus_sign():
+
+        t = arg.extract_multiplicatively(S.ImaginaryUnit)
+        if t == S.Infinity or t == S.NegativeInfinity:
+            return arg
+
+        if arg.could_extract_minus_sign():
             return -cls(-arg)
 
     @staticmethod
@@ -79,6 +133,9 @@ class erf(Function):
             else:
                 return 2*(-1)**k * x**n/(n*C.factorial(k)*sqrt(S.Pi))
 
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
@@ -87,9 +144,20 @@ class erf(Function):
         else:
             return self.func(arg)
 
+    def _eval_aseries(self, n, args0, x, logx):
+        z = self.args[0]
+        #h0 = C.hyper([S.One,S.Half],[],-1/z**2)
+        #return z/sqrt(z**2) - 1/(sqrt(pi)*z)*C.exp(-z**2)*h0
+        if -S.Half*S.Pi < C.arg(args0) and C.arg(args0) <= S.Half*S.Pi:
+            return S.One - C.exp(-z**2)/(sqrt(S.Pi)*z)
+        else:
+            return -S.One - C.exp(-z**2)/(sqrt(S.Pi)*z)
+
     def _eval_is_real(self):
         return self.args[0].is_real
 
+    def _eval_rewrite_as_uppergamma(self, z):
+        return sqrt(z**2)/z*(S.One-C.uppergamma(S.Half, z**2)/sqrt(S.Pi))
 
 ###############################################################################
 #################### EXPONENTIAL INTEGRALS ####################################
