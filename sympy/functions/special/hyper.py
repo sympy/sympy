@@ -148,9 +148,9 @@ class hyper(TupleParametersBase):
     See Also
     ========
 
-    meijerg
     sympy.simplify.hyperexpand
     sympy.functions.special.gamma_functions.gamma
+    meijerg
 
     References
     ==========
@@ -182,7 +182,7 @@ class hyper(TupleParametersBase):
             return gamma(c)*gamma(c - a - b)/gamma(c - a)/gamma(c - b)
         return hyperexpand(self)
 
-    @property
+    @propertyx	
     def argument(self):
         """ Argument of the hypergeometric function. """
         return self.args[2]
@@ -612,4 +612,4 @@ class meijerg(TupleParametersBase):
     def delta(self):
         """ A quantity related to the convergence region of the integral,
             c.f. references. """
-        return len(self.bm) + len(self.an) - S(len(self.ap) + len(self.bq))/2
+        return len(self.bm) + len(self.an) - S(len(self.ap) + len(self.bq))/2 

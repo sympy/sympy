@@ -340,7 +340,7 @@ class polygamma(Function):
        See Also
        ========
        
-       digamma, trigamma, gamma
+       gamma, digamma, trigamma
 
     Reference:
         http://en.wikipedia.org/wiki/Polygamma_function
@@ -516,7 +516,7 @@ def digamma(x):
     See Also
     ========
     
-    trigamma, polygamma, gamma
+    gamma, trigamma, polygamma
 
     """
     return polygamma(0, x)
@@ -530,7 +530,7 @@ def trigamma(x):
     See Also
     ========
     
-    digamma, polygamma, gamma
+    gamma, digamma, polygamma
 
     """
     return polygamma(1, x)

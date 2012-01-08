@@ -323,7 +323,7 @@ class hankel1(BesselBase):
     See Also
     ========
     
-    hankel2, besselj
+    hankel2, besselj, bessely
 
     """
 
@@ -356,7 +356,7 @@ class hankel2(BesselBase):
     See Also
     ========
 
-    hankel1, besselj
+    hankel1, besselj, bessely
 
     """
 
@@ -559,4 +559,4 @@ def jn_zeros(n, k, method="sympy", dps=15):
         # estimate the position of the next root using the last root + pi:
         root = solver(f, root+pi)
         roots.append(root)
-    return roots
+    return roots 
