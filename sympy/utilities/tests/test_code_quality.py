@@ -6,6 +6,7 @@ from os.path import split, join, abspath, exists
 from glob import glob
 import re
 import random
+import sys
 
 # System path separator (usually slash or backslash) to be
 # used with excluded files, e.g.
@@ -26,6 +27,8 @@ assert exists(SYMPY_PATH)
 EXAMPLES_PATH = abspath(reduce(join, [PATH, pardir, "examples"]))
 if not exists(EXAMPLES_PATH):
     EXAMPLES_PATH = ""
+
+IS_PYTHON_3 = (sys.version_info[0] == 3)
 
 # Error messages
 message_space = "File contains trailing whitespace: %s, line %s."
@@ -79,32 +82,38 @@ def test_files():
     """
 
     def test(fname):
-        # without "t" the lines from all systems may appear to be \n terminated
-        with open(fname, "rt") as test_file:
-            line = None # to flag the case where there were no lines in file
-            for idx, line in enumerate(test_file):
-                if line.endswith(" \n"):
-                    assert False, message_space % (fname, idx+1)
-                if line.endswith("\r\n"):
-                    assert False, message_carriage % (fname, idx+1)
-                if tab_in_leading(line):
-                    assert False, message_tabs % (fname, idx+1)
-                if str_raise_re.search(line):
-                    assert False, message_str_raise % (fname, idx+1)
-                if gen_raise_re.search(line):
-                    assert False, message_gen_raise % (fname, idx+1)
-                if (implicit_test_re.search(line) and
-                    not filter(lambda ex: ex in fname, import_exclude)):
-                        assert False, message_implicit % (fname, idx+1)
+        if IS_PYTHON_3:
+            with open(fname, "rt", encoding="utf8") as test_file:
+                test_this_file(fname, test_file)
+        else:
+            with open(fname, "rt") as test_file:
+                test_this_file(fname, test_file)
 
-                result = old_raise_re.search(line)
+    def test_this_file(fname, test_file):
+        line = None # to flag the case where there were no lines in file
+        for idx, line in enumerate(test_file):
+            if line.endswith(" \n"):
+                assert False, message_space % (fname, idx+1)
+            if line.endswith("\r\n"):
+                assert False, message_carriage % (fname, idx+1)
+            if tab_in_leading(line):
+                assert False, message_tabs % (fname, idx+1)
+            if str_raise_re.search(line):
+                assert False, message_str_raise % (fname, idx+1)
+            if gen_raise_re.search(line):
+                assert False, message_gen_raise % (fname, idx+1)
+            if (implicit_test_re.search(line) and
+                not filter(lambda ex: ex in fname, import_exclude)):
+                    assert False, message_implicit % (fname, idx+1)
 
-                if result is not None:
-                    assert False, message_old_raise % (fname, idx+1, result.group(2))
+            result = old_raise_re.search(line)
 
-            if line is not None and not line.endswith('\n'):
-                # eof newline check
-                assert False, message_eof % (fname, idx+1)
+            if result is not None:
+                assert False, message_old_raise % (fname, idx+1, result.group(2))
+
+        if line is not None and not line.endswith('\n'):
+            # eof newline check
+            assert False, message_eof % (fname, idx+1)
 
     exclude = set([
         "%(sep)smpmath%(sep)s" % sepd,

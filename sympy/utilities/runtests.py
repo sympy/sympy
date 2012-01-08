@@ -33,6 +33,10 @@ from sympy.core.cache import clear_cache
 # it here to make utf8 files work in Python 2.5.
 pdoctest._encoding = getattr(sys.__stdout__, 'encoding', None) or 'utf-8'
 
+IS_PYTHON_3 = (sys.version_info[0] == 3)
+IS_WINDOWS = (os.name == 'nt')
+
+
 class Skipped(Exception):
         pass
 
@@ -51,6 +55,19 @@ def _indent(s, indent=4):
     return re.sub('(?m)^(?!$)', indent*' ', s)
 
 pdoctest._indent = _indent
+
+# ovverride reporter to maintain windows and python3
+def _report_failure(self, out, test, example, got):
+    """
+    Report that the given example failed.
+    """
+    s = self._checker.output_difference(example, got, self.optionflags)
+    s = s.encode('raw_unicode_escape').decode('utf8', 'ignore')
+    out(self._failure_header(test, example) + s)
+
+if IS_PYTHON_3 and IS_WINDOWS:
+    DocTestRunner.report_failure = _report_failure
+
 
 def sys_normcase(f):
     if sys_case_insensitive:
@@ -456,10 +473,11 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
                          "relative paths.")
 
     # Relativize the path
-    if sys.version_info[0] < 3:
+    if not IS_PYTHON_3:
         text, filename = pdoctest._load_testfile(filename, package, module_relative)
+        if encoding is not None:
+            text = text.decode(encoding)
     else:
-        encoding = None
         text, filename = pdoctest._load_testfile(filename, package, module_relative, encoding)
 
     # If no name was given, then use the file's name.
@@ -480,9 +498,6 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
         runner = pdoctest.DebugRunner(verbose=verbose, optionflags=optionflags)
     else:
         runner = SymPyDocTestRunner(verbose=verbose, optionflags=optionflags)
-
-    if encoding is not None:
-        text = text.decode(encoding)
 
     # Read the file, convert it to a test, and run it.
     test = parser.get_doctest(text, globs, name, filename, 0)
@@ -539,7 +554,13 @@ class SymPyTests(object):
         gl = {'__file__':filename}
         random.seed(self._seed)
         try:
-            execfile(filename, gl)
+            if IS_PYTHON_3 and IS_WINDOWS:
+                with open(filename, encoding="utf8") as f:
+                    source = f.read()
+                c = compile(source, filename, 'exec')
+                exec c in gl
+            else:
+                execfile(filename, gl)
         except (SystemExit, KeyboardInterrupt):
             raise
         except ImportError:
@@ -1170,6 +1191,9 @@ class PyTestReporter(Reporter):
         if self._line_wrap:
             if text[0] != "\n":
                 sys.stdout.write("\n")
+
+        if IS_PYTHON_3 and IS_WINDOWS:
+            text = text.encode('raw_unicode_escape').decode('utf8', 'ignore')
 
         if color == "":
             sys.stdout.write(text)
