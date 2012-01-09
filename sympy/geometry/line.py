@@ -452,6 +452,18 @@ class LinearEntity(GeometryEntity):
 
     @property
     def length(self):
+        """
+        The length of the line.
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Line
+        >>> p1, p2 = Point(0, 0), Point(3, 5)
+        >>> l1 = Line(p1, p2)
+        >>> l1.length
+        oo
+        """
         return S.Infinity
 
     @property
@@ -568,7 +580,7 @@ class LinearEntity(GeometryEntity):
         """
         tline = Line(self.p1, self.p2)
 
-        def project(p):
+        def _project(p):
             """Project a point onto the line representing self."""
             if p in tline:
                 return p
@@ -577,10 +589,10 @@ class LinearEntity(GeometryEntity):
 
         projected = None
         if isinstance(o, Point):
-            return project(o)
+            return _project(o)
         elif isinstance(o, LinearEntity):
-            n_p1 = project(o.p1)
-            n_p2 = project(o.p2)
+            n_p1 = _project(o.p1)
+            n_p2 = _project(o.p2)
             if n_p1 == n_p2:
                 projected = n_p1
             else:
@@ -779,15 +791,27 @@ class LinearEntity(GeometryEntity):
         return Point(x, y)
 
     def is_similar(self, other):
-        """Return True if self and other are contained in the same line."""
-        def norm(a, b, c):
+        """
+        Return True if self and other are contained in the same line.
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Line
+        >>> p1, p2, p3 = Point(0, 1), Point(3, 4), Point(2, 3)
+        >>> l1 = Line(p1, p2)
+        >>> l2 = Line(p1, p3)
+        >>> l1.is_similar(l2)
+        True
+        """
+        def _norm(a, b, c):
             if a != 0:
                 return 1, b/a, c/a
             elif b != 0:
                 return a/b, 1, c/b
             else:
                 return c
-        return norm(*self.coefficients) == norm(*other.coefficients)
+        return _norm(*self.coefficients) == _norm(*other.coefficients)
 
     def __eq__(self, other):
         """Subclasses should implement this method."""
@@ -1564,7 +1588,23 @@ class Segment(LinearEntity):
         return Point.midpoint(self.p1, self.p2)
 
     def distance(self, o):
-        """Attempts to find the distance of the line segment to an object"""
+        """
+        Finds the shortest distance between a line segment and a point
+
+        Raises
+        ======
+
+        NotImplementedError is raised if o is not a Point
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Segment
+        >>> p1, p2 = Point(0, 1), Point(3, 4)
+        >>> s = Segment(p1, p2)
+        >>> s.distance(Point(10, 15))
+        sqrt(170)
+        """
         if isinstance(o, Point):
             return self._do_point_distance(o)
         raise NotImplementedError()
@@ -1592,7 +1632,19 @@ class Segment(LinearEntity):
         return super(Segment, self).__hash__()
 
     def contains(self, other):
-        """Is the other GeometryEntity contained within this Ray?"""
+        """
+        Is the other GeometryEntity contained within this Ray?
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Segment
+        >>> p1, p2 = Point(0, 1), Point(3, 4)
+        >>> s = Segment(p1, p2)
+        >>> s2 = Segment(p2, p1)
+        >>> s.contains(s2)
+        True
+        """
         if isinstance(other, Segment):
             return other.p1 in self and other.p2 in self
         elif isinstance(other, Point):
