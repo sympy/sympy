@@ -81,9 +81,10 @@ def add_formulae(formulae):
     # Luke, Y. L. (1969), The Special Functions and Their Approximations,
     # Volume 1, section 6.2
 
-    from sympy import (exp, sqrt, cosh, log, asin, atan, I, lowergamma, cos,
+    from sympy import (exp, sqrt, root, cosh, log, asin, atan, I, lowergamma, cos,
                        atanh, besseli, gamma, erf, pi, sin, besselj, Ei,
-                       EulerGamma, Shi, sinh, cosh, Chi, diag, Matrix)
+                       EulerGamma, Shi, sinh, cosh, Chi, diag, Matrix,
+                       fresnels, fresnelc)
     from sympy.functions.special.hyper import (HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
@@ -245,6 +246,14 @@ def add_formulae(formulae):
                  cosh(2*sqrt(z))]),
          Matrix([[1, 0, 0]]),
          Matrix([[-S.Half, S.Half, 0], [0, -S.Half, S.Half], [0, 2*z, 0]]))
+
+    # FresnelS
+    #add([S(3)/4], [S(3)/2,S(7)/4], fresnels(root(-16*z/pi**2, 4)) * 6/(pi*(root(-16*z/pi**2, 4))**3) )
+    add([S(3)/4], [S(3)/2,S(7)/4], fresnels(2/sqrt(pi)*root(-z,4)) * 6/(pi*8*(-z)**(S(3)/4)/pi**(S(3)/2) ) )
+
+    # FresnelC
+    #add([S(1)/4], [S(1)/2,S(5)/4], fresnelc(root(-16*z/pi**2, 4)) / (pi*(root(-16*z/pi**2, 4))) )
+    add([S(1)/4], [S(1)/2,S(5)/4], fresnelc(2/sqrt(pi)*root(-z,4)) / (2/sqrt(pi)*root(-z,4)) )
 
     # 2F3
     # XXX with this five-parameter formula is pretty slow with the current
