@@ -157,7 +157,8 @@ class erf(Function):
         return self.args[0].is_real
 
     def _eval_rewrite_as_uppergamma(self, z):
-        return sqrt(z**2)/z*(S.One-C.uppergamma(S.Half, z**2)/sqrt(S.Pi))
+        return sqrt(z**2)/z*(S.One - C.uppergamma(S.Half, z**2)/sqrt(S.Pi))
+
 
 ###############################################################################
 #################### EXPONENTIAL INTEGRALS ####################################
