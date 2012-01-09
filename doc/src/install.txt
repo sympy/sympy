@@ -15,6 +15,10 @@ You will first have to download the source files via the archive. Download the
 latest release (tar.gz) from the `downloads site`_ and open it with your
 operating system's standard decompression utility.
 
+When downloading the archive, make sure to get the correct version (Python 2 or
+Python 3). If you're not sure which one to use, you probably want the Python 2
+version. Note that you can install both if you want. 
+
 After the download is complete, you should have a folder called "sympy". From
 your favorite command line terminal, change directory into that folder and
 execute the following::
@@ -22,8 +26,8 @@ execute the following::
     $ python setup.py install
 
 Alternatively, if you don't want to install the package onto your computer, you
-may run SymPy with the "isympy" console (which auto-imports SymPy and defines
-symbols x, y, and z) by executing within the "sympy" folder::
+may run SymPy with the "isympy" console (which automatically imports SymPy
+packages and defines common symbols) by executing within the "sympy" folder::
 
     $ ./bin/isympy
 
@@ -52,6 +56,18 @@ To update to the latest version, go into your repository and execute::
 
     $ git pull origin master
 
+If you want to install SymPy, but still want to use the git version, you can run
+from your repository::
+
+    $ setup.py develop
+
+This will cause the installed version to always point to the version in the git
+directory.
+
+If you're using the git repository with Python 3, you have to use the
+``./bin/use2to3`` script to build the Python 3 version of SymPy. This will put
+everything in the py3ksympy directory. 
+
 Other Methods
 =============
 An installation executable is available for Windows users at the
@@ -69,9 +85,10 @@ works. To do this, start up Python and import the SymPy libraries::
 
 From here, execute some simple SymPy statements like the ones below::
 
-    >>> print limit(sin(x)/x, x, 0)
+    >>> x = Symbol('x')
+    >>> limit(sin(x)/x, x, 0)
     1
-    >>> print integrate(1/x, x)
+    >>> integrate(1/x, x)
     log(x)
 
 For a starter guide on using SymPy effectively, refer to the tutorial_.
@@ -80,11 +97,14 @@ Questions
 =========
 
 If you have a question about installation or SymPy in general, feel free to
-visit the IRC channel at irc.freenode.net, channel #sympy (webclient_). If you
-feel like there is an unresolvable problem with installation for your
-environment, you may post an `issue ticket`_.
+visit the IRC channel at irc.freenode.net, channel `#sympy`_. In addition,
+our `mailing list`_ is an excellent source of community support.
+
+If you think there's a bug or you would like to request a feature, please open
+an `issue ticket`_.
 
 .. _downloads site: https://code.google.com/p/sympy/downloads/list
 .. _tutorial: tutorial.txt
-.. _webclient: http://webchat.freenode.net/
+.. _#sympy: irc://irc.freenode.net/sympy
 .. _issue ticket: http://code.google.com/p/sympy/issues/list
+.. _mailing list: http://groups.google.com/group/sympy

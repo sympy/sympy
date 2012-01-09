@@ -64,6 +64,7 @@ for root, dirs, files in os.walk(np('./doc/src/modules')):
         relevant_txt_files.append(os.path.join(root, filename))
 
 # some files aren't in /doc/src/modules, add them explicitly
+relevant_txt_files.append(np('./doc/src/install.txt'))
 relevant_txt_files.append(np('./doc/src/tutorial.txt'))
 relevant_txt_files.append(np('./doc/src/tutorial.bg.txt'))
 relevant_txt_files.append(np('./doc/src/tutorial.cs.txt'))
