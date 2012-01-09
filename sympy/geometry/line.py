@@ -1589,7 +1589,7 @@ class Segment(LinearEntity):
 
     def distance(self, o):
         """
-        Finds the shortest distance of the line segment to an object.
+        Finds the shortest distance between a line segment and a point
 
         Raises
         ======
