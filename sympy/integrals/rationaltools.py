@@ -317,7 +317,7 @@ def log_to_real(h, q, x, t):
 
     log_to_atan
     """
-    u, v = symbols('u,v')
+    u, v = symbols('u,v', cls=Dummy)
 
     H = h.as_expr().subs({t:u+I*v}).expand()
     Q = q.as_expr().subs({t:u+I*v}).expand()
