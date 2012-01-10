@@ -354,8 +354,8 @@ def test_ellipse():
     e2 = Ellipse(p2, half, 1)
     e3 = Ellipse(p1, y1, y1)
     c1 = Circle(p1, 1)
-    c2 = Circle(p2,1)
-    c3 = Circle(Point(sqrt(2),sqrt(2)),1)
+    c2 = Circle(p2, 1)
+    c3 = Circle(Point(sqrt(2), sqrt(2)), 1)
 
     # Test creation with three points
     cen, rad = Point(3*half, 2), 5*half
@@ -381,6 +381,9 @@ def test_ellipse():
     assert e1.plot_interval(x) == e2.plot_interval(x) == [x, -pi, pi]
     assert Ellipse(None, 1, None, 1).circumference == 2*pi
     assert c1.minor == 1
+    assert c1.major == 1
+    assert c1.hradius == 1
+    assert c1.vradius == 1
 
     # Private Functions
     assert hash(c1) == hash(Circle(Point(1, 0), Point(0, 1), Point(0, -1)))
