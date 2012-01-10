@@ -29,7 +29,9 @@ class DiracDelta(Function):
     simplify, is_simple
     sympy.functions.special.tensor_functions.KroneckerDelta
     
-    For more information, see:
+    References
+    ==========
+
     http://mathworld.wolfram.com/DeltaFunction.html
     """
 
@@ -194,7 +196,9 @@ class Heaviside(Function):
     
     Diracdelta
 
-    For more information, see:
+    References
+    ==========
+
     http://mathworld.wolfram.com/HeavisideStepFunction.html
 
     """

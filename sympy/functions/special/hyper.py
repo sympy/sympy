@@ -182,7 +182,7 @@ class hyper(TupleParametersBase):
             return gamma(c)*gamma(c - a - b)/gamma(c - a)/gamma(c - b)
         return hyperexpand(self)
 
-    @propertyx	
+    @property	
     def argument(self):
         """ Argument of the hypergeometric function. """
         return self.args[2]

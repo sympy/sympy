@@ -111,8 +111,7 @@ class KroneckerDelta(Function):
     ========
 
     eval
-    sympy.functions.special.delta_functions.Diracdelta
-    sympy.physics.secondquant.KroneckerDelta
+    sympy.functions.special.delta_functions.DiracDelta
 
     References
     ==========
@@ -251,6 +250,12 @@ class KroneckerDelta(Function):
         >>> KroneckerDelta(p,i).is_only_above_fermi
         False
 
+        See Also
+        ========
+
+        is_above_fermi, is_below_fermi, is_only_below_fermi
+        
+
         """
         return ( self.args[0].assumptions0.get("above_fermi")
                 or
@@ -277,6 +282,12 @@ class KroneckerDelta(Function):
         False
         >>> KroneckerDelta(p,a).is_only_below_fermi
         False
+
+        See Also
+        ========
+
+        is_above_fermi, , is_below_fermi, is_only_above_fermi
+        
 
         """
         return ( self.args[0].assumptions0.get("below_fermi")

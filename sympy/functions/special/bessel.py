@@ -559,4 +559,4 @@ def jn_zeros(n, k, method="sympy", dps=15):
         # estimate the position of the next root using the last root + pi:
         root = solver(f, root+pi)
         roots.append(root)
-    return roots 
+    return roots

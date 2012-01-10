@@ -195,7 +195,7 @@ class legendre(PolynomialSequence):
     ========
 
     assoc_legendre
-    chebyshevu, chebyshevt, chebyshevt_root, chebyshevt_root
+    chebyshevu, chebyshevt, chebyshevu_root, chebyshevt_root
     
     References
     ==========
@@ -234,8 +234,8 @@ class assoc_legendre(Function):
     See Also
     ========
 
-    assoc_legendre
-    chebyshevu, chebyshevt, chebyshevt_root, chebyshevt_root
+    legendre
+    chebyshevu, chebyshevt, chebysheut_root, chebyshevt_root
     
     References
     ==========
