@@ -420,3 +420,6 @@ def test_issue_2552():
     a,b,c,K = symbols('a b c K', commutative=True)
     assert (a/(b*c)).subs(b*c, K) == a/K
     assert (a/(b**2*c**3)).subs(b*c, K) == a/(c*K**2)
+
+def test_issue_2976():
+    assert Tuple(1, True).subs(1, 2) == Tuple(2, True)

@@ -903,6 +903,8 @@ class Basic(PicklableWithSlots):
             hit = False
             args = list(self.args)
             for i, arg in enumerate(args):
+                if not hasattr(arg, '_subs'):
+                    continue
                 arg = arg._subs(old, new, **hints)
                 if arg is not args[i]:
                     hit = True

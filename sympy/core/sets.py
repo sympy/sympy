@@ -205,24 +205,6 @@ class Set(Basic):
             raise TypeError('contains did not evaluate to a bool: %r' % result)
         return result
 
-    def _eval_subs(self, old, new):
-        new_args = []
-        hit = False
-        for arg in self.args:
-            if arg == old:
-                new_args.append(new)
-                hit = True
-            elif isinstance(arg, Basic):
-                newa = arg._subs(old, new)
-                if not hit and newa != arg:
-                    hit = True
-                new_args.append(newa)
-            else: # e.g. bool will come here
-                new_args.append(arg)
-        if not hit:
-            return self
-        return self.__class__(*new_args)
-
     @property
     def is_number(self):
         return False
