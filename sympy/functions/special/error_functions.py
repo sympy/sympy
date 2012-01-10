@@ -863,14 +863,10 @@ class erfs(Function):
             return super(erfs, self)._eval_aseries(n, args0, x, logx)
 
         z = self.args[0]
-        l = [ C.factorial(2*k)*(-S(4))**(-k)/C.factorial(k)*(1/z)**(2*k+1) for k in xrange(1,n) ]
+        l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(4))**(-k)/C.factorial(k) * (1/z)**(2*k+1) for k in xrange(0,n) ]
 
-        # Not sure about the order terms
-        o = None
-        if n == 0:
-            o = C.Order(1, x)
-        else:
-            o = C.Order(1/z**(2*n+2), x)
+        # Still not sure about the order terms
+        o = C.Order(1/z**(2*n+2), x)
         # It is very inefficient to first add the order and then do the nseries
         return (Add(*l))._eval_nseries(x, n, logx) + o
 
