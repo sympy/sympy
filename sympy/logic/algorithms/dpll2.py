@@ -422,9 +422,19 @@ class SATSolver(object):
         """Initialize the data structures needed for the VSIDS heuristic."""
         self.lit_heap = []
         self.lit_scores = {}
+        def _nfloat(a):
+            """Return negative, float value of a.
+
+            If a is zero, don't negate it as this leads to 0.0
+            in Python 2.5. The calls to this can be dropped when
+            support for 2.5 is dropped."""
+            if a:
+                return -float(a)
+            else:
+                return 0.0
         for var in range(1, len(self.variable_set)):
-            self.lit_scores[var] = -float(self.occurrence_count[var])
-            self.lit_scores[-var] = -float(self.occurrence_count[-var])
+            self.lit_scores[var] = _nfloat(self.occurrence_count[var])
+            self.lit_scores[-var] = _nfloat(self.occurrence_count[-var])
             heappush(self.lit_heap, (self.lit_scores[var], var))
             heappush(self.lit_heap, (self.lit_scores[-var], -var))
 
@@ -439,12 +449,12 @@ class SATSolver(object):
         ... set([3, -2])], set([1, 2, 3]), set([]))
 
         >>> l.lit_scores
-        {-3: -2.0, -2: -2.0, -1: -0.0, 1: -0.0, 2: -2.0, 3: -2.0}
+        {-3: -2.0, -2: -2.0, -1: 0.0, 1: 0.0, 2: -2.0, 3: -2.0}
 
         >>> l._vsids_decay()
 
         >>> l.lit_scores
-        {-3: -1.0, -2: -1.0, -1: -0.0, 1: -0.0, 2: -1.0, 3: -1.0}
+        {-3: -1.0, -2: -1.0, -1: 0.0, 1: 0.0, 2: -1.0, 3: -1.0}
         """
         # We divide every literal score by 2 for a decay factor
         #  Note: This doesn't change the heap property
@@ -463,13 +473,13 @@ class SATSolver(object):
         ... set([3, -2])], set([1, 2, 3]), set([]))
 
         >>> l.lit_heap
-        [(-2.0, -3), (-2.0, 2), (-2.0, -2), (-0.0, 1), (-2.0, 3), (-0.0, -1)]
+        [(-2.0, -3), (-2.0, 2), (-2.0, -2), (0.0, 1), (-2.0, 3), (0.0, -1)]
 
         >>> l._vsids_calculate()
         -3
 
         >>> l.lit_heap
-        [(-2.0, -2), (-2.0, 2), (-0.0, -1), (-0.0, 1), (-2.0, 3)]
+        [(-2.0, -2), (-2.0, 2), (0.0, -1), (0.0, 1), (-2.0, 3)]
         """
         if len(self.lit_heap) == 0:
             return 0
@@ -496,13 +506,13 @@ class SATSolver(object):
         >>> l = SATSolver([set([2, -3]), set([1]), set([3, -3]), set([2, -2]),
         ... set([3, -2])], set([1, 2, 3]), set([]))
         >>> l.lit_heap
-        [(-2.0, -3), (-2.0, 2), (-2.0, -2), (-0.0, 1), (-2.0, 3), (-0.0, -1)]
+        [(-2.0, -3), (-2.0, 2), (-2.0, -2), (0.0, 1), (-2.0, 3), (0.0, -1)]
 
         >>> l._vsids_lit_unset(2)
 
         >>> l.lit_heap
-        [(-2.0, -3), (-2.0, -2), (-2.0, -2), (-2.0, 2), (-2.0, 3), (-0.0, -1),
-        ...(-2.0, 2), (-0.0, 1)]
+        [(-2.0, -3), (-2.0, -2), (-2.0, -2), (-2.0, 2), (-2.0, 3), (0.0, -1),
+        ...(-2.0, 2), (0.0, 1)]
         """
         var = abs(lit)
         heappush(self.lit_heap, (self.lit_scores[var], var))
@@ -521,14 +531,14 @@ class SATSolver(object):
         >>> l.num_learned_clauses
         0
         >>> l.lit_scores
-        {-3: -2.0, -2: -2.0, -1: -0.0, 1: -0.0, 2: -2.0, 3: -2.0}
+        {-3: -2.0, -2: -2.0, -1: 0.0, 1: 0.0, 2: -2.0, 3: -2.0}
 
         >>> l._vsids_clause_added(set([2, -3]))
 
         >>> l.num_learned_clauses
         1
         >>> l.lit_scores
-        {-3: -1.0, -2: -2.0, -1: -0.0, 1: -0.0, 2: -1.0, 3: -2.0}
+        {-3: -1.0, -2: -2.0, -1: 0.0, 1: 0.0, 2: -1.0, 3: -2.0}
         """
         self.num_learned_clauses += 1
         for lit in cls:
