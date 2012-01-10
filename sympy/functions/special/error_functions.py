@@ -159,6 +159,9 @@ class erf(Function):
     def _eval_rewrite_as_uppergamma(self, z):
         return sqrt(z**2)/z*(S.One - C.uppergamma(S.Half, z**2)/sqrt(S.Pi))
 
+    def _eval_rewrite_as_tractable(self, z):
+        return S.One - erfs(z)*C.exp(-z**2)
+
 
 ###############################################################################
 #################### EXPONENTIAL INTEGRALS ####################################
@@ -841,3 +844,37 @@ class Chi(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z):
         from sympy import exp_polar
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
+
+###############################################################################
+#################### HELPER FUNCTIONS #########################################
+###############################################################################
+
+
+class erfs(Function):
+    """
+    Helper function to make the :math:`erf(z)` function
+    tractable for the Gruntz algorithm.
+    """
+
+    def _eval_aseries(self, n, args0, x, logx):
+        if args0[0] != oo:
+            return super(erfs, self)._eval_aseries(n, args0, x, logx)
+
+        z = self.args[0]
+        l = [ C.factorial(2*k)*(-4)**(-k)/C.factorial(k)*(1/z)**(2*k+1) for k in xrange(1,n) ]
+
+        # Not sure about the order terms
+        o = None
+        if m == 0:
+            o = C.Order(1, x)
+        else:
+            o = C.Order(1/z**(2*n+2), x)
+        # It is very inefficient to first add the order and then do the nseries
+        return (Add(*l))._eval_nseries(x, n, logx) + o
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            z = self.args[0]
+            return -2/sqrt(S.Pi)+2*z*erfs(z)
+        else:
+            raise ArgumentIndexError(self, argindex)
