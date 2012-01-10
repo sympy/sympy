@@ -310,3 +310,6 @@ class GeometryEntity(Basic):
             old = Point(old)
             new = Point(new)
             return self._subs(old, new)
+
+from sympy.core.sympify import converter, sympify
+converter[GeometryEntity] = lambda x: x

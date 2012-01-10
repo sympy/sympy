@@ -76,7 +76,7 @@ def test_subbug2():
     x = Symbol('x')
     assert Float(7.7).epsilon_eq(abs(x).subs(x, -7.7))
 
-def test_dict():
+def test_dict_set():
     x = Symbol('x')
     a,b,c = map(Wild, 'abc')
 
@@ -86,6 +86,9 @@ def test_dict():
     e =  a/b * sin(b*x)
     assert e.subs(r) == r[a]/r[b] * sin(r[b]*x)
     assert e.subs(r) == 3 * sin(4*x) / 4
+    s = set(r.items())
+    assert e.subs(s) == r[a]/r[b] * sin(r[b]*x)
+    assert e.subs(s) == 3 * sin(4*x) / 4
 
     assert e.subs(r) == r[a]/r[b] * sin(r[b]*x)
     assert e.subs(r) == 3 * sin(4*x) / 4
@@ -308,9 +311,10 @@ def test_add():
     assert (a**2 - b - c).subs(a**2 - c, d) in [d - b, a**2 - b - c]
     assert (a**2 - x - c).subs(a**2 - c, d) in [d - x, a**2 - x - c]
     assert (a**2 - b - sqrt(a)).subs(a**2 - sqrt(a), c) == c - b
-    assert (a+b+exp(a+b)).subs(a+b,c) == c + exp(c)
-    assert (c+b+exp(c+b)).subs(c+b,a) == a + exp(a)
-
+    assert (a + b + exp(a + b)).subs(a + b, c) == c + exp(c)
+    assert (c + b + exp(c + b)).subs(c + b, a) == a + exp(a)
+    assert (a + b + c + d).subs(b + c, x) == a + d + x
+    assert (a + b + c + d).subs(-b - c, x) == a + d - x
     assert ((x + 1)*y).subs(x + 1, t) == t*y
     assert ((-x - 1)*y).subs(x + 1, t) == -t*y
     assert ((x - 1)*y).subs(x + 1, t) == y*(t - 2)

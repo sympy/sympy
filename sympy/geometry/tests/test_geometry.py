@@ -845,6 +845,10 @@ def test_subs():
     assert p.subs({x: 1}) == Point(1, 2)
     assert Point(1, 2).subs(Point(1, 2), Point(3, 4)) == Point(3, 4)
     assert Point(1, 2).subs((1,2), Point(3,4)) == Point(3, 4)
+    assert Point(1, 2).subs(Point(1,2), Point(3,4)) == Point(3, 4)
+    assert Point(1, 2).subs(set([(1, 2)])) == Point(2, 2)
+    raises(ValueError, 'Point(1, 2).subs(1)')
+    raises(ValueError, 'Point(1, 1).subs((Point(1, 1), Point(1, 2)), 1, 2)')
 
 def test_encloses():
     # square with a dimpled left side

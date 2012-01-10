@@ -807,7 +807,10 @@ class Basic(PicklableWithSlots):
                 unordered = True
                 sequence = [i for i in sequence.iteritems()]
             elif not iterable(sequence):
-                raise TypeError("subs accepts an iterable with 1 or 2 arguments")
+                from sympy.utilities.misc import filldedent
+                raise ValueError(filldedent("""
+                   When a single argument is passed to subs
+                   it should be an iterable of (old, new) tuples."""))
         elif len(args) == 2:
             sequence = [args]
         else:
