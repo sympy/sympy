@@ -374,8 +374,8 @@ def rsolve_ratio(coeffs, f, n, **hints):
 
     >>> from sympy.abc import x
     >>> from sympy.solvers.recurr import rsolve_ratio
-    >>> rsolve_ratio([-2*x**3+x**2+2*x-1, 2*x**3+x**2-6*x,
-    ... -2*x**3-11*x**2-18*x-9, 2*x**3+13*x**2+22*x+8], 0, x)
+    >>> rsolve_ratio([ - 2*x**3 + x**2 + 2*x - 1, 2*x**3 + x**2 - 6*x,
+    ... - 2*x**3 - 11*x**2 - 18*x - 9, 2*x**3 + 13*x**2 + 22*x + 8], 0, x)
     C2*(2*x - 3)/(2*(x**2 - 1))
 
     """

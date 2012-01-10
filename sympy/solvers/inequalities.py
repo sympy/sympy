@@ -21,7 +21,7 @@ def interval_evalf(interval):
     [1.0, 3.0]
 
     >>> x = Symbol('x', real=True)
-    >>> interval_evalf(Interval(x*2, x - 5))
+    >>> interval_evalf(Interval(2*x, x - 5))
     [2.0*x, x - 5.0]
     """
     return Interval(interval.left.evalf(), interval.right.evalf(),

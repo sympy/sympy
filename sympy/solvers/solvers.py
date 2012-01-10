@@ -1543,7 +1543,7 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
         return None # no solutions
 
 def solve_linear_system_LU(matrix, syms):
-    """ LU function works for invertible only
+    """ LU function works for invertible matrix only
 
     Examples
     ========
@@ -1552,7 +1552,10 @@ def solve_linear_system_LU(matrix, syms):
     >>> from sympy.abc import x, y, z
     >>> from sympy.solvers.solvers import solve_linear_system_LU
 
-    >>> solve_linear_system_LU(Matrix([[1, 2, 0, 1], [3, 2, 2, 1], [2, 0, 0, 1]]), [x, y, z])
+    >>> solve_linear_system_LU(Matrix([
+    ... [1, 2, 0, 1],
+    ... [3, 2, 2, 1],
+    ... [2, 0, 0, 1]]), [x, y, z])
     {x: 1/2, y: 1/4, z: -1/2}
     """
     assert matrix.rows == matrix.cols-1

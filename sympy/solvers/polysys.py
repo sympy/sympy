@@ -55,7 +55,7 @@ def solve_biquadratic(f, g, opt):
     >>> NewOption = Options((x, y), {'domain': 'ZZ'})
 
     >>> a = Poly(y**2 - 4 + x, y, x, domain='ZZ')
-    >>> b = Poly(y*2 + x*3 - 7, y, x, domain='ZZ')
+    >>> b = Poly(y*2 + 3*x - 7, y, x, domain='ZZ')
     >>> solve_biquadratic(a, b, NewOption)
     [(1/3, 3), (41/27, 11/9)]
 
@@ -140,8 +140,8 @@ def solve_generic(polys, opt):
     >>> solve_generic([a, b], NewOption)
     [(-1, 4)]
 
-    >>> a = Poly(x - y*2 + 5, x, y, domain='ZZ')
-    >>> b = Poly(x*2 - y - 3, x, y, domain='ZZ')
+    >>> a = Poly(x - 2*y + 5, x, y, domain='ZZ')
+    >>> b = Poly(2*x - y - 3, x, y, domain='ZZ')
     >>> solve_generic([a, b], NewOption)
     [(11/3, 13/3)]
 
