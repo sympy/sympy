@@ -324,6 +324,21 @@ def sub_func_doit(eq, func, new):
     To keep subs from having to look through all derivatives, we
     mask them off with dummy variables, do the func sub, and then
     replace masked off derivatives with their doit values.
+
+    Examples
+    ========
+
+    >>> from sympy import Derivative
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.solvers.ode import sub_func_doit
+
+    >>> sub_func_doit(3*Derivative(y(x), x) - 1, y(x), x)
+    2
+
+    >>> sub_func_doit(x*Derivative(y(x), x) - y(x)**2 + y(x), y(x),
+    ... 1/(x*(z + 1/x)))
+    x*(-1/(x**2*(z + 1/x)) + 1/(x**3*(z + 1/x)**2)) + 1/(x*(z + 1/x))
+    ...- 1/(x**2*(z + 1/x)**2)
     """
     reps = {}
     repu = {}
@@ -1464,7 +1479,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     else:
         # ================ pre-processing ================
         # collect terms to get constants together
-        def take(i):
+        def _take(i):
             t = sorted([s for s in i.atoms(Symbol) if s in constantsymbols])
             if not t:
                 return i
@@ -1474,12 +1489,12 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             return constantsymbols[0]
         if expr.is_Mul:
             i, d = expr.as_independent(x, strict=True)
-            newi = take(i)
+            newi = _take(i)
             if newi != i:
                 expr = newi*d
         elif expr.is_Add:
             i, d = expr.as_independent(x, strict=True)
-            expr = take(i) + d
+            expr = _take(i) + d
             if expr.is_Add:
                 terms = {}
                 for ai in expr.args:
@@ -1496,7 +1511,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             for p in pows:
                 b, e = p.as_base_exp()
                 ei, ed = e.as_independent(x, strict=True)
-                e = take(ei)
+                e = _take(ei)
                 if e != ei or e in constantsymbols:
                     reps.append((p, e*b**ed))
             expr = expr.subs(reps)
@@ -1508,9 +1523,9 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                 reps = []
                 for m in muls:
                     i, d = m.as_independent(x, strict=True)
-                    newi = take(i)
+                    newi = _take(i)
                     if newi != i:
-                        reps.append((m, take(i)*d))
+                        reps.append((m, _take(i)*d))
                 expr = expr.subs(reps)
         # ================ end of pre-processing ================
         newargs = []
