@@ -122,7 +122,7 @@ def bspline_basis_set(d, knots, x):
     calls bspline_basis(d, knots, n, x) for different values of n.
 
     Examples
-	    ========
+    ========
 
     >>> from sympy import bspline_basis_set
     >>> from sympy.abc import x
