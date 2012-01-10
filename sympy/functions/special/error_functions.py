@@ -1,7 +1,7 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 
-from sympy.core import S, C, sympify, cacheit, pi, I
+from sympy.core import Add, S, C, sympify, cacheit, pi, I
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 
@@ -856,16 +856,18 @@ class erfs(Function):
     tractable for the Gruntz algorithm.
     """
 
+    nargs = 1
+
     def _eval_aseries(self, n, args0, x, logx):
-        if args0[0] != oo:
+        if args0[0] != S.Infinity:
             return super(erfs, self)._eval_aseries(n, args0, x, logx)
 
         z = self.args[0]
-        l = [ C.factorial(2*k)*(-4)**(-k)/C.factorial(k)*(1/z)**(2*k+1) for k in xrange(1,n) ]
+        l = [ C.factorial(2*k)*(-S(4))**(-k)/C.factorial(k)*(1/z)**(2*k+1) for k in xrange(1,n) ]
 
         # Not sure about the order terms
         o = None
-        if m == 0:
+        if n == 0:
             o = C.Order(1, x)
         else:
             o = C.Order(1/z**(2*n+2), x)
@@ -878,3 +880,6 @@ class erfs(Function):
             return -2/sqrt(S.Pi)+2*z*erfs(z)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_intractable(self, z):
+        return (S.One-erf(z))*C.exp(z**2)
