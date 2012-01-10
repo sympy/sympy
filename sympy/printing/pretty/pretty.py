@@ -866,7 +866,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_GeometryEntity(self, expr):
-        # GeometryEntity is special -- it's base is tuple
+        # GeometryEntity is based on Tuple but should not print like a Tuple
         return self.emptyPrinter(expr)
 
     def _print_Lambda(self, e):

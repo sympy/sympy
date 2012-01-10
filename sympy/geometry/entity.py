@@ -8,6 +8,7 @@ GeometryEntity
 """
 
 from sympy.core.compatibility import cmp
+from sympy.core.containers import Tuple
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
@@ -23,7 +24,7 @@ ordering_of_classes = [
     "Curve"
 ]
 
-class GeometryEntity(tuple):
+class GeometryEntity(Tuple):
     """The base class for all geometrical entities.
 
     This class doesn't represent any particular geometric entity, it only
@@ -32,10 +33,10 @@ class GeometryEntity(tuple):
     """
 
     def __new__(cls, *args, **kwargs):
-        return tuple.__new__(cls, args)
+        return Tuple.__new__(cls, *args)
 
     def __getnewargs__(self):
-        return tuple(self)
+        return tuple(self.args)
 
     @property
     def free_symbols(self):
@@ -259,50 +260,6 @@ class GeometryEntity(tuple):
         """
         raise NotImplementedError()
 
-    def subs(self, *args):
-        """
-        Substitues new for old in self.
-
-        See Also
-        ========
-
-        sympy.core.basic.subs
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Circle
-        >>> from sympy.abc import x, y, z
-        >>> c = Circle(Point(0, 0), 3)
-        >>> c.subs(0, 5)
-        Circle(Point(5, 5), 3)
-        >>> c.subs(3, z)
-        Circle(Point(0, 0), z)
-
-        """
-        return type(self)(*[a.subs(*args) for a in self.args])
-
-    def _eval_subs(self, old, new):
-        return type(self)(*[a.subs(old, new) for a in self.args])
-
-    @property
-    def args(self):
-        """Return whatever is contained in the object's tuple.
-
-        The contents will not necessarily be Points. This is also
-        what will be returned when one does "for x in self".
-
-        Examples
-        ========
-
-        >>> from sympy import RegularPolygon, Point, Polygon
-        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
-        >>> t.args
-        (Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
-        """
-
-        return tuple(self)
-
     def __ne__(self, o):
         """Test inequality of two geometrical entities."""
         return not self.__eq__(o)
@@ -365,5 +322,3 @@ class GeometryEntity(tuple):
             return self == other
         raise NotImplementedError()
 
-from sympy.core.sympify import converter
-converter[GeometryEntity] = lambda x: x

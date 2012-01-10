@@ -797,8 +797,8 @@ def test_convex_hull():
     p.append(p[3])
 
     #more than 3 collinear points
-    another_p = [Point(-45, -85), Point(-45, 85), Point(-45,26),Point(-45,-24)]
-    ch2 = Segment(another_p[0],another_p[1])
+    another_p = [Point(-45, -85), Point(-45, 85), Point(-45, 26),Point(-45, -24)]
+    ch2 = Segment(another_p[0], another_p[1])
 
     assert convex_hull(*another_p) == ch2
     assert convex_hull(*p) == ch
@@ -835,6 +835,7 @@ def test_subs():
               Ellipse(p, 3, 4)]:
         assert 'y' in str(o.subs(x, y))
     assert p.subs({x: 1}) == Point(1, 2)
+    assert Point(1, 2).subs(Point(1, 2), Point(3, 4)) == Point(3, 4)
 
 def test_encloses():
     # square with a dimpled left side
@@ -860,11 +861,6 @@ def test_free_symbols():
     assert Circle((a,b),(c,d),(e,f)).free_symbols == set([e, d, c, b, f, a])
     assert Polygon((a,b),(c,d),(e,f)).free_symbols == set([e, b, d, f, a, c])
     assert RegularPolygon((a,b),c,d,e).free_symbols == set([e, a, b, c, d])
-
-@XFAIL
-def test_subsx():
-    """ this is fixed in smichr's subs_cleanup """
-    assert Point(1, 2).subs(Point(1,2), Point(3,4)) == Point(3, 4)
 
 def test_util_centroid():
     p = Polygon((0,0),(10,0),(10,10))

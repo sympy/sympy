@@ -233,7 +233,7 @@ def convex_hull(*args):
     # scan to find upper and lower convex hulls of a set of 2d points.
     U = []
     L = []
-    p.sort()
+    p.sort(key=tuple)
     for p_i in p:
         while len(U) > 1 and _orientation(U[-2], U[-1], p_i) <= 0:
             U.pop()
