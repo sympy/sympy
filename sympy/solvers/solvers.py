@@ -63,7 +63,23 @@ def _ispow(e):
 def denoms(eq, symbols=None):
     """Return (recursively) set of all denominators that appear in eq
     that contain any symbol in iterable ``symbols``; if ``symbols`` is
-    None (default) then all denominators with symbols will be returned."""
+    None (default) then all denominators with symbols will be returned.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solvers import denoms
+    >>> from sympy.abc import x, y, z
+
+    >>> denoms(x/y)
+    set([y])
+
+    >>> denoms(x/(y*z))
+    set([y, z])
+
+    >>> denoms(3/x + y/z)
+    set([x, z])
+    """
 
     symbols = symbols or eq.free_symbols
     dens = set()
@@ -524,7 +540,7 @@ def solve(f, *symbols, **flags):
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
     ###########################################################################
-    def sympified_list(w):
+    def _sympified_list(w):
         return map(sympify, w if iterable(w) else [w])
     bare_f = not iterable(f)
     ordered_symbols = (symbols and
@@ -533,7 +549,7 @@ def solve(f, *symbols, **flags):
                         is_sequence(symbols[0], include=GeneratorType)
                        )
                       )
-    f, symbols = (sympified_list(w) for w in [f, symbols])
+    f, symbols = (_sympified_list(w) for w in [f, symbols])
 
     implicit = flags.get('implicit', False)
 
@@ -646,15 +662,15 @@ def solve(f, *symbols, **flags):
     ###########################################################################
     # Restore masked off derivatives
     if non_inverts:
-        def do_dict(solution):
+        def _do_dict(solution):
             return dict([(k, v.subs(non_inverts)) for k, v in solution.iteritems()])
         for i in range(1):
             if type(solution) is dict:
-                solution = do_dict(solution)
+                solution = _do_dict(solution)
                 break
             elif solution and type(solution) is list:
                 if type(solution[0]) is dict:
-                    solution = [do_dict(s) for s in solution]
+                    solution = [_do_dict(s) for s in solution]
                     break
                 elif type(solution[0]) is tuple:
                     solution = [tuple([v.subs(non_inverts) for v in s]) for s in solution]
@@ -896,7 +912,7 @@ def _solve(f, *symbols, **flags):
             # If the exponents are Rational then a change of variables
             # will make this a polynomial equation in a single base.
 
-            def as_base_q(x):
+            def _as_base_q(x):
                 """Return (b**e, q) for x = b**(p*e/q) where p/q is the leading
                 Rational of the exponent of x, e.g. exp(-2*x/3) -> (exp(x), 3)
                 """
@@ -910,7 +926,7 @@ def _solve(f, *symbols, **flags):
                     return b**ee, c.q
                 return x, 1
 
-            bases, qs = zip(*[as_base_q(g) for g in gens])
+            bases, qs = zip(*[_as_base_q(g) for g in gens])
             bases = set(bases)
             if len(bases) > 1:
                 funcs = set(b.func for b in bases)
@@ -1527,7 +1543,18 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
         return None # no solutions
 
 def solve_linear_system_LU(matrix, syms):
-    """ LU function works for invertible only """
+    """ LU function works for invertible only
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.solvers.solvers import solve_linear_system_LU
+
+    >>> solve_linear_system_LU(Matrix([[1, 2, 0, 1], [3, 2, 2, 1], [2, 0, 0, 1]]), [x, y, z])
+    {x: 1/2, y: 1/4, z: -1/2}
+    """
     assert matrix.rows == matrix.cols-1
     A = matrix[:matrix.rows,:matrix.rows]
     b = matrix[:,matrix.cols-1:]
@@ -2014,7 +2041,7 @@ def unrad(eq, *syms, **flags):
         return
     cov, dens, nwas = [flags.get(k, v) for k, v in sorted(dict(dens=None, cov=None, n=None).items())]
 
-    def take(d):
+    def _take(d):
         # see if this is a term that has symbols of interest
         # and merits further processing
         free = d.free_symbols
@@ -2032,12 +2059,12 @@ def unrad(eq, *syms, **flags):
         syms = [s.subs([(v, k) for k, v in reps.items()]) for s in syms]
     eq = powdenest(eq)
     eq, d = eq.as_numer_denom()
-    if take(d):
+    if _take(d):
         dens.add(d)
 
     poly = eq.as_poly()
 
-    rads = set([g for g in poly.gens if take(g) and
+    rads = set([g for g in poly.gens if _take(g) and
                 g.is_Pow and g.exp.as_coeff_mul()[0].q != 1])
 
     if not rads:
@@ -2060,7 +2087,7 @@ def unrad(eq, *syms, **flags):
     rterms = {(): []}
     args = Add.make_args(poly.as_expr())
     for t in args:
-        if take(t):
+        if _take(t):
             common = set(t.as_poly().gens).intersection(rads)
             key = tuple(sorted([drad[i] for i in common]))
         else:
