@@ -751,18 +751,16 @@ class Basic(PicklableWithSlots):
         if len(args) == 1:
             sequence = args[0]
             if isinstance(sequence, dict):
-                rv = self._subs_dict(sequence)
+                return self._subs_dict(sequence)
             elif iterable(sequence):
-                rv = self._subs_list(sequence)
+                return self._subs_list(sequence)
             else:
                 raise TypeError("Not an iterable container")
         elif len(args) == 2:
             old, new = args
-            rv = self._subs_old_new(old, new)
+            return self._subs_old_new(old, new)
         else:
             raise TypeError("subs accepts either 1 or 2 arguments")
-        print self, rv
-        return rv
 
     @cacheit
     def _subs_old_new(self, old, new):
