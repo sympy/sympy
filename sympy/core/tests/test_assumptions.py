@@ -1,5 +1,5 @@
 from sympy.core import Symbol, S, Rational, Integer
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy import I, sqrt
 
 def test_symbol_unset():
@@ -54,8 +54,11 @@ def test_one():
     assert z.is_finite == True
     assert z.is_infinitesimal == False
     assert z.is_comparable == True
-    assert z.is_prime == True
-    assert z.is_composite == False
+    assert z.is_prime == False
+
+@XFAIL
+def test_one_is_composite():
+    assert S(1).is_composite is False
 
 def test_negativeone():
     z = Integer(-1)
@@ -337,6 +340,25 @@ def test_neg_symbol_nonpositive():
     assert x.is_nonnegative == True
     assert x.is_zero == None
     assert x.is_nonzero == None
+
+def test_prime():
+    assert S(-1).is_prime is False
+    assert S(-2).is_prime is False
+    assert S(-4).is_prime is False
+    assert S(0).is_prime is False
+    assert S(1).is_prime is False
+    assert S(2).is_prime is True
+    assert S(17).is_prime is True
+    assert S(4).is_prime is False
+
+def test_composite():
+    assert S(-1).is_composite is False
+    assert S(-2).is_composite is False
+    assert S(-4).is_composite is False
+    assert S(0).is_composite is False
+    assert S(2).is_composite is False
+    assert S(17).is_composite is False
+    assert S(4).is_composite is True
 
 def test_prime_symbol():
     x = Symbol('x', prime=True)
