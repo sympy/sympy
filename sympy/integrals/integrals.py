@@ -17,7 +17,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
 
 def _process_limits(*symbols):
-    """Convert the symbols-related limits into propert limits,
+    """Convert the symbols-related limits into proper limits,
     storing them as Tuple(symbol, lower, upper). The sign of
     the function is also returned when the upper limit is missing
     so (x, 1, None) becomes (x, None, 1) and the sign is changed.

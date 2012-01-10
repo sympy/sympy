@@ -1093,7 +1093,7 @@ class Circle(Ellipse):
     @property
     def major(self):
         """
-        This ellipse propert is an alias for radius
+        This Ellipse property is an alias for the Circle's radius.
 
         Examples
         ========
@@ -1108,7 +1108,7 @@ class Circle(Ellipse):
     @property
     def minor(self):
         """
-        This ellipse propert is an alias for radius
+        This Ellipse property is an alias for the Circle's radius.
 
         Examples
         ========
@@ -1123,7 +1123,7 @@ class Circle(Ellipse):
     @property
     def hradius(self):
         """
-        This ellipse propert is an alias for radius
+        This Ellipse property is an alias for the Circle's radius.
 
         Examples
         ========
@@ -1138,7 +1138,7 @@ class Circle(Ellipse):
     @property
     def vradius(self):
         """
-        This ellipse property is an alias for radius
+        This Ellipse property is an alias for the Circle's radius.
 
         Examples
         ========
