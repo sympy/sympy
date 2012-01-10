@@ -269,16 +269,8 @@ class Number(AtomicExpr):
         if isinstance(other, Number):
             if other is S.NaN:
                 return S.NaN
-            elif other is S.Infinity:
-                if self >= 0:
-                    return S.Infinity
-                else:
-                    return S.NegativeInfinity
-            elif other is S.NegativeInfinity:
-                if self >= 0:
-                    return S.NegativeInfinity
-                else:
-                    return S.Infinity
+            elif other is S.Infinity or other is S.NegativeInfinity:
+                return S.Zero
         return AtomicExpr.__div__(self, other)
 
     __truediv__ = __div__

@@ -452,10 +452,11 @@ def test_Infinity():
     assert S.Zero * oo == nan
     assert oo.is_Rational == False
     assert isinstance(oo, Rational) == False
-    assert S.One/oo == oo
-    assert -S.One/oo == -oo
-    assert S.One/-oo == -oo
-    assert -S.One/-oo == oo
+
+    assert S.One/oo == 0
+    assert -S.One/oo == 0
+    assert S.One/-oo == 0
+    assert -S.One/-oo == 0
     assert S.One*oo == oo
     assert -S.One*oo == -oo
     assert S.One*-oo == -oo
