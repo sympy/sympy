@@ -837,9 +837,7 @@ class FresnelIntegral(Function):
     """ Base class for the Fresnel integrals."""
 
     nargs = 1
-
-    _trigfunc = None
-    _sign = None
+    unbranched = True
 
     @classmethod
     def eval(cls, z):
