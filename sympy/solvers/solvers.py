@@ -1543,7 +1543,11 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
         return None # no solutions
 
 def solve_linear_system_LU(matrix, syms):
-    """ LU function works for invertible matrix only
+    """
+    Solves the augmented matrix system using LUsolve and returns a dictionary
+    in which solutions are keyed to the symbols of syms *as ordered*.
+
+    The matrix must be invertible.
 
     Examples
     ========
@@ -1557,14 +1561,20 @@ def solve_linear_system_LU(matrix, syms):
     ... [3, 2, 2, 1],
     ... [2, 0, 0, 1]]), [x, y, z])
     {x: 1/2, y: 1/4, z: -1/2}
+
+    See Also
+    ========
+
+    sympy.matrices.LUsolve
+
     """
-    assert matrix.rows == matrix.cols-1
-    A = matrix[:matrix.rows,:matrix.rows]
-    b = matrix[:,matrix.cols-1:]
+    assert matrix.rows == matrix.cols - 1
+    A = matrix[:matrix.rows, :matrix.rows]
+    b = matrix[:, matrix.cols - 1:]
     soln = A.LUsolve(b)
     solutions = {}
     for i in range(soln.rows):
-        solutions[syms[i]] = soln[i,0]
+        solutions[syms[i]] = soln[i, 0]
     return solutions
 
 _x = Dummy('x')
