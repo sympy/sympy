@@ -1091,54 +1091,12 @@ class Circle(Ellipse):
         return self.__getitem__(1)
 
     @property
-    def major(self):
-        """
-        This Ellipse property is an alias for the Circle's radius.
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Circle
-        >>> c1 = Circle(Point(3, 4), 6)
-        >>> c1.major
-        6
-        """
-        return self.radius
-
-    @property
-    def minor(self):
-        """
-        This Ellipse property is an alias for the Circle's radius.
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Circle
-        >>> c1 = Circle(Point(3, 4), 6)
-        >>> c1.minor
-        6
-        """
-        return self.radius
-
-    @property
-    def hradius(self):
-        """
-        This Ellipse property is an alias for the Circle's radius.
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Circle
-        >>> c1 = Circle(Point(3, 4), 6)
-        >>> c1.hradius
-        6
-        """
-        return self.radius
-
-    @property
     def vradius(self):
         """
         This Ellipse property is an alias for the Circle's radius.
+
+        Whereas hradius, major and minor can use Ellipse's conventions,
+        the vradius does not exist for a circle.
 
         Examples
         ========

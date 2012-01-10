@@ -5,7 +5,7 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     I, S, Limit, oo, cos, atan2, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
     Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict,
-    euler, groebner, catalan, Product, KroneckerDelta)
+    euler, groebner, catalan, Product, KroneckerDelta, Segment, Ray)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -3590,3 +3590,9 @@ atan2⎜───────, ╲╱ x ⎟\n\
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+def test_pretty_geometry():
+    e = Segment((0, 1), (0, 2))
+    assert pretty(e) == 'Segment(Point(0, 2), Point(0, 1))'
+    e = Ray((1, 1), angle=4.2*pi)
+    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(0.2*pi) + 1))'

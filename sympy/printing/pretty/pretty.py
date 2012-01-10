@@ -864,6 +864,10 @@ class PrettyPrinter(Printer):
 
         return pform
 
+    def _print_GeometryEntity(self, expr):
+        # GeometryEntity is special -- it's base is tuple
+        return self.emptyPrinter(expr)
+
     def _print_Lambda(self, e):
         symbols, expr = e.args
 
