@@ -9,7 +9,7 @@
     objects instead.  When things stabilize this could be a useful refactoring.
 """
 
-from sympy.tensor.indexed import Idx, IndexedBase, Indexed
+from sympy.tensor.indexed import Idx, Indexed
 from sympy.functions import exp
 from sympy.core import C
 
@@ -172,7 +172,8 @@ def get_indices(expr):
     and a dict.  The set contains outer indices and the dict contains
     information about index symmetries.
 
-    :Examples:
+    Examples
+    ========
 
     >>> from sympy.tensor.index_methods import get_indices
     >>> from sympy import symbols
@@ -287,7 +288,8 @@ def get_contraction_structure(expr):
        calculated first so that the outer expression can access the resulting
        indexed object.
 
-    :Examples:
+    Examples
+    ========
 
     >>> from sympy.tensor.index_methods import get_contraction_structure
     >>> from sympy import symbols, default_sort_key

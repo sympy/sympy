@@ -112,10 +112,13 @@ The Rolling Disc, again
 
 We will now revisit the rolling disc example, except this time we are bringing
 the non-contributing (constraint) forces into evidence. See [Kane1985]_ for a
-more thorough  explanation of this.::
+more thorough explanation of this. Here, we will turn on the automatic
+simplifcation done when doing vector operations. It makes the outputs nicer for
+small problems, but can cause larger vector operations to hang. ::
 
   >>> from sympy.physics.mechanics import *
   >>> mechanics_printing()
+  >>> Vector.simp = True
   >>> q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')
   >>> q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
   >>> r, m, g = symbols('r m g')
@@ -197,10 +200,9 @@ construction of the equations of motion in :mod:`mechanics`. ::
 
 Note that this code has been crudely ported from Autolev, which is the reason
 for some of the unusual naming conventions. It was purposefully as similar as
-possible in order to aid initial porting & debugging.
-
-Vector's simplification routines need to be turned off, otherwise the
-expressions get too big and too slow to simplify. ::
+possible in order to aid initial porting & debugging. We also turn off
+Vector.simp (turned on in the last example) to avoid hangups when doing
+computations in this problem. ::
 
   >>> Vector.simp = False
   >>> mechanics_printing()
@@ -278,7 +280,7 @@ contact -> rear wheel mass center -> frame mass center + frame/fork connection
   >>> Frame_mc = WR_mc.locatenew('Frame_mc', -framecg1 * Frame.x + framecg3 * Frame.z)
   >>> Fork_mc = Steer.locatenew('Fork_mc', -forkcg1 * Fork.x + forkcg3 * Fork.z)
   >>> WF_mc = Steer.locatenew('WF_mc', forklength * Fork.x + forkoffset * Fork.z)
-  >>> WF_cont = WF_mc.locatenew('WF_cont', WFrad*(dot(Fork.y, Y.z)*Fork.y - Y.z).unit)
+  >>> WF_cont = WF_mc.locatenew('WF_cont', WFrad*(dot(Fork.y, Y.z)*Fork.y - Y.z).normalize())
 
 Set the angular velocity of each frame:
 Angular accelerations end up being calculated automatically by differentiating

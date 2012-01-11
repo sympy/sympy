@@ -4,8 +4,8 @@ from sympify import _sympify, sympify
 from cache import cacheit
 from compatibility import cmp
 
-# from add import Add   /cyclic/
-# from mul import Mul   /cyclic/
+# from add import Add /cyclic/
+# from mul import Mul /cyclic/
 # from function import Lambda, WildFunction /cyclic/
 
 class AssocOp(Expr):
@@ -108,25 +108,26 @@ class AssocOp(Expr):
 
     @classmethod
     def flatten(cls, seq):
-        # apply associativity, no commutivity property is used
+        """Return seq so that none of the elements are of type `cls`. This is
+        the vanilla routine that will be used if a class derived from AssocOp
+        does not define its own flatten routine."""
+        # apply associativity, no commutativity property is used
         new_seq = []
         while seq:
-            o = seq.pop(0)
+            o = seq.pop()
             if o.__class__ is cls: # classes must match exactly
-                seq = list(o[:]) + seq
-                continue
-            new_seq.append(o)
+                seq.extend(o.args)
+            else:
+                new_seq.append(o)
         # c_part, nc_part, order_symbols
         return [], new_seq, None
 
-    def _matches_commutative(self, expr, repl_dict={}, evaluate=False):
+    def _matches_commutative(self, expr, repl_dict={}):
         """
         Matches Add/Mul "pattern" to an expression "expr".
 
         repl_dict ... a dictionary of (wild: expression) pairs, that get
                       returned with the results
-        evaluate .... if True, then repl_dict is first substituted into the
-                      pattern, and then _matches_commutative is run
 
         This function is the main workhorse for Add/Mul.
 
@@ -143,20 +144,12 @@ class AssocOp(Expr):
         In the example above, "a+sin(b)*c" is the pattern, and "x+sin(y)*z" is the
         expression.
 
-        The repl_dict contains parts that were already matched, and the
-        "evaluate=True" kwarg tells _matches_commutative to substitute this
-        repl_dict into pattern. For example here:
-
-        >>> (a+sin(b)*c)._matches_commutative(x+sin(y)*z, repl_dict={a: x}, evaluate=True)
-        {a_: x, b_: y, c_: z}
-
-        _matches_commutative substitutes "x" for "a" in the pattern and calls
-        itself again with the new pattern "x+b*c" and evaluate=False (default):
+        The repl_dict contains parts that were already matched. For example here:
 
         >>> (x+sin(b)*c)._matches_commutative(x+sin(y)*z, repl_dict={a: x})
         {a_: x, b_: y, c_: z}
 
-        the only function of the repl_dict now is just to return it in the
+        the only function of the repl_dict is to return it in the
         result, e.g. if you omit it:
 
         >>> (x+sin(b)*c)._matches_commutative(x+sin(y)*z)
@@ -166,10 +159,6 @@ class AssocOp(Expr):
         equivalent.
 
         """
-        # apply repl_dict to pattern to eliminate fixed wild parts
-        if evaluate:
-            return self.subs(repl_dict.items()).matches(expr, repl_dict)
-
         # handle simple patterns
         if self == expr:
             return repl_dict
@@ -197,13 +186,16 @@ class AssocOp(Expr):
             return newpattern.matches(newexpr, repl_dict)
 
         # now to real work ;)
-        expr_list = self.make_args(expr)
-
+        if expr.is_Add:
+            i, d = expr.as_independent(C.Symbol)
+            expr_list = (i,) + self.make_args(expr)
+        else:
+            expr_list = self.make_args(expr)
         for last_op in reversed(expr_list):
             for w in reversed(wild_part):
                 d1 = w.matches(last_op, repl_dict)
                 if d1 is not None:
-                    d2 = self.subs(d1.items()).matches(expr, d1)
+                    d2 = self.xreplace(d1).matches(expr, d1)
                     if d2 is not None:
                         return d2
 

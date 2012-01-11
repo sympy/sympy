@@ -23,7 +23,8 @@ def test_numerically(f, g, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     """
     Test numerically that f and g agree when evaluated in the argument z.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import sin, cos, S
     >>> from sympy.abc import x
@@ -41,7 +42,9 @@ def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     Test numerically that the symbolically computed derivative of f
     with respect to z is correct.
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy import sin, cos
     >>> from sympy.abc import x
     >>> from sympy.utilities.randtest import test_derivative_numerically as td

@@ -34,6 +34,10 @@ def components(f, x):
        >>> components(sin(x)*cos(x)**2, x)
        set([x, sin(x), cos(x)])
 
+    See Also
+    ========
+
+    heurisch
     """
     result = set()
 
@@ -95,7 +99,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
        this algorithm can be made a full decision procedure.
 
        This is an internal integrator procedure. You should use toplevel
-       'integrate' function in most cases,  as this procedure needs some
+       '_integrate' function in most cases,  as this procedure needs some
        preprocessing steps and otherwise may fail.
 
        **Specification**
@@ -113,7 +117,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
               - hints = [ ]           --> try to figure out
               - hints = [f1, ..., fn] --> we know better
 
-       **Examples**
+       Examples
+       ========
 
        >>> from sympy import tan
        >>> from sympy.integrals.risch import heurisch
@@ -142,6 +147,12 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
            Algorithm (II), ACM Transactions on Mathematical
            Software 11 (1985), 356-362.
 
+    See Also
+    ========
+
+    sympy.integrals.integrals.Integral.doit
+    sympy.integrals.integrals.Integral
+    components
     """
     f = sympify(f)
 
@@ -239,12 +250,12 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
 
     if mappings is None:
         # Pre-sort mapping in order of largest to smallest expressions (last is always x).
-        def sort_key(arg):
+        def _sort_key(arg):
             return default_sort_key(arg[0].as_independent(x)[1])
-        mapping = sorted(mapping.items(), key=sort_key, reverse=True)
+        mapping = sorted(mapping.items(), key=_sort_key, reverse=True)
         mappings = permutations(mapping)
 
-    def substitute(expr):
+    def _substitute(expr):
         return expr.subs(mapping)
 
     for mapping in mappings:
@@ -254,10 +265,10 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
 
         mapping = list(mapping)
 
-        diffs = [ substitute(cancel(g.diff(x))) for g in terms ]
+        diffs = [ _substitute(cancel(g.diff(x))) for g in terms ]
         denoms = [ g.as_numer_denom()[1] for g in diffs ]
 
-        if all(h.is_polynomial(*V) for h in denoms) and substitute(f).is_rational_function(*V):
+        if all(h.is_polynomial(*V) for h in denoms) and _substitute(f).is_rational_function(*V):
             denom = reduce(lambda p, q: lcm(p, q, *V), denoms)
             break
     else:
@@ -271,39 +282,39 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
 
     numers = [ cancel(denom*g) for g in diffs ]
 
-    def derivation(h):
+    def _derivation(h):
         return Add(*[ d * h.diff(v) for d, v in zip(numers, V) ])
 
-    def deflation(p):
+    def _deflation(p):
         for y in V:
             if not p.has(y):
                 continue
 
-            if derivation(p) is not S.Zero:
+            if _derivation(p) is not S.Zero:
                 c, q = p.as_poly(y).primitive()
-                return deflation(c)*gcd(q, q.diff(y)).as_expr()
+                return _deflation(c)*gcd(q, q.diff(y)).as_expr()
         else:
             return p
 
-    def splitter(p):
+    def _splitter(p):
         for y in V:
             if not p.has(y):
                 continue
 
-            if derivation(y) is not S.Zero:
+            if _derivation(y) is not S.Zero:
                 c, q = p.as_poly(y).primitive()
 
                 q = q.as_expr()
 
-                h = gcd(q, derivation(q), y)
+                h = gcd(q, _derivation(q), y)
                 s = quo(h, gcd(q, q.diff(y), y), y)
 
-                c_split = splitter(c)
+                c_split = _splitter(c)
 
                 if s.as_poly(y).degree() == 0:
                     return (c_split[0], q * c_split[1])
 
-                q_split = splitter(cancel(q / s))
+                q_split = _splitter(cancel(q / s))
 
                 return (c_split[0]*q_split[0]*s, c_split[1]*q_split[1])
         else:
@@ -314,19 +325,19 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
     for term in terms:
         if term.is_Function:
             if term.func is tan:
-                special[1 + substitute(term)**2] = False
+                special[1 + _substitute(term)**2] = False
             elif term.func is tanh:
-                special[1 + substitute(term)] = False
-                special[1 - substitute(term)] = False
+                special[1 + _substitute(term)] = False
+                special[1 - _substitute(term)] = False
             elif term.func is C.LambertW:
-                special[substitute(term)] = True
+                special[_substitute(term)] = True
 
-    F = substitute(f)
+    F = _substitute(f)
 
     P, Q = F.as_numer_denom()
 
-    u_split = splitter(denom)
-    v_split = splitter(Q)
+    u_split = _splitter(denom)
+    v_split = _splitter(Q)
 
     polys = list(v_split) + [ u_split[0] ] + special.keys()
 
@@ -338,9 +349,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
 
     a, b, c = [ p.total_degree() for p in polified ]
 
-    poly_denom = (s * v_split[0] * deflation(v_split[1])).as_expr()
+    poly_denom = (s * v_split[0] * _deflation(v_split[1])).as_expr()
 
-    def exponent(g):
+    def _exponent(g):
         if g.is_Pow:
             if g.exp.is_Rational and g.exp.q != 1:
                 if g.exp.p > 0:
@@ -349,12 +360,12 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
                     return abs(g.exp.p + g.exp.q)
             else:
                 return 1
-        elif not g.is_Atom:
-            return max([ exponent(h) for h in g.args ])
+        elif not g.is_Atom and g.args:
+            return max([ _exponent(h) for h in g.args ])
         else:
             return 1
 
-    A, B = exponent(f), a + max(b, c)
+    A, B = _exponent(f), a + max(b, c)
 
     if A > 1 and B > 1:
         monoms = monomials(V, A + B - 1)
@@ -381,7 +392,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
             else:
                 reducibles.add(factorization)
 
-    def integrate(field=None):
+    def _integrate(field=None):
         irreducibles = set()
 
         for poly in reducibles:
@@ -405,7 +416,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
 
         candidate = poly_part/poly_denom + Add(*log_part)
 
-        h = F - derivation(candidate) / denom
+        h = F - _derivation(candidate) / denom
 
         numer = h.as_numer_denom()[0].expand(force=True)
 
@@ -423,12 +434,12 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
             return None
 
     if not (F.atoms(Symbol) - set(V)):
-        result = integrate('Q')
+        result = _integrate('Q')
 
         if result is None:
-            result = integrate()
+            result = _integrate()
     else:
-        result = integrate()
+        result = _integrate()
 
     if result is not None:
         (solution, candidate, coeffs) = result

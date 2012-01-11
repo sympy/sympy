@@ -4,8 +4,7 @@ import py
 from py.__.test.item import Item
 from py.__.test.terminal.terminal import TerminalSession
 
-from math import ceil, floor, log10
-from time import time
+from math import ceil as _ceil, floor as _floor, log10
 import timeit
 
 from inspect import getsource
@@ -50,7 +49,7 @@ class Timer(timeit.Timer):
         self.src = src # Save for traceback display
         code = compile(src, timeit.dummy_src_name, "exec")
         ns = {}
-       #exec code in globals(), ns      -- original timeit code
+        #exec code in globals(), ns      -- original timeit code
         exec code in globals, ns    #   -- we use caller-provided globals instead
         self.inner = ns["inner"]
 
@@ -88,7 +87,7 @@ class Function(py.__.test.item.Function):
 
                 if t >= 0.2:
                     number *= (0.2 / t)
-                    number  = int(ceil(number))
+                    number  = int(_ceil(number))
                     break
 
                 if t <= 0.02:
@@ -99,7 +98,7 @@ class Function(py.__.test.item.Function):
                     # since we are very close to be > 0.2s we'd better adjust number
                     # so that timing time is not too high
                     number *= (0.2 / t)
-                    number  = int(ceil(number))
+                    number  = int(_ceil(number))
                     break
 
 
@@ -145,7 +144,7 @@ class BenchSession(TerminalSession):
                 else:
                     # from IPython.Magic.magic_timeit
                     if best > 0.0:
-                        order = min(-int(floor(log10(best)) // 3), 3)
+                        order = min(-int(_floor(log10(best)) // 3), 3)
                     else:
                         order = 3
 

@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy import Symbol, symbols, Function, Integer, Matrix, nan, oo, Abs, \
     Rational, Float, S, WildFunction
 from sympy.geometry import Point, Circle, Ellipse
@@ -22,10 +22,6 @@ def sT(expr, string):
     assert eval(string, ENV) == expr
 
 def test_printmethod():
-    class R(oo.__class__):
-        def _sympyrepr(self, printer):
-            return "foo"
-    assert srepr(R()) == "foo"
     class R(Abs):
         def _sympyrepr(self, printer):
             return "foo(%s)" % printer._print(self.args[0])

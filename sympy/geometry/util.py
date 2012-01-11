@@ -1,7 +1,7 @@
 """Utility functions for geometrical entities.
 
 Contains
---------
+========
 intersection
 convex_hull
 are_similar
@@ -22,6 +22,11 @@ def idiff(eq, y, x, dep=None):
     -1
     >>> idiff(x + a + y, y, x, [a])
     -Derivative(a, x) - 1
+
+    See Also
+    ========
+
+    sympy.core.function.Derivative
 
     """
     if not dep:
@@ -59,6 +64,11 @@ def _symbol(s, matching_symbol=None):
     NB: the symbol here may not be the same as a symbol with the same
     name defined elsewhere as a result of different assumptions.
 
+    See Also
+    ========
+
+    sympy.core.symbol.Symbol
+
     """
     if isinstance(s, basestring):
         if matching_symbol and matching_symbol.name == s:
@@ -73,20 +83,24 @@ def intersection(*entities):
     """The intersection of a collection of GeometryEntity instances.
 
     Parameters
-    ----------
+    ==========
+
     entities : sequence of GeometryEntity
 
     Returns
-    -------
+    =======
+
     intersection : list of GeometryEntity
 
     Raises
-    ------
+    ======
+
     NotImplementedError
         When unable to calculate intersection.
 
     Notes
-    -----
+    =====
+
     The intersection of any geometrical entity with itself should return
     a list with one item: the entity in question.
     An intersection requires two or more entities. If only a single
@@ -97,8 +111,14 @@ def intersection(*entities):
     Reals should be converted to Rationals, e.g. Rational(str(real_num))
     or else failures due to floating point issues may result.
 
+    See Also
+    ========
+
+    sympy.geometry.entity.GeometryEntity.intersection
+
     Examples
-    --------
+    ========
+
     >>> from sympy.geometry import Point, Line, Circle, intersection
     >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(-1, 5)
     >>> l1, l2 = Line(p1, p2), Line(p3, p2)
@@ -116,6 +136,7 @@ def intersection(*entities):
 
     """
     from entity import GeometryEntity
+    from point import Point
 
     if len(entities) <= 1:
         return []
@@ -137,34 +158,40 @@ def intersection(*entities):
 
 
 def convex_hull(*args):
-    """The convex hull of a collection of 2-dimensional points.
+    """The convex hull surrounding the Points contained in the list of entities.
 
     Parameters
-    ----------
-    args : a collection of Points
+    ==========
+
+    args : a collection of Points, Segments and/or Polygons
 
     Returns
-    -------
+    =======
+
     convex_hull : Polygon
 
     Notes
-    -----
+    =====
+
     This can only be performed on a set of non-symbolic points.
 
-    See Also
-    --------
-    Point
-
     References
-    ----------
+    ==========
+
     [1] http://en.wikipedia.org/wiki/Graham_scan
 
     [2] Andrew's Monotone Chain Algorithm
     ( A.M. Andrew, "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
     http://softsurfer.com/Archive/algorithm_0109/algorithm_0109.htm
 
+    See Also
+    ========
+
+    sympy.geometry.point.Point, sympy.geometry.polygon.Polygon
+
     Examples
-    --------
+    ========
+
     >>> from sympy.geometry import Point, convex_hull
     >>> points = [(1,1), (1,2), (3,1), (-5,2), (15,4)]
     >>> convex_hull(*points)
@@ -198,7 +225,7 @@ def convex_hull(*args):
     elif len(p) == 2:
         return Segment(p[0], p[1])
 
-    def orientation(p, q, r):
+    def _orientation(p, q, r):
         '''Return positive if p-q-r are clockwise, neg if ccw, zero if
         collinear.'''
         return (q[1] - p[1])*(r[0] - p[0]) - (q[0] - p[0])*(r[1] - p[1])
@@ -208,9 +235,9 @@ def convex_hull(*args):
     L = []
     p.sort()
     for p_i in p:
-        while len(U) > 1 and orientation(U[-2], U[-1], p_i) <= 0:
+        while len(U) > 1 and _orientation(U[-2], U[-1], p_i) <= 0:
             U.pop()
-        while len(L) > 1 and orientation(L[-2], L[-1], p_i) >= 0:
+        while len(L) > 1 and _orientation(L[-2], L[-1], p_i) >= 0:
             L.pop()
         U.append(p_i)
         L.append(p_i)
@@ -228,25 +255,35 @@ def are_similar(e1, e2):
     Can one geometrical entity be uniformly scaled to the other?
 
     Parameters
-    ----------
+    ==========
+
     e1 : GeometryEntity
     e2 : GeometryEntity
 
     Returns
-    -------
+    =======
+
     are_similar : boolean
 
     Raises
-    ------
+    ======
+
     GeometryError
         When `e1` and `e2` cannot be compared.
 
     Notes
-    -----
+    =====
+
     If the two objects are equal then they are similar.
 
+    See Also
+    ========
+
+    sympy.geometry.entity.GeometryEntity.is_similar
+
     Examples
-    --------
+    ========
+
     >>> from sympy import Point, Circle, Triangle, are_similar
     >>> c1, c2 = Circle(Point(0, 0), 4), Circle(Point(1, 4), 3)
     >>> t1 = Triangle(Point(0, 0), Point(1, 0), Point(0, 1))
@@ -258,6 +295,8 @@ def are_similar(e1, e2):
     False
 
     """
+    from exceptions import GeometryError
+
     if e1 == e2:
         return True
     try:
@@ -269,3 +308,76 @@ def are_similar(e1, e2):
             n1 = e1.__class__.__name__
             n2 = e2.__class__.__name__
             raise GeometryError("Cannot test similarity between %s and %s" % (n1, n2))
+
+def centroid(*args):
+    """Find the centroid (center of mass) of the collection containing only Points,
+    Segments or Polygons. The centroid is the weighted average of the individual centroid
+    where the weights are the lengths (of segments) or areas (of polygons).
+    Overlapping regions will add to the weight of that region.
+
+    If there are no objects (or a mixture of objects) then None is returned.
+
+    See Also
+    ========
+
+    sympy.geometry.point.Point, sympy.geometry.line.Segment,
+    sympy.geometry.polygon.Polygon
+
+    Examples
+    ========
+
+    >>> from sympy import Point, Segment, Polygon
+    >>> from sympy.geometry.util import centroid
+    >>> p = Polygon((0, 0), (10, 0), (10, 10))
+    >>> q = p.translate(0, 20)
+    >>> p.centroid, q.centroid
+    (Point(20/3, 10/3), Point(20/3, 70/3))
+    >>> centroid(p, q)
+    Point(20/3, 40/3)
+    >>> p, q = Segment((0, 0), (2, 0)), Segment((0, 0), (2, 2))
+    >>> centroid(p, q)
+    Point(1, 2*sqrt(2)/(2 + 2*sqrt(2)))
+    >>> centroid(Point(0, 0), Point(2, 0))
+    Point(1, 0)
+
+    Stacking 3 polygons on top of each other effectively triples the
+    weight of that polygon:
+
+        >>> p = Polygon((0, 0), (1, 0), (1, 1), (0, 1))
+        >>> q = Polygon((1, 0), (3, 0), (3, 1), (1, 1))
+        >>> centroid(p, q)
+        Point(3/2, 1/2)
+        >>> centroid(p, p, p, q) # centroid x-coord shifts left
+        Point(11/10, 1/2)
+
+    Stacking the squares vertically above and below p has the same
+    effect:
+
+        >>> centroid(p, p.translate(0, 1), p.translate(0, -1), q)
+        Point(11/10, 1/2)
+
+    """
+
+    from sympy.geometry import Polygon, Segment, Point
+    if args:
+        if all(isinstance(g, Point) for g in args):
+            c = Point(0, 0)
+            for g in args:
+                c += g
+            return c/len(args)
+        elif all(isinstance(g, Segment) for g in args):
+            c = Point(0, 0)
+            L = 0
+            for g in args:
+                l = g.length
+                c += g.midpoint*l
+                L += l
+            return c/L
+        elif all(isinstance(g, Polygon) for g in args):
+            c = Point(0, 0)
+            A = 0
+            for g in args:
+                a = g.area
+                c += g.centroid*a
+                A += a
+            return c/A

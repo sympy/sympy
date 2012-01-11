@@ -1,8 +1,7 @@
-from sympy import Expr, Symbol, Eq, Mul, Add, Pow, expand, sympify, Tuple
+from sympy import Expr, Symbol, Mul, Add, Pow, expand, sympify, Tuple
 from sympy.core.basic import Basic
 from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
-from sympy.core.cache import cacheit
 from sympy.matrices import ShapeError
 
 class MatrixExpr(Expr):
@@ -150,6 +149,10 @@ class MatrixSymbol(MatrixExpr, Symbol):
         else:
             shape = Tuple(*self.shape).subs(old, new)
             return MatrixSymbol(self.name, *shape)
+
+    def __call__(self, *args):
+        raise TypeError( "%s object is not callable"%self.__class__ )
+
 
 class Identity(MatrixSymbol):
     """The Matrix Identity I - multiplicative identity

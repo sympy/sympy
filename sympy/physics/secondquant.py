@@ -6,16 +6,13 @@ of Many-Particle Systems."
 """
 from collections import defaultdict
 
-from sympy import (
-    Basic, Expr, Function, Mul, sympify, Integer, Add, sqrt,
-    zeros, Pow, I, S, Symbol, Tuple, Dummy
-)
-
-from sympy.core.sympify import sympify
-from sympy.core.cache import cacheit
-from sympy.core.symbol import Dummy
+from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
+                   KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
+                   zeros)
+from sympy.core.compatibility import reduce
 from sympy.printing.str import StrPrinter
 
+from sympy.physics.quantum.qexpr import split_commutative_parts
 from sympy.core.compatibility import reduce
 
 __all__ = [
@@ -76,7 +73,8 @@ class Dagger(Expr):
     """
     Hermitian conjugate of creation/annihilation operators.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import I
     >>> from sympy.physics.secondquant import Dagger, B, Bd
@@ -102,7 +100,8 @@ class Dagger(Expr):
         """
         Evaluates the Dagger instance.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import I
         >>> from sympy.physics.secondquant import Dagger, B, Bd
@@ -118,7 +117,7 @@ class Dagger(Expr):
         """
         try:
             d = arg._dagger_()
-        except:
+        except AttributeError:
             if isinstance(arg, Basic):
                 if arg.is_Add:
                     return Add(*tuple(map(Dagger, arg.args)))
@@ -155,7 +154,8 @@ class AntiSymmetricTensor(TensorSymbol):
 
     Each group of indices is assumed to be antisymmetric.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import symbols
     >>> from sympy.physics.secondquant import AntiSymmetricTensor
@@ -227,7 +227,8 @@ class AntiSymmetricTensor(TensorSymbol):
         """
         Returns the symbol of the tensor.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
@@ -246,7 +247,8 @@ class AntiSymmetricTensor(TensorSymbol):
         """
         Returns the upper indices.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
@@ -266,7 +268,8 @@ class AntiSymmetricTensor(TensorSymbol):
         """
         Returns the lower indices.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
@@ -285,292 +288,6 @@ class AntiSymmetricTensor(TensorSymbol):
 
     def doit(self, **kw_args):
         return self
-
-
-class KroneckerDelta(Function):
-    """
-    Discrete delta function.
-
-    >>> from sympy import symbols
-    >>> from sympy.physics.secondquant import KroneckerDelta
-    >>> i, j, k = symbols('i,j,k')
-    >>> KroneckerDelta(i, j)
-    KroneckerDelta(i, j)
-    >>> KroneckerDelta(i, i)
-    1
-    >>> KroneckerDelta(i, i+1)
-    0
-    >>> KroneckerDelta(i, i+1+k)
-    KroneckerDelta(i, i + k + 1)
-
-    """
-
-    nargs = 2
-    is_commutative=True
-
-    @classmethod
-    def eval(cls, i, j):
-        """
-        Evaluates the discrete delta function.
-
-        >>> from sympy import symbols
-        >>> from sympy.physics.secondquant import KroneckerDelta
-        >>> i, j, k = symbols('i,j,k')
-        >>> KroneckerDelta(i, j)
-        KroneckerDelta(i, j)
-        >>> KroneckerDelta(i, i)
-        1
-        >>> KroneckerDelta(i, i+1)
-        0
-        >>> KroneckerDelta(i, i+1+k)
-        KroneckerDelta(i, i + k + 1)
-
-        # indirect doctest
-
-        """
-        if i > j:
-            return cls(j,i)
-        diff = i-j
-        if diff == 0:
-            return S.One
-        elif diff.is_number:
-            return S.Zero
-
-        if i.assumptions0.get("below_fermi") and j.assumptions0.get("above_fermi"):
-            return S.Zero
-        if j.assumptions0.get("below_fermi") and i.assumptions0.get("above_fermi"):
-            return S.Zero
-
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        r = KroneckerDelta(self.args[0].subs(old, new), self.args[1].subs(old, new))
-        return r
-
-    @property
-    def is_above_fermi(self):
-        """
-        True if Delta can be non-zero above fermi
-
-        >>> from sympy.physics.secondquant import KroneckerDelta
-        >>> from sympy import Symbol
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
-        >>> p = Symbol('p')
-        >>> q = Symbol('q')
-        >>> KroneckerDelta(p,a).is_above_fermi
-        True
-        >>> KroneckerDelta(p,i).is_above_fermi
-        False
-        >>> KroneckerDelta(p,q).is_above_fermi
-        True
-
-        """
-        if self.args[0].assumptions0.get("below_fermi"):
-            return False
-        if self.args[1].assumptions0.get("below_fermi"):
-            return False
-        return True
-
-    @property
-    def is_below_fermi(self):
-        """
-        True if Delta can be non-zero below fermi
-
-        >>> from sympy.physics.secondquant import KroneckerDelta
-        >>> from sympy import Symbol
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
-        >>> p = Symbol('p')
-        >>> q = Symbol('q')
-        >>> KroneckerDelta(p,a).is_below_fermi
-        False
-        >>> KroneckerDelta(p,i).is_below_fermi
-        True
-        >>> KroneckerDelta(p,q).is_below_fermi
-        True
-
-        """
-        if self.args[0].assumptions0.get("above_fermi"):
-            return False
-        if self.args[1].assumptions0.get("above_fermi"):
-            return False
-        return True
-
-    @property
-    def is_only_above_fermi(self):
-        """
-        True if Delta is restricted to above fermi
-
-        >>> from sympy.physics.secondquant import KroneckerDelta
-        >>> from sympy import Symbol
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
-        >>> p = Symbol('p')
-        >>> q = Symbol('q')
-        >>> KroneckerDelta(p,a).is_only_above_fermi
-        True
-        >>> KroneckerDelta(p,q).is_only_above_fermi
-        False
-        >>> KroneckerDelta(p,i).is_only_above_fermi
-        False
-
-        """
-        return ( self.args[0].assumptions0.get("above_fermi")
-                or
-                self.args[1].assumptions0.get("above_fermi")
-                ) or False
-
-    @property
-    def is_only_below_fermi(self):
-        """
-        True if Delta is restricted to below fermi
-
-        >>> from sympy.physics.secondquant import KroneckerDelta
-        >>> from sympy import Symbol
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
-        >>> p = Symbol('p')
-        >>> q = Symbol('q')
-        >>> KroneckerDelta(p,i).is_only_below_fermi
-        True
-        >>> KroneckerDelta(p,q).is_only_below_fermi
-        False
-        >>> KroneckerDelta(p,a).is_only_below_fermi
-        False
-
-        """
-        return ( self.args[0].assumptions0.get("below_fermi")
-                or
-                self.args[1].assumptions0.get("below_fermi")
-                ) or False
-
-    @property
-    def indices_contain_equal_information(self):
-        """
-        Returns True if indices are either both above or below fermi.
-
-        Example:
-
-        >>> from sympy.physics.secondquant import KroneckerDelta
-        >>> from sympy import Symbol
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
-        >>> p = Symbol('p')
-        >>> q = Symbol('q')
-        >>> KroneckerDelta(p, q).indices_contain_equal_information
-        True
-        >>> KroneckerDelta(p, q+1).indices_contain_equal_information
-        True
-        >>> KroneckerDelta(i, p).indices_contain_equal_information
-        False
-
-        """
-        if (self.args[0].assumptions0.get("below_fermi") and
-                self.args[1].assumptions0.get("below_fermi")):
-            return True
-        if (self.args[0].assumptions0.get("above_fermi")
-                and self.args[1].assumptions0.get("above_fermi")):
-            return True
-
-        # if both indices are general we are True, else false
-        return self.is_below_fermi and self.is_above_fermi
-
-
-    @property
-    def preferred_index(self):
-        """
-        Returns the index which is preferred to keep in the final expression.
-
-        The preferred index is the index with more information regarding fermi
-        level.  If indices contain same information, 'a' is preferred before
-        'b'.
-
-        >>> from sympy.physics.secondquant import KroneckerDelta
-        >>> from sympy import Symbol
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
-        >>> j = Symbol('j',below_fermi=True)
-        >>> p = Symbol('p')
-        >>> KroneckerDelta(p,i).preferred_index
-        i
-        >>> KroneckerDelta(p,a).preferred_index
-        a
-        >>> KroneckerDelta(i,j).preferred_index
-        i
-
-        """
-        if self._get_preferred_index():
-            return self.args[1]
-        else:
-            return self.args[0]
-
-    @property
-    def killable_index(self):
-        """
-        Returns the index which is preferred to substitute in the final expression.
-
-        The index to substitute is the index with less information regarding fermi
-        level.  If indices contain same information, 'a' is preferred before
-        'b'.
-
-        >>> from sympy.physics.secondquant import KroneckerDelta
-        >>> from sympy import Symbol
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
-        >>> j = Symbol('j',below_fermi=True)
-        >>> p = Symbol('p')
-        >>> KroneckerDelta(p,i).killable_index
-        p
-        >>> KroneckerDelta(p,a).killable_index
-        p
-        >>> KroneckerDelta(i,j).killable_index
-        j
-
-        """
-        if self._get_preferred_index():
-            return self.args[0]
-        else:
-            return self.args[1]
-
-    def _get_preferred_index(self):
-        """
-        Returns the index which is preferred to keep in the final expression.
-
-        The preferred index is the index with more information regarding fermi
-        level.  If indices contain same information, index 0 is returned.
-        """
-        if not self.is_above_fermi:
-            if self.args[0].assumptions0.get("below_fermi"):
-                return 0
-            else:
-                return 1
-        elif not self.is_below_fermi:
-            if self.args[0].assumptions0.get("above_fermi"):
-                return 0
-            else:
-                return 1
-        else:
-            return 0
-
-    def _dagger_(self):
-        return self
-
-    def _latex(self,printer):
-        return "\\delta_{%s%s}"% (self.args[0].name,self.args[1].name)
-
-    def __repr__(self):
-        return "KroneckerDelta(%s,%s)"% (self.args[0],self.args[1])
-
-    def __str__(self):
-        if not self.is_above_fermi:
-            return 'd<(%s,%s)'% (self.args[0],self.args[1])
-        elif not self.is_below_fermi:
-            return 'd>(%s,%s)'% (self.args[0],self.args[1])
-        else:
-            return 'd(%s,%s)'% (self.args[0],self.args[1])
-
-
 
 class SqOperator(Expr):
     """
@@ -861,7 +578,7 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
             return state.down(element)
 
         elif isinstance(state, Mul):
-            c_part, nc_part = split_commutative_parts(state)
+            c_part, nc_part = state.args_cnc()
             if isinstance(nc_part[0], FockStateFermionKet):
                 element = self.state
                 return Mul(*(c_part+[nc_part[0].down(element)]+nc_part[1:]))
@@ -983,14 +700,12 @@ class CreateFermion(FermionicOperator, Creator):
 
 
         elif isinstance(state, Mul):
-            c_part, nc_part = split_commutative_parts(state)
+            c_part, nc_part = state.args_cnc()
             if isinstance(nc_part[0], FockStateFermionKet):
                 element = self.state
-                return Mul(*(c_part+[nc_part[0].up(element)]+nc_part[1:]))
-            else:
-                return Mul(self,state)
-        else:
-            return Mul(self,state)
+                return Mul(*(c_part + [nc_part[0].up(element)] + nc_part[1:]))
+
+        return Mul(self, state)
 
     @property
     def is_q_creator(self):
@@ -1345,10 +1060,10 @@ class FermionState(FockState):
         """
         returns number of identified hole states in list.
         """
-        return len([ i for i in list if  cls._only_below_fermi(i)])
+        return len([i for i in list if cls._only_below_fermi(i)])
 
     def _negate_holes(self,list):
-        return tuple([ -i if i<=self.fermi_level else i for i in list ])
+        return tuple([-i if i<=self.fermi_level else i for i in list])
 
     def __repr__(self):
         if self.fermi_level:
@@ -1401,12 +1116,6 @@ BKet = FockStateBosonKet
 FBra = FockStateFermionBra
 FKet = FockStateFermionKet
 
-def split_commutative_parts(m):
-    c_part = [p for p in m.args if p.is_commutative]
-    nc_part = [p for p in m.args if not p.is_commutative]
-    return c_part, nc_part
-
-
 def apply_Mul(m):
     """
     Take a Mul instance with operators and apply them to states.
@@ -1423,7 +1132,7 @@ def apply_Mul(m):
     """
     if not isinstance(m, Mul):
         return m
-    c_part, nc_part = split_commutative_parts(m)
+    c_part, nc_part = m.args_cnc()
     n_nc = len(nc_part)
     if n_nc == 0 or n_nc == 1:
         return m
@@ -1437,9 +1146,9 @@ def apply_Mul(m):
                 else:
                     result = next_to_last.apply_operator(last)
                     if result == 0:
-                        return 0
+                        return S.Zero
                     else:
-                        return apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
+                        return apply_Mul(Mul(*(c_part + nc_part[:-2] + [result])))
             elif isinstance(next_to_last, Pow):
                 if isinstance(next_to_last.base, SqOperator) and \
                     next_to_last.exp.is_Integer:
@@ -1451,7 +1160,7 @@ def apply_Mul(m):
                             result = next_to_last.base.apply_operator(result)
                             if result == 0: break
                         if result == 0:
-                            return 0
+                            return S.Zero
                         else:
                             return apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
                 else:
@@ -1459,7 +1168,7 @@ def apply_Mul(m):
             elif isinstance(next_to_last, FockStateBra):
                 result = InnerProduct(next_to_last, last)
                 if result == 0:
-                    return 0
+                    return S.Zero
                 else:
                     return apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
             else:
@@ -1746,18 +1455,11 @@ class Commutator(Function):
         #
         # [xA,yB]  ->  xy*[A,B]
         #
-        c_part = []
-        nc_part = []
-        nc_part2 = []
-        if isinstance(a,Mul):
-            c_part,nc_part = split_commutative_parts(a)
-        if isinstance(b,Mul):
-            c_part2,nc_part2 = split_commutative_parts(b)
-            c_part.extend(c_part2)
+        ca, nca = a.args_cnc()
+        cb, ncb = b.args_cnc()
+        c_part = list(ca) + list(cb)
         if c_part:
-            a = nc_part or [a]
-            b = nc_part2 or [b]
-            return Mul(*c_part)*cls(Mul(*a),Mul(*b))
+            return Mul(Mul(*c_part), cls(Mul._from_args(nca), Mul._from_args(ncb)))
 
 
         #
@@ -1862,7 +1564,7 @@ class NO(Expr):
         if arg.is_Mul:
 
             # take coefficient outside of normal ordering brackets
-            c_part, seq = split_commutative_parts(arg)
+            c_part, seq = arg.args_cnc()
             if c_part:
                 coeff = Mul(*c_part)
                 if not seq:
@@ -1875,7 +1577,7 @@ class NO(Expr):
             newseq = []
             foundit = False
             for fac in seq:
-                if isinstance(fac,NO):
+                if isinstance(fac, NO):
                     newseq.extend(fac.args)
                     foundit = True
                 else:
@@ -2259,13 +1961,13 @@ def evaluate_deltas(e):
     dependent, the literal expression resulting from this function may be hard to
     predict.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     We assume that
 
-    >>> from sympy import symbols, Function, Dummy
-    >>> from sympy.physics.secondquant import evaluate_deltas, KroneckerDelta
+    >>> from sympy import symbols, Function, Dummy, KroneckerDelta
+    >>> from sympy.physics.secondquant import evaluate_deltas
     >>> i,j = symbols('i j', below_fermi=True, cls=Dummy)
     >>> a,b = symbols('a b', above_fermi=True, cls=Dummy)
     >>> p,q = symbols('p q', cls=Dummy)
@@ -2381,8 +2083,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     2*f(_a, _b)
 
 
-    Controlling output
-    ------------------
+    Controlling output:
 
     By default the dummy symbols that are already present in the expression
     will be reused in a different permuation.  However, if new_indices=True,
@@ -2807,7 +2508,7 @@ def wicks(e, **kw_args):
     >>> from sympy.physics.secondquant import wicks, F, Fd, NO
     >>> p,q,r = symbols('p,q,r')
     >>> wicks(Fd(p)*F(q))  # doctest: +SKIP
-    KroneckerDelta(p, q)*KroneckerDelta(q, _i) + NO(CreateFermion(p)*AnnihilateFermion(q))
+    d(p, q)*d(q, _i) + NO(CreateFermion(p)*AnnihilateFermion(q))
 
     By default, the expression is expanded:
 

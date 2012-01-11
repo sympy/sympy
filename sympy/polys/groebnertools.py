@@ -12,13 +12,10 @@ from sympy.polys.distributedpolys import (
 )
 
 from sympy.polys.polyerrors import (
-    ExactQuotientFailed, DomainError,
+    DomainError,
 )
 
 from sympy.polys.polyconfig import query
-from sympy.core.compatibility import cmp
-
-from operator import itemgetter
 
 def sdp_groebner(f, u, O, K, gens='', verbose=False, method=None):
     """
@@ -66,12 +63,13 @@ def buchberger(f, u, O, K, gens='', verbose=False):
     one polynomial lies in an ideal, divide by the elements in the
     base and see if the remainder vanishes.
 
-    They can also be used to  solve systems of polynomial equations
+    They can also be used to solve systems of polynomial equations
     as,  by choosing lexicographic ordering,  you can eliminate one
     variable at a time, provided that the ideal is zero-dimensional
     (finite number of solutions).
 
-    **References**
+    References
+    ==========
 
     1. [Bose03]_
     2. [Giovini91]_
@@ -181,7 +179,7 @@ def buchberger(f, u, O, K, gens='', verbose=False):
         G_new.add(ih)
 
         return G_new, B_new
-      # end of update ################################
+        # end of update ################################
 
     if not f:
         return []
@@ -264,7 +262,6 @@ def sdp_str(f, gens):
     if isinstance(gens, basestring):
         gens = gens.split(',')
     ngens = len(gens)
-    z = (0,) * ngens
     s = ''
     for expv, c in f:
         if c > 0:
@@ -830,7 +827,9 @@ def matrix_fglm(F, u, O_from, O_to, K):
     ideal w.r.t. ``O_from`` to a reduced Groebner basis
     w.r.t. ``O_to``.
 
-    **References**
+    References
+    ==========
+
     J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
     Computation of Zero-dimensional Groebner Bases by Change of
     Ordering

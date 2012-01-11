@@ -110,6 +110,8 @@ class Pow(Expr):
             return Pow(abs(b), e * other)
         if abs(e) < S.One and other.is_real:
             return Pow(b, e * other)
+        if b.is_polar:
+            return Pow(b, e * other)
 
     def _eval_is_comparable(self):
         c1 = self.base.is_comparable
@@ -175,8 +177,6 @@ class Pow(Expr):
         if b.is_Number and e.is_Number:
             # int**nonneg or rat**?
             check = Pow(*self.args)
-            if self == check:
-                return False
             return check.is_Integer
 
     def _eval_is_real(self):
@@ -228,6 +228,9 @@ class Pow(Expr):
         if c1 and c2:
             if self.exp.is_nonnegative or self.base.is_nonzero:
                 return True
+
+    def _eval_is_polar(self):
+        return self.base.is_polar
 
     def _eval_subs(self, old, new):
         if self == old:
@@ -319,7 +322,11 @@ class Pow(Expr):
                 # this is just like what is happening automatically, except
                 # that now we are doing it for an arbitrary exponent for which
                 # no automatic expansion is done
-                sifted = sift(b.args, lambda x: x.is_nonnegative)
+                def pred(x):
+                    if x.is_polar is None:
+                        return x.is_nonnegative
+                    return x.is_polar
+                sifted = sift(b.args, pred)
                 nonneg = sifted.get(True, [])
                 other = sifted.get(None, [])
                 neg = sifted.get(False, [])
@@ -602,10 +609,11 @@ class Pow(Expr):
         base = base._evalf(prec)
         if not exp.is_Integer:
             exp = exp._evalf(prec)
-        if exp < 0 and not base.is_real:
+        if exp < 0 and base.is_number and base.is_real is False:
             base = base.conjugate() / (base * base.conjugate())._evalf(prec)
             exp = -exp
-        return Pow(base, exp).expand()
+            return Pow(base, exp).expand()
+        return Pow(base, exp)
 
     def _eval_is_polynomial(self, syms):
         if self.exp.has(*syms):
@@ -658,14 +666,11 @@ class Pow(Expr):
         else:
             c, t = exp.as_coeff_mul()
             if c.is_negative:
-                return 1, base**-exp
+                return S.One, base**-exp
         # unprocessed Float and NumberSymbol
         return self, S.One
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
-        if evaluate:
-            return self.subs(repl_dict).matches(expr, repl_dict)
-
+    def matches(self, expr, repl_dict={}):
         expr = _sympify(expr)
         b, e = expr.as_base_exp()
 
@@ -681,9 +686,9 @@ class Pow(Expr):
         if d is None:
             return None
 
-        d = self.exp.subs(d).matches(e, d)
+        d = self.exp.xreplace(d).matches(e, d)
         if d is None:
-            return Expr.matches(self, expr, repl_dict, evaluate)
+            return Expr.matches(self, expr, repl_dict)
         return d
 
     def _eval_nseries(self, x, n, logx):
@@ -864,7 +869,110 @@ class Pow(Expr):
     def _sage_(self):
         return self.args[0]._sage_()**self.args[1]._sage_()
 
+    def as_content_primitive(self, radical=False):
+        """Return the tuple (R, self/R) where R is the positive Rational
+        extracted from self.
+
+        Examples
+        ========
+
+        >>> from sympy import sqrt
+        >>> sqrt(4 + 4*sqrt(2)).as_content_primitive()
+        (2, sqrt(1 + sqrt(2)))
+        >>> sqrt(3 + 3*sqrt(2)).as_content_primitive()
+        (1, sqrt(3)*sqrt(1 + sqrt(2)))
+
+        >>> from sympy import separate, powsimp, Mul
+        >>> from sympy.abc import x, y
+
+        >>> ((2*x + 2)**2).as_content_primitive()
+        (4, (x + 1)**2)
+        >>> (4**((1 + y)/2)).as_content_primitive()
+        (2, 4**(y/2))
+        >>> (3**((1 + y)/2)).as_content_primitive()
+        (1, 3**((y + 1)/2))
+        >>> (3**((5 + y)/2)).as_content_primitive()
+        (9, 3**((y + 1)/2))
+        >>> eq = 3**(2 + 2*x)
+        >>> powsimp(eq) == eq
+        True
+        >>> eq.as_content_primitive()
+        (9, 3**(2*x))
+        >>> powsimp(Mul(*_))
+        9*9**x
+
+        >>> eq = (2 + 2*x)**y
+        >>> s = separate(eq); s.is_Mul, s
+        (False, (2*x + 2)**y)
+        >>> eq.as_content_primitive()
+        (1, (2*(x + 1))**y)
+        >>> s = separate(_[1]); s.is_Mul, s
+        (True, 2**y*(x + 1)**y)
+
+        See docstring of Expr.as_content_primitive for more examples.
+        """
+
+        b, e = self.as_base_exp()
+        b = _keep_coeff(*b.as_content_primitive(radical=radical))
+        ce, pe = e.as_content_primitive(radical=radical)
+        if b.is_Rational:
+            #e
+            #= ce*pe
+            #= ce*(h + t)
+            #= ce*h + ce*t
+            #=> self
+            #= b**(ce*h)*b**(ce*t)
+            #= b**(cehp/cehq)*b**(ce*t)
+            #= b**(iceh+r/cehq)*b**(ce*t)
+            #= b**(iceh)*b**(r/cehq)*b**(ce*t)
+            #= b**(iceh)*b**(ce*t + r/cehq)
+            h, t = pe.as_coeff_Add()
+            if h.is_Rational:
+                ceh = ce*h
+                c = Pow(b, ceh)
+                r = S.Zero
+                if not c.is_Rational:
+                    iceh, r = divmod(ceh.p, ceh.q)
+                    c = Pow(b, iceh)
+                return c, Pow(b, _keep_coeff(ce, t + r/ce/ceh.q))
+        e = _keep_coeff(ce, pe)
+        # b**e = (h*t)**e = h**e*t**e = c*m*t**e
+        if e.is_Rational and b.is_Mul:
+            h, t = b.as_content_primitive(radical=radical) # h is positive
+            c, m = Pow(h, e).as_coeff_Mul() # so c is positive
+            m, me = m.as_base_exp()
+            if m is S.One or me == e: # probably always true
+                # return the following, not return c, m*Pow(t, e)
+                # which would change Pow into Mul; we let sympy
+                # decide what to do by using the unevaluated Mul, e.g
+                # should it stay as sqrt(2 + 2*sqrt(5)) or become
+                # sqrt(2)*sqrt(1 + sqrt(5))
+                return c, Pow(_keep_coeff(m, t), e)
+        return S.One, Pow(b, e)
+
+    def is_constant(self, *wrt, **flags):
+        if flags.get('simplify', True):
+            self = self.simplify()
+        b, e = self.as_base_exp()
+        bz = b.equals(0)
+        if bz: # recalculate with assumptions in case it's unevaluated
+            new = b**e
+            if new != self:
+                return new.is_constant()
+        econ = e.is_constant(*wrt)
+        bcon = b.is_constant(*wrt)
+        if bcon:
+            if econ:
+                return True
+            bz = b.equals(0)
+            if bz is False:
+                return False
+        elif bcon is None:
+            return None
+
+        return e.equals(0)
+
 from add import Add
 from numbers import Integer
-from mul import Mul
+from mul import Mul, _keep_coeff
 from symbol import Symbol, Dummy

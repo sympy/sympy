@@ -17,7 +17,6 @@ class SympifyError(ValueError):
             "raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__,
             str(self.base_exc)))
 
-
 converter = {}
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
@@ -147,7 +146,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     # _sympy_ (which is a canonical and robust way to convert
     # anything to SymPy expression).
     #
-    # As a last chance, we try to take "a"'s  normal form via unicode()
+    # As a last chance, we try to take "a"'s normal form via unicode()
     # and try to parse it. If it fails, then we have no luck and
     # return an exception
     try:

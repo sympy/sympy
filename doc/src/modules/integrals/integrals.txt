@@ -52,6 +52,19 @@ even a few nonelementary integrals (in particular, some integrals involving the 
 	      4
 
 
+Integral Transforms
+-------------------
+
+Sympy has special support for definite integrals, and integral transforms.
+
+.. autofunction:: sympy.integrals.transforms.mellin_transform
+.. autofunction:: sympy.integrals.transforms.inverse_mellin_transform
+.. autofunction:: sympy.integrals.transforms.laplace_transform
+.. autofunction:: sympy.integrals.transforms.inverse_laplace_transform
+.. autofunction:: sympy.integrals.transforms.fourier_transform
+.. autofunction:: sympy.integrals.transforms.inverse_fourier_transform
+
+
 Internals
 ---------
 
@@ -59,16 +72,37 @@ There is a general method for calculating antiderivatives of elementary function
 
 SymPy currently uses a simplified version of the Risch algorithm, called the Risch-Norman algorithm. This algorithm is much faster, but may fail to find an antiderivative, although it is still very powerful. SymPy also uses pattern matching and heuristics to speed up evaluation of some types of integrals, e.g. polynomials.
 
+For non-elementary definite integrals, sympy uses so-called Meijer G-functions.
+Details are described here:
+
+.. toctree::
+   :maxdepth: 1
+
+   g-functions.txt
+
 API reference
 -------------
 
 .. automethod:: sympy.integrals.integrate
+
+.. automethod:: sympy.integrals.line_integrate
+
+.. automethod:: sympy.integrals.deltaintegrate
+
+.. automethod:: sympy.integrals.ratint
+
+.. automethod:: sympy.integrals.heurisch
+
+.. automethod:: sympy.integrals.trigintegrate
 
 Class Integral represents an unevaluated integral and has some methods that help in the integration of an expression.
 
 .. autoclass:: sympy.integrals.Integral
    :members:
 
+   .. data:: is_commutative
+
+      Returns whether all the free symbols in the integral are commutative.
 
 TODO and Bugs
 -------------

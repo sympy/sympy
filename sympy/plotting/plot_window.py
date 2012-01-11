@@ -25,11 +25,11 @@ class PlotWindow(ManagedWindow):
         self.camera = None
         self._calculating = False
 
-        self.antialiasing       = kwargs.pop('antialiasing', True)
-        self.ortho              = kwargs.pop('ortho', False)
-        self.invert_mouse_zoom  = kwargs.pop('invert_mouse_zoom', False)
-        self.linewidth          = kwargs.pop('linewidth', 1.5)
-        self.title  =  kwargs.setdefault('caption', "SymPy Plot")
+        self.antialiasing = kwargs.pop('antialiasing', True)
+        self.ortho = kwargs.pop('ortho', False)
+        self.invert_mouse_zoom = kwargs.pop('invert_mouse_zoom', False)
+        self.linewidth = kwargs.pop('linewidth', 1.5)
+        self.title = kwargs.setdefault('caption', "SymPy Plot")
         self.last_caption_update = 0
         self.caption_update_interval = 0.2
         self.drawing_first_object = True
@@ -37,7 +37,7 @@ class PlotWindow(ManagedWindow):
         super(PlotWindow, self).__init__(**kwargs)
 
     def setup(self):
-        self.camera = PlotCamera(self, ortho = self.ortho)
+        self.camera = PlotCamera(self, ortho=self.ortho)
         self.controller = PlotController(self,
                 invert_mouse_zoom=self.invert_mouse_zoom)
         self.push_handlers(self.controller)
@@ -107,7 +107,8 @@ class PlotWindow(ManagedWindow):
                     if r.calculating_cverts:
                         calc_cverts_pos += r.calculating_cverts_pos
                         calc_cverts_len += r.calculating_cverts_len
-                except: pass
+                except ValueError:
+                    pass
 
         for r in self.plot._pobjects:
             glPushMatrix()
@@ -115,7 +116,8 @@ class PlotWindow(ManagedWindow):
             glPopMatrix()
 
         if should_update_caption:
-            self.update_caption(calc_verts_pos, calc_verts_len, calc_cverts_pos, calc_cverts_len)
+            self.update_caption(calc_verts_pos, calc_verts_len,
+                                calc_cverts_pos, calc_cverts_len)
             self.last_caption_update = clock()
 
         if self.plot._screenshot:
@@ -123,15 +125,17 @@ class PlotWindow(ManagedWindow):
 
         self.plot._render_lock.release()
 
-    def update_caption(self, calc_verts_pos, calc_verts_len, calc_cverts_pos, calc_cverts_len):
+    def update_caption(self, calc_verts_pos, calc_verts_len,
+            calc_cverts_pos, calc_cverts_len):
         caption = self.title
         if calc_verts_len or calc_cverts_len:
             caption += " (calculating"
             if calc_verts_len > 0:
-                p = (calc_verts_pos/calc_verts_len)*100
+                p = (calc_verts_pos / calc_verts_len) * 100
                 caption += " vertices %i%%" % (p)
             if calc_cverts_len > 0:
-                p = (calc_cverts_pos/calc_cverts_len)*100
+                p = (calc_cverts_pos / calc_cverts_len) * 100
                 caption += " colors %i%%" % (p)
             caption += ")"
-        if self.caption != caption: self.set_caption(caption)
+        if self.caption != caption:
+            self.set_caption(caption)

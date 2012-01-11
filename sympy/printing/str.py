@@ -122,7 +122,7 @@ class StrPrinter(Printer):
             printset = s
         try:
             printset = sorted(printset)
-        except:  pass
+        except AttributeError:  pass
         return '{' + ', '.join(self._print(el) for el in printset) + '}'
 
     def _print_Function(self, expr):
@@ -149,18 +149,6 @@ class StrPrinter(Printer):
                 return self._print((xab[0],) + tuple(xab[1:]))
         L = ', '.join([_xab_tostr(l) for l in expr.limits])
         return 'Integral(%s, %s)' % (self._print(expr.function), L)
-
-    def _print_FiniteSet(self, s):
-        if len(s) > 10:
-            #take ten elements from the set at random
-            q = iter(s)
-            printset = [q.next() for i in xrange(10)]
-        else:
-            printset = s
-        try:
-            printset = sorted(printset)
-        except:  pass
-        return '{' + ', '.join(self._print(el) for el in printset) + '}'
 
     def _print_Interval(self, i):
         if i.left_open:
@@ -229,7 +217,10 @@ class StrPrinter(Printer):
         # Gather args for numerator/denominator
         for item in args:
             if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
-                b.append(Pow(item.base, -item.exp))
+                if item.exp != -1:
+                    b.append(Pow(item.base, -item.exp, evaluate=False))
+                else:
+                    b.append(Pow(item.base, -item.exp))
             elif item.is_Rational and item is not S.Infinity:
                 if item.p != 1:
                     a.append(Rational(item.p))
@@ -241,8 +232,9 @@ class StrPrinter(Printer):
         if len(a)==0:
             a = [S.One]
 
-        a_str = map(lambda x:self.parenthesize(x, precedence(expr)), a)
-        b_str = map(lambda x:self.parenthesize(x, precedence(expr)), b)
+        prec = precedence(expr)
+        a_str = map(lambda x:self.parenthesize(x, prec), a)
+        b_str = map(lambda x:self.parenthesize(x, prec), b)
 
         if len(b)==0:
             return sign + '*'.join(a_str)
@@ -362,7 +354,7 @@ class StrPrinter(Printer):
                 # Note: Don't test "expr.exp == -S.Half" here, because that will
                 # match -0.5, which we don't want.
                 return "1/sqrt(%s)" % self._print(expr.base)
-            if expr.exp is S.NegativeOne:
+            if expr.exp == -1:
                 return '1/%s' % self.parenthesize(expr.base, PREC)
 
         e = self.parenthesize(expr.exp, PREC)
@@ -526,7 +518,8 @@ def sstr(expr, **settings):
     For large expressions where speed is a concern, use the setting
     order='none'.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import symbols, Eq, sstr
     >>> a, b = symbols('a b')
@@ -559,4 +552,3 @@ def sstrrepr(expr, **settings):
     s = p.doprint(expr)
 
     return s
-

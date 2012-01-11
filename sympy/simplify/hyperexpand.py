@@ -13,6 +13,49 @@ It is based on the following paper:
 
 It is described in great(er) detail in the Sphinx documentation.
 """
+# SUMMARY OF EXTENSIONS FOR MEIJER G FUNCTIONS
+#
+# o z**rho G(ap, bq; z) = G(ap + rho, bq + rho; z)
+#
+# o denote z*d/dz by D
+#
+# o It is helpful to keep in mind that ap and bq play essentially symmetric
+#   roles: G(1/z) has slightly altered parameters, with ap and bq interchanged.
+#
+# o There are four shift operators:
+#   A_J = b_J - D,     J = 1, ..., n
+#   B_J = 1 - a_j + D, J = 1, ..., m
+#   C_J = -b_J + D,    J = m+1, ..., q
+#   D_J = a_J - 1 - D, J = n+1, ..., p
+#
+#   A_J, C_J increment b_J
+#   B_J, D_J decrement a_J
+#
+# o The corresponding four inverse-shift operators are defined if there
+#   is no cancellation. Thus e.g. an index a_J (upper or lower) can be
+#   incremented if a_J != b_i for i = 1, ..., q.
+#
+# o Order reduction: if b_j - a_i is a non-negative integer, where
+#   j <= m and i > n, the corresponding quotient of gamma functions reduces
+#   to a polynomial. Hence the G function can be expressed using a G-function
+#   of lower order.
+#   Similarly if j > m and i <= n.
+#
+#   Secondly, there are paired index theorems [Adamchik, The evaluation of
+#   integrals of Bessel functions via G-function identities]. Suppose there
+#   are three parameters a, b, c, where a is an a_i, i <= n, b is a b_j,
+#   j <= m and c is a denominator parameter (i.e. a_i, i > n or b_j, j > m).
+#   Suppose further all three differ by integers.
+#   Then the order can be reduced.
+#   TODO work this out in detail.
+#
+# o An index quadruple is called suitable if its order cannot be reduced.
+#   If there exists a sequence of shift operators transforming one index
+#   quadruple into another, we say one is reachable from the other.
+#
+# o Deciding if one index quadruple is reachable from another is tricky. For
+#   this reason, we use hand-built routines to match and instantiate formulas.
+#
 from sympy.core import S, Dummy, symbols, sympify, Tuple, expand, I, Mul
 from sympy import SYMPY_DEBUG
 
@@ -33,23 +76,25 @@ def add_formulae(formulae):
 
     from sympy import (exp, sqrt, cosh, log, asin, atan, I, lowergamma, cos,
                        atanh, besseli, gamma, erf, pi, sin, besselj)
+    from sympy import polar_lift, exp_polar
 
     # 0F0
     add((), (), exp(z))
 
     # 1F0
-    add((-a, ), (), (1-z)**a)
+    add((-a, ), (), (1+exp_polar(-I*pi)*z)**a)
 
     # 2F1
     addb((a, a - S.Half), (2*a,),
-         Matrix([2**(2*a-1)*(1 + sqrt(1-z))**(1-2*a),
-                 2**(2*a-1)*(1 + sqrt(1-z))**(-2*a)]),
+         Matrix([2**(2*a-1)*(1 + sqrt(1+exp_polar(-I*pi)*z))**(1-2*a),
+                 2**(2*a-1)*(1 + sqrt(1+exp_polar(-I*pi)*z))**(-2*a)]),
          Matrix([[1, 0]]),
          Matrix([[(a-S.Half)*z/(1-z), (S.Half-a)*z/(1-z)],
                  [a/(1-z), a*(z-2)/(1-z)]]))
-    addb((1, 1), (2,),
-         Matrix([log(1 - z), 1]), Matrix([[-1/z, 0]]),
+    addb((1, 1), (2,), # it is not particularly obvious, but this is the cts. branch
+         Matrix([log(1 + exp_polar(-I*pi)*z), 1]), Matrix([[-1/z, 0]]),
          Matrix([[0, z/(z - 1)], [0, 0]]))
+    # TODO branching
     addb((S.Half, 1), (S('3/2'),),
          Matrix([log((1 + sqrt(z))/(1 - sqrt(z)))/sqrt(z), 1]),
          Matrix([[S(1)/2, 0]]),
@@ -58,6 +103,7 @@ def add_formulae(formulae):
          Matrix([asin(sqrt(z))/sqrt(z), 1/sqrt(1 - z)]),
          Matrix([[1, 0]]),
          Matrix([[-S(1)/2, S(1)/2], [0, z/(1 - z)/2]]))
+    # TODO branching
     addb((-a, S.Half - a), (S.Half,),
          Matrix([(1 + sqrt(z))**(2*a) + (1 - sqrt(z))**(2*a),
                  sqrt(z)*(1 + sqrt(z))**(2*a-1)
@@ -69,11 +115,13 @@ def add_formulae(formulae):
     # Integrals and Series: More Special Functions, Vol. 3,.
     # Gordon and Breach Science Publisher
     add([a, -a], [S.Half], cos(2*a*asin(sqrt(z))))
+    # TODO branching
     addb([1, 1], [3*S.Half],
          Matrix([asin(sqrt(z))/sqrt(z*(1-z)), 1]), Matrix([[1, 0]]),
          Matrix([[(z - S.Half)/(1 - z), 1/(1 - z)/2], [0, 0]]))
 
     # 3F2
+    # TODO branching
     addb([-S.Half, 1, 1], [S.Half, 2],
          Matrix([sqrt(z)*atanh(sqrt(z)), log(1 - z), 1]),
          Matrix([[-S(2)/3, -S(1)/(3*z), S(2)/3]]),
@@ -81,6 +129,7 @@ def add_formulae(formulae):
                  [0, 0, z/(z - 1)],
                  [0, 0, 0]]))
     # actually the formula for 3/2 is much nicer ...
+    # TODO branching
     addb([-S.Half, 1, 1], [2, 2],
          Matrix([sqrt(1 - z), log(sqrt(1 - z)/2 + S.Half), 1]),
          Matrix([[S(4)/9 - 16/(9*z), 4/(3*z), 16/(9*z)]]),
@@ -101,7 +150,7 @@ def add_formulae(formulae):
     # 2F2
     addb([S.Half, a], [S(3)/2, a + 1],
          Matrix([a/(2*a - 1)*(-I)*sqrt(pi/z)*erf(I*sqrt(z)),
-                 a/(2*a - 1)*(-z)**(-a)*lowergamma(a, -z), a/(2*a - 1)*exp(z)]),
+                 a/(2*a - 1)*(polar_lift(-1)*z)**(-a)*lowergamma(a, polar_lift(-1)*z), a/(2*a - 1)*exp(z)]),
          Matrix([[1, -1, 0]]),
          Matrix([[-S.Half, 0, 1], [0, -a, 1], [0, 0, z]]))
 
@@ -116,6 +165,7 @@ def add_formulae(formulae):
     x = 4*z**(S(1)/4)
     def fp(a,z): return besseli(a, x) + besselj(a, x)
     def fm(a,z): return besseli(a, x) - besselj(a, x)
+    # TODO branching
     addb([], [S.Half, a, a+S.Half],
          Matrix([fp(2*a - 1, z), fm(2*a, z)*z**(S(1)/4),
                  fm(2*a - 1, z)*sqrt(z), fp(2*a, z)*z**(S(3)/4)])
@@ -177,6 +227,38 @@ def add_formulae(formulae):
                  [z/2, 0, b-2*a, z/2],
                  [0, S(1)/2, S(1)/2, -2*a]]))
 
+def add_meijerg_formulae(formulae):
+    z = Dummy('z')
+    a, b, c = map(Dummy, 'abc')
+    rho = Dummy('rho')
+    def add(an, ap, bm, bq, B, C, M, matcher):
+        formulae.append(MeijerFormula(an, ap, bm, bq, z, [a, b, c, rho],
+                                      B, C, M, matcher))
+
+    from sympy import Matrix
+    from sympy import gamma, uppergamma, exp
+
+    def detect_uppergamma(iq):
+        x = iq.an[0]
+        y, z = iq.bm
+        swapped = False
+        if Mod1(x) == Mod1(y):
+            swapped = True
+            (y, z) = (z, y)
+        if Mod1(x) != Mod1(z) or x > z:
+            return None
+        l = [y, x]
+        if swapped:
+            l = [x, y]
+        return {rho: y, a: x-y}, IndexQuadruple([x], [], l, [])
+    add([a+rho], [], [rho, a+rho], [],
+        Matrix([gamma(1 - a)*z**rho*exp(z)*uppergamma(a, z),
+                gamma(1-a)*z**(a+rho)]),
+        Matrix([[1, 0]]),
+        Matrix([[rho+z, -1], [0, a+rho]]),
+        detect_uppergamma)
+
+
 def make_simp(z):
     """ Create a function that simplifies rational functions in `z`. """
     def simp(expr):
@@ -227,6 +309,9 @@ class Mod1(object):
         if simplify(self.expr - other.expr).is_integer is True:
             return True
         return False
+
+    def __ne__(self, other):
+        return not self == other
 
 class IndexPair(object):
     """ Holds a pair of indices, and methods to compute their invariants. """
@@ -416,6 +501,10 @@ class IndexQuadruple(object):
                 dic[m] = items
 
         return pan, pap, pbm, pbq
+
+    @property
+    def signature(self):
+        return (len(self.an), len(self.ap), len(self.bm), len(self.bq))
 
     def __str__(self):
         return 'IndexQuadruple(%s, %s, %s, %s)' % (self.an, self.ap,
@@ -682,7 +771,7 @@ class FormulaCollection(object):
         >>> f.lookup_origin(IndexPair((), ())).closed_form
         exp(_z)
         >>> f.lookup_origin(IndexPair([1], ())).closed_form
-        1/(-_z + 1)
+        1/(_z*exp_polar(-I*pi) + 1)
 
         >>> from sympy import S
         >>> f.lookup_origin(IndexPair([S('1/4'), S('3/4 + 4')], [S.Half])).closed_form
@@ -716,6 +805,69 @@ class FormulaCollection(object):
         possible.sort(key=lambda x:x[0])
         return possible[0][1]
 
+class MeijerFormula(object):
+    """
+    This class represents a Meijer G-function formula.
+
+    Its data members are:
+    - z, the argument
+    - symbols, the free symbols (parameters) in the formula
+    - indices, the parameters
+    - B, C, M (c/f ordinary Formula)
+    """
+
+    def __init__(self, an, ap, bm, bq, z, symbols, B, C, M, matcher):
+        an = Tuple(*map(expand, sympify(an)))
+        ap = Tuple(*map(expand, sympify(ap)))
+        bm = Tuple(*map(expand, sympify(bm)))
+        bq = Tuple(*map(expand, sympify(bq)))
+        self.indices = IndexQuadruple(an, ap, bm, bq)
+        self.z = z
+        self.symbols = symbols
+        self._matcher = matcher
+        self.B = B
+        self.C = C
+        self.M = M
+
+    @property
+    def closed_form(self):
+        return (self.C*self.B)[0]
+
+    def try_instantiate(self, iq):
+        """
+        Try to instantiate the current formula to (almost) match iq.
+        This uses the _matcher passed on init.
+        """
+        if iq.signature != self.indices.signature:
+            return None
+        res = self._matcher(iq)
+        if res is not None:
+            subs, niq = res
+            return MeijerFormula(niq.an, niq.ap, niq.bm, niq.bq,
+                                 self.z, [],
+                                 self.B.subs(subs), self.C.subs(subs),
+                                 self.M.subs(subs), None)
+
+class MeijerFormulaCollection(object):
+    """
+    This class holds a collection of meijer g formulae.
+    """
+
+    def __init__(self):
+        formulae = []
+        add_meijerg_formulae(formulae)
+        self.formulae = {}
+        for formula in formulae:
+            self.formulae.setdefault(formula.indices.signature, []).append(formula)
+
+    def lookup_origin(self, iq):
+        """ Try to find a formula that matches iq. """
+        if not iq.signature in self.formulae:
+            return None
+        for formula in self.formulae[iq.signature]:
+            res = formula.try_instantiate(iq)
+            if res is not None:
+                return res
 
 class Operator(object):
     """
@@ -823,7 +975,7 @@ class UnShiftA(Operator):
             n *= (D + b - 1)
         #print n
 
-        b0 = -n.all_coeffs()[-1]
+        b0 = -n.nth(0)
         if b0 == 0:
             raise ValueError('Cannot decrement upper index: ' \
                                'cancels with lower')
@@ -867,7 +1019,7 @@ class UnShiftB(Operator):
             n *= (D + a)
         #print n
 
-        b0 = n.all_coeffs()[-1]
+        b0 = n.nth(0)
         #print b0
         if b0 == 0:
             raise ValueError('Cannot increment index: ' \
@@ -882,6 +1034,253 @@ class UnShiftB(Operator):
     def __str__(self):
         return '<Increment lower index #%s of %s, %s.>' % (self._i,
                                                         self._ap, self._bq)
+
+class MeijerShiftA(Operator):
+    """ Increment an upper b index. """
+
+    def __init__(self, bi):
+        bi = sympify(bi)
+        self._poly = Poly(bi - x, x)
+
+    def __str__(self):
+        return '<Increment upper b=%s.>' % (self._poly.all_coeffs()[1])
+
+class MeijerShiftB(Operator):
+    """ Decrement an upper a index. """
+
+    def __init__(self, bi):
+        bi = sympify(bi)
+        self._poly = Poly(1 - bi + x, x)
+
+    def __str__(self):
+        return '<Decrement upper a=%s.>' % (1 - self._poly.all_coeffs()[1])
+
+class MeijerShiftC(Operator):
+    """ Increment a lower b index. """
+
+    def __init__(self, bi):
+        bi = sympify(bi)
+        self._poly = Poly(-bi + x, x)
+
+    def __str__(self):
+        return '<Increment lower b=%s.>' % (-self._poly.all_coeffs()[1])
+
+class MeijerShiftD(Operator):
+    """ Decrement a lower a index. """
+
+    def __init__(self, bi):
+        bi = sympify(bi)
+        self._poly = Poly(bi - 1 - x, x)
+
+    def __str__(self):
+        return '<Decrement lower a=%s.>' % (self._poly.all_coeffs()[1] + 1)
+
+class MeijerUnShiftA(Operator):
+    """ Decrement an upper b index. """
+
+    def __init__(self, an, ap, bm, bq, i, z):
+        """ Note: i counts from zero! """
+        an, ap, bm, bq, i = map(sympify, [an, ap, bm, bq, i])
+
+        self._an = an
+        self._ap = ap
+        self._bm = bm
+        self._bq = bq
+        self._i  = i
+
+        an = list(an)
+        ap = list(ap)
+        bm = list(bm)
+        bq = list(bq)
+        bi = bm.pop(i) - 1
+
+        m = Poly(1, x)
+        for b in bm:
+            m *= Poly(b - x, x)
+        for b in bq:
+            m *= Poly(x - b, x)
+        #print m
+
+        A = Dummy('A')
+        D = Poly(bi - A, A)
+        n = Poly(z, A)
+        for a in an:
+            n *= (D + 1 - a)
+        for a in ap:
+            n *= (-D + a - 1)
+        #print n
+
+        b0 = n.nth(0)
+        #print b0
+        if b0 == 0:
+            raise ValueError('Cannot decrement upper b index (cancels)')
+        #print b0
+
+        n = Poly(Poly(n.all_coeffs()[:-1], A).as_expr().subs(A, bi - x), x)
+        #print n
+
+        self._poly = Poly((m-n)/b0, x)
+
+    def __str__(self):
+        return '<Decrement upper b index #%s of %s, %s, %s, %s.>' % (self._i,
+                                      self._an, self._ap, self._bm, self._bq)
+
+class MeijerUnShiftB(Operator):
+    """ Increment an upper a index. """
+
+    def __init__(self, an, ap, bm, bq, i, z):
+        """ Note: i counts from zero! """
+        an, ap, bm, bq, i = map(sympify, [an, ap, bm, bq, i])
+
+        self._an = an
+        self._ap = ap
+        self._bm = bm
+        self._bq = bq
+        self._i  = i
+
+        an = list(an)
+        ap = list(ap)
+        bm = list(bm)
+        bq = list(bq)
+        ai = an.pop(i) + 1
+
+        m = Poly(z, x)
+        for a in an:
+            m *= Poly(1 - a + x, x)
+        for a in ap:
+            m *= Poly(a - 1 - x, x)
+        #print m
+
+        B = Dummy('B')
+        D = Poly(B + ai - 1, B)
+        n = Poly(1, B)
+        for b in bm:
+            n *= (-D + b)
+        for b in bq:
+            n *= (D - b)
+        #print n
+
+        b0 = n.nth(0)
+        #print b0
+        if b0 == 0:
+            raise ValueError('Cannot increment upper a index (cancels)')
+        #print b0
+
+        n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(B, 1 - ai + x), x)
+        #print n
+
+        self._poly = Poly((m-n)/b0, x)
+
+    def __str__(self):
+        return '<Increment upper a index #%s of %s, %s, %s, %s.>' % (self._i,
+                                      self._an, self._ap, self._bm, self._bq)
+
+class MeijerUnShiftC(Operator):
+    """ Decrement a lower b index. """
+    # XXX this is "essentially" the same as MeijerUnShiftA. This "essentially"
+    #     can be made rigorous using the functional equation G(1/z) = G'(z),
+    #     where G' denotes a G function of slightly altered parameters.
+    #     However, sorting out the details seems harder than just coding it
+    #     again.
+
+    def __init__(self, an, ap, bm, bq, i, z):
+        """ Note: i counts from zero! """
+        an, ap, bm, bq, i = map(sympify, [an, ap, bm, bq, i])
+
+        self._an = an
+        self._ap = ap
+        self._bm = bm
+        self._bq = bq
+        self._i  = i
+
+        an = list(an)
+        ap = list(ap)
+        bm = list(bm)
+        bq = list(bq)
+        bi = bq.pop(i) - 1
+
+        m = Poly(1, x)
+        for b in bm:
+            m *= Poly(b - x, x)
+        for b in bq:
+            m *= Poly(x - b, x)
+        #print m
+
+        C = Dummy('C')
+        D = Poly(bi + C, C)
+        n = Poly(z, C)
+        for a in an:
+            n *= (D + 1 - a)
+        for a in ap:
+            n *= (-D + a - 1)
+        #print n
+
+        b0 = n.nth(0)
+        #print b0
+        if b0 == 0:
+            raise ValueError('Cannot decrement lower b index (cancels)')
+        #print b0
+
+        n = Poly(Poly(n.all_coeffs()[:-1], C).as_expr().subs(C, x - bi), x)
+        #print n
+
+        self._poly = Poly((m-n)/b0, x)
+
+    def __str__(self):
+        return '<Decrement lower b index #%s of %s, %s, %s, %s.>' % (self._i,
+                                      self._an, self._ap, self._bm, self._bq)
+
+class MeijerUnShiftD(Operator):
+    """ Increment a lower a index. """
+    # XXX This is essentially the same as MeijerUnShiftA.
+    #     See comment at MeijerUnShiftC.
+
+    def __init__(self, an, ap, bm, bq, i, z):
+        """ Note: i counts from zero! """
+        an, ap, bm, bq, i = map(sympify, [an, ap, bm, bq, i])
+
+        self._an = an
+        self._ap = ap
+        self._bm = bm
+        self._bq = bq
+        self._i  = i
+
+        an = list(an)
+        ap = list(ap)
+        bm = list(bm)
+        bq = list(bq)
+        ai = ap.pop(i) + 1
+
+        m = Poly(z, x)
+        for a in an:
+            m *= Poly(1 - a + x, x)
+        for a in ap:
+            m *= Poly(a - 1 - x, x)
+        #print m
+
+        B = Dummy('B') # - this is the shift operator `D_I`
+        D = Poly(ai - 1 - B, B)
+        n = Poly(1, B)
+        for b in bm:
+            n *= (-D + b)
+        for b in bq:
+            n *= (D - b)
+        #print n
+
+        b0 = n.nth(0)
+        #print b0
+        if b0 == 0:
+            raise ValueError('Cannot increment lower a index (cancels)')
+        #print b0
+
+        n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(B, ai - 1 - x), x)
+        #print n
+
+        self._poly = Poly((m-n)/b0, x)
+
+    def __str__(self):
+        return '<Increment lower a index #%s of %s, %s, %s, %s.>' % (self._i,
+                                      self._an, self._ap, self._bm, self._bq)
 
 class ReduceOrder(Operator):
     """ Reduce Order by cancelling an upper and a lower index. """
@@ -979,7 +1378,8 @@ def reduce_order(ip):
     Return (nip, [operators]), where applying the operators to the
     hypergeometric function specified by nip.ap, nip.bq yields ap, bq.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.simplify.hyperexpand import reduce_order, IndexPair
     >>> reduce_order(IndexPair((1, 2), (3, 4)))
@@ -1000,7 +1400,8 @@ def reduce_order_meijer(iq):
 
     Return niq, [operators].
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.simplify.hyperexpand import reduce_order_meijer, IndexQuadruple
     >>> reduce_order_meijer(IndexQuadruple([3, 4], [5, 6], [3, 4], [1, 2]))[0]
@@ -1240,26 +1641,25 @@ def try_polynomial(ip, z):
     fac = 1
     res = S(1)
     for n in xrange(-a):
-       fac *= z
-       fac /= n + 1
-       for a in ip.ap: fac *= a + n
-       for b in ip.bq: fac /= b + n
-       res += fac
+        fac *= z
+        fac /= n + 1
+        for a in ip.ap: fac *= a + n
+        for b in ip.bq: fac /= b + n
+        res += fac
     return res
 
 collection = None
-def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, chainmult=1):
+def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     """
     Try to find an expression for the hypergeometric function
     `ip.ap`, `ip.bq`.
 
     The result is expressed in terms of a dummy variable z0. Then it
-    is multiplied by premult. Then ops0 is applied, using chainmult*t*d/dt
-    for the operator.
-
-    These latter parameters are all trickery to make _meijergexpand short.
+    is multiplied by premult. Then ops0 is applied.
+    premult must be a*z**prem for some a independent of z.
     """
-    from sympy.simplify import powdenest, simplify
+    from sympy.simplify import powdenest, simplify, polarify
+    z = polarify(z, subs=False)
 
     # TODO
     # The following would be possible:
@@ -1290,7 +1690,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, chainmult=1):
     if res is not None:
         debug('  Recognised polynomial.')
         p = apply_operators(res, ops, lambda f: z0*f.diff(z0))
-        p = apply_operators(p*premult, ops0, lambda f: chainmult*z0*f.diff(z0))
+        p = apply_operators(p*premult, ops0, lambda f: z0*f.diff(z0))
         return simplify(p).subs(z0, z)
 
     # Try to recognise a shifted sum.
@@ -1303,7 +1703,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, chainmult=1):
 
     # apply the plan for poly
     p = apply_operators(p, ops, lambda f: z0*f.diff(z0))
-    p = apply_operators(p*premult, ops0, lambda f: chainmult*z0*f.diff(z0))
+    p = apply_operators(p*premult, ops0, lambda f: z0*f.diff(z0))
     p = simplify(p).subs(z0, z)
 
     # Now try to find a formula
@@ -1320,19 +1720,142 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, chainmult=1):
     # Now carry out the plan.
     C = apply_operators(f.C.subs(f.z, z0), ops,
                         make_derivative_operator(f.M.subs(f.z, z0), z0))
-    C = apply_operators(C*premult, ops0,
-                        make_derivative_operator(f.M.subs(f.z, z0)*chainmult, z0))
+    from sympy import eye
+    C = apply_operators(C, ops0,
+                        make_derivative_operator(f.M.subs(f.z, z0)
+                                                 + prem*eye(f.M.shape[0]), z0))
 
     if premult == 1:
         C = C.applyfunc(make_simp(z0))
-    r = C*f.B.subs(f.z, z0)
+    r = C*f.B.subs(f.z, z0)*premult
     r = r[0].subs(z0, z) + p
 
     # This will simpliy things like sqrt(-z**2) to i*z.
     # It would be wrong under certain choices of branch, but all results we
     # return are under an "implicit suitable choice of branch" anyway.
-    return powdenest(r, force=True)
+    return powdenest(r, polar=True) # This unpolarifies!
 
+def devise_plan_meijer(fro, to, z):
+    """
+    Find a sequence of operators to convert index quadruple `fro` into
+    index quadruple `to`. It is assumed that fro and to have the same
+    signatures, and that in fact any corresponding pair of parameters differs
+    by integers, and a direct path is possible. I.e. if there are parameters
+       a1 b1 c1  and a2 b2 c2
+    it is assumed that a1 can be shifted to a2, etc.
+    The only thing this routine determines is the order of shifts to apply,
+    nothing clever will be tried.
+    It is also assumed that fro is suitable.
+
+    >>> from sympy.simplify.hyperexpand import devise_plan_meijer, IndexQuadruple
+    >>> from sympy.abc import z
+
+    Empty plan:
+
+    >>> devise_plan_meijer(IndexQuadruple([1], [2], [3], [4]), IndexQuadruple([1], [2], [3], [4]), z)
+    []
+
+    Very simple plans:
+
+    >>> devise_plan_meijer(IndexQuadruple([0], [], [], []), IndexQuadruple([1], [], [], []), z)
+    [<Increment upper a index #0 of [0], [], [], [].>]
+    >>> devise_plan_meijer(IndexQuadruple([0], [], [], []), IndexQuadruple([-1], [], [], []), z)
+    [<Decrement upper a=0.>]
+    >>> devise_plan_meijer(IndexQuadruple([], [1], [], []), IndexQuadruple([], [2], [], []), z)
+    [<Increment lower a index #0 of [], [1], [], [].>]
+
+    Slightly more complicated plans:
+
+    >>> devise_plan_meijer(IndexQuadruple([0], [], [], []), IndexQuadruple([2], [], [], []), z)
+    [<Increment upper a index #0 of [1], [], [], [].>, <Increment upper a index #0 of [0], [], [], [].>]
+    >>> devise_plan_meijer(IndexQuadruple([0], [], [0], []), IndexQuadruple([-1], [], [1], []), z)
+    [<Increment upper b=0.>, <Decrement upper a=0.>]
+
+    Order matters:
+
+    >>> devise_plan_meijer(IndexQuadruple([0], [], [0], []), IndexQuadruple([1], [], [1], []), z)
+    [<Increment upper a index #0 of [0], [], [1], [].>, <Increment upper b=0.>]
+    """
+    # TODO for now, we use the following simple heuristic: inverse-shift
+    #      when possible, shift otherwise. Give up if we cannot make progress.
+    def try_shift(f, t, shifter, diff, counter):
+        """ Try to apply `shifter` in order to bring some element in `f` nearer
+            to its counterpart in `to`. `diff` is +/- 1 and determines the
+            effect of `shifter`. Counter is a list of elements blocking the
+            shift.
+            Return an operator if change was possible, else None.
+        """
+        for idx, (a, b) in enumerate(zip(f, t)):
+            if (
+                (a-b).is_integer and (b-a)/diff > 0 and
+                all(a != x for x in counter)
+            ):
+                sh = shifter(idx)
+                f[idx] += diff
+                return sh
+    fan = list(fro.an)
+    fap = list(fro.ap)
+    fbm = list(fro.bm)
+    fbq = list(fro.bq)
+    ops = []
+    change = True
+    while change:
+        change = False
+        op = try_shift(fan, to.an,
+                       lambda i: MeijerUnShiftB(fan, fap, fbm, fbq, i, z),
+                       1, fbm + fbq)
+        if op is not None:
+            ops += [op]
+            change = True
+            continue
+        op = try_shift(fap, to.ap,
+                       lambda i: MeijerUnShiftD(fan, fap, fbm, fbq, i, z),
+                       1, fbm + fbq)
+        if op is not None:
+            ops += [op]
+            change = True
+            continue
+        op = try_shift(fbm, to.bm,
+                       lambda i: MeijerUnShiftA(fan, fap, fbm, fbq, i, z),
+                       -1, fan + fap)
+        if op is not None:
+            ops += [op]
+            change = True
+            continue
+        op = try_shift(fbq, to.bq,
+                       lambda i: MeijerUnShiftC(fan, fap, fbm, fbq, i, z),
+                       -1, fan + fap)
+        if op is not None:
+            ops += [op]
+            change = True
+            continue
+        op = try_shift(fan, to.an, lambda i: MeijerShiftB(fan[i]), -1, [])
+        if op is not None:
+            ops += [op]
+            change = True
+            continue
+        op = try_shift(fap, to.ap, lambda i: MeijerShiftD(fap[i]), -1, [])
+        if op is not None:
+            ops += [op]
+            change = True
+            continue
+        op = try_shift(fbm, to.bm, lambda i: MeijerShiftA(fbm[i]), 1, [])
+        if op is not None:
+            ops += [op]
+            change = True
+            continue
+        op = try_shift(fbq, to.bq, lambda i: MeijerShiftC(fbq[i]), 1, [])
+        if op is not None:
+            ops += [op]
+            change = True
+            continue
+    if fan != list(to.an) or fap != list(to.ap) or fbm != list(to.bm) or \
+       fbq != list(to.bq):
+        raise NotImplementedError('Could not devise plan.')
+    ops.reverse()
+    return ops
+
+meijercollection = None
 def _meijergexpand(iq, z0, allow_hyper=False):
     """
     Try to find an expression for the Meijer G function specified
@@ -1342,6 +1865,10 @@ def _meijergexpand(iq, z0, allow_hyper=False):
     Currently this just does slater's theorem.
     """
     from sympy import hyper, Piecewise, meijerg, powdenest
+    global meijercollection
+    if meijercollection is None:
+        meijercollection = MeijerFormulaCollection()
+
     iq_ = iq
     debug('Try to expand meijer G function corresponding to', iq)
 
@@ -1354,10 +1881,24 @@ def _meijergexpand(iq, z0, allow_hyper=False):
     else:
         debug('  Could not reduce order.')
 
+    # Try to find a direct formula
+    f = meijercollection.lookup_origin(iq)
+    if f is not None:
+        debug('  Found a Meijer G formula:', f.indices)
+        ops += devise_plan_meijer(f.indices, iq, z)
+
+        # Now carry out the plan.
+        C = apply_operators(f.C.subs(f.z, z), ops,
+                            make_derivative_operator(f.M.subs(f.z, z), z))
+
+        C = C.applyfunc(make_simp(z))
+        r = C*f.B.subs(f.z, z)
+        r = r[0].subs(z, z0)
+        return powdenest(r, polar=True)
+
+    debug("  Could not find a direct formula. Trying slater's theorem.")
+
     # TODO the following would be possible:
-    # 1) Set up a collection of meijer g formulae.
-    #    This handles some cases that cannot be done using Slater's theorem,
-    #    and also yields nicer looking results.
     # 2) Paired Index Theorems
     # 3) PFD Duplication
     #    (See Kelly Roach's paper for (2) and (3).)
@@ -1373,11 +1914,11 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                 if i in pap:
                     l = len(pap[i])
                 if l + 1 < len(pbm[i]):
-                   return False
+                    return False
         return True
 
-    def do_slater(an, bm, ap, bq, z, t, chainmult, realz):
-        from sympy import gamma, residue, factorial, rf, expand_func
+    def do_slater(an, bm, ap, bq, z):
+        from sympy import gamma, residue, factorial, rf, expand_func, polar_lift
         iq = IndexQuadruple(an, bm, ap, bq)
         _, pbm, pap, _ = iq.compute_buckets()
         if not can_do(pbm, pap):
@@ -1397,14 +1938,16 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                 nap = [1 + bh - a for a in list(an) + list(ap)]
                 nbq = [1 + bh - b for b in list(bo) + list(bq)]
 
-                k = S(-1)**(len(ap) - len(bm))
+                k = polar_lift(S(-1)**(len(ap) - len(bm)))
                 harg = k*z
-                premult = (k*t)**bh
+                # NOTE even though k "is" +-1, this has to be t/k instead of
+                #      t*k ... we are using polar numbers for consistency!
+                premult = (t/k)**bh
                 hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
-                                   t, premult, chainmult)
+                                   t, premult, bh)
                 if hyp is None:
                     hyp = apply_operators(premult*hyper(nap, nbq, t), ops,
-                                          lambda f: chainmult*t*f.diff(t)).subs(t, harg)
+                                          lambda f: t*f.diff(t)).subs(t, harg)
                 res += fac * hyp
             else:
                 b_ = pbm[m][0]
@@ -1437,22 +1980,22 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                 integrand = expand_func(integrand)
                 for r in range(lu):
                     resid = residue(integrand, s, b_ + r)
-                    resid = apply_operators(resid, ops, lambda f: realz*f.diff(realz))
+                    resid = apply_operators(resid, ops, lambda f: z*f.diff(z))
                     res -= resid
 
                 # Now the hypergeometric term.
                 au = b_ + lu
-                k = S(-1)**(len(ao) + len(bo) + 1)
+                k = polar_lift(S(-1)**(len(ao) + len(bo) + 1))
                 harg = k*z
-                premult = (k*t)**au
+                premult = (t/k)**au
                 nap = [1 + au - a for a in list(an) + list(ap)] + [1]
                 nbq = [1 + au - b for b in list(bm) + list(bq)]
 
                 hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
-                                   t, premult, chainmult)
+                                   t, premult, au)
                 if hyp is None:
                     hyp = apply_operators(premult*hyper(nap, nbq, t), ops,
-                                          lambda f: chainmult*t*f.diff(t)).subs(t, harg)
+                                          lambda f: t*f.diff(t)).subs(t, harg)
 
                 C = S(-1)**(lu)/factorial(lu)
                 for i in range(u):
@@ -1474,16 +2017,18 @@ def _meijergexpand(iq, z0, allow_hyper=False):
         return res, cond
 
     t = Dummy('t')
-    slater1, cond1 = do_slater(iq.an, iq.bm, iq.ap, iq.bq, z, t, 1, z)
+    slater1, cond1 = do_slater(iq.an, iq.bm, iq.ap, iq.bq, z)
 
     def tr(l): return [1 - x for x in l]
     for op in ops:
-        op._poly = Poly(op._poly.subs(z, S(-1)**(len(iq.an) - len(iq.bq))/t), x)
+        op._poly = Poly(op._poly.subs({z: 1/t, x: -x}), x)
     slater2, cond2 = do_slater(tr(iq.bm), tr(iq.an), tr(iq.bq), tr(iq.ap),
-                               1/z, t, -1, z)
+                               t)
 
-    slater1 = powdenest(slater1.subs(z, z0), force=True)
-    slater2 = powdenest(slater2.subs(z, z0), force=True)
+    slater1 = powdenest(slater1.subs(z, z0), polar=True)
+    slater2 = powdenest(slater2.subs(t, 1/z0), polar=True)
+    if not isinstance(cond2, bool):
+        cond2 = cond2.subs(t, 1/z0)
 
     if meijerg(iq.an, iq.ap, iq.bm, iq.bq, z).delta > 0:
         # The above condition means that the convergence region is connected.
@@ -1496,6 +2041,16 @@ def _meijergexpand(iq, z0, allow_hyper=False):
 
     if not isinstance(cond1, bool): cond1 = cond1.subs(z, z0)
     if not isinstance(cond2, bool): cond2 = cond2.subs(z, z0)
+
+    if cond1 is True and cond2 is True and not slater1.has(hyper) and \
+       not slater2.has(hyper):
+        # If both are possible and free of unevaluated terms, return the
+        # simpler one.
+        from sympy import count_ops
+        if count_ops(slater1) > count_ops(slater2):
+            return slater2
+        else:
+            return slater1
 
     if cond1 is True and not slater1.has(hyper):
         return slater1
@@ -1520,7 +2075,8 @@ def hyperexpand(f, allow_hyper=False):
     simplification (that is a result different from input,
     but still containing hypergeometric functions).
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.simplify.hyperexpand import hyperexpand
     >>> from sympy.functions import hyper
@@ -1532,7 +2088,7 @@ def hyperexpand(f, allow_hyper=False):
     that are not recognised are left unchanged:
 
     >>> hyperexpand(1 + hyper([1, 1, 1], [], z))
-    1 + hyper((1, 1, 1), (), z)
+    hyper((1, 1, 1), (), z) + 1
     """
     from sympy.functions import hyper, meijerg
     from sympy import nan, zoo, oo

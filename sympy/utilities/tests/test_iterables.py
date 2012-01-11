@@ -4,7 +4,7 @@ from sympy.utilities.iterables import (postorder_traversal, preorder_traversal,
     dict_merge, prefixes, postfixes, sift, topological_sort, rotate_left,
     rotate_right, multiset_partitions, partitions, binary_partitions,
     generate_bell, generate_involutions, generate_derangements,
-    unrestricted_necklace, generate_oriented_forest)
+    unrestricted_necklace, generate_oriented_forest, unflatten)
 
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
@@ -21,7 +21,8 @@ def test_postorder_traversal():
 
     expr = Piecewise((x,x<1),(x**2,True))
     assert list(postorder_traversal(expr)) == [
-        x, x, 1, x < 1, ExprCondPair(x, x < 1), x, 2, x**2, True,
+        x, x, 1, x < 1, ExprCondPair(x, x < 1), x, 2, x**2,
+        ExprCondPair.true_sentinel,
         ExprCondPair(x**2, True), Piecewise((x, x < 1), (x**2, True))
     ]
     assert list(preorder_traversal(Integral(x**2, (x, 0, 1)))) == [
@@ -42,7 +43,7 @@ def test_preorder_traversal():
     expr = Piecewise((x,x<1),(x**2,True))
     assert list(preorder_traversal(expr)) == [
         Piecewise((x, x < 1), (x**2, True)), ExprCondPair(x, x < 1), x, x < 1,
-        x, 1, ExprCondPair(x**2, True), x**2, x, 2, True
+        x, 1, ExprCondPair(x**2, True), x**2, x, 2, ExprCondPair.true_sentinel
     ]
     assert list(postorder_traversal(Integral(x**2, (x, 0, 1)))) == [
         x, 2, x**2, x, 0, 1, Tuple(x, 0, 1),
@@ -316,3 +317,10 @@ def test_generate_oriented_forest():
     [0, 1, 1, 1, 1], [0, 1, 1, 1, 0], [0, 1, 1, 0, 1], [0, 1, 1, 0, 0], \
     [0, 1, 0, 1, 0], [0, 1, 0, 0, 0], [0, 0, 0, 0, 0]]
     assert len(list(generate_oriented_forest(10))) == 1842
+
+def test_unflatten():
+    r = range(10)
+    assert unflatten(r) == zip(r[::2], r[1::2])
+    assert unflatten(r, 5) == [tuple(r[:5]), tuple(r[5:])]
+    raises(ValueError, "unflatten(range(10), 3)")
+    raises(ValueError, "unflatten(range(10), -2)")

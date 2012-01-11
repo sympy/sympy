@@ -3,7 +3,7 @@
 from sympy.polys.densebasic import (
     dup_LC, dup_TC, dup_degree,
     dup_strip, dup_reverse,
-    dup_convert, dmp_convert,
+    dup_convert,
     dup_terms_gcd)
 
 from sympy.polys.densearith import (
@@ -28,8 +28,6 @@ from sympy.polys.polyerrors import (
     RefinementFailed,
     DomainError)
 
-import operator
-
 def dup_sturm(f, K):
     """
     Computes the Sturm sequence of ``f`` in ``F[x]``.
@@ -40,7 +38,8 @@ def dup_sturm(f, K):
        f_0(x), f_1(x) = f(x), f'(x)
        f_n = -rem(f_{n-2}(x), f_{n-1}(x))
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rootisolation import dup_sturm
@@ -50,7 +49,8 @@ def dup_sturm(f, K):
     >>> dup_sturm(f, QQ)
     [[1/1, -2/1, 1/1, -3/1], [3/1, -4/1, 1/1], [2/9, 25/9], [-2079/4]]
 
-    **References**
+    References
+    ==========
 
     1. [Davenport88]_
 
@@ -277,8 +277,6 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
         roots = [dup_inner_refine_real_root(f, (a, b, c, d), K, eps=eps, fast=fast, mobius=True)]
     else:
         roots, stack = [], [(a, b, c, d, f, k)]
-
-        F = K.get_field()
 
         while stack:
             a, b, c, d, f, k = stack.pop()

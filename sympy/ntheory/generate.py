@@ -5,8 +5,6 @@ Generating and counting primes.
 import random
 from bisect import bisect
 from primetest import isprime
-from sympy.core.numbers import integer_nthroot
-
 
 # Using arrays for sieving instead of lists greatly reduces
 # memory consumption
@@ -32,7 +30,16 @@ class Sieve:
             (len(self._list), self._list[-2], self._list[-1])
 
     def extend(self, N):
-        """Grow the sieve to cover all numbers <= N."""
+        """Grow the sieve to cover all numbers <= N.
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory import sieve
+        >>> sieve.extend(30)
+        >>> sieve[10] == 29
+        True
+        """
         if N <= self._list[-1]:
             return
 
@@ -57,12 +64,29 @@ class Sieve:
         self._list += _array('l', [x for x in newsieve if x])
 
     def extend_to_no(self, n):
-        """Extend to include (at least) the nth prime number"""
+        """Extend to include (at least) the nth prime numbers
+
+        Examples
+        ========
+
+        >>> from sympy import sieve
+        >>> sieve.extend_to_no(9)
+        >>> sieve[10] == 29
+        True
+        """
         while len(self._list) < n:
             self.extend(int(self._list[-1] * 1.5))
 
     def primerange(self, a, b):
-        """Generate all prime numbers in the range [a, b)."""
+        """Generate all prime numbers in the range [a, b).
+
+        Examples
+        ========
+
+        >>> from sympy import sieve
+        >>> print [i for i in sieve.primerange(7, 18)]
+        [7, 11, 13, 17]
+        """
         assert a <= b
         if b < 2:
             return
@@ -80,7 +104,15 @@ class Sieve:
 
     def search(self, n):
         """For n >= 2, return the tightest a, b such that
-        self[a] <= n <= self[b]"""
+        self[a] <= n <= self[b]
+
+        Examples
+        ========
+
+        >>> from sympy import sieve
+        >>> sieve.search(25)
+        (9, 10)
+        """
         assert n >= 2
         if n > self._list[-1]:
             self.extend(n)
@@ -111,7 +143,26 @@ def prime(n):
         prime(2) = 3, etc.... The nth prime is approximately n*log(n) and
         can never be larger than 2**n.
 
-        Reference: http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html
+        References
+        ==========
+
+        - http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html
+
+        Examples
+        ========
+
+        >>> from sympy import prime
+        >>> prime(10)
+        29
+        >>> prime(1)
+        2
+
+        See Also
+        ========
+
+        sympy.ntheory.primetest.isprime : Test if n is prime
+        primerange : Generate all primes in a given range
+        primepi : Return the number of primes less than or equal to n
     """
 
     assert n > 0
@@ -121,6 +172,20 @@ def primepi(n):
     """ Return the value of the prime counting function pi(n) = the number
         of prime numbers less than or equal to n. The number n need not
         necessarily be an integer.
+
+        Examples
+        ========
+
+        >>> from sympy import primepi
+        >>> primepi(25)
+        9
+
+        See Also
+        ========
+
+        sympy.ntheory.primetest.isprime : Test if n is prime
+        primerange : Generate all primes in a given range
+        prime : Return the nth prime
     """
 
     if n < 2:
@@ -139,6 +204,13 @@ def nextprime(n, i=1):
         [(10, 11), (11, 13), (12, 13), (13, 17), (14, 17)]
         >>> nextprime(2, i=2) # the 2nd prime after 2
         5
+
+        See Also
+        ========
+
+        prevprime : Return the largest prime smaller than n
+        primerange : Generate all primes in a given range
+
     """
 
     if i > 1:
@@ -185,6 +257,12 @@ def prevprime(n):
         >>> from sympy import prevprime
         >>> [(i, prevprime(i)) for i in range(10, 15)]
         [(10, 7), (11, 7), (12, 11), (13, 11), (14, 13)]
+
+        See Also
+        ========
+
+        nextprime : Return the ith prime greater than n
+        primerange : Generates all primes in a given range
     """
 
     n = int(n)
@@ -229,9 +307,26 @@ def primerange(a, b):
         composite numbers are arbitrarily large, e.g. the numbers in the sequence
         n!+2, n!+3 ... n!+n are all composite.
 
-        References:
-            [1] http://en.wikipedia.org/wiki/Prime_number
-            [2] http://primes.utm.edu/notes/gaps.html
+        References
+        ==========
+
+        1. http://en.wikipedia.org/wiki/Prime_number
+        2. http://primes.utm.edu/notes/gaps.html
+
+        Examples
+        ========
+
+        >>> from sympy import primerange
+        >>> print [i for i in primerange(1, 30)]
+        [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+
+        See Also
+        ========
+
+        nextprime : Return the ith prime greater than n
+        prevprime : Return the largest prime smaller than n
+        randprime : Returns a random prime in a given range
+        primorial : Returns the product of primes based on condition
     """
     assert a <= b
     a -= 1
@@ -248,7 +343,25 @@ def randprime(a, b):
         Bertrand's postulate assures that
         randprime(a, 2*a) will always succeed for a > 1.
 
-        Reference: http://en.wikipedia.org/wiki/Bertrand's_postulate
+        References
+        ==========
+
+        - http://en.wikipedia.org/wiki/Bertrand's_postulate
+
+        Examples
+        ========
+
+        >>> from sympy import randprime, isprime
+        >>> randprime(1, 30) #doctest: +SKIP
+        13
+        >>> isprime(randprime(1, 30))
+        True
+
+        See Also
+        ========
+
+        primerange : Generate all primes in a given range
+
     """
 
     n = random.randint(a-1, b)
@@ -260,33 +373,40 @@ def randprime(a, b):
     return p
 
 def primorial(n, nth=True):
-    """ Returns the product of either a) the first n primes (default) or
-        b) the primes less than or equal to n (when `nth`=False).
+    """
+    Returns the product of either 1. the first n primes (default) or
+    2. the primes less than or equal to n (when ``nth=False``).
 
-        >>> from sympy.ntheory.generate import primorial, randprime, primerange
-        >>> from sympy import factorint, Mul, primefactors
-        >>> primorial(4) # the first 4 primes are 2, 3, 5, 7
-        210
-        >>> primorial(4, nth=0) # primes <= 4 are 2 and 3
-        6
-        >>> primorial(1)
-        2
-        >>> primorial(1, nth=0)
-        1
+    >>> from sympy.ntheory.generate import primorial, randprime, primerange
+    >>> from sympy import factorint, Mul, primefactors
+    >>> primorial(4) # the first 4 primes are 2, 3, 5, 7
+    210
+    >>> primorial(4, nth=0) # primes <= 4 are 2 and 3
+    6
+    >>> primorial(1)
+    2
+    >>> primorial(1, nth=0)
+    1
 
-        One can argue that the primes are infinite since if you take
-        a set of primes and multiply them together (e.g. the primorial) and
-        then add or subtract 1, the result cannot be divided by any of the
-        original factors, hence either 1 or more primes must divide this
-        product of primes.
+    One can argue that the primes are infinite since if you take
+    a set of primes and multiply them together (e.g. the primorial) and
+    then add or subtract 1, the result cannot be divided by any of the
+    original factors, hence either 1 or more primes must divide this
+    product of primes.
 
-        >>> factorint(primorial(4) + 1)
-        {211: 1}
-        >>> factorint(primorial(4) - 1)
-        {11: 1, 19: 1}
-        >>> p = list(primerange(10, 20))
-        >>> sorted(set(primefactors(Mul(*p) + 1)).difference(set(p)))
-        [2, 5, 31, 149]
+    >>> factorint(primorial(4) + 1)
+    {211: 1}
+    >>> factorint(primorial(4) - 1)
+    {11: 1, 19: 1}
+    >>> p = list(primerange(10, 20))
+    >>> sorted(set(primefactors(Mul(*p) + 1)).difference(set(p)))
+    [2, 5, 31, 149]
+
+    See Also
+    ========
+
+    primerange : Generate all primes in a given range
+
     """
 
     if n < 1:
@@ -338,12 +458,10 @@ def cycle_length(f, x0, nmax=None, values=False):
         >>> list(ni for ni in n)
         [17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
 
-                  \_______________/
-                   6 values after
-                    the first 2
+    There are 6 repeating values after the first 2.
 
     If a sequence is suspected of being longer than you might wish, ``nmax``
-    can be used to exit early (in which mu will be returned as None:
+    can be used to exit early (and mu will be returned as None):
 
         >>> cycle_length(func, 4, nmax = 4).next()
         (4, None)

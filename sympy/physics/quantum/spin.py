@@ -1,18 +1,15 @@
 """Quantum mechanical angular momemtum."""
 
-from sympy import (
-        Add, binomial, cos, diff, exp, Expr, factorial, I, Integer, Matrix, Mul, N, pi,
-        Rational, S, sin, simplify, sqrt, Sum, Symbol, symbols, sympify
-)
+from sympy import (Add, binomial, cos, exp, Expr, factorial, I, Integer, pi,
+                   Rational, S, sin, simplify, sqrt, Sum, symbols, sympify)
 from sympy.matrices.matrices import zeros
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.physics.quantum.qexpr import QExpr
-from sympy.physics.quantum.operator import (
-    HermitianOperator, Operator, UnitaryOperator
-)
+from sympy.physics.quantum.operator import (HermitianOperator, Operator,
+                                            UnitaryOperator)
 from sympy.physics.quantum.state import Bra, Ket, State
-from sympy.physics.quantum.kronecker import KroneckerDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -256,7 +253,7 @@ class SpinOpBase(object):
         state = ket.rewrite(self.basis)
         # If the state has only one term
         if isinstance(state, State):
-            return self._apply_operator(state, **options)
+            return self._apply_operator(state, **options).rewrite(orig_basis)
         # state is a linear combination of states
         return qapply(self*state).rewrite(orig_basis)
 
@@ -751,6 +748,7 @@ class WignerD(Expr):
     def __new__(cls, *args, **hints):
         if not len(args) == 6:
             raise ValueError('6 parameters expected, got %s' % args)
+        args = sympify(args)
         evaluate = hints.get('evaluate', False)
         if evaluate:
             return Expr.__new__(cls, *args)._eval_wignerd()
@@ -954,18 +952,20 @@ class SpinState(State):
         else:
             # TODO: better way to get angles of rotation
             mi = symbols('mi')
-            angles = represent(self.__class__(0,mi),basis=basis)[0].args[3:6]
+            if isinstance(self, Ket):
+                angles = represent(self.__class__(0,mi),basis=basis)[0].args[3:6]
+            else:
+                angles = represent(self.__class__(0,mi),basis=basis)[0].args[0].args[3:6]
             if angles == (0,0,0):
                 return self
             else:
                 state = evect(j, mi)
                 lt = Rotation.D(j, mi, self.m, *angles)
-                result = lt * state
                 return Sum(lt * state, (mi,-j,j))
 
     def _eval_innerproduct_JxBra(self, bra, **hints):
         result = KroneckerDelta(self.j, bra.j)
-        if not bra.dual_class() is self.__class__:
+        if bra.dual_class() is not self.__class__:
             result *= self._represent_JxOp(None)[bra.j-bra.m]
         else:
             result *= KroneckerDelta(self.j, bra.j) * KroneckerDelta(self.m, bra.m)
@@ -973,7 +973,7 @@ class SpinState(State):
 
     def _eval_innerproduct_JyBra(self, bra, **hints):
         result = KroneckerDelta(self.j, bra.j)
-        if not bra.dual_class() is self.__class__:
+        if bra.dual_class() is not self.__class__:
             result *= self._represent_JyOp(None)[bra.j-bra.m]
         else:
             result *= KroneckerDelta(self.j, bra.j) * KroneckerDelta(self.m, bra.m)
@@ -981,7 +981,7 @@ class SpinState(State):
 
     def _eval_innerproduct_JzBra(self, bra, **hints):
         result = KroneckerDelta(self.j, bra.j)
-        if not bra.dual_class() is self.__class__:
+        if bra.dual_class() is not self.__class__:
             result *= self._represent_JzOp(None)[bra.j-bra.m]
         else:
             result *= KroneckerDelta(self.j, bra.j) * KroneckerDelta(self.m, bra.m)
@@ -1092,8 +1092,7 @@ class JzKet(SpinState, Ket):
     Examples
     ========
 
-    Normal States
-    -------------
+    Normal States:
 
     Defining simple spin states, both numerical and symbolic:
 
@@ -1131,8 +1130,7 @@ class JzKet(SpinState, Ket):
         >>> i.doit()
         1/2
 
-    Uncoupled States
-    ---------------
+    Uncoupled States:
 
     Define an uncoupled state as a TensorProduct between two Jz eigenkets:
 

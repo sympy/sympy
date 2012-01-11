@@ -2,6 +2,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple)
 from sympy.core.power import integer_nthroot
+from sympy.utilities.pytest import XFAIL
 
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache
 from sympy.utilities.pytest import raises
@@ -309,6 +310,128 @@ def test_Infinity():
     assert 8/oo  == 0
     assert oo % 2 == nan
     assert 2 % oo == nan
+    assert oo/oo == nan
+    assert oo/-oo == nan
+    assert -oo/oo == nan
+    assert -oo/-oo == nan
+    assert oo - oo == nan
+    assert oo - -oo == oo
+    assert -oo - oo == -oo
+    assert -oo - -oo == nan
+    assert oo + -oo == nan
+    assert -oo + oo == nan
+    assert oo + oo == oo
+    assert -oo + oo == nan
+    assert oo + -oo == nan
+    assert -oo + -oo == -oo
+    assert oo*oo == oo
+    assert -oo*oo == -oo
+    assert oo*-oo == -oo
+    assert -oo*-oo == oo
+    assert oo/0 == oo
+    assert -oo/0 == -oo
+    assert 0/oo == 0
+    assert 0/-oo == 0
+    assert oo*0 == nan
+    assert -oo*0 == nan
+    assert 0*oo == nan
+    assert 0*-oo == nan
+    assert oo + 0 == oo
+    assert -oo + 0 == -oo
+    assert 0 + oo == oo
+    assert 0 + -oo == -oo
+    assert oo - 0 == oo
+    assert -oo - 0 == -oo
+    assert 0 - oo == -oo
+    assert 0 - -oo == oo
+    assert oo/2 == oo
+    assert -oo/2 == -oo
+    assert oo/-2 == -oo
+    assert -oo/-2 == oo
+    assert oo*2 == oo
+    assert -oo*2 == -oo
+    assert oo*-2 == -oo
+    assert 2/oo == 0
+    assert 2/-oo == 0
+    assert -2/oo == 0
+    assert -2/-oo == 0
+    assert 2*oo == oo
+    assert 2*-oo == -oo
+    assert -2*oo == -oo
+    assert -2*-oo == oo
+    assert 2 + oo == oo
+    assert 2 - oo == -oo
+    assert -2 + oo == oo
+    assert -2 - oo == -oo
+    assert 2 + -oo == -oo
+    assert 2 - -oo == oo
+    assert -2 + -oo == -oo
+    assert -2 - -oo == oo
+    assert S(2) + oo == oo
+    assert S(2) - oo == -oo
+    assert oo/I == -oo*I
+    assert -oo/I == oo*I
+    assert oo*float(1) == Float('inf') and (oo*float(1)).is_Float
+    assert -oo*float(1) == Float('-inf') and (-oo*float(1)).is_Float
+    assert oo/float(1) == Float('inf') and (oo/float(1)).is_Float
+    assert -oo/float(1) == Float('-inf') and (-oo/float(1)).is_Float
+    assert oo*float(-1) == Float('-inf') and (oo*float(-1)).is_Float
+    assert -oo*float(-1) == Float('inf') and (-oo*float(-1)).is_Float
+    assert oo/float(-1) == Float('-inf') and (oo/float(-1)).is_Float
+    assert -oo/float(-1) == Float('inf') and (-oo/float(-1)).is_Float
+    assert oo + float(1) == Float('inf') and (oo+float(1)).is_Float
+    assert -oo + float(1) == Float('-inf') and (-oo+float(1)).is_Float
+    assert oo - float(1) == Float('inf') and (oo-float(1)).is_Float
+    assert -oo - float(1) == Float('-inf') and (-oo-float(1)).is_Float
+    assert float(1)*oo == Float('inf') and (float(1)*oo).is_Float
+    assert float(1)*-oo == Float('-inf') and (float(1)*-oo).is_Float
+    assert float(1)/oo == 0
+    assert float(1)/-oo == 0
+    assert float(-1)*oo == Float('-inf') and (float(-1)*oo).is_Float
+    assert float(-1)*-oo == Float('inf') and (float(-1)*-oo).is_Float
+    assert float(-1)/oo == 0
+    assert float(-1)/-oo == 0
+    assert float(1) + oo == Float('inf')
+    assert float(1) + -oo == Float('-inf')
+    assert float(1) - oo == Float('-inf')
+    assert float(1) - -oo == Float('inf')
+
+    from sympy.mpmath.libmp.libmpf import fnan
+    assert (oo*Float('nan'))._mpf_ == fnan
+    assert (-oo*Float('nan'))._mpf_ == fnan
+    assert (oo/Float('nan'))._mpf_ == fnan
+    assert (-oo/Float('nan'))._mpf_ == fnan
+    assert (oo + Float('nan'))._mpf_ == fnan
+    assert (-oo + Float('nan'))._mpf_ == fnan
+    assert (oo - Float('nan'))._mpf_ == fnan
+    assert (-oo - Float('nan'))._mpf_ == fnan
+
+    assert oo*nan == nan
+    assert -oo*nan == nan
+    assert oo/nan == nan
+    assert -oo/nan == nan
+    assert oo + nan == nan
+    assert -oo + nan == nan
+    assert oo - nan == nan
+    assert -oo - nan == nan
+    assert S.Zero * oo == nan
+    assert oo.is_Rational == False
+    assert isinstance(oo, Rational) == False
+    assert S.One/oo == oo
+    assert -S.One/oo == -oo
+    assert S.One/-oo == -oo
+    assert -S.One/-oo == oo
+    assert S.One*oo == oo
+    assert -S.One*oo == -oo
+    assert S.One*-oo == -oo
+    assert -S.One*-oo == oo
+    assert S.One/nan == nan
+    assert S.One - -oo == oo
+    assert S.One + nan == nan
+    assert S.One - nan == nan
+    assert nan - S.One == nan
+    assert nan/S.One == nan
+    assert -oo - S.One == -oo
 
 def test_Infinity_2():
     x = Symbol('x')
@@ -341,6 +464,39 @@ def test_NaN():
     assert 1/nan  == nan
     assert 1/(-nan)  == nan
     assert 8/nan  == nan
+    assert not nan > 0
+    assert not nan < 0
+    assert not nan >= 0
+    assert not nan <= 0
+    assert not 0 < nan
+    assert not 0 > nan
+    assert not 0 <= nan
+    assert not 0 >= nan
+    assert S.One + nan == nan
+    assert S.One - nan == nan
+    assert S.One*nan == nan
+    assert S.One/nan == nan
+    assert nan - S.One == nan
+    assert nan*S.One == nan
+    assert nan + S.One == nan
+    assert nan/S.One == nan
+
+def test_special_numbers():
+    assert isinstance(S.NaN, Number) == True
+    assert isinstance(S.Infinity, Number) == True
+    assert isinstance(S.NegativeInfinity, Number) == True
+
+    assert S.NaN.is_number == True
+    assert S.Infinity.is_number == True
+    assert S.NegativeInfinity.is_number == True
+
+    assert isinstance(S.NaN, Rational) == False
+    assert isinstance(S.Infinity, Rational) == False
+    assert isinstance(S.NegativeInfinity, Rational) == False
+
+    assert S.NaN.is_rational != True
+    assert S.Infinity.is_rational != True
+    assert S.NegativeInfinity.is_rational != True
 
 def test_powers():
     assert integer_nthroot(1, 2) == (1, True)
@@ -622,15 +778,17 @@ def test_Integer_factors():
 
 
 def test_Rational_factors():
-    def F(p,q):
-        return Rational(p,q).factors()
+    def F(p,q,visual=None):
+        return Rational(p,q).factors(visual=visual)
 
     assert F(2,3)   == { 2:1, 3:-1}
     assert F(2,9)   == { 2:1, 3:-2}
     assert F(2,15)  == { 2:1, 3:-1, 5:-1}
     assert F(6,10)  == { 3:1, 5:-1}
-
-    # TODO write more Rational.factor() tests
+    assert str(F(12,1, visual=True)) == '2**2*3**1'
+    assert str(F(1,1, visual=True)) == '1'
+    assert str(F(25, 14, visual=True)) == '5**2/(2*7)'
+    assert str(F(-25, 14*9, visual=True)) == '-5**2/(2*3**2*7)'
 
 def test_issue1008():
     assert pi*(E + 10) + pi*(-E - 10)         != 0
@@ -858,3 +1016,17 @@ def test_issue_1023():
 
 def test_GoldenRatio_expand():
     assert GoldenRatio.expand(func=True) == S.Half + sqrt(5)/2
+
+def test_as_content_primitive():
+    assert S.Zero.as_content_primitive() == (1, 0)
+    assert S.Half.as_content_primitive() == (S.Half, 1)
+    assert (-S.Half).as_content_primitive() == (S.Half, -1)
+    assert S(3).as_content_primitive() == (3, 1)
+    assert S(3.1).as_content_primitive() == (1, 3.1)
+
+@XFAIL
+def test_hashing_sympy_integers():
+    # Test for issue #1973
+    # http://code.google.com/p/sympy/issues/detail?id=1973
+    assert hash(S(4)) == 4
+    assert hash(S(4)) == hash(int(4))

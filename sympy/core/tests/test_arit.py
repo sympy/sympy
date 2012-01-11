@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Float, re, pi, \
-        sympify, sqrt, Add, Mul, Pow, I, log, S
+        sympify, Add, Mul, Pow, Mod, I, log, S
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
@@ -397,34 +397,32 @@ def test_Add_is_even_odd():
     x = Symbol('x', integer=True)
 
     k = Symbol('k', odd=True)
-    n = Symbol('n', even=True)
+    n = Symbol('n', odd=True)
+    m = Symbol('m', even=True)
 
-    assert (2+k).is_even == False
-    assert (2+k).is_odd == True
+    assert (k+7).is_even == True
+    assert (k+7).is_odd == False
 
-    assert (7-k).is_even == True
-    assert (7-k).is_odd == False
+    assert (-k+7).is_even == True
+    assert (-k+7).is_odd == False
 
-    assert (11-n).is_even == False
-    assert (11-n).is_odd == True
+    assert (k-12).is_even == False
+    assert (k-12).is_odd == True
 
-    assert (-8+n).is_even == True
-    assert (-8+n).is_odd == False
+    assert (-k-12).is_even == False
+    assert (-k-12).is_odd == True
 
-    assert (n+k).is_even == False
-    assert (n+k).is_odd == True
+    assert (k+n).is_even == True
+    assert (k+n).is_odd == False
 
-    assert (n-k).is_even == False
-    assert (n-k).is_odd == True
+    assert (k+m).is_even == False
+    assert (k+m).is_odd == True
 
-    assert (n+2*k).is_even == True
-    assert (n+2*k).is_odd == False
+    assert (k+n+m).is_even == True
+    assert (k+n+m).is_odd == False
 
-    assert (k+n+x).is_odd == None
-    assert (k+n-x).is_even == None
-
-    assert (2*k+n*x).is_odd == None
-    assert (2*k+n*x).is_even == None
+    assert (k+n+x+m).is_even == None
+    assert (k+n+x+m).is_odd == None
 
 def test_Mul_is_negative_positive():
     x = Symbol('x', real=True)
@@ -637,37 +635,6 @@ def test_Mul_is_nonpositive_nonnegative():
 
     assert (x*k).is_nonnegative == None
     assert (u*v*n*x*k).is_nonnegative == None
-
-def test_Add_is_even_odd():
-    x = Symbol('x', integer=True)
-
-    k = Symbol('k', odd=True)
-    n = Symbol('n', odd=True)
-    m = Symbol('m', even=True)
-
-    assert (k+7).is_even == True
-    assert (k+7).is_odd == False
-
-    assert (-k+7).is_even == True
-    assert (-k+7).is_odd == False
-
-    assert (k-12).is_even == False
-    assert (k-12).is_odd == True
-
-    assert (-k-12).is_even == False
-    assert (-k-12).is_odd == True
-
-    assert (k+n).is_even == True
-    assert (k+n).is_odd == False
-
-    assert (k+m).is_even == False
-    assert (k+m).is_odd == True
-
-    assert (k+n+m).is_even == True
-    assert (k+n+m).is_odd == False
-
-    assert (k+n+x+m).is_even == None
-    assert (k+n+x+m).is_odd == None
 
 def test_Add_is_negative_positive():
     x = Symbol('x', real=True)
@@ -1182,36 +1149,106 @@ def test_issue2027():
     i = Symbol('i', integer=1)
     assert (-2)**i*(-3)**i == 6**i
 
-def test_Add_primitive():
-    assert (x + 2).primitive() == (1, x + 2)
+def test_Rational_as_content_primitive():
+    c, p = S(1), S(0)
+    assert (c*p).as_content_primitive() == (c, p)
+    c, p = S(1)/2, S(1)
+    assert (c*p).as_content_primitive() == (c, p)
 
-    assert (3*x + 2).primitive() == (1, 3*x + 2)
-    assert (3*x + 3).primitive() == (3, x + 1)
-    assert (3*x + 6).primitive() == (3, x + 2)
+def test_Add_as_content_primitive():
+    assert (x + 2).as_content_primitive() == (1, x + 2)
 
-    assert (3*x + 2*y).primitive() == (1, 3*x + 2*y)
-    assert (3*x + 3*y).primitive() == (3, x + y)
-    assert (3*x + 6*y).primitive() == (3, x + 2*y)
+    assert (3*x + 2).as_content_primitive() == (1, 3*x + 2)
+    assert (3*x + 3).as_content_primitive() == (3, x + 1)
+    assert (3*x + 6).as_content_primitive() == (3, x + 2)
 
-    assert (3/x + 2*x*y*z**2).primitive() == (1, 3/x + 2*x*y*z**2)
-    assert (3/x + 3*x*y*z**2).primitive() == (3, 1/x + x*y*z**2)
-    assert (3/x + 6*x*y*z**2).primitive() == (3, 1/x + 2*x*y*z**2)
+    assert (3*x + 2*y).as_content_primitive() == (1, 3*x + 2*y)
+    assert (3*x + 3*y).as_content_primitive() == (3, x + y)
+    assert (3*x + 6*y).as_content_primitive() == (3, x + 2*y)
 
-    assert (2*x/3 + 4*y/9).primitive() == (Rational(2, 9), 3*x + 2*y)
-    assert (2*x/3 + 4.1*y).primitive() == (1, 2*x/3 + 4.1*y)
-    assert S.Zero.gcd(1.0) == 1 # the loop in primitive assumes this to be true
+    assert (3/x + 2*x*y*z**2).as_content_primitive() == (1, 3/x + 2*x*y*z**2)
+    assert (3/x + 3*x*y*z**2).as_content_primitive() == (3, 1/x + x*y*z**2)
+    assert (3/x + 6*x*y*z**2).as_content_primitive() == (3, 1/x + 2*x*y*z**2)
+
+    assert (2*x/3 + 4*y/9).as_content_primitive() == (Rational(2, 9), 3*x + 2*y)
+    assert (2*x/3 + 2.5*y).as_content_primitive() == (Rational(1, 3), 2*x + 7.5*y)
 
     # the coefficient may sort to a position other than 0
     p = 3 + x + y
-    assert (2*p).expand().primitive() == (2, p)
-    assert (2.0*p).expand().primitive() == (1, 2.*p)
+    assert (2*p).expand().as_content_primitive() == (2, p)
+    assert (2.0*p).expand().as_content_primitive() == (1, 2.*p)
     p *= -1
-    assert (2*p).expand().primitive() == (2, p)
+    assert (2*p).expand().as_content_primitive() == (2, p)
+
+def test_Mul_as_content_primitive():
+    assert (2*x).as_content_primitive() == (2, x)
+    assert (x*(2+2*x)).as_content_primitive() == (2, x*(1 + x))
+    assert (x*(2 + 2*y)*(3*x + 3)**2).as_content_primitive() == (18, x*(1 + y)*(x + 1)**2)
+    assert ((2+2*x)**2*(3+6*x)+S.Half).as_content_primitive() == (S.Half, 24*(x + 1)**2*(2*x + 1) + 1)
+
+def test_Pow_as_content_primitive():
+    assert (x**y).as_content_primitive() == (1, x**y)
+    assert ((2*x + 2)**y).as_content_primitive() == (1, (Mul(2,(x + 1), evaluate=False))**y)
+    assert ((2*x + 2)**3).as_content_primitive() == (8, (x + 1)**3)
 
 def test_issue2361():
     u = Mul(2, (1 + x), evaluate=False)
     assert 2 + u == 4 + 2*x
+    # the Number is only suppose to distribute on a commutative Add
     n = Symbol('n', commutative=False)
     u = 2*(1 + n)
     assert u.is_Mul
     assert 2 + u == 4 + 2*n
+
+def test_product_irrational():
+    from sympy import I, pi
+    assert (I*pi).is_irrational is False
+    # The following used to be deduced from the above bug:
+    assert (I*pi).is_positive is False
+
+def test_issue_2820():
+    assert (x/(y*(1 + y))).expand() == x/(y**2 + y)
+
+def test_Mod():
+    assert Mod(5, 3) == 2
+    assert Mod(-5, 3) == 1
+    assert Mod(5, -3) == -1
+    assert Mod(-5, -3) == -2
+    assert type(Mod(3.2, 2, evaluate=False)) == Mod
+    assert 5 % x == Mod(5, x)
+    assert x % 5 == Mod(x, 5)
+    assert x % y == Mod(x, y)
+    assert (x % y).subs({x: 5, y: 3}) == 2
+
+def test_issue_2902():
+    A = Symbol("A", commutative=False)
+    eq = A + A**2
+    # it doesn't matter whether it's True or False; they should
+    # just both be the same
+    assert eq.is_commutative == (eq + 1).is_commutative
+
+def test_polar():
+    from sympy import polar_lift
+    p = Symbol('p', polar=True)
+    x = Symbol('x')
+    assert p.is_polar
+    assert x.is_polar is None
+    assert S(1).is_polar is None
+    assert (p**x).is_polar is True
+    assert (x**p).is_polar is None
+    assert ((2*p)**x).is_polar is True
+    assert (2*p).is_polar is True
+    assert (-2*p).is_polar is not True
+    assert (polar_lift(-2)*p).is_polar is True
+
+    q = Symbol('q', polar=True)
+    assert (p*q)**2 == p**2 * q**2
+    assert (2*q)**2 == 4 * q**2
+    assert ((p*q)**x).expand() == p**x * q**x
+
+def test_issue_2941():
+    a, b = Pow(1, 2, evaluate=False), S.One
+    assert a != b
+    assert b != a
+    assert not (a == b)
+    assert not (b == a)

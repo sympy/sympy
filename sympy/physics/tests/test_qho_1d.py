@@ -1,10 +1,8 @@
+from sympy import exp, integrate, oo, Rational, pi, S, simplify, sqrt
+from sympy.abc import omega, m, x
 from sympy.physics.qho_1d import psi_n, E_n
 from sympy.physics.quantum.constants import hbar
-from sympy import var, simplify, integrate, oo
-from sympy.core import S, pi, Rational
-from sympy.functions import sqrt, exp
 
-var("x m omega")
 nu = m * omega / hbar
 
 def test_wavefunction():

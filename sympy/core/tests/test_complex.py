@@ -1,6 +1,6 @@
-from sympy import Symbol, sqrt, I, Integer, Rational, cos, atan, sin, im, re, \
+from sympy import Symbol, sqrt, I, Integer, Rational, cos, sin, im, re, \
         exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi, expand_complex
-
+from sympy.utilities.pytest import XFAIL
 
 def test_complex():
     a = Symbol("a", real=True)
@@ -133,3 +133,14 @@ def test_issue_1985():
 def test_issue_2137():
     assert (cos(1+I)**3).as_real_imag() == (-3*sin(1)**2*sinh(1)**2*cos(1)*cosh(1) +
         cos(1)**3*cosh(1)**3, -3*cos(1)**2*cosh(1)**2*sin(1)*sinh(1) + sin(1)**3*sinh(1)**3)
+
+def test_real_imag():
+    x = Symbol('x')
+    a = Symbol('a', real=True)
+    assert (2*a*x).as_real_imag() == (2*a*re(x), 2*a*im(x))
+
+@XFAIL
+def test_issue_1724():
+    from sympy import S
+    a = S("(-29/54 + 93**(1/2)/18)**(1/3)")
+    assert a.conjugate().evalf() == a.evalf().conjugate()

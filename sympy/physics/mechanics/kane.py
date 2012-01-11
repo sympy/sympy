@@ -2,9 +2,9 @@ __all__ = ['Kane']
 
 from sympy import Symbol, zeros, Matrix, diff, solve_linear_system_LU, eye
 from sympy.physics.mechanics.essential import ReferenceFrame, dynamicsymbols
+from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.point import Point
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.mechanics.particle import Particle
 
 class Kane(object):
     """Kane's method object.
@@ -15,43 +15,46 @@ class Kane(object):
 
     The attributes are for equations in the form [M] udot = forcing
 
+
     Attributes
     ==========
+
     auxiliary : Matrix
-        If applicable, the set of auxiliary Kane's equations used to solve for
-        non-contributing forces.
+        If applicable, the set of auxiliary Kane's
+        equations used to solve for non-contributing
+        forces.
     mass_matrix : Matrix
         The system's mass matrix
     forcing : Matrix
         The system's forcing vector
     simp : Boolean
-        Flag determining whether simplification of symbolic matrix inversion
-        can occur or not
+        Flag determining whether simplification of symbolic matrix
+        inversion can occur or not
     mass_matrix_full : Matrix
         The "mass matrix" for the u's and q's
     forcing_full : Matrix
         The "forcing vector" for the u's and q's
 
-    A simple example for a one degree of freedom translational
-    spring-mass-damper follows
+    Examples
+    ========
 
-    Example
-    =======
+    This is a simple example for a one defree of freedom translational
+    spring-mass-damper.
 
     In this example, we first need to do the kinematics.
     This involves creating generalized speeds and coordinates and their
     derivatives.
-    Then we create a point and set its velocity in a frame.
+    Then we create a point and set its velocity in a frame::
 
-    >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
-    >>> from sympy.physics.mechanics import Point, Particle, Kane
-    >>> q, u = dynamicsymbols('q u')
-    >>> qd, ud = dynamicsymbols('q u', 1)
-    >>> m, c, k = symbols('m c k')
-    >>> N = ReferenceFrame('N')
-    >>> P = Point('P')
-    >>> P.set_vel(N, u * N.x)
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, Particle, Kane
+        >>> q, u = dynamicsymbols('q u')
+        >>> qd, ud = dynamicsymbols('q u', 1)
+        >>> m, c, k = symbols('m c k')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_vel(N, u * N.x)
 
     Next we need to arrange/store information in the way the Kane requires.
     The kinematic differential equations need to be stored in a dict.
@@ -60,14 +63,14 @@ class Kane(object):
     represent the Force or Torque.
     Next a particle needs to be created, and it needs to have a point and mass
     assigned to it.
-    Finally, a list of all bodies and particles needs to be created.
+    Finally, a list of all bodies and particles needs to be created::
 
-    >>> kd = [qd - u]
-    >>> FL = [(P, (-k * q - c * u) * N.x)]
-    >>> pa = Particle()
-    >>> pa.mass = m
-    >>> pa.point = P
-    >>> BL = [pa]
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle()
+        >>> pa.mass = m
+        >>> pa.point = P
+        >>> BL = [pa]
 
     Finally we can generate the equations of motion.
     First we create the Kane object and supply an inertial frame.
@@ -78,21 +81,21 @@ class Kane(object):
     It makes sense to rearrnge them though, so we calculate the mass matrix and
     the forcing terms, for E.o.M. in the form: [MM] udot = forcing, where MM is
     the mass matrix, udot is a vector of the time derivatives of the
-    generalized speeds, and forcing is a vector representing "forcing" terms.
+    generalized speeds, and forcing is a vector representing "forcing" terms::
 
-    >>> KM = Kane(N)
-    >>> KM.coords([q])
-    >>> KM.speeds([u])
-    >>> KM.kindiffeq(kd)
-    >>> (fr, frstar) = KM.kanes_equations(FL, BL)
-    >>> MM = KM.mass_matrix
-    >>> forcing = KM.forcing
-    >>> rhs = MM.inv() * forcing
-    >>> rhs
-    [-(c*u(t) + k*q(t))/m]
-    >>> KM.linearize()[0]
-    [0, 1]
-    [k, c]
+        >>> KM = Kane(N)
+        >>> KM.coords([q])
+        >>> KM.speeds([u])
+        >>> KM.kindiffeq(kd)
+        >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+        >>> MM = KM.mass_matrix
+        >>> forcing = KM.forcing
+        >>> rhs = MM.inv() * forcing
+        >>> rhs
+        [-(c*u(t) + k*q(t))/m]
+        >>> KM.linearize()[0]
+        [0, 1]
+        [k, c]
 
     Please look at the documentation pages for more information on how to
     perform linearization and how to deal with dependent coordinates & speeds,
@@ -100,7 +103,7 @@ class Kane(object):
 
     """
 
-    simp = True
+    simp = False
 
     def __init__(self, frame):
         """Supply the inertial frame for Kane initialization. """
@@ -228,6 +231,7 @@ class Kane(object):
 
         Parameters
         ==========
+
         qind : list
             A list of independent generalized coords
         qdep : list
@@ -260,6 +264,7 @@ class Kane(object):
 
         Parameters
         ==========
+
         uind : list
             A list of independent generalized speeds
         udep : list
@@ -332,7 +337,7 @@ class Kane(object):
     def kindiffdict(self):
         """Returns the qdot's in a dictionary. """
         if self._k_kqdot == None:
-            raise ValueError('Kin. diff. eqs  need to be supplied first')
+            raise ValueError('Kin. diff. eqs need to be supplied first')
         sub_dict = solve_linear_system_LU(Matrix([self._k_kqdot.T,
             -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
         return sub_dict
@@ -345,6 +350,7 @@ class Kane(object):
 
         Parameters
         ==========
+
         kdeqs : list (of Expr)
             The listof kinematic differential equations
 
@@ -353,7 +359,11 @@ class Kane(object):
             raise ValueError('There must be an equal number of kinematic '
                              'differential equations and coordinates.')
 
-        kdeqs = Matrix(kdeqs)
+        uaux = self._uaux
+        # dictionary of auxiliary speeds which are equal to zero
+        uaz = dict(zip(uaux, [0] * len(uaux)))
+
+        kdeqs = Matrix(kdeqs).subs(uaz)
 
         qdot = self._qdot
         qdotzero = dict(zip(qdot, [0] * len(qdot)))
@@ -376,6 +386,7 @@ class Kane(object):
 
         Parameters
         ==========
+
         fl : list
             Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)
             tuples which represent the force at a point or torque on a frame.
@@ -385,7 +396,6 @@ class Kane(object):
         if not isinstance(fl, (list, tuple)):
             raise TypeError('Forces must be supplied in a list of: lists or '
                             'tuples.')
-        t = dynamicsymbols._t
         N = self._inertial
         self._forcelist = fl[:]
         u = self._u
@@ -425,6 +435,7 @@ class Kane(object):
 
         Parameters
         ==========
+
         bl : list
             A list of all RigidBody's and Particle's in the system.
 
@@ -442,7 +453,6 @@ class Kane(object):
         o = len(u)
         p = o - len(udep)
         udot = self._udot
-        udots = []
         udotzero = dict(zip(udot, [0] * len(udot)))
         uaux = self._uaux
         uauxdot = [diff(i, t) for i in uaux]
@@ -487,7 +497,7 @@ class Kane(object):
                     print('This functionality has not yet been tested yet, '
                           'use at your own risk')
                     f = v.frame
-                    d = v.mc.pos_from(p)
+                    d = v.mc.pos_from(P)
                     I -= m * (((f.x | f.x) + (f.y | f.y) + (f.z | f.z)) *
                               (d & d) - (d | d))
                 templist = []
@@ -607,6 +617,7 @@ class Kane(object):
 
         Parameters
         ==========
+
         FL : list
             Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)
             tuples which represent the force at a point or torque on a frame.

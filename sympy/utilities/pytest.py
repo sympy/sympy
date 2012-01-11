@@ -4,13 +4,7 @@
 # XXX but we can't force everyone to install py-lib trunk
 
 import sys
-try:
-    # functools is not available in Python 2.4
-    import functools
-except ImportError:
-    has_functools = False
-else:
-    has_functools = True
+import functools
 
 try:
     # tested with py-lib 0.9.0
@@ -28,7 +22,8 @@ def raises(ExpectedException, code):
     Does nothing if the right exception is raised, otherwise raises an
     AssertionError.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.utilities.pytest import raises
     >>> raises(ZeroDivisionError, "1/0")
@@ -62,11 +57,18 @@ if not USE_PYTEST:
         def wrapper():
             try:
                 func()
-            except Exception:
-                raise XFail(func.func_name)
+            except Exception, e:
+                if sys.version_info[:2] < (2, 6):
+                    message = getattr(e, 'message', '')
+                else:
+                    message = str(e)
+                if message != "Timeout":
+                    raise XFail(func.func_name)
+                else:
+                    raise Skipped("Timeout")
             raise XPass(func.func_name)
-        if has_functools:
-            wrapper = functools.update_wrapper(wrapper, func)
+
+        wrapper = functools.update_wrapper(wrapper, func)
         return wrapper
 
     def skip(str):
@@ -148,13 +150,12 @@ else:
                 func()
             except Outcome:
                 raise   # pass-through test outcome
-            except:
+            except XFail(Exception):
                 raise XFail(func.func_name)
             else:
                 raise XPass(func.func_name)
 
-        if has_functools:
-            func_wrapper = functools.update_wrapper(func_wrapper, func)
+        func_wrapper = functools.update_wrapper(func_wrapper, func)
         return func_wrapper
 
 def SKIP(reason):
@@ -163,8 +164,15 @@ def SKIP(reason):
         def func_wrapper():
             raise Skipped(reason)
 
-        if has_functools:
-            func_wrapper = functools.update_wrapper(func_wrapper, func)
+        func_wrapper = functools.update_wrapper(func_wrapper, func)
         return func_wrapper
 
     return wrapper
+
+def slow(func):
+    func._slow = True
+    def func_wrapper():
+        func()
+
+    func_wrapper = functools.update_wrapper(func_wrapper, func)
+    return func_wrapper

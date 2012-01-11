@@ -92,6 +92,6 @@ class SymPyParser:
         compiler.misc.set_filename('<sympify>', ast_tree)
         code = ExpressionCodeGenerator(ast_tree).getCode()
 
-        parsed_expr = eval(code, self.local_dict, self.global_dict) #Changed order to prefer sympy objects to  user defined
+        parsed_expr = eval(code, self.local_dict, self.global_dict) #Changed order to prefer sympy objects to user defined
 
         return parsed_expr

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 
 """
 Program to test that all methods/functions have at least one example doctest.
@@ -14,6 +14,8 @@ bin/coverage_doctest.py sympy/core/basic.py
 This script is based on the sage-coverage script from Sage written by William
 Stein.
 """
+
+from __future__ import with_statement
 
 import os
 import re
@@ -101,10 +103,11 @@ def coverage(filename, file, verbose=False):
     num_functions = len(missing_docstring + missing_doctest + has_doctest)
     if num_functions == 0:
         print "No functions in %s" % filename
-        return
+        return 0, 0
     print '-'*70
     print filename
-    score = 100 * float(len(has_doctest)) / num_functions
+    doctests = len(has_doctest)
+    score = 100 * float(doctests) / num_functions
     score = int(score)
 
     if missing_docstring:
@@ -120,26 +123,31 @@ def coverage(filename, file, verbose=False):
         print 'Use "# indirect doctest" in the docstring to surpress this ' \
                 'warning'
 
-    print "SCORE %s: %s%% (%s of %s)" % (filename, score,
-            len(has_doctest), num_functions)
+    print "SCORE %s: %s%% (%s of %s)" % (filename, score, doctests, num_functions)
 
     print '-'*70
+
+    return len(has_doctest), num_functions
 
 
 
 def go(file, verbose=False, exact=True):
     if os.path.isdir(file):
+        doctests, num_functions = 0, 0
         for F in os.listdir(file):
-            go('%s/%s'%(file,F), verbose, exact=False)
-        return
+            _doctests, _num_functions = go('%s/%s'%(file,F), verbose, exact=False)
+            doctests += _doctests
+            num_functions += _num_functions
+        return doctests, num_functions
     if not (file.endswith('.py') or file.endswith('.pyx')) or \
         not exact and ('test_' in file or 'bench_' in file):
-            return
+            return 0, 0
     if not os.path.exists(file):
         print "File %s does not exist."%file
         sys.exit(1)
-    f = open(file).read()
-    coverage(file, f, verbose)
+    with open(file) as fh:
+        f = fh.read()
+    return coverage(file, f, verbose)
 
 if __name__ == "__main__":
     bintest_dir = os.path.abspath(os.path.dirname(__file__))   # bin/cover...
@@ -158,4 +166,14 @@ if __name__ == "__main__":
         parser.print_help()
     else:
         for file in args:
-            go(file, options.verbose)
+            doctests, num_functions = go(file, options.verbose)
+            if num_functions == 0:
+                score = 100
+            else:
+                score = 100 * float(doctests) / num_functions
+                score = int(score)
+            print
+            print '='*70
+            print "TOTAL SCORE for %s: %s%% (%s of %s)" % \
+                (file, score, doctests, num_functions)
+            print

@@ -66,6 +66,13 @@ def test_sinh():
 
     assert sinh(k*pi*I/2) == sin(k*pi/2)*I
 
+    assert sinh(x).inverse() == asinh
+
+def test_sinh_series():
+    x = Symbol('x')
+    assert sinh(x).series(x, 0, 10) == \
+                x + x**3/6 + x**5/120 + x**7/5040 + x**9/362880 + O(x**10)
+
 def test_cosh():
     x, y = symbols('x,y')
 
@@ -127,6 +134,13 @@ def test_cosh():
     assert cosh(17*k*pi*I) == cos(17*k*pi)
 
     assert cosh(k*pi) == cosh(k*pi)
+
+    assert cosh(x).inverse() == acosh
+
+def test_cosh_series():
+    x = Symbol('x')
+    assert cosh(x).series(x, 0, 10) == \
+                1 + x**2/2 + x**4/24 + x**6/720 + x**8/40320 + O(x**10)
 
 def test_tanh():
     x, y = symbols('x,y')
@@ -190,6 +204,13 @@ def test_tanh():
 
     assert tanh(k*pi*I/2) == tan(k*pi/2)*I
 
+    assert tanh(x).inverse() == atanh
+
+def test_tanh_series():
+    x = Symbol('x')
+    assert tanh(x).series(x, 0, 10) == \
+                x - x**3/3 + 2*x**5/15 - 17*x**7/315 + 62*x**9/2835 + O(x**10)
+
 def test_coth():
     x, y = symbols('x,y')
 
@@ -251,6 +272,13 @@ def test_coth():
     assert coth(17*k*pi*I) == -cot(17*k*pi)*I
 
     assert coth(k*pi*I) == -cot(k*pi)*I
+
+    assert coth(x).inverse() == acoth
+
+def test_coth_series():
+    x = Symbol('x')
+    assert coth(x).series(x, 0, 8) == \
+                1/x + x/3 - x**3/45 + 2*x**5/945 - x**7/4725 + O(x**8)
 
 def test_asinh():
     x, y = symbols('x,y')
@@ -373,6 +401,11 @@ def test_atanh():
     assert atanh(I*(sqrt(3)-2)) == -pi*I/12
     assert atanh(oo) == -I*pi/2
 
+def test_atanh_series():
+    x = Symbol('x')
+    assert atanh(x).series(x, 0, 10) == \
+                x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
+
 def test_atanh_infinities():
     assert atanh(oo) == -I*pi/2
     assert atanh(-oo) == I*pi/2
@@ -415,6 +448,39 @@ def test_acoth():
     assert acoth(-I*(2+sqrt(3))) == pi*I/12
     assert acoth(I*(2-sqrt(3))) == -5*pi*I/12
     assert acoth(I*(sqrt(3)-2)) == 5*pi*I/12
+
+def test_acoth_series():
+    x = Symbol('x')
+    assert acoth(x).series(x, 0, 10) == \
+                I*pi/2 + x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
+
+def test_leading_term():
+    x = Symbol('x')
+    for func in [sinh, cosh, tanh, coth]:
+        assert func(x).as_leading_term(x) == 1
+        assert func(1/x).as_leading_term(x) == func(1/x)
+    for func in [asinh, acosh, atanh, acoth]:
+        assert func(x).as_leading_term(x) == x
+        assert func(1/x).as_leading_term(x) == func(1/x)
+
+def test_complex():
+    a,b = symbols('a,b', real=True)
+    z = a + b*I
+    for func in [sinh, cosh, tanh, coth]:
+        assert func(z).conjugate() == func(a - b*I)
+    for deep in [True,False]:
+        assert sinh(z).expand(complex=True,deep=deep) == sinh(a)*cos(b) + I*cosh(a)*sin(b)
+        assert cosh(z).expand(complex=True,deep=deep) == cosh(a)*cos(b) + I*sinh(a)*sin(b)
+        assert tanh(z).expand(complex=True,deep=deep) == sinh(a)*cosh(a)/(cos(b)**2+sinh(a)**2) + I*sin(b)*cos(b)/(cos(b)**2+sinh(a)**2)
+        assert coth(z).expand(complex=True,deep=deep) == sinh(a)*cosh(a)/(sin(b)**2+sinh(a)**2) - I*sin(b)*cos(b)/(sin(b)**2+sinh(a)**2)
+
+@XFAIL
+def test_complex_2899():
+    # infinite recursion in coth, https://code.google.com/p/sympy/issues/detail?id=2899
+    a,b = symbols('a,b', real=True)
+    for deep in [True,False]:
+        for func in [sinh, cosh, tanh, coth]:
+            assert func(a).expand(complex=True,deep=deep) == func(a)
 
 def test_simplifications():
     x = Symbol('x')

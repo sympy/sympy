@@ -1,19 +1,18 @@
 """Elliptical geometrical entities.
 
 Contains
---------
-Ellipse
-Circle
+* Ellipse
+* Circle
 
 """
 
-from sympy.core import S, C, sympify, symbol, Dummy
+from sympy.core import S, C, sympify, pi, Dummy
 from sympy.core.logic import fuzzy_bool
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import im
 from sympy.geometry.exceptions import GeometryError
-from sympy.solvers import solve_poly_system, solve
+from sympy.solvers import solve
 from entity import GeometryEntity
 from point import Point
 from line import LinearEntity, Line
@@ -23,7 +22,8 @@ class Ellipse(GeometryEntity):
     """An elliptical GeometryEntity.
 
     Parameters
-    ----------
+    ==========
+
     center : Point, optional
         Default value is Point(0, 0)
     hradius : number or sympy expression, optional
@@ -33,7 +33,8 @@ class Ellipse(GeometryEntity):
         create an Ellipse. The third is derived from the two supplied.
 
     Attributes
-    ----------
+    ==========
+
     center
     hradius
     vradius
@@ -46,7 +47,8 @@ class Ellipse(GeometryEntity):
     foci
 
     Raises
-    ------
+    ======
+
     GeometryError
         When `hradius`, `vradius` and `eccentricity` are incorrectly supplied as
         parameters.
@@ -54,8 +56,9 @@ class Ellipse(GeometryEntity):
         When `center` is not a Point.
 
     See Also
-    --------
-    Point
+    ========
+
+    Circle
 
     Notes
     -----
@@ -69,7 +72,8 @@ class Ellipse(GeometryEntity):
     rotation is necessary.
 
     Examples
-    --------
+    ========
+
     >>> from sympy import Ellipse, Point, Rational
     >>> e1 = Ellipse(Point(0, 0), 5, 1)
     >>> e1.hradius, e1.vradius
@@ -78,8 +82,8 @@ class Ellipse(GeometryEntity):
     >>> e2
     Ellipse(Point(3, 1), 3, 9/5)
 
-    Plotting example
-    ----------------
+    Plotting:
+
     >>> from sympy import Circle, Plot, Segment
     >>> c1 = Circle(Point(0,0), 1)
     >>> Plot(c1)                                # doctest: +SKIP
@@ -127,11 +131,18 @@ class Ellipse(GeometryEntity):
         """The center of the ellipse.
 
         Returns
-        -------
+        =======
+
         center : number
 
+        See Also
+        ========
+
+        sympy.geometry.point.Point
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
@@ -146,11 +157,18 @@ class Ellipse(GeometryEntity):
         """The horizontal radius of the ellipse.
 
         Returns
-        -------
+        =======
+
         hradius : number
 
+        See Also
+        ========
+
+        vradius, major, minor
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
@@ -165,11 +183,18 @@ class Ellipse(GeometryEntity):
         """The vertical radius of the ellipse.
 
         Returns
-        -------
+        =======
+
         vradius : number
 
+        See Also
+        ========
+
+        hradius, major, minor
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
@@ -184,11 +209,18 @@ class Ellipse(GeometryEntity):
         """Shorter axis of the ellipse (if it can be determined) else vradius.
 
         Returns
-        -------
+        =======
+
         minor : number or expression
 
+        See Also
+        ========
+
+        hradius, vradius, major
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse, Symbol
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
@@ -218,11 +250,18 @@ class Ellipse(GeometryEntity):
         """Longer axis of the ellipse (if it can be determined) else hradius.
 
         Returns
-        -------
+        =======
+
         major : number or expression
 
+        See Also
+        ========
+
+        hradius, vradius, minor
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse, Symbol
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
@@ -253,11 +292,13 @@ class Ellipse(GeometryEntity):
         """The area of the ellipse.
 
         Returns
-        -------
+        =======
+
         area : number
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
@@ -272,7 +313,8 @@ class Ellipse(GeometryEntity):
         """The circumference of the ellipse.
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
@@ -293,11 +335,13 @@ class Ellipse(GeometryEntity):
         """The eccentricity of the ellipse.
 
         Returns
-        -------
+        =======
+
         eccentricity : number
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse, sqrt
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, sqrt(2))
@@ -314,11 +358,18 @@ class Ellipse(GeometryEntity):
         The shortest distance between the focus and the contour.
 
         Returns
-        -------
+        =======
+
         periapsis : number
 
+        See Also
+        ========
+
+        apoapsis : Returns greatest distance between focus and contour
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
@@ -330,16 +381,23 @@ class Ellipse(GeometryEntity):
 
     @property
     def apoapsis(self):
-        """The periapsis of the ellipse.
+        """The apoapsis of the ellipse.
 
         The greatest distance between the focus and the contour.
 
         Returns
-        -------
+        =======
+
         apoapsis : number
 
+        See Also
+        ========
+
+        periapsis : Returns shortest distance between foci and contour
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
@@ -356,11 +414,18 @@ class Ellipse(GeometryEntity):
         The distance between the center and one focus.
 
         Returns
-        -------
+        =======
+
         focus_distance : number
 
+        See Also
+        ========
+
+        foci
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
@@ -379,16 +444,20 @@ class Ellipse(GeometryEntity):
         The foci can only be calculated if the major/minor axes are known.
 
         Raises
-        ------
+        ======
+
         ValueError
             When the major and minor axis cannot be determined.
 
         See Also
-        --------
-        Point
+        ========
+
+        sympy.geometry.point.Point
+        focus_distance : Returns the distance between focus and center
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
@@ -420,15 +489,23 @@ class Ellipse(GeometryEntity):
         Being on the border of self is considered False.
 
         Parameters
-        ----------
+        ==========
+
         p : Point
 
         Returns
-        -------
+        =======
+
         encloses_point : True, False or None
 
+        See Also
+        ========
+
+        sympy.geometry.point.Point
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Ellipse, S
         >>> from sympy.abc import t
         >>> e = Ellipse((0, 0), 3, 2)
@@ -463,25 +540,29 @@ class Ellipse(GeometryEntity):
         None if no tangent line is possible (e.g., `p` inside ellipse).
 
         Parameters
-        ----------
+        ==========
+
         p : Point
 
         Returns
-        -------
+        =======
+
         tangent_lines : list with 1 or 2 Lines
 
         Raises
-        ------
+        ======
+
         NotImplementedError
             Can only find tangent lines for a point, `p`, on the ellipse.
 
         See Also
-        --------
-        Point
-        Line
+        ========
+
+        sympy.geometry.point.Point, sympy.geometry.line.Line
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.tangent_lines(Point(3, 0))
@@ -496,8 +577,6 @@ class Ellipse(GeometryEntity):
         >>> p[1] = t # doctest: +SKIP
 
         """
-        from sympy import solve
-
         if self.encloses_point(p):
             return []
 
@@ -525,7 +604,7 @@ class Ellipse(GeometryEntity):
             eq = self.equation(x, y)
             dydx = idiff(eq, y, x)
             slope = Line(p, Point(x, y)).slope
-            tangent_points = solve([w.as_numer_denom()[0] for w in [slope - dydx, eq]], [x, y])
+            tangent_points = solve([slope - dydx, eq], [x, y])
 
             # handle horizontal and vertical tangent lines
             if len(tangent_points) == 1:
@@ -539,22 +618,31 @@ class Ellipse(GeometryEntity):
         """Is `o` tangent to the ellipse?
 
         Parameters
-        ----------
+        ==========
+
         o : GeometryEntity
             An Ellipse, LinearEntity or Polygon
 
         Raises
-        ------
+        ======
+
         NotImplementedError
             When the wrong type of argument is supplied.
 
         Returns
-        -------
+        =======
+
         is_tangent: boolean
             True if o is tangent to the ellipse, False otherwise.
 
+        See Also
+        ========
+
+        tangent_lines
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse, Line
         >>> p0, p1, p2 = Point(0, 0), Point(3, 0), Point(3, 3)
         >>> e1 = Ellipse(p0, 3, 2)
@@ -587,25 +675,30 @@ class Ellipse(GeometryEntity):
         """A parameterized point on the ellipse.
 
         Parameters
-        ----------
+        ==========
+
         parameter : str, optional
             Default value is 't'.
 
         Returns
-        -------
+        =======
+
         arbitrary_point : Point
 
         Raises
-        ------
+        ======
+
         ValueError
             When `parameter` already appears in the functions.
 
         See Also
-        --------
-        Point
+        ========
+
+        sympy.geometry.point.Point
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.arbitrary_point()
@@ -622,17 +715,20 @@ class Ellipse(GeometryEntity):
         """The plot interval for the default geometric plot of the Ellipse.
 
         Parameters
-        ----------
+        ==========
+
         parameter : str, optional
             Default value is 't'.
 
         Returns
-        -------
+        =======
+
         plot_interval : list
             [parameter, lower_bound, upper_bound]
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.plot_interval()
@@ -646,12 +742,15 @@ class Ellipse(GeometryEntity):
         """A random point on the ellipse.
 
         Returns
-        -------
+        =======
+
         point : Point
 
         See Also
-        --------
-        Point
+        ========
+
+        sympy.geometry.point.Point
+        arbitrary_point : Returns parameterized point on ellipse
 
         Note
         ----
@@ -662,7 +761,8 @@ class Ellipse(GeometryEntity):
         point rounding error.
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> p1 = e1.random_point()
@@ -685,18 +785,26 @@ class Ellipse(GeometryEntity):
         """The equation of the ellipse.
 
         Parameters
-        ----------
+        ==========
+
         x : str, optional
             Label for the x-axis. Default value is 'x'.
         y : str, optional
             Label for the y-axis. Default value is 'y'.
 
         Returns
-        -------
+        =======
+
         equation : sympy expression
 
+        See Also
+        ========
+
+        arbitrary_point : Returns parameterized point on ellipse
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(1, 0), 3, 2)
         >>> e1.equation()
@@ -715,8 +823,9 @@ class Ellipse(GeometryEntity):
 
         All LinearEntities are treated as a line and filtered at
         the end to see that they lie in o.
+
         """
-        def dot(p1, p2):
+        def _dot(p1, p2):
             sum = 0
             for ind in xrange(len(p1.args)):
                 sum += p1[ind] * p2[ind]
@@ -731,9 +840,9 @@ class Ellipse(GeometryEntity):
         mdir = (ldir[0] / hr_sq, ldir[1] / vr_sq)
         mdiff = (diff[0] / hr_sq, diff[1] / vr_sq)
 
-        a = dot(ldir, mdir)
-        b = dot(ldir, mdiff)
-        c = dot(diff, mdiff) - 1
+        a = _dot(ldir, mdir)
+        b = _dot(ldir, mdiff)
+        c = _dot(diff, mdiff) - 1
         det = simplify(b*b - a*c);
 
         result = []
@@ -799,20 +908,28 @@ class Ellipse(GeometryEntity):
         `o`.
 
         Parameters
-        ----------
+        ==========
+
         o : GeometryEntity
 
         Returns
-        -------
-        intersection : list of GeometryEntities
+        =======
+
+        intersection : list of GeometryEntity objects
 
         Notes
         -----
         Currently supports intersections with Point, Line, Segment, Ray,
         Circle and Ellipse types.
 
-        Example
-        -------
+        See Also
+        ========
+
+        sympy.geometry.entity.GeometryEntity
+
+        Examples
+        ========
+
         >>> from sympy import Ellipse, Point, Line, sqrt
         >>> e = Ellipse(Point(0, 0), 5, 7)
         >>> e.intersection(Point(0, 0))
@@ -888,29 +1005,34 @@ class Circle(Ellipse):
     non-collinear points.
 
     Parameters
-    ----------
+    ==========
+
     center : Point
     radius : number or sympy expression
     points : sequence of three Points
 
     Attributes
-    ----------
+    ==========
+
     radius (synonymous with hradius, vradius, major and minor)
     circumference
     equation
 
     Raises
-    ------
+    ======
+
     GeometryError
         When trying to construct circle from three collinear points.
         When trying to construct circle from incorrect parameters.
 
     See Also
-    --------
-    Point
+    ========
+
+    Ellipse, sympy.geometry.point.Point
 
     Examples
-    --------
+    ========
+
     >>> from sympy.geometry import Point, Circle
     >>> # a circle constructed from a center and radius
     >>> c1 = Circle(Point(0, 0), 5)
@@ -948,11 +1070,18 @@ class Circle(Ellipse):
         """The radius of the circle.
 
         Returns
-        -------
+        =======
+
         radius : number or sympy expression
 
+        See Also
+        ========
+
+        Ellipse.major, Ellipse.minor, Ellipse.hradius, Ellipse.vradius
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Circle
         >>> c1 = Circle(Point(3, 4), 6)
         >>> c1.radius
@@ -962,19 +1091,21 @@ class Circle(Ellipse):
         return self.__getitem__(1)
 
     @property
-    def major(self):
-        return self.radius
-
-    @property
-    def minor(self):
-        return self.radius
-
-    @property
-    def hradius(self):
-        return self.radius
-
-    @property
     def vradius(self):
+        """
+        This Ellipse property is an alias for the Circle's radius.
+
+        Whereas hradius, major and minor can use Ellipse's conventions,
+        the vradius does not exist for a circle.
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Circle
+        >>> c1 = Circle(Point(3, 4), 6)
+        >>> c1.vradius
+        6
+        """
         return self.radius
 
     @property
@@ -982,11 +1113,13 @@ class Circle(Ellipse):
         """The circumference of the circle.
 
         Returns
-        -------
+        =======
+
         circumference : number or sympy expression
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Circle
         >>> c1 = Circle(Point(3, 4), 6)
         >>> c1.circumference
@@ -999,18 +1132,21 @@ class Circle(Ellipse):
         """The equation of the circle.
 
         Parameters
-        ----------
+        ==========
+
         x : str or Symbol, optional
             Default value is 'x'.
         y : str or Symbol, optional
             Default value is 'y'.
 
         Returns
-        -------
+        =======
+
         equation : sympy expression
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Circle
         >>> c1 = Circle(Point(0, 0), 5)
         >>> c1.equation()
@@ -1027,15 +1163,18 @@ class Circle(Ellipse):
         """The intersection of this circle with another geometrical entity.
 
         Parameters
-        ----------
+        ==========
+
         o : GeometryEntity
 
         Returns
-        -------
+        =======
+
         intersection : list of GeometryEntities
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Circle, Line, Ray
         >>> p1, p2, p3 = Point(0, 0), Point(5, 5), Point(6, 0)
         >>> p4 = Point(5, 0)

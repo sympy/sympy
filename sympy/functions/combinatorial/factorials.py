@@ -1,6 +1,7 @@
-from sympy.core import S, C, sympify, Function
+from sympy.core import S, C, sympify
+from sympy.core.function import Function, ArgumentIndexError
 from sympy.ntheory import sieve
-from math import sqrt
+from math import sqrt as _sqrt
 
 from sympy.core.compatibility import reduce
 
@@ -31,6 +32,9 @@ class factorial(CombinatorialFunction):
        known and computes n! via prime factorization of special class
        of numbers, called here the 'Swing Numbers'.
 
+       Examples
+       ========
+
        >>> from sympy import Symbol, factorial
        >>> n = Symbol('n', integer=True)
 
@@ -49,6 +53,10 @@ class factorial(CombinatorialFunction):
        >>> factorial(2*n)
        (2*n)!
 
+       See Also
+       ========
+
+       factorial2, RisingFactorial, FallingFactorial
     """
 
     nargs = 1
@@ -70,7 +78,7 @@ class factorial(CombinatorialFunction):
         if n < 33:
             return cls._small_swing[n]
         else:
-            N, primes = int(sqrt(n)), []
+            N, primes = int(_sqrt(n)), []
 
             for prime in sieve.primerange(3, N+1):
                 p, q = 1, n
@@ -152,12 +160,16 @@ class MultiFactorial(CombinatorialFunction):
 class factorial2(CombinatorialFunction):
     """The double factorial n!!, not to be confused with (n!)!
 
-    The double factorial is defined for integers >= -1 as
+    The double factorial is defined for integers >= -1 as::
+
                  ,
                 |  n*(n - 2)*(n - 4)* ... * 1    for n odd
         n!! =  -|  n*(n - 2)*(n - 4)* ... * 2    for n even
                 |  1                             for n = 0, -1
                  '
+
+    Examples
+    ========
 
     >>> from sympy import factorial2, var
     >>> var('n')
@@ -169,6 +181,10 @@ class factorial2(CombinatorialFunction):
     >>> factorial2(-1)
     1
 
+    See Also
+    ========
+
+    factorial, RisingFactorial, FallingFactorial
     """
     nargs = 1
 
@@ -192,13 +208,16 @@ class factorial2(CombinatorialFunction):
 class RisingFactorial(CombinatorialFunction):
     """Rising factorial (also called Pochhammer symbol) is a double valued
        function arising in concrete mathematics, hypergeometric functions
-       and series expansions. It is defined by
+       and series expansions. It is defined by:
 
                    rf(x, k) = x * (x+1) * ... * (x + k-1)
 
        where 'x' can be arbitrary expression and 'k' is an integer. For
        more information check "Concrete mathematics" by Graham, pp. 66
        or visit http://mathworld.wolfram.com/RisingFactorial.html page.
+
+       Examples
+       ========
 
        >>> from sympy import rf
        >>> from sympy.abc import x
@@ -212,6 +231,10 @@ class RisingFactorial(CombinatorialFunction):
        >>> rf(x, 5) == x*(1 + x)*(2 + x)*(3 + x)*(4 + x)
        True
 
+       See Also
+       ========
+
+       factorial, factorial2, FallingFactorial
     """
 
     nargs = 2
@@ -275,6 +298,10 @@ class FallingFactorial(CombinatorialFunction):
        >>> ff(x, 5) == x*(x-1)*(x-2)*(x-3)*(x-4)
        True
 
+       See Also
+       ========
+
+       factorial, factorial2, RisingFactorial
     """
 
     nargs = 2
@@ -340,6 +367,9 @@ class binomial(CombinatorialFunction):
        For the sake of convenience for negative 'k' this function
        will return zero no matter what valued is the other argument.
 
+       Examples
+       ========
+
        >>> from sympy import Symbol, Rational, binomial
        >>> n = Symbol('n', integer=True)
 
@@ -400,7 +430,7 @@ class binomial(CombinatorialFunction):
                     elif k > n // 2:
                         k = n - k
 
-                    M, result = int(sqrt(n)), 1
+                    M, result = int(_sqrt(n)), 1
 
                     for prime in sieve.primerange(2, n+1):
                         if prime > n - k:

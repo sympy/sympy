@@ -1,8 +1,8 @@
-from sympy import symbols, Matrix, sin, cos
-from sympy.physics.mechanics import (Vector, ReferenceFrame, dot, cross,
-                                     dynamicsymbols)
+from sympy import cos, Matrix, sin
+from sympy.abc import x, y, z
+from sympy.physics.mechanics import Vector, ReferenceFrame, dot, dynamicsymbols
 
-phi, x, y, z = symbols('phi x y z')
+Vector.simp = True
 A = ReferenceFrame('A')
 
 def test_dyadic():
@@ -31,7 +31,6 @@ def test_dyadic():
     assert d1.dt(A) == 0
     q = dynamicsymbols('q')
     qd = dynamicsymbols('q', 1)
-    qdd = dynamicsymbols('q', 2)
     B = A.orientnew('B', 'Axis', [q, A.z])
     assert d1.express(B) == d1.express(B, B)
     assert d1.express(B) == ((cos(q)**2) * (B.x | B.x) + (-sin(q) * cos(q)) *
@@ -103,8 +102,8 @@ def test_ang_vel():
     assert F.ang_vel_in(N) == ((sin(q2)*sin(q3)*q1d + cos(q3)*q2d)*F.x +
         (sin(q2)*cos(q3)*q1d - sin(q3)*q2d)*F.y + (cos(q2)*q1d + q3d)*F.z)
     G = N.orientnew('G', 'Axis', (q1, N.x + N.y))
-    assert G.ang_vel_in(N) == q1d * (N.x + N.y).unit
-    assert N.ang_vel_in(G) == -q1d * (N.x + N.y).unit
+    assert G.ang_vel_in(N) == q1d * (N.x + N.y).normalize()
+    assert N.ang_vel_in(G) == -q1d * (N.x + N.y).normalize()
 
 def test_dcm():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')

@@ -22,6 +22,7 @@ from sympy import (Rational, Symbol, list2numpy, sin, Float, Matrix, lambdify,
 import sympy
 
 from sympy import mpmath
+from sympy.utilities.decorator import conserve_mpmath_dps
 
 # first, systematically check, that all operations are implemented and don't
 # raise and exception
@@ -195,22 +196,19 @@ def test_issue629():
     assert (Float("0.5")*array([2*x, 0]) == array([Float("1.0")*x, 0])).all()
     assert (Float("0.5") + array([2*x, 0]) == array([2*x + Float("0.5"), Float("0.5")])).all()
 
+@conserve_mpmath_dps
 def test_lambdify():
-    dps = mpmath.mp.dps
+    mpmath.mp.dps = 16
+    sin02 = mpmath.mpf("0.198669330795061215459412627")
+    x = Symbol("x")
+    f = lambdify(x, sin(x), "numpy")
+    prec = 1e-15
+    assert -prec < f(0.2) - sin02 < prec
     try:
-        mpmath.mp.dps = 16
-        sin02 = mpmath.mpf("0.198669330795061215459412627")
-        x = Symbol("x")
-        f = lambdify(x, sin(x), "numpy")
-        prec = 1e-15
-        assert -prec < f(0.2) - sin02 < prec
-        try:
-            f(x) # if this succeeds, it can't be a numpy function
-            assert False
-        except AttributeError:
-            pass
-    finally:
-        mpmath.mp.dps = dps
+        f(x) # if this succeeds, it can't be a numpy function
+        assert False
+    except AttributeError:
+        pass
 
 def test_lambdify_matrix():
     x = Symbol("x")
@@ -284,3 +282,5 @@ def test_symarray():
     assert a3d[1,2,0] is a120
     assert a3d[1,2,1] is a121
 
+def test_vectorize():
+    assert (numpy.vectorize(sin)([1, 2, 3]) == numpy.array([sin(1), sin(2), sin(3)])).all()

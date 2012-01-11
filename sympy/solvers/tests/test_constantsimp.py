@@ -3,9 +3,9 @@ If the arbitrary constant class from issue 1336 is ever implemented, this
 should serve as a set of test cases.
 """
 
-from sympy import sin, exp, Function, Symbol, S, Pow, Eq, I, sinh, cosh, acos,\
-cos, log, Rational, sqrt, Integral
-from sympy.solvers.ode import constantsimp, constant_renumber
+from sympy import (acos, cos, cosh, Eq, exp, Function, I, Integral, log, Pow,
+                   S, sin, sinh, sqrt, Symbol)
+from sympy.solvers.ode import constant_renumber, constantsimp
 from sympy.utilities.pytest import XFAIL
 
 

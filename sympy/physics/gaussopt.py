@@ -14,7 +14,7 @@ The conventions for the distances are as follows:
     image distance - positive for real images
 """
 
-from sympy import sympify, Matrix, Expr, re, im, expand, together, sqrt, atan2, pi, I, oo
+from sympy import atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify, together
 
 ###
 # A,B,C,D matrices
@@ -29,11 +29,12 @@ class RayTransferMatrix(Matrix):
 
     Arguments
     =========
+
     either a 2x2 matrix
       or
     the parameters A, B, C and D
 
-    Example
+    Examples
     =======
 
     >>> from sympy.physics.gaussopt import RayTransferMatrix, ThinLens
@@ -122,7 +123,9 @@ class FreeSpace(RayTransferMatrix):
 
     See Also: RayTransferMatrix
 
-    Example:
+    Examples
+    ========
+
     >>> from sympy.physics.gaussopt import FreeSpace
     >>> from sympy import symbols
     >>> d = symbols('d')
@@ -141,7 +144,9 @@ class FlatRefraction(RayTransferMatrix):
 
     See Also: RayTransferMatrix
 
-    Example:
+    Examples
+    ========
+
     >>> from sympy.physics.gaussopt import FlatRefraction
     >>> from sympy import symbols
     >>> n1, n2 = symbols('n1 n2')
@@ -162,7 +167,9 @@ class CurvedRefraction(RayTransferMatrix):
 
     See Also: RayTransferMatrix
 
-    Example:
+    Examples
+    ========
+
     >>> from sympy.physics.gaussopt import CurvedRefraction
     >>> from sympy import symbols
     >>> R, n1, n2 = symbols('R n1 n2')
@@ -180,7 +187,9 @@ class FlatMirror(RayTransferMatrix):
 
     See Also: RayTransferMatrix
 
-    Example:
+    Examples
+    ========
+
     >>> from sympy.physics.gaussopt import FlatMirror
     >>> FlatMirror()
     [1, 0]
@@ -197,7 +206,9 @@ class CurvedMirror(RayTransferMatrix):
 
     See Also: RayTransferMatrix
 
-    Example:
+    Examples
+    ========
+
     >>> from sympy.physics.gaussopt import CurvedMirror
     >>> from sympy import symbols
     >>> R = symbols('R')
@@ -217,7 +228,9 @@ class ThinLens(RayTransferMatrix):
 
     See Also: RayTransferMatrix
 
-    Example:
+    Examples
+    ========
+
     >>> from sympy.physics.gaussopt import ThinLens
     >>> from sympy import symbols
     >>> f = symbols('f')
@@ -240,11 +253,12 @@ class GeometricRay(Matrix):
 
     Arguments
     =========
+
     either a 2x1 matrix
       or
     the height followed by the angle of the ray
 
-    Example
+    Examples
     =======
 
     >>> from sympy.physics.gaussopt import GeometricRay, FreeSpace
@@ -300,6 +314,7 @@ class BeamParameter(Expr):
 
     Arguments
     =========
+
     wavelength, distance to waist
     and either
            w = waist
@@ -308,6 +323,7 @@ class BeamParameter(Expr):
 
     Examples
     ========
+
     >>> from sympy.physics.gaussopt import BeamParameter
     >>> p = BeamParameter(530e-9, 1, w=1e-3)
     >>> p.q
@@ -331,10 +347,12 @@ class BeamParameter(Expr):
 
     See Also
     ========
+
     RayTransferMatrix
 
     References
     ==========
+
     [1] http://en.wikipedia.org/wiki/Complex_beam_parameter
     """
     #TODO A class Complex may be implemented. The BeamParameter may
@@ -413,7 +431,9 @@ def waist2rayleigh(w, wavelen):
 
     See Also: rayleigh2waist, BeamParameter
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.physics.gaussopt import waist2rayleigh
     >>> from sympy import symbols
     >>> w, wavelen = symbols('w wavelen')
@@ -428,7 +448,9 @@ def rayleigh2waist(z_r, wavelen):
 
     See Also: waist2rayleigh, BeamParameter
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.physics.gaussopt import rayleigh2waist
     >>> from sympy import symbols
     >>> z_r, wavelen = symbols('z_r wavelen')
@@ -449,7 +471,9 @@ def geometric_conj_ab(a,b):
     See Also:
     geometric_conj_af, geometric_conj_bf
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.physics.gaussopt import geometric_conj_ab
     >>> from sympy import symbols
     >>> a, b = symbols('a b')
@@ -458,9 +482,9 @@ def geometric_conj_ab(a,b):
     """
     a, b = sympify((a, b))
     if abs(a) == oo or abs(b) == oo:
-       return a if abs(b) == oo else b
+        return a if abs(b) == oo else b
     else:
-       return a*b/(a+b)
+        return a*b/(a+b)
 
 def geometric_conj_af(a,f):
     """
@@ -473,7 +497,9 @@ def geometric_conj_af(a,f):
     See Also:
     geometric_conj_ab
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.physics.gaussopt import geometric_conj_af, geometric_conj_bf
     >>> from sympy import symbols
     >>> a, b, f = symbols('a b f')
@@ -493,12 +519,14 @@ def gaussian_conj(s_in, z_r_in, f):
 
     Arguments
     =========
+
     s_in - distance to optical element from the waist
     z_r_in - the rayleigh range of the incident beam
     f - the focal length of the optical element
 
     Returns
     =======
+
     A tuple containing (s_out, z_r_out, m)
      - s_out - distance between the new waist and the optical element
      - z_r_out - rayleigh range of the emergent beam
@@ -506,6 +534,7 @@ def gaussian_conj(s_in, z_r_in, f):
 
     Examples
     ========
+
     >>> from sympy.physics.gaussopt import gaussian_conj
     >>> from sympy import symbols
     >>> s_in, z_r_in, f = symbols('s_in z_r_in f')
@@ -531,12 +560,14 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
 
     Arguments
     =========
+
     wavelen - the wavelength of the beam
     waist_in and waits_out - the waists to be conjugated
     f - the focal distance of the element used in the conjugation
 
     Returns
     =======
+
     A tuple containing (s_in, s_out, f)
      - s_in - distance before the optical element
      - s_out - distance after the optical element
@@ -544,6 +575,7 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
 
     Examples
     ========
+
     >>> from sympy.physics.gaussopt import conjugate_gauss_beams
     >>> from sympy import symbols, factor
     >>> l, w_i, w_o, f = symbols('l w_i w_o f')

@@ -2,7 +2,7 @@ from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
     I, S, erf, tan, asin, asinh, acos, acosh, Function, Derivative, diff, simplify, \
     LambertW
 from sympy.integrals.risch import heurisch, components
-from sympy.utilities.pytest import XFAIL, skip
+from sympy.utilities.pytest import XFAIL, skip, slow
 
 x, y, z = symbols('x,y,z')
 f = Function('f')
@@ -163,34 +163,29 @@ def test_issue510():
 
 @XFAIL
 def test_pmint_rat():
-    skip('takes too much time')
     f = (x**7-24*x**4-4*x**2+8*x-8) / (x**8+6*x**6+12*x**4+8*x**2)
     g = (4 + 8*x**2 + 6*x + 3*x**3) / (x*(x**4 + 4*x**2 + 4))  +  log(x)
 
     assert heurisch(f, x) == g
 
-
 @XFAIL
 def test_pmint_trig():
-    skip('takes too much time')
     f = (x-tan(x)) / tan(x)**2  +  tan(x)
     g = (-x - tan(x)*x**2 / 2) / tan(x)  +  log(1+tan(x)**2) / 2
 
     assert heurisch(f, x) == g
 
-
+@slow
 @XFAIL
 def test_pmint_logexp():
-    skip('takes too much time')
     f = (1+x+x*exp(x))*(x+log(x)+exp(x)-1)/(x+log(x)+exp(x))**2/x
     g = 1/(x+log(x)+exp(x)) + log(x + log(x) + exp(x))
 
     assert heurisch(f, x) == g
 
-
+@slow
 @XFAIL
 def test_pmint_erf():
-    skip('takes too much time')
     f = exp(-x**2)*erf(x)/(erf(x)**3-erf(x)**2-erf(x)+1)
     g = sqrt(pi)/4 * (-1/(erf(x)-1) - log(erf(x)+1)/2 + log(erf(x)-1)/2)
 

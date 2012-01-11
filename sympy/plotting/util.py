@@ -38,23 +38,23 @@ def get_view_direction_vectors():
             (m[8], m[9], m[10]))
 
 def get_basis_vectors():
-    return ((1,0,0), (0,1,0), (0,0,1))
+    return ((1, 0, 0), (0, 1, 0), (0, 0, 1))
 
 def screen_to_model(x,y,z):
     m = get_model_matrix(c_double, glGetDoublev)
     p = get_projection_matrix(c_double, glGetDoublev)
     w = get_viewport()
-    mx,my,mz = c_double(),c_double(),c_double()
-    gluUnProject(x,y,z,m,p,w,mx,my,mz)
-    return float(mx.value),float(my.value),float(mz.value)
+    mx, my, mz = c_double(), c_double(), c_double()
+    gluUnProject(x, y, z, m, p, w, mx, my, mz)
+    return float(mx.value), float(my.value), float(mz.value)
 
 def model_to_screen(x,y,z):
     m = get_model_matrix(c_double, glGetDoublev)
     p = get_projection_matrix(c_double, glGetDoublev)
     w = get_viewport()
-    mx,my,mz = c_double(),c_double(),c_double()
-    gluProject(x,y,z,m,p,w,mx,my,mz)
-    return float(mx.value),float(my.value),float(mz.value)
+    mx, my, mz = c_double(), c_double(), c_double()
+    gluProject(x, y, z, m, p, w, mx, my, mz)
+    return float(mx.value), float(my.value), float(mz.value)
 
 def vec_subs(a,b):
     return tuple(a[i]-b[i] for i in xrange(len(a)))
@@ -71,16 +71,26 @@ def billboard_matrix():
     |x|x|x|x|
     """
     m = get_model_matrix()
-    m[0] =1;m[1] =0;m[2] =0
-    m[4] =0;m[5] =1;m[6] =0
-    m[8] =0;m[9] =0;m[10]=1
+    # XXX: for i in range(11): m[i] = i ?
+    m[0] = 1
+    m[1] = 0
+    m[2] = 0
+    m[4] = 0
+    m[5] = 1
+    m[6] = 0
+    m[8] = 0
+    m[9] = 0
+    m[10] = 1
     glLoadMatrixf(m)
 
 def create_bounds():
-    return [ [S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0] ]
+    return [[S.Infinity, -S.Infinity, 0],
+            [S.Infinity, -S.Infinity, 0],
+            [S.Infinity, -S.Infinity, 0]]
 
 def update_bounds(b, v):
-    if v is None: return
+    if v is None:
+        return
     for axis in xrange(3):
         b[axis][0] = min([b[axis][0], v[axis]])
         b[axis][1] = max([b[axis][1], v[axis]])
@@ -98,18 +108,21 @@ def interpolate_color(color1, color2, ratio):
     return tuple(interpolate(color1[i], color2[i], ratio) for i in xrange(3))
 
 def scale_value(v, v_min, v_len):
-    return (v-v_min)/v_len
+    return (v - v_min) / v_len
 
 def scale_value_list(flist):
     v_min, v_max = min(flist), max(flist)
     v_len = v_max-v_min
-    return list(scale_value(f,v_min,v_len) for f in flist)
+    return list(scale_value(f, v_min, v_len) for f in flist)
 
 def strided_range(r_min, r_max, stride, max_steps=50):
     o_min, o_max = r_min, r_max
-    if abs(r_min-r_max) < 0.001: return []
-    try: xrange(int(r_min-r_max))
-    except: return []
+    if abs(r_min-r_max) < 0.001:
+        return []
+    try:
+        xrange(int(r_min-r_max))
+    except TypeError:
+        return []
     assert r_min < r_max
     r_min_s = (r_min % stride)
     r_max_s = stride - (r_max % stride)
@@ -117,10 +130,10 @@ def strided_range(r_min, r_max, stride, max_steps=50):
         r_max_s = 0.0
     r_min -= r_min_s
     r_max += r_max_s
-    r_steps = int( (r_max-r_min) / stride )
+    r_steps = int((r_max-r_min)/stride)
     if max_steps and r_steps > max_steps:
         return strided_range(o_min, o_max, stride*2)
-    return [r_min] + list( r_min+e*stride for e in xrange(1, r_steps+1) ) + [r_max]
+    return [r_min] + list(r_min+e*stride for e in xrange(1, r_steps+1)) + [r_max]
 
 def parse_option_string(s):
     if not isinstance(s, str):

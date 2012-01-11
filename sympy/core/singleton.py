@@ -27,7 +27,9 @@ class Singleton(WithAssumptions):
     class is instantiated. Additionally, this instance can be accessed through
     the global registry object S as S.<class_name>.
 
-    Example::
+    Examples
+    ========
+
         >>> from sympy import S, Basic
         >>> from sympy.core.singleton import Singleton
         >>> class MySingleton(Basic):

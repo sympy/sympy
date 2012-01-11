@@ -83,6 +83,18 @@ def test_sympy__assumptions__assume__Predicate():
     assert _test_args(Predicate("test"))
 
 @XFAIL
+def test_sympy__combinatorics__graycode__GrayCode():
+    from sympy.combinatorics.graycode import GrayCode
+    # an integer is given and returned from GrayCode as the arg
+    assert _test_args(GrayCode(3, start='100'))
+    assert _test_args(GrayCode(3, rank=1))
+
+def test_sympy__combinatorics__subsets__Subset():
+    from sympy.combinatorics.subsets import Subset
+    assert _test_args(Subset([0, 1], [0, 1, 2, 3]))
+    assert _test_args(Subset(['c','d'], ['a','b','c','d']))
+
+@XFAIL
 def test_sympy__combinatorics__permutations__Permutation():
     from sympy.combinatorics.permutations import Permutation
     assert _test_args(Permutation([0, 1, 2, 3]))
@@ -95,10 +107,12 @@ def test_sympy__combinatorics__prufer__Prufer():
 def test_sympy__concrete__products__Product():
     from sympy.concrete.products import Product
     assert _test_args(Product(x, (x, 0, 10)))
+    assert _test_args(Product(x, (x, 0, y), (y, 0, 10)))
 
 def test_sympy__concrete__summations__Sum():
     from sympy.concrete.summations import Sum
     assert _test_args(Sum(x, (x, 0, 10)))
+    assert _test_args(Sum(x, (x, 0, y), (y, 0, 10)))
 
 def test_sympy__core__add__Add():
     from sympy.core.add import Add
@@ -155,6 +169,10 @@ def test_sympy__core__function__Subs():
 def test_sympy__core__function__WildFunction():
     from sympy.core.function import WildFunction
     assert _test_args(WildFunction('f'))
+
+def test_sympy__core__mod__Mod():
+    from sympy.core.mod import Mod
+    assert _test_args(Mod(x, 2))
 
 def test_sympy__core__mul__Mul():
     from sympy.core.mul import Mul
@@ -412,13 +430,33 @@ def test_sympy__functions__elementary__complexes__sign():
     from sympy.functions.elementary.complexes import sign
     assert _test_args(sign(x))
 
+def test_sympy__functions__elementary__complexes__polar_lift():
+    from sympy.functions.elementary.complexes import polar_lift
+    assert _test_args(polar_lift(x))
+
+def test_sympy__functions__elementary__complexes__periodic_argument():
+    from sympy.functions.elementary.complexes import periodic_argument
+    assert _test_args(periodic_argument(x, y))
+
+def test_sympy__functions__elementary__complexes__principal_branch():
+    from sympy.functions.elementary.complexes import principal_branch
+    assert _test_args(principal_branch(x, y))
+
 def test_sympy__functions__elementary__exponential__LambertW():
     from sympy.functions.elementary.exponential import LambertW
     assert _test_args(LambertW(2))
 
+@SKIP("abstract class")
+def test_sympy__functions__elementary__exponential__ExpBase():
+    pass
+
 def test_sympy__functions__elementary__exponential__exp():
     from sympy.functions.elementary.exponential import exp
     assert _test_args(exp(2))
+
+def test_sympy__functions__elementary__exponential__exp_polar():
+    from sympy.functions.elementary.exponential import exp_polar
+    assert _test_args(exp_polar(2))
 
 def test_sympy__functions__elementary__exponential__log():
     from sympy.functions.elementary.exponential import log
@@ -489,7 +527,6 @@ def test_sympy__functions__elementary__miscellaneous__Min():
 def test_sympy__functions__elementary__miscellaneous__MinMaxBase():
     pass
 
-@XFAIL
 def test_sympy__functions__elementary__piecewise__ExprCondPair():
     from sympy.functions.elementary.piecewise import ExprCondPair
     assert _test_args(ExprCondPair(1, True))
@@ -531,7 +568,6 @@ def test_sympy__functions__elementary__trigonometric__cot():
     assert _test_args(cot(2))
 
 def test_sympy__functions__elementary__trigonometric__sin():
-    from sympy.functions.elementary.trigonometric import sin
     assert _test_args(sin(2))
 
 def test_sympy__functions__elementary__trigonometric__tan():
@@ -654,13 +690,13 @@ def test_sympy__functions__special__polynomials__legendre():
     from sympy.functions.special.polynomials import legendre
     assert _test_args(legendre(x, 2))
 
-def test_sympy__functions__special__tensor_functions__Dij():
-    from sympy.functions.special.tensor_functions import Dij
-    assert _test_args(Dij(x, 2))
-
 def test_sympy__functions__special__tensor_functions__LeviCivita():
     from sympy.functions.special.tensor_functions import LeviCivita
     assert _test_args(LeviCivita(x, y, 2))
+
+def test_sympy__functions__special__tensor_functions__KroneckerDelta():
+    from sympy.functions.special.tensor_functions import KroneckerDelta
+    assert _test_args(KroneckerDelta(x, y))
 
 def test_sympy__functions__special__zeta_functions__dirichlet_eta():
     from sympy.functions.special.zeta_functions import dirichlet_eta
@@ -673,6 +709,38 @@ def test_sympy__functions__special__zeta_functions__zeta():
 def test_sympy__integrals__integrals__Integral():
     from sympy.integrals.integrals import Integral
     assert _test_args(Integral(2, (x, 0, 1)))
+
+@SKIP("abstract class")
+def test_sympy__integrals__transforms__IntegralTransform():
+    pass
+
+def test_sympy__integrals__transforms__MellinTransform():
+    from sympy.integrals.transforms import MellinTransform
+    assert _test_args(MellinTransform(2, x, y))
+
+def test_sympy__integrals__transforms__InverseMellinTransform():
+    from sympy.integrals.transforms import InverseMellinTransform
+    assert _test_args(InverseMellinTransform(2, x, y, 0, 1))
+
+def test_sympy__integrals__transforms__LaplaceTransform():
+    from sympy.integrals.transforms import LaplaceTransform
+    assert _test_args(LaplaceTransform(2, x, y))
+
+def test_sympy__integrals__transforms__InverseLaplaceTransform():
+    from sympy.integrals.transforms import InverseLaplaceTransform
+    assert _test_args(InverseLaplaceTransform(2, x, y, 0))
+
+@SKIP("abstract class")
+def test_sympy__integrals__transforms__FourierTypeTransform():
+    pass
+
+def test_sympy__integrals__transforms__InverseFourierTransform():
+    from sympy.integrals.transforms import InverseFourierTransform
+    assert _test_args(InverseFourierTransform(2, x, y))
+
+def test_sympy__integrals__transforms__FourierTransform():
+    from sympy.integrals.transforms import FourierTransform
+    assert _test_args(FourierTransform(2, x, y))
 
 def test_sympy__logic__boolalg__And():
     from sympy.logic.boolalg import And
@@ -783,620 +851,518 @@ def test_sympy__matrices__expressions__transpose__Transpose():
     from sympy.matrices.expressions import MatrixSymbol
     assert _test_args(Transpose(MatrixSymbol('A', 3, 5)))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__gaussopt__BeamParameter():
     from sympy.physics.gaussopt import BeamParameter
-    assert _test_args(BeamParameter())
+    assert _test_args(BeamParameter(530e-9, 1, w=1e-3))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__paulialgebra__Pauli():
     from sympy.physics.paulialgebra import Pauli
-    assert _test_args(Pauli())
+    assert _test_args(Pauli(1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__anticommutator__AntiCommutator():
     from sympy.physics.quantum.anticommutator import AntiCommutator
-    assert _test_args(AntiCommutator())
+    assert _test_args(AntiCommutator(x, y))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__cartesian__PositionBra3D():
     from sympy.physics.quantum.cartesian import PositionBra3D
-    assert _test_args(PositionBra3D())
+    assert _test_args(PositionBra3D(x, y, z))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__cartesian__PositionKet3D():
     from sympy.physics.quantum.cartesian import PositionKet3D
-    assert _test_args(PositionKet3D())
+    assert _test_args(PositionKet3D(x, y, z))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__cartesian__PositionState3D():
     from sympy.physics.quantum.cartesian import PositionState3D
-    assert _test_args(PositionState3D())
+    assert _test_args(PositionState3D(x, y, z))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__cartesian__PxBra():
     from sympy.physics.quantum.cartesian import PxBra
-    assert _test_args(PxBra())
+    assert _test_args(PxBra(x, y, z))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__cartesian__PxKet():
     from sympy.physics.quantum.cartesian import PxKet
-    assert _test_args(PxKet())
+    assert _test_args(PxKet(x, y, z))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__cartesian__PxOp():
     from sympy.physics.quantum.cartesian import PxOp
-    assert _test_args(PxOp())
+    assert _test_args(PxOp(x, y, z))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__cartesian__XBra():
     from sympy.physics.quantum.cartesian import XBra
-    assert _test_args(XBra())
+    assert _test_args(XBra(x))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__cartesian__XKet():
     from sympy.physics.quantum.cartesian import XKet
-    assert _test_args(XKet())
+    assert _test_args(XKet(x))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__cartesian__XOp():
     from sympy.physics.quantum.cartesian import XOp
-    assert _test_args(XOp())
+    assert _test_args(XOp(x))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__cartesian__YOp():
     from sympy.physics.quantum.cartesian import YOp
-    assert _test_args(YOp())
+    assert _test_args(YOp(x))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__cartesian__ZOp():
     from sympy.physics.quantum.cartesian import ZOp
-    assert _test_args(ZOp())
+    assert _test_args(ZOp(x))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__cg__CG():
     from sympy.physics.quantum.cg import CG
-    assert _test_args(CG())
+    from sympy import S
+    assert _test_args(CG(S(3)/2, S(3)/2, S(1)/2, -S(1)/2, 1, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__cg__Wigner3j():
     from sympy.physics.quantum.cg import Wigner3j
-    assert _test_args(Wigner3j())
+    assert _test_args(Wigner3j(6,0,4,0,2,0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__commutator__Commutator():
     from sympy.physics.quantum.commutator import Commutator
-    assert _test_args(Commutator())
+    A, B = symbols('A,B', commutative=False)
+    assert _test_args(Commutator(A, B))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__constants__HBar():
     from sympy.physics.quantum.constants import HBar
     assert _test_args(HBar())
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__dagger__Dagger():
     from sympy.physics.quantum.dagger import Dagger
-    assert _test_args(Dagger())
+    from sympy.physics.quantum.state import Ket
+    assert _test_args(Dagger(Dagger(Ket('psi'))))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__gate__CGate():
-    from sympy.physics.quantum.gate import CGate
-    assert _test_args(CGate())
+    from sympy.physics.quantum.gate import CGate, Gate
+    assert _test_args(CGate((0,1), Gate(2)))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__gate__CNotGate():
     from sympy.physics.quantum.gate import CNotGate
-    assert _test_args(CNotGate())
+    assert _test_args(CNotGate(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__gate__Gate():
     from sympy.physics.quantum.gate import Gate
-    assert _test_args(Gate())
+    assert _test_args(Gate(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__gate__HadamardGate():
     from sympy.physics.quantum.gate import HadamardGate
-    assert _test_args(HadamardGate())
+    assert _test_args(HadamardGate(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__gate__IdentityGate():
     from sympy.physics.quantum.gate import IdentityGate
-    assert _test_args(IdentityGate())
+    assert _test_args(IdentityGate(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__gate__OneQubitGate():
     from sympy.physics.quantum.gate import OneQubitGate
-    assert _test_args(OneQubitGate())
+    assert _test_args(OneQubitGate(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__gate__PhaseGate():
     from sympy.physics.quantum.gate import PhaseGate
-    assert _test_args(PhaseGate())
+    assert _test_args(PhaseGate(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__gate__SwapGate():
     from sympy.physics.quantum.gate import SwapGate
-    assert _test_args(SwapGate())
+    assert _test_args(SwapGate(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__gate__TGate():
     from sympy.physics.quantum.gate import TGate
-    assert _test_args(TGate())
+    assert _test_args(TGate(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__gate__TwoQubitGate():
     from sympy.physics.quantum.gate import TwoQubitGate
-    assert _test_args(TwoQubitGate())
+    assert _test_args(TwoQubitGate(0))
 
-@SKIP("TODO: sympy.physics")
+@SKIP("TODO: Add ImmutableMatrix Class")
 def test_sympy__physics__quantum__gate__UGate():
     from sympy.physics.quantum.gate import UGate
     assert _test_args(UGate())
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__gate__XGate():
     from sympy.physics.quantum.gate import XGate
-    assert _test_args(XGate())
+    assert _test_args(XGate(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__gate__YGate():
     from sympy.physics.quantum.gate import YGate
-    assert _test_args(YGate())
+    assert _test_args(YGate(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__gate__ZGate():
     from sympy.physics.quantum.gate import ZGate
-    assert _test_args(ZGate())
+    assert _test_args(ZGate(0))
 
 @SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__grover__OracleGate():
     from sympy.physics.quantum.grover import OracleGate
     assert _test_args(OracleGate())
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__grover__WGate():
     from sympy.physics.quantum.grover import WGate
-    assert _test_args(WGate())
+    assert _test_args(WGate(1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__hilbert__ComplexSpace():
     from sympy.physics.quantum.hilbert import ComplexSpace
-    assert _test_args(ComplexSpace())
+    assert _test_args(ComplexSpace(x))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__hilbert__DirectSumHilbertSpace():
-    from sympy.physics.quantum.hilbert import DirectSumHilbertSpace
-    assert _test_args(DirectSumHilbertSpace())
+    from sympy.physics.quantum.hilbert import DirectSumHilbertSpace, ComplexSpace, FockSpace
+    c = ComplexSpace(2)
+    f = FockSpace()
+    assert _test_args(DirectSumHilbertSpace(c, f))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__hilbert__FockSpace():
     from sympy.physics.quantum.hilbert import FockSpace
     assert _test_args(FockSpace())
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__hilbert__HilbertSpace():
     from sympy.physics.quantum.hilbert import HilbertSpace
     assert _test_args(HilbertSpace())
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__hilbert__L2():
     from sympy.physics.quantum.hilbert import L2
-    assert _test_args(L2())
+    from sympy import oo, Interval
+    assert _test_args(L2(Interval(0, oo)))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__hilbert__TensorPowerHilbertSpace():
-    from sympy.physics.quantum.hilbert import TensorPowerHilbertSpace
-    assert _test_args(TensorPowerHilbertSpace())
+    from sympy.physics.quantum.hilbert import TensorPowerHilbertSpace, FockSpace
+    f = FockSpace()
+    assert _test_args(TensorPowerHilbertSpace(f, 2))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__hilbert__TensorProductHilbertSpace():
-    from sympy.physics.quantum.hilbert import TensorProductHilbertSpace
-    assert _test_args(TensorProductHilbertSpace())
+    from sympy.physics.quantum.hilbert import TensorProductHilbertSpace, FockSpace, ComplexSpace
+    c = ComplexSpace(2)
+    f = FockSpace()
+    assert _test_args(TensorProductHilbertSpace(f, c))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__innerproduct__InnerProduct():
-    from sympy.physics.quantum.innterproduct import InnerProduct
-    assert _test_args(InnerProduct())
+    from sympy.physics.quantum import Bra, Ket, InnerProduct
+    b = Bra('b')
+    k = Ket('k')
+    assert _test_args(InnerProduct(b, k))
 
-@SKIP("TODO: sympy.physics")
-def test_sympy__physics__quantum__kronecker__KroneckerDelta():
-    from sympy.physics.quantum.kronecker import KroneckerDelta
-    assert _test_args(KroneckerDelta())
-
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__operator__DifferentialOperator():
     from sympy.physics.quantum.operator import DifferentialOperator
-    assert _test_args(DifferentialOperator())
+    from sympy import Derivative, Function
+    f = Function('f')
+    assert _test_args(DifferentialOperator(1/x*Derivative(f(x), x), f(x)))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__operator__HermitianOperator():
     from sympy.physics.quantum.operator import HermitianOperator
-    assert _test_args(HermitianOperator())
+    assert _test_args(HermitianOperator('H'))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__operator__Operator():
     from sympy.physics.quantum.operator import Operator
-    assert _test_args(Operator())
+    assert _test_args(Operator('A'))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__operator__OuterProduct():
     from sympy.physics.quantum.operator import OuterProduct
-    assert _test_args(OuterProduct())
+    from sympy.physics.quantum import Ket, Bra
+    b = Bra('b')
+    k = Ket('k')
+    assert _test_args(OuterProduct(k, b))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__operator__UnitaryOperator():
     from sympy.physics.quantum.operator import UnitaryOperator
-    assert _test_args(UnitaryOperator())
+    assert _test_args(UnitaryOperator('U'))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__piab__PIABBra():
     from sympy.physics.quantum.piab import PIABBra
-    assert _test_args(PIABBra())
+    assert _test_args(PIABBra('B'))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__piab__PIABHamiltonian():
     from sympy.physics.quantum.piab import PIABHamiltonian
-    assert _test_args(PIABHamiltonian())
+    assert _test_args(PIABHamiltonian('P'))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__piab__PIABKet():
     from sympy.physics.quantum.piab import PIABKet
-    assert _test_args(PIABKet())
+    assert _test_args(PIABKet('K'))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__qexpr__QExpr():
     from sympy.physics.quantum.qexpr import QExpr
-    assert _test_args(QExpr())
+    assert _test_args(QExpr(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__qft__Fourier():
     from sympy.physics.quantum.qft import Fourier
-    assert _test_args(Fourier())
+    assert _test_args(Fourier(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__qft__IQFT():
     from sympy.physics.quantum.qft import IQFT
-    assert _test_args(IQFT())
+    assert _test_args(IQFT(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__qft__QFT():
     from sympy.physics.quantum.qft import QFT
-    assert _test_args(QFT())
+    assert _test_args(QFT(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__qft__RkGate():
     from sympy.physics.quantum.qft import RkGate
-    assert _test_args(RkGate())
+    assert _test_args(RkGate(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__qubit__IntQubit():
     from sympy.physics.quantum.qubit import IntQubit
-    assert _test_args(IntQubit())
+    assert _test_args(IntQubit(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__qubit__IntQubitBra():
     from sympy.physics.quantum.qubit import IntQubitBra
-    assert _test_args(IntQubitBra())
+    assert _test_args(IntQubitBra(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__qubit__IntQubitState():
-    from sympy.physics.quantum.qubit import IntQubitState
-    assert _test_args(IntQubitState())
+    from sympy.physics.quantum.qubit import IntQubitState, QubitState
+    assert _test_args(IntQubitState(QubitState(0, 1)))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__qubit__Qubit():
     from sympy.physics.quantum.qubit import Qubit
-    assert _test_args(Qubit())
+    assert _test_args(Qubit(0, 0, 0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__qubit__QubitBra():
     from sympy.physics.quantum.qubit import QubitBra
-    assert _test_args(QubitBra())
+    assert _test_args(QubitBra('1', 0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__qubit__QubitState():
     from sympy.physics.quantum.qubit import QubitState
-    assert _test_args(QubitState())
+    assert _test_args(QubitState(0, 1))
 
-@SKIP("TODO: sympy.physics")
+@SKIP("TODO: sympy.physics.quantum.shor: Cmod Not Implemented")
 def test_sympy__physics__quantum__shor__CMod():
     from sympy.physics.quantum.shor import CMod
     assert _test_args(CMod())
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__CoupledSpinState():
     from sympy.physics.quantum.spin import CoupledSpinState
-    assert _test_args(CoupledSpinState())
+    assert _test_args(CoupledSpinState(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__J2Op():
     from sympy.physics.quantum.spin import J2Op
-    assert _test_args(J2Op())
+    assert _test_args(J2Op(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JminusOp():
     from sympy.physics.quantum.spin import JminusOp
-    assert _test_args(JminusOp())
+    assert _test_args(JminusOp(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JplusOp():
     from sympy.physics.quantum.spin import JplusOp
-    assert _test_args(JplusOp())
+    assert _test_args(JplusOp(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JxBra():
     from sympy.physics.quantum.spin import JxBra
-    assert _test_args(JxBra())
+    assert _test_args(JxBra(1, 0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JxBraCoupled():
     from sympy.physics.quantum.spin import JxBraCoupled
-    assert _test_args(JxBraCoupled())
+    assert _test_args(JxBraCoupled(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JxKet():
     from sympy.physics.quantum.spin import JxKet
-    assert _test_args(JxKet())
+    assert _test_args(JxKet(1, 0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JxKetCoupled():
     from sympy.physics.quantum.spin import JxKetCoupled
-    assert _test_args(JxKetCoupled())
+    assert _test_args(JxKetCoupled(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JxOp():
     from sympy.physics.quantum.spin import JxOp
-    assert _test_args(JxOp())
+    assert _test_args(JxOp(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JyBra():
     from sympy.physics.quantum.spin import JyBra
-    assert _test_args(JyBra())
+    assert _test_args(JyBra(1, 0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JyBraCoupled():
     from sympy.physics.quantum.spin import JyBraCoupled
-    assert _test_args(JyBraCoupled())
+    assert _test_args(JyBraCoupled(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JyKet():
     from sympy.physics.quantum.spin import JyKet
-    assert _test_args(JyKet())
+    assert _test_args(JyKet(1, 0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JyKetCoupled():
     from sympy.physics.quantum.spin import JyKetCoupled
-    assert _test_args(JyKetCoupled())
+    assert _test_args(JyKetCoupled(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JyOp():
     from sympy.physics.quantum.spin import JyOp
-    assert _test_args(JyOp())
+    assert _test_args(JyOp(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JzBra():
     from sympy.physics.quantum.spin import JzBra
-    assert _test_args(JzBra())
+    assert _test_args(JzBra(1, 0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JzBraCoupled():
     from sympy.physics.quantum.spin import JzBraCoupled
-    assert _test_args(JzBraCoupled())
+    assert _test_args(JzBraCoupled(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JzKet():
     from sympy.physics.quantum.spin import JzKet
-    assert _test_args(JzKet())
+    assert _test_args(JzKet(1, 0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JzKetCoupled():
     from sympy.physics.quantum.spin import JzKetCoupled
-    assert _test_args(JzKetCoupled())
+    assert _test_args(JzKetCoupled(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__JzOp():
     from sympy.physics.quantum.spin import JzOp
-    assert _test_args(JzOp())
+    assert _test_args(JzOp(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__Rotation():
     from sympy.physics.quantum.spin import Rotation
-    assert _test_args(Rotation())
+    from sympy import pi
+    assert _test_args(Rotation(pi, 0, pi/2))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__SpinState():
     from sympy.physics.quantum.spin import SpinState
-    assert _test_args(SpinState())
+    assert _test_args(SpinState(1, 0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__spin__WignerD():
     from sympy.physics.quantum.spin import WignerD
-    assert _test_args(WignerD())
+    assert _test_args(WignerD(0, 1, 2, 3, 4, 5))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__state__Bra():
     from sympy.physics.quantum.state import Bra
-    assert _test_args(Bra())
+    assert _test_args(Bra(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__state__BraBase():
     from sympy.physics.quantum.state import BraBase
-    assert _test_args(BraBase())
+    assert _test_args(BraBase(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__state__Ket():
     from sympy.physics.quantum.state import Ket
-    assert _test_args(Ket())
+    assert _test_args(Ket(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__state__KetBase():
     from sympy.physics.quantum.state import KetBase
-    assert _test_args(KetBase())
+    assert _test_args(KetBase(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__state__State():
     from sympy.physics.quantum.state import State
-    assert _test_args(State())
+    assert _test_args(State(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__state__StateBase():
     from sympy.physics.quantum.state import StateBase
-    assert _test_args(StateBase())
+    assert _test_args(StateBase(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__state__TimeDepBra():
     from sympy.physics.quantum.state import TimeDepBra
-    assert _test_args(TimeDepBra())
+    assert _test_args(TimeDepBra('psi', 't'))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__state__TimeDepKet():
     from sympy.physics.quantum.state import TimeDepKet
-    assert _test_args(TimeDepKet())
+    assert _test_args(TimeDepKet('psi', 't'))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__state__TimeDepState():
     from sympy.physics.quantum.state import TimeDepState
-    assert _test_args(TimeDepState())
+    assert _test_args(TimeDepState('psi', 't'))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__state__Wavefunction():
     from sympy.physics.quantum.state import Wavefunction
-    assert _test_args(Wavefunction())
+    from sympy.functions import sin
+    from sympy import Piecewise, pi
+    n = 1
+    L = 1
+    g = Piecewise((0, x < 0), (0, x > L), (sqrt(2//L)*sin(n*pi*x/L), True))
+    assert _test_args(Wavefunction(g, x))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__tensorproduct__TensorProduct():
     from sympy.physics.quantum.tensorproduct import TensorProduct
-    assert _test_args(TensorProduct())
+    assert _test_args(TensorProduct(x, y))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__AnnihilateBoson():
     from sympy.physics.secondquant import AnnihilateBoson
-    assert _test_args(AnnihilateBoson())
+    assert _test_args(AnnihilateBoson(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__AnnihilateFermion():
     from sympy.physics.secondquant import AnnihilateFermion
-    assert _test_args(AnnihilateFermion())
+    assert _test_args(AnnihilateFermion(0))
 
-@SKIP("TODO: sympy.physics")
+@SKIP("abstract class")
 def test_sympy__physics__secondquant__Annihilator():
-    from sympy.physics.secondquant import Annihilator
-    assert _test_args(Annihilator())
+    pass
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__AntiSymmetricTensor():
     from sympy.physics.secondquant import AntiSymmetricTensor
-    assert _test_args(AntiSymmetricTensor())
+    i, j = symbols('i j', below_fermi=True)
+    a, b = symbols('a b', above_fermi=True)
+    assert _test_args(AntiSymmetricTensor('v', (a, i), (b, j)))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__BosonState():
     from sympy.physics.secondquant import BosonState
-    assert _test_args(BosonState())
+    assert _test_args(BosonState((0, 1)))
 
-@SKIP("TODO: sympy.physics")
+@SKIP("abstract class")
 def test_sympy__physics__secondquant__BosonicOperator():
-    from sympy.physics.secondquant import BosonicOperator
-    assert _test_args(BosonicOperator())
+    pass
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__Commutator():
     from sympy.physics.secondquant import Commutator
-    assert _test_args(Commutator())
+    assert _test_args(Commutator(x, y))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__CreateBoson():
     from sympy.physics.secondquant import CreateBoson
-    assert _test_args(CreateBoson())
+    assert _test_args(CreateBoson(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__CreateFermion():
     from sympy.physics.secondquant import CreateFermion
-    assert _test_args(CreateFermion())
+    assert _test_args(CreateFermion(0))
 
-@SKIP("TODO: sympy.physics")
+@SKIP("abstract class")
 def test_sympy__physics__secondquant__Creator():
-    from sympy.physics.secondquant import Creator
-    assert _test_args(Creator())
+    pass
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__Dagger():
     from sympy.physics.secondquant import Dagger
-    assert _test_args(Dagger())
+    from sympy import I
+    assert _test_args(Dagger(2*I))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__FermionState():
     from sympy.physics.secondquant import FermionState
-    assert _test_args(FermionState())
+    assert _test_args(FermionState((0, 1)))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__FermionicOperator():
     from sympy.physics.secondquant import FermionicOperator
-    assert _test_args(FermionicOperator())
+    assert _test_args(FermionicOperator(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__FockState():
     from sympy.physics.secondquant import FockState
-    assert _test_args(FockState())
+    assert _test_args(FockState((0, 1)))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__FockStateBosonBra():
     from sympy.physics.secondquant import FockStateBosonBra
-    assert _test_args(FockStateBosonBra())
+    assert _test_args(FockStateBosonBra((0, 1)))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__FockStateBosonKet():
     from sympy.physics.secondquant import FockStateBosonKet
-    assert _test_args(FockStateBosonKet())
+    assert _test_args(FockStateBosonKet((0, 1)))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__FockStateBra():
     from sympy.physics.secondquant import FockStateBra
-    assert _test_args(FockStateBra())
+    assert _test_args(FockStateBra((0, 1)))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__FockStateFermionBra():
     from sympy.physics.secondquant import FockStateFermionBra
-    assert _test_args(FockStateFermionBra())
+    assert _test_args(FockStateFermionBra((0, 1)))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__FockStateFermionKet():
     from sympy.physics.secondquant import FockStateFermionKet
-    assert _test_args(FockStateFermionKet())
+    assert _test_args(FockStateFermionKet((0, 1)))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__FockStateKet():
     from sympy.physics.secondquant import FockStateKet
-    assert _test_args(FockStateKet())
+    assert _test_args(FockStateKet((0, 1)))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__InnerProduct():
     from sympy.physics.secondquant import InnerProduct
-    assert _test_args(InnerProduct())
+    from sympy.physics.secondquant import FockStateKet, FockStateBra
+    assert _test_args(InnerProduct(FockStateBra((0, 1)), FockStateKet((0, 1))))
 
-@SKIP("TODO: sympy.physics")
-def test_sympy__physics__secondquant__KroneckerDelta():
-    from sympy.physics.secondquant import KroneckerDelta
-    assert _test_args(KroneckerDelta())
-
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__NO():
-    from sympy.physics.secondquant import NO
-    assert _test_args(NO())
+    from sympy.physics.secondquant import NO, F, Fd
+    assert _test_args(NO(Fd(x)*F(y)))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__PermutationOperator():
     from sympy.physics.secondquant import PermutationOperator
-    assert _test_args(PermutationOperator())
+    assert _test_args(PermutationOperator(0, 1))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__SqOperator():
     from sympy.physics.secondquant import SqOperator
-    assert _test_args(SqOperator())
+    assert _test_args(SqOperator(0))
 
-@SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__TensorSymbol():
     from sympy.physics.secondquant import TensorSymbol
-    assert _test_args(TensorSymbol())
+    assert _test_args(TensorSymbol(x))
 
 def test_sympy__physics__units__Unit():
     from sympy.physics.units import Unit
@@ -1450,3 +1416,9 @@ def test_sympy__tensor__indexed__Indexed():
 def test_sympy__tensor__indexed__IndexedBase():
     from sympy.tensor.indexed import IndexedBase
     assert _test_args(IndexedBase('A', shape=(x, y)))
+
+@XFAIL
+def test_as_coeff_add():
+    assert (7, (3*x, 4*x**2)) == (7 + 3*x + 4*x**2).as_coeff_add()
+
+

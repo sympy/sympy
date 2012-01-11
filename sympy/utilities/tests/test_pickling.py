@@ -21,19 +21,20 @@ from sympy.core.function import Derivative, Function, FunctionClass, Lambda,\
         WildFunction
 from sympy.core.sets import Interval
 from sympy.core.multidimensional import vectorize
+from sympy.functions import exp
 #from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
-from sympy.core.compatibility import callable
+from sympy.core.compatibility import callable, SymPyDeprecationWarning
 
 from sympy import symbols
 
 
-def check(a, check_attr = True):
+def check(a, check_attr=True):
     """ Check that pickling and copying round-trips.
     """
     # The below hasattr() check will warn about is_Real in Python 2.5, so
     # disable this to keep the tests clean
-    warnings.filterwarnings("ignore", ".*is_Real.*", DeprecationWarning)
+    warnings.filterwarnings("ignore", ".*is_Real.*", SymPyDeprecationWarning)
     protocols = [0, 1, 2, copy.copy, copy.deepcopy]
     # Python 2.x doesn't support the third pickling protocol
     if sys.version_info[0] > 2:
@@ -148,7 +149,7 @@ def test_core_multidimensional():
 #================== functions ===================
 from sympy.functions import (Piecewise, lowergamma, acosh,
         chebyshevu, chebyshevt, ln, chebyshevt_root, binomial, legendre,
-        Heaviside, Dij, factorial, bernoulli, coth, tanh, assoc_legendre, sign,
+        Heaviside, factorial, bernoulli, coth, tanh, assoc_legendre, sign,
         arg, asin, DiracDelta, re, rf, Abs, uppergamma, binomial, sinh, Ylm,
         cos, cot, acos, acot, gamma, bell, hermite, harmonic,
         LambertW, zeta, log, factorial, asinh, acoth, Zlm,
@@ -160,7 +161,7 @@ from sympy.core import pi, oo, nan, zoo, E, I
 
 def test_functions():
     zero_var = (pi, oo, nan, zoo, E, I)
-    one_var = (acosh, ln, Heaviside, Dij, factorial, bernoulli, coth, tanh,
+    one_var = (acosh, ln, Heaviside, factorial, bernoulli, coth, tanh,
             sign, arg, asin, DiracDelta, re, Abs, sinh, cos, cot, acos, acot,
             gamma, bell, harmonic, LambertW, zeta, log, factorial, asinh,
             acoth, cosh, dirichlet_eta, loggamma, erf, ceiling, im, fibonacci,
@@ -234,9 +235,7 @@ def test_physics():
         check(c)
 
 #================== plotting ====================
-# XXX: These tests are not complete.
-
-# these depend on ctypes, that are not in python2.4 by default, so XFAIled
+# XXX: These tests are not complete, so XFAIL them
 
 @XFAIL
 def test_plotting():
@@ -297,7 +296,6 @@ from sympy.polys.domains import (
     ExpressionDomain,
 )
 
-@XFAIL
 def test_polys():
     x = Symbol("x")
 
@@ -307,11 +305,9 @@ def test_polys():
     for c in (Poly, Poly(x, x)):
         check(c)
 
-    for c in (GFP, GFP([ZZ(1),ZZ(2),ZZ(3)], ZZ(7), ZZ)):
+    for c in (DMP, DMP([[ZZ(1)],[ZZ(2)],[ZZ(3)]], ZZ)):
         check(c)
-    for c in (DMP, DMP([ZZ(1),ZZ(2),ZZ(3)], 0, ZZ)):
-        check(c)
-    for c in (DMF, DMF(([ZZ(1),ZZ(2)],[ZZ(1),ZZ(3)], ZZ))):
+    for c in (DMF, DMF(([ZZ(1),ZZ(2)], [ZZ(1),ZZ(3)]), ZZ)):
         check(c)
     for c in (ANP, ANP([QQ(1),QQ(2)], [QQ(1),QQ(2),QQ(3)], QQ)):
         check(c)
@@ -331,13 +327,12 @@ def test_polys():
     for c in (ExpressionDomain, ExpressionDomain()):
         check(c)
 
-    from sympy.polys.domains import HAS_FRACTION, HAS_GMPY
+    from sympy.polys.domains import PythonRationalField
 
-    if HAS_FRACTION:
-        from sympy.polys.domains import PythonRationalField
+    for c in (PythonRationalField, PythonRationalField()):
+        check(c)
 
-        for c in (PythonRationalField, PythonRationalField()):
-            check(c)
+    from sympy.polys.domains import HAS_GMPY
 
     if HAS_GMPY:
         from sympy.polys.domains import GMPYIntegerRing, GMPYRationalField
@@ -348,7 +343,7 @@ def test_polys():
             check(c)
 
     f = x**3 + x + 3
-    g = lambda x: x
+    g = exp
 
     for c in (RootOf, RootOf(f, 0), RootSum, RootSum(f, g)):
         check(c)
@@ -401,6 +396,6 @@ from sympy.concrete.summations import Sum
 
 def test_concrete():
     x = Symbol("x")
-    for c in (Product, Product(1,2), Sum, Sum(x, (x, 2, 4))):
+    for c in (Product, Product(x, (x, 2, 4)), Sum, Sum(x, (x, 2, 4))):
         check(c)
 

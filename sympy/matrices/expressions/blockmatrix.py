@@ -1,12 +1,10 @@
 from matexpr import MatrixExpr, ZeroMatrix, Identity
 from matmul import MatMul
 from matadd import MatAdd
-from matpow import MatPow
 from transpose import Transpose
 from inverse import Inverse
 from sympy.matrices import Matrix, eye
 from sympy import Tuple, Basic, sympify, FiniteSet
-from sympy.utilities.iterables import iterable
 
 class BlockMatrix(MatrixExpr):
     """A BlockMatrix is a Matrix composed of other smaller, submatrices
@@ -281,7 +279,6 @@ def block_collapse(expr):
     if expr.is_Mul:
         nonmatrices = [arg for arg in expr.args if not arg.is_Matrix]
         matrices = [arg for arg in expr.args if arg.is_Matrix]
-        newmatrices = []
         i = 0
         while (i+1 < len(matrices)):
             A, B = matrices[i:i+2]

@@ -10,6 +10,7 @@ def test_normal():
     dps, mp.dps = mp.dps, 20
 
     N = Normal(0, 1)
+    assert N.random()
     assert N.mean == 0
     assert N.variance == 1
     assert N.probability(-1, 1) == erf(1/sqrt(2))
@@ -30,6 +31,10 @@ def test_normal():
 
 def test_uniform():
     U = Uniform(-3, -1)
+    assert str(U) == "Uniform(-3, -1)"
+    assert repr(U) == "Uniform(-3, -1)"
+    x = U.random()
+    assert x < -1 and x > -3
     assert U.mean == -2
     assert U.confidence(1) == (-3, -1)
     assert U.confidence(Rational(1,2)) == (Rational(-5,2), Rational(-3,2))
@@ -48,10 +53,18 @@ def test_fit():
     #print n.stddev
     assert abs(n.mean - 2) < 0.3
     assert abs(n.stddev - 1.5) < 0.3
+    n = Normal.fit([1,2,3,4,5])
+    assert n.mean == 3
+    assert n.stddev == sqrt(2)
+    n = Uniform.fit([1,2,3,4,5])
+    assert n.mean == 3
+    assert n.stddev == sqrt(2)
 
 def test_sample():
     from sympy.statistics.distributions import Sample
     s = Sample([0,1])
+    assert str(s) == "Sample([0, 1])"
+    assert repr(s) == "Sample([0, 1])"
     assert s.mean == Rational(1,2)
     assert s.median == Rational(1,2)
     s = Sample([4,2,3])
@@ -70,3 +83,15 @@ def test_PDF():
     assert exponential.mean == a
     assert exponential.variance == a**2
     assert exponential.stddev == a
+    exponential = PDF(exp(-x/a), x)
+    assert exponential.pdf(x) == exp(-x/a)
+    assert exponential.cdf(x) == -a*exp(-x/a) + oo
+    assert exponential.mean == -oo
+    exponential = PDF(1, (x,1,2))
+    assert exponential.normalize() == exponential
+    assert exponential._get_stddev() == sqrt(3)/6
+    assert exponential._get_stddev() == sqrt(3)/6
+    #This test is intentionally repeated to test PDF._get_stddev() properly.
+    exponential = exponential.transform(x, x)
+    assert exponential.pdf(x) == 1
+    assert exponential.cdf(x) == x - 1

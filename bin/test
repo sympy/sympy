@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 
 """
 Program to execute tests using the py.test like interface.
@@ -37,6 +37,10 @@ parser.add_option('-t', '--types', dest='types', action='store',
         help='setup ground types: gmpy | python | sympy')
 parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
         default=True, help='disable caching mechanism')
+parser.add_option("--timeout", action="store", dest="timeout",
+        default=False, help="Set a timeout for the all functions. By default there is no timeout.",type='int')
+parser.add_option("--slow", action="store_true", dest="slow",
+        default=False, help="Run only the slow functions.")
 parser.set_usage("test [options ...] [tests ...]")
 parser.epilog = """\
 "options" are any of the options above. "tests" are 0 or more glob strings of \
@@ -54,7 +58,7 @@ import sympy
 
 ok = sympy.test(*args, **{"verbose": options.verbose, "kw": options.kw,
     "tb": options.tb, "pdb": options.pdb, "colors": options.colors,
-    "sort": options.sort, "seed": options.seed})
+    "sort": options.sort, "seed": options.seed, "slow": options.slow, "timeout": options.timeout})
 
 if ok:
     sys.exit(0)

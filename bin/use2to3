@@ -3,10 +3,10 @@
 """
 This script converts SymPy code to a Python 3-compatible version.
 
-The script copies all files except the ones related to mpmath to a sympy-py3k
+The script copies all files except the ones related to mpmath to a py3k-sympy
 directory, runs 2to3 on them and then copies the vanilla mpmath files over. We
 need this because running 2to3 on mpmath (which is already Python 3 compatible)
-produces errors. You can then use SymPy normally from the sympy-py3k directory
+produces errors. You can then use SymPy normally from the py3k-sympy directory
 (installing it or importing it directly).
 
 Because copying and running 2to3 can take a lot of time, we try to do it only on
@@ -24,8 +24,9 @@ import re
 import sys
 import fnmatch
 import shutil
+import fileinput
 
-destination = "sympy-py3k" # directory to copy to
+destination = "py3k-sympy" # directory to copy to
 
 # TODO: build this from .gitignore
 skip_dirs = (
@@ -43,7 +44,10 @@ skip_files = (
     '.*',
     'ast_parser_python25.py', # this files produces doctest errors under py3k
                               # as we need it only for 2.5, just skip copying it
+    'use2to3',
     )
+
+np = os.path.normpath
 
 modified_files = []
 modified_txt_files = []
@@ -54,16 +58,20 @@ relevant_txt_files = []
 
 # generate the relevant txt files
 # most of them should be in this directory:
-for root, dirs, files in os.walk('./doc/src/modules'):
+for root, dirs, files in os.walk(np('./doc/src/modules')):
     # NOTE: this will consider mpmath-related files relevant, but it doesn't matter
     for filename in fnmatch.filter(files, '*.txt'):
         relevant_txt_files.append(os.path.join(root, filename))
 
 # some files aren't in /doc/src/modules, add them explicitly
-relevant_txt_files.append('./doc/src/tutorial.txt')
-relevant_txt_files.append('./doc/src/gotchas.txt')
-relevant_txt_files.append('./doc/src/guide.txt')
-relevant_txt_files.append('./doc/src/python-comparisons.txt')
+relevant_txt_files.append(np('./doc/src/install.txt'))
+relevant_txt_files.append(np('./doc/src/tutorial.txt'))
+relevant_txt_files.append(np('./doc/src/tutorial.bg.txt'))
+relevant_txt_files.append(np('./doc/src/tutorial.cs.txt'))
+relevant_txt_files.append(np('./doc/src/tutorial.ru.txt'))
+relevant_txt_files.append(np('./doc/src/gotchas.txt'))
+relevant_txt_files.append(np('./doc/src/guide.txt'))
+relevant_txt_files.append(np('./doc/src/python-comparisons.txt'))
 
 # walk the tree and copy over files as necessary
 for root, dirs, files in os.walk('.'):
@@ -74,12 +82,12 @@ for root, dirs, files in os.walk('.'):
         for filename in fnmatch.filter(files, pattern):
             files.remove(filename)
     for directory in dirs:
-        dstdir = os.path.normpath(os.path.join(destination, root, directory))
+        dstdir = np(os.path.join(destination, root, directory))
         if not os.path.exists(dstdir):
             os.makedirs(dstdir)
     for filename in files:
         src = os.path.join(root, filename)
-        dst = os.path.normpath(os.path.join(destination, root, filename))
+        dst = np(os.path.join(destination, root, filename))
         if os.path.isfile(dst):
             if os.path.getmtime(src) - os.path.getmtime(dst) < 1:
                 # the file hasn't been modified since the last run, so skip it
@@ -93,8 +101,9 @@ for root, dirs, files in os.walk('.'):
         elif filename.endswith(".txt"):
             # we need to check the exact path here, not just the filename
             # as there are eg. multiple index.txt files and not all are relevant
-            if src in relevant_txt_files:
+            if np(src) in relevant_txt_files:
                 modified_txt_files.append(dst)
+        # FIXME: Also run 2to3 on files with no extensions; now we just skip them
 
 # arguments to call 2to3 with
 args_2to3 = [
@@ -145,3 +154,16 @@ except OSError: # directories don't exist
 
 shutil.copytree("sympy/mpmath", os.path.join(destination, "./sympy/mpmath"))
 shutil.copytree("doc/src/modules/mpmath", os.path.join(destination, "./doc/src/modules/mpmath"))
+
+# change the shebang lines to point to "python3"
+
+# to do so, we first need to manually add the scripts in bin/
+# as 2to3 will not actually be ran on files with no extension
+for filename in os.listdir(destination + '/bin'):
+    modified_files.append(destination + '/bin/' + filename)
+
+for line in fileinput.input(modified_files, inplace=1):
+    if "#!/usr/bin/env python" in line:
+        line = line.replace("#!/usr/bin/env python", "#!/usr/bin/env python3")
+    # fileinput works by redirecting stdout to the file
+    sys.stdout.write(line)

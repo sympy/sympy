@@ -1,7 +1,7 @@
 """Geometrical Points.
 
 Contains
---------
+========
 Point
 
 """
@@ -18,29 +18,37 @@ class Point(GeometryEntity):
     """A point in a 2-dimensional Euclidean space.
 
     Parameters
-    ----------
+    ==========
+
     coords : sequence of 2 coordinate values.
 
     Attributes
-    ----------
+
     coordinates : 2-tuple of numbers or sympy objects.
         Stored in `self`. That is self[0] is the first coordinate value, and
         self[1] is the second coordinate value.
 
     Raises
-    ------
+    ======
+
     NotImplementedError
         When trying to create a point with more than two dimensions.
         When `intersection` is called with object other than a Point.
     TypeError
         When trying to add or subtract points with different dimensions.
 
-    Notes
-    -----
+    Note
+    ----
     Currently only 2-dimensional points are supported.
 
+    See Also
+    ========
+
+    sympy.geometry.line.Segment : Connects two Points
+
     Examples
-    --------
+    ========
+
     >>> from sympy.geometry import Point
     >>> from sympy.abc import x
     >>> Point(1, 2)
@@ -51,6 +59,7 @@ class Point(GeometryEntity):
     Point(0, x)
 
     """
+
     def __new__(cls, *args, **kwargs):
         if iterable(args[0]):
             coords = tuple([sympify(x) for x in args[0]])
@@ -64,15 +73,33 @@ class Point(GeometryEntity):
 
     @property
     def x(self):
+        """
+        Returns the X coordinate of the Point.
+
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> p = Point(0, 1)
+        >>> p.x
+        0
+        """
         return self[0]
 
     @property
     def y(self):
-        return self[1]
+        """
+        Returns the Y coordinate of the Point.
 
-    @property
-    def free_symbols(self):
-        return self.x.free_symbols.union(self.y.free_symbols)
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> p = Point(0, 1)
+        >>> p.y
+        1
+        """
+        return self[1]
 
     def is_collinear(*points):
         """Is a sequence of points collinear?
@@ -81,15 +108,18 @@ class Point(GeometryEntity):
         the set of points are collinear, or False otherwise.
 
         Parameters
-        ----------
+        ==========
+
         points : sequence of Point
 
         Returns
-        -------
+        =======
+
         is_collinear : boolean
 
         Notes
-        --------------------------
+        =====
+
         Slope is preserved everywhere on a line, so the slope between
         any two points on the line should be the same. Take the first
         two points, p1 and p2, and create a translated point v1
@@ -98,16 +128,24 @@ class Point(GeometryEntity):
         these translations preserve slope since everything is
         consistently translated to a new origin of p1. Since slope
         is preserved then we have the following equality:
-                v1_slope = vi_slope
-          =>    v1.y/v1.x = vi.y/vi.x (due to translation)
-          =>    v1.y*vi.x = vi.y*v1.x
-          =>    v1.y*vi.x - vi.y*v1.x = 0           (*)
+
+              * v1_slope = vi_slope
+              * v1.y/v1.x = vi.y/vi.x (due to translation)
+              * v1.y*vi.x = vi.y*v1.x
+              * v1.y*vi.x - vi.y*v1.x = 0           (*)
+
         Hence, if we have a vi such that the equality in (*) is False
         then the points are not collinear. We do this test for every
         point in the list, and if all pass then they are collinear.
 
+        See Also
+        ========
+
+        sympy.geometry.line.Line
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point
         >>> from sympy.abc import x
         >>> p1, p2 = Point(0, 0), Point(1, 1)
@@ -118,6 +156,7 @@ class Point(GeometryEntity):
         False
 
         """
+
         if len(points) == 0:
             return False
         if len(points) <= 2:
@@ -144,16 +183,24 @@ class Point(GeometryEntity):
         on a circle).
 
         Parameters
-        ----------
+        ==========
+
         points : sequence of Points
 
         Returns
-        -------
+        =======
+
         is_concyclic : boolean
             True if points are concyclic, False otherwise.
 
+        See Also
+        ========
+
+        sympy.geometry.ellipse.Circle
+
         Notes
-        -----
+        =====
+
         No points are not considered to be concyclic. One or two points
         are definitely concyclic and three points are conyclic iff they
         are not collinear.
@@ -165,7 +212,8 @@ class Point(GeometryEntity):
         in the circle.
 
         Examples
-        --------
+        ========
+
         >>> from sympy.geometry import Point
         >>> p1, p2 = Point(-1, 0), Point(1, 0)
         >>> p3, p4 = Point(0, 1), Point(-1, 2)
@@ -190,46 +238,55 @@ class Point(GeometryEntity):
                 if point not in c:
                     return False
             return True
-        except GeometryError, e:
+        except GeometryError:
             # Circle could not be created, because of collinearity of the
             # three points passed in, hence they are not concyclic.
             return False
-        """
-        # This code is from Maple
-        def f(u):
-            dd = u[0]**2 + u[1]**2 + 1
-            u1 = 2*u[0] / dd
-            u2 = 2*u[1] / dd
-            u3 = (dd - 2) / dd
-            return u1,u2,u3
 
-        u1,u2,u3 = f(points[0])
-        v1,v2,v3 = f(points[1])
-        w1,w2,w3 = f(points[2])
-        p = [v1 - u1, v2 - u2, v3 - u3]
-        q = [w1 - u1, w2 - u2, w3 - u3]
-        r = [p[1]*q[2] - p[2]*q[1], p[2]*q[0] - p[0]*q[2], p[0]*q[1] - p[1]*q[0]]
-        for ind in xrange(3, len(points)):
-            s1,s2,s3 = f(points[ind])
-            test = simplify(r[0]*(s1-u1) + r[1]*(s2-u2) + r[2]*(s3-u3))
-            if test != 0:
-                return False
-        return True
-        """
+#       """
+#       # This code is from Maple
+#       def f(u):
+#           dd = u[0]**2 + u[1]**2 + 1
+#           u1 = 2*u[0] / dd
+#           u2 = 2*u[1] / dd
+#           u3 = (dd - 2) / dd
+#           return u1,u2,u3
+
+#       u1,u2,u3 = f(points[0])
+#       v1,v2,v3 = f(points[1])
+#       w1,w2,w3 = f(points[2])
+#       p = [v1 - u1, v2 - u2, v3 - u3]
+#       q = [w1 - u1, w2 - u2, w3 - u3]
+#       r = [p[1]*q[2] - p[2]*q[1], p[2]*q[0] - p[0]*q[2], p[0]*q[1] - p[1]*q[0]]
+#       for ind in xrange(3, len(points)):
+#           s1,s2,s3 = f(points[ind])
+#           test = simplify(r[0]*(s1-u1) + r[1]*(s2-u2) + r[2]*(s3-u3))
+#           if test != 0:
+#               return False
+#       return True
+#       """
 
     def distance(self, p):
         """The Euclidean distance from self to point p.
 
         Parameters
-        ----------
+        ==========
+
         p : Point
 
         Returns
-        -------
+        =======
+
         distance : number or symbolic expression.
 
+        See Also
+        ========
+
+        sympy.geometry.line.Segment.length
+
         Examples
-        --------
+        ========
+
         >>> from sympy.geometry import Point
         >>> p1, p2 = Point(1, 1), Point(4, 5)
         >>> p1.distance(p2)
@@ -247,15 +304,23 @@ class Point(GeometryEntity):
         """The midpoint between self and point p.
 
         Parameters
-        ----------
+        ==========
+
         p : Point
 
         Returns
-        -------
+        =======
+
         midpoint : Point
 
+        See Also
+        ========
+
+        sympy.geometry.line.Segment.midpoint
+
         Examples
-        --------
+        ========
+
         >>> from sympy.geometry import Point
         >>> p1, p2 = Point(1, 1), Point(13, 5)
         >>> p1.midpoint(p2)
@@ -271,11 +336,13 @@ class Point(GeometryEntity):
         where the coordinates are evaluated as floating point numbers.
 
         Returns
-        -------
+        =======
+
         point : Point
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Rational
         >>> p1 = Point(Rational(1, 2), Rational(3, 2))
         >>> p1
@@ -290,20 +357,24 @@ class Point(GeometryEntity):
         """The intersection between this point and another point.
 
         Parameters
-        ----------
+        ==========
+
         other : Point
 
         Returns
-        -------
+        =======
+
         intersection : list of Points
 
         Notes
-        -----
+        =====
+
         The return value will either be an empty list if there is no
         intersection, otherwise it will contain this point.
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(0, 0)
         >>> p1.intersection(p2)
@@ -321,6 +392,18 @@ class Point(GeometryEntity):
 
     @property
     def length(self):
+        """
+        The length of a Point.
+        This is needed for compatibility with line.
+
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> p = Point(0, 1)
+        >>> p.length
+        0
+        """
         return S.Zero
 
     def __len__(self):
@@ -352,6 +435,8 @@ class Point(GeometryEntity):
         """Divide point's coordinates by a factor."""
         divisor = sympify(divisor)
         return Point([x/divisor for x in self])
+
+    __truediv__ = __div__
 
     def __neg__(self):
         """Negate the point."""

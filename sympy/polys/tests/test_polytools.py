@@ -24,7 +24,7 @@ from sympy.polys.polytools import (
     real_roots, nroots, ground_roots,
     nth_power_roots_poly,
     cancel, reduced, groebner,
-    GroebnerBasis, is_zero_dimensional, _keep_coeff)
+    GroebnerBasis, is_zero_dimensional)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -53,6 +53,7 @@ from sympy import (
     exp, sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
 
 from sympy.core.compatibility import iterable
+from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
 
 x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e = symbols('x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')
@@ -2042,6 +2043,8 @@ def test_factor():
     assert not isinstance(Poly(x**3 + x + 1).factor_list()[1][0][0], PurePoly) == True
     assert isinstance(PurePoly(x**3 + x + 1).factor_list()[1][0][0], PurePoly) == True
 
+    assert factor(sqrt(-x)) == sqrt(-x)
+
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
     g = ((x**2 + 2*x + 1)**3000*y**2 + (x**2 + 2*x + 1)**3000*2*y + (x**2 + 2*x + 1)**3000)
@@ -2667,3 +2670,10 @@ def test_keep_coeff():
     assert _keep_coeff(S(2), x + 1) == u
     assert _keep_coeff(x, 1/x) == 1
     assert _keep_coeff(x + 1, S(2)) == u
+
+@XFAIL
+def test_poly_matching_consistency():
+    # Test for this issue:
+    # http://code.google.com/p/sympy/issues/detail?id=2415
+    assert I * Poly(x, x) == Poly(I*x, x)
+    assert Poly(x, x) * I == Poly(I*x, x)

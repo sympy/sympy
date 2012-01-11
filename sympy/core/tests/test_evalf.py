@@ -1,17 +1,10 @@
-from sympy.core.evalf import PrecisionExhausted, complex_accuracy
-
-from sympy import pi, I, Symbol, Add, Rational, exp, sqrt, sin, cos, \
-    fibonacci, Integral, oo, E, atan, log, integrate, floor, ceiling, \
-    factorial, binomial, Sum, zeta, Catalan, Pow, GoldenRatio, sympify, \
-    sstr, Function, Eq, Mul, Pow, Derivative
-
+from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
+                   Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
+                   sin, sqrt, sstr, Sum, sympify)
+from sympy.core.evalf import complex_accuracy, PrecisionExhausted
+from sympy.abc import n, x, y
 from sympy.mpmath.libmp.libmpf import from_float
-
-from sympy.utilities.pytest import raises
-
-x = Symbol('x')
-y = Symbol('y')
-n = Symbol('n')
+from sympy.utilities.pytest import raises, XFAIL
 
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
@@ -51,8 +44,10 @@ def test_evalf_complex():
     assert NS('E+pi*I',15) == '2.71828182845905 + 3.14159265358979*I'
     assert NS('pi * (3+4*I)',15) == '9.42477796076938 + 12.5663706143592*I'
     assert NS('I*(2+I)',15) == '-1.00000000000000 + 2.00000000000000*I'
-    #assert NS('(pi+E*I)*(E+pi*I)',15) in ('.0e-15 + 17.25866050002*I', '.0e-17 + 17.25866050002*I', '-.0e-17 + 17.25866050002*I')
-    assert NS('(pi+E*I)*(E+pi*I)',15,chop=True) == '17.2586605000200*I'
+
+@XFAIL
+def test_evalf_complex_bug():
+    assert NS('(pi+E*I)*(E+pi*I)',15) in ('.0e-15 + 17.25866050002*I', '.0e-17 + 17.25866050002*I', '-.0e-17 + 17.25866050002*I')
 
 def test_evalf_complex_powers():
     assert NS('(E+pi*I)**100000000000000000') == \
@@ -62,11 +57,14 @@ def test_evalf_complex_powers():
     assert NS('(pi + pi*I)**2', chop=True) == '19.7392088021787*I'
     assert NS('(pi + 1/10**8 + pi*I)**2') == '6.2831853e-8 + 19.7392088650106*I'
     assert NS('(pi + 1/10**12 + pi*I)**2') == '6.283e-12 + 19.7392088021850*I'
-    #assert NS('(pi + pi*I)**4') == '-389.63636413601 + .0e-14*I'
     assert NS('(pi + pi*I)**4', chop=True) == '-389.636364136010'
     assert NS('(pi + 1/10**8 + pi*I)**4') == '-389.636366616512 + 2.4805021e-6*I'
     assert NS('(pi + 1/10**12 + pi*I)**4') == '-389.636364136258 + 2.481e-10*I'
     assert NS('(10000*pi + 10000*pi*I)**4', chop=True) == '-3.89636364136010e+18'
+
+@XFAIL
+def test_evalf_complex_powers_bug():
+    assert NS('(pi + pi*I)**4') == '-389.63636413601 + .0e-14*I'
 
 def test_evalf_exponentiation():
     assert NS(sqrt(-pi)) == '1.77245385090552*I'
@@ -153,6 +151,10 @@ def test_evalf_bugs():
     # because the order depends on the hashes of the terms.
     assert NS(20 - 5008329267844*n**25 - 477638700*n**37 - 19*n,
               subs={n:.01}) == '19.8100000000000'
+    assert NS(((x - 1)*((1 - x))**1000).n()) == '(-x + 1.00000000000000)**1000*(x - 1.00000000000000)'
+    assert NS((-x).n()) == '-x'
+    assert NS((-2*x).n()) == '-2.00000000000000*x'
+    assert NS((-2*x*y).n()) == '-2.00000000000000*x*y'
 
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
@@ -179,7 +181,6 @@ def test_evalf_trig_zero_detection():
     raises(PrecisionExhausted, "a.evalf(strict=True)")
 
 def test_evalf_divergent_series():
-    n = Symbol('n', integer=True)
     raises(ValueError, 'Sum(1/n, (n, 1, oo)).evalf()')
     raises(ValueError, 'Sum(n/(n**2+1), (n, 1, oo)).evalf()')
     raises(ValueError, 'Sum((-1)**n, (n, 1, oo)).evalf()')
@@ -213,7 +214,6 @@ def test_evalf_arguments():
 def test_implemented_function_evalf():
     from sympy.utilities.lambdify import implemented_function
     f = Function('f')
-    x = Symbol('x')
     f = implemented_function(f, lambda x: x + 1)
     assert str(f(x)) == "f(x)"
     assert str(f(2)) == "f(2)"
@@ -237,3 +237,18 @@ def test_issue_2387():
 def test_issue_2387_bug():
     from sympy import I, Expr
     assert abs(Expr._from_mpmath(I._to_mpmath(15), 15) - I) < 1.0e-15
+
+def test_bugs():
+    from sympy import polar_lift, re
+
+    assert abs(re((1+I)**2)) < 1e-15
+
+    # anything that evalf's to 0 will do in place of polar_lift
+    assert abs(polar_lift(0)).n() == 0
+
+def test_subs_bugs():
+    from sympy import besseli
+    assert NS('besseli(-x, y) - besseli(x, y)', subs={x:3.5, y:20.0}) == \
+           '-4.92535585957223e-10'
+    assert NS('Piecewise((x, x>0)) + Piecewise((1-x, x>0))', subs={x:0.1}) == \
+           '1.00000000000000'

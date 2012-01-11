@@ -65,10 +65,8 @@ Some more information how the single concepts work and who should use which:
     not defined in the Printer subclass this will be the same as str(expr)
 """
 
-from sympy import S, Basic, Mul, Add
+from sympy import Basic, Add
 
-from sympy.core.exprtools import decompose_power
-from sympy.polys.monomialtools import monomial_key
 from sympy.core.core import BasicMeta
 
 from sympy.core.compatibility import cmp_to_key
@@ -86,41 +84,44 @@ class Printer(object):
        If a object has a method with that name, this method will be used
        for printing.
 
-    3. In your subclass, define _print_<CLASS> methods
+    3. In your subclass, define ``_print_<CLASS>`` methods
 
        For each class you want to provide printing to, define an appropriate
        method how to do it. For example if you want a class FOO to be printed in
-       its own way, define _print_FOO:
+       its own way, define _print_FOO::
 
-       def _print_FOO(self, e):
-           ...
+           def _print_FOO(self, e):
+               ...
 
        this should return how FOO instance e is printed
 
-       Also, if BAR is a subclass of FOO, _print_FOO(bar) will be called for
-       instance of BAR, if no _print_BAR is provided.  Thus, usually, we don't
-       need to provide printing routines for every class we want to support --
-       only generic routine has to be provided for a set of classes.
+       Also, if ``BAR`` is a subclass of ``FOO``, ``_print_FOO(bar)`` will
+       be called for instance of ``BAR``, if no ``_print_BAR`` is provided.
+       Thus, usually, we don't need to provide printing routines for every
+       class we want to support -- only generic routine has to be provided
+       for a set of classes.
 
-       A good example for this are functions - for example PrettyPrinter only
-       defines _print_Function, and there is no _print_sin, _print_tan, etc...
+       A good example for this are functions - for example ``PrettyPrinter``
+       only defines ``_print_Function``, and there is no ``_print_sin``,
+       ``_print_tan``, etc...
 
-       On the other hand, a good printer will probably have to define separate
-       routines for Symbol, Atom, Number, Integral, Limit, etc...
+       On the other hand, a good printer will probably have to define
+       separate routines for ``Symbol``, ``Atom``, ``Number``, ``Integral``,
+       ``Limit``, etc...
 
-    4. If convenient, override self.emptyPrinter
+    4. If convenient, override ``self.emptyPrinter``
 
        This callable will be called to obtain printing result as a last resort,
        that is when no appropriate print method was found for an expression.
 
-    Example of overloading StrPrinter::
+    Examples of overloading StrPrinter::
 
         from sympy import Basic, Function, Symbol
         from sympy.printing.str import StrPrinter
 
         class CustomStrPrinter(StrPrinter):
             \"\"\"
-            Example of how to customize the StrPrinter for both a Sympy class and a
+            Examples of how to customize the StrPrinter for both a Sympy class and a
             user defined class subclassed from the Sympy Basic class.
             \"\"\"
 

@@ -1,7 +1,7 @@
 from basic import Basic
 from singleton import Singleton, S
 from evalf import EvalfMixin
-from numbers import Float, Integer
+from numbers import Float
 from sympify import _sympify, sympify, SympifyError
 from sympy.mpmath import mpi, mpf
 from containers import Tuple
@@ -243,14 +243,6 @@ class Set(Basic):
     def is_Union(self):
         return False
 
-class RealSet(Set, EvalfMixin):
-    """
-    A set of real values
-    """
-    @property
-    def is_real(self):
-        return True
-
 class ProductSet(Set):
     """
     Represents a Cartesian Product of Sets.
@@ -261,7 +253,9 @@ class ProductSet(Set):
 
         Can use '*' operator on any sets for convenient shorthand.
 
-    Examples:
+    Examples
+    ========
+
         >>> from sympy import Interval, FiniteSet, ProductSet
 
         >>> I = Interval(0, 5); S = FiniteSet(1, 2, 3)
@@ -412,17 +406,19 @@ class Interval(RealSet):
         will be open on the left. Similarly, for right_open=True the interval
         will be open on the right.
 
-    Examples:
-        >>> from sympy import Symbol, Interval, sets
+    Examples
+    ========
 
-        >>> Interval(0, 1)
-        [0, 1]
-        >>> Interval(0, 1, False, True)
-        [0, 1)
+    >>> from sympy import Symbol, Interval, sets
 
-        >>> a = Symbol('a', real=True)
-        >>> Interval(0, a)
-        [0, a]
+    >>> Interval(0, 1)
+    [0, 1]
+    >>> Interval(0, 1, False, True)
+    [0, 1)
+
+    >>> a = Symbol('a', real=True)
+    >>> Interval(0, a)
+    [0, a]
 
     Notes:
         - Only real end points are supported
@@ -623,7 +619,7 @@ class Interval(RealSet):
 
     def as_relational(self, symbol):
         """Rewrite an interval in terms of inequalities and logic operators. """
-        from sympy.core.relational import Eq, Lt, Le
+        from sympy.core.relational import Lt, Le
         from sympy.logic.boolalg import And
 
         if not self.is_left_unbounded:
@@ -650,7 +646,9 @@ class Union(Set):
     """
     Represents a union of sets as a Set.
 
-    Examples:
+    Examples
+    ========
+
         >>> from sympy import Union, Interval
 
         >>> Union(Interval(1, 2), Interval(3, 4))
@@ -670,7 +668,7 @@ class Union(Set):
         args = list(args)
         def flatten(arg):
             if arg == S.EmptySet:
-               return []
+                return []
             if isinstance(arg, Set):
                 if arg.is_Union:
                     return sum(map(flatten, arg.args), [])
@@ -949,7 +947,9 @@ class EmptySet(Set):
     Represents the empty set. The empty set is available as a singleton
     as S.EmptySet.
 
-    Examples:
+    Examples
+    ========
+
         >>> from sympy import S, Interval
 
         >>> S.EmptySet
@@ -992,7 +992,9 @@ class FiniteSet(CountableSet):
     """
     Represents a finite set of discrete numbers
 
-    Examples:
+    Examples
+    ========
+
         >>> from sympy import Symbol, FiniteSet, sets
 
         >>> FiniteSet(1, 2, 3, 4)
@@ -1016,7 +1018,7 @@ class FiniteSet(CountableSet):
         if len(args) == 0:
             return EmptySet()
 
-        if all(arg.is_real and arg.is_number for arg in args):
+        if all(arg.is_number and arg.is_real for arg in args):
             cls = RealFiniteSet
 
         elements = frozenset(map(sympify, args))
@@ -1157,9 +1159,6 @@ class RealFiniteSet(FiniteSet, RealSet):
         from sympy.core.relational import Eq
         from sympy.logic.boolalg import Or
         return Or(*[Eq(symbol, elem) for elem in self])
-
-    def _eval_evalf(self, prec):
-        return FiniteSet(elem.evalf(prec) for elem in self)
 
 genclass = (1 for i in xrange(2)).__class__
 def is_flattenable(obj):

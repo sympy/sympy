@@ -1,6 +1,6 @@
 from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
@@ -27,6 +27,7 @@ def test_ccode_Pow():
     assert ccode(x**(y**3)) == "pow(x, pow(y, 3))"
     assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "pow(3.5*g(x), -x + pow(y, x))/(pow(x, 2) + y)"
+    assert ccode(x**-1.0) == '1.0/x'
 
 def test_ccode_constants_mathh():
     assert ccode(exp(1)) == "M_E"

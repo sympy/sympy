@@ -44,11 +44,11 @@ a matter of preference).
 
 '''
 import math
-def Series(j, n):
+def _series(j, n):
 
     # Left sum from the bbp algorithm
     s = 0
-    D = dn(n)
+    D = _dn(n)
     for k in range(0, n+1):
         r = 8*k+j
         s = (s + (pow(16,n-k,r)<<4*(D))//r)
@@ -65,6 +65,19 @@ def Series(j, n):
     return total
 
 def pi_hex_digits(n):
+    """Returns a string containing 14 digits after the nth value of pi in hex
+       The decimal has been taken out of the number, so
+       n = 0[0] = 3 # First digit of pi in hex, 3
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.bbp_pi import pi_hex_digits
+    >>> pi_hex_digits(0)
+    '3243f6a8885a30'
+    >>> pi_hex_digits(10)
+    '5a308d313198a2'
+    """
 
     # main of implementation arrays holding formulae coefficients
     n -= 1
@@ -72,16 +85,16 @@ def pi_hex_digits(n):
     j = [1,4,5,6]
 
     #formulae
-    x =  + (a[0]*Series(j[0], n)
-         - a[1]*Series(j[1], n)
-         - a[2]*Series(j[2], n)
-         - a[3]*Series(j[3], n)) & (16**(dn(n)) -1)
+    x =  + (a[0]*_series(j[0], n)
+         - a[1]*_series(j[1], n)
+         - a[2]*_series(j[2], n)
+         - a[3]*_series(j[3], n)) & (16**(_dn(n)) -1)
 
     s=("%014x" % x)
     #s is constrained between 0 and 14
     return s[0:14]
 
-def dn(n):
+def _dn(n):
     # controller for n dependence on precision
     if (n < 1000):
         f=16

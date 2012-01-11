@@ -59,6 +59,7 @@ _assume_rules = FactRules([
 
 _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('comparable')
+_assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
 
 
@@ -195,7 +196,7 @@ class AssumeMixin(object):
         - infinitesimal - object value is infinitesimal
 
 
-    Example rules:
+    Examples rules:
 
       positive=T            ->  nonpositive=F, real=T
       real=T & positive=F   ->  nonpositive=T
@@ -208,7 +209,8 @@ class AssumeMixin(object):
     ._assumption dictionary or are returned by getter methods (with
     property decorators) or are attributes of objects/classes.
 
-    Examples:
+    Examples
+    ========
 
         - True, when we are sure about a property. For example, when we are
         working only with real numbers:
@@ -246,7 +248,7 @@ class AssumeMixin(object):
             #        |             |    important. say for %timeit x+y most of
             # .------'             |    the time is spent elsewhere
             # |                    |
-            # |  XXX _learn_new_facts  could be asked about what *new* facts have
+            # |  XXX _learn_new_facts could be asked about what *new* facts have
             # v  XXX been learned -- we'll need this to append to _hashable_content
             basek = set(self.default_assumptions.keys())
             k2    = set(self._assumptions.keys())
@@ -270,7 +272,8 @@ class AssumeMixin(object):
         are different objects. In other words, besides Python type (Symbol in
         this case), the initial assumptions are also forming their typeinfo.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Symbol
         >>> from sympy.abc import x

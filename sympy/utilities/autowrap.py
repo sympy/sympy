@@ -71,7 +71,7 @@ import tempfile
 import subprocess
 
 from sympy.utilities.codegen import (
-        codegen, get_code_generator, Routine, OutputArgument, InOutArgument,
+        get_code_generator, Routine, OutputArgument, InOutArgument,
         CodeGenArgumentListError, Result
         )
 from sympy.utilities.lambdify import implemented_function
@@ -349,7 +349,7 @@ def autowrap(expr, language='F95', backend='f2py', tempdir=None, args=None, flag
     helpers
         Used to define auxillary expressions needed for the main expr.  If the
         main expression need to do call a specialized function it should be put
-        in the `helpers' list.  Autowrap will then make sure that the compiled
+        in the ``helpers`` list.  Autowrap will then make sure that the compiled
         main expression can link to the helper routine.  Items should be tuples
         with (<funtion_name>, <sympy_expression>, <arguments>).  It is
         mandatory to supply an argument sequence to helper routines.
@@ -428,7 +428,8 @@ def ufuncify(args, expr, **kwargs):
 
        See http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
-    :Examples:
+    Examples
+    ========
 
     >>> from sympy.utilities.autowrap import ufuncify
     >>> from sympy.abc import x, y, z

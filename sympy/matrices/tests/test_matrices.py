@@ -7,7 +7,7 @@ from sympy.matrices.matrices import (ShapeError, MatrixError,
     SparseMatrix, SparseMatrix, NonSquareMatrixError,
     matrix_multiply_elementwise, diag, NonSquareMatrixError)
 from sympy.utilities.iterables import flatten, capture
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.matrices import rot_axis1, rot_axis2, rot_axis3
 
 def test_division():
@@ -585,6 +585,19 @@ def test_eigen():
         [( 2*abs(eps), 1, [ Matrix([[I*eps/abs(eps)],[1]]) ] ),
          ( 0, 1, [Matrix([[-I*eps/abs(eps)],[1]])]) ])
 
+    M = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
+    M._eigenvects = M.eigenvects(simplify=False)
+    assert max(i.q for i in M._eigenvects[0][2][0]) > 1
+    M._eigenvects = M.eigenvects(simplify=True)
+    assert max(i.q for i in M._eigenvects[0][2][0]) == 1
+    M = Matrix([[S(1)/4, 1], [1, 1]])
+    assert M.eigenvects(simplify=True) == [
+      (-sqrt(73)/8 + Rational(5, 8), 1, [Matrix([[-8/(-3 + sqrt(73))], [1]])]),
+      (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[-8/(-sqrt(73) - 3)], [1]])])]
+    assert M.eigenvects(simplify=False) == [
+    (-sqrt(73)/8 + Rational(5, 8), 1, [Matrix([[-1/(Rational(-3, 8) + sqrt(73)/8)], [1]])]),
+    (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[-1/(-sqrt(73)/8 + Rational(-3, 8))], [1]])])]
+
 def test_sparse_matrix():
     return
     def eye(n):
@@ -736,6 +749,8 @@ def test_sparse_matrix():
     m2 = SparseMatrix([0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15])
     assert m2[:,-1] == SparseMatrix(4,1,[3,7,11,15])
     assert m2[-2:,:] == SparseMatrix([[8,9,10,11],[12,13,14,15]])
+
+    assert SparseMatrix([[1, 2], [3, 4]]).submatrix([1, 1]) == Matrix([[4]])
 
     # test_submatrix_assignment
     m = zeros(4)
@@ -928,12 +943,12 @@ def test_subs():
 
 def test_simplify():
     x,y,f,n = symbols('x y f n')
-    M = Matrix([[    1/x + 1/y,               (x + x*y)/ x           ],
+    M = Matrix([[    1/x + 1/y,            (x + x*y)/ x           ],
                  [(f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n)/ pi ]
                  ])
     M.simplify()
-    assert M ==  Matrix([[(x + y)/(x * y),                 1 + y       ],
-                         [   1 + y,       2*((1 - 1*cos(pi*n))/(pi*n)) ]])
+    assert M ==  Matrix([[(x + y)/(x * y),              1 + y       ],
+                         [   1 + y,    2*((1 - 1*cos(pi*n))/(pi*n)) ]])
     M = Matrix([[(1 + x)**2]])
     M.simplify()
     assert M == Matrix([[(1 + x)**2]])
@@ -1169,7 +1184,7 @@ def test_jacobian2():
     J = Matrix([
             [cos(phi), -rho*sin(phi)],
             [sin(phi),  rho*cos(phi)],
-            [   2*rho,             0],
+            [   2*rho,          0],
         ])
     assert X.jacobian(Y) == J
 
@@ -1343,7 +1358,7 @@ def test_diagonal_symmetrical():
     m = Matrix(3,3,[1, 0, 0, 0, 2, 0, 0, 0, 3])
     assert m == diag(1, 2, 3)
 
-    m = Matrix(2, 3, [0, 0, 0, 0, 0, 0])
+    m = Matrix(2, 3, zeros(2, 3))
     assert not m.is_symmetric()
     assert m.is_diagonal()
 
@@ -1358,7 +1373,6 @@ def test_diagonal_symmetrical():
     assert m.is_symmetric()
     assert not m.is_symmetric(simplify=False)
     assert m.expand().is_symmetric(simplify=False)
-
 
 def test_diagonalization():
     x, y, z = symbols('x y z')
@@ -1396,6 +1410,8 @@ def test_diagonalization():
     assert m.is_diagonalizable()
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
+    for i in P:
+        assert i.as_numer_denom()[1] == 1
 
     m = Matrix(2,2,[1, 0, 0, 0])
     assert m.is_diagonal()
@@ -1412,14 +1428,6 @@ def test_diagonalization():
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
 
-    m = Matrix(2,2,[1, 0, 0, I])
-    raises(NotImplementedError, 'm.is_diagonalizable(True)')
-    # !!! bug because of eigenvects() or roots(x**2 + (-1 - I)*x + I, x)
-    # see issue 2193
-    # assert not m.is_diagonalizable(True)
-    # raises(MatrixError, '(P, D) = m.diagonalize(True)')
-    # (P, D) = m.diagonalize(True)
-
     # not diagonalizable
     m = Matrix(2,2,[0, 1, 0, 0])
     assert not m.is_diagonalizable()
@@ -1434,6 +1442,16 @@ def test_diagonalization():
     m = Matrix(2,2,[a, c, c, b])
     assert m.is_symmetric()
     assert m.is_diagonalizable()
+
+@XFAIL
+def test_eigen_vects():
+    m = Matrix(2,2,[1, 0, 0, I])
+    raises(NotImplementedError, 'm.is_diagonalizable(True)')
+    # !!! bug because of eigenvects() or roots(x**2 + (-1 - I)*x + I, x)
+    # see issue 2193
+    assert not m.is_diagonalizable(True)
+    raises(MatrixError, '(P, D) = m.diagonalize(True)')
+    (P, D) = m.diagonalize(True)
 
 def test_jordan_form():
 
@@ -1493,7 +1511,7 @@ def test_jordan_form():
 def test_Matrix_berkowitz_charpoly():
     x, UA, K_i, K_w = symbols('x UA K_i K_w')
 
-    A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),       K_i*K_w/(K_i + K_w)],
+    A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),    K_i*K_w/(K_i + K_w)],
                 [           K_i*K_w/(K_i + K_w), -K_w + K_w**2/(K_i + K_w)]])
 
     charpoly = A.berkowitz_charpoly(x)
@@ -1548,7 +1566,6 @@ def test_errors():
     raises(ShapeError, "Matrix([1]).row_insert(1, Matrix([[1, 2], [3, 4]]))")
     raises(ShapeError, "Matrix([1]).col_insert(1, Matrix([[1, 2], [3, 4]]))")
     raises(NonSquareMatrixError, "Matrix([1, 2]).trace()")
-    raises(TypeError, "SparseMatrix([[1, 2], [3, 4]]).submatrix([1, 1])")
     raises(TypeError, "Matrix([1]).applyfunc(1)")
     raises(ShapeError, "Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]]))")
     raises(MatrixError, "Matrix([[1,2,3],[4,5,6],[7,8,9]]).QRdecomposition()")
@@ -1574,7 +1591,7 @@ def test_errors():
     raises(ValueError, "SparseMatrix([[1, 2], [3, 4]]).rowdecomp(5)")
     raises(ValueError, "SparseMatrix([[1, 2], [3, 4]])[1, 2, 3] = 4")
     raises(TypeError, "SparseMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([]))")
-    raises(TypeError, "SparseMatrix([[1, 2], [3, 4]]).submatrix((1, 2))")
+    raises(IndexError, "SparseMatrix([[1, 2], [3, 4]]).submatrix((1, 2))")
     raises(TypeError, "SparseMatrix([1, 2, 3]).cross(1)")
     raises(ValueError, "Matrix([[5, 10, 7],[0, -1, 2],[8,  3, 4]]).LUdecomposition_Simple(iszerofunc=lambda x:abs(x)<=4)")
     raises(NotImplementedError, "Matrix([[1, 0],[1, 1]])**(S(1)/2)")
@@ -1588,12 +1605,13 @@ def test_len():
     assert Matrix([1]) == Matrix([[1]])
     assert not Matrix()
     assert Matrix() == Matrix([])
-    # These two matrices have different shape
-    #assert Matrix() == Matrix([[]])
     assert not SparseMatrix()
     assert SparseMatrix() == SparseMatrix([])
-    # These two matrices have different shape
-    #assert SparseMatrix() == SparseMatrix([[]])
+
+@XFAIL
+def test_len_different_shapes():
+    assert Matrix() == Matrix([[]])
+    assert SparseMatrix() == SparseMatrix([[]])
 
 def test_integrate():
     x, y = symbols('x,y')
@@ -1854,7 +1872,7 @@ def test_zeros_eye():
 def test_is_zero():
     assert Matrix().is_zero
     assert Matrix([[0, 0], [0, 0]]).is_zero
-    assert zeros((3, 4)).is_zero
+    assert zeros(3, 4).is_zero
     assert not eye(3).is_zero
 
 def test_rotation_matrices():
@@ -1884,3 +1902,41 @@ def test_zero_dimension_multiply():
     assert (Matrix()*zeros(0, 3)).shape == (0, 3)
     assert zeros(3, 0)*zeros(0, 3) == zeros(3, 3)
     assert zeros(0, 3)*zeros(3, 0) == Matrix()
+
+def test_slice_issue_2884():
+    m = Matrix(2,2,range(4))
+    assert m[1,:] == Matrix([[2, 3]])
+    assert m[-1,:] == Matrix([[2, 3]])
+    assert m[:,1] == Matrix([[1, 3]]).T
+    assert m[:,-1] == Matrix([[1, 3]]).T
+    raises(IndexError, 'm[2,:]')
+    raises(IndexError, 'm[2,2]')
+
+def test_invertible_check():
+    x = symbols('x')
+    # sometimes a singular matrix will have a pivot vector shorter than
+    # the number of rows in a matrix...
+    assert Matrix([[1, 2], [1, 2]]).rref() == (Matrix([[1, 2], [0, 0]]), [0])
+    raises(ValueError, 'Matrix([[1, 2], [1, 2]]).inv()')
+    # ... but sometimes it won't, so that is an insufficient test of
+    # whether something is invertible.
+    m = Matrix([
+    [0, -1,  0,  0,  0,  0, -1,  0,  0],
+    [-1, x, -1,  0,  0,  0,  0, -1,  0],
+    [ 0, -1, x,  0,  0,  0,  0,  0, -1],
+    [ 0,  0,  0, x, -1,  0, -1,  0,  0],
+    [ 0,  0,  0, -1, x, -1,  0, -1,  0],
+    [ 0,  0,  0,  0, -1,  0,  0,  0, -1],
+    [-1,  0,  0, -1,  0,  0, x, -1,  0],
+    [ 0, -1,  0,  0, -1,  0, -1,  0, -1],
+    [ 0,  0, -1,  0,  0, -1,  0, -1, x]])
+    assert len(m.rref()[1]) == m.rows
+    raises(ValueError, 'm.inv(method="ADJ")')
+    raises(ValueError, 'm.inv(method="GE")')
+    raises(ValueError, 'm.inv(method="LU")')
+
+@XFAIL
+def test_issue_860():
+    x, y=symbols('x, y')
+    e = x*y
+    assert e.subs(x, Matrix([3, 5, 3])) == Matrix([3, 5, 3])*y

@@ -11,20 +11,20 @@ such a way that it prints complete compilable code, but this leads to a few
 unsurmountable issues that can only be tackled with dedicated code generator:
 
 - For C, one needs both a code and a header file, while the printing routines
-generate just one string. This code generator can be extended to support .pyf
-files for f2py.
+  generate just one string. This code generator can be extended to support .pyf
+  files for f2py.
 
 - Sympy functions are not concerned with programming-technical issues, such as
-input, output and input-output arguments. Other examples are contiguous or
-non-contiguous arrays, including headers of other libraries such as gsl or others.
+  input, output and input-output arguments. Other examples are contiguous or
+  non-contiguous arrays, including headers of other libraries such as gsl or others.
 
 - It is highly interesting to evaluate several sympy functions in one C routine,
-eventually sharing common intermediate results with the help of the cse routine.
-This is more than just printing.
+  eventually sharing common intermediate results with the help of the cse routine.
+  This is more than just printing.
 
 - From the programming perspective, expressions with constants should be
-evaluated in the code generator as much as possible. This is different for
-printing.
+  evaluated in the code generator as much as possible. This is different for
+  printing.
 
 
 --- Basic assumptions ---
@@ -47,29 +47,31 @@ printing.
 + Friendly functions that are easier to use than the rigorous Routine/CodeGen
   workflow.
 + Integer and Real numbers as input and output
-- Optional extra include lines for libraries/objects that can eval special
-  functions
-- Test other C compilers and libraries: gcc, tcc, libtcc, gcc+gsl, ...
 + Output arguments
 + InputOutput arguments
 + Sort input/output arguments properly
 + Contiguous array arguments (numpy matrices)
++ Also generate .pyf code for f2py (in autowrap module)
++ Isolate constants and evaluate them beforehand in double precision
++ Fortran 90
+
+- Common Subexpression Elimination
+- User defined comments in the generated code
+- Optional extra include lines for libraries/objects that can eval special
+  functions
+- Test other C compilers and libraries: gcc, tcc, libtcc, gcc+gsl, ...
 - Contiguous array arguments (sympy matrices)
 - Non-contiguous array arguments (sympy matrices)
 - ccode must raise an error when it encounters something that can not be
   translated into c. ccode(integrate(sin(x)/x, x)) does not make sense.
 - Complex numbers as input and output
-+ Also generate .pyf code for f2py (in autowrap module)
 - A default complex datatype
 - Include extra information in the header: date, user, hostname, sha1 hash, ...
-+ Isolate constants and evaluate them beforehand in double precision
-- Common Subexpression Elimination
-- User defined comments in the generated code
 - Fortran 77
-+ Fortran 90
 - C++
 - Python
 - ...
+
 """
 from __future__ import with_statement
 
@@ -83,7 +85,6 @@ from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
-from sympy.utilities import flatten
 
 
 

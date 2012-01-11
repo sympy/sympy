@@ -116,8 +116,7 @@ this function to figure out the exact problem.
 
 """
 from sympy import SYMPY_DEBUG
-from sympy.core import Basic, S, oo, Symbol, C, I, Dummy, Wild
-from sympy.core.function import Function, UndefinedFunction
+from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify import powsimp
@@ -236,32 +235,42 @@ class SubsSet(dict):
 
     The gruntz algorithm needs to rewrite certain expressions in term of a new
     variable w. We cannot use subs, because it is just too smart for us. For
-    example:
+    example::
+
         > Omega=[exp(exp(_p - exp(-_p))/(1 - 1/_p)), exp(exp(_p))]
         > O2=[exp(-exp(_p) + exp(-exp(-_p))*exp(_p)/(1 - 1/_p))/_w, 1/_w]
         > e = exp(exp(_p - exp(-_p))/(1 - 1/_p)) - exp(exp(_p))
         > e.subs(Omega[0],O2[0]).subs(Omega[1],O2[1])
         -1/w + exp(exp(p)*exp(-exp(-p))/(1 - 1/p))
+
     is really not what we want!
 
     So we do it the hard way and keep track of all the things we potentially
-    want to substitute by dummy variables. Consider the expression
+    want to substitute by dummy variables. Consider the expression::
+
         exp(x - exp(-x)) + exp(x) + x.
+
     The mrv set is {exp(x), exp(-x), exp(x - exp(-x))}.
-    We introduce corresponding dummy variables d1, d2, d3 and rewrite:
+    We introduce corresponding dummy variables d1, d2, d3 and rewrite::
+
         d3 + d1 + x.
+
     This class first of all keeps track of the mapping expr->variable, i.e.
-    will at this stage be a dictionary
+    will at this stage be a dictionary::
+
         {exp(x): d1, exp(-x): d2, exp(x - exp(-x)): d3}.
+
     [It turns out to be more convenient this way round.]
     But sometimes expressions in the mrv set have other expressions from the
     mrv set as subexpressions, and we need to keep track of that as well. In
-    this case, d3 is really exp(x - d2), so rewrites at this stage is
+    this case, d3 is really exp(x - d2), so rewrites at this stage is::
+
         {d3: exp(x-d2)}.
 
     The function rewrite uses all this information to correctly rewrite our
     expression in terms of w. In this case w can be choosen to be exp(-x),
-    i.e. d2. The correct rewriting then is
+    i.e. d2. The correct rewriting then is::
+
         exp(-w)/w + 1/w + x.
     """
     def __init__(self):
@@ -281,11 +290,11 @@ class SubsSet(dict):
         return e
 
     def meets(self, s2):
-        """ Tell whether or not self and s2 have non-empty intersection """
+        """Tell whether or not self and s2 have non-empty intersection"""
         return set(self.keys()).intersection(s2.keys()) != set()
 
     def union(self, s2, exps=None):
-        """ Compute the union of self and s2, adjusting exps """
+        """Compute the union of self and s2, adjusting exps"""
         res = self.copy()
         tr = {}
         for expr, var in s2.iteritems():
@@ -307,7 +316,7 @@ class SubsSet(dict):
 
 @debug
 def mrv(e, x):
-    """Returns a SubsSet of  most rapidly varying (mrv) subexpressions of 'e',
+    """Returns a SubsSet of most rapidly varying (mrv) subexpressions of 'e',
        and e rewritten in terms of these"""
     e = powsimp(e, deep=True, combine='exp')
     assert isinstance(e, Basic)
@@ -406,18 +415,21 @@ def mrv_max1(f, g, exps, x):
 @cacheit
 @timeit
 def sign(e, x):
-    """Returns a sign of an expression e(x) for x->oo.
+    """
+    Returns a sign of an expression e(x) for x->oo.
+
+    ::
 
         e >  0 for x sufficiently large ...  1
         e == 0 for x sufficiently large ...  0
         e <  0 for x sufficiently large ... -1
 
-        The result of this function is currently undefined if e changes sign
-        arbitarily often for arbitrarily large x (e.g. sin(x)).
+    The result of this function is currently undefined if e changes sign
+    arbitarily often for arbitrarily large x (e.g. sin(x)).
 
-       Note that this returns zero only if e is *constantly* zero
-       for x sufficiently large. [If e is constant, of course, this is just
-       the same thing as the sign of e.]
+    Note that this returns zero only if e is *constantly* zero
+    for x sufficiently large. [If e is constant, of course, this is just
+    the same thing as the sign of e.]
     """
     from sympy import sign as _sign
     assert isinstance(e, Basic)
@@ -426,15 +438,9 @@ def sign(e, x):
         return 1
     elif e.is_negative:
         return -1
+    elif e.is_zero:
+        return 0
 
-    if e.is_Rational or e.is_Float:
-        assert not e is S.NaN
-        if e == 0:
-            return 0
-        elif e.evalf() > 0:
-            return 1
-        else:
-            return -1
     elif not e.has(x):
         return _sign(e)
     elif e == x:
@@ -565,13 +571,15 @@ def mrv_leadterm(e, x):
     return series.leadterm(w)
 
 def build_expression_tree(Omega, rewrites):
-    """ Helper function for rewrite.
+    r""" Helper function for rewrite.
 
     We need to sort Omega (mrv set) so that we replace an expression before
-    we replace any expression in terms of which it has to be rewritten:
-    e1 ---> e2 ---> e3
-             \
-              -> e4
+    we replace any expression in terms of which it has to be rewritten::
+
+        e1 ---> e2 ---> e3
+                 \
+                  -> e4
+
     Here we can do e1, e2, e3, e4 or e1, e2, e4, e3.
     To do this we assemble the nodes into a tree, and sort them by height.
 

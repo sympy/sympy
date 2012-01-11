@@ -8,7 +8,7 @@ Introduction
 ============
 
 This module provides around 200 predefined units that are commonly used in the
-sciences.  Additionally, it provides the :class:`Unit` class  which allows you
+sciences.  Additionally, it provides the :class:`Unit` class which allows you
 to define your own units.
 
 Examples
@@ -61,4 +61,10 @@ Common SI derived units.
 
     >>> joule
     kg*m**2/s**2
+
+Docstring
+=========
+
+.. automodule:: sympy.physics.units
+   :members:
 

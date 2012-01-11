@@ -23,7 +23,7 @@ from sympy.polys.galoistools import (
     gf_edf_zassenhaus, gf_edf_shoup,
     gf_berlekamp, gf_zassenhaus, gf_shoup,
     gf_factor_sqf, gf_factor,
-    gf_value, linear_congruence, csolve_prime, gf_csolve
+    gf_value, linear_congruence, csolve_prime, gf_csolve,
 )
 
 from sympy.polys.polyerrors import (

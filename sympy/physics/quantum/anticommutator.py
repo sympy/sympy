@@ -3,7 +3,6 @@
 from sympy import S, Expr, Mul, Integer
 from sympy.printing.pretty.stringpict import prettyForm
 
-from sympy.physics.quantum.qexpr import split_commutative_parts
 from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.dagger import Dagger
 
@@ -28,6 +27,7 @@ class AntiCommutator(Expr):
 
     Parameters
     ==========
+
     A : Expr
         The first argument of the anticommutator {A,B}.
     B : Expr
@@ -36,34 +36,34 @@ class AntiCommutator(Expr):
     Examples
     ========
 
-        >>> from sympy import symbols
-        >>> from sympy.physics.quantum import AntiCommutator
-        >>> from sympy.physics.quantum import Operator, Dagger
-        >>> x, y = symbols('x,y')
-        >>> A = Operator('A')
-        >>> B = Operator('B')
+    >>> from sympy import symbols
+    >>> from sympy.physics.quantum import AntiCommutator
+    >>> from sympy.physics.quantum import Operator, Dagger
+    >>> x, y = symbols('x,y')
+    >>> A = Operator('A')
+    >>> B = Operator('B')
 
     Create an anticommutator and use ``doit`` to multiply them out.
 
-        >>> ac = AntiCommutator(A,B); ac
-        {A,B}
-        >>> ac.doit()
-        A*B + B*A
+    >>> ac = AntiCommutator(A,B); ac
+    {A,B}
+    >>> ac.doit()
+    A*B + B*A
 
-    The commutator orders it arguments in canonical order::
+    The commutator orders it arguments in canonical order:
 
-        >>> ac = AntiCommutator(B,A); ac
-        {A,B}
+    >>> ac = AntiCommutator(B,A); ac
+    {A,B}
 
-    Scalar constants are factored out::
+    Scalar constants are factored out:
 
-        >>> AntiCommutator(3*x*A,x*y*B)
-        3*x**2*y*{A,B}
+    >>> AntiCommutator(3*x*A,x*y*B)
+    3*x**2*y*{A,B}
 
-    Dagger is alto handled::
+    Dagger is alto handled:
 
-        >>> Dagger(AntiCommutator(A,B))
-        {Dagger(A),Dagger(B)}
+    >>> Dagger(AntiCommutator(A,B))
+    {Dagger(A),Dagger(B)}
 
     References
     ==========
@@ -89,18 +89,11 @@ class AntiCommutator(Expr):
 
         # [xA,yB]  ->  xy*[A,B]
         # from sympy.physics.qmul import QMul
-        c_part = []
-        nc_part = []
-        nc_part2 = []
-        if isinstance(a, Mul):
-            c_part, nc_part = split_commutative_parts(a)
-        if isinstance(b, Mul):
-            c_part2, nc_part2 = split_commutative_parts(b)
-            c_part.extend(c_part2)
+        ca, nca = a.args_cnc()
+        cb, ncb = b.args_cnc()
+        c_part = ca + cb
         if c_part:
-            a = nc_part or [a]
-            b = nc_part2 or [b]
-            return Mul(Mul(*c_part), cls(Mul(*a), Mul(*b)))
+            return Mul(Mul(*c_part), cls(Mul._from_args(nca), Mul._from_args(ncb)))
 
         # Canonical ordering of arguments
         if a.compare(b) == 1:

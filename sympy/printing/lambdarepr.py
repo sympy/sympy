@@ -17,7 +17,6 @@ class LambdaPrinter(StrPrinter):
 
     def _print_Piecewise(self, expr):
         from sympy.core.sets import Interval
-        args = expr.args
         result = []
         i = 0
         for arg in expr.args:

@@ -16,13 +16,13 @@ class PlotCamera(object):
     _default_ortho_dist = 600.0
 
     rot_presets = {
-        'xy':(0,0,0),
-        'xz':(-90,0,0),
-        'yz':(0,90,0),
-        'perspective':(-45,0,-45)
+        'xy': (0, 0, 0),
+        'xz': (-90, 0, 0),
+        'yz': (0, 90, 0),
+        'perspective': (-45, 0, -45)
     }
 
-    def __init__(self, window, ortho = False):
+    def __init__(self, window, ortho=False):
         self.window = window
         self.axes = self.window.plot.axes
         self.ortho = ortho
@@ -36,14 +36,16 @@ class PlotCamera(object):
 
     def set_rot_preset(self, preset_name):
         self.init_rot_matrix()
-        try: r = self.rot_presets[preset_name]
-        except:
+        try:
+            r = self.rot_presets[preset_name]
+        except AttributeError:
             raise ValueError("%s is not a valid rotation preset." % preset_name)
         try:
             self.euler_rotate(r[0], 1, 0, 0)
             self.euler_rotate(r[1], 0, 1, 0)
             self.euler_rotate(r[2], 0, 0, 1)
-        except: pass
+        except AttributeError:
+            pass
 
     def reset(self):
         self._dist = 0.0
@@ -85,8 +87,10 @@ class PlotCamera(object):
         glScalef(*self._get_scale())
 
     def spherical_rotate(self, p1, p2, sensitivity=1.0):
-        mat = get_spherical_rotatation(p1, p2, self.window.width, self.window.height, sensitivity)
-        if mat is not None: self.mult_rot_matrix(mat)
+        mat = get_spherical_rotatation(p1, p2, self.window.width,
+                                       self.window.height, sensitivity)
+        if mat is not None:
+            self.mult_rot_matrix(mat)
 
     def euler_rotate(self, angle, x, y, z):
         glPushMatrix()
@@ -106,16 +110,16 @@ class PlotCamera(object):
             min_dist = self.min_dist
             max_dist = self.max_dist
 
-        new_dist = (self._dist - dist_d)
+        new_dist = (self._dist-dist_d)
         if (clicks < 0 and new_dist < max_dist) or new_dist > min_dist:
             self._dist = new_dist
 
     def mouse_translate(self, x, y, dx, dy):
         glPushMatrix()
         glLoadIdentity()
-        glTranslatef(0,0,-self._dist)
-        z = model_to_screen(0,0,0)[2]
-        d = vec_subs(screen_to_model(x,y,z), screen_to_model(x-dx,y-dy,z))
+        glTranslatef(0, 0, -self._dist)
+        z = model_to_screen(0, 0, 0)[2]
+        d = vec_subs(screen_to_model(x, y, z), screen_to_model(x-dx, y-dy, z))
         glPopMatrix()
         self._x += d[0]
         self._y += d[1]

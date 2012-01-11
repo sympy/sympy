@@ -1,7 +1,7 @@
 from __future__ import division
 from sympy import S, sqrt, Sum, symbols
 from sympy.physics.quantum.cg import Wigner3j, CG, cg_simp
-from sympy.physics.quantum.kronecker import KroneckerDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta
 
 
 def test_cg_simp_add():

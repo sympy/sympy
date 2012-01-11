@@ -208,3 +208,26 @@ def test_getO():
 def test_leading_term():
     from sympy import digamma
     assert O(1/digamma(1/x)) == O(1/log(x))
+
+def test_eval():
+    y = Symbol('y')
+    from sympy import Basic
+    assert Order(x).subs(Order(x), 1) == 1
+    assert Order(x).subs(x, y) == Order(y)
+    assert (O(1)**x).is_Pow
+
+def test_oseries():
+    assert Order(x).oseries(x) == Order(x)
+@XFAIL
+def test_issue_1180():
+    a, b = symbols('a b')
+    assert O(a+b,a,b)+O(1,a,b) == O(1, a, b)
+
+@XFAIL
+def test_issue_1756():
+    x = Symbol('x')
+    f = Function('f')
+    g = Function('g')
+    assert 1/O(1) != O(1)
+    assert 1/O(x) != O(1/x)
+    assert 1/O(f(x)) != O(1/x)

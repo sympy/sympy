@@ -1,14 +1,12 @@
 """Algorithms for computing symbolic roots of polynomials. """
 
 from sympy.core.symbol import Dummy
-from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core import S, I, Basic
+from sympy.core import S, I
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
 
 from sympy.ntheory import divisors, isprime, nextprime
-from sympy.functions import exp, sqrt, re, im
+from sympy.functions import exp, sqrt
 
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list
 from sympy.polys.specialpolys import cyclotomic_poly
@@ -141,7 +139,8 @@ def roots_quartic(f):
         a) `p == 0`
         b) `p != 0`
 
-    **Examples**
+    Examples
+    ========
 
         >>> from sympy import Poly, symbols, I
         >>> from sympy.polys.polyroots import roots_quartic
@@ -152,7 +151,8 @@ def roots_quartic(f):
         >>> sorted(str(tmp.evalf(n=2)) for tmp in r)
         ['1.0 + 1.7*I', '1.0 - 1.7*I', '2.0 + 1.0*I', '2.0 - 1.0*I']
 
-    **References**
+    References
+    ==========
 
     1. http://mathforum.org/dr.math/faq/faq.cubic.equations.html
     2. http://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
@@ -239,7 +239,8 @@ def _inv_totient_estimate(m):
     """
     Find ``(L, U)`` such that ``L <= phi^-1(m) <= U``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.polyroots import _inv_totient_estimate
 
@@ -459,7 +460,8 @@ def roots(f, *gens, **flags):
     case of multiple roots.  However to get a tuple containing all
     those roots set the ``multiple`` flag to True.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import Poly, roots
     >>> from sympy.abc import x, y
@@ -657,7 +659,8 @@ def root_factors(f, *gens, **args):
     """
     Returns all factors of a univariate polynomial.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.abc import x, y
     >>> from sympy.polys.polyroots import root_factors

@@ -6,6 +6,7 @@ from expr import Expr, AtomicExpr
 from cache import cacheit
 from function import FunctionClass
 from sympy.logic.boolalg import Boolean
+from sympy.core.compatibility import SymPyDeprecationWarning
 
 import re
 import warnings
@@ -62,7 +63,7 @@ class Symbol(AtomicExpr, Boolean):
                     "\nThe syntax Symbol('x', dummy=True) is deprecated and will"
                     "\nbe dropped in a future version of Sympy. Please use Dummy()"
                     "\nor symbols(..., cls=Dummy) to create dummy symbols.",
-                    DeprecationWarning)
+                    SymPyDeprecationWarning)
             if assumptions.pop('dummy'):
                 return Dummy(name, commutative, **assumptions)
         return Symbol.__xnew_cached_(cls, name, commutative, **assumptions)
@@ -106,6 +107,11 @@ class Symbol(AtomicExpr, Boolean):
     def _sage_(self):
         import sage.all as sage
         return sage.var(self.name)
+
+    def is_constant(self, *wrt, **flags):
+        if not wrt:
+            return False
+        return not self in wrt
 
     @property
     def is_number(self):
@@ -157,15 +163,11 @@ class Wild(Symbol):
     """
 
     __slots__ = ['exclude', 'properties']
-
     is_Wild = True
 
-    def __new__(cls, name, exclude=None, properties=None, **assumptions):
-        if type(exclude) is list:
-            exclude = tuple(exclude)
-        if type(properties) is list:
-            properties = tuple(properties)
-
+    def __new__(cls, name, exclude=(), properties=(), **assumptions):
+        exclude = tuple([sympify(x) for x in exclude])
+        properties = tuple(properties)
         return Wild.__xnew__(cls, name, exclude, properties, **assumptions)
 
     def __getnewargs__(self):
@@ -175,35 +177,19 @@ class Wild(Symbol):
     @cacheit
     def __xnew__(cls, name, exclude, properties, **assumptions):
         obj = Symbol.__xnew__(cls, name, **assumptions)
-
-        if exclude is None:
-            obj.exclude = None
-        else:
-            obj.exclude = tuple([sympify(x) for x in exclude])
-        if properties is None:
-            obj.properties = None
-        else:
-            obj.properties = tuple(properties)
+        obj.exclude = exclude
+        obj.properties = properties
         return obj
 
     def _hashable_content(self):
         return (self.name, self.exclude, self.properties )
 
     # TODO add check against another Wild
-    def matches(self, expr, repl_dict={}, evaluate=False):
-        if self in repl_dict:
-            if repl_dict[self] == expr:
-                return repl_dict
-            else:
-                return None
-        if self.exclude:
-            for x in self.exclude:
-                if expr.has(x):
-                    return None
-        if self.properties:
-            for f in self.properties:
-                if not f(expr):
-                    return None
+    def matches(self, expr, repl_dict={}):
+        if any(expr.has(x) for x in self.exclude):
+            return None
+        if any(not f(expr) for f in self.properties):
+            return None
         repl_dict = repl_dict.copy()
         repl_dict[self] = expr
         return repl_dict
@@ -300,7 +286,7 @@ def symbols(names, **args):
     if 'each_char' in args:
         warnings.warn("The each_char option to symbols() and var() is "
             "deprecated.  Separate symbol names by spaces or commas instead.",
-            DeprecationWarning)
+            SymPyDeprecationWarning)
 
     if isinstance(names, basestring):
         names = names.strip()

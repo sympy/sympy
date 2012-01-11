@@ -27,6 +27,7 @@ def _make_message(ipython=True, quiet=False, source=None):
     from sympy import __version__ as sympy_version
     from sympy.polys.domains import GROUND_TYPES
     from sympy.utilities.misc import ARCH
+    from sympy import SYMPY_DEBUG
 
     import sys
     import os
@@ -44,6 +45,9 @@ def _make_message(ipython=True, quiet=False, source=None):
 
     if cache is not None and cache.lower() == 'no':
         info.append('cache: off')
+
+    if SYMPY_DEBUG:
+        info.append('debugging: on')
 
     args = shell_name, sympy_version, python_version, ARCH, ', '.join(info)
     message = "%s console for SymPy %s (Python %s-%s) (%s)\n" % args
@@ -64,16 +68,45 @@ def _make_message(ipython=True, quiet=False, source=None):
 
     return message
 
-def _init_ipython_session(argv=[]):
+def _init_ipython_session(argv=[], auto=False):
     """Construct new IPython session. """
     import IPython
+
     if IPython.__version__ >= '0.11':
-        from IPython.frontend.terminal import ipapp
         # use an app to parse the command line, and init config
+        from IPython.frontend.terminal import ipapp
         app = ipapp.TerminalIPythonApp()
+
         # don't draw IPython banner during initialization:
         app.display_banner = False
         app.initialize(argv)
+
+        import re
+        re_nameerror = re.compile("name '(?P<symbol>[A-Za-z_][A-Za-z0-9_]*)' is not defined")
+
+        def handler(self, etype, value, tb, tb_offset=None):
+            """Handle :exc:`NameError` exception and allow injection of missing symbols. """
+            if etype is NameError and tb.tb_next and not tb.tb_next.tb_next:
+                match = re_nameerror.match(str(value))
+
+                if match is not None:
+                    self.run_cell("%(symbol)s = Symbol('%(symbol)s')" %
+                        {'symbol': match.group("symbol")}, store_history=False)
+
+                    try:
+                        code = self.user_ns_hidden['In'][-1]
+                    except (KeyError, IndexError):
+                        pass
+                    else:
+                        self.run_cell(code, store_history=False)
+                        return None
+
+            stb = self.InteractiveTB.structured_traceback(etype, value, tb, tb_offset=tb_offset)
+            self._showtraceback(etype, value, stb)
+
+        if auto:
+            app.shell.set_custom_exc((NameError,), handler)
+
         return app.shell
     else:
         from IPython.Shell import make_IPython
@@ -112,7 +145,7 @@ def _init_python_session():
     return SymPyConsole()
 
 def init_session(ipython=None, pretty_print=True, order=None,
-        use_unicode=None, quiet=False, argv=[]):
+        use_unicode=None, quiet=False, auto=False, argv=[]):
     """Initialize an embedded IPython or Python session. """
     import sys
 
@@ -134,6 +167,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 raise RuntimeError("IPython is not available on this system")
         else:
             ipython = True
+
             if IPython.__version__ >= '0.11':
                 try:
                     ip = get_ipython()
@@ -147,7 +181,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
             if ip is not None:
                 in_ipython = True
             else:
-                ip = _init_ipython_session(argv)
+                ip = _init_ipython_session(argv=argv, auto=auto)
 
             if IPython.__version__ >= '0.11':
                 # runsource is gone, use run_cell instead, which doesn't
@@ -157,6 +191,9 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 mainloop = ip.mainloop
             else:
                 mainloop = ip.interact
+
+    if auto and (not ipython or IPython.__version__ < '0.11'):
+        raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")
 
     _preexec_source = preexec_source
 

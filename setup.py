@@ -105,7 +105,7 @@ class audit(Command):
         import os
         try:
             import pyflakes.scripts.pyflakes as flakes
-        except:
+        except ImportError:
             print """In order to run the audit, you need to have PyFlakes installed."""
             sys.exit(-1)
         # We don't want to audit external dependencies
@@ -162,14 +162,25 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        if sympy.test():
-            # all regular tests run successfuly, so let's also run doctests
-            # (if some regular test fails, the doctests are not run)
-            if sympy.doctest():
-                # All ok
+        tests_successful = True
+        try:
+            if not sympy.test():
+                # some regular test fails, so set the tests_successful
+                # flag to false and continue running the doctests
+                tests_successful = False
+
+            if not sympy.doctest():
+                tests_successful = False
+
+            if tests_successful:
                 return
-        # Return nonzero exit code
-        sys.exit(1)
+            else:
+                # Return nonzero exit code
+                sys.exit(1)
+        except KeyboardInterrupt:
+            print
+            print("DO *NOT* COMMIT!")
+            sys.exit(1)
 
 
 class run_benchmarks(Command):
@@ -235,13 +246,35 @@ tests = [
     'sympy.utilities.tests',
     ]
 
+classifiers = [
+    'License :: OSI Approved :: BSD License',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python',
+    'Topic :: Scientific/Engineering',
+    'Topic :: Scientific/Engineering :: Mathematics',
+    'Topic :: Scientific/Engineering :: Physics',
+    'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 2.5',
+    'Programming Language :: Python :: 2.6',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.2',
+    ]
+
+long_description = '''SymPy is a Python library for symbolic mathematics. It aims
+to become a full-featured computer algebra system (CAS) while keeping the code
+as simple as possible in order to be comprehensible and easily extensible.
+SymPy is written entirely in Python and does not require any external libraries.'''
+
 setup(
       name = 'sympy',
       version = sympy.__version__,
       description = 'Computer algebra system (CAS) in Python',
+      long_description = long_description,
       author = 'SymPy development team',
       author_email = 'sympy@googlegroups.com',
       license = 'BSD',
+      keywords = "Math CAS",
       url = 'http://code.google.com/p/sympy',
       packages = ['sympy'] + modules + tests,
       scripts = ['bin/isympy'],
@@ -253,4 +286,5 @@ setup(
                      'clean': clean,
                      'audit' : audit,
                      },
+      classifiers = classifiers,
       )

@@ -1,45 +1,107 @@
 """Base class for all the objects in SymPy"""
 
-from decorators import _sympifyit
 from assumptions import WithAssumptions
 from cache import cacheit
 from core import BasicType, C
 from sympify import _sympify, sympify, SympifyError
 from compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
+from sympy.core.singleton import S
 
-class Basic(object):
+class PicklableWithSlots(object):
+    """
+    Mixin class that allows to pickle objects with ``__slots__``.
+
+    Examples
+    --------
+
+    First define a class that mixes :class:`PicklableWithSlots` in::
+
+        >>> from sympy.core.basic import PicklableWithSlots
+
+        >>> class Some(PicklableWithSlots):
+        ...     __slots__ = ['foo', 'bar']
+        ...
+        ...     def __init__(self, foo, bar):
+        ...         self.foo = foo
+        ...         self.bar = bar
+
+    To make :mod:`pickle` happy in doctest we have to use this hack::
+
+        >>> import __builtin__ as builtin
+        >>> builtin.Some = Some
+
+    Next lets see if we can create an instance, pickle it and unpickle::
+
+        >>> some = Some('abc', 10)
+        >>> some.foo, some.bar
+        ('abc', 10)
+
+        >>> from pickle import dumps, loads
+        >>> some2 = loads(dumps(some))
+
+        >>> some2.foo, some2.bar
+        ('abc', 10)
+
+    """
+
+    __slots__ = []
+
+    def __getstate__(self, cls=None):
+        if cls is None:
+            # This is the case for the instance that gets pickled
+            cls = self.__class__
+
+        d = {}
+
+        # Get all data that should be stored from super classes
+        for c in cls.__bases__:
+            if hasattr(c, "__getstate__"):
+                d.update(c.__getstate__(self, c))
+
+        # Get all information that should be stored from cls and return the dict
+        for name in cls.__slots__:
+            if hasattr(self, name):
+                d[name] = getattr(self, name)
+
+        return d
+
+    def __setstate__(self, d):
+        # All values that were pickled are now assigned to a fresh instance
+        for name, value in d.iteritems():
+            try:
+                setattr(self, name, value)
+            except AttributeError:    # This is needed in cases like Rational :> Half
+                pass
+
+class Basic(PicklableWithSlots):
     """
     Base class for all objects in sympy.
 
     Conventions:
 
-    1)
-    When you want to access parameters of some instance, always use .args:
-    Example:
+    1) Always use ``.args``, when accessing parameters of some instance:
 
-    >>> from sympy import symbols, cot
-    >>> from sympy.abc import x, y
+        >>> from sympy import symbols, cot
+        >>> from sympy.abc import x, y
 
-    >>> cot(x).args
-    (x,)
+        >>> cot(x).args
+        (x,)
 
-    >>> cot(x).args[0]
-    x
+        >>> cot(x).args[0]
+        x
 
-    >>> (x*y).args
-    (x, y)
+        >>> (x*y).args
+        (x, y)
 
-    >>> (x*y).args[1]
-    y
+        >>> (x*y).args[1]
+        y
 
 
-    2) Never use internal methods or variables (the ones prefixed with "_").
-    Example:
+    2) Never use internal methods or variables (the ones prefixed with ``_``):
 
-    >>> cot(x)._args    #don't use this, use cot(x).args instead
-    (x,)
-
+        >>> cot(x)._args    # do not use this, use cot(x).args instead
+        (x,)
 
     """
     __metaclass__ = WithAssumptions
@@ -125,31 +187,6 @@ class Basic(object):
         # relevant attributes as tuple.
         return self._args
 
-    def __getstate__(self, cls=None):
-        if cls is None:
-            # This is the case for the instance that gets pickled
-            cls = self.__class__
-
-        d = {}
-        # Get all data that should be stored from super classes
-        for c in cls.__bases__:
-            if hasattr(c, "__getstate__"):
-                d.update(c.__getstate__(self, c))
-
-        # Get all information that should be stored from cls and return the dic
-        for name in cls.__slots__:
-            if hasattr(self, name):
-                d[name] = getattr(self, name)
-        return d
-
-    def __setstate__(self, d):
-        # All values that were pickled are now assigned to a fresh instance
-        for name, value in d.iteritems():
-            try:
-                setattr(self, name, value)
-            except:
-                pass
-
     def compare(self, other):
         """
         Return -1,0,1 if the object is smaller, equal, or greater than other.
@@ -158,7 +195,8 @@ class Basic(object):
         from the "other" then their classes are ordered according to
         the sorted_classes list.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x, y
         >>> x.compare(y)
@@ -232,7 +270,8 @@ class Basic(object):
 
           1 < x < x**2 < x**3 < O(x**4) etc.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import Basic, Number
@@ -279,7 +318,8 @@ class Basic(object):
         This is a convenience function that allows one to create objects from
         any iterable, without having to convert to a list or tuple first.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Tuple
         >>> Tuple.fromiter(i for i in xrange(5))
@@ -298,7 +338,8 @@ class Basic(object):
         """
         Return a sort key.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy.core import Basic, S, I
         >>> from sympy.abc import x
@@ -312,7 +353,6 @@ class Basic(object):
         [x**(-2), 1/x, x**(1/4), sqrt(x), x, x**(3/2), x**2]
 
         """
-        from sympy.core.singleton import S
 
         # XXX: remove this when issue #2070 is fixed
         def inner_key(arg):
@@ -378,7 +418,8 @@ class Basic(object):
         """
         Compare two expressions and handle dummy symbols.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy import Dummy
         >>> from sympy.abc import x, y
@@ -437,7 +478,8 @@ class Basic(object):
            and number symbols like I and pi. It is possible to request
            atoms of any type, however, as demonstrated below.
 
-           Examples:
+           Examples
+           ========
 
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
@@ -447,7 +489,8 @@ class Basic(object):
            If one or more types are given, the results will contain only
            those types of atoms.
 
-           Examples:
+           Examples
+           ========
 
            >>> from sympy import Number, NumberSymbol, Symbol
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
@@ -581,7 +624,8 @@ class Basic(object):
 
             >> x == x.func(*x.args)
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> a = 2*x
@@ -601,7 +645,8 @@ class Basic(object):
     def args(self):
         """Returns a tuple of arguments of 'self'.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import symbols, cot
         >>> from sympy.abc import x, y
@@ -630,7 +675,8 @@ class Basic(object):
         """
         Iterates arguments of 'self'.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> a = 2*x
@@ -670,6 +716,14 @@ class Basic(object):
         except PolynomialError:
             return None
 
+    def as_content_primitive(self, radical=False):
+        """A stub to allow Basic args (like Tuple) to be skipped when computing
+        the content and primitive components of an expression.
+
+        See docstring of Expr.as_content_primitive
+        """
+        return S.One, self
+
     def subs(self, *args):
         """
         Substitutes an expression.
@@ -677,7 +731,8 @@ class Basic(object):
         Calls either _subs_old_new, _subs_dict or _subs_list depending
         if you give it two arguments (old, new), a dictionary or a list.
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy import pi
         >>> from sympy.abc import x, y
@@ -725,7 +780,8 @@ class Basic(object):
         Performs an order sensitive substitution from the
         input sequence list.
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy.abc import x, y
         >>> (x+y)._subs_list( [(x, 3),     (y, x**2)] )
@@ -787,6 +843,53 @@ class Basic(object):
 
         return self._subs_list(subst)
 
+    def xreplace(self, rule):
+        """
+        Replace occurrences of objects within the expression.
+
+        Parameters
+        ----------
+        rule : dict-like
+            Expresses a replacement rule
+
+        Returns
+        -------
+        xreplace : the result of the replacement
+
+        Examples
+        --------
+        >>> from sympy import symbols, pi
+        >>> x,y, z = symbols('x y z')
+        >>> (1+x*y).xreplace({x: pi})
+        pi*y + 1
+        >>> (1+x*y).xreplace({x:pi, y:2})
+        1 + 2*pi
+
+        Notes
+        -----
+        This method operates at a low level and considers only the objects that
+        appear explicitly as nodes in the expression tree. It is unaware of any
+        specific meaning attached to an object or its arguments. For instance,
+        a product of several factors will only be substituted if it matches
+        exactly a key of the dictionary:
+
+        >>> (x*y + z).xreplace({x*y: pi})
+        z + pi
+        >>> (x*y*z).xreplace({x*y: pi})
+        x*y*z
+        >>> (2*x).xreplace({2*x: y, x: z})
+        y
+        >>> (2*2*x).xreplace({2*x: y, x: z})
+        4*z
+        """
+        if self in rule:
+            return rule[self]
+        elif rule:
+            args = tuple([arg.xreplace(rule) for arg in self.args])
+            if args != self.args:
+                return self.func(*args)
+        return self
+
     @deprecated
     def __contains__(self, obj):
         if self == obj:
@@ -805,7 +908,8 @@ class Basic(object):
         """
         Test whether any subexpression matches any of the patterns.
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy import sin, S
         >>> from sympy.abc import x, y, z
@@ -913,7 +1017,8 @@ class Basic(object):
         3.1. func -> func
              obj.replace(lambda expr: ..., lambda expr: ...)
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy import log, sin, cos, tan, Wild
         >>> from sympy.abc import x
@@ -1049,7 +1154,7 @@ class Basic(object):
         """Count the number of matching subexpressions. """
         return sum(self.find(query, group=True).values())
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}):
         """
         Helper method for match() - switches the pattern and expr.
 
@@ -1062,9 +1167,6 @@ class Basic(object):
         {x_: -a/b}
 
         """
-        if evaluate:
-            return self.subs(repl_dict).matches(expr, repl_dict)
-
         expr = sympify(expr)
         if not isinstance(expr, self.__class__):
             return None
@@ -1079,7 +1181,7 @@ class Basic(object):
         for arg, other_arg in zip(self.args, expr.args):
             if arg == other_arg:
                 continue
-            d = arg.subs(d).matches(other_arg, d)
+            d = arg.xreplace(d).matches(other_arg, d)
             if d is None:
                 return None
         return d
@@ -1093,9 +1195,10 @@ class Basic(object):
         Return ``None`` when expression (self) does not match
         with pattern. Otherwise return a dictionary such that::
 
-          pattern.subs(self.match(pattern)) == self
+          pattern.xreplace(self.match(pattern)) == self
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import symbols, Wild
         >>> from sympy.abc import x, y
@@ -1110,7 +1213,7 @@ class Basic(object):
         >>> e = (2*x)**2
         >>> e.match(p*q**r)
         {p_: 4, q_: x, r_: 2}
-        >>> (p*q**r).subs(e.match(p*q**r))
+        >>> (p*q**r).xreplace(e.match(p*q**r))
         4*x**2
 
         """
@@ -1204,7 +1307,10 @@ class Atom(Basic):
     """
     A parent class for atomic things. An atom is an expression with no subexpressions.
 
-    Examples: Symbol, Number, Rational, Integer, ...
+    Examples
+    ========
+
+    Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
 
@@ -1212,7 +1318,7 @@ class Atom(Basic):
 
     __slots__ = []
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}):
         if self == expr:
             return repl_dict
 
@@ -1221,6 +1327,9 @@ class Atom(Basic):
             return new
         else:
             return self
+
+    def xreplace(self, rule):
+        return rule.get(self, self)
 
     def doit(self, **hints):
         return self

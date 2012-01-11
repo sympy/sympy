@@ -3,7 +3,6 @@
 from sympy import S, Expr, Mul, Add
 from sympy.printing.pretty.stringpict import prettyForm
 
-from sympy.physics.quantum.qexpr import split_commutative_parts
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.operator import Operator
 
@@ -30,6 +29,7 @@ class Commutator(Expr):
 
     Parameters
     ==========
+
     A : Expr
         The first argument of the commutator [A,B].
     B : Expr
@@ -38,44 +38,44 @@ class Commutator(Expr):
     Examples
     ========
 
-        >>> from sympy import symbols
-        >>> from sympy.physics.quantum import Commutator, Dagger
-        >>> x, y = symbols('x,y')
-        >>> A, B, C = symbols('A,B,C', commutative=False)
+    >>> from sympy import symbols
+    >>> from sympy.physics.quantum import Commutator, Dagger
+    >>> x, y = symbols('x,y')
+    >>> A, B, C = symbols('A,B,C', commutative=False)
 
     Create some commutators and use ``doit`` to multiply them out.
 
-        >>> comm = Commutator(A,B); comm
-        [A,B]
-        >>> comm.doit()
-        A*B - B*A
+    >>> comm = Commutator(A,B); comm
+    [A,B]
+    >>> comm.doit()
+    A*B - B*A
 
-    The commutator orders it arguments in canonical order::
+    The commutator orders it arguments in canonical order:
 
-        >>> comm = Commutator(B,A); comm
-        -[A,B]
+    >>> comm = Commutator(B,A); comm
+    -[A,B]
 
-    Scalar constants are factored out::
+    Scalar constants are factored out:
 
-        >>> Commutator(3*x*A,x*y*B)
-        3*x**2*y*[A,B]
+    >>> Commutator(3*x*A,x*y*B)
+    3*x**2*y*[A,B]
 
     Using ``expand(commutator=True)``, the standard commutator expansion rules
-    can be applied::
+    can be applied:
 
-        >>> Commutator(A+B,C).expand(commutator=True)
-        [A,C] + [B,C]
-        >>> Commutator(A,B+C).expand(commutator=True)
-        [A,B] + [A,C]
-        >>> Commutator(A*B,C).expand(commutator=True)
-        A*[B,C] + [A,C]*B
-        >>> Commutator(A,B*C).expand(commutator=True)
-        B*[A,C] + [A,B]*C
+    >>> Commutator(A+B,C).expand(commutator=True)
+    [A,C] + [B,C]
+    >>> Commutator(A,B+C).expand(commutator=True)
+    [A,B] + [A,C]
+    >>> Commutator(A*B,C).expand(commutator=True)
+    A*[B,C] + [A,C]*B
+    >>> Commutator(A,B*C).expand(commutator=True)
+    B*[A,C] + [A,B]*C
 
-    Commutator works with Dagger::
+    Commutator works with Dagger:
 
-        >>> Dagger(Commutator(A,B))
-        -[Dagger(A),Dagger(B)]
+    >>> Dagger(Commutator(A,B))
+    -[Dagger(A),Dagger(B)]
 
     References
     ==========
@@ -101,17 +101,11 @@ class Commutator(Expr):
 
         # [xA,yB]  ->  xy*[A,B]
         # from sympy.physics.qmul import QMul
-        c_part = c_part2 = []
-        nc_part = nc_part2 = []
-        if isinstance(a, Mul):
-            c_part, nc_part = split_commutative_parts(a)
-        if isinstance(b, Mul):
-            c_part2, nc_part2 = split_commutative_parts(b)
-            c_part.extend(c_part2)
+        ca, nca = a.args_cnc()
+        cb, ncb = b.args_cnc()
+        c_part = ca + cb
         if c_part:
-            a = nc_part or [a]
-            b = nc_part2 or [b]
-            return Mul(*c_part)*cls(Mul(*a),Mul(*b))
+            return Mul(Mul(*c_part), cls(Mul._from_args(nca), Mul._from_args(ncb)))
 
         # Canonical ordering of arguments
         if a.compare(b) == 1:

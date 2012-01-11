@@ -54,7 +54,7 @@ def test_tensor_product():
     h = hs1*hs2
     assert isinstance(h, TensorProductHilbertSpace)
     assert h.dimension == 2*n
-    assert h.spaces == set([hs1, hs2])
+    assert h.spaces == (hs1, hs2)
 
     h = hs2*hs2
     assert isinstance(h, TensorPowerHilbertSpace)
@@ -91,10 +91,10 @@ def test_direct_sum():
     h = hs1+hs2
     assert isinstance(h, DirectSumHilbertSpace)
     assert h.dimension == 2+n
-    assert h.spaces == set([hs1, hs2])
+    assert h.spaces == (hs1, hs2)
 
     f = FockSpace()
     h = hs1 + f + hs2
     assert h.dimension == oo
-    assert h.spaces == set([hs1, hs2, f])
+    assert h.spaces == (hs1, f, hs2)
 

@@ -1,14 +1,10 @@
 """Dirac notation for states."""
 
 
-from sympy import Expr, Symbol, Function, integrate, Expr
-from sympy import Lambda, oo, conjugate, Tuple, sqrt, cacheit
+from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
+                   Tuple)
 from sympy.printing.pretty.stringpict import prettyForm
-from sympy.physics.quantum.operator import Operator
-
-from sympy.physics.quantum.qexpr import (
-    QExpr, dispatch_method
-)
+from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 
 __all__ = [
     'KetBase',
@@ -210,6 +206,7 @@ class KetBase(StateBase):
 
         Parameters
         ==========
+
         op : Operator
             The Operator that is acting on the Ket.
         options : dict
@@ -291,6 +288,7 @@ class Ket(State, KetBase):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         ket. This will usually be its symbol or its quantum numbers. For
@@ -353,6 +351,7 @@ class Bra(State, BraBase):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         ket. This will usually be its symbol or its quantum numbers. For
@@ -417,6 +416,7 @@ class TimeDepState(StateBase):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         ket. This will usually be its symbol or its quantum numbers. For
@@ -496,6 +496,7 @@ class TimeDepKet(TimeDepState, KetBase):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         ket. This will usually be its symbol or its quantum numbers. For
@@ -539,6 +540,7 @@ class TimeDepBra(TimeDepState, BraBase):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         ket. This will usually be its symbol or its quantum numbers. For
@@ -688,7 +690,7 @@ class Wavefunction(Function):
             if args[ct] < lower or args[ct] > upper:
                 return 0
 
-            ct+=1
+            ct += 1
 
         expr = self.expr
 
@@ -698,7 +700,7 @@ class Wavefunction(Function):
                 val = options[str(symbol)]
                 expr = expr.subs(symbol, val)
 
-        return expr.subs(tuple(zip(var, args)))
+        return expr.subs(zip(var, args))
 
     def _eval_derivative(self, symbol):
         expr = self.expr

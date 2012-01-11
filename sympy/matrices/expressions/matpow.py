@@ -1,4 +1,4 @@
-from matexpr import MatrixExpr, ShapeError, matrixify, Identity
+from matexpr import MatrixExpr, ShapeError, Identity
 from sympy import Pow, S
 from sympy.core.sympify import _sympify
 

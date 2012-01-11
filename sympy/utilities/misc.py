@@ -7,7 +7,8 @@ def default_sort_key(item, order=None):
     This uses the default ordering. If you want a nonstandard ordering, you will
     have to create your own sort key using the sort_key() method of the object.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import Basic, S, I, default_sort_key
     >>> from sympy.abc import x
@@ -52,7 +53,7 @@ def default_sort_key(item, order=None):
         else:
             args = list(item)
 
-        args = [ default_sort_key(arg, order=order) for arg in  args ]
+        args = [default_sort_key(arg, order=order) for arg in args]
 
         if isinstance(item, dict):
             args = sorted(args)

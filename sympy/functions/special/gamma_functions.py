@@ -15,13 +15,14 @@ from sympy.functions.combinatorial.factorials import rf
 class gamma(Function):
     """The gamma function returns a function which passes through the integral
     values of the factorial function, i.e. though defined in the complex plane,
-    when n is an integer, gamma(n) = (n - 1)!
+    when n is an integer, `gamma(n) = (n - 1)!`
 
     Reference:
         http://en.wikipedia.org/wiki/Gamma_function
     """
 
     nargs = 1
+    unbranched = True
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -73,8 +74,9 @@ class gamma(Function):
         if arg.is_Add:
             coeff, tail = arg.as_coeff_add()
             if coeff and coeff.q != 1:
-                tail = (C.Rational(1, coeff.q),) + tail
-                coeff = floor(coeff)
+                intpart = floor(coeff)
+                tail = (coeff - intpart,) + tail
+                coeff = intpart
             tail = arg._new_rawargs(*tail, **dict(reeval=False))
             return gamma(tail)*C.RisingFactorial(tail, coeff)
 
@@ -100,7 +102,7 @@ class gamma(Function):
 
 class lowergamma(Function):
     r"""
-    Lower incomplete gamma function
+    The lower incomplete gamma function.
 
     It can be defined as the meromorphic continuation of
 
@@ -114,9 +116,15 @@ class lowergamma(Function):
 
     where :math:`{}_1F_1` is the (confluent) hypergeometric function.
 
-    **See also:** :class:`gamma`, :class:`uppergamma`, :class:`hyper`.
+    See Also
+    ========
 
-    **Examples**
+    gamma
+    uppergamma
+    sympy.functions.special.hyper.hyper
+
+    Examples
+    ========
 
     >>> from sympy import lowergamma, S
     >>> from sympy.abc import s, x
@@ -127,12 +135,14 @@ class lowergamma(Function):
     >>> lowergamma(-S(1)/2, x)
     -2*sqrt(pi)*erf(sqrt(x)) - 2*exp(-x)/sqrt(x)
 
-    **References**
+    References
+    ==========
 
     - Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
       Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
       Tables
     - http://en.wikipedia.org/wiki/Incomplete_gamma_function
+
     """
 
     nargs = 2
@@ -152,6 +162,34 @@ class lowergamma(Function):
 
     @classmethod
     def eval(cls, a, x):
+        # For lack of a better place, we use this one to extract branching
+        # information. The following can be
+        # found in the literature (c/f references given above), albeit scattered:
+        # 1) For fixed x != 0, lowergamma(s, x) is an entire function of s
+        # 2) For fixed positive integers s, lowergamma(s, x) is an entire
+        #    function of x.
+        # 3) For fixed non-positive integers s,
+        #    lowergamma(s, exp(I*2*pi*n)*x) =
+        #              2*pi*I*n*(-1)**(-s)/factorial(-s) + lowergamma(s, x)
+        #    (this follows from lowergamma(s, x).diff(x) = x**(s-1)*exp(-x)).
+        # 4) For fixed non-integral s,
+        #    lowergamma(s, x) = x**s*gamma(s)*lowergamma_unbranched(s, x),
+        #    where lowergamma_unbranched(s, x) is an entire function (in fact
+        #    of both s and x), i.e.
+        #    lowergamma(s, exp(2*I*pi*n)*x) = exp(2*pi*I*n*a)*lowergamma(a, x)
+        from sympy import unpolarify, I, factorial, exp
+        nx, n = x.extract_branch_factor()
+        if a.is_integer and a > 0:
+            nx = unpolarify(x)
+            if nx != x:
+                return lowergamma(a, nx)
+        elif a.is_integer and a <= 0:
+            if n != 0:
+                return 2*pi*I*n*(-1)**(-a)/factorial(-a) + lowergamma(a, nx)
+        elif n != 0:
+            return exp(2*pi*I*n*a)*lowergamma(a, nx)
+
+        # Special values.
         if a.is_Number:
             # TODO this should be non-recursive
             if a is S.One:
@@ -177,6 +215,9 @@ class lowergamma(Function):
         mp.prec = oprec
         return Expr._from_mpmath(res, prec)
 
+    def _eval_rewrite_as_uppergamma(self, s, x):
+        return gamma(s) - uppergamma(s, x)
+
 class uppergamma(Function):
     r"""
     Upper incomplete gamma function
@@ -195,7 +236,8 @@ class uppergamma(Function):
 
     where :math:`{}_1F_1` is the (confluent) hypergeometric function.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import uppergamma, S
     >>> from sympy.abc import s, x
@@ -206,14 +248,21 @@ class uppergamma(Function):
     >>> uppergamma(-S(1)/2, x)
     -2*sqrt(pi)*(-erf(sqrt(x)) + 1) + 2*exp(-x)/sqrt(x)
 
-    **See also:** :class:`gamma`, :class:`lowergamma`, :class:`hyper`.
+    See Also
+    ========
 
-    **References**
+    gamma
+    lowergamma
+    sympy.functions.special.hyper.hyper
+
+    References
+    ==========
 
     - Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
       Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
       Tables
     - http://en.wikipedia.org/wiki/Incomplete_gamma_function
+
     """
 
     nargs = 2
@@ -242,6 +291,7 @@ class uppergamma(Function):
 
     @classmethod
     def eval(cls, a, z):
+        from sympy import unpolarify, I, factorial, exp
         if z.is_Number:
             if z is S.NaN:
                 return S.NaN
@@ -250,6 +300,19 @@ class uppergamma(Function):
             elif z is S.Zero:
                 return gamma(a)
 
+        # We extract branching information here. C/f lowergamma.
+        nx, n = z.extract_branch_factor()
+        if a.is_integer and a > 0:
+            nx = unpolarify(z)
+            if z != nx:
+                return uppergamma(a, nx)
+        elif a.is_integer and a <= 0:
+            if n != 0:
+                return -2*pi*I*n*(-1)**(-a)/factorial(-a) + uppergamma(a, nx)
+        elif n != 0:
+            return gamma(a)*(1 - exp(2*pi*I*n*a)) + exp(2*pi*I*n*a)*uppergamma(a, nx)
+
+        # Special values.
         if a.is_Number:
             # TODO this should be non-recursive
             if a is S.One:
@@ -264,6 +327,9 @@ class uppergamma(Function):
                 if not a.is_Integer:
                     return (cls(a + 1, z) - z**a * C.exp(-z))/a
 
+    def _eval_rewrite_as_lowergamma(self, s, x):
+        return gamma(s) - lowergamma(s, x)
+
 
 
 ###############################################################################
@@ -271,7 +337,7 @@ class uppergamma(Function):
 ###############################################################################
 
 class polygamma(Function):
-    """The function polygamma(n, z) returns log(gamma(z)).diff(n + 1)
+    """The function `polygamma(n, z)` returns `log(gamma(z)).diff(n + 1)`
 
     Reference:
         http://en.wikipedia.org/wiki/Polygamma_function
@@ -398,6 +464,15 @@ class polygamma(Function):
         return (-1)**(n+1)*C.factorial(n)*zeta(n+1, z-1)
 
 class loggamma(Function):
+    """
+    The loggamma function is `ln(gamma(x))`.
+
+    References
+    ==========
+
+    http://mathworld.wolfram.com/LogGammaFunction.html
+
+    """
 
     nargs = 1
 
@@ -429,14 +504,29 @@ class loggamma(Function):
             raise ArgumentIndexError(self, argindex)
 
 def digamma(x):
+    """
+    The digamma function is the logarithmic derivative of the gamma function.
+
+    In this case, `digamma(x) = polygamma(0, x)`.
+
+    """
     return polygamma(0, x)
 
 def trigamma(x):
+    """
+    The trigamma function is the second of the polygamma functions.
+
+    In this case, `trigamma(x) = polygamma(1, x)`.
+
+    """
     return polygamma(1, x)
 
 def beta(x, y):
-    """ Euler Beta function
-    beta(x, y) == gamma(x)*gamma(y) / gamma(x+y)
+    """
+    Euler Beta function
+
+    ``beta(x, y) == gamma(x)*gamma(y) / gamma(x+y)``
+
     """
     return gamma(x)*gamma(y) / gamma(x+y)
 

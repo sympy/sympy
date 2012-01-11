@@ -7,7 +7,9 @@ def Rel(a, b, op):
     A handy wrapper around the Relational class.
     Rel(a,b, op)
 
-    Example:
+    Examples
+    ========
+
     >>> from sympy import Rel
     >>> from sympy.abc import x, y
     >>> Rel(y, x+x**2, '==')
@@ -21,7 +23,9 @@ def Eq(a, b=0):
     A handy wrapper around the Relational class.
     Eq(a,b)
 
-    Example:
+    Examples
+    ========
+
     >>> from sympy import Eq
     >>> from sympy.abc import x, y
     >>> Eq(y, x+x**2)
@@ -35,7 +39,9 @@ def Ne(a, b):
     A handy wrapper around the Relational class.
     Ne(a,b)
 
-    Example:
+    Examples
+    ========
+
     >>> from sympy import Ne
     >>> from sympy.abc import x, y
     >>> Ne(y, x+x**2)
@@ -49,7 +55,9 @@ def Lt(a, b):
     A handy wrapper around the Relational class.
     Lt(a,b)
 
-    Example:
+    Examples
+    ========
+
     >>> from sympy import Lt
     >>> from sympy.abc import x, y
     >>> Lt(y, x+x**2)
@@ -63,7 +71,9 @@ def Le(a, b):
     A handy wrapper around the Relational class.
     Le(a,b)
 
-    Example:
+    Examples
+    ========
+
     >>> from sympy import Le
     >>> from sympy.abc import x, y
     >>> Le(y, x+x**2)
@@ -77,7 +87,9 @@ def Gt(a, b):
     A handy wrapper around the Relational class.
     Gt(a,b)
 
-    Example:
+    Examples
+    ========
+
     >>> from sympy import Gt
     >>> from sympy.abc import x, y
     >>> Gt(y, x+x**2)
@@ -91,7 +103,9 @@ def Ge(a, b):
     A handy wrapper around the Relational class.
     Ge(a,b)
 
-    Example:
+    Examples
+    ========
+
     >>> from sympy import Ge
     >>> from sympy.abc import x, y
     >>> Ge(y, x+x**2)
@@ -124,7 +138,7 @@ class Relational(Expr, EvalfMixin):
         else:
             rop_cls, swap = Relational.get_relational_class(rop)
             if swap: lhs, rhs = rhs, lhs
-        if lhs.is_real and lhs.is_number and rhs.is_real and rhs.is_number:
+        if lhs.is_number and rhs.is_number and lhs.is_real and rhs.is_real:
             # Just becase something is a number, doesn't mean you can evalf it.
             Nlhs = lhs.evalf()
             if Nlhs.is_Number:
@@ -152,6 +166,18 @@ class Relational(Expr, EvalfMixin):
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
+    def doit(self, **hints):
+        lhs = self.lhs
+        rhs = self.rhs
+        if hints.get('deep', True):
+            lhs = lhs.doit(**hints)
+            rhs = rhs.doit(**hints)
+        return self._eval_relation_doit(lhs, rhs)
+
+    @classmethod
+    def _eval_relation_doit(cls, lhs, rhs):
+        return cls._eval_relation(lhs, rhs)
+
 class Equality(Relational):
 
     rel_op = '=='
@@ -163,6 +189,10 @@ class Equality(Relational):
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         return lhs == rhs
+
+    @classmethod
+    def _eval_relation_doit(cls, lhs, rhs):
+        return Eq(lhs, rhs)
 
     def __nonzero__(self):
         return self.lhs.compare(self.rhs)==0
@@ -176,6 +206,10 @@ class Unequality(Relational):
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         return lhs != rhs
+
+    @classmethod
+    def _eval_relation_doit(cls, lhs, rhs):
+        return Ne(lhs, rhs)
 
     def __nonzero__(self):
         return self.lhs.compare(self.rhs)!=0

@@ -2,9 +2,10 @@
 
 import operator
 
+from sympy.core.basic import PicklableWithSlots
 from sympy.polys.polyerrors import CoercionFailed
 
-class ModularInteger(object):
+class ModularInteger(PicklableWithSlots):
     """A class representing a modular integer. """
 
     mod, dom, sym = None, None, None

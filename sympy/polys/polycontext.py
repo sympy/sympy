@@ -1,6 +1,7 @@
 """Tools for managing evaluation contexts. """
 
 from sympy.utilities.iterables import dict_merge
+from sympy.core.basic import PicklableWithSlots
 
 __known_options__ = set(['frac', 'gens', 'wrt', 'sort', 'order', 'domain',
     'modulus', 'gaussian', 'extension', 'field', 'greedy', 'symmetric'])
@@ -15,13 +16,13 @@ def %(option)s(_%(option)s):
 for option in __known_options__:
     exec __template__ % { 'option': option }
 
-class Context(object):
+class Context(PicklableWithSlots):
 
     __slots__ = ['__options__']
 
     def __init__(self, dict=None, **options):
         if dict is not None:
-            self.__options__ = dict_merget(dict, options)
+            self.__options__ = dict_merge(dict, options)
         else:
             self.__options__ = options
 

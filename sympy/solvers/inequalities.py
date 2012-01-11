@@ -1,11 +1,11 @@
 """Tools for solving inequalities and systems of inequalities. """
 
-from sympy.core import Symbol, Interval, Union
+from sympy.core import Symbol, Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.core.singleton import S
 from sympy.assumptions import ask, AppliedPredicate, Q
 from sympy.functions import re, im, Abs
-from sympy.logic import And, Or
+from sympy.logic import And
 from sympy.polys import Poly
 
 def interval_evalf(interval):
@@ -211,10 +211,35 @@ def reduce_abs_inequalities(exprs, gen, assume=True):
     """Reduce a system of inequalities with nested absolute values. """
     return And(*[ reduce_abs_inequality(expr, rel, gen, assume) for expr, rel in exprs ])
 
-def reduce_inequalities(inequalities, assume=True):
+def _solve_inequality(ie, s):
+    """ A hacky replacement for solve, since the latter only works for
+        univariate inequalities. """
+    from sympy import Poly
+    if not ie.rel_op in ['<', '<=']:
+        raise NotImplementedError
+    expr = ie.lhs - ie.rhs
+    p = Poly(expr, s)
+    if p.degree() != 1:
+        raise NotImplementedError('%s' % ie)
+    a, b = p.all_coeffs()
+    if a.is_positive:
+        return ie.func(s, -b/a)
+    elif a.is_negative:
+        return ie.func(-b/a, s)
+    else:
+        raise NotImplementedError
+
+def reduce_inequalities(inequalities, assume=True, symbols=[]):
     """Reduce a system of inequalities with rational coefficients. """
     if not hasattr(inequalities, '__iter__'):
         inequalities = [inequalities]
+
+    if len(inequalities) == 1 and len(symbols) == 1 \
+       and inequalities[0].is_Relational:
+        try:
+            return _solve_inequality(inequalities[0], symbols[0])
+        except NotImplementedError:
+            pass
 
     poly_part, abs_part, extra_assume = {}, {}, []
 

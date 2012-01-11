@@ -11,9 +11,38 @@ from sympy.core.basic import Basic
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 
+def _add_factorial_tokens(name, result):
+    if result == [] or result[-1][1] == '(':
+        raise TokenError()
+
+    beginning = [(NAME, name), (OP, '(')]
+    end = [(OP, ')')]
+
+    diff = 0
+    length = len(result)
+
+    for index, token in enumerate(result[::-1]):
+        toknum, tokval = token
+        i = length-index-1
+
+        if tokval == ')':
+            diff += 1
+        elif tokval == '(':
+            diff -= 1
+
+        if diff == 0:
+            if i-1 >= 0 and result[i-1][0] == NAME:
+                return result[:i-1] + beginning + result[i-1:] + end
+            else:
+                return result[:i] + beginning + result[i:] + end
+
+    return result
+
 def _transform(s, local_dict, global_dict, rationalize, convert_xor):
     g = generate_tokens(StringIO(s).readline)
+
     result = []
+    prevtoken = ''
 
     for toknum, tokval, _, _, _ in g:
         if toknum == NUMBER:
@@ -33,7 +62,7 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
                     pre, post, repetend = match.groups()
 
                     zeros = '0'*len(post)
-                    repetends = repetend.lstrip('0')
+                    post, repetends = [w.lstrip('0') for w in [post, repetend]] # or else interpreted as octal
 
                     a = pre or '0'
                     b, c = post or '0', '1' + zeros
@@ -80,10 +109,20 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
 
             if op == '^' and convert_xor:
                 result.append((OP, '**'))
+            elif op == '!!':
+                if prevtoken == '!' or prevtoken == '!!':
+                    raise TokenError
+                result = _add_factorial_tokens('factorial2', result)
+            elif op == '!':
+                if prevtoken == '!' or prevtoken == '!!':
+                    raise TokenError
+                result = _add_factorial_tokens('factorial', result)
             else:
                 result.append((OP, op))
         else:
             result.append((toknum, tokval))
+
+        prevtoken = tokval
 
     return untokenize(result)
 
@@ -91,7 +130,8 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
     """
     Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.parsing.sympy_parser import parse_expr
 

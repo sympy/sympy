@@ -2,7 +2,7 @@
 derived geometrical entities.
 
 Contains
---------
+========
 GeometryEntity
 
 """
@@ -39,6 +39,18 @@ class GeometryEntity(tuple):
 
     @property
     def free_symbols(self):
+        """
+        Return all but any bound symbols that are used to define the Entity.
+
+        Examples
+        ========
+
+        >>> from sympy import Polygon, RegularPolygon, Point
+        >>> from sympy.abc import x, y
+        >>> t = Polygon(*RegularPolygon(Point(x, y), 1, 3).vertices)
+        >>> t.free_symbols
+        set([x, y])
+        """
         free = set()
         for a in self.args:
             free |= a.free_symbols
@@ -49,7 +61,8 @@ class GeometryEntity(tuple):
         Returns a list of all of the intersections of self with o.
 
         Notes
-        -----
+        =====
+
         An entity is not required to implement this method.
 
         If two different types of entities can intersect, the item with
@@ -57,9 +70,9 @@ class GeometryEntity(tuple):
         intersections with anything having a lower index.
 
         See Also
-        --------
-        intersection function in geometry/util.py which computes the
-        intersection between more than 2 objects.
+        ========
+
+        sympy.geometry.util.intersection
 
         """
         raise NotImplementedError()
@@ -71,6 +84,14 @@ class GeometryEntity(tuple):
 
         XXX geometry needs a modify_points method which operates
         on only the points of the object
+
+        See Also
+        ========
+
+        scale, translate
+
+        Examples
+        ========
 
         >>> from sympy import Point, RegularPolygon, Polygon, pi
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
@@ -106,6 +127,14 @@ class GeometryEntity(tuple):
     def scale(self, x=1, y=1):
         """Scale the object by multiplying the x,y-coordinates by x and y.
 
+        See Also
+        ========
+
+        rotate, translate
+
+        Examples
+        ========
+
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t
@@ -129,6 +158,14 @@ class GeometryEntity(tuple):
 
     def translate(self, x=0, y=0):
         """Shift the object by adding to the x,y-coordinates the values x and y.
+
+        See Also
+        ========
+
+        rotate, scale
+
+        Examples
+        ========
 
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
@@ -161,10 +198,27 @@ class GeometryEntity(tuple):
 
         The object will be decomposed into Points and individual Entities need
         only define an encloses_point method for their class.
+
+        See Also
+        ========
+
+        sympy.geometry.ellipse.Ellipse.encloses_point
+        sympy.geometry.polygon.Polygon.encloses_point
+
+        Examples
+        ========
+
+        >>> from sympy import RegularPolygon, Point, Polygon
+        >>> t  = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t2 = Polygon(*RegularPolygon(Point(0, 0), 2, 3).vertices)
+        >>> t2.encloses(t)
+        True
+        >>> t.encloses(t2)
+        False
         """
         from sympy.geometry.point import Point
         from sympy.geometry.line import Segment, Ray, Line
-        from sympy.geometry.ellipse import Circle, Ellipse
+        from sympy.geometry.ellipse import Ellipse
         from sympy.geometry.polygon import Polygon, RegularPolygon
 
         if isinstance(o, Point):
@@ -189,17 +243,43 @@ class GeometryEntity(tuple):
         shrinking) of one of the entities will allow one to obtain the other.
 
         Notes
-        -----
+        =====
+
         This method is not intended to be used directly but rather
         through the `are_similar` function found in util.py.
         An entity is not required to implement this method.
         If two different types of entities can be similar, it is only
         required that one of them be able to determine this.
 
+        See Also
+        ========
+
+        scale
+
         """
         raise NotImplementedError()
 
     def subs(self, *args):
+        """
+        Substitues new for old in self.
+
+        See Also
+        ========
+
+        sympy.core.basic.subs
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Circle
+        >>> from sympy.abc import x, y, z
+        >>> c = Circle(Point(0, 0), 3)
+        >>> c.subs(0, 5)
+        Circle(Point(5, 5), 3)
+        >>> c.subs(3, z)
+        Circle(Point(0, 0), z)
+
+        """
         return type(self)(*[a.subs(*args) for a in self.args])
 
     def _eval_subs(self, old, new):
@@ -211,6 +291,14 @@ class GeometryEntity(tuple):
 
         The contents will not necessarily be Points. This is also
         what will be returned when one does "for x in self".
+
+        Examples
+        ========
+
+        >>> from sympy import RegularPolygon, Point, Polygon
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t.args
+        (Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
         """
 
         return tuple(self)

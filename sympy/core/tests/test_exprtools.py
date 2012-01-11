@@ -1,10 +1,10 @@
 """Tests for tools for manipulating of large commutative expressions. """
 
-from sympy.core.exprtools import (
-    decompose_power, Factors, Term, _gcd_terms, gcd_terms)
-
-from sympy import S, Add, sin, Mul
-from sympy.abc import x, y, z, t
+from sympy import S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, Interval
+from sympy.abc import a, b, t, x, y, z
+from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
+                                  gcd_terms, factor_terms)
+from sympy.core.mul import _keep_coeff as _keep_coeff
 
 def test_decompose_power():
     assert decompose_power(x) == (x, 1)
@@ -86,3 +86,42 @@ def test_gcd_terms():
     assert gcd_terms(1) == 1
     assert gcd_terms(x) == x
     assert gcd_terms(2 + 2*x) == Mul(2, 1 + x, evaluate=False)
+    arg = x*(2*x + 4*y)
+    garg = 2*x*(x + 2*y)
+    assert gcd_terms(arg) == garg
+    assert gcd_terms(sin(arg)) == sin(garg)
+
+def test_factor_terms():
+    A = Symbol('A', commutative=False)
+    assert factor_terms(9*(x + x*y + 1) + (3*x + 3)**(2 + 2*x)) == \
+        9*x*y + 9*x + _keep_coeff(S(3), x + 1)**_keep_coeff(S(2), x + 1) + 9
+    assert factor_terms(9*(x + x*y + 1) + (3)**(2 + 2*x)) == \
+        _keep_coeff(S(9), 3**(2*x) + x*y + x + 1)
+    assert factor_terms(3**(2 + 2*x) + a*3**(2 + 2*x)) == \
+        9*3**(2*x)*(a + 1)
+    assert factor_terms(x + x*A) == \
+        x*(1 + A)
+    assert factor_terms(sin(x + x*A)) == \
+        sin(x*(1 + A))
+    assert factor_terms((3*x + 3)**((2 + 2*x)/3)) == \
+        _keep_coeff(S(3), x + 1)**_keep_coeff(S(2)/3, x + 1)
+    assert factor_terms(x + (x*y + x)**(3*x + 3)) == \
+        x + (x*(y + 1))**_keep_coeff(S(3), x + 1)
+    assert factor_terms(a*(x + x*y) + b*(x*2 + y*x*2)) == \
+        x*(a + 2*b)*(y + 1)
+    i = Integral(x, (x, 0, oo))
+    assert factor_terms(i) == i
+    eq = sqrt(2) + sqrt(10)
+    assert factor_terms(eq) == eq
+    assert factor_terms(eq, radical=True) == sqrt(2)*(1 + sqrt(5))
+    eq = [x + x*y]
+    ans = [x*(y + 1)]
+    for c in [list, tuple, set]:
+        assert factor_terms(c(eq)) == c(ans)
+    assert factor_terms(Tuple(x + x*y)) == Tuple(x*(y + 1))
+    assert factor_terms(Interval(0, 1)) == Interval(0, 1)
+
+def test_xreplace():
+    e = Mul(2, 1 + x, evaluate=False)
+    assert e.xreplace({}) == e
+    assert e.xreplace({y: x}) == e

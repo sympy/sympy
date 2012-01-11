@@ -1,7 +1,7 @@
 from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log,
-                   cos, sqrt, symbols, oo)
+                   cos, sqrt, symbols, oo, Derivative)
 from sympy.abc import x, z, k
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import (
         random_complex_number as randcplx,
         test_numerically as tn,
@@ -21,6 +21,7 @@ def test_hyper():
     assert h.ap == Tuple(1, 2)
     assert h.bq == Tuple(3, 4, 5)
     assert h.argument == z
+    assert h.is_commutative is True
 
     # just a few checks to make sure that all arguments go where they should
     assert tn(hyper(Tuple(), Tuple(), z), exp(z), z)
@@ -35,7 +36,12 @@ def test_hyper():
              a1*a2/(b1*b2*b3) * hyper((a1+1, a2+1), (b1+1, b2+1, b3+1), z)
 
     # differentiation wrt parameters is not supported
-    raises(NotImplementedError, 'hyper((z,), (), z).diff(z)')
+    assert hyper([z], [], z).diff(z) == Derivative(hyper([z], [], z), z)
+
+    # hyper is unbranched wrt parameters
+    from sympy import polar_lift
+    assert hyper([polar_lift(z)], [polar_lift(k)], polar_lift(x)) == \
+           hyper([z], [k], polar_lift(x))
 
 def test_expand_func():
     # evaluation at 1 of Gauss' hypergeometric function:
@@ -90,6 +96,7 @@ def test_meijer():
     assert g.argument == z
     assert g.nu == 75
     assert g.delta == -1
+    assert g.is_commutative is True
 
     assert meijerg([1, 2], [3], [4], [5], z).delta == S(1)/2
 
@@ -118,4 +125,37 @@ def test_meijer():
         (meijerg((a1-1, a2), (b1, b2), (c1, c2), (d1, d2), z) \
          + (a1 - 1)*meijerg((a1, a2), (b1, b2), (c1, c2), (d1, d2), z))/z
 
-    raises(NotImplementedError, 'meijerg((z,), (), (), (), z).diff(z)')
+    assert meijerg([z, z], [], [], [], z).diff(z) == \
+           Derivative(meijerg([z, z], [], [], [], z), z)
+
+    # meijerg is unbranched wrt parameters
+    from sympy import polar_lift as pl
+    assert meijerg([pl(a1)], [pl(a2)], [pl(b1)], [pl(b2)], pl(z)) == \
+           meijerg([a1], [a2], [b1], [b2], pl(z))
+
+def test_meijerg_derivative():
+    assert meijerg([], [1, 1], [0, 0, x], [], z).diff(x) == \
+           log(z)*meijerg([], [1, 1], [0, 0, x], [], z) \
+           + 2*meijerg([], [1, 1, 1], [0, 0, x, 0], [], z)
+
+    y = randcplx()
+    a = 5 # mpmath chokes with non-real numbers, and Mod1 with floats
+    assert td(meijerg([x], [], [], [], y), x)
+    assert td(meijerg([x**2], [], [], [], y), x)
+    assert td(meijerg([], [x], [], [], y), x)
+    assert td(meijerg([], [], [x], [], y), x)
+    assert td(meijerg([], [], [], [x], y), x)
+    assert td(meijerg([x], [a], [a + 1], [], y), x)
+    assert td(meijerg([x], [a + 1], [a], [], y), x)
+    assert td(meijerg([x, a], [], [], [a + 1], y), x)
+    assert td(meijerg([x, a + 1], [], [], [a], y), x)
+    b = S(3)/2
+    assert td(meijerg([a + 2], [b], [b - 3, x], [a], y), x)
+
+def test_meijerg_period():
+    assert meijerg([], [1], [0], [], x).get_period() == 2*pi
+    assert meijerg([1], [], [], [0], x).get_period() == 2*pi
+    assert meijerg([], [], [0], [], x).get_period() == 2*pi # exp(x)
+    assert meijerg([], [], [0], [S(1)/2], x).get_period() == 2*pi # cos(sqrt(x))
+    assert meijerg([], [], [S(1)/2], [0], x).get_period() == 4*pi # sin(sqrt(x))
+    assert meijerg([1, 1], [], [1], [0], x).get_period() == oo # log(1 + x)

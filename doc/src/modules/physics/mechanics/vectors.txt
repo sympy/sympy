@@ -589,9 +589,9 @@ warnings. ::
 Two additional operations can be done with vectors: normalizing the vector to
 length 1, and getting its magnitude. These are done as follows:
 
-  >>> (N.x + N.y).unit
+  >>> (N.x + N.y).normalize()
   sqrt(2)/2*N.x + sqrt(2)/2*N.y
-  >>> (N.x + N.y).mag
+  >>> (N.x + N.y).magnitude()
   sqrt(2)
 
 Vector Calculus, in Mechanics
@@ -765,3 +765,4 @@ bi-directionally; in that when you orient ``A`` to ``N`` you are setting ``A``'s
 orientation dictionary to include ``N`` and its ``Matrix``, but also you also
 are setting ``N``'s orientation dictionary to include ``A`` and its ``Matrix``
 (that DCM being the transpose of the other).
+

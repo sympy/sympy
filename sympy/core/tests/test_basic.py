@@ -71,6 +71,16 @@ def test_doit():
 def test_S():
     assert repr(S) == 'S'
 
+def test_xreplace():
+    assert b21.xreplace({b2: b1}) == Basic(b1, b1)
+    assert b21.xreplace({b2: b21}) == Basic(b21, b1)
+    assert b3.xreplace({b2: b1}) == b2
+    assert Basic(b1, b2).xreplace({b1: b2, b2: b1}) == Basic(b2, b1)
+    assert Atom(b1).xreplace({b1: b2}) == Atom(b1)
+    assert Atom(b1).xreplace({Atom(b1): b2}) == b2
+    raises(TypeError, 'b1.xreplace()')
+    raises(TypeError, 'b1.xreplace([b1,b2])')
+
 def test_Singleton():
     global instanciated
     instanciated = 0

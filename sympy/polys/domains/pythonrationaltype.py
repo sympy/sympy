@@ -1,14 +1,16 @@
 """Rational number type based on Python integers. """
 
 from sympy.core.numbers import igcd
+from sympy.core.basic import PicklableWithSlots
 
 import operator
 
-class PythonRationalType(object):
+class PythonRationalType(PicklableWithSlots):
     """
     Rational number type based on Python integers.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import PythonRationalType
 

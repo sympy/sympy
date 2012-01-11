@@ -32,7 +32,8 @@ class PlotMode(PlotObject):
     ## is meant to be overridden in child
     ## classes, and PlotModeBase provides
     ## a base implementation.
-    def draw(self): raise NotImplementedError()
+    def draw(self):
+        raise NotImplementedError()
 
     ## Everything else in this file has to
     ## do with registration and retrieval
@@ -120,7 +121,8 @@ class PlotMode(PlotObject):
             m = None
             if issubclass(mode_arg, PlotMode):
                 m = mode_arg
-        except: pass
+        except TypeError:
+            pass
         if m:
             if not m._was_initialized:
                 raise ValueError(("To use unregistered plot mode %s "
@@ -147,10 +149,12 @@ class PlotMode(PlotObject):
                 raise ValueError(var_count_error(False, True))
             # If the string is '', try to find a suitable
             # default mode
-            if not mode_arg: return PlotMode._get_default_mode(i, d)
+            if not mode_arg:
+                return PlotMode._get_default_mode(i, d)
             # Otherwise, interpret the string as a mode
             # alias (e.g. 'cartesian', 'parametric', etc)
-            else: return PlotMode._get_aliased_mode(mode_arg, i, d)
+            else:
+                return PlotMode._get_aliased_mode(mode_arg, i, d)
         else:
             raise ValueError("PlotMode argument must be "
                              "a class or a string")
@@ -161,7 +165,7 @@ class PlotMode(PlotObject):
             i_vars = i
         try:
             return PlotMode._mode_default_map[d][i]
-        except:
+        except TypeError:
             # Keep looking for modes in higher i var counts
             # which support the given d var count until we
             # reach the max i_var count.
@@ -182,7 +186,7 @@ class PlotMode(PlotObject):
                               % (alias, ", ".join(PlotMode._mode_alias_list)))
         try:
             return PlotMode._mode_map[d][i][alias]
-        except:
+        except TypeError:
             # Keep looking for modes in higher i var counts
             # which support the given d var count and alias
             # until we reach the max i_var count.
@@ -228,9 +232,9 @@ class PlotMode(PlotObject):
                 PlotMode._mode_default_map[d][i] = cls
 
         except Exception, e:
-            raise RuntimeError( ("Failed to register "
+            raise RuntimeError(("Failed to register "
                               "plot mode %s. Reason: %s")
-                               % (name, (str(e))) )
+                               % (name, (str(e))))
 
     @classmethod
     def _init_mode(cls):
@@ -243,7 +247,7 @@ class PlotMode(PlotObject):
         ModeSubclass._init_mode().
         """
         def symbols_list(symbol_str):
-            return [ Symbol(s) for s in symbol_str ]
+            return [Symbol(s) for s in symbol_str]
 
         # Convert the vars strs into
         # lists of symbols.
@@ -271,13 +275,9 @@ class PlotMode(PlotObject):
             raise ValueError("Plot mode must provide a "
                              "default interval for each i_var.")
         for i in range(cls.i_var_count):
-            assert len(di[i]) == 3 # default intervals
-                                   # must be given
-                                   # [min,max,steps]
-                                   #
-                                   # (no var, but they
-                                   # must be in the same
-                                   # order as i_vars)
+            # default intervals must be given [min,max,steps]
+            # (no var, but they must be in the same order as i_vars)
+            assert len(di[i]) == 3
 
             # Initialize an incomplete interval,
             # to later be filled with a var when
@@ -311,7 +311,7 @@ class PlotMode(PlotObject):
         # i_vars in given functions
         # (aka d_vars)
         for f in functions:
-            for a in f.atoms(Symbol):
+            for a in f.free_symbols:
                 if a not in i_vars:
                     i_vars.append(a)
 
@@ -368,7 +368,7 @@ class PlotMode(PlotObject):
                     try:
                         f = sympify(a)
                         functions.append(f)
-                    except:
+                    except TypeError:
                         raise ValueError(interpret_error % str(a))
 
         return functions, intervals
@@ -389,9 +389,13 @@ def var_count_error(is_independent, is_plotting):
     Used to format an error message which differs
     slightly in 4 places.
     """
-    if is_plotting: v = "Plotting"
-    else: v = "Registering plot modes"
-    if is_independent: n, s = PlotMode._i_var_max, "independent"
-    else: n, s = PlotMode._d_var_max, "dependent"
+    if is_plotting:
+        v = "Plotting"
+    else:
+        v = "Registering plot modes"
+    if is_independent:
+        n, s = PlotMode._i_var_max, "independent"
+    else:
+        n, s = PlotMode._d_var_max, "dependent"
     return ("%s with more than %i %s variables "
             "is not supported.") % (v, n, s)

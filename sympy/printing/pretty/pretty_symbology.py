@@ -1,4 +1,4 @@
-"""Symbolic primitives + unicode/ASCII abstraction  for pretty.py"""
+"""Symbolic primitives + unicode/ASCII abstraction for pretty.py"""
 
 import sys
 warnings = ''
@@ -161,8 +161,8 @@ for l in 'aeioruvx':
 for l in 'in':
     sup[l] = LSUP(l)
 
-for g in ['beta', 'gamma', 'rho', 'phi', 'chi']:
-    sub[g] = GSUB(g)
+for gl in ['beta', 'gamma', 'rho', 'phi', 'chi']:
+    sub[gl] = GSUB(gl)
 
 for d in [str(i) for i in range(10)]:
     sub[d] = DSUB(d)
@@ -202,7 +202,7 @@ _xobj_unicode = {
     'rceil'  : (( EXT(']'), CUP(']'), EXT(']') ), U('RIGHT CEILING')),
 
     'int':  (( EXT('int'), U('TOP HALF INTEGRAL'), U('BOTTOM HALF INTEGRAL') ), U('INTEGRAL')),
-   #'sum':  ( U('N-ARY SUMMATION'), TOP('sum'), None, None, BOT('sum')     ),
+    'sum':  (( U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'), '_', U('OVERLINE'), U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT')), U('N-ARY SUMMATION')),
 
 
     # horizontal objects
@@ -246,7 +246,6 @@ _xobj_ascii = {
     '/' :   '/',
     '\\':   '\\',
 }
-
 
 def xobj(symb, length):
     """Construct spatial object of given length.
@@ -467,7 +466,7 @@ def pretty_symbol(symb_name):
 
 def annotated(letter):
     """
-    Return a stylised drawing of the letter `letter`, together with
+    Return a stylised drawing of the letter ``letter``, together with
     information on how to put annotations (super- and subscripts to the
     left and to the right) on it.
 

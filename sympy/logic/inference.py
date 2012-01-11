@@ -5,7 +5,11 @@ from sympy.core.basic import C
 from sympy.core.sympify import sympify
 
 def literal_symbol(literal):
-    """The symbol in this literal (without the negation).
+    """
+    The symbol in this literal (without the negation).
+
+    Examples:
+
     >>> from sympy import Symbol
     >>> from sympy.abc import A
     >>> from sympy.logic.inference import literal_symbol
@@ -15,16 +19,18 @@ def literal_symbol(literal):
     A
 
     """
+
     if literal.func is Not:
         return literal.args[0]
     else:
         return literal
 
 def satisfiable(expr, algorithm="dpll2"):
-    """Check satisfiability of a propositional sentence.
+    """
+    Check satisfiability of a propositional sentence.
     Returns a model when it succeeds
 
-    Examples
+    Examples:
 
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import satisfiable
@@ -44,14 +50,17 @@ def satisfiable(expr, algorithm="dpll2"):
     raise NotImplementedError
 
 def pl_true(expr, model={}):
-    """Return True if the propositional logic expression is true in the model,
+    """
+    Return True if the propositional logic expression is true in the model,
     and False if it is false. If the model does not specify the value for
     every proposition, this may return None to indicate 'not obvious';
     this may happen even when the expression is tautological.
 
     The model is implemented as a dict containing the pair symbol, boolean value.
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import pl_true
     >>> pl_true( A & B, {A: True, B : True})
@@ -121,15 +130,46 @@ class KB(object):
 
 
 class PropKB(KB):
-    "A KB for Propositional Logic.  Inefficient, with no indexing."
+    """A KB for Propositional Logic.  Inefficient, with no indexing."""
 
     def tell(self, sentence):
-        "Add the sentence's clauses to the KB"
+        """Add the sentence's clauses to the KB
+
+        Examples
+        ========
+
+        >>> from sympy.logic.inference import PropKB
+        >>> from sympy.abc import x, y, z
+        >>> l = PropKB()
+        >>> l.clauses
+        []
+
+        >>> l.tell(x | y)
+        >>> l.clauses
+        [Or(x, y)]
+
+        >>> l.tell(y & z)
+        >>> l.clauses
+        [Or(x, y), y, z]
+        """
         for c in conjuncts(to_cnf(sentence)):
             if not c in self.clauses: self.clauses.append(c)
 
     def ask(self, query):
-        """TODO: examples"""
+        """Checks if the query is true given the set of clauses.
+
+        Examples
+        ========
+
+        >>> from sympy.logic.inference import PropKB
+        >>> from sympy.abc import x, y
+        >>> l = PropKB()
+        >>> l.tell(x & ~y)
+        >>> l.ask(x)
+        True
+        >>> l.ask(y)
+        False
+        """
         if len(self.clauses) == 0: return False
         from sympy.logic.algorithms.dpll import dpll
         query_conjuncts = self.clauses[:]
@@ -140,8 +180,25 @@ class PropKB(KB):
         return bool(dpll(query_conjuncts, list(s), {}))
 
     def retract(self, sentence):
-        "Remove the sentence's clauses from the KB"
+        """Remove the sentence's clauses from the KB
+
+        Examples
+        ========
+
+        >>> from sympy.logic.inference import PropKB
+        >>> from sympy.abc import x, y
+        >>> l = PropKB()
+        >>> l.clauses
+        []
+
+        >>> l.tell(x | y)
+        >>> l.clauses
+        [Or(x, y)]
+
+        >>> l.retract(x | y)
+        >>> l.clauses
+        []
+        """
         for c in conjuncts(to_cnf(sentence)):
             if c in self.clauses:
                 self.clauses.remove(c)
-

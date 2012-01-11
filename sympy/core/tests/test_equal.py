@@ -3,7 +3,6 @@ from sympy import Symbol, Dummy, Rational, exp
 def test_equal():
     b = Symbol("b")
     a = Symbol("a")
-    c = Symbol("c")
     e1 = a+b
     e2 = 2*a*b
     e3 = a**3*b**2

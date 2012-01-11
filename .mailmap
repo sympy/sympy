@@ -1,4 +1,14 @@
-Ondrej Certik <ondrej@certik.cz> ondrej.certik <devnull@localhost>
+# Prevent git from showing duplicate names with commands like "git shortlog"
+# See the manpage of git-shortlog for details.
+# The syntax is:
+# Name that should be used <email that should be used> Bad name <bad email>
+#
+# You can skip Bad name if it is the same as the one that should be used, and is unique.
+#
+# This file is up-to-date if the command git log --format="%aN <%aE>" | sort
+# -u gives no duplicates.
+Ondřej Čertík <ondrej@certik.cz> Ondrej Certik <ondrej@certik.cz>
+Ondřej Čertík <ondrej@certik.cz> ondrej.certik <devnull@localhost>
 Fredrik Johansson <fredrik.johansson@gmail.com> fredrik.johansson <devnull@localhost>
 Kirill Smelkov <kirr@landau.phys.spbu.ru> kirill.smelkov <devnull@localhost>
 Kirill Smelkov <kirr@landau.phys.spbu.ru> convert-repo <devnull@localhost>
@@ -17,3 +27,53 @@ Chris Wu <chris.wu@gmail.com> Chris.Wu <devnull@localhost>
 Jezreel Ng <jezreel@gmail.com>
 James Pearson <xiong.chiamiov@gmail.com>
 Cristóvão Sousa <crisjss@gmail.com>
+Addison Cugini <ajcugini@gmail.com> <addisonc@csmpm4z6d1ax.local>
+Addison Cugini <ajcugini@gmail.com> <addisonc@pcp065368pcs.dhcp.calpoly.edu>
+Addison Cugini <ajcugini@gmail.com> Addison CUgini
+Alan Bromborsky <abrombo@verizon.net> Alan Bromborsky <brombo@GA.(none)>
+Alexey U. Gudchenko <proga@goodok.ru> Alexey U. Goodchenko <proga@goodok.ru>
+Vinzent Steinberg <vinzent.steinberg@gmail.com> <Vinzent.Steinberg@gmail.com>
+Vinzent Steinberg <vinzent.steinberg@gmail.com> <vinzent.steinberg@googlemail.com>
+Chris Smith <smichr@gmail.com> Christopher Smith <smichr@gmail.com>
+Chris Smith <smichr@gmail.com> smichr <smichr@gmail.com>
+Chris Smith <smichr@gmail.com> unknown <Donna Smith@.(none)>
+Fredrik Johansson <fredrik.johansson@gmail.com> Fredrik <fredrik.johansson@gmail.com>
+Fredrik Johansson <fredrik.johansson@gmail.com> Fredrik Johansson <fredrik@airy.(none)>
+Brian E. Granger <ellisonbg@gmail.com> Brian Granger
+Jurjen N.E. Bos <jnebos@gmail.com> Jurjen N.E. Bos <devnull@localhost>
+Benjamin McDonald <mcdonald.ben@gmail.com> benjaminmcdonald <mcdonald.ben@gmail.com>
+Prafullkumar P. Tale <hector1618@gmail.com> hector1618 <hector1618@gmail.com>
+Øyvind Jensen <jensen.oyvind@gmail.com> jegerjensen
+Jeremias Yehdegho <j.yehdegho@gmail.com> jerryy <aevirex@aleph.(none)>
+Oleksandr Gituliar <gituliar@gmail.com> oleksandr gituliar
+Renato Coutinho <renato.coutinho@gmail.com> renato <renato.coutinho@gmail.com>
+Thomas Wiecki <thomas.wiecki@gmail.com> whyking <whyking@Lateralus.(none)>
+Thomas Wiecki <thomas.wiecki@gmail.com> <thomas.wieki@gmail.com>
+Felix Kaiser <felix.kaiser@fxkr.net> Felix Kaiser <kaiser.fx@gmail.com>
+Felix Kaiser <felix.kaiser@fxkr.net> Felix Kaiser <whatfxkr@gmail.com>
+Andy R. Terrel <aterrel@uchicago.edu> Andy R. Terrel <aterrel@enthought.com>
+Andy R. Terrel <aterrel@uchicago.edu> Andy R. Terrel <andy.terrel@gmail.com>
+Nicolas Pourcelot <nicolas.pourcelot@gmail.com> wxgeo <nicolas.pourcelot@gmail.com>
+Min Ragan-Kelley <benjaminrk@gmail.com> MinRK <benjaminrk@gmail.com>
+Bradley Froehle <brad.froehle@gmail.com> Bradley M. Froehle <brad.froehle@gmail.com>
+Matthew Rocklin <mrocklin@cs.uchicago.edu> <mrocklin@gmail.com>
+Bilal Akhtar <bilalakhtar@ubuntu.com> <bilalakhtar96@yahoo.com>
+David Li <l33tnerd.li@gmail.com> <li.davidm96@gmail.com>
+David Li <l33tnerd.li@gmail.com> <David@David-PC.(none)>
+David Marek <h4wk.cz@gmail.com> <davidm@atrey.karlin.mff.cuni.cz>
+Gilbert Gede <gilbertgede@gmail.com> <ggede@ucdavis.edu>
+Gilbert Gede <gilbertgede@gmail.com> <ggede@Gilbert-Gedes-MacBook.local>
+Ronan Lamy <ronan.lamy@gmail.com> <Ronan.Lamy@normalesup.org>
+Toon Verstraelen <Toon.Verstraelen@UGent.be> <toon.verstraelen@gmail.com>
+Toon Verstraelen <Toon.Verstraelen@UGent.be> <toon.verstraelen@ugent.be>
+Siddhu <siddhanathan@gmail.com> <siddhu@siddhu-laptop.(none)>
+Andrej Tokarčík <androsis@gmail.com> Andrej "qwp0" Tokarčík
+Goutham Lakshminarayan <dl.goutham@gmail.com> Goutham <devnull@localhost>
+Tomáš Bambas <tomas.bambas@gmail.com> Tomas Bambas
+Prafullkumar P. Tale <hector1618@gmail.com> hector
+Roberto Colistete, Jr. <roberto.colistete@gmail.com> Roberto Colistete-Jr
+Robert Cimrman <cimrman3@ntc.zcu.cz> <robert.cimrman@gmail.com>
+Raymond Wong <rayman> rayman <rayman@CoolGuyJr.(none)>
+Raymond Wong <rayman> rayman <rayman@coolguy.(none)>
+Luke Peterson <hazelnusse@gmail.com> Dale Lukas Peterson
+Davy Mao <e_equals_mass_speed_light_squared@hotmail.com> icedtrees <e_equals_mass_speed_light_squared@hotmail.com>

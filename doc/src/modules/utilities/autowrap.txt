@@ -1,3 +1,4 @@
+===============
 Autowrap module
 ===============
 
@@ -72,8 +73,8 @@ through all steps in the correct order, and also takes care of setting up and
 removing the temporary working directory.
 
 The actual compilation and wrapping is done by external resources, such as the
-system installed f2py command.   The Cython backend runs a distutils setup script
-in a subprocess.  Subclasses of CodeWrapper takes care of these
+system installed f2py command. The Cython backend runs a distutils setup script
+in a subprocess. Subclasses of CodeWrapper takes care of these
 backend-dependent details.
 
 .. autoclass:: CodeWrapper
@@ -84,3 +85,11 @@ backend-dependent details.
 
 .. autoclass:: CythonCodeWrapper
    :members:
+
+API Reference
+-------------
+
+.. automodule:: sympy.utilities.autowrap
+   :members:
+   :noindex:
+

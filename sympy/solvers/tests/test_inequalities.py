@@ -1,14 +1,11 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
-from sympy.solvers.inequalities import (
-    reduce_poly_inequalities,
-    reduce_inequalities)
-
-from sympy import (S, Symbol, Union, Interval, FiniteSet, Eq, Ne, Lt, Le, Gt,
-        Ge, Or, And, pi, oo, sqrt, Q, global_assumptions, re, im, sin)
-
-from sympy.utilities.pytest import raises
+from sympy import (And, Eq, FiniteSet, Ge, global_assumptions, Gt, im,
+                   Interval, Le, Lt, Ne, oo, Or, Q, re, S, sin, sqrt, Union)
 from sympy.abc import x, y
+from sympy.solvers.inequalities import (reduce_inequalities,
+                                        reduce_poly_inequalities)
+from sympy.utilities.pytest import raises
 
 inf = oo.evalf()
 
@@ -128,3 +125,7 @@ def test_reduce_inequalities_errors():
     raises(NotImplementedError, "reduce_inequalities(Ge(sin(x) + x, 1))")
     raises(NotImplementedError, "reduce_inequalities(Ge(x**2*y + y, 1))")
     raises(NotImplementedError, "reduce_inequalities(Ge(sqrt(2)*x, 1))")
+
+def test_hacky_inequalities():
+    assert reduce_inequalities(x + y < 1, symbols=[x]) == (x < 1 - y)
+    assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x >= 1 - y)

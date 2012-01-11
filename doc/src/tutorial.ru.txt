@@ -1,0 +1,921 @@
+.. _tutorial-ru:
+
+===================
+Краткое руководство
+===================
+
+.. role:: input(strong)
+
+Введение
+========
+
+SymPy - это открытая библиотека для символьных вычислений на языке Python.
+Ее цель - стать полнофункциональной системой компьютерной алгебры (CAS),
+сохраняя код максимально простым, понятным и легко расширяемым.
+SymPy полностью написан на Python и не требует сторонних библиотек.
+
+Это руководство представляет из себя обзор и введение в SymPy.
+Прочитайте его, чтобы узнать, что и как может сделать SymPy, а если
+вы хотите узнать больше, прочитайте
+:ref:`Руководство пользователя SymPy <guide>`,
+:ref:`Описание модулей SymPy <module-docs>`.
+или сразу `исходный код
+<https://github.com/sympy/sympy/>`_ .
+
+Первые шаги с SymPy
+===================
+
+Самый простой способ скачать SymPy - пройти на
+http://code.google.com/p/sympy/ и
+загрузить .tar файл с последней версией из блока Featured Downloads:
+
+.. image:: figures/featured-downloads.png
+
+Распаковать его:
+
+.. parsed-literal::
+
+    $ :input:`tar xzf sympy-0.5.12.tar.gz`
+
+и запустить из интерпретатора Python:
+
+.. parsed-literal::
+
+    $ :input:`cd sympy-0.5.12`
+    $ :input:`python`
+    Python 2.4.4 (#2, Jan  3 2008, 13:36:28)
+    [GCC 4.2.3 20071123 (prerelease) (Debian 4.2.2-4)] on linux2
+    Type "help", "copyright", "credits" or "license" for more information.
+    >>> from sympy import Symbol, cos
+    >>> x = Symbol("x")
+    >>> (1/cos(x)).series(x, 0, 10)
+    1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
+
+Если вы используете SymPy в вашей программе,
+рекомендуется использовать его как показано выше.
+Вы можете установить Sympy так же как и любой другой Python модуль,
+используя ./setup.py install. Или, если вы работаете в Linux, можно
+установить пакет ``python-sympy`` с помощью системы установки программ:
+
+.. topic:: Установка SymPy в Debian
+
+  .. parsed-literal::
+
+    $ :input:`sudo apt-get install python-sympy`
+    Reading package lists... Done
+    Building dependency tree
+    Reading state information... Done
+    The following NEW packages will be installed:
+      python-sympy
+    0 upgraded, 1 newly installed, 0 to remove and 18 not upgraded.
+    Need to get 991kB of archives.
+    After this operation, 5976kB of additional disk space will be used.
+    Get:1 http://ftp.cz.debian.org unstable/main python-sympy 0.5.12-1 [991kB]
+    Fetched 991kB in 2s (361kB/s)
+    Selecting previously deselected package python-sympy.
+    (Reading database ... 232619 files and directories currently installed.)
+    Unpacking python-sympy (from .../python-sympy_0.5.12-1_all.deb) ...
+    Setting up python-sympy (0.5.12-1) ...
+
+Для других вариантов установки SymPy, посмотрите, пожалуйста,
+вкладку Downloads_ на домашней странице SymPy.
+
+.. _Downloads: http://code.google.com/p/sympy/wiki/DownloadInstallation?tm=2
+
+
+Консоль isympy
+--------------
+
+Для экспериментов с новыми функциями, или для обучения SymPy, вы можете
+использовать специальную оболочку IPython под названием  ``isympy``
+(она расположена в ``bin/isympy``, относительно директории с исходным кодом),
+которая является стандартным терминалом Python, но с уже импортированными
+важными модулями SymPy, определенными переменными x, y, z и некоторыми
+другими надстройками:
+
+.. parsed-literal::
+
+    $ :input:`cd sympy`
+    $ :input:`./bin/isympy`
+    IPython console for SymPy 0.7.1-git (Python 2.7.1) (ground types: gmpy)
+
+    These commands were executed:
+    >>> from __future__ import division
+    >>> from sympy import *
+    >>> x, y, z, t = symbols('x y z t')
+    >>> k, m, n = symbols('k m n', integer=True)
+    >>> f, g, h = symbols('f g h', cls=Function)
+
+    Documentation can be found at http://www.sympy.org
+
+    In [1]: :input:`(1/cos(x)).series(x, 0, 10)`
+    Out[1]:
+         2      4       6        8
+        x    5*x    61*x    277*x     / 10\
+    1 + ── + ──── + ───── + ────── + O\x  /
+        2     24     720     8064
+
+.. note::
+
+    Команды, введенные вами, обозначены жирным шрифтом. То, что мы делали
+    тремя строчками в 
+    стандартном терминале Python, мы можем сделать одной строчкой в isympy.
+
+
+Использование SymPy в качестве калькулятора
+-------------------------------------------
+
+SymPy поддерживает три типа численных данных: Float, Rational и Integer.
+
+Rational реализует обыкновенную дробь с помощью двух целых чисел:
+числителя и знаменателя. Так, Rational(1,2) является числом 1/2,
+Rational(5,2) является 5/2, и так далее.
+
+::
+
+    >>> from sympy import Rational
+    >>> a = Rational(1,2)
+
+    >>> a
+    1/2
+
+    >>> a*2
+    1
+
+    >>> Rational(2)**50/Rational(10)**50
+    1/88817841970012523233890533447265625
+
+
+В Python-интерпретаторе при делении двух питоновских чисел типа int
+с помощью оператора "/" получается или питоновское int
+(в старых версиях, без использования ``from __future__ import division``)
+или питоновский тип float (стандарт "true division" в Python 3).
+Этот же стандарт "true division" по умолчанию включен и в isympy::
+
+    >>> 1/2 #doctest: +SKIP
+    0.5
+
+В более ранних версиях Python этого не произойдет,
+и результатом будет целочисленное деление::
+
+    >>> 1/2 #doctest: +SKIP
+    0
+
+В обоих случаях вы имеете дело не с объектом Number, который
+представляет число в SymPy, а с питоновскими числами, которые создаются
+по умолчанию. Скорее всего, в большинстве случаев вы будете работать
+с дробными числами, поэтому для того чтобы получать результат в виде
+объектов SymPy убедитесь, что вы используете класс Rational.
+Кому-то может показаться удобным обозначать Rational как ``R``::
+
+    >>> R = Rational
+    >>> R(1, 2)
+    1/2
+    >>> R(1)/2 # R(1) - это Integer sympy, а результат деления Integer на int - Rational
+    1/2
+
+Также в модуле Sympy зарезервированы особые константы, такие как e и pi,
+которые ведут себя как переменные (то есть 1+pi не сконвертируется в число,
+а останется выражением 1+pi), и заданы с некоторой точностью::
+
+    >>> from sympy import pi, E
+    >>> pi**2
+    pi**2
+
+    >>> pi.evalf()
+    3.14159265358979
+
+    >>> (pi + E).evalf()
+    5.85987448204884
+
+как вы видите, функция evalf переводит выражение в число с плавающей точкой
+
+Символ ``oo`` используется для работы с математической бесконечностью::
+
+    >>> from sympy import oo
+    >>> oo > 99999
+    True
+    >>> oo + 1
+    oo
+
+Переменные
+----------
+
+В отличие от многих других систем компьютерной алгебры, в SymPy вам нужно явно
+декларировать символьные переменные::
+
+    >>> from sympy import Symbol
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+
+В левой части выражения присваивания записывается переменная Python,
+которая соотносится с объектом класса Symbol в SymPy.
+Экземпляры класса Symbol взаимодействуют друг с другом и составляют
+алгебраические выражения::
+
+    >>> x+y+x-y
+    2*x
+
+    >>> (x+y)**2
+    (x + y)**2
+
+    >>> ((x+y)**2).expand()
+    x**2 + 2*x*y + y**2
+
+Переменные могут быть заменены на другие числа, переменные или выражения
+функцией ``subs(old, new)``::
+
+    >>> ((x+y)**2).subs(x, 1)
+    (y + 1)**2
+
+    >>> ((x+y)**2).subs(x, y)
+    4*y**2
+
+    >>> ((x+y)**2).subs(x, 1-y)
+    1
+
+Далее, на всем протяжении теста, мы будем предполагать,
+что для всех примеров мы запустили команду::
+
+    >>> from sympy import init_printing
+    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
+
+Это придаст более качественное отображение выражений при печати.
+Смотрите раздел :ref:`printing-tutorial-ru`
+ниже. Если же у вас установлен шрифт с юникодом, вы можете использовать
+опцию use_unicode=True для еще более красивого вывода данных.
+Подробнее о системе печати смотрите раздел :ref:`printing-tutorial-ru` ниже.
+
+Алгебра
+=======
+
+Чтобы разложить выражение на простейшие дроби, используйте ``apart(expr, x)``::
+
+    >>> from sympy import apart
+    >>> from sympy.abc import x, y, z
+
+    >>> 1/( (x+2)*(x+1) )
+           1
+    ---------------
+    (x + 1)*(x + 2)
+
+    >>> apart(1/( (x+2)*(x+1) ), x)
+        1       1
+    - ----- + -----
+      x + 2   x + 1
+
+    >>> (x+1)/(x-1)
+    x + 1
+    -----
+    x - 1
+
+    >>> apart((x+1)/(x-1), x)
+          2
+    1 + -----
+        x - 1
+
+Чтобы снова привести дроби к общему знаменателю,
+используйте ``together(expr, x)``::
+
+    >>> from sympy import together
+    >>> together(1/x + 1/y + 1/z)
+    x*y + x*z + y*z
+    ---------------
+         x*y*z
+
+    >>> together(apart((x+1)/(x-1), x), x)
+    x + 1
+    -----
+    x - 1
+
+    >>> together(apart(1/( (x+2)*(x+1) ), x), x)
+           1
+    ---------------
+    (x + 1)*(x + 2)
+
+
+.. index:: calculus
+
+Вычисления
+==========
+
+.. index:: limits
+
+Пределы
+-------
+
+Пределы считаются в SymPy очень просто. Чтобы посчитать предел функции,
+используйте ``limit(function, variable, point)``.
+Например, чтобы вычислить предел f(x) при x -> 0, вам нужно ввести
+``limit(f, x, 0)``::
+
+   >>> from sympy import limit, Symbol, sin, oo
+   >>> x = Symbol("x")
+   >>> limit(sin(x)/x, x, 0)
+   1
+
+также вы можете вычислить предел при x, стремящемся к бесконечности::
+
+   >>> limit(x, x, oo)
+   oo
+
+   >>> limit(1/x, x, oo)
+   0
+
+   >>> limit(x**x, x, 0)
+   1
+
+Для более сложных примеров вычисления пределов,
+вы можете ознакомиться с тестовым файлом
+`test_demidovich.py
+<https://github.com/sympy/sympy/blob/master/sympy/series/tests/test_demidovich.py>`_
+
+.. index:: differentiation, diff
+
+Дифференцирование
+-----------------
+
+Вы можете продифференцировать любое выражение SymPy,
+используя ``diff(func, var)``. Примеры::
+
+    >>> from sympy import diff, Symbol, sin, tan
+    >>> x = Symbol('x')
+    >>> diff(sin(x), x)
+    cos(x)
+    >>> diff(sin(2*x), x)
+    2*cos(2*x)
+
+    >>> diff(tan(x), x)
+       2
+    tan (x) + 1
+
+Правильность производной вы можете проверить следующим способом::
+
+    >>> from sympy import limit
+    >>> from sympy.abc import delta
+    >>> limit((tan(x + delta) - tan(x))/delta, delta, 0)
+       2
+    tan (x) + 1
+
+Производные более высших порядков вы можете вычислять,
+используя функцию ``diff(func, var, n)``::
+
+    >>> diff(sin(2*x), x, 1)
+    2*cos(2*x)
+
+    >>> diff(sin(2*x), x, 2)
+    -4*sin(2*x)
+
+    >>> diff(sin(2*x), x, 3)
+    -8*cos(2*x)
+
+
+.. index::
+    single: series expansion
+    single: expansion; series
+
+Разложение в ряд
+----------------
+
+Используйте ``.series(var, point, order)``::
+
+    >>> from sympy import Symbol, cos
+    >>> x = Symbol('x')
+    >>> cos(x).series(x, 0, 10)
+         2    4     6      8
+        x    x     x      x      / 10\
+    1 - -- + -- - --- + ----- + O\x  /
+        2    24   720   40320
+    >>> (1/cos(x)).series(x, 0, 10)
+         2      4       6        8
+        x    5*x    61*x    277*x     / 10\
+    1 + -- + ---- + ----- + ------ + O\x  /
+        2     24     720     8064
+
+Еще один простой пример::
+
+    >>> from sympy import Integral, pprint
+
+    >>> y = Symbol("y")
+    >>> e = 1/(x + y)
+    >>> s = e.series(x, 0, 5)
+
+    >>> print(s)
+    1/y - x/y**2 + x**2/y**3 - x**3/y**4 + x**4/y**5 + O(x**5)
+    >>> pprint(s)
+              2    3    4
+    1   x    x    x    x     / 5\
+    - - -- + -- - -- + -- + O\x /
+    y    2    3    4    5
+        y    y    y    y
+
+.. index:: integration
+
+Интегрирование
+--------------
+
+SymPy поддерживает вычисление определенных и неопределенных интегралов
+с помощью функции ``integrate()``. Она использует расширенный алгоритм
+Risch-Norman, с некоторыми шаблонами и эвристиками.
+Можно вычислять интегралы трансцендентных, простых и специальных функций::
+
+    >>> from sympy import integrate, erf, exp, sin, log, oo, pi, sinh, symbols
+    >>> x, y = symbols('x,y')
+
+Вы можете интегрировать простейшие функции::
+
+    >>> integrate(6*x**5, x)
+     6
+    x
+    >>> integrate(sin(x), x)
+    -cos(x)
+    >>> integrate(log(x), x)
+    x*log(x) - x
+    >>> integrate(2*x + sinh(x), x)
+     2
+    x  + cosh(x)
+
+Примеры интегрирования некоторых специальных функций::
+
+    >>> integrate(exp(-x**2)*erf(x), x)
+      ____    2
+    \/ pi *erf (x)
+    --------------
+          4
+
+Возможно также вычислить определенный интеграл::
+
+    >>> integrate(x**3, (x, -1, 1))
+    0
+    >>> integrate(sin(x), (x, 0, pi/2))
+    1
+    >>> integrate(cos(x), (x, -pi/2, pi/2))
+    2
+
+Поддерживаются и несобственные интегралы::
+
+    >>> integrate(exp(-x), (x, 0, oo))
+    1
+    >>> integrate(log(x), (x, 0, 1))
+    -1
+
+.. index::
+    single: complex numbers
+    single: expansion; complex
+
+Комплексные числа
+-----------------
+
+::
+
+    >>> from sympy import Symbol, exp, I
+    >>> x = Symbol("x")
+    >>> exp(I*x).expand()
+     I*x
+    e
+    >>> exp(I*x).expand(complex=True)
+       -im(x)               -im(x)
+    I*e      *sin(re(x)) + e      *cos(re(x))
+    >>> x = Symbol("x", real=True)
+    >>> exp(I*x).expand(complex=True)
+    I*sin(x) + cos(x)
+
+Функции
+-------
+
+**тригонометрические**::
+
+    >>> from sympy import asin, asinh, cos, sin, sinh, symbols, I
+    >>> x, y = symbols('x,y')
+
+    >>> sin(x+y).expand(trig=True)
+    sin(x)*cos(y) + sin(y)*cos(x)
+
+    >>> cos(x+y).expand(trig=True)
+    -sin(x)*sin(y) + cos(x)*cos(y)
+
+    >>> sin(I*x)
+    I*sinh(x)
+
+    >>> sinh(I*x)
+    I*sin(x)
+
+    >>> asinh(I)
+    I*pi
+    ----
+     2
+
+    >>> asinh(I*x)
+    I*asin(x)
+
+    >>> sin(x).series(x, 0, 10)
+         3     5     7       9
+        x     x     x       x       / 10\
+    x - -- + --- - ---- + ------ + O\x  /
+        6    120   5040   362880
+
+    >>> sinh(x).series(x, 0, 10)
+         3     5     7       9
+        x     x     x       x       / 10\
+    x + -- + --- + ---- + ------ + O\x  /
+        6    120   5040   362880
+
+    >>> asin(x).series(x, 0, 10)
+         3      5      7       9
+        x    3*x    5*x    35*x     / 10\
+    x + -- + ---- + ---- + ----- + O\x  /
+        6     40    112     1152
+
+    >>> asinh(x).series(x, 0, 10)
+         3      5      7       9
+        x    3*x    5*x    35*x     / 10\
+    x - -- + ---- - ---- + ----- + O\x  /
+        6     40    112     1152
+
+**сферические**::
+
+    >>> from sympy import Ylm
+    >>> from sympy.abc import theta, phi
+
+    >>> Ylm(1, 0, theta, phi)
+      ___
+    \/ 3 *cos(theta)
+    ----------------
+            ____
+        2*\/ pi
+
+    >>> Ylm(1, 1, theta, phi)
+       ___  I*phi
+    -\/ 6 *e     *sin(theta)
+    ------------------------
+                ____
+            4*\/ pi
+
+    >>> Ylm(2, 1, theta, phi)
+       ____  I*phi
+    -\/ 30 *e     *sin(theta)*cos(theta)
+    ------------------------------------
+                      ____
+                  4*\/ pi
+
+**факториалы и гамма-функции**::
+
+    >>> from sympy import factorial, gamma, Symbol
+    >>> x = Symbol("x")
+    >>> n = Symbol("n", integer=True)
+
+    >>> factorial(x)
+    x!
+
+    >>> factorial(n)
+    n!
+
+    >>> gamma(x + 1).series(x, 0, 3) # i.e. factorial(x)
+                         2  2             2  2
+                       pi *x    EulerGamma *x     / 3\
+    1 - EulerGamma*x + ------ + -------------- + O\x /
+                         12           2
+
+**дзета-функции**::
+
+    >>> from sympy import zeta
+    >>> zeta(4, x)
+    zeta(4, x)
+
+    >>> zeta(4, 1)
+      4
+    pi
+    ---
+     90
+
+    >>> zeta(4, 2)
+           4
+         pi
+    -1 + ---
+          90
+
+    >>> zeta(4, 3)
+             4
+      17   pi
+    - -- + ---
+      16    90
+
+
+**многочлены**::
+
+    >>> from sympy import assoc_legendre, chebyshevt, legendre, hermite
+    >>> chebyshevt(2, x)
+       2
+    2*x  - 1
+
+    >>> chebyshevt(4, x)
+       4      2
+    8*x  - 8*x  + 1
+
+    >>> legendre(2, x)
+       2
+    3*x    1
+    ---- - -
+     2     2
+
+    >>> legendre(8, x)
+          8         6         4        2
+    6435*x    3003*x    3465*x    315*x     35
+    ------- - ------- + ------- - ------ + ---
+      128        32        64       32     128
+
+    >>> assoc_legendre(2, 1, x)
+            __________
+           /    2
+    -3*x*\/  - x  + 1
+
+    >>> assoc_legendre(2, 2, x)
+         2
+    - 3*x  + 3
+
+    >>> hermite(3, x)
+       3
+    8*x  - 12*x
+
+.. index:: equations; differential, diff, dsolve
+
+Дифференциальные уравнения
+--------------------------
+
+В ``isympy``::
+
+    >>> from sympy import Function, Symbol, dsolve
+    >>> f = Function('f')
+    >>> x = Symbol('x')
+    >>> f(x).diff(x, x) + f(x)
+            2
+           d
+    f(x) + ---(f(x))
+             2
+           dx
+
+    >>> dsolve(f(x).diff(x, x) + f(x), f(x))
+    f(x) = C1*sin(x) + C2*cos(x)
+
+.. index:: equations; algebraic, solve
+
+Алгебраические уравнения
+------------------------
+
+В ``isympy``::
+
+    >>> from sympy import solve, symbols
+    >>> x, y = symbols('x,y')
+    >>> solve(x**4 - 1, x)
+    [-1, 1, -I, I]
+
+    >>> solve([x + 5*y - 2, -3*x + 6*y - 15], [x, y])
+    {x: -3, y: 1}
+
+.. index:: linear algebra
+
+Линейная Алгебра
+================
+
+.. index:: Matrix
+
+Матрицы
+-------
+
+Матрицы задаются с помощью конструктора Matrix::
+
+    >>> from sympy import Matrix, Symbol
+    >>> Matrix([[1,0], [0,1]])
+    [1  0]
+    [    ]
+    [0  1]
+
+Также вы можете использовать в матрице символьные переменные::
+
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+    >>> A = Matrix([[1,x], [y,1]])
+    >>> A
+    [1  x]
+    [    ]
+    [y  1]
+
+    >>> A**2
+    [x*y + 1    2*x  ]
+    [                ]
+    [  2*y    x*y + 1]
+
+Для того, чтобы получить больше информации, прочитайте, пожалуйста,
+Руководство по Линейной Алгебре.
+
+.. index:: pattern matching, match, Wild, WildFunction
+
+Сопоставление с образцом
+========================
+
+Чтобы сопоставить выражения с образцами, используйте функцию ``.match()``
+в паре со вспомогательным классом ``Wild``.
+Функция вернет словарь с необходимыми заменами, например::
+
+    >>> from sympy import Symbol, Wild
+    >>> x = Symbol('x')
+    >>> p = Wild('p')
+    >>> (5*x**2).match(p*x**2)
+    {p: 5}
+
+    >>> q = Wild('q')
+    >>> (x**2).match(p*x**q)
+    {p: 1, q: 2}
+
+Если сопоставление не удалось, функция вернет``None``::
+
+    >>> print (x+1).match(p**x)
+    None
+
+Также можно использовать параметр exclude для исключения некоторых
+значений из результата::
+
+    >>> p = Wild('p', exclude=[1,x])
+    >>> print (x+1).match(x+p) # 1 is excluded
+    None
+    >>> print (x+1).match(p+1) # x is excluded
+    None
+    >>> print (x+1).match(x+2+p) # -1 is not excluded
+    {p_: -1}
+
+.. _printing-tutorial-ru:
+
+Печать
+======
+
+Существует несколько способов для того, чтобы вывести на экран выражения.
+
+**Стандартный**
+
+Стандартный способ представлен фукнцией ``str(expression)`` и работает
+следующиим образом:
+
+    >>> from sympy import Integral
+    >>> from sympy.abc import x
+    >>> print x**2
+    x**2
+    >>> print 1/x
+    1/x
+    >>> print Integral(x**2, x)
+    Integral(x**2, x)
+
+
+**Красивая печать (Pretty-print)**
+
+Это способ печати выражений, основанный на ascii-графике и реализованный
+в функции ``pprint``:
+
+    >>> from sympy import Integral, pprint
+    >>> from sympy.abc import x
+    >>> pprint(x**2)
+     2
+    x
+    >>> pprint(1/x)
+    1
+    -
+    x
+    >>> pprint(Integral(x**2, x))
+      /
+     |
+     |  2
+     | x  dx
+     |
+    /
+
+Если у вас установлен шрифт с юникодом, он будет использовать Pretty-print
+с юникодом по умолчанию. 
+Эту опцию можно отменить, используя ``use_unicode``:
+
+    >>> pprint(Integral(x**2, x), use_unicode=True)
+    ⌠
+    ⎮  2
+    ⎮ x  dx
+    ⌡
+
+
+Также вы можете прочитать статью `Pretty Printing
+<https://github.com/sympy/sympy/wiki/Pretty-Printing>`_ 
+из нашего Вики для изучения примеров Pretty-print с юникодом.
+
+Совет: Чтобы активировать Pretty-print по умолчанию в интерпретаторе Python,
+используйте::
+
+    $ python
+    Python 2.5.2 (r252:60911, Jun 25 2008, 17:58:32)
+    [GCC 4.3.1] on linux2
+    Type "help", "copyright", "credits" or "license" for more information.
+    >>> from sympy import init_printing, var, Integral
+    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
+    >>> var("x")
+    x
+    >>> x**3/3
+     3
+    x
+    --
+    3
+    >>> Integral(x**2, x) #doctest: +NORMALIZE_WHITESPACE
+      /
+     |
+     |  2
+     | x  dx
+     |
+    /
+
+**Печать объектов Python**
+
+    >>> from sympy.printing.python import python
+    >>> from sympy import Integral
+    >>> from sympy.abc import x
+    >>> print python(x**2)
+    x = Symbol('x')
+    e = x**2
+    >>> print python(1/x)
+    x = Symbol('x')
+    e = 1/x
+    >>> print python(Integral(x**2, x))
+    x = Symbol('x')
+    e = Integral(x**2, x)
+
+
+**Печать в формате LaTeX**
+
+    >>> from sympy import Integral, latex
+    >>> from sympy.abc import x
+    >>> latex(x**2)
+    x^{2}
+    >>> latex(x**2, mode='inline')
+    $x^{2}$
+    >>> latex(x**2, mode='equation')
+    \begin{equation}x^{2}\end{equation}
+    >>> latex(x**2, mode='equation*')
+    \begin{equation*}x^{2}\end{equation*}
+    >>> latex(1/x)
+    \frac{1}{x}
+    >>> latex(Integral(x**2, x))
+    \int x^{2}\, dx
+
+**MathML**
+
+::
+
+    >>> from sympy.printing.mathml import mathml
+    >>> from sympy import Integral, latex
+    >>> from sympy.abc import x
+    >>> print mathml(x**2)
+    <apply><power/><ci>x</ci><cn>2</cn></apply>
+    >>> print mathml(1/x)
+    <apply><power/><ci>x</ci><cn>-1</cn></apply>
+
+**Pyglet**
+
+    >>> from sympy import Integral, preview
+    >>> from sympy.abc import x
+    >>> preview(Integral(x**2, x)) #doctest:+SKIP
+
+Появится окно pyglet с отрисованным выражением LaTeX:
+
+.. image:: pics/pngview1.png
+
+Примечания
+----------
+
+``isympy`` вызывает ``pprint`` автоматически,
+поэтому Pretty-print будет использована по умолчанию.
+
+Также доступен модуль печати - ``sympy.printing``.
+Через этот модуль доступны следующий функции печати:
+
+* ``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``: 
+  Возвращает или выводит на экран, соответственно, Красивое представление
+  выражения ``expr``. Это то же самое, что и второй уровень представления,
+  описанный выше.
+
+* ``latex(expr)``, ``print_latex(expr)``:
+  Возвращает или выводит на экран, соответственно,
+  `LaTeX <http://www.latex-project.org/>`_  -представление ``expr``
+
+* ``mathml(expr)``, ``print_mathml(expr)``:
+  Возвращает или выводит на экран, соответственно,
+  `MathML <http://www.w3.org/Math/>`_ -представление ``expr``.
+
+* ``print_gtk(expr)``: Вывод ``expr`` в
+  `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_, виджет GTK,
+  который отображает код MathML. Необходимо наличие пакета
+  `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_ .
+
+Другие справочники
+=====================
+
+Теперь самое время узнать больше о SymPy. Прочитайте
+:ref:`Руководство пользователя SymPy <guide>` и
+:ref:`Описание модулей SymPy <module-docs>`.
+
+Также зайдите на `wiki.sympy.org <http://wiki.sympy.org/>`_,
+сайт, который содержит множество полезных примеров, руководств и советов,
+созданных нами и нашим сообществом.
+Мы будем рады, если и вы внесете в него свой вклад.

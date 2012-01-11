@@ -4,12 +4,12 @@
 # -Implement new simpifications
 """Clebsch-Gordon Coefficients."""
 
-from sympy import Add, expand, Eq, Expr, Function, Mul, Piecewise, Pow, sqrt, Sum, symbols, sympify, Wild
+from sympy import (Add, expand, Eq, Expr, Mul, Piecewise, Pow, sqrt, Sum,
+                   symbols, sympify, Wild)
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
-from sympy.physics.quantum.kronecker import KroneckerDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.wigner import wigner_3j, clebsch_gordan
-
 
 __all__ = [
     'Wigner3j',
@@ -446,7 +446,7 @@ def _check_cg(cg_term, expr, length, sign=None):
     matches = cg_term.match(expr)
     if matches is None:
         return
-    if not sign is None:
+    if sign is not None:
         if not isinstance(sign, tuple):
             raise TypeError('sign must be a tuple')
         if not sign[0] == (sign[1]).subs(matches):
@@ -465,7 +465,7 @@ def _check_varsh_sum_871_1(e):
     alpha = symbols('alpha')
     b = Wild('b')
     match = e.match(Sum(CG(a,alpha,b,0,a,alpha),(alpha,-a,a)))
-    if not match is None and len(match) == 2:
+    if match is not None and len(match) == 2:
         return ((2*a+1)*KroneckerDelta(b,0)).subs(match)
     return e
 
@@ -474,7 +474,7 @@ def _check_varsh_sum_871_2(e):
     alpha = symbols('alpha')
     c = Wild('c')
     match = e.match(Sum((-1)**(a-alpha)*CG(a,alpha,a,-alpha,c,0),(alpha,-a,a)))
-    if not match is None and len(match) == 2:
+    if match is not None and len(match) == 2:
         return (sqrt(2*a+1)*KroneckerDelta(c,0)).subs(match)
     return e
 
@@ -488,10 +488,10 @@ def _check_varsh_sum_872_4(e):
     gamma = Wild('gamma')
     gammap = Wild('gammap')
     match1 = e.match(Sum(CG(a,alpha,b,beta,c,gamma)*CG(a,alpha,b,beta,cp,gammap),(alpha,-a,a),(beta,-b,b)))
-    if not match1 is None and len(match1) == 8:
+    if match1 is not None and len(match1) == 8:
         return (KroneckerDelta(c,cp)*KroneckerDelta(gamma,gammap)).subs(match1)
     match2 = e.match(Sum(CG(a,alpha,b,beta,c,gamma)**2,(alpha,-a,a),(beta,-b,b)))
-    if not match2 is None and len(match2) == 6:
+    if match2 is not None and len(match2) == 6:
         return 1
     return e
 

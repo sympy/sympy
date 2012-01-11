@@ -37,7 +37,7 @@
     >>> M[i, j]
     M[i, j]
 
-    Repreated indices in a product implies a summation, so to express a
+    Repeated indices in a product implies a summation, so to express a
     matrix-vector product in terms of Indexed objects:
 
     >>> x = IndexedBase('x')
@@ -105,11 +105,163 @@
 #      - Idx with stepsize != 1
 #      - Idx with step determined by function call
 
-from sympy.core import Expr, Basic, Tuple, Symbol, Integer, sympify, S
+from sympy.core import Expr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import is_sequence
 
 class IndexException(Exception):
     pass
+
+class Indexed(Expr):
+    """Represents a mathematical object with indices.
+
+    >>> from sympy.tensor import Indexed, IndexedBase, Idx
+    >>> from sympy import symbols
+    >>> i, j = map(Idx, ['i', 'j'])
+    >>> Indexed('A', i, j)
+    A[i, j]
+
+    It is recommended that Indexed objects are created via IndexedBase:
+
+    >>> A = IndexedBase('A')
+    >>> Indexed('A', i, j) == A[i, j]
+    True
+
+    """
+    is_commutative = False
+
+    def __new__(cls, base, *args, **kw_args):
+        from sympy.solvers.solvers import _filldedent
+
+        if not args:
+            raise IndexException("Indexed needs at least one index.")
+        if isinstance(base, (basestring, Symbol)):
+            base = IndexedBase(base)
+        elif not isinstance(base, IndexedBase):
+            raise TypeError(_filldedent("""
+                Indexed expects string, Symbol or IndexedBase as base."""))
+        return Expr.__new__(cls, base, *args, **kw_args)
+
+    @property
+    def base(self):
+        """Returns the IndexedBase of the Indexed object.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor import Indexed, IndexedBase, Idx
+        >>> i, j = map(Idx, ['i', 'j'])
+        >>> Indexed('A', i, j).base
+        A
+        >>> B = IndexedBase('B')
+        >>> B == B[i, j].base
+        True
+
+        """
+        return self.args[0]
+
+    @property
+    def indices(self):
+        """
+        Returns the indices of the Indexed object.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor import Indexed, Idx
+        >>> i, j = map(Idx, ['i', 'j'])
+        >>> Indexed('A', i, j).indices
+        (i, j)
+
+        """
+        return self.args[1:]
+
+    @property
+    def rank(self):
+        """
+        Returns the rank of the Indexed object.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor import Indexed, Idx
+        >>> i, j, k, l, m = map(Idx, ['i', 'j', 'k', 'l', 'm'])
+        >>> Indexed('A', i, j).rank
+        2
+        >>> q = Indexed('A', i, j, k, l, m)
+        >>> q.rank
+        5
+        >>> q.rank == len(q.indices)
+        True
+
+        """
+        return len(self.args)-1
+
+    @property
+    def shape(self):
+        """Returns a list with dimensions of each index.
+
+        Dimensions is a property of the array, not of the indices.  Still, if
+        the IndexedBase does not define a shape attribute, it is assumed that
+        the ranges of the indices correspond to the shape of the array.
+
+        >>> from sympy.tensor.indexed import IndexedBase, Idx
+        >>> from sympy import symbols
+        >>> n, m = symbols('n m', integer=True)
+        >>> i = Idx('i', m)
+        >>> j = Idx('j', m)
+        >>> A = IndexedBase('A', shape=(n, n))
+        >>> B = IndexedBase('B')
+        >>> A[i, j].shape
+        (n, n)
+        >>> B[i, j].shape
+        (m, m)
+        """
+        from sympy.solvers.solvers import _filldedent
+
+        if self.base.shape:
+            return self.base.shape
+        try:
+            return Tuple(*[i.upper - i.lower + 1 for i in self.indices])
+        except AttributeError:
+            raise IndexException(_filldedent("""
+                Range is not defined for all indices in: %s""" % self))
+        except TypeError:
+            raise IndexException(_filldedent("""
+                Shape cannot be inferred from Idx with
+                undefined range: %s""" % self))
+
+    @property
+    def ranges(self):
+        """Returns a list of tuples with lower and upper range of each index.
+
+        If an index does not define the data members upper and lower, the
+        corresponding slot in the list contains ``None`` instead of a tuple.
+
+        Examples
+        ========
+
+        >>> from sympy import Indexed,Idx, symbols
+        >>> Indexed('A', Idx('i', 2), Idx('j', 4), Idx('k', 8)).ranges
+        [(0, 1), (0, 3), (0, 7)]
+        >>> Indexed('A', Idx('i', 3), Idx('j', 3), Idx('k', 3)).ranges
+        [(0, 2), (0, 2), (0, 2)]
+        >>> x, y, z = symbols('x y z', integer=True)
+        >>> Indexed('A', x, y, z).ranges
+        [None, None, None]
+
+        """
+        ranges = []
+        for i in self.indices:
+            try:
+                ranges.append(Tuple(i.lower, i.upper))
+            except AttributeError:
+                ranges.append(None)
+        return ranges
+
+    def _sympystr(self, p):
+        indices = map(p.doprint, self.indices)
+        return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
+
 
 class IndexedBase(Expr):
     """Represent the base or stem of an indexed object
@@ -165,9 +317,10 @@ class IndexedBase(Expr):
     is_commutative = False
 
     def __new__(cls, label, shape=None, **kw_args):
-        if isinstance(label, basestring):
-            label = Symbol(label)
+        if not isinstance(label, (basestring, Symbol)):
+            raise TypeError("Base label should be a string or Symbol.")
 
+        label = sympify(label)
         obj = Expr.__new__(cls, label, **kw_args)
         if is_sequence(shape):
             obj._shape = Tuple(*shape)
@@ -177,6 +330,17 @@ class IndexedBase(Expr):
 
     @property
     def args(self):
+        """Returns the arguments used to create this IndexedBase object.
+
+        Examples
+        ========
+
+        >>> from sympy import IndexedBase
+        >>> from sympy.abc import x, y
+        >>> IndexedBase('A', shape=(x, y)).args
+        (A, (x, y))
+
+        """
         if self._shape:
             return self._args + (self._shape,)
         else:
@@ -189,115 +353,61 @@ class IndexedBase(Expr):
         if is_sequence(indices):
             # Special case needed because M[*my_tuple] is a syntax error.
             if self.shape and len(self.shape) != len(indices):
-                raise IndexException("Rank mismatch")
+                raise IndexException("Rank mismatch.")
             return Indexed(self, *indices, **kw_args)
         else:
             if self.shape and len(self.shape) != 1:
-                raise IndexException("Rank mismatch")
+                raise IndexException("Rank mismatch.")
             return Indexed(self, indices, **kw_args)
 
     @property
     def shape(self):
+        """Returns the shape of the IndexedBase object.
+
+        Examples
+        ========
+
+        >>> from sympy import IndexedBase, Idx, Symbol
+        >>> from sympy.abc import x, y
+        >>> IndexedBase('A', shape=(x, y)).shape
+        (x, y)
+
+        Note: If the shape of the IndexedBase is specified, it will override
+        any shape information given by the indices.
+
+        >>> A = IndexedBase('A', shape=(x, y))
+        >>> B = IndexedBase('B')
+        >>> i = Idx('i', 2)
+        >>> j = Idx('j', 1)
+        >>> A[i, j].shape
+        (x, y)
+        >>> B[i, j].shape
+        (2, 1)
+
+        """
         return self._shape
 
     @property
     def label(self):
+        """Returns the label of the IndexedBase object.
+
+        Examples
+        ========
+
+        >>> from sympy import IndexedBase
+        >>> from sympy.abc import x, y
+        >>> IndexedBase('A', shape=(x, y)).label
+        A
+
+        """
         return self.args[0]
 
     def _sympystr(self, p):
         return p.doprint(self.label)
 
 
-class Indexed(Expr):
-    """Represents a mathematical object with indices.
-
-    >>> from sympy.tensor import Indexed, IndexedBase, Idx
-    >>> from sympy import symbols
-    >>> i, j = map(Idx, ['i', 'j'])
-    >>> Indexed('A', i, j)
-    A[i, j]
-
-    It is recommended that Indexed objects are created via IndexedBase:
-
-    >>> A = IndexedBase('A')
-    >>> Indexed('A', i, j) == A[i, j]
-    True
-
-    """
-    is_commutative = False
-
-    def __new__(cls, base, *args, **kw_args):
-        if not args: raise IndexException("Indexed needs at least one index")
-        if isinstance(base, (basestring, Symbol)):
-            base = IndexedBase(base)
-        elif not isinstance(base, IndexedBase):
-            raise TypeError("Indexed expects string, Symbol or IndexedBase as base")
-        return Expr.__new__(cls, base, *args, **kw_args)
-
-    @property
-    def base(self):
-        return self.args[0]
-
-    @property
-    def indices(self):
-        return self.args[1:]
-
-    @property
-    def rank(self):
-        """returns the number of indices"""
-        return len(self.args)-1
-
-    @property
-    def shape(self):
-        """returns a list with dimensions of each index.
-
-        Dimensions is a property of the array, not of the indices.  Still, if
-        the IndexedBase does not define a shape attribute, it is assumed that
-        the ranges of the indices correspond to the shape of the array.
-
-        >>> from sympy.tensor.indexed import IndexedBase, Idx
-        >>> from sympy import symbols
-        >>> n, m = symbols('n m', integer=True)
-        >>> i = Idx('i', m)
-        >>> j = Idx('j', m)
-        >>> A = IndexedBase('A', shape=(n, n))
-        >>> B = IndexedBase('B')
-        >>> A[i, j].shape
-        (n, n)
-        >>> B[i, j].shape
-        (m, m)
-        """
-        if self.base.shape:
-            return self.base.shape
-        try:
-            return Tuple(*[i.upper - i.lower + 1 for i in self.indices])
-        except AttributeError:
-            raise IndexException("Range is not defined for all indices in: %s" % self)
-        except TypeError:
-            raise IndexException("Shape cannot be inferred from Idx with undefined range: %s"%self)
-
-    @property
-    def ranges(self):
-        """returns a list of tuples with lower and upper range of each index
-
-        If an index does not define the data members upper and lower, the
-        corresponding slot in the list contains ``None'' instead of a tuple.
-        """
-        ranges = []
-        for i in self.indices:
-            try:
-                ranges.append(Tuple(i.lower, i.upper))
-            except AttributeError:
-                ranges.append(None)
-        return ranges
-
-    def _sympystr(self, p):
-        indices = map(p.doprint, self.indices)
-        return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
-
-
 class Idx(Expr):
-    """Represents an index, either symbolic or integer.
+    """Represents an integer index as an Integer or integer expression.
 
     There are a number of ways to create an Idx object.  The constructor
     takes two arguments:
@@ -307,41 +417,45 @@ class Idx(Expr):
     ``range``
         Optionally you can specify a range as either
 
-            - Symbol or integer: This is interpreted as dimension. lower and
-              upper ranges are set to 0 and range-1
-            - tuple: This is interpreted as the lower and upper bounds in the
-              range.
+            - Symbol or integer: This is interpreted as a dimension. Lower and
+              upper bounds are set to 0 and range - 1, respectively.
+            - tuple: The two elements are interpreted as the lower and upper
+            bounds of the range, respectively.
 
-    Note that the Idx constructor is rather pedantic, and will not accept
-    non-integer symbols.  The only exception is that you can use oo and -oo to
+    Note: the Idx constructor is rather pedantic in that it only accepts
+    integer arguments.  The only exception is that you can use oo and -oo to
     specify an unbounded range.  For all other cases, both label and bounds
-    must be declared as integers, in the sense that for a index label n,
+    must be declared as integers, e.g. if n is given as an argument then
     n.is_integer must return True.
 
-    For convenience, if the label is given as a string, it is automatically
-    converted to an integer symbol.  (Note that this conversion is not done for
+    For convenience, if the label is given as a string it is automatically
+    converted to an integer symbol.  (Note: this conversion is not done for
     range or dimension arguments.)
 
-    :Examples:
+    Examples
+    ========
 
     >>> from sympy.tensor import IndexedBase, Idx
     >>> from sympy import symbols, oo
     >>> n, i, L, U = symbols('n i L U', integer=True)
 
-    0) Construction from a string.  An integer symbol is created from the
-    string.
+    If a string is given for the label an integer Symbol is created and the
+    bounds are both None:
 
-    >>> Idx('qwerty')
+    >>> idx = Idx('qwerty'); idx
     qwerty
+    >>> idx.lower, idx.upper
+    (None, None)
 
-    1) Both upper and lower bound specified
+    Both upper and lower bounds can be specified:
 
     >>> idx = Idx(i, (L, U)); idx
     i
     >>> idx.lower, idx.upper
     (L, U)
 
-    2) Only dimension specified, lower bound defaults to 0
+    When only a single bound is given it is interpreted as the dimension
+    and the lower bound defaults to 0:
 
     >>> idx = Idx(i, n); idx.lower, idx.upper
     (0, n - 1)
@@ -350,42 +464,43 @@ class Idx(Expr):
     >>> idx = Idx(i, oo); idx.lower, idx.upper
     (0, oo)
 
-    3) No bounds given, interpretation of this depends on context.
-
-    >>> idx = Idx(i); idx.lower, idx.upper
-    (None, None)
-
-    4) for a literal integer instead of a symbolic label the bounds are still
-    there:
+    The label can be a literal integer instead of a string/Symbol:
 
     >>> idx = Idx(2, n); idx.lower, idx.upper
     (0, n - 1)
+    >>> idx.label
+    2
 
     """
 
     is_integer = True
 
     def __new__(cls, label, range=None, **kw_args):
+        from sympy.solvers.solvers import _filldedent
 
         if isinstance(label, basestring):
             label = Symbol(label, integer=True)
         label, range = map(sympify, (label, range))
 
         if not label.is_integer:
-            raise TypeError("Idx object requires an integer label")
+            raise TypeError("Idx object requires an integer label.")
 
         elif is_sequence(range):
-            assert len(range) == 2, "Idx got range tuple with wrong length"
+            if len(range) != 2:
+                raise ValueError(_filldedent("""
+                    Idx range tuple must have length 2, but got %s""" % len(range)))
             for bound in range:
                 if not (bound.is_integer or abs(bound) is S.Infinity):
-                    raise TypeError("Idx object requires integer bounds")
+                    raise TypeError("Idx object requires integer bounds.")
             args = label, Tuple(*range)
         elif isinstance(range, Expr):
             if not (range.is_integer or range is S.Infinity):
-                raise TypeError("Idx object requires an integer dimension")
-            args = label, Tuple(S.Zero, range-S.One)
+                raise TypeError("Idx object requires an integer dimension.")
+            args = label, Tuple(0, range - 1)
         elif range:
-            raise TypeError("range must be ordered iterable or integer sympy expression")
+            raise TypeError(_filldedent("""
+                The range must be an ordered iterable or
+                integer SymPy expression."""))
         else:
             args = label,
 
@@ -394,12 +509,39 @@ class Idx(Expr):
 
     @property
     def label(self):
-        """Returns the name/label of the index, or it's integer value"""
+        """Returns the label (Integer or integer expression) of the Idx object.
+
+        Examples
+        ========
+
+        >>> from sympy import Idx, Symbol
+        >>> Idx(2).label
+        2
+        >>> j = Symbol('j', integer=True)
+        >>> Idx(j).label
+        j
+        >>> Idx(j + 1).label
+        j + 1
+
+        """
         return self.args[0]
 
     @property
     def lower(self):
-        """Returns the lower bound of the index"""
+        """Returns the lower bound of the Index.
+
+        Examples
+        ========
+
+        >>> from sympy import Idx
+        >>> Idx('j', 2).lower
+        0
+        >>> Idx('j', 5).lower
+        0
+        >>> Idx('j').lower is None
+        True
+
+        """
         try:
             return self.args[1][0]
         except IndexError:
@@ -407,7 +549,20 @@ class Idx(Expr):
 
     @property
     def upper(self):
-        """Returns the upper bound of the index"""
+        """Returns the upper bound of the Index.
+
+        Examples
+        ========
+
+        >>> from sympy import Idx
+        >>> Idx('j', 2).upper
+        1
+        >>> Idx('j', 5).upper
+        4
+        >>> Idx('j').upper is None
+        True
+
+        """
         try:
             return self.args[1][1]
         except IndexError:

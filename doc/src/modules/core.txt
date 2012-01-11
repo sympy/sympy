@@ -4,348 +4,485 @@ SymPy Core
 sympify
 -------
 .. module:: sympy.core.sympify
+
+sympify
+^^^^^^^
 .. autofunction:: sympify
 
-cacheit
+cache
 -------
 .. module:: sympy.core.cache
+
+cacheit
+^^^^^^^
 .. autofunction:: cacheit
 
+basic
+-----
 .. module:: sympy.core.basic
 
 Basic
------
+^^^^^
 .. autoclass:: Basic
    :members:
 
 Atom
-----
+^^^^
 .. autoclass:: Atom
    :members:
 
 C
--
+^
 .. autoclass:: C
    :members:
 
-S
--
+singleton
+---------
 .. module:: sympy.core.singleton
+
+S
+^
 .. autoclass:: S
    :members:
 
+expr
+----
 .. module:: sympy.core.expr
 
+.. note:: Pickling of singletons with protocol less than 2
+   ================================================
+
+   Note that when pickling a singleton (such as pi or e), the
+   object.__getnewargs__() method applies, and this method is only used for
+   protocol 2 and above. Therefore when the singleton is pickled with protocol
+   of less than 2 (i.e. 0 or 1), the singleton will lose its type as a singleton
+   and instead functions as a symbol of an similar but inexact value.
+
+   This is important when attempting to perform operations on the aforementioned
+   singletons, especially because the default protocol when pickling in Python 2
+   is protocol 0, and a regular simplification will not evaluate the result with
+   sufficient accuracy.
+   
+   For example:
+   
+   >>> from sympy import sin, pi
+   >>> from pickle import loads, dumps
+   
+   >>> picklepi = loads(dumps(pi,0))  # Uses default protocol 0 in Python 2 with no parameter
+   
+   >>> sin(pi)
+   0
+   >>> sin(picklepi)
+   sin(pi)
+   >>> sin(picklepi).evalf()
+   .0e-184
+   
+   >>> pi - picklepi
+   -pi + pi
+   >>> (pi-picklepi).evalf()
+   -.0e-125
+   
+   >>> pi is picklepi
+   False
+   
+   
+   The optimal solution to this problem is to specify a protocol of 2 or higher
+   when pickling the singleton (Specification of protocol redundant in Python 3).
+   
+   For example:
+   
+   >>> picklepi = loads(dumps(pi,-1))   # Defaults to highest protocol, which is 2 in Python 2 and 3 in Python 3
+   
+   >>> pi is picklepi
+   True
+   
+   >>> sin(picklepi)
+   0
+   
+   >>> picklepi - pi
+   0
+
+   However, this is not a problem when using Python 3 because the default protocol
+   of Python 3 when pickling is 3. Also note that the highest protocol in Python 3
+   is protocol 3, so a parameter of -1 when pickling will result in pickling with
+   protocol 3. The highest protocol available also can be checked with
+   pickle.HIGHEST_PROTOCOL
+
 Expr
-----
+^^^^
 .. autoclass:: Expr
    :members:
 
 AtomicExpr
-----------
+^^^^^^^^^^
 .. autoclass:: AtomicExpr
    :members:
 
+symbol
+------
 .. module:: sympy.core.symbol
 
 Symbol
-------
+^^^^^^
 .. autoclass:: Symbol
    :members:
 
 Wild
-----
+^^^^
 .. autoclass:: Wild
    :members:
 
 Dummy
------
+^^^^^
 .. autoclass:: Dummy
    :members:
 
 symbols
--------
+^^^^^^^
 .. autofunction:: symbols
 
 var
----
+^^^
 .. autofunction:: var
 
+numbers
+-------
 .. module:: sympy.core.numbers
 
 Number
-------
+^^^^^^
 .. autoclass:: Number
    :members:
 
 Float
------
+^^^^^
 .. autoclass:: Float
    :members:
 
 Rational
---------
+^^^^^^^^
 .. autoclass:: Rational
    :members:
 
 Integer
--------
+^^^^^^^
 .. autoclass:: Integer
    :members:
 
 NumberSymbol
-------------
+^^^^^^^^^^^^
 .. autoclass:: NumberSymbol
    :members:
 
 RealNumber
-----------
+^^^^^^^^^^
 .. autoclass:: RealNumber
    :members:
 
 Real
-----
+^^^^
 .. autoclass:: Real
    :members:
 
 igcd
-----
+^^^^
 .. autofunction:: igcd
 
 ilcm
-----
+^^^^
 .. autofunction:: ilcm
 
 seterr
-------
+^^^^^^
 .. autofunction:: seterr
 
 E
--
+^
 .. autoclass:: E
    :members:
 
 I
--
+^
 .. autoclass:: I
    :members:
 
 nan
----
+^^^
 .. autofunction:: nan
 
 oo
---
+^^
 .. autofunction:: oo
 
 pi
---
+^^
 .. autofunction:: pi
 
 zoo
----
+^^^
 .. autofunction:: zoo
 
+power
+-----
 .. module:: sympy.core.power
 
 Pow
----
+^^^
 .. autoclass:: Pow
    :members:
 
 integer_nthroot
----------------
+^^^^^^^^^^^^^^^
 .. autofunction:: integer_nthroot
 
-Mul
+mul
 ---
 .. module:: sympy.core.mul
+
+Mul
+^^^
 .. autoclass:: Mul
    :members:
 
-Add
+prod
+^^^^
+.. autofunction:: prod
+
+add
 ---
 .. module:: sympy.core.add
+
+Add
+^^^
 .. autoclass:: Add
    :members:
 
+mod
+---
+.. module:: sympy.core.mod
+
+Mod
+^^^
+.. autoclass:: Mod
+   :members:
+
+relational
+----------
 .. module:: sympy.core.relational
 
 Rel
----
+^^^
 .. autoclass:: Rel
    :members:
 
 Eq
---
+^^
 .. autoclass:: Eq
    :members:
 
 Ne
---
+^^
 .. autoclass:: Ne
    :members:
 
 Lt
---
+^^
 .. autoclass:: Lt
    :members:
 
 Le
---
+^^
 .. autoclass:: Le
    :members:
 
 Gt
---
+^^
 .. autoclass:: Gt
    :members:
 
 Ge
---
+^^
 .. autoclass:: Ge
    :members:
 
 Equality
---------
+^^^^^^^^
 .. autoclass:: Equality
    :members:
 
 Inequality
-----------
+^^^^^^^^^^
 .. autoclass:: Inequality
    :members:
 
 Unequality
-----------
+^^^^^^^^^^
 .. autoclass:: Unequality
    :members:
 
 StrictInequality
-----------------
+^^^^^^^^^^^^^^^^
 .. autoclass:: StrictInequality
    :members:
 
-vectorize
----------
+multidimensional
+----------------
 .. module:: sympy.core.multidimensional
+
+vectorize
+^^^^^^^^^
 .. autoclass:: vectorize
    :members:
 
+function
+--------
 .. module:: sympy.core.function
 
 Lambda
-------
+^^^^^^
 .. autoclass:: Lambda
    :members:
 
 WildFunction
-------------
+^^^^^^^^^^^^
 .. autoclass:: WildFunction
    :members:
 
 Derivative
-----------
+^^^^^^^^^^
 .. autoclass:: Derivative
    :members:
 
 diff
-----
+^^^^
 .. autofunction:: diff
 
 FunctionClass
--------------
+^^^^^^^^^^^^^
 .. autoclass:: FunctionClass
    :members:
 
 Function
---------
+^^^^^^^^
 .. autoclass:: Function
    :members:
 
 Subs
-----
+^^^^
 .. autoclass:: Subs
    :members:
 
 expand
-------
+^^^^^^
 .. autofunction:: expand
 
 PoleError
----------
+^^^^^^^^^
 .. autoclass:: PoleError
    :members:
 
 count_ops
----------
+^^^^^^^^^
 .. autofunction:: count_ops
 
 expand_mul
-----------
+^^^^^^^^^^
 .. autofunction:: expand_mul
 
 expand_log
-----------
+^^^^^^^^^^
 .. autofunction:: expand_log
 
 expand_func
------------
+^^^^^^^^^^^
 .. autofunction:: expand_func
 
 expand_trig
------------
+^^^^^^^^^^^
 .. autofunction:: expand_trig
 
 expand_complex
---------------
+^^^^^^^^^^^^^^
 .. autofunction:: expand_complex
 
 expand_multinomial
-------------------
+^^^^^^^^^^^^^^^^^^
 .. autofunction:: expand_multinomial
 
+nfloat
+^^^^^^
+.. autofunction:: nfloat
+
+sets
+----
 .. module:: sympy.core.sets
 
 Set
----
+^^^
 .. autoclass:: Set
    :members:
 
 Interval
---------
+^^^^^^^^
 .. autoclass:: Interval
    :members:
 
 Union
------
+^^^^^
 .. autoclass:: Union
    :members:
 
 EmptySet
---------
+^^^^^^^^
 .. autoclass:: EmptySet
    :members:
 
+FiniteSet
+^^^^^^^^^
+.. autoclass:: FiniteSet
+   :members:
+
+ProductSet
+^^^^^^^^^^
+.. autoclass: ProductSet
+   :members:
+
+evalf
+-----
 .. module:: sympy.core.evalf
 
 PrecisionExhausted
-------------------
+^^^^^^^^^^^^^^^^^^
 .. autoclass:: PrecisionExhausted
    :members:
 
 N
--
+^
 .. autoclass:: N
    :members:
 
-Tuple
------
+containers
+----------
 .. module:: sympy.core.containers
+
+Tuple
+^^^^^
 .. autoclass:: Tuple
    :members:
 
-gcd_terms
+Dict
+^^^^
+.. autoclass:: Dict
+   :members:
+
+exprtools
 ---------
 .. module:: sympy.core.exprtools
+
+gcd_terms
+^^^^^^^^^
 .. autofunction:: gcd_terms
+
+factor_terms
+^^^^^^^^^^^^
+.. autofunction:: factor_terms

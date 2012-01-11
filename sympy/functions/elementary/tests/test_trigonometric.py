@@ -2,6 +2,8 @@ from sympy import symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan, \
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos, \
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im
 
+from sympy.utilities.pytest import XFAIL
+
 def test_sin():
     x, y = symbols('x,y')
 
@@ -78,11 +80,22 @@ def test_sin():
     assert isinstance(sin( re(x) - im(y)), sin) == True
     assert isinstance(sin(-re(x) + im(y)), sin) == False
 
+def test_sin_series():
+    x = Symbol('x')
+    assert sin(x).series(x, 0, 9) == \
+                    x - x**3/6 + x**5/120 - x**7/5040 + O(x**9)
+
 def test_sin_rewrite():
     x = Symbol('x')
     assert sin(x).rewrite(exp) == -I*(exp(I*x) - exp(-I*x))/2
     assert sin(x).rewrite(tan) == 2*tan(x/2)/(1 + tan(x/2)**2)
     assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
+
+def test_sin_expansion():
+    x,y = symbols('x,y')
+    assert sin(x+y).expand(trig=True) == sin(x)*cos(y) + cos(x)*sin(y)
+    assert sin(2*x).expand(trig=True) == 2*sin(x)*cos(x)
+    assert sin(3*x).expand(trig=True) == 4*sin(x)*cos(x)**2-sin(x)
 
 def test_trig_symmetry():
     x = Symbol('x')
@@ -196,11 +209,22 @@ def test_cos():
     assert cos(k*pi) == (-1)**k
     assert cos(2*k*pi) == 1
 
+def test_cos_series():
+    x = Symbol('x')
+    assert cos(x).series(x, 0, 9) == \
+                    1 - x**2/2 + x**4/24 - x**6/720 + x**8/40320 + O(x**9)
+
 def test_cos_rewrite():
     x = Symbol('x')
     assert cos(x).rewrite(exp) == exp(I*x)/2 + exp(-I*x)/2
     assert cos(x).rewrite(tan) == (1 - tan(x/2)**2)/(1 + tan(x/2)**2)
     assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
+
+def test_cos_expansion():
+    x,y = symbols('x,y')
+    assert cos(x+y).expand(trig=True) == cos(x)*cos(y) - sin(x)*sin(y)
+    assert cos(2*x).expand(trig=True) == 2*cos(x)**2-1
+    assert cos(3*x).expand(trig=True) == 4*cos(x)**3-3*cos(x)
 
 def test_tan():
     x, y = symbols('x,y')
@@ -260,6 +284,11 @@ def test_tan():
     assert tan(11*pi/7) == -tan(3*pi/7)
     assert tan(-11*pi/7) == tan(3*pi/7)
 
+def test_tan_series():
+    x = Symbol('x')
+    assert tan(x).series(x, 0, 9) == \
+                    x + x**3/3 + 2*x**5/15 + 17*x**7/315 + O(x**9)
+
 def test_tan_rewrite():
     x = Symbol('x')
     neg_exp, pos_exp = exp(-x*I), exp(x*I)
@@ -267,6 +296,13 @@ def test_tan_rewrite():
     assert tan(x).rewrite(sin) == 2*sin(x)**2/sin(2*x)
     assert tan(x).rewrite(cos) == -cos(x + S.Pi/2)/cos(x)
     assert tan(x).rewrite(cot) == 1/cot(x)
+
+def test_tan_subs():
+    x,y = symbols('x,y')
+    assert tan(x).subs(tan(x), y) == y
+    assert tan(x).subs(x, y) == tan(y)
+    assert tan(x).subs(x, S.Pi/2) == S.NaN
+    assert tan(x).subs(x, 3*S.Pi/2) == S.NaN
 
 
 def test_cot():
@@ -323,6 +359,11 @@ def test_cot():
     assert cot(11*pi/7) == -cot(3*pi/7)
     assert cot(-11*pi/7) == cot(3*pi/7)
 
+def test_cot_series():
+    x = Symbol('x')
+    assert cot(x).series(x, 0, 9) == \
+                    1/x - x/3 - x**3/45 - 2*x**5/945 - x**7/4725 + O(x**9)
+
 def test_cot_rewrite():
     x = Symbol('x')
     neg_exp, pos_exp = exp(-x*I), exp(x*I)
@@ -330,6 +371,13 @@ def test_cot_rewrite():
     assert cot(x).rewrite(sin) == 2*sin(2*x)/sin(x)**2
     assert cot(x).rewrite(cos) == -cos(x)/cos(x + S.Pi/2)
     assert cot(x).rewrite(tan) == 1/tan(x)
+
+def test_cot_subs():
+    x,y = symbols('x,y')
+    assert cot(x).subs(cot(x), y) == y
+    assert cot(x).subs(x, y) == cot(y)
+    assert cot(x).subs(x, 0) == S.NaN
+    assert cot(x).subs(x, S.Pi) == S.NaN
 
 def test_asin():
     x = Symbol('x')
@@ -539,6 +587,11 @@ def test_as_leading_term_issue2173():
     assert atan(x).as_leading_term(x) == x
     assert acot(x).as_leading_term(x) == x
 
+def test_leading_terms():
+    x = Symbol('x')
+    for func in [sin, cos, tan, cot, asin, acos, atan, acot]:
+        assert func(1/x).as_leading_term(x) == func(1/x)
+
 def test_atan2_expansion():
     x, y = symbols("x,y")
     assert cancel(atan2(x+1,x**2).diff(x) - atan((x+1)/x**2).diff(x)) == 0
@@ -668,3 +721,28 @@ def test_issueXXX():
     assert sin(4.5*x*pi) == sin(4.5*pi*x)
     assert tan(4.5*x*pi) == tan(4.5*pi*x)
     assert cot(4.5*x*pi) == cot(4.5*pi*x)
+
+def test_inverses():
+    x = Symbol('x')
+    for pair in [[sin, asin], [cos, acos], [tan, atan], [cot, acot]]:
+        assert pair[0](x).inverse() == pair[1]
+
+def test_real_imag():
+    a,b = symbols('a,b', real=True)
+    z = a+b*I
+    for deep in [True, False]:
+        assert sin(z).as_real_imag(deep=deep) == (sin(a)*cosh(b), cos(a)*sinh(b))
+        assert cos(z).as_real_imag(deep=deep) == (cos(a)*cosh(b), -sin(a)*sinh(b))
+        assert tan(z).as_real_imag(deep=deep) == (sin(a)*cos(a)/(cos(a)**2+sinh(b)**2), sinh(b)*cosh(b)/(cos(a)**2+sinh(b)**2))
+        assert cot(z).as_real_imag(deep=deep) == (sin(a)*cos(a)/(sin(a)**2+sinh(b)**2), -sinh(b)*cosh(b)/(sin(a)**2+sinh(b)**2))
+        assert sin(a).as_real_imag(deep=deep) == (sin(a), 0)
+        assert cos(a).as_real_imag(deep=deep) == (cos(a), 0)
+        assert tan(a).as_real_imag(deep=deep) == (tan(a), 0)
+        assert cot(a).as_real_imag(deep=deep) == (cot(a), 0)
+
+@XFAIL
+def test_sin_cos_with_infinity():
+    # Test for issue 2097
+    # http://code.google.com/p/sympy/issues/detail?id=2097
+    assert sin(oo) == S.NaN
+    assert cos(oo) == S.NaN

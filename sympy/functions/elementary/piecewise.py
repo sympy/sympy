@@ -2,9 +2,12 @@ from sympy.core import Basic, S, Function, diff, Number, sympify
 from sympy.core.relational import Equality, Relational
 from sympy.logic.boolalg import Boolean
 from sympy.core.sets import Set
+from sympy.core.symbol import Dummy
 
 class ExprCondPair(Function):
     """Represents an expression, condition pair."""
+
+    true_sentinel = Dummy('True')
 
     def __new__(cls, *args, **assumptions):
         if isinstance(args[0], cls):
@@ -15,14 +18,24 @@ class ExprCondPair(Function):
             cond = sympify(args[1])
         else:
             raise TypeError("args must be a (expr, cond) pair")
+        if cond is True:
+            cond = ExprCondPair.true_sentinel
         return Basic.__new__(cls, expr, cond, **assumptions)
 
     @property
     def expr(self):
+        """
+        Returns the expression of this pair.
+        """
         return self.args[0]
 
     @property
     def cond(self):
+        """
+        Returns the condition of this pair.
+        """
+        if self.args[1] == ExprCondPair.true_sentinel:
+            return True
         return self.args[1]
 
     @property
@@ -31,6 +44,9 @@ class ExprCondPair(Function):
 
     @property
     def free_symbols(self):
+        """
+        Return the free symbols of this pair.
+        """
         # Overload Basic.free_symbols because self.args[1] may contain non-Basic
         result = self.expr.free_symbols
         if hasattr(self.cond, 'free_symbols'):
@@ -45,8 +61,8 @@ class Piecewise(Function):
     """
     Represents a piecewise function.
 
-    Usage
-    =====
+    Usage:
+
       Piecewise( (expr,cond), (expr,cond), ... )
         - Each argument is a 2-tuple defining a expression and condition
         - The conds are evaluated in turn returning the first that is True.
@@ -58,6 +74,7 @@ class Piecewise(Function):
 
     Examples
     ========
+
       >>> from sympy import Piecewise, log
       >>> from sympy.abc import x
       >>> f = x**2
@@ -68,6 +85,10 @@ class Piecewise(Function):
       >>> p.subs(x,5)
       log(5)
 
+    See Also
+    ========
+
+    piecewise_fold
     """
 
     nargs = None
@@ -143,6 +164,9 @@ class Piecewise(Function):
         return None
 
     def doit(self, **hints):
+        """
+        Evaluate this piecewise function.
+        """
         newargs = []
         for e, c in self.args:
             if hints.get('deep', True):
@@ -155,7 +179,7 @@ class Piecewise(Function):
 
     def _eval_integral(self,x):
         from sympy.integrals import integrate
-        return  Piecewise(*[(integrate(e, x), c) for e, c in self.args])
+        return Piecewise(*[(integrate(e, x), c) for e, c in self.args])
 
     def _eval_interval(self, sym, a, b):
         """Evaluates the function along the sym in a given interval ab"""
@@ -272,12 +296,19 @@ def piecewise_fold(expr):
     Takes an expression containing a piecewise function and returns the
     expression in piecewise form.
 
+    Examples
+    ========
+
     >>> from sympy import Piecewise, piecewise_fold
     >>> from sympy.abc import x
     >>> p = Piecewise((x, x < 1), (1, 1 <= x))
     >>> piecewise_fold(x*p)
     Piecewise((x**2, x < 1), (x, 1 <= x))
 
+    See Also
+    ========
+
+    Piecewise
     """
     if not isinstance(expr, Basic) or not expr.has(Piecewise):
         return expr
@@ -295,4 +326,3 @@ def piecewise_fold(expr):
         if len(piecewise_args) > 1:
             return piecewise_fold(Piecewise(*new_args))
     return Piecewise(*new_args)
-

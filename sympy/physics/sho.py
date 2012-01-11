@@ -3,7 +3,8 @@ from sympy.functions import laguerre_l, sqrt, exp, factorial, factorial2
 
 def R_nl(n, l, nu, r):
     """
-    Returns the radial wavefunction R_{nl} for a 3d isotropic harmonic oscillator.
+    Returns the radial wavefunction R_{nl} for a 3d isotropic harmonic
+    oscillator.
 
     ``n``
         the "nodal" quantum number.  Corresponds to the number of nodes in the
@@ -12,12 +13,13 @@ def R_nl(n, l, nu, r):
         the quantum number for orbital angular momentum
     ``nu``
         mass-scaled frequency: nu = m*omega/(2*hbar) where `m' is the mass and
-        `omega' the frequency of the oscillator.  (in atomic units nu == omega/2)
+        `omega` the frequency of the oscillator.
+        (in atomic units nu == omega/2)
     ``r``
         Radial coordinate
 
-
-    :Examples:
+    Examples
+    ========
 
     >>> from sympy.physics.sho import R_nl
     >>> from sympy import var
@@ -35,7 +37,7 @@ def R_nl(n, l, nu, r):
     >>> R_nl(0, l, 1, r)
     r**l*sqrt(2**(l + 3/2)*2**(l + 2)/(2*l + 1)!!)*exp(-r**2)/pi**(1/4)
 
-    The normalization of the radial wavefunction is::
+    The normalization of the radial wavefunction is:
 
     >>> from sympy import Integral, oo
     >>> Integral(R_nl(0, 0, 1, r)**2 * r**2, (r, 0, oo)).n()
@@ -54,7 +56,7 @@ def R_nl(n, l, nu, r):
             ((2*nu)**(l + Rational(3, 2))*2**(n+l+1)*factorial(n-1))/
             (sqrt(pi)*(factorial2(2*n + 2*l - 1)))
             )
-    return  C*r**(l)*exp(-nu*r**2)*laguerre_l(n-1, l + S(1)/2, 2*nu*r**2)
+    return C*r**(l)*exp(-nu*r**2)*laguerre_l(n-1, l + S(1)/2, 2*nu*r**2)
 
 def E_nl(n, l, hw):
     """

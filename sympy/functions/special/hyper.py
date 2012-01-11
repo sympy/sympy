@@ -1,6 +1,7 @@
 """Hypergeometric and Meijer G-functions"""
 
 from sympy import S
+from sympy.core.compatibility import iterable
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.containers import Tuple
 from sympy.core.sympify import sympify
@@ -9,31 +10,41 @@ from sympy.core.mul import Mul
 # TODO should __new__ accept **options?
 # TODO should constructors should check if parameters are sensible?
 
-# TODO when pull request #399 is in, this should be no longer necessary
-def _make_tuple(v):
+def _prep_tuple(v):
     """
-    Turn an iterable argument V into a Tuple.
+    Turn an iterable argument V into a Tuple and unpolarify, since both
+    hypergeometric and meijer g-functions are unbranched in their parameters.
 
     Examples:
-    >>> from sympy.functions.special.hyper import _make_tuple as mt
-    >>> from sympy.core.containers import Tuple
-    >>> mt([1, 2, 3])
+    >>> from sympy.functions.special.hyper import _prep_tuple
+    >>> _prep_tuple([1, 2, 3])
     (1, 2, 3)
-    >>> mt((4, 5))
+    >>> _prep_tuple((4, 5))
     (4, 5)
-    >>> mt((7, 8, 9))
+    >>> _prep_tuple((7, 8, 9))
     (7, 8, 9)
     """
-    return Tuple(*[sympify(x) for x in v])
+    from sympy.simplify.simplify import unpolarify
+    return Tuple(*[unpolarify(x) for x in v])
 
 class TupleParametersBase(Function):
     """ Base class that takes care of differentiation, when some of
         the arguments are actually tuples. """
     def _eval_derivative(self, s):
-        if self.args[0].has(s) or self.args[1].has(s):
-            raise NotImplementedError('differentiation with respect to ' \
-                                      'a parameter')
-        return self.fdiff(3)*self.args[2].diff(s)
+        from sympy import Derivative
+        try:
+            res = 0
+            if self.args[0].has(s) or self.args[1].has(s):
+                for i, p in enumerate(self._diffargs):
+                    m = self._diffargs[i].diff(s)
+                    if m != 0:
+                        res += self.fdiff((1, i))*m
+            return res + self.fdiff(3)*self.args[2].diff(s)
+        except (ArgumentIndexError, NotImplementedError):
+            return Derivative(self, s)
+
+    # This is not deduced automatically since there are Tuples as arguments.
+    is_commutative = True
 
 class hyper(TupleParametersBase):
     r"""
@@ -72,7 +83,8 @@ class hyper(TupleParametersBase):
     parameters actually yield a well-defined function.
 
 
-    **Examples**
+    Examples
+    ========
 
     The parameters :math:`a_p` and :math:`b_q` can be passed as arbitrary
     iterables, for example:
@@ -131,13 +143,15 @@ class hyper(TupleParametersBase):
 
     >>> from sympy.abc import a
     >>> hyperexpand(hyper([-a], [], x))
-    (-x + 1)**a
+    (x*exp_polar(-I*pi) + 1)**a
 
-    See Also:
+    See Also
+    ========
 
-    - :func:`sympy.simplify.hyperexpand`
+    sympy.simplify.hyperexpand
 
-    **References**
+    References
+    ==========
 
     - Luke, Y. L. (1969), The Special Functions and Their Approximations,
       Volume 1
@@ -148,7 +162,7 @@ class hyper(TupleParametersBase):
 
     def __new__(cls, ap, bq, z):
         # TODO should we check convergence conditions?
-        return Function.__new__(cls, _make_tuple(ap), _make_tuple(bq), z)
+        return Function.__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z)
 
     def fdiff(self, argindex=3):
         if argindex != 3:
@@ -162,7 +176,7 @@ class hyper(TupleParametersBase):
         from sympy import gamma, hyperexpand
         if len(self.ap) == 2 and len(self.bq) == 1 and self.argument == 1:
             a, b = self.ap
-            c    = self.bq[0]
+            c = self.bq[0]
             return gamma(c)*gamma(c - a - b)/gamma(c - a)/gamma(c - b)
         return hyperexpand(self)
 
@@ -180,6 +194,10 @@ class hyper(TupleParametersBase):
     def bq(self):
         """ Denominator parameters of the hypergeometric function. """
         return self.args[1]
+
+    @property
+    def _diffargs(self):
+        return self.ap + self.bq
 
     @property
     def eta(self):
@@ -295,7 +313,8 @@ class meijerg(TupleParametersBase):
     convergence conditions.
 
 
-    **Examples**
+    Examples
+    ========
 
     You can pass the parameters either as four separate vectors:
 
@@ -350,7 +369,7 @@ class meijerg(TupleParametersBase):
     >>> from sympy import hyperexpand
     >>> from sympy.abc import a, b, c
     >>> hyperexpand(meijerg([a], [], [c], [b], x), allow_hyper=True)
-    x**c*gamma(-a + c + 1)*hyper((-a + c + 1,), (-b + c + 1,), -x)/gamma(-b + c + 1)
+    x**c*gamma(-a + c + 1)*hyper((-a + c + 1,), (-b + c + 1,), x*exp_polar(I*pi))/gamma(-b + c + 1)
 
     Thus the Meijer G-function also subsumes many named functions as special
     cases. You can use expand_func or hyperexpand to (try to) rewrite a
@@ -362,15 +381,18 @@ class meijerg(TupleParametersBase):
     >>> hyperexpand(meijerg([[],[]], [[S(1)/2],[0]], (x/2)**2))
     sin(x)/sqrt(pi)
 
-    See Also:
+    See Also
+    ========
 
-    - :func:`sympy.simplify.hyperexpand`
+    sympy.simplify.hyperexpand
 
-    **References**
+    References
+    ==========
 
     - Luke, Y. L. (1969), The Special Functions and Their Approximations,
       Volume 1
     - http://en.wikipedia.org/wiki/Meijer_G-function
+
     """
 
     nargs = 3
@@ -384,14 +406,14 @@ class meijerg(TupleParametersBase):
         def tr(p):
             if len(p) != 2:
                 raise TypeError("wrong argument")
-            return Tuple(_make_tuple(p[0]), _make_tuple(p[1]))
+            return Tuple(_prep_tuple(p[0]), _prep_tuple(p[1]))
 
         # TODO should we check convergence conditions?
         return Function.__new__(cls, tr(args[0]), tr(args[1]), args[2])
 
     def fdiff(self, argindex=3):
         if argindex != 3:
-            raise ArgumentIndexError(self, argindex)
+            return self._diff_wrt_parameter(argindex[1])
         if len(self.an) >= 1:
             a = list(self.an)
             a[0] -= 1
@@ -404,6 +426,135 @@ class meijerg(TupleParametersBase):
             return 1/self.argument * (self.bm[0]*self - G)
         else:
             return S.Zero
+
+    def _diff_wrt_parameter(self, idx):
+        # Differentiation wrt a parameter can only be done in very special
+        # cases. In particular, if we want to differentiate with respect to
+        # `a`, all other gamma factors have to reduce to rational functions.
+        #
+        # Let MT denote mellin transform. Suppose T(-s) is the gamma factor
+        # appearing in the definition of G. Then
+        #
+        #   MT(log(z)G(z)) = d/ds T(s) = d/da T(s) + ...
+        #
+        # Thus d/da G(z) = log(z)G(z) - ...
+        # The ... can be evaluated as a G function under the above conditions,
+        # the formula being most easily derived by using
+        #
+        # d  Gamma(s + n)    Gamma(s + n) / 1    1                1     \
+        # -- ------------ =  ------------ | - + ----  + ... + --------- |
+        # ds Gamma(s)        Gamma(s)     \ s   s + 1         s + n - 1 /
+        #
+        # which follows from the difference equation of the digamma function.
+        # (There is a similar equation for -n instead of +n).
+
+        # We first figure out how to pair the parameters.
+        from sympy.simplify.hyperexpand import Mod1
+        from sympy import log
+        an = list(self.an)
+        ap = list(self.aother)
+        bm = list(self.bm)
+        bq = list(self.bother)
+        if idx < len(an):
+            an.pop(idx)
+        else:
+            idx -= len(an)
+            if idx < len(ap):
+                ap.pop(idx)
+            else:
+                idx -= len(ap)
+                if idx < len(bm):
+                    bm.pop(idx)
+                else:
+                    bq.pop(idx - len(bm))
+        pairs1 = []
+        pairs2 = []
+        for l1, l2, pairs in [(an, bq, pairs1), (ap, bm, pairs2)]:
+            while l1:
+                x = l1.pop()
+                found = None
+                for i, y in enumerate(l2):
+                    if Mod1(x) == Mod1(y):
+                        found = i
+                        break
+                if found is None:
+                    raise NotImplementedError('Derivative not expressible ' \
+                                              'as G-function?')
+                y = l2[i]
+                l2.pop(i)
+                pairs.append((x, y))
+
+        # Now build the result.
+        res = log(self.argument)*self
+
+        for a, b in pairs1:
+            sign = 1
+            n = a - b
+            base = b
+            if n < 0:
+                sign = -1
+                n = b - a
+                base = a
+            for k in range(n):
+                res -= sign*meijerg(self.an + (base + k + 1,), self.aother,
+                                    self.bm, self.bother + (base + k + 0,),
+                                    self.argument)
+
+        for a, b in pairs2:
+            sign = 1
+            n = b - a
+            base = a
+            if n < 0:
+                sign = -1
+                n = a - b
+                base = b
+            for k in range(n):
+                res -= sign*meijerg(self.an, self.aother + (base + k + 1,),
+                                    self.bm + (base + k + 0,), self.bother,
+                                    self.argument)
+
+        return res
+
+    def get_period(self):
+        """
+        Return a number P such that G(x*exp(I*P)) == G(x).
+
+        >>> from sympy.functions.special.hyper import meijerg
+        >>> from sympy.abc import z
+        >>> from sympy import pi, S
+
+        >>> meijerg([1], [], [], [], z).get_period()
+        2*pi
+        >>> meijerg([pi], [], [], [], z).get_period()
+        oo
+        >>> meijerg([1, 2], [], [], [], z).get_period()
+        oo
+        >>> meijerg([1,1], [2], [1, S(1)/2, S(1)/3], [1], z).get_period()
+        12*pi
+        """
+        # This follows from slater's theorem.
+        from sympy import oo, ilcm, pi, Min
+        from sympy.simplify.hyperexpand import Mod1
+        def compute(l):
+            # first check that no two differ by an integer
+            for i, b in enumerate(l):
+                if not b.is_Rational:
+                    return oo
+                for j in range(i + 1, len(l)):
+                    if Mod1(b) == Mod1(l[j]):
+                        return oo
+            return reduce(ilcm, (x.q for x in l), 1)
+        beta = compute(self.bm)
+        alpha = compute(self.an)
+        p, q = len(self.ap), len(self.bq)
+        if p == q:
+            if beta == oo or alpha == oo:
+                return oo
+            return 2*pi*ilcm(alpha, beta)
+        elif p < q:
+            return 2*pi*beta
+        else:
+            return 2*pi*alpha
 
     def _eval_expand_func(self, deep=True, **hints):
         from sympy import hyperexpand
@@ -443,6 +594,10 @@ class meijerg(TupleParametersBase):
     def bother(self):
         """ Second set of denominator parameters. """
         return self.args[1][1]
+
+    @property
+    def _diffargs(self):
+        return self.ap + self.bq
 
     @property
     def nu(self):

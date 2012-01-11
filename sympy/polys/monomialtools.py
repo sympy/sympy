@@ -1,6 +1,7 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
 from sympy.core import S, C, Symbol, Mul, Tuple
+from sympy.core.basic import PicklableWithSlots
 from sympy.utilities import cythonized
 from sympy.polys.polyerrors import ExactQuotientFailed
 
@@ -22,7 +23,8 @@ def monomials(variables, degree):
     would need almost 80 GiB of memory! Fortunately most polynomials,
     that we will encounter, are sparse.
 
-    **Examples**
+    Examples
+    ========
 
     Consider monomials in variables `x` and `y`::
 
@@ -60,7 +62,8 @@ def monomial_count(V, N):
 
     where `N` is a total degree and `V` is a set of variables.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import monomials, monomial_count
     >>> from sympy.abc import x, y
@@ -285,7 +288,7 @@ def monomial_min(*monoms):
 
     return tuple(M)
 
-class Monomial(object):
+class Monomial(PicklableWithSlots):
     """Class representing a monomial, i.e. a product of powers. """
 
     __slots__ = ['exponents', 'gens']

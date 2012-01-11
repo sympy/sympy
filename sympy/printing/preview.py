@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 import os
 import time
 import tempfile
@@ -117,9 +119,8 @@ def preview(expr, output='png', viewer=None, euler=True):
 
     tmp = tempfile.mktemp()
 
-    tex = open(tmp + ".tex", "w")
-    tex.write(format % latex_string)
-    tex.close()
+    with open(tmp + ".tex", "w") as tex:
+        tex.write(format % latex_string)
 
     cwd = os.getcwd()
     os.chdir(tempfile.gettempdir())

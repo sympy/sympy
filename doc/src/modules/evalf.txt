@@ -35,8 +35,8 @@ Complex numbers are supported:
 
 If the expression contains symbols or for some other reason cannot be evaluated
 numerically, calling ``.evalf()`` or ``N()`` returns the original expression, or
- in some cases a partially evaluated expression. For example, when the
- expression is a polynomial in expanded form, the coefficients are evaluated:
+in some cases a partially evaluated expression. For example, when the
+expression is a polynomial in expanded form, the coefficients are evaluated:
 
     >>> x = Symbol('x')
     >>> (pi*x**2 + x/3).evalf()
@@ -125,13 +125,13 @@ where φ is the golden ratio. With ordinary floating-point arithmetic,
 subtracting these numbers from each other erroneously results in a complete
 cancellation:
 
-    >>> float(GoldenRatio**1000/sqrt(5)) #doctest: +SKIP
+    >>> a, b = GoldenRatio**1000/sqrt(5), fibonacci(1000)
+    >>> float(a) #doctest: +SKIP
     4.34665576869...e+208
-    >>> float(fibonacci(1000)) #doctest: +SKIP
+    >>> float(b) #doctest: +SKIP
     4.34665576869...e+208
-    >>> float(fibonacci(1000)) - float(GoldenRatio**1000/sqrt(5))
+    >>> float(a) - float(b)
     0.0
-
 
 ``N`` and ``evalf`` keep track of errors and automatically increase the
 precision used internally in order to obtain a correct result:

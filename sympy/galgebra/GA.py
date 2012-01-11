@@ -26,7 +26,6 @@ ONE  = sympy.Rational(1)
 TWO  = sympy.Rational(2)
 HALF = sympy.Rational(1,2)
 
-from sympy.core import Symbol as sym_type
 from sympy.core import Pow as pow_type
 from sympy import Abs as abs_type
 from sympy.core import Mul as mul_type
@@ -149,24 +148,23 @@ def comb(N,P):
         comb.sort()
     return(combs)
 
-def diagpq(p,q=0):
+def diagpq(p, q=0):
     """
-    Return string equivalent metric tensor for signature (p,q).
+    Return string equivalent metric tensor for signature (p, q).
     """
-    n = p+q
-    D = ''
+    n = p + q
+    D = []
     rn = range(n)
     for i in rn:
         for j in rn:
             if i ==j:
                 if i < p:
-                    D += '1 '
+                    D.append('1 ')
                 else:
-                    D += '-1 '
+                    D.append('-1 ')
             else:
-                D += '0 '
-        D = D[:-1]+','
-    return(D)
+                D.append('0 ')
+    return ','.join(D)
 
 def make_scalars(symnamelst):
     """
@@ -311,9 +309,9 @@ def LaTeX_lst(lst,title=''):
     Output a list in LaTeX format.
     """
     if title != '':
-        LaTeX(title)
+        sympy.galgebra.latex_ex.LaTeX(title)
     for x in lst:
-        LaTeX(x)
+        sympy.galgebra.latex_ex.LaTeX(x)
     return
 
 def unabs(x):
@@ -352,7 +350,7 @@ def vector_fct(Fstr,x):
     the base name of each function while each function in the
     list is given the name Fstr+'__'+str(x[ix]) so that if
     Fstr = 'f' and str(x[1]) = 'theta' then the LaTeX output
-    of the second element in the output list would be 'f^{\theta}'.
+    of the second element in the output list would be 'f^{\\theta}'.
     """
     nx = len(x)
     Fvec = []
@@ -459,7 +457,6 @@ class MV(object):
         while igrade <= MV.n:
             tmpdict = {}
             bases = MV.gabasis[igrade]
-            nbases = len(bases)
             ibases = 0
             for base in bases:
                 tmpdict[str(base)] = ibases
@@ -768,7 +765,6 @@ class MV(object):
             tmp = []
             if isinstance(mv.mv[igrade],numpy.ndarray):
                 j = 0
-                xsum = 0
                 for x in mv.mv[igrade]:
                     if x != ZERO:
                         xstr = x.__str__()
@@ -1110,7 +1106,6 @@ class MV(object):
         igrade = 1
         while igrade <= MV.n:
             base_index = MV.gabasis[igrade]
-            nbase_index = len(base_index)
             grade_bases = []
             rgrade_bases = []
             for index in base_index:
@@ -1252,6 +1247,8 @@ class MV(object):
 
         if MV.coords[0] == sympy.Symbol('t'):
             MV.dedt = []
+            # I can't fix this no name error because I have no clue what the
+            # original writer was trying to do.
             for coef in dedt_coef:
                 MV.dedt.append(MV(coef,'vector'))
         else:
@@ -1361,7 +1358,6 @@ class MV(object):
                 mv1.convert_from_blades()
             if bladeflg2:
                 mv2.convert_from_blades()
-            mul = MV()
             for igrade in MV.n1rg:
                 gradei = mv1.mv[igrade]
                 if isinstance(gradei,numpy.ndarray):
@@ -1428,8 +1424,6 @@ class MV(object):
             if igrade >= 2:
                 tmp = []
                 basis = MV.basis[igrade]
-                nblades = MV.nbasis[igrade]
-                iblade = 0
                 for blade in basis:
                     name = ''
                     for i in blade:
@@ -2229,6 +2223,11 @@ class MV(object):
                     div_lst.append(self.mv[grade][ibase].as_coefficient(divisor))
         return(div_lst)
 
+    # don't know which one is correctly named
+
+    def div(self):
+        return self.grad_int()
+
     def collect(self,lst):
         """
         Applies sympy collect function to each component
@@ -2483,9 +2482,6 @@ class MV(object):
                         dD.add_in_place(coef*connect.project(igrade-1))
                 igrade += 1
         return(dD)
-
-    def div(self):
-        return(self.grad_int())
 
     def mag2(self):
         """

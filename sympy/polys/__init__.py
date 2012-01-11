@@ -54,7 +54,7 @@ from polyerrors import (
 
 from numberfields import (
     minimal_polynomial, minpoly,
-    primitive_element, primelt,
+    primitive_element,
     field_isomorphism,
     to_number_field,
     AlgebraicNumber,

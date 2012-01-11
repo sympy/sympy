@@ -2,6 +2,48 @@
 Physical units and dimensions.
 
 The base class is Unit, where all here defined units (~200) inherit from.
+
+The find_unit function can help you find units for a given quantity:
+
+    >>> import sympy.physics.units as u
+    >>> u.find_unit('coul')
+    ['coulomb', 'coulombs']
+    >>> u.find_unit(u.charge)
+    ['C', 'charge', 'coulomb', 'coulombs']
+    >>> u.coulomb
+    A*s
+
+Units are always given in terms of base units that have a name and
+an abbreviation:
+
+    >>> u.A.name
+    'ampere'
+    >>> u.ampere.abbrev
+    'A'
+
+The generic name for a unit (like 'length', 'mass', etc...)
+can help you find units:
+
+    >>> u.find_unit('magnet')
+    ['magnetic_flux', 'magnetic_constant', 'magnetic_flux_density']
+    >>> u.find_unit(u.magnetic_flux)
+    ['Wb', 'wb', 'weber', 'webers', 'magnetic_flux']
+
+If, for a given session, you wish to add a unit you may do so:
+
+    >>> u.find_unit('gal')
+    []
+    >>> u.gal = 4*u.quart
+    >>> u.gal/u.inch**3
+    924
+
+To see a given quantity in terms of some other unit, divide by the desired
+unit:
+
+    >>> mph = u.miles/u.hours
+    >>> (u.m/u.s/mph).n(2)
+    2.2
+
 """
 
 from sympy import Rational, pi
@@ -9,13 +51,23 @@ from sympy.core import AtomicExpr
 
 class Unit(AtomicExpr):
     """
-    Base class for all physical units.
+    Base class for base unit of physical units.
 
-    Create own units like:
-    m = Unit("meter", "m")
+    >>> from sympy.physics.units import Unit
+    >>> Unit("meter", "m")
+    m
+
+    Other units are derived from base units:
+
+    >>> import sympy.physics.units as u
+    >>> cm = u.m/100
+    >>> 100*u.cm
+    m
+
     """
     is_positive = True    # make sqrt(m**2) --> m
     is_commutative = True
+    is_number = False
 
     __slots__ = ["name", "abbrev"]
 
@@ -38,13 +90,6 @@ class Unit(AtomicExpr):
 
     def _hashable_content(self):
         return (self.name,self.abbrev)
-
-def defunit(value, *names):
-    u = value
-    g = globals()
-    for name in names:
-        g[name] = u
-
 
 # Dimensionless
 
@@ -79,80 +124,82 @@ deg = degree = degrees = pi/180
 
 # Base units
 
-defunit(Unit('meter', 'm'), 'm', 'meter', 'meters')
-defunit(Unit('kilogram', 'kg'), 'kg', 'kilogram', 'kilograms')
-defunit(Unit('second', 's'), 's', 'second', 'seconds')
-defunit(Unit('ampere', 'A'), 'A', 'ampere', 'amperes')
-defunit(Unit('kelvin', 'K'), 'K', 'kelvin', 'kelvins')
-defunit(Unit('mole', 'mol'), 'mol', 'mole', 'moles')
-defunit(Unit('candela', 'cd'), 'cd', 'candela', 'candelas')
+length = m = meter = meters = Unit('meter', 'm')
+mass = kg = kilogram = kilograms = Unit('kilogram', 'kg')
+time = s = second = seconds = Unit('second', 's')
+current = A = ampere = amperes = Unit('ampere', 'A')
+temperature = K = kelvin = kelvins = Unit('kelvin', 'K')
+amount = mol = mole = moles = Unit('mole', 'mol')
+luminosity = cd = candela = candelas = Unit('candela', 'cd')
 
 
 # Derived units
-
-defunit(1/s, 'Hz', 'hz', 'hertz')
-defunit(m*kg/s**2, 'N', 'newton', 'newtons')
-defunit(N*m, 'J', 'joule', 'joules')
-defunit(J/s, 'W', 'watt', 'watts')
-defunit(N/m**2, 'Pa', 'pa', 'pascal', 'pascals')
-defunit(s*A, 'C', 'coulomb', 'coulombs')
-defunit(W/A, 'v', 'V', 'volt', 'volts')
-defunit(V/A, 'ohm', 'ohms')
-defunit(A/V, 'S', 'siemens', 'mho', 'mhos')
-defunit(C/V, 'F', 'farad', 'farads')
-defunit(J/A, 'Wb', 'wb', 'weber', 'webers')
-defunit(V*s/m**2, 'T', 'tesla', 'teslas')
-defunit(V*s/A, 'H', 'henry', 'henrys')
-
+volume = meter**3
+frequency = Hz = hz = hertz = 1/s
+force = N = newton = newtons = m*kg/s**2
+energy = J = joule = joules = N*m
+power = W = watt = watts = J/s
+pressure = Pa = pa = pascal = pascals = N/m**2
+charge = C = coulomb = coulombs = s*A
+voltage = v = V = volt = volts = W/A
+resistance = ohm = ohms = V/A
+conductance = S = siemens = mho = mhos = A/V
+capacitance = F = farad = farads = C/V
+magnetic_flux = Wb = wb = weber = webers = J/A
+magnetic_flux_density = T = tesla = teslas = V*s/m**2
+inductance = H = henry = henrys = V*s/A
+speed = m/s
+acceleration = m/s**2
+density = kg/m**3
 
 # Common length units
 
-defunit(kilo*m, 'km', 'kilometer', 'kilometers')
-defunit(deci*m, 'dm', 'decimeter', 'decimeters')
-defunit(centi*m, 'cm', 'centimeter', 'centimeters')
-defunit(milli*m, 'mm', 'millimeter', 'millimeters')
-defunit(micro*m, 'um', 'micrometer', 'micrometers', 'micron', 'microns')
-defunit(nano*m, 'nm', 'nanometer', 'nanometers')
-defunit(pico*m, 'pm', 'picometer', 'picometers')
+km = kilometer = kilometers = kilo*m
+dm = decimeter = decimeters = deci*m
+cm = centimeter = centimeters = centi*m
+mm = millimeter = millimeters = milli*m
+um = micrometer = micrometers = micron = microns = micro*m
+nm = nanometer = nanometers = nano*m
+pm = picometer = picometers = pico*m
 
-defunit(Rational('0.3048')*m, 'ft', 'foot', 'feet')
-defunit(Rational('25.4')*mm, 'inch', 'inches')
-defunit(3*ft, 'yd', 'yard', 'yards')
-defunit(5280*ft, 'mi', 'mile', 'miles')
+ft = foot = feet = Rational('0.3048')*m
+inch = inches = Rational('25.4')*mm
+yd = yard = yards = 3*ft
+mi = mile = miles = 5280*ft
 
 
 # Common volume and area units
 
-defunit(m**3 / 1000, 'l', 'liter', 'liters')
-defunit(deci*l, 'dl', 'deciliter', 'deciliters')
-defunit(centi*l, 'cl', 'centiliter', 'centiliters')
-defunit(milli*l, 'ml', 'milliliter', 'milliliters')
+l = liter = liters = m**3 / 1000
+dl = deciliter = deciliters = deci*l
+cl = centiliter = centiliters = centi*l
+ml = milliliter = milliliters = milli*l
 
 
 # Common time units
 
-defunit(milli*s, 'ms', 'millisecond', 'milliseconds')
-defunit(micro*s, 'us', 'microsecond', 'microseconds')
-defunit(nano*s, 'ns', 'nanosecond', 'nanoseconds')
-defunit(pico*s, 'ps', 'picosecond', 'picoseconds')
+ms = millisecond = milliseconds = milli*s
+us = microsecond = microseconds = micro*s
+ns = nanosecond = nanoseconds = nano*s
+ps = picosecond = picoseconds = pico*s
 
-defunit(60*s, 'minute', 'minutes')
-defunit(60*minute, 'h', 'hour', 'hours')
-defunit(24*hour, 'day', 'days')
+minute = minutes = 60*s
+h = hour = hours = 60*minute
+day = days = 24*hour
 
-defunit(Rational('31558149.540')*s, 'sidereal_year', 'sidereal_years')
-defunit(Rational('365.24219')*day, 'tropical_year', 'tropical_years')
-defunit(Rational('365')*day, 'common_year', 'common_years')
-defunit(Rational('365.25')*day, 'julian_year', 'julian_years')
+sidereal_year = sidereal_years = Rational('31558149.540')*s
+tropical_year = tropical_years = Rational('365.24219')*day
+common_year = common_years = Rational('365')*day
+julian_year = julian_years = Rational('365.25')*day
 
 year = years = tropical_year
 
 
 # Common mass units
 
-defunit(kilogram / kilo, 'g', 'gram', 'grams')
-defunit(milli * g, 'mg', 'milligram', 'milligrams')
-defunit(micro * g, 'ug', 'microgram', 'micrograms')
+g = gram = grams = kilogram / kilo
+mg = milligram = milligrams = milli * g
+ug = microgram = micrograms = micro * g
 
 
 
@@ -187,8 +234,42 @@ eV = 1.602176487e-19 * J
 
 # Other convenient units and magnitudes
 
-defunit(c*julian_year, 'ly', 'lightyear', 'lightyears')
-defunit(149597870691*m, 'au', 'astronomical_unit', 'astronomical_units')
+ly = lightyear = lightyears = c*julian_year
+au = astronomical_unit = astronomical_units = 149597870691*m
+
+def find_unit(quantity):
+    """
+    Return a list of matching units names.
+    if quantity is a string -- units containing the string `quantity`
+    if quantity is a unit -- units having matching base units
+
+    Examples
+    ========
+
+    >>> from sympy.physics import units as u
+    >>> u.find_unit('charge')
+    ['charge']
+    >>> u.find_unit(u.charge)
+    ['C', 'charge', 'coulomb', 'coulombs']
+    >>> u.find_unit('volt')
+    ['volt', 'volts', 'voltage']
+    >>> u.find_unit(u.inch**3)[:5]
+    ['l', 'cl', 'dl', 'ml', 'liter']
+    """
+    import sympy.physics.units as u
+    rv = []
+    if isinstance(quantity, str):
+        rv = [i for i in dir(u) if quantity in i]
+    else:
+        units = quantity.as_coeff_Mul()[1]
+        for i in dir(u):
+            try:
+                if units == eval('u.' + i).as_coeff_Mul()[1]:
+                    rv.append(str(i))
+            except:
+                pass
+    return sorted(rv, key=len)
 
 # Delete this so it doesn't pollute the namespace
 del Rational, pi
+

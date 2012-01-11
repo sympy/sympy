@@ -9,8 +9,8 @@ terms. Formally these are sequences annihilated by first order linear
 recurrence operators. In simple words if we are given term `a(n)` then it is
 hypergeometric if its consecutive term ratio is a rational function in `n`.
 
-To check if a sequence is of this type you can use the ``is_hypergeometric`` method
-which is  available in Basic class. Here is simple example involving a
+To check if a sequence is of this type you can use the ``is_hypergeometric``
+method which is available in Basic class. Here is simple example involving a
 polynomial:
 
     >>> from sympy import *
@@ -78,3 +78,23 @@ hypergeometric:
     4*n**2 + 6*n + 2
     >>> hypersimp(factorial(n**2), n)
 
+Concrete Class Reference
+------------------------
+.. autoclass:: sympy.concrete.summations.Sum
+   :members:
+
+.. autoclass:: sympy.concrete.products.Product
+   :members:
+
+Concrete Functions Reference
+----------------------------
+
+.. autofunction:: sympy.concrete.summations.summation
+
+.. autofunction:: sympy.concrete.products.product
+
+.. autofunction:: sympy.concrete.gosper.gosper_normal
+
+.. autofunction:: sympy.concrete.gosper.gosper_term
+
+.. autofunction:: sympy.concrete.gosper.gosper_sum

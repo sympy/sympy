@@ -68,6 +68,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Andrew Straw: lambdify() improvements
 #. Kaifeng Zhu: factorint() fix
 #. Ted Horst: Basic.__call__() fix, pretty printing fix
+#. Andrew Docherty: Fix to series
 #. Akshay Srinivasan: printing fix, improvements to integration
 #. Aaron Meurer: ODE solvers (GSoC 2009), The Risch Algorithm for integration (GSoC 2010), other fixes, project leader as of Jan 4, 2011
 #. Barry Wardell: implement series as function, several tests added
@@ -86,6 +87,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. James Abbatiello: fixes tests on windows
 #. Ryan Krauss: fixes could_extract_minus_sign(), latex fixes and improvements
 #. Bill Flynn: substitution fixes
+#. Kevin Goodsell: Fix to Integer/Rational
 #. Jorn Baayen: improvements to piecewise functions and latex printing, bug fixes
 #. Eh Tan: improve trigonometric simplification
 #. Renato Coutinho: derivative improvements
@@ -99,14 +101,18 @@ want to be mentioned here, so see our repository history for a full list).
 #. Christian Muise: fixes to logic module
 #. Matt Curry: GSoC 2010 project (symbolic quantum mechanics)
 #. Kazuo Thow: cleanup pretty printing tests
+#. Christian Schubert: Fix to sympify()
 #. Jezreel Ng: fix hyperbolic functions rewrite
+#. James Pearson: Py3k related fixes
 #. Matthew Brett: fixes to lambdify
 #. Addison Cugini: GSoC 2010 project (quantum computing)
 #. Nicholas J.S. Kinar: improved documentation about "Immutability of Expressions"
+#. Harold Erbin: Geometry related work
 #. Thomas Dixon: fix a limit bug
 #. Cristóvão Sousa: implements _sage_ method for sign function.
 #. Andre de Fortier Smit: doctests in matrices improved
-#. Alexey U. Goodchenko: various work in matrices
+#. Mark Dewing: Fixes to Integral/Sum, MathML work
+#. Alexey U. Gudchenko: various work in matrices
 #. Gary Kerr: fix examples, docs
 #. Sherjil Ozair: fixes to SparseMatrix
 #. Oleksandr Gituliar: fixes to Matrix
@@ -127,6 +133,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Tomáš Bambas: prettier printing of examples
 #. Jeremias Yehdegho: fixes to the nthoery module
 #. Jack McCaffery: fixes to asin and acos
+#. Raymond Wong: Quantum work
 #. Luca Weihs: improvements to the geometry module
 #. Shai 'Deshe' Wyborski: fix to numeric evaluation of hypergeometric sums
 #. Thomas Wiecki: Fix Sum.diff
@@ -137,12 +144,50 @@ want to be mentioned here, so see our repository history for a full list).
 #. Stefan Krastanov: Make Pyglet an external dependency
 #. Bradley Froehle: Fix shell command to generate modules in setup.py
 #. Min Ragan-Kelley: Fix isympy to work with IPython 0.11
+#. Nikhil Sarda: Fix to combinatorics/prufer
 #. Emma Hogan: Fixes to the documentation
+#. Jason Moore: Fixes to the mechanics module
 #. Julien Rioux: Fix behavior of some deprecated methods
 #. Roberto Colistete, Jr.: Add num_columns option to the pretty printer
 #. Raoul Bourquin: Implement Euler numbers
 #. Gert-Ludwig Ingold: Correct derivative of coth
-#. Miha Marolt: Add numpydoc extension to the Sphinx docs
+#. Srinivas Vasudevan: Implementation of Catalan numbers
+#. Miha Marolt: Add numpydoc extension to the Sphinx docs, fix ode_order
+#. Tim Lahey: Rotation matrices
+#. Luis Garcia: update examples in symarry
+#. Matt Rajca: Code quality fixes
+#. David Li: Documentation fixes
+#. David Ju: Increase test coverage, fixes to KroneckerDelta
+#. Alexandr Gudulin: Code quality fixes
+#. Bilal Akhtar: isympy man page
+#. Grzegorz Świrski: Fix to latex(), MacPorts portfile
+#. Matt Habel: SymPy-wide pyflakes editing
+#. Nikolay Lazarov: Translation of the tutorial to Bulgarian
+#. Nichita Utiu: Add pretty printing to Product()
+#. Tristan Hume: Fixes to test_lambdify.py
+#. Imran Ahmed Manzoor: Fixes to the test runner
+#. Steve Anton: pyflakes cleanup of various modules, documentation fixes for logic
+#. Sam Sleight: Fixes to geometry documentation
+#. tsmars15: Fixes to code quality
+#. Chancellor Arkantos: Fixes to the logo
+#. Stepan Simsa: Translation of the tutorial to Czech
+#. Tobias Lenz: Unicode pretty printer for Sum
+#. Siddhu: Documentation fixes for the Physics module
+#. Tiffany Zhu: Improved the latex() docstring
+#. Alexey Subach: Translation of the tutorial to Russian
+#. Joan Creus: Improvements to the test runner
+#. Geoffry Song: Improve code coverage
+#. Puneeth Chaganti: Fix for the tutorial
+#. Marcin Kostrzewa: SymPy Cheatsheet
+#. Jim Zhang: Fixes to AUTHORS and .mailmap
+#. Natalia Nawara: Fixes to Product()
+#. vishal: Update the Czech tutorial translation to use a .po file
+#. Shruti Mangipudi: added See Also documentation to Matrices
+#. Davy Mao: Documentation
+#. Swapnil Agarwal: added See Also documentation to ntheory, functions
+#. Kendhia: Add XFAIL tests
+#. jerryma1121: See Also documentation for geometry
+#. Joachim Durchholz: corrected spacing issues identified by PyDev
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
@@ -152,15 +197,37 @@ You can find a brief history of SymPy in the README.
 Financial and Infrastructure Support
 ------------------------------------
 
-* `Google <http://www.google.com/corporate/>`_: SymPy has received generous financial support from Google in 2007 by financing 5 students through the Google Summer of Code (GSOC 2007) program (`more info <http://code.google.com/p/sympy/wiki/GSoC2007>`_) and 1 student in 2008 (`more info <http://code.google.com/p/sympy/wiki/GSoC2008>`_)
+* `Google <http://www.google.com/corporate/>`_: SymPy has received generous
+  financial support from Google in various years through the Google Summer of
+  Code program by providing stipends:
 
-* `Python Software Foundation <http://www.python.org/psf/>`_: PSF hosted 3 GSoC 2007 students (Brian, Robert and Jason), and 1 GSoC 2008 student (Fredrik)
+  * in 2007 for 5 students (`GSoC 2007 <http://code.google.com/p/sympy/wiki/GSoC2007>`_)
+  * in 2008 for 1 student (`GSoC 2008 <http://code.google.com/p/sympy/wiki/GSoC2008>`_)
+  * in 2009 for 5 students (`GSoC 2009 <http://code.google.com/p/sympy/wiki/GSoC2010>`_)
+  * in 2010 for 5 students (`GSoC 2010 <http://code.google.com/p/sympy/wiki/GSoC2010>`_)
+  * in 2011 for 9 studends (`GSoC 2011 <https://github.com/sympy/sympy/wiki/Gsoc-2011-report>`_)
+
+* `Python Software Foundation (PSF) <http://www.python.org/psf/>`_ has hosted
+  various GSoC studends over the years:
+
+  * 3 GSoC 2007 students (Brian, Robert and Jason)
+  * 1 GSoC 2008 student (Fredrik)
+  * 2 GSoC 2009 students (Freddie and Priit)
+  * 4 GSoC 2010 students (Aaron, Christian, Matthew and Øyvind)
+
+* `Portland State University (PSU) <http://www.pdx.edu/>`_ has hosted following
+  GSoC students:
+
+  * 1 student (Chris) in 2007
+  * 3 students (Aaron, Dale and Fabian) in 2009
+  * 1 student (Addison) in 2010
 
 * `the Space Telescope Science Institute <http://www.stsci.edu/portal/>`_: STScI hosted 1 GSoC 2007 student (Mateusz)
 
-* `Portland State University <http://www.pdx.edu/>`_: PSU hosted 1 GSoC 2007 student (Chris)
-
 * `Simula Research Laboratory <http://www.simula.no/>`_: supports Pearu Peterson work in SymPy/Sympy Core projects
+
+* `GitHub <https://github.com/about>`_ is providing us with development
+  and collaboration tools
 
 License
 -------

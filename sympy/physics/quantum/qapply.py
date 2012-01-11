@@ -5,7 +5,7 @@ Todo:
 """
 
 
-from sympy import Add, Mul, Pow, sympify
+from sympy import Add, Mul, Pow, sympify, S
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
@@ -30,6 +30,7 @@ def qapply(e, **options):
 
     Parameters
     ==========
+
     e : Expr
         The expression containing operators and states. This expression tree
         will be walked to find operators acting on states symbolically.
@@ -45,6 +46,7 @@ def qapply(e, **options):
 
     Returns
     =======
+
     e : Expr
         The original expression, but with the operators applied to states.
     """
@@ -52,7 +54,7 @@ def qapply(e, **options):
     dagger = options.get('dagger', False)
 
     if e == 0:
-        return 0
+        return S.Zero
 
     # This may be a bit aggressive but ensures that everything gets expanded
     # to its simplest form before trying to apply operators. This includes
@@ -159,7 +161,7 @@ def qapply_Mul(e, **options):
 
     # TODO: I may need to expand before returning the final result.
     if result == 0:
-        return 0
+        return S.Zero
     elif result is None:
         return qapply_Mul(e._new_rawargs(*(args+[lhs])), **options)*rhs
     elif isinstance(result, InnerProduct):

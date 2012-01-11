@@ -1,19 +1,38 @@
-from sympy import (S, Symbol, Sum, oo, Float, Rational, summation, pi, cos,
-    zeta, exp, log, factorial, sqrt, E, sympify, binomial, harmonic, Catalan,
-    EulerGamma, Function, Integral, Product, product, nan, diff, Derivative)
+from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
+                   factorial, Function, harmonic, Integral, log, nan, oo, pi,
+                   Product, product, Rational, S, sqrt, Sum, summation, Symbol,
+                   sympify, zeta)
+from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 
-a, b, c, d, m, k, x, y = map(Symbol, 'abcdmkxy')
 n = Symbol('n', integer=True)
 
 def test_arithmetic_sums():
     assert summation(1, (n, a, b)) == b-a+1
+    assert Sum(S.NaN, (n, a, b)) is S.NaN
+    assert Sum(x, (n, a, a)).doit() == x
+    assert Sum(x, (x, a, a)).doit() == a
+    assert Sum(x, (n, 1, a)).doit() == a*x
+    lo, hi = 1, 2
+    s1 = Sum(n, (n, lo, hi))
+    s2 = Sum(n, (n, hi, lo))
+    assert s1 != s2
+    assert s1.doit() == s2.doit() == 3
+    lo, hi = x, x + 1
+    s1 = Sum(n, (n, lo, hi))
+    s2 = Sum(n, (n, hi, lo))
+    assert s1 != s2
+    assert s1.doit() == s2.doit() == 2*x + 1
+    assert Sum(Integral(x, (x, 1, y)) + x, (x, 1, 2)).doit() == \
+        y**2 + 2
     assert summation(1, (n, 1, 10)) == 10
     assert summation(2*n, (n, 0, 10**10)) == 100000000010000000000
     assert summation(4*n*m, (n, a, 1), (m, 1, d)).expand() == \
         2*d + 2*d**2 + a*d + a*d**2 - d*a**2 - a**2*d**2
-    assert summation(cos(n), (n, -2, 1)) == cos(-2)+cos(-1)+cos(0)+cos(1)
+    assert summation(cos(n), (n, -2, 1)) == cos(-2) + cos(-1) + cos(0) + cos(1)
+    assert summation(cos(n), (n, x, x + 2)) == cos(x) + cos(x + 1) + cos(x + 2)
+    assert isinstance(summation(cos(n), (n, x, x + S.Half)), Sum)
 
 def test_polynomial_sums():
     assert summation(n**2, (n, 3, 8)) == 199
@@ -140,14 +159,32 @@ def test_evalf_euler_maclaurin():
     assert NS(Sum(1/k, (k, 1000000, 2000000)), 15) == '0.693147930560008'
     assert NS(Sum(1/k, (k, 1000000, 2000000)), 50) == '0.69314793056000780941723211364567656807940638436025'
 
-@XFAIL
 def test_simple_products():
-    assert Product(2, (n, a, b)) == 2**(b-a+1)
-    assert Product(n, (n, 1, b)) == factorial(b)
-    assert Product(n**3, (n, 1, b)) == factorial(b)**3
-    assert Product(3**(2+n), (n, a, b)) \
+    assert Product(S.NaN, (x, 1, 3)) is S.NaN
+    assert product(S.NaN, (x, 1, 3)) is S.NaN
+    assert Product(x, (n, a, a)).doit() == x
+    assert Product(x, (x, a, a)).doit() == a
+    assert Product(x, (y, 1, a)).doit() == x**a
+    lo, hi = 1, 2
+    s1 = Product(n, (n, lo, hi))
+    s2 = Product(n, (n, hi, lo))
+    assert s1 != s2
+    assert s1.doit() == s2.doit() == 2
+    lo, hi = x, x + 1
+    s1 = Product(n, (n, lo, hi))
+    s2 = Product(n, (n, hi, lo))
+    assert s1 != s2
+    assert s1.doit() == s2.doit() == x*(x + 1)
+    assert Product(Integral(2*x, (x,1,y)) + 2*x, (x,1,2)).doit() == \
+        (y**2 + 1)*(y**2 + 3)
+    assert product(2, (n, a, b)) == 2**(b-a+1)
+    assert product(n, (n, 1, b)) == factorial(b)
+    assert product(n**3, (n, 1, b)) == factorial(b)**3
+    assert product(3**(2+n), (n, a, b)) \
            == 3**(2*(1-a+b)+b/2+(b**2)/2+a/2-(a**2)/2)
-    assert Product(cos(n), (n, 3, 5)) == cos(3)*cos(4)*cos(5)
+    assert product(cos(n), (n, 3, 5)) == cos(3)*cos(4)*cos(5)
+    assert product(cos(n), (n, x, x + 2)) == cos(x)*cos(x + 1)*cos(x + 2)
+    assert isinstance(product(cos(n), (n, x, x + S.Half)), Product)
     # If Product managed to evaluate this one, it most likely got it wrong!
     assert isinstance(Product(n**n, (n, 1, b)), Product)
 
@@ -186,7 +223,7 @@ def test_telescopic_sums():
     assert telescopic(1/m, -m/(1+m),(m, n-1, n)) == \
            telescopic(1/k, -k/(1+k),(k, n-1, n))
 
-    assert Sum(1/x/(x - 1), (x, a, b)).doit() == 1/(-1 + a) - 1/b
+    assert Sum(1/x/(x - 1), (x, a, b)).doit() == -((a - b - 1)/(b*(a - 1)))
 
 def test_sum_reconstruct():
     s = Sum(n**2, (n, -1, 1))
@@ -254,3 +291,44 @@ def test_hypersum():
 
 def test_issue_1071():
     assert summation(1/factorial(k), (k, 0, oo)) == E
+
+def test_is_zero():
+    for func in [Sum, Product]:
+        assert func(0, (x, 1, 1)).is_zero is True
+        assert func(x, (x, 1, 1)).is_zero is None
+
+def test_is_number():
+    assert Sum(1, (x, 1, 1)).is_number is True
+    assert Sum(1, (x, 1, x)).is_number is False
+    assert Sum(0, (x, y, z)).is_number is True
+    assert Sum(x, (y, 1, 2)).is_number is False
+    assert Sum(x, (y, 1, 1)).is_number is False
+    assert Sum(x, (x, 1, 2)).is_number is True
+    assert Sum(x*y, (x, 1, 2), (y, 1, 3)).is_number is True
+
+    assert Product(2, (x, 1, 1)).is_number is True
+    assert Product(2, (x, 1, y)).is_number is False
+    assert Product(0, (x, y, z)).is_number is True
+    assert Product(1, (x, y, z)).is_number is True
+    assert Product(x, (y, 1, x)).is_number is False
+    assert Product(x, (y, 1, 2)).is_number is False
+    assert Product(x, (y, 1, 1)).is_number is False
+    assert Product(x, (x, 1, 2)).is_number is True
+
+def test_free_symbols():
+    for func in [Sum, Product]:
+        assert func(1, (x, 1, 2)).free_symbols == set()
+        assert func(0, (x, 1, y)).free_symbols == set()
+        assert func(2, (x, 1, y)).free_symbols == set([y])
+        assert func(x, (x, 1, 2)).free_symbols == set()
+        assert func(x, (x, 1, y)).free_symbols == set([y])
+        assert func(x, (y, 1, y)).free_symbols == set([x, y])
+        assert func(x, (y, 1, 2)).free_symbols == set([x])
+        assert func(x, (y, 1, 1)).free_symbols == set([x])
+        assert func(x, (y, 1, z)).free_symbols == set([x, z])
+        assert func(x, (x, 1, y), (y, 1, 2)).free_symbols == set()
+        assert func(x, (x, 1, y), (y, 1, z)).free_symbols == set([z])
+        assert func(x, (x, 1, y), (y, 1, y)).free_symbols == set([y])
+        assert func(x, (y, 1, y), (y, 1, z)).free_symbols == set([x, z])
+    assert Sum(1, (x, 1, y)).free_symbols == set([y])
+    assert Product(1, (x, 1, y)).free_symbols == set()

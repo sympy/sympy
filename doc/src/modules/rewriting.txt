@@ -87,4 +87,4 @@ subexpressions, collect them and evaluate them at once. This is implemented in t
 
 More information:
 
-.. autofunction:: cse
+.. autofunction:noindex: cse

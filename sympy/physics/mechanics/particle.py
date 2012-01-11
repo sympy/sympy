@@ -11,6 +11,7 @@ class Particle(object):
 
     Parameters
     ==========
+
     mass : sympifyable
         A SymPy expression representing the Particle's mass
     point : Point

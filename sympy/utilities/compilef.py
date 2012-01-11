@@ -78,7 +78,6 @@ to see the results of some benchmarks.
 
 """
 
-import os
 import ctypes
 from sympy import Symbol, cse, sympify
 from sympy.utilities.lambdify import lambdastr as getlambdastr
@@ -419,7 +418,7 @@ void evalonarray(double *array, int length)
 #########
 
 from sympy import sqrt, pi, lambdify
-from math import exp, cos, sin
+from math import exp as _exp, cos as _cos, sin as _sin
 
 def test_cexpr():
     expr = '1/(g(x)*3.5)**(x - a**x)/(x**2 + a)'
@@ -442,7 +441,7 @@ def test_clambdify():
     # FIXME: slight difference in precision
 
 def test_frange():
-    fstr = 'lambda x: exp(x)*cos(x)**x'
+    fstr = 'lambda x: _exp(x)*_cos(x)**x'
     f = eval(fstr)
     a = frange(fstr, 30, 168, 3)
     args = range(30, 168, 3)
@@ -483,9 +482,9 @@ def test_frange():
 
 def test_evalonarray_ctypes():
     a = frange('lambda x: x', 10)
-    evalonarray('lambda x: sin(x)', a)
+    evalonarray('lambda x: _sin(x)', a)
     for i, j in enumerate(a):
-        assert sin(i) == j
+        assert _sin(i) == j
 # TODO: test for ctypes pointers
 ##    evalonarray('lambda x: asin(x)', ctypes.byref(a), len(a))
 ##    for i, j in enumerater(a):
@@ -546,14 +545,14 @@ def benchmark():
             print 'Psyco lambda:  %.4f %.4f %.4f' % tuple(t3.repeat(3, 20))
 
     print 'big function:'
-    from sympy import diff, exp, sin, cos, pi, lambdify
+    from sympy import diff, _exp, _sin, _cos, pi, lambdify
     x = Symbol('x')
-##    f1 = diff(exp(x)**2 - sin(x)**pi, x) \
-##        * x**12-2*x**3+2*exp(x**2)-3*x**7+4*exp(123+x-x**5+2*x**4) \
+##    f1 = diff(_exp(x)**2 - _sin(x)**pi, x) \
+##        * x**12-2*x**3+2*_exp(x**2)-3*x**7+4*_exp(123+x-x**5+2*x**4) \
 ##        * ((x + pi)**5).expand()
-    f1 = 2*exp(x**2) + x**12*(-pi*sin(x)**((-1) + pi)*cos(x) + 2*exp(2*x)) \
+    f1 = 2*_exp(x**2) + x**12*(-pi*_sin(x)**((-1) + pi)*_cos(x) + 2*_exp(2*x)) \
          + 4*(10*pi**3*x**2 + 10*pi**2*x**3 + 5*pi*x**4 + 5*x*pi**4 + pi**5 \
-         + x**5)*exp(123 + x + 2*x**4 - x**5) - 2*x**3 - 3*x**7
+         + x**5)*_exp(123 + x + 2*x**4 - x**5) - 2*x**3 - 3*x**7
     fbenchmark(f1)
     print
     print 'simple function:'
@@ -561,7 +560,7 @@ def benchmark():
     f2 = sqrt(x*y)+x*5
     fbenchmark(f2, [x,y])
     times = 100000
-    fstr = 'exp(sin(exp(-x**2)) + sqrt(pi)*cos(x**5/(x**3-x**2+pi*x)))'
+    fstr = '_exp(_sin(_exp(-x**2)) + sqrt(pi)*_cos(x**5/(x**3-x**2+pi*x)))'
     print
     print 'frange with f(x) ='
     print fstr

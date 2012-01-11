@@ -8,8 +8,6 @@ from sympy.polys.polyerrors import (
     DomainError,
 )
 
-from sympy.polys.domains.groundtypes import python_factorial
-
 class Domain(object):
     """Represents an abstract domain. """
 

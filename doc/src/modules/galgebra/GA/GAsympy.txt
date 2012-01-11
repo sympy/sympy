@@ -62,14 +62,14 @@
 .. topic:: Abstract
 
    This document describes the implementation of a geometric algebra module in
-   python  that utilizes the :mod:`sympy` symbolic algebra library.  The   python
+   python that utilizes the :mod:`sympy` symbolic algebra library.  The python
    module :mod:`GA` has been developed for coordinate free calculations using
    the operations (geometric, outer, and inner products etc.) of geometric algebra.
    The operations can be defined using a completely arbitrary metric defined
-   by the inner products of a set of arbitrary vectors or the metric  can be
+   by the inner products of a set of arbitrary vectors or the metric can be
    restricted to enforce orthogonality and signature constraints on the set of
    vectors.  In addition the module includes the geometric, outer (curl) and inner
-   (div) derivatives and the ability to define a curvilinear coordinate  system.
+   (div) derivatives and the ability to define a curvilinear coordinate system.
    The module requires the numpy and the sympy modules.
 
 
@@ -77,13 +77,13 @@ What is Geometric Algebra?
 ==========================
 
 Geometric algebra is the Clifford algebra of a real finite dimensional vector
-space or the algebra that  results when a real finite dimensional vector space
+space or the algebra that results when a real finite dimensional vector space
 is extended with a product of vectors (geometric product) that is associative,
 left and right distributive, and yields a real number for the square (geometric
 product) of any vector [Hestenes,Lasenby].  The elements of the geometric
 algebra are called multivectors and consist of the linear combination of
 scalars, vectros, and the geometric product of two or more vectors. The
-additional axioms  for the geometric algebra are that for any vectors :math:`a`,
+additional axioms for the geometric algebra are that for any vectors :math:`a`,
 :math:`b`, and :math:`c` in the base vector space:
 
 .. math::
@@ -115,7 +115,7 @@ In order not to reinvent the wheel all scalar symbolic algebra is handled by the
 python module  :mod:`sympy`.
 
 The basic geometic algebra operations will be implemented in python by defining
-a multivector  class, MV, and overloading the python operators in Table
+a multivector class, MV, and overloading the python operators in Table
 :ref:`1 <table1>` where ``A`` and ``B``  are any two multivectors (In the case of
 ``+``, ``-``, ``*``, ``^``, ``|``, ``<<``, and ``>>`` the operation is also defined if ``A`` or
 ``B`` is a sympy symbol or a sympy real number).
@@ -150,7 +150,7 @@ multivector is the first operand.
 .. warning::
 
     Note that the operator order precedence is determined by python and is not
-    neccessarily that used by  geometric algebra. It is **absolutely essential** to
+    neccessarily that used by geometric algebra. It is **absolutely essential** to
     use parenthesis in multivector
     expressions containing ``^``, ``|``, ``<``, ``>``, ``<<`` and/or ``>>``.  As an example let
     ``A`` and ``B`` be any two multivectors. Then ``A + A*B = A +(A*B)``, but
@@ -169,7 +169,7 @@ Vector Basis and Metric
 =======================
 
 The two structures that define the :class:`MV` (multivector) class are the
-symbolic basis vectors and the  symbolic metric.  The symbolic basis
+symbolic basis vectors and the symbolic metric.  The symbolic basis
 vectors are input as a string with the symbol name separated by spaces.  For
 example if we are calculating the geometric algebra of a system with three
 vectors that we wish to denote as ``a0``, ``a1``, and ``a2`` we would define the
@@ -178,7 +178,7 @@ string variable:
 ``basis = 'a0 a1 a2'``
 
 that would be input into the multivector setup function.  The next step would be
-to define the symbolic  metric for the geometric algebra of the basis we
+to define the symbolic metric for the geometric algebra of the basis we
 have defined. The default metric is the most general and is the matrix of
 the following symbols
 
@@ -212,7 +212,7 @@ the :math:`g_{ij}` symbols are stored in a static member list of the multivector
 class :class:`MV` as the double list *MV.metric* (:math:`g_{ij}` = *MV.metric[i][j]*).
 
 The default definition of :math:`g` can be overwritten by specifying a string
-that will define :math:`g`. As an example  consider a symbolic representation
+that will define :math:`g`. As an example consider a symbolic representation
 for conformal geometry. Define for a basis
 
 ``basis = 'a0 a1 a2 n nbar'``
@@ -287,8 +287,8 @@ In our symbolic geometric algebra we assume that all multivectors of interest to
 us can be obtained from the symbolic basis vectors we have input, via the
 different operations available to geometric algebra. The first problem we have
 is representing the general multivector in terms terms of the basis vectors.  To
-do this we  form the ordered geometric products of the basis vectors and develop
-an internal representation of these  products in terms of python classes.  The
+do this we form the ordered geometric products of the basis vectors and develop
+an internal representation of these products in terms of python classes.  The
 ordered geometric products are all multivectors of the form
 :math:`a_{i_{1}}a_{i_{2}}\dots a_{i_{r}}` where :math:`i_{1}<i_{2}<\dots <i_{r}`
 and :math:`r \le n`. We call these multivectors bases and represent them
@@ -316,29 +316,29 @@ complete set of bases and labels are shown in Table :ref:`2 <table2>`
 Table :ref:`2 <table2>`. Multivector basis labels and internal basis representation.
 
 Since there are :math:`2^{n}` bases and the number of bases with equal list
-lengths is the same as for the  grade decomposition of a dimension :math:`n`
+lengths is the same as for the grade decomposition of a dimension :math:`n`
 geometric algebra we will call the collections of bases of equal length
 ``psuedogrades``.
 
 The critical operation in setting up the geometric algebra module is reducing
 the geomertric product of any two bases to a linear combination of bases so that
-we can calculate a multiplication table for the bases.   First we represent the
+we can calculate a multiplication table for the bases.  First we represent the
 product as the concatenation of two base lists.  For example ``a1a2*a0a1`` is
 represented by the list ``[1,2]+[0,1] = [1,2,0,1]``. The representation of the
 product is reduced via two operations, contraction and revision. The state of
 the reduction is saved in two lists of equal length.  The first list contains
 symbolic scale factors (symbol or numeric types) for the corresponding interger
-list representing the product of  bases.  If we wish to reduce
+list representing the product of bases.  If we wish to reduce
 :math:`\lbrk i_{1},\dots,i_{r}\rbrk` the starting point is the coefficient list
 :math:`C = \lbrk 1 \rbrk` and the bases list
-:math:`B = \lbrk \lbrk i_{1},\dots,i_{r}\rbrk \rbrk`.  We now operate  on each
+:math:`B = \lbrk \lbrk i_{1},\dots,i_{r}\rbrk \rbrk`.  We now operate on each
 element of the lists as follows:
 
 * ``contraction``: Consider a basis list :math:`B` with element
   :math:`B[j] = \lbrk i_{1},\dots,i_{l},i_{l+1},\dots,i_{s}\rbrk` where
   :math:`i_{l} = i_{l+1}`. Then the product of the :math:`l` and :math:`l+1` terms
   result in a scalar and :math:`B[j]` is replaced by the new list representation
-  :math:`\lbrk i_{1},\dots,i_{l-1},i_{l+2},\dots,i_{r}\rbrk` which is of  psuedo
+  :math:`\lbrk i_{1},\dots,i_{l-1},i_{l+2},\dots,i_{r}\rbrk` which is of psuedo
   grade :math:`r-2` and :math:`C[j]` is replaced by the symbol
   :math:`g_{i_{l}i_{l}}C[j]`.
 
@@ -346,11 +346,11 @@ element of the lists as follows:
   :math:`B[j] = \lbrk i_{1},\dots,i_{l},i_{l+1},\dots,i_{s}\rbrk` where
   :math:`i_{l} > i_{l+1}`. Then the :math:`l` and :math:`l+1` elements must be
   reversed to be put in normal order, but we have :math:`a_{i_{l}}a_{i_{l+1}} = 2g_{i_{l}i_{l+1}}-a_{i_{l+1}}a_{i_{l}}`
-  (From the geometric  algebra definition of the dot product of two vectors). Thus
+  (From the geometric algebra definition of the dot product of two vectors). Thus
   we append the list representing the reduced element,
   :math:`\lbrk i_{1},\dots,i_{l-1},i_{l+2},\dots,i_{s}\rbrk`, to the pseudo bases
   list, :math:`B`, and append :math:`2g_{i{l}i_{l+1}}C[j]` to the coefficients
-  list, then  we replace :math:`B[j]` with
+  list, then we replace :math:`B[j]` with
   :math:`\lbrk i_{1},\dots,i_{l+1},i_{l},\dots,i_{s}\rbrk`  and :math:`C[j]` with
   :math:`-C[j]`. Both lists are increased by one element if
   :math:`g_{i_{l}i_{l+1}} \ne 0`.
@@ -365,8 +365,7 @@ three vectors is given by (the coefficient of each psuedo base is enclosed with
 {} for clarity):
 
 
-.. include:: multable.dat
-   :literal:
+.. literalinclude:: multable.dat   
 
 
 Base Representation of Multivectors
@@ -375,8 +374,8 @@ Base Representation of Multivectors
 In terms of the bases defined an arbitrary multivector can be represented as a
 list of arrays  (we use the numpy python module to implement arrays).   If we
 have :math:`n` basis vectors we initialize the list ``self.mv = [0,0,...,0]``
-with :math:`n+1` integers all zero.   Each zero is a placeholder for an array of
-python objects (in this case the objects will be sympy  symbol objects). If
+with :math:`n+1` integers all zero.  Each zero is a placeholder for an array of
+python objects (in this case the objects will be sympy symbol objects). If
 ``self.mv[r] = numpy.array([list of symbol objects])`` each entry in the
 ``numpy.array`` will be a coefficient of the corresponding psuedo base.
 ``self.mv[r] = 0`` indicates that the coefficients of every base of psuedo grade
@@ -400,7 +399,7 @@ multiplication by an object are defined for the array if they are defined for
 the objects making up the array, which they are by sympy.  We call this
 representation a base type because the ``r`` index is not a grade index since
 the bases we are using are not blades. In a blade representation the structure
-would be identical, but the bases would be replaced by  blades and
+would be identical, but the bases would be replaced by blades and
 ``self.mv[r]`` would represent the ``r`` grade components of the multivector.
 The first use of the base representation is to store the results of the
 multiplication tabel for the bases in the class variable ``MV.mtabel``.  This
@@ -426,7 +425,7 @@ the symbolic basis vectors using the formula
 
 
 where :math:`A_{r}` is a multivector of grade :math:`r` and :math:`b` is a
-vector.  For our example basis the result  is shown in Table :ref:`3 <table3>`.
+vector.  For our example basis the result is shown in Table :ref:`3 <table3>`.
 
 .. _table3:
 
@@ -465,7 +464,7 @@ Table :ref:`4 <table4>`. Bases in terms of basis blades.
 
 Using Table :ref:`4 <table4>` and simple substitution we can convert from a base
 multivector representation to a blade representation.  Likewise, using Table
-:ref:`3 <table3>` we can convert from  blades to bases.
+:ref:`3 <table3>` we can convert from blades to bases.
 
 Using the blade representation it becomes simple to program functions that will
 calculate the grade projection, reverse, even, and odd multivector functions.
@@ -490,7 +489,7 @@ Outer and Inner Products, Left and Right Contractions
 =====================================================
 
 In geometric algebra any general multivector :math:`A` can be decomposed into
-pure grade  multivectors (a linear combination of blades of all the same order)
+pure grade multivectors (a linear combination of blades of all the same order)
 so that in a :math:`n`-dimensional vector space
 
 .. math::
@@ -513,7 +512,7 @@ The geometric product of two pure grade multivectors :math:`A_{r}` and
 
 
 where :math:`\proj{}{t}` projects the :math:`t` grade components of the
-multivector argument.  The   inner and outer products of :math:`A_{r}` and
+multivector argument.  The inner and outer products of :math:`A_{r}` and
 :math:`B_{s}` are then defined to be
 
 .. math::
@@ -753,7 +752,7 @@ vectors.
 
 The reverse is important in the theory of rotations in :math:`n`-dimensions.  If
 :math:`R` is the product of an even number of vectors and :math:`RR^{\R} = 1`
-then :math:`RaR^{\R}` is a composition of rotations of the  vector :math:`a`.
+then :math:`RaR^{\R}` is a composition of rotations of the vector :math:`a`.
 If :math:`R` is the product of two vectors then the plane that :math:`R` defines
 is the plane of the rotation.  That is to say that :math:`RaR^{\R}` rotates the
 component of :math:`a` that is projected into the plane defined by :math:`a` and
@@ -807,7 +806,7 @@ the product.  In the standard notation if a vector is denoted with a subscript
 the reciprocal vector is denoted with a superscript. The multivector setup
 function ``MV.setup(basis,metric,rframe)`` has the argument ``rframe`` with a
 default value of ``False``.  If it is set to ``True`` the reciprocal frame of
-the basis vectors is  calculated. Additionaly there is the function
+the basis vectors is calculated. Additionaly there is the function
 ``reciprocal_frame(vlst,names='')`` external to the ``MV`` class that will
 calculate the reciprocal frame of a list, ``vlst``, of vectors.  If the argument
 ``names`` is set to a space delimited string of names for the vectors the
@@ -850,7 +849,7 @@ Note that
 :math:`\bm{\gamma}^{j}\lp\bm{\gamma}_{i_{1}}\W\dots\W \bm{\gamma}_{i_{R}} \rp`
 can only contain grades :math:`R-1` and :math:`R+1` so that :math:`\nabla F_{R}`
 also can only contain those grades. For a grade-:math:`R` multivector
-:math:`F_{R}` the inner (div) and  outer (curl) derivatives are defined as
+:math:`F_{R}` the inner (div) and outer (curl) derivatives are defined as
 
 
 .. math::
@@ -872,13 +871,13 @@ and
 
 
 For a general multivector function :math:`F` the inner and outer derivatives are
-just the sum of the inner and outer  dervatives of each grade of the multivector
+just the sum of the inner and outer dervatives of each grade of the multivector
 function.
 
 Curvilinear coordinates are derived from a vector function
 :math:`x(\bm{\theta})` where
 :math:`\bm{\theta} = \lp\theta_{1},\dots,\theta_{N}\rp` where the number of
-coordinates is equal to the dimension of the  vector space.  In the case of
+coordinates is equal to the dimension of the vector space.  In the case of
 3-dimensional spherical coordinates :math:`\bm{\theta} = \lp r,\theta,\phi \rp`
 and the coordinate generating function :math:`x(\bm{\theta})` is
 
@@ -1085,7 +1084,7 @@ The multivector class is initialized with:
 .. function:: MV.setup(basis,metric='',rframe=False,coords=None,debug=False,offset=0)
 
    The *basis* and *metric* parameters were described in section :ref:`vbm`. If
-   *rframe=True* the  reciprocal frame of the symbolic bases vectors is calculated.
+   *rframe=True* the reciprocal frame of the symbolic bases vectors is calculated.
    If *debug=True* the data structure required to initialize the :class:`MV` class
    are printer out. *coords* is a list of :class:`sympy` symbols equal in length to
    the number of basis vectors.  These symbols are used as the arguments of a
@@ -1174,7 +1173,7 @@ and ``e3`` are made available (broadcast) for use in the program .
     This is only true if the statement  ``set_main(sys.modules[__name__])`` appears
     immediately after the ``from sympy.galgebra.GA import *`` statement.
 
-So that  multivectors
+So that multivectors
 could be instantiated with statements such as (``a1``, ``a2``, and ``a3`` are
 ``sympy`` symbols)::
 
@@ -1188,7 +1187,7 @@ or with the multivector class constructor:
 
 .. class:: MV(value='',mvtype='',mvname='',fct=False)
 
-   *mvname* is a  string that defines the name of the multivector for output
+   *mvname* is a string that defines the name of the multivector for output
    purposes. *value* and  *type* are defined by the following table and *fct* is a
    switch that will convert the symbolic coefficients of a multivector to functions
    if coordinate variables have been defined when :func:`MV.setup` is called:
@@ -1221,7 +1220,7 @@ or with the multivector class constructor:
    not defined in :func:`MV.setup` the indices of the multivector bases are appended to
    the base name with a double underscore (superscript notation).  If *coords* is defined
    the coordinate names will replace the indices in the coefficient names.  For example if
-   the base string is *A* and the  coordinates *(x,y,z)* then the
+   the base string is *A* and the coordinates *(x,y,z)* then the
    coefficients of a spinor in 3d space would be *A*, *A__xy*, *A__xz*, and *A__yz*.  If
    the :mod:`latex_ex` is used to print the multivector the coefficients would print as
    :math:`A`, :math:`A^{xy}`, :math:`A^{xz}`, and :math:`A^{yz}`.
@@ -1319,11 +1318,11 @@ Sympy Functions Applied Inplace to Multivector Coefficients
 -----------------------------------------------------------
 
 All the following fuctions belong to the :class:`MV` class and apply the
-corresponding :mod:`sympy` function to each component of a multivector.   All
+corresponding :mod:`sympy` function to each component of a multivector.  All
 these functions perform the operations inplace (``None`` is returned)  on each
 coefficient.  For example if you wished to simplify all the components of the
 multivector ``A`` you would invoke ``A.simplify()``.  The argument list for each
-function is the same as for the corresponding :mod:`sympy` function.   The only
+function is the same as for the corresponding :mod:`sympy` function.  The only
 function that differs in its action from the :mod:`sympy` version is
 :func:`trigsimp` in its case the function ``TrigSimp is applied`` (see
 documentation on :func:`TrigSimp`).
@@ -1434,8 +1433,8 @@ Algebra
 
 The following examples of geometric algebra (not calculus) are all in the file
 :program:`testsymbolicGA.py` which is included in the sympy distribution
-examples  under the galbebra directory.  The section of code in the program for
-each example  is show with the respective output following the code section.
+examples under the galbebra directory.  The section of code in the program for
+each example is show with the respective output following the code section.
 
 
 Example Header
@@ -1446,8 +1445,7 @@ required modules and also allow variables and certain multivectors to be
 broadcast from the :mod:`GA` module to the main program.
 
 
-.. include:: headerGAtest.py
-   :literal:
+.. literalinclude:: headerGAtest.py
 
 
 Basic Geometric Algebra Operations
@@ -1457,8 +1455,7 @@ Example of basic geometric algebra operation of geometric, outer, and inner
 products.
 
 
-.. include:: BasicGAtest.py
-   :literal:
+.. literalinclude:: BasicGAtest.py
 
 
 Examples of Conformal Geometry
@@ -1469,20 +1466,18 @@ basic geometric entities (lines, circles, planes, and spheres) in three
 dimensions can be represented by blades in a five dimensional (conformal) space.
 
 
-.. include:: conformalgeometryGAtest.py
-   :literal:
+.. literalinclude:: conformalgeometryGAtest.py
 
 
 Calculation of Reciprocal Frame
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Example shows the calculation of the reciprocal frame for three arbitrary
-vectors and  verifies that the calculated reciprocal vectors have the correct
+vectors and verifies that the calculated reciprocal vectors have the correct
 properties.
 
 
-.. include:: reciprocalframeGAtest.py
-   :literal:
+.. literalinclude:: reciprocalframeGAtest.py
 
 
 Hyperbolic Geometry
@@ -1494,8 +1489,7 @@ orthogonal. Note that most of the calculation is simplifying a scalar
 expression.
 
 
-.. include:: hyperbolicGAtest.py
-   :literal:
+.. literalinclude:: hyperbolicGAtest.py
 
 
 Calculus
@@ -1514,7 +1508,7 @@ In geometric calculus the equivalent of the electromagnetic tensor is
 where :math:`x^{0} = ct`, the pseudoscalar
 :math:`I = \gamma_{0}\gamma_{1}\gamma_{2}\gamma_{3}`, :math:`E` and :math:`B`
 are four vectors where the time component is zero and the spatial components
-equal to the electric and magnetic field  components.  Then Maxwell's equations
+equal to the electric and magnetic field components.  Then Maxwell's equations
 can be all written as :math:`\nabla F = J` with :math:`J` the four current.
 This example shows that this equations generates all of Maxwell's equations
 correctly  (in our units:math:`c=1`) [Lasenby,pp229-231].
@@ -1522,8 +1516,7 @@ correctly  (in our units:math:`c=1`) [Lasenby,pp229-231].
 ``Begin Program Maxwell.py``
 
 
-.. include:: Maxwell.py
-   :literal:
+.. literalinclude:: Maxwell.py
 
 ``End Program Maxwell.py``
 
@@ -1647,13 +1640,12 @@ real terms (no :math:`\sqrt{-1}`).  Spinors  :math:`\lp\Psi\rp` are even
 multivectors in space time (Minkowski space with signature (1,-1,-1,-1)) and the
 Dirac equation becomes
 :math:`\nabla \Psi I \sigma_{z}-eA\Psi = m\Psi\gamma_{t}`.  All the terms in the
-real equation are explined  in Doran and Lasenby [Lasenby,pp281-283].
+real equation are explined in Doran and Lasenby [Lasenby,pp281-283].
 
 ``Begin Program Dirac.py``
 
 
-.. include:: Dirac.py
-   :literal:
+.. literalinclude:: Dirac.py
 
 ``End Program Dirac.py``
 
@@ -1714,8 +1706,7 @@ geometric algebra) to demonstrate the formulas derived in section :ref:`deriv`.
 ``Begin Program coords.py``
 
 
-.. include:: coords.py
-   :literal:
+.. literalinclude:: coords.py
 
 ``End Program coords.py``
 
@@ -1766,11 +1757,11 @@ Div and Curl of Vector Function :math:`A`
 .. seealso::
 
    `Hestenes <http://geocalc.clas.asu.edu/html/CA_to_GC.html>`_
-      ``Clifford Algebra to Geometric Calculus`` by  D.Hestenes and G. Sobczyk, Kluwer
+      ``Clifford Algebra to Geometric Calculus`` by D.Hestenes and G. Sobczyk, Kluwer
       Academic Publishers, 1984.
 
    `Lasenby <http://www.mrao.cam.ac.uk/~cjld1/pages/book.htm>`_
-      ``Geometric Algebra for Physicists`` by  C. Doran and A. Lasenby, Cambridge
+      ``Geometric Algebra for Physicists`` by C. Doran and A. Lasenby, Cambridge
       University Press, 2003.
 
 

@@ -489,3 +489,60 @@ Matrix Class Reference
 ----------------------
 .. autoclass:: Matrix
    :members:
+
+.. autoclass:: SparseMatrix
+   :members:
+
+Matrix Exceptions Reference
+---------------------------
+
+.. autoclass:: MatrixError
+
+.. autoclass:: ShapeError
+
+.. autoclass:: NonSquareMatrixError
+
+
+Matrix Functions Reference
+--------------------------
+
+.. autofunction:: matrix_multiply
+
+.. autofunction:: matrix_multiply_elementwise
+
+.. autofunction:: matrix_add
+
+.. autofunction:: zeros
+
+.. autofunction:: ones
+
+.. autofunction:: eye
+
+.. autofunction:: diag
+
+.. autofunction:: randMatrix
+
+.. autofunction:: hessian
+
+.. autofunction:: GramSchmidt
+
+.. autofunction:: wronskian
+
+.. autofunction:: casoratian
+
+Numpy Utility Functions Reference
+---------------------------------
+
+.. autofunction:: list2numpy
+
+.. autofunction:: matrix2numpy
+
+.. autofunction:: a2idx
+
+.. autofunction:: symarray
+
+.. autofunction:: rot_axis1
+
+.. autofunction:: rot_axis2
+
+.. autofunction:: rot_axis3

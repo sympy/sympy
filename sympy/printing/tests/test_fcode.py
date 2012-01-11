@@ -29,6 +29,7 @@ def test_fcode_Pow():
     assert fcode(x**0.5) == '      sqrt(x)'
     assert fcode(sqrt(x)) == '      sqrt(x)'
     assert fcode(sqrt(10)) == '      sqrt(10.0d0)'
+    assert fcode(x**-1.0) == '      1.0/x'
 
 def test_fcode_Rational():
     assert fcode(Rational(3,7)) == "      3.0d0/7.0d0"

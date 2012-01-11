@@ -9,16 +9,10 @@ TODO:
   AntiCommutator, represent, apply_operators.
 """
 
-from itertools import count
-
-from sympy import Expr, Symbol, diff, Integer, Function, Tuple, Derivative
-from sympy.core.function import UndefinedFunction
+from sympy import Derivative, Expr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-
-from sympy.physics.quantum.qexpr import (
-    QExpr, dispatch_method
-)
+from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 
 __all__ = [
     'Operator',
@@ -40,6 +34,7 @@ class Operator(QExpr):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         operator. For time-dependent operators, this will include the time.
@@ -185,6 +180,7 @@ class HermitianOperator(Operator):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         operator. For time-dependent operators, this will include the time.
@@ -223,6 +219,7 @@ class UnitaryOperator(Operator):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         operator. For time-dependent operators, this will include the time.
@@ -249,6 +246,7 @@ class OuterProduct(Operator):
 
     Parameters
     ==========
+
     ket : KetBase
         The ket on the left side of the outer product.
     bar : BraBase

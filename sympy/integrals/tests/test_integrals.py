@@ -1,7 +1,8 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff, Matrix,
         sympify, sqrt, atan, asin, acos, asinh, acosh, DiracDelta, Heaviside,
-        Lambda, sstr, Add, Tuple, Interval, Sum, factor, trigsimp, simplify, O)
+        Lambda, sstr, Add, Tuple, Interval, Sum, factor, trigsimp, simplify, O,
+        terms_gcd)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.physics.units import m, s
 
@@ -201,7 +202,9 @@ def test_issue580():
     assert NS(Integral(1/(x**2-8*x+17), (x, 2, 4))) == '1.10714871779409'
 
 def test_issue587(): # remove this when fresnel itegrals are implemented
-    assert integrate(sin(x**2), x) == Integral(sin(x**2), x)
+    from sympy import meijerg
+    assert integrate(sin(x**2), x) == \
+           sqrt(2*pi)*meijerg([1], [], [S(3)/4], [S(1)/4, 0], x**4/4)/4
 
 def test_integrate_units():
     assert integrate(x * m/s, (x, 1*s, 5*s)) == 12*m*s
@@ -429,6 +432,8 @@ def test_integration_variable():
 def test_expand_integral():
     assert Integral(cos(x**2)*(sin(x**2)+1),(x, 0, 1)).expand() == Integral(cos(x**2)*sin(x**2) + cos(x**2), (x, 0, 1))
     assert Integral(cos(x**2)*(sin(x**2)+1),x).expand() == Integral(cos(x**2)*sin(x**2) + cos(x**2), x)
+    i = Integral(x, (x, 1, 2), (x, 1, 2))
+    assert i._eval_expand_basic() == i
 
 def test_as_sum_midpoint1():
     e = Integral(sqrt(x**3+1), (x, 2, 10))
@@ -610,17 +615,16 @@ def test_issue_1418():
         6*x**Rational(7,6)/7 - 3*x**Rational(11,3)/11
 
 def test_issue_1100():
-    assert integrate(exp(-I*2*pi*y*x)*x, (x, -oo, oo)) is S.NaN
+    ypos = Symbol('y', positive=True)
+    assert integrate(exp(-I*2*pi*y*x)*x, (x, -oo, oo)).subs(y, ypos) == \
+           Integral(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo))
+    raises(NotImplementedError, 'integrate(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo))')
 
 def test_issue_841():
     a,b,c,d = symbols('a:d', positive=True, bounded=True)
     assert integrate(exp(-x**2 + I*c*x), x) == sqrt(pi)*erf(x - I*c/2)*exp(-c**S(2)/4)/2
-    assert integrate(exp(a*x**2 + b*x + c), x) == I*sqrt(pi)*erf(-I*x*sqrt(a) - I*b/(2*sqrt(a)))*exp(c)*exp(-b**2/(4*a))/(2*sqrt(a))
-    a,b,c,d = symbols('a:d', positive=True)
-    i = integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))
-    ans = sqrt(pi)*exp(d**2/a)*(1 + erf(oo - d/sqrt(a)))/(2*sqrt(a))
-    n, d = i.as_numer_denom()
-    assert factor(n, expand=False)/d == ans
+    assert integrate(exp(a*x**2 + b*x + c), x) == \
+          I*sqrt(pi)*erf(-I*x*sqrt(a) - I*b/(2*sqrt(a)))*exp(c)*exp(-b**2/(4*a))/(2*sqrt(a))
 
 def test_issue_2314():
     # Note that this is not the same as testing ratint() becuase integrate()
@@ -667,3 +671,8 @@ def test_integrate_series():
     assert diff(integrate(f, x), x) == f
 
     assert integrate(O(x**5), x) == O(x**6)
+
+def test_atom_bug():
+    from sympy import meijerg
+    from sympy.integrals.risch import heurisch
+    assert heurisch(meijerg([], [], [1], [], x), x) is None

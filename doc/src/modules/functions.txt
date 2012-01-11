@@ -3,10 +3,19 @@ Functions Module
 
 .. module:: sympy.functions
 
+All functions support the methods documented below, inherited from
+:py:class:`sympy.core.function.Function`.
+
+.. autoclass:: sympy.core.function.Function
+   :noindex:
+   :members:
+
+
 Elementary
 ==========
 
-This module implements elementary functions, as well as functions like Abs, Max, etc.
+This module implements elementary functions, as well as functions like Abs,
+Max, etc.
 
 
 Abs
@@ -15,12 +24,37 @@ Abs
 Returns the absolute value of the argument.
 
 Examples::
+
     >>> from sympy.functions import Abs
     >>> Abs(-1)
     1
 
 .. autoclass:: sympy.functions.elementary.complexes.Abs
+   :members:
 
+acos
+----
+
+.. autoclass:: sympy.functions.elementary.trigonometric.acos
+   :members:
+
+acosh
+-----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.acosh
+   :members:
+
+acot
+----
+
+.. autoclass:: sympy.functions.elementary.trigonometric.acot
+   :members:
+
+acoth
+-----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.acoth
+   :members:
 
 arg
 ---
@@ -29,6 +63,7 @@ Returns the argument (in radians) of a complex number. For a real
 number, the argument is always 0.
 
 Examples::
+
     >>> from sympy.functions import arg
     >>> from sympy import I, sqrt
     >>> arg(2.0)
@@ -39,21 +74,62 @@ Examples::
     pi/4
 
 .. autoclass:: sympy.functions.elementary.complexes.arg
+   :members:
+
+asin
+----
+
+.. autoclass:: sympy.functions.elementary.trigonometric.asin
+   :members:
+
+asinh
+-----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.asinh
+   :members:
+
+atan
+----
+
+.. autoclass:: sympy.functions.elementary.trigonometric.atan
+   :members:
+
+atan2
+-----
+
+This function is like `atan`, but considers the sign of both arguments in
+order to correctly determine the quadrant of its result.
+
+.. autoclass:: sympy.functions.elementary.trigonometric.atan2
+   :members:
+
+atanh
+-----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.atanh
+   :members:
+
+ceiling
+-------
+
+.. autoclass:: sympy.functions.elementary.integers.ceiling
+   :members:
 
 conjugate
 ---------
 
-Returns the 'complex conjugate <http://en.wikipedia.org/wiki/Complex_conjugation>'_
+Returns the `complex conjugate <http://en.wikipedia.org/wiki/Complex_conjugation>`_
 of an argument. In mathematics, the complex conjugate of a complex number is given
 by changing the sign of the imaginary part. Thus, the conjugate of the complex number
 
-    a + ib
+    :math:`a + ib`
 
 (where a and b are real numbers) is
 
-    a - ib
+    :math:`a - ib`
 
 Examples::
+
     >>> from sympy.functions import conjugate
     >>> from sympy import I
     >>> conjugate(2)
@@ -62,7 +138,95 @@ Examples::
     -I
 
 .. autoclass:: sympy.functions.elementary.complexes.conjugate
+   :members:
 
+cos
+---
+
+.. autoclass:: sympy.functions.elementary.trigonometric.cos
+   :members:
+
+cosh
+----
+.. autoclass:: sympy.functions.elementary.hyperbolic.cosh
+   :members:
+
+cot
+---
+
+.. autoclass:: sympy.functions.elementary.trigonometric.cot
+   :members:
+
+coth
+----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.coth
+   :members:
+
+exp
+---
+
+.. autoclass:: sympy.functions.elementary.exponential.exp
+   :members:
+
+.. seealso:: classes :py:class:`sympy.functions.elementary.exponential.log`
+
+ExprCondPair
+------------
+
+.. autoclass:: sympy.functions.elementary.piecewise.ExprCondPair
+   :members:
+
+floor
+-----
+
+.. autoclass:: sympy.functions.elementary.integers.floor
+   :members:
+
+HyperbolicFunction
+------------------
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.HyperbolicFunction
+   :members:
+
+IdentityFunction
+----------------
+
+.. autoclass:: sympy.functions.elementary.miscellaneous.IdentityFunction
+   :members:
+
+im
+--
+
+Returns the imaginary part of an expression.
+
+Examples::
+
+
+    >>> from sympy.functions import im
+    >>> from sympy import I
+    >>> im(2+3*I)
+    3
+
+.. autoclass: sympy.functions.elementary.im
+   :members:
+
+.. seealso::
+   :py:class:`sympy.functions.elementary.complexes.re`
+
+LambertW
+--------
+
+.. autoclass:: sympy.functions.elementary.exponential.LambertW
+   :members:
+
+log
+---
+
+.. autoclass:: sympy.functions.elementary.exponential.log
+   :members:
+
+.. seealso:: classes :py:class:`sympy.functions.elementary.exponential.exp`
 
 Min
 ---
@@ -70,6 +234,7 @@ Min
 Returns the minimum of two (comparable) expressions.
 
 Examples::
+
     >>> from sympy.functions import Min
     >>> Min(1,2)
     1
@@ -80,6 +245,7 @@ Examples::
 It is named Min and not min to avoid conflicts with the built-in function min.
 
 .. autoclass:: sympy.functions.elementary.miscellaneous.Min
+   :members:
 
 
 Max
@@ -90,21 +256,55 @@ Returns the maximum of two (comparable) expressions
 It is named Max and not max to avoid conflicts with the built-in function max.
 
 .. autoclass:: sympy.functions.elementary.miscellaneous.Max
+   :members:
 
+Piecewise
+---------
+
+.. autoclass:: sympy.functions.elementary.piecewise.Piecewise
+   :members:
+
+.. autofunction:: sympy.functions.elementary.piecewise.piecewise_fold
 
 re
 --
 
-Return the real part of an expression
+Return the real part of an expression.
 
 Examples::
+
     >>> from sympy.functions import re
     >>> from sympy import I
     >>> re(2+3*I)
     2
 
 .. autoclass:: sympy.functions.elementary.complexes.re
+   :members:
 
+.. seealso::
+   :py:class:`sympy.functions.elementary.complexes.im`
+
+root
+----
+
+.. autofunction:: sympy.functions.elementary.miscellaneous.root
+
+RoundFunction
+-------------
+
+.. autoclass:: sympy.functions.elementary.integers.RoundFunction
+
+sin
+---
+
+.. autoclass:: sympy.functions.elementary.trigonometric.sin
+   :members:
+
+sinh
+----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.sinh
+   :members:
 
 sqrt
 ----
@@ -117,23 +317,26 @@ Returns the square root of an expression. It is equivalent to raise to Rational(
     True
 
 .. autoclass:: sympy.functions.elementary.miscellaneous.sqrt
+   :members:
 
 
 sign
 ----
 
-Returns the sign of an expression, that is:
-    -1 if expr is negative
-     0 if expr is zero
-     1 if expr is positive
-
-     >>> from sympy.functions import sign
-     >>> sign(-1)
-     -1
-     >>> sign(0)
-     0
-
 .. autoclass:: sympy.functions.elementary.complexes.sign
+   :members:
+
+tan
+---
+
+.. autoclass:: sympy.functions.elementary.trigonometric.tan
+   :members:
+
+tanh
+----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.tanh
+   :members:
 
 
 Combinatorial
@@ -141,35 +344,89 @@ Combinatorial
 
 This module implements various combinatorial functions.
 
+bell
+----
 
-Binomial
+.. autoclass:: sympy.functions.combinatorial.numbers.bell
+   :members:
+
+bernoulli
+---------
+
+.. autoclass:: sympy.functions.combinatorial.numbers.bernoulli
+   :members:
+
+binomial
 --------
 
 .. autoclass:: sympy.functions.combinatorial.factorials.binomial
+   :members:
+
+catalan
+-------
+
+.. autoclass:: sympy.functions.combinatorial.numbers.catalan
+   :members:
 
 
-Factorial
+euler
+-----
+
+.. autoclass:: sympy.functions.combinatorial.numbers.euler
+   :members:
+
+
+factorial
 ---------
 
 .. autoclass:: sympy.functions.combinatorial.factorials.factorial
+   :members:
+
+factorial2 / double factorial
+-----------------------------
+
+.. autoclass:: sympy.functions.combinatorial.factorials.factorial2
+   :members:
 
 
 FallingFactorial
 ----------------
 
 .. autoclass:: sympy.functions.combinatorial.factorials.FallingFactorial
+   :members:
+
+fibonacci
+---------
+
+.. autoclass:: sympy.functions.combinatorial.numbers.fibonacci
+   :members:
+
+harmonic
+--------
+
+.. autoclass:: sympy.functions.combinatorial.numbers.harmonic
+   :members:
+
+
+lucas
+-----
+
+.. autoclass:: sympy.functions.combinatorial.numbers.lucas
+   :members:
 
 
 MultiFactorial
 --------------
 
 .. autoclass:: sympy.functions.combinatorial.factorials.MultiFactorial
+   :members:
 
 
 RisingFactorial
 ---------------
 
 .. autoclass:: sympy.functions.combinatorial.factorials.RisingFactorial
+   :members:
 
 
 Special
@@ -178,33 +435,63 @@ Special
 DiracDelta
 ----------
 .. autoclass:: sympy.functions.special.delta_functions.DiracDelta
+   :members:
 
 Heaviside
 ---------
 .. autoclass:: sympy.functions.special.delta_functions.Heaviside
+   :members:
+
+beta
+----
+
+.. autofunction:: sympy.functions.special.gamma_functions.beta
+
+erf
+---
+
+.. autoclass:: sympy.functions.special.error_functions.erf
+   :members:
 
 gamma
 -----
 .. autoclass:: sympy.functions.special.gamma_functions.gamma
+   :members:
 
 loggamma
 --------
 .. autoclass:: sympy.functions.special.gamma_functions.loggamma
+   :members:
 
 polygamma
 ---------
 .. autoclass:: sympy.functions.special.gamma_functions.polygamma
+   :members:
+
+digamma
+-------
+.. autofunction:: sympy.functions.special.gamma_functions.digamma
+
+trigamma
+--------
+.. autofunction:: sympy.functions.special.gamma_functions.trigamma
 
 uppergamma
 ----------
 .. autoclass:: sympy.functions.special.gamma_functions.uppergamma
+   :members:
 
 lowergamma
 ----------
 .. autoclass:: sympy.functions.special.gamma_functions.lowergamma
+   :members:
 
 Bessel Type Functions
 ---------------------
+
+.. autoclass:: sympy.functions.special.bessel.BesselBase
+   :members:
+
 .. autoclass:: sympy.functions.special.bessel.besselj
 .. autoclass:: sympy.functions.special.bessel.bessely
 .. autoclass:: sympy.functions.special.bessel.besseli
@@ -214,7 +501,91 @@ Bessel Type Functions
 .. autoclass:: sympy.functions.special.bessel.jn
 .. autoclass:: sympy.functions.special.bessel.yn
 
+.. autofunction:: sympy.functions.special.bessel.jn_zeros
+
+B-Splines
+---------
+
+.. autofunction:: sympy.functions.special.bsplines.bspline_basis
+.. autofunction:: sympy.functions.special.bsplines.bspline_basis_set
+
 Hypergeometric Functions
 ------------------------
 .. autoclass:: sympy.functions.special.hyper.hyper
+   :members:
+
 .. autoclass:: sympy.functions.special.hyper.meijerg
+   :members:
+
+Orthogonal Polynomials
+----------------------
+
+.. automodule:: sympy.functions.special.polynomials
+
+Chebyshev Polynomials
++++++++++++++++++++++
+
+.. autoclass:: sympy.functions.special.polynomials.chebyshevt
+   :members:
+
+.. autoclass:: sympy.functions.special.polynomials.chebyshevu
+   :members:
+
+.. autoclass:: sympy.functions.special.polynomials.chebyshevt_root
+   :members:
+
+.. autoclass:: sympy.functions.special.polynomials.chebyshevu_root
+   :members:
+
+Legendre Polynomials
+++++++++++++++++++++
+
+.. autoclass:: sympy.functions.special.polynomials.legendre
+   :members:
+
+.. autoclass:: sympy.functions.special.polynomials.assoc_legendre
+   :members:
+
+Hermite Polynomials
++++++++++++++++++++
+
+.. autoclass:: sympy.functions.special.polynomials.hermite
+   :members:
+
+Laguerre Polynomials
+++++++++++++++++++++
+
+.. autofunction:: sympy.functions.special.polynomials.laguerre_l
+
+Spherical Harmonics
+-------------------
+
+.. autofunction:: sympy.functions.special.spherical_harmonics.Plmcos
+
+.. autofunction:: sympy.functions.special.spherical_harmonics.Ylm
+
+.. autofunction:: sympy.functions.special.spherical_harmonics.Ylm_c
+
+.. autofunction:: sympy.functions.special.spherical_harmonics.Zlm
+
+Tensor Functions
+----------------
+
+.. autofunction:: sympy.functions.special.tensor_functions.Eijk
+
+.. autofunction:: sympy.functions.special.tensor_functions.eval_levicivita
+
+.. autoclass:: sympy.functions.special.tensor_functions.LeviCivita
+   :members:
+
+.. autoclass:: sympy.functions.special.tensor_functions.KroneckerDelta
+   :members:
+
+Zeta Functions
+--------------
+
+.. autoclass:: sympy.functions.special.zeta_functions.zeta
+   :members:
+
+.. autoclass:: sympy.functions.special.zeta_functions.dirichlet_eta
+   :members:

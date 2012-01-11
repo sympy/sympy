@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import with_statement
+
 import os
 
 def strip_file(filename, write, report):
@@ -8,7 +10,9 @@ def strip_file(filename, write, report):
     # to re-add \n to a few right-stripped lines. The hit flag will keep us
     # from unecessarily re-writing files with no changes.
 
-    lines = open(filename, 'rb').readlines() # without "b" all lines appear as \n terminated
+    # without "b" all lines appear as \n terminated
+    with open(filename, 'rb') as f:
+        lines = f.readlines()
     hit = False
     cr = False
     for index, line in enumerate(lines):
@@ -35,9 +39,9 @@ def strip_file(filename, write, report):
             hit = True
 
     if write and hit:
-        f = open(filename, "wb") # without "b" the lines may be written in sys-dep format
-        f.writelines(lines)
-        f.close()
+        # without "b" the lines may be written in sys-dep format
+        with open(filename, "wb") as f:
+            f.writelines(lines)
 
 def go(path, write, report):
     allowed_ext = [

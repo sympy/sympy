@@ -1,18 +1,26 @@
 from sympy.core import S, C, sympify
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
+from sympy.core.numbers import Rational
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import Application, Lambda
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
+from sympy.core.rules import Transform
+from sympy.ntheory.residue_ntheory import int_tested
 
 class IdentityFunction(Lambda):
-    """The identity function
+    """
+    The identity function
+
+    Examples
+    ========
 
     >>> from sympy import Id, Symbol
     >>> x = Symbol('x')
     >>> Id(x)
     x
+
     """
     __metaclass__ = Singleton
     __slots__ = []
@@ -81,23 +89,24 @@ def sqrt(arg):
     >>> [ RootOf(x**2-3,i) for i in (0,1) ]
     [-sqrt(3), sqrt(3)]
 
-
-    See also
+    See Also
     ========
-       L{root}, L{RootOf}
 
-       External links
-       --------------
+    sympy.polys.rootoftools.RootOf, root
 
-       * http://en.wikipedia.org/wiki/Square_root
-       * http://en.wikipedia.org/wiki/Principal_value
+    References
+    ==========
+
+    * http://en.wikipedia.org/wiki/Square_root
+    * http://en.wikipedia.org/wiki/Principal_value
+
     """
     # arg = sympify(arg) is handled by Pow
     return C.Pow(arg, S.Half)
 
 
 def root(arg, n):
-    """The n-th root function
+    """The n-th root function (a shortcut for arg**(1/n))
 
     root(x, n) -> Returns the principal n-th root of x.
 
@@ -117,7 +126,7 @@ def root(arg, n):
     >>> root(x, n)
     x**(1/n)
 
-    >>> root(x, -Rational(2,3))
+    >>> root(x, -Rational(2, 3))
     x**(-3/2)
 
 
@@ -136,22 +145,63 @@ def root(arg, n):
     >>> [ RootOf(x**4-1,i) for i in (0,1,2,3) ]
     [-1, 1, -I, I]
 
-
-    See also
+    See Also
     ========
-       L{sqrt}, L{RootOf}
 
-       External links
-       --------------
+    sympy.polys.rootoftools.RootOf
+    sympy.core.power.integer_nthroot
+    sqrt, real_root
 
-       * http://en.wikipedia.org/wiki/Square_root
-       * http://en.wikipedia.org/wiki/Nth_root
-       * http://en.wikipedia.org/wiki/Root_of_unity
-       * http://en.wikipedia.org/wiki/Principal_value
+    References
+    ==========
+
+    * http://en.wikipedia.org/wiki/Square_root
+    * http://en.wikipedia.org/wiki/real_root
+    * http://en.wikipedia.org/wiki/Root_of_unity
+    * http://en.wikipedia.org/wiki/Principal_value
+
     """
     n = sympify(n)
     return C.Pow(arg, 1/n)
 
+def real_root(arg, n=None):
+    """Return the real nth-root of arg if possible. If n is omitted then
+    all instances of -1**(1/odd) will be changed to -1.
+
+    Examples
+    ========
+
+    >>> from sympy import root, real_root, Rational
+    >>> from sympy.abc import x, n
+
+    >>> real_root(-8, 3)
+    -2
+    >>> root(-8, 3)
+    2*(-1)**(1/3)
+    >>> real_root(_)
+    -2
+
+    See Also
+    ========
+
+    sympy.polys.rootoftools.RootOf
+    sympy.core.power.integer_nthroot
+    root, sqrt
+    """
+    if n is not None:
+        n = int_tested(n)
+        rv = C.Pow(arg, Rational(1, n))
+        if n % 2 == 0:
+            return rv
+    else:
+        rv = sympify(arg)
+    n1pow = Transform(lambda x: S.NegativeOne,
+                      lambda x:
+                      x.is_Pow and
+                      x.base is S.NegativeOne and
+                      x.exp.is_Rational and
+                      x.exp.p == 1 and x.exp.q % 2)
+    return rv.xreplace(n1pow)
 
 ###############################################################################
 ############################# MINIMUM and MAXIMUM #############################
@@ -298,8 +348,8 @@ class Max(MinMaxBase, Application, Basic):
 
     Also, only comparable arguments are permitted.
 
-    Example
-    -------
+    Examples
+    ========
 
     >>> from sympy import Max, Symbol, oo
     >>> from sympy.abc import x, y
@@ -331,7 +381,7 @@ class Max(MinMaxBase, Application, Basic):
     oo
 
     Algorithm
-    ---------
+
     The task can be considered as searching of supremums in the
     directed complete partial orders [1]_.
 
@@ -354,13 +404,16 @@ class Max(MinMaxBase, Application, Basic):
        - if A > B > C then A > C
        - if A==B then B can be removed
 
-    [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order
-    [2] http://en.wikipedia.org/wiki/Lattice_(order)
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order
+    .. [2] http://en.wikipedia.org/wiki/Lattice_(order)
 
     See Also
-    --------
-    Min() : find minimum values
+    ========
 
+    Min : find minimum values
     """
     zero = S.Infinity
     identity = S.NegativeInfinity
@@ -384,8 +437,8 @@ class Min(MinMaxBase, Application, Basic):
     """
     Return, if possible, the minimum value of the list.
 
-    Example
-    -------
+    Examples
+    ========
 
     >>> from sympy import Min, Symbol, oo
     >>> from sympy.abc import x, y
@@ -408,8 +461,9 @@ class Min(MinMaxBase, Application, Basic):
     Min(n, -7)
 
     See Also
-    --------
-    Max() : find maximum values
+    ========
+
+    Max : find maximum values
     """
     zero = S.NegativeInfinity
     identity = S.Infinity

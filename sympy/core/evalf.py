@@ -79,7 +79,8 @@ def fastlog(x):
     to see if the mantissa is a multiple of 2 (in which case the
     result would be too large by 1).
 
-    Example::
+    Examples
+    ========
 
     >>> from sympy import log
     >>> from sympy.core.evalf import fastlog, bitcount
@@ -123,8 +124,10 @@ def get_abs(expr, prec, options):
         re, re_acc, im, im_acc = im, im_acc, re, re_acc
     if im:
         return libmp.mpc_abs((re, im), prec), None, re_acc, None
-    else:
+    elif re:
         return mpf_abs(re), None, re_acc, None
+    else:
+        return None, None, None, None
 
 def get_complex_part(expr, no, prec, options):
     """no = 0 for real part, no = 1 for imaginary part"""
@@ -133,7 +136,8 @@ def get_complex_part(expr, no, prec, options):
     while 1:
         res = evalf(expr, workprec, options)
         value, accuracy = res[no::2]
-        if (not value) or accuracy >= prec:
+        # XXX is the last one correct? Consider re((1+I)**2).n()
+        if (not value) or accuracy >= prec or -value[2] > prec:
             return value, None, accuracy, None
         workprec += max(30, 2**i)
         i += 1
@@ -610,16 +614,27 @@ def evalf_atan(v, prec, options):
         raise NotImplementedError
     return mpf_atan(xre, prec, round_nearest), None, prec, None
 
+def evalf_subs(prec, subs):
+    """ Change all Float entries in `subs` to have precision prec. """
+    newsubs = {}
+    for a, b in subs.items():
+        b = S(b)
+        if b.is_Float:
+            b = b._eval_evalf(prec)
+        newsubs[a] = b
+    return newsubs
+
 def evalf_piecewise(expr, prec, options):
     if 'subs' in options:
-        expr = expr.subs(options['subs'])
-        del options['subs']
+        expr = expr.subs(evalf_subs(prec, options['subs']))
+        newopts = options.copy()
+        del newopts['subs']
         if hasattr(expr,'func'):
-            return evalf(expr, prec, options)
+            return evalf(expr, prec, newopts)
         if type(expr) == float:
-            return evalf(C.Float(expr), prec, options)
+            return evalf(C.Float(expr), prec, newopts)
         if type(expr) == int:
-            return evalf(C.Integer(expr), prec, options)
+            return evalf(C.Integer(expr), prec, newopts)
 
     # We still have undefined symbols
     raise NotImplementedError
@@ -951,6 +966,7 @@ def _create_evalf_table():
     }
 
 def evalf(x, prec, options):
+    from sympy import re as re_, im as im_
     try:
         rf = evalf_table[x.func]
         r = rf(x, prec, options)
@@ -959,8 +975,23 @@ def evalf(x, prec, options):
         try:
             # Fall back to ordinary evalf if possible
             if 'subs' in options:
-                x = x.subs(options['subs'])
-            r = x._eval_evalf(prec)._mpf_, None, prec, None
+                x = x.subs(evalf_subs(prec, options['subs']))
+            re, im = x._eval_evalf(prec).as_real_imag()
+            if re.has(re_) or im.has(im_):
+                raise NotImplementedError
+            if re == 0:
+                re = None
+                reprec = None
+            else:
+                re = re._to_mpmath(prec, allow_ints=False)._mpf_
+                reprec = prec
+            if im == 0:
+                im = None
+                imprec = None
+            else:
+                im = im._to_mpmath(prec, allow_ints=False)._mpf_
+                imprec = prec
+            r = re, im, reprec, imprec
         except AttributeError:
             raise NotImplementedError
     if options.get("verbose"):
@@ -1030,7 +1061,7 @@ class EvalfMixin(object):
             try:
                 # If the result is numerical, normalize it
                 result = evalf(v, prec, options)
-            except:
+            except NotImplementedError:
                 # Probably contains symbols or unknown functions
                 return v
         re, im, re_acc, im_acc = result
@@ -1071,8 +1102,10 @@ class EvalfMixin(object):
                 if not re:
                     re = fzero
                 return make_mpc((re, im))
-            else:
+            elif re:
                 return make_mpf(re)
+            else:
+                return make_mpf(fzero)
         except NotImplementedError:
             v = self._eval_evalf(prec)
             if v is None:
@@ -1103,7 +1136,8 @@ def N(x, n=15, **options):
     Both .evalf() and N() are equivalent, use the one that you like better.
     See also the docstring of .evalf() for information on the options.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import Sum, Symbol, oo, N
     >>> from sympy.abc import k

@@ -6,17 +6,21 @@ from sympy.polys.polyerrors import PolynomialError
 ################################ DELTA FUNCTION ###############################
 ###############################################################################
 class DiracDelta(Function):
-    """DiracDelta function, and the derivatives.
-    DiracDelta function has the following properties:
-    1) diff(Heaviside(x),x) = DiracDelta(x)
-    2) integrate(DiracDelta(x-a)*f(x),(x,-oo,oo)) = f(a)
-       integrate(DiracDelta(x-a)*f(x),(x,a-e,a+e)) = f(a)
-    3) DiracDelta(x) = 0, for all x != 0
-    4) DiracDelta(g(x)) = Sum_i(DiracDelta(x-xi)/abs(g'(xi)))
-       Where xis are the roots of g
+    """
+    The DiracDelta function and its derivatives.
 
-    Derivatives of k order of DiracDelta have the following property:
-    5) DiracDelta(x,k) = 0, for all x!=0
+    DiracDelta function has the following properties:
+
+    1) ``diff(Heaviside(x),x) = DiracDelta(x)``
+    2) ``integrate(DiracDelta(x-a)*f(x),(x,-oo,oo)) = f(a)`` and
+       ``integrate(DiracDelta(x-a)*f(x),(x,a-e,a+e)) = f(a)``
+    3) ``DiracDelta(x) = 0`` for all ``x != 0``
+    4) ``DiracDelta(g(x)) = Sum_i(DiracDelta(x-x_i)/abs(g'(x_i)))``
+       Where ``x_i``-s are the roots of ``g``
+
+    Derivatives of ``k``-th order of DiracDelta have the following property:
+
+    5) ``DiracDelta(x,k) = 0``, for all ``x != 0``
 
 
     For more information, see:
@@ -60,7 +64,7 @@ class DiracDelta(Function):
            - a symbol
 
            Examples
-           --------
+           ========
 
            >>> from sympy import DiracDelta
            >>> from sympy.abc import x, y
@@ -108,7 +112,7 @@ class DiracDelta(Function):
            - a symbol
 
            Examples
-           --------
+           ========
 
            >>> from sympy import DiracDelta, cos
            >>> from sympy.abc import x, y
@@ -138,36 +142,41 @@ class DiracDelta(Function):
 ###############################################################################
 
 class Heaviside(Function):
-    """Heaviside Piecewise function.
-    Heaviside function has the following properties:
-    1) diff(Heaviside(x),x) = DiracDelta(x)
-                        ( 0, if x<0
-    2) Heaviside(x) = < [*]  1/2 if x==0
-                        ( 1, if x>0
-    [*]Regarding to the value at 0, Mathematica adopt the value H(0)=1,
-    and Maple H(0)=undefined
+    """Heaviside Piecewise function
 
-    I think is better to have H(0)=1/2, due to the following:
-    integrate(DiracDelta(x),x) = Heaviside(x)
-    integrate(DiracDelta(x),(x,-oo,oo)) = 1
+    Heaviside function has the following properties [*]_:
+
+    1) ``diff(Heaviside(x),x) = DiracDelta(x)``
+                        ``( 0, if x < 0``
+    2) ``Heaviside(x) = < [*]  1/2 if x==0``
+                        ``( 1, if x>0``
+
+    .. [*] Regarding to the value at 0, Mathematica defines ``H(0)=1``,
+           but Maple uses ``H(0)=undefined``
+
+    I think is better to have H(0)=1/2, due to the following::
+
+        integrate(DiracDelta(x),x) = Heaviside(x)
+        integrate(DiracDelta(x),(x,-oo,oo)) = 1
 
     and since DiracDelta is a symmetric function,
-    integrate(DiracDelta(x),(x,0,oo)) should be 1/2
-    in fact, that is what maple returns.
+    ``integrate(DiracDelta(x),(x,0,oo))`` should be 1/2 in fact, that is what
+    maple returns.
 
-    If we take Heaviside(0)=1/2, we would have
-    integrate(DiracDelta(x),(x,0,oo)) = Heaviside(oo)-Heaviside(0)=1-1/2= 1/2
+    If we take ``Heaviside(0)=1/2``, we would have
+    ``integrate(DiracDelta(x),(x,0,oo)) = Heaviside(oo)-Heaviside(0)=1-1/2= 1/2``
     and
-    integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo)=1/2-0= 1/2
+    ``integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo)=1/2-0= 1/2``
 
-    If we consider, instead Heaviside(0)=1, we would have
-    integrate(DiracDelta(x),(x,0,oo)) = Heaviside(oo)-Heaviside(0) = 0
+    If we consider, instead ``Heaviside(0)=1``, we would have
+    ``integrate(DiracDelta(x),(x,0,oo)) = Heaviside(oo)-Heaviside(0) = 0``
     and
-    integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo) = 1
+    ``integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo) = 1``
 
 
     For more information, see:
     http://mathworld.wolfram.com/HeavisideStepFunction.html
+
     """
     nargs = 1
 
@@ -189,4 +198,3 @@ class Heaviside(Function):
             return S.Half
         elif arg.is_positive:
             return S.One
-

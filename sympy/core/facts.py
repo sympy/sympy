@@ -232,7 +232,7 @@ def split_rules_tt_tf_ft_ff(rules):
 
        and also rewrite them to be free of not-names
 
-       Example
+       Examples
        -------
 
        'a' -> ['b', '!c']
@@ -351,7 +351,7 @@ class Prover(object):
         # this is the core of processing
         try:
             self._process_rule(a, b)
-        except TautologyDetected, t:
+        except TautologyDetected:
             pass
 
     def _process_rule(self, a, b):

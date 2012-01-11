@@ -1,16 +1,16 @@
 from __future__ import division
-from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,
-    Function, GoldenRatio, I, Integer, Integral, Interval, Lambda, Limit, log,
-    Matrix, nan, O, oo, pi, Rational, Float, Rel, S, sin, SparseMatrix, sqrt,
-    summation, Sum, Symbol, symbols, Wild, WildFunction, zeta, zoo,
-    Dummy, Dict)
+from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
+    factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
+    Interval, Lambda, Limit, log, Matrix, nan, O, oo, pi, Rational, Float, Rel,
+    S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
+    WildFunction, zeta, zoo, Dummy, Dict)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner
 from sympy.statistics.distributions import Normal, Sample, Uniform
 from sympy.geometry import Point, Circle
 
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 
@@ -86,6 +86,10 @@ def test_factorial():
     assert str(factorial(7)) == "5040"
     assert str(factorial(n)) == "n!"
     assert str(factorial(2*n)) == "(2*n)!"
+    assert str(factorial(factorial(n))) == '(n!)!'
+    assert str(factorial(factorial2(n))) == '(n!!)!'
+    assert str(factorial2(factorial(n))) == '(n!)!!'
+    assert str(factorial2(factorial2(n))) == '(n!!)!!'
 
 def test_Function():
     f = Function('f')
@@ -108,7 +112,7 @@ def test_ImaginaryUnit():
 
 def test_Infinity():
     assert str(oo) == "oo"
-    assert str(I * oo) == "oo*I"
+    assert str(oo*I) == "oo*I"
 
 def test_Integer():
     assert str(Integer(-1)) == "-1"
@@ -228,6 +232,7 @@ def test_Pow():
     assert str(x**Rational(1, 3)) == "x**(1/3)"
     assert str(1/x**Rational(1, 3)) == "x**(-1/3)"
     assert str(sqrt(sqrt(x))) == "x**(1/4)"
+    assert str(x**-1.0) == '1/x'
 
 def test_sqrt():
     assert str(sqrt(x)) == "sqrt(x)"
@@ -404,7 +409,7 @@ def test_sstrrepr():
     assert sstrrepr(e)  == "['a', 'b', 'c', x]"
 
 def test_infinity():
-    assert sstr(I*oo) == "oo*I"
+    assert sstr(oo*I) == "oo*I"
 
 def test_full_prec():
     assert sstr(S("0.3"), full_prec=True) == "0.300000000000000"

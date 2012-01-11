@@ -1,4 +1,4 @@
-from matexpr import MatrixExpr, ShapeError
+from matexpr import MatrixExpr
 from sympy import Basic
 
 class Transpose(MatrixExpr):

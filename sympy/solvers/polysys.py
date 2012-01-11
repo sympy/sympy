@@ -14,8 +14,8 @@ def solve_poly_system(seq, *gens, **args):
     """
     Solve a system of polynomial equations.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy import solve_poly_system
     >>> from sympy.abc import x, y
@@ -190,8 +190,8 @@ def solve_triangulated(polys, *gens, **args):
     domain and then by iteratively computing polynomial factorizations in
     appropriately constructed algebraic extensions of the ground domain.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.solvers.polysys import solve_triangulated
     >>> from sympy.abc import x, y, z
@@ -204,7 +204,7 @@ def solve_triangulated(polys, *gens, **args):
     References
     ==========
 
-    .. [Gianni89] Patrizia Gianni, Teo Mora, Algebraic Solution of System of
+    1. Patrizia Gianni, Teo Mora, Algebraic Solution of System of
     Polynomial Equations using Groebner Bases, AAECC-5 on Applied Algebra,
     Algebraic Algorithms and Error-Correcting Codes, LNCS 356 247--257, 1989
 

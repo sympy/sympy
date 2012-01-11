@@ -45,6 +45,9 @@ def test_gamma():
     assert expand_func(gamma(x - Rational(1, 2))) == \
         gamma(Rational(1, 2) + x)/(x - Rational(1, 2))
 
+    # Test a bug:
+    assert expand_func(gamma(x + Rational(3, 4))) == gamma(x + Rational(3, 4))
+
 def test_gamma_series():
     assert gamma(x + 1).series(x, 0, 3) == \
         1 - x*EulerGamma + x**2*EulerGamma**2/2 + pi**2*x**2/12 + O(x**3)
@@ -54,8 +57,17 @@ def test_gamma_series():
         x**2*polygamma(2, 1)/6 + EulerGamma**3*x**2/6 - EulerGamma**2*x**2/2 \
         - pi**2*x**2/12 - x**2 + O(x**3)
 
+def tn_branch(s, func):
+    from sympy import I, pi, exp_polar
+    from random import uniform
+    c = uniform(1, 5)
+    expr = func(s, c*exp_polar(I*pi)) - func(s, c*exp_polar(-I*pi))
+    eps = 1e-15
+    expr2 = func(s + eps, -c + eps*I) - func(s + eps, -c - eps*I)
+    return abs(expr.n() - expr2.n()).n() < 1e-10
+
 def test_lowergamma():
-    from sympy import meijerg
+    from sympy import meijerg, exp_polar, I
     assert lowergamma(x, y).diff(y) == y**(x-1)*exp(-y)
     assert td(lowergamma(randcplx(), y), y)
     assert lowergamma(x, y).diff(x) == \
@@ -71,8 +83,20 @@ def test_lowergamma():
     assert tn(lowergamma(S.Half - 3, x, evaluate=False),
               lowergamma(S.Half - 3, x), x)
 
+    assert lowergamma(x, y).rewrite(uppergamma) == gamma(x) - uppergamma(x, y)
+
+    assert tn_branch(-3, lowergamma)
+    assert tn_branch(-4, lowergamma)
+    assert tn_branch(S(1)/3, lowergamma)
+    assert tn_branch(pi, lowergamma)
+    assert lowergamma(3, exp_polar(4*pi*I)*x) == lowergamma(3, x)
+    assert lowergamma(y, exp_polar(5*pi*I)*x) == \
+           exp(4*I*pi*y)*lowergamma(y, x*exp_polar(pi*I))
+    assert lowergamma(-2, exp_polar(5*pi*I)*x) == \
+           lowergamma(-2, x*exp_polar(I*pi)) + 2*pi*I
+
 def test_uppergamma():
-    from sympy import meijerg
+    from sympy import meijerg, exp_polar, I
     assert uppergamma(4, 0) == 6
     assert uppergamma(x, y).diff(y) == -y**(x-1)*exp(-y)
     assert td(uppergamma(randcplx(), y), y)
@@ -88,6 +112,18 @@ def test_uppergamma():
               uppergamma(S.Half + 3, x), x)
     assert tn(uppergamma(S.Half - 3, x, evaluate=False),
               uppergamma(S.Half - 3, x), x)
+
+    assert uppergamma(x, y).rewrite(lowergamma) == gamma(x) - lowergamma(x, y)
+
+    assert tn_branch(-3, uppergamma)
+    assert tn_branch(-4, uppergamma)
+    assert tn_branch(S(1)/3, uppergamma)
+    assert tn_branch(pi, uppergamma)
+    assert uppergamma(3, exp_polar(4*pi*I)*x) == uppergamma(3, x)
+    assert uppergamma(y, exp_polar(5*pi*I)*x) == \
+           exp(4*I*pi*y)*uppergamma(y, x*exp_polar(pi*I)) + gamma(y)*(1-exp(4*pi*I*y))
+    assert uppergamma(-2, exp_polar(5*pi*I)*x) == \
+           uppergamma(-2, x*exp_polar(I*pi)) - 2*pi*I
 
 def test_polygamma():
 

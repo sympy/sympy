@@ -55,12 +55,15 @@ class CCodePrinter(CodePrinter):
         return "%s;" % codestring
 
     def doprint(self, expr, assign_to=None):
+        """
+        Actually format the expression as C code.
+        """
 
         if isinstance(assign_to, basestring):
             assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("CCodePrinter cannot assign to object of type %s"%
-                    type(result_variable))
+                    type(assign_to))
 
         # keep a set of expressions that are not strictly translatable to C
         # and number constants that must be declared and initialized
@@ -120,7 +123,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
-        if expr.exp is S.NegativeOne:
+        if expr.exp == -1:
             return '1.0/%s'%(self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             return 'sqrt(%s)' % self._print(expr.base)
@@ -197,8 +200,8 @@ class CCodePrinter(CodePrinter):
         """Accepts a string of code or a list of code lines"""
 
         if isinstance(code, basestring):
-           code_lines = self.indent_code(code.splitlines(True))
-           return ''.join(code_lines)
+            code_lines = self.indent_code(code.splitlines(True))
+            return ''.join(code_lines)
 
         tab = "   "
         inc_token = ('{', '(', '{\n', '(\n')
@@ -224,20 +227,26 @@ class CCodePrinter(CodePrinter):
 def ccode(expr, assign_to=None, **settings):
     r"""Converts an expr to a string of c code
 
-        Arguments:
-          expr  --  a sympy expression to be converted
+        Parameters
+        ==========
 
-        Optional arguments:
-          precision  --  the precision for numbers such as pi [default=15]
-          user_functions  --  A dictionary where keys are FunctionClass instances
-                              and values are there string representations.
-                              Alternatively, the dictionary value can be a list
-                              of tuples i.e. [(argument_test, cfunction_string)].
-                              See below for examples.
-          human  --  If True, the result is a single string that may contain
-                     some constant declarations for the number symbols. If
-                     False, the same information is returned in a more
-                     programmer-friendly data structure.
+        expr : sympy.core.Expr
+            a sympy expression to be converted
+        precision : optional
+            the precision for numbers such as pi [default=15]
+        user_functions : optional
+            A dictionary where keys are FunctionClass instances and values
+            are there string representations.  Alternatively, the
+            dictionary value can be a list of tuples i.e. [(argument_test,
+            cfunction_string)].  See below for examples.
+        human : optional
+            If True, the result is a single string that may contain some
+            constant declarations for the number symbols. If False, the
+            same information is returned in a more programmer-friendly
+            data structure.
+
+        Examples
+        ========
 
         >>> from sympy import ccode, symbols, Rational, sin
         >>> x, tau = symbols(["x", "tau"])

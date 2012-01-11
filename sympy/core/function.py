@@ -17,7 +17,9 @@ There are two types of functions:
    works in sympy core, but needs to be ported back to SymPy.
 
 
-Example:
+    Examples
+    ========
+
     >>> import sympy
     >>> f = sympy.Function("f")
     >>> from sympy.abc import x
@@ -37,9 +39,9 @@ from expr import Expr, AtomicExpr
 from decorators import _sympifyit, deprecated
 from compatibility import iterable,is_sequence
 from cache import cacheit
-from numbers import Rational
+from numbers import Rational, Float
 
-from sympy.core.containers import Tuple
+from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
 
@@ -111,7 +113,7 @@ class Application(Basic):
         (possible of some other class), or if the class cls should be
         unmodified, return None.
 
-        Example of eval() for the function "sign"
+        Examples of eval() for the function "sign"
         ---------------------------------------------
 
         @classmethod
@@ -180,10 +182,19 @@ class Function(Application, Expr):
             return UndefinedFunction(*args)
 
         if cls.nargs is not None:
-            if (isinstance(cls.nargs, tuple) and len(args) not in cls.nargs) \
-               or (not isinstance(cls.nargs, tuple) and cls.nargs != len(args)):
-               raise ValueError('Function %s expects %s argument(s), got %s.' % (
-                                 cls, cls.nargs, len(args)))
+            if isinstance(cls.nargs, tuple):
+                nargs = cls.nargs
+            else:
+                nargs = (cls.nargs,)
+
+            n = len(args)
+
+            if n not in nargs:
+                # XXX: exception message must be in exactly this format to make it work with
+                # NumPy's functions like vectorize(). Ideal solution would be just to attach
+                # metadata to the exception and change NumPy to take advantage of this.
+                raise TypeError('%(name)s takes exactly %(args)s argument%(plural)s (%(given)s given)' %
+                    {'name': cls, 'args': cls.nargs, 'plural': 's'*(n != 1), 'given': n})
 
         args = map(sympify, args)
         evaluate = options.pop('evaluate', True)
@@ -241,6 +252,9 @@ class Function(Application, Expr):
 
     @property
     def is_commutative(self):
+        """
+        Returns whether the functon is commutative.
+        """
         if all(getattr(t, 'is_commutative') for t in self.args):
             return True
         else:
@@ -312,6 +326,9 @@ class Function(Application, Expr):
         return r
 
     def as_base_exp(self):
+        """
+        Returns the method as the 2-tuple (base, exponent).
+        """
         return self, S.One
 
     def _eval_aseries(self, n, args0, x, logx):
@@ -328,7 +345,8 @@ class Function(Application, Expr):
         """
         This function does compute series for multivariate functions,
         but the expansion is always in terms of *one* variable.
-        Examples:
+        Examples
+        ========
 
         >>> from sympy import atan2, O
         >>> from sympy.abc import x, y
@@ -351,11 +369,11 @@ functions are not supported.')
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_bounded == False for t in args0):
-            from sympy import Dummy, oo, zoo, nan
+            from sympy import oo, zoo, nan
             a = [t.compute_leading_term(x, logx=logx) for t in args]
             a0 = [t.limit(x, 0) for t in a]
             if any ([t.has(oo, -oo, zoo, nan) for t in a0]):
-               return self._eval_aseries(n, args0, x, logx)._eval_nseries(x, n, logx)
+                return self._eval_aseries(n, args0, x, logx)._eval_nseries(x, n, logx)
             # Careful: the argument goes to oo, but only logarithmically so. We
             # are supposed to do a power series expansion "around the
             # logarithmic term". e.g.
@@ -532,6 +550,9 @@ functions are not supported.')
         return self.func(*args)
 
     def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of the function.
+        """
         if self.nargs is not None:
             if isinstance(self.nargs, tuple):
                 nargs = self.nargs[-1]
@@ -599,12 +620,7 @@ class WildFunction(Function, AtomicExpr):
         obj.name = name
         return obj
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
-        if self in repl_dict:
-            if repl_dict[self] == expr:
-                return repl_dict
-            else:
-                return None
+    def matches(self, expr, repl_dict={}):
         if self.nargs is not None:
             if not hasattr(expr,'nargs') or self.nargs != expr.nargs:
                 return None
@@ -626,8 +642,7 @@ class Derivative(Expr):
     method internally (not _eval_derivative); Derivative should be the only
     one to call _eval_derivative.
 
-    Ordering of variables
-    ---------------------
+    Ordering of variables:
 
     If evaluate is set to True and the expression can not be evaluated, the
     list of differentiation symbols will be sorted, that is, the expression is
@@ -636,8 +651,7 @@ class Derivative(Expr):
     commute, but Symbol and non-Symbol derivatives don't commute with each
     other.
 
-    Derivative wrt non-Symbols
-    --------------------------
+    Derivative wrt non-Symbols:
 
     This class also allows derivatives wrt non-Symbols that have _diff_wrt
     set to True, such as Function and Derivative. When a derivative wrt a non-
@@ -1070,14 +1084,6 @@ class Derivative(Expr):
             return Subs(self, old, new)
         return Derivative(*map(lambda x: x._eval_subs(old, new), self.args))
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
-        if self in repl_dict:
-            if repl_dict[self] == expr:
-                return repl_dict
-        elif isinstance(expr, Derivative):
-            if len(expr.variables) == len(self.variables):
-                return Expr.matches(self, expr, repl_dict, evaluate)
-
     def _eval_lseries(self, x):
         dx = self.args[1:]
         for term in self.args[0].lseries(x):
@@ -1137,7 +1143,7 @@ class Lambda(Expr):
 
         #use dummy variables internally, just to be sure
         new_variables = [C.Dummy(arg.name) for arg in variables]
-        expr = sympify(expr).subs(tuple(zip(variables, new_variables)))
+        expr = sympify(expr).xreplace(dict(zip(variables, new_variables)))
 
         obj = Expr.__new__(cls, Tuple(*new_variables), expr)
         return obj
@@ -1164,7 +1170,7 @@ class Lambda(Expr):
     def __call__(self, *args):
         if len(args) != self.nargs:
             raise TypeError("%s takes %d arguments (%d given)" % (self, self.nargs, len(args)))
-        return self.expr.subs(tuple(zip(self.variables, args)))
+        return self.expr.xreplace(dict(zip(self.variables, args)))
 
     def __eq__(self, other):
         if not isinstance(other, Lambda):
@@ -1174,7 +1180,7 @@ class Lambda(Expr):
 
         selfexpr = self.args[1]
         otherexpr = other.args[1]
-        otherexpr = otherexpr.subs(tuple(zip(other.args[0], self.args[0])))
+        otherexpr = otherexpr.xreplace(dict(zip(other.args[0], self.args[0])))
         return selfexpr == otherexpr
 
     def __ne__(self, other):
@@ -1361,7 +1367,8 @@ def diff(f, *symbols, **kwargs):
     that if there are 0 symbols (such as diff(f(x), x, 0), then the result will
     be the function (the zeroth derivative), even if evaluate=False.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import sin, cos, Function, diff
     >>> from sympy.abc import x, y
@@ -1517,7 +1524,8 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     the expression might not be fully distributed.  The solution is to expand
     with mul=False first, then run expand_mul if you need further expansion.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import expand_log, expand, expand_mul
     >>> x, y, z = symbols('x,y,z', positive=True)
@@ -1555,7 +1563,19 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     >>> expand_mul(_)
     x*y**2 + 2*x*y*z + x*z**2
 
+    >>> expand((x + y)*y/x)
+    y + y**2/x
+
+    The parts of a rational expression can be targeted, too:
+
+    >>> expand((x + y)*y/x/(x + 1), frac=True)
+    (x*y + y**2)/(x**2 + x)
+    >>> expand((x + y)*y/x/(x + 1), numer=True)
+    (x*y + y**2)/(x*(x + 1))
+    >>> expand((x + y)*y/x/(x + 1), denom=True)
+    y*(x + y)/(x**2 + x)
     """
+    # don't modify this; modify the Expr.expand method
     hints['power_base'] = power_base
     hints['power_exp'] = power_exp
     hints['mul'] = mul
@@ -1571,7 +1591,8 @@ def expand_mul(expr, deep=True):
     Wrapper around expand that only uses the mul hint.  See the expand
     docstring for more information.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import symbols, expand_mul, exp, log
     >>> x, y = symbols('x,y', positive=True)
@@ -1587,7 +1608,8 @@ def expand_multinomial(expr, deep=True):
     Wrapper around expand that only uses the multinomial hint.  See the expand
     docstring for more information.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import symbols, expand_multinomial, exp
     >>> x, y = symbols('x y', positive=True)
@@ -1604,7 +1626,8 @@ def expand_log(expr, deep=True):
     Wrapper around expand that only uses the log hint.  See the expand
     docstring for more information.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import symbols, expand_log, exp, log
     >>> x, y = symbols('x,y', positive=True)
@@ -1620,7 +1643,8 @@ def expand_func(expr, deep=True):
     Wrapper around expand that only uses the func hint.  See the expand
     docstring for more information.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import expand_func, gamma
     >>> from sympy.abc import x
@@ -1636,7 +1660,8 @@ def expand_trig(expr, deep=True):
     Wrapper around expand that only uses the trig hint.  See the expand
     docstring for more information.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import expand_trig, sin, cos
     >>> from sympy.abc import x, y
@@ -1652,7 +1677,8 @@ def expand_complex(expr, deep=True):
     Wrapper around expand that only uses the complex hint.  See the expand
     docstring for more information.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import expand_complex, I, im, re
     >>> from sympy.abc import z
@@ -1677,7 +1703,8 @@ def count_ops(expr, visual=False):
     If expr is an iterable, the sum of the op counts of the
     items will be returned.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.abc import a, b, x, y
     >>> from sympy import sin, count_ops
@@ -1804,9 +1831,8 @@ def count_ops(expr, visual=False):
 
                 o = C.Symbol(a.func.__name__.upper())
                 # count the args
-                if (a.is_Mul or
-                    isinstance(a, C.LatticeOp)):
-                   ops.append(o*(len(a.args) - 1))
+                if (a.is_Mul or isinstance(a, C.LatticeOp)):
+                    ops.append(o*(len(a.args) - 1))
                 else:
                     ops.append(o)
             args.extend(a.args)
@@ -1837,5 +1863,66 @@ def count_ops(expr, visual=False):
 
     return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
 
+def nfloat(expr, n=15, exponent=False):
+    """Make all Rationals in expr Floats except if they are exponents
+    (unless the exponents flag is set to True).
+
+    Examples
+    ========
+
+    >>> from sympy.core.function import nfloat
+    >>> from sympy.abc import x, y
+    >>> from sympy import cos, pi, S, sqrt
+    >>> nfloat(x**4 + x/2 + cos(pi/3) + 1 + sqrt(y))
+    x**4 + 0.5*x + sqrt(y) + 1.5
+    >>> nfloat(x**4 + sqrt(y), exponent=True)
+    x**4.0 + y**0.5
+
+    """
+
+    if iterable(expr, exclude=basestring):
+        if isinstance(expr, (dict, Dict)):
+            return type(expr)([(k, nfloat(v, n, exponent)) for k, v in expr.iteritems()])
+        return type(expr)([nfloat(a, n, exponent) for a in expr])
+    elif not isinstance(expr, Expr):
+        return float(expr)
+    elif expr.is_Float:
+        return expr.n(n)
+    elif expr.is_Integer:
+        return Float(float(expr)).n(n)
+    elif expr.is_Rational:
+        return Float(expr).n(n)
+
+    if not exponent:
+        pows = [p for p in expr.atoms(Pow) if p.exp.is_Rational and p.exp.q != 1]
+        pows.sort(key=count_ops)
+        pows.reverse()
+        rats = {}
+        for p in pows:
+            if p.exp not in rats:
+                e = Dummy()
+                rats[p.exp] = e
+        reps = [(p, Pow(p.base, rats[p.exp], evaluate=False)) for p in pows]
+        rv = expr.subs(reps).n(n).subs([(v, k) for k, v in rats.iteritems()])
+    else:
+        expr = expr.n(n)
+        pows = [p for p in expr.atoms(Pow) if p.exp.is_Integer]
+        pows.sort(key=count_ops)
+        pows.reverse()
+        ints = {}
+        for p in pows:
+            if p.exp not in ints:
+                ints[p.exp] = Float(float(p.exp))
+        reps = [(p, p.base**ints[p.exp]) for p in pows]
+        rv = expr.subs(reps)
+
+    funcs = [f for f in rv.atoms(Function)]
+    funcs.sort(key=count_ops)
+    funcs.reverse()
+    return rv.subs([(f, f.func(*[nfloat(a, n, exponent)
+                     for a in f.args])) for f in funcs])
+
 from sympify import sympify
-from add    import Add
+from add import Add
+from power import Pow
+from sympy.core.symbol import Dummy

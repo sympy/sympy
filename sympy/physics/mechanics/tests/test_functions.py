@@ -1,8 +1,9 @@
-from sympy import symbols, Symbol, sin, cos
+from sympy import symbols, sin, cos
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols, express,
                                      ReferenceFrame, inertia,
-                                     kinematic_equations)
+                                     kinematic_equations, Vector)
 
+Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
 N = ReferenceFrame('N')
 A = N.orientnew('A', 'Axis', [q1, N.z])

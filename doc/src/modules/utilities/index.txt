@@ -1,7 +1,10 @@
+=========
 Utilities
 =========
 
-This module contains some general purpose utilities that are used across SymPy
+.. TODO: add compilef.txt and benchmarking.txt when they're fixed
+
+.. automodule:: sympy.utilities
 
 Contents:
 
@@ -10,4 +13,16 @@ Contents:
 
    autowrap.txt
    codegen.txt
+   cythonutils.txt
+   decorator.txt
    iterables.txt
+   lambdify.txt
+   memoization.txt
+   misc.txt
+   pkgdata.txt
+   pytest.txt
+   randtest.txt
+   runtests.txt
+   source.txt
+   timeutils.txt
+

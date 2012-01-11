@@ -3,8 +3,7 @@
 Todo:
 * Optimize printing of large circuits.
 * Get this to work with single gates.
-* Do a better job checking the form of circuits to make sure it is a Mul of
-  Gates.
+* Do a better job checking the form of circuits to make sure it is a Mul of Gates.
 * Get multi-target gates plotting.
 * Get initial and final states to plot.
 * Get measurements to plot. Might need to rethink measurement as a gate issue.
@@ -13,8 +12,8 @@ Todo:
 """
 
 from sympy import Mul
-from sympy.physics.quantum.gate import Gate
 from sympy.external import import_module
+from sympy.physics.quantum.gate import Gate
 
 __all__ = [
     'CircuitPlot',
@@ -205,6 +204,7 @@ else:
 
         Parameters
         ==========
+
         c : circuit
             The circuit to plot. Should be a product of Gate instances.
         nqubits : int

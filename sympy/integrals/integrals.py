@@ -1,5 +1,5 @@
 from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
-                        oo, Tuple, Dummy, Equality, Interval)
+                        oo, Tuple, Interval)
 
 from sympy.core.symbol import Dummy
 from sympy.core.compatibility import is_sequence
@@ -7,44 +7,17 @@ from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
 from sympy.integrals.risch import heurisch
+from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
 from sympy.utilities import xthreaded, flatten
 from sympy.polys import Poly, PolynomialError
 from sympy.solvers import solve
-from sympy.functions import Piecewise, sign, sqrt
+from sympy.functions import Piecewise, sqrt, sign
 from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
 
-def _free_symbols(function, limits):
-    """
-    Return the symbols that will exist when the function is evaluated as
-    an Integral or a Sum. This is useful if one is trying to determine
-    whether the result is dependent on a certain symbol or not.
-
-    This is written as a private function so it can be used from Sum as well
-    as from Integral.
-    """
-    if function.is_zero:
-        return set()
-    isyms = function.free_symbols
-    for xab in limits:
-        if len(xab) == 1:
-            isyms.add(xab[0])
-            continue
-        # take out the target symbol
-        if xab[0] in isyms:
-            isyms.remove(xab[0])
-        if len(xab) == 3 and xab[1] == xab[2]:
-            # if two limits are the same the integral is 0
-            # and there are no symbols
-            return set()
-        # add in the new symbols
-        for i in xab[1:]:
-            isyms.update(i.free_symbols)
-    return isyms
-
 def _process_limits(*symbols):
-    """Convert the symbols-related limits into propert limits,
+    """Convert the symbols-related limits into proper limits,
     storing them as Tuple(symbol, lower, upper). The sign of
     the function is also returned when the upper limit is missing
     so (x, 1, None) becomes (x, None, 1) and the sign is changed.
@@ -127,10 +100,34 @@ class Integral(Expr):
 
     @property
     def function(self):
+        """Return the function to be integrated.
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x
+        >>> Integral(x**2, (x,)).function
+        x**2
+
+        See Also
+        ========
+
+        limits, variables, free_symbols
+        """
         return self._args[0]
 
     @property
     def limits(self):
+        """Return the limits of integration.
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, i
+        >>> Integral(x**i, (i, 1, 3)).limits
+        ((i, 1, 3),)
+
+        See Also
+        ========
+
+        function, variables, free_symbols
+        """
         return self._args[1:]
 
     @property
@@ -141,6 +138,13 @@ class Integral(Expr):
         >>> from sympy.abc import x, i
         >>> Integral(x**i, (i, 1, 3)).variables
         [i]
+
+        See Also
+        ========
+
+        function, limits, free_symbols
+        as_dummy : Replace integration variables with dummy ones
+        transform : Perform mapping on the integration variable
         """
         return [l[0] for l in self.limits]
 
@@ -149,15 +153,38 @@ class Integral(Expr):
         """
         This method returns the symbols that will exist when the
         integral is evaluated. This is useful if one is trying to
-        determine whether an integral is dependent on a certain
+        determine whether an integral depends on a certain
         symbol or not.
 
         >>> from sympy import Integral
         >>> from sympy.abc import x, y
         >>> Integral(x, (x, y, 1)).free_symbols
         set([y])
-        """
-        return _free_symbols(self.function, self.limits)
+
+        See Also
+        ========
+
+        function, limits, variables
+       """
+        function, limits = self.function, self.limits
+        if function.is_zero:
+            return set()
+        isyms = function.free_symbols
+        for xab in limits:
+            if len(xab) == 1:
+                isyms.add(xab[0])
+                continue
+            # take out the target symbol
+            if xab[0] in isyms:
+                isyms.remove(xab[0])
+            if len(xab) == 3 and xab[1] == xab[2]:
+                # if two limits are the same the integral is 0
+                # and there are no symbols
+                return set()
+            # add in the new symbols
+            for i in xab[1:]:
+                isyms.update(i.free_symbols)
+        return isyms
 
     @property
     def is_zero(self):
@@ -167,6 +194,23 @@ class Integral(Expr):
 
         This is a very naive and quick test, not intended to check for special
         patterns like Integral(sin(m*x)*cos(n*x), (x, 0, 2*pi)) == 0.
+
+        Examples
+        ========
+
+            >>> from sympy import Integral
+            >>> from sympy.abc import x, y, z
+            >>> Integral(1, (x, 1, 1)).is_zero
+            True
+            >>> Integral(0, (x, y, z)).is_zero
+            True
+            >>> Integral(1, (x, 1, 2)).is_zero
+            False
+
+        See Also
+        ========
+
+        is_number
         """
         if (self.function.is_zero or
             any(len(xab) == 3 and xab[1] == xab[2] for xab in self.limits)):
@@ -210,6 +254,11 @@ class Integral(Expr):
         True
         >>> Integral(1, x, (x, 1, 2)).is_number
         True
+
+        See Also
+        ========
+
+        is_zero
         """
 
         integrand, limits = self.function, self.limits
@@ -249,6 +298,11 @@ class Integral(Expr):
         output of this function will show which symbols cannot be
         changed by subs(), those with an underscore prefix.
 
+        See Also
+        ========
+
+        variables : Lists the integration variables
+        transform : Perform mapping on the integration variable
         """
         reps = {}
         f = self.function
@@ -281,6 +335,22 @@ class Integral(Expr):
 
         The mapping must be uniquely invertible (e.g. a linear or linear
         fractional transformation).
+
+        Examples
+        ========
+
+            >>> from sympy.abc import a, b, c
+            >>> from sympy import Integral, S
+            >>> Integral(a*b + 2 + c, (c, -1, S(1)/2)).transform(a, c*2)
+            Integral(a*b + c + 2, (c, -1, 1/2))
+            >>> Integral(a**2 + 1, (a, -1, 2)).transform(a, 1 + 2*a)
+            Integral(2*(2*a + 1)**2 + 2, (a, -1, 1/2))
+
+        See Also
+        ========
+
+        variables : Lists the integration variables
+        as_dummy : Replace integration variables with dummy ones
         """
         if x not in self.variables:
             return self
@@ -295,9 +365,11 @@ class Integral(Expr):
             mapping, inverse_mapping = inverse_mapping, mapping
         function = function.subs(x, mapping) * mapping.diff(x)
 
-        def calc_limit(a, b):
-            """replace x with a, using subs if possible, otherwise limit
-            where sign of b is considered"""
+        def _calc_limit(a, b):
+            """
+            replace x with a, using subs if possible, otherwise limit
+            where sign of b is considered
+            """
             wok = inverse_mapping.subs(x, a)
             if wok is S.NaN or wok.is_bounded is False and a.is_bounded:
                 return limit(sign(b)*inverse_mapping, x, a)
@@ -308,7 +380,7 @@ class Integral(Expr):
             sym = xab[0]
             if sym == x and len(xab) == 3:
                 a, b = xab[1:]
-                a, b = calc_limit(a, b), calc_limit(b, a)
+                a, b = _calc_limit(a, b), _calc_limit(b, a)
                 if a == b:
                     raise ValueError("The mapping must transform the "
                         "endpoints into separate points")
@@ -322,10 +394,31 @@ class Integral(Expr):
 
 
     def doit(self, **hints):
+        """
+        Perform the integration using any hints given.
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, i
+        >>> Integral(x**i, (i, 1, 3)).doit()
+        x**3/log(x) - x/log(x)
+
+        See Also
+        ========
+
+        sympy.integrals.trigonometry.trigintegrate
+        sympy.integrals.risch.heurisch
+        sympy.integrals.rationaltools.ratint
+        as_sum : Approximate the integral using a sum
+        """
         if not hints.get('integrals', True):
             return self
 
         deep = hints.get('deep', True)
+        meijerg = hints.get('meijerg', None)
+        conds = hints.get('conds', 'piecewise')
+        if conds not in ['separate', 'piecewise', 'none']:
+            raise ValueError('conds must be one of "separate", "piecewise", ' \
+                             '"none", got: %s' % conds)
 
         # check for the trivial case of equal upper and lower limits
         if self.is_zero:
@@ -361,7 +454,64 @@ class Integral(Expr):
                 ulj.update(uli)
                 continue
 
-            antideriv = self._eval_integral(function, xab[0])
+            # There are a number of tradeoffs in using the meijer g method.
+            # It can sometimes be a lot faster than other methods, and
+            # sometimes slower. And there are certain types of integrals for
+            # which it is more likely to work than others.
+            # These heuristics are incorporated in deciding what integration
+            # methods to try, in what order.
+            # See the integrate() docstring for details.
+            def try_meijerg(function, xab):
+                ret = None
+                if len(xab) == 3 and meijerg is not False:
+                    x, a, b = xab
+                    try:
+                        res = meijerint_definite(function, x, a, b)
+                    except NotImplementedError:
+                        from sympy.integrals.meijerint import _debug
+                        _debug('NotImplementedError from meijerint_definite')
+                        res = None
+                    if res is not None:
+                        f, cond = res
+                        if conds == 'piecewise':
+                            ret = Piecewise((f, cond),
+                                          (Integral(function, (x, a, b)), True))
+                        elif conds == 'separate':
+                            if len(self.limits) != 1:
+                                raise ValueError('conds=separate not supported in ' \
+                                                 'multiple integrals')
+                            ret = f, cond
+                        else:
+                            ret = f
+                return ret
+
+            meijerg1 = meijerg
+            if len(xab) == 3 and xab[1].is_real and xab[2].is_real \
+               and not function.is_Poly and \
+               (xab[1].has(oo, -oo) or xab[2].has(oo, -oo)):
+                ret = try_meijerg(function, xab)
+                if ret is not None:
+                    function = ret
+                    continue
+                else:
+                    meijerg1 = False
+
+            # If the special meijerg code did not succeed finding a definite
+            # integral, then the code using meijerint_indefinite will not either
+            # (it might find an antiderivative, but the answer is likely to be
+            #  nonsensical).
+            # Thus if we are requested to only use meijer g-function methods,
+            # we give up at this stage. Otherwise we just disable g-function
+            # methods.
+            if meijerg1 is False and meijerg is True:
+                antideriv = None
+            else:
+                antideriv = self._eval_integral(function, xab[0], meijerg1)
+                if antideriv is None and meijerg1 is True:
+                    ret = try_meijerg(function, xab)
+                    if ret is not None:
+                        function = ret
+                        continue
 
             if antideriv is None:
                 undone_limits.append(xab)
@@ -397,12 +547,11 @@ class Integral(Expr):
         return function
 
     def _eval_expand_basic(self, deep=True, **hints):
-        from sympy import flatten
         if not deep:
             return self
         else:
             return Integral(self.function.expand(deep=deep, **hints),\
-            flatten(*self.limits))
+            *self.limits)
 
     def _eval_derivative(self, sym):
         """Evaluate the derivative of the current Integral object by
@@ -477,7 +626,7 @@ class Integral(Expr):
             rv += Integral(arg, Tuple(x, a, b))
         return rv
 
-    def _eval_integral(self, f, x):
+    def _eval_integral(self, f, x, meijerg=None):
         """Calculate the anti-derivative to the function f(x).
 
         This is a powerful function that should in theory be able to integrate
@@ -523,7 +672,7 @@ class Integral(Expr):
         # will return a sympy expression instead of a Polynomial.
         #
         # see Polynomial for details.
-        if isinstance(f, Poly):
+        if isinstance(f, Poly) and not meijerg:
             return f.integrate(x)
 
         # Piecewise antiderivatives need to call special integrate.
@@ -537,7 +686,7 @@ class Integral(Expr):
         # try to convert to poly(x) and then integrate if successful (fast)
         poly = f.as_poly(x)
 
-        if poly is not None:
+        if poly is not None and not meijerg:
             return poly.integrate().as_expr()
 
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
@@ -549,7 +698,7 @@ class Integral(Expr):
             coeff, g = g.as_independent(x)
 
             # g(x) = const
-            if g is S.One:
+            if g is S.One and not meijerg:
                 parts.append(coeff*x)
                 continue
 
@@ -573,7 +722,7 @@ class Integral(Expr):
 
             #               c
             # g(x) = (a*x+b)
-            if g.is_Pow and not g.exp.has(x):
+            if g.is_Pow and not g.exp.has(x) and not meijerg:
                 a = Wild('a', exclude=[x])
                 b = Wild('b', exclude=[x])
 
@@ -591,30 +740,41 @@ class Integral(Expr):
             #        poly(x)
             # g(x) = -------
             #        poly(x)
-            if g.is_rational_function(x):
+            if g.is_rational_function(x) and not meijerg:
                 parts.append(coeff * ratint(g, x))
                 continue
 
-            # g(x) = Mul(trig)
-            h = trigintegrate(g, x)
-            if h is not None:
-                parts.append(coeff * h)
-                continue
+            if not meijerg:
+                # g(x) = Mul(trig)
+                h = trigintegrate(g, x)
+                if h is not None:
+                    parts.append(coeff * h)
+                    continue
 
-            # g(x) has at least a DiracDelta term
-            h = deltaintegrate(g, x)
-            if h is not None:
-                parts.append(coeff * h)
-                continue
+                # g(x) has at least a DiracDelta term
+                h = deltaintegrate(g, x)
+                if h is not None:
+                    parts.append(coeff * h)
+                    continue
 
-            # fall back to the more general algorithm
-            try:
-                h = heurisch(g, x, hints=[])
-            except PolynomialError:
-                # XXX: this exception means there is a bug in the
-                # implementation of heuristic Risch integration
-                # algorithm.
+            if not meijerg:
+                # fall back to the more general algorithm
+                try:
+                    h = heurisch(g, x, hints=[])
+                except PolynomialError:
+                    # XXX: this exception means there is a bug in the
+                    # implementation of heuristic Risch integration
+                    # algorithm.
+                    h = None
+            else:
                 h = None
+
+            if meijerg is not False and h is None:
+                # rewrite using G functions
+                h = meijerint_indefinite(g, x)
+                if h is not None:
+                    parts.append(coeff * h)
+                    continue
 
             # if we failed maybe it was because we had
             # a product that could have been expanded,
@@ -630,7 +790,7 @@ class Integral(Expr):
             if not h and len(args) == 1:
                 f = f.expand(mul=True, deep=False)
                 if f.is_Add:
-                    return self._eval_integral(f, x)
+                    return self._eval_integral(f, x, meijerg)
 
 
             if h is not None:
@@ -747,7 +907,8 @@ class Integral(Expr):
         the curve exactly in the middle of each interval (thus midpoint
         method). See [1] for more information.
 
-        Examples:
+        Examples
+        ========
 
             >>> from sympy import sqrt
             >>> from sympy.abc import x
@@ -768,7 +929,8 @@ class Integral(Expr):
         interval the function value is taken at the left hand side of the
         interval.
 
-        Examples:
+        Examples
+        ========
 
             >>> from sympy import sqrt
             >>> from sympy.abc import x
@@ -782,6 +944,10 @@ class Integral(Expr):
             >>> e.n()
             124.616199194723
 
+        See Also
+        ========
+
+        Integral.doit : Perform the integration using any hints
         """
 
         limits = self.limits
@@ -830,9 +996,59 @@ def integrate(*args, **kwargs):
        Also, if no var is specified at all, then the full anti-derivative of f is
        returned. This is equivalent to integrating f over all its variables.
 
-       **Examples**
+       Definite improper integrals often entail delicate convergence conditions.
+       Pass conds='piecewise', 'separate' or 'none' to have these returned,
+       respectively, as a Piecewise function, as a separate result (i.e. result
+       will be a tuple), or not at all (default is 'piecewise').
 
-       >>> from sympy import integrate, log
+       **Strategy**
+
+       SymPy uses various approaches to integration. One method is to find
+       an antiderivative for the integrand, and then use the fundamental theorem
+       of calculus. Various functions are implemented to integrate polynomial,
+       rational and trigonometric functions, and integrands containing DiracDelta
+       terms. There is also a (very successful, albeit somewhat slow) general
+       implementation of the heuristic risch algorithm.
+       See the docstring of Integral._eval_integral() for more details on computing
+       the antiderivative using algebraic methods.
+
+       Another family of strategies comes from re-writing the integrand in
+       terms of so-called Meijer G-functions. Indefinite integrals of a single
+       G-function can always be computed, and the definite integral of a
+       product of two G-functions can be computed from zero to infinity.
+       Various strategies are implemented to rewrite integrands as
+       G-functions, and use this information to compute integrals (see the
+       ``meijerint`` module).
+
+       In general, the algebraic methods work best for computing
+       antiderivatives of (possibly complicated) combinations of elementary
+       functions. The G-function methods work best for computing definite
+       integrals from zero to infinity of moderately complicated combinations
+       of special functions, or indefinite integrals of very simple
+       combinations of special functions.
+
+       The strategy employed by the integration code is as follows:
+
+       - If computing a definite integral, and both limits are real,
+         and at least one limit is +- oo, try the G-function method of
+         definite integration first.
+
+       - Try to find an antiderivative, using all available methods, ordered
+         by performance (that is try fastest method first, slowest last;
+         in particular polynomial integration is tried first, meijer g-functions
+         second to last, and heuristic risch last).
+
+       - If still not successful, try G-functions irrespective of the limits.
+
+       The option meijerg=True, False, None can be used to, respectively:
+       always use G-function methods and no others, never use G-function methods,
+       or use all available methods (in order as described above). It defailts
+       to None.
+
+       Examples
+       ========
+
+       >>> from sympy import integrate, log, exp, oo
        >>> from sympy.abc import a, x, y
 
        >>> integrate(x*y, x)
@@ -855,14 +1071,26 @@ def integrate(*args, **kwargs):
        Note that ``integrate(x)`` syntax is meant only for convenience
        in interactive sessions and should be avoided in library code.
 
-       See also the doctest of Integral._eval_integral(), which explains
-       thoroughly the strategy that SymPy uses for integration.
+       >>> integrate(x**a*exp(-x), (x, 0, oo)) # same as conds='piecewise'
+       Piecewise((gamma(a + 1), -re(a) < 1), (Integral(x**a*exp(-x), (x, 0, oo)), True))
 
+       >>> integrate(x**a*exp(-x), (x, 0, oo), conds='none')
+       gamma(a + 1)
+
+       >>> integrate(x**a*exp(-x), (x, 0, oo), conds='separate')
+       (gamma(a + 1), -re(a) < 1)
+
+       See Also
+       ========
+
+       Integral, Integral.doit
     """
+    meijerg = kwargs.pop('meijerg', None)
+    conds = kwargs.pop('conds', 'piecewise')
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
-        return integral.doit(deep = False)
+        return integral.doit(deep = False, meijerg = meijerg, conds = conds)
     else:
         return integral
 
@@ -874,13 +1102,17 @@ def line_integrate(field, curve, vars):
        Compute the line integral.
 
        Examples
-       --------
+       ========
        >>> from sympy import Curve, line_integrate, E, ln
        >>> from sympy.abc import x, y, t
        >>> C = Curve([E**t + 1, E**t - 1], (t, 0, ln(2)))
        >>> line_integrate(x + y, C, [x, y])
         3*sqrt(2)
 
+       See Also
+       ========
+
+       integrate, Integral
     """
     F = sympify(field)
     if not F:
