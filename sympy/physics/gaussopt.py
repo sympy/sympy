@@ -101,18 +101,62 @@ class RayTransferMatrix(Matrix):
 
     @property
     def A(self):
+        """
+        The A parameter of the Matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.gaussopt import RayTransferMatrix
+        >>> mat = RayTransferMatrix(1, 2, 3, 4)
+        >>> mat.A
+        1
+        """
         return self[0,0]
 
     @property
     def B(self):
+        """
+        The B parameter of the Matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.gaussopt import RayTransferMatrix
+        >>> mat = RayTransferMatrix(1, 2, 3, 4)
+        >>> mat.B
+        2
+        """
         return self[0,1]
 
     @property
     def C(self):
+        """
+        The C parameter of the Matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.gaussopt import RayTransferMatrix
+        >>> mat = RayTransferMatrix(1, 2, 3, 4)
+        >>> mat.C
+        3
+        """
         return self[1,0]
 
     @property
     def D(self):
+        """
+        The D parameter of the Matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.gaussopt import RayTransferMatrix
+        >>> mat = RayTransferMatrix(1, 2, 3, 4)
+        >>> mat.D
+        4
+        """
         return self[1,1]
 
 class FreeSpace(RayTransferMatrix):
@@ -295,12 +339,36 @@ class GeometricRay(Matrix):
 
     @property
     def height(self):
-        """The distance from the optical axis."""
+        """
+        The distance from the optical axis.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.gaussopt import GeometricRay
+        >>> from sympy import symbols
+        >>> h, angle = symbols('h, angle')
+        >>> gRay = GeometricRay(h, angle)
+        >>> gRay.height
+        h
+        """
         return self[0]
 
     @property
     def angle(self):
-        """The angle with the optical axis."""
+        """
+        The angle with the optical axis.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.gaussopt import GeometricRay
+        >>> from sympy import symbols
+        >>> h, angle = symbols('h, angle')
+        >>> gRay = GeometricRay(h, angle)
+        >>> gRay.angle
+        angle
+        """
         return self[1]
 
 
@@ -378,12 +446,32 @@ class BeamParameter(Expr):
 
     @property
     def q(self):
-        """The complex parameter representing the beam."""
+        """
+        The complex parameter representing the beam.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.gaussopt import BeamParameter
+        >>> p = BeamParameter(530e-9, 1, w=1e-3)
+        >>> p.q
+        1 + 1.88679245283019*I*pi
+        """
         return self.z + I*self.z_r
 
     @property
     def radius(self):
-        """The radius of curvature of the phase front."""
+        """
+        The radius of curvature of the phase front.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.gaussopt import BeamParameter
+        >>> p = BeamParameter(530e-9, 1, w=1e-3)
+        >>> p.radius
+        0.2809/pi**2 + 1
+        """
         return self.z*(1+(self.z/self.z_r)**2)
 
     @property
@@ -391,23 +479,70 @@ class BeamParameter(Expr):
         """
         The beam radius at 1/e^2 intensity.
 
-        See Also: BeamParameter.w_0
+        See Also
+        ========
+
+        w_0: minimal radius.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.gaussopt import BeamParameter
+        >>> p = BeamParameter(530e-9, 1, w=1e-3)
+        >>> p.w
+        0.001*sqrt(0.2809/pi**2 + 1)
         """
         return self.w_0*sqrt(1+(self.z/self.z_r)**2)
 
     @property
     def w_0(self):
-        """The beam waist (minimal radius)."""
+        """
+        The beam waist (minimal radius).
+
+
+        See Also
+        ========
+
+        w: beam radius at 1/e^2 intensity.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.gaussopt import BeamParameter
+        >>> p = BeamParameter(530e-9, 1, w=1e-3)
+        >>> p.w_0
+        0.00100000000000000
+        """
         return sqrt(self.z_r/pi*self.wavelen)
 
     @property
     def divergence(self):
-        """Half of the total angular spread."""
+        """
+        Half of the total angular spread.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.gaussopt import BeamParameter
+        >>> p = BeamParameter(530e-9, 1, w=1e-3)
+        >>> p.divergence
+        0.00053/pi
+        """
         return self.wavelen/pi/self.w_0
 
     @property
     def gouy(self):
-        """The Gouy phase."""
+        """
+        The Gouy phase.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.gaussopt import BeamParameter
+        >>> p = BeamParameter(530e-9, 1, w=1e-3)
+        >>> p.gouy
+        atan(0.53/pi)
+        """
         return atan2(self.z, self.z_r)
 
     @property
@@ -417,6 +552,14 @@ class BeamParameter(Expr):
 
         The gauss beam is a solution to the paraxial equation. For curvatures
         that are too great it is not a valid approximation.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.gaussopt import BeamParameter
+        >>> p = BeamParameter(530e-9, 1, w=1e-3)
+        >>> p.waist_approximation_limit
+        1.06e-6/pi
         """
         return 2*self.wavelen/pi
 

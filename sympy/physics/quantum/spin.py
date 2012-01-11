@@ -531,16 +531,16 @@ class Rotation(UnitaryOperator):
         >>> from sympy import pi
         >>> from sympy.physics.quantum.spin import Rotation
         >>> Rotation(pi, 0, pi/2)
-        'R'(pi,0,pi/2)
+        R(pi,0,pi/2)
 
     With symbolic Euler angles and calculating the inverse rotation operator:
 
         >>> from sympy import symbols
         >>> a, b, c = symbols('a b c')
         >>> Rotation(a, b, c)
-        'R'(a,b,c)
+        R(a,b,c)
         >>> Rotation(a, b, c).inverse()
-        'R'(-c,-b,-a)
+        R(-c,-b,-a)
 
 
     References
@@ -574,7 +574,7 @@ class Rotation(UnitaryOperator):
         return self.label[2]
 
     def _print_operator_name(self, printer, *args):
-        return printer._print('R', *args)
+        return 'R'
 
     def _print_operator_name_pretty(self, printer, *args):
         return prettyForm(u"\u211B" + u" ")
