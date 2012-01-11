@@ -11,12 +11,40 @@ See also:
 from sympy import Symbol, I
 
 def delta(i,j):
+    """
+    Returns 1 if i == j, else 0
+    Used in multiplication of pauli matrices
+
+    Examples
+    ========
+
+    >>> from sympy.physics.paulialgebra import delta
+    >>> delta(1, 1)
+    1
+    >>> delta(2, 3)
+    0
+    """
     if i==j:
         return 1
     else:
         return 0
 
 def epsilon(i,j,k):
+    """
+    Returns 1 if the set i,j,k is equal to (1,2,3), (2,3,1), or (3,1,2)
+    Returns -1 if the set i,j,k is equal to (1,3,2), (3,2,1), or (2,1,3)
+    Else 0
+    Used in the multiplication of pauli matrices
+
+    Examples
+    ========
+
+    >>> from sympy.physics.paulialgebra import epsilon
+    >>> epsilon(1, 2, 3)
+    1
+    >>> epsilon(1, 3, 2)
+    -1
+    """
     if (i,j,k) in [(1,2,3), (2,3,1), (3,1,2)]:
         return 1
     elif (i,j,k) in [(1,3,2), (3,2,1), (2,1,3)]:

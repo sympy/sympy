@@ -74,5 +74,13 @@ def E_nl(n, l, hw):
 
         E_nl = (2*n + l + 3/2)*hw
 
+    Example
+    =======
+
+    >>> from sympy.physics.sho import E_nl
+    >>> from sympy import symbols
+    >>> x, y, z = symbols('x, y, z')
+    >>> E_nl(x, y, z)
+    z*(2*x + y + 3/2)
     """
     return (2*n + l + Rational(3, 2))*hw

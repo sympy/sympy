@@ -6,6 +6,14 @@ def msigma(i):
     """Returns a Pauli matrix sigma_i. i=1,2,3
     See also:
     http://en.wikipedia.org/wiki/Pauli_matrices
+
+    Example
+    =======
+
+    >>> from sympy.physics.matrices import msigma
+    >>> msigma(1)
+    [0, 1]
+    [1, 0]
     """
     if i==1:
         mat=( (
@@ -68,6 +76,15 @@ def mgamma(mu,lower=False):
 
     http://en.wikipedia.org/wiki/Gamma_matrices
 
+    Example
+    =======
+
+    >>> from sympy.physics.matrices import mgamma
+    >>> mgamma(1)
+    [ 0,  0, 0, 1]
+    [ 0,  0, 1, 0]
+    [ 0, -1, 0, 0]
+    [-1,  0, 0, 0]
     """
     if not mu in [0,1,2,3,5]:
         raise IndexError("Invalid Dirac index")
