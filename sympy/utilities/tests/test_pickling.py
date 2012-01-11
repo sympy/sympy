@@ -137,6 +137,16 @@ def test_core_multidimensional():
     for c in (vectorize, vectorize(0)):
         check(c)
 
+@XFAIL
+def test_issue_2587():
+    x = Symbol("x")
+    f = x**2 + x**-2
+    g = pickle.loads(pickle.dumps(f))
+    assert f.args[0].exp.is_positive # 2
+    assert f.args[1].exp.is_negative # -2
+    assert g.args[0].exp.is_positive # 2
+    assert g.args[1].exp.is_negative # -2
+
 # This doesn't have to be pickable.
 #@XFAIL
 #def test_core_astparser():
