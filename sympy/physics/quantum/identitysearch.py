@@ -217,46 +217,6 @@ class GateIdentity(Basic):
         """Returns the string of gates in a tuple."""
         return str(self.circuit)
 
-def construct_gate_list(numqubits):
-    """Dynamically generate and concatenate a list of all possible
-       sympy gate objects in given space."""
-
-    Xs = [X(i) for i in xrange(numqubits)]
-    Ys = [Y(i) for i in xrange(numqubits)]
-    Zs = [Z(i) for i in xrange(numqubits)]
-    Hs = [H(i) for i in xrange(numqubits)]
-    Ss = [S(i) for i in xrange(numqubits)]
-    Ts = [T(i) for i in xrange(numqubits)]
-    CNOTs = [CNOT(i,j) for i in xrange(numqubits)
-                           for j in xrange(numqubits) if i != j]
-
-    gate_list = Xs+Ys+Zs+Hs+Ss+Ts+CNOTs
-
-    return gate_list
-
-def construct_matrix_list(numqubits):
-    """ Dynamically generate and concatenate a list of all possible
-        scipy.sparse gate matrices in given space."""
-
-    xs = [represent(X(i), nqubits=numqubits, format='scipy.sparse')
-          for i in xrange(numqubits)]
-    ys = [represent(Y(i), nqubits=numqubits, format='scipy.sparse')
-          for i in xrange(numqubits)]
-    zs = [represent(Z(i), nqubits=numqubits, format='scipy.sparse')
-          for i in xrange(numqubits)]
-    hs = [represent(H(i), nqubits=numqubits, format='scipy.sparse')
-          for i in xrange(numqubits)]
-    ss = [represent(S(i), nqubits=numqubits, format='scipy.sparse')
-          for i in xrange(numqubits)]
-    ts = [represent(T(i), nqubits=numqubits, format='scipy.sparse')
-          for i in xrange(numqubits)]
-    cnots = [represent(CNOT(i,j), nqubits=numqubits, format='scipy.sparse')
-             for i in xrange(numqubits) for j in xrange(numqubits) if i != j]
-
-    matrix_list = xs+ys+zs+hs+ss+ts+cnots
-
-    return matrix_list
-
 def is_scalar_sparse_matrix(circuit, numqubits, identity_only):
     """Checks if a given scipy.sparse matrix is a scalar matrix.
 
