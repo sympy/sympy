@@ -1,6 +1,7 @@
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
-        cse, cot, tan, S, Tuple)
+        cse, cot, tan, S, Tuple, Basic)
+from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL
 
 def test_subs():
@@ -427,3 +428,14 @@ def test_issue_2552():
 
 def test_issue_2976():
     assert Tuple(1, True).subs(1, 2) == Tuple(2, True)
+
+def test_issue_2980():
+    # since x + 2.0 == x + 2 we can't do a simple equality test
+    x = symbols('x')
+    assert _aresame((x + 2.0).subs(2, 3), x + 2.0)
+    assert _aresame((x + 2.0).subs(2.0, 3), x + 3)
+    assert not _aresame(x + 2, x + 2.0)
+    assert not _aresame(Basic(cos, 1), Basic(cos, 1.))
+    assert _aresame(cos, cos)
+    assert not _aresame(1, S(1))
+    assert not _aresame(x, symbols('x', positive=True))

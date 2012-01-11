@@ -189,7 +189,7 @@ class Basic(PicklableWithSlots):
 
     def compare(self, other):
         """
-        Return -1,0,1 if the object is smaller, equal, or greater than other.
+        Return -1, 0, 1 if the object is smaller, equal, or greater than other.
 
         Not in the mathematical sense. If the object is of a different type
         from the "other" then their classes are ordered according to
@@ -209,22 +209,26 @@ class Basic(PicklableWithSlots):
         """
         # all redefinitions of __cmp__ method should start with the
         # following three lines:
-        if self is other: return 0
+        if self is other:
+            return 0
         c = cmp(self.__class__, other.__class__)
-        if c: return c
+        if c:
+            return c
         #
         st = self._hashable_content()
         ot = other._hashable_content()
-        c = cmp(len(st),len(ot))
-        if c: return c
-        for l,r in zip(st,ot):
+        c = cmp(len(st), len(ot))
+        if c:
+            return c
+        for l, r in zip(st, ot):
             if isinstance(l, Basic):
                 c = l.compare(r)
             elif isinstance(l, frozenset):
                 c = 0
             else:
                 c = cmp(l, r)
-            if c: return c
+            if c:
+                return c
         return 0
 
     @staticmethod
@@ -822,6 +826,8 @@ class Basic(PicklableWithSlots):
 
         rv = self
         for old, new in sequence:
+            if _aresame(old, new):
+                continue
             rv = rv._subs(old, new)
             if not isinstance(rv, Basic):
                 break
@@ -916,7 +922,7 @@ class Basic(PicklableWithSlots):
                 return self.func(*args)
             return self
 
-        if self == old:
+        if _aresame(self, old):
             return new
         if not self.args:
             return self
@@ -1444,3 +1450,51 @@ class Atom(Basic):
     def sort_key(self, order=None):
         from sympy.core import S
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
+
+def _aresame(a, b):
+    """Return True if a and b are structurally the same, else False.
+
+    Examples
+    ========
+
+    To SymPy, 2.0 == 2:
+
+    >>> from sympy import S, Symbol, cos, sin
+    >>> 2.0 == S(2)
+    True
+
+    The Basic.compare method will indicate that these are not the same, but
+    the same method allows symbols with different assumptions to compare the
+    same:
+
+    >>> S(2).compare(2.0)
+    -1
+    >>> Symbol('x').compare(Symbol('x', positive=True))
+    0
+
+    The Basic.compare method will not work with instances of FunctionClass:
+
+    >>> sin.compare(cos)
+    Traceback (most recent call last):
+     File "<stdin>", line 1, in <module>
+    TypeError: unbound method compare() must be called with sin instance as first ar
+    gument (got FunctionClass instance instead)
+
+    Since a simple 'same or not' result is sometimes useful, this routine was
+    written to provide that query.
+
+    """
+    from sympy.utilities.iterables import preorder_traversal
+    from itertools import izip
+
+    try:
+        if a.compare(b) == 0 and a.is_Symbol and b.is_Symbol:
+            return a.assumptions0 == b.assumptions0
+    except (TypeError, AttributeError):
+        pass
+
+    for i, j in izip(preorder_traversal(a), preorder_traversal(b)):
+        if i == j and type(i) == type(j):
+            continue
+        return False
+    return True
