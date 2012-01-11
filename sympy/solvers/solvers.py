@@ -250,13 +250,18 @@ def checksol(f, symbol, sol=None, **flags):
                 val = val.subs(reps)
             nz = val.is_nonzero
             if nz is not None:
-                # issue 2574: it may be True even when False
+                # issue 2574: nz may be True even when False
+                # so these are just hacks to keep a false positive
+                # from being returned
+
+                # HACK 1: LambertW (issue 2574)
                 if val.is_number and val.has(LambertW):
-                    evaled = abs(val.n())
-                    if evaled > 1e-12:
-                        return False
-                    elif evaled < 1e-12:
-                        return True
+                    # don't eval this to verify solution since if we got here,
+                    # numerical must be False
+                    return None
+
+                # add other HACKs here if necessary, otherwise we assume
+                # the nz value is correct
                 return not nz
             break
 

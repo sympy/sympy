@@ -7,7 +7,7 @@ from sympy.abc import a, b, c, d, x, y, z
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,\
      solve_undetermined_coeffs
-from sympy.solvers.solvers import _invert, unrad
+from sympy.solvers.solvers import _invert, unrad, checksol
 
 from sympy.utilities.pytest import XFAIL, raises, skip
 
@@ -879,3 +879,8 @@ def test_issue_2957():
     assert solve((tanh(x + 3)*tanh(x - 3) + 1)**2) == \
            [-log(2)/2 + log(-1 - I), -log(2)/2 + log(-1 + I),
             -log(2)/2 + log(1 - I), -log(2)/2 + log(1 + I)]
+
+def test_issue_2574():
+    eq = -x + exp(exp(LambertW(log(x)))*LambertW(log(x)))
+    assert checksol(eq, x, 2) == True
+    assert checksol(eq, x, 2, numerical=False) is None
