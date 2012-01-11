@@ -108,6 +108,35 @@ expr
    protocol 3. The highest protocol available also can be checked with
    pickle.HIGHEST_PROTOCOL
 
+.. note:: Pickling of SymPy Objects with Assumptions
+   =================================================
+
+   When pickling SymPy objects with assumptions, 'fast' mode must be used.
+
+   By default pickle will try to optimize the serialized form by combining
+   identical objects, storing only one instance and accessing them by refernce.
+   This behavior causes issues with SymPy because default assumptions will be
+   detected as identical and still be accessed through reference when they are
+   unpickled.  Any assumptions generated for those objects after being
+   unpickled will apply to all the objects with the same default assumptions,
+   whether applicable or not. Fast mode in Pickler causes pickle to bypass this
+   optimization returning the correct result.
+
+   For example:
+
+   >>> from pickle import dumps, loads
+   >>> from sympy.abc import x
+   >>> f = x**2 + x**-2
+   >>> g = loads(dumps(f))
+   >>> f.args[0].exp.is_positive # 2
+   True
+   >>> f.args[1].exp.is_negative # -2
+   True
+   >>> g.args[0].exp.is_positive # 2
+   True
+   >>> g.args[1].exp.is_negative # -2
+   False
+
 Expr
 ^^^^
 .. autoclass:: Expr
