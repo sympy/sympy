@@ -1,6 +1,5 @@
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
         IdentityGate, CGate, gate_simp)
-from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.identitysearch import *
 from sympy.physics.quantum.dagger import Dagger
 
@@ -194,4 +193,12 @@ def test_bfs_identity_search():
     id_set = set([GateIdentity(x, x),
                   GateIdentity(cgate_x, cgate_x),
                   GateIdentity(x, cgate_x, x, cgate_x)])
+    assert bfs_identity_search(gate_list, 2, max_depth=4) == id_set
+
+    cgate_z = CGate((0,), Z(1))
+    gate_list = [cnot, cgate_z, h]
+    id_set = set([GateIdentity(h, h),
+                  GateIdentity(cgate_z, cgate_z),
+                  GateIdentity(cnot, cnot),
+                  GateIdentity(cnot, h, cgate_z, h)])
     assert bfs_identity_search(gate_list, 2, max_depth=4) == id_set

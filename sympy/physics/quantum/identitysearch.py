@@ -261,7 +261,7 @@ def is_scalar_sparse_matrix(circuit, numqubits, identity_only):
         eps = 1e-11
         # Get the ndarray version of the dense matrix
         dense_matrix = matrix.todense().getA()
-        # Since complex values can be compared, must split
+        # Since complex values can't be compared, must split
         # the matrix into real and imaginary components
         # Find the real values in between -eps and eps
         bool_real = numpy.logical_and(dense_matrix.real > -eps,
@@ -319,9 +319,6 @@ def is_scalar_matrix(circuit, numqubits, identity_only):
 
     Note: Used in situations when is_scalar_sparse_matrix has bugs
     """
-
-    # A sparse matrix is faster but there's a few problems with it,
-    # such as not being able to determine H(0)*H(0) is the identity matrix.
 
     matrix = represent(Mul(*circuit), nqubits=numqubits)
 
@@ -516,7 +513,7 @@ def random_identity_search(gate_list, numgates, numqubits):
        a gate identity.
 
     If the circuit is a gate identity, the circuit is returned;
-    Otherwise, None is returned
+    Otherwise, None is returned.
     """
 
     gate_size = len(gate_list)
