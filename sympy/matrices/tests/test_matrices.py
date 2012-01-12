@@ -1081,12 +1081,10 @@ def test_issue882():
     assert m[1, 2] == 8
 
 def test_evalf():
-    def check(l, r):
-        # renormalize each Float so they compare the same
-        return l.__add__(0) == r.__add__(0)
     a = Matrix([sqrt(5), 6])
-    assert all(check(a.evalf()[i], a[i].evalf()) for i in range(2))
-    assert all(check(a.evalf(1)[i], a[i].evalf(1)) for i in range(2))
+    assert all(a.evalf()[i] == a[i].evalf() for i in range(2))
+    assert all(a.evalf(1)[i] == a[i].evalf(1) for i in range(2))
+    assert all(a.n(1)[i] == a[i].n(1) for i in range(2))
 
 def test_is_symbolic():
     x = Symbol('x')

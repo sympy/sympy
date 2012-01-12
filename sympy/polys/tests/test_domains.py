@@ -634,6 +634,7 @@ def test_RealDomain_from_sympy():
     assert RR.convert(S(1)) == RR.dtype(1)
     assert RR.convert(S(1.0)) == RR.dtype(1.0)
     assert RR.convert(sin(1)) == RR.dtype(sin(1).evalf())
+    assert RR.n(3, 2) == RR.evalf(3, 2) == Rational(3).n(2)
     raises(CoercionFailed, "RR.convert(x)")
     raises(CoercionFailed, "RR.convert(oo)")
     raises(CoercionFailed, "RR.convert(-oo)")
