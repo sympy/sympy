@@ -139,9 +139,10 @@ numpy_functions_different = {
 
 # Strings that should be translated
 numpy_not_functions = {
-        'I' : '1j',
-        'oo':'inf',
-        'E':'e',
+        'pi':'np.pi',
+        'I' :'1j',
+        'oo':'np.inf',
+        'E' :'np.e',
         }
 
 ###
@@ -243,10 +244,9 @@ def translate_str(estr, dict_tuple_str):
     """Translate substrings of estr using in order the dictionaries in
     dict_tuple_str."""
     for trans_dict in dict_tuple_str:
-        for k in trans_dict.keys():
-            while estr.find(k) is not -1:
-                i = estr.find(k)
-                estr = estr[:i] + trans_dict[k] + estr[i+len(k):]
+        # TODO a bug is waiting here :)
+        for pattern, repl in trans_dict.iteritems():
+            estr = re.sub(pattern, repl, estr)
     return estr
 
 def translate_func(func_name, argtree, dict_tuple_str, dict_tuple_fun):
@@ -271,7 +271,9 @@ def translate_func(func_name, argtree, dict_tuple_str, dict_tuple_fun):
 def sympy_expression_namespace(expr):
     """Traverses the (func, args) tree of an expression and creates a sympy
     namespace. All other modules are imported only as a module name. That way
-    the namespace is not poluted and rests quite small."""
+    the namespace is not poluted and rests quite small. It probably causes much
+    more variable lookups and so it takes more time, but there are no tests on
+    that for the moment."""
     if expr is None:
         return {}
     else:
