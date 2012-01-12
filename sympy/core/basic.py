@@ -220,6 +220,8 @@ class Basic(PicklableWithSlots):
         for l,r in zip(st,ot):
             if isinstance(l, Basic):
                 c = l.compare(r)
+            elif isinstance(l, frozenset):
+                c = 0
             else:
                 c = cmp(l, r)
             if c: return c

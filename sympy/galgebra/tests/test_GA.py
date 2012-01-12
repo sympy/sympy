@@ -13,7 +13,7 @@ if not numpy:
     disabled = True
 else:
     sys.path.append('../')
-    from sympy.galgebra.GA import set_main, MV, make_symbols, types, ZERO, ONE, HALF, S
+    from sympy.galgebra.GA import set_main, MV, make_symbols, ZERO, ONE, HALF, S
     import sympy
     from sympy import collect, sympify
 
@@ -29,7 +29,7 @@ def F(x):
     return(Fx)
 
 def make_vector(a,n = 3):
-    if type(a) == types.StringType:
+    if type(a) == str:
         sym_str = ''
         for i in range(n):
             sym_str += a+str(i)+' '

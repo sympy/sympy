@@ -280,13 +280,13 @@ def test_hypersum():
                               (n, 3, oo))) \
            == -x + sin(x) + x**3/6 - x**5/120
 
-    # TODO to get this without hyper need to improve hyperexpand
     assert summation(1/(n+2)**3, (n, 1, oo)) == \
-           hyper([3, 3, 3, 1], [4, 4, 4], 1)/27
+           -S(9)/8 + zeta(3)
+    assert summation(1/n**4, (n, 1, oo)) == pi**4/90
 
     s = summation(x**n*n, (n, -oo, 0))
     assert s.is_Piecewise
-    assert s.args[0].args[0] == -1/(x*(1-1/x)**2)
+    assert s.args[0].args[0] == -1/(x*(1 - 1/x)**2)
     assert s.args[0].args[1] == (abs(1/x) < 1)
 
 def test_issue_1071():

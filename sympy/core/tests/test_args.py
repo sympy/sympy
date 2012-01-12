@@ -634,6 +634,34 @@ def test_sympy__functions__special__error_functions__erf():
     from sympy.functions.special.error_functions import erf
     assert _test_args(erf(2))
 
+def test_sympy__functions__special__error_functions__Ei():
+    from sympy.functions.special.error_functions import Ei
+    assert _test_args(Ei(2))
+
+@SKIP("abstract class")
+def test_sympy__functions__special__error_functions__TrigonometricIntegral():
+    pass
+
+def test_sympy__functions__special__error_functions__Si():
+    from sympy.functions.special.error_functions import Si
+    assert _test_args(Si(2))
+
+def test_sympy__functions__special__error_functions__Ci():
+    from sympy.functions.special.error_functions import Ci
+    assert _test_args(Ci(2))
+
+def test_sympy__functions__special__error_functions__Shi():
+    from sympy.functions.special.error_functions import Shi
+    assert _test_args(Shi(2))
+
+def test_sympy__functions__special__error_functions__Chi():
+    from sympy.functions.special.error_functions import Chi
+    assert _test_args(Chi(2))
+
+def test_sympy__functions__special__error_functions__expint():
+    from sympy.functions.special.error_functions import expint
+    assert _test_args(expint(y, x))
+
 def test_sympy__functions__special__gamma_functions__gamma():
     from sympy.functions.special.gamma_functions import gamma
     assert _test_args(gamma(x))
@@ -665,6 +693,54 @@ def test_sympy__functions__special__hyper__hyper():
 def test_sympy__functions__special__hyper__meijerg():
     from sympy.functions.special.hyper import meijerg
     assert _test_args(meijerg([1, 2, 3], [4, 5], [6], [], x))
+
+@SKIP("abstract class")
+def test_sympy__functions__special__hyper__HyperRep():
+    pass
+
+def test_sympy__functions__special__hyper__HyperRep_power1():
+    from sympy.functions.special.hyper import HyperRep_power1
+    assert _test_args(HyperRep_power1(x, y))
+
+def test_sympy__functions__special__hyper__HyperRep_power2():
+    from sympy.functions.special.hyper import HyperRep_power2
+    assert _test_args(HyperRep_power2(x, y))
+
+def test_sympy__functions__special__hyper__HyperRep_log1():
+    from sympy.functions.special.hyper import HyperRep_log1
+    assert _test_args(HyperRep_log1(x))
+
+def test_sympy__functions__special__hyper__HyperRep_atanh():
+    from sympy.functions.special.hyper import HyperRep_atanh
+    assert _test_args(HyperRep_atanh(x))
+
+def test_sympy__functions__special__hyper__HyperRep_asin1():
+    from sympy.functions.special.hyper import HyperRep_asin1
+    assert _test_args(HyperRep_asin1(x))
+
+def test_sympy__functions__special__hyper__HyperRep_asin2():
+    from sympy.functions.special.hyper import HyperRep_asin2
+    assert _test_args(HyperRep_asin2(x))
+
+def test_sympy__functions__special__hyper__HyperRep_sqrts1():
+    from sympy.functions.special.hyper import HyperRep_sqrts1
+    assert _test_args(HyperRep_sqrts1(x, y))
+
+def test_sympy__functions__special__hyper__HyperRep_sqrts2():
+    from sympy.functions.special.hyper import HyperRep_sqrts2
+    assert _test_args(HyperRep_sqrts2(x, y))
+
+def test_sympy__functions__special__hyper__HyperRep_log2():
+    from sympy.functions.special.hyper import HyperRep_log2
+    assert _test_args(HyperRep_log2(x))
+
+def test_sympy__functions__special__hyper__HyperRep_cosasin():
+    from sympy.functions.special.hyper import HyperRep_cosasin
+    assert _test_args(HyperRep_cosasin(x, y))
+
+def test_sympy__functions__special__hyper__HyperRep_sinasin():
+    from sympy.functions.special.hyper import HyperRep_sinasin
+    assert _test_args(HyperRep_sinasin(x, y))
 
 @SKIP("abstract class")
 def test_sympy__functions__special__polynomials__PolynomialSequence():
@@ -713,6 +789,14 @@ def test_sympy__functions__special__zeta_functions__dirichlet_eta():
 def test_sympy__functions__special__zeta_functions__zeta():
     from sympy.functions.special.zeta_functions import zeta
     assert _test_args(zeta(101))
+
+def test_sympy__functions__special__zeta_functions__lerchphi():
+    from sympy.functions.special.zeta_functions import lerchphi
+    assert _test_args(lerchphi(x, y, z))
+
+def test_sympy__functions__special__zeta_functions__polylog():
+    from sympy.functions.special.zeta_functions import polylog
+    assert _test_args(polylog(x, y))
 
 def test_sympy__integrals__integrals__Integral():
     from sympy.integrals.integrals import Integral
