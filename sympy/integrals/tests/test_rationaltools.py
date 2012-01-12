@@ -1,7 +1,6 @@
-from sympy import S, symbols, I, atan, log, Poly, sqrt, simplify
+from sympy import S, symbols, I, atan, log, Poly, sqrt, simplify, integrate
 
-from sympy.integrals.rationaltools import ratint, \
-    ratint_ratpart, ratint_logpart, log_to_atan, log_to_real
+from sympy.integrals.rationaltools import ratint, ratint_logpart, log_to_atan
 
 from sympy.abc import a, b, x, t
 
@@ -93,6 +92,11 @@ def test_ratint():
     assert ratint(x/(1 - x**2), x) == -log(x**2 - 1)/2
     assert ratint(-x/(1 - x**2), x) == log(x**2 - 1)/2
 
+    ans = atan(x)
+    assert ratint(1/(x**2 + 1), x, symbol=x) == ans
+    assert ratint(1/(x**2 + 1), x, symbol='x') == ans
+    assert ratint(1/(x**2 + 1), x, symbol=a) == ans
+
 def test_ratint_logpart():
     assert ratint_logpart(x, x**2-9, x, t) == \
         [(Poly(x**2 - 9, x), Poly(-2*t + 1, t))]
@@ -112,3 +116,13 @@ def test_issue_2718():
 
     assert simplify(ratint(a/(b*c*x**2 + a**2 + b*a), x)) == \
         sqrt(a)*atan(sqrt(b)*sqrt(c)*x/(sqrt(a)*sqrt(a + b)))/(sqrt(b)*sqrt(c)*sqrt(a + b))
+
+def test_issue_2882():
+    u = symbols('u')
+    assert integrate(1/(u**2 + 1)) == atan(u)
+
+def test_log_to_atan():
+    f, g = (Poly(x + S(1)/2, x, domain='QQ'), Poly(sqrt(3)/2, x, domain='EX'))
+    fg_ans = 2*atan(2*sqrt(3)*x/3 + sqrt(3)/3)
+    assert log_to_atan(f, g) == fg_ans
+    assert log_to_atan(g, f) == -fg_ans
