@@ -1,4 +1,4 @@
-from rv import (P, E, Density, Where, Given, pspace, CDF, Sample, sample_iter, random_symbols)
+from rv import (P, E, Density, Where, Given, pspace, CDF, Sample, sample_iter, random_symbols, independent, dependent)
 from sympy import sqrt
 
 __all__ = ['P', 'E', 'Density', 'Where', 'Given', 'Sample', 'CDF', 'pspace',
@@ -80,50 +80,3 @@ def skewness(X, given=None, **kwargs):
     return E( ((X-mu)/sigma) ** 3 , given, **kwargs)
 Skewness = skewness
 
-def dependent(a, b):
-    """Dependence of two random expressions
-
-    Two expressions are independent if knowledge of one does not change
-    computations on the other
-
-    >>> from sympy.stats import Die, dependent, Given
-    >>> from sympy import Tuple
-
-    >>> X, Y = Die(6), Die(6)
-    >>> dependent(X, Y)
-    False
-    >>> dependent(2*X + Y, -Y)
-    True
-    >>> X, Y = Given(Tuple(X, Y), X>Y)
-    >>> dependent(X, Y)
-    True
-
-    See Also:
-        independent
-    """
-    a_symbols = pspace(b).symbols
-    b_symbols = pspace(a).symbols
-    return len(a_symbols.intersect(b_symbols)) != 0
-
-def independent(a, b):
-    """Independence of two random expressions
-
-    Two expressions are independent if knowledge of one does not change
-    computations on the other
-
-    >>> from sympy.stats import Die, independent, Given
-    >>> from sympy import Tuple
-
-    >>> X, Y = Die(6), Die(6)
-    >>> independent(X, Y)
-    True
-    >>> independent(2*X + Y, -Y)
-    False
-    >>> X, Y = Given(Tuple(X, Y), X>Y)
-    >>> independent(X, Y)
-    False
-
-    See Also:
-        dependent
-    """
-    return not dependent(a, b)

@@ -77,9 +77,9 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
         while conditions:
             cond = conditions.pop()
             if cond.is_Boolean:
-                if cond.is_And:
+                if isinstance(cond, And):
                     conditions.extend(cond.args)
-                elif cond.is_Or:
+                elif isinstance(cond, Or):
                     raise NotImplementedError("Or not implemented here")
             elif cond.is_Relational:
                 if cond.is_Equality:
@@ -104,7 +104,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                             # Put back into limits list
                             limits[i] = (symbol, intvl.left, intvl.right)
             else:
-                raise ValueError(
+                raise TypeError(
                         "Condition %s is not a relational or Boolean"%cond)
 
         return integrate(integrand, *limits, **kwargs)
@@ -228,9 +228,12 @@ class SingleContinuousPSpace(ContinuousPSpace):
         x,d = self.compute_cdf(self.value)
         z = Dummy('z', real=True, positive=True)
         # Invert CDF
-        inverse_cdf = solve(d-z, x)
+        try:
+            inverse_cdf = solve(d-z, x)
+        except NotImplementedError:
+            raise NotImplementedError("Could not invert CDF")
         if len(inverse_cdf) != 1:
-            raise ValueError("Could not invert CDF")
+            raise NotImplementedError("Could not invert CDF")
 
         return z, inverse_cdf[0]
 

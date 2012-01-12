@@ -19,7 +19,34 @@ import random
 
 oo = S.Infinity
 
-__all__ = ['Normal', 'Exponential', 'Pareto', 'Beta', 'Gamma', 'Uniform']
+__all__ = ['ContinuousRV', 'Normal', 'Exponential', 'Pareto', 'Beta', 'Gamma',
+'Uniform']
+
+def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
+    """
+    Create a Continuous Random Variable given
+    -- a symbol
+    -- a probability density function
+    -- set on which the pdf is valid (defaults to entire real line)
+
+    Returns a RandomSymbol
+
+    Many common continuous random variable types are already implemented.
+    This function should be necessary only very rarely.
+
+    >>> from sympy import Symbol
+    >>> from sympy.stats import ContinuousRV, P, E
+
+    >>> x = Symbol('x')
+    >>> pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)) # Normal distribution
+    >>> X = ContinuousRV(x, density)
+
+    >>> E(X)
+    0
+    >>> P(X>0)
+    1/2
+    """
+    return SingleContinuousPSpace(symbol, density, set).value
 
 class NormalPSpace(SingleContinuousPSpace):
     def __new__(cls, mean, std, symbol = None):
@@ -52,12 +79,9 @@ def Normal(mean, std, symbol=None):
 
     >>> simplify(Std(2*X + 1))
     2
-
     """
 
-
     return NormalPSpace(mean, std, symbol).value
-
 
 class ExponentialPSpace(SingleContinuousPSpace):
     def __new__(cls, rate, symbol=None):
@@ -87,8 +111,8 @@ def Exponential(rate, symbol=None):
 
     >>> Std(X)
     1/10
-
     """
+
     return ExponentialPSpace(rate, symbol).value
 
 class ParetoPSpace(SingleContinuousPSpace):
@@ -119,6 +143,7 @@ def Pareto(xm, alpha, symbol=None):
     >>> Density(X)
     (x, beta*x**(-beta - 1)*xm**beta)
     """
+
     return ParetoPSpace(xm, alpha, symbol).value
 
 class BetaPSpace(SingleContinuousPSpace):
@@ -152,6 +177,7 @@ def Beta(alpha, beta, symbol=None):
     >>> Density(X)
     (x, x**(a - 1)*(-x + 1)**(b - 1)*gamma(a + b)/(gamma(a)*gamma(b)))
     """
+
     return BetaPSpace(alpha, beta, symbol).value
 
 class GammaPSpace(SingleContinuousPSpace):
@@ -201,7 +227,6 @@ class UniformPSpace(SingleContinuousPSpace):
 
     def sample(self):
         return {self.value: random.uniform(self.left, self.right)}
-
 
 def Uniform(left, right, symbol=None):
     """

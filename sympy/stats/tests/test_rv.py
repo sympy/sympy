@@ -4,6 +4,7 @@ from sympy.stats import (Die, Normal, Exponential , P, E, Var, Covar,
         Skewness, Density, Given, independent, dependent, Where, pspace,
         random_symbols, Sample)
 from sympy.stats.rv import ProductPSpace, rs_swap
+from sympy.utilities.pytest import raises
 
 def test_where():
     X, Y = Die(), Die()
@@ -11,8 +12,19 @@ def test_where():
 
     assert Where(Z**2<=1).set == Interval(-1, 1)
     assert Where(Z**2<1).as_boolean() == And(Z.symbol<1, Z.symbol>-1)
+    assert Where(And(X>Y, Y>4)).as_boolean() == And(
+            Eq(X.symbol, 6), Eq(Y.symbol, 5))
+
     assert len(Where(X<3).set) == 2
     assert 1 in Where(X<3).set
+
+    X, Y = Normal(0, 1), Normal(0, 1)
+    assert Where(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
+    XX = Given(X, And(X**2 <= 1, X >= 0))
+    assert XX.pspace.domain.set == Interval(0, 1)
+    assert XX.pspace.domain.as_boolean() == And(0 <= X.symbol, X.symbol**2 <= 1)
+
+    raises(TypeError, "XX = Given(X, X+3)")
 
 def test_random_symbols():
     X, Y = Normal(0,1), Normal(0,1)
@@ -48,6 +60,14 @@ def test_RandomSymbol():
     assert X.symbol == Y.symbol
     assert X!=Y
 
+    assert X.name == X.symbol.name
+
+def test_overlap():
+    X = Normal(0, 1, symbol=Symbol('x'))
+    Y = Normal(0, 2, symbol=Symbol('x'))
+
+    raises(ValueError, "P(X>Y)")
+
 def test_ProductPSpace():
     X = Normal(0, 1)
     Y = Normal(0, 1)
@@ -62,6 +82,7 @@ def test_E():
 def test_Sample():
     X = Die(6)
     Y = Normal(0,1)
+    z = Symbol('z')
 
     assert Sample(X) in [1,2,3,4,5,6]
     assert Sample(X+Y).is_Float
@@ -69,3 +90,13 @@ def test_Sample():
     assert P(X+Y>0, Y<0, numsamples=10).is_Rational
     assert E(X+Y, numsamples=10).is_Float
     assert Var(X+Y, numsamples=10).is_Float
+
+    raises(ValueError, "P(Y>z, numsamples=5)")
+
+def test_Given():
+    X = Normal(0, 1)
+    Y = Normal(0, 1)
+    A = Given(X, True)
+    B = Given(X, Y>2)
+
+    assert X == A == B

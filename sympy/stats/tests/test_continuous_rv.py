@@ -1,7 +1,8 @@
-from sympy.stats import (Normal, Exponential, P, E, Where,
-        Density, Var, Covar, Skewness, Gamma, Pareto, Beta, Given, pspace, CDF)
+from sympy.stats import (Normal, Exponential, P, E, Where, Density, Var, Covar,
+        Skewness, Gamma, Pareto, Beta, Uniform, Given, pspace, CDF,
+        ContinuousRV, Sample)
 from sympy import (Symbol, exp, S, pi, simplify, Interval, erf, Eq, symbols,
-        sqrt, And, gamma, beta)
+        sqrt, And, gamma, beta, Piecewise)
 from sympy.utilities.pytest import raises
 
 oo = S.Infinity
@@ -41,10 +42,6 @@ def test_ContinuousDomain():
     Y = Given(X, X>=0)
 
     assert Y.pspace.domain.set == Interval(0, oo)
-
-
-
-
 
 def test_multiple_normal():
     X, Y = Normal(0,1), Normal(0,1)
@@ -95,6 +92,27 @@ def test_CDF():
     assert P(Y>3) == 1 - d.subs(y, 3)
 
     raises(ValueError, "CDF(X+Y)")
+
+    Z = Exponential(1)
+    z, cdf = CDF(Z)
+    assert cdf == Piecewise((0, z < 0), (1 - exp(-z), True))
+
+def test_sample():
+    z = Symbol('z')
+    Z = ContinuousRV(z, exp(-z), set=Interval(0,oo))
+    assert Sample(Z) in Z.pspace.domain.set
+    sym, val = Z.pspace.sample().items()[0]
+    assert sym == Z and val in Interval(0, oo)
+
+def test_ContinuousRV():
+    x = Symbol('x')
+    pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)) # Normal distribution
+    # X and Y should be equivalent
+    X = ContinuousRV(x, pdf)
+    Y = Normal(0, 1)
+
+    assert Var(X) == Var(Y)
+    assert P(X>0) == P(Y>0)
 
 def test_exponential():
 
@@ -150,3 +168,15 @@ def test_uniform():
     assert simplify(E(X)) == w**2/12
 
     assert P(X<l) == 0 and P(X>l+w) == 0
+
+def test_prefab_sampling():
+    N = Normal(0,1)
+    E = Exponential(1)
+    P = Pareto(1, 3)
+    U = Uniform(0, 1)
+    B = Beta(2,5)
+    G = Gamma(1,3)
+
+    variables = [N,E,P,U,B,G]
+    for var in variables:
+        assert Sample(var) in var.pspace.domain.set

@@ -1,6 +1,6 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify)
-from sympy.stats import (Die, Bernoulli, Coin, P, E, Var, Covar,
+from sympy.stats import (Die, Bernoulli, Coin, P, E, Var, Covar, Sample,
         Density, Given, independent, dependent, Where, FiniteRV, pspace, CDF)
 from sympy.utilities.pytest import raises
 
@@ -47,6 +47,12 @@ def test_dice():
             *[Eq(X.symbol, i) for i in [1,2,3,4,5,6]])
 
     assert Where(X>3).set == FiniteSet(4,5,6)
+
+def test_given():
+    X = Die(6)
+    Density(X, X>5) == {S(6): S(1)}
+    Where(X>2, X>5).as_boolean() == Eq(X.symbol, 6)
+    Sample(X, X>5) == 6
 
 def test_domains():
     x, y = symbols('x y')
