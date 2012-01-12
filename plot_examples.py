@@ -1,7 +1,6 @@
 # Check the plot docstring
 
 from sympy import *
-from sympy.plotting.newplot import plot
 
 lx = range(5)
 ly = [i**2 for i in lx]
@@ -31,7 +30,6 @@ if 'c' in globals().keys():
     e.xlabel = 'my argument'
     e.ylabel = 'my function'
     c.legend = True
-    c.axis_center = (0, 0)
     c.show()
 
 # Some aesthetics
@@ -47,9 +45,8 @@ if 'g' in globals().keys():
 
 # To show what happens when the backend is even simpler
 if 'a' in globals().keys() and 'b' in globals().keys():
-    from sympy.plotting.newplot import TextBackend
-    a.backend = TextBackend
-    b.backend = TextBackend
+    a.backend = plot_backends['text']
+    b.backend = plot_backends['text']
     try:
         a.show() # Error raised by the backend.
     except:
