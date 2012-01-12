@@ -9,7 +9,8 @@ c = FormulaCollection()
 doc = ""
 
 for f in c.formulae:
-    obj = Eq(hyper(f.indices.ap, f.indices.bq, f.z), f.closed_form)
+    obj = Eq(hyper(f.indices.ap, f.indices.bq, f.z),
+             f.closed_form.rewrite('nonrepsmall'))
     doc += ".. math::\n  %s\n" % latex(obj)
 
 __doc__ = doc
