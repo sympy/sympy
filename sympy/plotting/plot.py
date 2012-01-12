@@ -495,9 +495,9 @@ class Line2DBaseSeries(BaseSeries):
             arity = len(getargspec(c)[0])
             if arity == 1 and self.is_parametric:
                 x = self.get_parameter_points()
-                return f(x)
+                return f(centers_of_segments(x))
             else:
-                variables = self.get_points()
+                variables = map(centers_of_segments, self.get_points())
                 if arity == 1:
                     return f(variables[0])
                 elif arity == 2:
@@ -645,27 +645,24 @@ class SurfaceBaseSeries(BaseSeries):
         super(SurfaceBaseSeries, self).__init__()
         self._add_aesthetics({'surface_color' : None})
 
-        self.get_points = self.get_meshes
-
     def get_color_array(self):
         c = self._aesthetics['surface_color']
-        if hasattr(c, '__call__'):
+        if callable(c):
             f = np.vectorize(c)
             arity = len(getargspec(c)[0])
             if self.is_parametric:
-                variables = self.get_parameter_points()
-                if arity == 1:
-                    return f(variables[0])
-                else:
-                    return f(*variables)
-            else:
-                variables = self.get_points()
+                variables = map(centers_of_faces,self.get_parameter_meshes())
                 if arity == 1:
                     return f(variables[0])
                 elif arity == 2:
-                    return f(*variables[:2])
-                else:
                     return f(*variables)
+            variables = map(centers_of_faces, self.get_meshes())
+            if arity == 1:
+                return f(variables[0])
+            elif arity == 2:
+                return f(*variables[:2])
+            else:
+                return f(*variables)
         else:
             return c*np.ones(self.nb_of_points)
 
@@ -706,6 +703,9 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
 class ParametricSurfaceSeries(SurfaceBaseSeries):
     """Representation for a 3D surface consisting of three parametric sympy
     expressions and a range."""
+
+    is_parametric = True
+
     def __init__(self, expr_x, expr_y, expr_z, var_start_end_u, var_start_end_v):
         super(ParametricSurfaceSeries, self).__init__()
         self.nb_of_points_u = 50
@@ -731,11 +731,14 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
                 str(self.var_v),
                 str((self.start_v, self.end_v)))
 
+    def get_parameter_meshes(self):
+        return np.meshgrid(np.linspace(self.start_u, self.end_u,
+                                       num=self.nb_of_points_u),
+                           np.linspace(self.start_v, self.end_v,
+                                       num=self.nb_of_points_v))
+
     def get_meshes(self):
-        mesh_u, mesh_v = np.meshgrid(np.linspace(self.start_u, self.end_u,
-                                                 num=self.nb_of_points_u),
-                                     np.linspace(self.start_v, self.end_v,
-                                                 num=self.nb_of_points_v))
+        mesh_u, mesh_v = self.get_parameter_meshes()
         fx = vectorized_lambdify((self.var_u, self.var_v), self.expr_x)
         fy = vectorized_lambdify((self.var_u, self.var_v), self.expr_y)
         fz = vectorized_lambdify((self.var_u, self.var_v), self.expr_z)
@@ -1036,18 +1039,17 @@ class MatplotlibBackend(BaseBackend):
     def set_ser_aes_line_color(self, series, val):
         if isinstance(val, (float,int)) or callable(val):
             color_array = series.get_color_array()
-            self._dict_of_series[series].set_array(color_array[:-1])
+            self._dict_of_series[series].set_array(color_array)
         else:
             self._dict_of_series[series].set_color(val)
 
     def set_ser_aes_surface_color(self, series, val):
         if isinstance(val, (float,int)) or callable(val):
-            color_array = np.array(series.get_color_array()[:-1,:-1])
+            color_array = series.get_color_array()
             color_array.shape = color_array.shape[0] * color_array.shape[1]
             self._dict_of_series[series].set_array(color_array)
         else:
             self._dict_of_series[series].set_color(val)
-
 
 
 class TextBackend(BaseBackend):
@@ -1086,3 +1088,18 @@ plot_backends = {
 
 def vectorized_lambdify(args, expr):
     return np.vectorize(experimental_lambdify(args, expr))
+
+
+##############################################################################
+# Finding the centers of line segments or mesh faces
+##############################################################################
+
+def centers_of_segments(array):
+    return np.average(np.vstack((array[:-1], array[1:])), 0)
+
+def centers_of_faces(array):
+    return np.average(np.dstack((array[:-1, :-1],
+                                 array[1: , :-1],
+                                 array[:-1, 1: ],
+                                 array[:-1, :-1],
+                                 )), 2)

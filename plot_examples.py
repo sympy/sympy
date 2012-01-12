@@ -20,7 +20,6 @@ f = plot(sin(x), cos(x), x, (x,0,10))  # 3d parametric line plot
 g = plot(sin(x)*cos(y), (x, -5, 5), (y, -10, 10)) # 3d surface cartesian plot
 h = plot(cos(u)*v,sin(u)*v,u,(u,0,10),(v,-2,2)) # 3d parametric surface plot
 
-#for p in [a,b,c,d,e,f,g,h]:
 for p in [a,b,c,e,f,g,h]:
     p.show()
 
