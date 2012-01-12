@@ -4,6 +4,8 @@ from sympy.logic.boolalg import Boolean
 from sympy.core.sets import Set
 from sympy.core.symbol import Dummy
 
+from IPython import embed as I
+
 class ExprCondPair(Function):
     """Represents an expression, condition pair."""
 
@@ -210,24 +212,31 @@ class Piecewise(Function):
                     continue
             elif isinstance(cond, Equality):
                 continue
-            curr = list(cond.args)
-            if cond.args[0].has(sym):
-                curr[0] = S.NegativeInfinity
-            elif cond.args[1].has(sym):
-                curr[1] = S.Infinity
+
+            lower, upper = cond.lts, cond.gts # part 1: given defaults
+            if cond.lts.has(sym):     # part 1a: expand the side ...
+                lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
+            elif cond.gts.has(sym):   # part 1a: ... that can be expanded
+                upper = S.Infinity           # or e.g. x >= 0 ---> oo => 0
             else:
-                raise NotImplementedError(\
-                        "Unable handle interval evaluation of expression.")
-            curr = [max(a, curr[0]), min(b, curr[1])]
+                raise NotImplementedError(
+                        "Unable to handle interval evaluation of expression.")
+
+            # part 1b: Reduce (-)infinity to what was passed in.
+            lower, upper = max(a, lower), min(b, upper)
+
             for n in xrange(len(int_expr)):
-                if self.__eval_cond(curr[0] < int_expr[n][1]) and \
-                        self.__eval_cond(curr[0] >= int_expr[n][0]):
-                    curr[0] = int_expr[n][1]
-                if self.__eval_cond(curr[1] > int_expr[n][0]) and \
-                        self.__eval_cond(curr[1] <= int_expr[n][1]):
-                    curr[1] = int_expr[n][0]
-            if self.__eval_cond(curr[0] < curr[1]):
-                int_expr.append(curr + [expr])
+                # Part 2: remove any interval overlap.  For any conflicts, the
+                # iterval already there wins, and the incoming interval updates
+                # its bounds accordingly.
+                if self.__eval_cond(lower < int_expr[n][1]) and \
+                        self.__eval_cond(lower >= int_expr[n][0]):
+                    lower = int_expr[n][1]
+                if self.__eval_cond(upper > int_expr[n][0]) and \
+                        self.__eval_cond(upper <= int_expr[n][1]):
+                    upper = int_expr[n][0]
+            if self.__eval_cond(lower < upper):  # Is it still an interval?
+                int_expr.append((lower, upper, expr))
         int_expr.sort(key=lambda x:x[0])
 
         # Add holes to list of intervals if there is a default value,
@@ -254,6 +263,7 @@ class Piecewise(Function):
         ret_fun = 0
         for int_a, int_b, expr in int_expr:
             ret_fun += expr._eval_interval(sym,  max(a, int_a), min(b, int_b))
+
         return mul * ret_fun
 
     def _eval_derivative(self, s):

@@ -170,28 +170,28 @@ class Expr(Basic, EvalfMixin):
         dif = self - other
         if dif.is_negative != dif.is_nonnegative:
             return dif.is_negative
-        return C.StrictInequality(self, other)
+        return C.StrictLessThan(self, other)
 
-    @_sympifyit('other', True)  # sympy >  other
+    @_sympifyit('other', False)  # sympy >  other
     def __gt__(self, other):
         dif = self - other
         if dif.is_positive !=  dif.is_nonpositive:
             return dif.is_positive
-        return C.StrictInequality(other, self)
+        return C.StrictGreaterThan(self, other)
 
     @_sympifyit('other', False) # sympy >  other
     def __le__(self, other):
         dif = self - other
         if dif.is_nonpositive != dif.is_positive:
             return dif.is_nonpositive
-        return C.Inequality(self, other)
+        return C.LessThan(self, other)
 
-    @_sympifyit('other', True)  # sympy >  other
+    @_sympifyit('other', False)  # sympy >  other
     def __ge__(self, other):
         dif = self - other
         if dif.is_nonnegative != dif.is_negative:
             return dif.is_nonnegative
-        return C.Inequality(other, self)
+        return C.GreaterThan(self, other)
 
     @staticmethod
     def _from_mpmath(x, prec):

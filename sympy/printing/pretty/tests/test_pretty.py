@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     Rational, conjugate, Derivative, tan, Function, log, floor, Symbol, Tuple,
     pprint, sqrt, factorial, factorial2, binomial, pi, sin, ceiling, pprint_use_unicode,
@@ -729,11 +730,11 @@ x < y\
     expr = Gt(x, y)
     ascii_str = \
 """\
-y < x\
+x > y\
 """
     ucode_str = \
 u"""\
-y < x\
+x > y\
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -753,11 +754,11 @@ x ≤ y\
     expr = Ge(x, y)
     ascii_str = \
 """\
-y <= x\
+x >= y\
 """
     ucode_str = \
 u"""\
-y ≤ x\
+x ≥ y\
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
