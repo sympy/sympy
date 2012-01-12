@@ -134,7 +134,7 @@ class Relational(Expr, EvalfMixin):
     def get_relational_class(rop):
         try:
             return Relational.ValidRelationOperator[ rop ]
-        except:
+        except KeyError:
             raise ValueError("Invalid relational operator symbol: %r" % (rop))
 
     def __new__(cls, lhs, rhs, rop=None, **assumptions):

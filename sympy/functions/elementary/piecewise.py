@@ -4,8 +4,6 @@ from sympy.logic.boolalg import Boolean
 from sympy.core.sets import Set
 from sympy.core.symbol import Dummy
 
-from IPython import embed as I
-
 class ExprCondPair(Function):
     """Represents an expression, condition pair."""
 
