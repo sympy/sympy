@@ -620,6 +620,7 @@ class SymPyTests(object):
                 if timeout:
                     self._timeout(f, timeout)
                 else:
+                    random.seed(self._seed)
                     f()
             except KeyboardInterrupt:
                 if getattr(f, '_slow', False):
