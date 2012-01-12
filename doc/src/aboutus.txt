@@ -188,6 +188,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Kendhia: Add XFAIL tests
 #. jerryma1121: See Also documentation for geometry
 #. Joachim Durchholz: corrected spacing issues identified by PyDev
+#. Martin Povišer: fix problem with rationaltools
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
