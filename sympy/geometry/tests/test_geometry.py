@@ -59,12 +59,11 @@ def test_point():
     p3 = Point(0, 0)
     p4 = Point(1, 1)
 
-    assert len(p1) == 1
     assert p1 in p1
     assert p1 not in p2
-    assert p2[1] == y2
-    assert (p3+p4) == p4
-    assert (p2-p1) == Point(y1-x1, y2-x2)
+    assert p2.y == y2
+    assert (p3 + p4) == p4
+    assert (p2 - p1) == Point(y1-x1, y2-x2)
     assert p4*5 == Point(5, 5)
     assert -p2 == Point(-y1, -y2)
 
@@ -110,8 +109,15 @@ def test_point():
     assert p4 * 5 == Point(5, 5)
     assert p4 / 5 == Point(0.2, 0.2)
 
-    raises(ValueError, 'Point(0,0) + 10')
+    raises(ValueError, 'Point(0, 0) + 10')
 
+    # Point differences should be simplified
+    assert Point(x*(x - 1), y) - Point(x**2 - x, y + 1) == Point(0, -1)
+
+    a, b = Rational(1, 2), Rational(1, 3)
+    assert Point(a, b).evalf(2) == \
+        Point(a.n(2), b.n(2))
+    raises(ValueError, 'Point(1, 2) + 1')
 
 def test_line():
     p1 = Point(0, 0)
@@ -344,6 +350,8 @@ def test_line():
     assert Line(p1, p10) == Line(p10, p1)
     assert Line(p1, p10) != p1
     assert Line(p1, p10).plot_interval() == [t, -5, 5]
+    assert Ray((0, 0), angle=pi/4).plot_interval() == \
+        [t, 0, 5*sqrt(2)/(1 + 5*sqrt(2))]
 
 def test_ellipse():
     p1 = Point(0, 0)
@@ -477,8 +485,8 @@ def test_ellipse():
     assert intersection(c1, l1) == [Point(1, 0)]
     assert intersection(c1, l2) == [Point(0, -1)]
     assert intersection(c1, l3) in [pts_c1_l3, [pts_c1_l3[1], pts_c1_l3[0]]]
-    assert intersection(c1, c2) in [[(1,0), (0,1)],[(0,1),(1,0)]]
-    assert intersection(c1, c3) == [(sqrt(2)/2, sqrt(2)/2)]
+    assert intersection(c1, c2) == [Point(0, 1), Point(1, 0)]
+    assert intersection(c1, c3) == [Point(sqrt(2)/2, sqrt(2)/2)]
     assert e1.intersection(l1) == [Point(1, 0)]
     assert e2.intersection(l4) == []
     assert e1.intersection(Circle(Point(0, 2), 1)) == [Point(0, 1)]
@@ -587,7 +595,7 @@ def test_polygon():
     # General polygon
     #
     assert p1 == p2
-    assert len(p1) == 6
+    assert len(p1.args) == 6
     assert len(p1.sides) == 6
     assert p1.perimeter == 5+2*sqrt(10)+sqrt(29)+sqrt(8)
     assert p1.area == 22
@@ -641,15 +649,14 @@ def test_polygon():
     assert p2.encloses_point(Point(0, 4.9))
     p1.spin(pi/3)
     assert p1.rotation == pi/3
-    assert p1[0] == Point(5, 5*sqrt(3))
-    for var in p1:
+    assert p1.vertices[0] == Point(5, 5*sqrt(3))
+    for var in p1.args:
         if isinstance(var, Point):
             assert var == Point(0, 0)
         else:
             assert var == 5 or var == 10 or var == pi / 3
     assert p1 != Point(0, 0)
     assert p1 != p5
-    raises(IndexError, 'RegularPolygon(Point(0, 0), 1, 3)[4]')
 
     # while spin works in place (notice that rotation is 2pi/3 below)
     # rotate returns a new object
@@ -877,3 +884,6 @@ def test_util():
     assert intersection(Point(0, 0)) == []
     raises(ValueError, 'intersection(Point(0, 0), 3)')
     raises(ValueError, 'convex_hull(Point(0, 0), 3)')
+
+def test_repr():
+    assert repr(Circle((0, 1), 2)) == 'Circle(Point(0, 1), 2)'

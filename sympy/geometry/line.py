@@ -78,7 +78,7 @@ class LinearEntity(GeometryEntity):
         Point(0, 0)
 
         """
-        return self.__getitem__(0)
+        return self.args[0]
 
     @property
     def p2(self):
@@ -99,7 +99,7 @@ class LinearEntity(GeometryEntity):
         Point(5, 3)
 
         """
-        return self.__getitem__(1)
+        return self.args[1]
 
     @property
     def coefficients(self):
@@ -127,13 +127,13 @@ class LinearEntity(GeometryEntity):
 
         """
         p1, p2 = self.points
-        if p1[0] == p2[0]:
-            return (S.One, S.Zero, -p1[0])
-        elif p1[1] == p2[1]:
-            return (S.Zero, S.One, -p1[1])
-        return (self.p1[1]-self.p2[1],
-                self.p2[0]-self.p1[0],
-                self.p1[0]*self.p2[1] - self.p1[1]*self.p2[0])
+        if p1.x == p2.x:
+            return (S.One, S.Zero, -p1.x)
+        elif p1.y == p2.y:
+            return (S.Zero, S.One, -p1.y)
+        return (self.p1.y - self.p2.y,
+                self.p2.x - self.p1.x,
+                self.p1.x*self.p2.y - self.p1.y*self.p2.x)
 
     def is_concurrent(*lines):
         """Is a sequence of linear entities concurrent?
@@ -326,7 +326,7 @@ class LinearEntity(GeometryEntity):
         """
         v1 = l1.p2 - l1.p1
         v2 = l2.p2 - l2.p1
-        return C.acos((v1[0]*v2[0] + v1[1]*v2[1]) / (abs(v1)*abs(v2)))
+        return C.acos(v1.dot(v2)/(abs(v1)*abs(v2)))
 
     def parallel_line(self, p):
         """Create a new Line parallel to this linear entity which passes
@@ -395,16 +395,15 @@ class LinearEntity(GeometryEntity):
         True
 
         """
-        d1, d2 = self.p1 - self.p2
+        d1, d2 = (self.p1 - self.p2).args
         if d2 == 0: # If an horizontal line
-            if p[1] == self.p1[1]: # if p is on this linear entity
-                p2 = Point(p[0], p[1] + 1)
-                return Line(p, p2)
+            if p.y == self.p1.y: # if p is on this linear entity
+                return Line(p, p + Point(0, 1))
             else:
-                p2 = Point(p[0], self.p1[1])
+                p2 = Point(p.x, self.p1.y)
                 return Line(p, p2)
         else:
-            p2 = Point(p[0] - d2, p[1] + d1)
+            p2 = Point(p.x - d2, p.y + d1)
             return Line(p, p2)
 
     def perpendicular_segment(self, p):
@@ -494,7 +493,7 @@ class LinearEntity(GeometryEntity):
         oo
 
         """
-        d1, d2 = self.p1 - self.p2
+        d1, d2 = (self.p1 - self.p2).args
         if d1 == 0:
             return S.Infinity
         return simplify(d2/d1)
@@ -665,7 +664,7 @@ class LinearEntity(GeometryEntity):
                     if isinstance(o, Ray):
                         # case 1, rays in the same direction
                         if self.xdirection == o.xdirection:
-                            if self.source[0] < o.source[0]:
+                            if self.source.x < o.source.x:
                                 return [o]
                             return [self]
                         # case 2, rays in the opposite directions
@@ -765,24 +764,24 @@ class LinearEntity(GeometryEntity):
         if self.slope is S.Infinity:
             if isinstance(self, Ray):
                 if self.ydirection is S.Infinity:
-                    lower = self.p1[1]
+                    lower = self.p1.y
                 else:
-                    upper = self.p1[1]
+                    upper = self.p1.y
             elif isinstance(self, Segment):
-                lower = self.p1[1]
-                upper = self.p2[1]
+                lower = self.p1.y
+                upper = self.p2.y
 
-            x = self.p1[0]
+            x = self.p1.x
             y = randint(lower, upper)
         else:
             if isinstance(self, Ray):
                 if self.xdirection is S.Infinity:
-                    lower = self.p1[0]
+                    lower = self.p1.x
                 else:
-                    upper = self.p1[0]
+                    upper = self.p1.x
             elif isinstance(self, Segment):
-                lower = self.p1[0]
-                upper = self.p2[0]
+                lower = self.p1.x
+                upper = self.p2.x
 
             a, b, c = self.coefficients
             x = randint(lower, upper)
@@ -928,8 +927,8 @@ class Line(LinearEntity):
         t = _symbol(parameter)
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
-        x = simplify(self.p1[0] + t*(self.p2[0] - self.p1[0]))
-        y = simplify(self.p1[1] + t*(self.p2[1] - self.p1[1]))
+        x = simplify(self.p1.x + t*(self.p2.x - self.p1.x))
+        y = simplify(self.p1.y + t*(self.p2.y - self.p1.y))
         return Point(x, y)
 
     def plot_interval(self, parameter='t'):
@@ -993,10 +992,10 @@ class Line(LinearEntity):
         """
         x, y = _symbol(x), _symbol(y)
         p1, p2 = self.points
-        if p1[0] == p2[0]:
-            return x - p1[0]
-        elif p1[1] == p2[1]:
-            return y - p1[1]
+        if p1.x == p2.x:
+            return x - p1.x
+        elif p1.y == p2.y:
+            return y - p1.y
 
         a, b, c = self.coefficients
         return simplify(a*x + b*y + c)
@@ -1012,7 +1011,7 @@ class Line(LinearEntity):
         elif not self.is_similar(o):
             return False
         else:
-            return o[0] in self and o[1] in self
+            return o.p1 in self and o.p2 in self
 
     def __eq__(self, other):
         """Return True if other is equal to this Line, or False otherwise."""
@@ -1164,9 +1163,9 @@ class Ray(LinearEntity):
         0
 
         """
-        if self.p1[0] < self.p2[0]:
+        if self.p1.x < self.p2.x:
             return S.Infinity
-        elif self.p1[0] == self.p2[0]:
+        elif self.p1.x == self.p2.x:
             return S.Zero
         else:
             return S.NegativeInfinity
@@ -1196,9 +1195,9 @@ class Ray(LinearEntity):
         0
 
         """
-        if self.p1[1] < self.p2[1]:
+        if self.p1.y < self.p2.y:
             return S.Infinity
-        elif self.p1[1] == self.p2[1]:
+        elif self.p1.y == self.p2.y:
             return S.Zero
         else:
             return S.NegativeInfinity
@@ -1259,27 +1258,27 @@ class Ray(LinearEntity):
         ray, what value of `t` is needed?
 
         a) find the unit length and pick t accordingly
-        >>> u = Segment(r[0], p.subs(t, S.Half)).length # S.Half = 1/(1 + 1)
+        >>> u = Segment(r.p1, p.subs(t, S.Half)).length # S.Half = 1/(1 + 1)
         >>> want = 1
         >>> t_need = want/u
         >>> p_want = p.subs(t, t_need/(1 + t_need))
-        >>> simplify(Segment(r[0], p_want).length)
+        >>> simplify(Segment(r.p1, p_want).length)
         1
 
         b) find the t that makes the length from origin to p equal to 1
-        >>> l = Segment(r[0], p).length
+        >>> l = Segment(r.p1, p).length
         >>> t_need = solve(l**2 - want**2, t) # use the square to remove abs() if it is there
         >>> t_need = [w for w in t_need if w.n() > 0][0] # take positive t
         >>> p_want = p.subs(t, t_need)
-        >>> simplify(Segment(r[0], p_want).length)
+        >>> simplify(Segment(r.p1, p_want).length)
         1
 
         """
         t = _symbol(parameter)
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
-        x = simplify(self.p1[0] + t/(1 - t)*(self.p2[0] - self.p1[0]))
-        y = simplify(self.p1[1] + t/(1 - t)*(self.p2[1] - self.p1[1]))
+        x = simplify(self.p1.x + t/(1 - t)*(self.p2.x - self.p1.x))
+        y = simplify(self.p1.y + t/(1 - t)*(self.p2.y - self.p1.y))
         return Point(x, y)
 
     def plot_interval(self, parameter='t'):
@@ -1310,7 +1309,7 @@ class Ray(LinearEntity):
         p = self.arbitrary_point(t)
         # get a t corresponding to length of 10
         want = 10
-        u = Segment(self[0], p.subs(t, S.Half)).length # gives unit length
+        u = Segment(self.p1, p.subs(t, S.Half)).length # gives unit length
         t_need = want/u
         return [t, 0, t_need/(1 + t_need)]
 
@@ -1333,15 +1332,15 @@ class Ray(LinearEntity):
             return (o.p1 in self) and (o.p2 in self)
         elif isinstance(o, Point):
             if Point.is_collinear(self.p1, self.p2, o):
-                if (not self.p1[0].has(C.Symbol) and not self.p1[1].has(C.Symbol)
-                        and not self.p2[0].has(C.Symbol) and not self.p2[1].has(C.Symbol)):
+                if (not self.p1.x.free_symbols and not self.p1.y.free_symbols
+                        and not self.p2.x.free_symbols and not self.p2.y.free_symbols):
                     if self.xdirection is S.Infinity:
-                        return o[0] >= self.source[0]
+                        return o.x >= self.source.x
                     elif self.xdirection is S.NegativeInfinity:
-                        return o[0] <= self.source[0]
+                        return o.x <= self.source.x
                     elif self.ydirection is S.Infinity:
-                        return o[1] >= self.source[1]
-                    return o[1] <= self.source[1]
+                        return o.y >= self.source.y
+                    return o.y <= self.source.y
                 else:
                     # There are symbols lying around, so assume that o
                     # is contained in this ray (for now)
@@ -1406,15 +1405,15 @@ class Segment(LinearEntity):
 
     def __new__(cls, p1, p2, **kwargs):
         # Reorder the two points under the following ordering:
-        #   if p1[0] != p2[0] then p1[0] < p2[0]
-        #   if p1[0] == p2[0] then p1[1] < p2[1]
+        #   if p1.x != p2.x then p1.x < p2.x
+        #   if p1.x == p2.x then p1.y < p2.y
         p1 = Point(p1)
         p2 = Point(p2)
         if p1 == p2:
             return Point(p1)
-        if p1[0] > p2[0]:
+        if p1.x > p2.x:
             p1, p2 = p2, p1
-        elif p1[0] == p2[0] and p1[1] > p2[0]:
+        elif p1.x == p2.x and p1.y > p2.y:
             p1, p2 = p2, p1
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
@@ -1470,8 +1469,8 @@ class Segment(LinearEntity):
         t = _symbol(parameter)
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
-        x = simplify(self.p1[0] + t*(self.p2[0] - self.p1[0]))
-        y = simplify(self.p1[1] + t*(self.p2[1] - self.p1[1]))
+        x = simplify(self.p1.x + t*(self.p2.x - self.p1.x))
+        y = simplify(self.p1.y + t*(self.p2.y - self.p1.y))
         return Point(x, y)
 
     def plot_interval(self, parameter='t'):
@@ -1611,15 +1610,15 @@ class Segment(LinearEntity):
     def _do_point_distance(self, pt):
         """Calculates the distance between a point and a line segment."""
 
-        seg_vector = Point(self.p2[0] - self.p1[0], self.p2[1] - self.p1[1])
-        pt_vector = Point(pt[0] - self.p1[0], pt[1] - self.p1[1])
-        t = (seg_vector[0]*pt_vector[0] + seg_vector[1]*pt_vector[1])/self.length**2
+        seg_vector = self.p2 - self.p1
+        pt_vector = pt - self.p1
+        t = seg_vector.dot(pt_vector)/self.length**2
         if t >= 1:
             distance = Point.distance(self.p2, pt)
         elif t <= 0:
             distance = Point.distance(self.p1, pt)
         else:
-            distance = Point.distance(self.p1 + Point(t*seg_vector[0], t*seg_vector[1]), pt)
+            distance = Point.distance(self.p1 + Point(t*seg_vector.x, t*seg_vector.y), pt)
         return distance
 
     def __eq__(self, other):
@@ -1650,7 +1649,7 @@ class Segment(LinearEntity):
         elif isinstance(other, Point):
             if Point.is_collinear(self.p1, self.p2, other):
                 t = Dummy('t')
-                x, y = self.arbitrary_point(t)
+                x, y = self.arbitrary_point(t).args
                 if self.p1.x != self.p2.x:
                     ti = solve(x - other.x, t)[0]
                 else:

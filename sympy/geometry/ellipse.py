@@ -26,9 +26,9 @@ class Ellipse(GeometryEntity):
 
     center : Point, optional
         Default value is Point(0, 0)
-    hradius : number or sympy expression, optional
-    vradius : number or sympy expression, optional
-    eccentricity : number or sympy expression, optional
+    hradius : number or SymPy expression, optional
+    vradius : number or SymPy expression, optional
+    eccentricity : number or SymPy expression, optional
         Two of `hradius`, `vradius` and `eccentricity` must be supplied to
         create an Ellipse. The third is derived from the two supplied.
 
@@ -150,7 +150,7 @@ class Ellipse(GeometryEntity):
         Point(0, 0)
 
         """
-        return self.__getitem__(0)
+        return self.args[0]
 
     @property
     def hradius(self):
@@ -176,7 +176,7 @@ class Ellipse(GeometryEntity):
         3
 
         """
-        return self.__getitem__(1)
+        return self.args[1]
 
     @property
     def vradius(self):
@@ -202,7 +202,7 @@ class Ellipse(GeometryEntity):
         1
 
         """
-        return self.__getitem__(2)
+        return self.args[2]
 
     @property
     def minor(self):
@@ -240,7 +240,7 @@ class Ellipse(GeometryEntity):
         m
 
         """
-        rv = Min(*self[1:3])
+        rv = Min(*self.args[1:3])
         if rv.func is Min:
             return self.vradius
         return rv
@@ -281,7 +281,7 @@ class Ellipse(GeometryEntity):
         m + 1
 
         """
-        rv = Max(*self[1:3])
+        rv = Max(*self.args[1:3])
         if rv.func is Max:
             return self.hradius
         return rv
@@ -517,6 +517,7 @@ class Ellipse(GeometryEntity):
         False
 
         """
+        p = Point(p)
         if p in self:
             return False
 
@@ -581,10 +582,11 @@ class Ellipse(GeometryEntity):
             return []
 
         if p in self:
-            rise = (self.vradius ** 2)*(self.center[0] - p[0])
-            run = (self.hradius ** 2)*(p[1] - self.center[1])
-            p2 = Point(simplify(p[0] + run),
-                       simplify(p[1] + rise))
+            delta = self.center - p
+            rise = (self.vradius ** 2)*delta.x
+            run = -(self.hradius ** 2)*delta.y
+            p2 = Point(simplify(p.x + run),
+                       simplify(p.y + rise))
             return [Line(p, p2)]
         else:
             if len(self.foci) == 2:
@@ -608,8 +610,8 @@ class Ellipse(GeometryEntity):
 
             # handle horizontal and vertical tangent lines
             if len(tangent_points) == 1:
-                assert tangent_points[0][0] == p[0] or tangent_points[0][1] == p[1]
-                return [Line(p, Point(p[0]+1, p[1])), Line(p, Point(p[0], p[1]+1))]
+                assert tangent_points[0][0] == p.x or tangent_points[0][1] == p.y
+                return [Line(p, p + Point(1, 0)), Line(p, p + Point(0, 1))]
 
             # others
             return [Line(p, tangent_points[0]), Line(p, tangent_points[1])]
@@ -654,6 +656,8 @@ class Ellipse(GeometryEntity):
         inter = None
         if isinstance(o, Ellipse):
             inter = self.intersection(o)
+            if isinstance(inter, Ellipse):
+                return False
             return (inter is not None and isinstance(inter[0], Point)
                     and len(inter) == 1)
         elif isinstance(o, LinearEntity):
@@ -708,8 +712,8 @@ class Ellipse(GeometryEntity):
         t = _symbol(parameter)
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
-        return Point(self.center[0] + self.hradius*C.cos(t),
-                self.center[1] + self.vradius*C.sin(t))
+        return Point(self.center.x + self.hradius*C.cos(t),
+                     self.center.y + self.vradius*C.sin(t))
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ellipse.
@@ -776,10 +780,10 @@ class Ellipse(GeometryEntity):
         """
         from random import random
         t = _symbol('t')
-        p = self.arbitrary_point(t)
+        x, y = self.arbitrary_point(t).args
         # get a random value in [-pi, pi)
         subs_val = float(S.Pi)*(2*random() - 1)
-        return Point(p[0].subs(t, subs_val), p[1].subs(t, subs_val))
+        return Point(x.subs(t, subs_val), y.subs(t, subs_val))
 
     def equation(self, x='x', y='y'):
         """The equation of the ellipse.
@@ -813,8 +817,8 @@ class Ellipse(GeometryEntity):
         """
         x = _symbol(x)
         y = _symbol(y)
-        t1 = ((x - self.center[0]) / self.hradius)**2
-        t2 = ((y - self.center[1]) / self.vradius)**2
+        t1 = ((x - self.center.x) / self.hradius)**2
+        t2 = ((y - self.center.y) / self.vradius)**2
         return t1 + t2 - 1
 
     def _do_line_intersection(self, o):
@@ -825,11 +829,6 @@ class Ellipse(GeometryEntity):
         the end to see that they lie in o.
 
         """
-        def _dot(p1, p2):
-            sum = 0
-            for ind in xrange(len(p1.args)):
-                sum += p1[ind] * p2[ind]
-            return simplify(sum)
 
         hr_sq = self.hradius ** 2
         vr_sq = self.vradius ** 2
@@ -837,12 +836,12 @@ class Ellipse(GeometryEntity):
 
         ldir = lp[1] - lp[0]
         diff = lp[0] - self.center
-        mdir = (ldir[0] / hr_sq, ldir[1] / vr_sq)
-        mdiff = (diff[0] / hr_sq, diff[1] / vr_sq)
+        mdir = Point(ldir.x/hr_sq, ldir.y/vr_sq)
+        mdiff = Point(diff.x/hr_sq, diff.y/vr_sq)
 
-        a = _dot(ldir, mdir)
-        b = _dot(ldir, mdiff)
-        c = _dot(diff, mdiff) - 1
+        a = ldir.dot(mdir)
+        b = ldir.dot(mdiff)
+        c = diff.dot(mdiff) - 1
         det = simplify(b*b - a*c);
 
         result = []
@@ -992,7 +991,7 @@ class Ellipse(GeometryEntity):
             x = C.Dummy('x', real=True)
             y = C.Dummy('y', real=True)
 
-            res = self.equation(x, y).subs({x: o[0], y: o[1]})
+            res = self.equation(x, y).subs({x: o.x, y: o.y})
             return trigsimp(simplify(res)) is S.Zero
         elif isinstance(o, Ellipse):
             return self == o
@@ -1089,7 +1088,7 @@ class Circle(Ellipse):
         6
 
         """
-        return self.__getitem__(1)
+        return self.args[1]
 
     @property
     def vradius(self):
@@ -1116,7 +1115,7 @@ class Circle(Ellipse):
         Returns
         =======
 
-        circumference : number or sympy expression
+        circumference : number or SymPy expression
 
         Examples
         ========
@@ -1143,7 +1142,7 @@ class Circle(Ellipse):
         Returns
         =======
 
-        equation : sympy expression
+        equation : SymPy expression
 
         Examples
         ========
@@ -1156,8 +1155,8 @@ class Circle(Ellipse):
         """
         x = _symbol(x)
         y = _symbol(y)
-        t1 = (x - self.center[0])**2
-        t2 = (y - self.center[1])**2
+        t1 = (x - self.center.x)**2
+        t2 = (y - self.center.y)**2
         return t1 + t2 - self.major**2
 
     def intersection(self, o):
@@ -1195,7 +1194,7 @@ class Circle(Ellipse):
                 if o.radius == self.radius:
                     return o
                 return []
-            dx,dy = o.center - self.center
+            dx, dy = (o.center - self.center).args
             d = sqrt(simplify(dy**2 + dx**2))
             R = o.radius + self.radius
             if d > R or d < abs(self.radius - o.radius):
@@ -1203,8 +1202,8 @@ class Circle(Ellipse):
 
             a = simplify((self.radius**2 - o.radius**2 + d**2) / (2*d))
 
-            x2 = self.center[0] + (dx * a/d)
-            y2 = self.center[1] + (dy * a/d)
+            x2 = self.center.x + (dx * a/d)
+            y2 = self.center.y + (dy * a/d)
 
             h = sqrt(simplify(self.radius**2 - a**2))
             rx = -dy * (h/d)

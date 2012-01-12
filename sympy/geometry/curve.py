@@ -8,6 +8,7 @@ Curve
 
 from sympy.core import sympify
 from sympy.core.compatibility import is_sequence
+from sympy.core.containers import Tuple
 from sympy.geometry.entity import GeometryEntity
 from sympy.geometry.point import Point
 from util import _symbol
@@ -67,7 +68,7 @@ class Curve(GeometryEntity):
             raise ValueError("Function argument should be (x(t), y(t)) but got %s" % str(function))
         if not is_sequence(limits) or len(limits) != 3:
             raise ValueError("Limit argument should be (t, tmin, tmax) but got %s" % str(limits))
-        return GeometryEntity.__new__(cls, tuple(sympify(fun)), tuple(sympify(limits)))
+        return GeometryEntity.__new__(cls, Tuple(*fun), Tuple(*limits))
 
     @property
     def free_symbols(self):
@@ -114,7 +115,7 @@ class Curve(GeometryEntity):
         (t, t**2)
 
         """
-        return self.__getitem__(0)
+        return self.args[0]
 
     @property
     def parameter(self):
@@ -123,7 +124,7 @@ class Curve(GeometryEntity):
         Returns
         =======
 
-        parameter : sympy symbol
+        parameter : SymPy symbol
 
         See Also
         ========
@@ -140,7 +141,7 @@ class Curve(GeometryEntity):
         t
 
         """
-        return self.__getitem__(1)[0]
+        return self.args[1][0]
 
     @property
     def limits(self):
@@ -167,7 +168,7 @@ class Curve(GeometryEntity):
         (t, -2, 2)
 
         """
-        return self.__getitem__(1)
+        return self.args[1]
 
     def arbitrary_point(self, parameter='t'):
         """

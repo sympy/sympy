@@ -9,6 +9,7 @@ GeometryEntity
 
 from sympy.core.compatibility import cmp
 from sympy.core.containers import Tuple
+from sympy.core.basic import Basic
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
@@ -24,7 +25,7 @@ ordering_of_classes = [
     "Curve"
 ]
 
-class GeometryEntity(Tuple):
+class GeometryEntity(Basic):
     """The base class for all geometrical entities.
 
     This class doesn't represent any particular geometric entity, it only
@@ -33,29 +34,10 @@ class GeometryEntity(Tuple):
     """
 
     def __new__(cls, *args, **kwargs):
-        return Tuple.__new__(cls, *args)
+        return Basic.__new__(cls, *Tuple(*args).args)
 
     def __getnewargs__(self):
         return tuple(self.args)
-
-    @property
-    def free_symbols(self):
-        """
-        Return all but any bound symbols that are used to define the Entity.
-
-        Examples
-        ========
-
-        >>> from sympy import Polygon, RegularPolygon, Point
-        >>> from sympy.abc import x, y
-        >>> t = Polygon(*RegularPolygon(Point(x, y), 1, 3).vertices)
-        >>> t.free_symbols
-        set([x, y])
-        """
-        free = set()
-        for a in self.args:
-            free |= a.free_symbols
-        return free
 
     def intersection(self, o):
         """
@@ -111,8 +93,8 @@ class GeometryEntity(Tuple):
             rv = self
             if pt is not None:
                 rv -= pt
-            x, y = rv
-            rv = Point(c*x-s*y, s*x+c*y)
+            x, y = rv.args
+            rv = Point(c*x - s*y, s*x + c*y)
             if pt is not None:
                 rv += pt
             return rv
@@ -148,7 +130,7 @@ class GeometryEntity(Tuple):
         """
         from sympy import Point
         if isinstance(self, Point):
-            return Point(self[0]*x, self[1]*y)
+            return Point(self.x*x, self.y*y)
         newargs = []
         for a in self.args:
             if isinstance(a, GeometryEntity):
@@ -279,12 +261,12 @@ class GeometryEntity(Tuple):
     def __str__(self):
         """String representation of a GeometryEntity."""
         from sympy.printing import sstr
-        return type(self).__name__ + sstr(tuple(self))
+        return type(self).__name__ + sstr(self.args)
 
     def __repr__(self):
         """String representation of a GeometryEntity that can be evaluated
         by sympy."""
-        return type(self).__name__ + repr(tuple(self))
+        return type(self).__name__ + repr(self.args)
 
     def __cmp__(self, other):
         """Comparison of two GeometryEntities."""
