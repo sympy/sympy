@@ -52,11 +52,6 @@ class LeviCivita(Function):
     LeviCivita(i, j, k)
     >>> LeviCivita(i,j,i)
     0
-    
-    See Also
-    ========
-
-    Eijk
   
     """
     @classmethod
@@ -110,7 +105,6 @@ class KroneckerDelta(Function):
     See Also
     ========
 
-    eval
     sympy.functions.special.delta_functions.DiracDelta
 
     References
@@ -183,12 +177,6 @@ class KroneckerDelta(Function):
         >>> KroneckerDelta(p,q).is_above_fermi
         True
 
-        See Also
-        ========
-
-        is_below_fermi, is_only_below_fermi, is_only_above_fermi
-        
-
         """
         if self.args[0].assumptions0.get("below_fermi"):
             return False
@@ -216,12 +204,6 @@ class KroneckerDelta(Function):
         True
         >>> KroneckerDelta(p,q).is_below_fermi
         True
-
-        See Also
-        ========
-
-        is_above_fermi, is_only_above_fermi, is_only_below_fermi
-        
         """
         if self.args[0].assumptions0.get("above_fermi"):
             return False
@@ -250,12 +232,6 @@ class KroneckerDelta(Function):
         >>> KroneckerDelta(p,i).is_only_above_fermi
         False
 
-        See Also
-        ========
-
-        is_above_fermi, is_below_fermi, is_only_below_fermi
-        
-
         """
         return ( self.args[0].assumptions0.get("above_fermi")
                 or
@@ -283,13 +259,7 @@ class KroneckerDelta(Function):
         >>> KroneckerDelta(p,a).is_only_below_fermi
         False
 
-        See Also
-        ========
-
-        is_above_fermi, , is_below_fermi, is_only_above_fermi
-        
-
-        """
+         """
         return ( self.args[0].assumptions0.get("below_fermi")
                 or
                 self.args[1].assumptions0.get("below_fermi")
@@ -353,11 +323,6 @@ class KroneckerDelta(Function):
         >>> KroneckerDelta(i,j).preferred_index
         i
         
-        See Also
-        ========
-        
-        killable_index, _get_preferred_index
-        
         """
         if self._get_preferred_index():
             return self.args[1]
@@ -388,11 +353,6 @@ class KroneckerDelta(Function):
         p
         >>> KroneckerDelta(i,j).killable_index
         j
-
-        See Also
-        ========
-        
-        preferred_index, _get_preferred_index
 
         """
         if self._get_preferred_index():
