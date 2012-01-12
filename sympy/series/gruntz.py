@@ -145,23 +145,8 @@ def debug(func):
 
     return decorated
 
-from time import time
-it = 0
-do_timings = False
-def timeit(func):
-    global do_timings
-    if not do_timings:
-        return func
-    def dec(*args, **kwargs):
-        global it
-        it += 1
-        t0 = time()
-        r = func(*args, **kwargs)
-        t1 = time()
-        print "%s %.3f %s%s" % ('-' * (2+it), t1-t0, func.func_name, args)
-        it -= 1
-        return r
-    return dec
+from sympy.utilities.timeutils import timethis
+timeit = timethis('gruntz')
 
 def tree(subtrees):
     "Only debugging purposes: prints a tree"

@@ -540,7 +540,12 @@ class Integral(Expr):
                         function = antideriv._eval_interval(x, a, b)
                         function = Poly(function, *gens)
                     else:
-                        function = antideriv._eval_interval(x, a, b)
+                        try:
+                            function = antideriv._eval_interval(x, a, b)
+                        except NotImplementedError:
+                            # This can happen if _eval_interval depends in a
+                            # complicated way on limits that cannot be computed
+                            undone_limits.append(xab)
 
         if undone_limits:
             return self.func(*([function] + undone_limits))

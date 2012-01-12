@@ -5,7 +5,8 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     I, S, Limit, oo, cos, atan2, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
     Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict,
-    euler, groebner, catalan, Product, KroneckerDelta, Segment, Ray)
+    euler, groebner, catalan, Product, KroneckerDelta, Ei, expint, Shi, Chi, Si,
+    Ci, Segment, Ray)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -3596,3 +3597,24 @@ def test_pretty_geometry():
     assert pretty(e) == 'Segment(Point(0, 2), Point(0, 1))'
     e = Ray((1, 1), angle=4.2*pi)
     assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(0.2*pi) + 1))'
+
+def test_expint():
+    expr = Ei(x)
+    string = 'Ei(x)'
+    assert pretty(expr) == string
+    assert upretty(expr) == string
+
+    expr = expint(1, z)
+    ucode_str = u"E₁(z)"
+    ascii_str = "expint(1, z)"
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    assert pretty(Shi(x)) == 'Shi(x)'
+    assert pretty(Si(x)) == 'Si(x)'
+    assert pretty(Ci(x)) == 'Ci(x)'
+    assert pretty(Chi(x)) == 'Chi(x)'
+    assert upretty(Shi(x)) == 'Shi(x)'
+    assert upretty(Si(x)) == 'Si(x)'
+    assert upretty(Ci(x)) == 'Ci(x)'
+    assert upretty(Chi(x)) == 'Chi(x)'
