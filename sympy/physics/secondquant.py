@@ -1228,7 +1228,7 @@ class FockStateFermionKet(FermionState,FockStateKet):
 
     >>> from sympy.physics.secondquant import FKet
     >>> FKet([1, 2])
-    FockStateFermionKet((1, 2))
+    -FockStateFermionKet((2, 1))
     """
     def _dagger_(self):
         return FockStateFermionBra(*self.args)
@@ -1242,7 +1242,7 @@ class FockStateFermionBra(FermionState,FockStateBra):
 
     >>> from sympy.physics.secondquant import FBra
     >>> FBra([1, 2])
-    FockStateFermionBra((1, 2))
+    -FockStateFermionBra((2, 1))
     """
     def _dagger_(self):
         return FockStateFermionKet(*self.args)
