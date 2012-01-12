@@ -1252,3 +1252,13 @@ def test_issue_2941():
     assert b != a
     assert not (a == b)
     assert not (b == a)
+
+
+def test_issue_2983():
+    from sympy.functions.elementary.miscellaneous import Max
+    from sympy.logic.boolalg import Or
+    from sympy.abc import x, y, z
+
+    assert Max(x, 1) * Max(x, 2) == Max(x, 1) * Max(x, 2)
+    assert Or(x, z) * Or(x, z) == Or(x, z) * Or(x, z)
+
