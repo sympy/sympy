@@ -51,8 +51,8 @@ def E_n(n,omega):
 
         E_n = hbar * omega*(n + 1/2)
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.physics.qho_1d import E_n
     >>> from sympy import var

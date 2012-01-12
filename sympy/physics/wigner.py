@@ -332,8 +332,8 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
     Rational number times the square root of a rational number
     (if ``prec=None``), or real number if a precision is given.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.physics.wigner import racah
     >>> racah(3,3,3,3,3,3)

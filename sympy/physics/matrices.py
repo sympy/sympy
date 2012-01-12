@@ -4,11 +4,14 @@ from sympy import Matrix, I
 
 def msigma(i):
     """Returns a Pauli matrix sigma_i. i=1,2,3
-    See also:
+
+    See also
+    ========
+
     http://en.wikipedia.org/wiki/Pauli_matrices
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.physics.matrices import msigma
     >>> msigma(1)
@@ -76,8 +79,8 @@ def mgamma(mu,lower=False):
 
     http://en.wikipedia.org/wiki/Gamma_matrices
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.physics.matrices import mgamma
     >>> mgamma(1)

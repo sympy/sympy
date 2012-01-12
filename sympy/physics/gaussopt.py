@@ -104,8 +104,8 @@ class RayTransferMatrix(Matrix):
         """
         The A parameter of the Matrix
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.physics.gaussopt import RayTransferMatrix
         >>> mat = RayTransferMatrix(1, 2, 3, 4)
@@ -119,8 +119,8 @@ class RayTransferMatrix(Matrix):
         """
         The B parameter of the Matrix
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.physics.gaussopt import RayTransferMatrix
         >>> mat = RayTransferMatrix(1, 2, 3, 4)
@@ -134,8 +134,8 @@ class RayTransferMatrix(Matrix):
         """
         The C parameter of the Matrix
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.physics.gaussopt import RayTransferMatrix
         >>> mat = RayTransferMatrix(1, 2, 3, 4)
@@ -149,8 +149,8 @@ class RayTransferMatrix(Matrix):
         """
         The D parameter of the Matrix
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.physics.gaussopt import RayTransferMatrix
         >>> mat = RayTransferMatrix(1, 2, 3, 4)
@@ -342,8 +342,8 @@ class GeometricRay(Matrix):
         """
         The distance from the optical axis.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.physics.gaussopt import GeometricRay
         >>> from sympy import symbols
@@ -359,8 +359,8 @@ class GeometricRay(Matrix):
         """
         The angle with the optical axis.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.physics.gaussopt import GeometricRay
         >>> from sympy import symbols
@@ -479,7 +479,10 @@ class BeamParameter(Expr):
         """
         The beam radius at 1/e^2 intensity.
 
-        See Also: BeamParameter.w_0
+        See Also
+        ========
+
+        BeamParameter.w_0
 
         Examples
         ========
