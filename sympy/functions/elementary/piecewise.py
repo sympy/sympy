@@ -213,7 +213,7 @@ class Piecewise(Function):
             elif isinstance(cond, Equality):
                 continue
 
-            lower, upper = cond.lts, cond.gts # part 1: given defaults
+            lower, upper = cond.lts, cond.gts # part 1: initialize with givens
             if cond.lts.has(sym):     # part 1a: expand the side ...
                 lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
             elif cond.gts.has(sym):   # part 1a: ... that can be expanded

@@ -127,15 +127,15 @@ class Relational(Expr, EvalfMixin):
 
     is_Relational = True
 
+    # ValidRelationOperator - Defined below, because the necessary classes
+    #   have not yet been defined
+
     @staticmethod
     def get_relational_class(rop):
-        if rop is None or rop in ['==','eq']: return Equality
-        if rop in ['!=','<>','ne']:           return Unequality
-        if rop in ['<','lt']:                 return StrictLessThan
-        if rop in ['<=','le']:                return LessThan
-        if rop in ['>','gt']:                 return StrictGreaterThan
-        if rop in ['>=','ge']:                return GreaterThan
-        raise ValueError("Invalid relational operator symbol: %r" % (rop))
+        try:
+            return Relational.ValidRelationOperator[ rop ]
+        except:
+            raise ValueError("Invalid relational operator symbol: %r" % (rop))
 
     def __new__(cls, lhs, rhs, rop=None, **assumptions):
         lhs = _sympify(lhs)
@@ -290,3 +290,20 @@ class GreaterThan(_Greater):
 
     def __nonzero__(self):
         return self.gts.compare( self.lts ) >= 0
+
+Relational.ValidRelationOperator = {
+  None : Equality,
+  '==' : Equality,
+  'eq' : Equality,
+  '!=' : Unequality,
+  '<>' : Unequality,
+  'ne' : Unequality,
+  '>=' : GreaterThan,
+  'ge' : GreaterThan,
+  '<=' : LessThan,
+  'le' : LessThan,
+  '>'  : StrictGreaterThan,
+  'gt' : StrictGreaterThan,
+  '<'  : StrictLessThan,
+  'lt' : StrictLessThan,
+}
