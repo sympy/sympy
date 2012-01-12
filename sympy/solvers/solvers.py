@@ -368,7 +368,9 @@ def solve(f, *symbols, **flags):
 
     * flags
         'check=True (default)'
-            if False, don't do any testing of solutions
+            If False, don't do any testing of solutions. This can be
+            useful if one wants to include solutions that make any
+            denominator zero.
         'numerical=True (default)'
             do a fast numerical check if ``f`` has only one symbol.
         'minimal=True (default is False)'
@@ -545,6 +547,20 @@ def solve(f, *symbols, **flags):
 
     assumptions aren't checked when `solve()` input involves
     relationals or bools.
+
+    When the solutions are checked, those that make any denominator zero
+    are automatically excluded. If you do not want to exclude such solutions
+    then use the check=False option:
+
+        >>> from sympy import sin
+        >>> solve(sin(x)/x)
+        []
+        >>> solve(sin(x)/x, check=False)
+        [0]
+        >>> solve((x**2*(1/x - z**2/x)), x)
+        []
+        >>> solve((x**2*(1/x - z**2/x)), x, check=False)
+        [0]
 
     See Also
     ========
@@ -1295,8 +1311,8 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
         or
 
         (symbol, solution) where symbol appears linearly in the numerator of
-        ``f``,
-            is in ``symbols`` (if given) and is not in ``exclude`` (if given).
+            ``f`` and is in ``symbols`` (if given) and is not in ``exclude``
+            (if given).
 
         No simplification is done to ``f`` other than and mul=True expansion,
         so the solution will correspond strictly to a unique solution.
