@@ -65,6 +65,11 @@ def bspline_basis(d, knots, n, x, close=True):
         >>> f = lambdify(x, b0)
         >>> y = f(0.5)
 
+    See Also
+    ========
+
+    bsplines_basis_set
+
     References
     ==========
 
@@ -128,6 +133,10 @@ def bspline_basis_set(d, knots, x):
     >>> splines
     [Piecewise((x**2/2, [0, 1)), (-x**2 + 3*x - 3/2, [1, 2)), (x**2/2 - 3*x + 9/2, [2, 3]), (0, True)), Piecewise((x**2/2 - x + 1/2, [1, 2)), (-x**2 + 5*x - 11/2, [2, 3)), (x**2/2 - 4*x + 8, [3, 4]), (0, True))]
 
+    See Also
+    ========
+
+    bsplines_basis
     """
     n_splines = len(knots)-d-1
     return [bspline_basis(d, knots, i, x) for i in range(n_splines)]
