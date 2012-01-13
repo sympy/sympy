@@ -100,7 +100,7 @@ def Gt(a, b):
     >>> from sympy import Gt
     >>> from sympy.abc import x, y
     >>> Gt(y, x+x**2)
-    x**2 + x < y
+    y > x**2 + x
 
     """
     return Relational(a,b,'>')
@@ -116,7 +116,7 @@ def Ge(a, b):
     >>> from sympy import Ge
     >>> from sympy.abc import x, y
     >>> Ge(y, x+x**2)
-    x**2 + x <= y
+    y >= x**2 + x
 
     """
     return Relational(a,b,'>=')
