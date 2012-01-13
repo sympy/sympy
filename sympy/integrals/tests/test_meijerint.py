@@ -428,9 +428,9 @@ def test_probability():
     # TODO are there other distributions supported on (-oo, oo) that we can do?
 
     # misc tests
-    k = Symbol('k', integer=True)
+    k = Symbol('k', positive=True)
     assert combsimp(expand_mul(integrate(log(x) * x**(k-1) * exp(-x) / gamma(k),
-                                     (x, 0, oo), conds='none'))) == polygamma(0, k)
+                                     (x, 0, oo)))) == polygamma(0, k)
 
 def test_expint():
     """ Test various exponential integrals. """
