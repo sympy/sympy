@@ -286,7 +286,7 @@ class KroneckerDelta(Function):
         See Also
         ========
 
-        is_above_fermi, , is_below_fermi, is_only_above_fermi
+        is_above_fermi, is_below_fermi, is_only_above_fermi
         
 
         """
@@ -356,7 +356,7 @@ class KroneckerDelta(Function):
         See Also
         ========
         
-        killable_index, _get_preferred_index
+        killable_index
         
         """
         if self._get_preferred_index():
@@ -392,7 +392,7 @@ class KroneckerDelta(Function):
         See Also
         ========
         
-        preferred_index, _get_preferred_index
+        preferred_index
 
         """
         if self._get_preferred_index():

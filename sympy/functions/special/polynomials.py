@@ -235,7 +235,7 @@ class assoc_legendre(Function):
     ========
 
     legendre
-    chebyshevu, chebyshevt, chebysheut_root, chebyshevt_root
+    chebyshevu, chebyshevt, chebyshevu_root, chebyshevt_root
     
     References
     ==========

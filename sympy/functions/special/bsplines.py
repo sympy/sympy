@@ -28,6 +28,7 @@ def bspline_basis(d, knots, n, x, close=True):
 
     B-Splines are piecewise polynomials of degree d [1].  They are defined on
     a set of knots, which is a sequence of integers or floats.
+
     The 0th degree splines have a value of one on a single interval:
 	
         >>> from sympy import bspline_basis

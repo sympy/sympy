@@ -194,7 +194,7 @@ class Heaviside(Function):
     See Also
     ========
     
-    Diracdelta
+    DiracDelta
 
     References
     ==========
