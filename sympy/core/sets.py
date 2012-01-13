@@ -6,6 +6,8 @@ from sympify import _sympify, sympify, SympifyError
 from sympy.mpmath import mpi, mpf
 from containers import Tuple
 
+from sympy.core.relational import Le, Lt
+from sympy.logic.boolalg import And
 
 class Set(Basic):
     """
@@ -619,8 +621,6 @@ class Interval(RealSet):
 
     def as_relational(self, symbol):
         """Rewrite an interval in terms of inequalities and logic operators. """
-        from sympy.core.relational import Lt, Le
-        from sympy.logic.boolalg import And
 
         if not self.is_left_unbounded:
             if self.left_open:

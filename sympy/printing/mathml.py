@@ -60,8 +60,10 @@ class MathMLPrinter(Printer):
             'log': 'ln',
             'Equality': 'eq',
             'Unequality': 'neq',
-            'StrictInequality': 'lt',
-            'Inequality': 'leq'
+            'StrictGreaterThan': 'gt',
+            'StrictLessThan': 'lt',
+            'GreaterThan': 'geq',
+            'LessThan': 'leq',
         }
 
         for cls in e.__class__.__mro__:

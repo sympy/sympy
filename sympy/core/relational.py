@@ -2,6 +2,13 @@ from expr import Expr
 from evalf import EvalfMixin
 from sympify import _sympify
 
+__all__ = (
+ 'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
+ 'Relational', 'Equality', 'Unequality', 'StrictLessThan', 'LessThan',
+ 'StrictGreaterThan', 'GreaterThan',
+)
+
+
 def Rel(a, b, op):
     """
     A handy wrapper around the Relational class.
@@ -93,7 +100,7 @@ def Gt(a, b):
     >>> from sympy import Gt
     >>> from sympy.abc import x, y
     >>> Gt(y, x+x**2)
-    x**2 + x < y
+    y > x**2 + x
 
     """
     return Relational(a,b,'>')
@@ -109,7 +116,7 @@ def Ge(a, b):
     >>> from sympy import Ge
     >>> from sympy.abc import x, y
     >>> Ge(y, x+x**2)
-    x**2 + x <= y
+    y >= x**2 + x
 
     """
     return Relational(a,b,'>=')
@@ -120,15 +127,15 @@ class Relational(Expr, EvalfMixin):
 
     is_Relational = True
 
+    # ValidRelationOperator - Defined below, because the necessary classes
+    #   have not yet been defined
+
     @staticmethod
     def get_relational_class(rop):
-        if rop is None or rop in ['==','eq']: return Equality, False
-        if rop in ['!=','<>','ne']: return Unequality, False
-        if rop in ['<','lt']: return StrictInequality, False
-        if rop in ['>','gt']: return StrictInequality, True
-        if rop in ['<=','le']: return Inequality, False
-        if rop in ['>=','ge']: return Inequality, True
-        raise ValueError("Invalid relational operator symbol: %r" % (rop))
+        try:
+            return Relational.ValidRelationOperator[ rop ]
+        except KeyError:
+            raise ValueError("Invalid relational operator symbol: %r" % (rop))
 
     def __new__(cls, lhs, rhs, rop=None, **assumptions):
         lhs = _sympify(lhs)
@@ -136,8 +143,7 @@ class Relational(Expr, EvalfMixin):
         if cls is not Relational:
             rop_cls = cls
         else:
-            rop_cls, swap = Relational.get_relational_class(rop)
-            if swap: lhs, rhs = rhs, lhs
+            rop_cls = Relational.get_relational_class(rop)
         if lhs.is_number and rhs.is_number and lhs.is_real and rhs.is_real:
             # Just becase something is a number, doesn't mean you can evalf it.
             Nlhs = lhs.evalf()
@@ -169,6 +175,7 @@ class Relational(Expr, EvalfMixin):
     def doit(self, **hints):
         lhs = self.lhs
         rhs = self.rhs
+
         if hints.get('deep', True):
             lhs = lhs.doit(**hints)
             rhs = rhs.doit(**hints)
@@ -214,7 +221,25 @@ class Unequality(Relational):
     def __nonzero__(self):
         return self.lhs.compare(self.rhs)!=0
 
-class StrictInequality(Relational):
+class _Greater(Relational):
+    @property
+    def gts(self):
+        return self._args[0]
+
+    @property
+    def lts(self):
+        return self._args[1]
+
+class _Less(Relational):
+    @property
+    def gts(self):
+        return self._args[1]
+
+    @property
+    def lts(self):
+        return self._args[0]
+
+class StrictLessThan(_Less):
 
     rel_op = '<'
 
@@ -225,9 +250,9 @@ class StrictInequality(Relational):
         return lhs < rhs
 
     def __nonzero__(self):
-        return self.lhs.compare(self.rhs)==-1
+        return self.lhs.compare( self.rhs ) == -1
 
-class Inequality(Relational):
+class LessThan(_Less):
 
     rel_op = '<='
 
@@ -238,4 +263,47 @@ class Inequality(Relational):
         return lhs <= rhs
 
     def __nonzero__(self):
-        return self.lhs.compare(self.rhs)<=0
+        return self.lhs.compare( self.rhs ) <= 0
+
+class StrictGreaterThan(_Greater):
+
+    rel_op = '>'
+
+    __slots__ = []
+
+    @classmethod
+    def _eval_relation(cls, lhs, rhs):
+        return lhs > rhs
+
+    def __nonzero__(self):
+        return self.gts.compare( self.lts ) == 1
+
+class GreaterThan(_Greater):
+
+    rel_op = '>='
+
+    __slots__ = []
+
+    @classmethod
+    def _eval_relation(cls, lhs, rhs):
+        return lhs >= rhs
+
+    def __nonzero__(self):
+        return self.gts.compare( self.lts ) >= 0
+
+Relational.ValidRelationOperator = {
+  None : Equality,
+  '==' : Equality,
+  'eq' : Equality,
+  '!=' : Unequality,
+  '<>' : Unequality,
+  'ne' : Unequality,
+  '>=' : GreaterThan,
+  'ge' : GreaterThan,
+  '<=' : LessThan,
+  'le' : LessThan,
+  '>'  : StrictGreaterThan,
+  'gt' : StrictGreaterThan,
+  '<'  : StrictLessThan,
+  'lt' : StrictLessThan,
+}

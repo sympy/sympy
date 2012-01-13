@@ -1,5 +1,6 @@
-from sympy import (Symbol, Wild, Inequality, StrictInequality, pi, I, Rational,
-    sympify, symbols, Dummy, Function, flatten)
+from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
+    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy, Function, flatten
+)
 
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import SymPyDeprecationWarning
@@ -51,17 +52,19 @@ def test_as_dummy():
 def test_lt_gt():
     x, y = Symbol('x'), Symbol('y')
 
-    assert (x <= y) == Inequality(x, y)
-    assert (x >= y) == Inequality(y, x)
-    assert (x <= 0) == Inequality(x, 0)
-    assert (x >= 0) == Inequality(0, x)
+    assert (x >= y) == GreaterThan(x, y)
+    assert (x >= 0) == GreaterThan(x, 0)
+    assert (x <= y) == LessThan(x, y)
+    assert (x <= 0) == LessThan(x, 0)
 
-    assert (x < y) == StrictInequality(x, y)
-    assert (x > y) == StrictInequality(y, x)
-    assert (x < 0) == StrictInequality(x, 0)
-    assert (x > 0) == StrictInequality(0, x)
+    assert (x > y) == StrictGreaterThan(x, y)
+    assert (x > 0) == StrictGreaterThan(x, 0)
 
-    assert (x**2+4*x+1 > 0) == StrictInequality(0, x**2+4*x+1)
+    assert (x < y) == StrictLessThan(x, y)
+    assert (x < 0) == StrictLessThan(x, 0)
+
+    assert (x**2+4*x+1 > 0) == StrictGreaterThan(x**2+4*x+ 1, 0)
+    assert (x**2+4*x+1 < 0) == StrictLessThan(x**2+4*x+1, 0)
 
 def test_no_len():
     # there should be no len for numbers

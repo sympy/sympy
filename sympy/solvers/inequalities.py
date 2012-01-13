@@ -323,9 +323,9 @@ def _solve_inequality(ie, s):
     """ A hacky replacement for solve, since the latter only works for
         univariate inequalities. """
     from sympy import Poly
-    if not ie.rel_op in ['<', '<=']:
+    if not ie.rel_op in ('>', '>=', '<', '<='):
         raise NotImplementedError
-    expr = ie.lhs - ie.rhs
+    expr = ie.lts - ie.gts
     p = Poly(expr, s)
     if p.degree() != 1:
         raise NotImplementedError('%s' % ie)
