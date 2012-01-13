@@ -25,7 +25,6 @@ often. A new backend instance is initialized every time you call show() and the
 old one is left to the garbage collector.
 """
 
-import warnings
 from inspect import getargspec
 from sympy import sympify, Expr, Tuple
 from sympy.external import import_module
@@ -874,19 +873,19 @@ class BaseBackend(object):
 
     def __getattr__(self, name):
         if name.startswith('set_glo_'):
-            warnings.warn('The global option setter ' + name +
-                          ' is not implemented in the backend. ' +
-                          'The options is not available.')
+            #warnings.warn('The global option setter ' + name +
+            #              ' is not implemented in the backend. ' +
+            #              'The options is not available.')
             return self._dummy
         elif name.startswith('set_ser_opt_'):
-            warnings.warn('The series option setter ' + name +
-                          ' is not implemented in the backend. ' +
-                          'The options is not available.')
+            #warnings.warn('The series option setter ' + name +
+            #              ' is not implemented in the backend. ' +
+            #              'The options is not available.')
             return self._dummy
         elif name.startswith('set_ser_aes_'):
-            warnings.warn('The series aesthetic setter ' + name +
-                          ' is not implemented in the backend. ' +
-                          'The aesthetic is not available.')
+            #warnings.warn('The series aesthetic setter ' + name +
+            #              ' is not implemented in the backend. ' +
+            #              'The aesthetic is not available.')
             return self._dummy
         else:
             raise AttributeError('The backend has no such attribute ' + name)
@@ -989,7 +988,7 @@ class MatplotlibBackend(BaseBackend):
 
     def set_glo_axis_center(self, val):
         if isinstance(self.ax, Axes3D):
-            warnings.warn('axis_center is not supported in 3D matplotlib backend.')
+            pass
         elif val == 'center':
             self.ax.spines['left'].set_position('center')
             self.ax.spines['bottom'].set_position('center')
@@ -1005,7 +1004,7 @@ class MatplotlibBackend(BaseBackend):
 
     def set_glo_xscale(self, val):
         if isinstance(self.ax, Axes3D):
-            warnings.warn('xscale is not supported in 3D matplotlib backend.')
+            pass
         else:
             self.ax.set_xscale(val)
             #XXX In matplotlib xscale resets xlim, so we must set xlim again.
@@ -1013,7 +1012,7 @@ class MatplotlibBackend(BaseBackend):
 
     def set_glo_yscale(self, val):
         if isinstance(self.ax, Axes3D):
-            warnings.warn('yscale is not supported in 3D matplotlib backend.')
+            pass
         else:
            self.ax.set_yscale(val)
            #XXX In matplotlib yscale resets ylim, so we must set ylim again.
