@@ -286,7 +286,8 @@ class Mul(AssocOp):
         # We do want a combined exponent if it would not be an Add, such as
         #  y    2y     3y
         # x  * x   -> x
-        # We determine this if two exponents have the same term in as_coeff_mul
+        # We determine if two exponents have the same term by using
+        # as_coeff_Mul.
         #
         # Unfortunately, this isn't smart enough to consider combining into
         # exponents that might already be adds, so things like:
@@ -295,33 +296,25 @@ class Mul(AssocOp):
         # combination can slow things down.
 
         # gather exponents of common bases...
+        def _gather(c_powers):
+            new_c_powers = []
+            common_b = {} # b:e
+            for b, e in c_powers:
+                co = e.as_coeff_Mul()
+                common_b.setdefault(b, {}).setdefault(co[1], []).append(co[0])
+            for b, d in common_b.items():
+                for di, li in d.items():
+                    d[di] = Add(*li)
+            for b, e in common_b.items():
+                for t, c in e.items():
+                    new_c_powers.append((b, c*t))
+            return new_c_powers
+
         # in c_powers
-        new_c_powers = []
-        common_b = {} # b:e
-        for b, e in c_powers:
-            co = e.as_coeff_mul()
-            common_b.setdefault(b, {}).setdefault(co[1], []).append(co[0])
-        for b, d in common_b.items():
-            for di, li in d.items():
-                d[di] = Add(*li)
-        for b, e in common_b.items():
-            for t, c in e.items():
-                new_c_powers.append((b, c*Mul(*t)))
-        c_powers = new_c_powers
+        c_powers = _gather(c_powers)
 
         # and in num_exp
-        new_num_exp = []
-        common_b = {} # b:e
-        for b, e in num_exp:
-            co = e.as_coeff_mul()
-            common_b.setdefault(b, {}).setdefault(co[1], []).append(co[0])
-        for b, d in common_b.items():
-            for di, li in d.items():
-                d[di] = Add(*li)
-        for b, e in common_b.items():
-            for t, c in e.items():
-                new_num_exp.append((b,c*Mul(*t)))
-        num_exp = new_num_exp
+        num_exp = _gather(num_exp)
 
         # --- PART 2 ---
         #

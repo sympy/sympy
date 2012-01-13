@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Float, re, pi, \
-        sympify, Add, Mul, Pow, Mod, I, log, S
+        sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
@@ -220,7 +220,6 @@ def test_expand():
         W = W * (x-i)
     W = W.expand()
     assert W.has(-1672280820*x**15)
-
 
 def test_power_expand():
     """Test for Pow.expand()"""
@@ -1268,12 +1267,17 @@ def test_issue_2941():
     assert not (a == b)
     assert not (b == a)
 
-
 def test_issue_2983():
-    from sympy.functions.elementary.miscellaneous import Max
-    from sympy.logic.boolalg import Or
-    from sympy.abc import x, y, z
-
     assert Max(x, 1) * Max(x, 2) == Max(x, 1) * Max(x, 2)
     assert Or(x, z) * Or(x, z) == Or(x, z) * Or(x, z)
 
+def test_issue_2978():
+    assert x**2.0/x == x**1.0
+    assert x/x**2.0 == x**-1.0
+    assert x*x**2.0 == x**3.0
+    assert x**1.5*x**2.5 == x**4.0
+
+    assert 2**(2.0*x)/2**x == 2**(1.0*x)
+    assert 2**x/2**(2.0*x) == 2**(-1.0*x)
+    assert 2**x*2**(2.0*x) == 2**(3.0*x)
+    assert 2**(1.5*x)*2**(2.5*x) == 2**(4.0*x)
