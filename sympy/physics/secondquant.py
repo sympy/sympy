@@ -414,8 +414,8 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
         Examples
         ========
 
-        >>> from sympy.physics.secondquant import B
-        >>> from sympy.abc import x, y
+        >>> from sympy.physics.secondquant import B, BKet
+        >>> from sympy.abc import x, y, n
         >>> B(x).apply_operator(y)
         y*AnnihilateBoson(x)
         >>> B(0).apply_operator(BKet((n,)))
@@ -450,8 +450,8 @@ class CreateBoson(BosonicOperator, Creator):
         Examples
         ========
 
-        >>> from sympy.physics.secondquant import B, Dagger
-        >>> from sympy.abc import x, y
+        >>> from sympy.physics.secondquant import B, Dagger, BKet
+        >>> from sympy.abc import x, y, n
         >>> Dagger(B(x)).apply_operator(y)
         y*CreateBoson(x)
         >>> B(0).apply_operator(BKet((n,)))
@@ -632,8 +632,8 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         Examples
         ========
 
-        >>> from sympy.physics.secondquant import B, Dagger
-        >>> from sympy.abc import x, y
+        >>> from sympy.physics.secondquant import B, Dagger, BKet
+        >>> from sympy.abc import x, y, n
         >>> Dagger(B(x)).apply_operator(y)
         y*CreateBoson(x)
         >>> B(0).apply_operator(BKet((n,)))
@@ -767,8 +767,8 @@ class CreateFermion(FermionicOperator, Creator):
         Examples
         ========
 
-        >>> from sympy.physics.secondquant import B, Dagger
-        >>> from sympy.abc import x, y
+        >>> from sympy.physics.secondquant import B, Dagger, BKet
+        >>> from sympy.abc import x, y, n
         >>> Dagger(B(x)).apply_operator(y)
         y*CreateBoson(x)
         >>> B(0).apply_operator(BKet((n,)))
@@ -1467,7 +1467,7 @@ class VarBosonicBasis(object):
         >>> b
         [FockState((0,)), FockState((1,)), FockState((2,))]
         >>> state
-        FockState((1,))
+        FockStateBosonKet((1,))
         >>> b.index(state)
         1
         """
@@ -1510,7 +1510,7 @@ class FixedBosonicBasis(BosonicBasis):
     >>> b
     [FockState((2, 0)), FockState((1, 1)), FockState((0, 2))]
     >>> state
-    FockState((1, 1))
+    FockStateBosonKet((1, 1))
     >>> b.index(state)
     1
     """
@@ -1905,7 +1905,7 @@ class NO(Expr):
     @property
     def has_q_annihilators(self):
         """
-        Return True if the rightmost argument of the first argument 
+        Return True if the rightmost argument of the first argument
         is a q_annihilator
 
         Also, in case of yes, we indicate whether rightmost operator is an

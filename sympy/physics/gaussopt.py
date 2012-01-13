@@ -498,7 +498,7 @@ class BeamParameter(Expr):
     def w_0(self):
         """
         The beam waist (minimal radius).
-        
+
 
         See Also
         ========
