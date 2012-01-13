@@ -119,8 +119,7 @@ class lowergamma(Function):
     See Also
     ========
 
-    gamma
-    uppergamma
+    gamma, uppergamma
     sympy.functions.special.hyper.hyper
 
     Examples
@@ -262,8 +261,7 @@ class uppergamma(Function):
     See Also
     ========
 
-    gamma
-    lowergamma
+    gamma, lowergamma
     sympy.functions.special.hyper.hyper
 
     References
@@ -356,6 +354,11 @@ class uppergamma(Function):
 
 class polygamma(Function):
     """The function `polygamma(n, z)` returns `log(gamma(z)).diff(n + 1)`
+
+       See Also
+       ========
+       
+       gamma, digamma, trigamma
 
     Reference:
         http://en.wikipedia.org/wiki/Polygamma_function
@@ -551,8 +554,14 @@ class loggamma(Function):
 def digamma(x):
     """
     The digamma function is the logarithmic derivative of the gamma function.
-
+    
+    
     In this case, `digamma(x) = polygamma(0, x)`.
+
+    See Also
+    ========
+    
+    gamma, trigamma, polygamma
 
     """
     return polygamma(0, x)
@@ -562,6 +571,11 @@ def trigamma(x):
     The trigamma function is the second of the polygamma functions.
 
     In this case, `trigamma(x) = polygamma(1, x)`.
+    
+    See Also
+    ========
+    
+    gamma, digamma, polygamma
 
     """
     return polygamma(1, x)
