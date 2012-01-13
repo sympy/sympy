@@ -189,6 +189,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. jerryma1121: See Also documentation for geometry
 #. Joachim Durchholz: corrected spacing issues identified by PyDev
 #. Martin Povišer: fix problem with rationaltools
+#. Siddhant Jain: See Also documentation for functions/special
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
