@@ -102,7 +102,7 @@ class RayTransferMatrix(Matrix):
     @property
     def A(self):
         """
-        The A parameter of the Matrix
+        The A parameter of the Matrix.
 
         Examples
         ========
@@ -117,7 +117,7 @@ class RayTransferMatrix(Matrix):
     @property
     def B(self):
         """
-        The B parameter of the Matrix
+        The B parameter of the Matrix.
 
         Examples
         ========
@@ -132,7 +132,7 @@ class RayTransferMatrix(Matrix):
     @property
     def C(self):
         """
-        The C parameter of the Matrix
+        The C parameter of the Matrix.
 
         Examples
         ========
@@ -147,7 +147,7 @@ class RayTransferMatrix(Matrix):
     @property
     def D(self):
         """
-        The D parameter of the Matrix
+        The D parameter of the Matrix.
 
         Examples
         ========
@@ -482,7 +482,7 @@ class BeamParameter(Expr):
         See Also
         ========
 
-        BeamParameter.w_0
+        w_0: minimal radius.
 
         Examples
         ========
@@ -498,6 +498,12 @@ class BeamParameter(Expr):
     def w_0(self):
         """
         The beam waist (minimal radius).
+        
+
+        See Also
+        ========
+
+        w: beam radius at 1/e^2 intensity.
 
         Examples
         ========

@@ -12,8 +12,9 @@ from sympy import Symbol, I
 
 def delta(i,j):
     """
-    Returns 1 if i == j, else 0
-    Used in multiplication of pauli matrices
+    Returns 1 if i == j, else 0.
+
+    Used in multiplication of Pauli matrices
 
     Examples
     ========
@@ -31,11 +32,11 @@ def delta(i,j):
 
 def epsilon(i,j,k):
     """
-    Returns 1 if i,j,k is equal to (1,2,3), (2,3,1), or (3,1,2);
-    returns -1 if i,j,k is equal to (1,3,2), (3,2,1), or (2,1,3)
+    Return 1 if i,j,k is equal to (1,2,3), (2,3,1), or (3,1,2);
+    -1 if i,j,k is equal to (1,3,2), (3,2,1), or (2,1,3);
     else return 0.
 
-    Used in the multiplication of pauli matrices.
+    Used in the multiplication of Pauli matrices.
 
     Examples
     ========

@@ -5,7 +5,7 @@ from sympy import Matrix, I
 def msigma(i):
     """Returns a Pauli matrix sigma_i. i=1,2,3
 
-    See also
+    See Also
     ========
 
     http://en.wikipedia.org/wiki/Pauli_matrices
@@ -75,7 +75,8 @@ def mgamma(mu,lower=False):
     gamma^5 = I * gamma^0 * gamma^1 * gamma^2 * gamma^3
     gamma_5 = I * gamma_0 * gamma_1 * gamma_2 * gamma_3 = - gamma^5
 
-    See also:
+    See Also
+    ========
 
     http://en.wikipedia.org/wiki/Gamma_matrices
 
