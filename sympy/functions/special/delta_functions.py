@@ -26,6 +26,7 @@ class DiracDelta(Function):
     ========
 
     Heaviside
+    simplify, is_simple
     sympy.functions.special.tensor_functions.KroneckerDelta
     
     References
@@ -84,6 +85,11 @@ class DiracDelta(Function):
            >>> DiracDelta(x**2 + x - 2).simplify(x)
            DiracDelta(x - 1)/3 + DiracDelta(x + 2)/3
 
+           See Also
+           ========
+   
+           is_simple, Directdelta
+
         """
         from sympy.polys.polyroots import roots
 
@@ -134,8 +140,13 @@ class DiracDelta(Function):
 
            >>> DiracDelta(cos(x)).is_simple(x)
            False
+       
+           See Also
+           ========
+ 
+           simplify, Directdelta
 
-       """
+        """
         p = self.args[0].as_poly(x)
         if p:
             return p.degree() == 1
