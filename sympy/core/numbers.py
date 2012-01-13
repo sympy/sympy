@@ -1373,7 +1373,7 @@ class Integer(Rational):
         return result
 
     def _eval_is_prime(self):
-        if self.p < 0:
+        if self.p <= 0:
             return False
 
     def as_numer_denom(self):
@@ -1461,8 +1461,6 @@ class Zero(IntegerConstant):
     is_negative = False
     is_finite = False
     is_zero = True
-    is_prime = False
-    is_composite = False
 
     __slots__ = []
 
@@ -1508,8 +1506,6 @@ class One(IntegerConstant):
 
     p = 1
     q = 1
-
-    is_prime = True
 
     __slots__ = []
 
