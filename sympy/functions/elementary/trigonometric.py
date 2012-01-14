@@ -299,10 +299,10 @@ class sin(TrigonometricFunction):
         if arg.is_Add: # TODO, implement more if deep stuff here
             x, y = arg.as_two_terms()
         else:
-            coeff, terms = arg.as_coeff_mul()
-            if coeff is not S.One and coeff.is_Integer and terms:
-                x = arg._new_rawargs(*terms)
-                y = (coeff-1)*x
+            coeff, terms = arg.as_coeff_Mul(rational=True)
+            if coeff is not S.One and coeff.is_Integer and terms is not S.One:
+                x = terms
+                y = (coeff - 1)*x
         if x is not None:
             return (sin(x)*cos(y) + sin(y)*cos(x)).expand(trig=True)
         return sin(arg)
@@ -522,10 +522,9 @@ class cos(TrigonometricFunction):
             x, y = arg.as_two_terms()
             return (cos(x)*cos(y) - sin(y)*sin(x)).expand(trig=True)
         else:
-            coeff, terms = arg.as_coeff_mul()
-            if coeff is not S.One and coeff.is_Integer and terms:
-                x = arg._new_rawargs(*terms)
-                return C.chebyshevt(coeff, cos(x))
+            coeff, terms = arg.as_coeff_Mul(rational=True)
+            if coeff is not S.One and coeff.is_Integer and terms is not S.One:
+                return C.chebyshevt(coeff, cos(terms))
         return cos(arg)
 
     def _eval_as_leading_term(self, x):
