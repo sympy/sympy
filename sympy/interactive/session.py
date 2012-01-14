@@ -160,7 +160,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
     See Also
     ========
 
-    sympy.interactive.init_printing, for examples and the rest of the parameters.
+    sympy.interactive.init_printing: for examples and the rest of the parameters.
 
     """
     import sys

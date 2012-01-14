@@ -69,37 +69,40 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
     ==========
 
     pretty_print: boolean
-        If true, use pretty print to stringify, if false, use sstrrepr to stringify.
+        If True, use pretty print to stringify;
+        if False, use sstrrepr to stringify.
     order: boolean or string
         Set to 'none' for long expressions if slow; default is None.
     use_unicode: boolean or none
-        Use unicode characters instead of string characters.
+        If True, use unicode characters;
+        if False, do not use unicode characters.
     wrap_line: boolean
-        Is line wrapping enabled or not?
-    num_columns: boolean
-        Number of columns before before line breaking;
-        defaults to None which reads terminal width.
+        If True, lines will wrap at the end;
+        if False, they will not wrap but continue as one line.
+    num_columns: int or None
+        If int, number of columns before wrapping is set to num_columns;
+        if None, number of columns before wrapping is set to terminal width.
     no_global: boolean
-        Whether to make this a global printer or not.
+        If True, the settings become system wide;
+        if False, use just for this console/session. 
     ip: bool or None
-        If true, printing is set up specifically for ipython;
-        if false or None, printing is initialized for a normal python console.
+        If True, printing is set up specifically for ipython;
+        if False or None, printing is initialized for a normal python console.
 
     Examples
     ========
     >>> from sympy.interactive import init_printing
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, sqrt
+    >>> sqrt(5)
+    sqrt(5)
     >>> init_printing(pretty_print=True)
-    >>> sqrt(5) # doctest: +SKIP
+    >>> sqrt(5) 
       ___
     \/ 5
-    >>> init_printing(pretty_print=False)
-    >>> sqrt(5) # doctest: +SKIP
-    sqrt(5)
     >>> theta = Symbol('theta')
     >>> init_printing(use_unicode=True)
     >>> theta # doctest: +SKIP
-    u'\u03b8'
+    \u03b8
     >>> init_printing(use_unicode=False)
     >>> theta # doctest: +SKIP
     theta
