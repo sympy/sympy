@@ -236,19 +236,22 @@ class Pow(Expr):
         if self == old:
             return new
         if old.func is self.func and self.base == old.base:
-            coeff1, terms1 = self.exp.as_coeff_mul()
-            coeff2, terms2 = old.exp.as_coeff_mul()
+            coeff1, terms1 = self.exp.as_coeff_Mul(rational=True)
+            coeff2, terms2 = old.exp.as_coeff_Mul(rational=True)
             if terms1 == terms2:
                 pow = coeff1/coeff2
-                if pow.is_Integer or self.base.is_commutative:
-                    return Pow(new, pow) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
-        if old.func is C.exp:
-            coeff1, terms1 = old.args[0].as_coeff_mul()
-            coeff2, terms2 = (self.exp*C.log(self.base)).as_coeff_mul()
+                if pow.is_Integer or self.base.is_positive:
+                    # issue 2081
+                    return Pow(new, pow) # (x**(6*y)).subs(x**(3*y),z)->z**2
+        if old.func is C.exp and self.exp.is_real and self.base.is_positive:
+            coeff1, terms1 = old.args[0].as_coeff_Mul()
+            # we can only do this when the base is positive AND the exponent
+            # is real
+            coeff2, terms2 = (self.exp*C.log(self.base)).as_coeff_Mul(rational=True)
             if terms1 == terms2:
                 pow = coeff1/coeff2
-                if pow.is_Integer or self.base.is_commutative:
-                    return Pow(new, pow) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
+                if pow.is_Integer or self.base.is_positive:
+                    return Pow(new, pow) # (2**x).subs(exp(x*log(2)), z) -> z
         return Pow(self.base._eval_subs(old, new), self.exp._eval_subs(old, new))
 
     def as_base_exp(self):
