@@ -98,6 +98,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
     ========
     >>> from sympy.interactive import init_printing
     >>> from sympy import Symbol, sqrt
+    >>> from sympy.abc import x, y
     >>> sqrt(5)
     sqrt(5)
     >>> init_printing(pretty_print=True)
@@ -111,6 +112,18 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
     >>> init_printing(use_unicode=False)
     >>> theta # doctest: +SKIP
     theta
+    >>> init_printing(order='lex')
+    >>> str(y + x + y**2 + x**2) 
+    x**2 + x + y**2 + y
+    >>> init_printing(order='grlex')
+    >>> str(y + x + y**2 + x**2)
+    x**2 + x + y**2 + y
+    >>> init_printing(order='grevlex')
+    >>> str(y * x**2 + x * y**2)
+    x**2*y + x*y**2
+    >>> init_printing(order='old')
+    >>> str(x**2 + y**2 + x + y)
+    x**2 + x + y**2 + y
     """
     from sympy.printing.printer import Printer
 
