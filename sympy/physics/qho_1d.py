@@ -50,6 +50,16 @@ def E_n(n,omega):
     calculated as:
 
         E_n = hbar * omega*(n + 1/2)
+
+    Examples
+    ========
+
+    >>> from sympy.physics.qho_1d import E_n
+    >>> from sympy import var
+    >>> var("x omega")
+    (x, omega)
+    >>> E_n(x, omega)
+    hbar*omega*(x + 1/2)
     """
 
     return hbar * omega*(n + Rational(1,2))
