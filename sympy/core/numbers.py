@@ -855,9 +855,8 @@ class Rational(Number):
                 else:
                     return (-1)**e * (-b)**e
 
-        c, t = b.as_coeff_mul()
-        if e.is_even and isinstance(c, Number) and c < 0:
-            return (-c * Mul(*t)) ** e
+        if _coeff_isneg(b) and e.is_even:
+            return (-b) ** e
 
         return
 
@@ -1354,9 +1353,8 @@ class Integer(Rational):
         if not isinstance(e, Number):
             # simplify when exp is even
             # (-2) ** k --> 2 ** k
-            c, t = b.as_coeff_mul()
-            if e.is_even and isinstance(c, Number) and c < 0:
-                return (-c*Mul(*t))**e
+            if _coeff_isneg(b) and e.is_even:
+                return (-b) ** e
         if not isinstance(e, Rational):
             return
         if e is S.Half and b < 0:
@@ -1544,16 +1542,18 @@ class Zero(IntegerConstant):
             return S.Infinity
         if e.is_positive:
             return b
-        d = e.evalf()
-        if isinstance(d, Number):
-            if d.is_negative:
+        if e.is_number:
+            if e.evalf().is_negative:
                 return S.Infinity
             return b
-        coeff, terms = e.as_coeff_mul()
+        # infinities are already handled with pos and neg
+        # tests above; now throw away leading numbers on Mul
+        # exponent
+        coeff, terms = e.as_coeff_Mul()
         if coeff.is_negative:
-            return S.Infinity ** Mul(*terms)
-        if coeff is not S.One:
-            return b ** Mul(*terms)
+            return S.Infinity ** terms
+        if coeff is not S.One: # there is a Number to discard
+            return b ** terms
 
     def _eval_order(self, *symbols):
         # Order(0,x) -> 0
@@ -2381,6 +2381,7 @@ _intcache[0] = S.Zero
 _intcache[1] = S.One
 _intcache[-1]= S.NegativeOne
 
+from function import _coeff_isneg
 from power import Pow, integer_nthroot
 from mul import Mul
 Mul.identity = One()
