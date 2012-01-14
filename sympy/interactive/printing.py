@@ -124,6 +124,10 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
     >>> init_printing(order='old')
     >>> str(x**2 + y**2 + x + y)
     x**2 + x + y**2 + y
+    >>> init_printing(num_columns=10)
+    >>> x**2 + x + y**2 + y # doctest: +SKIP
+    x + y +
+    x**2 + y**2
     """
     from sympy.printing.printer import Printer
 
