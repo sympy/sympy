@@ -634,6 +634,10 @@ def test_sympy__functions__special__error_functions__erf():
     from sympy.functions.special.error_functions import erf
     assert _test_args(erf(2))
 
+def test_sympy__functions__special__error_functions__erfs():
+    from sympy.functions.special.error_functions import erfs
+    assert _test_args(erfs(2))
+
 def test_sympy__functions__special__error_functions__Ei():
     from sympy.functions.special.error_functions import Ei
     assert _test_args(Ei(2))
