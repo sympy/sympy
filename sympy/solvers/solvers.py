@@ -545,12 +545,18 @@ def solve(f, *symbols, **flags):
     Notes
     =====
 
-    assumptions aren't checked when `solve()` input involves
+    Assumptions aren't checked when ``solve()`` input involves
     relationals or bools.
 
     When the solutions are checked, those that make any denominator zero
     are automatically excluded. If you do not want to exclude such solutions
-    then use the check=False option:
+    then use the ``check=False`` option.
+     Roughly the effects of ``check`` are the following: With ``check=True`` you
+    may miss solutions at removable singularities. But with ``check=False``
+    for the moment one gets right answers at removable singularities of
+    the type ``O(x**p)/O(x**p)`` for ``p > q`` but wrong answers if ``p <= q``
+    (only ``p == q`` is still a removable singularity).
+    The example of ``solve(sin(x)/x, check=False)`` shows that.
 
         >>> from sympy import sin
         >>> solve(sin(x)/x)
