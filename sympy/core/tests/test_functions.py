@@ -471,5 +471,4 @@ def test_unhandled():
 @XFAIL
 def test_issue_1612() :
    x= Symbol("x")
-   f= Function("f")
    assert Symbol('f')(x) != Function('f')(x)
