@@ -1,5 +1,5 @@
 from sympy.core import S, C, sympify, cacheit
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
 
 from sympy.functions.elementary.miscellaneous import sqrt
 
@@ -67,7 +67,7 @@ class sinh(HyperbolicFunction):
             if i_coeff is not None:
                 return S.ImaginaryUnit * C.sin(i_coeff)
             else:
-                if arg.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(arg):
                     return -cls(-arg)
 
             if arg.func == asinh:
@@ -211,7 +211,7 @@ class cosh(HyperbolicFunction):
             if i_coeff is not None:
                 return C.cos(i_coeff)
             else:
-                if arg.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(arg):
                     return cls(-arg)
 
             if arg.func == asinh:
@@ -346,11 +346,11 @@ class tanh(HyperbolicFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                if i_coeff.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(i_coeff):
                     return -S.ImaginaryUnit * C.tan(-i_coeff)
                 return S.ImaginaryUnit * C.tan(i_coeff)
             else:
-                if arg.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(arg):
                     return -cls(-arg)
 
             if arg.func == asinh:
@@ -481,11 +481,11 @@ class coth(HyperbolicFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                if i_coeff.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(i_coeff):
                     return S.ImaginaryUnit * C.cot(-i_coeff)
                 return -S.ImaginaryUnit * C.cot(i_coeff)
             else:
-                if arg.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(arg):
                     return -cls(-arg)
 
             if arg.func == asinh:
@@ -617,7 +617,7 @@ class asinh(Function):
             if i_coeff is not None:
                 return S.ImaginaryUnit * C.asin(i_coeff)
             else:
-                if arg.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(arg):
                     return -cls(-arg)
 
     @staticmethod
@@ -723,11 +723,11 @@ class acosh(Function):
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
         if i_coeff is not None:
-            if i_coeff.as_coeff_mul()[0].is_negative:
+            if _coeff_isneg(i_coeff):
                 return S.ImaginaryUnit * C.acos(i_coeff)
             return S.ImaginaryUnit * C.acos(-i_coeff)
         else:
-            if arg.as_coeff_mul()[0].is_negative:
+            if _coeff_isneg(arg):
                 return -cls(-arg)
 
     @staticmethod
@@ -810,7 +810,7 @@ class atanh(Function):
             if i_coeff is not None:
                 return S.ImaginaryUnit * C.atan(i_coeff)
             else:
-                if arg.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(arg):
                     return -cls(-arg)
 
     @staticmethod
@@ -879,7 +879,7 @@ class acoth(Function):
             if i_coeff is not None:
                 return -S.ImaginaryUnit * C.acot(i_coeff)
             else:
-                if arg.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(arg):
                     return -cls(-arg)
 
     @staticmethod
