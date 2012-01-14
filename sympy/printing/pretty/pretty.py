@@ -1,4 +1,5 @@
 from sympy.core import S, C, Basic, Interval
+from sympy.core.function import _coeff_isneg
 from sympy.utilities import group
 
 from sympy.printing.printer import Printer
@@ -965,7 +966,7 @@ class PrettyPrinter(Printer):
             return prettyForm(binding=prettyForm.NEG, *pform)
 
         for i, term in enumerate(terms):
-            if term.is_Mul and term.as_coeff_mul()[0] < 0:
+            if term.is_Mul and _coeff_isneg(term):
                 pform = self._print(-term)
                 pforms.append(pretty_negative(pform, i))
             elif term.is_Rational and term.q > 1:
