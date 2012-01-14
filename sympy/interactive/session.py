@@ -84,7 +84,7 @@ def _init_ipython_session(argv=[], auto=False):
         import re
         re_nameerror = re.compile("name '(?P<symbol>[A-Za-z_][A-Za-z0-9_]*)' is not defined")
 
-        def handler(self, etype, value, tb, tb_offset=None):
+        def _handler(self, etype, value, tb, tb_offset=None):
             """Handle :exc:`NameError` exception and allow injection of missing symbols. """
             if etype is NameError and tb.tb_next and not tb.tb_next.tb_next:
                 match = re_nameerror.match(str(value))
@@ -105,7 +105,7 @@ def _init_ipython_session(argv=[], auto=False):
             self._showtraceback(etype, value, stb)
 
         if auto:
-            app.shell.set_custom_exc((NameError,), handler)
+            app.shell.set_custom_exc((NameError,), _handler)
 
         return app.shell
     else:
@@ -146,7 +146,23 @@ def _init_python_session():
 
 def init_session(ipython=None, pretty_print=True, order=None,
         use_unicode=None, quiet=False, auto=False, argv=[]):
-    """Initialize an embedded IPython or Python session. """
+    """
+    Initialize an embedded IPython or Python session.
+
+    Parameters
+    ==========
+
+    quiet: boolean
+        Whether or not init_session should print messages regarding its status.
+    auto: boolean
+        Whether or not the session should create symbols automatically.
+
+    See Also
+    ========
+
+    sympy.interactive.init_printing, for examples and the rest of the parameters.
+
+    """
     import sys
 
     in_ipython = False
