@@ -140,6 +140,8 @@ class Plot(object):
           line_color : float
         options:
           label : str
+          steps : bool
+          integers_only : bool
     is_3Dsurface:
       SurfaceOver2DRangeSeries, ParametricSurfaceSeries
         aesthetics:
@@ -234,7 +236,7 @@ class Plot(object):
         if name in self._options:
             return self._options[name]
         else:
-            raise AttributeError('The backend has no such attribute ' + name)
+            raise AttributeError('The Plot has no such attribute ' + name)
 
     def show(self):
         if hasattr(self, '_backend'):
@@ -439,7 +441,7 @@ class BaseSeries(object):
         elif name in self._aesthetics:
             return self._aesthetics[name]
         else:
-            raise AttributeError('The backend has no such attribute ' + name)
+            raise AttributeError('The data series has no such attribute ' + name)
 
     def _add_aesthetics(self, additional_aes):
         self._aesthetics.update(additional_aes)
@@ -468,7 +470,7 @@ class BaseSeries(object):
 class Line2DBaseSeries(BaseSeries):
     """A base class for 2D lines.
 
-    - adding the label option
+    - adding the label, steps and only_integers options
     - making is_2Dline true
     - defining get_segments and get_color_array
     """
@@ -479,11 +481,17 @@ class Line2DBaseSeries(BaseSeries):
 
     def __init__(self):
         super(Line2DBaseSeries, self).__init__()
-        self._add_options({'label' : None})
+        self._add_options({'label' : None,
+                           'steps' : False,
+                           'only_integers' : False})
         self._add_aesthetics({'line_color' : None})
 
     def get_segments(self):
         points = self.get_points()
+        if self.steps == True:
+            x = np.array((points[0],points[0])).T.flatten()[1:]
+            y = np.array((points[1],points[1])).T.flatten()[:-1]
+            points = (x, y)
         points = np.array(points).T.reshape(-1, 1, self._dim)
         return np.concatenate([points[:-1], points[1:]], axis=1)
 
@@ -542,7 +550,11 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 str((self.start, self.end)))
 
     def get_points(self):
-        list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
+        if self.only_integers == True:
+            list_x = np.linspace(int(self.start), int(self.end),
+                    num=int(self.end)-int(self.start)+1)
+        else:
+            list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
         f = vectorized_lambdify([self.var], self.expr)
         list_y = f(list_x)
         return (list_x, list_y)
