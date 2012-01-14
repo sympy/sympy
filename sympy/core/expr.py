@@ -1305,8 +1305,7 @@ class Expr(Basic, EvalfMixin):
         """
         if not self:
             return S.One, S.Zero
-        c, r = self.as_coeff_mul()
-        r = Mul._from_args(r)
+        c, r = self.as_coeff_Mul(rational=True)
         if c.is_negative:
             c, r = -c, -r
         return c, r
@@ -1555,13 +1554,13 @@ class Expr(Basic, EvalfMixin):
                 if subs1 != None:
                     return subs1 + terms[0]
         elif self.is_Mul:
-            self_coeff, self_terms = self.as_coeff_mul()
+            self_coeff, self_terms = self.as_coeff_Mul(rational=True)
             if c.is_Mul:
-                c_coeff, c_terms = c.as_coeff_mul()
+                c_coeff, c_terms = c.as_coeff_Mul(rational=True)
                 if c_terms == self_terms:
                     new_coeff = self_coeff.extract_additively(c_coeff)
                     if new_coeff != None:
-                        return new_coeff * c._new_rawargs(*c_terms)
+                        return new_coeff * c_terms
             elif c == self_terms:
                 new_coeff = self_coeff.extract_additively(1)
                 if new_coeff != None:
@@ -2312,12 +2311,12 @@ class Expr(Basic, EvalfMixin):
             terms = []
 
             for term in Add.make_args(expr):
-                coeff, tail = term.as_coeff_mul()
+                coeff, tail = term.as_coeff_Mul(rational=True)
 
                 coeff %= modulus
 
                 if coeff:
-                    terms.append(Mul(*((coeff,) + tail)))
+                    terms.append(coeff*tail)
 
             expr = Add(*terms)
 
