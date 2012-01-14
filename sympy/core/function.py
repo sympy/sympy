@@ -154,9 +154,67 @@ class Application(Basic):
 
 
 class Function(Application, Expr):
-    """
-    Base class for applied numeric functions.
-    Constructor of undefined function classes.
+    """Base class for applied mathematical functions.
+
+    It also serves as a constructor for undefined function classes.
+
+    Examples
+    ========
+
+    First example shows how to use Function as a constructor for undefined
+    function classes:
+
+    >>> from sympy import Function, Symbol
+    >>> x = Symbol('x')
+    >>> f = Function('f')
+    >>> g = Function('g')(x)
+    >>> f
+    f
+    >>> f(x)
+    f(x)
+    >>> g
+    g(x)
+    >>> f(x).diff(x)
+    Derivative(f(x), x)
+    >>> g.diff(x)
+    Derivative(g(x), x)
+
+    In the following example Function is used as a base class for
+    ``my_func`` that represents a mathematical function *my_func*. Suppose
+    that it is well known, that *my_func(0)* is *1* and *my_func* at infinity
+    goes to *0*, so we want those two simplifications to occur automatically.
+    Suppose also that *my_func(x)* is real exactly when *x* is real. Here is
+    an implementation that honours those requirements:
+
+    >>> from sympy import Function, S, oo, I, sin
+    >>> class my_func(Function):
+    ...
+    ...     nargs = 1
+    ...
+    ...     @classmethod
+    ...     def eval(cls, x):
+    ...         if x.is_Number:
+    ...             if x is S.Zero:
+    ...                 return S.One
+    ...             elif x is S.Infinity:
+    ...                 return S.Zero
+    ...
+    ...     def _eval_is_real(self):
+    ...         return self.args[0].is_real
+    ...
+    >>> x = S('x')
+    >>> my_func(0) + sin(0)
+    1
+    >>> my_func(oo)
+    0
+    >>> my_func(3.54).n() # Not yet implemented for my_func.
+    my_func(3.54)
+    >>> my_func(I).is_real
+    False
+
+    In order for ``my_func`` to become useful, several other methods would
+    need to be implemented. See source code of some of the already
+    implemented functions for more complete examples.
 
     """
 
@@ -167,11 +225,12 @@ class Function(Application, Expr):
         Examples
         ========
 
-            >>> from sympy import Function, Symbol
-            >>> f = Function('f')
-            >>> x = Symbol('x')
-            >>> f(x)._diff_wrt
-            True
+        >>> from sympy import Function, Symbol
+        >>> f = Function('f')
+        >>> x = Symbol('x')
+        >>> f(x)._diff_wrt
+        True
+
         """
         return True
 
