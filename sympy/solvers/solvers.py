@@ -556,15 +556,30 @@ def solve(f, *symbols, **flags):
     are automatically excluded. If you do not want to exclude such solutions
     then use the check=False option:
 
-        >>> from sympy import sin
+        >>> from sympy import sin, limit
         >>> solve(sin(x)/x)
         []
+
+    If check=False then a solution to the numerator being zero is found: x = 0.
+    In this case, this is a spurious solution since sin(x)/x has the well known
+    limit (without dicontinuity) of 1 at x = 0:
+
         >>> solve(sin(x)/x, check=False)
         [0]
-        >>> solve((x**2*(1/x - z**2/x)), x)
+
+    In the following case, however, the limit exists and is equal to the the
+    value of x = 0 that is excluded when check=True:
+
+        >>> eq = x**2*(1/x - z**2/x)
+        >>> solve(eq, x)
         []
-        >>> solve((x**2*(1/x - z**2/x)), x, check=False)
+        >>> solve(eq, x, check=False)
         [0]
+        >>> limit(eq, x, 0, '-')
+        0
+        >>> limit(eq, x, 0, '+')
+        0
+
 
     See Also
     ========
