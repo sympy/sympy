@@ -153,14 +153,16 @@ def init_session(ipython=None, pretty_print=True, order=None,
     ==========
 
     quiet: boolean
-        Whether or not init_session should print messages regarding its status.
+        If True, init_session will not print messages regarding its status;
+        if False, init_session will print messages regarding its status.
     auto: boolean
-        Whether or not the session should create symbols automatically.
+        If True, init_session will automatically create symbols for you;
+        if False, it will not.
 
     See Also
     ========
 
-    sympy.interactive.init_printing: for examples and the rest of the parameters.
+    sympy.interactive.printing.init_printing: for examples and the rest of the parameters.
 
     """
     import sys

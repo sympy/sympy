@@ -69,11 +69,16 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
     ==========
 
     pretty_print: boolean
-        If True, use pretty print to stringify;
+        If True, use pretty_print to stringify;
         if False, use sstrrepr to stringify.
-    order: boolean or string
-        Set to 'none' for long expressions if slow; default is None.
-    use_unicode: boolean or none
+    order: string or None
+        There are a few different settings for this parameter;
+        lex, which is lexographic order, this is the default;
+        grlex, which is graded lexographic order;
+        grevlex, which is reversed graded lexographic order;
+        old, which is used for compatibility reasons and for long expressions;
+        None, which sets it to lex.
+    use_unicode: boolean or None
         If True, use unicode characters;
         if False, do not use unicode characters.
     wrap_line: boolean
@@ -85,7 +90,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
     no_global: boolean
         If True, the settings become system wide;
         if False, use just for this console/session. 
-    ip: bool or None
+    ip: boolean or None
         If True, printing is set up specifically for ipython;
         if False or None, printing is initialized for a normal python console.
 
