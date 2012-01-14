@@ -854,6 +854,7 @@ def test_coeff():
     assert (-x/8 + x*y).coeff(-x) == S(1)/8
     assert (4*x).coeff(2*x) == None
     assert (2*x).coeff(2*x) == 1
+    assert (-oo*x).coeff(x*oo) == -1
 
     n1, n2 = symbols('n1 n2', commutative=False)
     assert (n1*n2).coeff(n1) == 1

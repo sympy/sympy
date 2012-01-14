@@ -293,8 +293,10 @@ class Number(AtomicExpr):
         other = _sympify(other)
         return S.One, self, other
 
-    def as_coeff_Mul(self):
+    def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product. """
+        if rational and not self.is_Rational:
+            return S.One, self
         return self, S.One
 
     def as_coeff_Add(self):
