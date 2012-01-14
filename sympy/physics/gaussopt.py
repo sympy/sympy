@@ -14,25 +14,25 @@ The conventions for the distances are as follows:
     image distance - positive for real images
 """
 
-from sympy import atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify, together
+from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
+    together)
+from sympy.solvers.solvers import _filldedent
 
 ###
-# A,B,C,D matrices
+# A, B, C, D matrices
 ###
 
 class RayTransferMatrix(Matrix):
     """
     Base class for a Ray Transfer Matrix.
 
-    It should be used if there isn't already a more
-    specific subclass (mentioned in See Also).
+    It should be used if there isn't already a more specific subclass mentioned
+    in See Also.
 
-    Arguments
-    =========
+    Parameters
+    ==========
 
-    either a 2x2 matrix
-      or
-    the parameters A, B, C and D
+    parameters A, B, C and D or 2x2 matrix (Matrix(2, 2, [A, B, C, D]))
 
     Examples
     =======
@@ -40,12 +40,12 @@ class RayTransferMatrix(Matrix):
     >>> from sympy.physics.gaussopt import RayTransferMatrix, ThinLens
     >>> from sympy import Symbol, Matrix
 
-    >>> mat = RayTransferMatrix(1,2,3,4)
+    >>> mat = RayTransferMatrix(1, 2, 3, 4)
     >>> mat
     [1,  2]
     [3,  4]
 
-    >>> RayTransferMatrix( Matrix([[1,2],[3,4]]) )
+    >>> RayTransferMatrix(Matrix([[1, 2], [3, 4]]))
     [1,  2]
     [3,  4]
 
@@ -76,25 +76,27 @@ class RayTransferMatrix(Matrix):
 
     def __init__(self, *args):
         if len(args) == 4:
-            temp = ((args[0],args[1]),(args[2],args[3]))
+            temp = ((args[0], args[1]), (args[2], args[3]))
         elif len(args) == 1 \
              and isinstance(args[0], Matrix) \
-             and args[0].shape == (2,2):
+             and args[0].shape == (2, 2):
             temp = args[0]
         else:
-            raise ValueError('Expecting 2x2 Matrix or the 4 elements of the Matrix but got %s' % str(args))
+            raise ValueError(_filldedent('''
+                Expecting 2x2 Matrix or the 4 elements of
+                the Matrix but got %s''' % str(args)))
         Matrix.__init__(self, temp)
 
-    def __mul__(self,other):
+    def __mul__(self, other):
         if isinstance(other, RayTransferMatrix):
             return RayTransferMatrix(Matrix.__mul__(self, other))
         elif isinstance(other, GeometricRay):
             return GeometricRay(Matrix.__mul__(self, other))
         elif isinstance(other, BeamParameter):
-            temp = self*Matrix(((other.q,),(1,)))
+            temp = self*Matrix(((other.q,), (1,)))
             q = (temp[0]/temp[1]).expand(complex=True)
-            return BeamParameter(other.wavelen,\
-                                 together(re(q)),\
+            return BeamParameter(other.wavelen, \
+                                 together(re(q)), \
                                  z_r = together(im(q)))
         else:
             return Matrix.__mul__(self, other)
@@ -112,7 +114,7 @@ class RayTransferMatrix(Matrix):
         >>> mat.A
         1
         """
-        return self[0,0]
+        return self[0, 0]
 
     @property
     def B(self):
@@ -127,7 +129,7 @@ class RayTransferMatrix(Matrix):
         >>> mat.B
         2
         """
-        return self[0,1]
+        return self[0, 1]
 
     @property
     def C(self):
@@ -142,7 +144,7 @@ class RayTransferMatrix(Matrix):
         >>> mat.C
         3
         """
-        return self[1,0]
+        return self[1, 0]
 
     @property
     def D(self):
@@ -157,15 +159,21 @@ class RayTransferMatrix(Matrix):
         >>> mat.D
         4
         """
-        return self[1,1]
+        return self[1, 1]
 
 class FreeSpace(RayTransferMatrix):
     """
     Ray Transfer Matrix for free space.
 
-    Arguments: Distance
+    Parameters
+    ==========
 
-    See Also: RayTransferMatrix
+    distance
+
+    See Also
+    ========
+
+    RayTransferMatrix
 
     Examples
     ========
@@ -178,15 +186,22 @@ class FreeSpace(RayTransferMatrix):
     [0, 1]
     """
     def __init__(self, d):
-        RayTransferMatrix.__init__(self,1,d,0,1)
+        RayTransferMatrix.__init__(self, 1, d, 0, 1)
 
 class FlatRefraction(RayTransferMatrix):
     """
     Ray Transfer Matrix for refraction.
 
-    Arguments: refractive indices of both media
+    Parameters
+    ==========
 
-    See Also: RayTransferMatrix
+    n1: refractive index of one medium
+    n2: refractive index of other medium
+
+    See Also
+    ========
+
+    RayTransferMatrix
 
     Examples
     ========
@@ -200,16 +215,23 @@ class FlatRefraction(RayTransferMatrix):
     """
     def __init__(self, n1, n2):
         n1, n2 = sympify((n1, n2))
-        RayTransferMatrix.__init__(self,1,0,0,n1/n2)
+        RayTransferMatrix.__init__(self, 1, 0, 0, n1/n2)
 
 class CurvedRefraction(RayTransferMatrix):
     """
     Ray Transfer Matrix for refraction on curved interface.
 
-    Arguments: radius of curvature (positive for concave),
-               refractive indices of both media
+    Parameters
+    ==========
 
-    See Also: RayTransferMatrix
+    R: radius of curvature (positive for concave),
+    n1: refractive index of one medium
+    n2: refractive index of other medium
+
+    See Also
+    ========
+
+    RayTransferMatrix
 
     Examples
     ========
@@ -223,7 +245,7 @@ class CurvedRefraction(RayTransferMatrix):
     """
     def __init__(self, R, n1, n2):
         R, n1 , n2 = sympify((R, n1, n2))
-        RayTransferMatrix.__init__(self,1,0,(n1-n2)/R/n2,n1/n2)
+        RayTransferMatrix.__init__(self, 1, 0, (n1-n2)/R/n2, n1/n2)
 
 class FlatMirror(RayTransferMatrix):
     """
@@ -240,15 +262,21 @@ class FlatMirror(RayTransferMatrix):
     [0, 1]
     """
     def __init__(self):
-        RayTransferMatrix.__init__(self,1,0,0,1)
+        RayTransferMatrix.__init__(self, 1, 0, 0, 1)
 
 class CurvedMirror(RayTransferMatrix):
     """
     Ray Transfer Matrix for reflection from curved surface.
 
-    Arguments: radius of curvature (positive for concave)
+    Parameters
+    ==========
 
-    See Also: RayTransferMatrix
+    radius of curvature (positive for concave)
+
+    See Also
+    ========
+
+    RayTransferMatrix
 
     Examples
     ========
@@ -262,15 +290,21 @@ class CurvedMirror(RayTransferMatrix):
     """
     def __init__(self, R):
         R = sympify(R)
-        RayTransferMatrix.__init__(self,1,0,-2/R,1)
+        RayTransferMatrix.__init__(self, 1, 0, -2/R, 1)
 
 class ThinLens(RayTransferMatrix):
     """
     Ray Transfer Matrix for a thin lens.
 
-    Arguments: the focal distance
+    Parameters
+    ==========
 
-    See Also: RayTransferMatrix
+    the focal distance
+
+    See Also
+    ========
+
+    RayTransferMatrix
 
     Examples
     ========
@@ -284,7 +318,7 @@ class ThinLens(RayTransferMatrix):
     """
     def __init__(self, f):
         f = sympify(f)
-        RayTransferMatrix.__init__(self,1,0,-1/f,1)
+        RayTransferMatrix.__init__(self, 1, 0, -1/f, 1)
 
 
 ###
@@ -295,29 +329,27 @@ class GeometricRay(Matrix):
     """
     Representation for a geometric ray in the Ray Transfer Matrix formalism.
 
-    Arguments
-    =========
+    Parameters
+    ==========
 
-    either a 2x1 matrix
-      or
-    the height followed by the angle of the ray
+    height and angle or 2x1 matrix (Matrix(2, 1, [height, angle]))
 
     Examples
     =======
 
     >>> from sympy.physics.gaussopt import GeometricRay, FreeSpace
     >>> from sympy import symbols, Matrix
-    >>> d,h,angle = symbols('d,h,angle')
+    >>> d, h, angle = symbols('d, h, angle')
 
-    >>> GeometricRay(h,angle)
+    >>> GeometricRay(h, angle)
     [    h]
     [angle]
 
-    >>> FreeSpace(d)*GeometricRay(h,angle)
+    >>> FreeSpace(d)*GeometricRay(h, angle)
     [angle*d + h]
     [      angle]
 
-    >>> GeometricRay( Matrix( ((h,),(angle,)) ) )
+    >>> GeometricRay( Matrix( ((h,), (angle,)) ) )
     [    h]
     [angle]
 
@@ -325,16 +357,19 @@ class GeometricRay(Matrix):
     ========
 
     RayTransferMatrix
+
     """
 
     def __init__(self, *args):
         if len(args) == 1 and isinstance(args[0], Matrix) \
-                          and args[0].shape == (2,1):
+                          and args[0].shape == (2, 1):
             temp = args[0]
         elif len(args) == 2:
-            temp = ((args[0],),(args[1],))
+            temp = ((args[0],), (args[1],))
         else:
-            raise ValueError('Expecting 2x1 Matrix or the 2 elements of the Matrix but got %s' % str(args))
+            raise ValueError(_filldedent('''
+                Expecting 2x1 Matrix or the 2 elements of
+                the Matrix but got %s''' % str(args)))
         Matrix.__init__(self, temp)
 
     @property
@@ -380,14 +415,10 @@ class BeamParameter(Expr):
     """
     Representation for a gaussian ray in the Ray Transfer Matrix formalism.
 
-    Arguments
-    =========
+    Parameters
+    ==========
 
-    wavelength, distance to waist
-    and either
-           w = waist
-             or
-           z_r = rayleigh range
+    wavelength, distance to waist, and w (waist) or z_r (rayleigh range)
 
     Examples
     ========
@@ -397,20 +428,19 @@ class BeamParameter(Expr):
     >>> p.q
     1 + 1.88679245283019*I*pi
 
-    >>> from sympy import N
-    >>> N(p.q)
+    >>> p.q.n()
     1.0 + 5.92753330865999*I
-    >>> N(p.w_0)
+    >>> p.w_0.n()
     0.00100000000000000
-    >>> N(p.z_r)
+    >>> p.z_r.n()
     5.92753330865999
 
     >>> from sympy.physics.gaussopt import FreeSpace
     >>> fs = FreeSpace(10)
     >>> p1 = fs*p
-    >>> N(p.w)
+    >>> p.w.n()
     0.00101413072159615
-    >>> N(p1.w)
+    >>> p1.w.n()
     0.00210803120913829
 
     See Also
@@ -435,7 +465,7 @@ class BeamParameter(Expr):
         inst.wavelen = wavelen
         inst.z = z
         if len(kwargs) !=1:
-            raise ValueError('The constructor expects one and only one named argument')
+            raise ValueError('Constructor expects exactly one named argument.')
         elif 'z_r' in kwargs:
             inst.z_r = sympify(kwargs['z_r'])
         elif 'w' in kwargs:
@@ -482,7 +512,7 @@ class BeamParameter(Expr):
         See Also
         ========
 
-        w_0: minimal radius.
+        w_0: minimal radius of beam
 
         Examples
         ========
@@ -503,7 +533,7 @@ class BeamParameter(Expr):
         See Also
         ========
 
-        w: beam radius at 1/e^2 intensity.
+        w: beam radius at 1/e^2 intensity
 
         Examples
         ========
@@ -572,7 +602,10 @@ def waist2rayleigh(w, wavelen):
     """
     Calculate the rayleigh range from the waist of a gaussian beam.
 
-    See Also: rayleigh2waist, BeamParameter
+    See Also
+    ========
+
+    rayleigh2waist, BeamParameter
 
     Examples
     ========
@@ -589,7 +622,10 @@ def waist2rayleigh(w, wavelen):
 def rayleigh2waist(z_r, wavelen):
     """Calculate the waist from the rayleigh range of a gaussian beam.
 
-    See Also: waist2rayleigh, BeamParameter
+    See Also
+    ========
+
+    waist2rayleigh, BeamParameter
 
     Examples
     ========
@@ -604,14 +640,16 @@ def rayleigh2waist(z_r, wavelen):
     return sqrt(z_r/pi*wavelen)
 
 
-def geometric_conj_ab(a,b):
+def geometric_conj_ab(a, b):
     """
     Conjugation relation for geometrical beams under paraxial conditions.
 
     Takes the distances to the optical element and returns the needed
     focal distance.
 
-    See Also:
+    See Also
+    ========
+
     geometric_conj_af, geometric_conj_bf
 
     Examples
@@ -629,7 +667,7 @@ def geometric_conj_ab(a,b):
     else:
         return a*b/(a+b)
 
-def geometric_conj_af(a,f):
+def geometric_conj_af(a, f):
     """
     Conjugation relation for geometrical beams under paraxial conditions.
 
@@ -637,7 +675,9 @@ def geometric_conj_af(a,f):
     (for geometric_conj_bf) to the optical element and the focal distance.
     Then it returns the other distance needed for conjugation.
 
-    See Also:
+    See Also
+    ========
+
     geometric_conj_ab
 
     Examples
@@ -660,12 +700,12 @@ def gaussian_conj(s_in, z_r_in, f):
     """
     Conjugation relation for gaussian beams.
 
-    Arguments
-    =========
+    Parameters
+    ==========
 
-    s_in - distance to optical element from the waist
-    z_r_in - the rayleigh range of the incident beam
-    f - the focal length of the optical element
+    s_in: distance to optical element from the waist
+    z_r_in: the rayleigh range of the incident beam
+    f: the focal length of the optical element
 
     Returns
     =======
@@ -701,12 +741,12 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     """
     Find the optical setup conjugating the object/image waists.
 
-    Arguments
-    =========
+    Parameters
+    ==========
 
-    wavelen - the wavelength of the beam
-    waist_in and waits_out - the waists to be conjugated
-    f - the focal distance of the element used in the conjugation
+    wavelen: the wavelength of the beam
+    waist_in and waist_out: the waists to be conjugated
+    f: the focal distance of the element used in the conjugation
 
     Returns
     =======
@@ -739,15 +779,18 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     if len(kwargs) != 1:
         raise ValueError("The function expects only one named argument")
     elif 'dist' in kwargs:
-        raise NotImplementedError("Currently only focal length is supported as a parameter")
+        raise NotImplementedError(_filldedent('''
+            Currently only focal length is supported as a parameter'''))
     elif 'f' in kwargs:
         f = sympify(kwargs['f'])
         s_in = f * (1 - sqrt(1/m**2 - z**2/f**2))
         s_out = gaussian_conj(s_in, z, f)[0]
     elif 's_in' in kwargs:
-        raise NotImplementedError("Currently only focal length is supported as a parameter")
+        raise NotImplementedError(_filldedent('''
+            Currently only focal length is supported as a parameter'''))
     else:
-        raise ValueError("The functions expects the focal length as a named argument")
+        raise ValueError(_filldedent('''
+            The functions expects the focal length as a named argument'''))
     return (s_in, s_out, f)
 
 #TODO
@@ -761,6 +804,10 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
 #    Plot the intersection of two beams.
 #
 #    Represents the conjugation relation.
-#    See Also: conjugate_gauss_beams
+#
+#    See Also
+#    ========
+#
+#    conjugate_gauss_beams
 #    """
 #    pass

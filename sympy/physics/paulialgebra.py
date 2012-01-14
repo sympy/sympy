@@ -14,7 +14,7 @@ def delta(i,j):
     """
     Returns 1 if i == j, else 0.
 
-    Used in multiplication of Pauli matrices
+    This is used in the multiplication of Pauli matrices.
 
     Examples
     ========
@@ -36,7 +36,7 @@ def epsilon(i,j,k):
     -1 if i,j,k is equal to (1,3,2), (3,2,1), or (2,1,3);
     else return 0.
 
-    Used in the multiplication of Pauli matrices.
+    This is used in the multiplication of Pauli matrices.
 
     Examples
     ========
