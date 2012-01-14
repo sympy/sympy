@@ -148,7 +148,7 @@ class erf(Function):
         z = self.args[0]
         #h0 = C.hyper([S.One,S.Half],[],-1/z**2)
         #return z/sqrt(z**2) - 1/(sqrt(pi)*z)*C.exp(-z**2)*h0
-        if -S.Half*S.Pi < C.arg(args0) and C.arg(args0) <= S.Half*S.Pi:
+        if -S.Half*S.Pi < C.arg(args0[0]) and C.arg(args0[0]) <= S.Half*S.Pi:
             return S.One - C.exp(-z**2)/(sqrt(S.Pi)*z)
         else:
             return -S.One - C.exp(-z**2)/(sqrt(S.Pi)*z)

@@ -31,8 +31,8 @@ def test_erf():
     assert erf(x).as_leading_term(x) == x
     assert erf(1/x).as_leading_term(x) == erf(1/x)
 
-    assert erf(z)._eval_aseries(None, oo, z,0) == 1 - exp(-z**2)/(sqrt(pi)*z)
-    assert erf(z)._eval_aseries(None, -oo, z,0) == -1 - exp(-z**2)/(sqrt(pi)*z)
+    assert erf(z)._eval_aseries(None, [oo], z,0) == 1 - exp(-z**2)/(sqrt(pi)*z)
+    assert erf(z)._eval_aseries(None, [-oo], z,0) == -1 - exp(-z**2)/(sqrt(pi)*z)
 
     assert erf(z)._eval_rewrite_as_uppergamma(z) == sqrt(z**2)*erf(sqrt(z**2))/z
 
