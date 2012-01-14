@@ -404,5 +404,5 @@ def test_no_arith_subs_on_floats():
 @XFAIL
 def test_issue_2261() :
     x = Symbol("x")
-    assert (1/x).subs(x, 0) == oo
+    assert (1/x).subs(x, 0) == 1/S(0)
     
