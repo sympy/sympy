@@ -59,7 +59,7 @@ TERMINAL_EXAMPLES = [
     "beginner.substitution",
     "intermediate.coupled_cluster",
     "intermediate.differential_equations",
-    "intermediate.infinite_1D_box",
+    "intermediate.infinite_1d_box",
     "intermediate.partial_differential_eqs",
     "intermediate.trees",
     "intermediate.vandermonde",
