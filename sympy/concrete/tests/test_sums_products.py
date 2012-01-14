@@ -332,3 +332,8 @@ def test_free_symbols():
         assert func(x, (y, 1, y), (y, 1, z)).free_symbols == set([x, z])
     assert Sum(1, (x, 1, y)).free_symbols == set([y])
     assert Product(1, (x, 1, y)).free_symbols == set()
+    
+@XFAIL
+def test_issue_1072() :
+    assert sum(factorial(2*k+1)/factorial(2*k), (k, 0, oo)) == oo
+  
