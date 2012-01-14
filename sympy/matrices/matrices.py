@@ -33,11 +33,18 @@ def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
 
+class DeferredVector(Symbol):
+    """A vector whose components are deferred (e.g. for use with lambdify)
 
-class DeferredVector(object):
-    def __init__(self,name):
-        self.name=name
-
+    >>> from sympy import DeferredVector, lambdify
+    >>> X = DeferredVector( 'X' )
+    >>> X
+    X
+    >>> expr = (X[0] + 2, X[2] + 3)
+    >>> func = lambdify( X, expr )
+    >>> func( [1, 2, 3] )
+    (3, 6)
+    """
     def __getitem__(self,i):
         component_name = '%s[%d]'%(self.name,i)
         return Symbol(component_name)
