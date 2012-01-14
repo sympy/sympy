@@ -557,7 +557,7 @@ class log(Function):
         >>> log(1+I).as_real_imag()
         (log(sqrt(2)), pi/4)
         >>> log(I*x).as_real_imag()
-        (log(Abs(I*x)), arg(I*x))
+        (log(Abs(x)), arg(I*x))
 
         """
         if deep:

@@ -126,6 +126,11 @@ def test_Abs():
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
     assert Abs(x).diff(x) == sign(x)
     assert conjugate(Abs(x)) == Abs(x)
+    assert Abs(-2*x) == 2*Abs(x)
+    assert Abs(-2.0*x) == 2.0*Abs(x)
+    assert Abs(2*pi*x*y) == 2*pi*Abs(x*y)
+    a = Symbol('a', positive=True)
+    assert Abs(2*pi*x*a) == 2*pi*a*Abs(x)
 
 def test_abs_real():
     # test some properties of abs that only apply
