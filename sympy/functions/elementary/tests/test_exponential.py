@@ -79,7 +79,8 @@ def test_exp_infinity():
     y = Symbol('y')
     assert exp(I*y) != nan
     assert exp(I*oo) == nan
-    assert exp(y*I*oo) == nan
+    assert exp(-I*oo) == nan
+    assert exp(y*I*oo) != nan
 
 def test_exp_subs():
     x,y = symbols('x,y')

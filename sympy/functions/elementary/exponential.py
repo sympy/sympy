@@ -6,6 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
 
+from sympy.functions.elementary.complexes import sign
 from sympy.ntheory import multiplicity, perfect_power
 
 # NOTE IMPORTANT
@@ -44,8 +45,7 @@ class ExpBase(Function):
         >>> exp(x).as_numer_denom()
         (exp(x), 1)
         """
-        c, t = self.args[0].as_coeff_mul()
-        if c.is_negative:
+        if self.args[0].as_coeff_mul()[0].is_negative:
             return S.One, exp(-self.args[0])
         return self, S.One
 
@@ -183,11 +183,8 @@ class exp(ExpBase):
                         return -S.ImaginaryUnit
                     elif (coeff + S.Half).is_odd:
                         return S.ImaginaryUnit
-            I = S.ImaginaryUnit
-            oo = S.Infinity
-            a = Wild("a", exclude=[I, oo])
-            r = arg.match(I*a*oo)
-            if r and r[a] != 0:
+            Ioo = S.ImaginaryUnit*S.Infinity
+            if arg in [Ioo, -Ioo]:
                 return S.NaN
 
         args = Add.make_args(arg)
@@ -195,14 +192,14 @@ class exp(ExpBase):
         included, excluded = [], []
 
         for arg in args:
-            coeff, terms = arg.as_coeff_mul()
+            coeff, terms = arg.as_coeff_Mul()
 
             if coeff is S.Infinity:
-                excluded.append(coeff**Mul(*terms))
+                excluded.append(coeff**terms)
             else:
                 coeffs, log_term = [coeff], None
 
-                for term in terms:
+                for term in Mul.make_args(terms):
                     if term.func is log:
                         if log_term is None:
                             log_term = term.args[0]
