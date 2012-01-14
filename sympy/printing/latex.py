@@ -3,6 +3,7 @@ A Printer which converts an expression into its LaTeX equivalent.
 """
 
 from sympy.core import S, C, Add
+from sympy.core.function import _coeff_isneg
 from printer import Printer
 from conventions import split_super_sub
 from sympy.simplify import fraction
@@ -140,9 +141,7 @@ class LatexPrinter(Printer):
         tex = self._print(terms[0])
 
         for term in terms[1:]:
-            coeff = term.as_coeff_mul()[0]
-
-            if coeff >= 0:
+            if not _coeff_isneg(term):
                 tex += " +"
 
             tex += " " + self._print(term)
@@ -904,10 +903,10 @@ class LatexPrinter(Printer):
         for term in terms[1:]:
             coeff, M = term.as_coeff_Mul()
 
-            if coeff >= 0:
-                tex += " +"
-            else:
+            if coeff < 0:
                 tex += " -"
+            else:
+                tex += " +"
 
             tex += " " + self._print(M)
 
