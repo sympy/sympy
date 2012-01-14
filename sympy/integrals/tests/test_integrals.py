@@ -676,3 +676,7 @@ def test_atom_bug():
     from sympy import meijerg
     from sympy.integrals.risch import heurisch
     assert heurisch(meijerg([], [], [1], [], x), x) is None
+@XFAIL
+def test_issue_1116() :
+    x= Symbol("x")
+    assert  integrate(1/(x**2), (x, -1, 1)) == oo
