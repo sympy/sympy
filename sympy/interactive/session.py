@@ -158,6 +158,10 @@ def init_session(ipython=None, pretty_print=True, order=None,
     auto: boolean
         If True, init_session will automatically create symbols for you;
         if False, it will not.
+    ipython: boolean or None
+        If True, printing will initialize with a IPython console in mind;
+        if False, printing will initialize with a normal console in mind;
+        The default is None, which does what False does.
 
     See Also
     ========

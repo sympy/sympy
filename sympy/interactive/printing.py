@@ -90,9 +90,9 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
     no_global: boolean
         If True, the settings become system wide;
         if False, use just for this console/session. 
-    ip: boolean or None
-        If True, printing is set up specifically for ipython;
-        if False or None, printing is initialized for a normal python console.
+    ip: An interactive console
+        This can either be an instance of IPython,
+        or a class that derives from code.InteractiveConsole.
 
     Examples
     ========
