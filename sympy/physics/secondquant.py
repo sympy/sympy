@@ -1276,7 +1276,7 @@ def _apply_Mul(m):
     This method applies all operators with integer state labels
     to the actual states.  For symbolic state labels, nothing is done.
     When inner products of FockStates are encountered (like <a|b>),
-    the are converted to instances of InnerProduct.
+    they are converted to instances of InnerProduct.
 
     This does not currently work on double inner products like,
     <a|b><c|d>.
