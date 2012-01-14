@@ -400,3 +400,8 @@ def test_no_arith_subs_on_floats():
 
     (x + y + 3.0).subs(x + 3.0, a) == a + y
     (x + y + 3.0).subs(x + 2.0, a) == x + y + 3.0
+
+@XFAIL
+def test_issue_1612() :
+   x= Symbol("x")
+   assert Symbol('f')(x) != Function('f')(x)
