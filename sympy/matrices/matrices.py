@@ -46,6 +46,10 @@ class DeferredVector(Symbol):
     (3, 6)
     """
     def __getitem__(self,i):
+        if i == -0:
+            i = 0
+        if i < 0:
+            raise IndexError('DeferredVector index out of range')
         component_name = '%s[%d]'%(self.name,i)
         return Symbol(component_name)
 
@@ -53,7 +57,7 @@ class DeferredVector(Symbol):
         return sstr(self)
 
     def __repr__(self):
-        return sstr(self)
+        return "DeferredVector('%s')"%(self.name)
 
 
 class Matrix(object):
