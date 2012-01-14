@@ -258,7 +258,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
     well known behavior::
 
         >>> collect(a*x**(2*c) + b*x**(2*c), x**c)
-        (a + b)*(x**2)**c
+        x**(2*c)*(a + b)
 
     Note also that all previously stated facts about :func:`collect` function
     apply to the exponential function, so you can get::
@@ -378,26 +378,22 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
             else:
                 sexpr = expr.base
 
-            if expr.exp.is_Rational:
+            if expr.exp.is_Number:
                 rat_expo = expr.exp
-            elif expr.exp.is_Mul:
-                coeff, tail = expr.exp.as_coeff_mul()
+            else:
+                coeff, tail = expr.exp.as_coeff_Mul()
 
-                if coeff.is_Rational:
-                    rat_expo, sym_expo = coeff, expr.exp._new_rawargs(*tail)
+                if coeff.is_Number:
+                    rat_expo, sym_expo = coeff, tail
                 else:
                     sym_expo = expr.exp
-            else:
-                sym_expo = expr.exp
         elif expr.func is C.exp:
             arg = expr.args[0]
             if arg.is_Rational:
                 sexpr, rat_expo = S.Exp1, arg
             elif arg.is_Mul:
-                coeff, tail = arg.as_coeff_mul()
-
-                if coeff.is_Rational:
-                    sexpr, rat_expo = C.exp(arg._new_rawargs(*tail)), coeff
+                coeff, tail = arg.as_coeff_Mul(rational=True)
+                sexpr, rat_expo = C.exp(tail), coeff
         elif isinstance(expr, Derivative):
             sexpr, deriv = parse_derivative(expr)
 
@@ -422,7 +418,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
 
             for elem, e_rat, e_sym, e_ord in pattern:
 
-                if elem.is_Number:
+                if elem.is_Number and e_rat == 1 and e_sym is None:
                     # a constant is a match for everything
                     continue
 
@@ -482,7 +478,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
             b = collect(expr.base, syms, func, True, exact, distribute_order_term)
             return Pow(b, expr.exp)
 
-    if hasattr(syms, '__iter__') or hasattr(syms, '__getitem__'):
+    if iterable(syms):
         syms = map(separate, syms)
     else:
         syms = [ separate(syms) ]
@@ -501,7 +497,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
 
     summa = map(separate, Add.make_args(expr))
 
-    collected, disliked = defaultdict(lambda: S.Zero), S.Zero
+    collected, disliked = defaultdict(list), S.Zero
     for product in summa:
         terms = [parse_term(i) for i in Mul.make_args(product)]
 
@@ -522,18 +518,21 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
                 if not has_deriv:
                     index = 1
                     for elem in elems:
-                        index *= Pow(elem[0], elem[1])
+                        e = elem[1]
                         if elem[2] is not None:
-                            index **= elem[2]
+                            e *= elem[2]
+                        index *= Pow(elem[0], e)
                 else:
                     index = make_expression(elems)
                 terms = separate(make_expression(terms))
                 index = separate(index)
-                collected[index] += terms
+                collected[index].append(terms)
                 break
         else:
             # none of the patterns matched
             disliked += product
+    # add terms now for each key
+    collected = dict([(k, Add(*v)) for k, v in collected.iteritems()])
 
     if disliked is not S.Zero:
         collected[S.One] = disliked
@@ -1505,7 +1504,7 @@ def _denest_pow(eq):
     if glogb.func is C.log or not glogb.is_Mul:
         if glogb.args[0].is_Pow or glogb.args[0].func is exp:
             glogb = _denest_pow(glogb.args[0])
-            c, _ = glogb.exp.as_coeff_mul()
+            c = glogb.exp.as_coeff_mul()[0]
             ok = c.p != 1
             if ok:
                 ok = c.q != 1
@@ -1818,9 +1817,9 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     elif e.is_Rational:
                         return (b, Integer(e.q)), Integer(e.p)
                     else:
-                        c, m = e.as_coeff_mul()
+                        c, m = e.as_coeff_Mul(rational=True)
                         if c is not S.One:
-                            return (b**Mul._from_args(m), Integer(c.q)), Integer(c.p)
+                            return (b**m, Integer(c.q)), Integer(c.p)
                         else:
                             return (b**e, S.One), S.One
                 else:
@@ -1981,9 +1980,9 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 b, e = c_powers[i]
                 if not (b.is_nonnegative or e.is_integer or force or b.is_polar):
                     continue
-                exp_c, exp_t = e.as_coeff_mul()
-                if exp_c is not S.One and exp_t:
-                    c_powers[i] = [Pow(b, exp_c), e._new_rawargs(*exp_t)]
+                exp_c, exp_t = e.as_coeff_Mul(rational=True)
+                if exp_c is not S.One and exp_t is not S.One:
+                    c_powers[i] = [Pow(b, exp_c), exp_t]
 
 
             # Combine bases whenever they have the same exponent and
