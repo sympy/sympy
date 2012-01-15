@@ -69,11 +69,11 @@ class erf(Function):
     Differentiation with respect to z is supported:
 
     >>> from sympy import diff
-    >>> diff(erf(z),z)
+    >>> diff(erf(z), z)
     2*exp(-z**2)/sqrt(pi)
 
     We can numerically evaluate the error function to arbitrary precision
-    on the whole complex plane
+    on the whole complex plane:
 
     >>> erf(4).evalf(30)
     0.999999984582742099719981147840
@@ -136,23 +136,6 @@ class erf(Function):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
-
-        if C.Order(1,x).contains(arg):
-            return arg
-        else:
-            return self.func(arg)
-
-    def _eval_aseries(self, n, args0, x, logx):
-        z = self.args[0]
-        #h0 = C.hyper([S.One,S.Half],[],-1/z**2)
-        #return z/sqrt(z**2) - 1/(sqrt(pi)*z)*C.exp(-z**2)*h0
-        if -S.Half*S.Pi < C.arg(args0[0]) and C.arg(args0[0]) <= S.Half*S.Pi:
-            return S.One - C.exp(-z**2)/(sqrt(S.Pi)*z)
-        else:
-            return -S.One - C.exp(-z**2)/(sqrt(S.Pi)*z)
-
     def _eval_is_real(self):
         return self.args[0].is_real
 
@@ -160,7 +143,7 @@ class erf(Function):
         return sqrt(z**2)/z*(S.One - C.uppergamma(S.Half, z**2)/sqrt(S.Pi))
 
     def _eval_rewrite_as_tractable(self, z):
-        return S.One - erfs(z)*C.exp(-z**2)
+        return S.One - _erfs(z)*C.exp(-z**2)
 
 
 ###############################################################################
@@ -850,7 +833,7 @@ class Chi(TrigonometricIntegral):
 ###############################################################################
 
 
-class erfs(Function):
+class _erfs(Function):
     """
     Helper function to make the :math:`erf(z)` function
     tractable for the Gruntz algorithm.
@@ -860,20 +843,18 @@ class erfs(Function):
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] != S.Infinity:
-            return super(erfs, self)._eval_aseries(n, args0, x, logx)
+            return super(_erfs, self)._eval_aseries(n, args0, x, logx)
 
         z = self.args[0]
         l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(4))**(-k)/C.factorial(k) * (1/z)**(2*k+1) for k in xrange(0,n) ]
-
-        # Still not sure about the order terms
-        o = C.Order(1/z**(2*n+2), x)
+        o = C.Order(1/z**(2*n+1), x)
         # It is very inefficient to first add the order and then do the nseries
         return (Add(*l))._eval_nseries(x, n, logx) + o
 
     def fdiff(self, argindex=1):
         if argindex == 1:
             z = self.args[0]
-            return -2/sqrt(S.Pi)+2*z*erfs(z)
+            return -2/sqrt(S.Pi)+2*z*_erfs(z)
         else:
             raise ArgumentIndexError(self, argindex)
 

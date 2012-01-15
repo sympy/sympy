@@ -1,6 +1,8 @@
-from sympy import (symbols, erf, nan, oo, Float, conjugate, sqrt, exp, pi, O, I, Ei,
-                   exp_polar, polar_lift, Symbol, I, exp, uppergamma, expint,
+from sympy import (symbols, expand, erf, nan, oo, Float, conjugate, sqrt, exp, pi, O, I, Ei,
+                   exp_polar, polar_lift, Symbol, I, exp, uppergamma, expint, log, loggamma, limit,
                    meijerg, gamma, S, Shi, Chi, Si, Ci, E1, sin, cos, sinh, cosh)
+
+from sympy.functions.special.error_functions import _erfs
 
 from sympy.core.function import ArgumentIndexError
 
@@ -31,10 +33,13 @@ def test_erf():
     assert erf(x).as_leading_term(x) == x
     assert erf(1/x).as_leading_term(x) == erf(1/x)
 
-    assert erf(z)._eval_aseries(None, [oo], z,0) == 1 - exp(-z**2)/(sqrt(pi)*z)
-    assert erf(z)._eval_aseries(None, [-oo], z,0) == -1 - exp(-z**2)/(sqrt(pi)*z)
+    assert erf(z).rewrite('uppergamma') == sqrt(z**2)*erf(sqrt(z**2))/z
 
-    assert erf(z)._eval_rewrite_as_uppergamma(z) == sqrt(z**2)*erf(sqrt(z**2))/z
+    assert limit(exp(x)*exp(x**2)*(erf(x+1/exp(x))-erf(x)), x, oo) == 2/sqrt(pi)
+    assert limit((1-erf(z))*exp(z**2)*z, z, oo) == 1/sqrt(pi)
+    assert expand(limit(erf(erf(erf(z))), z, oo)) == erf(erf(1))
+    assert limit(exp(gamma(erf(z))), z, oo) == exp(1)
+    assert limit(exp(gamma(erf(log(loggamma(z))))), z, oo) == exp(1)
 
     raises(ArgumentIndexError, 'erf(x).fdiff(2)')
 
@@ -45,6 +50,13 @@ def test_erf_series():
 def test_erf_evalf():
     assert abs( erf(Float(2.0)) - 0.995322265 )  <  1E-8  # XXX
 
+def test__erfs():
+    assert _erfs(z).diff(z) == -2/sqrt(S.Pi)+2*z*_erfs(z)
+
+    assert _erfs(1/z).series(z) == z/sqrt(pi) - z**3/(2*sqrt(pi)) + 3*z**5/(4*sqrt(pi)) + O(z**6)
+
+    assert expand(erf(z).rewrite('tractable').diff(z).rewrite('intractable')) == erf(z).diff(z)
+    assert _erfs(z).rewrite("intractable") == (-erf(z) + 1)*exp(z**2)
 
 # NOTE we multiply by exp_polar(I*pi) and need this to be on the principal
 #      branch, hence take x in the lower half plane (d=0).
