@@ -72,8 +72,8 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
         If True, use pretty_print to stringify;
         if False, use sstrrepr to stringify.
     order: string or None
-        There are a few different settings for this parameter;
-        lex, which is lexographic order, this is the default;
+        There are a few different settings for this parameter:
+        lex (default), which is lexographic order;
         grlex, which is graded lexographic order;
         grevlex, which is reversed graded lexographic order;
         old, which is used for compatibility reasons and for long expressions;
