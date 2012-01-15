@@ -1940,3 +1940,7 @@ def test_issue_860():
     x, y=symbols('x, y')
     e = x*y
     assert e.subs(x, Matrix([3, 5, 3])) == Matrix([3, 5, 3])*y
+
+@XFAIL  
+def test_issue_2865() :
+    assert  str(Matrix([[1, 2], [3, 4]])) == 'Matrix([[1, 2], [3, 4]])'

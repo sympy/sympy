@@ -1,7 +1,7 @@
 from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
                    factorial, Function, harmonic, Integral, log, nan, oo, pi,
                    Product, product, Rational, S, sqrt, Sum, summation, Symbol,
-                   sympify, zeta)
+                   sympify, zeta, oo)
 from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
@@ -332,3 +332,8 @@ def test_free_symbols():
         assert func(x, (y, 1, y), (y, 1, z)).free_symbols == set([x, z])
     assert Sum(1, (x, 1, y)).free_symbols == set([y])
     assert Product(1, (x, 1, y)).free_symbols == set()
+    
+@XFAIL
+def test_issue_1072() :
+    k = Symbol("k")
+    assert summation(factorial(2*k+1)/factorial(2*k), (k, 0, oo)) == oo  
