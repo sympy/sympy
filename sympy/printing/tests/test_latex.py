@@ -2,7 +2,7 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Function, factorial, factorial2, floor, ceiling, Abs, re, im, conjugate, gamma,
     Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg,
-    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan,
+    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan, Min, Max,
     cot, coth, re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
     FallingFactorial, polylog, lerchphi, Ei, expint, Si, Ci, Shi, Chi)
 from sympy.abc import mu, tau
@@ -131,6 +131,8 @@ def test_latex_functions():
 
     assert latex(floor(x)) == r"\lfloor{x}\rfloor"
     assert latex(ceiling(x)) == r"\lceil{x}\rceil"
+    assert latex(Min(x,2,x**3)) == r"\min\left(2, x, x^{3}\right)"
+    assert latex(Max(x,2,x**3)) == r"\max\left(2, x, x^{3}\right)"
     assert latex(Abs(x)) == r"\lvert{x}\rvert"
     assert latex(re(x)) == r"\Re{x}"
     assert latex(re(x+y)) == r"\Re {\left (x + y \right )}"
