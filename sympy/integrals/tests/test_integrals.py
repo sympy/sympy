@@ -717,9 +717,9 @@ def test_issue1893():
 
 def test_issue1388():
     from sympy import lowergamma, simplify
-   assert simplify(integrate(exp(-x)*x**y, x)) == lowergamma(y + 1, x)
+    assert simplify(integrate(exp(-x)*x**y, x)) == lowergamma(y + 1, x)
 
 @XFAIL
 def test_issue_1116() :
-    x= Symbol("x")
+    x = Symbol("x")
     assert integrate(1/(x**2), (x, -1, 1)) == oo
