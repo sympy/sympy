@@ -335,5 +335,5 @@ def test_free_symbols():
     
 @XFAIL
 def test_issue_1072() :
-    assert sum(factorial(2*k+1)/factorial(2*k), (k, 0, oo)) == oo
+    assert sum(factorial(2*k+1)/factorial(2*k), (k, 0, oo)) = oo
   
