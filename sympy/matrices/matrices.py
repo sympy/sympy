@@ -856,7 +856,9 @@ class Matrix(object):
         before it is inverted in order to properly detect zeros during
         pivoting. In difficult cases a custom zero detection function can
         be provided by setting the iszerosfunc argument to a function that
-        should return True if its argument is zero.
+        should return True if its argument is zero. The ADJ routine computes
+        the determinant and uses that to detect singular matrices in addition
+        to testing for zeros on the diagonal.
 
         See Also
         ========
@@ -2641,7 +2643,7 @@ class Matrix(object):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        ok = self.rref()[0]
+        ok = self.rref(simplified=True)[0]
         if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
             raise ValueError("Matrix det == 0; not invertible.")
 
@@ -2662,7 +2664,7 @@ class Matrix(object):
             raise NonSquareMatrixError()
 
         big = self.row_join(self.eye(self.rows))
-        red = big.rref(iszerofunc=iszerofunc)[0]
+        red = big.rref(iszerofunc=iszerofunc, simplified=True)[0]
         if any(iszerofunc(red[j, j]) for j in range(red.rows)):
             raise ValueError("Matrix det == 0; not invertible.")
 
@@ -2686,14 +2688,14 @@ class Matrix(object):
         zero = d.equals(0)
         if zero is None:
             # if equals() can't decide, will rref be able to?
-            ok = self.rref()[0]
+            ok = self.rref(simplified=True)[0]
             zero = any(iszerofunc(ok[j, j]) for j in range(ok.rows))
         if zero:
-            raise ValueError("A Matrix must have non-zero determinant to invert.")
+            raise ValueError("Matrix det == 0; not invertible.")
 
         return self.adjugate()/d
 
-    def rref(self,simplified=False, iszerofunc=_iszero, simplify=sympy_simplify):
+    def rref(self, simplified=False, iszerofunc=_iszero, simplify=sympy_simplify):
         """
         Take any matrix and return reduced row-echelon form and indices of pivot vars
 
