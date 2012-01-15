@@ -990,7 +990,11 @@ class fresnels(FresnelIntegral):
             return S.Zero
         else:
             x = sympify(x)
-            return x**3*(-x**4)**n*(S(2)**(-2*n-1)*pi**(2*n+1))/((4*n+3)*C.factorial(2*n+1))
+            if len(previous_terms) > 1:
+                p = previous_terms[-1]
+                return (-pi**2*x**4*(4*n - 1)/(8*n*(2*n + 1)*(4*n + 3))) * p
+            else:
+                return x**3*(-x**4)**n*(S(2)**(-2*n-1)*pi**(2*n+1))/((4*n+3)*C.factorial(2*n+1))
 
     def _eval_rewrite_as_erf(self, z):
         return (S.One+I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) - I*erf((S.One-I)/2*sqrt(pi)*z))
@@ -1077,7 +1081,11 @@ class fresnelc(FresnelIntegral):
             return S.Zero
         else:
             x = sympify(x)
-            return x*(-x**4)**n*(S(2)**(-2*n)*pi**(2*n))/((4*n+1)*C.factorial(2*n))
+            if len(previous_terms) > 1:
+                p = previous_terms[-1]
+                return (-pi**2*x**4*(4*n - 3)/(8*n*(2*n - 1)*(4*n + 1))) * p
+            else:
+                return x*(-x**4)**n*(S(2)**(-2*n)*pi**(2*n))/((4*n+1)*C.factorial(2*n))
 
     def _eval_rewrite_as_erf(self, z):
         return (S.One-I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) + I*erf((S.One-I)/2*sqrt(pi)*z))
