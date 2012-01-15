@@ -984,6 +984,7 @@ class fresnels(FresnelIntegral):
     _sign = -S.One
 
     @staticmethod
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0:
             return S.Zero
@@ -1070,6 +1071,7 @@ class fresnelc(FresnelIntegral):
     _sign = S.One
 
     @staticmethod
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0:
             return S.Zero
