@@ -156,8 +156,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
         If True, use pretty_print to stringify;
         if False, use sstrrepr to stringify.
     order: string or None
-        There are a few different settings for this parameter;
-        lex, which is lexographic order, this is the default;
+        There are a few different settings for this parameter:
+        lex (default), which is lexographic order;
         grlex, which is graded lexographic order;
         grevlex, which is reversed graded lexographic order;
         old, which is used for compatibility reasons and for long expressions;
@@ -172,20 +172,17 @@ def init_session(ipython=None, pretty_print=True, order=None,
         If True, init_session will automatically create symbols for you;
         if False, it will not.
     ipython: boolean or None
-        If True, printing will initialize with a IPython console in mind;
-        if False, printing will initialize with a normal console in mind;
+        If True, printing will initialize for an IPython console;
+        if False, printing will initialize for a normal console;
         The default is None, which does what False does.
     argv: list of arguments for IPython
-        List of arguments to set up IPython with.
-
-    See Also
-    ========
-    sympy.bin.isympy: For a list of possible arguments for IPython.
+        See sympy.bin.isympy for options that can be used to intialize IPython.
 
     See Also
     ========
 
     sympy.interactive.printing.init_printing: for examples and the rest of the parameters.
+    
 
     Examples
     ========
