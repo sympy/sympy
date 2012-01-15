@@ -15,6 +15,8 @@ def test_exp_values():
 
     assert exp(0) == 1
     assert exp(1) == E
+    assert exp(-1 + x).as_base_exp() == (S.Exp1, x - 1)
+    assert exp(1 + x).as_base_exp() == (S.Exp1, x + 1)
 
     assert exp(pi*I/2) == I
     assert exp(pi*I) == -1
