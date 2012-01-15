@@ -859,15 +859,12 @@ class LatexPrinter(Printer):
             charmap[expr.rel_op], self._print(expr.rhs))
 
     def _print_Piecewise(self, expr):
-        ecpairs = [r"%s & \text{for}\: %s" % (self._print(e), self._print(c)) \
-                       for e, c in expr.args[:-1]]
-        if expr.args[-1].cond == True:
-            ecpairs.append(r"%s & \text{otherwise}" % \
-                               self._print(expr.args[-1].expr))
-        else:
-            ecpairs.append(r"%s & \text{for}\: %s" % \
-                           (self._print(expr.args[-1].cond),
-                            self._print(expr.args[-1].expr)))
+        ecpairs = []
+        for e, c in expr.exprcondpairs:
+            ecpairs.append(r"{%s} & \text{for\: } {%s}" % (self._print(e), self._print(c)))
+        if expr.otherwise is not S.NaN:
+            ecpairs.append(r"{%s} & \text{otherwise}" % \
+                               self._print(expr.otherwise))
         tex = r"\begin{cases} %s \end{cases}"
         return tex % r" \\".join(ecpairs)
 

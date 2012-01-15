@@ -115,14 +115,15 @@ class FCodePrinter(CodePrinter):
         lines = []
         if isinstance(expr, Piecewise):
             # support for top-level Piecewise function
-            for i, (e, c) in enumerate(expr.args):
+            for i, (e, c) in enumerate(expr.exprcondpairs):
                 if i == 0:
                     lines.append("if (%s) then" % self._print(c))
-                elif i == len(expr.args)-1 and c == True:
-                    lines.append("else")
                 else:
                     lines.append("else if (%s) then" % self._print(c))
                 lines.extend(self._doprint_a_piece(e, self._settings['assign_to']))
+            if expr.otherwise is not S.NaN:
+                lines.append("else")
+                lines.extend(self._doprint_a_piece(expr.otherwise, self._settings['assign_to']))
             lines.append("end if")
         else:
             lines.extend(self._doprint_a_piece(expr, self._settings['assign_to']))

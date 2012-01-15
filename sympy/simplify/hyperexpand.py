@@ -2392,13 +2392,13 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
             return slater2
     if max(w1[0], w2[0]) <= 1 and max(w1[1], w2[1]) <= 1:
         return Piecewise((slater1, cond1), (slater2, cond2),
-                   (meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0), True))
+                   meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0))
 
     # We couldn't find an expression without hypergeometric functions.
     # TODO it would be helpful to give conditions under which the integral
     #      is known to diverge.
     r = Piecewise((slater1, cond1), (slater2, cond2),
-                   (meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0), True))
+                   meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0))
     if r.has(hyper) and not allow_hyper:
         debug('  Could express using hypergeometric functions, '+
               'but not allowed.')

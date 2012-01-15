@@ -137,7 +137,7 @@ def test_line_wrapping():
 
 def test_fcode_Piecewise():
     x = symbols('x')
-    code = fcode(Piecewise((x,x<1),(x**2,True)))
+    code = fcode(Piecewise((x,x<1),x**2))
     expected = (
         "      if (x < 1) then\n"
         "         x\n"
@@ -146,7 +146,7 @@ def test_fcode_Piecewise():
         "      end if"
     )
     assert code == expected
-    assert fcode(Piecewise((x,x<1),(x**2,True)), assign_to="var") == (
+    assert fcode(Piecewise((x,x<1),x**2), assign_to="var") == (
         "      if (x < 1) then\n"
         "         var = x\n"
         "      else\n"
@@ -171,9 +171,9 @@ def test_fcode_Piecewise():
         "     @ )/x**10 + 3628800*sin(x)/x**11\n"
         "      end if"
     )
-    code = fcode(Piecewise((a,x<0),(b,True)), assign_to="weird_name")
+    code = fcode(Piecewise((a,x<0),b), assign_to="weird_name")
     assert code == expected
-    assert fcode(Piecewise((x,x<1),(x**2,x>1),(sin(x),True))) == (
+    assert fcode(Piecewise((x,x<1),(x**2,x>1),sin(x))) == (
         "      if (x < 1) then\n"
         "         x\n"
         "      else if (x > 1) then\n"

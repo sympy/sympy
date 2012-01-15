@@ -286,8 +286,8 @@ def test_hypersum():
 
     s = summation(x**n*n, (n, -oo, 0))
     assert s.is_Piecewise
-    assert s.args[0].args[0] == -1/(x*(1 - 1/x)**2)
-    assert s.args[0].args[1] == (abs(1/x) < 1)
+    assert s.exprcondpairs[0].args[0] == -1/(x*(1 - 1/x)**2)
+    assert s.exprcondpairs[0].args[1] == (abs(1/x) < 1)
 
 def test_issue_1071():
     assert summation(1/factorial(k), (k, 0, oo)) == E

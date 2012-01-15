@@ -725,13 +725,9 @@ def test_sympy__functions__elementary__miscellaneous__Min():
 def test_sympy__functions__elementary__miscellaneous__MinMaxBase():
     pass
 
-def test_sympy__functions__elementary__piecewise__ExprCondPair():
-    from sympy.functions.elementary.piecewise import ExprCondPair
-    assert _test_args(ExprCondPair(1, True))
-
 def test_sympy__functions__elementary__piecewise__Piecewise():
     from sympy.functions.elementary.piecewise import Piecewise
-    assert _test_args(Piecewise((1, x >= 0), (0, True)))
+    assert _test_args(Piecewise((1, x >= 0), 0))
 
 @SKIP("abstract class")
 def test_sympy__functions__elementary__trigonometric__TrigonometricFunction():
@@ -1586,7 +1582,7 @@ def test_sympy__physics__quantum__state__Wavefunction():
     from sympy import Piecewise, pi
     n = 1
     L = 1
-    g = Piecewise((0, x < 0), (0, x > L), (sqrt(2//L)*sin(n*pi*x/L), True))
+    g = Piecewise((0, x < 0), (0, x > L), sqrt(2//L)*sin(n*pi*x/L))
     assert _test_args(Wavefunction(g, x))
 
 def test_sympy__physics__quantum__tensorproduct__TensorProduct():

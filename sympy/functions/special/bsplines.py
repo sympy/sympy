@@ -1,6 +1,5 @@
 from sympy.core import S, sympify, expand
 from sympy.functions import Piecewise, piecewise_fold
-from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.core.sets import Interval
 
 
@@ -11,16 +10,16 @@ def _add_splines(c, b1, d, b2):
     if b2 == S.Zero or d == S.Zero:
         return expand(piecewise_fold(c*b1))
     new_args = []
-    n_intervals = len(b1.args)
-    assert(n_intervals==len(b2.args))
-    new_args.append((expand(c*b1.args[0].expr), b1.args[0].cond))
-    for i in range(1, n_intervals-1):
+    n_intervals = len(b1.exprcondpairs)
+    assert(n_intervals==len(b2.exprcondpairs))
+    new_args.append((expand(c*b1.exprcondpairs[0][0]), b1.exprcondpairs[0][1]))
+    for i in range(1, n_intervals):
         new_args.append((
-            expand(c*b1.args[i].expr+d*b2.args[i-1].expr),
-            b1.args[i].cond
+            expand(c*b1.exprcondpairs[i][0]+d*b2.exprcondpairs[i-1][0]),
+            b1.exprcondpairs[i][1]
         ))
-    new_args.append((expand(d*b2.args[-2].expr), b2.args[-2].cond))
-    new_args.append(b2.args[-1])
+    new_args.append((expand(d*b2.exprcondpairs[-1][0]), b2.exprcondpairs[-1][1]))
+    new_args.append(d*b2.otherwise)
     return Piecewise(*new_args)
 
 def bspline_basis(d, knots, n, x, close=True):
@@ -36,7 +35,7 @@ def bspline_basis(d, knots, n, x, close=True):
         >>> d = 0
         >>> knots = range(5)
         >>> bspline_basis(d, knots, 0, x)
-        Piecewise((1, [0, 1]), (0, True))
+        Piecewise((1, And(0 <= x, x <= 1)), 0)
 
     For a given (d, knots) there are len(knots)-d-1 B-splines defined, that
     are indexed by n (starting at 0).
@@ -44,7 +43,7 @@ def bspline_basis(d, knots, n, x, close=True):
     Here is an example of a cubic B-spline:
 
         >>> bspline_basis(3, range(5), 0, x)
-        Piecewise((x**3/6, [0, 1)), (-x**3/2 + 2*x**2 - 2*x + 2/3, [1, 2)), (x**3/2 - 4*x**2 + 10*x - 22/3, [2, 3)), (-x**3/6 + 2*x**2 - 8*x + 32/3, [3, 4]), (0, True))
+        Piecewise((x**3/6, And(0 <= x, x < 1)), (-x**3/2 + 2*x**2 - 2*x + 2/3, And(1 <= x, x < 2)), (x**3/2 - 4*x**2 + 10*x - 22/3, And(2 <= x, x < 3)), (-x**3/6 + 2*x**2 - 8*x + 32/3, And(3 <= x, x <= 4)), 0)
 
     By repeating knot points, you can introduce discontinuities in the
     B-splines and their derivatives:
@@ -52,7 +51,7 @@ def bspline_basis(d, knots, n, x, close=True):
         >>> d = 1
         >>> knots = [0,0,2,3,4]
         >>> bspline_basis(d, knots, 0, x)
-        Piecewise((-x/2 + 1, [0, 2]), (0, True))
+        Piecewise((-x/2 + 1, And(0 <= x, x <= 2)), 0)
 
     It is quite time consuming to construct and evaluate B-splines. If you
     need to evaluate a B-splines many times, it is best to lambdify them
@@ -85,7 +84,7 @@ def bspline_basis(d, knots, n, x, close=True):
         raise ValueError('n+d+1 must not exceed len(knots)-1')
     if d==0:
         result = Piecewise(
-            (S.One, Interval(knots[n], knots[n+1], False, True)),
+            (S.One, Interval(knots[n], knots[n+1], False, True).as_relational(x)),
             (0, True)
         )
     elif d > 0:
@@ -106,12 +105,17 @@ def bspline_basis(d, knots, n, x, close=True):
     else:
         raise ValueError('degree must be non-negative: %r' % n)
     if close:
-        final_ec_pair = result.args[-2]
-        final_cond = final_ec_pair.cond
-        final_expr = final_ec_pair.expr
-        new_args = final_cond.args[:3] + (False,)
-        new_ec_pair = ExprCondPair(final_expr, Interval(*new_args))
-        new_args = result.args[:-2] + (new_ec_pair, result.args[-1])
+        final_ec_pair = result.exprcondpairs[-1]
+        final_cond = final_ec_pair[1]
+        final_expr = final_ec_pair[0]
+        final_cond = final_cond.args
+        from sympy import And
+        if final_cond[0].lts == x:
+            final_cond = And(final_cond[0].lts <= final_cond[0].gts, final_cond[1])
+        else:
+            final_cond = And(final_cond[0], final_cond[1].lts <= final_cond[1].gts)
+        new_ec_pair = (final_expr, final_cond)
+        new_args = tuple(result.exprcondpairs[:-1]) + (new_ec_pair, result.otherwise)
         result = Piecewise(*new_args)
     return result
 
@@ -131,7 +135,7 @@ def bspline_basis_set(d, knots, x):
     >>> knots = range(5)
     >>> splines = bspline_basis_set(d, knots, x)
     >>> splines
-    [Piecewise((x**2/2, [0, 1)), (-x**2 + 3*x - 3/2, [1, 2)), (x**2/2 - 3*x + 9/2, [2, 3]), (0, True)), Piecewise((x**2/2 - x + 1/2, [1, 2)), (-x**2 + 5*x - 11/2, [2, 3)), (x**2/2 - 4*x + 8, [3, 4]), (0, True))]
+    [Piecewise((x**2/2, And(0 <= x, x < 1)), (-x**2 + 3*x - 3/2, And(1 <= x, x < 2)), (x**2/2 - 3*x + 9/2, And(2 <= x, x <= 3)), 0), Piecewise((x**2/2 - x + 1/2, And(1 <= x, x < 2)), (-x**2 + 5*x - 11/2, And(2 <= x, x < 3)), (x**2/2 - 4*x + 8, And(3 <= x, x <= 4)), 0)]
 
     See Also
     ========

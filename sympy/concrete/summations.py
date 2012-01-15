@@ -538,7 +538,7 @@ def eval_sum_hyper(f, (i, a, b)):
         if a == -oo:
             res = _eval_sum_hyper(f.subs(i, -i), i, -b)
             if res is not None:
-                return Piecewise(res, (Sum(f, (i, a, b)), True))
+                return Piecewise(res, Sum(f, (i, a, b)))
         else:
             return None
 
@@ -552,9 +552,9 @@ def eval_sum_hyper(f, (i, a, b)):
         cond = And(cond1, cond2)
         if cond is False:
             return None
-        return Piecewise((res1 + res2, cond), (Sum(f, (i, a, b)), True))
+        return Piecewise((res1 + res2, cond), Sum(f, (i, a, b)))
 
     # Now b == oo, a != -oo
     res = _eval_sum_hyper(f, i, a)
     if res is not None:
-        return Piecewise(res, (Sum(f, (i, a, b)), True))
+        return Piecewise(res, Sum(f, (i, a, b)))

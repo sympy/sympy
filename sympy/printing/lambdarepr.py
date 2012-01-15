@@ -1,4 +1,5 @@
 from str import StrPrinter
+from sympy import S
 
 def _find_first_symbol(expr):
     for atom in expr.atoms():
@@ -19,9 +20,7 @@ class LambdaPrinter(StrPrinter):
         from sympy.core.sets import Interval
         result = []
         i = 0
-        for arg in expr.args:
-            e = arg.expr
-            c = arg.cond
+        for e, c in expr.exprcondpairs:
             result.append('((')
             result.append(self._print(e))
             result.append(') if (')
@@ -31,9 +30,16 @@ class LambdaPrinter(StrPrinter):
                 result.append(self._print(c))
             result.append(') else (')
             i += 1
-        result = result[:-1]
-        result.append(') else None)')
-        result.append(')'*(2*i - 2))
+        if len(result) > 0:
+            result = result[:-1]
+            result.append(') else ')
+        if expr.otherwise is not S.NaN:
+            result.append('(')
+            result.append(self._print(expr.otherwise))
+            result.append(')')
+        else:
+            result.append('None')
+        result.append(')'*(2*i - 1))
         return ''.join(result)
 
     def _print_And(self, expr):

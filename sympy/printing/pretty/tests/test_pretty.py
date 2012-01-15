@@ -139,7 +139,8 @@ Matrix([[x/y, y, th], [0, exp(I*k*ph), 1]])
 
 PIECEWISE:
 
-Piecewise((x,x<1),(x**2,True))
+Piecewise((x,x<1),x**2)
+Piecewise((x,x<1),(x**2,x>1))
 
 
 SEQUENCES (TUPLES, LISTS, DICTIONARIES):
@@ -2150,7 +2151,7 @@ u"""\
 
 
 def test_pretty_piecewise():
-    expr = Piecewise((x,x<1),(x**2,True))
+    expr = Piecewise((x,x<1),x**2)
     ascii_str = \
 """\
 /x   for x < 1\n\
@@ -2165,6 +2166,25 @@ u"""\
 ⎪             \n\
 ⎨ 2           \n\
 ⎪x   otherwise\n\
+⎩             \
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+    expr = Piecewise((x, x < 1),(x**2, x > 1))
+    ascii_str = \
+"""\
+/x   for x < 1\n\
+|             \n\
+< 2           \n\
+|x   for x > 1\n\
+\             \
+"""
+    ucode_str = \
+u"""\
+⎧x   for x < 1\n\
+⎪             \n\
+⎨ 2           \n\
+⎪x   for x > 1\n\
 ⎩             \
 """
     assert  pretty(expr) == ascii_str

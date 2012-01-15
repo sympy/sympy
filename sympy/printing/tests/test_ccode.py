@@ -82,7 +82,7 @@ def test_ccode_boolean():
     assert ccode((x|y)&z) == "(x||y)&&z"
 
 def test_ccode_Piecewise():
-    p = ccode(Piecewise((x,x<1),(x**2,True)))
+    p = ccode(Piecewise((x,x<1),x**2))
     s = \
 """\
 if (x < 1) {
@@ -95,7 +95,7 @@ else {
     assert p == s
 
 def test_ccode_Piecewise_deep():
-    p = ccode(2*Piecewise((x,x<1),(x**2,True)))
+    p = ccode(2*Piecewise((x,x<1),x**2))
     s = \
 """\
 2*if (x < 1) {

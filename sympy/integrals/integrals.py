@@ -475,7 +475,7 @@ class Integral(Expr):
                         f, cond = res
                         if conds == 'piecewise':
                             ret = Piecewise((f, cond),
-                                          (Integral(function, (x, a, b)), True))
+                                          Integral(function, (x, a, b)))
                         elif conds == 'separate':
                             if len(self.limits) != 1:
                                 raise ValueError('conds=separate not supported in ' \
@@ -1077,7 +1077,7 @@ def integrate(*args, **kwargs):
        in interactive sessions and should be avoided in library code.
 
        >>> integrate(x**a*exp(-x), (x, 0, oo)) # same as conds='piecewise'
-       Piecewise((gamma(a + 1), -re(a) < 1), (Integral(x**a*exp(-x), (x, 0, oo)), True))
+       Piecewise((gamma(a + 1), -re(a) < 1), Integral(x**a*exp(-x), (x, 0, oo)))
 
        >>> integrate(x**a*exp(-x), (x, 0, oo), conds='none')
        gamma(a + 1)

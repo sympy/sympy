@@ -214,7 +214,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
     if not F.is_Piecewise:
         raise IntegralTransformError('Mellin', f, 'could not compute integral')
 
-    F, cond = F.args[0]
+    F, cond = F.exprcondpairs[0]
     if F.has(Integral):
         raise IntegralTransformError('Mellin', f, 'integral in unexpected form')
 
@@ -920,7 +920,7 @@ def _laplace_transform(f, t, s_, simplify=True):
     if not F.is_Piecewise:
         raise IntegralTransformError('Laplace', f, 'could not compute integral')
 
-    F, cond = F.args[0]
+    F, cond = F.exprcondpairs[0]
     if F.has(Integral):
         raise IntegralTransformError('Laplace', f, 'integral in unexpected form')
 
@@ -1099,7 +1099,7 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         if f is None:
             raise IntegralTransformError('Inverse Laplace', f, '')
         if f.is_Piecewise:
-            f, cond = f.args[0]
+            f, cond = f.exprcondpairs[0]
             if f.has(Integral):
                 raise IntegralTransformError('Inverse Laplace', f,
                                      'inversion integral of unrecognised form.')
@@ -1233,7 +1233,7 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
     if not F.is_Piecewise:
         raise IntegralTransformError(name, f, 'could not compute integral')
 
-    F, cond = F.args[0]
+    F, cond = F.exprcondpairs[0]
     if F.has(Integral):
         raise IntegralTransformError(name, f, 'integral in unexpected form')
 

@@ -882,7 +882,7 @@ def _check_antecedents(g1, g2, x):
          And(Eq(arg(sigma), 0), Ne(arg(omega), 0))),
         (lambda_s0(+1, sign(arg(sigma)))*lambda_s0(-1, sign(arg(sigma))),
          And(Ne(arg(sigma), 0), Eq(arg(omega), 0))),
-        (lambda_s0(sign(arg(omega)), sign(arg(sigma))), True))
+        lambda_s0(sign(arg(omega)), sign(arg(sigma))))
 
     _debug('Checking antecedents:')
     _debug('  sigma=%s, s=%s, t=%s, u=%s, v=%s, b*=%s, rho=%s'
@@ -1398,7 +1398,7 @@ def _rewrite_single(f, x, recursive=True):
             res, cond = r
             res = _my_unpolarify(hyperexpand(res, rewrite='nonrepsmall'))
             return Piecewise((res, cond),
-                             (Integral(f, (x, 0, oo)), True))
+                              Integral(f, (x, 0, oo)))
         return Integral(f, (x, 0, oo))
     try:
         F, strip, _ = mellin_transform(f, x, s, integrator=my_integrator,
@@ -1545,13 +1545,17 @@ def _meijerint_indefinite_1(f, x):
     res = piecewise_fold(res)
     if res.is_Piecewise:
         nargs = []
-        for expr, cond in res.args:
+        for expr, cond in res.exprcondpairs:
             expr = _my_unpolarify(Add(*expand_mul(expr).as_coeff_add(x)[1]))
-            nargs += [(expr, cond)]
+            nargs.append((expr, cond))
+        if res.otherwise is not None:
+            expr = _my_unpolarify(Add(*expand_mul(res.otherwise).as_coeff_add(x)[1]))
+            nargs.append(expr)
+            cond = True
         res = Piecewise(*nargs)
     else:
         res = _my_unpolarify(Add(*expand_mul(res).as_coeff_add(x)[1]))
-    return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
+    return Piecewise((res, _my_unpolarify(cond)), Integral(f, x))
 
 @timeit
 def meijerint_definite(f, x, a, b):
@@ -1889,4 +1893,4 @@ def meijerint_inversion(f, x, t):
             if not isinstance(cond, bool):
                 cond = cond.subs(t, t + shift)
             return Piecewise((res.subs(t, t_), cond),
-                             (Integral(f_*exp(x*t), (x, c - oo*I, c + oo*I)).subs(t, t_), True))
+                              Integral(f_*exp(x*t), (x, c - oo*I, c + oo*I)).subs(t, t_))

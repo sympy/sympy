@@ -171,7 +171,7 @@ def test_functions():
             atan2, polygamma, hermite, legendre, uppergamma)
     x, y, z = symbols("x,y,z")
     others = (chebyshevt_root, chebyshevu_root, Eijk(x, y, z),
-            Piecewise( (0, x<-1), (x**2, x<=1), (x**3, True)),
+            Piecewise( (0, x<-1), (x**2, x<=1), x**3),
             assoc_legendre)
     for a in zero_var:
         check(a)

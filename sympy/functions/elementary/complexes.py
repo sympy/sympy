@@ -363,7 +363,7 @@ class Abs(Function):
         when = Eq(direction, 0)
         return Piecewise(
                          ((s.subs(direction, 0)), when),
-                         (sign(direction)*s, True),
+                         sign(direction)*s
                          )
 
     def _sage_(self):

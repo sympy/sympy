@@ -1,9 +1,9 @@
 from __future__ import division
 
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
-    factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
-    Interval, Lambda, Limit, log, Matrix, nan, O, oo, pi, Rational, Float, Rel,
-    S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
+    factorial, factorial2, Float, Function, GoldenRatio, I, Integer, Integral,
+    Interval, Lambda, Limit, log, Matrix, nan, O, oo, pi, Piecewise, Rational,
+    Rel,S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, round)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
@@ -192,6 +192,12 @@ def test_Order():
 
 def test_Pi():
     assert str(pi) == "pi"
+
+def test_Piecewise():
+    p1 = Piecewise( (x, x < 1), x**2 )
+    p2 = Piecewise( (x, x < 1), (x**2, x >= 1))
+    assert str(p1) == "Piecewise((x, x < 1), x**2)"
+    assert str(p2) == "Piecewise((x, x < 1), (x**2, x >= 1))"
 
 def test_Poly():
     assert str(Poly(0, x)) == "Poly(0, x, domain='ZZ')"
