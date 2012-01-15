@@ -2,7 +2,7 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Function, factorial, factorial2, floor, ceiling, Abs, re, im, conjugate, gamma,
     Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg,
-    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan,
+    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan, Min, Max,
     cot, coth, re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
     FallingFactorial, polylog, lerchphi, Ei, expint, Si, Ci, Shi, Chi)
 from sympy.abc import mu, tau
@@ -95,7 +95,7 @@ def test_latex_symbols_failing():
 
 def test_latex_functions():
     assert latex(exp(x)) == "e^{x}"
-    assert latex(exp(1)+exp(2)) == "e + e^{2}"
+    assert latex(exp(1) + exp(2)) == "e + e^{2}"
 
     f = Function('f')
     assert latex(f(x)) == '\\operatorname{f}{\\left (x \\right )}'
@@ -106,16 +106,17 @@ def test_latex_functions():
     assert latex(sin(x)) == r"\sin{\left (x \right )}"
     assert latex(sin(x), fold_func_brackets=True) == r"\sin {x}"
     assert latex(sin(2*x**2), fold_func_brackets=True) == \
-    r"\sin {2 x^{2}}"
+        r"\sin {2 x^{2}}"
     assert latex(sin(x**2), fold_func_brackets=True) == \
-    r"\sin {x^{2}}"
+        r"\sin {x^{2}}"
 
     assert latex(asin(x)**2) == r"\operatorname{asin}^{2}{\left (x \right )}"
-    assert latex(asin(x)**2,inv_trig_style="full") == \
+    assert latex(asin(x)**2, inv_trig_style="full") == \
         r"\arcsin^{2}{\left (x \right )}"
-    assert latex(asin(x)**2,inv_trig_style="power") == \
+    assert latex(asin(x)**2, inv_trig_style="power") == \
         r"\sin^{-1}{\left (x \right )}^{2}"
-    assert latex(asin(x**2),inv_trig_style="power",fold_func_brackets=True) == \
+    assert latex(asin(x**2), inv_trig_style="power",
+                 fold_func_brackets=True) == \
         r"\sin^{-1} {x^{2}}"
 
     assert latex(factorial(k)) == r"k!"
@@ -124,16 +125,18 @@ def test_latex_functions():
     assert latex(factorial2(k)) == r"k!!"
     assert latex(factorial2(-k)) == r"\left(- k\right)!!"
 
-    assert latex(binomial(2,k)) == r"{\binom{2}{k}}"
+    assert latex(binomial(2, k)) == r"{\binom{2}{k}}"
 
-    assert latex(FallingFactorial(3,k)) == r"{\left(3\right)}_{\left(k\right)}"
-    assert latex(RisingFactorial(3,k)) == r"{\left(3\right)}^{\left(k\right)}"
+    assert latex(FallingFactorial(3, k)) == r"{\left(3\right)}_{\left(k\right)}"
+    assert latex(RisingFactorial(3, k)) == r"{\left(3\right)}^{\left(k\right)}"
 
     assert latex(floor(x)) == r"\lfloor{x}\rfloor"
     assert latex(ceiling(x)) == r"\lceil{x}\rceil"
+    assert latex(Min(x, 2, x**3)) == r"\min\left(2, x, x^{3}\right)"
+    assert latex(Max(x, 2, x**3)) == r"\max\left(2, x, x^{3}\right)"
     assert latex(Abs(x)) == r"\lvert{x}\rvert"
     assert latex(re(x)) == r"\Re{x}"
-    assert latex(re(x+y)) == r"\Re {\left (x + y \right )}"
+    assert latex(re(x + y)) == r"\Re {\left (x + y \right )}"
     assert latex(im(x)) == r"\Im{x}"
     assert latex(conjugate(x)) == r"\overline{x}"
     assert latex(gamma(x)) == r"\Gamma\left(x\right)"
@@ -145,7 +148,7 @@ def test_latex_functions():
     assert latex(coth(x)) == r'\coth{\left (x \right )}'
     assert latex(re(x)) == r'\Re{x}'
     assert latex(im(x)) == r'\Im{x}'
-    assert latex(root(x,y)) == r'x^{\frac{1}{y}}'
+    assert latex(root(x, y)) == r'x^{\frac{1}{y}}'
     assert latex(arg(x)) == r'\arg{\left (x \right )}'
     assert latex(zeta(x)) == r'\zeta\left(x\right)'
 
