@@ -84,7 +84,7 @@ def _init_ipython_session(argv=[], auto=False):
         import re
         re_nameerror = re.compile("name '(?P<symbol>[A-Za-z_][A-Za-z0-9_]*)' is not defined")
 
-        def handler(self, etype, value, tb, tb_offset=None):
+        def _handler(self, etype, value, tb, tb_offset=None):
             """Handle :exc:`NameError` exception and allow injection of missing symbols. """
             if etype is NameError and tb.tb_next and not tb.tb_next.tb_next:
                 match = re_nameerror.match(str(value))
@@ -105,7 +105,7 @@ def _init_ipython_session(argv=[], auto=False):
             self._showtraceback(etype, value, stb)
 
         if auto:
-            app.shell.set_custom_exc((NameError,), handler)
+            app.shell.set_custom_exc((NameError,), _handler)
 
         return app.shell
     else:
@@ -146,7 +146,77 @@ def _init_python_session():
 
 def init_session(ipython=None, pretty_print=True, order=None,
         use_unicode=None, quiet=False, auto=False, argv=[]):
-    """Initialize an embedded IPython or Python session. """
+    """
+    Initialize an embedded IPython or Python session.
+
+    Parameters
+    ==========
+
+    pretty_print: boolean
+        If True, use pretty_print to stringify;
+        if False, use sstrrepr to stringify.
+    order: string or None
+        There are a few different settings for this parameter:
+        lex (default), which is lexographic order;
+        grlex, which is graded lexographic order;
+        grevlex, which is reversed graded lexographic order;
+        old, which is used for compatibility reasons and for long expressions;
+        None, which sets it to lex.
+    use_unicode: boolean or None
+        If True, use unicode characters;
+        if False, do not use unicode characters.
+    quiet: boolean
+        If True, init_session will not print messages regarding its status;
+        if False, init_session will print messages regarding its status.
+    auto: boolean
+        If True, init_session will automatically create symbols for you;
+        if False, it will not.
+    ipython: boolean or None
+        If True, printing will initialize for an IPython console;
+        if False, printing will initialize for a normal console;
+        The default is None, which does what False does.
+    argv: list of arguments for IPython
+        See sympy.bin.isympy for options that can be used to intialize IPython.
+
+    See Also
+    ========
+
+    sympy.interactive.printing.init_printing: for examples and the rest of the parameters.
+
+
+    Examples
+    ========
+
+    >>> from sympy import init_session, Symbol, sin, sqrt
+    >>> sin(x) #doctest: +SKIP
+    NameError: name 'x' is not defined
+    >>> init_session() #doctest: +SKIP
+    >>> sin(x) #doctest: +SKIP
+    sin(x)
+    >>> sqrt(5) #doctest: +SKIP
+      ___
+    \/ 5
+    >>> init_session(pretty_print=False) #doctest: +SKIP
+    >>> sqrt(5) #doctest: +SKIP
+    sqrt(5)
+    >>> y + x + y**2 + x**2 #doctest: +SKIP
+    x**2 + x + y**2 + y
+    >>> init_session(order='grlex') #doctest: +SKIP
+    >>> y + x + y**2 + x**2 #doctest: +SKIP
+    x**2 + y**2 + x + y
+    >>> init_session(order='grevlex') #doctest: +SKIP
+    >>> y * x**2 + x * y**2 #doctest: +SKIP
+    x**2*y + x*y**2
+    >>> init_session(order='old') #doctest: +SKIP
+    >>> x**2 + y**2 + x + y #doctest: +SKIP
+    x + y + x**2 + y**2
+    >>> theta = Symbol('theta') #doctest: +SKIP
+    >>> theta #doctest: +SKIP
+    theta
+    >>> init_session(use_unicode=True) #doctest: +SKIP
+    >>> theta # doctest: +SKIP
+    \u03b8
+    """
     import sys
 
     in_ipython = False
