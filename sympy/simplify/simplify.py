@@ -1061,11 +1061,79 @@ def collect_const(expr, *vars, **first):
                 break
     return expr
 
+def _split_gcd(*a):
+    """
+    split the list of integers `a` into a list of integers a1 having
+    g = gcd(a1) and a list a2 whose elements are not divisible by g
+
+    Examples
+    ========
+    >>> from sympy.simplify.simplify import _split_gcd
+    >>> _split_gcd(55,35,22,14,77,10)
+    ([55, 35, 10], [22, 14, 77])
+    """
+    g = a[0]
+    b1 = [g]
+    b2 = []
+    for x in a[1:]:
+        g1 = gcd(g, x)
+        if g1 == 1:
+            b2.append(x)
+        else:
+            g = g1
+            b1.append(x)
+    return b1, b2
+
+def split_surds(expr):
+    """
+    split an expression with terms whose squares are rationals
+    into a sum of terms whose surds squared have gcd iqual to g
+    and a sum of terms with surds squared prime with g
+
+    Examples
+    ========
+    >>> from sympy import sqrt
+    >>> from sympy.simplify.simplify import split_surds
+    >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
+    (sqrt(5)/7 + sqrt(10) + sqrt(15), sqrt(6) + 3*sqrt(3))
+    """
+    coeff_muls =  [x.as_coeff_Mul() for x in expr.args]
+    surds = [x[1]**2 for x in coeff_muls if x[1].is_Pow]
+    b1, b2 = _split_gcd(*surds)
+    a1v, a2v = [], []
+    for c, s in coeff_muls:
+        if s**2 in b1:
+            a1v.append(c*s)
+        else:
+            a2v.append(c*s)
+    a = Add(*a1v)
+    b = Add(*a2v)
+    return a, b
+
+def radint_simplify(num, den):
+    """
+    Rationalize num/den by removing square roots in the denominator;
+    num and den are sum of terms whose squares are rationals
+
+    Examples
+    ========
+    >>> from sympy import sqrt
+    >>> from sympy.simplify.simplify import radint_simplify
+    >>> radint_simplify(sqrt(3), 1 + sqrt(2)/3)
+    (-sqrt(3) + sqrt(6)/3, -7/9)
+    """
+    if not den.is_Add:
+        return num, den
+    #print 'DB0 radint_simplify num=%s den=%s' %(num, den)
+    a, b = split_surds(den)
+    num = expand_mul(expand_multinomial((a - b)*num))
+    den = expand_mul(expand_multinomial(a**2 - b**2))
+    return radint_simplify(num, den)
+
+
 def radsimp(expr, symbolic=True):
     """
-    Rationalize the denominator by removing square roots. If there are more
-    than 3 terms (after collecting common square root terms) that have
-    square roots then the removal is in general only partial.
+    Rationalize the denominator by removing square roots.
 
     Note: the expression returned from radsimp must be used with caution
     since if the denominator contains symbols, it will be possible to make
@@ -1146,7 +1214,6 @@ def radsimp(expr, symbolic=True):
             d = sqrtdenest(sqrt(d.base))**d.exp.p
 
         changed = False
-        nterms4 = False
         while 1:
             # collect similar terms
             d, nterms = collect_sqrt(expand_mul(expand_multinomial(d)), evaluate=False)
@@ -1160,27 +1227,16 @@ def radsimp(expr, symbolic=True):
             #   iteration
             if not nterms:
                 break
-            elif nterms > 4 or nterms4 and nterms == 4 and len(d.args) > 5:
-                n, d = fraction(expr)
+            if nterms > 3 or nterms == 3 and len(d.args) > 4:
+                if all([(x**2).is_Integer for x in d.args]):
+                    nd, d = radint_simplify(S.One, d)
+                    n = expand_mul(expand_multinomial(n*nd))
+                else:
+                    n, d = fraction(expr)
                 break
             changed = True
 
             # now match for a radical
-            if nterms == 4 and len(d.args) == 5:
-                r = d.match(a + b*sqrt(c) + D*sqrt(E) + F*sqrt(G))
-                va, vb, vc, vd, ve, vf, vg = \
-                    r[a], r[b], r[c], r[D], r[E], r[F], r[G]
-                nmul = va - vb*sqrt(vc) - vd*sqrt(ve) - vf*sqrt(vg)
-                d = va**2 - vc*vb**2 - ve*vd**2 - vg*vf**2 - \
-                2*vb*vd*sqrt(vc*ve) - 2*vb*vf*sqrt(vc*vg) - 2*vd*vf*sqrt(ve*vg)
-                nterms4 = True
-                n1 = n/d
-                if denom(n1) is not S.One:
-                    n = -(-n/d)
-                else:
-                    n = n1
-                n, d = fraction(n*nmul)
-
             if len(d.args) == 4:
                 r = d.match(a + b*sqrt(c) + D*sqrt(E))
                 va, vb, vc, vd, ve = r[a], r[b], r[c], r[D], r[E]
