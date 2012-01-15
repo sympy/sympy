@@ -336,4 +336,4 @@ def test_free_symbols():
 @XFAIL
 def test_issue_1072() :
     k = Symbol("k")
-    assert sum(factorial(2*k+1)/factorial(2*k), (k, 0, oo)) == oo  
+    assert summation(factorial(2*k+1)/factorial(2*k), (k, 0, oo)) == oo  
