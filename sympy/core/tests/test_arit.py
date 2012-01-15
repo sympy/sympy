@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Float, re, pi, \
-        sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or
+        sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
@@ -1281,3 +1281,15 @@ def test_issue_2978():
     assert 2**x/2**(2.0*x) == 2**(-1.0*x)
     assert 2**x*2**(2.0*x) == 2**(3.0*x)
     assert 2**(1.5*x)*2**(2.5*x) == 2**(4.0*x)
+
+def test_mul_flatten_oo():
+    p = symbols('p', positive=True)
+    n, m = symbols('n,m', negative=True)
+    i, j = symbols('i,j', imaginary=True)
+    assert n*oo == -oo
+    assert n*m*oo == oo
+    assert p*oo == oo
+    assert i*oo == I*oo
+    assert i*j*oo == -oo
+    assert i*j*I*oo == -I*oo
+    assert i*I*I*oo == -I*oo

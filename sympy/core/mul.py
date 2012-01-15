@@ -443,25 +443,28 @@ class Mul(AssocOp):
 
         # oo, -oo
         if (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
-            new_c_part = []
-            coeff_sign = 1
-            for t in c_part:
-                if t.is_positive:
-                    continue
-                if t.is_negative:
-                    coeff_sign *= -1
-                    continue
-                new_c_part.append(t)
-            c_part = new_c_part
-            new_nc_part = []
-            for t in nc_part:
-                if t.is_positive:
-                    continue
-                if t.is_negative:
-                    coeff_sign *= -1
-                    continue
-                new_nc_part.append(t)
-            nc_part = new_nc_part
+            def _handle_for_oo(c_part, coeff_sign, imaginary):
+                new_c_part = []
+                for t in c_part:
+                    if t.is_positive:
+                        continue
+                    if t.is_negative:
+                        coeff_sign *= -1
+                        continue
+                    if t.is_imaginary:
+                        imaginary += 1
+                        continue
+                    new_c_part.append(t)
+                return new_c_part, coeff_sign, imaginary
+            c_part, coeff_sign, imaginary = \
+                _handle_for_oo(c_part, 1, 0)
+            nc_part, coeff_sign, imaginary = \
+                _handle_for_oo(nc_part, coeff_sign, imaginary)
+            imaginary = imaginary % 4 # -> [1, I, -1, -I]
+            if imaginary in [2, 3]:
+                coeff_sign *= -1
+            if imaginary in [1, 3]:
+                c_part.append(S.ImaginaryUnit)
             coeff *= coeff_sign
 
         # zoo
