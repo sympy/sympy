@@ -57,7 +57,7 @@ TERMINAL_EXAMPLES = [
     "beginner.print_pretty",
     "beginner.series",
     "beginner.substitution",
-#    "intermediate.coupled_cluster",
+    "intermediate.coupled_cluster",
     "intermediate.differential_equations",
     "intermediate.infinite_1d_box",
     "intermediate.partial_differential_eqs",
