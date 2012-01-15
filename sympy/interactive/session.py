@@ -152,6 +152,19 @@ def init_session(ipython=None, pretty_print=True, order=None,
     Parameters
     ==========
 
+    pretty_print: boolean
+        If True, use pretty_print to stringify;
+        if False, use sstrrepr to stringify.
+    order: string or None
+        There are a few different settings for this parameter;
+        lex, which is lexographic order, this is the default;
+        grlex, which is graded lexographic order;
+        grevlex, which is reversed graded lexographic order;
+        old, which is used for compatibility reasons and for long expressions;
+        None, which sets it to lex.
+    use_unicode: boolean or None
+        If True, use unicode characters;
+        if False, do not use unicode characters.
     quiet: boolean
         If True, init_session will not print messages regarding its status;
         if False, init_session will print messages regarding its status.
@@ -162,6 +175,12 @@ def init_session(ipython=None, pretty_print=True, order=None,
         If True, printing will initialize with a IPython console in mind;
         if False, printing will initialize with a normal console in mind;
         The default is None, which does what False does.
+    argv: list of arguments for IPython
+        List of arguments to set up IPython with.
+
+    See Also
+    ========
+    sympy.bin.isympy: For a list of possible arguments for IPython.
 
     See Also
     ========
