@@ -865,15 +865,12 @@ class FresnelIntegral(Function):
         if changed:
             return prefact*cls(newarg)
 
-        # Values at infinities
+        # Values at positive infinities signs
+        # if any were extracted automatically
         if z is S.Infinity:
             return S.Half
-        #elif z is S.NegativeInfinity:
-        #    return -S.Half
         elif z is I*S.Infinity:
             return cls._sign*I*S.Half
-        #elif z is I*S.NegativeInfinity:
-        #    return -cls._sign*I*S.Half
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -961,7 +958,7 @@ class fresnels(FresnelIntegral):
     sin(pi*z**2/2)
 
     We can numerically evaluate the Fresnel integral to arbitrary precision
-    on the whole complex plane
+    on the whole complex plane:
 
     >>> fresnels(2).evalf(30)
     0.343415678363698242195300815958
@@ -986,27 +983,16 @@ class fresnels(FresnelIntegral):
     _trigfunc = C.sin
     _sign = -S.One
 
+    @staticmethod
+    def taylor_term(n, x, *previous_terms):
+        if n < 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            return x**3*(-x**4)**n*(S(2)**(-2*n-1)*pi**(2*n+1))/((4*n+3)*C.factorial(2*n+1))
+
     def _eval_rewrite_as_erf(self, z):
         return (S.One+I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) - I*erf((S.One-I)/2*sqrt(pi)*z))
-
-    def _eval_nseries(self, x, n, logx):
-        return x**3*(-x**4)**n*(2**(-2*n-1)*pi**(2*n+1))/((4*n+3)*C.factorial(2*n+1))
-
-    def _eval_aseries(self, n, args0, x, logx):
-        z = self.args[0]
-        #e = S.Half*I*pi*z**2
-        #h1 = C.hyper([S.One,S.Half],[],2*I/(pi*z**2))
-        #h2 = C.hyper([S.One,S.Half],[],-2*I/(pi*z**2))
-        #return root(z**4,4)/(2*z) - S.One/(2*pi*z)*(C.exp(-e)*h1 + C.exp(e)*h2)
-        return S.Half - 1/(pi*z)*C.cos(S.Half*pi*z**2)
-
-    def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
-
-        if C.Order(1,x).contains(arg):
-            return pi/6*arg**3
-        else:
-            return self.func(arg)
 
 
 class fresnelc(FresnelIntegral):
@@ -1058,7 +1044,7 @@ class fresnelc(FresnelIntegral):
     cos(pi*z**2/2)
 
     We can numerically evaluate the Fresnel integral to arbitrary precision
-    on the whole complex plane
+    on the whole complex plane:
 
     >>> fresnelc(2).evalf(30)
     0.488253406075340754500223503357
@@ -1083,27 +1069,16 @@ class fresnelc(FresnelIntegral):
     _trigfunc = C.cos
     _sign = S.One
 
+    @staticmethod
+    def taylor_term(n, x, *previous_terms):
+        if n < 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            return x*(-x**4)**n*(S(2)**(-2*n)*pi**(2*n))/((4*n+1)*C.factorial(2*n))
+
     def _eval_rewrite_as_erf(self, z):
         return (S.One-I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) + I*erf((S.One-I)/2*sqrt(pi)*z))
-
-    def _eval_nseries(self, x, n, logx):
-        return x*(-x**4)**n*(2**(-2*n)*pi**(2*n))/((4*n+1)*C.factorial(2*n))
-
-    def _eval_aseries(self, n, args0, x, logx):
-        z = self.args[0]
-        #e = S.Half*I*pi*z**2
-        #h1 = C.hyper([S.One,S.Half],[],2*I/(pi*z**2))
-        #h2 = C.hyper([S.One,S.Half],[],-2*I/(pi*z**2))
-        #return (z**4)**C.Rational(3,4)/(2*z**3) + I/(2*pi*z)*(C.exp(-e)*h1 - C.exp(e)*h2)
-        return S.Half + 1/(pi*z)*C.sin(S.Half*pi*z**2)
-
-    def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
-
-        if C.Order(1,x).contains(arg):
-            return arg
-        else:
-            return self.func(arg)
 
 
 ###############################################################################

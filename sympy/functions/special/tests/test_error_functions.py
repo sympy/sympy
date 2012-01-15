@@ -244,19 +244,17 @@ def test_fresnel():
 
     assert fresnels(z).diff(z) == sin(pi*z**2/2)
 
-    assert fresnels(z).as_leading_term(z) == pi*z**3/6
-
     assert fresnels(z).rewrite(erf) == (S.One+I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) - I*erf((S.One-I)/2*sqrt(pi)*z))
 
-    assert fresnels(z)._eval_nseries(z, n, None) == z**3*(-z**4)**n*(2**(-2*n-1)*pi**(2*n+1))/((4*n+3)*factorial(2*n+1))
-
-    assert fresnels(z)._eval_aseries(z, oo, 0, 0) == S.Half - cos(pi*z**2/2)/(pi*z)
+    assert fresnels(z).series(z, n=15) == pi*z**3/6 - pi**3*z**7/336 + pi**5*z**11/42240 + O(z**15)
 
     assert fresnels(w).is_real is True
 
     assert fresnels(z).as_real_imag() == ((fresnels(re(z) - I*re(z)*Abs(im(z))/Abs(re(z)))/2 + fresnels(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))/2,
                                           I*(fresnels(re(z) - I*re(z)*Abs(im(z))/Abs(re(z))) - fresnels(re(z) + I*re(z)*Abs(im(z))/Abs(re(z))))*
                                           re(z)*Abs(im(z))/(2*im(z)*Abs(re(z)))))
+
+    assert fresnels(2+3*I).as_real_imag() == (fresnels(2 + 3*I)/2 + fresnels(2 - 3*I)/2, I*(fresnels(2 - 3*I) - fresnels(2 + 3*I))/2)
 
     assert fresnelc(0) == 0
     assert fresnelc(oo) == S.Half
@@ -271,16 +269,14 @@ def test_fresnel():
 
     assert fresnelc(z).diff(z) == cos(pi*z**2/2)
 
-    assert fresnelc(z).as_leading_term(z) == z
-
     assert fresnelc(z).rewrite(erf) == (S.One-I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) + I*erf((S.One-I)/2*sqrt(pi)*z))
 
-    assert fresnelc(z)._eval_nseries(z, n, None) ==  z*(-z**4)**n*(2**(-2*n)*pi**(2*n))/((4*n+1)*factorial(2*n))
-
-    assert fresnelc(z)._eval_aseries(z, oo, 0, 0) == S.Half + sin(pi*z**2/2)/(pi*z)
+    assert fresnelc(z).series(z, n=15) == z - pi**2*z**5/40 + pi**4*z**9/3456 - pi**6*z**13/599040 + O(z**15)
 
     assert fresnelc(w).is_real is True
 
     assert fresnelc(z).as_real_imag() == ((fresnelc(re(z) - I*re(z)*Abs(im(z))/Abs(re(z)))/2 + fresnelc(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))/2,
                                            I*(fresnelc(re(z) - I*re(z)*Abs(im(z))/Abs(re(z))) - fresnelc(re(z) + I*re(z)*Abs(im(z))/Abs(re(z))))*
                                            re(z)*Abs(im(z))/(2*im(z)*Abs(re(z)))))
+
+    assert fresnelc(2+3*I).as_real_imag() == (fresnelc(2 - 3*I)/2 + fresnelc(2 + 3*I)/2, I*(fresnelc(2 - 3*I) - fresnelc(2 + 3*I))/2)
