@@ -101,30 +101,30 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
     >>> from sympy.abc import x, y
     >>> sqrt(5)
     sqrt(5)
-    >>> init_printing(pretty_print=True)
-    >>> sqrt(5)
+    >>> init_printing(pretty_print=True) # doctest: +SKIP
+    >>> sqrt(5) # doctest: +SKIP
       ___
     \/ 5
-    >>> theta = Symbol('theta')
-    >>> init_printing(use_unicode=True)
+    >>> theta = Symbol('theta') # doctest: +SKIP
+    >>> init_printing(use_unicode=True) # doctest: +SKIP
     >>> theta # doctest: +SKIP
     \u03b8
-    >>> init_printing(use_unicode=False)
+    >>> init_printing(use_unicode=False) # doctest: +SKIP
     >>> theta # doctest: +SKIP
     theta
-    >>> init_printing(order='lex')
-    >>> str(y + x + y**2 + x**2)
+    >>> init_printing(order='lex') # doctest: +SKIP
+    >>> str(y + x + y**2 + x**2) # doctest: +SKIP
     x**2 + x + y**2 + y
-    >>> init_printing(order='grlex')
-    >>> str(y + x + y**2 + x**2)
+    >>> init_printing(order='grlex') # doctest: +SKIP
+    >>> str(y + x + y**2 + x**2) # doctest: +SKIP
     x**2 + x + y**2 + y
-    >>> init_printing(order='grevlex')
-    >>> str(y * x**2 + x * y**2)
+    >>> init_printing(order='grevlex') # doctest: +SKIP
+    >>> str(y * x**2 + x * y**2) # doctest: +SKIP
     x**2*y + x*y**2
-    >>> init_printing(order='old')
-    >>> str(x**2 + y**2 + x + y)
+    >>> init_printing(order='old') # doctest: +SKIP
+    >>> str(x**2 + y**2 + x + y) # doctest: +SKIP
     x**2 + x + y**2 + y
-    >>> init_printing(num_columns=10)
+    >>> init_printing(num_columns=10) # doctest: +SKIP
     >>> x**2 + x + y**2 + y # doctest: +SKIP
     x + y +
     x**2 + y**2
