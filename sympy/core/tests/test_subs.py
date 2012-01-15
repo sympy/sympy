@@ -1,6 +1,6 @@
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
-        cse, cot, tan, S, Tuple)
+        cse, cot, tan, S, Tuple, zoo)
 from sympy.utilities.pytest import XFAIL
 
 def test_subs():
@@ -404,4 +404,4 @@ def test_no_arith_subs_on_floats():
 @XFAIL
 def test_issue_2261() :
     x = Symbol("x")
-    assert (1/x).subs(x, 0) == 1/S(0)
+    assert (1/x).subs(x, 0) == zoo
