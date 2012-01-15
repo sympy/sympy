@@ -33,7 +33,7 @@ def test_interval_symbolic_end_points():
     assert Union(Interval(0, a), Interval(0, 3)).sup == Max(a, 3)
     assert Union(Interval(a, 0), Interval(-3, 0)).inf == Min(-3, a)
 
-    assert Interval(0, a).contains(1) == Inequality(1, a)
+    assert Interval(0, a).contains(1) == LessThan(1, a)
 
 def test_union():
     assert Union(Interval(1, 2), Interval(2, 3)) == Interval(1, 3)

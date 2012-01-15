@@ -21,7 +21,7 @@ def test_rel_subs():
     e = Relational(x, y, '<')
     e = e.subs(x,z)
 
-    assert isinstance(e, StrictInequality)
+    assert isinstance(e, StrictLessThan)
     assert e.lhs == z
     assert e.rhs == y
 
