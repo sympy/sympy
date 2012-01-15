@@ -233,19 +233,20 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
             aux_ = []
             for d in disjuncts(c):
                 d_ = d.replace(re, lambda x: x.as_real_imag()[0]).subs(re(s), t)
-                if not d.is_Relational or (d.rel_op != '<' and d.rel_op != '<=') \
+                if not d.is_Relational or \
+                   d.rel_op not in ('>', '>=', '<', '<=') \
                    or d_.has(s) or not d_.has(t):
                     aux_ += [d]
                     continue
                 soln = _solve_inequality(d_, t)
                 if not soln.is_Relational or \
-                   (soln.rel_op != '<' and soln.rel_op != '<='):
+                   soln.rel_op not in ('>', '>=', '<', '<='):
                     aux_ += [d]
                     continue
-                if soln.lhs == t:
-                    b_ = Max(soln.rhs, b_)
+                if soln.lts == t:
+                    b_ = Max(soln.gts, b_)
                 else:
-                    a_ = Min(soln.lhs, a_)
+                    a_ = Min(soln.lts, a_)
             if a_ != oo and a_ != b:
                 a = Max(a_, a)
             elif b_ != -oo and b_ != a:
@@ -946,20 +947,21 @@ def _laplace_transform(f, t, s_, simplify=True):
                 if m and all(m[wild] > 0 for wild in [w1, w2, w3, w4, w5]):
                     d = re(s) > m[p]
                 d_ = d.replace(re, lambda x: x.expand().as_real_imag()[0]).subs(re(s), t)
-                if not d.is_Relational or (d.rel_op != '<' and d.rel_op != '<=') \
+                if not d.is_Relational or \
+                   d.rel_op not in ('>', '>=', '<', '<=') \
                    or d_.has(s) or not d_.has(t):
                     aux_ += [d]
                     continue
                 soln = _solve_inequality(d_, t)
                 if not soln.is_Relational or \
-                   (soln.rel_op != '<' and soln.rel_op != '<='):
+                   soln.rel_op not in ('>', '>=', '<', '<='):
                     aux_ += [d]
                     continue
-                if soln.lhs == t:
+                if soln.lts == t:
                     raise IntegralTransformError('Laplace', f,
                                          'convergence not in half-plane?')
                 else:
-                    a_ = Min(soln.lhs, a_)
+                    a_ = Min(soln.lts, a_)
             if a_ != oo:
                 a = Max(a_, a)
             else:
