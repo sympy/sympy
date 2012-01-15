@@ -320,9 +320,9 @@ def test_Finite_as_relational():
 def test_Union_as_relational():
     x = Symbol('x')
     assert (Interval(0,1) + FiniteSet(2)).as_relational(x) ==\
-            Or(And(Ge(x,0), Le(x,1)) , Eq(x,2))
+            Or(And(Le(0, x), Le(x, 1)), Eq(x, 2))
     assert (Interval(0,1, True, True) + FiniteSet(1)).as_relational(x) ==\
-            And(Gt(x,0), Le(x,1))
+            And(Lt(0, x), Le(x, 1))
 
 def test_EmptySet_as_relational():
     assert S.EmptySet.as_relational(Symbol('x')) == False
