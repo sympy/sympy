@@ -251,7 +251,8 @@ def test_subs_bugs():
     assert NS('besseli(-x, y) - besseli(x, y)', subs={x:3.5, y:20.0}) == \
            '-4.92535585957223e-10'
     assert NS('Piecewise((x, x>0)) + Piecewise((1-x, x>0))', subs={x:0.1}) == \
-           '1.00000000000000'
+         
+         '1.00000000000000'
 
 @XFAIL
 def test_issue_2107 () :
