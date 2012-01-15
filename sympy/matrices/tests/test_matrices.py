@@ -1943,4 +1943,4 @@ def test_issue_860():
 
 @XFAIL  
 def test_issue_2865() :
-  assert  str(Matrix([[1, 2], [3, 4]])) == Matrix([[1, 2], [3, 4]])
+   assert  str(Matrix([[1, 2], [3, 4]])) == 'Matrix([[1, 2], [3, 4]])'
