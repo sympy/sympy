@@ -2,6 +2,13 @@ from expr import Expr
 from evalf import EvalfMixin
 from sympify import _sympify
 
+__all__ = (
+ 'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
+ 'Relational', 'Equality', 'Unequality', 'StrictLessThan', 'LessThan',
+ 'StrictGreaterThan', 'GreaterThan',
+)
+
+
 def Rel(a, b, op):
     """
     A handy wrapper around the Relational class.
@@ -122,12 +129,12 @@ class Relational(Expr, EvalfMixin):
 
     @staticmethod
     def get_relational_class(rop):
-        if rop is None or rop in ['==','eq']: return Equality, False
-        if rop in ['!=','<>','ne']: return Unequality, False
-        if rop in ['<','lt']: return StrictInequality, False
-        if rop in ['>','gt']: return StrictInequality, True
-        if rop in ['<=','le']: return Inequality, False
-        if rop in ['>=','ge']: return Inequality, True
+        if rop is None or rop in ('==','eq'): return Equality
+        if rop in ('!=','<>','ne'):           return Unequality
+        if rop in ('<','lt'):                 return StrictLessThan
+        if rop in ('<=','le'):                return LessThan
+        if rop in ('>','gt'):                 return StrictGreaterThan
+        if rop in ('>=','ge'):                return GreaterThan
         raise ValueError("Invalid relational operator symbol: %r" % (rop))
 
     def __new__(cls, lhs, rhs, rop=None, **assumptions):
@@ -136,8 +143,7 @@ class Relational(Expr, EvalfMixin):
         if cls is not Relational:
             rop_cls = cls
         else:
-            rop_cls, swap = Relational.get_relational_class(rop)
-            if swap: lhs, rhs = rhs, lhs
+            rop_cls = Relational.get_relational_class(rop)
         if lhs.is_number and rhs.is_number and lhs.is_real and rhs.is_real:
             # Just becase something is a number, doesn't mean you can evalf it.
             Nlhs = lhs.evalf()
@@ -214,7 +220,112 @@ class Unequality(Relational):
     def __nonzero__(self):
         return self.lhs.compare(self.rhs)!=0
 
-class StrictInequality(Relational):
+class _Greater(Relational):
+    @property
+    def gts(self):
+        return self._args[0]
+
+    @property
+    def lts(self):
+        return self._args[1]
+
+class _Less(Relational):
+    @property
+    def gts(self):
+        return self._args[1]
+
+    @property
+    def lts(self):
+        return self._args[0]
+
+    def __eq__ ( self, other ):
+        if isinstance(other, _Less):
+            ot = other._hashable_content()
+        elif isinstance(other, _Greater):
+            ot = tuple(reversed( other._hashable_content() ))
+        else:
+            return False
+
+        st = self._hashable_content()
+
+        return st == ot
+
+class GreaterThan(_Greater):
+
+    rel_op = '>='
+
+    __slots__ = []
+
+    @classmethod
+    def _eval_relation(cls, lhs, rhs):
+        return lhs >= rhs
+
+    def __nonzero__(self):
+        return self.lhs.compare( self.rhs ) >= 0
+
+    def __eq__ ( self, other ):
+        if isinstance(other, GreaterThan):
+            ot = other._hashable_content()
+        elif isinstance(other, LessThan):
+            ot = tuple(reversed( other._hashable_content() ))
+        else:
+            return False
+
+        st = self._hashable_content()
+
+        return st == ot
+
+class LessThan(_Less):
+
+    rel_op = '<='
+
+    __slots__ = []
+
+    @classmethod
+    def _eval_relation(cls, lhs, rhs):
+         return lhs <= rhs
+
+    def __nonzero__(self):
+        return self.lhs.compare( self.rhs ) <= 0
+
+    def __eq__ ( self, other ):
+        if isinstance(other, LessThan):
+            ot = other._hashable_content()
+        elif isinstance(other, GreaterThan):
+            ot = tuple(reversed( other._hashable_content() ))
+        else:
+            return False
+
+        st = self._hashable_content()
+
+        return st == ot
+
+class StrictGreaterThan(_Greater):
+
+    rel_op = '>'
+
+    __slots__ = []
+
+    @classmethod
+    def _eval_relation(cls, lhs, rhs):
+        return lhs > rhs
+
+    def __nonzero__(self):
+        return self.lhs.compare( self.rhs ) == 1
+
+    def __eq__ ( self, other ):
+        if isinstance(other, StrictGreaterThan):
+            ot = other._hashable_content()
+        elif isinstance(other, StrictLessThan):
+            ot = tuple(reversed( other._hashable_content() ))
+        else:
+            return False
+
+        st = self._hashable_content()
+
+        return st == ot
+
+class StrictLessThan(_Less):
 
     rel_op = '<'
 
@@ -225,17 +336,16 @@ class StrictInequality(Relational):
         return lhs < rhs
 
     def __nonzero__(self):
-        return self.lhs.compare(self.rhs)==-1
+        return self.lhs.compare( self.rhs ) == -1
 
-class Inequality(Relational):
+    def __eq__ ( self, other ):
+        if isinstance(other, StrictLessThan):
+            ot = other._hashable_content()
+        elif isinstance(other, StrictGreaterThan):
+            ot = tuple(reversed( other._hashable_content() ))
+        else:
+            return False
 
-    rel_op = '<='
+        st = self._hashable_content()
 
-    __slots__ = []
-
-    @classmethod
-    def _eval_relation(cls, lhs, rhs):
-        return lhs <= rhs
-
-    def __nonzero__(self):
-        return self.lhs.compare(self.rhs)<=0
+        return st == ot
