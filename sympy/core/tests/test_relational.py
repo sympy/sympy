@@ -1,7 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import symbols, oo
-from sympy.core.relational import Relational, Equality, StrictInequality, \
-    Rel, Eq, Lt, Le, Gt, Ge, Ne
+from sympy.core.relational import Relational, Equality, StrictGreaterThan, \
+    StrictLessThan, Rel, Eq, Lt, Le, Gt, Ge, Ne
 
 x,y,z = symbols('x,y,z')
 

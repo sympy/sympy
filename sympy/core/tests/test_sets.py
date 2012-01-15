@@ -1,6 +1,7 @@
 from sympy import (
     Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    Inequality, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float, FiniteSet
+    GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
+    FiniteSet
 )
 from sympy.mpmath import mpi
 

@@ -1,5 +1,6 @@
-from sympy import (Symbol, Wild, Inequality, StrictInequality, pi, I, Rational,
-    sympify, symbols, Dummy, Function, flatten)
+from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
+    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy, Function, flatten
+)
 
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import SymPyDeprecationWarning
