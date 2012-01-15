@@ -722,4 +722,3 @@ def test_issue1388():
 def test_issue_1116() :
     x= Symbol("x")
     assert integrate(1/(x**2), (x, -1, 1)) == oo
-    
