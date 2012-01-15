@@ -183,7 +183,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
     >>> init_session(pretty_print=False) #doctest: +SKIP
     >>> sqrt(5) #doctest: +SKIP
     sqrt(5)
-    >>> y + x + y**2 + x**2 #doctest: +SKIP 
+    >>> y + x + y**2 + x**2 #doctest: +SKIP
     x**2 + x + y**2 + y
     >>> init_session(order='grlex') #doctest: +SKIP
     >>> y + x + y**2 + x**2 #doctest: +SKIP

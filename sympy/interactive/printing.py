@@ -89,7 +89,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
         if None, number of columns before wrapping is set to terminal width.
     no_global: boolean
         If True, the settings become system wide;
-        if False, use just for this console/session. 
+        if False, use just for this console/session.
     ip: An interactive console
         This can either be an instance of IPython,
         or a class that derives from code.InteractiveConsole.
@@ -102,7 +102,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
     >>> sqrt(5)
     sqrt(5)
     >>> init_printing(pretty_print=True)
-    >>> sqrt(5) 
+    >>> sqrt(5)
       ___
     \/ 5
     >>> theta = Symbol('theta')
@@ -113,7 +113,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
     >>> theta # doctest: +SKIP
     theta
     >>> init_printing(order='lex')
-    >>> str(y + x + y**2 + x**2) 
+    >>> str(y + x + y**2 + x**2)
     x**2 + x + y**2 + y
     >>> init_printing(order='grlex')
     >>> str(y + x + y**2 + x**2)
