@@ -834,6 +834,7 @@ def _simplifyconds(expr, s, a):
 
     >>> from sympy.integrals.transforms import _simplifyconds as simp
     >>> from sympy.abc import x
+    >>> from sympy import sympify as S
     >>> simp(abs(x**2) < 1, x, 1)
     False
     >>> simp(abs(x**2) < 1, x, 2)
@@ -842,9 +843,9 @@ def _simplifyconds(expr, s, a):
     Abs(x**2) < 1
     >>> simp(abs(1/x**2) < 1, x, 1)
     True
-    >>> simp(1 < abs(x), x, 1)
+    >>> simp(S(1) < abs(x), x, 1)
     True
-    >>> simp(1 < abs(1/x), x, 1)
+    >>> simp(S(1) < abs(1/x), x, 1)
     False
 
     >>> from sympy import Ne
