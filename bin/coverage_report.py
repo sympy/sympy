@@ -58,6 +58,7 @@ def make_report(source_dir, report_dir, use_cache=False):
     cov = coverage.coverage()
     cov.exclude("raise NotImplementedError")
     cov.exclude("def canonize")      #this should be "@decorated"
+    cov.exclude("def __mathml__")
     if use_cache:
         cov.load()
     else:
