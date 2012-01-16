@@ -25,6 +25,9 @@ from sympy.polys.polytools import _keep_coeff
 
 import sympy.mpmath as mpmath
 
+def _mexpand(expr):
+    return expand_mul(expand_multinomial(expr))
+
 def fraction(expr, exact=False):
     """Returns a pair with expression's numerator and denominator.
        If the given expression is not a fraction then this function
@@ -1087,7 +1090,7 @@ def _split_gcd(*a):
 def split_surds(expr):
     """
     split an expression with terms whose squares are rationals
-    into a sum of terms whose surds squared have gcd iqual to g
+    into a sum of terms whose surds squared have gcd equal to g
     and a sum of terms with surds squared prime with g
 
     Examples
@@ -1110,7 +1113,7 @@ def split_surds(expr):
     b = Add(*a2v)
     return a, b
 
-def radint_simplify(num, den):
+def radint_rationalize(num, den):
     """
     Rationalize num/den by removing square roots in the denominator;
     num and den are sum of terms whose squares are rationals
@@ -1118,17 +1121,16 @@ def radint_simplify(num, den):
     Examples
     ========
     >>> from sympy import sqrt
-    >>> from sympy.simplify.simplify import radint_simplify
-    >>> radint_simplify(sqrt(3), 1 + sqrt(2)/3)
+    >>> from sympy.simplify.simplify import radint_rationalize
+    >>> radint_rationalize(sqrt(3), 1 + sqrt(2)/3)
     (-sqrt(3) + sqrt(6)/3, -7/9)
     """
     if not den.is_Add:
         return num, den
-    #print 'DB0 radint_simplify num=%s den=%s' %(num, den)
     a, b = split_surds(den)
-    num = expand_mul(expand_multinomial((a - b)*num))
-    den = expand_mul(expand_multinomial(a**2 - b**2))
-    return radint_simplify(num, den)
+    num = _mexpand((a - b)*num)
+    den = _mexpand(a**2 - b**2)
+    return radint_rationalize(num, den)
 
 
 def radsimp(expr, symbolic=True):
@@ -1216,21 +1218,19 @@ def radsimp(expr, symbolic=True):
         changed = False
         while 1:
             # collect similar terms
-            d, nterms = collect_sqrt(expand_mul(expand_multinomial(d)), evaluate=False)
+            d, nterms = collect_sqrt(_mexpand(d), evaluate=False)
             d = Add._from_args(d)
 
             # check to see if we are done:
             # - no radical terms
-            # - don't continue if there are more than 4 radical
-            #   terms and a constant term, too; in the case of 4 radical
-            #   terms don't continue if they do not reduce after an
-            #   iteration
+            # - if there are more than 3 radical terms, or
+            #   there 3 radical terms and a constant, use radint_rationalize
             if not nterms:
                 break
             if nterms > 3 or nterms == 3 and len(d.args) > 4:
                 if all([(x**2).is_Integer for x in d.args]):
-                    nd, d = radint_simplify(S.One, d)
-                    n = expand_mul(expand_multinomial(n*nd))
+                    nd, d = radint_rationalize(S.One, d)
+                    n = _mexpand(n*nd)
                 else:
                     n, d = fraction(expr)
                 break
