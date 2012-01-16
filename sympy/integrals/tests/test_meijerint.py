@@ -486,13 +486,20 @@ def test_expint():
 def test_messy():
     from sympy import (laplace_transform, Si, Ci, Shi, Chi, atan, Piecewise,
                        atanh, acoth, E1, besselj, acosh, asin, Ne, And, re,
-                       fourier_transform, sqrt)
+                       fourier_transform, sqrt, Abs)
     assert laplace_transform(Si(x), x, s) == ((pi - 2*atan(s))/(2*s), 0, True)
 
-    assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, True) \
+    # The hand-coded test result (rhs) is an improvement over the previous test
+    # result, but I believe still incorrect.  E.g. see WolframAlpha's result:
+    #  http://www.wolframalpha.com/input/?i=Laplace(Shi(x),x,s)
+    assert laplace_transform(Shi(x), x, s) == (Piecewise((acoth(s)/s, Abs(s**2) > 1), ((2*atanh(s) - I*pi)/(2*s), True)), 1, True)
+
     # where should the logs be simplified?
+    # This also does not jive with the result returned by WolframAlpha:
+    #  http://www.wolframalpha.com/input/?i=laplace(Chi(x),x,s)
     assert laplace_transform(Chi(x), x, s) == \
            ((log(s**(-2)) - log((s**2 - 1)/s**2))/(2*s), 1, True)
+
     # TODO maybe simplify the inequalities?
     assert laplace_transform(besselj(a, x), x, s)[1:] == \
            (0, And(0 < re(a/2) + S(1)/2, 0 < re(a/2) + 1))
