@@ -166,12 +166,6 @@ class test_sympy(Command):
     def run(self):
         tests_successful = True
 
-        def get_sage_executable():
-            if sys.platform == "win32":
-                return "sage.exe"
-            else:
-                return "sage"
-
         try:
             if not sympy.test():
                 # some regular test fails, so set the tests_successful
@@ -181,9 +175,10 @@ class test_sympy(Command):
             if not sympy.doctest():
                 tests_successful = False
 
-            with open(os.devnull, 'w') as dev_null:
-                if subprocess.call(get_sage_executable() + " -v", shell = True, stdout = dev_null, stderr = dev_null) == 0:
-                    if subprocess.call(get_sage_executable() + " -python bin/test sympy/external/tests/test_sage.py", shell = True) != 0:
+            if not sys.platform == "win32":
+                dev_null = open(os.devnull, 'w')
+                if subprocess.call("sage -v", shell = True, stdout = dev_null, stderr = dev_null) == 0:
+                    if subprocess.call("sage -python bin/test sympy/external/tests/test_sage.py", shell = True) != 0:
                         tests_successful = False
 
             if tests_successful:
