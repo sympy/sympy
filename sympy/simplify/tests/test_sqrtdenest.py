@@ -152,6 +152,5 @@ def test_subsets():
       [0, 1, 1, 0], [1, 1, 1, 0], [0, 0, 0, 1], [1, 0, 0, 1], [0, 1, 0, 1],
       [1, 1, 0, 1], [0, 0, 1, 1], [1, 0, 1, 1], [0, 1, 1, 1], [1, 1, 1, 1]]
 
-@XFAIL
 def test_issue_2554():
-    assert sqrtdenest(sqrt(2 + sqrt(2 + sqrt(2)))) == 1.96157056080646
+    assert sqrtdenest(sqrt(2 + sqrt(2 + sqrt(2)))) == sqrt(2 + sqrt(2 + sqrt(2)))

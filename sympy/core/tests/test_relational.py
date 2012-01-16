@@ -131,6 +131,7 @@ def test_relational_bool_output():
 
 @XFAIL
 def test_issue_2620():
+    from sympy import Symbol
     x = Symbol('x')
     assert Eq(x, x) == True
     x = Symbol('x', positive=True)

@@ -1,6 +1,6 @@
 from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
                    Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
-                   sin, sqrt, sstr, Sum, sympify)
+                   sin, sqrt, sstr, Sum, sympify, S)
 from sympy.core.evalf import complex_accuracy, PrecisionExhausted
 from sympy.abc import n, x, y
 from sympy.mpmath.libmp.libmpf import from_float
@@ -259,4 +259,4 @@ def test_issue_2105():
           54*249**(1/2))**(1/3) - 3110400000*I*6**(1/3)*83**(1/2)*(1422 + 54*249**(1/2))**(1/3) + 13478400000*I*3**(1/2)*6**(1/3)*(1422 + 54*249**(1/2))**(1/3) + 1274950152*6**(2/3)*(1422 +\
           54*249**(1/2))**(2/3) + 32347944*6**(2/3)*249**(1/2)*(1422 + 54*249**(1/2))**(2/3) - 1758790152*I*3**(1/2)*6**(2/3)*(1422 + 54*249**(1/2))**(2/3) - 304403832*I*6**(2/3)*83**(1/2)*(1422 +\
           54*249**(1/2))**(2/3))/(175732658352 + (1106028 + 25596*249**(1/2) + 76788*I*83**(1/2))**2)')
-    assert str(v.n(1)) == "0.2 + 1.0*I"
+    assert v.n(1) == 0.2 + 1.0*I
