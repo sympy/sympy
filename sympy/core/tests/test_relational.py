@@ -128,3 +128,10 @@ def test_relational_bool_output():
     # XFail test for issue:
     # http://code.google.com/p/sympy/issues/detail?id=2832
     raises(ValueError, "bool(x > 3)")
+
+@XFAIL
+def test_issue_2620():
+    x = Symbol('x')
+    assert Eq(x, x) == True
+    x = Symbol('x', positive=True)
+    assert Ne(x, 0) == False

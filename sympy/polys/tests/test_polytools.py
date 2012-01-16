@@ -2677,3 +2677,7 @@ def test_poly_matching_consistency():
     # http://code.google.com/p/sympy/issues/detail?id=2415
     assert I * Poly(x, x) == Poly(I*x, x)
     assert Poly(x, x) * I == Poly(I*x, x)
+
+@XFAIL
+def test_issue_2687():
+    assert factor(expand((x - I*y)*(z - I*t)), extension=[I]) == -I*t*x - t*y + x*z - I*y*z

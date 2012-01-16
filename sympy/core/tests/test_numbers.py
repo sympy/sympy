@@ -1030,3 +1030,9 @@ def test_hashing_sympy_integers():
     # http://code.google.com/p/sympy/issues/detail?id=1973
     assert hash(S(4)) == 4
     assert hash(S(4)) == hash(int(4))
+
+@XFAIL
+def test_issue_1073():
+    assert int(round(E**100)) == 26881171418161354484126255515800135873611119
+    assert int(round(pi**100)) == 51878483143196131920862615246303013562686760680406
+    assert int(round(Rational(1)/EulerGamma**100)) == 734833795660954410469466
