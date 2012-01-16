@@ -92,7 +92,7 @@ class Matrix(object):
                 self.cols = mat.cols
                 self.mat = mat[:]
                 return
-            elif hasattr(mat, "__array__"):
+            elif hasattr(mat, "__array__"): #pragma: no cover
                 # NumPy array or matrix or some other object that implements
                 # __array__. So let's first use this method to get a
                 # numpy.array() and then make a python list out of it.
@@ -521,6 +521,7 @@ class Matrix(object):
 
         dot
         cross
+
         multiply_elementwise
         """
         return matrix_multiply(self,b)
@@ -4316,7 +4317,10 @@ class SparseMatrix(Matrix):
             tmp[i,i] = 1
         return tmp
 
-def list2numpy(l):
+    def __hash__(self):
+        return super(Matrix, self).__hash__()
+
+def list2numpy(l): # pragma: no cover
     """Converts python list of SymPy expressions to a NumPy array.
 
     See Also
@@ -4330,7 +4334,7 @@ def list2numpy(l):
         a[i] = s
     return a
 
-def matrix2numpy(m):
+def matrix2numpy(m): # pragma: no cover
     """Converts SymPy's matrix to a NumPy array.
 
     See Also
