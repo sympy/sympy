@@ -1293,7 +1293,10 @@ def fourier_transform(f, x, k, **hints):
     See Also
     ========
 
-    inverse_fourier_transform, mellin_transform, laplace_transform
+    inverse_fourier_transform
+    sine_transform, inverse_sine_transform
+    cosine_transform, inverse_cosine_transform
+    mellin_transform, laplace_transform
     """
     return FourierTransform(f, x, k).doit(**hints)
 
@@ -1339,5 +1342,165 @@ def inverse_fourier_transform(F, k, x, **hints):
     ========
 
     fourier_transform
+    sine_transform, inverse_sine_transform
+    cosine_transform, inverse_cosine_transform
+    mellin_transform, laplace_transform
     """
     return InverseFourierTransform(F, k, x).doit(**hints)
+
+
+##########################################################################
+# Fourier Sine and Cosine Transform
+##########################################################################
+
+from sympy import sin, cos, sqrt, pi, I, oo
+
+@_noconds_(True)
+def _sine_cosine_transform(f, x, k, a, b, K, name, simplify=True):
+    """
+    Compute a general sine or cosine-type transform
+        F(k) = a int_0^oo b*sin(x*k) f(x) dx.
+        F(k) = a int_0^oo b*cos(x*k) f(x) dx.
+
+    For suitable choice of a and b, this reduces to the standard sine/cosine
+    and inverse sine/cosine transforms.
+    """
+    F = integrate(a*f*K(b*x*k), (x, 0, oo))
+
+    if not F.has(Integral):
+        return _simplify(F, simplify), True
+
+    if not F.is_Piecewise:
+        raise IntegralTransformError(name, f, 'could not compute integral')
+
+    F, cond = F.args[0]
+    if F.has(Integral):
+        raise IntegralTransformError(name, f, 'integral in unexpected form')
+
+    return _simplify(F, simplify), cond
+
+class SineCosineTypeTransform(IntegralTransform):
+    """ Base class for sine and cosine transforms.
+        Specify cls._a and cls._b and cls._kern.
+    """
+
+    def _compute_transform(self, f, x, k, **hints):
+        return _sine_cosine_transform(f, x, k,
+                                      self.__class__._a, self.__class__._b,
+                                      self.__class__._kern,
+                                      self.__class__._name, **hints)
+
+    def _as_integral(self, f, x, k):
+        from sympy import Integral, exp, I
+        a = self.__class__._a
+        b = self.__class__._b
+        K = self.__class__._kern
+        return Integral(a*f*K(b*x*k), (x, 0, oo))
+
+class SineTransform(SineCosineTypeTransform):
+    """
+    Class representing unevaluated sine transforms.
+
+    For usage of this class, see the :class:`IntegralTransform` docstring.
+
+    For how to compute sine transforms, see the :func:`sine_transform`
+    docstring.
+    """
+
+    _name = 'Sine'
+    _kern = sin
+    _a = sqrt(2)/sqrt(pi)
+    _b = 1
+
+def sine_transform(f, x, k, **hints):
+    r"""
+    See Also
+    ========
+
+    fourier_transform, inverse_fourier_transform
+    inverse_sine_transform
+    cosine_transform, inverse_cosine_transform
+    mellin_transform, laplace_transform
+    """
+    return SineTransform(f, x, k).doit(**hints)
+
+class InverseSineTransform(SineCosineTypeTransform):
+    """
+    Class representing unevaluated inverse sine transforms.
+
+    For usage of this class, see the :class:`IntegralTransform` docstring.
+
+    For how to compute inverse sine transforms, see the
+    :func:`inverse_sine_transform` docstring.
+    """
+
+    _name = 'Inverse Sine'
+    _kern = sin
+    _a = sqrt(2)/sqrt(pi)
+    _b = 1
+
+def inverse_sine_transform(F, k, x, **hints):
+    r"""
+    See Also
+    ========
+
+    fourier_transform, inverse_fourier_transform
+    sine_transform
+    cosine_transform, inverse_cosine_transform
+    mellin_transform, laplace_transform
+    """
+    return InverseSineTransform(F, k, x).doit(**hints)
+
+class CosineTransform(SineCosineTypeTransform):
+    """
+    Class representing unevaluated cosine transforms.
+
+    For usage of this class, see the :class:`IntegralTransform` docstring.
+
+    For how to compute cosine transforms, see the :func:`cosine_transform`
+    docstring.
+    """
+
+    _name = 'Cosine'
+    _kern = cos
+    _a = sqrt(2)/sqrt(pi)
+    _b = 1
+
+def cosine_transform(f, x, k, **hints):
+    r"""
+    See Also
+    ========
+
+    fourier_transform, inverse_fourier_transform,
+    sine_transform, inverse_sine_transform
+    inverse_cosine_transform
+    mellin_transform, laplace_transform
+    """
+    return CosineTransform(f, x, k).doit(**hints)
+
+class InverseCosineTransform(SineCosineTypeTransform):
+    """
+    Class representing unevaluated inverse cosine transforms.
+
+    For usage of this class, see the :class:`IntegralTransform` docstring.
+
+    For how to compute inverse cosine transforms, see the
+    :func:`inverse_cosine_transform` docstring.
+    """
+
+    _name = 'Inverse Cosine'
+    _kern = cos
+    _a = sqrt(2)/sqrt(pi)
+    _b = 1
+
+def inverse_cosine_transform(F, k, x, **hints):
+    r"""
+    See Also
+    ========
+
+    fourier_transform, inverse_fourier_transform,
+    sine_transform, inverse_sine_transform
+    cosine_transform
+    mellin_transform, laplace_transform
+    """
+    return InverseCosineTransform(F, k, x).doit(**hints)
