@@ -5,8 +5,8 @@
 #
 # You can skip Bad name if it is the same as the one that should be used, and is unique.
 #
-# This file is up-to-date if the command git log --format="%aN <%aE>" | sort
-# -u gives no duplicates.
+# This file is up-to-date if the command git log --format="%aN <%aE>" | sort -u
+# gives no duplicates.
 Ondřej Čertík <ondrej@certik.cz> Ondrej Certik <ondrej@certik.cz>
 Ondřej Čertík <ondrej@certik.cz> ondrej.certik <devnull@localhost>
 Fredrik Johansson <fredrik.johansson@gmail.com> fredrik.johansson <devnull@localhost>
@@ -77,3 +77,4 @@ Raymond Wong <rayman> rayman <rayman@CoolGuyJr.(none)>
 Raymond Wong <rayman> rayman <rayman@coolguy.(none)>
 Luke Peterson <hazelnusse@gmail.com> Dale Lukas Peterson
 Davy Mao <e_equals_mass_speed_light_squared@hotmail.com> icedtrees <e_equals_mass_speed_light_squared@hotmail.com>
+Kendhia <kendhia@gmail.com> ALGHeArT <algheart@live.fr>
