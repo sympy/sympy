@@ -49,7 +49,7 @@ def _init_ipython_printing(ip, stringify_func):
         formatter = ip.display_formatter.formatters['text/plain']
 
         for cls in (object, tuple, list, set, frozenset, dict, str):
-            formatter.for_type(cls, pretty_print)
+            formatter.for_type(cls, _pretty_print)
 
         # this loads pretty printing for objects that inherit from Basic or Matrix:
         formatter.for_type_by_name(
