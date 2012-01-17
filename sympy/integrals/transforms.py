@@ -1112,11 +1112,11 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         if a.has(t):
             return Heaviside(arg)
         rel = _solve_inequality(a > 0, u)
-        if rel.lhs == u:
-            k = log(rel.rhs)
+        if rel.lts == u:
+            k = log(rel.gts)
             return Heaviside(t + k)
         else:
-            k = log(rel.lhs)
+            k = log(rel.lts)
             return Heaviside(-(t + k))
     f = f.replace(Heaviside, simp_heaviside)
 
