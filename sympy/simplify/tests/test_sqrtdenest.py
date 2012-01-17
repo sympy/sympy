@@ -88,6 +88,11 @@ def test_sqrtdenest_four_terms():
     assert _sqrtdenest34(sqrt(4*sqrt(15) + 8*r5 + 12*r3 + 24)) == \
       1 + r3 + r5 + sqrt(15)
 
+def test_sqrtdenest_rec():
+    w = 1 + r2 + r3 + r5 + r7
+    assert sqrtdenest(sqrt((w**2).expand())) == w
+    z = sqrt((w**2).expand() + 1)
+    assert sqrtdenest(z) == z
 
 def test_sqrtdenest3():
     z = sqrt(13 - 2*r10 + 2*r2*sqrt(-2*r10 + 11))
