@@ -34,7 +34,8 @@ def check_expression(expr, var_symbols):
     """Does eval(expr) both in Sage and SymPy and does other checks."""
 
     # evaluate the expression in the context of Sage:
-    sage.var(var_symbols)
+    if var_symbols:
+        sage.var(var_symbols)
     a = globals().copy()
     # safety checks...
     assert not "sin" in a
