@@ -262,7 +262,7 @@ def _sqrtdenest_rec(expr):
     >>> _sqrtdenest_rec(sqrt(w))
     -sqrt(11) - sqrt(7) + sqrt(2) + 3*sqrt(5)
     """
-    from sympy.simplify.simplify import radsimp, split_surds, radint_rationalize
+    from sympy.simplify.simplify import radsimp, split_surds, rad_rationalize
     a, b = split_surds(expr.base)
     if a < b:
         a, b = b, a
@@ -278,10 +278,10 @@ def _sqrtdenest_rec(expr):
         d_1 = _sqrtdenest_rec(sqrt(a1 + c_1))
         if sqrt_depth(d_1) > 1:
             raise SqrtdenestStopIteration
-        num, den = radint_rationalize(b1, d_1)
+        num, den = rad_rationalize(b1, d_1)
         c = _mexpand(d_1/sqrt(2) + num/(den*sqrt(2)))
     else:
-        c = _sqrtdenest34(sqrt(_mexpand(a**2 - b**2)))
+        c = sqrtdenest(sqrt(_mexpand(a**2 - b**2)))
         if sqrt_depth(c) > 1:
             raise SqrtdenestStopIteration
 
@@ -290,7 +290,7 @@ def _sqrtdenest_rec(expr):
     d = sqrtdenest(sqrt(a + c))
     if sqrt_depth(d) > 1:
         raise SqrtdenestStopIteration
-    num, den = radint_rationalize(b, d)
+    num, den = rad_rationalize(b, d)
     r = d/sqrt(2) + num/(den*sqrt(2))
     r = radsimp(r)
     return _mexpand(r)

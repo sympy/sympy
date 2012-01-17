@@ -1113,7 +1113,7 @@ def split_surds(expr):
     b = Add(*a2v)
     return a, b
 
-def radint_rationalize(num, den):
+def rad_rationalize(num, den):
     """
     Rationalize num/den by removing square roots in the denominator;
     num and den are sum of terms whose squares are rationals
@@ -1121,8 +1121,8 @@ def radint_rationalize(num, den):
     Examples
     ========
     >>> from sympy import sqrt
-    >>> from sympy.simplify.simplify import radint_rationalize
-    >>> radint_rationalize(sqrt(3), 1 + sqrt(2)/3)
+    >>> from sympy.simplify.simplify import rad_rationalize
+    >>> rad_rationalize(sqrt(3), 1 + sqrt(2)/3)
     (-sqrt(3) + sqrt(6)/3, -7/9)
     """
     if not den.is_Add:
@@ -1130,10 +1130,10 @@ def radint_rationalize(num, den):
     a, b = split_surds(den)
     num = _mexpand((a - b)*num)
     den = _mexpand(a**2 - b**2)
-    return radint_rationalize(num, den)
+    return rad_rationalize(num, den)
 
 
-def radsimp(expr, symbolic=True):
+def radsimp(expr, symbolic=True, max_terms=4):
     """
     Rationalize the denominator by removing square roots.
 
@@ -1146,6 +1146,7 @@ def radsimp(expr, symbolic=True):
     you do not want the simplification to occur for symbolic denominators, set
     ``symbolic`` to False.
 
+    If there are more than ``max_terms`` radical terms do not simplify.
 
     Examples
     ========
@@ -1220,16 +1221,18 @@ def radsimp(expr, symbolic=True):
             # collect similar terms
             d, nterms = collect_sqrt(_mexpand(d), evaluate=False)
             d = Add._from_args(d)
+            if nterms > max_terms:
+                break
 
             # check to see if we are done:
             # - no radical terms
             # - if there are more than 3 radical terms, or
-            #   there 3 radical terms and a constant, use radint_rationalize
+            #   there 3 radical terms and a constant, use rad_rationalize
             if not nterms:
                 break
             if nterms > 3 or nterms == 3 and len(d.args) > 4:
                 if all([(x**2).is_Integer for x in d.args]):
-                    nd, d = radint_rationalize(S.One, d)
+                    nd, d = rad_rationalize(S.One, d)
                     n = _mexpand(n*nd)
                 else:
                     n, d = fraction(expr)

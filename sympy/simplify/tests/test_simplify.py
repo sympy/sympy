@@ -879,7 +879,7 @@ def test_radsimp():
         62*sqrt(30) + 135*sqrt(7), 215)
     z = radsimp(1/(1 + r2/3 + r3/5 + r5 + r7))
     assert len((3616791619821680643598*z).args) == 16
-    assert radsimp(1/z).expand() == 1 + r2/3 + r3/5 + r5 + r7
+    assert radsimp(1/z, max_terms=20).expand() == 1 + r2/3 + r3/5 + r5 + r7
     assert radsimp(1/(r2*3)) == \
         sqrt(2)/6
     assert radsimp(1/(r2*a + r2*b + r3 + r7)) == \
