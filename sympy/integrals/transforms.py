@@ -856,8 +856,10 @@ def _simplifyconds(expr, s, a):
     >>> simp(Ne(1, x**3), x, 0)
     1 != x**3
     """
-    from sympy.core.relational import StrictLessThan, Unequality
+    from sympy.core.relational import ( StrictGreaterThan, StrictLessThan,
+        Unequality )
     from sympy import Abs
+
     def power(ex):
         if ex == s:
             return 1
@@ -900,6 +902,7 @@ def _simplifyconds(expr, s, a):
             return ex
         return ex.replace(*args)
     expr = repl(expr, StrictLessThan, replie)
+    expr = repl(expr, StrictGreaterThan, lambda x, y: replie(y, x))
     expr = repl(expr, Unequality, replue)
     return expr
 

@@ -489,10 +489,7 @@ def test_messy():
                        fourier_transform, sqrt, Abs)
     assert laplace_transform(Si(x), x, s) == ((pi - 2*atan(s))/(2*s), 0, True)
 
-    # The hand-coded test result (rhs) is an improvement over the previous test
-    # result, but I believe still incorrect.  E.g. see WolframAlpha's result:
-    #  http://www.wolframalpha.com/input/?i=Laplace(Shi(x),x,s)
-    assert laplace_transform(Shi(x), x, s) == (Piecewise((acoth(s)/s, Abs(s**2) > 1), ((2*atanh(s) - I*pi)/(2*s), True)), 1, True)
+    assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, True)
 
     # where should the logs be simplified?
     assert laplace_transform(Chi(x), x, s) == \
