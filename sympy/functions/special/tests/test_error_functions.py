@@ -37,9 +37,8 @@ def test_erf():
 
     assert limit(exp(x)*exp(x**2)*(erf(x+1/exp(x))-erf(x)), x, oo) == 2/sqrt(pi)
     assert limit((1-erf(z))*exp(z**2)*z, z, oo) == 1/sqrt(pi)
-    assert expand(limit(erf(erf(erf(z))), z, oo)) == erf(erf(1))
-    assert limit(exp(gamma(erf(z))), z, oo) == exp(1)
-    assert limit(exp(gamma(erf(log(loggamma(z))))), z, oo) == exp(1)
+    assert limit((1-erf(x))*exp(x**2)*sqrt(pi)*x, x, oo) == 1
+    assert limit(((1-erf(x))*exp(x**2)*sqrt(pi)*x-1)*2*x**2, x, oo) == -1
 
     raises(ArgumentIndexError, 'erf(x).fdiff(2)')
 
