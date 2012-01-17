@@ -497,7 +497,8 @@ def test_messy():
 
     # TODO maybe simplify the inequalities?
     assert laplace_transform(besselj(a, x), x, s)[1:] == \
-           (0, And(0 < re(a/2) + S(1)/2, 0 < re(a/2) + 1))
+           (0, And(S(0) < re(a/2) + S(1)/2, S(0) < re(a/2) + 1))
+
     # NOTE s < 0 can be done, but argument reduction is currently not good enough
     assert fourier_transform(besselj(1, x)/x, x, s, noconds=False) == \
            (Piecewise((0, 1 < 4*abs(pi**2*s**2)),
