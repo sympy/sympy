@@ -124,7 +124,7 @@ def load_example_module(example):
 
 def run_examples(windowed=False, quiet=False, summary=True):
     """Run all examples in the list of modules.
-    
+
     Returns a boolean value indicating whether all the examples were
     successful.
     """
@@ -148,7 +148,7 @@ def run_examples(windowed=False, quiet=False, summary=True):
 
 def run_example(example, quiet=False):
     """Run a specific example.
-    
+
     Returns a boolean value indicating whether the example was successful.
     """
     if quiet:
