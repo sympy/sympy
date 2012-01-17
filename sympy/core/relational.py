@@ -238,18 +238,6 @@ class _Less(Relational):
     def lts(self):
         return self._args[0]
 
-    def __eq__ ( self, other ):
-        if isinstance(other, _Less):
-            ot = other._hashable_content()
-        elif isinstance(other, _Greater):
-            ot = tuple(reversed( other._hashable_content() ))
-        else:
-            return False
-
-        st = self._hashable_content()
-
-        return st == ot
-
 class GreaterThan(_Greater):
 
     rel_op = '>='
