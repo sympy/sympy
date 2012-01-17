@@ -39,14 +39,12 @@ import os
 import sys
 import traceback
 
-try:
-    this_file = os.path.abspath(__file__)
-    sympy_dir = os.path.join(os.path.dirname(this_file), "..")
-    sympy_dir = os.path.normpath(sympy_dir)
-    sys.path.insert(0, sympy_dir)
-    import sympy
-except ImportError:
-    print "Could not find SymPy."
+# add local sympy to the module path
+this_file = os.path.abspath(__file__)
+sympy_dir = os.path.join(os.path.dirname(this_file), "..")
+sympy_dir = os.path.normpath(sympy_dir)
+sys.path.insert(0, sympy_dir)
+import sympy
 
 TERMINAL_EXAMPLES = [
     "beginner.basic",
@@ -133,6 +131,8 @@ def run_examples(windowed=False, quiet=False, summary=True):
     if quiet:
         from sympy.utilities.runtests import PyTestReporter
         reporter = PyTestReporter()
+        reporter.write("Testing Examples\n")
+        reporter.write("-" * reporter.terminal_width)
     else:
         reporter = None
 
@@ -193,11 +193,11 @@ def show_summary(successes, failures, reporter=None):
     if reporter:
         reporter.write("-" * reporter.terminal_width)
         if failures:
-            reporter.write("FAILED:", "Red")
+            reporter.write("FAILED:\n", "Red")
             for example in failures:
-                reporter.write("  " + example)
+                reporter.write("  %s\n" % example)
         else:
-            reporter.write("ALL EXAMPLES PASSED", "Green")
+            reporter.write("ALL EXAMPLES PASSED\n", "Green")
     else:
         if successes:
             print >> sys.stderr, "SUCCESSFUL: "

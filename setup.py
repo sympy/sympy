@@ -176,8 +176,6 @@ class test_sympy(Command):
                 tests_successful = False
 
             print
-            print "Testing Examples"
-            print "-" * 79
             sys.path.append("examples")
             from all import run_examples # examples/all.py
             if not run_examples(quiet=True):
