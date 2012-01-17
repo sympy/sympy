@@ -495,8 +495,6 @@ def test_messy():
     assert laplace_transform(Shi(x), x, s) == (Piecewise((acoth(s)/s, Abs(s**2) > 1), ((2*atanh(s) - I*pi)/(2*s), True)), 1, True)
 
     # where should the logs be simplified?
-    # This also does not jive with the result returned by WolframAlpha:
-    #  http://www.wolframalpha.com/input/?i=laplace(Chi(x),x,s)
     assert laplace_transform(Chi(x), x, s) == \
            ((log(s**(-2)) - log((s**2 - 1)/s**2))/(2*s), 1, True)
 
