@@ -1,21 +1,13 @@
 #!/usr/bin/env python
 
-"""all.py
-
+DESCRIPTION = """
 Runs all the examples for testing purposes and reports successes and failures
 to stderr.  An example is marked successful if the running thread does not
 throw an exception, for threaded examples, such as plotting, one needs to
 check the stderr messages as well.
+"""
 
-   $ ./all.py [-hqsw]
-
-Options:
-    -h     Print this help message and exit.
-    -q     Runs examples in quiet mode.  This will suppress example output and
-           show simple status messages.
-    -s     Hides the summary at the end of testing the examples.
-    -w     Also run examples requiring windowed environment.
-
+EPILOG = """
 Example Usage:
    When no examples fail:
      $ ./all.py > out
@@ -41,11 +33,20 @@ Example Usage:
    Obviously, we want to achieve the first result.
 """
 
+import argparse
 import imp
 import os
 import sys
 import traceback
-import getopt
+
+try:
+    this_file = os.path.abspath(__file__)
+    sympy_dir = os.path.join(os.path.dirname(this_file), "..")
+    sympy_dir = os.path.normpath(sympy_dir)
+    sys.path.insert(0, sympy_dir)
+    import sympy
+except ImportError:
+    print "Could not find SymPy."
 
 TERMINAL_EXAMPLES = [
     "beginner.basic",
@@ -103,11 +104,6 @@ def __import__(name, globals=None, locals=None, fromlist=None):
 
     fp, pathname, description = imp.find_module(module_name, [module_path])
 
-    this_file = os.path.abspath(__file__)
-    sympy_dir = os.path.join(os.path.dirname(this_file), "..")
-    sympy_dir = os.path.normpath(sympy_dir)
-    sys.path.insert(0, sympy_dir)
-
     try:
         return imp.load_module(module_name, fp, pathname, description)
     finally:
@@ -134,40 +130,46 @@ def run_examples(windowed=False, quiet=False, summary=True):
     if windowed:
         examples += WINDOWED_EXAMPLES
 
+    if quiet:
+        from sympy.utilities.runtests import PyTestReporter
+        reporter = PyTestReporter()
+    else:
+        reporter = None
+
     for example in examples:
-        if run_example(example, quiet):
+        if run_example(example, reporter=reporter):
             successes.append(example)
         else:
             failures.append(example)
 
     if summary:
-        show_summary(successes, failures, quiet)
+        show_summary(successes, failures, reporter=reporter)
 
     return len(failures) == 0
 
 
-def run_example(example, quiet=False):
+def run_example(example, reporter=None):
     """Run a specific example.
 
     Returns a boolean value indicating whether the example was successful.
     """
-    if quiet:
-        print example + " " * (72 - len(example)),
+    if reporter:
+        reporter.write(example)
     else:
         print "=" * 79
         print "Running: ", example
 
     try:
         mod = load_example_module(example)
-        if quiet:
+        if reporter:
             suppress_output(mod.main)
-            print "[PASS]"
+            reporter.write("[PASS]", "Green", align="right")
         else:
             mod.main()
         return True
     except:
-        if quiet:
-            print "[FAIL]"
+        if reporter:
+            reporter.write("[FAIL]", "Red", align="right")
         traceback.print_exc()
         return False
 
@@ -186,16 +188,16 @@ def suppress_output(fn):
         sys.stdout = save_stdout
 
 
-def show_summary(successes, failures, quiet=False):
+def show_summary(successes, failures, reporter=None):
     """Shows a summary detailing which examples were successful and which failed."""
-    if quiet:
-        print "-" * 79
+    if reporter:
+        reporter.write("-" * reporter.terminal_width)
         if failures:
-            print "FAILED:"
+            reporter.write("FAILED:", "Red")
             for example in failures:
-                print "  " + example
+                reporter.write("  " + example)
         else:
-            print "ALL EXAMPLES PASSED"
+            reporter.write("ALL EXAMPLES PASSED", "Green")
     else:
         if successes:
             print >> sys.stderr, "SUCCESSFUL: "
@@ -214,30 +216,20 @@ def show_summary(successes, failures, quiet=False):
 
 def main(*args, **kws):
     """Main script runner"""
-    windowed = False
-    summary = True
-    quiet = False
+    parser = argparse.ArgumentParser(description=DESCRIPTION, epilog=EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('-w', '--windowed', action="store_true",
+        help="also run examples requiring windowed environment")
+    parser.add_argument('-q', '--quiet', action="store_true",
+        help="runs examples in 'quiet mode' suppressing example output and \
+              showing simple status messages.")
+    parser.add_argument('--no-summary', action="store_true",
+        help="hides the summary at the end of testing the examples")
 
-    try:
-        opts, remainder = getopt.getopt(args, "hqsw")
-        for opt_key, opt_val in opts:
-            if opt_key == '-w':
-                windowed = True
-            elif opt_key == "-h":
-                print __doc__
-                sys.exit(0)
-            elif opt_key == "-s":
-                summary = False
-            elif opt_key == "-q":
-                quiet = True
-            else:
-                raise getopt.GetoptError, "option %s not processed" % opt_key
-    except getopt.GetoptError, message:
-        print >> sys.stderr, message
-        print >> sys.stderr, "Use -h option for usage.\n"
-        sys.exit(1)
+    options = parser.parse_args(args)
 
-    return 0 if run_examples(windowed, quiet, summary) else 1
+    return 0 if run_examples(windowed=options.windowed, quiet=options.quiet,
+                             summary=not options.no_summary) else 1
 
 
 if __name__ == "__main__":
