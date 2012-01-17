@@ -894,7 +894,7 @@ def _simplifyconds(expr, s, a):
             return not r
         return (x < y)
     def replue(x, y):
-        if bigger(x, y) in [True, False]:
+        if bigger(x, y) in (True, False):
             return True
         return Unequality(x, y)
     def repl(ex, *args):
