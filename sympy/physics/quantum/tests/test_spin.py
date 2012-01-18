@@ -15,10 +15,8 @@ from sympy.physics.quantum.spin import (
     Rotation, WignerD
 )
 
-from sympy.utilities.pytest import XFAIL
-
-j1,j2,j3,j4,m1,m2,m3,m4,mi,mp = symbols('j1:5 m1:5 mi mp')
-j12,j13,j24,j34,j123,j134 = symbols('j12 j13 j24 j34 j123 j134')
+j1,j2,j3,j4,m1,m2,m3,m4 = symbols('j1:5 m1:5')
+j12,j13,j24,j34,j123,j134,mi,mi1,mp = symbols('j12 j13 j24 j34 j123 j134 mi mi1 mp')
 
 def test_represent():
     # Spin operators
@@ -3069,20 +3067,20 @@ def test_jx():
         hbar*sqrt(j**2+j-m**2-m)*JzKet(j,m+1)/2 + hbar*sqrt(j**2+j-m**2+m)*JzKet(j,m-1)/2
     # Normal operators, coupled states
     # Numerical
-    assert qapply(Jx*JxKetCoupled(1,1,1,1)) == \
-        hbar*JxKetCoupled(1,1,1,1)
-    assert qapply(Jx*JyKetCoupled(1,1,1,1)) == \
-        hbar*JyKetCoupled(1,1,1,1)
-    assert qapply(Jx*JzKetCoupled(1,1,1,1)) == \
-        sqrt(2)*hbar*JzKetCoupled(1,0,1,1)/2
+    assert qapply(Jx*JxKetCoupled(1,1,(1,1))) == \
+        hbar*JxKetCoupled(1,1,(1,1))
+    assert qapply(Jx*JyKetCoupled(1,1,(1,1))) == \
+        hbar*JyKetCoupled(1,1,(1,1))
+    assert qapply(Jx*JzKetCoupled(1,1,(1,1))) == \
+        sqrt(2)*hbar*JzKetCoupled(1,0,(1,1))/2
     # Symbolic
-    assert qapply(Jx*JxKetCoupled(j,m,j1,j2)) == \
-        hbar*m*JxKetCoupled(j,m,j1,j2)
-    assert qapply(Jx*JyKetCoupled(j,m,j1,j2)) == \
-        Sum(hbar*mi*WignerD(j,mi,m,0,0,pi/2)*Sum(WignerD(j,mi1,mi,3*pi/2,0,0)*JyKetCoupled(j,mi1,j1,j2), (mi1,-j,j)), (mi,-j,j))
-    assert qapply(Jx*JzKetCoupled(j,m,j1,j2)) == \
-        hbar*sqrt(j**2+j-m**2-m)*JzKetCoupled(j,m+1,j1,j2)/2 + \
-        hbar*sqrt(j**2+j-m**2+m)*JzKetCoupled(j,m-1,j1,j2)/2
+    assert qapply(Jx*JxKetCoupled(j,m,(j1,j2))) == \
+        hbar*m*JxKetCoupled(j,m,(j1,j2))
+    assert qapply(Jx*JyKetCoupled(j,m,(j1,j2))) == \
+        Sum(hbar*mi*WignerD(j,mi,m,0,0,pi/2)*Sum(WignerD(j,mi1,mi,3*pi/2,0,0)*JyKetCoupled(j,mi1,(j1,j2)), (mi1,-j,j)), (mi,-j,j))
+    assert qapply(Jx*JzKetCoupled(j,m,(j1,j2))) == \
+        hbar*sqrt(j**2+j-m**2-m)*JzKetCoupled(j,m+1,(j1,j2))/2 + \
+        hbar*sqrt(j**2+j-m**2+m)*JzKetCoupled(j,m-1,(j1,j2))/2
     # Normal operators, uncoupled states
     # Numerical
     assert qapply(Jx*TensorProduct(JxKet(1,1), JxKet(1,1))) == \
@@ -3096,7 +3094,8 @@ def test_jx():
     assert qapply(Jx*TensorProduct(JxKet(1,1), JxKet(1,-1))) == 0
     # Symbolic
     assert qapply(Jx*TensorProduct(JxKet(j1,m1), JxKet(j2,m2))) == \
-        hbar*m1*TensorProduct(JxKet(j1,m1),JxKet(j2,m2))+hbar*m2*TensorProduct(JxKet(j1,m1),JxKet(j2,m2))
+        hbar*m1*TensorProduct(JxKet(j1,m1),JxKet(j2,m2)) + \
+        hbar*m2*TensorProduct(JxKet(j1,m1),JxKet(j2,m2))
     assert qapply(Jx*TensorProduct(JyKet(j1,m1), JyKet(j2,m2))) == \
         TensorProduct(Sum(hbar*mi*WignerD(j1,mi,m1,0,0,pi/2)*Sum(WignerD(j1,mi1,mi,3*pi/2,0,0)*JyKet(j1,mi1),(mi1,-j1,j1)),(mi,-j1,j1)),JyKet(j2,m2)) + \
         TensorProduct(JyKet(j1,m1),Sum(hbar*mi*WignerD(j2,mi,m2,0,0,pi/2)*Sum(WignerD(j2,mi1,mi,3*pi/2,0,0)*JyKet(j2,mi1),(mi1,-j2,j2)),(mi,-j2,j2)))
@@ -3152,20 +3151,20 @@ def test_jy():
         -hbar*I*sqrt(j**2+j-m**2-m)*JzKet(j,m+1)/2 + hbar*I*sqrt(j**2+j-m**2+m)*JzKet(j,m-1)/2
     # Normal operators, coupled states
     # Numerical
-    assert qapply(Jy*JxKetCoupled(1,1,1,1)) == \
-        hbar*JxKetCoupled(1,1,1,1)
-    assert qapply(Jy*JyKetCoupled(1,1,1,1)) == \
-        hbar*JyKetCoupled(1,1,1,1)
-    assert qapply(Jy*JzKetCoupled(1,1,1,1)) == \
-        sqrt(2)*hbar*I*JzKetCoupled(1,0,1,1)/2
+    assert qapply(Jy*JxKetCoupled(1,1,(1,1))) == \
+        hbar*JxKetCoupled(1,1,(1,1))
+    assert qapply(Jy*JyKetCoupled(1,1,(1,1))) == \
+        hbar*JyKetCoupled(1,1,(1,1))
+    assert qapply(Jy*JzKetCoupled(1,1,(1,1))) == \
+        sqrt(2)*hbar*I*JzKetCoupled(1,0,(1,1))/2
     # Symbolic
-    assert qapply(Jy*JxKetCoupled(j,m,j1,j2)) == \
-        Sum(hbar*mi*WignerD(j,mi,m,3*pi/2,0,0)*Sum(WignerD(j,mi1,mi,0,0,pi/2)*JxKetCoupled(j,mi1,j1,j2), (mi1,-j,j)), (mi,-j,j))
-    assert qapply(Jy*JyKetCoupled(j,m,j1,j2)) == \
-        hbar*m*JyKetCoupled(j,m,j1,j2)
-    assert qapply(Jy*JzKetCoupled(j,m,j1,j2)) == \
-        -hbar*I*sqrt(j**2+j-m**2-m)*JzKetCoupled(j,m+1,j1,j2)/2 + \
-        hbar*I*sqrt(j**2+j-m**2+m)*JzKetCoupled(j,m-1,j1,j2)/2
+    assert qapply(Jy*JxKetCoupled(j,m,(j1,j2))) == \
+        Sum(hbar*mi*WignerD(j,mi,m,3*pi/2,0,0)*Sum(WignerD(j,mi1,mi,0,0,pi/2)*JxKetCoupled(j,mi1,(j1,j2)), (mi1,-j,j)), (mi,-j,j))
+    assert qapply(Jy*JyKetCoupled(j,m,(j1,j2))) == \
+        hbar*m*JyKetCoupled(j,m,(j1,j2))
+    assert qapply(Jy*JzKetCoupled(j,m,(j1,j2))) == \
+        -hbar*I*sqrt(j**2+j-m**2-m)*JzKetCoupled(j,m+1,(j1,j2))/2 + \
+        hbar*I*sqrt(j**2+j-m**2+m)*JzKetCoupled(j,m-1,(j1,j2))/2
     # Normal operators, uncoupled states
     # Numerical
     assert qapply(Jy*TensorProduct(JxKet(1,1), JxKet(1,1))) == \
@@ -3226,7 +3225,6 @@ def test_jz():
     assert qapply(Jz*JyKet(1,1)) == -sqrt(2)*hbar*I*JyKet(1,0)/2
     assert qapply(Jz*JzKet(2,1)) == hbar*JzKet(2,1)
     # Symbolic
-    j, m, j1, j2, m1, m2, mi, mi1 = symbols("j m j1:3 m1:3 mi mi1")
     assert qapply(Jz*JxKet(j,m)) == \
         Sum(hbar*mi*WignerD(j,mi,m,0,pi/2,0)*Sum(WignerD(j,mi1,mi,0,3*pi/2,0)*JxKet(j,mi1),(mi1,-j,j)), (mi,-j,j))
     assert qapply(Jz*JyKet(j,m)) == \
@@ -3234,19 +3232,19 @@ def test_jz():
     assert qapply(Jz*JzKet(j,m)) == hbar*m*JzKet(j,m)
     # Normal operators, coupled states
     # Numerical
-    assert qapply(Jz*JxKetCoupled(1,1,1,1)) == \
-        -sqrt(2)*hbar*JxKetCoupled(1,0,1,1)/2
-    assert qapply(Jz*JyKetCoupled(1,1,1,1)) == \
-        -sqrt(2)*hbar*I*JyKetCoupled(1,0,1,1)/2
-    assert qapply(Jz*JzKetCoupled(1,1,1,1)) == \
-        hbar*JzKetCoupled(1,1,1,1)
+    assert qapply(Jz*JxKetCoupled(1,1,(1,1))) == \
+        -sqrt(2)*hbar*JxKetCoupled(1,0,(1,1))/2
+    assert qapply(Jz*JyKetCoupled(1,1,(1,1))) == \
+        -sqrt(2)*hbar*I*JyKetCoupled(1,0,(1,1))/2
+    assert qapply(Jz*JzKetCoupled(1,1,(1,1))) == \
+        hbar*JzKetCoupled(1,1,(1,1))
     # Symbolic
-    assert qapply(Jz*JxKetCoupled(j,m,j1,j2)) == \
-        Sum(hbar*mi*WignerD(j,mi,m,0,pi/2,0)*Sum(WignerD(j,mi1,mi,0,3*pi/2,0)*JxKetCoupled(j,mi1,j1,j2), (mi1,-j,j)), (mi,-j,j))
-    assert qapply(Jz*JyKetCoupled(j,m,j1,j2)) == \
-        Sum(hbar*mi*WignerD(j,mi,m,3*pi/2,-pi/2,pi/2)*Sum(WignerD(j,mi1,mi,3*pi/2,pi/2,pi/2)*JyKetCoupled(j,mi1,j1,j2), (mi1,-j,j)), (mi,-j,j))
-    assert qapply(Jz*JzKetCoupled(j,m,j1,j2)) == \
-        hbar*m*JzKetCoupled(j,m,j1,j2)
+    assert qapply(Jz*JxKetCoupled(j,m,(j1,j2))) == \
+        Sum(hbar*mi*WignerD(j,mi,m,0,pi/2,0)*Sum(WignerD(j,mi1,mi,0,3*pi/2,0)*JxKetCoupled(j,mi1,(j1,j2)), (mi1,-j,j)), (mi,-j,j))
+    assert qapply(Jz*JyKetCoupled(j,m,(j1,j2))) == \
+        Sum(hbar*mi*WignerD(j,mi,m,3*pi/2,-pi/2,pi/2)*Sum(WignerD(j,mi1,mi,3*pi/2,pi/2,pi/2)*JyKetCoupled(j,mi1,(j1,j2)), (mi1,-j,j)), (mi,-j,j))
+    assert qapply(Jz*JzKetCoupled(j,m,(j1,j2))) == \
+        hbar*m*JzKetCoupled(j,m,(j1,j2))
     # Normal operators, uncoupled states
     # Numerical
     assert qapply(Jz*TensorProduct(JxKet(1,1), JxKet(1,1))) == \
@@ -3259,7 +3257,6 @@ def test_jz():
         2*hbar*TensorProduct(JzKet(1,1), JzKet(1,1))
     assert qapply(Jz*TensorProduct(JzKet(1,1), JzKet(1,-1))) == 0
     # Symbolic
-    # Uncoupled Operators
     assert qapply(Jz*TensorProduct(JxKet(j1,m1), JxKet(j2,m2))) == \
         TensorProduct(JxKet(j1,m1),Sum(hbar*mi*WignerD(j2,mi,m2,0,pi/2,0)*Sum(WignerD(j2,mi1,mi,0,3*pi/2,0)*JxKet(j2,mi1),(mi1,-j2,j2)),(mi,-j2,j2))) + \
         TensorProduct(Sum(hbar*mi*WignerD(j1,mi,m1,0,pi/2,0)*Sum(WignerD(j1,mi1,mi,0,3*pi/2,0)*JxKet(j1,mi1),(mi1,-j1,j1)),(mi,-j1,j1)),JxKet(j2,m2))
@@ -3268,6 +3265,7 @@ def test_jz():
         TensorProduct(Sum(hbar*mi*WignerD(j1,mi,m1,3*pi/2,-pi/2,pi/2)*Sum(WignerD(j1,mi1,mi,3*pi/2,pi/2,pi/2)*JyKet(j1,mi1),(mi1,-j1,j1)),(mi,-j1,j1)),JyKet(j2,m2))
     assert qapply(Jz*TensorProduct(JzKet(j1,m1), JzKet(j2,m2))) == \
         hbar*m1*TensorProduct(JzKet(j1,m1),JzKet(j2,m2))+hbar*m2*TensorProduct(JzKet(j1,m1),JzKet(j2,m2))
+    # Uncoupled Operators
     # Numerical
     assert qapply(TensorProduct(Jz,1)*TensorProduct(JxKet(1,1),JxKet(1,-1))) == \
         -sqrt(2)*hbar*TensorProduct(JxKet(1,0),JxKet(1,-1))/2

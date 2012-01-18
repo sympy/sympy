@@ -510,11 +510,12 @@ class JplusOp(SpinOpBase, Operator):
     def _apply_operator_JzKetCoupled(self, ket, **options):
         j = ket.j
         m = ket.m
-        jvals = ket.jvals
+        jn = ket.jn
+        coupling = ket.coupling
         if m.is_Number and j.is_Number:
             if m >= j:
                 return S.Zero
-        return hbar*sqrt(j*(j+S.One)-m*(m+S.One))*JzKetCoupled(j, m+S.One,*jvals)
+        return hbar*sqrt(j*(j+S.One)-m*(m+S.One))*JzKetCoupled(j, m+S.One,jn,coupling)
 
     def matrix_element(self, j, m, jp, mp):
         result = hbar*sqrt(j*(j+S.One)-mp*(mp+S.One))
@@ -550,11 +551,12 @@ class JminusOp(SpinOpBase, Operator):
     def _apply_operator_JzKetCoupled(self, ket, **options):
         j = ket.j
         m = ket.m
-        jvals = ket.jvals
+        jn = ket.jn
+        coupling = ket.coupling
         if m.is_Number and j.is_Number:
             if m <= -j:
                 return S.Zero
-        return hbar*sqrt(j*(j+S.One)-m*(m-S.One))*JzKetCoupled(j, m-S.One,*jvals)
+        return hbar*sqrt(j*(j+S.One)-m*(m-S.One))*JzKetCoupled(j, m-S.One,jn,coupling)
 
     def matrix_element(self, j, m, jp, mp):
         result = hbar*sqrt(j*(j+S.One)-mp*(mp-S.One))
@@ -760,16 +762,16 @@ class Rotation(UnitaryOperator):
         >>> from sympy import pi
         >>> from sympy.physics.quantum.spin import Rotation
         >>> Rotation(pi, 0, pi/2)
-        'R'(pi,0,pi/2)
+        R(pi,0,pi/2)
 
     With symbolic Euler angles and calculating the inverse rotation operator:
 
         >>> from sympy import symbols
         >>> a, b, c = symbols('a b c')
         >>> Rotation(a, b, c)
-        'R'(a,b,c)
+        R(a,b,c)
         >>> Rotation(a, b, c).inverse()
-        'R'(-c,-b,-a)
+        R(-c,-b,-a)
 
 
     References
@@ -1199,7 +1201,7 @@ class SpinState(State):
                 break
             # TODO: better way to get angles of rotation
             if isinstance(self, CoupledSpinState):
-                test_args = (0,mi,0)
+                test_args = (0,mi,(0,0))
             else:
                 test_args = (0,mi)
             if isinstance(self, Ket):
@@ -1553,6 +1555,10 @@ class CoupledSpinState(SpinState):
     @property
     def jn(self):
         return self.label[2]
+
+    @property
+    def coupling(self):
+        return self.label[3]
 
     @property
     def coupled_jn(self):
