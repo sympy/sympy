@@ -131,20 +131,17 @@ class Relational(Expr, EvalfMixin):
     # ValidRelationOperator - Defined below, because the necessary classes
     #   have not yet been defined
 
-    @staticmethod
-    def get_relational_class(rop):
-        try:
-            return Relational.ValidRelationOperator[ rop ]
-        except KeyError:
-            raise ValueError("Invalid relational operator symbol: %r" % (rop))
-
     def __new__(cls, lhs, rhs, rop=None, **assumptions):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         if cls is not Relational:
             rop_cls = cls
         else:
-            rop_cls = Relational.get_relational_class(rop)
+            try:
+                rop_cls = Relational.ValidRelationOperator[ rop ]
+            except KeyError:
+                msg = "Invalid relational operator symbol: '%r'"
+                raise ValueError(msg % repr(rop))
         if lhs.is_number and rhs.is_number and lhs.is_real and rhs.is_real:
             # Just becase something is a number, doesn't mean you can evalf it.
             Nlhs = lhs.evalf()
