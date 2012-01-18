@@ -44,6 +44,24 @@ unit:
     >>> (u.m/u.s/mph).n(2)
     2.2
 
+The units are defined in terms of base units, so when you divide similar
+units you will obtain a pure number. This means, for example, that if you
+divide a real-world mass (like grams) by the atomic mass unit (amu) you
+will obtain Avogadro's number. To obtain the answer in moles you
+should divide by the unit ``avogadro``:
+
+    >>> u.grams/u.amu
+    602214179000000000000000
+    >>> _/u.avogadro
+    mol
+
+For chemical calculations the unit ``mmu`` (molar mass unit) has been
+defined so this conversion is handled automatically. For example, the
+number of moles in 1 kg of water might be calculated as:
+
+    >>> u.kg/(18*u.mmu).n(3)
+    55.5*mol
+
 """
 
 from sympy import Rational, pi
@@ -229,6 +247,7 @@ psi = pound / inch ** 2
 dHg0 = 13.5951 # approx value at 0 C
 mmHg = dHg0 * 9.80665 * Pa
 amu = amus = gram / avogadro / mol
+mmu = mmus = gram / mol
 quart = quarts = 231 * inch**3
 eV = 1.602176487e-19 * J
 
