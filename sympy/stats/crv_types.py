@@ -34,12 +34,12 @@ def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
     Many common continuous random variable types are already implemented.
     This function should be necessary only very rarely.
 
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, sqrt, exp, pi
     >>> from sympy.stats import ContinuousRV, P, E
 
     >>> x = Symbol('x')
     >>> pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)) # Normal distribution
-    >>> X = ContinuousRV(x, density)
+    >>> X = ContinuousRV(x, pdf)
 
     >>> E(X)
     0
