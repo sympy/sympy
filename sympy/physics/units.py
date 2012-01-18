@@ -62,6 +62,15 @@ number of moles in 1 kg of water might be calculated as:
     >>> u.kg/(18*u.mmu).n(3)
     55.5*mol
 
+If you need the number of atoms in a mol as a pure number you can use
+``avogadro_number`` but if you need it as a dimensional quantity you should use
+``avogadro_constant``. ``avogardo`` is a shorthand for the dimensional
+quantity.
+
+    >>> u.avogadro_number
+    602214179000000000000000
+    >>> u.avogadro_constant
+    602214179000000000000000/mol
 """
 
 from sympy import Rational, pi
@@ -234,7 +243,8 @@ Z0 = vacuum_impedance = u0 * c
 planck = Rational('6.62606896') * ten**-34 * J*s
 hbar = planck / (2*pi)
 
-avogadro = (Rational('6.02214179') * 10**23) / mol
+avogadro_number = Rational('6.02214179') * 10**23
+avogadro = avogadro_constant = avogadro_number / mol
 boltzmann = Rational('1.3806505') * ten**-23 * J / K
 
 gee = gees = Rational('9.80665') * m/s**2
