@@ -884,3 +884,21 @@ def test_issue_2574():
     eq = -x + exp(exp(LambertW(log(x)))*LambertW(log(x)))
     assert checksol(eq, x, 2) == True
     assert checksol(eq, x, 2, numerical=False) is None
+
+def test_exclude():
+    R, C, Ri, Vout, V1, Rf, Vminus, Vplus, s = \
+        symbols('R, C, Ri, Vout, V1, Rf, Vminus, Vplus, s')
+    eqs = [C*V1*s + Vplus*(-2*C*s - 1/R),
+           Vminus*(-1/Ri - 1/Rf) + Vout/Rf,
+           C*Vplus*s + V1*(-C*s - 1/R) + Vout/R,
+           -Vminus + Vplus]
+    assert solve(eqs, exclude=s*C*R) == [
+                {Vminus: Vplus,
+                 Vout: Vplus*(C**2*R**2*s**2 + 3*C*R*s + 1)/(C*R*s),
+                 V1: Vplus*(2*C*R*s + 1)/(C*R*s),
+                 Ri: C*R*Rf*s/(C*R*s + 1)**2}]
+    assert solve(eqs, exclude=[Vplus, s, C]) == [
+                {Vminus: Vplus,
+                 Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
+                 R: Vplus/(C*s*(V1 - 2*Vplus)),
+                 Ri: Rf*Vplus*(V1 - 2*Vplus)/(V1 - Vplus)**2}]
