@@ -221,6 +221,8 @@ class Unequality(Relational):
         return self.lhs.compare(self.rhs)!=0
 
 class _Greater(Relational):
+    __slots__ = ()
+
     @property
     def gts(self):
         return self._args[0]
@@ -230,6 +232,8 @@ class _Greater(Relational):
         return self._args[1]
 
 class _Less(Relational):
+    __slots__ = ()
+
     @property
     def gts(self):
         return self._args[1]
@@ -242,7 +246,7 @@ class GreaterThan(_Greater):
 
     rel_op = '>='
 
-    __slots__ = []
+    __slots__ = ()
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -267,7 +271,7 @@ class LessThan(_Less):
 
     rel_op = '<='
 
-    __slots__ = []
+    __slots__ = ()
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -292,7 +296,7 @@ class StrictGreaterThan(_Greater):
 
     rel_op = '>'
 
-    __slots__ = []
+    __slots__ = ()
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -317,7 +321,7 @@ class StrictLessThan(_Less):
 
     rel_op = '<'
 
-    __slots__ = []
+    __slots__ = ()
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
