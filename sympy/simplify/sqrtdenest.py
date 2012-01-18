@@ -102,7 +102,7 @@ def subsets(n):
 def sqrtdenest(expr, max_iter=3):
     """Denests sqrts in an expression that contain other square roots
     if possible, otherwise returns the expr unchanged. This is based on the
-    algorithms of [1] and [2].
+    algorithms of [1].
 
     Examples
     ========
@@ -119,9 +119,6 @@ def sqrtdenest(expr, max_iter=3):
     References
     ==========
     [1] http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf
-    [2] D. J. Jeffrey and A. D. Rich, 'Symplifying Square Roots of Square Roots
-        by Denesting' (available at http://www.cybertester.com/data/denest.pdf)
-
     """
     expr = expand_mul(sympify(expr))
     for i in range(max_iter):
@@ -192,10 +189,7 @@ def _sqrtdenest0(expr):
         if d is S.One: # n is a square root
             if n.base.is_Add:
                 args = n.base.args
-                if (3 <= len(args) <= 4 and
-                    all((x**2).is_Rational for x in args)):
-                    return _sqrtdenest34(n)
-                if len(args) > 4 and all((x**2).is_Integer for x in args):
+                if len(args) > 2 and all((x**2).is_Integer for x in args):
                     try:
                         return _sqrtdenest_rec(n)
                     except SqrtdenestStopIteration:
@@ -211,42 +205,14 @@ def _sqrtdenest0(expr):
             return expr.func(*[_sqrtdenest0(a) for a in args])
     return expr
 
-
-def _sqrtdenest34(expr):
-    """Helper that denests the square root of three or four surds.
-
-    Examples
-    ========
-    >>> from sympy import sqrt
-    >>> from sympy.simplify.sqrtdenest import _sqrtdenest34
-    >>> _sqrtdenest34(sqrt(-72*sqrt(2) + 158*sqrt(5) + 498))
-    -sqrt(10) + sqrt(2) + 9 + 9*sqrt(5)
-    >>> _sqrtdenest34(sqrt(12 + 2*sqrt(6) + 2*sqrt(14) + 2*sqrt(21)))
-    sqrt(2) + sqrt(3) + sqrt(7)
-
-    References
-    ==========
-    - D. J. Jeffrey and A. D. Rich, 'Symplifying Square Roots of Square Roots
-      by Denesting'
-
-    """
-    from sympy.simplify.simplify import radsimp
-    if expr.base < 0:
-        return sqrt(-1)*_sqrtdenest34(sqrt(-expr.base))
-    # a should be > b so we sort; this also makes the process canonical
-    args = sorted(expr.base.args, reverse=True)
-    a = Add._from_args(args[:2])
-    b = Add._from_args(args[2:])
-    c = _sqrtdenest1(sqrt(_mexpand(a**2 - b**2)))
-    if sqrt_depth(c) > 1:
-        return expr
-    d = _sqrtdenest1(sqrt(a + c))
-    if sqrt_depth(d) > 1:
-        return expr
-    return _mexpand(radsimp((d/sqrt(2) + b/(sqrt(2)*d))))
-
 def _sqrtdenest_rec(expr):
     """Helper that denests the square root of five or more surds.
+
+    Algorithm: expr.base is in the extension Q_m = Q(sqrt(r_1),..,sqrt(r_k));
+    split expr.base = a + b*sqrt(r_k), where `a` and `b` are on
+    Q_(m-1) = Q(sqrt(r_1),..,sqrt(r_(k-1))); then a**2 - b**2*r_k is
+    on Q_(m-1); denest sqrt(a**2 - b**2*r_k) and so on.
+    See [1], section 6.
 
     Examples
     ========
@@ -263,11 +229,13 @@ def _sqrtdenest_rec(expr):
     -sqrt(11) - sqrt(7) + sqrt(2) + 3*sqrt(5)
     """
     from sympy.simplify.simplify import radsimp, split_surds, rad_rationalize
+    if expr.base < 0:
+        return sqrt(-1)*_sqrtdenest_rec(sqrt(-expr.base))
     a, b = split_surds(expr.base)
     if a < b:
         a, b = b, a
     c2 = _mexpand(a**2 - b**2)
-    if len(c2.args) > 4:
+    if len(c2.args) > 2:
         a1, b1 = split_surds(c2)
         if a1 < b1:
             a1, b1 = b1, a1
@@ -281,9 +249,7 @@ def _sqrtdenest_rec(expr):
         num, den = rad_rationalize(b1, d_1)
         c = _mexpand(d_1/sqrt(2) + num/(den*sqrt(2)))
     else:
-        c = sqrtdenest(sqrt(_mexpand(a**2 - b**2)))
-        if sqrt_depth(c) > 1:
-            raise SqrtdenestStopIteration
+        c = _sqrtdenest1(sqrt(_mexpand(a**2 - b**2)))
 
     if sqrt_depth(c) > 1:
         raise SqrtdenestStopIteration
