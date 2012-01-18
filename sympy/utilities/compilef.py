@@ -15,49 +15,50 @@ Experimental module for compiling functions to machine code.
 Can also be used to generate C code from SymPy expressions.
 Depends on libtcc.
 
-This code is experimental. It may have severe bugs. Due to the use of C, it's
-able to crash your Python interpreter/debugger with obscure error messages.
+This code is experimental. It may have severe bugs. Due to the use of C,
+it's able to crash your Python interpreter/debugger with obscure error
+messages.
 
 64 bit floats (double) are used.
-
 
 Overview
 ========
 
-clambdify:   compile a function to machine code (only useful for big functions)
+clambdify:   compile a function to machine code (only useful for big
+             functions)
 frange:      evaluate a function on a range of numbers using machine code
 cexpr:       translate a Python expression to a C expression
 genfcode:    generate C code from a lambda string
 evanonarray: evaluate a function on an array using machine code
 
-
 Performance
 ===========
 
-Python functions using the math module are *quite* fast. For simple functions
-they are faster than functions compiled to machine code. So you should test
-to see whether lambdify is fast enough for you.
+Python functions using the math module are *quite* fast. For simple
+functions they are faster than functions compiled to machine code. So you
+should test to see whether lambdify is fast enough for you.
 
 Iterating is slow in Python (it's probably the biggest bottle neck).
 frange allows you to iterate using machine code. This can result in huge
 speedups. You might want to use NumPy: http://numpy.org/
-For simple functions it's faster, but for big ones frange can be several times
-more efficient.
+For simple functions it's faster, but for big ones frange can be several
+times more efficient.
 
 You should experiment to see which solution is best for your application.
 
-You can run the included benchmarks to see the real performance on your machine.
-
+You can run the included benchmarks to see the real performance on your
+machine.
 
 Configuration
 =============
 
-You will probably need to compile libtcc on your own. Get the sources of tcc:
+You will probably need to compile libtcc on your own. Get the sources of
+tcc:
 
 http://bellard.org/tcc/
 
-Currently it only works for a recent development version. So you might want to
-run the following commands (you have to use your own paths of course):
+Currently it only works for a recent development version. So you might want
+to run the following commands (you have to use your own paths of course):
 
 $ cvs -z3 -d:pserver:anonymous@cvs.savannah.nongnu.org:/sources/tinycc co tinycc
 $ cd tinycc
@@ -67,14 +68,15 @@ $ gcc -shared -Wl,-soname,libtcc.so -o libtcc.so libtcc.o
 $ cd sympy/utilities/
 $ ln -s tinycc/libtcc.so # or change libtccpath in compilef.py
 
-You might try to run libtcc_test. If something went wrong there will be bad low
-level Python errors probably crashing the interpreter. The error output will be
-printed to stdout or stderr, which might be different to your Python shell.
+You might try to run libtcc_test. If something went wrong there will be bad
+low level Python errors probably crashing the interpreter. The error output
+will be printed to stdout or stderr, which might be different to your Python
+shell.
 
 Make sure that this module knows the path to libtcc.
 
-If everything went right, all the tests will pass. Run this file to do so and
-to see the results of some benchmarks.
+If everything went right, all the tests will pass. Run this file to do so
+and to see the results of some benchmarks.
 
 """
 

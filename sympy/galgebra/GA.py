@@ -7,8 +7,8 @@ The relevant references for this module are:
     1. "Geometric Algebra for Physicists" by C. Doran and A. Lazenby,
        Cambridge University Press, 2003.
 
-    2. "Geometric Algebra for Computer Science" by Leo Dorst, Daniel Fontijne,
-       and Stephen Mann, Morgan Kaufmann Publishers, 2007
+    2. "Geometric Algebra for Computer Science" by Leo Dorst,
+       Daniel Fontijne, and Stephen Mann, Morgan Kaufmann Publishers, 2007.
 
     3. Sympy Tutorial, http://docs.sympy.org/
 """

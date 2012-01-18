@@ -6,15 +6,18 @@ Usage:
 
 $ bin/coverage_report.py
 
-This will create a directory covhtml with the coverage reports.To restrict the analysis
-to a directory, you just need to pass its name as
+This will create a directory covhtml with the coverage reports. To
+restrict the analysis to a directory, you just need to pass its name as
 argument. For example:
+
 
 $ bin/coverage_report.py sympy/logic
 
 runs only the tests in sympy/logic/ and reports only on the modules in
-sympy/logic/.  You can also get a report on the parts of the whole sympy code
-covered by the tests in sympy/logic/ by following up the previous command with
+sympy/logic/. You can also get a report on the parts of the whole sympy
+code covered by the tests in sympy/logic/ by following up the previous
+command with
+
 
 $ bin/coverage_report.py -c
 

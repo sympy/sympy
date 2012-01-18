@@ -1,4 +1,5 @@
-"""This module contains some general purpose utilities that are used across SymPy.
+"""This module contains some general purpose utilities that are used across
+SymPy.
 """
 from iterables import (flatten, group, take, subsets,
     variations, numbered_symbols, cartes, capture, dict_merge,

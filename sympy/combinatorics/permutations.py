@@ -15,7 +15,6 @@ def perm_af_parity(pi):
     number of inversions in the permutation, i.e., the
     number of pairs of x and y such that x > y but p[x] < p[y].
 
-
     Examples
     ========
 
@@ -95,8 +94,8 @@ class Permutation(Basic):
     (1) Skiena, S. 'Permutations.' 1.1 in Implementing Discrete Mathematics
         Combinatorics and Graph Theory with Mathematica.
         Reading, MA: Addison-Wesley, pp. 3-16, 1990.
-    (2) Knuth, D. E. The Art of Computer Programming, Vol. 4: Combinatorial Algorithms,
-        1st ed. Reading, MA: Addison-Wesley, 2011.
+    (2) Knuth, D. E. The Art of Computer Programming, Vol. 4: Combinatorial
+        Algorithms, 1st ed. Reading, MA: Addison-Wesley, 2011.
     (3) Wendy Myrvold and Frank Ruskey. 2001. Ranking and unranking
         permutations in linear time. Inf. Process. Lett. 79, 6 (September 2001),
         281-284. DOI=10.1016/S0020-0190(01)00141-7

@@ -1,6 +1,6 @@
 """
-Reimplementations of constructs introduced in later versions of Python than we
-support.
+Reimplementations of constructs introduced in later versions of Python than
+we support.
 """
 
 class SymPyDeprecationWarning(DeprecationWarning):

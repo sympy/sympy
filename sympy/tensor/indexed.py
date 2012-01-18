@@ -18,12 +18,13 @@
            The stem used by itself is usually taken to represent the entire
            array.
 
-    There can be any number of indices on an Indexed object.  No transformation
-    properties are implemented in these Base objects, but implicit contraction
-    of repeated indices is supported.
+    There can be any number of indices on an Indexed object.  No
+    transformation properties are implemented in these Base objects, but
+    implicit contraction of repeated indices is supported.
 
-    Note that the support for complicated (i.e. non-atomic) integer expressions
-    as indices is limited.  (This should be improved in future releases.)
+    Note that the support for complicated (i.e. non-atomic) integer
+    expressions as indices is limited.  (This should be improved in
+    future releases.)
 
     Examples
     ========
