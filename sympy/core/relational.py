@@ -245,7 +245,9 @@ class GreaterThan(_Greater):
     rel_op = '>='
 
     __slots__ = ()
-    __hash__ = Basic.__hash__  # because __eq__ is overridden as well
+
+    def __hash__ ( self ):   # because __eq__ is overridden as well
+        return super(GreaterThan, self).__hash__()
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -271,7 +273,9 @@ class LessThan(_Less):
     rel_op = '<='
 
     __slots__ = ()
-    __hash__ = Basic.__hash__  # because __eq__ is overridden as well
+
+    def __hash__ ( self ):   # because __eq__ is overridden as well
+        return super(LessThan, self).__hash__()
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -297,7 +301,9 @@ class StrictGreaterThan(_Greater):
     rel_op = '>'
 
     __slots__ = ()
-    __hash__ = Basic.__hash__  # because __eq__ is overridden as well
+
+    def __hash__ ( self ):   # because __eq__ is overridden as well
+        return super(StrictGreaterThan, self).__hash__()
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -323,7 +329,9 @@ class StrictLessThan(_Less):
     rel_op = '<'
 
     __slots__ = ()
-    __hash__ = Basic.__hash__  # because __eq__ is overridden as well
+
+    def __hash__ ( self ):   # because __eq__ is overridden as well
+        return super(StrictLessThan, self).__hash__()
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
