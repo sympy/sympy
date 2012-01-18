@@ -1,3 +1,4 @@
+from basic import Basic
 from expr import Expr
 from evalf import EvalfMixin
 from sympify import _sympify
@@ -247,6 +248,7 @@ class GreaterThan(_Greater):
     rel_op = '>='
 
     __slots__ = ()
+    __hash__ = Basic.__hash__  # because __eq__ is overridden as well
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -272,6 +274,7 @@ class LessThan(_Less):
     rel_op = '<='
 
     __slots__ = ()
+    __hash__ = Basic.__hash__  # because __eq__ is overridden as well
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -297,6 +300,7 @@ class StrictGreaterThan(_Greater):
     rel_op = '>'
 
     __slots__ = ()
+    __hash__ = Basic.__hash__  # because __eq__ is overridden as well
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -322,6 +326,7 @@ class StrictLessThan(_Less):
     rel_op = '<'
 
     __slots__ = ()
+    __hash__ = Basic.__hash__  # because __eq__ is overridden as well
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
