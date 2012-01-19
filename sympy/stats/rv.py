@@ -12,7 +12,7 @@ sympy.stats.frv
 sympy.stats.rv_interface
 """
 
-from sympy import Basic, S, Expr, Symbol, Tuple, And, Add
+from sympy import Basic, S, Expr, Symbol, Tuple, And, Add, Eq
 from sympy.core.sets import FiniteSet, ProductSet
 
 class RandomDomain(Basic):
@@ -396,7 +396,7 @@ def Given(expr, given=None, **kwargs):
 
     """
 
-    if not random_symbols(given) or independent(expr, given):
+    if not random_symbols(given) or pspace_independent(expr, given):
         return expr
 
     # Get full probability space of both the expression and the condition
@@ -653,24 +653,29 @@ def dependent(a, b):
     Two expressions are independent if knowledge of one does not change
     computations on the other
 
-    >>> from sympy.stats import Die, dependent, Given
-    >>> from sympy import Tuple
+    >>> from sympy.stats import Normal, dependent, Given
+    >>> from sympy import Tuple, Eq
 
-    >>> X, Y = Die(6), Die(6)
+    >>> X, Y = Normal(0, 1), Normal(0, 1)
     >>> dependent(X, Y)
     False
     >>> dependent(2*X + Y, -Y)
     True
-    >>> X, Y = Given(Tuple(X, Y), X>Y)
+    >>> X, Y = Given(Tuple(X, Y), Eq(X+Y,3))
     >>> dependent(X, Y)
     True
 
     See Also:
         independent
     """
-    a_symbols = pspace(b).symbols
-    b_symbols = pspace(a).symbols
-    return len(a_symbols.intersect(b_symbols)) != 0
+    if pspace_independent(a,b):
+        return False
+
+    z = Symbol('z', real=True)
+    # Dependent if density is unchanged when one is given information about
+    # the other
+    return (Density(a, Eq(b, z)) != Density(a) or
+            Density(b, Eq(a, z)) != Density(b))
 
 def independent(a, b):
     """Independence of two random expressions
@@ -678,15 +683,15 @@ def independent(a, b):
     Two expressions are independent if knowledge of one does not change
     computations on the other
 
-    >>> from sympy.stats import Die, independent, Given
-    >>> from sympy import Tuple
+    >>> from sympy.stats import Normal, independent, Given
+    >>> from sympy import Tuple, Eq
 
-    >>> X, Y = Die(6), Die(6)
+    >>> X, Y = Normal(0, 1), Normal(0, 1)
     >>> independent(X, Y)
     True
     >>> independent(2*X + Y, -Y)
     False
-    >>> X, Y = Given(Tuple(X, Y), X>Y)
+    >>> X, Y = Given(Tuple(X, Y), Eq(X+Y,3))
     >>> independent(X, Y)
     False
 
@@ -694,3 +699,30 @@ def independent(a, b):
         dependent
     """
     return not dependent(a, b)
+
+def pspace_independent(a,b):
+    """
+    Tests for independence between a and b by checking if their PSpaces have
+    overlapping symbols. This is a sufficient but not necessary condition for
+    independence and is intended to be used internally.
+    Note:
+    pspace_independent(a,b) implies independent(a,b)
+    independent(a,b) does not imply pspace_independent(a,b)
+    """
+    a_symbols = pspace(b).symbols
+    b_symbols = pspace(a).symbols
+    if len(a_symbols.intersect(b_symbols)) == 0:
+        return True
+    return None
+
+def rv_subs(expr, symbols=None):
+    """
+    Given a random expression replace all random variables with their symbols
+
+    If symbols keyword is given restrict the swap to only the symbols listed
+    """
+    if symbols is None:
+        symbols = random_symbols(expr)
+    swapdict = dict([(rv, rv.symbol) for rv in symbols])
+    return expr.subs(swapdict)
+

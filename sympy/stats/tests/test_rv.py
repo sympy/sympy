@@ -4,7 +4,7 @@ from sympy.stats import (Die, Normal, Exponential , P, E, Var, Covar,
         Skewness, Density, Given, independent, dependent, Where, pspace,
         random_symbols, Sample)
 from sympy.stats.rv import ProductPSpace, rs_swap
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 def test_where():
     X, Y = Die(), Die()
@@ -40,7 +40,7 @@ def test_pspace():
     assert not pspace(5+3)
     assert pspace(X) == X.pspace
     assert pspace(2*X+1) == X.pspace
-    #assert pspace(2*X+Y) == ProductPSpace(Y.pspace, X.pspace)
+    assert pspace(2*X+Y) == ProductPSpace(Y.pspace, X.pspace)
 
 def test_rs_swap():
     x, y = symbols('x y')
@@ -73,7 +73,7 @@ def test_ProductPSpace():
     Y = Normal(0, 1)
     px = X.pspace
     py = Y.pspace
-    #assert pspace(X+Y) == ProductPSpace(px, py)
+    assert pspace(X+Y) == ProductPSpace(px, py)
     assert pspace(X+Y) == ProductPSpace(py, px)
 
 def test_E():
@@ -100,3 +100,36 @@ def test_Given():
     B = Given(X, Y>2)
 
     assert X == A == B
+
+def test_dependence():
+    X, Y = Die(), Die()
+    assert independent(X, 2*Y)
+    assert not dependent(X, 2*Y)
+
+    X, Y = Normal(0,1), Normal(0,1)
+    assert independent(X, Y)
+    assert dependent(X, 2*X)
+
+    # Create a dependency
+    XX, YY = Given(Tuple(X,Y), Eq(X+Y, 3))
+    assert dependent(XX, YY)
+
+@XFAIL
+def test_dependent_finite():
+    X, Y = Die(), Die()
+    # Dependence testing requires symbolic conditions which currently break
+    # finite random variables
+    assert dependent(X, Y+X)
+
+    XX, YY = Given(Tuple(X, Y), X+Y>5) # Create a dependency
+    assert dependent(XX, YY)
+
+@XFAIL
+def test_normality():
+    # I believe this is due to delta function oddness
+    # Issue 2630
+    X, Y = Normal(0,1), Normal(0,1)
+    z = Symbol('z', real=True)
+    x, density = Density(X-Y, Eq(X+Y, z))
+
+    assert integrate(density, (x, -oo, oo)) == 1

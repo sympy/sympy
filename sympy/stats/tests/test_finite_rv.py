@@ -102,15 +102,6 @@ def test_bernoulli():
     E(a*X+b) == a*E(X)+b
     Var(a*X+b) == a**2 * Var(X)
 
-def test_dependence():
-    X, Y = Die(), Die()
-    assert independent(X, 2*Y)
-    assert not dependent(X, 2*Y)
-    assert dependent(X, Y+X)
-
-    XX, YY = Given(Tuple(X, Y), X+Y>5) # Create a dependency
-    assert dependent(XX, YY)
-
 def test_CDF():
     D = Die(6)
     o = S.One
