@@ -300,7 +300,7 @@ def test_linear_subs():
 def test_probability():
     # various integrals from probability theory
     from sympy.abc import x, y, z
-    from sympy import symbols, Symbol, Abs, expand_mul, combsimp, powsimp
+    from sympy import symbols, Symbol, Abs, expand_mul, combsimp, powsimp, sin
     mu1, mu2 = symbols('mu1 mu2', real=True, finite=True, bounded=True)
     sigma1, sigma2 = symbols('sigma1 sigma2', real=True, finite=True,
                                               bounded=True, positive=True)
@@ -418,7 +418,38 @@ def test_probability():
     assert simplify(integrate(x**2*f, (x, 0, oo), meijerg=True, conds='none')) == \
            d2**2*(d1 + 2)/d1/(d2 - 4)/(d2 - 2)
 
-    # TODO gamma, inverse gaussian, Levi, log-logistic, rayleigh, weibull
+    # TODO gamma, rayleigh
+
+    # inverse gaussian
+    lamda, mu = symbols('lamda mu', positive=True)
+    dist = sqrt(lamda/2/pi)*x**(-S(3)/2)*exp(-lamda*(x-mu)**2/x/2/mu**2)
+    mysimp = lambda expr: simplify(expr.rewrite(exp))
+    assert mysimp(integrate(dist, (x, 0, oo))) == 1
+    assert mysimp(integrate(x*dist, (x, 0, oo))) == mu
+    assert mysimp(integrate((x-mu)**2*dist, (x, 0, oo))) == mu**3/lamda
+    assert mysimp(integrate((x-mu)**3*dist, (x, 0, oo))) == 3*mu**5/lamda**2
+
+    # Levi
+    c = Symbol('c', positive=True)
+    assert integrate(sqrt(c/2/pi)*exp(-c/2/(x-mu))/(x-mu)**S('3/2'), (x, mu, oo)) == 1
+    # higher moments oo
+
+    # log-logistic
+    distn = (beta/alpha)*x**(beta-1)/alpha**(beta-1)/(1 + x**beta/alpha**beta)**2
+    assert simplify(integrate(distn, (x, 0, oo))) == 1
+    # NOTE the conditions are a mess, but correctly state beta > 1
+    assert simplify(integrate(x*distn, (x, 0, oo), conds='none')) == \
+           pi*alpha/beta/sin(pi/beta)
+    # (similar comment for conditions applies)
+    assert simplify(integrate(x**y*distn, (x, 0, oo), conds='none')) == \
+           pi*alpha**y*y/beta/sin(pi*y/beta)
+
+    # weibull
+    k = Symbol('k', positive=True)
+    n = Symbol('n', positive=True)
+    distn = k/lamda*(x/lamda)**(k-1)*exp(-(x/lamda)**k)
+    assert simplify(integrate(distn, (x, 0, oo))) == 1
+    assert simplify(integrate(x**n*distn, (x, 0, oo))) == lamda**n*gamma(1 + n/k)
 
     # rice distribution
     from sympy import besseli
