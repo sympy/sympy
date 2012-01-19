@@ -15,7 +15,7 @@ This module contain solvers for all kinds of equations:
 from sympy.core.compatibility import iterable, is_sequence, \
     SymPyDeprecationWarning
 from sympy.core.sympify import sympify
-from sympy.core import C, S, Add, Symbol, Wild, Equality, Dummy, Basic
+from sympy.core import C, S, Add, Symbol, Wild, Equality, Dummy, Basic, Expr
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
                           count_ops)
@@ -367,6 +367,10 @@ def solve(f, *symbols, **flags):
           e.g. solve(f, [x, y])
 
     * flags
+        'exclude=[] (default)'
+            don't try to solve for any of the free symbols in exclude;
+            if expressions are given, the free symbols in them will
+            be extracted automatically.
         'check=True (default)'
             If False, don't do any testing of solutions. This can be
             useful if one wants to include solutions that make any
@@ -552,15 +556,30 @@ def solve(f, *symbols, **flags):
     are automatically excluded. If you do not want to exclude such solutions
     then use the check=False option:
 
-        >>> from sympy import sin
+        >>> from sympy import sin, limit
         >>> solve(sin(x)/x)
         []
+
+    If check=False then a solution to the numerator being zero is found: x = 0.
+    In this case, this is a spurious solution since sin(x)/x has the well known
+    limit (without dicontinuity) of 1 at x = 0:
+
         >>> solve(sin(x)/x, check=False)
         [0]
-        >>> solve((x**2*(1/x - z**2/x)), x)
+
+    In the following case, however, the limit exists and is equal to the the
+    value of x = 0 that is excluded when check=True:
+
+        >>> eq = x**2*(1/x - z**2/x)
+        >>> solve(eq, x)
         []
-        >>> solve((x**2*(1/x - z**2/x)), x, check=False)
+        >>> solve(eq, x, check=False)
         [0]
+        >>> limit(eq, x, 0, '-')
+        0
+        >>> limit(eq, x, 0, '+')
+        0
+
 
     See Also
     ========
@@ -612,6 +631,15 @@ def solve(f, *symbols, **flags):
         ordered_symbols = False
     elif len(symbols) == 1 and iterable(symbols[0]):
         symbols = symbols[0]
+
+    # remove symbols the user is not interested in
+    exclude = flags.pop('exclude', set())
+    if exclude:
+        if isinstance(exclude, Expr):
+            exclude = [exclude]
+        exclude = reduce(set.union, [e.free_symbols for e in sympify(exclude)])
+    symbols = [s for s in symbols if s not in exclude]
+
     if not ordered_symbols:
         # we do this to make the results returned canonical in case f
         # contains a system of nonlinear equations; all other cases should
