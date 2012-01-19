@@ -32,7 +32,7 @@ Random Variable Examples
 .. autofunction:: Beta
 
 Mechanics
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^
 
 .. module:: sympy.stats.rv
 

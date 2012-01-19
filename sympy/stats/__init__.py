@@ -8,12 +8,16 @@ Normal, Exponential, Coin, Die, etc...  or built with functions like FiniteRV.
 
 Queries on random expressions can be made using the functions
 
-P(condition) -- Probability
-E(expression) -- Expectation value
-Var(expression) -- Variance
-Density(expression) -- Probability Density Function (PDF)
-Sample(expression) -- Produce a realization
-Where(condition) -- Domain of where the condition might be true
+==================== =============================
+    Expression                Meaning
+-------------------- -----------------------------
+ P(condition)         Probability
+ E(expression)        Expectation value
+ Var(expression)      Variance
+ Density(expression)  Probability Density Function
+ Sample(expression)   Produce a realization
+ Where(condition)     Where the condition is true
+==================== =============================
 
 >>> from sympy.stats import P, E, Var, Die, Normal
 >>> from sympy import Eq, simplify
