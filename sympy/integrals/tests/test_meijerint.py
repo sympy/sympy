@@ -369,6 +369,16 @@ def test_probability():
     assert combsimp(j[0] - i[0]**2) == (alpha + beta - 1)*alpha \
                                         /(beta - 2)/(beta - 1)**2
 
+    # Beta distribution
+    a, b = symbols('a b', positive=True)
+    betadist = x**(a - 1)*(-x + 1)**(b - 1)*gamma(a + b)/(gamma(a)*gamma(b))
+    assert simplify(integrate(betadist, (x, 0, 1), meijerg=True)) == 1
+    assert simplify(integrate(x*betadist, (x, 0, 1), meijerg=True)) == a/(a + b)
+    assert simplify(integrate(x**2*betadist, (x, 0, 1), meijerg=True)) == \
+           a*(a + 1)/(a + b)/(a + b + 1)
+    assert simplify(integrate(x**y*betadist, (x, 0, 1), meijerg=True)) == \
+           gamma(a + b)*gamma(a + y)/gamma(a)/gamma(a + b + y)
+
     # Chi distribution
     k = Symbol('k', integer=True, positive=True)
     chi = 2**(1-k/2)*x**(k-1)*exp(-x**2/2)/gamma(k/2)
