@@ -23,11 +23,17 @@ class GQCBase(Basic, GenomeBase):
     programs, or generally, algorithms.  Each quantum circuit
     represents a quantum algorithm.
 
-    TODO:
-    * Initializer operator
-    * Mutator operator
-    * Crossover operator
+    The base class provides no default behavior other than those
+    provided by Basic and GenomeBase; all subclasses are expected
+    to provide class specific implementations.
     """
+    pass
+
+# At the moment, this function would construct circuits of popsize
+# by randomly choosing gates.  The number of gates in a circuit range
+# from minsize to maxsize.
+def qclinear_initializator(gates, nqubits, popsize=100,
+        minsize=1, maxsize=1):
     pass
 
 class GQCLinear(GQCBase):
@@ -37,5 +43,6 @@ class GQCLinear(GQCBase):
     * Initializer operator
     * Mutator operator
     * Crossover operator
+    * Evaluator function
     """
     pass
