@@ -12,11 +12,9 @@ from rv import (RandomDomain, SingleDomain, ConditionalDomain, ProductDomain,
         PSpace, random_symbols, ProductPSpace)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (S, Interval, Dummy, FiniteSet, Mul, Integral, And, Or,
-        Piecewise, solve, cacheit, integrate)
+        Piecewise, solve, cacheit, integrate, oo)
 from sympy.solvers.inequalities import reduce_poly_inequalities
-from sympy import integrate as sympy_integrate
 import random
-oo = S.Infinity
 
 class ContinuousDomain(RandomDomain):
     """
@@ -29,6 +27,10 @@ class ContinuousDomain(RandomDomain):
         raise NotImplementedError("Not Implemented for generic Domains")
 
 class SingleContinuousDomain(ContinuousDomain, SingleDomain):
+    """
+    A univariate domain with continuous support
+    Represented using a single symbol and interval
+    """
     def __new__(cls, symbol, set):
         assert symbol.is_Symbol
         symbols = FiniteSet(symbol)
@@ -48,6 +50,9 @@ class SingleContinuousDomain(ContinuousDomain, SingleDomain):
 
 
 class ProductContinuousDomain(ProductDomain, ContinuousDomain):
+    """
+    A collection of independent domains with continuous support
+    """
 
     def integrate(self, expr, variables=None, **kwargs):
         if variables is None:
@@ -62,6 +67,10 @@ class ProductContinuousDomain(ProductDomain, ContinuousDomain):
         return And(*[domain.as_boolean() for domain in self.domains])
 
 class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
+    """
+    A domain with continuous support that has been further restricted by a
+    condition such as x > 3
+    """
 
     def integrate(self, expr, variables=None, **kwargs):
         if variables is None:
@@ -122,6 +131,14 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                     "Set of Conditional Domain not Implemented")
 
 class ContinuousPSpace(PSpace):
+    """
+    A Continuous Probability Space
+
+    Represents the likelihood of an event space defined over a continuum.
+
+    Represented with a set of symbols and a probability density function
+    """
+
     is_Continuous = True
 
     def integrate(self, expr, rvs=None, **kwargs):
@@ -203,6 +220,12 @@ class ContinuousPSpace(PSpace):
         return ContinuousPSpace(domain, density)
 
 class SingleContinuousPSpace(ContinuousPSpace):
+    """
+    A continuous probability space over a single univariate domain
+
+    This class is commonly implemented by the various ContinuousRV types
+    such as Normal, Exponential, Uniform, etc....
+    """
     _count = 0
     _name = 'x'
     def __new__(cls, symbol, density, set=Interval(-oo, oo)):
@@ -246,6 +269,9 @@ class SingleContinuousPSpace(ContinuousPSpace):
         return {self.value: icdf.subs(z, random.uniform(0,1))}
 
 class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
+    """
+    A collection of independent continuous probability spaces
+    """
     @property
     def density(self):
         return Mul(*[space.density for space in self.spaces])

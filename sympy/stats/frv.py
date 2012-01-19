@@ -12,7 +12,7 @@ from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
         And, Or, Tuple)
 from sympy.core.sets import FiniteSet
 from rv import (RandomDomain, ProductDomain, ConditionalDomain, PSpace,
-        ProductPSpace, random_symbols, sumsets)
+        ProductPSpace, random_symbols, sumsets, rv_subs)
 import itertools
 from sympy.core.containers import Dict
 import random
@@ -47,6 +47,12 @@ class FiniteDomain(RandomDomain):
         return Or(*[And(*[Eq(sym, val) for sym, val in item]) for item in self])
 
 class SingleFiniteDomain(FiniteDomain):
+    """
+    A FiniteDomain over a single symbol/set
+
+    Example: The possibilities of a *single* die roll.
+    """
+
     def __new__(cls, symbol, set):
         return RandomDomain.__new__(cls, (symbol, ), FiniteSet(*set))
 
@@ -68,6 +74,11 @@ class SingleFiniteDomain(FiniteDomain):
         return sym == self.symbol and val in self.set
 
 class ProductFiniteDomain(ProductDomain, FiniteDomain):
+    """
+    A Finite domain consisting of several other FiniteDomains.
+
+    Example: The possibilities of the rolls of three independent dice
+    """
 
     def __iter__(self):
         proditer = itertools.product(*self.domains)
@@ -78,6 +89,20 @@ class ProductFiniteDomain(ProductDomain, FiniteDomain):
         return FiniteSet(iter(self))
 
 class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
+    """
+    A FiniteDomain that has been restricted by a condition
+
+    Example: The possibilities of a die roll under the condition that the
+    roll is even.
+    """
+
+    def __init__(self, domain, condition):
+        cond = rv_subs(condition)
+        if not cond.free_symbols.issubset(domain.free_symbols):
+            raise ValueError('Condition "%s" contains foreign symbols \n%s.\n'%(
+                condition, tuple(cond.free_symbols-domain.free_symbols))+
+                    "Will be unable to iterate using this condition")
+        return ConditionalDomain(domain, condition)
 
     def _test(self, elem):
         val = self.condition.subs(dict(elem))
@@ -111,6 +136,11 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 #=============================================
 
 class FinitePSpace(PSpace):
+    """
+    A Finite Probability Space
+
+    Represents the probabilities of a finite number of events
+    """
 
     is_Finite = True
     def __new__(cls, domain, density):
@@ -193,6 +223,15 @@ class FinitePSpace(PSpace):
         assert False, "We should never have gotten to this point"
 
 class SingleFinitePSpace(FinitePSpace):
+    """
+    A single finite probability space
+
+    Represents the probabilities of a set of random events that can be
+    attributed to a single variable/symbol.
+
+    This class is implemented by many of the standard FiniteRV types such as
+    Die, Bernoulli, Coin, etc....
+    """
     _count = 0
     _name = 'fx'
 
@@ -209,6 +248,9 @@ def create_SingleFinitePSpace(density, symbol=None, cls = SingleFinitePSpace):
     return FinitePSpace.__new__(cls, domain, density)
 
 class ProductFinitePSpace(ProductPSpace, FinitePSpace):
+    """
+    A collection of several independent finite probability spaces
+    """
     @property
     def domain(self):
         return ProductFiniteDomain(*[space.domain for space in self.spaces])
