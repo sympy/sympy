@@ -187,8 +187,7 @@ def test_uniform():
     assert simplify(E(X)) == l + w/2
     assert simplify(Var(X)) == w**2/12
 
-    # This symbolic version fails due to some odd integration issue
-    # assert P(X<l) == 0 and P(X>l+w) == 0
+    assert P(X<l) == 0 and P(X>l+w) == 0
 
     # With numbers all is well
     X = Uniform(3, 5)
