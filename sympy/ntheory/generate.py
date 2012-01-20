@@ -165,7 +165,8 @@ def prime(n):
         primepi : Return the number of primes less than or equal to n
     """
 
-    assert n > 0
+    if int(n)<=0 or int(n)!=n:
+	raise ValueError('n should be a natural number')
     return sieve[n]
 
 def primepi(n):
