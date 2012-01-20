@@ -274,8 +274,8 @@ similarly more robust to client code changes:
 
     >>> from sympy import GreaterThan, StrictGreaterThan
     >>> from sympy import LessThan,    StrictLessThan
-    >>> from sympy import Ge, Gt, Le, Lt, Rel, S
-    >>> from sympy.abc import x
+    >>> from sympy import And, Ge, Gt, Le, Lt, Rel, S
+    >>> from sympy.abc import x, y, z
     >>> from sympy.core.relational import Relational
     >>> e = Ge(x, 1)
     >>> print( e )
@@ -299,12 +299,11 @@ convenience methods:
     >>> Lt( x, 2 )
     x < 2
 
-Another option is to use the Python inequality operatoers.  The advantage over
-using one of >=, >, <=, < over their Ge, Gt, Le, and Lt counterparts, is that
-code can take advantage of Python's builtin order of algebraic operations, and
-can generally write a more "mathematical looking" statement rather than one
-littered with oddball functions.  However there are certain (minor) caveats of
-which to be aware (search for 'gotcha', below).
+Another option is to use the Python inequality operators (>=, >, <=, <)
+directly.  Their main advantage over the Ge, Gt, Le, and Lt counterparts, is
+that one can write a more "mathematical looking" statement rather than littering
+the math with oddball function calls.  However there are certain (minor) caveats
+of which to be aware (search for 'gotcha', below).
 
     >>> e2 = x >= 2
     >>> print e2
@@ -361,7 +360,7 @@ The *Than inequality classes smartly compare equivalent:
     >>> e != e3
     True
 
-SymPy allows nesting of inequalities, so to compare whole inequality
+SymPy allows nesting of inequalities[1], so to compare whole inequality
 expressions, use .compare():
 
     >>> e4 = Le( x, 4 )
@@ -381,7 +380,9 @@ lhs is greater than rhs.
     >>> e4.compare(e5)
     0
 
-There is a "gotcha" when using Python's operators and literal numbers as the lhs
+There are a couple of "gotchas" when using Python's operators.
+
+The first enters the mix when comparing against a literal number as the lhs
 argument.  Due to the order that Python decides to parse a statement, it may not
 immediately find two objects comparable.  For example to evaluate the statement
 (1 < x), Python will first recognize the number 1 as a native number, and then
@@ -429,6 +430,49 @@ succinct methods described above:
     1 < x     1 <= x
     1 > x     1 >= x
     1 < x     1 <= x
+
+The other gotcha is with chained inequalities.  Occasionally, one may be tempted
+to write statements like:
+
+e = x < y < z  # silent error!
+e
+
+Due to an implementation detail or decision of Python[2], there is no way for
+SymPy to reliably create that as a chained inequality.  To create a chained
+inequality, the only method currently available is to make use of And:
+
+    >>> e = And(x < y, y < z)
+    >>> type( e )
+    And
+    >>> e
+    And(x < y, y < z)
+
+Note that this is different than chaining an equality directly via use of
+parenthesis (this is currently an open bug in SymPy):
+
+    >>> e = (x < y) < z
+    >>> type( e )
+    <class 'sympy.core.relational.StrictLessThan'>
+    >>> e
+    (x < y) < z
+
+Any code that explicitly relies on this latter behavior will not be robust as
+this is not correct and will be corrected at some point.  For the time being
+(circa Jan 2012), use And to create chained inequalities.
+
+[1] As currently implemented, this is actually a bug.  For more information,
+see these two bug reports:
+
+"Separate boolean and symbolic relationals"
+http://code.google.com/p/sympy/issues/detail?id=1887
+
+"It right 0 < x < 1 ?"
+http://code.google.com/p/sympy/issues/detail?id=2960
+
+[2] This implementation detail is that Python provides no reliable method to
+determine that a chained inequality is being built.  For that, SymPy would at
+least need Python to allow code to override __and__, which it currently does
+not.  See issue 2960, referenced in the previous footnote.
 
 """
 
