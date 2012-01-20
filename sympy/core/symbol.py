@@ -1,5 +1,6 @@
 from basic import Basic
 from core import C
+from power import Pow
 from sympify import sympify
 from singleton import S
 from expr import Expr, AtomicExpr
