@@ -29,7 +29,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
     -- a probability density function
     -- set on which the pdf is valid (defaults to entire real line)
 
-    Returns a RandomSymbol
+    Returns a RandomSymbol.
 
     Many common continuous random variable types are already implemented.
     This function should be necessary only very rarely.
@@ -64,7 +64,8 @@ class NormalPSpace(SingleContinuousPSpace):
 
 def Normal(mean, std, symbol=None):
     """
-    Create a Continuous Random Varible with a Normal distribution
+    Create a Continuous Random Varible with a Normal distribution.
+
     Returns a RandomSymbol
 
     >>> from sympy.stats import Normal, Density, E, Std
@@ -96,7 +97,8 @@ class ExponentialPSpace(SingleContinuousPSpace):
 
 def Exponential(rate, symbol=None):
     """
-    Create a Continuous Random Varible with an Exponential distribution
+    Create a Continuous Random Varible with an Exponential distribution.
+
     Returns a RandomSymbol
 
     >>> from sympy.stats import Exponential, Density, E, Std
@@ -132,7 +134,8 @@ class ParetoPSpace(SingleContinuousPSpace):
 
 def Pareto(xm, alpha, symbol=None):
     """
-    Create a Continuous Random Varible with the Pareto distribution
+    Create a Continuous Random Varible with the Pareto distribution.
+
     Returns a RandomSymbol
 
     >>> from sympy.stats import Pareto, Density, E, Std
@@ -166,7 +169,8 @@ class BetaPSpace(SingleContinuousPSpace):
 
 def Beta(alpha, beta, symbol=None):
     """
-    Create a Continuous Random Varible with a Beta distribution
+    Create a Continuous Random Varible with a Beta distribution.
+
     Returns a RandomSymbol
 
     >>> from sympy.stats import Beta, Density, E, Std
@@ -195,7 +199,8 @@ class GammaPSpace(SingleContinuousPSpace):
 
 def Gamma(k, theta, symbol=None):
     """
-    Create a Continuous Random Varible with a Gamma distribution
+    Create a Continuous Random Varible with a Gamma distribution.
+
     Returns a RandomSymbol
 
     >>> from sympy.stats import Gamma, Density, E, Std
@@ -230,7 +235,8 @@ class UniformPSpace(SingleContinuousPSpace):
 
 def Uniform(left, right, symbol=None):
     """
-    Create a Continuous Random Varible with a Uniform distribution
+    Create a Continuous Random Varible with a Uniform distribution.
+
     Returns a RandomSymbol
 
     >>> from sympy.stats import Uniform, Density, E, Var

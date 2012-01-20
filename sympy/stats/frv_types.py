@@ -16,8 +16,9 @@ __all__ = ['FiniteRV', 'Die', 'Bernoulli', 'Coin']
 
 def FiniteRV(density, symbol=None):
     """
-    Create a Finite Random Variable given a dict representing the density
-    Returns a RandomSymbol
+    Create a Finite Random Variable given a dict representing the density.
+
+    Returns a RandomSymbol.
 
     >>> from sympy.stats import FiniteRV, P, E
 
@@ -35,7 +36,7 @@ def FiniteRV(density, symbol=None):
 
 class DiePSpace(SingleFinitePSpace):
     """
-    Create a Finite Random Varible representing a fair die
+    Create a Finite Random Varible representing a fair die.
 
     This class is for internal use.
 
@@ -60,8 +61,9 @@ class DiePSpace(SingleFinitePSpace):
 
 def Die(sides=6, symbol=None):
     """
-    Create a Finite Random Varible representing a fair die
-    Returns a RandomSymbol
+    Create a Finite Random Varible representing a fair die.
+
+    Returns a RandomSymbol.
 
     >>> from sympy.stats import Die, Density
 
@@ -79,12 +81,13 @@ def Die(sides=6, symbol=None):
 
 class BernoulliPSpace(SingleFinitePSpace):
     """
-    Create a Finite Random Varible representing a Bernoulli process
-    Returns a RandomSymbol
+    Create a Finite Random Varible representing a Bernoulli process.
+
+    Returns a RandomSymbol.
 
     This class is for internal use.
 
-    Create Bernoulli Random Symbols using Bernoulli function
+    Create Bernoulli Random Symbols using Bernoulli function.
 
     >>> from sympy.stats import Bernoulli, Density
     >>> from sympy import S
@@ -108,7 +111,8 @@ class BernoulliPSpace(SingleFinitePSpace):
 
 def Bernoulli(p, a, b, symbol=None):
     """
-    Create a Finite Random Varible representing a Bernoulli process
+    Create a Finite Random Varible representing a Bernoulli process.
+
     Returns a RandomSymbol
 
     >>> from sympy.stats import Bernoulli, Density
@@ -128,7 +132,7 @@ def Bernoulli(p, a, b, symbol=None):
 
 class CoinPSpace(BernoulliPSpace):
     """
-    A probability space representing a coin toss
+    A probability space representing a coin toss.
     Probability p is the chance of gettings "Heads." Half by default
 
     This class is for internal use.
@@ -154,10 +158,11 @@ class CoinPSpace(BernoulliPSpace):
 
 def Coin(p=S.Half, symbol=None):
     """
-    Create a Finite Random Varible representing a Coin toss
+    Create a Finite Random Varible representing a Coin toss.
+
     Probability p is the chance of gettings "Heads." Half by default
 
-    Returns a RandomSymbol
+    Returns a RandomSymbol.
 
     >>> from sympy.stats import Coin, Density
     >>> from sympy import Rational
