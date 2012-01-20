@@ -23,7 +23,8 @@
 
    For example if we would like to compute m-th Bernoulli polynomial up to
    a constant (example was taken from rsolve_poly docstring), then we would
-   use b(n+1) - b(n) == m*n**(m-1) recurrence, which has solution b(n) = B_m + C.
+   use b(n+1) - b(n) == m*n**(m-1) recurrence, which has solution b(n) =
+   B_m + C.
 
    Then L = [-1, 1] and f(n) = m*n**(m-1) and finally for m=4:
 

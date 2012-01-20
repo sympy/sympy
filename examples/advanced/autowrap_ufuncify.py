@@ -3,15 +3,18 @@
 Setup ufuncs for the legendre polynomials
 -----------------------------------------
 
-This example demonstrates how you can use the ufuncify utility in Sympy to
-create fast, customized universal functions for use with numpy arrays.
-An autowrapped sympy expression can be significantly faster than what you would
-get by applying a sequence of the ufuncs shipped with numpy. [0]
+This example demonstrates how you can use the ufuncify utility in Sympy
+to create fast, customized universal functions for use with numpy
+arrays. An autowrapped sympy expression can be significantly faster than
+what you would get by applying a sequence of the ufuncs shipped with
+numpy. [0]
 
-You need to have numpy installed to run this example, as well as a working
-fortran compiler.
+You need to have numpy installed to run this example, as well as a
+working fortran compiler.
 
-[0]: http://ojensen.wordpress.com/2010/08/10/fast-ufunc-ish-hydrogen-solutions/
+
+[0]:
+http://ojensen.wordpress.com/2010/08/10/fast-ufunc-ish-hydrogen-solutions/
 """
 
 import sys

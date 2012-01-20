@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 """
-Program to test that all methods/functions have at least one example doctest.
+Program to test that all methods/functions have at least one example
+doctest.
+
 
 Usage:
 
@@ -11,8 +13,9 @@ or
 
 bin/coverage_doctest.py sympy/core/basic.py
 
-This script is based on the sage-coverage script from Sage written by William
-Stein.
+This script is based on the sage-coverage script from Sage written by
+William Stein.
+
 """
 
 from __future__ import with_statement

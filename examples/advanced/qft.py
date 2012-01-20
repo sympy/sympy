@@ -9,9 +9,10 @@ scattering amplitude of the process:
 
     electron + positron -> photon -> electron + positron
 
-in QED (http://en.wikipedia.org/wiki/Quantum_electrodynamics). The aim is to be
-able to do any kind of calculations in QED or standard model in SymPy, but
-that's a long journey.
+in QED (http://en.wikipedia.org/wiki/Quantum_electrodynamics). The aim
+is to be able to do any kind of calculations in QED or standard model in
+SymPy, but that's a long journey.
+
 """
 
 from sympy import Basic,exp,Symbol,sin,Rational,I,Mul, Matrix, \

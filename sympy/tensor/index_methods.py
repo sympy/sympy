@@ -6,7 +6,8 @@
     etc.
 
     Methods in this module could be implemented by calling methods on Expr
-    objects instead.  When things stabilize this could be a useful refactoring.
+    objects instead.  When things stabilize this could be a useful
+    refactoring.
 """
 
 from sympy.tensor.indexed import Idx, Indexed

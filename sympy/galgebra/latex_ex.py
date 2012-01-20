@@ -72,8 +72,9 @@ def process_equals(xstr):
 
 class LatexPrinter(Printer):
     """
-    A printer class which converts an expression into its LaTeX equivalent. This
-    class extends the LatexPrinter class currently in sympy in the following ways:
+    A printer class which converts an expression into its LaTeX equivalent.
+    This class extends the LatexPrinter class currently in sympy in the
+    following ways:
 
         1. Variable and function names can now encode multiple Greek symbols,
            number, Greek, and roman super and subscripts and accents plus bold

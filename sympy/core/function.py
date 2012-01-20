@@ -11,11 +11,10 @@ There are two types of functions:
    no name but has body with dummy variables. Examples of anonymous function
    creation:
        f = Lambda(x, exp(x)*x)
-       f = Lambda(exp(x)*x)  # free symbols in the expression define the number of arguments
+       f = Lambda(exp(x)*x) # free symbols of expr define the number of args
        f = exp * Lambda(x,x)
 4) isn't implemented yet: composition of functions, like (sin+cos)(x), this
    works in sympy core, but needs to be ported back to SymPy.
-
 
     Examples
     ========

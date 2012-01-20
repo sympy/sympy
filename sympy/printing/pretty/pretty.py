@@ -72,7 +72,7 @@ class PrettyPrinter(Printer):
         except KeyError:
             return self.emptyPrinter(e)
 
-    # Infinity inherits from Rational, so we have to override _print_XXX order
+    # Infinity inherits from Number, so we have to override _print_XXX order
     _print_Infinity         = _print_Atom
     _print_NegativeInfinity = _print_Atom
     _print_EmptySet         = _print_Atom
