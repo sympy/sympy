@@ -244,7 +244,7 @@ class LinearEntity(GeometryEntity):
             return False
 
     def is_perpendicular(l1, l2):
-        """Are two linear entities parallel?
+        """Are two linear entities perpendicular?
 
         Parameters
         ==========
