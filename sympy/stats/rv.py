@@ -22,7 +22,6 @@ class RandomDomain(Basic):
     Implemented by:
         ContinuousDomain
         FiniteDomain
-        MultivariateDomain
     """
 
     is_ProductDomain = False
@@ -54,7 +53,6 @@ class SingleDomain(RandomDomain):
     Implemented by:
         SingleContinuousDomain
         SingleFiniteDomain
-        SingleMultivariateDomain
     """
     def __new__(cls, symbol, set):
         assert symbol.is_Symbol
@@ -111,7 +109,6 @@ class PSpace(Basic):
     Implemented by:
         ContinuousPSpace
         FinitePSpace
-        MultivariatePSpace
     """
 
     is_Finite = None
@@ -156,6 +153,16 @@ class PSpace(Basic):
         cls._count += 1
         return Symbol('%s%d'%(cls._name, cls._count),
                 real=True, finite=True, bounded=True)
+
+class SinglePSpace(PSpace):
+    """
+    Represents the probabilities of a set of random events that can be
+    attributed to a single variable/symbol.
+    """
+
+    @property
+    def value(self):
+        return tuple(self.values)[0]
 
 class RandomSymbol(Symbol):
     """

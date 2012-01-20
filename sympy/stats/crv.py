@@ -9,7 +9,7 @@ sympy.stats.frv
 """
 
 from rv import (RandomDomain, SingleDomain, ConditionalDomain, ProductDomain,
-        PSpace, random_symbols, ProductPSpace)
+        PSpace, SinglePSpace, random_symbols, ProductPSpace)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (S, Interval, Dummy, FiniteSet, Mul, Integral, And, Or,
         Piecewise, solve, cacheit, integrate, oo)
@@ -219,7 +219,7 @@ class ContinuousPSpace(PSpace):
 
         return ContinuousPSpace(domain, density)
 
-class SingleContinuousPSpace(ContinuousPSpace):
+class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     """
     A continuous probability space over a single univariate domain
 
@@ -234,10 +234,6 @@ class SingleContinuousPSpace(ContinuousPSpace):
         obj = ContinuousPSpace.__new__(cls, domain, density)
         obj._cdf = None
         return obj
-
-    @property
-    def value(self):
-        return tuple(self.values)[0]
 
     @cacheit
     def _inverse_cdf_expression(self):

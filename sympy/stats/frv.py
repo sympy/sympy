@@ -12,7 +12,7 @@ from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
         And, Or, Tuple)
 from sympy.core.sets import FiniteSet
 from rv import (RandomDomain, ProductDomain, ConditionalDomain, PSpace,
-        ProductPSpace, random_symbols, sumsets, rv_subs)
+        ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs)
 import itertools
 from sympy.core.containers import Dict
 import random
@@ -226,7 +226,7 @@ class FinitePSpace(PSpace):
 
         assert False, "We should never have gotten to this point"
 
-class SingleFinitePSpace(FinitePSpace):
+class SingleFinitePSpace(FinitePSpace, SinglePSpace):
     """
     A single finite probability space
 
@@ -238,10 +238,6 @@ class SingleFinitePSpace(FinitePSpace):
     """
     _count = 0
     _name = 'fx'
-
-    @property
-    def value(self):
-        return tuple(self.values)[0]
 
 def create_SingleFinitePSpace(density, symbol=None, cls = SingleFinitePSpace):
     symbol = symbol or cls.create_symbol()

@@ -414,6 +414,12 @@ def test_sympy__stats__rv__PSpace():
     D = RandomDomain(FiniteSet(x), FiniteSet(1,2))
     assert _test_args(PSpace(D, Dict({(x,1):S.Half, (x,2):S.Half})))
 
+def test_sympy__stats__rv__SinglePSpace():
+    from sympy.stats.rv import SinglePSpace, RandomDomain
+    from sympy import Dict, FiniteSet
+    D = RandomDomain(FiniteSet(x), FiniteSet(1,2))
+    assert _test_args(SinglePSpace(D, Dict({(x,1):S.Half, (x,2):S.Half})))
+
 def test_sympy__stats__rv__RandomSymbol():
     from sympy.stats.rv import RandomSymbol
     from sympy.stats.crv import SingleContinuousPSpace
