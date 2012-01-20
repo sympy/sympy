@@ -1,4 +1,4 @@
-from sympy.core import Rational, Symbol, S, Float, Integer, Number
+from sympy.core import Rational, Symbol, S, Float, Integer, Number, Pow, Basic
 from sympy.functions.elementary.miscellaneous import sqrt
 
 def test_issue153():
@@ -168,3 +168,21 @@ def test_pow_as_base_exp():
     assert (S.Infinity**(x - 2)).as_base_exp() == (S.Infinity, x - 2)
     p = S.Half**x
     assert p.base, p.exp == p.as_base_exp() == (S(2), -x)
+
+def test_issue_3001():
+    x = Symbol('x')
+    y = Symbol('y')
+    assert x**1.0 == x
+    assert x == x**1.0
+    assert True != x**1.0
+    assert x**1.0 != True
+    assert x != True
+    assert x*y == (x*y)**1.0
+    assert (x**1.0)**1.0 == x
+    assert (x**1.0)**2.0 == x**2
+    b = Basic()
+    assert Pow(b, 1.0, evaluate=False) == b
+    # if the following gets distributed as a Mul (x**1.0*y**1.0 then
+    # __eq__ methods could be added to Symbol and Pow to detect the
+    # power-of-1.0 case.
+    assert ((x*y)**1.0).func is Pow
