@@ -348,6 +348,7 @@ def random_symbols(expr):
 def pspace(expr):
     """
     Returns the underlying Probability Space of a random expression
+
     >>> from sympy.stats import pspace, Normal
     >>> from sympy.stats.rv import ProductPSpace
     >>> X, Y = Normal(0, 1), Normal(0, 1)
