@@ -24,7 +24,8 @@ __all__ = ['ContinuousRV', 'Normal', 'Exponential', 'Pareto', 'Beta', 'Gamma',
 
 def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
     """
-    Create a Continuous Random Variable given
+    Create a Continuous Random Variable given the following:
+
     -- a symbol
     -- a probability density function
     -- set on which the pdf is valid (defaults to entire real line)
@@ -33,6 +34,9 @@ def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
 
     Many common continuous random variable types are already implemented.
     This function should be necessary only very rarely.
+
+    Examples
+    ========
 
     >>> from sympy import Symbol, sqrt, exp, pi
     >>> from sympy.stats import ContinuousRV, P, E
@@ -66,7 +70,10 @@ def Normal(mean, std, symbol=None):
     """
     Create a Continuous Random Varible with a Normal distribution.
 
-    Returns a RandomSymbol
+    Returns a RandomSymbol.
+
+    Examples
+    ========
 
     >>> from sympy.stats import Normal, Density, E, Std
     >>> from sympy import Symbol, simplify
@@ -99,7 +106,10 @@ def Exponential(rate, symbol=None):
     """
     Create a Continuous Random Varible with an Exponential distribution.
 
-    Returns a RandomSymbol
+    Returns a RandomSymbol.
+
+    Examples
+    ========
 
     >>> from sympy.stats import Exponential, Density, E, Std
     >>> from sympy import Symbol
@@ -136,7 +146,10 @@ def Pareto(xm, alpha, symbol=None):
     """
     Create a Continuous Random Varible with the Pareto distribution.
 
-    Returns a RandomSymbol
+    Returns a RandomSymbol.
+
+    Examples
+    ========
 
     >>> from sympy.stats import Pareto, Density, E, Std
     >>> from sympy import symbols
@@ -171,7 +184,10 @@ def Beta(alpha, beta, symbol=None):
     """
     Create a Continuous Random Varible with a Beta distribution.
 
-    Returns a RandomSymbol
+    Returns a RandomSymbol.
+
+    Examples
+    ========
 
     >>> from sympy.stats import Beta, Density, E, Std
     >>> from sympy import symbols
@@ -201,7 +217,10 @@ def Gamma(k, theta, symbol=None):
     """
     Create a Continuous Random Varible with a Gamma distribution.
 
-    Returns a RandomSymbol
+    Returns a RandomSymbol.
+
+    Examples
+    ========
 
     >>> from sympy.stats import Gamma, Density, E, Std
     >>> from sympy import symbols
@@ -237,7 +256,10 @@ def Uniform(left, right, symbol=None):
     """
     Create a Continuous Random Varible with a Uniform distribution.
 
-    Returns a RandomSymbol
+    Returns a RandomSymbol.
+
+    Examples
+    ========
 
     >>> from sympy.stats import Uniform, Density, E, Var
     >>> from sympy import symbols, simplify

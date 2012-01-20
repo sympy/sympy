@@ -19,9 +19,9 @@ import random
 
 class FiniteDomain(RandomDomain):
     """
-    A domain with discrete finite support.
-    Represented using a FiniteSet
+    A domain with discrete finite support
 
+    Represented using a FiniteSet.
     """
     is_Finite = True
     def __new__(cls, elements):
@@ -75,7 +75,7 @@ class SingleFiniteDomain(FiniteDomain):
 
 class ProductFiniteDomain(ProductDomain, FiniteDomain):
     """
-    A Finite domain consisting of several other FiniteDomains.
+    A Finite domain consisting of several other FiniteDomains
 
     Example: The possibilities of the rolls of three independent dice
     """
@@ -143,7 +143,7 @@ class FinitePSpace(PSpace):
     """
     A Finite Probability Space
 
-    Represents the probabilities of a finite number of events
+    Represents the probabilities of a finite number of events.
     """
 
     is_Finite = True
@@ -210,8 +210,9 @@ class FinitePSpace(PSpace):
 
     def sample(self):
         """
-        Internal sample method.
-        Returns dictionary mapping RandomSymbol to realization value
+        Internal sample method
+
+        Returns dictionary mapping RandomSymbol to realization value.
         """
         expr = Tuple(*self.values)
         cdf = self.sorted_cdf(expr, python_float=True)

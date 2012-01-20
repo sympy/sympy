@@ -29,8 +29,6 @@ def FiniteRV(density, symbol=None):
     2.00000000000000
     >>> P(X>=2)
     0.700000000000000
-
-
     """
     return create_SingleFinitePSpace(density, symbol).value
 
@@ -51,7 +49,6 @@ class DiePSpace(SingleFinitePSpace):
     >>> X = Die(4) # Four sided Die
     >>> Density(X)
     {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
-
     """
     _count = 0
     _name = 'die'
@@ -74,7 +71,6 @@ def Die(sides=6, symbol=None):
     >>> X = Die(4) # Four sided Die
     >>> Density(X)
     {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
-
     """
 
     return DiePSpace(sides, symbol).value
@@ -99,7 +95,6 @@ class BernoulliPSpace(SingleFinitePSpace):
     >>> X = Bernoulli(S.Half, 'Heads', 'Tails') # A fair coin toss
     >>> Density(X)
     {Heads: 1/2, Tails: 1/2}
-
     """
 
     _count = 0
@@ -125,7 +120,6 @@ def Bernoulli(p, a, b, symbol=None):
     >>> X = Bernoulli(S.Half, 'Heads', 'Tails') # A fair coin toss
     >>> Density(X)
     {Heads: 1/2, Tails: 1/2}
-
     """
 
     return BernoulliPSpace(p, a, b, symbol).value
@@ -133,6 +127,7 @@ def Bernoulli(p, a, b, symbol=None):
 class CoinPSpace(BernoulliPSpace):
     """
     A probability space representing a coin toss.
+
     Probability p is the chance of gettings "Heads." Half by default
 
     This class is for internal use.
@@ -149,7 +144,6 @@ class CoinPSpace(BernoulliPSpace):
     >>> X = Coin(Rational(3, 5)) # An unfair coin
     >>> Density(X)
     {H: 3/5, T: 2/5}
-
     """
     _count = 0
     _name = 'coin'
@@ -174,6 +168,5 @@ def Coin(p=S.Half, symbol=None):
     >>> X = Coin(Rational(3, 5)) # An unfair coin
     >>> Density(X)
     {H: 3/5, T: 2/5}
-
     """
     return CoinPSpace(p, symbol).value

@@ -18,8 +18,9 @@ import random
 
 class ContinuousDomain(RandomDomain):
     """
-    A domain with continuous support.
-    Represented using symbols and Intervals
+    A domain with continuous support
+
+    Represented using symbols and Intervals.
     """
     is_Continuous = True
 
@@ -29,7 +30,8 @@ class ContinuousDomain(RandomDomain):
 class SingleContinuousDomain(ContinuousDomain, SingleDomain):
     """
     A univariate domain with continuous support
-    Represented using a single symbol and interval
+
+    Represented using a single symbol and interval.
     """
     def __new__(cls, symbol, set):
         assert symbol.is_Symbol
@@ -136,7 +138,7 @@ class ContinuousPSpace(PSpace):
 
     Represents the likelihood of an event space defined over a continuum.
 
-    Represented with a set of symbols and a probability density function
+    Represented with a set of symbols and a probability density function.
     """
 
     is_Continuous = True
@@ -240,9 +242,10 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         """
         Inverse of the CDF
 
-        See Also:
-            compute_cdf
-            sample
+        See Also
+        ========
+        compute_cdf
+        sample
         """
         x,d = self.compute_cdf(self.value)
         z = Dummy('z', real=True, positive=True)
@@ -258,8 +261,9 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
     def sample(self):
         """
-        Internal sample method.
-        Returns dictionary mapping RandomSymbol to realization value
+        Internal sample method
+
+        Returns dictionary mapping RandomSymbol to realization value.
         """
         z, icdf = self._inverse_cdf_expression()
         return {self.value: icdf.subs(z, random.uniform(0,1))}

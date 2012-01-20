@@ -6,9 +6,13 @@ __all__ = ['P', 'E', 'Density', 'Where', 'Given', 'Sample', 'CDF', 'pspace',
         'independent', 'random_symbols']
 
 def variance(X, given=None, **kwargs):
-    """Variance of a random expression.
+    """
+    Variance of a random expression
 
     Expectation of (X-E(X))**2
+
+    Examples
+    ========
 
     >>> from sympy.stats import Die, E, Bernoulli, Var
     >>> from sympy import simplify, Symbol
@@ -22,16 +26,19 @@ def variance(X, given=None, **kwargs):
 
     >>> simplify(Var(B))
     p*(-p + 1)
-
     """
     return E(X**2, given, **kwargs) - E(X, given, **kwargs)**2
 Var = variance
 
 
 def standard_deviation(X, given=None, **kwargs):
-    """Standard Deviation of a random expression.
+    """
+    Standard Deviation of a random expression
 
     Square root of the Expectation of (X-E(X))**2
+
+    Examples
+    ========
 
     >>> from sympy.stats import Bernoulli, Std
     >>> from sympy import Symbol
@@ -41,18 +48,20 @@ def standard_deviation(X, given=None, **kwargs):
 
     >>> Std(B)
     sqrt(-p**2 + p)
-
     """
     return sqrt(variance(X, given, **kwargs))
 Std = standard_deviation
 
 def covariance(X, Y, given=None, **kwargs):
-    """Covariance of two random expressions.
+    """
+    Covariance of two random expressions
 
     The expectation that the two variables will rise and fall together
 
     Covariance(X,Y) = E( (X-E(X)) * (Y-E(Y)) )
 
+    Examples
+    ========
 
     >>> from sympy.stats import Exponential, Covar
     >>> from sympy import Symbol

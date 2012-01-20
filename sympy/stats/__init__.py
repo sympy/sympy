@@ -19,6 +19,9 @@ Queries on random expressions can be made using the functions
  Where(condition)     Where the condition is true
 ==================== =============================
 
+Examples
+========
+
 >>> from sympy.stats import P, E, Var, Die, Normal
 >>> from sympy import Eq, simplify
 >>> X, Y = Die(6), Die(6) # Define two six sided dice

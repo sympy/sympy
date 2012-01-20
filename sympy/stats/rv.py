@@ -19,9 +19,10 @@ class RandomDomain(Basic):
     """
     Represents a set of variables and the values which they can take
 
-    Implemented by:
-        ContinuousDomain
-        FiniteDomain
+    See Also
+    ========
+    sympy.stats.crv.ContinuousDomain
+    sympy.stats.frv.FiniteDomain
     """
 
     is_ProductDomain = False
@@ -50,9 +51,10 @@ class SingleDomain(RandomDomain):
     """
     A single variable and its domain
 
-    Implemented by:
-        SingleContinuousDomain
-        SingleFiniteDomain
+    See Also
+    ========
+    sympy.stats.crv.SingleContinuousDomain
+    sympy.stats.frv.SingleFiniteDomain
     """
     def __new__(cls, symbol, set):
         assert symbol.is_Symbol
@@ -73,9 +75,10 @@ class ConditionalDomain(RandomDomain):
     """
     A RandomDomain with an attached condition
 
-    Implemented by:
-        ConditionalContinuousDomain
-        ConditionalFiniteDomain
+    See Also
+    ========
+    sympy.stats.crv.ConditionalContinuousDomain
+    sympy.stats.frv.ConditionalFiniteDomain
     """
     def __new__(cls, fulldomain, condition):
         condition = condition.subs(dict((rs,rs.symbol)
@@ -106,9 +109,10 @@ class PSpace(Basic):
     probabalistically. These underly Random Symbols which occur in SymPy
     expressions and contain the mechanics to evaluate statistical statements.
 
-    Implemented by:
-        ContinuousPSpace
-        FinitePSpace
+    See Also
+    ========
+    sympy.stats.crv.ContinuousPSpace
+    sympy.stats.frv.FinitePSpace
     """
 
     is_Finite = None
@@ -273,9 +277,10 @@ class ProductDomain(RandomDomain):
     """
     A domain resulting from the merger of two independent domains
 
-    Implemented by:
-        ProductContinuousDomain
-        ProductFiniteDomain
+    See Also
+    ========
+    sympy.stats.crv.ProductContinuousDomain
+    sympy.stats.frv.ProductFiniteDomain
     """
     is_ProductDomain = True
     def __new__(cls, *domains):
@@ -338,7 +343,7 @@ def is_random(x):
 
 def random_symbols(expr):
     """
-    Returns all RandomSymbols within a SymPy Expression
+    Returns all RandomSymbols within a SymPy Expression.
     """
     try:
         return [s for s in expr.free_symbols if is_random(s)]
@@ -347,15 +352,18 @@ def random_symbols(expr):
 
 def pspace(expr):
     """
-    Returns the underlying Probability Space of a random expression
+    Returns the underlying Probability Space of a random expression.
+
+    For internal use.
+
+    Examples
+    ========
 
     >>> from sympy.stats import pspace, Normal
     >>> from sympy.stats.rv import ProductPSpace
     >>> X, Y = Normal(0, 1), Normal(0, 1)
     >>> pspace(2*X + 1) == X.pspace
     True
-
-    For internal use.
     """
 
     rvs = random_symbols(expr)
@@ -375,7 +383,8 @@ def sumsets(sets):
 
 def rs_swap(a,b):
     """
-    Build a dictionary to swap RandomSymbols based on their underlying symbol
+    Build a dictionary to swap RandomSymbols based on their underlying symbol.
+
     i.e.
     if    X = ('x', pspace1)
     and   Y = ('x', pspace2)
@@ -396,12 +405,14 @@ def Given(expr, given=None, **kwargs):
     probability space from the condition and returns the same expression on that
     conditional probability space.
 
+    Examples
+    ========
+
     >>> from sympy.stats import Given, Density, Die
     >>> X = Die(6)
     >>> Y = Given(X, X>3)
     >>> Density(Y)
     {4: 1/3, 5: 1/3, 6: 1/3}
-
     """
 
     if not random_symbols(given) or pspace_independent(expr, given):
@@ -420,8 +431,12 @@ def Given(expr, given=None, **kwargs):
 
 def E(expr, given=None, numsamples=None, **kwargs):
     """
-    Returns the expected value of a random expression (optionally given a
-    condition)
+    Returns the expected value of a random expression
+
+    (optionally given a condition)
+
+    Examples
+    ========
 
     >>> from sympy.stats import E, Die
     >>> X = Die(6)
@@ -455,6 +470,9 @@ def P(condition, given=None, numsamples=None,  **kwargs):
     """
     Probability that a condition is true, optionally given a second condition
 
+    Examples
+    ========
+
     >>> from sympy.stats import P, Die
     >>> from sympy import Eq
     >>> X, Y = Die(6), Die(6)
@@ -464,7 +482,6 @@ def P(condition, given=None, numsamples=None,  **kwargs):
     1/4
     >>> P(X>Y)
     5/12
-
     """
 
     if numsamples:
@@ -478,14 +495,18 @@ def P(condition, given=None, numsamples=None,  **kwargs):
 
 def Density(expr, given=None, **kwargs):
     """
-    Probability Density of a random expression, optionally given a second
-    condition
+    Probability Density of a random expression
+
+    Optionally given a second condition
 
     This density will take on different forms for different types of probability
     spaces.
     Discrete RV's produce Dicts
     Continuous RV's produce a Tuple with expression representing the PDF and
     a symbol designating the active variable
+
+    Examples
+    ========
 
     >>> from sympy.stats import Density, Die, Normal
     >>> from sympy import Symbol
@@ -499,7 +520,6 @@ def Density(expr, given=None, **kwargs):
     {2: 1/6, 4: 1/6, 6: 1/6, 8: 1/6, 10: 1/6, 12: 1/6}
     >>> Density(X)
     (x, sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)))
-
     """
     if given is not None: # If there is a condition
         # Recompute on new conditional expr
@@ -510,14 +530,18 @@ def Density(expr, given=None, **kwargs):
 
 def CDF(expr, given=None, **kwargs):
     """
-    Cumulative Distribution Function of a random expression,
+    Cumulative Distribution Function of a random expression.
+
     optionally given a second condition
 
     This density will take on different forms for different types of probability
     spaces.
-    Discrete RV's produce list of tuples
+    Discrete RV's produce list of tuples.
     Continuous RV's produce a Tuple with expression representing the PDF and
-    a symbol designating the active variable
+    a symbol designating the active variable.
+
+    Examples
+    ========
 
     >>> from sympy.stats import Density, Die, Normal, CDF
     >>> from sympy import Symbol
@@ -534,7 +558,6 @@ def CDF(expr, given=None, **kwargs):
 
     >>> CDF(X)
     (_z, erf(sqrt(2)*_z/2)/2 + 1/2)
-
     """
     if given is not None: # If there is a condition
         # Recompute on new conditional expr
@@ -545,7 +568,10 @@ def CDF(expr, given=None, **kwargs):
 
 def Where(condition, given=None, **kwargs):
     """
-    Returns the domain where a condition is True
+    Returns the domain where a condition is True.
+
+    Examples
+    ========
 
     >>> from sympy.stats import Where, Die, Normal
     >>> from sympy import symbols, And
@@ -562,7 +588,6 @@ def Where(condition, given=None, **kwargs):
 
     >>> Where(And(D1<=D2 , D2<3))
     Domain: Or(And(a == 1, b == 1), And(a == 1, b == 2), And(a == 2, b == 2))
-
     """
     if given is not None: # If there is a condition
         # Recompute on new conditional expr
@@ -574,6 +599,9 @@ def Where(condition, given=None, **kwargs):
 def Sample(expr, given=None, **kwargs):
     """
     A realization of the random expression
+
+    Examples
+    ========
 
     >>> from sympy.stats import Die, Sample
     >>> X, Y, Z = Die(6), Die(6), Die(6)
@@ -590,10 +618,11 @@ def sample_iter(expr, given=None, numsamples=S.Infinity, **kwargs):
     given: A conditional expression (optional)
     numsamples: Length of the iterator (defaults to infinity)
 
-    See Also:
-        Sample
-        sampling_P
-        sampling_E
+    See Also
+    ========
+    Sample
+    sampling_P
+    sampling_E
     """
 
     if given:
@@ -621,9 +650,10 @@ def sampling_P(condition, given=None, numsamples=1, **kwargs):
     """
     Sampling version of P
 
-    See Also:
-        P
-        sampling_E
+    See Also
+    ========
+    P
+    sampling_E
     """
 
     count_true = 0
@@ -646,9 +676,10 @@ def sampling_E(condition, given=None, numsamples=1, **kwargs):
     """
     Sampling version of E
 
-    See Also:
-        P
-        sampling_P
+    See Also
+    ========
+    P
+    sampling_P
     """
 
     samples = sample_iter(condition, given, numsamples=numsamples, **kwargs)
@@ -656,10 +687,14 @@ def sampling_E(condition, given=None, numsamples=1, **kwargs):
     return Add(*samples) / numsamples
 
 def dependent(a, b):
-    """Dependence of two random expressions
+    """
+    Dependence of two random expressions
 
     Two expressions are independent if knowledge of one does not change
-    computations on the other
+    computations on the other.
+
+    Examples
+    ========
 
     >>> from sympy.stats import Normal, dependent, Given
     >>> from sympy import Tuple, Eq
@@ -673,8 +708,9 @@ def dependent(a, b):
     >>> dependent(X, Y)
     True
 
-    See Also:
-        independent
+    See Also
+    ========
+    independent
     """
     if pspace_independent(a,b):
         return False
@@ -686,10 +722,14 @@ def dependent(a, b):
             Density(b, Eq(a, z)) != Density(b))
 
 def independent(a, b):
-    """Independence of two random expressions
+    """
+    Independence of two random expressions
 
     Two expressions are independent if knowledge of one does not change
-    computations on the other
+    computations on the other.
+
+    Examples
+    ========
 
     >>> from sympy.stats import Normal, independent, Given
     >>> from sympy import Tuple, Eq
@@ -703,8 +743,9 @@ def independent(a, b):
     >>> independent(X, Y)
     False
 
-    See Also:
-        dependent
+    See Also
+    ========
+    dependent
     """
     return not dependent(a, b)
 
@@ -725,9 +766,9 @@ def pspace_independent(a,b):
 
 def rv_subs(expr, symbols=None):
     """
-    Given a random expression replace all random variables with their symbols
+    Given a random expression replace all random variables with their symbols.
 
-    If symbols keyword is given restrict the swap to only the symbols listed
+    If symbols keyword is given restrict the swap to only the symbols listed.
     """
     if symbols is None:
         symbols = random_symbols(expr)
