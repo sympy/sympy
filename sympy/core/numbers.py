@@ -1973,10 +1973,8 @@ class Infinity(Number):
         if exp is S.NaN:
             return S.NaN
 
-        n = exp.evalf()
-
-        if isinstance(n, Number):
-            return self**n
+        if exp.is_number:
+            return self**exp.evalf()
 
     def _as_mpf_val(self, prec):
         return mlib.finf
@@ -2331,10 +2329,10 @@ class NumberSymbol(AtomicExpr):
                     return False
                 if other > u:
                     return True
-            return self.evalf()<other
+            return self.evalf() < other
         if other.is_comparable:
             other = other.evalf()
-            return self.evalf()<other
+            return self.evalf() < other
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
@@ -2347,7 +2345,7 @@ class NumberSymbol(AtomicExpr):
         if other.is_comparable:
             other = other.evalf()
         if isinstance(other, Number):
-            return self.evalf()<=other
+            return self.evalf() <= other
         return Expr.__le__(self, other)
 
     def __gt__(self, other):
