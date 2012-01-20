@@ -7,9 +7,9 @@ The whole thing is split into two parts
  - rules compilation and preparation of tables
  - runtime inference
 
-For rule-based inference engines, the classical work is RETE algorithm [1], [2]
-Although we are not implementing it in full (or even significantly) it's still
-still worth a read to understand the underlying ideas.
+For rule-based inference engines, the classical work is RETE algorithm [1],
+[2] Although we are not implementing it in full (or even significantly)
+it's still still worth a read to understand the underlying ideas.
 
 In short, every rule in a system of rules is one of two forms:
 

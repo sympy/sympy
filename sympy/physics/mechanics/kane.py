@@ -13,8 +13,7 @@ class Kane(object):
     equations of motion in the way Kane presents in:
     Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
 
-    The attributes are for equations in the form [M] udot = forcing
-
+    The attributes are for equations in the form [M] udot = forcing.
 
     Attributes
     ==========

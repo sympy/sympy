@@ -66,22 +66,22 @@ class hyper(TupleParametersBase):
     where :math:`(a)_n = (a)(a+1)\dots(a+n-1)` denotes the rising factorial.
 
     If one of the :math:`b_q` is a non-positive integer then the series is
-    undefined unless one of the `a_p` is a larger (i.e. smaller in magnitude)
-    non-positive integer. If none
-    of the :math:`b_q` is a non-positive integer and one of the :math:`a_p` is
-    a non-positive integer, then the series reduces to a polynomial. To simplify
-    the following discussion, we assume that none of the :math:`a_p` or
-    :math:`b_q` is a non-positive integer. For more details, see the references.
+    undefined unless one of the `a_p` is a larger (i.e. smaller in
+    magnitude) non-positive integer. If none of the :math:`b_q` is a
+    non-positive integer and one of the :math:`a_p` is a non-positive
+    integer, then the series reduces to a polynomial. To simplify the
+    following discussion, we assume that none of the :math:`a_p` or
+    :math:`b_q` is a non-positive integer. For more details, see the
+    references.
 
     The series converges for all :math:`z` if :math:`p \le q`, and thus
-    defines an entire single-valued function in this case. If
-    :math:`p = q+1` the series converges for :math:`|z| < 1`, and can be
-    continued analytically into a half-plane. If :math:`p > q+1` the series is
+    defines an entire single-valued function in this case. If :math:`p =
+    q+1` the series converges for :math:`|z| < 1`, and can be continued
+    analytically into a half-plane. If :math:`p > q+1` the series is
     divergent for all :math:`z`.
 
-    Note: The hypergeometric function constructor currently does *not* check if the
-    parameters actually yield a well-defined function.
-
+    Note: The hypergeometric function constructor currently does *not* check
+    if the parameters actually yield a well-defined function.
 
     Examples
     ========
@@ -114,7 +114,6 @@ class hyper(TupleParametersBase):
 
     >>> hyper((n, a), (n**2,), x)
     hyper((n, a), (n**2,), x)
-
 
     The hypergeometric function generalizes many named special functions.
     The function hyperexpand() tries to express a hypergeometric function
@@ -288,9 +287,9 @@ class meijerg(TupleParametersBase):
     :math:`a_1, \dots, a_n` and :math:`a_{n+1}, \dots, a_p`, and there are
     "*denominator parameters*"
     :math:`b_1, \dots, b_m` and :math:`b_{m+1}, \dots, b_q`.
-    Confusingly, it is traditionally denoted as follows (note the position of
-    `m`, `n`, `p`, `q`, and how they relate to the lengths of the four parameter
-    vectors):
+    Confusingly, it is traditionally denoted as follows (note the position
+    of `m`, `n`, `p`, `q`, and how they relate to the lengths of the four
+    parameter vectors):
 
     .. math ::
         G_{p,q}^{m,n} \left.\left(\begin{matrix}a_1, \dots, a_n & a_{n+1}, \dots, a_p \\
@@ -321,7 +320,6 @@ class meijerg(TupleParametersBase):
 
     Note: Currently the Meijer G-function constructor does *not* check any
     convergence conditions.
-
 
     Examples
     ========
@@ -370,7 +368,6 @@ class meijerg(TupleParametersBase):
     (3, 4)
     >>> g.bother
     (4,)
-
 
     The Meijer G-function generalizes the hypergeometric functions.
     In some cases it can be expressed in terms of hypergeometric functions,

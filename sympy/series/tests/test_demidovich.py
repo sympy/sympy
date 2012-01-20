@@ -1,11 +1,8 @@
 from sympy import limit, Symbol, oo, sqrt, Rational, log, exp, cos, sin, tan, \
     pi, asin, together
 
-"""
-(*) in problem number means that the number is relative to the book "Anti-demidovich,
-problemas resueltos, Ed. URSS"
-
-"""
+# Numbers listed with the tests refer to problem numbers in the book
+# "Anti-demidovich, problemas resueltos, Ed. URSS"
 
 x = Symbol("x")
 

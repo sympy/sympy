@@ -511,8 +511,9 @@ class ClassDoc(NumpyDocString):
 # try/except AttributeError clause added, which catches exceptions like this
 # one: https://gist.github.com/1471949
 def inspect_getmembers(object, predicate=None):
-    """Return all members of an object as (name, value) pairs sorted by name.
-    Optionally, only return members that satisfy a given predicate."""
+     """Return all members of an object as (name, value) pairs sorted by
+    name. Optionally, only return members that satisfy a given predicate."""
+
     results = []
     for key in dir(object):
         try:

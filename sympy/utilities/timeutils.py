@@ -1,4 +1,5 @@
-"""Simple tools for timing functions execution, when IPython is not available. """
+"""Simple tools for timing functions execution, when IPython is not
+   available. """
 
 import timeit, math
 

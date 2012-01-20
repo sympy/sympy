@@ -1,5 +1,5 @@
-"""The definition of the base geometrical entity with attributes common to all
-derived geometrical entities.
+"""The definition of the base geometrical entity with attributes common to
+all derived geometrical entities.
 
 Contains
 ========

@@ -1,6 +1,6 @@
 """
-This module implements the Residue function and related tools for working with
-residues.
+This module implements the Residue function and related tools for working
+with residues.
 """
 
 from sympy import Wild, sympify, Integer, Add
