@@ -551,7 +551,7 @@ class StrictGreaterThan(_Greater):
         return lhs > rhs
 
     def __nonzero__(self):
-        return self.lhs.compare( self.rhs ) == 1
+        return self.lhs.compare( self.rhs ) > 0
 
     def __eq__ ( self, other ):
         if isinstance(other, StrictGreaterThan):
@@ -579,7 +579,7 @@ class StrictLessThan(_Less):
         return lhs < rhs
 
     def __nonzero__(self):
-        return self.lhs.compare( self.rhs ) == -1
+        return self.lhs.compare( self.rhs ) < 0
 
     def __eq__ ( self, other ):
         if isinstance(other, StrictLessThan):
