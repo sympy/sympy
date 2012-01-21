@@ -267,7 +267,7 @@ def test_expint():
     # TODO LT of Si, Shi, Chi is a mess ...
     assert laplace_transform(Ci(x), x, s) == (-log(1 + s**2)/2/s, 0, True)
     assert laplace_transform(expint(a, x), x, s) == \
-           (lerchphi(s*polar_lift(-1), 1, a), 0, 0 < re(a))
+           (lerchphi(s*polar_lift(-1), 1, a), 0, S(0) < re(a))
     assert laplace_transform(expint(1, x), x, s) == (log(s + 1)/s, 0, True)
     assert laplace_transform(expint(2, x), x, s) == \
            ((s - log(s + 1))/s**2, 0, True)

@@ -89,24 +89,6 @@ def test_lt_gt():
     assert (S(0) <  e) == StrictLessThan(0, e)
     assert (S(0) >  e) == StrictGreaterThan(0, e)
 
-def test_lt__eq__gt():
-    from sympy import Ge, Le, Gt, Lt
-    x = Symbol('x')
-
-    lhs, rhs = Ge(x, 5), Le(5, x)
-    assert lhs == rhs
-
-    lhs, rhs = Ge(x, 5), Lt(5, x)
-    assert lhs != rhs
-
-    lhs, rhs = Gt(x, 5), Le(5, x)
-    assert lhs != rhs
-
-    lhs, rhs = Gt(x, 5), Lt(5, x)
-    assert lhs == rhs
-
-
-
 def test_no_len():
     # there should be no len for numbers
     x = Symbol('x')

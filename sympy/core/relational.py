@@ -487,9 +487,6 @@ class GreaterThan(_Greater):
 
     __slots__ = ()
 
-    def __hash__ ( self ):   # because __eq__ is overridden as well
-        return super(GreaterThan, self).__hash__()
-
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         return lhs >= rhs
@@ -497,26 +494,11 @@ class GreaterThan(_Greater):
     def __nonzero__(self):
         return self.lhs.compare( self.rhs ) >= 0
 
-    def __eq__ ( self, other ):
-        if isinstance(other, GreaterThan):
-            ot = other._hashable_content()
-        elif isinstance(other, LessThan):
-            ot = tuple(reversed( other._hashable_content() ))
-        else:
-            return False
-
-        st = self._hashable_content()
-
-        return st == ot
-
 class LessThan(_Less):
     __doc__ = GreaterThan.__doc__
     __slots__ = ()
 
     rel_op = '<='
-
-    def __hash__ ( self ):   # because __eq__ is overridden as well
-        return super(LessThan, self).__hash__()
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -525,26 +507,11 @@ class LessThan(_Less):
     def __nonzero__(self):
         return self.lhs.compare( self.rhs ) <= 0
 
-    def __eq__ ( self, other ):
-        if isinstance(other, LessThan):
-            ot = other._hashable_content()
-        elif isinstance(other, GreaterThan):
-            ot = tuple(reversed( other._hashable_content() ))
-        else:
-            return False
-
-        st = self._hashable_content()
-
-        return st == ot
-
 class StrictGreaterThan(_Greater):
     __doc__ = GreaterThan.__doc__
     __slots__ = ()
 
     rel_op = '>'
-
-    def __hash__ ( self ):   # because __eq__ is overridden as well
-        return super(StrictGreaterThan, self).__hash__()
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -553,26 +520,11 @@ class StrictGreaterThan(_Greater):
     def __nonzero__(self):
         return self.lhs.compare( self.rhs ) > 0
 
-    def __eq__ ( self, other ):
-        if isinstance(other, StrictGreaterThan):
-            ot = other._hashable_content()
-        elif isinstance(other, StrictLessThan):
-            ot = tuple(reversed( other._hashable_content() ))
-        else:
-            return False
-
-        st = self._hashable_content()
-
-        return st == ot
-
 class StrictLessThan(_Less):
     __doc__ = GreaterThan.__doc__
     __slots__ = ()
 
     rel_op = '<'
-
-    def __hash__ ( self ):   # because __eq__ is overridden as well
-        return super(StrictLessThan, self).__hash__()
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -580,18 +532,6 @@ class StrictLessThan(_Less):
 
     def __nonzero__(self):
         return self.lhs.compare( self.rhs ) < 0
-
-    def __eq__ ( self, other ):
-        if isinstance(other, StrictLessThan):
-            ot = other._hashable_content()
-        elif isinstance(other, StrictGreaterThan):
-            ot = tuple(reversed( other._hashable_content() ))
-        else:
-            return False
-
-        st = self._hashable_content()
-
-        return st == ot
 
 # A class-specific (not object-specific) data item used for a minor speedup.  It
 # is defined here, rather than directly in the class, because the classes that
