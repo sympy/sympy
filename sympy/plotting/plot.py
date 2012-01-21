@@ -201,10 +201,17 @@ class Plot(object):
                 setattr(self, key, val)
 
     def show(self):
+        # TODO move this to the backend (also for save)
         if hasattr(self, '_backend'):
             self._backend.close()
         self._backend = self.backend(self)
         self._backend.show()
+
+    def save(self, path):
+        if hasattr(self, '_backend'):
+            self._backend.close()
+        self._backend = self.backend(self)
+        self._backend.save(path)
 
     def __str__(self):
         series_strs = [('[%d]: ' % i) + str(s)
@@ -922,6 +929,10 @@ class MatplotlibBackend(BaseBackend):
         # you can uncomment the next line and remove the pyplot.show() call
         #self.fig.show()
         plt.show()
+
+    def save(self, path):
+        self.process_series()
+        self.fig.savefig(path)
 
     def close(self):
         plt.close(self.fig)
