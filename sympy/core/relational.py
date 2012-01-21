@@ -447,13 +447,14 @@ class GreaterThan(_Greater):
     >>> e
     (x < y) < z
 
-    Any code that explicitly relies on this latter behavior will not be robust
-    as this is not correct and will be fixed at some point.  For the time being
-    (circa Jan 2012), use And to create chained inequalities.
+    Any code that explicitly relies on this latter functionality will not be
+    robust as this behaviour is completely wrong and will be corrected at some
+    point.  For the time being (circa Jan 2012), use And to create chained
+    inequalities.
 
-    .. [1] This implementation detail is that Python provides no reliable method to
-    determine that a chained inequality is being built.  Chained comparison
-    operators are evaluated pairwise, using "and" logic (see
+    ..  [1] This implementation detail is that Python provides no reliable
+    method to determine that a chained inequality is being built.  Chained
+    comparison operators are evaluated pairwise, using "and" logic (see
     http://docs.python.org/reference/expressions.html#notin).  This is done in
     an efficient way, so that each object being compared is only evaluated once
     and the comparison can short-circuit.  For example, ``1 > 2 > 3`` is
