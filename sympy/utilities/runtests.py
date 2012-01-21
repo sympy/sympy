@@ -137,14 +137,37 @@ def setup_pprint():
 
 def test(*paths, **kwargs):
     """
-    Run all tests in test_*.py files which match any of the given
-    strings in `paths` or all tests if paths=[].
+    Run tests in the specified test_*.py files.
+
+    Tests in a particular test_*.py file are run if any of the given strings
+    in ``paths`` matches a part of the test file's path. If ``paths=[]``,
+    tests in all test_*.py files are run.
 
     Notes:
 
        * if sort=False, tests are run in random order (not default).
        * paths can be entered in native system format or in unix,
          forward-slash format.
+
+    **Explanation of test results**
+
+    ======  ===============================================================
+    Output  Meaning
+    ======  ===============================================================
+    .       passed
+    F       failed
+    X       XPassed (expected to fail but passed)
+    f       XFAILed (expected to fail and indeed failed)
+    s       skipped
+    w       slow
+    T       timeout (e.g., when --timeout is used)
+    K       KeyboardInterrupt (when running the slow tests with --slow, you
+            can interrupt one of them without killing the test runner)
+    ======  ===============================================================
+
+
+    Colors have no additional meaning and are used just to facilitate
+    interpreting the output.
 
     Examples
     ========
