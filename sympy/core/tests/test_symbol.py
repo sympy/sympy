@@ -146,6 +146,7 @@ def test_ineq_unequal():
       x - pi >  y + z,  y - pi >  x + z,  z - pi >  x + y,
       x - pi <= y + z,  y - pi <= x + z,  z - pi <= x + y,
       x - pi <  y + z,  y - pi <  x + z,  z - pi <  x + y,
+      True, False
     )
 
     left_e = e[:-1]
