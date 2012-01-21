@@ -56,6 +56,15 @@ class MatMul(MatrixExpr, Mul):
         matrices = [arg for arg in self.args if arg.is_Matrix]
         return (matrices[0].n, matrices[-1].m)
 
+    def _entry(self, i, j):
+        from sympy import Dummy, summation
+        head, tail = self.args[0], self.args[1:]
+        X = head
+        Y = MatMul(*tail)
+        k = Dummy('k', integer=True)
+        return summation(X[i,k]*Y[k,j], (k, 0, X.m))
+        return summation(*[arg._entry(i,j) for arg in self.args])
+
 from matadd import MatAdd
 from matpow import MatPow
 from inverse import Inverse

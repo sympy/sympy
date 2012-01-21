@@ -113,8 +113,8 @@ def test_BlockMatrix():
     Y = BlockMatrix(Matrix([[E], [F]]))
 
     assert (X*Y).shape == (l+n, 1)
-    assert block_collapse(X*Y)[0,0] == A*E + B*F
-    assert block_collapse(X*Y)[1,0] == C*E + D*F
+    assert block_collapse(X*Y).blocks[0,0] == A*E + B*F
+    assert block_collapse(X*Y).blocks[1,0] == C*E + D*F
     assert (block_collapse(Transpose(block_collapse(Transpose(X*Y)))) ==
             block_collapse(X*Y))
 
@@ -152,7 +152,7 @@ def test_squareBlockMatrix():
     assert (X + MatrixSymbol('Q', n+m, n+m)).is_Add
     assert (X * MatrixSymbol('Q', n+m, n+m)).is_Mul
 
-    assert Y.I[0,0] == A.I
+    assert Y.I.blocks[0,0] == A.I
     assert Inverse(X, expand=True) == BlockMatrix([
         [(-B*D.I*C + A).I, -A.I*B*(D+-C*A.I*B).I],
         [-(D-C*A.I*B).I*C*A.I, (D-C*A.I*B).I]])
@@ -176,9 +176,9 @@ def test_BlockDiagMatrix():
     X = BlockDiagMatrix(A,B,C)
     Y = BlockDiagMatrix(A, 2*B, 3*C)
 
-    assert X[1,1] == B
+    assert X.blocks[1,1] == B
     assert X.shape == (n+m+l, n+m+l)
-    assert all(X[i,j].is_ZeroMatrix if i!=j else X[i,j] in [A,B,C]
+    assert all(X.blocks[i,j].is_ZeroMatrix if i!=j else X.blocks[i,j] in [A,B,C]
             for i in range(3) for j in range(3))
 
     assert block_collapse(X.I * X).is_Identity

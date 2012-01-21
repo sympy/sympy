@@ -1,8 +1,8 @@
-from sympy import Expr, Symbol, Mul, Add, Pow, expand, sympify, Tuple
+from sympy import Expr, Symbol, Mul, Add, Pow, expand, sympify, Tuple, Integer
 from sympy.core.basic import Basic
 from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
-from sympy.matrices import ShapeError
+from sympy.matrices import ShapeError, Matrix
 
 class MatrixExpr(Expr):
     """ Matrix Expression Class
@@ -82,6 +82,9 @@ class MatrixExpr(Expr):
         raise NotImplementedError()
         #return MatMul(other, Pow(self, S.NegativeOne))
 
+    def __getitem__(self, key):
+        raise NotImplementedError()
+
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
@@ -111,6 +114,26 @@ class MatrixExpr(Expr):
     def I(self):
         return Inverse(self)
 
+    def _entry(self, i, j):
+        raise NotImplementedError("Indexing not implemented")
+
+    def valid_index(self, i, j):
+        def is_valid(idx):
+            return isinstance(idx, (int, Integer, Symbol))
+        return (is_valid(i) and is_valid(j) and
+                0 <= i < self.n and 0 <= j < self.m)
+
+    def __getitem__(self, key):
+        if isinstance(key, tuple) and len(key)==2:
+            i,j = key
+            if self.valid_index(i, j) is not False:
+                return self._entry(*key)
+        raise TypeError("Only elementwise indexing currently supported")
+
+    def to_explicit(self):
+        return Matrix([[    self[i,j]
+                            for j in range(self.m)]
+                            for i in range(self.n)])
 
 class MatrixSymbol(MatrixExpr, Symbol):
     """Symbolic representation of a Matrix object
@@ -153,6 +176,9 @@ class MatrixSymbol(MatrixExpr, Symbol):
     def __call__(self, *args):
         raise TypeError( "%s object is not callable"%self.__class__ )
 
+    def _entry(self, i, j):
+        return Symbol(self.name)(i,j)
+        return Symbol(self.name+"_{%s,%s}"%(str(i),str(j)))
 
 class Identity(MatrixSymbol):
     """The Matrix Identity I - multiplicative identity
@@ -170,6 +196,9 @@ class Identity(MatrixSymbol):
     def transpose(self):
         return self
 
+    def _entry(self, i, j):
+        return S.One if i==j else S.Zero
+
 class ZeroMatrix(MatrixSymbol):
     """The Matrix Zero 0 - additive identity
     >>> from sympy import MatrixSymbol, ZeroMatrix
@@ -185,6 +214,9 @@ class ZeroMatrix(MatrixSymbol):
         return MatrixSymbol.__new__(cls, "0", n, m)
     def transpose(self):
         return ZeroMatrix(self.m, self.n)
+
+    def _entry(self, i, j):
+        return S.Zero
 
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]

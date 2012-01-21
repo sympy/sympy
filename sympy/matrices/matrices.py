@@ -456,6 +456,13 @@ class Matrix(object):
         """The shape (dimensions) of the matrix as the 2-tuple (rows, cols)."""
         return (self.rows, self.cols)
 
+    @property
+    def n(self):
+        return self.shape[0]
+    @property
+    def m(self):
+        return self.shape[1]
+
     def __rmul__(self,a):
         if hasattr(a, "__array__") and a.shape != ():
             return matrix_multiply(a,self)
@@ -3898,7 +3905,8 @@ def casoratian(seqs, n, zero=True):
 
 # Add sympify converters
 def _matrix_sympify(matrix):
-    raise SympifyError('Matrix cannot be sympified')
+    warnings.warn("Attempting to sympify Matrix. Matrix is not Basic", Warning)
+    return matrix
 converter[Matrix] = _matrix_sympify
 del _matrix_sympify
 
