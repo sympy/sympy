@@ -219,10 +219,14 @@ class Unequality(Relational):
         return self.lhs.compare(self.rhs)!=0
 
 class _Greater(Relational):
-    """\
-Not intended for general use; _Greater is only used so that GreaterThan and
-StrictGreaterThan may subclass it for the .gts and .lts properties.
-"""
+    """Not intended for general use
+
+    _Greater is only used so that GreaterThan and StrictGreaterThan may subclass
+    it for the .gts and .lts properties.
+    """
+
+    is_comparable = False
+
     __slots__ = ()
 
     @property
@@ -234,11 +238,14 @@ StrictGreaterThan may subclass it for the .gts and .lts properties.
         return self._args[1]
 
 class _Less(Relational):
-    """\
+    """Not intended for general use.
 
-Not intended for general use; _Less is only used so that LessThan and
-StrictLessThan may subclass it for the .gts and .lts properties.
-"""
+    _Less is only used so that LessThan and StrictLessThan may subclass it for
+    the .gts and .lts properties.
+    """
+
+    is_comparable = False
+
     __slots__ = ()
 
     @property
@@ -250,60 +257,74 @@ StrictLessThan may subclass it for the .gts and .lts properties.
         return self._args[0]
 
 class GreaterThan(_Greater):
-    """\
-The *Than classes represent inequal relationships, where the left-hand side is
-generally bigger or smaller than the right-hand side.  For example, the
-GreaterThan class represents an inequal relationship where the left-hand side is
-at least as big as the right side, if not bigger.  In mathematical notation:
+    """Class representations of inequalities.
+
+    Extended Summary
+    ================
+
+    The *Than classes represent inequal relationships, where the left-hand side
+    is generally bigger or smaller than the right-hand side.  For example, the
+    GreaterThan class represents an inequal relationship where the left-hand
+    side is at least as big as the right side, if not bigger.  In mathematical
+    notation:
 
     lhs >= rhs
 
-In total, there are four *Than classes, to represent the four inequalities:
+    In total, there are four *Than classes, to represent the four inequalities:
 
-GreaterThan       (>=)
-LessThan          (<=)
-StrictGreaterThan (>)
-StrictLessThan    (<)
+    GreaterThan       (>=)
+    LessThan          (<=)
+    StrictGreaterThan (>)
+    StrictLessThan    (<)
 
-In addition to the normal .lhs and .rhs of Relations, *Than inequality objects
-also have the .lts and .gts properties, which represent the "less than side" and
-"greater than side" of the operator.  Use of .lts and .gts in an algorithm
-rather than .lhs, .rhs, and an assumption of inequality direction, will make
-more explicit the intent of a certain section of code, and will make it
-similarly more robust to client code changes:
+    All classes take two arguments, lhs and rhs.
+
+    GreaterThan(lhs, rhs)       --> lhs >= rhs
+    LessThan(lhs, rhs)          --> lhs <= rhs
+    StrictGreaterThan(lhs, rhs) --> lhs >  rhs
+    StrictLessThan(lhs, rhs)    --> lhs <  rhs
+
+    In addition to the normal .lhs and .rhs of Relations, *Than inequality
+    objects also have the .lts and .gts properties, which represent the "less
+    than side" and "greater than side" of the operator.  Use of .lts and .gts in
+    an algorithm rather than .lhs and .rhs as an assumption of inequality
+    direction will make more explicit the intent of a certain section of code,
+    and will make it similarly more robust to client code changes:
 
     >>> from sympy import GreaterThan, StrictGreaterThan
     >>> from sympy import LessThan,    StrictLessThan
     >>> from sympy import And, Ge, Gt, Le, Lt, Rel, S
     >>> from sympy.abc import x, y, z
     >>> from sympy.core.relational import Relational
-    >>> e = Ge(x, 1)
-    >>> print( e )
-    x >= 1
-    >>> print "%s >= %s is the same as %s <= %s" % (e.gts, e.lts, e.lts, e.gts)
-    x >= 1 is the same as 1 <= x
 
-One generally does not instantiate these classes directly, but uses various
-convenience methods:
+    >>> e = GreaterThan(x, 1)
+    >>> e
+    x >= 1
+    >>> '%s >= %s is the same as %s <= %s' % (e.gts, e.lts, e.lts, e.gts)
+    'x >= 1 is the same as 1 <= x'
+
+    Examples
+    ========
+
+    One generally does not instantiate these classes directly, but uses various
+    convenience methods:
 
     >>> e1 = Ge( x, 2 )      # Ge is a convenience wrapper
     >>> print e1
     x >= 2
 
-    >>> Ge( x, 2 )
+    >>> rels = Ge( x, 2 ), Gt( x, 2 ), Le( x, 2 ), Lt( x, 2 )
+    >>> print '%s\\n%s\\n%s\\n%s' % rels
     x >= 2
-    >>> Gt( x, 2 )
     x > 2
-    >>> Le( x, 2 )
     x <= 2
-    >>> Lt( x, 2 )
     x < 2
 
-Another option is to use the Python inequality operators (>=, >, <=, <)
-directly.  Their main advantage over the Ge, Gt, Le, and Lt counterparts, is
-that one can write a more "mathematical looking" statement rather than littering
-the math with oddball function calls.  However there are certain (minor) caveats
-of which to be aware (search for 'gotcha', below).
+    Another option is to use the Python inequality operators (>=, >, <=, <)
+    directly.  Their main advantage over the Ge, Gt, Le, and Lt counterparts, is
+    that one can write a more "mathematical looking" statement rather than
+    littering the math with oddball function calls.  However there are certain
+    (minor) caveats of which to be aware (search for 'gotcha', below).
 
     >>> e2 = x >= 2
     >>> print e2
@@ -313,90 +334,48 @@ of which to be aware (search for 'gotcha', below).
     >>> e1 == e2
     True
 
-However, it is also perfectly valid to instantiate a *Than class less succinctly
-and less conviently:
+    However, it is also perfectly valid to instantiate a *Than class less
+    succinctly and less conviently:
 
-    >>> Rel(x, 1, '>=')
+    >>> rels = Rel(x, 1, '>='), Relational(x, 1, '>='), GreaterThan(x, 1)
+    >>> print '%s\\n%s\\n%s' % rels
     x >= 1
-    >>> Relational(x, 1, '>=')
     x >= 1
-    >>> GreaterThan(x, 1)
     x >= 1
 
-    >>> Rel(x, 1, '>')
+    >>> rels = Rel(x, 1, '>'), Relational(x, 1, '>'), StrictGreaterThan(x, 1)
+    >>> print '%s\\n%s\\n%s' % rels
     x > 1
-    >>> Relational(x, 1, '>')
     x > 1
-    >>> StrictGreaterThan(x, 1)
     x > 1
 
-    >>> Rel(x, 1, '<=')
+    >>> rels = Rel(x, 1, '<='), Relational(x, 1, '<='), LessThan(x, 1)
+    >>> print "%s\\n%s\\n%s" % rels
     x <= 1
-    >>> Relational(x, 1, '<=')
     x <= 1
-    >>> LessThan(x, 1)
     x <= 1
 
-    >>> Rel(x, 1, '<')
+    >>> rels = Rel(x, 1, '<'), Relational(x, 1, '<'), StrictLessThan(x, 1)
+    >>> print '%s\\n%s\\n%s' % rels
     x < 1
-    >>> Relational(x, 1, '<')
     x < 1
-    >>> StrictLessThan(x, 1)
     x < 1
 
+    Notes
+    =====
 
-The *Than inequality classes smartly compare equivalent:
+    There are a couple of "gotchas" when using Python's operators.
 
-    >>> e3 = Le( 2, x )
-    >>> print "e2: %s,   e3: %s" % (e2, e3)
-    e2: x >= 2,   e3: 2 <= x
-    >>> e2 == e3
-    True
-
-    >>> print "e: %s,   e3: %s" % (e, e3)
-    e: x >= 1,   e3: 2 <= x
-    >>> e == e3
-    False
-    >>> e != e3
-    True
-
-SymPy allows nesting of inequalities[1], so to compare whole inequality
-expressions, use .compare():
-
-    >>> e4 = Le( x, 4 )
-    >>> print "e3: %s,   e4: %s" % (e3, e4)
-    e3: 2 <= x,   e4: x <= 4
-    >>> print "Nested inequality: %s" % (e3 > e4)
-    Nested inequality: (2 <= x) > (x <= 4)
-
-When comparing lhs to rhs (lhs.compare(rhs)), a value of -1 means that lhs is
-less than rhs.  A value of 0 means they're equivalent, and a value of 1 means
-lhs is greater than rhs.
-
-    >>> print "To compare, use .compare(): %d" % (e3.compare(e4))
-    To compare, use .compare(): -1
-
-    >>> e5 = x <= 4
-    >>> e4.compare(e5)
-    0
-
-There are a couple of "gotchas" when using Python's operators.
-
-The first enters the mix when comparing against a literal number as the lhs
-argument.  Due to the order that Python decides to parse a statement, it may not
-immediately find two objects comparable.  For example to evaluate the statement
-(1 < x), Python will first recognize the number 1 as a native number, and then
-that x is *not* a native number.  At this point, because Python numbers have no
-__lt__ methods, it will instead call the reflective operation:
-
-x > 1
-
-this is equivalent to x.__gt__( 1 ).  Unfortunately, there is no way available
-to SymPy to recognize this has happened, so the statement (1 < x) will turn
-silently into (x > 1).  (Note that the position of the literal as an lhs or rhs
-is only dependent on the specific implementation of Python.  On another parser,
-this could easily turn (x > 1) into (1 < x).  This is another reason to use S()
-and the .lts/.gts over .lhs/.rhs, as appropriate.)
+    The first enters the mix when comparing against a literal number as the lhs
+    argument.  Due to the order that Python decides to parse a statement, it may
+    not immediately find two objects comparable.  For example, to evaluate the
+    statement (1 < x), Python will first recognize the number 1 as a native
+    number, and then that x is *not* a native number.  At this point, because a
+    native Python number does not know how to compare itself with a SymPy object
+    Python will try the reflective operation (x > 1), which is equivalent to
+    x.__gt__( 1 ).  Unfortunately, there is no way available to SymPy to
+    recognize this has happened, so the statement (1 < x) will turn silently
+    into (x > 1).
 
     >>> e1 = x >  1
     >>> e2 = x >= 1
@@ -412,10 +391,10 @@ and the .lts/.gts over .lhs/.rhs, as appropriate.)
     x < 1     x <= 1
     x > 1     x >= 1
 
-If the order of the statement is important (for visual output to the console,
-perhaps), one can work around this annoyance in a couple ways: (1) "Sympify" the
-literal before comparison, (2) use one of the wrappers, or (3) use the less
-succinct methods described above:
+    If the order of the statement is important (for visual output to the
+    console, perhaps), one can work around this annoyance in a couple ways: (1)
+    "sympify" the literal before comparison, (2) use one of the wrappers, or (3)
+    use the less succinct methods described above:
 
     >>> e1 = S(1) >  x
     >>> e2 = S(1) >= x
@@ -431,15 +410,17 @@ succinct methods described above:
     1 > x     1 >= x
     1 < x     1 <= x
 
-The other gotcha is with chained inequalities.  Occasionally, one may be tempted
-to write statements like:
+    The other gotcha is with chained inequalities.  Occasionally, one may be
+    tempted to write statements like:
 
-e = x < y < z  # silent error!
-e
+    >>> e = x < y < z  # silent error!  Where did ``x`` go?
+    >>> e
+    y < z
 
-Due to an implementation detail or decision of Python[2], there is no way for
-SymPy to reliably create that as a chained inequality.  To create a chained
-inequality, the only method currently available is to make use of And:
+    Due to an implementation detail or decision of Python[2], there is no way
+    for SymPy to reliably create that as a chained inequality.  To create a
+    chained inequality, the only method currently available is to make use of
+    And:
 
     >>> e = And(x < y, y < z)
     >>> type( e )
@@ -447,8 +428,8 @@ inequality, the only method currently available is to make use of And:
     >>> e
     And(x < y, y < z)
 
-Note that this is different than chaining an equality directly via use of
-parenthesis (this is currently an open bug in SymPy):
+    Note that this is different than chaining an equality directly via use of
+    parenthesis (this is currently an open bug in SymPy[1]):
 
     >>> e = (x < y) < z
     >>> type( e )
@@ -456,23 +437,49 @@ parenthesis (this is currently an open bug in SymPy):
     >>> e
     (x < y) < z
 
-Any code that explicitly relies on this latter behavior will not be robust as
-this is not correct and will be corrected at some point.  For the time being
-(circa Jan 2012), use And to create chained inequalities.
+    Any code that explicitly relies on this latter behavior will not be robust
+    as this is not correct and will be fixed at some point.  For the time being
+    (circa Jan 2012), use And to create chained inequalities.
 
-[1] As currently implemented, this is actually a bug.  For more information,
-see these two bug reports:
+    [1] For more information, see these two bug reports:
 
-"Separate boolean and symbolic relationals"
-http://code.google.com/p/sympy/issues/detail?id=1887
+    "Separate boolean and symbolic relationals"
+    http://code.google.com/p/sympy/issues/detail?id=1887
 
-"It right 0 < x < 1 ?"
-http://code.google.com/p/sympy/issues/detail?id=2960
+    "It right 0 < x < 1 ?"
+    http://code.google.com/p/sympy/issues/detail?id=2960
 
-[2] This implementation detail is that Python provides no reliable method to
-determine that a chained inequality is being built.  For that, SymPy would at
-least need Python to allow code to override __and__, which it currently does
-not.  See issue 2960, referenced in the previous footnote.
+    [2] This implementation detail is that Python provides no reliable method to
+    determine that a chained inequality is being built.  Chained comparison
+    operators are evaluated pairwise, using "and" logic (see
+    http://docs.python.org/reference/expressions.html#notin).  This is done in
+    an efficient way, so that each object being compared is only evaluated once
+    and the comparison can short-circuit.  For example, ``1 > 2 > 3`` is
+    evaluated by Python as ``(1 > 2) and (2 > 3)``.  The ``and`` operator
+    coerces each side into a bool, returning the object itself when it
+    short-circuits.  Currently, the bool of the *Than operators will give True
+    or False arbitrarily.  Thus, if we were to compute ``x > y > z``, with
+    ``x``, ``y``, and ``z`` being Symbols, Python converts the statement
+    (roughly) into these steps:
+
+    (1) x > y > z
+    (2) (x > y) and (y > z)
+    (3) (GreaterThanObject) and (y > z)
+    (4) (GreaterThanObject.__nonzero__()) and (y > z)
+    (5) (True) and (y > z)
+    (6) (y > z)
+    (7) LessThanObject
+
+    Because of the "and" added at step 2, the statement gets turned into a weak
+    ternary statement.  If the first object evalutes __nonzero__ as True, then
+    the second object is returned.  If the first object evaluates __nonzero__ as
+    False, then nothing is returned.
+
+    In Python, there is no way to override the ``and`` operator, or to control
+    how it short circuits, so it is impossible to make something like ``x > y >
+    z`` work.  There is an open PEP to change this
+    http://www.python.org/dev/peps/pep-0335/, but until that is implemented,
+    this cannot be made to work.
 
 """
 
@@ -513,7 +520,7 @@ class LessThan(_Less):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-         return lhs <= rhs
+        return lhs <= rhs
 
     def __nonzero__(self):
         return self.lhs.compare( self.rhs ) <= 0
