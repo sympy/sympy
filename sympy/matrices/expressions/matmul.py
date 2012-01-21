@@ -62,7 +62,7 @@ class MatMul(MatrixExpr, Mul):
         X = head
         Y = MatMul(*tail)
         k = Dummy('k', integer=True)
-        return summation(X[i,k]*Y[k,j], (k, 0, X.m))
+        return summation(X[i,k]*Y[k,j], (k, 0, X.m-1))
         return summation(*[arg._entry(i,j) for arg in self.args])
 
 from matadd import MatAdd
