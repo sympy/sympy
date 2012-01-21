@@ -15,6 +15,8 @@ from sympy.physics.quantum.spin import (
     Rotation, WignerD
 )
 
+from sympy.utilities.pytest import raises
+
 j1,j2,j3,j4,m1,m2,m3,m4 = symbols('j1:5 m1:5')
 j12,j13,j24,j34,j123,j134,mi,mi1,mp = symbols('j12 j13 j24 j34 j123 j134 mi mi1 mp')
 
@@ -3292,3 +3294,60 @@ def test_jz():
         hbar*m1*TensorProduct(JzKet(j1,m1),JzKet(j2,m2))
     assert qapply(TensorProduct(1,Jz)*TensorProduct(JzKet(j1,m1),JzKet(j2,m2))) == \
         hbar*m2*TensorProduct(JzKet(j1,m1),JzKet(j2,m2))
+
+def test_jzket():
+    j, m = symbols('j m')
+    # j not integer or half integer
+    raises(ValueError, 'JzKet(S(2)/3,-S(1)/3)')
+    raises(ValueError, 'JzKet(S(2)/3,m)')
+    # j < 0
+    raises(ValueError, 'JzKet(-1,1)')
+    raises(ValueError, 'JzKet(-1,m)')
+    # m not integer or half integer
+    raises(ValueError, 'JzKet(j,-S(1)/3)')
+    # abs(m) > j
+    raises(ValueError, 'JzKet(1,2)')
+    raises(ValueError, 'JzKet(1,-2)')
+    # j-m not integer
+    raises(ValueError, 'JzKet(1,S(1)/2)')
+
+def test_jzketcoupled():
+    j, m = symbols('j m')
+    # j not integer or half integer
+    raises(ValueError, 'JzKetCoupled(S(2)/3, -S(1)/3, (1,))')
+    raises(ValueError, 'JzKetCoupled(S(2)/3, m, (1,))')
+    # j < 0
+    raises(ValueError, 'JzKetCoupled(-1, 1, (1,))')
+    raises(ValueError, 'JzKetCoupled(-1, m, (1,))')
+    # m not integer or half integer
+    raises(ValueError, 'JzKetCoupled(j, -S(1)/3, (1,))')
+    # abs(m) > j
+    raises(ValueError, 'JzKetCoupled(1, 2, (1,))')
+    raises(ValueError, 'JzKetCoupled(1, -2, (1,))')
+    # j-m not integer
+    raises(ValueError, 'JzKetCoupled(1, S(1)/2, (1,))')
+    # checks types on coupling scheme
+    raises(TypeError, 'JzKetCoupled(1, 1, 1)')
+    raises(TypeError, 'JzKetCoupled(1, 1, (1,), 1)')
+    raises(TypeError, 'JzKetCoupled(1, 1, (1,1), (1,))')
+    raises(TypeError, 'JzKetCoupled(1, 1, (1,1,1), (1,2,1), (1,3,1))')
+    # checks length of coupling terms
+    raises(ValueError, 'JzKetCoupled(1, 1, (1,), ((1,2,1),))')
+    raises(ValueError, 'JzKetCoupled(1, 1, (1,1), ((1,2),))')
+    # all jn are integer or half-integer
+    raises(ValueError, 'JzKetCoupled(1, 1, (S(1)/3, S(2)/3))')
+    # indicies in coupling scheme must be integers
+    raises(ValueError, 'JzKetCoupled(1, 1, (1,1), ((S(1)/2,1,2),) )')
+    raises(ValueError, 'JzKetCoupled(1, 1, (1,1), ((1,S(1)/2,2),) )')
+    # indicies out of range
+    raises(ValueError, 'JzKetCoupled(1, 1, (1,1), ((0,2,1),) )')
+    raises(ValueError, 'JzKetCoupled(1, 1, (1,1), ((3,2,1),) )')
+    raises(ValueError, 'JzKetCoupled(1, 1, (1,1), ((1,0,1),) )')
+    raises(ValueError, 'JzKetCoupled(1, 1, (1,1), ((1,3,1),) )')
+    # all j values in coupling scheme must by integer or half-integer
+    raises(ValueError, 'JzKetCoupled(1, 1, (1,1,1), ((1,2,S(4)/3),(1,3,1)) )')
+    # each coupling must satisfy |j1-j2| <= j3 <= j1+j2
+    raises(ValueError, 'JzKetCoupled(1, 1, (1,5))')
+    raises(ValueError, 'JzKetCoupled(5, 1, (1,1))')
+    # final j of coupling must be j of the state
+    raises(ValueError, 'JzKetCoupled(1, 1, (1,1), ((1,2,2),) )')
