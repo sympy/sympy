@@ -442,12 +442,14 @@ class LatexPrinter(Printer):
                 if func in accepted_latex_functions:
                     name = r"\%s^{%s}" % (func,exp)
                 else:
-                    name = r"\operatorname{%s}^{%s}" % (func, exp)
+                    # If the generic function name contains an underscore, handle it
+                    name = r"\operatorname{%s}^{%s}" % (func.replace("_", r"\_"), exp)
             else:
                 if func in accepted_latex_functions:
                     name = r"\%s" % func
                 else:
-                    name = r"\operatorname{%s}" % func
+                    # If the generic function name contains an underscore, handle it
+                    name = r"\operatorname{%s}" % func.replace("_", r"\_")
 
             if can_fold_brackets:
                 if func in accepted_latex_functions:
