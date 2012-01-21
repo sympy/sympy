@@ -225,8 +225,6 @@ class _Greater(Relational):
     it for the .gts and .lts properties.
     """
 
-    is_comparable = False
-
     __slots__ = ()
 
     @property
@@ -243,8 +241,6 @@ class _Less(Relational):
     _Less is only used so that LessThan and StrictLessThan may subclass it for
     the .gts and .lts properties.
     """
-
-    is_comparable = False
 
     __slots__ = ()
 
@@ -272,17 +268,31 @@ class GreaterThan(_Greater):
 
     In total, there are four *Than classes, to represent the four inequalities:
 
-    GreaterThan       (>=)
-    LessThan          (<=)
-    StrictGreaterThan (>)
-    StrictLessThan    (<)
+    +-----------------+--------+
+    |Class Name       | Symbol |
+    +=================+========+
+    |GreaterThan      | (>=)   |
+    +-----------------+--------+
+    |LessThan         | (<=)   |
+    +-----------------+--------+
+    |StrictGreaterThan| (>)    |
+    +-----------------+--------+
+    |StrictLessThan   | (<)    |
+    +-----------------+--------+
 
     All classes take two arguments, lhs and rhs.
 
-    GreaterThan(lhs, rhs)       --> lhs >= rhs
-    LessThan(lhs, rhs)          --> lhs <= rhs
-    StrictGreaterThan(lhs, rhs) --> lhs >  rhs
-    StrictLessThan(lhs, rhs)    --> lhs <  rhs
+    +----------------------------+-----------------+
+    |Signature Example           | Math equivalent |
+    +============================+=================+
+    |GreaterThan(lhs, rhs)       |   lhs >= rhs    |
+    +----------------------------+-----------------+
+    |LessThan(lhs, rhs)          |   lhs <= rhs    |
+    +----------------------------+-----------------+
+    |StrictGreaterThan(lhs, rhs) |   lhs >  rhs    |
+    +----------------------------+-----------------+
+    |StrictLessThan(lhs, rhs)    |   lhs <  rhs    |
+    +----------------------------+-----------------+
 
     In addition to the normal .lhs and .rhs of Relations, *Than inequality
     objects also have the .lts and .gts properties, which represent the "less
@@ -372,10 +382,9 @@ class GreaterThan(_Greater):
     statement (1 < x), Python will first recognize the number 1 as a native
     number, and then that x is *not* a native number.  At this point, because a
     native Python number does not know how to compare itself with a SymPy object
-    Python will try the reflective operation (x > 1), which is equivalent to
-    x.__gt__( 1 ).  Unfortunately, there is no way available to SymPy to
-    recognize this has happened, so the statement (1 < x) will turn silently
-    into (x > 1).
+    Python will try the reflective operation (x > 1).  Unfortunately, there is
+    no way available to SymPy to recognize this has happened, so the statement
+    (1 < x) will turn silently into (x > 1).
 
     >>> e1 = x >  1
     >>> e2 = x >= 1
@@ -413,11 +422,12 @@ class GreaterThan(_Greater):
     The other gotcha is with chained inequalities.  Occasionally, one may be
     tempted to write statements like:
 
+    #doctest: +SKIP
     >>> e = x < y < z  # silent error!  Where did ``x`` go?
     >>> e
     y < z
 
-    Due to an implementation detail or decision of Python[2], there is no way
+    Due to an implementation detail or decision of Python[1], there is no way
     for SymPy to reliably create that as a chained inequality.  To create a
     chained inequality, the only method currently available is to make use of
     And:
@@ -429,7 +439,7 @@ class GreaterThan(_Greater):
     And(x < y, y < z)
 
     Note that this is different than chaining an equality directly via use of
-    parenthesis (this is currently an open bug in SymPy[1]):
+    parenthesis (this is currently an open bug in SymPy[2]):
 
     >>> e = (x < y) < z
     >>> type( e )
@@ -441,15 +451,7 @@ class GreaterThan(_Greater):
     as this is not correct and will be fixed at some point.  For the time being
     (circa Jan 2012), use And to create chained inequalities.
 
-    [1] For more information, see these two bug reports:
-
-    "Separate boolean and symbolic relationals"
-    http://code.google.com/p/sympy/issues/detail?id=1887
-
-    "It right 0 < x < 1 ?"
-    http://code.google.com/p/sympy/issues/detail?id=2960
-
-    [2] This implementation detail is that Python provides no reliable method to
+    .. [1] This implementation detail is that Python provides no reliable method to
     determine that a chained inequality is being built.  Chained comparison
     operators are evaluated pairwise, using "and" logic (see
     http://docs.python.org/reference/expressions.html#notin).  This is done in
@@ -472,14 +474,22 @@ class GreaterThan(_Greater):
 
     Because of the "and" added at step 2, the statement gets turned into a weak
     ternary statement.  If the first object evalutes __nonzero__ as True, then
-    the second object is returned.  If the first object evaluates __nonzero__ as
-    False, then nothing is returned.
+    the second object, (y > z) is returned.  If the first object evaluates
+    __nonzero__ as False (step 5), then (x > y) is returned.
 
-    In Python, there is no way to override the ``and`` operator, or to control
-    how it short circuits, so it is impossible to make something like ``x > y >
-    z`` work.  There is an open PEP to change this
-    http://www.python.org/dev/peps/pep-0335/, but until that is implemented,
-    this cannot be made to work.
+        In Python, there is no way to override the ``and`` operator, or to
+        control how it short circuits, so it is impossible to make something
+        like ``x > y > z`` work.  There is an open PEP to change this
+        http://www.python.org/dev/peps/pep-0335/, but until that is implemented,
+        this cannot be made to work.
+
+    .. [2] For more information, see these two bug reports:
+
+    "Separate boolean and symbolic relationals"
+    `Issue 1887 <http://code.google.com/p/sympy/issues/detail?id=1887>`
+
+    "It right 0 < x < 1 ?"
+    `Issue 2960 <http://code.google.com/p/sympy/issues/detail?id=2960>`
 
 """
 
