@@ -172,41 +172,55 @@ def test(*paths, **kwargs):
     Examples
     ========
 
-    >> import sympy
+    >>> import sympy
 
     Run all tests:
-    >> sympy.test()
+
+    >>> sympy.test()    # doctest: +SKIP
 
     Run one file:
-    >> sympy.test("sympy/core/tests/test_basic.py")
-    >> sympy.test("_basic")
+
+    >>> sympy.test("sympy/core/tests/test_basic.py")    # doctest: +SKIP
+    >>> sympy.test("_basic")    # doctest: +SKIP
 
     Run all tests in sympy/functions/ and some particular file:
-    >> sympy.test("sympy/core/tests/test_basic.py", "sympy/functions")
+
+    >>> sympy.test("sympy/core/tests/test_basic.py",
+    ...        "sympy/functions")    # doctest: +SKIP
 
     Run all tests in sympy/core and sympy/utilities:
-    >> sympy.test("/core", "/util")
+
+    >>> sympy.test("/core", "/util")    # doctest: +SKIP
 
     Run specific test from a file:
-    >> sympy.test("sympy/core/tests/test_basic.py", kw="test_equality")
+
+    >>> sympy.test("sympy/core/tests/test_basic.py",
+    ...        kw="test_equality")    # doctest: +SKIP
 
     Run specific test from any file:
-    >> sympy.test(kw="subs")
+
+    >>> sympy.test(kw="subs")    # doctest: +SKIP
 
     Run the tests with verbose mode on:
-    >> sympy.test(verbose=True)
+
+    >>> sympy.test(verbose=True)    # doctest: +SKIP
 
     Don't sort the test output:
-    >> sympy.test(sort=False)
+
+    >>> sympy.test(sort=False)    # doctest: +SKIP
 
     Turn on post-mortem pdb:
-    >> sympy.test(pdb=True)
+
+    >>> sympy.test(pdb=True)    # doctest: +SKIP
 
     Turn off colors:
-    >> sympy.test(colors=False)
 
-    The traceback verboseness can be set to "short" or "no" (default is "short")
-    >> sympy.test(tb='no')
+    >>> sympy.test(colors=False)    # doctest: +SKIP
+
+    The traceback verboseness can be set to "short" or "no" (default is
+    "short")
+
+    >>> sympy.test(tb='no')    # doctest: +SKIP
 
     """
     verbose = kwargs.get("verbose", False)
