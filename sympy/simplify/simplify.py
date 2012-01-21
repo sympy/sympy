@@ -1983,7 +1983,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     continue
                 exp_c, exp_t = e.as_coeff_mul()
                 if exp_c is not S.One and exp_t:
-                    c_powers[i] = [Pow(b, exp_c), e._new_rawargs(*exp_t)]
+                    c_powers[i] = [Pow(b, exp_c), Mul._from_args(exp_t)]
 
 
             # Combine bases whenever they have the same exponent and

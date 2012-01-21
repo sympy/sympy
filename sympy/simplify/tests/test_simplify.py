@@ -996,3 +996,7 @@ def test_unpolarify():
 
     # Test bools
     assert unpolarify(True) is True
+
+def test_issue_1127():
+    assert nsimplify(integrate(2*a/((((2*a)**2 + x**2))**Rational(3, 2)), x).n(2)) == \
+        1/(2*a*sqrt(4*a**2/x**2 + 1))
