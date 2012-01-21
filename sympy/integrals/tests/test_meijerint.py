@@ -190,6 +190,11 @@ def test_meijerint():
             *meijerg([S(1)/2, 0, S(1)/2], [1], [],
                      [-alpha/2, -alpha/2 - S(1)/2], 16/alpha**2), True)
 
+    # test a bug related to 3016
+    a, s = symbols('a s', positive=True)
+    assert simplify(integrate(x**s*exp(-a*x**2), (x, -oo, oo))) == \
+           a**(-s/2 - S(1)/2)*(exp(I*pi*s) + 1)*gamma(s/2 + S(1)/2)/2
+
 def test_bessel():
     from sympy import (besselj, Heaviside, besseli, polar_lift, exp_polar,
                        powdenest)
@@ -370,6 +375,8 @@ def test_probability():
                                         /(beta - 2)/(beta - 1)**2
 
     # Beta distribution
+    # NOTE: this is evaluated using antiderivatives. It also tests that
+    #       meijerint_indefinite returns the simplest possible answer.
     a, b = symbols('a b', positive=True)
     betadist = x**(a - 1)*(-x + 1)**(b - 1)*gamma(a + b)/(gamma(a)*gamma(b))
     assert simplify(integrate(betadist, (x, 0, 1), meijerg=True)) == 1

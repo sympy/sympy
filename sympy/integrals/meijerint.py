@@ -374,7 +374,7 @@ def _split_mul(f, x):
     for a in args:
         if not a.has(x):
             fac *= a
-        elif a.is_Pow and a.base == x:
+        elif a.is_Pow and a.base.as_coeff_mul(x)[1] == (x,):
             c = a.base.as_coeff_mul(x)[0]
             po *= x**a.exp
             fac *= unpolarify(polarify(c**a.exp, subs=False))
