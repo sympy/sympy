@@ -94,7 +94,7 @@ def test_no_len():
     x = Symbol('x')
     raises(TypeError, "len(x)")
 
-def test_ineq_inequal():
+def test_ineq_unequal():
     S = sympify
 
     x, y, z = symbols('x,y,z')
