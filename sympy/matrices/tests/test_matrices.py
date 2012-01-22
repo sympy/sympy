@@ -420,8 +420,8 @@ def test_util():
     assert v1.cross(v2) == Matrix(1,3,[-2,4,-2])
     assert v1.norm() == sqrt(14)
     assert v1.project(v2) == Matrix(1, 3, [R(39)/25, R(52)/25, R(13)/5])
-    assert Matrix.zeros((1, 2)) == Matrix(1, 2, [0, 0])
-    assert ones((1, 2)) == Matrix(1, 2, [1, 1])
+    assert Matrix.zeros(1, 2) == Matrix(1, 2, [0, 0])
+    assert ones(1, 2) == Matrix(1, 2, [1, 1])
     assert v1.clone() == v1
     # cofactor
     assert eye(3) == eye(3).cofactorMatrix()
