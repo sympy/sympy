@@ -239,13 +239,10 @@ def matrixify(expr):
 
     For internal use
     """
-    if len(matrix_symbols(expr))==0: # No matrix symbols present
-        return expr
-
     class_dict = {Mul:MatMul, Add:MatAdd, MatMul:MatMul, MatAdd:MatAdd,
             Pow:MatPow, MatPow:MatPow}
 
-    if expr.__class__ not in class_dict.keys():
+    if expr.__class__ not in class_dict:
         return expr
 
     args = map(matrixify, expr.args) # Recursively call down the tree

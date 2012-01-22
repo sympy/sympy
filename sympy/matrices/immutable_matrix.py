@@ -24,3 +24,6 @@ class ImmutableMatrix(MatrixExpr, MatrixBase):
     @property
     def cols(self):
         return self.shape[1]
+
+    def _entry(self, i, j):
+        return MatrixBase.__getitem__(self, (i,j))
