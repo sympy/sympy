@@ -440,14 +440,13 @@ class MatrixBase(object):
     def __neg__(self):
         return -1*self
 
-    def __eq__(self, a):
-        if not isinstance(a, (MatrixBase, Basic)):
-            a = sympify(a)
-        if isinstance(a, MatrixBase) and self.shape == a.shape:
-            return all(self[i, j] == a[i, j]
-                for i in xrange(self.rows)
-                for j in xrange(self.cols))
-        else:
+    def __eq__(self, other):
+        try:
+            return (self.shape == other.shape and
+                    all([self[i,j] == other[i,j]
+                        for i in xrange(self.rows)
+                        for j in xrange(self.cols)]))
+        except AttributeError:
             return False
 
     def __ne__(self, a):
@@ -3999,7 +3998,7 @@ def casoratian(seqs, n, zero=True):
 
 # Add sympify converters
 def _matrix_sympify(matrix):
-    return matrix.as_immutable()
+    #return matrix.as_immutable()
     raise SympifyError('Matrix cannot be sympified')
 converter[MatrixBase] = _matrix_sympify
 del _matrix_sympify
