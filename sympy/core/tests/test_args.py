@@ -278,17 +278,25 @@ def test_sympy__core__relational__Equality():
     from sympy.core.relational import Equality
     assert _test_args(Equality(x, 2))
 
-def test_sympy__core__relational__Inequality():
-    from sympy.core.relational import Inequality
-    assert _test_args(Inequality(x, 2))
+def test_sympy__core__relational__GreaterThan():
+    from sympy.core.relational import GreaterThan
+    assert _test_args(GreaterThan(x, 2))
+
+def test_sympy__core__relational__LessThan():
+    from sympy.core.relational import LessThan
+    assert _test_args(LessThan(x, 2))
 
 @SKIP("abstract class")
 def test_sympy__core__relational__Relational():
     pass
 
-def test_sympy__core__relational__StrictInequality():
-    from sympy.core.relational import StrictInequality
-    assert _test_args(StrictInequality(x, 2))
+def test_sympy__core__relational__StrictGreaterThan():
+    from sympy.core.relational import StrictGreaterThan
+    assert _test_args(StrictGreaterThan(x, 2))
+
+def test_sympy__core__relational__StrictLessThan():
+    from sympy.core.relational import StrictLessThan
+    assert _test_args(StrictLessThan(x, 2))
 
 def test_sympy__core__relational__Unequality():
     from sympy.core.relational import Unequality
