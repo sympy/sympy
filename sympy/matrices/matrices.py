@@ -449,15 +449,8 @@ class MatrixBase(object):
         except AttributeError:
             return False
 
-    def __ne__(self, a):
-        if not isinstance(a, (MatrixBase, Basic)):
-            a = sympify(a)
-        if isinstance(a, MatrixBase) and self.shape == a.shape:
-            return any(self[i, j] != a[i, j]
-                for i in xrange(self.rows)
-                for j in xrange(self.cols))
-        else:
-            return True
+    def __ne__(self, other):
+        return not self == other
 
     def __hash__(self):
         return super(MatrixBase, self).__hash__()
