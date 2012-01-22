@@ -1094,7 +1094,7 @@ def test_uncouple():
         sqrt(10)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))/10
     assert uncouple(JzKetCoupled(3, -1, (S(1)/2,S(1)/2,1,1))) == \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,1))/15 + \
-        2*sqrt(15)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-1/2), JzKet(1,0), JzKet(1,0))/15 + \
+        2*sqrt(15)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,0))/15 + \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,-1))/15 + \
         sqrt(30)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))/15 + \
         sqrt(30)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))/15 + \
