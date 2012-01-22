@@ -871,7 +871,7 @@ class LatexPrinter(Printer):
         tex = r"\begin{cases} %s \end{cases}"
         return tex % r" \\".join(ecpairs)
 
-    def _print_Matrix(self, expr):
+    def _print_MatrixBase(self, expr):
         lines = []
 
         for line in range(expr.rows): # horrible, should be 'rows'

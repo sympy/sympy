@@ -1,17 +1,13 @@
-from matrices import Matrix
+from matrices import MatrixBase
 from expressions import MatrixExpr, Transpose
 from sympy import Basic, Tuple
 
-class ImmutableMatrix(MatrixExpr, Matrix):
-
+class ImmutableMatrix(MatrixExpr, MatrixBase):
     def __new__(cls, *args, **kwargs):
-        if len(args) == 1 and isinstance(args[0], Matrix):
-            mat = args[0]
-        else:
-            mat = Matrix(*args, **kwargs)
-        shape = Tuple(*mat.shape)
-        data = Tuple(*mat.mat)
-        return Basic.__new__(cls, shape, data)
+        rows, cols, mat = MatrixBase._handle_creation_inputs(*args, **kwargs)
+        shape = Tuple(rows, cols)
+        mat = Tuple(*mat)
+        return Basic.__new__(cls, shape, mat)
 
     @property
     def shape(self):
@@ -28,36 +24,3 @@ class ImmutableMatrix(MatrixExpr, Matrix):
     @property
     def cols(self):
         return self.shape[1]
-
-    def as_mutable(self):
-        return Matrix(self.rows, self.cols, self.mat)
-
-    def __setitem__(self, *args):
-        raise TypeError('Can not set values in ImmutableMatrix')
-
-    def __getitem__(self, *args):
-        result = Matrix.__getitem__(self, *args)
-        if result.is_Matrix:
-            result = ImmutableMatrix(result)
-        return result
-
-    def transpose(self):
-        return ImmutableMatrix(Matrix.transpose(self))
-
-    def conjugate(self):
-        return ImmutableMatrix(Matrix.conjugate(self))
-
-    def expand(self, **hints):
-        return ImmutableMatrix(Matrix.expand(self, **hints))
-
-    def rref(self, *args, **kwargs):
-        r, pivotlist = self.as_mutable().rref()
-        return ImmutableMatrix(r), pivotlist
-
-    def QRdecomposition(self):
-        Q, R = self.as_mutable().QRdecomposition()
-        return ImmutableMatrix(Q), ImmutableMatrix(R)
-
-    def reshape(self, *args, **kwargs):
-        return ImmutableMatrix(Matrix.reshape(self, *args, **kwargs))
-

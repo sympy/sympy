@@ -528,9 +528,9 @@ class PrettyPrinter(Printer):
     #
     # see _MatrixAsBasic docstring, and #420
     def _print__MatrixAsBasic(self, e):
-        return self._print_Matrix(e.m)
+        return self._print_MatrixBase(e.m)
 
-    def _print_Matrix(self, e):
+    def _print_MatrixBase(self, e):
         M = e   # matrix
         Ms = {}  # i,j -> pretty(M[i,j])
         for i in range(M.rows):
