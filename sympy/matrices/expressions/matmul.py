@@ -58,12 +58,25 @@ class MatMul(MatrixExpr, Mul):
 
     def _entry(self, i, j):
         from sympy import Dummy, summation
-        head, tail = self.args[0], self.args[1:]
+        coeff, matmul = self.as_coeff_mmul()
+        if not matmul.is_Mul: # situation like 2*X, matmul is just X
+            return coeff * matmul[i,j]
+
+        head, tail = matmul.args[0], matmul.args[1:]
+        assert len(tail) != 0
+
         X = head
         Y = MatMul(*tail)
         k = Dummy('k', integer=True)
-        return summation(X[i,k]*Y[k,j], (k, 0, X.m-1))
-        return summation(*[arg._entry(i,j) for arg in self.args])
+        return summation(coeff*X[i,k]*Y[k,j], (k, 0, X.m-1))
+
+    def as_coeff_mmul(self):
+        scalars = [x for x in self.args if not x.is_Matrix]
+        matrices = [x for x in self.args if x.is_Matrix]
+        coeff = 1
+        for scalar in scalars:
+            coeff *= scalar
+        return coeff, MatMul(*matrices)
 
 from matadd import MatAdd
 from matpow import MatPow

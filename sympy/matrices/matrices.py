@@ -440,7 +440,7 @@ class MatrixBase(object):
     def __neg__(self):
         return -1*self
 
-    def __eq__(self, other):
+    def equals(self, other):
         try:
             return (self.shape == other.shape and
                     all([self[i,j] == other[i,j]
@@ -448,6 +448,9 @@ class MatrixBase(object):
                         for j in xrange(self.cols)]))
         except AttributeError:
             return False
+
+    def __eq__(self, other):
+        return self.equals(other)
 
     def __ne__(self, other):
         return not self == other
@@ -3217,6 +3220,8 @@ class MatrixBase(object):
 
 class MutableMatrix(MatrixBase):
 
+    is_MatrixExpr = False
+
     _op_priority = 12.0
 
     def __new__(cls, *args, **kwargs):
@@ -3540,32 +3545,32 @@ class MutableMatrix(MatrixBase):
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return MatrixBase.__add__(self, other)
+        return MatrixBase.__add__(self, force_mutable(other))
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return MatrixBase.__radd__(self, other)
+        return MatrixBase.__radd__(self, force_mutable(other))
 
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return MatrixBase.__sub__(self, other)
+        return MatrixBase.__sub__(self, force_mutable(other))
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return MatrixBase.__rsub__(self, other)
+        return MatrixBase.__rsub__(self, force_mutable(other))
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        return MatrixBase.__mul__(self, other)
+        return MatrixBase.__mul__(self, force_mutable(other))
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        return MatrixBase.__rmul__(self, other)
+        return MatrixBase.__rmul__(self, force_mutable(other))
 
     @call_highest_priority('__div__')
     def __div__(self, other):
-        return MatrixBase.__div__(self, other)
+        return MatrixBase.__div__(self, force_mutable(other))
     @call_highest_priority('__truediv__')
     def __truediv__(self, other):
-        return MatrixBase.__truediv__(self, other)
+        return MatrixBase.__truediv__(self, force_mutable(other))
 
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
@@ -3574,6 +3579,15 @@ class MutableMatrix(MatrixBase):
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
         raise NotImplementedError("Matrix Power not defined")
+
+def force_mutable(x):
+    if not isinstance(x, Basic):
+        return x
+    if not x.is_Matrix:
+        return x
+    if x.is_Matrix and x.is_MatrixExpr:
+        return x.as_mutable()
+    return x
 
 def classof(A,B):
     from immutable_matrix import ImmutableMatrix

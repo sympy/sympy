@@ -24,7 +24,7 @@ def test_add_index():
 
 def test_mul_index():
     assert (A*y)[0,0] == A[0,0]*y[0,0] + A[0,1]*y[1,0]
-    assert (A*B).to_explicit() == A.to_explicit() * B.to_explicit()
+    assert (A*B).as_mutable() == (A.as_mutable() * B.as_mutable())
 
 def test_Identity_index():
     I = Identity(3)
@@ -36,14 +36,15 @@ def test_block_index():
     I = Identity(3)
     Z = ZeroMatrix(3,3)
     B = BlockMatrix([[I,I],[I,I]])
-    BB = BlockMatrix([[eye(3), eye(3)], [eye(3), eye(3)]])
+    e3 = ImmutableMatrix(eye(3))
+    BB = BlockMatrix([[e3, e3], [e3, e3]])
     assert B[0,0] == B[3,0] == B[0,3] == B[3,3] == 1
     assert B[4,3] == B[5,1] == 0
 
-    BB = BlockMatrix([[eye(3), eye(3)], [eye(3), eye(3)]])
+    BB = BlockMatrix([[e3, e3], [e3, e3]])
     assert B.to_explicit() == BB.to_explicit()
 
     BI = BlockMatrix([[I, Z], [Z, I]])
 
-    assert BI.to_explicit() == eye(6)
+    assert BI.to_explicit().equals(eye(6))
 
