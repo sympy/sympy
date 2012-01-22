@@ -422,9 +422,8 @@ class GreaterThan(_Greater):
     The other gotcha is with chained inequalities.  Occasionally, one may be
     tempted to write statements like:
 
-    #doctest: +SKIP
     >>> e = x < y < z  # silent error!  Where did ``x`` go?
-    >>> e
+    >>> e #doctest: +SKIP
     y < z
 
     Due to an implementation detail or decision of Python[1], there is no way
