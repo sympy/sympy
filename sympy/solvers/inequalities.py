@@ -323,7 +323,7 @@ def _solve_inequality(ie, s):
     """ A hacky replacement for solve, since the latter only works for
         univariate inequalities. """
     from sympy import Poly
-    if not ie.rel_op in ['<', '<=']:
+    if not ie.rel_op in ('>', '>=', '<', '<='):
         raise NotImplementedError
     expr = ie.lhs - ie.rhs
     p = Poly(expr, s)
@@ -343,14 +343,14 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
     Examples
     ========
 
-    >>> from sympy import Q
+    >>> from sympy import Q, sympify as S
     >>> from sympy.abc import x, y
     >>> from sympy.solvers.inequalities import reduce_inequalities
 
-    >>> reduce_inequalities(0 <= x + 3, Q.real(x), [])
+    >>> reduce_inequalities(S(0) <= x + 3, Q.real(x), [])
     -3 <= x
 
-    >>> reduce_inequalities(0 <= x + y*2 - 1, True, [x])
+    >>> reduce_inequalities(S(0) <= x + y*2 - 1, True, [x])
     -2*y + 1 <= x
     """
     if not hasattr(inequalities, '__iter__'):

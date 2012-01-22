@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from sympy import (Symbol, symbols, oo, limit, Rational, Integral, Derivative,
-    log, exp, sqrt, pi, Function, sin, Eq, Le, Gt, Ne, Abs)
+    log, exp, sqrt, pi, Function, sin, Eq, Ge, Le, Gt, Lt, Ne, Abs)
 
 from sympy.printing.python import python
 
@@ -62,8 +62,10 @@ def test_python_basic():
 
 def test_python_relational():
     assert python(Eq(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x == y"
+    assert python(Ge(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x >= y"
     assert python(Le(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x <= y"
-    assert python(Gt(x, y)) == "y = Symbol('y')\nx = Symbol('x')\ne = y < x"
+    assert python(Gt(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x > y"
+    assert python(Lt(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x < y"
     assert python(Ne(x/(y+1), y**2)) in [
             "x = Symbol('x')\ny = Symbol('y')\ne = x/(1 + y) != y**2",
             "x = Symbol('x')\ny = Symbol('y')\ne = x/(y + 1) != y**2"]

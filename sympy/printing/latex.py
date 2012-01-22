@@ -841,13 +841,17 @@ class LatexPrinter(Printer):
 
     def _print_Relational(self, expr):
         if self._settings['itex']:
+            gt = r"\gt"
             lt = r"\lt"
         else:
+            gt = ">"
             lt = "<"
 
         charmap = {
             "==" : "=",
+            ">"  : gt,
             "<"  : lt,
+            ">=" : r"\geq",
             "<=" : r"\leq",
             "!=" : r"\neq",
         }

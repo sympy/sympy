@@ -101,10 +101,10 @@ def test_reduce_poly_inequalities_complex_relational():
 def test_reduce_abs_inequalities():
     real = Q.real(x)
 
-    assert reduce_inequalities(abs(x - 5) < 3, assume=real) == And(Gt(x, 2), Lt(x, 8))
-    assert reduce_inequalities(abs(2*x + 3) >= 8, assume=real) == Or(Le(x, -S(11)/2), Ge(x, S(5)/2))
-    assert reduce_inequalities(abs(x - 4) + abs(3*x - 5) < 7, assume=real) == And(Gt(x, S(1)/2), Lt(x, 4))
-    assert reduce_inequalities(abs(x - 4) + abs(3*abs(x) - 5) < 7, assume=real) == Or(And(-2 < x, x < -1), And(S(1)/2 < x, x < 4))
+    assert reduce_inequalities(abs(x - 5) < 3, assume=real) == And(Lt(2, x), Lt(x, 8))
+    assert reduce_inequalities(abs(2*x + 3) >= 8, assume=real) == Or(Le(x, -S(11)/2), Le(S(5)/2, x))
+    assert reduce_inequalities(abs(x - 4) + abs(3*x - 5) < 7, assume=real) == And(Lt(S(1)/2, x), Lt(x, 4))
+    assert reduce_inequalities(abs(x - 4) + abs(3*abs(x) - 5) < 7, assume=real) == Or(And(S(-2) < x, x < -1), And(S(1)/2 < x, x < 4))
 
     raises(NotImplementedError, "reduce_inequalities(abs(x - 5) < 3)")
 

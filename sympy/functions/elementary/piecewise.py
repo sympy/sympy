@@ -213,24 +213,31 @@ class Piecewise(Function):
                     continue
             elif isinstance(cond, Equality):
                 continue
-            curr = list(cond.args)
-            if cond.args[0].has(sym):
-                curr[0] = S.NegativeInfinity
-            elif cond.args[1].has(sym):
-                curr[1] = S.Infinity
+
+            lower, upper = cond.lts, cond.gts # part 1: initialize with givens
+            if cond.lts.has(sym):     # part 1a: expand the side ...
+                lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
+            elif cond.gts.has(sym):   # part 1a: ... that can be expanded
+                upper = S.Infinity           # e.g. x >= 0 --->  oo >= 0
             else:
-                raise NotImplementedError(\
-                        "Unable handle interval evaluation of expression.")
-            curr = [max(a, curr[0]), min(b, curr[1])]
+                raise NotImplementedError(
+                        "Unable to handle interval evaluation of expression.")
+
+            # part 1b: Reduce (-)infinity to what was passed in.
+            lower, upper = max(a, lower), min(b, upper)
+
             for n in xrange(len(int_expr)):
-                if self.__eval_cond(curr[0] < int_expr[n][1]) and \
-                        self.__eval_cond(curr[0] >= int_expr[n][0]):
-                    curr[0] = int_expr[n][1]
-                if self.__eval_cond(curr[1] > int_expr[n][0]) and \
-                        self.__eval_cond(curr[1] <= int_expr[n][1]):
-                    curr[1] = int_expr[n][0]
-            if self.__eval_cond(curr[0] < curr[1]):
-                int_expr.append(curr + [expr])
+                # Part 2: remove any interval overlap.  For any conflicts, the
+                # iterval already there wins, and the incoming interval updates
+                # its bounds accordingly.
+                if self.__eval_cond(lower < int_expr[n][1]) and \
+                        self.__eval_cond(lower >= int_expr[n][0]):
+                    lower = int_expr[n][1]
+                if self.__eval_cond(upper > int_expr[n][0]) and \
+                        self.__eval_cond(upper <= int_expr[n][1]):
+                    upper = int_expr[n][0]
+            if self.__eval_cond(lower < upper):  # Is it still an interval?
+                int_expr.append((lower, upper, expr))
         int_expr.sort(key=lambda x:x[0])
 
         # Add holes to list of intervals if there is a default value,
@@ -302,9 +309,9 @@ def piecewise_fold(expr):
     Examples
     ========
 
-    >>> from sympy import Piecewise, piecewise_fold
+    >>> from sympy import Piecewise, piecewise_fold, sympify as S
     >>> from sympy.abc import x
-    >>> p = Piecewise((x, x < 1), (1, 1 <= x))
+    >>> p = Piecewise((x, x < 1), (1, S(1) <= x))
     >>> piecewise_fold(x*p)
     Piecewise((x**2, x < 1), (x, 1 <= x))
 

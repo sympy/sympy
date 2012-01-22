@@ -500,6 +500,32 @@ class Float(Number):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __gt__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return False    # sympy > other
+        if isinstance(other, NumberSymbol):
+            return other.__le__(self)
+        if other.is_comparable:
+            other = other.evalf()
+        if isinstance(other, Number):
+            return bool(mlib.mpf_gt(self._mpf_, other._as_mpf_val(self._prec)))
+        return Expr.__gt__(self, other)
+
+    def __ge__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return False    # sympy > other  -->  ! <=
+        if isinstance(other, NumberSymbol):
+            return other.__lt__(self)
+        if other.is_comparable:
+            other = other.evalf()
+        if isinstance(other, Number):
+            return bool(mlib.mpf_ge(self._mpf_, other._as_mpf_val(self._prec)))
+        return Expr.__ge__(self, other)
+
     def __lt__(self, other):
         try:
             other = _sympify(other)
@@ -863,6 +889,37 @@ class Rational(Number):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __gt__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return False    # sympy > other  --> not <
+        if isinstance(other, NumberSymbol):
+            return other.__le__(self)
+        if other.is_comparable and not isinstance(other, Rational):
+            other = other.evalf()
+        if isinstance(other, Number):
+            if isinstance(other, Float):
+                return bool(mlib.mpf_gt(self._as_mpf_val(other._prec), other._mpf_))
+            return bool(self.p * other.q > self.q * other.p)
+        return Expr.__gt__(self, other)
+
+    def __ge__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return False    # sympy > other  -->  not <=
+        if isinstance(other, NumberSymbol):
+            return other.__lt__(self)
+        if other.is_comparable and not isinstance(other, Rational):
+            other = other.evalf()
+        if isinstance(other, Number):
+            if isinstance(other, Float):
+                return bool(mlib.mpf_ge(self._as_mpf_val(other._prec), other._mpf_))
+            return bool(self.p * other.q >= self.q * other.p)
+        return Expr.__ge__(self, other)
+
 
     def __lt__(self, other):
         try:
