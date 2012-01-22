@@ -39,7 +39,7 @@ class MatAdd(MatrixExpr, Add):
 
         # Clear out Identities
         # Any zeros around?
-        if expr.is_Add and any(M.is_ZeroMatrix for M in expr.args):
+        if expr.is_Add and any([M.is_ZeroMatrix for M in expr.args]):
             newargs = [M for M in expr.args if not M.is_ZeroMatrix] # clear out
             if len(newargs)==0: # Did we lose everything?
                 return ZeroMatrix(*args[0].shape)

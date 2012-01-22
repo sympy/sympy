@@ -68,7 +68,7 @@ class Matrix(object):
 
     is_Matrix = True
 
-    def __init__(self, *args):
+    def __new__(cls, *args):
         """
         Matrix can be constructed with values or a rule.
 
@@ -81,6 +81,7 @@ class Matrix(object):
         [0, 2]
 
         """
+        self = object.__new__(Matrix)
         if len(args) == 3 and callable(args[2]):
             operation = args[2]
             self.rows = int(args[0])
@@ -102,7 +103,7 @@ class Matrix(object):
                 self.rows = mat.rows
                 self.cols = mat.cols
                 self.mat = mat[:]
-                return
+                return self
             elif hasattr(mat, "__array__"): #pragma: no cover
                 # NumPy array or matrix or some other object that implements
                 # __array__. So let's first use this method to get a
@@ -111,13 +112,13 @@ class Matrix(object):
                 if len(arr.shape) == 2:
                     self.rows, self.cols = arr.shape[0], arr.shape[1]
                     self.mat = map(lambda i: sympify(i), arr.ravel())
-                    return
+                    return self
                 elif len(arr.shape) == 1:
                     self.rows, self.cols = 1, arr.shape[0]
                     self.mat = [0]*self.cols
                     for i in xrange(len(arr)):
                         self.mat[i] = sympify(arr[i])
-                    return
+                    return self
                 else:
                     raise NotImplementedError("Sympy supports just 1D and 2D matrices")
             elif not is_sequence(mat, include=Matrix):
@@ -133,7 +134,7 @@ class Matrix(object):
                 if not is_sequence(mat[0]):
                     self.cols = 1
                     self.mat = map(lambda i: sympify(i), mat)
-                    return
+                    return self
                 self.cols = len(mat[0])
             else:
                 self.cols = 0
@@ -150,6 +151,8 @@ class Matrix(object):
             self.mat = []
         else:
             raise TypeError("Data type not understood")
+
+        return self
 
     def transpose(self):
         """

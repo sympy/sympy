@@ -8,4 +8,6 @@ from matrices import (Matrix, SparseMatrix, zeros, ones, eye, diag,
      list2numpy, matrix2numpy, DeferredVector, symarray, ShapeError,
      NonSquareMatrixError, rot_axis1, rot_axis2, rot_axis3)
 
+from immutable_matrix import ImmutableMatrix
+
 from expressions import *
