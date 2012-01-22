@@ -3,6 +3,7 @@ from math import log as _log
 from sympify import _sympify
 from cache import cacheit
 from core import C
+from sympy.core.function import _coeff_isneg
 from singleton import S
 from expr import Expr
 
@@ -644,33 +645,32 @@ class Pow(Expr):
             return self, S.One
         base, exp = self.as_base_exp()
         n, d = base.as_numer_denom()
-        if d.is_negative and n.is_negative:
-            n, d = -n, -d
-        if exp.is_Integer:
-            if exp.is_negative:
-                n, d = d, n
-                exp = -exp
-            return Pow(n, exp), Pow(d, exp)
-        elif exp.is_Rational or d.is_positive:
-            if d.is_negative is None:
-                # we won't split up the base
+        if d is not S.One:
+            if d.is_negative and n.is_negative:
+                n, d = -n, -d
+            if exp.is_Integer:
                 if exp.is_negative:
-                    return S.One, Pow(base, -exp)
-                else:
-                    return self, S.One
-            if d.is_negative:
-                n = -n
-                d = -d
-            c, t = exp.as_coeff_mul()
-            if c.is_negative:
-                n, d = d, n
-                exp = -exp
-            return Pow(n, exp), Pow(d, exp)
-        else:
-            c, t = exp.as_coeff_mul()
-            if c.is_negative:
-                return S.One, base**-exp
-        # unprocessed Float and NumberSymbol
+                    n, d = d, n
+                    exp = -exp
+                return Pow(n, exp), Pow(d, exp)
+            elif exp.is_Rational or d.is_positive:
+                dneg = d.is_negative
+                if dneg is not None:
+                    if dneg is True:
+                        n = -n
+                        d = -d
+                    elif dneg is False:
+                        n, d = d, n
+                        exp = -exp
+                    if _coeff_isneg(exp):
+                        n, d = d, n
+                        exp = -exp
+                    return Pow(n, exp), Pow(d, exp)
+                # else we won't split up base but we check for neg expo below
+        if _coeff_isneg(exp):
+            return S.One, base**-exp
+        # unprocessed float or NumberSymbol exponent
+        # and Mul exp w/o negative sign
         return self, S.One
 
     def matches(self, expr, repl_dict={}):
