@@ -13,7 +13,7 @@ from pyevolve.GenomeBase import GenomeBase
 
 __all__ = [
     'GQCBase',
-    'has_subcircuit'
+    'find_subcircuit'
 ]
 
 class GQCBase(Basic, GenomeBase):
@@ -78,7 +78,7 @@ def find_subcircuit(circuit, subcircuit):
         # If the value of index reaches the length of subcircuit
         # then this identity contains subcircuit
         if index == len(subcircuit):
-            return True
+            return loc
 
     return -1
 
