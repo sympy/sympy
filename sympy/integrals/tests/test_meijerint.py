@@ -513,3 +513,7 @@ def test_messy():
 
     assert integrate(1/x/sqrt(1 - x**2), x, meijerg=True) == \
            Piecewise((-acosh(1/x), 1 < abs(x**(-2))), (I*asin(1/x), True))
+
+def test_3023():
+    assert integrate(exp(-I*x**2), (x, -oo, oo), meijerg=True) == \
+           -I*sqrt(pi)*exp(I*pi/4)
