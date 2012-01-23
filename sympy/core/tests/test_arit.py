@@ -146,6 +146,7 @@ def test_pow():
     assert (-1)**x == (-1)**x
     assert (-1)**n == (-1)**n
     assert (-2)**k == 2**k
+    assert (-2*x)**k == 2**k*x**k
     assert (-1)**k == 1
 
 def test_pow2():

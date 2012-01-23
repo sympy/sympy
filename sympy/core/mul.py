@@ -547,10 +547,8 @@ class Mul(AssocOp):
                 return Mul(*[Pow(s, e) for s in nonneg + neg + [coeff]])* \
                    Pow(Mul(*unk), e)*bnc
 
-        if e.is_even:
-            c = b.as_coeff_Mul()[0]
-            if c < 0:
-                return Pow((Mul(-c, t)), e)
+        if e.is_even and coeff.is_negative:
+            return Pow(-coeff, e)*Pow(b, e)
 
         #if e.has(Wild):
         #    return Mul(*[t**e for t in b])
@@ -1407,3 +1405,4 @@ from numbers import Rational, igcd
 from power import Pow
 from sympify import sympify
 from add import Add
+from sympy.core.function import _coeff_isneg
