@@ -111,6 +111,8 @@ def test_sign():
 
 def test_Abs():
     x, y = symbols('x,y')
+    assert sign(sign(x)) == sign(x)
+    assert sign(x*y).func is sign
     assert Abs(0) == 0
     assert Abs(1) == 1
     assert Abs(-1)== 1
@@ -283,6 +285,7 @@ def test_principal_branch():
     assert principal_branch(x, -4).func is principal_branch
     assert principal_branch(x, -oo).func is principal_branch
     assert principal_branch(x, zoo).func is principal_branch
+
 @XFAIL
 def test_issue_2453():
     assert abs(I * pi) == pi
