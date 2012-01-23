@@ -299,5 +299,6 @@ def test__print_Mul_Add():
     l = LatexPrinter()
     assert l._print_Mul(n*m) == 'm n'
     assert l._print_Mul(-2*m) == '- 2 m'
-    assert l._print_Add(-3*x - 2*y - 5 + 4*z) == '-5 + 4 z - 2 y - 3 x'
+    assert l._print_Add(-5 + 4*z) == '-5 + 4 z'
+    assert l._print_Add(-5 - 4*z) == '-5 - 4 z'
     assert l._print_Add(n - 2) == '-2 + n'
