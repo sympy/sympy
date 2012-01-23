@@ -160,9 +160,9 @@ def test(*paths, **kwargs):
     f       XFAILed (expected to fail and indeed failed)
     s       skipped
     w       slow
-    T       timeout (e.g., when --timeout is used)
-    K       KeyboardInterrupt (when running the slow tests with --slow, you
-            can interrupt one of them without killing the test runner)
+    T       timeout (e.g., when ``--timeout`` is used)
+    K       KeyboardInterrupt (when running the slow tests with ``--slow``,
+            you can interrupt one of them without killing the test runner)
     ======  ===============================================================
 
 
