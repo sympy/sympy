@@ -833,7 +833,7 @@ class Rational(Number):
                         return S.NegativeOne ** ne * Rational(b.q, -b.p) ** ne
                 else:
                     return Rational(b.q, b.p) ** ne
-            if e is S.Infinity:
+            if e is S.Infinity: # neg infinity already caught by test for negative
                 if b.p > b.q:
                     # (3/2)**oo -> oo
                     return S.Infinity
@@ -841,8 +841,6 @@ class Rational(Number):
                     # (-3/2)**oo -> oo + I*oo
                     return S.Infinity + S.Infinity * S.ImaginaryUnit
                 return S.Zero
-            if e is S.NegativeInfinity:
-                return Rational(b.q, b.p)**S.Infinity
             if isinstance(e, Integer):
                 # (4/3)**2 -> 4**2 / 3**2
                 return Rational(b.p ** e.p, b.q ** e.p)
@@ -850,10 +848,8 @@ class Rational(Number):
                 if b.p != 1:
                     # (4/3)**(5/6) -> 4**(5/6) * 3**(-5/6)
                     return Integer(b.p) ** e * Integer(b.q) ** (-e)
-                if b >= 0:
-                    return Integer(b.q)**Rational(e.p * (e.q-1), e.q) / (Integer(b.q) ** Integer(e.p))
-                else:
-                    return (-1)**e * (-b)**e
+                # as the above caught negative b.p, now b is positive
+                return Integer(b.q)**Rational(e.p * (e.q-1), e.q) / (Integer(b.q) ** Integer(e.p))
 
         if _coeff_isneg(b) and e.is_even:
             return (-b) ** e
