@@ -1296,7 +1296,7 @@ def test_mul_flatten_oo():
 
 def test_issue_2061_2988_2990_2991():
     #2988
-    assert (-2*x*y**y)**3.2 == 2**3.2*(-x*y**y)**3.2
+    assert ((-2*x*y**y)**3.2).n(2) == (2**3.2*(-x*y**y)**3.2).n(2)
     #2990
     A, B, C = symbols('A,B,C', commutative=False)
     assert (2.*B*C)**3 == 8.0*(B*C)**3
