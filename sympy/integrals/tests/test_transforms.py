@@ -5,7 +5,7 @@ from sympy import (gamma, exp, oo, Heaviside, symbols, re, factorial, pi,
                    cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
                    EulerGamma, erf, besselj, bessely, besseli, besselk,
                    exp_polar, polar_lift, unpolarify)
-from sympy.utilities.pytest import XFAIL, slow
+from sympy.utilities.pytest import XFAIL, slow, skip
 from sympy.abc import x, s, a, b
 nu, beta, rho = symbols('nu beta rho')
 
@@ -45,6 +45,8 @@ def test_as_integral():
 @slow
 @XFAIL
 def test_mellin_transform_fail():
+    skip("Risch takes forever.")
+
     from sympy import Max, Min
     MT = mellin_transform
 
