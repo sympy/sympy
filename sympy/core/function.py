@@ -219,14 +219,14 @@ class Function(Application, Expr):
                 # it work with NumPy's functions like vectorize(). The ideal
                 # solution would be just to attach metadata to the exception
                 # and change NumPy to take advantage of this.
-                from sympy.solvers.solvers import _filldedent
-                raise TypeError(_filldedent('''
-                    %(name)s takes exactly %(args)s argument%(plural)s
-                    (%(given)s given)''' % {
+                temp = ('%(name)s takes exactly %(args)s '
+                       'argument%(plural)s (%(given)s given)')
+                raise TypeError(temp %
+                    {
                     'name': cls,
                     'args': cls.nargs,
                     'plural': 's'*(n != 1),
-                    'given': n}))
+                    'given': n})
 
         args = map(sympify, args)
         evaluate = options.pop('evaluate', True)
