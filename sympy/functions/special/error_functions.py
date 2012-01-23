@@ -1,7 +1,7 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 
-from sympy.core import S, C, sympify, cacheit, pi, I
+from sympy.core import Add, S, C, sympify, cacheit, pi, I
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 
@@ -36,7 +36,58 @@ class erf(Function):
               ____
             \/ pi
 
+    Examples
+    ========
 
+    >>> from sympy import I, oo, erf
+    >>> from sympy.abc import z
+
+    Several special values are known:
+
+    >>> erf(0)
+    0
+    >>> erf(oo)
+    1
+    >>> erf(-oo)
+    -1
+    >>> erf(I*oo)
+    oo*I
+    >>> erf(-I*oo)
+    -oo*I
+
+    In general one can pull out factors of -1 and I from the argument:
+
+    >>> erf(-z)
+    -erf(z)
+
+    The error function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(erf(z))
+    erf(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(erf(z), z)
+    2*exp(-z**2)/sqrt(pi)
+
+    We can numerically evaluate the error function to arbitrary precision
+    on the whole complex plane:
+
+    >>> erf(4).evalf(30)
+    0.999999984582742099719981147840
+
+    >>> erf(-4*I).evalf(30)
+    -1296959.73071763923152794095062*I
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Error_function
+    .. [2] http://dlmf.nist.gov/7
+    .. [3] http://mathworld.wolfram.com/Erf.html
+    .. [4] http://functions.wolfram.com/GammaBetaErf/Erf
     """
 
     nargs = 1
@@ -59,9 +110,12 @@ class erf(Function):
                 return S.NegativeOne
             elif arg is S.Zero:
                 return S.Zero
-            elif arg.is_negative:
-                return -cls(-arg)
-        elif arg.could_extract_minus_sign():
+
+        t = arg.extract_multiplicatively(S.ImaginaryUnit)
+        if t == S.Infinity or t == S.NegativeInfinity:
+            return arg
+
+        if arg.could_extract_minus_sign():
             return -cls(-arg)
 
     @staticmethod
@@ -71,24 +125,23 @@ class erf(Function):
             return S.Zero
         else:
             x = sympify(x)
-
-            k = (n - 1)//2
-
+            k = C.floor((n - 1)/S(2))
             if len(previous_terms) > 2:
                 return -previous_terms[-2] * x**2 * (n-2)/(n*k)
             else:
                 return 2*(-1)**k * x**n/(n*C.factorial(k)*sqrt(S.Pi))
 
-    def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
-
-        if C.Order(1,x).contains(arg):
-            return arg
-        else:
-            return self.func(arg)
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
 
     def _eval_is_real(self):
         return self.args[0].is_real
+
+    def _eval_rewrite_as_uppergamma(self, z):
+        return sqrt(z**2)/z*(S.One - C.uppergamma(S.Half, z**2)/sqrt(S.Pi))
+
+    def _eval_rewrite_as_tractable(self, z):
+        return S.One - _erfs(z)*C.exp(-z**2)
 
 
 ###############################################################################
@@ -772,3 +825,36 @@ class Chi(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z):
         from sympy import exp_polar
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
+
+###############################################################################
+#################### HELPER FUNCTIONS #########################################
+###############################################################################
+
+
+class _erfs(Function):
+    """
+    Helper function to make the :math:`erf(z)` function
+    tractable for the Gruntz algorithm.
+    """
+
+    nargs = 1
+
+    def _eval_aseries(self, n, args0, x, logx):
+        if args0[0] != S.Infinity:
+            return super(_erfs, self)._eval_aseries(n, args0, x, logx)
+
+        z = self.args[0]
+        l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(4))**(-k)/C.factorial(k) * (1/z)**(2*k+1) for k in xrange(0,n) ]
+        o = C.Order(1/z**(2*n+1), x)
+        # It is very inefficient to first add the order and then do the nseries
+        return (Add(*l))._eval_nseries(x, n, logx) + o
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            z = self.args[0]
+            return -2/sqrt(S.Pi)+2*z*_erfs(z)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_intractable(self, z):
+        return (S.One-erf(z))*C.exp(z**2)
