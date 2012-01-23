@@ -502,41 +502,6 @@ class Mul(AssocOp):
 
 
     def _eval_power(b, e):
-        """
-        >>> from sympy import symbols, sqrt
-        >>> from sympy.abc import x, y
-        >>> A, B, C = symbols('A,B,C', commutative=False)
-        >>> (2*x*y**y)**3.2
-        2**3.2*(x*y**y)**3.2
-        >>> (-2*x*y**y)**3.2
-        2**3.2*(-x*y**y)**3.2
-        >>> _.subs({x:-1,y:2}).n()
-        776.046882053324
-        >>> (-2*x*y**y).subs({x:-1,y:2}).n()**3.2
-        776.046882053324
-        >>> sqrt(-1.0*x)
-        1.0*sqrt(-x)
-        >>> (B*C)**3
-        (B*C)**3
-        >>> (x*B*C)**3
-        x**3*(B*C)**3
-        >>> (2*B*C)**3
-        8*(B*C)**3
-        >>> (2.*B*C)**3
-        8.0*(B*C)**3
-        >>> (-2.*B*C)**3
-        -8.0*(B*C)**3
-        >>> (-2.*B*C)**2
-        4.0*(B*C)**2
-        >>> (-2*B*C)**2
-        4*(B*C)**2
-        >>> (-2*x*y)**2
-        4*x**2*y**2
-        >>> (-2*x*y*A*B)**2
-        4*x**2*y**2*(A*B)**2
-        >>> (-2*x*y)**2
-        4*x**2*y**2
-        """
 
         # don't break up NC terms: (A*B)**3 != A**3*B**3, it is A*B*A*B*A*B
         coeff, b = b.as_coeff_Mul()

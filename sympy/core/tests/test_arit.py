@@ -1293,3 +1293,16 @@ def test_mul_flatten_oo():
     assert i*j*oo == -oo
     assert i*j*I*oo == -I*oo
     assert i*I*I*oo == -I*oo
+
+def test_issue_2061_2988_2990_2991():
+    #2988
+    assert (-2*x*y**y)**3.2 == 2**3.2*(-x*y**y)**3.2
+    #2990
+    A, B, C = symbols('A,B,C', commutative=False)
+    assert (2.*B*C)**3 == 8.0*(B*C)**3
+    assert (-2.*B*C)**3 == -8.0*(B*C)**3
+    assert (-2*B*C)**2 == 4*(B*C)**2
+    #2061
+    assert sqrt(-1.0*x) == 1.0*sqrt(-x)
+    #2991
+    assert (-2*x*y*A*B)**2 == 4*x**2*y**2*(A*B)**2
