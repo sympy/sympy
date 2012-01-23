@@ -1921,7 +1921,7 @@ class NO(Expr):
         -1
         >>> NO(F(i)*F(a)).has_q_annihilators
         1
-        >>> NO(Fd(a)*F(i)).has_q_annihilators           #doctest: +SKIP
+        >>> NO(Fd(a)*F(i)).has_q_annihilators
         0
 
         """
