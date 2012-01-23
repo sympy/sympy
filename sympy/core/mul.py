@@ -456,8 +456,7 @@ class Mul(AssocOp):
                         continue
                     new_c_part.append(t)
                 return new_c_part, coeff_sign, imaginary
-            c_part, coeff_sign, imaginary = \
-                _handle_for_oo(c_part, 1, 0)
+            c_part, coeff_sign, imaginary = _handle_for_oo(c_part, 1, 0)
             nc_part, coeff_sign, imaginary = \
                 _handle_for_oo(nc_part, coeff_sign, imaginary)
             imaginary = imaginary % 4 # -> [1, I, -1, -I]
