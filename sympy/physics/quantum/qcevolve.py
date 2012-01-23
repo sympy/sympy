@@ -62,7 +62,11 @@ def find_subcircuit(circuit, subcircuit):
     subcircuit : tuple, Gate
         A tuple of Gates to check if circuit contains
 
-    """    
+    """
+
+    # Currently has a bug - perhaps implement Knuth-Morris-Pratt algorithm
+    # but it would require creating a table for the subcircuit.
+
     if len(subcircuit) == 0 or len(subcircuit) > len(circuit):
         return -1
 

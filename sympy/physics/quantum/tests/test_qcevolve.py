@@ -22,3 +22,5 @@ def test_find_subcircuit():
     assert find_subcircuit(circuit, (x, y, z, h)) == -1
     assert find_subcircuit(circuit, (z, y, x)) == -1
 
+    circuit = (x, y, x, y, z)
+    assert find_subcircuit(circuit, (x, y, z)) == 2
