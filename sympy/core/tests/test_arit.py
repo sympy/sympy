@@ -1285,14 +1285,11 @@ def test_issue_2978():
 def test_mul_flatten_oo():
     p = symbols('p', positive=True)
     n, m = symbols('n,m', negative=True)
-    i, j = symbols('i,j', imaginary=True)
+    x_im = symbols('x_im', imaginary=True)
     assert n*oo == -oo
     assert n*m*oo == oo
     assert p*oo == oo
-    assert i*oo == I*oo
-    assert i*j*oo == -oo
-    assert i*j*I*oo == -I*oo
-    assert i*I*I*oo == -I*oo
+    assert x_im*oo != I*oo # i could be +/- 3*I -> +/-oo
 
 def test_issue_2061_2988_2990_2991():
     #2988
