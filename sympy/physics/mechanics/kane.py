@@ -64,12 +64,10 @@ class Kane(object):
     assigned to it.
     Finally, a list of all bodies and particles needs to be created::
 
-        >>> kd = [qd - u]
-        >>> FL = [(P, (-k * q - c * u) * N.x)]
-        >>> pa = Particle()
-        >>> pa.mass = m
-        >>> pa.point = P
-        >>> BL = [pa]
+    >>> kd = [qd - u]
+    >>> FL = [(P, (-k * q - c * u) * N.x)]
+    >>> pa = Particle('pa', P, m)
+    >>> BL = [pa]
 
     Finally we can generate the equations of motion.
     First we create the Kane object and supply an inertial frame.
@@ -163,9 +161,7 @@ class Kane(object):
         ol = []
         for i in list(inlist):
             ol += _deeper(i)
-        seta = {}
-        map(seta.__setitem__, ol, [])
-        ol = seta.keys()
+        ol = list(set(ol))
         for i, v in enumerate(insyms):
             if ol.__contains__(v):
                 ol.remove(v)
@@ -185,9 +181,7 @@ class Kane(object):
         ol = []
         for i in list(inlist):
             ol += _deeper(i)
-        seta = {}
-        map(seta.__setitem__, ol, [])
-        ol = seta.keys()
+        ol = list(set(ol))
         for i, v in enumerate(insyms):
             if ol.__contains__(v):
                 ol.remove(v)
@@ -660,13 +654,28 @@ class Kane(object):
         Note that for linearization, it is assumed that time is not perturbed,
         but only coordinates and positions. The "forcing" vector's jacobian is
         computed with respect to the state vector in the form [Qi, Qd, Ui, Ud].
-        This is the "A" matrix.
+        This is the "f_lin_A" matrix.
 
         It also finds any non-state dynamicsymbols and computes the jacobian of
-        the "forcing" vector with respect to them. This is the "B" matrix; if
+        the "forcing" vector with respect to them. This is the "f_lin_B" matrix; if
         this is empty, an empty matrix is created
 
-        A tuple of ("A", "B") is returned.
+        See the following:
+        If our equations are: [M]qudot = f, where [M] is the full mass matrix,
+        qudot is a vector of the deriatives of the coordinates and speeds, and
+        f in the full forcing vector, the linearization process is as follows:
+        [M]qudot = [f_lin_A]qu + [f_lin_B]y, where qu is the state vector,
+        f_lin_A is the jacobian of the full forcing vector with respect to the
+        state vector, f_lin_B is the jacobian of the full forcing vector with
+        respect to any non-speed/coordinate dynamicsymbols which show up in
+        full forcing vector, and y is a vector of those dynamic symbols (each
+        column in f_lin_B corresponds to a row of the y vector, each of which
+        is a non-speed/coordinate dynamicsymbol.
+
+        To get the traditional state-space A and B matrix, you need to multiply
+        the f_lin_A and f_lin_B matrices by the inverse of the mass matrix.
+
+        A tuple of (f_lin_A, f_lin_B, other_dynamicsymbols) is returned.
 
         """
 
@@ -700,10 +709,10 @@ class Kane(object):
         if bad_oths != []:
             raise ValueError('Cannot have dynamic symbols outside dynamic ' +
                              'forcing vector')
-        oth_dyns = self._find_dynamicsymbols(self._f_d.subs(uadz).subs(uaz),
+        other_dyns = self._find_dynamicsymbols(self._f_d.subs(uadz).subs(uaz),
                                              insyms)
-        for i in oth_dyns:
-            if diff(i, dynamicsymbols._t) in oth_dyns:
+        for i in other_dyns:
+            if diff(i, dynamicsymbols._t) in other_dyns:
                 raise ValueError('Cannot have derivatives of forcing terms ' +
                                  'when linearizing forcing terms')
 
@@ -807,14 +816,14 @@ class Kane(object):
             f1_u = f1.jacobian(ui)
             f2_q = f2.jacobian(qi) + f2.jacobian(self._qdot) * dqdot_dqi
             f2_u = f2.jacobian(ui) + f2.jacobian(self._qdot) * dqdot_dui
-        Amat = -(f1_q.row_join(f1_u)).col_join(f2_q.row_join(f2_u))
-        if oth_dyns != []:
-            f1_oths = f1.jacobian(oth_dyns)
-            f2_oths = f2.jacobian(oth_dyns)
-            Bmat = -f1_oths.col_join(f2_oths)
+        f_lin_A = -(f1_q.row_join(f1_u)).col_join(f2_q.row_join(f2_u))
+        if other_dyns != []:
+            f1_oths = f1.jacobian(other_dyns)
+            f2_oths = f2.jacobian(other_dyns)
+            f_lin_B = -f1_oths.col_join(f2_oths)
         else:
-            Bmat = Matrix([])
-        return (Amat, Bmat)
+            f_lin_B = Matrix([])
+        return (f_lin_A, f_lin_B, Matrix(other_dyns))
 
     @property
     def mass_matrix(self):
