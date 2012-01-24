@@ -27,7 +27,7 @@ the only two attributes of the object.::
   >>> from sympy import Symbol
   >>> m = Symbol('m')
   >>> po = Point('po')
-  >>> # create an particle container
+  >>> # create a particle container
   >>> pa = Particle('pa', po, m)
 
 The associated point contains the position, velocity and acceleration of the

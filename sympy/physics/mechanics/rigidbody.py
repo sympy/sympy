@@ -10,7 +10,8 @@ class RigidBody(object):
     This is essentially a container which holds the various components which
     describe a rigid body: a name, mass, point, reference frame, and inertia.
 
-    All of these need to be supplied on creation, but can be changed afterwards
+    All of these need to be supplied on creation, but can be changed
+    afterwards.
 
     Attributes
     ==========
