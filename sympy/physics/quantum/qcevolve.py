@@ -13,6 +13,7 @@ from pyevolve.GenomeBase import GenomeBase
 
 __all__ = [
     'GQCBase',
+    'kmp_table',
     'find_subcircuit'
 ]
 
@@ -48,12 +49,44 @@ class GQCLinear(GQCBase):
     """
     pass
 
+def kmp_table(word):
+    """Build the 'partial match' table of the
+       Knuth-Morris-Pratt algorithm.
+
+    Note: This is applicable to strings or quantum circuits.
+    """
+
+    # Current position in subcircuit
+    pos = 2
+    # Beginning position of candidate substring that
+    # may reappear later in word
+    cnd = 0
+    # The 'partial match' table that helps one determine
+    # the next location to start substring search
+    table = list()
+    table.append(-1)
+    table.append(0)
+
+    while pos < len(word):
+        if word[pos-1] == word[cnd]:
+            cnd = cnd + 1
+            table.append(cnd)
+            pos = pos + 1
+        elif cnd > 0:
+            cnd = table[cnd]
+        else:
+            table.append(0)
+            pos = pos + 1
+
+    return table
+
 def find_subcircuit(circuit, subcircuit):
     """Finds the subcircuit in circuit, if it exists.
 
     If the subcircuit exists, the index of the start of
     the subcircuit in circuit is returned; otherwise,
-    -1 is returned.
+    -1 is returned.  The algorithm that is implemented
+    is the Knuth-Morris-Pratt algorithm.
 
     Parameters
     ==========
@@ -64,25 +97,25 @@ def find_subcircuit(circuit, subcircuit):
 
     """
 
-    # Currently has a bug - perhaps implement Knuth-Morris-Pratt algorithm
-    # but it would require creating a table for the subcircuit.
-
     if len(subcircuit) == 0 or len(subcircuit) > len(circuit):
         return -1
 
-    # Location of subcircuit that this identity contains
+    # Location in circuit
+    pos = 0
+    # Location in the subcircuit
     index = 0
-    loc = -1
-    for gate in circuit:
-        if index < len(subcircuit):
-            index = index + 1 if gate == subcircuit[index] else 0
-            # if index == 1, then the start of the subcircuit is found
-            loc = circuit.index(gate) if index == 1 else loc
+    # 'Partial match' table
+    table = kmp_table(subcircuit)
 
-        # If the value of index reaches the length of subcircuit
-        # then this identity contains subcircuit
+    while (pos + index) < len(circuit):
+        if subcircuit[index] == circuit[pos + index]:
+            index = index + 1
+        else:
+            pos = pos + index - table[index]
+            index = table[index] if table[index] > -1 else 0
+
         if index == len(subcircuit):
-            return loc
+            return pos
 
     return -1
 
