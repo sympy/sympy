@@ -17,7 +17,7 @@ operating system's standard decompression utility.
 
 When downloading the archive, make sure to get the correct version (Python 2 or
 Python 3). If you're not sure which one to use, you probably want the Python 2
-version. Note that you can install both if you want. 
+version. Note that you can install both if you want.
 
 After the download is complete, you should have a folder called "sympy". From
 your favorite command line terminal, change directory into that folder and
@@ -66,7 +66,7 @@ directory.
 
 If you're using the git repository with Python 3, you have to use the
 ``./bin/use2to3`` script to build the Python 3 version of SymPy. This will put
-everything in the py3ksympy directory. 
+everything in the py3ksympy directory.
 
 Other Methods
 =============

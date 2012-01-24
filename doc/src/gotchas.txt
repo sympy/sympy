@@ -69,7 +69,7 @@ equation reduces to 0.
 
 .. note::
 
-    See also `Why does SymPy say that two equal expressions are unequal? 
+    See also `Why does SymPy say that two equal expressions are unequal?
     <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
 
 
@@ -166,7 +166,7 @@ If you define a circular relationship, you will get a
 
 
 .. note::
-    See also `Why doesn't changing one variable change another that depends on it? 
+    See also `Why doesn't changing one variable change another that depends on it?
     <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
 
 .. _symbols:
@@ -258,7 +258,7 @@ all built-in names and to autocomplete.  Also, see `this page
 trick for getting tab completion in the regular Python console.
 
 .. note::
-    See also `What is the best way to create symbols? 
+    See also `What is the best way to create symbols?
     <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
 
 .. _symbolic-expressions:
@@ -581,9 +581,9 @@ Getting help from within SymPy
 ==============================
 help()
 ------
-Although all docs are available at `docs.sympy.org <http://docs.sympy.org/>`_ or on the 
-`SymPy Wiki <http://wiki.sympy.org/>`_, you can also get info on functions from within the 
-Python interpreter that runs SymPy.  The easiest way to do this is to do 
+Although all docs are available at `docs.sympy.org <http://docs.sympy.org/>`_ or on the
+`SymPy Wiki <http://wiki.sympy.org/>`_, you can also get info on functions from within the
+Python interpreter that runs SymPy.  The easiest way to do this is to do
 ``help(function)``, or ``function?`` if you are using :command:`ipython`::
 
     In [1]: help(powsimp) # help() works everywhere
