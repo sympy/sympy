@@ -268,7 +268,7 @@ def Uniform(left, right, symbol=None):
     >>> X = Uniform(l, r, symbol=x)
 
     >>> Density(X)
-    (x, Piecewise((0, x < l), (0, r < x), (1/(-l + r), True)))
+    (x, Piecewise((0, x < l), (0, x > r), (1/(-l + r), True)))
 
     >>> simplify(E(X))
     l/2 + r/2
