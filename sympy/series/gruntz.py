@@ -504,7 +504,7 @@ def calculate_series(e, x, skip_abs=False, logx=None):
     """
 
     f = e
-    for n in [1, 2, 4, 6, 8]:
+    for n in [1, 2, 4, 6, 8, 16]:
         series = f.nseries(x, n=n, logx=logx)
         if not series.has(O):
             # The series expansion is locally exact.
@@ -515,7 +515,7 @@ def calculate_series(e, x, skip_abs=False, logx=None):
             if (not skip_abs) or series.has(x):
                 break
     else:
-        raise ValueError('(%s).series(%s, n=8) gave no terms.' % (f, x))
+        raise ValueError('(%s).series(%s, n=16) gave no terms.' % (f, x))
     return series
 
 @debug
@@ -602,6 +602,7 @@ def rewrite(e, Omega, x, wsym):
     Returns the rewritten e in terms of w and log(w). See test_rewrite1()
     for examples and correct results.
     """
+    from sympy import ilcm
     assert isinstance(Omega, SubsSet)
     assert len(Omega) != 0
     #all items in Omega must be exponentials
@@ -621,8 +622,11 @@ def rewrite(e, Omega, x, wsym):
         raise NotImplementedError('Result depends on the sign of %s' % sig)
     #O2 is a list, which results by rewriting each item in Omega using "w"
     O2 = []
+    denominators = []
     for f, var in Omega:
         c = limitinf(f.args[0]/g.args[0], x)
+        if c.is_Rational:
+            denominators.append(c.q)
         arg = f.args[0]
         if var in rewrites:
             assert rewrites[var].func is exp
@@ -646,6 +650,12 @@ def rewrite(e, Omega, x, wsym):
     logw = g.args[0]
     if sig == 1:
         logw = -logw     #log(w)->log(1/w)=-log(w)
+
+    # Some parts of sympy have difficulty computing series expansions with
+    # non-integral exponents. The following heuristic improves the situation:
+    exponent = reduce(ilcm, denominators, 1)
+    f = f.subs(wsym, wsym**exponent)
+    logw /= exponent
 
     return f, logw
 
