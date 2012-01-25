@@ -459,4 +459,4 @@ def test_latex_RandomDomain():
 
     A = Exponential(1, symbol=Symbol('a'))
     B = Exponential(1, symbol=Symbol('b'))
-    assert latex(pspace(Tuple(A,B)).domain) =="Domain: 0 \leq a \wedge 0 \leq b"
+    assert latex(pspace(Tuple(A,B)).domain) =="Domain: 0 \leq b \wedge 0 \leq a"

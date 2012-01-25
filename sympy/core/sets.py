@@ -1120,7 +1120,7 @@ class FiniteSet(CountableSet):
         return all(el.is_real for el in self)
 
     def compare(self, other):
-        return cmp(hash(self), hash(other))
+        return (hash(self) - hash(other))
 
 class RealFiniteSet(FiniteSet, RealSet):
     """

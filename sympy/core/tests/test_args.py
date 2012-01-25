@@ -355,7 +355,7 @@ def normal_pdf(x):
 
 def test_sympy__stats__crv__ContinuousDomain():
     from sympy.stats.crv import ContinuousDomain
-    assert _test_args(ContinuousDomain({x}, Interval(-oo,oo)))
+    assert _test_args(ContinuousDomain(set([x]), Interval(-oo,oo)))
 
 def test_sympy__stats__crv__SingleContinuousDomain():
     from sympy.stats.crv import SingleContinuousDomain
