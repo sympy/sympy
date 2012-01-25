@@ -456,39 +456,39 @@ def test_sympy__stats__frv_types__CoinPSpace():
 
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
-    assert _test_args(FiniteDomain({(x,1), (x,2)})) # x can be 1 or 2
+    assert _test_args(FiniteDomain(set([(x,1), (x,2)]))) # x can be 1 or 2
 
 def test_sympy__stats__frv__SingleFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain
-    assert _test_args(SingleFiniteDomain(x, {1,2})) # x can be 1 or 2
+    assert _test_args(SingleFiniteDomain(x, set([1,2]))) # x can be 1 or 2
 
 def test_sympy__stats__frv__ProductFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain, ProductFiniteDomain
-    xd = SingleFiniteDomain(x, {1,2})
-    yd = SingleFiniteDomain(y, {1,2})
+    xd = SingleFiniteDomain(x, set([1,2]))
+    yd = SingleFiniteDomain(y, set([1,2]))
     assert _test_args(ProductFiniteDomain(xd, yd))
 
 def test_sympy__stats__frv__ConditionalFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain, ConditionalFiniteDomain
-    xd = SingleFiniteDomain(x, {1,2})
+    xd = SingleFiniteDomain(x, set([1,2]))
     assert _test_args(ConditionalFiniteDomain(xd, x>1))
 
 def test_sympy__stats__frv__FinitePSpace():
     from sympy.stats.frv import FinitePSpace, SingleFiniteDomain
-    xd = SingleFiniteDomain(x, {1,2})
+    xd = SingleFiniteDomain(x, set([1,2]))
     assert _test_args(FinitePSpace(xd, {(x,1):S.Half, (x,2):S.Half}))
 
 def test_sympy__stats__frv__SingleFinitePSpace():
     from sympy.stats.frv import SingleFinitePSpace, SingleFiniteDomain
-    xd = SingleFiniteDomain(x, {1,2})
+    xd = SingleFiniteDomain(x, set([1,2]))
     assert _test_args(SingleFinitePSpace(xd, {(x,1):S.Half, (x,2):S.Half}))
 
 def test_sympy__stats__frv__ProductFinitePSpace():
     from sympy.stats.frv import (SingleFiniteDomain, SingleFinitePSpace,
         ProductFinitePSpace)
-    xd = SingleFiniteDomain(x, {1,2})
+    xd = SingleFiniteDomain(x, set([1,2]))
     xp = SingleFinitePSpace(xd, {(x,1):S.Half, (x,2):S.Half})
-    yd = SingleFiniteDomain(y, {1,2})
+    yd = SingleFiniteDomain(y, set([1,2]))
     yp = SingleFinitePSpace(yd, {(y,1):S.Half, (y,2):S.Half})
     assert _test_args(ProductFinitePSpace(xp, yp))
 
