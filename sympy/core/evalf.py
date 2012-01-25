@@ -610,6 +610,8 @@ def evalf_log(expr, prec, options):
 def evalf_atan(v, prec, options):
     arg = v.args[0]
     xre, xim, reacc, imacc = evalf(arg, prec+5, options)
+    if xre is xim is None:
+        return (None,)*4
     if xim:
         raise NotImplementedError
     return mpf_atan(xre, prec, round_nearest), None, prec, None
