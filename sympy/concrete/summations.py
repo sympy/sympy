@@ -209,7 +209,7 @@ class Sum(Expr):
             -log(2) + 7/20 + log(5)
             >>> from sympy import sstr
             >>> print sstr((s.evalf(), e.evalf()), full_prec=True)
-            (1.26629073187416, 0.0175000000000000)
+            (1.26629073187415, 0.0175000000000000)
 
         The endpoints may be symbolic:
 

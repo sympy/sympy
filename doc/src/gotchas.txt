@@ -241,7 +241,7 @@ careful.
     ...
     >>> cos(pi)
     15
-
+    >>> from sympy import cos # reimport to restore normal behavior
 
 
 To get a full list of all default names in SymPy do:
@@ -364,6 +364,107 @@ You only need to be careful with number/number.
     TypeError: int() argument must be a string or a number, not 'Symbol'
     >>> 2/x
     2/x
+
+Evaluating Expressions with Floats and Rationals
+------------------------------------------------
+
+SymPy keeps track of the precision of Floats. The default precision is
+15 digits. When expressions involving Floats are evaluated, the result
+will be expressed to 15 digits of precision but those digits (depending
+on the numbers involved with the calculation) may not all be significant.
+
+The first issue to keep in mind is how the Float is created: it is created
+with a value and a precision. The precision indicates how precise of a value
+to use when that Float (or an expression it appears in) is evaluate.
+
+The values can be given as strings, integers, or Rationals. We do so below
+with a few different values:
+
+    >>> inti, i, s, r = [Float(j, 3) for j in (100, '100', '0.1', Rational(1, 7))]
+    >>> for f in [inti, i, s, r]:
+    ...     print f
+    100
+    100.
+    0.100
+    0.143
+
+First, notice that if you try to Float an integer you will receive an Integer.
+You must sent an integer as a string if you want a Float representation of it.
+Next, notice that each of those values looks correct to 3 digits. But if we try
+to evaluate them to 20 digits, a difference will become apparent:
+
+    The 0.1 (with precision of 3) and 1/7 cannot be represented accurately
+    too far past those first 3 digits, while the 100 can:
+
+    >>> s.n(20)
+    0.10000610351562500000
+    >>> r.n(20)
+    0.14285278320312500000
+    >>> i.n(20)
+    100.00000000000000000
+
+If the inexact, low-precision numbers are involved in a calculation with
+with higher precision values, the evalf engine will increase the precision
+of the low precision values and inexact results will be obtained. This is
+feature of calculations with limited precision:
+
+    >>> from sympy.core.evalf import evalf_subs
+    >>> x.subs(evalf_subs(34, {x: s})) # used by evalf to incr. precision
+    0.100006104
+    >>> s + _
+    0.200012207
+
+Although the evalf engine tried to maintain 10 digits of precision (since
+that was the highest precision represented) the 4-digit precision of the
+``s`` keeps more than a few digits past those 4 from being obtained. So
+not all the digits you see are significant. evalf doesn't try to keep
+track of the number of significant digits.
+
+That very simple expression involving the addition of two numbers with
+different precisions will hopefully be instructive in helping you
+understand why more complicated expressions (like trig expressions that
+may not be simplified) will not evaluate to an exact zero even though,
+with the right simplification, they should be zero. Consider this
+unsimplified trig identity, multiplied by a big number:
+
+    >>> big = 12345678901234567890
+    >>> big_trig_identity = big*cos(x)**2 + big*sin(x)**2 - big*1
+    >>> big_trig_identity.subs(x, .1).n(2)
+    -1.4e+3
+
+When the cos and sin terms were evaluated to 15 digits of precision and
+multiplied by the big number, they gave a large number that was only
+precise to 15 digits (approximately) and when the 20 digit big number
+was subtracted the result was not zero.
+
+There are three things that will help you obtain more precise numerical
+values for expressions:
+
+    1) Pass the desired substitutions with the call to evaluate. By doing
+    the subs first, the Float values can not be updated as necessary. By
+    passing the desired substitutions with the call to evalf the ability
+    to re-evaluate as necessary is gained and the results are impressively
+    better:
+
+    >>> big_trig_identity.n(2, {x: 0.1})
+    -.0e-94
+
+    2) Use Rationals, not Floats. During the evaluation process, the
+    Rational can be computed to an arbitrary precision while the Float,
+    once created -- at a default of 15 digits -- cannot. Compare the
+    value of -1.4e+3 above with the nearly zero value obtained when
+    replacing x with a Rational representing 1/10 -- before the call
+    to evaluate:
+
+    >>> big_trig_identity.subs(x, S('1/10')).n(2)
+    -.0e-94
+
+    3) Try to simplify the expression. In this case, SymPy will recognize
+    the trig identity and simplify it to zero so you don't even have to
+    evaluate it numerically:
+
+    >>> big_trig_identity.simplify()
+    0
 
 
 .. _Immutability-of-Expressions:
