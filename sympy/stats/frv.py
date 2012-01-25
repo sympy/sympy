@@ -177,7 +177,8 @@ class FinitePSpace(PSpace):
         d = self.compute_density(expr)
         cum_prob = 0
         cdf = []
-        for key, prob in sorted(d.items()):
+        for key in sorted(d):
+            prob = d[key]
             cum_prob += prob
             cdf.append((key, cum_prob))
 
@@ -185,10 +186,13 @@ class FinitePSpace(PSpace):
 
     @cacheit
     def sorted_cdf(self, expr, python_float=False):
-        cdf = sorted(self.compute_cdf(expr).items(), key=lambda x: x[1])
+        cdf = self.compute_cdf(expr)
+        items = list(cdf.items())
+        sorted_items = sorted(items, key=lambda (val, cum_prob): cum_prob)
         if python_float:
-            cdf = [(v, float(cum_prob)) for v, cum_prob in cdf]
-        return cdf
+            sorted_items = [(v, float(cum_prob))
+                    for v, cum_prob in sorted_items]
+        return sorted_items
 
     def integrate(self, expr, rvs=None):
         rvs = rvs or self.values
