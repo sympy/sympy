@@ -209,7 +209,7 @@ Helper Functions for Extending LatexPrinter Class
 
 The functions :func:`sym_format`, :func:`fct_format`, :func:`pdiff_format`, and
 :func:`MV_format` allow one to change various formatting aspects of the
-:class:`LatexPrinter`.  They do not initialize the class and if the are called
+:class:`LatexPrinter`.  They do not initialize the class and if they are called
 with the class not initialized they have no effect.  These functions and the
 function :func:`xdvi` are designed so that if the :class:`LatexPrinter` class is
 not initialized the program output is as if the :class:`LatexPrinter` class is

@@ -1,6 +1,6 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
-    pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt
+    pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float
 from sympy.printing.mathml import mathml, MathMLPrinter
 from xml.dom.minidom import parseString
 
@@ -40,6 +40,13 @@ def test_mathml_core():
     nodes = mml_3.childNodes
     assert nodes[0].nodeName == 'times'
     assert nodes[1].childNodes[0].nodeValue == '2'
+    assert nodes[2].childNodes[0].nodeValue == 'x'
+
+    mml = mp._print(Float(1.0,2)*x)
+    assert mml.nodeName == 'apply'
+    nodes = mml.childNodes
+    assert nodes[0].nodeName == 'times'
+    assert nodes[1].childNodes[0].nodeValue == '1.0'
     assert nodes[2].childNodes[0].nodeValue == 'x'
 
 def test_mathml_functions():

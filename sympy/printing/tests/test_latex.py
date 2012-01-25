@@ -438,3 +438,12 @@ def test_custom_symbol_names():
     assert latex(x + y, symbol_names={x:"x_i"}) == "x_i + y"
     assert latex(x**2, symbol_names={x:"x_i"}) == "x_i^{2}"
     assert latex(x + y, symbol_names={x:"x_i", y:"y_j"}) == "x_i + y_j"
+
+def test_matAdd():
+    from sympy import MatrixSymbol
+    from sympy.printing.latex import LatexPrinter
+    C = MatrixSymbol('C', 5, 5)
+    B = MatrixSymbol('B', 5, 5)
+    l = LatexPrinter()
+    assert l._print_MatAdd(C - 2*B) == '- 2 B + C'
+    assert l._print_MatAdd(C + 2*B) == '+ 2 B + C'

@@ -443,25 +443,18 @@ class Mul(AssocOp):
 
         # oo, -oo
         if (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
-            new_c_part = []
-            coeff_sign = 1
-            for t in c_part:
-                if t.is_positive:
-                    continue
-                if t.is_negative:
-                    coeff_sign *= -1
-                    continue
-                new_c_part.append(t)
-            c_part = new_c_part
-            new_nc_part = []
-            for t in nc_part:
-                if t.is_positive:
-                    continue
-                if t.is_negative:
-                    coeff_sign *= -1
-                    continue
-                new_nc_part.append(t)
-            nc_part = new_nc_part
+            def _handle_for_oo(c_part, coeff_sign):
+                new_c_part = []
+                for t in c_part:
+                    if t.is_positive:
+                        continue
+                    if t.is_negative:
+                        coeff_sign *= -1
+                        continue
+                    new_c_part.append(t)
+                return new_c_part, coeff_sign
+            c_part, coeff_sign = _handle_for_oo(c_part, 1)
+            nc_part, coeff_sign = _handle_for_oo(nc_part, coeff_sign)
             coeff *= coeff_sign
 
         # zoo
@@ -499,73 +492,63 @@ class Mul(AssocOp):
 
 
     def _eval_power(b, e):
+
+        # don't break up NC terms: (A*B)**3 != A**3*B**3, it is A*B*A*B*A*B
+        coeff, b = b.as_coeff_Mul()
+        bc, bnc = b.args_cnc()
+
+        bnc = Pow(Mul._from_args(bnc), e, evaluate=False)
         if e.is_Number:
-            if b.is_commutative:
-                if e.is_Integer:
-                    # (a*b)**2 -> a**2 * b**2
-                    return Mul(*[s**e for s in b.args])
+            if e.is_Integer:
+                # (a*b)**2 -> a**2 * b**2
+                return coeff**e*(Mul(*[s**e for s in bc])*bnc)
 
-                if e.is_rational:
-                    coeff, rest = b.as_coeff_mul()
-                    rest = list(rest)
-                    unk=[]
-                    nonneg=[]
-                    neg=[]
-                    for bi in rest:
-                        if bi.is_negative is not None: #then we know the sign
-                            if bi.is_negative:
-                                neg.append(bi)
-                            else:
-                                nonneg.append(bi)
-                        elif bi.is_polar:
-                            nonneg.append(bi)
+            if e.is_Rational or e.is_Float:
+                unk=[]
+                nonneg=[]
+                neg=[]
+                for bi in bc:
+                    if bi.is_negative is not None: #then we know the sign
+                        if bi.is_negative:
+                            neg.append(bi)
                         else:
-                            unk.append(bi)
-                    if len(unk) == len(rest) or len(neg) == len(rest) == 1:
-                        # if all terms were unknown there is nothing to pull
-                        # out except maybe the coeff; if there is a single
-                        # negative term, this is the base case which cannot
-                        # be processed further
-                        if coeff.is_negative:
-                            coeff *= -1
-                            rest[0] = -rest[0]
-                        if coeff is S.One:
-                            return None
-                        return Mul(Pow(coeff, e), Pow(Mul(*rest), e))
+                            nonneg.append(bi)
+                    elif bi.is_polar:
+                        nonneg.append(bi)
+                    else:
+                        unk.append(bi)
+                if len(unk) == len(bc) or len(neg) == len(bc) == 1:
+                    # if all terms were unknown there is nothing to pull
+                    # out except maybe the coeff; if there is a single
+                    # negative term, this is the base case which cannot
+                    # be processed further
+                    if coeff.is_negative:
+                        coeff *= -1
+                        bc[0] = -bc[0]
+                    if coeff is S.One:
+                        return None
+                    return Mul(Pow(coeff, e), Pow(Mul(*bc), e), bnc)
 
-                    # otherwise return the new expression expanding out the
-                    # known terms; those that are not known can be expanded
-                    # out with separate() but this will introduce a lot of
-                    # "garbage" that is needed to keep one on the same branch
-                    # as the unexpanded expression. The negatives are brought
-                    # out with a negative sign added and a negative left behind
-                    # in the unexpanded terms if there were an odd number of
-                    # negatives.
-                    if neg:
-                        neg = [-w for w in neg]
-                        if coeff.is_negative:
-                            coeff = -coeff
-                            unk.append(S.NegativeOne)
-                        if len(neg) % 2:
-                            unk.append(S.NegativeOne)
-                    return Mul(*[Pow(s, e) for s in nonneg + neg + [coeff]])* \
-                       Pow(Mul(*unk), e)
+                # otherwise return the new expression expanding out the
+                # known terms; those that are not known can be expanded
+                # out with separate() but this will introduce a lot of
+                # "garbage" that is needed to keep one on the same branch
+                # as the unexpanded expression. The negatives are brought
+                # out with a negative sign added and a negative left behind
+                # in the unexpanded terms if there were an odd number of
+                # negatives.
+                if neg:
+                    neg = [-w for w in neg]
+                    if coeff.is_negative:
+                        coeff = -coeff
+                        unk.append(S.NegativeOne)
+                    if len(neg) % 2:
+                        unk.append(S.NegativeOne)
+                return Mul(*[Pow(s, e) for s in nonneg + neg + [coeff]])* \
+                   Pow(Mul(*unk), e)*bnc
 
-
-                coeff, rest = b.as_coeff_mul()
-                if coeff is not S.One:
-                    # (2*a)**3 -> 2**3 * a**3
-                    return Mul(Pow(coeff, e), Mul(*[s**e for s in rest]))
-            elif e.is_Integer:
-                coeff, rest = b.as_coeff_mul()
-                if coeff == S.One:
-                    return # the test below for even exponent needs coeff != 1
-                else:
-                    return Mul(Pow(coeff, e), Pow(Mul(*rest), e))
-
-        c, t = b.as_coeff_mul()
-        if e.is_even and c.is_Number and c < 0:
-            return Pow((Mul(-c, Mul(*t))), e)
+        if e.is_even and coeff.is_negative:
+            return Pow(-coeff, e)*Pow(b, e)
 
         #if e.has(Wild):
         #    return Mul(*[t**e for t in b])
@@ -630,16 +613,18 @@ class Mul(AssocOp):
                 else:
                     l1.append(f)
             return self._new_rawargs(*l1), tuple(l2)
-        coeff, notrat = self.args[0].as_coeff_mul()
-        if coeff is not S.One:
-            return coeff, notrat + self.args[1:]
-        return S.One, self.args
+        args = self.args
+        if args[0].is_Rational:
+            return args[0], args[1:]
+        elif args[0] is S.NegativeInfinity:
+            return S.NegativeOne, (-args[0],) + args[1:]
+        return S.One, args
 
-    def as_coeff_Mul(self):
+    def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product. """
         coeff, args = self.args[0], self.args[1:]
 
-        if coeff.is_Number:
+        if coeff.is_Number and not (rational and not coeff.is_Rational):
             if len(args) == 1:
                 return coeff, args[0]
             else:
@@ -812,7 +797,8 @@ class Mul(AssocOp):
 
     def _matches_simple(self, expr, repl_dict):
         # handle (w*3).matches('x*5') -> {w: x*5/3}
-        coeff, terms = self.as_coeff_mul()
+        coeff, terms = self.as_coeff_Mul()
+        terms = Mul.make_args(terms)
         if len(terms) == 1:
             newexpr = self.__class__._combine_inverse(expr, coeff)
             return terms[0].matches(newexpr, repl_dict)
@@ -1419,3 +1405,4 @@ from numbers import Rational, igcd
 from power import Pow
 from sympify import sympify
 from add import Add
+from sympy.core.function import _coeff_isneg

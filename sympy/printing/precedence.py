@@ -1,7 +1,7 @@
 """A module providing information about the necessity of brackets"""
 
 from sympy import S
-
+from sympy.core.function import _coeff_isneg
 
 # Default precedence values for some basic types
 PRECEDENCE = {
@@ -38,7 +38,7 @@ PRECEDENCE_VALUES = {
 
 # Precedence functions
 def precedence_Mul(item):
-    if item.as_coeff_mul()[0].is_negative:
+    if _coeff_isneg(item):
         return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
 

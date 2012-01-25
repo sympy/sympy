@@ -1,4 +1,5 @@
-from sympy import Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi, S
+from sympy import (Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi,
+    S, Integral, sin)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import w, x, y, z
 
@@ -178,6 +179,11 @@ def test_leading_order2():
 def test_order_leadterm():
     assert O(x**2)._eval_as_leading_term(x) == O(x**2)
 
+def test_order_symbols():
+    e = x*y*sin(x)*Integral(x, (x, 1, 2))
+    assert O(e) == O(x**2*y, x, y)
+    assert O(e, x) == O(x**2)
+
 def test_nan():
     assert not O(x).contains(nan)
 
@@ -218,6 +224,7 @@ def test_eval():
 
 def test_oseries():
     assert Order(x).oseries(x) == Order(x)
+
 @XFAIL
 def test_issue_1180():
     a, b = symbols('a b')

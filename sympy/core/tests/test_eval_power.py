@@ -157,6 +157,8 @@ def test_zero():
     y = Symbol('y')
     assert 0**x != 0
     assert 0**(2*x) == 0**x
+    assert 0**(1.0*x) == 0**x
+    assert 0**(2.0*x) == 0**x
     assert (0**(2 - x)).as_base_exp() == (0, 2 - x)
     assert 0**(x - 2) != S.Infinity**(2 - x)
     assert 0**(2*x*y) == 0**(x*y)
