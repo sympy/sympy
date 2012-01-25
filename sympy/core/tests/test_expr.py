@@ -640,7 +640,7 @@ def test_has_piecewise():
     f = (x*y + 3/y)**(3 + 2)
     g = Function('g')
     h = Function('h')
-    p = Piecewise((g, x < -1), (1, x <= 1), f)
+    p = Piecewise((g(x), x < -1), (1, x <= 1), f)
 
     assert p.has(x)
     assert p.has(y)

@@ -85,7 +85,7 @@ def bspline_basis(d, knots, n, x, close=True):
     if d==0:
         result = Piecewise(
             (S.One, Interval(knots[n], knots[n+1], False, True).as_relational(x)),
-            (0, True)
+            0
         )
     elif d > 0:
         denom = knots[n+d] - knots[n]

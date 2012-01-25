@@ -18,15 +18,18 @@ class Piecewise(Function):
         - The otherwise expression is optional final argument. If no argument
           is given, the default value is NaN.
 
+    Note that old otherwise syntax of using including an (otherwise, True)
+    tuple is currently deprecated.
+
     Piecewise also accepts an option ``evaluate``, which is False by default.
     When booleans are passed as conditions or other Piecewise functions are
     passed as expressions, evaluation is automatically enabled. On evaluation:
 
         - Nested Piecewise functions are simplified (currently only simple
           cases can be handled).
-        - Explicitly False conditions are removed.
-        - Evaluation stops when at an explicitly True condition. The
-          corresponding expression becomes the new otherwise expression.
+        - Expr/cond pairs where cond is explicitly False are removed.
+        - Evaluation stops at an explicitly True condition. The corresponding
+          expression becomes the new otherwise expression.
         - If the only remaining argument is the otherwise expression, the
           otherwise expression is returned.
 
@@ -70,7 +73,6 @@ class Piecewise(Function):
     def __new__(cls, *args, **options):
         ecs = [ Tuple(*sympify(arg)) for arg in args if hasattr(arg, '__iter__') ]
         oth = [ arg for arg in args if not hasattr(arg, '__iter__') ]
-        evaluate = options.pop('evaluate', False)
         if any([ len(ec) != 2 for ec in ecs ]):
             raise ValueError("Piecewise conditions must be (expr, cond) pairs.")
 
@@ -93,19 +95,28 @@ class Piecewise(Function):
         new_args = ecs + [oth]
 
         # evaluation
-        if not evaluate and any([ isinstance(expr, Piecewise) or isinstance(cond, bool) for (expr, cond) in ecs ]):
+        evaluate = options.pop('evaluate', None)
+        # Force evaluation for boolean, can be changed when there are Basic Boolean types
+        # TODO: See Issue 3025
+        if any([ isinstance(cond, bool) for (_, cond) in ecs ]):
+            evaluate = True
+        # Allow explicit evaluate=False to stop evaluation of nested Piecewise
+        if evaluate is None and (any([ isinstance(expr, Piecewise) for (expr, _) in ecs ]) or isinstance(oth, Piecewise)):
             evaluate = True
         if evaluate:
             evaluated = cls.eval(*new_args)
             if evaluated is not None:
                 return evaluated
+
         # check exprs and otherwise are Exprs
-        # TODO: UndefinedFunction neither Basic not Expr
-        #from sympy.geometry.entity import GeometryEntity
-        #if not all([ isinstance(expr, Expr) or isinstance(expr, GeometryEntity) for (expr, _) in ecs ]):
-        #    bad_args = [ "%s of type %s" % (expr, type(expr)) for (expr, _) in ecs if not isinstance(expr, Expr) ]
-        #    raise TypeError("Expressions must be subclass of Expr, " \
-        #                    "got: %s" % ', '.join(bad_args))
+        from sympy.geometry.entity import GeometryEntity
+        if not all([ isinstance(expr, Expr) or isinstance(expr, GeometryEntity) for (expr, _) in ecs ]):
+            bad_args = [ "%s of type %s" % (expr, type(expr)) for (expr, _) in ecs if not isinstance(expr, Expr) ]
+            raise TypeError("Expressions must be subclass of Expr, " \
+                            "got: %s" % ', '.join(bad_args))
+        if not (isinstance(oth, Expr) or isinstance(oth, GeometryEntity)):
+            raise TypeError("Otherwise expression must be a subclass of Expr, " \
+                            "got %s of type %s" % (oth, type(oth)) )
         # check conds are Relational or Boolean
         if not all([ isinstance(cond, Relational) or isinstance(cond, Boolean) for (_, cond) in ecs ]):
             bad_args = [ "%s of type %s" % (cond, type(cond)) for (_, cond) in ecs if not (isinstance(cond, Relational) or isinstance(cond, Boolean)) ]
@@ -166,10 +177,47 @@ class Piecewise(Function):
 
     @property
     def exprcondpairs(self):
+        """
+        Return all expressions and conditions as 2-tuples
+
+        Returns a list of 2-tuples, each formatted as (expr, cond) for each of
+        the given expressions and conditions.
+
+            >>> from sympy import Piecewise
+            >>> from sympy.abc import x
+            >>> p = Piecewise((x, x > 1), (x**2, x > 0), -x)
+            >>> p.exprcondpairs
+            ((x, x > 1), (x**2, x > 0))
+
+        See Also
+        ========
+
+        otherwise
+        """
         return self.args[:-1]
 
     @property
     def otherwise(self):
+        """
+        Returns otherwise expression
+
+        Returns the expression given when all conditions are False. If no
+        expression was specified, this will return NaN.
+
+            >>> from sympy import Piecewise
+            >>> from sympy.abc import x
+            >>> p = Piecewise((x, x > 1), (x**2, x > 0), -x)
+            >>> p.otherwise
+            -x
+            >>> p = Piecewise((x, x > 1), (x**2, x > 0))
+            >>> p.otherwise
+            nan
+
+        See Also
+        ========
+
+        exprcondpairs
+        """
         return self.args[-1]
 
     @property
@@ -290,7 +338,7 @@ class Piecewise(Function):
 
     @classmethod
     def __eval_cond(cls, cond):
-        """Returns cond if it's a number, otherwise it is undecidable and returns None."""
+        """ Returns cond if it's a boolean, otherwise it is undecidable and returns None. """
         if isinstance(cond,bool):
             return cond
         return None

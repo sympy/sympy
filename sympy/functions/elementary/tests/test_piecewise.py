@@ -11,15 +11,25 @@ def test_piecewise():
     assert Piecewise((x, x > 1)) == Piecewise((x, x > 1), S.NaN)
     assert Piecewise((x, x > 1), (0, True), S.NaN) == Piecewise((x, x > 1), 0)
     assert Piecewise((x, x < 1), (0, False), (-1, 1 > 2), S.NaN) == Piecewise((x, x < 1))
+    assert Piecewise((x, x < 1), (x**2, True)) == Piecewise((x, x < 1), x**2)
     assert Piecewise((x, True), S.NaN) == x
-    assert Piecewise([x**2, x > 0], (-x, x < 0)) == Piecewise((x**2, x > 0), [-x, x < 0])
     raises(TypeError,"Piecewise((x,x**2))")
     raises(TypeError,"Piecewise((1,Interval(0,1,False,True)),(0,x<1))")
     raises(TypeError,"Piecewise((x,1))")
+    raises(TypeError,"Piecewise((None, x>0))")
+    raises(TypeError,"Piecewise((x, x>0),None)")
     raises(ValueError,"Piecewise((x,))")
     raises(ValueError,"Piecewise((x,x>1,x>0))")
     raises(ValueError,"Piecewise(x,(x,x<1))")
     raises(ValueError,"Piecewise(x,x)")
+
+    # Test properties
+    p1 = Piecewise((x, x > 1), x**2)
+    p2 = Piecewise((x, x > 1), (x**2, x <=1))
+    assert p1.exprcondpairs == ((x, x > 1),)
+    assert p1.otherwise == x**2
+    assert p2.exprcondpairs == ((x, x > 1),(x**2, x <= 1))
+    assert p2.otherwise == S.NaN
 
     # Test subs
     p = Piecewise((-1, x < -1), (x**2, x < 0), (log(x), x >=0))
@@ -85,6 +95,12 @@ def test_piecewise():
 
     # Test commutativity
     assert p.is_commutative is True
+
+    # Test leading term
+    # This may not be the best behavior, but is necessary to pass tests
+    # See XFAIL test_piecewise_leading_term for better behavior
+    p = Piecewise((x**3 + x, x < -1), (x**2 - 1, x < 0), log(x))
+    assert p.as_leading_term(x) == log(x)
 
 @XFAIL
 def test_piecewise_leading_term():
@@ -238,3 +254,23 @@ def test_piecewise_evaluate():
     assert Piecewise((x, 1 > 2), S.NaN) == S.NaN
     assert Piecewise((x, x < 1), (0, True), S.NaN) == Piecewise((x, x < 1), 0)
     assert Piecewise((x, 1 > 2), (-x, False)) == S.NaN
+    p1 = Piecewise((x, x > 0), (2*x, x <= 0), 3*x)
+    p2 = Piecewise((p1, x > 0), (2*x**2, x <= 0))
+    p3 = Piecewise((x**2, x > 0), (2*x**2, x <= 0), p1)
+    assert p2 == Piecewise((x, x > 0), (2*x**2, x <=0))
+    assert p3 == Piecewise((x**2, x > 0), (2*x**2, x<=0), 3*x)
+    p2 = Piecewise((p1, x > 0), (2*x**2, x <= 0), evaluate=False)
+    p3 = Piecewise((x**2, x > 0), (2*x**2, x <= 0), p1, evaluate=False)
+    assert p2.exprcondpairs[0][0].is_Piecewise
+    assert p3.otherwise.is_Piecewise
+
+@XFAIL
+def test_piecewise_evaluate_false():
+    # Requires Issue 3025
+    assert Piecewise((x, True), S.NaN, evaluate=False).is_Piecewise
+    assert Piecewise((x, 1 < 2), S.NaN, evaluate=False).is_Piecewise
+    assert Piecewise((x, 1 > 2), S.NaN, evaluate=False).is_Piecewise
+    p = Piecewise((x, x < 1), (0, True), S.NaN, evaluate=False)
+    assert p.is_Piecewise
+    assert len(p.args) == 3
+    assert Piecewise((x, 1 > 2), (-x, False), evaluate=False).is_Piecewise
