@@ -13,7 +13,7 @@ from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
 from sympy.core.sets import FiniteSet
 from rv import (RandomDomain, ProductDomain, ConditionalDomain, PSpace,
         ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs)
-import itertools
+from sympy.core.compatibility import product
 from sympy.core.containers import Dict
 import random
 
@@ -81,7 +81,7 @@ class ProductFiniteDomain(ProductDomain, FiniteDomain):
     """
 
     def __iter__(self):
-        proditer = itertools.product(*self.domains)
+        proditer = product(*self.domains)
         return (sumsets(items) for items in proditer)
 
     @property
@@ -258,7 +258,7 @@ class ProductFinitePSpace(ProductPSpace, FinitePSpace):
     @property
     @cacheit
     def _density(self):
-        proditer = itertools.product(*[space._density.iteritems()
+        proditer = product(*[space._density.iteritems()
             for space in self.spaces])
         d = {}
         for items in proditer:
