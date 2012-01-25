@@ -293,8 +293,10 @@ class Number(AtomicExpr):
         other = _sympify(other)
         return S.One, self, other
 
-    def as_coeff_Mul(self):
+    def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product. """
+        if rational and not self.is_Rational:
+            return S.One, self
         return self, S.One
 
     def as_coeff_Add(self):
@@ -831,7 +833,7 @@ class Rational(Number):
                         return S.NegativeOne ** ne * Rational(b.q, -b.p) ** ne
                 else:
                     return Rational(b.q, b.p) ** ne
-            if e is S.Infinity:
+            if e is S.Infinity: # neg infinity already caught by test for negative
                 if b.p > b.q:
                     # (3/2)**oo -> oo
                     return S.Infinity
@@ -839,8 +841,6 @@ class Rational(Number):
                     # (-3/2)**oo -> oo + I*oo
                     return S.Infinity + S.Infinity * S.ImaginaryUnit
                 return S.Zero
-            if e is S.NegativeInfinity:
-                return Rational(b.q, b.p)**S.Infinity
             if isinstance(e, Integer):
                 # (4/3)**2 -> 4**2 / 3**2
                 return Rational(b.p ** e.p, b.q ** e.p)
@@ -848,14 +848,11 @@ class Rational(Number):
                 if b.p != 1:
                     # (4/3)**(5/6) -> 4**(5/6) * 3**(-5/6)
                     return Integer(b.p) ** e * Integer(b.q) ** (-e)
-                if b >= 0:
-                    return Integer(b.q)**Rational(e.p * (e.q-1), e.q) / (Integer(b.q) ** Integer(e.p))
-                else:
-                    return (-1)**e * (-b)**e
+                # as the above caught negative b.p, now b is positive
+                return Integer(b.q)**Rational(e.p * (e.q-1), e.q) / (Integer(b.q) ** Integer(e.p))
 
-        c, t = b.as_coeff_mul()
-        if e.is_even and isinstance(c, Number) and c < 0:
-            return (-c * Mul(*t)) ** e
+        if _coeff_isneg(b) and e.is_even:
+            return (-b) ** e
 
         return
 
@@ -1352,9 +1349,8 @@ class Integer(Rational):
         if not isinstance(e, Number):
             # simplify when exp is even
             # (-2) ** k --> 2 ** k
-            c, t = b.as_coeff_mul()
-            if e.is_even and isinstance(c, Number) and c < 0:
-                return (-c*Mul(*t))**e
+            if _coeff_isneg(b) and e.is_even:
+                return (-b) ** e
         if not isinstance(e, Rational):
             return
         if e is S.Half and b < 0:
@@ -1542,16 +1538,18 @@ class Zero(IntegerConstant):
             return S.Infinity
         if e.is_positive:
             return b
-        d = e.evalf()
-        if isinstance(d, Number):
-            if d.is_negative:
+        if e.is_number:
+            if e.evalf().is_negative:
                 return S.Infinity
             return b
-        coeff, terms = e.as_coeff_mul()
+        # infinities are already handled with pos and neg
+        # tests above; now throw away leading numbers on Mul
+        # exponent
+        coeff, terms = e.as_coeff_Mul()
         if coeff.is_negative:
-            return S.Infinity ** Mul(*terms)
-        if coeff is not S.One:
-            return b ** Mul(*terms)
+            return S.Infinity ** terms
+        if coeff is not S.One: # there is a Number to discard
+            return b ** terms
 
     def _eval_order(self, *symbols):
         # Order(0,x) -> 0
@@ -2379,6 +2377,7 @@ _intcache[0] = S.Zero
 _intcache[1] = S.One
 _intcache[-1]= S.NegativeOne
 
+from function import _coeff_isneg
 from power import Pow, integer_nthroot
 from mul import Mul
 Mul.identity = One()

@@ -451,7 +451,7 @@ def test_laplace_transform():
     assert LT(besselj(0, t), t, s) == (1/sqrt(1 + s**2), 0, True)
     assert LT(besselj(1, t), t, s) == (1 - 1/sqrt(1 + 1/s**2), 0, True)
     # TODO general order works, but is a *mess*
-    # TODO besseli also works, but is an eaven greater mess
+    # TODO besseli also works, but is an even greater mess
 
 def test_inverse_laplace_transform():
     from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,

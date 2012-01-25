@@ -55,8 +55,7 @@ def _get_indices_Mul(expr, return_dummies=False):
 
     """
 
-    junk, factors = expr.as_coeff_mul()
-    inds = map(get_indices, factors)
+    inds = map(get_indices, expr.args)
     inds, syms = zip(*inds)
 
     inds = map(list, inds)
@@ -211,7 +210,7 @@ def get_indices(expr):
        (set([i, j]), {})
 
        This is correct and may appear convenient, but you need to be careful
-       with this as Sympy wil happily .expand() the product, if requested.  The
+       with this as SymPy will happily .expand() the product, if requested.  The
        resulting expression would mix the outer ``j`` with the dummies inside
        the parenthesis, which makes it a different expression.  To be on the
        safe side, it is best to avoid such ambiguities by using unique indices

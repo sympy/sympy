@@ -44,11 +44,12 @@ def decompose_power(expr):
         else:
             base, exp = expr, 1
     else:
-        exp, tail = exp.as_coeff_mul()
+        exp, tail = exp.as_coeff_Mul(rational=True)
 
-        if exp.is_Rational:
-            tail = _keep_coeff(Rational(1, exp.q), Mul(*tail))
-
+        if exp is S.NegativeOne:
+            base, exp = Pow(base, tail), -1
+        elif exp is not S.One:
+            tail = _keep_coeff(Rational(1, exp.q), tail)
             base, exp = Pow(base, tail), exp.p
         else:
             base, exp = expr, 1

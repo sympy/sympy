@@ -111,6 +111,8 @@ def test_sign():
 
 def test_Abs():
     x, y = symbols('x,y')
+    assert sign(sign(x)) == sign(x)
+    assert sign(x*y).func is sign
     assert Abs(0) == 0
     assert Abs(1) == 1
     assert Abs(-1)== 1
@@ -126,6 +128,11 @@ def test_Abs():
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
     assert Abs(x).diff(x) == sign(x)
     assert conjugate(Abs(x)) == Abs(x)
+    assert Abs(-2*x) == 2*Abs(x)
+    assert Abs(-2.0*x) == 2.0*Abs(x)
+    assert Abs(2*pi*x*y) == 2*pi*Abs(x*y)
+    a = Symbol('a', positive=True)
+    assert Abs(2*pi*x*a) == 2*pi*a*Abs(x)
 
 def test_abs_real():
     # test some properties of abs that only apply
@@ -278,6 +285,7 @@ def test_principal_branch():
     assert principal_branch(x, -4).func is principal_branch
     assert principal_branch(x, -oo).func is principal_branch
     assert principal_branch(x, zoo).func is principal_branch
+
 @XFAIL
 def test_issue_2453():
     assert abs(I * pi) == pi
