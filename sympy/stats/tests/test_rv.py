@@ -11,7 +11,7 @@ def test_where():
     Z = Normal(0, 1)
 
     assert Where(Z**2<=1).set == Interval(-1, 1)
-    assert Where(Z**2<1).as_boolean() == And(Z.symbol<1, Z.symbol>-1)
+    assert Where(Z**2<=1).as_boolean() == Interval(-1,1).as_relational(Z.symbol)
     assert Where(And(X>Y, Y>4)).as_boolean() == And(
             Eq(X.symbol, 6), Eq(Y.symbol, 5))
 
