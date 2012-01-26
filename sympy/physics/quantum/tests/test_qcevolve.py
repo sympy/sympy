@@ -1,6 +1,8 @@
 from sympy.physics.quantum.qcevolve import *
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
         IdentityGate, CGate, gate_simp)
+from sympy.physics.quantum.identitysearch import (
+        GateIdentity, bfs_identity_search)
 
 def test_kmp_table():
     word = ('a', 'b', 'c', 'd', 'a', 'b', 'd')
@@ -44,10 +46,38 @@ def test_find_subcircuit():
     assert find_subcircuit(circuit, (y, z)) == 1
     assert find_subcircuit(circuit, (x, y, z, h)) == -1
     assert find_subcircuit(circuit, (z, y, x)) == -1
+    assert find_subcircuit(circuit, (x,), start=2, end=1) == -1
 
     circuit = (x, y, x, y, z)
     assert find_subcircuit(circuit, (x, y, z)) == 2
+    assert find_subcircuit(circuit, (x,), start=1) == 2
+    assert find_subcircuit(circuit, (x, y), start=1, end=2) == -1
+    assert find_subcircuit(circuit, (x, y), start=1, end=3) == -1
+    assert find_subcircuit(circuit, (x, y), start=1, end=4) == 2
+    assert find_subcircuit(circuit, (x, y), start=2, end=4) == 2
 
     circuit = (x, y, z, x1, x, y, z, h, x, y, x1,
                x, y, z, h, y1, h)
     assert find_subcircuit(circuit, (x, y, z, h, y1)) == 11
+
+def test_qc_reduce():
+    x = X(0)
+    y = Y(0)
+    z = Z(0)
+    h = H(0)
+    cnot = CNOT(1,0)
+
+    gate_list = [x, y, z]
+    id_set = bfs_identity_search(gate_list, 1, max_depth=4)
+
+    circuit = (z, y, x, x)
+    # assert qc_reduce(circuit, list(id_set)) == (x,)
+
+    circuit = (x, y, x, y, z)
+    #assert qc_reduce(circuit, list(id_set)) == (x, y)
+
+    circuit = (x, y, z, y, x)
+    #assert qc_reduce(circuit, list(id_set)) == (y, x)
+
+    circuit = (x, y, z, x, y, x, y)
+    #assert qc_reduce(circuit, list(id_set), homogeneous=False) == ()

@@ -14,7 +14,8 @@ from pyevolve.GenomeBase import GenomeBase
 __all__ = [
     'GQCBase',
     'kmp_table',
-    'find_subcircuit'
+    'find_subcircuit',
+    'qc_reduce'
 ]
 
 class GQCBase(Basic, GenomeBase):
@@ -80,7 +81,7 @@ def kmp_table(word):
 
     return table
 
-def find_subcircuit(circuit, subcircuit):
+def find_subcircuit(circuit, subcircuit, start=0, end=0):
     """Finds the subcircuit in circuit, if it exists.
 
     If the subcircuit exists, the index of the start of
@@ -94,20 +95,29 @@ def find_subcircuit(circuit, subcircuit):
         A tuple of Gates representing a quantum circuit
     subcircuit : tuple, Gate
         A tuple of Gates to check if circuit contains
-
+    start : int
+        The location to start looking for subcircuit.
+        If start is the same or past end, -1 is returned.
+    end : int
+        The last place to look for a subcircuit.  If end
+        is less than 1 (one), then the length of circuit
+        is taken to be end.
     """
 
     if len(subcircuit) == 0 or len(subcircuit) > len(circuit):
         return -1
 
+    if end < 1:
+        end = len(circuit)
+
     # Location in circuit
-    pos = 0
+    pos = start
     # Location in the subcircuit
     index = 0
     # 'Partial match' table
     table = kmp_table(subcircuit)
 
-    while (pos + index) < len(circuit):
+    while (pos + index) < end:
         if subcircuit[index] == circuit[pos + index]:
             index = index + 1
         else:
@@ -119,11 +129,12 @@ def find_subcircuit(circuit, subcircuit):
 
     return -1
 
-def qc_reduce(circuit, ids):
+def qc_reduce(circuit, ids, quant=0, homogeneous=True):
     """Shorten the length of a quantum circuit.
 
     qc_reduce looks for subcircuits - circuit identities -
     in circuit, removes them, and returns the new shorter circuit.
+
 
     Parameters
     ==========
@@ -131,16 +142,36 @@ def qc_reduce(circuit, ids):
         A tuple of Gates representing a quantum circuit
     ids : list, GateIdentity
         List of gate identities to find in circuit
+    quant : int
+        Number of identities to remove.  The default
+        is to remove the maximum number of identities
+        that can be found.
+    homogeneous : bool
+        True to remove up to quant number of the
+        same identities in circuit;
+        False to remove up to the first quant number of
+        identities found
+
     """
 
-    # Try greedy approach - find longest subcircuits first
-    # before optimizing.  Theoretically, it's possible that
-    # circuit may contain two shorter identities and one
-    # longer identity and removing the two shorter identities
-    # may be more optimal than removing the one longer identity.
+    # Greedy approach - look for all locations of a
+    # subcircuit in circuit and remove the subcircuits
+    # that produce the shortest resulting circuit.
 
-    # Sort places the shortest length circuits at the top of the list
-    ids.sort().reverse()
+    # The circuits to remove, may contain multiple copies
+    remove_circuits = []
+    # List of locations in circuit to remove an identity
+    # Each item is a 2-tuple giving the location of the
+    # first gate and the location after the last gate
+    remove_loc = []
+    # Index into the list of gate identities
+    i = 0
+    # Location to start finding identities in circuit
+    pos = 0
+
+    #while i < len(ids):
+    #    identity = ids[i]
+    #    if find_subcircuit
 
 def qc_random_insert(circuit, choices, identity=False):
     """Insert a circuit into another quantum circuit.
