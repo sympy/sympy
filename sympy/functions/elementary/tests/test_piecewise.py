@@ -9,9 +9,9 @@ def test_piecewise():
 
     # Test canonization
     assert Piecewise((x, x > 1)) == Piecewise((x, x > 1), S.NaN)
-    assert Piecewise((x, x > 1), (0, True), S.NaN) == Piecewise((x, x > 1), 0)
-    assert Piecewise((x, x < 1), (0, False), (-1, 1 > 2), S.NaN) == Piecewise((x, x < 1))
-    assert Piecewise((x, x < 1), (x**2, True)) == Piecewise((x, x < 1), x**2)
+    assert Piecewise((x, x > 1), (0, True), S.NaN) == 0
+    assert Piecewise((x, x > 1), (0, False)) == S.NaN
+    assert Piecewise((x, x > 1), (0, False), 1) == 1
     assert Piecewise((x, True), S.NaN) == x
     raises(TypeError,"Piecewise((x,x**2))")
     raises(TypeError,"Piecewise((1,Interval(0,1,False,True)),(0,x<1))")
@@ -164,7 +164,7 @@ def test_piecewise_solve():
     g = Piecewise(((x - 5)**5, x >= 2), f)
     assert solve(g, x) == [5]
 
-    g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False))
+    g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False), evaluate=False)
     assert solve(g, x) == [5]
 
     assert solve(Piecewise((x, x < 0), x), x) == [0]
@@ -249,10 +249,13 @@ def test_piecewise_evaluate():
     assert Piecewise(x) != x
     assert Piecewise(x).is_Piecewise
     assert Piecewise(x, evaluate=True) == x
+
     assert Piecewise((x, True), S.NaN) == x
-    assert Piecewise((x, 1 < 2), S.NaN) == x
-    assert Piecewise((x, 1 > 2), S.NaN) == S.NaN
-    assert Piecewise((x, x < 1), (0, True), S.NaN) == Piecewise((x, x < 1), 0)
+    assert Piecewise((x, True), S.NaN, evaluate=False) == Piecewise(x)
+
+    assert Piecewise((x, x < 1), (0, True), S.NaN) == 0
+    assert Piecewise((x, x < 1), (0, True), S.NaN, evaluate=False) == Piecewise((x, x < 1), 0)
+
     assert Piecewise((x, 1 > 2), (-x, False)) == S.NaN
     p1 = Piecewise((x, x > 0), (2*x, x <= 0), 3*x)
     p2 = Piecewise((p1, x > 0), (2*x**2, x <= 0))

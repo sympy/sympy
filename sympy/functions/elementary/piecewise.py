@@ -19,19 +19,26 @@ class Piecewise(Function):
           is given, the default value is NaN.
 
     Note that old otherwise syntax of using including an (otherwise, True)
-    tuple is currently deprecated.
+    tuple is currently deprecated. If your final expr/cond is (expr, True),
+    you must specify an otherwise expression to avoid having this expr changed
+    to an otherwise condition. The defualt value, NaN, is a suitable option.
 
-    Piecewise also accepts an option ``evaluate``, which is False by default.
-    When booleans are passed as conditions or other Piecewise functions are
-    passed as expressions, evaluation is automatically enabled. On evaluation:
+    Piecewise can also evaluate the function, which is set by the ``evaluate``
+    keyword, that is disabled by default. Having explicitly True or False
+    conditions will enable evaluation unless the ``evaluate`` option is
+    explicitly False. When evaluate is True, it returns the first expression
+    with its condition explicitly True.
 
-        - Nested Piecewise functions are simplified (currently only simple
-          cases can be handled).
+    When booleans are given as conditions and ``evaluate=False``:
+
         - Expr/cond pairs where cond is explicitly False are removed.
         - Evaluation stops at an explicitly True condition. The corresponding
           expression becomes the new otherwise expression.
         - If the only remaining argument is the otherwise expression, the
           otherwise expression is returned.
+
+    When Piecewise functions are nested, they will automatically be siplified.
+    This behavior can be overridden with the keyword evaluate=False.
 
     Examples
     ========
@@ -73,14 +80,9 @@ class Piecewise(Function):
     def __new__(cls, *args, **options):
         ecs = [ Tuple(*sympify(arg)) for arg in args if hasattr(arg, '__iter__') ]
         oth = [ arg for arg in args if not hasattr(arg, '__iter__') ]
+        evaluate = options.pop('evaluate', None)
         if any([ len(ec) != 2 for ec in ecs ]):
             raise ValueError("Piecewise conditions must be (expr, cond) pairs.")
-
-        # deprecated otherwise behavior
-        if len(ecs) > 0 and isinstance(ecs[-1][1], bool) and ecs[-1][1] and len(oth) == 0:
-            warn('Pass "otherwise" expression as parameter rather than (expr, True). ' \
-                'Adding an otherwise parameter, such as the default NaN, silences this warning.', \
-                SymPyDeprecationWarning)
 
         if len(oth) == 0:
             oth = S.NaN
@@ -92,26 +94,49 @@ class Piecewise(Function):
         else:
             oth = [ str(o) for o in oth ]
             raise ValueError("Only one otherwise statement can be specified, got: %s" % ', '.join(oth))
-        new_args = ecs + [oth]
 
-        # evaluation
-        evaluate = options.pop('evaluate', None)
-        # Force evaluation for boolean, can be changed when there are Basic Boolean types
-        # TODO: See Issue 3025
-        if any([ isinstance(cond, bool) for (_, cond) in ecs ]):
-            evaluate = True
+        # deprecated otherwise behavior
+        if len(ecs) > 0 and ecs[-1][1] is True and ecs[-1] == args[-1]:
+            oth = ecs[-1][0]
+            ecs = ecs[:-1]
+            warn('Pass "otherwise" expression as parameter rather than (expr, True). ' \
+                'Converting final expr/cond to otherwise to maintain old behavior. ' \
+                'Manually adding an otherwise parameter, such as NaN, silences this warning and ensures evaluation.', \
+                SymPyDeprecationWarning)
+
+        # Collapse nested piecewise expressions
         # Allow explicit evaluate=False to stop evaluation of nested Piecewise
-        if evaluate is None and (any([ isinstance(expr, Piecewise) for (expr, _) in ecs ]) or isinstance(oth, Piecewise)):
-            evaluate = True
+        if evaluate is not False and (any([ isinstance(expr, Piecewise) for (expr, _) in ecs ]) or isinstance(oth, Piecewise)):
+            ecs, oth = cls._collapse_piecewise_args(ecs, oth)
+
+        # TODO: See Issue 3025
+        # When evaluate=False, remove False conds and move True cond to otherwise
+        # Should subs True for Basic True, False for Basic False when evaluate!=False
+        if any([ isinstance(cond, bool) for (_, cond) in ecs ]):
+            new_ecs = []
+            if evaluate is False:
+                for e, c in ecs:
+                    cond_eval = cls.__eval_cond(c)
+                    if cond_eval is False:
+                        continue
+                    elif cond_eval is True:
+                        oth = e
+                        break
+                    else:
+                        new_ecs.append(Tuple(e,c))
+                ecs = new_ecs
+            else:
+                evaluate = True
+
+        new_args = ecs + [oth]
         if evaluate:
-            evaluated = cls.eval(*new_args)
-            if evaluated is not None:
-                return evaluated
+            return cls.eval(*new_args)
 
         # check exprs and otherwise are Exprs
         from sympy.geometry.entity import GeometryEntity
         if not all([ isinstance(expr, Expr) or isinstance(expr, GeometryEntity) for (expr, _) in ecs ]):
-            bad_args = [ "%s of type %s" % (expr, type(expr)) for (expr, _) in ecs if not isinstance(expr, Expr) ]
+            bad_args = [ "%s of type %s" % (expr, type(expr)) for (expr, _) in ecs \
+                         if not isinstance(expr, Expr) ]
             raise TypeError("Expressions must be subclass of Expr, " \
                             "got: %s" % ', '.join(bad_args))
         if not (isinstance(oth, Expr) or isinstance(oth, GeometryEntity)):
@@ -119,68 +144,35 @@ class Piecewise(Function):
                             "got %s of type %s" % (oth, type(oth)) )
         # check conds are Relational or Boolean
         if not all([ isinstance(cond, Relational) or isinstance(cond, Boolean) for (_, cond) in ecs ]):
-            bad_args = [ "%s of type %s" % (cond, type(cond)) for (_, cond) in ecs if not (isinstance(cond, Relational) or isinstance(cond, Boolean)) ]
+            bad_args = [ "%s of type %s" % (cond, type(cond)) for (_, cond) in ecs \
+                         if not (isinstance(cond, Relational) or isinstance(cond, Boolean)) ]
             raise TypeError("Conditions can only be Relationals or Booleans, " \
                             "got: %s" % ', '.join(bad_args))
+
         return Expr.__new__(cls, *new_args)
 
     @classmethod
     def eval(cls, *args):
-        from sympy import Or
-        # Check for situations where we can evaluate the Piecewise object.
-        # 1) Hit an unevaluable cond (e.g. x<1) -> keep object
-        # 2) Hit a true condition -> return that expr
-        # 3) Remove false conditions, if no conditions left return otherwise
-        all_conds_evaled = True    # False if any previous conditions cannot be determined
-        piecewise_again = False    # True when args are changed and we should return new Piecewise
-        new_args = []
+        """
+        Evaluate Piecewise function
+
+        Return expression of the first explicitly True condition. If no
+        conditions are explicitly True, return otherwise expression.
+        """
         ecs = args[:-1]
         oth = args[-1]
-        or1 = Or( *[c for (_, c) in ecs] )
         for expr, cond in ecs:
-            # Check here if expr is a Piecewise and collapse if one of
-            # the conds in expr matches cond. This allows the collapsing
-            # of Piecewise((Piecewise(x,x<0),x<0)) to Piecewise((x,x<0)).
-            # This is important when using piecewise_fold to simplify
-            # multiple Piecewise instances having the same conds.
-            # Eventually, this code should be able to collapse Piecewise's
-            # having different intervals, but this will probably require
-            # using the new assumptions.
-            if isinstance(expr, Piecewise):
-                or2 = Or( *[c for (_, c) in expr.exprcondpairs] )
-                for e, c in expr.exprcondpairs:
-                    # Don't collapse if cond is "True" as this leads to
-                    # incorrect simplifications with nested Piecewises.
-                    if c == cond and (or1 == or2 or cond is not True):
-                        expr = e
-                        piecewise_again = True
             cond_eval = cls.__eval_cond(cond)
-            if cond_eval is None:
-                all_conds_evaled = False
-                new_args.append( (expr, cond) )
-            elif cond_eval:
-                if all_conds_evaled:
-                    return expr
-                oth = expr
-                break
-        if isinstance(oth, Piecewise):
-            or2 = Or( *[c for (_, c) in oth.exprcondpairs] )
-            if or1 == or2:
-                piecewise_again = True
-                oth = oth.otherwise
-        new_args.append(oth)
-        if len(new_args) == 1:
-            return oth
-        if len(new_args) != len(args) or piecewise_again:
-            return Piecewise(*new_args)
-        return None
+            if cond_eval:
+                return expr
+        return oth
 
     @property
     def exprcondpairs(self):
         """
-        Return all expressions and conditions as 2-tuples
+        Return all expressions and conditions as 2-Tuples
 
-        Returns a list of 2-tuples, each formatted as (expr, cond) for each of
+        Returns a tuple of 2-Tuples, each formatted as (expr, cond) for each of
         the given expressions and conditions.
 
             >>> from sympy import Piecewise
@@ -325,11 +317,6 @@ class Piecewise(Function):
         new_args.append( self.otherwise._eval_nseries(x, n, logx) )
         return self.func( *new_args )
 
-    def _eval_subs(self, old, new):
-        new_args = [(expr._eval_subs(old, new), cond._eval_subs(old, new)) for expr, cond in self.exprcondpairs]
-        new_args.append(self.otherwise._eval_subs(old, new))
-        return self.func(*new_args, **{'evaluate': True})
-
     def _eval_as_leading_term(self, x):
         args = [ e for (e, _) in self.exprcondpairs]
         if self.otherwise is not S.NaN:
@@ -342,6 +329,42 @@ class Piecewise(Function):
         if isinstance(cond,bool):
             return cond
         return None
+
+    @classmethod
+    def _collapse_piecewise_args(cls, ecs, oth):
+        """
+        Collapse nested Piecewise expressions
+
+        If an (expr,cond) pair in ecs is a Piecewise and the conditions of expr
+        match the conditions in ecs, collapse expr to the expression matching
+        cond.
+
+        This allows the collapsing of Piecewise((Piecewise((x, x<0)), x<0)) to
+        Piecewise((x, x<0)).
+
+        Eventually, this code should be able to collapse Piecewise's having
+        different intervals, but this will probably require using the new
+        assumptions.
+        """
+        from sympy import Or
+        # True when args are changed and we should rerun to check for new Piecewise exprs
+        new_ecs = []
+        or1 = Or( *[c for (_, c) in ecs] )
+        for expr, cond in ecs:
+            if isinstance(expr, Piecewise):
+                or2 = Or( *[c for (_, c) in expr.exprcondpairs] )
+                for e, c in expr.exprcondpairs:
+                    # Don't collapse if cond is "True" as this leads to
+                    # incorrect simplifications with nested Piecewises.
+                    if c == cond and (or1 == or2 or cond is not True):
+                        expr = e
+            new_ecs.append( Tuple(expr, cond) )
+        if isinstance(oth, Piecewise):
+            or2 = Or( *[c for (_, c) in oth.exprcondpairs] )
+            if or1 == or2:
+                oth = oth.otherwise
+        return new_ecs, oth
+
 
 def piecewise_fold(expr):
     """
