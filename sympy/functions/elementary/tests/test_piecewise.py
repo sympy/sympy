@@ -58,7 +58,7 @@ def test_piecewise():
 
     # Test doit
     f_int = Piecewise((Integral(x,(x,0,1)), x < 1))
-    assert f_int.doit(evaluate=False) == Piecewise( (1.0/2.0, x < 1) )
+    assert f_int.doit(piecewise=False) == Piecewise( (1.0/2.0, x < 1) )
 
     # Test differentiation
     f = x
@@ -208,8 +208,8 @@ def test_piecewise_duplicate():
 def test_doit():
     p1 = Piecewise((x, x < 1), (x**2, -1 <= x), (x, 3 < x))
     p2 = Piecewise((x, x < 1), (Integral(2 * x), -1 <= x), (x, 3 < x))
-    assert p2.doit(evaluate = False) == p1
-    assert p2.doit(deep = False, evaluate=False) == p2
+    assert p2.doit(piecewise = False) == p1
+    assert p2.doit(deep = False, piecewise=False) == p2
 
 def test_piecewise_interval():
     p1 = Piecewise((x, Interval(0,1).contains(x)), 0)
@@ -221,7 +221,7 @@ def test_piecewise_interval():
 def test_piecewise_collapse():
     p1 = Piecewise((x, x<0),(x**2,x>1))
     p2 = Piecewise((p1,x<0),(p1,x>1))
-    assert p2.doit(evaluate = False) == Piecewise((x, x < 0), (x**2, 1 < x))
+    assert p2.doit(piecewise = False) == Piecewise((x, x < 0), (x**2, 1 < x))
 
     p1 = Piecewise(Piecewise((x,x<0),1))
     assert p1 == Piecewise(Piecewise((x,x<0),1))
@@ -246,15 +246,20 @@ def test_piecewise_series():
     assert p1.nseries(x,n=2) == p2
 
 def test_piecewise_evaluate():
-    # Forced evaluation gives otherwise
-    assert Piecewise(x).is_Piecewise
-    assert Piecewise(x, evaluate=True) == x
+    # Force evaluation=False when only given otherwise
+    assert Piecewise(x) == x
+    assert Piecewise(x, evaluate=False).is_Piecewise
+
+    # Forcing evaluation when no conds True gives otherwise
     assert Piecewise((x, x < 1)).is_Piecewise
     assert Piecewise((x, x < 1), evaluate=True) == S.NaN
+    assert Piecewise((x, x < 1), x**2).is_Piecewise
+    assert Piecewise((x, x < 1), x**2, evaluate=True) == x**2
 
     # Explicit evaluate=False stops automatic evaluation
     assert Piecewise((x, True), S.NaN) == x
-    assert Piecewise((x, True), S.NaN, evaluate=False) == Piecewise(x)
+    assert Piecewise((x, True), S.NaN, evaluate=False).is_Piecewise
+    assert Piecewise((x, True), S.NaN, evaluate=False) == Piecewise(x, evaluate=False)
     assert Piecewise((x, x < 1), (0, True), S.NaN) == 0
     assert Piecewise((x, x < 1), (0, True), S.NaN, evaluate=False) == Piecewise((x, x < 1), 0)
 
@@ -277,7 +282,7 @@ def test_piecewise_evaluate():
     p1 = Piecewise((x, x < 1), x**2)
     assert p1.is_Piecewise
     assert p1.doit() == x**2
-    assert p1.doit(evaluate=False) == p1
+    assert p1.doit(piecewise=False) == p1
 
 @XFAIL
 def test_piecewise_evaluate_false():

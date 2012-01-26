@@ -108,7 +108,6 @@ class Piecewise(Function):
         # Allow explicit evaluate=False to stop evaluation of nested Piecewise
         if evaluate is not False and (any([ isinstance(expr, Piecewise) for (expr, _) in ecs ]) or isinstance(oth, Piecewise)):
             ecs, oth = cls._collapse_piecewise_args(ecs, oth)
-
         # TODO: See Issue 3025
         # When evaluate=False, remove False conds and move True cond to otherwise
         # Should subs True for Basic True, False for Basic False when evaluate!=False
@@ -127,6 +126,9 @@ class Piecewise(Function):
                 ecs = new_ecs
             else:
                 evaluate = True
+        # Having no expr/cond pairs should also trigger evaluation unless explicitly False
+        if len(ecs) == 0 and evaluate is not False:
+            return oth
 
         new_args = ecs + [oth]
         if evaluate:
@@ -152,7 +154,7 @@ class Piecewise(Function):
         return Expr.__new__(cls, *new_args)
 
     def doit(self, **hints):
-        evaluate = hints.get('evaluate', True)
+        evaluate = hints.get('piecewise', True)
         if hints.get('deep', True):
             args = [ arg.doit(**hints) for arg in self.args ]
         else:

@@ -549,9 +549,9 @@ def test_expint():
     assert integrate(expint(1, x)*sin(x), (x, 0, oo), meijerg=True) == log(2)/2
 
 def test_messy():
-    from sympy import (laplace_transform, Si, Ci, Shi, Chi, atan, Piecewise,
-                       atanh, acoth, E1, besselj, acosh, asin, Ne, And, re,
-                       fourier_transform, sqrt, Abs)
+    from sympy import (laplace_transform, Si, Shi, Chi, atan, Piecewise, acoth,
+                       E1, besselj, acosh, asin, And, re, fourier_transform,
+                       sqrt)
     assert laplace_transform(Si(x), x, s) == ((pi - 2*atan(s))/(2*s), 0, True)
 
     assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, True)

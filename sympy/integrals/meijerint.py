@@ -601,7 +601,8 @@ def _eval_cond(cond):
     """ Re-evaluate the conditions. """
     if isinstance(cond, bool):
         return cond
-    return _condsimp(cond.doit())
+    # Keep Piecewises from being evaluated
+    return _condsimp(cond.doit(**{'piecewise': False}))
 
 ####################################################################
 # Now the "backbone" functions to do actual integration.
@@ -882,7 +883,8 @@ def _check_antecedents(g1, g2, x):
          And(Eq(arg(sigma), 0), Ne(arg(omega), 0))),
         (lambda_s0(+1, sign(arg(sigma)))*lambda_s0(-1, sign(arg(sigma))),
          And(Ne(arg(sigma), 0), Eq(arg(omega), 0))),
-        lambda_s0(sign(arg(omega)), sign(arg(sigma))))
+        lambda_s0(sign(arg(omega)), sign(arg(sigma))),
+        **{'evaluate': False})
 
     _debug('Checking antecedents:')
     _debug('  sigma=%s, s=%s, t=%s, u=%s, v=%s, b*=%s, rho=%s'
@@ -1548,7 +1550,7 @@ def _meijerint_indefinite_1(f, x):
         for expr, cond in res.exprcondpairs:
             expr = _my_unpolarify(Add(*expand_mul(expr).as_coeff_add(x)[1]))
             nargs.append((expr, cond))
-        if res.otherwise is not None:
+        if res.otherwise is not S.NaN:
             expr = _my_unpolarify(Add(*expand_mul(res.otherwise).as_coeff_add(x)[1]))
             nargs.append(expr)
             cond = True
