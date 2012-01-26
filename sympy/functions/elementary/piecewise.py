@@ -151,6 +151,14 @@ class Piecewise(Function):
 
         return Expr.__new__(cls, *new_args)
 
+    def doit(self, **hints):
+        evaluate = hints.get('evaluate', True)
+        if hints.get('deep', True):
+            args = [ arg.doit(**hints) for arg in self.args ]
+        else:
+            args = self.args
+        return self.func(*args, **{'evaluate': evaluate})
+
     @classmethod
     def eval(cls, *args):
         """
