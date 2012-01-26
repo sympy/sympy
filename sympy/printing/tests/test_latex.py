@@ -323,12 +323,14 @@ def test_mode():
 def test_latex_Piecewise():
     p1 = Piecewise((x,x<1),x**2)
     p2 = Piecewise((x,x<0),(0,x>=0))
+    p3 = Piecewise(x, evaluate=False)
     assert latex(p1) == "\\begin{cases} {x} & \\text{for\: } {x < 1} \\\\{x^{2}} &" \
                         " \\text{otherwise} \\end{cases}"
     assert latex(p1, itex=True) == "\\begin{cases} {x} & \\text{for\: } {x \\lt 1} \\\\{x^{2}} &" \
                                   " \\text{otherwise} \\end{cases}"
     assert latex(p2) == "\\begin{cases} {x} & \\text{for\: } {x < 0} \\\\{0} &" \
                         " \\text{for\: } {x \\geq 0} \\end{cases}"
+    assert latex(p3) == "\\begin{cases} {x} & \\text{otherwise} \\end{cases}"
 
 def test_latex_Matrix():
     M = Matrix([[1+x, y],[y, x-1]])

@@ -196,8 +196,10 @@ def test_Pi():
 def test_Piecewise():
     p1 = Piecewise( (x, x < 1), x**2 )
     p2 = Piecewise( (x, x < 1), (x**2, x >= 1))
+    p3 = Piecewise(x, evaluate=False)
     assert str(p1) == "Piecewise((x, x < 1), x**2)"
     assert str(p2) == "Piecewise((x, x < 1), (x**2, x >= 1))"
+    assert str(p3) == "Piecewise(x)"
 
 def test_Poly():
     assert str(Poly(0, x)) == "Poly(0, x, domain='ZZ')"

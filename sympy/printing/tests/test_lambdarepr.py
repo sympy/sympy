@@ -85,7 +85,7 @@ def test_piecewise():
         (3, x >= 3),
         (4, x >= 4),
         (5, x >= 5),
-        (6, True)
+        6
     )
     l = lambdarepr(p)
     eval(h + l)
@@ -98,7 +98,7 @@ def test_piecewise():
         (3, x <= 3),
         (4, x <= 4),
         (5, x <= 5),
-        (6, True)
+        6
     )
     l = lambdarepr(p)
     eval(h + l)
@@ -111,7 +111,7 @@ def test_piecewise():
         (3, x > 3),
         (4, x > 4),
         (5, x > 5),
-        (6, True)
+        6
     )
     l = lambdarepr(p)
     eval(h + l)

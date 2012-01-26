@@ -624,6 +624,7 @@ class PrettyPrinter(Printer):
 
     def _print_Piecewise(self, pexpr):
         P = {}
+        n = -1
         for n, (e,c) in enumerate(pexpr.exprcondpairs):
             P[n,0] = self._print(e)
             P[n,1] = prettyForm(*prettyForm('for ').right(self._print(c)))

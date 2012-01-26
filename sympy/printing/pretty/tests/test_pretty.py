@@ -139,6 +139,7 @@ Matrix([[x/y, y, th], [0, exp(I*k*ph), 1]])
 
 PIECEWISE:
 
+Piecewise(x, evaluate=False)
 Piecewise((x,x<1),x**2)
 Piecewise((x,x<1),(x**2,x>1))
 
@@ -2151,6 +2152,17 @@ u"""\
 
 
 def test_pretty_piecewise():
+    expr = Piecewise(x, evaluate=False)
+    ascii_str = \
+"""\
+{x  otherwise\
+"""
+    ucode_str = \
+u"""\
+{x  otherwise\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
     expr = Piecewise((x,x<1),x**2)
     ascii_str = \
 """\
