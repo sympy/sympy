@@ -8,6 +8,7 @@ http://pyevolve.sourceforge.net/index.html
 
 """
 
+from random import randint
 from sympy import Basic
 from pyevolve.GenomeBase import GenomeBase
 
@@ -15,7 +16,7 @@ __all__ = [
     'GQCBase',
     'kmp_table',
     'find_subcircuit',
-    'qc_reduce'
+    'qc_random_reduce'
 ]
 
 class GQCBase(Basic, GenomeBase):
@@ -129,12 +130,59 @@ def find_subcircuit(circuit, subcircuit, start=0, end=0):
 
     return -1
 
+def qc_remove_subcircuit(circuit, subcircuit, pos=-1):
+    """Removes subcircuit from circuit, if it exists.
+
+    If multiple instances of subcircuit exists, the
+    first instance is removed.  A location to check
+    may be optionally given.
+
+    Parameters
+    ==========
+    circuit : tuple, Gate
+        A quantum circuit represented by a tuple of Gates
+    subcircuit : tuple, Gate
+        A quantum circuit to remove from circuit
+    pos : int
+        The location to remove subcircuit, if it exists.
+        This may be used if it is known beforehand that
+        multiple instances exist, and it is desirable
+        to remove a specific instance.
+    """
+    pass
+
+def qc_random_reduce(circuit, ids, seed=-1):
+    """Shorten the length of a quantum circuit.
+
+    qc_random_reduce looks for circuit identities
+    in circuit, randomly chooses one to remove,
+    and returns a shorter yet equivalent circuit.
+
+    Parameters
+    ==========
+    circuit : tuple, Gate
+        A tuple of Gates representing a quantum circuit
+    ids : list, GateIdentity
+        List of gate identities to find in circuit
+    """
+    pass
+    
+# For now leaving this code in as a reminder of past progress
+# Since using genetic programming, mutation by reduction
+# should be a simple procedure.
+# ===========================================================
+def conflict_indices(pair, pairs):
+    """Returns a list of positions in pairs where
+    the endpoints in pair intersect with another set
+    of endpoints in pairs.
+    """
+    pass
+
 def qc_reduce(circuit, ids, quant=0, homogeneous=True):
     """Shorten the length of a quantum circuit.
 
     qc_reduce looks for subcircuits - circuit identities -
     in circuit, removes them, and returns the new shorter circuit.
-
 
     Parameters
     ==========
@@ -158,20 +206,37 @@ def qc_reduce(circuit, ids, quant=0, homogeneous=True):
     # subcircuit in circuit and remove the subcircuits
     # that produce the shortest resulting circuit.
 
-    # The circuits to remove, may contain multiple copies
-    remove_circuits = []
-    # List of locations in circuit to remove an identity
-    # Each item is a 2-tuple giving the location of the
+    # The circuits to remove from circuit, and the list
+    # may contain more than one copy of the same identity.
+    # Each item in the list is a 2-tuple:
+    #     i) the identity to remove
+    #    ii) the endpoints the identity occupies
+    # The endpoints are a 2-tuple giving the location of the
     # first gate and the location after the last gate
-    remove_loc = []
+    remove_circuits = []
     # Index into the list of gate identities
     i = 0
     # Location to start finding identities in circuit
     pos = 0
 
+    # Overview of following code
+    # collapse GateIdentity objects (with gate rules) into one list
+    # for each identity
+    #     while pos less than end of circuit
+    #         get location of identity in circuit
+    #         if location doesn't conflict with another identity
+    #             save endpoints of identity in circuit
+    #             save the circuit
+    #         else
+    #             if 'new' identity is longer than 'old' identities
+    #                 remove 'old' identities
+    #                 save 'new' identity
+                
     #while i < len(ids):
     #    identity = ids[i]
     #    if find_subcircuit
+    pass
+# ===========================================================
 
 def qc_random_insert(circuit, choices, identity=False):
     """Insert a circuit into another quantum circuit.
