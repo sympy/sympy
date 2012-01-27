@@ -1,6 +1,6 @@
 from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
                    Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
-                   sin, sqrt, sstr, Sum, sympify, S)
+                   sin, sqrt, sstr, Sum, sympify, S, integrate, atan)
 from sympy.core.evalf import complex_accuracy, PrecisionExhausted
 from sympy.abc import n, x, y
 from sympy.mpmath.libmp.libmpf import from_float
@@ -260,3 +260,7 @@ def test_issue_2105():
           54*249**(1/2))**(2/3) + 32347944*6**(2/3)*249**(1/2)*(1422 + 54*249**(1/2))**(2/3) - 1758790152*I*3**(1/2)*6**(2/3)*(1422 + 54*249**(1/2))**(2/3) - 304403832*I*6**(2/3)*83**(1/2)*(1422 +\
           54*249**(1/2))**(2/3))/(175732658352 + (1106028 + 25596*249**(1/2) + 76788*I*83**(1/2))**2)')
     assert v.n(1) == 0.2 + 1.0*I
+
+def test_issue_1707():
+    assert round(integrate(atan(x)**2, (x, -1, 1)).evalf(), 1) == 0.5
+    assert atan(0, evaluate=False).n() == 0
