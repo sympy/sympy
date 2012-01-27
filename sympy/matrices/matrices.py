@@ -1389,6 +1389,8 @@ class Matrix(object):
         else:
             return self.applyfunc(lambda i: i.evalf(prec, **options))
 
+    n = evalf
+
     def reshape(self, _rows, _cols):
         """
         Reshape the matrix. Total number of elements must remain the same.
