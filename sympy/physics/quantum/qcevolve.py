@@ -8,7 +8,7 @@ http://pyevolve.sourceforge.net/index.html
 
 """
 
-from random import randint
+from random import Random
 from sympy import Basic
 from pyevolve.GenomeBase import GenomeBase
 
@@ -16,6 +16,7 @@ __all__ = [
     'GQCBase',
     'kmp_table',
     'find_subcircuit',
+    'qc_remove_subcircuit',
     'qc_random_reduce'
 ]
 
@@ -130,12 +131,13 @@ def find_subcircuit(circuit, subcircuit, start=0, end=0):
 
     return -1
 
-def qc_remove_subcircuit(circuit, subcircuit, pos=-1):
+def qc_remove_subcircuit(circuit, subcircuit, pos=0):
     """Removes subcircuit from circuit, if it exists.
 
     If multiple instances of subcircuit exists, the
-    first instance is removed.  A location to check
-    may be optionally given.
+    first instance is removed.  A location to check may
+    be optionally given.  If subcircuit can't be found,
+    circuit is returned.
 
     Parameters
     ==========
@@ -147,25 +149,73 @@ def qc_remove_subcircuit(circuit, subcircuit, pos=-1):
         The location to remove subcircuit, if it exists.
         This may be used if it is known beforehand that
         multiple instances exist, and it is desirable
-        to remove a specific instance.
+        to remove a specific instance.  If a negative number
+        is given, pos will be defaulted to 0.
     """
-    pass
 
-def qc_random_reduce(circuit, ids, seed=-1):
+    if pos < 0:
+        pos = 0
+
+    # Look for the subcircuit starting at pos
+    loc = find_subcircuit(circuit, subcircuit, start=pos)
+
+    # If subcircuit was found
+    if loc > -1:
+        # Get the gates to the left of subcircuit
+        left = circuit[0:loc]
+        # Get the gates to the right of subcircuit
+        right = circuit[loc + len(subcircuit):len(circuit)]
+        # Recombine the left and right side gates into a circuit
+        circuit = left + right
+
+    return circuit
+
+def qc_random_reduce(circuit, gate_ids, seed=None):
     """Shorten the length of a quantum circuit.
 
     qc_random_reduce looks for circuit identities
     in circuit, randomly chooses one to remove,
     and returns a shorter yet equivalent circuit.
+    If no identities are found, the same circuit
+    is returned.
 
     Parameters
     ==========
     circuit : tuple, Gate
         A tuple of Gates representing a quantum circuit
-    ids : list, GateIdentity
+    gate_ids : list, GateIdentity
         List of gate identities to find in circuit
+    seed : int
+        Seed value for the random number generator
     """
-    pass
+
+    if len(gate_ids) < 1:
+        return circuit
+
+    # Create the random integer generator with the seed
+    int_gen = Random()
+    int_gen.seed(seed)
+
+    # Flatten the GateIdentity objects (with gate rules)
+    # into one single list
+    collapse_func = lambda acc, an_id: acc + an_id.gate_rules
+    ids = reduce(collapse_func, gate_ids, [])
+
+    # List of identities found in circuit
+    ids_found = []
+
+    # Look for identities in circuit
+    for an_id in ids:
+        if find_subcircuit(circuit, an_id) > -1:
+            ids_found.append(an_id)
+
+    # Randomly choose an identity to remove
+    remove_id = int_gen.randint(0, len(ids_found)-1)
+
+    # Remove the identity
+    new_circuit = qc_remove_subcircuit(circuit, ids_found[remove_id])
+
+    return new_circuit
     
 # For now leaving this code in as a reminder of past progress
 # Since using genetic programming, mutation by reduction

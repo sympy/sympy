@@ -1,6 +1,6 @@
 from sympy.physics.quantum.qcevolve import *
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
-        IdentityGate, CGate, gate_simp)
+        CGate)
 from sympy.physics.quantum.identitysearch import (
         GateIdentity, bfs_identity_search)
 
@@ -60,24 +60,74 @@ def test_find_subcircuit():
                x, y, z, h, y1, h)
     assert find_subcircuit(circuit, (x, y, z, h, y1)) == 11
 
-def test_qc_reduce():
+def test_qc_remove_subcircuit():
     x = X(0)
     y = Y(0)
     z = Z(0)
     h = H(0)
     cnot = CNOT(1,0)
+    cgate_z = CGate((0,), Z(1))
 
-    gate_list = [x, y, z]
-    id_set = bfs_identity_search(gate_list, 1, max_depth=4)
-
+    # Standard cases
     circuit = (z, y, x, x)
-    # assert qc_reduce(circuit, list(id_set)) == (x,)
+    remove = (z, y, x)
+    assert qc_remove_subcircuit(circuit, remove) == (x,)
+    assert qc_remove_subcircuit(circuit, remove + (x,)) == ()
+    assert qc_remove_subcircuit(circuit, remove, pos=1) == circuit
+    assert qc_remove_subcircuit(circuit, remove, pos=0) == (x,)
+    assert qc_remove_subcircuit(circuit, (x, x), pos=2) == (z, y)
+    assert qc_remove_subcircuit(circuit, (h,)) == circuit
 
     circuit = (x, y, x, y, z)
-    #assert qc_reduce(circuit, list(id_set)) == (x, y)
+    remove = (x, y, z)
+    assert qc_remove_subcircuit(circuit, remove) == (x, y)
+    remove = (x, y, x, y)
+    assert qc_remove_subcircuit(circuit, remove) == (z,)
 
-    circuit = (x, y, z, y, x)
-    #assert qc_reduce(circuit, list(id_set)) == (y, x)
+    circuit = (x, h, cgate_z, h, cnot)
+    remove = (x, h, cgate_z)
+    assert qc_remove_subcircuit(circuit, remove, pos=-1) == (h, cnot)
+    assert qc_remove_subcircuit(circuit, remove, pos=1) == circuit
+    remove = (h, h)
+    assert qc_remove_subcircuit(circuit, remove) == circuit
+    remove = (h, cgate_z, h, cnot)
+    assert qc_remove_subcircuit(circuit, remove) == (x,)
 
-    circuit = (x, y, z, x, y, x, y)
-    #assert qc_reduce(circuit, list(id_set), homogeneous=False) == ()
+def test_qc_random_reduce():
+    x = X(0)
+    y = Y(0)
+    z = Z(0)
+    h = H(0)
+    cnot = CNOT(1,0)
+    cgate_z = CGate((0,), Z(1))
+
+    seed = 1
+    gate_list = [x, y, z]
+    ids = list(bfs_identity_search(gate_list, 1, max_depth=4))
+    ids.sort()
+
+    circuit = (x, y, z, x, y, h)
+    # With seed = 1, randint(0, 0) = 0
+    assert qc_random_reduce(circuit, ids, seed=seed) == (x, y, h)
+
+    circuit = (x, x, y, y, z, z)
+    # randint(0, 2) = 0
+    assert qc_random_reduce(circuit, ids, seed=seed) == (y, y, z, z)
+
+    seed = 2
+    # randint(0, 2) = 2
+    assert qc_random_reduce(circuit, ids, seed=seed) == (x, x, y, y)
+
+    gate_list = [x, y, z, h, cnot, cgate_z]
+    ids = list(bfs_identity_search(gate_list, 2, max_depth=4))
+    ids.sort()
+
+    circuit = (x, y, z, y, h, y, h, cgate_z, h, cnot)
+    expected = (x, y, z, y, h, y)
+    # randint(0, 2) == 2
+    assert qc_random_reduce(circuit, ids, seed=seed) == expected
+
+    seed = 5
+    expected = (x, y, z, cgate_z, h, cnot)
+    # randint(0, 1) == 1
+    assert qc_random_reduce(circuit, ids, seed=seed) == expected
