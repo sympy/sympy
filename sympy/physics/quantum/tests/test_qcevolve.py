@@ -106,6 +106,10 @@ def test_qc_random_reduce():
     ids = list(bfs_identity_search(gate_list, 1, max_depth=4))
     ids.sort()
 
+    circuit = (x, y, h, z, cnot)
+    assert qc_random_reduce(circuit, []) == circuit
+    assert qc_random_reduce(circuit, ids) == circuit
+
     circuit = (x, y, z, x, y, h)
     # With seed = 1, randint(0, 0) = 0
     assert qc_random_reduce(circuit, ids, seed=seed) == (x, y, h)
@@ -131,3 +135,34 @@ def test_qc_random_reduce():
     expected = (x, y, z, cgate_z, h, cnot)
     # randint(0, 1) == 1
     assert qc_random_reduce(circuit, ids, seed=seed) == expected
+
+def test_qc_random_insert():
+    x = X(0)
+    y = Y(0)
+    z = Z(0)
+    h = H(0)
+    cnot = CNOT(1,0)
+    cgate_z = CGate((0,), Z(1))
+
+    seed = 1
+    choices = [(x, x)]
+    circuit = (y, y)
+    # insert location: 0; 
+    assert qc_random_insert(circuit, choices, seed=seed) == (x, x, y, y)
+
+    seed = 8
+    circuit = (x, y, z, h)
+    choices = [(h, h), (x, y, z)]
+    expected = (x, x, y, z, y, z, h)
+    # insert location: 1; circuit choice: 1
+    assert qc_random_insert(circuit, choices, seed=seed) == expected
+
+    gate_list = [x, y, z, h, cnot, cgate_z]
+    ids = list(bfs_identity_search(gate_list, 2, max_depth=4))
+    ids.sort()
+
+    circuit = (x, y, h, cnot, cgate_z)
+    expected = (x, cgate_z, h, cnot, h, y, h, cnot, cgate_z)
+    # insert location: 1; circuit choice: 31
+    actual = qc_random_insert(circuit, ids, gate_identity=True, seed=seed)
+    assert actual == expected

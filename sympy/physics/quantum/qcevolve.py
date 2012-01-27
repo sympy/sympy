@@ -17,7 +17,8 @@ __all__ = [
     'kmp_table',
     'find_subcircuit',
     'qc_remove_subcircuit',
-    'qc_random_reduce'
+    'qc_random_reduce',
+    'qc_random_insert'
 ]
 
 class GQCBase(Basic, GenomeBase):
@@ -209,6 +210,9 @@ def qc_random_reduce(circuit, gate_ids, seed=None):
         if find_subcircuit(circuit, an_id) > -1:
             ids_found.append(an_id)
 
+    if len(ids_found) < 1:
+        return circuit
+
     # Randomly choose an identity to remove
     remove_id = int_gen.randint(0, len(ids_found)-1)
 
@@ -288,12 +292,12 @@ def qc_reduce(circuit, ids, quant=0, homogeneous=True):
     pass
 # ===========================================================
 
-def qc_random_insert(circuit, choices, identity=False):
+def qc_random_insert(circuit, choices, gate_identity=False, seed=None):
     """Insert a circuit into another quantum circuit.
 
-    qc_insert looks for subcircuits - circuit identities -
-    in circuit, makes the reduction, and returns the new
-    smaller circuit.
+    qc_random_insert randomly selects a circuit from
+    choices and randomly chooses a location to insert
+    into circuit.
 
     Parameters
     ==========
@@ -304,8 +308,31 @@ def qc_random_insert(circuit, choices, identity=False):
     identity : boolean
         Indicates whether choices are of type GateIdentity
         or tuples
+    seed : int
+        Seed value for the random number generator
     """
-    pass
+
+    if len(choices) < 1:
+        return circuit
+
+    if gate_identity:
+        # Flatten the GateIdentity objects (with gate rules)
+        # into one single list
+        collapse_func = lambda acc, an_id: acc + an_id.gate_rules
+        choices = reduce(collapse_func, choices, [])
+
+    # Create the random integer generator with the seed
+    int_gen = Random()
+    int_gen.seed(seed)
+
+    insert_loc = int_gen.randint(0, len(circuit))
+    insert_circuit_loc = int_gen.randint(0, len(choices)-1)
+    insert_circuit = choices[insert_circuit_loc]
+
+    left = circuit[0:insert_loc]
+    right = circuit[insert_loc:len(circuit)]
+
+    return left + insert_circuit + right
 
 """
 For the current problem of optimizing quantum circuits,
