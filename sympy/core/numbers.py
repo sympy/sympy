@@ -2403,7 +2403,9 @@ class GoldenRatio(NumberSymbol):
     __slots__ = []
 
     def _as_mpf_val(self, prec):
-        return mlib.from_man_exp(phi_fixed(prec+10), -prec-10)
+         # XXX track down why this has to be increased
+        rv = mlib.from_man_exp(phi_fixed(prec+10), -prec-10)
+        return mpf_norm(rv, prec)
 
     def _eval_expand_func(self, deep=True, **hints):
         from sympy import sqrt
@@ -2430,8 +2432,10 @@ class EulerGamma(NumberSymbol):
     __slots__ = []
 
     def _as_mpf_val(self, prec):
-        return mlib.from_man_exp(mlib.libhyper.euler_fixed(
-            prec+10), -prec-10)
+         # XXX track down why this has to be increased
+        v = mlib.libhyper.euler_fixed(prec+10)
+        rv = mlib.from_man_exp(v, -prec-10)
+        return mpf_norm(rv, prec)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls, Integer):
@@ -2454,7 +2458,10 @@ class Catalan(NumberSymbol):
     __slots__ = []
 
     def _as_mpf_val(self, prec):
-        return mlib.from_man_exp(mlib.catalan_fixed(prec+10), -prec-10)
+        # XXX track down why this has to be increased
+        v = mlib.catalan_fixed(prec+10)
+        rv = mlib.from_man_exp(v, -prec-10)
+        return mpf_norm(rv, prec)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls, Integer):
