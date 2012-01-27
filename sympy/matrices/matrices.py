@@ -3218,6 +3218,16 @@ class MatrixBase(object):
         """
         return any(a.has(*patterns) for a in self.mat)
 
+    @property
+    def is_Identity(self):
+        for i in xrange(self.rows):
+            for j in xrange(self.cols):
+                if i==j and self[i,j] != 1:
+                    return False
+                if i!=j and self[i,j] != 0:
+                    return False
+        return True
+
 class MutableMatrix(MatrixBase):
 
     is_MatrixExpr = False

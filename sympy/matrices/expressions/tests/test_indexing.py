@@ -42,9 +42,9 @@ def test_block_index():
     assert B[4,3] == B[5,1] == 0
 
     BB = BlockMatrix([[e3, e3], [e3, e3]])
-    assert B.to_explicit() == BB.to_explicit()
+    assert B.as_explicit() == BB.as_explicit()
 
     BI = BlockMatrix([[I, Z], [Z, I]])
 
-    assert BI.to_explicit().equals(eye(6))
+    assert BI.as_explicit().equals(eye(6))
 

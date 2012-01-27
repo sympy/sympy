@@ -37,7 +37,7 @@ class ImmutableMatrix(MatrixExpr, MatrixBase):
     def as_mutable(self):
         return MutableMatrix(self)
 
-    def to_explicit(self):
+    def as_explicit(self):
         return self
 
     def equals(self, other):

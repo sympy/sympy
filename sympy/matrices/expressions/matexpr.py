@@ -21,7 +21,7 @@ class MatrixExpr(Expr):
 
     is_Matrix = True
     is_MatrixExpr = True
-    is_Identity = False
+    is_Identity = None
     is_Inverse = False
     is_Transpose = False
     is_ZeroMatrix = False
@@ -133,17 +133,17 @@ class MatrixExpr(Expr):
                 raise ValueError("Invalid indices (%s, %s)"%(str(i), str(j)))
         raise TypeError("Only elementwise indexing currently supported")
 
-    def to_explicit(self):
+    def as_explicit(self):
         from sympy.matrices.immutable_matrix import ImmutableMatrix
         return ImmutableMatrix([[    self[i,j]
                             for j in range(self.m)]
                             for i in range(self.n)])
 
     def as_mutable(self):
-        return self.to_explicit().as_mutable()
+        return self.as_explicit().as_mutable()
 
     def equals(self, other):
-        return self.to_explicit().equals(other)
+        return self.as_explicit().equals(other)
 
 class MatrixSymbol(MatrixExpr, Symbol):
     """Symbolic representation of a Matrix object

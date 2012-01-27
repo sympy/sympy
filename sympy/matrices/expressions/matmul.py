@@ -73,9 +73,8 @@ class MatMul(MatrixExpr, Mul):
     def as_coeff_mmul(self):
         scalars = [x for x in self.args if not x.is_Matrix]
         matrices = [x for x in self.args if x.is_Matrix]
-        coeff = 1
-        for scalar in scalars:
-            coeff *= scalar
+        coeff = Mul(*scalars)
+
         return coeff, MatMul(*matrices)
 
 from matadd import MatAdd

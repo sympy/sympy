@@ -2097,3 +2097,6 @@ def test_issue_2865() :
 def test_DeferredVector():
     assert sympify(DeferredVector("d")) == DeferredVector("d")
 
+def test_is_Identity():
+    assert eye(3).is_Identity
+    assert not ones(3).is_Identity
