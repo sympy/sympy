@@ -1341,8 +1341,13 @@ class Subs(Expr):
     def doit(self):
         return self.expr.doit().subs(zip(self.variables, self.point))
 
-    def evalf(self):
-        return self.doit().evalf()
+    def evalf(self, prec=None, **options):
+        if prec is None:
+            return self.doit().evalf(**options)
+        else:
+            return self.doit().evalf(prec, **options)
+
+    n = evalf
 
     @property
     def variables(self):
