@@ -342,21 +342,24 @@ the mutation operation is applied to create future populations.
 The first approach keeps all members of the population
 within the same equivalence class of the original circuit.
 """
-def qcopt_linear_init(orig_circuit, ids, popsize=100):
+def qcopt_linear_init(genome, **args):
     """Initialization function for optimizing quantum circuits
        problem using an linear circuit representataion."""
     pass
 
-def qcopt_linear_mutator():
+def qcopt_linear_mutator(genome, **args):
     """Mutator function for optimizing quantum circuits
        problem using an linear circuit representataion."""
 
     # The mutator may either look for identities in
     # the circuit and make a reduction or it may
     # insert new identities into the circuit.
+
+    # Return the number of mutations that occurred
+    # with this genome (following convention)
     pass
 
-def qcopt_linear_eval():
+def qcopt_linear_eval(chromosome):
     """Evaluation function for optimizing quantum circuits
        problem using an linear circuit representataion."""
     pass
