@@ -1,9 +1,11 @@
 """Quantum mechanical angular momemtum."""
 
 from sympy import (Add, binomial, cos, exp, Expr, factorial, I, Integer, Mul,
-                   pi, Rational, S, sin, simplify, sqrt, Sum, symbols, sympify)
+                   pi, Rational, S, sin, simplify, sqrt, Sum, symbols, sympify,
+                   Tuple)
 from sympy.matrices.matrices import zeros
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
+from sympy.printing.pretty.pretty_symbology import pretty_symbol
 
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.operator import (HermitianOperator, Operator,
@@ -178,6 +180,7 @@ def _couple(tp, jcoupling_list):
                 diff_list = _confignum_to_difflist(config_num, diff, n)
 
                 # Skip the configuration if non-physical
+                # This is a lazy check for physical states given the loose restrictions of diff_max
                 if any( [ d > m for d, m in zip(diff_list, diff_max) ] ):
                     continue
 
@@ -195,6 +198,13 @@ def _couple(tp, jcoupling_list):
                     m3 = m1 + m2
                     cg_terms.append( (j1, m1, j2, m2, j3, m3) )
                     jcoupling.append( (min(j1_n), min(j2_n), j3) )
+                # Better checks that state is physical
+                if any([ abs(term[5]) > term[4] for term in cg_terms ]):
+                    continue
+                if any([ term[0] + term[2] < term[4] for term in cg_terms ]):
+                    continue
+                if any([ abs(term[0] - term[2]) > term[4] for term in cg_terms ]):
+                    continue
                 coeff = Mul( *[ CG(*term).doit() for term in cg_terms] )
                 state = coupled_evect(j3, m3, jn, jcoupling)
                 result.append(coeff*state)
@@ -1116,14 +1126,21 @@ class SpinState(State):
     _label_separator = ','
 
     def __new__(cls, j, m):
-        if sympify(j).is_number and not 2*j == int(2*j):
-            raise ValueError('j must be integer or half-integer, got %s' % j)
-        if sympify(m).is_number and not 2*m == int(2*m):
-            raise ValueError('m must be integer or half-integer, got %s' % m)
-        if sympify(j).is_number and j < 0:
-            raise ValueError('j must be < 0')
-        if sympify(j).is_number and sympify(m).is_number and abs(m) > j:
-            raise ValueError('Allowed values for m are -j <= m <= j')
+        j = sympify(j)
+        m = sympify(m)
+        if j.is_number:
+            if 2*j != int(2*j):
+                raise ValueError('j must be integer or half-integer, got: %s' % j)
+            if j < 0:
+                raise ValueError('j must be >= 0, got: %s' % j)
+        if m.is_number:
+            if 2*m != int(2*m):
+                raise ValueError('m must be integer or half-integer, got: %s' % m)
+        if j.is_number and m.is_number:
+            if abs(m) > j:
+                raise ValueError('Allowed values for m are -j <= m <= j, got j, m: %s, %s' % (j, m))
+            if int(j-m) != j-m:
+                raise ValueError('Both j and m must be integer or half-integer, got j, m: %s, %s' % (j, m))
         return State.__new__(cls, j, m)
 
     @property
@@ -1139,8 +1156,8 @@ class SpinState(State):
         return ComplexSpace(2*label[0]+1)
 
     def _represent_base(self, **options):
-        j = sympify(self.j)
-        m = sympify(self.m)
+        j = self.j
+        m = self.m
         alpha = sympify(options.get('alpha', 0))
         beta = sympify(options.get('beta', 0))
         gamma = sympify(options.get('gamma', 0))
@@ -1176,7 +1193,7 @@ class SpinState(State):
 
     def _rewrite_basis(self, basis, evect, **options):
         from sympy.physics.quantum.represent import represent
-        j = sympify(self.j)
+        j = self.j
         args = self.args[2:]
         if j.is_number:
             if isinstance(self, CoupledSpinState):
@@ -1481,21 +1498,65 @@ def _build_coupled(jcoupling, length):
 class CoupledSpinState(SpinState):
     """Base class for coupled angular momentum states."""
 
-    def __new__(cls, *args):
-        if len(args) == 4:
-            j, m, jn, jcoupling = args
-        elif len(args) == 3:
-            j, m, jn = args
+    def __new__(cls, j, m, jn, *jcoupling):
+        # Check j and m values using SpinState
+        SpinState(j, m)
+        # Build and check coupling scheme from arguments
+        if len(jcoupling) == 0:
+            # Use default coupling scheme
             jcoupling = []
             for n in range(2,len(jn)):
                 jcoupling.append( (1,n,Add(*[jn[i] for i in range(n)])) )
             jcoupling.append( (1,len(jn),j) )
+        elif len(jcoupling) == 1:
+            # Use specified coupling scheme
+            jcoupling = jcoupling[0]
         else:
-            raise ValueError("args must have length 3 or 4")
+            raise TypeError("CoupledSpinState only takes 3 or 4 arguments, got: %s" % (len(jcoupling)+3) )
+        # Check arguments have correct form
+        if not (isinstance(jn, list) or isinstance(jn, tuple) or isinstance(jn, Tuple)):
+            raise TypeError('jn must be Tuple, list or tuple, got %s' % jn.__class__.__name__)
+        if not (isinstance(jcoupling, list) or isinstance(jcoupling, tuple) or isinstance(jcoupling, Tuple)):
+            raise TypeError('jcoupling must be Tuple, list or tuple, got %s' % jcoupling.__class__.__name__)
+        if not all(isinstance(term, list) or isinstance(term, tuple) or isinstance(term, Tuple) for term in jcoupling):
+            raise TypeError('All elements of jcoupling must be list, tuple or Tuple')
         if not len(jn)-1 == len(jcoupling):
             raise ValueError('jcoupling must have length of %d, got %d' % (len(jn)-1, len(jcoupling)))
         if not all(len(x) == 3 for x in jcoupling):
             raise ValueError('All elements of jcoupling must have length 3')
+        # Build sympified args
+        j = sympify(j)
+        m = sympify(m)
+        jn = Tuple( *[sympify(ji) for ji in jn] )
+        jcoupling = Tuple( *[Tuple(sympify(n1), sympify(n2), sympify(ji)) for (n1, n2, ji) in jcoupling] )
+        # Check values in coupling scheme give physical state
+        if any(2*ji != int(2*ji) for ji in jn if ji.is_number):
+            raise ValueError('All elements of jn must be integer or half-integer, got: %s' % jn)
+        if any(n1 != int(n1) or n2 != int(n2) for (n1, n2, _) in jcoupling):
+            raise ValueError('Indicies in jcoupling must be integers')
+        if any(n1 < 1 or n2 < 1 or n1 > len(jn) or n2 > len(jn) for (n1, n2, _) in jcoupling):
+            raise ValueError('Indicies must be between 1 and the number of coupled spin spaces')
+        if any(2*ji != int(2*ji) for (_, _, ji) in jcoupling if ji.is_number):
+            raise ValueError('All coupled j values in coupling scheme must be integer or half-integer')
+        coupled_n, coupled_jn = _build_coupled(jcoupling, len(jn))
+        jvals = list(jn)
+        for n, (n1,n2) in enumerate(coupled_n):
+            j1 = jvals[min(n1)-1]
+            j2 = jvals[min(n2)-1]
+            j3 = coupled_jn[n]
+            if sympify(j1).is_number and sympify(j2).is_number and sympify(j3).is_number:
+                if j1+j2 < j3:
+                    raise ValueError('All couplings must have j1+j2 >= j3, '\
+                        'in coupling number %d got j1,j2,j3: %d,%d,%d' % (n+1, j1, j2, j3))
+                if abs(j1-j2) > j3:
+                    raise ValueError("All couplings must have |j1+j2| <= j3, "\
+                        "in coupling number %d got j1,j2,j3: %d,%d,%d" % (n+1, j1, j2, j3))
+                if int(j1+j2) == j1+j2:
+                    pass
+            jvals[min(n1+n2)-1] = j3
+        if len(jcoupling) > 0 and jcoupling[-1][2] != j:
+            raise ValueError('Last j value coupled together must be the final j of the state')
+        # Return state
         return State.__new__(cls, j, m, jn, jcoupling)
 
     def _print_label(self, printer, *args):
@@ -1519,20 +1580,15 @@ class CoupledSpinState(SpinState):
         #for i, ji in enumerate(self.jn, start=1):
         #    n = '%d' % (i)
         for i, ji in enumerate(self.jn):
-            n = '%d' % (i+1)
-            j = self._print_subscript_pretty(
-                stringPict('j'), stringPict(n)
-            )
-            item = prettyForm(*j.right(stringPict('=')))
-            item = prettyForm(*item.right(printer._print(ji)))
+            symb = 'j%d' % (i+1)
+            symb = pretty_symbol(symb)
+            symb = prettyForm(symb + '=')
+            item = prettyForm(*symb.right(printer._print(ji)))
             label.append(item)
         for jn, (n1,n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
-            n = ','.join(str(i) for i in sorted(n1+n2))
-            j = self._print_subscript_pretty(
-                stringPict('j'), stringPict(n)
-            )
-            item = prettyForm(*j.right(stringPict('=')))
-            item = prettyForm(*item.right(printer._print(jn)))
+            n = ','.join(pretty_symbol("j%d" % i)[-1] for i in sorted(n1+n2))
+            symb = prettyForm('j' + n + '=')
+            item = prettyForm(*symb.right(printer._print(jn)))
             label.append(item)
         return self._print_sequence_pretty(
             label, self._label_separator, printer, *args
