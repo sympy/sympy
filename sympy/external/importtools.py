@@ -125,7 +125,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
         if warn_not_installed:
             warnings.warn("%s module is not installed" % module, UserWarning)
         return
-    except catch as e:
+    except catch, e:
         if warn_not_installed:
             warnings.warn("%s module could not be used (%s)" % (module, repr(e)))
         return
