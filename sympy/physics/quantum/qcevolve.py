@@ -14,6 +14,7 @@ from pyevolve.GenomeBase import GenomeBase
 
 __all__ = [
     'GQCBase',
+    'GQCLinear',
     'kmp_table',
     'find_subcircuit',
     'qc_remove_subcircuit',
@@ -33,7 +34,22 @@ class GQCBase(Basic, GenomeBase):
     provided by Basic and GenomeBase; all subclasses are expected
     to provide class specific implementations.
     """
-    pass
+
+    def __new__(cls, *args):
+        # args is the quantum circuit representing a genome
+        obj = Basic.__new__(cls, *args)
+        return obj
+
+    @property
+    def circuit(self):
+        return self.args
+
+    def __repr__(self):
+        """Return a string representation of GQCBase"""
+        rep = GenomeBase.__repr__(self)
+        rep += "- GQCBase\n"
+        rep += "\tCircuit:\t\t %s\n\n" % (self.circuit,)
+        return rep
 
 class GQCLinear(GQCBase):
     """A linear program representation of quantum circuits.
@@ -51,7 +67,44 @@ class GQCLinear(GQCBase):
     GQCLinear was created to provide a meaningful name
     for a representation of quantum circuits.
     """
-    pass
+
+    def __new__(cls, *args, **kargs):
+        # args is the quantum circuit representing a genome
+        # kargs should a variable length dictionary
+        obj = GQCBase.__new__(args)
+
+        obj._genome_circuit = args
+        obj._gate_identities = False
+        obj._insert_choices = []
+
+        # Doing this is a questionable design
+        if 'GateIdentity' in kargs.keys():
+            obj._gate_identities = kargs['GateIdentity']
+
+        if 'choices' in kargs.keys():
+            obj._insert_choices = kargs['choices']
+
+        if obj._gate_identities:
+            collapse_func = lambda acc, an_id: acc + an_id.gate_rules
+            ids_flat = reduce(collapse_func, obj._insert_choices, [])
+            obj._insert_choices = ids_flat
+
+        return obj
+
+    @property
+    def genome_circuit(self):
+        return self._genome_circuit
+
+    def insert_choices(self):
+        # List of circuits that could be inserted into another circuit
+        return self._insert_choices
+
+    def __repr__(self):
+        """Return a string representation of GQCBase"""
+        rep = GQCBase.__repr__(self)
+        rep += "- GQCLinear\n"
+        rep += "\tIdentities:\t\t %s\n\n" % (self.identities,)
+        return rep
 
 def kmp_table(word):
     """Build the 'partial match' table of the
@@ -292,7 +345,7 @@ def qc_reduce(circuit, ids, quant=0, homogeneous=True):
     pass
 # ===========================================================
 
-def qc_random_insert(circuit, choices, gate_identity=False, seed=None):
+def qc_random_insert(circuit, choices, seed=None):
     """Insert a circuit into another quantum circuit.
 
     qc_random_insert randomly selects a circuit from
@@ -305,21 +358,12 @@ def qc_random_insert(circuit, choices, gate_identity=False, seed=None):
         A tuple of Gates representing a quantum circuit
     choices : list
         Set of circuit choices
-    identity : boolean
-        Indicates whether choices are of type GateIdentity
-        or tuples
     seed : int
         Seed value for the random number generator
     """
 
     if len(choices) < 1:
         return circuit
-
-    if gate_identity:
-        # Flatten the GateIdentity objects (with gate rules)
-        # into one single list
-        collapse_func = lambda acc, an_id: acc + an_id.gate_rules
-        choices = reduce(collapse_func, choices, [])
 
     # Create the random integer generator with the seed
     int_gen = Random()
@@ -344,12 +388,35 @@ within the same equivalence class of the original circuit.
 """
 def qcopt_linear_init(genome, **args):
     """Initialization function for optimizing quantum circuits
-       problem using an linear circuit representataion."""
-    pass
+       problem using an linear circuit representataion.
+
+    Parameters
+    ==========
+    genome : GQCLinear
+        The genome in the population
+    args : any (variable length)
+        In many cases, will include an instance of GSimpleGA
+    """
+
+    new_circuit = qc_random_insert(
+                      genome.genome_circuit,
+                      genome.insert_choices
+                  )
+
+    genome.genome_circuit = new_circuit
+    
 
 def qcopt_linear_mutator(genome, **args):
     """Mutator function for optimizing quantum circuits
-       problem using an linear circuit representataion."""
+       problem using an linear circuit representataion.
+
+    Parameters
+    ==========
+    genome : GQCLinear
+        The genome in the population
+    args : any (variable length)
+        In many cases, will include an instance of GSimpleGA
+    """
 
     # The mutator may either look for identities in
     # the circuit and make a reduction or it may
