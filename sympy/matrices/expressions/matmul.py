@@ -1,5 +1,5 @@
 from matexpr import MatrixExpr, ShapeError, matrixify, Identity, ZeroMatrix
-from sympy.core import Mul
+from sympy.core import Mul, Add
 
 class MatMul(MatrixExpr, Mul):
     """A Product of Matrix Expressions
@@ -57,7 +57,6 @@ class MatMul(MatrixExpr, Mul):
         return (matrices[0].n, matrices[-1].m)
 
     def _entry(self, i, j):
-        from sympy import Dummy, summation
         coeff, matmul = self.as_coeff_mmul()
         if not matmul.is_Mul: # situation like 2*X, matmul is just X
             return coeff * matmul[i,j]
@@ -67,8 +66,15 @@ class MatMul(MatrixExpr, Mul):
 
         X = head
         Y = MatMul(*tail)
-        k = Dummy('k', integer=True)
-        return summation(coeff*X[i,k]*Y[k,j], (k, 0, X.m-1))
+
+        if X.shape[1].is_Number:
+            # Numeric shape like (3,5)
+            return coeff*Add(*[X[i,k]*Y[k,j] for k in range(X.shape[1])])
+        else:
+            # Symbolic shape like (n, m)
+            from sympy import Dummy, summation
+            k = Dummy('k', integer=True)
+            return summation(coeff*X[i,k]*Y[k,j], (k, 0, X.m-1))
 
     def as_coeff_mmul(self):
         scalars = [x for x in self.args if not x.is_Matrix]
