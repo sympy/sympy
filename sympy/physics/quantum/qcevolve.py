@@ -71,7 +71,7 @@ class GQCLinear(GQCBase):
     def __new__(cls, *args, **kargs):
         # args is the quantum circuit representing a genome
         # kargs should a variable length dictionary
-        obj = GQCBase.__new__(args)
+        obj = GQCBase.__new__(cls, *args)
 
         obj._genome_circuit = args
         obj._gate_identities = False
@@ -95,6 +95,11 @@ class GQCLinear(GQCBase):
     def genome_circuit(self):
         return self._genome_circuit
 
+    @genome_circuit.setter
+    def genome_circuit(self, new_circuit):
+        self._genome_circuit = new_circuit
+
+    @property
     def insert_choices(self):
         # List of circuits that could be inserted into another circuit
         return self._insert_choices
