@@ -1093,3 +1093,9 @@ def test_Catalan_EulerGamma_prec():
     assert f._mpf_ == (0, 302627L, -19, 19)
     assert f._prec == 20
     assert n._as_mpf_val(20) == f._mpf_
+
+def test_Float_eq():
+    assert Float(.12, 3) != Float(.12, 4)
+    assert Float(.12, 3) == .12
+    assert 0.12 == Float(.12, 3)
+    assert Float('.12', 22) != .12

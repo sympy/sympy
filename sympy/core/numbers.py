@@ -660,6 +660,14 @@ class Float(Number):
         return int(mlib.to_int(self._mpf_))
 
     def __eq__(self, other):
+        if isinstance(other, float):
+            # coerce to Float at same precision
+            o = Float(other)
+            try:
+                ompf = o._as_mpf_val(self._prec)
+            except ValueError:
+                return False
+            return bool(mlib.mpf_eq(self._mpf_, ompf))
         try:
             other = _sympify(other)
         except SympifyError:
@@ -668,6 +676,12 @@ class Float(Number):
             if other.is_irrational:
                 return False
             return other.__eq__(self)
+        if isinstance(other, Float):
+            # hack for the nan == nan case which, to mpf_eq is not equal
+            # but to SymPy should be equal
+            if other._mpf_ == self._mpf_ == fnan:
+                return True
+            return bool(mlib.mpf_eq(self._mpf_, other._mpf_))
         if isinstance(other, Number):
             # numbers should compare at the same precision;
             # all _as_mpf_val routines should be sure to abide
@@ -675,10 +689,6 @@ class Float(Number):
             # they don't, the equality test will fail since it compares
             # the mpf tuples
             ompf = other._as_mpf_val(self._prec)
-            # hack for the nan == nan case which, to mpf_eq is not equal
-            # but to SymPy should be equal
-            if ompf == self._mpf_ == fnan:
-                return True
             return bool(mlib.mpf_eq(self._mpf_, ompf))
         return False    # Float != non-Number
 
