@@ -91,8 +91,8 @@ def cse(exprs, symbols=None, optimizations=None):
     replacements : list of (Symbol, expression) pairs
         All of the common subexpressions that were replaced. Subexpressions
         earlier in this list might show up in subexpressions later in this list.
-    reduced_exprs : list of sympy expressions if an iterable was input, else
-        a single expression, with all common subexpression replacements made.
+    reduced_exprs : list of sympy expressions
+        The reduced expressions with all of the replacements above.
     """
     from sympy.matrices import Matrix
 
@@ -115,12 +115,10 @@ def cse(exprs, symbols=None, optimizations=None):
 
     # Handle the case if just one expression was passed.
     if isinstance(exprs, Basic):
-        reduced_exprs = [exprs]
-    else:
-        reduced_exprs = exprs
+        exprs = [exprs]
 
     # Preprocess the expressions to give us better optimization opportunities.
-    reduced_exprs = [preprocess_for_cse(e, optimizations) for e in reduced_exprs]
+    reduced_exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
     # Find all of the repeated subexpressions.
     def insert(subtree):
         '''This helper will insert the subtree into to_eliminate while
@@ -252,8 +250,6 @@ def cse(exprs, symbols=None, optimizations=None):
         replacements[i] = (sym, subtree)
     reduced_exprs = [postprocess_for_cse(e, optimizations) for e in reduced_exprs]
 
-    if isinstance(exprs, Basic):
-        reduced_exprs = reduced_exprs[0]
-    elif isinstance(exprs, Matrix):
-        reduced_exprs = Matrix(exprs.rows, exprs.cols, reduced_exprs)
+    if isinstance(exprs, Matrix):
+        reduced_exprs = [Matrix(exprs.rows, exprs.cols, reduced_exprs)]
     return replacements, reduced_exprs

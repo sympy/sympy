@@ -52,8 +52,8 @@ def test_cse_single2():
     e = Add(Pow(x+y,2), sqrt(x+y))
     substs, reduced = cse(e, optimizations=[])
     assert substs == [(x0, x+y)]
-    assert reduced == sqrt(x0) + x0**2
-    assert isinstance(cse(Matrix([[1]]))[1], Matrix)
+    assert reduced == [sqrt(x0) + x0**2]
+    assert isinstance(cse(Matrix([[1]]))[1][0], Matrix)
 
 def test_cse_not_possible():
     # No substitution possible.
@@ -76,11 +76,11 @@ def test_subtraction_opt():
     assert substs == [(x0, x - y), (x1, y - z), (x2, x0*x1)]
     assert reduced == [-x2 + exp(-x2)]
     assert cse(-(x - y)*(z - y) + exp(-(x - y)*(z - y))) == \
-        ([(x0, (x - y)*(y - z))], x0 + exp(x0))
+        ([(x0, (x - y)*(y - z))], [x0 + exp(x0)])
     # issue 978
     n = -1 + 1/x
     e = n/x/(-n)**2 - 1/n/x
-    assert cse(e) == ([], 0)
+    assert cse(e) == ([], [0])
 
 def test_multiple_expressions():
     e1 = (x+y)*z
@@ -125,10 +125,10 @@ def test_powers():
     assert cse(x*y**2 + x*y) == ([(x0, x*y)], [x0*y + x0])
 
 def test_issues_1399():
-    assert cse(w/(x - y) + z/(y - x)) == ([], (w - z)/(x - y))
+    assert cse(w/(x - y) + z/(y - x)) == ([], [(w - z)/(x - y)])
 
 def test_issue_921():
-    assert cse(x**5 + x**4 + x**3 + x**2) == ([(x0, x**2)], x0*(x**3 + x + x0 + 1))
+    assert cse(x**5 + x**4 + x**3 + x**2) == ([(x0, x**2)], [x0*(x**3 + x + x0 + 1)])
 
 def test_issue_1104():
-    assert cse(sin(x**x)/x**x) == ([(x0, x**x)], sin(x0)/x0)
+    assert cse(sin(x**x)/x**x) == ([(x0, x**x)], [sin(x0)/x0])
