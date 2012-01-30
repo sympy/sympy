@@ -312,27 +312,31 @@ def evalf_floor(expr, prec, options):
 def add_terms(terms, prec, target_prec):
     """
     Helper for evalf_add. Adds a list of (mpfval, accuracy) terms.
+
+    The returned mpf tuple will be normalized to target_prec; prec is used
+    to calculate a working precision to attain.
+
+    XXX explain why this is needed and why one can't just loop using mpf_add
     """
-    if len(terms) == 1:
-        if not terms[0]:
-            # XXX: this is supposed to represent a scaled zero
-            return mpf_shift(fone, target_prec), -1
+    terms = [t for t in terms if not zero(t)]
+    if not terms:
+        return None, None
+    elif len(terms) == 1:
         return terms[0]
-    max_extra_prec = 2*prec
+    working_prec = 2*prec
     sum_man, sum_exp, absolute_error = 0, 0, MINUS_INF
     for x, accuracy in terms:
-        if not x:
-            continue
         sign, man, exp, bc = x
         if sign:
             man = -man
-        absolute_error = max(absolute_error, bc+exp-accuracy)
+        absolute_error = max(absolute_error, bc + exp - accuracy)
         delta = exp - sum_exp
         if exp >= sum_exp:
             # x much larger than existing sum?
             # first: quick test
-            if (delta > max_extra_prec) and \
-                ((not sum_man) or delta-bitcount(abs(sum_man)) > max_extra_prec):
+            if ((delta > working_prec) and
+                ((not sum_man) or
+                 delta - bitcount(abs(sum_man)) > working_prec)):
                 sum_man = man
                 sum_exp = exp
             else:
@@ -340,17 +344,14 @@ def add_terms(terms, prec, target_prec):
         else:
             delta = -delta
             # x much smaller than existing sum?
-            if delta-bc > max_extra_prec:
+            if delta - bc > working_prec:
                 if not sum_man:
                     sum_man, sum_exp = man, exp
             else:
                 sum_man = (sum_man << delta) + man
                 sum_exp = exp
-    if absolute_error == MINUS_INF:
-        return None, None
     if not sum_man:
-        # XXX: this is supposed to represent a scaled zero
-        return mpf_shift(fone, absolute_error), -1
+        return scaled_zero(absolute_error), -1
     if sum_man < 0:
         sum_sign = 1
         sum_man = -sum_man
@@ -359,7 +360,7 @@ def add_terms(terms, prec, target_prec):
     sum_bc = bitcount(sum_man)
     sum_accuracy = sum_exp + sum_bc - absolute_error
     r = normalize(sum_sign, sum_man, sum_exp, sum_bc, target_prec,
-        round_nearest), sum_accuracy
+        rnd), sum_accuracy
     #print "returning", to_str(r[0],50), r[1]
     return r
 
