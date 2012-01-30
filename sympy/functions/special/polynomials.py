@@ -9,17 +9,32 @@ combinatorial polynomials.
 from sympy.core.basic import C
 from sympy.core.singleton import S
 from sympy.core import Rational
-from sympy.core.function import Function
+from sympy.core.function import Function, ArgumentIndexError
 
 from sympy.polys.orthopolys import (
     chebyshevt_poly,
     chebyshevu_poly,
     laguerre_poly,
     hermite_poly,
-    legendre_poly,
+    legendre_poly
 )
 
 _x = C.Dummy('x')
+
+
+class OrthogonalPolynomial(Function):
+    """Base class for orthogonal polynomials.
+    """
+    nargs = 2
+
+    @classmethod
+    def _eval_at_order(cls, n, x):
+        if n.is_integer and n >= 0:
+            return cls._ortho_poly(int(n), _x).subs(_x, x)
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0], self.args[1].conjugate())
+
 
 class PolynomialSequence(Function):
     """Polynomial sequence with one index and n >= 0. """
