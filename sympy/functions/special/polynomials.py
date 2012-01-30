@@ -301,25 +301,46 @@ class assoc_legendre(Function):
     nargs = 3
 
     @classmethod
-    def calc(cls, n, m):
+    def _eval_at_order(cls, n, m):
         P = legendre_poly(n, _x, polys=True).diff((_x, m))
         return (-1)**m * (1 - _x**2)**Rational(m, 2) * P.as_expr()
 
     @classmethod
     def eval(cls, n, m, x):
-        if n.is_integer and n >= 0 and m.is_integer and abs(m) <= n:
-            assoc = cls.calc(int(n), abs(int(m)))
+        if m.could_extract_minus_sign():
+            # P^{-m}_n  --->  F * P^m_n
+            return S.NegativeOne**(-m) * (C.factorial(m + n)/C.factorial(n - m)) * assoc_legendre(n, -m, x)
+        if m == 0:
+            # P^0_n  --->  L_n
+            return legendre(n, x)
+        if x == 0:
+            return 2**m*sqrt(S.Pi) / (C.gamma((1 - m - n)/2)*C.gamma(1 - (m - n)/2))
+        if n.is_Number and m.is_Number and n.is_integer and m.is_integer:
+            if n.is_negative:
+                raise ValueError("%s : 1st index must be nonnegative integer (got %r)" % (cls, n))
+            if abs(m) > n:
+                raise ValueError("%s : abs('2nd index') must be <= '1st index' (got %r, %r)" % (cls, n, m))
+            return cls._eval_at_order(int(n), abs(int(m))).subs(_x, x)
 
-            if m < 0:
-                assoc *= (-1)**(-m) * (C.factorial(n + m)/C.factorial(n - m))
+    def fdiff(self, argindex=3):
+        if argindex == 1:
+            # Diff wrt n
+            raise ArgumentIndexError(self, argindex)
+        elif argindex == 2:
+            # Diff wrt m
+            raise ArgumentIndexError(self, argindex)
+        elif argindex == 3:
+            # Diff wrt x
+            # Find better formula, this is unsuitable for x = 1
+            n, m, x = self.args
+            return 1/(x**2 - 1)*(x*n*assoc_legendre(n,m,x) - (m + n)*assoc_legendre(n - 1,m,x))
+        else:
+            raise ArgumentIndexError(self, argindex)
 
-            return assoc.subs(_x, x)
-
-        if n.is_negative:
-            raise ValueError("%s : 1st index must be nonnegative integer (got %r)" % (cls, n))
-
-        if abs(m) > n:
-            raise ValueError("%s : abs('2nd index') must be <= '1st index' (got %r, %r)" % (cls, n, m))
+    def _eval_rewrite_as_polynomial(self, n, m, x):
+        k = C.Dummy("k")
+        kern = C.factorial(2*n - 2*k)/(2**n*C.factorial(n - k)*C.factorial(k)*C.factorial(n - 2*k - m))*(-1)**k*x**(n - m - 2*k)
+        return (1 - x**2)**(m/2) * C.Sum(kern, (k, 0, C.floor((n - m)*S.Half)))
 
 #----------------------------------------------------------------------------
 # Hermite polynomials
