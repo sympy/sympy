@@ -289,6 +289,8 @@ def test_Float():
     assert Float(2.0, 22) == 2
     raises(ValueError, 'Float(.1, 22)')
     raises(ValueError, 'Float(Float(.1), 22)')
+    assert float(Float('.12500000000000001', '')) == .125
+    raises(ValueError, "Float(Float(.12500000000000001, ''), 22)")
 
     # allow spaces
     Float('123 456.123 456') == Float('123456.123456')

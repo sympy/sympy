@@ -74,8 +74,21 @@ def _literal_float(f):
     return bool(regex.match(pat, f))
 
 def _exact_float(f):
-    """Return True if float f can be represented exactly in binary."""
-    n, f = divmod(float(f), 1)
+    """Return True if float/Float f can be represented exactly in binary.
+
+    A decimal fraction can be represented exactly in binary if its
+    denominator is a power of 2. Whether it is or not is tested by
+    seeing if the log, base 2, of the fraction is an integer.
+    """
+    fin = f
+    f = float(f)
+    if isinstance(fin, Float) and fin._prec > 53:
+        # a high precision float may truncate to an exact float, so watch
+        # out for that by rebuilding the Float from the str repr
+        rebuilt = Float._new(Float(str(f))._mpf_, fin._prec)
+        if fin != rebuilt:
+            return False
+    n, f = divmod(f, 1)
     if f:
         q = 2**(1 - math.floor(math.log(f)/_LOG2))
         p = f*q
