@@ -274,10 +274,10 @@ def test_Float():
     teq(cos(0.1, evaluate=False))
 
     assert Float(0) is S.Zero
-    assert Float(1).is_Integer and Float(1) == 1
+    assert Float(1) is S.One
 
     assert Float(S.Zero) is S.Zero
-    assert Float(S.One).is_Integer and Float(S.One) == 1
+    assert Float(S.One) is S.One
 
     i = 12345678901234567890
     assert Float(i) == Float(i, 20)

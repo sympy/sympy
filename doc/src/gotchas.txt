@@ -388,7 +388,7 @@ with a few different values:
     0.100
     0.143
 
-First, notice that if you try to Float an integer you will receive an Integer.
+First, notice that if you apply Float to an integer you will receive an Integer.
 You must sent an integer as a string if you want a Float representation of it.
 Next, notice that each of those values looks correct to 3 digits. But if we try
 to evaluate them to 20 digits, a difference will become apparent:
