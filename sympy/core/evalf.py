@@ -199,24 +199,28 @@ def evalf_im(expr, prec, options):
     return get_complex_part(expr.args[0], 1, prec, options)
 
 def finalize_complex(re, im, prec):
-    assert re and im
     if re == fzero and im == fzero:
         raise ValueError("got complex zero with unknown accuracy")
+
+    # one or both of these will be correct
     size_re = fastlog(re)
     size_im = fastlog(im)
-    # Convert fzeros to scaled zeros
+
+    # convert fzeros to scaled zeros and update size
     if re == fzero:
-        re = mpf_shift(fone, size_im-prec)
+        re = scaled_zero(size_im - prec)
         size_re = fastlog(re)
     elif im == fzero:
-        im = mpf_shift(fone, size_re-prec)
+        im = scaled_zero(size_re-prec)
         size_im = fastlog(im)
+
     if size_re > size_im:
         re_acc = prec
         im_acc = prec + min(-(size_re - size_im), 0)
     else:
         im_acc = prec
         re_acc = prec + min(-(size_im - size_re), 0)
+
     return re, im, re_acc, im_acc
 
 def chop_parts(value, prec):
