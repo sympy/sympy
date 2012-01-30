@@ -1,6 +1,7 @@
 __all__ = ['Kane']
 
 from sympy import Symbol, zeros, Matrix, diff, solve_linear_system_LU, eye
+from sympy.utilities import default_sort_key
 from sympy.physics.mechanics.essential import ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.point import Point
@@ -138,60 +139,13 @@ class Kane(object):
         self._k_dnh = Matrix([])
         self._f_dnh = Matrix([])
 
-    def _find_dynamicsymbols(self, inlist, insyms=[]):
+    def _find_dynamicsymbols(self, inlist, insyms=set()):
         """Finds all non-supplied dynamicsymbols in the expressions."""
         from sympy.core.function import UndefinedFunction, Derivative
         t = dynamicsymbols._t
-
-        def _deeper(iexpr):
-            oli = []
-            if isinstance(type(iexpr), UndefinedFunction):
-                if iexpr.args == (t,):
-                    oli += [iexpr]
-            elif isinstance(iexpr, Derivative):
-                if (bool([i == t for i in iexpr.variables]) &
-                    isinstance(type(iexpr.args[0]), UndefinedFunction)):
-                    ol = str(iexpr.args[0].func)
-                    for i, v in enumerate(iexpr.variables):
-                        ol += '\''
-                    oli += [iexpr]
-            else:
-                for i, v in enumerate(iexpr.args):
-                    oli += _deeper(v)
-            return oli
-
-        ol = []
-        for i in list(inlist):
-            ol += _deeper(i)
-        seta = {}
-        map(seta.__setitem__, ol, [])
-        ol = seta.keys()
-        for i, v in enumerate(insyms):
-            if ol.__contains__(v):
-                ol.remove(v)
-        return ol
-
-    def _find_othersymbols(self, inlist, insyms=[]):
-        """Finds all non-dynamic symbols in the expressions."""
-        def _deeper(iexpr):
-            oli = []
-            if isinstance(iexpr, Symbol):
-                oli += [iexpr]
-            else:
-                for i, v in enumerate(iexpr.args):
-                    oli += _deeper(v)
-            return oli
-
-        ol = []
-        for i in list(inlist):
-            ol += _deeper(i)
-        seta = {}
-        map(seta.__setitem__, ol, [])
-        ol = seta.keys()
-        for i, v in enumerate(insyms):
-            if ol.__contains__(v):
-                ol.remove(v)
-        return ol
+        return reduce(set.union, [i.atoms(t)
+            for j in inlist 
+            for i in j.atoms(UndefinedFunction, Derivative)], set()) - insyms
 
     def _mat_inv_mul(self, A, B):
         """Internal Function
@@ -690,18 +644,21 @@ class Kane(object):
 
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.
-        insyms = self._q + self._qdot + self._u + self._udot + uaux + uauxdot
-        bad_oths= self._find_dynamicsymbols(self._k_kqdot, insyms)
-        bad_oths += self._find_dynamicsymbols(self._k_ku, insyms)
-        bad_oths += self._find_dynamicsymbols(self._f_k, insyms)
-        bad_oths += self._find_dynamicsymbols(self._k_dnh, insyms)
-        bad_oths += self._find_dynamicsymbols(self._f_dnh, insyms)
-        bad_oths += self._find_dynamicsymbols(self._k_d, insyms)
-        if bad_oths != []:
+        insyms = set(self._q + self._qdot + self._u + self._udot + uaux + uauxdot)
+        if any(self._find_dynamicsymbols(i, insyms) for i in [self._k_kqdot,
+                                                              self._k_ku,
+                                                              self._f_k,
+                                                              self._k_dnh,
+                                                              self._f_dnh,
+                                                              self._k_d]):
             raise ValueError('Cannot have dynamic symbols outside dynamic ' +
                              'forcing vector')
-        oth_dyns = self._find_dynamicsymbols(self._f_d.subs(uadz).subs(uaz),
-                                             insyms)
+        oth_dyns = list(self._find_dynamicsymbols(self._f_d.subs(uadz).subs(uaz),
+                                             insyms))
+
+        # make it canonically ordered so the jacobian is canonical
+        oth_dyns.sort(key=default_sort_key)
+
         for i in oth_dyns:
             if diff(i, dynamicsymbols._t) in oth_dyns:
                 raise ValueError('Cannot have derivatives of forcing terms ' +
@@ -808,7 +765,7 @@ class Kane(object):
             f2_q = f2.jacobian(qi) + f2.jacobian(self._qdot) * dqdot_dqi
             f2_u = f2.jacobian(ui) + f2.jacobian(self._qdot) * dqdot_dui
         Amat = -(f1_q.row_join(f1_u)).col_join(f2_q.row_join(f2_u))
-        if oth_dyns != []:
+        if oth_dyns:
             f1_oths = f1.jacobian(oth_dyns)
             f2_oths = f2.jacobian(oth_dyns)
             Bmat = -f1_oths.col_join(f2_oths)
