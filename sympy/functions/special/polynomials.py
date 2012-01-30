@@ -10,6 +10,7 @@ from sympy.core.basic import C
 from sympy.core.singleton import S
 from sympy.core import Rational
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.functions.elementary.miscellaneous import sqrt
 
 from sympy.polys.orthopolys import (
     chebyshevt_poly,
@@ -186,7 +187,7 @@ class chebyshevu_root(Function):
 # Legendre polynomials and Associated Legendre polynomials
 #
 
-class legendre(PolynomialSequence):
+class legendre(OrthogonalPolynomial):
     """
     legendre(n, x) gives the nth Legendre polynomial of x, P_n(x)
 
@@ -220,6 +221,44 @@ class legendre(PolynomialSequence):
     """
 
     _ortho_poly = staticmethod(legendre_poly)
+
+    @classmethod
+    def eval(cls, n, x):
+        if not n.is_Number:
+            # Symbolic result L_n(x)
+            # L_n(-x)  --->  (-1)**n * L_n(x)
+            if x.could_extract_minus_sign():
+                return S.NegativeOne**n * legendre(n,-x)
+            # L_{-n}(x)  --->  L_{n-1}(x)
+            if n.could_extract_minus_sign():
+                return legendre(-n - S.One,x)
+            # We can evaluate for some special values of x
+            if x == S.Zero:
+                return sqrt(S.Pi)/(C.gamma(S.Half - n/2)*C.gamma(S.One + n/2))
+            elif x == S.One:
+                return S.One
+            elif x == S.Infinity:
+                return S.Infinity
+        else:
+            # n is a given fixed integer, evaluate into polynomial
+            return cls._eval_at_order(n, x)
+
+    def fdiff(self, argindex=2):
+        if argindex == 1:
+            # Diff wrt n
+            raise ArgumentIndexError(self, argindex)
+        elif argindex == 2:
+            # Diff wrt x
+            # Find better formula, this is unsuitable for x = 1
+            n, x = self.args
+            return n/(x**2 - 1)*(x*legendre(n, x) - legendre(n - 1, x))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_polynomial(self, n, x):
+        k = C.Dummy("k")
+        kern = (-1)**k*C.binomial(n, k)**2*((1 + x)/2)**(n - k)*((1 - x)/2)**k
+        return C.Sum(kern, (k, 0, n))
 
 class assoc_legendre(Function):
     """
