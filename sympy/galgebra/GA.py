@@ -2307,14 +2307,15 @@ class MV(object):
     def trigsimp(self):
         """
         Applies sympy trigsimp function
-        to each component of multivector.
+        to each component of multivector
+        using the recursive option.
         """
         for igrade in MV.n1rg:
             if isinstance(self.mv[igrade],numpy.ndarray):
                 for ibase in range(MV.nbasis[igrade]):
                     if self.mv[igrade][ibase] != ZERO:
                         self.mv[igrade][ibase] = \
-                        sympy.trigsimp(self.mv[igrade][ibase],deep=True,recursive=True)
+                        sympy.trigsimp(self.mv[igrade][ibase],deep=True, recursive=True)
         return
 
     def cancel(self):

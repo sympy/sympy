@@ -1514,9 +1514,9 @@ def test_sympy__series__order__Order():
     from sympy.series.order import Order
     assert _test_args(Order(1, x, y))
 
-def test_sympy__simplify__cse_opts__Sub():
-    from sympy.simplify.cse_opts import Sub
-    assert _test_args(Sub())
+def test_sympy__simplify__cse_opts__Neg():
+    from sympy.simplify.cse_opts import Neg
+    assert _test_args(Neg())
 
 def test_sympy__tensor__indexed__Idx():
     from sympy.tensor.indexed import Idx
