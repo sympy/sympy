@@ -6,10 +6,10 @@ for mathematical functions.
 import sympy.mpmath.libmp as libmp
 from sympy.mpmath import make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc
 from sympy.mpmath import inf as mpmath_inf
-from sympy.mpmath.libmp import (bitcount, from_int, from_man_exp, \
-        from_rational, fhalf, fnone, fone, fzero, mpf_abs, mpf_add, mpf_atan, \
-        mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt, mpf_mul, \
-        mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin, mpf_sqrt, \
+from sympy.mpmath.libmp import (bitcount, from_int, from_man_exp,
+        from_rational, fhalf, fnone, fone, fzero, mpf_abs, mpf_add, mpf_atan,
+        mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt, mpf_mul,
+        mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin, mpf_sqrt,
         normalize, round_nearest, to_int, to_str)
 from sympy.mpmath.libmp.backend import MPZ
 from sympy.mpmath.libmp.libmpf import dps_to_prec
@@ -24,6 +24,7 @@ from singleton import S
 from containers import Tuple
 
 LG10 = math.log(10, 2)
+rnd = round_nearest
 
 # Used in a few places as placeholder values to denote exponents and
 # precision levels, e.g. of exact numbers. Must be careful to avoid
@@ -45,12 +46,14 @@ class PrecisionExhausted(ArithmeticError):
 
 """
 An mpf value tuple is a tuple of integers (sign, man, exp, bc)
-representing a floating-point number: (-1)**sign*man*2**exp where
-bc should correspond to the number of bits used to represent the
-mantissa (man) in binary notation, e.g. (0,5,1,3) represents 10::
+representing a floating-point number: [1, -1][sign]*man*2**exp where
+sign is 0 or 1 and bc should correspond to the number of bits used to
+represent the mantissa (man) in binary notation, e.g.
 
 >>> from sympy.core.evalf import bitcount
->>> n=(-1)**0 * 5 * 2**1; n, bitcount(5)
+>>> sign, man, exp, bc = 0, 5, 1, 3
+>>> n = [1, -1][sign]*man*2**exp
+>>> n, bitcount(man)
 (10, 3)
 
 A temporary result is a tuple (re, im, re_acc, im_acc) where
@@ -84,8 +87,11 @@ def fastlog(x):
 
     >>> from sympy import log
     >>> from sympy.core.evalf import fastlog, bitcount
-    >>> n=(-1)**0*5*2**1; n, (log(n)/log(2)).evalf(), fastlog((0,5,1,bitcount(5)))
-    (10, 3.32192809488736, 4)
+    >>> s, m, e = 0, 5, 1
+    >>> bc = bitcount(m)
+    >>> n = [1, -1][s]*m*2**e
+    >>> n, (log(n)/log(2)).evalf(2), fastlog((s, m, e, bc))
+    (10, 3.3, 4)
     """
 
     if not x or x == fzero:
@@ -231,7 +237,7 @@ def get_integer_part(expr, no, options, return_ints=False):
     # must also calculate whether the difference to the nearest integer is
     # positive or negative (which may fail if very close)
     def calc_part(expr, nexpr):
-        nint = int(to_int(nexpr, round_nearest))
+        nint = int(to_int(nexpr, rnd))
         expr = C.Add(expr, -nint, evaluate=False)
         x, _, x_acc, _ = evalf(expr, 10, options)
         check_target(expr, (x, None, x_acc, None), 3)
@@ -554,7 +560,7 @@ def evalf_trig(v, prec, options):
     # danger of hitting the first root of cos (with sin, magnitude
     # <= 2.0 would actually be ok)
     if xsize < 1:
-        return func(re, prec, round_nearest), None, prec, None
+        return func(re, prec, rnd), None, prec, None
     # Very large
     if xsize >= 10:
         xprec = prec + xsize
@@ -562,7 +568,7 @@ def evalf_trig(v, prec, options):
     # Need to repeat in case the argument is very close to a
     # multiple of pi (or pi/2), hitting close to a root
     while 1:
-        y = func(re, prec, round_nearest)
+        y = func(re, prec, rnd)
         ysize = fastlog(y)
         gap = -ysize
         accuracy = (xprec - xsize) - gap
@@ -591,14 +597,14 @@ def evalf_log(expr, prec, options):
 
     imaginary_term = (mpf_cmp(xre, fzero) < 0)
 
-    re = mpf_log(mpf_abs(xre), prec, round_nearest)
+    re = mpf_log(mpf_abs(xre), prec, rnd)
     size = fastlog(re)
     if prec - size > workprec:
         # We actually need to compute 1+x accurately, not x
-        arg = C.Add(S.NegativeOne,arg,evaluate=False)
+        arg = C.Add(S.NegativeOne, arg, evaluate=False)
         xre, xim, xre_acc, xim_acc = evalf_add(arg, prec, options)
         prec2 = workprec - fastlog(xre)
-        re = mpf_log(mpf_add(xre, fone, prec2), prec, round_nearest)
+        re = mpf_log(mpf_add(xre, fone, prec2), prec, rnd)
 
     re_acc = prec
 
@@ -614,7 +620,7 @@ def evalf_atan(v, prec, options):
         return (None,)*4
     if xim:
         raise NotImplementedError
-    return mpf_atan(xre, prec, round_nearest), None, prec, None
+    return mpf_atan(xre, prec, rnd), None, prec, None
 
 def evalf_subs(prec, subs):
     """ Change all Float entries in `subs` to have precision prec. """
@@ -646,7 +652,7 @@ def evalf_bernoulli(expr, prec, options):
     if not arg.is_Integer:
         raise ValueError("Bernoulli number index must be an integer")
     n = int(arg)
-    b = mpf_bernoulli(n, prec, round_nearest)
+    b = mpf_bernoulli(n, prec, rnd)
     if b == fzero:
         return None, None, None, None
     return b, None, prec, None
@@ -735,7 +741,7 @@ def do_integral(expr, prec, options):
             re = mpf_shift(fone, min(-prec,-max_real_term[0],-quadrature_error))
             re_acc = -1
         else:
-            re_acc = -max(max_real_term[0]-fastlog(re)-prec, quadrature_error)
+            re_acc = -max(max_real_term[0] - fastlog(re) - prec, quadrature_error)
     else:
         re, re_acc = None, None
 
@@ -745,7 +751,7 @@ def do_integral(expr, prec, options):
             im = mpf_shift(fone, min(-prec,-max_imag_term[0],-quadrature_error))
             im_acc = -1
         else:
-            im_acc = -max(max_imag_term[0]-fastlog(im)-prec, quadrature_error)
+            im_acc = -max(max_imag_term[0] - fastlog(im) - prec, quadrature_error)
     else:
         im, im_acc = None, None
 
@@ -1069,13 +1075,13 @@ class EvalfMixin(object):
         re, im, re_acc, im_acc = result
         if re:
             p = max(min(prec, re_acc), 1)
-            #re = mpf_pos(re, p, round_nearest)
+            #re = mpf_pos(re, p, rnd)
             re = C.Float._new(re, p)
         else:
             re = S.Zero
         if im:
             p = max(min(prec, im_acc), 1)
-            #im = mpf_pos(im, p, round_nearest)
+            #im = mpf_pos(im, p, rnd)
             im = C.Float._new(im, p)
             return re + im*S.ImaginaryUnit
         else:
