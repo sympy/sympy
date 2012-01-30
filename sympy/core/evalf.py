@@ -98,6 +98,47 @@ def fastlog(x):
         return MINUS_INF
     return x[2] + x[3]
 
+def pure_complex(v):
+    """Return a and b if v matches a + I*b where b is not zero and
+    a and b are Numbers, else None.
+
+    >>> from sympy.core.evalf import pure_complex
+    >>> from sympy import Tuple, I
+    >>> a, b = Tuple(2, 3)
+    >>> pure_complex(a)
+    >>> pure_complex(a + b*I)
+    (2, 3)
+    >>> pure_complex(I)
+    (0, 1)
+    """
+    h, t = v.as_coeff_Add()
+    c, i = t.as_coeff_Mul()
+    if i is S.ImaginaryUnit:
+        return h, c
+
+def scaled_zero(n):
+    """Return a power of two with magnitude n and -1 for precision.
+
+    When printed to zero decimal places this will
+    represent a zero scaled to n:
+
+    >>> from sympy.core.evalf import scaled_zero
+    >>> from sympy import Float
+    >>> z, p = scaled_zero(100)
+    >>> Float(z)
+    1.26765060022823e+30
+    >>> Float(z, p)
+    .0e+30
+    >>> z = list(z)
+    >>> z[0] = 1
+    >>> Float(tuple(z), p)
+    -.0e+30
+    """
+    return mpf_shift(fone, n), -1
+
+def zero(mpf):
+    return not mpf or not mpf[1] and not mpf[-1]
+
 def complex_accuracy(result):
     """
     Returns relative accuracy of a complex number with given accuracies
@@ -738,7 +779,7 @@ def do_integral(expr, prec, options):
     if have_part[0]:
         re = result.real._mpf_
         if re == fzero:
-            re = mpf_shift(fone, min(-prec,-max_real_term[0],-quadrature_error))
+            re = scaled_zero(min(-prec, -max_real_term[0], -quadrature_error))
             re_acc = -1
         else:
             re_acc = -max(max_real_term[0] - fastlog(re) - prec, quadrature_error)
@@ -748,7 +789,7 @@ def do_integral(expr, prec, options):
     if have_part[1]:
         im = result.imag._mpf_
         if im == fzero:
-            im = mpf_shift(fone, min(-prec,-max_imag_term[0],-quadrature_error))
+            im = scaled_zero(min(-prec, -max_imag_term[0], -quadrature_error))
             im_acc = -1
         else:
             im_acc = -max(max_imag_term[0] - fastlog(im) - prec, quadrature_error)
