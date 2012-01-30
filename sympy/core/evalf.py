@@ -208,10 +208,10 @@ def finalize_complex(re, im, prec):
 
     # convert fzeros to scaled zeros and update size
     if re == fzero:
-        re = scaled_zero(size_im - prec)
+        re = scaled_zero(size_im - prec)[0]
         size_re = fastlog(re)
     elif im == fzero:
-        im = scaled_zero(size_re-prec)
+        im = scaled_zero(size_re - prec)[0]
         size_im = fastlog(im)
 
     if size_re > size_im:
@@ -355,7 +355,7 @@ def add_terms(terms, prec, target_prec):
                 sum_man = (sum_man << delta) + man
                 sum_exp = exp
     if not sum_man:
-        return scaled_zero(absolute_error), -1
+        return scaled_zero(absolute_error)
     if sum_man < 0:
         sum_sign = 1
         sum_man = -sum_man
@@ -400,25 +400,41 @@ def evalf_add(v, prec, options):
         options['maxprec'] = oldmaxprec
 
 def evalf_mul(v, prec, options):
-    args = v.args
+    res = pure_complex(v)
+    if res:
+        # the only pure complex that is a mul is h*I
+        _, h = res
+        im, _, im_acc, _ = evalf(h, prec, options)
+        return None, im, None, im_acc
+    args = list(v.args)
+
     # With guard digits, multiplication in the real case does not destroy
     # accuracy. This is also true in the complex case when considering the
     # total accuracy; however accuracy for the real or imaginary parts
     # separately may be lower.
     acc = prec
-    target_prec = prec
+
     # XXX: big overestimate
-    prec = prec + len(args) + 5
-    direction = 0
+    working_prec = prec + len(args) + 5
+
     # Empty product is 1
-    man, exp, bc = MPZ(1), 0, 1
-    direction = 0
-    complex_factors = []
+    start = man, exp, bc = MPZ(1), 0, 1
+
     # First, we multiply all pure real or pure imaginary numbers.
     # direction tells us that the result should be multiplied by
-    # i**direction
-    for arg in args:
-        re, im, re_acc, im_acc = evalf(arg, prec, options)
+    # I**direction; all other numbers get put into complex_factors
+    # to be multiplied out after the first phase.
+    last = len(args)
+    direction = 0
+    args.append(S.One)
+    complex_factors = []
+    for i, arg in enumerate(args):
+        if i != last and pure_complex(arg):
+            args[-1] = (args[-1]*arg).expand()
+            continue
+        elif i == last and arg is S.One:
+            continue
+        re, im, re_acc, im_acc = evalf(arg, working_prec, options)
         if re and im:
             complex_factors.append((re, im, re_acc, im_acc))
             continue
@@ -433,41 +449,53 @@ def evalf_mul(v, prec, options):
         man *= m
         exp += e
         bc += b
-        if bc > 3*prec:
-            man >>= prec
-            exp += prec
+        if bc > 3*working_prec:
+            man >>= working_prec
+            exp += working_prec
         acc = min(acc, w_acc)
     sign = (direction & 2) >> 1
-    v = normalize(sign, man, exp, bitcount(man), prec, round_nearest)
-    if complex_factors:
-        # make existing real scalar look like an imaginary and
-        # multiply by the remaining complex numbers
-        re, im = v, (0, MPZ(0), 0, 0)
-        for wre, wim, wre_acc, wim_acc in complex_factors:
-            # acc is the overall accuracy of the product; we aren't
-            # computing exact accuracies of the product.
-            acc = min(acc,
-                      complex_accuracy((wre, wim, wre_acc, wim_acc)))
-            A = mpf_mul(re, wre, prec)
-            B = mpf_mul(mpf_neg(im), wim, prec)
-            C = mpf_mul(re, wim, prec)
-            D = mpf_mul(im, wre, prec)
-            re, xre_acc = add_terms([(A, acc), (B, acc)], prec, target_prec)
-            im, xim_acc = add_terms([(C, acc), (D, acc)], prec, target_prec)
-
-        if options.get('verbose'):
-            print "MUL: wanted", target_prec, "accurate bits, got", acc
-        # multiply by i
-        if direction & 1:
-            return mpf_neg(im), re, acc, acc
-        else:
-            return re, im, acc, acc
-    else:
+    if not complex_factors:
+        v = normalize(sign, man, exp, bitcount(man), prec, rnd)
         # multiply by i
         if direction & 1:
             return None, v, None, acc
         else:
             return v, None, acc, None
+    else:
+        # intialize with the first term
+        if (man, exp, bc) != start:
+            # there was a real part; give it an imaginary part
+            re, im = (sign, man, exp, bitcount(man)), (0, MPZ(0), 0, 0)
+            i0 = 0
+        else:
+            # there is no real part to start (other than the starting 1)
+            wre, wim, wre_acc, wim_acc = complex_factors[0]
+            acc = min(acc,
+                      complex_accuracy((wre, wim, wre_acc, wim_acc)))
+            re = wre
+            im = wim
+            i0 = 1
+
+        for wre, wim, wre_acc, wim_acc in complex_factors[i0:]:
+            # acc is the overall accuracy of the product; we aren't
+            # computing exact accuracies of the product.
+            acc = min(acc,
+                      complex_accuracy((wre, wim, wre_acc, wim_acc)))
+
+            use_prec = working_prec
+            A = mpf_mul(re, wre, use_prec)
+            B = mpf_mul(mpf_neg(im), wim, use_prec)
+            C = mpf_mul(re, wim, use_prec)
+            D = mpf_mul(im, wre, use_prec)
+            re = mpf_add(A, B, use_prec)
+            im = mpf_add(C, D, use_prec)
+        if options.get('verbose'):
+            print "MUL: wanted", prec, "accurate bits, got", acc
+        # multiply by I
+        if direction & 1:
+            return mpf_neg(im), re, acc, acc
+        else:
+            return re, im, acc, acc
 
 def evalf_pow(v, prec, options):
 
@@ -784,8 +812,7 @@ def do_integral(expr, prec, options):
     if have_part[0]:
         re = result.real._mpf_
         if re == fzero:
-            re = scaled_zero(min(-prec, -max_real_term[0], -quadrature_error))
-            re_acc = -1
+            re, re_acc = scaled_zero(min(-prec, -max_real_term[0], -quadrature_error))
         else:
             re_acc = -max(max_real_term[0] - fastlog(re) - prec, quadrature_error)
     else:
@@ -794,8 +821,7 @@ def do_integral(expr, prec, options):
     if have_part[1]:
         im = result.imag._mpf_
         if im == fzero:
-            im = scaled_zero(min(-prec, -max_imag_term[0], -quadrature_error))
-            im_acc = -1
+            im, im_acc = scaled_zero(min(-prec, -max_imag_term[0], -quadrature_error))
         else:
             im_acc = -max(max_imag_term[0] - fastlog(im) - prec, quadrature_error)
     else:

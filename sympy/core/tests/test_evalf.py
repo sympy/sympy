@@ -87,10 +87,14 @@ def test_evalf_complex_cancellation():
     F = Rational('2231321613/2500000000')
     # XXX: the number of returned mantissa digits in the real part could
     # change with the implementation. What matters is that the returned digits are
-    # correct.
-    assert NS((A+B*I)*(C+D*I),6) == '6.44862e-6 + 0.892529*I'
-    assert NS((A+B*I)*(C+D*I),10) == '6.447099821e-6 + 0.8925286452*I'
-    assert NS((A+B*I)*(C+D*I) - F*I, 5) in ('6.4471e-6 - .0e-15*I', '6.4471e-6 + .0e-15*I')
+    # correct; those that are showing now are correct.
+    # >>> ((A+B*I)*(C+D*I)).expand()
+    # 64471/10000000000 + 2231321613*I/2500000000
+    # >>> 2231321613*4
+    # 8925286452L
+    assert NS((A+B*I)*(C+D*I), 6) == '6.44710e-6 + 0.892529*I'
+    assert NS((A+B*I)*(C+D*I), 10) == '6.447100000e-6 + 0.8925286452*I'
+    assert NS((A+B*I)*(C+D*I) - F*I, 5) in ('6.4471e-6 + .0e-14*I', '6.4471e-6 - .0e-14*I')
 
 def test_evalf_logs():
     assert NS("log(3+pi*I)", 15) == '1.46877619736226 + 0.808448792630022*I'
@@ -260,6 +264,11 @@ def test_issue_2105():
           54*249**(1/2))**(2/3) + 32347944*6**(2/3)*249**(1/2)*(1422 + 54*249**(1/2))**(2/3) - 1758790152*I*3**(1/2)*6**(2/3)*(1422 + 54*249**(1/2))**(2/3) - 304403832*I*6**(2/3)*83**(1/2)*(1422 +\
           54*249**(1/2))**(2/3))/(175732658352 + (1106028 + 25596*249**(1/2) + 76788*I*83**(1/2))**2)')
     assert v.n(1) == 0.2 + 1.0*I
+
+def test_old_docstring():
+    a = (E + pi*I)*(E - pi*I)
+    assert NS(a) == '17.2586605000200'
+    assert a.n() == 17.25866050002001
 
 def test_issue_1707():
     assert round(integrate(atan(x)**2, (x, -1, 1)).evalf(), 1) == 0.5
