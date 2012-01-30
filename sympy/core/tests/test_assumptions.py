@@ -54,8 +54,8 @@ def test_one():
     assert z.is_finite == True
     assert z.is_infinitesimal == False
     assert z.is_comparable == True
-    assert z.is_prime == True
-    assert z.is_composite == False
+    assert z.is_prime == None
+    assert z.is_composite == None
 
 def test_negativeone():
     z = Integer(-1)
