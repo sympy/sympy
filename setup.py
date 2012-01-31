@@ -175,6 +175,12 @@ class test_sympy(Command):
             if not sympy.doctest():
                 tests_successful = False
 
+            print
+            sys.path.append("examples")
+            from all import run_examples # examples/all.py
+            if not run_examples(quiet=True):
+                tests_successful = False
+
             if not sys.platform == "win32":
                 dev_null = open(os.devnull, 'w')
                 if subprocess.call("sage -v", shell = True, stdout = dev_null, stderr = dev_null) == 0:
