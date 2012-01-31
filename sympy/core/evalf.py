@@ -311,8 +311,18 @@ def add_terms(terms, prec, target_prec):
     """
     Helper for evalf_add. Adds a list of (mpfval, accuracy) terms.
 
-    The returned mpf tuple will be normalized to target_prec; prec is used
-    to calculate a working precision to attain.
+    Returns
+    -------
+
+    - None, None if there are no non-zero terms;
+    - terms[0] if there is only 1 term;
+    - scaled_zero if the sum of the terms produces a zero by cancellation
+      e.g. mpfs representing 1 and -1 would produce a scaled zero;
+    - a tuple that is scaled to target_prec that corresponds to the
+      sum of the terms.
+
+    The returned mpf tuple will be normalized to target_prec; the input
+    prec is used to define the working precision.
 
     XXX explain why this is needed and why one can't just loop using mpf_add
     """
