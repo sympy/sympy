@@ -140,27 +140,17 @@ class Kane(object):
 
     def _find_dynamicsymbols(self, inlist, insyms=[]):
         """Finds all non-supplied dynamicsymbols in the expressions."""
-        from sympy.core.function import UndefinedFunction, Derivative
+        from sympy.core.function import UndefinedFunction, Derivative, Function
         t = dynamicsymbols._t
 
-        def _deeper(iexpr):
-            oli = set()
-            if isinstance(type(iexpr), UndefinedFunction):
-                if iexpr.args == (t,):
-                    oli = oli.union(set([iexpr]))
-            elif isinstance(iexpr, Derivative):
-                if (all([i == t for i in iexpr.variables]) &
-                    isinstance(type(iexpr.args[0]), UndefinedFunction)):
-                    oli = oli.union(set([iexpr]))
-            else:
-                for i, v in enumerate(iexpr.args):
-                    oli = oli.union(_deeper(v))
-            return oli
-
-        ol = set()
-        for i in list(inlist):
-            ol = ol.union(_deeper(i))
-        return list(ol - set(insyms))
+        temp_f = set().union(*[i.atoms(Function) for i in inlist])
+        temp_d = set().union(*[i.atoms(Derivative) for i in inlist])
+        set_f = set([a for a in temp_f if (isinstance(a.func,
+            UndefinedFunction) and (a.args == (t,)))])
+        set_d = set([a for a in temp_d if (isinstance(a.args[0].func,
+            UndefinedFunction) and (a.args[0].args == (t,)) and all([i == t for
+                i in a.variables]))])
+        return list(set.union(set_f, set_d) - set(insyms))
 
     def _find_othersymbols(self, inlist, insyms=[]):
         """Finds all non-dynamic symbols in the expressions."""
@@ -686,8 +676,8 @@ class Kane(object):
                                                               self._k_dnh,
                                                               self._f_dnh,
                                                               self._k_d]):
-           raise ValueError('Cannot have dynamic symbols outside dynamic ' +
-                            'forcing vector')
+            raise ValueError('Cannot have dynamic symbols outside dynamic ' +
+                             'forcing vector')
         other_dyns = list(self._find_dynamicsymbols(self._f_d.subs(uadz).subs(uaz),
                                              insyms))
 
