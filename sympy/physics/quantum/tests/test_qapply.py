@@ -9,6 +9,7 @@ from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.spin import Jx, Jy, Jz, Jplus, Jminus, J2, JzKet
+from sympy.physics.quantum.state import Ket
 
 
 j, jp, m, mp = symbols("j j' m m'")
@@ -81,3 +82,11 @@ def test_dagger():
     lhs = Dagger(Qubit(0))*Dagger(H(0))
     rhs = Dagger(Qubit(1))/sqrt(2) + Dagger(Qubit(0))/sqrt(2)
     assert qapply(lhs, dagger=True) == rhs
+
+
+def test_issue2974():
+    x, y = symbols('x y', commutative=False)
+    A = Ket(x,y)
+    B = Operator('B')
+    assert qapply(A) == A
+    assert qapply(A.dual*B) == A.dual*B

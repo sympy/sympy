@@ -50,8 +50,8 @@ class Ellipse(GeometryEntity):
     ======
 
     GeometryError
-        When `hradius`, `vradius` and `eccentricity` are incorrectly supplied as
-        parameters.
+        When `hradius`, `vradius` and `eccentricity` are incorrectly supplied
+        as parameters.
     TypeError
         When `center` is not a Point.
 

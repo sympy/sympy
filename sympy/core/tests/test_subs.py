@@ -41,7 +41,7 @@ def test_trigonometric():
     assert tan(o*x).subs(x, pi/2) is S.NaN
 
 def test_powers():
-    x = Symbol('x')
+    x, y = symbols('x,y')
     assert sqrt(1 - sqrt(x)).subs(x, 4) == I
     assert (sqrt(1-x**2)**3).subs(x, 2) == - 3 * I * sqrt(3)
     assert (x ** Rational(1,3)).subs(x, 27) == 3
@@ -50,9 +50,10 @@ def test_powers():
     n = Symbol('n', negative=True)
     assert (x**n).subs(x, 0) is S.Infinity
     assert exp(-1).subs(S.Exp1, 0) is S.Infinity
+    assert (x**(4.0*y)).subs(x**(2.0*y), n) == n**2.0
 
 def test_logexppow():   # no eval()
-    x = Symbol("x")
+    x = Symbol("x", real=True)
     w = Symbol("w")
     e = (3**(1+x)+2**(1+x))/(3**x+2**x)
     assert e.subs(2**x, w) != e

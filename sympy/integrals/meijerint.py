@@ -623,13 +623,14 @@ def _rewrite_saxena_1(fac, po, g, x):
     _, s = _get_coeff_exp(po, x)
     a, b = _get_coeff_exp(g.argument, x)
     period = g.get_period()
+    a = _my_principal_branch(a, period)
 
     # We substitute t = x**b.
     C = fac/(abs(b)*a**((s+1)/b - 1))
     # Absorb a factor of (at)**((1 + s)/b - 1).
     def tr(l): return [a + (1 + s)/b - 1 for a in l]
     return C, meijerg(tr(g.an), tr(g.aother), tr(g.bm), tr(g.bother),
-                      _my_principal_branch(a, period)*x)
+                      a*x)
 
 def _check_antecedents_1(g, x, helper=False):
     """
@@ -1752,6 +1753,7 @@ def _meijerint_definite_4(f, x, only_double=False):
                 res += C*_int0oo_1(f, x)
                 cond = And(cond, _check_antecedents_1(f, x))
             cond = _my_unpolarify(cond)
+            _debug('Result before branch substitutions is:', res)
             if cond is False:
                 _debug('But cond is always False.')
             else:

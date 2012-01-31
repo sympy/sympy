@@ -38,7 +38,8 @@ ordering_of_classes = [
     # Landau O symbol
     'Order',
     # relational operations
-    'Equality', 'Unequality', 'StrictInequality', 'Inequality',
+    'Equality', 'Unequality', 'StrictGreaterThan', 'StrictLessThan',
+    'GreaterThan', 'LessThan',
     ]
 
 

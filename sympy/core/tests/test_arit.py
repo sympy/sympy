@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Float, re, pi, \
-        sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or
+        sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
@@ -146,6 +146,7 @@ def test_pow():
     assert (-1)**x == (-1)**x
     assert (-1)**n == (-1)**n
     assert (-2)**k == 2**k
+    assert (-2*x)**k == 2**k*x**k
     assert (-1)**k == 1
 
 def test_pow2():
@@ -1281,3 +1282,25 @@ def test_issue_2978():
     assert 2**x/2**(2.0*x) == 2**(-1.0*x)
     assert 2**x*2**(2.0*x) == 2**(3.0*x)
     assert 2**(1.5*x)*2**(2.5*x) == 2**(4.0*x)
+
+def test_mul_flatten_oo():
+    p = symbols('p', positive=True)
+    n, m = symbols('n,m', negative=True)
+    x_im = symbols('x_im', imaginary=True)
+    assert n*oo == -oo
+    assert n*m*oo == oo
+    assert p*oo == oo
+    assert x_im*oo != I*oo # i could be +/- 3*I -> +/-oo
+
+def test_issue_2061_2988_2990_2991():
+    #2988
+    assert ((-2*x*y**y)**3.2).n(2) == (2**3.2*(-x*y**y)**3.2).n(2)
+    #2990
+    A, B, C = symbols('A,B,C', commutative=False)
+    assert (2.*B*C)**3 == 8.0*(B*C)**3
+    assert (-2.*B*C)**3 == -8.0*(B*C)**3
+    assert (-2*B*C)**2 == 4*(B*C)**2
+    #2061
+    assert sqrt(-1.0*x) == 1.0*sqrt(-x)
+    #2991
+    assert (-2*x*y*A*B)**2 == 4*x**2*y**2*(A*B)**2

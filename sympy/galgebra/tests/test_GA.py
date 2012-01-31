@@ -291,3 +291,15 @@ def test_constructor():
     assert str(MV('a')) == 'a+a__0*e_1+a__1*e_2+a__2*e_3+a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3+a__012*e_1e_2e_3'
     assert str(MV([2,'a'],'grade')) == 'a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
     assert str(MV('a','grade2')) == 'a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
+
+def test__print_Mul_Add():
+    from sympy.galgebra.latex_ex import LatexPrinter
+    from sympy import symbols
+    n, m = symbols('n,m', negative=True)
+    l = LatexPrinter()
+    assert l._print_Mul(n*m) == 'm n'
+    assert l._print_Mul(-2*m) == '- 2 m'
+    assert l._print_Mul(2*m) == '2 m'
+    assert l._print_Add(-5 + 4*z) == '-5 + 4 z'
+    assert l._print_Add(-5 - 4*z) == '-5 - 4 z'
+    assert l._print_Add(n - 2) == '-2 + n'

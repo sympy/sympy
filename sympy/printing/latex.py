@@ -3,6 +3,7 @@ A Printer which converts an expression into its LaTeX equivalent.
 """
 
 from sympy.core import S, C, Add
+from sympy.core.function import _coeff_isneg
 from printer import Printer
 from conventions import split_super_sub
 from sympy.simplify import fraction
@@ -140,9 +141,7 @@ class LatexPrinter(Printer):
         tex = self._print(terms[0])
 
         for term in terms[1:]:
-            coeff = term.as_coeff_mul()[0]
-
-            if coeff >= 0:
+            if not _coeff_isneg(term):
                 tex += " +"
 
             tex += " " + self._print(term)
@@ -442,12 +441,14 @@ class LatexPrinter(Printer):
                 if func in accepted_latex_functions:
                     name = r"\%s^{%s}" % (func,exp)
                 else:
-                    name = r"\operatorname{%s}^{%s}" % (func, exp)
+                    # If the generic function name contains an underscore, handle it
+                    name = r"\operatorname{%s}^{%s}" % (func.replace("_", r"\_"), exp)
             else:
                 if func in accepted_latex_functions:
                     name = r"\%s" % func
                 else:
-                    name = r"\operatorname{%s}" % func
+                    # If the generic function name contains an underscore, handle it
+                    name = r"\operatorname{%s}" % func.replace("_", r"\_")
 
             if can_fold_brackets:
                 if func in accepted_latex_functions:
@@ -839,13 +840,17 @@ class LatexPrinter(Printer):
 
     def _print_Relational(self, expr):
         if self._settings['itex']:
+            gt = r"\gt"
             lt = r"\lt"
         else:
+            gt = ">"
             lt = "<"
 
         charmap = {
             "==" : "=",
+            ">"  : gt,
             "<"  : lt,
+            ">=" : r"\geq",
             "<=" : r"\leq",
             "!=" : r"\neq",
         }
@@ -892,20 +897,26 @@ class LatexPrinter(Printer):
             return "%s^T"%self._print(mat)
 
     def _print_MatAdd(self, expr):
-        terms = expr.args
-        tex = self._print(terms[0])
+        c, terms = expr.as_coeff_Add()
+        tex = []
+        if c < 0:
+            tex.append("-")
+            tex.append(self._print(-c))
 
-        for term in terms[1:]:
+        for term in Add.make_args(terms):
             coeff, M = term.as_coeff_Mul()
 
-            if coeff >= 0:
-                tex += " +"
+            if coeff < 0:
+                tex.append("-")
+                coeff = -coeff
             else:
-                tex += " -"
+                tex.append("+")
 
-            tex += " " + self._print(M)
+            if coeff != 1:
+                tex.append(self._print(coeff))
+            tex.append(self._print(M))
 
-        return tex
+        return " ".join(tex)
 
     def _print_MatMul(self, expr):
         coeff, tail = expr.as_coeff_Mul()
@@ -1186,4 +1197,3 @@ def latex(expr, **settings):
 def print_latex(expr, **settings):
     """Prints LaTeX representation of the given expression."""
     print latex(expr, **settings)
-

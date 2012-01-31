@@ -165,33 +165,33 @@ class Expr(Basic, EvalfMixin):
         re, im = result.as_real_imag()
         return complex(float(re), float(im))
 
-    @_sympifyit('other', False) # sympy >  other
-    def __lt__(self, other):
+    @_sympifyit('other', False)  # sympy >  other
+    def __ge__(self, other):
         dif = self - other
-        if dif.is_negative != dif.is_nonnegative:
-            return dif.is_negative
-        return C.StrictInequality(self, other)
-
-    @_sympifyit('other', True)  # sympy >  other
-    def __gt__(self, other):
-        dif = self - other
-        if dif.is_positive !=  dif.is_nonpositive:
-            return dif.is_positive
-        return C.StrictInequality(other, self)
+        if dif.is_nonnegative != dif.is_negative:
+            return dif.is_nonnegative
+        return C.GreaterThan(self, other)
 
     @_sympifyit('other', False) # sympy >  other
     def __le__(self, other):
         dif = self - other
         if dif.is_nonpositive != dif.is_positive:
             return dif.is_nonpositive
-        return C.Inequality(self, other)
+        return C.LessThan(self, other)
 
-    @_sympifyit('other', True)  # sympy >  other
-    def __ge__(self, other):
+    @_sympifyit('other', False)  # sympy >  other
+    def __gt__(self, other):
         dif = self - other
-        if dif.is_nonnegative != dif.is_negative:
-            return dif.is_nonnegative
-        return C.Inequality(other, self)
+        if dif.is_positive !=  dif.is_nonpositive:
+            return dif.is_positive
+        return C.StrictGreaterThan(self, other)
+
+    @_sympifyit('other', False) # sympy >  other
+    def __lt__(self, other):
+        dif = self - other
+        if dif.is_negative != dif.is_nonnegative:
+            return dif.is_negative
+        return C.StrictLessThan(self, other)
 
     @staticmethod
     def _from_mpmath(x, prec):
@@ -661,6 +661,11 @@ class Expr(Basic, EvalfMixin):
         When x is noncommutative, the coeff to the left (default) or right of x
         can be returned. The keyword 'right' is ignored when x is commutative.
 
+        See Also
+        ========
+
+        as_coefficient
+
         Examples
         ========
 
@@ -756,21 +761,16 @@ class Expr(Basic, EvalfMixin):
         def arglist(x):
             """ Return list of x's args when treated as a Mul after checking
             to see if a negative Rational is present (in which case it is made
-            positive and a -1 is added to the list).
+            positive and a -1 is prepended to the list).
             """
 
-            margs = list(Mul.make_args(x))
-            try:
-                assert Mul.make_args(S.One)
-                # replace try/except with the following
-                if margs[0].is_Rational and margs[0].is_negative and margs[0] != S.NegativeOne:
-                    margs.append(S.NegativeOne)
-                    margs[0] *= -1
-            except AssertionError:
-                if margs and margs[0].is_Rational and margs[0].is_negative and margs[0] != S.NegativeOne:
-                    margs.append(S.NegativeOne)
-                    margs[0] *= -1
-            return margs
+            c, margs = x.as_coeff_mul()
+            if c is not S.One:
+                if c is not S.NegativeOne and c.is_negative:
+                    margs = (S.NegativeOne, -c) + margs
+                else:
+                    margs = (c,) + margs
+            return list(margs)
 
         def find(l, sub, first=True):
             """ Find where list sub appears in list l. When ``first`` is True
@@ -921,9 +921,14 @@ class Expr(Basic, EvalfMixin):
     def as_coefficient(self, expr):
         """
         Extracts symbolic coefficient at the given expression. In
-        other words, this functions separates 'self' into product
+        other words, this functions separates 'self' into the product
         of 'expr' and 'expr'-free coefficient. If such separation
         is not possible it will return None.
+
+        See Also
+        ========
+
+        coeff
 
         Examples
         ========
@@ -1305,8 +1310,7 @@ class Expr(Basic, EvalfMixin):
         """
         if not self:
             return S.One, S.Zero
-        c, r = self.as_coeff_mul()
-        r = Mul._from_args(r)
+        c, r = self.as_coeff_Mul(rational=True)
         if c.is_negative:
             c, r = -c, -r
         return c, r
@@ -1555,13 +1559,13 @@ class Expr(Basic, EvalfMixin):
                 if subs1 != None:
                     return subs1 + terms[0]
         elif self.is_Mul:
-            self_coeff, self_terms = self.as_coeff_mul()
+            self_coeff, self_terms = self.as_coeff_Mul(rational=True)
             if c.is_Mul:
-                c_coeff, c_terms = c.as_coeff_mul()
+                c_coeff, c_terms = c.as_coeff_Mul(rational=True)
                 if c_terms == self_terms:
                     new_coeff = self_coeff.extract_additively(c_coeff)
                     if new_coeff != None:
-                        return new_coeff * c._new_rawargs(*c_terms)
+                        return new_coeff * c_terms
             elif c == self_terms:
                 new_coeff = self_coeff.extract_additively(1)
                 if new_coeff != None:
@@ -2223,7 +2227,7 @@ class Expr(Basic, EvalfMixin):
             return c, e
         raise ValueError("cannot compute leadterm(%s, %s), got c=%s" % (self, x, c))
 
-    def as_coeff_Mul(self):
+    def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product. """
         return S.One, self
 
@@ -2312,12 +2316,12 @@ class Expr(Basic, EvalfMixin):
             terms = []
 
             for term in Add.make_args(expr):
-                coeff, tail = term.as_coeff_mul()
+                coeff, tail = term.as_coeff_Mul(rational=True)
 
                 coeff %= modulus
 
                 if coeff:
-                    terms.append(Mul(*((coeff,) + tail)))
+                    terms.append(coeff*tail)
 
             expr = Add(*terms)
 

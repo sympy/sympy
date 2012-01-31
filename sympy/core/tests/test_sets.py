@@ -1,6 +1,7 @@
 from sympy import (
     Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    Inequality, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float, FiniteSet
+    GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
+    FiniteSet
 )
 from sympy.mpmath import mpi
 
@@ -32,7 +33,7 @@ def test_interval_symbolic_end_points():
     assert Union(Interval(0, a), Interval(0, 3)).sup == Max(a, 3)
     assert Union(Interval(a, 0), Interval(-3, 0)).inf == Min(-3, a)
 
-    assert Interval(0, a).contains(1) == Inequality(1, a)
+    assert Interval(0, a).contains(1) == LessThan(1, a)
 
 def test_union():
     assert Union(Interval(1, 2), Interval(2, 3)) == Interval(1, 3)
@@ -319,9 +320,9 @@ def test_Finite_as_relational():
 def test_Union_as_relational():
     x = Symbol('x')
     assert (Interval(0,1) + FiniteSet(2)).as_relational(x) ==\
-            Or(And(Ge(x,0), Le(x,1)) , Eq(x,2))
+            Or(And(Le(0, x), Le(x, 1)), Eq(x, 2))
     assert (Interval(0,1, True, True) + FiniteSet(1)).as_relational(x) ==\
-            And(Gt(x,0), Le(x,1))
+            And(Lt(0, x), Le(x, 1))
 
 def test_EmptySet_as_relational():
     assert S.EmptySet.as_relational(Symbol('x')) == False

@@ -59,8 +59,8 @@ class AssocOp(Expr):
         return obj
 
     def _new_rawargs(self, *args, **kwargs):
-        """create new instance of own class with args exactly as provided by caller
-           but returning the self class identity if args is empty.
+        """Create new instance of own class with args exactly as provided by
+        caller but returning the self class identity if args is empty.
 
            This is handy when we want to optimize things, e.g.
 
@@ -141,10 +141,11 @@ class AssocOp(Expr):
         >>> (a+sin(b)*c)._matches_commutative(x+sin(y)*z)
         {a_: x, b_: y, c_: z}
 
-        In the example above, "a+sin(b)*c" is the pattern, and "x+sin(y)*z" is the
-        expression.
+        In the example above, "a+sin(b)*c" is the pattern, and "x+sin(y)*z" is
+        the expression.
 
-        The repl_dict contains parts that were already matched. For example here:
+        The repl_dict contains parts that were already matched. For example
+        here:
 
         >>> (x+sin(b)*c)._matches_commutative(x+sin(y)*z, repl_dict={a: x})
         {a_: x, b_: y, c_: z}

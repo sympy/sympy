@@ -420,8 +420,8 @@ def test_util():
     assert v1.cross(v2) == Matrix(1,3,[-2,4,-2])
     assert v1.norm() == sqrt(14)
     assert v1.project(v2) == Matrix(1, 3, [R(39)/25, R(52)/25, R(13)/5])
-    assert Matrix.zeros((1, 2)) == Matrix(1, 2, [0, 0])
-    assert ones((1, 2)) == Matrix(1, 2, [1, 1])
+    assert Matrix.zeros(1, 2) == Matrix(1, 2, [0, 0])
+    assert ones(1, 2) == Matrix(1, 2, [1, 1])
     assert v1.clone() == v1
     # cofactor
     assert eye(3) == eye(3).cofactorMatrix()
@@ -1111,12 +1111,10 @@ def test_issue882():
     assert m[1, 2] == 8
 
 def test_evalf():
-    def check(l, r):
-        # renormalize each Float so they compare the same
-        return l.__add__(0) == r.__add__(0)
     a = Matrix([sqrt(5), 6])
-    assert all(check(a.evalf()[i], a[i].evalf()) for i in range(2))
-    assert all(check(a.evalf(1)[i], a[i].evalf(1)) for i in range(2))
+    assert all(a.evalf()[i] == a[i].evalf() for i in range(2))
+    assert all(a.evalf(1)[i] == a[i].evalf(1) for i in range(2))
+    assert all(a.n(1)[i] == a[i].n(1) for i in range(2))
 
 def test_is_symbolic():
     x = Symbol('x')
@@ -2041,3 +2039,7 @@ def test_issue_860():
 @XFAIL
 def test_issue_2865() :
     assert str(Matrix([[1, 2], [3, 4]])) == 'Matrix([[1, 2], [3, 4]])'
+
+def test_DeferredVector():
+    assert sympify(DeferredVector("d")) == DeferredVector("d")
+

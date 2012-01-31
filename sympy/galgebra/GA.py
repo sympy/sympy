@@ -7,8 +7,8 @@ The relevant references for this module are:
     1. "Geometric Algebra for Physicists" by C. Doran and A. Lazenby,
        Cambridge University Press, 2003.
 
-    2. "Geometric Algebra for Computer Science" by Leo Dorst, Daniel Fontijne,
-       and Stephen Mann, Morgan Kaufmann Publishers, 2007
+    2. "Geometric Algebra for Computer Science" by Leo Dorst,
+       Daniel Fontijne, and Stephen Mann, Morgan Kaufmann Publishers, 2007.
 
     3. Sympy Tutorial, http://docs.sympy.org/
 """
@@ -2307,14 +2307,15 @@ class MV(object):
     def trigsimp(self):
         """
         Applies sympy trigsimp function
-        to each component of multivector.
+        to each component of multivector
+        using the recursive option.
         """
         for igrade in MV.n1rg:
             if isinstance(self.mv[igrade],numpy.ndarray):
                 for ibase in range(MV.nbasis[igrade]):
                     if self.mv[igrade][ibase] != ZERO:
                         self.mv[igrade][ibase] = \
-                        sympy.trigsimp(self.mv[igrade][ibase],deep=True,recursive=True)
+                        sympy.trigsimp(self.mv[igrade][ibase],deep=True, recursive=True)
         return
 
     def cancel(self):

@@ -413,7 +413,8 @@ def test_collect_4():
     a, b, c, x = symbols('a,b,c,x')
 
     assert collect(a*x**c + b*x**c, x**c) == x**c*(a + b)
-    assert collect(a*x**(2*c) + b*x**(2*c), x**c) == (x**2)**c*(a + b)
+    # issue 2997: 2 stays with c (unless c is integer or x is positive0
+    assert collect(a*x**(2*c) + b*x**(2*c), x**c) == x**(2*c)*(a + b)
 
 def test_collect_5():
     """Collect with respect to a tuple"""
@@ -996,3 +997,7 @@ def test_unpolarify():
 
     # Test bools
     assert unpolarify(True) is True
+
+def test_issue_2998():
+    collect(a*y**(2.0*x)+b*y**(2.0*x),y**(x)) == y**(2.0*x)*(a + b)
+    collect(a*2**(2.0*x)+b*2**(2.0*x),2**(x)) == 2**(2.0*x)*(a + b)

@@ -854,6 +854,7 @@ def test_coeff():
     assert (-x/8 + x*y).coeff(-x) == S(1)/8
     assert (4*x).coeff(2*x) == None
     assert (2*x).coeff(2*x) == 1
+    assert (-oo*x).coeff(x*oo) == -1
 
     n1, n2 = symbols('n1 n2', commutative=False)
     assert (n1*n2).coeff(n1) == 1
@@ -1025,7 +1026,7 @@ def test_issue2201():
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
 
 def test_issue_2061():
-    assert sqrt(-1.0*x) == 1.0*I*sqrt(x)
+    assert sqrt(-1.0*x) == 1.0*sqrt(-x)
     assert sqrt(1.0*x) == 1.0*sqrt(x)
 
 def test_as_coeff_Mul():

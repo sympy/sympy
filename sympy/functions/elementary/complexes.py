@@ -211,11 +211,15 @@ class sign(Function):
     def eval(cls, arg):
         if arg is S.NaN:
             return S.NaN
-        if arg is S.Zero: return S.Zero
-        if arg.is_positive: return S.One
-        if arg.is_negative: return S.NegativeOne
+        if arg is S.Zero:
+            return S.Zero
+        if arg.is_positive:
+            return S.One
+        if arg.is_negative:
+            return S.NegativeOne
         if arg.is_Function:
-            if arg.func is sign: return arg
+            if arg.func is sign:
+                return arg
         if arg.is_Mul:
             c, args = arg.as_coeff_mul()
             unk = []
@@ -307,14 +311,26 @@ class Abs(Function):
 
     @classmethod
     def eval(cls, arg):
+        if arg.is_Mul:
+            known = []
+            unk = []
+            for t in arg.args:
+                tnew = cls(t)
+                if tnew.func is cls:
+                    unk.append(tnew.args[0])
+                else:
+                    known.append(tnew)
+            known = Mul(*known)
+            unk = cls(Mul(*unk), evaluate=False) if unk else S.One
+            return known*unk
         if arg is S.NaN:
             return S.NaN
-        if arg.is_zero:     return arg
-        if arg.is_positive: return arg
-        if arg.is_negative: return -arg
-        coeff, terms = arg.as_coeff_mul()
-        if coeff is not S.One:
-            return cls(coeff) * cls(Mul(*terms))
+        if arg.is_zero:
+            return arg
+        if arg.is_positive:
+            return arg
+        if arg.is_negative:
+            return -arg
         if arg.is_real is False:
             from sympy import expand_mul
             return sqrt( expand_mul(arg * arg.conjugate()) )
@@ -322,7 +338,6 @@ class Abs(Function):
             base, exponent = arg.as_base_exp()
             if exponent.is_even and base.is_real:
                 return arg
-        return
 
     def _eval_is_nonzero(self):
         return self._args[0].is_nonzero

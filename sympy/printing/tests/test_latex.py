@@ -1,7 +1,7 @@
 from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Function, factorial, factorial2, floor, ceiling, Abs, re, im, conjugate, gamma,
     Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
-    Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg,
+    Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg, polar_lift,
     Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan, Min, Max,
     cot, coth, re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
     FallingFactorial, polylog, lerchphi, Ei, expint, Si, Ci, Shi, Chi)
@@ -170,6 +170,11 @@ def test_latex_functions():
     assert latex(Si(x)**2) == r'\operatorname{Si}^{2}{\left (x \right )}'
     assert latex(Ci(x)**2) == r'\operatorname{Ci}^{2}{\left (x \right )}'
     assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}{\left (x \right )}'
+
+    # Test latex printing of function names with "_"
+    assert latex(polar_lift(0)) == r"\operatorname{polar\_lift}{\left (0 \right )}"
+    assert latex(polar_lift(0)**3) == r"\operatorname{polar\_lift}^{3}{\left (0 \right )}"
+
 
 def test_hyper_printing():
     from sympy import pi, Tuple
@@ -433,3 +438,12 @@ def test_custom_symbol_names():
     assert latex(x + y, symbol_names={x:"x_i"}) == "x_i + y"
     assert latex(x**2, symbol_names={x:"x_i"}) == "x_i^{2}"
     assert latex(x + y, symbol_names={x:"x_i", y:"y_j"}) == "x_i + y_j"
+
+def test_matAdd():
+    from sympy import MatrixSymbol
+    from sympy.printing.latex import LatexPrinter
+    C = MatrixSymbol('C', 5, 5)
+    B = MatrixSymbol('B', 5, 5)
+    l = LatexPrinter()
+    assert l._print_MatAdd(C - 2*B) in ['- 2 B + C', '+ C - 2 B']
+    assert l._print_MatAdd(C + 2*B) in ['+ 2 B + C', '+ C + 2 B']

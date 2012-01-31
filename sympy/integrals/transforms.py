@@ -233,19 +233,20 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
             aux_ = []
             for d in disjuncts(c):
                 d_ = d.replace(re, lambda x: x.as_real_imag()[0]).subs(re(s), t)
-                if not d.is_Relational or (d.rel_op != '<' and d.rel_op != '<=') \
+                if not d.is_Relational or \
+                   d.rel_op not in ('>', '>=', '<', '<=') \
                    or d_.has(s) or not d_.has(t):
                     aux_ += [d]
                     continue
                 soln = _solve_inequality(d_, t)
                 if not soln.is_Relational or \
-                   (soln.rel_op != '<' and soln.rel_op != '<='):
+                   soln.rel_op not in ('>', '>=', '<', '<='):
                     aux_ += [d]
                     continue
-                if soln.lhs == t:
-                    b_ = Max(soln.rhs, b_)
+                if soln.lts == t:
+                    b_ = Max(soln.gts, b_)
                 else:
-                    a_ = Min(soln.lhs, a_)
+                    a_ = Min(soln.lts, a_)
             if a_ != oo and a_ != b:
                 a = Max(a_, a)
             elif b_ != -oo and b_ != a:
@@ -833,6 +834,7 @@ def _simplifyconds(expr, s, a):
 
     >>> from sympy.integrals.transforms import _simplifyconds as simp
     >>> from sympy.abc import x
+    >>> from sympy import sympify as S
     >>> simp(abs(x**2) < 1, x, 1)
     False
     >>> simp(abs(x**2) < 1, x, 2)
@@ -841,9 +843,9 @@ def _simplifyconds(expr, s, a):
     Abs(x**2) < 1
     >>> simp(abs(1/x**2) < 1, x, 1)
     True
-    >>> simp(1 < abs(x), x, 1)
+    >>> simp(S(1) < abs(x), x, 1)
     True
-    >>> simp(1 < abs(1/x), x, 1)
+    >>> simp(S(1) < abs(1/x), x, 1)
     False
 
     >>> from sympy import Ne
@@ -854,8 +856,10 @@ def _simplifyconds(expr, s, a):
     >>> simp(Ne(1, x**3), x, 0)
     1 != x**3
     """
-    from sympy.core.relational import StrictInequality, Unequality
+    from sympy.core.relational import ( StrictGreaterThan, StrictLessThan,
+        Unequality )
     from sympy import Abs
+
     def power(ex):
         if ex == s:
             return 1
@@ -890,14 +894,15 @@ def _simplifyconds(expr, s, a):
             return not r
         return (x < y)
     def replue(x, y):
-        if bigger(x, y) in [True, False]:
+        if bigger(x, y) in (True, False):
             return True
         return Unequality(x, y)
     def repl(ex, *args):
         if isinstance(ex, bool):
             return ex
         return ex.replace(*args)
-    expr = repl(expr, StrictInequality, replie)
+    expr = repl(expr, StrictLessThan, replie)
+    expr = repl(expr, StrictGreaterThan, lambda x, y: replie(y, x))
     expr = repl(expr, Unequality, replue)
     return expr
 
@@ -946,20 +951,21 @@ def _laplace_transform(f, t, s_, simplify=True):
                 if m and all(m[wild] > 0 for wild in [w1, w2, w3, w4, w5]):
                     d = re(s) > m[p]
                 d_ = d.replace(re, lambda x: x.expand().as_real_imag()[0]).subs(re(s), t)
-                if not d.is_Relational or (d.rel_op != '<' and d.rel_op != '<=') \
+                if not d.is_Relational or \
+                   d.rel_op not in ('>', '>=', '<', '<=') \
                    or d_.has(s) or not d_.has(t):
                     aux_ += [d]
                     continue
                 soln = _solve_inequality(d_, t)
                 if not soln.is_Relational or \
-                   (soln.rel_op != '<' and soln.rel_op != '<='):
+                   soln.rel_op not in ('>', '>=', '<', '<='):
                     aux_ += [d]
                     continue
-                if soln.lhs == t:
+                if soln.lts == t:
                     raise IntegralTransformError('Laplace', f,
                                          'convergence not in half-plane?')
                 else:
-                    a_ = Min(soln.lhs, a_)
+                    a_ = Min(soln.lts, a_)
             if a_ != oo:
                 a = Max(a_, a)
             else:
@@ -1109,11 +1115,11 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         if a.has(t):
             return Heaviside(arg)
         rel = _solve_inequality(a > 0, u)
-        if rel.lhs == u:
-            k = log(rel.rhs)
+        if rel.lts == u:
+            k = log(rel.gts)
             return Heaviside(t + k)
         else:
-            k = log(rel.lhs)
+            k = log(rel.lts)
             return Heaviside(-(t + k))
     f = f.replace(Heaviside, simp_heaviside)
 

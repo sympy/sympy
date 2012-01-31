@@ -9,6 +9,7 @@ import sys
 import os,types,StringIO
 
 from sympy.core import S, C, Basic, Symbol
+from sympy.core.function import _coeff_isneg
 from sympy.printing.printer import Printer
 from sympy.simplify import fraction
 import re as regrep
@@ -72,8 +73,9 @@ def process_equals(xstr):
 
 class LatexPrinter(Printer):
     """
-    A printer class which converts an expression into its LaTeX equivalent. This
-    class extends the LatexPrinter class currently in sympy in the following ways:
+    A printer class which converts an expression into its LaTeX equivalent.
+    This class extends the LatexPrinter class currently in sympy in the
+    following ways:
 
         1. Variable and function names can now encode multiple Greek symbols,
            number, Greek, and roman super and subscripts and accents plus bold
@@ -415,9 +417,7 @@ class LatexPrinter(Printer):
         tex = str(self._print(expr.args[0]))
 
         for term in expr.args[1:]:
-            coeff = term.as_coeff_mul()[0]
-
-            if coeff.is_negative:
+            if _coeff_isneg(term):
                 tex += r" %s" % self._print(term)
             else:
                 tex += r" + %s" % self._print(term)
@@ -425,13 +425,13 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Mul(self, expr):
-        coeff, tail = expr.as_two_terms()
+        coeff, tail = expr.as_coeff_Mul()
 
-        if not coeff.is_negative:
-            tex = ""
-        else:
+        if coeff.is_negative:
             coeff = -coeff
             tex = "- "
+        else:
+            tex = ""
 
         numer, denom = fraction(tail)
 

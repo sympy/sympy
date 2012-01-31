@@ -124,8 +124,9 @@ class Order(Expr):
                     expr = expr.as_leading_term(*symbols)
                 else:
                     expr = expr.compute_leading_term(symbols[0])
-                coeff, terms = expr.as_coeff_mul()
-                expr = Mul(*[t for t in terms if t.has(*symbols)])
+                terms = expr.as_coeff_mul(*symbols)[1]
+                s = set(symbols)
+                expr = Mul(*[t for t in terms if s & t.free_symbols])
 
         if expr is S.Zero:
             return expr

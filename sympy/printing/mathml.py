@@ -2,7 +2,8 @@
 A MathML printer.
 """
 
-from sympy import sympify, S
+from sympy import sympify, S, Mul
+from sympy.core.function import _coeff_isneg
 from sympy.simplify import fraction
 from printer import Printer
 from conventions import split_super_sub
@@ -60,8 +61,10 @@ class MathMLPrinter(Printer):
             'log': 'ln',
             'Equality': 'eq',
             'Unequality': 'neq',
-            'StrictInequality': 'lt',
-            'Inequality': 'leq'
+            'GreaterThan': 'geq',
+            'LessThan': 'leq',
+            'StrictGreaterThan': 'gt',
+            'StrictLessThan': 'lt',
         }
 
         for cls in e.__class__.__mro__:
@@ -73,9 +76,8 @@ class MathMLPrinter(Printer):
         return n.lower()
 
     def _print_Mul(self, expr):
-        coeff, terms  = expr.as_coeff_mul()
 
-        if coeff.is_negative:
+        if _coeff_isneg(expr):
             x = self.dom.createElement('apply')
             x.appendChild(self.dom.createElement('minus'))
             x.appendChild(self._print_Mul(-expr))
@@ -90,11 +92,15 @@ class MathMLPrinter(Printer):
             x.appendChild(self._print(denom))
             return x
 
-        if self.order != 'old':
-            terms = expr._new_rawargs(*terms).as_ordered_factors()
-
-        if coeff == 1 and len(terms) == 1:
+        coeff, terms  = expr.as_coeff_mul()
+        if coeff is S.One and len(terms) == 1:
+            # XXX since the negative coefficient has been handled, I don't
+            # thing a coeff of 1 can remain
             return self._print(terms[0])
+
+        if self.order != 'old':
+            terms = Mul._from_args(terms).as_ordered_factors()
+
         x = self.dom.createElement('apply')
         x.appendChild(self.dom.createElement('times'))
         if(coeff != 1):
@@ -108,8 +114,7 @@ class MathMLPrinter(Printer):
         lastProcessed = self._print(args[0])
         plusNodes = []
         for arg in args[1:]:
-            coeff, _ = arg.as_coeff_mul()
-            if(coeff.is_negative):
+            if _coeff_isneg(arg):
                 #use minus
                 x = self.dom.createElement('apply')
                 x.appendChild(self.dom.createElement('minus'))

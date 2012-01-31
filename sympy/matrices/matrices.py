@@ -33,12 +33,23 @@ def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
 
+class DeferredVector(Symbol):
+    """A vector whose components are deferred (e.g. for use with lambdify)
 
-class DeferredVector(object):
-    def __init__(self,name):
-        self.name=name
-
+    >>> from sympy import DeferredVector, lambdify
+    >>> X = DeferredVector( 'X' )
+    >>> X
+    X
+    >>> expr = (X[0] + 2, X[2] + 3)
+    >>> func = lambdify( X, expr )
+    >>> func( [1, 2, 3] )
+    (3, 6)
+    """
     def __getitem__(self,i):
+        if i == -0:
+            i = 0
+        if i < 0:
+            raise IndexError('DeferredVector index out of range')
         component_name = '%s[%d]'%(self.name,i)
         return Symbol(component_name)
 
@@ -46,7 +57,7 @@ class DeferredVector(object):
         return sstr(self)
 
     def __repr__(self):
-        return sstr(self)
+        return "DeferredVector('%s')"%(self.name)
 
 
 class Matrix(object):
@@ -1377,6 +1388,8 @@ class Matrix(object):
             return self.applyfunc(lambda i: i.evalf(**options))
         else:
             return self.applyfunc(lambda i: i.evalf(prec, **options))
+
+    n = evalf
 
     def reshape(self, _rows, _cols):
         """

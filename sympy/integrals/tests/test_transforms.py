@@ -5,7 +5,7 @@ from sympy import (gamma, exp, oo, Heaviside, symbols, re, factorial, pi,
                    cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
                    EulerGamma, erf, besselj, bessely, besseli, besselk,
                    exp_polar, polar_lift, unpolarify)
-from sympy.utilities.pytest import XFAIL, slow
+from sympy.utilities.pytest import XFAIL, slow, skip
 from sympy.abc import x, s, a, b
 nu, beta, rho = symbols('nu beta rho')
 
@@ -45,6 +45,8 @@ def test_as_integral():
 @slow
 @XFAIL
 def test_mellin_transform_fail():
+    skip("Risch takes forever.")
+
     from sympy import Max, Min
     MT = mellin_transform
 
@@ -267,7 +269,7 @@ def test_expint():
     # TODO LT of Si, Shi, Chi is a mess ...
     assert laplace_transform(Ci(x), x, s) == (-log(1 + s**2)/2/s, 0, True)
     assert laplace_transform(expint(a, x), x, s) == \
-           (lerchphi(s*polar_lift(-1), 1, a), 0, 0 < re(a))
+           (lerchphi(s*polar_lift(-1), 1, a), 0, S(0) < re(a))
     assert laplace_transform(expint(1, x), x, s) == (log(s + 1)/s, 0, True)
     assert laplace_transform(expint(2, x), x, s) == \
            ((s - log(s + 1))/s**2, 0, True)
@@ -449,7 +451,7 @@ def test_laplace_transform():
     assert LT(besselj(0, t), t, s) == (1/sqrt(1 + s**2), 0, True)
     assert LT(besselj(1, t), t, s) == (1 - 1/sqrt(1 + 1/s**2), 0, True)
     # TODO general order works, but is a *mess*
-    # TODO besseli also works, but is an eaven greater mess
+    # TODO besseli also works, but is an even greater mess
 
 def test_inverse_laplace_transform():
     from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,

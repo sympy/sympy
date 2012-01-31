@@ -1,5 +1,6 @@
-from sympy import (Symbol, Wild, Inequality, StrictInequality, pi, I, Rational,
-    sympify, symbols, Dummy, Function, flatten)
+from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
+    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy, Function, flatten
+)
 
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import SymPyDeprecationWarning
@@ -49,24 +50,109 @@ def test_as_dummy():
     assert x.as_dummy().assumptions0 == x.assumptions0
 
 def test_lt_gt():
+    from sympy import sympify as S
     x, y = Symbol('x'), Symbol('y')
 
-    assert (x <= y) == Inequality(x, y)
-    assert (x >= y) == Inequality(y, x)
-    assert (x <= 0) == Inequality(x, 0)
-    assert (x >= 0) == Inequality(0, x)
+    assert (x >= y)    == GreaterThan(x, y)
+    assert (x >= 0)    == GreaterThan(x, 0)
+    assert (x <= y)    == LessThan(x, y)
+    assert (x <= 0)    == LessThan(x, 0)
 
-    assert (x < y) == StrictInequality(x, y)
-    assert (x > y) == StrictInequality(y, x)
-    assert (x < 0) == StrictInequality(x, 0)
-    assert (x > 0) == StrictInequality(0, x)
+    assert (0 <= x)    == GreaterThan(x, 0)
+    assert (0 >= x)    == LessThan(x, 0)
+    assert (S(0) >= x) == GreaterThan(0, x)
+    assert (S(0) <= x) == LessThan(0, x)
 
-    assert (x**2+4*x+1 > 0) == StrictInequality(0, x**2+4*x+1)
+    assert (x > y)    == StrictGreaterThan(x, y)
+    assert (x > 0)    == StrictGreaterThan(x, 0)
+    assert (x < y)    == StrictLessThan(x, y)
+    assert (x < 0)    == StrictLessThan(x, 0)
+
+    assert (0 < x)    == StrictGreaterThan(x, 0)
+    assert (0 > x)    == StrictLessThan(x, 0)
+    assert (S(0) > x) == StrictGreaterThan(0, x)
+    assert (S(0) < x) == StrictLessThan(0, x)
+
+    e = x**2 + 4*x + 1
+    assert (e >= 0) == GreaterThan(e, 0)
+    assert (0 <= e) == GreaterThan(e, 0)
+    assert (e >  0) == StrictGreaterThan(e, 0)
+    assert (0 <  e) == StrictGreaterThan(e, 0)
+
+    assert (e <= 0) == LessThan(e, 0)
+    assert (0 >= e) == LessThan(e, 0)
+    assert (e <  0) == StrictLessThan(e, 0)
+    assert (0 >  e) == StrictLessThan(e, 0)
+
+    assert (S(0) >= e) == GreaterThan(0, e)
+    assert (S(0) <= e) == LessThan(0, e)
+    assert (S(0) <  e) == StrictLessThan(0, e)
+    assert (S(0) >  e) == StrictGreaterThan(0, e)
 
 def test_no_len():
     # there should be no len for numbers
     x = Symbol('x')
     raises(TypeError, "len(x)")
+
+def test_ineq_unequal():
+    S = sympify
+
+    x, y, z = symbols('x,y,z')
+
+    e = (
+      S(-1)    >=  x,   S(-1)    >=  y,   S(-1)    >=  z,
+      S(-1)    >   x,   S(-1)    >   y,   S(-1)    >   z,
+      S(-1)    <=  x,   S(-1)    <=  y,   S(-1)    <=  z,
+      S(-1)    <   x,   S(-1)    <   y,   S(-1)    <   z,
+      S(0)     >=  x,   S(0)     >=  y,   S(0)     >=  z,
+      S(0)     >   x,   S(0)     >   y,   S(0)     >   z,
+      S(0)     <=  x,   S(0)     <=  y,   S(0)     <=  z,
+      S(0)     <   x,   S(0)     <   y,   S(0)     <   z,
+      S('3/7') >=  x,   S('3/7') >=  y,   S('3/7') >=  z,
+      S('3/7') >   x,   S('3/7') >   y,   S('3/7') >   z,
+      S('3/7') <=  x,   S('3/7') <=  y,   S('3/7') <=  z,
+      S('3/7') <   x,   S('3/7') <   y,   S('3/7') <   z,
+      S(1.5)   >=  x,   S(1.5)   >=  y,   S(1.5)   >=  z,
+      S(1.5)   >   x,   S(1.5)   >   y,   S(1.5)   >   z,
+      S(1.5)   <=  x,   S(1.5)   <=  y,   S(1.5)   <=  z,
+      S(1.5)   <   x,   S(1.5)   <   y,   S(1.5)   <   z,
+      S(2)     >=  x,   S(2)     >=  y,   S(2)     >=  z,
+      S(2)     >   x,   S(2)     >   y,   S(2)     >   z,
+      S(2)     <=  x,   S(2)     <=  y,   S(2)     <=  z,
+      S(2)     <   x,   S(2)     <   y,   S(2)     <   z,
+      x      >= -1,   y      >= -1,   z      >= -1,
+      x      >  -1,   y      >  -1,   z      >  -1,
+      x      <= -1,   y      <= -1,   z      <= -1,
+      x      <  -1,   y      <  -1,   z      <  -1,
+      x      >=  0,   y      >=  0,   z      >=  0,
+      x      >   0,   y      >   0,   z      >   0,
+      x      <=  0,   y      <=  0,   z      <=  0,
+      x      <   0,   y      <   0,   z      <   0,
+      x      >=  1.5, y      >=  1.5, z      >=  1.5,
+      x      >   1.5, y      >   1.5, z      >   1.5,
+      x      <=  1.5, y      <=  1.5, z      <=  1.5,
+      x      <   1.5, y      <   1.5, z      <   1.5,
+      x      >=  2,   y      >=  2,   z      >=  2,
+      x      >   2,   y      >   2,   z      >   2,
+      x      <=  2,   y      <=  2,   z      <=  2,
+      x      <   2,   y      <   2,   z      <   2,
+
+      x >= y,  x >= z,  y >= x, y >= z, z >= x, z >= y,
+      x >  y,  x >  z,  y >  x, y >  z, z >  x, z >  y,
+      x <= y,  x <= z,  y <= x, y <= z, z <= x, z <= y,
+      x <  y,  x <  z,  y <  x, y <  z, z <  x, z <  y,
+
+      x - pi >= y + z,  y - pi >= x + z,  z - pi >= x + y,
+      x - pi >  y + z,  y - pi >  x + z,  z - pi >  x + y,
+      x - pi <= y + z,  y - pi <= x + z,  z - pi <= x + y,
+      x - pi <  y + z,  y - pi <  x + z,  z - pi <  x + y,
+      True, False
+    )
+
+    left_e = e[:-1]
+    for i, e1 in enumerate( left_e ):
+        for e2 in e[i +1:]:
+            assert e1 != e2
 
 def test_Wild_properties():
     # these tests only include Atoms

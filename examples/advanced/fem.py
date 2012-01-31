@@ -2,7 +2,8 @@
 
 """FEM library
 
-Demonstrates some simple finite element definitions, and computes a mass matrix
+Demonstrates some simple finite element definitions, and computes a mass
+matrix
 
 $ python fem.py
 [  1/60,     0, -1/360,     0, -1/90, -1/360]
