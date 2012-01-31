@@ -79,8 +79,8 @@ expr
 
    >>> pi - picklepi
    -pi + pi
-   >>> (pi-picklepi).evalf()
-   -.0e-125
+   >>> (pi - picklepi).evalf()
+   -.0e-124
 
    >>> pi is picklepi
    False
