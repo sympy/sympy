@@ -201,19 +201,13 @@ def evalf_im(expr, prec, options):
 def finalize_complex(re, im, prec):
     if re == fzero and im == fzero:
         raise ValueError("got complex zero with unknown accuracy")
+    elif re == fzero:
+        return None, im, None, prec
+    elif im == fzero:
+        return re, None, prec, None
 
-    # one or both of these will be correct
     size_re = fastlog(re)
     size_im = fastlog(im)
-
-    # convert fzeros to scaled zeros and update size
-    if re == fzero:
-        re = scaled_zero(size_im - prec)[0]
-        size_re = fastlog(re)
-    elif im == fzero:
-        im = scaled_zero(size_re - prec)[0]
-        size_im = fastlog(im)
-
     if size_re > size_im:
         re_acc = prec
         im_acc = prec + min(-(size_re - size_im), 0)
