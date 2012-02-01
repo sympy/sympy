@@ -73,7 +73,7 @@ def _literal_float(f):
     pat = r"[-+]?((\d*\.\d+)|(\d+\.?))(eE[-+]?\d+)?"
     return bool(regex.match(pat, f))
 
-def _exact_float(f):
+def _exact_decimal(f):
     """Return True if the decimal represented by f (a float or Float)
     can be represented exactly in binary.
 
@@ -524,7 +524,7 @@ class Float(Number):
         if isinstance(num, float):
             if dps > 15:
                 # check to see if it is an exact float
-                if not _exact_float(num):
+                if not _exact_decimal(num):
                     # "...refuse the temptation to guess"
                     raise ValueError('float has insufficient precision; send as Float("%s", %s)?' % (num, dps))
             _mpf_ = mlib.from_float(num, prec, rnd)
@@ -547,7 +547,7 @@ class Float(Number):
                     _mpf_ = mpmath.mpf(
                     S.NegativeOne ** num[0] * num[1] * 2 ** num[2])._mpf_
         elif isinstance(num, Float):
-            if prec > num._prec and not _exact_float(num):
+            if prec > num._prec and not _exact_decimal(num):
                 raise ValueError("The Float precision cannot be increased.")
             # renormalize at lower prec
             _mpf_ = mpf_norm(num._mpf_, prec)
