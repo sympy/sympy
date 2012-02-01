@@ -116,28 +116,47 @@ def pure_complex(v):
     if i is S.ImaginaryUnit:
         return h, c
 
-def scaled_zero(n):
-    """Return a power of two with magnitude n and -1 for precision.
+def scaled_zero(mag, sign=1):
+    """Return an mpf representing a power of two with magnitude ``mag``
+    and -1 for precision. Or, if ``mag`` is a scaled_zero tuple, then just
+    remove the sign from within the list that it was initially wrapped
+    in.
 
-    When printed to zero decimal places this will
-    represent a zero scaled to n:
+    Examples
+    ========
 
     >>> from sympy.core.evalf import scaled_zero
     >>> from sympy import Float
     >>> z, p = scaled_zero(100)
-    >>> Float(z)
+    >>> z, p
+    (([0], 1, 100, 1), -1)
+    >>> ok = scaled_zero(z)
+    >>> ok
+    (0, 1, 100, 1)
+    >>> Float(ok)
     1.26765060022823e+30
-    >>> Float(z, p)
+    >>> Float(ok, p)
     .0e+30
-    >>> z = list(z)
-    >>> z[0] = 1
-    >>> Float(tuple(z), p)
+    >>> ok, p = scaled_zero(100, -1)
+    >>> Float(scaled_zero(ok), p)
     -.0e+30
     """
-    return mpf_shift(fone, n), -1
+    if type(mag) is tuple and len(mag) == 4 and zero(mag, scaled=True):
+        return (mag[0][0],) + mag[1:]
+    elif type(mag) is int:
+        if sign not in [-1, 1]:
+            raise ValueError('sign must be +/-1')
+        rv, p = mpf_shift(fone, mag), -1
+        s = 0 if sign == 1 else 1
+        rv = ([s],) + rv[1:]
+        return rv, p
+    else:
+        raise ValueError('scaled zero expects int or scaled_zero tuple.')
 
-def zero(mpf):
-    return not mpf or not mpf[1] and not mpf[-1]
+def zero(mpf, scaled=False):
+    if not scaled:
+        return not mpf or not mpf[1] and not mpf[-1]
+    return mpf and type(mpf[0]) is list and mpf[1] == mpf[-1] == 1
 
 def complex_accuracy(result):
     """
@@ -317,7 +336,10 @@ def add_terms(terms, prec, target_prec):
     - None, None if there are no non-zero terms;
     - terms[0] if there is only 1 term;
     - scaled_zero if the sum of the terms produces a zero by cancellation
-      e.g. mpfs representing 1 and -1 would produce a scaled zero;
+      e.g. mpfs representing 1 and -1 would produce a scaled zero which need
+      special handling since they are not actually zero and they are purposely
+      malformed to ensure that they can't be used in anything but accuracy
+      calculations;
     - a tuple that is scaled to target_prec that corresponds to the
       sum of the terms.
 
@@ -391,6 +413,8 @@ def evalf_add(v, prec, options):
         terms = [evalf(arg, prec + 10, options) for arg in v.args]
         re, re_acc = add_terms([a[0::2] for a in terms if a[0]], prec, target_prec)
         im, im_acc = add_terms([a[1::2] for a in terms if a[1]], prec, target_prec)
+        # if re and/or im is a scaled zero then acc will come back as -1
+        # and cause prec to be increased
         acc = complex_accuracy((re, im, re_acc, im_acc))
         if acc >= target_prec:
             if options.get('verbose'):
@@ -398,6 +422,14 @@ def evalf_add(v, prec, options):
             break
         else:
             if (prec - target_prec) > options['maxprec']:
+                if zero(re, scaled=True):
+                    re = scaled_zero(re)
+                else:
+                    pass # just here for coverage testing
+                if zero(im, scaled=True):
+                    im = scaled_zero(im)
+                else:
+                    pass # just here for coverage testing
                 break
 
             prec = prec + max(10 + 2**i, target_prec - acc)
@@ -502,9 +534,8 @@ def evalf_mul(v, prec, options):
             print "MUL: wanted", prec, "accurate bits, got", acc
         # multiply by I
         if direction & 1:
-            return mpf_neg(im), re, acc, acc
-        else:
-            return re, im, acc, acc
+            re, im = mpf_neg(im), re
+        return re, im, acc, acc
 
 def evalf_pow(v, prec, options):
 
@@ -845,6 +876,8 @@ def evalf_integral(expr, prec, options):
     maxprec = options.get('maxprec', INF)
     while 1:
         result = do_integral(expr, workprec, options)
+        # if a scaled_zero comes back accuracy will compute to -1
+        # which will cause workprec to increment by 1
         accuracy = complex_accuracy(result)
         if accuracy >= prec or workprec >= maxprec:
             return result

@@ -1,7 +1,7 @@
 from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
                    Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
                    sin, sqrt, sstr, Sum, sympify, S, integrate, atan, product)
-from sympy.core.evalf import complex_accuracy, PrecisionExhausted
+from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
 from sympy.abc import n, x, y
 from sympy.mpmath.libmp.libmpf import from_float
 from sympy.utilities.pytest import raises, XFAIL
@@ -293,3 +293,15 @@ def test_evalf_mul():
     # sympy should not try to expand this; it should be handled term-wise
     # in evalf through mpmath
     assert NS(product(1 + sqrt(n)*I, (n, 1, 500)), 1) == '5.e+567 + 2.e+568*I'
+
+def test_scaled_zero():
+    a, b = (([0], 1, 100, 1), -1)
+    assert scaled_zero(100) == (a, b)
+    assert scaled_zero(a) == (0, 1, 100, 1)
+    a, b = (([1], 1, 100, 1), -1)
+    assert scaled_zero(100, -1) == (a, b)
+    assert scaled_zero(a) == (1, 1, 100, 1)
+    raises(ValueError, 'scaled_zero(scaled_zero(100))')
+    raises(ValueError, 'scaled_zero(100, 2)')
+    raises(ValueError, 'scaled_zero(100, 0)')
+    raises(ValueError, 'scaled_zero((1, 5, 1, 3))')
