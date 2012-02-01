@@ -12,6 +12,7 @@ from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
+from sympy import Symbol
 
 from sympy.utilities.pytest import raises
 from sympy.utilities.iterables import capture
@@ -118,6 +119,8 @@ def test_prime():
     assert prime(4096) == 38873
     assert prime(9096) == 94321
     assert prime(25023) == 287341
+    x = Symbol('x')
+    raises(TypeError, 'prime(x)')
 
 def test_primepi():
     assert primepi(1) == 0

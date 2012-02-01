@@ -165,7 +165,7 @@ def prime(n):
         primepi : Return the number of primes less than or equal to n
     """
 
-    assert n > 0
+    assert int(n) > 0
     return sieve[n]
 
 def primepi(n):
