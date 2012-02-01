@@ -74,7 +74,8 @@ def _literal_float(f):
     return bool(regex.match(pat, f))
 
 def _exact_float(f):
-    """Return True if float/Float f can be represented exactly in binary.
+    """Return True if the decimal represented by f (a float or Float)
+    can be represented exactly in binary.
 
     A decimal fraction can be represented exactly in binary if its
     denominator is a power of 2. Whether it is or not is tested by
