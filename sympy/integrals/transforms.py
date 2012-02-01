@@ -318,7 +318,7 @@ def mellin_transform(f, x, s, **hints):
     an unevaluated MellinTransform object.
 
     For a description of possible hints, refer to the docstring of
-    :func:`sympy.transforms.IntegralTransform.doit`. If ``noconds=False``,
+    :func:`sympy.integrals.transforms.IntegralTransform.doit`. If ``noconds=False``,
     then only `F` will be returned (i.e. not ``cond``, and also not the strip
     ``(a, b)``).
 
@@ -798,7 +798,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
     of the sympy assumptions!
 
     For a description of possible hints, refer to the docstring of
-    :func:`sympy.transforms.IntegralTransform.doit`.
+    :func:`sympy.integrals.transforms.IntegralTransform.doit`.
 
     >>> from sympy.integrals.transforms import inverse_mellin_transform
     >>> from sympy import oo, gamma
@@ -1049,7 +1049,7 @@ def laplace_transform(f, t, s, **hints):
     an unevaluated LaplaceTransform object.
 
     For a description of possible hints, refer to the docstring of
-    :func:`sympy.transforms.IntegralTransform.doit`. If ``noconds=True``,
+    :func:`sympy.integrals.transforms.IntegralTransform.doit`. If ``noconds=True``,
     only `F` will be returned (i.e. not ``cond``, and also not the plane ``a``).
 
     >>> from sympy.integrals import laplace_transform
@@ -1191,7 +1191,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     regardless of the sympy assumption on `t`.
 
     For a description of possible hints, refer to the docstring of
-    :func:`sympy.transforms.IntegralTransform.doit`.
+    :func:`sympy.integrals.transforms.IntegralTransform.doit`.
 
     >>> from sympy.integrals.transforms import inverse_laplace_transform
     >>> from sympy import exp, Symbol
@@ -1280,7 +1280,7 @@ def fourier_transform(f, x, k, **hints):
     :func:`sympy.integrals.transforms._fourier_transform`.
 
     For a description of possible hints, refer to the docstring of
-    :func:`sympy.transforms.IntegralTransform.doit`.
+    :func:`sympy.integrals.transforms.IntegralTransform.doit`.
     Note that for this transform, by default ``noconds=True``.
 
     >>> from sympy import fourier_transform, exp
@@ -1325,7 +1325,7 @@ def inverse_fourier_transform(F, k, x, **hints):
     :func:`sympy.integrals.transforms._fourier_transform`.
 
     For a description of possible hints, refer to the docstring of
-    :func:`sympy.transforms.IntegralTransform.doit`.
+    :func:`sympy.integrals.transforms.IntegralTransform.doit`.
     Note that for this transform, by default ``noconds=True``.
 
     >>> from sympy import inverse_fourier_transform, exp, sqrt, pi
