@@ -233,7 +233,6 @@ def finalize_complex(re, im, prec):
     else:
         im_acc = prec
         re_acc = prec + min(-(size_im - size_re), 0)
-
     return re, im, re_acc, im_acc
 
 def chop_parts(value, prec):
@@ -413,8 +412,6 @@ def evalf_add(v, prec, options):
         terms = [evalf(arg, prec + 10, options) for arg in v.args]
         re, re_acc = add_terms([a[0::2] for a in terms if a[0]], prec, target_prec)
         im, im_acc = add_terms([a[1::2] for a in terms if a[1]], prec, target_prec)
-        # if re and/or im is a scaled zero then acc will come back as -1
-        # and cause prec to be increased
         acc = complex_accuracy((re, im, re_acc, im_acc))
         if acc >= target_prec:
             if options.get('verbose'):
@@ -422,14 +419,6 @@ def evalf_add(v, prec, options):
             break
         else:
             if (prec - target_prec) > options['maxprec']:
-                if zero(re, scaled=True):
-                    re = scaled_zero(re)
-                else:
-                    pass # just here for coverage testing
-                if zero(im, scaled=True):
-                    im = scaled_zero(im)
-                else:
-                    pass # just here for coverage testing
                 break
 
             prec = prec + max(10 + 2**i, target_prec - acc)
@@ -438,6 +427,14 @@ def evalf_add(v, prec, options):
                 print "ADD: restarting with prec", prec
 
     options['maxprec'] = oldmaxprec
+    if zero(re, scaled=True):
+        re = scaled_zero(re)
+    else:
+        pass # just here for coverage testing
+    if zero(im, scaled=True):
+        im = scaled_zero(im)
+    else:
+        pass # just here for coverage testing
     return re, im, re_acc, im_acc
 
 def evalf_mul(v, prec, options):
@@ -575,7 +572,7 @@ def evalf_pow(v, prec, options):
 
     # Pure square root
     if exp is S.Half:
-        xre, xim, xre_acc, yim_acc = evalf(base, prec+5, options)
+        xre, xim, _, _ = evalf(base, prec+5, options)
         # General complex square root
         if xim:
             re, im = libmp.mpc_sqrt((xre or fzero, xim), prec)
@@ -591,7 +588,7 @@ def evalf_pow(v, prec, options):
     # We first evaluate the exponent to find its magnitude
     # This determines the working precision that must be used
     prec += 10
-    yre, yim, yre_acc, yim_acc = evalf(exp, prec, options)
+    yre, yim, _, _ = evalf(exp, prec, options)
     # Special cases: x**0
     if not (yre or yim):
         return fone, None, prec, None
@@ -601,7 +598,7 @@ def evalf_pow(v, prec, options):
     # XXX: prec + ysize might exceed maxprec
     if ysize > 5:
         prec += ysize
-        yre, yim, yre_acc, yim_acc = evalf(exp, prec, options)
+        yre, yim, _, _ = evalf(exp, prec, options)
 
     # Pure exponential function; no need to evalf the base
     if base is S.Exp1:
@@ -610,7 +607,7 @@ def evalf_pow(v, prec, options):
             return finalize_complex(re, im, target_prec)
         return mpf_exp(yre, target_prec), None, target_prec, None
 
-    xre, xim, xre_acc, yim_acc = evalf(base, prec+5, options)
+    xre, xim, _, _= evalf(base, prec+5, options)
     # 0**y
     if not (xre or xim):
         return None, None, None, None
@@ -716,7 +713,7 @@ def evalf_log(expr, prec, options):
     if prec - size > workprec:
         # We actually need to compute 1+x accurately, not x
         arg = C.Add(S.NegativeOne, arg, evaluate=False)
-        xre, xim, xre_acc, xim_acc = evalf_add(arg, prec, options)
+        xre, xim, _, _ = evalf_add(arg, prec, options)
         prec2 = workprec - fastlog(xre)
         re = mpf_log(mpf_add(xre, fone, prec2), prec, rnd)
 
@@ -853,6 +850,7 @@ def do_integral(expr, prec, options):
         re = result.real._mpf_
         if re == fzero:
             re, re_acc = scaled_zero(min(-prec, -max_real_term[0], -quadrature_error))
+            re = scaled_zero(re) # handled ok in evalf_integral
         else:
             re_acc = -max(max_real_term[0] - fastlog(re) - prec, quadrature_error)
     else:
@@ -862,6 +860,7 @@ def do_integral(expr, prec, options):
         im = result.imag._mpf_
         if im == fzero:
             im, im_acc = scaled_zero(min(-prec, -max_imag_term[0], -quadrature_error))
+            im = scaled_zero(im) # handled ok in evalf_integral
         else:
             im_acc = -max(max_imag_term[0] - fastlog(im) - prec, quadrature_error)
     else:
@@ -1093,7 +1092,6 @@ def evalf(x, prec, options):
         rf = evalf_table[x.func]
         r = rf(x, prec, options)
     except KeyError:
-        #r = finalize_complex(x._eval_evalf(prec)._mpf_, fzero, prec)
         try:
             # Fall back to ordinary evalf if possible
             if 'subs' in options:
