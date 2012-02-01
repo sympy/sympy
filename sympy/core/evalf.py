@@ -1255,7 +1255,7 @@ def N(x, n=15, **options):
     """
     Calls x.evalf(n, \*\*options).
 
-    Both .evalf() and N() are equivalent, use the one that you like better.
+    Both .n() and N() are equivalent to .evalf(); use the one that you like better.
     See also the docstring of .evalf() for information on the options.
 
     Examples
@@ -1265,7 +1265,7 @@ def N(x, n=15, **options):
     >>> from sympy.abc import k
     >>> Sum(1/k**k, (k, 1, oo))
     Sum(k**(-k), (k, 1, oo))
-    >>> N(Sum(1/k**k, (k, 1, oo)), 4)
+    >>> N(_, 4)
     1.291
 
     """
