@@ -77,10 +77,10 @@ def couple(expr, jcoupling_list=None):
         the coupling of the spin spaces. The length of this must be N-1, where N
         is the number of states in the tensor product to be coupled. The
         elements of this sublist are the same as the first two elements of each
-        sublist in *jcoupling as defined in JzKetCoupled. If this argument is
-        not specified, the default value is taken, which couples the first and
-        second product basis spaces, then couples this new coupled space to the
-        third product space, etc
+        sublist in the ``jcoupling`` parameter defined for JzKetCoupled. If this
+        parameter is not specified, the default value is taken, which couples
+        the first and second product basis spaces, then couples this new coupled
+        space to the third product space, etc
 
     Examples
     ========
@@ -248,21 +248,21 @@ def uncouple(expr, jn=None, jcoupling_list=None):
 
     expr : Expr
         The expression containing states that are to be coupled. If the states
-        are a subclass of SpinState, the jn and jcoupling parameters must be
-        defined. If the states are a subclass of CoupledSpinState, jn and
-        jcoupling will be taken from the state.
+        are a subclass of SpinState, the ``jn`` and ``jcoupling`` parameters
+        must be defined. If the states are a subclass of CoupledSpinState,
+        ``jn`` and ``jcoupling`` will be taken from the state.
 
     jn : list or tuple
         The list of the j-values that are coupled. If state is a
         CoupledSpinState, this parameter is ignored. This must be defined if
-        state is not a subclass of CoupledSpinState. See the jn parameter of
-        the JzKetCoupled class to see how this must be defined.
+        state is not a subclass of CoupledSpinState. The syntax of this
+        parameter is the same as the ``jn`` parameter of JzKetCoupled.
 
     jcoupling_list : list or tuple
         The list defining how the j-values are coupled together. If state is a
         CoupledSpinState, this parameter is ignored. This must be defined if
-        state is not a subclass of CoupledSpinState. See the jcoupling
-        parameter of the JzKetCoupled class to see how this must be defined.
+        state is not a subclass of CoupledSpinState. The syntax of this
+        parameter is the same as the ``jcoupling`` parameter of JzKetCoupled.
 
     Examples
     ========
@@ -751,9 +751,6 @@ class Rotation(UnitaryOperator):
     x''-y''-z'' axes. Then this new coordinate system is rotated about the
     z''-axis. Conventions follow those laid out in [1].
 
-    See the Wigner D-function, Rotation.D, and the Wigner small-d matrix for
-    the evaluation of the rotation operator on spin states.
-
     Parameters
     ==========
 
@@ -783,6 +780,12 @@ class Rotation(UnitaryOperator):
         >>> Rotation(a, b, c).inverse()
         R(-c,-b,-a)
 
+    See Also
+    ========
+
+    WignerD: Symbolic Wigner-D function
+    D: Wigner-D function
+    d: Wigner small-d function
 
     References
     ==========
@@ -827,8 +830,8 @@ class Rotation(UnitaryOperator):
     def D(cls, j, m, mp, alpha, beta, gamma):
         """Wigner D-function.
 
-        Returns an instance of the WignerD class. See the corresponding
-        docstring for more information on the Wigner-D matrix.
+        Returns an instance of the WignerD class corresponding to the Wigner-D
+        function specified by the parameters.
 
         Parameters
         ===========
@@ -858,6 +861,11 @@ class Rotation(UnitaryOperator):
             >>> Rotation.D(1, 1, 0,pi, pi/2,-pi)
             WignerD(1, 1, 0, pi, pi/2, -pi)
 
+        See Also
+        ========
+
+        WignerD: Symbolic Wigner-D function
+
         """
         return WignerD(j,m,mp,alpha,beta,gamma)
 
@@ -865,9 +873,9 @@ class Rotation(UnitaryOperator):
     def d(cls, j, m, mp, beta):
         """Wigner small-d function.
 
-        Returns an instance of the WignerD class with the alpha and gamma
-        angles given as 0. See the corresponding docstring for more
-        information on the Wigner small-d matrix.
+        Returns an instance of the WignerD class corresponding to the Wigner-D
+        function specified by the parameters with the alpha and gamma angles
+        given as 0.
 
         Parameters
         ===========
@@ -892,6 +900,11 @@ class Rotation(UnitaryOperator):
             >>> beta = symbols('beta')
             >>> Rotation.d(1, 1, 0, pi/2)
             WignerD(1, 1, 0, 0, pi/2, 0)
+
+        See Also
+        ========
+
+        WignerD: Symbolic Wigner-D function
 
         """
         return WignerD(j,m,mp,0,beta,0)
@@ -979,6 +992,11 @@ class WignerD(Expr):
         WignerD(1, 1, 0, 0, pi/2, 0)
         >>> rot.doit()
         -sqrt(2)/2
+
+    See Also
+    ========
+
+    Rotation: Rotation operator
 
     References
     ==========
@@ -1261,6 +1279,12 @@ class JxKet(SpinState, Ket):
     """Eigenket of Jx.
 
     See JzKet for the usage of spin eigenstates.
+
+    See Also
+    ========
+
+    JzKet: Usage of spin states
+
     """
 
     @classmethod
@@ -1287,6 +1311,12 @@ class JxBra(SpinState, Bra):
     """Eigenbra of Jx.
 
     See JzKet for the usage of spin eigenstates.
+
+    See Also
+    ========
+
+    JzKet: Usage of spin states
+
     """
 
     @classmethod
@@ -1302,6 +1332,12 @@ class JyKet(SpinState, Ket):
     """Eigenket of Jy.
 
     See JzKet for the usage of spin eigenstates.
+
+    See Also
+    ========
+
+    JzKet: Usage of spin states
+
     """
 
     @classmethod
@@ -1329,6 +1365,12 @@ class JyBra(SpinState, Bra):
     """Eigenbra of Jy.
 
     See JzKet for the usage of spin eigenstates.
+
+    See Also
+    ========
+
+    JzKet: Usage of spin states
+
     """
 
     @classmethod
@@ -1347,9 +1389,6 @@ class JzKet(SpinState, Ket):
     that is states representing the interaction of multiple separate spin
     states, are defined as a tensor product of states.
 
-    See uncouple and couple for coupling of states and JzKetCoupled for coupled
-    states.
-
     Parameters
     ==========
 
@@ -1361,7 +1400,7 @@ class JzKet(SpinState, Ket):
     Examples
     ========
 
-    Normal States:
+    *Normal States:*
 
     Defining simple spin states, both numerical and symbolic:
 
@@ -1399,7 +1438,7 @@ class JzKet(SpinState, Ket):
         >>> i.doit()
         1/2
 
-    Uncoupled States:
+    *Uncoupled States:*
 
     Define an uncoupled state as a TensorProduct between two Jz eigenkets:
 
@@ -1441,6 +1480,14 @@ class JzKet(SpinState, Ket):
         [        0]
         [        0]
 
+    See Also
+    ========
+
+    JzKetCoupled: Coupled eigenstates
+    TensorProduct: Used to specify uncoupled states
+    uncouple: Uncouples states given coupling parameters
+    couple: Couples uncoupled states
+
     """
 
     @classmethod
@@ -1468,6 +1515,12 @@ class JzBra(SpinState, Bra):
     """Eigenbra of Jz.
 
     See the JzKet for the usage of spin eigenstates.
+
+    See Also
+    ========
+
+    JzKet: Usage of spin states
+
     """
 
     @classmethod
@@ -1671,6 +1724,12 @@ class JxKetCoupled(CoupledSpinState, Ket):
     """Coupled eigenket of Jx.
 
     See JzKetCoupled for the usage of coupled spin eigenstates.
+
+    See Also
+    ========
+
+    JzKetCoupled: Usage of coupled spin states
+
     """
 
     @classmethod
@@ -1698,6 +1757,12 @@ class JxBraCoupled(CoupledSpinState, Bra):
     """Coupled eigenbra of Jx.
 
     See JzKetCoupled for the usage of coupled spin eigenstates.
+
+    See Also
+    ========
+
+    JzKetCoupled: Usage of coupled spin states
+
     """
 
     @classmethod
@@ -1713,6 +1778,12 @@ class JyKetCoupled(CoupledSpinState, Ket):
     """Coupled eigenket of Jy.
 
     See JzKetCoupled for the usage of coupled spin eigenstates.
+
+    See Also
+    ========
+
+    JzKetCoupled: Usage of coupled spin states
+
     """
 
     @classmethod
@@ -1740,6 +1811,12 @@ class JyBraCoupled(CoupledSpinState, Bra):
     """Coupled eigenbra of Jy.
 
     See JzKetCoupled for the usage of coupled spin eigenstates.
+
+    See Also
+    ========
+
+    JzKetCoupled: Usage of coupled spin states
+
     """
 
     @classmethod
@@ -1757,55 +1834,56 @@ class JzKetCoupled(CoupledSpinState, Ket):
     Spin state that is an eigenket of Jz which represents the coupling of
     separate spin spaces.
 
-    The arguments for creating instances of JzKetCoupled are j, m, jn and an
-    optional jcoupling argument. The j and m options are the total angular
-    momentum quantum numbers, as used for normal states (e.g. JzKet).
+    The arguments for creating instances of JzKetCoupled are ``j``, ``m``,
+    ``jn`` and an optional ``jcoupling`` argument. The ``j`` and ``m`` options
+    are the total angular momentum quantum numbers, as used for normal states
+    (e.g. JzKet).
 
-    The other required parameter in *jn, which is a tuple defining the j_n
+    The other required parameter in ``jn``, which is a tuple defining the j_n
     angular momentum quantum numbers of the product spaces. So for example, if
-    a state represented the coupling of the product basis state |j1,m1>x|j2,m2>,
-    the *jn for this state would be (j1,j2).
+    a state represented the coupling of the product basis state
+    ``|j1,m1>x|j2,m2>``, the ``jn`` for this state would be (j1,j2).
 
-    The final option is *jcoupling, which is used to define how the spaces
-    specified by *jn are coupled, which includes both the order these spaces
+    The final option is ``jcoupling``, which is used to define how the spaces
+    specified by ``jn`` are coupled, which includes both the order these spaces
     are coupled together and the quantum numbers that arise from these
-    couplings. The *jcoupling parameter itself is a list of lists, such that
+    couplings. The ``jcoupling`` parameter itself is a list of lists, such that
     each of the sublists defines a single coupling between the spin spaces. If
-    there are N coupled angular momentum spaces, that is *jn has N elements,
+    there are N coupled angular momentum spaces, that is ``jn`` has N elements,
     then there must be N-1 sublists. Each of these sublists making up the
-    *jcoupling parameter have length 3. The first two elements are the indicies
-    of the product spaces that are considered to be coupled together. For
-    example, if we want to couple j_1 and j_4, the indicies would be 1 and 4. If
-    a state has already been coupled, it is referenced by the smallest index
-    that is coupled, so if j_2 and j_4 has already been coupled to some j24,
-    then this value can be coupled by referencing it with index 2. The final
-    element of the sublist is the quantum number of the coupled state. So
-    putting everything together, into a valid sublist for *jcoupling, if j_1 and
-    j_2 are coupled to an angular momentum space with quantum number j12, the
-    sublist would be (1,2,j12), N-1 of these sublists are used in the list for
-    *jcoupling.
+    ``jcoupling`` parameter have length 3. The first two elements are the
+    indicies of the product spaces that are considered to be coupled together.
+    For example, if we want to couple j_1 and j_4, the indicies would be 1 and
+    4. If a state has already been coupled, it is referenced by the smallest
+    index that is coupled, so if j_2 and j_4 has already been coupled to some
+    j24, then this value can be coupled by referencing it with index 2. The
+    final element of the sublist is the quantum number of the coupled state. So
+    putting everything together, into a valid sublist for ``jcoupling``, if j_1
+    and j_2 are coupled to an angular momentum space with quantum number j12,
+    the sublist would be (1,2,j12), N-1 of these sublists are used in the list
+    for ``jcoupling``.
 
-    Note the *jcoupling parameter is optional, if it is not specified, the
+    Note the ``jcoupling`` parameter is optional, if it is not specified, the
     default coupling is taken. This default value is to coupled the spaces in
     order and take the quantum number of the coupling to be the maximum value.
     For example, if the spin spaces are j1,j2,j3,j4, then the default coupling
     couples j1 and j2 to j12=j1+j2, then, j12 and j3 are coupled to
     j123=j12+j3, and finally j123 and j4 to j1234=j123+j4. The jcoupling value
     that would correspond to this is:
-    ((1,2,j1+j2),(1,3,j1+j2+j3))
 
-    See uncouple and couple for coupling and uncoupling of states.
+    ``((1,2,j1+j2),(1,3,j1+j2+j3))``
 
     Parameters
     ==========
 
-    *args : tuple
-        The arguments that must be passed are j, m, *jn, and *jcoupling. The j
-        value is the total angular momentum. The m value is the eigenvalue of
-        the Jz spin operator. The *jn list are the j values of argular momentum
-        spaces coupled together. The jcoupling parameter is an optional
-        parameter defining how the spaces are coupled together. See the above
-        description for how these coupling parameters are defined.
+    args : tuple
+        The arguments that must be passed are ``j``, ``m``, ``jn``, and
+        ``jcoupling``. The ``j`` value is the total angular momentum. The ``m``
+        value is the eigenvalue of the Jz spin operator. The ``jn`` list are
+        the j values of argular momentum spaces coupled together. The
+        ``jcoupling`` parameter is an optional parameter defining how the spaces
+        are coupled together. See the above description for how these coupling
+        parameters are defined.
 
     Examples
     ========
@@ -1854,6 +1932,13 @@ class JzKetCoupled(CoupledSpinState, Ket):
         [sqrt(2)/2]
         [      1/2]
 
+    See Also
+    ========
+
+    JzKet: Normal spin eigenstates
+    uncouple: Uncoupling of coupling spin states
+    couple: Coupling of uncoupled spin states
+
     """
 
     @classmethod
@@ -1881,6 +1966,12 @@ class JzBraCoupled(CoupledSpinState, Bra):
     """Coupled eigenbra of Jz.
 
     See the JzKetCoupled for the usage of coupled spin eigenstates.
+
+    See Also
+    ========
+
+    JzKetCoupled: Usage of coupled spin states
+
     """
 
     @classmethod
