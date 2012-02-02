@@ -3,6 +3,7 @@
 Gates are unitary operators that act on the space of qubits.
 
 Medium Term Todo:
+
 * Optimize Gate._apply_operators_Qubit to remove the creation of many
   intermediate Qubit objects.
 * Add commutation relationships to all operators and use this in gate_sort.

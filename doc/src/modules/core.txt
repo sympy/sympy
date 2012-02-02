@@ -310,12 +310,12 @@ Equality
    :members:
 
 GreaterThan
-^^^^^^^^^^
+^^^^^^^^^^^
 .. autoclass:: GreaterThan
    :members:
 
 LessThan
-^^^^^^^^^^
+^^^^^^^^
 .. autoclass:: LessThan
    :members:
 
@@ -325,12 +325,12 @@ Unequality
    :members:
 
 StrictGreaterThan
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 .. autoclass:: StrictGreaterThan
    :members:
 
 StrictLessThan
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 .. autoclass:: StrictLessThan
    :members:
 

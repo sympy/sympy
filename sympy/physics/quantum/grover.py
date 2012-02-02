@@ -1,6 +1,7 @@
 """Grover's algorithm and helper functions.
 
 Todo:
+
 * W gate construction (or perhaps -W gate based on Mermin's book)
 * Generalize the algorithm for an unknown function that returns 1 on multiple
   qubit states, not just one.

@@ -1,6 +1,7 @@
 """Matplotlib based plotting of quantum circuits.
 
 Todo:
+
 * Optimize printing of large circuits.
 * Get this to work with single gates.
 * Do a better job checking the form of circuits to make sure it is a Mul of
