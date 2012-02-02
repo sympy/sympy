@@ -224,8 +224,15 @@ class legendre(OrthogonalPolynomial):
 
     @classmethod
     def eval(cls, n, x):
+        # We just return a generic L_n(x) placeholder object
+        pass
+
+    def _eval_expand_func(self, deep=False, **hints):
+        if deep:
+            n, x = [ arg.expand(deep, **hints) for arg in self.args ]
+        else:
+            n, x = self.args
         if not n.is_Number:
-            # Symbolic result L_n(x)
             # L_n(-x)  --->  (-1)**n * L_n(x)
             if x.could_extract_minus_sign():
                 return S.NegativeOne**n * legendre(n,-x)
@@ -241,7 +248,9 @@ class legendre(OrthogonalPolynomial):
                 return S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
-            return cls._eval_at_order(n, x)
+            return self._eval_at_order(n, x)
+        # Nothing could be expanded
+        return self
 
     def fdiff(self, argindex=2):
         if argindex == 1:
@@ -307,6 +316,15 @@ class assoc_legendre(Function):
 
     @classmethod
     def eval(cls, n, m, x):
+        # We just return a generic L_n,m(x) placeholder object
+        pass
+
+    def _eval_expand_func(self, deep=False, **hints):
+        if deep:
+            n, m, x = [ arg.expand(deep, **hints) for arg in self.args ]
+        else:
+            n, m, x = self.args
+
         if m.could_extract_minus_sign():
             # P^{-m}_n  --->  F * P^m_n
             return S.NegativeOne**(-m) * (C.factorial(m + n)/C.factorial(n - m)) * assoc_legendre(n, -m, x)
@@ -320,7 +338,10 @@ class assoc_legendre(Function):
                 raise ValueError("%s : 1st index must be nonnegative integer (got %r)" % (cls, n))
             if abs(m) > n:
                 raise ValueError("%s : abs('2nd index') must be <= '1st index' (got %r, %r)" % (cls, n, m))
+            # n, m are given fixed integers, evaluate into polynomial
             return cls._eval_at_order(int(n), abs(int(m))).subs(_x, x)
+        # Nothing could be expanded
+        return self
 
     def fdiff(self, argindex=3):
         if argindex == 1:
