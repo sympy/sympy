@@ -50,7 +50,6 @@ expr
 .. module:: sympy.core.expr
 
 .. note:: Pickling of singletons with protocol less than 2
-   ================================================
 
    Note that when pickling a singleton (such as pi or e), the
    object.__getnewargs__() method applies, and this method is only used for
@@ -109,12 +108,12 @@ expr
    pickle.HIGHEST_PROTOCOL
 
 Expr
-^^^^
+----
 .. autoclass:: Expr
    :members:
 
 AtomicExpr
-^^^^^^^^^^
+----------
 .. autoclass:: AtomicExpr
    :members:
 

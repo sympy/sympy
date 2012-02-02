@@ -926,17 +926,17 @@ class WignerD(Expr):
     The Wigner D-function gives the matrix elements of the rotation
     operator in the jm-representation. For the Euler angles alpha, beta,
     gamma, the D-function is defined such that:
-    <j,m| R(alpha,beta,gamma) |j',m'> = delta_jj' * D(j, m, m', alpha, beta, gamma)
+    ``<j,m| R(alpha,beta,gamma) |j',m'> = delta_jj' * D(j, m, m', alpha, beta, gamma)``
     Where the rotation operator is as defined by the Rotation class.
 
     The Wigner D-function defined in this way gives:
-    D(j, m, m', alpha, beta, gamma) = exp(-i*m*alpha) * d(j, m, m', beta) * exp(-i*m'*gamma)
+    ``D(j, m, m', alpha, beta, gamma) = exp(-i*m*alpha) * d(j, m, m', beta) * exp(-i*m'*gamma)``
     Where d is the Wigner small-d function, which is given by Rotation.d.
 
     The Wigner small-d function gives the component of the Wigner
     D-function that is determined by the second Euler angle. That is the
     Wigner D-function is:
-    D(j, m, m', alpha, beta, gamma) = exp(-i*m*alpha) * d(j, m, m', beta) * exp(-i*m'*gamma)
+    ``D(j, m, m', alpha, beta, gamma) = exp(-i*m*alpha) * d(j, m, m', beta) * exp(-i*m'*gamma)``
     Where d is the small-d function. The Wigner D-function is given by
     Rotation.D.
 

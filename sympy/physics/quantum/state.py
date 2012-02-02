@@ -642,12 +642,14 @@ class Wavefunction(Function):
 
     All arguments are automatically sympified, so you can define the
     variables as strings rather than symbols
+
     >>> expr = x**2
     >>> f = Wavefunction(expr, 'x')
     >>> type(f.variables[0])
     <class 'sympy.core.symbol.Symbol'>
 
     Derivatives of Wavefunctions will return Wavefunctions
+
     >>> diff(f, x)
     Wavefunction(2*x, x)
 

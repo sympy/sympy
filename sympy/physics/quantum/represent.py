@@ -226,7 +226,7 @@ def represent(expr, **options):
 
 def rep_innerproduct(expr, **options):
     """
-    Returns an innerproduct like representation (e.g. <x'|x>) for the
+    Returns an innerproduct like representation (e.g. ``<x'|x>``) for the
     given state.
 
     Attempts to calculate inner product with a bra from the specified
@@ -280,7 +280,7 @@ def rep_innerproduct(expr, **options):
 
 def rep_expectation(expr, **options):
     """
-    Returns an <x'|A|x> type representation for the given operator.
+    Returns an ``<x'|A|x>`` type representation for the given operator.
 
     Parameters
     ==========
@@ -322,7 +322,7 @@ def rep_expectation(expr, **options):
 
 def integrate_result(orig_expr, result, **options):
     """
-    Returns the result of integrating over any unities (|x><x|) in
+    Returns the result of integrating over any unities ``(|x><x|)`` in
     the given expression. Intended for integrating over the result of
     representations in continuous bases.
 

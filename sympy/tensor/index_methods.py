@@ -309,7 +309,7 @@ def get_contraction_structure(expr):
     [None, x[i, i]*y[j, j]]
     >>> d[None]  # Note that the product has no contractions
     set([x[i, i]*y[j, j]])
-    >>> sorted(d[x[i, i]*y[j, j]], key=default_sort_key)  # factors are contracted ``first''
+    >>> sorted(d[x[i, i]*y[j, j]], key=default_sort_key)  # factors are contracted ''first''
     [{(i,): set([x[i, i]])}, {(j,): set([y[j, j]])}]
 
     A parenthesized Add object is also returned as a nested dictionary.  The

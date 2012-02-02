@@ -698,8 +698,8 @@ class ZGate(HermitianOperator, OneQubitGate):
 class PhaseGate(OneQubitGate):
     """The single qubit phase, or S, gate.
 
-    This gate rotates the phase of the state by pi/2 if the state is |1> and
-    does nothing if the state is |0>.
+    This gate rotates the phase of the state by pi/2 if the state is ``|1>`` and
+    does nothing if the state is ``|0>``.
 
     Parameters
     ----------
@@ -726,8 +726,8 @@ class PhaseGate(OneQubitGate):
 class TGate(OneQubitGate):
     """The single qubit pi/8 gate.
 
-    This gate rotates the phase of the state by pi/4 if the state is |1> and
-    does nothing if the state is |0>.
+    This gate rotates the phase of the state by pi/4 if the state is ``|1>`` and
+    does nothing if the state is ``|0>``.
 
     Parameters
     ----------

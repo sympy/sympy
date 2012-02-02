@@ -1354,8 +1354,8 @@ class InnerProduct(Basic):
 
     Currently this class just reduces things to a product of
     Kronecker Deltas.  In the future, we could introduce abstract
-    states like |a> and |b>, and leave the inner product unevaluated as
-    <a|b>.
+    states like ``|a>`` and ``|b>``, and leave the inner product unevaluated as
+    ``<a|b>``.
 
     """
     def __new__(cls, bra, ket):

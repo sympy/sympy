@@ -71,7 +71,7 @@ class OracleGate(Gate):
     Examples
     ========
 
-    Apply an Oracle gate that flips the sign of |2> on different qubits::
+    Apply an Oracle gate that flips the sign of ``|2>`` on different qubits::
 
         >>> from sympy.physics.quantum.qubit import IntQubit
         >>> from sympy.physics.quantum.qapply import qapply
@@ -169,8 +169,8 @@ class OracleGate(Gate):
 class WGate(Gate):
     """General n qubit W Gate in Grover's algorithm.
 
-    The gate performs the operation 2|phi><phi| - 1 on some qubits.
-    |phi> = (tensor product of n Hadamards)*(|0> with n qubits)
+    The gate performs the operation ``2|phi><phi| - 1`` on some qubits.
+    ``|phi> = (tensor product of n Hadamards)*(|0> with n qubits)``
 
     Parameters
     ==========
