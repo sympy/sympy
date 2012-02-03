@@ -1414,6 +1414,25 @@ class SineTransform(SineCosineTypeTransform):
 
 def sine_transform(f, x, k, **hints):
     r"""
+    Compute the unitary, ordinary-frequency sine transform of `f`, defined
+    as
+
+    .. math:: F(k) = \sqrt{\frac{2}{\pi}} \int_{0}^\infty f(x) \sin(2\pi x k) \mathrm{d} x.
+
+    If the transform cannot be computed in closed form, this
+    function returns an unevaluated SineTransform object.
+
+    For a description of possible hints, refer to the docstring of
+    :func:`sympy.integrals.transforms.IntegralTransform.doit`.
+    Note that for this transform, by default ``noconds=True``.
+
+    >>> from sympy import sine_transform, exp
+    >>> from sympy.abc import x, k, a
+    >>> sine_transform(x*exp(-a*x**2), x, k)
+    sqrt(2)*k*exp(-k**2/(4*a))/(4*a**(3/2))
+    >>> sine_transform(x**(-a), x, k)
+    2**(-a + 1/2)*k**(a - 1)*gamma(-a/2 + 1)/gamma(a/2 + 1/2)
+
     See Also
     ========
 
@@ -1441,6 +1460,25 @@ class InverseSineTransform(SineCosineTypeTransform):
 
 def inverse_sine_transform(F, k, x, **hints):
     r"""
+    Compute the unitary, ordinary-frequency inverse sine transform of `F`,
+    defined as
+
+    .. math:: f(x) = \sqrt{\frac{2}{\pi}} \int_{0}^\infty F(k) \sin(2\pi x k) \mathrm{d} k.
+
+    If the transform cannot be computed in closed form, this
+    function returns an unevaluated InverseSineTransform object.
+
+    For a description of possible hints, refer to the docstring of
+    :func:`sympy.integrals.transforms.IntegralTransform.doit`.
+    Note that for this transform, by default ``noconds=True``.
+
+    >>> from sympy import inverse_sine_transform, exp, sqrt, gamma, pi
+    >>> from sympy.abc import x, k, a
+    >>> inverse_sine_transform(2**((1-2*a)/2)*k**(a - 1)*gamma(-a/2 + 1)/gamma((a+1)/2), k, x)
+    x**(-a)
+    >>> inverse_sine_transform(sqrt(2)*k*exp(-k**2/(4*a))/(4*sqrt(a)**3), k, x)
+    x*exp(-a*x**2)
+
     See Also
     ========
 
@@ -1468,6 +1506,25 @@ class CosineTransform(SineCosineTypeTransform):
 
 def cosine_transform(f, x, k, **hints):
     r"""
+    Compute the unitary, ordinary-frequency cosine transform of `f`, defined
+    as
+
+    .. math:: F(k) = \sqrt{\frac{2}{\pi}} \int_{0}^\infty f(x) \cos(2\pi x k) \mathrm{d} x.
+
+    If the transform cannot be computed in closed form, this
+    function returns an unevaluated CosineTransform object.
+
+    For a description of possible hints, refer to the docstring of
+    :func:`sympy.integrals.transforms.IntegralTransform.doit`.
+    Note that for this transform, by default ``noconds=True``.
+
+    >>> from sympy import cosine_transform, exp, sqrt, cos
+    >>> from sympy.abc import x, k, a
+    >>> cosine_transform(exp(-a*x), x, k)
+    sqrt(2)*a/(sqrt(pi)*(a**2 + k**2))
+    >>> cosine_transform(exp(-a*sqrt(x))*cos(a*sqrt(x)), x, k)
+    a*(-sinh(a**2/(2*k)) + cosh(a**2/(2*k)))/(2*k**(3/2))
+
     See Also
     ========
 
@@ -1495,6 +1552,25 @@ class InverseCosineTransform(SineCosineTypeTransform):
 
 def inverse_cosine_transform(F, k, x, **hints):
     r"""
+    Compute the unitary, ordinary-frequency inverse cosine transform of `F`,
+    defined as
+
+    .. math:: f(x) = \sqrt{\frac{2}{\pi}} \int_{0}^\infty F(k) \cos(2\pi x k) \mathrm{d} k.
+
+    If the transform cannot be computed in closed form, this
+    function returns an unevaluated InverseCosineTransform object.
+
+    For a description of possible hints, refer to the docstring of
+    :func:`sympy.integrals.transforms.IntegralTransform.doit`.
+    Note that for this transform, by default ``noconds=True``.
+
+    >>> from sympy import inverse_cosine_transform, exp, sqrt, pi
+    >>> from sympy.abc import x, k, a
+    >>> inverse_cosine_transform(sqrt(2)*a/(sqrt(pi)*(a**2 + k**2)), k, x)
+    -sinh(a*x) + cosh(a*x)
+    >>> inverse_cosine_transform(1/sqrt(k), k, x)
+    1/sqrt(x)
+
     See Also
     ========
 
