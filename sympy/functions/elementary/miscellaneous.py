@@ -1,13 +1,16 @@
 from sympy.core import S, C, sympify
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, Integer
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import Application, Lambda
 from sympy.core.expr import Expr
+from sympy.core.power import Pow
 from sympy.core.singleton import Singleton
 from sympy.core.rules import Transform
 from sympy.ntheory.residue_ntheory import int_tested
+
+from math import log10, ceil
 
 class IdentityFunction(Lambda):
     """
@@ -481,3 +484,52 @@ class Min(MinMaxBase, Application, Basic):
         Check if x > y.
         """
         return (x > y)
+
+_pyround = round
+def round(x, p=0):
+    """Return x rounded to the given decimal place. If x is not an Expr,
+    Python's round function is employed.
+
+    Examples
+    ========
+    >>> from sympy import round, pi, S, Number
+    >>> round(S(10.5))
+    11.
+    >>> round(pi)
+    3.
+    >>> round(pi, 2)
+    3.14
+
+    If x is not a SymPy Expr then Python's round is used and it returns
+    a Python type, not a SymPy Number:
+
+    >>> isinstance(round(543210, -2), Number)
+    False
+    >>> round(S(543210), -2)
+    5.432e+5
+    >>> _.is_Number
+    True
+
+    """
+    if not isinstance(x, Expr):
+        return _pyround(x, p)
+    if not x.is_number:
+        return x
+    p = int(p)
+    mag_first_dig = int(ceil(log10(abs(x.n()))))
+    digits_needed = mag_first_dig + p
+    mag = Pow(10, p) # magnitude needed to bring digit p to units place
+    x += 1/(2*mag) # add the half for rounding
+    rv = Integer(x.n(digits_needed)*mag) # evaluate, shift p to unit, truncate
+    q = 1
+    if p > 0:
+        q = mag
+    elif p < 0:
+        rv /= mag
+    # evaluate to the needed precision but store it exactly
+    rv = Rational(rv, q)
+    if rv.is_Integer:
+        # use str or else it won't be a float
+        return C.Float(str(rv), digits_needed)
+    else:
+        return C.Float(rv, digits_needed)

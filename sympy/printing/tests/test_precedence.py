@@ -1,7 +1,7 @@
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.function import Derivative
-from sympy.core.numbers import Integer, Rational, Float
+from sympy.core.numbers import Integer, Rational, Float, oo
 from sympy.core.relational import Rel
 from sympy.core.symbol import symbols
 from sympy.functions import sin
@@ -36,6 +36,8 @@ def test_Number():
     assert precedence(Rational(-5,2)) == PRECEDENCE["Add"]
     assert precedence(Float(5)) == PRECEDENCE["Atom"]
     assert precedence(Float(-5)) == PRECEDENCE["Add"]
+    assert precedence(oo) == PRECEDENCE["Atom"]
+    assert precedence(-oo) == PRECEDENCE["Add"]
 
 def test_Order():
     assert precedence(Order(x)) == PRECEDENCE["Atom"]
