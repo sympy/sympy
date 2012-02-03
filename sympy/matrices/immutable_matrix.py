@@ -3,6 +3,7 @@ from expressions import MatrixExpr, Transpose
 from sympy import Basic, Tuple
 
 class ImmutableMatrix(MatrixExpr, MatrixBase):
+
     def __new__(cls, *args, **kwargs):
         rows, cols, mat = MatrixBase._handle_creation_inputs(*args, **kwargs)
         shape = Tuple(rows, cols)
@@ -34,11 +35,5 @@ class ImmutableMatrix(MatrixExpr, MatrixBase):
     def _entry(self, i, j):
         return MatrixBase.__getitem__(self, (i,j))
 
-    def as_mutable(self):
-        return MutableMatrix(self)
-
-    def as_explicit(self):
-        return self
-
-    def equals(self, other):
-        return MatrixBase.equals(self, other)
+    as_mutable = MatrixBase.as_mutable
+    equals = MatrixBase.equals

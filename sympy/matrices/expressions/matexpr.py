@@ -134,15 +134,57 @@ class MatrixExpr(Expr):
         raise TypeError("Only elementwise indexing currently supported")
 
     def as_explicit(self):
+        """
+        Returns a dense Matrix with elements represented explicitly
+
+        Returns an object of type ImmutableMatrix.
+
+        See Also
+        --------
+        as_mutable: returns MutableMatrix type
+        >>> from sympy import Identity
+        >>> I = Identity(3)
+        >>> I
+        I
+        >>> I.as_explicit()
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+        """
         from sympy.matrices.immutable_matrix import ImmutableMatrix
         return ImmutableMatrix([[    self[i,j]
                             for j in range(self.m)]
                             for i in range(self.n)])
 
     def as_mutable(self):
+        """
+        Returns a dense Matrix with elements represented explicitly
+
+        Returns an object of type MutableMatrix.
+
+        See Also
+        --------
+        as_explicit: returns ImmutableMatrix
+        >>> from sympy import Identity
+        >>> I = Identity(3)
+        >>> I
+        I
+        >>> I.as_mutable()
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+        """
         return self.as_explicit().as_mutable()
 
     def equals(self, other):
+        """
+        Test elementwise equality between matrices, potentially of different
+        types
+
+        >>> from sympy import Identity, eye
+        >>> Identity(3).equals(eye(3))
+        True
+        """
         return self.as_explicit().equals(other)
 
 class MatrixSymbol(MatrixExpr, Symbol):

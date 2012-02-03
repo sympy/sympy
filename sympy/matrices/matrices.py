@@ -297,11 +297,25 @@ class MatrixBase(object):
         raise NotImplementedError()
 
     def as_mutable(self):
-        return MutableMatrix(self.rows, self.cols, self[:,:].mat)
+        """
+        Returns a Mutable version of this Matrix
+
+        >>> from sympy import ImmutableMatrix
+        >>> X = ImmutableMatrix([[1,2],[3,4]])
+        >>> Y = X.as_mutable()
+        >>> Y[1,1] = 5 # Can set values in Y
+        >>> Y
+        [1, 2]
+        [3, 5]
+        """
+        return MutableMatrix(self.rows, self.cols, self.mat)
 
     def as_immutable(self):
+        """
+        Returns an Immutable version of this Matrix
+        """
         from immutable_matrix import ImmutableMatrix
-        return ImmutableMatrix(self.rows, self.cols, self[:,:].mat)
+        return ImmutableMatrix(self.rows, self.cols, self.mat)
 
     def __array__(self):
         return matrix2numpy(self)
@@ -3239,7 +3253,7 @@ class MutableMatrix(MatrixBase):
         self = object.__new__(cls)
         self.rows = rows
         self.cols = cols
-        self.mat = mat
+        self.mat = list(mat) # create a shallow copy
         return self
 
     def __setitem__(self, key, value):
