@@ -124,10 +124,7 @@ def test_dependent_finite():
     XX, YY = Given(Tuple(X, Y), X+Y>5) # Create a dependency
     assert dependent(XX, YY)
 
-@XFAIL
 def test_normality():
-    # I believe this is due to delta function oddness
-    # Issue 2630
     X, Y = Normal(0,1), Normal(0,1)
     z = Symbol('z', real=True)
     x, density = Density(X-Y, Eq(X+Y, z))
