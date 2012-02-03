@@ -73,29 +73,6 @@ def _literal_float(f):
     pat = r"[-+]?((\d*\.\d+)|(\d+\.?))(eE[-+]?\d+)?"
     return bool(regex.match(pat, f))
 
-def _exact_decimal(f):
-    """Return True if the decimal represented by f (a float or Float)
-    can be represented exactly in binary.
-
-    A decimal fraction can be represented exactly in binary if its
-    denominator is a power of 2. Whether it is or not is tested by
-    seeing if the log, base 2, of the fraction is an integer.
-    """
-    fin = f
-    f = float(f)
-    if isinstance(fin, Float) and fin._prec > 53:
-        # a high precision float may truncate to an exact float, so watch
-        # out for that by rebuilding the Float from the str repr
-        rebuilt = Float._new(Float(str(f))._mpf_, fin._prec)
-        if fin != rebuilt:
-            return False
-    n, f = divmod(f, 1)
-    if f:
-        q = 2**(1 - math.floor(math.log(f)/_LOG2))
-        p = f*q
-        return p == int(p)
-    return True
-
 # (a,b) -> gcd(a,b)
 _gcdcache = {}
 
@@ -446,17 +423,29 @@ class Float(Number):
     >>> Float('0.3', 20)
     0.30000000000000000000
 
-    You cannot increase the precision of an existing Float using Float:
+    Although you can increase the precision of an existing Float using Float
+    it will not increase the accuracy -- the underlying value is not changed:
 
-    >>> Float(_, 22)
-    Traceback (most recent call last):
+    >>> def show(f): # binary rep of Float
+    ...     from sympy import Mul, Pow
+    ...     s, m, e, b = f._mpf_
+    ...     v = Mul(m, Pow(2, e, evaluate=False), evaluate=False)
+    ...     print '%s at prec=%s' % (v, f._prec)
     ...
-    ValueError: The Float precision cannot be increased.
+    >>> t = Float('0.3', 3)
+    >>> show(t)
+    4915/2**14 at prec=13
+    >>> show(Float(t, 20)) # higher prec, not higher accuracy
+    4915/2**14 at prec=70
+    >>> show(Float(t, 2)) # lower prec
+    307/2**10 at prec=10
 
-    But if you can use evalf to do so:
+    The same thing happens when evalf is used on a Float:
 
-    >>> _.evalf(22)
-    0.2999999999999999999998
+    >>> show(t.evalf(20))
+    4915/2**14 at prec=70
+    >>> show(t.evalf(2))
+    307/2**10 at prec=10
 
     Finally, Floats can be instantiated with an mpf tuple (n, c, p) to
     produce the number (-1)**n * c * 2**p:
@@ -566,10 +555,9 @@ class Float(Number):
                     _mpf_ = mpmath.mpf(
                     S.NegativeOne ** num[0] * num[1] * 2 ** num[2])._mpf_
         elif isinstance(num, Float):
-            if prec > num._prec and not _exact_decimal(num):
-                raise ValueError("The Float precision cannot be increased.")
-            # renormalize at lower prec
-            _mpf_ = mpf_norm(num._mpf_, prec)
+            _mpf_ = num._mpf_
+            if prec < num._prec:
+                _mpf_ = mpf_norm(_mpf_, prec)
         else:
             _mpf_ = mpmath.mpf(num)._mpf_
 

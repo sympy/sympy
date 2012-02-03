@@ -375,50 +375,58 @@ on the numbers involved with the calculation) may not all be significant.
 
 The first issue to keep in mind is how the Float is created: it is created
 with a value and a precision. The precision indicates how precise of a value
-to use when that Float (or an expression it appears in) is evaluate.
+to use when that Float (or an expression it appears in) is evaluated.
 
 The values can be given as strings, integers, or Rationals. We do so below
 with a few different values:
 
-    >>> inti, i, s, r = [Float(j, 3) for j in (100, '100', '0.1', Rational(1, 7))]
-    >>> for f in [inti, i, s, r]:
-    ...     print f
-    100
+    - integer input always returns an exact Integer and precision is ignored
+    >>> Float(1234, 3)
+    1234
+    
+    - strings are interpreted as exact and always result in a Float
+    >>> Float('100', 3)
     100.
-    0.100
+    
+    >>> s, r = [Float(j, 3) for j in ('0.25', Rational(1, 7))]
+    >>> for f in [s, r]:
+    ...     print f
+    0.250
     0.143
 
-First, notice that if you apply Float to an integer you will receive an Integer.
-You must sent an integer as a string if you want a Float representation of it.
 Next, notice that each of those values looks correct to 3 digits. But if we try
 to evaluate them to 20 digits, a difference will become apparent:
 
-    The 0.1 (with precision of 3) and 1/7 cannot be represented accurately
-    too far past those first 3 digits, while the 100 can:
+    The 0.25 (with precision of 3) represents a number that has a non-repeating
+    binary decimal; 1/7 is repeating in binary and decimal -- it cannot be
+    represented accurately too far past those first 3 digits (the correct
+    decimal is a repeating 142857):
 
     >>> s.n(20)
-    0.10000610351562500000
+    0.25000000000000000000
     >>> r.n(20)
     0.14285278320312500000
-    >>> i.n(20)
-    100.00000000000000000
+    
+    It is important to realize that although a Float is being displayed in
+    decimal at aritrary precision, it is actually stored in binary. Once the
+    Float is created, its binary information is set at the given precision.
+    The accuracy of that value cannot be subsequently changed; so 1/7, at a
+    precision of 3 digits, can be padded with binary zeros, but these will
+    not make it a more accurate value of 1/7.
 
-If the inexact, low-precision numbers are involved in a calculation with
+If inexact, low-precision numbers are involved in a calculation with
 with higher precision values, the evalf engine will increase the precision
 of the low precision values and inexact results will be obtained. This is
 feature of calculations with limited precision:
 
-    >>> from sympy.core.evalf import evalf_subs
-    >>> x.subs(evalf_subs(34, {x: s})) # used by evalf to incr. precision
-    0.100006104
-    >>> s + _
-    0.200012207
+    >>> Float('0.1', 10) + Float('0.1', 3)
+    0.2000061035
 
 Although the evalf engine tried to maintain 10 digits of precision (since
-that was the highest precision represented) the 4-digit precision of the
-``s`` keeps more than a few digits past those 4 from being obtained. So
-not all the digits you see are significant. evalf doesn't try to keep
-track of the number of significant digits.
+that was the highest precision represented) the 3-digit precision used
+limits the accuracy to about 4 digits -- not all the digits you see
+are significant. evalf doesn't try to keep track of the number of
+significant digits.
 
 That very simple expression involving the addition of two numbers with
 different precisions will hopefully be instructive in helping you
