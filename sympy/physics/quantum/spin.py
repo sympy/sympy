@@ -937,19 +937,28 @@ class WignerD(Expr):
     """Wigner-D function
 
     The Wigner D-function gives the matrix elements of the rotation
-    operator in the jm-representation. For the Euler angles alpha, beta,
-    gamma, the D-function is defined such that:
-    ``<j,m| R(alpha,beta,gamma) |j',m'> = delta_jj' * D(j, m, m', alpha, beta, gamma)``
+    operator in the jm-representation. For the Euler angles `\\alpha`,
+    `\\beta`, `\gamma`, the D-function is defined such that:
+
+    .. math ::
+        <j,m| \mathcal{R}(\\alpha, \\beta, \gamma ) |j',m'> = \delta_{jj'} D(j, m, m', \\alpha, \\beta, \gamma)
+
     Where the rotation operator is as defined by the Rotation class [1]_.
 
     The Wigner D-function defined in this way gives:
-    ``D(j, m, m', alpha, beta, gamma) = exp(-i*m*alpha) * d(j, m, m', beta) * exp(-i*m'*gamma)``
+
+    .. math ::
+        D(j, m, m', \\alpha, \\beta, \gamma) = e^{-i m \\alpha} d(j, m, m', \\beta) e^{-i m' \gamma}
+
     Where d is the Wigner small-d function, which is given by Rotation.d.
 
     The Wigner small-d function gives the component of the Wigner
     D-function that is determined by the second Euler angle. That is the
     Wigner D-function is:
-    ``D(j, m, m', alpha, beta, gamma) = exp(-i*m*alpha) * d(j, m, m', beta) * exp(-i*m'*gamma)``
+
+    .. math ::
+        D(j, m, m', \\alpha, \\beta, \gamma) = e^{-i m \\alpha} d(j, m, m', \\beta) e^{-i m' \gamma}
+
     Where d is the small-d function. The Wigner D-function is given by
     Rotation.D.
 
@@ -1839,10 +1848,11 @@ class JzKetCoupled(CoupledSpinState, Ket):
     are the total angular momentum quantum numbers, as used for normal states
     (e.g. JzKet).
 
-    The other required parameter in ``jn``, which is a tuple defining the j_n
+    The other required parameter in ``jn``, which is a tuple defining the `j_n`
     angular momentum quantum numbers of the product spaces. So for example, if
     a state represented the coupling of the product basis state
-    ``|j1,m1>x|j2,m2>``, the ``jn`` for this state would be (j1,j2).
+    `|j_1,m_1\\rangle\\times|j_2,m_2\\rangle`, the ``jn`` for this state would be
+    ``(j1,j2)``.
 
     The final option is ``jcoupling``, which is used to define how the spaces
     specified by ``jn`` are coupled, which includes both the order these spaces
@@ -1853,25 +1863,27 @@ class JzKetCoupled(CoupledSpinState, Ket):
     then there must be N-1 sublists. Each of these sublists making up the
     ``jcoupling`` parameter have length 3. The first two elements are the
     indicies of the product spaces that are considered to be coupled together.
-    For example, if we want to couple j_1 and j_4, the indicies would be 1 and
-    4. If a state has already been coupled, it is referenced by the smallest
-    index that is coupled, so if j_2 and j_4 has already been coupled to some
-    j24, then this value can be coupled by referencing it with index 2. The
-    final element of the sublist is the quantum number of the coupled state. So
-    putting everything together, into a valid sublist for ``jcoupling``, if j_1
-    and j_2 are coupled to an angular momentum space with quantum number j12,
-    the sublist would be (1,2,j12), N-1 of these sublists are used in the list
-    for ``jcoupling``.
+    For example, if we want to couple `j_1` and `j_4`, the indicies would be 1
+    and 4. If a state has already been coupled, it is referenced by the
+    smallest index that is coupled, so if `j_2` and `j_4` has already been
+    coupled to some `j_{24}`, then this value can be coupled by referencing it
+    with index 2. The final element of the sublist is the quantum number of the
+    coupled state. So putting everything together, into a valid sublist for
+    ``jcoupling``, if `j_1` and `j_2` are coupled to an angular momentum space
+    with quantum number `j_{12}` with the value ``j12``, the sublist would be
+    ``(1,2,j12)``, N-1 of these sublists are used in the list for
+    ``jcoupling``.
 
     Note the ``jcoupling`` parameter is optional, if it is not specified, the
     default coupling is taken. This default value is to coupled the spaces in
     order and take the quantum number of the coupling to be the maximum value.
-    For example, if the spin spaces are j1,j2,j3,j4, then the default coupling
-    couples j1 and j2 to j12=j1+j2, then, j12 and j3 are coupled to
-    j123=j12+j3, and finally j123 and j4 to j1234=j123+j4. The jcoupling value
-    that would correspond to this is:
+    For example, if the spin spaces are `j_1`, `j_2`, `j_3`, `j_4`, then the
+    default coupling couples `j_1` and `j_2` to `j_{12}=j_1+j_2`, then,
+    `j_{12}` and `j_3` are coupled to `j_{123}=j_{12}+j_3`, and finally
+    `j_{123}` and `j_4` to `j=j_{123}+j_4`. The jcoupling value that would
+    correspond to this is:
 
-    ``((1,2,j1+j2),(1,3,j1+j2+j3))``
+        ``((1,2,j1+j2),(1,3,j1+j2+j3))``
 
     Parameters
     ==========

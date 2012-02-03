@@ -154,7 +154,9 @@ class CG(Wigner3j):
     two systems. The coefficients give the expansion of a coupled total angular
     momentum state and an uncoupled tensor product state. The Clebsch-Gordan
     coefficients are defined as [1]_:
-    CG(j1,m1,j2,m2,j3,m3) = <j1,m1; j2,m2 | j3,m3>
+
+    .. math ::
+        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \langle j_1,m_1;j_2,m_2 | j_3,m_3\\rangle
 
     Parameters
     ==========
