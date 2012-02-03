@@ -370,14 +370,14 @@ def rsolve_ratio(coeffs, f, n, **hints):
            in: T. Levelt, ed., Proc. ISSAC '95, ACM Press, New York,
            1995, 285-289
 
-    Examples
-    ========
+        Examples
+        ========
 
-    >>> from sympy.abc import x
-    >>> from sympy.solvers.recurr import rsolve_ratio
-    >>> rsolve_ratio([ - 2*x**3 + x**2 + 2*x - 1, 2*x**3 + x**2 - 6*x,
-    ... - 2*x**3 - 11*x**2 - 18*x - 9, 2*x**3 + 13*x**2 + 22*x + 8], 0, x)
-    C2*(2*x - 3)/(2*(x**2 - 1))
+        >>> from sympy.abc import x
+        >>> from sympy.solvers.recurr import rsolve_ratio
+        >>> rsolve_ratio([ - 2*x**3 + x**2 + 2*x - 1, 2*x**3 + x**2 - 6*x,
+        ... - 2*x**3 - 11*x**2 - 18*x - 9, 2*x**3 + 13*x**2 + 22*x + 8], 0, x)
+        C2*(2*x - 3)/(2*(x**2 - 1))
 
     """
     f = sympify(f)
