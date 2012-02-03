@@ -287,7 +287,6 @@ def test_Float():
     # cannot have precision greater than 15
     assert Float(.125, 22) == .125
     assert Float(2.0, 22) == 2
-    raises(ValueError, 'Float(.1, 22)')
     raises(ValueError, 'Float(Float(.1), 22)')
     assert float(Float('.12500000000000001', '')) == .125
     raises(ValueError, "Float(Float(.12500000000000001, ''), 22)")

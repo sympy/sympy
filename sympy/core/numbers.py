@@ -410,13 +410,6 @@ class Float(Number):
 
     >>> approx, exact = Float(.1, 1), Float(.125, 1)
 
-    Float cannot be used to obtain a new Float at a higher precision:
-
-    >>> Float(approx, 20)
-    Traceback (most recent call last):
-    ...
-    ValueError: The Float precision cannot be increased.
-
     For calculation purposes, evalf needs to be able to change the precision
     but this will not increase the accuracy of the inexact value. The
     following is the most accurate 5-digit approximation of a value of 0.1
@@ -426,16 +419,47 @@ class Float(Number):
     0.099609
 
     By contrast, 0.125 is exact in binary (as it is in base 10) and so it
-    can be re-Floated or evalf'ed to arbitrary precision:
+    can be passed to Float or evalf to obtain an arbitrary precision with
+    matching accuracy:
 
     >>> Float(exact, 5)
     0.12500
     >>> exact.evalf(20)
     0.12500000000000000000
 
+    Trying to make a high-precision Float from a float is not disallowed,
+    but one must keep in mind that the *underlying float* (not the apparent
+    decimal value) is being obtained with high precision. For example, 0.3
+    does not have a finite binary representation. The closest rational is
+    the fraction 5404319552844595/2**54. So if you try to obtain a Float of
+    0.3 to 20 digits of precision you will not see the same thing as 0.3
+    followed by 19 zeros:
 
-    Finally, Floats can be instantiated with an mpf tuple (n, c, p) to produce
-    the number (-1)**n * c * 2**p:
+    >>> Float(0.3, 20)
+    0.29999999999999998890
+
+    If you want a 20-digit value of the decimal 0.3 (not the floating point
+    approximation of 0.3) you should send the 0.3 as a string. The underlying
+    representation is still binary but a higher precision than Python's float
+    is used:
+
+    >>> Float('0.3', 20)
+    0.30000000000000000000
+
+    You cannot increase the precision of an existing Float using Float:
+
+    >>> Float(_, 22)
+    Traceback (most recent call last):
+    ...
+    ValueError: The Float precision cannot be increased.
+
+    But if you can use evalf to do so:
+
+    >>> _.evalf(22)
+    0.2999999999999999999998
+
+    Finally, Floats can be instantiated with an mpf tuple (n, c, p) to
+    produce the number (-1)**n * c * 2**p:
 
     >>> n, c, p = 1, 5, 0
     >>> (-1)**n*c*2**p
@@ -522,11 +546,6 @@ class Float(Number):
             return Integer(num)
 
         if isinstance(num, float):
-            if dps > 15:
-                # check to see if it is an exact float
-                if not _exact_decimal(num):
-                    # "...refuse the temptation to guess"
-                    raise ValueError('float has insufficient precision; send as Float("%s", %s)?' % (num, dps))
             _mpf_ = mlib.from_float(num, prec, rnd)
         elif isinstance(num, Rational):
             _mpf_ = mlib.from_rational(num.p, num.q, prec, rnd)

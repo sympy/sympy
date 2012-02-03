@@ -85,9 +85,7 @@ can be created with a custom precision as second argument:
     >>> Float(0.125, 30)
     0.125000000000000000000000000000
     >>> Float(0.1, 30)
-    Traceback (most recent call last):
-    ...
-    ValueError: float has insufficient precision; send as Float("0.1", 30)?
+    0.100000000000000005551115123126
 
 As the last example shows, some Python floats are only accurate to about 15
 digits as inputs, while others (those that have a denominator that is a
@@ -106,9 +104,15 @@ or ``evalf`` a ``Rational``:
 The precision of a number determines 1) the precision to use when performing
 arithmetic with the number, and 2) the number of digits to display when printing
 the number. When two numbers with different precision are used together in an
-arithmetic operation, the higher of the precisions is used for the result. Note
-that precision therefore cannot be used as a model of error propagation or
-significance arithmetic; rather, this scheme is designed to ensure stability of
+arithmetic operation, the higher of the precisions is used for the result. The
+product of 0.1 +/- 0.001 and 3.1415 +/- 0.0001 has an uncertainty of about 0.003
+and yet 5 digits of precision are shown.
+
+    >>> Float(0.1, 3)*Float(3.1415, 5)
+    0.31417
+
+So the displayed precision should not be used as a model of error propagation or
+significance arithmetic; rather, this scheme is employed to ensure stability of
 numerical algorithms.
 
 ``N`` and ``evalf`` can be used to change the precision of existing
