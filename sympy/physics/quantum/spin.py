@@ -749,7 +749,7 @@ class Rotation(UnitaryOperator):
     axes are rotated first about the z-axis, giving the new x'-y'-z' axes. Then
     this new coordinate system is rotated about the new y'-axis, giving new
     x''-y''-z'' axes. Then this new coordinate system is rotated about the
-    z''-axis. Conventions follow those laid out in [1].
+    z''-axis. Conventions follow those laid out in [1]_.
 
     Parameters
     ==========
@@ -790,7 +790,7 @@ class Rotation(UnitaryOperator):
     References
     ==========
 
-    [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
+    .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
 
     @classmethod
@@ -940,7 +940,7 @@ class WignerD(Expr):
     operator in the jm-representation. For the Euler angles alpha, beta,
     gamma, the D-function is defined such that:
     ``<j,m| R(alpha,beta,gamma) |j',m'> = delta_jj' * D(j, m, m', alpha, beta, gamma)``
-    Where the rotation operator is as defined by the Rotation class.
+    Where the rotation operator is as defined by the Rotation class [1]_.
 
     The Wigner D-function defined in this way gives:
     ``D(j, m, m', alpha, beta, gamma) = exp(-i*m*alpha) * d(j, m, m', beta) * exp(-i*m'*gamma)``
@@ -1001,7 +1001,7 @@ class WignerD(Expr):
     References
     ==========
 
-    [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
+    .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
 
     is_commutative = True
