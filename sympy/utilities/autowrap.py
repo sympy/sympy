@@ -49,7 +49,7 @@ When is this useful?
        binaries immediately from within SymPy.
 
     4) To create customized ufuncs for use with numpy arrays.
-       See :ref:`ufuncify`
+       See *ufuncify*.
 
 When is this module NOT the best approach?
 
