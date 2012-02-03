@@ -2643,26 +2643,6 @@ def simplify(expr, ratio=1.7, measure=count_ops):
         >>> count_ops(simplify(root, ratio=oo)) > count_ops(root)
         True
 
-    Another issue to be aware of if using ``ratio=oo`` is that simplification
-    of a denominator containing a sqrt may lead to an expression which is not
-    strictly valid. If ``ratio`` is not changed, this transformation doesn't
-    (usually) happen since it would lead to a longer expression:
-
-        >>> from sympy.abc import a, b, c
-        >>> from sympy import sqrt
-        >>> eq = 1/(a + b*sqrt(c))
-        >>> simplify(eq) == eq
-        True
-        >>> forced = simplify(eq, ratio=oo)
-        >>> forced == eq
-        False
-        >>> eq.subs(a, b*sqrt(c))
-        1/(2*b*sqrt(c))
-        >>> forced.subs(a, b*sqrt(c))
-        nan
-        >>> forced
-        (a - b*sqrt(c))/(a**2 - b**2*c)
-
     Note that the shortest expression is not necessary the simplest, so
     setting ``ratio`` to 1 may not be a good idea.
     Heuristically, the default value ``ratio=1.7`` seems like a reasonable
@@ -2779,7 +2759,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     expr = powsimp(expr, combine='exp', deep=True)
     numer, denom = expr.as_numer_denom()
     if denom.is_Add:
-        n, d = fraction(radsimp(1/denom, max_terms=2))
+        n, d = fraction(radsimp(1/denom, symbolic=False, max_terms=2))
         if n is not S.One:
             expr = (numer*n).expand()/d
 
