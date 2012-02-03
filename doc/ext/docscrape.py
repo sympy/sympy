@@ -114,7 +114,6 @@ class NumpyDocString(object):
             'Syntax':[],
             'Yields':[],
             'Return':[],
-            'Notes on Hint Names':[]
             }
 
         self._parse()
