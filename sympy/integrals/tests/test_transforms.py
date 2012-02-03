@@ -1,6 +1,8 @@
 from sympy.integrals.transforms import (mellin_transform,
     inverse_mellin_transform, laplace_transform, inverse_laplace_transform,
-    fourier_transform, inverse_fourier_transform)
+    fourier_transform, inverse_fourier_transform,
+    sine_transform, inverse_sine_transform,
+    cosine_transform, inverse_cosine_transform)
 from sympy import (gamma, exp, oo, Heaviside, symbols, re, factorial, pi,
                    cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
                    EulerGamma, erf, besselj, bessely, besseli, besselk,
@@ -539,3 +541,26 @@ def test_fourier_transform():
     # TODO besselj(n, x), n an integer > 0 actually can be done...
 
     # TODO are there other common transforms (no distributions!)?
+
+def test_sine_transform():
+    from sympy import sinh, cosh, EulerGamma
+
+    t = symbols("t")
+    w = symbols("w")
+    a = symbols("a")
+
+    assert sine_transform(1/sqrt(t), t, w) == 1/sqrt(w)
+    assert inverse_sine_transform(1/sqrt(w), w, t) == 1/sqrt(t)
+
+    assert sine_transform((1/sqrt(t))**3, t, w) == sqrt(w)*gamma(S(1)/4)/(2*gamma(S(5)/4))
+
+    assert sine_transform(t**(-a), t, w) == 2**(-a + S(1)/2)*w**(a - 1)*gamma(-a/2 + 1)/gamma(a/2 + S(1)/2)
+    assert inverse_sine_transform(2**(-a + S(1)/2)*w**(a - 1)*gamma(-a/2 + 1)/gamma(a/2 + S(1)/2), w, t) == t**(-a)
+
+    assert sine_transform(exp(-a*t), t, w) == sqrt(2)*w/(sqrt(pi)*(a**2 + w**2))
+    assert inverse_sine_transform(sqrt(2)*w/(sqrt(pi)*(a**2 + w**2)), w, t) == -sinh(a*t) + cosh(a*t)
+
+    assert sine_transform(log(t)/t, t, w) == sqrt(2)*sqrt(pi)*(-log(w**2) - 2*EulerGamma)/4
+
+    assert sine_transform(t*exp(-a*t**2), t, w) == sqrt(2)*w*exp(-w**2/(4*a))/(4*a**(S(3)/2))
+    assert inverse_sine_transform(sqrt(2)*w*exp(-w**2/(4*a))/(4*a**(S(3)/2)), w, t) == t*exp(-a*t**2)
