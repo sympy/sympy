@@ -258,7 +258,7 @@ class GreaterThan(_Greater):
     Extended Summary
     ================
 
-    The *Than classes represent inequal relationships, where the left-hand side
+    The ``Than`` classes represent inequal relationships, where the left-hand side
     is generally bigger or smaller than the right-hand side.  For example, the
     GreaterThan class represents an inequal relationship where the left-hand
     side is at least as big as the right side, if not bigger.  In mathematical
@@ -266,7 +266,7 @@ class GreaterThan(_Greater):
 
     lhs >= rhs
 
-    In total, there are four *Than classes, to represent the four inequalities:
+    In total, there are four ``Than`` classes, to represent the four inequalities:
 
     +-----------------+--------+
     |Class Name       | Symbol |
@@ -294,7 +294,7 @@ class GreaterThan(_Greater):
     |StrictLessThan(lhs, rhs)    |   lhs <  rhs    |
     +----------------------------+-----------------+
 
-    In addition to the normal .lhs and .rhs of Relations, *Than inequality
+    In addition to the normal .lhs and .rhs of Relations, ``Than`` inequality
     objects also have the .lts and .gts properties, which represent the "less
     than side" and "greater than side" of the operator.  Use of .lts and .gts in
     an algorithm rather than .lhs and .rhs as an assumption of inequality
@@ -344,7 +344,7 @@ class GreaterThan(_Greater):
     >>> e1 == e2
     True
 
-    However, it is also perfectly valid to instantiate a *Than class less
+    However, it is also perfectly valid to instantiate a ``Than`` class less
     succinctly and less conviently:
 
     >>> rels = Rel(x, 1, '>='), Relational(x, 1, '>='), GreaterThan(x, 1)
@@ -382,7 +382,7 @@ class GreaterThan(_Greater):
     statement (1 < x), Python will first recognize the number 1 as a native
     number, and then that x is *not* a native number.  At this point, because a
     native Python number does not know how to compare itself with a SymPy object
-    Python will try the reflective operation (x > 1).  Unfortunately, there is
+    Python will try the reflective operation, (x > 1).  Unfortunately, there is
     no way available to SymPy to recognize this has happened, so the statement
     (1 < x) will turn silently into (x > 1).
 
@@ -451,7 +451,9 @@ class GreaterThan(_Greater):
     point.  For the time being (circa Jan 2012), use And to create chained
     inequalities.
 
-    ..  [1] This implementation detail is that Python provides no reliable
+    .. [1]
+
+    This implementation detail is that Python provides no reliable
     method to determine that a chained inequality is being built.  Chained
     comparison operators are evaluated pairwise, using "and" logic (see
     http://docs.python.org/reference/expressions.html#notin).  This is done in
@@ -459,7 +461,7 @@ class GreaterThan(_Greater):
     and the comparison can short-circuit.  For example, ``1 > 2 > 3`` is
     evaluated by Python as ``(1 > 2) and (2 > 3)``.  The ``and`` operator
     coerces each side into a bool, returning the object itself when it
-    short-circuits.  Currently, the bool of the *Than operators will give True
+    short-circuits.  Currently, the bool of the ``Than`` operators will give True
     or False arbitrarily.  Thus, if we were to compute ``x > y > z``, with
     ``x``, ``y``, and ``z`` being Symbols, Python converts the statement
     (roughly) into these steps:
