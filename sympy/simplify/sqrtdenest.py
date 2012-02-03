@@ -206,7 +206,10 @@ def _sqrtdenest0(expr):
     return expr
 
 def _sqrtdenest_rec(expr):
-    """Helper that denests the square root of five or more surds.
+    """Helper that denests the square root of three or more surds.
+
+    It returns the denested expression; if it cannot be denested it
+    throws SqrtdenestStopIteration
 
     Algorithm: expr.base is in the extension Q_m = Q(sqrt(r_1),..,sqrt(r_k));
     split expr.base = a + b*sqrt(r_k), where `a` and `b` are on
@@ -218,12 +221,8 @@ def _sqrtdenest_rec(expr):
     ========
     >>> from sympy import sqrt
     >>> from sympy.simplify.sqrtdenest import _sqrtdenest_rec
-    >>> z= sqrt(-4*sqrt(10) + 4*sqrt(2) + 8*sqrt(3) + 16*sqrt(5) + 68)
-    >>> _sqrtdenest_rec(z)
-    -2*sqrt(6) + sqrt(2) + sqrt(3) + sqrt(5) + 3 + sqrt(10) + sqrt(15)
-    >>> z= sqrt(-8*sqrt(10)-4*sqrt(15)+4*sqrt(3)+8*sqrt(6)+12*sqrt(5)+60)
-    >>> _sqrtdenest_rec(z)
-    -2*sqrt(6) + 1 + sqrt(2) + sqrt(3) + sqrt(5) + sqrt(10) + sqrt(15)
+    >>> _sqrtdenest_rec(sqrt(-72*sqrt(2) + 158*sqrt(5) + 498))
+    -sqrt(10) + sqrt(2) + 9 + 9*sqrt(5)
     >>> w=-6*sqrt(55)-6*sqrt(35)-2*sqrt(22)-2*sqrt(14)+2*sqrt(77)+6*sqrt(10)+65
     >>> _sqrtdenest_rec(sqrt(w))
     -sqrt(11) - sqrt(7) + sqrt(2) + 3*sqrt(5)
@@ -241,11 +240,7 @@ def _sqrtdenest_rec(expr):
             a1, b1 = b1, a1
         c2_1 = _mexpand(a1**2 - b1**2)
         c_1 = _sqrtdenest_rec(sqrt(c2_1))
-        if sqrt_depth(c_1) > 1:
-            raise SqrtdenestStopIteration
         d_1 = _sqrtdenest_rec(sqrt(a1 + c_1))
-        if sqrt_depth(d_1) > 1:
-            raise SqrtdenestStopIteration
         num, den = rad_rationalize(b1, d_1)
         c = _mexpand(d_1/sqrt(2) + num/(den*sqrt(2)))
     else:
