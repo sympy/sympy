@@ -17,7 +17,7 @@ y[i] == A[i, j]*x[j]
 
 Because the code printers treat Indexed objects with repeated indices as a
 summation, the above equality instance will be translated to low-level code for
-a matrix vector product.  This is how you tell Sympy to generate the code,
+a matrix vector product.  This is how you tell SymPy to generate the code,
 compile it and wrap it as a python function:
 
 >>> matvec = autowrap(instruction)                 # doctest: +SKIP

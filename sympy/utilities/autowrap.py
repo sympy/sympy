@@ -17,8 +17,8 @@ performance with a one-button user interface, i.e.
     -1.0
 
 The callable returned from autowrap() is a binary python function, not a
-Sympy object.  If it is desired to use the compiled function in symbolic
-expressions, it is better to use binary_function() which returns a Sympy
+SymPy object.  If it is desired to use the compiled function in symbolic
+expressions, it is better to use binary_function() which returns a SymPy
 Function object.  The binary callable is attached as the _imp_ attribute and
 invoked when a numerical evaluation is requested with evalf(), or with
 lambdify().
@@ -157,7 +157,7 @@ class CodeWrapper:
 class DummyWrapper(CodeWrapper):
     """Class used for testing independent of backends """
 
-    template = """# dummy module for testing of Sympy
+    template = """# dummy module for testing of SymPy
 def %(name)s():
     return "%(expr)s"
 %(name)s.args = "%(args)s"
@@ -391,7 +391,7 @@ def binary_function(symfunc, expr, **kwargs):
     """Returns a sympy function with expr as binary implementation
 
     This is a convenience function that automates the steps needed to
-    autowrap the Sympy expression and attaching it to a Function object
+    autowrap the SymPy expression and attaching it to a Function object
     with implemented_function().
 
     >>> from sympy.abc import x, y, z
@@ -417,7 +417,7 @@ def ufuncify(args, expr, **kwargs):
         for the ufunc-like function.
 
     ``expr``
-        A Sympy expression that defines the element wise operation
+        A SymPy expression that defines the element wise operation
 
     ``kwargs``
         Optional keyword arguments are forwarded to autowrap().

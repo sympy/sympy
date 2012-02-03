@@ -62,7 +62,7 @@ class Symbol(AtomicExpr, Boolean):
         if 'dummy' in assumptions:
             warnings.warn(
                     "\nThe syntax Symbol('x', dummy=True) is deprecated and will"
-                    "\nbe dropped in a future version of Sympy. Please use Dummy()"
+                    "\nbe dropped in a future version of SymPy. Please use Dummy()"
                     "\nor symbols(..., cls=Dummy) to create dummy symbols.",
                     SymPyDeprecationWarning)
             if assumptions.pop('dummy'):

@@ -1,7 +1,7 @@
 .. _extended-latex:
 
 **********************************
-  Extended LaTeXModule for Sympy  
+  Extended LaTeXModule for SymPy
 **********************************
 
 :Author: Alan Bromborsky

@@ -1,5 +1,5 @@
 **************************************
-  Geometric Algebra Module for Sympy
+  Geometric Algebra Module for SymPy
 **************************************
 
 :Author: Alan Bromborsky
@@ -1314,7 +1314,7 @@ Basic Multivector Class Functions
    Set the multivector coefficient of index *(grade,base)* to *value*.
 
 
-Sympy Functions Applied Inplace to Multivector Coefficients
+SymPy Functions Applied Inplace to Multivector Coefficients
 -----------------------------------------------------------
 
 All the following fuctions belong to the :class:`MV` class and apply the

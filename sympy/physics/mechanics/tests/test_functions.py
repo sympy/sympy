@@ -167,7 +167,7 @@ def test_express():
 
     """
     These don't really test our code, they instead test the auto simplification
-    (or lack thereof) of Sympy.
+    (or lack thereof) of SymPy.
     assert N.x == express((
             (cos(q1)*cos(q3)-sin(q1)*sin(q2)*sin(q3))*C.x -
             sin(q1)*cos(q2)*C.y +

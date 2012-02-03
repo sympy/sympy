@@ -13,7 +13,7 @@ unsurmountable issues that can only be tackled with dedicated code generator:
   generate just one string. This code generator can be extended to support
   .pyf files for f2py.
 
-- Sympy functions are not concerned with programming-technical issues, such
+- SymPy functions are not concerned with programming-technical issues, such
   as input, output and input-output arguments. Other examples are contiguous
   or non-contiguous arrays, including headers of other libraries such as gsl
   or others.

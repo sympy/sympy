@@ -149,7 +149,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     >>> f(0, 5)
     0.0
 
-    If not specified differently by the user, Sympy functions are replaced as
+    If not specified differently by the user, SymPy functions are replaced as
     far as possible by either python-math, numpy (if available) or mpmath
     functions - exactly in this order.
     To change this behavior, the "modules" argument can be used.

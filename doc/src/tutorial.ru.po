@@ -88,7 +88,7 @@ msgstr ""
 
 #: ../../src/tutorial.txt:126
 # 88460153b0404c1c80d7d9fef1b9d530
-msgid "Sympy has three built-in numeric types: Float, Rational and Integer."
+msgid "SymPy has three built-in numeric types: Float, Rational and Integer."
 msgstr ""
 
 #: ../../src/tutorial.txt:128
