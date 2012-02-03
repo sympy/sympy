@@ -723,3 +723,8 @@ def test_issue1388():
 def test_issue_1116() :
     x = Symbol("x")
     assert integrate(1/(x**2), (x, -1, 1)) == oo
+
+def test_issue_1301():
+    assert integrate((x**n)*log(x), x) == \
+    n*x*x**n*log(x)/(n**2 + 2*n + 1) + x*x**n*log(x)/(n**2 + 2*n + 1) - \
+    x*x**n/(n**2 + 2*n + 1)
