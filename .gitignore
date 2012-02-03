@@ -48,6 +48,9 @@ covhtml/
 doc/_build/
 doc/sphinx/
 
+# Internationalization files (cd doc; make htmli18n)
+doc/src/i18n/
+
 # Mac OS X Junk
 .DS_Store
 
