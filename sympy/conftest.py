@@ -1,8 +1,7 @@
-# The py library is part of the "py.test" testing suite (python-codespeak-lib on
-# Debian), see http://codespeak.net/py/
+import sys
+sys._running_pytest = True
 
-import py
-
-#this makes py.test put sympy directory into the sys.path, so that we can
-#"import sympy" from tests nicely
-rootdir = py.magic.autopath().dirpath()
+def pytest_terminal_summary(terminalreporter):
+    if (terminalreporter.stats.get('error', None) or
+            terminalreporter.stats.get('failed', None)):
+        terminalreporter.write_sep(' ', 'DO *NOT* COMMIT!', red=True, bold=True)
