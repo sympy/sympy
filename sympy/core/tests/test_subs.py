@@ -86,6 +86,9 @@ def test_dict():
     assert e._subs_dict(r) == r[a]/r[b] * sin(r[b]*x)
     assert e._subs_dict(r) == 3 * sin(4*x) / 4
 
+    assert e.subs(r) == r[a]/r[b] * sin(r[b]*x)
+    assert e.subs(r) == 3 * sin(4*x) / 4
+
 def test_dict_ambigous():   # see #467
     x = Symbol('x')
     y = Symbol('y')
@@ -143,17 +146,6 @@ def test_subs_dict1():
     assert test.subs({c1**2 : 1-s1**2, c2**2 : 1-s2**2, c3**3: 1-s3**2}) \
         == c3*q2p*(1 - s2**2) + c3*q2p*s2**2*(1 - s1**2) - c2*q1p*s3*(1 - s1**2) \
         + c3*q2p*s1**2*s2**2 - c2*q1p*s3*s1**2
-
-def test_subs_dict2():
-    x = Symbol('x')
-    a,b,c = map(Wild, 'abc')
-
-    f = 3*cos(4*x)
-    r = f.match(a*cos(b*x))
-    assert r == {a: 3, b: 4}
-    e =  a/b * sin(b*x)
-    assert e.subs(r) == r[a]/r[b] * sin(r[b]*x)
-    assert e.subs(r) == 3 * sin(4*x) / 4
 
 def test_mul():
     x, y, z, a, b, c = symbols('x,y,z,a,b,c')
