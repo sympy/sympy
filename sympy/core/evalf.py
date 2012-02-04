@@ -141,7 +141,7 @@ def scaled_zero(mag, sign=1):
     >>> Float(scaled_zero(ok), p)
     -.0e+30
     """
-    if type(mag) is tuple and len(mag) == 4 and zero(mag, scaled=True):
+    if type(mag) is tuple and len(mag) == 4 and iszero(mag, scaled=True):
         return (mag[0][0],) + mag[1:]
     elif type(mag) is int:
         if sign not in [-1, 1]:
@@ -153,7 +153,7 @@ def scaled_zero(mag, sign=1):
     else:
         raise ValueError('scaled zero expects int or scaled_zero tuple.')
 
-def zero(mpf, scaled=False):
+def iszero(mpf, scaled=False):
     if not scaled:
         return not mpf or not mpf[1] and not mpf[-1]
     return mpf and type(mpf[0]) is list and mpf[1] == mpf[-1] == 1
@@ -347,7 +347,7 @@ def add_terms(terms, prec, target_prec):
 
     XXX explain why this is needed and why one can't just loop using mpf_add
     """
-    terms = [t for t in terms if not zero(t)]
+    terms = [t for t in terms if not iszero(t)]
     if not terms:
         return None, None
     elif len(terms) == 1:
@@ -427,14 +427,10 @@ def evalf_add(v, prec, options):
                 print "ADD: restarting with prec", prec
 
     options['maxprec'] = oldmaxprec
-    if zero(re, scaled=True):
+    if iszero(re, scaled=True):
         re = scaled_zero(re)
-    else:
-        pass # just here for coverage testing
-    if zero(im, scaled=True):
+    if iszero(im, scaled=True):
         im = scaled_zero(im)
-    else:
-        pass # just here for coverage testing
     return re, im, re_acc, im_acc
 
 def evalf_mul(v, prec, options):
