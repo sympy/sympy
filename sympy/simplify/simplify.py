@@ -2759,7 +2759,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     expr = powsimp(expr, combine='exp', deep=True)
     numer, denom = expr.as_numer_denom()
     if denom.is_Add:
-        n, d = fraction(radsimp(1/denom, symbolic=False, max_terms=2))
+        n, d = fraction(radsimp(1/denom, symbolic=False, max_terms=1))
         if n is not S.One:
             expr = (numer*n).expand()/d
 
