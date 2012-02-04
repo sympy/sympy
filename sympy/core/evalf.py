@@ -23,7 +23,7 @@ from core import C
 from singleton import S
 from containers import Tuple
 
-LG10 = math.log(10,2)
+LG10 = math.log(10, 2)
 
 # Used in a few places as placeholder values to denote exponents and
 # precision levels, e.g. of exact numbers. Must be careful to avoid

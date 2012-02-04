@@ -1,4 +1,5 @@
 from __future__ import division
+
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
     Interval, Lambda, Limit, log, Matrix, nan, O, oo, pi, Rational, Float, Rel,
@@ -241,7 +242,7 @@ def test_sqrt():
     assert str(1/sqrt(x**2)) == "1/sqrt(x**2)"
     assert str(y/sqrt(x)) == "y/sqrt(x)"
     assert str(x**(1/2)) == "x**0.5"
-    assert str(1/x**(1/2)) == "x**-0.5"
+    assert str(1/x**(1/2)) == "x**(-0.5)"
 
 def test_Rational():
     n1 = Rational(1,4)
