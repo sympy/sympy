@@ -11,7 +11,7 @@ class MatPow(MatrixExpr, Pow):
         elif not b.is_square:
             raise ShapeError("Power of non-square matrix %s"%b)
         elif e is S.Zero:
-            return Identity(b.n)
+            return Identity(b.rows)
         else:
             return MatrixExpr.__new__(cls, b, e)
 

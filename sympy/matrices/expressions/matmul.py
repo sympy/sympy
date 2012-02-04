@@ -21,11 +21,11 @@ class MatMul(MatrixExpr, Mul):
 
         for i in range(len(matrices)-1):
             A,B = matrices[i:i+2]
-            if A.m != B.n:
+            if A.cols != B.rows:
                 raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
         if any(arg.is_zero for arg in args):
-            return ZeroMatrix(matrices[0].n, matrices[-1].m)
+            return ZeroMatrix(matrices[0].rows, matrices[-1].cols)
 
         expr = matrixify(Mul.__new__(cls, *args))
         if expr.is_Add:
@@ -44,7 +44,7 @@ class MatMul(MatrixExpr, Mul):
         if any(M.is_Identity for M in mats): # Any identities around?
             newmats = [M for M in mats if not M.is_Identity] # clear out
             if len(newmats)==0: # Did we lose everything?
-                newmats = [Identity(expr.n)] # put just one back in
+                newmats = [Identity(expr.rows)] # put just one back in
 
             if mats != newmats: # Removed some I's but not everything?
                 return MatMul(*(nonmats+newmats)) # Repeat with simpler expr
@@ -54,7 +54,7 @@ class MatMul(MatrixExpr, Mul):
     @property
     def shape(self):
         matrices = [arg for arg in self.args if arg.is_Matrix]
-        return (matrices[0].n, matrices[-1].m)
+        return (matrices[0].rows, matrices[-1].cols)
 
     def _entry(self, i, j):
         coeff, matmul = self.as_coeff_mmul()
@@ -74,7 +74,7 @@ class MatMul(MatrixExpr, Mul):
             # Symbolic shape like (n, m)
             from sympy import Dummy, summation
             k = Dummy('k', integer=True)
-            return summation(coeff*X[i,k]*Y[k,j], (k, 0, X.m-1))
+            return summation(coeff*X[i,k]*Y[k,j], (k, 0, X.cols-1))
 
     def as_coeff_mmul(self):
         scalars = [x for x in self.args if not x.is_Matrix]

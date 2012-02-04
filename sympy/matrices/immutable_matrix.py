@@ -18,22 +18,14 @@ class ImmutableMatrix(MatrixExpr, MatrixBase):
     def mat(self):
         return self.args[1]
 
-    @property
-    def rows(self):
-        return self.shape[0]
-
-    @property
-    def cols(self):
-        return self.shape[1]
-
-    def __getitem__(self, *args):
-        return MatrixBase.__getitem__(self, *args)
+    def _entry(self, i, j):
+        return MatrixBase.__getitem__(self, (i,j))
 
     def __setitem__(self, *args):
         raise TypeError("Can not set values in Immutable Matrix")
 
-    def _entry(self, i, j):
-        return MatrixBase.__getitem__(self, (i,j))
+    __getitem__ = MatrixBase.__getitem__
 
     as_mutable = MatrixBase.as_mutable
+
     equals = MatrixBase.equals

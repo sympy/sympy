@@ -60,11 +60,11 @@ class BlockMatrix(MatrixExpr):
         return self.mat
     @property
     def rowblocksizes(self):
-        return [self.blocks[i,0].n for i in range(self.blockshape[0])]
+        return [self.blocks[i,0].rows for i in range(self.blockshape[0])]
 
     @property
     def colblocksizes(self):
-        return [self.blocks[0,i].m for i in range(self.blockshape[1])]
+        return [self.blocks[0,i].cols for i in range(self.blockshape[1])]
 
     def _blockmul(self, other):
 
@@ -170,8 +170,8 @@ class BlockDiagMatrix(BlockMatrix):
             for c in range(len(mats)):
                 if r == c:
                     continue
-                n = mats[r].n
-                m = mats[c].m
+                n = mats[r].rows
+                m = mats[c].cols
                 data_matrix[r, c] = ZeroMatrix(n, m)
 
         shape = Tuple(*sympify(mat.shape))

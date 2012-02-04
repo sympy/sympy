@@ -30,7 +30,7 @@ def test_inverse():
     raises(ShapeError, "Inverse(A)")
     assert Inverse(Inverse(C)) == C
 
-    assert Inverse(C)*C == Identity(C.n)
+    assert Inverse(C)*C == Identity(C.rows)
 
     assert Inverse(eye(3)) == eye(3)
 

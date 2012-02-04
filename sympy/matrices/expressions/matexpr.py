@@ -89,17 +89,16 @@ class MatrixExpr(Expr):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
-
     @property
-    def n(self):
+    def rows(self):
         return self.shape[0]
     @property
-    def m(self):
+    def cols(self):
         return self.shape[1]
 
     @property
     def is_square(self):
-        return self.n == self.m
+        return self.rows == self.cols
 
     def eval_transpose(self):
         raise NotImplementedError()
@@ -122,7 +121,7 @@ class MatrixExpr(Expr):
         def is_valid(idx):
             return isinstance(idx, (int, Integer, Symbol))
         return (is_valid(i) and is_valid(j) and
-                0 <= i < self.n and 0 <= j < self.m)
+                0 <= i < self.rows and 0 <= j < self.cols)
 
     def __getitem__(self, key):
         if isinstance(key, tuple) and len(key)==2:
@@ -153,8 +152,8 @@ class MatrixExpr(Expr):
         """
         from sympy.matrices.immutable_matrix import ImmutableMatrix
         return ImmutableMatrix([[    self[i,j]
-                            for j in range(self.m)]
-                            for i in range(self.n)])
+                            for j in range(self.cols)]
+                            for i in range(self.rows)])
 
     def as_mutable(self):
         """
@@ -231,7 +230,6 @@ class MatrixSymbol(MatrixExpr, Symbol):
 
     def _entry(self, i, j):
         return Symbol(self.name)(i,j)
-        return Symbol(self.name+"_{%s,%s}"%(str(i),str(j)))
 
 class Identity(MatrixSymbol):
     """The Matrix Identity I - multiplicative identity
@@ -250,7 +248,10 @@ class Identity(MatrixSymbol):
         return self
 
     def _entry(self, i, j):
-        return S.One if i==j else S.Zero
+        if i==j:
+            return S.One
+        else:
+            return S.Zero
 
 class ZeroMatrix(MatrixSymbol):
     """The Matrix Zero 0 - additive identity
@@ -266,7 +267,7 @@ class ZeroMatrix(MatrixSymbol):
     def __new__(cls, n, m):
         return MatrixSymbol.__new__(cls, "0", n, m)
     def transpose(self):
-        return ZeroMatrix(self.m, self.n)
+        return ZeroMatrix(self.cols, self.rows)
 
     def _entry(self, i, j):
         return S.Zero
@@ -319,7 +320,7 @@ def linear_factors(expr, *syms):
     d = {}
     if expr.is_Matrix and expr.is_Symbol:
         if expr in syms:
-            d[expr] = Identity(expr.n)
+            d[expr] = Identity(expr.rows)
 
     if expr.is_Add:
         for sym in syms:
@@ -335,12 +336,12 @@ def linear_factors(expr, *syms):
                 factor = sympify(factor)
                 if not factor.is_Matrix:
                     if factor.is_zero:
-                        factor = ZeroMatrix(expr.n, sym.n)
-                        if not sym.m == expr.m:
+                        factor = ZeroMatrix(expr.rows, sym.rows)
+                        if not sym.cols == expr.cols:
                             raise ShapeError(
                             "%s not compatible as factor of %s"%(sym, expr))
                     else:
-                        factor = Identity(sym.n)*factor
+                        factor = Identity(sym.rows)*factor
                 total_factor += factor
             d[sym] = total_factor
     elif expr.is_Mul:
@@ -355,12 +356,12 @@ def linear_factors(expr, *syms):
             factor = sympify(factor)
             if not factor.is_Matrix:
                 if factor.is_zero:
-                    factor = ZeroMatrix(expr.n, sym.n)
-                    if not sym.m == expr.m:
+                    factor = ZeroMatrix(expr.rows, sym.rows)
+                    if not sym.cols == expr.cols:
                         raise ShapeError("%s not compatible as factor of %s"%
                                 (sym, expr))
                 else:
-                    factor = Identity(sym.n)*factor
+                    factor = Identity(sym.rows)*factor
             d[sym] = factor
 
     if any(sym in matrix_symbols(Tuple(*d.values())) for sym in syms):
