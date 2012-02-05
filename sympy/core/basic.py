@@ -820,7 +820,14 @@ class Basic(PicklableWithSlots):
         else:
             raise ValueError("subs accepts either 1 or 2 arguments")
 
-        sequence = [(sympify(old), sympify(new)) for old, new in sequence]
+        sequence = list(sequence)
+        for i in range(len(sequence)):
+            o, n = sequence[i]
+            so, sn = sympify(o), sympify(n)
+            if not isinstance(so, Basic):
+                if type(o) is str:
+                    so = C.Symbol(o)
+            sequence[i] = (so, sn)
         if unordered:
             sequence.sort(key=lambda x: (x[0].count_ops(), len(x[0].args)), reverse=True)
 

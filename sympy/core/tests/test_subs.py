@@ -439,3 +439,7 @@ def test_issue_2980():
     assert _aresame(cos, cos)
     assert not _aresame(1, S(1))
     assert not _aresame(x, symbols('x', positive=True))
+
+def test_issue_1581():
+    N = Symbol('N')
+    assert N.subs(dict(N=3)) == 3
