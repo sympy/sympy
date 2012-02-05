@@ -125,6 +125,7 @@ class MatrixExpr(Expr):
 
     def __getitem__(self, key):
         if isinstance(key, tuple) and len(key)==2:
+            key = sympify(key)
             i,j = key
             if self.valid_index(i, j) is not False:
                 return self._entry(*key)
@@ -229,7 +230,14 @@ class MatrixSymbol(MatrixExpr, Symbol):
         raise TypeError( "%s object is not callable"%self.__class__ )
 
     def _entry(self, i, j):
-        return Symbol(self.name)(i,j)
+        # MatMul _entry will pass us a Dummy and ask that we remember it
+        # so that it can be summed over later. We'll use the function syntax
+        if i.is_Dummy or j.is_Dummy:
+            return Symbol(self.name)(i,j)
+        # If that isn't the case we'd really rather just make a symbol
+        # They are simpler and look much nicer
+        else:
+            return Symbol('%s_%s%s'%(self.name, str(i), str(j)))
 
 class Identity(MatrixSymbol):
     """The Matrix Identity I - multiplicative identity
