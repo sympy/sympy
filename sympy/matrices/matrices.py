@@ -1227,9 +1227,9 @@ class Matrix(object):
         [1, 2, 3, 4]
         [2, 3, 4, 5]
         [3, 4, 5, 6]
-        >>> m[0:1, 1]   #doctest: +NORMALIZE_WHITESPACE
+        >>> m[:1, 1]   #doctest: +NORMALIZE_WHITESPACE
         [1]
-        >>> m[0:2, 0:1] #doctest: +NORMALIZE_WHITESPACE
+        >>> m[:2, :1] #doctest: +NORMALIZE_WHITESPACE
         [0]
         [1]
         >>> m[2:4, 2:4] #doctest: +NORMALIZE_WHITESPACE
@@ -3222,14 +3222,14 @@ class Matrix(object):
                     to_the_right = M[0, i:]
                     to_the_bottom = M[i:, 0]
                 else:
-                    to_the_right = M[0:i, i:]
-                    to_the_bottom = M[i:, 0:i]
+                    to_the_right = M[:i, i:]
+                    to_the_bottom = M[i:, :i]
                 if any(to_the_right) or any(to_the_bottom):
                     i += 1
                     continue
                 else:
-                    sub_blocks.append(M[0:i, 0:i])
-                    if M.shape == M[0:i, 0:i].shape:
+                    sub_blocks.append(M[:i, :i])
+                    if M.shape == M[:i, :i].shape:
                         return
                     else:
                         recurse_sub_blocks(M[i:, i:])

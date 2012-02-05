@@ -694,9 +694,9 @@ class Kane(object):
         n = len(self._q) # number of coordinates
         l = len(self._qdep) # number of configuration constraints
         m = len(self._udep) # number of motion constraints
-        qi = Matrix(self._q[0: n - l]) # independent coords
+        qi = Matrix(self._q[: n - l]) # independent coords
         qd = Matrix(self._q[n - l: n]) # dependent coords; could be empty
-        ui = Matrix(self._u[0: o - m]) # independent speeds
+        ui = Matrix(self._u[: o - m]) # independent speeds
         ud = Matrix(self._u[o - m: o]) # dependent speeds; could be empty
         qdot = Matrix(self._qdot) # time derivatives of coordinates
 
