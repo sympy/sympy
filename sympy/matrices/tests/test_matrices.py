@@ -2099,4 +2099,6 @@ def test_DeferredVector():
 
 def test_is_Identity():
     assert eye(3).is_Identity
+    assert eye(3).as_immutable().is_Identity
+    assert not zeros(3).is_Identity
     assert not ones(3).is_Identity

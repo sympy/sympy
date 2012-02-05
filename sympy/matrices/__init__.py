@@ -9,7 +9,6 @@ from matrices import (SparseMatrix, zeros, ones, eye, diag,
      NonSquareMatrixError, rot_axis1, rot_axis2, rot_axis3)
 
 from matrices import MutableMatrix as Matrix
-#from mutable_matrix import MutableMatrix as Matrix
 
 from immutable_matrix import ImmutableMatrix
 

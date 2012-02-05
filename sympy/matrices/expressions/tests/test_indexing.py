@@ -25,6 +25,11 @@ def test_add_index():
 def test_mul_index():
     assert (A*y)[0,0] == A[0,0]*y[0,0] + A[0,1]*y[1,0]
     assert (A*B).as_mutable() == (A.as_mutable() * B.as_mutable())
+    X = MatrixSymbol('X', n, m)
+    Y = MatrixSymbol('Y', m, k)
+    # Using str to avoid dealing with a Dummy variable
+    assert str((X*Y)[4,2]) == "Sum(X(4, _k)*Y(_k, 2), (_k, 0, m - 1))"
+
 
 def test_Identity_index():
     I = Identity(3)

@@ -357,13 +357,6 @@ class MatrixBase(object):
         """The shape (dimensions) of the matrix as the 2-tuple (rows, cols)."""
         return (self.rows, self.cols)
 
-    @property
-    def n(self):
-        return self.shape[0]
-    @property
-    def m(self):
-        return self.shape[1]
-
     def __rmul__(self,a):
         if hasattr(a, "__array__") and a.shape != ():
             return matrix_multiply(a,self)
@@ -1657,9 +1650,6 @@ class MatrixBase(object):
         multiply
         multiply_elementwise
         """
-#        if a.is_Immutable: # this would be slow
-#            return a.as_mutable().dot(b)
-
         if not isinstance(b, MatrixBase):
             if is_sequence(b):
                 if len(b) != self.cols and len(b) != self.rows:
@@ -3605,15 +3595,32 @@ class MutableMatrix(MatrixBase):
         raise NotImplementedError("Matrix Power not defined")
 
 def force_mutable(x):
+    """
+    Safely turn a Matrix object into a Mutable Matrix
+    """
     if not isinstance(x, Basic):
         return x
     if not x.is_Matrix:
         return x
-    if x.is_Matrix and x.is_MatrixExpr:
+    if x.is_MatrixExpr:
         return x.as_mutable()
     return x
 
 def classof(A,B):
+    """
+    Determines strategy for combining Immutable and Mutable matrices
+
+    Currently the strategy is that Mutability is contagious
+
+    Example
+
+    >>> from sympy import Matrix, ImmutableMatrix
+    >>> from sympy.matrices.matrices import classof
+    >>> M = Matrix([[1,2],[3,4]]) # a Mutable Matrix
+    >>> IM = ImmutableMatrix([[1,2],[3,4]])
+    >>> classof(M, IM)
+    sympy.matrices.matrices.MutableMatrix
+    """
     from immutable_matrix import ImmutableMatrix
     if A.__class__ == B.__class__:
         return A.__class__

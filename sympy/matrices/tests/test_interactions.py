@@ -21,11 +21,14 @@ a,b,c = symbols('a,b,c')
 
 def test_IM_MM():
     assert (MM+IM).__class__ is MutableMatrix
+    assert (IM+MM).__class__ is MutableMatrix
     assert (2*IM + MM).__class__ is MutableMatrix
     assert MM.equals(IM)
 
 def test_ME_MM():
     assert (Identity(3) + MM).__class__ is MutableMatrix
+    assert (SM + MM).__class__ is MutableMatrix
+    assert (MM + SM).__class__ is MutableMatrix
     assert (Identity(3) + MM)[1,1] == 6
 
 def test_equality():

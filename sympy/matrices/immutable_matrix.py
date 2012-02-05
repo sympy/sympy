@@ -29,3 +29,4 @@ class ImmutableMatrix(MatrixExpr, MatrixBase):
     as_mutable = MatrixBase.as_mutable
 
     equals = MatrixBase.equals
+    is_Identity = MatrixBase.is_Identity

@@ -16,3 +16,7 @@ def test_immutability():
 def test_slicing():
     IM[1,:] == ImmutableMatrix([[4,5,6]])
     IM[:2, :2] == ImmutableMatrix([[1,2],[4,5]])
+
+def test_as_immutable():
+    X = Matrix([[1,2], [3,4]])
+    assert X.as_immutable() == ImmutableMatrix([[1,2],[3,4]])
