@@ -465,23 +465,23 @@ class GreaterThan(_Greater):
        compute ``x > y > z``, with ``x``, ``y``, and ``z`` being Symbols,
        Python converts the statement (roughly) into these steps:
 
-    (1) x > y > z
-    (2) (x > y) and (y > z)
-    (3) (GreaterThanObject) and (y > z)
-    (4) (GreaterThanObject.__nonzero__()) and (y > z)
-    (5) (True) and (y > z)
-    (6) (y > z)
-    (7) LessThanObject
+        (1) x > y > z
+        (2) (x > y) and (y > z)
+        (3) (GreaterThanObject) and (y > z)
+        (4) (GreaterThanObject.__nonzero__()) and (y > z)
+        (5) (True) and (y > z)
+        (6) (y > z)
+        (7) LessThanObject
 
-    Because of the "and" added at step 2, the statement gets turned into a weak
-    ternary statement.  If the first object evalutes __nonzero__ as True, then
-    the second object, (y > z) is returned.  If the first object evaluates
-    __nonzero__ as False (step 5), then (x > y) is returned.
+       Because of the "and" added at step 2, the statement gets turned into a
+       weak ternary statement.  If the first object evalutes __nonzero__ as
+       True, then the second object, (y > z) is returned.  If the first object
+       evaluates __nonzero__ as False (step 5), then (x > y) is returned.
 
-        In Python, there is no way to override the ``and`` operator, or to
-        control how it short circuits, so it is impossible to make something
-        like ``x > y > z`` work.  There is an open PEP to change this,
-        :pep:`335`, but until that is implemented, this cannot be made to work.
+           In Python, there is no way to override the ``and`` operator, or to
+           control how it short circuits, so it is impossible to make something
+           like ``x > y > z`` work.  There is an open PEP to change this,
+           :pep:`335`, but until that is implemented, this cannot be made to work.
 
     .. [2] For more information, see these two bug reports:
 
