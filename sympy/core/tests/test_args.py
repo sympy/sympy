@@ -10,6 +10,7 @@ import os
 import re
 
 from sympy import Basic, S, symbols, sqrt, sin
+from sympy import Basic, S, symbols, sqrt, sin, oo, Interval
 from sympy.utilities.pytest import XFAIL, SKIP
 
 x, y, z = symbols('x,y,z')
@@ -345,6 +346,175 @@ def test_sympy__core__sets__Set():
 def test_sympy__core__sets__Union():
     from sympy.core.sets import Union, Interval
     assert _test_args(Union(Interval(0, 1), Interval(2, 3)))
+
+# STATS
+def normal_pdf(x):
+    from sympy import pi, exp, sqrt
+    pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))
+    return pdf
+
+def test_sympy__stats__crv__ContinuousDomain():
+    from sympy.stats.crv import ContinuousDomain
+    assert _test_args(ContinuousDomain(set([x]), Interval(-oo,oo)))
+
+def test_sympy__stats__crv__SingleContinuousDomain():
+    from sympy.stats.crv import SingleContinuousDomain
+    assert _test_args(SingleContinuousDomain(x, Interval(-oo,oo)))
+
+def test_sympy__stats__crv__ProductContinuousDomain():
+    from sympy.stats.crv import SingleContinuousDomain, ProductContinuousDomain
+    D = SingleContinuousDomain(x, Interval(-oo,oo))
+    E = SingleContinuousDomain(y, Interval(0,oo))
+    assert _test_args(ProductContinuousDomain(D, E))
+
+def test_sympy__stats__crv__ConditionalContinuousDomain():
+    from sympy.stats.crv import (SingleContinuousDomain,
+            ConditionalContinuousDomain)
+    D = SingleContinuousDomain(x, Interval(-oo,oo))
+    assert _test_args(ConditionalContinuousDomain(D, x>0))
+
+def test_sympy__stats__crv__ContinuousPSpace():
+    from sympy.stats.crv import ContinuousPSpace, SingleContinuousDomain
+    pdf = normal_pdf(x)
+    D = SingleContinuousDomain(x, Interval(-oo,oo))
+    assert _test_args(ContinuousPSpace(D, pdf))
+
+def test_sympy__stats__crv__SingleContinuousPSpace():
+    from sympy.stats.crv import SingleContinuousPSpace
+    pdf = normal_pdf(x)
+    assert _test_args(SingleContinuousPSpace(x, pdf, Interval(-oo,oo)))
+
+def test_sympy__stats__crv__ProductContinuousPSpace():
+    from sympy.stats.crv import ProductContinuousPSpace, SingleContinuousPSpace
+    pdf1 = normal_pdf(x)
+    A = SingleContinuousPSpace(x, pdf1, Interval(-oo,oo))
+    pdf2 = normal_pdf(y)
+    B = SingleContinuousPSpace(y, pdf2, Interval(-oo,oo))
+    assert _test_args(ProductContinuousPSpace(A,B))
+
+def test_sympy__stats__rv__RandomDomain():
+    from sympy.stats.rv import RandomDomain
+    from sympy.core.sets import FiniteSet
+    assert _test_args(RandomDomain(FiniteSet(x), FiniteSet(1,2,3)))
+
+def test_sympy__stats__rv__SingleDomain():
+    from sympy.stats.rv import SingleDomain
+    from sympy.core.sets import FiniteSet
+    assert _test_args(SingleDomain(x, FiniteSet(1,2,3)))
+
+def test_sympy__stats__rv__ConditionalDomain():
+    from sympy.stats.rv import ConditionalDomain, RandomDomain
+    from sympy.core.sets import FiniteSet
+    D = RandomDomain(FiniteSet(x), FiniteSet(1,2))
+    assert _test_args(ConditionalDomain(D, x>1))
+
+def test_sympy__stats__rv__PSpace():
+    from sympy.stats.rv import PSpace, RandomDomain
+    from sympy import Dict, FiniteSet
+    D = RandomDomain(FiniteSet(x), FiniteSet(1,2))
+    assert _test_args(PSpace(D, Dict({(x,1):S.Half, (x,2):S.Half})))
+
+def test_sympy__stats__rv__SinglePSpace():
+    from sympy.stats.rv import SinglePSpace, RandomDomain
+    from sympy import Dict, FiniteSet
+    D = RandomDomain(FiniteSet(x), FiniteSet(1,2))
+    assert _test_args(SinglePSpace(D, Dict({(x,1):S.Half, (x,2):S.Half})))
+
+def test_sympy__stats__rv__RandomSymbol():
+    from sympy.stats.rv import RandomSymbol
+    from sympy.stats.crv import SingleContinuousPSpace
+    pdf = normal_pdf(x)
+    A = SingleContinuousPSpace(x, pdf, Interval(-oo,oo))
+    assert _test_args(RandomSymbol(A, x))
+
+def test_sympy__stats__rv__ProductPSpace():
+    from sympy.stats.rv import ProductPSpace
+    from sympy.stats.crv import SingleContinuousPSpace
+    pdf1 = normal_pdf(x)
+    A = SingleContinuousPSpace(x, pdf1, Interval(-oo,oo))
+    pdf2 = normal_pdf(y)
+    B = SingleContinuousPSpace(y, pdf2, Interval(-oo,oo))
+    assert _test_args(ProductPSpace(A,B))
+
+def test_sympy__stats__rv__ProductDomain():
+    from sympy.stats.rv import ProductDomain, SingleDomain
+    D = SingleDomain(x, Interval(-oo,oo))
+    E = SingleDomain(y, Interval(0,oo))
+    assert _test_args(ProductDomain(D, E))
+
+def test_sympy__stats__frv_types__DiePSpace():
+    from sympy.stats.frv_types import DiePSpace
+    assert _test_args(DiePSpace(6))
+
+def test_sympy__stats__frv_types__BernoulliPSpace():
+    from sympy.stats.frv_types import BernoulliPSpace
+    assert _test_args(BernoulliPSpace(S.Half, 0, 1))
+
+def test_sympy__stats__frv_types__CoinPSpace():
+    from sympy.stats.frv_types import CoinPSpace
+    assert _test_args(CoinPSpace(S.Half))
+
+def test_sympy__stats__frv__FiniteDomain():
+    from sympy.stats.frv import FiniteDomain
+    assert _test_args(FiniteDomain(set([(x,1), (x,2)]))) # x can be 1 or 2
+
+def test_sympy__stats__frv__SingleFiniteDomain():
+    from sympy.stats.frv import SingleFiniteDomain
+    assert _test_args(SingleFiniteDomain(x, set([1,2]))) # x can be 1 or 2
+
+def test_sympy__stats__frv__ProductFiniteDomain():
+    from sympy.stats.frv import SingleFiniteDomain, ProductFiniteDomain
+    xd = SingleFiniteDomain(x, set([1,2]))
+    yd = SingleFiniteDomain(y, set([1,2]))
+    assert _test_args(ProductFiniteDomain(xd, yd))
+
+def test_sympy__stats__frv__ConditionalFiniteDomain():
+    from sympy.stats.frv import SingleFiniteDomain, ConditionalFiniteDomain
+    xd = SingleFiniteDomain(x, set([1,2]))
+    assert _test_args(ConditionalFiniteDomain(xd, x>1))
+
+def test_sympy__stats__frv__FinitePSpace():
+    from sympy.stats.frv import FinitePSpace, SingleFiniteDomain
+    xd = SingleFiniteDomain(x, set([1,2]))
+    assert _test_args(FinitePSpace(xd, {(x,1):S.Half, (x,2):S.Half}))
+
+def test_sympy__stats__frv__SingleFinitePSpace():
+    from sympy.stats.frv import SingleFinitePSpace, SingleFiniteDomain
+    xd = SingleFiniteDomain(x, set([1,2]))
+    assert _test_args(SingleFinitePSpace(xd, {(x,1):S.Half, (x,2):S.Half}))
+
+def test_sympy__stats__frv__ProductFinitePSpace():
+    from sympy.stats.frv import (SingleFiniteDomain, SingleFinitePSpace,
+        ProductFinitePSpace)
+    xd = SingleFiniteDomain(x, set([1,2]))
+    xp = SingleFinitePSpace(xd, {(x,1):S.Half, (x,2):S.Half})
+    yd = SingleFiniteDomain(y, set([1,2]))
+    yp = SingleFinitePSpace(yd, {(y,1):S.Half, (y,2):S.Half})
+    assert _test_args(ProductFinitePSpace(xp, yp))
+
+def test_sympy__stats__crv_types__NormalPSpace():
+    from sympy.stats.crv_types import NormalPSpace
+    assert _test_args(NormalPSpace(0,1))
+
+def test_sympy__stats__crv_types__ExponentialPSpace():
+    from sympy.stats.crv_types import ExponentialPSpace
+    assert _test_args(ExponentialPSpace(1))
+
+def test_sympy__stats__crv_types__ParetoPSpace():
+    from sympy.stats.crv_types import ParetoPSpace
+    assert _test_args(ParetoPSpace(1,1))
+
+def test_sympy__stats__crv_types__BetaPSpace():
+    from sympy.stats.crv_types import BetaPSpace
+    assert _test_args(BetaPSpace(1,1))
+
+def test_sympy__stats__crv_types__GammaPSpace():
+    from sympy.stats.crv_types import GammaPSpace
+    assert _test_args(GammaPSpace(1,1))
+
+def test_sympy__stats__crv_types__UniformPSpace():
+    from sympy.stats.crv_types import UniformPSpace
+    assert _test_args(UniformPSpace(0,1))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy

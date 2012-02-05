@@ -1,6 +1,6 @@
 from sympy import sqrt, Rational, oo, Symbol, exp, pi
 from sympy.functions import erf
-from sympy.statistics import Normal, Uniform
+from sympy.statistics.distributions import Normal, Uniform
 from sympy.statistics.distributions import PDF
 from operator import abs
 

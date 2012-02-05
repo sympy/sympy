@@ -1692,7 +1692,7 @@ def _meijerint_definite_2(f, x):
     x = dummy
 
     if f == 0:
-        return 0, True
+        return S(0), True
 
     for g, explanation in _guess_expansion(f, x):
         _debug('Trying', explanation)
