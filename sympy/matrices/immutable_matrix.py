@@ -5,6 +5,8 @@ from sympy import Basic, Tuple
 class ImmutableMatrix(MatrixExpr, MatrixBase):
 
     def __new__(cls, *args, **kwargs):
+        if len(args)==1 and isinstance(args[0], ImmutableMatrix):
+            return args[0]
         rows, cols, mat = MatrixBase._handle_creation_inputs(*args, **kwargs)
         shape = Tuple(rows, cols)
         mat = Tuple(*mat)

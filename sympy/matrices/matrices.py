@@ -382,6 +382,9 @@ class MatrixBase(object):
     def __sub__(self,a):
         return self + (-a)
 
+    def __rsub__(self,a):
+        return (-self) + a
+
     def __mul__(self,a):
         if hasattr(a, "__array__") and a.shape != ():
             return matrix_multiply(self,a)
@@ -538,7 +541,7 @@ class MatrixBase(object):
                     for k in xrange(j)))
             L[i, i] = sqrt(self[i, i] - sum(L[i, k] ** 2
                 for k in xrange(i)))
-        return L
+        return self.__class__(L)
 
     def LDLdecomposition(self):
         """
@@ -590,7 +593,7 @@ class MatrixBase(object):
                     L[i, k] * L[j, k] * D[k, k] for k in xrange(j)))
             D[i, i] = self[i, i] - sum(L[i, k]**2 * D[k, k]
                 for k in xrange(i))
-        return L, D
+        return self.__class__(L), self.__class__(D)
 
     def lower_triangular_solve(self, rhs):
         """
@@ -627,7 +630,7 @@ class MatrixBase(object):
                 raise TypeError("Matrix must be non-singular.")
             X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
                 for k in xrange(i))) / self[i, i]
-        return X
+        return self.__class__(X)
 
     def upper_triangular_solve(self, rhs):
         """
@@ -661,7 +664,7 @@ class MatrixBase(object):
                 raise ValueError("Matrix must be non-singular.")
             X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
                 for k in xrange(i+1, self.rows))) / self[i, i]
-        return X
+        return self.__class__(X)
 
     def cholesky_solve(self, rhs):
         """
@@ -1219,7 +1222,7 @@ class MatrixBase(object):
 
         A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
         n = self.rows
-        b = rhs.permuteFwd(perm)
+        b = rhs.permuteFwd(perm).as_mutable()
         # forward substitution, all diag entries are scaled to 1
         for i in range(n):
             for j in range(i):
@@ -1229,7 +1232,7 @@ class MatrixBase(object):
             for j in range(i+1, n):
                 b.row(i, lambda x,k: x - b[j,k]*A[i,j])
             b.row(i, lambda x,k: x / A[i,i])
-        return b
+        return rhs.__class__(b)
 
     def LUdecomposition(self, iszerofunc=_iszero):
         """
@@ -1581,7 +1584,7 @@ class MatrixBase(object):
         QRdecomposition
         """
 
-        Q, R = self.QRdecomposition()
+        Q, R = self.as_mutable().QRdecomposition()
         y = Q.T * b
 
         # back substitution to solve R*x = y:
@@ -1732,7 +1735,6 @@ class MatrixBase(object):
 
         normalized
         """
-
         # Row or Column Vector Norms
         if self.rows == 1 or self.cols == 1:
             if ord == 2 or ord == None: # Common case sqrt(<x,x>)
@@ -1866,7 +1868,7 @@ class MatrixBase(object):
         M = self.as_mutable()
         M.row_del(i)
         M.col_del(j)
-        return M
+        return self.__class__(M)
 
     def exp(self):
         """ Returns the exponentiation of a matrix
@@ -2217,7 +2219,7 @@ class MatrixBase(object):
         if simplify:
             delta = self - self.transpose()
             delta.simplify()
-            return delta == self.zeros(self.rows, self.cols)
+            return delta.equals(self.zeros(self.rows, self.cols))
         else:
             return self == self.transpose()
 
@@ -2509,7 +2511,7 @@ class MatrixBase(object):
                             # XXX: Is this the correct error?
                             raise NotImplementedError("Could not compute the nullspace of `self`.")
                         basis[basiskey.index(j)][i,0] = -1 * reduced[line, j]
-        return basis
+        return [self.__class__(b) for b in basis]
 
     def berkowitz(self):
         """The Berkowitz algorithm.
@@ -2719,7 +2721,7 @@ class MatrixBase(object):
                     basis[0][i] = b
                 if l != 1:
                     basis[0] *= l
-            out.append((r, k, basis))
+            out.append((r, k, [self.__class__(b) for b in basis]))
         return out
 
     def singular_values(self):
@@ -2737,6 +2739,7 @@ class MatrixBase(object):
 
         condition_number
         """
+        self = self.as_mutable()
         # Compute eigenvalues of A.H A
         valmultpairs = (self.H*self).eigenvals()
 
@@ -3239,6 +3242,8 @@ class MutableMatrix(MatrixBase):
     _op_priority = 12.0
 
     def __new__(cls, *args, **kwargs):
+        if len(args)==1 and isinstance(args[0], MutableMatrix):
+            return args[0]
         rows, cols, mat = MatrixBase._handle_creation_inputs(*args, **kwargs)
         self = object.__new__(cls)
         self.rows = rows

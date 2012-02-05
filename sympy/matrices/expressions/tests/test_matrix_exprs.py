@@ -2,7 +2,7 @@ from sympy.utilities.pytest import raises
 from sympy import S, symbols, Symbol, Tuple
 from sympy.matrices import (eye, MatrixSymbol, Transpose, Inverse, ShapeError,
         MatMul, Identity, BlockMatrix, BlockDiagMatrix, block_collapse, Matrix,
-        ZeroMatrix, MatAdd)
+        ZeroMatrix, MatAdd, MatPow)
 
 def test_transpose():
     n, m, l = symbols('n m l', integer=True)
@@ -183,11 +183,11 @@ def test_BlockDiagMatrix():
 
     assert block_collapse(X.I * X).is_Identity
 
-    assert block_collapse(X*X) == BlockDiagMatrix(A**2, B**2, C**2)
+    assert block_collapse(X*X) == BlockDiagMatrix(A*A, B*B, C*C)
 
     assert block_collapse(X+X) == BlockDiagMatrix(2*A, 2*B, 2*C)
 
-    assert block_collapse(X*Y) == BlockDiagMatrix(A**2, 2*B**2, 3*C**2)
+    assert block_collapse(X*Y) == BlockDiagMatrix(A*A, 2*B*B, 3*C*C)
 
     assert block_collapse(X+Y) == BlockDiagMatrix(2*A, 3*B, 4*C)
 
@@ -269,9 +269,10 @@ def test_MatPow():
     A = MatrixSymbol('A', n, n)
 
     assert Inverse(A).is_Pow
-    assert (A*A).is_Pow
-    assert (A*A).exp == 2
-    assert (A*A).base == A
+    AA = MatPow(A, 2)
+    assert AA.is_Pow
+    assert AA.exp == 2
+    assert AA.base == A
     assert (A**n).exp == n
 
     assert A**0 == Identity(n)

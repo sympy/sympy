@@ -299,7 +299,10 @@ def matrixify(expr):
 
     args = map(matrixify, expr.args) # Recursively call down the tree
 
-    return Basic.__new__(class_dict[expr.__class__], *args)
+    if not any(arg.is_Matrix for arg in args):
+        return expr
+    else:
+        return Basic.__new__(class_dict[expr.__class__], *args)
 
 def linear_factors(expr, *syms):
     """Reduce a Matrix Expression to a sum of linear factors

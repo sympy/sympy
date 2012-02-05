@@ -1,5 +1,5 @@
 from matexpr import MatrixExpr, ShapeError, matrixify, Identity, ZeroMatrix
-from sympy.core import Mul, Add
+from sympy.core import Mul, Add, Basic
 
 class MatMul(MatrixExpr, Mul):
     """A Product of Matrix Expressions
@@ -31,7 +31,8 @@ class MatMul(MatrixExpr, Mul):
         if expr.is_Add:
             return MatAdd(*expr.args)
         if expr.is_Pow:
-            return MatPow(*expr.args)
+            assert expr.exp.is_Integer
+            expr = Basic.__new__(MatMul, *[expr.base for i in range(expr.exp)])
         if not expr.is_Mul:
             return expr
 
@@ -84,5 +85,4 @@ class MatMul(MatrixExpr, Mul):
         return coeff, MatMul(*matrices)
 
 from matadd import MatAdd
-from matpow import MatPow
 from inverse import Inverse
