@@ -3,7 +3,7 @@ from math import log as _log
 from sympify import _sympify
 from cache import cacheit
 from core import C
-from sympy.core.function import _coeff_isneg
+from sympy.core.function import _coeff_isneg, expand_complex
 from singleton import S
 from expr import Expr
 
@@ -269,7 +269,15 @@ class Pow(Expr):
 
     def _eval_conjugate(self):
         from sympy.functions.elementary.complexes import conjugate as c
-        return c(self.base)**self.exp
+        i, p = self.exp.is_integer, self.base.is_positive
+        if i:
+            return c(self.base)**self.exp
+        if p:
+            return self.base**c(self.exp)
+        if i is False and p is False:
+            expanded = expand_complex(self)
+            if expanded != self:
+                return c(expanded)
 
     def _eval_expand_basic(self, deep=True, **hints):
         sargs, terms = self.args, []
