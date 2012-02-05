@@ -37,7 +37,7 @@ class Particle(object):
 
     def __init__(self, name, point, mass):
         if not isinstance(name, str):
-            raise TypeError('Supply a valid name')
+            raise TypeError('Supply a valid name.')
         self._name = name
         self.set_mass(mass)
         self.set_point(point)
