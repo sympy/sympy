@@ -1,6 +1,6 @@
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
-        cse, cot, tan, S, Tuple, Basic)
+        cse, cot, tan, S, Tuple, Basic, Dict)
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL
 
@@ -93,6 +93,7 @@ def test_dict_set():
 
     assert e.subs(r) == r[a]/r[b] * sin(r[b]*x)
     assert e.subs(r) == 3 * sin(4*x) / 4
+    assert x.subs(Dict((x, 1))) == 1
 
 def test_dict_ambigous():   # see #467
     x = Symbol('x')

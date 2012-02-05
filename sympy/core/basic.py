@@ -809,7 +809,7 @@ class Basic(PicklableWithSlots):
                 unordered = True
             elif isinstance(sequence, (Dict, dict)):
                 unordered = True
-                sequence = [i for i in sequence.iteritems()]
+                sequence = sequence.items()
             elif not iterable(sequence):
                 from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent("""
