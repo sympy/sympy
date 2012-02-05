@@ -87,8 +87,8 @@ def test_exp_infinity():
 def test_exp_subs():
     x, y = symbols('x,y')
     e = (exp(3*log(x), evaluate=False))
-    assert e.subs(x**3, y**3) == x**3
-    assert e.subs(x**2, 5) == x**3
+    assert e.subs(x**3, y**3) == e
+    assert e.subs(x**2, 5) == e
     assert exp(3*log(x)).subs(x**2, y) == x**3
     assert exp(5*x).subs(exp(7*x),y) == y**Rational(5,7)
     assert exp(2*x + 7).subs(exp(3*x),y) == y**Rational(2,3) * exp(7)
