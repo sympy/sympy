@@ -520,10 +520,10 @@ class ReferenceFrame(object):
         indices : list (of strings)
             If custom indices are desired for console, pretty, and LaTeX
             printing, supply three as a list. The basis vectors can then be
-            accessed with the get_item method
+            accessed with the get_item method.
         latexs : list (of strings)
             If custom names are desired for LaTeX printing of each basis
-            vector, supply the names here in a list
+            vector, supply the names here in a list.
 
         Examples
         ========

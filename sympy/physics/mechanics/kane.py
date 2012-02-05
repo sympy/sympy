@@ -140,16 +140,17 @@ class Kane(object):
 
     def _find_dynamicsymbols(self, inlist, insyms=[]):
         """Finds all non-supplied dynamicsymbols in the expressions."""
-        from sympy.core.function import UndefinedFunction, Derivative, Function
+        from sympy.core.function import AppliedUndef, Derivative
         t = dynamicsymbols._t
+        return reduce(set.union, [set([i]) for j in inlist
+            for i in j.atoms(AppliedUndef, Derivative)
+            if i.atoms() == set([t])], set()) - insyms
 
-        temp_f = set().union(*[i.atoms(Function) for i in inlist])
+        temp_f = set().union(*[i.atoms(AppliedUndef) for i in inlist])
         temp_d = set().union(*[i.atoms(Derivative) for i in inlist])
-        set_f = set([a for a in temp_f if (isinstance(a.func,
-            UndefinedFunction) and (a.args == (t,)))])
-        set_d = set([a for a in temp_d if (isinstance(a.args[0].func,
-            UndefinedFunction) and (a.args[0].args == (t,)) and all([i == t for
-                i in a.variables]))])
+        set_f = set([a for a in temp_f if a.args == (t,)])
+        set_d = set([a for a in temp_d if ((a.args[0] in set_f) and all([i == t
+                     for i in a.variables]))])
         return list(set.union(set_f, set_d) - set(insyms))
 
     def _find_othersymbols(self, inlist, insyms=[]):
@@ -627,8 +628,8 @@ class Kane(object):
         This is the "f_lin_A" matrix.
 
         It also finds any non-state dynamicsymbols and computes the jacobian of
-        the "forcing" vector with respect to them. This is the "f_lin_B" matrix; if
-        this is empty, an empty matrix is created
+        the "forcing" vector with respect to them. This is the "f_lin_B"
+        matrix; if this is empty, an empty matrix is created.
 
         Consider the following:
         If our equations are: [M]qudot = f, where [M] is the full mass matrix,
@@ -644,6 +645,8 @@ class Kane(object):
 
         To get the traditional state-space A and B matrix, you need to multiply
         the f_lin_A and f_lin_B matrices by the inverse of the mass matrix.
+        Caution needs to be taken when inverting large symbolic matrices;
+        substituting in numerical values before inverting will work better.
 
         A tuple of (f_lin_A, f_lin_B, other_dynamicsymbols) is returned.
 
@@ -662,10 +665,8 @@ class Kane(object):
         t = dynamicsymbols._t
         uaux = self._uaux
         uauxdot = [diff(i, t) for i in uaux]
-        # dictionary of auxiliary speeds which are equal to zero
-        uaz = dict(zip(uaux, [0] * len(uaux)))
-        # dictionary of derivatives of auxiliary speeds which are equal to zero
-        uadz = dict(zip(uauxdot, [0] * len(uauxdot)))
+        # dictionary of auxiliary speeds & derivatives which are equal to zero
+        subdict = dict(zip(uaux + uauxdot, [0] * (len(uaux) + len(uauxdot))))
 
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.
@@ -678,7 +679,7 @@ class Kane(object):
                                                               self._k_d]):
             raise ValueError('Cannot have dynamic symbols outside dynamic ' +
                              'forcing vector')
-        other_dyns = list(self._find_dynamicsymbols(self._f_d.subs(uadz).subs(uaz),
+        other_dyns = list(self._find_dynamicsymbols(self._f_d.subs(subdict),
                                              insyms))
 
         # make it canonically ordered so the jacobian is canonical
@@ -686,8 +687,8 @@ class Kane(object):
 
         for i in other_dyns:
             if diff(i, dynamicsymbols._t) in other_dyns:
-                raise ValueError('Cannot have derivatives of forcing terms ' +
-                                 'when linearizing forcing terms')
+                raise ValueError('Cannot have derivatives of specified ' +
+                                 'quantities when linearizing forcing terms')
 
         o = len(self._u) # number of speeds
         n = len(self._q) # number of coordinates
@@ -697,6 +698,7 @@ class Kane(object):
         qd = Matrix(self._q[n - l: n]) # dependent coords; could be empty
         ui = Matrix(self._u[0: o - m]) # independent speeds
         ud = Matrix(self._u[o - m: o]) # dependent speeds; could be empty
+        qdot = Matrix(self._qdot) # time derivatives of coordinates
 
         # with equations in the form MM udot = forcing, expand that to:
         # MM_full [q,u].T = forcing_full. This combines coordinates and
@@ -712,11 +714,11 @@ class Kane(object):
         if m != 0:
             f2 = self._f_d.col_join(self._f_dnh)
             fnh = self._f_nh + self._k_nh * Matrix(self._u)
-        f1 = f1.subs(uadz).subs(uaz)
-        f2 = f2.subs(uadz).subs(uaz)
-        fh = self._f_h.subs(uadz).subs(uaz)
-        fku = (self._k_ku * Matrix(self._u)).subs(uadz).subs(uaz)
-        fkf = self._f_k.subs(uadz).subs(uaz)
+        f1 = f1.subs(subdict)
+        f2 = f2.subs(subdict)
+        fh = self._f_h.subs(subdict)
+        fku = (self._k_ku * Matrix(self._u)).subs(subdict)
+        fkf = self._f_k.subs(subdict)
 
         # In the code below, we are applying the chain rule by hand on these
         # things. All the matrices have been changed into vectors (by
@@ -737,23 +739,41 @@ class Kane(object):
 
         # First case: configuration and motion constraints
         if (l != 0) and (m != 0):
-            dqd_dqi = - self._mat_inv_mul(fh.jacobian(qd), fh.jacobian(qi))
-            dud_dqi = self._mat_inv_mul(fnh.jacobian(ud), (fnh.jacobian(qd) *
-                                        dqd_dqi - fnh.jacobian(qi)))
-            dud_dui = - self._mat_inv_mul(fnh.jacobian(ud), fnh.jacobian(ui))
-            dqdot_dui = - self._k_kqdot.inv() * (fku.jacobian(ui) +
-                                                fku.jacobian(ud) * dud_dui)
-            dqdot_dqi = - self._k_kqdot.inv() * (fku.jacobian(qi) +
-                    fkf.jacobian(qi) + (fku.jacobian(qd) + fkf.jacobian(qd)) *
-                    dqd_dqi + fku.jacobian(ud) * dud_dqi)
-            f1_q = (f1.jacobian(qi) + f1.jacobian(qd) * dqd_dqi +
-                    f1.jacobian(ud) * dud_dqi)
-            f1_u = (f1.jacobian(ui) + f1.jacobian(ud) * dud_dui)
-            f2_q = (f2.jacobian(qi) + f2.jacobian(qd) * dqd_dqi +
-                    f2.jacobian(self._qdot) * dqdot_dqi + f2.jacobian(ud) *
-                    dud_dqi)
-            f2_u = (f2.jacobian(ui) + f2.jacobian(ud) * dud_dui +
-                    f2.jacobian(self._qdot) * dqdot_dui)
+            fh_jac_qi = fh.jacobian(qi)
+            fh_jac_qd = fh.jacobian(qd)
+            fnh_jac_qi = fnh.jacobian(qi)
+            fnh_jac_qd = fnh.jacobian(qd)
+            fnh_jac_ui = fnh.jacobian(ui)
+            fnh_jac_ud = fnh.jacobian(ud)
+            fku_jac_qi = fku.jacobian(qi)
+            fku_jac_qd = fku.jacobian(qd)
+            fku_jac_ui = fku.jacobian(ui)
+            fku_jac_ud = fku.jacobian(ud)
+            fkf_jac_qi = fkf.jacobian(qi)
+            fkf_jac_qd = fkf.jacobian(qd)
+            f1_jac_qi = f1.jacobian(qi)
+            f1_jac_qd = f1.jacobian(qd)
+            f1_jac_ui = f1.jacobian(ui)
+            f1_jac_ud = f1.jacobian(ud)
+            f2_jac_qi = f2.jacobian(qi)
+            f2_jac_qd = f2.jacobian(qd)
+            f2_jac_ui = f2.jacobian(ui)
+            f2_jac_ud = f2.jacobian(ud)
+            f2_jac_qdot = f2.jacobian(qdot)
+
+            dqd_dqi = - self._mat_inv_mul(fh_jac_qd, fh_jac_qi)
+            dud_dqi = self._mat_inv_mul(fnh_jac_ud, (fnh_jac_qd *
+                                        dqd_dqi - fnh_jac_qi))
+            dud_dui = - self._mat_inv_mul(fnh_jac_ud, fnh_jac_ui)
+            dqdot_dui = - self._k_kqdot.inv() * (fku_jac_ui +
+                                                fku_jac_ud * dud_dui)
+            dqdot_dqi = - self._k_kqdot.inv() * (fku_jac_qi + fkf_jac_qi +
+                    (fku_jac_qd + fkf_jac_qd) * dqd_dqi + fku_jac_ud * dud_dqi)
+            f1_q = f1_jac_qi + f1_jac_qd * dqd_dqi + f1_jac_ud * dud_dqi
+            f1_u = f1_jac_ui + f1_jac_ud * dud_dui
+            f2_q = (f2_jac_qi + f2_jac_qd * dqd_dqi + f2_jac_qdot * dqdot_dqi +
+                    f2_jac_ud * dud_dqi)
+            f2_u = f2_jac_ui + f2_jac_ud * dud_dui + f2_jac_qdot * dqdot_dui
         # Second case: configuration constraints only
         elif l != 0:
             dqd_dqi = - self._mat_inv_mul(fh.jacobian(qd), fh.jacobian(qi))
@@ -763,9 +783,10 @@ class Kane(object):
                     dqd_dqi)
             f1_q = (f1.jacobian(qi) + f1.jacobian(qd) * dqd_dqi)
             f1_u = f1.jacobian(ui)
+            f2_jac_qdot = f2.jacobian(qdot)
             f2_q = (f2.jacobian(qi) + f2.jacobian(qd) * dqd_dqi +
-                    f2.jacobian(self._qdot) * dqdot_dqi)
-            f2_u = (f2.jacobian(ui) + f2.jacobian(self._qdot) * dqdot_dui)
+                    f2.jac_qdot * dqdot_dqi)
+            f2_u = f2.jacobian(ui) + f2_jac_qdot * dqdot_dui
         # Third case: motion constraints only
         elif m != 0:
             dud_dqi = self._mat_inv_mul(fnh.jacobian(ud), - fnh.jacobian(qi))
@@ -774,12 +795,15 @@ class Kane(object):
                                                 fku.jacobian(ud) * dud_dui)
             dqdot_dqi = - self._k_kqdot.inv() * (fku.jacobian(qi) +
                     fkf.jacobian(qi) + fku.jacobian(ud) * dud_dqi)
-            f1_q = (f1.jacobian(qi) + f1.jacobian(ud) * dud_dqi)
-            f1_u = (f1.jacobian(ui) + f1.jacobian(ud) * dud_dui)
-            f2_q = (f2.jacobian(qi) + f2.jacobian(self._qdot) * dqdot_dqi +
-                    f2.jacobian(ud) * dud_dqi)
-            f2_u = (f2.jacobian(ui) + f2.jacobian(ud) * dud_dui +
-                    f2.jacobian(self._qdot) * dqdot_dui)
+            f1_jac_ud = f1.jacobian(ud)
+            f2_jac_qdot = f2.jacobian(qdot)
+            f2_jac_ud = f2.jacobian(ud)
+            f1_q = f1.jacobian(qi) + f1_jac_ud * dud_dqi
+            f1_u = f1.jacobian(ui) + f1_jac_ud * dud_dui
+            f2_q = (f2.jacobian(qi) + f2_jac_qdot * dqdot_dqi + f2_jac_ud
+                    * dud_dqi)
+            f2_u = (f2.jacobian(ui) + f2_jac_ud * dud_dui + f2_jac_qdot *
+                    dqdot_dui)
         # Fourth case: No constraints
         else:
             dqdot_dui = - self._k_kqdot.inv() * fku.jacobian(ui)
@@ -787,8 +811,9 @@ class Kane(object):
                     fkf.jacobian(qi))
             f1_q = f1.jacobian(qi)
             f1_u = f1.jacobian(ui)
-            f2_q = f2.jacobian(qi) + f2.jacobian(self._qdot) * dqdot_dqi
-            f2_u = f2.jacobian(ui) + f2.jacobian(self._qdot) * dqdot_dui
+            f2_jac_qdot = f2.jacobian(qdot)
+            f2_q = f2.jacobian(qi) + f2_jac_qdot * dqdot_dqi
+            f2_u = f2.jacobian(ui) + f2_jac_qdot * dqdot_dui
         f_lin_A = -(f1_q.row_join(f1_u)).col_join(f2_q.row_join(f2_u))
         if other_dyns:
             f1_oths = f1.jacobian(other_dyns)
