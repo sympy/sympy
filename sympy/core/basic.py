@@ -670,8 +670,9 @@ class Basic(PicklableWithSlots):
         >>> (x*y).args[1]
         y
 
-        Note
-        ====
+        Notes
+        =====
+
         Never use self._args, always use self.args.
         Only use _args in __new__ when creating a new function.
         Don't override .args() from Basic (so that it's easy to

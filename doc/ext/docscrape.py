@@ -104,16 +104,7 @@ class NumpyDocString(object):
             'Warnings': [],
             'References': '',
             'Examples': '',
-            'index': {},
-            'Usage':[],
-            'Note':[],
-            'Arguments':[],
-            'Strategy':[],
-            'Definition':[],
-            'Properties':[],
-            'Syntax':[],
-            'Yields':[],
-            'Return':[],
+            'index': {}
             }
 
         self._parse()

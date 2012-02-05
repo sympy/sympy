@@ -34,8 +34,8 @@ def superposition_basis(nqubits):
     nqubits : int
         The number of qubits.
 
-    Return
-    ======
+    Returns
+    =======
 
     state : Qubit
         An equal superposition of the computational basis with nqubits.

@@ -3374,10 +3374,10 @@ class Matrix(object):
 
         will not be calculated.
 
-        Note
-        ====
+        Notes
+        =====
 
-        Calculation of transformation P is not implemented yet
+        Calculation of transformation P is not implemented yet.
 
         Examples
         ========
@@ -3417,9 +3417,10 @@ class Matrix(object):
 
         will not be calculated.
 
-        Note:
+        Notes
+        =====
 
-        Calculation of transformation P is not implemented yet
+        Calculation of transformation P is not implemented yet.
 
         Examples
         ========

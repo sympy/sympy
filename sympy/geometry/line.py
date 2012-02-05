@@ -826,8 +826,9 @@ class Line(LinearEntity):
     A line is declared with two distinct points or a point and slope
     as defined using keyword `slope`.
 
-    Note
-    ----
+    Notes
+    -----
+
     At the moment only lines in a 2D space can be declared, because
     Points can be defined only for 2D spaces.
 

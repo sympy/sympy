@@ -122,8 +122,8 @@ def postorder_traversal(node):
     node : sympy expression
         The expression to traverse.
 
-    Yields
-    ------
+    Returns
+    -------
     subtree : sympy expression
         All of the subtrees in the tree.
 
@@ -159,8 +159,8 @@ class preorder_traversal(object):
     node : sympy expression
         The expression to traverse.
 
-    Yields
-    ------
+    Returns
+    -------
     subtree : sympy expression
         All of the subtrees in the tree.
 
@@ -421,8 +421,8 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     start : int, optional
         The start number.  By default, it is 0.
 
-    Yields
-    ------
+    Returns
+    -------
     sym : Symbol
         The subscripted symbols.
     """

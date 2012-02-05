@@ -37,8 +37,9 @@ class Point(GeometryEntity):
     TypeError
         When trying to add or subtract points with different dimensions.
 
-    Note
-    ----
+    Notes
+    =====
+
     Currently only 2-dimensional points are supported.
 
     See Also

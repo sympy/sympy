@@ -371,8 +371,9 @@ class Polygon(GeometryEntity):
         sides : list of sides
             Each side is a Segment.
 
-        Note
-        ----
+        Notes
+        =====
+
         The Segments that represent the sides are an undirected
         line segment so cannot be used to tell the orientation of
         the polygon.
@@ -982,8 +983,9 @@ class RegularPolygon(Polygon):
         If the `center` is not a Point, or the `radius` is not a number or Basic
         instance, or the number of sides, `n`, is less than three.
 
-    Note
-    ----
+    Notes
+    =====
+
     A RegularPolygon can be instantiated with Polygon with the kwarg n.
 
     Regular polygons are instantiated with a center, radius, number of sides
