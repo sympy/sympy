@@ -6,6 +6,7 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
     separate, collect, factorial, apart, combsimp, factor, refine, cancel,
     Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum)
+from sympy.core.function import UndefinedFunction
 from sympy.abc import a, b, c, d, e, n, t, u, x, y, z
 from sympy.physics.secondquant import FockState
 
@@ -242,6 +243,20 @@ def test_atoms():
                                                    [1 + x*(2 + y)+exp(3 + z),
                                                     2 + y,
                                                     3 + z])
+
+    # issue 3033
+    f = Function('f')
+    e = (f(x) + sin(x) + 2)
+    assert e.atoms(UndefinedFunction) == \
+        set([f(x)])
+    assert e.atoms(UndefinedFunction, Function) == \
+        set([f(x), sin(x)])
+    assert e.atoms(Function) == \
+        set([f(x), sin(x)])
+    assert e.atoms(UndefinedFunction, Number) == \
+        set([f(x), S(2)])
+    assert e.atoms(Function, Number) == \
+        set([S(2), sin(x), f(x)])
 
 def test_is_polynomial():
     k = Symbol('k', nonnegative=True, integer=True)
