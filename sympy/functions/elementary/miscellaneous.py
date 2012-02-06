@@ -68,7 +68,7 @@ def sqrt(arg):
     >>> x.subs(x, -1)
     -1
 
-    This is because sqrt computes the principle square root, so the square may
+    This is because sqrt computes the principal square root, so the square may
     put the argument in a different branch.  This identity does hold if x is
     positive:
 
@@ -148,6 +148,24 @@ def root(arg, n):
     >>> [ RootOf(x**4-1,i) for i in (0,1,2,3) ]
     [-1, 1, -I, I]
 
+    SymPy, like other symbolic algebra systems, returns the
+    complex root of negative numbers. This is the principal
+    root and differs from the text-book result that one might
+    be expecting. For example, the cube root of -8 does not
+    come back as -2:
+
+    >>> root(-8, 3)
+    2*(-1)**(1/3)
+
+    The real_root function can be used to either make such a result
+    real or simply return the real root in the first place:
+
+    >>> from sympy import real_root
+    >>> real_root(_)
+    -2
+    >>> real_root(-32, 5)
+    -2
+
     See Also
     ========
 
@@ -162,6 +180,7 @@ def root(arg, n):
     * http://en.wikipedia.org/wiki/real_root
     * http://en.wikipedia.org/wiki/Root_of_unity
     * http://en.wikipedia.org/wiki/Principal_value
+    * http://mathworld.wolfram.com/CubeRoot.html
 
     """
     n = sympify(n)
