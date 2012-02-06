@@ -1383,6 +1383,22 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.left('atan2'))
         return pform
 
+    def _print_RandomDomain(self, d):
+        try:
+            pform = self._print('Domain: ')
+            pform = prettyForm(*pform.right(self._print(d.as_boolean())))
+            return pform
+
+        except:
+            try:
+                pform = self._print('Domain: ')
+                pform = prettyForm(*pform.right(self._print(d.symbols)))
+                pform = prettyForm(*pform.right(self._print(' in ')))
+                pform = prettyForm(*pform.right(self._print(d.set)))
+                return pform
+            except:
+                return self._print(None)
+
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 

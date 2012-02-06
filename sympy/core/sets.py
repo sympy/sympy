@@ -1018,8 +1018,11 @@ class FiniteSet(CountableSet):
         if len(args) == 0:
             return EmptySet()
 
-        if all(arg.is_number and arg.is_real for arg in args):
-            cls = RealFiniteSet
+        try:
+            if all([arg.is_real and arg.is_number for arg in args]):
+                cls = RealFiniteSet
+        except AttributeError:
+            pass
 
         elements = frozenset(map(sympify, args))
         obj = Basic.__new__(cls, elements)
@@ -1115,6 +1118,9 @@ class FiniteSet(CountableSet):
     @property
     def is_real(self):
         return all(el.is_real for el in self)
+
+    def compare(self, other):
+        return (hash(self) - hash(other))
 
 class RealFiniteSet(FiniteSet, RealSet):
     """
