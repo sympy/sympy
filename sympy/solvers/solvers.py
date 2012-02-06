@@ -1992,7 +1992,7 @@ def _invert(eq, *symbols, **kwargs):
     (0, sqrt(x) + y)
 
     If there is more than one symbol in a power's base and the exponent
-    is not an Integer, then the principle root will be used for the
+    is not an Integer, then the principal root will be used for the
     inversion:
 
     >>> invert(sqrt(x + y) - 2)
@@ -2001,7 +2001,7 @@ def _invert(eq, *symbols, **kwargs):
     (4, x + y)
 
     If the exponent is an integer, setting ``integer_power`` to True
-    will force the principle root to be selected:
+    will force the principal root to be selected:
 
     >>> invert(x**2 - 4, integer_power=True)
     (2, x)

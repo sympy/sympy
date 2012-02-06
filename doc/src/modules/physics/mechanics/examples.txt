@@ -323,7 +323,7 @@ Assignment the relevant points to each body. ::
   >>> BodyWR.mc = WR_mc
 
 Sets the inertias of each body. Uses the inertia frame to construct the inertia
-dyadics. Wheel inertias are only defined by principle moments of inertia, and
+dyadics. Wheel inertias are only defined by principal moments of inertia, and
 are in fact constant in the frame and fork reference frames; it is for this
 reason that the orientations of the wheels does not need to be defined. The
 frame and fork inertias are defined in the 'Temp' frames which are fixed to the
