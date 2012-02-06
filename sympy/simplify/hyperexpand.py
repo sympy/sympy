@@ -2265,7 +2265,7 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
                 b_ = pbm[m][0]
                 ki = [bi - b_ for bi in pbm[m][1:]]
                 u = len(ki)
-                li = [ai - b_ for ai in pap[m][0:u+1]]
+                li = [ai - b_ for ai in pap[m][:u+1]]
                 bo = list(bm)
                 for b in pbm[m]:
                     bo.remove(b)

@@ -224,7 +224,7 @@ def test_berkowitz_minors():
 
 def test_submatrix():
     m0 = eye(4)
-    assert m0[0:3, 0:3] == eye(3)
+    assert m0[:3, :3] == eye(3)
     assert m0[2:4, 0:2] == zeros(2)
 
     m1 = Matrix(3,3, lambda i,j: i+j)
@@ -242,7 +242,7 @@ def test_submatrix_assignment():
                         (0,0,0,0),
                         (0,0,1,0),
                         (0,0,0,1)))
-    m[0:2, 0:2] = eye(2)
+    m[:2, :2] = eye(2)
     assert m == eye(4)
     m[:,0] = Matrix(4,1,(1,2,3,4))
     assert m == Matrix(((1,0,0,0),
@@ -256,7 +256,7 @@ def test_submatrix_assignment():
                         (5,6,7,8),
                         (9, 10, 11, 12),
                         (13,14,15,16)))
-    m[0:2, 0] = [0,0]
+    m[:2, 0] = [0,0]
     assert m == Matrix(((0,2,3,4),
                         (0,6,7,8),
                         (9, 10, 11, 12),
@@ -769,7 +769,7 @@ def test_sparse_matrix():
 
     # test_submatrix
     m0 = eye(4)
-    assert m0[0:3, 0:3] == eye(3)
+    assert m0[:3, :3] == eye(3)
     assert m0[2:4, 0:2] == zeros(2)
 
     m1 = SparseMatrix(3,3, lambda i,j: i+j)
@@ -789,7 +789,7 @@ def test_sparse_matrix():
                         (0,0,0,0),
                         (0,0,1,0),
                         (0,0,0,1))
-    m[0:2, 0:2] = eye(2)
+    m[:2, :2] = eye(2)
     assert m == eye(4)
     m[:,0] = SparseMatrix(4,1,(1,2,3,4))
     assert m == SparseMatrix((1,0,0,0),
@@ -803,7 +803,7 @@ def test_sparse_matrix():
                         (5,6,7,8),
                         (9, 10, 11, 12),
                         (13,14,15,16)))
-    m[0:2, 0] = [0,0]
+    m[:2, 0] = [0,0]
     assert m == SparseMatrix(((0,2,3,4),
                         (0,6,7,8),
                         (9, 10, 11, 12),

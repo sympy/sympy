@@ -432,9 +432,9 @@ def test_laplace_transform():
     assert LT((exp(2*t)-1)*exp(-b - t)*Heaviside(t)/2, t, s, noconds=True) \
            == exp(-b)/(s**2 - 1)
 
-    assert LT(exp(t), t, s)[0:2] == (1/(s-1), 1)
-    assert LT(exp(2*t), t, s)[0:2] == (1/(s-2), 2)
-    assert LT(exp(a*t), t, s)[0:2] == (1/(s-a), a)
+    assert LT(exp(t), t, s)[:2] == (1/(s-1), 1)
+    assert LT(exp(2*t), t, s)[:2] == (1/(s-2), 2)
+    assert LT(exp(a*t), t, s)[:2] == (1/(s-a), a)
 
     assert LT(log(t/a), t, s) == ((log(a) + log(s) + EulerGamma)/(-s), 0, True)
 

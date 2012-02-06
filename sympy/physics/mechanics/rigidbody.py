@@ -46,7 +46,7 @@ class RigidBody(object):
 
     def __init__(self, name, mc, frame, mass, inertia):
         if not isinstance(name, str):
-            raise TypeError('Supply a valid name')
+            raise TypeError('Supply a valid name.')
         self._name = name
         self.set_mc(mc)
         self.set_mass(mass)
@@ -74,7 +74,7 @@ class RigidBody(object):
 
     def set_mc(self, p):
         if not isinstance(p, Point):
-            raise TypeError("RigidBody mass center must be a Point object")
+            raise TypeError("RigidBody mass center must be a Point object.")
         self._mc = p
 
     mc = property(get_mc, set_mc)

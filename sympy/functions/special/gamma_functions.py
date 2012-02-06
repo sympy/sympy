@@ -368,7 +368,7 @@ class polygamma(Function):
 
     def fdiff(self, argindex=2):
         if argindex == 2:
-            n, z = self.args[0:2]
+            n, z = self.args[:2]
             return polygamma(n+1, z)
         else:
             raise ArgumentIndexError(self, argindex)

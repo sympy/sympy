@@ -206,16 +206,16 @@ class Kane(object):
         """
 
         if not isinstance(qind, (list, tuple)):
-            raise TypeError('Generalized coords. must be supplied in a list')
+            raise TypeError('Generalized coords. must be supplied in a list.')
         self._q = qind + qdep
         self._qdot = [diff(i, dynamicsymbols._t) for i in self._q]
 
         if not isinstance(qdep, (list, tuple)):
             raise TypeError('Dependent speeds and constraints must each be '
-                            'provided in their own list')
+                            'provided in their own list.')
         if len(qdep) != len(coneqs):
             raise ValueError('There must be an equal number of dependent '
-                             'speeds and constraints')
+                             'speeds and constraints.')
         coneqs = Matrix(coneqs)
         self._qdep = qdep
         self._f_h = coneqs
@@ -247,21 +247,21 @@ class Kane(object):
         """
 
         if not isinstance(uind, (list, tuple)):
-            raise TypeError('Generalized speeds must be supplied in a list')
+            raise TypeError('Generalized speeds must be supplied in a list.')
         self._u = uind + udep
         self._udot = [diff(i, dynamicsymbols._t) for i in self._u]
         self._uaux = u_auxiliary
 
         if not isinstance(udep, (list, tuple)):
             raise TypeError('Dependent speeds and constraints must each be '
-                            'provided in their own list')
+                            'provided in their own list.')
         if len(udep) != len(coneqs):
             raise ValueError('There must be an equal number of dependent '
-                             'speeds and constraints')
+                             'speeds and constraints.')
         if diffconeqs != None:
             if len(udep) != len(diffconeqs):
                 raise ValueError('There must be an equal number of dependent '
-                                 'speeds and constraints')
+                                 'speeds and constraints.')
         if len(udep) != 0:
             u = self._u
             uzero = dict(zip(u, [0] * len(u)))
@@ -301,7 +301,7 @@ class Kane(object):
     def kindiffdict(self):
         """Returns the qdot's in a dictionary. """
         if self._k_kqdot == None:
-            raise ValueError('Kin. diff. eqs need to be supplied first')
+            raise ValueError('Kin. diff. eqs need to be supplied first.')
         sub_dict = solve_linear_system_LU(Matrix([self._k_kqdot.T,
             -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
         return sub_dict
@@ -378,7 +378,7 @@ class Kane(object):
                     FR[i] += speed.diff(v, N) & w[1]
                 else:
                     raise TypeError('First entry in force pair is a point or'
-                                    ' frame')
+                                    ' frame.')
         # for dependent speeds
         if len(self._udep) != 0:
             m = len(self._udep)
@@ -408,7 +408,7 @@ class Kane(object):
         if not isinstance(bl, (list, tuple)):
             raise TypeError('Bodies must be supplied in a list.')
         if self._fr == None:
-            raise ValueError('Calculate Fr first, please')
+            raise ValueError('Calculate Fr first, please.')
         t = dynamicsymbols._t
         N = self._inertial
         self._bodylist = bl
@@ -459,7 +459,7 @@ class Kane(object):
 
                     # This block of code needs to have a test written for it
                     print('This functionality has not yet been tested yet, '
-                          'use at your own risk')
+                          'use at your own risk.')
                     f = v.frame
                     d = v.mc.pos_from(P)
                     I -= m * (((f.x | f.x) + (f.y | f.y) + (f.z | f.z)) *
@@ -515,7 +515,7 @@ class Kane(object):
                 partials.append((tl1, tl2))
             else:
                 raise TypeError('The body list needs RigidBody or '
-                                'Particle as list elements')
+                                'Particle as list elements.')
             rsts.append((rs, ts))
 
         # Use R*, T* and partial velocities to form FR*
@@ -591,9 +591,9 @@ class Kane(object):
         """
 
         if (self._q == None) or (self._u == None):
-            raise ValueError('Speeds and coordinates must be supplied first')
+            raise ValueError('Speeds and coordinates must be supplied first.')
         if (self._k_kqdot == None):
-            raise ValueError('Supply kinematic differential equations please')
+            raise ValueError('Supply kinematic differential equations, please.')
 
 
         fr = self._form_fr(FL)
@@ -614,9 +614,9 @@ class Kane(object):
     @property
     def auxiliary_eqs(self):
         if (self._fr == None) or (self._frstar == None):
-            raise ValueError('Need to compute Fr, Fr* first')
+            raise ValueError('Need to compute Fr, Fr* first.')
         if self._uaux == []:
-            raise ValueError('No auxiliary speeds have been declared')
+            raise ValueError('No auxiliary speeds have been declared.')
         return self._aux_eq
 
     def linearize(self):
@@ -653,14 +653,14 @@ class Kane(object):
         """
 
         if (self._fr == None) or (self._frstar == None):
-            raise ValueError('Need to compute Fr, Fr* first')
+            raise ValueError('Need to compute Fr, Fr* first.')
 
         # Note that this is now unneccessary, and it should never be
         # encountered; I still think it should be in here in case the user
         # manually sets these matrices incorrectly.
         for i in self._q:
             if self._k_kqdot.diff(i) != 0 * self._k_kqdot:
-                raise ValueError('Matrix K_kqdot must not depend on any q')
+                raise ValueError('Matrix K_kqdot must not depend on any q.')
 
         t = dynamicsymbols._t
         uaux = self._uaux
@@ -677,8 +677,8 @@ class Kane(object):
                                                               self._k_dnh,
                                                               self._f_dnh,
                                                               self._k_d]):
-            raise ValueError('Cannot have dynamic symbols outside dynamic ' +
-                             'forcing vector')
+            raise ValueError('Cannot have dynamic symbols outside dynamic '
+                             'forcing vector.')
         other_dyns = list(self._find_dynamicsymbols(self._f_d.subs(subdict),
                                              insyms))
 
@@ -687,16 +687,16 @@ class Kane(object):
 
         for i in other_dyns:
             if diff(i, dynamicsymbols._t) in other_dyns:
-                raise ValueError('Cannot have derivatives of specified ' +
-                                 'quantities when linearizing forcing terms')
+                raise ValueError('Cannot have derivatives of specified '
+                                 'quantities when linearizing forcing terms.')
 
         o = len(self._u) # number of speeds
         n = len(self._q) # number of coordinates
         l = len(self._qdep) # number of configuration constraints
         m = len(self._udep) # number of motion constraints
-        qi = Matrix(self._q[0: n - l]) # independent coords
+        qi = Matrix(self._q[: n - l]) # independent coords
         qd = Matrix(self._q[n - l: n]) # dependent coords; could be empty
-        ui = Matrix(self._u[0: o - m]) # independent speeds
+        ui = Matrix(self._u[: o - m]) # independent speeds
         ud = Matrix(self._u[o - m: o]) # dependent speeds; could be empty
         qdot = Matrix(self._qdot) # time derivatives of coordinates
 
@@ -828,14 +828,14 @@ class Kane(object):
         # Returns the mass matrix, which is augmented by the differentiated non
         # holonomic equations if necessary
         if (self._frstar == None) & (self._fr == None):
-            raise ValueError('Need to compute Fr, Fr* first')
+            raise ValueError('Need to compute Fr, Fr* first.')
         return Matrix([self._k_d, self._k_dnh])
 
     @property
     def mass_matrix_full(self):
         # Returns the mass matrix from above, augmented by kin diff's k_kqdot
         if (self._frstar == None) & (self._fr == None):
-            raise ValueError('Need to compute Fr, Fr* first')
+            raise ValueError('Need to compute Fr, Fr* first.')
         o = len(self._u)
         n = len(self._q)
         return ((self._k_kqdot).row_join(zeros(n, o))).col_join((zeros(o,
@@ -846,7 +846,7 @@ class Kane(object):
         # Returns the forcing vector, which is augmented by the differentiated
         # non holonomic equations if necessary
         if (self._frstar == None) & (self._fr == None):
-            raise ValueError('Need to compute Fr, Fr* first')
+            raise ValueError('Need to compute Fr, Fr* first.')
         return -Matrix([self._f_d, self._f_dnh])
 
     @property
@@ -854,7 +854,7 @@ class Kane(object):
         # Returns the forcing vector, which is augmented by the differentiated
         # non holonomic equations if necessary
         if (self._frstar == None) & (self._fr == None):
-            raise ValueError('Need to compute Fr, Fr* first')
+            raise ValueError('Need to compute Fr, Fr* first.')
         f1 = self._k_ku * Matrix(self._u) + self._f_k
         return -Matrix([f1, self._f_d, self._f_dnh])
 
