@@ -1498,7 +1498,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     Hints evaluated unless explicitly set to False are:
       basic, log, multinomial, mul, power_base, and power_exp
     The following hints are supported but not applied unless set to True:
-      complex, func, and trig.
+      complex, func, trig, frac, numer, and denom.
 
     basic is a generic keyword for methods that want to be expanded
     automatically.  For example, Integral uses expand_basic to expand the
@@ -1926,7 +1926,8 @@ def count_ops(expr, visual=False):
                     ops.append(o*(len(a.args) - 1))
                 else:
                     ops.append(o)
-            args.extend(a.args)
+            if not a.is_Symbol:
+                args.extend(a.args)
 
     elif type(expr) is dict:
         ops = [count_ops(k, visual=visual) +

@@ -83,6 +83,7 @@ modules = [
     'sympy.simplify',
     'sympy.solvers',
     'sympy.statistics',
+    'sympy.stats',
     'sympy.tensor',
     'sympy.utilities',
     'sympy.utilities.mathml',

@@ -30,8 +30,8 @@ implementation of which is::
     def __hash__(self):
         return id(self)
 
-You can reimplement it to return a different integer that you compute on your own. 
-``hash(x)`` just calls ``x.__hash__()``. Python builtin classes usually redefine 
+You can reimplement it to return a different integer that you compute on your own.
+``hash(x)`` just calls ``x.__hash__()``. Python builtin classes usually redefine
 the ``__hash__()`` method. For example, an ``int`` has something like this::
 
     def __hash__(self):

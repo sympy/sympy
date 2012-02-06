@@ -25,6 +25,9 @@ from sympy.polys.polytools import _keep_coeff
 
 import sympy.mpmath as mpmath
 
+def _mexpand(expr):
+    return expand_mul(expand_multinomial(expr))
+
 def fraction(expr, exact=False):
     """Returns a pair with expression's numerator and denominator.
        If the given expression is not a fraction then this function
@@ -1060,11 +1063,78 @@ def collect_const(expr, *vars, **first):
                 break
     return expr
 
-def radsimp(expr, symbolic=True):
+def _split_gcd(*a):
     """
-    Rationalize the denominator by removing square roots. If there are more
-    than 3 terms (after collecting common square root terms) that have
-    square roots then the removal is in general only partial.
+    split the list of integers `a` into a list of integers a1 having
+    g = gcd(a1) and a list a2 whose elements are not divisible by g
+
+    Examples
+    ========
+    >>> from sympy.simplify.simplify import _split_gcd
+    >>> _split_gcd(55,35,22,14,77,10)
+    ([55, 35, 10], [22, 14, 77])
+    """
+    g = a[0]
+    b1 = [g]
+    b2 = []
+    for x in a[1:]:
+        g1 = gcd(g, x)
+        if g1 == 1:
+            b2.append(x)
+        else:
+            g = g1
+            b1.append(x)
+    return b1, b2
+
+def split_surds(expr):
+    """
+    split an expression with terms whose squares are rationals
+    into a sum of terms whose surds squared have gcd equal to g
+    and a sum of terms with surds squared prime with g
+
+    Examples
+    ========
+    >>> from sympy import sqrt
+    >>> from sympy.simplify.simplify import split_surds
+    >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
+    (sqrt(5)/7 + sqrt(10) + sqrt(15), sqrt(6) + 3*sqrt(3))
+    """
+    coeff_muls =  [x.as_coeff_Mul() for x in expr.args]
+    surds = [x[1]**2 for x in coeff_muls if x[1].is_Pow]
+    b1, b2 = _split_gcd(*surds)
+    a1v, a2v = [], []
+    for c, s in coeff_muls:
+        if s**2 in b1:
+            a1v.append(c*s)
+        else:
+            a2v.append(c*s)
+    a = Add(*a1v)
+    b = Add(*a2v)
+    return a, b
+
+def rad_rationalize(num, den):
+    """
+    Rationalize num/den by removing square roots in the denominator;
+    num and den are sum of terms whose squares are rationals
+
+    Examples
+    ========
+    >>> from sympy import sqrt
+    >>> from sympy.simplify.simplify import rad_rationalize
+    >>> rad_rationalize(sqrt(3), 1 + sqrt(2)/3)
+    (-sqrt(3) + sqrt(6)/3, -7/9)
+    """
+    if not den.is_Add:
+        return num, den
+    a, b = split_surds(den)
+    num = _mexpand((a - b)*num)
+    den = _mexpand(a**2 - b**2)
+    return rad_rationalize(num, den)
+
+
+def radsimp(expr, symbolic=True, max_terms=4):
+    """
+    Rationalize the denominator by removing square roots.
 
     Note: the expression returned from radsimp must be used with caution
     since if the denominator contains symbols, it will be possible to make
@@ -1075,6 +1145,7 @@ def radsimp(expr, symbolic=True):
     you do not want the simplification to occur for symbolic denominators, set
     ``symbolic`` to False.
 
+    If there are more than ``max_terms`` radical terms do not simplify.
 
     Examples
     ========
@@ -1145,41 +1216,29 @@ def radsimp(expr, symbolic=True):
             d = sqrtdenest(sqrt(d.base))**d.exp.p
 
         changed = False
-        nterms4 = False
         while 1:
             # collect similar terms
-            d, nterms = collect_sqrt(expand_mul(expand_multinomial(d)), evaluate=False)
+            d, nterms = collect_sqrt(_mexpand(d), evaluate=False)
             d = Add._from_args(d)
+            if nterms > max_terms:
+                break
 
             # check to see if we are done:
             # - no radical terms
-            # - don't continue if there are more than 4 radical
-            #   terms and a constant term, too; in the case of 4 radical
-            #   terms don't continue if they do not reduce after an
-            #   iteration
+            # - if there are more than 3 radical terms, or
+            #   there 3 radical terms and a constant, use rad_rationalize
             if not nterms:
                 break
-            elif nterms > 4 or nterms4 and nterms == 4 and len(d.args) > 5:
-                n, d = fraction(expr)
+            if nterms > 3 or nterms == 3 and len(d.args) > 4:
+                if all([(x**2).is_Integer for x in d.args]):
+                    nd, d = rad_rationalize(S.One, d)
+                    n = _mexpand(n*nd)
+                else:
+                    n, d = fraction(expr)
                 break
             changed = True
 
             # now match for a radical
-            if nterms == 4 and len(d.args) == 5:
-                r = d.match(a + b*sqrt(c) + D*sqrt(E) + F*sqrt(G))
-                va, vb, vc, vd, ve, vf, vg = \
-                    r[a], r[b], r[c], r[D], r[E], r[F], r[G]
-                nmul = va - vb*sqrt(vc) - vd*sqrt(ve) - vf*sqrt(vg)
-                d = va**2 - vc*vb**2 - ve*vd**2 - vg*vf**2 - \
-                2*vb*vd*sqrt(vc*ve) - 2*vb*vf*sqrt(vc*vg) - 2*vd*vf*sqrt(ve*vg)
-                nterms4 = True
-                n1 = n/d
-                if denom(n1) is not S.One:
-                    n = -(-n/d)
-                else:
-                    n = n1
-                n, d = fraction(n*nmul)
-
             if len(d.args) == 4:
                 r = d.match(a + b*sqrt(c) + D*sqrt(E))
                 va, vb, vc, vd, ve = r[a], r[b], r[c], r[D], r[E]
@@ -2583,26 +2642,6 @@ def simplify(expr, ratio=1.7, measure=count_ops):
         >>> count_ops(simplify(root, ratio=oo)) > count_ops(root)
         True
 
-    Another issue to be aware of if using ``ratio=oo`` is that simplification
-    of a denominator containing a sqrt may lead to an expression which is not
-    strictly valid. If ``ratio`` is not changed, this transformation doesn't
-    (usually) happen since it would lead to a longer expression:
-
-        >>> from sympy.abc import a, b, c
-        >>> from sympy import sqrt
-        >>> eq = 1/(a + b*sqrt(c))
-        >>> simplify(eq) == eq
-        True
-        >>> forced = simplify(eq, ratio=oo)
-        >>> forced == eq
-        False
-        >>> eq.subs(a, b*sqrt(c))
-        1/(2*b*sqrt(c))
-        >>> forced.subs(a, b*sqrt(c))
-        nan
-        >>> forced
-        (a - b*sqrt(c))/(a**2 - b**2*c)
-
     Note that the shortest expression is not necessary the simplest, so
     setting ``ratio`` to 1 may not be a good idea.
     Heuristically, the default value ``ratio=1.7`` seems like a reasonable
@@ -2719,34 +2758,9 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     expr = powsimp(expr, combine='exp', deep=True)
     numer, denom = expr.as_numer_denom()
     if denom.is_Add:
-        a, b, c = map(Wild, 'abc')
-
-        # cancel already took care of things like 1/sqrt(3) -> sqrt(3)/3
-        # so we don't have to worry about `a` matching with `b`=0 as we
-        # do in radsimp yet, but we do below...
-        r = denom.match(a + b*sqrt(c))
-
-        if r is not None and r[b]:
-            # be careful not to multiply by 0/0 when removing denom;
-            # this will happen in a = +/- b*sqrt(c), so collect c so
-            # it's not also in `a` but this may turn the denom into
-            # a Mul so we have to watch out for that.
-            if r[c].is_number:
-                newdenom = collect_const(denom, sqrt(r[c]))
-                if newdenom != denom:
-                    if newdenom.is_Add:
-                        r = newdenom.match(a + b*sqrt(c))
-                    else:
-                        r = None # Add turned into a Mul
-            if r:
-                a, b, c = r[a], r[b], r[c]
-
-                numer *= a-b*sqrt(c)
-                numer = numer.expand()
-
-                denom = a**2 - c*b**2
-
-                expr = numer/denom
+        n, d = fraction(radsimp(1/denom, symbolic=False, max_terms=1))
+        if n is not S.One:
+            expr = (numer*n).expand()/d
 
     if expr.could_extract_minus_sign():
         n, d = expr.as_numer_denom()

@@ -142,13 +142,13 @@ class Relational(Expr, EvalfMixin):
             except KeyError:
                 msg = "Invalid relational operator symbol: '%r'"
                 raise ValueError(msg % repr(rop))
-        if lhs.is_number and rhs.is_number and lhs.is_real and rhs.is_real:
-            # Just becase something is a number, doesn't mean you can evalf it.
-            Nlhs = lhs.evalf()
-            if Nlhs.is_Number:
-                # S.Zero.evalf() returns S.Zero, so test Number instead of Float
-                Nrhs = rhs.evalf()
-                if Nrhs.is_Number:
+        if lhs.is_number and rhs.is_number and (rop in ('==', '!=' ) or
+        lhs.is_real and rhs.is_real):
+            # Just because something is a number, doesn't mean you can evalf it.
+            Nlhs = lhs.evalf() if not lhs.is_Atom else lhs
+            if Nlhs.is_Atom:
+                Nrhs = rhs.evalf() if not rhs.is_Atom else rhs
+                if Nrhs.is_Atom:
                     return rop_cls._eval_relation(Nlhs, Nrhs)
 
         obj = Expr.__new__(rop_cls, lhs, rhs, **assumptions)
