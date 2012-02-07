@@ -16,6 +16,18 @@ class Kane(object):
 
     The attributes are for equations in the form [M] udot = forcing.
 
+    Very Important Warning: simp is set to True by default, to the advantage of
+    smaller, simpler systems. If your system is large, it will lead to
+    slowdowns; however turning it off might have negative implications in
+    numerical evaluation. Care needs to be taken to appropriately reduce
+    expressions generated with simp==False, as they might be too large
+    themselves. Computing the relationship between independent and dependent
+    speeds (when dealing with non-holonomic systems) benefits from simp being
+    set to True (during the .speeds() method); the same is true for
+    linearization of non-holonomic systems.  If numerical evaluations are
+    unsucessful with simp==False, try setting simp to True only for these
+    methods; this provides some compromise between the two options.
+
     Attributes
     ==========
 
@@ -101,7 +113,7 @@ class Kane(object):
 
     """
 
-    simp = False
+    simp = True
 
     def __init__(self, frame):
         """Supply the inertial frame for Kane initialization. """
