@@ -310,7 +310,7 @@ entering the numerical value. ::
 Declaration of the RigidBody containers. ::
 
   >>> BodyFrame = RigidBody('BodyFrame', Frame_mc, Frame, mframe, Frame_I)
-  >>> BodyFork = RigidBody('BodyFork', Fork_mc, Frame, mfork, Fork_I)
+  >>> BodyFork = RigidBody('BodyFork', Fork_mc, Fork, mfork, Fork_I)
   >>> BodyWR = RigidBody('BodyWR', WR_mc, WR, mwr, WR_I)
   >>> BodyWF = RigidBody('BodyWF', WF_mc, WF, mwf, WF_I)
 
