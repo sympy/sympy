@@ -153,12 +153,31 @@ class Expr(Basic, EvalfMixin):
     def __rmod__(self, other):
         return Mod(other, self)
 
+    def __int__(self):
+        from sympy import round
+        # we'll look to the 15th decimal to see if this appears to be an integer
+        f = round(self, 15)
+        i = C.Integer(f)
+        # if it appears to be an integer still we will warn that we aren't
+        # sure if this is really an integer or not
+        if i and i == f and not self.is_integer:
+            from sympy.solvers.solvers import _filldedent
+            raise ValueError(_filldedent('''
+            %s was calculated to 15 decimal digits and appeared to be
+            %s; it was not confirmed to be an integer, however.
+            Use round() to round your expression to the desired number
+            of decimal places, first.''' % (self, i)))
+        i = int(i)
+        return i
+
     def __float__(self):
+        # Don't bother testing if it's a number; if it's not this is going
+        # to fail, and if it is we still need to check that it evalf'ed to
+        # a number.
         result = self.evalf()
         if result.is_Number:
             return float(result)
-        else:
-            raise ValueError("Symbolic value, can't compute")
+        raise TypeError("%s should be a literal number." % self)
 
     def __complex__(self):
         result = self.evalf()
@@ -510,7 +529,7 @@ class Expr(Basic, EvalfMixin):
                     if factor.is_number:
                         try:
                             coeff *= complex(factor)
-                        except ValueError:
+                        except TypeError:
                             pass
                         else:
                             continue

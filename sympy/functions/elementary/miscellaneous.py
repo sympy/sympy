@@ -530,25 +530,39 @@ def round(x, p=0):
     True
 
     """
+    from sympy.functions.elementary.exponential import log
+    from sympy.mpmath.libmp import prec_to_dps
+
     if not isinstance(x, Expr):
         return _pyround(x, p)
     if not x.is_number:
+        raise TypeError('%s is not a number' % x)
+    if not x:
         return x
     p = int(p)
-    mag_first_dig = int(ceil(log10(abs(x.n()))))
-    digits_needed = mag_first_dig + p
+
+    precs = [f._prec for f in x.atoms(C.Float)]
+    dps = prec_to_dps(max(precs)) if precs else None
+
+    try:
+        mag_first_dig = int(ceil(log10(abs(x.n()))))
+    except (ValueError, OverflowError):
+        mag_first_dig = int(ceil(log(abs(x), 10).n()))
+    allow = digits_needed = mag_first_dig + p
+    if dps is not None and allow > dps:
+        allow = dps
     mag = Pow(10, p) # magnitude needed to bring digit p to units place
     x += 1/(2*mag) # add the half for rounding
-    rv = Integer(x.n(digits_needed)*mag) # evaluate, shift p to unit, truncate
+    i10 = 10*mag*x.n((dps if dps is not None else digits_needed) + 1)
+    rv = Integer(i10)//10
     q = 1
     if p > 0:
         q = mag
     elif p < 0:
         rv /= mag
-    # evaluate to the needed precision but store it exactly
     rv = Rational(rv, q)
     if rv.is_Integer:
         # use str or else it won't be a float
         return C.Float(str(rv), digits_needed)
     else:
-        return C.Float(rv, digits_needed)
+        return C.Float(rv, allow)

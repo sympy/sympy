@@ -678,7 +678,7 @@ class Float(Number):
         return Float._new(mlib.mpf_abs(self._mpf_), self._prec)
 
     def __int__(self):
-        return int(mlib.to_int(self._mpf_))
+        return int(mlib.to_int(self._mpf_)) # uses round_fast = round_down
 
     def __eq__(self, other):
         if isinstance(other, float):
@@ -1080,7 +1080,10 @@ class Rational(Number):
         return Rational(abs(self.p), self.q)
 
     def __int__(self):
-        return int(float(self.p)/self.q)
+        p, q = self.p, self.q
+        if p < 0:
+            return -(-p//q)
+        return p//q
 
     def __eq__(self, other):
         try:
@@ -1370,6 +1373,12 @@ class Integer(Rational):
     def __new__(cls, i):
         if isinstance(i, basestring):
             i = i.replace(' ', '')
+        # whereas we cannot, in general, make a Rational from an
+        # arbitrary expression, we can make an Integer unambiguously
+        # (except when a non-integer expression happens to round to
+        # an integer). So we proceed by taking int() of the input and
+        # let the int routines determine whether the expression can
+        # be made into an int or whether an error should be raised.
         ival = int(i)
 
         try:
@@ -2357,7 +2366,8 @@ class NumberSymbol(AtomicExpr):
         return (-self) <= (-other)
 
     def __int__(self):
-        return int(self.evalf(0))
+        # subclass with appropriate return value
+        raise NotImplementedError
 
     def __hash__(self):
         return super(NumberSymbol, self).__hash__()
@@ -2376,6 +2386,9 @@ class Exp1(NumberSymbol):
     @staticmethod
     def __abs__():
         return S.Exp1
+
+    def __int__(self):
+        return 2
 
     def _as_mpf_val(self, prec):
         return mpf_e(prec)
@@ -2409,6 +2422,9 @@ class Pi(NumberSymbol):
     def __abs__():
         return S.Pi
 
+    def __int__(self):
+        return 3
+
     def _as_mpf_val(self, prec):
         return mpf_pi(prec)
 
@@ -2432,6 +2448,9 @@ class GoldenRatio(NumberSymbol):
     is_irrational = True
 
     __slots__ = []
+
+    def __int__(self):
+        return 1
 
     def _as_mpf_val(self, prec):
          # XXX track down why this has to be increased
@@ -2462,6 +2481,9 @@ class EulerGamma(NumberSymbol):
 
     __slots__ = []
 
+    def __int__(self):
+        return 0
+
     def _as_mpf_val(self, prec):
          # XXX track down why this has to be increased
         v = mlib.libhyper.euler_fixed(prec+10)
@@ -2487,6 +2509,9 @@ class Catalan(NumberSymbol):
     is_irrational = None
 
     __slots__ = []
+
+    def __int__(self):
+        return 0
 
     def _as_mpf_val(self, prec):
         # XXX track down why this has to be increased
