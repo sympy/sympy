@@ -1,5 +1,5 @@
 from sympy.stats import (Normal, Exponential, P, E, Where, Density, Var, Covar,
-        Skewness, Gamma, Pareto, Beta, Uniform, Given, pspace, CDF,
+        Skewness, Gamma, Pareto, Weibull, Beta, Uniform, Given, pspace, CDF,
         ContinuousRV, Sample)
 from sympy import (Symbol, exp, S, pi, simplify, Interval, erf, Eq, symbols,
         sqrt, And, gamma, beta, Piecewise)

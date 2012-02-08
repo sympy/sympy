@@ -7,6 +7,7 @@ Normal
 Exponential
 Uniform
 Pareto
+Weibull
 Beta
 Gamma
 """
@@ -19,8 +20,8 @@ import random
 
 oo = S.Infinity
 
-__all__ = ['ContinuousRV', 'Normal', 'Exponential', 'Pareto', 'Beta', 'Gamma',
-'Uniform']
+__all__ = ['ContinuousRV', 'Normal', 'Exponential', 'Pareto', 'Weibull', 'Beta',
+'Gamma', 'Uniform']
 
 def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
     """
@@ -161,6 +162,43 @@ def Pareto(xm, alpha, symbol=None):
     """
 
     return ParetoPSpace(xm, alpha, symbol).value
+
+class WeibullPSpace(SingleContinuousPSpace):
+    def __new__(cls, alpha, beta, symbol=None):
+        assert alpha>0, "Alpha must be positive"
+        assert beta>0, "Beta must be positive"
+
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = Piecewise(
+            ((beta/alpha)*(x/alpha)**(beta-1)*exp(-((x/alpha)**beta)), x >= 0),
+            (0, True))
+
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        obj.alpha = alpha
+        obj.beta = beta
+        return obj
+
+    def sample(self):
+        return {self.value: random.weibullvariate(self.alpha, self.beta)}
+
+def Weibull(alpha, beta, symbol=None):
+    """
+    Create a Continuous Random Varible with a Weibull distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Weibull, Density, E, Std
+    >>> from sympy import symbols
+    >>> x, a, b = symbols('x a b', positive=True)
+
+    >>> X = Weibull(a, b, symbol=x)
+    >>> Density(X)
+    (x, (b/a)*(x/a)**(b-1)*exp(-((x/a)^b)))
+    """
+    return WeibullPSpace(alpha, beta, symbol).value
 
 class BetaPSpace(SingleContinuousPSpace):
     def __new__(cls, alpha, beta, symbol=None):

@@ -1,13 +1,30 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify)
-from sympy.stats import (Die, Bernoulli, Coin, P, E, Var, Covar, Sample,
-        Density, Given, independent, dependent, Where, FiniteRV, pspace, CDF)
+from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, P, E, Var,
+        Covar, Sample, Density, Given, independent, dependent, Where,
+        FiniteRV, pspace, CDF)
 from sympy.utilities.pytest import raises
 
 oo = S.Infinity
 def BayesTest(A,B):
     assert P(A, B) == P(And(A, B)) / P(B)
     assert P(A, B) == P(B, A) * P(A) / P(B)
+
+def test_discrete_uniform():
+    X, Y = DiscreteUniform(3, 14), DiscreteUniform(-5, 10)
+    a, b = symbols('a b')
+    
+    assert E(X) == 8 + S.Half
+    assert E(Y) == 2 + S.Half
+    assert Var(X) == S(143)/12
+    assert E(X+Y) == 11
+    assert E(X+X) == 17
+    assert E(a*X+b) == a*E(X)+b
+    assert Var(X+Y) == Var(X) + Var(Y)
+    assert Var(X+X) == 4 * Var(X)
+    assert Covar(X, X+Y) == Var(X)
+
+    assert P(X>8) == S.Half
 
 def test_dice():
     X, Y, Z= Die(6), Die(6), Die(6)

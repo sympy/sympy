@@ -4,15 +4,18 @@ Finite Discrete Random Variables - Prebuilt variable types
 Contains
 ========
 FiniteRV
+DiscreteUniform
 Die
 Bernoulli
 Coin
+Binomial
 """
 
 from sympy.stats.frv import SingleFinitePSpace, create_SingleFinitePSpace
-from sympy import S, sympify, Rational
+from sympy import S, sympify, Rational, binomial
 
-__all__ = ['FiniteRV', 'Die', 'Bernoulli', 'Coin']
+__all__ = ['FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin',
+        'Binomial']
 
 def FiniteRV(density, symbol=None):
     """
@@ -32,9 +35,45 @@ def FiniteRV(density, symbol=None):
     """
     return create_SingleFinitePSpace(density, symbol).value
 
+class DiscreteUniformPSpace(SingleFinitePSpace):
+    """
+    Create a Finite Random Variable representing a discrete uniform distribution.
+
+    This class is for internal use.
+
+    Create DiscreteUniform Random Symbols using DiscreteUniform function
+
+    >>> from sympy.stats import DiscreteUniform, Density
+
+    >>> X = DiscreteUniform(3, 8) # range 3..19
+    >>> Density(X)
+    {3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6, 7: 1/6, 8: 1/6}
+
+    >>> X = DiscreteUniform(-1, 2) # Four sided DiscreteUniform
+    >>> Density(X)
+    {-1: 1/4, 0: 1/4, 1: 1/4, 2: 1/4}
+    """
+    _count = 0
+    _name = 'discreteuniform'
+    def __new__(cls, left, right, symbol=None):
+        density = dict((i,Rational(1, right-left+1))
+                       for i in range(left, right+1))
+        return create_SingleFinitePSpace(density, symbol, cls)
+
+def DiscreteUniform(left, right, symbol=None):
+    """
+    Create left Finite Random Variable representing left uniform range
+    distribution.
+
+    Returns left RandomSymbol.
+
+    """
+    return DiscreteUniformPSpace(left, right, symbol).value
+
+## TODO Subclass from DiscreteUniform
 class DiePSpace(SingleFinitePSpace):
     """
-    Create a Finite Random Varible representing a fair die.
+    Create a Finite Random Variable representing a fair die.
 
     This class is for internal use.
 
@@ -58,7 +97,7 @@ class DiePSpace(SingleFinitePSpace):
 
 def Die(sides=6, symbol=None):
     """
-    Create a Finite Random Varible representing a fair die.
+    Create a Finite Random Variable representing a fair die.
 
     Returns a RandomSymbol.
 
@@ -77,7 +116,7 @@ def Die(sides=6, symbol=None):
 
 class BernoulliPSpace(SingleFinitePSpace):
     """
-    Create a Finite Random Varible representing a Bernoulli process.
+    Create a Finite Random Variable representing a Bernoulli process.
 
     Returns a RandomSymbol.
 
@@ -106,7 +145,7 @@ class BernoulliPSpace(SingleFinitePSpace):
 
 def Bernoulli(p, a, b, symbol=None):
     """
-    Create a Finite Random Varible representing a Bernoulli process.
+    Create a Finite Random Variable representing a Bernoulli process.
 
     Returns a RandomSymbol
 
@@ -152,7 +191,7 @@ class CoinPSpace(BernoulliPSpace):
 
 def Coin(p=S.Half, symbol=None):
     """
-    Create a Finite Random Varible representing a Coin toss.
+    Create a Finite Random Variable representing a Coin toss.
 
     Probability p is the chance of gettings "Heads." Half by default
 
@@ -170,3 +209,39 @@ def Coin(p=S.Half, symbol=None):
     {H: 3/5, T: 2/5}
     """
     return CoinPSpace(p, symbol).value
+
+class BinomialPSpace(SingleFinitePSpace):
+    """
+    Create a Finite Random Variable representing a binomial distribution.
+
+    This class is for internal use.
+
+    Create Binomial Random Symbols using Binomial function
+    >>> from sympy.stats import Binomial, Density
+
+    >>> X = Binomial(4, S.Half) # Four "coin flips"
+    >>> Density(X)
+    {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16} 
+    """
+
+    _count = 0
+    _name = 'binomial'
+    def __new__(cls, n, p, symbol=None):
+        n, p = map(sympify, (n, p))
+        density = dict((k,binomial(n, k)*p**k*(1-p)**(n-k))
+                for k in range(0, n+1))
+        return create_SingleFinitePSpace(density, symbol, cls)
+
+def Binomial(n, p, symbol=None):
+    """
+    Create a Finite Random Variable representing a binomial distribution.
+
+    Returns a RandomSymbol.
+    >>> from sympy.stats import Binomial, Density
+
+    >>> X = Binomial(4, S.Half) # Four "coin flips"
+    >>> Density(X)
+    {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16} 
+    """
+
+    return BinomialPSpace(n, p, symbol).value
