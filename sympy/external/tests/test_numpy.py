@@ -13,9 +13,14 @@ numpy = import_module('numpy')
 if numpy:
     array, matrix, ndarray = numpy.array, numpy.matrix, numpy.ndarray
 else:
-    #py.test will not execute any tests now
+    #bin/test will not execute any tests now
     disabled = True
 
+def setup_module(module):
+    """py.test support"""
+    if getattr(module, 'disabled', False):
+        import pytest
+        pytest.skip("numpy isn't available.")
 
 from sympy import (Rational, Symbol, list2numpy, sin, Float, Matrix, lambdify,
         symarray, symbols, Integer)
