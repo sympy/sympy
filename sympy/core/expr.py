@@ -161,8 +161,8 @@ class Expr(Basic, EvalfMixin):
         # if it appears to be an integer still we will warn that we aren't
         # sure if this is really an integer or not
         if i and i == f and not self.is_integer:
-            from sympy.solvers.solvers import _filldedent
-            raise ValueError(_filldedent('''
+            from sympy.utilities.misc import filldedent
+            raise ValueError(filldedent('''
             %s was calculated to 15 decimal digits and appeared to be
             %s; it was not confirmed to be an integer, however.
             Use round() to round your expression to the desired number
@@ -2132,8 +2132,8 @@ class Expr(Basic, EvalfMixin):
         never call this method directly (use .nseries() instead), so you don't
         have to write docstrings for _eval_nseries().
         """
-        from sympy.solvers.solvers import _filldedent
-        raise NotImplementedError(_filldedent("""
+        from sympy.utilities.misc import filldedent
+        raise NotImplementedError(filldedent("""
                      The _eval_nseries method should be added to
                      %s to give terms up to O(x**n) at x=0
                      from the positive direction so it is available when
