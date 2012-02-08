@@ -849,7 +849,7 @@ class Line(LinearEntity):
     >>> import sympy
     >>> from sympy import Point
     >>> from sympy.abc import L
-    >>> from sympy.geometry import Line
+    >>> from sympy.geometry import Line, Segment
     >>> L = Line(Point(2,3), Point(3,5))
     >>> L
     Line(Point(2, 3), Point(3, 5))
@@ -865,10 +865,18 @@ class Line(LinearEntity):
     >>> Line(Point(0, 0), slope=0)
     Line(Point(0, 0), Point(1, 0))
 
+    Instantiate with another linear object
+
+    >>> s = Segment((0, 0), (0, 1))
+    >>> Line(s).equation()
+    x
     """
 
     def __new__(cls, p1, pt=None, slope=None, **kwargs):
-        p1 = Point(p1)
+        if isinstance(p1, LinearEntity):
+            p1, pt = p1.args
+        else:
+            p1 = Point(p1)
         if pt is not None and slope is None:
             try:
                 p2 = Point(pt)
