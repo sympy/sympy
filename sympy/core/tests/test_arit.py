@@ -1331,3 +1331,5 @@ def test_float_int():
     assert int(1 + Rational('.9999999999999999999999999')) == 1
     assert int(pi/1e20) == 0
     raises(ValueError, 'int(1 + pi/1e20)')
+    raises(TypeError, 'float(x)')
+    raises(TypeError, 'float(sqrt(-1))')

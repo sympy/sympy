@@ -177,7 +177,9 @@ class Expr(Basic, EvalfMixin):
         result = self.evalf()
         if result.is_Number:
             return float(result)
-        raise TypeError("%s should be a literal number." % self)
+        if result.is_number and result.as_real_imag()[1]:
+            raise TypeError("can't convert complex to float")
+        raise TypeError("can't convert expression to float")
 
     def __complex__(self):
         result = self.evalf()
