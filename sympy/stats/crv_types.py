@@ -169,11 +169,9 @@ class WeibullPSpace(SingleContinuousPSpace):
         assert beta>0, "Beta must be positive"
 
         x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = Piecewise(
-            ((beta/alpha)*(x/alpha)**(beta-1)*exp(-((x/alpha)**beta)), x >= 0),
-            (0, True))
+        pdf = beta*(x/alpha)**(beta-1)*exp(-(x/alpha)**beta) / alpha
 
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         obj.alpha = alpha
         obj.beta = beta
         return obj
@@ -210,7 +208,7 @@ class BetaPSpace(SingleContinuousPSpace):
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = x**(alpha-1) * (1-x)**(beta-1) / beta_fn(alpha, beta)
 
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, 1))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, 1))
         obj.alpha = alpha
         obj.beta = beta
         return obj
@@ -246,10 +244,13 @@ class GammaPSpace(SingleContinuousPSpace):
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = x**(k-1) * exp(-x/theta) / (gamma(k)*theta**k)
 
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         obj.k = k
         obj.theta = theta
         return obj
+
+    def sample(self):
+        return {self.value: random.gammavariate(self.k, self.theta)}
 
 def Gamma(k, theta, symbol=None):
     """

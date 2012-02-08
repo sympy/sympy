@@ -149,6 +149,21 @@ def test_pareto():
     # assert simplify(E(X)) == alpha*xm/(alpha-1)
     # assert simplify(Var(X)) == xm**2*alpha / ((alpha-1)**2*(alpha-2))
 
+def test_weibull_numeric():
+    a = 3
+    betas = [S.Half, 1, 2]
+    for b in betas:
+        X = Weibull(a, b)
+        assert simplify(E(X)) == simplify(a * gamma(1 + 1/S(b)))
+        assert simplify(Var(X)) == simplify(a**2 * gamma(1 + 2/S(b)) - E(X)**2)
+
+def test_weibull():
+    a, b = symbols('a b', positive=True)
+    X = Weibull(a, b)
+
+    assert simplify(E(X)) == simplify(a * gamma(1 + 1/b))
+    assert simplify(Var(X)) == simplify(a**2 * gamma(1 + 2/b) - E(X)**2)
+
 def test_gamma():
     k, theta = symbols('k theta', real=True, bounded=True, positive=True)
     X = Gamma(k, theta)
