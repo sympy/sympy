@@ -1,4 +1,4 @@
-from basic import Basic
+from basic import Basic, S
 from expr import Expr
 from evalf import EvalfMixin
 from sympify import _sympify
@@ -144,12 +144,22 @@ class Relational(Expr, EvalfMixin):
                 raise ValueError(msg % repr(rop))
         if lhs.is_number and rhs.is_number and (rop in ('==', '!=' ) or
         lhs.is_real and rhs.is_real):
-            # Just because something is a number, doesn't mean you can evalf it.
-            Nlhs = lhs.evalf() if not lhs.is_Atom else lhs
-            if Nlhs.is_Atom:
-                Nrhs = rhs.evalf() if not rhs.is_Atom else rhs
-                if Nrhs.is_Atom:
-                    return rop_cls._eval_relation(Nlhs, Nrhs)
+            diff = lhs - rhs
+            know = (lhs - rhs).equals(0,
+                                      failing_expression=True,
+                                      )
+            if know is True: # exclude failing expression case
+                Nlhs = Nrhs = S.Zero
+            elif know is False:
+                from sympy import sign
+                Nlhs = sign((lhs - rhs).n(1))
+                Nrhs = S.Zero
+            else:
+                Nlhs = None
+                lhs = know
+                rhs = S.Zero
+            if Nlhs is not None:
+                return rop_cls._eval_relation(Nlhs, S.Zero)
 
         obj = Expr.__new__(rop_cls, lhs, rhs, **assumptions)
         return obj

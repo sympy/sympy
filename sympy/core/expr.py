@@ -1,7 +1,7 @@
 from core import C
 from basic import Basic, Atom
 from singleton import S
-from evalf import EvalfMixin
+from evalf import EvalfMixin, pure_complex
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
 from compatibility import reduce, SymPyDeprecationWarning
@@ -166,16 +166,16 @@ class Expr(Basic, EvalfMixin):
         # were 1.99, however, this would round to 2.0 and our int value is
         # off by one. So...if our round value is the same as the int value
         # (regardless of how much extra work we do to calculate extra decimal
-        # places) we need to test whether we are off by one or not.
+        # places) we need to test whether we are off by one.
         r = round(self, 1)
-        i = int(C.Integer(r))
+        i = int(r)
         if not i:
             return 0
         # off-by-one check
-        if i == r:
+        if i == r and not (self - i).equals(0):
             isign = 1 if i > 0 else -1
             x = C.Dummy()
-            # in the following (self - i).evalf(1) will not work while
+            # in the following (self - i).evalf(1) will not always work while
             # (self - r).evalf(1) and the use of subs does; if the test that
             # was added when this comment was added passes, it might be safe
             # to simply use sign to compute this rather than doing this by hand:
@@ -369,27 +369,51 @@ class Expr(Basic, EvalfMixin):
     def equals(self, other, failing_expression=False):
         """Return True if self == other, False if it doesn't, or None. If
         failing_expression is True then the expression which did not simplify
-        to a 0 will be returned instead of None."""
+        to a 0 will be returned instead of None.
+
+        If ``self`` is a Number (or complex number) that is not zero, then
+        the result is False.
+
+        If ``self`` is a number and has not evaluated to zero, evalf will be
+        used to test the expression evaluates to zero. As long as a value with
+        precision greater than 1 is obtained, this indicates that the
+        computed value has significance (while a precision of 1 indicates
+        that no significant figures were computed by evalf and a precision
+		of -1 indicates that the expression is Rational, thus exact).
+
+        """
 
         other = sympify(other)
         if self == other:
             return True
 
-        # they aren't the same so see if we can make the difference 0
-        diff = factor_terms((self - other).as_content_primitive()[1]).simplify()
-        if not diff.is_constant(simplify=False):
+        # they aren't the same so see if we can make the difference 0;
+        # don't worry about doing simplification steps one at a time
+        # because if the expression ever goes to 0 then the subsequent
+        # simplification steps that are done will be very fast.
+        diff = (self - other).as_content_primitive()[1]
+        diff = factor_terms(diff.simplify(), radical=True)
+        if not diff:
+            return True
+        elif diff.is_Number or pure_complex(diff):
+            return False
+        elif not diff.is_constant(simplify=False) or \
+           not diff.free_symbols and not diff.is_number:
             return False
 
-        # don't worry about doing these steps a little at a time: if there
-        # is not going to be any control over what to try then just
-        # try everything and know that if a 0 is obtained, the additional
-        # step (e.g. factoring) is going to go quickly
-        diff = diff.factor()
-        if diff.is_Number:
-            return diff is S.Zero
+        # We now know that diff is a constant, perhaps with
+        # symbols, that has not simplified to zero.
+
+        # if it's numeric with prec != 1, we trust evalf;
+        # prec = -1 if a Rational is returned; this likely
+        # won't happen after the above steps, but it is there
+        # just in case
+        evaldiff = diff.evalf(2)
+        if evaldiff.is_Number and (evaldiff._prec > 1 or evaldiff._prec == -1):
+            return evaldiff == 0
+
 
         if failing_expression:
-            # return the expression that wouldn't simplify to zero
             return diff
         return None
 

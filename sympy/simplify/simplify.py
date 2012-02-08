@@ -2837,6 +2837,10 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
         >>> nsimplify(pi, tolerance=0.01)
         22/7
 
+    See Also
+    ========
+    sympy.core.function.nfloat
+
     """
     expr = sympify(expr)
     if rational or expr.free_symbols:

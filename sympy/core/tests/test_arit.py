@@ -1336,3 +1336,5 @@ def test_float_int():
     assert int(Add(1 + Float('.99999999999999999', ''), evaluate=False)) == 1
     raises(TypeError, 'float(x)')
     raises(TypeError, 'float(sqrt(-1))')
+
+    assert int(12345678901234567890 + cos(1)**2 + sin(1)**2) == 12345678901234567891

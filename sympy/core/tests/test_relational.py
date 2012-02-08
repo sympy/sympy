@@ -1,5 +1,5 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import Symbol, symbols, oo, I
+from sympy import Symbol, symbols, oo, I, pi, Float
 from sympy.core.relational import ( Relational, Equality, Unequality,
     GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Rel, Eq, Lt, Le,
     Gt, Ge, Ne )
@@ -126,6 +126,9 @@ def test_bool():
     assert Ge(I, 2) not in [True, False]
     assert Lt(I, 2) not in [True, False]
     assert Le(I, 2) not in [True, False]
+    a = Float('.000000000000000000001', '')
+    b = Float('.0000000000000000000001', '')
+    assert Eq(pi + a, pi + b) is False
 
 def test_rich_cmp():
     assert (x<y) == Lt(x,y)
