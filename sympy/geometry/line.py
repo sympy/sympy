@@ -861,21 +861,21 @@ class Line(LinearEntity):
 
     Instantiate with keyword `slope`:
 
-    >>> Line(Point(0, 0), slope=2)
-    Line(Point(0, 0), Point(1, 2))
+    >>> Line(Point(0, 0), slope=0)
+    Line(Point(0, 0), Point(1, 0))
 
     """
 
     def __new__(cls, p1, pt=None, slope=None, **kwargs):
         p1 = Point(p1)
-        if pt and slope is None:
+        if pt is not None and slope is None:
             try:
                 p2 = Point(pt)
             except NotImplementedError:
                 raise ValueError('The 2nd argument was not a valid Point; if it was meant to be a slope it should be given with keyword "slope".')
             if p1 == p2:
                 raise ValueError('A line requires two distinct points.')
-        elif slope and pt is None:
+        elif slope is not None and pt is None:
             slope = sympify(slope)
             if slope.is_bounded is False:
                 # when unbounded slope, don't change x
@@ -1083,7 +1083,7 @@ class Ray(LinearEntity):
 
     def __new__(cls, p1, pt=None, angle=None, **kwargs):
         p1 = Point(p1)
-        if pt and angle is None:
+        if pt is not None and angle is None:
             try:
                 p2 = Point(pt)
             except NotImplementedError:
