@@ -849,7 +849,7 @@ class Line(LinearEntity):
     >>> import sympy
     >>> from sympy import Point
     >>> from sympy.abc import L
-    >>> from sympy.geometry import Line
+    >>> from sympy.geometry import Line, Segment
     >>> L = Line(Point(2,3), Point(3,5))
     >>> L
     Line(Point(2, 3), Point(3, 5))
@@ -862,21 +862,29 @@ class Line(LinearEntity):
 
     Instantiate with keyword `slope`:
 
-    >>> Line(Point(0, 0), slope=2)
-    Line(Point(0, 0), Point(1, 2))
+    >>> Line(Point(0, 0), slope=0)
+    Line(Point(0, 0), Point(1, 0))
 
+    Instantiate with another linear object
+
+    >>> s = Segment((0, 0), (0, 1))
+    >>> Line(s).equation()
+    x
     """
 
     def __new__(cls, p1, pt=None, slope=None, **kwargs):
-        p1 = Point(p1)
-        if pt and slope is None:
+        if isinstance(p1, LinearEntity):
+            p1, pt = p1.args
+        else:
+            p1 = Point(p1)
+        if pt is not None and slope is None:
             try:
                 p2 = Point(pt)
             except NotImplementedError:
                 raise ValueError('The 2nd argument was not a valid Point; if it was meant to be a slope it should be given with keyword "slope".')
             if p1 == p2:
                 raise ValueError('A line requires two distinct points.')
-        elif slope and pt is None:
+        elif slope is not None and pt is None:
             slope = sympify(slope)
             if slope.is_bounded is False:
                 # when unbounded slope, don't change x
@@ -1084,7 +1092,7 @@ class Ray(LinearEntity):
 
     def __new__(cls, p1, pt=None, angle=None, **kwargs):
         p1 = Point(p1)
-        if pt and angle is None:
+        if pt is not None and angle is None:
             try:
                 p2 = Point(pt)
             except NotImplementedError:

@@ -1641,7 +1641,7 @@ class Triangle(Polygon):
                _are_similar(s1_3, s1_2, s1_1, *s2)
 
     def is_equilateral(self):
-        """Is the triangle equilateral
+        """Are all the sides the same length?
 
         Returns
         =======
@@ -1652,6 +1652,7 @@ class Triangle(Polygon):
         ========
 
         sympy.geometry.entity.GeometryEntity.is_similar, RegularPolygon
+        is_isosceles, is_right, is_scalene
 
         Examples
         ========
@@ -1667,8 +1668,55 @@ class Triangle(Polygon):
         True
 
         """
-        s = self.sides
-        return bool(s[0].length == s[1].length) and bool(s[1].length == s[2].length)
+        return len(set([s.length for s in self.sides])) == 1
+
+    def is_isosceles(self):
+        """Are two or more of the sides the same length?
+
+        Returns
+        =======
+
+        is_isosceles : boolean
+
+        See Also
+        ========
+
+        is_equilateral, is_right, is_scalene
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Triangle, Point
+        >>> t1 = Triangle(Point(0, 0), Point(4, 0), Point(2, 4))
+        >>> t1.is_isosceles()
+        True
+
+        """
+        return len(set([s.length for s in self.sides])) < 3
+
+    def is_scalene(self):
+        """Are all the sides of the triangle of different lengths?
+
+        Returns
+        =======
+
+        is_scalene : boolean
+
+        See Also
+        ========
+
+        is_equilateral, is_isosceles, is_right
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Triangle, Point
+        >>> t1 = Triangle(Point(0, 0), Point(4, 0), Point(1, 4))
+        >>> t1.is_scalene()
+        True
+
+        """
+        return len(set([s.length for s in self.sides])) == 3
 
     def is_right(self):
         """Is the triangle right-angled.
@@ -1682,6 +1730,7 @@ class Triangle(Polygon):
         ========
 
         sympy.geometry.line.LinearEntity.is_perpendicular
+        is_equilateral, is_isosceles, is_scalene
 
         Examples
         ========
