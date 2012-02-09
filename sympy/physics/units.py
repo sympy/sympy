@@ -118,6 +118,10 @@ class Unit(AtomicExpr):
     def _hashable_content(self):
         return (self.name,self.abbrev)
 
+    @property
+    def free_symbols(self):
+        return set()
+
 # Dimensionless
 
 percent = percents = Rational(1,100)

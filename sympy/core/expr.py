@@ -289,31 +289,36 @@ class Expr(Basic, EvalfMixin):
 
         simplify = flags.get('simplify', True)
 
-        free = self.free_symbols
-        # only one of these should be necessary since if something is
+        # Except for expressions that contain units, only one of these should
+        # be necessary since if something is
         # known to be a number it should also know that there are no
         # free symbols. But is_number quits as soon as it hits a non-number
         # whereas free_symbols goes until all free symbols have been collected,
         # thus is_number should be faster. But a double check on free symbols
         # is made just in case there is a discrepancy between the two.
-        if self.is_number:
-            return True
         free = self.free_symbols
-        # if this fails, the free_symbols routine needs to recognize that
-        # if the expression is a number then there are no free_symbols
-        assert free
+        if self.is_number or not free:
+            # if the following assertion fails then that object's free_symbols
+            # method needs attention: if an expression is a number it cannot
+            # have free symbols
+            assert not free
+            return True
+
         # if we are only interested in some symbols and they are not in the
         # free symbols then this expression is constant wrt those symbols
         if wrt and not set(wrt) & free:
             return True
+
         # simplify unless this has already been done
         if simplify:
             self = self.simplify()
+
         # is_zero should be a quick assumptions check; it can be wrong for numbers
         # (see test_is_not_constant test), giving False when it shouldn't, but hopefully
         # it will never give True unless it is sure.
         if self.is_zero:
             return True
+
         # now we will test each wrt symbol (or all free symbols) to see if the
         # expression depends on them or not using differentiation.
         if not wrt:
