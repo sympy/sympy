@@ -1,8 +1,8 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
-        symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify)
-from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, P, E, Var,
-        Covar, Sample, Density, Given, independent, dependent, Where,
-        FiniteRV, pspace, CDF)
+        symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial)
+from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, P, E,
+        Var, Covar, Skewness, Sample, Density, Given, independent, dependent,
+        Where, FiniteRV, pspace, CDF)
 from sympy.utilities.pytest import raises
 
 oo = S.Infinity
@@ -142,6 +142,33 @@ def test_coins():
 
     raises(ValueError, "P(C>D)") # Can't intelligently compare H to T
 
+def test_binomial_numeric():
+    nvals = range(8)
+    pvals = [0, S(1)/4, S(1)/3, S.Half, S(2)/3, S(3)/4, 1]
+
+    for n in nvals:
+        for p in pvals:
+            X = Binomial(n, p)
+            assert Eq(E(X), n*p)
+            assert Eq(Var(X), n*p*(1-p))
+            if n > 0 and 0 < p < 1:
+                assert Eq(Skewness(X), (1-2*p)/sqrt(n*p*(1-p)))
+            for k in range(n+1):
+                assert Eq(P(Eq(X, k)), binomial(n, k)*p**k*(1-p)**(n-k))
+
+def test_binomial_symbolic():
+    n = 10 # Because we're using for loops, can't do symbolic n
+    p = symbols('p', positive=True)
+    X = Binomial(n, p)
+    assert Eq(simplify(E(X)), n*p)
+    assert Eq(simplify(Var(X)), n*p*(1-p))
+# Can't detect the equality
+#    assert Eq(simplify(Skewness(X)), (1-2*p)/sqrt(n*p*(1-p)))
+
+    # Test ability to change success/failure winnings
+    H, T = symbols('H T')
+    Y = Binomial(n, p, succ=H, fail=T)
+    assert Eq(simplify(E(Y)), simplify(n*(H*p+T*(1-p))))
 
 def test_FiniteRV():
     F = FiniteRV({1:S.Half, 2:S.One/4, 3:S.One/4})

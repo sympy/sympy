@@ -127,7 +127,7 @@ class BernoulliPSpace(SingleFinitePSpace):
     >>> from sympy.stats import Bernoulli, Density
     >>> from sympy import S
 
-    >>> X = Bernoulli(S(3)/4, 1, 0) # 1-0 Bernoulli variable, probability = 3/4
+    >>> X = Bernoulli(S(3)/4) # 1-0 Bernoulli variable, probability = 3/4
     >>> Density(X)
     {0: 1/4, 1: 3/4}
 
@@ -138,12 +138,12 @@ class BernoulliPSpace(SingleFinitePSpace):
 
     _count = 0
     _name = 'bernoulli'
-    def __new__(cls, p, a, b, symbol=None):
-        a, b, p = map(sympify, (a, b, p))
-        density = {a:p, b:(1-p)}
+    def __new__(cls, p, succ=1, fail=0, symbol=None):
+        succ, fail, p = map(sympify, (succ, fail, p))
+        density = {succ:p, fail:(1-p)}
         return create_SingleFinitePSpace(density, symbol, cls)
 
-def Bernoulli(p, a, b, symbol=None):
+def Bernoulli(p, succ=1, fail=0, symbol=None):
     """
     Create a Finite Random Variable representing a Bernoulli process.
 
@@ -161,7 +161,7 @@ def Bernoulli(p, a, b, symbol=None):
     {Heads: 1/2, Tails: 1/2}
     """
 
-    return BernoulliPSpace(p, a, b, symbol).value
+    return BernoulliPSpace(p, succ, fail, symbol).value
 
 class CoinPSpace(BernoulliPSpace):
     """
@@ -226,13 +226,13 @@ class BinomialPSpace(SingleFinitePSpace):
 
     _count = 0
     _name = 'binomial'
-    def __new__(cls, n, p, symbol=None):
-        n, p = map(sympify, (n, p))
-        density = dict((k,binomial(n, k)*p**k*(1-p)**(n-k))
+    def __new__(cls, n, p, succ=1, fail=0, symbol=None):
+        n, p, succ, fail = map(sympify, (n, p, succ, fail))
+        density = dict((k*succ+(n-k)*fail,binomial(n, k)*p**k*(1-p)**(n-k))
                 for k in range(0, n+1))
         return create_SingleFinitePSpace(density, symbol, cls)
 
-def Binomial(n, p, symbol=None):
+def Binomial(n, p, succ=1, fail=0, symbol=None):
     """
     Create a Finite Random Variable representing a binomial distribution.
 
@@ -244,4 +244,4 @@ def Binomial(n, p, symbol=None):
     {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16} 
     """
 
-    return BinomialPSpace(n, p, symbol).value
+    return BinomialPSpace(n, p, succ, fail, symbol).value
