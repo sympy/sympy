@@ -26,7 +26,7 @@ g = Function('g')
 
 # Note that if the ODE solver, the integral engine, solve(), or even simplify(),
 # changes, these tests could fail but still be correct, only written differently.
-# Also not that in differently formatted solutions, the arbitrary constants
+# Also note that in differently formatted solutions, the arbitrary constants
 # might not be equal.  Using specific hints in tests can help avoid this.
 
 # Tests of order higher than 1 should run the solutions through constant_renumber
