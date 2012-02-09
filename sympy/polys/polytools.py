@@ -4820,9 +4820,9 @@ def primitive(f, *gens, **args):
     >>> primitive(eq)
     (2, x**2 + x + 1)
 
-    Set ``expand`` to False to shut this off (but not that the
-    extraction will not be recursive (use the as_content_primitive method
-    for recursive, non-destructive Rational extraction.)
+    Set ``expand`` to False to shut this off. Note that the
+    extraction will not be recursive; use the as_content_primitive method
+    for recursive, non-destructive Rational extraction.
 
     >>> primitive(eq, expand=False)
     (1, x*(2*x + 2) + 2)
@@ -4839,7 +4839,6 @@ def primitive(f, *gens, **args):
         raise ComputationFailed('primitive', 1, exc)
 
     cont, result = F.primitive()
-
     if not opt.polys:
         return cont, result.as_expr()
     else:
