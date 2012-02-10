@@ -4,6 +4,7 @@ Continuous Random Variables - Prebuilt variables
 Contains
 ========
 Normal
+LogNormal
 Exponential
 Uniform
 Pareto
@@ -12,7 +13,8 @@ Beta
 Gamma
 """
 
-from sympy import exp, sqrt, pi, S, Dummy, Interval, S, sympify, gamma, Piecewise
+from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
+    Piecewise)
 from sympy import beta as beta_fn
 from crv import SingleContinuousPSpace
 from sympy.core.decorators import _sympifyit
@@ -20,8 +22,8 @@ import random
 
 oo = S.Infinity
 
-__all__ = ['ContinuousRV', 'Normal', 'Exponential', 'Pareto', 'Weibull', 'Beta',
-'Gamma', 'Uniform']
+__all__ = ['ContinuousRV', 'Normal', 'LogNormal', 'Exponential', 'Pareto',
+    'Weibull', 'Beta', 'Gamma', 'Uniform']
 
 def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
     """
@@ -54,7 +56,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
     return SingleContinuousPSpace(symbol, density, set).value
 
 class NormalPSpace(SingleContinuousPSpace):
-    def __new__(cls, mean, std, symbol = None):
+    def __new__(cls, mean, std, symbol=None):
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = exp(-(x-mean)**2 / (2*std**2)) / (sqrt(2*pi)*std)
@@ -92,11 +94,47 @@ def Normal(mean, std, symbol=None):
 
     return NormalPSpace(mean, std, symbol).value
 
+class LogNormalPSpace(SingleContinuousPSpace):
+    def __new__(cls, mean, std, symbol=None):
+        mean, std = sympify(mean), sympify(std)
+
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = exp(-(log(x)-mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
+        obj.mean = mean
+        obj.std = std
+        return obj
+
+    def sample(self):
+        return {self.value: random.lognormvariate(self.mean, self.std)}
+
+def LogNormal(mean, std, symbol=None):
+    """
+    Create a Continuous Random Varible with a LogNormal distribution.
+
+    Note: Only density and sampling work.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import LogNormal, Density, E, Std
+    >>> from sympy import Symbol, simplify
+
+    >>> X = LogNormal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
+    >>> Density(X)
+    (x, sqrt(2)*exp(-log(x)**2/2)/(2*sqrt(pi)*x))
+    """
+
+    return LogNormalPSpace(mean, std, symbol).value
+
+
 class ExponentialPSpace(SingleContinuousPSpace):
     def __new__(cls, rate, symbol=None):
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = rate * exp(-rate*x)
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         obj.rate = rate
         return obj
 
@@ -168,6 +206,8 @@ class WeibullPSpace(SingleContinuousPSpace):
         assert alpha>0, "Alpha must be positive"
         assert beta>0, "Beta must be positive"
 
+        alpha, beta = sympify(alpha), sympify(beta)
+
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = beta*(x/alpha)**(beta-1)*exp(-(x/alpha)**beta) / alpha
 
@@ -194,7 +234,11 @@ def Weibull(alpha, beta, symbol=None):
 
     >>> X = Weibull(a, b, symbol=x)
     >>> Density(X)
-    (x, (b/a)*(x/a)**(b-1)*exp(-((x/a)^b)))
+    (x, b*(x/a)**(b - 1)*exp(-(x/a)**b)/a)
+    >>> simplify(E(X))
+    a*gamma(1 + 1/b)
+    >>> simplify(Var(X))
+    -a**2*(gamma(1 + 1/b)**2 - gamma(1 + 2/b))
     """
     return WeibullPSpace(alpha, beta, symbol).value
 

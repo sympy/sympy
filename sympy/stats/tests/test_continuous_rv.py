@@ -1,7 +1,6 @@
-from sympy.stats import (Normal, Exponential, P, E, Where, Density, Var, Covar,
-        Skewness, Gamma, Pareto, Weibull, Beta, Uniform, Given, pspace, CDF,
-        ContinuousRV, Sample)
-from sympy import (Symbol, exp, S, pi, simplify, Interval, erf, Eq, symbols,
+from sympy.stats import (Normal, LogNormal, Exponential, P, E, Where, Density,
+        Var, Covar, Skewness, Gamma, Pareto, Weibull, Beta, Uniform, Given, pspace, CDF, ContinuousRV, Sample)
+from sympy import (Symbol, exp, S, N, pi, simplify, Interval, erf, Eq, symbols,
         sqrt, And, gamma, beta, Piecewise)
 from sympy.utilities.pytest import raises
 
@@ -114,8 +113,22 @@ def test_ContinuousRV():
     assert Var(X) == Var(Y)
     assert P(X>0) == P(Y>0)
 
-def test_exponential():
+def test_lognormal():
+    mean = Symbol('mu', real=True, bounded=True)
+    std = Symbol('sigma', positive=True, real=True, bounded=True)
+    X = LogNormal(mean, std)
+    # The sympy integrator can't do this too well
+    #assert E(X) == exp(mean+std**2/2)
+    #assert Var(X) == (exp(std**2)-1) * exp(2*mean + std**2)
 
+    # Right now, only density function and sampling works
+    # Test sampling: Only e^mean in sample std of 0
+    for i in range(10):
+        X = LogNormal(i, 0)
+        assert S(Sample(X)) == N(exp(i))
+    # The sympy integrator can't do this too well
+    #assert E(X) == 
+def test_exponential():
     rate = Symbol('lambda', positive=True, real=True, bounded=True)
     X = Exponential(rate)
 
@@ -150,12 +163,14 @@ def test_pareto():
     # assert simplify(Var(X)) == xm**2*alpha / ((alpha-1)**2*(alpha-2))
 
 def test_weibull_numeric():
-    a = 3
-    betas = [S.Half, 1, 2]
-    for b in betas:
+    # Test for integers and rationals
+    a = 1
+    bvals = [S.Half, 1, S(3)/2, 5]
+    for b in bvals:
         X = Weibull(a, b)
         assert simplify(E(X)) == simplify(a * gamma(1 + 1/S(b)))
         assert simplify(Var(X)) == simplify(a**2 * gamma(1 + 2/S(b)) - E(X)**2)
+        # Not testing Skew... it's slow with int/frac values > 3/2
 
 def test_weibull():
     a, b = symbols('a b', positive=True)
@@ -163,6 +178,7 @@ def test_weibull():
 
     assert simplify(E(X)) == simplify(a * gamma(1 + 1/b))
     assert simplify(Var(X)) == simplify(a**2 * gamma(1 + 2/b) - E(X)**2)
+    # Skewness tests too slow. Try shortcutting function?
 
 def test_gamma():
     k, theta = symbols('k theta', real=True, bounded=True, positive=True)
@@ -210,14 +226,16 @@ def test_uniform():
     assert P(X<4) == P(X>4) == S.Half
 
 def test_prefab_sampling():
-    N = Normal(0,1)
+    N = Normal(0, 1)
+    L = LogNormal(0, 1)
     E = Exponential(1)
     P = Pareto(1, 3)
+    W = Weibull(1, 1)
     U = Uniform(0, 1)
     B = Beta(2,5)
     G = Gamma(1,3)
 
-    variables = [N,E,P,U,B,G]
+    variables = [N,L,E,P,W,U,B,G]
     niter = 10
     for var in variables:
         for i in xrange(niter):

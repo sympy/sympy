@@ -10,21 +10,25 @@ def BayesTest(A,B):
     assert P(A, B) == P(And(A, B)) / P(B)
     assert P(A, B) == P(B, A) * P(A) / P(B)
 
-def test_discrete_uniform():
-    X, Y = DiscreteUniform(3, 14), DiscreteUniform(-5, 10)
-    a, b = symbols('a b')
-    
-    assert E(X) == 8 + S.Half
-    assert E(Y) == 2 + S.Half
-    assert Var(X) == S(143)/12
-    assert E(X+Y) == 11
-    assert E(X+X) == 17
-    assert E(a*X+b) == a*E(X)+b
-    assert Var(X+Y) == Var(X) + Var(Y)
-    assert Var(X+X) == 4 * Var(X)
-    assert Covar(X, X+Y) == Var(X)
+def test_discreteuniform():
+    # Symbolic
+    a, b, c = symbols('a b c')
+    X = DiscreteUniform([a,b,c])
 
-    assert P(X>8) == S.Half
+    assert E(X) == (a+b+c)/3
+    assert Var(X) == (a**2+b**2+c**2)/3 - (a/3+b/3+c/3)**2
+    assert P(Eq(X, a)) == P(Eq(X, b)) == P(Eq(X, c)) == S('1/3')
+
+    Y = DiscreteUniform(range(-5, 5))
+
+    # Numeric
+    assert E(Y) == S('-1/2')
+    assert Var(Y) == S('33/4')
+    assert Skewness(Y) == 0
+    for x in range(-5, 5):
+        assert P(Eq(Y, x)) == S('1/10')
+        assert P(Y <= x) == S(x+6)/10
+        assert P(Y >= x) == S(5-x)/10
 
 def test_dice():
     X, Y, Z= Die(6), Die(6), Die(6)
