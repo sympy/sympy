@@ -425,13 +425,28 @@ def factor_terms(expr, radical=False):
     Examples
     ========
 
-    >>> from sympy import factor_terms, Symbol
+    >>> from sympy import factor_terms, Symbol, Mul, primitive
     >>> from sympy.abc import x, y
     >>> factor_terms(x + x*(2 + 4*y)**3)
     x*(8*(2*y + 1)**3 + 1)
     >>> A = Symbol('A', commutative=False)
     >>> factor_terms(x*A + x*A + x*y*A)
     x*(y*A + 2*A)
+
+    Notes
+    =====
+
+    A fraction will only appear factored out of an Add expression if all
+    terms of the Add have coefficients that are fractions:
+
+    >>> factor_terms(x*y/2 + y) # result has fraction before Mul
+    y*(x + 2)/2
+    >>> factor_terms(x/2 + 1) # not (x + 2)/2
+    x/2 + 1
+    >>> Mul(*primitive(_), evaluate=False)
+    (x + 2)/2
+    >>> factor_terms(x/2 + y/4) # fraction separated from Add
+    (2*x + y)/4
 
     """
 
@@ -463,4 +478,11 @@ def factor_terms(expr, radical=False):
         # cancel terms that may not have cancelled
     p = Add._from_args(list_args) # gcd_terms will fix up ordering
     p = gcd_terms(p, isprimitive=True).xreplace(ncreps)
+    if cont.is_Rational and cont.q != 1 and p.is_Add:
+        q = sympify(cont.q)
+        for i in p.args:
+            c, t = i.as_coeff_Mul()
+            r = c/q
+            if r == int(r):
+                return cont*p
     return _keep_coeff(cont, p)
