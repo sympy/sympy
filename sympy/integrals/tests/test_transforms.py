@@ -3,7 +3,8 @@ from sympy.integrals.transforms import (mellin_transform,
     fourier_transform, inverse_fourier_transform,
     sine_transform, inverse_sine_transform,
     cosine_transform, inverse_cosine_transform,
-    LaplaceTransform, FourierTransform, SineTransform, CosineTransform)
+    LaplaceTransform, FourierTransform, SineTransform, CosineTransform,
+    InverseLaplaceTransform, InverseFourierTransform, InverseSineTransform, InverseCosineTransform)
 from sympy import (gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
                    cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
                    EulerGamma, erf, besselj, bessely, besseli, besselk,
@@ -423,6 +424,7 @@ def test_laplace_transform():
 
     # Test unevaluated form
     assert laplace_transform(f(t), t, w) == LaplaceTransform(f(t), t, w)
+    assert inverse_laplace_transform(f(w), w, t, plane=0) == InverseLaplaceTransform(f(w), w, t, 0)
 
     # test a bug
     spos = symbols('s', positive=True)
@@ -521,6 +523,7 @@ def test_fourier_transform():
 
     # Test unevaluated form
     assert fourier_transform(f(x), x, k) == FourierTransform(f(x), x, k)
+    assert inverse_fourier_transform(f(k), k, x) == InverseFourierTransform(f(k), k, x)
 
     # basic examples from wikipedia
     assert simp(FT(Heaviside(1 - abs(2*a*x)), x, k)) == sinc(k/a)/a
@@ -560,7 +563,9 @@ def test_sine_transform():
     a = symbols("a")
     f = Function("f")
 
+    # Test unevaluated form
     assert sine_transform(f(t), t, w) == SineTransform(f(t), t, w)
+    assert inverse_sine_transform(f(w), w, t) == InverseSineTransform(f(w), w, t)
 
     assert sine_transform(1/sqrt(t), t, w) == 1/sqrt(w)
     assert inverse_sine_transform(1/sqrt(w), w, t) == 1/sqrt(t)
@@ -586,7 +591,9 @@ def test_cosine_transform():
     a = symbols("a")
     f = Function("f")
 
+    # Test unevaluated form
     assert cosine_transform(f(t), t, w) == CosineTransform(f(t), t, w)
+    assert inverse_cosine_transform(f(w), w, t) == InverseCosineTransform(f(w), w, t)
 
     assert cosine_transform(1/sqrt(t), t, w) == 1/sqrt(w)
     assert inverse_cosine_transform(1/sqrt(w), w, t) == 1/sqrt(t)
