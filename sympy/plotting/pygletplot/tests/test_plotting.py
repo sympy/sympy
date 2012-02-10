@@ -20,59 +20,60 @@ def test_import():
     from sympy.plotting.pygletplot import PygletPlot
 
 def test_plot_2d():
-    from sympy import PygletPlot
+    from sympy.plotting.pygletplot import PygletPlot
     p = PygletPlot(x, [x, -5, 5, 4], visible=False)
     p.wait_for_calculations()
 
 def test_plot_2d_discontinuous():
-    from sympy import PygletPlot
+    from sympy.plotting.pygletplot import PygletPlot
     p = PygletPlot(1/x, [x, -1, 1, 2], visible=False)
     p.wait_for_calculations()
 
 def test_plot_3d():
-    from sympy import PygletPlot
+    from sympy.plotting.pygletplot import PygletPlot
     p = PygletPlot(x*y, [x, -5, 5, 5], [y, -5, 5, 5], visible=False)
     p.wait_for_calculations()
 
 def test_plot_3d_discontinuous():
-    from sympy import PygletPlot
+    from sympy.plotting.pygletplot import PygletPlot
     p = PygletPlot(1/x, [x, -3, 3, 6], [y, -1, 1, 1], visible=False)
     p.wait_for_calculations()
 
 def test_plot_2d_polar():
-    from sympy import PygletPlot
+    from sympy.plotting.pygletplot import PygletPlot
     p = PygletPlot(1/x, [x,-1,1,4], 'mode=polar', visible=False)
     p.wait_for_calculations()
 
 def test_plot_3d_cylinder():
-    from sympy import PygletPlot
+    from sympy.plotting.pygletplot import PygletPlot
     p = PygletPlot(1/y, [x,0,6.282,4], [y,-1,1,4], 'mode=polar;style=solid',
              visible=False)
     p.wait_for_calculations()
 
 def test_plot_3d_spherical():
-    from sympy import PygletPlot
+    from sympy.plotting.pygletplot import PygletPlot
     p = PygletPlot(1, [x,0,6.282,4], [y,0,3.141,4], 'mode=spherical;style=wireframe',
              visible=False)
     p.wait_for_calculations()
 
 def test_plot_2d_parametric():
-    from sympy import PygletPlot
+    from sympy.plotting.pygletplot import PygletPlot
     p = PygletPlot(sin(x), cos(x), [x, 0, 6.282, 4], visible=False)
     p.wait_for_calculations()
 
 def test_plot_3d_parametric():
-    from sympy import PygletPlot
+    from sympy.plotting.pygletplot import PygletPlot
     p = PygletPlot(sin(x), cos(x), x/5.0, [x, 0, 6.282, 4], visible=False)
     p.wait_for_calculations()
 
 def _test_plot_log():
-    from sympy import PygletPlot
+    from sympy.plotting.pygletplot import PygletPlot
     p = PygletPlot(log(x), [x,0,6.282,4], 'mode=polar', visible=False)
     p.wait_for_calculations()
 
 def test_plot_integral():
     # Make sure it doesn't treat x as an independent variable
-    from sympy import PygletPlot, Integral
+    from sympy.plotting.pygletplot import PygletPlot
+    from sympy import Integral
     p = PygletPlot(Integral(z*x, (x, 1, z), (z, 1, y)), visible=False)
     p.wait_for_calculations()

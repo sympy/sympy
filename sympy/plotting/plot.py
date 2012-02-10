@@ -23,10 +23,11 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 """
 
 from inspect import getargspec
+from itertools import repeat, izip
 from sympy import sympify, Expr, Tuple
 from sympy.external import import_module
 
-from experimental_lambdify import experimental_lambdify
+from experimental_lambdify import vectorized_lambdify
 
 np = import_module('numpy')
 
@@ -116,7 +117,7 @@ class Plot(object):
     xscale : {'linear', 'log'}
     yscale : {'linear', 'log'}
     axis : bool
-    axis_center : tuple of two floats or {'center'}
+    axis_center : tuple of two floats or {'center', 'auto'}
     xlim : tuple of two floats
     ylim : tuple of two floats
     aspect_ratio : tuple of two floats or {'auto'}
@@ -140,18 +141,6 @@ class Plot(object):
       SurfaceOver2DRangeSeries, ParametricSurfaceSeries
         aesthetics:
           surface_color : float
-
-    Examples
-    --------
-    >>> # Creating Plot
-    >>> # Creating Plot of multiple data series
-    >>> # Setting global option (title)
-    >>> # Setting per-data series option (label)
-    >>> # Creating legend (global option)
-    >>> # Changing aesthetics (color set to a constant)
-    >>> # Changing aesthetics (color proportional to length)
-    >>> # Changing backend
-    >>> # Appending and extending plots
     """
 
     def __init__(self, *args, **kwargs):
@@ -166,7 +155,7 @@ class Plot(object):
         self.aspect_ratio = 'auto'
         self.xlim = None
         self.ylim = None
-        self.axis_center = (0,0)
+        self.axis_center = 'auto'
         self.axis = True
         self.xscale = 'linear'
         self.yscale = 'linear'
@@ -235,8 +224,11 @@ class Plot(object):
             self._series.append(Series(*args))
 
     def extend(self, plot):
-        """Adds the series from another plot."""
-        self._series.extend(plot._series)
+        """Adds the series from another plot or a list of series."""
+        if isinstance(plot, Plot):
+            self._series.extend(plot._series)
+        else:
+            self._series.extend(plot)
 
 
 def plot(*args, **kwargs):
@@ -245,6 +237,8 @@ def plot(*args, **kwargs):
     This function has a more relaxed input requirements than the Plot class
     and shows the figure immediately. As such is better suited for interactive
     work.
+
+    It can also plot a list of equations.
 
     It returns a Plot object with a matplotlib backend.
     For the more advanced options, detailed documentation and other types of
@@ -286,6 +280,16 @@ def plot(*args, **kwargs):
 
     Set title or other options:
     >> p10 = plot(x**2, title='second order polynomial')
+
+    Plot a list of expressions:
+    >> p11 = plot([x, x**2, x**3])
+    >> p12 = plot([x, x**2, x**3], (0,2)) # explicit range
+    >> p13 = plot([x*y, -x*y]) # list of surfaces
+
+    And you can even plot a Plot or a Series object:
+    >> a = plot(x, show=False)
+    >> p14 = plot(a) # plotting a plot object
+    >> p15 = plot(a[0]) # plotting a series object
     """
     # The idea of this function is to permint more ambiguous input than Plot
     # and Series. It uses default values to make the input understandable for
@@ -298,7 +302,26 @@ def plot(*args, **kwargs):
     # The code assumes that the only use for tuples is to give the range of the
     # plot either as (x, -4, +2) or just (-4, +2).
 
-    args = sympify(args)
+    plot_arguments = [p for p in args if isinstance(p, Plot)]
+    series_arguments = [p for p in args if isinstance(p, BaseSeries)]
+    args = sympify([np for np in args if not isinstance(np, (Plot, BaseSeries))])
+
+    #
+    # The case of a list of expressions.
+    # The Series factory class does not understand this so we do something
+    # special.
+    #
+    if args and isinstance(args[0], list) and all(isinstance(e, Expr) for e in args[0]):
+        new_args = [args[0],]
+        new_args.extend(repeat(a) for a in args[1:])
+        return plot(*zip(*new_args), **kwargs)
+
+    #
+    # The case of two lists with point coordinates, or tuples with expressions
+    # or Plot instances.
+    # All this is stuff that can be handled by the Series factory class after
+    # explicit ranges are added.
+    #
     default_range = Tuple(-10, 10)
 
     if all([isinstance(a, Tuple) for a in args]):
@@ -323,6 +346,9 @@ def plot(*args, **kwargs):
 
     show = kwargs.pop('show', True)
     p = Plot(*list_of_plots, **kwargs)
+    p.extend(series_arguments)
+    for plot_argument in plot_arguments:
+        p.extend(plot_argument)
     if show:
         p.show()
     return p
@@ -473,7 +499,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
     def __init__(self, expr, var_start_end):
         super(LineOver1DRangeSeries, self).__init__()
-        self.nb_of_points = 100
+        self.nb_of_points = 300
         self.expr = sympify(expr)
         self.label = str(self.expr)
         self.var = sympify(var_start_end[0])
@@ -505,7 +531,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
 
     def __init__(self, expr_x, expr_y, var_start_end):
         super(Parametric2DLineSeries, self).__init__()
-        self.nb_of_points = 100
+        self.nb_of_points = 300
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.label = "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
@@ -552,7 +578,7 @@ class Parametric3DLineSeries(Line3DBaseSeries):
 
     def __init__(self, expr_x, expr_y, expr_z, var_start_end):
         super(Parametric3DLineSeries, self).__init__()
-        self.nb_of_points = 100
+        self.nb_of_points = 300
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.expr_z = sympify(expr_z)
@@ -860,13 +886,14 @@ class MatplotlibBackend(BaseBackend):
             if s.is_3Dsurface and s.surface_color:
                 if isinstance(s.surface_color, (float,int)) or callable(s.surface_color):
                     color_array = s.get_color_array()
-                    color_array.shape = color_array.shape[0] * color_array.shape[1]
+                    color_array = color_array.reshape(color_array.size)
                     collection.set_array(color_array)
                 else:
                     collection.set_color(s.surface_color)
 
         # Set global options.
-        # TODO Those can probably be simplified.
+        # TODO The 3D stuff
+        # XXX The order of those is important.
         if parent.title:
             self.ax.set_title(parent.title)
         if parent.xlabel:
@@ -875,16 +902,19 @@ class MatplotlibBackend(BaseBackend):
             self.ax.set_ylabel(parent.ylabel, position=(0,1))
         if parent.aspect_ratio:
             val = parent.aspect_ratio
-            if isinstance(val, tuple):
-                self.ax.set_aspect(float(val[1])/val[0])
-            elif val == 'auto':
+            if val == 'auto':
                 self.ax.set_aspect('auto')
             else:
-                raise ValueError('Bad value for the aspect arg. Use tuple or \'auto\'.')
+                self.ax.set_aspect(float(val[1])/val[0])
+        if parent.xscale and not isinstance(self.ax, Axes3D):
+            self.ax.set_xscale(parent.xscale)
+        if parent.yscale and  not isinstance(self.ax, Axes3D):
+            self.ax.set_yscale(parent.yscale)
         if parent.xlim:
             self.ax.set_xlim(parent.xlim)
         if parent.ylim:
             self.ax.set_ylim(parent.ylim)
+        self.ax.set_autoscale_on(parent.autoscale)
         if parent.axis_center:
             val = parent.axis_center
             if isinstance(self.ax, Axes3D):
@@ -892,6 +922,13 @@ class MatplotlibBackend(BaseBackend):
             elif val == 'center':
                 self.ax.spines['left'].set_position('center')
                 self.ax.spines['bottom'].set_position('center')
+            elif val == 'auto':
+                xl, xh = self.ax.get_xlim()
+                yl, yh = self.ax.get_ylim()
+                pos_left = ('data', 0) if xl*xh <= 0 else 'center'
+                pos_bottom = ('data', 0) if yl*yh <= 0 else 'center'
+                self.ax.spines['left'].set_position(pos_left)
+                self.ax.spines['bottom'].set_position(pos_bottom)
             else:
                 self.ax.spines['left'].set_position(('data', val[0]))
                 self.ax.spines['bottom'].set_position(('data', val[1]))
@@ -899,26 +936,11 @@ class MatplotlibBackend(BaseBackend):
             self.ax.set_axis_on()
         else:
             self.ax.set_axis_off()
-        if parent.xscale:
-            if isinstance(self.ax, Axes3D):
-                pass
-            else:
-                self.ax.set_xscale(parent.xscale)
-                #XXX In matplotlib xscale resets xlim, so we must set xlim again.
-                self.ax.set_xlim(parent.xlim)
-        if parent.yscale:
-            if isinstance(self.ax, Axes3D):
-                pass
-            else:
-                self.ax.set_yscale(parent.yscale)
-                #XXX In matplotlib yscale resets ylim, so we must set ylim again.
-                self.ax.set_ylim(parent.ylim)
         if parent.legend:
             self.ax.legend()
             self.ax.legend_.set_visible(parent.legend)
         elif hasattr(self.ax, 'ledend_'):
             self.ax.legend_.set_visible(parent.legend)
-        self.ax.set_autoscale_on(parent.autoscale)
         if parent.margin:
             self.ax.set_xmargin(parent.margin)
             self.ax.set_ymargin(parent.margin)
@@ -967,17 +989,6 @@ plot_backends = {
         'matplotlib' : MatplotlibBackend,
         'text' : TextBackend,
         }
-
-
-##############################################################################
-# A helper for making vectorized functions
-##############################################################################
-# There are so many levels of evalf, ufunc and vectorize
-# here that this is most probably hundred times slower
-# than The Right Solution TM.
-
-def vectorized_lambdify(args, expr):
-    return np.vectorize(experimental_lambdify(args, expr))
 
 
 ##############################################################################
