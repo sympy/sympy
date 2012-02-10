@@ -4,7 +4,8 @@ import sys
 import functools
 
 try:
-    from pytest import skip, raises
+    import py
+    from py.test import skip, raises
     USE_PYTEST = getattr(sys, '_running_pytest', False)
 except ImportError:
     USE_PYTEST = False
