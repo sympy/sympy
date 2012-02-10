@@ -37,7 +37,7 @@ def FiniteRV(density, symbol=None):
 
 class DiscreteUniformPSpace(SingleFinitePSpace):
     """
-    Create a Finite Random Variable representing a discrete uniform 
+    Create a Finite Random Variable representing a discrete uniform
     distribution.
 
     This class is for internal use.
@@ -45,13 +45,14 @@ class DiscreteUniformPSpace(SingleFinitePSpace):
     Create DiscreteUniform Random Symbols using DiscreteUniform function
 
     >>> from sympy.stats import DiscreteUniform, Density
+    >>> from sympy import symbols
 
-    >>> X = DiscreteUniform(symbols('a b c') # equally likely over a, b, c
+    >>> X = DiscreteUniform(symbols('a b c')) # equally likely over a, b, c
     >>> Density(X)
     {a: 1/3, b: 1/3, c: 1/3}
 
-    >>> X = DiscreteUniform(range(5)) # distribution over a range
-    >>> Density(X)
+    >>> Y = DiscreteUniform(range(5)) # distribution over a range
+    >>> Density(Y)
     {0: 1/5, 1: 1/5, 2: 1/5, 3: 1/5, 4: 1/5}
     """
     _count = 0
@@ -219,10 +220,11 @@ class BinomialPSpace(SingleFinitePSpace):
 
     Create Binomial Random Symbols using Binomial function.
     >>> from sympy.stats import Binomial, Density
+    >>> from sympy import S
 
     >>> X = Binomial(4, S.Half) # Four "coin flips"
     >>> Density(X)
-    {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16} 
+    {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}
     """
 
     _count = 0
@@ -239,10 +241,11 @@ def Binomial(n, p, succ=1, fail=0, symbol=None):
 
     Returns a RandomSymbol.
     >>> from sympy.stats import Binomial, Density
+    >>> from sympy import S
 
     >>> X = Binomial(4, S.Half) # Four "coin flips"
     >>> Density(X)
-    {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16} 
+    {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}
     """
 
     return BinomialPSpace(n, p, succ, fail, symbol).value

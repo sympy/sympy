@@ -228,8 +228,8 @@ def Weibull(alpha, beta, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Weibull, Density, E, Std
-    >>> from sympy import symbols
+    >>> from sympy.stats import Weibull, Density, E, Var
+    >>> from sympy import symbols, simplify
     >>> x, a, b = symbols('x a b', positive=True)
 
     >>> X = Weibull(a, b, symbol=x)

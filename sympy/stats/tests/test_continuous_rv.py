@@ -127,7 +127,7 @@ def test_lognormal():
         X = LogNormal(i, 0)
         assert S(Sample(X)) == N(exp(i))
     # The sympy integrator can't do this too well
-    #assert E(X) == 
+    #assert E(X) ==
 def test_exponential():
     rate = Symbol('lambda', positive=True, real=True, bounded=True)
     X = Exponential(rate)
