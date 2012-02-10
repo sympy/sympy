@@ -1008,6 +1008,26 @@ def test_sympy__integrals__transforms__FourierTransform():
     from sympy.integrals.transforms import FourierTransform
     assert _test_args(FourierTransform(2, x, y))
 
+@SKIP("abstract class")
+def test_sympy__integrals__transforms__SineCosineTypeTransform():
+    pass
+
+def test_sympy__integrals__transforms__InverseSineTransform():
+    from sympy.integrals.transforms import InverseSineTransform
+    assert _test_args(InverseSineTransform(2, x, y))
+
+def test_sympy__integrals__transforms__SineTransform():
+    from sympy.integrals.transforms import SineTransform
+    assert _test_args(SineTransform(2, x, y))
+
+def test_sympy__integrals__transforms__InverseCosineTransform():
+    from sympy.integrals.transforms import InverseCosineTransform
+    assert _test_args(InverseCosineTransform(2, x, y))
+
+def test_sympy__integrals__transforms__CosineTransform():
+    from sympy.integrals.transforms import CosineTransform
+    assert _test_args(CosineTransform(2, x, y))
+
 def test_sympy__logic__boolalg__And():
     from sympy.logic.boolalg import And
     assert _test_args(And(x, y, 2))

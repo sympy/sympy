@@ -15,4 +15,8 @@ from transforms import (mellin_transform, inverse_mellin_transform,
                         laplace_transform, inverse_laplace_transform,
                         LaplaceTransform, InverseLaplaceTransform,
                         fourier_transform, inverse_fourier_transform,
-                        FourierTransform, InverseFourierTransform)
+                        FourierTransform, InverseFourierTransform,
+                        sine_transform, inverse_sine_transform,
+                        SineTransform, InverseSineTransform,
+                        cosine_transform, inverse_cosine_transform,
+                        CosineTransform, InverseCosineTransform)
