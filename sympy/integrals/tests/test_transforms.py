@@ -2,17 +2,18 @@ from sympy.integrals.transforms import (mellin_transform,
     inverse_mellin_transform, laplace_transform, inverse_laplace_transform,
     fourier_transform, inverse_fourier_transform,
     sine_transform, inverse_sine_transform,
-    cosine_transform, inverse_cosine_transform)
-from sympy import (gamma, exp, oo, Heaviside, symbols, re, factorial, pi,
+    cosine_transform, inverse_cosine_transform,
+    LaplaceTransform, FourierTransform, SineTransform, CosineTransform)
+from sympy import (gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
                    cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
                    EulerGamma, erf, besselj, bessely, besseli, besselk,
-                   exp_polar, polar_lift, unpolarify)
+                   exp_polar, polar_lift, unpolarify, Function)
 from sympy.utilities.pytest import XFAIL, slow, skip
 from sympy.abc import x, s, a, b
 nu, beta, rho = symbols('nu beta rho')
 
 def test_undefined_function():
-    from sympy import Function, MellinTransform, LaplaceTransform
+    from sympy import Function, MellinTransform
     f = Function('f')
     assert mellin_transform(f(x), x, s) == MellinTransform(f(x), x, s)
     assert mellin_transform(f(x) + exp(-x), x, s) == \
@@ -417,6 +418,11 @@ def test_laplace_transform():
     LT = laplace_transform
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
+    w = Symbol("w")
+    f = Function("f")
+
+    # Test unevaluated form
+    assert laplace_transform(f(t), t, w) == LaplaceTransform(f(t), t, w)
 
     # test a bug
     spos = symbols('s', positive=True)
@@ -505,12 +511,16 @@ def test_fourier_transform():
     def simp(x): return simplify(expand_trig(expand_complex(expand(x))))
     def sinc(x): return sin(pi*x)/(pi*x)
     k = symbols('k', real=True)
+    f = Function("f")
 
     # TODO for this to work with real a, need to expand abs(a*x) to abs(a)*abs(x)
     a = symbols('a', positive=True)
     b = symbols('b', positive=True)
 
     posk = symbols('k', positive=True)
+
+    # Test unevaluated form
+    assert fourier_transform(f(x), x, k) == FourierTransform(f(x), x, k)
 
     # basic examples from wikipedia
     assert simp(FT(Heaviside(1 - abs(2*a*x)), x, k)) == sinc(k/a)/a
@@ -548,6 +558,9 @@ def test_sine_transform():
     t = symbols("t")
     w = symbols("w")
     a = symbols("a")
+    f = Function("f")
+
+    assert sine_transform(f(t), t, w) == SineTransform(f(t), t, w)
 
     assert sine_transform(1/sqrt(t), t, w) == 1/sqrt(w)
     assert inverse_sine_transform(1/sqrt(w), w, t) == 1/sqrt(t)
@@ -571,6 +584,9 @@ def test_cosine_transform():
     t = symbols("t")
     w = symbols("w")
     a = symbols("a")
+    f = Function("f")
+
+    assert cosine_transform(f(t), t, w) == CosineTransform(f(t), t, w)
 
     assert cosine_transform(1/sqrt(t), t, w) == 1/sqrt(w)
     assert inverse_cosine_transform(1/sqrt(w), w, t) == 1/sqrt(t)
