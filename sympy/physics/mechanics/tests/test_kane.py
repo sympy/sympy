@@ -14,9 +14,7 @@ def test_one_dof():
 
     kd = [qd - u]
     FL = [(P, (-k * q - c * u) * N.x)]
-    pa = Particle()
-    pa.mass = m
-    pa.point = P
+    pa = Particle('pa', P, m)
     BL = [pa]
 
     KM = Kane(N)
@@ -28,7 +26,7 @@ def test_one_dof():
     forcing = KM.forcing
     rhs = MM.inv() * forcing
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
-    assert KM.linearize() == (Matrix([[0, 1], [k, c]]), Matrix([]))
+    assert KM.linearize() == (Matrix([[0, 1], [k, c]]), Matrix([]), Matrix([]))
 
 def test_two_dof():
     # This is for a 2 d.o.f., 2 particle spring-mass-damper.
@@ -49,12 +47,8 @@ def test_two_dof():
     # particle, then create a list of all particles.
     FL = [(P1, (-k1 * q1 - c1 * u1 + k2 * q2 + c2 * u2) * N.x), (P2, (-k2 *
         q2 - c2 * u2) * N.x)]
-    pa1 = Particle()
-    pa2 = Particle()
-    pa1.mass = m
-    pa2.mass = m
-    pa1.point = P1
-    pa2.point = P2
+    pa1 = Particle('pa1', P1, m)
+    pa2 = Particle('pa2', P2, m)
     BL = [pa1, pa2]
 
     # Finally we create the Kane object, specify the inertial frame, pass
@@ -82,9 +76,7 @@ def test_pend():
     kd = [qd - u]
 
     FL = [(P, m * g * N.x)]
-    pa = Particle()
-    pa.mass = m
-    pa.point = P
+    pa = Particle('pa', P, m)
     BL = [pa]
 
     KM = Kane(N)
@@ -143,11 +135,7 @@ def test_rolling_disc():
     # mass center attribute, a ReferenceFrame to the frame attribute, and mass
     # and inertia. Then we form the body list.
     ForceList = [(Dmc, - m * g * Y.z)]
-    BodyD = RigidBody()
-    BodyD.mc = Dmc
-    BodyD.inertia = (I, Dmc)
-    BodyD.frame = R
-    BodyD.mass = m
+    BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
     BodyList = [BodyD]
 
     # Finally we form the equations of motion, using the same steps we did
@@ -200,11 +188,7 @@ def test_aux():
     kd = [q1d - u3/cos(q3), q2d - u1, q3d - u2 + u3 * tan(q2)]
 
     ForceList = [(Dmc, - m * g * Y.z), (C, f1 * L.x + f2 * (Y.z ^ L.x))]
-    BodyD = RigidBody()
-    BodyD.mc = Dmc
-    BodyD.inertia = (I, Dmc)
-    BodyD.frame = R
-    BodyD.mass = m
+    BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
     BodyList = [BodyD]
 
     KM = Kane(N)

@@ -8,11 +8,15 @@ class RigidBody(object):
     """An idealized rigid body.
 
     This is essentially a container which holds the various components which
-    describe a rigid body: mass, point, reference frame, and inertia.
+    describe a rigid body: a name, mass, point, reference frame, and inertia.
+
+    All of these need to be supplied on creation, but can be changed
+    afterwards.
 
     Attributes
     ==========
-
+    name : str
+        The body's name
     mass : Sympifyable
         The body's mass
     inertia : (Dyadic, Point)
@@ -32,20 +36,28 @@ class RigidBody(object):
     >>> A = ReferenceFrame('A')
     >>> P = Point('P')
     >>> I = outer (A.x, A.x)
-    >>> B = RigidBody()
-    >>> B.mass = m
-    >>> B.frame = A
-    >>> B.mc = P
-    >>> B.inertia = (I, B.mc)
+    >>> Inertia_tuple = (I, P)
+    >>> B = RigidBody('B', P, A, m, Inertia_tuple)
+    >>> # Or you could change them afterwards
+    >>> m2 = Symbol('m2')
+    >>> B.mass = m2
 
     """
 
-    def __init__(self):
-        self._frame = None
-        self._mc = None
-        self._mass = None
-        self._inertia = None
-        self._inertia_point = None
+    def __init__(self, name, mc, frame, mass, inertia):
+        if not isinstance(name, str):
+            raise TypeError('Supply a valid name.')
+        self._name = name
+        self.set_mc(mc)
+        self.set_mass(mass)
+        self.set_frame(frame)
+        self.set_inertia(inertia)
+
+    def __str__(self):
+        return self._name
+
+    __repr__ = __str__
+
 
     def get_frame(self):
         return self._frame
@@ -62,7 +74,7 @@ class RigidBody(object):
 
     def set_mc(self, p):
         if not isinstance(p, Point):
-            raise TypeError("RigidBody mass center must be a Point object")
+            raise TypeError("RigidBody mass center must be a Point object.")
         self._mc = p
 
     mc = property(get_mc, set_mc)

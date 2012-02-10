@@ -39,7 +39,7 @@ def parse (s):
     return s
 
 def translateFunction (s):
-    if s[0:3] == "Arc":
+    if s.startswith("Arc"):
         return "a" + s[3:]
     return s.lower()
 
