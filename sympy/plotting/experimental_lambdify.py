@@ -69,259 +69,493 @@ from sympy import Symbol, NumberSymbol, I, zoo, oo
 # args) tree and creating the namespace at the same time. That actually sounds
 # good.
 
-def experimental_lambdify(args, expr, print_lambda=False):
-    # Constructing the argument string
-    if not all([isinstance(a, Symbol) for a in args]):
-        raise ValueError('The arguments must be Symbols.')
-    else:
-        argstr = ', '.join([str(a) for a in args])
+import numpy as np
+import warnings
 
-    # Constructing the translation dictionaries and making the translation
-    dict_tuple_str = get_dict_tuple_str()
-    dict_tuple_fun = get_dict_tuple_fun()
-    exprstr = str(expr)
-    newexpr = tree2str_translate(str2tree(exprstr), dict_tuple_str, dict_tuple_fun)
+#TODO debuging output
 
-    # Constructing the namespaces
-    namespace = {}
-    namespace.update(sympy_atoms_namespace(expr))
-    namespace.update(sympy_expression_namespace(expr))
-    # XXX Workaround
-    # Ugly workaround because Pow(a,Half) prints as sqrt(a)
-    # and sympy_expression_namespace can not catch it.
-    from sympy import sqrt
-    namespace.update({'sqrt': sqrt})
-    # End workaround.
-    try:
-        namespace.update({'np' : __import__('numpy')})
-    except ImportError:
-        raise ImportError('experimental_lambdify needs numpy.')
+class vectorized_lambdify(object):
+    """ Return a sufficiently smart, vectorized and lambdified function.
 
-    if print_lambda:
-        print newexpr
-    return eval('lambda ' + argstr + ' : (' + newexpr + ')', namespace)
+    Returns only reals. Truncates complex if necessary.
 
+    This function uses experimental_lambdify to created a lambdified
+    expression ready to be used with numpy. Many of the functions in sympy
+    are not implemented in numpy so in some cases we resort to python math or
+    even to evalf.
 
-##############################################################################
-# Dicts for translating from sympy to other modules
-##############################################################################
+    The following translations are tried:
+    only numpy
+      - on FloatingPointError (numpy tried to return a nan):
+          take the real part and use complex128 arguments
+      - on errors raised by sympy trying to work with ndarray:
+          only python math and then vectorize float64
+      - on ValueError (math trying to work with complex numbers):
+          only python cmath and then vectorize complex128
 
-###
-# numpy
-###
+    When using python math/cmath there is no need for evalf or float/complex
+    because python math/cmath calls those.
 
-# Functions that are the same in numpy
-numpy_functions_same = [
-        'sin', 'cos', 'tan',
-        'sinh', 'cosh', 'tanh',
-        'sqrt',
-        'floor',
-        'conjugate',
-        ]
-
-# Functions with different names in numpy
-numpy_functions_different = {
-        "acos":"arccos",
-        "acosh":"arccosh",
-        "arg":"angle",
-        "asin":"arcsin",
-        "asinh":"arcsinh",
-        "atan":"arctan",
-        "atan2":"arctan2",
-        "atanh":"arctanh",
-        "ceiling":"ceil",
-        "im":"imag",
-        "ln":"log",
-        "Max":"amax",
-        "Min":"amin",
-        "re":"real",
-        }
-
-# Strings that should be translated
-numpy_not_functions = {
-        'pi':'np.pi',
-        'I' :'1j',
-        'oo':'np.inf',
-        'E' :'np.e',
-        }
-
-###
-# mpmath, python math, etc
-###
-# Not needed really
-
-###
-# Create the final ordered tuples of dictionaries
-###
-
-# For strings
-def get_dict_tuple_str():
-    return (numpy_not_functions,)
-
-# For functions
-def get_dict_tuple_fun():
-    numpy_dict = {}
-    for s in numpy_functions_same:
-        numpy_dict[s] = 'np.'+s
-    for k in numpy_functions_different:
-        numpy_dict[k] = 'np.'+numpy_functions_different[k]
-    return (numpy_dict, )
-
-##############################################################################
-# The translator functions, tree parsers, etc.
-##############################################################################
-
-def str2tree(exprstr):
-    """Converts an expression string to a tree.
-
-    Functions are represented by ('func_name(', tree_of_arguments).
-    Other expressions are (head_string, mid_tree, tail_str).
-    Expressions that do not contain functions are directly returned.
-
-    Examples:
-    >>> from sympy.abc import x, y, z
-    >>> from sympy import Integral, sin
-    >>> from sympy.plotting.experimental_lambdify import str2tree
-
-    >>> str2tree(str(Integral(x, (x, 1, y))))
-    ('', ('Integral(', 'x, (x, 1, y)'), ')')
-    >>> str2tree(str(x+y))
-    'x + y'
-    >>> str2tree(str(x+y*sin(z)+1))
-    ('x + y*', ('sin(', 'z'), ') + 1')
+    This function never tries to mix numpy directly with evalf because numpy
+    does not understand sympy Float. If this is needed one can use the
+    float_wrap_evalf/complex_wrap_evalf options of experimental_lambdify or
+    better one can be explicit about the dtypes that numpy works with.
+    Check numpy bug http://projects.scipy.org/numpy/ticket/1013 to know what
+    types of errors to expect.
     """
-    #matches the first 'function_name('
-    first_par = re.match(r'[^\(]*?[\W]?(\w+\()', exprstr)
-    if first_par is None:
-        return exprstr
-    else:
-        start = len(first_par.group()) - len(first_par.groups()[0])
-        head = exprstr[:start]
-        func = exprstr[start:first_par.end()]
-        tail = exprstr[first_par.end():]
-        count = 0
-        for i, c in enumerate(tail):
-            if c == '(':
-                count += 1
-            elif c == ')':
-                count -= 1
-            if count == -1:
-                break
-        func_tail = str2tree(tail[:i])
-        tail = str2tree(tail[i:])
-        return (head, (func, func_tail), tail)
+    def __init__(self, args, expr):
+        self.args = args
+        self.expr = expr
+        self.lambda_func = experimental_lambdify(args, expr, use_np=True)
+        self.vector_func = self.lambda_func
+        self.failure = False
 
-def tree2str(tree):
-    """Converts a tree to string without translations.
-
-    Examples:
-    >>> from sympy.abc import x, y, z
-    >>> from sympy import Integral, sin
-    >>> from sympy.plotting.experimental_lambdify import str2tree, tree2str
-
-    >>> tree2str(str2tree(str(x+y*sin(z)+1)))
-    'x + y*sin(z) + 1'
-    """
-    if isinstance(tree, str):
-        return tree
-    else:
-        return ''.join(map(tree2str, tree))
-
-def tree2str_translate(tree, dict_tuple_str, dict_tuple_fun):
-    """Converts a tree to string with translations.
-
-    Function names are translated by translate_func.
-    Other strings are translated by translate_str.
-    """
-    if isinstance(tree, str):
-        return translate_str(tree, dict_tuple_str)
-    elif isinstance(tree, tuple) and len(tree) == 2:
-        return translate_func(tree[0][:-1], tree[1], dict_tuple_str, dict_tuple_fun)
-    else:
-        return ''.join([tree2str_translate(t, dict_tuple_str, dict_tuple_fun) for t in tree])
-
-def translate_str(estr, dict_tuple_str):
-    """Translate substrings of estr using in order the dictionaries in
-    dict_tuple_str."""
-    for trans_dict in dict_tuple_str:
-        # TODO a bug is waiting here :)
-        for pattern, repl in trans_dict.iteritems():
-            estr = re.sub(pattern, repl, estr)
-    return estr
-
-def translate_func(func_name, argtree, dict_tuple_str, dict_tuple_fun):
-    """Translate function names and the tree of arguments.
-
-    If the function name is not in the dictionaries of dict_tuple_fun then the
-    function is surrounded by an (...).evalf()."""
-    for trans_dict in dict_tuple_fun:
-        if func_name in trans_dict:
-            new_name = trans_dict[func_name]
-            argstr = tree2str_translate(argtree, dict_tuple_str, dict_tuple_fun)
-            break
-    else:
-        new_name = '(' + func_name
-        argstr = tree2str(argtree) + ').evalf()'
-    return new_name + '(' + argstr
-
-##############################################################################
-# The namespace constructors
-##############################################################################
-
-def sympy_expression_namespace(expr):
-    """Traverses the (func, args) tree of an expression and creates a sympy
-    namespace. All other modules are imported only as a module name. That way
-    the namespace is not poluted and rests quite small. It probably causes much
-    more variable lookups and so it takes more time, but there are no tests on
-    that for the moment."""
-    if expr is None:
-        return {}
-    else:
-        funcname = str(expr.func)
-        # XXX Workaround
-        # Here we add an ugly workaround because str(func(x))
-        # is not always the same as str(func). Eg
-        # >>> str(Integral(x))
-        # "Integral(x)"
-        # >>> str(Integral)
-        # "<class 'sympy.integrals.integrals.Integral'>"
-        # >>> str(sqrt(x))
-        # "sqrt(x)"
-        # >>> str(sqrt)
-        # "<function sqrt at 0x3d92de8>"
-        # >>> str(sin(x))
-        # "sin(x)"
-        # >>> str(sin)
-        # "sin"
-        # Either one of those can be used but not all at the same time.
-        # The code considers the sin example as the right one.
-        regexlist = [
-                r'<class \'sympy[\w.]*?.([\w]*)\'>$', # the example Integral
-                r'<function ([\w]*) at 0x[\w]*>$',    # the example sqrt
-                ]
-        for r in regexlist:
-            m = re.match(r, funcname)
-            if m is not None:
-                funcname = m.groups()[0]
-        # End of the workaround
-        # XXX debug: print funcname
-        args_dict = {}
-        for a in expr.args:
-            if (isinstance(a, Symbol) or
-                isinstance(a, NumberSymbol) or
-                a in [I, zoo, oo]):
-                continue
+    def __call__(self, *args):
+        # TODO: This can be simplified. Check the last failback.
+        np_old_err = np.seterr(invalid='raise')
+        try:
+            results = self.vector_func(*args)
+        except Exception, e:
+            np.seterr(**np_old_err)
+            #DEBUG: print 'Error', type(e), e
+            if (isinstance(e, FloatingPointError)
+                and 'invalid value encountered in' in str(e)):
+                # All functions were translated to numpy but
+                # complex number were produced and returned as nan.
+                # Solution: demand the use of np.complex128.
+                args = (np.array(a, dtype=np.complex) for a in args)
+                results = np.real(self.vector_func(*args))
+                warnings.warn('Complex values encountered. Returning only the real part.')
+            elif ((isinstance(e, TypeError)
+                   and 'unhashable type: \'numpy.ndarray\'' in str(e))
+                  or
+                  (isinstance(e, ValueError)
+                   and ('Invalid limits given:' in str(e)
+                        or 'negative dimensions are not allowed' in str(e) #XXX
+                        or 'sequence too large; must be smaller than 32' in str(e)))): #XXX
+                # Almost all functions were translated to numpy, but some were
+                # left as sympy functions. They recieved an ndarray as an
+                # argument and failed.
+                #   sin(ndarray(...)) raises "unhashable type"
+                #   Integral(x, (x, 0, ndarray(...))) raises "Invalid limits"
+                #   other ugly exceptions that are not well understood (marked with XXX)
+                # Solution: use math and vectorize the final lambda.
+                self.lambda_func = experimental_lambdify(self.args, self.expr, use_python_math=True)
+                self.vector_func = np.vectorize(self.lambda_func, otypes=[np.float])
+                results = self.__call__(*args)
+            elif (isinstance(e, ValueError)
+                  and
+                  ('Symbolic value, can\'t compute' in str(e) or 'math domain error' in str(e))):
+                # Almost all functions were translated to python math, but some
+                # were left as sympy functions. They produced complex numbers.
+                #   float(a+I*b) raises "Symbolic value, can't compute"
+                #   math.sqrt(-1) raises "math domain error"
+                # Solution: use cmath and vectorize the final lambda.
+                self.lambda_func = experimental_lambdify(self.args, self.expr, use_python_cmath=True)
+                self.vector_func = np.vectorize(self.lambda_func, otypes=[np.complex])
+                results = np.real(self.__call__(*args))
+                warnings.warn('Complex values encountered. Returning only the real part.')
             else:
-                args_dict.update(sympy_expression_namespace(a))
-        args_dict.update({funcname : expr.func})
-        return args_dict
+                # Complete failure. One last try with no translations, only
+                # wrapping in complex((...).evalf()) and returning the real
+                # part.
+                if self.failure:
+                    raise e
+                else:
+                    self.failure = True
+                    self.lambda_func = experimental_lambdify(self.args, self.expr,
+                                                        use_evalf=True,
+                                                        complex_wrap_evalf=True)
+                    self.vector_func = np.vectorize(self.lambda_func, otypes=[np.complex])
+                    results = np.real(self.__call__(*args))
+                    warnings.warn('The evaluation of the expression is'
+                            ' problematic. We are trying a failback method'
+                            ' that may still work. Please report this as a bug.')
+        return results
 
-def sympy_atoms_namespace(expr):
-    """For no real reason this function is separated from
-    sympy_expression_namespace. It can be moved to it."""
-    atoms = expr.atoms(Symbol, NumberSymbol, I, zoo, oo)
-    d = {}
-    for a in atoms:
-        # XXX debug: print 'atom:' + str(a)
-        d[str(a)] = a
-    return d
+
+def experimental_lambdify(*args, **kwargs):
+    l = Lambdifier(*args, **kwargs)
+    return l.lambda_func
+
+
+class Lambdifier(object):
+    def __init__(self, args, expr, print_lambda=False,
+                                   use_evalf=False,
+                                   float_wrap_evalf=False,
+                                   complex_wrap_evalf=False,
+                                   use_np=False,
+                                   use_python_math=False,
+                                   use_python_cmath=False):
+
+        self.print_lambda = print_lambda
+        self.use_evalf = use_evalf
+        self.float_wrap_evalf = float_wrap_evalf
+        self.complex_wrap_evalf = complex_wrap_evalf
+        self.use_np = use_np
+        self.use_python_math = use_python_math
+        self.use_python_cmath = use_python_cmath
+
+        # Constructing the argument string
+        if not all([isinstance(a, Symbol) for a in args]):
+            raise ValueError('The arguments must be Symbols.')
+        else:
+            argstr = ', '.join([str(a) for a in args])
+
+        # Constructing the translation dictionaries and making the translation
+        self.dict_str = self.get_dict_str()
+        self.dict_fun = self.get_dict_fun()
+        exprstr = str(expr)
+        newexpr = self.tree2str_translate(self.str2tree(exprstr))
+
+        # Constructing the namespaces
+        namespace = {}
+        namespace.update(self.sympy_atoms_namespace(expr))
+        namespace.update(self.sympy_expression_namespace(expr))
+        # XXX Workaround
+        # Ugly workaround because Pow(a,Half) prints as sqrt(a)
+        # and sympy_expression_namespace can not catch it.
+        from sympy import sqrt
+        namespace.update({'sqrt': sqrt})
+        # End workaround.
+        if use_python_math:
+            namespace.update({'math' : __import__('math')})
+        if use_python_cmath:
+            namespace.update({'cmath' : __import__('cmath')})
+        if use_np:
+            try:
+                namespace.update({'np' : __import__('numpy')})
+            except ImportError:
+                raise ImportError('experimental_lambdify failed to import numpy.')
+
+        # Construct the lambda
+        if self.print_lambda:
+            print newexpr
+        eval_str = 'lambda %s : ( %s )' %(argstr, newexpr)
+        exec "from __future__ import division; MYNEWLAMBDA = %s" % eval_str in namespace
+        self.lambda_func = namespace['MYNEWLAMBDA']
+
+
+    ##############################################################################
+    # Dicts for translating from sympy to other modules
+    ##############################################################################
+
+    ###
+    # builtins
+    ###
+
+    # Functions with different names in builtins
+    builtin_functions_different = {
+            'Min':'min',
+            'Max':'max',
+            'Abs':'abs',
+            }
+
+    # Strings that should be translated
+    builtin_not_functions = {
+            'I' :'1j',
+            'oo':'1e400',
+            }
+
+    ###
+    # numpy
+    ###
+
+    # Functions that are the same in numpy
+    numpy_functions_same = [
+            'sin', 'cos', 'tan',
+            'sinh', 'cosh', 'tanh',
+            'exp', 'log',
+            'sqrt',
+            'floor',
+            'conjugate',
+            ]
+
+    # Functions with different names in numpy
+    numpy_functions_different = {
+            "acos":"arccos",
+            "acosh":"arccosh",
+            "arg":"angle",
+            "asin":"arcsin",
+            "asinh":"arcsinh",
+            "atan":"arctan",
+            "atan2":"arctan2",
+            "atanh":"arctanh",
+            "ceiling":"ceil",
+            "im":"imag",
+            "ln":"log",
+            "Max":"amax",
+            "Min":"amin",
+            "re":"real",
+            "Abs":"abs",
+            }
+
+    # Strings that should be translated
+    numpy_not_functions = {
+            'pi':'np.pi',
+            'oo':'np.inf',
+            'E' :'np.e',
+            }
+
+    ###
+    # python math
+    ###
+
+    # Functions that are the same in math
+    math_functions_same = [
+            'sin', 'cos', 'tan',
+            'asin', 'acos', 'atan', 'atan2',
+            'sinh', 'cosh', 'tanh',
+            'asinh', 'acosh', 'atanh',
+            'exp', 'log', 'erf',
+            'sqrt',
+            'floor',
+            'factorial', 'gamma',
+            ]
+
+    # Functions with different names in math
+    math_functions_different = {
+            'ceiling':'ceil',
+            'ln':'log',
+            'loggamma':'lgamma'
+            }
+
+    # Strings that should be translated
+    math_not_functions = {
+            'pi':'math.pi',
+            'E' :'math.e',
+            }
+
+    ###
+    # python cmath
+    ###
+
+    # Functions that are the same in cmath
+    cmath_functions_same = [
+            'sin', 'cos', 'tan',
+            'asin', 'acos', 'atan',
+            'sinh', 'cosh', 'tanh',
+            'asinh', 'acosh', 'atanh',
+            'exp', 'log',
+            'sqrt',
+            ]
+
+    # Functions with different names in cmath
+    cmath_functions_different = {
+            'ln':'log',
+            'arg':'phase',
+            }
+
+    # Strings that should be translated
+    cmath_not_functions = {
+            'pi':'cmath.pi',
+            'E' :'cmath.e',
+            }
+
+    ###
+    # mpmath, etc
+    ###
+    #TODO
+
+    ###
+    # Create the final ordered tuples of dictionaries
+    ###
+
+    # For strings
+    def get_dict_str(self):
+        dict_str = dict(self.builtin_not_functions)
+        if self.use_np:
+            dict_str.update(self.numpy_not_functions)
+        if self.use_python_math:
+            dict_str.update(self.math_not_functions)
+        if self.use_python_cmath:
+            dict_str.update(self.cmath_not_functions)
+        return dict_str
+
+    # For functions
+    def get_dict_fun(self):
+        dict_fun = dict(self.builtin_functions_different)
+        if self.use_np:
+            for s in self.numpy_functions_same:
+                dict_fun[s] = 'np.'+s
+            for k, v in self.numpy_functions_different.iteritems():
+                dict_fun[k] = 'np.'+v
+        if self.use_python_math:
+            for s in self.math_functions_same:
+                dict_fun[s] = 'math.'+s
+            for k, v in self.math_functions_different.iteritems():
+                dict_fun[k] = 'math.'+v
+        if self.use_python_cmath:
+            for s in self.cmath_functions_same:
+                dict_fun[s] = 'cmath.'+s
+            for k, v in self.cmath_functions_different.iteritems():
+                dict_fun[k] = 'cmath.'+v
+        return dict_fun
+
+    ##############################################################################
+    # The translator functions, tree parsers, etc.
+    ##############################################################################
+
+    def str2tree(self, exprstr):
+        """Converts an expression string to a tree.
+
+        Functions are represented by ('func_name(', tree_of_arguments).
+        Other expressions are (head_string, mid_tree, tail_str).
+        Expressions that do not contain functions are directly returned.
+
+        Examples:
+        >>> from sympy.abc import x, y, z
+        >>> from sympy import Integral, sin
+        >>> from sympy.plotting.experimental_lambdify import str2tree
+
+        >>> str2tree(str(Integral(x, (x, 1, y))))
+        ('', ('Integral(', 'x, (x, 1, y)'), ')')
+        >>> str2tree(str(x+y))
+        'x + y'
+        >>> str2tree(str(x+y*sin(z)+1))
+        ('x + y*', ('sin(', 'z'), ') + 1')
+        >>> str2tree('sin(y*(y + 1.1) + (sin(y)))')
+        ('', ('sin(', ('y*(y + 1.1) + (', ('sin(', 'y'), '))')), ')')
+        """
+        #matches the first 'function_name('
+        first_par = re.search(r'(\w+\()', exprstr)
+        if first_par is None:
+            return exprstr
+        else:
+            start = first_par.start()
+            end = first_par.end()
+            head = exprstr[:start]
+            func = exprstr[start:end]
+            tail = exprstr[end:]
+            count = 0
+            for i, c in enumerate(tail):
+                if c == '(':
+                    count += 1
+                elif c == ')':
+                    count -= 1
+                if count == -1:
+                    break
+            func_tail = self.str2tree(tail[:i])
+            tail = self.str2tree(tail[i:])
+            return (head, (func, func_tail), tail)
+
+    @classmethod
+    def tree2str(cls, tree):
+        """Converts a tree to string without translations.
+
+        Examples:
+        >>> from sympy.abc import x, y, z
+        >>> from sympy import Integral, sin
+        >>> from sympy.plotting.experimental_lambdify import str2tree, tree2str
+
+        >>> tree2str(str2tree(str(x+y*sin(z)+1)))
+        'x + y*sin(z) + 1'
+        """
+        if isinstance(tree, str):
+            return tree
+        else:
+            return ''.join(map(cls.tree2str, tree))
+
+    def tree2str_translate(self, tree):
+        """Converts a tree to string with translations.
+
+        Function names are translated by translate_func.
+        Other strings are translated by translate_str.
+        """
+        if isinstance(tree, str):
+            return self.translate_str(tree)
+        elif isinstance(tree, tuple) and len(tree) == 2:
+            return self.translate_func(tree[0][:-1], tree[1])
+        else:
+            return ''.join([self.tree2str_translate(t) for t in tree])
+
+    def translate_str(self, estr):
+        """Translate substrings of estr using in order the dictionaries in
+        dict_tuple_str."""
+        for pattern, repl in self.dict_str.iteritems():
+                estr = re.sub(pattern, repl, estr)
+        return estr
+
+    def translate_func(self, func_name, argtree):
+        """Translate function names and the tree of arguments.
+
+        If the function name is not in the dictionaries of dict_tuple_fun then the
+        function is surrounded by a float((...).evalf()).
+
+        The use of float is necessary as np.<function>(sympy.Float(..)) raises an
+        error."""
+        if func_name in self.dict_fun:
+            new_name = self.dict_fun[func_name]
+            argstr = self.tree2str_translate(argtree)
+            return new_name + '(' + argstr
+        else:
+            template = '(%s(%s)).evalf(' if self.use_evalf else '%s(%s'
+            if self.float_wrap_evalf:
+                template = 'float(%s)' % template
+            elif self.complex_wrap_evalf:
+                template = 'complex(%s)' % template
+            return template % (func_name, self.tree2str(argtree))
+
+    ##############################################################################
+    # The namespace constructors
+    ##############################################################################
+
+    @classmethod
+    def sympy_expression_namespace(cls, expr):
+        """Traverses the (func, args) tree of an expression and creates a sympy
+        namespace. All other modules are imported only as a module name. That way
+        the namespace is not poluted and rests quite small. It probably causes much
+        more variable lookups and so it takes more time, but there are no tests on
+        that for the moment."""
+        if expr is None:
+            return {}
+        else:
+            funcname = str(expr.func)
+            # XXX Workaround
+            # Here we add an ugly workaround because str(func(x))
+            # is not always the same as str(func). Eg
+            # >>> str(Integral(x))
+            # "Integral(x)"
+            # >>> str(Integral)
+            # "<class 'sympy.integrals.integrals.Integral'>"
+            # >>> str(sqrt(x))
+            # "sqrt(x)"
+            # >>> str(sqrt)
+            # "<function sqrt at 0x3d92de8>"
+            # >>> str(sin(x))
+            # "sin(x)"
+            # >>> str(sin)
+            # "sin"
+            # Either one of those can be used but not all at the same time.
+            # The code considers the sin example as the right one.
+            regexlist = [
+                    r'<class \'sympy[\w.]*?.([\w]*)\'>$', # the example Integral
+                    r'<function ([\w]*) at 0x[\w]*>$',    # the example sqrt
+                    ]
+            for r in regexlist:
+                m = re.match(r, funcname)
+                if m is not None:
+                    funcname = m.groups()[0]
+            # End of the workaround
+            # XXX debug: print funcname
+            args_dict = {}
+            for a in expr.args:
+                if (isinstance(a, Symbol) or
+                    isinstance(a, NumberSymbol) or
+                    a in [I, zoo, oo]):
+                    continue
+                else:
+                    args_dict.update(cls.sympy_expression_namespace(a))
+            args_dict.update({funcname : expr.func})
+            return args_dict
+
+    @staticmethod
+    def sympy_atoms_namespace(expr):
+        """For no real reason this function is separated from
+        sympy_expression_namespace. It can be moved to it."""
+        atoms = expr.atoms(Symbol, NumberSymbol, I, zoo, oo)
+        d = {}
+        for a in atoms:
+            # XXX debug: print 'atom:' + str(a)
+            d[str(a)] = a
+        return d

@@ -8,7 +8,7 @@ Suggested Usage:    python -i plotting.py
 
 
 from sympy import symbols
-from sympy.plotting.pygletplot import Plot
+from sympy.plotting.pygletplot import PygletPlot
 from sympy import sin, cos, pi, sqrt, exp
 from sympy.core.compatibility import callable
 
@@ -21,7 +21,7 @@ def main():
     axes_options = 'visible=false; colored=true; label_ticks=true; label_axes=true; overlay=true; stride=0.5'
     #axes_options = 'colored=false; overlay=false; stride=(1.0, 0.5, 0.5)'
 
-    p = Plot(width=600, height=500, ortho=False, invert_mouse_zoom=False, axes=axes_options, antialiasing=True)
+    p = PygletPlot(width=600, height=500, ortho=False, invert_mouse_zoom=False, axes=axes_options, antialiasing=True)
 
     examples = []
     def example_wrapper(f):
