@@ -9,9 +9,12 @@ class Particle(object):
     Particles have a non-zero mass and lack spatial extension; they take up no
     space.
 
+    Values need to be supplied on initialization, but can be changed later.
+
     Parameters
     ==========
-
+    name : str
+        Name of particle
     mass : sympifyable
         A SymPy expression representing the Particle's mass
     point : Point
@@ -24,16 +27,25 @@ class Particle(object):
     >>> from sympy.physics.mechanics import Particle, Point
     >>> from sympy import Symbol
     >>> po = Point('po')
-    >>> pa = Particle()
     >>> m = Symbol('m')
+    >>> pa = Particle('pa', po, m)
+    >>> # Or you could change these later
     >>> pa.mass = m
     >>> pa.point = po
 
     """
 
-    def __init__(self):
-        self._mass = None
-        self._point = None
+    def __init__(self, name, point, mass):
+        if not isinstance(name, str):
+            raise TypeError('Supply a valid name.')
+        self._name = name
+        self.set_mass(mass)
+        self.set_point(point)
+
+    def __str__(self):
+        return self._name
+
+    __repr__ = __str__
 
     def get_mass(self):
         """Mass of the particle."""

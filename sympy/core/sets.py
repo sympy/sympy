@@ -1154,7 +1154,7 @@ class RealFiniteSet(FiniteSet, RealSet):
 
         intervals = [] # Build up a list of intervals between the elements
         intervals += [Interval(S.NegativeInfinity,sorted_elements[0],True,True)]
-        for a, b in zip(sorted_elements[0:-1], sorted_elements[1:]):
+        for a, b in zip(sorted_elements[:-1], sorted_elements[1:]):
             intervals.append(Interval(a, b, True, True)) # open intervals
         intervals.append(Interval(sorted_elements[-1], S.Infinity, True, True))
         return Union(*intervals)

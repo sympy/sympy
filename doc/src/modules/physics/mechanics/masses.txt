@@ -27,11 +27,8 @@ the only two attributes of the object.::
   >>> from sympy import Symbol
   >>> m = Symbol('m')
   >>> po = Point('po')
-  >>> # create an empty particle container
-  >>> pa = Particle()
-  >>> # specify the mass and point
-  >>> pa.mass = m
-  >>> pa.point = po
+  >>> # create a particle container
+  >>> pa = Particle('pa', po, m)
 
 The associated point contains the position, velocity and acceleration of the
 particle. :mod:`mechanics` allows one to perform kinematic analysis of points
@@ -72,12 +69,7 @@ frame, and an inertia tuple::
   >>> P = Point('P')
   >>> I = outer(A.x, A.x)
   >>> # create a rigid body
-  >>> B = RigidBody()
-  >>> # specify the mass, reference frame, mass center and inertia
-  >>> B.mass = m
-  >>> B.frame = A
-  >>> B.mc = P
-  >>> B.inertia = (I, B.mc)
+  >>> B = RigidBody('B', P, A, m, (I, P))
 
 The mass is specified exactly as is in a particle. Similar to the
 ``Particle``'s ``.point``, the ``RigidBody``'s mass center, ``.mc`` must be
