@@ -629,6 +629,7 @@ def test_polygon():
     p2 = RegularPolygon(Point(0, 0), 5, 5)
     raises(GeometryError, 'RegularPolygon(Point(0, 0), Point(0, 1), Point(1, 1))')
     raises(GeometryError, 'RegularPolygon(Point(0, 0), 1, 2)')
+    raises(ValueError, 'RegularPolygon(Point(0, 0), 1, 2.5)')
 
     assert p1 != p2
     assert p1.interior_angle == 3*pi/5
@@ -836,7 +837,7 @@ def test_subs():
               Ray(p, q),
               Line(p, q),
               Triangle(p, q, r),
-              RegularPolygon(p, 3, 6),
+              #RegularPolygon(p, 3, 6),
               Polygon(p, q, r, Point(5,4)),
               Circle(p, 3),
               Ellipse(p, 3, 4)]:

@@ -1,4 +1,4 @@
-from sympy.core import Basic, S, sympify, oo, pi, Symbol
+from sympy.core import Expr, S, sympify, oo, pi, Symbol
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.simplify import simplify
@@ -1015,12 +1015,16 @@ class RegularPolygon(Polygon):
     __slots__ = ['_n', '_center', '_radius', '_rot']
 
     def __new__(self, c, r, n, rot=0, **kwargs):
+        from sympy.ntheory.residue_ntheory import int_tested
+
         r, n, rot = sympify([r, n, rot])
         c = Point(c)
-        if not isinstance(r, Basic):
-            raise GeometryError("RegularPolygon.__new__ requires r to be a number or Basic instance")
-        if n < 3:
-            raise GeometryError("RegularPolygon.__new__ requires n >= 3")
+        if not isinstance(r, Expr):
+            raise GeometryError("r must be an Expr object, not %s" % r)
+        if n.is_Number:
+            int_tested(n) # let an error raise if necessary
+            if n < 3:
+                raise GeometryError("n must be a >= 3, not %s" % n)
 
         obj = GeometryEntity.__new__(self, c, r, n, **kwargs)
         obj._n = n
