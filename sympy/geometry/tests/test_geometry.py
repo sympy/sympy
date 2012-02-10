@@ -837,7 +837,7 @@ def test_subs():
               Ray(p, q),
               Line(p, q),
               Triangle(p, q, r),
-              #RegularPolygon(p, 3, 6),
+              RegularPolygon(p, 3, 6),
               Polygon(p, q, r, Point(5,4)),
               Circle(p, 3),
               Ellipse(p, 3, 4)]:

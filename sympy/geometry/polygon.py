@@ -1469,6 +1469,9 @@ class RegularPolygon(Polygon):
             return Polygon.__eq__(o, self)
         return self.args == o.args
 
+    def __hash__(self):
+        return super(RegularPolygon, self).__hash__()
+
 class Triangle(Polygon):
     """
     A polygon with three vertices and three sides.
