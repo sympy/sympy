@@ -1,8 +1,8 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial)
-from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, P, E,
-        Var, Covar, Skewness, Sample, Density, Given, independent, dependent,
-        Where, FiniteRV, pspace, CDF)
+from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
+        Hypergeometric, P, E, Var, Covar, Skewness, Sample, Density, Given,
+        independent, dependent, Where, FiniteRV, pspace, CDF)
 from sympy.utilities.pytest import raises
 
 oo = S.Infinity
@@ -173,6 +173,21 @@ def test_binomial_symbolic():
     H, T = symbols('H T')
     Y = Binomial(n, p, succ=H, fail=T)
     assert Eq(simplify(E(Y)), simplify(n*(H*p+T*(1-p))))
+
+def test_hypergeometric_numeric():
+    for N in range(1, 10):
+        for m in range(0, N):
+            for n in range(1, N):
+                X = Hypergeometric(N, m, n)
+                N, m, n = map(sympify, (N, m, n))
+                assert sum(Density(X).values()) == 1
+                assert E(X) == n * m / N
+                assert Var(X) == n*(m/N)*(N-m)/N*(N-n)/(N-1)
+                # Only test for skewness when defined
+                if N > 2 and 0 < m < N and n < N:
+                    assert Eq(Skewness(X),simplify((N-2*m)*sqrt(N-1)*(N-2*n)
+                        / (sqrt(n*m*(N-m)*(N-n))*(N-2))))
+
 
 def test_FiniteRV():
     F = FiniteRV({1:S.Half, 2:S.One/4, 3:S.One/4})

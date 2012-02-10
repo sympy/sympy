@@ -9,13 +9,14 @@ Die
 Bernoulli
 Coin
 Binomial
+Hypergeometric
 """
 
 from sympy.stats.frv import SingleFinitePSpace, create_SingleFinitePSpace
 from sympy import S, sympify, Rational, binomial
 
 __all__ = ['FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin',
-        'Binomial']
+        'Binomial', 'Hypergeometric']
 
 def FiniteRV(density, symbol=None):
     """
@@ -72,8 +73,7 @@ def DiscreteUniform(items, symbol=None):
     """
     return DiscreteUniformPSpace(items, symbol).value
 
-## TODO Subclass from DiscreteUniform
-class DiePSpace(SingleFinitePSpace):
+class DiePSpace(DiscreteUniformPSpace):
     """
     Create a Finite Random Variable representing a fair die.
 
@@ -94,8 +94,7 @@ class DiePSpace(SingleFinitePSpace):
     _count = 0
     _name = 'die'
     def __new__(cls, sides=6, symbol=None):
-        density = dict((i,Rational(1,sides)) for i in range(1,sides+1))
-        return create_SingleFinitePSpace(density, symbol, cls)
+        return DiscreteUniformPSpace.__new__(cls, range(1, sides+1), symbol)
 
 def Die(sides=6, symbol=None):
     """
@@ -249,3 +248,35 @@ def Binomial(n, p, succ=1, fail=0, symbol=None):
     """
 
     return BinomialPSpace(n, p, succ, fail, symbol).value
+
+class HypergeometricPSpace(SingleFinitePSpace):
+    """
+    Create a Finite Random Variable representing a hypergeometric distribution.
+
+    This class is for internal use.
+
+    Create Hypergeometric Random Symbols using Hypergeometric function.
+    """
+
+    _count = 0
+    _name = 'hypergeometric'
+    def __new__(cls, N, m, n, symbol=None):
+        N, m, n = map(sympify, (N, m, n))
+        density = dict((k,binomial(m,k)*binomial(N-m,n-k)/binomial(N,n))
+                for k in range(max(0, n+m-N), min(m,n)+1))
+        return create_SingleFinitePSpace(density, symbol, cls)
+
+def Hypergeometric(N, m, n, symbol=None):
+    """
+    Create a Finite Random Variable representing a hypergeometric distribution.
+
+    Returns a RandomSymbol.
+    >>> from sympy.stats import Hypergeometric, Density
+    >>> from sympy import S
+
+    >>> X = Hypergeometric(10, 5, 3) # 10 marbles, 5 white (success), 3 draws
+    >>> Density(X)
+    {0: 1/12, 1: 5/12, 2: 5/12, 3: 1/12}
+    """
+
+    return HypergeometricPSpace(N, m, n, symbol).value

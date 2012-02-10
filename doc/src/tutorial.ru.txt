@@ -571,10 +571,17 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
     n!
 
     >>> gamma(x + 1).series(x, 0, 3) # i.e. factorial(x)
+<<<<<<< HEAD
                           /          2     2\        
                         2 |EulerGamma    pi |    / 3\
     1 - EulerGamma*x + x *|----------- + ---| + O\x /
                           \     2         12/        
+=======
+                          /          2     2\
+                        2 |EulerGamma    pi |    / 3\
+    1 - EulerGamma*x + x *|----------- + ---| + O\x /
+                          \     2         12/
+>>>>>>> Added Hypergeometric and tests
 
 **дзета-функции**::
 
