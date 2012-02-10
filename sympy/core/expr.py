@@ -1899,6 +1899,7 @@ class Expr(Basic, EvalfMixin):
             -x
 
         """
+        from sympy import collect
         if x is None:
             syms = self.atoms(C.Symbol)
             if len(syms) > 1:
@@ -1991,7 +1992,10 @@ class Expr(Basic, EvalfMixin):
                 if (s1 + o).removeO() == s1:
                     o = S.Zero
 
-            return s1 + o
+            try:
+                return collect(s1,x) + o
+            except NotImplementedError:
+                return s1 + o
 
         else: # lseries handling
             def yield_lseries(s):

@@ -196,7 +196,7 @@ def test_seriesbug2c():
     #more complicated case, but sin(x)~x, so the result is the same as in (1)
     e=(sin(2*w)/w)**(1+w)
     assert e.series(w,0,1) == 2 + O(w)
-    assert e.series(w,0,3) == 2-Rational(4,3)*w**2+w**2*log(2)**2+2*w*log(2)+O(w**3, w)
+    assert e.series(w,0,3) == 2 + 2*w*log(2) + w**2*(-Rational(4,3) + log(2)**2) + O(w**3)
     assert e.series(w,0,2).subs(w,0) == 2
 
 def test_expbug4():
@@ -428,10 +428,8 @@ def test_dir():
 def test_issue405():
     a = Symbol("a")
     e = asin(a*x)/x
-    assert e.series(x, 4, n=2).removeO().subs(x, x - 4) == (
-           asin(4*a)/4 -
-           (x - 4)*asin(4*a)/16 +
-           a*(x - 4)/(4*sqrt(1 - 16*a**2)))
+    assert e.series(x, 4, n=2).removeO().subs(x, x - 4) == (x - 4)*(a/(4*sqrt(-16*a**2 + 1)) \
+                                                           - asin(4*a)/16) + asin(4*a)/4
 
 def test_issue1342():
     x, a, b = symbols('x,a,b')
@@ -439,8 +437,7 @@ def test_issue1342():
     assert f.series(x, 0, 5) == 1 - a*x + a**2*x**2 - a**3*x**3 + \
             a**4*x**4 + O(x**5)
     f = 1/(1+(a+b)*x)
-    assert f.series(x, 0, 3) == 1 - a*x - b*x + a**2*x**2 + b**2*x**2 + \
-            2*a*b*x**2 + O(x**3)
+    assert f.series(x, 0, 3) == 1 + x*(-a - b) + x**2*(a**2 + 2*a*b + b**2) + O(x**3)
 
 def test_issue1230():
     assert tan(x).series(x, pi/2, n=3).removeO().subs(x, x - pi/2) == \
