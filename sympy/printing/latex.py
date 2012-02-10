@@ -1107,6 +1107,37 @@ class LatexPrinter(Printer):
     def _print_catalan(self, expr):
         return r"C_{%s}" % self._print(expr.args[0])
 
+    def _print_MellinTransform(self, expr):
+        return r"\mathcal{M}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
+    def _print_InverseMellinTransform(self, expr):
+        return r"\mathcal{M}^{-1}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
+    def _print_LaplaceTransform(self, expr):
+        return r"\mathcal{L}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
+    def _print_InverseLaplaceTransform(self, expr):
+        return r"\mathcal{L}^{-1}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
+    def _print_FourierTransform(self, expr):
+        return r"\mathcal{F}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
+    def _print_InverseFourierTransform(self, expr):
+        return r"\mathcal{F}^{-1}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
+    def _print_SineTransform(self, expr):
+        return r"\mathcal{SIN}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
+    def _print_InverseSineTransform(self, expr):
+        return r"\mathcal{SIN}^{-1}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
+    def _print_CosineTransform(self, expr):
+        return r"\mathcal{COS}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
+    def _print_InverseCosineTransform(self, expr):
+        return r"\mathcal{COS}^{-1}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
+
 def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.
