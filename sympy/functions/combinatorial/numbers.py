@@ -536,6 +536,12 @@ class harmonic(Function):
         from sympy.functions.special.gamma_functions import polygamma
         return self.rewrite(polygamma)
 
+    def _eval_rewrite_as_Sum(self, n, m=None):
+        k = C.Dummy("k", integer=True)
+        if m is None:
+            m = S.One
+        return C.Sum(k**(-m), (k, 1, n))
+
     def _eval_expand_func(self, **hints):
         n = self.args[0]
         m = self.args[1] if len(self.args) == 2 else 1
