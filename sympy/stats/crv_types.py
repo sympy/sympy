@@ -30,6 +30,7 @@ __all__ = ['ContinuousRV',
 'Gamma',
 'LogNormal',
 'Maxwell',
+'Nakagami',
 'Normal',
 'Pareto',
 'Rayleigh',
@@ -331,6 +332,32 @@ def Maxwell(a, symbol=None):
     """
 
     return MaxwellPSpace(a, symbol).value
+
+#-------------------------------------------------------------------------------
+# Nakagami distribution --------------------------------------------------------
+
+class NakagamiPSpace(SingleContinuousPSpace):
+    def __new__(cls, mu, omega, symbol = None):
+        mu, omega = sympify(mu), sympify(omega)
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = 2*mu**mu/(gamma(mu)*omega**mu)*x**(2*mu-1)*exp(-mu/omega*x**2)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        return obj
+
+def Nakagami(mu, omega, symbol=None):
+    """
+    Create a Continuous Random Varible with a Nakagami distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Nakagami, Density, E, Std
+    >>> from sympy import Symbol, simplify
+    """
+
+    return NakagamiPSpace(mu, omega, symbol).value
 
 #-------------------------------------------------------------------------------
 # Normal distribution ----------------------------------------------------------
