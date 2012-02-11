@@ -28,6 +28,7 @@ __all__ = ['ContinuousRV',
 'Chi',
 'Exponential',
 'Gamma',
+'Logistic',
 'LogNormal',
 'Maxwell',
 'Nakagami',
@@ -267,6 +268,34 @@ def Gamma(k, theta, symbol=None):
     return GammaPSpace(k, theta, symbol).value
 
 #-------------------------------------------------------------------------------
+# Logistic distribution --------------------------------------------------------
+
+class LogisticPSpace(SingleContinuousPSpace):
+    def __new__(cls, mu, s, symbol=None):
+        mu, s = sympify(mu), sympify(s)
+
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = exp(-(x-mu)/s)/(s*(1+exp(-(x-mu)/s))**2)
+
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
+        return obj
+
+def Logistic(mu, s, symbol=None):
+    """
+    Create a Continuous Random Varible with a Logistic distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Logistic, Density, E, Std
+    >>> from sympy import Symbol
+    """
+
+    return LogisticPSpace(mu, s, symbol).value
+
+#-------------------------------------------------------------------------------
 # Log Normal distribution ------------------------------------------------------
 
 class LogNormalPSpace(SingleContinuousPSpace):
@@ -299,6 +328,7 @@ def LogNormal(mean, std, symbol=None):
     >>> from sympy import Symbol, simplify
 
     >>> X = LogNormal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
+
     >>> Density(X)
     Lambda(_x, sqrt(2)*exp(-log(_x)**2/2)/(2*_x*sqrt(pi)))
     """
