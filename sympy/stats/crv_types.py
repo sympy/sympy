@@ -71,7 +71,7 @@ class NormalPSpace(SingleContinuousPSpace):
 
 def Normal(mean, std, symbol=None):
     """
-    Create a Continuous Random Varible with a Normal distribution.
+    Create a Continuous Random Variable with a Normal distribution.
 
     Returns a RandomSymbol.
 
@@ -110,7 +110,7 @@ class LogNormalPSpace(SingleContinuousPSpace):
 
 def LogNormal(mean, std, symbol=None):
     """
-    Create a Continuous Random Varible with a LogNormal distribution.
+    Create a Continuous Random Variable with a LogNormal distribution.
 
     Note: Only density and sampling work.
 
@@ -143,7 +143,7 @@ class ExponentialPSpace(SingleContinuousPSpace):
 
 def Exponential(rate, symbol=None):
     """
-    Create a Continuous Random Varible with an Exponential distribution.
+    Create a Continuous Random Variable with an Exponential distribution.
 
     Returns a RandomSymbol.
 
@@ -183,7 +183,7 @@ class ParetoPSpace(SingleContinuousPSpace):
 
 def Pareto(xm, alpha, symbol=None):
     """
-    Create a Continuous Random Varible with the Pareto distribution.
+    Create a Continuous Random Variable with the Pareto distribution.
 
     Returns a RandomSymbol.
 
@@ -221,7 +221,7 @@ class WeibullPSpace(SingleContinuousPSpace):
 
 def Weibull(alpha, beta, symbol=None):
     """
-    Create a Continuous Random Varible with a Weibull distribution.
+    Create a Continuous Random Variable with a Weibull distribution.
 
     Returns a RandomSymbol.
 
@@ -262,7 +262,7 @@ class BetaPSpace(SingleContinuousPSpace):
 
 def Beta(alpha, beta, symbol=None):
     """
-    Create a Continuous Random Varible with a Beta distribution.
+    Create a Continuous Random Variable with a Beta distribution.
 
     Returns a RandomSymbol.
 
@@ -298,7 +298,7 @@ class GammaPSpace(SingleContinuousPSpace):
 
 def Gamma(k, theta, symbol=None):
     """
-    Create a Continuous Random Varible with a Gamma distribution.
+    Create a Continuous Random Variable with a Gamma distribution.
 
     Returns a RandomSymbol.
 
@@ -337,7 +337,7 @@ class UniformPSpace(SingleContinuousPSpace):
 
 def Uniform(left, right, symbol=None):
     """
-    Create a Continuous Random Varible with a Uniform distribution.
+    Create a Continuous Random Variable with a Uniform distribution.
 
     Returns a RandomSymbol.
 

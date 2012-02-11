@@ -30,6 +30,8 @@ def test_discreteuniform():
         assert P(Y <= x) == S(x+6)/10
         assert P(Y >= x) == S(5-x)/10
 
+    assert Density(Die(6)) == Density(DiscreteUniform(range(1,7)))
+
 def test_dice():
     X, Y, Z= Die(6), Die(6), Die(6)
     a,b = symbols('a b')
@@ -147,8 +149,8 @@ def test_coins():
     raises(ValueError, "P(C>D)") # Can't intelligently compare H to T
 
 def test_binomial_numeric():
-    nvals = range(8)
-    pvals = [0, S(1)/4, S(1)/3, S.Half, S(2)/3, S(3)/4, 1]
+    nvals = range(5)
+    pvals = [0, S(1)/4, S.Half, S(3)/4, 1]
 
     for n in nvals:
         for p in pvals:
@@ -175,14 +177,15 @@ def test_binomial_symbolic():
     assert Eq(simplify(E(Y)), simplify(n*(H*p+T*(1-p))))
 
 def test_hypergeometric_numeric():
-    for N in range(1, 10):
-        for m in range(0, N):
-            for n in range(1, N):
+    for N in range(1, 5):
+        for m in range(0, N+1):
+            for n in range(1, N+1):
                 X = Hypergeometric(N, m, n)
                 N, m, n = map(sympify, (N, m, n))
                 assert sum(Density(X).values()) == 1
                 assert E(X) == n * m / N
-                assert Var(X) == n*(m/N)*(N-m)/N*(N-n)/(N-1)
+                if N > 1:
+                    assert Var(X) == n*(m/N)*(N-m)/N*(N-n)/(N-1)
                 # Only test for skewness when defined
                 if N > 2 and 0 < m < N and n < N:
                     assert Eq(Skewness(X),simplify((N-2*m)*sqrt(N-1)*(N-2*n)
