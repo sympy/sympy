@@ -443,7 +443,7 @@ def factor_terms(expr, radical=False):
     y*(x + 2)/2
     >>> factor_terms(x/2 + 1) # not (x + 2)/2
     x/2 + 1
-    >>> Mul(*primitive(_), evaluate=False)
+    >>> Mul(*primitive(_), **dict(evaluate=False))
     (x + 2)/2
     >>> factor_terms(x/2 + y/4) # fraction separated from Add
     (2*x + y)/4
