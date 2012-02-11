@@ -14,7 +14,8 @@ Gamma
 """
 
 from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
-    Piecewise)
+                   Piecewise, And, Eq)
+
 from sympy import beta as beta_fn
 from crv import SingleContinuousPSpace
 from sympy.core.decorators import _sympifyit
@@ -29,8 +30,9 @@ __all__ = ['ContinuousRV',
 'LogNormal',
 'Normal',
 'Pareto',
+'Triangular',
 'Uniform',
-'Weibull',
+'Weibull'
 ]
 
 def _value_check(condition, message):
@@ -331,6 +333,41 @@ def Pareto(xm, alpha, symbol=None):
     """
 
     return ParetoPSpace(xm, alpha, symbol).value
+
+#-------------------------------------------------------------------------------
+# Triangular distribution ------------------------------------------------------
+
+class TriangularPSpace(SingleContinuousPSpace):
+    def __new__(cls, a, b, c, symbol=None):
+        a, b, c = sympify(a), sympify(b), sympify(c)
+
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = Piecewise(
+                (2*(x-a)/((b-a)*(c-a)), And(a<=x, x<c)),
+                (2/(b-a), Eq(x,c)),
+                (2*(b-x)/((b-a)*(b-c)), And(c<x, x<=b)),
+                (S.Zero, True))
+
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
+        return obj
+
+def Triangular(a, b, c, symbol=None):
+    """
+    Create a Continuous Random Varible with a Triangular distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Triangular, Density, E, Var
+    >>> from sympy import symbols, simplify
+    >>> x, a, b, c = symbols('x a b c')
+
+    >>> X = Triangular(a, b, c, symbol=x)
+    """
+
+    return TriangularPSpace(a, b, c, symbol).value
 
 #-------------------------------------------------------------------------------
 # Uniform distribution ---------------------------------------------------------
