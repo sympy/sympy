@@ -29,6 +29,7 @@ __all__ = ['ContinuousRV',
 'Exponential',
 'Gamma',
 'LogNormal',
+'Maxwell',
 'Normal',
 'Pareto',
 'Rayleigh',
@@ -302,6 +303,34 @@ def LogNormal(mean, std, symbol=None):
     """
 
     return LogNormalPSpace(mean, std, symbol).value
+
+#-------------------------------------------------------------------------------
+# Maxwell distribution ---------------------------------------------------------
+
+class MaxwellPSpace(SingleContinuousPSpace):
+    def __new__(cls, a, symbol = None):
+        a = sympify(a)
+
+        x = symbol or SingleContinuousPSpace.create_symbol()
+
+        pdf = sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        return obj
+
+def Maxwell(a, symbol=None):
+    """
+    Create a Continuous Random Varible with a Maxwell distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Maxwell, Density, E, Std
+    >>> from sympy import Symbol, simplify
+    """
+
+    return MaxwellPSpace(a, symbol).value
 
 #-------------------------------------------------------------------------------
 # Normal distribution ----------------------------------------------------------
