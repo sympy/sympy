@@ -14,7 +14,7 @@ Gamma
 """
 
 from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
-                   Piecewise, And, Eq, binomial, factorial, Sum, floor)
+                   Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs)
 from sympy import beta as beta_fn
 from crv import SingleContinuousPSpace
 from sympy.core.decorators import _sympifyit
@@ -28,6 +28,7 @@ __all__ = ['ContinuousRV',
 'Chi',
 'Exponential',
 'Gamma',
+'Laplace',
 'Logistic',
 'LogNormal',
 'Maxwell',
@@ -266,6 +267,32 @@ def Gamma(k, theta, symbol=None):
     """
 
     return GammaPSpace(k, theta, symbol).value
+
+#-------------------------------------------------------------------------------
+# Laplace distribution ---------------------------------------------------------
+
+class LaplacePSpace(SingleContinuousPSpace):
+    def __new__(cls, mu, b, symbol=None):
+        mu, b = sympify(mu), sympify(b)
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = 1/(2*b)*exp(-Abs(x-mu)/b)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
+        return obj
+
+def Laplace(mu, b, symbol=None):
+    """
+    Create a Continuous Random Varible with a Laplace distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Laplace, Density, E, Std
+    >>> from sympy import Symbol
+    """
+
+    return LaplacePSpace(mu, b, symbol).value
 
 #-------------------------------------------------------------------------------
 # Logistic distribution --------------------------------------------------------
