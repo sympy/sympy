@@ -24,6 +24,7 @@ oo = S.Infinity
 
 __all__ = ['ContinuousRV',
 'Beta',
+'BetaPrime',
 'Cauchy',
 'Chi',
 'Dagum',
@@ -128,6 +129,35 @@ def Beta(alpha, beta, symbol=None):
     """
 
     return BetaPSpace(alpha, beta, symbol).value
+
+#-------------------------------------------------------------------------------
+# Beta prime distribution ------------------------------------------------------
+
+class BetaPrimePSpace(SingleContinuousPSpace):
+    def __new__(cls, alpha, beta, symbol=None):
+        alpha, beta = sympify(alpha), sympify(beta)
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = x**(alpha-1)*(1+x)**(-alpha-beta)/beta_fn(alpha, beta)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        return obj
+
+def BetaPrime(alpha, beta, symbol=None):
+    """
+    Create a Continuous Random Varible with a Beta prime distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import BetaPrime, Density, E, Std
+    >>> from sympy import symbols
+    >>> x, a, b = symbols('x a b', positive=True)
+
+    >>> X = BetaPrime(a, b, symbol=x)
+    """
+
+    return BetaPrimePSpace(alpha, beta, symbol).value
 
 #-------------------------------------------------------------------------------
 # Cauchy distribution ----------------------------------------------------------
