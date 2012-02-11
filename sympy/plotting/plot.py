@@ -894,18 +894,6 @@ class MatplotlibBackend(BaseBackend):
         # Set global options.
         # TODO The 3D stuff
         # XXX The order of those is important.
-        if parent.title:
-            self.ax.set_title(parent.title)
-        if parent.xlabel:
-            self.ax.set_xlabel(parent.xlabel, position=(1,0))
-        if parent.ylabel:
-            self.ax.set_ylabel(parent.ylabel, position=(0,1))
-        if parent.aspect_ratio:
-            val = parent.aspect_ratio
-            if val == 'auto':
-                self.ax.set_aspect('auto')
-            else:
-                self.ax.set_aspect(float(val[1])/val[0])
         if parent.xscale and not isinstance(self.ax, Axes3D):
             self.ax.set_xscale(parent.xscale)
         if parent.yscale and  not isinstance(self.ax, Axes3D):
@@ -932,18 +920,20 @@ class MatplotlibBackend(BaseBackend):
             else:
                 self.ax.spines['left'].set_position(('data', val[0]))
                 self.ax.spines['bottom'].set_position(('data', val[1]))
-        if parent.axis:
-            self.ax.set_axis_on()
-        else:
+        if not parent.axis:
             self.ax.set_axis_off()
         if parent.legend:
             self.ax.legend()
             self.ax.legend_.set_visible(parent.legend)
-        elif hasattr(self.ax, 'ledend_'):
-            self.ax.legend_.set_visible(parent.legend)
         if parent.margin:
             self.ax.set_xmargin(parent.margin)
             self.ax.set_ymargin(parent.margin)
+        if parent.title:
+            self.ax.set_title(parent.title)
+        if parent.xlabel:
+            self.ax.set_xlabel(parent.xlabel, position=(1,0))
+        if parent.ylabel:
+            self.ax.set_ylabel(parent.ylabel, position=(0,1))
 
     def show(self):
         self.process_series()
