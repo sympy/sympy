@@ -29,6 +29,7 @@ __all__ = ['ContinuousRV',
 'LogNormal',
 'Normal',
 'Pareto',
+'StudentT',
 'Triangular',
 'Uniform',
 'UniformSum',
@@ -333,6 +334,34 @@ def Pareto(xm, alpha, symbol=None):
     """
 
     return ParetoPSpace(xm, alpha, symbol).value
+
+#-------------------------------------------------------------------------------
+# StudentT distribution --------------------------------------------------------
+
+class StudentTPSpace(SingleContinuousPSpace):
+    def __new__(cls, nu, symbol = None):
+        nu = sympify(nu)
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = 1/(sqrt(nu)*beta_fn(S(1)/2,nu/2))*(1+x**2/nu)**(-(nu+1)/2)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
+        return obj
+
+def StudentT(nu, symbol=None):
+    """
+    Create a Continuous Random Varible with a student's t distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import StudentT, Density, E, Std
+    >>> from sympy import Symbol, simplify
+
+    >>> X = Normal(2, symbol=Symbol('x'))
+    """
+
+    return StudentTPSpace(nu, symbol).value
 
 #-------------------------------------------------------------------------------
 # Triangular distribution ------------------------------------------------------
