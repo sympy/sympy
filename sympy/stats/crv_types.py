@@ -31,6 +31,7 @@ __all__ = ['ContinuousRV',
 'LogNormal',
 'Normal',
 'Pareto',
+'Rayleigh',
 'StudentT',
 'Triangular',
 'Uniform',
@@ -388,6 +389,32 @@ def Pareto(xm, alpha, symbol=None):
     """
 
     return ParetoPSpace(xm, alpha, symbol).value
+
+#-------------------------------------------------------------------------------
+# Rayleigh distribution --------------------------------------------------------
+
+class RayleighPSpace(SingleContinuousPSpace):
+    def __new__(cls, sigma, symbol = None):
+        sigma = sympify(sigma)
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = x/sigma**2*exp(-x**2/(2*sigma**2))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        return obj
+
+def Rayleigh(sigma, symbol=None):
+    """
+    Create a Continuous Random Varible with a Rayleigh distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Rayleigh, Density, E, Std
+    >>> from sympy import Symbol, simplify
+    """
+
+    return RayleighPSpace(sigma, symbol).value
 
 #-------------------------------------------------------------------------------
 # StudentT distribution --------------------------------------------------------
