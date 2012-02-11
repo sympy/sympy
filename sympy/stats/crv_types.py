@@ -14,7 +14,7 @@ Gamma
 """
 
 from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
-                   Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs)
+                   Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs, log)
 from sympy import beta as beta_fn
 from crv import SingleContinuousPSpace
 from sympy.core.decorators import _sympifyit
@@ -23,6 +23,7 @@ import random
 oo = S.Infinity
 
 __all__ = ['ContinuousRV',
+'Benini',
 'Beta',
 'BetaPrime',
 'Cauchy',
@@ -88,6 +89,32 @@ def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
 ########################################
 # Continuous Probability Distributions #
 ########################################
+
+#-------------------------------------------------------------------------------
+# Benini distribution ----------------------------------------------------------
+
+class BeniniPSpace(SingleContinuousPSpace):
+    def __new__(cls, alpha, beta, sigma, symbol = None):
+        alpha, beta, sigma = sympify(alpha), sympify(beta), sympify(sigma)
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = exp(-alpha*log(x/sigma)-beta*log(x/sigma)**2)*(alpha/x+2*beta*log(x/sigma)/x)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(sigma, oo))
+        return obj
+
+def Benini(alpha, beta, sigma, symbol=None):
+    """
+    Create a Continuous Random Varible with a Benini distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Benini, Density, E, Std
+    >>> from sympy import Symbol, simplify
+    """
+
+    return BeniniPSpace(alpha, beta, sigma, symbol).value
 
 #-------------------------------------------------------------------------------
 # Beta distribution ------------------------------------------------------------
