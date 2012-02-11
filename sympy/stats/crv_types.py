@@ -25,6 +25,7 @@ oo = S.Infinity
 __all__ = ['ContinuousRV',
 'Beta',
 'Cauchy',
+'Chi',
 'Exponential',
 'Gamma',
 'LogNormal',
@@ -147,6 +148,32 @@ def Cauchy(x0, gamma, symbol=None):
     """
 
     return CauchyPSpace(x0, gamma, symbol).value
+
+#-------------------------------------------------------------------------------
+# Chi distribution -------------------------------------------------------------
+
+class ChiPSpace(SingleContinuousPSpace):
+    def __new__(cls, k, symbol = None):
+        k = sympify(k)
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = 2**(1-k/2)*x**(k-1)*exp(-x**2/2)/gamma(k/2)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        return obj
+
+def Chi(k, symbol=None):
+    """
+    Create a Continuous Random Varible with a Chi distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Chi, Density, E, Std
+    >>> from sympy import Symbol, simplify
+    """
+
+    return ChiPSpace(k, symbol).value
 
 #-------------------------------------------------------------------------------
 # Exponential distribution -----------------------------------------------------
