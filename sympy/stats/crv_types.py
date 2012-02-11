@@ -642,15 +642,21 @@ def Weibull(alpha, beta, symbol=None):
 
     Returns a RandomSymbol.
 
+    Examples
+    ========
+
     >>> from sympy.stats import Weibull, Density, E, Var
     >>> from sympy import symbols, simplify
     >>> x, a, b = symbols('x a b', positive=True)
 
     >>> X = Weibull(a, b, symbol=x)
+
     >>> Density(X)
     Lambda(_x, b*(_x/a)**(b - 1)*exp(-(_x/a)**b)/a)
+
     >>> simplify(E(X))
     a*gamma(1 + 1/b)
+
     >>> simplify(Var(X))
     -a**2*(gamma(1 + 1/b)**2 - gamma(1 + 2/b))
     """
