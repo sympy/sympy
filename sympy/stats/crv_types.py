@@ -24,6 +24,7 @@ oo = S.Infinity
 
 __all__ = ['ContinuousRV',
 'Beta',
+'Cauchy',
 'Exponential',
 'Gamma',
 'LogNormal',
@@ -120,6 +121,32 @@ def Beta(alpha, beta, symbol=None):
     """
 
     return BetaPSpace(alpha, beta, symbol).value
+
+#-------------------------------------------------------------------------------
+# Cauchy distribution ----------------------------------------------------------
+
+class CauchyPSpace(SingleContinuousPSpace):
+    def __new__(cls, x0, gamma, symbol = None):
+        x0, gamma = sympify(x0), sympify(gamma)
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = 1/(pi*gamma*(1+((x-x0)/gamma)**2))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
+        return obj
+
+def Cauchy(x0, gamma, symbol=None):
+    """
+    Create a Continuous Random Varible with a Cauchy distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Cauchy, Density, E, Std
+    >>> from sympy import Symbol, simplify
+    """
+
+    return CauchyPSpace(x0, gamma, symbol).value
 
 #-------------------------------------------------------------------------------
 # Exponential distribution -----------------------------------------------------
