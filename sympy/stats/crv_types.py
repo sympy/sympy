@@ -14,8 +14,7 @@ Gamma
 """
 
 from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
-                   Piecewise, And, Eq)
-
+                   Piecewise, And, Eq, binomial, factorial, Sum, floor)
 from sympy import beta as beta_fn
 from crv import SingleContinuousPSpace
 from sympy.core.decorators import _sympifyit
@@ -32,6 +31,7 @@ __all__ = ['ContinuousRV',
 'Pareto',
 'Triangular',
 'Uniform',
+'UniformSum',
 'Weibull'
 ]
 
@@ -418,6 +418,38 @@ def Uniform(left, right, symbol=None):
     return UniformPSpace(left, right, symbol).value
 
 #-------------------------------------------------------------------------------
+# UniformSum distribution ------------------------------------------------------
+
+class UniformSumPSpace(SingleContinuousPSpace):
+    def __new__(cls, n, symbol=None):
+        n = sympify(n)
+
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        k = Dummy("k")
+        pdf =1/factorial(n-1)*Sum((-1)**k*binomial(n,k)*(x-k)**(n-1), (k,0,floor(x)))
+
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0,n))
+        return obj
+
+def UniformSum(n, symbol=None):
+    """
+    Create a Continuous Random Varible with an Irwin-Hall distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import UniformSum, Density, E, Var
+    >>> from sympy import symbols, simplify
+    >>> x, n = symbols('x n')
+
+    >>> X = UniformSum(n, symbol=x)
+    """
+
+    return UniformSumPSpace(n, symbol).value
+
+#-------------------------------------------------------------------------------
 # Weibull distribution ---------------------------------------------------------
 
 class WeibullPSpace(SingleContinuousPSpace):
@@ -443,9 +475,6 @@ def Weibull(alpha, beta, symbol=None):
     Create a Continuous Random Variable with a Weibull distribution.
 
     Returns a RandomSymbol.
-
-    Examples
-    ========
 
     >>> from sympy.stats import Weibull, Density, E, Var
     >>> from sympy import symbols, simplify
