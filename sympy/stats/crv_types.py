@@ -26,6 +26,7 @@ __all__ = ['ContinuousRV',
 'Beta',
 'Cauchy',
 'Chi',
+'Dagum',
 'Exponential',
 'Gamma',
 'Laplace',
@@ -179,6 +180,32 @@ def Chi(k, symbol=None):
     """
 
     return ChiPSpace(k, symbol).value
+
+#-------------------------------------------------------------------------------
+# Dagum distribution -----------------------------------------------------
+
+class DagumPSpace(SingleContinuousPSpace):
+    def __new__(cls, p, a, b, symbol = None):
+        p, a, b = sympify(p), sympify(a), sympify(b)
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = a*p/x*((x/b)**(a*p)/(((x/b)**a+1)**(p+1)))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
+        return obj
+
+def Dagum(p, a, b, symbol=None):
+    """
+    Create a Continuous Random Varible with a Dagum distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Dagum, Density, E, Std
+    >>> from sympy import Symbol, simplify
+    """
+
+    return DagumPSpace(p, a, b, symbol).value
 
 #-------------------------------------------------------------------------------
 # Exponential distribution -----------------------------------------------------
