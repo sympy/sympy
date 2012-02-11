@@ -453,6 +453,10 @@ def test_laplace_transform():
     # TODO general order works, but is a *mess*
     # TODO besseli also works, but is an even greater mess
 
+    # test a bug in conditions processing
+    # TODO the auxiliary condition should be recognised/simplified
+    assert LT(exp(t)*cos(t), t, s)[0:-1] == ((s - 1)/(s**2 - 2*s + 2), -oo)
+
 def test_inverse_laplace_transform():
     from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,
                        unpolarify, simplify)
