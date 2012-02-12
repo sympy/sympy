@@ -3,14 +3,29 @@ Continuous Random Variables - Prebuilt variables
 
 Contains
 ========
-Normal
-LogNormal
-Exponential
-Uniform
-Pareto
-Weibull
+Arcsin
+Benini
 Beta
+BetaPrime
+Cauchy
+Chi
+Dagum
+Exponential
 Gamma
+Laplace
+Logistic
+LogNormal
+Maxwell
+Nakagami
+Normal
+Pareto
+Rayleigh
+StudentT
+Triangular
+Uniform
+UniformSum
+Weibull
+WignerSemicircle
 """
 
 from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
