@@ -4,7 +4,7 @@ from sympy.assumptions import (ask, AssumptionsContext, global_assumptions, Q,
 from sympy.assumptions.ask import (compute_known_facts, known_facts_cnf,
                                    known_facts_dict)
 from sympy.assumptions.handlers import AskHandler
-from sympy.core import I, Integer, oo, pi, Rational, S, symbols
+from sympy.core import I, Integer, oo, pi, Rational, S, symbols, Add
 from sympy.functions import Abs, cos, exp, im, log, re, sign, sin, sqrt
 from sympy.logic import Equivalent, Implies, Xor
 from sympy.utilities.pytest import raises, XFAIL, slow
@@ -22,6 +22,42 @@ def test_int_1():
     assert ask(Q.negative(z))         == False
     assert ask(Q.even(z))             == False
     assert ask(Q.odd(z))              == True
+    assert ask(Q.bounded(z))          == True
+    assert ask(Q.infinitesimal(z))    == False
+    assert ask(Q.prime(z))            == False
+    assert ask(Q.composite(z))        == True
+
+def test_int_11():
+    z = 11
+    assert ask(Q.commutative(z))      == True
+    assert ask(Q.integer(z))          == True
+    assert ask(Q.rational(z))         == True
+    assert ask(Q.real(z))             == True
+    assert ask(Q.complex(z))          == True
+    assert ask(Q.irrational(z))       == False
+    assert ask(Q.imaginary(z))        == False
+    assert ask(Q.positive(z))         == True
+    assert ask(Q.negative(z))         == False
+    assert ask(Q.even(z))             == False
+    assert ask(Q.odd(z))              == True
+    assert ask(Q.bounded(z))          == True
+    assert ask(Q.infinitesimal(z))    == False
+    assert ask(Q.prime(z))            == True
+    assert ask(Q.composite(z))        == False
+
+def test_int_12():
+    z = 12
+    assert ask(Q.commutative(z))      == True
+    assert ask(Q.integer(z))          == True
+    assert ask(Q.rational(z))         == True
+    assert ask(Q.real(z))             == True
+    assert ask(Q.complex(z))          == True
+    assert ask(Q.irrational(z))       == False
+    assert ask(Q.imaginary(z))        == False
+    assert ask(Q.positive(z))         == True
+    assert ask(Q.negative(z))         == False
+    assert ask(Q.even(z))             == True
+    assert ask(Q.odd(z))              == False
     assert ask(Q.bounded(z))          == True
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
@@ -1240,3 +1276,9 @@ def test_compute_known_facts():
     exec compute_known_facts() in globals(), ns
     assert ns['known_facts_cnf'] == known_facts_cnf
     assert ns['known_facts_dict'] == known_facts_dict
+
+def test_Add_queries():
+    assert ask(Q.prime(12345678901234567890 + (cos(1)**2 + sin(1)**2))) is True
+    assert ask(Q.even(Add(S(2), S(2), evaluate=0))) is True
+    assert ask(Q.prime(Add(S(2), S(2), evaluate=0))) is False
+    assert ask(Q.integer(Add(S(2), S(2), evaluate=0))) is True
