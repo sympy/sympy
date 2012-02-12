@@ -23,6 +23,7 @@ import random
 oo = S.Infinity
 
 __all__ = ['ContinuousRV',
+'Arcsin',
 'Benini',
 'Beta',
 'BetaPrime',
@@ -89,6 +90,32 @@ def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
 ########################################
 # Continuous Probability Distributions #
 ########################################
+
+#-------------------------------------------------------------------------------
+# Arcsin distribution ----------------------------------------------------------
+
+class ArcsinPSpace(SingleContinuousPSpace):
+    def __new__(cls, a, b, symbol=None):
+        a, b = sympify(a), sympify(b)
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = 1/(pi*sqrt((x-a)*(b-x)))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(a, b))
+        return obj
+
+def Arcsin(a=0, b=1, symbol=None):
+    """
+    Create a Continuous Random Varible with an Arcsin distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Arcsin, Density, E, Std
+    >>> from sympy import Symbol, simplify
+    """
+
+    return ArcsinPSpace(a, b, symbol).value
 
 #-------------------------------------------------------------------------------
 # Benini distribution ----------------------------------------------------------
