@@ -378,14 +378,14 @@ class GateIdentity(Basic):
         """Returns the string of gates in a tuple."""
         return str(self.circuit)
 
-def is_scalar_sparse_matrix(circuit, numqubits, identity_only):
+def is_scalar_sparse_matrix(circuit, nqubits, identity_only):
     """Checks if a given scipy.sparse matrix is a scalar matrix.
 
     Parameters
     ==========
     circuit : tuple, Gate
         Sequence of quantum gates representing a quantum circuit
-    numqubits : int
+    nqubits : int
         Number of qubits in the circuit
     identity_only : bool
         Check for only identity matrices
@@ -397,15 +397,15 @@ def is_scalar_sparse_matrix(circuit, numqubits, identity_only):
                     is_scalar_sparse_matrix
         >>> from sympy.physics.quantum.gate import X, Y, Z
         >>> x = X(0); y = Y(0); z = Z(0)
-        >>> numqubits = 2
+        >>> nqubits = 2
         >>> circuit = (x, y, z)
-        >>> is_scalar_sparse_matrix(circuit, numqubits, False)
+        >>> is_scalar_sparse_matrix(circuit, nqubits, False)
         True
-        >>> is_scalar_sparse_matrix(circuit, numqubits, True)
+        >>> is_scalar_sparse_matrix(circuit, nqubits, True)
         False
     """
 
-    matrix = represent(Mul(*circuit), nqubits=numqubits,
+    matrix = represent(Mul(*circuit), nqubits=nqubits,
                        format='scipy.sparse')
 
     # In some cases, represent returns a 1D scalar value in place
@@ -453,10 +453,10 @@ def is_scalar_sparse_matrix(circuit, numqubits, identity_only):
             return False
 
         # The dimensions of the dense matrix should still
-        # be 2^numqubits if there are elements all along the
+        # be 2^nqubits if there are elements all along the
         # the main diagonal
         trace_of_corrected = (corrected_dense/first_element).trace()
-        expected_trace = pow(2, numqubits)
+        expected_trace = pow(2, nqubits)
         has_correct_trace = trace_of_corrected == expected_trace
 
         # If only looking for identity matrices
@@ -465,7 +465,7 @@ def is_scalar_sparse_matrix(circuit, numqubits, identity_only):
 
         return is_diagonal and has_correct_trace and is_identity
 
-def is_scalar_matrix(circuit, numqubits, identity_only):
+def is_scalar_matrix(circuit, nqubits, identity_only):
     """Checks if a given circuit, in matrix form, is equivalent to
        a scalar value.
 
@@ -473,7 +473,7 @@ def is_scalar_matrix(circuit, numqubits, identity_only):
     ==========
     circuit : tuple, Gate
         Sequence of quantum gates representing a quantum circuit
-    numqubits : int
+    nqubits : int
         Number of qubits in the circuit
     identity_only : bool
         Check for only identity matrices
@@ -481,7 +481,7 @@ def is_scalar_matrix(circuit, numqubits, identity_only):
     Note: Used in situations when is_scalar_sparse_matrix has bugs
     """
 
-    matrix = represent(Mul(*circuit), nqubits=numqubits)
+    matrix = represent(Mul(*circuit), nqubits=nqubits)
 
     # In some cases, represent returns a 1D scalar value in place
     # of a multi-dimensional scalar matrix
@@ -501,10 +501,10 @@ def is_scalar_matrix(circuit, numqubits, identity_only):
 
         is_identity = matrix[0] == 1.0 if identity_only else True
 
-        has_correct_trace = adjusted_matrix_trace == pow(2, numqubits)
+        has_correct_trace = adjusted_matrix_trace == pow(2, nqubits)
 
         # The matrix is scalar if it's diagonal and the adjusted trace
-        # value is equal to 2^numqubits
+        # value is equal to 2^nqubits
         return (matrix.is_diagonal() and
                 has_correct_trace and
                 is_identity)
@@ -546,7 +546,7 @@ def is_degenerate(identity_set, gate_identity):
             return True
     return False
 
-def is_reducible(circuit, numqubits, begin, end):
+def is_reducible(circuit, nqubits, begin, end):
     """Determines if a subcircuit in circuit is reducible to a scalar value.
 
     Parameters
@@ -554,7 +554,7 @@ def is_reducible(circuit, numqubits, begin, end):
     circuit : tuple, Gate
         A tuple of Gates representing a circuit.  The circuit to check
         if a gate identity is contained in a subcircuit.
-    numqubits : int
+    nqubits : int
         The number of qubits the circuit operates on.
     begin : int
         The leftmost gate in the circuit to include in a subcircuit.
@@ -585,12 +585,12 @@ def is_reducible(circuit, numqubits, begin, end):
         current_circuit = (next_gate,) + current_circuit
 
         # If a circuit as a matrix is equivalent to a scalar value
-        if (is_scalar_sparse_matrix(current_circuit, numqubits, False)):
+        if (is_scalar_sparse_matrix(current_circuit, nqubits, False)):
             return True
 
     return False
 
-def bfs_identity_search(gate_list, numqubits, **kwargs):
+def bfs_identity_search(gate_list, nqubits, **kwargs):
     """Constructs a set of gate identities from the list of possible gates.
 
     Performs a breadth first search over the space of gate identities.
@@ -600,7 +600,7 @@ def bfs_identity_search(gate_list, numqubits, **kwargs):
     ==========
     gate_list : list, Gate
         A list of Gates from which to search for gate identities.
-    numqubits : int
+    nqubits : int
         The number of qubits the quantum circuit operates on.
     max_depth : int
         The longest quantum circuit to construct from gate_list.
@@ -649,16 +649,16 @@ def bfs_identity_search(gate_list, numqubits, **kwargs):
 
         for next_gate in gate_list:
             new_circuit = current_circuit + (next_gate,)
-            #matrix_version = represent(Mul(*new_circuit), nqubits=numqubits,
+            #matrix_version = represent(Mul(*new_circuit), nqubits=nqubits,
             #                           format='scipy.sparse')
 
             # Determines if a (strict) subcircuit is a scalar matrix
-            circuit_reducible = is_reducible(new_circuit, numqubits,
+            circuit_reducible = is_reducible(new_circuit, nqubits,
                                              1, len(new_circuit))
 
             # In many cases when the matrix is a scalar value,
             # the evaluated matrix will actually be an integer
-            if (is_scalar_sparse_matrix(new_circuit, numqubits, eye_only) and
+            if (is_scalar_sparse_matrix(new_circuit, nqubits, eye_only) and
                 not is_degenerate(ids, new_circuit) and
                 not circuit_reducible):
                 ids.add(GateIdentity(*new_circuit))
@@ -669,7 +669,7 @@ def bfs_identity_search(gate_list, numqubits, **kwargs):
 
     return ids
 
-def random_identity_search(gate_list, numgates, numqubits):
+def random_identity_search(gate_list, numgates, nqubits):
     """Randomly selects numgates from gate_list and checks if it is
        a gate identity.
 
@@ -684,9 +684,9 @@ def random_identity_search(gate_list, numgates, numqubits):
         next_gate = gate_list[randint(0, gate_size - 1)]
         circuit = initial_circuit*next_gate
 
-    matrix_version = represent(circuit, nqubits=numqubits,
+    matrix_version = represent(circuit, nqubits=nqubits,
                                format='scipy.sparse')
 
     return (circuit
-            if is_scalar_sparse_matrix(matrix_version, numqubits, False)
+            if is_scalar_sparse_matrix(matrix_version, nqubits, False)
             else None)
