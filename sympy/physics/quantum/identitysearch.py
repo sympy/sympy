@@ -12,7 +12,11 @@ from sympy.physics.quantum.operator import (UnitaryOperator,
 from sympy.physics.quantum.dagger import Dagger
 
 __all__ = [
-    'generate_gate_rules',
+    'll_op',
+    'lr_op',
+    'rl_op',
+    'rr_op',
+    'generate_equivalent_ids',
     'GateIdentity',
     'is_scalar_sparse_matrix',
     'is_scalar_matrix',
@@ -22,11 +26,206 @@ __all__ = [
     'random_identity_search'
 ]
 
-def generate_gate_rules(*gate_seq):
+def ll_op(left, rite):
+    """Perform a LL operation.  If LL is possible, it
+    returns a 2-tuple representing the new gate rule;
+    otherwise None is returned.
+
+    Parameters
+    ==========
+    left : tuple, Gate
+        The left circuit of a gate rule expression.
+    rite : tuple, Gate
+        The right circuit of a gate rule expression.
+
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum.identitysearch import ll_op
+        >>> from sympy.physics.quantum.gate import X, Y, Z
+        >>> x = X(0); y = Y(0); z = Z(0)
+        >>> ll_op((x, y, z), ())
+        ((Y(0), Z(0)), (X(0),))
+        >>> ll_op((x, y), (z,))
+        ((Y(0),), (X(0), Z(0)))
+    """
+    if (len(left) > 0):
+        ll_gate = left[0]
+        ll_gate_is_unitary = is_scalar_sparse_matrix(
+                                 (Dagger(ll_gate), ll_gate),
+                                 ll_gate.min_qubits,
+                                 True)
+
+    if (len(left) > 0 and ll_gate_is_unitary):
+        # Get the new left side w/o the leftmost gate
+        new_left = left[1:len(left)]
+        # Add the leftmost gate to the left position on the right side
+        new_rite = (Dagger(ll_gate),) + rite
+        # Return the new gate rule
+        return (new_left, new_rite)
+       
+    return None
+
+def lr_op(left, rite):
+    """Perform a LR operation.  If LR is possible, it
+    returns a 2-tuple representing the new gate rule;
+    otherwise None is returned.
+
+    Parameters
+    ==========
+    left : tuple, Gate
+        The left circuit of a gate rule expression.
+    rite : tuple, Gate
+        The right circuit of a gate rule expression.
+
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum.identitysearch import lr_op
+        >>> from sympy.physics.quantum.gate import X, Y, Z
+        >>> x = X(0); y = Y(0); z = Z(0)
+        >>> lr_op((x, y, z), ())
+        ((X(0), Y(0)), (Z(0),))
+        >>> lr_op((x, y), (z,))
+        ((X(0),), (Z(0), Y(0)))
+    """
+    if (len(left) > 0):
+        lr_gate = left[len(left)-1]
+        lr_gate_is_unitary = is_scalar_sparse_matrix(
+                                 (Dagger(lr_gate), lr_gate),
+                                 lr_gate.min_qubits,
+                                 True)
+
+    if (len(left) > 0 and lr_gate_is_unitary):
+        # Get the new left side w/o the rightmost gate
+        new_left = left[0:len(left)-1]
+        # Add the rightmost gate to the right position on the right side
+        new_rite = rite + (Dagger(lr_gate),)
+        # Return the new gate rule
+        return (new_left, new_rite)
+
+    return None
+
+def rl_op(left, rite):
+    """Perform a RL operation.  If RL is possible, it
+    returns a 2-tuple representing the new gate rule;
+    otherwise None is returned.
+
+    Parameters
+    ==========
+    left : tuple, Gate
+        The left circuit of a gate rule expression.
+    rite : tuple, Gate
+        The right circuit of a gate rule expression.
+
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum.identitysearch import rl_op
+        >>> from sympy.physics.quantum.gate import X, Y, Z
+        >>> x = X(0); y = Y(0); z = Z(0)
+        >>> rl_op((x,), (y, z))
+        ((Y(0), X(0)), (Z(0),))
+        >>> rl_op((x, y), (z,))
+        ((Z(0), X(0), Y(0)), ())
+    """
+    if (len(rite) > 0):
+        rl_gate = rite[0]
+        rl_gate_is_unitary = is_scalar_sparse_matrix(
+                                 (Dagger(rl_gate), rl_gate),
+                                 rl_gate.min_qubits,
+                                 True)
+
+    if (len(rite) > 0 and rl_gate_is_unitary):
+        # Get the new right side w/o the leftmost gate
+        new_rite = rite[1:len(rite)]
+        # Add the leftmost gate to the left position on the left side
+        new_left = (Dagger(rl_gate),) + left
+        # Return the new gate rule
+        return (new_left, new_rite)
+
+    return None
+
+def rr_op(left, rite):
+    """Perform a RR operation.  If RR is possible, it
+    returns a 2-tuple representing the new gate rule;
+    otherwise None is returned.
+
+    Parameters
+    ==========
+    left : tuple, Gate
+        The left circuit of a gate rule expression.
+    rite : tuple, Gate
+        The right circuit of a gate rule expression.
+
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum.identitysearch import rr_op
+        >>> from sympy.physics.quantum.gate import X, Y, Z
+        >>> x = X(0); y = Y(0); z = Z(0)
+        >>> rr_op((x, y), (z,))
+        ((X(0), Y(0), Z(0)), ())
+        >>> rr_op((x,), (y, z))
+        ((X(0), Z(0)), (Y(0),))
+    """
+    if (len(rite) > 0):
+        rr_gate = rite[len(rite)-1]
+        rr_gate_is_unitary = is_scalar_sparse_matrix(
+                               (Dagger(rr_gate), rr_gate),
+                               rr_gate.min_qubits,
+                               True)
+
+    if (len(rite) > 0 and rr_gate_is_unitary):
+        # Get the new right side w/o the rightmost gate
+        new_rite = rite[0:len(rite)-1]
+        # Add the rightmost gate to the right position on the right side
+        new_left = left + (Dagger(rr_gate),)
+        # Return the new gate rule
+        return (new_left, new_rite)
+
+    return None
+
+def generate_equivalent_ids(*gate_seq):
     """Returns a list of equivalent gate identities.
 
-    The function uses the four operations (LL, LR, RL, RR)
-    to find equivalent gate identities.
+    A gate identity is a quantum circuit such that the product
+    of their matrix representations is equal to a scalar value.
+    For example, XYZ = i, where X, Y, Z are the Pauli gates and
+    i is the imaginary value, is considered a gate identity.
+
+    This function uses the four operations (LL, LR, RL, RR)
+    to generate gate rules and, subsequently, to locate equivalent
+    gate identities.
+
+    A gate rule is an expression such as ABC = D or AB = CD, where
+    A, B, C, and D are gates.  Each value on either side of the
+    equal sign represents a circuit.  The four operations allow
+    one to find a set of equivalent circuits from a gate identity.
+    The letters denoting the operation tell the user what
+    activities to perform on each expression.  The first letter
+    indicates which side of the equal sign to focus on.  The
+    second letter indicates which gate to focus on given the
+    side.  Once this information is determined, the inverse
+    of the gate is multiplied on both circuits to create a new
+    gate rule.
+
+    For example, given the identity, ABCD = 1, a LL operation
+    means look at the left value and multiply both left sides by the
+    inverse of the leftmost gate A.  If A is Hermitian, the inverse
+    of A is still A.  The resulting new rule is BCD = A.
+
+    The following is a summary of the four operations.  Assume
+    that in the examples, all gates are Hermitian.
+
+        LL : left circuit, left multiply
+             ABCD = E -> AABCD = AE -> BCD = AE
+        LR : left circuit, right multiply
+             ABCD = E -> ABCDD = ED -> ABC = ED
+        RL : right circuit, left multiply
+             ABC = ED -> EABC = EED -> EABC = D
+        RR : right circuit, right multiply
+             AB = CD -> ABD = CDD -> ABD = C
 
     Note that all equivalent identities are reachable in n operations
     from the starting gate identity, where n is the number of gates
@@ -35,7 +234,8 @@ def generate_gate_rules(*gate_seq):
     Parameters
     ==========
     gate_seq : tuple, Gate
-        A variable length tuple of Gates.
+        A variable length tuple of Gates whose product is equal to
+        a scalar matrix.
 
     Examples
     ========
@@ -43,13 +243,13 @@ def generate_gate_rules(*gate_seq):
     Find equivalent gate identities from the current circuit:
 
         >>> from sympy.physics.quantum.identitysearch import \
-                    generate_gate_rules
+                    generate_equivalent_ids
         >>> from sympy.physics.quantum.gate import X, Y, Z
         >>> x = X(0); y = Y(0); z = Z(0)
-        >>> generate_gate_rules(x, x)
+        >>> generate_equivalent_ids(x, x)
         [(X(0), X(0))]
 
-        >>> generate_gate_rules(x, y, z)
+        >>> generate_equivalent_ids(x, y, z)
         [(X(0), Y(0), Z(0)), (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)),
          (Z(0), Y(0), X(0)), (Y(0), X(0), Z(0)), (X(0), Z(0), Y(0))]
     """
@@ -80,40 +280,11 @@ def generate_gate_rules(*gate_seq):
         rite = rule[1]
         ops = rule[2]
 
-        if (len(left) > 0):
-            ll_op = left[0]
-            ll_op_is_unitary = is_scalar_sparse_matrix(
-                                   (Dagger(ll_op), ll_op),
-                                   ll_op.min_qubits,
-                                   True)
-
-            lr_op = left[len(left)-1]
-            lr_op_is_unitary = is_scalar_sparse_matrix(
-                                   (Dagger(lr_op), lr_op),
-                                   lr_op.min_qubits,
-                                   True)
-
-        if (len(rite) > 0):
-            rl_op = rite[0]
-            rl_op_is_unitary = is_scalar_sparse_matrix(
-                                   (Dagger(rl_op), rl_op),
-                                   rl_op.min_qubits,
-                                   True)
-
-            rr_op = rite[len(rite)-1]
-            rr_op_is_unitary = is_scalar_sparse_matrix(
-                                   (Dagger(rr_op), rr_op),
-                                   rr_op.min_qubits,
-                                   True)
-
         # Do a LL, if possible
-        if (len(left) > 0 and ll_op_is_unitary):
-            # Get the new left side w/o the leftmost gate
-            new_left = left[1:len(left)]
-            # Add the leftmost gate to the left position on the right side
-            new_rite = (Dagger(ll_op),) + rite
+        new_rule = ll_op(left, rite)
+        if (new_rule is not None):
+            (new_left, new_rite) = new_rule
 
-            new_rule = (new_left, new_rite)
             # If the left side is empty (left side is scalar)
             if (len(new_left) == 0 and new_rite not in gate_rules):
                 gate_rules.append(new_rite)
@@ -125,13 +296,10 @@ def generate_gate_rules(*gate_seq):
             vis.append(new_rule)
 
         # Do a LR, if possible
-        if (len(left) > 0 and lr_op_is_unitary):
-            # Get the new left side w/o the rightmost gate
-            new_left = left[0:len(left)-1]
-            # Add the rightmost gate to the right position on the right side
-            new_rite = rite + (Dagger(lr_op),)
+        new_rule = lr_op(left, rite)
+        if (new_rule is not None):
+            (new_left, new_rite) = new_rule
 
-            new_rule = (new_left, new_rite)
             if (len(new_left) == 0 and new_rite not in gate_rules):
                 gate_rules.append(new_rite)
             elif (new_rule not in vis and ops + 1 < max_ops):
@@ -140,13 +308,10 @@ def generate_gate_rules(*gate_seq):
             vis.append(new_rule)
 
         # Do a RL, if possible
-        if (len(rite) > 0 and rl_op_is_unitary):
-            # Get the new right side w/o the leftmost gate
-            new_rite = rite[1:len(rite)]
-            # Add the leftmost gate to the left position on the left side
-            new_left = (Dagger(rl_op),) + left
+        new_rule = rl_op(left, rite)
+        if (new_rule is not None):
+            (new_left, new_rite) = new_rule
 
-            new_rule = (new_left, new_rite)
             if (len(new_rite) == 0 and new_left not in gate_rules):
                 gate_rules.append(new_left)
             elif (new_rule not in vis and ops + 1 < max_ops):
@@ -155,13 +320,10 @@ def generate_gate_rules(*gate_seq):
             vis.append(new_rule)
 
         # Do a RR, if possible
-        if (len(rite) > 0 and rr_op_is_unitary):
-            # Get the new right side w/o the rightmost gate
-            new_rite = rite[0:len(rite)-1]
-            # Add the rightmost gate to the right position on the right side
-            new_left = left + (Dagger(rr_op),)
+        new_rule = rr_op(left, rite)
+        if (new_rule is not None):
+            (new_left, new_rite) = new_rule
 
-            new_rule = (new_left, new_rite)
             if (len(new_rite) == 0 and new_left not in gate_rules):
                 gate_rules.append(new_left)
             elif (new_rule not in vis and ops + 1 < max_ops):
@@ -201,7 +363,7 @@ class GateIdentity(Basic):
     def __new__(cls, *args):
         # args should be a tuple - a variable length argument list
         obj = Basic.__new__(cls, *args)
-        obj._gate_rules = generate_gate_rules(*args)
+        obj._gate_rules = generate_equivalent_ids(*args)
 
         return obj
 
