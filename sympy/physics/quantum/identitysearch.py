@@ -275,7 +275,6 @@ def generate_equivalent_ids(*gate_seq):
 
     while (len(queue) > 0):
         rule = queue.popleft()
-        #print rule
         left = rule[0]
         rite = rule[1]
         ops = rule[2]
