@@ -168,8 +168,8 @@ def Exponential(rate, symbol=None):
 
 class ParetoPSpace(SingleContinuousPSpace):
     def __new__(cls, xm, alpha, symbol=None):
-        assert xm > 0 is True, "Xm must be positive"
-        assert alpha > 0 is True, "Alpha must be positive"
+        assert (xm > 0) is True, "Xm must be positive"
+        assert (alpha > 0) is True, "Alpha must be positive"
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = alpha * xm**alpha / x**(alpha+1)
@@ -203,8 +203,8 @@ def Pareto(xm, alpha, symbol=None):
 
 class WeibullPSpace(SingleContinuousPSpace):
     def __new__(cls, alpha, beta, symbol=None):
-        assert alpha > 0 is True, "Alpha must be positive"
-        assert beta > 0 is True, "Beta must be positive"
+        assert (alpha > 0) is True, "Alpha must be positive"
+        assert (beta > 0) is True, "Beta must be positive"
 
         alpha, beta = sympify(alpha), sympify(beta)
 
@@ -244,8 +244,8 @@ def Weibull(alpha, beta, symbol=None):
 
 class BetaPSpace(SingleContinuousPSpace):
     def __new__(cls, alpha, beta, symbol=None):
-        assert alpha > 0 is True, "Alpha must be positive"
-        assert beta > 0 is True, "Beta must be positive"
+        assert (alpha > 0) is True, "Alpha must be positive"
+        assert (beta > 0) is True, "Beta must be positive"
 
         alpha, beta = sympify(alpha), sympify(beta)
 
@@ -282,8 +282,8 @@ def Beta(alpha, beta, symbol=None):
 
 class GammaPSpace(SingleContinuousPSpace):
     def __new__(cls, k, theta, symbol=None):
-        assert k > 0 is True, "k must be positive"
-        assert theta > 0 is True, "theta must be positive"
+        assert (k > 0) is True, "k must be positive"
+        assert (theta > 0) is True, "theta must be positive"
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = x**(k-1) * exp(-x/theta) / (gamma(k)*theta**k)
