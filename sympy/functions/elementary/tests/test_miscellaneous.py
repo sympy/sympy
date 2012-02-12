@@ -218,3 +218,6 @@ def test_round():
     assert round(a, 26) == Float('3.00000000000000000000000000','')
     assert round(a, 27) == Float('2.999999999999999999999999999','')
     assert round(a, 30) == Float('2.999999999999999999999999999','')
+
+    raises(TypeError, 'round(x)')
+    raises(TypeError, 'round(1 + 3*I)')

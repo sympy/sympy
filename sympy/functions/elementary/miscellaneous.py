@@ -537,6 +537,8 @@ def round(x, p=0):
         return _pyround(x, p)
     if not x.is_number:
         raise TypeError('%s is not a number' % x)
+    if not x.is_real:
+        raise TypeError("can't convert complex to int")
     if not x:
         return x
     p = int(p)
