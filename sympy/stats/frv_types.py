@@ -71,6 +71,20 @@ def DiscreteUniform(items, symbol=None):
 
     Returns a RandomSymbol.
 
+    Examples
+    ========
+
+    >>> from sympy.stats import DiscreteUniform, Density
+    >>> from sympy import symbols
+
+    >>> X = DiscreteUniform(symbols('a b c')) # equally likely over a, b, c
+    >>> Density(X)
+    {a: 1/3, b: 1/3, c: 1/3}
+
+    >>> Y = DiscreteUniform(range(5)) # distribution over a range
+    >>> Density(Y)
+    {0: 1/5, 1: 1/5, 2: 1/5, 3: 1/5, 4: 1/5}
+ 
     """
     return DiscreteUniformPSpace(items, symbol).value
 
