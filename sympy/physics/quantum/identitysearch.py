@@ -187,7 +187,7 @@ def rr_op(left, rite):
     return None
 
 def generate_equivalent_ids(*gate_seq):
-    """Returns a list of equivalent gate identities.
+    """Returns a set of equivalent gate identities.
 
     A gate identity is a quantum circuit such that the product
     of their matrix representations is equal to a scalar value.
@@ -247,11 +247,11 @@ def generate_equivalent_ids(*gate_seq):
         >>> from sympy.physics.quantum.gate import X, Y, Z
         >>> x = X(0); y = Y(0); z = Z(0)
         >>> generate_equivalent_ids(x, x)
-        [(X(0), X(0))]
+        set([(X(0), X(0))])
 
         >>> generate_equivalent_ids(x, y, z)
-        [(X(0), Y(0), Z(0)), (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)),
-         (Z(0), Y(0), X(0)), (Y(0), X(0), Z(0)), (X(0), Z(0), Y(0))]
+        set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
+             (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))])
     """
 
     # Each item in queue is a 3-tuple:
@@ -264,14 +264,14 @@ def generate_equivalent_ids(*gate_seq):
     queue = deque()
     # visited is a list of equalities that's been visited
     vis = []
-    # A list of equivalent gate identities
-    eq_ids = []
+    # A set of equivalent gate identities
+    eq_ids = set()
     # Maximum number of operations to perform
     max_ops = len(gate_seq)
 
     queue.append((gate_seq, (), 0))
     vis.append((gate_seq, ()))
-    eq_ids.append(gate_seq)
+    eq_ids.add(gate_seq)
 
     while (len(queue) > 0):
         rule = queue.popleft()
@@ -286,7 +286,7 @@ def generate_equivalent_ids(*gate_seq):
 
             # If the left side is empty (left side is scalar)
             if (len(new_left) == 0 and new_rite not in eq_ids):
-                eq_ids.append(new_rite)
+                eq_ids.add(new_rite)
             # If the equality has not been seen and has not reached the
             # max limit on operations
             elif (new_rule not in vis and ops + 1 < max_ops):
@@ -300,7 +300,7 @@ def generate_equivalent_ids(*gate_seq):
             (new_left, new_rite) = new_rule
 
             if (len(new_left) == 0 and new_rite not in eq_ids):
-                eq_ids.append(new_rite)
+                eq_ids.add(new_rite)
             elif (new_rule not in vis and ops + 1 < max_ops):
                 queue.append(new_rule + (ops + 1,))
 
@@ -312,7 +312,7 @@ def generate_equivalent_ids(*gate_seq):
             (new_left, new_rite) = new_rule
 
             if (len(new_rite) == 0 and new_left not in eq_ids):
-                eq_ids.append(new_left)
+                eq_ids.add(new_left)
             elif (new_rule not in vis and ops + 1 < max_ops):
                 queue.append(new_rule + (ops + 1,))
 
@@ -324,7 +324,7 @@ def generate_equivalent_ids(*gate_seq):
             (new_left, new_rite) = new_rule
 
             if (len(new_rite) == 0 and new_left not in eq_ids):
-                eq_ids.append(new_left)
+                eq_ids.add(new_left)
             elif (new_rule not in vis and ops + 1 < max_ops):
                 queue.append(new_rule + (ops + 1,))
 
@@ -354,8 +354,8 @@ class GateIdentity(Basic):
         (X(0), Y(0), Z(0))
 
         >>> an_identity.eq_identities
-        [(X(0), Y(0), Z(0)), (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)),
-         (Z(0), Y(0), X(0)), (Y(0), X(0), Z(0)), (X(0), Z(0), Y(0))]
+        set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
+             (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))])
 
     """
 

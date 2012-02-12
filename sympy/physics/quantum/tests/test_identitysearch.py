@@ -8,36 +8,36 @@ def test_generate_equivalent_ids():
     y = Y(0)
     z = Z(0)
 
-    assert generate_equivalent_ids(x) == [(x,)]
-    assert generate_equivalent_ids(x, y) == [(x, y), (y, x)]
+    assert generate_equivalent_ids(x) == set([(x,)])
+    assert generate_equivalent_ids(x, y) == set([(x, y), (y, x)])
 
     gate_seq = (x, y, z)
-    gate_rules = [(x, y, z), (y, z, x), (z, x, y), (z, y, x),
-                  (y, x, z), (x, z, y)]
+    gate_rules = set([(x, y, z), (y, z, x), (z, x, y), (z, y, x),
+                      (y, x, z), (x, z, y)])
     assert generate_equivalent_ids(*gate_seq) == gate_rules
 
     h = H(0)
     gate_seq = (x, y, z, h)
-    gate_rules = [(x, y, z, h), (y, z, h, x),
-                  (h, x, y, z), (h, z, y, x),
-                  (z, y, x, h), (y, x, h, z),
-                  (z, h, x, y) ,(x, h, z, y)]
+    gate_rules = set([(x, y, z, h), (y, z, h, x),
+                      (h, x, y, z), (h, z, y, x),
+                      (z, y, x, h), (y, x, h, z),
+                      (z, h, x, y) ,(x, h, z, y)])
     assert generate_equivalent_ids(*gate_seq) == gate_rules
 
     gate_seq = (x, y, x, y)
-    gate_rules = [(x, y, x, y), (y, x, y, x)]
+    gate_rules = set([(x, y, x, y), (y, x, y, x)])
     assert generate_equivalent_ids(*gate_seq) == gate_rules
 
     cgate_y = CGate((1,), y)
     gate_seq = (y, cgate_y, y, cgate_y)
-    gate_rules = [(y, cgate_y, y, cgate_y), (cgate_y, y, cgate_y, y)]
+    gate_rules = set([(y, cgate_y, y, cgate_y), (cgate_y, y, cgate_y, y)])
     assert generate_equivalent_ids(*gate_seq) == gate_rules
 
     cnot = CNOT(1,0)
     cgate_z = CGate((0,), Z(1))
     gate_seq = (cnot, h, cgate_z, h)
-    gate_rules = [(cnot, h, cgate_z, h), (h, cgate_z, h, cnot),
-                  (h, cnot, h, cgate_z), (cgate_z, h, cnot, h)]
+    gate_rules = set([(cnot, h, cgate_z, h), (h, cgate_z, h, cnot),
+                      (h, cnot, h, cgate_z), (cgate_z, h, cnot, h)])
     assert generate_equivalent_ids(*gate_seq) == gate_rules
 
 def test_is_scalar_matrix():
