@@ -155,15 +155,30 @@ class Expr(Basic, EvalfMixin):
 
     def __int__(self):
         from sympy import round
+        # Although we only need to round to the units position, we'll
+        # get one more digit so the extra testing below can be avoided
+        # unless the rounded value rounded to an integer, e.g. if an
+        # expression were equal to 1.9 and we rounded to the unit position
+        # we would get a 2 and would not know if this rounded up or not
+        # without doing a test (as done below). But if we keep an extra
+        # digit we know that 1.9 is not the same as 1 and there is no
+        # need for further testing: our int value is correct. If the value
+        # were 1.99, however, this would round to 2.0 and our int value is
+        # off by one. So...if our round value is the same as the int value
+        # (regardless of how much extra work we do to calculate extra decimal
+        # places) we need to test whether we are off by one or not.
         r = round(self, 1)
         i = int(C.Integer(r))
         if not i:
             return 0
-        if i == r: # it may have rounded to an integer
+        # off-by-one check
+        if i == r:
             isign = 1 if i > 0 else -1
             x = C.Dummy()
             # in the following (self - i).evalf(1) will not work while
-            # (self - r).evalf(1) and the use of subs does:
+            # (self - r).evalf(1) and the use of subs does; if the test that
+            # was added when this comment was added passes, it might be safe
+            # to simply use sign to compute this rather than doing this by hand:
             diff_sign = 1 if (self - x).evalf(1, subs={x: i}) > 0 else -1
             if diff_sign != isign:
                 i -= isign
