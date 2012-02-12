@@ -76,6 +76,15 @@ def test_cgate():
     assert matrix_to_qubit(represent(CPhaseGate*Qubit('11'), nqubits=2)) == \
         I*Qubit('11')
 
+    # Test that the dagger, inverse, and power of CGate is evaluated properly
+    assert Dagger(CZGate) == CZGate
+    assert pow(CZGate, 1) == Dagger(CZGate)
+    assert Dagger(CZGate) == CZGate.inverse()
+    assert Dagger(CPhaseGate) != CPhaseGate
+    assert Dagger(CPhaseGate) == CPhaseGate.inverse()
+    assert Dagger(CPhaseGate) == pow(CPhaseGate, -1)
+    assert pow(CPhaseGate, -1) == CPhaseGate.inverse()
+
 def test_UGate_CGate_combo():
     a,b,c,d = symbols('a,b,c,d')
     uMat = Matrix([[a,b],[c,d]])
