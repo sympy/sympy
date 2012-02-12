@@ -1758,6 +1758,9 @@ def test_primitive():
     assert f.primitive() == (1, f)
     assert g.primitive() == (1.0, g)
 
+    assert primitive(S('-3*x/4 + y + 11/8')) == \
+        S('(1/8, -6*x + 8*y + 11)')
+
 def test_compose():
     f = x**12+20*x**10+150*x**8+500*x**6+625*x**4-2*x**3-10*x+9
     g = x**4 - 2*x + 9
