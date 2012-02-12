@@ -44,7 +44,8 @@ __all__ = ['ContinuousRV',
 'Triangular',
 'Uniform',
 'UniformSum',
-'Weibull'
+'Weibull',
+'WignerSemicircle'
 ]
 
 def _value_check(condition, message):
@@ -829,3 +830,31 @@ def Weibull(alpha, beta, symbol=None):
     -a**2*(gamma(1 + 1/b)**2 - gamma(1 + 2/b))
     """
     return WeibullPSpace(alpha, beta, symbol).value
+
+#-------------------------------------------------------------------------------
+# Wigner semicircle distribution -----------------------------------------------
+
+class WignerSemicirclePSpace(SingleContinuousPSpace):
+    def __new__(cls, R, symbol=None):
+        R = sympify(R)
+
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = 2/(pi*R**2)*sqrt(R**2-x**2)
+
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(-R, R))
+        return obj
+
+def WignerSemicircle(R, symbol=None):
+    """
+    Create a Continuous Random Varible with a Wigner semicircle distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import WignerSemicircle, Density, E, Std
+    >>> from sympy import Symbol, simplify
+    """
+
+    return WignerSemicirclePSpace(R, symbol).value
