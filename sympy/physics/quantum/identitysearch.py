@@ -381,6 +381,11 @@ class GateIdentity(Basic):
 def is_scalar_sparse_matrix(circuit, nqubits, identity_only):
     """Checks if a given scipy.sparse matrix is a scalar matrix.
 
+    A scalar matrix is such that B = bI, where B is the scalar
+    matrix, b is some scalar multiple, and I is the identity
+    matrix.  A scalar matrix would have only the element b along
+    it's main diagonal and zeroes elsewhere.
+
     Parameters
     ==========
     circuit : tuple, Gate
