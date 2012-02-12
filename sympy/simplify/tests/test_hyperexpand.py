@@ -570,6 +570,8 @@ def test_hyperexpand_special():
     assert hyperexpand(meijerg([1 - z - a/2], [1 - z + a/2], [b/2], [-b/2], 1)) == \
            gamma(1 - 2*z)*gamma(z + a/2 + b/2)/gamma(1 - z + a/2 - b/2) \
            /gamma(1 - z - a/2 + b/2)/gamma(1 - z + a/2 + b/2)
+    assert hyperexpand(hyper([a], [b], 0)) == 0
+    assert hyper([a], [b], 0) != 0
 
 def test_Mod1_behavior():
     from sympy import Symbol, simplify, lowergamma

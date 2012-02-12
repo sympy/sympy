@@ -973,7 +973,10 @@ def _laplace_transform(f, t, s_, simplify=True):
         return a, aux
 
     conds = [process_conds(c) for c in disjuncts(cond)]
-    conds = filter(lambda x: x[1] is not False and x[0] != -oo, conds)
+    conds2 = filter(lambda x: x[1] is not False and x[0] != -oo, conds)
+    if not conds2:
+        conds2 = filter(lambda x: x[1] is not False, conds)
+    conds = conds2
     def cnt(expr):
         if isinstance(expr, bool):
             return 0
