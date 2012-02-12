@@ -108,6 +108,11 @@ def test_sign():
     x = 0
     assert sign(x).is_zero == True
 
+@XFAIL
+def test_sign_issue_3068():
+    n = pi**1000
+    i = int(n)
+    assert sign(n - i) == -1
 
 def test_Abs():
     x, y = symbols('x,y')

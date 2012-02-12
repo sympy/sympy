@@ -1330,6 +1330,9 @@ def test_float_int():
         112345678901234567890123456789000000
     assert int(1 + Rational('.9999999999999999999999999')) == 1
     assert int(pi/1e20) == 0
-    raises(ValueError, 'int(1 + pi/1e20)')
+    assert int(1 + pi/1e20) == 1
+    assert int(Add(1.2, -2, evaluate=False)) == int(1.2 - 2)
+    assert int(Add(1.2, +2, evaluate=False)) == int(1.2 + 2)
+    assert int(Add(1 + Float('.99999999999999999', ''), evaluate=False)) == 1
     raises(TypeError, 'float(x)')
     raises(TypeError, 'float(sqrt(-1))')
