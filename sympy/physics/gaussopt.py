@@ -16,7 +16,7 @@ The conventions for the distances are as follows:
 
 from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
     together)
-from sympy.solvers.solvers import _filldedent
+from sympy.utilities.misc import filldedent
 
 ###
 # A, B, C, D matrices
@@ -82,7 +82,7 @@ class RayTransferMatrix(Matrix):
              and args[0].shape == (2, 2):
             temp = args[0]
         else:
-            raise ValueError(_filldedent('''
+            raise ValueError(filldedent('''
                 Expecting 2x2 Matrix or the 4 elements of
                 the Matrix but got %s''' % str(args)))
         Matrix.__init__(self, temp)
@@ -367,7 +367,7 @@ class GeometricRay(Matrix):
         elif len(args) == 2:
             temp = ((args[0],), (args[1],))
         else:
-            raise ValueError(_filldedent('''
+            raise ValueError(filldedent('''
                 Expecting 2x1 Matrix or the 2 elements of
                 the Matrix but got %s''' % str(args)))
         Matrix.__init__(self, temp)
@@ -779,17 +779,17 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     if len(kwargs) != 1:
         raise ValueError("The function expects only one named argument")
     elif 'dist' in kwargs:
-        raise NotImplementedError(_filldedent('''
+        raise NotImplementedError(filldedent('''
             Currently only focal length is supported as a parameter'''))
     elif 'f' in kwargs:
         f = sympify(kwargs['f'])
         s_in = f * (1 - sqrt(1/m**2 - z**2/f**2))
         s_out = gaussian_conj(s_in, z, f)[0]
     elif 's_in' in kwargs:
-        raise NotImplementedError(_filldedent('''
+        raise NotImplementedError(filldedent('''
             Currently only focal length is supported as a parameter'''))
     else:
-        raise ValueError(_filldedent('''
+        raise ValueError(filldedent('''
             The functions expects the focal length as a named argument'''))
     return (s_in, s_out, f)
 
