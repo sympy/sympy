@@ -56,8 +56,6 @@ class DiscreteUniformPSpace(SingleFinitePSpace):
     >>> Density(Y)
     {0: 1/5, 1: 1/5, 2: 1/5, 3: 1/5, 4: 1/5}
     """
-    _count = 0
-    _name = 'discreteuniform'
     def __new__(cls, items, symbol=None):
         density = dict((sympify(item), Rational(1, len(items)))
                        for item in items)
@@ -68,7 +66,7 @@ def DiscreteUniform(items, symbol=None):
     Create a Finite Random Variable representing a uniform distribution over
     the input set.
 
-    Returns left RandomSymbol.
+    Returns a RandomSymbol.
 
     """
     return DiscreteUniformPSpace(items, symbol).value
@@ -137,7 +135,6 @@ class BernoulliPSpace(SingleFinitePSpace):
     {Heads: 1/2, Tails: 1/2}
     """
 
-    _count = 0
     _name = 'bernoulli'
     def __new__(cls, p, succ=1, fail=0, symbol=None):
         succ, fail, p = map(sympify, (succ, fail, p))
@@ -218,6 +215,10 @@ class BinomialPSpace(SingleFinitePSpace):
     This class is for internal use.
 
     Create Binomial Random Symbols using Binomial function.
+
+    Examples
+    ========
+
     >>> from sympy.stats import Binomial, Density
     >>> from sympy import S
 
@@ -226,8 +227,6 @@ class BinomialPSpace(SingleFinitePSpace):
     {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}
     """
 
-    _count = 0
-    _name = 'binomial'
     def __new__(cls, n, p, succ=1, fail=0, symbol=None):
         n, p, succ, fail = map(sympify, (n, p, succ, fail))
         density = dict((k*succ+(n-k)*fail,binomial(n, k)*p**k*(1-p)**(n-k))
@@ -239,6 +238,10 @@ def Binomial(n, p, succ=1, fail=0, symbol=None):
     Create a Finite Random Variable representing a binomial distribution.
 
     Returns a RandomSymbol.
+
+    Examples
+    ========
+
     >>> from sympy.stats import Binomial, Density
     >>> from sympy import S
 
@@ -256,10 +259,18 @@ class HypergeometricPSpace(SingleFinitePSpace):
     This class is for internal use.
 
     Create Hypergeometric Random Symbols using Hypergeometric function.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Hypergeometric, Density
+    >>> from sympy import S
+
+    >>> X = Hypergeometric(10, 5, 3) # 10 marbles, 5 white (success), 3 draws
+    >>> Density(X)
+    {0: 1/12, 1: 5/12, 2: 5/12, 3: 1/12}
     """
 
-    _count = 0
-    _name = 'hypergeometric'
     def __new__(cls, N, m, n, symbol=None):
         N, m, n = map(sympify, (N, m, n))
         density = dict((k,binomial(m,k)*binomial(N-m,n-k)/binomial(N,n))
@@ -271,6 +282,10 @@ def Hypergeometric(N, m, n, symbol=None):
     Create a Finite Random Variable representing a hypergeometric distribution.
 
     Returns a RandomSymbol.
+
+    Examples
+    ========
+
     >>> from sympy.stats import Hypergeometric, Density
     >>> from sympy import S
 

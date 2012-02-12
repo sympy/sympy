@@ -123,11 +123,12 @@ def test_lognormal():
 
     # Right now, only density function and sampling works
     # Test sampling: Only e^mean in sample std of 0
-    for i in range(10):
+    for i in range(3):
         X = LogNormal(i, 0)
         assert S(Sample(X)) == N(exp(i))
     # The sympy integrator can't do this too well
     #assert E(X) ==
+
 def test_exponential():
     rate = Symbol('lambda', positive=True, real=True, bounded=True)
     X = Exponential(rate)
