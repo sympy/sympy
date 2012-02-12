@@ -105,7 +105,7 @@ class ArcsinPSpace(SingleContinuousPSpace):
 
 def Arcsin(a=0, b=1, symbol=None):
     """
-    Create a Continuous Random Varible with an Arcsin distribution.
+    Create a Continuous Random Variable with an Arcsin distribution.
 
     Returns a RandomSymbol.
 
@@ -131,7 +131,7 @@ class BeniniPSpace(SingleContinuousPSpace):
 
 def Benini(alpha, beta, sigma, symbol=None):
     """
-    Create a Continuous Random Varible with a Benini distribution.
+    Create a Continuous Random Variable with a Benini distribution.
 
     Returns a RandomSymbol.
 
@@ -198,7 +198,7 @@ class BetaPrimePSpace(SingleContinuousPSpace):
 
 def BetaPrime(alpha, beta, symbol=None):
     """
-    Create a Continuous Random Varible with a Beta prime distribution.
+    Create a Continuous Random Variable with a Beta prime distribution.
 
     Returns a RandomSymbol.
 
@@ -227,7 +227,7 @@ class CauchyPSpace(SingleContinuousPSpace):
 
 def Cauchy(x0, gamma, symbol=None):
     """
-    Create a Continuous Random Varible with a Cauchy distribution.
+    Create a Continuous Random Variable with a Cauchy distribution.
 
     Returns a RandomSymbol.
 
@@ -253,7 +253,7 @@ class ChiPSpace(SingleContinuousPSpace):
 
 def Chi(k, symbol=None):
     """
-    Create a Continuous Random Varible with a Chi distribution.
+    Create a Continuous Random Variable with a Chi distribution.
 
     Returns a RandomSymbol.
 
@@ -279,7 +279,7 @@ class DagumPSpace(SingleContinuousPSpace):
 
 def Dagum(p, a, b, symbol=None):
     """
-    Create a Continuous Random Varible with a Dagum distribution.
+    Create a Continuous Random Variable with a Dagum distribution.
 
     Returns a RandomSymbol.
 
@@ -393,7 +393,7 @@ class LaplacePSpace(SingleContinuousPSpace):
 
 def Laplace(mu, b, symbol=None):
     """
-    Create a Continuous Random Varible with a Laplace distribution.
+    Create a Continuous Random Variable with a Laplace distribution.
 
     Returns a RandomSymbol.
 
@@ -421,7 +421,7 @@ class LogisticPSpace(SingleContinuousPSpace):
 
 def Logistic(mu, s, symbol=None):
     """
-    Create a Continuous Random Varible with a Logistic distribution.
+    Create a Continuous Random Variable with a Logistic distribution.
 
     Returns a RandomSymbol.
 
@@ -489,7 +489,7 @@ class MaxwellPSpace(SingleContinuousPSpace):
 
 def Maxwell(a, symbol=None):
     """
-    Create a Continuous Random Varible with a Maxwell distribution.
+    Create a Continuous Random Variable with a Maxwell distribution.
 
     Returns a RandomSymbol.
 
@@ -515,7 +515,7 @@ class NakagamiPSpace(SingleContinuousPSpace):
 
 def Nakagami(mu, omega, symbol=None):
     """
-    Create a Continuous Random Varible with a Nakagami distribution.
+    Create a Continuous Random Variable with a Nakagami distribution.
 
     Returns a RandomSymbol.
 
@@ -628,7 +628,7 @@ class RayleighPSpace(SingleContinuousPSpace):
 
 def Rayleigh(sigma, symbol=None):
     """
-    Create a Continuous Random Varible with a Rayleigh distribution.
+    Create a Continuous Random Variable with a Rayleigh distribution.
 
     Returns a RandomSymbol.
 
@@ -654,7 +654,7 @@ class StudentTPSpace(SingleContinuousPSpace):
 
 def StudentT(nu, symbol=None):
     """
-    Create a Continuous Random Varible with a student's t distribution.
+    Create a Continuous Random Variable with a student's t distribution.
 
     Returns a RandomSymbol.
 
@@ -688,7 +688,7 @@ class TriangularPSpace(SingleContinuousPSpace):
 
 def Triangular(a, b, c, symbol=None):
     """
-    Create a Continuous Random Varible with a Triangular distribution.
+    Create a Continuous Random Variable with a Triangular distribution.
 
     Returns a RandomSymbol.
 
@@ -768,7 +768,7 @@ class UniformSumPSpace(SingleContinuousPSpace):
 
 def UniformSum(n, symbol=None):
     """
-    Create a Continuous Random Varible with an Irwin-Hall distribution.
+    Create a Continuous Random Variable with an Irwin-Hall distribution.
 
     Returns a RandomSymbol.
 
@@ -846,7 +846,7 @@ class WignerSemicirclePSpace(SingleContinuousPSpace):
 
 def WignerSemicircle(R, symbol=None):
     """
-    Create a Continuous Random Varible with a Wigner semicircle distribution.
+    Create a Continuous Random Variable with a Wigner semicircle distribution.
 
     Returns a RandomSymbol.
 
