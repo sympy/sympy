@@ -25,6 +25,16 @@ oo = S.Infinity
 __all__ = ['ContinuousRV', 'Normal', 'LogNormal', 'Exponential', 'Pareto',
     'Weibull', 'Beta', 'Gamma', 'Uniform']
 
+def _value_check(condition, message):
+    """
+    Check a condition on input value.
+
+    Raises ValueError with message if condition is not True
+    """
+    if condition is not True:
+        raise ValueError(message)
+
+
 def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
     """
     Create a Continuous Random Variable given the following:
@@ -57,6 +67,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
 
 class NormalPSpace(SingleContinuousPSpace):
     def __new__(cls, mean, std, symbol=None):
+        _value_check(std > 0, "Standard deviation must be positive")
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = exp(-(x-mean)**2 / (2*std**2)) / (sqrt(2*pi)*std)
@@ -132,6 +143,8 @@ def LogNormal(mean, std, symbol=None):
 
 class ExponentialPSpace(SingleContinuousPSpace):
     def __new__(cls, rate, symbol=None):
+        _value_check(rate > 0, "Rate must be positive.")
+
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = rate * exp(-rate*x)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
@@ -168,8 +181,8 @@ def Exponential(rate, symbol=None):
 
 class ParetoPSpace(SingleContinuousPSpace):
     def __new__(cls, xm, alpha, symbol=None):
-        assert (xm > 0) is True, "Xm must be positive"
-        assert (alpha > 0) is True, "Alpha must be positive"
+        _value_check(xm > 0, "Xm must be positive")
+        _value_check(alpha > 0, "Alpha must be positive")
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = alpha * xm**alpha / x**(alpha+1)
@@ -203,8 +216,8 @@ def Pareto(xm, alpha, symbol=None):
 
 class WeibullPSpace(SingleContinuousPSpace):
     def __new__(cls, alpha, beta, symbol=None):
-        assert (alpha > 0) is True, "Alpha must be positive"
-        assert (beta > 0) is True, "Beta must be positive"
+        _value_check(alpha > 0, "Alpha must be positive")
+        _value_check(beta > 0, "Beta must be positive")
 
         alpha, beta = sympify(alpha), sympify(beta)
 
@@ -244,8 +257,8 @@ def Weibull(alpha, beta, symbol=None):
 
 class BetaPSpace(SingleContinuousPSpace):
     def __new__(cls, alpha, beta, symbol=None):
-        assert (alpha > 0) is True, "Alpha must be positive"
-        assert (beta > 0) is True, "Beta must be positive"
+        _value_check(alpha > 0, "Alpha must be positive")
+        _value_check(beta > 0, "Beta must be positive")
 
         alpha, beta = sympify(alpha), sympify(beta)
 
@@ -282,8 +295,8 @@ def Beta(alpha, beta, symbol=None):
 
 class GammaPSpace(SingleContinuousPSpace):
     def __new__(cls, k, theta, symbol=None):
-        assert (k > 0) is True, "k must be positive"
-        assert (theta > 0) is True, "theta must be positive"
+        _value_check(k > 0, "k must be positive")
+        _value_check(theta > 0, "Theta must be positive")
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = x**(k-1) * exp(-x/theta) / (gamma(k)*theta**k)

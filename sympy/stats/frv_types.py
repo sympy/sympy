@@ -45,6 +45,9 @@ class DiscreteUniformPSpace(SingleFinitePSpace):
 
     Create DiscreteUniform Random Symbols using DiscreteUniform function
 
+    Examples
+    ========
+
     >>> from sympy.stats import DiscreteUniform, Density
     >>> from sympy import symbols
 

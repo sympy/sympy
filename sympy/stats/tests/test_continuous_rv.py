@@ -241,3 +241,17 @@ def test_prefab_sampling():
     for var in variables:
         for i in xrange(niter):
             assert Sample(var) in var.pspace.domain.set
+
+def test_input_value_assertions():
+    a, b = symbols('a b')
+    p, q = symbols('p q', positive=True)
+
+    raises(ValueError, "Normal(3, 0)")
+    raises(ValueError, "Normal(a, b)")
+    Normal(a, p) # No error raised
+    raises(ValueError, "Exponential(a)")
+    Exponential(p) # No error raised
+    for fn_name in ['Pareto', 'Weibull', 'Beta', 'Gamma']:
+        raises(ValueError, "%s(a, p)" % fn_name)
+        raises(ValueError, "%s(p, a)" % fn_name)
+        eval("%s(p, q)" % fn_name) # No error raised
