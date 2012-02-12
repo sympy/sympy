@@ -659,13 +659,40 @@ def Rayleigh(sigma, symbol=None):
     """
     Create a Continuous Random Variable with a Rayleigh distribution.
 
+    The probability distribution function depends on a single parameter
+    `sigma` which is a positive real values.
+
+    The density is given by
+
+    .. math ::
+        \frac{x}{\sigma^2} e^{-x^2/2\sigma^2}.
+
     Returns a RandomSymbol.
 
     Examples
     ========
 
-    >>> from sympy.stats import Rayleigh, Density, E, Std
+    >>> from sympy.stats import Rayleigh, Density, E, Var
     >>> from sympy import Symbol, simplify
+
+    >>> sigma = Symbol("sigma", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = Rayleigh(sigma, symbol=x)
+
+    >>> Density(X)
+    (x, x*exp(-x**2/(2*sigma**2))/sigma**2)
+
+    >>> E(X)
+    sqrt(2)*sqrt(pi)*sigma/2
+
+    >>> Var(X)
+    -pi*sigma**2/2 + 2*sigma**2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Rayleigh_distribution
     """
 
     return RayleighPSpace(sigma, symbol).value
