@@ -265,13 +265,13 @@ def generate_equivalent_ids(*gate_seq):
     # visited is a list of equalities that's been visited
     vis = []
     # A list of equivalent gate identities
-    gate_rules = []
+    eq_ids = []
     # Maximum number of operations to perform
     max_ops = len(gate_seq)
 
     queue.append((gate_seq, (), 0))
     vis.append((gate_seq, ()))
-    gate_rules.append(gate_seq)
+    eq_ids.append(gate_seq)
 
     while (len(queue) > 0):
         rule = queue.popleft()
@@ -285,8 +285,8 @@ def generate_equivalent_ids(*gate_seq):
             (new_left, new_rite) = new_rule
 
             # If the left side is empty (left side is scalar)
-            if (len(new_left) == 0 and new_rite not in gate_rules):
-                gate_rules.append(new_rite)
+            if (len(new_left) == 0 and new_rite not in eq_ids):
+                eq_ids.append(new_rite)
             # If the equality has not been seen and has not reached the
             # max limit on operations
             elif (new_rule not in vis and ops + 1 < max_ops):
@@ -299,8 +299,8 @@ def generate_equivalent_ids(*gate_seq):
         if (new_rule is not None):
             (new_left, new_rite) = new_rule
 
-            if (len(new_left) == 0 and new_rite not in gate_rules):
-                gate_rules.append(new_rite)
+            if (len(new_left) == 0 and new_rite not in eq_ids):
+                eq_ids.append(new_rite)
             elif (new_rule not in vis and ops + 1 < max_ops):
                 queue.append(new_rule + (ops + 1,))
 
@@ -311,8 +311,8 @@ def generate_equivalent_ids(*gate_seq):
         if (new_rule is not None):
             (new_left, new_rite) = new_rule
 
-            if (len(new_rite) == 0 and new_left not in gate_rules):
-                gate_rules.append(new_left)
+            if (len(new_rite) == 0 and new_left not in eq_ids):
+                eq_ids.append(new_left)
             elif (new_rule not in vis and ops + 1 < max_ops):
                 queue.append(new_rule + (ops + 1,))
 
@@ -323,14 +323,14 @@ def generate_equivalent_ids(*gate_seq):
         if (new_rule is not None):
             (new_left, new_rite) = new_rule
 
-            if (len(new_rite) == 0 and new_left not in gate_rules):
-                gate_rules.append(new_left)
+            if (len(new_rite) == 0 and new_left not in eq_ids):
+                eq_ids.append(new_left)
             elif (new_rule not in vis and ops + 1 < max_ops):
                 queue.append(new_rule + (ops + 1,))
 
             vis.append(new_rule)
 
-    return gate_rules
+    return eq_ids
 
 class GateIdentity(Basic):
     """Wrapper class for circuits that reduce to a scalar value.
@@ -353,7 +353,7 @@ class GateIdentity(Basic):
         >>> an_identity.circuit
         (X(0), Y(0), Z(0))
 
-        >>> an_identity.gate_rules
+        >>> an_identity.eq_identities
         [(X(0), Y(0), Z(0)), (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)),
          (Z(0), Y(0), X(0)), (Y(0), X(0), Z(0)), (X(0), Z(0), Y(0))]
 
@@ -362,7 +362,7 @@ class GateIdentity(Basic):
     def __new__(cls, *args):
         # args should be a tuple - a variable length argument list
         obj = Basic.__new__(cls, *args)
-        obj._gate_rules = generate_equivalent_ids(*args)
+        obj._eq_ids = generate_equivalent_ids(*args)
 
         return obj
 
@@ -371,8 +371,8 @@ class GateIdentity(Basic):
         return self.args
 
     @property
-    def gate_rules(self):
-        return self._gate_rules
+    def eq_identities(self):
+        return self._eq_ids
 
     def __str__(self):
         """Returns the string of gates in a tuple."""
@@ -542,7 +542,7 @@ def is_degenerate(identity_set, gate_identity):
     # For now, just iteratively go through the set and check if the current
     # gate_identity is a permutation of an identity in the set
     for an_id in identity_set:
-        if (gate_identity in an_id.gate_rules):
+        if (gate_identity in an_id.eq_identities):
             return True
     return False
 
