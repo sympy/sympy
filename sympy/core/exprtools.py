@@ -376,11 +376,15 @@ def _gcd_terms(terms, isprimitive=False):
 
     return cont, numer, denom
 
-def gcd_terms(terms, isprimitive=False, clear=False):
+def gcd_terms(terms, isprimitive=False, clear=True):
     """
     Compute the GCD of ``terms`` and put them together. If ``isprimitive`` is
-    True the _gcd_terms will not run the primitive method on the terms. If
-    ``clear`` is True, all Add expressions will have Integer coefficients.
+    True the _gcd_terms will not run the primitive method on the terms.
+
+    ``clear`` controls the removal of integers from the denominator of an Add
+    expression. When True, all numerical denominator will be cleared; when
+    False the denominators will be cleared only if all terms had numerical
+    denominators.
 
     Examples
     ========
@@ -394,6 +398,8 @@ def gcd_terms(terms, isprimitive=False, clear=False):
     (x + 2)/2
     >>> gcd_terms(x/2 + 1, clear=False)
     x/2 + 1
+    >>> gcd_terms(x/2 + y/2, clear=False)
+    (x + y)/2
 
     """
     terms = sympify(terms)

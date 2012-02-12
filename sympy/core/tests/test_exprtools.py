@@ -122,7 +122,7 @@ def test_factor_terms():
     assert factor_terms(Interval(0, 1)) == Interval(0, 1)
     e = 1/sqrt(a/2 + 1)
     assert factor_terms(e, clear=False) == 1/sqrt(a/2 + 1)
-    assert factor_terms(e) == sqrt(2)/sqrt(a + 2)
+    assert factor_terms(e, clear=True) == sqrt(2)/sqrt(a + 2)
 
 def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)
