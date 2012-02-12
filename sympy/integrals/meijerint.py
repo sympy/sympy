@@ -372,15 +372,17 @@ def _split_mul(f, x):
 
     args = Mul.make_args(f)
     for a in args:
-        if not a.has(x):
-            fac *= a
-        elif a.is_Pow and a.base.as_coeff_mul(x)[1] == (x,):
-            c = a.base.as_coeff_mul(x)[0]
-            po *= x**a.exp
-            fac *= unpolarify(polarify(c**a.exp, subs=False))
-        elif a == x:
+        if a == x:
             po *= x
+        elif not a.has(x):
+            fac *= a
         else:
+            if a.is_Pow:
+                c, t = a.base.as_coeff_mul(x)
+                if t == (x,):
+                    po *= x**a.exp
+                    fac *= unpolarify(polarify(c**a.exp, subs=False))
+                    continue
             g *= a
 
     return fac, po, g
@@ -1357,8 +1359,8 @@ def _rewrite_single(f, x, recursive=True):
                                                    exponents_only=True), x)
                     g = g.subs(subs).subs(z, x)
                     # NOTE these substitutions can in principle introduce oo,
-                    #      zoo and other
-                    #      absurdities. It shouldn't matter, but better be safe.
+                    #      zoo and other absurdities. It shouldn't matter,
+                    #      but better be safe.
                     if Tuple(*(r1 + (g,))).has(oo, zoo, -oo):
                         continue
                     g = meijerg(g.an, g.aother, g.bm, g.bother,
