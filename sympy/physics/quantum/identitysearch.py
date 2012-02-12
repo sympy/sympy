@@ -378,7 +378,7 @@ class GateIdentity(Basic):
         """Returns the string of gates in a tuple."""
         return str(self.circuit)
 
-def is_scalar_sparse_matrix(circuit, nqubits, identity_only):
+def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
     """Checks if a given scipy.sparse matrix is a scalar matrix.
 
     A scalar matrix is such that B = bI, where B is the scalar
@@ -394,6 +394,9 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only):
         Number of qubits in the circuit
     identity_only : bool
         Check for only identity matrices
+    eps : number
+        The tolerance value for zeroing out elements in the matrix.
+        Values in the range [-eps, +eps] will be changed to a zero.
 
     Examples
     ========
@@ -423,8 +426,8 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only):
     else:
         # Due to floating pointing operations, must zero out
         # elements that are "very" small in the dense matrix
-        # Epsilon value
-        eps = 1e-11
+        # See parameter for default value.
+
         # Get the ndarray version of the dense matrix
         dense_matrix = matrix.todense().getA()
         # Since complex values can't be compared, must split
