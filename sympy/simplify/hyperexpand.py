@@ -1896,6 +1896,8 @@ def hyperexpand_special(ap, bq, z):
     p, q = len(ap), len(bq)
     z_ = z
     z = unpolarify(z)
+    if z == 0:
+        return S.Zero
     if p == 2 and q == 1:
         # 2F1
         a, b, c = ap + bq
