@@ -720,7 +720,13 @@ def StudentT(nu, symbol=None):
     >>> from sympy.stats import StudentT, Density, E, Std
     >>> from sympy import Symbol, simplify
 
-    >>> X = Normal(2, symbol=Symbol('x'))
+    >>> nu = Symbol("nu", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = StudentT(nu, symbol=x)
+
+    >>> Density(X)
+    (x, (1 + x**2/nu)**(-nu/2 - 1/2)*gamma(nu/2 + 1/2)/(sqrt(pi)*sqrt(nu)*gamma(nu/2)))
     """
 
     return StudentTPSpace(nu, symbol).value
