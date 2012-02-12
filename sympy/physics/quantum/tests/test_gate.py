@@ -165,6 +165,10 @@ def test_cnot_gate():
     assert matrix_to_qubit(represent(circuit, nqubits=3)) ==\
         qapply(circuit)
 
+    circuit = CNotGate(1,0)
+    assert Dagger(circuit) == circuit
+    assert Dagger(Dagger(circuit)) == circuit
+    assert circuit*circuit == 1
 
 def test_gate_sort():
     """Test gate_sort."""
