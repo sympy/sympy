@@ -832,16 +832,34 @@ def UniformSum(n, symbol=None):
     """
     Create a Continuous Random Variable with an Irwin-Hall distribution.
 
+    The probability distribution function depends on a single parameter
+    `n` which is an integer.
+
+    The density is given by
+
+    .. math ::
+        \frac{1}{(n-1)!}\sum_{k=0}^{\lfloor x\rfloor}(-1)^k\binom{n}{k}(x-k)^{n-1}
+
     Returns a RandomSymbol.
 
     Examples
     ========
 
     >>> from sympy.stats import UniformSum, Density, E, Var
-    >>> from sympy import symbols, simplify
-    >>> x, n = symbols('x n')
+    >>> from sympy import Symbol
+
+    >>> n = Symbol("n", integer=True)
+    >>> x = Symbol("x")
 
     >>> X = UniformSum(n, symbol=x)
+
+    >>> Density(X)
+    (x, Sum((-1)**_k*(-_k + x)**(n - 1)*binomial(n, _k), (_k, 0, floor(x)))/(n - 1)!)
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Uniform_sum_distribution
     """
 
     return UniformSumPSpace(n, symbol).value
