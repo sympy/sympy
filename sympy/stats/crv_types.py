@@ -148,6 +148,10 @@ def Benini(alpha, beta, sigma, symbol=None):
     """
     Create a Continuous Random Variable with a Benini distribution.
 
+    The probability distribution function depends on three parameters
+    `alpha`, `beta` and the shape `sigma` which are all positive real
+    values.
+
     Returns a RandomSymbol.
 
     Examples
@@ -155,6 +159,16 @@ def Benini(alpha, beta, sigma, symbol=None):
 
     >>> from sympy.stats import Benini, Density, E, Std
     >>> from sympy import Symbol, simplify
+
+    >>> alpha = Symbol("alpha", positive=True)
+    >>> beta = Symbol("beta", positive=True)
+    >>> sigma = Symbol("sigma", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = Benini(alpha, beta, sigma, symbol=x)
+
+    >>> Density(X)
+    (x, (alpha/x + 2*beta*log(x/sigma)/x)*exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2))
     """
 
     return BeniniPSpace(alpha, beta, sigma, symbol).value
