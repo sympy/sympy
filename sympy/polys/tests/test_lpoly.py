@@ -206,8 +206,6 @@ def test_coefficient():
         c = p1.coefficient(p2)
     raises(TypeError, 'test1(p1, p2)')
 
-
-
 def test_coefficient_t():
     lp, x, y = lgens('x, y', QQ, lex)
     p = (1 + x + y)**3
@@ -337,7 +335,6 @@ def test_square():
     p3 = 3*x/7 + x**3*y + 8*y**2
     assert p3.square() == x**6*y**2 + 16*x**3*y**3 + 6*x**4*y/7 + 64*y**4 + 48*x*y**2/7 + 9*x**2/49
 
-
 def test_mul_iadd():
     lp, x, y = lgens('x, y', QQ, lex)
     p = x**2 + y**2 - 1
@@ -404,7 +401,6 @@ def test_expand():
     p = x + 1
     assert p.expand() == p
 
-
 def test_div():
     lp, x, y = lgens('x, y', QQ, lex)
     p = y**2/4
@@ -426,7 +422,6 @@ def test_div():
     def test3(p):
         p2 = p/z
     raises(NotImplementedError, 'test3(p1)')
-
 
 def test_pow():
     lp, x, y = lgens('x, y', QQ, lex)
@@ -550,7 +545,6 @@ def test_pow_trunc():
         p1 = p.pow_trunc(0, 'x', 4)
     raises(ValueError, 'test1(p)')
 
-
 def test_pow_miller():
     lp, x = lgens('x', QQ, lex)
     n = 5
@@ -598,7 +592,6 @@ def test_inversion():
     def test4(p):
         p1 = p._series_inversion1('x', 4)
     raises(ValueError, 'test4(p)')
-
 
 def test_reversion():
     lp, x, y = lgens('x, y', QQ, lex)
@@ -653,7 +646,6 @@ def test_series_from_list():
         return x*x
     p1 = p.fun(square, 'x', h)
     assert p1 == x**2 + 2*x**3
-
 
 def test_derivative():
     gens=['x%d' % i for i in range(11)]
@@ -767,7 +759,6 @@ def test_log():
     def test2(p):
         p1 = p.log('x', 4)
     raises(TaylorEvalError, 'test2(p)')
-
 
 def test_acot():
     lp, x = lgens('x', QQ, lex)
@@ -897,7 +888,6 @@ def test_cos():
         p1 = p.cos('x', 3)
     raises(TaylorEvalError, 'test2(p)')
 
-
 def test_cos_sin():
     lp, x, y = lgens('x, y', QQ, lex)
     h = 10
@@ -905,8 +895,6 @@ def test_cos_sin():
     p = p.series_inversion('x', h) - 1
     assert p.cos_sin('x', h) == (p.cos('x', h), p.sin('x', h))
     assert p.cosh_sinh('x', h) == (p.cosh('x', h), p.sinh('x', h))
-
-
 
 def test_sinh():
     lp, x, y = lgens('x, y', QQ, lex)
@@ -971,7 +959,6 @@ def test_basic():
     assert p2 == 1 + X/2 - A*X/4 - X**2/8 - 3*A*X**2/8 + 5*A**2*X**2/32 + X**3/16 - 15*A**3*X**3/128 + 5*A*X**3/32 + 37*A**2*X**3/64 - 5*X**4/128 - 173*A**3*X**4/256 - 7*A*X**4/64 + 115*A**2*X**4/256 + 195*A**4*X**4/2048
     p2 = p2.tobasic(a, x)
     assert p2 == 1 + x/2 - a*x/4 - x**2/8 - 3*a*x**2/8 + 5*a**2*x**2/32 + x**3/16 - 15*a**3*x**3/128 + 5*a*x**3/32 + 37*a**2*x**3/64 - 5*x**4/128 - 173*a**3*x**4/256 - 7*a*x**4/64 + 115*a**2*x**4/256 + 195*a**4*x**4/2048
-
 
 def test_SR1():
     x = Symbol('x')

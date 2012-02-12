@@ -2342,7 +2342,6 @@ class LPolyElement(dict):
         series with total degree truncation
         """
         lp = p.lp
-        zm = lp.zero_mon
         p1 = lp(1)
         for precx in giant_steps(prec):
             tmp = (p - p1.log(iv, precx)).mul_trunc(p1, iv, precx)
