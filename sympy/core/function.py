@@ -381,8 +381,8 @@ class Function(Application, Expr):
         be called directly; derived classes can overwrite this to implement
         asymptotic expansions.
         """
-        from sympy.solvers.solvers import _filldedent
-        raise PoleError(_filldedent('''
+        from sympy.utilities.misc import filldedent
+        raise PoleError(filldedent('''
             Asymptotic expansion of %s around %s is
             not implemented.''' % (type(self), args0)))
 
@@ -409,8 +409,8 @@ class Function(Application, Expr):
 
         """
         if self.func.nargs is None:
-            from sympy.solvers.solvers import _filldedent
-            raise NotImplementedError(_filldedent('''
+            from sympy.utilities.misc import filldedent
+            raise NotImplementedError(filldedent('''
                 series for user-defined functions are not
                 supported.'''))
         args = self.args
@@ -874,8 +874,8 @@ class Derivative(Expr):
         if not variables:
             variables = expr.free_symbols
             if len(variables) != 1:
-                from sympy.solvers.solvers import _filldedent
-                raise ValueError(_filldedent('''
+                from sympy.utilities.misc import filldedent
+                raise ValueError(filldedent('''
                     Since there is more than one variable in the
                     expression, the variable(s) of differentiation
                     must be supplied to differentiate %s''' % expr))
@@ -907,8 +907,8 @@ class Derivative(Expr):
                     i += 1
 
             if i == iwas: # didn't get an update because of bad input
-                from sympy.solvers.solvers import _filldedent
-                raise ValueError(_filldedent('''
+                from sympy.utilities.misc import filldedent
+                raise ValueError(filldedent('''
                 Can\'t differentiate wrt the variable: %s, %s''' % (v, count)))
 
             variable_count.append((v, count))
@@ -1231,8 +1231,8 @@ class Lambda(Expr):
 
     def __call__(self, *args):
         if len(args) != self.nargs:
-            from sympy.solvers.solvers import _filldedent
-            raise TypeError(_filldedent('''
+            from sympy.utilities.misc import filldedent
+            raise TypeError(filldedent('''
                 %s takes %d arguments (%d given)
                 ''' % (self, self.nargs, len(args))))
         return self.expr.xreplace(dict(zip(self.variables, args)))

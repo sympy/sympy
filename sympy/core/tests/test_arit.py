@@ -1,8 +1,8 @@
 from __future__ import division
 
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Float, re, pi, \
-        sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo
-from sympy.utilities.pytest import XFAIL
+        sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer
+from sympy.utilities.pytest import XFAIL, raises
 
 x = Symbol('x')
 y = Symbol('y')
@@ -1312,3 +1312,24 @@ def test_issue_2061_2988_2990_2991():
     assert sqrt(-1.0*x) == 1.0*sqrt(-x)
     #2991
     assert (-2*x*y*A*B)**2 == 4*x**2*y**2*(A*B)**2
+
+def test_float_int():
+    assert int(float(sqrt(10))) == int(sqrt(10))
+    assert int(pi**1000) % 10 == 2
+    assert int(Float('1.123456789012345678901234567890e20','')) == \
+        112345678901234567890L
+    assert int(Float('1.123456789012345678901234567890e25','')) == \
+        11234567890123456789012345L
+    assert int(Float('1.123456789012345678901234567890e35','')) == \
+        112345678901234567890123456789000000L
+    assert Integer(Float('1.123456789012345678901234567890e20','')) == \
+        112345678901234567890
+    assert Integer(Float('1.123456789012345678901234567890e25','')) == \
+        11234567890123456789012345
+    assert Integer(Float('1.123456789012345678901234567890e35','')) == \
+        112345678901234567890123456789000000
+    assert int(1 + Rational('.9999999999999999999999999')) == 1
+    assert int(pi/1e20) == 0
+    raises(ValueError, 'int(1 + pi/1e20)')
+    raises(TypeError, 'float(x)')
+    raises(TypeError, 'float(sqrt(-1))')
