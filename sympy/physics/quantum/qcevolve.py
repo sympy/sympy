@@ -85,7 +85,7 @@ class GQCLinear(GQCBase):
             obj._insert_choices = kargs['choices']
 
         if obj._gate_identities:
-            collapse_func = lambda acc, an_id: acc + an_id.gate_rules
+            collapse_func = lambda acc, an_id: acc + list(an_id.eq_identities)
             ids_flat = reduce(collapse_func, obj._insert_choices, [])
             obj._insert_choices = ids_flat
 
@@ -242,8 +242,8 @@ def qc_random_reduce(circuit, gate_ids, seed=None):
     ==========
     circuit : tuple, Gate
         A tuple of Gates representing a quantum circuit
-    gate_ids : list, GateIdentity
-        List of gate identities to find in circuit
+    gate_ids : set, GateIdentity
+        Set of gate identities to find in circuit
     seed : int
         Seed value for the random number generator
     """
@@ -257,7 +257,7 @@ def qc_random_reduce(circuit, gate_ids, seed=None):
 
     # Flatten the GateIdentity objects (with gate rules)
     # into one single list
-    collapse_func = lambda acc, an_id: acc + an_id.gate_rules
+    collapse_func = lambda acc, an_id: acc + list(an_id.eq_identities)
     ids = reduce(collapse_func, gate_ids, [])
 
     # List of identities found in circuit

@@ -161,11 +161,11 @@ def test_qc_random_insert():
     ids = list(bfs_identity_search(gate_list, 2, max_depth=4))
     ids.sort()
 
-    collapse_func = lambda acc, an_id: acc + an_id.gate_rules
+    collapse_func = lambda acc, an_id: acc + list(an_id.eq_identities)
     ids = reduce(collapse_func, ids, [])
 
     circuit = (x, y, h, cnot, cgate_z)
-    expected = (x, cgate_z, h, cnot, h, y, h, cnot, cgate_z)
+    expected = (x, cnot, h, cgate_z, h, y, h, cnot, cgate_z)
     # insert location: 1; circuit choice: 31
     actual = qc_random_insert(circuit, ids, seed=seed)
     assert actual == expected
