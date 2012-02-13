@@ -4,14 +4,17 @@ Continuous Random Variables - Prebuilt variables
 Contains
 ========
 Normal
+LogNormal
 Exponential
 Uniform
 Pareto
+Weibull
 Beta
 Gamma
 """
 
-from sympy import exp, sqrt, pi, S, Dummy, Interval, S, sympify, gamma, Piecewise
+from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
+    Piecewise)
 from sympy import beta as beta_fn
 from crv import SingleContinuousPSpace
 from sympy.core.decorators import _sympifyit
@@ -19,8 +22,18 @@ import random
 
 oo = S.Infinity
 
-__all__ = ['ContinuousRV', 'Normal', 'Exponential', 'Pareto', 'Beta', 'Gamma',
-'Uniform']
+__all__ = ['ContinuousRV', 'Normal', 'LogNormal', 'Exponential', 'Pareto',
+    'Weibull', 'Beta', 'Gamma', 'Uniform']
+
+def _value_check(condition, message):
+    """
+    Check a condition on input value.
+
+    Raises ValueError with message if condition is not True
+    """
+    if condition is not True:
+        raise ValueError(message)
+
 
 def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
     """
@@ -53,7 +66,8 @@ def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
     return SingleContinuousPSpace(symbol, density, set).value
 
 class NormalPSpace(SingleContinuousPSpace):
-    def __new__(cls, mean, std, symbol = None):
+    def __new__(cls, mean, std, symbol=None):
+        _value_check(std > 0, "Standard deviation must be positive")
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = exp(-(x-mean)**2 / (2*std**2)) / (sqrt(2*pi)*std)
@@ -68,7 +82,7 @@ class NormalPSpace(SingleContinuousPSpace):
 
 def Normal(mean, std, symbol=None):
     """
-    Create a Continuous Random Varible with a Normal distribution.
+    Create a Continuous Random Variable with a Normal distribution.
 
     Returns a RandomSymbol.
 
@@ -91,11 +105,49 @@ def Normal(mean, std, symbol=None):
 
     return NormalPSpace(mean, std, symbol).value
 
+class LogNormalPSpace(SingleContinuousPSpace):
+    def __new__(cls, mean, std, symbol=None):
+        mean, std = sympify(mean), sympify(std)
+
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = exp(-(log(x)-mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
+        obj.mean = mean
+        obj.std = std
+        return obj
+
+    def sample(self):
+        return {self.value: random.lognormvariate(self.mean, self.std)}
+
+def LogNormal(mean, std, symbol=None):
+    """
+    Create a Continuous Random Variable with a LogNormal distribution.
+
+    Note: Only density and sampling work.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import LogNormal, Density, E, Std
+    >>> from sympy import Symbol, simplify
+
+    >>> X = LogNormal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
+    >>> Density(X)
+    (x, sqrt(2)*exp(-log(x)**2/2)/(2*sqrt(pi)*x))
+    """
+
+    return LogNormalPSpace(mean, std, symbol).value
+
+
 class ExponentialPSpace(SingleContinuousPSpace):
     def __new__(cls, rate, symbol=None):
+        _value_check(rate > 0, "Rate must be positive.")
+
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = rate * exp(-rate*x)
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         obj.rate = rate
         return obj
 
@@ -104,7 +156,7 @@ class ExponentialPSpace(SingleContinuousPSpace):
 
 def Exponential(rate, symbol=None):
     """
-    Create a Continuous Random Varible with an Exponential distribution.
+    Create a Continuous Random Variable with an Exponential distribution.
 
     Returns a RandomSymbol.
 
@@ -129,8 +181,8 @@ def Exponential(rate, symbol=None):
 
 class ParetoPSpace(SingleContinuousPSpace):
     def __new__(cls, xm, alpha, symbol=None):
-        assert xm>0, "Xm must be positive"
-        assert alpha>0, "Alpha must be positive"
+        _value_check(xm > 0, "Xm must be positive")
+        _value_check(alpha > 0, "Alpha must be positive")
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = alpha * xm**alpha / x**(alpha+1)
@@ -144,7 +196,7 @@ class ParetoPSpace(SingleContinuousPSpace):
 
 def Pareto(xm, alpha, symbol=None):
     """
-    Create a Continuous Random Varible with the Pareto distribution.
+    Create a Continuous Random Variable with the Pareto distribution.
 
     Returns a RandomSymbol.
 
@@ -162,17 +214,58 @@ def Pareto(xm, alpha, symbol=None):
 
     return ParetoPSpace(xm, alpha, symbol).value
 
+class WeibullPSpace(SingleContinuousPSpace):
+    def __new__(cls, alpha, beta, symbol=None):
+        _value_check(alpha > 0, "Alpha must be positive")
+        _value_check(beta > 0, "Beta must be positive")
+
+        alpha, beta = sympify(alpha), sympify(beta)
+
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = beta * (x/alpha)**(beta-1) * exp(-(x/alpha)**beta) / alpha
+
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
+        obj.alpha = alpha
+        obj.beta = beta
+        return obj
+
+    def sample(self):
+        return {self.value: random.weibullvariate(self.alpha, self.beta)}
+
+def Weibull(alpha, beta, symbol=None):
+    """
+    Create a Continuous Random Variable with a Weibull distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Weibull, Density, E, Var
+    >>> from sympy import symbols, simplify
+    >>> x, a, b = symbols('x a b', positive=True)
+
+    >>> X = Weibull(a, b, symbol=x)
+    >>> Density(X)
+    (x, b*(x/a)**(b - 1)*exp(-(x/a)**b)/a)
+    >>> simplify(E(X))
+    a*gamma(1 + 1/b)
+    >>> simplify(Var(X))
+    -a**2*(gamma(1 + 1/b)**2 - gamma(1 + 2/b))
+    """
+    return WeibullPSpace(alpha, beta, symbol).value
+
 class BetaPSpace(SingleContinuousPSpace):
     def __new__(cls, alpha, beta, symbol=None):
-        assert alpha>0, "Alpha must be positive"
-        assert beta>0, "Beta must be positive"
+        _value_check(alpha > 0, "Alpha must be positive")
+        _value_check(beta > 0, "Beta must be positive")
 
         alpha, beta = sympify(alpha), sympify(beta)
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = x**(alpha-1) * (1-x)**(beta-1) / beta_fn(alpha, beta)
 
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, 1))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, 1))
         obj.alpha = alpha
         obj.beta = beta
         return obj
@@ -182,7 +275,7 @@ class BetaPSpace(SingleContinuousPSpace):
 
 def Beta(alpha, beta, symbol=None):
     """
-    Create a Continuous Random Varible with a Beta distribution.
+    Create a Continuous Random Variable with a Beta distribution.
 
     Returns a RandomSymbol.
 
@@ -202,20 +295,23 @@ def Beta(alpha, beta, symbol=None):
 
 class GammaPSpace(SingleContinuousPSpace):
     def __new__(cls, k, theta, symbol=None):
-        assert k>0, "k must be positive"
-        assert theta>0, "theta must be positive"
+        _value_check(k > 0, "k must be positive")
+        _value_check(theta > 0, "Theta must be positive")
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = x**(k-1) * exp(-x/theta) / (gamma(k)*theta**k)
 
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         obj.k = k
         obj.theta = theta
         return obj
 
+    def sample(self):
+        return {self.value: random.gammavariate(self.k, self.theta)}
+
 def Gamma(k, theta, symbol=None):
     """
-    Create a Continuous Random Varible with a Gamma distribution.
+    Create a Continuous Random Variable with a Gamma distribution.
 
     Returns a RandomSymbol.
 
@@ -254,7 +350,7 @@ class UniformPSpace(SingleContinuousPSpace):
 
 def Uniform(left, right, symbol=None):
     """
-    Create a Continuous Random Varible with a Uniform distribution.
+    Create a Continuous Random Variable with a Uniform distribution.
 
     Returns a RandomSymbol.
 

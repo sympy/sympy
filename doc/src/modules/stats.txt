@@ -8,19 +8,24 @@ Random Variable Types
 
 Finite Types 
 ---------------
+.. autofunction:: DiscreteUniform
 .. autofunction:: Die
 .. autofunction:: Bernoulli 
 .. autofunction:: Coin
+.. autofunction:: Binomial
+.. autofunction:: Hypergeometric
 .. autofunction:: FiniteRV
 
 Continuous Types 
 -------------------
 .. autofunction:: Normal
+.. autofunction:: LogNormal
 .. autofunction:: Exponential
 .. autofunction:: Uniform
 .. autofunction:: Pareto
-.. autofunction:: Gamma 
+.. autofunction:: Weibull
 .. autofunction:: Beta
+.. autofunction:: Gamma 
 .. autofunction:: ContinuousRV 
 
 Interface
