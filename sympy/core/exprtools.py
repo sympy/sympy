@@ -405,6 +405,10 @@ def gcd_terms(terms, isprimitive=False, clear=True):
     >>> gcd_terms(x/2 + y/2, clear=False)
     (x + y)/2
 
+    See Also
+    ========
+    factor_terms, sympy.polys.polytools.terms_gcd
+
     """
     def mask(terms):
         """replace nc portions of each term with a unique Dummy symbols
@@ -488,6 +492,10 @@ def factor_terms(expr, radical=False, clear=False):
     y*(x + 2)/2
     >>> factor_terms(x*y/2 + y, clear=False) == _
     True
+
+    See Also
+    ========
+    gcd_terms, sympy.polys.polytools.terms_gcd
 
     """
 
