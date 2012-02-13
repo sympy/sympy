@@ -459,48 +459,13 @@ class Float(Number):
         (1, 5, 0, 3)
 
     """
+    __slots__ = ['_mpf_', '_prec']
+
     is_real = True
     is_irrational = False
     is_integer = False
 
-    __slots__ = ['_mpf_', '_prec']
-
-    # mpz can't be pickled
-    def __getnewargs__(self):
-        return (mlib.to_pickable(self._mpf_),)
-
-    def __getstate__(self):
-        d = Expr.__getstate__(self).copy()
-        del d["_mpf_"]
-        return mlib.to_pickable(self._mpf_), d
-
-    def __setstate__(self, state):
-        _mpf_, d = state
-        _mpf_ = mlib.from_pickable(_mpf_)
-        self._mpf_ = _mpf_
-        Expr.__setstate__(self, d)
-
     is_Float = True
-
-    def floor(self):
-        return C.Integer(int(mlib.to_int(mlib.mpf_floor(self._mpf_, self._prec))))
-
-    def ceiling(self):
-        return C.Integer(int(mlib.to_int(mlib.mpf_ceil(self._mpf_, self._prec))))
-
-    @property
-    def num(self):
-        return mpmath.mpf(self._mpf_)
-
-    def _as_mpf_val(self, prec):
-        rv = mpf_norm(self._mpf_, prec)
-        # uncomment to see failures
-        #if rv != was._mpf_ and self._prec == prec:
-        #    print was._mpf_, rv
-        return rv
-
-    def _as_mpf_op(self, prec):
-        return self._mpf_, max(prec, self._prec)
 
     def __new__(cls, num, prec=15):
         if isinstance(num, basestring):
@@ -594,8 +559,43 @@ class Float(Number):
         obj._prec = _prec
         return obj
 
+    # mpz can't be pickled
+    def __getnewargs__(self):
+        return (mlib.to_pickable(self._mpf_),)
+
+    def __getstate__(self):
+        d = Expr.__getstate__(self).copy()
+        del d["_mpf_"]
+        return mlib.to_pickable(self._mpf_), d
+
+    def __setstate__(self, state):
+        _mpf_, d = state
+        _mpf_ = mlib.from_pickable(_mpf_)
+        self._mpf_ = _mpf_
+        Expr.__setstate__(self, d)
+
     def _hashable_content(self):
         return (self._mpf_, self._prec)
+
+    def floor(self):
+        return C.Integer(int(mlib.to_int(mlib.mpf_floor(self._mpf_, self._prec))))
+
+    def ceiling(self):
+        return C.Integer(int(mlib.to_int(mlib.mpf_ceil(self._mpf_, self._prec))))
+
+    @property
+    def num(self):
+        return mpmath.mpf(self._mpf_)
+
+    def _as_mpf_val(self, prec):
+        rv = mpf_norm(self._mpf_, prec)
+        # uncomment to see failures
+        #if rv != was._mpf_ and self._prec == prec:
+        #    print was._mpf_, rv
+        return rv
+
+    def _as_mpf_op(self, prec):
+        return self._mpf_, max(prec, self._prec)
 
     def _eval_is_positive(self):
         return self.num > 0
@@ -2606,7 +2606,6 @@ converter[complex] = sympify_complex
 _intcache[0] = S.Zero
 _intcache[1] = S.One
 _intcache[-1]= S.NegativeOne
-
 
 from function import _coeff_isneg
 from power import Pow, integer_nthroot
