@@ -84,7 +84,7 @@ def DiscreteUniform(items, symbol=None):
     >>> Y = DiscreteUniform(range(5)) # distribution over a range
     >>> Density(Y)
     {0: 1/5, 1: 1/5, 2: 1/5, 3: 1/5, 4: 1/5}
- 
+
     """
     return DiscreteUniformPSpace(items, symbol).value
 
