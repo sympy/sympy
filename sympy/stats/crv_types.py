@@ -222,7 +222,7 @@ class WeibullPSpace(SingleContinuousPSpace):
         alpha, beta = sympify(alpha), sympify(beta)
 
         x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = beta*(x/alpha)**(beta-1)*exp(-(x/alpha)**beta) / alpha
+        pdf = beta * (x/alpha)**(beta-1) * exp(-(x/alpha)**beta) / alpha
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         obj.alpha = alpha
