@@ -190,7 +190,7 @@ def generate_equivalent_ids(*gate_seq):
     """Returns a set of equivalent gate identities.
 
     A gate identity is a quantum circuit such that the product
-    of their matrix representations is equal to a scalar value.
+    of the gates in the circuit is equal to a scalar value.
     For example, XYZ = i, where X, Y, Z are the Pauli gates and
     i is the imaginary value, is considered a gate identity.
 
@@ -334,6 +334,11 @@ def generate_equivalent_ids(*gate_seq):
 
 class GateIdentity(Basic):
     """Wrapper class for circuits that reduce to a scalar value.
+
+    A gate identity is a quantum circuit such that the product
+    of the gates in the circuit is equal to a scalar value.
+    For example, XYZ = i, where X, Y, Z are the Pauli gates and
+    i is the imaginary value, is considered a gate identity.
 
     Parameters
     ==========
