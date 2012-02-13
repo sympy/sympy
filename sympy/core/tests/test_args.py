@@ -442,6 +442,10 @@ def test_sympy__stats__rv__ProductDomain():
     E = SingleDomain(y, Interval(0,oo))
     assert _test_args(ProductDomain(D, E))
 
+def test_sympy__stats__frv_types__DiscreteUniformPSpace():
+    from sympy.stats.frv_types import DiscreteUniformPSpace
+    assert _test_args(DiscreteUniformPSpace(range(6)))
+
 def test_sympy__stats__frv_types__DiePSpace():
     from sympy.stats.frv_types import DiePSpace
     assert _test_args(DiePSpace(6))
@@ -453,6 +457,14 @@ def test_sympy__stats__frv_types__BernoulliPSpace():
 def test_sympy__stats__frv_types__CoinPSpace():
     from sympy.stats.frv_types import CoinPSpace
     assert _test_args(CoinPSpace(S.Half))
+
+def test_sympy__stats__frv_types__BinomialPSpace():
+    from sympy.stats.frv_types import BinomialPSpace
+    assert _test_args(BinomialPSpace(5, S.Half))
+
+def test_sympy__stats__frv_types__HypergeometricPSpace():
+    from sympy.stats.frv_types import HypergeometricPSpace
+    assert _test_args(HypergeometricPSpace(10, 5, 3))
 
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
@@ -496,6 +508,10 @@ def test_sympy__stats__crv_types__NormalPSpace():
     from sympy.stats.crv_types import NormalPSpace
     assert _test_args(NormalPSpace(0,1))
 
+def test_sympy__stats__crv_types__LogNormalPSpace():
+    from sympy.stats.crv_types import LogNormalPSpace
+    assert _test_args(LogNormalPSpace(0,1))
+
 def test_sympy__stats__crv_types__ExponentialPSpace():
     from sympy.stats.crv_types import ExponentialPSpace
     assert _test_args(ExponentialPSpace(1))
@@ -503,6 +519,10 @@ def test_sympy__stats__crv_types__ExponentialPSpace():
 def test_sympy__stats__crv_types__ParetoPSpace():
     from sympy.stats.crv_types import ParetoPSpace
     assert _test_args(ParetoPSpace(1,1))
+
+def test_sympy__stats__crv_types__WeibullPSpace():
+    from sympy.stats.crv_types import WeibullPSpace
+    assert _test_args(WeibullPSpace(1,1))
 
 def test_sympy__stats__crv_types__BetaPSpace():
     from sympy.stats.crv_types import BetaPSpace
