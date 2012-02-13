@@ -11,16 +11,7 @@ from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
                                homogeneous_order, ode_order)
 from sympy.utilities.pytest import XFAIL, skip, raises, slow
 
-C1 = Symbol('C1')
-C2 = Symbol('C2')
-C3 = Symbol('C3')
-C4 = Symbol('C4')
-C5 = Symbol('C5')
-C6 = Symbol('C6')
-C7 = Symbol('C7')
-C8 = Symbol('C8')
-C9 = Symbol('C9')
-C10 = Symbol('C10')
+C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C1:11')
 f = Function('f')
 g = Function('g')
 
@@ -131,9 +122,7 @@ def test_dsolve_options():
         dsolve(f(x).diff(x) - 1/f(x)**2, hint='best')
     assert dsolve(f(x) + f(x).diff(x) + sin(x).diff(x) + 1, f(x),
                   hint="1st_linear_Integral") == \
-        Eq(f(x), (C1 + Integral((-sin(x).diff(x) - \
-        1)*exp(Integral(1, x)), x))*exp(-Integral(1, x)))
-
+        Eq(f(x), (C1 + Integral((-sin(x).diff(x) - 1)*exp(Integral(1, x)), x))*exp(-Integral(1, x)))
 def test_classify_ode():
     assert classify_ode(f(x).diff(x, 2), f(x)) == \
         ('nth_linear_constant_coeff_homogeneous', 'Liouville', 'Liouville_Integral')
@@ -234,7 +223,7 @@ def test_old_ode_tests():
     sol4 = Eq(f(x), C1*sin(x/3) + C2*cos(x/3))
     sol5 = Eq(f(x), C1*exp(-x/3) + C2*exp(x/3))
     sol6 = Eq(f(x), (C1-cos(x))/x**3)
-    sol7 = Eq(f(x), C1*exp(x) + C2*exp(2*x))
+    sol7 = Eq(f(x), (C1 + C2*exp(x))*exp(x))
     sol8 = Eq(f(x), (C1 + C2*x)*exp(2*x))
     sol9 = Eq(f(x), (C1*sin(x*sqrt(2)) + C2*cos(x*sqrt(2)))*exp(-x))
     sol10 = Eq(f(x), C1 + x/3)
@@ -680,19 +669,19 @@ def test_nth_linear_constant_coeff_homogeneous():
     eq29 = f(x).diff(x, 4) + 4*f(x).diff(x, 2)
     eq30 = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x)
     sol1 = Eq(f(x), C1 + C2*exp(-2*x))
-    sol2 = Eq(f(x), C1*exp(x) + C2*exp(2*x))
+    sol2 = Eq(f(x), (C1 + C2*exp(x))*exp(x))
     sol3 = Eq(f(x), C1*exp(x) + C2*exp(-x))
     sol4 = Eq(f(x), C1 + C2*exp(-3*x) + C3*exp(2*x))
     sol5 = Eq(f(x), C1*exp(x/2) + C2*exp(4*x/3))
-    sol6 = Eq(f(x), C1*exp(-x + x*sqrt(2)) + C2*exp(-x - x*sqrt(2)))
-    sol7 = Eq(f(x), C1*exp(3*x) + C2*exp(-2*x + x*sqrt(2)) + C3*exp(-2*x - x*sqrt(2)))
+    sol6 = Eq(f(x), C1*exp(x*(-1 + sqrt(2))) + C2*exp(x*(-sqrt(2) - 1)))
+    sol7 = Eq(f(x), C1*exp(3*x) + C2*exp(x*(-2 - sqrt(2))) + C3*exp(x*(-2 + sqrt(2))))
     sol8 = Eq(f(x), C1 + C2*exp(x) + C3*exp(-2*x) + C4*exp(2*x))
-    sol9 = Eq(f(x), C1*exp(x) + C2*exp(-x) + C3*exp(-2*x + x*sqrt(2)) + \
-        C4*exp(-2*x - x*sqrt(2)))
+    sol9 = Eq(f(x), C1*exp(x) + C2*exp(-x) + C3*exp(x*(-2 + sqrt(2))) + \
+        C4*exp(x*(-2 - sqrt(2))))
     sol10 = Eq(f(x), C1*sin(x*sqrt(a)) + C2*cos(x*sqrt(a)) + C3*exp(x*sqrt(a)) + \
         C4*exp(-x*sqrt(a)))
-    sol11 = Eq(f(x), C1*exp(k*x + x*sqrt(2 + k**2)) + C2*exp(k*x - x*sqrt(2 + k**2)))
-    sol12 = Eq(f(x), C1*exp(-4*x*abs(k) - 2*k*x) + C2*exp(-2*k*x + 4*x*abs(k)))
+    sol11 = Eq(f(x), C1*exp(x*(k - sqrt(k**2 + 2))) + C2*exp(x*(k + sqrt(k**2 + 2))))
+    sol12 = Eq(f(x), C1*exp(2*x*(-2*abs(k) - k)) + C2*exp(2*x*(2*abs(k) - k)))
     sol13 = Eq(f(x), C1 + C2*x + C3*x**2 + C4*x**3)
     sol14 = Eq(f(x), (C1 + C2*x)*exp(-2*x))
     sol15 = Eq(f(x), (C1 + C2*x)*exp(-x) + C3*exp(x/3))
@@ -966,22 +955,22 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     sol8 = Eq(f(x), 4 - 3*cos(x)/5 + sin(x)/5 + exp(x) + C1*exp(-x) + C2*exp(-2*x))
     sol9 = Eq(f(x), -2*x + x**2 + (C1*sin(x*sqrt(3)/2) + C2*cos(x*sqrt(3)/2))*exp(-x/2))
     sol10 = Eq(f(x), -x*exp(x) - 2*exp(-x) + C1*exp(-2*x) + C2*exp(4*x))
-    sol11 = Eq(f(x), C1 + (-3*sin(x)/5 - cos(x)/5)*exp(2*x) + C2*exp(3*x))
+    sol11 = Eq(f(x), C1 + C2*exp(3*x) + (-3*sin(x) - cos(x))*exp(2*x)/5)
     sol12 = Eq(f(x), x - sin(x)/4 + (C1 + C2*x)*exp(-x) + (C3 + C4*x)*exp(x))
     sol13 = Eq(f(x), C1 + x**3/3 + C2*exp(-x))
     sol14 = Eq(f(x), C1 - x - sin(2*x)/5 - cos(2*x)/10 + x**2/2 + C2*exp(-x))
     sol15 = Eq(f(x), (C1 + x)*sin(x) + (C2 - x**2)*cos(x))
     sol16 = Eq(f(x), (C1 + x/16)*sin(2*x) + (C2 - x**2/8)*cos(2*x))
-    sol17 = Eq(f(x), (C1 + C2*x + x**4/12)*exp(-x))
-    sol18 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/3 - x**5/60)*exp(-x))
+    sol17 = Eq(f(x), (C1 + C2*x + x**4)*exp(-x)/12)
+    sol18 = Eq(f(x), (C1 + C2*x + C3*x**2 - x**5 + 20*x**3)*exp(-x)/60)
     sol19 = Eq(f(x), S(7)/4 - 3*x/2 + x**2/2 + C1*exp(-x) + (C2 - x)*exp(-2*x))
-    sol20 = Eq(f(x), C1*exp(x) + (S(5)/36 + x/6)*exp(-x) + C2*exp(2*x))
+    sol20 = Eq(f(x), C1*exp(x) + C2*exp(2*x) + (6*x + 5)*exp(-x)/36)
     sol21 = Eq(f(x), -S(1)/36 - x/6 + C1*exp(-3*x) + (C2 + x/5)*exp(2*x))
     sol22 = Eq(f(x), C1*sin(x) + (C2 - x/2)*cos(x) + exp(-x)/2)
     sol23 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
     sol24 = Eq(f(x), S(1)/2 - cos(2*x)/6 + C1*sin(x) + C2*cos(x))
-    sol25 = Eq(f(x), C1 + C2*exp(x) + C3*exp(-x) + (S(1)/12 - 7*sin(2*x)/520 + \
-        9*cos(2*x)/520)*exp(2*x))
+    sol25 = Eq(f(x), C1 + C2*exp(-x) + C3*exp(x) + \
+                    (-21*sin(2*x) + 27*cos(2*x) + 130)*exp(2*x)/1560)
     sol26 = Eq(f(x), C1 + (C2 + C3*x - x**2/8)*sin(x) + (C4 + C5*x + x**2/8)*cos(x) + x**2)
     sol27 = Eq(f(x), cos(3*x)/16 + C1*cos(x) + (C2 + x/4)*sin(x))
     sol28 = Eq(f(x), C1 + x)
@@ -1100,8 +1089,8 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     sol4 = Eq(f(x), 2 + C1*exp(-x) + C2*exp(-2*x))
     sol5 = Eq(f(x), 2*exp(x) + C1*exp(-x) + C2*exp(-2*x))
     sol6 = Eq(f(x), -x*exp(x) - 2*exp(-x) + C1*exp(-2*x) + C2*exp(4*x))
-    sol7 = Eq(f(x), (C1 + C2*x + x**4/12)*exp(-x))
-    sol8 = Eq(f(x), C1*exp(x) + (S(5)/36 + x/6)*exp(-x) + C2*exp(2*x))
+    sol7 = Eq(f(x), (C1 + C2*x + x**4)*exp(-x)/12)
+    sol8 = Eq(f(x), C1*exp(x) + C2*exp(2*x) + (6*x + 5)*exp(-x)/36)
     sol9 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
     sol10 = Eq(f(x), (C1 + x*(C2 + log(x)))*exp(-x))
     sol11 = Eq(f(x), cos(x)*(C2 - Integral(1/cos(x), x)) + sin(x)*(C1 + \
