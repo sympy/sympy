@@ -19,6 +19,9 @@ The main class responsible for printing is ``Printer`` (see also its
 .. autoclass:: Printer
     :members: doprint, _print, set_global_settings, order
 
+    .. autoattribute:: Printer.printmethod
+
+
 PrettyPrinter Class
 -------------------
 
@@ -40,6 +43,8 @@ when possible.
 
 .. autoclass:: PrettyPrinter
    :members: _use_unicode, doprint
+
+   .. autoattribute:: PrettyPrinter.printmethod
 
 .. autofunction:: pretty
 .. autofunction:: pretty_print
@@ -69,6 +74,9 @@ Usage::
 .. autoclass:: sympy.printing.ccode.CCodePrinter
    :members:
 
+   .. autoattribute:: CCodePrinter.printmethod
+
+
 .. autofunction:: sympy.printing.ccode.ccode
 
 .. autofunction:: sympy.printing.ccode.print_ccode
@@ -88,6 +96,9 @@ manual changes in the result are no longer needed.
 .. autofunction:: print_fcode
 .. autoclass:: FCodePrinter
    :members:
+
+   .. autoattribute:: FCodePrinter.printmethod
+
 
 Two basic examples:
 
@@ -221,6 +232,9 @@ This classes implements printing to strings that can be used by the
 
 .. autoclass:: LambdaPrinter
 
+   .. autoattribute:: LambdaPrinter.printmethod
+
+
 .. autofunction:: lambdarepr
 
 LatexPrinter
@@ -237,6 +251,8 @@ See also the extended LatexPrinter: :ref:`Extended LaTeXModule for Sympy <extend
 .. autoclass:: LatexPrinter
    :members:
 
+   .. autoattribute:: LatexPrinter.printmethod
+
 .. autofunction:: latex
 
 .. autofunction:: print_latex
@@ -252,6 +268,8 @@ More info on mathml content: http://www.w3.org/TR/MathML2/chapter4.html
 
 .. autoclass:: MathMLPrinter
    :members:
+
+   .. autoattribute:: MathMLPrinter.printmethod
 
 .. autofunction:: mathml
 
@@ -282,6 +300,8 @@ This printer generates executable code. This code satisfies the identity
 .. autoclass:: ReprPrinter
    :members:
 
+   .. autoattribute:: ReprPrinter.printmethod
+
 .. autofunction:: srepr
 
 StrPrinter
@@ -293,6 +313,8 @@ This module generates readable representations of SymPy expressions.
 
 .. autoclass:: StrPrinter
    :members: parenthesize, stringify, emptyPrinter
+
+   .. autoattribute:: StrPrinter.printmethod
 
 .. autofunction:: sstrrepr
 
@@ -338,6 +360,8 @@ functionality, and additionally lists a number of functions that cannot be
 easily translated to C or Fortran.
 
 .. autoclass:: sympy.printing.codeprinter.CodePrinter
+
+   .. autoattribute:: CodePrinter.printmethod
 
 .. autoexception:: sympy.printing.codeprinter.AssignmentError
 
