@@ -14,7 +14,7 @@ from sympy.functions.elementary.trigonometric import (cos, sin, tan, asin, atan,
 from sympy.functions.elementary.exponential import (exp, log, LambertW)
 from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, atanh, asinh, acosh, acoth)
 from sympy.core.numbers import (Number, Rational, Integer)
-from sympy.core import pi, expand_multinomial
+from sympy.core import pi, expand_multinomial, expand_mul
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
@@ -246,22 +246,6 @@ def _factor_var(q, var):
     >>> _factor_var(p, x)
     (-2, 2*x**2 + x)
     """
-    if q.__class__.is_Pow:
-        if q.base == var:
-            return (q.exp, S.One)
-    if q.__class__.is_Mul:
-        cv = []
-        pw = 0
-        for x in q.args:
-            if not x.has(var):
-                cv.append(x)
-            elif x.is_Pow:
-                pw += x.exp
-            else:
-                break
-        else:
-            c = Mul(*cv)
-            return (pw, c)
     if q.__class__ != Add:
         return (0, q)
     a = []
@@ -614,7 +598,7 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
         if px == 0:
             pass
         if px == var:
-            if prec > 1:
+            if prec > 1 or i > 0:
                 ps = ps + c*var*logi
             else:
                 ps = ps + O(var**prec*logi)
@@ -623,10 +607,10 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
             px.args[0] == var and var not in px.args[1].atoms():
             n = px.args[1]
             if n.is_number:
-                if n <= prec:
+                if n < prec or (prec == n and i > 0):
                     ps = ps + c*var**n*logi
                 else:
-                    ps += c*px*logi + O(var**prec)
+                    ps += O(var**prec)
             else:
                 if n.is_positive:
                     ps += c*px*logi
@@ -651,19 +635,24 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
                         pb = px.base.as_poly()
                         if len(pb.gens) == 1:
                             px1 = pb**px.exp
-                            pxp = poly_truncate(px1, var, prec)
-                            if pxdeg < prec:
-                                ps += c*pxp*logi
+                            if i == 0:
+                                pxp = poly_truncate(px1, var, prec)
                             else:
-                                ps += c*pxp*logi + O(var**prec*logi)
+                                pxp = poly_truncate(px1, var, prec+1)
+                            if pxdeg < prec or pxdeg == prec and i > 0:
+                                ps += expand_mul(c*pxp*logi)
+                            else:
+                                #ps += c*pxp*logi + O(var**prec*logi)
+                                ps += expand_mul(c*pxp*logi) + O(var**prec)
                     if not px.is_Pow or len(pb.gens) != 1:
-                        if pxdeg < prec:
+                        if pxdeg < prec or pxdeg == prec and i > 0:
                             pxp = expand_multinomial(px)
-                            ps += c*pxp*logi
+                            ps += expand_mul(c*pxp*logi)
                         else:
-                            px = px.series(var, 0, prec)
-                            px = px.removeO()
-                            ps += c*px*logi + O(var**prec*logi)
+                            #px = px.series(var, 0, prec)
+                            #px = px.removeO()
+                            #ps += c*px*logi + O(var**prec*logi)
+                            ps += (c*px*logi).series(var, 0, prec)
                 else:
                     p1, ord1 = _taylor_term(px, var, tev, 0, start, prec, dir, pol_pars, rdeco)
                     if ord1:

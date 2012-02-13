@@ -29,8 +29,7 @@ def test_helper_functions():
     assert _is_monomial(x**x, x) == None
     assert _is_monomial(2*x**x, x) == None
     assert _get_var_from_term((x+1)**2, x) == (0, (x + 1)**2)
-    assert _factor_var(x**2, x) == (2, S.One)
-    assert _factor_var(2*x, x) == (0, 2*x)
+    assert _factor_var(1 + x + sin(x)/x**2, x) == (-2, x**2 + x**3 + sin(x))
 
 def test_poly_truncate():
     assert poly_truncate(x.as_poly(x), x, 6) == x
@@ -49,12 +48,19 @@ def test_taylor_QQ1():
     assert taylor(x, x, 0, 7) == x
     assert taylor(-x, x, 0, 7) == -x
     assert taylor(x+1, x, 0, 11) == x+1
+    assert taylor(x**4, x, 0, 4) == O(x**4)
+    assert taylor(x**4, x, 0, 5) == x**4
     assert taylor(x + O(x**6), x, 0, 4) == x + O(x**4)
     assert taylor(2 + x**10, x, 0, 4) == 2 + O(x**4)
-    assert taylor(log(x)*x, x, 0, 1) == O(x*log(x))
+    assert taylor(log(x)*x, x, 0, 1) == x*log(x)
     assert taylor(log(x)*x**3, x, 0, 4) == x**3*log(x)
     assert taylor(log(x)*x**4, x, 0, 4) == x**4*log(x)
     assert taylor(log(x)*x**6, x, 0, 4) == O(x**4)
+    assert taylor((x**4 + x**2)*log(x), x, 0, 4) == x**4*log(x) + x**2*log(x)
+    assert taylor((x**2 + 1)**2*log(x), x, 0, 4) == x**4*log(x) + 2*x**2*log(x) + log(x)
+    assert taylor(x**2*(x**3 + x**2 + 1)*log(x), x, 0, 4) == x**2*log(x) + x**4*log(x) + O(x**4)
+    assert taylor((1 + x + x**2 + x**4)**2*log(x), x, 0, 4) == \
+      log(x) + 2*x*log(x) + 3*x**2*log(x) + 2*x**3*log(x) + 3*x**4*log(x) + O(x**4)
     assert taylor((1 + x)**20, x, 0, 11) == \
       1 + 20*x + 190*x**2 + 1140*x**3 + 4845*x**4 + 15504*x**5 + 38760*x**6 + 77520*x**7 + 125970*x**8 + 167960*x**9 + 184756*x**10 + O(x**11)
 
