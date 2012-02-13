@@ -74,15 +74,25 @@ def test_is_scalar_matrix():
     assert is_scalar_matrix(hh_circuit, numqubits, id_only) == True
     assert is_scalar_sparse_matrix(hh_circuit, numqubits, id_only) == True
 
+    # NOTE:
+    # The elements of the sparse matrix for the following circuit
+    # is actually 1.0000000000000002+0.0j.
+    h1 = H(1)
+    xhzh_circuit = (x1, h1, z1, h1)
+    assert is_scalar_matrix(xhzh_circuit, numqubits, id_only) == True
+    assert is_scalar_sparse_matrix(xhzh_circuit, numqubits, id_only) == True
+
     id_only = True
+    assert is_scalar_matrix(xhzh_circuit, numqubits, id_only) == True
     assert is_scalar_matrix(xyz_circuit, numqubits, id_only) == False
     assert is_scalar_matrix(cnot_circuit, numqubits, id_only) == True
     assert is_scalar_matrix(hh_circuit, numqubits, id_only) == True
-
+    
+    assert is_scalar_sparse_matrix(xhzh_circuit, numqubits, id_only) == True
     assert is_scalar_sparse_matrix(xyz_circuit, numqubits, id_only) == False
     assert is_scalar_sparse_matrix(cnot_circuit, numqubits, id_only) == True
     assert is_scalar_sparse_matrix(hh_circuit, numqubits, id_only) == True
-
+    
 def test_is_degenerate():
     x = X(0)
     y = Y(0)
@@ -181,6 +191,14 @@ def test_bfs_identity_search():
                   GateIdentity(y, z, h, z, h)])
     assert bfs_identity_search(gate_list, 1, max_depth=5) == id_set
 
+    id_set = set([GateIdentity(x, x),
+                  GateIdentity(y, y),
+                  GateIdentity(z, z),
+                  GateIdentity(h, h),
+                  GateIdentity(x, h, z, h)])
+    assert id_set == bfs_identity_search(gate_list, 1, max_depth=4,
+                                         identity_only=True)
+
     cnot = CNOT(1,0)
     gate_list = [x, cnot]
     id_set = set([GateIdentity(x, x),
@@ -202,3 +220,4 @@ def test_bfs_identity_search():
                   GateIdentity(cnot, cnot),
                   GateIdentity(cnot, h, cgate_z, h)])
     assert bfs_identity_search(gate_list, 2, max_depth=4) == id_set
+

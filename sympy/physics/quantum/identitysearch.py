@@ -474,8 +474,10 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
 
         # If only looking for identity matrices
         # first element must be a 1
-        is_identity = first_element == 1.0 if identity_only else True
-
+        real_is_one = abs(first_element.real - 1.0) < eps
+        imag_is_zero = abs(first_element.imag) < eps
+        is_one = real_is_one and imag_is_zero
+        is_identity = is_one if identity_only else True
         return is_diagonal and has_correct_trace and is_identity
 
 def is_scalar_matrix(circuit, nqubits, identity_only):
