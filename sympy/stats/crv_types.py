@@ -712,12 +712,24 @@ def StudentT(nu, symbol=None):
     """
     Create a Continuous Random Variable with a student's t distribution.
 
+    The density of the student's t distribution is given by
+
+    .. math ::
+        \frac{\Gamma \left(\frac{\nu+1}{2} \right)} {\sqrt{\nu\pi}\,\Gamma \left(\frac{\nu}{2} \right)}
+        \left(1+\frac{x^2}{\nu} \right)^{-\frac{\nu+1}{2}}
+
+    Parameters
+    ==========
+
+    nu : Real number, `nu` > 0
+        Degrees of freedom
+
     Returns a RandomSymbol.
 
     Examples
     ========
 
-    >>> from sympy.stats import StudentT, Density, E, Std
+    >>> from sympy.stats import StudentT, Density, E, Var
     >>> from sympy import Symbol, simplify
 
     >>> nu = Symbol("nu", positive=True)
@@ -727,6 +739,12 @@ def StudentT(nu, symbol=None):
 
     >>> Density(X)
     (x, (1 + x**2/nu)**(-nu/2 - 1/2)*gamma(nu/2 + 1/2)/(sqrt(pi)*sqrt(nu)*gamma(nu/2)))
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Student_t
+    .. [2] http://mathworld.wolfram.com/Studentst-Distribution.html
     """
 
     return StudentTPSpace(nu, symbol).value
