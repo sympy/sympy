@@ -103,7 +103,7 @@ def ilcm(a, b):
     if a == 0 and b == 0:
         return 0
     else:
-        return a * b // igcd(a, b)
+        return a*b // igcd(a, b)
 
 def igcdex(a, b):
     """Returns x, y, g such that g = x*a + y*b = gcd(a, b).
@@ -305,7 +305,7 @@ class Number(AtomicExpr):
         return True
 
     def as_coeff_mul(self, *deps):
-        # a -> c * t
+        # a -> c*t
         if self.is_Rational:
             return self, tuple()
         elif self.is_negative:
@@ -444,7 +444,7 @@ class Float(Number):
     307/2**10 at prec=10
 
     Finally, Floats can be instantiated with an mpf tuple (n, c, p) to
-    produce the number (-1)**n * c * 2**p:
+    produce the number (-1)**n*c*2**p:
 
     >>> n, c, p = 1, 5, 0
     >>> (-1)**n*c*2**p
@@ -518,7 +518,7 @@ class Float(Number):
                     return Float._new(num, prec)
                 else:
                     _mpf_ = mpmath.mpf(
-                    S.NegativeOne ** num[0] * num[1] * 2 ** num[2])._mpf_
+                    S.NegativeOne**num[0]*num[1]*2**num[2])._mpf_
         elif isinstance(num, Float):
             _mpf_ = num._mpf_
             if prec < num._prec:
@@ -658,8 +658,8 @@ class Float(Number):
         """
         expt is symbolic object but not equal to 0, 1
 
-        (-p) ** r -> exp(r * log(-p)) -> exp(r * (log(p) + I*Pi)) ->
-                  -> p ** r * (sin(Pi*r) + cos(Pi*r) * I)
+        (-p)**r -> exp(r*log(-p)) -> exp(r*(log(p) + I*Pi)) ->
+                  -> p**r*(sin(Pi*r) + cos(Pi*r)*I)
         """
         if isinstance(expt, Number):
             if isinstance(expt, Integer):
@@ -672,7 +672,7 @@ class Float(Number):
                 return Float._new(y, prec)
             except mlib.ComplexResult:
                 re, im = mlib.mpc_pow((self, mlib.fzero), (expt, mlib.fzero), prec, rnd)
-                return Float._new(re, prec) + Float._new(im, prec) * S.ImaginaryUnit
+                return Float._new(re, prec) + Float._new(im, prec)*S.ImaginaryUnit
 
     def __abs__(self):
         return Float._new(mlib.mpf_abs(self._mpf_), self._prec)
@@ -857,7 +857,7 @@ class Rational(Number):
                 try:
                     # we might have a Float
                     neg_pow, digits, expt = decimal.Decimal(p).as_tuple()
-                    p = [1, -1][neg_pow] * int("".join(str(x) for x in digits))
+                    p = [1, -1][neg_pow]*int("".join(str(x) for x in digits))
                     if expt > 0:
                         # TODO: this branch needs a test
                         return Rational(p*Pow(10, expt), 1)
@@ -1034,7 +1034,7 @@ class Rational(Number):
             return S.NaN
         if isinstance(expt, Number):
             if isinstance(expt, Float):
-                return self._eval_evalf(expt._prec) ** expt
+                return self._eval_evalf(expt._prec)**expt
             if expt.is_negative:
                 # (3/4)**-2 -> (4/3)**2
                 ne = -expt
@@ -1042,31 +1042,31 @@ class Rational(Number):
                     return Rational(self.q, self.p)
                 if self < 0:
                     if expt.q != 1:
-                        return -(S.NegativeOne) ** ((expt.p % expt.q) / S(expt.q)) * Rational(self.q, -self.p) ** ne
+                        return -(S.NegativeOne)**((expt.p % expt.q) / S(expt.q))*Rational(self.q, -self.p)**ne
                     else:
-                        return S.NegativeOne ** ne * Rational(self.q, -self.p) ** ne
+                        return S.NegativeOne**ne*Rational(self.q, -self.p)**ne
                 else:
-                    return Rational(self.q, self.p) ** ne
+                    return Rational(self.q, self.p)**ne
             if expt is S.Infinity: # neg infinity already caught by test for negative
                 if self.p > self.q:
                     # (3/2)**oo -> oo
                     return S.Infinity
                 if self.p < -self.q:
                     # (-3/2)**oo -> oo + I*oo
-                    return S.Infinity + S.Infinity * S.ImaginaryUnit
+                    return S.Infinity + S.Infinity*S.ImaginaryUnit
                 return S.Zero
             if isinstance(expt, Integer):
                 # (4/3)**2 -> 4**2 / 3**2
-                return Rational(self.p ** expt.p, self.q ** expt.p)
+                return Rational(self.p**expt.p, self.q**expt.p)
             if isinstance(expt, Rational):
                 if self.p != 1:
-                    # (4/3)**(5/6) -> 4**(5/6) * 3**(-5/6)
-                    return Integer(self.p) ** expt * Integer(self.q) ** (-expt)
+                    # (4/3)**(5/6) -> 4**(5/6)*3**(-5/6)
+                    return Integer(self.p)**expt*Integer(self.q)**(-expt)
                 # as the above caught negative self.p, now self is positive
-                return Integer(self.q)**Rational(expt.p * (expt.q-1), expt.q) / (Integer(self.q) ** Integer(expt.p))
+                return Integer(self.q)**Rational(expt.p*(expt.q-1), expt.q) / (Integer(self.q)**Integer(expt.p))
 
         if _coeff_isneg(self) and expt.is_even:
-            return (-self) ** expt
+            return (-self)**expt
 
         return
 
@@ -1116,7 +1116,7 @@ class Rational(Number):
         if isinstance(other, Number):
             if isinstance(other, Float):
                 return bool(mlib.mpf_gt(self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p * other.q > self.q * other.p)
+            return bool(self.p*other.q > self.q*other.p)
         return Expr.__gt__(self, other)
 
     def __ge__(self, other):
@@ -1131,7 +1131,7 @@ class Rational(Number):
         if isinstance(other, Number):
             if isinstance(other, Float):
                 return bool(mlib.mpf_ge(self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p * other.q >= self.q * other.p)
+            return bool(self.p*other.q >= self.q*other.p)
         return Expr.__ge__(self, other)
 
 
@@ -1147,7 +1147,7 @@ class Rational(Number):
         if isinstance(other, Number):
             if isinstance(other, Float):
                 return bool(mlib.mpf_lt(self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p * other.q < self.q * other.p)
+            return bool(self.p*other.q < self.q*other.p)
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
@@ -1162,7 +1162,7 @@ class Rational(Number):
         if isinstance(other, Number):
             if isinstance(other, Float):
                 return bool(mlib.mpf_le(self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p * other.q <= self.q * other.p)
+            return bool(self.p*other.q <= self.q*other.p)
         return Expr.__le__(self, other)
 
     def __hash__(self):
@@ -1452,16 +1452,16 @@ class Integer(Rational):
 
     def __mul__(self, other):
         if isinstance(other, (int, long)):
-            return Integer(self.p * other)
+            return Integer(self.p*other)
         elif isinstance(other, Integer):
-            return Integer(self.p * other.p)
+            return Integer(self.p*other.p)
         return Rational.__mul__(self, other)
 
     def __rmul__(self, other):
         if isinstance(other, (int, long)):
-            return Integer(other * self.p)
+            return Integer(other*self.p)
         elif isinstance(other, Integer):
-            return Integer(other.p * self.p)
+            return Integer(other.p*self.p)
         return Rational.__mul__(self, other)
 
     def __mod__(self, other):
@@ -1529,7 +1529,7 @@ class Integer(Rational):
 
     def _eval_power(self, expt):
         """
-        Tries to do some simplifications on self ** expt
+        Tries to do some simplifications on self**expt
 
         Returns None if no further simplifications can be done
 
@@ -1559,36 +1559,36 @@ class Integer(Rational):
             if self is S.NegativeOne:
                 return S.NaN
             # cases 0, 1 are done in their respective classes
-            return S.Infinity + S.ImaginaryUnit * S.Infinity
+            return S.Infinity + S.ImaginaryUnit*S.Infinity
         if expt is S.NegativeInfinity:
             return Rational(1, self)**S.Infinity
         if not isinstance(expt, Number):
             # simplify when exp is even
-            # (-2) ** k --> 2 ** k
+            # (-2)**k --> 2**k
             if _coeff_isneg(self) and expt.is_even:
-                return (-self) ** expt
+                return (-self)**expt
         if not isinstance(expt, Rational):
             return
         if expt is S.Half and self < 0:
             # we extract I for this special case since everyone is doing so
-            return S.ImaginaryUnit * Pow(-self, expt)
+            return S.ImaginaryUnit*Pow(-self, expt)
         if expt < 0:
             # invert base and change sign on exponent
             ne = -expt
             if self < 0:
                 if expt.q != 1:
-                    return -(S.NegativeOne) ** ((expt.p % expt.q) / S(expt.q)) * Rational(1, -self) ** ne
+                    return -(S.NegativeOne)**((expt.p % expt.q) / S(expt.q))*Rational(1, -self)**ne
                 else:
-                    return (S.NegativeOne) ** ne * Rational(1, -self) ** ne
+                    return (S.NegativeOne)**ne*Rational(1, -self)**ne
             else:
-                return Rational(1, self.p) ** ne
+                return Rational(1, self.p)**ne
         # see if base is a perfect root, sqrt(4) --> 2
         x, xexact = integer_nthroot(abs(self.p), expt.q)
         if xexact:
             # if it's a perfect root we've finished
-            result = Integer(x ** abs(expt.p))
+            result = Integer(x**abs(expt.p))
             if self < 0:
-                result *= (-1)**expt
+                result*= (-1)**expt
             return result
 
         # The following is an algorithm where we collect perfect roots
@@ -1760,9 +1760,9 @@ class Zero(IntegerConstant):
         # exponent
         coeff, terms = expt.as_coeff_Mul()
         if coeff.is_negative:
-            return S.Infinity ** terms
+            return S.Infinity**terms
         if coeff is not S.One: # there is a Number to discard
-            return self ** terms
+            return self**terms
 
     def _eval_order(self, *symbols):
         # Order(0,x) -> 0
@@ -1825,7 +1825,7 @@ class NegativeOne(IntegerConstant):
             return S.One
         if isinstance(expt, Number):
             if isinstance(expt, Float):
-                return Float(-1.0) ** expt
+                return Float(-1.0)**expt
             if expt is S.NaN:
                 return S.NaN
             if expt is S.Infinity or expt is S.NegativeInfinity:
@@ -1834,11 +1834,11 @@ class NegativeOne(IntegerConstant):
                 return S.ImaginaryUnit
             if isinstance(expt, Rational):
                 if expt.q == 2:
-                    return S.ImaginaryUnit ** Integer(expt.p)
+                    return S.ImaginaryUnit**Integer(expt.p)
                 q = Float(expt).floor()
                 if q:
                     q = Integer(q)
-                    return self ** q * self ** (expt - q)
+                    return self**q*self**(expt - q)
         return
 
 class Half(RationalConstant):
@@ -2541,25 +2541,25 @@ class ImaginaryUnit(AtomicExpr):
         b is I = sqrt(-1)
         e is symbolic object but not equal to 0, 1
 
-        I ** r -> (-1)**(r/2) -> exp(r/2 * Pi * I) -> sin(Pi*r/2) + cos(Pi*r/2) * I, r is decimal
-        I ** 0 mod 4 -> 1
-        I ** 1 mod 4 -> I
-        I ** 2 mod 4 -> -1
-        I ** 3 mod 4 -> -I
+        I**r -> (-1)**(r/2) -> exp(r/2*Pi*I) -> sin(Pi*r/2) + cos(Pi*r/2)*I, r is decimal
+        I**0 mod 4 -> 1
+        I**1 mod 4 -> I
+        I**2 mod 4 -> -1
+        I**3 mod 4 -> -I
         """
 
 
         if isinstance(expt, Number):
             if isinstance(expt, Integer):
                 expt = expt.p % 4
-                if expt==0:
+                if expt == 0:
                     return S.One
-                if expt==1:
+                if expt == 1:
                     return S.ImaginaryUnit
-                if expt==2:
+                if expt == 2:
                     return -S.One
                 return -S.ImaginaryUnit
-            return (S.NegativeOne) ** (expt * S.Half)
+            return (S.NegativeOne)**(expt*S.Half)
         return
 
     def as_base_exp(self):
@@ -2603,7 +2603,7 @@ converter[mpnumeric] = sympify_mpmath
 
 def sympify_complex(a):
     real, imag = map(sympify, (a.real, a.imag))
-    return real + S.ImaginaryUnit * imag
+    return real + S.ImaginaryUnit*imag
 
 converter[complex] = sympify_complex
 
