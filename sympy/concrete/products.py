@@ -1,5 +1,4 @@
-from sympy.core import C, Expr, Mul, S, sympify, Tuple
-from sympy.core.compatibility import is_sequence
+from sympy.core import C, Expr, Mul, S, sympify
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp

@@ -49,7 +49,7 @@ http://en.wikipedia.org/wiki/List_of_rules_of_inference
 """
 from collections import defaultdict
 
-from logic import fuzzy_not, Logic, And, Or, Not
+from logic import Logic, And, Or, Not
 
 def _base_fact(atom):
     """Return the literal fact of an atom.

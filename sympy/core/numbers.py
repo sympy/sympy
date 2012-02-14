@@ -63,7 +63,6 @@ def _decimal_to_Rational_prec(dec):
         rv = Rational(int(dec))
     else:
         s = (-1)**s
-        n = len(d)
         d = sum([di*10**i for i, di in enumerate(reversed(d))])
         rv = Rational(s*d, 10**-e)
     return rv, prec
@@ -2696,7 +2695,6 @@ _intcache[0] = S.Zero
 _intcache[1] = S.One
 _intcache[-1]= S.NegativeOne
 
-from function import _coeff_isneg
 from power import Pow, integer_nthroot
 from mul import Mul
 Mul.identity = One()

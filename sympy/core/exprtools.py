@@ -6,7 +6,6 @@ from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
-from sympy.core.function import expand_mul
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, Integer
 from sympy.core.singleton import S
