@@ -1,7 +1,7 @@
 from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
                    factorial, Function, harmonic, Integral, log, nan, oo, pi,
                    Product, product, Rational, S, sqrt, Sum, summation, Symbol,
-                   sympify, zeta)
+                   sympify, zeta, oo)
 from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
@@ -280,13 +280,13 @@ def test_hypersum():
                               (n, 3, oo))) \
            == -x + sin(x) + x**3/6 - x**5/120
 
-    # TODO to get this without hyper need to improve hyperexpand
     assert summation(1/(n+2)**3, (n, 1, oo)) == \
-           hyper([3, 3, 3, 1], [4, 4, 4], 1)/27
+           -S(9)/8 + zeta(3)
+    assert summation(1/n**4, (n, 1, oo)) == pi**4/90
 
     s = summation(x**n*n, (n, -oo, 0))
     assert s.is_Piecewise
-    assert s.args[0].args[0] == -1/(x*(1-1/x)**2)
+    assert s.args[0].args[0] == -1/(x*(1 - 1/x)**2)
     assert s.args[0].args[1] == (abs(1/x) < 1)
 
 def test_issue_1071():
@@ -332,3 +332,8 @@ def test_free_symbols():
         assert func(x, (y, 1, y), (y, 1, z)).free_symbols == set([x, z])
     assert Sum(1, (x, 1, y)).free_symbols == set([y])
     assert Product(1, (x, 1, y)).free_symbols == set()
+
+@XFAIL
+def test_issue_1072() :
+    k = Symbol("k")
+    assert summation(factorial(2*k + 1)/factorial(2*k), (k, 0, oo)) == oo

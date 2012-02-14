@@ -41,15 +41,12 @@ def test_general_function():
     assert edxdy == 0
 
 def test_derivative_subs_bug():
-    l = Function('l')
-    n = Function('n')
+    e = diff(g(x), x)
+    assert e.subs(g(x), f(x)) != e
+    assert e.subs(g(x), f(x)) == Derivative(f(x), x)
+    assert e.subs(g(x), -f(x)) == Derivative(-f(x), x)
 
-    e = diff(n(x), x)
-    assert e.subs(n(x), l(x)) != e
-    assert e.subs(n(x), l(x)) == Derivative(l(x), x)
-    assert e.subs(n(x), -l(x)) == Derivative(-l(x), x)
-
-    assert e.subs(x, y) == Derivative(n(y), y)
+    assert e.subs(x, y) == Derivative(g(y), y)
 
 def test_derivative_subs_self_bug():
     d = diff(f(x), x)
@@ -58,13 +55,11 @@ def test_derivative_subs_self_bug():
 
 
 def test_derivative_linearity():
-    n = Function('n')
-
-    assert diff(-n(x), x) == -diff(n(x), x)
-    assert diff(8*n(x), x) == 8*diff(n(x), x)
-    assert diff(8*n(x), x) != 7*diff(n(x), x)
-    assert diff(8*n(x)*x, x) == 8*n(x) + 8*x*diff(n(x), x)
-    assert diff(8*n(x)*y*x, x) == 8*y*n(x) + 8*y*x*diff(n(x), x)
+    assert diff(-f(x), x) == -diff(f(x), x)
+    assert diff(8*f(x), x) == 8*diff(f(x), x)
+    assert diff(8*f(x), x) != 7*diff(f(x), x)
+    assert diff(8*f(x)*x, x) == 8*f(x) + 8*x*diff(f(x), x)
+    assert diff(8*f(x)*y*x, x) == 8*y*f(x) + 8*y*x*diff(f(x), x)
 
 def test_derivative_evaluate():
     assert Derivative(sin(x), x) != diff(sin(x), x)
@@ -180,7 +175,9 @@ def test_Subs():
     assert e1.__hash__() == e2.__hash__()
     assert Subs(z*f(x+1), x, 1) not in [ e1, e2 ]
     assert Derivative(f(x),x).subs(x,g(x)) == Derivative(f(g(x)),g(x))
-
+    assert Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).n(1) == \
+        Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).evalf(1) == \
+        z + Rational('1/2').n(1)*f(0)
 
 @XFAIL
 def test_Subs2():
@@ -345,12 +342,10 @@ def test_fdiff_argument_index_error():
     raises(TypeError, 'myfunc(x, x)')
 
 def test_deriv_wrt_function():
-    xfunc = Function('x')
-    yfunc = Function('y')
-    x = xfunc(t)
+    x = f(t)
     xd = diff(x, t)
     xdd = diff(xd, t)
-    y = yfunc(t)
+    y = g(t)
     yd = diff(y, t)
 
     assert diff(x, t) == xd
@@ -415,7 +410,7 @@ def test_diff_wrt_not_allowed():
 
 def test_klein_gordon_lagrangian():
     m = Symbol('m')
-    phi = Function('phi')(x,t)
+    phi = f(x, t)
 
     L = -(diff(phi,t)**2 - diff(phi,x)**2 - m**2*phi**2)/2
     eqna = Eq(diff(L,phi) - diff(L,diff(phi,x),x) - diff(L,diff(phi,t),t), 0)
@@ -425,7 +420,7 @@ def test_klein_gordon_lagrangian():
 def test_sho_lagrangian():
     m = Symbol('m')
     k = Symbol('k')
-    x = Function('x')(t)
+    x = f(t)
 
     L = m*diff(x,t)**2/2 - k*x**2/2
     eqna = Eq(diff(L,x), diff(L,diff(x,t),t))
@@ -437,11 +432,11 @@ def test_sho_lagrangian():
     assert diff(L,t,diff(x,t)) == -k*x + m*diff(x,t,2)
 
 def test_straight_line():
-    f = Function('f')(x)
-
-    L = sqrt(1 + diff(f,x)**2)
-    assert diff(L,f) == 0
-    assert diff(L, diff(f,x)) == diff(f,x)/sqrt(1 + diff(f,x)**2)
+    F = f(x)
+    Fd = F.diff(x)
+    L = sqrt(1 + Fd**2)
+    assert diff(L, F) == 0
+    assert diff(L, Fd) == Fd/sqrt(1 + Fd**2)
 
 def test_sort_variable():
     vsort = Derivative._sort_variables
@@ -467,3 +462,8 @@ def test_unhandled():
     expr = MyExpr(x,y,z)
     assert diff(expr,x,y,f(x),z) == Derivative(expr,f(x),z)
     assert diff(expr,f(x),x) == Derivative(expr,f(x),x)
+
+@XFAIL
+def test_issue_1612() :
+   x = Symbol("x")
+   assert Symbol('f')(x) == f(x)

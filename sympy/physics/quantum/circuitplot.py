@@ -3,10 +3,12 @@
 Todo:
 * Optimize printing of large circuits.
 * Get this to work with single gates.
-* Do a better job checking the form of circuits to make sure it is a Mul of Gates.
+* Do a better job checking the form of circuits to make sure it is a Mul of
+  Gates.
 * Get multi-target gates plotting.
 * Get initial and final states to plot.
-* Get measurements to plot. Might need to rethink measurement as a gate issue.
+* Get measurements to plot. Might need to rethink measurement as a gate
+  issue.
 * Get scale and figsize to be handled in a better way.
 * Write some tests/examples!
 """
@@ -21,7 +23,8 @@ __all__ = [
 ]
 
 np = import_module('numpy', min_python_version=(2, 6))
-matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
+matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']},
+    catch=(RuntimeError,)) # This is raised in environments that have no display.
 
 if not np or not matplotlib:
     class CircuitPlot(object):

@@ -19,7 +19,7 @@ from combinatorial.factorials import factorial, RisingFactorial, FallingFactoria
 from combinatorial.factorials import binomial, factorial2
 from combinatorial.numbers import fibonacci, lucas, harmonic, bernoulli, bell, euler, catalan
 
-from elementary.miscellaneous import sqrt, root, Min, Max, Id, real_root
+from elementary.miscellaneous import sqrt, root, Min, Max, Id, real_root, round
 from elementary.complexes import (re, im, sign, Abs, conjugate, arg,
                       polar_lift, periodic_argument, unbranched_argument,
                       principal_branch)
@@ -29,10 +29,10 @@ from elementary.hyperbolic import sinh, cosh, tanh, coth, asinh, acosh, atanh, a
 from elementary.integers import floor, ceiling
 from elementary.piecewise import Piecewise, piecewise_fold
 
-from special.error_functions import erf
+from special.error_functions import erf, Ei, expint, E1, Si, Ci, Shi, Chi
 from special.gamma_functions import gamma, lowergamma, uppergamma, polygamma, \
          loggamma, digamma, trigamma, beta
-from special.zeta_functions import dirichlet_eta, zeta
+from special.zeta_functions import dirichlet_eta, zeta, lerchphi, polylog
 from special.spherical_harmonics import Ylm, Zlm
 from special.tensor_functions import Eijk, LeviCivita, KroneckerDelta
 from special.delta_functions import DiracDelta, Heaviside

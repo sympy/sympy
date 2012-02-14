@@ -3,10 +3,12 @@ This is our testing framework.
 
 Goals:
 
-* it should be compatible with py.test and operate very similarly (or identically)
+* it should be compatible with py.test and operate very similarly
+ (or identically)
 * doesn't require any external dependencies
 * preferably all the functionality should be in this file only
-* no magic, just import the test file and execute the test functions, that's it
+* no magic, just import the test file and execute the test functions,
+  that's it
 * portable
 
 """
@@ -135,8 +137,11 @@ def setup_pprint():
 
 def test(*paths, **kwargs):
     """
-    Run all tests in test_*.py files which match any of the given
-    strings in `paths` or all tests if paths=[].
+    Run tests in the specified test_*.py files.
+
+    Tests in a particular test_*.py file are run if any of the given strings
+    in ``paths`` matches a part of the test file's path. If ``paths=[]``,
+    tests in all test_*.py files are run.
 
     Notes:
 
@@ -144,44 +149,78 @@ def test(*paths, **kwargs):
        * paths can be entered in native system format or in unix,
          forward-slash format.
 
+    **Explanation of test results**
+
+    ======  ===============================================================
+    Output  Meaning
+    ======  ===============================================================
+    .       passed
+    F       failed
+    X       XPassed (expected to fail but passed)
+    f       XFAILed (expected to fail and indeed failed)
+    s       skipped
+    w       slow
+    T       timeout (e.g., when ``--timeout`` is used)
+    K       KeyboardInterrupt (when running the slow tests with ``--slow``,
+            you can interrupt one of them without killing the test runner)
+    ======  ===============================================================
+
+
+    Colors have no additional meaning and are used just to facilitate
+    interpreting the output.
+
     Examples
     ========
 
-    >> import sympy
+    >>> import sympy
 
     Run all tests:
-    >> sympy.test()
+
+    >>> sympy.test()    # doctest: +SKIP
 
     Run one file:
-    >> sympy.test("sympy/core/tests/test_basic.py")
-    >> sympy.test("_basic")
+
+    >>> sympy.test("sympy/core/tests/test_basic.py")    # doctest: +SKIP
+    >>> sympy.test("_basic")    # doctest: +SKIP
 
     Run all tests in sympy/functions/ and some particular file:
-    >> sympy.test("sympy/core/tests/test_basic.py", "sympy/functions")
+
+    >>> sympy.test("sympy/core/tests/test_basic.py",
+    ...        "sympy/functions")    # doctest: +SKIP
 
     Run all tests in sympy/core and sympy/utilities:
-    >> sympy.test("/core", "/util")
+
+    >>> sympy.test("/core", "/util")    # doctest: +SKIP
 
     Run specific test from a file:
-    >> sympy.test("sympy/core/tests/test_basic.py", kw="test_equality")
+
+    >>> sympy.test("sympy/core/tests/test_basic.py",
+    ...        kw="test_equality")    # doctest: +SKIP
 
     Run specific test from any file:
-    >> sympy.test(kw="subs")
+
+    >>> sympy.test(kw="subs")    # doctest: +SKIP
 
     Run the tests with verbose mode on:
-    >> sympy.test(verbose=True)
+
+    >>> sympy.test(verbose=True)    # doctest: +SKIP
 
     Don't sort the test output:
-    >> sympy.test(sort=False)
+
+    >>> sympy.test(sort=False)    # doctest: +SKIP
 
     Turn on post-mortem pdb:
-    >> sympy.test(pdb=True)
+
+    >>> sympy.test(pdb=True)    # doctest: +SKIP
 
     Turn off colors:
-    >> sympy.test(colors=False)
 
-    The traceback verboseness can be set to "short" or "no" (default is "short")
-    >> sympy.test(tb='no')
+    >>> sympy.test(colors=False)    # doctest: +SKIP
+
+    The traceback verboseness can be set to "short" or "no" (default is
+    "short")
+
+    >>> sympy.test(tb='no')    # doctest: +SKIP
 
     """
     verbose = kwargs.get("verbose", False)
@@ -620,6 +659,7 @@ class SymPyTests(object):
                 if timeout:
                     self._timeout(f, timeout)
                 else:
+                    random.seed(self._seed)
                     f()
             except KeyboardInterrupt:
                 if getattr(f, '_slow', False):

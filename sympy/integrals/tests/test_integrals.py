@@ -202,9 +202,10 @@ def test_issue580():
     assert NS(Integral(1/(x**2-8*x+17), (x, 2, 4))) == '1.10714871779409'
 
 def test_issue587(): # remove this when fresnel itegrals are implemented
-    from sympy import meijerg
+    from sympy import hyper, exp_polar, gamma
     assert integrate(sin(x**2), x) == \
-           sqrt(2*pi)*meijerg([1], [], [S(3)/4], [S(1)/4, 0], x**4/4)/4
+           x**3*gamma(S(3)/4)*hyper([S(3)/4], [S(3)/2, S(7)/4],
+                                    x**4*exp_polar(I*pi)/4)/(4*gamma(S(7)/4))
 
 def test_integrate_units():
     assert integrate(x * m/s, (x, 1*s, 5*s)) == 12*m*s
@@ -616,9 +617,8 @@ def test_issue_1418():
 
 def test_issue_1100():
     ypos = Symbol('y', positive=True)
-    assert integrate(exp(-I*2*pi*y*x)*x, (x, -oo, oo)).subs(y, ypos) == \
+    assert integrate(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo)) == \
            Integral(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo))
-    raises(NotImplementedError, 'integrate(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo))')
 
 def test_issue_841():
     a,b,c,d = symbols('a:d', positive=True, bounded=True)
@@ -676,3 +676,55 @@ def test_atom_bug():
     from sympy import meijerg
     from sympy.integrals.risch import heurisch
     assert heurisch(meijerg([], [], [1], [], x), x) is None
+
+def test_limit_bug():
+    # NOTE this used to raise NotImplementedError because of a limit problem.
+    #      actually gruntz() can do this limit, see issue 2079
+    assert integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi)) == \
+           Integral(-cos(pi*y*z)/(y*z) + 1/(y*z), (y, 0, pi))
+
+# The following tests work using meijerint.
+def test_issue841():
+    from sympy import expand_mul
+    from sympy.abc import k
+    assert expand_mul(integrate(exp(-x**2)*exp(I*k*x), (x, -oo, oo))) == \
+           sqrt(pi)*exp(-k**2/4)
+    a, d = symbols('a d', positive=True)
+    assert expand_mul(integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))) == \
+           sqrt(pi)*exp(d**2/a)/sqrt(a)
+
+def test_issue1304():
+    assert integrate(1/(x**2+y**2)**S('3/2'), x) == 1/(y**2*sqrt(1 + y**2/x**2))
+
+def test_issue459():
+    from sympy import Si
+    integrate(cos(x*y), (x, -pi/2, pi/2), (y, 0, pi)) == 2*Si(pi**2/2)
+
+def test_issue1394():
+    from sympy import simplify
+    assert simplify(integrate(x*sqrt(1+2*x), x)) == \
+           sqrt(2*x + 1)*(6*x**2 + x - 1)/15
+
+def test_issue1638():
+    assert integrate(sin(x)/x, (x, -oo, oo)) == pi
+    assert integrate(sin(x)/x, (x, 0, oo)) == pi/2
+
+def test_issue1893():
+    from sympy import simplify, expand_func, polygamma, gamma
+    a = Symbol('a', positive=True)
+    assert simplify(expand_func(integrate(exp(-x)*log(x)*x**a, (x, 0, oo)))) == \
+           (a*polygamma(0, a) + 1)*gamma(a)
+
+def test_issue1388():
+    from sympy import lowergamma, simplify
+    assert simplify(integrate(exp(-x)*x**y, x)) == lowergamma(y + 1, x)
+
+@XFAIL
+def test_issue_1116() :
+    x = Symbol("x")
+    assert integrate(1/(x**2), (x, -1, 1)) == oo
+
+def test_issue_1301():
+    assert integrate((x**n)*log(x), x) == \
+    n*x*x**n*log(x)/(n**2 + 2*n + 1) + x*x**n*log(x)/(n**2 + 2*n + 1) - \
+    x*x**n/(n**2 + 2*n + 1)

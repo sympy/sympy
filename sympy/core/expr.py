@@ -153,45 +153,80 @@ class Expr(Basic, EvalfMixin):
     def __rmod__(self, other):
         return Mod(other, self)
 
+    def __int__(self):
+        from sympy import round
+        # Although we only need to round to the units position, we'll
+        # get one more digit so the extra testing below can be avoided
+        # unless the rounded value rounded to an integer, e.g. if an
+        # expression were equal to 1.9 and we rounded to the unit position
+        # we would get a 2 and would not know if this rounded up or not
+        # without doing a test (as done below). But if we keep an extra
+        # digit we know that 1.9 is not the same as 1 and there is no
+        # need for further testing: our int value is correct. If the value
+        # were 1.99, however, this would round to 2.0 and our int value is
+        # off by one. So...if our round value is the same as the int value
+        # (regardless of how much extra work we do to calculate extra decimal
+        # places) we need to test whether we are off by one or not.
+        r = round(self, 1)
+        i = int(C.Integer(r))
+        if not i:
+            return 0
+        # off-by-one check
+        if i == r:
+            isign = 1 if i > 0 else -1
+            x = C.Dummy()
+            # in the following (self - i).evalf(1) will not work while
+            # (self - r).evalf(1) and the use of subs does; if the test that
+            # was added when this comment was added passes, it might be safe
+            # to simply use sign to compute this rather than doing this by hand:
+            diff_sign = 1 if (self - x).evalf(1, subs={x: i}) > 0 else -1
+            if diff_sign != isign:
+                i -= isign
+        return i
+
     def __float__(self):
+        # Don't bother testing if it's a number; if it's not this is going
+        # to fail, and if it is we still need to check that it evalf'ed to
+        # a number.
         result = self.evalf()
         if result.is_Number:
             return float(result)
-        else:
-            raise ValueError("Symbolic value, can't compute")
+        if result.is_number and result.as_real_imag()[1]:
+            raise TypeError("can't convert complex to float")
+        raise TypeError("can't convert expression to float")
 
     def __complex__(self):
         result = self.evalf()
         re, im = result.as_real_imag()
         return complex(float(re), float(im))
 
-    @_sympifyit('other', False) # sympy >  other
-    def __lt__(self, other):
+    @_sympifyit('other', False)  # sympy >  other
+    def __ge__(self, other):
         dif = self - other
-        if dif.is_negative != dif.is_nonnegative:
-            return dif.is_negative
-        return C.StrictInequality(self, other)
-
-    @_sympifyit('other', True)  # sympy >  other
-    def __gt__(self, other):
-        dif = self - other
-        if dif.is_positive !=  dif.is_nonpositive:
-            return dif.is_positive
-        return C.StrictInequality(other, self)
+        if dif.is_nonnegative != dif.is_negative:
+            return dif.is_nonnegative
+        return C.GreaterThan(self, other)
 
     @_sympifyit('other', False) # sympy >  other
     def __le__(self, other):
         dif = self - other
         if dif.is_nonpositive != dif.is_positive:
             return dif.is_nonpositive
-        return C.Inequality(self, other)
+        return C.LessThan(self, other)
 
-    @_sympifyit('other', True)  # sympy >  other
-    def __ge__(self, other):
+    @_sympifyit('other', False)  # sympy >  other
+    def __gt__(self, other):
         dif = self - other
-        if dif.is_nonnegative != dif.is_negative:
-            return dif.is_nonnegative
-        return C.Inequality(other, self)
+        if dif.is_positive !=  dif.is_nonpositive:
+            return dif.is_positive
+        return C.StrictGreaterThan(self, other)
+
+    @_sympifyit('other', False) # sympy >  other
+    def __lt__(self, other):
+        dif = self - other
+        if dif.is_negative != dif.is_nonnegative:
+            return dif.is_negative
+        return C.StrictLessThan(self, other)
 
     @staticmethod
     def _from_mpmath(x, prec):
@@ -510,7 +545,7 @@ class Expr(Basic, EvalfMixin):
                     if factor.is_number:
                         try:
                             coeff *= complex(factor)
-                        except ValueError:
+                        except TypeError:
                             pass
                         else:
                             continue
@@ -661,6 +696,11 @@ class Expr(Basic, EvalfMixin):
         When x is noncommutative, the coeff to the left (default) or right of x
         can be returned. The keyword 'right' is ignored when x is commutative.
 
+        See Also
+        ========
+
+        as_coefficient
+
         Examples
         ========
 
@@ -756,21 +796,16 @@ class Expr(Basic, EvalfMixin):
         def arglist(x):
             """ Return list of x's args when treated as a Mul after checking
             to see if a negative Rational is present (in which case it is made
-            positive and a -1 is added to the list).
+            positive and a -1 is prepended to the list).
             """
 
-            margs = list(Mul.make_args(x))
-            try:
-                assert Mul.make_args(S.One)
-                # replace try/except with the following
-                if margs[0].is_Rational and margs[0].is_negative and margs[0] != S.NegativeOne:
-                    margs.append(S.NegativeOne)
-                    margs[0] *= -1
-            except AssertionError:
-                if margs and margs[0].is_Rational and margs[0].is_negative and margs[0] != S.NegativeOne:
-                    margs.append(S.NegativeOne)
-                    margs[0] *= -1
-            return margs
+            c, margs = x.as_coeff_mul()
+            if c is not S.One:
+                if c is not S.NegativeOne and c.is_negative:
+                    margs = (S.NegativeOne, -c) + margs
+                else:
+                    margs = (c,) + margs
+            return list(margs)
 
         def find(l, sub, first=True):
             """ Find where list sub appears in list l. When ``first`` is True
@@ -921,9 +956,14 @@ class Expr(Basic, EvalfMixin):
     def as_coefficient(self, expr):
         """
         Extracts symbolic coefficient at the given expression. In
-        other words, this functions separates 'self' into product
+        other words, this functions separates 'self' into the product
         of 'expr' and 'expr'-free coefficient. If such separation
         is not possible it will return None.
+
+        See Also
+        ========
+
+        coeff
 
         Examples
         ========
@@ -1305,8 +1345,7 @@ class Expr(Basic, EvalfMixin):
         """
         if not self:
             return S.One, S.Zero
-        c, r = self.as_coeff_mul()
-        r = Mul._from_args(r)
+        c, r = self.as_coeff_Mul(rational=True)
         if c.is_negative:
             c, r = -c, -r
         return c, r
@@ -1555,13 +1594,13 @@ class Expr(Basic, EvalfMixin):
                 if subs1 != None:
                     return subs1 + terms[0]
         elif self.is_Mul:
-            self_coeff, self_terms = self.as_coeff_mul()
+            self_coeff, self_terms = self.as_coeff_Mul(rational=True)
             if c.is_Mul:
-                c_coeff, c_terms = c.as_coeff_mul()
+                c_coeff, c_terms = c.as_coeff_Mul(rational=True)
                 if c_terms == self_terms:
                     new_coeff = self_coeff.extract_additively(c_coeff)
                     if new_coeff != None:
-                        return new_coeff * c._new_rawargs(*c_terms)
+                        return new_coeff * c_terms
             elif c == self_terms:
                 new_coeff = self_coeff.extract_additively(1)
                 if new_coeff != None:
@@ -1607,7 +1646,7 @@ class Expr(Basic, EvalfMixin):
             # As a last resort, we choose the one with greater value of .sort_key()
             return self.sort_key() < negative_self.sort_key()
 
-    def extract_branch_factor(self):
+    def extract_branch_factor(self, allow_half=False):
         """
         Try to write self as exp_polar(2*pi*I*n)*z in a nice way.
         Return (z, n).
@@ -1626,14 +1665,22 @@ class Expr(Basic, EvalfMixin):
         (y*exp_polar(2*pi*x), -1)
         >>> exp_polar(-I*pi/2).extract_branch_factor()
         (exp_polar(-I*pi/2), 0)
+
+        If allow_half is True, also extract exp_polar(I*pi):
+
+        >>> exp_polar(I*pi).extract_branch_factor(allow_half=True)
+        (1, 1/2)
+        >>> exp_polar(2*I*pi).extract_branch_factor(allow_half=True)
+        (1, 1)
+        >>> exp_polar(3*I*pi).extract_branch_factor(allow_half=True)
+        (1, 3/2)
+        >>> exp_polar(-I*pi).extract_branch_factor(allow_half=True)
+        (1, -1/2)
         """
         from sympy import exp_polar, pi, I, ceiling, Add
         n = S(0)
         res = S(1)
-        if self.is_Mul:
-            args = self.args
-        else:
-            args = [self]
+        args = Mul.make_args(self)
         exps = []
         for arg in args:
             if arg.func is exp_polar:
@@ -1654,9 +1701,16 @@ class Expr(Basic, EvalfMixin):
                     continue
             extras += [exp]
         coeff, tail = piimult.as_coeff_add()
-        branchfact = ceiling(coeff/2-S(1)/2)*2
+        # round down to nearest multiple of 2
+        branchfact = ceiling(coeff/2 - S(1)/2)*2
         n += branchfact/2
-        newexp = pi*I*Add(*((coeff - branchfact, ) + tail)) + Add(*extras)
+        c = coeff - branchfact
+        if allow_half:
+            nc = c.extract_additively(1)
+            if nc is not None:
+                n += S(1)/2
+                c = nc
+        newexp = pi*I*Add(*((c, ) + tail)) + Add(*extras)
         if newexp != 0:
             res *= exp_polar(newexp)
         return res, n
@@ -1880,6 +1934,7 @@ class Expr(Basic, EvalfMixin):
             -x
 
         """
+        from sympy import collect
         if x is None:
             syms = self.atoms(C.Symbol)
             if len(syms) > 1:
@@ -1972,7 +2027,10 @@ class Expr(Basic, EvalfMixin):
                 if (s1 + o).removeO() == s1:
                     o = S.Zero
 
-            return s1 + o
+            try:
+                return collect(s1,x) + o
+            except NotImplementedError:
+                return s1 + o
 
         else: # lseries handling
             def yield_lseries(s):
@@ -2092,8 +2150,8 @@ class Expr(Basic, EvalfMixin):
         never call this method directly (use .nseries() instead), so you don't
         have to write docstrings for _eval_nseries().
         """
-        from sympy.solvers.solvers import _filldedent
-        raise NotImplementedError(_filldedent("""
+        from sympy.utilities.misc import filldedent
+        raise NotImplementedError(filldedent("""
                      The _eval_nseries method should be added to
                      %s to give terms up to O(x**n) at x=0
                      from the positive direction so it is available when
@@ -2208,7 +2266,7 @@ class Expr(Basic, EvalfMixin):
             return c, e
         raise ValueError("cannot compute leadterm(%s, %s), got c=%s" % (self, x, c))
 
-    def as_coeff_Mul(self):
+    def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product. """
         return S.One, self
 
@@ -2297,12 +2355,12 @@ class Expr(Basic, EvalfMixin):
             terms = []
 
             for term in Add.make_args(expr):
-                coeff, tail = term.as_coeff_mul()
+                coeff, tail = term.as_coeff_Mul(rational=True)
 
                 coeff %= modulus
 
                 if coeff:
-                    terms.append(Mul(*((coeff,) + tail)))
+                    terms.append(coeff*tail)
 
             expr = Add(*terms)
 

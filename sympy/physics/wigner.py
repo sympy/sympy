@@ -27,7 +27,7 @@ AUTHORS:
 
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 """
-from sympy import Integer, pi, sqrt
+from sympy import Integer, pi, sqrt, sympify
 #from sage.rings.complex_number import ComplexNumber
 #from sage.rings.finite_rings.integer_mod import Mod
 
@@ -79,18 +79,14 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
     Rational number times the square root of a rational number
     (if ``prec=None``), or real number if a precision is given.
 
-    EXAMPLES::
+    Examples
+    ========
 
-        sage: wigner_3j(2, 6, 4, 0, 0, 0)
-        sqrt(5/143)
-        sage: wigner_3j(2, 6, 4, 0, 0, 1)
-        0
-        sage: wigner_3j(0.5, 0.5, 1, 0.5, -0.5, 0)
-        sqrt(1/6)
-        sage: wigner_3j(40, 100, 60, -10, 60, -50)
-        95608/18702538494885*sqrt(21082735836735314343364163310/220491455010479533763)
-        sage: wigner_3j(2500, 2500, 5000, 2488, 2400, -4888, prec=64)
-        7.60424456883448589e-12
+    >>> from sympy.physics.wigner import wigner_3j
+    >>> wigner_3j(2, 6, 4, 0, 0, 0)
+    sqrt(715)/143
+    >>> wigner_3j(2, 6, 4, 0, 0, 1)
+    0
 
     It is an error to have arguments that are not integer or half
     integer values::
@@ -262,7 +258,7 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    res = (-1) ** int(j_1 - j_2 + m_3) * sqrt(2 * j_3 + 1) * \
+    res = (-1) ** sympify(j_1 - j_2 + m_3) * sqrt(2 * j_3 + 1) * \
         wigner_3j(j_1, j_2, j_3, m_1, m_2, -m_3, prec)
     return res
 
@@ -336,10 +332,12 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
     Rational number times the square root of a rational number
     (if ``prec=None``), or real number if a precision is given.
 
-    EXAMPLES::
+    Examples
+    ========
 
-        sage: racah(3,3,3,3,3,3)
-        -1/14
+    >>> from sympy.physics.wigner import racah
+    >>> racah(3,3,3,3,3,3)
+    -1/14
 
     NOTES:
 
@@ -409,22 +407,14 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     Rational number times the square root of a rational number
     (if ``prec=None``), or real number if a precision is given.
 
-    EXAMPLES::
+    Examples
+    ========
 
-        sage: wigner_6j(3,3,3,3,3,3)
-        -1/14
-        sage: wigner_6j(5,5,5,5,5,5)
-        1/52
-        sage: wigner_6j(6,6,6,6,6,6)
-        309/10868
-        sage: wigner_6j(8,8,8,8,8,8)
-        -12219/965770
-        sage: wigner_6j(30,30,30,30,30,30)
-        36082186869033479581/87954851694828981714124
-        sage: wigner_6j(0.5,0.5,1,0.5,0.5,1)
-        1/6
-        sage: wigner_6j(200,200,200,200,200,200, prec=1000)*1.0
-        0.000155903212413242
+    >>> from sympy.physics.wigner import wigner_6j
+    >>> wigner_6j(3,3,3,3,3,3)
+    -1/14
+    >>> wigner_6j(5,5,5,5,5,5)
+    1/52
 
     It is an error to have arguments that are not integer or half
     integer values or do not fulfill the triangle relation::
@@ -512,35 +502,12 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     Rational number times the square root of a rational number
     (if ``prec=None``), or real number if a precision is given.
 
-    EXAMPLES:
+    Examples
+    ========
 
-    A couple of examples and test cases, note that for speed reasons a
-    precision is given::
-
-        sage: wigner_9j(1,1,1, 1,1,1, 1,1,0 ,prec=64) # ==1/18
-        0.0555555555555555555
-        sage: wigner_9j(1,1,1, 1,1,1, 1,1,1)
-        0
-        sage: wigner_9j(1,1,1, 1,1,1, 1,1,2 ,prec=64) # ==1/18
-        0.0555555555555555556
-        sage: wigner_9j(1,2,1, 2,2,2, 1,2,1 ,prec=64) # ==-1/150
-        -0.00666666666666666667
-        sage: wigner_9j(3,3,2, 2,2,2, 3,3,2 ,prec=64) # ==157/14700
-        0.0106802721088435374
-        sage: wigner_9j(3,3,2, 3,3,2, 3,3,2 ,prec=64) # ==3221*sqrt(70)/(246960*sqrt(105)) - 365/(3528*sqrt(70)*sqrt(105))
-        0.00944247746651111739
-        sage: wigner_9j(3,3,1, 3.5,3.5,2, 3.5,3.5,1 ,prec=64) # ==3221*sqrt(70)/(246960*sqrt(105)) - 365/(3528*sqrt(70)*sqrt(105))
-        0.0110216678544351364
-        sage: wigner_9j(100,80,50, 50,100,70, 60,50,100 ,prec=1000)*1.0
-        1.05597798065761e-7
-        sage: wigner_9j(30,30,10, 30.5,30.5,20, 30.5,30.5,10 ,prec=1000)*1.0 # ==(80944680186359968990/95103769817469)*sqrt(1/682288158959699477295)
-        0.0000325841699408828
-        sage: wigner_9j(64,62.5,114.5, 61.5,61,112.5, 113.5,110.5,60, prec=1000)*1.0
-        -3.41407910055520e-39
-        sage: wigner_9j(15,15,15, 15,3,15, 15,18,10, prec=1000)*1.0
-        -0.0000778324615309539
-        sage: wigner_9j(1.5,1,1.5, 1,1,1, 1.5,1,1.5)
-        0
+    >>> from sympy.physics.wigner import wigner_9j
+    >>> wigner_9j(1,1,1, 1,1,1, 1,1,0 ,prec=64) # ==1/18
+    0.05555555...
 
     It is an error to have arguments that are not integer or half
     integer values or do not fulfill the triangle relation::
@@ -601,22 +568,14 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     Rational number times the square root of a rational number
     (if ``prec=None``), or real number if a precision is given.
 
-    EXAMPLES::
+    Examples
+    ========
 
-        sage: gaunt(1,0,1,1,0,-1)
-        -1/2/sqrt(pi)
-        sage: gaunt(1,0,1,1,0,0)
-        0
-        sage: gaunt(29,29,34,10,-5,-5)
-        1821867940156/215552371055153321*sqrt(22134)/sqrt(pi)
-        sage: gaunt(20,20,40,1,-1,0)
-        28384503878959800/74029560764440771/sqrt(pi)
-        sage: gaunt(12,15,5,2,3,-5)
-        91/124062*sqrt(36890)/sqrt(pi)
-        sage: gaunt(10,10,12,9,3,-12)
-        -98/62031*sqrt(6279)/sqrt(pi)
-        sage: gaunt(1000,1000,1200,9,3,-12).n(64)
-        0.00689500421922113448
+    >>> from sympy.physics.wigner import gaunt
+    >>> gaunt(1,0,1,1,0,-1)
+    -1/(2*sqrt(pi))
+    >>> gaunt(1000,1000,1200,9,3,-12).n(64)
+    0.00689500421922113448...
 
     It is an error to use non-integer values for `l` and `m`::
 

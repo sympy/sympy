@@ -540,7 +540,12 @@ class Integral(Expr):
                         function = antideriv._eval_interval(x, a, b)
                         function = Poly(function, *gens)
                     else:
-                        function = antideriv._eval_interval(x, a, b)
+                        try:
+                            function = antideriv._eval_interval(x, a, b)
+                        except NotImplementedError:
+                            # This can happen if _eval_interval depends in a
+                            # complicated way on limits that cannot be computed
+                            undone_limits.append(xab)
 
         if undone_limits:
             return self.func(*([function] + undone_limits))
@@ -1087,13 +1092,13 @@ def integrate(*args, **kwargs):
     """
     meijerg = kwargs.pop('meijerg', None)
     conds = kwargs.pop('conds', 'piecewise')
+    evaluate = kwargs.pop('evaluate', True)
     integral = Integral(*args, **kwargs)
 
-    if isinstance(integral, Integral):
+    if evaluate and isinstance(integral, Integral):
         return integral.doit(deep = False, meijerg = meijerg, conds = conds)
     else:
         return integral
-
 
 @xthreaded
 def line_integrate(field, curve, vars):

@@ -44,6 +44,33 @@ unit:
     >>> (u.m/u.s/mph).n(2)
     2.2
 
+The units are defined in terms of base units, so when you divide similar
+units you will obtain a pure number. This means, for example, that if you
+divide a real-world mass (like grams) by the atomic mass unit (amu) you
+will obtain Avogadro's number. To obtain the answer in moles you
+should divide by the unit ``avogadro``:
+
+    >>> u.grams/u.amu
+    602214179000000000000000
+    >>> _/u.avogadro
+    mol
+
+For chemical calculations the unit ``mmu`` (molar mass unit) has been
+defined so this conversion is handled automatically. For example, the
+number of moles in 1 kg of water might be calculated as:
+
+    >>> u.kg/(18*u.mmu).n(3)
+    55.5*mol
+
+If you need the number of atoms in a mol as a pure number you can use
+``avogadro_number`` but if you need it as a dimensional quantity you should use
+``avogadro_constant``. (``avogadro`` is a shorthand for the dimensional
+quantity.)
+
+    >>> u.avogadro_number
+    602214179000000000000000
+    >>> u.avogadro_constant
+    602214179000000000000000/mol
 """
 
 from sympy import Rational, pi
@@ -216,7 +243,8 @@ Z0 = vacuum_impedance = u0 * c
 planck = Rational('6.62606896') * ten**-34 * J*s
 hbar = planck / (2*pi)
 
-avogadro = (Rational('6.02214179') * 10**23) / mol
+avogadro_number = Rational('6.02214179') * 10**23
+avogadro = avogadro_constant = avogadro_number / mol
 boltzmann = Rational('1.3806505') * ten**-23 * J / K
 
 gee = gees = Rational('9.80665') * m/s**2
@@ -228,7 +256,8 @@ pound = pounds = 0.45359237 * kg * gee #exact
 psi = pound / inch ** 2
 dHg0 = 13.5951 # approx value at 0 C
 mmHg = dHg0 * 9.80665 * Pa
-amu = amus = gram / avogadro
+amu = amus = gram / avogadro / mol
+mmu = mmus = gram / mol
 quart = quarts = 231 * inch**3
 eV = 1.602176487e-19 * J
 

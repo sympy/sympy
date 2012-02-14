@@ -1758,6 +1758,9 @@ def test_primitive():
     assert f.primitive() == (1, f)
     assert g.primitive() == (1.0, g)
 
+    assert primitive(S('-3*x/4 + y + 11/8')) == \
+        S('(1/8, -6*x + 8*y + 11)')
+
 def test_compose():
     f = x**12+20*x**10+150*x**8+500*x**6+625*x**4-2*x**3-10*x+9
     g = x**4 - 2*x + 9
@@ -2677,3 +2680,7 @@ def test_poly_matching_consistency():
     # http://code.google.com/p/sympy/issues/detail?id=2415
     assert I * Poly(x, x) == Poly(I*x, x)
     assert Poly(x, x) * I == Poly(I*x, x)
+
+@XFAIL
+def test_issue_2687():
+    assert expand(factor(expand((x - I*y)*(z - I*t)), extension=[I])) == -I*t*x - t*y + x*z - I*y*z

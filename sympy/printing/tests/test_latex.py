@@ -1,9 +1,14 @@
 from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
-    Function, factorial, factorial2, floor, ceiling, Abs, re, im, conjugate, gamma,
+    Function, factorial, factorial2, floor, ceiling, Abs, re, im, conjugate,
     Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
-    Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg,
-    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan,
-    cot, coth, re, im, root, arg, zeta, binomial, RisingFactorial, FallingFactorial)
+    Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg, polar_lift,
+    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan, Min, Max,
+    cot, coth, re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
+    FallingFactorial, polylog, lerchphi, Ei, expint, Si, Ci, Shi, Chi, gamma, Tuple,
+    MellinTransform, InverseMellinTransform, LaplaceTransform, InverseLaplaceTransform,
+    FourierTransform, InverseFourierTransform, SineTransform, InverseSineTransform,
+    CosineTransform, InverseCosineTransform)
+
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
@@ -94,7 +99,7 @@ def test_latex_symbols_failing():
 
 def test_latex_functions():
     assert latex(exp(x)) == "e^{x}"
-    assert latex(exp(1)+exp(2)) == "e + e^{2}"
+    assert latex(exp(1) + exp(2)) == "e + e^{2}"
 
     f = Function('f')
     assert latex(f(x)) == '\\operatorname{f}{\\left (x \\right )}'
@@ -105,16 +110,17 @@ def test_latex_functions():
     assert latex(sin(x)) == r"\sin{\left (x \right )}"
     assert latex(sin(x), fold_func_brackets=True) == r"\sin {x}"
     assert latex(sin(2*x**2), fold_func_brackets=True) == \
-    r"\sin {2 x^{2}}"
+        r"\sin {2 x^{2}}"
     assert latex(sin(x**2), fold_func_brackets=True) == \
-    r"\sin {x^{2}}"
+        r"\sin {x^{2}}"
 
     assert latex(asin(x)**2) == r"\operatorname{asin}^{2}{\left (x \right )}"
-    assert latex(asin(x)**2,inv_trig_style="full") == \
+    assert latex(asin(x)**2, inv_trig_style="full") == \
         r"\arcsin^{2}{\left (x \right )}"
-    assert latex(asin(x)**2,inv_trig_style="power") == \
+    assert latex(asin(x)**2, inv_trig_style="power") == \
         r"\sin^{-1}{\left (x \right )}^{2}"
-    assert latex(asin(x**2),inv_trig_style="power",fold_func_brackets=True) == \
+    assert latex(asin(x**2), inv_trig_style="power",
+                 fold_func_brackets=True) == \
         r"\sin^{-1} {x^{2}}"
 
     assert latex(factorial(k)) == r"k!"
@@ -123,16 +129,18 @@ def test_latex_functions():
     assert latex(factorial2(k)) == r"k!!"
     assert latex(factorial2(-k)) == r"\left(- k\right)!!"
 
-    assert latex(binomial(2,k)) == r"{\binom{2}{k}}"
+    assert latex(binomial(2, k)) == r"{\binom{2}{k}}"
 
-    assert latex(FallingFactorial(3,k)) == r"{\left(3\right)}_{\left(k\right)}"
-    assert latex(RisingFactorial(3,k)) == r"{\left(3\right)}^{\left(k\right)}"
+    assert latex(FallingFactorial(3, k)) == r"{\left(3\right)}_{\left(k\right)}"
+    assert latex(RisingFactorial(3, k)) == r"{\left(3\right)}^{\left(k\right)}"
 
     assert latex(floor(x)) == r"\lfloor{x}\rfloor"
     assert latex(ceiling(x)) == r"\lceil{x}\rceil"
+    assert latex(Min(x, 2, x**3)) == r"\min\left(2, x, x^{3}\right)"
+    assert latex(Max(x, 2, x**3)) == r"\max\left(2, x, x^{3}\right)"
     assert latex(Abs(x)) == r"\lvert{x}\rvert"
     assert latex(re(x)) == r"\Re{x}"
-    assert latex(re(x+y)) == r"\Re {\left (x + y \right )}"
+    assert latex(re(x + y)) == r"\Re {\left (x + y \right )}"
     assert latex(im(x)) == r"\Im{x}"
     assert latex(conjugate(x)) == r"\overline{x}"
     assert latex(gamma(x)) == r"\Gamma\left(x\right)"
@@ -144,9 +152,33 @@ def test_latex_functions():
     assert latex(coth(x)) == r'\coth{\left (x \right )}'
     assert latex(re(x)) == r'\Re{x}'
     assert latex(im(x)) == r'\Im{x}'
-    assert latex(root(x,y)) == r'x^{\frac{1}{y}}'
+    assert latex(root(x, y)) == r'x^{\frac{1}{y}}'
     assert latex(arg(x)) == r'\arg{\left (x \right )}'
-    assert latex(zeta(x)) == r'\zeta{\left (x \right )}'
+    assert latex(zeta(x)) == r'\zeta\left(x\right)'
+
+    assert latex(zeta(x)) == r"\zeta\left(x\right)"
+    assert latex(zeta(x)**2) == r"\zeta^{2}\left(x\right)"
+    assert latex(zeta(x, y)) == r"\zeta\left(x, y\right)"
+    assert latex(zeta(x, y)**2) == r"\zeta^{2}\left(x, y\right)"
+    assert latex(dirichlet_eta(x)) == r"\eta\left(x\right)"
+    assert latex(dirichlet_eta(x)**2) == r"\eta^{2}\left(x\right)"
+    assert latex(polylog(x, y)) == r"\operatorname{Li}_{x}\left(y\right)"
+    assert latex(polylog(x, y)**2) == r"\operatorname{Li}_{x}^{2}\left(y\right)"
+    assert latex(lerchphi(x, y, n)) == r"\Phi\left(x, y, n\right)"
+    assert latex(lerchphi(x, y, n)**2) == r"\Phi^{2}\left(x, y, n\right)"
+
+    assert latex(Ei(x)) == r'\operatorname{Ei}{\left (x \right )}'
+    assert latex(Ei(x)**2) == r'\operatorname{Ei}^{2}{\left (x \right )}'
+    assert latex(expint(x, y)**2) == r'\operatorname{E}_{x}^{2}\left(y\right)'
+    assert latex(Shi(x)**2) == r'\operatorname{Shi}^{2}{\left (x \right )}'
+    assert latex(Si(x)**2) == r'\operatorname{Si}^{2}{\left (x \right )}'
+    assert latex(Ci(x)**2) == r'\operatorname{Ci}^{2}{\left (x \right )}'
+    assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}{\left (x \right )}'
+
+    # Test latex printing of function names with "_"
+    assert latex(polar_lift(0)) == r"\operatorname{polar\_lift}{\left (0 \right )}"
+    assert latex(polar_lift(0)**3) == r"\operatorname{polar\_lift}^{3}{\left (0 \right )}"
+
 
 def test_hyper_printing():
     from sympy import pi, Tuple
@@ -410,3 +442,46 @@ def test_custom_symbol_names():
     assert latex(x + y, symbol_names={x:"x_i"}) == "x_i + y"
     assert latex(x**2, symbol_names={x:"x_i"}) == "x_i^{2}"
     assert latex(x + y, symbol_names={x:"x_i", y:"y_j"}) == "x_i + y_j"
+
+def test_matAdd():
+    from sympy import MatrixSymbol
+    from sympy.printing.latex import LatexPrinter
+    C = MatrixSymbol('C', 5, 5)
+    B = MatrixSymbol('B', 5, 5)
+    l = LatexPrinter()
+    assert l._print_MatAdd(C - 2*B) in ['- 2 B + C', '+ C - 2 B']
+    assert l._print_MatAdd(C + 2*B) in ['+ 2 B + C', '+ C + 2 B']
+
+def test_latex_RandomDomain():
+    from sympy.stats import Normal, Die, Exponential, pspace, Where
+    X = Normal(0, 1, symbol=Symbol('x1'))
+    assert latex(Where(X>0)) == "Domain: 0 < x_{1}"
+
+    D = Die(6, symbol=Symbol('d1'))
+    assert latex(Where(D>4)) == r"Domain: d_{1} = 5 \vee d_{1} = 6"
+
+    A = Exponential(1, symbol=Symbol('a'))
+    B = Exponential(1, symbol=Symbol('b'))
+    assert latex(pspace(Tuple(A,B)).domain) =="Domain: 0 \leq b \wedge 0 \leq a"
+
+def test_integral_transforms():
+    x = Symbol("x")
+    k = Symbol("k")
+    f = Function("f")
+    a = Symbol("a")
+    b = Symbol("b")
+
+    assert latex(MellinTransform(f(x), x, k)) == r"\mathcal{M}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
+    assert latex(InverseMellinTransform(f(k), k, x, a,b)) == r"\mathcal{M}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+
+    assert latex(LaplaceTransform(f(x), x, k)) == r"\mathcal{L}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
+    assert latex(InverseLaplaceTransform(f(k), k, x, (a,b))) == r"\mathcal{L}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+
+    assert latex(FourierTransform(f(x), x, k)) == r"\mathcal{F}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
+    assert latex(InverseFourierTransform(f(k), k, x)) == r"\mathcal{F}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+
+    assert latex(CosineTransform(f(x), x, k)) == r"\mathcal{COS}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
+    assert latex(InverseCosineTransform(f(k), k, x)) == r"\mathcal{COS}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+
+    assert latex(SineTransform(f(x), x, k)) == r"\mathcal{SIN}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
+    assert latex(InverseSineTransform(f(k), k, x)) == r"\mathcal{SIN}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"

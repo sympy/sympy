@@ -220,6 +220,8 @@ class Basic(PicklableWithSlots):
         for l,r in zip(st,ot):
             if isinstance(l, Basic):
                 c = l.compare(r)
+            elif isinstance(l, frozenset):
+                c = 0
             else:
                 c = cmp(l, r)
             if c: return c
@@ -375,6 +377,11 @@ class Basic(PicklableWithSlots):
         """
 
         if type(self) is not type(other):
+            # issue 3001 a**1.0 == a like a**2.0 == a**2
+            while isinstance(self, C.Pow) and self.exp == 1:
+                self = self.base
+            while isinstance(other, C.Pow) and other.exp == 1:
+                other = other.base
             try:
                 other = _sympify(other)
             except SympifyError:

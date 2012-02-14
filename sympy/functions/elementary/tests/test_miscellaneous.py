@@ -1,9 +1,9 @@
-from sympy import S
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Rational
 from sympy.utilities.pytest import raises
-from sympy.functions.elementary.miscellaneous import sqrt, root, Min, Max, real_root
-from sympy import I, cos, sin, oo
+_pyround = round
+from sympy.functions.elementary.miscellaneous import sqrt, root, Min, Max, real_root, round
+from sympy import S, Float, I, cos, sin, oo, pi, Add
 
 def test_Min():
     from sympy.abc import x, y, z
@@ -164,3 +164,60 @@ def test_nthroot():
     r2 = r1**2
     r3 = root(-1, 4)
     assert real_root(r1 + r2 + r3) == -1 + r2 + r3
+
+def test_round():
+    from sympy.abc import x
+
+    assert round(Float('0.1249999'), 2) == 0.12
+    d20 = 12345678901234567890
+    ans = round(S(d20), 2)
+    assert ans.is_Float and ans == d20
+    ans = round(S(d20), -2)
+    assert ans.is_Float and ans == 12345678901234567900
+    assert round(S('1/7'), 4) == 0.1429
+    assert round(S('.[12345]'), 4) == 0.1235
+    assert round(S('.1349'), 2) == 0.13
+    n = S(12345)
+    ans = round(n)
+    assert ans.is_Float
+    assert ans == n
+    ans = round(n, 1)
+    assert ans.is_Float
+    assert ans == n
+    ans = round(n, 4)
+    assert ans.is_Float
+    assert ans == n
+    assert round(n, -1) == 12350
+
+    r = round(n, -4)
+    assert r == 10000
+    # in fact, it should equal many values since __eq__
+    # compares at equal precision
+    assert all(r == i for i in range(9984, 10049))
+
+    assert round(n, -5) == 0
+
+    assert round(pi + sqrt(2), 2) == 4.56
+    assert round(10*(pi + sqrt(2)), -1) == 50
+    raises(TypeError, 'round(x + 2, 2)')
+    assert round(S(2.3), 1) == 2.3
+    e = round(12.345, 2)
+    assert e == _pyround(12.345, 2)
+    assert type(e) is float
+
+    assert round(Float(.3, 3) + 2*pi) == 7
+    assert round(Float(.3, 3) + 2*pi*100) == 629
+    assert round(Float(.03, 3) + 2*pi/100, 5) == 0.09283
+    assert round(Float(.03, 3) + 2*pi/100, 4) == 0.0928
+
+    assert round(S.Zero) == 0
+
+    a = (Add(1, Float('1.'+'9'*27, ''), evaluate=0))
+    assert round(a, 10) == Float('3.0000000000','')
+    assert round(a, 25) == Float('3.0000000000000000000000000','')
+    assert round(a, 26) == Float('3.00000000000000000000000000','')
+    assert round(a, 27) == Float('2.999999999999999999999999999','')
+    assert round(a, 30) == Float('2.999999999999999999999999999','')
+
+    raises(TypeError, 'round(x)')
+    raises(TypeError, 'round(1 + 3*I)')

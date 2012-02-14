@@ -1,4 +1,5 @@
 from sympy.core import S, C, Basic, Interval
+from sympy.core.function import _coeff_isneg
 from sympy.utilities import group
 
 from sympy.printing.printer import Printer
@@ -72,7 +73,7 @@ class PrettyPrinter(Printer):
         except KeyError:
             return self.emptyPrinter(e)
 
-    # Infinity inherits from Rational, so we have to override _print_XXX order
+    # Infinity inherits from Number, so we have to override _print_XXX order
     _print_Infinity         = _print_Atom
     _print_NegativeInfinity = _print_Atom
     _print_EmptySet         = _print_Atom
@@ -924,6 +925,26 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e)
 
+    def _print_expint(self, e):
+        from sympy import Function
+        if e.args[0].is_Integer and self._use_unicode:
+            return self._print_Function(Function('E_%s' % e.args[0])(e.args[1]))
+        return self._print_Function(e)
+
+    def _print_Chi(self, e):
+        # This needs a special case since otherwise it comes out as greek
+        # letter chi...
+        prettyFunc = prettyForm("Chi")
+        prettyArgs = prettyForm(*self._print_seq(e.args).parens())
+
+        pform = prettyForm(binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
+
+        # store pform parts so it can be reassembled e.g. when powered
+        pform.prettyFunc = prettyFunc
+        pform.prettyArgs = prettyArgs
+
+        return pform
+
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
             terms = list(expr.args)
@@ -945,7 +966,7 @@ class PrettyPrinter(Printer):
             return prettyForm(binding=prettyForm.NEG, *pform)
 
         for i, term in enumerate(terms):
-            if term.is_Mul and term.as_coeff_mul()[0] < 0:
+            if term.is_Mul and _coeff_isneg(term):
                 pform = self._print(-term)
                 pforms.append(pretty_negative(pform, i))
             elif term.is_Rational and term.q > 1:
@@ -1361,6 +1382,22 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*self._print_seq(e.args).parens())
         pform = prettyForm(*pform.left('atan2'))
         return pform
+
+    def _print_RandomDomain(self, d):
+        try:
+            pform = self._print('Domain: ')
+            pform = prettyForm(*pform.right(self._print(d.as_boolean())))
+            return pform
+
+        except:
+            try:
+                pform = self._print('Domain: ')
+                pform = prettyForm(*pform.right(self._print(d.symbols)))
+                pform = prettyForm(*pform.right(self._print(' in ')))
+                pform = prettyForm(*pform.right(self._print(d.set)))
+                return pform
+            except:
+                return self._print(None)
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

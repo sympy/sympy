@@ -149,8 +149,7 @@ def test_simplify():
     A = Matrix([[2*k-m*w**2, -k], [-k, k-m*w**2]]).inv()
 
     assert simplify((A*Matrix([0,f]))[1]) == \
-        f/(-k**2/(2*k - m*w**2) + k - m*w**2)
-
+        f*(2*k - m*w**2)/(k**2 - 3*k*m*w**2 + m**2*w**4)
     a, b, c, d, e, f, g, h, i = symbols('a,b,c,d,e,f,g,h,i')
 
     f_1 = x*a + y*b + z*c - 1
@@ -172,6 +171,8 @@ def test_simplify():
 
     assert simplify(log(2) + log(3)) == log(6)
     assert simplify(log(2*x) - log(2)) == log(x)
+
+    assert simplify(hyper([], [], x)) == exp(x)
 
 def test_simplify_other():
     assert simplify(sin(x)**2 + cos(x)**2) == 1
@@ -412,7 +413,8 @@ def test_collect_4():
     a, b, c, x = symbols('a,b,c,x')
 
     assert collect(a*x**c + b*x**c, x**c) == x**c*(a + b)
-    assert collect(a*x**(2*c) + b*x**(2*c), x**c) == (x**2)**c*(a + b)
+    # issue 2997: 2 stays with c (unless c is integer or x is positive0
+    assert collect(a*x**(2*c) + b*x**(2*c), x**c) == x**(2*c)*(a + b)
 
 def test_collect_5():
     """Collect with respect to a tuple"""
@@ -730,6 +732,14 @@ def test_powdenest():
     assert powdenest((4**x)**y) == 2**(2*x*y)
     assert powdenest(4**x*y) == 2**(2*x)*y
 
+def test_powdenest_polar():
+    from sympy import powdenest
+    x, y, z = symbols('x y z', polar=True)
+    a, b, c = symbols('a b c')
+    assert powdenest((x*y*z)**a) == x**a*y**a*z**a
+    assert powdenest((x**a*y**b)**c) == x**(a*c)*y**(b*c)
+    assert powdenest(((x**a)**b*y**c)**c) == x**(a*b*c)*y**(c**2)
+
 @XFAIL
 def test_issue_2706():
     assert (((gamma(x)*hyper((),(),x))*pi)**2).is_positive is None
@@ -867,8 +877,13 @@ def test_radsimp():
         (-50*sqrt(42) - 133*sqrt(5) - 34*sqrt(70) -
         145*sqrt(3) + 22*sqrt(105) + 185*sqrt(2) +
         62*sqrt(30) + 135*sqrt(7), 215)
+    z = radsimp(1/(1 + r2/3 + r3/5 + r5 + r7))
+    assert len((3616791619821680643598*z).args) == 16
+    assert radsimp(1/z) == 1/z
+    assert radsimp(1/z, max_terms=20).expand() == 1 + r2/3 + r3/5 + r5 + r7
     assert radsimp(1/(r2*3)) == \
         sqrt(2)/6
+    assert radsimp(1/(r2*a + r3 + r5 + r7)) == 1/(r2*a + r3 + r5 + r7)
     assert radsimp(1/(r2*a + r2*b + r3 + r7)) == \
         ((sqrt(42)*(a + b) +
         sqrt(3)*(-a**2 - 2*a*b - b**2 - 2)  +
@@ -942,6 +957,9 @@ def test_combsimp_gamma():
            == 1
     assert combsimp(gamma(S(-1)/4)*gamma(S(-3)/4)) == 16*sqrt(2)*pi/3
 
+    assert simplify(combsimp(gamma(2*x)/gamma(x))) == \
+           2**(2*x - 1)*gamma(x + S(1)/2)/sqrt(pi)
+
 def test_unpolarify():
     from sympy import (exp_polar, polar_lift, exp, unpolarify, sin,
                        principal_branch)
@@ -984,3 +1002,7 @@ def test_unpolarify():
 
     # Test bools
     assert unpolarify(True) is True
+
+def test_issue_2998():
+    collect(a*y**(2.0*x)+b*y**(2.0*x),y**(x)) == y**(2.0*x)*(a + b)
+    collect(a*2**(2.0*x)+b*2**(2.0*x),2**(x)) == 2**(2.0*x)*(a + b)

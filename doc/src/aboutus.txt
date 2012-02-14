@@ -122,7 +122,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Tom Bachmann: fixes to Real
 #. Yuri Karadzhov: improvements to hyperbolic identities
 #. Vladimir Lagunov: improvements to the geometry module
-#. Matthew Rocklin: improvements to Number instantiation
+#. Matthew Rocklin: stats, sets, matrix expressions 
 #. Saptarshi Mandal: Test for an integral
 #. Gilbert Gede: Tests for solvers
 #. Anatolii Koval: Infinite 1D box example
@@ -188,6 +188,9 @@ want to be mentioned here, so see our repository history for a full list).
 #. Kendhia: Add XFAIL tests
 #. jerryma1121: See Also documentation for geometry
 #. Joachim Durchholz: corrected spacing issues identified by PyDev
+#. Martin Povišer: fix problem with rationaltools
+#. Siddhant Jain: See Also documentation for functions/special
+#. Kevin Hunter: Improvements to the inequality classes
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
@@ -237,4 +240,3 @@ wiki), all images and all documentation including this User's Guide is licensed
 using the new BSD license:
 
 .. literalinclude:: ../../LICENSE
-

@@ -7,13 +7,13 @@ def R_nl(n, l, nu, r):
     oscillator.
 
     ``n``
-        the "nodal" quantum number.  Corresponds to the number of nodes in the
-        wavefunction.  n >= 0
+        the "nodal" quantum number.  Corresponds to the number of nodes in
+        the wavefunction.  n >= 0
     ``l``
         the quantum number for orbital angular momentum
     ``nu``
-        mass-scaled frequency: nu = m*omega/(2*hbar) where `m' is the mass and
-        `omega` the frequency of the oscillator.
+        mass-scaled frequency: nu = m*omega/(2*hbar) where `m' is the mass
+        and `omega` the frequency of the oscillator.
         (in atomic units nu == omega/2)
     ``r``
         Radial coordinate
@@ -74,5 +74,13 @@ def E_nl(n, l, hw):
 
         E_nl = (2*n + l + 3/2)*hw
 
+    Examples
+    ========
+
+    >>> from sympy.physics.sho import E_nl
+    >>> from sympy import symbols
+    >>> x, y, z = symbols('x, y, z')
+    >>> E_nl(x, y, z)
+    z*(2*x + y + 3/2)
     """
     return (2*n + l + Rational(3, 2))*hw

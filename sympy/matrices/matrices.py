@@ -33,12 +33,23 @@ def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
 
+class DeferredVector(Symbol):
+    """A vector whose components are deferred (e.g. for use with lambdify)
 
-class DeferredVector(object):
-    def __init__(self,name):
-        self.name=name
-
+    >>> from sympy import DeferredVector, lambdify
+    >>> X = DeferredVector( 'X' )
+    >>> X
+    X
+    >>> expr = (X[0] + 2, X[2] + 3)
+    >>> func = lambdify( X, expr )
+    >>> func( [1, 2, 3] )
+    (3, 6)
+    """
     def __getitem__(self,i):
+        if i == -0:
+            i = 0
+        if i < 0:
+            raise IndexError('DeferredVector index out of range')
         component_name = '%s[%d]'%(self.name,i)
         return Symbol(component_name)
 
@@ -46,7 +57,7 @@ class DeferredVector(object):
         return sstr(self)
 
     def __repr__(self):
-        return sstr(self)
+        return "DeferredVector('%s')"%(self.name)
 
 
 class Matrix(object):
@@ -92,7 +103,7 @@ class Matrix(object):
                 self.cols = mat.cols
                 self.mat = mat[:]
                 return
-            elif hasattr(mat, "__array__"):
+            elif hasattr(mat, "__array__"): #pragma: no cover
                 # NumPy array or matrix or some other object that implements
                 # __array__. So let's first use this method to get a
                 # numpy.array() and then make a python list out of it.
@@ -521,6 +532,7 @@ class Matrix(object):
 
         dot
         cross
+
         multiply_elementwise
         """
         return matrix_multiply(self,b)
@@ -856,7 +868,9 @@ class Matrix(object):
         before it is inverted in order to properly detect zeros during
         pivoting. In difficult cases a custom zero detection function can
         be provided by setting the iszerosfunc argument to a function that
-        should return True if its argument is zero.
+        should return True if its argument is zero. The ADJ routine computes
+        the determinant and uses that to detect singular matrices in addition
+        to testing for zeros on the diagonal.
 
         See Also
         ========
@@ -1213,9 +1227,9 @@ class Matrix(object):
         [1, 2, 3, 4]
         [2, 3, 4, 5]
         [3, 4, 5, 6]
-        >>> m[0:1, 1]   #doctest: +NORMALIZE_WHITESPACE
+        >>> m[:1, 1]   #doctest: +NORMALIZE_WHITESPACE
         [1]
-        >>> m[0:2, 0:1] #doctest: +NORMALIZE_WHITESPACE
+        >>> m[:2, :1] #doctest: +NORMALIZE_WHITESPACE
         [0]
         [1]
         >>> m[2:4, 2:4] #doctest: +NORMALIZE_WHITESPACE
@@ -1374,6 +1388,8 @@ class Matrix(object):
             return self.applyfunc(lambda i: i.evalf(**options))
         else:
             return self.applyfunc(lambda i: i.evalf(prec, **options))
+
+    n = evalf
 
     def reshape(self, _rows, _cols):
         """
@@ -2641,7 +2657,7 @@ class Matrix(object):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        ok = self.rref()[0]
+        ok = self.rref(simplified=True)[0]
         if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
             raise ValueError("Matrix det == 0; not invertible.")
 
@@ -2662,7 +2678,7 @@ class Matrix(object):
             raise NonSquareMatrixError()
 
         big = self.row_join(self.eye(self.rows))
-        red = big.rref(iszerofunc=iszerofunc)[0]
+        red = big.rref(iszerofunc=iszerofunc, simplified=True)[0]
         if any(iszerofunc(red[j, j]) for j in range(red.rows)):
             raise ValueError("Matrix det == 0; not invertible.")
 
@@ -2686,14 +2702,14 @@ class Matrix(object):
         zero = d.equals(0)
         if zero is None:
             # if equals() can't decide, will rref be able to?
-            ok = self.rref()[0]
+            ok = self.rref(simplified=True)[0]
             zero = any(iszerofunc(ok[j, j]) for j in range(ok.rows))
         if zero:
-            raise ValueError("A Matrix must have non-zero determinant to invert.")
+            raise ValueError("Matrix det == 0; not invertible.")
 
         return self.adjugate()/d
 
-    def rref(self,simplified=False, iszerofunc=_iszero, simplify=sympy_simplify):
+    def rref(self, simplified=False, iszerofunc=_iszero, simplify=sympy_simplify):
         """
         Take any matrix and return reduced row-echelon form and indices of pivot vars
 
@@ -3208,14 +3224,14 @@ class Matrix(object):
                     to_the_right = M[0, i:]
                     to_the_bottom = M[i:, 0]
                 else:
-                    to_the_right = M[0:i, i:]
-                    to_the_bottom = M[i:, 0:i]
+                    to_the_right = M[:i, i:]
+                    to_the_bottom = M[i:, :i]
                 if any(to_the_right) or any(to_the_bottom):
                     i += 1
                     continue
                 else:
-                    sub_blocks.append(M[0:i, 0:i])
-                    if M.shape == M[0:i, 0:i].shape:
+                    sub_blocks.append(M[:i, :i])
+                    if M.shape == M[:i, :i].shape:
                         return
                     else:
                         recurse_sub_blocks(M[i:, i:])
@@ -4314,7 +4330,10 @@ class SparseMatrix(Matrix):
             tmp[i,i] = 1
         return tmp
 
-def list2numpy(l):
+    def __hash__(self):
+        return super(Matrix, self).__hash__()
+
+def list2numpy(l): # pragma: no cover
     """Converts python list of SymPy expressions to a NumPy array.
 
     See Also
@@ -4328,7 +4347,7 @@ def list2numpy(l):
         a[i] = s
     return a
 
-def matrix2numpy(m):
+def matrix2numpy(m): # pragma: no cover
     """Converts SymPy's matrix to a NumPy array.
 
     See Also

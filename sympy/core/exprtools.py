@@ -44,11 +44,12 @@ def decompose_power(expr):
         else:
             base, exp = expr, 1
     else:
-        exp, tail = exp.as_coeff_mul()
+        exp, tail = exp.as_coeff_Mul(rational=True)
 
-        if exp.is_Rational:
-            tail = _keep_coeff(Rational(1, exp.q), Mul(*tail))
-
+        if exp is S.NegativeOne:
+            base, exp = Pow(base, tail), -1
+        elif exp is not S.One:
+            tail = _keep_coeff(Rational(1, exp.q), tail)
             base, exp = Pow(base, tail), exp.p
         else:
             base, exp = expr, 1
@@ -375,10 +376,15 @@ def _gcd_terms(terms, isprimitive=False):
 
     return cont, numer, denom
 
-def gcd_terms(terms, isprimitive=False):
+def gcd_terms(terms, isprimitive=False, clear=True):
     """
     Compute the GCD of ``terms`` and put them together. If ``isprimitive`` is
     True the _gcd_terms will not run the primitive method on the terms.
+
+    ``clear`` controls the removal of integers from the denominator of an Add
+    expression. When True, all numerical denominator will be cleared; when
+    False the denominators will be cleared only if all terms had numerical
+    denominators.
 
     Examples
     ========
@@ -388,6 +394,12 @@ def gcd_terms(terms, isprimitive=False):
 
     >>> gcd_terms((x + 1)**2*y + (x + 1)*y**2)
     y*(x + 1)*(x + y + 1)
+    >>> gcd_terms(x/2 + 1)
+    (x + 2)/2
+    >>> gcd_terms(x/2 + 1, clear=False)
+    x/2 + 1
+    >>> gcd_terms(x/2 + y/2, clear=False)
+    (x + y)/2
 
     """
     terms = sympify(terms)
@@ -395,25 +407,25 @@ def gcd_terms(terms, isprimitive=False):
     if not isexpr or terms.is_Add:
         cont, numer, denom = _gcd_terms(terms, isprimitive)
         coeff, factors = cont.as_coeff_Mul()
-        return _keep_coeff(coeff, factors*numer/denom)
+        return _keep_coeff(coeff, factors*numer/denom, clear=clear)
 
     if terms.is_Atom:
         return terms
 
     if terms.is_Mul:
         c, args = terms.as_coeff_mul()
-        return _keep_coeff(c, Mul(*[gcd_terms(i, isprimitive) for i in args]))
+        return _keep_coeff(c, Mul(*[gcd_terms(i, isprimitive, clear) for i in args]), clear=clear)
 
     def handle(a):
         if iterable(a):
             if isinstance(a, Basic):
-                return a.func(*[gcd_terms(i, isprimitive) for i in a.args])
-            return type(a)([gcd_terms(i, isprimitive) for i in a])
-        return gcd_terms(a, isprimitive)
+                return a.func(*[gcd_terms(i, isprimitive, clear) for i in a.args])
+            return type(a)([gcd_terms(i, isprimitive, clear) for i in a])
+        return gcd_terms(a, isprimitive, clear)
     return terms.func(*[handle(i) for i in terms.args])
 
 
-def factor_terms(expr, radical=False):
+def factor_terms(expr, radical=False, clear=False):
     """Remove common factors from terms in all arguments without
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutatives) is performed.
@@ -421,16 +433,37 @@ def factor_terms(expr, radical=False):
     If radical=True then a radical common to all terms will be factored
     out of any Add sub-expressions of the expr.
 
+    If clear=False (default) then coefficients will not be separated
+    from a single Add if they can be distributed to leave one or more
+    terms with integer coefficients.
+
     Examples
     ========
 
-    >>> from sympy import factor_terms, Symbol
+    >>> from sympy import factor_terms, Symbol, Mul, primitive
     >>> from sympy.abc import x, y
     >>> factor_terms(x + x*(2 + 4*y)**3)
     x*(8*(2*y + 1)**3 + 1)
     >>> A = Symbol('A', commutative=False)
     >>> factor_terms(x*A + x*A + x*y*A)
     x*(y*A + 2*A)
+
+    When clear is False, a fraction will only appear factored out of an
+    Add expression if all terms of the Add have coefficients that are
+    fractions:
+
+    >>> factor_terms(x/2 + 1, clear=False)
+    x/2 + 1
+    >>> factor_terms(x/2 + 1, clear=True)
+    (x + 2)/2
+
+    This only applies when there is a single Add that the coefficient
+    multiplies:
+
+    >>> factor_terms(x*y/2 + y, clear=True)
+    y*(x + 2)/2
+    >>> factor_terms(x*y/2 + y, clear=False) == _
+    True
 
     """
 
@@ -439,12 +472,12 @@ def factor_terms(expr, radical=False):
 
     if not isinstance(expr, Basic) or expr.is_Atom:
         if is_iterable:
-            return type(expr)([factor_terms(i, radical=radical) for i in expr])
+            return type(expr)([factor_terms(i, radical=radical, clear=clear) for i in expr])
         return expr
 
-    if expr.is_Function or is_iterable or not hasattr(expr, 'args_cnc'):
+    if expr.is_Pow or expr.is_Function or is_iterable or not hasattr(expr, 'args_cnc'):
         args = expr.args
-        newargs = tuple([factor_terms(i, radical=radical) for i in args])
+        newargs = tuple([factor_terms(i, radical=radical, clear=clear) for i in args])
         if newargs == args:
             return expr
         return expr.func(*newargs)
@@ -458,8 +491,8 @@ def factor_terms(expr, radical=False):
         if nc[i] is not None:
             a.append(nc[i][0])
         a = Mul._from_args(a) # gcd_terms will fix up ordering
-        list_args[i] = gcd_terms(a, isprimitive=True)
+        list_args[i] = gcd_terms(a, isprimitive=True, clear=clear)
         # cancel terms that may not have cancelled
     p = Add._from_args(list_args) # gcd_terms will fix up ordering
-    p = gcd_terms(p, isprimitive=True).xreplace(ncreps)
-    return _keep_coeff(cont, p)
+    p = gcd_terms(p, isprimitive=True, clear=clear).xreplace(ncreps)
+    return _keep_coeff(cont, p, clear=clear)

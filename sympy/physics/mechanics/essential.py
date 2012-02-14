@@ -183,7 +183,7 @@ class Dyadic(object):
                 arg_str = mlp.doprint(ar[i][0])
                 if isinstance(ar[i][0], Add):
                     arg_str = '(%s)' % arg_str
-                if arg_str[0] == '-':
+                if arg_str.startswith('-'):
                     arg_str = arg_str[1:]
                     str_start = ' - '
                 else:
@@ -193,9 +193,9 @@ class Dyadic(object):
                           r"\otimes " +
                           mlp.doprint(ar[i][2]))
         outstr = ''.join(ol)
-        if outstr[0:3] == ' + ':
+        if outstr.startswith(' + '):
             outstr = outstr[3:]
-        elif outstr[0] == ' ':
+        elif outstr.startswith(' '):
             outstr = outstr[1:]
         return outstr
 
@@ -229,7 +229,7 @@ class Dyadic(object):
                         arg_str = mpp.doprint(ar[i][0])
                         if isinstance(ar[i][0], Add):
                             arg_str = u"(%s)" % arg_str
-                        if arg_str[0] == u"-":
+                        if arg_str.startswith(u"-"):
                             arg_str = arg_str[1:]
                             str_start = u" - "
                         else:
@@ -239,9 +239,9 @@ class Dyadic(object):
                                   u"\u2a02 " +
                                   mpp.doprint(ar[i][2]))
                 outstr = u"".join(ol)
-                if outstr[0:3] == u" + ":
+                if outstr.startswith(u" + "):
                     outstr = outstr[3:]
-                elif outstr[0] == " ":
+                elif outstr.startswith(" "):
                     outstr = outstr[1:]
                 return outstr
         return Fake()
@@ -338,9 +338,9 @@ class Dyadic(object):
                 ol.append(str_start + arg_str + '*(' + str(ar[i][1]) +
                           '|' + str(ar[i][2]) + ')')
         outstr = ''.join(ol)
-        if outstr[0:3] == ' + ':
+        if outstr.startswith(' + '):
             outstr = outstr[3:]
-        elif outstr[0] == ' ':
+        elif outstr.startswith(' '):
             outstr = outstr[1:]
         return outstr
 
@@ -520,10 +520,10 @@ class ReferenceFrame(object):
         indices : list (of strings)
             If custom indices are desired for console, pretty, and LaTeX
             printing, supply three as a list. The basis vectors can then be
-            accessed with the get_item method
+            accessed with the get_item method.
         latexs : list (of strings)
             If custom names are desired for LaTeX printing of each basis
-            vector, supply the names here in a list
+            vector, supply the names here in a list.
 
         Examples
         ========
@@ -1305,9 +1305,9 @@ class Vector(object):
                     ol.append(str_start + arg_str + '*' +
                               ar[i][1].latex_vecs[j])
         outstr = ''.join(ol)
-        if outstr[0:3] == ' + ':
+        if outstr.startswith(' + '):
             outstr = outstr[3:]
-        elif outstr[0] == ' ':
+        elif outstr.startswith(' '):
             outstr = outstr[1:]
         return outstr
 
@@ -1345,9 +1345,9 @@ class Vector(object):
                             ol.append(str_start + arg_str + '*' +
                                       ar[i][1].pretty_vecs[j])
                 outstr = u"".join(ol)
-                if outstr[0:3] == u" + ":
+                if outstr.startswith(u" + "):
                     outstr = outstr[3:]
-                elif outstr[0] == " ":
+                elif outstr.startswith(" "):
                     outstr = outstr[1:]
                 return outstr
         return Fake()
@@ -1424,9 +1424,9 @@ class Vector(object):
                         str_start = ' + '
                     ol.append(str_start + arg_str + '*' + ar[i][1].str_vecs[j])
         outstr = ''.join(ol)
-        if outstr[0:3] == ' + ':
+        if outstr.startswith(' + '):
             outstr = outstr[3:]
-        elif outstr[0] == ' ':
+        elif outstr.startswith(' '):
             outstr = outstr[1:]
         return outstr
 

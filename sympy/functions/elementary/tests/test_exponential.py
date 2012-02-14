@@ -15,6 +15,8 @@ def test_exp_values():
 
     assert exp(0) == 1
     assert exp(1) == E
+    assert exp(-1 + x).as_base_exp() == (S.Exp1, x - 1)
+    assert exp(1 + x).as_base_exp() == (S.Exp1, x + 1)
 
     assert exp(pi*I/2) == I
     assert exp(pi*I) == -1
@@ -45,6 +47,11 @@ def test_exp_log():
     assert log(x).inverse() == exp
     assert exp(x).inverse() == log
 
+    y = Symbol("y", polar=True)
+    z = Symbol("z")
+    assert log(exp_polar(z)) == z
+    assert exp(log(y)) == y
+
 def test_exp_expand():
     x = Symbol("x")
     y = Symbol("y")
@@ -74,17 +81,20 @@ def test_exp_infinity():
     y = Symbol('y')
     assert exp(I*y) != nan
     assert exp(I*oo) == nan
-    assert exp(y*I*oo) == nan
+    assert exp(-I*oo) == nan
+    assert exp(y*I*oo) != nan
 
 def test_exp_subs():
     x,y = symbols('x,y')
     assert (exp(3*log(x), evaluate=False)).subs(x**3,y**3) == x**3
     assert (exp(3*log(x), evaluate=False)).subs(x**2,5) == x**3
-    assert exp(3*log(x)).subs(x**2, y) == y**Rational(3,2)
+    assert exp(3*log(x)).subs(x**2, y) == x**3
     assert exp(5*x).subs(exp(7*x),y) == y**Rational(5,7)
-    assert exp(2*x+7).subs(exp(3*x),y) == y**Rational(2,3) * exp(7)
+    assert exp(2*x + 7).subs(exp(3*x),y) == y**Rational(2,3) * exp(7)
     assert exp(exp(x) + exp(x**2)).subs(exp(exp(x)), y) == y * exp(exp(x**2))
     assert exp(x).subs(E,y) == y**x
+    x = symbols('x', positive=True)
+    assert exp(3*log(x)).subs(x**2, y) == y**Rational(3,2)
 
 def test_exp_conjugate():
     x = Symbol('x')
@@ -283,5 +293,12 @@ def test_as_numer_denom():
     assert exp(-n).as_numer_denom() == (1, exp(n))
 
 def test_polar():
+    x, y = symbols('x y', polar=True)
+    z = Symbol('z')
+
     assert abs(exp_polar(I*4)) == 1
     assert exp_polar(I*10).n() == exp_polar(I*10)
+
+    assert log(exp_polar(z)) == z
+    assert log(x*y).expand() == log(x) + log(y)
+    assert log(x**z).expand() == z*log(x)

@@ -60,8 +60,8 @@ Then I step into (F7) and after a little debugging I get for example:
 
 .. image:: pics/winpdb2.png
 
-.. tip:: Make the winpdb window larger on your screen, it was just made smaller to fit in
-         this guide.
+.. tip:: Make the winpdb window larger on your screen, it was just made smaller
+         to fit in this guide.
 
 I see values of all local variables in the left panel, so it's very easy to see
 what's happening. You can see, that the ``y+2*x`` is emerging in the ``obj``
@@ -105,9 +105,9 @@ almost any Python code.
 SymPy's Architecture
 ====================
 
-We try to make the sources easily understandable, so you can look into the sources and
-read the doctests, it should be well documented and if you don't understand something,
-ask on the mailinglist_.
+We try to make the sources easily understandable, so you can look into the
+sources and read the doctests, it should be well documented and if you don't
+understand something, ask on the mailinglist_.
 
 You can find all the decisions archived in the issues_, to see rationale for
 doing this and that.
@@ -124,7 +124,8 @@ class supports.
 
 For easier use, there is a syntactic sugar for expressions like:
 
-``cos(x)+1`` is equal to ``cos(x).__add__(1)`` is equal to ``Add(cos(x),Integer(1))``
+``cos(x)+1`` is equal to ``cos(x).__add__(1)`` is equal to
+``Add(cos(x),Integer(1))``
 
 or
 
@@ -138,8 +139,8 @@ So, you can write normal expressions using python arithmetics like this::
     e=(a+b)**2
     print e
 
-but from the sympy point of view, we just need the classes ``Add``, ``Mul``, ``Pow``,
-``Rational``, ``Integer``.
+but from the sympy point of view, we just need the classes ``Add``, ``Mul``,
+``Pow``, ``Rational``, ``Integer``.
 
 Automatic evaluation to canonical form
 --------------------------------------
@@ -206,9 +207,9 @@ up::
 Debugging
 ---------
 
-Starting with 0.6.4, you can turn on/off debug messages with the environment variable
-SYMPY_DEBUG, which is expected to have the values True or False. For example, to turn on
-debugging, you would issue::
+Starting with 0.6.4, you can turn on/off debug messages with the environment
+variable SYMPY_DEBUG, which is expected to have the values True or False. For
+example, to turn on debugging, you would issue::
 
     [user@localhost]: SYMPY_DEBUG=True ./bin/isympy
 
@@ -231,14 +232,14 @@ and use it like ``1+cos(x)``, but if you don't implement the ``fdiff()`` method,
 you will not be able to call ``(1+cos(x)).series()``.
 
 The symbolic object is characterized (defined) by the things which it can do,
-so implementing more methods like ``fdiff()``, ``subs()`` etc., you are creating a
-"shape" of the symbolic object. Useful things to implement in new classes are:
+so implementing more methods like ``fdiff()``, ``subs()`` etc., you are creating
+a "shape" of the symbolic object. Useful things to implement in new classes are:
 ``hash()`` (to use the class in comparisons), ``fdiff()`` (to use it in series
 expansion), ``subs()`` (to use it in expressions, where some parts are being
-substituted) and ``series()`` (if the series cannot be computed using the general
-``Basic.series()`` method). When you create a new class, don't worry about this
-too much - just try to use it in your code and you will realize immediately
-which methods need to be implemented in each situation.
+substituted) and ``series()`` (if the series cannot be computed using the
+general ``Basic.series()`` method). When you create a new class, don't worry
+about this too much - just try to use it in your code and you will realize
+immediately which methods need to be implemented in each situation.
 
 All objects in sympy are immutable - in the sense that any operation just
 returns a new instance (it can return the same instance only if it didn't
@@ -305,11 +306,13 @@ The applied function ``sign(x)`` is constructed using
 
     sign(x)
 
-both inside and outside of SymPy. Unapplied functions ``sign`` is just the class itself::
+both inside and outside of SymPy. Unapplied functions ``sign`` is just the class
+itself::
 
     sign
 
-both inside and outside of SymPy. This is the current structure of classes in SymPy::
+both inside and outside of SymPy. This is the current structure of classes in
+SymPy::
 
     class BasicType(type):
         pass
@@ -326,8 +329,8 @@ both inside and outside of SymPy. This is the current structure of classes in Sy
         __metaclass__ = FunctionClass
         ...
 
-The exact names of the classes and the names of the methods and how they work can be
-changed in the future.
+The exact names of the classes and the names of the methods and how they work
+can be changed in the future.
 
 This is how to create a function with two variables::
 
@@ -341,7 +344,8 @@ This is how to create a function with two variables::
             return C.cos(S.Pi*(2*k+1)/(2*n))
 
 
-.. note:: the first argument of a @classmethod should be ``cls`` (i.e. not ``self``).
+.. note:: the first argument of a @classmethod should be ``cls`` (i.e. not
+          ``self``).
 
 Here it's how to define a derivative of the function::
 
@@ -377,8 +381,8 @@ Looks familiar indeed::
     x - -- + --- - ---- + ------ + O\x  /
         6    120   5040   362880
 
-Let's try a more complicated example. Let's define the derivative in terms of the
-function itself::
+Let's try a more complicated example. Let's define the derivative in terms of
+the function itself::
 
     >>> class what_am_i(Function):
     ...     nargs = 1
@@ -513,10 +517,10 @@ Improving the code
 Go to issues_ that are sorted by priority and simply find something that you
 would like to get fixed and fix it. If you find something odd, please report it
 into issues_ first before fixing it. Feel free to consult with us on the
-mailinglist_.  Then send your patch either to the issues_ or the mailinglist_. See
-the SympyDevelopment_ wiki, but don't worry about it too much if you find it
-too formal - simply get in touch with us on the mailinglist_ and we'll help you
-get your patch accepted.
+mailinglist_.  Then send your patch either to the issues_ or the mailinglist_.
+See the SympyDevelopment_ wiki, but don't worry about it too much if you find
+it too formal - simply get in touch with us on the mailinglist_ and we'll help
+you get your patch accepted.
 
 .. _issues:             http://code.google.com/p/sympy/issues/list
 .. _mailinglist:        http://groups.google.com/group/sympy

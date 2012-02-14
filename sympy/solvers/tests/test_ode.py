@@ -3,7 +3,8 @@ from __future__ import division
 
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve, Eq,
                    erf, exp, Function, I, Integral, LambertW, log, O, pi,
-                   Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan)
+                   Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin,
+                   Piecewise)
 from sympy.abc import x, y, z
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
                                classify_ode, constant_renumber, constantsimp,
@@ -25,7 +26,7 @@ g = Function('g')
 
 # Note that if the ODE solver, the integral engine, solve(), or even simplify(),
 # changes, these tests could fail but still be correct, only written differently.
-# Also not that in differently formatted solutions, the arbitrary constants
+# Also note that in differently formatted solutions, the arbitrary constants
 # might not be equal.  Using specific hints in tests can help avoid this.
 
 # Tests of order higher than 1 should run the solutions through constant_renumber
@@ -622,8 +623,9 @@ def test_1st_homogeneous_coeff_ode3():
     # test_homogeneous_order_ode1_sol above. It has to compare string
     # expressions because u2 is a dummy variable.
     eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
-    solstr = "log(C1*f(x)) + I*asin(f(x)/x) == 0"
-    assert str(dsolve(eq, f(x), hint='1st_homogeneous_coeff_subs_indep_div_dep')) == solstr
+    sol = Eq(Piecewise((-acosh(f(x)/x), 1 < abs(f(x)**2/x**2)),
+                       (I*asin(f(x)/x), True))                   + log(C1*f(x)), 0)
+    assert dsolve(eq, f(x), hint='1st_homogeneous_coeff_subs_indep_div_dep') == sol
 
 @XFAIL
 def test_1st_homogeneous_coeff_ode3_check():

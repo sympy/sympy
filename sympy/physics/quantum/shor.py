@@ -72,7 +72,7 @@ class CMod(Gate):
         out = int(self.a**k%self.N)
 
         # Create array for new qbit-ket which will have high memory unaffected
-        outarray = list(qubits.args[0][0:self.t])
+        outarray = list(qubits.args[0][:self.t])
 
         # Place out in low memory
         for i in reversed(range(self.t)):

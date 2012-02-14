@@ -1,6 +1,7 @@
 __all__ = ['Kane']
 
 from sympy import Symbol, zeros, Matrix, diff, solve_linear_system_LU, eye
+from sympy.utilities import default_sort_key
 from sympy.physics.mechanics.essential import ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.point import Point
@@ -13,8 +14,19 @@ class Kane(object):
     equations of motion in the way Kane presents in:
     Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
 
-    The attributes are for equations in the form [M] udot = forcing
+    The attributes are for equations in the form [M] udot = forcing.
 
+    Very Important Warning: simp is set to True by default, to the advantage of
+    smaller, simpler systems. If your system is large, it will lead to
+    slowdowns; however turning it off might have negative implications in
+    numerical evaluation. Care needs to be taken to appropriately reduce
+    expressions generated with simp==False, as they might be too large
+    themselves. Computing the relationship between independent and dependent
+    speeds (when dealing with non-holonomic systems) benefits from simp being
+    set to True (during the .speeds() method); the same is true for
+    linearization of non-holonomic systems.  If numerical evaluations are
+    unsucessful with simp==False, try setting simp to True only for these
+    methods; this provides some compromise between the two options.
 
     Attributes
     ==========
@@ -65,12 +77,10 @@ class Kane(object):
     assigned to it.
     Finally, a list of all bodies and particles needs to be created::
 
-        >>> kd = [qd - u]
-        >>> FL = [(P, (-k * q - c * u) * N.x)]
-        >>> pa = Particle()
-        >>> pa.mass = m
-        >>> pa.point = P
-        >>> BL = [pa]
+    >>> kd = [qd - u]
+    >>> FL = [(P, (-k * q - c * u) * N.x)]
+    >>> pa = Particle('pa', P, m)
+    >>> BL = [pa]
 
     Finally we can generate the equations of motion.
     First we create the Kane object and supply an inertial frame.
@@ -103,7 +113,7 @@ class Kane(object):
 
     """
 
-    simp = False
+    simp = True
 
     def __init__(self, frame):
         """Supply the inertial frame for Kane initialization. """
@@ -139,60 +149,26 @@ class Kane(object):
         self._k_dnh = Matrix([])
         self._f_dnh = Matrix([])
 
+
     def _find_dynamicsymbols(self, inlist, insyms=[]):
         """Finds all non-supplied dynamicsymbols in the expressions."""
-        from sympy.core.function import UndefinedFunction, Derivative
+        from sympy.core.function import AppliedUndef, Derivative
         t = dynamicsymbols._t
+        return reduce(set.union, [set([i]) for j in inlist
+            for i in j.atoms(AppliedUndef, Derivative)
+            if i.atoms() == set([t])], set()) - insyms
 
-        def _deeper(iexpr):
-            oli = []
-            if isinstance(type(iexpr), UndefinedFunction):
-                if iexpr.args == (t,):
-                    oli += [iexpr]
-            elif isinstance(iexpr, Derivative):
-                if (bool([i == t for i in iexpr.variables]) &
-                    isinstance(type(iexpr.args[0]), UndefinedFunction)):
-                    ol = str(iexpr.args[0].func)
-                    for i, v in enumerate(iexpr.variables):
-                        ol += '\''
-                    oli += [iexpr]
-            else:
-                for i, v in enumerate(iexpr.args):
-                    oli += _deeper(v)
-            return oli
-
-        ol = []
-        for i in list(inlist):
-            ol += _deeper(i)
-        seta = {}
-        map(seta.__setitem__, ol, [])
-        ol = seta.keys()
-        for i, v in enumerate(insyms):
-            if ol.__contains__(v):
-                ol.remove(v)
-        return ol
+        temp_f = set().union(*[i.atoms(AppliedUndef) for i in inlist])
+        temp_d = set().union(*[i.atoms(Derivative) for i in inlist])
+        set_f = set([a for a in temp_f if a.args == (t,)])
+        set_d = set([a for a in temp_d if ((a.args[0] in set_f) and all([i == t
+                     for i in a.variables]))])
+        return list(set.union(set_f, set_d) - set(insyms))
 
     def _find_othersymbols(self, inlist, insyms=[]):
         """Finds all non-dynamic symbols in the expressions."""
-        def _deeper(iexpr):
-            oli = []
-            if isinstance(iexpr, Symbol):
-                oli += [iexpr]
-            else:
-                for i, v in enumerate(iexpr.args):
-                    oli += _deeper(v)
-            return oli
-
-        ol = []
-        for i in list(inlist):
-            ol += _deeper(i)
-        seta = {}
-        map(seta.__setitem__, ol, [])
-        ol = seta.keys()
-        for i, v in enumerate(insyms):
-            if ol.__contains__(v):
-                ol.remove(v)
-        return ol
+        return list(reduce(set.union, [i.atoms(Symbol) for i in inlist]) -
+                    set(insyms))
 
     def _mat_inv_mul(self, A, B):
         """Internal Function
@@ -242,16 +218,16 @@ class Kane(object):
         """
 
         if not isinstance(qind, (list, tuple)):
-            raise TypeError('Generalized coords. must be supplied in a list')
+            raise TypeError('Generalized coords. must be supplied in a list.')
         self._q = qind + qdep
         self._qdot = [diff(i, dynamicsymbols._t) for i in self._q]
 
         if not isinstance(qdep, (list, tuple)):
             raise TypeError('Dependent speeds and constraints must each be '
-                            'provided in their own list')
+                            'provided in their own list.')
         if len(qdep) != len(coneqs):
             raise ValueError('There must be an equal number of dependent '
-                             'speeds and constraints')
+                             'speeds and constraints.')
         coneqs = Matrix(coneqs)
         self._qdep = qdep
         self._f_h = coneqs
@@ -283,21 +259,21 @@ class Kane(object):
         """
 
         if not isinstance(uind, (list, tuple)):
-            raise TypeError('Generalized speeds must be supplied in a list')
+            raise TypeError('Generalized speeds must be supplied in a list.')
         self._u = uind + udep
         self._udot = [diff(i, dynamicsymbols._t) for i in self._u]
         self._uaux = u_auxiliary
 
         if not isinstance(udep, (list, tuple)):
             raise TypeError('Dependent speeds and constraints must each be '
-                            'provided in their own list')
+                            'provided in their own list.')
         if len(udep) != len(coneqs):
             raise ValueError('There must be an equal number of dependent '
-                             'speeds and constraints')
+                             'speeds and constraints.')
         if diffconeqs != None:
             if len(udep) != len(diffconeqs):
                 raise ValueError('There must be an equal number of dependent '
-                                 'speeds and constraints')
+                                 'speeds and constraints.')
         if len(udep) != 0:
             u = self._u
             uzero = dict(zip(u, [0] * len(u)))
@@ -337,7 +313,7 @@ class Kane(object):
     def kindiffdict(self):
         """Returns the qdot's in a dictionary. """
         if self._k_kqdot == None:
-            raise ValueError('Kin. diff. eqs need to be supplied first')
+            raise ValueError('Kin. diff. eqs need to be supplied first.')
         sub_dict = solve_linear_system_LU(Matrix([self._k_kqdot.T,
             -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
         return sub_dict
@@ -414,7 +390,7 @@ class Kane(object):
                     FR[i] += speed.diff(v, N) & w[1]
                 else:
                     raise TypeError('First entry in force pair is a point or'
-                                    ' frame')
+                                    ' frame.')
         # for dependent speeds
         if len(self._udep) != 0:
             m = len(self._udep)
@@ -444,7 +420,7 @@ class Kane(object):
         if not isinstance(bl, (list, tuple)):
             raise TypeError('Bodies must be supplied in a list.')
         if self._fr == None:
-            raise ValueError('Calculate Fr first, please')
+            raise ValueError('Calculate Fr first, please.')
         t = dynamicsymbols._t
         N = self._inertial
         self._bodylist = bl
@@ -495,7 +471,7 @@ class Kane(object):
 
                     # This block of code needs to have a test written for it
                     print('This functionality has not yet been tested yet, '
-                          'use at your own risk')
+                          'use at your own risk.')
                     f = v.frame
                     d = v.mc.pos_from(P)
                     I -= m * (((f.x | f.x) + (f.y | f.y) + (f.z | f.z)) *
@@ -551,7 +527,7 @@ class Kane(object):
                 partials.append((tl1, tl2))
             else:
                 raise TypeError('The body list needs RigidBody or '
-                                'Particle as list elements')
+                                'Particle as list elements.')
             rsts.append((rs, ts))
 
         # Use R*, T* and partial velocities to form FR*
@@ -627,9 +603,9 @@ class Kane(object):
         """
 
         if (self._q == None) or (self._u == None):
-            raise ValueError('Speeds and coordinates must be supplied first')
+            raise ValueError('Speeds and coordinates must be supplied first.')
         if (self._k_kqdot == None):
-            raise ValueError('Supply kinematic differential equations please')
+            raise ValueError('Supply kinematic differential equations, please.')
 
 
         fr = self._form_fr(FL)
@@ -650,9 +626,9 @@ class Kane(object):
     @property
     def auxiliary_eqs(self):
         if (self._fr == None) or (self._frstar == None):
-            raise ValueError('Need to compute Fr, Fr* first')
+            raise ValueError('Need to compute Fr, Fr* first.')
         if self._uaux == []:
-            raise ValueError('No auxiliary speeds have been declared')
+            raise ValueError('No auxiliary speeds have been declared.')
         return self._aux_eq
 
     def linearize(self):
@@ -661,61 +637,80 @@ class Kane(object):
         Note that for linearization, it is assumed that time is not perturbed,
         but only coordinates and positions. The "forcing" vector's jacobian is
         computed with respect to the state vector in the form [Qi, Qd, Ui, Ud].
-        This is the "A" matrix.
+        This is the "f_lin_A" matrix.
 
         It also finds any non-state dynamicsymbols and computes the jacobian of
-        the "forcing" vector with respect to them. This is the "B" matrix; if
-        this is empty, an empty matrix is created
+        the "forcing" vector with respect to them. This is the "f_lin_B"
+        matrix; if this is empty, an empty matrix is created.
 
-        A tuple of ("A", "B") is returned.
+        Consider the following:
+        If our equations are: [M]qudot = f, where [M] is the full mass matrix,
+        qudot is a vector of the deriatives of the coordinates and speeds, and
+        f in the full forcing vector, the linearization process is as follows:
+        [M]qudot = [f_lin_A]qu + [f_lin_B]y, where qu is the state vector,
+        f_lin_A is the jacobian of the full forcing vector with respect to the
+        state vector, f_lin_B is the jacobian of the full forcing vector with
+        respect to any non-speed/coordinate dynamicsymbols which show up in the
+        full forcing vector, and y is a vector of those dynamic symbols (each
+        column in f_lin_B corresponds to a row of the y vector, each of which
+        is a non-speed/coordinate dynamicsymbol).
+
+        To get the traditional state-space A and B matrix, you need to multiply
+        the f_lin_A and f_lin_B matrices by the inverse of the mass matrix.
+        Caution needs to be taken when inverting large symbolic matrices;
+        substituting in numerical values before inverting will work better.
+
+        A tuple of (f_lin_A, f_lin_B, other_dynamicsymbols) is returned.
 
         """
 
         if (self._fr == None) or (self._frstar == None):
-            raise ValueError('Need to compute Fr, Fr* first')
+            raise ValueError('Need to compute Fr, Fr* first.')
 
         # Note that this is now unneccessary, and it should never be
         # encountered; I still think it should be in here in case the user
         # manually sets these matrices incorrectly.
         for i in self._q:
             if self._k_kqdot.diff(i) != 0 * self._k_kqdot:
-                raise ValueError('Matrix K_kqdot must not depend on any q')
+                raise ValueError('Matrix K_kqdot must not depend on any q.')
 
         t = dynamicsymbols._t
         uaux = self._uaux
         uauxdot = [diff(i, t) for i in uaux]
-        # dictionary of auxiliary speeds which are equal to zero
-        uaz = dict(zip(uaux, [0] * len(uaux)))
-        # dictionary of derivatives of auxiliary speeds which are equal to zero
-        uadz = dict(zip(uauxdot, [0] * len(uauxdot)))
+        # dictionary of auxiliary speeds & derivatives which are equal to zero
+        subdict = dict(zip(uaux + uauxdot, [0] * (len(uaux) + len(uauxdot))))
 
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.
-        insyms = self._q + self._qdot + self._u + self._udot + uaux + uauxdot
-        bad_oths= self._find_dynamicsymbols(self._k_kqdot, insyms)
-        bad_oths += self._find_dynamicsymbols(self._k_ku, insyms)
-        bad_oths += self._find_dynamicsymbols(self._f_k, insyms)
-        bad_oths += self._find_dynamicsymbols(self._k_dnh, insyms)
-        bad_oths += self._find_dynamicsymbols(self._f_dnh, insyms)
-        bad_oths += self._find_dynamicsymbols(self._k_d, insyms)
-        if bad_oths != []:
-            raise ValueError('Cannot have dynamic symbols outside dynamic ' +
-                             'forcing vector')
-        oth_dyns = self._find_dynamicsymbols(self._f_d.subs(uadz).subs(uaz),
-                                             insyms)
-        for i in oth_dyns:
-            if diff(i, dynamicsymbols._t) in oth_dyns:
-                raise ValueError('Cannot have derivatives of forcing terms ' +
-                                 'when linearizing forcing terms')
+        insyms = set(self._q + self._qdot + self._u + self._udot + uaux + uauxdot)
+        if any(self._find_dynamicsymbols(i, insyms) for i in [self._k_kqdot,
+                                                              self._k_ku,
+                                                              self._f_k,
+                                                              self._k_dnh,
+                                                              self._f_dnh,
+                                                              self._k_d]):
+            raise ValueError('Cannot have dynamic symbols outside dynamic '
+                             'forcing vector.')
+        other_dyns = list(self._find_dynamicsymbols(self._f_d.subs(subdict),
+                                             insyms))
+
+        # make it canonically ordered so the jacobian is canonical
+        other_dyns.sort(key=default_sort_key)
+
+        for i in other_dyns:
+            if diff(i, dynamicsymbols._t) in other_dyns:
+                raise ValueError('Cannot have derivatives of specified '
+                                 'quantities when linearizing forcing terms.')
 
         o = len(self._u) # number of speeds
         n = len(self._q) # number of coordinates
         l = len(self._qdep) # number of configuration constraints
         m = len(self._udep) # number of motion constraints
-        qi = Matrix(self._q[0: n - l]) # independent coords
+        qi = Matrix(self._q[: n - l]) # independent coords
         qd = Matrix(self._q[n - l: n]) # dependent coords; could be empty
-        ui = Matrix(self._u[0: o - m]) # independent speeds
+        ui = Matrix(self._u[: o - m]) # independent speeds
         ud = Matrix(self._u[o - m: o]) # dependent speeds; could be empty
+        qdot = Matrix(self._qdot) # time derivatives of coordinates
 
         # with equations in the form MM udot = forcing, expand that to:
         # MM_full [q,u].T = forcing_full. This combines coordinates and
@@ -731,11 +726,11 @@ class Kane(object):
         if m != 0:
             f2 = self._f_d.col_join(self._f_dnh)
             fnh = self._f_nh + self._k_nh * Matrix(self._u)
-        f1 = f1.subs(uadz).subs(uaz)
-        f2 = f2.subs(uadz).subs(uaz)
-        fh = self._f_h.subs(uadz).subs(uaz)
-        fku = (self._k_ku * Matrix(self._u)).subs(uadz).subs(uaz)
-        fkf = self._f_k.subs(uadz).subs(uaz)
+        f1 = f1.subs(subdict)
+        f2 = f2.subs(subdict)
+        fh = self._f_h.subs(subdict)
+        fku = (self._k_ku * Matrix(self._u)).subs(subdict)
+        fkf = self._f_k.subs(subdict)
 
         # In the code below, we are applying the chain rule by hand on these
         # things. All the matrices have been changed into vectors (by
@@ -756,23 +751,41 @@ class Kane(object):
 
         # First case: configuration and motion constraints
         if (l != 0) and (m != 0):
-            dqd_dqi = - self._mat_inv_mul(fh.jacobian(qd), fh.jacobian(qi))
-            dud_dqi = self._mat_inv_mul(fnh.jacobian(ud), (fnh.jacobian(qd) *
-                                        dqd_dqi - fnh.jacobian(qi)))
-            dud_dui = - self._mat_inv_mul(fnh.jacobian(ud), fnh.jacobian(ui))
-            dqdot_dui = - self._k_kqdot.inv() * (fku.jacobian(ui) +
-                                                fku.jacobian(ud) * dud_dui)
-            dqdot_dqi = - self._k_kqdot.inv() * (fku.jacobian(qi) +
-                    fkf.jacobian(qi) + (fku.jacobian(qd) + fkf.jacobian(qd)) *
-                    dqd_dqi + fku.jacobian(ud) * dud_dqi)
-            f1_q = (f1.jacobian(qi) + f1.jacobian(qd) * dqd_dqi +
-                    f1.jacobian(ud) * dud_dqi)
-            f1_u = (f1.jacobian(ui) + f1.jacobian(ud) * dud_dui)
-            f2_q = (f2.jacobian(qi) + f2.jacobian(qd) * dqd_dqi +
-                    f2.jacobian(self._qdot) * dqdot_dqi + f2.jacobian(ud) *
-                    dud_dqi)
-            f2_u = (f2.jacobian(ui) + f2.jacobian(ud) * dud_dui +
-                    f2.jacobian(self._qdot) * dqdot_dui)
+            fh_jac_qi = fh.jacobian(qi)
+            fh_jac_qd = fh.jacobian(qd)
+            fnh_jac_qi = fnh.jacobian(qi)
+            fnh_jac_qd = fnh.jacobian(qd)
+            fnh_jac_ui = fnh.jacobian(ui)
+            fnh_jac_ud = fnh.jacobian(ud)
+            fku_jac_qi = fku.jacobian(qi)
+            fku_jac_qd = fku.jacobian(qd)
+            fku_jac_ui = fku.jacobian(ui)
+            fku_jac_ud = fku.jacobian(ud)
+            fkf_jac_qi = fkf.jacobian(qi)
+            fkf_jac_qd = fkf.jacobian(qd)
+            f1_jac_qi = f1.jacobian(qi)
+            f1_jac_qd = f1.jacobian(qd)
+            f1_jac_ui = f1.jacobian(ui)
+            f1_jac_ud = f1.jacobian(ud)
+            f2_jac_qi = f2.jacobian(qi)
+            f2_jac_qd = f2.jacobian(qd)
+            f2_jac_ui = f2.jacobian(ui)
+            f2_jac_ud = f2.jacobian(ud)
+            f2_jac_qdot = f2.jacobian(qdot)
+
+            dqd_dqi = - self._mat_inv_mul(fh_jac_qd, fh_jac_qi)
+            dud_dqi = self._mat_inv_mul(fnh_jac_ud, (fnh_jac_qd *
+                                        dqd_dqi - fnh_jac_qi))
+            dud_dui = - self._mat_inv_mul(fnh_jac_ud, fnh_jac_ui)
+            dqdot_dui = - self._k_kqdot.inv() * (fku_jac_ui +
+                                                fku_jac_ud * dud_dui)
+            dqdot_dqi = - self._k_kqdot.inv() * (fku_jac_qi + fkf_jac_qi +
+                    (fku_jac_qd + fkf_jac_qd) * dqd_dqi + fku_jac_ud * dud_dqi)
+            f1_q = f1_jac_qi + f1_jac_qd * dqd_dqi + f1_jac_ud * dud_dqi
+            f1_u = f1_jac_ui + f1_jac_ud * dud_dui
+            f2_q = (f2_jac_qi + f2_jac_qd * dqd_dqi + f2_jac_qdot * dqdot_dqi +
+                    f2_jac_ud * dud_dqi)
+            f2_u = f2_jac_ui + f2_jac_ud * dud_dui + f2_jac_qdot * dqdot_dui
         # Second case: configuration constraints only
         elif l != 0:
             dqd_dqi = - self._mat_inv_mul(fh.jacobian(qd), fh.jacobian(qi))
@@ -782,9 +795,10 @@ class Kane(object):
                     dqd_dqi)
             f1_q = (f1.jacobian(qi) + f1.jacobian(qd) * dqd_dqi)
             f1_u = f1.jacobian(ui)
+            f2_jac_qdot = f2.jacobian(qdot)
             f2_q = (f2.jacobian(qi) + f2.jacobian(qd) * dqd_dqi +
-                    f2.jacobian(self._qdot) * dqdot_dqi)
-            f2_u = (f2.jacobian(ui) + f2.jacobian(self._qdot) * dqdot_dui)
+                    f2.jac_qdot * dqdot_dqi)
+            f2_u = f2.jacobian(ui) + f2_jac_qdot * dqdot_dui
         # Third case: motion constraints only
         elif m != 0:
             dud_dqi = self._mat_inv_mul(fnh.jacobian(ud), - fnh.jacobian(qi))
@@ -793,12 +807,15 @@ class Kane(object):
                                                 fku.jacobian(ud) * dud_dui)
             dqdot_dqi = - self._k_kqdot.inv() * (fku.jacobian(qi) +
                     fkf.jacobian(qi) + fku.jacobian(ud) * dud_dqi)
-            f1_q = (f1.jacobian(qi) + f1.jacobian(ud) * dud_dqi)
-            f1_u = (f1.jacobian(ui) + f1.jacobian(ud) * dud_dui)
-            f2_q = (f2.jacobian(qi) + f2.jacobian(self._qdot) * dqdot_dqi +
-                    f2.jacobian(ud) * dud_dqi)
-            f2_u = (f2.jacobian(ui) + f2.jacobian(ud) * dud_dui +
-                    f2.jacobian(self._qdot) * dqdot_dui)
+            f1_jac_ud = f1.jacobian(ud)
+            f2_jac_qdot = f2.jacobian(qdot)
+            f2_jac_ud = f2.jacobian(ud)
+            f1_q = f1.jacobian(qi) + f1_jac_ud * dud_dqi
+            f1_u = f1.jacobian(ui) + f1_jac_ud * dud_dui
+            f2_q = (f2.jacobian(qi) + f2_jac_qdot * dqdot_dqi + f2_jac_ud
+                    * dud_dqi)
+            f2_u = (f2.jacobian(ui) + f2_jac_ud * dud_dui + f2_jac_qdot *
+                    dqdot_dui)
         # Fourth case: No constraints
         else:
             dqdot_dui = - self._k_kqdot.inv() * fku.jacobian(ui)
@@ -806,30 +823,31 @@ class Kane(object):
                     fkf.jacobian(qi))
             f1_q = f1.jacobian(qi)
             f1_u = f1.jacobian(ui)
-            f2_q = f2.jacobian(qi) + f2.jacobian(self._qdot) * dqdot_dqi
-            f2_u = f2.jacobian(ui) + f2.jacobian(self._qdot) * dqdot_dui
-        Amat = -(f1_q.row_join(f1_u)).col_join(f2_q.row_join(f2_u))
-        if oth_dyns != []:
-            f1_oths = f1.jacobian(oth_dyns)
-            f2_oths = f2.jacobian(oth_dyns)
-            Bmat = -f1_oths.col_join(f2_oths)
+            f2_jac_qdot = f2.jacobian(qdot)
+            f2_q = f2.jacobian(qi) + f2_jac_qdot * dqdot_dqi
+            f2_u = f2.jacobian(ui) + f2_jac_qdot * dqdot_dui
+        f_lin_A = -(f1_q.row_join(f1_u)).col_join(f2_q.row_join(f2_u))
+        if other_dyns:
+            f1_oths = f1.jacobian(other_dyns)
+            f2_oths = f2.jacobian(other_dyns)
+            f_lin_B = -f1_oths.col_join(f2_oths)
         else:
-            Bmat = Matrix([])
-        return (Amat, Bmat)
+            f_lin_B = Matrix([])
+        return (f_lin_A, f_lin_B, Matrix(other_dyns))
 
     @property
     def mass_matrix(self):
         # Returns the mass matrix, which is augmented by the differentiated non
         # holonomic equations if necessary
         if (self._frstar == None) & (self._fr == None):
-            raise ValueError('Need to compute Fr, Fr* first')
+            raise ValueError('Need to compute Fr, Fr* first.')
         return Matrix([self._k_d, self._k_dnh])
 
     @property
     def mass_matrix_full(self):
         # Returns the mass matrix from above, augmented by kin diff's k_kqdot
         if (self._frstar == None) & (self._fr == None):
-            raise ValueError('Need to compute Fr, Fr* first')
+            raise ValueError('Need to compute Fr, Fr* first.')
         o = len(self._u)
         n = len(self._q)
         return ((self._k_kqdot).row_join(zeros(n, o))).col_join((zeros(o,
@@ -840,7 +858,7 @@ class Kane(object):
         # Returns the forcing vector, which is augmented by the differentiated
         # non holonomic equations if necessary
         if (self._frstar == None) & (self._fr == None):
-            raise ValueError('Need to compute Fr, Fr* first')
+            raise ValueError('Need to compute Fr, Fr* first.')
         return -Matrix([self._f_d, self._f_dnh])
 
     @property
@@ -848,7 +866,7 @@ class Kane(object):
         # Returns the forcing vector, which is augmented by the differentiated
         # non holonomic equations if necessary
         if (self._frstar == None) & (self._fr == None):
-            raise ValueError('Need to compute Fr, Fr* first')
+            raise ValueError('Need to compute Fr, Fr* first.')
         f1 = self._k_ku * Matrix(self._u) + self._f_k
         return -Matrix([f1, self._f_d, self._f_dnh])
 

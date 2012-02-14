@@ -41,7 +41,7 @@ def test_trigonometric():
     assert tan(o*x).subs(x, pi/2) is S.NaN
 
 def test_powers():
-    x = Symbol('x')
+    x, y = symbols('x,y')
     assert sqrt(1 - sqrt(x)).subs(x, 4) == I
     assert (sqrt(1-x**2)**3).subs(x, 2) == - 3 * I * sqrt(3)
     assert (x ** Rational(1,3)).subs(x, 27) == 3
@@ -50,9 +50,10 @@ def test_powers():
     n = Symbol('n', negative=True)
     assert (x**n).subs(x, 0) is S.Infinity
     assert exp(-1).subs(S.Exp1, 0) is S.Infinity
+    assert (x**(4.0*y)).subs(x**(2.0*y), n) == n**2.0
 
 def test_logexppow():   # no eval()
-    x = Symbol("x")
+    x = Symbol("x", real=True)
     w = Symbol("w")
     e = (3**(1+x)+2**(1+x))/(3**x+2**x)
     assert e.subs(2**x, w) != e
@@ -84,6 +85,9 @@ def test_dict():
     e =  a/b * sin(b*x)
     assert e._subs_dict(r) == r[a]/r[b] * sin(r[b]*x)
     assert e._subs_dict(r) == 3 * sin(4*x) / 4
+
+    assert e.subs(r) == r[a]/r[b] * sin(r[b]*x)
+    assert e.subs(r) == 3 * sin(4*x) / 4
 
 def test_dict_ambigous():   # see #467
     x = Symbol('x')
@@ -142,17 +146,6 @@ def test_subs_dict1():
     assert test.subs({c1**2 : 1-s1**2, c2**2 : 1-s2**2, c3**3: 1-s3**2}) \
         == c3*q2p*(1 - s2**2) + c3*q2p*s2**2*(1 - s1**2) - c2*q1p*s3*(1 - s1**2) \
         + c3*q2p*s1**2*s2**2 - c2*q1p*s3*s1**2
-
-def test_subs_dict2():
-    x = Symbol('x')
-    a,b,c = map(Wild, 'abc')
-
-    f = 3*cos(4*x)
-    r = f.match(a*cos(b*x))
-    assert r == {a: 3, b: 4}
-    e =  a/b * sin(b*x)
-    assert e.subs(r) == r[a]/r[b] * sin(r[b]*x)
-    assert e.subs(r) == 3 * sin(4*x) / 4
 
 def test_mul():
     x, y, z, a, b, c = symbols('x,y,z,a,b,c')
@@ -400,3 +393,8 @@ def test_no_arith_subs_on_floats():
 
     (x + y + 3.0).subs(x + 3.0, a) == a + y
     (x + y + 3.0).subs(x + 2.0, a) == x + y + 3.0
+
+@XFAIL
+def test_issue_2261() :
+    x = Symbol("x")
+    assert (1/x).subs(x, 0) == 1/S(0)

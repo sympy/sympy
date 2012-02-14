@@ -176,7 +176,7 @@ def test_fcode_Piecewise():
     assert fcode(Piecewise((x,x<1),(x**2,x>1),(sin(x),True))) == (
         "      if (x < 1) then\n"
         "         x\n"
-        "      else if (1 < x) then\n"
+        "      else if (x > 1) then\n"
         "         x**2\n"
         "      else\n"
         "         sin(x)\n"
@@ -185,9 +185,9 @@ def test_fcode_Piecewise():
     assert fcode(Piecewise((x,x<1),(x**2,x>1),(sin(x),x>0))) == (
         "      if (x < 1) then\n"
         "         x\n"
-        "      else if (1 < x) then\n"
+        "      else if (x > 1) then\n"
         "         x**2\n"
-        "      else if (0 < x) then\n"
+        "      else if (x > 0) then\n"
         "         sin(x)\n"
         "      end if"
     )

@@ -69,7 +69,7 @@ equation reduces to 0.
 
 .. note::
 
-    See also `Why does SymPy say that two equal expressions are unequal? 
+    See also `Why does SymPy say that two equal expressions are unequal?
     <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
 
 
@@ -166,7 +166,7 @@ If you define a circular relationship, you will get a
 
 
 .. note::
-    See also `Why doesn't changing one variable change another that depends on it? 
+    See also `Why doesn't changing one variable change another that depends on it?
     <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
 
 .. _symbols:
@@ -241,7 +241,7 @@ careful.
     ...
     >>> cos(pi)
     15
-
+    >>> from sympy import cos # reimport to restore normal behavior
 
 
 To get a full list of all default names in SymPy do:
@@ -258,7 +258,7 @@ all built-in names and to autocomplete.  Also, see `this page
 trick for getting tab completion in the regular Python console.
 
 .. note::
-    See also `What is the best way to create symbols? 
+    See also `What is the best way to create symbols?
     <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
 
 .. _symbolic-expressions:
@@ -364,6 +364,115 @@ You only need to be careful with number/number.
     TypeError: int() argument must be a string or a number, not 'Symbol'
     >>> 2/x
     2/x
+
+Evaluating Expressions with Floats and Rationals
+------------------------------------------------
+
+SymPy keeps track of the precision of Floats. The default precision is
+15 digits. When expressions involving Floats are evaluated, the result
+will be expressed to 15 digits of precision but those digits (depending
+on the numbers involved with the calculation) may not all be significant.
+
+The first issue to keep in mind is how the Float is created: it is created
+with a value and a precision. The precision indicates how precise of a value
+to use when that Float (or an expression it appears in) is evaluated.
+
+The values can be given as strings, integers, or Rationals. We do so below
+with a few different values:
+
+    - integer input always returns an exact Integer and precision is ignored
+    >>> Float(1234, 3)
+    1234
+    
+    - strings are interpreted as exact and always result in a Float
+    >>> Float('100', 3)
+    100.
+    
+    >>> s, r = [Float(j, 3) for j in ('0.25', Rational(1, 7))]
+    >>> for f in [s, r]:
+    ...     print f
+    0.250
+    0.143
+
+Next, notice that each of those values looks correct to 3 digits. But if we try
+to evaluate them to 20 digits, a difference will become apparent:
+
+    The 0.25 (with precision of 3) represents a number that has a non-repeating
+    binary decimal; 1/7 is repeating in binary and decimal -- it cannot be
+    represented accurately too far past those first 3 digits (the correct
+    decimal is a repeating 142857):
+
+    >>> s.n(20)
+    0.25000000000000000000
+    >>> r.n(20)
+    0.14285278320312500000
+    
+    It is important to realize that although a Float is being displayed in
+    decimal at aritrary precision, it is actually stored in binary. Once the
+    Float is created, its binary information is set at the given precision.
+    The accuracy of that value cannot be subsequently changed; so 1/7, at a
+    precision of 3 digits, can be padded with binary zeros, but these will
+    not make it a more accurate value of 1/7.
+
+If inexact, low-precision numbers are involved in a calculation with
+with higher precision values, the evalf engine will increase the precision
+of the low precision values and inexact results will be obtained. This is
+feature of calculations with limited precision:
+
+    >>> Float('0.1', 10) + Float('0.1', 3)
+    0.2000061035
+
+Although the evalf engine tried to maintain 10 digits of precision (since
+that was the highest precision represented) the 3-digit precision used
+limits the accuracy to about 4 digits -- not all the digits you see
+are significant. evalf doesn't try to keep track of the number of
+significant digits.
+
+That very simple expression involving the addition of two numbers with
+different precisions will hopefully be instructive in helping you
+understand why more complicated expressions (like trig expressions that
+may not be simplified) will not evaluate to an exact zero even though,
+with the right simplification, they should be zero. Consider this
+unsimplified trig identity, multiplied by a big number:
+
+    >>> big = 12345678901234567890
+    >>> big_trig_identity = big*cos(x)**2 + big*sin(x)**2 - big*1
+    >>> big_trig_identity.subs(x, .1).n(2)
+    -1.4e+3
+
+When the cos and sin terms were evaluated to 15 digits of precision and
+multiplied by the big number, they gave a large number that was only
+precise to 15 digits (approximately) and when the 20 digit big number
+was subtracted the result was not zero.
+
+There are three things that will help you obtain more precise numerical
+values for expressions:
+
+    1) Pass the desired substitutions with the call to evaluate. By doing
+    the subs first, the Float values can not be updated as necessary. By
+    passing the desired substitutions with the call to evalf the ability
+    to re-evaluate as necessary is gained and the results are impressively
+    better:
+
+    >>> big_trig_identity.n(2, {x: 0.1})
+    -.0e-91
+
+    2) Use Rationals, not Floats. During the evaluation process, the
+    Rational can be computed to an arbitrary precision while the Float,
+    once created -- at a default of 15 digits -- cannot. Compare the
+    value of -1.4e+3 above with the nearly zero value obtained when
+    replacing x with a Rational representing 1/10 -- before the call
+    to evaluate:
+
+    >>> big_trig_identity.subs(x, S('1/10')).n(2)
+    .0e-91
+
+    3) Try to simplify the expression. In this case, SymPy will recognize
+    the trig identity and simplify it to zero so you don't even have to
+    evaluate it numerically:
+
+    >>> big_trig_identity.simplify()
+    0
 
 
 .. _Immutability-of-Expressions:
@@ -581,9 +690,9 @@ Getting help from within SymPy
 ==============================
 help()
 ------
-Although all docs are available at `docs.sympy.org <http://docs.sympy.org/>`_ or on the 
-`SymPy Wiki <http://wiki.sympy.org/>`_, you can also get info on functions from within the 
-Python interpreter that runs SymPy.  The easiest way to do this is to do 
+Although all docs are available at `docs.sympy.org <http://docs.sympy.org/>`_ or on the
+`SymPy Wiki <http://wiki.sympy.org/>`_, you can also get info on functions from within the
+Python interpreter that runs SymPy.  The easiest way to do this is to do
 ``help(function)``, or ``function?`` if you are using :command:`ipython`::
 
     In [1]: help(powsimp) # help() works everywhere

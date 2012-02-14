@@ -1,13 +1,16 @@
 from sympy.core import S, C, sympify
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, Integer
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import Application, Lambda
 from sympy.core.expr import Expr
+from sympy.core.power import Pow
 from sympy.core.singleton import Singleton
 from sympy.core.rules import Transform
 from sympy.ntheory.residue_ntheory import int_tested
+
+from math import log10, ceil
 
 class IdentityFunction(Lambda):
     """
@@ -65,7 +68,7 @@ def sqrt(arg):
     >>> x.subs(x, -1)
     -1
 
-    This is because sqrt computes the principle square root, so the square may
+    This is because sqrt computes the principal square root, so the square may
     put the argument in a different branch.  This identity does hold if x is
     positive:
 
@@ -145,6 +148,24 @@ def root(arg, n):
     >>> [ RootOf(x**4-1,i) for i in (0,1,2,3) ]
     [-1, 1, -I, I]
 
+    SymPy, like other symbolic algebra systems, returns the
+    complex root of negative numbers. This is the principal
+    root and differs from the text-book result that one might
+    be expecting. For example, the cube root of -8 does not
+    come back as -2:
+
+    >>> root(-8, 3)
+    2*(-1)**(1/3)
+
+    The real_root function can be used to either make such a result
+    real or simply return the real root in the first place:
+
+    >>> from sympy import real_root
+    >>> real_root(_)
+    -2
+    >>> real_root(-32, 5)
+    -2
+
     See Also
     ========
 
@@ -159,6 +180,7 @@ def root(arg, n):
     * http://en.wikipedia.org/wiki/real_root
     * http://en.wikipedia.org/wiki/Root_of_unity
     * http://en.wikipedia.org/wiki/Principal_value
+    * http://mathworld.wolfram.com/CubeRoot.html
 
     """
     n = sympify(n)
@@ -481,3 +503,68 @@ class Min(MinMaxBase, Application, Basic):
         Check if x > y.
         """
         return (x > y)
+
+_pyround = round
+def round(x, p=0):
+    """Return x rounded to the given decimal place. If x is not an Expr,
+    Python's round function is employed.
+
+    Examples
+    ========
+    >>> from sympy import round, pi, S, Number
+    >>> round(S(10.5))
+    11.
+    >>> round(pi)
+    3.
+    >>> round(pi, 2)
+    3.14
+
+    If x is not a SymPy Expr then Python's round is used and it returns
+    a Python type, not a SymPy Number:
+
+    >>> isinstance(round(543210, -2), Number)
+    False
+    >>> round(S(543210), -2)
+    5.432e+5
+    >>> _.is_Number
+    True
+
+    """
+    from sympy.functions.elementary.exponential import log
+    from sympy.mpmath.libmp import prec_to_dps
+
+    if not isinstance(x, Expr):
+        return _pyround(x, p)
+    if not x.is_number:
+        raise TypeError('%s is not a number' % x)
+    if not x.is_real:
+        raise TypeError("can't convert complex to int")
+    if not x:
+        return x
+    p = int(p)
+
+    precs = [f._prec for f in x.atoms(C.Float)]
+    dps = prec_to_dps(max(precs)) if precs else None
+
+    try:
+        mag_first_dig = int(ceil(log10(abs(x.n()))))
+    except (ValueError, OverflowError):
+        mag_first_dig = int(ceil(log(abs(x), 10).n()))
+    allow = digits_needed = mag_first_dig + p
+    if dps is not None and allow > dps:
+        allow = dps
+    mag = Pow(10, p) # magnitude needed to bring digit p to units place
+    x += 1/(2*mag) # add the half for rounding
+    i10 = 10*mag*x.n((dps if dps is not None else digits_needed) + 1)
+    rv = Integer(i10)//10
+    q = 1
+    if p > 0:
+        q = mag
+    elif p < 0:
+        rv /= mag
+    rv = Rational(rv, q)
+    if rv.is_Integer:
+        # use str or else it won't be a float
+        return C.Float(str(rv), digits_needed)
+    else:
+        return C.Float(rv, allow)

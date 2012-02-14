@@ -83,7 +83,7 @@ subexpressions, collect them and evaluate them at once. This is implemented in t
 
     >>> pprint(cse((x-y)*(z-y) + sqrt((x-y)*(z-y))), use_unicode=True)
     ⎛                         ⎡  ____     ⎤⎞
-    ⎝[(x₀, (x - y)⋅(-y + z))], ⎣╲╱ x₀  + x₀⎦⎠
+    ⎝[(x₀, -(x - y)⋅(y - z))], ⎣╲╱ x₀  + x₀⎦⎠
 
 More information:
 

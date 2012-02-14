@@ -76,11 +76,7 @@ attribute, a ReferenceFrame to the frame attribute, and mass and inertia. Then
 we form the body list. ::
 
   >>> ForceList = [(Dmc, - m * g * Y.z)]
-  >>> BodyD = RigidBody()
-  >>> BodyD.mc = Dmc
-  >>> BodyD.inertia = (I, Dmc)
-  >>> BodyD.frame = R
-  >>> BodyD.mass = m
+  >>> BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
   >>> BodyList = [BodyD]
 
 Finally we form the equations of motion, using the same steps we did before.
@@ -156,11 +152,7 @@ introduce three forces; they are in the same direction as the speeds, and
 represent the constraint forces in those directions. ::
 
   >>> ForceList = [(Dmc, - m * g * Y.z), (C, f1 * L.x + f2 * (Y.z ^ L.x) + f3 * Y.z)]
-  >>> BodyD = RigidBody()
-  >>> BodyD.mc = Dmc
-  >>> BodyD.inertia = (I, Dmc)
-  >>> BodyD.frame = R
-  >>> BodyD.mass = m
+  >>> BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
   >>> BodyList = [BodyD]
 
   >>> KM = Kane(N)
@@ -179,10 +171,9 @@ represent the constraint forces in those directions. ::
   [                                          -2*u1*u3/3]
   [                             (-2*u2 + u3*tan(q2))*u1]
   >>> mprint(KM.auxiliary_eqs, order=None)
-  [                                                            -m*(r*u1*u3 + r*u2') + f1]
-  [      -m*(-r*(-u3*q3' + u1') + r*u2*u3)*cos(q2) + m*(-r*u1**2 - r*u2**2)*sin(q2) + f2]
-  [-g*m - m*(-r*(-u3*q3' + u1') + r*u2*u3)*sin(q2) - m*(-r*u1**2 - r*u2**2)*cos(q2) + f3]
-
+  [                                                        -m*(r*u1*u3 + r*u2') + f1]
+  [     m*(-r*(u3*q3' - u1') - r*u2*u3)*cos(q2) - m*(r*u1**2 + r*u2**2)*sin(q2) + f2]
+  [-g*m + m*(r*(u1**2 + u2**2)*cos(q2) + (-r*(u3*q3' - u1') - r*u2*u3)*sin(q2)) + f3]
 
 The Bicycle
 ===========
@@ -251,23 +242,6 @@ WF - front wheel, again posses a ignorable coordinate ::
   >>> TempFork = Fork.orientnew('TempFork', 'Axis', [-htangle, Fork.y])
   >>> WF = ReferenceFrame('WF')
 
-Declaration of the RigidBody containers & setting their masses. ::
-
-  >>> BodyFrame = RigidBody()
-  >>> BodyFork = RigidBody()
-  >>> BodyWR = RigidBody()
-  >>> BodyWF = RigidBody()
-  >>> BodyFrame.mass = mframe
-  >>> BodyFork.mass = mfork
-  >>> BodyWF.mass = mwf
-  >>> BodyWR.mass = mwr
-
-Assignment of the appropriate frame to each body. ::
-
-  >>> BodyFrame.frame = Frame
-  >>> BodyFork.frame = Fork
-  >>> BodyWR.frame = WR
-  >>> BodyWF.frame = WF
 
 Kinematics of the Bicycle:
 First block of code is forming the positions of the relevant points rear wheel
@@ -316,15 +290,9 @@ again are calculated automatically when first needed. ::
   >>> WF_cont.v2pt_theory(WF_mc, N, WF)
   WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4))*Frame.y + (-WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1) + forkoffset*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)))*Fork.x + (forklength*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkoffset*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y + (WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5)/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1) - forklength*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)))*Fork.z - WFrad*((-sin(q2)*sin(q5)*cos(htangle + q4) + cos(q2)*cos(q5))*u6 + u4*cos(q2) + u5*sin(htangle + q4)*sin(q2))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1)*Y.x + WFrad*(u2 + u5*cos(htangle + q4) + u6*sin(htangle + q4)*sin(q5))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1)*Y.y
 
-Assignment the relevant points to each body. ::
-
-  >>> BodyFrame.mc = Frame_mc
-  >>> BodyFork.mc = Fork_mc
-  >>> BodyWF.mc = WF_mc
-  >>> BodyWR.mc = WR_mc
 
 Sets the inertias of each body. Uses the inertia frame to construct the inertia
-dyadics. Wheel inertias are only defined by principle moments of inertia, and
+dyadics. Wheel inertias are only defined by principal moments of inertia, and
 are in fact constant in the frame and fork reference frames; it is for this
 reason that the orientations of the wheels does not need to be defined. The
 frame and fork inertias are defined in the 'Temp' frames which are fixed to the
@@ -333,10 +301,18 @@ of the benchmark paper. Note that due to slightly different orientations, the
 products of inertia need to have their signs flipped; this is done later when
 entering the numerical value. ::
 
-  >>> BodyFrame.inertia = (inertia(TempFrame, Iframe11, Iframe22, Iframe33, 0, 0, Iframe31), Frame_mc)
-  >>> BodyFork.inertia = (inertia(TempFork, Ifork11, Ifork22, Ifork33, 0, 0, Ifork31), Fork_mc)
-  >>> BodyWR.inertia = (inertia(Frame, Iwr11, Iwr22, Iwr11), WR_mc)
-  >>> BodyWF.inertia = (inertia(Fork, Iwf11, Iwf22, Iwf11), WF_mc)
+  >>> Frame_I = (inertia(TempFrame, Iframe11, Iframe22, Iframe33, 0, 0, Iframe31), Frame_mc)
+  >>> Fork_I = (inertia(TempFork, Ifork11, Ifork22, Ifork33, 0, 0, Ifork31), Fork_mc)
+  >>> WR_I = (inertia(Frame, Iwr11, Iwr22, Iwr11), WR_mc)
+  >>> WF_I = (inertia(Fork, Iwf11, Iwf22, Iwf11), WF_mc)
+
+Declaration of the RigidBody containers. ::
+
+  >>> BodyFrame = RigidBody('BodyFrame', Frame_mc, Frame, mframe, Frame_I)
+  >>> BodyFork = RigidBody('BodyFork', Fork_mc, Fork, mfork, Fork_I)
+  >>> BodyWR = RigidBody('BodyWR', WR_mc, WR, mwr, WR_I)
+  >>> BodyWF = RigidBody('BodyWF', WF_mc, WF, mwf, WF_I)
+
   >>> print('Before Forming the List of Nonholonomic Constraints.')
   Before Forming the List of Nonholonomic Constraints.
 

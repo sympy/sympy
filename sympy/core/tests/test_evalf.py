@@ -1,7 +1,7 @@
 from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
                    Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
-                   sin, sqrt, sstr, Sum, sympify)
-from sympy.core.evalf import complex_accuracy, PrecisionExhausted
+                   sin, sqrt, sstr, Sum, sympify, S, integrate, atan, product)
+from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
 from sympy.abc import n, x, y
 from sympy.mpmath.libmp.libmpf import from_float
 from sympy.utilities.pytest import raises, XFAIL
@@ -87,10 +87,14 @@ def test_evalf_complex_cancellation():
     F = Rational('2231321613/2500000000')
     # XXX: the number of returned mantissa digits in the real part could
     # change with the implementation. What matters is that the returned digits are
-    # correct.
-    assert NS((A+B*I)*(C+D*I),6) == '6.44862e-6 + 0.892529*I'
-    assert NS((A+B*I)*(C+D*I),10) == '6.447099821e-6 + 0.8925286452*I'
-    assert NS((A+B*I)*(C+D*I) - F*I, 5) in ('6.4471e-6 - .0e-15*I', '6.4471e-6 + .0e-15*I')
+    # correct; those that are showing now are correct.
+    # >>> ((A+B*I)*(C+D*I)).expand()
+    # 64471/10000000000 + 2231321613*I/2500000000
+    # >>> 2231321613*4
+    # 8925286452L
+    assert NS((A+B*I)*(C+D*I), 6) == '6.44710e-6 + 0.892529*I'
+    assert NS((A+B*I)*(C+D*I), 10) == '6.447100000e-6 + 0.8925286452*I'
+    assert NS((A+B*I)*(C+D*I) - F*I, 5) in ('6.4471e-6 + .0e-14*I', '6.4471e-6 - .0e-14*I')
 
 def test_evalf_logs():
     assert NS("log(3+pi*I)", 15) == '1.46877619736226 + 0.808448792630022*I'
@@ -139,11 +143,11 @@ def test_evalf_bugs():
     assert NS('(sin(x)-x)/x**3', 15, subs={x:'1/10**50'}) == '-0.166666666666667'
     assert NS(sin(1)+Rational(1,10**100)*I,15) == '0.841470984807897 + 1.00000000000000e-100*I'
     assert x.evalf() == x
-    assert NS((1+I)**2*I,6) == '-2.00000 + 2.32831e-10*I'
+    assert NS((1+I)**2*I, 6) == '-2.00000'
     d={n: (-1)**Rational(6,7), y: (-1)**Rational(4,7), x: (-1)**Rational(2,7)}
     assert NS((x*(1+y*(1 + n))).subs(d).evalf(),6) == '0.346011 + 0.433884*I'
     assert NS(((-I-sqrt(2)*I)**2).evalf()) == '-5.82842712474619'
-    assert NS((1+I)**2*I,15) == '-2.00000000000000 + 2.16840434497101e-19*I'
+    assert NS((1+I)**2*I,15) == '-2.00000000000000'
     #1659 (1/2):
     assert NS(pi.evalf(69) - pi) == '-4.43863937855894e-71'
     #1659 (2/2): With the bug present, this still only fails if the
@@ -195,8 +199,7 @@ def test_evalf_py_methods():
     assert abs(float(pi+1) - 4.1415926535897932) < 1e-10
     assert abs(complex(pi+1) - 4.1415926535897932) < 1e-10
     assert abs(complex(pi+E*I) - (3.1415926535897931+2.7182818284590451j)) < 1e-10
-    raises(ValueError, "float(pi+x)")
-    raises(ValueError, "complex(pi+x)")
+    raises(TypeError, "float(pi+x)")
 
 def test_evalf_power_subs_bugs():
     assert (x**2).evalf(subs={x:0}) == 0
@@ -252,3 +255,52 @@ def test_subs_bugs():
            '-4.92535585957223e-10'
     assert NS('Piecewise((x, x>0)) + Piecewise((1-x, x>0))', subs={x:0.1}) == \
            '1.00000000000000'
+
+def test_issue_1857_2105():
+    # 1857
+    v = S('''(-27*12**(1/3)*sqrt(31)*I +
+    27*2**(2/3)*3**(1/3)*sqrt(31)*I)/(-2511*2**(2/3)*3**(1/3) +
+    (29*18**(1/3) + 9*2**(1/3)*3**(2/3)*sqrt(31)*I +
+    87*2**(1/3)*3**(1/6)*I)**2)''')
+    assert NS(v, 1) == '.0e-118 - .0e-118*I'
+
+    # 2105
+    v = S('''-(357587765856 + 18873261792*249**(1/2) + 56619785376*I*83**(1/2) +
+    108755765856*I*3**(1/2) + 41281887168*6**(1/3)*(1422 +
+    54*249**(1/2))**(1/3) - 1239810624*6**(1/3)*249**(1/2)*(1422 +
+    54*249**(1/2))**(1/3) - 3110400000*I*6**(1/3)*83**(1/2)*(1422 +
+    54*249**(1/2))**(1/3) + 13478400000*I*3**(1/2)*6**(1/3)*(1422 +
+    54*249**(1/2))**(1/3) + 1274950152*6**(2/3)*(1422 +
+    54*249**(1/2))**(2/3) + 32347944*6**(2/3)*249**(1/2)*(1422 +
+    54*249**(1/2))**(2/3) - 1758790152*I*3**(1/2)*6**(2/3)*(1422 +
+    54*249**(1/2))**(2/3) - 304403832*I*6**(2/3)*83**(1/2)*(1422 +
+    4*249**(1/2))**(2/3))/(175732658352 + (1106028 + 25596*249**(1/2) +
+    76788*I*83**(1/2))**2)''')
+    assert NS(v, 5) == '0.077284 + 1.1104*I'
+    assert NS(v, 1) == '0.08 + 1.*I'
+
+def test_old_docstring():
+    a = (E + pi*I)*(E - pi*I)
+    assert NS(a) == '17.2586605000200'
+    assert a.n() == 17.25866050002001
+
+def test_issue_1707():
+    assert round(integrate(atan(x)**2, (x, -1, 1)).evalf(), 1) == 0.5
+    assert atan(0, evaluate=False).n() == 0
+
+def test_evalf_mul():
+    # sympy should not try to expand this; it should be handled term-wise
+    # in evalf through mpmath
+    assert NS(product(1 + sqrt(n)*I, (n, 1, 500)), 1) == '5.e+567 + 2.e+568*I'
+
+def test_scaled_zero():
+    a, b = (([0], 1, 100, 1), -1)
+    assert scaled_zero(100) == (a, b)
+    assert scaled_zero(a) == (0, 1, 100, 1)
+    a, b = (([1], 1, 100, 1), -1)
+    assert scaled_zero(100, -1) == (a, b)
+    assert scaled_zero(a) == (1, 1, 100, 1)
+    raises(ValueError, 'scaled_zero(scaled_zero(100))')
+    raises(ValueError, 'scaled_zero(100, 2)')
+    raises(ValueError, 'scaled_zero(100, 0)')
+    raises(ValueError, 'scaled_zero((1, 5, 1, 3))')

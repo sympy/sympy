@@ -6,6 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
 
+from sympy.functions.elementary.complexes import sign
 from sympy.ntheory import multiplicity, perfect_power
 
 # NOTE IMPORTANT
@@ -44,8 +45,7 @@ class ExpBase(Function):
         >>> exp(x).as_numer_denom()
         (exp(x), 1)
         """
-        c, t = self.args[0].as_coeff_mul()
-        if c.is_negative:
+        if self.args[0].as_coeff_mul()[0].is_negative:
             return S.One, exp(-self.args[0])
         return self, S.One
 
@@ -61,8 +61,10 @@ class ExpBase(Function):
     def _eval_is_bounded(self):
         arg = self.args[0]
         if arg.is_unbounded:
-            if arg.is_negative: return True
-            if arg.is_positive: return False
+            if arg.is_negative:
+                return True
+            if arg.is_positive:
+                return False
         if arg.is_bounded:
             return True
     def _eval_is_zero(self):
@@ -171,8 +173,11 @@ class exp(ExpBase):
         elif arg.func is log:
             return arg.args[0]
         elif arg.is_Mul:
-            coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
+            Ioo = S.ImaginaryUnit*S.Infinity
+            if arg in [Ioo, -Ioo]:
+                return S.NaN
 
+            coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
             if coeff is not None:
                 if (2*coeff).is_integer:
                     if coeff.is_even:
@@ -183,45 +188,43 @@ class exp(ExpBase):
                         return -S.ImaginaryUnit
                     elif (coeff + S.Half).is_odd:
                         return S.ImaginaryUnit
-            I = S.ImaginaryUnit
-            oo = S.Infinity
-            a = Wild("a", exclude=[I, oo])
-            r = arg.match(I*a*oo)
-            if r and r[a] != 0:
-                return S.NaN
 
-        args = Add.make_args(arg)
+            # look for a single log factor
 
-        included, excluded = [], []
+            coeff, terms = arg.as_coeff_Mul()
 
-        for arg in args:
-            coeff, terms = arg.as_coeff_mul()
+            # but it can't be multiplied by oo
+            if coeff in [S.NegativeInfinity, S.Infinity]:
+                return None
 
-            if coeff is S.Infinity:
-                excluded.append(coeff**Mul(*terms))
-            else:
-                coeffs, log_term = [coeff], None
-
-                for term in terms:
-                    if term.func is log:
-                        if log_term is None:
-                            log_term = term.args[0]
-                        else:
-                            log_term = None
-                            break
-                    elif term.is_comparable:
-                        coeffs.append(term)
+            coeffs, log_term = [coeff], None
+            for term in Mul.make_args(terms):
+                if term.func is log:
+                    if log_term is None:
+                        log_term = term.args[0]
                     else:
-                        log_term = None
-                        break
-
-                if log_term is not None:
-                    excluded.append(log_term**Mul(*coeffs))
+                        return None
+                elif term.is_comparable:
+                    coeffs.append(term)
                 else:
-                    included.append(arg)
+                    return None
 
-        if excluded:
-            return Mul(*(excluded + [cls(Add(*included))]))
+            return log_term**Mul(*coeffs) if log_term else None
+
+        elif arg.is_Add:
+            out = []
+            add = []
+            for a in arg.args:
+                if a is S.One:
+                    add.append(a)
+                    continue
+                newa = cls(a)
+                if newa.func is cls:
+                    add.append(a)
+                else:
+                    out.append(newa)
+            if out:
+                return Mul(*out)*cls(Add(*add), evaluate=False)
 
     @property
     def base(self):
@@ -243,8 +246,10 @@ class exp(ExpBase):
         """
         Calculates the next term in the Taylor series expansion.
         """
-        if n<0: return S.Zero
-        if n==0: return S.One
+        if n < 0:
+            return S.Zero
+        if n == 0:
+            return S.One
         x = sympify(x)
         if previous_terms:
             p = previous_terms[-1]
@@ -426,6 +431,7 @@ class log(Function):
 
     @classmethod
     def eval(cls, arg, base=None):
+        from sympy import unpolarify
         if base is not None:
             base = sympify(base)
 
@@ -468,6 +474,8 @@ class log(Function):
             return S.One
         elif arg.func is exp and arg.args[0].is_real:
             return arg.args[0]
+        elif arg.func is exp_polar:
+            return unpolarify(arg.args[0])
         #don't autoexpand Pow or Mul (see the issue 252):
         elif not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -496,9 +504,11 @@ class log(Function):
         Returns the next term in the Taylor series expansion of log(1+x).
         """
         from sympy import powsimp
-        if n<0: return S.Zero
+        if n < 0:
+            return S.Zero
         x = sympify(x)
-        if n==0: return x
+        if n == 0:
+            return x
         if previous_terms:
             p = previous_terms[-1]
             if p is not None:
@@ -506,6 +516,7 @@ class log(Function):
         return (1-2*(n%2)) * x**(n+1)/(n+1)
 
     def _eval_expand_log(self, deep=True, **hints):
+        from sympy import unpolarify
         force = hints.get('force', False)
         if deep:
             arg = self.args[0].expand(deep=deep, **hints)
@@ -517,20 +528,21 @@ class log(Function):
             for x in arg.args:
                 if deep:
                     x = x.expand(deep=deep, **hints)
-                if force or x.is_positive:
+                if force or x.is_positive or x.is_polar:
                     expr.append(self.func(x)._eval_expand_log(deep=deep, **hints))
                 else:
                     nonpos.append(x)
             return Add(*expr) + log(Mul(*nonpos))
         elif arg.is_Pow:
-            if force or arg.exp.is_real and arg.base.is_positive:
+            if force or (arg.exp.is_real and arg.base.is_positive) or \
+                        arg.base.is_polar:
                 if deep:
                     b = arg.base.expand(deep=deep, **hints)
                     e = arg.exp.expand(deep=deep, **hints)
                 else:
                     b = arg.base
                     e = arg.exp
-                return e * self.func(b)._eval_expand_log(deep=deep,\
+                return unpolarify(e) * self.func(b)._eval_expand_log(deep=deep,\
                 **hints)
 
         return self.func(arg)
@@ -552,7 +564,7 @@ class log(Function):
         >>> log(1+I).as_real_imag()
         (log(sqrt(2)), pi/4)
         >>> log(I*x).as_real_imag()
-        (log(Abs(I*x)), arg(I*x))
+        (log(Abs(x)), arg(I*x))
 
         """
         if deep:
@@ -583,10 +595,12 @@ class log(Function):
     def _eval_is_positive(self):
         arg = self.args[0]
         if arg.is_positive:
-            if arg.is_unbounded: return True
-            if arg.is_infinitesimal: return False
+            if arg.is_unbounded:
+                return True
+            if arg.is_infinitesimal:
+                return False
             if arg.is_Number:
-                return arg>1
+                return arg > 1
 
     def _eval_is_zero(self):
         # XXX This is not quite useless. Try evaluating log(0.5).is_negative
@@ -656,11 +670,16 @@ class LambertW(Function):
 
     @classmethod
     def eval(cls, x):
-        if x == S.Zero: return S.Zero
-        if x == S.Exp1: return S.One
-        if x == -1/S.Exp1: return S.NegativeOne
-        if x == -log(2)/2: return -log(2)
-        if x == S.Infinity: return S.Infinity
+        if x == S.Zero:
+            return S.Zero
+        if x == S.Exp1:
+            return S.One
+        if x == -1/S.Exp1:
+            return S.NegativeOne
+        if x == -log(2)/2:
+            return -log(2)
+        if x == S.Infinity:
+            return S.Infinity
 
     def fdiff(self, argindex=1):
         """

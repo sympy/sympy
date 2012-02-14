@@ -1,7 +1,8 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import symbols, oo
-from sympy.core.relational import Relational, Equality, StrictInequality, \
-    Rel, Eq, Lt, Le, Gt, Ge, Ne
+from sympy import Symbol, symbols, oo, I
+from sympy.core.relational import ( Relational, Equality, Unequality,
+    GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Rel, Eq, Lt, Le,
+    Gt, Ge, Ne )
 
 x,y,z = symbols('x,y,z')
 
@@ -18,10 +19,31 @@ def test_rel_subs():
     assert e.lhs == z
     assert e.rhs == y
 
+    e = Relational(x, y, '>=')
+    e = e.subs(x,z)
+
+    assert isinstance(e, GreaterThan)
+    assert e.lhs == z
+    assert e.rhs == y
+
+    e = Relational(x, y, '<=')
+    e = e.subs(x,z)
+
+    assert isinstance(e, LessThan)
+    assert e.lhs == z
+    assert e.rhs == y
+
+    e = Relational(x, y, '>')
+    e = e.subs(x,z)
+
+    assert isinstance(e, StrictGreaterThan)
+    assert e.lhs == z
+    assert e.rhs == y
+
     e = Relational(x, y, '<')
     e = e.subs(x,z)
 
-    assert isinstance(e, StrictInequality)
+    assert isinstance(e, StrictLessThan)
     assert e.lhs == z
     assert e.rhs == y
 
@@ -98,6 +120,12 @@ def test_bool():
     assert Ge(1,0) is True
     assert Ge(0,1) is False
     assert Ge(1,1) is True
+    assert Eq(I, 2) is False
+    assert Ne(I, 2) is True
+    assert Gt(I, 2) not in [True, False]
+    assert Ge(I, 2) not in [True, False]
+    assert Lt(I, 2) not in [True, False]
+    assert Le(I, 2) not in [True, False]
 
 def test_rich_cmp():
     assert (x<y) == Lt(x,y)
@@ -122,6 +150,102 @@ def test_doit():
     assert Lt(nn, 0).doit() is False
 
     assert Eq(x, 0).doit() == Eq(x, 0)
+
+def test_new_relational():
+    x = Symbol('x')
+
+    assert Eq(x)     == Relational(x, 0)       # None ==> Equality
+    assert Eq(x)     == Relational(x, 0, '==')
+    assert Eq(x)     == Relational(x, 0, 'eq')
+    assert Eq(x)     == Equality(x, 0)
+    assert Eq(x, -1) == Relational(x, -1)       # None ==> Equality
+    assert Eq(x, -1) == Relational(x, -1, '==')
+    assert Eq(x, -1) == Relational(x, -1, 'eq')
+    assert Eq(x, -1) == Equality(x, -1)
+    assert Eq(x)     != Relational(x, 1)       # None ==> Equality
+    assert Eq(x)     != Relational(x, 1, '==')
+    assert Eq(x)     != Relational(x, 1, 'eq')
+    assert Eq(x)     != Equality(x, 1)
+    assert Eq(x, -1) != Relational(x, 1)       # None ==> Equality
+    assert Eq(x, -1) != Relational(x, 1, '==')
+    assert Eq(x, -1) != Relational(x, 1, 'eq')
+    assert Eq(x, -1) != Equality(x, 1)
+
+    assert Ne(x, 0) == Relational(x, 0, '!=')
+    assert Ne(x, 0) == Relational(x, 0, '<>')
+    assert Ne(x, 0) == Relational(x, 0, 'ne')
+    assert Ne(x, 0) == Unequality(x, 0)
+    assert Ne(x, 0) != Relational(x, 1, '!=')
+    assert Ne(x, 0) != Relational(x, 1, '<>')
+    assert Ne(x, 0) != Relational(x, 1, 'ne')
+    assert Ne(x, 0) != Unequality(x, 1)
+
+    assert Ge(x, 0) == Relational(x, 0, '>=')
+    assert Ge(x, 0) == Relational(x, 0, 'ge')
+    assert Ge(x, 0) == GreaterThan(x, 0)
+    assert Ge(x, 1) != Relational(x, 0, '>=')
+    assert Ge(x, 1) != Relational(x, 0, 'ge')
+    assert Ge(x, 1) != GreaterThan(x, 0)
+    assert (x >= 1) == Relational(x, 1, '>=')
+    assert (x >= 1) == Relational(x, 1, 'ge')
+    assert (x >= 1) == GreaterThan(x, 1)
+    assert (x >= 0) != Relational(x, 1, '>=')
+    assert (x >= 0) != Relational(x, 1, 'ge')
+    assert (x >= 0) != GreaterThan(x, 1)
+
+    assert Le(x, 0) == Relational(x, 0, '<=')
+    assert Le(x, 0) == Relational(x, 0, 'le')
+    assert Le(x, 0) == LessThan(x, 0)
+    assert Le(x, 1) != Relational(x, 0, '<=')
+    assert Le(x, 1) != Relational(x, 0, 'le')
+    assert Le(x, 1) != LessThan(x, 0)
+    assert (x <= 1) == Relational(x, 1, '<=')
+    assert (x <= 1) == Relational(x, 1, 'le')
+    assert (x <= 1) == LessThan(x, 1)
+    assert (x <= 0) != Relational(x, 1, '<=')
+    assert (x <= 0) != Relational(x, 1, 'le')
+    assert (x <= 0) != LessThan(x, 1)
+
+    assert Gt(x, 0) == Relational(x, 0, '>')
+    assert Gt(x, 0) == Relational(x, 0, 'gt')
+    assert Gt(x, 0) == StrictGreaterThan(x, 0)
+    assert Gt(x, 1) != Relational(x, 0, '>')
+    assert Gt(x, 1) != Relational(x, 0, 'gt')
+    assert Gt(x, 1) != StrictGreaterThan(x, 0)
+    assert (x > 1) == Relational(x, 1, '>')
+    assert (x > 1) == Relational(x, 1, 'gt')
+    assert (x > 1) == StrictGreaterThan(x, 1)
+    assert (x > 0) != Relational(x, 1, '>')
+    assert (x > 0) != Relational(x, 1, 'gt')
+    assert (x > 0) != StrictGreaterThan(x, 1)
+
+    assert Lt(x, 0) == Relational(x, 0, '<')
+    assert Lt(x, 0) == Relational(x, 0, 'lt')
+    assert Lt(x, 0) == StrictLessThan(x, 0)
+    assert Lt(x, 1) != Relational(x, 0, '<')
+    assert Lt(x, 1) != Relational(x, 0, 'lt')
+    assert Lt(x, 1) != StrictLessThan(x, 0)
+    assert (x < 1)  == Relational(x, 1, '<')
+    assert (x < 1)  == Relational(x, 1, 'lt')
+    assert (x < 1)  == StrictLessThan(x, 1)
+    assert (x < 0)  != Relational(x, 1, '<')
+    assert (x < 0)  != Relational(x, 1, 'lt')
+    assert (x < 0)  != StrictLessThan(x, 1)
+
+
+    # finally, some fuzz testing
+    from random import randint
+    for i in range(100):
+        while 1:
+            strtype, length = (unichr, 65535) if randint(0, 1) else (chr, 255)
+            relation_type = strtype( randint(0, length) )
+            if randint(0, 1):
+                relation_type += strtype( randint(0, length) )
+            if relation_type not in ('==', 'eq', '!=', '<>', 'ne', '>=', 'ge',
+                                     '<=', 'le', '>', 'gt', '<', 'lt'):
+                break
+
+        raises(ValueError, "Relational(x, 1, relation_type)" )
 
 @XFAIL
 def test_relational_bool_output():

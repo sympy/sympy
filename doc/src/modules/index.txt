@@ -21,7 +21,7 @@ access any SymPy module, or use this contens:
    ntheory.txt
    concrete.txt
    evalf.txt
-   functions.txt
+   functions/index.txt
    geometry.txt
    galgebra/index.txt
    galgebra/GA/GAsympy.txt
@@ -39,6 +39,7 @@ access any SymPy module, or use this contens:
    simplify/simplify.txt
    simplify/hyperexpand.txt
    statistics.txt
+   stats.txt
    solvers/ode.txt
    solvers/solvers.txt
    tensor/index.txt

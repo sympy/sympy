@@ -81,6 +81,21 @@ the square root function on `\mathbb{C}`, we are forced to define
 (We are omitting `|z| = 1` here, this does not matter for integration.)
 Finally we define `G(a, b) = \sqrt{a}F(b/a)`.
 
+Representing Branched Functions on the Argand Plane
+===================================================
+
+Suppose `f: \mathcal{S} \to \mathbb{C}` is a holomorphic function. We wish to
+define a function `F` on (part of) the complex numbers `\mathbb{C}` that
+represents `f` as closely as possible. This process is knows as "introducing
+branch cuts". In our situation, there is actually a canonical way of doing this
+(which is adhered to in all of SymPy), as follows: Introduce the "cut complex
+plane"
+`C = \mathbb{C} \setminus \mathbb{R}_{\le 0}`. Define a function
+`l: C \to \mathcal{S}` via `re^{i\theta} \mapsto r Exp(i\theta)`. Here `r > 0`
+and `-\pi < \theta \le \pi`. Then `l` is holomorphic, and we define
+`G = f \circ l`. This called "lifting to the principal branch" throughout the
+SymPy documentation.
+
 Table Lookups and Inverse Mellin Transforms
 ===========================================
 

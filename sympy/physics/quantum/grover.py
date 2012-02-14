@@ -2,7 +2,8 @@
 
 Todo:
 * W gate construction (or perhaps -W gate based on Mermin's book)
-* Generalize the algorithm for an unknown function that returns 1 on multiple qubit states, not just one.
+* Generalize the algorithm for an unknown function that returns 1 on multiple
+  qubit states, not just one.
 * Implement _represent_ZGate in OracleGate
 """
 

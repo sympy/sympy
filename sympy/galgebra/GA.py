@@ -7,13 +7,12 @@ The relevant references for this module are:
     1. "Geometric Algebra for Physicists" by C. Doran and A. Lazenby,
        Cambridge University Press, 2003.
 
-    2. "Geometric Algebra for Computer Science" by Leo Dorst, Daniel Fontijne,
-       and Stephen Mann, Morgan Kaufmann Publishers, 2007
+    2. "Geometric Algebra for Computer Science" by Leo Dorst,
+       Daniel Fontijne, and Stephen Mann, Morgan Kaufmann Publishers, 2007.
 
     3. Sympy Tutorial, http://docs.sympy.org/
 """
 import sys
-import types
 import numpy, sympy
 import re as regrep
 import sympy.galgebra.latex_ex
@@ -67,7 +66,7 @@ def set_main(main_program):
     return
 
 def plist(lst):
-    if type(lst) == types.ListType:
+    if type(lst) == list:
         for x in lst:
             plist(x)
     else:
@@ -80,7 +79,7 @@ def numeric(num_str):
     Input is a string representing a fraction or integer
     or a simple integer.
     """
-    if type(num_str) == types.IntType:
+    if type(num_str) == int:
         a = num_str
         b = 1
     else:
@@ -107,7 +106,7 @@ def isint(a):
     """
     Test for integer.
     """
-    return(type(a) == types.IntType)
+    return(type(a) == int)
 
 def make_null_array(n):
     """
@@ -174,7 +173,7 @@ def make_scalars(symnamelst):
     of the symbols.
     """
     global MAIN_PROGRAM
-    if type(symnamelst) == types.StringType:
+    if type(symnamelst) == str:
         symnamelst = symnamelst.split()
     scalar_lst = []
     isym = 0
@@ -194,7 +193,7 @@ def make_symbols(symnamelst):
     of the symbols.
     """
     global MAIN_PROGRAM
-    if type(symnamelst) == types.StringType:
+    if type(symnamelst) == str:
         symnamelst = symnamelst.split()
     sym_lst = []
     isym = 0
@@ -711,7 +710,7 @@ class MV(object):
             else:
                 labels = MV.bladelabel
         mv.compact()
-        if isinstance(mv.mv[0],types.IntType):
+        if isinstance(mv.mv[0],int):
             value = ''
         else:
             value = (mv.mv[0][0]).__str__()
@@ -819,7 +818,7 @@ class MV(object):
         else:
             MV.coords = tuple(coords)
             rframe= True
-        if type(basis) == types.StringType:
+        if type(basis) == str:
             basislst = basis.split()
             if len(basislst) == 1:
                 MV.basisroot = basislst[0]
@@ -827,7 +826,7 @@ class MV(object):
                 for coord in coords:
                     basislst.append(MV.basisroot+'_'+str(coord))
             MV.define_basis(basislst)
-        if type(metric) == types.StringType:
+        if type(metric) == str:
             MV.metric_str = True
             if len(metric) > 0:
                 if metric[0] == '[' and metric[-1] == ']':
@@ -895,7 +894,7 @@ class MV(object):
         independent variables coords (list of variable).  Default variables are
         those associated with each dimension of vector space.
         """
-        if isinstance(vars,types.StringType):
+        if isinstance(vars,str):
             Acoefs = vector_fct(fct_name,MV.coords)
         else:
             Acoefs =numpy.array(MV.n*[ZERO],dtype=numpy.object)
@@ -1635,7 +1634,7 @@ class MV(object):
     def scalar_to_symbol(scalar):
         if isinstance(scalar,MV):
             return(scalar.mv[0][0])
-        if type(scalar) == types.ListType:
+        if type(scalar) == list:
             sym = []
             for x in scalar:
                 sym.append(MV.scalar_to_symbol(x))
@@ -1680,17 +1679,17 @@ class MV(object):
             self.mv[2] = numpy.array(MV.nbasis[2]*[ZERO],dtype=numpy.object)
             self.mv[2][value] = ONE
         if mvtype == 'scalar':
-            if isinstance(value,types.StringType):
+            if isinstance(value,str):
                 value = sympy.Symbol(value)
-            if isinstance(value,types.IntType):
+            if isinstance(value,int):
                 value = sympy.Rational(value)
             self.mv[0] = numpy.array([value],dtype=numpy.object)
         if mvtype == 'pseudo':
-            if isinstance(value,types.StringType):
+            if isinstance(value,str):
                 value = sympy.Symbol(value)
             self.mv[MV.n] = numpy.array([value],dtype=numpy.object)
         if mvtype == 'vector':
-            if isinstance(value,types.StringType): #Most general vector
+            if isinstance(value,str): #Most general vector
                 symbol_str = ''
                 for ibase in MV.nrg:
                     if MV.coords == None:
@@ -1706,7 +1705,7 @@ class MV(object):
                 value = MV.pad_zeros(value,MV.nbasis[1])
                 self.mv[1] = numpy.array(value,dtype=numpy.object)
         if mvtype == 'grade2':
-            if isinstance(value,types.StringType): #Most general grade-2 multivector
+            if isinstance(value,str): #Most general grade-2 multivector
                 if value != '':
                     symbol_str = ''
                     for base in MV.basis[2]:
@@ -1720,7 +1719,7 @@ class MV(object):
         if mvtype == 'grade':
             igrade = value[0]
             coefs  = value[1]
-            if isinstance(coefs,types.StringType): #Most general pure grade multivector
+            if isinstance(coefs,str): #Most general pure grade multivector
                 base_symbol = coefs
                 coefs = []
                 bases = MV.basis[igrade]
@@ -1738,7 +1737,7 @@ class MV(object):
             self.mv[value[0]] = numpy.array(MV.nbasis[value[0]]*[ZERO],dtype=numpy.object)
             self.mv[value[0]][value[1]] = ONE
         if mvtype == 'spinor':
-            if isinstance(value,types.StringType): #Most general spinor
+            if isinstance(value,str): #Most general spinor
                 for grade in MV.n1rg:
                     if grade%2 == 0:
                         symbol_str = ''
@@ -1751,7 +1750,7 @@ class MV(object):
                         else:
                             self.mv[0] = numpy.array([sympy.Symbol(value)],dtype=numpy.object)
                 self.name = value+'bm'
-        if isinstance(value,types.StringType) and mvtype == '': #Most general multivector
+        if isinstance(value,str) and mvtype == '': #Most general multivector
             if value != '':
                 for grade in MV.n1rg:
                     symbol_str = ''
@@ -1768,7 +1767,7 @@ class MV(object):
             if vars is not None:
                 vars = tuple(vars)
             for grade in MV.n1rg:
-                if not isinstance(self.mv[grade],types.IntType):
+                if not isinstance(self.mv[grade],int):
                     if grade == 0:
                         coef = sympy.galgebra.latex_ex.LatexPrinter.str_basic(self.mv[0][0])
                         if vars == None and MV.coords is not None:
@@ -1824,7 +1823,7 @@ class MV(object):
         return(self.mv[1][i])
 
     def set_coef(self,grade,base,value):
-        if isinstance(self.mv[grade],types.IntType):
+        if isinstance(self.mv[grade],int):
             self.mv[grade] = numpy.array(MV.nbasis[grade]*[ZERO],dtype=numpy.object)
         self.mv[grade][base] = value
         return
@@ -2050,7 +2049,7 @@ class MV(object):
         if not isinstance(mv2,MV) and pure_grade != 0:
             return(False)
         if not isinstance(mv2,MV) and pure_grade == 0:
-            if isinstance(mv1.mv[0],types.IntType):
+            if isinstance(mv1.mv[0],int):
                 return(mv2 == 0)
             else:
                 return(mv1.mv[0][0] == mv2)
@@ -2142,7 +2141,7 @@ class MV(object):
         r is a general spinor then X.project(r) will return the even
         grades of X.
         """
-        if isinstance(r,types.IntType):
+        if isinstance(r,int):
             grade_r = MV()
             if r > MV.n:
                 return(grade_r)
@@ -2158,7 +2157,7 @@ class MV(object):
             r.convert_to_blades()
             proj = MV()
             for i in MV.n1rg:
-                if not isinstance(r.mv[i],types.IntType):
+                if not isinstance(r.mv[i],int):
                     proj.mv[i] = self.mv[i]
             proj.bladeflg = self.bladeflg
             return(proj)
@@ -2257,7 +2256,7 @@ class MV(object):
     def flatten(self):
         flst = []
         for igrade in MV.n1rg:
-            if isinstance(self.mv[igrade],types.IntType):
+            if isinstance(self.mv[igrade],int):
                 flst += MV.nbasis[igrade]*[ZERO]
             else:
                 for coef in self.mv[igrade]:
@@ -2280,13 +2279,13 @@ class MV(object):
         return
 
     def sub_scalar(self,expr1,expr2):
-        if (isinstance(expr1,types.ListType) and isinstance(expr2,types.ListType)) or \
-           (isinstance(expr1,types.TupleType) and isinstance(expr2,types.TupleType)):
+        if (isinstance(expr1,list) and isinstance(expr2,list)) or \
+           (isinstance(expr1,tuple) and isinstance(expr2,tuple)):
             for (var1,var2) in zip(expr1,expr2):
                 self.sub_scalar(var1,var2)
         else:
             for igrade in MV.n1rg:
-                if not isinstance(self.mv[igrade],types.IntType):
+                if not isinstance(self.mv[igrade],int):
                     for ibase in range(MV.nbasis[igrade]):
                         if expr1 != ZERO:
                             self.mv[igrade][ibase] = self.mv[igrade][ibase].subs(expr1,expr2)
@@ -2308,14 +2307,15 @@ class MV(object):
     def trigsimp(self):
         """
         Applies sympy trigsimp function
-        to each component of multivector.
+        to each component of multivector
+        using the recursive option.
         """
         for igrade in MV.n1rg:
             if isinstance(self.mv[igrade],numpy.ndarray):
                 for ibase in range(MV.nbasis[igrade]):
                     if self.mv[igrade][ibase] != ZERO:
                         self.mv[igrade][ibase] = \
-                        sympy.trigsimp(self.mv[igrade][ibase],deep=True,recursive=True)
+                        sympy.trigsimp(self.mv[igrade][ibase],deep=True, recursive=True)
         return
 
     def cancel(self):
@@ -2392,7 +2392,7 @@ class MV(object):
         D = MV()
         igrade = 0
         for grade in self.mv:
-            if not isinstance(grade,types.IntType):
+            if not isinstance(grade,int):
                 D.mv[igrade] = MV.vdiff(grade,x)
             igrade += 1
         return(D)
@@ -2425,7 +2425,7 @@ class MV(object):
             igrade = 1
             while igrade <= MV.n:
                 coefs = self.mv[igrade]
-                if type(coefs) != types.IntType:
+                if type(coefs) != int:
                     for (coef,connect) in zip(coefs,MV.Connect[igrade]):
                         dD.add_in_place(coef*connect)
                 igrade += 1
@@ -2449,7 +2449,7 @@ class MV(object):
             igrade = 1
             while igrade <= MV.n:
                 coefs = self.mv[igrade]
-                if type(coefs) != types.IntType:
+                if type(coefs) != int:
                     for (coef,connect) in zip(coefs,MV.Connect[igrade]):
                         if igrade < MV.n:
                             dD.add_in_place(coef*connect.project(igrade+1))
@@ -2477,7 +2477,7 @@ class MV(object):
             igrade = 1
             while igrade <= MV.n:
                 coefs = self.mv[igrade]
-                if type(coefs) != types.IntType:
+                if type(coefs) != int:
                     for (coef,connect) in zip(coefs,MV.Connect[igrade]):
                         dD.add_in_place(coef*connect.project(igrade-1))
                 igrade += 1
@@ -2517,7 +2517,7 @@ def reciprocal_frame(vlst,names=''):
     """
     E = vlst[0]
     recp = []
-    if type(names) != types.StringType:
+    if type(names) != str:
         name_lst = names
     else:
         if names != '':

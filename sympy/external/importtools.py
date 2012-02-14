@@ -23,7 +23,7 @@ if __sympy_debug():
 def import_module(module, min_module_version=None, min_python_version=None,
         warn_not_installed=None, warn_old_version=None,
         module_version_attr='__version__', module_version_attr_call_args=None,
-        __import__kwargs={}):
+        __import__kwargs={}, catch=()):
     """
     Import and return a module if it is installed.
 
@@ -64,6 +64,10 @@ def import_module(module, min_module_version=None, min_python_version=None,
     example, to import a submodule A.B, you must pass a nonempty fromlist option
     to __import__.  See the docstring of __import__().
 
+    This catches ImportError to determine if the module is not installed.  To
+    catch additional errors, pass them as a tuple to the catch keyword
+    argument.
+
     Examples
     ========
 
@@ -87,6 +91,10 @@ def import_module(module, min_module_version=None, min_python_version=None,
     >>> # __import__().  The values do not matter.
     >>> p3 = import_module('mpl_toolkits.mplot3d',
     ... __import__kwargs={'fromlist':['something']})
+
+    >>> # matplotlib.pyplot can raise RuntimeError when the display cannot be opened
+    >>> matplotlib = import_module('matplotlib',
+    ... __import__kwargs={'fromlist':['pyplot']}, catch=(RuntimeError,))
 
     """
     # keyword argument overrides default, and global variable overrides
@@ -114,13 +122,14 @@ def import_module(module, min_module_version=None, min_python_version=None,
     try:
         mod = __import__(module, **__import__kwargs)
     except ImportError:
-        installed = False
-    else:
-        installed = True
-
-    if not installed:
         if warn_not_installed:
             warnings.warn("%s module is not installed" % module, UserWarning)
+        return
+    # TODO: After 2.5 is dropped, use new 'as' keyword
+    #except catch as e:
+    except catch, e:
+        if warn_not_installed:
+            warnings.warn("%s module could not be used (%s)" % (module, repr(e)))
         return
 
     if min_module_version:

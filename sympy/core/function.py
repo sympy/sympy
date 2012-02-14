@@ -11,11 +11,12 @@ There are two types of functions:
    no name but has body with dummy variables. Examples of anonymous function
    creation:
        f = Lambda(x, exp(x)*x)
-       f = Lambda(exp(x)*x)  # free symbols in the expression define the number of arguments
+       f = Lambda(exp(x)*x) # free symbols of expr define the number of args
+       f = Lambda(exp(x)*x)  # free symbols in the expression define the number
+                             # of arguments
        f = exp * Lambda(x,x)
 4) isn't implemented yet: composition of functions, like (sin+cos)(x), this
    works in sympy core, but needs to be ported back to SymPy.
-
 
     Examples
     ========
@@ -47,6 +48,29 @@ from sympy.utilities.iterables import uniq
 
 from sympy import mpmath
 import sympy.mpmath.libmp as mlib
+
+def _coeff_isneg(a):
+    """Return True if the leading Number is negative.
+
+    Examples
+    ========
+
+    >>> from sympy.core.function import _coeff_isneg
+    >>> from sympy import S, Symbol, oo, pi
+    >>> _coeff_isneg(-3*pi)
+    True
+    >>> _coeff_isneg(S(3))
+    False
+    >>> _coeff_isneg(-oo)
+    True
+    >>> _coeff_isneg(Symbol('n', negative=True)) # coeff is 1
+    False
+
+    """
+
+    if a.is_Mul:
+        a = a.args[0]
+    return a.is_Number and a.is_negative
 
 class PoleError(Exception):
     pass
@@ -93,7 +117,8 @@ class Application(Basic):
         args = map(sympify, args)
 
         # these lines should be refactored
-        for opt in ["nargs", "dummy", "comparable", "noncommutative", "commutative"]:
+        for opt in ["nargs", "dummy", "comparable", "noncommutative",
+                    "commutative"]:
             if opt in options:
                 del options[opt]
 
@@ -124,9 +149,9 @@ class Application(Basic):
             if arg.is_positive: return S.One
             if arg.is_negative: return S.NegativeOne
             if isinstance(arg, C.Mul):
-                coeff, terms = arg.as_coeff_mul()
+                coeff, terms = arg.as_coeff_Mul(rational=True)
                 if coeff is not S.One:
-                    return cls(coeff) * cls(arg._new_rawargs(*terms))
+                    return cls(coeff) * cls(terms)
 
         """
         return
@@ -190,11 +215,18 @@ class Function(Application, Expr):
             n = len(args)
 
             if n not in nargs:
-                # XXX: exception message must be in exactly this format to make it work with
-                # NumPy's functions like vectorize(). Ideal solution would be just to attach
-                # metadata to the exception and change NumPy to take advantage of this.
-                raise TypeError('%(name)s takes exactly %(args)s argument%(plural)s (%(given)s given)' %
-                    {'name': cls, 'args': cls.nargs, 'plural': 's'*(n != 1), 'given': n})
+                # XXX: exception message must be in exactly this format to make
+                # it work with NumPy's functions like vectorize(). The ideal
+                # solution would be just to attach metadata to the exception
+                # and change NumPy to take advantage of this.
+                temp = ('%(name)s takes exactly %(args)s '
+                       'argument%(plural)s (%(given)s given)')
+                raise TypeError(temp %
+                    {
+                    'name': cls,
+                    'args': cls.nargs,
+                    'plural': 's'*(n != 1),
+                    'given': n})
 
         args = map(sympify, args)
         evaluate = options.pop('evaluate', True)
@@ -230,10 +262,20 @@ class Function(Application, Expr):
     @classmethod
     def class_key(cls):
         funcs = {
-            'exp': 10, 'log': 11,
-            'sin': 20, 'cos': 21, 'tan': 22, 'cot': 23,
-            'sinh': 30, 'cosh': 31, 'tanh': 32, 'coth': 33,
-            'conjugate': 40, 're': 41, 'im': 42, 'arg': 43,
+            'exp': 10,
+            'log': 11,
+            'sin': 20,
+            'cos': 21,
+            'tan': 22,
+            'cot': 23,
+            'sinh': 30,
+            'cosh': 31,
+            'tanh': 32,
+            'coth': 33,
+            'conjugate': 40,
+            're': 41,
+            'im': 42,
+            'arg': 43,
         }
         name = cls.__name__
 
@@ -242,10 +284,7 @@ class Function(Application, Expr):
         except KeyError:
             nargs = cls.nargs
 
-            if nargs is None:
-                i = 0
-            else:
-                i = 10000
+            i = 0 if nargs is None else 10000
 
         return 4, i, name
 
@@ -296,8 +335,10 @@ class Function(Application, Expr):
             r = True
             for s in self.args:
                 c = s.is_comparable
-                if c is None: return
-                if not c: r = False
+                if c is None:
+                    return
+                if not c:
+                    r = False
             return r
         return
 
@@ -321,8 +362,10 @@ class Function(Application, Expr):
         r = True
         for a in self._args:
             c = a.is_commutative
-            if c is None: return None
-            if not c: r = False
+            if c is None:
+                return None
+            if not c:
+                r = False
         return r
 
     def as_base_exp(self):
@@ -338,8 +381,10 @@ class Function(Application, Expr):
         be called directly; derived classes can overwrite this to implement
         asymptotic expansions.
         """
-        raise PoleError('Asymptotic expansion of %s around %s '
-                        'not implemented.' % (type(self), args0))
+        from sympy.utilities.misc import filldedent
+        raise PoleError(filldedent('''
+            Asymptotic expansion of %s around %s is
+            not implemented.''' % (type(self), args0)))
 
     def _eval_nseries(self, x, n, logx):
         """
@@ -364,8 +409,10 @@ class Function(Application, Expr):
 
         """
         if self.func.nargs is None:
-            raise NotImplementedError('series for user-defined \
-functions are not supported.')
+            from sympy.utilities.misc import filldedent
+            raise NotImplementedError(filldedent('''
+                series for user-defined functions are not
+                supported.'''))
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_bounded == False for t in args0):
@@ -373,7 +420,8 @@ functions are not supported.')
             a = [t.compute_leading_term(x, logx=logx) for t in args]
             a0 = [t.limit(x, 0) for t in a]
             if any ([t.has(oo, -oo, zoo, nan) for t in a0]):
-                return self._eval_aseries(n, args0, x, logx)._eval_nseries(x, n, logx)
+                return self._eval_aseries(n, args0, x, logx
+                                          )._eval_nseries(x, n, logx)
             # Careful: the argument goes to oo, but only logarithmically so. We
             # are supposed to do a power series expansion "around the
             # logarithmic term". e.g.
@@ -387,7 +435,8 @@ functions are not supported.')
             v = None
             for ai, zi, pi in zip(a0, z, p):
                 if zi.has(x):
-                    if v is not None: raise NotImplementedError
+                    if v is not None:
+                        raise NotImplementedError
                     q.append(ai + pi)
                     v = pi
                 else:
@@ -536,7 +585,7 @@ functions are not supported.')
 
     def _eval_rewrite(self, pattern, rule, **hints):
         if hints.get('deep', False):
-            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self.args ]
+            args = [a._eval_rewrite(pattern, rule, **hints) for a in self.args]
         else:
             args = self.args
 
@@ -582,7 +631,7 @@ functions are not supported.')
     def taylor_term(cls, n, x, *previous_terms):
         """General method for the taylor term.
 
-        This method is slow, because it differentiates n-times.  Subclasses can
+        This method is slow, because it differentiates n-times. Subclasses can
         redefine it to make it faster by using the "previous_terms".
         """
         x = sympify(x)
@@ -591,7 +640,8 @@ functions are not supported.')
 
 class AppliedUndef(Function):
     """
-    Base class for expressions resulting from the application of an undefined function.
+    Base class for expressions resulting from the application of an undefined
+    function.
     """
     def __new__(cls, *args, **options):
         args = map(sympify, args)
@@ -740,8 +790,8 @@ class Derivative(Expr):
     2*g(x).diff(x) times f(u).diff(u) at u = 2*g(x).  Note that this last part
     is exactly the same as our definition of a derivative with respect to a
     function given above, except the derivative is at a non-Function 2*g(x).
-    If we instead computed f(g(x)).diff(x), we would be able to express the Subs
-    as simply f(g(x)).diff(g(x)).  Therefore, SymPy does this when it's
+    If we instead computed f(g(x)).diff(x), we would be able to express the
+    Subs as simply f(g(x)).diff(g(x)).  Therefore, SymPy does this when it's
     possible::
 
         >>> f(g(x)).diff(x)
@@ -824,7 +874,11 @@ class Derivative(Expr):
         if not variables:
             variables = expr.free_symbols
             if len(variables) != 1:
-                raise ValueError("specify differentiation variables to differentiate %s" % expr)
+                from sympy.utilities.misc import filldedent
+                raise ValueError(filldedent('''
+                    Since there is more than one variable in the
+                    expression, the variable(s) of differentiation
+                    must be supplied to differentiate %s''' % expr))
 
         # Standardize the variables by sympifying them and making appending a
         # count of 1 if there is only one variable: diff(e,x)->diff(e,x,1).
@@ -853,7 +907,9 @@ class Derivative(Expr):
                     i += 1
 
             if i == iwas: # didn't get an update because of bad input
-                raise ValueError("Can't differentiate wrt the variable: %s, %s" % (v, count))
+                from sympy.utilities.misc import filldedent
+                raise ValueError(filldedent('''
+                Can\'t differentiate wrt the variable: %s, %s''' % (v, count)))
 
             variable_count.append((v, count))
 
@@ -1000,18 +1056,22 @@ class Derivative(Expr):
         for v in vars:
             if not v.is_Symbol:
                 if len(symbol_part) > 0:
-                    sorted_vars.extend(sorted(symbol_part,key=default_sort_key))
+                    sorted_vars.extend(sorted(symbol_part,
+                                              key=default_sort_key))
                     symbol_part = []
                 non_symbol_part.append(v)
             else:
                 if len(non_symbol_part) > 0:
-                    sorted_vars.extend(sorted(non_symbol_part,key=default_sort_key))
+                    sorted_vars.extend(sorted(non_symbol_part,
+                                              key=default_sort_key))
                     non_symbol_part = []
                 symbol_part.append(v)
         if len(non_symbol_part) > 0:
-            sorted_vars.extend(sorted(non_symbol_part,key=default_sort_key))
+            sorted_vars.extend(sorted(non_symbol_part,
+                                      key=default_sort_key))
         if len(symbol_part) > 0:
-            sorted_vars.extend(sorted(symbol_part,key=default_sort_key))
+            sorted_vars.extend(sorted(symbol_part,
+                                      key=default_sort_key))
         return sorted_vars
 
     def _eval_derivative(self, v):
@@ -1032,7 +1092,8 @@ class Derivative(Expr):
         # In this case s was in self.variables so the derivatve wrt s has
         # already been attempted and was not computed, either because it
         # couldn't be or evaluate=False originally.
-        return Derivative(self.expr, *(self.variables + (v, )), **{'evaluate': False})
+        return Derivative(self.expr, *(self.variables + (v, )),
+                          **{'evaluate': False})
 
     def doit(self, **hints):
         expr = self.expr
@@ -1058,7 +1119,8 @@ class Derivative(Expr):
             f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=mpmath.mp.prec))
             f0 = f0.evalf(mlib.libmpf.prec_to_dps(mpmath.mp.prec))
             return f0._to_mpmath(mpmath.mp.prec)
-        return Expr._from_mpmath(mpmath.diff(eval, z0._to_mpmath(mpmath.mp.prec)),
+        return Expr._from_mpmath(mpmath.diff(eval,
+                                             z0._to_mpmath(mpmath.mp.prec)),
                                  mpmath.mp.prec)
 
     @property
@@ -1169,7 +1231,10 @@ class Lambda(Expr):
 
     def __call__(self, *args):
         if len(args) != self.nargs:
-            raise TypeError("%s takes %d arguments (%d given)" % (self, self.nargs, len(args)))
+            from sympy.utilities.misc import filldedent
+            raise TypeError(filldedent('''
+                %s takes %d arguments (%d given)
+                ''' % (self, self.nargs, len(args))))
         return self.expr.xreplace(dict(zip(self.variables, args)))
 
     def __eq__(self, other):
@@ -1204,8 +1269,8 @@ class Subs(Expr):
     """
     Represents unevaluated substitutions of an expression.
 
-    ``Subs(expr, x, x0)`` receives 3 arguments: an expression, a variable or list
-    of distinct variables and a point or list of evaluation points
+    ``Subs(expr, x, x0)`` receives 3 arguments: an expression, a variable or
+    list of distinct variables and a point or list of evaluation points
     corresponding to those variables.
 
     ``Subs`` objects are generally useful to represent unevaluated derivatives
@@ -1276,8 +1341,13 @@ class Subs(Expr):
     def doit(self):
         return self.expr.doit().subs(zip(self.variables, self.point))
 
-    def evalf(self):
-        return self.doit().evalf()
+    def evalf(self, prec=None, **options):
+        if prec is None:
+            return self.doit().evalf(**options)
+        else:
+            return self.doit().evalf(prec, **options)
+
+    n = evalf
 
     @property
     def variables(self):
@@ -1402,10 +1472,17 @@ def diff(f, *symbols, **kwargs):
     Note that ``diff(sin(x))`` syntax is meant only for convenience
     in interactive sessions and should be avoided in library code.
 
-    **See Also**
+    References
+    ==========
 
-    - http://documents.wolfram.com/v5/Built-inFunctions/AlgebraicComputation/Calculus/D.html
-    - The docstring of Derivative.
+    http://documents.wolfram.com/v5/Built-inFunctions/AlgebraicComputation/
+           Calculus/D.html
+
+    See Also
+    ========
+
+    Derivative
+
     """
     kwargs.setdefault('evaluate', True)
     return Derivative(f, *symbols, **kwargs)
@@ -1421,7 +1498,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     Hints evaluated unless explicitly set to False are:
       basic, log, multinomial, mul, power_base, and power_exp
     The following hints are supported but not applied unless set to True:
-      complex, func, and trig.
+      complex, func, trig, frac, numer, and denom.
 
     basic is a generic keyword for methods that want to be expanded
     automatically.  For example, Integral uses expand_basic to expand the
@@ -1689,6 +1766,23 @@ def expand_complex(expr, deep=True):
     return sympify(expr).expand(deep=deep, complex=True, basic=False,\
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
+def expand_power_base(expr, deep=True):
+    """
+    Wrapper around expand that only uses the power_base hint.
+
+    See the expand docstring for more information.
+
+    Examples
+    ========
+
+    >>> from sympy import expand_power_base
+    >>> from sympy.abc import x, y
+    >>> expand_power_base((3*x)**y)
+    3**y*x**y
+    """
+    return sympify(expr).expand(deep=deep, complex=False, basic=False,\
+    log=False, mul=False, power_exp=False, power_base=True, multinomial=False)
+
 def count_ops(expr, visual=False):
     """
     Return a representation (integer or expression) of the operations in expr.
@@ -1768,9 +1862,6 @@ def count_ops(expr, visual=False):
         DIV = C.Symbol('DIV')
         SUB = C.Symbol('SUB')
         ADD = C.Symbol('ADD')
-        def isneg(a):
-            c = a.as_coeff_mul()[0]
-            return c.is_Number and c.is_negative
         while args:
             a = args.pop()
             if a.is_Rational:
@@ -1782,7 +1873,7 @@ def count_ops(expr, visual=False):
                         ops.append(DIV)
                     continue
             elif a.is_Mul:
-                if isneg(a):
+                if _coeff_isneg(a):
                     ops.append(NEG)
                     if a.args[0] is S.NegativeOne:
                         a = a.as_two_terms()[1]
@@ -1805,7 +1896,7 @@ def count_ops(expr, visual=False):
                 aargs = list(a.args)
                 negs = 0
                 for i, ai in enumerate(aargs):
-                    if isneg(ai):
+                    if _coeff_isneg(ai):
                         negs += 1
                         args.append(-ai)
                         if i > 0:
@@ -1816,7 +1907,7 @@ def count_ops(expr, visual=False):
                             ops.append(ADD)
                 if negs == len(aargs): # -x - y = NEG + SUB
                     ops.append(NEG)
-                elif isneg(aargs[0]): # -x + y = SUB, but we already recorded an ADD
+                elif _coeff_isneg(aargs[0]): # -x + y = SUB, but already recorded ADD
                     ops.append(SUB - ADD)
                 continue
             if a.is_Pow and a.exp is S.NegativeOne:
@@ -1835,7 +1926,8 @@ def count_ops(expr, visual=False):
                     ops.append(o*(len(a.args) - 1))
                 else:
                     ops.append(o)
-            args.extend(a.args)
+            if not a.is_Symbol:
+                args.extend(a.args)
 
     elif type(expr) is dict:
         ops = [count_ops(k, visual=visual) +
@@ -1882,7 +1974,8 @@ def nfloat(expr, n=15, exponent=False):
 
     if iterable(expr, exclude=basestring):
         if isinstance(expr, (dict, Dict)):
-            return type(expr)([(k, nfloat(v, n, exponent)) for k, v in expr.iteritems()])
+            return type(expr)([(k, nfloat(v, n, exponent)) for k, v in
+                               expr.iteritems()])
         return type(expr)([nfloat(a, n, exponent) for a in expr])
     elif not isinstance(expr, Expr):
         return float(expr)
@@ -1894,7 +1987,8 @@ def nfloat(expr, n=15, exponent=False):
         return Float(expr).n(n)
 
     if not exponent:
-        pows = [p for p in expr.atoms(Pow) if p.exp.is_Rational and p.exp.q != 1]
+        pows = [p for p in expr.atoms(Pow) if p.exp.is_Rational and
+                p.exp.q != 1]
         pows.sort(key=count_ops)
         pows.reverse()
         rats = {}

@@ -82,26 +82,37 @@ can be created with a custom precision as second argument:
     0.100000000000000
     >>> Float(0.1, 10)
     0.1000000000
+    >>> Float(0.125, 30)
+    0.125000000000000000000000000000
     >>> Float(0.1, 30)
     0.100000000000000005551115123126
 
-
-As the last example shows, Python floats are only accurate to about 15 digits as
-inputs. To create a ``Float`` from a high-precision decimal number, it is better
-to pass a string or ``evalf`` a ``Rational``:
+As the last example shows, some Python floats are only accurate to about 15
+digits as inputs, while others (those that have a denominator that is a
+power of 2, like .125 = 1/4) are exact. To create a ``Float`` from a
+high-precision decimal number, it is better to pass a string, ``Rational``,
+or ``evalf`` a ``Rational``:
 
     >>> Float('0.1', 30)
     0.100000000000000000000000000000
-    >>> Rational(1,10).evalf(30)
+    >>> Float(Rational(1, 10), 30)
+    0.100000000000000000000000000000
+    >>> Rational(1, 10).evalf(30)
     0.100000000000000000000000000000
 
 
 The precision of a number determines 1) the precision to use when performing
 arithmetic with the number, and 2) the number of digits to display when printing
 the number. When two numbers with different precision are used together in an
-arithmetic operation, the higher of the precisions is used for the result. Note
-that precision therefore cannot be used as a model of error propagation or
-significance arithmetic; rather, this scheme is designed to ensure stability of
+arithmetic operation, the higher of the precisions is used for the result. The
+product of 0.1 +/- 0.001 and 3.1415 +/- 0.0001 has an uncertainty of about 0.003
+and yet 5 digits of precision are shown.
+
+    >>> Float(0.1, 3)*Float(3.1415, 5)
+    0.31417
+
+So the displayed precision should not be used as a model of error propagation or
+significance arithmetic; rather, this scheme is employed to ensure stability of
 numerical algorithms.
 
 ``N`` and ``evalf`` can be used to change the precision of existing
@@ -146,7 +157,7 @@ therefore capped, by default to around 100 digits. If we try with the 1000'th
 Fibonacci number, the following happens:
 
     >>> N(fibonacci(1000) - (GoldenRatio)**1000/sqrt(5))
-    -.0e+84
+    .0e+85
 
 
 The lack of digits in the returned number indicates that ``N`` failed to achieve
@@ -177,30 +188,50 @@ does not know this:
 
     >>> f = fibonacci(100) - (GoldenRatio**100 - (GoldenRatio-1)**100)/sqrt(5)
     >>> N(f)
-    .0e-113
+    .0e-104
     >>> N(f, maxn=1000)
-    .0e-1345
+    .0e-1336
 
 
 In situations where such cancellations are known to occur, the ``chop`` options
-is useful. This basically replaces very small numbers with exact zeros:
+is useful. This basically replaces very small numbers in the real or
+imaginary portions of a number with exact zeros:
 
     >>> N(f, chop=True)
     0
+    >>> N(3 + I*f, chop=True)
+    3.00000000000000
 
 
-The ``chop`` option is very useful for cleaning up small real or imaginary parts:
+In situations where you wish to remove meaningless digits, re-evaluation and
+the use of the ``round`` function are useful:
 
-    >>> N((E+pi*I)*(E-pi*I))
-    17.25866050002 - 1.30104260698261e-17*I
-    >>> N((E+pi*I)*(E-pi*I), chop=True)
-    17.2586605000200
+    >>> Float('.1', '')*Float('.12345', '')
+    0.012297
+    >>> ans = _
+    >>> N(ans, 1)
+    0.01
+    >>> round(ans, 2)
+    0.01
+
+
+If you are dealing with a numeric expression that contains no floats, it
+will be evaluable to arbitrary precision. To round the result relative to
+the decimal, the round function is useful:
+
+    >>> from sympy import round
+    >>> 10*pi + cos(1)
+    cos(1) + 10*pi
+    >>> N(_)
+    31.9562288417661
+    >>> round(_, 3)
+    31.956
 
 
 Sums and integrals
 ------------------
 
-Sums (in particular infinite series) and integrals can be used like regular
+Sums (in particular, infinite series) and integrals can be used like regular
 closed-form expressions, and support arbitrary-precision evaluation:
 
     >>> var('n x')

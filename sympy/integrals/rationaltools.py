@@ -62,7 +62,7 @@ def ratint(f, x, **flags):
         if not isinstance(symbol, Symbol):
             t = Dummy(symbol)
         else:
-            t = symbol
+            t = symbol.as_dummy()
 
         L = ratint_logpart(r, Q, x, t)
 
@@ -249,7 +249,7 @@ def log_to_atan(f, g):
     Given a real field K and polynomials f and g in K[x], with g != 0,
     returns a sum h of arctangents of polynomials in K[x], such that:
 
-                   df   d         f + I g
+                   dh   d         f + I g
                    -- = -- I log( ------- )
                    dx   dx        f - I g
 
@@ -317,7 +317,7 @@ def log_to_real(h, q, x, t):
 
     log_to_atan
     """
-    u, v = symbols('u,v')
+    u, v = symbols('u,v', cls=Dummy)
 
     H = h.as_expr().subs({t:u+I*v}).expand()
     Q = q.as_expr().subs({t:u+I*v}).expand()

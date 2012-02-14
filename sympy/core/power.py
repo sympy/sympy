@@ -3,6 +3,7 @@ from math import log as _log
 from sympify import _sympify
 from cache import cacheit
 from core import C
+from sympy.core.function import _coeff_isneg, expand_complex
 from singleton import S
 from expr import Expr
 
@@ -236,19 +237,22 @@ class Pow(Expr):
         if self == old:
             return new
         if old.func is self.func and self.base == old.base:
-            coeff1, terms1 = self.exp.as_coeff_mul()
-            coeff2, terms2 = old.exp.as_coeff_mul()
+            coeff1, terms1 = self.exp.as_coeff_Mul()
+            coeff2, terms2 = old.exp.as_coeff_Mul()
             if terms1 == terms2:
                 pow = coeff1/coeff2
-                if pow.is_Integer or self.base.is_commutative:
-                    return Pow(new, pow) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
-        if old.func is C.exp:
-            coeff1, terms1 = old.args[0].as_coeff_mul()
-            coeff2, terms2 = (self.exp*C.log(self.base)).as_coeff_mul()
+                if pow == int(pow) or self.base.is_positive:
+                    # issue 2081
+                    return Pow(new, pow) # (x**(6*y)).subs(x**(3*y),z)->z**2
+        if old.func is C.exp and self.exp.is_real and self.base.is_positive:
+            coeff1, terms1 = old.args[0].as_coeff_Mul()
+            # we can only do this when the base is positive AND the exponent
+            # is real
+            coeff2, terms2 = (self.exp*C.log(self.base)).as_coeff_Mul()
             if terms1 == terms2:
                 pow = coeff1/coeff2
-                if pow.is_Integer or self.base.is_commutative:
-                    return Pow(new, pow) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
+                if pow == int(pow) or self.base.is_positive:
+                    return Pow(new, pow) # (2**x).subs(exp(x*log(2)), z) -> z
         return Pow(self.base._eval_subs(old, new), self.exp._eval_subs(old, new))
 
     def as_base_exp(self):
@@ -265,7 +269,15 @@ class Pow(Expr):
 
     def _eval_conjugate(self):
         from sympy.functions.elementary.complexes import conjugate as c
-        return c(self.base)**self.exp
+        i, p = self.exp.is_integer, self.base.is_positive
+        if i:
+            return c(self.base)**self.exp
+        if p:
+            return self.base**c(self.exp)
+        if i is False and p is False:
+            expanded = expand_complex(self)
+            if expanded != self:
+                return c(expanded)
 
     def _eval_expand_basic(self, deep=True, **hints):
         sargs, terms = self.args, []
@@ -641,33 +653,32 @@ class Pow(Expr):
             return self, S.One
         base, exp = self.as_base_exp()
         n, d = base.as_numer_denom()
-        if d.is_negative and n.is_negative:
-            n, d = -n, -d
-        if exp.is_Integer:
-            if exp.is_negative:
-                n, d = d, n
-                exp = -exp
-            return Pow(n, exp), Pow(d, exp)
-        elif exp.is_Rational or d.is_positive:
-            if d.is_negative is None:
-                # we won't split up the base
+        if d is not S.One:
+            if d.is_negative and n.is_negative:
+                n, d = -n, -d
+            if exp.is_Integer:
                 if exp.is_negative:
-                    return S.One, Pow(base, -exp)
-                else:
-                    return self, S.One
-            if d.is_negative:
-                n = -n
-                d = -d
-            c, t = exp.as_coeff_mul()
-            if c.is_negative:
-                n, d = d, n
-                exp = -exp
-            return Pow(n, exp), Pow(d, exp)
-        else:
-            c, t = exp.as_coeff_mul()
-            if c.is_negative:
-                return S.One, base**-exp
-        # unprocessed Float and NumberSymbol
+                    n, d = d, n
+                    exp = -exp
+                return Pow(n, exp), Pow(d, exp)
+            elif exp.is_Rational or d.is_positive:
+                dneg = d.is_negative
+                if dneg is not None:
+                    if dneg is True:
+                        n = -n
+                        d = -d
+                    elif dneg is False:
+                        n, d = d, n
+                        exp = -exp
+                    if _coeff_isneg(exp):
+                        n, d = d, n
+                        exp = -exp
+                    return Pow(n, exp), Pow(d, exp)
+                # else we won't split up base but we check for neg expo below
+        if _coeff_isneg(exp):
+            return S.One, base**-exp
+        # unprocessed float or NumberSymbol exponent
+        # and Mul exp w/o negative sign
         return self, S.One
 
     def matches(self, expr, repl_dict={}):

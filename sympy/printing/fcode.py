@@ -12,9 +12,9 @@ Fortran77" by Clive G. Page:
 
 http://www.star.le.ac.uk/~cgp/prof77.html
 
-Fortran is a case-insensitive language. This might cause trouble because sympy
-is case sensitive. The implementation below does not care and leaves the
-responsibility for generating properly cased Fortran code to the user.
+Fortran is a case-insensitive language. This might cause trouble because
+SymPy is case sensitive. The implementation below does not care and leaves
+the responsibility for generating properly cased Fortran code to the user.
 """
 
 

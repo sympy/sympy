@@ -1,8 +1,8 @@
 """Printing subsystem driver
 
-SymPy's printing system works the following way: Any expression can be passed to
-a designated Printer who then is responsible to return a adequate representation
-of that expression.
+SymPy's printing system works the following way: Any expression can be
+passed to a designated Printer who then is responsible to return a
+adequate representation of that expression.
 
 The basic concept is the following:
   1. Let the object print itself if it knows how.
@@ -13,22 +13,24 @@ Some more information how the single concepts work and who should use which:
 
 1. The object prints itself
 
-    This was the original way of doing printing in sympy. Every class had its
-    own latex, mathml, str and repr methods, but it turned out that it is hard
-    to produce a high quality printer, if all the methods are spread out that
-    far. Therefor all printing code was combined into the different printers,
-    which works great for built-in sympy objects, but not that good for user
-    defined classes where it is inconvenient to patch the printers.
-    To get nevertheless a fitting representation, the printers look for a
-    specific method in every object, that will be called if it's available and
-    is then responsible for the representation. The name of that method depends
-    on the specific printer and is defined under Printer.printmethodname.
+    This was the original way of doing printing in sympy. Every class had
+    its own latex, mathml, str and repr methods, but it turned out that it
+    is hard to produce a high quality printer, if all the methods are spread
+    out that far. Therefor all printing code was combined into the different
+    printers, which works great for built-in sympy objects, but not that
+    good for user defined classes where it is inconvenient to patch the
+    printers.
 
+    Nevertheless, to get a fitting representation, the printers look for a
+    specific method in every object, that will be called if it's available
+    and is then responsible for the representation. The name of that method
+    depends on the specific printer and is defined under
+    Printer.printmethod.
 
 2. Take the best fitting method defined in the printer.
 
-    The printer loops through expr classes (class + its bases), and tries to dispatch the
-    work to _print_<EXPR_CLASS>
+    The printer loops through expr classes (class + its bases), and tries
+    to dispatch the work to _print_<EXPR_CLASS>
 
     e.g., suppose we have the following class hierarchy::
 
@@ -40,8 +42,8 @@ Some more information how the single concepts work and who should use which:
             |
         Rational
 
-    then, for expr=Rational(...), in order to dispatch, we will try calling printer methods
-    as shown in the figure below::
+    then, for expr=Rational(...), in order to dispatch, we will try
+    calling printer methods as shown in the figure below::
 
         p._print(expr)
         |
@@ -62,7 +64,7 @@ Some more information how the single concepts work and who should use which:
 3. As fall-back use the emptyPrinter method for the printer.
 
     As fall-back self.emptyPrinter will be called with the expression. If
-    not defined in the Printer subclass this will be the same as str(expr)
+    not defined in the Printer subclass this will be the same as str(expr).
 """
 
 from sympy import Basic, Add

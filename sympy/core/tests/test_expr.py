@@ -6,6 +6,7 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
     separate, collect, factorial, apart, combsimp, factor, refine, cancel,
     Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum)
+from sympy.core.function import AppliedUndef
 from sympy.abc import a, b, c, d, e, n, t, u, x, y, z
 from sympy.physics.secondquant import FockState
 
@@ -242,6 +243,20 @@ def test_atoms():
                                                    [1 + x*(2 + y)+exp(3 + z),
                                                     2 + y,
                                                     3 + z])
+
+    # issue 3033
+    f = Function('f')
+    e = (f(x) + sin(x) + 2)
+    assert e.atoms(AppliedUndef) == \
+        set([f(x)])
+    assert e.atoms(AppliedUndef, Function) == \
+        set([f(x), sin(x)])
+    assert e.atoms(Function) == \
+        set([f(x), sin(x)])
+    assert e.atoms(AppliedUndef, Number) == \
+        set([f(x), S(2)])
+    assert e.atoms(Function, Number) == \
+        set([S(2), sin(x), f(x)])
 
 def test_is_polynomial():
     k = Symbol('k', nonnegative=True, integer=True)
@@ -854,6 +869,7 @@ def test_coeff():
     assert (-x/8 + x*y).coeff(-x) == S(1)/8
     assert (4*x).coeff(2*x) == None
     assert (2*x).coeff(2*x) == 1
+    assert (-oo*x).coeff(x*oo) == -1
 
     n1, n2 = symbols('n1 n2', commutative=False)
     assert (n1*n2).coeff(n1) == 1
@@ -1025,7 +1041,7 @@ def test_issue2201():
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
 
 def test_issue_2061():
-    assert sqrt(-1.0*x) == 1.0*I*sqrt(x)
+    assert sqrt(-1.0*x) == 1.0*sqrt(-x)
     assert sqrt(1.0*x) == 1.0*sqrt(x)
 
 def test_as_coeff_Mul():
@@ -1226,3 +1242,7 @@ def test_equals():
 @XFAIL
 def test_equals_factorial():
     assert factorial(x + 1).diff(x).equals(((x + 1)*factorial(x)).diff(x))
+
+@XFAIL
+def test_issue_2330():
+    assert sqrt(I).conjugate() != sqrt(I)

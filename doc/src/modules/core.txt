@@ -62,43 +62,43 @@ expr
    singletons, especially because the default protocol when pickling in Python 2
    is protocol 0, and a regular simplification will not evaluate the result with
    sufficient accuracy.
-   
+
    For example:
-   
+
    >>> from sympy import sin, pi
    >>> from pickle import loads, dumps
-   
+
    >>> picklepi = loads(dumps(pi,0))  # Uses default protocol 0 in Python 2 with no parameter
-   
+
    >>> sin(pi)
    0
    >>> sin(picklepi)
    sin(pi)
    >>> sin(picklepi).evalf()
    .0e-184
-   
+
    >>> pi - picklepi
    -pi + pi
-   >>> (pi-picklepi).evalf()
-   -.0e-125
-   
+   >>> (pi - picklepi).evalf()
+   -.0e-124
+
    >>> pi is picklepi
    False
-   
-   
+
+
    The optimal solution to this problem is to specify a protocol of 2 or higher
    when pickling the singleton (Specification of protocol redundant in Python 3).
-   
+
    For example:
-   
+
    >>> picklepi = loads(dumps(pi,-1))   # Defaults to highest protocol, which is 2 in Python 2 and 3 in Python 3
-   
+
    >>> pi is picklepi
    True
-   
+
    >>> sin(picklepi)
    0
-   
+
    >>> picklepi - pi
    0
 
@@ -310,9 +310,14 @@ Equality
 .. autoclass:: Equality
    :members:
 
-Inequality
+GreaterThan
 ^^^^^^^^^^
-.. autoclass:: Inequality
+.. autoclass:: GreaterThan
+   :members:
+
+LessThan
+^^^^^^^^^^
+.. autoclass:: LessThan
    :members:
 
 Unequality
@@ -320,9 +325,14 @@ Unequality
 .. autoclass:: Unequality
    :members:
 
-StrictInequality
+StrictGreaterThan
 ^^^^^^^^^^^^^^^^
-.. autoclass:: StrictInequality
+.. autoclass:: StrictGreaterThan
+   :members:
+
+StrictLessThan
+^^^^^^^^^^^^^^^^
+.. autoclass:: StrictLessThan
    :members:
 
 multidimensional

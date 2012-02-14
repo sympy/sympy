@@ -4,13 +4,12 @@ Limits
 
 Implemented according to the PhD thesis
 http://www.cybertester.com/data/gruntz.pdf, which contains very thorough
-descriptions of the algorithm including many examples.  We summarize here the
-gist of it.
+descriptions of the algorithm including many examples.  We summarize here
+the gist of it.
 
-
-All functions are sorted according to how rapidly varying they are at infinity
-using the following rules. Any two functions f and g can be compared using the
-properties of L:
+All functions are sorted according to how rapidly varying they are at
+infinity using the following rules. Any two functions f and g can be
+compared using the properties of L:
 
 L=lim  log|f(x)| / log|g(x)|           (for x -> oo)
 
@@ -23,7 +22,6 @@ We define >, < ~ according to::
         - f is more rapidly varying than g
         - f goes to infinity/zero faster than g
 
-
     2. f < g .... L=0
 
         we say that:
@@ -35,7 +33,6 @@ We define >, < ~ according to::
         - both f and g are bounded from above and below by suitable integral
           powers of the other
 
-
 Examples
 ========
 ::
@@ -45,19 +42,20 @@ Examples
     exp(x) ~ exp(-x) ~ exp(2x) ~ exp(x)**2 ~ exp(x+exp(-x))
     f ~ 1/f
 
-So we can divide all the functions into comparability classes (x and x^2 belong
-to one class, exp(x) and exp(-x) belong to some other class). In principle, we
-could compare any two functions, but in our algorithm, we don't compare
-anything below the class 2~3~-5 (for example log(x) is below this), so we set
-2~3~-5 as the lowest comparability class.
+So we can divide all the functions into comparability classes (x and x^2
+belong to one class, exp(x) and exp(-x) belong to some other class). In
+principle, we could compare any two functions, but in our algorithm, we
+don't compare anything below the class 2~3~-5 (for example log(x) is
+below this), so we set 2~3~-5 as the lowest comparability class.
 
 Given the function f, we find the list of most rapidly varying (mrv set)
-subexpressions of it. This list belongs to the same comparability class. Let's
-say it is {exp(x), exp(2x)}. Using the rule f ~ 1/f we find an element "w"
-(either from the list or a new one) from the same comparability class which
-goes to zero at infinity. In our example we set w=exp(-x) (but we could also
-set w=exp(-2x) or w=exp(-3x) ...). We rewrite the mrv set using w, in our case
-{1/w, 1/w^2}, and substitute it into f. Then we expand f into a series in w::
+subexpressions of it. This list belongs to the same comparability class.
+Let's say it is {exp(x), exp(2x)}. Using the rule f ~ 1/f we find an
+element "w" (either from the list or a new one) from the same
+comparability class which goes to zero at infinity. In our example we
+set w=exp(-x) (but we could also set w=exp(-2x) or w=exp(-3x) ...). We
+rewrite the mrv set using w, in our case {1/w, 1/w^2}, and substitute it
+into f. Then we expand f into a series in w::
 
     f = c0*w^e0 + c1*w^e1 + ... + O(w^en),       where e0<e1<...<en, c0!=0
 
@@ -74,25 +72,28 @@ as is shown in the PhD thesis, it always finishes.
 Important functions from the implementation:
 
 compare(a, b, x) compares "a" and "b" by computing the limit L.
-mrv(e, x) returns the list of most rapidly varying (mrv) subexpressions of "e"
+mrv(e, x) returns list of most rapidly varying (mrv) subexpressions of "e"
 rewrite(e, Omega, x, wsym) rewrites "e" in terms of w
 leadterm(f, x) returns the lowest power term in the series of f
 mrv_leadterm(e, x) returns the lead term (c0, e0) for e
 limitinf(e, x) computes lim e  (for x->oo)
 limit(e, z, z0) computes any limit by converting it to the case x->oo
 
-All the functions are really simple and straightforward except rewrite(), which
-is the most difficult/complex part of the algorithm. When the algorithm fails,
-the bugs are usually in the series expansion (i.e. in SymPy) or in rewrite.
+All the functions are really simple and straightforward except
+rewrite(), which is the most difficult/complex part of the algorithm.
+When the algorithm fails, the bugs are usually in the series expansion
+(i.e. in SymPy) or in rewrite.
 
-This code is almost exact rewrite of the Maple code inside the Gruntz thesis.
+This code is almost exact rewrite of the Maple code inside the Gruntz
+thesis.
 
 Debugging
 ---------
 
-Because the gruntz algorithm is highly recursive, it's difficult to figure out
-what went wrong inside a debugger. Instead, turn on nice debug prints by
-defining the environment variable SYMPY_DEBUG. For example:
+Because the gruntz algorithm is highly recursive, it's difficult to
+figure out what went wrong inside a debugger. Instead, turn on nice
+debug prints by defining the environment variable SYMPY_DEBUG. For
+example:
 
 [user@localhost]: SYMPY_DEBUG=True ./bin/isympy
 
@@ -111,8 +112,8 @@ limitinf(_x*sin(1/_x), _x) = 1
 +-sign(0, _x) = 0
 +-limitinf(1, _x) = 1
 
-And check manually which line is wrong. Then go to the source code and debug
-this function to figure out the exact problem.
+And check manually which line is wrong. Then go to the source code and
+debug this function to figure out the exact problem.
 
 """
 from sympy import SYMPY_DEBUG
@@ -145,23 +146,8 @@ def debug(func):
 
     return decorated
 
-from time import time
-it = 0
-do_timings = False
-def timeit(func):
-    global do_timings
-    if not do_timings:
-        return func
-    def dec(*args, **kwargs):
-        global it
-        it += 1
-        t0 = time()
-        r = func(*args, **kwargs)
-        t1 = time()
-        print "%s %.3f %s%s" % ('-' * (2+it), t1-t0, func.func_name, args)
-        it -= 1
-        return r
-    return dec
+from sympy.utilities.timeutils import timethis
+timeit = timethis('gruntz')
 
 def tree(subtrees):
     "Only debugging purposes: prints a tree"
@@ -518,7 +504,7 @@ def calculate_series(e, x, skip_abs=False, logx=None):
     """
 
     f = e
-    for n in [1, 2, 4, 6, 8]:
+    for n in [1, 2, 4, 6, 8, 16]:
         series = f.nseries(x, n=n, logx=logx)
         if not series.has(O):
             # The series expansion is locally exact.
@@ -529,7 +515,7 @@ def calculate_series(e, x, skip_abs=False, logx=None):
             if (not skip_abs) or series.has(x):
                 break
     else:
-        raise ValueError('(%s).series(%s, n=8) gave no terms.' % (f, x))
+        raise ValueError('(%s).series(%s, n=16) gave no terms.' % (f, x))
     return series
 
 @debug
@@ -616,6 +602,7 @@ def rewrite(e, Omega, x, wsym):
     Returns the rewritten e in terms of w and log(w). See test_rewrite1()
     for examples and correct results.
     """
+    from sympy import ilcm
     assert isinstance(Omega, SubsSet)
     assert len(Omega) != 0
     #all items in Omega must be exponentials
@@ -635,8 +622,11 @@ def rewrite(e, Omega, x, wsym):
         raise NotImplementedError('Result depends on the sign of %s' % sig)
     #O2 is a list, which results by rewriting each item in Omega using "w"
     O2 = []
+    denominators = []
     for f, var in Omega:
         c = limitinf(f.args[0]/g.args[0], x)
+        if c.is_Rational:
+            denominators.append(c.q)
         arg = f.args[0]
         if var in rewrites:
             assert rewrites[var].func is exp
@@ -660,6 +650,12 @@ def rewrite(e, Omega, x, wsym):
     logw = g.args[0]
     if sig == 1:
         logw = -logw     #log(w)->log(1/w)=-log(w)
+
+    # Some parts of sympy have difficulty computing series expansions with
+    # non-integral exponents. The following heuristic improves the situation:
+    exponent = reduce(ilcm, denominators, 1)
+    f = f.subs(wsym, wsym**exponent)
+    logw /= exponent
 
     return f, logw
 

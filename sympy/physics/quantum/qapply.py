@@ -105,7 +105,7 @@ def qapply_Mul(e, **options):
     args = list(e.args)
 
     # If we only have 0 or 1 args, we have nothing to do and return.
-    if len(args) <= 1:
+    if len(args) <= 1 or not isinstance(e, Mul):
         return e
     rhs = args.pop()
     lhs = args.pop()
@@ -163,7 +163,11 @@ def qapply_Mul(e, **options):
     if result == 0:
         return S.Zero
     elif result is None:
-        return qapply_Mul(e._new_rawargs(*(args+[lhs])), **options)*rhs
+        if len(args) == 0:
+            # We had two args to begin with so args=[].
+            return e
+        else:
+            return qapply_Mul(e._new_rawargs(*(args+[lhs])), **options)*rhs
     elif isinstance(result, InnerProduct):
         return result*qapply_Mul(e._new_rawargs(*args), **options)
     else:  # result is a scalar times a Mul, Add or TensorProduct

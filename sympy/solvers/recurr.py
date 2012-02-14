@@ -23,7 +23,8 @@
 
    For example if we would like to compute m-th Bernoulli polynomial up to
    a constant (example was taken from rsolve_poly docstring), then we would
-   use b(n+1) - b(n) == m*n**(m-1) recurrence, which has solution b(n) = B_m + C.
+   use b(n+1) - b(n) == m*n**(m-1) recurrence, which has solution b(n) =
+   B_m + C.
 
    Then L = [-1, 1] and f(n) = m*n**(m-1) and finally for m=4:
 
@@ -203,13 +204,13 @@ def rsolve_poly(coeffs, f, n, **hints):
         else:
             a = S.Zero
 
-        def zero_vector(k):
+        def _zero_vector(k):
             return [S.Zero] * k
 
-        def one_vector(k):
+        def _one_vector(k):
             return [S.One] * k
 
-        def delta(p, k):
+        def _delta(p, k):
             B = S.One
             D = p.subs(n, a+k)
 
@@ -222,7 +223,7 @@ def rsolve_poly(coeffs, f, n, **hints):
         alpha = {}
 
         for i in xrange(-A, d+1):
-            I = one_vector(d+1)
+            I = _one_vector(d+1)
 
             for k in xrange(1, d+1):
                 I[k] = I[k-1] * (x+i-k+1)/k
@@ -232,7 +233,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             for j in xrange(0, A+1):
                 for k in xrange(0, d+1):
                     B = binomial(k, i+j)
-                    D = delta(polys[j].as_expr(), k)
+                    D = _delta(polys[j].as_expr(), k)
 
                     alpha[i] += I[k]*B*D
 
@@ -240,7 +241,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
         if homogeneous:
             for i in xrange(A, U):
-                v = zero_vector(A)
+                v = _zero_vector(A)
 
                 for k in xrange(1, A+b+1):
                     if i - k < 0:
@@ -256,10 +257,10 @@ def rsolve_poly(coeffs, f, n, **hints):
                 for j in xrange(0, A):
                     V[i, j] = -v[j] / denom
         else:
-            G = zero_vector(U)
+            G = _zero_vector(U)
 
             for i in xrange(A, U):
-                v = zero_vector(A)
+                v = _zero_vector(A)
                 g = S.Zero
 
                 for k in xrange(1, A+b+1):
@@ -278,9 +279,9 @@ def rsolve_poly(coeffs, f, n, **hints):
                 for j in xrange(0, A):
                     V[i, j] = -v[j] / denom
 
-                G[i] = (delta(f, i-A) - g) / denom
+                G[i] = (_delta(f, i-A) - g) / denom
 
-        P, Q = one_vector(U), zero_vector(A)
+        P, Q = _one_vector(U), _zero_vector(A)
 
         for i in xrange(1, U):
             P[i] = (P[i-1] * (n-a-i+1)/i).expand()
@@ -293,12 +294,12 @@ def rsolve_poly(coeffs, f, n, **hints):
 
         C = [ Symbol('C'+str(i)) for i in xrange(0, A) ]
 
-        g = lambda i: Add(*[ c*delta(q, i) for c, q in zip(C, Q) ])
+        g = lambda i: Add(*[ c*_delta(q, i) for c, q in zip(C, Q) ])
 
         if homogeneous:
             E = [ g(i) for i in xrange(N+1, U) ]
         else:
-            E = [ g(i) + delta(h, i) for i in xrange(N+1, U) ]
+            E = [ g(i) + _delta(h, i) for i in xrange(N+1, U) ]
 
         if E != []:
             solutions = solve(E, *C)
@@ -368,6 +369,15 @@ def rsolve_ratio(coeffs, f, n, **hints):
            and q-difference equations with polynomial coefficients,
            in: T. Levelt, ed., Proc. ISSAC '95, ACM Press, New York,
            1995, 285-289
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x
+    >>> from sympy.solvers.recurr import rsolve_ratio
+    >>> rsolve_ratio([ - 2*x**3 + x**2 + 2*x - 1, 2*x**3 + x**2 - 6*x,
+    ... - 2*x**3 - 11*x**2 - 18*x - 9, 2*x**3 + 13*x**2 + 22*x + 8], 0, x)
+    C2*(2*x - 3)/(2*(x**2 - 1))
 
     """
     f = sympify(f)
@@ -466,6 +476,17 @@ def rsolve_hyper(coeffs, f, n, **hints):
            14 (1992), 243-264.
 
        [2] M. Petkovsek, H. S. Wilf, D. Zeilberger, A = B, 1996.
+
+        Examples
+        ========
+        >>> from sympy.solvers import rsolve_hyper
+        >>> from sympy.abc import x
+
+        >>> rsolve_hyper([-1, -1, 1], 0, x)
+        C0*(1/2 + sqrt(5)/2)**x + C1*(-sqrt(5)/2 + 1/2)**x
+
+        >>> rsolve_hyper([-1, 1], 1+x, x)
+        C0 + x*(x + 1)/2
 
     """
     coeffs = map(sympify, coeffs)

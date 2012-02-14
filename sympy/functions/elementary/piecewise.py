@@ -127,6 +127,7 @@ class Piecewise(Function):
 
     @classmethod
     def eval(cls, *args):
+        from sympy import Or
         # Check for situations where we can evaluate the Piecewise object.
         # 1) Hit an unevaluable cond (e.g. x<1) -> keep object
         # 2) Hit a true condition -> return that expr
@@ -134,6 +135,7 @@ class Piecewise(Function):
         all_conds_evaled = True    # Do all conds eval to a bool?
         piecewise_again = False    # Should we pass args to Piecewise again?
         non_false_ecpairs = []
+        or1 = Or(*[cond for (_, cond) in args if cond is not True])
         for expr, cond in args:
             # Check here if expr is a Piecewise and collapse if one of
             # the conds in expr matches cond. This allows the collapsing
@@ -144,10 +146,11 @@ class Piecewise(Function):
             # having different intervals, but this will probably require
             # using the new assumptions.
             if isinstance(expr, Piecewise):
+                or2 = Or(*[c for (_, c) in expr.args if c is not True])
                 for e, c in expr.args:
                     # Don't collapse if cond is "True" as this leads to
                     # incorrect simplifications with nested Piecewises.
-                    if c == cond and cond is not True:
+                    if c == cond and (or1 == or2 or cond is not True):
                         expr = e
                         piecewise_again = True
             cond_eval = cls.__eval_cond(cond)
@@ -210,24 +213,31 @@ class Piecewise(Function):
                     continue
             elif isinstance(cond, Equality):
                 continue
-            curr = list(cond.args)
-            if cond.args[0].has(sym):
-                curr[0] = S.NegativeInfinity
-            elif cond.args[1].has(sym):
-                curr[1] = S.Infinity
+
+            lower, upper = cond.lts, cond.gts # part 1: initialize with givens
+            if cond.lts.has(sym):     # part 1a: expand the side ...
+                lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
+            elif cond.gts.has(sym):   # part 1a: ... that can be expanded
+                upper = S.Infinity           # e.g. x >= 0 --->  oo >= 0
             else:
-                raise NotImplementedError(\
-                        "Unable handle interval evaluation of expression.")
-            curr = [max(a, curr[0]), min(b, curr[1])]
+                raise NotImplementedError(
+                        "Unable to handle interval evaluation of expression.")
+
+            # part 1b: Reduce (-)infinity to what was passed in.
+            lower, upper = max(a, lower), min(b, upper)
+
             for n in xrange(len(int_expr)):
-                if self.__eval_cond(curr[0] < int_expr[n][1]) and \
-                        self.__eval_cond(curr[0] >= int_expr[n][0]):
-                    curr[0] = int_expr[n][1]
-                if self.__eval_cond(curr[1] > int_expr[n][0]) and \
-                        self.__eval_cond(curr[1] <= int_expr[n][1]):
-                    curr[1] = int_expr[n][0]
-            if self.__eval_cond(curr[0] < curr[1]):
-                int_expr.append(curr + [expr])
+                # Part 2: remove any interval overlap.  For any conflicts, the
+                # iterval already there wins, and the incoming interval updates
+                # its bounds accordingly.
+                if self.__eval_cond(lower < int_expr[n][1]) and \
+                        self.__eval_cond(lower >= int_expr[n][0]):
+                    lower = int_expr[n][1]
+                if self.__eval_cond(upper > int_expr[n][0]) and \
+                        self.__eval_cond(upper <= int_expr[n][1]):
+                    upper = int_expr[n][0]
+            if self.__eval_cond(lower < upper):  # Is it still an interval?
+                int_expr.append((lower, upper, expr))
         int_expr.sort(key=lambda x:x[0])
 
         # Add holes to list of intervals if there is a default value,
@@ -299,9 +309,9 @@ def piecewise_fold(expr):
     Examples
     ========
 
-    >>> from sympy import Piecewise, piecewise_fold
+    >>> from sympy import Piecewise, piecewise_fold, sympify as S
     >>> from sympy.abc import x
-    >>> p = Piecewise((x, x < 1), (1, 1 <= x))
+    >>> p = Piecewise((x, x < 1), (1, S(1) <= x))
     >>> piecewise_fold(x*p)
     Piecewise((x**2, x < 1), (x, 1 <= x))
 

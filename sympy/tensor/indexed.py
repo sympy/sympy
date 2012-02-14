@@ -18,12 +18,13 @@
            The stem used by itself is usually taken to represent the entire
            array.
 
-    There can be any number of indices on an Indexed object.  No transformation
-    properties are implemented in these Base objects, but implicit contraction
-    of repeated indices is supported.
+    There can be any number of indices on an Indexed object.  No
+    transformation properties are implemented in these Base objects, but
+    implicit contraction of repeated indices is supported.
 
-    Note that the support for complicated (i.e. non-atomic) integer expressions
-    as indices is limited.  (This should be improved in future releases.)
+    Note that the support for complicated (i.e. non-atomic) integer
+    expressions as indices is limited.  (This should be improved in
+    future releases.)
 
     Examples
     ========
@@ -130,14 +131,14 @@ class Indexed(Expr):
     is_commutative = False
 
     def __new__(cls, base, *args, **kw_args):
-        from sympy.solvers.solvers import _filldedent
+        from sympy.utilities.misc import filldedent
 
         if not args:
             raise IndexException("Indexed needs at least one index.")
         if isinstance(base, (basestring, Symbol)):
             base = IndexedBase(base)
         elif not isinstance(base, IndexedBase):
-            raise TypeError(_filldedent("""
+            raise TypeError(filldedent("""
                 Indexed expects string, Symbol or IndexedBase as base."""))
         return Expr.__new__(cls, base, *args, **kw_args)
 
@@ -216,17 +217,17 @@ class Indexed(Expr):
         >>> B[i, j].shape
         (m, m)
         """
-        from sympy.solvers.solvers import _filldedent
+        from sympy.utilities.misc import filldedent
 
         if self.base.shape:
             return self.base.shape
         try:
             return Tuple(*[i.upper - i.lower + 1 for i in self.indices])
         except AttributeError:
-            raise IndexException(_filldedent("""
+            raise IndexException(filldedent("""
                 Range is not defined for all indices in: %s""" % self))
         except TypeError:
-            raise IndexException(_filldedent("""
+            raise IndexException(filldedent("""
                 Shape cannot be inferred from Idx with
                 undefined range: %s""" % self))
 
@@ -476,7 +477,7 @@ class Idx(Expr):
     is_integer = True
 
     def __new__(cls, label, range=None, **kw_args):
-        from sympy.solvers.solvers import _filldedent
+        from sympy.utilities.misc import filldedent
 
         if isinstance(label, basestring):
             label = Symbol(label, integer=True)
@@ -487,7 +488,7 @@ class Idx(Expr):
 
         elif is_sequence(range):
             if len(range) != 2:
-                raise ValueError(_filldedent("""
+                raise ValueError(filldedent("""
                     Idx range tuple must have length 2, but got %s""" % len(range)))
             for bound in range:
                 if not (bound.is_integer or abs(bound) is S.Infinity):
@@ -498,7 +499,7 @@ class Idx(Expr):
                 raise TypeError("Idx object requires an integer dimension.")
             args = label, Tuple(0, range - 1)
         elif range:
-            raise TypeError(_filldedent("""
+            raise TypeError(filldedent("""
                 The range must be an ordered iterable or
                 integer SymPy expression."""))
         else:

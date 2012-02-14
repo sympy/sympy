@@ -2,7 +2,8 @@
 A Printer for generating readable representation of most sympy classes.
 """
 
-from sympy.core import S, Rational, Pow, Basic
+from sympy.core import S, Rational, Pow, Basic, Mul
+from sympy.core.function import _coeff_isneg
 from printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -97,6 +98,16 @@ class StrPrinter(Printer):
 
     def _print_Dict(self, expr):
         return self._print_dict(expr)
+
+    def _print_RandomDomain(self, d):
+        try:
+            return 'Domain: '+self._print(d.as_boolean())
+        except:
+            try:
+                return ('Domain: ' + self._print(d.symbols) + ' in ' +
+                        self._print(d.set))
+            except:
+                return 'Domain on ' + self._print(d.symbols)
 
     def _print_Dummy(self, expr):
         return '_' + expr.name
@@ -196,23 +207,23 @@ class StrPrinter(Printer):
         return expr.name
 
     def _print_Mul(self, expr):
-        coeff, terms = expr.as_coeff_mul()
-        if coeff.is_negative:
-            coeff = -coeff
-            if coeff is not S.One:
-                terms = (coeff,) + terms
+
+        prec = precedence(expr)
+
+        if _coeff_isneg(expr):
+            expr = -expr
             sign = "-"
         else:
-            terms = (coeff,) + terms
             sign = ""
 
         a = [] # items in the numerator
         b = [] # items that are in the denominator (if any)
 
         if self.order not in ('old', 'none'):
-            args = expr._new_rawargs(*terms).as_ordered_factors()
+            args = expr.as_ordered_factors()
         else:
-            args = terms
+            # use make_args in case expr was something like -x -> x
+            args = Mul.make_args(expr)
 
         # Gather args for numerator/denominator
         for item in args:
@@ -229,17 +240,15 @@ class StrPrinter(Printer):
             else:
                 a.append(item)
 
-        if len(a)==0:
-            a = [S.One]
+        a = a or [S.One]
 
-        prec = precedence(expr)
         a_str = map(lambda x:self.parenthesize(x, prec), a)
         b_str = map(lambda x:self.parenthesize(x, prec), b)
 
-        if len(b)==0:
+        if len(b) == 0:
             return sign + '*'.join(a_str)
-        elif len(b)==1:
-            if len(a)==1 and not (a[0].is_Atom or a[0].is_Add):
+        elif len(b) == 1:
+            if len(a) == 1 and not (a[0].is_Atom or a[0].is_Add):
                 return sign + "%s/"%a_str[0] + '*'.join(b_str)
             else:
                 return sign + '*'.join(a_str) + "/%s"%b_str[0]

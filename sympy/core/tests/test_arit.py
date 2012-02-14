@@ -1,8 +1,8 @@
 from __future__ import division
 
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Float, re, pi, \
-        sympify, Add, Mul, Pow, Mod, I, log, S
-from sympy.utilities.pytest import XFAIL
+        sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer
+from sympy.utilities.pytest import XFAIL, raises
 
 x = Symbol('x')
 y = Symbol('y')
@@ -146,6 +146,7 @@ def test_pow():
     assert (-1)**x == (-1)**x
     assert (-1)**n == (-1)**n
     assert (-2)**k == 2**k
+    assert (-2*x)**k == 2**k*x**k
     assert (-1)**k == 1
 
 def test_pow2():
@@ -162,6 +163,14 @@ def test_pow_issue417():
 def test_pow3():
     assert sqrt(2)**3 == 2 * sqrt(2)
     assert sqrt(2)**3 == sqrt(8)
+
+def test_pow_issue_1724():
+    e = ((-1)**(S(1)/3))
+    assert e.conjugate().n() == e.n().conjugate()
+    e = S('-2/3 - (-29/54 + sqrt(93)/18)**(1/3) - 1/(9*(-29/54 + sqrt(93)/18)**(1/3))')
+    assert e.conjugate().n() == e.n().conjugate()
+    e = 2**I
+    assert e.conjugate().n() == e.n().conjugate()
 
 def test_expand():
     p = Rational(5)
@@ -220,7 +229,6 @@ def test_expand():
         W = W * (x-i)
     W = W.expand()
     assert W.has(-1672280820*x**15)
-
 
 def test_power_expand():
     """Test for Pow.expand()"""
@@ -1219,6 +1227,21 @@ def test_Mod():
     assert x % 5 == Mod(x, 5)
     assert x % y == Mod(x, y)
     assert (x % y).subs({x: 5, y: 3}) == 2
+    assert (x + 3) % 1 == Mod(x, 1)
+    assert (x + 3.0) % 1 == Mod(x, 1)
+    assert (x - S(33)/10) % 1 == Mod(x + S(7)/10, 1)
+    assert (x - 3.3) % 1 == Mod(x + 0.7, 1)
+    assert Mod(-3.3, 1) == Mod(0.7, 1) == Float(0.7)
+    e = Mod(1.3, 1)
+    assert e == .3 and e.is_Float
+    e = Mod(1.3, .7)
+    assert e == .6 and e.is_Float
+    e = Mod(1.3, Rational(7, 10))
+    assert e == .6 and e.is_Float
+    e = Mod(Rational(13, 10), 0.7)
+    assert e == .6 and e.is_Float
+    e = Mod(Rational(13, 10), Rational(7, 10))
+    assert e == .6 and e.is_Rational
 
 def test_issue_2902():
     A = Symbol("A", commutative=False)
@@ -1252,3 +1275,64 @@ def test_issue_2941():
     assert b != a
     assert not (a == b)
     assert not (b == a)
+
+def test_issue_2983():
+    assert Max(x, 1) * Max(x, 2) == Max(x, 1) * Max(x, 2)
+    assert Or(x, z) * Or(x, z) == Or(x, z) * Or(x, z)
+
+def test_issue_2978():
+    assert x**2.0/x == x**1.0
+    assert x/x**2.0 == x**-1.0
+    assert x*x**2.0 == x**3.0
+    assert x**1.5*x**2.5 == x**4.0
+
+    assert 2**(2.0*x)/2**x == 2**(1.0*x)
+    assert 2**x/2**(2.0*x) == 2**(-1.0*x)
+    assert 2**x*2**(2.0*x) == 2**(3.0*x)
+    assert 2**(1.5*x)*2**(2.5*x) == 2**(4.0*x)
+
+def test_mul_flatten_oo():
+    p = symbols('p', positive=True)
+    n, m = symbols('n,m', negative=True)
+    x_im = symbols('x_im', imaginary=True)
+    assert n*oo == -oo
+    assert n*m*oo == oo
+    assert p*oo == oo
+    assert x_im*oo != I*oo # i could be +/- 3*I -> +/-oo
+
+def test_issue_2061_2988_2990_2991():
+    #2988
+    assert ((-2*x*y**y)**3.2).n(2) == (2**3.2*(-x*y**y)**3.2).n(2)
+    #2990
+    A, B, C = symbols('A,B,C', commutative=False)
+    assert (2.*B*C)**3 == 8.0*(B*C)**3
+    assert (-2.*B*C)**3 == -8.0*(B*C)**3
+    assert (-2*B*C)**2 == 4*(B*C)**2
+    #2061
+    assert sqrt(-1.0*x) == 1.0*sqrt(-x)
+    #2991
+    assert (-2*x*y*A*B)**2 == 4*x**2*y**2*(A*B)**2
+
+def test_float_int():
+    assert int(float(sqrt(10))) == int(sqrt(10))
+    assert int(pi**1000) % 10 == 2
+    assert int(Float('1.123456789012345678901234567890e20','')) == \
+        112345678901234567890L
+    assert int(Float('1.123456789012345678901234567890e25','')) == \
+        11234567890123456789012345L
+    assert int(Float('1.123456789012345678901234567890e35','')) == \
+        112345678901234567890123456789000000L
+    assert Integer(Float('1.123456789012345678901234567890e20','')) == \
+        112345678901234567890
+    assert Integer(Float('1.123456789012345678901234567890e25','')) == \
+        11234567890123456789012345
+    assert Integer(Float('1.123456789012345678901234567890e35','')) == \
+        112345678901234567890123456789000000
+    assert int(1 + Rational('.9999999999999999999999999')) == 1
+    assert int(pi/1e20) == 0
+    assert int(1 + pi/1e20) == 1
+    assert int(Add(1.2, -2, evaluate=False)) == int(1.2 - 2)
+    assert int(Add(1.2, +2, evaluate=False)) == int(1.2 + 2)
+    assert int(Add(1 + Float('.99999999999999999', ''), evaluate=False)) == 1
+    raises(TypeError, 'float(x)')
+    raises(TypeError, 'float(sqrt(-1))')

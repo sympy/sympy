@@ -1,6 +1,6 @@
 from sympy import sqrt, root, S, Symbol, sqrtdenest, Integral, cos
 from sympy.utilities.pytest import XFAIL
-from sympy.simplify.sqrtdenest import _sqrtdenest34, subsets
+from sympy.simplify.sqrtdenest import subsets
 
 r2, r3, r5, r6, r7, r10, r29 = [sqrt(x) for x in [2, 3, 5, 6, 7, 10, 29]]
 
@@ -65,7 +65,7 @@ def test_sqrtdenest_fail():
     assert sqrtdenest(z) != z
 
 
-def test_sqrtdenest_four_terms():
+def test_sqrtdenest_rec():
     assert sqrtdenest(sqrt(-4*sqrt(14) - 2*r6 + 4*sqrt(21) + 33)) == \
       -r2 + r3 + 2*r7
     assert sqrtdenest(sqrt(-28*r7 - 14*r5 + 4*sqrt(35) + 82)) == \
@@ -85,9 +85,13 @@ def test_sqrtdenest_four_terms():
         -r10/3 + r2 + r5 + 3
     assert sqrtdenest(sqrt(sqrt(2*r6 + 5) + sqrt(2*r7 + 8))) == \
       sqrt(1 + r2 + r3 + r7)
-    assert _sqrtdenest34(sqrt(4*sqrt(15) + 8*r5 + 12*r3 + 24)) == \
+    assert sqrtdenest(sqrt(4*sqrt(15) + 8*r5 + 12*r3 + 24)) == \
       1 + r3 + r5 + sqrt(15)
 
+    w = 1 + r2 + r3 + r5 + r7
+    assert sqrtdenest(sqrt((w**2).expand())) == w
+    z = sqrt((w**2).expand() + 1)
+    assert sqrtdenest(z) == z
 
 def test_sqrtdenest3():
     z = sqrt(13 - 2*r10 + 2*r2*sqrt(-2*r10 + 11))
@@ -151,3 +155,6 @@ def test_subsets():
       [1, 0, 0, 0], [0, 1, 0, 0], [1, 1, 0, 0], [0, 0, 1, 0], [1, 0, 1, 0],
       [0, 1, 1, 0], [1, 1, 1, 0], [0, 0, 0, 1], [1, 0, 0, 1], [0, 1, 0, 1],
       [1, 1, 0, 1], [0, 0, 1, 1], [1, 0, 1, 1], [0, 1, 1, 1], [1, 1, 1, 1]]
+
+def test_issue_2554():
+    assert sqrtdenest(sqrt(2 + sqrt(2 + sqrt(2)))) == sqrt(2 + sqrt(2 + sqrt(2)))

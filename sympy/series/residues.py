@@ -1,10 +1,12 @@
 """
-This module implements the Residue function and related tools for working with
-residues.
+This module implements the Residue function and related tools for working
+with residues.
 """
 
 from sympy import Wild, sympify, Integer, Add
+from sympy.utilities.timeutils import timethis
 
+@timethis('residue')
 def residue(expr, x, x0):
     """
     Finds the residue of ``expr`` at the point x=x0.
@@ -43,29 +45,33 @@ def residue(expr, x, x0):
     # For the definition of a resultant, see section 1.4 (and any
     # previous sections for more review).
 
-    from sympy import collect
+    from sympy import collect, Mul, Order, S
     expr = sympify(expr)
     if x0 != 0:
         expr = expr.subs(x, x+x0)
-    s = expr.series(x, 0, 0).removeO()
-    # TODO: this sometimes helps, but the series expansion should rather be
-    # fixed, see #1627:
-    if s == 0:
-        s = expr.series(x, 0, 1).removeO()
-    if s == 0:
-        s = expr.series(x, 0, 6).removeO()
-    s = collect(s, x)
-    if x0 != 0:
-        s = s.subs(x, x-x0)
-    a = Wild("r", exclude=[x])
-    c = Wild("c", exclude=[x])
-    r = s.match(a/(x-x0)+c)
-    if r:
-        return r[a]
-    elif isinstance(s, Add):
-        # TODO: this is to overcome a bug in match (#1626)
-        for t in s.args:
-            r = t.match(a/(x-x0)+c)
-            if r:
-                return r[a]
-    return Integer(0)
+    for n in [0, 1, 2, 4, 8, 16, 32]:
+        if n == 0:
+            s = expr.series(x, n=0)
+        else:
+            s = expr.nseries(x, n=n)
+        if s.has(Order) and s.removeO() == 0:
+            # bug in nseries
+            continue
+        if not s.has(Order) or s.getn() >= 0:
+            break
+    if s.has(Order) and s.getn() < 0:
+        raise NotImplementedError('Bug in nseries?')
+    s = collect(s.removeO(), x)
+    if s.is_Add:
+        args = s.args
+    else:
+        args = [s]
+    res = S(0)
+    for arg in args:
+        c, m = arg.as_coeff_mul(x)
+        m = Mul(*m)
+        if not (m == 1 or m == x or (m.is_Pow and m.exp.is_Integer)):
+            raise NotImplementedError('term of unexpected form: %s' % m)
+        if m == 1/x:
+            res += c
+    return res

@@ -1,6 +1,7 @@
 import itertools
 
-from sympy import Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse
+from sympy import (Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
+    Matrix, S, sin)
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL
 
@@ -52,6 +53,7 @@ def test_cse_single2():
     substs, reduced = cse(e, optimizations=[])
     assert substs == [(x0, x+y)]
     assert reduced == [sqrt(x0) + x0**2]
+    assert isinstance(cse(Matrix([[1]]))[1][0], Matrix)
 
 def test_cse_not_possible():
     # No substitution possible.
@@ -71,8 +73,14 @@ def test_subtraction_opt():
     # Make sure subtraction is optimized.
     e = (x-y)*(z-y) + exp((x-y)*(z-y))
     substs, reduced = cse([e], optimizations=[(cse_opts.sub_pre,cse_opts.sub_post)])
-    assert substs == [(x0, (x - y)*(z - y))]
-    assert reduced == [x0 + exp(x0)]
+    assert substs == [(x0, x - y), (x1, y - z), (x2, x0*x1)]
+    assert reduced == [-x2 + exp(-x2)]
+    assert cse(-(x - y)*(z - y) + exp(-(x - y)*(z - y))) == \
+        ([(x0, (x - y)*(y - z))], [x0 + exp(x0)])
+    # issue 978
+    n = -1 + 1/x
+    e = n/x/(-n)**2 - 1/n/x
+    assert cse(e) == ([], [0])
 
 def test_multiple_expressions():
     e1 = (x+y)*z
@@ -104,8 +112,8 @@ def test_multiple_expressions():
     assert cse(l) == ([(x0, w*y)], [w + x + x0 + y + z, x*x0])
     assert cse([x + y, x + y + z]) == ([(x0, x + y)], [x0, z + x0])
     assert cse([x + y, x + z]) == ([], [x + y, x + z])
-    assert cse([x*y, x + x*y , x*y*z + 3]) == \
-           ([(x0, x*y)], [x0, x + x0, 3 + x0*z])
+    assert cse([x*y, z + x*y , x*y*z + 3]) == \
+           ([(x0, x*y)], [x0, z + x0, 3 + x0*z])
     A, B, C = symbols('A B C', commutative=False)
     l = [A*B*C, A*C]
     assert cse(l) == ([], l)
@@ -116,3 +124,11 @@ def test_multiple_expressions():
 def test_powers():
     assert cse(x*y**2 + x*y) == ([(x0, x*y)], [x0*y + x0])
 
+def test_issues_1399():
+    assert cse(w/(x - y) + z/(y - x)) == ([], [(w - z)/(x - y)])
+
+def test_issue_921():
+    assert cse(x**5 + x**4 + x**3 + x**2) == ([(x0, x**2)], [x0*(x**3 + x + x0 + 1)])
+
+def test_issue_1104():
+    assert cse(sin(x**x)/x**x) == ([(x0, x**x)], [sin(x0)/x0])

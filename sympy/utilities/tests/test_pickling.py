@@ -12,8 +12,8 @@ from sympy.core.numbers import Catalan, ComplexInfinity, EulerGamma, Exp1,\
         GoldenRatio, Half, ImaginaryUnit, Infinity, Integer, NaN,\
         NegativeInfinity,  NegativeOne, Number, NumberSymbol, One, Pi,\
         Rational, Float, Zero
-from sympy.core.relational import Equality, Inequality, Relational,\
-        StrictInequality, Unequality
+from sympy.core.relational import ( Equality, GreaterThan, LessThan, Relational,
+        StrictGreaterThan, StrictLessThan, Unequality )
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
@@ -97,9 +97,10 @@ def test_core_numbers():
 def test_core_relational():
     x = Symbol("x")
     y = Symbol("y")
-    for c in (Equality, Equality(x,y), Inequality, Inequality(x,y), Relational,
-              Relational(x,y), StrictInequality, StrictInequality(x,y), Unequality,
-              Unequality(x,y)):
+    for c in (Equality, Equality(x,y), GreaterThan, GreaterThan(x, y),
+              LessThan, LessThan(x,y), Relational, Relational(x,y),
+              StrictGreaterThan, StrictGreaterThan(x,y), StrictLessThan,
+              StrictLessThan(x,y), Unequality, Unequality(x,y)):
         check(c)
 
 def test_core_add():

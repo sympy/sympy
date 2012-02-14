@@ -2,12 +2,12 @@ from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
     sqrt, LambertW, pi, I, sin, asin, Function, diff, Derivative, symbols,
     S, sympify, sstr, Wild, solve_linear, Integral,
     And, Or, Lt, Gt, Q, re, im, expand, tan, Poly, cosh, sinh, atanh,
-    atan, Dummy, Float)
+    atan, Dummy, Float, tanh)
 from sympy.abc import a, b, c, d, x, y, z
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,\
      solve_undetermined_coeffs
-from sympy.solvers.solvers import _invert, unrad
+from sympy.solvers.solvers import _invert, unrad, checksol
 
 from sympy.utilities.pytest import XFAIL, raises, skip
 
@@ -643,7 +643,8 @@ def test_unrad():
     assert check(unrad(sqrt(x)*sqrt(1-x) + 2, x),
            (x*(-x + 1) - 4, [], []))
 
-    # http://tutorial.math.lamar.edu/Classes/Alg/SolveRadicalEqns.aspx#Solve_Rad_Ex2_a
+    # http://tutorial.math.lamar.edu/
+    #        Classes/Alg/SolveRadicalEqns.aspx#Solve_Rad_Ex2_a
     assert solve(Eq(x, sqrt(x + 6))) == [3]
     assert solve(Eq(x + sqrt(x - 4), 4)) == [4]
     assert solve(Eq(1, x + sqrt(2*x - 3))) == []
@@ -651,31 +652,22 @@ def test_unrad():
     assert solve(Eq(sqrt(2*x - 1) - sqrt(x - 4), 2)) == [5, 13]
     assert solve(Eq(sqrt(x + 7) + 2, sqrt(3 - x))) == [-6]
     # http://www.purplemath.com/modules/solverad.htm
-    assert solve((2*x-5)**Rational(1,3)-3) == [16]
-    assert solve((x**3-3*x**2)**Rational(1,3)+1-x) == []
-    assert solve(x+1-(x**4+4*x**3-x)**Rational(1,4)) == [-S(1)/2, -S(1)/3]
-    assert solve(sqrt(2*x**2-7)-(3-x)) == [-8, 2]
-    assert solve(sqrt(2*x+9)-sqrt(x+1)-sqrt(x+4)) == [0]
-    assert solve(sqrt(x+4)+sqrt(2*x-1)-3*sqrt(x-1)) == [5]
-    assert solve(sqrt(x)*sqrt(x-7)-12) == [16]
-    assert solve(sqrt(x-3)+sqrt(x)-3) == [4]
-    assert solve(sqrt(9*x**2+4)-(3*x+2)) == [0]
-    assert solve(sqrt(x)-2-5) == [49]
-    assert solve(sqrt(x-3)-sqrt(x)-3) == []
-    assert solve(sqrt(x-1)-x+7) == [10]
-    assert solve(sqrt(x-2)-5) == [27]
-
-@XFAIL
-def test_unrad1():
-    # unrad not implemented
-    assert solve(sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))) is not None
-@XFAIL
-def test_unrad3():
-    # unrad not implemented
-    assert solve(sqrt(17*x-sqrt(x**2-5))-7) == [3]
-@XFAIL
-def test_unrad2():
-    assert solve((x**3-3*x**2)**Rational(1,3)+1-x) == [S(1)/3] # b/c (-8/27)**(1/3) -> 2*(-1)**(1/3)/3 instead of -2/3
+    assert solve((2*x - 5)**Rational(1, 3) - 3) == [16]
+    assert solve((x**3 - 3*x**2)**Rational(1, 3) + 1 - x) == [S(1)/3]
+    assert solve(x + 1 - (x**4 + 4*x**3 - x)**Rational(1, 4)) == \
+        [-S(1)/2, -S(1)/3]
+    assert solve(sqrt(2*x**2 - 7) - (3 - x)) == [-8, 2]
+    assert solve(sqrt(2*x + 9) - sqrt(x + 1) - sqrt(x + 4)) == [0]
+    assert solve(sqrt(x + 4) + sqrt(2*x - 1) - 3*sqrt(x - 1)) == [5]
+    assert solve(sqrt(x)*sqrt(x - 7) - 12) == [16]
+    assert solve(sqrt(x - 3) + sqrt(x) - 3) == [4]
+    assert solve(sqrt(9*x**2 + 4) - (3*x + 2)) == [0]
+    assert solve(sqrt(x) - 2 - 5) == [49]
+    assert solve(sqrt(x - 3) - sqrt(x) - 3) == []
+    assert solve(sqrt(x - 1) - x + 7) == [10]
+    assert solve(sqrt(x - 2) - 5) == [27]
+    assert solve(sqrt(17*x - sqrt(x**2 - 5)) - 7) == [3]
+    assert solve(sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))) == []
 
 @XFAIL
 def test_multivariate():
@@ -877,3 +869,36 @@ def test_check_assumptions():
 def test_solve_abs():
     assert solve(abs(x - 7) - 8) == [-1, 15]
 
+def test_issue_2957():
+    assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
+    assert solve(tanh(x - 1)*tanh(x + 1) + 1) == [
+        -log(2)/2 + log(-1 - I),
+        -log(2)/2 + log(-1 + I),
+        -log(2)/2 + log(1 - I),
+        -log(2)/2 + log(1 + I)]
+    assert solve((tanh(x + 3)*tanh(x - 3) + 1)**2) == \
+           [-log(2)/2 + log(-1 - I), -log(2)/2 + log(-1 + I),
+            -log(2)/2 + log(1 - I), -log(2)/2 + log(1 + I)]
+
+def test_issue_2574():
+    eq = -x + exp(exp(LambertW(log(x)))*LambertW(log(x)))
+    assert checksol(eq, x, 2) == True
+    assert checksol(eq, x, 2, numerical=False) is None
+
+def test_exclude():
+    R, C, Ri, Vout, V1, Rf, Vminus, Vplus, s = \
+        symbols('R, C, Ri, Vout, V1, Rf, Vminus, Vplus, s')
+    eqs = [C*V1*s + Vplus*(-2*C*s - 1/R),
+           Vminus*(-1/Ri - 1/Rf) + Vout/Rf,
+           C*Vplus*s + V1*(-C*s - 1/R) + Vout/R,
+           -Vminus + Vplus]
+    assert solve(eqs, exclude=s*C*R) == [
+                {Vminus: Vplus,
+                 Vout: Vplus*(C**2*R**2*s**2 + 3*C*R*s + 1)/(C*R*s),
+                 V1: Vplus*(2*C*R*s + 1)/(C*R*s),
+                 Ri: C*R*Rf*s/(C*R*s + 1)**2}]
+    assert solve(eqs, exclude=[Vplus, s, C]) == [
+                {Vminus: Vplus,
+                 Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
+                 R: Vplus/(C*s*(V1 - 2*Vplus)),
+                 Ri: Rf*Vplus*(V1 - 2*Vplus)/(V1 - Vplus)**2}]
