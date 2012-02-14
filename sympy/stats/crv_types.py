@@ -659,13 +659,15 @@ def Rayleigh(sigma, symbol=None):
     """
     Create a Continuous Random Variable with a Rayleigh distribution.
 
-    The probability distribution function depends on a single parameter
-    `sigma` which is a positive real values.
-
-    The density is given by
+    The density of the Rayleigh distribution is given by
 
     .. math ::
         \frac{x}{\sigma^2} e^{-x^2/2\sigma^2}.
+
+    Parameters
+    ==========
+
+    sigma : Real number, `sigma` > 0
 
     Returns a RandomSymbol.
 
@@ -693,6 +695,7 @@ def Rayleigh(sigma, symbol=None):
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Rayleigh_distribution
+    .. [2] http://mathworld.wolfram.com/RayleighDistribution.html
     """
 
     return RayleighPSpace(sigma, symbol).value
