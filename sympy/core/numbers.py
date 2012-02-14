@@ -173,8 +173,11 @@ class Number(AtomicExpr):
     is_Number = True
 
     def __new__(cls, *obj):
-        if len(obj)==1:
+        if len(obj) == 1:
             obj=obj[0]
+
+        if isinstance(obj, Number):
+            return obj
         if isinstance(obj, (int, long)):
             return Integer(obj)
         if isinstance(obj, tuple) and len(obj) == 2:
@@ -187,9 +190,37 @@ class Number(AtomicExpr):
                 return val
             else:
                 raise ValueError('String "%s" does not denote a Number'%obj)
-        if isinstance(obj, Number):
-            return obj
-        raise TypeError("expected str|int|long|float|Decimal|Number object but got %r" % (obj))
+            if isinstance(obj, Number):
+                return obj
+        raise TypeError("expected str|int|long|float|Decimal|Number object but got %r" % type(obj).__name__)
+
+    def __divmod__(self, other):
+        from containers import Tuple
+        from sympy.functions.elementary.complexes import sign
+
+        try:
+            other = Number(other)
+        except TypeError:
+            msg = "unsupported operand type(s) for divmod(): '%s' and '%s'"
+            raise TypeError(msg % (type(self).__name__, type(other).__name__))
+        if not other:
+            raise ZeroDivisionError('modulo by zero')
+        if self.is_Integer and other.is_Integer:
+            return Tuple(*divmod(self.p, other.p))
+        else:
+            rat = self/other
+        w = sign(rat)*int(abs(rat)) # = rat.floor()
+        r = self - other*w
+        #w*other + r == self
+        return Tuple(w, r)
+
+    def __rdivmod__(self, other):
+        try:
+            other = Number(other)
+        except TypeError:
+            msg = "unsupported operand type(s) for divmod(): '%s' and '%s'"
+            raise TypeError(msg % (type(other).__name__, type(self).__name__))
+        return divmod(other, self)
 
     def _as_mpf_val(self, prec):
         """Evaluation of mpf tuple accurate to at least prec bits."""
@@ -1412,14 +1443,19 @@ class Integer(Rational):
         if isinstance(other, Integer):
             return Tuple(*(divmod(self.p, other.p)))
         else:
-            return Tuple(*(divmod(self.p, other)))
+            return Number.__divmod__(self, other)
 
     def __rdivmod__(self, other):
         from containers import Tuple
-        if isinstance(other, Integer):
-            return Tuple(*divmod(other.p, self.p))
+        if isinstance(other, (int, long)):
+            return Tuple(*(divmod(other, self.p)))
         else:
-            return Tuple(*divmod(other, self.p))
+            try:
+                other = Number(other)
+            except TypeError:
+                msg = "unsupported operand type(s) for divmod(): '%s' and '%s'"
+                raise TypeError(msg % (type(other).__name__, type(self).__name__))
+            return Number.__divmod__(other, self)
 
     # TODO make it decorator + bytecodehacks?
     def __add__(self, other):
@@ -1835,10 +1871,9 @@ class NegativeOne(IntegerConstant):
             if isinstance(expt, Rational):
                 if expt.q == 2:
                     return S.ImaginaryUnit**Integer(expt.p)
-                q = Float(expt).floor()
-                if q:
-                    q = Integer(q)
-                    return self**q*self**(expt - q)
+                i, r = divmod(expt.p, expt.q)
+                if i:
+                    return self**i*self**Rational(r, expt.q)
         return
 
 class Half(RationalConstant):
