@@ -125,8 +125,11 @@ class ExponentialPSpace(SingleContinuousPSpace):
     def __new__(cls, rate, symbol=None):
         _value_check(rate > 0, "Rate must be positive.")
 
+        rate = sympify(rate)
+
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = rate * exp(-rate*x)
+
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         obj.rate = rate
         return obj
@@ -166,6 +169,8 @@ class GammaPSpace(SingleContinuousPSpace):
     def __new__(cls, k, theta, symbol=None):
         _value_check(k > 0, "k must be positive")
         _value_check(theta > 0, "Theta must be positive")
+
+        k, theta = sympify(k), sympify(theta)
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = x**(k-1) * exp(-x/theta) / (gamma(k)*theta**k)
@@ -210,6 +215,7 @@ class LogNormalPSpace(SingleContinuousPSpace):
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = exp(-(log(x)-mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
+
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         obj.mean = mean
         obj.std = std
@@ -246,8 +252,11 @@ class NormalPSpace(SingleContinuousPSpace):
     def __new__(cls, mean, std, symbol=None):
         _value_check(std > 0, "Standard deviation must be positive")
 
+        mean, std = sympify(mean), sympify(std)
+
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = exp(-(x-mean)**2 / (2*std**2)) / (sqrt(2*pi)*std)
+
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         obj.mean = mean
         obj.std = std
@@ -290,8 +299,11 @@ class ParetoPSpace(SingleContinuousPSpace):
         _value_check(xm > 0, "Xm must be positive")
         _value_check(alpha > 0, "Alpha must be positive")
 
+        xm, alpha = sympify(xm), sympify(alpha)
+
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = alpha * xm**alpha / x**(alpha+1)
+
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(xm, oo))
         obj.xm = xm
         obj.alpha = alpha
@@ -325,6 +337,8 @@ def Pareto(xm, alpha, symbol=None):
 
 class UniformPSpace(SingleContinuousPSpace):
     def __new__(cls, left, right, symbol=None):
+        left, right = sympify(left), sympify(right)
+
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = Piecewise(
                 (S.Zero, x<left),
