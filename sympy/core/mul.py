@@ -1,13 +1,13 @@
 from collections import defaultdict
+import operator
 
+from sympify import sympify
 from basic import Basic, C
 from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from logic import fuzzy_not
 from compatibility import cmp_to_key
-
-import operator
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -1521,6 +1521,4 @@ def _keep_coeff(coeff, factors, clear=True):
 
 from numbers import Rational, igcd
 from power import Pow
-from sympify import sympify
 from add import Add
-from sympy.core.function import _coeff_isneg

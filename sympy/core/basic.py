@@ -1,5 +1,5 @@
 """Base class for all the objects in SymPy"""
-from copy import copy
+
 from assumptions import ManagedProperties
 from cache import cacheit
 from core import BasicType, C
@@ -796,11 +796,8 @@ class Basic(object):
                   using matching rules
 
         """
-        from sympy.core.expr import Expr
         from sympy.core.containers import Dict
-        from sympy.utilities import default_sort_key, sift
-        from sympy.core.function import Function, Derivative
-        from sympy.core.symbol import Symbol
+        from sympy.utilities import default_sort_key
 
         unordered = False
         if len(args) == 1:
