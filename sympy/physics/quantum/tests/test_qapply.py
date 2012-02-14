@@ -1,4 +1,4 @@
-from sympy import I, Integer, sqrt, symbols
+from sympy import I, Integer, sqrt, symbols, S, Mul
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
@@ -9,6 +9,7 @@ from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.spin import Jx, Jy, Jz, Jplus, Jminus, J2, JzKet
+from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.state import Ket
 
 
@@ -90,3 +91,10 @@ def test_issue2974():
     B = Operator('B')
     assert qapply(A) == A
     assert qapply(A.dual*B) == A.dual*B
+
+
+def test_issue3044():
+    expr1 = TensorProduct(Jz*JzKet(S(2),S(-1))/sqrt(2), Jz*JzKet(S(1)/2,S(1)/2))
+    result = Mul(S(-1), S(1)/4, (2**(S(1)/2)), hbar**2)
+    result *= TensorProduct(JzKet(2,-1), JzKet(S(1)/2,S(1)/2))
+    assert qapply(expr1) == result
