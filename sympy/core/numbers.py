@@ -1061,8 +1061,6 @@ class Rational(Number):
         return Number.__rmod__(self, other)
 
     def _eval_power(self, exp):
-        if (exp is S.NaN):
-            return S.NaN
         if isinstance(exp, Number):
             if isinstance(exp, Float):
                 return self._eval_evalf(exp._prec)**exp
@@ -1577,18 +1575,10 @@ class Integer(Rational):
         """
         from sympy import perfect_power
 
-        if exp is S.NaN:
-            return S.NaN
-        if self is S.One:
-            return S.One
-        if self is S.NegativeOne:
-            return
         if exp is S.Infinity:
             if self.p > S.One:
                 return S.Infinity
-            if self is S.NegativeOne:
-                return S.NaN
-            # cases 0, 1 are done in their respective classes
+            # cases -1, 0, 1 are done in their respective classes
             return S.Infinity + S.ImaginaryUnit*S.Infinity
         if exp is S.NegativeInfinity:
             return Rational(1, self)**S.Infinity
@@ -1815,6 +1805,9 @@ class One(IntegerConstant):
     @staticmethod
     def __neg__():
         return S.NegativeOne
+
+    def _eval_power(self, exp):
+        return self
 
     def _eval_order(self, *symbols):
         return
@@ -2226,9 +2219,6 @@ class NaN(Number):
 
     def _as_mpf_val(self, prec):
         return mlib.fnan
-
-    def _eval_power(self, exp):
-        return self
 
     def _sage_(self):
         import sage.all as sage

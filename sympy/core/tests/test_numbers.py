@@ -574,6 +574,7 @@ def test_NaN():
     assert nan*S.One == nan
     assert nan + S.One == nan
     assert nan/S.One == nan
+    assert nan**0 == nan
 
 def test_special_numbers():
     assert isinstance(S.NaN, Number) == True

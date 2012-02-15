@@ -77,7 +77,9 @@ class Pow(Expr):
         b = _sympify(b)
         e = _sympify(e)
         if evaluate:
-            if e is S.Zero:
+            if S.NaN in (e, b):
+                return S.NaN
+            elif e is S.Zero:
                 return S.One
             elif e is S.One:
                 return b
