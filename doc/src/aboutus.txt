@@ -192,6 +192,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Siddhant Jain: See Also documentation for functions/special
 #. Kevin Hunter: Improvements to the inequality classes
 #. Michael Mayorov: Improvement to series
+#. Nathan Alison: Additions to the stats module
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
