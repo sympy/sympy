@@ -1096,7 +1096,7 @@ class Rational(Number):
                 # as the above caught negative self.p, now self is positive
                 return Integer(self.q)**Rational(expt.p*(expt.q-1), expt.q) / (Integer(self.q)**Integer(expt.p))
 
-        if _coeff_isneg(self) and expt.is_even:
+        if self.is_negative and expt.is_even:
             return (-self)**expt
 
         return
@@ -1595,7 +1595,7 @@ class Integer(Rational):
         if not isinstance(expt, Number):
             # simplify when exp is even
             # (-2)**k --> 2**k
-            if _coeff_isneg(self) and expt.is_even:
+            if self.is_negative and expt.is_even:
                 return (-self)**expt
         if not isinstance(expt, Rational):
             return
