@@ -94,6 +94,28 @@ class Z(CountableSet):
         return oo
 
 class Isomorphic(Set):
+    """
+    A set that is isomorphic to another through some algebraic expressions
+
+    Examples
+    --------
+    >>> from sympy import Isomorphic, S, FiniteSet
+    >>> squares = Isomorphic(x**2, x, S.N) # {x**2 for x in Naturals}
+    >>> 4 in squares
+    True
+    >>> 5 in squares
+    False
+    >>> FiniteSet(0,1,2,3,4,5,6,7,9,10).intersect(squares)
+    {1, 4}
+    >>> square_iterable = iter(squares)
+    >>> for i in range(5):
+    ...     square_iterable.next()
+    0
+    1
+    4
+    9
+    16
+    """
     def __new__(cls, expr, variable, base_set):
         return Basic.__new__(cls, expr, variable, base_set)
 
@@ -114,6 +136,29 @@ class Isomorphic(Set):
         return False
 
 class IsomorphicToN(Isomorphic):
+    """
+    A set that is isomorphic to the natural numbers through an algebraic
+    expressions. A countable set.
+
+    Examples
+    --------
+    >>> from sympy import IsomorphicToN, S, FiniteSet
+    >>> squares = IsomorphicToN(x**2, x) # {x**2 for x in Naturals}
+    >>> 4 in squares
+    True
+    >>> 5 in squares
+    False
+    >>> FiniteSet(0,1,2,3,4,5,6,7,9,10).intersect(squares)
+    {1, 4}
+    >>> square_iterable = iter(squares)
+    >>> for i in range(5):
+    ...     square_iterable.next()
+    0
+    1
+    4
+    9
+    16
+    """
     def __new__(cls, expr, variable):
         return Isomorphic.__new__(cls, expr, variable, N())
 
