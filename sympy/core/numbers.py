@@ -1468,8 +1468,6 @@ class Integer(Rational):
     def __radd__(self, other):
         if isinstance(other, (int, long)):
             return Integer(other + self.p)
-        elif isinstance(other, Integer):
-            return Integer(other.p + self.p)
         return Rational.__add__(self, other)
 
     def __sub__(self, other):
@@ -1482,8 +1480,6 @@ class Integer(Rational):
     def __rsub__(self, other):
         if isinstance(other, (int, long)):
             return Integer(other - self.p)
-        elif isinstance(other, Integer):
-            return Integer(other.p - self.p)
         return Rational.__rsub__(self, other)
 
     def __mul__(self, other):
@@ -1496,8 +1492,6 @@ class Integer(Rational):
     def __rmul__(self, other):
         if isinstance(other, (int, long)):
             return Integer(other*self.p)
-        elif isinstance(other, Integer):
-            return Integer(other.p*self.p)
         return Rational.__mul__(self, other)
 
     def __mod__(self, other):
@@ -1705,7 +1699,7 @@ class Integer(Rational):
 
     def gcdex(self, other):
         """Extended Euclidean Algorithm. """
-        if isinstance(self, (int, long)):
+        if isinstance(other, (int, long)):
             return tuple(map(Integer, igcdex(int(self), other)))
         b = _sympify(other)
         if b.is_Integer:
@@ -1783,14 +1777,11 @@ class Zero(IntegerConstant):
         return S.Zero
 
     def _eval_power(self, expt):
-        if expt.is_negative:
+        ispos = expt.is_positive
+        if ispos:
+            return self
+        elif ispos is False:
             return S.Infinity
-        if expt.is_positive:
-            return self
-        if expt.is_number:
-            if expt.evalf().is_negative:
-                return S.Infinity
-            return self
         # infinities are already handled with pos and neg
         # tests above; now throw away leading numbers on Mul
         # exponent
@@ -2237,10 +2228,7 @@ class NaN(Number):
         return mlib.fnan
 
     def _eval_power(self, exp):
-        if exp is S.Zero:
-            return S.One
-        else:
-            return self
+        return self
 
     def _sage_(self):
         import sage.all as sage

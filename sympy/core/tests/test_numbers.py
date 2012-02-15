@@ -715,6 +715,9 @@ def test_powers_Integer():
     assert (-2)**(1/S(3))*(-3)**(1/S(4))*(-5)**(5/S(6)) == \
            -(-1)**Rational(5, 12)*2**Rational(1, 3)*3**Rational(1, 4)*5**Rational(5, 6)
 
+    assert Integer(-2)**Symbol('', even=True) == Integer(2)**Symbol('', even=True)
+    assert (-1)**Float(.5) == 1.0*I
+
 def test_powers_Rational():
     """Test Rational._eval_power"""
     # check infinity
@@ -752,6 +755,13 @@ def test_powers_Rational():
 
     # negative integer power and negative rational base
     assert Rational(-2, 3) ** Rational(-2, 1) == Rational(9, 4)
+
+    a = Rational(1, 10)
+    assert a**Float(a, 2) == Float(a, 2)**Float(a, 2)
+    assert Rational(-2, 3)**Symbol('', even=True) == Rational(2, 3)**Symbol('', even=True)
+
+def test_powers_Float():
+    assert str((S('-1/10')**S('3/10')).n()) == str(Float(-.1)**(.3))
 
 def test_abs1():
     assert Rational(1,6) != Rational(-1,6)
