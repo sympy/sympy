@@ -357,7 +357,6 @@ def plot(*args, **kwargs):
 ##############################################################################
 # Data Series
 ##############################################################################
-#TODO nb_of_points can (should) became an option
 #TODO more general way to cacollectionulate aesthetics (see get_color_array)
 
 ### The base class for all series
