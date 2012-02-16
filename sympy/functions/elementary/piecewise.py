@@ -19,26 +19,38 @@ class Piecewise(Function):
           is given, the default value is NaN.
 
     Note that old otherwise syntax of using including an (otherwise, True)
-    tuple is currently deprecated. If your final expr/cond is (expr, True),
-    you must specify an otherwise expression to avoid having this expr changed
-    to an otherwise condition. The defualt value, NaN, is a suitable option.
+    tuple is currently deprecated. If your final expr/cond is (expr, True), you
+    must specify an otherwise expression to avoid having this expr changed to
+    an otherwise condition, which may stop a potential evaluation. The defualt
+    value, NaN, is a suitable option when no otherwise expression exists.
 
-    Piecewise can also evaluate the function, which is set by the ``evaluate``
-    keyword, that is disabled by default. Having explicitly True or False
-    conditions will enable evaluation unless the ``evaluate`` option is
-    explicitly False. When evaluate is True, it returns the first expression
-    with its condition explicitly True.
+    Evaluating a Piecewise object will return one of the expressions or the
+    otherwise condition. Evaluation of expr/cond pairs is done in the order
+    they are passed as parameters. For the first expr/cond pair where ``cond``
+    is True, evaluation returns the corresponding ``expr``. If no conditions
+    are True, the ``otherwise`` expression is returned.
 
-    When booleans are given as conditions and ``evaluate=False``:
+    The evaluation of the Piecewise object can be controlled by the
+    ``evaluate`` keyword. Under default conditions, wherever possible, any
+    nested Piecewise objects will be simplified and if there are no expr/cond
+    pairs, the otherwise value is returned. Furthermore, if any conds are
+    booleans, i.e. either True or False, the Piecewise object is evaluated, as
+    described above.  Evaluation can be forced when creating the Piecewise
+    object even when none of the conds are booleans by setting
+    ``evaluate=True``. When ``evaluate`` is set to False, nested Piecewise
+    objects are not simplified and Piecewise functions may contain only an
+    otherwise expression without expr/cond pairs.  Due to limitations with
+    having boolean values in ``.args``, when boolean conditions are given with
+    ``evaluate`` set to False:
 
         - Expr/cond pairs where cond is explicitly False are removed.
         - Evaluation stops at an explicitly True condition. The corresponding
           expression becomes the new otherwise expression.
-        - If the only remaining argument is the otherwise expression, the
-          otherwise expression is returned.
 
-    When Piecewise functions are nested, they will automatically be siplified.
-    This behavior can be overridden with the keyword evaluate=False.
+    Evaluation can be performed on an existing Piecewise object by calling the
+    ``.doit()`` method. The ``piecewise`` keyword can be used when calling
+    ``.doit()`` and sets the value of the ``evalute`` keyword. By default,
+    calling ``.doit()`` sets ``evaluate`` to True.
 
     Examples
     ========
