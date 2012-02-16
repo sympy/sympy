@@ -449,7 +449,7 @@ def test_pow():
     assert p1.coeff(x**50) == 847288609443
     def test1(p):
         p1 = p**QQ(1,3)
-    raises(NotImplementedError, 'test1(p)')
+    raises(ValueError, 'test1(p)')
 
 def test_division():
     lp, x, y = lgens('x, y', QQ, lex)

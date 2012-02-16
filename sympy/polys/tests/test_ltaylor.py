@@ -16,7 +16,6 @@ from sympy.functions.special.error_functions import erf
 from sympy.core.function import Function
 from sympy.utilities.pytest import XFAIL
 
-one = Rational(1)
 x = Symbol('x')
 
 def test_helper_functions():
@@ -40,6 +39,7 @@ def test_polynomial_degree():
     assert polynomial_degree(x, x) == 1
     assert polynomial_degree(-x, x) == 1
     assert polynomial_degree((x+1)*((x**2+1)**2 + 1)**2 + x + 1, x) == 9
+    assert polynomial_degree((x+1)*(x**2+1)**2 - x**5, x) == 5
     assert polynomial_degree(1/x, x) == -1
     assert polynomial_degree(x/(1+x), x) == -1
     assert polynomial_degree(sin(x), x) == -1
@@ -50,6 +50,8 @@ def test_taylor_QQ1():
     assert taylor(x+1, x, 0, 11) == x+1
     assert taylor(x**4, x, 0, 4) == O(x**4)
     assert taylor(x**4, x, 0, 5) == x**4
+    assert taylor((x**2 + 1)**2 - x**4, x, 0, 4) == 2*x**2 + 1
+    assert taylor(sqrt(x) + 1, x, 0, 5) == sqrt(x) + 1
     assert taylor(x + O(x**6), x, 0, 4) == x + O(x**4)
     assert taylor(2 + x**10, x, 0, 4) == 2 + O(x**4)
     assert taylor(log(x)*x, x, 0, 1) == x*log(x)
@@ -151,26 +153,40 @@ def test_taylor_QQ6():
 
 def test_taylor_QQ_logx():
     assert taylor(sin(x)**2*log(x), x, 0, 7) == \
-      (2*x**6/45 - x**4/3 + x**2)*log(x) + O(x**7*log(x))
+      x**2*log(x) - x**4*log(x)/3 + 2*x**6*log(x)/45 + O(x**7)
+    # series gives O(x**7*log(x))
 
     p1 = taylor(sin(x)**2*log(sin(x) + x)*log(x), x, 0, 7)
-    p2 = x**2*log(2)*log(x) + x**2*log(x)**2 - x**4*log(x)/12 - x**4*log(2)*log(x)/3 - x**4*log(x)**2/3 + 2*x**6*log(2)*log(x)/45 + 41*x**6*log(x)/1440 + 2*x**6*log(x)**2/45 + O(x**7*log(x)**2)
-    assert expand(p1) == p2
+    p2 = x**2*(log(x)**2 + log(2)*log(x)) + x**4*(-log(x)**2/3 - log(2)*log(x)/3 - log(x)/12) + x**6*(2*log(x)**2/45 + 41*log(x)/1440 + 2*log(2)*log(x)/45) + O(x**7)
+    assert p1 == p2
+    # series gives O(x**7*log(x)**2)
 
     p = log(x)*log(x + sin(x))*log(x**2 + sin(2*x))*sin(x)**2*log(x + x**2)
     p1 = taylor(p, x, 0, 4)
-    p2 = x**2*log(2)**2*log(x)**2 + 2*x**2*log(2)*log(x)**3 + x**2*log(x)**4 + x**3*log(2)**2*log(x) + 5*x**3*log(2)*log(x)**2/2 + 3*x**3*log(x)**3/2 + O(x**4*log(x)**4)
-    assert expand(p1) == p2
+    p2 = x**2*(log(x)**4 + 2*log(2)*log(x)**3 + log(2)**2*log(x)**2) + x**3*(3*log(x)**3/2 + 5*log(2)*log(x)**2/2 + log(2)**2*log(x)) + x**4*(-log(x)**4/3 - 11*log(x)**3/8 - 2*log(2)*log(x)**3/3 - 15*log(2)*log(x)**2/8 - log(2)**2*log(x)**2/3 + log(x)**2/2 - log(2)**2*log(x)/2 + log(2)*log(x)/2) + O(x**4)
 
-    p1 = taylor(tan(x)**2*log(tan(x)), x, 0, 7)
-    p2 = x**2*log(x) + x**4/3 + 2*x**4*log(x)/3 + 3*x**6/10 + 17*x**6*log(x)/45 + O(x**7*log(x))
-    assert expand(p1) == p2
+    assert p1 == p2
+    # series gives O(x**4*log(x)**4) missing terms x**4 * log(x)**k
+
+    p1 = taylor(tan(x)**2*log(tan(x)), x, 0, 8)
+    p2 = x**2*log(x) + x**4*(2*log(x)/3 + S.One/3) + x**6*(17*log(x)/45 + S(3)/10) + 62*x**8*log(x)/315 + O(x**8)
+
+    # the series method gives  order O(x**8*log(x))
+    assert p1 == p2
 
     assert taylor(log(sin(2*x)), x, 0, 7) == \
       log(2) + log(x) - 2*x**2/3 - 4*x**4/45 - 64*x**6/2835 + O(x**7)
 
     p1 = taylor(log(2/x)*log(sin(2*x)), x, 0, 3)
-    assert p1.expand() == log(2)**2 - log(x)**2 - 2*x**2*log(2)/3 + 2*x**2*log(x)/3 + O(x**3*log(x))
+    p2 = log(2)**2 - log(x)**2 + x**2*(2*log(x)/3 - 2*log(2)/3) + O(x**3)
+
+    #  the series method gives  order O(x**3*log(x))
+    assert p1 == p2
+
+    p1 = taylor(log(2/x)*log(sin(2*x)), x, 0, 4)
+    assert p1 == log(2)**2 - log(x)**2 + x**2*(2*log(x)/3 - 2*log(2)/3) + 4*x**4*log(x)/45 + O(x**4)
+
+    # series has order O(x**4*log(x)), missing last term
 
     y = Symbol('y', positive=True)
     assert taylor(x**y*log(x), x, 0, 4) == x**y*log(x)
@@ -213,10 +229,10 @@ def test_taylor_QQ_par1():
       y**4 + 4*x*y**3 + 6*x**2*y**2 + O(x**3)
 
     assert taylor((1+x+y)**4, x, 0, 3, pol_pars=[y]) == \
-      1 + 4*y + 6*y**2 + 4*y**3 + y**4 + 4*x + 12*x*y + 12*x*y**2 + 4*x*y**3 + 6*x**2 + 12*x**2*y + 6*x**2*y**2 + O(x**3)
+      1 + 4*y + 6*y**2 + 4*y**3 + y**4 + x*(4*y**3 + 12*y**2 + 12*y + 4) + x**2*(6*y**2 + 12*y + 6) + O(x**3)
 
     p1 = taylor(atan(x*y + x**2), x, 0, 6)
-    assert p1.expand() == x*y + x**2 - x**3*y**3/3 - x**4*y**2 - x**5*y + x**5*y**5/5 + O(x**6)
+    assert p1 == x*y + x**2 - x**3*y**3/3 - x**4*y**2 + x**5*(y**5/5 - y) + O(x**6)
 
     assert taylor(sin(x*y), x, 0, 2, pol_pars=[y]) == x*y + O(x**2)
     assert taylor((sin(x) + y)*cos(x), x, 0, 3, pol_pars=[y]) == y + x - x**2*y/2 + O(x**3)
@@ -228,14 +244,15 @@ def test_taylor_SR1():
 
     p1 = taylor(sqrt(1 + cos(x)), x, 0, 11)
     p2 = sqrt(2)*(1 - x**2/8 + x**4/384 - x**6/46080 + x**8/10321920 - x**10/3715891200 + O(x**12)) + O(x**11)
+    # ATT series method collects sqrt(2)
     assert p1 == p2.expand()
 
     p1 = taylor(cos(x+40), x, 0, 5)
     assert p1 == cos(40) - x*sin(40) - x**2*cos(40)/2 + x**3*sin(40)/6 + x**4*cos(40)/24 + O(x**5)
 
     p1 = taylor(1/cos(x+40), x, 0, 3)
-    p2 = 1/cos(40) + x*sin(40)/cos(40)**2 + x**2/(2*cos(40)) + x**2*sin(40)**2/cos(40)**3 + O(x**3)
-    assert p1.expand() == p2
+    p2 = 1/cos(40) + x*sin(40)/cos(40)**2 + x**2*(sin(40)**2/cos(40)**3 + 1/(2*cos(40))) + O(x**3)
+    assert p1 == p2
 
     p1 = taylor(sin(x+40), x, 0, 6)
     assert p1 == sin(40) + x*cos(40) - x**2*sin(40)/2 - x**3*cos(40)/6 + x**4*sin(40)/24 + x**5*cos(40)/120 + O(x**6)
@@ -252,6 +269,7 @@ def test_taylor_SR1():
 def test_taylor_SR2():
     p1 = taylor(exp(2 - exp(1+x+x**2)), x, 0, 5)
     p2 = exp(-E + 2) - x*exp(-E + 3) + x**2*exp(-E + 4)/2 - 3*x**2*exp(-E + 3)/2 + 3*x**3*exp(-E + 4)/2 - 7*x**3*exp(-E + 3)/6 - x**3*exp(-E + 5)/6 + 55*x**4*exp(-E + 4)/24 + x**4*exp(-E + 6)/24 - 25*x**4*exp(-E + 3)/24 - 3*x**4*exp(-E + 5)/4 + O(x**5)
+    # ATT series collects exponentials
     assert p1.expand() == p2.expand()
 
 def test_SR3():
@@ -260,6 +278,7 @@ def test_SR3():
     p = (exp(x))/((y/2 + log(2*pi)/2 + x/12 - 1/x - y/x))
     p1 = taylor(taylor(p, x, 0, 3).removeO(), y, 0, 2)
     p2 = -x + x*y - x**2*log(2)/2 - x**2*log(pi)/2 + y*x**2*log(2) + y*x**2*log(pi) - x**2 + y*x**2/2 + O(y**2)
+
     assert p1 == p2
 
 def test_taylor_SR_logx():
@@ -267,9 +286,10 @@ def test_taylor_SR_logx():
     p2 = x**2*log(x)*log(1 + pi) + x**2*log(x)**2 - 120*x**4*log(x)/(720 + 720*pi) - x**4*log(x)*log(1 + pi)/3 - x**4*log(x)**2/3 + O(x**6*log(x)**2)
     assert simplify(p1 - p2) == O(x**6*log(x)**2)
 
-    p1 = taylor(tan(pi*x)**2*log(tan(x)), x, 0, 7)
-    p2 = pi**2*x**2*log(x) + pi**2*x**4/3 + 2*pi**4*x**4*log(x)/3 + 2*pi**4*x**6/9 + 7*pi**2*x**6/90 + 17*pi**6*x**6*log(x)/45 + O(x**7*log(x))
-    assert expand(p1 - p2) == O(x**7*log(x))
+    p1 = taylor(tan(pi*x)**2*log(tan(x)), x, 0, 6)
+    p2 = pi**2*x**2*log(x) + x**4*(2*pi**4*log(x)/3 + pi**2/3) + 17*pi**6*x**6*log(x)/45 + O(x**6)
+    # series has order O(x**6*log(x)), missing last term
+    assert p1 == p2
 
 def test_taylor_SR_root():
     p1 = taylor(sqrt(sin(cos(2)*x)), x, 0, 7)
@@ -292,10 +312,10 @@ def test_lambert():
 
 def test_acos():
     p1 = taylor(acos(x), x, 0, 10)
-    assert p1 == pi/2 - 35*one/1152*x**9 - 5*one/112*x**7 - 3*one/40*x**5 - one/6*x**3 - x + O(x**10)
+    assert p1 == pi/2 - x - x**3/6 - 3*x**5/40 - 5*x**7/112 - 35*x**9/1152 + O(x**10)
 
     p1 = taylor(acos(x+x**2), x, 0, 10)
-    assert p1 == pi/2 - 1223*one/640*x**10 - 1547*one/1152*x**9 - 17*one/16*x**8 - 89*one/112*x**7 - 13*one/24*x**6 - 23*one/40*x**5 - one/2*x**4 - one/6*x**3 - x**2 - x + O(x**10)
+    assert p1 == pi/2 - x - x**2 - x**3/6 - x**4/2 - 23*x**5/40 - 13*x**6/24 - 89*x**7/112 - 17*x**8/16 - 1547*x**9/1152 + O(x**10)
 
 def test_acot():
     p1 = taylor(acot(x+x**2), x, 0, 10)
@@ -304,31 +324,31 @@ def test_acot():
 
 def test_acoth():
     p1 = taylor(acoth(x+x**2), x, 0, 10)
-    p2 = I*pi/2 + 37*one/9*x**9 + 3*x**8 + 15*one/7*x**7 + 4*one/3*x**6 + 6*one/5*x**5 + x**4 + one/3*x**3 + x**2 + x + O(x**10)
+    p2 = I*pi/2 + x + x**2 + x**3/3 + x**4 + 6*x**5/5 + 4*x**6/3 + 15*x**7/7 + 3*x**8 + 37*x**9/9 + O(x**10)
     assert p1 == p2
 
 def test_acosh():
     p1 = taylor(acosh(x), x, 0, 10)
-    p2 = -I*pi/2 + 35*one/1152*I*x**9 + 5*one/112*I*x**7 + 3*one/40*I*x**5 + one/6*I*x**3 + I*x + O(x**10)
-    assert p1 == -p2
+    p2 = I*pi/2 - I*x - I*x**3/6 - 3*I*x**5/40 - 5*I*x**7/112 - 35*I*x**9/1152 + O(x**10)
+    assert p1 == p2
 
 def test_sum():
     p1 = taylor(log(2) + x, x, 0, 10)
     assert p1 == log(2) + x
 
     p1 = taylor(log(2) + sin(x), x, 0, 8)
-    assert p1 == -one/5040*x**7 + one/120*x**5 - one/6*x**3 + x + log(2) + O(x**8)
+    assert p1 == log(2) + x - x**3/6 + x**5/120 - x**7/5040 + O(x**8)
+
     p = 1/x + sin(x)
     p1 = taylor(p,x,0,8)
-    assert p1 == -one/5040*x**7 + one/120*x**5 - one/6*x**3 + x + one/x + O(x**8)
+    assert p1 == 1/x + x - x**3/6 + x**5/120 - x**7/5040 + O(x**8)
     p = log(2) + sqrt(3)*sin(x)
     p1 = taylor(p,x,0,8)
-    assert p1.expand() == -one/5040*sqrt(3)*x**7 + one/120*sqrt(3)*x**5 - one/6*sqrt(3)*x**3 + sqrt(3)*x + log(2) + O(x**8)
+    assert p1 == log(2) + sqrt(3)*x - sqrt(3)*x**3/6 + sqrt(3)*x**5/120 - sqrt(3)*x**7/5040 + O(x**8)
 
     p1 = taylor(log(2) + (1+sqrt(3))*sin(x) + 1/x, x, 0, 8)
-    p2 = -one/5040*(sqrt(3) + 1)*x**7 + one/120*(sqrt(3) + 1)*x**5 - one/6*(sqrt(3) + 1)*x**3 + (sqrt(3) + 1)*x + 1/x + log(2) + O(x**8)
-    assert p1.expand() == p2.expand()
-
+    p2 = 1/x + log(2) + sqrt(3)*x + x - x**3/6 - sqrt(3)*x**3/6 + sqrt(3)*x**5/120 + x**5/120 - x**7/5040 - sqrt(3)*x**7/5040 + O(x**8)
+    assert p1 == p2
 
 def test_factor_var_from_num():
     x = Symbol("x")
@@ -379,16 +399,16 @@ def test_singular():
 
     y = Symbol('y')
     p1 = taylor(1/(1 + y + 1/x), x, 0, 5)
-    assert p1 == x - x**2 + x**3*y**2 - y*x**2 - 3*x**4*y**2 + x**3 - x**4*y**3 + 2*y*x**3 - x**4 - 3*y*x**4 + O(x**5)
+    assert p1 == x + x**2*(-y - 1) + x**3*(y**2 + 2*y + 1) + x**4*(-y**3 - 3*y**2 - 3*y - 1) + O(x**5)
 
     p1 = taylor(1/(1 + y/x + 1/x**2), x, 0, 5)
-    assert p1 == x**2 + x**4*y**2 - y*x**3 - x**4 + O(x**5)
+    assert p1 == x**2 - x**3*y + x**4*(y**2 - 1) + O(x**5)
 
     p1 = taylor(1/(1 + y/x), x, 0, 5)
     assert p1 == x/y - x**4/y**4 + x**3/y**3 - x**2/y**2 + O(x**5)
 
     p1 = taylor(cos(x)/(x*sin(2*x))**2, x, 0, 7)
-    assert p1 == 53*one/480 + 1/(4*x**4) + 5/(24*x**2) + 599*x**2/12096 + 7193*x**4/345600 + 90899*x**6/10644480 + O(x**7)
+    assert p1 == 1/(4*x**4) + 5/(24*x**2) + S(53)/480 + 599*x**2/12096 + 7193*x**4/345600 + 90899*x**6/10644480 + O(x**7)
 
     p1 = taylor((1 + x**7)/(x + 1/x + exp(x)), x, 0, 10)
     assert p1 == x - x**2 - x**3 + 5*x**4/2 - x**5/6 - 101*x**6/24 + 419*x**7/120 + 4061*x**8/720 - 3557*x**9/336 + O(x**10)
@@ -432,15 +452,15 @@ class ftoy3(Function):
 
 def test_analytic():
     x = Symbol('x')
-    p1 = taylor(log(sin(2*x)*erf(x)*sqrt(pi)), x, 0, 7, analytic=True).expand()
+    p1 = taylor(log(sin(2*x)*erf(x)*sqrt(pi)), x, 0, 7, analytic=True)
     assert p1 == 2*log(2) + 2*log(x) - x**2 - 2*x**4/45 - 8*x**6/315 + O(x**7)
 
-    p1 = taylor(sqrt(pi)*erf(sin(x)), x, 0, 10, analytic=True).expand()
+    p1 = taylor(sqrt(pi)*erf(sin(x)), x, 0, 10, analytic=True)
     assert p1 == 2*x - x**3 + 11*x**5/20 - 241*x**7/840 + 2777*x**9/20160 + O(x**10)
-    p1 = taylor(log(sin(2*x)*erf(x)*sqrt(pi)), x, 0, 10, analytic=True).expand()
+    p1 = taylor(log(sin(2*x)*erf(x)*sqrt(pi)), x, 0, 10, analytic=True)
     assert p1 == 2*log(2) + 2*log(x) - x**2 - 2*x**4/45 - 8*x**6/315 - 4*x**8/567 + O(x**10)
 
-    p1 = taylor(sqrt(pi)*erf(sin(cos(2)*x)), x, 0, 8, analytic=True).expand()
+    p1 = taylor(sqrt(pi)*erf(sin(cos(2)*x)), x, 0, 8, analytic=True)
     assert p1 == 2*x*cos(2) - x**3*cos(2)**3 + 11*x**5*cos(2)**5/20 - 241*x**7*cos(2)**7/840 + O(x**8)
 
     assert taylor(ftoy1(x), x, 0, 1, analytic=True) == O(x)
@@ -456,8 +476,8 @@ def test_taylor_series():
     assert p == 1 + x**3/2 + 5*x**6/24 + 61*x**9/720 + O(x**10)
 
     p1 = taylor(cos(sqrt(2)*x)*log(tan(x)), x, 0, 6)
-    p2 = log(x) + x**2/3 - x**2*log(x) - 23*x**4/90 + x**4*log(x)/6 - x**6*log(x)/90 + O(x**6)
-    assert expand(p1-p2) == O(x**6*log(x))
+    p2 = log(x) + x**2*(-log(x) + S.One/3) + x**4*(log(x)/6 - S(23)/90) - x**6*log(x)/90 + O(x**6)
+    assert p1 == p2
 
     assert taylor(2*exp(1/x), x, 0, 4) == 2*exp(1/x)
     assert taylor(log(1 - cos(x**4)), x, 0, 1) == -log(2) + 8*log(x) + O(x)
@@ -533,9 +553,9 @@ def test_exp_1():
                x**11/39916800 + O(x**12)
     assert taylor(exp(1/x), x, n=5) == exp(1/x)
     assert taylor(exp(1/(1+x)), x, n=4) == \
-            (E*(1-x-13*x**3/6+3*x**2/2)).expand() + O(x**4)
+            E - E*x + 3*E*x**2/2 - 13*E*x**3/6 + O(x**4)
     assert taylor(exp(2+x), x, n=5) == \
-            (exp(2)*(1+x+x**2/2+x**3/6+x**4/24)).expand() + O(x**5)
+      exp(2) + x*exp(2) + x**2*exp(2)/2 + x**3*exp(2)/6 + x**4*exp(2)/24 + O(x**5)
 
 def test_exp_sqrt_1():
     p1 = taylor(exp(1+sqrt(x)), x, n=3)
@@ -674,8 +694,8 @@ def test_seriesbug2c():
     p = (sin(2*w)/w)**(1+w)
     assert taylor(p, w, 0, 1) == 2 + O(w)
     p1 = taylor(p, w, 0, 3)
-    p1 = p1.expand()
-    assert p1 == 2-Rational(4,3)*w**2+w**2*log(2)**2+2*w*log(2)+O(w**3, w)
+    assert p1 == 2 + 2*w*log(2) + w**2*(-S(4)/3 + log(2)**2) + O(w**3)
+
     p1 = taylor(p, w, 0, 1)
     assert p1 == 2 + O(w)
     assert p1.subs(w, 0) == 2
@@ -769,8 +789,7 @@ def test_issue403():
 def test_issue404():
     p = sin(2 + x)/(2 + x)
     p1 = taylor(p, x, n=2)
-    p1 = p1.expand()
-    assert p1== sin(2)/2 + x*cos(2)/2 - x*sin(2)/4 + O(x**2)
+    assert p1 == sin(2)/2 + x*(-sin(2)/4 + cos(2)/2) + O(x**2)
 
 def test_issue407():
     p = (x + sin(3*x))**(-2)*(x*(x + sin(3*x)) - (x + sin(3*x))*sin(2*x))
@@ -789,7 +808,7 @@ def test_issue408():
 def test_issue540():
     #taylor collects terms'
     p1 = taylor(sin(cos(x)), x, n=5)
-    assert p1.expand() == sin(1) -x**2*cos(1)/2 - x**4*sin(1)/8 + x**4*cos(1)/24 + O(x**5)
+    assert p1 == sin(1) - x**2*cos(1)/2 + x**4*(-sin(1)/8 + cos(1)/24) + O(x**5)
 
 def test_hyperbolic():
     #coth test missing
@@ -912,9 +931,8 @@ def test_issue1342():
             a**4*x**4 + O(x**5)
     p = 1/(1+(a+b)*x)
     p1 = taylor(p, x, 0, 3)
-    p1 = p1.expand()
-    assert p1 == 1 - a*x - b*x + a**2*x**2 + b**2*x**2 + \
-            2*a*b*x**2 + O(x**3)
+    p2 = 1 + x*(-a - b) + x**2*(a**2 + 2*a*b + b**2) + O(x**3)
+    assert p1 == p2
 
 def test_issue1230():
     assert taylor(tan(x), x, pi/2, 3).removeO().subs(x, x - pi/2) == \

@@ -18,7 +18,7 @@ from sympy.core import pi, expand_multinomial, expand_mul
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy import I
+from sympy import I, collect
 from sympy.core.sympify import sympify
 from sympy.polys.domains import PythonRationalType
 from sympy.polys.polyutils import basic_from_dict
@@ -93,11 +93,13 @@ def _is_monomial(p, var):
 
 def polynomial_degree(p, x):
     """
-    return the degree of p if p is a polynomial in x; else return -1
+    return an upper bound to the degree of p if p is a polynomial in x;
+    else return -1
 
     This function does not attempt any nontrivial simplifications that may
     result in an expression that does not appear to be a polynomial to
-    become one.
+    become one; or in a polynomial that appears to have higher degree
+    than its expanded form.
 
     Examples
     >>> from sympy import Symbol, S
@@ -474,36 +476,44 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
         # consider first the Order; in case the order is less than
         # prec series raises ValueError, so it is not necessary
         # to do the rest of the computation
+        res = S.Zero
         pol_part = []
         non_pol_part = []
         for q in p.args:
             if q.is_Order:
                 orders.append(q)
+                continue
             m = _is_monomial(q, var)
             if m:
-                pol_part.append(m)
+                n0, c0 = m
+                if n0 < 0:
+                    res += q
+                    continue
+                if not sympify(n0).is_Integer:
+                    res += q
+                    continue
+            if q.is_polynomial(var):
+                pol_part.append(q)
             else:
                 non_pol_part.append(q)
 
         if not non_pol_part:
-            if max(pol_part)[0] < prec:
-                return p
-            else:
-                p2 = 0
-                for n, c in pol_part:
-                    if n < prec:
-                        p2 += c*var**n
-                p2 += O(var**prec)
-                return p2
+            res += Add(*(pol_part + orders)).series(var, 0, prec)
+            return res
 
-        res = S.Zero
         if pol_part:
-            for n0, c0 in pol_part:
-                res += c0*var**n0
+            pol_part = Add(*pol_part)
+            res += pol_part.series(var, 0, prec)
 
         for p1 in non_pol_part:
             p1, c = _split_constant_part(p1, var)
-            p2, ord2 = _taylor_term(p1, var, tev, 0, start, prec, dir, pol_pars, rdeco)
+            #p2, ord2 = _taylor_term(p1, var, tev, 0, start, prec, dir, pol_pars, rdeco)
+            tres = _taylor_term(p1, var, tev, 0, start, prec, dir, pol_pars, rdeco)
+            if not tres:
+                ts = p1.series(var, 0, prec)
+                p2, ord2 = ts.removeO(), ts.getO()
+            else:
+                p2, ord2 = tres
             if c == 1:
                 res += p2
             else:
@@ -591,7 +601,7 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
     # p11 = [0, log(sin(x)/x), 1]
     ps = 0
     logi = 1
-
+    ords = S.Zero
     for i in range(nlog+1):
         px = p11[i]
         px, c = _split_constant_part(px, var)
@@ -654,12 +664,25 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
                             #ps += c*px*logi + O(var**prec*logi)
                             ps += (c*px*logi).series(var, 0, prec)
                 else:
-                    p1, ord1 = _taylor_term(px, var, tev, 0, start, prec, dir, pol_pars, rdeco)
-                    if ord1:
-                        ps += c*p1*logi + ord1*logi
+                    prec1 = prec if i == 0 else prec+1
+                    #p1, ord1 = _taylor_term(px, var, tev, 0, start, prec1, dir, pol_pars, rdeco)
+                    tres =  _taylor_term(px, var, tev, 0, start, prec1, dir, pol_pars, rdeco)
+                    if not tres:
+                        ts = px.series(var, 0, prec1)
+                        p1, ord1 = ts.removeO(), ts.getO()
                     else:
-                        ps += c*p1*logi
+                        p1, ord1 = tres
+
+                    if ord1:
+                        ps += expand_mul(c*p1*logi, deep=False)
+                        if i > 0 and tres and not ord1.has(log):
+                            ord1 = ord1/var
+                        ords += ord1
+                    else:
+                        ps += expand_mul(c*p1*logi, deep=False)
             logi *= log(var)
+    ps = collect(ps, var)
+    ps += ords
     return ps
 
 def _taylor_term(p, var, tev, typ=0, start=0, prec=6, dir="+", pol_pars=[], rdeco=1):
@@ -690,8 +713,7 @@ def _taylor_term(p, var, tev, typ=0, start=0, prec=6, dir="+", pol_pars=[], rdec
     assert p.has(var)
     res = _taylor_term1(p, var, tev, typ, prec, rdeco)
     if res == None:
-        p1 = p.series(var, start, prec, dir)
-        return (p1.removeO(), p1.getO())
+        return None
 
     c, num, pw, typn = res
     p2 = _tobasic(num, tev, typn)
