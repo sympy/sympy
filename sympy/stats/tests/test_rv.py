@@ -1,5 +1,5 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
-        symbols, simplify, Eq, cos, And, Tuple, integrate, oo)
+        symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum)
 from sympy.stats import (Die, Normal, Exponential , P, E, Var, Covar,
         Skewness, Density, Given, independent, dependent, Where, pspace,
         random_symbols, Sample)
@@ -92,6 +92,12 @@ def test_Sample():
     assert Var(X+Y, numsamples=10).is_Float
 
     raises(ValueError, "P(Y>z, numsamples=5)")
+
+    assert P(sin(Y)<=1, numsamples=10) == 1
+    assert P(sin(Y)<=1, cos(Y)<1, numsamples=10) == 1
+
+    # Make sure this doesn't raise an error
+    E(Sum(1/z**Y, (z,1,oo)), Y>2, numsamples=3)
 
 def test_Given():
     X = Normal(0, 1)

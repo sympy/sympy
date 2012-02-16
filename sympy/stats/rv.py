@@ -618,6 +618,15 @@ def sample_iter(expr, given=None, numsamples=S.Infinity, **kwargs):
     given: A conditional expression (optional)
     numsamples: Length of the iterator (defaults to infinity)
 
+    Examples
+    --------
+    >>> from sympy.stats import Normal, sample_iter
+    >>> X = Normal(0,1)
+    >>> expr = X*X + 3
+    >>> iterator = sample_iter(expr, numsamples=3)
+    >>> list(iterator) # doctest: +SKIP
+    [12, 4, 7]
+
     See Also
     ========
     Sample
@@ -627,9 +636,9 @@ def sample_iter(expr, given=None, numsamples=S.Infinity, **kwargs):
     sample_iter_subs
     """
     # lambdify is much faster but not as robust
-    try:    return sample_iter_lambdify(expr, given, numsamples, **kwargs)
+    try:          return sample_iter_lambdify(expr, given, numsamples, **kwargs)
     # use subs when lambdify fails
-    except: return sample_iter_subs(expr, given, numsamples, **kwargs)
+    except TypeError: return sample_iter_subs(expr, given, numsamples, **kwargs)
 
 def sample_iter_lambdify(expr, given=None, numsamples=S.Infinity, **kwargs):
     """
@@ -642,25 +651,38 @@ def sample_iter_lambdify(expr, given=None, numsamples=S.Infinity, **kwargs):
     else:
         ps = pspace(expr)
 
-    count = 0
     rvs = list(ps.values)
     fn = lambdify(rvs, expr, **kwargs)
     if given:
         given_fn = lambdify(rvs, given, **kwargs)
 
-    while count < numsamples:
+    # Check that lambdify can handle the expression
+    # Some operations like Sum can prove difficult
+    try:
         d = ps.sample() # a dictionary that maps RVs to values
         args = [d[rv] for rv in rvs]
+        fn(*args)
+        if given:
+            given_fn(*args)
+    except:
+        raise TypeError("Expr/given too complex for lambdify")
 
-        if given: # Check that these values satisfy the condition
-            gd = given_fn(*args)
-            if not isinstance(gd, bool):
-                raise ValueError("Conditions must not contain free symbols")
-            if gd == False: # If the values don't satisfy then try again
-                continue
+    def return_generator():
+        count = 0
+        while count < numsamples:
+            d = ps.sample() # a dictionary that maps RVs to values
+            args = [d[rv] for rv in rvs]
 
-        yield fn(*args)
-        count += 1
+            if given: # Check that these values satisfy the condition
+                gd = given_fn(*args)
+                if not isinstance(gd, bool):
+                    raise ValueError("Conditions must not contain free symbols")
+                if gd == False: # If the values don't satisfy then try again
+                    continue
+
+            yield fn(*args)
+            count += 1
+    return return_generator()
 
 def sample_iter_subs(expr, given=None, numsamples=S.Infinity, **kwargs):
     """
@@ -727,7 +749,7 @@ def sampling_E(condition, given=None, numsamples=1, **kwargs):
 
     samples = sample_iter(condition, given, numsamples=numsamples, **kwargs)
 
-    return Add(*samples) / numsamples
+    return Add(*list(samples)) / numsamples
 
 def dependent(a, b):
     """
