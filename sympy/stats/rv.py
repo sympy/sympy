@@ -623,6 +623,19 @@ def sample_iter(expr, given=None, numsamples=S.Infinity, **kwargs):
     Sample
     sampling_P
     sampling_E
+    sample_iter_lambdify
+    sample_iter_subs
+    """
+    # lambdify is much faster but not as robust
+    try:    return sample_iter_lambdify(expr, given, numsamples, **kwargs)
+    # use subs when lambdify fails
+    except: return sample_iter_subs(expr, given, numsamples, **kwargs)
+
+def sample_iter_lambdify(expr, given=None, numsamples=S.Infinity, **kwargs):
+    """
+    See sample_iter
+
+    Uses lambdify for computation. This is fast but does not always work.
     """
     if given:
         ps = pspace(Tuple(expr, given))
@@ -649,6 +662,33 @@ def sample_iter(expr, given=None, numsamples=S.Infinity, **kwargs):
         yield fn(*args)
         count += 1
 
+def sample_iter_subs(expr, given=None, numsamples=S.Infinity, **kwargs):
+    """
+    See sample_iter
+
+    Uses subs for computation. This is slow but almost always works.
+    """
+    if given:
+        ps = pspace(Tuple(expr, given))
+    else:
+        ps = pspace(expr)
+
+    count = 0
+
+    while count < numsamples:
+        d = ps.sample() # a dictionary that maps RVs to values
+
+
+        if given: # Check that these values satisfy the condition
+            gd = given.subs(d)
+            if not isinstance(gd, bool):
+                raise ValueError("Conditions must not contain free symbols")
+            if gd == False: # If the values don't satisfy then try again
+                continue
+
+        yield expr.subs(d)
+
+        count += 1
 def sampling_P(condition, given=None, numsamples=1, **kwargs):
     """
     Sampling version of P
