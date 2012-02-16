@@ -1051,29 +1051,55 @@ class Mul(AssocOp):
         return False
 
     def _eval_is_positive(self):
-        terms = [t for t in self.args if not t.is_positive]
+        ZERO = ()
+        POS = (1,)
+        NEG = (-1,)
+        NONPOS = (-1, 0)
+        NONNEG = (0, 1)
+        class Fuz(tuple):
+            def __new__(cls, *args):
+                if args:
+                    args = list(args[0])
+                    args.sort
+                return tuple.__new__(cls, tuple(args))
+            def __mul__(self, other):
+                if len(other) < len(self):
+                    self, other = other, self
+                if other < self:
+                    self, other = other, self
+                if self == POS:
+                    return other
+                if self == NEG:
+                    if other is NONPOS: return NONNEG
+                    if other is NONNEG: return NONPOS
+                    if other is NEG: return POS
+                if self == NONPOS:
+                    if other == NONPOS:
+                        return NONNEG
+                return self
+
+        ZERO, POS, NEG, NONPOS, NONNEG = [Fuz(i) for i in ZERO, POS, NEG, NONPOS, NONNEG]
+        def myfuz(t):
+            if t.is_negative:
+                return NEG
+            elif t.is_nonpositive:
+                return NONPOS
+            elif t.is_nonnegative:
+                return NONNEG
+            return ZERO
+        terms = [myfuz(t) for t in self.args if not t.is_positive]
         if not terms:
             return True
-        c = terms[0]
-        if len(terms)==1:
-            if c.is_nonpositive:
-                return False
-            return
-        r = self._new_rawargs(*terms[1:])
-        if c.is_negative and r.is_negative:
+        rv = terms[0]
+        for t in terms[1:]:
+            rv = Fuz.__mul__(rv, t)
+        if rv == POS:
             return True
-        if r.is_negative and c.is_negative:
-            return True
-        # check for nonpositivity, <=0
-        if c.is_negative and r.is_nonnegative:
+        if rv == NEG:
             return False
-        if r.is_negative and c.is_nonnegative:
+        if rv == NONPOS:
             return False
-        if c.is_nonnegative and r.is_nonpositive:
-            return False
-        if r.is_nonnegative and c.is_nonpositive:
-            return False
-
+        return None
 
     def _eval_is_negative(self):
         terms = [t for t in self.args if not t.is_positive]
