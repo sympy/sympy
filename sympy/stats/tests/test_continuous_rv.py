@@ -1,7 +1,7 @@
 from sympy.stats import (Normal, LogNormal, Exponential, P, E, Where, Density,
         Var, Covar, Skewness, Gamma, Pareto, Weibull, Beta, Uniform, Given, pspace, CDF, ContinuousRV, Sample)
 from sympy import (Symbol, exp, S, N, pi, simplify, Interval, erf, Eq, symbols,
-        sqrt, And, gamma, beta, Piecewise, Integral)
+        sqrt, And, gamma, beta, Piecewise, Integral, sin)
 from sympy.utilities.pytest import raises
 
 oo = S.Infinity
@@ -37,6 +37,7 @@ def test_ContinuousDomain():
     assert Where(X**2<=1).set == Interval(-1,1)
     assert Where(X**2<=1).symbol == X.symbol
     Where(And(X**2<=1, X>=0)).set == Interval(0,1)
+    raises(ValueError, "Where(sin(X)>1)")
 
     Y = Given(X, X>=0)
 
