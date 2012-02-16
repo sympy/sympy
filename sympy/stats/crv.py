@@ -45,7 +45,11 @@ class SingleContinuousDomain(ContinuousDomain, SingleDomain):
             return expr
         assert frozenset(variables) == frozenset(self.symbols)
         # assumes only intervals
-        return integrate(expr, (self.symbol, self.set), **kwargs)
+        evaluate = kwargs.pop('evaluate', True)
+        if evaluate:
+            return integrate(expr, (self.symbol, self.set), **kwargs)
+        else:
+            return Integral(expr, (self.symbol, self.set), **kwargs)
 
     def as_boolean(self):
         return self.set.as_relational(self.symbol)
@@ -118,7 +122,10 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                 raise TypeError(
                         "Condition %s is not a relational or Boolean"%cond)
 
-        return integrate(integrand, *limits, **kwargs)
+        evaluate = kwargs.pop('evaluate', True)
+        if evaluate:
+            return integrate(integrand, *limits, **kwargs)
+        return Integral(integrand, *limits, **kwargs)
 
     def as_boolean(self):
         return And(self.fulldomain.as_boolean(), self.condition)
