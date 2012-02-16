@@ -9,6 +9,7 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
 from sympy.core.function import AppliedUndef
 from sympy.abc import a, b, c, d, e, n, t, u, x, y, z
 from sympy.physics.secondquant import FockState
+from sympy.physics.units import meter
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -1029,12 +1030,14 @@ def test_2127():
     assert Mul(evaluate=False) == 1
     assert Mul(x+y, evaluate=False).is_Add
 
-def test_symbols():
-    # symbols should return the free symbols of an object
+def test_free_symbols():
+    # free_symbols should return the free symbols of an object
     assert S(1).free_symbols == set()
     assert (x).free_symbols == set([x])
     assert Integral(x, (x, 1, y)).free_symbols == set([y])
     assert (-Integral(x, (x, 1, y))).free_symbols == set([y])
+    assert meter.free_symbols == set()
+    assert (meter**x).free_symbols == set([x])
 
 def test_issue2201():
     x = Symbol('x', commutative=False)
@@ -1225,7 +1228,11 @@ def test_is_constant():
     assert Pow(S(2), S(3), evaluate=False).is_constant() == True
 
     z1, z2 = symbols('z1 z2', zero=True)
-    assert (z1+2*z2).is_constant
+    assert (z1 + 2*z2).is_constant() is True
+
+    assert meter.is_constant() is True
+    assert (3*meter).is_constant() is True
+    assert (x*meter).is_constant() is False
 
 @XFAIL
 def test_is_not_constant():
