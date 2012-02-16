@@ -30,6 +30,8 @@ from sympy import Abs as abs_type
 from sympy.core import Mul as mul_type
 from sympy.core import Add as add_type
 
+from bisect import bisect_left
+
 global MAIN_PROGRAM
 
 MAIN_PROGRAM = ''
@@ -237,38 +239,16 @@ def reduce_base(k,base):
     number of permutations is required to sort the list. The sorted list
     is returned and +1 for even permutations or -1 for odd permutations.
     """
-    if k in base:
-        return(0,base)
-    grade = len(base)
-    if grade == 1:
-        if k < base[0]:
-            return(1,[k,base[0]])
-        else:
-            return(-1,[base[0],k])
-    ilo = 0
-    ihi = grade-1
-    if k < base[0]:
-        return(1,[k]+base)
-    if k > base[ihi]:
-        if grade%2 == 0:
-            return(1,base+[k])
-        else:
-            return(-1,base+[k])
-    imid = ihi+ilo
-    if grade == 2:
-        return(-1,[base[0],k,base[1]])
-    while True:
-        if ihi-ilo == 1:
-            break
-        if base[imid] > k:
-            ihi = imid
-        else:
-            ilo = imid
-        imid = (ilo+ihi)/2
-    if ilo%2 == 1:
-        return(1,base[:ihi]+[k]+base[ihi:])
+    ind_k = bisect_left(base, k)
+    if ind_k%2 == 0:
+        perm = 1
     else:
-        return(-1,base[:ihi]+[k]+base[ihi:])
+        perm =-1
+    if ind_k == len(base):
+        return (perm,base+[k])   
+    if base[ind_k] == k:
+        return(0,base)
+    return(perm,base[:ind_k]+[k]+base[ind_k:])
 
 def sub_base(k,base):
     """
