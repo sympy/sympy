@@ -1051,77 +1051,49 @@ class Mul(AssocOp):
         return False
 
     def _eval_is_positive(self):
-        ZERO = ()
-        POS = (1,)
-        NEG = (-1,)
-        NONPOS = (-1, 0)
-        NONNEG = (0, 1)
-        class Fuz(tuple):
-            def __new__(cls, *args):
-                if args:
-                    args = list(args[0])
-                    args.sort
-                return tuple.__new__(cls, tuple(args))
-            def __mul__(self, other):
-                if len(other) < len(self):
-                    self, other = other, self
-                if other < self:
-                    self, other = other, self
-                if self == POS:
-                    return other
-                if self == NEG:
-                    if other is NONPOS: return NONNEG
-                    if other is NONNEG: return NONPOS
-                    if other is NEG: return POS
-                if self == NONPOS:
-                    if other == NONPOS:
-                        return NONNEG
-                return self
-
-        ZERO, POS, NEG, NONPOS, NONNEG = [Fuz(i) for i in ZERO, POS, NEG, NONPOS, NONNEG]
-        def myfuz(t):
-            if t.is_negative:
-                return NEG
+        ZERO = 0
+        NEG = -1
+        POS = 1
+        NONPOS = -2
+        NONNEG = 2
+        res = 1
+        for t in self.args:
+            if t.is_positive:
+                res *= POS
+            elif t.is_negative:
+                res *= NEG
             elif t.is_nonpositive:
-                return NONPOS
+                res *= NONPOS
             elif t.is_nonnegative:
-                return NONNEG
-            return ZERO
-        terms = [myfuz(t) for t in self.args if not t.is_positive]
-        if not terms:
+                res *= NONNEG
+            else:
+                return
+        if res == 1:
             return True
-        rv = terms[0]
-        for t in terms[1:]:
-            rv = Fuz.__mul__(rv, t)
-        if rv == POS:
-            return True
-        if rv == NEG:
+        if res < 0:
             return False
-        if rv == NONPOS:
-            return False
-        return None
 
     def _eval_is_negative(self):
-        terms = [t for t in self.args if not t.is_positive]
-        if not terms:
-            # all terms are either positive -- 2*Symbol('n', positive=T)
-            #               or     unknown  -- 2*Symbol('x')
-            if self.is_positive:
-                return False
+        ZERO = 0
+        NEG = -1
+        POS = 1
+        NONPOS = -2
+        NONNEG = 2
+        res = 1
+        for t in self.args:
+            if t.is_positive:
+                res *= POS
+            elif t.is_negative:
+                res *= NEG
+            elif t.is_nonpositive:
+                res *= NONPOS
+            elif t.is_nonnegative:
+                res *= NONNEG
             else:
-                return None
-        c = terms[0]
-        if len(terms)==1:
-            return c.is_negative
-        r = self._new_rawargs(*terms[1:])
-        # check for nonnegativity, >=0
-        if c.is_negative and r.is_nonpositive:
-            return False
-        if r.is_negative and c.is_nonpositive:
-            return False
-        if c.is_nonpositive and r.is_nonpositive:
-            return False
-        if c.is_nonnegative and r.is_nonnegative:
+                return
+        if res == -1:
+            return True
+        if res > 0:
             return False
 
     def _eval_is_odd(self):
@@ -1139,7 +1111,6 @@ class Mul(AssocOp):
         # !integer -> !odd
         elif is_integer == False:
             return False
-
 
     def _eval_is_even(self):
         is_integer = self.is_integer
