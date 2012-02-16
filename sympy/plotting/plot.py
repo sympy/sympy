@@ -33,7 +33,8 @@ np = import_module('numpy')
 
 # Backend specific imports - matplotlib
 matplotlib = import_module('matplotlib',
-    __import__kwargs={'fromlist':['pyplot', 'cm', 'collections']})
+    __import__kwargs={'fromlist':['pyplot', 'cm', 'collections']},
+    min_module_version='1.0.0')
 if matplotlib:
     plt = matplotlib.pyplot
     cm = matplotlib.cm
@@ -883,7 +884,9 @@ class MatplotlibBackend(BaseBackend):
                 else:
                     collection.set_color(s.line_color)
             if s.is_3Dsurface and s.surface_color:
-                if isinstance(s.surface_color, (float,int)) or callable(s.surface_color):
+                if matplotlib.__version__ < "1.2.0": #TODO in the distant future remove this check
+                    warn.waring('The version of matplotlib is too old to use surface coloring.')
+                elif isinstance(s.surface_color, (float,int)) or callable(s.surface_color):
                     color_array = s.get_color_array()
                     color_array = color_array.reshape(color_array.size)
                     collection.set_array(color_array)
