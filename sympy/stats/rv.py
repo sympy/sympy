@@ -12,7 +12,7 @@ sympy.stats.frv
 sympy.stats.rv_interface
 """
 
-from sympy import Basic, S, Expr, Symbol, Tuple, And, Add, Eq
+from sympy import Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify
 from sympy.core.sets import FiniteSet, ProductSet
 
 class RandomDomain(Basic):
@@ -624,26 +624,29 @@ def sample_iter(expr, given=None, numsamples=S.Infinity, **kwargs):
     sampling_P
     sampling_E
     """
-
     if given:
         ps = pspace(Tuple(expr, given))
     else:
         ps = pspace(expr)
 
     count = 0
+    rvs = list(ps.values)
+    fn = lambdify(rvs, expr, **kwargs)
+    if given:
+        given_fn = lambdify(rvs, given, **kwargs)
+
     while count < numsamples:
         d = ps.sample() # a dictionary that maps RVs to values
+        args = [d[rv] for rv in rvs]
 
         if given: # Check that these values satisfy the condition
-            gd = given.subs(d)
+            gd = given_fn(*args)
             if not isinstance(gd, bool):
                 raise ValueError("Conditions must not contain free symbols")
             if gd == False: # If the values don't satisfy then try again
                 continue
 
-        ed = expr.subs(d)
-
-        yield ed
+        yield fn(*args)
         count += 1
 
 def sampling_P(condition, given=None, numsamples=1, **kwargs):
