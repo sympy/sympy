@@ -221,3 +221,7 @@ def test_round():
 
     raises(TypeError, 'round(x)')
     raises(TypeError, 'round(1 + 3*I)')
+
+    # exact magnitude of 10
+    assert str(round(S(1))) == '1.'
+    assert str(round(S(100))) == '100.'

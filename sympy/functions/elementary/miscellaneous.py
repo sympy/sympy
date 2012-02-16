@@ -9,7 +9,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import Singleton
 from sympy.core.rules import Transform
 from sympy.ntheory.residue_ntheory import int_tested
-
+from sympy.mpmath.libmp import mpf_log
 from math import log10, ceil
 
 class IdentityFunction(Lambda):
@@ -546,10 +546,15 @@ def round(x, p=0):
     precs = [f._prec for f in x.atoms(C.Float)]
     dps = prec_to_dps(max(precs)) if precs else None
 
+    xpos = abs(x.n())
     try:
-        mag_first_dig = int(ceil(log10(abs(x.n()))))
+        mag_first_dig = int(ceil(log10(xpos)))
     except (ValueError, OverflowError):
-        mag_first_dig = int(ceil(log(abs(x), 10).n()))
+        mag_first_dig = int(ceil(C.Float(mpf_log(xpos._mpf_, 53))/log(10)))
+    # check that we aren't off by 1
+    if (xpos/10**mag_first_dig) >= 1:
+        mag_first_dig += 1
+        assert .1 <= (xpos/10**mag_first_dig) < 1
     allow = digits_needed = mag_first_dig + p
     if dps is not None and allow > dps:
         allow = dps
