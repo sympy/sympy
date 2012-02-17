@@ -6,6 +6,7 @@ from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag, GramSchmidt, casoratian,
     SparseMatrix, SparseMatrix, NonSquareMatrixError,
     matrix_multiply_elementwise, diag, NonSquareMatrixError, DeferredVector)
+from sympy.matrices import ImmutableMatrix
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.matrices import rot_axis1, rot_axis2, rot_axis3
@@ -126,6 +127,9 @@ def test_creation():
     assert c.cols == 3
     assert c.rows == 3
     assert c[:] == [1,2,3,4,5,6,7,8,9]
+
+    assert Matrix(c) == c
+    assert ImmutableMatrix(c) == c.as_immutable()
 
 def test_tolist():
     x, y, z = symbols('x y z')
