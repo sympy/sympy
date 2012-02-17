@@ -7,8 +7,6 @@ from sympy import *
 
 import sympy,numpy,sys
 
-set_main(sys.modules[__name__])
-
 if __name__ == '__main__':
     metric = '1 0 0,'+\
              '0 1 0,'+\

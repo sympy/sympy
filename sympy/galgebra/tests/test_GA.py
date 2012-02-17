@@ -13,11 +13,9 @@ if not numpy:
     disabled = True
 else:
     sys.path.append('../')
-    from sympy.galgebra.GA import set_main, MV, make_symbols, ZERO, ONE, HALF, S
+    from sympy.galgebra.GA import MV, make_symbols, ZERO, ONE, HALF, S
     import sympy
     from sympy import collect, sympify
-
-    set_main(sys.modules[__name__])
 
 def F(x):
     """
