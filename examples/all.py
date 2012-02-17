@@ -33,8 +33,8 @@ Example Usage:
    Obviously, we want to achieve the first result.
 """
 
-import argparse
 import imp
+import optparse
 import os
 import sys
 import traceback
@@ -216,17 +216,16 @@ def show_summary(successes, failures, reporter=None):
 
 def main(*args, **kws):
     """Main script runner"""
-    parser = argparse.ArgumentParser(description=DESCRIPTION, epilog=EPILOG,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-w', '--windowed', action="store_true",
+    parser = optparse.OptionParser()
+    parser.add_option('-w', '--windowed', action="store_true", dest="windowed",
         help="also run examples requiring windowed environment")
-    parser.add_argument('-q', '--quiet', action="store_true",
+    parser.add_option('-q', '--quiet', action="store_true", dest="quiet",
         help="runs examples in 'quiet mode' suppressing example output and \
               showing simple status messages.")
-    parser.add_argument('--no-summary', action="store_true",
+    parser.add_option('--no-summary', action="store_true", dest="no_summary",
         help="hides the summary at the end of testing the examples")
 
-    options = parser.parse_args(args)
+    (options, _) = parser.parse_args()
 
     return 0 if run_examples(windowed=options.windowed, quiet=options.quiet,
                              summary=not options.no_summary) else 1
