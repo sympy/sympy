@@ -80,6 +80,9 @@ class Tuple(Basic):
     def _to_mpmath(self, prec):
         return tuple([a._to_mpmath(prec) for a in self.args])
 
+    def __lt__(self, other):
+        return self.args < other.args
+
 def tuple_wrapper(method):
     """
     Decorator that converts any tuple in the function arguments into a Tuple.

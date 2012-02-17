@@ -1,22 +1,25 @@
-from sympy import Symbol
+from sympy import symbols
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 
 def test_rigidbody():
-    m = Symbol('m')
+    m, m2 = symbols('m m2')
     A = ReferenceFrame('A')
+    A2 = ReferenceFrame('A2')
     P = Point('P')
+    P2 = Point('P2')
     I = Dyadic([])
-    B = RigidBody()
-    assert B.mass == None
-    assert B.mc == None
-    assert B.inertia == (None, None)
-    assert B.frame == None
-
-    B.mass = m
-    B.frame = A
-    B.cm = P
-    B.inertia = (I, B.cm)
+    I2 = Dyadic([])
+    B = RigidBody('B', P, A, m, (I, P))
     assert B.mass == m
     assert B.frame == A
-    assert B.cm == P
-    assert B.inertia == (I, B.cm)
+    assert B.mc == P
+    assert B.inertia == (I, B.mc)
+
+    B.mass = m2
+    B.frame = A2
+    B.mc = P2
+    B.inertia = (I2, B.mc)
+    assert B.mass == m2
+    assert B.frame == A2
+    assert B.mc == P2
+    assert B.inertia == (I2, B.mc)

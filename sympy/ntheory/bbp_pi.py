@@ -94,7 +94,7 @@ def pi_hex_digits(n):
 
     s=("%014x" % x)
     #s is constrained between 0 and 14
-    return s[0:14]
+    return s[:14]
 
 def _dn(n):
     # controller for n dependence on precision

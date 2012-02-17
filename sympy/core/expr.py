@@ -153,12 +153,47 @@ class Expr(Basic, EvalfMixin):
     def __rmod__(self, other):
         return Mod(other, self)
 
+    def __int__(self):
+        from sympy import round
+        # Although we only need to round to the units position, we'll
+        # get one more digit so the extra testing below can be avoided
+        # unless the rounded value rounded to an integer, e.g. if an
+        # expression were equal to 1.9 and we rounded to the unit position
+        # we would get a 2 and would not know if this rounded up or not
+        # without doing a test (as done below). But if we keep an extra
+        # digit we know that 1.9 is not the same as 1 and there is no
+        # need for further testing: our int value is correct. If the value
+        # were 1.99, however, this would round to 2.0 and our int value is
+        # off by one. So...if our round value is the same as the int value
+        # (regardless of how much extra work we do to calculate extra decimal
+        # places) we need to test whether we are off by one or not.
+        r = round(self, 1)
+        i = int(C.Integer(r))
+        if not i:
+            return 0
+        # off-by-one check
+        if i == r:
+            isign = 1 if i > 0 else -1
+            x = C.Dummy()
+            # in the following (self - i).evalf(1) will not work while
+            # (self - r).evalf(1) and the use of subs does; if the test that
+            # was added when this comment was added passes, it might be safe
+            # to simply use sign to compute this rather than doing this by hand:
+            diff_sign = 1 if (self - x).evalf(1, subs={x: i}) > 0 else -1
+            if diff_sign != isign:
+                i -= isign
+        return i
+
     def __float__(self):
+        # Don't bother testing if it's a number; if it's not this is going
+        # to fail, and if it is we still need to check that it evalf'ed to
+        # a number.
         result = self.evalf()
         if result.is_Number:
             return float(result)
-        else:
-            raise ValueError("Symbolic value, can't compute")
+        if result.is_number and result.as_real_imag()[1]:
+            raise TypeError("can't convert complex to float")
+        raise TypeError("can't convert expression to float")
 
     def __complex__(self):
         result = self.evalf()
@@ -289,31 +324,36 @@ class Expr(Basic, EvalfMixin):
 
         simplify = flags.get('simplify', True)
 
-        free = self.free_symbols
-        # only one of these should be necessary since if something is
+        # Except for expressions that contain units, only one of these should
+        # be necessary since if something is
         # known to be a number it should also know that there are no
         # free symbols. But is_number quits as soon as it hits a non-number
         # whereas free_symbols goes until all free symbols have been collected,
         # thus is_number should be faster. But a double check on free symbols
         # is made just in case there is a discrepancy between the two.
-        if self.is_number:
-            return True
         free = self.free_symbols
-        # if this fails, the free_symbols routine needs to recognize that
-        # if the expression is a number then there are no free_symbols
-        assert free
+        if self.is_number or not free:
+            # if the following assertion fails then that object's free_symbols
+            # method needs attention: if an expression is a number it cannot
+            # have free symbols
+            assert not free
+            return True
+
         # if we are only interested in some symbols and they are not in the
         # free symbols then this expression is constant wrt those symbols
         if wrt and not set(wrt) & free:
             return True
+
         # simplify unless this has already been done
         if simplify:
             self = self.simplify()
+
         # is_zero should be a quick assumptions check; it can be wrong for numbers
         # (see test_is_not_constant test), giving False when it shouldn't, but hopefully
         # it will never give True unless it is sure.
         if self.is_zero:
             return True
+
         # now we will test each wrt symbol (or all free symbols) to see if the
         # expression depends on them or not using differentiation.
         if not wrt:
@@ -510,7 +550,7 @@ class Expr(Basic, EvalfMixin):
                     if factor.is_number:
                         try:
                             coeff *= complex(factor)
-                        except ValueError:
+                        except TypeError:
                             pass
                         else:
                             continue
@@ -1899,6 +1939,7 @@ class Expr(Basic, EvalfMixin):
             -x
 
         """
+        from sympy import collect
         if x is None:
             syms = self.atoms(C.Symbol)
             if len(syms) > 1:
@@ -1991,7 +2032,10 @@ class Expr(Basic, EvalfMixin):
                 if (s1 + o).removeO() == s1:
                     o = S.Zero
 
-            return s1 + o
+            try:
+                return collect(s1,x) + o
+            except NotImplementedError:
+                return s1 + o
 
         else: # lseries handling
             def yield_lseries(s):
@@ -2111,8 +2155,8 @@ class Expr(Basic, EvalfMixin):
         never call this method directly (use .nseries() instead), so you don't
         have to write docstrings for _eval_nseries().
         """
-        from sympy.solvers.solvers import _filldedent
-        raise NotImplementedError(_filldedent("""
+        from sympy.utilities.misc import filldedent
+        raise NotImplementedError(filldedent("""
                      The _eval_nseries method should be added to
                      %s to give terms up to O(x**n) at x=0
                      from the positive direction so it is available when

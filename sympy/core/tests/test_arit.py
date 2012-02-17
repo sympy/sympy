@@ -1,8 +1,8 @@
 from __future__ import division
 
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Float, re, pi, \
-        sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo
-from sympy.utilities.pytest import XFAIL
+        sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer
+from sympy.utilities.pytest import XFAIL, raises
 
 x = Symbol('x')
 y = Symbol('y')
@@ -163,6 +163,14 @@ def test_pow_issue417():
 def test_pow3():
     assert sqrt(2)**3 == 2 * sqrt(2)
     assert sqrt(2)**3 == sqrt(8)
+
+def test_pow_issue_1724():
+    e = ((-1)**(S(1)/3))
+    assert e.conjugate().n() == e.n().conjugate()
+    e = S('-2/3 - (-29/54 + sqrt(93)/18)**(1/3) - 1/(9*(-29/54 + sqrt(93)/18)**(1/3))')
+    assert e.conjugate().n() == e.n().conjugate()
+    e = 2**I
+    assert e.conjugate().n() == e.n().conjugate()
 
 def test_expand():
     p = Rational(5)
@@ -1304,3 +1312,27 @@ def test_issue_2061_2988_2990_2991():
     assert sqrt(-1.0*x) == 1.0*sqrt(-x)
     #2991
     assert (-2*x*y*A*B)**2 == 4*x**2*y**2*(A*B)**2
+
+def test_float_int():
+    assert int(float(sqrt(10))) == int(sqrt(10))
+    assert int(pi**1000) % 10 == 2
+    assert int(Float('1.123456789012345678901234567890e20','')) == \
+        112345678901234567890L
+    assert int(Float('1.123456789012345678901234567890e25','')) == \
+        11234567890123456789012345L
+    assert int(Float('1.123456789012345678901234567890e35','')) == \
+        112345678901234567890123456789000000L
+    assert Integer(Float('1.123456789012345678901234567890e20','')) == \
+        112345678901234567890
+    assert Integer(Float('1.123456789012345678901234567890e25','')) == \
+        11234567890123456789012345
+    assert Integer(Float('1.123456789012345678901234567890e35','')) == \
+        112345678901234567890123456789000000
+    assert int(1 + Rational('.9999999999999999999999999')) == 1
+    assert int(pi/1e20) == 0
+    assert int(1 + pi/1e20) == 1
+    assert int(Add(1.2, -2, evaluate=False)) == int(1.2 - 2)
+    assert int(Add(1.2, +2, evaluate=False)) == int(1.2 + 2)
+    assert int(Add(1 + Float('.99999999999999999', ''), evaluate=False)) == 1
+    raises(TypeError, 'float(x)')
+    raises(TypeError, 'float(sqrt(-1))')

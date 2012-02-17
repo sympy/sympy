@@ -1018,8 +1018,11 @@ class FiniteSet(CountableSet):
         if len(args) == 0:
             return EmptySet()
 
-        if all(arg.is_number and arg.is_real for arg in args):
-            cls = RealFiniteSet
+        try:
+            if all([arg.is_real and arg.is_number for arg in args]):
+                cls = RealFiniteSet
+        except AttributeError:
+            pass
 
         elements = frozenset(map(sympify, args))
         obj = Basic.__new__(cls, elements)
@@ -1116,6 +1119,9 @@ class FiniteSet(CountableSet):
     def is_real(self):
         return all(el.is_real for el in self)
 
+    def compare(self, other):
+        return (hash(self) - hash(other))
+
 class RealFiniteSet(FiniteSet, RealSet):
     """
     A FiniteSet with all elements Real Numbers.
@@ -1148,7 +1154,7 @@ class RealFiniteSet(FiniteSet, RealSet):
 
         intervals = [] # Build up a list of intervals between the elements
         intervals += [Interval(S.NegativeInfinity,sorted_elements[0],True,True)]
-        for a, b in zip(sorted_elements[0:-1], sorted_elements[1:]):
+        for a, b in zip(sorted_elements[:-1], sorted_elements[1:]):
             intervals.append(Interval(a, b, True, True)) # open intervals
         intervals.append(Interval(sorted_elements[-1], S.Infinity, True, True))
         return Union(*intervals)

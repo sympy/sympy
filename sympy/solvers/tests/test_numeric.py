@@ -7,7 +7,7 @@ from sympy.utilities.pytest import raises
 def test_nsolve():
     # onedimensional
     x = Symbol('x')
-    assert nsolve(sin(x), 2) - pi.evalf() < 1e-16
+    assert nsolve(sin(x), 2) - pi.evalf() < 1e-15
     assert nsolve(Eq(2*x, 2), x, -10) == nsolve(2*x - 2, -10)
     # Testing checks on number of inputs
     raises(TypeError, "nsolve(Eq(2*x,2))")

@@ -19,7 +19,7 @@ from combinatorial.factorials import factorial, RisingFactorial, FallingFactoria
 from combinatorial.factorials import binomial, factorial2
 from combinatorial.numbers import fibonacci, lucas, harmonic, bernoulli, bell, euler, catalan
 
-from elementary.miscellaneous import sqrt, root, Min, Max, Id, real_root
+from elementary.miscellaneous import sqrt, root, Min, Max, Id, real_root, round
 from elementary.complexes import (re, im, sign, Abs, conjugate, arg,
                       polar_lift, periodic_argument, unbranched_argument,
                       principal_branch)

@@ -35,7 +35,7 @@ class DiracDelta(Function):
     http://mathworld.wolfram.com/DeltaFunction.html
     """
 
-    nargs = (1,2)
+    nargs = (1, 2)
 
     def fdiff(self, argindex = 1):
         if argindex == 1:
@@ -43,7 +43,7 @@ class DiracDelta(Function):
             k = 0
             if len(self.args) > 1:
                 k = self.args[1]
-            return DiracDelta(self.args[0],k+1)
+            return DiracDelta(self.args[0], k + 1)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -96,7 +96,7 @@ class DiracDelta(Function):
         if not self.args[0].has(x) or (len(self.args)>1 and self.args[1] != 0 ):
             return self
         try:
-            argroots = roots(self.args[0],x, \
+            argroots = roots(self.args[0], x, \
                                                      multiple=True)
             result = 0
             valid = True
@@ -166,30 +166,32 @@ class Heaviside(Function):
 
     1) ``diff(Heaviside(x),x) = DiracDelta(x)``
                         ``( 0, if x < 0``
-    2) ``Heaviside(x) = < [*]  1/2 if x==0``
-                        ``( 1, if x>0``
+    2) ``Heaviside(x) = < ( 1/2 if x==0 [*]``
+                        ``( 1, if x > 0``
 
-    .. [*] Regarding to the value at 0, Mathematica defines ``H(0)=1``,
-           but Maple uses ``H(0)=undefined``
+    .. [*] Regarding to the value at 0, Mathematica defines ``H(0) = 1``,
+           but Maple uses ``H(0) = undefined``
 
-    I think is better to have H(0)=1/2, due to the following::
+    I think is better to have H(0) = 1/2, due to the following::
 
-        integrate(DiracDelta(x),x) = Heaviside(x)
-        integrate(DiracDelta(x),(x,-oo,oo)) = 1
+        integrate(DiracDelta(x), x) = Heaviside(x)
+        integrate(DiracDelta(x), (x, -oo, oo)) = 1
 
     and since DiracDelta is a symmetric function,
-    ``integrate(DiracDelta(x),(x,0,oo))`` should be 1/2 in fact, that is what
-    maple returns.
+    ``integrate(DiracDelta(x), (x, 0, oo))`` should be 1/2 (which is what
+    Maple returns).
 
-    If we take ``Heaviside(0)=1/2``, we would have
-    ``integrate(DiracDelta(x),(x,0,oo)) = Heaviside(oo)-Heaviside(0)=1-1/2= 1/2``
+    If we take ``Heaviside(0) = 1/2``, we would have
+    ``integrate(DiracDelta(x), (x, 0, oo)) = ``
+    ``Heaviside(oo) - Heaviside(0) = 1 - 1/2 = 1/2``
     and
-    ``integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo)=1/2-0= 1/2``
+    ``integrate(DiracDelta(x), (x, -oo, 0)) = ``
+    ``Heaviside(0) - Heaviside(-oo) = 1/2 - 0 = 1/2``
 
-    If we consider, instead ``Heaviside(0)=1``, we would have
-    ``integrate(DiracDelta(x),(x,0,oo)) = Heaviside(oo)-Heaviside(0) = 0``
+    If we consider, instead ``Heaviside(0) = 1``, we would have
+    ``integrate(DiracDelta(x), (x, 0, oo)) = Heaviside(oo) - Heaviside(0) = 0``
     and
-    ``integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo) = 1``
+    ``integrate(DiracDelta(x), (x, -oo, 0)) = Heaviside(0) - Heaviside(-oo) = 1``
 
     See Also
     ========

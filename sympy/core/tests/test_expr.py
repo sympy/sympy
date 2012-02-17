@@ -6,8 +6,10 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
     separate, collect, factorial, apart, combsimp, factor, refine, cancel,
     Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum)
+from sympy.core.function import AppliedUndef
 from sympy.abc import a, b, c, d, e, n, t, u, x, y, z
 from sympy.physics.secondquant import FockState
+from sympy.physics.units import meter
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -242,6 +244,20 @@ def test_atoms():
                                                    [1 + x*(2 + y)+exp(3 + z),
                                                     2 + y,
                                                     3 + z])
+
+    # issue 3033
+    f = Function('f')
+    e = (f(x) + sin(x) + 2)
+    assert e.atoms(AppliedUndef) == \
+        set([f(x)])
+    assert e.atoms(AppliedUndef, Function) == \
+        set([f(x), sin(x)])
+    assert e.atoms(Function) == \
+        set([f(x), sin(x)])
+    assert e.atoms(AppliedUndef, Number) == \
+        set([f(x), S(2)])
+    assert e.atoms(Function, Number) == \
+        set([S(2), sin(x), f(x)])
 
 def test_is_polynomial():
     k = Symbol('k', nonnegative=True, integer=True)
@@ -1014,12 +1030,14 @@ def test_2127():
     assert Mul(evaluate=False) == 1
     assert Mul(x+y, evaluate=False).is_Add
 
-def test_symbols():
-    # symbols should return the free symbols of an object
+def test_free_symbols():
+    # free_symbols should return the free symbols of an object
     assert S(1).free_symbols == set()
     assert (x).free_symbols == set([x])
     assert Integral(x, (x, 1, y)).free_symbols == set([y])
     assert (-Integral(x, (x, 1, y))).free_symbols == set([y])
+    assert meter.free_symbols == set()
+    assert (meter**x).free_symbols == set([x])
 
 def test_issue2201():
     x = Symbol('x', commutative=False)
@@ -1210,7 +1228,11 @@ def test_is_constant():
     assert Pow(S(2), S(3), evaluate=False).is_constant() == True
 
     z1, z2 = symbols('z1 z2', zero=True)
-    assert (z1+2*z2).is_constant
+    assert (z1 + 2*z2).is_constant() is True
+
+    assert meter.is_constant() is True
+    assert (3*meter).is_constant() is True
+    assert (x*meter).is_constant() is False
 
 @XFAIL
 def test_is_not_constant():

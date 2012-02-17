@@ -1,10 +1,14 @@
 from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
-    Function, factorial, factorial2, floor, ceiling, Abs, re, im, conjugate, gamma,
+    Function, factorial, factorial2, floor, ceiling, Abs, re, im, conjugate,
     Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg, polar_lift,
     Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan, Min, Max,
     cot, coth, re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
-    FallingFactorial, polylog, lerchphi, Ei, expint, Si, Ci, Shi, Chi)
+    FallingFactorial, polylog, lerchphi, Ei, expint, Si, Ci, Shi, Chi, gamma, Tuple,
+    MellinTransform, InverseMellinTransform, LaplaceTransform, InverseLaplaceTransform,
+    FourierTransform, InverseFourierTransform, SineTransform, InverseSineTransform,
+    CosineTransform, InverseCosineTransform)
+
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
@@ -447,3 +451,37 @@ def test_matAdd():
     l = LatexPrinter()
     assert l._print_MatAdd(C - 2*B) in ['- 2 B + C', '+ C - 2 B']
     assert l._print_MatAdd(C + 2*B) in ['+ 2 B + C', '+ C + 2 B']
+
+def test_latex_RandomDomain():
+    from sympy.stats import Normal, Die, Exponential, pspace, Where
+    X = Normal(0, 1, symbol=Symbol('x1'))
+    assert latex(Where(X>0)) == "Domain: 0 < x_{1}"
+
+    D = Die(6, symbol=Symbol('d1'))
+    assert latex(Where(D>4)) == r"Domain: d_{1} = 5 \vee d_{1} = 6"
+
+    A = Exponential(1, symbol=Symbol('a'))
+    B = Exponential(1, symbol=Symbol('b'))
+    assert latex(pspace(Tuple(A,B)).domain) =="Domain: 0 \leq b \wedge 0 \leq a"
+
+def test_integral_transforms():
+    x = Symbol("x")
+    k = Symbol("k")
+    f = Function("f")
+    a = Symbol("a")
+    b = Symbol("b")
+
+    assert latex(MellinTransform(f(x), x, k)) == r"\mathcal{M}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
+    assert latex(InverseMellinTransform(f(k), k, x, a,b)) == r"\mathcal{M}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+
+    assert latex(LaplaceTransform(f(x), x, k)) == r"\mathcal{L}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
+    assert latex(InverseLaplaceTransform(f(k), k, x, (a,b))) == r"\mathcal{L}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+
+    assert latex(FourierTransform(f(x), x, k)) == r"\mathcal{F}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
+    assert latex(InverseFourierTransform(f(k), k, x)) == r"\mathcal{F}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+
+    assert latex(CosineTransform(f(x), x, k)) == r"\mathcal{COS}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
+    assert latex(InverseCosineTransform(f(k), k, x)) == r"\mathcal{COS}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+
+    assert latex(SineTransform(f(x), x, k)) == r"\mathcal{SIN}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
+    assert latex(InverseSineTransform(f(k), k, x)) == r"\mathcal{SIN}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"

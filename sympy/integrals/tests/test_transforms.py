@@ -1,16 +1,20 @@
 from sympy.integrals.transforms import (mellin_transform,
     inverse_mellin_transform, laplace_transform, inverse_laplace_transform,
-    fourier_transform, inverse_fourier_transform)
-from sympy import (gamma, exp, oo, Heaviside, symbols, re, factorial, pi,
+    fourier_transform, inverse_fourier_transform,
+    sine_transform, inverse_sine_transform,
+    cosine_transform, inverse_cosine_transform,
+    LaplaceTransform, FourierTransform, SineTransform, CosineTransform,
+    InverseLaplaceTransform, InverseFourierTransform, InverseSineTransform, InverseCosineTransform)
+from sympy import (gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
                    cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
                    EulerGamma, erf, besselj, bessely, besseli, besselk,
-                   exp_polar, polar_lift, unpolarify)
+                   exp_polar, polar_lift, unpolarify, Function)
 from sympy.utilities.pytest import XFAIL, slow, skip
 from sympy.abc import x, s, a, b
 nu, beta, rho = symbols('nu beta rho')
 
 def test_undefined_function():
-    from sympy import Function, MellinTransform, LaplaceTransform
+    from sympy import Function, MellinTransform
     f = Function('f')
     assert mellin_transform(f(x), x, s) == MellinTransform(f(x), x, s)
     assert mellin_transform(f(x) + exp(-x), x, s) == \
@@ -415,6 +419,12 @@ def test_laplace_transform():
     LT = laplace_transform
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
+    w = Symbol("w")
+    f = Function("f")
+
+    # Test unevaluated form
+    assert laplace_transform(f(t), t, w) == LaplaceTransform(f(t), t, w)
+    assert inverse_laplace_transform(f(w), w, t, plane=0) == InverseLaplaceTransform(f(w), w, t, 0)
 
     # test a bug
     spos = symbols('s', positive=True)
@@ -432,9 +442,9 @@ def test_laplace_transform():
     assert LT((exp(2*t)-1)*exp(-b - t)*Heaviside(t)/2, t, s, noconds=True) \
            == exp(-b)/(s**2 - 1)
 
-    assert LT(exp(t), t, s)[0:2] == (1/(s-1), 1)
-    assert LT(exp(2*t), t, s)[0:2] == (1/(s-2), 2)
-    assert LT(exp(a*t), t, s)[0:2] == (1/(s-a), a)
+    assert LT(exp(t), t, s)[:2] == (1/(s-1), 1)
+    assert LT(exp(2*t), t, s)[:2] == (1/(s-2), 2)
+    assert LT(exp(a*t), t, s)[:2] == (1/(s-a), a)
 
     assert LT(log(t/a), t, s) == ((log(a) + log(s) + EulerGamma)/(-s), 0, True)
 
@@ -452,6 +462,10 @@ def test_laplace_transform():
     assert LT(besselj(1, t), t, s) == (1 - 1/sqrt(1 + 1/s**2), 0, True)
     # TODO general order works, but is a *mess*
     # TODO besseli also works, but is an even greater mess
+
+    # test a bug in conditions processing
+    # TODO the auxiliary condition should be recognised/simplified
+    assert LT(exp(t)*cos(t), t, s)[0:-1] == ((s - 1)/(s**2 - 2*s + 2), -oo)
 
 def test_inverse_laplace_transform():
     from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,
@@ -503,12 +517,17 @@ def test_fourier_transform():
     def simp(x): return simplify(expand_trig(expand_complex(expand(x))))
     def sinc(x): return sin(pi*x)/(pi*x)
     k = symbols('k', real=True)
+    f = Function("f")
 
     # TODO for this to work with real a, need to expand abs(a*x) to abs(a)*abs(x)
     a = symbols('a', positive=True)
     b = symbols('b', positive=True)
 
     posk = symbols('k', positive=True)
+
+    # Test unevaluated form
+    assert fourier_transform(f(x), x, k) == FourierTransform(f(x), x, k)
+    assert inverse_fourier_transform(f(k), k, x) == InverseFourierTransform(f(k), k, x)
 
     # basic examples from wikipedia
     assert simp(FT(Heaviside(1 - abs(2*a*x)), x, k)) == sinc(k/a)/a
@@ -539,3 +558,62 @@ def test_fourier_transform():
     # TODO besselj(n, x), n an integer > 0 actually can be done...
 
     # TODO are there other common transforms (no distributions!)?
+
+def test_sine_transform():
+    from sympy import sinh, cosh, EulerGamma
+
+    t = symbols("t")
+    w = symbols("w")
+    a = symbols("a")
+    f = Function("f")
+
+    # Test unevaluated form
+    assert sine_transform(f(t), t, w) == SineTransform(f(t), t, w)
+    assert inverse_sine_transform(f(w), w, t) == InverseSineTransform(f(w), w, t)
+
+    assert sine_transform(1/sqrt(t), t, w) == 1/sqrt(w)
+    assert inverse_sine_transform(1/sqrt(w), w, t) == 1/sqrt(t)
+
+    assert sine_transform((1/sqrt(t))**3, t, w) == sqrt(w)*gamma(S(1)/4)/(2*gamma(S(5)/4))
+
+    assert sine_transform(t**(-a), t, w) == 2**(-a + S(1)/2)*w**(a - 1)*gamma(-a/2 + 1)/gamma(a/2 + S(1)/2)
+    assert inverse_sine_transform(2**(-a + S(1)/2)*w**(a - 1)*gamma(-a/2 + 1)/gamma(a/2 + S(1)/2), w, t) == t**(-a)
+
+    assert sine_transform(exp(-a*t), t, w) == sqrt(2)*w/(sqrt(pi)*(a**2 + w**2))
+    assert inverse_sine_transform(sqrt(2)*w/(sqrt(pi)*(a**2 + w**2)), w, t) == -sinh(a*t) + cosh(a*t)
+
+    assert sine_transform(log(t)/t, t, w) == sqrt(2)*sqrt(pi)*(-log(w**2) - 2*EulerGamma)/4
+
+    assert sine_transform(t*exp(-a*t**2), t, w) == sqrt(2)*w*exp(-w**2/(4*a))/(4*a**(S(3)/2))
+    assert inverse_sine_transform(sqrt(2)*w*exp(-w**2/(4*a))/(4*a**(S(3)/2)), w, t) == t*exp(-a*t**2)
+
+def test_cosine_transform():
+    from sympy import sinh, cosh
+
+    t = symbols("t")
+    w = symbols("w")
+    a = symbols("a")
+    f = Function("f")
+
+    # Test unevaluated form
+    assert cosine_transform(f(t), t, w) == CosineTransform(f(t), t, w)
+    assert inverse_cosine_transform(f(w), w, t) == InverseCosineTransform(f(w), w, t)
+
+    assert cosine_transform(1/sqrt(t), t, w) == 1/sqrt(w)
+    assert inverse_cosine_transform(1/sqrt(w), w, t) == 1/sqrt(t)
+
+    assert cosine_transform(1/(a**2+t**2), t, w) == sqrt(2)*sqrt(pi)*(-sinh(a*w) + cosh(a*w))/(2*a)
+
+    assert cosine_transform(t**(-a), t, w) == 2**(-a + S(1)/2)*w**(a - 1)*gamma(-a/2 + S(1)/2)/gamma(a/2)
+    assert inverse_cosine_transform(2**(-a + S(1)/2)*w**(a - 1)*gamma(-a/2 + S(1)/2)/gamma(a/2), w, t) == t**(-a)
+
+    assert cosine_transform(exp(-a*t), t, w) == sqrt(2)*a/(sqrt(pi)*(a**2 + w**2))
+    assert inverse_cosine_transform(sqrt(2)*a/(sqrt(pi)*(a**2 + w**2)), w, t) == -sinh(a*t) + cosh(a*t)
+
+    assert cosine_transform(exp(-a*sqrt(t))*cos(a*sqrt(t)), t, w) == a*(-sinh(a**2/(2*w)) + cosh(a**2/(2*w)))/(2*w**(S(3)/2))
+
+    assert cosine_transform(1/(a+t), t, w) == sqrt(2)*meijerg(((S(1)/2, 0), ()), ((S(1)/2, 0, 0), (S(1)/2,)), a**2*w**2/4)/(2*pi)
+    assert inverse_cosine_transform(sqrt(2)*meijerg(((S(1)/2, 0), ()), ((S(1)/2, 0, 0), (S(1)/2,)), a**2*w**2/4)/(2*pi), w, t) == 1/(a + t)
+
+    assert cosine_transform(1/sqrt(a**2+t**2), t, w) == sqrt(2)*meijerg(((S(1)/2,), ()), ((0, 0), (S(1)/2,)), a**2*w**2/4)/(2*sqrt(pi))
+    assert inverse_cosine_transform(sqrt(2)*meijerg(((S(1)/2,), ()), ((0, 0), (S(1)/2,)), a**2*w**2/4)/(2*sqrt(pi)), w, t) == 1/(t*sqrt(a**2/t**2 + 1))

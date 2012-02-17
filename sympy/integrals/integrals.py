@@ -1099,7 +1099,6 @@ def integrate(*args, **kwargs):
     else:
         return integral
 
-
 @xthreaded
 def line_integrate(field, curve, vars):
     """line_integrate(field, Curve, variables)

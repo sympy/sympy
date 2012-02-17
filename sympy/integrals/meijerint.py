@@ -364,6 +364,7 @@ def _split_mul(f, x):
     >>> _split_mul((3*x)**s*sin(x**2)*x, x)
     (3**s, x*x**s, sin(x**2))
     """
+    from sympy import polarify, unpolarify
     fac = S(1)
     po  = S(1)
     g   = S(1)
@@ -371,13 +372,17 @@ def _split_mul(f, x):
 
     args = Mul.make_args(f)
     for a in args:
-        if not a.has(x):
-            fac *= a
-        elif a.is_Pow and a.base == x:
-            po *= a
-        elif a == x:
+        if a == x:
             po *= x
+        elif not a.has(x):
+            fac *= a
         else:
+            if a.is_Pow:
+                c, t = a.base.as_coeff_mul(x)
+                if t == (x,):
+                    po *= x**a.exp
+                    fac *= unpolarify(polarify(c**a.exp, subs=False))
+                    continue
             g *= a
 
     return fac, po, g
@@ -1306,7 +1311,7 @@ def _rewrite_single(f, x, recursive=True):
     Returns a list of tuples (C, s, G) and a condition cond.
     Returns None on failure.
     """
-    from sympy import polarify, unpolarify
+    from sympy import polarify, unpolarify, oo, zoo, Tuple
     global _lookup_table
     if not _lookup_table:
         _lookup_table = {}
@@ -1353,10 +1358,16 @@ def _rewrite_single(f, x, recursive=True):
                     r1 = _get_coeff_exp(unpolarify(fac.subs(subs).subs(z, x),
                                                    exponents_only=True), x)
                     g = g.subs(subs).subs(z, x)
+                    # NOTE these substitutions can in principle introduce oo,
+                    #      zoo and other absurdities. It shouldn't matter,
+                    #      but better be safe.
+                    if Tuple(*(r1 + (g,))).has(oo, zoo, -oo):
+                        continue
                     g = meijerg(g.an, g.aother, g.bm, g.bother,
                                 unpolarify(g.argument, exponents_only=True))
                     res.append(r1 + (g,))
-                return res, cond
+                if res:
+                    return res, cond
 
     # try recursive mellin transform
     if not recursive:
@@ -1475,10 +1486,17 @@ def meijerint_indefinite(f, x):
     >>> meijerint_indefinite(sin(x), x)
     -cos(x)
     """
+    from sympy import hyper, meijerg, count_ops
+    results = []
     for a in list(_find_splitting_points(f, x)) + [S(0)]:
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
-        if res is not None:
-            return res.subs(x, x - a)
+        if res is None:
+            continue
+        results.append(res.subs(x, x - a))
+        if not res.has(hyper, meijerg):
+            return results[-1]
+    if results:
+        return sorted(results, key=count_ops)[0]
 
 def _meijerint_indefinite_1(f, x):
     """ Helper that does not attempt any substitution. """
@@ -1692,7 +1710,7 @@ def _meijerint_definite_2(f, x):
     x = dummy
 
     if f == 0:
-        return 0, True
+        return S(0), True
 
     for g, explanation in _guess_expansion(f, x):
         _debug('Trying', explanation)

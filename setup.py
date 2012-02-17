@@ -83,6 +83,7 @@ modules = [
     'sympy.simplify',
     'sympy.solvers',
     'sympy.statistics',
+    'sympy.stats',
     'sympy.tensor',
     'sympy.utilities',
     'sympy.utilities.mathml',
@@ -181,13 +182,8 @@ class test_sympy(Command):
             if not run_examples(quiet=True):
                 tests_successful = False
 
-            print
-            sys.path.append("examples")
-            from all import run_examples # examples/all.py
-            if not run_examples(quiet=True):
-                tests_successful = False
-
-            if not sys.platform == "win32":
+            if not (sys.platform == "win32" or sys.version_info[0] == 3):
+                # run Sage tests; Sage currently doesn't support Windows or Python 3
                 dev_null = open(os.devnull, 'w')
                 if subprocess.call("sage -v", shell = True, stdout = dev_null, stderr = dev_null) == 0:
                     if subprocess.call("sage -python bin/test sympy/external/tests/test_sage.py", shell = True) != 0:

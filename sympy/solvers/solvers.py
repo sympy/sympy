@@ -36,7 +36,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.iterables import preorder_traversal
 from sympy.utilities.lambdify import lambdify
-from sympy.utilities.misc import default_sort_key
+from sympy.utilities.misc import default_sort_key, filldedent
 from sympy.mpmath import findroot
 
 from sympy.solvers.polysys import solve_poly_system
@@ -47,18 +47,8 @@ from sympy.core.compatibility import reduce
 from sympy.assumptions import Q, ask
 
 from warnings import warn
-from textwrap import fill, dedent
 from types import GeneratorType
 from collections import defaultdict
-
-# if you use
-# _filldedent('''
-#             the text''')
-# a space will be put before the first line because dedent will
-# put a \n as the first line and fill replaces \n with spaces
-# so we strip off any leading and trailing \n since printed wrapped
-# text should not have leading or trailing spaces.
-_filldedent = lambda s: '\n'+fill(dedent(s).strip('\n'))
 
 
 def _ispow(e):
@@ -751,7 +741,7 @@ def solve(f, *symbols, **flags):
             elif not solution:
                 break
         else:
-            raise NotImplementedError(_filldedent('''
+            raise NotImplementedError(filldedent('''
                             no handling of %s was implemented''' % solution))
 
     # Restore original Functions and Derivatives if a dictionary is returned.
@@ -852,7 +842,7 @@ def solve(f, *symbols, **flags):
     elif isinstance(solution, (Relational, And, Or)):
         assert len(symbols) == 1
         if warning and symbols[0].assumptions0:
-            print(_filldedent("""
+            print(filldedent("""
                 \tWarning: assumptions about variable '%s' are
                 not handled currently.""" %symbols[0]))
         # TODO: check also variable assumptions for inequalities
@@ -862,7 +852,7 @@ def solve(f, *symbols, **flags):
 
     solution = no_False
     if warning and got_None:
-        print(_filldedent("""
+        print(filldedent("""
             \tWarning: assumptions concerning following solution(s)
             can't be checked:""" + '\n\t' +
             ', '.join(str(s) for s in got_None)))
@@ -1234,7 +1224,7 @@ def _solve_system(exprs, symbols, **flags):
                     check = checksol(polys, r, **flags)
                     if check is not False:
                         if check is None and warning:
-                            print(_filldedent("""
+                            print(filldedent("""
                                 \tWarning: could not verify solution %s.""" %
                                 result))
                         # if it's a solution to any denom then exclude
@@ -1396,7 +1386,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     from sympy import Equality
     if isinstance(lhs, Equality):
         if rhs:
-            raise ValueError(_filldedent('''
+            raise ValueError(filldedent('''
             If lhs is an Equality, rhs must be 0 but was %s''' % rhs))
         rhs = lhs.rhs
         lhs = lhs.lhs
@@ -1418,7 +1408,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
                 eg = 'solve(%s, %s)' % (eq, symbols[0])
             else:
                 eg = 'solve(%s, *%s)' % (eq, list(symbols))
-            raise ValueError(_filldedent('''
+            raise ValueError(filldedent('''
                 solve_linear only handles symbols, not %s. To isolate
                 non-symbols use solve, e.g. >>> %s <<<.
                              ''' % (bad, eg)))
@@ -1934,7 +1924,7 @@ def nsolve(*args, **kwargs):
         if fargs is None:
             fargs = atoms.copy().pop()
         if not (len(atoms) == 1 and (fargs in atoms or fargs[0] in atoms)):
-            raise ValueError(_filldedent('''
+            raise ValueError(filldedent('''
                 expected a one-dimensional and numerical function'''))
 
         # the function is much better behaved if there is no denominator
@@ -1943,7 +1933,7 @@ def nsolve(*args, **kwargs):
         f = lambdify(fargs, f, modules)
         return findroot(f, x0, **kwargs)
     if len(fargs) > f.cols:
-        raise NotImplementedError(_filldedent('''
+        raise NotImplementedError(filldedent('''
             need at least as many equations as variables'''))
     verbose = kwargs.get('verbose', False)
     if verbose:
@@ -1992,7 +1982,7 @@ def _invert(eq, *symbols, **kwargs):
     (0, sqrt(x) + y)
 
     If there is more than one symbol in a power's base and the exponent
-    is not an Integer, then the principle root will be used for the
+    is not an Integer, then the principal root will be used for the
     inversion:
 
     >>> invert(sqrt(x + y) - 2)
@@ -2001,7 +1991,7 @@ def _invert(eq, *symbols, **kwargs):
     (4, x + y)
 
     If the exponent is an integer, setting ``integer_power`` to True
-    will force the principle root to be selected:
+    will force the principal root to be selected:
 
     >>> invert(x**2 - 4, integer_power=True)
     (2, x)

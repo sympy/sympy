@@ -3,6 +3,8 @@ Statistics
 
 .. module:: sympy.statistics
 
+Note: This module has been deprecated. See the stats module.
+
 The *statistics* module in SymPy implements standard probability distributions
 and related tools. Its contents can be imported with the following statement::
 
@@ -54,7 +56,7 @@ particular values:
         ____
     2*\/ pi
     >>> N.pdf(3).evalf()
-    0.0539909665131881
+    0.0539909665131880
     >>> N.cdf(x)
        /  ___        \
        |\/ 2 *(x - 1)|
