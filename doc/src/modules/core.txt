@@ -122,20 +122,25 @@ expr
    whether applicable or not. Fast mode in Pickler causes pickle to bypass this
    optimization returning the correct result.
 
-   For example:
+   Workaround using fast mode:
 
-   >>> from pickle import dumps, loads
-   >>> from sympy.abc import x
-   >>> f = x**2 + x**-2
-   >>> g = loads(dumps(f))
-   >>> f.args[0].exp.is_positive # 2
+   >>> from cStringIO import StringIO
+   >>> from pickle import loads, Pickler
+   >>> from sympy.abc import u
+   >>> f = u**2 + u**-2
+   >>> s = StringIO()
+   >>> p = Pickler(s)
+   >>> p.fast = True
+   >>> p.dump(f)
+   >>> g = loads(s.getvalue())
+   >>> f.args[1].exp.is_positive # 2
    True
-   >>> f.args[1].exp.is_negative # -2
+   >>> f.args[0].exp.is_negative # -2
    True
-   >>> g.args[0].exp.is_positive # 2
+   >>> g.args[1].exp.is_positive # 2
    True
-   >>> g.args[1].exp.is_negative # -2
-   False
+   >>> g.args[0].exp.is_negative # -2, would be False without fast mode
+   True
 
 Expr
 ^^^^

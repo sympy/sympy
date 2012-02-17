@@ -139,8 +139,8 @@ def test_core_multidimensional():
 
 @XFAIL
 def test_issue_2587():
-    x = Symbol("x")
-    f = x**2 + x**-2
+    u = Symbol("u")
+    f = u**2 + u**-2
     g = pickle.loads(pickle.dumps(f))
     assert f.args[0].exp.is_positive # 2
     assert f.args[1].exp.is_negative # -2
