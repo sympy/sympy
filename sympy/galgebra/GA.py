@@ -60,7 +60,8 @@ def is_quasi_unit_numpy_array(array):
         return(False)
 
 def set_main(main_program):
-    return
+    import warnings
+    warnings.warn('set_main is not needed any more', DeprecationWarning, stacklevel=2)
 
 def plist(lst):
     if type(lst) == list:
