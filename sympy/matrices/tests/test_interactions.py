@@ -6,7 +6,7 @@ Here we test the extent to which they cooperate
 """
 
 from sympy import *
-from sympy.matrices.matrices import MutableMatrix
+from sympy.matrices.matrices import MutableMatrix, classof
 from sympy.utilities.pytest import raises, XFAIL
 
 
@@ -40,10 +40,19 @@ def test_equality():
 def test_matrix_symbol_MM():
     X = MatrixSymbol('X', 3,3)
     Y = eye(3) + X
-    assert Y[1,1] == 1 + Symbol('X')(1,1)
+    assert Y[1,1] == 1 + X[1,1]
 
 def test_indexing_interactions():
     assert (a * IM)[1,1] == 5*a
     assert (SM + IM)[1,1] == SM[1,1] + IM[1,1]
     assert (SM * IM)[1,1] == SM[1,0]*IM[0,1] + SM[1,1]*IM[1,1] + SM[1,2]*IM[2,1]
+
+def test_classof():
+    A = MutableMatrix(3,3,range(9))
+    B = ImmutableMatrix(3,3,range(9))
+    C = MatrixSymbol('C', 3,3)
+    assert classof(A,A) == MutableMatrix
+    assert classof(B,B) == ImmutableMatrix
+    assert classof(A,B) == MutableMatrix
+    raises(TypeError, "classof(A,C)")
 

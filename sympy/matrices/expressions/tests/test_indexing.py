@@ -16,8 +16,8 @@ y = MatrixSymbol('x', 2,1)
 
 def test_symbolic_indexing():
     x12 = X[1,2]
-    assert x12 == Symbol(X.name)(1,2)
-    assert X[i,j] == Symbol(X.name)(i,j)
+    assert x12 == Symbol(X.name+"_12")
+    assert X[i,j] == Symbol(X.name+"_ij")
 
 def test_add_index():
     assert (X+Y)[i,j] == X[i,j] + Y[i,j]
@@ -30,6 +30,12 @@ def test_mul_index():
     # Using str to avoid dealing with a Dummy variable
     assert str((X*Y)[4,2]) == "Sum(X(4, _k)*Y(_k, 2), (_k, 0, m - 1))"
 
+def test_pow_index():
+    Q = MatPow(A, 2)
+    assert Q[0,0] == A[0,0]**2 + A[0,1]*A[1,0]
+
+def test_transpose_index():
+    assert X.T[i,j] == X[j,i]
 
 def test_Identity_index():
     I = Identity(3)
@@ -52,4 +58,9 @@ def test_block_index():
     BI = BlockMatrix([[I, Z], [Z, I]])
 
     assert BI.as_explicit().equals(eye(6))
+
+def test_slicing():
+    raises(ValueError, "W[3,:]")
+    A.as_explicit()[0,:] # does not raise an error
+
 
