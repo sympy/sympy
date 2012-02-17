@@ -82,10 +82,10 @@ def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
 
 class BetaPSpace(SingleContinuousPSpace):
     def __new__(cls, alpha, beta, symbol=None):
+        alpha, beta = sympify(alpha), sympify(beta)
+
         _value_check(alpha > 0, "Alpha must be positive")
         _value_check(beta > 0, "Beta must be positive")
-
-        alpha, beta = sympify(alpha), sympify(beta)
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = x**(alpha-1) * (1-x)**(beta-1) / beta_fn(alpha, beta)
@@ -123,9 +123,9 @@ def Beta(alpha, beta, symbol=None):
 
 class ExponentialPSpace(SingleContinuousPSpace):
     def __new__(cls, rate, symbol=None):
-        _value_check(rate > 0, "Rate must be positive.")
-
         rate = sympify(rate)
+
+        _value_check(rate > 0, "Rate must be positive.")
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = rate * exp(-rate*x)
@@ -167,10 +167,10 @@ def Exponential(rate, symbol=None):
 
 class GammaPSpace(SingleContinuousPSpace):
     def __new__(cls, k, theta, symbol=None):
+        k, theta = sympify(k), sympify(theta)
+
         _value_check(k > 0, "k must be positive")
         _value_check(theta > 0, "Theta must be positive")
-
-        k, theta = sympify(k), sympify(theta)
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = x**(k-1) * exp(-x/theta) / (gamma(k)*theta**k)
@@ -250,9 +250,9 @@ def LogNormal(mean, std, symbol=None):
 
 class NormalPSpace(SingleContinuousPSpace):
     def __new__(cls, mean, std, symbol=None):
-        _value_check(std > 0, "Standard deviation must be positive")
-
         mean, std = sympify(mean), sympify(std)
+
+        _value_check(std > 0, "Standard deviation must be positive")
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = exp(-(x-mean)**2 / (2*std**2)) / (sqrt(2*pi)*std)
@@ -296,10 +296,10 @@ def Normal(mean, std, symbol=None):
 
 class ParetoPSpace(SingleContinuousPSpace):
     def __new__(cls, xm, alpha, symbol=None):
+        xm, alpha = sympify(xm), sympify(alpha)
+
         _value_check(xm > 0, "Xm must be positive")
         _value_check(alpha > 0, "Alpha must be positive")
-
-        xm, alpha = sympify(xm), sympify(alpha)
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = alpha * xm**alpha / x**(alpha+1)
@@ -385,10 +385,10 @@ def Uniform(left, right, symbol=None):
 
 class WeibullPSpace(SingleContinuousPSpace):
     def __new__(cls, alpha, beta, symbol=None):
+        alpha, beta = sympify(alpha), sympify(beta)
+
         _value_check(alpha > 0, "Alpha must be positive")
         _value_check(beta > 0, "Beta must be positive")
-
-        alpha, beta = sympify(alpha), sympify(beta)
 
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = beta * (x/alpha)**(beta-1) * exp(-(x/alpha)**beta) / alpha
