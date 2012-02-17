@@ -4,8 +4,6 @@ import sys
 import sympy.galgebra.GA as GA
 import sympy.galgebra.latex_ex as tex
 
-GA.set_main(sys.modules[__name__])
-
 if __name__ == '__main__':
 
     metric = '1  0  0  0,'+\

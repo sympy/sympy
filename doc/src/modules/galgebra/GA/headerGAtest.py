@@ -1,7 +1,6 @@
 import os,sys,sympy
-from sympy.galgebra.GA import set_main, make_symbols, types, MV, ZERO, ONE, HALF
+from sympy.galgebra.GA import make_symbols, types, MV, ZERO, ONE, HALF
 from sympy import collect
-set_main(sys.modules[__name__])
 
 def F(x):
         """
