@@ -87,9 +87,9 @@ def test_Sample():
     assert Sample(X) in [1,2,3,4,5,6]
     assert Sample(X+Y).is_Float
 
-    assert P(X+Y>0, Y<0, numsamples=10).is_Rational
-    assert E(X+Y, numsamples=10).is_Float
-    assert Var(X+Y, numsamples=10).is_Float
+    P(X+Y>0, Y<0, numsamples=10).is_number
+    assert E(X+Y, numsamples=10).is_number
+    assert Var(X+Y, numsamples=10).is_number
 
     raises(ValueError, "P(Y>z, numsamples=5)")
 

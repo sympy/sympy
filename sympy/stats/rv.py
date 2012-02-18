@@ -711,7 +711,7 @@ def sample_iter_subs(expr, given=None, numsamples=S.Infinity, **kwargs):
         yield expr.subs(d)
 
         count += 1
-def sampling_P(condition, given=None, numsamples=1, **kwargs):
+def sampling_P(condition, given=None, numsamples=1, evalf=True, **kwargs):
     """
     Sampling version of P
 
@@ -735,9 +735,11 @@ def sampling_P(condition, given=None, numsamples=1, **kwargs):
         else:
             count_false += 1
 
-    return S(count_true) / numsamples
+    result = S(count_true) / numsamples
+    if evalf:   return result.evalf()
+    else:       return result
 
-def sampling_E(condition, given=None, numsamples=1, **kwargs):
+def sampling_E(condition, given=None, numsamples=1, evalf=True, **kwargs):
     """
     Sampling version of E
 
@@ -749,7 +751,9 @@ def sampling_E(condition, given=None, numsamples=1, **kwargs):
 
     samples = sample_iter(condition, given, numsamples=numsamples, **kwargs)
 
-    return Add(*list(samples)) / numsamples
+    result = Add(*list(samples)) / numsamples
+    if evalf:   return result.evalf()
+    else:       return result
 
 def dependent(a, b):
     """
