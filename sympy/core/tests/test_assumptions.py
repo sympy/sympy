@@ -533,3 +533,13 @@ def test_special_is_rational():
     assert (r**i).is_rational is True
     assert (r**r).is_rational is None
     assert (r**x).is_rational is None
+
+    z = Symbol('z', zero=True)
+    assert (2*z).is_positive is False
+    assert (2*z).is_negative is False
+    assert (2*z).is_zero is True
+    # if this doesn't pass, the Mul._eval_is_zero routine
+    # probably needs some attention
+    assert (x*z).is_zero == (0*S.Infinity).is_zero
+    b = Symbol('b', bounded=None)
+    assert (b*z).is_zero is None

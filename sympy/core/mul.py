@@ -1050,6 +1050,18 @@ class Mul(AssocOp):
                 return
         return False
 
+    def _eval_is_zero(self):
+        zero = None
+        for a in self.args:
+            if a.is_zero:
+                zero = True
+                continue
+            bound = a.is_bounded
+            if not bound:
+                return bound
+        if zero:
+            return True
+
     def _eval_is_positive(self):
         ZERO = 0
         NEG = -1
@@ -1066,6 +1078,8 @@ class Mul(AssocOp):
                 res *= NONPOS
             elif t.is_nonnegative:
                 res *= NONNEG
+            elif t.is_zero:
+                return False
             else:
                 return
         if res == 1:
@@ -1089,6 +1103,8 @@ class Mul(AssocOp):
                 res *= NONPOS
             elif t.is_nonnegative:
                 res *= NONNEG
+            elif t.is_zero:
+                return False
             else:
                 return
         if res == -1:
