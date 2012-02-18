@@ -30,9 +30,8 @@ from sympy import Abs as abs_type
 from sympy.core import Mul as mul_type
 from sympy.core import Add as add_type
 
-global MAIN_PROGRAM
-
-MAIN_PROGRAM = ''
+from inspect import currentframe
+frame = currentframe().f_back
 
 @sympy.vectorize(0)
 def substitute_array(array,*args):
@@ -61,9 +60,8 @@ def is_quasi_unit_numpy_array(array):
         return(False)
 
 def set_main(main_program):
-    global MAIN_PROGRAM
-    MAIN_PROGRAM = main_program
-    return
+    import warnings
+    warnings.warn('set_main is not needed any more', DeprecationWarning, stacklevel=2)
 
 def plist(lst):
     if type(lst) == list:
@@ -172,7 +170,6 @@ def make_scalars(symnamelst):
     accessible by the main program and addition returns a list
     of the symbols.
     """
-    global MAIN_PROGRAM
     if type(symnamelst) == str:
         symnamelst = symnamelst.split()
     scalar_lst = []
@@ -181,7 +178,7 @@ def make_scalars(symnamelst):
         tmp = sympy.Symbol(name)
         tmp = MV(tmp,'scalar')
         scalar_lst.append(tmp)
-        setattr(MAIN_PROGRAM,name,tmp)
+        frame.f_globals[name] = tmp
         isym += 1
     return(scalar_lst)
 
@@ -192,7 +189,6 @@ def make_symbols(symnamelst):
     accessible by the main program and addition returns a list
     of the symbols.
     """
-    global MAIN_PROGRAM
     if type(symnamelst) == str:
         symnamelst = symnamelst.split()
     sym_lst = []
@@ -200,7 +196,7 @@ def make_symbols(symnamelst):
     for name in symnamelst:
         tmp = sympy.Symbol(name)
         sym_lst.append(tmp)
-        setattr(MAIN_PROGRAM,name,tmp)
+        frame.f_globals[name] = tmp
         isym += 1
     return(sym_lst)
 
@@ -503,7 +499,7 @@ class MV(object):
                         if i <= j:
                             MV.g.append(tmp)
                             if name_flg:
-                                setattr(MAIN_PROGRAM,name,tmp)
+                                frame.f_globals[name] = tmp
                                 name_flg = False
         else:
             MV.metric = metric
@@ -804,7 +800,6 @@ class MV(object):
         on multivectors.  See reference 5 section 2 for details on
         basis and metric arguments.
         """
-        global MAIN_PROGRAM
         MV.is_setup = True
         MV.metric_str = False
         MV.debug = debug
@@ -860,7 +855,7 @@ class MV(object):
             bvar = MV(value=isym,mvtype='basisvector',mvname=name)
             bvar.bladeflg = 1
             MV.bvec.append(bvar)
-            setattr(MAIN_PROGRAM,name,bvar)
+            frame.f_globals[name] = bvar
             isym += 1
         if rframe:
             MV.define_reciprocal_frame()
@@ -937,8 +932,6 @@ class MV(object):
         the above list.  This is why the debug option is included.  The debug_level can equal 0,1,2, or 3 and
         determines how far in the list to calculate (input 0 to do the entire list) while debugging.
         """
-        global MAIN_PROGRAM
-
         #Form root names for basis, reciprocal basis, normalized basis, and normalized reciprocal basis
 
         if base_name == '':
@@ -1241,7 +1234,7 @@ class MV(object):
         MV.org_basis = []
         for ibasis in MV.nrg:
             evec = MV(Acoef[ibasis],'vector',old_names[ibasis])
-            setattr(MAIN_PROGRAM,evec.name,evec)
+            frame.f_globals[name] = evec
             MV.org_basis.append(evec)
 
         if MV.coords[0] == sympy.Symbol('t'):
