@@ -753,8 +753,9 @@ class Basic(PicklableWithSlots):
                patterns possibly affecting replacements already made.
              o a dict or set whose key/value items correspond to old/new pairs.
                In this case the old/new pairs will be sorted by op count and in
-               case of a tie, by number of args. The resulting sorted list is
-               then processed as an iterable container (see previous).
+               case of a tie, by number of args and the default_sort_key. The
+               resulting sorted list is then processed as an iterable container
+               (see previous).
 
         Examples
         ========
@@ -801,6 +802,7 @@ class Basic(PicklableWithSlots):
 
         """
         from sympy.core.containers import Dict
+        from sympy.utilities import default_sort_key, sift
 
         unordered = False
         if len(args) == 1:
@@ -829,7 +831,13 @@ class Basic(PicklableWithSlots):
                     so = C.Symbol(o)
             sequence[i] = (so, sn)
         if unordered:
-            sequence.sort(key=lambda x: (x[0].count_ops(), len(x[0].args)), reverse=True)
+            sequence = dict(sequence)
+            d = sift(sequence.iteritems(), lambda i: (i[0].count_ops(), len(i[0].args)))
+            newseq = []
+            for k in sorted(d.keys(), reverse=True):
+                newseq.extend(sorted([v[0] for v in d[k]], key=default_sort_key))
+            sequence = [(k, sequence[k]) for k in newseq]
+            del newseq, d
 
         rv = self
         for old, new in sequence:

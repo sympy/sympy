@@ -113,6 +113,13 @@ def test_dict_ambigous():   # see #467
     assert f .subs(x,y) .subs(exp(x),y)  == y*exp(y)
     assert f .subs(exp(x),y) .subs(x,y)  == y**2
 
+    # length of args and count_ops are the same so
+    # default sort key resolves ordering...if one
+    # doesn't want this result then an unordered
+    # sequence should not be used.
+    e = 1 + x*y
+    assert e.subs({x: y, y: 2}) == 5
+
 def test_deriv_sub_bug3():
     x = Symbol("x")
     y = Symbol("y")
