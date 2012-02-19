@@ -177,7 +177,7 @@ class MatrixBase(object):
         a = [0]*len(self)
         for i in xrange(self.cols):
             a[i*self.rows:(i+1)*self.rows] = self.mat[i::self.cols]
-        return self.__class__(self.cols,self.rows,a)
+        return self._new(self.cols,self.rows,a)
 
     T = property(transpose,None,None,"Matrix transposition.")
 
@@ -191,7 +191,7 @@ class MatrixBase(object):
         H: Hermite conjugation
         D: Dirac conjugation
         """
-        out = self.__class__(self.rows,self.cols,
+        out = self._new(self.rows,self.cols,
                 lambda i,j: self[i,j].conjugate())
         return out
 
@@ -355,14 +355,14 @@ class MatrixBase(object):
     def __rmul__(self,a):
         if hasattr(a, "__array__") and a.shape != ():
             return matrix_multiply(a,self)
-        out = self.__class__(self.rows, self.cols, map(lambda i: a*i,self.mat))
+        out = self._new(self.rows, self.cols, map(lambda i: a*i,self.mat))
         return out
 
     def expand(self, **hints):
         """
         Expand each element of the matrix by calling `expand()`.
         """
-        out = self.__class__(self.rows, self.cols,
+        out = self._new(self.rows, self.cols,
                 map(lambda i: i.expand(**hints), self.mat))
         return out
 
@@ -370,7 +370,7 @@ class MatrixBase(object):
         """
         Create substituted expressions for each element with `Expr.subs`.
         """
-        out = self.__class__(self.rows, self.cols,
+        out = self._new(self.rows, self.cols,
                 map(lambda i: i.subs(*args),self.mat))
         return out
 
@@ -383,7 +383,7 @@ class MatrixBase(object):
     def __mul__(self,a):
         if hasattr(a, "__array__") and a.shape != ():
             return matrix_multiply(self,a)
-        out = self.__class__(self.rows, self.cols, map(lambda i: i*a,self.mat))
+        out = self._new(self.rows, self.cols, map(lambda i: i*a,self.mat))
         return out
 
     def __pow__(self, num):
@@ -536,7 +536,7 @@ class MatrixBase(object):
                     for k in xrange(j)))
             L[i, i] = sqrt(self[i, i] - sum(L[i, k] ** 2
                 for k in xrange(i)))
-        return self.__class__(L)
+        return self._new(L)
 
     def LDLdecomposition(self):
         """
@@ -588,7 +588,7 @@ class MatrixBase(object):
                     L[i, k] * L[j, k] * D[k, k] for k in xrange(j)))
             D[i, i] = self[i, i] - sum(L[i, k]**2 * D[k, k]
                 for k in xrange(i))
-        return self.__class__(L), self.__class__(D)
+        return self._new(L), self._new(D)
 
     def lower_triangular_solve(self, rhs):
         """
@@ -625,7 +625,7 @@ class MatrixBase(object):
                 raise TypeError("Matrix must be non-singular.")
             X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
                 for k in xrange(i))) / self[i, i]
-        return self.__class__(X)
+        return self._new(X)
 
     def upper_triangular_solve(self, rhs):
         """
@@ -659,7 +659,7 @@ class MatrixBase(object):
                 raise ValueError("Matrix must be non-singular.")
             X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
                 for k in xrange(i+1, self.rows))) / self[i, i]
-        return self.__class__(X)
+        return self._new(X)
 
     def cholesky_solve(self, rhs):
         """
@@ -714,7 +714,7 @@ class MatrixBase(object):
         Helper function of function diagonal_solve,
         without the error checks, to be used privately.
         """
-        return self.__class__(rhs.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
+        return self._new(rhs.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
 
     def LDLsolve(self, rhs):
         """
@@ -992,7 +992,7 @@ class MatrixBase(object):
         outMat = [0]*outLines*outCols
         for i in xrange(outLines):
             outMat[i*outCols:(i+1)*outCols] = self.mat[(i+rlo)*self.cols+clo:(i+rlo)*self.cols+chi]
-        return self.__class__(outLines,outCols,outMat)
+        return self._new(outLines,outCols,outMat)
 
     def extract(self, rowsList, colsList):
         """
@@ -1037,7 +1037,7 @@ class MatrixBase(object):
         mat = self.mat
         rowsList = [self.key2ij((k,0))[0] for k in rowsList]
         colsList = [self.key2ij((0,k))[1] for k in colsList]
-        return self.__class__(len(rowsList), len(colsList),
+        return self._new(len(rowsList), len(colsList),
                 lambda i,j: mat[rowsList[i]*cols + colsList[j]])
 
     def key2bounds(self, keys):
@@ -1124,7 +1124,7 @@ class MatrixBase(object):
         if not callable(f):
             raise TypeError("`f` must be callable.")
 
-        out = self.__class__(self.rows, self.cols, map(f,self.mat))
+        out = self._new(self.rows, self.cols, map(f,self.mat))
         return out
 
     def evalf(self, prec=None, **options):
@@ -1157,7 +1157,7 @@ class MatrixBase(object):
         """
         if len(self) != _rows*_cols:
             raise ValueError("Invalid reshape parameters %d %d" % (_rows, _cols))
-        return self.__class__(_rows, _cols, lambda i,j: self.mat[i*_cols + j])
+        return self._new(_rows, _cols, lambda i,j: self.mat[i*_cols + j])
 
     def print_nonzero (self, symb="X"):
         """
@@ -1369,7 +1369,7 @@ class MatrixBase(object):
         minorMatrix
         adjugate
         """
-        out = self.__class__(self.rows, self.cols, lambda i,j:
+        out = self._new(self.rows, self.cols, lambda i,j:
                 self.cofactor(i, j, method))
         return out
 
@@ -1456,7 +1456,7 @@ class MatrixBase(object):
         wronskian
         """
         if not isinstance(X, MatrixBase):
-            X = self.__class__(X)
+            X = self._new(X)
         # Both X and self can be a row or a column matrix, so we need to make
         # sure all valid combinations work, but everything else fails:
         if self.shape[0] == 1:
@@ -1474,7 +1474,7 @@ class MatrixBase(object):
 
         # m is the number of functions and n is the number of variables
         # computing the Jacobian is now easy:
-        return self.__class__(m, n, lambda j, i: self[j].diff(X[i]))
+        return self._new(m, n, lambda j, i: self[j].diff(X[i]))
 
     def QRdecomposition(self):
         """
@@ -1592,7 +1592,7 @@ class MatrixBase(object):
             for k in range(j+1, n):
                 tmp -= R[j,k] * x[n-1-k]
             x.append(tmp/R[j,j])
-        return self.__class__([row.mat for row in reversed(x)])
+        return self._new([row.mat for row in reversed(x)])
 
     #def evaluate(self):    # no more eval() so should be removed
     #    for i in range(self.rows):
@@ -1619,7 +1619,7 @@ class MatrixBase(object):
                 b.rows == 3 and b.cols == 1):
             raise ShapeError("Dimensions incorrect for cross product.")
         else:
-            return self.__class__(1,3,((self[1]*b[2] - self[2]*b[1]),
+            return self._new(1,3,((self[1]*b[2] - self[2]*b[1]),
                                (self[2]*b[0] - self[0]*b[2]),
                                (self[0]*b[1] - self[1]*b[0])))
 
@@ -1863,7 +1863,7 @@ class MatrixBase(object):
         M = self.as_mutable()
         M.row_del(i)
         M.col_del(j)
-        return self.__class__(M)
+        return self._new(M)
 
     def exp(self):
         """ Returns the exponentiation of a matrix
@@ -2267,7 +2267,7 @@ class MatrixBase(object):
         """
         Create a shallow copy of this matrix.
         """
-        return self.__class__(self.rows, self.cols, lambda i, j: self[i, j])
+        return self._new(self.rows, self.cols, lambda i, j: self[i, j])
 
     def det(self, method="bareis"):
         """
@@ -2477,7 +2477,7 @@ class MatrixBase(object):
                 r.row(j, lambda x, k: x - scale*r[pivot,k])
             pivotlist.append(i)
             pivot += 1
-        return self.__class__(r), pivotlist
+        return self._new(r), pivotlist
 
     def nullspace(self, simplified=False):
         """
@@ -2506,7 +2506,7 @@ class MatrixBase(object):
                             # XXX: Is this the correct error?
                             raise NotImplementedError("Could not compute the nullspace of `self`.")
                         basis[basiskey.index(j)][i,0] = -1 * reduced[line, j]
-        return [self.__class__(b) for b in basis]
+        return [self._new(b) for b in basis]
 
     def berkowitz(self):
         """The Berkowitz algorithm.
@@ -2592,7 +2592,7 @@ class MatrixBase(object):
 
             transforms[k-1] = T
 
-        polys = [ self.__class__([S.One, -A[0,0]]) ]
+        polys = [ self._new([S.One, -A[0,0]]) ]
 
         for i, T in enumerate(transforms):
             polys.append(T * polys[i])
@@ -2716,7 +2716,7 @@ class MatrixBase(object):
                     basis[0][i] = b
                 if l != 1:
                     basis[0] *= l
-            out.append((r, k, [self.__class__(b) for b in basis]))
+            out.append((r, k, [self._new(b) for b in basis]))
         return out
 
     def singular_values(self):
@@ -2801,7 +2801,7 @@ class MatrixBase(object):
         limit
         diff
         """
-        return self.__class__(self.rows, self.cols,
+        return self._new(self.rows, self.cols,
                 lambda i, j: self[i, j].integrate(*args))
 
     def limit(self, *args):
@@ -2824,7 +2824,7 @@ class MatrixBase(object):
         integrate
         diff
         """
-        return self.__class__(self.rows, self.cols,
+        return self._new(self.rows, self.cols,
                 lambda i, j: self[i, j].limit(*args))
 
     def diff(self, *args):
@@ -2847,7 +2847,7 @@ class MatrixBase(object):
         integrate
         limit
         """
-        return self.__class__(self.rows, self.cols,
+        return self._new(self.rows, self.cols,
                 lambda i, j: self[i, j].diff(*args))
 
     def vec(self):
@@ -3236,7 +3236,8 @@ class MutableMatrix(MatrixBase):
 
     _op_priority = 12.0
 
-    def __new__(cls, *args, **kwargs):
+    @classmethod
+    def _new(cls, *args, **kwargs):
         if len(args)==1 and isinstance(args[0], MutableMatrix):
             return args[0]
         rows, cols, mat = MatrixBase._handle_creation_inputs(*args, **kwargs)
@@ -3245,6 +3246,8 @@ class MutableMatrix(MatrixBase):
         self.cols = cols
         self.mat = list(mat) # create a shallow copy
         return self
+    def __new__(cls, *args, **kwargs):
+        return cls._new(*args, **kwargs)
 
     def __setitem__(self, key, value):
         """

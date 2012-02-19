@@ -4,13 +4,16 @@ from sympy import Basic, Tuple
 
 class ImmutableMatrix(MatrixExpr, MatrixBase):
 
-    def __new__(cls, *args, **kwargs):
+    @classmethod
+    def _new(cls, *args, **kwargs):
         if len(args)==1 and isinstance(args[0], ImmutableMatrix):
             return args[0]
         rows, cols, mat = MatrixBase._handle_creation_inputs(*args, **kwargs)
         shape = Tuple(rows, cols)
         mat = Tuple(*mat)
         return Basic.__new__(cls, shape, mat)
+    def __new__(cls, *args, **kwargs):
+        return cls._new(*args, **kwargs)
 
     @property
     def shape(self):
