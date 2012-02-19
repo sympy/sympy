@@ -520,16 +520,6 @@ class PrettyPrinter(Printer):
 
         return Lim
 
-    # Matrix is special:
-    #
-    # it can exist in SymPy in two forms:
-    # - as Matrix
-    # - as _MatrixAsBasic
-    #
-    # see _MatrixAsBasic docstring, and #420
-    def _print__MatrixAsBasic(self, e):
-        return self._print_MatrixBase(e.m)
-
     def _print_MatrixBase(self, e):
         M = e   # matrix
         Ms = {}  # i,j -> pretty(M[i,j])
