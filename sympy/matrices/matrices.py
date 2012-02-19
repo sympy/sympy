@@ -68,6 +68,7 @@ class MatrixBase(object):
     __array_priority__ = 10.0
 
     is_Matrix = True
+    _class_priority = 3
 
     @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
@@ -3235,6 +3236,7 @@ class MutableMatrix(MatrixBase):
     is_MatrixExpr = False
 
     _op_priority = 12.0
+    _class_priority = 10
 
     @classmethod
     def _new(cls, *args, **kwargs):
@@ -3625,18 +3627,19 @@ def classof(A,B):
     sympy.matrices.matrices.MutableMatrix
     """
     from immutable_matrix import ImmutableMatrix
-    if A.__class__ == B.__class__:
-        return A.__class__
-    if frozenset((A.__class__, B.__class__)) == frozenset(
-            (MutableMatrix, ImmutableMatrix)):
-        return MutableMatrix
+    try:
+        if A._class_priority > B._class_priority:
+            return A.__class__
+        else:
+            return B.__class__
+    except: pass
     try:
         import numpy
         if isinstance(A, numpy.ndarray):
             return B.__class__
         if isinstance(B, numpy.ndarray):
             return A.__class__
-    except:        pass
+    except: pass
     raise TypeError("Incompatible classes %s, %s"%(A.__class__, B.__class__))
 
 def matrix_multiply(A, B):
@@ -3685,7 +3688,7 @@ def matrix_multiply(A, B):
         raise ShapeError("Matrices size mismatch.")
     blst = B.T.tolist()
     alst = A.tolist()
-    return classof(A,B)(A.shape[0], B.shape[1], lambda i, j:
+    return classof(A,B)._new(A.shape[0], B.shape[1], lambda i, j:
                                         reduce(lambda k, l: k+l,
                                         map(lambda n, m: n*m,
                                         alst[i],
@@ -3710,7 +3713,7 @@ def matrix_multiply_elementwise(A, B):
     if A.shape != B.shape:
         raise ShapeError()
     shape = A.shape
-    return classof(A,B)(shape[0], shape[1],
+    return classof(A,B)._new(shape[0], shape[1],
         lambda i, j: A[i,j] * B[i, j])
 
 def matrix_add(A, B):
@@ -3729,7 +3732,7 @@ def matrix_add(A, B):
     ret = [0]*A.shape[0]
     for i in xrange(A.shape[0]):
         ret[i] = map(lambda j,k: j+k, alst[i], blst[i])
-    return classof(A,B)(ret)
+    return classof(A,B)._new(ret)
 
 def zeros(r, c=None, cls=MutableMatrix):
     """Returns a matrix of zeros with ``r`` rows and ``c`` columns;

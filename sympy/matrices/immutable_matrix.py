@@ -4,6 +4,8 @@ from sympy import Basic, Tuple
 
 class ImmutableMatrix(MatrixExpr, MatrixBase):
 
+    _class_priority = 8
+
     @classmethod
     def _new(cls, *args, **kwargs):
         if len(args)==1 and isinstance(args[0], ImmutableMatrix):
