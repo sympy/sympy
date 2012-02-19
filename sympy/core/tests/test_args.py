@@ -1096,6 +1096,14 @@ def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
     assert _test_args(DeferredVector("X"))
 
+@SKIP("abstract class")
+def test_sympy__matrices__expressions__matexpr__MatrixBase():
+    pass
+
+def test_sympy__matrices__immutable_matrix__ImmutableMatrix():
+    from sympy.matrices.immutable_matrix import ImmutableMatrix
+    assert _test_args(ImmutableMatrix([[1,2],[3,4]]))
+
 def test_sympy__matrices__expressions__blockmatrix__BlockDiagMatrix():
     from sympy.matrices.expressions.blockmatrix import BlockDiagMatrix
     from sympy.matrices.expressions import MatrixSymbol
@@ -1124,7 +1132,6 @@ def test_sympy__matrices__expressions__matadd__MatAdd():
     Y = MatrixSymbol('Y', x, y)
     assert _test_args(MatAdd(X, Y))
 
-@XFAIL
 def test_sympy__matrices__expressions__matexpr__Identity():
     from sympy.matrices.expressions.matexpr import Identity
     assert _test_args(Identity(3))
@@ -1288,7 +1295,6 @@ def test_sympy__physics__quantum__gate__TwoQubitGate():
     from sympy.physics.quantum.gate import TwoQubitGate
     assert _test_args(TwoQubitGate(0))
 
-@SKIP("TODO: Add ImmutableMatrix Class")
 def test_sympy__physics__quantum__gate__UGate():
     from sympy.physics.quantum.gate import UGate
     assert _test_args(UGate())
