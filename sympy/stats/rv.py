@@ -433,7 +433,18 @@ def E(expr, given=None, numsamples=None, **kwargs):
     """
     Returns the expected value of a random expression
 
-    (optionally given a condition)
+    Parameters
+    ----------
+    expr : Expr containing RandomSymbols
+        The expression of which you want to compute the expectation value
+    given : Expr containing RandomSymbols
+        A conditional expression. E(X, X>0) is expectation of X given X > 0
+    numsamples : int
+        Enables sampling and approximates the expectation with this many samples
+    evalf : Bool (defaults to True)
+        If sampling return a number rather than a complex expression
+    evaluate : Bool (defaults to True)
+        In case of continuous systems return unevaluated integral
 
     Examples
     ========
@@ -469,6 +480,19 @@ def E(expr, given=None, numsamples=None, **kwargs):
 def P(condition, given=None, numsamples=None,  **kwargs):
     """
     Probability that a condition is true, optionally given a second condition
+
+    Parameters
+    ----------
+    expr : Relational containing RandomSymbols
+        The condition of which you want to compute the probability
+    given : Relational containing RandomSymbols
+        A conditional expression. P(X>1, X>0) is expectation of X>1 given X>0
+    numsamples : int
+        Enables sampling and approximates the probability with this many samples
+    evalf : Bool (defaults to True)
+        If sampling return a number rather than a complex expression
+    evaluate : Bool (defaults to True)
+        In case of continuous systems return unevaluated integral
 
     Examples
     ========
