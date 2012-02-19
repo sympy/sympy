@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import raises
 from sympy import Symbol, symbols, Function, Integer, Matrix, nan, oo, Abs, \
-    Rational, Float, S, WildFunction
+    Rational, Float, S, WildFunction, ImmutableMatrix
 from sympy.geometry import Point, Circle, Ellipse
 from sympy.printing import srepr
 
@@ -65,11 +65,14 @@ def test_list():
     sT([x, Integer(4)], "[Symbol('x'), Integer(4)]")
 
 def test_Matrix():
-    sT(Matrix([[x**+1, 1], [y, x+y]]),
-       "Matrix([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])")
-    sT(Matrix(), "Matrix([])")
+    for cls in [Matrix, ImmutableMatrix]:
+        name = cls.__name__
+        sT(cls([[x**+1, 1], [y, x+y]]),
+           "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])"%name)
 
-    sT(Matrix([[x**+1, 1], [y, x+y]]), "Matrix([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])")
+        sT(cls(), "%s([])"%name)
+
+        sT(cls([[x**+1, 1], [y, x+y]]), "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])"%name)
 
 def test_Rational():
     sT(Rational(1,3), "Rational(1, 3)")

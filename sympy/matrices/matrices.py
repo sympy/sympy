@@ -3627,8 +3627,7 @@ def classof(A,B):
     if frozenset((A.__class__, B.__class__)) == frozenset(
             (MutableMatrix, ImmutableMatrix)):
         return MutableMatrix
-    raise TypeError('No defined strategy to combine types %s, %s'%(
-        A.__class__, B.__class__))
+    return MutableMatrix
 
 def matrix_multiply(A, B):
     """
@@ -4699,3 +4698,6 @@ def rot_axis1(theta):
            (0,ct,st),
            (0,-st,ct))
     return MutableMatrix(mat)
+
+Matrix = MutableMatrix
+Matrix.__name__ = "Matrix"
