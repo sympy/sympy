@@ -3624,7 +3624,7 @@ def classof(A,B):
     >>> M = Matrix([[1,2],[3,4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1,2],[3,4]])
     >>> classof(M, IM)
-    sympy.matrices.matrices.MutableMatrix
+    <class 'sympy.matrices.matrices.Matrix'>
     """
     from immutable_matrix import ImmutableMatrix
     try:
