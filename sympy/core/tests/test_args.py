@@ -1298,7 +1298,9 @@ def test_sympy__physics__quantum__gate__TwoQubitGate():
 
 def test_sympy__physics__quantum__gate__UGate():
     from sympy.physics.quantum.gate import UGate
-    assert _test_args(UGate())
+    from sympy.matrices.immutable_matrix import ImmutableMatrix
+    from sympy import Integer, Tuple
+    assert _test_args(UGate(Tuple(Integer(1)), ImmutableMatrix([[1,0],[0,2]])))
 
 def test_sympy__physics__quantum__gate__XGate():
     from sympy.physics.quantum.gate import XGate
