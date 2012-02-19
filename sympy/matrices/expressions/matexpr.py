@@ -130,8 +130,8 @@ class MatrixExpr(Expr):
             if self.valid_index(i, j) is not False:
                 return self._entry(*key)
             else:
-                raise ValueError("Invalid indices (%s, %s)"%(str(i), str(j)))
-        raise TypeError("Only elementwise indexing currently supported")
+                raise IndexError("Invalid indices (%s, %s)"%(str(i), str(j)))
+        raise IndexError("Invalid index, wanted %s[i,j]"%str(self))
 
     def as_explicit(self):
         """

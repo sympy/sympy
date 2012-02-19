@@ -104,12 +104,7 @@ class MatrixBase(object):
             self.mat = map(lambda i: sympify(i), mat)
         elif len(args) == 1:
             mat = args[0]
-            if isinstance(mat, MatrixBase):
-                self.rows = mat.rows
-                self.cols = mat.cols
-                self.mat = mat[:]
-                return self.rows, self.cols, self.mat
-            elif hasattr(mat, "__array__"): #pragma: no cover
+            if hasattr(mat, "__array__"): #pragma: no cover
                 # NumPy array or matrix or some other object that implements
                 # __array__. So let's first use this method to get a
                 # numpy.array() and then make a python list out of it.

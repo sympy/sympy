@@ -128,8 +128,10 @@ def test_creation():
     assert c.rows == 3
     assert c[:] == [1,2,3,4,5,6,7,8,9]
 
-    assert Matrix(c) == c
+    assert Matrix(eye(2)) == eye(2)
+    assert ImmutableMatrix(ImmutableMatrix(eye(2))) == ImmutableMatrix(eye(2))
     assert ImmutableMatrix(c) == c.as_immutable()
+    assert Matrix(ImmutableMatrix(c)) == ImmutableMatrix(c).as_mutable()
 
 def test_tolist():
     x, y, z = symbols('x y z')
@@ -1688,6 +1690,8 @@ def test_errors():
     raises(NotImplementedError, "Matrix([[1, 0],[1, 1]])**(S(1)/2)")
     raises(NotImplementedError,
         "Matrix([[1, 2, 3],[4, 5, 6],[7,  8, 9]])**(0.5)")
+    raises(IndexError, "eye(3)[5,2]")
+    raises(IndexError, "eye(3)[2,5]")
 
 def test_len():
     assert len(Matrix()) == 0
@@ -2106,3 +2110,8 @@ def test_is_Identity():
     assert eye(3).as_immutable().is_Identity
     assert not zeros(3).is_Identity
     assert not ones(3).is_Identity
+
+def test_dot():
+    assert ones(1,3).dot(ones(3,1)) == 3
+    assert ones(1,3).dot([1,1,1]) == 3
+

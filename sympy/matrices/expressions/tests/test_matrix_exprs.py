@@ -1,8 +1,8 @@
 from sympy.utilities.pytest import raises
-from sympy import S, symbols, Symbol, Tuple
+from sympy import S, symbols, Symbol, Tuple, Mul
 from sympy.matrices import (eye, MatrixSymbol, Transpose, Inverse, ShapeError,
         MatMul, Identity, BlockMatrix, BlockDiagMatrix, block_collapse, Matrix,
-        ZeroMatrix, MatAdd, MatPow)
+        ZeroMatrix, MatAdd, MatPow, matrixify)
 
 def test_transpose():
     n, m, l = symbols('n m l', integer=True)
@@ -310,3 +310,9 @@ def test_MatrixSymbol():
     assert X.shape == (n,m)
     raises(TypeError, "MatrixSymbol('X', n, m)(t)") # issue 2756
 
+def test_matrixify():
+    n, m, l = symbols('n m l')
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', m, l)
+    assert matrixify(n+m) == n+m
+    assert matrixify(Mul(A,B)) == MatMul(A,B)
