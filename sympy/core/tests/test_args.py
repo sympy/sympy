@@ -1132,6 +1132,7 @@ def test_sympy__matrices__expressions__matadd__MatAdd():
     Y = MatrixSymbol('Y', x, y)
     assert _test_args(MatAdd(X, Y))
 
+@XFAIL
 def test_sympy__matrices__expressions__matexpr__Identity():
     from sympy.matrices.expressions.matexpr import Identity
     assert _test_args(Identity(3))
