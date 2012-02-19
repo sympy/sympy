@@ -3627,7 +3627,14 @@ def classof(A,B):
     if frozenset((A.__class__, B.__class__)) == frozenset(
             (MutableMatrix, ImmutableMatrix)):
         return MutableMatrix
-    return MutableMatrix
+    try:
+        import numpy
+        if isinstance(A, numpy.ndarray):
+            return B.__class__
+        if isinstance(B, numpy.ndarray):
+            return A.__class__
+    except:        pass
+    raise TypeError("Incompatible classes %s, %s"%(A.__class__, B.__class__))
 
 def matrix_multiply(A, B):
     """

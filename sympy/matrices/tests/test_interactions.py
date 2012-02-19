@@ -5,7 +5,9 @@ MutableMatrix, ImmutableMatrix, MatrixExpr
 Here we test the extent to which they cooperate
 """
 
-from sympy import *
+from sympy import symbols
+from sympy.matrices import (Matrix, MatrixSymbol, eye, Identity,
+        ImmutableMatrix)
 from sympy.matrices.matrices import MutableMatrix, classof
 from sympy.utilities.pytest import raises, XFAIL
 
