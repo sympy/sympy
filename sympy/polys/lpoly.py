@@ -242,7 +242,7 @@ class BaseLPoly(object):
             c_0*m_0 + c_1*m_1 + ...
         where c_i are coefficients and m_i are monomials
 
-        >>> from sympy.polys.domains import  QQ
+        >>> from sympy.polys.domains import QQ
         >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ, lex)
@@ -1640,7 +1640,7 @@ class LPolyElement(dict):
         return p
 
     def pow_trunc(self, n, i, prec):
-        """truncation of self**n using mul_trunc
+        """truncation of self**n, where `n` is rational
 
         Examples
         ========
@@ -1962,9 +1962,15 @@ class LPolyElement(dict):
           compute (_x + p[0]).nth_root(n, '_x', prec)), then substitute _x
           with p - p[0]
 
-        example with f function:
-        f = LPolyElement.exp_series0
-        p1 = p.fun(LPolyElement.exp_series0, ['y', 'x'], [h, h])
+        Examples
+        ========
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.monomialtools import lex
+        >>> from sympy.polys.lpoly import lgens
+        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> p = x + x*y + x**2*y + x**3*y**2
+        >>> p.fun('_tan1', 'x', 4)
+        1/3*x**3*y**3 + 2*x**3*y**2 + x**3*y + 1/3*x**3 + x**2*y + x*y + x
         """
         lp = p.lp
         lp1 = LPoly(['_x'], lp.ring, lp.order)
@@ -1985,8 +1991,7 @@ class LPolyElement(dict):
             q = getattr(x1, f)(*args1)
         else:
             q = f(x1, *args1)
-        a = list(zip(list(q.keys()), list(q.values())))
-        a.sort()
+        a = sorted(q.iteritems())
         c = [0]*h
         for x in a:
             c[x[0][0]] = x[1]
@@ -2006,10 +2011,7 @@ class LPolyElement(dict):
         zm = lp.zero_mon
         if zm not in p:
             raise NotImplementedError('no constant term in series')
-        if n != int(n):
-            raise NotImplementedError('n must be an integer')
-        else:
-            n = int(n)
+        n = int_tested(n)
         assert p[zm] == 1
         p1 = lp(1)
         if p == 1:
@@ -2090,7 +2092,7 @@ class LPolyElement(dict):
         if n == 1:
             return p.trunc(iv, prec)
         lp = p.lp
-        if (p-1).has_constant_term(iv):
+        if (p - 1).has_constant_term(iv):
             if lp.zero_mon in p:
                 c = p[lp.zero_mon]
                 if isinstance(c, PythonRationalType):
@@ -2112,13 +2114,13 @@ class LPolyElement(dict):
                         return (p/c).nth_root(n, iv, prec)*c**Rational(1, n)
                     else:
                         raise NotImplementedError
-        if lp.commuting:
+        if lp.commuting and lp.ngens == 1:
             return p._nth_root1(n, iv, prec)
         else:
-            raise NotImplementedError
+            return p.fun('_nth_root1',n, iv, prec)
 
     def re_acoth(p, iv, prec):
-        """Re(acoth(p)) = 1/2*(log(1+p) - log(1-p))
+        """Re(acoth(p)) = 1/2*(log(1 + p) - log(1 - p))
 
         Examples
         ========
@@ -2192,14 +2194,14 @@ class LPolyElement(dict):
         >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x = lgens('x', QQ, lex)
-        >>> p = (1+x).log('x', 8)
+        >>> p = (1 + x).log('x', 8)
         >>> p
         1/7*x**7 - 1/6*x**6 + 1/5*x**5 - 1/4*x**4 + 1/3*x**3 - 1/2*x**2 + x
         """
         lp = p.lp
-        if (p-1).has_constant_term(iv):
+        if (p - 1).has_constant_term(iv):
             if not lp.SR:
-                raise TaylorEvalError('p-1 must not have a constant term in the series variables')
+                raise TaylorEvalError('p - 1 must not have a constant term in the series variables')
             else:
                 if lp.zero_mon in p:
                     c = p[lp.zero_mon]
@@ -2209,7 +2211,7 @@ class LPolyElement(dict):
                         raise NotImplementedError
             raise NotImplementedError('p-1 must not have a constant term in the series variables')
         lp = p.lp
-        if iv in lp.pol_gens and lp.commuting:
+        if lp.commuting:
             dlog = p.derivative(iv)
             dlog = dlog.mul_trunc(p._series_inversion1(iv, prec), iv, prec-1)
             return dlog.integrate(iv)
@@ -2406,9 +2408,8 @@ class LPolyElement(dict):
         lp = p.lp
         if p.has_constant_term(iv):
             raise NotImplementedError('p must not have constant part in series variables')
-        if lp.commuting:
-            if iv in lp.pol_gens:
-                return p._tanh1(iv, prec)
+        if lp.commuting and lp.ngens == 1:
+            return p._tanh1(iv, prec)
         return p.fun('_tanh1', iv, prec)
 
     def _tan1(p, iv, prec):
@@ -2436,9 +2437,8 @@ class LPolyElement(dict):
         lp = p.lp
         if p.has_constant_term(iv):
             raise NotImplementedError('p must not have constant part in series variables')
-        if lp.commuting:
-            if iv in lp.pol_gens:
-                return p._tan1(iv, prec)
+        if lp.commuting and lp.ngens == 1:
+            return p._tan1(iv, prec)
         return p.fun('tan', iv, prec)
 
 
@@ -2476,8 +2476,7 @@ class LPolyElement(dict):
                 raise TaylorEvalError('p must not have constant part in series variables')
             return sympy.functions.exp(p[zm])*(p - p[zm]).exp(iv, prec)
         if len(p) > 20 and lp.commuting:
-            if iv in lp.pol_gens:
-                return p._exp1(iv, prec)
+            return p._exp1(iv, prec)
         one = lp.ring(1)
         n = 1
         k = 1
@@ -2514,7 +2513,7 @@ class LPolyElement(dict):
             p1 = p - c
             return sympy.functions.cos(c)*p1.sin(iv, prec) + sympy.functions.sin(c)*p1.cos(iv, prec)
         # get a good value
-        if len(p) > 20:
+        if len(p) > 20 and lp.ngens == 1:
             t = (p/2).tan(iv, prec)
             t2 = t.square_trunc(iv, prec)
             p1 = (1+t2).series_inversion(iv, prec)
@@ -2553,7 +2552,7 @@ class LPolyElement(dict):
             return sympy.functions.cos(c)*p1.cos(iv, prec) - \
                     sympy.functions.sin(c)*p1.sin(iv, prec)
         # get a good value
-        if len(p) > 20:
+        if len(p) > 20 and lp.ngens == 1:
             t = (p/2).tan(iv, prec)
             t2 = t.square_trunc(iv, prec)
             p1 = (1+t2).series_inversion(iv, prec)
@@ -2657,7 +2656,7 @@ class LPolyElement(dict):
             def convert(c):
                 return c
         result = []
-        for monom, coeff in p.items():
+        for monom, coeff in p.iteritems():
             term = [convert(coeff)]
             for g, m in zip(gens, monom):
                 term.append(Pow(g, m))

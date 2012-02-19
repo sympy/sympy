@@ -91,6 +91,10 @@ def test_variables():
     x, y, z = lp.gens()
     p = x*y + 3*y**2
     assert p.variables() == (0, 1)
+    lp = LPoly('z,y,x,', QQ, lex)
+    z, y, x = lp.gens()
+    p = x*y + 3*y**2
+    assert p.variables() == (1, 2)
 
 def test_mlgens():
     lp,x = mlgens('x', complex, lex)
@@ -118,14 +122,16 @@ def test_nclgens():
     p = pa.mul_trunc(pb, 'x', prec)
     p1 = p.log('x', prec)
     p1 = p1.expand()
-    assert p1 == (-A*B*A/6 + A*B**2/12 + A**2*B/12 - B*A*B/6 + B*A**2/12 + B**2*A/12)*x**3 + (A*B/2 - B*A/2)*x**2 + (A + B)*x
+    assert p1 == (-A*B*A/6 + A*B**2/12 + A**2*B/12 - B*A*B/6 + B*A**2/12 +
+                  B**2*A/12)*x**3 + (A*B/2 - B*A/2)*x**2 + (A + B)*x
 
     p1 = 1 + x*A + x**2*B
     p2 = p1.series_inversion('x', 4)
     assert p2 == 1 - x*A - x**2*B + x**2*A**2 + x**3*(A*B + B*A - A**3)
     p1 = 2 + x*A + x**2*B
     p2 = p1.series_inversion('x', 4).expand()
-    assert p2 == QQ(1, 2) - x*A/4 - x**2*B/4 + x**2*A**2/8 + x**3*(A*B/8 + B*A/8 - A**3/16)
+    assert p2 == QQ(1, 2) - x*A/4 - x**2*B/4 + x**2*A**2/8 + x**3*(A*B/8 +
+            B*A/8 - A**3/16)
     p1 = x*A + x**2*B
     p2 = p1.atan('x', 4)
     assert p2 == A*x + B*x**2 - A**3*x**3/3
@@ -450,6 +456,9 @@ def test_pow():
     def test1(p):
         p1 = p**QQ(1,3)
     raises(ValueError, 'test1(p)')
+    def test2():
+        p1 = x**QQ(1,3)
+    raises(ValueError, 'test2()')
 
 def test_division():
     lp, x, y = lgens('x, y', QQ, lex)
@@ -714,7 +723,7 @@ def test_nth_root():
     p = 1 + x
     def test5(p, n):
         p1 = p.nth_root(n, 'x', 4)
-    raises(NotImplementedError, 'test5(p, n)')
+    raises(ValueError, 'test5(p, n)')
 
 def test_sqrt():
     lp, x, y = lgens('x, y', QQ, lex)

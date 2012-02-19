@@ -946,5 +946,4 @@ def test_issue2084():
     assert taylor(abs(x + x**2), n=2) == x + O(x**2)
     assert taylor((1+x)**2, x, n=6) == 1 + 2*x + x**2
     assert taylor((1 + 1/x)) == 1 + 1/x
-    assert Derivative(taylor(exp(x)), x).doit() == \
-           1 + x + x**2/2 + x**3/6 + x**4/24 + O(x**5)
+    assert Derivative(taylor(exp(x)), x).doit() == 1 + x + x**2/2 + x**3/6 + x**4/24 + O(x**5)
