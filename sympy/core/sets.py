@@ -17,6 +17,14 @@ class Set(Basic):
     by the Union class. The empty set is represented by the EmptySet class
     and available as a singleton as S.EmptySet.
     """
+    is_number = False
+    is_iterable = False
+    is_interval = False
+
+    is_FiniteSet = False
+    is_Interval = False
+    is_ProductSet = False
+    is_Union = False
 
     def union(self, other):
         """
@@ -206,28 +214,7 @@ class Set(Basic):
         return result
 
     @property
-    def is_number(self):
-        return False
-    @property
     def is_real(self):
-        return False
-    @property
-    def is_iterable(self):
-        return False
-    @property
-    def is_interval(self):
-        return False
-    @property
-    def is_FiniteSet(self):
-        return False
-    @property
-    def is_Interval(self):
-        return False
-    @property
-    def is_ProductSet(self):
-        return False
-    @property
-    def is_Union(self):
         return False
 
 class ProductSet(Set):
@@ -267,6 +254,7 @@ class ProductSet(Set):
         - Passes most operations down to the argument sets
         - Flattens Products of ProductSets
     """
+    is_ProductSet = True
 
     def __new__(cls, *sets, **assumptions):
         def flatten(arg):
@@ -355,29 +343,21 @@ class ProductSet(Set):
             measure *= set.measure
         return measure
 
-    @property
-    def is_ProductSet(self):
-        return True
-
 class RealSet(Set, EvalfMixin):
     """
     A set of real values
     """
-    @property
-    def is_real(self):
-        return True
+    is_real = True
 
 class CountableSet(Set):
     """
     Represents a set of countable numbers such as {1, 2, 3, 4} or {1, 2, 3, ...}
     """
+    is_iterable = True
+
     @property
     def _measure(self):
         return 0
-
-    @property
-    def is_iterable(self):
-        return True
 
     def __iter__(self):
         raise NotImplementedError("Iteration not yet implemented")
@@ -413,6 +393,7 @@ class Interval(RealSet):
         - Use the evalf() method to turn an Interval into an mpmath
           'mpi' interval instance
     """
+    is_Interval = True
 
     def __new__(cls, start, end, left_open=False, right_open=False):
 
@@ -590,9 +571,6 @@ class Interval(RealSet):
         is_comparable &= other.end.is_comparable
 
         return is_comparable
-    @property
-    def is_Interval(self):
-        return True
 
     @property
     def is_left_unbounded(self):
@@ -648,9 +626,9 @@ class Union(Set):
         [1, 3]
 
     """
+    is_Union = True
 
     def __new__(cls, *args):
-
         # Flatten out Iterators and Unions to form one list of sets
         args = list(args)
         def flatten(arg):
@@ -810,9 +788,6 @@ class Union(Set):
     def is_iterable(self):
         return all(arg.is_iterable for arg in self.args)
 
-    @property
-    def is_Union(self):
-        return True
 
 class RealUnion(Union, RealSet):
     """
@@ -946,7 +921,6 @@ class EmptySet(Set):
         EmptySet()
 
     """
-
     __metaclass__ = Singleton
 
     def _intersect(self, other):
@@ -990,6 +964,8 @@ class FiniteSet(CountableSet):
         True
 
     """
+    is_FiniteSet = True
+
     def __new__(cls, *args):
         def flatten(arg):
             if is_flattenable(arg):
@@ -1050,9 +1026,7 @@ class FiniteSet(CountableSet):
         >>> Interval(1, 2) - FiniteSet(2, 3)
         [1, 2)
 
-
         """
-
         if other == S.EmptySet:
             return self
         if other.is_FiniteSet:
@@ -1097,10 +1071,6 @@ class FiniteSet(CountableSet):
         from sympy.core.relational import Eq
         from sympy.logic.boolalg import Or
         return Or(*[Eq(symbol, elem) for elem in self])
-
-    @property
-    def is_FiniteSet(self):
-        return True
 
     @property
     def is_real(self):
