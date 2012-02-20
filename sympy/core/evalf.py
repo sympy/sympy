@@ -136,10 +136,10 @@ def scaled_zero(mag, sign=1):
     >>> Float(ok)
     1.26765060022823e+30
     >>> Float(ok, p)
-    .0e+30
+    0.e+30
     >>> ok, p = scaled_zero(100, -1)
     >>> Float(scaled_zero(ok), p)
-    -.0e+30
+    -0.e+30
     """
     if type(mag) is tuple and len(mag) == 4 and iszero(mag, scaled=True):
         return (mag[0][0],) + mag[1:]
