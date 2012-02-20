@@ -539,18 +539,54 @@ class ExponentialPSpace(SingleContinuousPSpace):
         return {self.value: random.expovariate(self.rate)}
 
 def Exponential(rate, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with an Exponential distribution.
 
-    Returns a RandomSymbol.
+    The density of the exponential distribution is given by
+
+    .. math::
+        f(x) := \lambda \exp(-\lambda x)
+
+    with :math:`x > 0`.
+
+    Parameters
+    ==========
+
+    rate : Real number, `rate` > 0 the rate or inverse scale
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
-    >>> from sympy.stats import Exponential, Density, E, Std
+    >>> from sympy.stats import Exponential, Density, CDF, E, Var, Std, Skewness
     >>> from sympy import Symbol
 
-    >>> X = Exponential(rate=10, symbol=Symbol('x')) # Decay rate equals 10
+    >>> l = Symbol("lambda", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = Exponential(l, symbol=x)
+
+    >>> Density(X)
+    (x, lambda*exp(-lambda*x))
+
+    >>> CDF(X)
+    (_z, Piecewise((0, _z < 0), (1 - exp(-_z*lambda), True)))
+
+    >>> E(X)
+    1/lambda
+
+    >>> Var(X)
+    lambda**(-2)
+
+    >>> Skewness(X)
+    2
+
+    >>> X = Exponential(10, symbol=x)
+
     >>> Density(X)
     Lambda(_x, 10*exp(-10*_x))
 
@@ -559,6 +595,12 @@ def Exponential(rate, symbol=None):
 
     >>> Std(X)
     1/10
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Exponential_distribution
+    .. [2] http://mathworld.wolfram.com/ExponentialDistribution.html
     """
 
     return ExponentialPSpace(rate, symbol).value
