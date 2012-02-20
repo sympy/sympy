@@ -461,7 +461,7 @@ def Chi(k, symbol=None):
     return ChiPSpace(k, symbol).value
 
 #-------------------------------------------------------------------------------
-# Dagum distribution -----------------------------------------------------
+# Dagum distribution -----------------------------------------------------------
 
 class DagumPSpace(SingleContinuousPSpace):
     def __new__(cls, p, a, b, symbol = None):
@@ -472,16 +472,49 @@ class DagumPSpace(SingleContinuousPSpace):
         return obj
 
 def Dagum(p, a, b, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with a Dagum distribution.
 
-    Returns a RandomSymbol.
+    The density of the Dagum distribution is given by
+
+    .. math::
+        f(x) := \frac{a p}{x} \left( \frac{(\tfrac{x}{b})^{a p}}
+        {\left((\tfrac{x}{b})^a + 1 \right)^{p+1}} \right)
+
+    with :math:`x > 0`.
+
+    Parameters
+    ==========
+
+    p : Real number, `p` > 0 a shape
+    a : Real number, `a` > 0 a shape
+    b : Real number, `b` > 0 a scale
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
-    >>> from sympy.stats import Dagum, Density, E, Std
+    >>> from sympy.stats import Dagum, Density
     >>> from sympy import Symbol, simplify
+
+    >>> p = Symbol("p", positive=True)
+    >>> b = Symbol("b", positive=True)
+    >>> a = Symbol("a", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = Dagum(p, a, b, symbol=x)
+
+    >>> Density(X)
+    (x, a*p*(x/b)**(a*p)*((x/b)**a + 1)**(-p - 1)/x)
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Dagum_distribution
     """
 
     return DagumPSpace(p, a, b, symbol).value
