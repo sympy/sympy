@@ -1,11 +1,12 @@
-from basic import Basic
-from singleton import Singleton, S
-from evalf import EvalfMixin
-from numbers import Float
-from sympify import _sympify, sympify, SympifyError
-from sympy.mpmath import mpi, mpf
-from containers import Tuple
+from sympy.core.sympify import _sympify, sympify, SympifyError
+from sympy.core.basic import Basic
+from sympy.core.singleton import Singleton, S
+from sympy.core.evalf import EvalfMixin
+from sympy.core.numbers import Float
+from sympy.core.containers import Tuple
 
+from sympy.mpmath import mpi, mpf
+from sympy.assumptions import ask
 
 class Set(Basic):
     """
@@ -208,9 +209,10 @@ class Set(Basic):
         return self.complement
 
     def __contains__(self, other):
-        result = self.contains(other)
-        if not isinstance(result, bool):
-            raise TypeError('contains did not evaluate to a bool: %r' % result)
+        symb = self.contains(other)
+        result = ask(symb)
+        if result is None:
+            raise TypeError('contains did not evaluate to a bool: %r' % symb)
         return result
 
     @property
