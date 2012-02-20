@@ -115,20 +115,49 @@ class ArcsinPSpace(SingleContinuousPSpace):
         a, b = sympify(a), sympify(b)
         x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = 1/(pi*sqrt((x-a)*(b-x)))
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(a, b))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(a, b))
         return obj
 
 def Arcsin(a=0, b=1, symbol=None):
     """
-    Create a Continuous Random Variable with an Arcsin distribution.
+    Create a Continuous Random Variable with an arcsin distribution.
+
+    The density of the arcsin distribution is given by
+
+    .. math ::
+        \frac{1}{\pi\sqrt{(x-a)(b-x)}}
+
+    with :math:`x \in [a,b]`.
+
+    Parameters
+    ==========
+
+    a : Real number, the left interval boundary
+    b : Real number, the right interval boundary
+
+    It must hold that :math:`-\infty < a < b < \infty`.
 
     Returns a RandomSymbol.
 
     Examples
     ========
 
-    >>> from sympy.stats import Arcsin, Density, E, Std
+    >>> from sympy.stats import Arcsin, Density
     >>> from sympy import Symbol, simplify
+
+    >>> a = Symbol("a", real=True)
+    >>> b = Symbol("b", real=True)
+    >>> x = Symbol("x")
+
+    >>> X = Arcsin(a, b, symbol=x)
+
+    >>> Density(X)
+    (x, 1/(pi*sqrt((-a + x)*(b - x))))
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Arcsine_distribution
     """
 
     return ArcsinPSpace(a, b, symbol).value
