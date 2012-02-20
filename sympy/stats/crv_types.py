@@ -627,24 +627,56 @@ class GammaPSpace(SingleContinuousPSpace):
         return {self.value: random.gammavariate(self.k, self.theta)}
 
 def Gamma(k, theta, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with a Gamma distribution.
 
-    Returns a RandomSymbol.
+    The density of the Gamma distribution is given by
+
+    .. math::
+        f(x) := \frac{1}{\Gamma(k) \theta^k} x^{k - 1} e^{-\frac{x}{\theta}}
+
+    with :math:`x \in [0,1]`.
+
+    Parameters
+    ==========
+
+    k : Real number, `k` > 0 a shape
+    theta : Real number, `theta` > 0 a scale
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
-    >>> from sympy.stats import Gamma, Density, E, Std
-    >>> from sympy import symbols
-    >>> x, k, theta = symbols('x k theta', positive=True)
+    >>> from sympy.stats import Gamma, Density, CDF, E, Var
+    >>> from sympy import Symbol
+
+    >>> k = Symbol("k", positive=True)
+    >>> theta = Symbol("theta", positive=True)
+    >>> x = Symbol("x")
 
     >>> X = Gamma(k, theta, symbol=x)
+
     >>> Density(X)
     Lambda(_x, _x**(k - 1)*theta**(-k)*exp(-_x/theta)/gamma(k))
 
+    >>> CDF(X, meijerg=True)
+    (_z, Piecewise((0, _z < 0), (-k*lowergamma(k, 0)/gamma(k + 1) + k*lowergamma(k, _z/theta)/gamma(k + 1), True)))
+
     >>> E(X)
     theta*gamma(k + 1)/gamma(k)
+
+    >>> Var(X)
+    -theta**2*gamma(k + 1)**2/gamma(k)**2 + theta*theta**(-k)*theta**(k + 1)*gamma(k + 2)/gamma(k)
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Gamma_distribution
+    .. [2] http://mathworld.wolfram.com/GammaDistribution.html
     """
 
     return GammaPSpace(k, theta, symbol).value
@@ -661,16 +693,45 @@ class LaplacePSpace(SingleContinuousPSpace):
         return obj
 
 def Laplace(mu, b, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with a Laplace distribution.
 
-    Returns a RandomSymbol.
+    The density of the Laplace distribution is given by
+
+    .. math::
+        f(x) := \frac{1}{2 b} \exp \left(-\frac{|x-\mu|}b \right)
+
+    Parameters
+    ==========
+
+    mu : Real number, the location
+    b : Real number, `b` > 0 a scale
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
-    >>> from sympy.stats import Laplace, Density, E, Std
+    >>> from sympy.stats import Laplace, Density
     >>> from sympy import Symbol
+
+    >>> mu = Symbol("mu")
+    >>> b = Symbol("b", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = Laplace(mu, b, symbol=x)
+
+    >>> Density(X)
+    (x, exp(-Abs(-mu + x)/b)/(2*b))
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Laplace_distribution
+    .. [2] http://mathworld.wolfram.com/LaplaceDistribution.html
     """
 
     return LaplacePSpace(mu, b, symbol).value
