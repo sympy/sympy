@@ -7,6 +7,7 @@ from sympy.core.containers import Tuple
 
 from sympy.mpmath import mpi, mpf
 from sympy.assumptions import ask
+from sympy.logic.boolalg import And, Or
 
 class Set(Basic):
     """
@@ -292,7 +293,6 @@ class ProductSet(Set):
 
         if len(element) != len(self.args):
             return False
-        from sympy.logic.boolalg import And
         return And(*[set.contains(item) for set,item in zip(self.sets,element)])
 
     def _intersect(self, other):
@@ -537,7 +537,6 @@ class Interval(RealSet):
     def _contains(self, other):
         # We use the logic module here so that this method is meaningful
         # when used with symbolic end points.
-        from sympy.logic.boolalg import And
         try:
             other = _sympify(other)
         except SympifyError:
@@ -587,7 +586,6 @@ class Interval(RealSet):
     def as_relational(self, symbol):
         """Rewrite an interval in terms of inequalities and logic operators. """
         from sympy.core.relational import Lt, Le
-        from sympy.logic.boolalg import And
 
         if not self.is_left_unbounded:
             if self.left_open:
@@ -732,7 +730,6 @@ class Union(Set):
         return complement
 
     def _contains(self, other):
-        from sympy.logic.boolalg import Or
         or_args = [the_set.contains(other) for the_set in self.args]
         return Or(*or_args)
 
@@ -783,7 +780,6 @@ class Union(Set):
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators.
         """
-        from sympy.logic.boolalg import Or
         return Or(*[set.as_relational(symbol) for set in self.args])
 
     @property
@@ -1071,7 +1067,6 @@ class FiniteSet(CountableSet):
         """Rewrite a FiniteSet in terms of equalities and logic operators.
         """
         from sympy.core.relational import Eq
-        from sympy.logic.boolalg import Or
         return Or(*[Eq(symbol, elem) for elem in self])
 
     @property
@@ -1122,7 +1117,6 @@ class RealFiniteSet(FiniteSet, RealSet):
         """Rewrite a FiniteSet in terms of equalities and logic operators.
         """
         from sympy.core.relational import Eq
-        from sympy.logic.boolalg import Or
         return Or(*[Eq(symbol, elem) for elem in self])
 
 genclass = (1 for i in xrange(2)).__class__
