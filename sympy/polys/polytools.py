@@ -5969,7 +5969,7 @@ def poly(expr, *gens, **args):
                 else:
                     result = result.add(Poly._from_expr(term, opt))
 
-        return result.reorder(**args)
+        return result.reorder(*opt.get('gens', ()), **args)
 
     expr = sympify(expr)
 
