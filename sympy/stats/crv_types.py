@@ -417,16 +417,45 @@ class ChiPSpace(SingleContinuousPSpace):
         return obj
 
 def Chi(k, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with a Chi distribution.
 
-    Returns a RandomSymbol.
+    The density of the Chi distribution is given by
+
+    .. math::
+        f(x) := \frac{2^{1-k/2}x^{k-1}e^{-x^2/2}}{\Gamma(k/2)}
+
+    with :math:`x \geq 0`.
+
+    Parameters
+    ==========
+
+    k : Integer, `k` > 0 the number of degrees of freedom
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
     >>> from sympy.stats import Chi, Density, E, Std
     >>> from sympy import Symbol, simplify
+
+    >>> k = Symbol("k", integer=True)
+    >>> x = Symbol("x")
+
+    >>> X = Chi(k, symbol=x)
+
+    >>> Density(X)
+    (x, 2**(-k/2 + 1)*x**(k - 1)*exp(-x**2/2)/gamma(k/2))
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Chi_distribution
+    .. [2] http://mathworld.wolfram.com/ChiDistribution.html
     """
 
     return ChiPSpace(k, symbol).value
