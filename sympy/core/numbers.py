@@ -470,6 +470,10 @@ class Float(Number):
     def __new__(cls, num, prec=15):
         if isinstance(num, basestring):
             num = num.replace(' ', '')
+            if num.startswith('.') and len(num) > 1:
+                num = '0' + num
+            elif num.startswith('-.') and len(num) > 2:
+                num = '-0.' + num[2:]
         elif not num:
             return C.Zero()
         if prec == '':
