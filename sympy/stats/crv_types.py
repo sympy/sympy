@@ -119,15 +119,15 @@ class ArcsinPSpace(SingleContinuousPSpace):
         return obj
 
 def Arcsin(a=0, b=1, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with an arcsin distribution.
 
     The density of the arcsin distribution is given by
 
-    .. math ::
-        \frac{1}{\pi\sqrt{(x-a)(b-x)}}
+    .. math::
+        f(x) := \frac{1}{\pi\sqrt{(x-a)(b-x)}}
 
-    with :math:`x \in [a,b]`.
+    with :math:`x \in [a,b]`. It must hold that :math:`-\infty < a < b < \infty`.
 
     Parameters
     ==========
@@ -135,9 +135,10 @@ def Arcsin(a=0, b=1, symbol=None):
     a : Real number, the left interval boundary
     b : Real number, the right interval boundary
 
-    It must hold that :math:`-\infty < a < b < \infty`.
+    Returns
+    =======
 
-    Returns a RandomSymbol.
+    A `RandomSymbol` X.
 
     Examples
     ========
@@ -174,19 +175,31 @@ class BeniniPSpace(SingleContinuousPSpace):
         return obj
 
 def Benini(alpha, beta, sigma, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with a Benini distribution.
 
-    The probability distribution function depends on three parameters
-    `alpha`, `beta` and the shape `sigma` which are all positive real
-    values.
+    The density of the Benini distribution is given by
 
-    Returns a RandomSymbol.
+    .. math::
+        f(x) := e^{-\alpha\log{\frac{x}{\sigma}}-\beta\log\left[{\frac{x}{\sigma}}\right]^2}
+        \left(\frac{\alpha}{x}+\frac{2\beta\log{\frac{x}{\sigma}}}{x}\right)
+
+    Parameters
+    ==========
+
+    alpha : Real number, `alpha` > 0 a shape
+    beta : Real number, `beta` > 0 a shape
+    sigma : Real number, `sigma` > 0 a scale
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
-    >>> from sympy.stats import Benini, Density, E, Std
+    >>> from sympy.stats import Benini, Density
     >>> from sympy import Symbol, simplify
 
     >>> alpha = Symbol("alpha", positive=True)
@@ -198,6 +211,11 @@ def Benini(alpha, beta, sigma, symbol=None):
 
     >>> Density(X)
     (x, (alpha/x + 2*beta*log(x/sigma)/x)*exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2))
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Benini_distribution
     """
 
     return BeniniPSpace(alpha, beta, sigma, symbol).value
@@ -224,21 +242,53 @@ class BetaPSpace(SingleContinuousPSpace):
         return {self.value: random.betavariate(self.alpha, self.beta)}
 
 def Beta(alpha, beta, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with a Beta distribution.
 
-    Returns a RandomSymbol.
+    The density of the Beta distribution is given by
+
+    .. math::
+        f(x) := \frac{x^{\alpha-1}(1-x)^{\beta-1}} {\mathrm{B}(\alpha,\beta)}
+
+    with :math:`x \in [0,1]`.
+
+    Parameters
+    ==========
+
+    alpha : Real number, `alpha` > 0 a shape
+    beta : Real number, `beta` > 0 a shape
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
-    >>> from sympy.stats import Beta, Density, E, Std
-    >>> from sympy import symbols
-    >>> x, a, b = symbols('x a b', positive=True)
+    >>> from sympy.stats import Beta, Density, E, Var
+    >>> from sympy import Symbol, simplify
 
-    >>> X = Beta(a, b, symbol=x)
+    >>> alpha = Symbol("alpha", positive=True)
+    >>> beta = Symbol("beta", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = Beta(alpha, beta, symbol=x)
+
     >>> Density(X)
-    Lambda(_x, _x**(a - 1)*(-_x + 1)**(b - 1)*gamma(a + b)/(gamma(a)*gamma(b)))
+    Lambda(_x, _x**(alpha - 1)*(-_x + 1)**(beta - 1)*gamma(alpha + beta)/(gamma(alpha)*gamma(beta)))
+
+    >>> simplify(E(X, meijerg=True))
+    alpha/(alpha + beta)
+
+    >>> simplify(Var(X, meijerg=True))
+    alpha*beta/((alpha + beta)**2*(alpha + beta + 1))
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Beta_distribution
+    .. [2] http://mathworld.wolfram.com/BetaDistribution.html
     """
 
     return BetaPSpace(alpha, beta, symbol).value
@@ -255,19 +305,47 @@ class BetaPrimePSpace(SingleContinuousPSpace):
         return obj
 
 def BetaPrime(alpha, beta, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with a Beta prime distribution.
 
-    Returns a RandomSymbol.
+    The density of the Beta prime distribution is given by
+
+    .. math::
+        f(x) := \frac{x^{\alpha-1} (1+x)^{-\alpha -\beta}}{B(\alpha,\beta)}
+
+    with :math:`x > 0`.
+
+    Parameters
+    ==========
+
+    alpha : Real number, `alpha` > 0 a shape
+    beta : Real number, `beta` > 0 a shape
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
-    >>> from sympy.stats import BetaPrime, Density, E, Std
-    >>> from sympy import symbols
-    >>> x, a, b = symbols('x a b', positive=True)
+    >>> from sympy.stats import BetaPrime, Density
+    >>> from sympy import Symbol
 
-    >>> X = BetaPrime(a, b, symbol=x)
+    >>> alpha = Symbol("alpha", positive=True)
+    >>> beta = Symbol("beta", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = BetaPrime(alpha, beta, symbol=x)
+
+    >>> Density(X)
+    (x, x**(alpha - 1)*(x + 1)**(-alpha - beta)*gamma(alpha + beta)/(gamma(alpha)*gamma(beta)))
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Beta_prime_distribution
+    .. [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
     """
 
     return BetaPrimePSpace(alpha, beta, symbol).value
@@ -284,16 +362,45 @@ class CauchyPSpace(SingleContinuousPSpace):
         return obj
 
 def Cauchy(x0, gamma, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with a Cauchy distribution.
 
-    Returns a RandomSymbol.
+    The density of the Cauchy distribution is given by
+
+    .. math::
+        f(x) := \frac{1}{\pi} \arctan\left(\frac{x-x_0}{\gamma}\right)+\frac{1}{2}
+
+    Parameters
+    ==========
+
+    x0 : Real number, the location
+    gamma : Real number, `gamma` > 0 the scale
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
-    >>> from sympy.stats import Cauchy, Density, E, Std
-    >>> from sympy import Symbol, simplify
+    >>> from sympy.stats import Cauchy, Density
+    >>> from sympy import Symbol
+
+    >>> x0 = Symbol("x0")
+    >>> gamma = Symbol("gamma", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = Cauchy(x0, gamma, symbol=x)
+
+    >>> Density(X)
+    (x, 1/(pi*gamma*(1 + (x - x0)**2/gamma**2)))
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Cauchy_distribution
+    .. [2] http://mathworld.wolfram.com/CauchyDistribution.html
     """
 
     return CauchyPSpace(x0, gamma, symbol).value
