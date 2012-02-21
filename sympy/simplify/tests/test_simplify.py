@@ -9,7 +9,7 @@ from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
 
-from sympy.abc import x, y, z, t, a, b, c, d, e
+from sympy.abc import x, y, z, t, a, b, c, d, e, k
 
 def test_ratsimp():
     f, g = 1/x + 1/y, (x + y)/(x*y)
@@ -181,6 +181,14 @@ def test_simplify_other():
     assert simplify(Eq(sin(x)**2 + cos(x)**2, factorial(x)/gamma(x))) == Eq(1, x)
     nc = symbols('nc', commutative=False)
     assert simplify(x + x*nc) == x*(1 + nc)
+    # issue 3024
+    # f = exp(-I*(k*sqrt(t) + x/(2*sqrt(t)))**2)
+    # ans = integrate(f, (k, -oo, oo), conds='none')
+    ans = I*(-pi*x*exp(-3*I*pi/4 + I*x**2/(4*t))*erf(x*exp(-3*I*pi/4)/\
+        (2*sqrt(t)))/(2*sqrt(t)) + pi*x*exp(-3*I*pi/4 + I*x**2/(4*t))/\
+        (2*sqrt(t)))*exp(-I*x**2/(4*t))/(sqrt(pi)*x) - I*sqrt(pi)*\
+        (-erf(x*exp(I*pi/4)/(2*sqrt(t))) + 1)*exp(I*pi/4)/(2*sqrt(t))
+    assert simplify(ans) == -(-1)**(S(1)/4)*I*sqrt(pi)/sqrt(t)
 
 def test_simplify_ratio():
     # roots of x**3-3*x+5
