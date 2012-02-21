@@ -460,7 +460,7 @@ def E(expr, given=None, numsamples=None, **kwargs):
 
     # A few known statements for efficiency
     if expr.is_Add:
-        return Add(*[E(arg) for arg in expr.args]) # E is Linear
+        return Add(*[E(arg, **kwargs) for arg in expr.args]) # E is Linear
 
     # Otherwise case is simple, pass work off to the ProbabilitySpace
     return pspace(expr).integrate(expr, **kwargs)
