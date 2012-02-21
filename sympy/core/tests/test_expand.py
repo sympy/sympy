@@ -1,4 +1,4 @@
-from sympy import log, sqrt, Rational as R, Symbol
+from sympy import log, sqrt, Rational as R, Symbol, I, exp, pi, S, re, im
 
 from sympy.simplify.simplify import expand_numer, expand
 from sympy.utilities.pytest import raises
@@ -67,3 +67,8 @@ def test_expand_frac():
         y*(x + y)/(x**2 + x)
     eq = (x+1)**2/y
     assert expand_numer(eq, multinomial=False) == eq
+
+def test_issue_3022():
+    assert (-I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))).expand(complex=True
+    ) == -sqrt(2)/(8*pi**(S(3)/2)*sqrt(re(x) + I*im(x))) + \
+          sqrt(2)*I/(8*pi**(S(3)/2)*sqrt(re(x) + I*im(x)))
