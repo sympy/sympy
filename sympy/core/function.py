@@ -1971,7 +1971,6 @@ def nfloat(expr, n=15, exponent=False):
     x**4.0 + y**0.5
 
     """
-
     if iterable(expr, exclude=basestring):
         if isinstance(expr, (dict, Dict)):
             return type(expr)([(k, nfloat(v, n, exponent)) for k, v in

@@ -861,6 +861,9 @@ def test_float_handling():
     assert test(nfloat(x/3), x/3.0)
     assert test(nfloat(x**4 + 2*x + cos(S(1)/3) + 1),
             x**4 + 2.0*x + 1.94495694631474)
+    # don't call nfloat if there is no solution
+    tot = 100 + c + z + t
+    assert solve(((.7 + c)/tot - .6, (.2 + z)/tot - .3, t/tot - .1)) is None
 
 def test_check_assumptions():
     x = symbols('x', positive=1)
