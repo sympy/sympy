@@ -1,7 +1,7 @@
 from sympy.stats import (Normal, LogNormal, Exponential, P, E, Where, Density,
         Var, Covar, Skewness, Gamma, Pareto, Weibull, Beta, Uniform, Given, pspace, CDF, ContinuousRV, Sample)
 from sympy import (Symbol, exp, S, N, pi, simplify, Interval, erf, Eq, symbols,
-        sqrt, And, gamma, beta, Piecewise)
+        sqrt, And, gamma, beta, Piecewise, Integral)
 from sympy.utilities.pytest import raises
 
 oo = S.Infinity
@@ -255,3 +255,20 @@ def test_input_value_assertions():
         raises(ValueError, "%s(a, p)" % fn_name)
         raises(ValueError, "%s(p, a)" % fn_name)
         eval("%s(p, q)" % fn_name) # No error raised
+
+def test_unevaluated():
+    x = Symbol('x')
+    X = Normal(0,1, symbol=x)
+    assert E(X, evaluate=False) == \
+            Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo))
+
+    assert E(X+1, evaluate=False) == \
+            Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo)) + 1
+
+    assert P(X>0, evaluate=False).args == \
+            Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)), (x, 0, oo)).args
+
+    assert P(X>0, X**2<1, evaluate=False).args == \
+            Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)*
+            Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)),
+                (x, -1, 1))), (x, 0, 1)).args
