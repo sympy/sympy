@@ -239,15 +239,15 @@ class IntQubitState(QubitState):
         # that integer with the minimal number of bits.
         if len(args) == 1 and args[0] > 1:
             #rvalues is the minimum number of bits needed to express the number
-            rvalues = reversed(
-                range(int(math.ceil(math.log(args[0], 2)+.01)+.001))
-            )
+            rvalues = reversed(range(len(bin(abs(args[0]))) - 2))
             qubit_values = [(args[0]>>i)&1 for i in rvalues]
             return QubitState._eval_args(qubit_values)
         # For two numbers, the second number is the number of bits
         # on which it is expressed, so IntQubit(0,5) == |00000>.
         elif len(args) == 2 and args[1] > 1:
-            #TODO Raise error if there are not enough bits
+            need = len(bin(abs(args[0]))) - 2
+            if args[1] < need:
+                raise ValueError('cannot represent %s with %s bits' % (args[0], args[1]))
             qubit_values = [(args[0]>>i)&1 for i in reversed(range(args[1]))]
             return QubitState._eval_args(qubit_values)
         else:

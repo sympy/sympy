@@ -2663,6 +2663,10 @@ def test_poly():
     assert poly(1, x) == Poly(1, x)
     raises(GeneratorsNeeded, "poly(1)")
 
+    # issue 3085
+    assert poly(x + y, x, y) == Poly(x + y, x, y)
+    assert poly(x + y, y, x) == Poly(x + y, y, x)
+
 def test_keep_coeff():
     u = Mul(2, x + 1, evaluate=False)
     assert _keep_coeff(S(1), x) == x

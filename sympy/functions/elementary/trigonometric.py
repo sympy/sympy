@@ -4,6 +4,7 @@ from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
 from sympy.core.function import Function, ArgumentIndexError
 from miscellaneous import sqrt
+from exponential import log
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -85,23 +86,29 @@ def _pi_coeff(arg, cycles=1):
             c, x = cx.as_coeff_Mul() # pi is not included as coeff
             if c.is_Float:
                 # recast exact binary fractions to Rationals
-                m = int(c*2)
-                if Float(float(m)/2) == c:
-                    c = Rational(m, 2)
-            if x is not S.One or not (c.is_Rational and c.q != 1):
-                if x.is_integer:
-                    c2 = c % 2
-                    if c2 == 1:
-                        return x
-                    elif not c2:
-                        if x.is_even is not None: # known parity
-                            return S.Zero
-                        return 2*x
-                    else:
-                        return c2*x
-                return cx
-            else:
-                return Rational(c.p % (2*c.q), c.q)
+                f = abs(c) % 1
+                if f != 0:
+                    p = -round(log(f, 2).evalf())
+                    m = 2**p
+                    cm = c*m
+                    i = int(cm)
+                    if i == cm:
+                        c = Rational(i, m)
+                        cx = c*x
+                else:
+                    c = Rational(int(c))
+                    cx = c*x
+            if x.is_integer:
+                c2 = c % 2
+                if c2 == 1:
+                    return x
+                elif not c2:
+                    if x.is_even is not None: # known parity
+                        return S.Zero
+                    return 2*x
+                else:
+                    return c2*x
+            return cx
 
 class sin(TrigonometricFunction):
     """
@@ -214,6 +221,9 @@ class sin(TrigonometricFunction):
                     if P != p:
                         result = cls(C.Rational(P, q)*S.Pi)
                     else:
+                        newarg = pi_coeff*S.Pi
+                        if newarg != arg:
+                            return cls(newarg)
                         return None
 
             if Q % 2 == 1:
@@ -435,6 +445,9 @@ class cos(TrigonometricFunction):
                     if P != p:
                         result = cls(C.Rational(P, q)*S.Pi)
                     else:
+                        newarg = pi_coeff*S.Pi
+                        if newarg != arg:
+                            return cls(newarg)
                         return None
 
             if Q % 4 in (1, 2):
@@ -640,6 +653,11 @@ class tan(TrigonometricFunction):
                     if 2 * p > q:
                         return -cls(Rational(q - p, q)*S.Pi)
                     return cls(Rational(p, q)*S.Pi)
+                else:
+                    newarg = pi_coeff*S.Pi
+                    if newarg != arg:
+                        return cls(newarg)
+                    return None
 
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
@@ -819,6 +837,11 @@ class cot(TrigonometricFunction):
                     if 2 * p > q:
                         return -cls(Rational(q - p, q)*S.Pi)
                     return cls(Rational(p, q)*S.Pi)
+                else:
+                    newarg = pi_coeff*S.Pi
+                    if newarg != arg:
+                        return cls(newarg)
+                    return None
 
         if arg.is_Add:
             x, m = _peeloff_pi(arg)

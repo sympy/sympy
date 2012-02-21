@@ -537,7 +537,7 @@ def test_1st_homogeneous_coeff_ode_check2():
     (False, x*(-C1**2*sin(2*atan(x/C1)) + 2*C1*x - x**2*sin(2*atan(x/C1))))
     >>> z = _[1]
     >>> z.subs(zip((x,C1),(2,3))).n()
-    .0e-124
+    0.e-124
     >>> z.subs(zip((x,C1),(2,.3))).n()
     4.44089209850063e-16
     >>> z.subs(zip((x,C1),(12,.3))).n()
