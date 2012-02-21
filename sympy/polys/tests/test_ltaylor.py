@@ -1,5 +1,5 @@
 """Tests for taylor, computing series using lpoly"""
-from sympy.polys.ltaylor import taylor, polynomial_degree, poly_truncate, _is_monomial, _get_var_from_term, _factor_var
+from sympy.polys.ltaylor import taylor, series_reversion, polynomial_degree, poly_truncate, _is_monomial, _get_var_from_term, _factor_var
 from sympy.functions.elementary.trigonometric import (cos,sin,atan,acos,acot,tan, asin, cot, atan2)
 from sympy.functions.elementary.exponential import (exp,log,LambertW)
 from sympy.functions.elementary.hyperbolic import (asinh,acosh,acoth,sinh,cosh,tanh, atanh)
@@ -947,3 +947,12 @@ def test_issue2084():
     assert taylor((1+x)**2, x, n=6) == 1 + 2*x + x**2
     assert taylor((1 + 1/x)) == 1 + 1/x
     assert Derivative(taylor(exp(x)), x).doit() == 1 + x + x**2/2 + x**3/6 + x**4/24 + O(x**5)
+
+def test_series_reversion():
+    from sympy.abc import x, y, z
+    from sympy.series.order import O
+    p = taylor(sin(x), x, 0, 4)
+    assert series_reversion(p, [x, y]) == taylor(asin(y), y, 0, 4)
+    p = x + x**2/2 + x**2*y + x**3/3 + x**3*y + O(x**4)
+    p1 = series_reversion(p, [x, y, z])
+    assert p.removeO().subs(x,p1).series(z, 0, 4) == z + O(z**4)

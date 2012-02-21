@@ -3,7 +3,7 @@ using monomials instead of packed exponents for the monomials.
 """
 
 import sympy
-from sympy.polys.monomialtools import monomial_mul, monomial_div, monomial_min
+from sympy.polys.monomialtools import monomial_mul, monomial_div, monomial_min, lex
 from sympy.core import Add, Mul, Pow
 from sympy import S, Rational, sign
 from sympy.polys.domains import ZZ, QQ, PythonRationalType
@@ -114,10 +114,8 @@ class BaseLPoly(object):
     Examples
     ========
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.monomialtools import lex
     >>> from sympy.polys.lpoly import LPoly
-
-    >>> lp = LPoly('x, y', QQ, lex)
+    >>> lp = LPoly('x, y', QQ)
     >>> lp.zero_mon
     (0, 0)
     >>> x, y = lp.gens()
@@ -243,9 +241,8 @@ class BaseLPoly(object):
         where c_i are coefficients and m_i are monomials
 
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = lp('1/2 + 2/3*x**4 + 1/5*x*y**2')
         >>> p
         2/3*x**4 + 1/5*x*y**2 + 1/2
@@ -312,19 +309,45 @@ class BaseLPoly(object):
         p[expv] = c
         return p
 
+    def from_dict(self, d):
+        """
+        polynomial from a dictionary
+
+        Examples
+        ========
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.lpoly import lgens
+        >>> from sympy.abc import x, y
+        >>> p = (x + x*y + x**2*y + x**3*y**2).as_poly()
+        >>> d = p.as_dict()
+        >>> lp, X, Y = lgens('X, Y', QQ)
+        >>> lp.from_dict(d)
+        X**3*Y**2 + X**2*Y + X*Y + X
+        """
+        p = LPolyElement(self)
+        for k, v in d.iteritems():
+            if self.SR:
+                p[k] = v
+            elif isinstance(v, Rational):
+                v = QQ(v.p, v.q)
+            else:
+                raise TaylorEvalError
+            p[k] = v
+        p.strip_zero()
+        return p
+
 class LPoly(BaseLPoly):
     """class of polynomials on a ring with elements with one term
 
     Examples
     ========
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.monomialtools import lex
     >>> from sympy.polys.lpoly import lgens
-    >>> lp, x, y = lgens('x, y', QQ, lex)
+    >>> lp, x, y = lgens('x, y', QQ)
     >>> lp.__class__
     <class 'sympy.polys.lpoly.LPoly'>
     """
-    def __init__(self, pol_gens, ring, order, **kwds):
+    def __init__(self, pol_gens, ring, order=lex, **kwds):
         BaseLPoly.__init__(self, pol_gens, ring, order, **kwds)
         self.__name__ = 'LPoly'
 
@@ -337,11 +360,10 @@ class MLPoly(BaseLPoly):
 
     Examples
     ========
-    >>> from sympy.polys.monomialtools import lex
     >>> from sympy.polys.lpoly import lgens, MLPoly
     >>> from sympy.core import sympify
     >>> from sympy.functions.elementary.exponential import log
-    >>> lp, x, y = lgens('x, y', sympify, lex)
+    >>> lp, x, y = lgens('x, y', sympify)
     >>> p = (x + x*log(2) + y)**2
     >>> lp.__class__
      <class 'sympy.polys.lpoly.MLPoly'>
@@ -361,14 +383,13 @@ class NCLPoly(BaseLPoly):
         self.commuting = False
         self.__name__ = 'NCLPoly'
 
-def lgens(pol_gens, ring, order, **kwds):
+def lgens(pol_gens, ring, order=lex, **kwds):
     """
      factory function to generate LPoly object and its generators
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.monomialtools import lex
     >>> from sympy.polys.lpoly import lgens
-    >>> lp, x, y = lgens('x, y', QQ, lex)
+    >>> lp, x, y = lgens('x, y', QQ)
     >>> p = (x + y)**2
     >>> p
     x**2 + 2*x*y + y**2
@@ -382,14 +403,14 @@ def lgens(pol_gens, ring, order, **kwds):
         lp.__name__ = 'LPoly'
     return [lp] + lp.gens()
 
-def mlgens(pol_gens, ring, order, **kwds):
+def mlgens(pol_gens, ring, order=lex, **kwds):
     """
     factory function to generate MLPoly object and its generators
     """
     lp = MLPoly(pol_gens, ring, order, **kwds)
     return [lp] + lp.gens()
 
-def nclgens(pol_gens, ring, order, **kwds):
+def nclgens(pol_gens, ring, order=lex, **kwds):
     """
     factory function to generate NCLPoly object and its generators
     """
@@ -404,9 +425,8 @@ class LPolyElement(dict):
     elements of a multivariate polynomial ring
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.monomialtools import lex
     >>> from sympy.polys.lpoly import lgens, LPolyElement
-    >>> lp, x, y = lgens('x, y', QQ, lex)
+    >>> lp, x, y = lgens('x, y', QQ)
     >>> p = LPolyElement(lp)
     >>> p
     0
@@ -423,9 +443,8 @@ class LPolyElement(dict):
         Terms are in decreasing order; term coefficients are in front
 
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x**2/3 + 2*x*y**2/5
         >>> p
         1/3*x**2 + 2/5*x*y**2
@@ -438,7 +457,7 @@ class LPolyElement(dict):
         pol_gens = lp.pol_gens
         ngens = lp.ngens
         zm = self.lp.zero_mon
-        s = ''
+        s = []
         a = list(self.keys())
         a.sort(key=lambda m: lp.order(m), reverse=True)
         for expv in a:
@@ -464,6 +483,7 @@ class LPolyElement(dict):
                 sa = [cnt1] + sa
             s += '*'.join(sa)
         # remove leading ' + ', and correct ' - ' to '-'
+        s = ''.join(s)
         if s[:3] == " + ":
             s = s[3:]
         elif s[:3] == " - ":
@@ -521,9 +541,8 @@ class LPolyElement(dict):
         variables occurring in the polynomial p
 
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y, z = lgens('x, y, z', QQ, lex)
+        >>> lp, x, y, z = lgens('x, y, z', QQ)
         >>> p = x + y**2 + x*y
         >>> p.variables()
         (0, 1)
@@ -542,9 +561,8 @@ class LPolyElement(dict):
         equality test for polynomials
 
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p1 = (x + y)**2 + (x - y)**2
         >>> p2 = 4*x*y
         >>> p1 == p2
@@ -570,9 +588,8 @@ class LPolyElement(dict):
         """add two polynomials
 
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = (x + y)**2 + (x - y)**2
         >>> p
         2*x**2 + 2*y**2
@@ -583,7 +600,7 @@ class LPolyElement(dict):
         zm = lp1.zero_mon
         if isinstance(p2, LPolyElement):
             if lp1 == p2.lp:
-                p = LPolyElement(p1.lp)
+                p = LPolyElement(lp1)
                 for k, v in p1.iteritems():
                     if k in p2:
                         r = v + p2[k]
@@ -633,9 +650,8 @@ class LPolyElement(dict):
         can copy the polynomial
 
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = (x+y)**2
         >>> p1 = p.copy()
         >>> p2 = p
@@ -654,10 +670,11 @@ class LPolyElement(dict):
         self which have the same degrees as the variables present in p1,
         divided by p1
 
+        Examples
+        ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = (1 + x + y)**3
         >>> p1 = p.coefficient(y**2)
         >>> p1
@@ -683,9 +700,8 @@ class LPolyElement(dict):
         for j=0 it gives the terms independent from the variable x_i
 
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = (1 + x + y)**3
         >>> p.coefficient_t((0, 0))
         y**3 + 3*y**2 + 3*y + 1
@@ -710,9 +726,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = (1 + x + y)**3/5
         >>> p.coeff(y**2)
         3/5
@@ -752,9 +767,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x+x**2
         >>> p1 = p.series_reversion('x', 4, 'y')
         >>> p1
@@ -798,9 +812,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x**2 + y**2
         >>> p1 = p.subs(x=x+y, y=x-y)
         >>> p1
@@ -814,16 +827,41 @@ class LPolyElement(dict):
         """
         substitution with truncation
 
+          p     input polynomial
+          iv    (name of the) variable in which the series truncation is done
+          nv    order of the truncation
+          rules rules of substitution x=px, y=py, .. where x, y are
+                in p.lp.gens and px, py are the polynomials with which
+                they are substituted:
+                p = ... + c_{i,j}*x**i*y**j + ... ->
+                   .....+ c_{i,j}*px**i*py**j + ...
+
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x**2 + y**2
         >>> p2 = p.subs_trunc('x', 3, y=(x+y)**2)
         >>> p2
         6*x**2*y**2 + x**2 + 4*x*y**3 + y**4
+        >>> p.subs_trunc('x', 3, y=p.lp(1))
+        x**2 + 1
+
+        One can even substitute the series variable with a constant;
+        beware that this is operation has usually no meaning in a series
+        >>> p.subs_trunc('x', 3, x=p.lp(1))
+        y**2 + 1
+
+        Notice that substitutions are not done one after the other
+        >>> p.subs_trunc('x', 3, x=x+y, y=x+2*y)
+        2*x**2 + 6*x*y + 5*y**2
+        >>> (x+y)**2 + (x+2*y)**2
+        2*x**2 + 6*x*y + 5*y**2
+
+        which differs from
+        >>> p.subs_trunc('x', 3, x=x+y).subs_trunc('x', 3, y=x+2*y)
+        5*x**2 + 12*x*y + 8*y**2
         """
         lp = p.lp
         sb = LPolySubs(lp, lp, rules)
@@ -860,9 +898,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p1 = x + y**2
         >>> p2 = x**2
         >>> p3 = p1
@@ -911,9 +948,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p1 = x + y**2
         >>> p2 = x*y + y**2
         >>> p3 = p1 - p2
@@ -970,9 +1006,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x + y
         >>> p1 = 4 - p
         >>> p1
@@ -1027,9 +1062,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p1 = x + y
         >>> p2 = x - y
         >>> p3 = p1*p2
@@ -1071,9 +1105,8 @@ class LPolyElement(dict):
          p2 + p1 with p2 in the coefficient ring of p1
 
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x + y
         >>> p1 = 4 * p
         >>> p1
@@ -1098,9 +1131,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x**2
         >>> p1 = x + y
         >>> p2 = x - y
@@ -1131,9 +1163,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x + y**2
         >>> p1 = p.imul_num(3)
         >>> p1
@@ -1163,9 +1194,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p1 = (x**2 + x + y)*(x**2-y**2)
         >>> p2 = x + y
         >>> p3 = p1/p2
@@ -1209,10 +1239,9 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
         >>> from sympy.polys.lpoly import monomial_from_sequence
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x**4 + 2*y
         >>> m = monomial_from_sequence((1, 2))
         >>> p1 = p.iadd_mon((m, 5))
@@ -1249,10 +1278,9 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
         >>> from sympy.polys.lpoly import monomial_from_sequence
-        >>> lp, x, y, z = lgens('x, y, z', QQ, lex)
+        >>> lp, x, y, z = lgens('x, y, z', QQ)
         >>> p1 = x**4 + 2*y
         >>> p2 = y + z
         >>> m = monomial_from_sequence((1, 2, 3))
@@ -1277,9 +1305,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y, z = lgens('x, y, z', QQ, lex)
+        >>> lp, x, y, z = lgens('x, y, z', QQ)
         >>> p = x**4 + x**3*y + x**2*z**2 + z**7
         >>> p.leading_expv()
         (4, 0, 0)
@@ -1296,9 +1323,8 @@ class LPolyElement(dict):
         Examples
         ========
        >>> from sympy.polys.domains import QQ
-       >>> from sympy.polys.monomialtools import lex
        >>> from sympy.polys.lpoly import lgens
-       >>> lp, x, y = lgens('x, y', QQ, lex)
+       >>> lp, x, y = lgens('x, y', QQ)
        >>> p = (x+y)**4
        >>> p1 = p.leading_term()
        >>> p1
@@ -1327,9 +1353,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x + y**2
         >>> p1 = p.square()
         >>> p1
@@ -1371,9 +1396,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x = lgens('x', QQ, lex)
+        >>> lp, x = lgens('x', QQ)
         >>> p1 = (1 + x + x**2)**5
         >>> p2 = (1 + x + x**2).pow_miller(5)
         >>> p1 == p2
@@ -1411,9 +1435,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x + y**2
         >>> p1 = p**3
         >>> p1
@@ -1474,9 +1497,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> f = x**3
         >>> f0 = x-y**2
         >>> f1 = x-y
@@ -1527,9 +1549,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = (x+y)**4
         >>> p1 = p.trunc('x', 3)
         >>> p1
@@ -1555,9 +1576,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p1 = (x + y)**2
         >>> p2 = p1.mul_trunc(x**2, 'x', 3)
         >>> p2
@@ -1602,9 +1622,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p1 = (x + y)**2
         >>> p2 = p1.square_trunc('x', 3)
         >>> p2
@@ -1645,9 +1664,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p1 = 1 + x + y
         >>> p2 = p1.pow_trunc(3, 'y', 2)
         >>> p2
@@ -1781,16 +1799,15 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
         >>> from sympy.core import sympify
         >>> from sympy import Symbol
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = (1 + y*x).series_inversion('x', 6)
         >>> p
         -x**5*y**5 + x**4*y**4 - x**3*y**3 + x**2*y**2 - x*y + 1
         >>> a = Symbol('a')
-        >>> lp, x = lgens('x', sympify, lex)
+        >>> lp, x = lgens('x', sympify)
         >>> p1 = (1 + a + x).series_inversion('x', 3)
         >>> p1
         ((a + 1)**(-3))*x**2 + (-1/(a + 1)**2)*x + (1/(a + 1))
@@ -1813,9 +1830,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x + x**2*y**3
         >>> p1 = p.derivative('x')
         >>> p1
@@ -1843,9 +1859,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x + x**2*y**3
         >>> p1 = p.integrate('x')
         >>> p1
@@ -1876,9 +1891,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> c = [1, 3, 5, 7]
         >>> p1 = (x+y).series_from_list(c, 'x', 3)
         >>> p2 = (1 + 3*(x+y) + 5*(x+y)**2 + 7*(x+y)**3).trunc('x', 3)
@@ -1965,9 +1979,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x + x*y + x**2*y + x**3*y**2
         >>> p.fun('_tan1', 'x', 4)
         1/3*x**3*y**3 + 2*x**3*y**2 + x**3*y + 1/3*x**3 + x**2*y + x*y + x
@@ -2051,9 +2064,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = (1 + x + x*y).sqrt('x', 3)
         >>> p
         -1/8*x**2*y**2 - 1/4*x**2*y - 1/8*x**2 + 1/2*x*y + 1/2*x + 1
@@ -2080,9 +2092,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x, y = lgens('x, y', QQ, lex)
+        >>> lp, x, y = lgens('x, y', QQ)
         >>> p = (1 + x + x*y).nth_root(-3, 'x', 3)
         >>> p
         2/9*x**2*y**2 + 4/9*x**2*y + 2/9*x**2 - 1/3*x*y - 1/3*x + 1
@@ -2125,9 +2136,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x = lgens('x', QQ, lex)
+        >>> lp, x = lgens('x', QQ)
         >>> p = x.re_acoth('x', 8)
         >>> p
         1/7*x**7 + 1/5*x**5 + 1/3*x**3 + x
@@ -2191,9 +2201,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x = lgens('x', QQ, lex)
+        >>> lp, x = lgens('x', QQ)
         >>> p = (1 + x).log('x', 8)
         >>> p
         1/7*x**7 - 1/6*x**6 + 1/5*x**5 - 1/4*x**4 + 1/3*x**3 - 1/2*x**2 + x
@@ -2236,9 +2245,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x = lgens('x', QQ, lex)
+        >>> lp, x = lgens('x', QQ)
         >>> p = x.atan('x', 8)
         >>> p
         -1/7*x**7 + 1/5*x**5 - 1/3*x**3 + x
@@ -2262,9 +2270,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x = lgens('x', QQ, lex)
+        >>> lp, x = lgens('x', QQ)
         >>> p = x.lambert('x', 8)
         >>> p
         16807/720*x**7 - 54/5*x**6 + 125/24*x**5 - 8/3*x**4 + 3/2*x**3 - x**2 + x
@@ -2292,9 +2299,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x = lgens('x', QQ, lex)
+        >>> lp, x = lgens('x', QQ)
         >>> p = x.asin('x', 8)
         >>> p
         5/112*x**7 + 3/40*x**5 + 1/6*x**3 + x
@@ -2328,9 +2334,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x = lgens('x', QQ, lex)
+        >>> lp, x = lgens('x', QQ)
         >>> p = x.asinh('x', 8)
         >>> p
         -5/112*x**7 + 3/40*x**5 - 1/6*x**3 + x
@@ -2364,9 +2369,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x = lgens('x', QQ, lex)
+        >>> lp, x = lgens('x', QQ)
         >>> p = x.atanh('x', 8)
         >>> p
         1/7*x**7 + 1/5*x**5 + 1/3*x**3 + x
@@ -2398,9 +2402,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x = lgens('x', QQ, lex)
+        >>> lp, x = lgens('x', QQ)
         >>> p = x.tanh('x', 8)
         >>> p
         -17/315*x**7 + 2/15*x**5 - 1/3*x**3 + x
@@ -2427,9 +2430,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x = lgens('x', QQ, lex)
+        >>> lp, x = lgens('x', QQ)
         >>> p = x.tan('x', 8)
         >>> p
         17/315*x**7 + 2/15*x**5 + 1/3*x**3 + x
@@ -2462,9 +2464,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x = lgens('x', QQ, lex)
+        >>> lp, x = lgens('x', QQ)
         >>> p = x.exp('x', 6)
         >>> p
         1/120*x**5 + 1/24*x**4 + 1/6*x**3 + 1/2*x**2 + x + 1
@@ -2495,9 +2496,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x = lgens('x', QQ, lex)
+        >>> lp, x = lgens('x', QQ)
         >>> p = x.sin('x', 6)
         >>> p
         1/120*x**5 - 1/6*x**3 + x
@@ -2533,9 +2533,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x = lgens('x', QQ, lex)
+        >>> lp, x = lgens('x', QQ)
         >>> p = x.cos('x', 6)
         >>> p
         1/24*x**4 - 1/2*x**2 + 1
@@ -2582,9 +2581,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x = lgens('x', QQ, lex)
+        >>> lp, x = lgens('x', QQ)
         >>> p = x.sinh('x', 8)
         >>> p
         1/5040*x**7 + 1/120*x**5 + 1/6*x**3 + x
@@ -2599,9 +2597,8 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
-        >>> lp, x = lgens('x', QQ, lex)
+        >>> lp, x = lgens('x', QQ)
         >>> p = x.cosh('x', 8)
         >>> p
         1/720*x**6 + 1/24*x**4 + 1/2*x**2 + 1
@@ -2636,10 +2633,9 @@ class LPolyElement(dict):
         Examples
         ========
         >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
         >>> from sympy import Symbol
-        >>> lp, X = lgens('X', QQ, lex)
+        >>> lp, X = lgens('X', QQ)
         >>> x = Symbol('x')
         >>> p = (1 + X)**3
         >>> p
@@ -2671,10 +2667,9 @@ class LPolySubs(object):
     Examples
     ========
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.monomialtools import lex
     >>> from sympy.polys.lpoly import lgens
     >>> from sympy.polys.lpoly import LPolySubs
-    >>> lp, x, y = lgens('x, y', QQ, lex)
+    >>> lp, x, y = lgens('x, y', QQ)
     >>> sb = LPolySubs(lp, lp, {'y':y+1})
     >>> p1 = sb.subs((x + y)**2)
     >>> p1
@@ -2684,6 +2679,21 @@ class LPolySubs(object):
     4*x*y**3 + 12*x*y**2 + 12*x*y + 4*x + y**4 + 4*y**3 + 6*y**2 + 4*y + 1
     """
     def __init__(self, lp1, lp2, rules):
+        """
+        initialize a substitution object
+
+        lp1, lp2 LPoly objects
+
+        rules    rules of substitution x=px, y=py, .. where x, y are
+                 in p.lp.gens and px, py are the polynomials with which
+                 they are substituted:
+                 p = ... + c_{i,j}*x**i*y**j + ... ->
+                    .....+ c_{i,j}*px**i*py**j + ...
+
+        TODO currently it must be lp1.ring == lp2.ring
+             Implement substitutions between different polynomial rings,
+             e.g. mpq and mpf
+        """
         self.lp1 = lp1
         gens_dict = lp1.gens_dict
         self.lp2 = lp2
@@ -2723,8 +2733,11 @@ class LPolySubs(object):
         return p1
 
     def subs_trunc(self, p, ii, h):
-        """substitution with truncation of variable(s) corresponding
-        to ii and truncation order(s) h
+        """substitution with truncation in variable ii with precision h
+
+          p     input polynomial
+          iv    (name of the) variable in which the series truncation is done
+          nv    order of the truncation
         """
         lp1 = self.lp1
         lp2 = self.lp2
