@@ -3,7 +3,7 @@ from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
 )
 
 from sympy.utilities.pytest import raises, XFAIL
-from sympy.core.compatibility import SymPyDeprecationWarning
+from sympy.core.exceptions import SymPyDeprecationWarning
 
 def test_Symbol():
     a = Symbol("a")

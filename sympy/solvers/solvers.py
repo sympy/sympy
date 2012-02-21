@@ -12,8 +12,8 @@ This module contain solvers for all kinds of equations:
 
 """
 
-from sympy.core.compatibility import iterable, is_sequence, \
-    SymPyDeprecationWarning
+from sympy.core.compatibility import iterable, is_sequence
+from sympy.core.exceptions import SymPyDeprecationWarning
 from sympy.core.sympify import sympify
 from sympy.core import C, S, Add, Symbol, Wild, Equality, Dummy, Basic, Expr
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,

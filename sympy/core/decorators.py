@@ -7,7 +7,7 @@ dependencies, so that they can be easily imported anywhere in sympy/core.
 
 from functools import wraps
 from sympify import SympifyError, sympify
-from sympy.core.compatibility import SymPyDeprecationWarning
+from sympy.core.exceptions import SymPyDeprecationWarning
 import warnings
 
 def deprecated(func):
