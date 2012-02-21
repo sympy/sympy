@@ -189,6 +189,7 @@ class ContinuousPSpace(PSpace):
         return z, cdf
 
     def P(self, condition, **kwargs):
+        evaluate = kwargs.get("evaluate", True)
         # Univariate case can be handled by where
         try:
             domain = self.where(condition)
@@ -196,7 +197,10 @@ class ContinuousPSpace(PSpace):
             # Integrate out all other random variables
             z, pdf = self.compute_density(rv, **kwargs)
             # Integrate out this last variable over the special domain
-            return integrate(pdf, (z, domain.set), **kwargs)
+            if evaluate:
+                return integrate(pdf, (z, domain.set), **kwargs)
+            else:
+                return Integral(pdf, (z, domain.set), **kwargs)
         # Other cases can be turned into univariate case
         # by computing a density handled by density computation
         except NotImplementedError:
