@@ -47,13 +47,13 @@ def test_evalf_complex():
 
 @XFAIL
 def test_evalf_complex_bug():
-    assert NS('(pi+E*I)*(E+pi*I)',15) in ('.0e-15 + 17.25866050002*I', '.0e-17 + 17.25866050002*I', '-.0e-17 + 17.25866050002*I')
+    assert NS('(pi+E*I)*(E+pi*I)',15) in ('0.e-15 + 17.25866050002*I', '0.e-17 + 17.25866050002*I', '-0.e-17 + 17.25866050002*I')
 
 def test_evalf_complex_powers():
     assert NS('(E+pi*I)**100000000000000000') == \
         '-3.58896782867793e+61850354284995199 + 4.58581754997159e+61850354284995199*I'
     # XXX: rewrite if a+a*I simplification introduced in sympy
-    #assert NS('(pi + pi*I)**2') in ('.0e-15 + 19.7392088021787*I', '.0e-16 + 19.7392088021787*I')
+    #assert NS('(pi + pi*I)**2') in ('0.e-15 + 19.7392088021787*I', '0.e-16 + 19.7392088021787*I')
     assert NS('(pi + pi*I)**2', chop=True) == '19.7392088021787*I'
     assert NS('(pi + 1/10**8 + pi*I)**2') == '6.2831853e-8 + 19.7392088650106*I'
     assert NS('(pi + 1/10**12 + pi*I)**2') == '6.283e-12 + 19.7392088021850*I'
@@ -64,7 +64,7 @@ def test_evalf_complex_powers():
 
 @XFAIL
 def test_evalf_complex_powers_bug():
-    assert NS('(pi + pi*I)**4') == '-389.63636413601 + .0e-14*I'
+    assert NS('(pi + pi*I)**4') == '-389.63636413601 + 0.e-14*I'
 
 def test_evalf_exponentiation():
     assert NS(sqrt(-pi)) == '1.77245385090552*I'
@@ -94,7 +94,7 @@ def test_evalf_complex_cancellation():
     # 8925286452L
     assert NS((A+B*I)*(C+D*I), 6) == '6.44710e-6 + 0.892529*I'
     assert NS((A+B*I)*(C+D*I), 10) == '6.447100000e-6 + 0.8925286452*I'
-    assert NS((A+B*I)*(C+D*I) - F*I, 5) in ('6.4471e-6 + .0e-14*I', '6.4471e-6 - .0e-14*I')
+    assert NS((A+B*I)*(C+D*I) - F*I, 5) in ('6.4471e-6 + 0.e-14*I', '6.4471e-6 - 0.e-14*I')
 
 def test_evalf_logs():
     assert NS("log(3+pi*I)", 15) == '1.46877619736226 + 0.808448792630022*I'
@@ -262,7 +262,7 @@ def test_issue_1857_2105():
     27*2**(2/3)*3**(1/3)*sqrt(31)*I)/(-2511*2**(2/3)*3**(1/3) +
     (29*18**(1/3) + 9*2**(1/3)*3**(2/3)*sqrt(31)*I +
     87*2**(1/3)*3**(1/6)*I)**2)''')
-    assert NS(v, 1) == '.0e-118 - .0e-118*I'
+    assert NS(v, 1) == '0.e-118 - 0.e-118*I'
 
     # 2105
     v = S('''-(357587765856 + 18873261792*249**(1/2) + 56619785376*I*83**(1/2) +
@@ -304,3 +304,7 @@ def test_scaled_zero():
     raises(ValueError, 'scaled_zero(100, 2)')
     raises(ValueError, 'scaled_zero(100, 0)')
     raises(ValueError, 'scaled_zero((1, 5, 1, 3))')
+
+def test_chop_value():
+    for i in range(-27, 28):
+        assert (Pow(10, i)*2).n(chop=10**i) and not (Pow(10, i)).n(chop=10**i)

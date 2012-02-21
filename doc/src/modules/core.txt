@@ -75,12 +75,12 @@ expr
    >>> sin(picklepi)
    sin(pi)
    >>> sin(picklepi).evalf()
-   .0e-184
+   0.e-184
 
    >>> pi - picklepi
    -pi + pi
    >>> (pi - picklepi).evalf()
-   -.0e-124
+   -0.e-124
 
    >>> pi is picklepi
    False

@@ -455,7 +455,7 @@ values for expressions:
     better:
 
     >>> big_trig_identity.n(2, {x: 0.1})
-    -.0e-91
+    -0.e-91
 
     2) Use Rationals, not Floats. During the evaluation process, the
     Rational can be computed to an arbitrary precision while the Float,
@@ -465,7 +465,7 @@ values for expressions:
     to evaluate:
 
     >>> big_trig_identity.subs(x, S('1/10')).n(2)
-    .0e-91
+    0.e-91
 
     3) Try to simplify the expression. In this case, SymPy will recognize
     the trig identity and simplify it to zero so you don't even have to
