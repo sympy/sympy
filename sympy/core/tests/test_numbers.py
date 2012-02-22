@@ -574,7 +574,8 @@ def test_NaN():
     assert nan*S.One == nan
     assert nan + S.One == nan
     assert nan/S.One == nan
-    assert nan**0 == nan
+    assert nan**0 == 1 # as per IEEE 754
+    assert 1**nan == 1 # as per IEEE 754
 
 def test_special_numbers():
     assert isinstance(S.NaN, Number) == True
@@ -641,7 +642,7 @@ def test_powers_Integer():
     assert S(0) ** S.Infinity == 0
 
     # check Nan
-    assert S(1)  ** S.NaN == S.NaN
+    assert S(1)  ** S.NaN == S.One
     assert S(-1) ** S.NaN == S.NaN
 
     # check for exact roots
