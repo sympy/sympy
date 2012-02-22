@@ -142,7 +142,7 @@ class Set(Basic):
         True
 
         """
-        return self._contains(other)
+        return self._contains(sympify(other, strict=True))
 
     def _contains(self, other):
         raise NotImplementedError("(%s)._contains(%s)" % (self, other))
@@ -293,7 +293,7 @@ class ProductSet(Set):
 
         if len(element) != len(self.args):
             return False
-        return And(*[set.contains(item) for set,item in zip(self.sets,element)])
+        return And(*[set.contains(item) for set, item in zip(self.sets, element)])
 
     def _intersect(self, other):
         if other.is_Union:
@@ -535,13 +535,6 @@ class Interval(RealSet):
         return Union(a, b)
 
     def _contains(self, other):
-        # We use the logic module here so that this method is meaningful
-        # when used with symbolic end points.
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return False
-
         if self.left_open:
             expr = other > self.start
         else:
@@ -1042,7 +1035,7 @@ class FiniteSet(CountableSet):
         False
 
         """
-        return sympify(other) in self.elements
+        return other in self.elements
 
     @property
     def _inf(self):
