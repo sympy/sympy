@@ -122,10 +122,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     if strict:
         raise SympifyError(a)
 
-    if isinstance(a, tuple):
-        from containers import Tuple
-        return Tuple(*[sympify(x, locals=locals, convert_xor=convert_xor,
-            rational=rational) for x in a])
     if iterable(a):
         try:
             return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,

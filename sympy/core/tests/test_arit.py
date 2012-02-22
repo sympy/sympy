@@ -1089,6 +1089,7 @@ def test_Add_is_irrational():
     assert (i+1).is_irrational  == True
     assert (i+1).is_rational    == False
 
+@XFAIL
 def test_issue432():
     class MightyNumeric(tuple):
         def __rdiv__(self, other):

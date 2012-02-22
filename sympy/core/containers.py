@@ -6,8 +6,8 @@
     They are supposed to work seamlessly within the SymPy framework.
 """
 
-from basic import Basic
-from sympify import sympify
+from sympy.core.basic import Basic
+from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
 
 class Tuple(Basic):
@@ -82,6 +82,8 @@ class Tuple(Basic):
 
     def __lt__(self, other):
         return self.args < other.args
+
+converter[tuple] = lambda tup: Tuple(*tup)
 
 def tuple_wrapper(method):
     """
