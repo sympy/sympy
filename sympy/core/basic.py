@@ -741,7 +741,7 @@ class Basic(PicklableWithSlots):
         """
         return S.One, self
 
-    def subs(self, *args):
+    def subs(self, *args, **kwargs):
         """
         Substitutes old for new in an expression after sympifying args.
 
@@ -784,7 +784,8 @@ class Basic(PicklableWithSlots):
 
         When unordered iterables are given they are sorted so a canonical result
         is obtained, by count_op length and then by number of arguments to break
-        any ties. All other iterables are unsorted.
+        any ties. All other iterables are unsorted. A ValueError will be raised
+        if the substitution appears ambiguous unless flag ``warn=False``.
 
         >>> from sympy import sqrt, sin, cos, exp
         >>> from sympy.abc import a, b, c, d, e
@@ -797,12 +798,15 @@ class Basic(PicklableWithSlots):
 
         >>> expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
 
-        >>> expr.subs(dict([A,B,C,D,E]))
+        >>> expr.subs(dict([A,B,C,D,E]), warn=False)
         a*c*sin(d*e) + b
 
         """
+        from sympy.core.expr import Expr
         from sympy.core.containers import Dict
         from sympy.utilities import default_sort_key, sift
+        from sympy.core.function import Function, Derivative
+        from sympy.core.symbol import Symbol
 
         unordered = False
         if len(args) == 1:
@@ -830,8 +834,38 @@ class Basic(PicklableWithSlots):
                 if type(o) is str:
                     so = C.Symbol(o)
             sequence[i] = (so, sn)
+            if _aresame(so, sn):
+                sequence[i] = None
+                continue
+        sequence = filter(None, sequence)
+
         if unordered:
             sequence = dict(sequence)
+            def ambiguous(rules_dict):
+                """Return True if it appears that there could be ambiguity
+                in the substitution as a result of overlapping keys and
+                values."""
+                val = set()
+                key = set()
+                for k, v in rules_dict.iteritems():
+                    kfree = _atomic(k)
+                    # if x and cos(x) are keys, the result depends on
+                    # which one gets replaced first
+                    if any(ki in key for ki in kfree):
+                        return True
+                    # if any other substitution could introduce the key
+                    # then the order will matter
+                    if any(ki in val for ki in kfree):
+                        return True
+                    # if this substitution will introduce anything that
+                    # has already been targeted before then its order matters
+                    vfree = _atomic(v)
+                    if any(vi in key for vi in vfree):
+                        return True
+                    val.update(vfree)
+                    key.update(kfree)
+            if kwargs.pop('warn', True) and ambiguous(sequence):
+                raise ValueError('ambiguous unordered sequence %s; send items in a list' % sequence)
             d = sift(sequence.iteritems(), lambda i: (i[0].count_ops(), len(i[0].args)))
             newseq = []
             for k in sorted(d.keys(), reverse=True):
@@ -841,8 +875,6 @@ class Basic(PicklableWithSlots):
 
         rv = self
         for old, new in sequence:
-            if _aresame(old, new):
-                continue
             rv = rv._subs(old, new)
             if not isinstance(rv, Basic):
                 break
@@ -1513,3 +1545,44 @@ def _aresame(a, b):
             continue
         return False
     return True
+
+def _atomic(e):
+    """Return atom-like quantities as far as substitution is
+    concerned: Derivatives, Functions and Symbols. Don't
+    return any 'atoms' that are inside such quantities unless
+    they also appear outside, too.
+
+    Examples
+    ========
+    >>> from sympy import Derivative, Function, cos
+    >>> from sympy.abc import x, y
+    >>> from sympy.core.basic import _atomic
+    >>> f = Function('f')
+    >>> _atomic(x + y)
+    set([x, y])
+    >>> _atomic(x + f(y))
+    set([x, f(y)])
+    >>> _atomic(Derivative(f(x), x) + cos(x) + y)
+    set([y, cos(x), Derivative(f(x), x)])
+
+    """
+    from sympy import Derivative, Function, Symbol
+    from sympy.utilities.iterables import preorder_traversal
+    pot = preorder_traversal(e)
+    seen = set()
+    try:
+        free = e.free_symbols
+    except AttributeError:
+        return set([e])
+    atoms = set()
+    for p in pot:
+        if p in seen:
+            pot.skip()
+            continue
+        seen.add(p)
+        if isinstance(p, Symbol) and p in free:
+            atoms.add(p)
+        elif isinstance(p, (Derivative, Function)):
+            pot.skip()
+            atoms.add(p)
+    return atoms
