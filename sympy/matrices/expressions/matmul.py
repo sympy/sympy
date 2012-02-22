@@ -1,5 +1,5 @@
 from matexpr import MatrixExpr, ShapeError, matrixify, Identity, ZeroMatrix
-from sympy.core import Mul
+from sympy.core import Mul, Add, Basic
 
 class MatMul(MatrixExpr, Mul):
     """A Product of Matrix Expressions
@@ -21,17 +21,18 @@ class MatMul(MatrixExpr, Mul):
 
         for i in range(len(matrices)-1):
             A,B = matrices[i:i+2]
-            if A.m != B.n:
+            if A.cols != B.rows:
                 raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
         if any(arg.is_zero for arg in args):
-            return ZeroMatrix(matrices[0].n, matrices[-1].m)
+            return ZeroMatrix(matrices[0].rows, matrices[-1].cols)
 
         expr = matrixify(Mul.__new__(cls, *args))
         if expr.is_Add:
             return MatAdd(*expr.args)
         if expr.is_Pow:
-            return MatPow(*expr.args)
+            assert expr.exp.is_Integer
+            expr = Basic.__new__(MatMul, *[expr.base for i in range(expr.exp)])
         if not expr.is_Mul:
             return expr
 
@@ -44,7 +45,7 @@ class MatMul(MatrixExpr, Mul):
         if any(M.is_Identity for M in mats): # Any identities around?
             newmats = [M for M in mats if not M.is_Identity] # clear out
             if len(newmats)==0: # Did we lose everything?
-                newmats = [Identity(expr.n)] # put just one back in
+                newmats = [Identity(expr.rows)] # put just one back in
 
             if mats != newmats: # Removed some I's but not everything?
                 return MatMul(*(nonmats+newmats)) # Repeat with simpler expr
@@ -54,8 +55,34 @@ class MatMul(MatrixExpr, Mul):
     @property
     def shape(self):
         matrices = [arg for arg in self.args if arg.is_Matrix]
-        return (matrices[0].n, matrices[-1].m)
+        return (matrices[0].rows, matrices[-1].cols)
+
+    def _entry(self, i, j):
+        coeff, matmul = self.as_coeff_mmul()
+        if not matmul.is_Mul: # situation like 2*X, matmul is just X
+            return coeff * matmul[i,j]
+
+        head, tail = matmul.args[0], matmul.args[1:]
+        assert len(tail) != 0
+
+        X = head
+        Y = MatMul(*tail)
+
+        if X.shape[1].is_Number:
+            # Numeric shape like (3,5)
+            return coeff*Add(*[X[i,k]*Y[k,j] for k in range(X.shape[1])])
+        else:
+            # Symbolic shape like (n, m)
+            from sympy import Dummy, summation
+            k = Dummy('k', integer=True)
+            return summation(coeff*X[i,k]*Y[k,j], (k, 0, X.cols-1))
+
+    def as_coeff_mmul(self):
+        scalars = [x for x in self.args if not x.is_Matrix]
+        matrices = [x for x in self.args if x.is_Matrix]
+        coeff = Mul(*scalars)
+
+        return coeff, MatMul(*matrices)
 
 from matadd import MatAdd
-from matpow import MatPow
 from inverse import Inverse

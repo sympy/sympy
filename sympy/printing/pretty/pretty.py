@@ -520,17 +520,7 @@ class PrettyPrinter(Printer):
 
         return Lim
 
-    # Matrix is special:
-    #
-    # it can exist in SymPy in two forms:
-    # - as Matrix
-    # - as _MatrixAsBasic
-    #
-    # see _MatrixAsBasic docstring, and #420
-    def _print__MatrixAsBasic(self, e):
-        return self._print_Matrix(e.m)
-
-    def _print_Matrix(self, e):
+    def _print_MatrixBase(self, e):
         M = e   # matrix
         Ms = {}  # i,j -> pretty(M[i,j])
         for i in range(M.rows):
@@ -597,6 +587,8 @@ class PrettyPrinter(Printer):
 
         D = prettyForm(*D.parens('[',']'))
         return D
+    _print_ImmutableMatrix = _print_MatrixBase
+    _print_MutableMatrix = _print_MatrixBase
 
     def _print_Transpose(self, T):
         pform = self._print(T.arg)

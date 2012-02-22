@@ -74,7 +74,8 @@ class RayTransferMatrix(Matrix):
     [1] http://en.wikipedia.org/wiki/Ray_transfer_matrix_analysis
     """
 
-    def __init__(self, *args):
+    def __new__(cls, *args):
+
         if len(args) == 4:
             temp = ((args[0], args[1]), (args[2], args[3]))
         elif len(args) == 1 \
@@ -85,7 +86,7 @@ class RayTransferMatrix(Matrix):
             raise ValueError(filldedent('''
                 Expecting 2x2 Matrix or the 4 elements of
                 the Matrix but got %s''' % str(args)))
-        Matrix.__init__(self, temp)
+        return Matrix.__new__(cls, temp)
 
     def __mul__(self, other):
         if isinstance(other, RayTransferMatrix):
@@ -185,8 +186,8 @@ class FreeSpace(RayTransferMatrix):
     [1, d]
     [0, 1]
     """
-    def __init__(self, d):
-        RayTransferMatrix.__init__(self, 1, d, 0, 1)
+    def __new__(cls, d):
+        return RayTransferMatrix.__new__(cls, 1, d, 0, 1)
 
 class FlatRefraction(RayTransferMatrix):
     """
@@ -213,9 +214,9 @@ class FlatRefraction(RayTransferMatrix):
     [1,     0]
     [0, n1/n2]
     """
-    def __init__(self, n1, n2):
+    def __new__(cls, n1, n2):
         n1, n2 = sympify((n1, n2))
-        RayTransferMatrix.__init__(self, 1, 0, 0, n1/n2)
+        return RayTransferMatrix.__new__(cls, 1, 0, 0, n1/n2)
 
 class CurvedRefraction(RayTransferMatrix):
     """
@@ -243,9 +244,9 @@ class CurvedRefraction(RayTransferMatrix):
     [               1,     0]
     [(n1 - n2)/(R*n2), n1/n2]
     """
-    def __init__(self, R, n1, n2):
+    def __new__(cls, R, n1, n2):
         R, n1 , n2 = sympify((R, n1, n2))
-        RayTransferMatrix.__init__(self, 1, 0, (n1-n2)/R/n2, n1/n2)
+        return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R/n2, n1/n2)
 
 class FlatMirror(RayTransferMatrix):
     """
@@ -261,8 +262,8 @@ class FlatMirror(RayTransferMatrix):
     [1, 0]
     [0, 1]
     """
-    def __init__(self):
-        RayTransferMatrix.__init__(self, 1, 0, 0, 1)
+    def __new__(cls):
+        return RayTransferMatrix.__new__(cls, 1, 0, 0, 1)
 
 class CurvedMirror(RayTransferMatrix):
     """
@@ -288,9 +289,9 @@ class CurvedMirror(RayTransferMatrix):
     [   1, 0]
     [-2/R, 1]
     """
-    def __init__(self, R):
+    def __new__(cls, R):
         R = sympify(R)
-        RayTransferMatrix.__init__(self, 1, 0, -2/R, 1)
+        return RayTransferMatrix.__new__(cls, 1, 0, -2/R, 1)
 
 class ThinLens(RayTransferMatrix):
     """
@@ -316,9 +317,9 @@ class ThinLens(RayTransferMatrix):
     [   1, 0]
     [-1/f, 1]
     """
-    def __init__(self, f):
+    def __new__(cls, f):
         f = sympify(f)
-        RayTransferMatrix.__init__(self, 1, 0, -1/f, 1)
+        return RayTransferMatrix.__new__(cls, 1, 0, -1/f, 1)
 
 
 ###
@@ -360,7 +361,7 @@ class GeometricRay(Matrix):
 
     """
 
-    def __init__(self, *args):
+    def __new__(cls, *args):
         if len(args) == 1 and isinstance(args[0], Matrix) \
                           and args[0].shape == (2, 1):
             temp = args[0]
@@ -370,7 +371,7 @@ class GeometricRay(Matrix):
             raise ValueError(filldedent('''
                 Expecting 2x1 Matrix or the 2 elements of
                 the Matrix but got %s''' % str(args)))
-        Matrix.__init__(self, temp)
+        return Matrix.__new__(cls, temp)
 
     @property
     def height(self):

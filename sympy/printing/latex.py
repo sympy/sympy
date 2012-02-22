@@ -871,7 +871,7 @@ class LatexPrinter(Printer):
         tex = r"\begin{cases} %s \end{cases}"
         return tex % r" \\".join(ecpairs)
 
-    def _print_Matrix(self, expr):
+    def _print_MatrixBase(self, expr):
         lines = []
 
         for line in range(expr.rows): # horrible, should be 'rows'
@@ -885,6 +885,8 @@ class LatexPrinter(Printer):
             out_str = r'\left' + left_delim + out_str + \
                       r'\right' + right_delim
         return out_str % r"\\".join(lines)
+    _print_ImmutableMatrix = _print_MatrixBase
+    _print_MutableMatrix = _print_MatrixBase
 
     def _print_BlockMatrix(self, expr):
         return self._print(expr.mat)
