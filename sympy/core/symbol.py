@@ -7,7 +7,7 @@ from expr import Expr, AtomicExpr
 from cache import cacheit
 from function import FunctionClass
 from sympy.logic.boolalg import Boolean
-from sympy.core.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 import re
 import warnings

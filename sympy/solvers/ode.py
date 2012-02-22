@@ -207,7 +207,7 @@ from collections import defaultdict
 
 from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import iterable, is_sequence, set_union
-from sympy.core.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative, AppliedUndef, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq

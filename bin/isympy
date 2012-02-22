@@ -295,7 +295,7 @@ def main():
     args['quiet'] = options.quiet
     args['auto'] = options.auto
 
-    from sympy.core.exceptions import SymPyDeprecationWarning
+    from sympy.utilities.exceptions import SymPyDeprecationWarning
     warnings.simplefilter("always", SymPyDeprecationWarning)
 
     from sympy.interactive import init_session

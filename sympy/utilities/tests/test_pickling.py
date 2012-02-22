@@ -25,7 +25,7 @@ from sympy.functions import exp
 #from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
 from sympy.core.compatibility import callable
-from sympy.core.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy import symbols
 
