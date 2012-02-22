@@ -441,7 +441,10 @@ class Add(AssocOp):
             return None # let assumptions handle this
         pos = nonneg = nonpos = unknown_sign = False
         unbounded = set()
-        for a in self.args:
+        args = [a for a in self.args if not a.is_zero]
+        if not args:
+            return False
+        for a in args:
             ispos = a.is_positive
             ubound = a.is_unbounded
             if ubound:
@@ -457,6 +460,8 @@ class Add(AssocOp):
             elif a.is_nonpositive:
                 nonpos = True
                 continue
+            elif a.is_zero:
+                continue
 
             if ubound is None:
                 # sign is unknown; if we don't know the boundedness
@@ -464,9 +469,11 @@ class Add(AssocOp):
                 # but the only option is that we have something like
                 # oo - oo which is NaN and it really doesn't matter
                 # what sign we apply to that because it (when finally
-                # computed0 will trump any sign. So we pass instead of
-                # returning None
+                # computed) will trump any sign. So instead of returning
+                # None, we pass.
                 pass
+            else:
+                return None
             unknown_sign = True
 
         if unbounded:
@@ -485,7 +492,10 @@ class Add(AssocOp):
             return None # let assumptions handle this
         neg = nonpos = nonneg = unknown_sign = False
         unbounded = set()
-        for a in self.args:
+        args = [a for a in self.args if not a.is_zero]
+        if not args:
+            return False
+        for a in args:
             isneg = a.is_negative
             ubound = a.is_unbounded
             if ubound:
@@ -501,6 +511,8 @@ class Add(AssocOp):
             elif a.is_nonnegative:
                 nonneg = True
                 continue
+            elif a.is_zero:
+                continue
 
             if ubound is None:
                 # sign is unknown; if we don't know the boundedness
@@ -508,8 +520,8 @@ class Add(AssocOp):
                 # but the only option is that we have something like
                 # oo - oo which is NaN and it really doesn't matter
                 # what sign we apply to that because it (when finally
-                # computed0 will trump any sign. So we pass instead of
-                # returning None
+                # computed) will trump any sign. So instead of returning
+                # None, we pass.
                 pass
             unknown_sign = True
 
