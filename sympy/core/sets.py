@@ -971,10 +971,7 @@ class FiniteSet(CountableSet):
             return [arg]
         args = flatten(list(args))
 
-        # Sympify Arguments
         args = map(sympify, args)
-        # Turn tuples into Tuples
-        args = [Tuple(*arg) if arg.__class__ is tuple else arg for arg in args]
 
         if len(args) == 0:
             return EmptySet()
@@ -985,7 +982,7 @@ class FiniteSet(CountableSet):
         except AttributeError:
             pass
 
-        elements = frozenset(map(sympify, args))
+        elements = frozenset(args)
         obj = Basic.__new__(cls, elements)
         obj.elements = elements
         return obj
