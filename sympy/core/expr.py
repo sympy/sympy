@@ -278,6 +278,7 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
+        >>> from sympy import sqrt
         >>> from sympy.abc import x, y
         >>> x._random()                         # doctest: +SKIP
         2.02156676842162 + 2.09079610844169*I
@@ -367,7 +368,7 @@ class Expr(Basic, EvalfMixin):
         given symbols.
 
         If neither evaluation nor differentiation can prove the expression is
-        constant, None is returned unles two numerical values happened to be
+        constant, None is returned unless two numerical values happened to be
         the same and the flag ``failing_number`` is True -- in that case the
         numerical value will be returned.
 
@@ -461,10 +462,8 @@ class Expr(Basic, EvalfMixin):
         # expression depends on them or not using differentiation. This is
         # not sufficient for all expressions, however, so we don't return
         # False if we get a derivative other than 0 with free symbols.
-        wrt = wrt or free
-        wrt = list(wrt)
-        for i in range(len(wrt)):
-            deriv = (self.diff(wrt[0])).simplify()
+        for w in wrt:
+            deriv = self.diff(w).simplify()
             if deriv != 0:
                 if not (deriv.is_Number or pure_complex(deriv)):
                     if flags.get('failing_number', False):
@@ -473,7 +472,6 @@ class Expr(Basic, EvalfMixin):
                         # dead line provided _random returns None in such cases
                         return None
                 return False
-            wrt.pop(0)
         return True
 
     def equals(self, other, failing_expression=False):
@@ -847,40 +845,40 @@ class Expr(Basic, EvalfMixin):
 
         You can select terms that have an explicit negative in front of them:
 
-        >>> (-x+2*y).coeff(-1)
+        >>> (-x + 2*y).coeff(-1)
         x
-        >>> (x-2*y).coeff(-1)
+        >>> (x - 2*y).coeff(-1)
         2*y
 
         You can select terms with no rational coefficient:
 
-        >>> (x+2*y).coeff(1)
+        >>> (x + 2*y).coeff(1)
         x
-        >>> (3+2*x+4*x**2).coeff(1)
+        >>> (3 + 2*x + 4*x**2).coeff(1)
 
         You can select terms that have a numerical term in front of them:
 
-        >>> (-x-2*y).coeff(2)
+        >>> (-x - 2*y).coeff(2)
         -y
         >>> from sympy import sqrt
-        >>> (x+sqrt(2)*x).coeff(sqrt(2))
+        >>> (x + sqrt(2)*x).coeff(sqrt(2))
         x
 
         The matching is exact:
 
-        >>> (3+2*x+4*x**2).coeff(x)
+        >>> (3 + 2*x + 4*x**2).coeff(x)
         2
-        >>> (3+2*x+4*x**2).coeff(x**2)
+        >>> (3 + 2*x + 4*x**2).coeff(x**2)
         4
-        >>> (3+2*x+4*x**2).coeff(x**3)
-        >>> (z*(x+y)**2).coeff((x+y)**2)
+        >>> (3 + 2*x + 4*x**2).coeff(x**3)
+        >>> (z*(x + y)**2).coeff((x + y)**2)
         z
-        >>> (z*(x+y)**2).coeff(x+y)
+        >>> (z*(x + y)**2).coeff(x + y)
 
         In addition, no factoring is done, so 2 + y is not obtained from the
         following:
 
-        >>> (2*x+2+(x+1)*y).coeff(x+1)
+        >>> (2*x + 2 + (x + 1)*y).coeff(x + 1)
         y
 
         >>> n, m, o = symbols('n m o', commutative=False)

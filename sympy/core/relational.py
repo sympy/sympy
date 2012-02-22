@@ -145,9 +145,7 @@ class Relational(Expr, EvalfMixin):
         if lhs.is_number and rhs.is_number and (rop in ('==', '!=' ) or
         lhs.is_real and rhs.is_real):
             diff = lhs - rhs
-            know = (lhs - rhs).equals(0,
-                                      failing_expression=True,
-                                      )
+            know = (lhs - rhs).equals(0, failing_expression=True)
             if know is True: # exclude failing expression case
                 Nlhs = Nrhs = S.Zero
             elif know is False:
