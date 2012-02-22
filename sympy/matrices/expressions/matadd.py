@@ -14,8 +14,6 @@ class MatAdd(MatrixExpr, Add):
     A + B + C
     """
 
-
-
     def __new__(cls, *args):
 
         args = map(matrixify, args)
@@ -53,5 +51,8 @@ class MatAdd(MatrixExpr, Add):
     @property
     def shape(self):
         return self.args[0].shape
+
+    def _entry(self, i, j):
+        return Add(*[arg._entry(i,j) for arg in self.args])
 
 from matmul import MatMul

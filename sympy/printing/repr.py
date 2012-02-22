@@ -75,7 +75,7 @@ class ReprPrinter(Printer):
     def _print_list(self, expr):
         return "[%s]" % self.reprify(expr, ", ")
 
-    def _print_Matrix(self, expr):
+    def _print_MatrixBase(self, expr):
         l = []
         for i in range(expr.rows):
             l.append([])

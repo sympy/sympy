@@ -1,8 +1,8 @@
 from sympy.utilities.pytest import raises
-from sympy import S, symbols, Symbol, Tuple
+from sympy import S, symbols, Symbol, Tuple, Mul
 from sympy.matrices import (eye, MatrixSymbol, Transpose, Inverse, ShapeError,
         MatMul, Identity, BlockMatrix, BlockDiagMatrix, block_collapse, Matrix,
-        ZeroMatrix, MatAdd)
+        ZeroMatrix, MatAdd, MatPow, matrixify)
 
 def test_transpose():
     n, m, l = symbols('n m l', integer=True)
@@ -30,7 +30,7 @@ def test_inverse():
     raises(ShapeError, "Inverse(A)")
     assert Inverse(Inverse(C)) == C
 
-    assert Inverse(C)*C == Identity(C.n)
+    assert Inverse(C)*C == Identity(C.rows)
 
     assert Inverse(eye(3)) == eye(3)
 
@@ -113,8 +113,8 @@ def test_BlockMatrix():
     Y = BlockMatrix(Matrix([[E], [F]]))
 
     assert (X*Y).shape == (l+n, 1)
-    assert block_collapse(X*Y)[0,0] == A*E + B*F
-    assert block_collapse(X*Y)[1,0] == C*E + D*F
+    assert block_collapse(X*Y).blocks[0,0] == A*E + B*F
+    assert block_collapse(X*Y).blocks[1,0] == C*E + D*F
     assert (block_collapse(Transpose(block_collapse(Transpose(X*Y)))) ==
             block_collapse(X*Y))
 
@@ -152,7 +152,7 @@ def test_squareBlockMatrix():
     assert (X + MatrixSymbol('Q', n+m, n+m)).is_Add
     assert (X * MatrixSymbol('Q', n+m, n+m)).is_Mul
 
-    assert Y.I[0,0] == A.I
+    assert Y.I.blocks[0,0] == A.I
     assert Inverse(X, expand=True) == BlockMatrix([
         [(-B*D.I*C + A).I, -A.I*B*(D+-C*A.I*B).I],
         [-(D-C*A.I*B).I*C*A.I, (D-C*A.I*B).I]])
@@ -176,18 +176,18 @@ def test_BlockDiagMatrix():
     X = BlockDiagMatrix(A,B,C)
     Y = BlockDiagMatrix(A, 2*B, 3*C)
 
-    assert X[1,1] == B
+    assert X.blocks[1,1] == B
     assert X.shape == (n+m+l, n+m+l)
-    assert all(X[i,j].is_ZeroMatrix if i!=j else X[i,j] in [A,B,C]
+    assert all(X.blocks[i,j].is_ZeroMatrix if i!=j else X.blocks[i,j] in [A,B,C]
             for i in range(3) for j in range(3))
 
     assert block_collapse(X.I * X).is_Identity
 
-    assert block_collapse(X*X) == BlockDiagMatrix(A**2, B**2, C**2)
+    assert block_collapse(X*X) == BlockDiagMatrix(A*A, B*B, C*C)
 
     assert block_collapse(X+X) == BlockDiagMatrix(2*A, 2*B, 2*C)
 
-    assert block_collapse(X*Y) == BlockDiagMatrix(A**2, 2*B**2, 3*C**2)
+    assert block_collapse(X*Y) == BlockDiagMatrix(A*A, 2*B*B, 3*C*C)
 
     assert block_collapse(X+Y) == BlockDiagMatrix(2*A, 3*B, 4*C)
 
@@ -269,9 +269,10 @@ def test_MatPow():
     A = MatrixSymbol('A', n, n)
 
     assert Inverse(A).is_Pow
-    assert (A*A).is_Pow
-    assert (A*A).exp == 2
-    assert (A*A).base == A
+    AA = MatPow(A, 2)
+    assert AA.is_Pow
+    assert AA.exp == 2
+    assert AA.base == A
     assert (A**n).exp == n
 
     assert A**0 == Identity(n)
@@ -309,3 +310,9 @@ def test_MatrixSymbol():
     assert X.shape == (n,m)
     raises(TypeError, "MatrixSymbol('X', n, m)(t)") # issue 2756
 
+def test_matrixify():
+    n, m, l = symbols('n m l')
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', m, l)
+    assert matrixify(n+m) == n+m
+    assert matrixify(Mul(A,B)) == MatMul(A,B)
