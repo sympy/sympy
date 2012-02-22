@@ -1253,10 +1253,15 @@ def test_equals():
     assert meter.equals(0) is False
     assert (3*meter**2).equals(0) is False
 
-    # from integrate(x*sqrt(1+2*x), x)
+    # from integrate(x*sqrt(1+2*x), x);
+    # diff is zero, but differentiation does not show it
     i = 2*sqrt(2)*x**(S(5)/2)*(1 + 1/(2*x))**(S(5)/2)/5 + \
         2*sqrt(2)*x**(S(3)/2)*(1 + 1/(2*x))**(S(5)/2)/(-6 - 3/x)
-    assert i.equals(sqrt(2*x + 1)*(6*x**2 + x - 1)/15)
+    ans = sqrt(2*x + 1)*(6*x**2 + x - 1)/15
+    diff = i - ans
+    assert diff.equals(0) is None
+    p = Symbol('p', positive=True)
+    assert diff.subs(x, p).equals(0) is True
 
 @XFAIL
 def test_equals_factorial():
