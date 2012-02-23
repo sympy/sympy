@@ -2715,7 +2715,7 @@ class LPolyElement(dict):
         return p1
 
 
-    def tobasic(p, *gens):
+    def as_expr(p, *gens):
         """Convert an LPolyElement into a SymPy expression.
 
         Examples
@@ -2729,7 +2729,7 @@ class LPolyElement(dict):
         >>> p = (1 + X)**3
         >>> p
         X**3 + 3*X**2 + 3*X + 1
-        >>> p1 = p.tobasic(x)
+        >>> p1 = p.as_expr(x)
         >>> p1
         x**3 + 3*x**2 + 3*x + 1
         """

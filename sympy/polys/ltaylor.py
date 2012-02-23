@@ -1276,5 +1276,5 @@ def series_reversion(p, gens):
     lp = LPoly(['X%d' % i for i in range(ngens)], QQ)
     p1 = lp.from_dict(d)
     p2 = p1.series_reversion('X0', prec, 'X%d' % (ngens-1))
-    p3 = p2.tobasic(*gens)
+    p3 = p2.as_expr(*gens)
     return p3 + O(gens[-1]**prec)

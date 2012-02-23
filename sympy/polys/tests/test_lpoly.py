@@ -957,7 +957,7 @@ def test_basic():
     x = Symbol('x')
     y = Symbol('y')
     p = (_x + _y**2/3)**2
-    p2 = p.tobasic(x, y)
+    p2 = p.as_expr(x, y)
     assert p2 == expand((x + y**2/3)**2)
     x = Symbol('x')
     a = Symbol('a')
@@ -966,7 +966,7 @@ def test_basic():
     p1 = (1 + A*X + 2*A*X**2).nth_root(-2, 'X', h) + X
     p2 = p1.sqrt('X', h)
     assert p2 == 1 + X/2 - A*X/4 - X**2/8 - 3*A*X**2/8 + 5*A**2*X**2/32 + X**3/16 - 15*A**3*X**3/128 + 5*A*X**3/32 + 37*A**2*X**3/64 - 5*X**4/128 - 173*A**3*X**4/256 - 7*A*X**4/64 + 115*A**2*X**4/256 + 195*A**4*X**4/2048
-    p2 = p2.tobasic(a, x)
+    p2 = p2.as_expr(a, x)
     assert p2 == 1 + x/2 - a*x/4 - x**2/8 - 3*a*x**2/8 + 5*a**2*x**2/32 + x**3/16 - 15*a**3*x**3/128 + 5*a*x**3/32 + 37*a**2*x**3/64 - 5*x**4/128 - 173*a**3*x**4/256 - 7*a*x**4/64 + 115*a**2*x**4/256 + 195*a**4*x**4/2048
 
 def test_SR1():
@@ -974,7 +974,7 @@ def test_SR1():
     lp, _x  = lgens('_x', sympify, lex)
     h = 10
     p=(_x*sqrt(2) + _x**2*sqrt(3)).cos('_x', h).pow_trunc(-1, '_x', h)
-    p1 = p.tobasic(x)
+    p1 = p.as_expr(x)
     p2 = series(1/cos(x*sqrt(2) + x**2*sqrt(3)), x, 0, h)
     p3 = p1 - p2
     assert p3 == O(x**h)
@@ -992,7 +992,7 @@ def test_SR2():
     lp, _x  = lgens('_x', sympify, lex)
     h = 5
     p = (_x + 1).exp('_x', h)
-    p1 = p.tobasic(x)
+    p1 = p.as_expr(x)
     assert series(exp(x+1), x, 0, 5) == p1 + O(x**5)
 
 def test_subs():
