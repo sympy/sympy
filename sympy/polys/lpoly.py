@@ -141,24 +141,24 @@ class BaseLPoly(object):
     (x0, x1, x2)
     """
 
-    def __init__(self, pol_gens, ring, order, **kwds):
-        if not is_sequence(pol_gens, include=(str, Symbol)) or not pol_gens:
+    def __init__(self, sgens, ring, order, **kwds):
+        if not is_sequence(sgens, include=(str, Symbol)) or not sgens:
             raise ValueError('expecting string, Symbol or other ordered iterable')
 
-        if isinstance(pol_gens, str):
-            pol_gens = [s.name for s in symbols(pol_gens, seq=True)]
-        elif isinstance(pol_gens, Symbol):
-            pol_gens = pol_gens.name
-        elif isinstance(pol_gens[0], Symbol):
-            pol_gens = [s.name for s in pol_gens]
-        elif not isinstance(pol_gens[0], str):
+        if isinstance(sgens, str):
+            sgens = [s.name for s in symbols(sgens, seq=True)]
+        elif isinstance(sgens, Symbol):
+            sgens = sgens.name
+        elif isinstance(sgens[0], Symbol):
+            sgens = [s.name for s in sgens]
+        elif not isinstance(sgens[0], str):
             raise ValueError('expecting iterables of Symbols or strings')
 
-        self.pol_gens = tuple(pol_gens)
-        self.ngens = len(pol_gens)
+        self.sgens = tuple(sgens)
+        self.ngens = len(sgens)
         self.ring = ring
         self.order = order
-        self.gens_dict = dict(zip(self.pol_gens, xrange(self.ngens)))
+        self.gens_dict = dict(zip(self.sgens, xrange(self.ngens)))
         self.parens = kwds.get('parens', False)
         self.commuting = kwds.get('commuting', True)
         if isinstance(ring, BaseLPoly):
@@ -368,8 +368,8 @@ class LPoly(BaseLPoly):
     >>> lp.__class__
     <class 'sympy.polys.lpoly.LPoly'>
     """
-    def __init__(self, pol_gens, ring, order=lex, **kwds):
-        BaseLPoly.__init__(self, pol_gens, ring, order, **kwds)
+    def __init__(self, sgens, ring, order=lex, **kwds):
+        BaseLPoly.__init__(self, sgens, ring, order, **kwds)
         self.__name__ = 'LPoly'
 
 
@@ -389,8 +389,8 @@ class MLPoly(BaseLPoly):
     >>> lp.__class__
      <class 'sympy.polys.lpoly.MLPoly'>
     """
-    def __init__(self, pol_gens, ring, order, **kwds):
-        BaseLPoly.__init__(self, pol_gens, ring, order, **kwds)
+    def __init__(self, sgens, ring, order, **kwds):
+        BaseLPoly.__init__(self, sgens, ring, order, **kwds)
         self.parens = True
         self.__name__ = 'MLPoly'
 
@@ -398,13 +398,13 @@ class MLPoly(BaseLPoly):
 class NCLPoly(BaseLPoly):
     """class of polynomials on noncommuting ring
     """
-    def __init__(self, pol_gens, ring, order, **kwds):
-        BaseLPoly.__init__(self, pol_gens, ring, order, **kwds)
+    def __init__(self, sgens, ring, order, **kwds):
+        BaseLPoly.__init__(self, sgens, ring, order, **kwds)
         self.parens = True
         self.commuting = False
         self.__name__ = 'NCLPoly'
 
-def lgens(pol_gens, ring, order=lex, **kwds):
+def lgens(sgens, ring, order=lex, **kwds):
     """
      factory function to generate LPoly object and its generators
 
@@ -414,7 +414,7 @@ def lgens(pol_gens, ring, order=lex, **kwds):
     >>> (x + y)**2
     x**2 + 2*x*y + y**2
     """
-    lp = BaseLPoly(pol_gens, ring, order, **kwds)
+    lp = BaseLPoly(sgens, ring, order, **kwds)
     if lp.parens:
         lp.__class__ = MLPoly
         lp.__name__ = 'MLPoly'
@@ -423,18 +423,18 @@ def lgens(pol_gens, ring, order=lex, **kwds):
         lp.__name__ = 'LPoly'
     return (lp,) + lp.gens
 
-def mlgens(pol_gens, ring, order=lex, **kwds):
+def mlgens(sgens, ring, order=lex, **kwds):
     """
     factory function to generate MLPoly object and its generators
     """
-    lp = MLPoly(pol_gens, ring, order, **kwds)
+    lp = MLPoly(sgens, ring, order, **kwds)
     return (lp,) + lp.gens
 
-def nclgens(pol_gens, ring, order=lex, **kwds):
+def nclgens(sgens, ring, order=lex, **kwds):
     """
     factory function to generate NCLPoly object and its generators
     """
-    lp = NCLPoly(pol_gens, ring, order, **kwds)
+    lp = NCLPoly(sgens, ring, order, **kwds)
     return (lp,) + lp.gens
 
 
@@ -474,7 +474,7 @@ class LPolyElement(dict):
         lp = self.lp
         if lp.parens:
             return self._tostr()
-        pol_gens = lp.pol_gens
+        sgens = lp.sgens
         ngens = lp.ngens
         zm = self.lp.zero_mon
         s = []
@@ -496,9 +496,9 @@ class LPolyElement(dict):
             for i in range(ngens):
                 exp = expv[i]
                 if exp > 1:
-                    sa.append('%s**%d' % (pol_gens[i], exp))
+                    sa.append('%s**%d' % (sgens[i], exp))
                 if exp == 1:
-                    sa.append('%s' % pol_gens[i])
+                    sa.append('%s' % sgens[i])
             if cnt1:
                 sa = [cnt1] + sa
             s += '*'.join(sa)
@@ -523,7 +523,7 @@ class LPolyElement(dict):
 
     def _tostr(self):
         lp = self.lp
-        pol_gens = lp.pol_gens
+        sgens = lp.sgens
         ngens = lp.ngens
         zm = lp.zero_mon
         s = []
@@ -540,9 +540,9 @@ class LPolyElement(dict):
             for i in range(ngens):
                 exp = expv[i]
                 if exp > 1:
-                    sa.append('%s**%d' % (pol_gens[i], exp))
+                    sa.append('%s**%d' % (sgens[i], exp))
                 if exp == 1:
-                    sa.append('%s' % pol_gens[i])
+                    sa.append('%s' % sgens[i])
             s.append('*'.join(sa))
         s = ''.join(s)
         s = s.lstrip(' +')
@@ -803,13 +803,13 @@ class LPolyElement(dict):
             nx = i
             i = p.lp.gens_dict[i]
         else:
-            nx = lp.pol_gens[i]
+            nx = lp.sgens[i]
         y = lp(j)
         if j.__class__ == str:
             ny = j
             j = p.lp.gens_dict[j]
         else:
-            ny = lp.pol_gens[j]
+            ny = lp.sgens[j]
         if p.coefficient_t((i, 0)):
             raise ValueError('part independent from %s must be 0' % nx)
         a = p.coefficient_t((i, 1))
@@ -2283,7 +2283,7 @@ class LPolyElement(dict):
         if p.has_constant_term(iv):
             raise NotImplementedError('polynomial must not have constant term in the series variables')
         lp = p.lp
-        if iv in lp.pol_gens and lp.commuting:
+        if iv in lp.sgens and lp.commuting:
             dp = p.derivative(iv)
             p1 = p.square_trunc(iv, prec) + 1
             p1 = p1.series_inversion(iv, prec - 1)
@@ -2310,7 +2310,7 @@ class LPolyElement(dict):
         p1 = lp(0)
         if p.has_constant_term(iv):
             raise NotImplementedError('polynomial must not have constant term in the series variables')
-        if iv in lp.pol_gens and lp.commuting:
+        if iv in lp.sgens and lp.commuting:
             for precx in giant_steps(prec):
                 e = p1.exp(iv, precx)
                 p2 = e.mul_trunc(p1, iv, precx) - p
@@ -2339,7 +2339,7 @@ class LPolyElement(dict):
         if p.has_constant_term(iv):
             raise NotImplementedError('polynomial must not have constant term in the series variables')
         lp = p.lp
-        if iv in lp.pol_gens and lp.commuting:
+        if iv in lp.sgens and lp.commuting:
             # get a good value
             if len(p) > 20:
                 dp = p.derivative(iv)
@@ -2374,7 +2374,7 @@ class LPolyElement(dict):
         if p.has_constant_term(iv):
             raise NotImplementedError('polynomial must not have constant term in the series variables')
         lp = p.lp
-        if iv in lp.pol_gens and lp.commuting:
+        if iv in lp.sgens and lp.commuting:
             dp = p.derivative(iv)
             p1 = 1 + p.square_trunc(iv, prec - 1)
             p1 = p1.nth_root(-2, iv, prec - 1)
@@ -2410,7 +2410,7 @@ class LPolyElement(dict):
         if p.has_constant_term(iv):
             raise NotImplementedError('polynomial must not have constant term in the series variables')
         lp = p.lp
-        if iv in lp.pol_gens and lp.commuting:
+        if iv in lp.sgens and lp.commuting:
             dp = p.derivative(iv)
             p1 = -p.square_trunc(iv, prec) + 1
             p1 = p1.series_inversion(iv, prec - 1)
