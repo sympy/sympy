@@ -19,14 +19,12 @@ _rpm = re.compile('([+-])')
 _re_var_split = re.compile(r"\s*,\s*|\s+")
 
 class TaylorEvalError(TypeError):
-    """
-    Exception used in ltaylor.taylor
+    """Exception used in ltaylor.taylor
     """
     pass
 
 def giant_steps(target):
-    """
-    list of precision steps for the Newton's method
+    """list of precision steps for the Newton's method
 
     code adapted from mpmath/libmp/libintmath.py
     """
@@ -46,22 +44,19 @@ def monomial_zero(n):
     return (0, )*n
 
 def monomial_basis(i, n):
-    """
-    return the ith-basis element
+    """return the ith-basis element
     """
     a = [0]*n
     a[i] = 1
     return tuple(a)
 
 def monomial_from_sequence(a):
-    """
-    return a monomial tuple from a list or tuple
+    """return a monomial tuple from a list or tuple
     """
     return tuple(a)
 
 def monomial_pow(a, n):
-    """
-    return the n-th pow of the monomial
+    """return the n-th pow of the monomial
     """
     b = [x*n for x in a]
     return tuple(b)
@@ -85,8 +80,8 @@ def monomial_as_expr(monom, *gens):
 gmpy_mode = not QQ(1).__class__ is PythonRationalType
 
 def _PythonRationalType(p):
-    """
-    returns a PythonRationalType
+    """returns a PythonRationalType
+
     if p is a PythonRationalType it returns it
     if p is a sring representing a rational number or an integer,
     it returns a PythonRationalType object
@@ -111,8 +106,7 @@ def _PythonRationalType(p):
         return PythonRationalType(p)
 
 class BaseLPoly(object):
-    """
-    abstract base class for polynomial rings of a ring K
+    """abstract base class for polynomial rings of a ring K
     subclasses:
 
       RPoly polynomial ring on a commutative ring
@@ -260,8 +254,7 @@ class BaseLPoly(object):
         return (tuple(expv), coeff)
 
     def __call__(self, s):
-        """
-        Generate a polynomial from a string.
+        """Generate a polynomial from a string.
 
         The string must be in the form
             c_0*m_0 + c_1*m_1 + ...
@@ -324,8 +317,7 @@ class BaseLPoly(object):
         return p
 
     def from_dict(self, d):
-        """
-        polynomial from a dictionary
+        """create a polynomial from a dictionary
 
         Examples
         ========
@@ -419,15 +411,13 @@ def lgens(sgens, ring, order=lex, **kwds):
     return (lp,) + lp.gens
 
 def mlgens(sgens, ring, order=lex, **kwds):
-    """
-    factory function to generate MLPoly object and its generators
+    """factory function to generate MLPoly object and its generators
     """
     lp = MLPoly(sgens, ring, order, **kwds)
     return (lp,) + lp.gens
 
 def nclgens(sgens, ring, order=lex, **kwds):
-    """
-    factory function to generate NCLPoly object and its generators
+    """factory function to generate NCLPoly object and its generators
     """
     lp = NCLPoly(sgens, ring, order, **kwds)
     return (lp,) + lp.gens
@@ -436,8 +426,7 @@ def nclgens(sgens, ring, order=lex, **kwds):
 
 
 class LPolyElement(dict):
-    """
-    elements of a multivariate polynomial ring
+    """elements of a multivariate polynomial ring
 
     Examples
     ========
@@ -515,8 +504,7 @@ class LPolyElement(dict):
     __repr__ = __str__
 
     def __coefficient_to_str(self, c):
-        """
-        Represent coefficient as string.
+        """Represent coefficient as string.
         """
         if isinstance(c, PythonRationalType) and c.q == 1:
             return str(c.p)
@@ -581,8 +569,7 @@ class LPolyElement(dict):
         return tuple(a)
 
     def __eq__(p1, p2):
-        """
-        equality test for polynomials
+        """equality test for polynomials
 
         Examples
         ========
@@ -672,8 +659,7 @@ class LPolyElement(dict):
             return p
 
     def copy(self):
-        """
-        return a copy of polynomial self
+        """return a copy of polynomial self
 
         polynomials are mutable; if one is interested in preserving
         a polynomial, and one plans to use inplace operations, one
@@ -844,8 +830,7 @@ class LPolyElement(dict):
         return r
 
     def subs(p, **rules):
-        """
-        substitution
+        """substitution
 
         Examples
         ========
@@ -863,8 +848,7 @@ class LPolyElement(dict):
         return sb.subs(p)
 
     def subs_trunc(p, iv, nv, **rules):
-        """
-        substitution with truncation
+        """substitution with truncation
 
           p     input polynomial
           iv    (name of the) variable in which the series truncation is done
@@ -935,7 +919,8 @@ class LPolyElement(dict):
         return self
 
     def __iadd__(p1, p2):
-        """inplace addition of polinomials
+        """in-place addition of polynomials
+
         update p1 with values in p2;
         if p1 is a generator, a new polynomial will be returned
 
@@ -987,8 +972,7 @@ class LPolyElement(dict):
             return p1
 
     def __sub__(p1, p2):
-        """
-        subtract polynomial p2 from p1
+        """subtract polynomial p2 from p1
 
         Examples
         ========
@@ -1046,8 +1030,7 @@ class LPolyElement(dict):
             return p
 
     def __rsub__(p1, n):
-        """
-        n - p1 with n convertible to the coefficient ring
+        """n - p1 with n convertible to the coefficient ring
 
         Examples
         ========
@@ -1068,8 +1051,8 @@ class LPolyElement(dict):
 
 
     def __isub__(p1, p2):
-        """
-        inplace subtraction of polynomials
+        """in-place subtraction of polynomials
+
         update p1 with values in p2;
         if p1 is a generator, a new polynomial will be returned
         """
@@ -1149,8 +1132,7 @@ class LPolyElement(dict):
         return p
 
     def __rmul__(p1, p2):
-        """
-         p2 + p1 with p2 in the coefficient ring of p1
+        """p2 + p1 with p2 in the coefficient ring of p1
 
         Examples
         ========
@@ -1551,6 +1533,7 @@ class LPolyElement(dict):
 
     def division(self, fv):
         """division algorithm, see [CLO] p64
+
         fv array of polynomials
            return qv, r such that
            self = sum(fv[i]*qv[i]) + r
@@ -1606,6 +1589,7 @@ class LPolyElement(dict):
 
     def trunc(p1, i, prec):
         """monomials containing x**k, k >= prec neglected
+
         i is the name of the variable x, or its index
 
         Examples
@@ -1632,6 +1616,7 @@ class LPolyElement(dict):
 
     def mul_trunc(p1, p2, i, prec):
         """truncation of p1*p2
+
         p1 and p2 polynomials
         i is the name of the variable x, or its index;
         neglect in p1*p2 the monomials containing x**k, k >= prec
@@ -1682,6 +1667,7 @@ class LPolyElement(dict):
 
     def square_trunc(p1, i, prec):
         """truncation of p1*p1
+
         i is the name of the variable x, or its index;
         neglect in p1*p1 the monomials containing x**k, k >= prec
 
@@ -1803,6 +1789,7 @@ class LPolyElement(dict):
 
     def _series_inversion1(p, iv, prec):
         """univariate series inversion 1/p
+
         iv name of the series variable
         prec precision of the series
 
@@ -1826,7 +1813,7 @@ class LPolyElement(dict):
         return p1
 
     def _series_inversion_nc(p, iv, prec):
-        """
+        """TODO needs a docstring here
         a = A**-1, c =  B*a
         (A + B)**-1 = a*(1 - c + c**2 - ...)
         """
@@ -1896,8 +1883,8 @@ class LPolyElement(dict):
 
     def derivative(self, n):
         """derivative of p with respect to x_n; the argument n is the
-        index of the variable x_n = self.lp.gens[n], or the
-        corresponding string.
+        index of the variable x_n = self.lp.gens[n], or the corresponding
+        string.
 
         Examples
         ========
@@ -1925,7 +1912,7 @@ class LPolyElement(dict):
 
 
     def integrate(self, n):
-        """ integrate p with respect to x_n; the argument n is the
+        """integrate p with respect to x_n; the argument n is the
         index of the variable x_n = self.lp.gens[n], or the
         corresponding string.
 
@@ -1954,6 +1941,7 @@ class LPolyElement(dict):
 
     def series_from_list(p, c, iv, prec, concur=1):
         """series sum c[n]*p**n
+
         reduce the number of multiplication summing concurrently
         ax = [1, p, p**2, .., p**(J - 1)]
         s = sum(c[i]*ax[i] for i in range(0, J)) +
@@ -2031,8 +2019,7 @@ class LPolyElement(dict):
         return s
 
     def fun(p, f, *args):
-        """
-        function of a multivariate series computed by substitution
+        """function of a multivariate series computed by substitution
 
           p multivariate series
           f method name or function
@@ -2274,8 +2261,7 @@ class LPolyElement(dict):
         return (p - 1).series_from_list(c, iv, prec)
 
     def log(p, iv, prec):
-        """
-        logarithm of p with truncation
+        """logarithm of p with truncation
 
         For univariate series or with the total degree
         truncation integral dx p**-1*d p/dx is used.
@@ -2323,8 +2309,7 @@ class LPolyElement(dict):
 
 
     def atan(p, iv, prec):
-        """
-        arctangent of a series
+        """arctangent of a series
 
         Examples
         ========
@@ -2350,8 +2335,7 @@ class LPolyElement(dict):
             return p._atan_series(iv, prec)
 
     def lambert(p, iv, prec):
-        """
-        principal branch of the Lambert W function
+        """principal branch of the Lambert W function
 
         Examples
         ========
@@ -2381,8 +2365,7 @@ class LPolyElement(dict):
             raise NotImplementedError
 
     def asin(p, iv, prec):
-        """
-        arcsin of a series
+        """arcsine of a series
 
         Examples
         ========
@@ -2417,8 +2400,7 @@ class LPolyElement(dict):
             raise NotImplementedError
 
     def asinh(p, iv, prec):
-        """
-        arcsinh of a series
+        """hyperbolic arcsine of a series
 
         Examples
         ========
@@ -2455,7 +2437,7 @@ class LPolyElement(dict):
         return s
 
     def atanh(p, iv, prec):
-        """ hyperbolic arctangent
+        """hyperbolic arctangent of a series
 
         Examples
         ========
@@ -2490,7 +2472,7 @@ class LPolyElement(dict):
         return p1
 
     def tanh(p, iv, prec):
-        """ hyperbolic tangent of a series
+        """hyperbolic tangent of a series
 
         Examples
         ========
@@ -2542,8 +2524,7 @@ class LPolyElement(dict):
 
 
     def _exp1(p, iv, prec):
-        """
-        exponential of a univariate series, or of a multivariate
+        """exponential of a univariate series, or of a multivariate
         series with total degree truncation
         """
         lp = p.lp
@@ -2555,8 +2536,7 @@ class LPolyElement(dict):
         return p1
 
     def exp(p, iv, prec):
-        """
-        exponential of a series
+        """exponentiation of a series
 
         Examples
         ========
@@ -2590,7 +2570,7 @@ class LPolyElement(dict):
         return r
 
     def sin(p, iv, prec):
-        """ sine of a series
+        """sine of a series
 
         Examples
         ========
@@ -2629,7 +2609,7 @@ class LPolyElement(dict):
         return p.series_from_list(c, iv, prec)
 
     def cos(p, iv, prec):
-        """ cosine of a series
+        """cosine of a series
 
         Examples
         ========
@@ -2670,8 +2650,7 @@ class LPolyElement(dict):
 
 
     def cos_sin(p, iv, prec):
-        """
-        tuple (p.cos(iv, iv), p.sin(iv, iv))
+        """tuple (p.cos(iv, iv), p.sin(iv, iv))
         """
         iv = str(iv)
         t = (p/2).tan(iv, prec)
@@ -2680,7 +2659,7 @@ class LPolyElement(dict):
         return (p1.mul_trunc(1 - t2, iv, prec), p1.mul_trunc(2*t, iv, prec))
 
     def sinh(self, iv, prec):
-        """ hyperbolic sine of a series
+        """hyperbolic sine of a series
 
         Examples
         ========
@@ -2716,7 +2695,7 @@ class LPolyElement(dict):
         return (t + t1)/2
 
     def cosh_sinh(p, iv, prec):
-        """ tuple (p.cosh(iv, iv), p.sinh(iv, iv))
+        """tuple (p.cosh(iv, iv), p.sinh(iv, iv))
         """
         iv = str(iv)
         t = p.exp(iv, prec)
@@ -2790,8 +2769,7 @@ class LPolySubs(object):
     4*x*y**3 + 12*x*y**2 + 12*x*y + 4*x + y**4 + 4*y**3 + 6*y**2 + 4*y + 1
     """
     def __init__(self, lp1, lp2, rules):
-        """
-        initialize a substitution object
+        """initialize a substitution object
 
         lp1, lp2 LPoly objects
 
