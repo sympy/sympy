@@ -204,7 +204,7 @@ def _factor_var(q, var):
     return (pwn, num)
 
 def _as_expr(num, tev, typn):
-    """convert lpoly polynomial num to Sympy expression
+    """convert lpoly polynomial num to SymPy expression
     tev list of TaylorEval objects
     typn index ot tev
 
@@ -334,10 +334,10 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
     using polynomials; taylor has a very dumb interpreter transforming
     Mul, Pow, and the elementary functions in the corresponding operations
     in polynomials on a ring; it starts with the QQ ring; if the computation
-    fails, it passes to the symbolic ring (SR) consisting of the sympy
+    fails, it passes to the symbolic ring (SR) consisting of the SymPy
     expressions not having `var` and pol_pars in its atoms;
     if also that fails, it passes it to the series method.
-    Finally convert the polynomial to a sympy expression.
+    Finally convert the polynomial to a SymPy expression.
 
     This procedure can be extended to some other cases, e.g. when
     p_i = n_1*..*nh/(d_1*...*d_k) and
@@ -374,7 +374,7 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
     1 + x*log(x) + x**2*log(x)**2/2 + O(x**3*log(x)**3)
 
     In these examples y is first treated internally
-    as a Sympy symbol, then as a polynomial parameter;
+    as a SymPy symbol, then as a polynomial parameter;
     the latter version is faster
 
     >>> taylor(atan(x*y + x**2), x, 0, 5)
@@ -575,12 +575,12 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
             else:
                 pxdeg = polynomial_degree(px, var)
                 # if px is a polynomial in var it is faster to use the series
-                # method or Sympy polynomials
+                # method or SymPy polynomials
                 if pxdeg >= 0:
                     if px.is_Pow:
                         # for polynomials on rationals,
                         # e.g. px = (1 + 3*x + 2*x**2)**100, prec=10
-                        # using Sympy polynomials is very fast
+                        # using SymPy polynomials is very fast
                         # px = (pi + 3*x + 2*x**2)**100 is faster
                         # using the series method; in this case
                         # pb.gens = (x, pi)
@@ -875,7 +875,7 @@ def _taylor_term1(p, var, tev, typ, prec, rdeco):
 def _taylor_eval(p, prec, tev, typ):
     """taylor expansion attempted with lpoly
 
-    p Sympy expression
+    p SymPy expression
     tev tuple of TaylorEval objects of the form
     tev = (TaylorEval(gens, lpq, prec), TaylorEval(gens, lps, prec))
       lpq LPoly on QQ, lps LPoly on SR
@@ -922,23 +922,23 @@ def _taylor_eval(p, prec, tev, typ):
 
 
 class TaylorEval:
-    """evaluation of sympy expressions as lpoly polynomials
+    """evaluation of SymPy expressions as lpoly polynomials
     """
     def __init__(self, gens, lp, analytic=False):
         """
         prec  precision
-        gens polynomial variables in Sympy (the series variable
+        gens polynomial variables in SymPy (the series variable
              and the variables in pol_pars
-        var = gens[0] is the series variable in Sympy
+        var = gens[0] is the series variable in SymPy
         ngens number of polynomial variables
         lp LPoly on which the computation is done
           lp can be on the ring QQ or on SR
-          SR is the ring of the expressions in Sympy which
+          SR is the ring of the expressions in SymPy which
           do not contain the gens variables
         lvname = 'X0'
         lgens polynomial variables in lpoly
         lvar = X0 is the series variable in lpoly
-        dgens dictionary to do from Sympy to lpoly variabled
+        dgens dictionary to do from SymPy to lpoly variabled
 
         Examples
         ========
@@ -999,7 +999,7 @@ class TaylorEval:
             return s
 
     def __call__(self, f, prec):
-        """evaluate the sympy expression self as a lpoly polynomial
+        """evaluate the SymPy expression self as a lpoly polynomial
         representing a series of precision `prec`
         """
         prec = int(prec)
