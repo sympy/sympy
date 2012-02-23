@@ -5,7 +5,7 @@ taylor() attempts taylor expansion using lpoly; if it fails it calls the
 series method.
 """
 
-from sympy.polys.lpoly import (LPoly, monomial_tobasic, TaylorEvalError)
+from sympy.polys.lpoly import (LPoly, monomial_as_expr, TaylorEvalError)
 from sympy.series.order import O
 from sympy.core.singleton import S
 from sympy.polys.domains import QQ, ZZ
@@ -252,10 +252,10 @@ def _tobasic(num, tev, typn):
     >>> lpq = LPoly('X', QQ)
     >>> lps = LPoly('X', sympify)
     >>> tev = (TaylorEval([x], lpq), TaylorEval([x], lps))
-    >>> X = lpq.gens()[0]
+    >>> X = lpq.gens[0]
     >>> _tobasic(X**2 + X + 1, tev, 0)
     x**2 + x + 1
-    >>> X = lps.gens()[0]
+    >>> X = lps.gens[0]
     >>> _tobasic(X**2 + cos(2)*X + 1, tev, 1)
     x**2 + x*cos(2) + 1
     """
@@ -264,12 +264,12 @@ def _tobasic(num, tev, typn):
     if typn == 0:
         for m1, c1 in num.iteritems():
             c1 = QQ.to_sympy(c1)
-            m1 = monomial_tobasic(m1, *gens)
+            m1 = monomial_as_expr(m1, *gens)
             a.append(c1*m1)
     else:
         for m1, c1 in num.iteritems():
             c1 = c1.expand()
-            m1 = monomial_tobasic(m1, *gens)
+            m1 = monomial_as_expr(m1, *gens)
             a.append(c1*m1)
     return Add(*a)
 
@@ -514,7 +514,7 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
 
         p2, typ, pw, n0 = rx
         den, typd = _taylor_eval(p2, prec+n0, tev, typ)
-        den = den/den.lp.gens()[0]**n0
+        den = den/den.lp.gens[0]**n0
         c = den[den.lp.zero_mon]
         if c != 1:
             den = den/c
@@ -535,7 +535,7 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
     if p.is_Mul and log in classes:
         # initialise polynomials in tlog
         lpl = LPoly('tlog', sympify, lex)
-        tlog = lpl.gens()[0]
+        tlog = lpl.gens[0]
         p12 = lpl(1)
         for q in p.args:
             if q.__class__ is not log:
@@ -748,7 +748,7 @@ def _taylor_term1(p, var, tev, typ, prec, rdeco):
             pw -= pw0*n
             prec1 = _round(prec+pw+n0)
             den, typd = _taylor_eval(p2, prec1, tev, typ2)
-            den = den/den.lp.gens()[0]**n0
+            den = den/den.lp.gens[0]**n0
             prec1 = _round(prec + pw)
             if not n.is_Integer:
                 c = den[den.lp.zero_mon]
@@ -843,7 +843,7 @@ def _taylor_term1(p, var, tev, typ, prec, rdeco):
             px, typx, n0x, nx = denv[0]
             den, typd = _taylor_eval(px, prec1+n0x, tev, typx)
             lp = den.lp
-            ring, lvar = lp.ring, lp.gens()[0]
+            ring, lvar = lp.ring, lp.gens[0]
             if n0x:
                 den = den/lvar**n0x
             if not nx.is_Integer:
@@ -858,7 +858,7 @@ def _taylor_term1(p, var, tev, typ, prec, rdeco):
                 px, typx, n0x, nx = denv[i]
                 den1, typd1 = _taylor_eval(px, prec1+n0x, tev, typx)
                 if n0x:
-                    den1 = den1/den1.lp.gens()[0]**n0x
+                    den1 = den1/den1.lp.gens[0]**n0x
                 if not nx.is_Integer:
                     cx = den1[den1.lp.zero_mon]
                     if cx != 1:
@@ -987,7 +987,7 @@ class TaylorEval:
         self.ring = lp.ring
         self.lp = lp
         self.lvname = 'X0'
-        self.lgens = lp.gens()
+        self.lgens = lp.gens
         self.lvar = self.lgens[0]
         self.dgens = dict(zip(self.gens, self.lgens))
         self.analytic = analytic

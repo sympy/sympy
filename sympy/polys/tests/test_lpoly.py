@@ -4,7 +4,7 @@ from sympy import Symbol, S, symbols, Rational, sympify, sqrt
 from sympy.polys.domains import QQ, PythonRationalType
 from sympy.series import series
 from sympy.core.function import expand
-from sympy.polys.lpoly import LPoly, MLPoly, lgens, mlgens, nclgens, LPolySubs, monomial_tobasic, TaylorEvalError, _PythonRationalType
+from sympy.polys.lpoly import LPoly, MLPoly, lgens, mlgens, nclgens, LPolySubs, monomial_as_expr, TaylorEvalError, _PythonRationalType
 from sympy.polys.monomialtools import lex, grlex
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.elementary.exponential import exp, log
@@ -30,7 +30,7 @@ def test_str():
     # or in gmpy mode, in one case giving n/1, in the other giving n
     # for QQ(n, 1); in this test these quantities do not appear
     lp = LPoly(list('xyz'), QQ, lex)
-    x, y, z = lp.gens()
+    x, y, z = lp.gens
     p = lp('  +z**4 +1/2*z**2 -1/4')
     assert str(p) == 'z**4 + 1/2*z**2 - 1/4'
     p = lp('z**4 -1/2')
@@ -44,7 +44,7 @@ def test_str():
     assert +x == x
     lp2 = LPoly('w', QQ, lex)
     def test1(p):
-        w = lp2.gens()
+        w = lp2.gens
         p2 = lp2(p)
     raises(NotImplementedError, 'test1(p)')
 
@@ -58,14 +58,14 @@ def test_mon_eval():
     s = '31*x**2*y**3*z'
     assert lp.mon_eval(s) == ((2, 3, 1), QQ(31))
 
-def test_monomial_tobasic():
+def test_monomial_as_expr():
     x, y = symbols('x,y')
-    assert monomial_tobasic((1,), x) == x
-    assert monomial_tobasic((1, 2), x, y) == x*y**2
+    assert monomial_as_expr((1,), x) == x
+    assert monomial_as_expr((1, 2), x, y) == x*y**2
 
 def test_gens():
     lp = LPoly(list('xy'), QQ, lex)
-    x, y = lp.gens()
+    x, y = lp.gens
     assert x == lp('x')
     #assert x**4 == lp('x**4')
 
@@ -84,15 +84,15 @@ def test_from_mon():
 
 def test_variables():
     lp = LPoly('z, y, x', QQ, lex)
-    z, y, x = lp.gens()
+    z, y, x = lp.gens
     p = x*y + 3*y**2
     assert p.variables() == (1, 2)
     lp = LPoly('x, y, z', QQ, lex)
-    x, y, z = lp.gens()
+    x, y, z = lp.gens
     p = x*y + 3*y**2
     assert p.variables() == (0, 1)
     lp = LPoly('z,y,x,', QQ, lex)
-    z, y, x = lp.gens()
+    z, y, x = lp.gens
     p = x*y + 3*y**2
     assert p.variables() == (1, 2)
 
@@ -190,7 +190,7 @@ def test_eq():
 def test_coefficient():
     gens=['x%d' % i for i in range(11)]
     lp = LPoly(gens, QQ, lex)
-    x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10 = lp.gens()
+    x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10 = lp.gens
     p1 = x0**6 + 6*x0**5*x1 + 15*x0**4*x1**2 + 20*x0**3*x1**3 + 15*x0**2*x1**4 + 6*x0*x1**5 + x1**6 + x0**4*x1**2*x2
     m = x0**2
     p2 = p1.coefficient(m)
@@ -1025,8 +1025,8 @@ def test_subs_trunc():
     assert p2 == p3
 
 def test_LPolySubs():
-    lp = LPoly(['x%d' % i for i in range(11)], QQ, lex)
-    x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10 = lp.gens()
+    lp = LPoly('x:11', QQ, lex)
+    x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10 = lp.gens
     lp1, c = lgens('c', QQ, lex)
     rules = {'x0':c, 'x1':c+1, 'x2':c**2+1, 'x3':c+2, 'x4':c**4, 'x5':c+1,
         'x6':c*(c-3), 'x7':c*(c-7), 'x8':c+7, 'x9':c+9, 'x10':c+10}

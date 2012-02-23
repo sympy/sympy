@@ -3,15 +3,19 @@ using monomials instead of packed exponents for the monomials.
 """
 
 import sympy
+from sympy import S, Rational, sign, symbols, Add, Mul, Pow, Symbol
+from sympy.core.compatibility import is_sequence
+from sympy.core.symbol import symbols
 from sympy.polys.monomialtools import monomial_mul, monomial_div, monomial_min, lex
-from sympy.core import Add, Mul, Pow
-from sympy import S, Rational, sign
 from sympy.polys.domains import ZZ, QQ, PythonRationalType
+from sympy.ntheory.residue_ntheory import int_tested
+
 from copy import copy
 import re
 import math
-from sympy.ntheory.residue_ntheory import int_tested
-from sympy.core.symbol import symbols
+
+_rpm = re.compile('[+-]')
+_re_var_split = re.compile(r"\s*,\s*|\s+")
 
 class TaylorEvalError(TypeError):
     """
@@ -26,11 +30,15 @@ def giant_steps(target):
     code adapted from mpmath/libmp/libintmath.py
     """
     L = [target]
-    while L[-1] > 2:
-        L = L + [(L[-1]+1)//2]
+    start = 2
+    while 1:
+        Li = L[-1]//2 + 2
+        if Li >= L[-1] or Li < start:
+            if L[-1] != start:
+                L.append(start)
+            break
+        L.append(Li)
     return L[::-1]
-
-rpm = re.compile('[+-]')
 
 def monomial_zero(n):
     """zero monomial in n variables"""
@@ -43,7 +51,6 @@ def monomial_basis(i, n):
     a = [0]*n
     a[i] = 1
     return tuple(a)
-
 
 def monomial_from_sequence(a):
     """
@@ -58,18 +65,16 @@ def monomial_pow(a, n):
     b = [x*n for x in a]
     return tuple(b)
 
-def monomial_tobasic(monom, *gens):
+def monomial_as_expr(monom, *gens):
     """
-    >>> from sympy.polys.lpoly import monomial_tobasic
+    >>> from sympy.polys.lpoly import monomial_as_expr
     >>> from sympy import symbols
     >>> x, y = symbols('x, y')
-    >>> monomial_tobasic((2, 1), x, y)
+    >>> monomial_as_expr((2, 1), x, y)
     x**2*y
     """
-    term = []
-    for g, m in zip(gens, monom):
-        term.append(Pow(g, m))
-    return Mul(*term)
+    assert len(monom) == len(gens)
+    return Mul(*[Pow(g, m) for (g, m) in zip(gens, monom)])
 
 gmpy_mode = not QQ(1).__class__ is PythonRationalType
 
@@ -98,8 +103,6 @@ def _PythonRationalType(p):
             return PythonRationalType(int(a[0]), 1)
     else:
         return PythonRationalType(p)
-
-_re_var_split = re.compile(r"\s*,\s*|\s+")
 
 class BaseLPoly(object):
     """
@@ -130,7 +133,7 @@ class BaseLPoly(object):
     >>> lp = LPoly('x, y', QQ)
     >>> lp.zero_mon
     (0, 0)
-    >>> x, y = lp.gens()
+    >>> x, y = lp.gens
     >>> p = (x + y)**2
     >>> p
     x**2 + 2*x*y + y**2
@@ -140,14 +143,17 @@ class BaseLPoly(object):
     """
 
     def __init__(self, pol_gens, ring, order, **kwds):
+        if not is_sequence(pol_gens, include=(str, Symbol)) or not pol_gens:
+            raise ValueError('expecting string, Symbol or other ordered iterable')
+
         if isinstance(pol_gens, str):
-            names = pol_gens.strip()
-            as_seq= names.endswith(',')
-            if as_seq:
-                names = names[:-1].rstrip()
-            if not names:
-                raise ValueError('no symbols given')
-            pol_gens = [v.name for v in symbols(pol_gens, seq=True)]
+            pol_gens = [s.name for s in symbols(pol_gens, seq=True)]
+        elif isinstance(pol_gens, Symbol):
+            pol_gens = pol_gens.name
+        elif isinstance(pol_gens[0], Symbol):
+            pol_gens = [s.name for s in pol_gens]
+        elif not isinstance(pol_gens[0], str):
+            raise ValueError('expecting iterables of Symbols or strings')
 
         self.pol_gens = tuple(pol_gens)
         self.ngens = len(pol_gens)
@@ -183,8 +189,9 @@ class BaseLPoly(object):
 
         return s
 
+    @property
     def gens(self):
-        """return the list of the variables
+        """return a list of the LPoly generators
         """
         one = self.ring(1)
         ngens = self.ngens
@@ -194,7 +201,7 @@ class BaseLPoly(object):
             p = LPolyElement(self)
             p[expv] = one
             a.append(p)
-        return a
+        return tuple(a)
 
     def read_monom(self, s):
         """compute expv for the string 'x_0**e_0*...'
@@ -281,11 +288,11 @@ class BaseLPoly(object):
             sgn = s[0]
         else:
             sgn = '+'
-            s = '+' + s
-        it = rpm.finditer(s)
+            s = sgn + s
+        it = _rpm.finditer(s)
         next(it)
         s1 = s[1:]
-        if rpm.search(s1):
+        if _rpm.search(s1):
             start = 1
             for match in it:
                 t = match.span()
@@ -405,8 +412,7 @@ def lgens(pol_gens, ring, order=lex, **kwds):
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.lpoly import lgens
     >>> lp, x, y = lgens('x, y', QQ)
-    >>> p = (x + y)**2
-    >>> p
+    >>> (x + y)**2
     x**2 + 2*x*y + y**2
     """
     lp = BaseLPoly(pol_gens, ring, order, **kwds)
@@ -416,21 +422,21 @@ def lgens(pol_gens, ring, order=lex, **kwds):
     else:
         lp.__class__ = LPoly
         lp.__name__ = 'LPoly'
-    return [lp] + lp.gens()
+    return (lp,) + lp.gens
 
 def mlgens(pol_gens, ring, order=lex, **kwds):
     """
     factory function to generate MLPoly object and its generators
     """
     lp = MLPoly(pol_gens, ring, order, **kwds)
-    return [lp] + lp.gens()
+    return (lp,) + lp.gens
 
 def nclgens(pol_gens, ring, order=lex, **kwds):
     """
     factory function to generate NCLPoly object and its generators
     """
     lp = NCLPoly(pol_gens, ring, order, **kwds)
-    return [lp] + lp.gens()
+    return (lp,) + lp.gens
 
 
 
@@ -667,7 +673,7 @@ class LPolyElement(dict):
         >>> from sympy.polys.domains import QQ
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ)
-        >>> p = (x+y)**2
+        >>> p = (x + y)**2
         >>> p1 = p.copy()
         >>> p2 = p
         >>> p[lp.zero_mon] = 3
@@ -769,13 +775,13 @@ class LPolyElement(dict):
 
         Algorithm:
         if r_i is the solution at order i
-        a*r_i + f(r_i) - y = O(y^(i+1))
-        r_(i+1) = r_i + e such that
-        a*r_(i+1) + f(r_(i+1)) - y = O(y^(i+2))
-        a*e + f(r_i) = O(y^(i+2))
+        a*r_i + f(r_i) - y = O(y^(i + 1))
+        r_(i + 1) = r_i + e such that
+        a*r_(i + 1) + f(r_(i + 1)) - y = O(y^(i + 2))
+        a*e + f(r_i) = O(y^(i + 2))
         e = -f(r_i)/a
         so that one uses the recursion relation
-        r_(i+1) = r_i -f(r_i)/a
+        r_(i + 1) = r_i -f(r_i)/a
         with the boundary condition
         r_1 = y
 
@@ -784,7 +790,7 @@ class LPolyElement(dict):
         >>> from sympy.polys.domains import QQ
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ)
-        >>> p = x+x**2
+        >>> p = x + x**2
         >>> p1 = p.series_reversion('x', 4, 'y')
         >>> p1
         2*y**3 - y**2 + y
@@ -814,7 +820,7 @@ class LPolyElement(dict):
         r = lp(ny)/a
         for i in range(2, n):
             sb = LPolySubs(lp, lp, {nx:r})
-            sp = sb.subs_trunc(p, ny, i+1)
+            sp = sb.subs_trunc(p, ny, i + 1)
             sp = sp.coefficient_t((j, i))*y**i
             r -= sp/a
         return r
@@ -829,7 +835,7 @@ class LPolyElement(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x**2 + y**2
-        >>> p1 = p.subs(x=x+y, y=x-y)
+        >>> p1 = p.subs(x=x + y, y=x - y)
         >>> p1
         2*x**2 + 2*y**2
         """
@@ -848,7 +854,7 @@ class LPolyElement(dict):
                 in p.lp.gens and px, py are the polynomials with which
                 they are substituted:
                 p = ... + c_{i,j}*x**i*y**j + ... ->
-                   .....+ c_{i,j}*px**i*py**j + ...
+                    ... + c_{i,j}*px**i*py**j + ...
 
         Examples
         ========
@@ -856,7 +862,7 @@ class LPolyElement(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x**2 + y**2
-        >>> p2 = p.subs_trunc('x', 3, y=(x+y)**2)
+        >>> p2 = p.subs_trunc('x', 3, y=(x + y)**2)
         >>> p2
         6*x**2*y**2 + x**2 + 4*x*y**3 + y**4
         >>> p.subs_trunc('x', 3, y=p.lp(1))
@@ -868,13 +874,13 @@ class LPolyElement(dict):
         y**2 + 1
 
         Notice that substitutions are not done one after the other
-        >>> p.subs_trunc('x', 3, x=x+y, y=x+2*y)
+        >>> p.subs_trunc('x', 3, x=x + y, y=x + 2*y)
         2*x**2 + 6*x*y + 5*y**2
-        >>> (x+y)**2 + (x+2*y)**2
+        >>> (x + y)**2 + (x + 2*y)**2
         2*x**2 + 6*x*y + 5*y**2
 
         which differs from
-        >>> p.subs_trunc('x', 3, x=x+y).subs_trunc('x', 3, y=x+2*y)
+        >>> p.subs_trunc('x', 3, x=x + y).subs_trunc('x', 3, y=x + 2*y)
         5*x**2 + 12*x*y + 8*y**2
         """
         lp = p.lp
@@ -926,7 +932,7 @@ class LPolyElement(dict):
         if not p2:
             return p1
         lp1 = p1.lp
-        if p1 in lp1.gens():
+        if p1 in lp1.gens:
             return p1 + p2
         if isinstance(p2, LPolyElement):
             if lp1 != p2.lp:
@@ -1041,7 +1047,7 @@ class LPolyElement(dict):
         if p1 is a generator, a new polynomial will be returned
         """
         lp1 = p1.lp
-        if p1 in lp1.gens():
+        if p1 in lp1.gens:
             return p1 - p2
         if isinstance(p2, LPolyElement):
             if lp1.__class__ != p2.lp.__class__ or lp1 != p2.lp:
@@ -1154,7 +1160,7 @@ class LPolyElement(dict):
         >>> p
         2*x**2 - y**2
         """
-        if p in p.lp.gens():
+        if p in p.lp.gens:
             return p + p1*p2
         if isinstance(p1, LPolyElement) and isinstance(p2, LPolyElement):
             if p1.lp != p2.lp:
@@ -1192,7 +1198,7 @@ class LPolyElement(dict):
         >>> p1 is p
         False
         """
-        if p in p.lp.gens():
+        if p in p.lp.gens:
             return p*c
         if not c:
             p.clear()
@@ -1210,10 +1216,10 @@ class LPolyElement(dict):
         >>> from sympy.polys.domains import QQ
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ)
-        >>> p1 = (x**2 + x + y)*(x**2-y**2)
+        >>> p1 = (x**2 + x + y)*(x**2 - y**2)
         >>> p2 = x + y
         >>> p3 = p1/p2
-        >>> p4 = (x**2 + x + y)*(x-y)
+        >>> p4 = (x**2 + x + y)*(x - y)
         >>> p3 == p4
         True
         """
@@ -1270,7 +1276,7 @@ class LPolyElement(dict):
         >>> p1 is p
         False
         """
-        if self in self.lp.gens():
+        if self in self.lp.gens:
             self = self.copy()
         coeff = a[1]
         expv = a[0]
@@ -1302,7 +1308,7 @@ class LPolyElement(dict):
         >>> p1
         x**4 + 3*x*y**3*z**3 + 3*x*y**2*z**4 + 2*y
         """
-        if p1 in p1.lp.gens():
+        if p1 in p1.lp.gens:
             p1 = p1.copy()
         (m, c) = mc
         get = p1.get
@@ -1339,7 +1345,7 @@ class LPolyElement(dict):
        >>> from sympy.polys.domains import QQ
        >>> from sympy.polys.lpoly import lgens
        >>> lp, x, y = lgens('x, y', QQ)
-       >>> p = (x+y)**4
+       >>> p = (x + y)**4
        >>> p1 = p.leading_term()
        >>> p1
        x**4
@@ -1402,7 +1408,7 @@ class LPolyElement(dict):
         p**m = sum_k=0**(m*L) a(m, k)*x**k
         Miller pure recurrence formula (see article by
         D. Zeilberger)
-        a(m, k) = 1/(k*p_0)*sum_i=1**L p_i*((m+1)*i-k)*a(m, k-i)
+        a(m, k) = 1/(k*p_0)*sum_i=1**L p_i*((m + 1)*i - k)*a(m, k - i)
 
         Reference: D. Zeilberger 'The Miller Recurrence for
         Exponentiating a Polynomial, and its q-Analog'
@@ -1421,22 +1427,22 @@ class LPolyElement(dict):
         lp = p.lp
         if lp.ngens > 1:
             raise NotImplementedError("only for univariate polynomials")
-        x = lp.gens()[0]
+        x = lp.gens[0]
         assert lp.ngens == 1
         mindeg = min(p)[0]
         if mindeg != 0:
             p = p/x**mindeg
         degp = max(p)[0]
-        pv = [0]*(degp+1)
+        pv = [0]*(degp + 1)
         for k, v in p.iteritems():
             pv[k[0]] = v
-        a = [lp(0) for i in range(m*degp+1)]
+        a = [lp(0) for i in range(m*degp + 1)]
         a[0] = pv[0]**m
         res = lp(a[0])
-        for k in range(1, m*degp+1):
+        for k in range(1, m*degp + 1):
             s = 0
-            for i in range(1, min(degp, k)+1):
-                s += pv[i]*((m+1)*i - k)*a[k-i]
+            for i in range(1, min(degp, k) + 1):
+                s += pv[i]*((m + 1)*i - k)*a[k - i]
             a[k] = s/(k*pv[0])
             res[(k, )] = a[k]
         if mindeg != 0:
@@ -1514,8 +1520,8 @@ class LPolyElement(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ)
         >>> f = x**3
-        >>> f0 = x-y**2
-        >>> f1 = x-y
+        >>> f0 = x - y**2
+        >>> f1 = x - y
         >>> qv, r = f.division((f0, f1))
         >>> qv[0]
         x**2 + x*y**2 + y**4
@@ -1565,7 +1571,7 @@ class LPolyElement(dict):
         >>> from sympy.polys.domains import QQ
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ)
-        >>> p = (x+y)**4
+        >>> p = (x + y)**4
         >>> p1 = p.trunc('x', 3)
         >>> p1
         6*x**2*y**2 + 4*x*y**3 + y**4
@@ -1775,8 +1781,8 @@ class LPolyElement(dict):
 
     def _series_inversion_nc(p, iv, prec):
         """
-        a = A^-1, c =  B*a
-        (A + B)^-1 = a*(1 - c + c^2 - ...)
+        a = A**-1, c =  B*a
+        (A + B)**-1 = a*(1 - c + c**2 - ...)
         """
         lp = p.lp
         zm = lp.zero_mon
@@ -1811,7 +1817,7 @@ class LPolyElement(dict):
           prec truncation integer for the variable
 
         p is a series with O(x_1**n_1*..x_m**n_m) in
-        variables x_k with index or name iv[k-1]
+        variables x_k with index or name iv[k - 1]
 
         p has constant term different from zero
 
@@ -1835,15 +1841,15 @@ class LPolyElement(dict):
         zm = lp.zero_mon
         if zm not in p:
             raise NotImplementedError('no constant term in series')
-        if (p-p[zm]).has_constant_term(iv):
-            raise NotImplementedError('p-p[0] must not have a constant term in the series variables')
+        if (p - p[zm]).has_constant_term(iv):
+            raise NotImplementedError('p - p[0] must not have a constant term in the series variables')
         if not lp.commuting:
             return p._series_inversion_nc(iv, prec)
         return p._series_inversion1(iv, prec)
 
     def derivative(self, n):
         """derivative of p with respect to x_n; the argument n is the
-        index of the variable x_n = self.lp.gens()[n], or the
+        index of the variable x_n = self.lp.gens[n], or the
         corresponding string.
 
         Examples
@@ -1872,7 +1878,7 @@ class LPolyElement(dict):
 
     def integrate(self, n):
         """ integrate p with respect to x_n; the argument n is the
-        index of the variable x_n = self.lp.gens()[n], or the
+        index of the variable x_n = self.lp.gens[n], or the
         corresponding string.
 
         Examples
@@ -1892,7 +1898,7 @@ class LPolyElement(dict):
         mn = monomial_basis(n, lp.ngens)
         for expv in self:
             e = monomial_mul(expv, mn)
-            p1[e] = self[expv]/(expv[n]+1)
+            p1[e] = self[expv]/(expv[n] + 1)
         return p1
 
 ############## elementary functions ####################
@@ -1900,12 +1906,12 @@ class LPolyElement(dict):
     def series_from_list(p, c, iv, prec, concur=1):
         """series sum c[n]*p**n
         reduce the number of multiplication summing concurrently
-        ax = [1, p, p**2, .., p**(J-1)]
+        ax = [1, p, p**2, .., p**(J - 1)]
         s = sum(c[i]*ax[i] for i in range(0, J)) +
             sum(c[i]*ax[i] for i in range(J, 2*J))*p**J +
-            sum(c[i]*ax[i] for i in range(2*J, 3*J))*p**(2*J) + ...+
-            sum(c[i]*ax[i] for i in range((K-1)*J, K*J))*p**((K-1)*J)
-        with K >= (n+1)/J
+            sum(c[i]*ax[i] for i in range(2*J, 3*J))*p**(2*J) + ... +
+            sum(c[i]*ax[i] for i in range((K - 1)*J, K*J))*p**((K - 1)*J)
+        with K >= (n + 1)/J
 
         Examples
         ========
@@ -1913,8 +1919,8 @@ class LPolyElement(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ)
         >>> c = [1, 3, 5, 7]
-        >>> p1 = (x+y).series_from_list(c, 'x', 3)
-        >>> p2 = (1 + 3*(x+y) + 5*(x+y)**2 + 7*(x+y)**3).trunc('x', 3)
+        >>> p1 = (x + y).series_from_list(c, 'x', 3)
+        >>> p2 = (1 + 3*(x + y) + 5*(x + y)**2 + 7*(x + y)**3).trunc('x', 3)
         >>> p1 == p2
         True
         """
@@ -1952,24 +1958,24 @@ class LPolyElement(dict):
         pj = ax[-1].mul_trunc(p, iv, prec)
         b = lp(1)
         s = lp(0)
-        for k in range(K-1):
+        for k in range(K - 1):
             r = J*k
             s1 = c[r]
             for j in range(1, J):
-                s1 += c[r+j]*ax[j]
+                s1 += c[r + j]*ax[j]
             s1 = s1.mul_trunc(b, iv, prec)
             s += s1
             b = b.mul_trunc(pj, iv, prec)
             if not b:
                 break
-        k = K-1
+        k = K - 1
         r = J*k
         if r < n:
             s1 = c[r]*lp(1)
             for j in range(1, J):
-                if r+j >= n:
+                if r + j >= n:
                     break
-                s1 += c[r+j]*ax[j]
+                s1 += c[r + j]*ax[j]
             s1 = s1.mul_trunc(b, iv, prec)
             s += s1
         return s
@@ -2005,7 +2011,7 @@ class LPolyElement(dict):
         """
         lp = p.lp
         lp1 = LPoly(['_x'], lp.ring, lp.order)
-        _x = lp1.gens()[0]
+        _x = lp1.gens[0]
         h = int(args[-1])
         args1 = args[:-2] + ('_x', h)
         zm = lp.zero_mon
@@ -2057,7 +2063,7 @@ class LPolyElement(dict):
         else:
             sign = 0
         for precx in giant_steps(prec):
-            tmp = p1.pow_trunc(n+1, iv, precx)
+            tmp = p1.pow_trunc(n + 1, iv, precx)
             tmp = tmp.mul_trunc(p, iv, precx)
             p1 += p1/n - tmp/n
         if sign:
@@ -2077,7 +2083,7 @@ class LPolyElement(dict):
           prec truncation integer for the variable
 
         p is a series with O(x_1**n_1*..x_m**n_m) in
-        variables x_k with index or name iv[k-1]
+        variables x_k with index or name iv[k - 1]
 
         Examples
         ========
@@ -2106,7 +2112,7 @@ class LPolyElement(dict):
           prec truncation integer for the variable
 
         p is a series with O(x_1**n_1*..x_m**n_m) in
-        variables x_k with index or name iv[k-1]
+        variables x_k with index or name iv[k - 1]
 
         Examples
         ========
@@ -2137,7 +2143,7 @@ class LPolyElement(dict):
                     return cn*(p/c).nth_root(n, iv, prec)
 
             if not lp.SR:
-                raise TaylorEvalError('p-1 must not have a constant term in the series variables')
+                raise TaylorEvalError('p - 1 must not have a constant term in the series variables')
             else:
                 if lp.zero_mon in p:
                     c = p[lp.zero_mon]
@@ -2211,7 +2217,7 @@ class LPolyElement(dict):
             else:
                 cf = one/k
             c.append(cf)
-        return (p-1).series_from_list(c, iv, prec)
+        return (p - 1).series_from_list(c, iv, prec)
 
     def log(p, iv, prec):
         """
@@ -2241,11 +2247,11 @@ class LPolyElement(dict):
                         return sympy.functions.log(c) + (p/c).log(iv, prec)
                     else:
                         raise NotImplementedError
-            raise NotImplementedError('p-1 must not have a constant term in the series variables')
+            raise NotImplementedError('p - 1 must not have a constant term in the series variables')
         lp = p.lp
         if lp.commuting:
             dlog = p.derivative(iv)
-            dlog = dlog.mul_trunc(p._series_inversion1(iv, prec), iv, prec-1)
+            dlog = dlog.mul_trunc(p._series_inversion1(iv, prec), iv, prec - 1)
             return dlog.integrate(iv)
         return p._log_series(iv, prec)
 
@@ -2255,7 +2261,7 @@ class LPolyElement(dict):
         c = [-mo]
         p2 = p.square_trunc(iv, prec)
         for k in range(1, prec):
-            c.append(mo**k/(2*k+1))
+            c.append(mo**k/(2*k + 1))
         s = p2.series_from_list(c, iv, prec)
         s = s.mul_trunc(p, iv, prec)
         return s
@@ -2281,8 +2287,8 @@ class LPolyElement(dict):
         if iv in lp.pol_gens and lp.commuting:
             dp = p.derivative(iv)
             p1 = p.square_trunc(iv, prec) + 1
-            p1 = p1.series_inversion(iv, prec-1)
-            p1 = dp.mul_trunc(p1, iv, prec-1)
+            p1 = p1.series_inversion(iv, prec - 1)
+            p1 = dp.mul_trunc(p1, iv, prec - 1)
             return p1.integrate(iv)
         else:
             return p._atan_series(iv, prec)
@@ -2338,14 +2344,14 @@ class LPolyElement(dict):
             # get a good value
             if len(p) > 20:
                 dp = p.derivative(iv)
-                p1 = 1 - p.square_trunc(iv, prec-1)
-                p1 = p1.nth_root(-2, iv, prec-1)
-                p1 = dp.mul_trunc(p1, iv, prec-1)
+                p1 = 1 - p.square_trunc(iv, prec - 1)
+                p1 = p1.nth_root(-2, iv, prec - 1)
+                p1 = dp.mul_trunc(p1, iv, prec - 1)
                 return p1.integrate(iv)
             one = lp.ring(1)
             c = [0, one, 0]
             for k in range(3, prec, 2):
-                c.append((k-2)**2*c[-2]/(k*(k-1)))
+                c.append((k - 2)**2*c[-2]/(k*(k - 1)))
                 c.append(0)
             return p.series_from_list(c, iv, prec)
 
@@ -2371,9 +2377,9 @@ class LPolyElement(dict):
         lp = p.lp
         if iv in lp.pol_gens and lp.commuting:
             dp = p.derivative(iv)
-            p1 = 1 + p.square_trunc(iv, prec-1)
-            p1 = p1.nth_root(-2, iv, prec-1)
-            p1 = dp.mul_trunc(p1, iv, prec-1)
+            p1 = 1 + p.square_trunc(iv, prec - 1)
+            p1 = p1.nth_root(-2, iv, prec - 1)
+            p1 = dp.mul_trunc(p1, iv, prec - 1)
             return p1.integrate(iv)
         else:
             raise NotImplementedError
@@ -2384,7 +2390,7 @@ class LPolyElement(dict):
         c = [one]
         p2 = p.square_trunc(iv, prec)
         for k in range(1, prec):
-            c.append(one/(2*k+1))
+            c.append(one/(2*k + 1))
         s = p2.series_from_list(c, iv, prec)
         s = s.mul_trunc(p, iv, prec)
         return s
@@ -2408,8 +2414,8 @@ class LPolyElement(dict):
         if iv in lp.pol_gens and lp.commuting:
             dp = p.derivative(iv)
             p1 = -p.square_trunc(iv, prec) + 1
-            p1 = p1.series_inversion(iv, prec-1)
-            p1 = dp.mul_trunc(p1, iv, prec-1)
+            p1 = p1.series_inversion(iv, prec - 1)
+            p1 = dp.mul_trunc(p1, iv, prec - 1)
             return p1.integrate(iv)
         else:
             return p._atanh_series(iv, prec)
@@ -2547,15 +2553,15 @@ class LPolyElement(dict):
         if len(p) > 20 and lp.ngens == 1:
             t = (p/2).tan(iv, prec)
             t2 = t.square_trunc(iv, prec)
-            p1 = (1+t2).series_inversion(iv, prec)
+            p1 = (1 + t2).series_inversion(iv, prec)
             return p1.mul_trunc(2*t, iv, prec)
         one = lp.ring(1)
         n = 1
         c = [0]
-        for k in range(2, prec+2, 2):
+        for k in range(2, prec + 2, 2):
             c.append(one/n)
             c.append(0)
-            n *= -k*(k+1)
+            n *= -k*(k + 1)
         return p.series_from_list(c, iv, prec)
 
     def cos(p, iv, prec):
@@ -2586,15 +2592,15 @@ class LPolyElement(dict):
         if len(p) > 20 and lp.ngens == 1:
             t = (p/2).tan(iv, prec)
             t2 = t.square_trunc(iv, prec)
-            p1 = (1+t2).series_inversion(iv, prec)
-            return p1.mul_trunc(1-t2, iv, prec)
+            p1 = (1 + t2).series_inversion(iv, prec)
+            return p1.mul_trunc(1 - t2, iv, prec)
         one = lp.ring(1)
         n = 1
         c = []
-        for k in range(2, prec+2, 2):
+        for k in range(2, prec + 2, 2):
             c.append(one/n)
             c.append(0)
-            n *= -k*(k-1)
+            n *= -k*(k - 1)
         return p.series_from_list(c, iv, prec)
 
 
@@ -2605,8 +2611,8 @@ class LPolyElement(dict):
         iv = str(iv)
         t = (p/2).tan(iv, prec)
         t2 = t.square_trunc(iv, prec)
-        p1 = (1+t2).series_inversion(iv, prec)
-        return (p1.mul_trunc(1-t2, iv, prec), p1.mul_trunc(2*t, iv, prec))
+        p1 = (1 + t2).series_inversion(iv, prec)
+        return (p1.mul_trunc(1 - t2, iv, prec), p1.mul_trunc(2*t, iv, prec))
 
     def sinh(self, iv, prec):
         """ hyperbolic sin of a series
@@ -2706,7 +2712,7 @@ class LPolySubs(object):
     >>> from sympy.polys.lpoly import lgens
     >>> from sympy.polys.lpoly import LPolySubs
     >>> lp, x, y = lgens('x, y', QQ)
-    >>> sb = LPolySubs(lp, lp, {'y':y+1})
+    >>> sb = LPolySubs(lp, lp, {'y':y + 1})
     >>> p1 = sb.subs((x + y)**2)
     >>> p1
     x**2 + 2*x*y + 2*x + y**2 + 2*y + 1
@@ -2724,7 +2730,7 @@ class LPolySubs(object):
                  in p.lp.gens and px, py are the polynomials with which
                  they are substituted:
                  p = ... + c_{i,j}*x**i*y**j + ... ->
-                    .....+ c_{i,j}*px**i*py**j + ...
+                     ... + c_{i,j}*px**i*py**j + ...
 
         TODO currently it must be lp1.ring == lp2.ring
              Implement substitutions between different polynomial rings,
@@ -2736,7 +2742,7 @@ class LPolySubs(object):
         if lp1.ring.__class__ != lp2.ring.__class__ or lp1.ring != lp2.ring:
             raise NotImplementedError
         d = {} # replace monomials with (i, pw)
-        gens = lp1.gens()
+        gens = lp1.gens
         for i in range(lp1.ngens):
             d[(i, 1)] = gens[i]
         for var in rules:
@@ -2761,8 +2767,8 @@ class LPolySubs(object):
                     w, r = divmod(pw, 2)
                     if r == 0 and (i, w) in d:
                         d[(i, pw)] = d[(i, w)]**2
-                    elif (i, pw-1) in d:
-                        d[(i, pw)] = d[(i, pw-1)]*d[(i, 1)]
+                    elif (i, pw - 1) in d:
+                        d[(i, pw)] = d[(i, pw - 1)]*d[(i, 1)]
                     else:
                         d[(i, pw)] = d[(i, 1)]**pw
                 p2 *= d[(i, pw)]
@@ -2794,8 +2800,8 @@ class LPolySubs(object):
                     w, r = divmod(pw, 2)
                     if r == 0 and (i, w) in d:
                         d[(i, pw)] = d[(i, w)].square_trunc(ii, h)
-                    elif (i, pw-1) in d:
-                        d[(i, pw)] = d[(i, pw-1)].mul_trunc(d[(i, 1)], ii, h)
+                    elif (i, pw - 1) in d:
+                        d[(i, pw)] = d[(i, pw - 1)].mul_trunc(d[(i, 1)], ii, h)
                     else:
                         d[(i, pw)] = d[(i, 1)].pow_trunc(pw, ii, h)
                 p2 = p2.mul_trunc(d[(i, pw)], ii, h)
