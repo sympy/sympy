@@ -382,7 +382,7 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
     nr_1*..*nr_h/((dr_1/var**n0_1)*...*(dr_k/var**n0_k)) with precision
     depending on the factored power of `var`.
 
-    EXAMPLES
+    Examples
     ========
     >>> from sympy.core.symbol import symbols
     >>> from sympy.functions.elementary.trigonometric import (sin, tan, atan)

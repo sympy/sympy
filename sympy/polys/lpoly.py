@@ -11,6 +11,7 @@ from copy import copy
 import re
 import math
 from sympy.ntheory.residue_ntheory import int_tested
+from sympy.core.symbol import symbols
 
 class TaylorEvalError(TypeError):
     """
@@ -72,7 +73,7 @@ def monomial_tobasic(monom, *gens):
 
 gmpy_mode = not QQ(1).__class__ is PythonRationalType
 
-def PythonRationalType_new(p):
+def _PythonRationalType(p):
     """
     returns a PythonRationalType
     if p is a PythonRationalType it returns it
@@ -82,9 +83,9 @@ def PythonRationalType_new(p):
     Examples
     ========
     >>> from sympy.polys.domains.pythonrationalfield import PythonRationalType
-    >>> from sympy.polys.lpoly import PythonRationalType_new
+    >>> from sympy.polys.lpoly import _PythonRationalType
     >>> a =  PythonRationalType(2, 3)
-    >>> PythonRationalType_new(a)
+    >>> _PythonRationalType(a)
     2/3
     """
     if isinstance(p, PythonRationalType):
@@ -133,6 +134,9 @@ class BaseLPoly(object):
     >>> p = (x + y)**2
     >>> p
     x**2 + 2*x*y + y**2
+    >>> lp = LPoly('x:3', QQ)
+    >>> lp.gens()
+    [x0, x1, x2]
     """
 
     def __init__(self, pol_gens, ring, order, **kwds):
@@ -143,7 +147,7 @@ class BaseLPoly(object):
                 names = names[:-1].rstrip()
             if not names:
                 raise ValueError('no symbols given')
-            pol_gens = _re_var_split.split(names)
+            pol_gens = [v.name for v in symbols(pol_gens, seq=True)]
 
         self.pol_gens = tuple(pol_gens)
         self.ngens = len(pol_gens)
@@ -167,7 +171,7 @@ class BaseLPoly(object):
         self.ring_new = ring
         if not self.SR and not gmpy_mode:
             if ring.__class__ == QQ.__class__ and ring == QQ:
-                self.ring_new = PythonRationalType_new
+                self.ring_new = _PythonRationalType
         self.zero_mon = monomial_zero(self.ngens)
 
     def __str__(self):
@@ -524,7 +528,7 @@ class LPolyElement(dict):
             c = self[expv]
             s.append(' + (%s)' % c)
             if expv != zm:
-                s += '*'
+                s.append('*')
             # throw away the bits for the hidden variable
             i = 0
             sa = []
@@ -1926,10 +1930,9 @@ class LPolyElement(dict):
                 s += c[i]*q
             return s
         J = int(math.sqrt(n) + 1)
-        if n % J == 0:
-            K = n//J
-        else:
-            K = int(n/J) + 1
+        K, r = divmod(n, J)
+        if r:
+            K += 1
         ax = [lp(1)]
         b = 1
         q = lp(1)
@@ -2342,9 +2345,8 @@ class LPolyElement(dict):
             one = lp.ring(1)
             c = [0, one, 0]
             for k in range(3, prec, 2):
-                if k % 2 == 1:
-                    c.append((k-2)**2*c[-2]/(k*(k-1)))
-                    c.append(0)
+                c.append((k-2)**2*c[-2]/(k*(k-1)))
+                c.append(0)
             return p.series_from_list(c, iv, prec)
 
         else:
@@ -2756,8 +2758,9 @@ class LPolySubs(object):
                 if pw == 0:
                     continue
                 if (i, pw) not in d:
-                    if pw % 2 == 0 and (i, pw//2) in d:
-                        d[(i, pw)] = d[(i, pw//2)]**2
+                    w, r = divmod(pw, 2)
+                    if r == 0 and (i, w) in d:
+                        d[(i, pw)] = d[(i, w)]**2
                     elif (i, pw-1) in d:
                         d[(i, pw)] = d[(i, pw-1)]*d[(i, 1)]
                     else:
@@ -2788,8 +2791,9 @@ class LPolySubs(object):
                 if pw == 0:
                     continue
                 if (i, pw) not in d:
-                    if pw % 2 == 0 and (i, pw//2) in d:
-                        d[(i, pw)] = d[(i, pw//2)].square_trunc(ii, h)
+                    w, r = divmod(pw, 2)
+                    if r == 0 and (i, w) in d:
+                        d[(i, pw)] = d[(i, w)].square_trunc(ii, h)
                     elif (i, pw-1) in d:
                         d[(i, pw)] = d[(i, pw-1)].mul_trunc(d[(i, 1)], ii, h)
                     else:

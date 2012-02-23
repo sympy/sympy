@@ -4,7 +4,7 @@ from sympy import Symbol, S, symbols, Rational, sympify, sqrt
 from sympy.polys.domains import QQ, PythonRationalType
 from sympy.series import series
 from sympy.core.function import expand
-from sympy.polys.lpoly import LPoly, MLPoly, lgens, mlgens, nclgens, LPolySubs, monomial_tobasic, TaylorEvalError, PythonRationalType_new
+from sympy.polys.lpoly import LPoly, MLPoly, lgens, mlgens, nclgens, LPolySubs, monomial_tobasic, TaylorEvalError, _PythonRationalType
 from sympy.polys.monomialtools import lex, grlex
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.elementary.exponential import exp, log
@@ -14,15 +14,15 @@ from sympy.physics.quantum import Operator
 from sympy.utilities.pytest import raises, XFAIL
 from sympy import I
 
-def test_PythonRationalType_new():
+def test__PythonRationalType():
     p = PythonRationalType(4, 3)
-    p1 = PythonRationalType_new(p)
+    p1 = _PythonRationalType(p)
     assert p1 == p
-    p1 = PythonRationalType_new('4/3')
+    p1 = _PythonRationalType('4/3')
     assert p1 == p
-    p1 = PythonRationalType_new('4')
+    p1 = _PythonRationalType('4')
     assert p1 == 4
-    p1 = PythonRationalType_new(4)
+    p1 = _PythonRationalType(4)
     assert p1 == 4
 
 def test_str():
