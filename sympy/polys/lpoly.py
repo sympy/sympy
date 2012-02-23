@@ -134,12 +134,11 @@ class BaseLPoly(object):
     >>> lp.zero_mon
     (0, 0)
     >>> x, y = lp.gens
-    >>> p = (x + y)**2
-    >>> p
+    >>> (x + y)**2
     x**2 + 2*x*y + y**2
     >>> lp = LPoly('x:3', QQ)
-    >>> lp.gens()
-    [x0, x1, x2]
+    >>> lp.gens
+    (x0, x1, x2)
     """
 
     def __init__(self, pol_gens, ring, order, **kwds):
