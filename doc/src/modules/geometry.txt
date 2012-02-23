@@ -110,7 +110,7 @@ An in-depth example: Pappus' Theorem
     ...    """Take an arbitrary point and make it a fixed point."""
     ...    t = Symbol('t', real=True)
     ...    ap = l.arbitrary_point()
-    ...    return Point(ap[0].subs(t, val), ap[1].subs(t, val))
+    ...    return Point(ap.x.subs(t, val), ap.y.subs(t, val))
     ...
     >>> p11 = subs_point(l1, 5)
     >>> p12 = subs_point(l1, 6)
@@ -131,7 +131,7 @@ An in-depth example: Pappus' Theorem
     >>> pp2 = intersection(ll2, ll5)[0]
     >>> pp3 = intersection(ll4, ll6)[0]
     >>>
-    >>> print Point.is_collinear(pp1, pp2, pp3)
+    >>> Point.is_collinear(pp1, pp2, pp3)
     True
 
 Miscellaneous Notes

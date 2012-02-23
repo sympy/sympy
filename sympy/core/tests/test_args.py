@@ -1752,6 +1752,54 @@ def test_sympy__tensor__indexed__IndexedBase():
 
 @XFAIL
 def test_as_coeff_add():
+    # the ordering of terms in (3*x, 4*x**2) is system-dependent
     assert (7, (3*x, 4*x**2)) == (7 + 3*x + 4*x**2).as_coeff_add()
 
+def test_sympy__geometry__curve__Curve():
+    from sympy.geometry.curve import Curve
+    assert _test_args(Curve((x, 1), (x, 0, 1)))
 
+def test_sympy__geometry__point__Point():
+    from sympy.geometry.point import Point
+    assert _test_args(Point(0, 1))
+
+def test_sympy__geometry__ellipse__Ellipse():
+    from sympy.geometry.ellipse import Ellipse
+    assert _test_args(Ellipse((0, 1), 2, 3))
+
+def test_sympy__geometry__ellipse__Circle():
+    from sympy.geometry.ellipse import Circle
+    assert _test_args(Circle((0, 1), 2))
+
+def test_sympy__geometry__line__LinearEntity():
+    from sympy.geometry.line import LinearEntity
+    assert _test_args(LinearEntity((0, 1), (2, 3)))
+
+def test_sympy__geometry__line__Line():
+    from sympy.geometry.line import Line
+    assert _test_args(Line((0, 1), (2, 3)))
+
+def test_sympy__geometry__line__Ray():
+    from sympy.geometry.line import Ray
+    assert _test_args(Ray((0, 1), (2, 3)))
+
+def test_sympy__geometry__line__Segment():
+    from sympy.geometry.line import Segment
+    assert _test_args(Segment((0, 1), (2, 3)))
+
+def test_sympy__geometry__polygon__Polygon():
+    from sympy.geometry.polygon import Polygon
+    assert _test_args(Polygon((0, 1), (2, 3), (4, 5), (6, 7)))
+
+def test_sympy__geometry__polygon__RegularPolygon():
+    from sympy.geometry.polygon import RegularPolygon
+    assert _test_args(RegularPolygon((0, 1), 2, 3, 4))
+
+def test_sympy__geometry__polygon__Triangle():
+    from sympy.geometry.polygon import Triangle
+    assert _test_args(Triangle((0, 1), (2, 3), (4, 5)))
+
+def test_sympy__geometry__entity__GeometryEntity():
+    from sympy.geometry.entity import GeometryEntity
+    from sympy.geometry.point import Point
+    assert _test_args(GeometryEntity(Point(1, 0), 1))

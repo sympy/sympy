@@ -8,6 +8,8 @@ GeometryEntity
 """
 
 from sympy.core.compatibility import cmp
+from sympy.core.basic import Basic
+from sympy.core.sympify import sympify
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
@@ -23,7 +25,7 @@ ordering_of_classes = [
     "Curve"
 ]
 
-class GeometryEntity(tuple):
+class GeometryEntity(Basic):
     """The base class for all geometrical entities.
 
     This class doesn't represent any particular geometric entity, it only
@@ -32,29 +34,10 @@ class GeometryEntity(tuple):
     """
 
     def __new__(cls, *args, **kwargs):
-        return tuple.__new__(cls, args)
+        return Basic.__new__(cls, *sympify(args))
 
     def __getnewargs__(self):
-        return tuple(self)
-
-    @property
-    def free_symbols(self):
-        """
-        Return all but any bound symbols that are used to define the Entity.
-
-        Examples
-        ========
-
-        >>> from sympy import Polygon, RegularPolygon, Point
-        >>> from sympy.abc import x, y
-        >>> t = Polygon(*RegularPolygon(Point(x, y), 1, 3).vertices)
-        >>> t.free_symbols
-        set([x, y])
-        """
-        free = set()
-        for a in self.args:
-            free |= a.free_symbols
-        return free
+        return tuple(self.args)
 
     def intersection(self, o):
         """
@@ -110,8 +93,8 @@ class GeometryEntity(tuple):
             rv = self
             if pt is not None:
                 rv -= pt
-            x, y = rv
-            rv = Point(c*x-s*y, s*x+c*y)
+            x, y = rv.args
+            rv = Point(c*x - s*y, s*x + c*y)
             if pt is not None:
                 rv += pt
             return rv
@@ -147,7 +130,7 @@ class GeometryEntity(tuple):
         """
         from sympy import Point
         if isinstance(self, Point):
-            return Point(self[0]*x, self[1]*y)
+            return Point(self.x*x, self.y*y)
         newargs = []
         for a in self.args:
             if isinstance(a, GeometryEntity):
@@ -259,50 +242,6 @@ class GeometryEntity(tuple):
         """
         raise NotImplementedError()
 
-    def subs(self, *args):
-        """
-        Substitues new for old in self.
-
-        See Also
-        ========
-
-        sympy.core.basic.subs
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Circle
-        >>> from sympy.abc import x, y, z
-        >>> c = Circle(Point(0, 0), 3)
-        >>> c.subs(0, 5)
-        Circle(Point(5, 5), 3)
-        >>> c.subs(3, z)
-        Circle(Point(0, 0), z)
-
-        """
-        return type(self)(*[a.subs(*args) for a in self.args])
-
-    def _eval_subs(self, old, new):
-        return type(self)(*[a.subs(old, new) for a in self.args])
-
-    @property
-    def args(self):
-        """Return whatever is contained in the object's tuple.
-
-        The contents will not necessarily be Points. This is also
-        what will be returned when one does "for x in self".
-
-        Examples
-        ========
-
-        >>> from sympy import RegularPolygon, Point, Polygon
-        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
-        >>> t.args
-        (Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
-        """
-
-        return tuple(self)
-
     def __ne__(self, o):
         """Test inequality of two geometrical entities."""
         return not self.__eq__(o)
@@ -322,12 +261,12 @@ class GeometryEntity(tuple):
     def __str__(self):
         """String representation of a GeometryEntity."""
         from sympy.printing import sstr
-        return type(self).__name__ + sstr(tuple(self))
+        return type(self).__name__ + sstr(self.args)
 
     def __repr__(self):
         """String representation of a GeometryEntity that can be evaluated
         by sympy."""
-        return type(self).__name__ + repr(tuple(self))
+        return type(self).__name__ + repr(self.args)
 
     def __cmp__(self, other):
         """Comparison of two GeometryEntities."""
@@ -365,5 +304,3 @@ class GeometryEntity(tuple):
             return self == other
         raise NotImplementedError()
 
-from sympy.core.sympify import converter
-converter[GeometryEntity] = lambda x: x

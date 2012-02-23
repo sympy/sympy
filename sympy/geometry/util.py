@@ -228,12 +228,12 @@ def convex_hull(*args):
     def _orientation(p, q, r):
         '''Return positive if p-q-r are clockwise, neg if ccw, zero if
         collinear.'''
-        return (q[1] - p[1])*(r[0] - p[0]) - (q[0] - p[0])*(r[1] - p[1])
+        return (q.y - p.y)*(r.x - p.x) - (q.x - p.x)*(r.y - p.y)
 
     # scan to find upper and lower convex hulls of a set of 2d points.
     U = []
     L = []
-    p.sort()
+    p.sort(key=lambda x: x.args)
     for p_i in p:
         while len(U) > 1 and _orientation(U[-2], U[-1], p_i) <= 0:
             U.pop()
