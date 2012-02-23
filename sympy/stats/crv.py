@@ -14,6 +14,7 @@ from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (S, Interval, Dummy, FiniteSet, Mul, Integral, And, Or,
         Piecewise, solve, cacheit, integrate, oo)
 from sympy.solvers.inequalities import reduce_poly_inequalities
+from sympy.polys.polyerrors import PolynomialError
 import random
 
 class ContinuousDomain(RandomDomain):
@@ -287,14 +288,20 @@ class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     def density(self):
         return Mul(*[space.density for space in self.spaces])
 
+def _reduce_inequalities(conditions, var, **kwargs):
+    try:
+        return reduce_poly_inequalities(conditions, var, **kwargs)
+    except PolynomialError:
+        raise ValueError("Reduction of condition failed %s\n"%conditions[0])
+
 def reduce_poly_inequalities_wrap(condition, var):
     if condition.is_Relational:
-        return reduce_poly_inequalities([[condition]], var, relational=False)
+        return _reduce_inequalities([[condition]], var, relational=False)
     if condition.__class__ is Or:
-        return reduce_poly_inequalities([list(condition.args)],
+        return _reduce_inequalities([list(condition.args)],
                 var, relational=False)
     if condition.__class__ is And:
-        intervals = [reduce_poly_inequalities([[arg]], var, relational=False)
+        intervals = [_reduce_inequalities([[arg]], var, relational=False)
             for arg in condition.args]
         I = intervals[0]
         for i in intervals:
