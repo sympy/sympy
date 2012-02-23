@@ -250,7 +250,6 @@ tests = [
     'sympy.printing.tests',
     'sympy.series.tests',
     'sympy.simplify.tests',
-    'sympy.slow_tests',
     'sympy.solvers.tests',
     'sympy.statistics.tests',
     'sympy.tensor.tests',

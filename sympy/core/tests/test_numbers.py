@@ -2,7 +2,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, round)
 from sympy.core.power import integer_nthroot
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, slow
 
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache
 from sympy.utilities.pytest import raises
@@ -577,6 +577,11 @@ def test_powers():
 
     # Test that this is fast
     assert integer_nthroot(2,10**10) == (1, False)
+
+@slow
+def test_integer_nthroot():
+    assert integer_nthroot(10**(500*500), 500) == (10**500, True)
+    assert integer_nthroot(10**1000000, 100000) == (10**10, True)
 
 def test_powers_Integer():
     """Test Integer._eval_power"""
