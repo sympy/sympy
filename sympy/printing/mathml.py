@@ -391,4 +391,4 @@ def print_mathml(expr, **settings):
 
     """
     s = MathMLPrinter(settings)
-    print s._print(sympify(expr)).toprettyxml()
+    print s._print(sympify(expr)).toprettyxml(),
