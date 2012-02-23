@@ -1460,7 +1460,8 @@ class RegularPolygon(Polygon):
         rot = self._rot
         v = 2*S.Pi/self._n
 
-        return [Point(c.x + r*cos(k*v + rot), c.y + r*sin(k*v + rot)) for k in xrange(self._n)]
+        return [Point(c.x + r*cos(k*v + rot), c.y + r*sin(k*v + rot))
+                for k in xrange(self._n)]
 
     def __eq__(self, o):
         if not isinstance(o, Polygon):

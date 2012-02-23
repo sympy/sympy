@@ -8,8 +8,8 @@ GeometryEntity
 """
 
 from sympy.core.compatibility import cmp
-from sympy.core.containers import Tuple
 from sympy.core.basic import Basic
+from sympy.core.sympify import sympify
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
@@ -34,7 +34,7 @@ class GeometryEntity(Basic):
     """
 
     def __new__(cls, *args, **kwargs):
-        return Basic.__new__(cls, *Tuple(*args).args)
+        return Basic.__new__(cls, *sympify(args))
 
     def __getnewargs__(self):
         return tuple(self.args)
