@@ -538,8 +538,12 @@ class Basic(PicklableWithSlots):
            expression recursively:
 
            >>> from sympy import Function, Mul
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(Function)
-           set([sin(y + I*pi)])
+           >>> from sympy.core.function import AppliedUndef
+           >>> f = Function('f')
+           >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(Function)
+           set([f(x), sin(y + I*pi)])
+           >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(AppliedUndef)
+           set([f(x)])
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Mul)
            set([I*pi, 2*sin(y + I*pi)])
