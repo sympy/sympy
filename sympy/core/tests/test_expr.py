@@ -1239,12 +1239,31 @@ def test_is_not_constant():
     assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).is_zero != False
 
 def test_equals():
+    assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).equals(0)
     assert (x**2 - 1).equals((x + 1)*(x - 1))
     assert (cos(x)**2 + sin(x)**2).equals(1)
     assert (a*cos(x)**2 + a*sin(x)**2).equals(a)
     r = sqrt(2)
     assert (-1/(r + r*x) + 1/r/(1 + x)).equals(0)
     assert factorial(x + 1).equals((x + 1)*factorial(x))
+    assert sqrt(3).equals(2*sqrt(3)) is False
+    assert (sqrt(5)*sqrt(3)).equals(sqrt(3)) is False
+    assert (sqrt(5) + sqrt(3)).equals(0) is False
+    assert (sqrt(5) + pi).equals(0) is False
+    assert meter.equals(0) is False
+    assert (3*meter**2).equals(0) is False
+
+    # from integrate(x*sqrt(1+2*x), x);
+    # diff is zero, but differentiation does not show it
+    i = 2*sqrt(2)*x**(S(5)/2)*(1 + 1/(2*x))**(S(5)/2)/5 + \
+        2*sqrt(2)*x**(S(3)/2)*(1 + 1/(2*x))**(S(5)/2)/(-6 - 3/x)
+    ans = sqrt(2*x + 1)*(6*x**2 + x - 1)/15
+    diff = i - ans
+    assert diff.equals(0) is not False # should be True, but now it's None
+    # XXX TODO add a force=True option to equals to posify both
+    # self and other before beginning comparisions
+    p = Symbol('p', positive=True)
+    assert diff.subs(x, p).equals(0) is True
 
 @XFAIL
 def test_equals_factorial():

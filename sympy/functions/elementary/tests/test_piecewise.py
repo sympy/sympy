@@ -24,7 +24,7 @@ def test_piecewise():
 
     # More subs tests
     p2 = Piecewise((1, x < pi), (-1, x < 2*pi), (0, x > 2*pi))
-    assert p2.subs(x,2) == 1
+    assert p2.subs(x, 2) == 1
     assert p2.subs(x,4) == -1
     assert p2.subs(x,10) == 0
 
