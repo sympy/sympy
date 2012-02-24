@@ -876,16 +876,51 @@ class MaxwellPSpace(SingleContinuousPSpace):
         return obj
 
 def Maxwell(a, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with a Maxwell distribution.
 
-    Returns a RandomSymbol.
+    The density of the Maxwell distribution is given by
+
+    .. math::
+        f(x) := \sqrt{\frac{2}{\pi}} \frac{x^2 e^{-x^2/(2a^2)}}{a^3}
+
+    with :math:`x \geq 0`.
+
+    Parameters
+    ==========
+
+    a : Real number, `a` > 0
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
-    >>> from sympy.stats import Maxwell, Density, E, Std
+    >>> from sympy.stats import Maxwell, Density, E, Var
     >>> from sympy import Symbol, simplify
+
+    >>> a = Symbol("a", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = Maxwell(a, symbol=x)
+
+    >>> Density(X)
+    (x, sqrt(2)*x**2*exp(-x**2/(2*a**2))/(sqrt(pi)*a**3))
+
+    >>> E(X)
+    2*sqrt(2)*a/sqrt(pi)
+
+    >>> simplify(Var(X))
+    a**2*(-8 + 3*pi)/pi
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Maxwell_distribution
+    .. [2] http://mathworld.wolfram.com/MaxwellDistribution.html
     """
 
     return MaxwellPSpace(a, symbol).value
