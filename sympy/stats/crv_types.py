@@ -937,16 +937,53 @@ class NakagamiPSpace(SingleContinuousPSpace):
         return obj
 
 def Nakagami(mu, omega, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with a Nakagami distribution.
 
-    Returns a RandomSymbol.
+    The density of the Nakagami distribution is given by
+
+    .. math::
+        f(x) := \frac{2\mu^\mu}{\Gamma(\mu)\omega^\mu} x^{2\mu-1}
+                \exp\left(-\frac{\mu}{\omega}x^2 \right)
+
+    with :math:`x > 0`.
+
+    Parameters
+    ==========
+
+    mu : Real number, :math:`mu \geq \frac{1}{2}` a shape
+    omega : Real number, `omega` > 0 the spread
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
-    >>> from sympy.stats import Nakagami, Density, E, Std
+    >>> from sympy.stats import Nakagami, Density, E, Var
     >>> from sympy import Symbol, simplify
+
+    >>> mu = Symbol("mu", positive=True)
+    >>> omega = Symbol("omega", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = Nakagami(mu, omega, symbol=x)
+
+    >>> Density(X)
+    (x, 2*mu**mu*omega**(-mu)*x**(2*mu - 1)*exp(-mu*x**2/omega)/gamma(mu))
+
+    >>> simplify(E(X, meijerg=True))
+    sqrt(mu)*sqrt(omega)*gamma(mu + 1/2)/gamma(mu + 1)
+
+    >>> simplify(Var(X, meijerg=True))
+    omega*(gamma(mu)*gamma(mu + 1) - gamma(mu + 1/2)**2)/(gamma(mu)*gamma(mu + 1))
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Nakagami_distribution
     """
 
     return NakagamiPSpace(mu, omega, symbol).value
