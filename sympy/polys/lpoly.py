@@ -15,7 +15,7 @@ from copy import copy
 import re
 import math
 
-_rpm = re.compile('([^*(][+-])')
+_rpm = re.compile('([+-])')
 _re_var_split = re.compile(r"\s*,\s*|\s+")
 
 class TaylorEvalError(TypeError):
