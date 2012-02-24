@@ -1091,21 +1091,47 @@ class ParetoPSpace(SingleContinuousPSpace):
         return {self.value: random.paretovariate(self.alpha)}
 
 def Pareto(xm, alpha, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with the Pareto distribution.
 
-    Returns a RandomSymbol.
+    The density of the Pareto distribution is given by
+
+    .. math::
+        f(x) := \frac{\alpha\,x_\mathrm{m}^\alpha}{x^{\alpha+1}}
+
+    with :math:`x \in [x_m,\infty]`.
+
+    Parameters
+    ==========
+
+    xm : Real number, `xm` > 0 a scale
+    alpha : Real number, `alpha` > 0 a shape
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
-    >>> from sympy.stats import Pareto, Density, E, Std
-    >>> from sympy import symbols
+    >>> from sympy.stats import Pareto, Density
+    >>> from sympy import Symbol
 
-    >>> x, xm, beta = symbols('x xm beta', positive=True)
+    >>> xm = Symbol("xm", positive=True)
+    >>> beta = Symbol("beta", positive=True)
+    >>> x = Symbol("x")
+
     >>> X = Pareto(xm, beta, symbol=x)
+
     >>> Density(X)
     Lambda(_x, _x**(-beta - 1)*beta*xm**beta)
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Pareto_distribution
+    .. [2] http://mathworld.wolfram.com/ParetoDistribution.html
     """
 
     return ParetoPSpace(xm, alpha, symbol).value
