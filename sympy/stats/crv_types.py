@@ -1270,19 +1270,57 @@ class TriangularPSpace(SingleContinuousPSpace):
         return obj
 
 def Triangular(a, b, c, symbol=None):
-    """
-    Create a Continuous Random Variable with a Triangular distribution.
+    r"""
+    Create a Continuous Random Variable with a triangular distribution.
 
-    Returns a RandomSymbol.
+    The density of the triangular distribution is given by
+
+    .. math::
+        f(x) := \begin{cases}
+                  0 & \mathrm{for\ } x < a, \\
+                  \frac{2(x-a)}{(b-a)(c-a)} & \mathrm{for\ } a \le x < c, \\
+                  \frac{2}{b-a} & \mathrm{for\ } x = c, \\
+                  \frac{2(b-x)}{(b-a)(b-c)} & \mathrm{for\ } c < x \le b, \\
+                  0 & \mathrm{for\ } b < x.
+                \end{cases}
+
+    Parameters
+    ==========
+
+    a : Real number, :math:`a \in \left(-\infty, \infty\right)`
+    b : Real number, :math:`a < b`
+    c : Real number, :math:`a \leq c \leq b`
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
     >>> from sympy.stats import Triangular, Density, E, Var
-    >>> from sympy import symbols, simplify
-    >>> x, a, b, c = symbols('x a b c')
+    >>> from sympy import Symbol
 
-    >>> X = Triangular(a, b, c, symbol=x)
+    >>> a = Symbol("a")
+    >>> b = Symbol("b")
+    >>> c = Symbol("c")
+    >>> x = Symbol("x")
+
+    >>> X = Triangular(a,b,c, symbol=x)
+
+    >>> Density(X)
+    (x, Piecewise(((-2*a + 2*x)/((-a + b)*(-a + c)),
+    And(a <= x, x < c)),
+    (2/(-a + b), x == c),
+    ((2*b - 2*x)/((-a + b)*(b - c)),
+    And(x <= b, c < x)), (0, True)))
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Triangular_distribution
+    .. [2] http://mathworld.wolfram.com/TriangularDistribution.html
     """
 
     return TriangularPSpace(a, b, c, symbol).value
