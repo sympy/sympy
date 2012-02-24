@@ -396,7 +396,7 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
         return p.series(var, start, prec, dir)
 
     prec = int(prec)
-    if var not in p.atoms():
+    if var not in p.free_symbols:
         return p
 
     gens = [var] + pol_pars
@@ -556,7 +556,7 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
                 ps = ps + O(var**prec*logi)
             continue
         elif px.is_Pow and \
-            px.args[0] == var and var not in px.args[1].atoms():
+            px.args[0] == var and var not in px.args[1].free_symbols:
             n = px.args[1]
             if n.is_number:
                 if n < prec or (prec == n and i > 0):
@@ -1037,7 +1037,7 @@ class TaylorEval:
                     rest.append(q)
             prec1 = prec + pw
             for q in rest:
-                if self.var in q.atoms():
+                if self.var in q.free_symbols:
                     q = self(q, prec1)
                     s = s.mul_trunc(q, self.lvname, prec1)
                 elif q in self.gens:
@@ -1056,7 +1056,7 @@ class TaylorEval:
             args = f.args
             pw = args[1]
             # f = q*pw(x) = exp(pw(x)*log(q))
-            if self.var in pw.atoms():
+            if self.var in pw.free_symbols:
                 base = f.args[0]
                 # log(x) is not dealt by lpoly
                 if base == self.var:
@@ -1065,7 +1065,7 @@ class TaylorEval:
                 x1 = self(f, prec)
                 return x1
             x = args[0]
-            if self.var in x.atoms():
+            if self.var in x.free_symbols:
                 if x == self.var:
                     x = self.lvar
                 else:

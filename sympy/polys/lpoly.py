@@ -15,7 +15,7 @@ from copy import copy
 import re
 import math
 
-_rpm = re.compile('([+-])')
+_rpm = re.compile('([^*(][+-])')
 _re_var_split = re.compile(r"\s*,\s*|\s+")
 
 class TaylorEvalError(TypeError):
@@ -110,9 +110,9 @@ class BaseLPoly(object):
     subclasses:
 
       RPoly polynomial ring on a commutative ring
-          with no elements with more than one term
+          with all no elements having more than one factor
       MRPoly polynomial ring on a commutative ring
-          with elements with more than one term
+          with elements having more than one factor
       NCPoly polynomial ring with noncommutative base ring
 
     The objects lp in one of these polynomial rings
@@ -286,7 +286,7 @@ class BaseLPoly(object):
         s = s.replace(' ', '')
         if s[0] not in '+-':
             s = "+" + s
-        a = unflatten(_rpm.split(s)[1:], 2)
+        a = unflatten(_rpm.split(s)[1:], 2) # TODO this won't work if there are signed exponents
         p = LPolyElement(self)
         for sgn, s1 in a:
             m = self.mon_eval(s1)
@@ -716,7 +716,8 @@ class LPolyElement(dict):
         return p
 
     def coefficient_t(self, t):
-        """coefficient x_i^j of p
+        """coefficient x_i^j of self where t = (i, j)
+
         for j=0 it gives the terms independent from the variable x_i
 
         Examples
@@ -1156,7 +1157,7 @@ class LPolyElement(dict):
         return p
 
 
-    def mul_iadd(p, p1, p2):
+    def mul_iadd(p, p1, p2): # TODO rename to imul_add
         """p += p1*p2
         add inplace unless p is a generator, in which case
         return p + p1*p2
@@ -1304,7 +1305,7 @@ class LPolyElement(dict):
             self[expv] = coeff
         return self
 
-    def iadd_m_mul_q(self, p, mc):
+    def iadd_m_mul_q(self, p, mc): # TODO rename to iadd_p_mon
         """add to self the product of (p)*(coeff*x0**i0*x1**i1*...)
         unless self is a generator -- then just return the sum of the two.
 
@@ -1531,7 +1532,7 @@ class LPolyElement(dict):
             n = n // 2
         return p
 
-    def division(self, fv):
+    def division(self, fv): # TODO should this be named quo?
         """division algorithm, see [CLO] p64
 
         fv array of polynomials
@@ -1771,6 +1772,7 @@ class LPolyElement(dict):
 
     def has_constant_term(p, iv):
         """test if p has a constant term in variable with name iv
+        TODO add examples
         """
         lp = p.lp
         if isinstance(iv, str):
@@ -1881,7 +1883,7 @@ class LPolyElement(dict):
             return p._series_inversion_nc(iv, prec)
         return p._series_inversion1(iv, prec)
 
-    def derivative(self, n):
+    def derivative(self, n): # TODO change to diff
         """derivative of p with respect to x_n; the argument n is the
         index of the variable x_n = self.lp.gens[n], or the corresponding
         string.
