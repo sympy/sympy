@@ -750,16 +750,45 @@ class LogisticPSpace(SingleContinuousPSpace):
         return obj
 
 def Logistic(mu, s, symbol=None):
-    """
-    Create a Continuous Random Variable with a Logistic distribution.
+    r"""
+    Create a Continuous Random Variable with a logistic distribution.
 
-    Returns a RandomSymbol.
+    The density of the logistic distribution is given by
+
+    .. math::
+        f(x) := \frac{e^{-(x-\mu)/s}} {s\left(1+e^{-(x-\mu)/s}\right)^2}
+
+    Parameters
+    ==========
+
+    mu : Real number, the location
+    s : Real number, `s` > 0 a scale
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
-    >>> from sympy.stats import Logistic, Density, E, Std
+    >>> from sympy.stats import Logistic, Density
     >>> from sympy import Symbol
+
+    >>> mu = Symbol("mu", real=True)
+    >>> s = Symbol("s", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = Logistic(mu, s, symbol=x)
+
+    >>> Density(X)
+    (x, exp((mu - x)/s)/(s*(exp((mu - x)/s) + 1)**2))
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Logistic_distribution
+    .. [2] http://mathworld.wolfram.com/LogisticDistribution.html
     """
 
     return LogisticPSpace(mu, s, symbol).value
