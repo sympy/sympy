@@ -1422,18 +1422,26 @@ class UniformSumPSpace(SingleContinuousPSpace):
         return obj
 
 def UniformSum(n, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with an Irwin-Hall distribution.
 
     The probability distribution function depends on a single parameter
     `n` which is an integer.
 
-    The density is given by
+    The density of the Irwin-Hall distribution is given by
 
     .. math ::
-        \frac{1}{(n-1)!}\sum_{k=0}^{\lfloor x\rfloor}(-1)^k\binom{n}{k}(x-k)^{n-1}
+        f(x) := \frac{1}{(n-1)!}\sum_{k=0}^{\lfloor x\rfloor}(-1)^k\binom{n}{k}(x-k)^{n-1}
 
-    Returns a RandomSymbol.
+    Parameters
+    ==========
+
+    n : Integral number, `n` > 0
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
@@ -1453,6 +1461,7 @@ def UniformSum(n, symbol=None):
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Uniform_sum_distribution
+    .. [2] http://mathworld.wolfram.com/UniformSumDistribution.html
     """
 
     return UniformSumPSpace(n, symbol).value
