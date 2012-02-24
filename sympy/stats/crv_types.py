@@ -1488,28 +1488,56 @@ class WeibullPSpace(SingleContinuousPSpace):
         return {self.value: random.weibullvariate(self.alpha, self.beta)}
 
 def Weibull(alpha, beta, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with a Weibull distribution.
 
-    Returns a RandomSymbol.
+    The density of the Weibull distribution is given by
+
+    .. math::
+        f(x) := \begin{cases}
+                  \frac{k}{\lambda}\left(\frac{x}{\lambda}\right)^{k-1}
+                  e^{-(x/\lambda)^{k}} & x\geq0\\
+                  0 & x<0
+                \end{cases}
+
+    Parameters
+    ==========
+
+    lambda : Real number, :math:`\lambda > 0` a scale
+    k : Real number, `k` > 0 a shape
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
     >>> from sympy.stats import Weibull, Density, E, Var
-    >>> from sympy import symbols, simplify
-    >>> x, a, b = symbols('x a b', positive=True)
+    >>> from sympy import Symbol, simplify
 
-    >>> X = Weibull(a, b, symbol=x)
+    >>> l = Symbol("lambda", positive=True)
+    >>> k = Symbol("k", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = Weibull(l, k, symbol=x)
 
     >>> Density(X)
-    Lambda(_x, b*(_x/a)**(b - 1)*exp(-(_x/a)**b)/a)
+    Lambda(_x, k*(_x/lambda)**(k - 1)*exp(-(_x/lambda)**k)/lambda)
 
     >>> simplify(E(X))
-    a*gamma(1 + 1/b)
+    lambda*gamma(1 + 1/k)
 
     >>> simplify(Var(X))
-    -a**2*(gamma(1 + 1/b)**2 - gamma(1 + 2/b))
+    -lambda**2*(gamma(1 + 1/k)**2 - gamma(1 + 2/k))
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Weibull_distribution
+    .. [2] http://mathworld.wolfram.com/WeibullDistribution.html
+
     """
     return WeibullPSpace(alpha, beta, symbol).value
 
