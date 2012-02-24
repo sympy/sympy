@@ -812,23 +812,52 @@ class LogNormalPSpace(SingleContinuousPSpace):
         return {self.value: random.lognormvariate(self.mean, self.std)}
 
 def LogNormal(mean, std, symbol=None):
-    """
-    Create a Continuous Random Variable with a LogNormal distribution.
+    r"""
+    Create a Continuous Random Variable with a log-normal distribution.
 
-    Note: Only density and sampling work.
+    The density of the log-normal distribution is given by
 
-    Returns a RandomSymbol.
+    .. math::
+        f(x) := \frac{1}{x\sqrt{2\pi\sigma^2}} e^{-\frac{\left(\ln x-\mu\right)^2}{2\sigma^2}}
+
+    with :math:`x \geq 0`.
+
+    Parameters
+    ==========
+
+    mu : Real number, the log-scale
+    sigma : Real number, :math:`\sigma^2 > 0` a shape
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
-    >>> from sympy.stats import LogNormal, Density, E, Std
+    >>> from sympy.stats import LogNormal, Density
     >>> from sympy import Symbol, simplify
+
+    >>> mu = Symbol("mu", real=True)
+    >>> sigma = Symbol("sigma", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = LogNormal(mu, sigma, symbol=x)
+
+    >>> Density(X)
+    (x, sqrt(2)*exp(-(-mu + log(x))**2/(2*sigma**2))/(2*sqrt(pi)*sigma*x))
 
     >>> X = LogNormal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
 
     >>> Density(X)
     Lambda(_x, sqrt(2)*exp(-log(_x)**2/2)/(2*_x*sqrt(pi)))
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Lognormal
+    .. [2] http://mathworld.wolfram.com/LogNormalDistribution.html
     """
 
     return LogNormalPSpace(mean, std, symbol).value
