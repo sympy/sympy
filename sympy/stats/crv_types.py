@@ -1209,22 +1209,25 @@ class StudentTPSpace(SingleContinuousPSpace):
         return obj
 
 def StudentT(nu, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with a student's t distribution.
 
     The density of the student's t distribution is given by
 
-    .. math ::
-        \frac{\Gamma \left(\frac{\nu+1}{2} \right)} {\sqrt{\nu\pi}\,\Gamma \left(\frac{\nu}{2} \right)}
+    .. math::
+        f(x) := \frac{\Gamma \left(\frac{\nu+1}{2} \right)}
+        {\sqrt{\nu\pi}\Gamma \left(\frac{\nu}{2} \right)}
         \left(1+\frac{x^2}{\nu} \right)^{-\frac{\nu+1}{2}}
 
     Parameters
     ==========
 
-    nu : Real number, `nu` > 0
-        Degrees of freedom
+    nu : Real number, `nu` > 0, the degrees of freedom
 
-    Returns a RandomSymbol.
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
@@ -1243,7 +1246,7 @@ def StudentT(nu, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Student_t
+    .. [1] http://en.wikipedia.org/wiki/Student_t-distribution
     .. [2] http://mathworld.wolfram.com/Studentst-Distribution.html
     """
 
