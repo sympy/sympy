@@ -109,15 +109,15 @@ class BaseLPoly(object):
     """abstract base class for polynomial rings of a ring K
     subclasses:
 
-      RPoly polynomial ring on a commutative ring
-          with all no elements having more than one factor
-      MRPoly polynomial ring on a commutative ring
-          with elements having more than one factor
-      NCPoly polynomial ring with noncommutative base ring
+      LPoly polynomial ring on a commutative ring with elements having
+          one term
+      MLPoly polynomial ring on a commutative ring with elements having
+          more than one term
+      NCLPoly polynomial ring with a noncommutative base ring
 
-    The objects lp in one of these polynomial rings
-    construct elements of LPolyElement, a multivariate polynomial ring with
-    monomial ordering.
+    The object lp in one of these polynomial rings constructs elements
+    of LPolyElement, a multivariate polynomial ring with monomial ordering.
+
     lp.ring generates the elements in K
 
       lp.ring(0)  zero element in K
@@ -342,8 +342,9 @@ class BaseLPoly(object):
         p.strip_zero()
         return p
 
+
 class LPoly(BaseLPoly):
-    """class of polynomials on a ring with elements with one term
+    """polynomials on a ring with elements having one term
 
     Examples
     ========
@@ -352,6 +353,8 @@ class LPoly(BaseLPoly):
     >>> lp, x, y = lgens('x, y', QQ)
     >>> lp.__class__
     <class 'sympy.polys.lpoly.LPoly'>
+    >>> x + cos(2)*y # TODO disallow or fix this
+    x - -1.0*cos(2)*y
     """
     def __init__(self, sgens, ring, order=lex, **kwds):
         BaseLPoly.__init__(self, sgens, ring, order, **kwds)
@@ -359,10 +362,10 @@ class LPoly(BaseLPoly):
 
 
 class MLPoly(BaseLPoly):
-    """class of polynomials on a ring with elements with more than one term
+    """polynomial on a ring with elements having more than one term
 
     This class differs from LPoly only because the coefficients of
-    its polynomials are surrounded by parenthesis
+    its polynomials are surrounded by parentheses.
 
     Examples
     ========
@@ -370,7 +373,8 @@ class MLPoly(BaseLPoly):
     >>> from sympy.core import sympify
     >>> from sympy.functions.elementary.exponential import log
     >>> lp, x, y = lgens('x, y', sympify)
-    >>> p = (x + x*log(2) + y)**2
+    >>> (x + x*log(2) + y)**2
+    ((log(2) + 1)**2)*x**2 + (2*log(2) + 2)*x*y + (1)*y**2
     >>> lp.__class__
      <class 'sympy.polys.lpoly.MLPoly'>
     """
@@ -388,6 +392,7 @@ class NCLPoly(BaseLPoly):
         self.parens = True
         self.commuting = False
         self.__name__ = 'NCLPoly'
+
 
 def lgens(sgens, ring, order=lex, **kwds):
     """factory function to generate LPoly object and its generators
@@ -421,8 +426,6 @@ def nclgens(sgens, ring, order=lex, **kwds):
     """
     lp = NCLPoly(sgens, ring, order, **kwds)
     return (lp,) + lp.gens
-
-
 
 
 class LPolyElement(dict):
