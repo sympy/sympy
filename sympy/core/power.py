@@ -107,6 +107,9 @@ class Pow(Expr):
 
     def _eval_power(self, other):
         b, e = self.as_base_exp()
+        ##could process e.is_integer here; for now it's in powdenest
+        #if e.is_integer:
+        #    return Pow(b, e * other)
         if other.is_integer:
             return Pow(b, e * other)
         if b.is_nonnegative and (e.is_real or other.is_real):
