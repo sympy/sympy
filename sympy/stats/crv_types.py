@@ -1148,20 +1148,25 @@ class RayleighPSpace(SingleContinuousPSpace):
         return obj
 
 def Rayleigh(sigma, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with a Rayleigh distribution.
 
     The density of the Rayleigh distribution is given by
 
     .. math ::
-        \frac{x}{\sigma^2} e^{-x^2/2\sigma^2}.
+        f(x) := \frac{x}{\sigma^2} e^{-x^2/2\sigma^2}
+
+    with :math:`x > 0`.
 
     Parameters
     ==========
 
     sigma : Real number, `sigma` > 0
 
-    Returns a RandomSymbol.
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
