@@ -12,7 +12,7 @@ sympy.stats.frv
 sympy.stats.rv_interface
 """
 
-from sympy import Basic, S, Expr, Symbol, Tuple, And, Add, Eq
+from sympy import Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify
 from sympy.core.sets import FiniteSet, ProductSet
 
 class RandomDomain(Basic):
@@ -433,7 +433,18 @@ def E(expr, given=None, numsamples=None, **kwargs):
     """
     Returns the expected value of a random expression
 
-    (optionally given a condition)
+    Parameters
+    ----------
+    expr : Expr containing RandomSymbols
+        The expression of which you want to compute the expectation value
+    given : Expr containing RandomSymbols
+        A conditional expression. E(X, X>0) is expectation of X given X > 0
+    numsamples : int
+        Enables sampling and approximates the expectation with this many samples
+    evalf : Bool (defaults to True)
+        If sampling return a number rather than a complex expression
+    evaluate : Bool (defaults to True)
+        In case of continuous systems return unevaluated integral
 
     Examples
     ========
@@ -469,6 +480,19 @@ def E(expr, given=None, numsamples=None, **kwargs):
 def P(condition, given=None, numsamples=None,  **kwargs):
     """
     Probability that a condition is true, optionally given a second condition
+
+    Parameters
+    ----------
+    expr : Relational containing RandomSymbols
+        The condition of which you want to compute the probability
+    given : Relational containing RandomSymbols
+        A conditional expression. P(X>1, X>0) is expectation of X>1 given X>0
+    numsamples : int
+        Enables sampling and approximates the probability with this many samples
+    evalf : Bool (defaults to True)
+        If sampling return a number rather than a complex expression
+    evaluate : Bool (defaults to True)
+        In case of continuous systems return unevaluated integral
 
     Examples
     ========
@@ -618,21 +642,88 @@ def sample_iter(expr, given=None, numsamples=S.Infinity, **kwargs):
     given: A conditional expression (optional)
     numsamples: Length of the iterator (defaults to infinity)
 
+    Examples
+    --------
+    >>> from sympy.stats import Normal, sample_iter
+    >>> X = Normal(0,1)
+    >>> expr = X*X + 3
+    >>> iterator = sample_iter(expr, numsamples=3)
+    >>> list(iterator) # doctest: +SKIP
+    [12, 4, 7]
+
     See Also
     ========
     Sample
     sampling_P
     sampling_E
+    sample_iter_lambdify
+    sample_iter_subs
     """
+    # lambdify is much faster but not as robust
+    try:          return sample_iter_lambdify(expr, given, numsamples, **kwargs)
+    # use subs when lambdify fails
+    except TypeError: return sample_iter_subs(expr, given, numsamples, **kwargs)
 
+def sample_iter_lambdify(expr, given=None, numsamples=S.Infinity, **kwargs):
+    """
+    See sample_iter
+
+    Uses lambdify for computation. This is fast but does not always work.
+    """
+    if given:
+        ps = pspace(Tuple(expr, given))
+    else:
+        ps = pspace(expr)
+
+    rvs = list(ps.values)
+    fn = lambdify(rvs, expr, **kwargs)
+    if given:
+        given_fn = lambdify(rvs, given, **kwargs)
+
+    # Check that lambdify can handle the expression
+    # Some operations like Sum can prove difficult
+    try:
+        d = ps.sample() # a dictionary that maps RVs to values
+        args = [d[rv] for rv in rvs]
+        fn(*args)
+        if given:
+            given_fn(*args)
+    except:
+        raise TypeError("Expr/given too complex for lambdify")
+
+    def return_generator():
+        count = 0
+        while count < numsamples:
+            d = ps.sample() # a dictionary that maps RVs to values
+            args = [d[rv] for rv in rvs]
+
+            if given: # Check that these values satisfy the condition
+                gd = given_fn(*args)
+                if not isinstance(gd, bool):
+                    raise ValueError("Conditions must not contain free symbols")
+                if gd == False: # If the values don't satisfy then try again
+                    continue
+
+            yield fn(*args)
+            count += 1
+    return return_generator()
+
+def sample_iter_subs(expr, given=None, numsamples=S.Infinity, **kwargs):
+    """
+    See sample_iter
+
+    Uses subs for computation. This is slow but almost always works.
+    """
     if given:
         ps = pspace(Tuple(expr, given))
     else:
         ps = pspace(expr)
 
     count = 0
+
     while count < numsamples:
         d = ps.sample() # a dictionary that maps RVs to values
+
 
         if given: # Check that these values satisfy the condition
             gd = given.subs(d)
@@ -641,12 +732,10 @@ def sample_iter(expr, given=None, numsamples=S.Infinity, **kwargs):
             if gd == False: # If the values don't satisfy then try again
                 continue
 
-        ed = expr.subs(d)
+        yield expr.subs(d)
 
-        yield ed
         count += 1
-
-def sampling_P(condition, given=None, numsamples=1, **kwargs):
+def sampling_P(condition, given=None, numsamples=1, evalf=True, **kwargs):
     """
     Sampling version of P
 
@@ -670,9 +759,11 @@ def sampling_P(condition, given=None, numsamples=1, **kwargs):
         else:
             count_false += 1
 
-    return S(count_true) / numsamples
+    result = S(count_true) / numsamples
+    if evalf:   return result.evalf()
+    else:       return result
 
-def sampling_E(condition, given=None, numsamples=1, **kwargs):
+def sampling_E(condition, given=None, numsamples=1, evalf=True, **kwargs):
     """
     Sampling version of E
 
@@ -684,7 +775,9 @@ def sampling_E(condition, given=None, numsamples=1, **kwargs):
 
     samples = sample_iter(condition, given, numsamples=numsamples, **kwargs)
 
-    return Add(*samples) / numsamples
+    result = Add(*list(samples)) / numsamples
+    if evalf:   return result.evalf()
+    else:       return result
 
 def dependent(a, b):
     """
