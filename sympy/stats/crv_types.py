@@ -1347,28 +1347,62 @@ class UniformPSpace(SingleContinuousPSpace):
         return {self.value: random.uniform(self.left, self.right)}
 
 def Uniform(left, right, symbol=None):
-    """
-    Create a Continuous Random Variable with a Uniform distribution.
+    r"""
+    Create a Continuous Random Variable with a uniform distribution.
 
-    Returns a RandomSymbol.
+    The density of the uniform distribution is given by
+
+    .. math::
+        f(x) := \begin{cases}
+                  \frac{1}{b - a} & \text{for } x \in [a,b]  \\
+                  0               & \text{otherwise}
+                \end{cases}
+
+    with :math:`x \in [a,b]`.
+
+    Parameters
+    ==========
+
+    a : Real number, :math:`-\infty < a` the left boundary
+    b : Real number, :math:`a < b < \infty` the right boundary
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
-    >>> from sympy.stats import Uniform, Density, E, Var
-    >>> from sympy import symbols, simplify
-    >>> x, l, r = symbols('x l r')
+    >>> from sympy.stats import Uniform, Density, CDF, E, Var, Skewness
+    >>> from sympy import Symbol, simplify
 
-    >>> X = Uniform(l, r, symbol=x)
+    >>> a = Symbol("a")
+    >>> b = Symbol("b")
+    >>> x = Symbol("x")
+
+    >>> X = Uniform(a, b, symbol=x)
 
     >>> Density(X)
-    Lambda(_x, Piecewise((0, _x < l), (0, _x > r), (1/(-l + r), True)))
+    Lambda(_x, Piecewise((0, _x < a), (0, _x > b), (1/(-a + b), True)))
+
+    >>> CDF(X)
+    Lambda(_z, _z/(-a + b) - a/(-a + b))
 
     >>> simplify(E(X))
-    l/2 + r/2
+    a/2 + b/2
 
     >>> simplify(Var(X))
-    l**2/12 - l*r/6 + r**2/12
+    a**2/12 - a*b/6 + b**2/12
+
+    >>> simplify(Skewness(X))
+    0
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29
+    .. [2] http://mathworld.wolfram.com/UniformDistribution.html
     """
 
     return UniformPSpace(left, right, symbol).value
