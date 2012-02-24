@@ -306,7 +306,7 @@ class BetaPrimePSpace(SingleContinuousPSpace):
 
 def BetaPrime(alpha, beta, symbol=None):
     r"""
-    Create a Continuous Random Variable with a Beta prime distribution.
+    Create a continuous random variable with a Beta prime distribution.
 
     The density of the Beta prime distribution is given by
 
@@ -363,7 +363,7 @@ class CauchyPSpace(SingleContinuousPSpace):
 
 def Cauchy(x0, gamma, symbol=None):
     r"""
-    Create a Continuous Random Variable with a Cauchy distribution.
+    Create a continuous random variable with a Cauchy distribution.
 
     The density of the Cauchy distribution is given by
 
@@ -418,7 +418,7 @@ class ChiPSpace(SingleContinuousPSpace):
 
 def Chi(k, symbol=None):
     r"""
-    Create a Continuous Random Variable with a Chi distribution.
+    Create a continuous random variable with a Chi distribution.
 
     The density of the Chi distribution is given by
 
@@ -473,7 +473,7 @@ class DagumPSpace(SingleContinuousPSpace):
 
 def Dagum(p, a, b, symbol=None):
     r"""
-    Create a Continuous Random Variable with a Dagum distribution.
+    Create a continuous random variable with a Dagum distribution.
 
     The density of the Dagum distribution is given by
 
@@ -540,7 +540,7 @@ class ExponentialPSpace(SingleContinuousPSpace):
 
 def Exponential(rate, symbol=None):
     r"""
-    Create a Continuous Random Variable with an Exponential distribution.
+    Create a continuous random variable with an Exponential distribution.
 
     The density of the exponential distribution is given by
 
@@ -628,7 +628,7 @@ class GammaPSpace(SingleContinuousPSpace):
 
 def Gamma(k, theta, symbol=None):
     r"""
-    Create a Continuous Random Variable with a Gamma distribution.
+    Create a continuous random variable with a Gamma distribution.
 
     The density of the Gamma distribution is given by
 
@@ -694,7 +694,7 @@ class LaplacePSpace(SingleContinuousPSpace):
 
 def Laplace(mu, b, symbol=None):
     r"""
-    Create a Continuous Random Variable with a Laplace distribution.
+    Create a continuous random variable with a Laplace distribution.
 
     The density of the Laplace distribution is given by
 
@@ -751,7 +751,7 @@ class LogisticPSpace(SingleContinuousPSpace):
 
 def Logistic(mu, s, symbol=None):
     r"""
-    Create a Continuous Random Variable with a logistic distribution.
+    Create a continuous random variable with a logistic distribution.
 
     The density of the logistic distribution is given by
 
@@ -813,7 +813,7 @@ class LogNormalPSpace(SingleContinuousPSpace):
 
 def LogNormal(mean, std, symbol=None):
     r"""
-    Create a Continuous Random Variable with a log-normal distribution.
+    Create a continuous random variable with a log-normal distribution.
 
     The density of the log-normal distribution is given by
 
@@ -877,7 +877,7 @@ class MaxwellPSpace(SingleContinuousPSpace):
 
 def Maxwell(a, symbol=None):
     r"""
-    Create a Continuous Random Variable with a Maxwell distribution.
+    Create a continuous random variable with a Maxwell distribution.
 
     The density of the Maxwell distribution is given by
 
@@ -938,7 +938,7 @@ class NakagamiPSpace(SingleContinuousPSpace):
 
 def Nakagami(mu, omega, symbol=None):
     r"""
-    Create a Continuous Random Variable with a Nakagami distribution.
+    Create a continuous random variable with a Nakagami distribution.
 
     The density of the Nakagami distribution is given by
 
@@ -1011,7 +1011,7 @@ class NormalPSpace(SingleContinuousPSpace):
 
 def Normal(mean, std, symbol=None):
     r"""
-    Create a Continuous Random Variable with a Normal distribution.
+    Create a continuous random variable with a Normal distribution.
 
     The density of the Normal distribution is given by
 
@@ -1092,7 +1092,7 @@ class ParetoPSpace(SingleContinuousPSpace):
 
 def Pareto(xm, alpha, symbol=None):
     r"""
-    Create a Continuous Random Variable with the Pareto distribution.
+    Create a continuous random variable with the Pareto distribution.
 
     The density of the Pareto distribution is given by
 
@@ -1149,7 +1149,7 @@ class RayleighPSpace(SingleContinuousPSpace):
 
 def Rayleigh(sigma, symbol=None):
     r"""
-    Create a Continuous Random Variable with a Rayleigh distribution.
+    Create a continuous random variable with a Rayleigh distribution.
 
     The density of the Rayleigh distribution is given by
 
@@ -1210,7 +1210,7 @@ class StudentTPSpace(SingleContinuousPSpace):
 
 def StudentT(nu, symbol=None):
     r"""
-    Create a Continuous Random Variable with a student's t distribution.
+    Create a continuous random variable with a student's t distribution.
 
     The density of the student's t distribution is given by
 
@@ -1271,7 +1271,7 @@ class TriangularPSpace(SingleContinuousPSpace):
 
 def Triangular(a, b, c, symbol=None):
     r"""
-    Create a Continuous Random Variable with a triangular distribution.
+    Create a continuous random variable with a triangular distribution.
 
     The density of the triangular distribution is given by
 
@@ -1348,7 +1348,7 @@ class UniformPSpace(SingleContinuousPSpace):
 
 def Uniform(left, right, symbol=None):
     r"""
-    Create a Continuous Random Variable with a uniform distribution.
+    Create a continuous random variable with a uniform distribution.
 
     The density of the uniform distribution is given by
 
@@ -1423,7 +1423,7 @@ class UniformSumPSpace(SingleContinuousPSpace):
 
 def UniformSum(n, symbol=None):
     r"""
-    Create a Continuous Random Variable with an Irwin-Hall distribution.
+    Create a continuous random variable with an Irwin-Hall distribution.
 
     The probability distribution function depends on a single parameter
     `n` which is an integer.
@@ -1489,7 +1489,7 @@ class WeibullPSpace(SingleContinuousPSpace):
 
 def Weibull(alpha, beta, symbol=None):
     r"""
-    Create a Continuous Random Variable with a Weibull distribution.
+    Create a continuous random variable with a Weibull distribution.
 
     The density of the Weibull distribution is given by
 
@@ -1556,7 +1556,7 @@ class WignerSemicirclePSpace(SingleContinuousPSpace):
 
 def WignerSemicircle(R, symbol=None):
     r"""
-    Create a Continuous Random Variable with a Wigner semicircle distribution.
+    Create a continuous random variable with a Wigner semicircle distribution.
 
     The density of the Wigner semicircle distribution is given by
 
@@ -1573,7 +1573,7 @@ def WignerSemicircle(R, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A `RandomSymbol`.
 
     Examples
     ========
