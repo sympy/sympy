@@ -1010,18 +1010,47 @@ class NormalPSpace(SingleContinuousPSpace):
         return {self.value: random.normalvariate(self.mean, self.std)}
 
 def Normal(mean, std, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with a Normal distribution.
 
-    Returns a RandomSymbol.
+    The density of the Normal distribution is given by
+
+    .. math::
+        f(x) := \frac{1}{\sigma\sqrt{2\pi}} e^{ -\frac{(x-\mu)^2}{2\sigma^2} }
+
+    Parameters
+    ==========
+
+    mu : Real number, the mean
+    sigma : Real number, :math:`\sigma^2 > 0` the variance
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
-    >>> from sympy.stats import Normal, Density, E, Std
+    >>> from sympy.stats import Normal, Density, E, Std, CDF, Skewness
     >>> from sympy import Symbol, simplify
 
-    >>> X = Normal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
+    >>> mu = Symbol("mu")
+    >>> sigma = Symbol("sigma", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = Normal(mu, sigma, symbol=x)
+
+    >>> Density(X)
+    (x, sqrt(2)*exp(-(-mu + x)**2/(2*sigma**2))/(2*sqrt(pi)*sigma))
+
+    >>> simplify(CDF(X)[1])
+    erf(sqrt(2)*(_z - mu)/(2*sigma))/2 + 1/2
+
+    >>> simplify(Skewness(X))
+    0
+
+    >>> X = Normal(0, 1, symbol=x) # Mean 0, standard deviation 1
     >>> Density(X)
     Lambda(_x, sqrt(2)*exp(-_x**2/2)/(2*sqrt(pi)))
 
@@ -1030,6 +1059,12 @@ def Normal(mean, std, symbol=None):
 
     >>> simplify(Std(2*X + 1))
     2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Normal_distribution
+    .. [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
     """
 
     return NormalPSpace(mean, std, symbol).value
