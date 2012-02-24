@@ -1,26 +1,18 @@
-from sympy.core import Basic, S, Function, diff, Number, sympify
+from sympy.core import Basic, S, Function, diff, Number, sympify, Tuple
 from sympy.core.relational import Equality, Relational
 from sympy.logic.boolalg import Boolean
 from sympy.core.sets import Set
 from sympy.core.symbol import Dummy
 
-class ExprCondPair(Function):
+class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
 
     true_sentinel = Dummy('True')
 
-    def __new__(cls, *args, **assumptions):
-        if isinstance(args[0], cls):
-            expr = args[0].expr
-            cond = args[0].cond
-        elif len(args) == 2:
-            expr = sympify(args[0])
-            cond = sympify(args[1])
-        else:
-            raise TypeError("args must be a (expr, cond) pair")
+    def __new__(cls, expr, cond):
         if cond is True:
             cond = ExprCondPair.true_sentinel
-        return Basic.__new__(cls, expr, cond, **assumptions)
+        return Tuple.__new__(cls, expr, cond)
 
     @property
     def expr(self):
@@ -117,13 +109,6 @@ class Piecewise(Function):
             return Basic.__new__(cls, *newargs, **options)
         else:
             return r
-
-    def __getnewargs__(self):
-        # Convert ExprCondPair objects to tuples.
-        args = []
-        for expr, condition in self.args:
-            args.append((expr, condition))
-        return tuple(args)
 
     @classmethod
     def eval(cls, *args):
@@ -288,6 +273,10 @@ class Piecewise(Function):
         args = map(lambda ec: (ec.expr._eval_nseries(x, n, logx), ec.cond), \
                    self.args)
         return self.func(*args)
+
+    def _eval_as_leading_term(self, x):
+        # This is completely wrong, cf. issue 3110
+        return self.args[0][0].as_leading_term(x)
 
     @classmethod
     def __eval_cond(cls, cond):
