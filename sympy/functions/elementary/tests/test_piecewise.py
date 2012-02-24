@@ -164,9 +164,6 @@ def test_piecewise_solve():
     g = Piecewise(((x - 5)**5, x >= 2), f)
     assert solve(g, x) == [5]
 
-    g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False), evaluate=False)
-    assert solve(g, x) == [5]
-
     assert solve(Piecewise((x, x < 0), x), x) == [0]
 
 # See issue 1253 (enhance the solver to handle inequalities).
@@ -258,10 +255,7 @@ def test_piecewise_evaluate():
 
     # Explicit evaluate=False stops automatic evaluation
     assert Piecewise((x, True), S.NaN) == x
-    assert Piecewise((x, True), S.NaN, evaluate=False).is_Piecewise
-    assert Piecewise((x, True), S.NaN, evaluate=False) == Piecewise(x, evaluate=False)
     assert Piecewise((x, x < 1), (0, True), S.NaN) == 0
-    assert Piecewise((x, x < 1), (0, True), S.NaN, evaluate=False) == Piecewise((x, x < 1), 0)
 
     # Automatic evaluation of bool conds
     assert Piecewise((x, 1 > 2), (-x, False)) == S.NaN
@@ -284,13 +278,25 @@ def test_piecewise_evaluate():
     assert p1.doit() == x**2
     assert p1.doit(piecewise=False) == p1
 
+# Requires Issue 3025: implementation of boolean objects subclassing Basic
 @XFAIL
-def test_piecewise_evaluate_false():
-    # Requires Issue 3025
+def test_needs_basic_bools():
+    # from test_piecewise_evaluate
     assert Piecewise((x, True), S.NaN, evaluate=False).is_Piecewise
     assert Piecewise((x, 1 < 2), S.NaN, evaluate=False).is_Piecewise
     assert Piecewise((x, 1 > 2), S.NaN, evaluate=False).is_Piecewise
+
     p = Piecewise((x, x < 1), (0, True), S.NaN, evaluate=False)
     assert p.is_Piecewise
     assert len(p.args) == 3
     assert Piecewise((x, 1 > 2), (-x, False), evaluate=False).is_Piecewise
+
+    assert Piecewise((x, True), S.NaN, evaluate=False).is_Piecewise
+    assert Piecewise((x, True), S.NaN, evaluate=False) == Piecewise(x, evaluate=False)
+    assert Piecewise((x, x < 1), (0, True), S.NaN, evaluate=False) == Piecewise((x, x < 1), 0)
+
+    # from test_piecewise_solve
+    abs2 = Piecewise((-x, x <= 0), (x, x > 0))
+    f = abs2.subs(x, x - 2)
+    g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False), evaluate=False)
+    assert solve(g, x) == [5]

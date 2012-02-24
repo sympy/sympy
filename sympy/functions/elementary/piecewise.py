@@ -39,13 +39,12 @@ class Piecewise(Function):
     object even when none of the conds are booleans by setting
     ``evaluate=True``. When ``evaluate`` is set to False, nested Piecewise
     objects are not simplified and Piecewise functions may contain only an
-    otherwise expression without expr/cond pairs.  Due to limitations with
-    having boolean values in ``.args``, when boolean conditions are given with
-    ``evaluate`` set to False:
+    otherwise expression without expr/cond pairs.
 
-        - Expr/cond pairs where cond is explicitly False are removed.
-        - Evaluation stops at an explicitly True condition. The corresponding
-          expression becomes the new otherwise expression.
+    Due to limitations with having boolean values in ``.args``, when boolean
+    conditions are given with ``evaluate`` set to False, a NotImplementedError
+    is raised. This will be fixed when there are objects to do boolean logic
+    that subclass Basic.
 
     Evaluation can be performed on an existing Piecewise object by calling the
     ``.doit()`` method. The ``piecewise`` keyword can be used when calling
@@ -121,21 +120,21 @@ class Piecewise(Function):
         if evaluate is not False and (any([ isinstance(expr, Piecewise) for (expr, _) in ecs ]) or isinstance(oth, Piecewise)):
             ecs, oth = cls._collapse_piecewise_args(ecs, oth)
         # TODO: See Issue 3025
-        # When evaluate=False, remove False conds and move True cond to otherwise
-        # Should subs True for Basic True, False for Basic False when evaluate!=False
-        if any([ isinstance(cond, bool) for (_, cond) in ecs ]):
+        #     When evaluate=False replace True with Basic True, False with Basic False, as in commented out code block
+        # Currently, evaluate=False with bool conditions raises an error
+        if any([ isinstance(cond, bool) or cond is None for (_, cond) in ecs ]):
             new_ecs = []
             if evaluate is False:
-                for e, c in ecs:
-                    cond_eval = cls.__eval_cond(c)
-                    if cond_eval is False:
-                        continue
-                    elif cond_eval is True:
-                        oth = e
-                        break
-                    else:
-                        new_ecs.append(Tuple(e,c))
-                ecs = new_ecs
+                raise NotImplementedError("Cannot suspend evaluation with bool arguments, see Issue 3025")
+                #for e, c in ecs:
+                #    if c is True:
+                #        c = BasicTrue
+                #    elif c is False:
+                #        c = BasicFalse
+                #    elif c is None:
+                #        c = BasicNone
+                #    new_ecs.append(Tuple(e,c))
+                #ecs = new_ecs
             else:
                 evaluate = True
         # Having no expr/cond pairs should also trigger evaluation unless explicitly False

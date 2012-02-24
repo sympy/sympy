@@ -876,15 +876,39 @@ def _check_antecedents(g1, g2, x):
     def lambda_s0(c1, c2):
         return c1*(q-p)*abs(omega)**(1/(q-p))*sin(psi) \
              + c2*(v-u)*abs(sigma)**(1/(v-u))*sin(theta)
-    lambda_s = Piecewise(
-        ((lambda_s0(+1, +1)*lambda_s0(-1, -1)),
-         And(Eq(arg(sigma), 0), Eq(arg(omega), 0))),
-        (lambda_s0(sign(arg(omega)), +1)*lambda_s0(sign(arg(omega)), -1),
-         And(Eq(arg(sigma), 0), Ne(arg(omega), 0))),
-        (lambda_s0(+1, sign(arg(sigma)))*lambda_s0(-1, sign(arg(sigma))),
-         And(Ne(arg(sigma), 0), Eq(arg(omega), 0))),
-        lambda_s0(sign(arg(omega)), sign(arg(sigma))),
-        **{'evaluate': False})
+
+    # TODO: Requires Issue 3025
+    # Can't set evaluate=False, due to possible boolean conditions
+    # must parse expr/conds and deal with conds accordingly
+    otherwise = lambda_s0(sign(arg(omega)), sign(arg(sigma)))
+    piecewise_args = [(lambda_s0(+1, +1)*lambda_s0(-1, -1),
+                      And(Eq(arg(sigma), 0), Eq(arg(omega), 0))),
+                     (lambda_s0(sign(arg(omega)), +1)*lambda_s0(sign(arg(omega)), -1),
+                      And(Eq(arg(sigma), 0), Ne(arg(omega), 0))),
+                     (lambda_s0(+1, sign(arg(sigma)))*lambda_s0(-1, sign(arg(sigma))),
+                      And(Ne(arg(sigma), 0), Eq(arg(omega), 0)))
+                     ]
+    new_args = []
+    for e, c in piecewise_args:
+        if c is False:
+            continue
+        if c is True:
+            new_args.append(e)
+            break
+        new_args.append((e,c))
+    else:
+        new_args.append(otherwise)
+    lambda_s = Piecewise(*new_args)
+    #lambda_s = Piecewise(
+    #    ((lambda_s0(+1, +1)*lambda_s0(-1, -1)),
+    #     And(Eq(arg(sigma), 0), Eq(arg(omega), 0))),
+    #    (lambda_s0(sign(arg(omega)), +1)*lambda_s0(sign(arg(omega)), -1),
+    #     And(Eq(arg(sigma), 0), Ne(arg(omega), 0))),
+    #    (lambda_s0(+1, sign(arg(sigma)))*lambda_s0(-1, sign(arg(sigma))),
+    #     And(Ne(arg(sigma), 0), Eq(arg(omega), 0))),
+    #    lambda_s0(sign(arg(omega)), sign(arg(sigma))),
+    #    **{'evaluate': False}
+    #)
 
     _debug('Checking antecedents:')
     _debug('  sigma=%s, s=%s, t=%s, u=%s, v=%s, b*=%s, rho=%s'
