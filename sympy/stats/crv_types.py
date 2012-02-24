@@ -1555,16 +1555,48 @@ class WignerSemicirclePSpace(SingleContinuousPSpace):
         return obj
 
 def WignerSemicircle(R, symbol=None):
-    """
+    r"""
     Create a Continuous Random Variable with a Wigner semicircle distribution.
 
-    Returns a RandomSymbol.
+    The density of the Wigner semicircle distribution is given by
+
+    .. math::
+        f(x) := \frac2{\pi R^2}\,\sqrt{R^2-x^2}
+
+    with :math:`x \in [-R,R]`.
+
+    Parameters
+    ==========
+
+    R : Real number, `R` > 0 the radius
+
+    Returns
+    =======
+
+    A `RandomSymbol` X.
 
     Examples
     ========
 
     >>> from sympy.stats import WignerSemicircle, Density, E, Std
     >>> from sympy import Symbol, simplify
+
+    >>> R = Symbol("R", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = WignerSemicircle(R, symbol=x)
+
+    >>> Density(X)
+    (x, 2*sqrt(R**2 - x**2)/(pi*R**2))
+
+    >>> E(X)
+    0
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Wigner_semicircle_distribution
+    .. [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
     """
 
     return WignerSemicirclePSpace(R, symbol).value
