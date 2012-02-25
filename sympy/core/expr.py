@@ -30,15 +30,15 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import Expr
-        >>> e = Expr()
-        >>> e._diff_wrt
-        False
-        >>> class MyClass(Expr):
-        ...     _diff_wrt = True
-        ...
-        >>> (2*MyClass()).diff(MyClass())
-        2
+            >>> from sympy import Expr
+            >>> e = Expr()
+            >>> e._diff_wrt
+            False
+            >>> class MyClass(Expr):
+            ...     _diff_wrt = True
+            ...
+            >>> (2*MyClass()).diff(MyClass())
+            2
         """
         return False
 
@@ -239,8 +239,7 @@ class Expr(Basic, EvalfMixin):
         expression.
 
 
-        Examples
-        ========
+        Examples:
 
         >>> from sympy import cos, sin, Sum, S, pi
         >>> from sympy.abc import a, n, x, y
@@ -425,8 +424,7 @@ class Expr(Basic, EvalfMixin):
         """
         Transform an expression to an ordered list of factors.
 
-        Examples
-        ========
+        **Examples**
 
         >>> from sympy import sin, cos
         >>> from sympy.abc import x, y
@@ -444,8 +442,7 @@ class Expr(Basic, EvalfMixin):
         """
         Transform an expression to an ordered list of terms.
 
-        Examples
-        ========
+        **Examples**
 
         >>> from sympy import sin, cos
         >>> from sympy.abc import x, y
@@ -638,8 +635,7 @@ class Expr(Basic, EvalfMixin):
         When x is noncommutative, the coeff to the left (default) or right of x
         can be returned. The keyword 'right' is ignored when x is commutative.
 
-        Examples
-        ========
+        Examples::
 
         >>> from sympy import symbols
         >>> from sympy.abc import x, y, z
@@ -879,8 +875,7 @@ class Expr(Basic, EvalfMixin):
         """
         Convert a polynomial to a SymPy expression.
 
-        Examples
-        ========
+        **Examples**
 
         >>> from sympy import sin
         >>> from sympy.abc import x, y
@@ -950,8 +945,7 @@ class Expr(Basic, EvalfMixin):
 
         To force the expression to be treated as an Add, use the hint as_Add=True
 
-        Examples
-        ========
+        Examples:
 
         -- self is an Add
 
@@ -1255,9 +1249,7 @@ class Expr(Basic, EvalfMixin):
         like the as_coeff_Mul() method but primitive always extracts a positive
         Rational (never a negative or a Float).
 
-        Examples
-        ========
-
+        **Examples**
         >>> from sympy.abc import x
         >>> (3*(x + 1)**2).primitive()
         (3, (x + 1)**2)
@@ -1282,9 +1274,7 @@ class Expr(Basic, EvalfMixin):
         the underlying structure if possible (i.e. expand_mul should not be
         applied to self).
 
-        Examples
-        ========
-
+        **Examples**
         >>> from sympy.abc import x, y, z
 
         >>> eq = 2 + 2*x + 2*y*(3 + 3*y)
@@ -1583,8 +1573,7 @@ class Expr(Basic, EvalfMixin):
         This is not part of the assumptions system.  You cannot do
         Symbol('z', polynomial=True).
 
-        Examples
-        ========
+        **Examples**
 
         >>> from sympy import Symbol
         >>> x = Symbol('x')
@@ -2288,7 +2277,7 @@ class AtomicExpr(Atom, Expr):
     """
     A parent class for object which are both atoms and Exprs.
 
-    For example: Symbol, Number, Rational, Integer, ...
+    Examples: Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
 
