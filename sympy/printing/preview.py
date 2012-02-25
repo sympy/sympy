@@ -6,7 +6,7 @@ import tempfile
 
 from latex import latex
 
-def preview(expr, output='png', viewer=None, euler=True):
+def preview(expr, output='png', viewer=None, euler=True, **latex_settings):
     """View expression or LaTeX markup in PNG, DVI, PostScript or
        PDF form.
 
@@ -56,6 +56,12 @@ def preview(expr, output='png', viewer=None, euler=True):
        to return a file object in read-only mode.
 
        Currently this depends on pexpect, which is not available for windows.
+
+       Additional keyword args will be passed to the latex call. E.g. the
+       symbol_names flag::
+
+           >> phidd = Symbol('phidd')
+           >> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'})
     """
 
     # we don't want to depend on anything not in the
@@ -114,7 +120,7 @@ def preview(expr, output='png', viewer=None, euler=True):
     if isinstance(expr, str):
         latex_string = expr
     else:
-        latex_string = latex(expr, mode='inline')
+        latex_string = latex(expr, mode='inline', **latex_settings)
 
 
     tmp = tempfile.mktemp()
