@@ -559,6 +559,8 @@ class Expr(Basic, EvalfMixin):
         return B - A
 
     def _eval_power(self, other):
+        # subclass to compute self**other for cases when
+        # other is not NaN, 0, or 1
         return None
 
     def _eval_conjugate(self):
