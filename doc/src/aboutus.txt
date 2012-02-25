@@ -194,6 +194,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Michael Mayorov: Improvement to series
 #. Nathan Alison: Additions to the stats module
 #. Christian Bühler: remove use of set_main() in GA
+#. Carsten Knoll: improvement to preview()
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
