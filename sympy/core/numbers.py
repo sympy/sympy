@@ -1661,8 +1661,9 @@ class Integer(Rational):
         return result
 
     def _eval_is_prime(self):
-        if self.p < 0:
-            return False
+        from sympy.ntheory import isprime
+
+        return isprime(self)
 
     def as_numer_denom(self):
         return self, S.One
@@ -1747,7 +1748,6 @@ class Zero(IntegerConstant):
     is_negative = False
     is_finite = False
     is_zero = True
-    is_prime = False
     is_composite = False
 
     __slots__ = []
@@ -1792,8 +1792,6 @@ class One(IntegerConstant):
 
     p = 1
     q = 1
-
-    is_prime = True
 
     __slots__ = []
 
