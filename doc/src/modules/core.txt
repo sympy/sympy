@@ -377,7 +377,7 @@ Function
    :members:
 
 .. note:: Not all functions are the same
-   ==============================
+
    SymPy defines many functions (like ``cos`` and ``factorial``). It also
    allows the user to create generic functions which act as argument
    holders. Such functions are created just like symbols:
