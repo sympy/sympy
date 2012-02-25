@@ -30,15 +30,15 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-            >>> from sympy import Expr
-            >>> e = Expr()
-            >>> e._diff_wrt
-            False
-            >>> class MyClass(Expr):
-            ...     _diff_wrt = True
-            ...
-            >>> (2*MyClass()).diff(MyClass())
-            2
+        >>> from sympy import Expr
+        >>> e = Expr()
+        >>> e._diff_wrt
+        False
+        >>> class MyClass(Expr):
+        ...     _diff_wrt = True
+        ...
+        >>> (2*MyClass()).diff(MyClass())
+        2
         """
         return False
 
@@ -2590,10 +2590,7 @@ class AtomicExpr(Atom, Expr):
     """
     A parent class for object which are both atoms and Exprs.
 
-    Examples
-    ========
-
-    Symbol, Number, Rational, Integer, ...
+    For example: Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
 
