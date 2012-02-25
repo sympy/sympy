@@ -75,6 +75,16 @@ class Point(GeometryEntity):
 
         return GeometryEntity.__new__(cls, *coords)
 
+    def __cmp__(self, other):
+        ts, to = type(self), type(other)
+        if ts is not to:
+            return cmp(str(ts), str(to) )
+        else:
+            return self.args == other.args
+
+    def __gt__(self, other):
+        return self.args > other.args
+
     def __contains__(self, item):
         return item == self
 
