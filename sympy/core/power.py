@@ -37,12 +37,12 @@ def integer_nthroot(y, n):
     try:
         guess = int(y**(1./n) + 0.5)
     except OverflowError:
-        expt = _log(y, 2)/n
-        if expt > 53:
-            shift = int(expt - 53)
-            guess = int(2.0**(expt-shift) + 1) << shift
+        exp = _log(y, 2)/n
+        if exp > 53:
+            shift = int(exp - 53)
+            guess = int(2.0**(exp - shift) + 1) << shift
         else:
-            guess = int(2.0**expt)
+            guess = int(2.0**exp)
     #print n
     if guess > 2**50:
         # Newton iteration
@@ -81,6 +81,10 @@ class Pow(Expr):
                 return S.One
             elif e is S.One:
                 return b
+            elif S.NaN in (e, b):
+                if b is S.One or e is S.Zero:
+                    return S.One
+                return S.NaN
             else:
                 obj = b._eval_power(e)
                 if obj is not None:
