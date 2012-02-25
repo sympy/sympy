@@ -7,7 +7,7 @@ Point
 """
 
 from sympy.core import S, sympify
-from sympy.core.compatibility import iterable, cmp
+from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
@@ -74,6 +74,18 @@ class Point(GeometryEntity):
             raise NotImplementedError("Only two dimensional points currently supported")
 
         return GeometryEntity.__new__(cls, *coords)
+
+    def __hash__(self):
+        return super(Point, self).__hash__()
+
+    def __eq__(self, other):
+        ts, to = type(self), type(other)
+        if ts is not to:
+            return False
+        return self.args == other.args
+
+    def __lt__(self, other):
+        return self.args < other.args
 
     def __contains__(self, item):
         return item == self
