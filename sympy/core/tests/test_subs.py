@@ -1,6 +1,6 @@
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
-        cse, cot, tan, S, Tuple, Basic, Dict, oo)
+        cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo)
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -459,3 +459,10 @@ def test_issue_3059():
     assert (x - 1).subs(-1, y) == x + y
     assert (x - oo).subs(oo, y) == x - y
     assert (x - oo).subs(-oo, y) == x + y
+
+def test_Piecewise_subs():
+    from sympy.abc import x, y
+    g = Function('g')
+    h = Function('h')
+    p = Piecewise((g, x < -1), (g(x), x <= 1))
+    assert p.subs(g, h) == Piecewise((h, x < -1), (h(x), x <= 1))
