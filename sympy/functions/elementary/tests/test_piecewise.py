@@ -16,8 +16,6 @@ def test_piecewise():
     raises(TypeError,"Piecewise((x,x**2))")
     raises(TypeError,"Piecewise((1,Interval(0,1,False,True)),(0,x<1))")
     raises(TypeError,"Piecewise((x,1))")
-    raises(TypeError,"Piecewise((None, x>0))")
-    raises(TypeError,"Piecewise((x, x>0),None)")
     raises(ValueError,"Piecewise((x,))")
     raises(ValueError,"Piecewise((x,x>1,x>0))")
     raises(ValueError,"Piecewise(x,(x,x<1))")

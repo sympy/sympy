@@ -89,8 +89,10 @@ class Piecewise(Function):
     is_Piecewise = True
 
     def __new__(cls, *args, **options):
-        ecs = [ Tuple(*sympify(arg)) for arg in args if hasattr(arg, '__iter__') ]
-        oth = [ arg for arg in args if not hasattr(arg, '__iter__') ]
+        ecs = [ Tuple(*sympify(arg)) for arg in args if isinstance(arg, list) or
+                                                        isinstance(arg, Tuple) or
+                                                        isinstance(arg, tuple)]
+        oth = [ arg for arg in args if arg not in ecs ]
         evaluate = options.pop('evaluate', None)
         if any([ len(ec) != 2 for ec in ecs ]):
             raise ValueError("Piecewise conditions must be (expr, cond) pairs.")
@@ -145,16 +147,6 @@ class Piecewise(Function):
         if evaluate:
             return cls.eval(*new_args)
 
-        # check exprs and otherwise are Exprs
-        from sympy.geometry.entity import GeometryEntity
-        if not all([ isinstance(expr, Expr) or isinstance(expr, GeometryEntity) for (expr, _) in ecs ]):
-            bad_args = [ "%s of type %s" % (expr, type(expr)) for (expr, _) in ecs \
-                         if not isinstance(expr, Expr) ]
-            raise TypeError("Expressions must be subclass of Expr, " \
-                            "got: %s" % ', '.join(bad_args))
-        if not (isinstance(oth, Expr) or isinstance(oth, GeometryEntity)):
-            raise TypeError("Otherwise expression must be a subclass of Expr, " \
-                            "got %s of type %s" % (oth, type(oth)) )
         # check conds are Relational or Boolean
         if not all([ isinstance(cond, Relational) or isinstance(cond, Boolean) for (_, cond) in ecs ]):
             bad_args = [ "%s of type %s" % (cond, type(cond)) for (_, cond) in ecs \
