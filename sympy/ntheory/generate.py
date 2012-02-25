@@ -74,6 +74,8 @@ class Sieve:
         >>> sieve[10] == 29
         True
         """
+        if int(n) <= 0 or int(n) != n:
+            raise ValueError("n must be a positive integer");
         while len(self._list) < n:
             self.extend(int(self._list[-1] * 1.5))
 
@@ -165,7 +167,8 @@ def prime(n):
         primepi : Return the number of primes less than or equal to n
     """
 
-    assert n > 0
+    if int(n) <= 0 or int(n) != n:
+        raise ValueError("n must be a positive number");
     return sieve[n]
 
 def primepi(n):
