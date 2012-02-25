@@ -715,6 +715,10 @@ def test_has_polys():
 def test_has_physics():
     assert FockState((x, y)).has(x)
 
+def test_has_negated():
+    # issue 3059
+    assert (-x - 1).has(x + 1)
+
 def test_as_poly_as_expr():
     f = x**2 + 2*x*y
 
