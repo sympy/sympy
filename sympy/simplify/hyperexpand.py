@@ -1896,6 +1896,8 @@ def hyperexpand_special(ap, bq, z):
     p, q = len(ap), len(bq)
     z_ = z
     z = unpolarify(z)
+    if z == 0:
+        return S.Zero
     if p == 2 and q == 1:
         # 2F1
         a, b, c = ap + bq
@@ -2265,7 +2267,7 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
                 b_ = pbm[m][0]
                 ki = [bi - b_ for bi in pbm[m][1:]]
                 u = len(ki)
-                li = [ai - b_ for ai in pap[m][0:u+1]]
+                li = [ai - b_ for ai in pap[m][:u+1]]
                 bo = list(bm)
                 for b in pbm[m]:
                     bo.remove(b)

@@ -437,41 +437,103 @@ class Add(AssocOp):
         return False
 
     def _eval_is_positive(self):
-        c, r = self.as_two_terms()
-        if c.is_positive and r.is_positive:
-            return True
-        if c.is_unbounded:
-            if r.is_unbounded:
-                # either c or r is negative
-                return
+        if self.is_number:
+            return None # let assumptions handle this
+        pos = nonneg = nonpos = unknown_sign = False
+        unbounded = set()
+        args = [a for a in self.args if not a.is_zero]
+        if not args:
+            return False
+        for a in args:
+            ispos = a.is_positive
+            ubound = a.is_unbounded
+            if ubound:
+                unbounded.add(ispos)
+                if len(unbounded) > 1:
+                    return None
+            if ispos:
+                pos = True
+                continue
+            elif a.is_nonnegative:
+                nonneg = True
+                continue
+            elif a.is_nonpositive:
+                nonpos = True
+                continue
+            elif a.is_zero:
+                continue
+
+            if ubound is None:
+                # sign is unknown; if we don't know the boundedness
+                # we're done: we don't know. That is technically true,
+                # but the only option is that we have something like
+                # oo - oo which is NaN and it really doesn't matter
+                # what sign we apply to that because it (when finally
+                # computed) will trump any sign. So instead of returning
+                # None, we pass.
+                pass
             else:
-                return c.is_positive
-        elif r.is_unbounded:
-            return r.is_positive
-        if c.is_nonnegative and r.is_positive:
+                return None
+            unknown_sign = True
+
+        if unbounded:
+            return unbounded.pop()
+        elif unknown_sign:
+            return None
+        elif not nonpos and not nonneg and pos:
             return True
-        if r.is_nonnegative and c.is_positive:
+        elif not nonpos and pos:
             return True
-        if c.is_nonpositive and r.is_nonpositive:
+        elif not pos and not nonneg:
             return False
 
     def _eval_is_negative(self):
-        c, r = self.as_two_terms()
-        if c.is_negative and r.is_negative:
+        if self.is_number:
+            return None # let assumptions handle this
+        neg = nonpos = nonneg = unknown_sign = False
+        unbounded = set()
+        args = [a for a in self.args if not a.is_zero]
+        if not args:
+            return False
+        for a in args:
+            isneg = a.is_negative
+            ubound = a.is_unbounded
+            if ubound:
+                unbounded.add(isneg)
+                if len(unbounded) > 1:
+                    return None
+            if isneg:
+                neg = True
+                continue
+            elif a.is_nonpositive:
+                nonpos = True
+                continue
+            elif a.is_nonnegative:
+                nonneg = True
+                continue
+            elif a.is_zero:
+                continue
+
+            if ubound is None:
+                # sign is unknown; if we don't know the boundedness
+                # we're done: we don't know. That is technically true,
+                # but the only option is that we have something like
+                # oo - oo which is NaN and it really doesn't matter
+                # what sign we apply to that because it (when finally
+                # computed) will trump any sign. So instead of returning
+                # None, we pass.
+                pass
+            unknown_sign = True
+
+        if unbounded:
+            return unbounded.pop()
+        elif unknown_sign:
+            return None
+        elif not nonneg and not nonpos and neg:
             return True
-        if c.is_unbounded:
-            if r.is_unbounded:
-                # either c or r is positive
-                return
-            else:
-                return c.is_negative
-        elif r.is_unbounded:
-            return r.is_negative
-        if c.is_nonpositive and r.is_negative:
+        elif not nonneg and neg:
             return True
-        if r.is_nonpositive and c.is_negative:
-            return True
-        if c.is_nonnegative and r.is_nonnegative:
+        elif not neg and not nonpos:
             return False
 
     def _eval_subs(self, old, new):

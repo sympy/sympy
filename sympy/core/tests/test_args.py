@@ -442,6 +442,10 @@ def test_sympy__stats__rv__ProductDomain():
     E = SingleDomain(y, Interval(0,oo))
     assert _test_args(ProductDomain(D, E))
 
+def test_sympy__stats__frv_types__DiscreteUniformPSpace():
+    from sympy.stats.frv_types import DiscreteUniformPSpace
+    assert _test_args(DiscreteUniformPSpace(range(6)))
+
 def test_sympy__stats__frv_types__DiePSpace():
     from sympy.stats.frv_types import DiePSpace
     assert _test_args(DiePSpace(6))
@@ -453,6 +457,14 @@ def test_sympy__stats__frv_types__BernoulliPSpace():
 def test_sympy__stats__frv_types__CoinPSpace():
     from sympy.stats.frv_types import CoinPSpace
     assert _test_args(CoinPSpace(S.Half))
+
+def test_sympy__stats__frv_types__BinomialPSpace():
+    from sympy.stats.frv_types import BinomialPSpace
+    assert _test_args(BinomialPSpace(5, S.Half))
+
+def test_sympy__stats__frv_types__HypergeometricPSpace():
+    from sympy.stats.frv_types import HypergeometricPSpace
+    assert _test_args(HypergeometricPSpace(10, 5, 3))
 
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
@@ -496,6 +508,10 @@ def test_sympy__stats__crv_types__NormalPSpace():
     from sympy.stats.crv_types import NormalPSpace
     assert _test_args(NormalPSpace(0,1))
 
+def test_sympy__stats__crv_types__LogNormalPSpace():
+    from sympy.stats.crv_types import LogNormalPSpace
+    assert _test_args(LogNormalPSpace(0,1))
+
 def test_sympy__stats__crv_types__ExponentialPSpace():
     from sympy.stats.crv_types import ExponentialPSpace
     assert _test_args(ExponentialPSpace(1))
@@ -503,6 +519,10 @@ def test_sympy__stats__crv_types__ExponentialPSpace():
 def test_sympy__stats__crv_types__ParetoPSpace():
     from sympy.stats.crv_types import ParetoPSpace
     assert _test_args(ParetoPSpace(1,1))
+
+def test_sympy__stats__crv_types__WeibullPSpace():
+    from sympy.stats.crv_types import WeibullPSpace
+    assert _test_args(WeibullPSpace(1,1))
 
 def test_sympy__stats__crv_types__BetaPSpace():
     from sympy.stats.crv_types import BetaPSpace
@@ -1008,6 +1028,26 @@ def test_sympy__integrals__transforms__FourierTransform():
     from sympy.integrals.transforms import FourierTransform
     assert _test_args(FourierTransform(2, x, y))
 
+@SKIP("abstract class")
+def test_sympy__integrals__transforms__SineCosineTypeTransform():
+    pass
+
+def test_sympy__integrals__transforms__InverseSineTransform():
+    from sympy.integrals.transforms import InverseSineTransform
+    assert _test_args(InverseSineTransform(2, x, y))
+
+def test_sympy__integrals__transforms__SineTransform():
+    from sympy.integrals.transforms import SineTransform
+    assert _test_args(SineTransform(2, x, y))
+
+def test_sympy__integrals__transforms__InverseCosineTransform():
+    from sympy.integrals.transforms import InverseCosineTransform
+    assert _test_args(InverseCosineTransform(2, x, y))
+
+def test_sympy__integrals__transforms__CosineTransform():
+    from sympy.integrals.transforms import CosineTransform
+    assert _test_args(CosineTransform(2, x, y))
+
 def test_sympy__logic__boolalg__And():
     from sympy.logic.boolalg import And
     assert _test_args(And(x, y, 2))
@@ -1055,6 +1095,14 @@ def test_sympy__logic__boolalg__Xor():
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
     assert _test_args(DeferredVector("X"))
+
+@SKIP("abstract class")
+def test_sympy__matrices__expressions__matexpr__MatrixBase():
+    pass
+
+def test_sympy__matrices__immutable_matrix__ImmutableMatrix():
+    from sympy.matrices.immutable_matrix import ImmutableMatrix
+    assert _test_args(ImmutableMatrix([[1,2],[3,4]]))
 
 def test_sympy__matrices__expressions__blockmatrix__BlockDiagMatrix():
     from sympy.matrices.expressions.blockmatrix import BlockDiagMatrix
@@ -1248,10 +1296,11 @@ def test_sympy__physics__quantum__gate__TwoQubitGate():
     from sympy.physics.quantum.gate import TwoQubitGate
     assert _test_args(TwoQubitGate(0))
 
-@SKIP("TODO: Add ImmutableMatrix Class")
 def test_sympy__physics__quantum__gate__UGate():
     from sympy.physics.quantum.gate import UGate
-    assert _test_args(UGate())
+    from sympy.matrices.immutable_matrix import ImmutableMatrix
+    from sympy import Integer, Tuple
+    assert _test_args(UGate(Tuple(Integer(1)), ImmutableMatrix([[1,0],[0,2]])))
 
 def test_sympy__physics__quantum__gate__XGate():
     from sympy.physics.quantum.gate import XGate
@@ -1703,6 +1752,54 @@ def test_sympy__tensor__indexed__IndexedBase():
 
 @XFAIL
 def test_as_coeff_add():
+    # the ordering of terms in (3*x, 4*x**2) is system-dependent
     assert (7, (3*x, 4*x**2)) == (7 + 3*x + 4*x**2).as_coeff_add()
 
+def test_sympy__geometry__curve__Curve():
+    from sympy.geometry.curve import Curve
+    assert _test_args(Curve((x, 1), (x, 0, 1)))
 
+def test_sympy__geometry__point__Point():
+    from sympy.geometry.point import Point
+    assert _test_args(Point(0, 1))
+
+def test_sympy__geometry__ellipse__Ellipse():
+    from sympy.geometry.ellipse import Ellipse
+    assert _test_args(Ellipse((0, 1), 2, 3))
+
+def test_sympy__geometry__ellipse__Circle():
+    from sympy.geometry.ellipse import Circle
+    assert _test_args(Circle((0, 1), 2))
+
+def test_sympy__geometry__line__LinearEntity():
+    from sympy.geometry.line import LinearEntity
+    assert _test_args(LinearEntity((0, 1), (2, 3)))
+
+def test_sympy__geometry__line__Line():
+    from sympy.geometry.line import Line
+    assert _test_args(Line((0, 1), (2, 3)))
+
+def test_sympy__geometry__line__Ray():
+    from sympy.geometry.line import Ray
+    assert _test_args(Ray((0, 1), (2, 3)))
+
+def test_sympy__geometry__line__Segment():
+    from sympy.geometry.line import Segment
+    assert _test_args(Segment((0, 1), (2, 3)))
+
+def test_sympy__geometry__polygon__Polygon():
+    from sympy.geometry.polygon import Polygon
+    assert _test_args(Polygon((0, 1), (2, 3), (4, 5), (6, 7)))
+
+def test_sympy__geometry__polygon__RegularPolygon():
+    from sympy.geometry.polygon import RegularPolygon
+    assert _test_args(RegularPolygon((0, 1), 2, 3, 4))
+
+def test_sympy__geometry__polygon__Triangle():
+    from sympy.geometry.polygon import Triangle
+    assert _test_args(Triangle((0, 1), (2, 3), (4, 5)))
+
+def test_sympy__geometry__entity__GeometryEntity():
+    from sympy.geometry.entity import GeometryEntity
+    from sympy.geometry.point import Point
+    assert _test_args(GeometryEntity(Point(1, 0), 1))

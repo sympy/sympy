@@ -122,7 +122,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Tom Bachmann: fixes to Real
 #. Yuri Karadzhov: improvements to hyperbolic identities
 #. Vladimir Lagunov: improvements to the geometry module
-#. Matthew Rocklin: stats, sets, matrix expressions 
+#. Matthew Rocklin: stats, sets, matrix expressions
 #. Saptarshi Mandal: Test for an integral
 #. Gilbert Gede: Tests for solvers
 #. Anatolii Koval: Infinite 1D box example
@@ -191,6 +191,10 @@ want to be mentioned here, so see our repository history for a full list).
 #. Martin Povišer: fix problem with rationaltools
 #. Siddhant Jain: See Also documentation for functions/special
 #. Kevin Hunter: Improvements to the inequality classes
+#. Michael Mayorov: Improvement to series
+#. Nathan Alison: Additions to the stats module
+#. Christian Bühler: remove use of set_main() in GA
+#. Carsten Knoll: improvement to preview()
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

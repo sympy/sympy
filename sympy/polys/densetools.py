@@ -589,16 +589,22 @@ def dup_content(f, K):
     2/1
 
     """
+    from sympy.polys.domains import QQ
+
     if not f:
         return K.zero
 
     cont = K.zero
 
-    for c in f:
-        cont = K.gcd(cont, c)
+    if K == QQ:
+        for c in f:
+            cont = K.gcd(cont, c)
+    else:
+        for c in f:
+            cont = K.gcd(cont, c)
 
-        if K.is_one(cont):
-            break
+            if K.is_one(cont):
+                break
 
     return cont
 
@@ -622,19 +628,25 @@ def dmp_ground_content(f, u, K):
     2/1
 
     """
+    from sympy.polys.domains import QQ
+
     if not u:
         return dup_content(f, K)
 
     if dmp_zero_p(f, u):
         return K.zero
 
-    cont, v = K.zero, u-1
+    cont, v = K.zero, u - 1
 
-    for c in f:
-        cont = K.gcd(cont, dmp_ground_content(c, v, K))
+    if K == QQ:
+        for c in f:
+            cont = K.gcd(cont, dmp_ground_content(c, v, K))
+    else:
+        for c in f:
+            cont = K.gcd(cont, dmp_ground_content(c, v, K))
 
-        if K.is_one(cont):
-            break
+            if K.is_one(cont):
+                break
 
     return cont
 

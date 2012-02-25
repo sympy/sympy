@@ -26,7 +26,7 @@ g = Function('g')
 
 # Note that if the ODE solver, the integral engine, solve(), or even simplify(),
 # changes, these tests could fail but still be correct, only written differently.
-# Also not that in differently formatted solutions, the arbitrary constants
+# Also note that in differently formatted solutions, the arbitrary constants
 # might not be equal.  Using specific hints in tests can help avoid this.
 
 # Tests of order higher than 1 should run the solutions through constant_renumber
@@ -537,7 +537,7 @@ def test_1st_homogeneous_coeff_ode_check2():
     (False, x*(-C1**2*sin(2*atan(x/C1)) + 2*C1*x - x**2*sin(2*atan(x/C1))))
     >>> z = _[1]
     >>> z.subs(zip((x,C1),(2,3))).n()
-    .0e-124
+    0.e-124
     >>> z.subs(zip((x,C1),(2,.3))).n()
     4.44089209850063e-16
     >>> z.subs(zip((x,C1),(12,.3))).n()

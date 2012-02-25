@@ -5,8 +5,6 @@ from sympy.galgebra.GA import *
 from sympy.galgebra.latex_ex import *
 from sympy import *
 
-set_main(sys.modules[__name__])
-
 if __name__ == '__main__':
 
     metric = '1  0  0  0,'+\

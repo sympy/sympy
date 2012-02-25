@@ -1092,10 +1092,9 @@ def integrate(*args, **kwargs):
     """
     meijerg = kwargs.pop('meijerg', None)
     conds = kwargs.pop('conds', 'piecewise')
-    evaluate = kwargs.pop('evaluate', True)
     integral = Integral(*args, **kwargs)
 
-    if evaluate and isinstance(integral, Integral):
+    if isinstance(integral, Integral):
         return integral.doit(deep = False, meijerg = meijerg, conds = conds)
     else:
         return integral

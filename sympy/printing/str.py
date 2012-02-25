@@ -200,8 +200,10 @@ class StrPrinter(Printer):
     def _print_list(self, expr):
         return "[%s]"%self.stringify(expr, ", ")
 
-    def _print_Matrix(self, expr):
+    def _print_MatrixBase(self, expr):
         return expr._format_str(lambda elem: self._print(elem))
+    _print_ImmutableMatrix = _print_MatrixBase
+    _print_MutableMatrix = _print_MatrixBase
 
     def _print_DeferredVector(self, expr):
         return expr.name
@@ -409,7 +411,12 @@ class StrPrinter(Printer):
             strip = True
         elif self._settings["full_prec"] == "auto":
             strip = self._print_level > 1
-        return mlib.to_str(expr._mpf_, dps, strip_zeros=strip)
+        rv = mlib.to_str(expr._mpf_, dps, strip_zeros=strip)
+        if rv.startswith('-.0'):
+            rv = '-0.' + rv[3:]
+        elif rv.startswith('.0'):
+            rv = '0.' + rv[2:]
+        return rv
 
     def _print_Relational(self, expr):
         return '%s %s %s'%(self.parenthesize(expr.lhs, precedence(expr)),

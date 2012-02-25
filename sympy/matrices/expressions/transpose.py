@@ -46,5 +46,8 @@ class Transpose(MatrixExpr):
     def shape(self):
         return self.arg.shape[::-1]
 
+    def _entry(self, i, j):
+        return self.arg._entry(j, i)
+
 from matmul import MatMul
 from matadd import MatAdd

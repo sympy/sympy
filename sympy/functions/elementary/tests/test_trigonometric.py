@@ -1,6 +1,7 @@
-from sympy import symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan, \
-        acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos, \
-        cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im
+from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
+        acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos,
+        cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
+        Float)
 
 from sympy.utilities.pytest import XFAIL
 
@@ -208,6 +209,13 @@ def test_cos():
 
     assert cos(k*pi) == (-1)**k
     assert cos(2*k*pi) == 1
+
+def test_issue_3091():
+    c = Float('123456789012345678901234567890.25', '')
+    for cls in [sin, cos, tan, cot]:
+        assert cls(c*pi) == cls(pi/4)
+        assert cls(4.125*pi) == cls(pi/8)
+        assert cls(4.7*pi) == cls((4.7 % 2)*pi)
 
 def test_cos_series():
     x = Symbol('x')
@@ -613,7 +621,7 @@ def test_aseries():
     t(acot, 0.1, '+', 1e-5)
     t(acot, -0.1, '-', 1e-5)
 
-def test_issueXXX():
+def test_issue_1321():
     i = Symbol('i', integer=True)
     e = Symbol('e', even=True)
     o = Symbol('o', odd=True)

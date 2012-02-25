@@ -84,3 +84,8 @@ def test_acceleration():
     A = Sum(Integer(-1)**(k+1) / k, (k, 1, n))
     assert round(shanks(A, n, 25).evalf(), 4) == round(log(2).evalf(), 4)
     assert round(shanks(A, n, 25, 5).evalf(), 10) == round(log(2).evalf(), 10)
+
+def test_1484():
+    assert cos(1+x+x**2).series(x,0,5) == cos(1) - x*sin(1) + x**2*(-sin(1) - \
+                                          cos(1)/2) + x**3*(-cos(1) + sin(1)/6) + \
+                                          x**4*(-11*cos(1)/24 + sin(1)/2) + O(x**5)

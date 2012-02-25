@@ -578,10 +578,10 @@ Functions
     n!
 
     >>> gamma(x + 1).series(x, 0, 3) # i.e. factorial(x)
-                         2  2             2  2
-                       pi *x    EulerGamma *x     / 3\
-    1 - EulerGamma*x + ------ + -------------- + O\x /
-                         12           2
+                          /          2     2\        
+                        2 |EulerGamma    pi |    / 3\
+    1 - EulerGamma*x + x *|----------- + ---| + O\x /
+                          \     2         12/        
 
 **zeta function**::
 

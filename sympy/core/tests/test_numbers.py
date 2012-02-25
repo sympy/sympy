@@ -89,6 +89,10 @@ def test_divmod():
     assert divmod(S(12), 8) == Tuple(1, 4)
     assert divmod(12, S(8)) == Tuple(1, 4)
 
+@XFAIL
+def test_divmod_rational():
+    assert divmod(S('3/2'), 2) == Tuple(0, S('3/2'))
+
 def test_igcd():
     assert igcd(0, 0) == 0
     assert igcd(0, 1) == 1
@@ -156,6 +160,7 @@ def test_Integer_new():
     _test_rational_new(Integer)
 
     raises(ValueError, 'Integer("10.5")')
+    assert Integer(Rational('1.'+'9'*20)) == 1
 
 def test_Rational_new():
     """"
@@ -302,6 +307,12 @@ def test_Float():
     assert Float('2.0', '') == Float('2', 2)
     raises(ValueError, 'Float("12.3d-4", "")')
     raises(ValueError, 'Float(12.3, "")')
+    raises(ValueError, "Float('.')")
+    raises(ValueError, "Float('-.')")
+    assert Float('-0') == Float('0.0')
+    assert Float('.0') == Float('0.0')
+    assert Float('-.0') == Float('-0.0')
+    assert Float(' .3e2') == Float('0.3e2')
 
 def test_Float_eval():
     a = Float(3.2)
@@ -447,10 +458,11 @@ def test_Infinity():
     assert S.Zero * oo == nan
     assert oo.is_Rational == False
     assert isinstance(oo, Rational) == False
-    assert S.One/oo == oo
-    assert -S.One/oo == -oo
-    assert S.One/-oo == -oo
-    assert -S.One/-oo == oo
+
+    assert S.One/oo == 0
+    assert -S.One/oo == 0
+    assert S.One/-oo == 0
+    assert -S.One/-oo == 0
     assert S.One*oo == oo
     assert -S.One*oo == -oo
     assert S.One*-oo == -oo
@@ -1099,3 +1111,7 @@ def test_Float_eq():
     assert Float(.12, 3) == .12
     assert 0.12 == Float(.12, 3)
     assert Float('.12', 22) != .12
+
+def test_int_NumberSymbols():
+    assert [int(i) for i in [pi, EulerGamma, E, GoldenRatio, Catalan]] == \
+        [3, 0, 2, 1, 0]

@@ -126,9 +126,7 @@ or ``(ReferenceFrame, Vector)`` to represent applied forces and torques.
   >>> qd, ud = dynamicsymbols('q u', 1)
   >>> P = Point('P')
   >>> P.set_vel(N, u * N.x)
-  >>> Pa = Particle()
-  >>> Pa.point = P
-  >>> Pa.mass = 5
+  >>> Pa = Particle('Pa', P, 5)
   >>> BL = [Pa]
   >>> FL = [(P, 7 * N.x)]
   >>> KM = Kane(N)

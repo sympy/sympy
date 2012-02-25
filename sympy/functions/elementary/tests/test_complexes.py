@@ -108,6 +108,17 @@ def test_sign():
     x = 0
     assert sign(x).is_zero == True
 
+@XFAIL
+def test_sign_issue_3068():
+    n = pi**1000
+    i = int(n)
+    assert round(n - i) == 1 # doesn't hang
+    assert sign(n - i) == 1
+    # perhaps it's not possible to get the sign right when
+    # only 1 digit is being requested for this situtation;
+    # 2 digits works
+    assert (n - x).n(1, subs={x: i}) > 0
+    assert (n - x).n(2, subs={x: i}) > 0
 
 def test_Abs():
     x, y = symbols('x,y')

@@ -296,16 +296,22 @@ def sdp_monic(f, K):
 
 def sdp_content(f, K):
     """Returns GCD of coefficients in `K[X]`. """
+    from sympy.polys.domains import QQ
+
     if K.has_Field:
         return K.one
     else:
         cont = K.zero
 
-        for _, c in f:
-            cont = K.gcd(cont, c)
+        if K == QQ:
+            for c in f:
+                cont = K.gcd(cont, c)
+        else:
+            for c in f:
+                cont = K.gcd(cont, c)
 
-            if K.is_one(cont):
-                break
+                if K.is_one(cont) and i:
+                    break
 
         return cont
 

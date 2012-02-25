@@ -1168,11 +1168,6 @@ multivector can be instantiated. As an example assume that the multivector space
 is initialized with ``MV.setup('e1 e2 e3')``. Then the vectors ``e1``, ``e2``,
 and ``e3`` are made available (broadcast) for use in the program .
 
-.. warning::
-
-    This is only true if the statement  ``set_main(sys.modules[__name__])`` appears
-    immediately after the ``from sympy.galgebra.GA import *`` statement.
-
 So that multivectors
 could be instantiated with statements such as (``a1``, ``a2``, and ``a3`` are
 ``sympy`` symbols)::
@@ -1355,16 +1350,6 @@ These are functions in :mod:`GA`, but not in the multivector (:class:`MV`)
 class.
 
 
-.. function:: set_main(main_program)
-
-   :func:`set_main` passes the argument *main_program* from the main program to the
-   :mod:`GA` module.  The argument must be *sys.modules[__name__]* and the
-   call should be placed immediately after :mod:`sys` and :mod:`GA` are
-   imported.  The purpose of this call is to allow :mod:`GA` to broadcast to
-   the main program :mod:`sympy`  variables and multivectors created by calls to
-   :mod:`GA`. It is used by :func:`MV.setup` and :func:`make_symbols`.
-
-
 .. function:: make_symbols(symnamelst)
 
    :func:`make_symbols` creates a list of :mod:`sympy` symbols with names defined
@@ -1377,11 +1362,6 @@ class.
    Not only will *syms* contain the symbols, but you can also directly use *x*,
    *y*, and *ab* as symbols in your program.
 
-    .. warning::
-
-        You can only directly use *x*, *y*, and *ab* as symbols in your program if
-        the statement  ``set_main(sys.modules[__name__])`` appears immediately after
-        the ``from sympy.galgebra.GA import *`` statement.
 
 .. function:: set_names(var_lst,var_str)
 

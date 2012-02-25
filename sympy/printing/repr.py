@@ -53,10 +53,6 @@ class ReprPrinter(Printer):
     def _print_FunctionClass(self, expr):
         return 'Function(%r)'%(expr.__name__)
 
-    def _print_GeometryEntity(self, expr):
-        # GeometryEntity is special -- its base is tuple
-        return type(expr).__name__ + srepr(tuple(expr))
-
     def _print_Half(self, expr):
         return 'Rational(1, 2)'
 
@@ -75,7 +71,7 @@ class ReprPrinter(Printer):
     def _print_list(self, expr):
         return "[%s]" % self.reprify(expr, ", ")
 
-    def _print_Matrix(self, expr):
+    def _print_MatrixBase(self, expr):
         l = []
         for i in range(expr.rows):
             l.append([])

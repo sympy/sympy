@@ -39,7 +39,7 @@ from sympy.polys.factortools import (
 from sympy.polys.specialpolys import (
     f_1, f_2, f_3, f_4, f_5, f_6, w_1, w_2)
 
-from sympy.polys.polyconfig import setup
+from sympy.polys import polyconfig as config
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyclasses import DMP, DMF, ANP
 from sympy.polys.domains import FF, ZZ, QQ, RR, EX
@@ -267,10 +267,10 @@ def test_dup_zz_factor():
 
     f = dup_from_raw_dict({10:1, 0:-1}, ZZ)
 
-    setup('USE_CYCLOTOMIC_FACTOR', True)
+    config.setup('USE_CYCLOTOMIC_FACTOR', True)
     F_0 = dup_zz_factor(f, ZZ)
 
-    setup('USE_CYCLOTOMIC_FACTOR', False)
+    config.setup('USE_CYCLOTOMIC_FACTOR', False)
     F_1 = dup_zz_factor(f, ZZ)
 
     assert F_0 == F_1 == \
@@ -279,21 +279,21 @@ def test_dup_zz_factor():
              ([1,-1, 1,-1, 1], 1),
              ([1, 1, 1, 1, 1], 1)])
 
-    setup('USE_CYCLOTOMIC_FACTOR')
+    config.setup('USE_CYCLOTOMIC_FACTOR')
 
     f = dup_from_raw_dict({10:1, 0:1}, ZZ)
 
-    setup('USE_CYCLOTOMIC_FACTOR', True)
+    config.setup('USE_CYCLOTOMIC_FACTOR', True)
     F_0 = dup_zz_factor(f, ZZ)
 
-    setup('USE_CYCLOTOMIC_FACTOR', False)
+    config.setup('USE_CYCLOTOMIC_FACTOR', False)
     F_1 = dup_zz_factor(f, ZZ)
 
     assert F_0 == F_1 == \
         (1, [([1, 0, 1], 1),
              ([1, 0, -1, 0, 1, 0, -1, 0, 1], 1)])
 
-    setup('USE_CYCLOTOMIC_FACTOR')
+    config.setup('USE_CYCLOTOMIC_FACTOR')
 
 def test_dmp_zz_wang():
     p = ZZ(nextprime(dmp_zz_mignotte_bound(w_1, 2, ZZ)))

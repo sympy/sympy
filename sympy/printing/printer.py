@@ -25,7 +25,7 @@ Some more information how the single concepts work and who should use which:
     specific method in every object, that will be called if it's available
     and is then responsible for the representation. The name of that method
     depends on the specific printer and is defined under
-    Printer.printmethodname.
+    Printer.printmethod.
 
 2. Take the best fitting method defined in the printer.
 

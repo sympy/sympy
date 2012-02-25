@@ -25,7 +25,7 @@ from sympy.polys.domains import ZZ, QQ
 
 from sympy import S, Symbol, symbols, groebner
 from sympy.utilities.pytest import raises, skip, XFAIL
-from sympy.polys.polyconfig import setup
+from sympy.polys import polyconfig as config
 
 def helper_test_sdp_groebner():
     f = sdp_from_dict({(1,2): QQ(2,), (2,0): QQ(1)}, lex)
@@ -179,9 +179,9 @@ def helper_test_sdp_groebner():
     raises(DomainError, "sdp_groebner([], 1, lex, ZZ)")
 
 def test_sdp_groebner():
-    setup('GB_METHOD', 'f5b')
+    config.setup('GB_METHOD', 'f5b')
     helper_test_sdp_groebner()
-    setup('GB_METHOD', 'buchberger')
+    config.setup('GB_METHOD', 'buchberger')
     helper_test_sdp_groebner()
 
 def helper_test_benchmark_minpoly():
@@ -202,9 +202,9 @@ def helper_test_benchmark_minpoly():
     ]
 
 def test_benchmark_minpoly():
-    setup('GB_METHOD', 'f5b')
+    config.setup('GB_METHOD', 'f5b')
     helper_test_benchmark_minpoly()
-    setup('GB_METHOD', 'buchberger')
+    config.setup('GB_METHOD', 'buchberger')
     helper_test_benchmark_minpoly()
 
 @XFAIL
@@ -264,9 +264,9 @@ def helper_test_benchmark_katsura_3():
     ]
 
 def test_benchmark_katsura3():
-    setup('GB_METHOD', 'f5b')
+    config.setup('GB_METHOD', 'f5b')
     helper_test_benchmark_katsura_3()
-    setup('GB_METHOD', 'buchberger')
+    config.setup('GB_METHOD', 'buchberger')
     helper_test_benchmark_katsura_3()
 
 def helper_test_benchmark_katsura_4():
@@ -296,9 +296,9 @@ def helper_test_benchmark_katsura_4():
     ]
 
 def test_benchmark_kastura_4():
-    setup('GB_METHOD', 'f5b')
+    config.setup('GB_METHOD', 'f5b')
     helper_test_benchmark_katsura_4()
-    setup('GB_METHOD', 'buchberger')
+    config.setup('GB_METHOD', 'buchberger')
     helper_test_benchmark_katsura_4()
 
 def helper_test_benchmark_czichowski():
@@ -322,9 +322,9 @@ def helper_test_benchmark_czichowski():
 def test_benchmark_czichowski():
     skip('This takes too much time (without gmpy)')
 
-    setup('GB_METHOD', 'f5b')
+    config.setup('GB_METHOD', 'f5b')
     helper_test_benchmark_czichowski()
-    setup('GB_METHOD', 'buchberger')
+    config.setup('GB_METHOD', 'buchberger')
     helper_test_benchmark_czichowski()
 
 def helper_test_benchmark_cyclic_4():
@@ -351,9 +351,9 @@ def helper_test_benchmark_cyclic_4():
     ]
 
 def test_benchmark_cyclic_4():
-    setup('GB_METHOD', 'f5b')
+    config.setup('GB_METHOD', 'f5b')
     helper_test_benchmark_cyclic_4()
-    setup('GB_METHOD', 'buchberger')
+    config.setup('GB_METHOD', 'buchberger')
     helper_test_benchmark_cyclic_4()
 
 def test_sig_key():

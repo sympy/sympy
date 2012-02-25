@@ -538,14 +538,17 @@ class Basic(PicklableWithSlots):
            expression recursively:
 
            >>> from sympy import Function, Mul
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(Function)
-           set([sin(y + I*pi)])
+           >>> from sympy.core.function import AppliedUndef
+           >>> f = Function('f')
+           >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(Function)
+           set([f(x), sin(y + I*pi)])
+           >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(AppliedUndef)
+           set([f(x)])
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Mul)
            set([I*pi, 2*sin(y + I*pi)])
 
         """
-        from sympy.core.function import UndefinedFunction, Function
 
         def _atoms(expr, typ):
             """Helper function for recursively denesting atoms"""
@@ -579,19 +582,6 @@ class Basic(PicklableWithSlots):
 
             return result
 
-        # UndefinedFunction is a subset of Function, so it
-        # need not be present if Function is present, otherwise
-        # to find it you need to filter Functions
-        if UndefinedFunction in types:
-            types = list(types)
-            types.remove(UndefinedFunction)
-            if Function not in types:
-                u = set(f for f in _atoms(self, typ=[Function]) if
-                        isinstance(f.func, UndefinedFunction))
-                if types:
-                    return u | _atoms(self, typ=types)
-                else:
-                    return u
         return _atoms(self, typ=types)
 
     @property

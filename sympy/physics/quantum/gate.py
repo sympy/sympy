@@ -30,6 +30,8 @@ from sympy.physics.quantum.operator import (UnitaryOperator, Operator,
 from sympy.physics.quantum.matrixutils import matrix_tensor_product, matrix_eye
 from sympy.physics.quantum.matrixcache import matrix_cache
 
+from sympy.matrices.matrices import MatrixBase
+
 __all__ = [
     'Gate',
     'CGate',
@@ -125,7 +127,7 @@ class Gate(UnitaryOperator):
 
     @classmethod
     def _eval_args(cls, args):
-        args = UnitaryOperator._eval_args(args)
+        args = Tuple(*UnitaryOperator._eval_args(args))
         _validate_targets_controls(args)
         return args
 
@@ -445,7 +447,7 @@ class UGate(Gate):
         targets = Gate._eval_args(targets)
         _validate_targets_controls(targets)
         mat = args[1]
-        if not isinstance(mat, Matrix):
+        if not isinstance(mat, MatrixBase):
             raise TypeError('Matrix expected, got: %r' % mat)
         dim = 2**len(targets)
         if not all(dim == shape for shape in mat.shape):

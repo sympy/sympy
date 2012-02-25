@@ -1375,8 +1375,27 @@ def prod(a, start=1):
     """
     return reduce(operator.mul, a, start)
 
-def _keep_coeff(coeff, factors):
-    """Return ``coeff*factors`` unevaluated if necessary."""
+def _keep_coeff(coeff, factors, clear=True):
+    """Return ``coeff*factors`` unevaluated if necessary.
+
+    If clear is False, do not keep the coefficient as a factor
+    if it can be distributed on a single factor such that one or
+    more terms will still have integer coefficients.
+
+    Examples
+    ========
+
+    >>> from sympy.core.mul import _keep_coeff
+    >>> from sympy.abc import x, y
+    >>> from sympy import S
+
+    >>> _keep_coeff(S.Half, x + 2)
+    (x + 2)/2
+    >>> _keep_coeff(S.Half, x + 2, clear=False)
+    x/2 + 1
+    >>> _keep_coeff(S.Half, (x + 2)*y, clear=False)
+    y*(x + 2)/2
+    """
 
     if not coeff.is_Number:
         if factors.is_Number:
@@ -1388,6 +1407,13 @@ def _keep_coeff(coeff, factors):
     elif coeff == -1: # don't keep sign?
         return -factors
     elif factors.is_Add:
+        if not clear and coeff.is_Rational and coeff.q != 1:
+            q = S(coeff.q)
+            for i in factors.args:
+                c, t = i.as_coeff_Mul()
+                r = c/q
+                if r == int(r):
+                    return coeff*factors
         return Mul._from_args((coeff, factors))
     elif factors.is_Mul:
         margs = list(factors.args)

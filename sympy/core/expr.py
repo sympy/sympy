@@ -1,7 +1,7 @@
 from core import C
 from basic import Basic, Atom
 from singleton import S
-from evalf import EvalfMixin
+from evalf import EvalfMixin, pure_complex
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
 from compatibility import reduce, SymPyDeprecationWarning
@@ -30,15 +30,15 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-            >>> from sympy import Expr
-            >>> e = Expr()
-            >>> e._diff_wrt
-            False
-            >>> class MyClass(Expr):
-            ...     _diff_wrt = True
-            ...
-            >>> (2*MyClass()).diff(MyClass())
-            2
+        >>> from sympy import Expr
+        >>> e = Expr()
+        >>> e._diff_wrt
+        False
+        >>> class MyClass(Expr):
+        ...     _diff_wrt = True
+        ...
+        >>> (2*MyClass()).diff(MyClass())
+        2
         """
         return False
 
@@ -153,12 +153,47 @@ class Expr(Basic, EvalfMixin):
     def __rmod__(self, other):
         return Mod(other, self)
 
+    def __int__(self):
+        from sympy import round
+        # Although we only need to round to the units position, we'll
+        # get one more digit so the extra testing below can be avoided
+        # unless the rounded value rounded to an integer, e.g. if an
+        # expression were equal to 1.9 and we rounded to the unit position
+        # we would get a 2 and would not know if this rounded up or not
+        # without doing a test (as done below). But if we keep an extra
+        # digit we know that 1.9 is not the same as 1 and there is no
+        # need for further testing: our int value is correct. If the value
+        # were 1.99, however, this would round to 2.0 and our int value is
+        # off by one. So...if our round value is the same as the int value
+        # (regardless of how much extra work we do to calculate extra decimal
+        # places) we need to test whether we are off by one.
+        r = round(self, 1)
+        i = int(r)
+        if not i:
+            return 0
+        # off-by-one check
+        if i == r and not (self - i).equals(0):
+            isign = 1 if i > 0 else -1
+            x = C.Dummy()
+            # in the following (self - i).evalf(1) will not always work while
+            # (self - r).evalf(1) and the use of subs does; if the test that
+            # was added when this comment was added passes, it might be safe
+            # to simply use sign to compute this rather than doing this by hand:
+            diff_sign = 1 if (self - x).evalf(1, subs={x: i}) > 0 else -1
+            if diff_sign != isign:
+                i -= isign
+        return i
+
     def __float__(self):
+        # Don't bother testing if it's a number; if it's not this is going
+        # to fail, and if it is we still need to check that it evalf'ed to
+        # a number.
         result = self.evalf()
         if result.is_Number:
             return float(result)
-        else:
-            raise ValueError("Symbolic value, can't compute")
+        if result.is_number and result.as_real_imag()[1]:
+            raise TypeError("can't convert complex to float")
+        raise TypeError("can't convert expression to float")
 
     def __complex__(self):
         result = self.evalf()
@@ -228,26 +263,117 @@ class Expr(Basic, EvalfMixin):
             return False
         return all(obj.is_number for obj in self.iter_basic_args())
 
+    def _random(self, n=None, a=1, b=2, c=3, d=4):
+        """Return self evaluated, if possible, replacing free symbols with
+        random complex values, if necessary.
+
+        The random complex value for each free symbol is generated
+        by the random_complex_number routine using values of a, b, c
+        and d. The returned value is evaluated to a precision of n
+        (if given) else the maximum of 15 and the precision needed
+        to get more than 1 digit of precision. If the expression
+        could not be evaluated to a number, or could not be evaluated
+        to more than 1 digit of precision, then None is returned.
+
+        Examples
+        ========
+
+        >>> from sympy import sqrt
+        >>> from sympy.abc import x, y
+        >>> x._random()                         # doctest: +SKIP
+        2.02156676842162 + 2.09079610844169*I
+        >>> x._random(2)                        # doctest: +SKIP
+        1.8 + 2.8*I
+        >>> (x + y/2)._random(2)                # doctest: +SKIP
+        3.7 + 3.8*I
+        >>> sqrt(2)._random(2)
+        1.4
+
+        See Also
+        ========
+
+        sympy.utilities.randtest.random_complex_number
+        """
+
+        mag = abs(self)
+        free = self.free_symbols
+        prec = 1
+        if free:
+            from sympy.utilities.randtest import random_complex_number
+            reps = dict(zip(free, [random_complex_number(a, b, c, d, rational=True)
+                           for zi in free]))
+            nmag = mag.evalf(1, subs=reps)
+        elif mag.is_number:
+            reps = {}
+            nmag = mag.evalf(1)
+
+        if not hasattr(nmag, '_prec'):
+            # e.g. exp_polar(2*I*pi) doesn't evaluate but is_number is True
+            return None
+
+
+        if nmag._prec == 1:
+            # increase the precision up to the default maximum
+            # precision to see if we can get any significance
+
+            # get the prec steps (patterned after giant_steps in
+            # libintmath) which approximately doubles the prec
+            # each step
+            from sympy.core.evalf import DEFAULT_MAXPREC as target
+            L = [target]
+            start = 2
+            while 1:
+                Li = L[-1]//2 + 2
+                if Li >= L[-1] or Li < start:
+                    if L[-1] != start:
+                        L.append(start)
+                    break
+                L.append(Li)
+            L = L[::-1]
+
+            # evaluate
+            for prec in L:
+                nmag = mag.evalf(prec, subs=reps)
+                if nmag._prec != 1:
+                    break
+
+        if nmag._prec != 1:
+            if n is None:
+                n = max(prec, 15)
+            return self.evalf(n, subs=reps)
+
+        # never got any significance
+        return None
+
     def is_constant(self, *wrt, **flags):
-        """Return True if self is constant, otherwise False.
+        """Return True if self is constant, False if not, or None if
+        the constancy could not be determined conclusively.
 
         If an expression has no free symbols then it is a constant. If
         there are free symbols it is possible that the expression is a
-        constant, perhaps (but not necessarily) zero. If an expression
-        with free symbols is a number then it is not a constant.
-        Other free-symbol containing expressions are tested with
-        differentiation with respect to variables in `wrt` (or all free
-        symbols if omitted) to see if the expression is constant or not.
+        constant, perhaps (but not necessarily) zero. To test such
+        expressions, two strategies are tried:
+
+        1) numerical evaluation at two random points. If two such evaluations
+        give two different values and the values have a precision greater than
+        1 then self is not constant. If the evaluations agree or could not be
+        obtained with any precision, no decision is made. The numerical testing
+        is done only if ``wrt`` is different than the free symbols.
+
+        2) differentiation with respect to variables in 'wrt' (or all free
+        symbols if omitted) to see if the expression is constant or not. This
+        will not always lead to an expression that is zero even though an
+        expression is constant (see added test in test_expr.py). If
+        all derivatives are zero then self is constant with respect to the
+        given symbols.
+
+        If neither evaluation nor differentiation can prove the expression is
+        constant, None is returned unless two numerical values happened to be
+        the same and the flag ``failing_number`` is True -- in that case the
+        numerical value will be returned.
 
         If flag simplify=False is passed, self will not be simplified;
         the default is True since self should be simplified before testing.
-
-        Although it is tempting to use numerical methods to test
-        expessions that have free symbols, results thus obtained
-        could only be probabalistic since for any tested values that
-        returned 0, it is possible that these were simply roots of the
-        expression.
-
 
         Examples
         ========
@@ -280,76 +406,121 @@ class Expr(Basic, EvalfMixin):
         False
         >>> (x**x).is_constant()
         False
-        >>> one = cos(x)**2+sin(x)**2
+        >>> one = cos(x)**2 + sin(x)**2
         >>> one.is_constant()
         True
-        >>> ((one-1)**(x+1)).is_constant() # could be 0 or 1
+        >>> ((one - 1)**(x + 1)).is_constant() # could be 0 or 1
         False
         """
 
         simplify = flags.get('simplify', True)
 
-        free = self.free_symbols
-        # only one of these should be necessary since if something is
+        # Except for expressions that contain units, only one of these should
+        # be necessary since if something is
         # known to be a number it should also know that there are no
         # free symbols. But is_number quits as soon as it hits a non-number
         # whereas free_symbols goes until all free symbols have been collected,
         # thus is_number should be faster. But a double check on free symbols
         # is made just in case there is a discrepancy between the two.
-        if self.is_number:
-            return True
         free = self.free_symbols
-        # if this fails, the free_symbols routine needs to recognize that
-        # if the expression is a number then there are no free_symbols
-        assert free
+        if self.is_number or not free:
+            # if the following assertion fails then that object's free_symbols
+            # method needs attention: if an expression is a number it cannot
+            # have free symbols
+            assert not free
+            return True
+
         # if we are only interested in some symbols and they are not in the
         # free symbols then this expression is constant wrt those symbols
-        if wrt and not set(wrt) & free:
+        wrt = set(wrt)
+        if wrt and not wrt & free:
             return True
+        wrt = wrt or free
+
         # simplify unless this has already been done
         if simplify:
             self = self.simplify()
-        # is_zero should be a quick assumptions check; it can be wrong for numbers
-        # (see test_is_not_constant test), giving False when it shouldn't, but hopefully
-        # it will never give True unless it is sure.
+
+        # is_zero should be a quick assumptions check; it can be wrong for
+        # numbers (see test_is_not_constant test), giving False when it
+        # shouldn't, but hopefully it will never give True unless it is sure.
         if self.is_zero:
             return True
+
+        # try numerical evaluation to see if we get two different values
+        failing_number = None
+        if wrt == free:
+            a, b = [self._random() for i in range(2)]
+            if not any(p is None for p in (a, b)):
+                if a != b:
+                    return False
+                failing_number = a
+            else:
+                failing_number = None
+
         # now we will test each wrt symbol (or all free symbols) to see if the
-        # expression depends on them or not using differentiation.
-        if not wrt:
-            wrt = free
-        wrt = list(wrt)
-        for i in range(len(wrt)):
-            deriv = (self.diff(wrt[0])).simplify()
+        # expression depends on them or not using differentiation. This is
+        # not sufficient for all expressions, however, so we don't return
+        # False if we get a derivative other than 0 with free symbols.
+        for w in wrt:
+            deriv = self.diff(w).simplify()
             if deriv != 0:
+                if not (deriv.is_Number or pure_complex(deriv)):
+                    if flags.get('failing_number', False):
+                        return failing_number
+                    elif deriv.free_symbols:
+                        # dead line provided _random returns None in such cases
+                        return None
                 return False
-            wrt.pop(0)
         return True
 
     def equals(self, other, failing_expression=False):
         """Return True if self == other, False if it doesn't, or None. If
         failing_expression is True then the expression which did not simplify
-        to a 0 will be returned instead of None."""
+        to a 0 will be returned instead of None.
+
+        If ``self`` is a Number (or complex number) that is not zero, then
+        the result is False.
+
+        If ``self`` is a number and has not evaluated to zero, evalf will be
+        used to test the expression evaluates to zero. As long as a value with
+        precision greater than 1 is obtained, this indicates that the
+        computed value has significance (while a precision of 1 indicates
+        that no significant figures were computed by evalf and a precision
+        of -1 indicates that the expression is Rational, thus exact).
+
+        """
 
         other = sympify(other)
         if self == other:
             return True
 
-        # they aren't the same so see if we can make the difference 0
-        diff = factor_terms((self - other).as_content_primitive()[1]).simplify()
-        if not diff.is_constant(simplify=False):
+        # they aren't the same so see if we can make the difference 0;
+        # don't worry about doing simplification steps one at a time
+        # because if the expression ever goes to 0 then the subsequent
+        # simplification steps that are done will be very fast.
+        diff = (self - other).as_content_primitive()[1]
+        diff = factor_terms(diff.simplify(), radical=True)
+        if not diff:
+            return True
+        elif diff.is_Number or pure_complex(diff):
+            return False
+        constant = diff.is_constant(simplify=False, failing_number=True)
+        if constant is False or \
+           not diff.free_symbols and not diff.is_number:
+            return False
+        elif constant is True:
+            ndiff = diff._random()
+            if ndiff:
+               return False
+
+        # diff has not simplified to zero; constant is either None, True
+        # or the number with significance (prec != 1) that was randomly
+        # calculated twice as the same value.
+        if constant not in (True, None) and constant != 0:
             return False
 
-        # don't worry about doing these steps a little at a time: if there
-        # is not going to be any control over what to try then just
-        # try everything and know that if a 0 is obtained, the additional
-        # step (e.g. factoring) is going to go quickly
-        diff = diff.factor()
-        if diff.is_Number:
-            return diff is S.Zero
-
         if failing_expression:
-            # return the expression that wouldn't simplify to zero
             return diff
         return None
 
@@ -510,7 +681,7 @@ class Expr(Basic, EvalfMixin):
                     if factor.is_number:
                         try:
                             coeff *= complex(factor)
-                        except ValueError:
+                        except TypeError:
                             pass
                         else:
                             continue
@@ -674,40 +845,40 @@ class Expr(Basic, EvalfMixin):
 
         You can select terms that have an explicit negative in front of them:
 
-        >>> (-x+2*y).coeff(-1)
+        >>> (-x + 2*y).coeff(-1)
         x
-        >>> (x-2*y).coeff(-1)
+        >>> (x - 2*y).coeff(-1)
         2*y
 
         You can select terms with no rational coefficient:
 
-        >>> (x+2*y).coeff(1)
+        >>> (x + 2*y).coeff(1)
         x
-        >>> (3+2*x+4*x**2).coeff(1)
+        >>> (3 + 2*x + 4*x**2).coeff(1)
 
         You can select terms that have a numerical term in front of them:
 
-        >>> (-x-2*y).coeff(2)
+        >>> (-x - 2*y).coeff(2)
         -y
         >>> from sympy import sqrt
-        >>> (x+sqrt(2)*x).coeff(sqrt(2))
+        >>> (x + sqrt(2)*x).coeff(sqrt(2))
         x
 
         The matching is exact:
 
-        >>> (3+2*x+4*x**2).coeff(x)
+        >>> (3 + 2*x + 4*x**2).coeff(x)
         2
-        >>> (3+2*x+4*x**2).coeff(x**2)
+        >>> (3 + 2*x + 4*x**2).coeff(x**2)
         4
-        >>> (3+2*x+4*x**2).coeff(x**3)
-        >>> (z*(x+y)**2).coeff((x+y)**2)
+        >>> (3 + 2*x + 4*x**2).coeff(x**3)
+        >>> (z*(x + y)**2).coeff((x + y)**2)
         z
-        >>> (z*(x+y)**2).coeff(x+y)
+        >>> (z*(x + y)**2).coeff(x + y)
 
         In addition, no factoring is done, so 2 + y is not obtained from the
         following:
 
-        >>> (2*x+2+(x+1)*y).coeff(x+1)
+        >>> (2*x + 2 + (x + 1)*y).coeff(x + 1)
         y
 
         >>> n, m, o = symbols('n m o', commutative=False)
@@ -1899,6 +2070,7 @@ class Expr(Basic, EvalfMixin):
             -x
 
         """
+        from sympy import collect
         if x is None:
             syms = self.atoms(C.Symbol)
             if len(syms) > 1:
@@ -1991,7 +2163,10 @@ class Expr(Basic, EvalfMixin):
                 if (s1 + o).removeO() == s1:
                     o = S.Zero
 
-            return s1 + o
+            try:
+                return collect(s1,x) + o
+            except NotImplementedError:
+                return s1 + o
 
         else: # lseries handling
             def yield_lseries(s):
@@ -2111,8 +2286,8 @@ class Expr(Basic, EvalfMixin):
         never call this method directly (use .nseries() instead), so you don't
         have to write docstrings for _eval_nseries().
         """
-        from sympy.solvers.solvers import _filldedent
-        raise NotImplementedError(_filldedent("""
+        from sympy.utilities.misc import filldedent
+        raise NotImplementedError(filldedent("""
                      The _eval_nseries method should be added to
                      %s to give terms up to O(x**n) at x=0
                      from the positive direction so it is available when
@@ -2415,10 +2590,7 @@ class AtomicExpr(Atom, Expr):
     """
     A parent class for object which are both atoms and Exprs.
 
-    Examples
-    ========
-
-    Symbol, Number, Rational, Integer, ...
+    For example: Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
 

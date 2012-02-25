@@ -14,6 +14,7 @@ from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (S, Interval, Dummy, FiniteSet, Mul, Integral, And, Or,
         Piecewise, solve, cacheit, integrate, oo)
 from sympy.solvers.inequalities import reduce_poly_inequalities
+from sympy.polys.polyerrors import PolynomialError
 import random
 
 class ContinuousDomain(RandomDomain):
@@ -45,7 +46,11 @@ class SingleContinuousDomain(ContinuousDomain, SingleDomain):
             return expr
         assert frozenset(variables) == frozenset(self.symbols)
         # assumes only intervals
-        return integrate(expr, (self.symbol, self.set), **kwargs)
+        evaluate = kwargs.pop('evaluate', True)
+        if evaluate:
+            return integrate(expr, (self.symbol, self.set), **kwargs)
+        else:
+            return Integral(expr, (self.symbol, self.set), **kwargs)
 
     def as_boolean(self):
         return self.set.as_relational(self.symbol)
@@ -118,7 +123,10 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                 raise TypeError(
                         "Condition %s is not a relational or Boolean"%cond)
 
-        return integrate(integrand, *limits, **kwargs)
+        evaluate = kwargs.pop('evaluate', True)
+        if evaluate:
+            return integrate(integrand, *limits, **kwargs)
+        return Integral(integrand, *limits, **kwargs)
 
     def as_boolean(self):
         return And(self.fulldomain.as_boolean(), self.condition)
@@ -182,6 +190,7 @@ class ContinuousPSpace(PSpace):
         return z, cdf
 
     def P(self, condition, **kwargs):
+        evaluate = kwargs.get("evaluate", True)
         # Univariate case can be handled by where
         try:
             domain = self.where(condition)
@@ -189,7 +198,10 @@ class ContinuousPSpace(PSpace):
             # Integrate out all other random variables
             z, pdf = self.compute_density(rv, **kwargs)
             # Integrate out this last variable over the special domain
-            return integrate(pdf, (z, domain.set), **kwargs)
+            if evaluate:
+                return integrate(pdf, (z, domain.set), **kwargs)
+            else:
+                return Integral(pdf, (z, domain.set), **kwargs)
         # Other cases can be turned into univariate case
         # by computing a density handled by density computation
         except NotImplementedError:
@@ -276,14 +288,20 @@ class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     def density(self):
         return Mul(*[space.density for space in self.spaces])
 
+def _reduce_inequalities(conditions, var, **kwargs):
+    try:
+        return reduce_poly_inequalities(conditions, var, **kwargs)
+    except PolynomialError:
+        raise ValueError("Reduction of condition failed %s\n"%conditions[0])
+
 def reduce_poly_inequalities_wrap(condition, var):
     if condition.is_Relational:
-        return reduce_poly_inequalities([[condition]], var, relational=False)
+        return _reduce_inequalities([[condition]], var, relational=False)
     if condition.__class__ is Or:
-        return reduce_poly_inequalities([list(condition.args)],
+        return _reduce_inequalities([list(condition.args)],
                 var, relational=False)
     if condition.__class__ is And:
-        intervals = [reduce_poly_inequalities([[arg]], var, relational=False)
+        intervals = [_reduce_inequalities([[arg]], var, relational=False)
             for arg in condition.args]
         I = intervals[0]
         for i in intervals:
