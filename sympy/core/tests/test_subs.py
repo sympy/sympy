@@ -1,6 +1,6 @@
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
-        cse, cot, tan, S, Tuple, Basic, Dict)
+        cse, cot, tan, S, Tuple, Basic, Dict, oo)
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -452,3 +452,10 @@ def test_issue_2980():
 def test_issue_1581():
     N = Symbol('N')
     assert N.subs(dict(N=3)) == 3
+
+def test_issue_3059():
+    from sympy.abc import x, y
+    assert (x - 1).subs(1, y) == x - y
+    assert (x - 1).subs(-1, y) == x + y
+    assert (x - oo).subs(oo, y) == x - y
+    assert (x - oo).subs(-oo, y) == x + y

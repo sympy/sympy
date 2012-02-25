@@ -928,7 +928,7 @@ class Basic(PicklableWithSlots):
                that should be attempted (as in Piecewise where the condition
                may be updated without doing a replacement).
 
-        If it is overridden here are some special cases that might arise:
+        If it is overridden, here are some special cases that might arise:
 
             1) If it turns out that no special change was made and all
                the original sub-arguments should be checked for
@@ -959,7 +959,7 @@ class Basic(PicklableWithSlots):
             hit = False
             args = list(self.args)
             for i, arg in enumerate(args):
-                if not hasattr(arg, '_subs'):
+                if not hasattr(arg, '_eval_subs'):
                     continue
                 arg = arg._subs(old, new, **hints)
                 if arg is not args[i]:
@@ -971,8 +971,6 @@ class Basic(PicklableWithSlots):
 
         if _aresame(self, old):
             return new
-        if not self.args:
-            return self
 
         rv = self._eval_subs(old, new)
         if rv is None:
