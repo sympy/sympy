@@ -132,6 +132,7 @@ class Dict(Basic):
 
     The args are sympified so the 1 and 2 are Integers and the values
     are Symbols. Queries automatically sympify args so the following work:
+
     >>> 1 in D
     True
     >>> D.has('one') # searches keys and values

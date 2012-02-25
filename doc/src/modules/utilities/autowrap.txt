@@ -1,11 +1,6 @@
 ===============
-Autowrap module
+Autowrap Module
 ===============
-
-.. automodule:: sympy.utilities.autowrap
-
-Examples
-^^^^^^^^
 
 The autowrap module works very well in tandem with the Indexed classes of the
 :ref:`tensor_module`.  Here is a simple example that shows how to setup a binary
@@ -22,7 +17,7 @@ y[i] == A[i, j]*x[j]
 
 Because the code printers treat Indexed objects with repeated indices as a
 summation, the above equality instance will be translated to low-level code for
-a matrix vector product.  This is how you tell Sympy to generate the code,
+a matrix vector product.  This is how you tell SymPy to generate the code,
 compile it and wrap it as a python function:
 
 >>> matvec = autowrap(instruction)                 # doctest: +SKIP
@@ -37,34 +32,8 @@ matrix vector product like this:
 >>> matvec(M, [2, 3])                              # doctest: +SKIP
 [ 3.  2.]
 
-More examples of usage are supplied with the Sympy installation.  There is one
-example demonstrating :download:`basic usage of ufuncify
-<../../../../examples/advanced/autowrap_ufuncify.py>`, and another more
-elaborate example, showing how the autowrap module can be used to set up
-:download:`specialized binary integration routines
-<../../../../examples/advanced/autowrap_integrators.py>`.
-
-
-User interface
-^^^^^^^^^^^^^^
-
-autowrap
---------
-.. autofunction:: sympy.utilities.autowrap.autowrap
-
-
-.. _ufuncify:
-
-ufuncify
----------------
-.. autofunction:: sympy.utilities.autowrap.ufuncify
-
-binary_function
----------------
-.. autofunction:: sympy.utilities.autowrap.binary_function
-
 Implementation details
-^^^^^^^^^^^^^^^^^^^^^^
+======================
 
 The autowrap module is implemented with a backend consisting of CodeWrapper
 objects.  The base class ``CodeWrapper`` takes care of details about module
@@ -77,19 +46,8 @@ system installed f2py command. The Cython backend runs a distutils setup script
 in a subprocess. Subclasses of CodeWrapper takes care of these
 backend-dependent details.
 
-.. autoclass:: CodeWrapper
-   :members:
-
-.. autoclass:: F2PyCodeWrapper
-   :members:
-
-.. autoclass:: CythonCodeWrapper
-   :members:
-
 API Reference
--------------
+=============
 
 .. automodule:: sympy.utilities.autowrap
    :members:
-   :noindex:
-

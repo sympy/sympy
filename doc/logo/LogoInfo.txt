@@ -1,4 +1,4 @@
-I created these logo's and permit their free use on the same terms as the rest of Sympy's code and documentation.
+I created these logo's and permit their free use on the same terms as the rest of SymPy's code and documentation.
 
 Fredrik Johansson
 

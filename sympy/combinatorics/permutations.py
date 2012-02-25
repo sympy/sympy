@@ -316,9 +316,9 @@ class Permutation(Basic):
         If one of the permutations is in a cyclic form then it is first
         converted to an array form and then multiplied. ::
 
-            >>> q = Permutation([[1,3,2],[0]])
-            >>> p*q
-            Permutation([1, 0, 2, 3])
+        >>> q = Permutation([[1,3,2],[0]])
+        >>> p*q
+        Permutation([1, 0, 2, 3])
 
         """
         a = self.array_form
@@ -345,7 +345,6 @@ don\'t match.")
         >>> b = Permutation([2,3,5,4,1,0])
         >>> a.commutes_with(b)
         False
-
         """
         a = self.array_form
         b = other.array_form
@@ -661,7 +660,7 @@ don\'t match.")
 
         The parity of a permutation reflects the parity of the
         number of inversions in the permutation, i.e., the
-        number of pairs of x and y such that x > y but p[x] < p[y].
+        number of pairs of x and y such that ``x > y`` but ``p[x] < p[y]``.
 
         Examples
         ========
@@ -912,7 +911,7 @@ don\'t match.")
 
     def conjugate(self, x):
         """
-        Computes the conjugate Permutation `~x*p*x'
+        Computes the conjugate Permutation ``~x*p*x``
 
         Examples
         ========

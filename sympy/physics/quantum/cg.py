@@ -28,7 +28,7 @@ class Wigner3j(Expr):
 
     Wigner 3j-symbols are coefficients determined by the coupling of
     two angular momenta. When created, they are expressed as symbolic
-    quantities that can be evaluated using the doit() method.
+    quantities that can be evaluated using the doit() method [1]_.
 
     Parameters
     ==========
@@ -53,7 +53,7 @@ class Wigner3j(Expr):
     References
     ==========
 
-    [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
+    .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
     def __new__(cls, j1, m1, j2, m2, j3, m3):
         j1,m1,j2,m2,j3,m3 = map(sympify, (j1,m1,j2,m2,j3,m3))
@@ -153,8 +153,10 @@ class CG(Wigner3j):
     Clebsch-Gordan coefficients describe the angular momentum coupling between
     two systems. The coefficients give the expansion of a coupled total angular
     momentum state and an uncoupled tensor product state. The Clebsch-Gordan
-    coefficients are defined as:
-    CG(j1,m1,j2,m2,j3,m3) = <j1,m1; j2,m2 | j3,m3>
+    coefficients are defined as [1]_:
+
+    .. math ::
+        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \langle j_1,m_1;j_2,m_2 | j_3,m_3\\rangle
 
     Parameters
     ==========
@@ -179,7 +181,7 @@ class CG(Wigner3j):
     References
     ==========
 
-    [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
+    .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
 
     def doit(self, **hints):
@@ -431,7 +433,7 @@ def cg_simp(e):
 
     This function uses various symmetry and properties of sums and
     products of Clebsch-Gordan coefficients to simplify statements
-    involving these terms
+    involving these terms [1]_.
 
     Examples
     ========
@@ -449,7 +451,7 @@ def cg_simp(e):
     References
     ==========
 
-    [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
+    .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
     if isinstance(e, Add):
         return _cg_simp_add(e)

@@ -607,8 +607,10 @@ def classify_ode(eq, func=None, dict=False, prep=True):
     See sympy.ode.allhints or the sympy.ode docstring for a list of all
     supported hints that can be returned from classify_ode.
 
-    Notes on Hint Names
-    ===================
+    Notes
+    =====
+
+    These are remarks on hint names.
 
     *"_Integral"*
 
@@ -1846,11 +1848,11 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     References
     ==========
 
-        - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
-        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-          Dover 1963, pp. 59
+    - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 59
 
-        # indirect doctest
+    # indirect doctest
 
     """
     # There are two substitutions that solve the equation, u1=y/x and u2=x/y

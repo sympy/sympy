@@ -47,7 +47,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Vinzent Steinberg: docstring patches, a lot of bug fixes, nsolve (nonlinear equation systems solver), compiling functions to machine code, patches review
 #. Riccardo Gori: improvements and speedups to matrices, many bug fixes
 #. Case Van Horsen: implemented optional support for gmpy in mpmath
-#. Štěpán Roučka: a lot of bug fixes all over sympy (matrix, simplification, limits, series, ...)
+#. Štěpán Roučka: a lot of bug fixes all over SymPy (matrix, simplification, limits, series, ...)
 #. Ali Raza Syed: pretty printing/isympy on windows fix
 #. Stefano Maggiolo: many bug fixes, polishings and improvements
 #. Robert Cimrman: matrix patches
@@ -231,7 +231,7 @@ Financial and Infrastructure Support
 
 * `the Space Telescope Science Institute <http://www.stsci.edu/portal/>`_: STScI hosted 1 GSoC 2007 student (Mateusz)
 
-* `Simula Research Laboratory <http://www.simula.no/>`_: supports Pearu Peterson work in SymPy/Sympy Core projects
+* `Simula Research Laboratory <http://www.simula.no/>`_: supports Pearu Peterson work in SymPy/SymPy Core projects
 
 * `GitHub <https://github.com/about>`_ is providing us with development
   and collaboration tools

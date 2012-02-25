@@ -69,7 +69,7 @@ class SphinxDocString(NumpyDocString):
                 prefix = '~%s.' % prefix
             
             ## Lines that are commented out are used to make the
-            ## autosummary:: table. Since Sympy does not use the
+            ## autosummary:: table. Since SymPy does not use the
             ## autosummary:: functionality, it is easiest to just comment it
             ## out.
             #autosum = []

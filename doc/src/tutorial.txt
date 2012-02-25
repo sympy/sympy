@@ -919,6 +919,5 @@ This tutorial is also available in other languages:
 .. toctree::
    :maxdepth: 1
 
-   tutorial.bg.txt
-   tutorial.cs.txt
    tutorial.ru.txt
+

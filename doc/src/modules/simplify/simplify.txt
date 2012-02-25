@@ -89,10 +89,6 @@ sqrtdenest
 ^^^^^^^^^^
 .. autofunction:: sqrtdenest
 
-denester
-^^^^^^^^
-.. autofunction:: denester
-
 subsets
 ^^^^^^^
 .. autofunction:: subsets

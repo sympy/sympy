@@ -381,10 +381,12 @@ The values can be given as strings, integers, or Rationals. We do so below
 with a few different values:
 
     - integer input always returns an exact Integer and precision is ignored
+
     >>> Float(1234, 3)
     1234
     
     - strings are interpreted as exact and always result in a Float
+
     >>> Float('100', 3)
     100.
     

@@ -4,39 +4,47 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import cmp_to_key
 
 class Order(Expr):
-    """
-    Represents O(f(x)) at the point x = 0.
+    """ Represents the limiting behavior of some function
 
-    Definition
-    ==========
+    The order of a function characterizes the function based on the limiting
+    behavior of the function as it goes to some limit. Only taking the limit
+    point to be 0 is currently supported. This is expressed in big O notation
+    [1]_.
 
-    g(x) = O(f(x)) as x->0  if and only if
-    |g(x)|<=M|f(x)| near x=0                     (1)
+    The formal definition for the order of a function `g(x)` about a point `a`
+    is such that `g(x) = O(f(x))` as `x \\rightarrow a` if and only if for any
+    `\delta > 0` there exists a `M > 0` such that `|g(x)| \leq M|f(x)|` for
+    `|x-a| < \delta`. This is equivalent to `\lim_{x \\rightarrow a}
+    |g(x)/f(x)| < \infty`.
 
-    for some positive but finite M. An equivalent way of saying (1) is:
+    Let's illustrate it on the following example by taking the expansion of
+    `\sin(x)` about 0:
 
-    lim_{x->0}  |g(x)/f(x)|  < oo
+    .. math ::
+        \sin(x) = x - x^3/3! + O(x^5)
 
-    Let's illustrate it on the following example:
+    where in this case `O(x^5) = x^5/5! - x^7/7! + \cdots`. By the definition
+    of `O`, for any `\delta > 0` there is an `M` such that:
 
-    sin x = x - x**3/3! + O(x**5)
+    .. math ::
+        |x^5/5! - x^7/7! + ....| <= M|x^5| \\text{ for } |x| < \delta
 
-    where in this case O(x**5) = x**5/5! - x**7/7! + .... and the definition
-    of O means:
+    or by the alternate definition:
 
-    |x**5/5! - x**7/7! + ....| <= M|x**5|      near x=0
-
-    or equivalently:
-
-    lim_{x->0} | (x**5/5! - x**7/7! + ....) / x**5| < oo
+    .. math ::
+        \lim_{x \\rightarrow 0} | (x^5/5! - x^7/7! + ....) / x^5| < \infty
 
     which surely is true, because
 
-    lim_{x->0} | (x**5/5! - x**7/7! + ....) / x**5| = 1/5!
+    .. math ::
+        \lim_{x \\rightarrow 0} | (x^5/5! - x^7/7! + ....) / x^5| = 1/5!
 
 
-    So intuitively O(x**3) means: all terms x**3, x**4 and
-    higher. But not x**2, x or 1.
+    As it is usually used, the order of a function can be intuitively thought
+    of representing all terms of powers greater than the one specified. For
+    example, `O(x^3)` corresponds to any terms proportional to `x^3,
+    x^4,\ldots` and any higher power. For a polynomial, this leaves terms
+    proportional to `x^2`, `x` and constants.
 
     Examples
     ========
@@ -53,31 +61,28 @@ class Order(Expr):
     References
     ==========
 
-    U{Big O notation<http://en.wikipedia.org/wiki/Big_O_notation>}
-
-    Properties
-    ==========
-
-    g(x) = O(f(x)) as x->0  <->  |g(x)| <= M|f(x)| near x=0
-                            <->  lim_{x->0}  |g(x)/f(x)| < oo
-
-    g(x,y) = O(f(x,y))  <->  lim_{x,y->0}  |g(x,y)/f(x,y)|  < oo;
-                             it is assumed that limits commute.
+    .. [1] `Big O notation <http://en.wikipedia.org/wiki/Big_O_notation>`_
 
     Notes
     =====
 
-    In O(f(x), x) the expression f(x) is assumed to have a leading term.
-    O(f(x), x) is automatically transformed to O(f(x).as_leading_term(x),x).
+    In ``O(f(x), x)`` the expression ``f(x)`` is assumed to have a leading
+    term.  ``O(f(x), x)`` is automatically transformed to
+    ``O(f(x).as_leading_term(x),x)``.
 
-        O(expr*f(x), x) is O(f(x), x)
-        O(expr, x) is O(1)
-        O(0, x) is 0.
+        ``O(expr*f(x), x)`` is ``O(f(x), x)``
+
+        ``O(expr, x)`` is ``O(1)``
+
+        ``O(0, x)`` is 0.
 
     Multivariate O is also supported:
 
-        O(f(x, y), x, y) is transformed to
-        O(f(x, y).as_leading_term(x,y).as_leading_term(y), x, y)
+        ``O(f(x, y), x, y)`` is transformed to
+        ``O(f(x, y).as_leading_term(x,y).as_leading_term(y), x, y)``
+
+    In the multivariate case, it is assumed the limits w.r.t. the various
+    symbols commute.
 
     If no symbols are passed then all symbols in the expression are used:
 

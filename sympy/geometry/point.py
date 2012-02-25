@@ -41,6 +41,7 @@ class Point(GeometryEntity):
 
     Notes
     =====
+
     Currently only 2-dimensional points are supported.
 
     See Also

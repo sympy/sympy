@@ -17,8 +17,8 @@ performance with a one-button user interface, i.e.
     -1.0
 
 The callable returned from autowrap() is a binary python function, not a
-Sympy object.  If it is desired to use the compiled function in symbolic
-expressions, it is better to use binary_function() which returns a Sympy
+SymPy object.  If it is desired to use the compiled function in symbolic
+expressions, it is better to use binary_function() which returns a SymPy
 Function object.  The binary callable is attached as the _imp_ attribute and
 invoked when a numerical evaluation is requested with evalf(), or with
 lambdify().
@@ -49,7 +49,7 @@ When is this useful?
        binaries immediately from within SymPy.
 
     4) To create customized ufuncs for use with numpy arrays.
-       See :ref:`ufuncify`
+       See *ufuncify*.
 
 When is this module NOT the best approach?
 
@@ -157,7 +157,7 @@ class CodeWrapper:
 class DummyWrapper(CodeWrapper):
     """Class used for testing independent of backends """
 
-    template = """# dummy module for testing of Sympy
+    template = """# dummy module for testing of SymPy
 def %(name)s():
     return "%(expr)s"
 %(name)s.args = "%(args)s"
@@ -391,7 +391,7 @@ def binary_function(symfunc, expr, **kwargs):
     """Returns a sympy function with expr as binary implementation
 
     This is a convenience function that automates the steps needed to
-    autowrap the Sympy expression and attaching it to a Function object
+    autowrap the SymPy expression and attaching it to a Function object
     with implemented_function().
 
     >>> from sympy.abc import x, y, z
@@ -409,14 +409,15 @@ def binary_function(symfunc, expr, **kwargs):
     return implemented_function(symfunc, binary)
 
 def ufuncify(args, expr, **kwargs):
-    """Generates a binary ufunc-like lambda function for numpy arrays
+    """
+    Generates a binary ufunc-like lambda function for numpy arrays
 
     ``args``
         Either a Symbol or a tuple of symbols. Specifies the argument sequence
         for the ufunc-like function.
 
     ``expr``
-        A Sympy expression that defines the element wise operation
+        A SymPy expression that defines the element wise operation
 
     ``kwargs``
         Optional keyword arguments are forwarded to autowrap().
@@ -428,7 +429,9 @@ def ufuncify(args, expr, **kwargs):
        casting and more.  The function returned here, may not qualify for
        numpy's definition of a ufunc.  That why we use the term ufunc-like.
 
-       See http://docs.scipy.org/doc/numpy/reference/ufuncs.html
+    References
+    ==========
+    [1] http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
     Examples
     ========

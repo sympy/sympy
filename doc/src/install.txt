@@ -71,7 +71,7 @@ everything in the py3ksympy directory.
 Other Methods
 =============
 An installation executable is available for Windows users at the
-`downloads site`_ (.exe). In addition, various Linux distributions have Sympy
+`downloads site`_ (.exe). In addition, various Linux distributions have SymPy
 available as a package. Others are strongly encouraged to download from source
 (details above).
 
