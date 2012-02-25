@@ -3,7 +3,7 @@
 Setup ufuncs for the legendre polynomials
 -----------------------------------------
 
-This example demonstrates how you can use the ufuncify utility in Sympy
+This example demonstrates how you can use the ufuncify utility in SymPy
 to create fast, customized universal functions for use with numpy
 arrays. An autowrapped sympy expression can be significantly faster than
 what you would get by applying a sequence of the ufuncs shipped with
@@ -49,7 +49,7 @@ def main():
     plot1 = Plot(visible=False)
     for n in range(6):
 
-        # Setup the Sympy expression to ufuncify
+        # Setup the SymPy expression to ufuncify
         expr = legendre(n, x)
         print "The polynomial of degree %i is" % n
         pprint(expr)

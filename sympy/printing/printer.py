@@ -123,13 +123,13 @@ class Printer(object):
 
         class CustomStrPrinter(StrPrinter):
             \"\"\"
-            Examples of how to customize the StrPrinter for both a Sympy class and a
-            user defined class subclassed from the Sympy Basic class.
+            Examples of how to customize the StrPrinter for both a SymPy class and a
+            user defined class subclassed from the SymPy Basic class.
             \"\"\"
 
             def _print_Derivative(self, expr):
                 \"\"\"
-                Custom printing of the Sympy Derivative class.
+                Custom printing of the SymPy Derivative class.
 
                 Instead of:
 

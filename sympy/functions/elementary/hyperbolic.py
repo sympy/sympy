@@ -16,10 +16,7 @@ class sinh(HyperbolicFunction):
     """
     The hyperbolic sine function, :math:`\\frac{exp(x) - exp(-x)}{2}`.
 
-    Usage
-    =====
-
-      sinh(x) -> Returns the hyperbolic sine of x
+    * sinh(x) -> Returns the hyperbolic sine of x
 
     See Also
     ========
@@ -163,10 +160,7 @@ class cosh(HyperbolicFunction):
     """
     The hyperbolic cosine function, :math:`\\frac{exp(x) + exp(-x)}{2}`.
 
-    Usage
-    =====
-
-      cosh(x) -> Returns the hyperbolic cosine of x
+    * cosh(x) -> Returns the hyperbolic cosine of x
 
     See Also
     ========
@@ -300,10 +294,7 @@ class tanh(HyperbolicFunction):
     """
     The hyperbolic tangent function, :math:`\\frac{sinh(x)}{cosh(x)}`.
 
-    Usage
-    =====
-
-      tanh(x) -> Returns the hyperbolic tangent of x
+    * tanh(x) -> Returns the hyperbolic tangent of x
 
     See Also
     ========
@@ -440,10 +431,7 @@ class coth(HyperbolicFunction):
     """
     The hyperbolic tangent function, :math:`\\frac{cosh(x)}{sinh(x)}`.
 
-    Usage
-    =====
-
-      coth(x) -> Returns the hyperbolic cotangent of x
+    * coth(x) -> Returns the hyperbolic cotangent of x
     """
     nargs = 1
 
@@ -571,10 +559,7 @@ class asinh(Function):
     """
     The inverse hyperbolic sine function.
 
-    Usage
-    =====
-
-      asinh(x) -> Returns the inverse hyperbolic sine of x
+    * asinh(x) -> Returns the inverse hyperbolic sine of x
 
     See Also
     ========
@@ -652,10 +637,7 @@ class acosh(Function):
     """
     The inverse hyperbolic cosine function.
 
-    Usage
-    =====
-
-      acosh(x) -> Returns the inverse hyperbolic cosine of x
+    * acosh(x) -> Returns the inverse hyperbolic cosine of x
 
     See Also
     ========
@@ -764,10 +746,7 @@ class atanh(Function):
     """
     The inverse hyperbolic tangent function.
 
-    Usage
-    =====
-
-      atanh(x) -> Returns the inverse hyperbolic tangent of x
+    * atanh(x) -> Returns the inverse hyperbolic tangent of x
 
     See Also
     ========
@@ -838,10 +817,7 @@ class acoth(Function):
     """
     The inverse hyperbolic cotangent function.
 
-    Usage
-    =====
-
-      acoth(x) -> Returns the inverse hyperbolic cotangent of x
+    * acoth(x) -> Returns the inverse hyperbolic cotangent of x
     """
     nargs = 1
 

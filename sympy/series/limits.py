@@ -26,8 +26,8 @@ def limit(e, z, z0, dir="+"):
     >>> limit(1/x, x, oo)
     0
 
-    Strategy
-    ========
+    Notes
+    =====
 
     First we try some heuristics for easy and frequent cases like "x", "1/x",
     "x**2" and similar, so that it's fast. For all other cases, we use the

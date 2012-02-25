@@ -269,9 +269,9 @@ def get_contraction_structure(expr):
     1) A conforming summation of Indexed objects is described with a dict where
        the keys are summation indices and the corresponding values are sets
        containing all terms for which the summation applies.  All Add objects
-       in the Sympy expression tree are described like this.
+       in the SymPy expression tree are described like this.
 
-    2) For all nodes in the Sympy expression tree that are *not* of type Add, the
+    2) For all nodes in the SymPy expression tree that are *not* of type Add, the
        following applies:
 
        If a node discovers contractions in one of it's arguments, the node
@@ -309,7 +309,7 @@ def get_contraction_structure(expr):
     [None, x[i, i]*y[j, j]]
     >>> d[None]  # Note that the product has no contractions
     set([x[i, i]*y[j, j]])
-    >>> sorted(d[x[i, i]*y[j, j]], key=default_sort_key)  # factors are contracted ``first''
+    >>> sorted(d[x[i, i]*y[j, j]], key=default_sort_key)  # factors are contracted ''first''
     [{(i,): set([x[i, i]])}, {(j,): set([y[j, j]])}]
 
     A parenthesized Add object is also returned as a nested dictionary.  The

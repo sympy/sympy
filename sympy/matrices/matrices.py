@@ -121,7 +121,7 @@ class MatrixBase(object):
                         self.mat[i] = sympify(arr[i])
                     return self.rows, self.cols, self.mat
                 else:
-                    raise NotImplementedError("Sympy supports just 1D and 2D matrices")
+                    raise NotImplementedError("SymPy supports just 1D and 2D matrices")
             elif not is_sequence(mat, include=MatrixBase):
                 raise TypeError("Matrix constructor doesn't accept %s as input" % str(type(mat)))
             mat = []
@@ -3103,10 +3103,10 @@ class MatrixBase(object):
 
         will not be calculated.
 
-        Note
-        ====
+        Notes
+        =====
 
-        Calculation of transformation P is not implemented yet
+        Calculation of transformation P is not implemented yet.
 
         Examples
         ========
@@ -3146,9 +3146,10 @@ class MatrixBase(object):
 
         will not be calculated.
 
-        Note:
+        Notes
+        =====
 
-        Calculation of transformation P is not implemented yet
+        Calculation of transformation P is not implemented yet.
 
         Examples
         ========
@@ -4530,7 +4531,7 @@ def symarray(prefix, shape):
 
     The created symbols are named `prefix_i1_i2_`...  You should thus provide a
     non-empty prefix if you want your symbols to be unique for different output
-    arrays, as Sympy symbols with identical names are the same object.
+    arrays, as SymPy symbols with identical names are the same object.
 
     Parameters
     ----------

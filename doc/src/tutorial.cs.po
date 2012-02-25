@@ -91,7 +91,7 @@ msgstr "SymPy jako kalkulačka"
 #: ../../src/tutorial.txt:126
 #, fuzzy
 msgid "SymPy has three built-in numeric types: Float, Rational and Integer."
-msgstr "Sympy má zabudované tři číselné typy: Float, Rational a Integer."
+msgstr "SymPy má zabudované tři číselné typy: Float, Rational a Integer."
 
 # 668a48de987a4bd6bb25e6319aa18ba2
 #: ../../src/tutorial.txt:128

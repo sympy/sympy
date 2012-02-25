@@ -267,7 +267,7 @@ class Basic(PicklableWithSlots):
         Strategy:
 
         It uses Basic.compare as a fallback, but improves it in many cases,
-        like x**3, x**4, O(x**3) etc. In those simple cases, it just parses the
+        like ``x**3``, ``x**4``, ``O(x**3)`` etc. In those simple cases, it just parses the
         expression and returns the "sane" ordering such as::
 
           1 < x < x**2 < x**3 < O(x**4) etc.
@@ -674,11 +674,13 @@ class Basic(PicklableWithSlots):
         >>> (x*y).args[1]
         y
 
-        ** Developer Notes **
-            Never use self._args, always use self.args.
-            Only use _args in __new__ when creating a new function.
-            Don't override .args() from Basic (so that it's easy to
-            change the interface in the future if needed).
+        Notes
+        =====
+
+        Never use self._args, always use self.args.
+        Only use _args in __new__ when creating a new function.
+        Don't override .args() from Basic (so that it's easy to
+        change the interface in the future if needed).
         """
         return self._args
 

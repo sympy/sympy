@@ -9,7 +9,7 @@ SymPy User's Guide
 Introduction
 ============
 
-If you are new to Sympy, start with the :ref:`Tutorial <tutorial>`. If you went
+If you are new to SymPy, start with the :ref:`Tutorial <tutorial>`. If you went
 through it, now
 it's time to learn how SymPy works internally and this is what this guide is
 about. Once you grasp the idea behind SymPy, you will be able to use it
@@ -518,13 +518,13 @@ Go to issues_ that are sorted by priority and simply find something that you
 would like to get fixed and fix it. If you find something odd, please report it
 into issues_ first before fixing it. Feel free to consult with us on the
 mailinglist_.  Then send your patch either to the issues_ or the mailinglist_.
-See the SympyDevelopment_ wiki, but don't worry about it too much if you find
+See the SymPyDevelopment_ wiki, but don't worry about it too much if you find
 it too formal - simply get in touch with us on the mailinglist_ and we'll help
 you get your patch accepted.
 
 .. _issues:             http://code.google.com/p/sympy/issues/list
 .. _mailinglist:        http://groups.google.com/group/sympy
-.. _SympyDevelopment:   http://code.google.com/p/sympy/wiki/SympyDevelopment
+.. _SymPyDevelopment:   http://code.google.com/p/sympy/wiki/SymPyDevelopment
 
 Please read our excellent `SymPy Patches Tutorial
 <https://github.com/sympy/sympy/wiki/Development-workflow>`_ at our

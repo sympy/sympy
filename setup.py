@@ -37,7 +37,7 @@ import sympy
 
 # Make sure I have the right Python version.
 if sys.version_info[:2] < (2,5):
-    print "Sympy requires Python 2.5 or newer. Python %d.%d detected" % \
+    print "SymPy requires Python 2.5 or newer. Python %d.%d detected" % \
           sys.version_info[:2]
     sys.exit(-1)
 
@@ -90,12 +90,12 @@ modules = [
   ]
 
 class audit(Command):
-    """Audits Sympy's source code for following issues:
+    """Audits SymPy's source code for following issues:
         - Names which are used but not defined or used before they are defined.
         - Names which are redefined without having been used.
     """
 
-    description = "Audit Sympy source with PyFlakes"
+    description = "Audit SymPy source with PyFlakes"
     user_options = []
 
     def initialize_options(self):

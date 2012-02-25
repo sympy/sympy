@@ -756,8 +756,9 @@ class Ellipse(GeometryEntity):
         sympy.geometry.point.Point
         arbitrary_point : Returns parameterized point on ellipse
 
-        Note
-        ----
+        Notes
+        -----
+
         A random point may not appear to be on the ellipse, ie, `p in e` may
         return False. This is because the coordinates of the point will be
         floating point values, and when these values are substituted into the

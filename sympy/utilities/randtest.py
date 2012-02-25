@@ -19,8 +19,8 @@ def random_complex_number(a=2, b=-1, c=3, d=1, rational=False):
 def comp(z1, z2, tol):
     """Return a bool indicating whether the error between z1 and z2 is <= tol.
 
-    If z2 is non-zero and |z1| > 1 the error is normalized by |z1|, so if you
-    want the absolute error, call this as comp(z1 - z2, 0, tol).
+    If z2 is non-zero and ``|z1| > 1`` the error is normalized by ``|z1|``, so
+    if you want the absolute error, call this as ``comp(z1 - z2, 0, tol)``.
     """
     if not z1:
         z1, z2 = z2, z1

@@ -119,6 +119,10 @@ def sqrtdenest(expr, max_iter=3):
     References
     ==========
     [1] http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf
+
+    [2] D. J. Jeffrey and A. D. Rich, 'Symplifying Square Roots of Square Roots
+    by Denesting' (available at http://www.cybertester.com/data/denest.pdf)
+
     """
     expr = expand_mul(sympify(expr))
     for i in range(max_iter):

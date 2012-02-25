@@ -1,6 +1,7 @@
 """An implementation of qubits and gates acting on them.
 
 Todo:
+
 * Update docstrings.
 * Update tests.
 * Implement apply using decompose.
