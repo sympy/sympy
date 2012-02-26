@@ -74,8 +74,8 @@ class Sieve:
         >>> sieve[10] == 29
         True
         """
-        if int(n) <= 0 or int(n) != n:
-            raise ValueError("n must be a positive integer");
+        from residue_ntheory import int_tested
+        n = int_tested(n)
         while len(self._list) < n:
             self.extend(int(self._list[-1] * 1.5))
 
@@ -115,6 +115,8 @@ class Sieve:
         >>> sieve.search(25)
         (9, 10)
         """
+        from residue_ntheory import int_tested
+        n = int_tested(n)
         assert n >= 2
         if n > self._list[-1]:
             self.extend(n)
@@ -166,8 +168,9 @@ def prime(n):
         primerange : Generate all primes in a given range
         primepi : Return the number of primes less than or equal to n
     """
-
-    if int(n) <= 0 or int(n) != n:
+    from residue_ntheory import int_tested
+    n = int_tested(n)
+    if n < 1:
         raise ValueError("n must be a positive number");
     return sieve[n]
 
@@ -190,7 +193,8 @@ def primepi(n):
         primerange : Generate all primes in a given range
         prime : Return the nth prime
     """
-
+    from residue_ntheory import int_tested
+    n = int_tested(n)
     if n < 2:
         return 0
     else:
@@ -215,7 +219,8 @@ def nextprime(n, i=1):
         primerange : Generate all primes in a given range
 
     """
-
+    from residue_ntheory import int_tested
+    n = int_tested(n)
     if i > 1:
         pr = n
         j = 1
@@ -267,8 +272,8 @@ def prevprime(n):
         nextprime : Return the ith prime greater than n
         primerange : Generates all primes in a given range
     """
-
-    n = int(n)
+    from residue_ntheory import int_tested
+    n = int_tested(n)
     if n < 3:
         raise ValueError("no preceding primes")
     if n < 8:
@@ -411,7 +416,8 @@ def primorial(n, nth=True):
     primerange : Generate all primes in a given range
 
     """
-
+    from residue_ntheory import int_tested
+    n = int_tested(n)
     if n < 1:
         raise ValueError("primorial argument must be >= 1")
     p = 1
@@ -508,3 +514,4 @@ def cycle_length(f, x0, nmax=None, values=False):
         if mu:
             mu -= 1
         yield lam, mu
+
