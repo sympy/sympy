@@ -266,7 +266,7 @@ def test_subs_basic_funcs_division_bug():
     assert (a/(b*c)).subs(b*c, K) == a/K
 
 def test_subs_wild():
-    R,S,T,U = Wild('R'), Wild('S'), Wild('T'), Wild('U')
+    R, S, T, U = symbols('R, S, T, U', cls=Wild)
 
     assert (R*S ).subs(R*S,T) == T
     assert (S*R ).subs(R*S,T) == T
@@ -280,7 +280,7 @@ def test_subs_wild():
 def test_subs_mixed():
     a,b,c,d,K = symbols('a b c d K', commutative=True)
     w,x,y,z,L = symbols('w x y z L', commutative=False)
-    R,S,T,U = Wild('R'), Wild('S'), Wild('T'), Wild('U')
+    R, S, T, U = symbols('R, S, T, U', cls=Wild)
 
     assert (a*x*y).subs(x*y,L) == a*L
     assert (a*b*x*y*x).subs(x*y,L) == a*b*L*x
