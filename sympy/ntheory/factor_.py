@@ -1306,6 +1306,8 @@ def totient(n):
 
     divisor_count
     """
+    from residue_ntheory import int_tested
+    n = int_tested(n)
     if n < 1:
         raise ValueError("n must be a positive integer")
     factors = factorint(n)
