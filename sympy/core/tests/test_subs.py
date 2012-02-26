@@ -106,20 +106,22 @@ def test_dict_ambigous():   # see #467
     df= {x:y, exp(x): y}
     dg= {z:y, exp(z): y}
 
-    assert f.subs(df, warn=False) == y**2
-    assert g.subs(dg, warn=False) == y**2
+    assert f.subs(df) == y**2
+    assert g.subs(dg) == y**2
 
     # and this is how order can affect the result
     assert f .subs(x, y) .subs(exp(x), y)  == y*exp(y)
     assert f .subs(exp(x), y) .subs(x, y)  == y**2
 
     # length of args and count_ops are the same so
-    # default sort key resolves ordering...if one
+    # default_sort_key resolves ordering...if one
     # doesn't want this result then an unordered
     # sequence should not be used.
     e = 1 + x*y
-    assert e.subs({x: y, y: 2}, warn=False) == 5
-    raises(ValueError, 'x.subs({x: x**2 + 1, y: x + y})')
+    assert e.subs({x: y, y: 2}) == 5
+    # here, there are no obviously clashing keys or values
+    # but the results depend on the order
+    assert exp(x/2 + y).subs(dict([(exp(y + 1), 2),(x, 2)])) == exp(y + 1)
 
 def test_deriv_sub_bug3():
     x = Symbol('x')
@@ -389,8 +391,8 @@ def test_subs_dict():
     assert (2*x + y + z).subs(dict(x=1, y=2)) == 4 + z
 
     l = [(sin(x), 2), (x, 1)]
-    assert (sin(x)).subs(l, warn=False) == \
-           (sin(x)).subs(dict(l), warn=False) == 2
+    assert (sin(x)).subs(l) == \
+           (sin(x)).subs(dict(l)) == 2
     assert sin(x).subs(reversed(l)) == sin(1)
 
     expr = sin(2*x) + sqrt(sin(2*x))*cos(2*x)*sin(exp(x)*x)
@@ -401,7 +403,7 @@ def test_subs_dict():
                (exp(x), e),
                (x, d),
                ])
-    assert expr.subs(reps, warn=False) == c + a*b*sin(d*e)
+    assert expr.subs(reps) == c + a*b*sin(d*e)
 
     l = [(x, 3), (y, x**2)]
     assert (x + y).subs(l) == 3 + x**2
