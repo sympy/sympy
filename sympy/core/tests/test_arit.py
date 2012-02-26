@@ -165,9 +165,34 @@ def test_pow3():
 def test_pow_issue417():
     assert 4**Rational(1, 4) == sqrt(2)
 
-def test_issue_3101():
-    assert (-2*I)**Rational(5,3) == 2*2**Rational(2, 3)*I
-    assert (-I)**Rational(4,3) is S.One
+def test_pow_im():
+    for m in (-2, -1, 2):
+        for d in (3, 4, 5):
+            b = m*I
+            for i in range(1, 4*d + 1):
+                e = Rational(i, d)
+                assert (b**e - b.n()**e.n()).n(2, chop=1e-10) == 0
+
+    e = Rational(7, 3)
+    assert (2*x*I)**e == 4*2**Rational(1, 3)*(I*x)**e # same as Wolfram Alpha
+    im = symbols('im', imaginary=True)
+    assert (2*im*I)**e == 4*2**Rational(1, 3)*(I*im)**e
+
+    args = [I, I, I, I, 2]
+    e = Rational(1, 3)
+    ans = 2**e
+    assert Mul(*args, evaluate=False)**e == ans
+    assert Mul(*args)**e == ans
+    args = [I, I, I, 2]
+    e = Rational(1, 3)
+    ans = -(-1)**Rational(5, 6)*2**e
+    assert Mul(*args, evaluate=False)**e == ans
+    assert Mul(*args)**e == ans
+    args = [I, I, 2]
+    e = Rational(1, 3)
+    ans = (-2)**e
+    assert Mul(*args, evaluate=False)**e == ans
+    assert Mul(*args)**e == ans
 
 def test_expand():
     p = Rational(5)

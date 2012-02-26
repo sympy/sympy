@@ -514,26 +514,49 @@ class Mul(AssocOp):
         coeff, b = b.as_coeff_Mul()
         bc, bnc = b.args_cnc()
 
-        bnc = Pow(Mul._from_args(bnc), e, evaluate=False) if bnc else S.One
+        done = [Pow(Mul._from_args(bnc), e, evaluate=False) if bnc else S.One]
+
         if e.is_Number:
             if e.is_Integer:
                 # (a*b)**2 -> a**2 * b**2
-                return coeff**e*(Mul(*[s**e for s in bc])*bnc)
+                return Mul(*([s**e for s in [coeff] + bc] + done))
 
             if e.is_Rational or e.is_Float:
-                unk=[]
-                nonneg=[]
-                neg=[]
+                unk = []
+                nonneg = []
+                neg = []
+                iu = []
                 for bi in bc:
-                    if bi.is_negative is not None: #then we know the sign
+                    if bi.is_polar:
+                        nonneg.append(bi)
+                    elif bi.is_negative is not None:
                         if bi.is_negative:
                             neg.append(bi)
-                        else:
+                        elif bi.is_nonnegative:
                             nonneg.append(bi)
-                    elif bi.is_polar:
-                        nonneg.append(bi)
+                        elif bi is S.ImaginaryUnit:
+                            iu.append(bi)
+                        else:
+                            unk.append(bi)
                     else:
                         unk.append(bi)
+
+                if iu:
+                    niu = len(iu) % 4
+                    i = S.ImaginaryUnit if niu % 2 else S.One
+                    if niu in (2, 3):
+                        coeff = -coeff
+                    if i is S.ImaginaryUnit:
+                        if unk or e.is_Float:
+                            unk.append(i)
+                        else:
+                            if coeff.is_negative and e.is_Rational:
+                                coeff = -coeff
+                                ie = Rational(4*e.q - e.p, 2*e.q)
+                                done.append(Pow(-1, ie))
+                            else:
+                                done.append(i**e)
+
                 if len(unk) == len(bc) or len(neg) == len(bc) == 1:
                     # if all terms were unknown there is nothing to pull
                     # out except maybe the coeff; if there is a single
@@ -544,7 +567,7 @@ class Mul(AssocOp):
                         bc[0] = -bc[0]
                     if coeff is S.One:
                         return None
-                    return Mul(Pow(coeff, e), Pow(Mul(*bc), e), bnc)
+                    return Mul(*([Pow(coeff, e), Pow(Mul(*bc), e)] + done))
 
                 # otherwise return the new expression expanding out the
                 # known terms; those that are not known can be expanded
@@ -561,14 +584,12 @@ class Mul(AssocOp):
                         unk.append(S.NegativeOne)
                     if len(neg) % 2:
                         unk.append(S.NegativeOne)
-                return Mul(*[Pow(s, e) for s in nonneg + neg + [coeff]])* \
-                   Pow(Mul(*unk), e)*bnc
+
+                done.extend([Pow(s, e) for s in nonneg + neg + [coeff, Mul(*unk)]])
+                return Mul(*done)
 
         if e.is_even and coeff.is_negative:
             return Pow(-coeff, e)*Pow(b, e)
-
-        #if e.has(Wild):
-        #    return Mul(*[t**e for t in b])
 
     @classmethod
     def class_key(cls):
