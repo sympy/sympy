@@ -307,7 +307,7 @@ def mellin_transform(f, x, s, **hints):
     For all "sensible" functions, this converges absolutely in a strip
       `a < Re(s) < b`.
 
-    The mellin transform is related via change of variables to the fourier
+    The mellin transform is related via change of variables to the Fourier
     transform, and also to the (bilateral) laplace transform.
 
     This function returns (F, (a, b), cond)
@@ -1218,11 +1218,11 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
 @_noconds_(True)
 def _fourier_transform(f, x, k, a, b, name, simplify=True):
     """
-    Compute a general fourier-type transform
+    Compute a general Fourier-type transform
         F(k) = a int_-oo^oo exp(b*I*x*k) f(x) dx.
 
-    For suitable choice of a and b, this reduces to the standard fourier
-    and inverse fourier transforms.
+    For suitable choice of a and b, this reduces to the standard Fourier
+    and inverse Fourier transforms.
     """
     from sympy import exp, I, oo
     F = integrate(a*f*exp(b*I*x*k), (x, -oo, oo))
@@ -1240,7 +1240,7 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
     return _simplify(F, simplify), cond
 
 class FourierTypeTransform(IntegralTransform):
-    """ Base class for fourier transforms.
+    """ Base class for Fourier transforms.
         Specify cls._a and cls._b.
     """
 
@@ -1257,11 +1257,11 @@ class FourierTypeTransform(IntegralTransform):
 
 class FourierTransform(FourierTypeTransform):
     """
-    Class representing unevaluated fourier transforms.
+    Class representing unevaluated Fourier transforms.
 
     For usage of this class, see the :class:`IntegralTransform` docstring.
 
-    For how to compute fourier transforms, see the :func:`fourier_transform`
+    For how to compute Fourier transforms, see the :func:`fourier_transform`
     docstring.
     """
 
@@ -1271,7 +1271,7 @@ class FourierTransform(FourierTypeTransform):
 
 def fourier_transform(f, x, k, **hints):
     r"""
-    Compute the unitary, ordinary-frequency fourier transform of `f`, defined
+    Compute the unitary, ordinary-frequency Fourier transform of `f`, defined
     as
 
     .. math:: F(k) = \int_{-\infty}^\infty f(x) e^{-2\pi i x k} \mathrm{d} x.
@@ -1279,7 +1279,7 @@ def fourier_transform(f, x, k, **hints):
     If the transform cannot be computed in closed form, this
     function returns an unevaluated FourierTransform object.
 
-    For other fourier transform conventions, see the function
+    For other Fourier transform conventions, see the function
     :func:`sympy.integrals.transforms._fourier_transform`.
 
     For a description of possible hints, refer to the docstring of
@@ -1305,11 +1305,11 @@ def fourier_transform(f, x, k, **hints):
 
 class InverseFourierTransform(FourierTypeTransform):
     """
-    Class representing unevaluated inverse fourier transforms.
+    Class representing unevaluated inverse Fourier transforms.
 
     For usage of this class, see the :class:`IntegralTransform` docstring.
 
-    For how to compute inverse fourier transforms, see the
+    For how to compute inverse Fourier transforms, see the
     :func:`inverse_fourier_transform` docstring.
     """
 
@@ -1319,7 +1319,7 @@ class InverseFourierTransform(FourierTypeTransform):
 
 def inverse_fourier_transform(F, k, x, **hints):
     r"""
-    Compute the unitary, ordinary-frequency inverse fourier transform of `F`,
+    Compute the unitary, ordinary-frequency inverse Fourier transform of `F`,
     defined as
 
     .. math:: f(x) = \int_{-\infty}^\infty F(k) e^{2\pi i x k} \mathrm{d} k.
@@ -1327,7 +1327,7 @@ def inverse_fourier_transform(F, k, x, **hints):
     If the transform cannot be computed in closed form, this
     function returns an unevaluated InverseFourierTransform object.
 
-    For other fourier transform conventions, see the function
+    For other Fourier transform conventions, see the function
     :func:`sympy.integrals.transforms._fourier_transform`.
 
     For a description of possible hints, refer to the docstring of
