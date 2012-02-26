@@ -1583,3 +1583,136 @@ def inverse_cosine_transform(F, k, x, **hints):
     mellin_transform, laplace_transform
     """
     return InverseCosineTransform(F, k, x).doit(**hints)
+
+
+##########################################################################
+# Hankel Transform
+##########################################################################
+
+@_noconds_(True)
+def _hankel_transform(f, r, k, nu, name, simplify=True):
+    """
+    Compute a general Hankel transform
+
+    .. math:: F_\nu(k) = \int_{0}^\infty f(r) J_\nu(k r) r \mathrm{d} r.
+    """
+    from sympy import besselj, oo
+    F = integrate(f*besselj(nu, k*r)*r, (r, 0, oo))
+
+    if not F.has(Integral):
+        return _simplify(F, simplify), True
+
+    if not F.is_Piecewise:
+        raise IntegralTransformError(name, f, 'could not compute integral')
+
+    F, cond = F.args[0]
+    if F.has(Integral):
+        raise IntegralTransformError(name, f, 'integral in unexpected form')
+
+    return _simplify(F, simplify), cond
+
+
+class HankelTypeTransform(IntegralTransform):
+    """ Base class for Hankel transforms.
+    """
+
+    nargs = 4
+
+    def doit(self, **hints):
+        return self._compute_transform(self.function,
+                                       self.function_variable,
+                                       self.transform_variable,
+                                       self.args[3],
+                                       **hints)
+
+    def _compute_transform(self, f, r, k, nu, **hints):
+        return _hankel_transform(f, r, k, nu, self._name, **hints)
+
+    def _as_integral(self, f, r, k, nu):
+        from sympy import Integral, besselj, oo
+        return Integral(f*besselj(nu, k*r)*r, (r, 0, oo))
+
+    @property
+    def as_integral(self):
+        return self._as_integral(self.function,
+                                 self.function_variable,
+                                 self.transform_variable,
+                                 self.args[3])
+
+
+class HankelTransform(HankelTypeTransform):
+    """
+    Class representing unevaluated Hankel transforms.
+
+    For usage of this class, see the :class:`IntegralTransform` docstring.
+
+    For how to compute Hankel transforms, see the :func:`hankel_transform`
+    docstring.
+    """
+
+    _name = 'Hankel'
+
+
+def hankel_transform(f, r, k, nu, **hints):
+    r"""
+    Compute the Hankel transform of `f`, defined as
+
+    .. math:: F_\nu(k) = \int_{0}^\infty f(r) J_\nu(k r) r \mathrm{d} r.
+
+    If the transform cannot be computed in closed form, this
+    function returns an unevaluated HankelTransform object.
+
+    For a description of possible hints, refer to the docstring of
+    :func:`sympy.integrals.transforms.IntegralTransform.doit`.
+    Note that for this transform, by default ``noconds=True``.
+
+    >>> from sympy import hankel_transform, exp
+    >>> from sympy.abc import x, k
+
+    See Also
+    ========
+
+    fourier_transform, inverse_fourier_transform
+    sine_transform, inverse_sine_transform
+    cosine_transform, inverse_cosine_transform
+    mellin_transform, laplace_transform
+    """
+    return HankelTransform(f, r, k, nu).doit(**hints)
+
+class InverseHankelTransform(HankelTypeTransform):
+    """
+    Class representing unevaluated inverse Hankel transforms.
+
+    For usage of this class, see the :class:`IntegralTransform` docstring.
+
+    For how to compute inverse Hankel transforms, see the
+    :func:`inverse_hankel_transform` docstring.
+    """
+
+    _name = 'Inverse Hankel'
+
+def inverse_hankel_transform(F, k, r, nu, **hints):
+    r"""
+    Compute the inverse Hankel transform of `F` defined as
+
+    .. math:: f(r) = \int_{0}^\infty F_\nu(k) J_\nu(k r) k \mathrm{d} k.
+
+    If the transform cannot be computed in closed form, this
+    function returns an unevaluated InverseHankelTransform object.
+
+    For a description of possible hints, refer to the docstring of
+    :func:`sympy.integrals.transforms.IntegralTransform.doit`.
+    Note that for this transform, by default ``noconds=True``.
+
+    >>> from sympy import inverse_hankel_transform, exp, sqrt, pi
+    >>> from sympy.abc import x, k
+
+    See Also
+    ========
+
+    fourier_transform, inverse_fourier_transform
+    sine_transform, inverse_sine_transform
+    cosine_transform, inverse_cosine_transform
+    mellin_transform, laplace_transform
+    """
+    return InverseHankelTransform(F, k, r, nu).doit(**hints)
