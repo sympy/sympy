@@ -158,12 +158,16 @@ def test_pow2():
     assert (-x)**Rational(2,3) != x**Rational(2,3)
     assert (-x)**Rational(5,7) != -x**Rational(5,7)
 
-def test_pow_issue417():
-    assert 4**Rational(1, 4) == sqrt(2)
-
 def test_pow3():
     assert sqrt(2)**3 == 2 * sqrt(2)
     assert sqrt(2)**3 == sqrt(8)
+
+def test_pow_issue417():
+    assert 4**Rational(1, 4) == sqrt(2)
+
+def test_issue_3101():
+    assert (-2*I)**Rational(5,3) == 2*2**Rational(2, 3)*I
+    assert (-I)**Rational(4,3) is S.One
 
 def test_expand():
     p = Rational(5)

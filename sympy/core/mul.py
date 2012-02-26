@@ -426,11 +426,10 @@ class Mul(AssocOp):
             if p.is_Number:
                 coeff *= p
             else:
-                if p.is_Mul:
-                    c, p = p.args
-                    coeff *= c
-                    assert p.is_Pow and p.base is S.NegativeOne
-                    neg1e = p.args[1]
+                c, p = p.as_coeff_Mul()
+                coeff *= c
+                if p.is_Pow and p.base is S.NegativeOne:
+                    neg1e = p.exp
                 for e, b in pnew.iteritems():
                     if e == neg1e and b.is_positive:
                         pnew[e] = -b
@@ -497,7 +496,7 @@ class Mul(AssocOp):
         coeff, b = b.as_coeff_Mul()
         bc, bnc = b.args_cnc()
 
-        bnc = Pow(Mul._from_args(bnc), e, evaluate=False)
+        bnc = Pow(Mul._from_args(bnc), e, evaluate=False) if bnc else S.One
         if e.is_Number:
             if e.is_Integer:
                 # (a*b)**2 -> a**2 * b**2
