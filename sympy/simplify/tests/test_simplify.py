@@ -4,7 +4,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float, radsimp, collect_const)
+    factor, Mul, O, hyper, Add, Float, radsimp, collect_const, polygamma)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
@@ -1006,3 +1006,9 @@ def test_unpolarify():
 def test_issue_2998():
     collect(a*y**(2.0*x)+b*y**(2.0*x),y**(x)) == y**(2.0*x)*(a + b)
     collect(a*2**(2.0*x)+b*2**(2.0*x),2**(x)) == 2**(2.0*x)*(a + b)
+
+@XFAIL
+def test_factorial_simplify():
+    # simplify(factorial(x + 1).diff(x) - ((x + 1)*factorial(x)).diff(x))) == 0
+    assert simplify(x*polygamma(0, x + 1) - x*polygamma(0, x + 2) +
+    polygamma(0, x + 1) - polygamma(0, x + 2) + 1) == 0

@@ -1270,7 +1270,3 @@ def test_equals():
     # self and other before beginning comparisions
     p = Symbol('p', positive=True)
     assert diff.subs(x, p).equals(0) is True
-
-@XFAIL
-def test_equals_factorial():
-    assert factorial(x + 1).diff(x).equals(((x + 1)*factorial(x)).diff(x))

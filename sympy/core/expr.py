@@ -450,13 +450,13 @@ class Expr(Basic, EvalfMixin):
         # try numerical evaluation to see if we get two different values
         failing_number = None
         if wrt == free:
-            a, b = [self._random() for i in range(2)]
-            if not any(p is None for p in (a, b)):
-                if a != b:
-                    return False
-                failing_number = a
-            else:
-                failing_number = None
+            a = self._random()
+            if a is not None:
+                b = self._random()
+                if b is not None:
+                    if a != b:
+                        return False
+                    failing_number = a
 
         # now we will test each wrt symbol (or all free symbols) to see if the
         # expression depends on them or not using differentiation. This is
