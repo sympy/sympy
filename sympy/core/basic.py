@@ -973,6 +973,9 @@ class Basic(PicklableWithSlots):
                             if _nc[i:i+len(nc)] == nc:
                                 return True
 
+            if not subexpr.is_Atom:
+                u = C.Dummy()
+                return expr.subs(subexpr, u).has(u)
             return False
 
         def _match(pattern):

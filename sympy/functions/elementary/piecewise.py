@@ -274,14 +274,19 @@ class Piecewise(Function):
             return new
         new_args = []
         for e, c in self.args:
+            try:
+                e = e._eval_subs(old, new)
+            except TypeError:
+                if e == old:
+                    e = new
             if isinstance(c, bool):
-                new_args.append((e._eval_subs(old, new), c))
+                new_args.append((e, c))
             elif isinstance(c, Set):
                 # What do we do if there are more than one symbolic
                 # variable. Which do we put pass to Set.contains?
-                new_args.append((e._eval_subs(old, new),  c.contains(new)))
+                new_args.append((e,  c.contains(new)))
             else:
-                new_args.append((e._eval_subs(old, new), c._eval_subs(old, new)))
+                new_args.append((e, c._eval_subs(old, new)))
         return Piecewise( *new_args )
 
     def _eval_nseries(self, x, n, logx):
