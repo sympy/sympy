@@ -308,7 +308,7 @@ def mellin_transform(f, x, s, **hints):
       `a < Re(s) < b`.
 
     The mellin transform is related via change of variables to the Fourier
-    transform, and also to the (bilateral) laplace transform.
+    transform, and also to the (bilateral) Laplace transform.
 
     This function returns (F, (a, b), cond)
     where `F` is the mellin transform of `f`, `(a, b)` is the fundamental strip
@@ -908,7 +908,7 @@ def _simplifyconds(expr, s, a):
 
 @_noconds
 def _laplace_transform(f, t, s_, simplify=True):
-    """ The backend function for laplace transforms. """
+    """ The backend function for Laplace transforms. """
     from sympy import (re, Max, exp, pi, Abs, Min, periodic_argument as arg,
                        cos, Wild, symbols, polar_lift)
     s = Dummy('s')
@@ -998,11 +998,11 @@ def _laplace_transform(f, t, s_, simplify=True):
 
 class LaplaceTransform(IntegralTransform):
     """
-    Class representing unevaluated laplace transforms.
+    Class representing unevaluated Laplace transforms.
 
     For usage of this class, see the :class:`IntegralTransform` docstring.
 
-    For how to compute laplace transforms, see the :func:`laplace_transform`
+    For how to compute Laplace transforms, see the :func:`laplace_transform`
     docstring.
     """
 
@@ -1016,10 +1016,10 @@ class LaplaceTransform(IntegralTransform):
         return Integral(f*exp(-s*t), (t, 0, oo))
 
     """
-    Class representing unevaluated laplace transforms.
+    Class representing unevaluated Laplace transforms.
 
     For usage of this class, see the :class:`IntegralTransform` docstring.
-    For how to compute laplace transforms, see the :func:`laplace_transform`
+    For how to compute Laplace transforms, see the :func:`laplace_transform`
     docstring.
     """
     def _collapse_extra(self, extra):
@@ -1045,7 +1045,7 @@ def laplace_transform(f, t, s, **hints):
     half plane  `a < Re(s)`.
 
     This function returns (F, a, cond)
-    where `F` is the laplace transform of `f`, `Re(s) > a` is the half-plane
+    where `F` is the Laplace transform of `f`, `Re(s) > a` is the half-plane
     of convergence, and cond are auxiliary convergence conditions.
 
     If the integral cannot be computed in closed form, this function returns
@@ -1069,7 +1069,7 @@ def laplace_transform(f, t, s, **hints):
 
 @_noconds_(True)
 def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
-    """ The backend function for inverse laplace transforms. """
+    """ The backend function for inverse Laplace transforms. """
     from sympy import exp, Heaviside, log, expand_complex, Integral, Piecewise
     from sympy.integrals.meijerint import meijerint_inversion, _get_coeff_exp
     # There are two strategies we can try:
@@ -1137,11 +1137,11 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
 
 class InverseLaplaceTransform(IntegralTransform):
     """
-    Class representing unevaluated inverse laplace transforms.
+    Class representing unevaluated inverse Laplace transforms.
 
     For usage of this class, see the :class:`IntegralTransform` docstring.
 
-    For how to compute inverse laplace transforms, see the
+    For how to compute inverse Laplace transforms, see the
     :func:`inverse_laplace_transform` docstring.
     """
 
@@ -1173,7 +1173,7 @@ class InverseLaplaceTransform(IntegralTransform):
 
 def inverse_laplace_transform(F, s, t, plane=None, **hints):
     r"""
-    Compute the inverse laplace transform of `F(s)`, defined as
+    Compute the inverse Laplace transform of `F(s)`, defined as
 
     .. math :: f(t) = \int_{c-i\infty}^{c+i\infty} e^{st} F(s) \mathrm{d}s,
 
