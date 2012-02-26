@@ -201,7 +201,7 @@ def _default_integrator(f, x):
 
 @_noconds
 def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
-    """ Backend function to compute mellin transforms. """
+    """ Backend function to compute Mellin transforms. """
     from sympy import re, Max, Min, count_ops
     # We use a fresh dummy, because assumptions on s might drop conditions on
     # convergence of the integral.
@@ -267,11 +267,11 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
 
 class MellinTransform(IntegralTransform):
     """
-    Class representing unevaluated mellin transforms.
+    Class representing unevaluated Mellin transforms.
 
     For usage of this class, see the :class:`IntegralTransform` docstring.
 
-    For how to compute mellin transforms, see the :func:`mellin_transform`
+    For how to compute Mellin transforms, see the :func:`mellin_transform`
     docstring.
     """
 
@@ -300,18 +300,18 @@ class MellinTransform(IntegralTransform):
 
 def mellin_transform(f, x, s, **hints):
     r"""
-    Compute the mellin transform `F(s)` of `f(x)`,
+    Compute the Mellin transform `F(s)` of `f(x)`,
 
     .. math :: F(s) = \int_0^\infty x^{s-1} f(x) \mathrm{d}x.
 
     For all "sensible" functions, this converges absolutely in a strip
       `a < Re(s) < b`.
 
-    The mellin transform is related via change of variables to the Fourier
+    The Mellin transform is related via change of variables to the Fourier
     transform, and also to the (bilateral) Laplace transform.
 
     This function returns (F, (a, b), cond)
-    where `F` is the mellin transform of `f`, `(a, b)` is the fundamental strip
+    where `F` is the Mellin transform of `f`, `(a, b)` is the fundamental strip
     (as above), and cond are auxiliary convergence conditions.
 
     If the integral cannot be computed in closed form, this function returns
@@ -384,11 +384,11 @@ class MellinTransformStripError(ValueError):
 def _rewrite_gamma(f, s, a, b):
     """
     Try to rewrite the product f(s) as a product of gamma functions,
-    so that the inverse mellin transform of f can be expressed as a meijer
+    so that the inverse Mellin transform of f can be expressed as a meijer
     G function.
 
     Return (an, ap), (bm, bq), arg, exp, fac such that
-    G((an, ap), (bm, bq), arg/z**exp)*fac is the inverse mellin transform of f(s).
+    G((an, ap), (bm, bq), arg/z**exp)*fac is the inverse Mellin transform of f(s).
 
     Raises IntegralTransformError or MellinTransformStripError on failure.
 
@@ -724,11 +724,11 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
 _allowed = None
 class InverseMellinTransform(IntegralTransform):
     """
-    Class representing unevaluated inverse mellin transforms.
+    Class representing unevaluated inverse Mellin transforms.
 
     For usage of this class, see the :class:`IntegralTransform` docstring.
 
-    For how to compute inverse mellin transforms, see the
+    For how to compute inverse Mellin transforms, see the
     :func:`inverse_mellin_transform` docstring.
     """
 
@@ -776,7 +776,7 @@ class InverseMellinTransform(IntegralTransform):
 
 def inverse_mellin_transform(F, s, x, strip, **hints):
     r"""
-    Compute the inverse mellin transform of `F(s)` over the fundamental
+    Compute the inverse Mellin transform of `F(s)` over the fundamental
     strip given by ``strip=(a, b)``.
 
     This can be defined as
@@ -785,7 +785,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 
     for any `c` in the fundamental strip. Under certain regularity
     conditions on `F` and/or `f`,
-    this recovers `f` from its mellin transform `F`
+    this recovers `f` from its Mellin transform `F`
     (and vice versa), for positive real `x`.
 
     One of `a` or `b` may be passed as None; a suitable `c` will be
