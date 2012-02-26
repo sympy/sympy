@@ -1268,7 +1268,3 @@ def test_equals():
 @XFAIL
 def test_equals_factorial():
     assert factorial(x + 1).diff(x).equals(((x + 1)*factorial(x)).diff(x))
-
-@XFAIL
-def test_issue_2330():
-    assert sqrt(I).conjugate() != sqrt(I)
