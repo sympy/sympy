@@ -32,14 +32,20 @@ def totient_(n):
     66
 
     """
+    from sympy import sieve,sqrt
     n = int_tested(n)
     if n < 1:
         raise ValueError("n must be a positive integer")
-    tot = 0
-    for x in xrange(1, n):
-        if igcd(x, n) == 1:
-            tot += 1
+    tot = n
+    for x in sieve.primerange(1, int(sqrt(n))):
+        if n % x == 0:
+            tot -= tot/x
+            while n%x == 0:
+                n /= x
+    if n>1:
+        tot -= tot/n
     return tot
+
 
 
 def n_order(a, n):
