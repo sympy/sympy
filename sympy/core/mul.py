@@ -146,6 +146,8 @@ class Mul(AssocOp):
         coeff = S.One       # standalone term
                             # e.g. 3 * ...
 
+        iu = []             # ImaginaryUnits, I
+
         c_powers = []       # (base,exp)      n
                             # e.g. (x,n) for x
 
@@ -216,6 +218,10 @@ class Mul(AssocOp):
                 coeff = S.ComplexInfinity
                 continue
 
+            elif o is S.ImaginaryUnit:
+                iu.append(o)
+                continue
+
             elif o.is_commutative:
                 #      e
                 # o = b
@@ -244,7 +250,7 @@ class Mul(AssocOp):
                     elif b.is_positive or e.is_integer:
                         num_exp.append((b, e))
                         continue
-                c_powers.append((b,e))
+                c_powers.append((b, e))
 
             # NON-COMMUTATIVE
             # TODO: Make non-commutative exponents not combine automatically
@@ -282,6 +288,18 @@ class Mul(AssocOp):
                     else:
                         nc_part.append(o1)
                         nc_part.append(o)
+
+        # handle the ImaginaryUnits
+        if iu:
+            if len(iu) == 1:
+                c_powers.append((iu[0], S.One))
+            else:
+                # iu = [I, -1, -I, 1][len(iu) % 4]
+                niu = len(iu) % 4
+                if niu % 2:
+                    c_powers.append((S.ImaginaryUnit, S.One))
+                if niu in (2, 3):
+                    coeff = -coeff
 
         # We do want a combined exponent if it would not be an Add, such as
         #  y    2y     3y
