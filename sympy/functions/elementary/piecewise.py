@@ -91,14 +91,16 @@ class Piecewise(Function):
         newargs = []
         for ec in args:
             pair = ExprCondPair(*ec)
-            cond_type = type(pair.cond)
-            if not (cond_type is bool or issubclass(cond_type, Relational) or \
-                    issubclass(cond_type, Number) or \
-                    issubclass(cond_type, Set) or issubclass(cond_type, Boolean)):
+            cond = pair.cond
+            if cond is False:
+                continue
+            if not isinstance(cond, (bool, Relational, Set, Boolean)):
                 raise TypeError(
                     "Cond %s is of type %s, but must be a bool," \
-                    " Relational, Number or Set" % (pair.cond, cond_type))
+                    " Relational, Number or Set" % (cond, type(cond)))
             newargs.append(pair)
+            if cond is ExprCondPair.true_sentinel:
+                break
 
         if options.pop('evaluate', True):
             r = cls.eval(*newargs)
@@ -190,12 +192,9 @@ class Piecewise(Function):
         #    -  eg x < 1, x < 3 -> [oo,1],[1,3] instead of [oo,1],[oo,3]
         # 3) Sort the intervals to make it easier to find correct exprs
         for expr, cond in self.args:
-            if isinstance(cond, bool) or cond.is_Number:
-                if cond:
-                    default = expr
-                    break
-                else:
-                    continue
+            if cond is True:
+                default = expr
+                break
             elif isinstance(cond, Equality):
                 continue
 
@@ -280,14 +279,9 @@ class Piecewise(Function):
 
     @classmethod
     def __eval_cond(cls, cond):
-        """Returns S.One if True, S.Zero if False, or None if undecidable."""
-        if type(cond) == bool or cond.is_number:
-            if cond:
-                return S.One
-            else:
-                return S.Zero
-        elif type(cond) == Set:
-            return None
+        """Return the truth value of the condition."""
+        if cond is True:
+            return True
         return None
 
 def piecewise_fold(expr):
