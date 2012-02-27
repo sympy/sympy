@@ -48,6 +48,8 @@ def test_str():
     assert p == -2*z - 1
     p = -x
     assert str(p) == '-x'
+    p = lp('-1/2*x**2 - x**2*y**-1 - 1/2*x**2*y**-2 + 1')
+    assert p == -x**2/2 - x**2*y**-1 - x**2*y**-2/2 + 1
     assert +x == x
     lp2 = LPoly('w', QQ, lex)
     def test1(p):
@@ -487,6 +489,17 @@ def test_pow():
         p1 = x**QQ(1,3)
     raises(ValueError, 'test2()')
 
+def test_laurent():
+    lp, x, y = lgens('x, y', QQ)
+    assert not x.is_laurent(x)
+    assert not x.is_laurent(y)
+    assert not x.is_laurent(x, y)
+    p = x + x**2 + x*y**-1
+    assert not p.is_laurent(x)
+    assert p.is_laurent(y)
+    p = x + x**2 + x*y
+    assert not p.is_laurent(x, y)
+
 def test_division():
     lp, x, y = lgens('x, y', QQ, lex)
     f = x**3
@@ -523,6 +536,11 @@ def test_division():
     def test1(f, g):
         q, r = f.div([g])
     raises(ValueError, 'test1(f, g)')
+    g = x**2 + y**-1
+    def test2(f, g):
+        q, r = f.div([g])
+    raises(NotImplementedError, 'test2(f, g)')
+
 
 def test_mul_trunc():
     lp, x, y, t = lgens('x, y, t', QQ, lex)
@@ -1145,7 +1163,7 @@ def test_polypoly():
     p2 = p2/p1
     assert p2 == x + y
     def test1(lp):
-        p = lp('+( +x^2)*y^4')
+        p = lp('+( +x**2)*y**4')
     raises(NotImplementedError, 'test1(lp2)')
 
 def test_polypoly_add():

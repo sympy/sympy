@@ -255,6 +255,7 @@ class BaseLPoly(object):
         ngens = self.ngens
         ring_new = self.ring_new
         s = s.replace(' ', '')
+        s = s.replace('**M', '^-')
         s = s.replace('**', '^')
         if s[0].isdigit():
             if '*' not in s:
@@ -281,19 +282,27 @@ class BaseLPoly(object):
     def __call__(self, s):
         """Generate a polynomial from a string.
 
-        The string must be in the form
+        On QQ the string must be in the form
             c_0*m_0 + c_1*m_1 + ...
         where c_i are coefficients and m_i are monomials
+
+        On SR not implemented for laurent polynomials.
+        Not implemented on other rings.
 
         Examples
         ========
 
         >>> from sympy.polys.domains import QQ
         >>> from sympy.polys.lpoly import lgens
+        >>> from sympy.core import sympify
         >>> lp, x, y = lgens('x, y', QQ)
-        >>> p = lp('1/2 + 2/3*x**4 + 1/5*x*y**2')
-        >>> p
+        >>> lp('1/2 + 2/3*x**4 + 1/5*x*y**2')
         2/3*x**4 + 1/5*x*y**2 + 1/2
+        >>> lp('3 + 2/5*x*y**-2 + y')
+        2/5*x*y**-2 + y + 3
+        >>> lp, x = lgens('x', sympify)
+        >>> lp('(x/3 + cos(2))**2')
+        (1/9)*x**2 + (2*cos(2)/3)*x + (cos(2)**2)
         """
         if isinstance(s, LPolyElement):
             if s.lp == self:
@@ -307,11 +316,22 @@ class BaseLPoly(object):
                 p[self.zero_mon] = c
             return p
         if self.parens:
-            raise NotImplementedError
+            if self.SR:
+                gens = symbols(' '.join(self.sgens), seq=True)
+                p = S(s)
+                p = p.as_poly(*gens)
+                if p == None:
+                    raise NotImplementedError
+            else:
+                raise NotImplementedError
+            d = p.as_dict()
+            res = self.from_dict(d)
+            return res
         s = s.replace(' ', '')
         if s[0] not in '+-':
             s = "+" + s
-        a = unflatten(_rpm.split(s)[1:], 2) # TODO this won't work if there are signed exponents
+        s = s.replace('**-','**M')
+        a = unflatten(_rpm.split(s)[1:], 2)
         p = LPolyElement(self)
         for sgn, s1 in a:
             m = self.mon_eval(s1)
@@ -870,7 +890,7 @@ class LPolyElement(dict):
         return r
 
     def subs(p, **rules):
-        """substitution
+        """substitution of variables with polynomials
 
         Examples
         ========
@@ -879,9 +899,10 @@ class LPolyElement(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x**2 + y**2
-        >>> p1 = p.subs(x=x + y, y=x - y)
-        >>> p1
+        >>> p.subs(x=x + y, y=x - y)
         2*x**2 + 2*y**2
+        >>> p.subs(x=x**-1*y**-2)
+        y**2 + x**-2*y**-4
         """
         lp = p.lp
         sb = LPolySubs(lp, lp, rules)
@@ -906,8 +927,7 @@ class LPolyElement(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x**2 + y**2
-        >>> p2 = p.subs_trunc('x', 3, y=(x + y)**2)
-        >>> p2
+        >>> p.subs_trunc('x', 3, y=(x + y)**2)
         6*x**2*y**2 + x**2 + 4*x*y**3 + y**4
         >>> p.subs_trunc('x', 3, y=p.lp(1))
         x**2 + 1
@@ -1533,8 +1553,7 @@ class LPolyElement(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ)
         >>> p = x + y**2
-        >>> p1 = p**3
-        >>> p1
+        >>> p**3
         x**3 + 3*x**2*y**2 + 3*x*y**4 + y**6
         """
         lp = self.lp
@@ -1588,12 +1607,38 @@ class LPolyElement(dict):
             n = n // 2
         return p
 
+    def is_laurent(self, *gens):
+        """returns True if `self` is a Laurent polynomial,
+        that is if it has some monomial with negative power
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.lpoly import lgens
+        >>> lp, x, y = lgens('x, y', QQ)
+        >>> p = x + x*y + x**2*y + x**3*y**-2
+        >>> p.is_laurent(x), p.is_laurent(y), p.is_laurent(x, y)
+        (False, True, True)
+        """
+        lp = self.lp
+        gens = [str(g) for g in gens]
+        rn = [lp.gens_dict[g] for g in gens]
+        for k in self:
+            if any(k[i] < 0 for i in rn):
+                break
+        else:
+            return False
+        return True
+
     def div(self, fv):
         """division algorithm, see [CLO] p64
 
         fv array of polynomials
            return qv, r such that
            self = sum(fv[i]*qv[i]) + r
+
+        All polynomials are required not to be Laurent polynomials.
 
         Examples
         ========
@@ -1620,6 +1665,11 @@ class LPolyElement(dict):
         for f in fv:
             if f.lp != lp:
                 raise ValueError('self and f must have the same lp')
+        gens = lp.gens
+        if self.is_laurent(*gens):
+            raise NotImplementedError('self is a Laurent polynomial')
+        if any(p.is_laurent(*gens) for p in fv):
+            raise NotImplementedError('there is a Laurent polynomial in fv')
         s = len(fv)
         qv = [LPolyElement(lp) for i in range(s)]
         p = self.copy()
