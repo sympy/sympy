@@ -486,6 +486,8 @@ def test_taylor_series():
     assert taylor(log(1 - cos(x**4)), x, 0, 2) == -log(2) + 8*log(x) + O(x**2)
     assert taylor((1 + exp(1/x))**2, x, 0, 2) == exp(2/x) + 2*exp(1/x) + 1
     assert taylor((1 + x)**x * x, x, 0, 2) == x + O(x**2)
+    p1 = taylor((1 + 1/sin(x))/sin(x), x, 0, 2)
+    p2 = x**(-2) + 1/x + S.One/3 + x/6 + O(x**2)
     assert taylor((1 + 1/sin(x))/sin(x), x, 0, 2) == x**(-2) + 1/x + S.One/3 + x/6 + O(x**2)
     assert taylor(exp(1/x), x, 0, 2) == exp(1/x)
     assert taylor(exp(1/x)*(1 + sin(x)/x), x, 0, 2) == 2*exp(1/x) + O(x**2*exp(1/x))

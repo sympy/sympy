@@ -25,6 +25,13 @@ def test__PythonRationalType():
     p1 = _PythonRationalType(4)
     assert p1 == 4
 
+def test_ring():
+    lp, x, y = lgens('x, y', QQ)
+
+    def test1():
+        p = x + cos(2)*y
+    raises(TypeError, 'test1()')
+
 def test_str():
     # str of a LPolyElement object gives different output using QQ in python
     # or in gmpy mode, in one case giving n/1, in the other giving n
@@ -47,6 +54,10 @@ def test_str():
         w = lp2.gens
         p2 = lp2(p)
     raises(NotImplementedError, 'test1(p)')
+
+    lp, x = lgens('x', QQ)
+    p = (1 - x)/x**2
+    assert str(p) == '-x**-1 + x**-2'
 
 def test_read_monom():
     lp = LPoly(list('xyz'), QQ, lex)
@@ -127,6 +138,7 @@ def test_nclgens():
 
     p1 = 1 + x*A + x**2*B
     p2 = p1.series_inversion('x', 4)
+    #(2*A*B - A**3)*x**3 + (A**2 - B)*x**2 + (-A)*x + (1) NO
     assert p2 == 1 - x*A - x**2*B + x**2*A**2 + x**3*(A*B + B*A - A**3)
     p1 = 2 + x*A + x**2*B
     p2 = p1.series_inversion('x', 4).expand()
@@ -159,12 +171,12 @@ def test_nclgens():
     def test3(p):
         p2 = p.asin('x', 4)
     raises(NotImplementedError, 'test3(p1)')
-    def test4(p):
-        p2 = p.nth_root(2, 'x', 4)
-    raises(NotImplementedError, 'test4(p1)')
-    def test5(p):
-        p2 = p.series_inversion('x', 4)
-    raises(NotImplementedError, 'test5(p1)')
+    #def test4(p):
+    #    p2 = p.nth_root(2, 'x', 4)
+    #raises(NotImplementedError, 'test4(p1)')
+    #def test5(p):
+    #    p2 = p.series_inversion('x', 4)
+    #raises(NotImplementedError, 'test5(p1)')
     def test6(p):
         p2 = p.lambert('x', 4)
     raises(NotImplementedError, 'test6(p1)')
@@ -261,6 +273,13 @@ def test_add():
         p = x + y
     raises(ValueError, 'test1(x, y)')
 
+    lp, x = lgens('x', QQ)
+    p1 = 2 + 7*x**-1 + 11*x**-2
+    p2 = 3 + 2*x**-1 + 3*x**-3 + x
+    p3 = p1 + p2
+    assert p3 == x + 5 + 9*x**-1 + 11*x**-2 + 3*x**-3
+    assert p3 - p2 == p1
+
 def test_iadd():
     lp, x, y = lgens('x, y', QQ, lex)
     p3 = -2*x + 3*y**2/7
@@ -332,6 +351,12 @@ def test_mul():
         p2 = p*z
     raises(ValueError, 'test1(p)')
 
+    lp, x = lgens('x', QQ)
+    p1 = (1 + 2*x + 3*x**2)/x
+    p2 = (1 - x)/x**2
+    assert p1*p2 == -3 + x**-1 + x**-2 + x**-3
+
+
 def test_square():
     lp, x, y = lgens('x, y', QQ, lex)
     p1 = x.square()
@@ -341,22 +366,22 @@ def test_square():
     p3 = 3*x/7 + x**3*y + 8*y**2
     assert p3.square() == x**6*y**2 + 16*x**3*y**3 + 6*x**4*y/7 + 64*y**4 + 48*x*y**2/7 + 9*x**2/49
 
-def test_mul_iadd():
+def test_imul_add():
     lp, x, y = lgens('x, y', QQ, lex)
     p = x**2 + y**2 - 1
     p1 = x + y
     p2 = x - y
-    p.mul_iadd(p1, p2)
+    p.imul_add(p1, p2)
     assert p == 2*x*x - 1
     p = x
-    p = p.mul_iadd(p1, p2)
+    p = p.imul_add(p1, p2)
     assert p == x + x**2 - y**2
     def test1(p):
-        p2 = p.mul_iadd(p1, 2)
+        p2 = p.imul_add(p1, 2)
     raises(NotImplementedError, 'test1(p)')
     lp1, z = lgens('z', QQ, lex)
     def test2(p):
-        p2 = p.mul_iadd(p1, z)
+        p2 = p.imul_add(p1, z)
     raises(ValueError, 'test2(p)')
 
 def test_iadd_mon():
@@ -366,17 +391,17 @@ def test_iadd_mon():
     p1 = p1.iadd_mon((m, QQ(2)))
     assert p1 == x**2 + y**2
 
-def test_iadd_m_mul_q():
+def test_iadd_p_mon():
     lp, x, y = lgens('x, y', QQ, lex)
     p1 = x**2 + y**2
     p2 = x**3 + y**3
     m = x*y
     expva = m.keys()[0]
     c = m[expva]
-    p1 = p1.iadd_m_mul_q(p2, (expva, c))
+    p1 = p1.iadd_p_mon(p2, (expva, c))
     assert p1 == x**2 + y**2 + x**4*y + x*y**4
     p1 = x
-    p1 = p1.iadd_m_mul_q(p2, (expva, c))
+    p1 = p1.iadd_p_mon(p2, (expva, c))
     assert p1 == x + x**4*y + x*y**4
     assert str(x) == 'x'
 
@@ -418,12 +443,14 @@ def test_div():
     assert p1/x == x + 1
     p1 = x*y - x + y - 1
     assert p1/(y - 1) == x + 1
+    assert p1/x == y - 1 + y/x - x**-1
+    assert p1/(x**2*y) == x**-1 - x**-1*y**-1 + x**-2 - x**-2*y**-1
     def test1(p):
         p2 = p/0
     raises(ZeroDivisionError, 'test1(p1)')
-    def test2(p):
-        p2 =  p/y
-    raises(NotImplementedError, 'test2(p1)')
+    #def test2(p):
+    #    p2 =  p/y
+    #raises(NotImplementedError, 'test2(p1)')
     lp1, z = lgens('z', QQ, lex)
     def test3(p):
         p2 = p/z
@@ -465,36 +492,36 @@ def test_division():
     f = x**3
     f0 = x-y**2
     f1 = x-y
-    qv, r = f.division((f0, f1))
+    qv, r = f.div((f0, f1))
     assert (qv[0], qv[1], r) == (x**2 + x*y**2 + y**4, lp(0), y**6)
     expv0 = f0.leading_expv()
     expv1 = f1.leading_expv()
     lp, y, x = lgens('y, x', QQ, lex)
     f = x**3*y**2 + x*y**4
     g = x**2 + y
-    qv, r = f.division((g, ))
+    qv, r = f.div((g, ))
     assert r == x**9 +x**7
     f = x**10*y**2 + x**20*y**4
-    qv, r = f.division((g, ))
+    qv, r = f.div((g, ))
     assert r == x**28 + x**14
     f = x**20*y**2 + 2*x**25*y**4
-    qv, r = f.division((g, ))
+    qv, r = f.div((g, ))
     assert r == 2*x**33 + x**24
     f = x**61*y**2 + x**60*y**4
     g = x**2 + y
-    qv, r = f.division((g, ))
+    qv, r = f.div((g, ))
     assert r == x**68 + x**65
     f = lp(0)
-    qv, r = f.division((g, ))
+    qv, r = f.div((g, ))
     assert not qv and r == 0
     f = x + 1
     g = lp(1)
-    qv, r = f.division((g, ))
+    qv, r = f.div((g, ))
     assert qv[0] == f and r == 0
     lp1, z = lgens('z', QQ, lex)
     g = z
     def test1(f, g):
-        q, r = f.division([g])
+        q, r = f.div([g])
     raises(ValueError, 'test1(f, g)')
 
 def test_mul_trunc():
@@ -512,12 +539,18 @@ def test_mul_trunc():
         p2 = p.mul_trunc(z, 'x', 2)
     raises(ValueError, 'test1(p)')
 
+    p1 = 2 + 7*x**-1 + 11*x**-2 + 2*x + 3*x**2
+    p2 = 3*x**-3 + 3 + x**2
+    assert p1.mul_trunc(p2, 'x', 3) == 11*x**2 + 13*x + 17 + 30*x**-1 + 39*x**-2 + 6*x**-3 + 21*x**-4 + 33*x**-5
+
 def test_square_trunc():
     lp, x, y, t = lgens('x, y, t', QQ, lex)
     p = (1 + t*x + t*y)*2
     p1 = p.mul_trunc(p, 'x', 3)
     p2 = p.square_trunc('x', 3)
     assert p1 == p2
+    p = x**-1 + 1 + x + x**2 + x**3
+    assert p.square_trunc('x', 4) == 4*x**3 + 5*x**2 + 4*x + 3 + 2*x**-1 + x**-2
 
 def test_trunc():
     lp, x, y, t = lgens('x, y, t', QQ, lex)
@@ -554,6 +587,13 @@ def test_pow_trunc():
         p1 = p.pow_trunc(0, 'x', 4)
     raises(ValueError, 'test1(p)')
 
+    p = x**-1 + 1 + x + x**2 + x**3
+    p1 = p.pow_trunc(5, 'x', 4)
+    assert p1 == 320*x**3 + 255*x**2 + 185*x + 121 + 70*x**-1 + 35*x**-2 + 15*x**-3 + 5*x**-4 + x**-5
+    p = x + x**2 + x**3
+    assert p.pow_trunc(5, 'x', 4) == 0
+    assert p.pow_trunc(1000, 'x', 1002) == 1000*x**1001 + x**1000
+
 def test_pow_miller():
     lp, x = lgens('x', QQ, lex)
     n = 5
@@ -585,10 +625,10 @@ def test_inversion():
     p = 2 + x + 2*x**2 + y*x + x**2*y
     p1 = p.series_inversion('x', n)
     assert (p*p1).trunc('x', n) == lp(1)
-    p = x + x**2
-    def test1(p):
-        p1 = p.series_inversion('x', 4)
-    raises(NotImplementedError, 'test1(p)')
+    #p = x + x**2
+    #def test1(p):
+    #    p1 = p.series_inversion('x', 4)
+    #raises(NotImplementedError, 'test1(p)')
     lp, x, y = lgens('x, y', QQ, lex)
     p = 1 + x + y
     def test2(p):
@@ -601,6 +641,11 @@ def test_inversion():
     def test4(p):
         p1 = p._series_inversion1('x', 4)
     raises(ValueError, 'test4(p)')
+
+    lp, x = lgens('x', QQ)
+    p = x + x**2 + x**3
+    p1 = p.series_inversion('x', 8)
+    assert p1 == -x**6 + x**5 - x**3 + x**2 - 1 + x**-1
 
 def test_reversion():
     lp, x, y = lgens('x, y', QQ, lex)
@@ -656,13 +701,13 @@ def test_series_from_list():
     p1 = p.fun(square, 'x', h)
     assert p1 == x**2 + 2*x**3
 
-def test_derivative():
+def test_diff():
     gens=['x%d' % i for i in range(11)]
     lp = LPoly(gens, QQ, lex)
     p = lp('288/5*x0**8*x1**6*x4**3*x10**2 + 8*x0**2*x2**3*x4**3 +2*x0**2-2*x1**2')
-    p1 = p.derivative(0)
+    p1 = p.diff(0)
     assert p1 == lp('2304/5*x0**7*x1**6*x4**3*x10**2 + 16*x0*x2**3*x4**3 + 4*x0')
-    p1 = p.derivative('x0')
+    p1 = p.diff('x0')
     assert p1 == lp('2304/5*x0**7*x1**6*x4**3*x10**2 + 16*x0*x2**3*x4**3 + 4*x0')
 
 def test_integrate():
@@ -709,7 +754,7 @@ def test_nth_root():
     p = x
     def test2(p):
         p1 = p.nth_root(2, 'x', 4)
-    raises(NotImplementedError, 'test2(p)')
+    raises(TaylorEvalError, 'test2(p)')
     lp, x = lgens('x', QQ, lex)
     p = 2 + x
     def test3(p):
@@ -735,6 +780,8 @@ def test_sqrt():
     assert p2 == p0
     p3 = p0.square_trunc(0, h)
     assert p1 == p3
+    p1 = (x**2 + x**3).sqrt(x, 6)
+    assert p1 == -5*x**5/128 + x**4/16 - x**3/8 + x**2/2 + x
 
 def test_log():
     # log of univariate series
@@ -813,6 +860,13 @@ def test_tan():
     def test1(p):
         p1 = p.tan('x', 4)
     raises(NotImplementedError, 'test1(p)')
+
+def test_cot():
+    lp, x = lgens('x', QQ)
+    p = x**6 + x**7
+    p1 = p.cot(x, 8)
+    assert p1 == x**(-6) - x**-5 + x**(-4) - x**-3 + x**(-2) - x**-1 + 1 - x + x**2 - x**3 + x**4 - x**5 + 2*x**6/3 - 4*x**7/3
+
 
 def test_tanh():
     lp, x, y = lgens('x, y', QQ, lex)
@@ -1143,7 +1197,7 @@ def test_polypoly_mul():
     p = x + y
     p1 = 1 + x + y
     p2 = y
-    p = p.mul_iadd(p1,p2)
+    p = p.imul_add(p1,p2)
     assert p == x + 2*y + x*y + y**2
 
 def test_polypoly_div():

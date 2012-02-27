@@ -287,7 +287,7 @@ def _taylor_decompose(p, var, tev, typ, rdeco):
         # pw, pr = -2, sin(x) + x**2
         pw, pr = _factor_var(p, var)
         s2, typ2 = _taylor_eval(pr, _PWMAX[typ]*rdeco, tev, typ)
-        # pr = sin(x) + x**2 -> s2 = ... +X0^2 +X0, typ2=0
+        # pr = sin(x) + x**2 -> s2 = ... +X0**2 +X0, typ2=0
         if not s2 or typ2 == 2:
             return None
         n0 = min(s2.keys())[0]
@@ -590,7 +590,7 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
                             if i == 0:
                                 pxp = poly_truncate(px1, var, prec)
                             else:
-                                pxp = poly_truncate(px1, var, prec +1)
+                                pxp = poly_truncate(px1, var, prec + 1)
                             if pxdeg < prec or pxdeg == prec and i > 0:
                                 ps += expand_mul(c*pxp*logi)
                             else:
@@ -975,8 +975,6 @@ class TaylorEval:
             raise TaylorEvalError
 
     def eval_polynomial(self, p, prec):
-        """TODO add docstring
-        """
         gens = self.gens
         if p in gens:
             return self.dgens[p]
@@ -1003,6 +1001,7 @@ class TaylorEval:
         representing a series of precision `prec`
         """
         prec = int(prec)
+
         if f in self.gens:
             return self.dgens[f]
         if isinstance(f, Number):
@@ -1051,6 +1050,8 @@ class TaylorEval:
             elif pw < 0:
                 s = s*self.lvar**-pw
 
+            if min(s)[0] < 0:
+                raise NotImplementedError
             return s
         if head == Pow:
             args = f.args
@@ -1072,6 +1073,8 @@ class TaylorEval:
                     x = self(x, prec)
                 if pw.is_Integer:
                     pw = int(pw)
+                    if pw < 0:
+                        raise NotImplementedError
                     x1 = x.pow_trunc(pw, self.lvname, prec)
                 else:
                     if isinstance(pw, Rational):
