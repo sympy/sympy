@@ -181,17 +181,17 @@ def test_pow_im():
     args = [I, I, I, I, 2]
     e = Rational(1, 3)
     ans = 2**e
-    assert Mul(*args, evaluate=False)**e == ans
+    assert Mul(*args, **dict(evaluate=False))**e == ans
     assert Mul(*args)**e == ans
     args = [I, I, I, 2]
     e = Rational(1, 3)
     ans = -(-1)**Rational(5, 6)*2**e
-    assert Mul(*args, evaluate=False)**e == ans
+    assert Mul(*args, **dict(evaluate=False))**e == ans
     assert Mul(*args)**e == ans
     args = [I, I, 2]
     e = Rational(1, 3)
     ans = (-2)**e
-    assert Mul(*args, evaluate=False)**e == ans
+    assert Mul(*args, **dict(evaluate=False))**e == ans
     assert Mul(*args)**e == ans
 
 def test_expand():
