@@ -1980,9 +1980,30 @@ class LPolyElement(dict):
             p = p.mul_xin(ii, -m)
             prec = prec + m
         if zm not in p:
+            # x series variable, pol_pars=[y]
+            # p = 1/(y + x)   k[(0,1)] = 1; p = y**-1*(1 + x*y**-1)
+            #   this series can be done in lpoly
+            # p = 1/(y + y**2 + x)  k[(0, 1)], k[(0, 2] != 0
+            # this series cannot be done in lpoly
+            count = 0
+            for k in p:
+                if k[ii] == 0:
+                    k0 = k
+                    if not count:
+                        count += 1
+                    else:
+                        break
+            if count == 1:
+                res = lp(0)
+                res[k0] = p[k0]
+                res = res**-1
+                p1 = p*res
+                p1 = p1.series_inversion(iv, prec)
+                res = res*p1
+                return res
             raise NotImplementedError('no constant term in series')
         if (p - p[zm]).has_constant_term(iv):
-            raise NotImplementedError('p - p[0] must not have a constant term in the series variables')
+            raise NotImplementedError('the constant term in p is not invertible')
         if not lp.commuting:
             res = p._series_inversion_nc(iv, prec)
         else:
@@ -2712,11 +2733,10 @@ class LPolyElement(dict):
         1/120*x**5 - 1/6*x**3 + x
         """
         lp = p.lp
+        if not p:
+            return lp(0)
         iv = str(iv)
-        ii = lp.sgens.index(iv)
-        m = min(p, key=lambda k: k[ii])[ii]
-        if m < 0:
-            raise PoleError('Asymptotic expansion of sin around [oo] not implemented.')
+        ii, m = p.check_series_var(iv, PoleError, 'sin')
         if p.has_constant_term(iv):
             if not lp.SR:
                 raise TaylorEvalError
