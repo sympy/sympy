@@ -117,7 +117,8 @@ class Sieve:
         """
         from residue_ntheory import int_tested
         n = int_tested(n)
-        assert n >= 2
+        if n < 2:
+            raise ValueError("n must be greater than 1")
         if n > self._list[-1]:
             self.extend(n)
         b = bisect(self._list, n)
