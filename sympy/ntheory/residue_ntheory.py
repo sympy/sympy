@@ -33,17 +33,19 @@ def totient_(n):
 
     """
     from sympy import sieve,sqrt
+    from sympy.ntheory import multiplicity
     n = int_tested(n)
     if n < 1:
         raise ValueError("n must be a positive integer")
     tot = n
-    for x in sieve.primerange(1, int(sqrt(n))):
-        if n % x == 0:
-            tot -= tot/x
-            while n%x == 0:
-                n /= x
-    if n>1:
-        tot -= tot/n
+    for p in sieve.primerange(1, int(sqrt(n))):
+        m = multiplicity(p, n)
+        if m:
+            factor = p**m
+            tot -= tot // factor
+            n //= factor
+    if n > 1:
+            tot -= tot // n
     return tot
 
 
