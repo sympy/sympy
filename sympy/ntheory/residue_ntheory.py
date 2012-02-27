@@ -32,7 +32,7 @@ def totient_(n):
     66
 
     """
-    from sympy import sieve,sqrt
+    from sympy import sieve, sqrt
     from sympy.ntheory import multiplicity
     n = int_tested(n)
     if n < 1:
@@ -45,7 +45,7 @@ def totient_(n):
             tot -= tot // factor
             n //= factor
     if n > 1:
-            tot -= tot // n
+        tot -= tot // n
     return tot
 
 
