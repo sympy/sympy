@@ -65,7 +65,7 @@ def n_order(a, n):
     >>> n_order(4, 7)
     3
     """
-    a, n = int_tested(a, n)
+    a, n = int_tested((a, n))
     if igcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
     group_order = totient_(n)
@@ -106,7 +106,7 @@ def is_primitive_root(a, p):
     False
 
     """
-    a, p = int_tested(a, p)
+    a, p = int_tested((a, p))
     if igcd(a, p) != 1:
         raise ValueError("The two numbers should be relatively prime")
     if a > p:
@@ -134,7 +134,7 @@ def is_quad_residue(a, p):
 
     legendre_symbol, jacobi_symbol
     """
-    a, p = int_tested(a, p)
+    a, p = int_tested((a, p), strict = True)
     if p < 1:
         raise ValueError('p must be > 0')
     if a >= p or a < 0:
@@ -186,7 +186,7 @@ def legendre_symbol(a, p):
     is_quad_residue, jacobi_symbol
 
     """
-    a, p = int_tested(a, p)
+    a, p = int_tested((a, p))
     if not isprime(p) or p == 2:
         raise ValueError("p should be an odd prime")
     _, a = divmod(a, p)
@@ -233,7 +233,7 @@ def jacobi_symbol(m, n):
 
     is_quad_residue, legendre_symbol
     """
-    m, n = int_tested((tuple(m, n)))
+    m, n = int_tested((m, n))
     if not n % 2:
         raise ValueError("n should be an odd integer")
     if m < 0 or m > n:
