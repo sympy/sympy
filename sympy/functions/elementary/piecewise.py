@@ -31,10 +31,6 @@ class ExprCondPair(Tuple):
         return self.args[1]
 
     @property
-    def is_commutative(self):
-        return self.expr.is_commutative
-
-    @property
     def free_symbols(self):
         """
         Return the free symbols of this pair.
@@ -166,6 +162,10 @@ class Piecewise(Function):
                     c = c.doit(**hints)
             newargs.append((e, c))
         return Piecewise(*newargs)
+
+    @property
+    def is_commutative(self):
+        return all(expr.is_commutative for expr, _ in self.args)
 
     def _eval_integral(self,x):
         from sympy.integrals import integrate
