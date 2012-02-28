@@ -89,8 +89,6 @@ Ntheory Functions Reference
 
 .. autofunction:: int_tested
 
-.. autofunction:: totient_
-
 .. autofunction:: n_order
 
 .. autofunction:: is_primitive_root
