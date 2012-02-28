@@ -294,7 +294,10 @@ class Mul(AssocOp):
             if len(iu) == 1:
                 c_powers.append((iu[0], S.One))
             else:
-                # iu = [I, -1, -I, 1][len(iu) % 4]
+                # a product of I's has one of 4 values; select that value
+                # based on the length of iu:
+                # len(iu) % 4 of (0, 1, 2, 3) has a corresponding value of
+                #                (1, I,-1,-I)
                 niu = len(iu) % 4
                 if niu % 2:
                     c_powers.append((S.ImaginaryUnit, S.One))
