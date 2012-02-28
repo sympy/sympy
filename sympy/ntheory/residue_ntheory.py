@@ -38,11 +38,11 @@ def totient_(n):
     if n < 1:
         raise ValueError("n must be a positive integer")
     tot = n
-    for p in sieve.primerange(1, int(sqrt(n))):
+    for p in sieve.primerange(1, int(sqrt(n)+1)):
         m = multiplicity(p, n)
         if m:
             factor = p**m
-            tot -= tot // factor
+            tot -= tot // p
             n //= factor
     if n > 1:
         tot -= tot // n
