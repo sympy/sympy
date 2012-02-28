@@ -1270,3 +1270,7 @@ def test_equals():
     # self and other before beginning comparisions
     p = Symbol('p', positive=True)
     assert diff.subs(x, p).equals(0) is True
+
+def test_random():
+    from sympy import posify
+    assert posify(x)[0]._random() is not None
