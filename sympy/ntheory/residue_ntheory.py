@@ -2,8 +2,11 @@ from sympy.core.numbers import igcd
 from primetest import isprime
 from factor_ import factorint, trailing
 
-def int_tested(*j):
-    """Return all args as integers after confirming that they are integers.
+def int_tested(j,strict = False):
+    """
+    Return all args as integers after confirming:
+    1) if strict = False : whether they are integers or can be converted into integers.
+    2) if strict = True : after confirming that they are strictly integers.
 
     Examples
     ========
@@ -12,12 +15,18 @@ def int_tested(*j):
     >>> int_tested(8, 9, 110)
     (8, 9, 110)
     """
+    try:
+        j = tuple(j)
+    except TypeError:
+        j = j,
     i = tuple([int(i) for i in j])
-    if i != j:
-        raise ValueError('all arguments were not integers')
+    if strict:
+        if i != j:
+            raise ValueError('all arguments were not integers')
     if len(i) == 1:
         return i[0]
     return i
+
 
 def totient_(n):
     """Returns the number of integers less than n and relatively prime to n.
@@ -224,7 +233,7 @@ def jacobi_symbol(m, n):
 
     is_quad_residue, legendre_symbol
     """
-    m, n = int_tested(m, n)
+    m, n = int_tested((tuple(m, n)))
     if not n % 2:
         raise ValueError("n should be an odd integer")
     if m < 0 or m > n:
