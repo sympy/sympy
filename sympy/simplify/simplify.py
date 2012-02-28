@@ -1470,9 +1470,8 @@ def _denest_pow(eq):
     if b is S.Exp1 and e.is_Mul:
         logs = []
         other = []
-        for ei in Mul.make_args(e):
-            if any(aj.func is C.log for a in Mul.make_args(ei)
-                    for ai in Add.make_args(a) for aj in Mul.make_args(ai)):
+        for ei in e.args:
+            if any(ai.func is C.log for ai in Add.make_args(ei)):
                 logs.append(ei)
             else:
                 other.append(ei)
