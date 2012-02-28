@@ -1563,16 +1563,10 @@ def _denest_pow(eq):
     if glogb.func is C.log or not glogb.is_Mul:
         if glogb.args[0].is_Pow or glogb.args[0].func is exp:
             glogb = _denest_pow(glogb.args[0])
-            c = glogb.exp.as_coeff_mul()[0]
-            ok = c.p != 1
-            if ok:
-                ok = c.q != 1
-                if not ok:
-                    n, d = glogb.exp.as_numer_denom()
-                    ok = d is not S.One and any(di.is_integer for di in Mul.make_args(d))
-            if ok:
-                return Pow(Pow(glogb.base, glogb.exp/c.p), c.p*e)
+            if (abs(glogb.exp) < 1) is True:
+                return Pow(glogb.base, glogb.exp*e)
         return eq
+
     # the log(b) was a Mul so join any adds with logcombine
     add= []
     other = []
@@ -1588,10 +1582,9 @@ def powdenest(eq, force=False, polar=False):
     Collect exponents on powers as assumptions allow.
 
     Given (bb**be)**e, this can be simplified as follows:
-
-    - if bb is positive or e is an integer, bb**(be*e)
-    - if be has an integer in the denominator, then
-      all integers from its numerator can be joined with e
+        o if bb is positive, or
+        o e is an integer, or
+        o |be| < 1 then this simplifies to bb**(be*e)
 
     Given a product of powers raised to a power, (bb1**be1 * bb2**be2...)**e,
     simplification can be done as follows:
@@ -1621,7 +1614,7 @@ def powdenest(eq, force=False, polar=False):
     >>> from sympy import Symbol, exp, log, sqrt, symbols, powdenest
 
     >>> powdenest((x**(2*a/3))**(3*x))
-    (x**(a/3))**(6*x)
+    (x**(2*a/3))**(3*x)
     >>> powdenest(exp(3*x*log(2)))
     2**(3*x)
 
@@ -1664,7 +1657,7 @@ def powdenest(eq, force=False, polar=False):
     p**(6*a*x*y)
 
     >>> powdenest(((x**(2*a/3))**(3*y/i))**x)
-    ((x**(a/3))**(y/i))**(6*x)
+    ((x**(2*a/3))**(3*y/i))**x
     >>> powdenest((x**(2*i)*y**(4*i))**z, force=True)
     (x*y**2)**(2*i*z)
 

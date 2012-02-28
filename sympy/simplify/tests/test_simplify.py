@@ -696,9 +696,9 @@ def test_powdenest():
     i, j = symbols('i,j', integer=True)
 
     assert powdenest(x) == x
-    assert powdenest(x + 2*(x**(2*a/3))**(3*x)) == x + 2*(x**(a/3))**(6*x)
+    assert powdenest(x + 2*(x**(2*a/3))**(3*x)) == (x + 2*(x**(2*a/3))**(3*x))
     assert powdenest((exp(2*a/3))**(3*x)) == (exp(a/3))**(6*x)
-    assert powdenest((x**(2*a/3))**(3*x)) == (x**(a/3))**(6*x)
+    assert powdenest((x**(2*a/3))**(3*x)) == ((x**(2*a/3))**(3*x))
     assert powdenest(exp(3*x*log(2))) == 2**(3*x)
     assert powdenest(sqrt(p**2)) == p
     i, j = symbols('i,j', integer=True)
@@ -710,7 +710,7 @@ def test_powdenest():
     assert powdenest(exp(3*(log(a) + log(b)))) == a**3*b**3
     assert powdenest(((x**(2*i))**(3*y))**x) == ((x**(2*i))**(3*y))**x
     assert powdenest(((x**(2*i))**(3*y))**x, force=True) == x**(6*i*x*y)
-    assert powdenest(((x**(2*a/3))**(3*y/i))**x) == ((x**(a/3))**(y/i))**(6*x)
+    assert powdenest(((x**(2*a/3))**(3*y/i))**x) == (((x**(2*a/3))**(3*y/i))**x)
     assert powdenest((x**(2*i)*y**(4*i))**z, force=True) == (x*y**2)**(2*i*z)
     assert powdenest((p**(2*i)*q**(4*i))**j) == (p*q**2)**(2*i*j)
     assert powdenest(((p**(2*a))**(3*y))**x) == p**(6*a*x*y)
