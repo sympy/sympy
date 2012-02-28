@@ -19,36 +19,6 @@ def int_tested(*j):
         return i[0]
     return i
 
-def totient_(n):
-    """Returns the number of integers less than n and relatively prime to n.
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory import totient_
-    >>> totient_(6)
-    2
-    >>> totient_(67)
-    66
-
-    """
-    from sympy import sieve, sqrt
-    from sympy.ntheory import multiplicity
-    n = int_tested(n)
-    if n < 1:
-        raise ValueError("n must be a positive integer")
-    tot = n
-    for p in sieve.primerange(1, int(sqrt(n)+1)):
-        m = multiplicity(p, n)
-        if m:
-            factor = p**m
-            tot -= tot // p
-            n //= factor
-    if n > 1:
-        tot -= tot // n
-    return tot
-
-
 
 def n_order(a, n):
     """Returns the order of a modulo n
@@ -64,10 +34,11 @@ def n_order(a, n):
     >>> n_order(4, 7)
     3
     """
+    from sympy.ntheory import totient
     a, n = int_tested(a, n)
     if igcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
-    group_order = totient_(n)
+    group_order = totient(n)
     factors = factorint(group_order)
     order = 1
     if a > n:
@@ -105,12 +76,13 @@ def is_primitive_root(a, p):
     False
 
     """
+    from sympy.ntheory import totient
     a, p = int_tested(a, p)
     if igcd(a, p) != 1:
         raise ValueError("The two numbers should be relatively prime")
     if a > p:
         a = a % p
-    if n_order(a, p) == totient_(p):
+    if n_order(a, p) == totient(p):
         return True
     else:
         return False
