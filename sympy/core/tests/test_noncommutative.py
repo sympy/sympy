@@ -1,6 +1,7 @@
 """Tests for noncommutative symbols and expressions."""
 
 from sympy import (
+    collect,
     conjugate,
     expand,
     factor,
@@ -10,10 +11,16 @@ from sympy import (
     I,
 )
 from sympy.abc import x, y, z
+from sympy.utilities.pytest import XFAIL
 
 A, B, C = symbols("A B C", commutative=False)
 X, Y = symbols("X Y", commutative=False, real=True)
 Z = X + I*Y
+
+@XFAIL
+def test_collect():
+    assert collect(A*B - B*A, A) == B
+    assert collect(A*B - B*A, B) == -A
 
 def test_complex():
     assert Z.conjugate() == X - I*Y
