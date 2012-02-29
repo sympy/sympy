@@ -830,8 +830,8 @@ class Expr(Basic, EvalfMixin):
     def coeff(self, x, n=1, right=False):
         """
         Returns the coefficient from the term containing "x**n" or None if
-        there is no such term. If ``n`` is zero then the additive constant will
-        be returned (regardless of the value of ``x``).
+        there is no such term. If ``n`` is zero then all terms independent of
+        x will be returned.
 
         When x is noncommutative, the coeff to the left (default) or right of x
         can be returned. The keyword 'right' is ignored when x is commutative.
@@ -854,19 +854,26 @@ class Expr(Basic, EvalfMixin):
         >>> (x - 2*y).coeff(-1)
         2*y
 
-        You can select terms with no rational coefficient:
+        You can select terms with no Rational coefficient:
 
         >>> (x + 2*y).coeff(1)
         x
         >>> (3 + 2*x + 4*x**2).coeff(1)
 
-        You can select the additive constant by making e = 0;
-        in this case it doesn't matter what x is:
+        You can select terms independent of x by making n=0; in this case
+        expr.as_independent(x)[0] is returned (and 0 will be returned instead
+        of None):
 
-        >>> (3 + 2*x + 4*x**2).coeff(1, 0)
+        >>> (3 + 2*x + 4*x**2).coeff(x, 0)
         3
-        >>> (3*x).coeff(1, 0)
-        0
+        >>> eq = ((x + 1)**3).expand() + 1
+        >>> eq
+        x**3 + 3*x**2 + 3*x + 2
+        >>> [eq.coeff(x, i) for i in reversed(range(4))]
+        [1, 3, 3, 2]
+        >>> eq -= 2
+        >>> [eq.coeff(x, i) for i in reversed(range(4))]
+        [1, 3, 3, None]
 
         You can select terms that have a numerical term in front of them:
 
@@ -887,11 +894,17 @@ class Expr(Basic, EvalfMixin):
         z
         >>> (z*(x + y)**2).coeff(x + y)
 
-        In addition, no factoring is done, so 2 + y is not obtained from the
-        following:
+        In addition, no factoring is done, so 1 + z*(1 + y) is not obtained
+        from the following:
 
-        >>> (2*x + 2 + (x + 1)*y).coeff(x + 1)
-        y
+        >>> (x + z*(x + x*y)).coeff(x)
+        1
+
+        If such factoring is desired, factor_terms can be used first:
+
+        >>> from sympy import factor_terms
+        >>> factor_terms(x + z*(x + x*y)).coeff(x)
+        z*(y + 1) + 1
 
         >>> n, m, o = symbols('n m o', commutative=False)
         >>> n.coeff(n)
@@ -913,20 +926,41 @@ class Expr(Basic, EvalfMixin):
         o
         >>> (n*m + o*m*n).coeff(m*n, right=1)
         1
+
+        See Also
+        ========
+
+        as_coeff_Add: a method to separate the additive constant from an expression
+        as_coeff_Mul: a method to separate the multiplicative constant from an expression
+        as_independent: a method to separate x dependent terms/factors from others
+
         """
-        x = sympify(x)**n
-        if not x: # 0 or None
+        x = sympify(x)
+        if not isinstance(x, Basic):
+            return None
+        if not x:
             return None
         if x == self:
-            return S.One
+            if n == 1:
+                return S.One
+            return None
         if x is S.One:
-            if n:
-                co = [a for a in Add.make_args(self)
-                      if not any(ai.is_number for ai in Mul.make_args(a))]
-                if not co:
+            co = [a for a in Add.make_args(self)
+                  if a.as_coeff_Mul()[0] is S.One]
+            if not co:
+                return None
+            return Add(*co)
+        if n == 0:
+            if x.is_Add and self.is_Add:
+                c = self.coeff(x, right=right)
+                if c is None:
                     return None
-                return Add(*co)
-            return self.as_coeff_Add()[0]
+                if not right:
+                    return self - Add(*[a*x for a in Add.make_args(c)])
+                return self - Add(*[x*a for a in Add.make_args(c)])
+            return self.as_independent(x, as_Add=not self.is_Mul)[0] or None
+
+        x = x**n
 
         def incommon(l1, l2):
             if not l1 or not l2:
