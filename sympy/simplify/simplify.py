@@ -808,9 +808,9 @@ def factor_nc(expr, **kwargs):
         # find any commutative gcd term
         for i, a in enumerate(args):
             if i == 0:
-                c = Mul._from_args(list(a[0]))
+                c = Mul._from_args(a[0])
             elif a[0]:
-                c = gcd(c, Mul._from_args(list(a[0])))
+                c = gcd(c, Mul._from_args(a[0]))
             else:
                 c = S.One
         if c is not S.One:
@@ -826,7 +826,29 @@ def factor_nc(expr, **kwargs):
             else:
                 n = common_prefix(n, a[1])
             if not n:
-                break
+                # is there a power that can be extracted?
+                if not args[0][1]:
+                    break
+                b, e = args[0][1][0].as_base_exp()
+                ok = False
+                if e.is_Integer:
+                    for t in args:
+                        if not t[1]:
+                            break
+                        bt, et = t[1][0].as_base_exp()
+                        if et.is_Integer and bt == b:
+                            e = min(e, et)
+                        else:
+                            break
+                    else:
+                        ok = hit = True
+                        l = b**e
+                        il = b**-e
+                        for i, a in enumerate(args):
+                            args[i][1][0] = il*args[i][1][0]
+                        break
+                if not ok:
+                    break
         else:
             hit = True
             lenn = len(n)
@@ -840,7 +862,29 @@ def factor_nc(expr, **kwargs):
             else:
                 n = common_suffix(n, a[1])
             if not n:
-                break
+                # is there a power that can be extracted?
+                if not args[0][1]:
+                    break
+                b, e = args[0][1][-1].as_base_exp()
+                ok = False
+                if e.is_Integer:
+                    for t in args:
+                        if not t[1]:
+                            break
+                        bt, et = t[1][-1].as_base_exp()
+                        if et.is_Integer and bt == b:
+                            e = min(e, et)
+                        else:
+                            break
+                    else:
+                        ok = hit = True
+                        r = b**e
+                        il = b**-e
+                        for i, a in enumerate(args):
+                            args[i][1][-1] = args[i][1][-1]*il
+                        break
+                if not ok:
+                    break
         else:
             hit = True
             lenn = len(n)

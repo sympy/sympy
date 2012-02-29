@@ -1065,3 +1065,5 @@ def test_factor_nc():
     assert factor_nc(eq.expand()) == x*n*(x*m + 1)
     eq = (x*m*n + x**2*n*m)
     assert factor_nc(eq.expand()) == x*(m*n + x*n*m)
+    eq = (n**3 - n*m*n**2)
+    assert factor_nc(eq) == n*(1 - m)*n**2
