@@ -901,9 +901,13 @@ def test_coeff():
     assert (3 + 2*x + 4*x**2).coeff(x) ==  2
     assert (3 + 2*x + 4*x**2).coeff(x**2) == 4
     assert (3 + 2*x + 4*x**2).coeff(x**3) == None
-    assert (z*(x + y)**2).coeff((x+y)**2) == z
-    assert (z*(x + y)**2).coeff(x+y) == None
-    assert (2 + 2*x + (x+1)*y).coeff(x+1) == y
+    assert (z*(x + y)**2).coeff((x + y)**2) == z
+    assert (z*(x + y)**2).coeff(x + y) == None
+    assert (2 + 2*x + (x + 1)*y).coeff(x + 1) == y
+
+    assert (x + 2*y + 3).coeff(1) == x
+    assert (x + 2*y + 3).coeff(x, 0) == 3
+    assert (x + 2*y + 3).coeff(0, 0) == 3
 
     n, m, o, l = symbols('n m o l', commutative=False)
     assert n.coeff(n) ==  1

@@ -827,9 +827,11 @@ class Expr(Basic, EvalfMixin):
                                  [ci for ci in c if list(self.args).count(ci) > 1])
         return [c, nc]
 
-    def coeff(self, x, right=False):
+    def coeff(self, x, n=1, right=False):
         """
-        Returns the coefficient of the exact term "x" or None if there is no "x".
+        Returns the coefficient from the term containing "x**n" or None if
+        there is no such term. If ``n`` is zero then the additive constant will
+        be returned (regardless of the value of ``x``).
 
         When x is noncommutative, the coeff to the left (default) or right of x
         can be returned. The keyword 'right' is ignored when x is commutative.
@@ -857,6 +859,14 @@ class Expr(Basic, EvalfMixin):
         >>> (x + 2*y).coeff(1)
         x
         >>> (3 + 2*x + 4*x**2).coeff(1)
+
+        You can select the additive constant by making e = 0;
+        in this case it doesn't matter what x is:
+
+        >>> (3 + 2*x + 4*x**2).coeff(1, 0)
+        3
+        >>> (3*x).coeff(1, 0)
+        0
 
         You can select terms that have a numerical term in front of them:
 
@@ -904,23 +914,19 @@ class Expr(Basic, EvalfMixin):
         >>> (n*m + o*m*n).coeff(m*n, right=1)
         1
         """
-        x = sympify(x)
+        x = sympify(x)**n
         if not x: # 0 or None
             return None
         if x == self:
             return S.One
         if x is S.One:
-            try:
-                assert Add.make_args(S.Zero) and Mul.make_args(S.One)
-                # replace try/except with this
+            if n:
                 co = [a for a in Add.make_args(self)
                       if not any(ai.is_number for ai in Mul.make_args(a))]
-            except AssertionError:
-                co = [a for a in (Add.make_args(self) or [S.Zero])
-                      if not any(ai.is_number for ai in (Mul.make_args(a) or [S.One]))]
-            if not co:
-                return None
-            return Add(*co)
+                if not co:
+                    return None
+                return Add(*co)
+            return self.as_coeff_Add()[0]
 
         def incommon(l1, l2):
             if not l1 or not l2:
