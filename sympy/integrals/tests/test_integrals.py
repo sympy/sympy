@@ -396,12 +396,17 @@ def test_subs4():
 
 def test_subs5():
     e = Integral(exp(-x**2), x)
+    assert e.subs(x, 5) == Integral(exp(-25), x)
+    e = Integral(exp(-x**2), (x, x))
     assert e.subs(x, 5) == Integral(exp(-x**2), (x, 5))
     e = Integral(exp(-x**2), (x, -oo, oo))
     assert e.subs(x, 5) == e
-    e = Integral(exp(-x**2+y), x)
+    e = Integral(exp(-x**2 + y), x)
+    assert e.subs(x, 5) == Integral(exp(y - 25), x)
+    assert e.subs(y, 5) == Integral(exp(-x**2 + 5), x)
+    e = Integral(exp(-x**2+y), (x, x))
     assert e.subs(x, 5) == Integral(exp(y - x**2), (x, 5))
-    assert e.subs(y, 5) == Integral(exp(-x**2+5), x)
+    assert e.subs(y, 5) == Integral(exp(-x**2 + 5), (x, x))
     e = Integral(exp(-x**2+y), (y, -oo, oo), (x, -oo, oo))
     assert e.subs(x, 5) == e
     assert e.subs(y, 5) == e
