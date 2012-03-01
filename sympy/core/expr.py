@@ -785,13 +785,15 @@ class Expr(Basic, EvalfMixin):
         then an error will be raised unless it is explicitly supressed by
         setting ``warn`` to False.
 
-        Note: -1 is always separated from a Rational.
+        Note: -1 is always separated from a Number.
 
-        >>> from sympy import symbols
+        >>> from sympy import symbols, oo
         >>> A, B = symbols('A B', commutative=0)
         >>> x, y = symbols('x y')
         >>> (-2*x*y).args_cnc()
         [[-1, 2, x, y], []]
+        >>> (-2.5*x).args_cnc()
+        [[-1, 2.5, x], []]
         >>> (-2*x*A*B*y).args_cnc()
         [[-1, 2, x, y], [A, B]]
         >>> (-2*x*y).args_cnc(cset=True)
@@ -801,6 +803,8 @@ class Expr(Basic, EvalfMixin):
 
         >>> (-2 + x + A).args_cnc()
         [[], [x - 2 + A]]
+        >>> (-oo).args_cnc() # -oo is a singleton
+        [[-1, oo], []]
         """
 
         if self.is_Mul:
@@ -816,7 +820,10 @@ class Expr(Basic, EvalfMixin):
             c = args
             nc = []
 
-        if c and c[0].is_Rational and c[0].is_negative and c[0] != S.NegativeOne:
+        if c and (
+            c[0].is_Number and
+            c[0].is_negative and
+            c[0] != S.NegativeOne):
             c[:1] = [S.NegativeOne, -c[0]]
 
         if cset:
@@ -961,7 +968,7 @@ class Expr(Basic, EvalfMixin):
             return self.as_independent(x, as_Add=not self.is_Mul)[0] or None
 
         x = x**n
-
+            
         def incommon(l1, l2):
             if not l1 or not l2:
                 return []
@@ -970,20 +977,6 @@ class Expr(Basic, EvalfMixin):
                 if l1[i] != l2[i]:
                     return l1[:i]
             return l1[:]
-
-        def arglist(x):
-            """ Return list of x's args when treated as a Mul after checking
-            to see if a negative Rational is present (in which case it is made
-            positive and a -1 is prepended to the list).
-            """
-
-            c, margs = x.as_coeff_mul()
-            if c is not S.One:
-                if c is not S.NegativeOne and c.is_negative:
-                    margs = (S.NegativeOne, -c) + margs
-                else:
-                    margs = (c,) + margs
-            return list(margs)
 
         def find(l, sub, first=True):
             """ Find where list sub appears in list l. When ``first`` is True
@@ -1025,9 +1018,9 @@ class Expr(Basic, EvalfMixin):
             return None
 
         if self_c:
-            xargs = set(arglist(x))
+            xargs = x.args_cnc(cset=True, warn=False)[0]
             for a in args:
-                margs = set(arglist(a))
+                margs = a.args_cnc(cset=True, warn=False)[0]
                 if len(xargs) > len(margs):
                     continue
                 resid = margs.difference(xargs)
@@ -1038,7 +1031,7 @@ class Expr(Basic, EvalfMixin):
             elif co:
                 return Add(*co)
         elif x_c:
-            xargs = set(arglist(x))
+            xargs = x.args_cnc(cset=True, warn=False)[0]
             for a in args:
                 margs, nc = a.args_cnc(cset=True)
                 if len(xargs) > len(margs):
