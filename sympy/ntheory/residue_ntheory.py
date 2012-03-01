@@ -1,6 +1,6 @@
 from sympy.core.numbers import igcd
 from primetest import isprime
-from factor_ import factorint, trailing
+from factor_ import factorint, trailing, totient
 
 def int_tested(*j):
     """Return all args as integers after confirming that they are integers.
@@ -34,7 +34,6 @@ def n_order(a, n):
     >>> n_order(4, 7)
     3
     """
-    from sympy.ntheory import totient
     a, n = int_tested(a, n)
     if igcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
@@ -76,7 +75,6 @@ def is_primitive_root(a, p):
     False
 
     """
-    from sympy.ntheory import totient
     a, p = int_tested(a, p)
     if igcd(a, p) != 1:
         raise ValueError("The two numbers should be relatively prime")
