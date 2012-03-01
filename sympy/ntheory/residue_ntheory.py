@@ -2,18 +2,30 @@ from sympy.core.numbers import igcd
 from primetest import isprime
 from factor_ import factorint, trailing
 
-def int_tested(j,strict = False):
+def int_tested(j, strict=False):
     """
-    Return all args as integers after confirming:
-    1) if strict = False : whether they are integers or can be converted into integers.
-    2) if strict = True : after confirming that they are strictly integers.
+    Return all args as Python integers.
+
+    In some cases a routine needs to work with integers
+    but it is convenient to allow the user to pass a non-integer
+    value or expression. In other cases, a routine may consider
+    passing anything but an integer-equivalent to be an error;
+    in this case the flag ``strict`` can be set to True and a ValueError
+    will be raised if all arguments cannot pass the int(arg) == arg test.
 
     Examples
     ========
 
     >>> from sympy.ntheory.residue_ntheory import int_tested
-    >>> int_tested(8, 9, 110)
-    (8, 9, 110)
+    >>> from sympy import sqrt
+    >>> n = sqrt(10)
+    >>> int_tested(n)
+    3
+    >>> int_tested(n, strict=True)
+    Traceback (most recent call last):
+    ...
+    ValueError: All arguments were not integers
+
     """
     try:
         j = tuple(j)
@@ -134,7 +146,7 @@ def is_quad_residue(a, p):
 
     legendre_symbol, jacobi_symbol
     """
-    a, p = int_tested((a, p), strict = True)
+    a, p = int_tested((a, p), strict=True)
     if p < 1:
         raise ValueError('p must be > 0')
     if a >= p or a < 0:
