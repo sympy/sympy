@@ -866,6 +866,7 @@ class Expr(Basic, EvalfMixin):
         >>> (x + 2*y).coeff(1)
         x
         >>> (3 + 2*x + 4*x**2).coeff(1)
+        0
 
         You can select terms independent of x by making n=0; in this case
         expr.as_independent(x)[0] is returned (and 0 will be returned instead
@@ -880,7 +881,7 @@ class Expr(Basic, EvalfMixin):
         [1, 3, 3, 2]
         >>> eq -= 2
         >>> [eq.coeff(x, i) for i in reversed(range(4))]
-        [1, 3, 3, None]
+        [1, 3, 3, 0]
 
         You can select terms that have a numerical term in front of them:
 
@@ -897,9 +898,11 @@ class Expr(Basic, EvalfMixin):
         >>> (3 + 2*x + 4*x**2).coeff(x**2)
         4
         >>> (3 + 2*x + 4*x**2).coeff(x**3)
+        0
         >>> (z*(x + y)**2).coeff((x + y)**2)
         z
         >>> (z*(x + y)**2).coeff(x + y)
+        0
 
         In addition, no factoring is done, so 1 + z*(1 + y) is not obtained
         from the following:
@@ -923,15 +926,16 @@ class Expr(Basic, EvalfMixin):
         >>> (n*m + m*n*m).coeff(n, right=True) # = (1 + m)*n*m
         m
 
-        If there is more than one possible coefficient None is returned:
+        If there is more than one possible coefficient 0 is returned:
 
         >>> (n*m + m*n).coeff(n)
+        0
 
         If there is only one possible coefficient, it is returned:
 
-        >>> (n*m + o*m*n).coeff(m*n)
-        o
-        >>> (n*m + o*m*n).coeff(m*n, right=1)
+        >>> (n*m + x*m*n).coeff(m*n)
+        x
+        >>> (n*m + x*m*n).coeff(m*n, right=1)
         1
 
         See Also
@@ -942,33 +946,42 @@ class Expr(Basic, EvalfMixin):
         as_independent: a method to separate x dependent terms/factors from others
 
         """
+        from sympy.ntheory.residue_ntheory import int_tested
+
         x = sympify(x)
         if not isinstance(x, Basic):
-            return None
+            return S.Zero
+
+        n = int_tested(n)
+
         if not x:
-            return None
+            return S.Zero
+
         if x == self:
             if n == 1:
                 return S.One
-            return None
+            return S.Zero
+
         if x is S.One:
             co = [a for a in Add.make_args(self)
                   if a.as_coeff_Mul()[0] is S.One]
             if not co:
-                return None
+                return S.Zero
             return Add(*co)
+
         if n == 0:
             if x.is_Add and self.is_Add:
                 c = self.coeff(x, right=right)
-                if c is None:
-                    return None
+                if not c:
+                    return S.Zero
                 if not right:
                     return self - Add(*[a*x for a in Add.make_args(c)])
                 return self - Add(*[x*a for a in Add.make_args(c)])
-            return self.as_independent(x, as_Add=not self.is_Mul)[0] or None
+            return self.as_independent(x, as_Add=not self.is_Mul)[0]
 
+        # continue with the full method, looking for this power of x:
         x = x**n
-            
+
         def incommon(l1, l2):
             if not l1 or not l2:
                 return []
@@ -1015,7 +1028,7 @@ class Expr(Basic, EvalfMixin):
         self_c = self.is_commutative
         x_c = x.is_commutative
         if self_c and not x_c:
-            return None
+            return S.Zero
 
         if self_c:
             xargs = x.args_cnc(cset=True, warn=False)[0]
@@ -1027,7 +1040,7 @@ class Expr(Basic, EvalfMixin):
                 if len(resid) + len(xargs) == len(margs):
                     co.append(Mul(*resid))
             if co == []:
-                return None
+                return S.Zero
             elif co:
                 return Add(*co)
         elif x_c:
@@ -1040,7 +1053,7 @@ class Expr(Basic, EvalfMixin):
                 if len(resid) + len(xargs) == len(margs):
                     co.append(Mul(*(list(resid) + nc)))
             if co == []:
-                return None
+                return S.Zero
             elif co:
                 return Add(*co)
         else: # both nc
@@ -1055,7 +1068,7 @@ class Expr(Basic, EvalfMixin):
                     co.append((resid, nc))
             # now check the non-comm parts
             if not co:
-                return None
+                return S.Zero
             if all(n == co[0][1] for r, n in co):
                 ii = find(co[0][1], nx, right)
                 if ii is not None:
@@ -1102,7 +1115,7 @@ class Expr(Basic, EvalfMixin):
                     else:
                         return Mul(*n[ii+len(nx):])
 
-            return None
+            return S.Zero
 
     def as_expr(self, *gens):
         """

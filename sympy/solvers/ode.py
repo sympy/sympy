@@ -761,8 +761,8 @@ def classify_ode(eq, func=None, dict=False, prep=True):
             u = Dummy('u')
             ind, dep = (reduced_eq + u).as_independent(f)
             ind, dep = [tmp.subs(u, 0) for tmp in [ind, dep]]
-        r = {a: dep.coeff(df) or S.Zero, # if we get None for coeff, take 0
-             b: dep.coeff(f(x)) or S.Zero, # ditto
+        r = {a: dep.coeff(df),
+             b: dep.coeff(f(x)),
              c: ind}
         # double check f[a] since the preconditioning may have failed
         if not r[a].has(f) and (r[a]*df + r[b]*f(x) + r[c]).expand() - reduced_eq == 0:

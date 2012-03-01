@@ -178,7 +178,7 @@ class exp(ExpBase):
                 return S.NaN
 
             coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
-            if coeff is not None:
+            if coeff:
                 if (2*coeff).is_integer:
                     if coeff.is_even:
                         return S.One
