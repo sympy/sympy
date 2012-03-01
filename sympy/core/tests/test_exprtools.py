@@ -1,6 +1,7 @@
 """Tests for tools for manipulating of large commutative expressions. """
 
-from sympy import S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, Interval
+from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple,
+                   Interval, O, symbols, simplify, collect)
 from sympy.abc import a, b, t, x, y, z
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
                                   gcd_terms, factor_terms)
@@ -90,6 +91,13 @@ def test_gcd_terms():
     garg = 2*x*(x + 2*y)
     assert gcd_terms(arg) == garg
     assert gcd_terms(sin(arg)) == sin(garg)
+
+    # issue 3040-like
+    alpha, alpha1, alpha2, alpha3 = symbols('alpha:4')
+    a = alpha**2 - alpha*x**2 + alpha + x**3 - x*(alpha + 1)
+    rep = (alpha, (1 + sqrt(5))/2 + alpha1*x + alpha2*x**2 + alpha3*x**3)
+    s = (a/(x - alpha)).subs(*rep).series(x, 0, 1)
+    assert simplify(collect(s, x)) == -sqrt(5)/2 - S(3)/2 + O(x)
 
 def test_factor_terms():
     A = Symbol('A', commutative=False)

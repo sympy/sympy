@@ -402,10 +402,30 @@ def gcd_terms(terms, isprimitive=False, clear=True):
     (x + y)/2
 
     """
+    def mask(terms):
+        """replace nc portions of each term with a unique Dummy symbols
+        and return the replacements to restore them"""
+        args = [(a, []) if a.is_commutative else a.args_cnc() for a in terms]
+        reps = []
+        for i, (c, nc) in enumerate(args):
+            if nc:
+                nc = Mul._from_args(nc)
+                d = Dummy()
+                reps.append((d, nc))
+                c.append(d)
+                args[i] = Mul._from_args(c)
+            else:
+                args[i] = c
+        return args, dict(reps)
+
     terms = sympify(terms)
     isexpr = isinstance(terms, Expr)
     if not isexpr or terms.is_Add:
+        if isexpr: # hence an Add
+            terms = list(terms.args)
+        terms, reps = mask(terms)
         cont, numer, denom = _gcd_terms(terms, isprimitive)
+        numer = numer.xreplace(reps)
         coeff, factors = cont.as_coeff_Mul()
         return _keep_coeff(coeff, factors*numer/denom, clear=clear)
 
@@ -483,16 +503,7 @@ def factor_terms(expr, radical=False, clear=False):
         return expr.func(*newargs)
 
     cont, p = expr.as_content_primitive(radical=radical)
-    list_args, nc = zip(*[ai.args_cnc() for ai in Add.make_args(p)])
-    list_args = list(list_args)
-    nc = [((Dummy(), Mul._from_args(i)) if i else None) for i in nc]
-    ncreps = dict([i for i in nc if i is not None])
-    for i, a in enumerate(list_args):
-        if nc[i] is not None:
-            a.append(nc[i][0])
-        a = Mul._from_args(a) # gcd_terms will fix up ordering
-        list_args[i] = gcd_terms(a, isprimitive=True, clear=clear)
-        # cancel terms that may not have cancelled
+    list_args = [gcd_terms(a, isprimitive=True, clear=clear) for a in Add.make_args(p)]
     p = Add._from_args(list_args) # gcd_terms will fix up ordering
-    p = gcd_terms(p, isprimitive=True, clear=clear).xreplace(ncreps)
+    p = gcd_terms(p, isprimitive=True, clear=clear)
     return _keep_coeff(cont, p, clear=clear)
