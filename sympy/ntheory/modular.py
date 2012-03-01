@@ -75,8 +75,8 @@ def crt(m, v, symmetric=False, check=True):
     sympy.polys.galoistools.gf_crt : low level crt routine used by this routine
     """
     if check:
-        m = int_tested(*m)
-        v = int_tested(*v)
+        m = int_tested(m, strict=True)
+        v = int_tested(v, strict=True)
 
     result = gf_crt(v, m, ZZ)
     mm = prod(m)
@@ -204,7 +204,7 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
     symmetric = hint.get('symmetric', False)
 
     if hint.get('check', True):
-        rm = [int_tested(*pair) for pair in rm]
+        rm = [int_tested(pair, strict=True) for pair in rm]
 
         # ignore redundant pairs but raise an error otherwise; also
         # make sure that a unique set of bases is sent to gf_crt if
