@@ -211,7 +211,7 @@ def real_root(arg, n=None):
     root, sqrt
     """
     if n is not None:
-        n = int_tested(n)
+        n = int_tested(n, strict=True)
         rv = C.Pow(arg, Rational(1, n))
         if n % 2 == 0:
             return rv

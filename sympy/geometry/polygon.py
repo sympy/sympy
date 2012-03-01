@@ -1022,7 +1022,7 @@ class RegularPolygon(Polygon):
         if not isinstance(r, Expr):
             raise GeometryError("r must be an Expr object, not %s" % r)
         if n.is_Number:
-            int_tested(n) # let an error raise if necessary
+            int_tested(n, strict=True) # let an error raise if necessary
             if n < 3:
                 raise GeometryError("n must be a >= 3, not %s" % n)
 
