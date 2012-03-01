@@ -1,6 +1,6 @@
 from sympy.core.numbers import igcd
 from primetest import isprime
-from factor_ import factorint, trailing
+from factor_ import factorint, trailing, totient
 
 def int_tested(*j):
     """Return all args as integers after confirming that they are integers.
@@ -18,28 +18,6 @@ def int_tested(*j):
     if len(i) == 1:
         return i[0]
     return i
-
-def totient_(n):
-    """Returns the number of integers less than n and relatively prime to n.
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory import totient_
-    >>> totient_(6)
-    2
-    >>> totient_(67)
-    66
-
-    """
-    n = int_tested(n)
-    if n < 1:
-        raise ValueError("n must be a positive integer")
-    tot = 0
-    for x in xrange(1, n):
-        if igcd(x, n) == 1:
-            tot += 1
-    return tot
 
 
 def n_order(a, n):
@@ -59,7 +37,7 @@ def n_order(a, n):
     a, n = int_tested(a, n)
     if igcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
-    group_order = totient_(n)
+    group_order = totient(n)
     factors = factorint(group_order)
     order = 1
     if a > n:
@@ -102,7 +80,7 @@ def is_primitive_root(a, p):
         raise ValueError("The two numbers should be relatively prime")
     if a > p:
         a = a % p
-    if n_order(a, p) == totient_(p):
+    if n_order(a, p) == totient(p):
         return True
     else:
         return False
