@@ -74,6 +74,7 @@ class Sieve:
         >>> sieve[10] == 29
         True
         """
+        n = int_tested(n, strict=False)
         while len(self._list) < n:
             self.extend(int(self._list[-1] * 1.5))
 
@@ -113,7 +114,9 @@ class Sieve:
         >>> sieve.search(25)
         (9, 10)
         """
-        assert n >= 2
+        n = int_tested(n, strict=False)
+        if n < 2:
+            raise ValueError("n must be greater than 1")
         if n > self._list[-1]:
             self.extend(n)
         b = bisect(self._list, n)
@@ -164,8 +167,9 @@ def prime(n):
         primerange : Generate all primes in a given range
         primepi : Return the number of primes less than or equal to n
     """
-
-    assert n > 0
+    n = int_tested(n, strict=False)
+    if n < 1:
+        raise ValueError("n must be a positive number");
     return sieve[n]
 
 def primepi(n):
@@ -187,7 +191,7 @@ def primepi(n):
         primerange : Generate all primes in a given range
         prime : Return the nth prime
     """
-
+    n = int_tested(n, strict=False)
     if n < 2:
         return 0
     else:
@@ -212,7 +216,7 @@ def nextprime(n, i=1):
         primerange : Generate all primes in a given range
 
     """
-
+    n = int_tested(n, strict=False)
     if i > 1:
         pr = n
         j = 1
@@ -264,8 +268,7 @@ def prevprime(n):
         nextprime : Return the ith prime greater than n
         primerange : Generates all primes in a given range
     """
-
-    n = int(n)
+    n = int_tested(n, strict=False)
     if n < 3:
         raise ValueError("no preceding primes")
     if n < 8:
@@ -408,7 +411,7 @@ def primorial(n, nth=True):
     primerange : Generate all primes in a given range
 
     """
-
+    n = int_tested(n, strict=False)
     if n < 1:
         raise ValueError("primorial argument must be >= 1")
     p = 1
@@ -505,3 +508,5 @@ def cycle_length(f, x0, nmax=None, values=False):
         if mu:
             mu -= 1
         yield lam, mu
+
+from sympy.ntheory.residue_ntheory import int_tested

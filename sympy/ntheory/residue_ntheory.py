@@ -2,22 +2,38 @@ from sympy.core.numbers import igcd
 from primetest import isprime
 from factor_ import factorint, trailing
 
-def int_tested(*j):
-    """Return all args as integers after confirming that they are integers.
+def int_tested(*j, **hint):
+    """
+    Return all args as Python integers.
+
+    In some cases a routine needs to work with integers
+    but it is convenient to allow the user to pass a non-integer
+    value or expression. In this case, the flag ``strict`` can be set
+    to False. The default behavior is to raise an error if any argument
+    cannot pass an int(arg) == arg test.
 
     Examples
     ========
 
     >>> from sympy.ntheory.residue_ntheory import int_tested
-    >>> int_tested(8, 9, 110)
-    (8, 9, 110)
+    >>> from sympy import sqrt
+    >>> n = sqrt(10)
+    >>> int_tested(n, strict=False)
+    3
+    >>> int_tested(n)
+    Traceback (most recent call last):
+    ...
+    ValueError: All arguments were not integers
+
     """
     i = tuple([int(i) for i in j])
-    if i != j:
-        raise ValueError('all arguments were not integers')
+    if hint.get('strict', True):
+        if i != j:
+            raise ValueError('all arguments were not integers')
     if len(i) == 1:
         return i[0]
     return i
+
 
 def totient_(n):
     """Returns the number of integers less than n and relatively prime to n.
@@ -43,9 +59,10 @@ def totient_(n):
 
 
 def n_order(a, n):
-    """Returns the order of a modulo n
-    Order of a modulo n is the smallest integer
-    k such that a^k leaves a remainder of 1 with n.
+    """Returns the order of ``a`` modulo ``n``.
+
+    The order of ``a`` modulo ``n`` is the smallest integer
+    ``k`` such that ``a**k`` leaves a remainder of 1 with ``n``.
 
     Examples
     ========
@@ -76,12 +93,12 @@ def n_order(a, n):
 
 def is_primitive_root(a, p):
     """
-    Returns True if ``a`` is a primitive root of ``n``
+    Returns True if ``a`` is a primitive root of ``p``
 
-    ``a`` is said to be the primitive root of ``n`` if gcd(a, n) == 1 and
-    totient(n) is the smallest positive number s.t.
+    ``a`` is said to be the primitive root of ``p`` if gcd(a, p) == 1 and
+    totient(p) is the smallest positive number s.t.
 
-        a**totient(n) cong 1 mod(n)
+        a**totient(p) cong 1 mod(p)
 
     Examples
     ========
@@ -191,7 +208,7 @@ def legendre_symbol(a, p):
 def jacobi_symbol(m, n):
     """
     Returns the product of the legendre_symbol(m, p)
-    for all the prime factors p of n.
+    for all the prime factors, p, of n.
 
     Returns
     =======
