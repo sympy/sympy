@@ -283,12 +283,9 @@ class ProductDomain(RandomDomain):
     sympy.stats.frv.ProductFiniteDomain
     """
     is_ProductDomain = True
-    def __new__(cls, *domains):
 
-        symbolslist = sumsets([domain.symbols for domain in domains])
-        symbols = frozenset(symbolslist)
-        if len(symbols) != len(symbolslist):
-            raise ValueError("Overlapping Domains")
+    def __new__(cls, *domains):
+        symbols = sumsets([domain.symbols for domain in domains])
 
         # Flatten any product of products
         domains2 = []
@@ -338,16 +335,13 @@ class ProductDomain(RandomDomain):
     def as_boolean(self):
         return And(*[domain.as_boolean() for domain in self.domains])
 
-def is_random(x):
-    return isinstance(x, RandomSymbol)
-
 def random_symbols(expr):
     """
     Returns all RandomSymbols within a SymPy Expression.
     """
     try:
-        return [s for s in expr.free_symbols if is_random(s)]
-    except:
+        return list(expr.atoms(RandomSymbol))
+    except AttributeError:
         return []
 
 def pspace(expr):
