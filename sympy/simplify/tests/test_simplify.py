@@ -4,8 +4,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float, radsimp, collect_const, polygamma,
-    factor_nc, Sum, hyper)
+    factor, Mul, O, hyper, Add, Float, radsimp, collect_const, hyper)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
@@ -1032,38 +1031,3 @@ def test_unpolarify():
 def test_issue_2998():
     collect(a*y**(2.0*x)+b*y**(2.0*x),y**(x)) == y**(2.0*x)*(a + b)
     collect(a*2**(2.0*x)+b*2**(2.0*x),2**(x)) == 2**(2.0*x)*(a + b)
-
-@XFAIL
-def test_factorial_simplify():
-    # simplify(factorial(x + 1).diff(x) - ((x + 1)*factorial(x)).diff(x))) == 0
-    assert simplify(x*polygamma(0, x + 1) - x*polygamma(0, x + 2) +
-    polygamma(0, x + 1) - polygamma(0, x + 2) + 1) == 0
-
-def test_factor_nc():
-    x, y = symbols('x,y')
-    n, m, o = symbols('n,m,o', commutative=False)
-    assert factor_nc(x + x*y) == x*(1 + y)
-    assert factor_nc(x*n + n) == n*(x + 1)
-    assert factor_nc(x*n + n*m) == n*(x + m)
-    assert factor_nc(x*n + m*n) == (x + m)*n
-    assert factor_nc(x*n*m*o*n + n*m*n*o*m*n) == n*m*(x*o + n*o*m)*n
-    s = Sum(x, (x, 1, 2))
-    assert factor_nc(x*s + x) == x*(1 + s)
-    assert factor_nc(x*s**2 + x*s) == x*(1 + s)*s
-    assert factor_nc(x*sin(s) + x) == x*(1 + sin(s))
-    assert factor_nc(n**2 + 2*n + 1) == (1 + n)**2
-
-    eq = (x + n)*(x + m)*(x+y)
-    assert factor_nc(eq.expand()) == eq
-    eq = (x + x*n*m)
-    assert factor_nc(eq.expand()) == x*(n*m + 1)
-    eq = (x**2 + x*n*m)
-    assert factor_nc(eq.expand()) == x*(n*m + x)
-    eq = (x + x**2*n*m)
-    assert factor_nc(eq.expand()) == x*(x*n*m + 1)
-    eq = (x*n + x**2*n*m)
-    assert factor_nc(eq.expand()) == x*n*(x*m + 1)
-    eq = (x*m*n + x**2*n*m)
-    assert factor_nc(eq.expand()) == x*(m*n + x*n*m)
-    eq = (n**3 - n*m*n**2)
-    assert factor_nc(eq) == n*(1 - m)*n**2

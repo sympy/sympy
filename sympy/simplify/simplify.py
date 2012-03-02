@@ -15,8 +15,6 @@ from sympy.core.rules import Transform
 
 from sympy.functions import gamma, exp, sqrt, log, root, exp_polar
 from sympy.utilities import flatten, default_sort_key
-from sympy.utilities.iterables import (common_prefix, common_suffix,
-                                       preorder_traversal, variations)
 
 from sympy.simplify.cse_main import cse
 from sympy.simplify.sqrtdenest import sqrtdenest
@@ -598,11 +596,17 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     string 'coeff'. (Passing None for symbols will return the
     expression in a dictionary keyed to 'coeff'.)
 
-    If force=True, then power bases will only be separated if assumptions
-    allow.
+    If force=True, then bases of powers will be separated regardless
+    of assumptions on the symbols involved.
 
-    Note: the order of the factors is determined by Mul, so that the
+    Notes
+    =====
+    The order of the factors is determined by Mul, so that the
     separated expressions may not necessarily be grouped together.
+
+    Although factoring is necessary to separate variables in some
+    expressions, it is not necessary in all cases, so one should not
+    count on the returned factors being factored.
 
     Examples
     ========
@@ -613,18 +617,18 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     (x*y)**y
     >>> separatevars((x*y)**y, force=True)
     x**y*y**y
-    >>> separatevars(2*x**2*z*sin(y)+2*z*x**2)
-    2*x**2*z*(sin(y) + 1)
 
-    >>> separatevars(2*x+y*sin(x))
-    2*x + y*sin(x)
-    >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, symbols=(x, y), dict=True)
+    >>> e = 2*x**2*z*sin(y)+2*z*x**2
+    >>> separatevars(e)
+    2*x**2*z*(sin(y) + 1)
+    >>> separatevars(e, symbols=(x, y), dict=True)
     {'coeff': 2*z, x: x**2, y: sin(y) + 1}
-    >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, [x, y, alpha], dict=True)
+    >>> separatevars(e, [x, y, alpha], dict=True)
     {'coeff': 2*z, alpha: 1, x: x**2, y: sin(y) + 1}
 
     If the expression is not really separable, or is only partially
-    separable, separatevars will do the best it can to separate it.
+    separable, separatevars will do the best it can to separate it
+    by using factoring.
 
     >>> separatevars(x + x*y - 3*x**2)
     -x*(3*x - y - 1)
@@ -632,10 +636,10 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     If the expression is not separable then expr is returned unchanged
     or (if dict=True) then None is returned.
 
-    >>> eq = 2*x+y*sin(x)
+    >>> eq = 2*x + y*sin(x)
     >>> separatevars(eq) == eq
     True
-    >>> separatevars(2*x+y*sin(x), symbols=(x, y), dict=True) == None
+    >>> separatevars(2*x + y*sin(x), symbols=(x, y), dict=True) == None
     True
 
     """
@@ -693,7 +697,7 @@ def _separatevars(expr, force):
     if len(nonsepar.free_symbols) > 1:
         _expr = nonsepar
         _expr, reps = posify(_expr) if force else (_expr, {})
-        _expr = (factor_nc(_expr)).subs(reps)
+        _expr = (factor(_expr)).subs(reps)
 
         if not _expr.is_Add:
             nonsepar = _expr
@@ -730,205 +734,6 @@ def _separatevars_dict(expr, symbols):
         ret[k] = Mul(*v)
 
     return ret
-
-def _mask_nc(eq):
-    """Return ``eq`` with non-commutative objects replaced with dummy symbols.
-    A dictionary that can be used to restore the original values is
-    returned: if it is None, the expression is noncommutative and cannot
-    be made commutative. The third value returned is a list of any
-    non-commutative symbols that appeared in the equation.
-
-    >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
-    >>> from sympy import Dummy, symbols
-    >>> from sympy.abc import x, y
-    >>> from sympy.simplify.simplify import _mask_nc
-    >>> A, B = symbols('A,B', commutative=False)
-    >>> Dummy._count = 0 # reset for doctest purposes
-    >>> _mask_nc(1 + x + Commutator(A, B))
-    (_0 + x + 1, {_0: Commutator(A, B)}, [B, A])
-    >>> _mask_nc(NO(Fd(x)*F(y)))
-    (_1, {_1: NO(CreateFermion(x)*AnnihilateFermion(y))}, [])
-
-    """
-    expr = eq
-    if expr.is_commutative:
-        return eq, {}, []
-    # if there is only one nc symbol, it can be factored regularly but
-    # polys is going to complain, so replace it with a dummy
-    rep = []
-    nc_syms = [s for s in expr.free_symbols if not s.is_commutative]
-    if len(nc_syms) == 1:
-        nc = Dummy()
-        rep.append((nc_syms.pop(), nc))
-        expr = expr.subs(rep)
-    # even though the noncommutative symbol may be gone, the expression
-    # might still appear noncommutative; if it's a non-elementary object
-    # we will replace it, but if it is a Symbol, Add, Mul, Pow we leave
-    # it alone. Symbols (past the first one) are not replaced unless the
-    # ``all`` flag is set since any factoring that is done must keep
-    # track of nc ordering within Muls
-    if nc_syms or not expr.is_commutative:
-        pot = preorder_traversal(expr)
-        for i, a in enumerate(pot):
-            if a in [r[0] for r in rep]:
-                pass
-            elif (
-                not a.is_commutative and
-                not (a.is_Symbol or a.is_Add or a.is_Mul or a.is_Pow)
-                ):
-                rep.append((a, Dummy()))
-            else:
-                continue # don't skip
-            pot.skip() # don't go any further
-        expr = expr.subs(rep)
-    return expr, dict([(v, k) for k, v in rep]) or None, nc_syms
-
-def factor_nc(expr, **kwargs):
-    """Return the factored form of ``expr`` while handling non-commutative
-    expressions.
-
-    **examples**
-    >>> from sympy.simplify.simplify import factor_nc
-    >>> from sympy import Symbol
-    >>> from sympy.abc import x
-    >>> A = Symbol('A', commutative=False)
-    >>> B = Symbol('B', commutative=False)
-    >>> factor_nc((x**2 + 2*A*x + A**2).expand())
-    (x + A)**2
-    >>> factor_nc(((x + A)*(x + B)).expand())
-    (x + A)*(x + B)
-    """
-    expr, rep, nc_symbols = _mask_nc(expr)
-    if rep is not None:
-        return factor(expr, **kwargs).subs(rep)
-    else:
-        args = [a.args_cnc() for a in Add.make_args(expr)]
-        c = g = l = r = S.One
-        hit = False
-        # find any commutative gcd term
-        for i, a in enumerate(args):
-            if i == 0:
-                c = Mul._from_args(a[0])
-            elif a[0]:
-                c = gcd(c, Mul._from_args(a[0]))
-            else:
-                c = S.One
-        if c is not S.One:
-            hit = True
-            c, g = c.as_coeff_Mul()
-            for i, (cc, _) in enumerate(args):
-                cc = list(Mul.make_args(Mul._from_args(list(cc))/g))
-                args[i][0] = cc
-        # find any noncommutative common prefix
-        for i, a in enumerate(args):
-            if i == 0:
-                n = a[1][:]
-            else:
-                n = common_prefix(n, a[1])
-            if not n:
-                # is there a power that can be extracted?
-                if not args[0][1]:
-                    break
-                b, e = args[0][1][0].as_base_exp()
-                ok = False
-                if e.is_Integer:
-                    for t in args:
-                        if not t[1]:
-                            break
-                        bt, et = t[1][0].as_base_exp()
-                        if et.is_Integer and bt == b:
-                            e = min(e, et)
-                        else:
-                            break
-                    else:
-                        ok = hit = True
-                        l = b**e
-                        il = b**-e
-                        for i, a in enumerate(args):
-                            args[i][1][0] = il*args[i][1][0]
-                        break
-                if not ok:
-                    break
-        else:
-            hit = True
-            lenn = len(n)
-            l = Mul(*n)
-            for i, a in enumerate(args):
-                args[i][1] = args[i][1][lenn:]
-        # find any noncommutative common suffix
-        for i, a in enumerate(args):
-            if i == 0:
-                n = a[1][:]
-            else:
-                n = common_suffix(n, a[1])
-            if not n:
-                # is there a power that can be extracted?
-                if not args[0][1]:
-                    break
-                b, e = args[0][1][-1].as_base_exp()
-                ok = False
-                if e.is_Integer:
-                    for t in args:
-                        if not t[1]:
-                            break
-                        bt, et = t[1][-1].as_base_exp()
-                        if et.is_Integer and bt == b:
-                            e = min(e, et)
-                        else:
-                            break
-                    else:
-                        ok = hit = True
-                        r = b**e
-                        il = b**-e
-                        for i, a in enumerate(args):
-                            args[i][1][-1] = args[i][1][-1]*il
-                        break
-                if not ok:
-                    break
-        else:
-            hit = True
-            lenn = len(n)
-            r = Mul(*n)
-            for i, a in enumerate(args):
-                args[i][1] = a[1][:len(a[1]) - lenn]
-        if hit:
-            args = [Add(*[Mul(*cc)*Mul(*nc) for cc, nc in args])]
-        else:
-            args = list(Mul.make_args(expr))
-
-        rep1 = [(n, Dummy()) for n in nc_symbols]
-        unrep1 = [(v, k) for k, v in rep1]
-        unrep1.reverse()
-        for ia, a in enumerate(args):
-            if not a.is_Add:
-                continue
-            new_expr, r2, _ = _mask_nc(a.subs(rep1))
-            if r2 is not None:
-                newa = factor(new_expr)
-                if newa.is_Mul and all(ai.is_Add for ai in newa.args):
-                    args[ia] = newa.subs(r2).subs(unrep1)
-        mid = Mul(*args)
-        if mid.is_Mul:
-            # XXX TODO there should be a way to inspect what order the terms
-            # must be in and just select the plausible ordering without
-            # checking permutations
-            cfac = []
-            ncfac = []
-            for f in mid.args:
-                if f.is_commutative:
-                    cfac.append(f)
-                else:
-                    ncfac.append(f)
-            easy = g*Mul(*cfac)*l
-            target = expand_mul(expr/c)
-            for s in variations(ncfac, len(ncfac)):
-                ok = easy*Mul(*s)*r
-                if expand_mul(ok) == target:
-                    new_expr = ok
-                    break
-        else:
-            new_expr = g*l*mid*r
-        return _keep_coeff(c, new_expr)
 
 def ratsimp(expr):
     """

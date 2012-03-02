@@ -1,10 +1,10 @@
 """Tests for tools for manipulating of large commutative expressions. """
 
 from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple,
-                   Interval, O, symbols, simplify, collect)
+                   Interval, O, symbols, simplify, collect, Sum)
 from sympy.abc import a, b, t, x, y, z
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
-                                  gcd_terms, factor_terms)
+                                  gcd_terms, factor_terms, factor_nc)
 from sympy.core.mul import _keep_coeff as _keep_coeff
 
 def test_decompose_power():
@@ -136,3 +136,45 @@ def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)
     assert e.xreplace({}) == e
     assert e.xreplace({y: x}) == e
+
+def test_factor_nc():
+    x, y = symbols('x,y')
+    n, m, o = symbols('n,m,o', commutative=False)
+
+    # mul and multinomial expansion is needed
+    from sympy.simplify.simplify import _mexpand
+    e = x*(1 + y)**2
+    assert _mexpand(e) == x + x*2*y + x*y**2
+
+    def factor_nc_test(e):
+        ex = _mexpand(e)
+        assert ex.is_Add
+        f = factor_nc(ex)
+        assert not f.is_Add and _mexpand(f) == ex
+
+    factor_nc_test(x*(1 + y))
+    factor_nc_test(n*(x + 1))
+    factor_nc_test(n*(x + m))
+    factor_nc_test((x + m)*n)
+    factor_nc_test(n*m*(x*o + n*o*m)*n)
+    s = Sum(x, (x, 1, 2))
+    factor_nc_test(x*(1 + s))
+    factor_nc_test(x*(1 + s)*s)
+    factor_nc_test(x*(1 + sin(s)))
+    factor_nc_test((1 + n)**2)
+
+    factor_nc_test((x + n)*(x + m)*(x+y))
+    factor_nc_test(x*(n*m + 1))
+    factor_nc_test(x*(n*m + x))
+    factor_nc_test(x*(x*n*m + 1))
+    factor_nc_test(x*n*(x*m + 1))
+    factor_nc_test(x*(m*n + x*n*m))
+    factor_nc_test(n*(1 - m)*n**2)
+
+    factor_nc_test((n + m)**2)
+    factor_nc_test((n - m)*(n + m)**2)
+    factor_nc_test((n + m)**2*(n - m))
+    factor_nc_test((m - n)*(n + m)**2*(n - m))
+
+    assert factor_nc(n*(n + n*m)) == n**2*(1 + m)
+    assert factor_nc(m*(m*n + n*m*n**2)) == m*(m + n*m*n)*n
