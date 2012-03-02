@@ -481,7 +481,9 @@ class SpinOpBase(object):
         return self._apply_op(ket, 'Jz', **options)
 
     def _apply_operator_TensorProduct(self, tp, **options):
-        if isinstance(self, J2Op):
+        # Uncoupling operator is only easily found for coordinate basis spin operators
+        # TODO: add methods for uncoupling operators
+        if not (isinstance(self, JxOp) or isinstance(self, JyOp) or isinstance(self, JzOp)):
             raise NotImplementedError
         result = []
         for n in range(len(tp.args)):
@@ -492,6 +494,7 @@ class SpinOpBase(object):
             result.append(tp.__class__(*arg))
         return Add(*result).expand()
 
+    # TODO: move this to qapply_Mul
     def _apply_operator_Sum(self, s, **options):
         new_func = qapply(self * s.function)
         if new_func == self*s.function:
@@ -706,7 +709,27 @@ class J2Op(SpinOpBase, HermitianOperator):
     def _eval_commutator_JminusOp(self, other):
         return S.Zero
 
+    def _apply_operator_JxKet(self, ket, **options):
+        j = ket.j
+        return hbar**2*j*(j+1)*ket
+
+    def _apply_operator_JxKetCoupled(self, ket, **options):
+        j = ket.j
+        return hbar**2*j*(j+1)*ket
+
+    def _apply_operator_JyKet(self, ket, **options):
+        j = ket.j
+        return hbar**2*j*(j+1)*ket
+
+    def _apply_operator_JyKetCoupled(self, ket, **options):
+        j = ket.j
+        return hbar**2*j*(j+1)*ket
+
     def _apply_operator_JzKet(self, ket, **options):
+        j = ket.j
+        return hbar**2*j*(j+1)*ket
+
+    def _apply_operator_JzKetCoupled(self, ket, **options):
         j = ket.j
         return hbar**2*j*(j+1)*ket
 
