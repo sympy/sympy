@@ -654,9 +654,11 @@ def sample_iter(expr, given=None, numsamples=S.Infinity, **kwargs):
     sample_iter_subs
     """
     # lambdify is much faster but not as robust
-    try:          return sample_iter_lambdify(expr, given, numsamples, **kwargs)
+    try:
+        return sample_iter_lambdify(expr, given, numsamples, **kwargs)
     # use subs when lambdify fails
-    except TypeError: return sample_iter_subs(expr, given, numsamples, **kwargs)
+    except TypeError:
+        return sample_iter_subs(expr, given, numsamples, **kwargs)
 
 def sample_iter_lambdify(expr, given=None, numsamples=S.Infinity, **kwargs):
     """
@@ -754,8 +756,10 @@ def sampling_P(condition, given=None, numsamples=1, evalf=True, **kwargs):
             count_false += 1
 
     result = S(count_true) / numsamples
-    if evalf:   return result.evalf()
-    else:       return result
+    if evalf:
+        return result.evalf()
+    else:
+        return result
 
 def sampling_E(condition, given=None, numsamples=1, evalf=True, **kwargs):
     """
@@ -770,8 +774,10 @@ def sampling_E(condition, given=None, numsamples=1, evalf=True, **kwargs):
     samples = sample_iter(condition, given, numsamples=numsamples, **kwargs)
 
     result = Add(*list(samples)) / numsamples
-    if evalf:   return result.evalf()
-    else:       return result
+    if evalf:
+        return result.evalf()
+    else:
+        return result
 
 def dependent(a, b):
     """

@@ -1,4 +1,5 @@
-from rv import (P, E, Density, Where, Given, pspace, CDF, Sample, sample_iter, random_symbols, independent, dependent)
+from rv import (P, E, Density, Where, Given, pspace, CDF, Sample, sample_iter,
+        random_symbols, independent, dependent)
 from sympy import sqrt
 
 __all__ = ['P', 'E', 'Density', 'Where', 'Given', 'Sample', 'CDF', 'pspace',
