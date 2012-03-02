@@ -1,26 +1,18 @@
-from sympy.core import Basic, S, Function, diff, Number, sympify
+from sympy.core import Basic, S, Function, diff, Number, sympify, Tuple
 from sympy.core.relational import Equality, Relational
 from sympy.logic.boolalg import Boolean
 from sympy.core.sets import Set
 from sympy.core.symbol import Dummy
 
-class ExprCondPair(Function):
+class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
 
     true_sentinel = Dummy('True')
 
-    def __new__(cls, *args, **assumptions):
-        if isinstance(args[0], cls):
-            expr = args[0].expr
-            cond = args[0].cond
-        elif len(args) == 2:
-            expr = sympify(args[0])
-            cond = sympify(args[1])
-        else:
-            raise TypeError("args must be a (expr, cond) pair")
+    def __new__(cls, expr, cond):
         if cond is True:
             cond = ExprCondPair.true_sentinel
-        return Basic.__new__(cls, expr, cond, **assumptions)
+        return Tuple.__new__(cls, expr, cond)
 
     @property
     def expr(self):
@@ -37,10 +29,6 @@ class ExprCondPair(Function):
         if self.args[1] == ExprCondPair.true_sentinel:
             return True
         return self.args[1]
-
-    @property
-    def is_commutative(self):
-        return self.expr.is_commutative
 
     @property
     def free_symbols(self):
@@ -99,14 +87,16 @@ class Piecewise(Function):
         newargs = []
         for ec in args:
             pair = ExprCondPair(*ec)
-            cond_type = type(pair.cond)
-            if not (cond_type is bool or issubclass(cond_type, Relational) or \
-                    issubclass(cond_type, Number) or \
-                    issubclass(cond_type, Set) or issubclass(cond_type, Boolean)):
+            cond = pair.cond
+            if cond is False:
+                continue
+            if not isinstance(cond, (bool, Relational, Set, Boolean)):
                 raise TypeError(
                     "Cond %s is of type %s, but must be a bool," \
-                    " Relational, Number or Set" % (pair.cond, cond_type))
+                    " Relational, Number or Set" % (cond, type(cond)))
             newargs.append(pair)
+            if cond is ExprCondPair.true_sentinel:
+                break
 
         if options.pop('evaluate', True):
             r = cls.eval(*newargs)
@@ -117,13 +107,6 @@ class Piecewise(Function):
             return Basic.__new__(cls, *newargs, **options)
         else:
             return r
-
-    def __getnewargs__(self):
-        # Convert ExprCondPair objects to tuples.
-        args = []
-        for expr, condition in self.args:
-            args.append((expr, condition))
-        return tuple(args)
 
     @classmethod
     def eval(cls, *args):
@@ -180,6 +163,10 @@ class Piecewise(Function):
             newargs.append((e, c))
         return Piecewise(*newargs)
 
+    @property
+    def is_commutative(self):
+        return all(expr.is_commutative for expr, _ in self.args)
+
     def _eval_integral(self,x):
         from sympy.integrals import integrate
         return Piecewise(*[(integrate(e, x), c) for e, c in self.args])
@@ -205,12 +192,9 @@ class Piecewise(Function):
         #    -  eg x < 1, x < 3 -> [oo,1],[1,3] instead of [oo,1],[oo,3]
         # 3) Sort the intervals to make it easier to find correct exprs
         for expr, cond in self.args:
-            if isinstance(cond, bool) or cond.is_Number:
-                if cond:
-                    default = expr
-                    break
-                else:
-                    continue
+            if cond is True:
+                default = expr
+                break
             elif isinstance(cond, Equality):
                 continue
 
@@ -289,16 +273,15 @@ class Piecewise(Function):
                    self.args)
         return self.func(*args)
 
+    def _eval_as_leading_term(self, x):
+        # This is completely wrong, cf. issue 3110
+        return self.args[0][0].as_leading_term(x)
+
     @classmethod
     def __eval_cond(cls, cond):
-        """Returns S.One if True, S.Zero if False, or None if undecidable."""
-        if type(cond) == bool or cond.is_number:
-            if cond:
-                return S.One
-            else:
-                return S.Zero
-        elif type(cond) == Set:
-            return None
+        """Return the truth value of the condition."""
+        if cond is True:
+            return True
         return None
 
 def piecewise_fold(expr):

@@ -925,17 +925,13 @@ def _solve(f, *symbols, **flags):
         result = set()
         for expr, cond in f.args:
             candidates = _solve(expr, *symbols)
-            if isinstance(cond, bool) or cond.is_Number:
-                if not cond:
-                    continue
-
+            if cond is True:
                 # Only include solutions that do not match the condition
                 # of any of the other pieces.
                 for candidate in candidates:
                     matches_other_piece = False
                     for other_expr, other_cond in f.args:
-                        if isinstance(other_cond, bool) \
-                            or other_cond.is_Number:
+                        if other_cond is True:
                             continue
                         if bool(other_cond.subs(symbol, candidate)):
                             matches_other_piece = True
