@@ -8,8 +8,8 @@ sympy.stats.rv
 sympy.stats.frv
 """
 
-from rv import (RandomDomain, SingleDomain, ConditionalDomain, ProductDomain,
-        PSpace, SinglePSpace, random_symbols, ProductPSpace)
+from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
+        ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (S, Interval, Dummy, FiniteSet, Mul, Integral, And, Or,
         Piecewise, solve, cacheit, integrate, oo)
@@ -102,12 +102,12 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                     # Add the appropriate Delta to the integrand
                     integrand *= DiracDelta(cond.lhs-cond.rhs)
                 else:
-                    symbols = FiniteSet(cond.free_symbols) & self.symbols
+                    symbols = cond.free_symbols & set(self.symbols)
                     if len(symbols)!=1: # Can't handle x > y
                         raise NotImplementedError(
                             "Multivariate Inequalities not yet implemented")
                     # Can handle x > 0
-                    symbol = tuple(symbols)[0]
+                    symbol = symbols.pop()
                     # Find the limit with x, such as (x, -oo, oo)
                     for i, limit in enumerate(limits):
                         if limit[0]==symbol:
