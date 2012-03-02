@@ -22,11 +22,21 @@ def test_expand_negative_integer_powers():
     assert expr.expand() == 1 / (2*x*y + x**2 + y**2)
     assert expr.expand(multinomial=False) == (x+y)**(-2)
 
-def test_expand_non_commutative_multinomial():
-    x = Symbol('x', commutative=False)
-    y = Symbol('x', commutative=False)
-    assert ((x+y)**2).expand() == x*y + y*x + x**2 + y**2
-    assert ((x+y)**3).expand() == x**2*y + y**2*x + x*y**2 + y*x**2 + x**3 + y**3 + x*y*x + y*x*y
+def test_expand_non_commutative():
+    A = x = Symbol('x', commutative=False)
+    B = y = Symbol('y', commutative=False)
+    a = Symbol('a')
+    i = Symbol('i', integer=True)
+    assert ((x + y)**2).expand() == x*y + y*x + x**2 + y**2
+    assert ((x + y)**3).expand() == (x**2*y + y**2*x + x*y**2 + y*x**2 +
+                                     x**3 + y**3 + x*y*x + y*x*y)
+    # 3120
+    assert ((a*A*B*A**-1)**2).expand() == a**2*A*B**2*A**(-1)
+    assert ((a*A*B*A**-1)**2).expand(deep=False) == a**2*A*B**2*A**(-1)
+    assert ((a*A*B*A**-1)**2).expand(force=True) == a**2*A*B**2*A**(-1)
+    assert ((a*A*B)**2).expand() == a**2*A*B*A*B
+    assert ((a*A)**2).expand() == a**2*A**2
+    assert ((a*A*B)**i).expand() == a**i*(A*B)**i
 
 def test_expand_radicals():
     a = (x + y)**R(1,2)

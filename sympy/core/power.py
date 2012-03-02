@@ -346,9 +346,9 @@ class Pow(Expr):
                         return x.is_nonnegative
                     return x.is_polar
                 sifted = sift(b.args, pred)
-                nonneg = sifted.get(True, [])
-                other = sifted.get(None, [])
-                neg = sifted.get(False, [])
+                nonneg = sifted[True]
+                other = sifted[None]
+                neg = sifted[False]
 
                 # make sure the Number gets pulled out
                 if neg and neg[0].is_Number and neg[0] is not S.NegativeOne:
@@ -364,12 +364,23 @@ class Pow(Expr):
                 nonneg += [-n for n in neg]
 
             if nonneg: # then there's a new expression to return
-                other = [Pow(Mul(*other), e)]
+                d = sift(nonneg, lambda x: x.is_commutative is True)
+                c = d[True]
+                nc = d[False]
+                if not e.is_Integer:
+                    other.extend(nc)
+                    nc = []
+                elif len(nc) == 1:
+                    c.extend(nc)
+                    nc = []
+                else:
+                    nc = [Mul._from_args(nc)]*e
+                other = [Pow(Mul(*other), e)] + nc
                 if deep:
                     return Mul(*([Pow(b.expand(deep=deep, **hints), e)\
-                    for b in nonneg] + other))
+                    for b in c] + other))
                 else:
-                    return Mul(*([Pow(b, e) for b in nonneg] + other))
+                    return Mul(*([Pow(b, e) for b in c] + other))
         return Pow(b, e)
 
     def _eval_expand_mul(self, deep=True, **hints):
