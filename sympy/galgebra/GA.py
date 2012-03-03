@@ -16,6 +16,7 @@ import sys
 import numpy, sympy
 import re as regrep
 import sympy.galgebra.latex_ex
+from sympy.core.decorators import deprecated
 
 NUMPAT = regrep.compile( '([\-0-9])|([\-0-9]/[0-9])')
 """Re pattern for rational number"""
@@ -55,6 +56,10 @@ def is_quasi_unit_numpy_array(array):
         return(True)
     else:
         return(False)
+
+@deprecated
+def set_main(main_program):
+    pass
 
 def plist(lst):
     if type(lst) == list:
@@ -168,6 +173,10 @@ def make_scalars(symnamelst):
         tmp = MV(s,'scalar')
         scalar_lst.append(tmp)
     return(scalar_lst)
+
+@deprecated
+def make_symbols(symnamelst):
+    return sympy.symbols(symnamelst)
 
 def israt(numstr):
     """
