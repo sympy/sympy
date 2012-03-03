@@ -1,4 +1,4 @@
-        MV.setup('e1 e2 e3',metric)
+        e1,e2,e3 = MV.setup('e1 e2 e3')
 
         print 'Example: Reciprocal Frames e1, e2, and e3 unit vectors.\n\n'
 
