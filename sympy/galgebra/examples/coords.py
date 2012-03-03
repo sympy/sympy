@@ -11,10 +11,10 @@ if __name__ == '__main__':
              '0 1 0,'+\
              '0 0 1'
 
-    GA.MV.setup('gamma_x gamma_y gamma_z',metric,True)
+    gamma_x,gamma_y,gamma_z = GA.MV.setup('gamma_x gamma_y gamma_z',metric,True)
     tex.Format()
 
-    coords = GA.make_symbols('r theta phi')
+    coords = r,theta,phi = sympy.symbols('r theta phi')
     x = r*(sympy.cos(theta)*gamma_z+sympy.sin(theta)*\
         (sympy.cos(phi)*gamma_x+sympy.sin(phi)*gamma_y))
     x.set_name('x')

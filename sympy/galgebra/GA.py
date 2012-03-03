@@ -30,9 +30,6 @@ from sympy import Abs as abs_type
 from sympy.core import Mul as mul_type
 from sympy.core import Add as add_type
 
-from inspect import currentframe
-frame = currentframe().f_back
-
 @sympy.vectorize(0)
 def substitute_array(array,*args):
     return(array.subs(*args))
@@ -58,10 +55,6 @@ def is_quasi_unit_numpy_array(array):
         return(True)
     else:
         return(False)
-
-def set_main(main_program):
-    import warnings
-    warnings.warn('set_main is not needed any more', DeprecationWarning, stacklevel=2)
 
 def plist(lst):
     if type(lst) == list:
@@ -165,40 +158,16 @@ def diagpq(p, q=0):
 
 def make_scalars(symnamelst):
     """
-    make_symbols takes a string of symbol names separated by
-    blanks and converts them to MV scalars separately
-    accessible by the main program and addition returns a list
+    make_scalars takes a string of symbol names separated by
+    blanks and converts them to MV scalars and returns a list
     of the symbols.
     """
-    if type(symnamelst) == str:
-        symnamelst = symnamelst.split()
+    symlst = sympy.symbols(symnamelst)
     scalar_lst = []
-    isym = 0
-    for name in symnamelst:
-        tmp = sympy.Symbol(name)
-        tmp = MV(tmp,'scalar')
+    for s in symlst:
+        tmp = MV(s,'scalar')
         scalar_lst.append(tmp)
-        frame.f_globals[name] = tmp
-        isym += 1
     return(scalar_lst)
-
-def make_symbols(symnamelst):
-    """
-    make_symbols takes a string of symbol names separated by
-    blanks and converts them to MV scalars separately
-    accessible by the main program and addition returns a list
-    of the symbols.
-    """
-    if type(symnamelst) == str:
-        symnamelst = symnamelst.split()
-    sym_lst = []
-    isym = 0
-    for name in symnamelst:
-        tmp = sympy.Symbol(name)
-        sym_lst.append(tmp)
-        frame.f_globals[name] = tmp
-        isym += 1
-    return(sym_lst)
 
 def israt(numstr):
     """
@@ -415,7 +384,7 @@ class MV(object):
         basis operations.  See reference 5 section 2.
         """
         MV.vbasis     = basis
-        MV.vsyms      = make_symbols(MV.vbasis)
+        MV.vsyms      = sympy.symbols(MV.vbasis)
         MV.n          = len(MV.vbasis)
         MV.nrg        = range(MV.n)
         MV.n1         = MV.n+1
@@ -475,7 +444,6 @@ class MV(object):
         metric operations.  See reference 5 section 2.
         """
         if MV.metric_str:
-            name_flg = False
             MV.g = []
             MV.metric = numpy.array(MV.n*[MV.n*[ZERO]],dtype=numpy.object)
             if metric == '':
@@ -487,20 +455,14 @@ class MV(object):
                         MV.metric[i][j] = numeric(gij)
                     else:
                         if gij == '#':
-                            name_flg = True
                             if i == j:
                                 gij = '('+MV.vbasis[j]+'**2)'
-                                name = MV.vbasis[j]+'sq'
                             else:
                                 gij = '('+MV.vbasis[min(i,j)]+'.'+MV.vbasis[max(i,j)]+')'
-                                name = MV.vbasis[min(i,j)]+'dot'+MV.vbasis[max(i,j)]
                         tmp = sympy.Symbol(gij)
                         MV.metric[i][j] = tmp
                         if i <= j:
                             MV.g.append(tmp)
-                            if name_flg:
-                                frame.f_globals[name] = tmp
-                                name_flg = False
         else:
             MV.metric = metric
             MV.g = []
@@ -855,7 +817,6 @@ class MV(object):
             bvar = MV(value=isym,mvtype='basisvector',mvname=name)
             bvar.bladeflg = 1
             MV.bvec.append(bvar)
-            frame.f_globals[name] = bvar
             isym += 1
         if rframe:
             MV.define_reciprocal_frame()
@@ -863,7 +824,7 @@ class MV(object):
         MV.ZERO = MV()
         Isq = (MV.I*MV.I)()
         MV.Iinv = (1/Isq)*MV.I
-        return('Setup of '+basis+' complete!')
+        return MV.bvec
 
     @staticmethod
     def set_coords(coords):
@@ -1234,7 +1195,6 @@ class MV(object):
         MV.org_basis = []
         for ibasis in MV.nrg:
             evec = MV(Acoef[ibasis],'vector',old_names[ibasis])
-            frame.f_globals[name] = evec
             MV.org_basis.append(evec)
 
         if MV.coords[0] == sympy.Symbol('t'):
@@ -1691,7 +1651,7 @@ class MV(object):
                     else:
                         symbol = value+'__'+(MV.coords[ibase]).name
                         symbol_str += symbol+' '
-                symbol_lst = make_symbols(symbol_str)
+                symbol_lst = sympy.symbols(symbol_str)
                 self.mv[1] = numpy.array(symbol_lst,dtype=numpy.object)
                 self.name = value
             else:
@@ -1704,7 +1664,7 @@ class MV(object):
                     for base in MV.basis[2]:
                         symbol = value+MV.construct_index(base)
                         symbol_str += symbol+' '
-                    symbol_lst = make_symbols(symbol_str)
+                    symbol_lst = sympy.symbols(symbol_str)
                     self.mv[2] = numpy.array(symbol_lst,dtype=numpy.object)
             else:
                 value = MV.pad_zeros(value,MV.nbasis[2])
@@ -1735,10 +1695,10 @@ class MV(object):
                     if grade%2 == 0:
                         symbol_str = ''
                         if grade != 0:
+                            symbol_lst = []
                             for base in MV.basis[grade]:
-                                symbol = value+MV.construct_index(base)
-                                symbol_str += symbol+' '
-                            symbol_lst = make_symbols(symbol_str)
+                                symbol = sympy.Symbol(value+MV.construct_index(base))
+                                symbol_lst.append(symbol)
                             self.mv[grade] = numpy.array(symbol_lst,dtype=numpy.object)
                         else:
                             self.mv[0] = numpy.array([sympy.Symbol(value)],dtype=numpy.object)
@@ -1748,10 +1708,10 @@ class MV(object):
                 for grade in MV.n1rg:
                     symbol_str = ''
                     if grade != 0:
+                        symbol_lst = []
                         for base in MV.basis[grade]:
-                            symbol = value+MV.construct_index(base)
-                            symbol_str += symbol+' '
-                        symbol_lst = make_symbols(symbol_str)
+                            symbol = sympy.Symbol(value+MV.construct_index(base))
+                            symbol_lst.append(symbol)
                         self.mv[grade] = numpy.array(symbol_lst,dtype=numpy.object)
                     else:
                         self.mv[0] = numpy.array([sympy.Symbol(value)],dtype=numpy.object)
@@ -1806,7 +1766,7 @@ class MV(object):
         xi_str = ''
         for i in MV.nrg:
             xi_str += xname+str(i+offset)+' '
-        xi = make_symbols(xi_str)
+        xi = sympy.symbols(xi_str)
         x = MV(xi,'vector')
         return(x)
 

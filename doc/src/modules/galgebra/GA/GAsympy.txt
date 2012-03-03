@@ -1106,8 +1106,8 @@ curvilinear coordinates using:
    is::
 
       metric = '1 0 0,0 1 0,0 0 1'
-      MV.setup('gamma_x gamma_y gamma_z',metric,True)
-      coords = make_symbols('r theta phi')
+      gamma_x,gamma_y,gamma_z = MV.setup('gamma_x gamma_y gamma_z',metric,True)
+      coords = r,theta,phi = sympy.symbols('r theta phi')
       x = r*(sympy.cos(theta)*gamma_z+sympy.sin(theta)*\
           (sympy.cos(phi)*gamma_x+sympy.sin(phi)*gamma_y))
       x.set_name('x')
@@ -1165,8 +1165,7 @@ Instantiating a Multivector
 
 Now that grades and bases have been described we can show all the ways that a
 multivector can be instantiated. As an example assume that the multivector space
-is initialized with ``MV.setup('e1 e2 e3')``. Then the vectors ``e1``, ``e2``,
-and ``e3`` are made available (broadcast) for use in the program .
+is initialized with ``e1,e2,e3 = MV.setup('e1 e2 e3')``.
 
 So that multivectors
 could be instantiated with statements such as (``a1``, ``a2``, and ``a3`` are
@@ -1348,19 +1347,6 @@ Helper Functions
 
 These are functions in :mod:`GA`, but not in the multivector (:class:`MV`)
 class.
-
-
-.. function:: make_symbols(symnamelst)
-
-   :func:`make_symbols` creates a list of :mod:`sympy` symbols with names defined
-   by the space delimited string *symnamelst*. In addition to returning the symbol
-   list the function broadcasts the named symbols to the main program.  For example
-   if you make the call::
-
-      syms = make_symbols('x y ab')
-
-   Not only will *syms* contain the symbols, but you can also directly use *x*,
-   *y*, and *ab* as symbols in your program.
 
 
 .. function:: set_names(var_lst,var_str)
