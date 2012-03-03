@@ -284,10 +284,7 @@ the string ``'x = '+str(x)`` to the output processor (:func:`xdvi`).  Because
 the string contains an :math:`=` sign the processor treats the string as an
 LaTeX equation (unnumbered).  If ``'x ='``  was not in the print statment a
 LaTeX error would be generated.  In the case of a :class:`GA` multivector one
-does not need the ``'x ='`` if the multivector has been given a name.  In the
-example the function :func:`symbols` has been used to create
-the :class:`sympy` symbols for convenience.  The :class:`sympy` function
-:func:`Symbol` could have also been used.
+does not need the ``'x ='`` if the multivector has been given a name.
 
 
 :program:`Maxwell.py` a multivector example
