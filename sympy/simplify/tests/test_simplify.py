@@ -251,6 +251,10 @@ def test_fraction():
     assert fraction(x*A/y) == (x*A, y)
     assert fraction(x*A**-1/y) == (x*A**-1, y)
 
+    n = symbols('n', negative=True)
+    assert fraction(exp(n)) == (1, exp(-n))
+    assert fraction(exp(-n)) == (exp(-n), 1)
+
 def test_separate():
     x, y, z = symbols('x,y,z')
 

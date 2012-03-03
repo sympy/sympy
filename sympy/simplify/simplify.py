@@ -88,6 +88,8 @@ def fraction(expr, exact=False):
                     denom.append(b)
                 else:
                     denom.append(Pow(b, -ex))
+            elif ex.is_positive:
+                numer.append(term)
             elif not exact and ex.is_Mul:
                 n, d = term.as_numer_denom()
                 numer.append(n)
