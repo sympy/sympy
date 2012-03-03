@@ -270,7 +270,7 @@ class Pow(Expr):
         """
 
         b, e = self.args
-        if b.is_Rational and b.p == 1 and b is not S.Infinity:
+        if b.is_Rational and b.p == 1:
             return Integer(b.q), -e
         return b, e
 
