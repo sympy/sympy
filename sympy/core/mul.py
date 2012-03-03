@@ -212,9 +212,12 @@ class Mul(AssocOp):
                 continue
 
             elif o is S.ComplexInfinity:
-                if not coeff or coeff is S.ComplexInfinity:
-                    # we know for sure the result will be nan
+                if not coeff:
+                    # 0 * zoo = NaN
                     return [S.NaN], [], None
+                if coeff is S.ComplexInfinity:
+                    # zoo * zoo = zoo
+                    return [S.ComplexInfinity], [], None
                 coeff = S.ComplexInfinity
                 continue
 

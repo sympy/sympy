@@ -1078,7 +1078,7 @@ def test_zoo():
 
     assert (I*oo).is_Mul # allow directed infinity
     assert zoo + zoo is S.NaN
-    assert zoo * zoo is S.NaN
+    assert zoo * zoo is zoo
     assert zoo - zoo is S.NaN
     assert zoo/zoo is S.NaN
     assert zoo**zoo is S.NaN
