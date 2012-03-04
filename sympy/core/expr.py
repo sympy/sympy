@@ -263,13 +263,14 @@ class Expr(Basic, EvalfMixin):
             return False
         return all(obj.is_number for obj in self.iter_basic_args())
 
-    def _random(self, n=None, a=1, b=2, c=3, d=4):
+    def _random(self, n=None, re_min=-1, im_min=-1, re_max=1, im_max=1):
         """Return self evaluated, if possible, replacing free symbols with
         random complex values, if necessary.
 
         The random complex value for each free symbol is generated
-        by the random_complex_number routine using values of a, b, c
-        and d. The returned value is evaluated to a precision of n
+        by the random_complex_number routine giving real and imaginary
+        parts in the range given by the re_min, re_max, im_min, and im_max
+        values. The returned value is evaluated to a precision of n
         (if given) else the maximum of 15 and the precision needed
         to get more than 1 digit of precision. If the expression
         could not be evaluated to a number, or could not be evaluated
@@ -281,11 +282,11 @@ class Expr(Basic, EvalfMixin):
         >>> from sympy import sqrt
         >>> from sympy.abc import x, y
         >>> x._random()                         # doctest: +SKIP
-        2.02156676842162 + 2.09079610844169*I
+        0.0392918155679172 + 0.916050214307199*I
         >>> x._random(2)                        # doctest: +SKIP
-        1.8 + 2.8*I
+        -0.77 - 0.87*I
         >>> (x + y/2)._random(2)                # doctest: +SKIP
-        3.7 + 3.8*I
+        -0.57 + 0.16*I
         >>> sqrt(2)._random(2)
         1.4
 
@@ -295,17 +296,17 @@ class Expr(Basic, EvalfMixin):
         sympy.utilities.randtest.random_complex_number
         """
 
-        mag = abs(self)
         free = self.free_symbols
         prec = 1
         if free:
             from sympy.utilities.randtest import random_complex_number
+            a, c, b, d = re_min, re_max, im_min, im_max
             reps = dict(zip(free, [random_complex_number(a, b, c, d, rational=True)
                            for zi in free]))
-            nmag = mag.evalf(1, subs=reps)
-        elif mag.is_number:
+            nmag = abs(self.evalf(1, subs=reps))
+        else:
             reps = {}
-            nmag = mag.evalf(1)
+            nmag = abs(self.evalf(1))
 
         if not hasattr(nmag, '_prec'):
             # e.g. exp_polar(2*I*pi) doesn't evaluate but is_number is True
@@ -333,7 +334,7 @@ class Expr(Basic, EvalfMixin):
 
             # evaluate
             for prec in L:
-                nmag = mag.evalf(prec, subs=reps)
+                nmag = abs(self.evalf(prec, subs=reps))
                 if nmag._prec != 1:
                     break
 
@@ -450,13 +451,13 @@ class Expr(Basic, EvalfMixin):
         # try numerical evaluation to see if we get two different values
         failing_number = None
         if wrt == free:
-            a, b = [self._random() for i in range(2)]
-            if not any(p is None for p in (a, b)):
-                if a != b:
-                    return False
-                failing_number = a
-            else:
-                failing_number = None
+            a = self._random()
+            if a is not None:
+                b = self._random()
+                if b is not None:
+                    if a != b:
+                        return False
+                    failing_number = a
 
         # now we will test each wrt symbol (or all free symbols) to see if the
         # expression depends on them or not using differentiation. This is
