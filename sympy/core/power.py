@@ -656,6 +656,18 @@ class Pow(Expr):
         else:
             return True
 
+    def _eval_is_rational(self):
+        p = self.func(*self.as_base_exp()) # in case it's unevaluated
+        if not p.is_Pow:
+            return p.is_rational
+        b, e = p.as_base_exp()
+        if e.is_Rational and b.is_Rational:
+            # we didn't check that e is not an Integer
+            # because Rational**Integer autosimplifies
+            return False
+        if e.is_integer:
+            return b.is_rational
+
     def _eval_is_rational_function(self, syms):
         if self.exp.has(*syms):
             return False
