@@ -2,7 +2,7 @@ from sympy.stats import (Normal, LogNormal, Exponential, P, E, Where, Density,
         Var, Covar, Skewness, Gamma, Pareto, Weibull, Beta, Uniform, Given, pspace, CDF, ContinuousRV, Sample)
 from sympy import (Symbol, exp, S, N, pi, simplify, Interval, erf, Eq, symbols,
         sqrt, And, gamma, beta, Piecewise, Integral, sin)
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 oo = S.Infinity
 
@@ -14,18 +14,20 @@ def test_single_normal():
 
     assert simplify(E(Y)) == mu
     assert simplify(Var(Y)) == sigma**2
-    x, pdf = Density(Y)
-    assert pdf == 2**S.Half*exp(-(x - mu)**2/(2*sigma**2))/(2*pi**S.Half*sigma)
+    pdf = Density(Y)
+    x = Symbol('x')
+    assert pdf(x) == 2**S.Half*exp(-(x - mu)**2/(2*sigma**2))/(2*pi**S.Half*sigma)
 
-    assert P(X**2<1) == erf(2**S.Half/2)
+    assert P(X**2 < 1) == erf(2**S.Half/2)
 
     assert E(X, Eq(X, mu)) == mu
 
+@XFAIL
 def test_conditional_1d():
     X = Normal(0,1)
     Y = Given(X, X>=0)
 
-    assert Density(Y)[1] == 2 * Density(X)[1]
+    assert Density(Y) == 2 * Density(X)
 
     assert Y.pspace.domain.set == Interval(0, oo)
     assert E(Y) == sqrt(2) / sqrt(pi)
@@ -76,26 +78,25 @@ def test_symbolic():
 
 def test_CDF():
     X = Normal(0,1)
-    x,d = CDF(X)
 
-    assert P(X<1) == d.subs(x,1)
-    assert d.subs(x,0) == S.Half
+    d = CDF(X)
+    assert P(X<1) == d(1)
+    assert d(0) == S.Half
 
-    x,d = CDF(X, X>0) # given X>0
-
-    assert d.subs(x,0) == 0
+    d = CDF(X, X>0) # given X>0
+    assert d(0) == 0
 
     Y = Exponential(10)
-    y,d = CDF(Y)
-
-    assert d.subs(y, -5) == 0
-    assert P(Y>3) == 1 - d.subs(y, 3)
+    d = CDF(Y)
+    assert d(-5) == 0
+    assert P(Y > 3) == 1 - d(3)
 
     raises(ValueError, "CDF(X+Y)")
 
     Z = Exponential(1)
-    z, cdf = CDF(Z)
-    assert cdf == Piecewise((0, z < 0), (1 - exp(-z), True))
+    cdf = CDF(Z)
+    z = Symbol('z')
+    assert cdf(z) == Piecewise((0, z < 0), (1 - exp(-z), True))
 
 def test_sample():
     z = Symbol('z')
@@ -157,8 +158,9 @@ def test_pareto():
     alpha = beta + 5
     X = Pareto(xm, alpha)
 
-    x, density = Density(X)
-    assert density == x**(-(alpha+1))*xm**(alpha)*(alpha)
+    density = Density(X)
+    x = Symbol('x')
+    assert density(x) == x**(-(alpha+1))*xm**(alpha)*(alpha)
 
     # These fail because SymPy can not deduce that 1/xm != 0
     # assert simplify(E(X)) == alpha*xm/(alpha-1)
@@ -199,8 +201,9 @@ def test_beta():
 
     assert pspace(B).domain.set == Interval(0, 1)
 
-    x, dens = Density(B)
-    assert dens == x**(a-1)*(1-x)**(b-1) / beta(a,b)
+    dens = Density(B)
+    x = Symbol('x')
+    assert dens(x) == x**(a-1)*(1-x)**(b-1) / beta(a,b)
 
     # This is too slow
     # assert E(B) == a / (a + b)
@@ -257,6 +260,7 @@ def test_input_value_assertions():
         raises(ValueError, "%s(p, a)" % fn_name)
         eval("%s(p, q)" % fn_name) # No error raised
 
+@XFAIL
 def test_unevaluated():
     x = Symbol('x')
     X = Normal(0,1, symbol=x)
@@ -266,10 +270,10 @@ def test_unevaluated():
     assert E(X+1, evaluate=False) == \
             Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo)) + 1
 
-    assert P(X>0, evaluate=False).args == \
-            Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)), (x, 0, oo)).args
+    assert P(X>0, evaluate=False) == \
+            Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)), (x, 0, oo))
 
-    assert P(X>0, X**2<1, evaluate=False).args == \
+    assert P(X>0, X**2<1, evaluate=False) == \
             Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)*
             Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)),
-                (x, -1, 1))), (x, 0, 1)).args
+                (x, -1, 1))), (x, 0, 1))

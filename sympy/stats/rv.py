@@ -517,11 +517,10 @@ def Density(expr, given=None, **kwargs):
 
     Optionally given a second condition
 
-    This density will take on different forms for different types of probability
-    spaces.
-    Discrete RV's produce Dicts
-    Continuous RV's produce a Tuple with expression representing the PDF and
-    a symbol designating the active variable
+    This density will take on different forms for different types of
+    probability spaces.
+    Discrete variables produce Dicts.
+    Continuous variables produce Lambdas.
 
     Examples
     ========
@@ -537,7 +536,7 @@ def Density(expr, given=None, **kwargs):
     >>> Density(2*D)
     {2: 1/6, 4: 1/6, 6: 1/6, 8: 1/6, 10: 1/6, 12: 1/6}
     >>> Density(X)
-    (x, sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)))
+    Lambda(_x, sqrt(2)*exp(-_x**2/2)/(2*sqrt(pi)))
     """
     if given is not None: # If there is a condition
         # Recompute on new conditional expr
@@ -552,11 +551,10 @@ def CDF(expr, given=None, **kwargs):
 
     optionally given a second condition
 
-    This density will take on different forms for different types of probability
-    spaces.
-    Discrete RV's produce list of tuples.
-    Continuous RV's produce a Tuple with expression representing the PDF and
-    a symbol designating the active variable.
+    This density will take on different forms for different types of
+    probability spaces.
+    Discrete variables produce Dicts.
+    Continuous variables produce Lambdas.
 
     Examples
     ========
@@ -575,7 +573,7 @@ def CDF(expr, given=None, **kwargs):
     {9: 1/4, 12: 1/2, 15: 3/4, 18: 1}
 
     >>> CDF(X)
-    (_z, erf(sqrt(2)*_z/2)/2 + 1/2)
+    Lambda(_z, erf(sqrt(2)*_z/2)/2 + 1/2)
     """
     if given is not None: # If there is a condition
         # Recompute on new conditional expr
