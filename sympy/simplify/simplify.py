@@ -2985,8 +2985,7 @@ def _logcombine(expr, force=False):
             return flatten(args)
         return None
 
-    if type(expr) in (int, float) or expr.is_Number or expr.is_Rational or \
-        expr.is_NumberSymbol or type(expr) == C.Integral:
+    if expr.is_Number or expr.is_NumberSymbol or type(expr) == C.Integral:
         return expr
 
     if isinstance(expr, Equality):
@@ -3060,7 +3059,7 @@ def _logcombine(expr, force=False):
         else:
             return _logcombine(expr.args[0], force)*reduce(lambda x, y:\
              _logcombine(x, force)*_logcombine(y, force),\
-             expr.args[1:], 1)
+             expr.args[1:], S.One)
 
     if expr.is_Function:
         return expr.func(*map(lambda t: _logcombine(t, force), expr.args))
