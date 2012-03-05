@@ -106,20 +106,22 @@ class Pow(Expr):
         return 3, 2, cls.__name__
 
     def _eval_power(self, other):
+        from sympy.functions.elementary.exponential import log
+
         b, e = self.as_base_exp()
-        ##could process e.is_integer here; for now it's in powdenest
-        #if e.is_integer:
-        #    return Pow(b, e * other)
-        if other.is_integer:
-            return Pow(b, e * other)
-        if b.is_nonnegative and (e.is_real or other.is_real):
-            return Pow(b, e * other)
-        if e.is_even and b.is_real: # hence b is pos and e is real
-            return Pow(abs(b), e * other)
-        if abs(e) < S.One and other.is_real:
-            return Pow(b, e * other)
-        if b.is_polar:
-            return Pow(b, e * other)
+        b_nneg = b.is_nonnegative
+        if b.is_real and not b_nneg and e.is_even:
+            b = abs(b)
+            b_nneg = True
+        smallarg = (abs(e) <= abs(S.Pi/log(b)))
+        if (other.is_Rational and other.q == 2 and
+            e.is_real is False and smallarg is False):
+                return -Pow(b, e*other)
+        if (other.is_integer or
+            e.is_real and (b_nneg or abs(e) < 1) or
+            e.is_real is False and smallarg is True or
+            b.is_polar):
+            return Pow(b, e*other)
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:

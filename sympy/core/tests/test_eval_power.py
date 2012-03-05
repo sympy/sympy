@@ -1,5 +1,7 @@
 from sympy.core import Rational, Symbol, S, Float, Integer, Number, Pow, Basic
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.exponential import exp
+from sympy.utilities.pytest import XFAIL
 
 def test_issue153():
     #test that is runs:
@@ -46,7 +48,7 @@ def test_issue350():
     assert (a**2)**b == (abs(a)**b)**2
     assert sqrt(1/a) != 1/sqrt(a) # e.g. for a = -1
     assert (a**3)**Rational(1,3) != a
-    assert (x**a)**b != x**(a*b) # e.g. x = -1, a=1/2, b=2
+    assert (x**a)**b != x**(a*b) # e.g. x = -1, a=2, b=1/2
     assert (x**.5)**b == x**(.5*b)
     assert (x**.5)**.5 == x**.25
     assert (x**2.5)**.5 != x**1.25 # e.g. for x = 5*I
@@ -62,7 +64,7 @@ def test_issue350():
     a = Symbol('a', positive=True)
     assert (a**3)**Rational(2,5) == a**Rational(6,5)
     assert (a**2)**b == (a**b)**2
-    assert (a**Rational(2, 3))**x == (a**x)**Rational(2, 3) == (a**(2*x/3))
+    assert (a**Rational(2, 3))**x == (a**(2*x/3)) != (a**x)**Rational(2, 3)
 
 def test_issue767():
     assert --sqrt(sqrt(5)-1)==sqrt(sqrt(5)-1)
@@ -188,3 +190,18 @@ def test_issue_3001():
     # __eq__ methods could be added to Symbol and Pow to detect the
     # power-of-1.0 case.
     assert ((x*y)**1.0).func is Pow
+
+def test_issue_3109():
+    from sympy import root, Rational
+    I = S.ImaginaryUnit
+    assert sqrt(33**(9*I/10)) == -33**(9*I/20)
+    assert root((6*I)**(2*I), 3).as_base_exp()[1] == Rational(1, 3) # != 2*I/3
+    assert root((6*I)**(I/3), 3).as_base_exp()[1] == I/9
+    assert sqrt(exp(3*I)) == exp(3*I/2)
+
+@XFAIL
+def test_issue_3109_fail():
+    from sympy import root, Rational
+    I = S.ImaginaryUnit
+    assert sqrt(exp(5*I)) == -exp(5*I/2)
+    assert root(exp(5*I), 3).exp == Rational(1, 3)
