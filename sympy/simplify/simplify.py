@@ -652,20 +652,7 @@ def _separatevars(expr, force):
     expr = expr.expand(mul=False, multinomial=False, force=force)
 
     _expr = expr.expand(power_exp=False, deep=False, force=force)
-
-    if not force:
-        # factor will expand bases so we mask them off now
-        pows = [p for p in _expr.atoms(Pow) if p.base.is_Mul]
-        dums = [Dummy(str(i)) for i in xrange(len(pows))]
-        _expr = _expr.subs(dict(zip(pows, dums)))
-
     _expr = factor(_expr, expand=False)
-
-    if not force:
-        # and retore them
-        _expr = _expr.subs(dict(zip(dums, pows)))
-
-
 
     if not _expr.is_Add:
         expr = _expr
