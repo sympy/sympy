@@ -1869,7 +1869,7 @@ class Expr(Basic, EvalfMixin):
         exps = []
         for arg in args:
             if arg.func is exp_polar:
-                exps += [arg.args[0]]
+                exps += [arg.exp]
             else:
                 res *= arg
         piimult = S(0)

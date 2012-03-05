@@ -302,3 +302,5 @@ def test_polar():
     assert log(exp_polar(z)) == z
     assert log(x*y).expand() == log(x) + log(y)
     assert log(x**z).expand() == z*log(x)
+
+    assert exp_polar(3).exp == 3

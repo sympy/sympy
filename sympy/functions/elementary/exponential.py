@@ -49,6 +49,13 @@ class ExpBase(Function):
             return S.One, exp(-self.args[0])
         return self, S.One
 
+    @property
+    def exp(self):
+        """
+        Returns the exponent of the function.
+        """
+        return self.args[0]
+
     def as_base_exp(self):
         """
         Returns the 2-tuple (base, exponent).
@@ -241,13 +248,6 @@ class exp(ExpBase):
         Returns the base of the exponential function.
         """
         return S.Exp1
-
-    @property
-    def exp(self):
-        """
-        Returns the exponent of the function.
-        """
-        return self.args[0]
 
     @staticmethod
     @cacheit
@@ -484,7 +484,7 @@ class log(Function):
         elif arg.func is exp and arg.args[0].is_real:
             return arg.args[0]
         elif arg.func is exp_polar:
-            return unpolarify(arg.args[0])
+            return unpolarify(arg.exp)
         #don't autoexpand Pow or Mul (see the issue 252):
         elif not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)

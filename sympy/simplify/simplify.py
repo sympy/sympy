@@ -1417,7 +1417,7 @@ def _unpolarify(eq, exponents_only, pause=False):
         return base**expo
 
     if eq.func is exp_polar and not pause:
-        return exp(_unpolarify(eq.args[0], exponents_only))
+        return exp(_unpolarify(eq.exp, exponents_only))
     if eq.is_Function and getattr(eq.func, 'unbranched', False):
         return eq.func(*[_unpolarify(x, exponents_only, exponents_only) for x in eq.args])
     if eq.func is principal_branch and eq.args[1] == 2*pi and not pause:
@@ -1435,7 +1435,7 @@ def _unpolarify(eq, exponents_only, pause=False):
 
 def unpolarify(eq, subs={}, exponents_only=False):
     """
-    If p denotes the projection from the riemann surface of the logarithm to
+    If p denotes the projection from the Riemann surface of the logarithm to
     the complex line, return a simplified version eq' of `eq` such that
     p(eq') == p(eq).
     Also apply the substitution subs in the end. (This is a convenience, since
