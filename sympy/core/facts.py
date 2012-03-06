@@ -528,7 +528,8 @@ class FactRules(object):
             tbeta = rel_tbeta.get(k,empty)
             fbeta = rel_fbeta.get(k,empty)
 
-            rels[k] = tt, tf, tbeta,  ft, ff, fbeta
+            rels[(k, True)] = tt, tf, tbeta
+            rels[(k, False)] = ft, ff, fbeta
 
         self.rels = rels
 
@@ -601,7 +602,7 @@ class FactKB(dict):
                 if v is not None:
                     # lookup routing tables
                     try:
-                        tt, tf, tbeta,  ft, ff, fbeta = rels[k]
+                        true_facts, false_facts, beta = rels[(k, v)]
                     except KeyError:
                         pass
                     else:
@@ -609,21 +610,10 @@ class FactKB(dict):
                         # implications for this k. This means we do not have to
                         # process each implications recursively!
                         # XXX this ^^^ is true only for alpha chains
+                        x_new_facts(true_facts, True)   # k -> i
+                        x_new_facts(false_facts, False)  # k -> !i
 
-                        # k=T
-                        if v:
-                            x_new_facts(tt, True)   # k -> i
-                            x_new_facts(tf, False)  # k -> !i
-
-                            beta_maytrigger.update(tbeta)
-
-                        # k=F
-                        else:
-                            x_new_facts(ft, True)   # !k -> i
-                            x_new_facts(ff, False)  # !k -> !i
-
-                            beta_maytrigger.update(fbeta)
-
+                        beta_maytrigger.update(beta)
 
             # --- beta chains ---
 
