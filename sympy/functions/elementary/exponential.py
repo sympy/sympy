@@ -67,6 +67,15 @@ class ExpBase(Function):
                 return False
         if arg.is_bounded:
             return True
+
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
+
     def _eval_is_zero(self):
         return (self.args[0] is S.NegativeInfinity)
 
@@ -582,6 +591,14 @@ class log(Function):
     def _eval_expand_complex(self, deep=True, **hints):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)
         return re_part + im_part*S.ImaginaryUnit
+
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
 
     def _eval_is_real(self):
         return self.args[0].is_positive

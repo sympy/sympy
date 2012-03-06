@@ -1,6 +1,6 @@
 from sympy.core import Symbol, S, Rational, Integer
 from sympy.utilities.pytest import raises, XFAIL
-from sympy import I, sqrt
+from sympy import I, sqrt, log, exp
 
 def test_symbol_unset():
     x = Symbol('x',real=True, integer=True)
@@ -508,3 +508,28 @@ def test_Add_is_pos_neg():
     assert (n + p).is_negative is None
     assert (n + x).is_negative is True
     assert (p + x).is_negative is False
+
+def test_special_is_rational():
+    i = Symbol('i', integer=True)
+    r = Symbol('r', rational=True)
+    x = Symbol('x')
+    assert sqrt(3).is_rational is False
+    assert (3+sqrt(3)).is_rational is False
+    assert (3*sqrt(3)).is_rational is False
+    assert exp(3).is_rational is False
+    assert exp(i).is_rational is False
+    assert exp(r).is_rational is False
+    assert exp(x).is_rational is None
+    assert exp(log(3), evaluate=False).is_rational is True
+    assert log(exp(3), evaluate=False).is_rational is True
+    assert log(3).is_rational is False
+    assert log(i).is_rational is False
+    assert log(r).is_rational is False
+    assert log(x).is_rational is None
+    assert (sqrt(3) + sqrt(5)).is_rational is None
+    assert (sqrt(3) + S.Pi).is_rational is None
+    assert (x**i).is_rational is None
+    assert (i**i).is_rational is True
+    assert (r**i).is_rational is True
+    assert (r**r).is_rational is None
+    assert (r**x).is_rational is None
