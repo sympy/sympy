@@ -1,7 +1,7 @@
 from sympy.core.facts import deduce_alpha_implications, apply_beta_to_alpha_route, \
         rules_2prereq, split_rules_tt_tf_ft_ff, FactRules
-from sympy.core.logic import And
-from sympy.utilities.pytest import raises
+from sympy.core.logic import And, Not
+from sympy.utilities.pytest import XFAIL, raises
 
 T = True
 F = False
@@ -28,9 +28,9 @@ def test_deduce_alpha_implications():
     assert D([('a','b'), ('b','a')]) == ({'a': set(['b']), 'b': set(['a'])},  {'a': set(['b']), 'b': set(['a'])})
 
     # see if it catches inconsistency
-    raises(ValueError, "D([('a','!a')])")
-    raises(ValueError, "D([('a','b'), ('b','!a')])")
-    raises(ValueError, "D([('a','b'), ('b','c'), ('b','na'), ('na','!a')])")
+    raises(ValueError, "D([('a',Not('a'))])")
+    raises(ValueError, "D([('a','b'), ('b',Not('a'))])")
+    raises(ValueError, "D([('a','b'), ('b','c'), ('b','na'), ('na',Not('a'))])")
 
 
     # something related to real-world
@@ -53,8 +53,8 @@ def test_apply_beta_to_alpha_route():
     assert APPLY(A, B) == {'x': (set(['a']), []),    'a':Q(0), 'b':Q(0)}
 
     # x -> a        &(a,!x) -> b    --  x -> a
-    A = {'x': set(['a'])};       B = [ (And('a','!x'), 'b') ]
-    assert APPLY(A, B) == {'x': (set(['a']), []),    '!x':Q(0), 'a':Q(0)}
+    A = {'x': set(['a'])};       B = [ (And('a',Not('x')), 'b') ]
+    assert APPLY(A, B) == {'x': (set(['a']), []),    Not('x'):Q(0), 'a':Q(0)}
 
     # x -> a b      &(a,b) -> c     --  x -> a b c
     A = {'x': set(['a','b'])};   B = [ (And('a','b'), 'c') ]
@@ -94,17 +94,17 @@ def test_apply_beta_to_alpha_route():
 
     # x -> a b      &(a,!b) -> c    --  x -> a b
     A = {'x': set(['a', 'b'])}
-    B = [ (And('a','!b'), 'c') ]
-    assert APPLY(A,B)  == {'x': (set(['a', 'b']), []), 'a':Q(0), '!b':Q(0)}
+    B = [ (And('a', Not('b')), 'c') ]
+    assert APPLY(A,B)  == {'x': (set(['a', 'b']), []), 'a':Q(0), Not('b'):Q(0)}
 
     # !x -> !a !b   &(!a,b) -> c    --  !x -> !a !b
-    A = {'!x': set(['!a', '!b'])}
-    B = [ (And('!a','b'), 'c') ]
-    assert APPLY(A,B)  == {'!x': (set(['!a', '!b']), []), '!a':Q(0), 'b':Q(0)}
+    A = {Not('x'): set([Not('a'), Not('b')])}
+    B = [ (And(Not('a'),'b'), 'c') ]
+    assert APPLY(A,B)  == {Not('x'): (set([Not('a'), Not('b')]), []), Not('a'):Q(0), 'b':Q(0)}
 
     # x -> a b      &(b,c) -> !a    --  x -> a b
     A = {'x': set(['a','b'])}
-    B = [ (And('b','c'), '!a') ]
+    B = [ (And('b','c'), Not('a')) ]
     assert APPLY(A,B)  == {'x': (set(['a','b']), []), 'b':Q(0), 'c':Q(0)}
 
     # x -> a b      &(a, b) -> c    --  x -> a b c p
@@ -118,8 +118,8 @@ def test_apply_beta_to_alpha_route():
 def test_split_rules_tf():
     S = split_rules_tt_tf_ft_ff
 
-    r = {'a': set(['b', '!c', 'd']),
-         'b': set(['e', '!f']) }
+    r = {'a': set(['b', Not('c'), 'd']),
+         'b': set(['e', Not('f')]) }
 
     tt, tf, ft, ff = S(r)
     assert tt == {'a': set(['b', 'd']), 'b': set(['e'])}
@@ -127,8 +127,8 @@ def test_split_rules_tf():
     assert ft == {}
     assert ff == {'b': set(['a']), 'd': set(['a']), 'e': set(['b'])}
 
-    r = {'!a': set(['b', '!c']),
-         'b' : set(['e', '!f']) }
+    r = {Not('a'): set(['b', Not('c')]),
+         'b' : set(['e', Not('f')]) }
 
     tt, tf, ft, ff = S(r)
     assert tt == {'b': set(['e']), 'c': set(['a'])    }

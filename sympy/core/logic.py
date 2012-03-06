@@ -53,24 +53,6 @@ def fuzzy_not(v):
     else:
         return not v
 
-
-def name_not(k):
-    """negate a name
-
-       >>> from sympy.core.logic import name_not
-       >>> name_not('zero')
-       '!zero'
-
-       >>> name_not('!zero')
-       'zero'
-
-    """
-    if k[:1] != '!':
-        return '!'+k
-    else:
-        return k[1:]
-
-
 class Logic(object):
     """Logical expression"""
 
@@ -121,7 +103,7 @@ class Logic(object):
             return cmp(a.args, b.args)
 
     def __str__(self):
-        return '%s(%s)' % (self.op, ', '.join(str(a) for a in self.args))
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(str(a) for a in self.args))
 
     __repr__ = __str__
 
@@ -144,10 +126,12 @@ class Logic(object):
                     raise ValueError('%s cannot be in the beginning of expression' % term)
                 schedop = term
                 continue
+            if term[0] == '!':
+                term = Not(term[1:])
 
             # already scheduled operation, e.g. '&'
             if schedop:
-                lexpr   = Logic.op_2class[schedop] ( *(lexpr, term) )
+                lexpr = Logic.op_2class[schedop](lexpr, term)
                 schedop = None
                 continue
 
@@ -261,22 +245,24 @@ class Not(Logic):
 
     def __new__(cls, arg):
         if isinstance(arg, str):
-            return name_not(arg)
+            return Logic.__new__(cls, (arg,))
 
         elif isinstance(arg, bool):
             return not arg
+        elif isinstance(arg, Not):
+            return arg.args[0]
 
         elif isinstance(arg, Logic):
             # XXX this is a hack to expand right from the beginning
             arg = arg._eval_propagate_not()
             return arg
 
-            obj = Logic.__new__(cls, (arg,))
-            return obj
-
         else:
             raise ValueError('Not: unknown argument %r' % (arg,))
 
+    @property
+    def arg(self):
+        return self.args[0]
 
 Logic.op_2class['&'] = And
 Logic.op_2class['|'] = Or

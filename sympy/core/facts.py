@@ -49,7 +49,7 @@ http://en.wikipedia.org/wiki/List_of_rules_of_inference
 """
 from collections import defaultdict
 
-from logic import fuzzy_not, name_not, Logic, And, Or, Not
+from logic import fuzzy_not, Logic, And, Or, Not
 
 # XXX this prepares forward-chaining rules for alpha-network
 def deduce_alpha_implications(implications):
@@ -92,7 +92,7 @@ def deduce_alpha_implications(implications):
     # Clean up tautologies and check consistency
     for a, impl in res.iteritems():
         impl.discard(a)
-        na = name_not(a)
+        na = Not(a)
         if na in impl:
             raise ValueError('implications are inconsistent: %s -> %s %s' % (a, na, impl))
 
@@ -253,19 +253,19 @@ def split_rules_tt_tf_ft_ff(rules):
     tf = defaultdict(set)
     ft = defaultdict(set)
     for k, impl in rules.iteritems():
-        if k[:1] != '!':
+        if type(k) is not Not:
             for i in impl:
-                if i[:1] != '!':
+                if type(i) is not Not:
                     tt[k].add(i)
                 else:
-                    tf[k].add(i[1:])
+                    tf[k].add(i.arg)
         else:
-            k = k[1:]
+            k = k.arg
             for i in impl:
-                if i[:1] != '!':
+                if type(i) is not Not:
                     ft[i].add(k)
                 else:
-                    tt[i[1:]].add(k)
+                    tt[i.arg].add(k)
 
     # FF is related to TT
     ff = defaultdict(set)
@@ -356,58 +356,53 @@ class Prover(object):
 
     def _process_rule(self, a, b):
         # right part first
-        if isinstance(b, Logic):
-            # a -> b & c    -->  a -> b  ;  a -> c
-            # (?) FIXME this is only correct when b & c != null !
-            if isinstance(b, And):
-                for barg in b.args:
-                    self.process_rule(a, barg)
 
-            # a -> b | c    -->  !b & !c -> !a
-            #               -->   a & !b -> c & !b
-            #               -->   a & !c -> b & !c
-            #
-            # NB: the last two rewrites add 1 term, so the rule *grows* in size.
-            # NB: without catching terminating conditions this could continue infinitely
-            elif isinstance(b, Or):
-                # detect tautology first
-                if not isinstance(a, Logic):    # Atom
-                    # tautology:  a -> a|c|...
-                    if a in b.args:
-                        raise TautologyDetected(a,b, 'a -> a|c|...')
-                self.process_rule(And(*[Not(barg) for barg in b.args]), Not(a))
+        # a -> b & c    -->  a -> b  ;  a -> c
+        # (?) FIXME this is only correct when b & c != null !
+        if isinstance(b, And):
+            for barg in b.args:
+                self.process_rule(a, barg)
 
-                for bidx in range(len(b.args)):
-                    barg = b.args[bidx]
-                    brest= b.args[:bidx] + b.args[bidx+1:]
-                    self.process_rule(And(a, Not(barg)),
-                                        And(b.__class__(*brest), Not(barg)))
-            else:
-                raise ValueError('unknown b.op %r' % b.op)
+        # a -> b | c    -->  !b & !c -> !a
+        #               -->   a & !b -> c & !b
+        #               -->   a & !c -> b & !c
+        #
+        # NB: the last two rewrites add 1 term, so the rule *grows* in size.
+        # NB: without catching terminating conditions this could continue infinitely
+        elif isinstance(b, Or):
+            # detect tautology first
+            if not isinstance(a, Logic):    # Atom
+                # tautology:  a -> a|c|...
+                if a in b.args:
+                    raise TautologyDetected(a,b, 'a -> a|c|...')
+            self.process_rule(And(*[Not(barg) for barg in b.args]), Not(a))
+
+            for bidx in range(len(b.args)):
+                barg = b.args[bidx]
+                brest= b.args[:bidx] + b.args[bidx+1:]
+                self.process_rule(And(a, Not(barg)),
+                                    And(b.__class__(*brest), Not(barg)))
 
         # left part
-        elif isinstance(a, Logic):
-            # a & b -> c    -->  IRREDUCIBLE CASE -- WE STORE IT AS IS
-            #                    (this will be the basis of beta-network)
-            if isinstance(a, And):
-                assert not isinstance(b, Logic)
-                if b in a.args:
-                    raise TautologyDetected(a,b, 'a & b -> a')
-                self.proved_rules.append((a,b))
-                # XXX NOTE at present we ignore  !c -> !a | !b
 
-            elif isinstance(a, Or):
-                if b in a.args:
-                    raise TautologyDetected(a,b, 'a | b -> a')
-                for aarg in a.args:
-                    self.process_rule(aarg, b)
-            else:
-                raise ValueError('unknown a.op %r' % a.op)
+        # a & b -> c    -->  IRREDUCIBLE CASE -- WE STORE IT AS IS
+        #                    (this will be the basis of beta-network)
+        elif isinstance(a, And):
+            if b in a.args:
+                raise TautologyDetected(a,b, 'a & b -> a')
+            self.proved_rules.append((a,b))
+            # XXX NOTE at present we ignore  !c -> !a | !b
+
+        elif isinstance(a, Or):
+            if b in a.args:
+                raise TautologyDetected(a,b, 'a | b -> a')
+            for aarg in a.args:
+                self.process_rule(aarg, b)
+
         else:
             # both `a` and `b` are atoms
-            na, nb = name_not(a), name_not(b)
             self.proved_rules.append((a,b))     # a  -> b
-            self.proved_rules.append((nb,na))   # !b -> !a
+            self.proved_rules.append((Not(b), Not(a)))   # !b -> !a
 
 ########################################
 
@@ -489,8 +484,8 @@ class FactRules(object):
         self.defined_facts = set()
 
         for k in impl_ab.keys():
-            if k[:1] == '!':
-                k = k[1:]
+            if type(k) is Not:
+                k = Not(k)
             self.defined_facts.add(k)
 
         # now split each rule into four logic chains
@@ -500,9 +495,9 @@ class FactRules(object):
         rel_tbeta = {}
         rel_fbeta = {}
         for k, (impl,betaidxs) in impl_ab.iteritems():
-            if k[:1] == '!':
+            if type(k) is Not:
                 rel_xbeta = rel_fbeta
-                k = name_not(k)
+                k = Not(k)
             else:
                 rel_xbeta = rel_tbeta
             rel_xbeta[k] = betaidxs
@@ -588,12 +583,7 @@ class FactRules(object):
             beta_maytrigger = set()
 
             # --- alpha chains ---
-            for k,v in fseq:
-                # first, convert name to be not a not-name
-                if k[:1] == '!':
-                    k = name_not(k)
-                    v = fuzzy_not(v)
-
+            for k, v in fseq:
                 #new_fact(k, v)
                 if k in new_facts:
                     assert new_facts[k] is None or new_facts[k] == v, \
@@ -644,8 +634,8 @@ class FactRules(object):
                 # let's see whether bcond is satisfied
                 for bk in bcond.args:
                     try:
-                        if bk[:1] == '!':
-                            bv = fuzzy_not(new_facts[bk[1:]])
+                        if type(bk) is Not:
+                            bv = fuzzy_not(new_facts[bk.arg])
                         else:
                             bv = new_facts[bk]
                     except KeyError:
@@ -655,8 +645,8 @@ class FactRules(object):
                         break
                 else:
                     # all of bcond's condition hold -- let's fire this beta rule
-                    if bimpl[:1] == '!':
-                        bimpl = bimpl[1:]
+                    if type(bimpl) is Not:
+                        bimpl = bimpl.arg
                         v = False
                     else:
                         v = True
