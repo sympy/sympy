@@ -1319,12 +1319,12 @@ def posify(eq):
             reps.update(dict((v, k) for k, v in posify(s)[1].items()))
         for i, e in enumerate(eq):
             eq[i] = e.subs(reps)
-        return f(eq), dict([(r,s) for s, r in reps.iteritems()])
+        return f(eq), dict([(r, s) for s, r in reps.iteritems()])
 
     reps = dict([(s, Dummy(s.name, positive=True))
                  for s in eq.atoms(Symbol) if s.is_positive is None])
     eq = eq.subs(reps)
-    return eq, dict([(r,s) for s, r in reps.iteritems()])
+    return eq, dict([(r, s) for s, r in reps.iteritems()])
 
 def _polarify(eq, lift, pause=False):
     from sympy import polar_lift
