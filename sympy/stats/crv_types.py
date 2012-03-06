@@ -113,7 +113,7 @@ def Beta(alpha, beta, symbol=None):
 
     >>> X = Beta(a, b, symbol=x)
     >>> Density(X)
-    (x, x**(a - 1)*(-x + 1)**(b - 1)*gamma(a + b)/(gamma(a)*gamma(b)))
+    Lambda(_x, _x**(a - 1)*(-_x + 1)**(b - 1)*gamma(a + b)/(gamma(a)*gamma(b)))
     """
 
     return BetaPSpace(alpha, beta, symbol).value
@@ -151,7 +151,7 @@ def Exponential(rate, symbol=None):
 
     >>> X = Exponential(rate=10, symbol=Symbol('x')) # Decay rate equals 10
     >>> Density(X)
-    (x, 10*exp(-10*x))
+    Lambda(_x, 10*exp(-10*_x))
 
     >>> E(X)
     1/10
@@ -198,7 +198,7 @@ def Gamma(k, theta, symbol=None):
 
     >>> X = Gamma(k, theta, symbol=x)
     >>> Density(X)
-    (x, theta**(-k)*x**(k - 1)*exp(-x/theta)/gamma(k))
+    Lambda(_x, _x**(k - 1)*theta**(-k)*exp(-_x/theta)/gamma(k))
 
     >>> E(X)
     theta*gamma(k + 1)/gamma(k)
@@ -240,7 +240,7 @@ def LogNormal(mean, std, symbol=None):
 
     >>> X = LogNormal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
     >>> Density(X)
-    (x, sqrt(2)*exp(-log(x)**2/2)/(2*sqrt(pi)*x))
+    Lambda(_x, sqrt(2)*exp(-log(_x)**2/2)/(2*_x*sqrt(pi)))
     """
 
     return LogNormalPSpace(mean, std, symbol).value
@@ -280,7 +280,7 @@ def Normal(mean, std, symbol=None):
 
     >>> X = Normal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
     >>> Density(X)
-    (x, sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)))
+    Lambda(_x, sqrt(2)*exp(-_x**2/2)/(2*sqrt(pi)))
 
     >>> E(2*X + 1)
     1
@@ -327,7 +327,7 @@ def Pareto(xm, alpha, symbol=None):
     >>> x, xm, beta = symbols('x xm beta', positive=True)
     >>> X = Pareto(xm, beta, symbol=x)
     >>> Density(X)
-    (x, beta*x**(-beta - 1)*xm**beta)
+    Lambda(_x, _x**(-beta - 1)*beta*xm**beta)
     """
 
     return ParetoPSpace(xm, alpha, symbol).value
@@ -369,7 +369,7 @@ def Uniform(left, right, symbol=None):
     >>> X = Uniform(l, r, symbol=x)
 
     >>> Density(X)
-    (x, Piecewise((0, x < l), (0, x > r), (1/(-l + r), True)))
+    Lambda(_x, Piecewise((0, _x < l), (0, _x > r), (1/(-l + r), True)))
 
     >>> simplify(E(X))
     l/2 + r/2
@@ -416,7 +416,7 @@ def Weibull(alpha, beta, symbol=None):
 
     >>> X = Weibull(a, b, symbol=x)
     >>> Density(X)
-    (x, b*(x/a)**(b - 1)*exp(-(x/a)**b)/a)
+    Lambda(_x, b*(_x/a)**(b - 1)*exp(-(_x/a)**b)/a)
     >>> simplify(E(X))
     a*gamma(1 + 1/b)
     >>> simplify(Var(X))

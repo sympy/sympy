@@ -12,7 +12,7 @@ Binomial
 Hypergeometric
 """
 
-from sympy.stats.frv import SingleFinitePSpace, create_SingleFinitePSpace
+from sympy.stats.frv import SingleFinitePSpace
 from sympy import S, sympify, Rational, binomial
 
 __all__ = ['FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin',
@@ -34,7 +34,7 @@ def FiniteRV(density, symbol=None):
     >>> P(X>=2)
     0.700000000000000
     """
-    return create_SingleFinitePSpace(density, symbol).value
+    return SingleFinitePSpace.fromdict(density, symbol).value
 
 class DiscreteUniformPSpace(SingleFinitePSpace):
     """
@@ -62,7 +62,7 @@ class DiscreteUniformPSpace(SingleFinitePSpace):
     def __new__(cls, items, symbol=None):
         density = dict((sympify(item), Rational(1, len(items)))
                        for item in items)
-        return create_SingleFinitePSpace(density, symbol, cls)
+        return cls.fromdict(density, symbol)
 
 def DiscreteUniform(items, symbol=None):
     """
@@ -156,7 +156,7 @@ class BernoulliPSpace(SingleFinitePSpace):
     def __new__(cls, p, succ=1, fail=0, symbol=None):
         succ, fail, p = map(sympify, (succ, fail, p))
         density = {succ:p, fail:(1-p)}
-        return create_SingleFinitePSpace(density, symbol, cls)
+        return cls.fromdict(density, symbol)
 
 def Bernoulli(p, succ=1, fail=0, symbol=None):
     """
@@ -248,7 +248,7 @@ class BinomialPSpace(SingleFinitePSpace):
         n, p, succ, fail = map(sympify, (n, p, succ, fail))
         density = dict((k*succ + (n-k)*fail,
                 binomial(n, k) * p**k * (1-p)**(n-k)) for k in range(0, n+1))
-        return create_SingleFinitePSpace(density, symbol, cls)
+        return cls.fromdict(density, symbol)
 
 def Binomial(n, p, succ=1, fail=0, symbol=None):
     """
@@ -292,7 +292,7 @@ class HypergeometricPSpace(SingleFinitePSpace):
         N, m, n = map(sympify, (N, m, n))
         density = dict((k, binomial(m, k) * binomial(N-m, n-k) / binomial(N, n))
                 for k in range(max(0, n+m-N), min(m, n) + 1))
-        return create_SingleFinitePSpace(density, symbol, cls)
+        return cls.fromdict(density, symbol)
 
 def Hypergeometric(N, m, n, symbol=None):
     """
