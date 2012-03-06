@@ -540,9 +540,9 @@ class FactRules(object):
                 prereq[k] |= pitems
         self.prereq = prereq
 
-    # --- DEDUCTION ENGINE: RUNTIME CORE ---
+class FactKB(dict):
 
-    def deduce_all_facts(self, facts, base=None):
+    def deduce_all_facts(self, rules, facts):
         """Deduce all facts from known facts ({} or [] of (k,v))
 
            *********************************************
@@ -558,21 +558,17 @@ class FactRules(object):
         """
         # keep frequently used attributes locally, so we'll avoid extra
         # attribute access overhead
-        rels = self.rels
-        beta_rules = self.beta_rules
-        if base is None:
-            new_facts = {}
-        else:
-            new_facts = base
+        rels = rules.rels
+        beta_rules = rules.beta_rules
 
         def x_new_facts(keys, v):
             for k in keys:
-                if k in new_facts and new_facts[k] is not None:
-                    assert new_facts[k] == v, \
-                            ('inconsistency between facts', new_facts, k, v)
+                if k in self and self[k] is not None:
+                    assert self[k] == v, \
+                            ('inconsistency between facts', self, k, v)
                     continue
                 else:
-                    new_facts[k] = v
+                    self[k] = v
 
         if type(facts) is dict:
             fseq = facts.iteritems()
@@ -585,14 +581,14 @@ class FactRules(object):
             # --- alpha chains ---
             for k, v in fseq:
                 #new_fact(k, v)
-                if k in new_facts:
-                    assert new_facts[k] is None or new_facts[k] == v, \
-                            ('inconsistency between facts', new_facts, k, v)
+                if k in self:
+                    assert self[k] is None or self[k] == v, \
+                            ('inconsistency between facts', self, k, v)
                     # performance-wise it is important not to fire implied rules
                     # for already-seen fact -- we already did them all.
                     continue
                 else:
-                    new_facts[k] = v
+                    self[k] = v
 
                 # some known fact -- let's follow its implications
                 if v is not None:
@@ -635,9 +631,9 @@ class FactRules(object):
                 for bk in bcond.args:
                     try:
                         if type(bk) is Not:
-                            bv = fuzzy_not(new_facts[bk.arg])
+                            bv = fuzzy_not(self[bk.arg])
                         else:
-                            bv = new_facts[bk]
+                            bv = self[bk]
                     except KeyError:
                         break   # fact not found -- bcond not satisfied
                     # one of bcond's condition does not hold
@@ -651,4 +647,4 @@ class FactRules(object):
                     else:
                         v = True
                     fseq.append( (bimpl,v) )
-        return new_facts
+        return self

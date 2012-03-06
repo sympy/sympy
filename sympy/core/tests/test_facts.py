@@ -1,5 +1,6 @@
-from sympy.core.facts import deduce_alpha_implications, apply_beta_to_alpha_route, \
-        rules_2prereq, split_rules_tt_tf_ft_ff, FactRules
+from sympy.core.facts import (deduce_alpha_implications,
+        apply_beta_to_alpha_route, rules_2prereq, split_rules_tt_tf_ft_ff,
+        FactRules, FactKB)
 from sympy.core.logic import And, Not
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -181,7 +182,7 @@ def test_FactRules_parse2():
 
 def test_FactRules_deduce():
     f = FactRules(['a -> b', 'b -> c', 'b -> d', 'c -> e'])
-    D = f.deduce_all_facts
+    D = lambda facts: FactKB().deduce_all_facts(f, facts)
 
     assert D({'a': T})  == {'a': T, 'b': T, 'c': T, 'd': T, 'e': T}
     assert D({'b': T})  == {        'b': T, 'c': T, 'd': T, 'e': T}
@@ -200,7 +201,7 @@ def test_FactRules_deduce():
 def test_FactRules_deduce2():
     # pos/neg/zero, but the rules are not sufficient to derive all relations
     f = FactRules(['pos -> !neg', 'pos -> !z'])
-    D = f.deduce_all_facts
+    D = lambda facts: FactKB().deduce_all_facts(f, facts)
 
     assert D({'pos':T}) == {'pos': T, 'neg': F, 'z': F}
     assert D({'pos':F}) == {'pos': F                  }
@@ -211,7 +212,7 @@ def test_FactRules_deduce2():
 
     # pos/neg/zero. rules are sufficient to derive all relations
     f = FactRules(['pos -> !neg', 'neg -> !pos', 'pos -> !z', 'neg -> !z'])
-    D = f.deduce_all_facts
+    D = lambda facts: FactKB().deduce_all_facts(f, facts)
 
     assert D({'pos':T}) == {'pos': T, 'neg': F, 'z': F}
     assert D({'pos':F}) == {'pos': F                  }
@@ -226,7 +227,7 @@ def test_FactRules_deduce_multiple():
 
     # TODO add the same check for 'npos == real & !pos' ?
     f = FactRules(['real == pos | npos'])
-    D = f.deduce_all_facts
+    D = lambda facts: FactKB().deduce_all_facts(f, facts)
 
     assert D({'real': T})   == {'real': T}
     assert D({'real': F})   == {'real': F, 'pos': F, 'npos': F}
@@ -245,7 +246,7 @@ def test_FactRules_deduce_multiple():
 def test_FactRules_deduce_multiple2():
 
     f = FactRules(['real == neg | zero | pos'])
-    D = f.deduce_all_facts
+    D = lambda facts: FactKB().deduce_all_facts(f, facts)
 
     assert D({'real': T})   == {'real': T}
     assert D({'real': F})   == {'real': F, 'neg': F, 'zero': F, 'pos': F}
@@ -275,14 +276,12 @@ def test_FactRules_deduce_base():
     f = FactRules(['real  == neg | zero | pos',
                    'neg   -> real & !zero & !pos',
                    'pos   -> real & !zero & !neg'])
-    D = f.deduce_all_facts
+    D = lambda facts: FactKB().deduce_all_facts(f, facts)
 
     base = D({'real': T, 'neg': F})
     assert base == {'real': T, 'neg': F}
 
-    X = D({'zero': F}, base=base)
-
-    assert X is base    # base is modified inplace
+    X = base.deduce_all_facts(f, {'zero': F})
     assert base == {'real': T, 'neg': F, 'zero': F, 'pos': T}
 
 
@@ -298,36 +297,3 @@ def test_FactRules_deduce_staticext():
     assert 'nneg' in f.rel_tt['pos']
     assert 'nneg' in f.rel_tt['zero']
     assert 'npos' in f.rel_tt['zero']
-
-
-# NOTE: once upon a time there was an idea to intoruce copy-on-write (COW) mode
-# in deduce_all_facts, and also teach it to return list of newly derived knowledge.
-#
-# it turned out not to be better performance wise (or was i wrong ?), so this
-# mode was removed.
-#
-# However disabled test stays here just in case (maybe we'll return to this
-# idea some day)
-def X_test_FactRules_deduce_cow():
-    f = FactRules(['real  == neg | zero | pos',
-                   'neg   -> real & !zero & !pos',
-                   'pos   -> real & !zero & !neg'])
-    D = f.deduce_all_facts
-
-    base0 = D({'real': T, 'neg': F})
-    assert base0 == {'real': T, 'neg': F}
-
-    base = base0.copy()
-    X = D({'zero': F}, base=base, cow=False)
-
-    assert X is base    # base is modified inplace
-    assert base == {'real': T, 'neg': F, 'zero': F, 'pos': T}
-
-    base = base0.copy()
-    X, new_knowledge = D({'zero': F}, base=base, cow=True)
-
-    assert X is not base    # base should be copied
-    assert base == {'real': T, 'neg': F}
-
-    assert X == {'real': T, 'neg': F, 'zero': F, 'pos': T}
-    #assert set(new_knowledge) == set([ ('zero',F), ('pos',T) ])    # XXX disabled
