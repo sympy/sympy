@@ -55,12 +55,8 @@ def fuzzy_not(v):
 
 class Logic(object):
     """Logical expression"""
-
-    __slots__ = ['args']
-
     # {} 'op' -> LogicClass
     op_2class = {}
-
 
     def __new__(cls, args):
         obj = object.__new__(cls)
@@ -72,6 +68,8 @@ class Logic(object):
 
         return obj
 
+    def __getnewargs__(self):
+        return self.args
 
     def __hash__(self):
         return hash( (type(self).__name__, self.args) )
@@ -153,8 +151,6 @@ class Logic(object):
 
 class AndOr_Base(Logic):
 
-    __slots__ = []
-
     def __new__(cls, *args):
         bargs = []
         for a in args:
@@ -203,8 +199,6 @@ class AndOr_Base(Logic):
 class And(AndOr_Base):
     op_x_notx = False
 
-    __slots__ = []
-
     def _eval_propagate_not(self):
         # !(a&b&c ...) == !a | !b | !c ...
         return Or( *[Not(a) for a in self.args] )
@@ -234,14 +228,11 @@ class And(AndOr_Base):
 class Or(AndOr_Base):
     op_x_notx = True
 
-    __slots__ = []
-
     def _eval_propagate_not(self):
         # !(a|b|c ...) == !a & !b & !c ...
         return And( *[Not(a) for a in self.args] )
 
 class Not(Logic):
-    __slots__ = []
 
     def __new__(cls, arg):
         if isinstance(arg, str):
