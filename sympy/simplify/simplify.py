@@ -1769,18 +1769,25 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     y = Dummy('y')
     if expr.is_Pow:
         if deep:
-            return powsimp(y*powsimp(expr.base, deep, combine, force)**powsimp(\
-            expr.exp, deep, combine, force), deep, combine, force)/y
+            return powsimp(y*powsimp(expr.base, deep, combine, force, measure
+                                     )**powsimp(
+                                      expr.exp, deep, combine, force, measure
+                                      ), deep, combine, force, measure)/y
         else:
-            return powsimp(y*expr, deep, combine, force)/y # Trick it into being a Mul
-    elif expr.is_Function and not expr == exp_polar(1) and not expr == exp_polar(0):
+            return powsimp(y*expr, deep, combine, force, measure)/y # Trick it into being a Mul
+    elif (expr.is_Function and not
+          expr == exp_polar(1) and not
+          expr == exp_polar(0)):
         if (expr.func is exp or expr.func is exp_polar) and deep:
             # Exp should really be like Pow
-            return powsimp(y*expr.func(powsimp(expr.args[0], deep, combine, force)), deep, combine, force)/y
+            return powsimp(y*expr.func(powsimp(expr.args[0],
+                                               deep, combine, force, measure)
+                                       ), deep, combine, force, measure)/y
         elif (expr.func is exp or expr.func is exp_polar) and not deep:
-            return powsimp(y*expr, deep, combine, force)/y
+            return powsimp(y*expr, deep, combine, force, measure)/y
         elif deep:
-            return expr.func(*[powsimp(t, deep, combine, force) for t in expr.args])
+            return expr.func(*[powsimp(t, deep, combine, force, measure)
+                               for t in expr.args])
         else:
             return expr
     elif expr.is_Add:
@@ -1793,18 +1800,22 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if combine == 'all' and deep and any((t.is_Add for t in expr.args)):
                 # Once we get to 'base', there is no more 'exp', so we need to
                 # distribute here.
-                return powsimp(expand_mul(expr, deep=False), deep, combine, force)
+                return powsimp(expand_mul(expr, deep=False),
+                               deep, combine, force, measure)
             c_powers = defaultdict(list)
             nc_part = []
             newexpr = []
             for term in expr.args:
                 if term.is_Add and deep:
-                    newexpr.append(powsimp(term, deep, combine, force))
+                    newexpr.append(powsimp(term,
+                                           deep, combine, force, measure))
                 else:
                     if term.is_commutative:
                         b, e = term.as_base_exp()
                         if deep:
-                            b, e = [powsimp(i, deep, combine, force) for i in  [b, e]]
+                            b, e = [powsimp(i,
+                                            deep, combine, force, measure)
+                                    for i in [b, e]]
                         c_powers[b].append(e)
                     else:
                         # This is the logic that combines exponents for equal,
@@ -1993,19 +2004,25 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 if deep:
                     newexpr = expand_mul(newexpr, deep=False)
                 if newexpr.is_Add:
-                    return powsimp(Mul(*nc_part), deep, combine='base', force=force) * \
-                           Add(*[powsimp(i, deep, combine='base', force=force)
-                                 for i in newexpr.args])
+                    return powsimp(Mul(*nc_part),
+                        deep, combine='base', force=force, measure=measure)*\
+                    Add(*[powsimp(i,
+                        deep, combine='base', force=force, measure=measure)
+                          for i in newexpr.args])
                 else:
-                    return powsimp(Mul(*nc_part), deep, combine='base', force=force)*\
-                    powsimp(newexpr, deep, combine='base', force=force)
+                    return powsimp(Mul(*nc_part),
+                        deep, combine='base', force=force, measure=measure)*\
+                            powsimp(newexpr,
+                        deep, combine='base', force=force, measure=measure)
 
         else:
             # combine is 'base'
             if deep:
                 expr = expand_mul(expr, deep=False)
             if expr.is_Add:
-                return Add(*[powsimp(i, deep, combine, force) for i in expr.args])
+                return Add(*[powsimp(i,
+                                     deep, combine, force, measure)
+                             for i in expr.args])
             else:
                 # Build c_powers and nc_part.  These must both be lists not
                 # dicts because exp's are not combined.
@@ -2044,7 +2061,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             c_exp = defaultdict(list)
             for b, e in c_powers:
                 if deep:
-                    e = powsimp(e, deep, combine, force)
+                    e = powsimp(e, deep, combine, force, measure)
                 c_exp[e].append(b)
             del c_powers
 
@@ -2726,13 +2743,25 @@ def simplify(expr, ratio=1.7, measure=count_ops):
             return expr1
         return shorter(expr1, expr)
 
-    expr1 = cancel(powsimp(expr))
+    expr0 = powsimp(expr)
+    expr1 = cancel(expr0)
     expr2 = together(expr1.expand(), deep=True)
+    # sometimes the expansions applied to Muls
+    # give shorter expressions, so make this a
+    # Mul if it's an Add (issue 3024)
+    if expr.is_Add:
+        y = Dummy()
+        expr0b = powsimp(expr*y)/y
+        if expr0b != expr0:
+            expr1b = cancel(expr0b)
+            expr2b = together(expr1b.expand(), deep=True)
+            if shorter(expr2b, expr) == expr2b:
+                expr1, expr2 = expr1b, expr2b
+
     if ratio is S.Infinity:
         expr = expr2
     else:
         expr = shorter(expr2, expr1, expr)
-
     if not isinstance(expr, Basic): # XXX: temporary hack
         return expr
 
