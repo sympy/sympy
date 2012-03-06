@@ -103,7 +103,8 @@ class WithAssumptions(BasicMeta):
         cls._default_premises.update(cls_premises)
 
         # deduce all consequences from default assumptions -- make it complete
-        default_assumptions = FactKB().deduce_all_facts(_assume_rules, cls._default_premises)
+        default_assumptions = FactKB(_assume_rules)
+        default_assumptions.deduce_all_facts(cls._default_premises)
 
         # and store completed set into cls -- this way we'll avoid rededucing
         # extensions of class default assumptions each time on instance
@@ -383,8 +384,7 @@ class AssumeMixin(object):
 
         base = self._assumptions
         if base is self.default_assumptions:
-            base = FactKB(base)
+            base = base.copy()
             self._assumptions = base
-        # NOTE it modifies base inplace
-        base.deduce_all_facts(_assume_rules, facts)
+        base.deduce_all_facts(facts)
 

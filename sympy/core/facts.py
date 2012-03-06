@@ -541,8 +541,15 @@ class FactRules(object):
         self.prereq = prereq
 
 class FactKB(dict):
+    def __init__(self, rules):
+        self.rules = rules
 
-    def deduce_all_facts(self, rules, facts):
+    def copy(self):
+        new = self.__class__(self.rules)
+        new.update(self)
+        return new
+
+    def deduce_all_facts(self, facts):
         """Deduce all facts from known facts ({} or [] of (k,v))
 
            *********************************************
@@ -558,8 +565,8 @@ class FactKB(dict):
         """
         # keep frequently used attributes locally, so we'll avoid extra
         # attribute access overhead
-        rels = rules.rels
-        beta_rules = rules.beta_rules
+        rels = self.rules.rels
+        beta_rules = self.rules.beta_rules
 
         def x_new_facts(keys, v):
             for k in keys:
