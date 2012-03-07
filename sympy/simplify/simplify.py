@@ -162,7 +162,7 @@ def separate(expr, deep=False, force=False):
        2**y*sin(x)**y + 2**y*cos(x)**y
 
        >>> separate((2*exp(y))**x)
-       2**x*exp(x*y)
+       2**x*exp(y)**x
 
        >>> separate((2*cos(x))**y)
        2**y*cos(x)**y

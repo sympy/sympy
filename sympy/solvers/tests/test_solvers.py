@@ -400,8 +400,11 @@ def test_issue_1694():
     assert solve(1/(5 + x)**(S(1)/5) - 9, x) == [-295244/S(59049)]
 
     assert solve(sqrt(x) + sqrt(sqrt(x)) - 4) == [-9*sqrt(17)/2 + 49*S.Half]
-    assert solve(Poly(sqrt(exp(x)) + sqrt(exp(-x)) - 4)) == \
-            [2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2)]
+    assert solve(Poly(sqrt(exp(x)) + sqrt(exp(-x)) - 4)) in \
+            [
+            [2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2)],
+            [log(-4*sqrt(3) + 7), log(4*sqrt(3) + 7)],
+            ]
     assert solve(Poly(exp(x) + exp(-x) - 4)) == [log(-sqrt(3) + 2), log(sqrt(3) + 2)]
     assert solve(x**y + x**(2*y) - 1, x) == \
         [(-S.Half + sqrt(5)/2)**(1/y), (-S.Half - sqrt(5)/2)**(1/y)]
