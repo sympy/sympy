@@ -16,9 +16,9 @@ class SymPyDeprecationWarning(DeprecationWarning):
 
     To provide additional information, do
 
-    >>> warnings.warn(SymPyDeprecationWarning(feature = "such and such",
-    ...     last_supported_version = "1.2.3",
-    ...     useinstead = "this other feature")) #doctest:+SKIP
+    >>> warnings.warn(SymPyDeprecationWarning(feature="such and such",
+    ...     last_supported_version="1.2.3",
+    ...     useinstead="this other feature")) #doctest:+SKIP
     __main__:3: SymPyDeprecationWarning: The feature such and such is
     deprecated.  It will be last supported in SymPy version 1.2.3.
     Use this other feature instead.
@@ -27,17 +27,17 @@ class SymPyDeprecationWarning(DeprecationWarning):
     useinstead can be omitted.  In this case the corresponding
     sentence will not be shown:
 
-    >>> warnings.warn(SymPyDeprecationWarning(feature = "such and such",
-    ...     useinstead = "this other feature")) #doctest:+SKIP
+    >>> warnings.warn(SymPyDeprecationWarning(feature="such and such",
+    ...     useinstead="this other feature")) #doctest:+SKIP
     __main__:2: SymPyDeprecationWarning: The feature such and such is
     deprecated.  Use this other feature instead.
 
     You can still provide the argument value.  If it is a string, it
     will be appended to the end of the message:
 
-    >>> warnings.warn(SymPyDeprecationWarning(feature = "such and such",
-    ...     useinstead = "this other feature",
-    ...     value = "Contact the developers for further information.")) #doctest:+SKIP
+    >>> warnings.warn(SymPyDeprecationWarning(feature="such and such",
+    ...     useinstead="this other feature",
+    ...     value="Contact the developers for further information.")) #doctest:+SKIP
     __main__:3: SymPyDeprecationWarning: The feature such and such is
     deprecated.  Use this other feature instead.  Contact the developers
     for further information.
@@ -45,16 +45,16 @@ class SymPyDeprecationWarning(DeprecationWarning):
     If, however, the argument value does not hold a string, a string
     representation of the object will be appended to the message:
 
-    >>> warnings.warn(SymPyDeprecationWarning(feature = "such and such",
-    ...     useinstead = "this other feature",
-    ...     value = [1,2,3])) #doctest:+SKIP
+    >>> warnings.warn(SymPyDeprecationWarning(feature="such and such",
+    ...     useinstead="this other feature",
+    ...     value=[1,2,3])) #doctest:+SKIP
     __main__:3: SymPyDeprecationWarning: The feature such and such is
     deprecated.  Use this other feature instead.  ([1, 2, 3])
     """
 
-    def __init__(self, value = None, feature = None, last_supported_version = None,
-                 useinstead = None):
-        self.fullMessage = ""
+    def __init__(self, value=None, feature=None, last_supported_version=None,
+                 useinstead=None):
+        self.fullMessage=""
 
         if feature:
             self.fullMessage = "The feature {0} is deprecated.".format(feature)
