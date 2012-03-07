@@ -1720,13 +1720,8 @@ class Expr(Basic, EvalfMixin):
            >>> (x+1).extract_additively(x)
            1
 
-           >>> (x+1).extract_additively(2*x)
-
-           >>> (x+1).extract_additively(-x)
-           2*x + 1
-
-           >>> (-x+1).extract_additively(2*x)
-           -3*x + 1
+           >>> (x+1).extract_additively(2*x) is None
+           True
 
         """
         c = sympify(c)
@@ -1736,60 +1731,50 @@ class Expr(Basic, EvalfMixin):
             return S.Zero
         elif self is S.Zero:
             return None
-        elif c.is_Add:
-            x = self.extract_additively(c.as_two_terms()[0])
-            if x != None:
-                return x.extract_additively(c.as_two_terms()[1])
-        sub = self - c
+
         if self.is_Number:
-            if self.is_Integer:
-                if not sub.is_Integer:
-                    return None
-                elif self.is_positive and sub.is_negative:
-                    return None
-                else:
-                    return sub
-            elif self.is_Rational:
-                if not sub.is_Rational:
-                    return None
-                elif self.is_positive and sub.is_negative:
-                    return None
-                else:
-                    return sub
-            elif self.is_Float:
-                if not sub.is_Float:
-                    return None
-                elif self.is_positive and sub.is_negative:
-                    return None
-                else:
-                    return sub
-        elif self.is_NumberSymbol or self.is_Symbol or self is S.ImaginaryUnit:
-            if sub.is_Mul and len(sub.args) == 2:
-                if sub.args[0].is_Integer and sub.args[0].is_positive and sub.args[1] == self:
-                    return sub
-            elif sub.is_Integer:
-                return sub
-        elif self.is_Add:
-            terms = self.as_two_terms()
-            subs0 = terms[0].extract_additively(c)
-            if subs0 != None:
-                return subs0 + terms[1]
-            else:
-                subs1 = terms[1].extract_additively(c)
-                if subs1 != None:
-                    return subs1 + terms[0]
-        elif self.is_Mul:
-            self_coeff, self_terms = self.as_coeff_Mul(rational=True)
-            if c.is_Mul:
-                c_coeff, c_terms = c.as_coeff_Mul(rational=True)
-                if c_terms == self_terms:
-                    new_coeff = self_coeff.extract_additively(c_coeff)
-                    if new_coeff != None:
-                        return new_coeff * c_terms
-            elif c == self_terms:
-                new_coeff = self_coeff.extract_additively(1)
-                if new_coeff != None:
-                    return new_coeff * c
+            if not c.is_Number:
+                return None
+            co = self
+            diff = co - c
+            # XXX should we match types? i.e should 3 - .1 succeed?
+            if (co > 0 and diff > 0 and diff < co or
+                co < 0 and diff < 0 and diff > co):
+                return diff
+            return None
+
+        if c.is_Number:
+            co, t = self.as_coeff_Add()
+            xa = co.extract_additively(c)
+            if xa is None:
+                return None
+            return xa + t
+
+        if c.is_Add and c.args[0].is_Number:
+            h, t = c.as_coeff_Add()
+            sh, st = self.as_coeff_Add()
+            xa = sh.extract_additively(h)
+            if xa is None:
+                return None
+            xa2 = st.extract_additively(t)
+            if xa2 is None:
+                return None
+            return xa + xa2
+
+        coeffs = []
+        for a in Add.make_args(c):
+            ac, at = a.as_coeff_Mul()
+            co = self.coeff(at)
+            if not co:
+                return None
+            coc, cot = co.as_coeff_Add()
+            xa = coc.extract_additively(ac)
+            if xa is None:
+                return None
+            self -= co*at
+            coeffs.append((cot + xa)*at)
+        coeffs.append(self)
+        return Add(*coeffs)
 
     def could_extract_minus_sign(self):
         """Canonical way to choose an element in the set {e, -e} where
