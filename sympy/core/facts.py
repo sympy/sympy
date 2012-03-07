@@ -51,6 +51,22 @@ from collections import defaultdict
 
 from logic import fuzzy_not, Logic, And, Or, Not
 
+def _base_fact(atom):
+    """Return the literal fact of an atom.
+
+    Effectively, this merely strips the Not around a fact.
+    """
+    if isinstance(atom, Not):
+        return atom.arg
+    else:
+        return atom
+
+def _as_pair(atom):
+    if isinstance(atom, Not):
+        return (atom.arg, False)
+    else:
+        return (atom, True)
+
 # XXX this prepares forward-chaining rules for alpha-network
 def deduce_alpha_implications(implications):
     """deduce all implications
@@ -261,10 +277,7 @@ def split_rules_tt_tf_ft_ff(rules):
         else:
             k = k.arg
             for i in impl:
-                if type(i) is not Not:
-                    t[(i, False)].add(k)
-                else:
-                    t[(i.arg, True)].add(k)
+                t[_as_pair(Not(i))].add(k)
 
     # FF is related to TT
     for (k, v), impl in t.iteritems():
@@ -480,55 +493,32 @@ class FactRules(object):
         impl_ab = apply_beta_to_alpha_route(impl_a, P.rules_beta)
 
         # extract defined fact names
-        self.defined_facts = set()
-
-        for k in impl_ab.keys():
-            if type(k) is Not:
-                k = Not(k)
-            self.defined_facts.add(k)
+        self.defined_facts = set(_base_fact(k) for k in impl_ab.keys())
 
         # now split each rule into four logic chains
         # (removing betaidxs from impl_ab view) (XXX is this needed?)
         impl_ab_ = dict( (k,impl)  for k, (impl,betaidxs) in impl_ab.iteritems())
         rel_t, rel_f = split_rules_tt_tf_ft_ff(impl_ab_)
-        rel_tbeta = {}
-        rel_fbeta = {}
+        rel_beta = {}
         for k, (impl,betaidxs) in impl_ab.iteritems():
-            if type(k) is Not:
-                rel_xbeta = rel_fbeta
-                k = Not(k)
-            else:
-                rel_xbeta = rel_tbeta
-            rel_xbeta[k] = betaidxs
+            rel_beta[_as_pair(k)] = betaidxs
 
         self.rel_tt = dict((k, impl) for (k,v), impl in rel_t.iteritems() if v)
         self.rel_tf = dict((k, impl) for (k,v), impl in rel_f.iteritems() if v)
-        self.rel_tbeta  = rel_tbeta
+        self.rel_tbeta  = dict((k, impl) for (k,v), impl in rel_beta.iteritems() if v)
         self.rel_ff = dict((k, impl) for (k,v), impl in rel_f.iteritems() if not v)
         self.rel_ft = dict((k, impl) for (k,v), impl in rel_t.iteritems() if not v)
-        self.rel_fbeta  = rel_fbeta
+        self.rel_fbeta  = dict((k, impl) for (k,v), impl in rel_beta.iteritems() if not v)
 
         self.beta_rules = P.rules_beta
 
         # build rels (forward chains)
-        K = set (self.rel_tt.keys())
-        K.update(self.rel_tf.keys())
-        K.update(self.rel_ff.keys())
-        K.update(self.rel_ft.keys())
+        K = set(rel_t) | set(rel_f) | set(rel_beta)
 
         rels = {}
         empty= ()
-        for k in K:
-            tt = rel_t.get((k, True), empty)
-            tf = rel_f.get((k, True), empty)
-            ft = rel_t.get((k, False), empty)
-            ff = rel_f.get((k, False), empty)
-
-            tbeta = rel_tbeta.get(k,empty)
-            fbeta = rel_fbeta.get(k,empty)
-
-            rels[(k, True)] = tt, tf, tbeta
-            rels[(k, False)] = ft, ff, fbeta
+        for kv in K:
+            rels[kv] = tuple([rule.get(kv, empty) for rule in rel_t, rel_f, rel_beta])
 
         self.rels = rels
 
