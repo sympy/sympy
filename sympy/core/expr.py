@@ -2513,7 +2513,7 @@ class Expr(Basic, EvalfMixin):
         if hints:
             for i in hints.keys():
                 if i not in list_hints:
-                    raise TypeError("The arguement passed to the function is not a valid hint \""+i+"\"."
+                    raise TypeError("%d is not a valid hint to expand()." % i)
         from sympy.simplify.simplify import fraction
 
         hints.update(power_base=power_base, power_exp=power_exp, mul=mul, \
