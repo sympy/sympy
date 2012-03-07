@@ -1742,7 +1742,7 @@ def _generate_patterns():
 
 
 def tsolve(eq, sym):
-    warn("tsolve is deprecated, use solve.", SymPyDeprecationWarning)
+    warn(SymPyDeprecationWarning(feature="tsolve()", useinstead="solve"))
     return _tsolve(eq, sym)
 
 

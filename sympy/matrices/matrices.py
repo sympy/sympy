@@ -1912,8 +1912,7 @@ class MatrixBase(object):
         fill
         """
         if is_sequence(r):
-            warnings.warn("pass row and column as zeros(%i, %i)" % r,
-                    SymPyDeprecationWarning)
+            warnings.warn(SymPyDeprecationWarning("Pass row and column as zeros(%i, %i)." % r))
             r, c = r
         else:
             c = r if c is None else c
@@ -3791,7 +3790,7 @@ def zeros(r, c=None, cls=MutableMatrix):
     diag
     """
     if is_sequence(r):
-        warnings.warn("pass row and column as zeros(%i, %i)" % r, SymPyDeprecationWarning)
+        warnings.warn(SymPyDeprecationWarning("Pass row and column as zeros(%i, %i)." % r))
         r, c = r
     else:
         c = r if c is None else c
@@ -3811,7 +3810,7 @@ def ones(r, c=None):
     """
 
     if is_sequence(r):
-        warnings.warn("pass row and column as ones(%i, %i)" % r, SymPyDeprecationWarning)
+        warnings.warn(SymPyDeprecationWarning("Pass row and column as ones(%i, %i)." % r))
         r, c = r
     else:
         c = r if c is None else c

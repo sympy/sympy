@@ -1136,7 +1136,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         msg = "sol appears to be a valid function. " +\
               "The order of sol and func will be reversed. " +\
               "If this is not desired, send sol as Eq(sol, 0)."
-        warnings.warn(msg, category=SymPyDeprecationWarning)
+        warnings.warn(SymPyDeprecationWarning(msg))
         sol, func = func, sol
     elif not (isinstance(func, AppliedUndef) and len(func.args) == 1):
         raise ValueError("func (or sol, during deprecation) must be a function of one variable. Got sol = %s, func = %s" % (sol, func))

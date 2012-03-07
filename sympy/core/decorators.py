@@ -16,8 +16,7 @@ def deprecated(func):
     @wraps(func)
     def new_func(*args, **kwargs):
         from sympy.utilities.exceptions import SymPyDeprecationWarning
-        warnings.warn("Call to deprecated function %s." % func.__name__,
-                      category=SymPyDeprecationWarning)
+        warnings.warn(SymPyDeprecationWarning("Call to deprecated function.", feature=func.__name__ + "()"))
         return func(*args, **kwargs)
     return new_func
 

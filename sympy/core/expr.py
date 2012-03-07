@@ -1491,8 +1491,8 @@ class Expr(Basic, EvalfMixin):
         """
         import warnings
         from sympy.utilities.exceptions import SymPyDeprecationWarning
-        warnings.warn("\nuse as_coeff_mul() instead of as_coeff_terms().",
-                      SymPyDeprecationWarning)
+        warnings.warn(SymPyDeprecationWarning(feature="as_coeff_terms()",
+                                              useinstead="as_coeff_mul()"))
         return self.as_coeff_mul(*deps)
 
     def as_coeff_factors(self, *deps):
@@ -1501,8 +1501,8 @@ class Expr(Basic, EvalfMixin):
         """
         import warnings
         from sympy.utilities.exceptions import SymPyDeprecationWarning
-        warnings.warn("\nuse as_coeff_add() instead of as_coeff_factors().",
-                      SymPyDeprecationWarning)
+        warnings.warn(SymPyDeprecationWarning(feature="as_coeff_factors()",
+                                              useinstead="as_coeff_add()"))
         return self.as_coeff_add(*deps)
 
     def as_coeff_mul(self, *deps):
