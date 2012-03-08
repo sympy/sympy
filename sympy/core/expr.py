@@ -1707,23 +1707,19 @@ class Expr(Basic, EvalfMixin):
                     return self.base ** (new_exp)
 
     def extract_additively(self, c):
-        """Return None if it's not possible to make self in the form
-           something + c in a nice way, i.e. preserving the properties
-           of arguments of self.
+        """Return self - c if it's possible to subtract c from self such
+        that all term coefficients move towards zero, else return None.
 
-           >>> from sympy import symbols
-
-           >>> x, y = symbols('x,y', real=True)
-
-           >>> ((x*y)**3).extract_additively(1)
-
-           >>> (x+1).extract_additively(x)
-           1
-
-           >>> (x+1).extract_additively(2*x) is None
-           True
+        >>> from sympy import S
+        >>> from sympy.abc import x, y
+        >>> e = 2*x + 3
+        >>> e.extract_additively(x + 1)
+        x + 2
+        >>> e.extract_additively(3*x)
+        >>> e.extract_additively(4)
 
         """
+
         c = sympify(c)
         if c is S.Zero:
             return self
