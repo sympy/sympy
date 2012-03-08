@@ -162,28 +162,21 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
 
         for bidx, (bcond,bimpl) in enumerate(beta_rules):
             assert isinstance(bcond, And)
+            bargs = set(bcond.args)
             for x, (ximpls, bb) in x_impl.iteritems():
-                # A: x -> a     B: &(...) -> x      (non-informative)
-                if x == bimpl:
-                    continue
+                x_all = ximpls | set([x])
                 # A: ... -> a   B: &(...) -> a      (non-informative)
-                if bimpl in ximpls:
-                    continue
-                # A: x -> a     B: &(a,!x) -> ...   (will never trigger)
-                if Not(x) in bcond.args:
+                if bimpl in x_all:
                     continue
                 # A: x -> a...  B: &(!a,...) -> ... (will never trigger)
                 # A: x -> a...  B: &(...) -> !a     (will never trigger)
-                if any(Not(xi) in bcond.args or Not(xi) == bimpl for xi in ximpls):
+                if any(Not(xi) in bargs or Not(xi) == bimpl for xi in x_all):
                     continue
 
                 # A: x -> a,b   B: &(a,b) -> c      (static extension)
                 #                                       |
                 # A: x -> a,b,c <-----------------------+
-                for barg in bcond.args:
-                    if not ( (barg == x) or (barg in ximpls) ):
-                        break
-                else:
+                if bargs.issubset(x_all):
                     assert phase==1
                     ximpls.add(bimpl)
 
@@ -196,11 +189,8 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
                     continue
 
                 # does this beta-rule even has a chance to be triggered ?
-                if phase == 2:
-                    for barg in bcond.args:
-                        if (barg == x) or (barg in ximpls):
-                            bb.append( bidx )
-                            break
+                elif bargs & x_all and phase == 2:
+                    bb.append(bidx)
 
         # no static extensions was seen at this pass -- lets move to phase2
         if phase==1 and (not seen_static_extension):
