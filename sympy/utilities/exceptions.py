@@ -64,12 +64,12 @@ class SymPyDeprecationWarning(DeprecationWarning):
         self.fullMessage=""
 
         if feature:
-            self.fullMessage = "The feature {0} is deprecated.".format(feature)
+            self.fullMessage = "The feature %s is deprecated." % feature
 
             if last_supported_version:
-                self.fullMessage += "  It will be last supported in SymPy version {0}.".format(last_supported_version)
+                self.fullMessage += "  It will be last supported in SymPy version %s." % last_supported_version
             if useinstead:
-                self.fullMessage += "  Use {0} instead.".format(useinstead)
+                self.fullMessage += "  Use %s instead." % useinstead
 
         if self.fullMessage:
             # We should also handle a non-string "value".
@@ -77,7 +77,7 @@ class SymPyDeprecationWarning(DeprecationWarning):
                 if value:
                     self.fullMessage += "  " + value
             elif value:
-                self.fullMessage += "  ({0})".format(repr(value))
+                self.fullMessage += "  (%s)" % repr(value)
         else:
             # No extended arguments; replicate the original behaviour.
             self.fullMessage = repr(value)
