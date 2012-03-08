@@ -1707,9 +1707,11 @@ class Expr(Basic, EvalfMixin):
                     return self.base ** (new_exp)
 
     def extract_additively(self, c):
-        """Return self - c if it's possible to subtract c from self such
-        that all term coefficients move towards zero, else return None.
+        """Return self - c if it's possible to subtract c from self and
+        make all matching coefficients move towards zero, else return None.
 
+        Examples
+        ========
         >>> from sympy import S
         >>> from sympy.abc import x, y
         >>> e = 2*x + 3
@@ -1717,6 +1719,24 @@ class Expr(Basic, EvalfMixin):
         x + 2
         >>> e.extract_additively(3*x)
         >>> e.extract_additively(4)
+        >>> (y*(x + 1)).extract_additively(x + 1)
+        >>> ((x + 1)*(x + 2*y + 1) + 3).extract_additively(x + 1)
+        (x + 1)*(x + 2*y) + 3
+
+        Sometimes auto-expansion will return a less simplified result
+        than desired; gcd_terms might be used in such cases:
+
+        >>> from sympy import gcd_terms
+        >>> (4*x*(y + 1) + y).extract_additively(x)
+        4*x*(y + 1) + x*(4*y + 3) - x*(4*y + 4) + y
+        >>> gcd_terms(_)
+        x*(4*y + 3) + y
+
+        See Also
+        ========
+        extract_multiplicatively
+        coeff
+        as_coefficient
 
         """
 
@@ -1746,7 +1766,17 @@ class Expr(Basic, EvalfMixin):
                 return None
             return xa + t
 
+        # handle the args[0].is_Number case separately
+        # since we will have trouble looking for the coeff of
+        # a number.
         if c.is_Add and c.args[0].is_Number:
+            # whole term as a term factor
+            co = self.coeff(c)
+            xa0 = (co.extract_additively(1) or 0)*c
+            if xa0:
+                diff = self - co*c
+                return (xa0 + (diff.extract_additively(c) or diff)) or None
+            # term-wise
             h, t = c.as_coeff_Add()
             sh, st = self.as_coeff_Add()
             xa = sh.extract_additively(h)
@@ -1757,6 +1787,13 @@ class Expr(Basic, EvalfMixin):
                 return None
             return xa + xa2
 
+        # whole term as a term factor
+        co = self.coeff(c)
+        xa0 = (co.extract_additively(1) or 0)*c
+        if xa0:
+            diff = self - co*c
+            return (xa0 + (diff.extract_additively(c) or diff)) or None
+        # term-wise
         coeffs = []
         for a in Add.make_args(c):
             ac, at = a.as_coeff_Mul()

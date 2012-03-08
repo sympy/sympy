@@ -850,6 +850,15 @@ def test_extractions():
         4*a*x + 3*x + y
     assert ((a + 1)*x*4 + 3*y).extract_additively(x + 2*y).expand() == \
         4*a*x + 3*x + y
+    assert (y*(x + 1)).extract_additively(x + 1) is None
+    assert ((y + 1)*(x + 1) + 3).extract_additively(x + 1) == \
+        y*(x + 1) + 3
+    assert ((x + y)*(x + 1) + x + y + 3).extract_additively(x + y) == \
+        x*(x + y) + 3
+    assert (x + y + 2*((x + y)*(x + 1)) + 3).extract_additively((x + y)*(x + 1)) == \
+        x + y + (x + 1)*(x + y) + 3
+    assert ((y + 1)*(x + 2*y + 1) + 3).extract_additively(y + 1) == \
+        (x + 2*y)*(y + 1) + 3
 
     n = Symbol("n", integer=True)
     assert (Integer(-3)).could_extract_minus_sign() == True

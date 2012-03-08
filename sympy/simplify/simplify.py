@@ -2975,7 +2975,7 @@ def _logcombine(expr, force=False):
         retval = Equality(_logcombine(expr.lhs-expr.rhs, force),\
         Integer(0))
         # If logcombine couldn't do much with the equality, try to make it like
-        # it was.  Hopefully extract_additively won't become smart enought to
+        # it was.  Hopefully extract_additively won't become smart enough to
         # take logs apart :)
         right = retval.lhs.extract_additively(expr.lhs)
         if right:
