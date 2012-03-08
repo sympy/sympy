@@ -62,7 +62,7 @@ class Symbol(AtomicExpr, Boolean):
         if 'dummy' in assumptions:
             warnings.warn(
                 SymPyDeprecationWarning(
-                    "Deprecated syntax.", feature="Symbol('x', dummy=True)",
+                    feature="Symbol('x', dummy=True)",
                     useinstead="Dummy() or symbols(..., cls=Dummy)"))
             if assumptions.pop('dummy'):
                 return Dummy(name, **assumptions)
@@ -288,7 +288,7 @@ def symbols(names, **args):
     if 'each_char' in args:
         warnings.warn(
             SymPyDeprecationWarning(
-                feature="each_char option to symbols() and var()",
+                feature="each_char in the options to symbols() and var()",
                 useinstead="spaces or commas between symbol names"))
 
     if isinstance(names, basestring):
