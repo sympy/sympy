@@ -50,6 +50,13 @@ class SymPyDeprecationWarning(DeprecationWarning):
     ...     value=[1,2,3])) #doctest:+SKIP
     __main__:3: SymPyDeprecationWarning: The feature such and such is
     deprecated.  Use this other feature instead.  ([1, 2, 3])
+
+    To mark a function as deprecated, you can use the decorator
+    @deprecated.
+
+    See Also
+    ========
+    sympy.core.decorators.deprecated
     """
 
     def __init__(self, value=None, feature=None, last_supported_version=None,
