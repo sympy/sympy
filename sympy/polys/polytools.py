@@ -5479,9 +5479,6 @@ def cancel(f, *gens, **args):
         else:
             p, q = f.as_numer_denom()
 
-            # XXX: remove this when issue #281 is fixed
-            if p.is_zero or q.is_zero:
-                return f
     else:
         p, q = f
 
