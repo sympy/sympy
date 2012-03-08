@@ -4,19 +4,27 @@ Handlers for keys related to number theory: prime, even, odd, etc.
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 from sympy.ntheory import isprime
+from sympy.ntheory.residue_ntheory import int_tested
+from sympy.functions.elementary.miscellaneous import round
 
 class AskPrimeHandler(CommonHandler):
     """
     Handler for key 'prime'
-    Test that an expression represents a prime number
+    Test that an expression represents a prime number. When the
+    expression is a number the result, when True, is subject to
+    the limitations of isprime() which is used to return the result.
     """
 
     @staticmethod
     def _number(expr, assumptions):
         # helper method
-        if (expr.as_real_imag()[1] == 0) and int(expr.evalf()) == expr:
-            return isprime(expr.evalf(1))
-        return False
+        try:
+            i = int(round(expr))
+            if not (expr - i).equals(0):
+                raise TypeError
+        except TypeError:
+            return False
+        return isprime(i)
 
     @staticmethod
     def Basic(expr, assumptions):
@@ -96,9 +104,13 @@ class AskEvenHandler(CommonHandler):
     @staticmethod
     def _number(expr, assumptions):
         # helper method
-        if (expr.as_real_imag()[1] == 0) and expr.evalf(1) == expr:
-            return float(expr.evalf()) % 2 == 0
-        else: return False
+        try:
+            i = int(round(expr))
+            if not (expr - i).equals(0):
+                raise TypeError
+        except TypeError:
+            return False
+        return i % 2 == 0
 
     @staticmethod
     def Basic(expr, assumptions):
@@ -142,9 +154,6 @@ class AskEvenHandler(CommonHandler):
         Even + Even -> Even
         Odd  + Odd  -> Even
 
-        TODO: remove float() when issue
-        http://code.google.com/p/sympy/issues/detail?id=1473
-        is solved
         """
         if expr.is_number:
             return AskEvenHandler._number(expr, assumptions)
