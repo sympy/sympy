@@ -1063,53 +1063,73 @@ class Mul(AssocOp):
             return True
 
     def _eval_is_positive(self):
-        ZERO = 0
-        NEG = -1
-        POS = 1
-        NONPOS = -2
-        NONNEG = 2
-        res = 1
+        """Return True if self is positive, False if not, and None if it
+        cannot be determined.
+
+        This algorithm is non-recursive and works by keeping track of the
+        sign which changes when a negative or nonpositive is encountered.
+        Whether a nonpositive or nonnegative is seen is also tracked since
+        the presence of these makes it impossible to return True, but
+        possible to return False if the end result is nonpositive. e.g.
+
+            pos * neg * nonpositive -> pos or zero -> None is returned
+            pos * neg * nonnegative -> neg or zero -> False is returned
+        """
+
+        sign = 1
+        saw_NON = False
         for t in self.args:
             if t.is_positive:
-                res *= POS
+                continue
             elif t.is_negative:
-                res *= NEG
+                sign = -sign
             elif t.is_nonpositive:
-                res *= NONPOS
+                sign = -sign
+                saw_NON = True
             elif t.is_nonnegative:
-                res *= NONNEG
+                saw_NON = True
             elif t.is_zero:
                 return False
             else:
                 return
-        if res == 1:
+        if sign == 1 and saw_NON is False:
             return True
-        if res < 0:
+        if sign < 0:
             return False
 
     def _eval_is_negative(self):
-        ZERO = 0
-        NEG = -1
-        POS = 1
-        NONPOS = -2
-        NONNEG = 2
-        res = 1
+        """Return True if self is negative, False if not, and None if it
+        cannot be determined.
+
+        This algorithm is non-recursive and works by keeping track of the
+        sign which changes when a negative or nonpositive is encountered.
+        Whether a nonpositive or nonnegative is seen is also tracked since
+        the presence of these makes it impossible to return True, but
+        possible to return False if the end result is nonnegative. e.g.
+
+            pos * neg * nonpositive -> pos or zero -> False is returned
+            pos * neg * nonnegative -> neg or zero -> None is returned
+        """
+
+        sign = 1
+        saw_NON = False
         for t in self.args:
             if t.is_positive:
-                res *= POS
+                continue
             elif t.is_negative:
-                res *= NEG
+                sign = -sign
             elif t.is_nonpositive:
-                res *= NONPOS
+                sign = -sign
+                saw_NON = True
             elif t.is_nonnegative:
-                res *= NONNEG
+                saw_NON = True
             elif t.is_zero:
                 return False
             else:
                 return
-        if res == -1:
+        if sign == -1 and saw_NON is False:
             return True
-        if res > 0:
+        if sign > 0:
             return False
 
     def _eval_is_odd(self):
