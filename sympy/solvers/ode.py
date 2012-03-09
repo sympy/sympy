@@ -1490,7 +1490,20 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
 
         if not (expr.has(x) and x in expr.free_symbols):
             return constantsymbols[0]
-        expr = terms_gcd(expr, clear=False, deep=True)
+        new_expr = terms_gcd(expr, clear=False, deep=True)
+        if new_expr.is_Mul:
+            # don't let C1*exp(x) + C2*exp(2*x) become exp(x)*(C1 + C2*exp(x))
+            infac = False
+            asfac = False
+            for m in new_expr.args:
+                if m.func is exp:
+                    asfac = True
+                elif m.is_Add:
+                    infac = any(fi.func is exp for t in m.args for fi in Mul.make_args(t))
+                if asfac and infac:
+                    new_expr = expr
+                    break
+        expr = new_expr
         # don't allow a number to be factored out of an expression
         # that has no denominator
         if expr.is_Mul:
