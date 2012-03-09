@@ -819,22 +819,48 @@ def test_as_coeff_exponent():
     assert fx.as_coeff_exponent(f(x)) == (fx ,0)
 
 def test_extractions():
-    n = Symbol("n", integer=True)
     assert ((x*y)**3).extract_multiplicatively(x**2 * y) == x*y**2
     assert ((x*y)**3).extract_multiplicatively(x**4 * y) == None
     assert (2*x).extract_multiplicatively(2) == x
     assert (2*x).extract_multiplicatively(3) == None
     assert (2*x).extract_multiplicatively(-1) == None
-    assert (Rational(1,2)*x).extract_multiplicatively(3) == x/6
+    assert (Rational(1, 2)*x).extract_multiplicatively(3) == x/6
     assert (sqrt(x)).extract_multiplicatively(x) == None
-    assert (sqrt(x)).extract_multiplicatively(1/x) == sqrt(x)**3
+    assert (sqrt(x)).extract_multiplicatively(1/x) == None
 
     assert ((x*y)**3).extract_additively(1) == None
-    assert (x+1).extract_additively(x) == 1
-    assert (x+1).extract_additively(2*x) == None
-    assert (x+1).extract_additively(-x) == 1+2*x
-    assert (-x+1).extract_additively(2*x) == 1-3*x
+    assert (x + 1).extract_additively(x) == 1
+    assert (x + 1).extract_additively(2*x) == None
+    assert (x + 1).extract_additively(-x) == None
+    assert (-x + 1).extract_additively(2*x) == None
+    assert (2*x + 3).extract_additively(x) == x + 3
+    assert (2*x + 3).extract_additively(2) == 2*x + 1
+    assert (2*x + 3).extract_additively(3) == 2*x
+    assert (2*x + 3).extract_additively(-2) == None
+    assert (2*x + 3).extract_additively(3*x) == None
+    assert (2*x + 3).extract_additively(2*x) == 3
+    assert x.extract_additively(0) == x
+    assert S(2).extract_additively(x) is None
+    assert S(2.).extract_additively(2) == S.Zero
+    assert S(2*x + 3).extract_additively(x + 1) == x + 2
+    assert S(2*x + 3).extract_additively(y + 1) is None
+    assert S(2*x - 3).extract_additively(x + 1) is None
+    assert S(2*x - 3).extract_additively(y + z) is None
+    assert ((a + 1)*x*4 + y).extract_additively(x).expand() == \
+        4*a*x + 3*x + y
+    assert ((a + 1)*x*4 + 3*y).extract_additively(x + 2*y).expand() == \
+        4*a*x + 3*x + y
+    assert (y*(x + 1)).extract_additively(x + 1) is None
+    assert ((y + 1)*(x + 1) + 3).extract_additively(x + 1) == \
+        y*(x + 1) + 3
+    assert ((x + y)*(x + 1) + x + y + 3).extract_additively(x + y) == \
+        x*(x + y) + 3
+    assert (x + y + 2*((x + y)*(x + 1)) + 3).extract_additively((x + y)*(x + 1)) == \
+        x + y + (x + 1)*(x + y) + 3
+    assert ((y + 1)*(x + 2*y + 1) + 3).extract_additively(y + 1) == \
+        (x + 2*y)*(y + 1) + 3
 
+    n = Symbol("n", integer=True)
     assert (Integer(-3)).could_extract_minus_sign() == True
     assert (-n*x+x).could_extract_minus_sign() != (n*x-x).could_extract_minus_sign()
     assert (x-y).could_extract_minus_sign() != (-x+y).could_extract_minus_sign()
