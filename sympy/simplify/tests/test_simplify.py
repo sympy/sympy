@@ -79,6 +79,10 @@ def test_trigsimp2():
     assert trigsimp(sin(x)**2*sin(y)**2 + sin(x)**2*cos(y)**2 + cos(x)**2,
             recursive=True) == 1
 
+def test_trigsimp_wishlist():
+    e = [-2*atan(2 + sqrt(5)), -2*atan(-sqrt(5) + 2)]
+    asssert [trigsimp(ei) for ei in e] == [atan(S.Half) - S.Pi, atan(S.Half)]
+
 def test_issue1274():
     x = Symbol("x")
     assert abs(trigsimp(2.0*sin(x)**2+2.0*cos(x)**2)-2.0) < 1e-10
