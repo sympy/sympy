@@ -151,33 +151,19 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
                 continue
             x_impl[bk] = (set(), [])
 
-    # we do it in 2 phases:
-    #
-    # 1st phase -- only do static extensions to alpha rules
-    # 2nd phase -- attach beta-nodes which can be possibly triggered by an
-    #              alpha-chain
-    phase=1
-    while True:
-        seen_static_extension=False
+    # static extensions to alpha rules:
+    # A: x -> a,b   B: &(a,b) -> c  ==>  A: x -> a,b,c
+    seen_static_extension = True
+    while seen_static_extension:
+        seen_static_extension = False
 
-        for bidx, (bcond,bimpl) in enumerate(beta_rules):
+        for bcond, bimpl in beta_rules:
             assert isinstance(bcond, And)
             bargs = set(bcond.args)
             for x, (ximpls, bb) in x_impl.iteritems():
                 x_all = ximpls | set([x])
-                # A: ... -> a   B: &(...) -> a      (non-informative)
-                if bimpl in x_all:
-                    continue
-                # A: x -> a...  B: &(!a,...) -> ... (will never trigger)
-                # A: x -> a...  B: &(...) -> !a     (will never trigger)
-                if any(Not(xi) in bargs or Not(xi) == bimpl for xi in x_all):
-                    continue
-
-                # A: x -> a,b   B: &(a,b) -> c      (static extension)
-                #                                       |
-                # A: x -> a,b,c <-----------------------+
-                if bargs.issubset(x_all):
-                    assert phase==1
+                # A: ... -> a   B: &(...) -> a  is non-informative
+                if bimpl not in x_all and bargs.issubset(x_all):
                     ximpls.add(bimpl)
 
                     # we introduced new implication - now we have to restore
@@ -186,20 +172,22 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
                     if bimpl_impl is not None:
                         ximpls |= bimpl_impl[0]
                     seen_static_extension=True
-                    continue
 
-                # does this beta-rule even has a chance to be triggered ?
-                elif bargs & x_all and phase == 2:
-                    bb.append(bidx)
+    # attach beta-nodes which can be possibly triggered by an alpha-chain
+    for bidx, (bcond,bimpl) in enumerate(beta_rules):
+        bargs = set(bcond.args)
+        for x, (ximpls, bb) in x_impl.iteritems():
+            x_all = ximpls | set([x])
+            # A: ... -> a   B: &(...) -> a      (non-informative)
+            if bimpl in x_all:
+                continue
+            # A: x -> a...  B: &(!a,...) -> ... (will never trigger)
+            # A: x -> a...  B: &(...) -> !a     (will never trigger)
+            if any(Not(xi) in bargs or Not(xi) == bimpl for xi in x_all):
+                continue
 
-        # no static extensions was seen at this pass -- lets move to phase2
-        if phase==1 and (not seen_static_extension):
-            phase = 2
-            continue
-
-        # let's finish at the end of phase2
-        if phase==2:
-            break
+            if bargs & x_all:
+                bb.append(bidx)
 
     return x_impl
 
