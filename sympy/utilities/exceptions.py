@@ -26,8 +26,9 @@ class SymPyDeprecationWarning(DeprecationWarning):
     >>> SymPyDeprecationWarning(feature="such and such",
     ...     last_supported_version="1.2.3",
     ...     useinstead="this other feature")
-    The feature such and such is deprecated.  It will be last
-    supported in SymPy version 1.2.3.  Use this other feature instead.
+    SymPyDeprecationWarning("The feature such and such is deprecated.
+    It will be last supported in SymPy version 1.2.3.  Use this other
+    feature instead.")
 
     Either (or both) of the arguments last_supported_version and
     useinstead can be omitted.  In this case the corresponding
@@ -35,8 +36,8 @@ class SymPyDeprecationWarning(DeprecationWarning):
 
     >>> SymPyDeprecationWarning(feature="such and such",
     ...     useinstead="this other feature")
-    The feature such and such is deprecated.  Use this other feature
-    instead.
+    SymPyDeprecationWarning("The feature such and such is deprecated.
+    Use this other feature instead.")
 
     You can still provide the argument value.  If it is a string, it
     will be appended to the end of the message:
@@ -44,8 +45,9 @@ class SymPyDeprecationWarning(DeprecationWarning):
     >>> SymPyDeprecationWarning(feature="such and such",
     ...     useinstead="this other feature",
     ...     value="Contact the developers for further information.")
-    The feature such and such is deprecated.  Use this other feature
-    instead.  Contact the developers for further information.
+    SymPyDeprecationWarning("The feature such and such is deprecated.
+    Use this other feature instead.  Contact the developers for
+    further information.")
 
     If, however, the argument value does not hold a string, a string
     representation of the object will be appended to the message:
@@ -53,8 +55,8 @@ class SymPyDeprecationWarning(DeprecationWarning):
     >>> SymPyDeprecationWarning(feature="such and such",
     ...     useinstead="this other feature",
     ...     value=[1,2,3])
-    The feature such and such is deprecated.  Use this other feature
-    instead.  ([1, 2, 3])
+    SymPyDeprecationWarning("The feature such and such is deprecated.
+    Use this other feature instead.  ([1, 2, 3])")
 
     To mark a function as deprecated, you can use the decorator
     @deprecated.
@@ -76,16 +78,17 @@ class SymPyDeprecationWarning(DeprecationWarning):
             if useinstead:
                 self.fullMessage += "  Use %s instead." % useinstead
 
-        if self.fullMessage:
-            # We should also handle a non-string "value".
-            if isinstance(value, str):
-                if value:
-                    self.fullMessage += "  " + value
-            elif value:
-                self.fullMessage += "  (%s)" % repr(value)
+        if value:
+            if not isinstance(value, str):
+                value = "(%s)" % repr(value)
         else:
-            # No extended arguments; replicate the original behaviour.
-            self.fullMessage = repr(value)
+            value = ""
+
+        if self.fullMessage:
+            if value:
+                self.fullMessage += "  " + value
+        else:
+            self.fullMessage = value
 
     def __str__(self):
-        return self.fullMessage
+        return "SymPyDeprecationWarning(\"%s\")" % self.fullMessage
