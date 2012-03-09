@@ -325,7 +325,7 @@ class Abs(Function):
             return known*unk
         if arg is S.NaN:
             return S.NaN
-        if arg.is_zero:
+        if arg.is_zero:#equals(0):
             return arg
         if arg.is_positive:
             return arg
