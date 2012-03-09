@@ -558,6 +558,8 @@ class Pow(Expr):
         if self.exp.is_Integer:
             exp = self.exp
             re, im = self.base.as_real_imag(deep=deep)
+            if re.func == C.re or im.func == C.im:
+                return self, S.Zero
             a, b = symbols('a b', cls=Dummy)
             if exp >= 0:
                 if re.is_Number and im.is_Number:
@@ -593,7 +595,8 @@ class Pow(Expr):
             #       x being imaginary there are actually q roots, but
             #       only a single one is returned from here.
             re, im = self.base.as_real_imag(deep=deep)
-
+            if re.func == C.re or im.func == C.im:
+                return self, S.Zero
             r = Pow(Pow(re, 2) + Pow(im, 2), S.Half)
             t = C.atan2(im, re)
 
@@ -604,8 +607,8 @@ class Pow(Expr):
 
             if deep:
                 hints['complex'] = False
-                return (C.re(self.expand(deep, complex=False)),
-                C.im(self. expand(deep, **hints)))
+                return (C.re(self.expand(deep, **hints)),
+                        C.im(self.expand(deep, **hints)))
             else:
                 return (C.re(self), C.im(self))
 
