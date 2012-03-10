@@ -325,6 +325,25 @@ class LatexPrinter(Printer):
 
         return tex
 
+    def _print_Product(self, expr):
+        if len(expr.limits) == 1:
+            tex = r"\prod_{%s=%s}^{%s} " % \
+                tuple([ self._print(i) for i in expr.limits[0] ])
+        else:
+            def _format_ineq(l):
+                return r"%s \leq %s \leq %s" % \
+                    tuple([self._print(s) for s in l[1], l[0], l[2]])
+
+            tex = r"\prod_{\substack{%s}} " % \
+                str.join('\\\\', [ _format_ineq(l) for l in expr.limits ])
+
+        if isinstance(expr.function, Add):
+            tex += r"\left(%s\right)" % self._print(expr.function)
+        else:
+            tex += self._print(expr.function)
+
+        return tex
+
     def _print_Derivative(self, expr):
         dim = len(expr.variables)
 
