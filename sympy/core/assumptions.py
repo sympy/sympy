@@ -137,6 +137,8 @@ class WithAssumptions(BasicMeta):
             try:
                 return self._assumptions[fact]
             except KeyError:
+                if self._assumptions is self.default_assumptions:
+                    self._assumptions = self.default_assumptions.copy()
                 return self._what_known_about(fact)
 
         getit.func_name = '%s__is_%s' % (cls.__name__, fact)
@@ -218,14 +220,15 @@ class AssumeMixin(object):
         __slots__ = []
 
     def  _init_assumptions(self, assumptions):
-        # initially assumptions are shared between instances and class
-        self._assumptions  = self.default_assumptions
         self._a_inprogress = []
 
         # NOTE this could be made lazy -- probably not all instances will need
         # fully derived assumptions?
         if assumptions:
-            self._learn_new_facts(assumptions)
+            self._assumptions = self.default_assumptions.copy()
+            if not assumptions:
+                pass
+            self._assumptions.deduce_all_facts(assumptions)
             #                      ^
             # FIXME this is slow   |    another NOTE: speeding this up is *not*
             #        |             |    important. say for %timeit x+y most of
@@ -239,6 +242,7 @@ class AssumeMixin(object):
 
             self._assume_type_keys = frozenset(newk)
         else:
+            self._assumptions  = self.default_assumptions
             self._assume_type_keys = None
 
     # XXX better name?
@@ -329,6 +333,7 @@ class AssumeMixin(object):
             raise CycleDetected
         seen.append(k)
 
+        assumptions = self._assumptions
         try:
             # First try the assumption evaluation function if it exists
             if hasattr(self, '_eval_is_' + k):
@@ -338,7 +343,7 @@ class AssumeMixin(object):
                     pass
                 else:
                     if a is not None:
-                        self._learn_new_facts( ((k, a),) )
+                        assumptions.deduce_all_facts(((k, a),))
                         return a
 
             # Try assumption's prerequisites
@@ -349,11 +354,11 @@ class AssumeMixin(object):
                         continue
                     a = getattr(self, 'is_' + pk)
                     if a is not None:
-                        self._learn_new_facts( ((pk,a),) )
+                        assumptions.deduce_all_facts(((pk,a),))
                         # it is possible that we either know or don't know k at
                         # this point
                         try:
-                            return self._assumptions[k]
+                            return assumptions[k]
                         except KeyError:
                             pass
         finally:
@@ -362,29 +367,5 @@ class AssumeMixin(object):
         # No result -- unknown
         # cache it  (NB ._learn_new_facts(k, None) to learn other properties,
         # and because assumptions may not be detached)
-        self._learn_new_facts( ((k,None),) )
+        assumptions.deduce_all_facts(((k,None),))
         return None
-
-
-    def _learn_new_facts(self, facts):
-        """Learn new facts about self.
-
-           *******************************************************************
-           * internal routine designed to be used only from assumptions core *
-           *******************************************************************
-
-           Given new facts and already present knowledge (._assumptions) we ask
-           inference engine to derive full set of new facts which follow from
-           this combination.
-
-           The result is stored back into ._assumptions
-        """
-        if not facts:
-            return
-
-        base = self._assumptions
-        if base is self.default_assumptions:
-            base = base.copy()
-            self._assumptions = base
-        base.deduce_all_facts(facts)
-
