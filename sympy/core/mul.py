@@ -1083,13 +1083,13 @@ class Mul(AssocOp):
                 continue
             elif t.is_negative:
                 sign = -sign
+            elif t.is_zero:
+                return False
             elif t.is_nonpositive:
                 sign = -sign
                 saw_NON = True
             elif t.is_nonnegative:
                 saw_NON = True
-            elif t.is_zero:
-                return False
             else:
                 return
         if sign == 1 and saw_NON is False:
@@ -1118,13 +1118,13 @@ class Mul(AssocOp):
                 continue
             elif t.is_negative:
                 sign = -sign
+            elif t.is_zero:
+                return False
             elif t.is_nonpositive:
                 sign = -sign
                 saw_NON = True
             elif t.is_nonnegative:
                 saw_NON = True
-            elif t.is_zero:
-                return False
             else:
                 return
         if sign == -1 and saw_NON is False:
