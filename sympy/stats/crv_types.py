@@ -153,7 +153,7 @@ def Arcsin(a=0, b=1, symbol=None):
     >>> X = Arcsin(a, b, symbol=x)
 
     >>> Density(X)
-    (x, 1/(pi*sqrt((-a + x)*(b - x))))
+    Lambda(_x, 1/(pi*sqrt((-_x + b)*(_x - a))))
 
     References
     ==========
@@ -210,7 +210,7 @@ def Benini(alpha, beta, sigma, symbol=None):
     >>> X = Benini(alpha, beta, sigma, symbol=x)
 
     >>> Density(X)
-    (x, (alpha/x + 2*beta*log(x/sigma)/x)*exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2))
+    Lambda(_x, (alpha/_x + 2*beta*log(_x/sigma)/_x)*exp(-alpha*log(_x/sigma) - beta*log(_x/sigma)**2))
 
     References
     ==========
@@ -339,7 +339,7 @@ def BetaPrime(alpha, beta, symbol=None):
     >>> X = BetaPrime(alpha, beta, symbol=x)
 
     >>> Density(X)
-    (x, x**(alpha - 1)*(x + 1)**(-alpha - beta)*gamma(alpha + beta)/(gamma(alpha)*gamma(beta)))
+    Lambda(_x, _x**(alpha - 1)*(_x + 1)**(-alpha - beta)*gamma(alpha + beta)/(gamma(alpha)*gamma(beta)))
 
     References
     ==========
@@ -394,7 +394,7 @@ def Cauchy(x0, gamma, symbol=None):
     >>> X = Cauchy(x0, gamma, symbol=x)
 
     >>> Density(X)
-    (x, 1/(pi*gamma*(1 + (x - x0)**2/gamma**2)))
+    Lambda(_x, 1/(pi*gamma*(1 + (_x - x0)**2/gamma**2)))
 
     References
     ==========
@@ -449,7 +449,7 @@ def Chi(k, symbol=None):
     >>> X = Chi(k, symbol=x)
 
     >>> Density(X)
-    (x, 2**(-k/2 + 1)*x**(k - 1)*exp(-x**2/2)/gamma(k/2))
+    Lambda(_x, 2**(-k/2 + 1)*_x**(k - 1)*exp(-_x**2/2)/gamma(k/2))
 
     References
     ==========
@@ -509,7 +509,7 @@ def Dagum(p, a, b, symbol=None):
     >>> X = Dagum(p, a, b, symbol=x)
 
     >>> Density(X)
-    (x, a*p*(x/b)**(a*p)*((x/b)**a + 1)**(-p - 1)/x)
+    Lambda(_x, a*p*(_x/b)**(a*p)*((_x/b)**a + 1)**(-p - 1)/_x)
 
     References
     ==========
@@ -571,10 +571,10 @@ def Exponential(rate, symbol=None):
     >>> X = Exponential(l, symbol=x)
 
     >>> Density(X)
-    (x, lambda*exp(-lambda*x))
+    Lambda(_x, lambda*exp(-_x*lambda))
 
     >>> CDF(X)
-    (_z, Piecewise((0, _z < 0), (1 - exp(-_z*lambda), True)))
+    Lambda(_z, Piecewise((0, _z < 0), (1 - exp(-_z*lambda), True)))
 
     >>> E(X)
     1/lambda
@@ -664,7 +664,7 @@ def Gamma(k, theta, symbol=None):
     Lambda(_x, _x**(k - 1)*theta**(-k)*exp(-_x/theta)/gamma(k))
 
     >>> CDF(X, meijerg=True)
-    (_z, Piecewise((0, _z < 0), (-k*lowergamma(k, 0)/gamma(k + 1) + k*lowergamma(k, _z/theta)/gamma(k + 1), True)))
+    Lambda(_z, Piecewise((0, _z < 0), (-k*lowergamma(k, 0)/gamma(k + 1) + k*lowergamma(k, _z/theta)/gamma(k + 1), True)))
 
     >>> E(X)
     theta*gamma(k + 1)/gamma(k)
@@ -725,7 +725,7 @@ def Laplace(mu, b, symbol=None):
     >>> X = Laplace(mu, b, symbol=x)
 
     >>> Density(X)
-    (x, exp(-Abs(-mu + x)/b)/(2*b))
+    Lambda(_x, exp(-Abs(_x - mu)/b)/(2*b))
 
     References
     ==========
@@ -782,7 +782,7 @@ def Logistic(mu, s, symbol=None):
     >>> X = Logistic(mu, s, symbol=x)
 
     >>> Density(X)
-    (x, exp((mu - x)/s)/(s*(exp((mu - x)/s) + 1)**2))
+    Lambda(_x, exp((-_x + mu)/s)/(s*(exp((-_x + mu)/s) + 1)**2))
 
     References
     ==========
@@ -846,7 +846,7 @@ def LogNormal(mean, std, symbol=None):
     >>> X = LogNormal(mu, sigma, symbol=x)
 
     >>> Density(X)
-    (x, sqrt(2)*exp(-(-mu + log(x))**2/(2*sigma**2))/(2*sqrt(pi)*sigma*x))
+    Lambda(_x, sqrt(2)*exp(-(-mu + log(_x))**2/(2*sigma**2))/(2*_x*sqrt(pi)*sigma))
 
     >>> X = LogNormal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
 
@@ -908,7 +908,7 @@ def Maxwell(a, symbol=None):
     >>> X = Maxwell(a, symbol=x)
 
     >>> Density(X)
-    (x, sqrt(2)*x**2*exp(-x**2/(2*a**2))/(sqrt(pi)*a**3))
+    Lambda(_x, sqrt(2)*_x**2*exp(-_x**2/(2*a**2))/(sqrt(pi)*a**3))
 
     >>> E(X)
     2*sqrt(2)*a/sqrt(pi)
@@ -972,7 +972,7 @@ def Nakagami(mu, omega, symbol=None):
     >>> X = Nakagami(mu, omega, symbol=x)
 
     >>> Density(X)
-    (x, 2*mu**mu*omega**(-mu)*x**(2*mu - 1)*exp(-mu*x**2/omega)/gamma(mu))
+    Lambda(_x, 2*_x**(2*mu - 1)*mu**mu*omega**(-mu)*exp(-_x**2*mu/omega)/gamma(mu))
 
     >>> simplify(E(X, meijerg=True))
     sqrt(mu)*sqrt(omega)*gamma(mu + 1/2)/gamma(mu + 1)
@@ -1042,10 +1042,10 @@ def Normal(mean, std, symbol=None):
     >>> X = Normal(mu, sigma, symbol=x)
 
     >>> Density(X)
-    (x, sqrt(2)*exp(-(-mu + x)**2/(2*sigma**2))/(2*sqrt(pi)*sigma))
+    Lambda(_x, sqrt(2)*exp(-(_x - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma))
 
-    >>> simplify(CDF(X)[1])
-    erf(sqrt(2)*(_z - mu)/(2*sigma))/2 + 1/2
+    >>> simplify(CDF(X))
+    Lambda(_z, (erf(sqrt(2)*(_z - mu)/(2*sigma)) + 1)*exp((_z - mu)**2/(2*sigma**2) + (-_z**2 + 2*_z*mu - mu**2)/(2*sigma**2))/2)
 
     >>> simplify(Skewness(X))
     0
@@ -1180,7 +1180,7 @@ def Rayleigh(sigma, symbol=None):
     >>> X = Rayleigh(sigma, symbol=x)
 
     >>> Density(X)
-    (x, x*exp(-x**2/(2*sigma**2))/sigma**2)
+    Lambda(_x, _x*exp(-_x**2/(2*sigma**2))/sigma**2)
 
     >>> E(X)
     sqrt(2)*sqrt(pi)*sigma/2
@@ -1241,7 +1241,7 @@ def StudentT(nu, symbol=None):
     >>> X = StudentT(nu, symbol=x)
 
     >>> Density(X)
-    (x, (1 + x**2/nu)**(-nu/2 - 1/2)*gamma(nu/2 + 1/2)/(sqrt(pi)*sqrt(nu)*gamma(nu/2)))
+    Lambda(_x, (_x**2/nu + 1)**(-nu/2 - 1/2)*gamma(nu/2 + 1/2)/(sqrt(pi)*sqrt(nu)*gamma(nu/2)))
 
     References
     ==========
@@ -1310,11 +1310,11 @@ def Triangular(a, b, c, symbol=None):
     >>> X = Triangular(a,b,c, symbol=x)
 
     >>> Density(X)
-    (x, Piecewise(((-2*a + 2*x)/((-a + b)*(-a + c)),
-    And(a <= x, x < c)),
-    (2/(-a + b), x == c),
-    ((2*b - 2*x)/((-a + b)*(b - c)),
-    And(x <= b, c < x)), (0, True)))
+    Lambda(_x, Piecewise(((2*_x - 2*a)/((-a + b)*(-a + c)),
+                         And(a <= _x, _x < c)),
+                         (2/(-a + b), _x == c),
+                         ((-2*_x + 2*b)/((-a + b)*(b - c)),
+                         And(_x <= b, c < _x)), (0, True)))
 
     References
     ==========
@@ -1455,7 +1455,7 @@ def UniformSum(n, symbol=None):
     >>> X = UniformSum(n, symbol=x)
 
     >>> Density(X)
-    (x, Sum((-1)**_k*(-_k + x)**(n - 1)*binomial(n, _k), (_k, 0, floor(x)))/(n - 1)!)
+    Lambda(_x, Sum((-1)**_k*(-_k + _x)**(n - 1)*binomial(n, _k), (_k, 0, floor(_x)))/(n - 1)!)
 
     References
     ==========
@@ -1587,7 +1587,7 @@ def WignerSemicircle(R, symbol=None):
     >>> X = WignerSemicircle(R, symbol=x)
 
     >>> Density(X)
-    (x, 2*sqrt(R**2 - x**2)/(pi*R**2))
+    Lambda(_x, 2*sqrt(-_x**2 + R**2)/(pi*R**2))
 
     >>> E(X)
     0
