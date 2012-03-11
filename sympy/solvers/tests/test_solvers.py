@@ -890,21 +890,23 @@ def test_issue_2574():
     assert checksol(eq, x, 2) == True
     assert checksol(eq, x, 2, numerical=False) is None
 
-@XFAIL  # depends on dict ordering
 def test_exclude():
-    R, C, Ri, Vout, V1, Rf, Vminus, Vplus, s = \
-        symbols('R, C, Ri, Vout, V1, Rf, Vminus, Vplus, s')
+    R, C, Ri, Vout, V1, Vminus, Vplus, s = \
+        symbols('R, C, Ri, Vout, V1, Vminus, Vplus, s')
+    Rf = symbols('Rf', positive=True) # to eliminate Rf = 0 soln
     eqs = [C*V1*s + Vplus*(-2*C*s - 1/R),
            Vminus*(-1/Ri - 1/Rf) + Vout/Rf,
            C*Vplus*s + V1*(-C*s - 1/R) + Vout/R,
            -Vminus + Vplus]
     assert solve(eqs, exclude=s*C*R) == [
-                {Vminus: Vplus,
-                 Vout: Vplus*(C**2*R**2*s**2 + 3*C*R*s + 1)/(C*R*s),
-                 V1: Vplus*(2*C*R*s + 1)/(C*R*s),
-                 Ri: C*R*Rf*s/(C*R*s + 1)**2}]
+        {
+        Rf: Ri*(C*R*s + 1)**2/(C*R*s),
+        Vminus: Vplus,
+        V1: Vplus*(2*C*R*s + 1)/(C*R*s),
+        Vout: Vplus*(C**2*R**2*s**2 + 3*C*R*s + 1)/(C*R*s)}]
     assert solve(eqs, exclude=[Vplus, s, C]) == [
-                {Vminus: Vplus,
-                 Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
-                 R: Vplus/(C*s*(V1 - 2*Vplus)),
-                 Ri: Rf*Vplus*(V1 - 2*Vplus)/(V1 - Vplus)**2}]
+        {
+        Rf: Ri*(V1 - Vplus)**2/(Vplus*(V1 - 2*Vplus)),
+        Vminus: Vplus,
+        Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
+        R: Vplus/(C*s*(V1 - 2*Vplus))}]
