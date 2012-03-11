@@ -1,6 +1,6 @@
 from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Function, factorial, factorial2, floor, ceiling, Abs, re, im, conjugate,
-    Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
+    Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum, Product,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg, polar_lift,
     Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan, Min, Max,
     cot, coth, re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
@@ -262,6 +262,14 @@ def test_latex_sum():
         r"\sum_{x=-2}^{2} x^{2}"
     assert latex(Sum(x**2 + y, (x, -2, 2))) == \
         r"\sum_{x=-2}^{2} \left(x^{2} + y\right)"
+
+def test_latex_product():
+    assert latex(Product(x*y**2, (x, -2, 2), (y, -5, 5))) == \
+        r"\prod_{\substack{-2 \leq x \leq 2\\-5 \leq y \leq 5}} x y^{2}"
+    assert latex(Product(x**2, (x, -2, 2))) == \
+        r"\prod_{x=-2}^{2} x^{2}"
+    assert latex(Product(x**2 + y, (x, -2, 2))) == \
+        r"\prod_{x=-2}^{2} \left(x^{2} + y\right)"
 
 def test_latex_limits():
     assert latex(Limit(x, x, oo)) == r"\lim_{x \to \infty} x"
