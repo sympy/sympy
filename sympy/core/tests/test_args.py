@@ -513,37 +513,97 @@ def test_sympy__stats__frv__ProductFinitePSpace():
     yp = SingleFinitePSpace(yd, {(y,1):S.Half, (y,2):S.Half})
     assert _test_args(ProductFinitePSpace(xp, yp))
 
-def test_sympy__stats__crv_types__NormalPSpace():
-    from sympy.stats.crv_types import NormalPSpace
-    assert _test_args(NormalPSpace(0,1))
+def test_sympy__stats__crv_types__ArcsinPSpace():
+    from sympy.stats.crv_types import ArcsinPSpace
+    assert _test_args(ArcsinPSpace(0,1))
 
-def test_sympy__stats__crv_types__LogNormalPSpace():
-    from sympy.stats.crv_types import LogNormalPSpace
-    assert _test_args(LogNormalPSpace(0,1))
-
-def test_sympy__stats__crv_types__ExponentialPSpace():
-    from sympy.stats.crv_types import ExponentialPSpace
-    assert _test_args(ExponentialPSpace(1))
-
-def test_sympy__stats__crv_types__ParetoPSpace():
-    from sympy.stats.crv_types import ParetoPSpace
-    assert _test_args(ParetoPSpace(1,1))
-
-def test_sympy__stats__crv_types__WeibullPSpace():
-    from sympy.stats.crv_types import WeibullPSpace
-    assert _test_args(WeibullPSpace(1,1))
+def test_sympy__stats__crv_types__BeniniPSpace():
+    from sympy.stats.crv_types import BeniniPSpace
+    assert _test_args(BeniniPSpace(1,1,1))
 
 def test_sympy__stats__crv_types__BetaPSpace():
     from sympy.stats.crv_types import BetaPSpace
     assert _test_args(BetaPSpace(1,1))
 
+def test_sympy__stats__crv_types__BetaPrimePSpace():
+    from sympy.stats.crv_types import BetaPrimePSpace
+    assert _test_args(BetaPrimePSpace(1,1))
+
+def test_sympy__stats__crv_types__CauchyPSpace():
+    from sympy.stats.crv_types import CauchyPSpace
+    assert _test_args(CauchyPSpace(0,1))
+
+def test_sympy__stats__crv_types__ChiPSpace():
+    from sympy.stats.crv_types import ChiPSpace
+    assert _test_args(ChiPSpace(1))
+
+def test_sympy__stats__crv_types__DagumPSpace():
+    from sympy.stats.crv_types import DagumPSpace
+    assert _test_args(DagumPSpace(1,1,1))
+
+def test_sympy__stats__crv_types__ExponentialPSpace():
+    from sympy.stats.crv_types import ExponentialPSpace
+    assert _test_args(ExponentialPSpace(1))
+
 def test_sympy__stats__crv_types__GammaPSpace():
     from sympy.stats.crv_types import GammaPSpace
     assert _test_args(GammaPSpace(1,1))
 
+def test_sympy__stats__crv_types__LaplacePSpace():
+    from sympy.stats.crv_types import LaplacePSpace
+    assert _test_args(LaplacePSpace(0,1))
+
+def test_sympy__stats__crv_types__LogisticPSpace():
+    from sympy.stats.crv_types import LogisticPSpace
+    assert _test_args(LogisticPSpace(0,1))
+
+def test_sympy__stats__crv_types__LogNormalPSpace():
+    from sympy.stats.crv_types import LogNormalPSpace
+    assert _test_args(LogNormalPSpace(0,1))
+
+def test_sympy__stats__crv_types__MaxwellPSpace():
+    from sympy.stats.crv_types import MaxwellPSpace
+    assert _test_args(MaxwellPSpace(1))
+
+def test_sympy__stats__crv_types__NakagamiPSpace():
+    from sympy.stats.crv_types import NakagamiPSpace
+    assert _test_args(NakagamiPSpace(1,1))
+
+def test_sympy__stats__crv_types__NormalPSpace():
+    from sympy.stats.crv_types import NormalPSpace
+    assert _test_args(NormalPSpace(0,1))
+
+def test_sympy__stats__crv_types__ParetoPSpace():
+    from sympy.stats.crv_types import ParetoPSpace
+    assert _test_args(ParetoPSpace(1,1))
+
+def test_sympy__stats__crv_types__RayleighPSpace():
+    from sympy.stats.crv_types import RayleighPSpace
+    assert _test_args(RayleighPSpace(1))
+
+def test_sympy__stats__crv_types__StudentTPSpace():
+    from sympy.stats.crv_types import StudentTPSpace
+    assert _test_args(StudentTPSpace(1))
+
+def test_sympy__stats__crv_types__TriangularPSpace():
+    from sympy.stats.crv_types import TriangularPSpace
+    assert _test_args(TriangularPSpace(-1,0,1))
+
 def test_sympy__stats__crv_types__UniformPSpace():
     from sympy.stats.crv_types import UniformPSpace
     assert _test_args(UniformPSpace(0,1))
+
+def test_sympy__stats__crv_types__UniformSumPSpace():
+    from sympy.stats.crv_types import UniformSumPSpace
+    assert _test_args(UniformSumPSpace(1))
+
+def test_sympy__stats__crv_types__WeibullPSpace():
+    from sympy.stats.crv_types import WeibullPSpace
+    assert _test_args(WeibullPSpace(1,1))
+
+def test_sympy__stats__crv_types__WignerSemicirclePSpace():
+    from sympy.stats.crv_types import WignerSemicirclePSpace
+    assert _test_args(WignerSemicirclePSpace(1))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
