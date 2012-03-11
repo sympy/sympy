@@ -92,7 +92,7 @@ def test_files():
     def test_this_file(fname, test_file):
         line = None # to flag the case where there were no lines in file
         for idx, line in enumerate(test_file):
-            if line.endswith(" \n"):
+            if line.endswith(" \n") or line.endswith("\t\n"):
                 assert False, message_space % (fname, idx+1)
             if line.endswith("\r\n"):
                 assert False, message_carriage % (fname, idx+1)
