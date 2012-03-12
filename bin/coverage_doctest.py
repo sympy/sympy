@@ -24,32 +24,6 @@ import string
 import inspect
 from optparse import OptionParser
 
-def _is_skip(module_path, name, obj):
-    """ Given a module object and the type object, the function
-    determines if the objected should be ignored on following
-    remarks:
-      * It is a builtin
-      * Starts with an underscore (is private)
-    """
-
-    skip = False
-    filename = None
-
-    # Removes the built-in types, a bit hacky
-    try:
-        filename = inspect.getfile(obj)
-    except TypeError as (strerror):
-        skip = True
-
-    # If import imported something other than our module
-    if inspect.getmodule(obj).__name__ != module_path:
-        skip = True
-
-    if skip or name.startswith('_'):
-            skip = True
-
-    return skip
-
 def print_coverage(c, c_md, c_mdt, f, f_md, f_mdt):
 
     # Print routines (can be deported?)
@@ -67,13 +41,13 @@ def print_coverage(c, c_md, c_mdt, f, f_md, f_mdt):
             print 'Missing docstrings'
             print '-'*15
             for md in c_md:
-               print md[0]
+               print md
         if c_mdt:
             print
             print 'Missing doctests'
             print '-'*15
             for md in c_mdt:
-                print md[0]
+                print md
 
     print
     print 'DEFINITIONS'
@@ -87,13 +61,13 @@ def print_coverage(c, c_md, c_mdt, f, f_md, f_mdt):
             print 'Missing docstrings'
             print '-'*15
             for md in f_md:
-               print md[0]
+               print md
         if f_mdt:
             print
             print 'Missing doctests'
             print '-'*15
             for md in f_mdt:
-                print md[0]
+                print md
 
 def coverage(module_path, verbose=False):
 
@@ -112,19 +86,14 @@ def coverage(module_path, verbose=False):
         return 0, 0
 
     # Get the list of members (currently everything possible)
-    m_members = inspect.getmembers(m)
-
-    # Create a list of class and definitions
-    m_classes = filter(lambda x: inspect.isclass(x[1]), m_members)
-    m_functions = filter(lambda x: inspect.isfunction(x[1]), m_members)
-
+    m_members = dir(m)
 
     print
     print '='*70
     print module_path
     print '='*70
 
-    # Iterate over classes
+
     c_skipped = []
     c_md = []
     c_mdt = []
@@ -132,21 +101,6 @@ def coverage(module_path, verbose=False):
     c_indirect_doctest = []
     classes = 0
 
-    for c in m_classes:
-        class_name, class_obj = c[0], c[1]
-        # Check if the class needs to be skipped
-        skip = _is_skip(module_path, class_name, class_obj)
-        if skip:  c_skipped.append(c)
-        else:   classes = classes + 1
-        # Check if the class has docstrings
-        if not skip and not class_obj.__doc__:
-             c_md.append(c)
-        # Check for a docstring
-        if not skip and class_obj.__doc__ and \
-            not '>>>' in class_obj.__doc__:
-                c_mdt.append(c)
-
-    # Iterate over functions
     f_skipped = []
     f_md = []
     f_mdt = []
@@ -154,20 +108,52 @@ def coverage(module_path, verbose=False):
     f_indirect_doctest = []
     functions = 0
 
+    for member in m_members:
+        # Identify if the member (class/def) a part of this module
+        obj = getattr(m, member)
+        obj_mod = inspect.getmodule(obj)
+        if not obj_mod or not obj_mod.__name__ == module_path:
+          continue
 
-    for f in m_functions:
-        f_name, f_obj = f[0], f[1]
-        # Check if the class needs to be skipped
-        skip = _is_skip(module_path, f_name, f_obj)
-        if skip:  f_skipped.append(f)
-        else:   functions = functions + 1
-        # Check if the class has docstrings
-        if not skip and not f_obj.__doc__:
-             f_md.append(f)
-        # Check for a docstring
-        if not skip and f_obj.__doc__ and \
-            not '>>>' in f_obj.__doc__:
-                f_mdt.append(f)
+        # If it's a function, simply process it
+        if inspect.isfunction(obj) or inspect.ismethod(obj):
+            functions = functions + 1
+            # Various scenarios
+            if member.startswith('_'): f_skipped.append(member)
+            elif not obj.__doc__: f_md.append(member)
+            elif not '>>>' in obj.__doc__: f_mdt.append(member)
+
+        # If it's a class, look at it's methods too
+        elif inspect.isclass(obj):
+            #print 'Class: '+member
+            classes = classes + 1
+            # Process the class first
+            if not obj.__doc__: c_md.append(member)
+            elif not '>>>' in obj.__doc__: c_mdt.append(member)
+
+            # Iterate through it's members
+            for class_m in dir(obj):
+
+                # Check if the method is a part of this module
+                class_m_mod = None
+                class_m_obj = None
+
+                # Gutsy hack; need to expand reasons
+                try:
+                    class_m_obj = getattr(obj, class_m)
+                    class_m_mod = inspect.getmodule(class_m_obj)
+                except:
+                    continue
+
+                if not class_m_mod or not class_m_obj or \
+                    not class_m_mod.__name__ == module_path:
+                    continue
+
+                # Check function for various categories
+                full_name = member + '.' + class_m
+                if class_m.startswith('_'): f_skipped.append(full_name)
+                elif not class_m_obj.__doc__: f_md.append(full_name)
+                elif not '>>>' in class_m_obj.__doc__: f_mdt.append(full_name)
 
     print_coverage(classes, c_md, c_mdt, functions, f_md, f_mdt)
 
