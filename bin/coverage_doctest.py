@@ -81,9 +81,9 @@ def coverage(module_path, verbose=False):
     try:
         __import__(module_path)
         m = sys.modules[module_path]
-    except:
+    except Exception, a:
         # Most likely cause, absence of __init__
-        print module_path + ' could not be loaded!'
+        print module_path + ' could not be loaded due to, \"' + a.args[0] + '\"'
         return 0, 0
 
     # Get the list of members (currently everything possible)
