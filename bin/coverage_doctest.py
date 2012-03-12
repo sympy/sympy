@@ -13,9 +13,6 @@ or
 
 bin/coverage_doctest.py sympy/core/basic.py
 
-This script is based on the sage-coverage script from Sage written by
-William Stein.
-
 """
 
 from __future__ import with_statement
@@ -23,118 +20,78 @@ from __future__ import with_statement
 import os
 import re
 import sys
+import string
+import inspect
 from optparse import OptionParser
 
-def parse_file(file, verbose=False):
+def coverage(module_path, verbose=False):
+
+    """ Given a module path, builds an index of all classes and functions
+    contained. It then goes through each of the classes/functions to get
+    the docstring and doctest coverage of the module. """
+
+    # Import the package and find membmers
+    m = None
+    try:
+        __import__(module_path)
+        m = sys.modules[module_path]
+    except:
+        # Most likely cause, absence of __init__
+        print module_path + ' could not be loaded!'
+        return 0, 0
+
+    # Get the list of members (currently everything possible)
+    m_members = inspect.getmembers(m)
+
+    # Create a list of class and definitions
+    m_classes = filter(lambda x: inspect.isclass(x[1]), m_members)
+    m_functions = filter(lambda x: inspect.isfunction(x[1]), m_members)
+
+    # Iterate over functions first
+    print module_path
+    print '-'*70
+
     skipped = []
     missing_docstring = []
     missing_doctest = []
     has_doctest = []
     indirect_doctest = []
-    while True:
-        i = file.find("def ")
-        if i == -1:
-            break
 
-        e = re.compile('\)\s*:')
-        m = e.search(file[i:])
-        if m is None:
-            break
-        j = m.end() + i
+    for c in m_classes:
 
-        # "j" now points to the end of the function definition.
+        class_name, class_obj = c[0], c[1]
 
-        function_name = (' '.join(file[i:j].lstrip('def').split()))[:-1]
-        bare_function_name = function_name[:function_name.find("(")]
+        # Check if the class needs to be skipped
+        skip = False
+        filename = None
 
-        skip_this = False
-        for skip in ['__dealloc__', '__new__', '_']:
-            if function_name.startswith(skip + '('):
-                skip_this = True
-                break
-        if function_name.startswith("_"):
-            # For the time being, let's skip all "private" functions, that
-            # beging with "_". Later, when our doctests are in a good shape, we
-            # may doctest those too.
-            skip_this = True
-        if skip_this:
-            if verbose:
-                skipped.append(function_name)
-            file = file[j:]
-            continue
+        # Removes the built-in types, a bit hacky
+        try:
+          filename = inspect.getfile(c[1])
+        except TypeError as (strerror):
+          #print 'ERRORR:' + str(strerror)
+          skip = True
 
-        k = file[j:].find('\n')
-        if k == -1:
-            break
-        k += j
-        kk = file[k+1:].find('\n')
-        if kk == -1:
-            break
-        kk += k+1
+        # If import imported something other than our module
+        if inspect.getmodule(class_obj).__name__ != module_path:
+          skip = True
 
-        q0 = file[k:kk].find('"""')
-        if q0 == -1:
-            missing_docstring.append(function_name)
-        else:
-            q0 += k
-            q1 = file[q0+3:].find('"""')
-            if q1 == -1:
-                print "ERROR: Error parsing %s" % function_name
-            else:
-                q1 += q0 + 3
-                # the docstring is now between q0:q1
-                d = file[q0:q1].find('>>>')
-                if d == -1:
-                    missing_doctest.append(function_name)
-                else:
-                    has_doctest.append(function_name)
-                    if not (bare_function_name[0:2] == '__' and
-                        bare_function_name[-2:] == '__'):
-                        d = file[q0:q1].find(bare_function_name)
-                        e = file[q0:q1].find('indirect doctest')
-                        if d == -1 and e == -1:
-                            indirect_doctest.append(function_name)
+        if skip or class_name.startswith('_') or \
+          not 'sympy' in filename:
+            skip = True
+        if skip:
+            skipped.append(c)
 
-        file = file[j+3:]
-    return skipped, missing_docstring, missing_doctest, has_doctest, \
-            indirect_doctest
+        # Check if the class has docstrings
+        if not skip and not class_obj.__doc__:
+             missing_docstring.append(c)
 
 
-def coverage(filename, file, verbose=False):
-    skipped, missing_docstring, missing_doctest, has_doctest, \
-        indirect_doctest = parse_file(file, verbose)
-    num_functions = len(missing_docstring + missing_doctest + has_doctest)
-    if num_functions == 0:
-        print "No functions in %s" % filename
-        return 0, 0
-    print '-'*70
-    print filename
-    doctests = len(has_doctest)
-    score = 100 * float(doctests) / num_functions
-    score = int(score)
-
-    if missing_docstring:
-        print "\nMissing documentation:\n\t * %s\n" % \
-                ('\n\t * '.join(missing_docstring))
-    if missing_doctest:
-        print "\nMissing doctests:\n\t * %s\n" % \
-                ('\n\t * '.join(missing_doctest))
-
-    if indirect_doctest:
-        print "\nIndirect doctest (function name doesn't occur in doctests):\n"\
-                "\t * %s\n"%('\n\t * '.join(indirect_doctest))
-        print 'Use "# indirect doctest" in the docstring to surpress this ' \
-                'warning'
-
-    print "SCORE %s: %s%% (%s of %s)" % (filename, score, doctests, num_functions)
-
-    print '-'*70
-
-    return len(has_doctest), num_functions
-
-
+    print 'Missing: '+str(missing_docstring)
+    return 0, 0
 
 def go(file, verbose=False, exact=True):
+
     if os.path.isdir(file):
         doctests, num_functions = 0, 0
         for F in os.listdir(file):
@@ -143,16 +100,16 @@ def go(file, verbose=False, exact=True):
             num_functions += _num_functions
         return doctests, num_functions
     if not (file.endswith('.py') or file.endswith('.pyx')) or \
+        file.endswith('__init__.py') or \
         not exact and ('test_' in file or 'bench_' in file):
             return 0, 0
     if not os.path.exists(file):
         print "File %s does not exist."%file
         sys.exit(1)
-    with open(file) as fh:
-        f = fh.read()
-    return coverage(file, f, verbose)
+    return coverage(string.replace(file,'/','.')[:-3], verbose)
 
 if __name__ == "__main__":
+
     bintest_dir = os.path.abspath(os.path.dirname(__file__))   # bin/cover...
     sympy_top  = os.path.split(bintest_dir)[0]      # ../
     sympy_dir  = os.path.join(sympy_top, 'sympy')  # ../sympy/
