@@ -181,9 +181,18 @@ def go(file, verbose=False, exact=True):
     if not os.path.exists(file):
         print "File %s does not exist."%file
         sys.exit(1)
-    # Handle trailing slashes
-    if file[:-1] == '/': file = file[:-1]
-    return coverage(string.replace(file,'/','.')[:-3], verbose)
+
+    # Remove the file extension
+    file, ign = os.path.splitext(file)
+
+    # Replace separators by . for module path
+    file_module = ""
+    h, t = os.path.split(file)
+    while h or t:
+        if t: file_module = t + '.' + file_module
+        h, t = os.path.split(h)
+
+    return coverage(file_module[:-1], verbose)
 
 if __name__ == "__main__":
 
@@ -203,6 +212,7 @@ if __name__ == "__main__":
         parser.print_help()
     else:
         for file in args:
+            file = os.path.normpath(file)
             doctests, num_functions = go(file, options.verbose)
             if num_functions == 0:
                 score = 100
