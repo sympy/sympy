@@ -24,48 +24,37 @@ import string
 import inspect
 from optparse import OptionParser
 
+
+def print_header(name, underline=None):
+  print '\n'+name
+  if underline: print underline*len(name)
+
 def print_coverage(c, c_md, c_mdt, f, f_md, f_mdt):
 
-    # Print routines (can be deported?)
-
-    print
-    print 'CLASSES'
-    print '*'*10
-
+    print_header('CLASSES', '*')
     if not c:
-        print
-        print 'No classes found!\n'
+        print_header('No classes found!')
+
     else:
         if c_md:
-            print
-            print 'Missing docstrings'
-            print '-'*15
+            print_header('Missing docstrings','-')
             for md in c_md:
                print md
         if c_mdt:
-            print
-            print 'Missing doctests'
-            print '-'*15
+            print_header('Missing doctests')
             for md in c_mdt:
                 print md
 
-    print
-    print 'DEFINITIONS'
-    print '*'*10
+    print_header('FUNCTIONS','*')
     if not f:
-        print
-        print 'No functions found!\n'
+        print_header('No functions found!')
     else:
         if f_md:
-            print
-            print 'Missing docstrings'
-            print '-'*15
+            print_header('Missing docstrings', '-')
             for md in f_md:
                print md
         if f_mdt:
-            print
-            print 'Missing doctests'
-            print '-'*15
+            print_header('Missing doctests', '-')
             for md in f_mdt:
                 print md
 
@@ -192,6 +181,8 @@ def go(file, verbose=False, exact=True):
     if not os.path.exists(file):
         print "File %s does not exist."%file
         sys.exit(1)
+    # Handle trailing slashes
+    if file[:-1] == '/': file = file[:-1]
     return coverage(string.replace(file,'/','.')[:-3], verbose)
 
 if __name__ == "__main__":
