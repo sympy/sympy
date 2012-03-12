@@ -176,6 +176,12 @@ class test_sympy(Command):
             if not sympy.doctest():
                 tests_successful = False
 
+            print
+            sys.path.append("examples")
+            from all import run_examples # examples/all.py
+            if not run_examples(quiet=True):
+                tests_successful = False
+
             if not (sys.platform == "win32" or sys.version_info[0] == 3):
                 # run Sage tests; Sage currently doesn't support Windows or Python 3
                 dev_null = open(os.devnull, 'w')
