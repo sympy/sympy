@@ -100,6 +100,7 @@ def coverage(module_path, verbose=False):
     c_has_doctest = []
     c_indirect_doctest = []
     classes = 0
+    c_doctests = 0
 
     f_skipped = []
     f_md = []
@@ -107,29 +108,34 @@ def coverage(module_path, verbose=False):
     f_has_doctest = []
     f_indirect_doctest = []
     functions = 0
+    f_doctests = 0
 
     for member in m_members:
         # Identify if the member (class/def) a part of this module
         obj = getattr(m, member)
         obj_mod = inspect.getmodule(obj)
+
+        # Function not a part of this module
         if not obj_mod or not obj_mod.__name__ == module_path:
           continue
 
         # If it's a function, simply process it
         if inspect.isfunction(obj) or inspect.ismethod(obj):
-            functions = functions + 1
             # Various scenarios
             if member.startswith('_'): f_skipped.append(member)
-            elif not obj.__doc__: f_md.append(member)
-            elif not '>>>' in obj.__doc__: f_mdt.append(member)
+            else:
+                if not obj.__doc__: f_md.append(member)
+                elif not '>>>' in obj.__doc__: f_mdt.append(member)
+                else: f_doctests = f_doctests + 1
+                functions = functions + 1
 
         # If it's a class, look at it's methods too
         elif inspect.isclass(obj):
-            #print 'Class: '+member
             classes = classes + 1
             # Process the class first
             if not obj.__doc__: c_md.append(member)
             elif not '>>>' in obj.__doc__: c_mdt.append(member)
+            else: c_doctests = c_doctests + 1
 
             # Iterate through it's members
             for class_m in dir(obj):
@@ -152,12 +158,23 @@ def coverage(module_path, verbose=False):
                 # Check function for various categories
                 full_name = member + '.' + class_m
                 if class_m.startswith('_'): f_skipped.append(full_name)
-                elif not class_m_obj.__doc__: f_md.append(full_name)
-                elif not '>>>' in class_m_obj.__doc__: f_mdt.append(full_name)
+                else:
+                    if not class_m_obj.__doc__: f_md.append(full_name)
+                    elif not '>>>' in class_m_obj.__doc__: f_mdt.append(full_name)
+                    else: f_doctests = f_doctests + 1
+                    functions = functions + 1
 
+    total_doctests = c_doctests + f_doctests
+    total_members = classes + functions
     print_coverage(classes, c_md, c_mdt, functions, f_md, f_mdt)
 
-    return 0, 0
+    if total_members: score = 100 * float(total_doctests) / (total_members)
+    else: score = 0
+
+    score = int(score)
+    print '-'*70
+    print "SCORE %s: %s%% (%s of %s)" % (module_path, score, total_doctests, total_members)
+    return total_doctests, total_members
 
 def go(file, verbose=False, exact=True):
 
