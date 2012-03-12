@@ -24,6 +24,33 @@ import string
 import inspect
 from optparse import OptionParser
 
+def _is_skip(module_path, name, obj):
+    """ Given a module object and the type object, the function
+    determines if the objected should be ignored on following
+    remarks:
+      * It is a builtin
+      * Starts with an underscore (is private)
+    """
+
+    skip = False
+    filename = None
+
+    # Removes the built-in types, a bit hacky
+    try:
+        filename = inspect.getfile(obj)
+    except TypeError as (strerror):
+        skip = True
+
+    # If import imported something other than our module
+    if inspect.getmodule(obj).__name__ != module_path:
+        skip = True
+
+    if skip or name.startswith('_') or \
+        not 'sympy' in filename:
+            skip = True
+
+    return skip
+
 def coverage(module_path, verbose=False):
 
     """ Given a module path, builds an index of all classes and functions
@@ -48,46 +75,52 @@ def coverage(module_path, verbose=False):
     m_functions = filter(lambda x: inspect.isfunction(x[1]), m_members)
 
     # Iterate over functions first
+    print
+    print '='*70
     print module_path
-    print '-'*70
+    print '='*70
 
     skipped = []
     missing_docstring = []
     missing_doctest = []
     has_doctest = []
     indirect_doctest = []
+    classes = 0
 
+    print
+    print 'CLASSES'
+    print '-'*10
     for c in m_classes:
-
         class_name, class_obj = c[0], c[1]
-
         # Check if the class needs to be skipped
-        skip = False
-        filename = None
-
-        # Removes the built-in types, a bit hacky
-        try:
-          filename = inspect.getfile(c[1])
-        except TypeError as (strerror):
-          #print 'ERRORR:' + str(strerror)
-          skip = True
-
-        # If import imported something other than our module
-        if inspect.getmodule(class_obj).__name__ != module_path:
-          skip = True
-
-        if skip or class_name.startswith('_') or \
-          not 'sympy' in filename:
-            skip = True
-        if skip:
-            skipped.append(c)
-
+        skip = _is_skip(module_path, class_name, class_obj)
+        if skip:  skipped.append(c)
+        else:   classes = classes + 1
         # Check if the class has docstrings
         if not skip and not class_obj.__doc__:
              missing_docstring.append(c)
+        # Check for a docstring
+        if not skip and class_obj.__doc__ and \
+            not '>>>' in class_obj.__doc__:
+                missing_doctest.append(c)
 
+    if not classes:
+        print
+        print 'No classes found!\n'
+    else:
+        if missing_docstring:
+            print
+            print 'Missing docstrings'
+            print '*'*15
+            for md in missing_docstring:
+               print md[0]
+        if missing_doctest:
+            print
+            print 'Missing doctests'
+            print '*'*15
+            for md in missing_doctest:
+                print md[0]
 
-    print 'Missing: '+str(missing_docstring)
     return 0, 0
 
 def go(file, verbose=False, exact=True):
