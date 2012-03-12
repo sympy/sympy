@@ -25,38 +25,50 @@ import inspect
 from optparse import OptionParser
 
 
-def print_header(name, underline=None):
-  print '\n'+name
+def print_header(name, underline=None, overline=None):
+  print
+  print name
   if underline: print underline*len(name)
 
-def print_coverage(c, c_md, c_mdt, f, f_md, f_mdt):
+def print_coverage(module_path, c, c_md, c_mdt, f, f_md, f_mdt, score, total_doctests, total_members, verbose=False):
 
-    print_header('CLASSES', '*')
-    if not c:
-        print_header('No classes found!')
 
-    else:
-        if c_md:
-            print_header('Missing docstrings','-')
-            for md in c_md:
-               print md
-        if c_mdt:
-            print_header('Missing doctests')
-            for md in c_mdt:
-                print md
+    if verbose:
+        print '\n'+'-'*70
 
-    print_header('FUNCTIONS','*')
-    if not f:
-        print_header('No functions found!')
-    else:
-        if f_md:
-            print_header('Missing docstrings', '-')
-            for md in f_md:
-               print md
-        if f_mdt:
-            print_header('Missing doctests', '-')
-            for md in f_mdt:
-                print md
+    print "%s: %s%% (%s of %s)" % (module_path, score, total_doctests, total_members)
+
+    if verbose:
+        print '-'*70
+
+
+    if verbose:
+        print_header('CLASSES', '*')
+        if not c:
+            print_header('No classes found!')
+
+        else:
+            if c_md:
+                print_header('Missing docstrings','-')
+                for md in c_md:
+                   print md
+            if c_mdt:
+                print_header('Missing doctests','-')
+                for md in c_mdt:
+                    print md
+
+        print_header('FUNCTIONS','*')
+        if not f:
+            print_header('No functions found!')
+        else:
+            if f_md:
+                print_header('Missing docstrings', '-')
+                for md in f_md:
+                   print md
+            if f_mdt:
+                print_header('Missing doctests', '-')
+                for md in f_mdt:
+                    print md
 
 def coverage(module_path, verbose=False):
 
@@ -76,11 +88,6 @@ def coverage(module_path, verbose=False):
 
     # Get the list of members (currently everything possible)
     m_members = dir(m)
-
-    print
-    print '='*70
-    print module_path
-    print '='*70
 
 
     c_skipped = []
@@ -155,14 +162,13 @@ def coverage(module_path, verbose=False):
 
     total_doctests = c_doctests + f_doctests
     total_members = classes + functions
-    print_coverage(classes, c_md, c_mdt, functions, f_md, f_mdt)
-
     if total_members: score = 100 * float(total_doctests) / (total_members)
     else: score = 0
-
     score = int(score)
-    print '-'*70
-    print "SCORE %s: %s%% (%s of %s)" % (module_path, score, total_doctests, total_members)
+
+    print_coverage(module_path, classes, c_md, c_mdt, functions, f_md, f_mdt, score, total_doctests, total_members, verbose)
+
+
     return total_doctests, total_members
 
 def go(file, verbose=False, exact=True):
@@ -213,6 +219,9 @@ if __name__ == "__main__":
     else:
         for file in args:
             file = os.path.normpath(file)
+            print 'DOCTEST for %s' % (file)
+            print '='*70
+            print
             doctests, num_functions = go(file, options.verbose)
             if num_functions == 0:
                 score = 100
