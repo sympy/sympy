@@ -45,11 +45,55 @@ def _is_skip(module_path, name, obj):
     if inspect.getmodule(obj).__name__ != module_path:
         skip = True
 
-    if skip or name.startswith('_') or \
-        not 'sympy' in filename:
+    if skip or name.startswith('_'):
             skip = True
 
     return skip
+
+def print_coverage(c, c_md, c_mdt, f, f_md, f_mdt):
+
+    # Print routines (can be deported?)
+
+    print
+    print 'CLASSES'
+    print '*'*10
+
+    if not c:
+        print
+        print 'No classes found!\n'
+    else:
+        if c_md:
+            print
+            print 'Missing docstrings'
+            print '-'*15
+            for md in c_md:
+               print md[0]
+        if c_mdt:
+            print
+            print 'Missing doctests'
+            print '-'*15
+            for md in c_mdt:
+                print md[0]
+
+    print
+    print 'DEFINITIONS'
+    print '*'*10
+    if not f:
+        print
+        print 'No functions found!\n'
+    else:
+        if f_md:
+            print
+            print 'Missing docstrings'
+            print '-'*15
+            for md in f_md:
+               print md[0]
+        if f_mdt:
+            print
+            print 'Missing doctests'
+            print '-'*15
+            for md in f_mdt:
+                print md[0]
 
 def coverage(module_path, verbose=False):
 
@@ -74,52 +118,58 @@ def coverage(module_path, verbose=False):
     m_classes = filter(lambda x: inspect.isclass(x[1]), m_members)
     m_functions = filter(lambda x: inspect.isfunction(x[1]), m_members)
 
-    # Iterate over functions first
+
     print
     print '='*70
     print module_path
     print '='*70
 
-    skipped = []
-    missing_docstring = []
-    missing_doctest = []
-    has_doctest = []
-    indirect_doctest = []
+    # Iterate over classes
+    c_skipped = []
+    c_md = []
+    c_mdt = []
+    c_has_doctest = []
+    c_indirect_doctest = []
     classes = 0
 
-    print
-    print 'CLASSES'
-    print '-'*10
     for c in m_classes:
         class_name, class_obj = c[0], c[1]
         # Check if the class needs to be skipped
         skip = _is_skip(module_path, class_name, class_obj)
-        if skip:  skipped.append(c)
+        if skip:  c_skipped.append(c)
         else:   classes = classes + 1
         # Check if the class has docstrings
         if not skip and not class_obj.__doc__:
-             missing_docstring.append(c)
+             c_md.append(c)
         # Check for a docstring
         if not skip and class_obj.__doc__ and \
             not '>>>' in class_obj.__doc__:
-                missing_doctest.append(c)
+                c_mdt.append(c)
 
-    if not classes:
-        print
-        print 'No classes found!\n'
-    else:
-        if missing_docstring:
-            print
-            print 'Missing docstrings'
-            print '*'*15
-            for md in missing_docstring:
-               print md[0]
-        if missing_doctest:
-            print
-            print 'Missing doctests'
-            print '*'*15
-            for md in missing_doctest:
-                print md[0]
+    # Iterate over functions
+    f_skipped = []
+    f_md = []
+    f_mdt = []
+    f_has_doctest = []
+    f_indirect_doctest = []
+    functions = 0
+
+
+    for f in m_functions:
+        f_name, f_obj = f[0], f[1]
+        # Check if the class needs to be skipped
+        skip = _is_skip(module_path, f_name, f_obj)
+        if skip:  f_skipped.append(f)
+        else:   functions = functions + 1
+        # Check if the class has docstrings
+        if not skip and not f_obj.__doc__:
+             f_md.append(f)
+        # Check for a docstring
+        if not skip and f_obj.__doc__ and \
+            not '>>>' in f_obj.__doc__:
+                f_mdt.append(f)
+
+    print_coverage(classes, c_md, c_mdt, functions, f_md, f_mdt)
 
     return 0, 0
 
