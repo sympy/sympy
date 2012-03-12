@@ -57,7 +57,7 @@ def test_latex_basic():
     assert latex(x & y & z) == r"x \wedge y \wedge z"
     assert latex(x | y) == r"x \vee y"
     assert latex(x | y | z) == r"x \vee y \vee z"
-    assert latex((x & y) | z) == r"\left(x \wedge y\right) \vee z"
+    assert latex((x & y) | z) == r"z \vee \left(x \wedge y\right)"
     assert latex(Implies(x,y)) == r"x \Rightarrow y"
 
     assert latex(~x, symbol_names={x: "x_i"}) == r"\neg x_i"
@@ -69,7 +69,7 @@ def test_latex_basic():
     assert latex(x | y | z, symbol_names={x: "x_i", y: "y_i", z: "z_i"}) == \
         r"x_i \vee y_i \vee z_i"
     assert latex((x & y) | z, symbol_names={x: "x_i", y: "y_i", z: "z_i"}) ==\
-        r"\left(x_i \wedge y_i\right) \vee z_i"
+        r"z_i \vee \left(x_i \wedge y_i\right)"
     assert latex(Implies(x,y), symbol_names={x: "x_i", y: "y_i"}) == \
         r"x_i \Rightarrow y_i"
 
@@ -470,7 +470,7 @@ def test_latex_RandomDomain():
 
     A = Exponential(1, symbol=Symbol('a'))
     B = Exponential(1, symbol=Symbol('b'))
-    assert latex(pspace(Tuple(A,B)).domain) =="Domain: 0 \leq b \wedge 0 \leq a"
+    assert latex(pspace(Tuple(A,B)).domain) =="Domain: 0 \leq a \wedge 0 \leq b"
 
 def test_integral_transforms():
     x = Symbol("x")

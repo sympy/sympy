@@ -859,8 +859,8 @@ class Integral(Expr):
         >>> from sympy.abc import a, b, c, x, y
 
         >>> i = Integral(a + x, (a, a, 3), (b, x, c))
-        >>> list(i.free_symbols) # only these can be changed
-        [x, a, c]
+        >>> i.free_symbols # only these can be changed
+        set([a, c, x])
         >>> i.subs(a, c) # note that the variable of integration is unchanged
         Integral(a + x, (a, c, 3), (b, x, c))
         >>> i.subs(a + x, b) == i # there is no x + a, only x + <a>
