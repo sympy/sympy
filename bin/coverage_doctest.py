@@ -92,6 +92,49 @@ def _is_indirect(member, doc):
   else:
       return False
 
+def _get_arg_list(name, fobj):
+
+    """ Given a function object, constructs a list of arguments
+    and their defaults. Takes care of varargs and kwargs """
+
+    argspec = inspect.getargspec(fobj)
+
+    arg_list = []
+
+    if argspec.args:
+        for arg in argspec.args: arg_list.append(arg)
+
+    arg_list.reverse()
+
+    # Now add the defaults
+    if argspec.defaults:
+        rev_defaults = list(argspec.defaults).reverse()
+        for i in range(len(argspec.defaults)):
+            arg_list[i] = str(arg_list[i]) + '=' + str(argspec.defaults[-i])
+
+    # Get the list in right order
+    arg_list.reverse()
+
+    # Add var args
+    if argspec.varargs:
+          arg_list.append(argspec.varargs)
+    if argspec.keywords:
+          arg_list.append(argspec.keywords)
+
+
+    # Construct the parameter string (enclosed in brackets)
+    if arg_list:
+        str_param = name + '('
+        for arg in arg_list[:-1]:
+            str_param = str_param + arg + ', '
+        str_param = str_param + arg_list[-1] + ')'
+    else:
+        str_param = name + '()'
+
+    return str_param
+
+
+
 def coverage(module_path, verbose=False):
 
     """ Given a module path, builds an index of all classes and functions
@@ -149,14 +192,15 @@ def coverage(module_path, verbose=False):
             if member.startswith('_'): f_skipped.append(member)
             else:
 
-                if not obj.__doc__: f_md.append(member)
-                elif not '>>>' in obj.__doc__: f_mdt.append(member)
+                param_name = _get_arg_list(member, obj)
+                if not obj.__doc__: f_md.append(param_name)
+                elif not '>>>' in obj.__doc__: f_mdt.append(param_name)
                 else:
                     f_doctests = f_doctests + 1
-                    f_has_doctest.append(member)
+                    f_has_doctest.append(param_name)
                     # indirect doctest
                     if _is_indirect(member, obj.__doc__):
-                        f_indirect_doctest.append(member)
+                        f_indirect_doctest.append(param_name)
 
                 functions = functions + 1
 
@@ -193,7 +237,7 @@ def coverage(module_path, verbose=False):
                     continue
 
                 # Check function for various categories
-                full_name = member + '.' + class_m
+                full_name = _get_arg_list(member + '.'  + class_m, class_m_obj)
                 if class_m.startswith('_'): f_skipped.append(full_name)
                 else:
                     if not class_m_obj.__doc__: f_md.append(full_name)
