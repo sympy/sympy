@@ -528,7 +528,7 @@ class FactKB(dict):
                 else:
                     self[k] = v
 
-        if type(facts) is dict:
+        if isinstance(facts, dict):
             fseq = facts.iteritems()
         else:
             fseq = facts

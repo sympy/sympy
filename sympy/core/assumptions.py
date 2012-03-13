@@ -60,6 +60,20 @@ _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
 
+class StdFactKB(FactKB):
+    """A FactKB specialised for the built-in rules
+
+    This is the only kind of FactKB that Basic objects should use.
+    """
+    rules = _assume_rules
+
+    def __init__(self, facts=None):
+        if facts:
+            self.deduce_all_facts(facts)
+
+    def copy(self):
+        return self.__class__(self)
+
 
 class CycleDetected(Exception):
     """(internal) used to detect cycles when evaluating assumptions
@@ -103,8 +117,7 @@ class WithAssumptions(BasicMeta):
         cls._default_premises.update(cls_premises)
 
         # deduce all consequences from default assumptions -- make it complete
-        default_assumptions = FactKB(_assume_rules)
-        default_assumptions.deduce_all_facts(cls._default_premises)
+        default_assumptions = StdFactKB(cls._default_premises)
 
         # and store completed set into cls -- this way we'll avoid rededucing
         # extensions of class default assumptions each time on instance
