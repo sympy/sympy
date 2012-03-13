@@ -161,25 +161,9 @@ class Basic(PicklableWithSlots):
         # occurs as hash is needed for setting cache dictionary keys
         h = self._mhash
         if h is None:
-            h = (type(self).__name__,) + self._hashable_content()
-
-            if self._assume_type_keys is not None:
-                a = []
-                kv= self._assumptions
-                for k in sorted(self._assume_type_keys):
-                    a.append( (k, kv[k]) )
-
-                h = hash( h + tuple(a) )
-
-            else:
-                h = hash( h )
-
-
+            h = hash((type(self).__name__,) + self._hashable_content())
             self._mhash = h
-            return h
-
-        else:
-            return h
+        return h
 
     def _hashable_content(self):
         # If class defines additional attributes, like name in Symbol,
@@ -394,11 +378,8 @@ class Basic(PicklableWithSlots):
             if type(self) is not type(other):
                 return False
 
-        # type(self) == type(other)
-        st = self._hashable_content()
-        ot = other._hashable_content()
+        return self._hashable_content() == other._hashable_content()
 
-        return st == ot and self._assume_type_keys == other._assume_type_keys
 
     def __ne__(self, other):
         """a != b  -> Compare two symbolic trees and see whether they are different
@@ -419,11 +400,7 @@ class Basic(PicklableWithSlots):
             if type(self) is not type(other):
                 return True
 
-        # type(self) == type(other)
-        st = self._hashable_content()
-        ot = other._hashable_content()
-
-        return (st != ot) or self._assume_type_keys != other._assume_type_keys
+        return self._hashable_content() != other._hashable_content()
 
     def dummy_eq(self, other, symbol=None):
         """

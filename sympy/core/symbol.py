@@ -84,7 +84,11 @@ class Symbol(AtomicExpr, Boolean):
         return (self.name,)
 
     def _hashable_content(self):
-        return (self.name,)
+        content = (self.name,)
+        if self._assume_type_keys is not None:
+            content += tuple((k, self._assumptions[k])
+                    for k in sorted(self._assume_type_keys))
+        return content
 
     @cacheit
     def sort_key(self, order=None):
@@ -184,7 +188,7 @@ class Wild(Symbol):
         return obj
 
     def _hashable_content(self):
-        return (self.name, self.exclude, self.properties )
+        return super(Wild, self)._hashable_content() + (self.exclude, self.properties)
 
     # TODO add check against another Wild
     def matches(self, expr, repl_dict={}):
