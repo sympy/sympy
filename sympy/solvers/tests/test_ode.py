@@ -367,7 +367,7 @@ def test_separable2():
     # solve() messes this one up a little bit, so lets test _Integral here
     # We have to test strings with _Integral because y is a dummy variable.
     sol6str = "Integral((_y - 2)/_y**3, (_y, f(x))) == C1 + Integral(x**(-2), x)"
-    sol7 = Eq(log(-1 + f(x)**2)/2, C1 + log(-2 - x))
+    sol7 = Eq(-log(-1 + f(x)**2)/2, C1 - log(x + 2))
     sol8 = Eq(asinh(f(x)), C1 - log(log(x)))
     # integrate cannot handle the integral on the lhs (cos/tan)
     sol9str = "Integral(cos(_y)/tan(_y), (_y, f(x))) == C1 + Integral(-E*exp(x), x)"
@@ -420,7 +420,7 @@ def test_separable5():
                         ((1 - x)*(-x*exp(x) + exp(x))))
     sol19e = Eq(f(x), (C1*(1 - x) - x*(-x*exp(x) + exp(x)) -
                             x*exp(x) + exp(x))/((1 - x)*(-exp(x) + x*exp(x))))
-    sol20 = Eq(-log(-1 + 3*f(x)**2)/6, C1 - x**2/2)
+    sol20 = Eq(log(-1 + 3*f(x)**2)/6, C1 + x**2/2)
     sol21 = Eq(-exp(-f(x)), C1 + exp(x))
     assert dsolve(eq15, hint='separable') == sol15
     assert dsolve(eq16, hint='separable', simplify=False) == sol16
@@ -429,7 +429,7 @@ def test_separable5():
     assert dsolve(eq19, hint='separable') in [sol19a, sol19b, sol19c,
                                                     sol19d, sol19e]
     assert dsolve(eq20, hint='separable', simplify=False) == sol20
-    assert dsolve(eq21, hint='separable') == sol21
+    assert dsolve(eq21, hint='separable', simplify=False) == sol21
     assert checkodesol(eq15, sol15, order=1, solve_for_func=False)[0]
     assert checkodesol(eq16, sol16, order=1, solve_for_func=False)[0]
     assert checkodesol(eq17, sol17, order=1, solve_for_func=False)[0]

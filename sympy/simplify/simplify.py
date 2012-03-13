@@ -612,14 +612,14 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     >>> separatevars((x*y)**y, force=True)
     x**y*y**y
     >>> separatevars(2*x**2*z*sin(y)+2*z*x**2)
-    x**2*z*(2*sin(y) + 2)
+    2*x**2*z*(sin(y) + 1)
 
     >>> separatevars(2*x+y*sin(x))
     2*x + y*sin(x)
     >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, symbols=(x, y), dict=True)
-    {'coeff': z, x: x**2, y: 2*sin(y) + 2}
+    {'coeff': 2*z, x: x**2, y: sin(y) + 1}
     >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, [x, y, alpha], dict=True)
-    {'coeff': z, alpha: 1, x: x**2, y: 2*sin(y) + 2}
+    {'coeff': 2*z, alpha: 1, x: x**2, y: sin(y) + 1}
 
     If the expression is not really separable, or is only partially
     separable, separatevars will do the best it can to separate it.
@@ -637,7 +637,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     True
 
     """
-
+    expr = sympify(expr)
     if dict:
         return _separatevars_dict(_separatevars(expr, force), symbols)
     else:
@@ -666,48 +666,37 @@ def _separatevars(expr, force):
 
     _expr = expr
     if expr.is_commutative: # factor fails for nc
-        _expr = factor(_expr)
+        _expr, reps = posify(expr) if force else (expr, {})
+        expr = factor(_expr).subs(reps)
+
     if not expr.is_Add:
         return expr
 
     # Find any common coefficients to pull out
     args = list(expr.args)
-    commonc = args[0].args_cnc()[0]
+    commonc = args[0].args_cnc(cset=True, warn=False)[0]
     for i in args[1:]:
-        commonc &= i.args_cnc()[0]
+        commonc &= i.args_cnc(cset=True, warn=False)[0]
     commonc = Mul(*commonc)
     commonc = commonc.as_coeff_Mul()[1] # ignore constants
+    commonc_set = commonc.args_cnc(cset=True, warn=False)[0]
 
-    # pull them out
-    nonsepar = sympify(0)
-    for i in expr.args:
-        coe = i.extract_multiplicatively(commonc)
-        if coe == None:
-            nonsepar += sympify(1)
-        else:
-            nonsepar += coe
+    # remove them
+    for i, a in enumerate(args):
+        c, nc = a.args_cnc(cset=True, warn=False)
+        c = c - commonc_set
+        args[i] = Mul(*c)*Mul(*nc)
+    nonsepar = Add(*args)
 
-    if not nonsepar:
-        return commonc
-    else:
-        if nonsepar.is_commutative and len(nonsepar.free_symbols) > 1: # factor fails for nc
-            _expr = nonsepar
-            if not force:
-                # factor will expand bases so we mask them off now
-                pows = [p for p in _expr.atoms(Pow) if not p.base.is_Atom]
-                dums = [Dummy(str(i)) for i in xrange(len(pows))]
-                _expr = _expr.subs(dict(zip(pows, dums)))
+    if len(nonsepar.free_symbols) > 1:
+        _expr = nonsepar
+        _expr, reps = posify(_expr) if force else (_expr, {})
+        _expr = (factor_nc(_expr)).subs(reps)
 
-            _expr = factor(_expr)
+        if not _expr.is_Add:
+            nonsepar = _expr
 
-            if not force:
-                # and restore them
-                _expr = _expr.subs(dict(zip(dums, pows)))
-
-            if not _expr.is_Add:
-                nonsepar = _expr
-
-        return commonc*nonsepar
+    return commonc*nonsepar
 
 
 def _separatevars_dict(expr, symbols):
@@ -721,7 +710,7 @@ def _separatevars_dict(expr, symbols):
         if not symbols:
             return None
 
-    ret = dict(((i, S.One) for i in symbols + ['coeff']))
+    ret = dict(((i, []) for i in symbols + ['coeff']))
 
     for i in Mul.make_args(expr):
         expsym = i.free_symbols
@@ -730,9 +719,13 @@ def _separatevars_dict(expr, symbols):
             return None
         if len(intersection) == 0:
             # There are no symbols, so it is part of the coefficient
-            ret['coeff'] *= i
+            ret['coeff'].append(i)
         else:
-            ret[intersection.pop()] *= i
+            ret[intersection.pop()].append(i)
+
+    # rebuild
+    for k, v in ret.items():
+        ret[k] = Mul(*v)
 
     return ret
 

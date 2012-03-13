@@ -488,7 +488,7 @@ def test_collect_Wild():
     assert collect(a*(x + 1)**y + (x + 1)**y, w1**w2) == (1 + a)*(x + 1)**y
 
 def test_collect_func():
-    f = expand((x + a + 1)**3)
+    f = ((x + a + 1)**3).expand()
 
     assert collect(f, x) == a**3 + 3*a**2 + 3*a + x**3 + x**2*(3*a + 3) + x*(3*a**2 + 6*a + 3) + 1
     assert collect(f, x, factor) == x**3 + 3*x**2*(a + 1) + 3*x*(a + 1)**2 + (a + 1)**3
@@ -532,7 +532,7 @@ def test_separatevars():
     assert separatevars(x*exp(x+y)+x*exp(x)) == x*(1 + exp(y))*exp(x)
     assert separatevars((x*(y+1))**z).is_Pow # != x**z*(1 + y)**z
     assert separatevars(1+x+y+x*y) == (x+1)*(y+1)
-    assert separatevars(y / pi * exp(-(z - x) / cos(n))) == y * exp((x - z) / cos(n)) / pi
+    assert separatevars(y/pi*exp(-(z - x)/cos(n))) == y*exp(x/cos(n))*exp(-z/cos(n))/pi
     assert separatevars((x + y)*(x - y) + y**2 + 2*x + 1) == (x + 1)**2
     # 1759
     p=Symbol('p',positive=True)
@@ -544,12 +544,14 @@ def test_separatevars():
     assert separatevars(sqrt(x*y), force=True) == sqrt(x)*sqrt(y)
     # 1858
     # any type sequence for symbols is fine
-    assert separatevars(((2*x+2)*y), dict=True, symbols=()) == {'coeff': 2, x: x + 1, y: y}
+    assert separatevars(((2*x+2)*y), dict=True, symbols=()) == {'coeff': 1, x: 2*x + 2, y: y}
     # separable
-    assert separatevars(((2*x+2)*y), dict=True, symbols=[]) == {'coeff': 2, x: x + 1, y: y}
-    assert separatevars(((2*x+2)*y), dict=True) == {'coeff': 2, x: x + 1, y: y}
-    assert separatevars(((2*x+2)*y), dict=True, symbols=None) == {'coeff': 2*y*(x + 1)}
+    assert separatevars(((2*x+2)*y), dict=True, symbols=[x]) == {'coeff': y, x: 2*x + 2}
+    assert separatevars(((2*x+2)*y), dict=True, symbols=[]) == {'coeff': 1, x: 2*x + 2, y: y}
+    assert separatevars(((2*x+2)*y), dict=True) == {'coeff': 1, x: 2*x + 2, y: y}
+    assert separatevars(((2*x+2)*y), dict=True, symbols=None) == {'coeff': y*(2*x + 2)}
     # not separable
+    assert separatevars(3, dict=True) is None
     assert separatevars(2*x+y, dict=True, symbols=()) is None
     assert separatevars(2*x+y, dict=True) is None
     assert separatevars(2*x+y, dict=True, symbols=None) == {'coeff': 2*x + y}
