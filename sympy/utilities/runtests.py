@@ -216,6 +216,10 @@ def test(*paths, **kwargs):
 
     >>> sympy.test(colors=False)    # doctest: +SKIP
 
+    Force colors, even when the output is not to a terminal (this is useful,
+    e.g., if you are piping to ``less -r`` and you still want colors)
+
+    >>> sympy.test(force_colors=False    # doctest: +SKIP
     The traceback verboseness can be set to "short" or "no" (default is
     "short")
 
