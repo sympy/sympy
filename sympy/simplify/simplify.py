@@ -2595,6 +2595,74 @@ def combsimp(expr):
 
     return factor(expr)
 
+def signsimp(expr):
+    """Make all Add sub-expressions canonical wrt sign.
+
+    If an Add subexpression, ``a``, can have a sign extracted,
+    as determined by could_extract_minus_sign, it is replaced
+    with Mul(-1, a, evaluate=False). This allows signs to be
+    extracted from powers and products.
+
+    Examples
+    ========
+
+    >>> from sympy import signsimp
+    >>> from sympy.abc import x
+    >>> n = -1 + 1/x
+    >>> n/x/(-n)**2 - 1/n/x
+    (-1 + 1/x)/(x*(1 - 1/x)**2) - 1/(x*(-1 + 1/x))
+    >>> signsimp(_)
+    0
+    >>> x*n + x*-n
+    x*(-1 + 1/x) + x*(1 - 1/x)
+    >>> signsimp(_)
+    0
+    >>> n**3
+    (-1 + 1/x)**3
+    >>> signsimp(_)
+    -(1 - 1/x)**3
+
+    """
+    from sympy.utilities.iterables import preorder_traversal
+
+    # collect Add expressions in order of length
+
+    pot = preorder_traversal(sympify(expr))
+    saw = set()
+    adds = []
+    for p in pot:
+        if p in saw:
+            pot.skip()
+            continue
+        if p.is_Add:
+            adds.append(p)
+        saw.add(p)
+
+    # starting from the shortest adds (which were encountered last
+    # during the traversal) see if they can have a sign extracted
+    # and if so, keep them and substitute them into collected longer
+    # expressions
+
+    adds.reverse()
+    negated = []
+    restore = {}
+    for i, a in enumerate(adds):
+        if a.could_extract_minus_sign():
+            d = Dummy()
+            negated.append((a, -d))
+            restore[d] = -a
+        # update others
+        for j in range(i + 1, len(adds)):
+            adds[j] = adds[j].subs(negated)
+
+    # let signs on the dummies work themselves out in expressions
+    # e.g. (-d1)*(-d2) will become d1*d2, and then restore the
+    # original expressions. Since each of the Adds has already
+    # been updated, do them in reverse order (largest first).
+
+    negated.reverse()
+    return expr.subs(negated).xreplace(restore)
+
 def simplify(expr, ratio=1.7, measure=count_ops):
     """
     Simplifies the given expression.
