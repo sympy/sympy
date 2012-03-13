@@ -227,13 +227,14 @@ def test(*paths, **kwargs):
     kw = kwargs.get("kw", "")
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
+    force_colors = kwargs.get("force_colors", False)
     sort = kwargs.get("sort", True)
     seed = kwargs.get("seed", None)
     if seed is None:
         seed = random.randrange(100000000)
     timeout = kwargs.get("timeout", False)
     slow = kwargs.get("slow", False)
-    r = PyTestReporter(verbose, tb, colors)
+    r = PyTestReporter(verbose=verbose, tb=tb, colors=colors, force_colors=force_colors)
     t = SymPyTests(r, kw, post_mortem, seed)
 
     # Disable warnings for external modules
@@ -1083,10 +1084,11 @@ class PyTestReporter(Reporter):
     Py.test like reporter. Should produce output identical to py.test.
     """
 
-    def __init__(self, verbose=False, tb="short", colors=True):
+    def __init__(self, verbose=False, tb="short", colors=True, force_colors=False):
         self._verbose = verbose
         self._tb_style = tb
         self._colors = colors
+        self._force_colors = force_colors
         self._xfailed = 0
         self._xpassed = []
         self._failed = []
@@ -1168,7 +1170,7 @@ class PyTestReporter(Reporter):
 
         return width
 
-    def write(self, text, color="", align="left", width=None):
+    def write(self, text, color="", align="left", width=None, force_colors=False):
         """
         Prints a text on the screen.
 
@@ -1218,7 +1220,7 @@ class PyTestReporter(Reporter):
                 self.write("\n")
             self.write(" "*(width-self._write_pos-len(text)))
 
-        if hasattr(sys.stdout, 'isatty') and not sys.stdout.isatty():
+        if not self._force_colors and hasattr(sys.stdout, 'isatty') and not sys.stdout.isatty():
             # the stdout is not a terminal, this for example happens if the
             # output is piped to less, e.g. "bin/test | less". In this case,
             # the terminal control sequences would be printed verbatim, so
@@ -1441,4 +1443,3 @@ class PyTestReporter(Reporter):
         self.write("\n")
 
 sympy_dir = get_sympy_dir()
-
