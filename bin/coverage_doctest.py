@@ -128,7 +128,13 @@ def coverage(module_path, verbose=False):
     functions = 0
     f_doctests = 0
 
+    skip_members = ['__abstractmethods__']
+
     for member in m_members:
+        # Check for skipped functions first, they throw nasty errors
+        # when combined with getattr
+        if member in skip_members: continue
+
         # Identify if the member (class/def) a part of this module
         obj = getattr(m, member)
         obj_mod = inspect.getmodule(obj)
@@ -170,16 +176,16 @@ def coverage(module_path, verbose=False):
             # Iterate through it's members
             for class_m in dir(obj):
 
+                # Check in skip function list
+                if class_m in skip_members: continue
+
                 # Check if the method is a part of this module
                 class_m_mod = None
                 class_m_obj = None
 
                 # Gutsy hack; need to expand reasons
-                try:
-                    class_m_obj = getattr(obj, class_m)
-                    class_m_mod = inspect.getmodule(class_m_obj)
-                except:
-                    continue
+                class_m_obj = getattr(obj, class_m)
+                class_m_mod = inspect.getmodule(class_m_obj)
 
                 # Method not part of our module
                 if not class_m_mod or not class_m_obj or \
