@@ -1107,7 +1107,7 @@ def split_surds(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.simplify import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
-    (sqrt(5)/7 + sqrt(10) + sqrt(15), sqrt(6) + 3*sqrt(3))
+     (sqrt(6) + sqrt(15) + 3*sqrt(3), sqrt(5)/7 + sqrt(10))
     """
     coeff_muls =  [x.as_coeff_Mul() for x in expr.args]
     surds = [x[1]**2 for x in coeff_muls if x[1].is_Pow]

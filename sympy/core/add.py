@@ -16,6 +16,12 @@ class Add(AssocOp):
     #identity = S.Zero
     # cyclic import, so defined in numbers.py
 
+    def _hashable_content(self):
+        #TODO: noncommutative case.
+        if self._hashable_tuple_chached == None:
+            self._hashable_tuple_chached = tuple(sorted(self._args, key=hash))
+        return self._hashable_tuple_chached
+
     @classmethod
     def flatten(cls, seq):
         """
@@ -66,14 +72,22 @@ class Add(AssocOp):
                     return rv
                 return [], rv[0], None
 
-        terms = {}      # term -> coeff
-                        # e.g. x**2 -> 5   for ... + 5*x**2 + ...
+        # Accumulators to collect conformable terms
+        # it is organized as a set, which maintains the original ordering
+        # 2*x**2 + 3*y + 4*x**2 --> 6*x**2 + 3*y
+
+        terms_c = []        # list of coefficients
+        terms_s = []        # list of conformable terms
+        terms_i = {}        # dictionary of its position
+
 
         coeff = S.Zero  # standalone term (Number or zoo will always be in slot 0)
                         # e.g. 3 + ...
         order_factors = []
 
+        current_pos = 0 # while flatting we will insert terms in current  positions
         for o in seq:
+            current_pos += 1
 
             # O(x)
             if o.is_Order:
@@ -108,7 +122,13 @@ class Add(AssocOp):
             # Add([...])
             elif o.is_Add:
                 # NB: here we assume Add is always commutative
-                seq.extend(o.args)  # TODO zerocopy?
+                # Now we insert nested Add in-place, so we can to do not care
+                # about commutativity.
+                _args = o.args
+                i = len(_args)
+                while i>0:
+                    i -= 1
+                    seq.insert(current_pos, _args[i])
                 continue
 
             # Mul([...])
@@ -120,7 +140,11 @@ class Add(AssocOp):
                 # it can combine with other terms (just like is done
                 # with the Pow below)
                 if c.is_Number and s.is_Add:
-                    seq.extend([c*a for a in s.args])
+                    _args = s.args
+                    i = len(_args)
+                    while i>0:
+                        i -= 1
+                        seq.insert(current_pos, c *_args[i])
                     continue
 
             # check for unevaluated Pow, e.g. 2**3 or 2**(-1/2)
@@ -145,17 +169,23 @@ class Add(AssocOp):
 
             # let's collect terms with the same s, so e.g.
             # 2*x**2 + 3*x**2  ->  5*x**2
-            if s in terms:
-                terms[s] += c
+            if s in terms_i:
+                i = terms_i[s]
+                terms_c[i] += c
             else:
-                terms[s] = c
-
+                i = len(terms_i)
+                terms_i[s] = i
+                terms_s.append(s)
+                terms_c.append(c)
 
         # now let's construct new args:
         # [2*x**2, x**3, 7*x**4, pi, ...]
         newseq = []
         noncommutative = False
-        for s,c in terms.items():
+        for i in range(len(terms_s)):
+            c = terms_c[i]
+            s = terms_s[i]
+
             # 0*s
             if c is S.Zero:
                 continue
@@ -217,14 +247,6 @@ class Add(AssocOp):
                 if o.contains(coeff):
                     coeff = S.Zero
                     break
-
-
-        # order args canonically
-        # Currently we sort things using hashes, as it is quite fast. A better
-        # solution is not to sort things at all - but this needs some more
-        # fixing. NOTE: this is used in primitive, too, so if it changes
-        # here it should be changed there.
-        newseq.sort(key=hash)
 
         # current code expects coeff to be always in slot-0
         if coeff is not S.Zero:
@@ -824,7 +846,6 @@ class Add(AssocOp):
             c = terms.pop(0)
         else:
             c = None
-        terms.sort(key=hash)
         if c:
             terms.insert(0, c)
         return Rational(ngcd, dlcm), self._new_rawargs(*terms)
