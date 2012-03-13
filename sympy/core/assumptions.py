@@ -74,7 +74,6 @@ class StdFactKB(FactKB):
     def copy(self):
         return self.__class__(self)
 
-
 class CycleDetected(Exception):
     """(internal) used to detect cycles when evaluating assumptions
        through prerequisites
@@ -84,6 +83,34 @@ class CycleDetected(Exception):
 def as_property(fact):
     """Convert a fact name to the name of the corresponding property"""
     return 'is_%s' % fact
+
+class PropertyManager(StdFactKB):
+    """This object is responsible for ensuring the consistency of class
+    properties obeying a set of logic rules."""
+    def __init__(self, cls):
+        local_defs = {}
+        for k in _assume_defined:
+            attrname = as_property(k)
+            v = cls.__dict__.get(attrname, '')
+            if isinstance(v, (bool, int, long, type(None))):
+                if v is not None:
+                    v = bool(v)
+                local_defs[k] = v
+
+        defs = {}
+        for base in reversed(cls.__bases__):
+            try:
+                defs.update(base.default_assumptions.definitions)
+            except AttributeError:
+                pass
+        defs.update(local_defs)
+
+        self.definitions = defs
+        self.deduce_all_facts(defs)
+
+    def copy(self):
+        return StdFactKB(self)
+
 
 class WithAssumptions(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
@@ -99,46 +126,25 @@ class WithAssumptions(BasicMeta):
     def __init__(cls, *args, **kws):
         BasicMeta.__init__(cls, *args, **kws)
 
-        cls_premises = {}
-        for k in _assume_defined:
-            attrname = as_property(k)
-            v = cls.__dict__.get(attrname, '')
-            if isinstance(v, (bool, int, long, type(None))):
-                if v is not None:
-                    v = bool(v)
-                cls_premises[k] = v
-
-        cls._default_premises = {}
-        for base in reversed(cls.__bases__):
-            try:
-                cls._default_premises.update(base._default_premises)
-            except AttributeError:
-                pass
-        cls._default_premises.update(cls_premises)
-
-        # deduce all consequences from default assumptions -- make it complete
-        default_assumptions = StdFactKB(cls._default_premises)
-
-        # and store completed set into cls -- this way we'll avoid rededucing
-        # extensions of class default assumptions each time on instance
-        # creation -- we keep it prededuced already.
-        for k, v in default_assumptions.iteritems():
-            setattr(cls, as_property(k), v)
+        default_assumptions = PropertyManager(cls)
         cls.default_assumptions = default_assumptions
 
-        # protection e.g. for Initeger.is_even=F <- (Rational.is_integer=F)
-        base_derived_premises = set()
+        # Put definite results directly into the class dict, for speed
+        for k, v in default_assumptions.iteritems():
+            setattr(cls, as_property(k), v)
+
+        # protection e.g. for Integer.is_even=F <- (Rational.is_integer=F)
+        derived_from_bases = set()
         for base in cls.__bases__:
             try:
-                base_derived_premises |= (set(base.default_assumptions) -
-                                                set(base._default_premises))
+                derived_from_bases |= set(base.default_assumptions)
             except AttributeError:
                 continue        #not an assumption-aware class
-
-        for fact in base_derived_premises:
+        for fact in derived_from_bases - set(default_assumptions):
             if as_property(fact) not in cls.__dict__:
                 cls.add_property(fact)
 
+        # Finally, add any missing automagic property (e.g. for Basic)
         for fact in _assume_defined:
             if not hasattr(cls, as_property(fact)):
                 cls.add_property(fact)
