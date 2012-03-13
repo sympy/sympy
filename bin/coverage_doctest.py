@@ -231,6 +231,11 @@ def coverage(module_path, verbose=False):
                 class_m_obj = getattr(obj, class_m)
                 class_m_mod = inspect.getmodule(class_m_obj)
 
+                # Check for a function
+                if not inspect.isfunction(class_m_obj) and \
+                    not inspect.ismethod(class_m_obj):
+                        continue
+
                 # Method not part of our module
                 if not class_m_mod or not class_m_obj or \
                     not class_m_mod.__name__ == module_path:
