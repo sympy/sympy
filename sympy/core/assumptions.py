@@ -367,17 +367,15 @@ class AssumeMixin(object):
             for pk in _assume_rules.prereq[k]:
                 if hasattr(self, '_eval_is_' + pk):
                     # cycle
-                    if pk in seen:
+                    if pk in seen or pk in assumptions:
                         continue
-                    a = getattr(self, 'is_' + pk)
-                    if a is not None:
-                        assumptions.deduce_all_facts(((pk,a),))
-                        # it is possible that we either know or don't know k at
-                        # this point
-                        try:
-                            return assumptions[k]
-                        except KeyError:
-                            pass
+                    a = self._what_known_about(pk)
+
+                    # we might have found the value of k
+                    try:
+                        return assumptions[k]
+                    except KeyError:
+                        pass
         finally:
             seen.pop()
 
