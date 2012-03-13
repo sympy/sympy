@@ -3,6 +3,7 @@ from sympy.core import S, Wild, sympify, Mul, Add, Expr
 from sympy.core.function import expand_multinomial, expand_mul
 from sympy.core.symbol import Dummy
 from sympy.polys import Poly, PolynomialError
+from sympy.core.function import count_ops
 
 def _mexpand(expr):
     return expand_mul(expand_multinomial(expr))
@@ -248,11 +249,15 @@ def _sqrtdenest_rec(expr):
         num, den = rad_rationalize(b1, d_1)
         c = _mexpand(d_1/sqrt(2) + num/(den*sqrt(2)))
     else:
-        c = _sqrtdenest1(sqrt(_mexpand(a**2 - b**2)))
+        c = _sqrtdenest1(sqrt(c2))
 
     if sqrt_depth(c) > 1:
         raise SqrtdenestStopIteration
-    d = sqrtdenest(sqrt(a + c))
+    ac = a + c
+    if len(ac.args) >= len(expr.args):
+        if count_ops(ac) >= count_ops(expr.base):
+            raise SqrtdenestStopIteration
+    d = sqrtdenest(sqrt(ac))
     if sqrt_depth(d) > 1:
         raise SqrtdenestStopIteration
     num, den = rad_rationalize(b, d)
