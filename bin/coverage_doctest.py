@@ -30,7 +30,7 @@ def print_header(name, underline=None, overline=None):
   print name
   if underline: print underline*len(name)
 
-def print_coverage(module_path, c, c_md, c_mdt, f, f_md, f_mdt, score, total_doctests, total_members, verbose=False):
+def print_coverage(module_path, c, c_md, c_mdt, c_idt, f, f_md, f_mdt, f_idt, score, total_doctests, total_members, verbose=False):
 
 
     if verbose:
@@ -56,6 +56,11 @@ def print_coverage(module_path, c, c_md, c_mdt, f, f_md, f_mdt, score, total_doc
                 print_header('Missing doctests','-')
                 for md in c_mdt:
                     print md
+            if f_idt:
+                print_header('Indirect doctests', '-')
+                for md in f_idt:
+                    print md
+
 
         print_header('FUNCTIONS','*')
         if not f:
@@ -69,6 +74,22 @@ def print_coverage(module_path, c, c_md, c_mdt, f, f_md, f_mdt, score, total_doc
                 print_header('Missing doctests', '-')
                 for md in f_mdt:
                     print md
+            if f_idt:
+                print_header('Indirect doctests', '-')
+                for md in f_idt:
+                    print md
+
+def _is_indirect(member, doc):
+
+  """ Given string repr of doc and member checks if the member
+  contains indirect documentation """
+
+  d = member in doc
+  e = 'indirect doctest' in doc
+  if not d and not e:
+      return True
+  else:
+      return False
 
 def coverage(module_path, verbose=False):
 
@@ -120,9 +141,15 @@ def coverage(module_path, verbose=False):
             # Various scenarios
             if member.startswith('_'): f_skipped.append(member)
             else:
+
                 if not obj.__doc__: f_md.append(member)
                 elif not '>>>' in obj.__doc__: f_mdt.append(member)
-                else: f_doctests = f_doctests + 1
+                else:
+                    f_doctests = f_doctests + 1
+                    f_has_doctest.append(member)
+                    if _is_indirect(member, obj.__doc__):
+                        f_indirect_doctest.append(member)
+
                 functions = functions + 1
 
         # If it's a class, look at it's methods too
@@ -131,7 +158,11 @@ def coverage(module_path, verbose=False):
             # Process the class first
             if not obj.__doc__: c_md.append(member)
             elif not '>>>' in obj.__doc__: c_mdt.append(member)
-            else: c_doctests = c_doctests + 1
+            else:
+                c_doctests = c_doctests + 1
+                c_has_doctest.append(member)
+                if _is_indirect(member, obj.__doc__):
+                    c_indirect_doctest.append(member)
 
             # Iterate through it's members
             for class_m in dir(obj):
@@ -157,7 +188,11 @@ def coverage(module_path, verbose=False):
                 else:
                     if not class_m_obj.__doc__: f_md.append(full_name)
                     elif not '>>>' in class_m_obj.__doc__: f_mdt.append(full_name)
-                    else: f_doctests = f_doctests + 1
+                    else:
+                        f_has_doctest.append(full_name)
+                        if _is_indirect(member, class_m_obj.__doc__):
+                            f_indirect_doctest.append(full_name)
+                        f_doctests = f_doctests + 1
                     functions = functions + 1
 
     total_doctests = c_doctests + f_doctests
@@ -166,7 +201,7 @@ def coverage(module_path, verbose=False):
     else: score = 0
     score = int(score)
 
-    print_coverage(module_path, classes, c_md, c_mdt, functions, f_md, f_mdt, score, total_doctests, total_members, verbose)
+    print_coverage(module_path, classes, c_md, c_mdt, c_indirect_doctest, functions, f_md, f_mdt, f_indirect_doctest, score, total_doctests, total_members, verbose)
 
 
     return total_doctests, total_members
