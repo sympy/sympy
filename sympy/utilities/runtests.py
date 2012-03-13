@@ -134,6 +134,66 @@ def setup_pprint():
     # hook our nice, hash-stable strprinter
     init_printing(pretty_print=False)
 
+def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
+    doctest_kwargs={}, examples_args=(), examples_kwargs={'quiet':True}):
+    """
+    Run all tests.
+
+    Right now, this runs the regular tests (bin/test), the doctests
+    (bin/doctest), the examples (examples/all.py), and the sage tests (see
+    sympy/external/tests/test_sage.py).
+
+    This is what ``setup.py test`` uses.
+
+    You can pass arguments and keyword arguments to the test functions that
+    support them (for now, test,  doctest, and the examples).  See the docstrings of those
+    functions for a description of the available options.
+
+    For example, to run the solvers tests with colors turned off:
+
+    >>> from sympy.utilities.runtests import run_all_tests
+
+    >>> run_all_tests(test_args=("solvers",), test_kwargs={"colors:False"}) # doctest: +SKIP
+
+    """
+    tests_successful = True
+
+    try:
+        # Regular tests
+        if not test(*test_args, **test_kwargs):
+            # some regular test fails, so set the tests_successful
+            # flag to false and continue running the doctests
+            tests_successful = False
+
+        # Doctests
+        if not doctest(*doctest_args, **doctest_kwargs):
+            tests_successful = False
+
+        # Examples
+        print
+        sys.path.append("examples")
+        from all import run_examples # examples/all.py
+        if not run_examples(*examples_args, **examples_kwargs):
+            tests_successful = False
+
+        # Sage tests
+        if not (sys.platform == "win32" or sys.version_info[0] == 3):
+            # run Sage tests; Sage currently doesn't support Windows or Python 3
+            dev_null = open(os.devnull, 'w')
+            if subprocess.call("sage -v", shell=True, stdout=dev_null, stderr=dev_null) == 0:
+                if subprocess.call("sage -python bin/test sympy/external/tests/test_sage.py", shell=True) != 0:
+                    tests_successful = False
+
+        if tests_successful:
+            return
+        else:
+            # Return nonzero exit code
+            sys.exit(1)
+    except KeyboardInterrupt:
+        print
+        print("DO *NOT* COMMIT!")
+        sys.exit(1)
+
 def test(*paths, **kwargs):
     """
     Run tests in the specified test_*.py files.
