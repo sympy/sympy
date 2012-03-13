@@ -540,11 +540,11 @@ def _mask_nc(eq):
     >>> _mask_nc(A**2 - x**2)
     (_0**2 - x**2, {_0: A}, [])
     >>> _mask_nc(A**2 - B**2)
-    (A**2 - B**2, None, [B, A])
-    >>> _mask_nc(1 + x*Commutator(A, B) + Commutator(A, C))
-    (_1*x + _2 + 1, {_1: Commutator(A, B), _2: Commutator(A, C)}, [C, B, A])
+    (A**2 - B**2, None, [A, B])
+    >>> _mask_nc(1 + x*Commutator(A, B))
+    (_1*x + 1, {_1: Commutator(A, B)}, [A, B])
     >>> _mask_nc(NO(Fd(x)*F(y)))
-    (_3, {_3: NO(CreateFermion(x)*AnnihilateFermion(y))}, [])
+    (_2, {_2: NO(CreateFermion(x)*AnnihilateFermion(y))}, [])
 
     """
     expr = eq
@@ -562,6 +562,7 @@ def _mask_nc(eq):
     # might still appear noncommutative; if it's a non-elementary object
     # we will replace it, but if it is a Symbol, Add, Mul, Pow we leave
     # it alone.
+    nc_syms.sort(key=default_sort_key)
     if nc_syms or not expr.is_commutative:
         pot = preorder_traversal(expr)
         for i, a in enumerate(pot):
