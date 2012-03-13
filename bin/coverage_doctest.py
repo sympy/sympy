@@ -32,6 +32,7 @@ def print_header(name, underline=None, overline=None):
 
 def print_coverage(module_path, c, c_md, c_mdt, c_idt, f, f_md, f_mdt, f_idt, score, total_doctests, total_members, verbose=False):
 
+    """ Prints details (depending on verbose) of a module """
 
     if verbose:
         print '\n'+'-'*70
@@ -107,7 +108,7 @@ def coverage(module_path, verbose=False):
         print module_path + ' could not be loaded due to, \"' + a.args[0] + '\"'
         return 0, 0
 
-    # Get the list of members (currently everything possible)
+    # Get the list of members
     m_members = dir(m)
 
 
@@ -136,7 +137,7 @@ def coverage(module_path, verbose=False):
         if not obj_mod or not obj_mod.__name__ == module_path:
           continue
 
-        # If it's a function, simply process it
+        # If it's a function
         if inspect.isfunction(obj) or inspect.ismethod(obj):
             # Various scenarios
             if member.startswith('_'): f_skipped.append(member)
@@ -147,6 +148,7 @@ def coverage(module_path, verbose=False):
                 else:
                     f_doctests = f_doctests + 1
                     f_has_doctest.append(member)
+                    # indirect doctest
                     if _is_indirect(member, obj.__doc__):
                         f_indirect_doctest.append(member)
 
@@ -161,6 +163,7 @@ def coverage(module_path, verbose=False):
             else:
                 c_doctests = c_doctests + 1
                 c_has_doctest.append(member)
+                # indirect doctest
                 if _is_indirect(member, obj.__doc__):
                     c_indirect_doctest.append(member)
 
@@ -178,6 +181,7 @@ def coverage(module_path, verbose=False):
                 except:
                     continue
 
+                # Method not part of our module
                 if not class_m_mod or not class_m_obj or \
                     not class_m_mod.__name__ == module_path:
                     continue
@@ -190,11 +194,13 @@ def coverage(module_path, verbose=False):
                     elif not '>>>' in class_m_obj.__doc__: f_mdt.append(full_name)
                     else:
                         f_has_doctest.append(full_name)
+                        # Indirect doctest
                         if _is_indirect(member, class_m_obj.__doc__):
                             f_indirect_doctest.append(full_name)
                         f_doctests = f_doctests + 1
                     functions = functions + 1
 
+    # Evaluate the percent coverage
     total_doctests = c_doctests + f_doctests
     total_members = classes + functions
     if total_members: score = 100 * float(total_doctests) / (total_members)
