@@ -84,9 +84,15 @@ class MatrixBase(object):
         [0, 2]
 
         """
+        # Matrix(Matrix(...))
         if len(args) == 1 and isinstance(args[0], MatrixBase):
             return args[0].rows, args[0].cols, args[0].mat
 
+        # Matrix(MatrixSymbol('X', 2,2))
+        if len(args) == 1 and isinstance(args[0], Basic) and args[0].is_Matrix:
+            return args[0].rows, args[0].cols, args[0].as_explicit().mat
+
+        # Matrix(2, 2, lambda i,j: i+j)
         if len(args) == 3 and callable(args[2]):
             operation = args[2]
             rows = int(args[0])
@@ -95,6 +101,8 @@ class MatrixBase(object):
             for i in range(rows):
                 for j in range(cols):
                     mat.append(sympify(operation(i, j)))
+
+        # Matrix(2, 2, [1,2,3,4])
         elif len(args)==3 and is_sequence(args[2]):
             rows = args[0]
             cols = args[1]
@@ -102,6 +110,8 @@ class MatrixBase(object):
             if len(mat) != rows*cols:
                 raise ValueError('List length should be equal to rows*columns')
             mat = map(lambda i: sympify(i), mat)
+
+        # Matrix(numpy.ones((2,2)))
         elif len(args) == 1:
             in_mat = args[0]
             if hasattr(in_mat, "__array__"): #pragma: no cover
@@ -146,6 +156,8 @@ class MatrixBase(object):
                         args)
                 for i in xrange(cols):
                     mat.append(sympify(in_mat[j][i]))
+
+        # Matrix()
         elif len(args) == 0:
             # Empty Matrix
             rows = cols = 0
