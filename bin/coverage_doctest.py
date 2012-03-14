@@ -97,12 +97,14 @@ def _get_arg_list(name, fobj):
     """ Given a function object, constructs a list of arguments
     and their defaults. Takes care of varargs and kwargs """
 
+    trunc = 20 # Sometimes argument length can be huge
+
     argspec = inspect.getargspec(fobj)
 
     arg_list = []
 
     if argspec.args:
-        for arg in argspec.args: arg_list.append(arg)
+        for arg in argspec.args: arg_list.append(str(arg))
 
     arg_list.reverse()
 
@@ -121,15 +123,11 @@ def _get_arg_list(name, fobj):
     if argspec.keywords:
           arg_list.append(argspec.keywords)
 
+    # Truncate long arguments
+    arg_list = map(lambda x: x[:trunc], arg_list)
 
     # Construct the parameter string (enclosed in brackets)
-    if arg_list:
-        str_param = name + '('
-        for arg in arg_list[:-1]:
-            str_param = str_param + arg + ', '
-        str_param = str_param + arg_list[-1] + ')'
-    else:
-        str_param = name + '()'
+    str_param = "%s(%s)" % (name, ', '.join(arg_list))
 
     return str_param
 
@@ -315,7 +313,7 @@ if __name__ == "__main__":
     else:
         for file in args:
             file = os.path.normpath(file)
-            print 'DOCTEST for %s' % (file)
+            print 'DOCTEST COVERAGE for %s' % (file)
             print '='*70
             print
             doctests, num_functions = go(file, options.verbose)
