@@ -757,6 +757,9 @@ class Basic(PicklableWithSlots):
                resulting sorted list is then processed as an iterable container
                (see previous).
 
+        If the keyword ``parallel`` is True, the subexpressions will not be
+        evaluated until all the substitutions have been made.
+
         Examples
         ========
 
@@ -782,10 +785,26 @@ class Basic(PicklableWithSlots):
         >>> (x**2 + x**4).xreplace({x**2: y})
         x**4 + y
 
-        When unordered iterables are given they are sorted so a canonical result
-        is obtained, by count_op length, number of arguments and, finally, by
-        the default_sort_key to break any ties. All other iterables are
-        left unsorted
+        To delay evaluation until all substitutions have been made,
+        set the keyword ``parallel`` to True:
+
+        >>> (x/y).subs([(x, 0), (y, 0)])
+        0
+        >>> (x/y).subs([(x, 0), (y, 0)], parallel=True)
+        nan
+
+        This has the added feature of not allowing subsequent substitutions
+        to affect those already made:
+
+        >>> ((x + y)/y).subs({x + y: y, y: x + y})
+        1
+        >>> ((x + y)/y).subs({x + y: y, y: x + y}, parallel=True)
+        y/(x + y)
+
+        When unordered iterables are given they are sorted so a canonical
+        result is obtained, by count_op length, number of arguments and,
+        finally, by the default_sort_key to break any ties. All other
+        iterables are left unsorted
 
         >>> from sympy import sqrt, sin, cos, exp
         >>> from sympy.abc import a, b, c, d, e
@@ -852,12 +871,23 @@ class Basic(PicklableWithSlots):
                 sequence = sorted([(k, v) for (k, v) in sequence.iteritems()],
                                   key=default_sort_key)
 
-        rv = self
-        for old, new in sequence:
-            rv = rv._subs(old, new)
-            if not isinstance(rv, Basic):
-                break
-        return rv
+        if kwargs.pop('parallel', False): # XXX should this be the default for dict subs?
+            reps = {}
+            rv = self
+            for old, new in sequence:
+                d = C.Dummy()
+                rv = rv._subs(old, d)
+                reps[d] = new
+                if not isinstance(rv, Basic):
+                    break
+            return rv.xreplace(reps)
+        else:
+            rv = self
+            for old, new in sequence:
+                rv = rv._subs(old, new)
+                if not isinstance(rv, Basic):
+                    break
+            return rv
 
     @cacheit
     def _subs(self, old, new, **hints):
