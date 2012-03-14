@@ -131,7 +131,88 @@ def _get_arg_list(name, fobj):
 
     return str_param
 
+def process_function(name, c_name, b_obj, mod_path, f_sk, f_md, f_mdt, f_idt, f_has_doctest, sk_list):
 
+    """ Processes a function to get information regarding documentation.
+    It is assume that the function calling this subrouting has already
+    verified that it is a valid module function """
+
+    if name in sk_list: return False, False
+
+    # We add in the end, as inspect.getsourcelines is slow
+    add_md = False
+    add_mdt = False
+    add_idt = False
+    f_doctest = False
+    function = False
+
+    if inspect.isclass(b_obj):
+        obj = getattr(b_obj, name)
+    else:
+        obj = b_obj
+
+    # Check function for various categories
+    if inspect.isclass(b_obj):
+        full_name = _get_arg_list(c_name + '.' + name, obj)
+    else:
+        full_name = _get_arg_list(name, obj)
+    if name.startswith('_'): f_sk.append(full_name)
+    else:
+        if not obj.__doc__:
+            add_md = True
+        elif not '>>>' in obj.__doc__:
+            add_mdt = True
+        else:
+            # Indirect doctest
+            if _is_indirect(name, obj.__doc__):
+                add_idt = True
+            f_doctest = True
+        function = True
+
+    if add_md or add_mdt or add_idt:
+
+        try:
+            line_no = inspect.getsourcelines(obj)[1]
+        except IOError:
+            # Raised when source does not exist
+            # which means the function is not there.
+            return False, False
+
+        full_name = "LINE %d: %s" % (line_no, full_name)
+        if add_md: f_md.append(full_name)
+        elif add_mdt: f_mdt.append(full_name)
+        elif add_idt: f_idt.append(full_name)
+
+    return f_doctest, function
+
+
+def process_class(c_name, obj, c_md, c_mdt, c_idt, c_has_doctest):
+
+    """ Extracts information about the class regarding documentation.
+    It is assumed that the function calling this subroutine has already
+    checked that the class is valid. """
+
+    c = False
+    c_dt = False
+    # Get the line number of class
+    try:
+      line_no = inspect.getsourcelines(obj)[1]
+    except IOError:
+      # Raised when source does not exist
+      # which means the class is not there.
+      return c_dt, c
+
+    c = True
+    full_name = "LINE %d: %s" % (line_no, c_name)
+    if not obj.__doc__: c_md.append(full_name)
+    elif not '>>>' in obj.__doc__: c_mdt.append(full_name)
+    else:
+        c_dt =  True
+        c_has_doctest.append(full_name)
+        # indirect doctest
+        if _is_indirect(c_name, obj.__doc__):
+            c_idt.append(full_name)
+    return c_dt, c
 
 def coverage(module_path, verbose=False):
 
@@ -149,15 +230,12 @@ def coverage(module_path, verbose=False):
         print module_path + ' could not be loaded due to, \"' + a.args[0] + '\"'
         return 0, 0
 
-    # Get the list of members
-    m_members = dir(m)
-
 
     c_skipped = []
     c_md = []
     c_mdt = []
     c_has_doctest = []
-    c_indirect_doctest = []
+    c_idt = []
     classes = 0
     c_doctests = 0
 
@@ -165,13 +243,16 @@ def coverage(module_path, verbose=False):
     f_md = []
     f_mdt = []
     f_has_doctest = []
-    f_indirect_doctest = []
+    f_idt = []
     functions = 0
     f_doctests = 0
 
     skip_members = ['__abstractmethods__']
 
+    # Get the list of members
+    m_members = dir(m)
     for member in m_members:
+
         # Check for skipped functions first, they throw nasty errors
         # when combined with getattr
         if member in skip_members: continue
@@ -186,72 +267,39 @@ def coverage(module_path, verbose=False):
 
         # If it's a function
         if inspect.isfunction(obj) or inspect.ismethod(obj):
-            # Various scenarios
-            if member.startswith('_'): f_skipped.append(member)
-            else:
 
-                param_name = _get_arg_list(member, obj)
-                if not obj.__doc__: f_md.append(param_name)
-                elif not '>>>' in obj.__doc__: f_mdt.append(param_name)
-                else:
-                    f_doctests = f_doctests + 1
-                    f_has_doctest.append(param_name)
-                    # indirect doctest
-                    if _is_indirect(member, obj.__doc__):
-                        f_indirect_doctest.append(param_name)
-
-                functions = functions + 1
+            f_dt, f = process_function(member, '',  obj, module_path, f_skipped, f_md, f_mdt, f_idt, f_has_doctest, skip_members)
+            if f: functions += 1
+            if f_dt: f_doctests += 1
 
         # If it's a class, look at it's methods too
         elif inspect.isclass(obj):
-            classes = classes + 1
+
             # Process the class first
-            if not obj.__doc__: c_md.append(member)
-            elif not '>>>' in obj.__doc__: c_mdt.append(member)
-            else:
-                c_doctests = c_doctests + 1
-                c_has_doctest.append(member)
-                # indirect doctest
-                if _is_indirect(member, obj.__doc__):
-                    c_indirect_doctest.append(member)
+            c_dt, c = process_class(member, obj, c_md, c_mdt, c_idt, c_has_doctest)
+            if c: classes += 1
+            if c_dt: c_doctests += 1
 
             # Iterate through it's members
-            for class_m in dir(obj):
+            for f_name in dir(obj):
 
-                # Check in skip function list
-                if class_m in skip_members: continue
+                if f_name in skip_members: continue
 
-                # Check if the method is a part of this module
-                class_m_mod = None
-                class_m_obj = None
+                # Identify the module of the current class member
+                f_obj = getattr(obj, f_name)
+                obj_mod = inspect.getmodule(f_obj)
 
-                # Gutsy hack; need to expand reasons
-                class_m_obj = getattr(obj, class_m)
-                class_m_mod = inspect.getmodule(class_m_obj)
+                # Function not a part of this module
+                if not obj_mod or not obj_mod.__name__ == module_path:
+                  continue
 
-                # Check for a function
-                if not inspect.isfunction(class_m_obj) and \
-                    not inspect.ismethod(class_m_obj):
-                        continue
+                # If it's a function
+                if inspect.isfunction(f_obj) or inspect.ismethod(f_obj):
 
-                # Method not part of our module
-                if not class_m_mod or not class_m_obj or \
-                    not class_m_mod.__name__ == module_path:
-                    continue
+                  f_dt, f = process_function(f_name, member, obj, module_path, f_skipped, f_md, f_mdt, f_idt, f_has_doctest, skip_members)
+                  if f: functions += 1
+                  if f_dt: f_doctests += 1
 
-                # Check function for various categories
-                full_name = _get_arg_list(member + '.'  + class_m, class_m_obj)
-                if class_m.startswith('_'): f_skipped.append(full_name)
-                else:
-                    if not class_m_obj.__doc__: f_md.append(full_name)
-                    elif not '>>>' in class_m_obj.__doc__: f_mdt.append(full_name)
-                    else:
-                        f_has_doctest.append(full_name)
-                        # Indirect doctest
-                        if _is_indirect(member, class_m_obj.__doc__):
-                            f_indirect_doctest.append(full_name)
-                        f_doctests = f_doctests + 1
-                    functions = functions + 1
 
     # Evaluate the percent coverage
     total_doctests = c_doctests + f_doctests
@@ -260,7 +308,7 @@ def coverage(module_path, verbose=False):
     else: score = 0
     score = int(score)
 
-    print_coverage(module_path, classes, c_md, c_mdt, c_indirect_doctest, functions, f_md, f_mdt, f_indirect_doctest, score, total_doctests, total_members, verbose)
+    print_coverage(module_path, classes, c_md, c_mdt, c_idt, functions, f_md, f_mdt, f_idt, score, total_doctests, total_members, verbose)
 
 
     return total_doctests, total_members
