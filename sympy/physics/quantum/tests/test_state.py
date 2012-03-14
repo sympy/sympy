@@ -3,7 +3,7 @@ from sympy import (Add, conjugate, diff, expand, I, Integer, latex, Mul, oo, pi,
 from sympy.utilities.pytest import raises
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr
-from sympy.physics.quantum.state import (Bra, BraBase, Ket, KetBase,
+from sympy.physics.quantum.state import (Bra, BraBase, Ket, KetBase, StateBase,
                                          TimeDepKet, TimeDepBra, Wavefunction)
 from sympy.physics.quantum.hilbert import HilbertSpace
 

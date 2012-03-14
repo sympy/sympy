@@ -1181,9 +1181,17 @@ class SpinState(State):
 
     _label_separator = ','
 
-    def __new__(cls, j, m):
-        j = sympify(j)
-        m = sympify(m)
+    def __new__(cls, *args, **old_assumptions):
+        #This had to be added since the spin Ket classes will no
+        #longer inherit the default behavior from QExpr
+        if len(args) == 0:
+            args = tuple(cls.default_args())
+        elif len(args) != 2:
+            raise NotImplementedError("This class should get either zero or two arguments!")
+
+        j = sympify(args[0])
+        m = sympify(args[1])
+
         if j.is_number:
             if 2*j != int(2*j):
                 raise ValueError('j must be integer or half-integer, got: %s' % j)
@@ -1199,6 +1207,10 @@ class SpinState(State):
                 raise ValueError('Both j and m must be integer or half-integer, got j, m: %s, %s' % (j, m))
         return State.__new__(cls, j, m)
 
+    @classmethod
+    def default_args(self):
+        return ("j", "m")
+    
     @property
     def j(self):
         return self.label[0]
@@ -1234,18 +1246,18 @@ class SpinState(State):
 
     def _eval_rewrite_as_Jx(self, *args, **options):
         if isinstance(self, Bra):
-            return self._rewrite_basis(Jx, JxBra, **options)
-        return self._rewrite_basis(Jx, JxKet, **options)
+            return self._rewrite_basis(Jx_basis, JxBra, **options)
+        return self._rewrite_basis(Jx_basis, JxKet, **options)
 
     def _eval_rewrite_as_Jy(self, *args, **options):
         if isinstance(self, Bra):
-            return self._rewrite_basis(Jy, JyBra, **options)
-        return self._rewrite_basis(Jy, JyKet, **options)
+            return self._rewrite_basis(Jy_basis, JyBra, **options)
+        return self._rewrite_basis(Jy_basis, JyKet, **options)
 
     def _eval_rewrite_as_Jz(self, *args, **options):
         if isinstance(self, Bra):
-            return self._rewrite_basis(Jz, JzBra, **options)
-        return self._rewrite_basis(Jz, JzKet, **options)
+            return self._rewrite_basis(Jz_basis, JzBra, **options)
+        return self._rewrite_basis(Jz_basis, JzKet, **options)
 
     def _rewrite_basis(self, basis, evect, **options):
         from sympy.physics.quantum.represent import represent
@@ -1291,7 +1303,7 @@ class SpinState(State):
     def _eval_innerproduct_JxBra(self, bra, **hints):
         result = KroneckerDelta(self.j, bra.j)
         if bra.dual_class() is not self.__class__:
-            result *= self._represent_JxOp(None)[bra.j-bra.m]
+            result *= self._represent_JxKet(None)[bra.j-bra.m]
         else:
             result *= KroneckerDelta(self.j, bra.j) * KroneckerDelta(self.m, bra.m)
         return result
@@ -1299,7 +1311,7 @@ class SpinState(State):
     def _eval_innerproduct_JyBra(self, bra, **hints):
         result = KroneckerDelta(self.j, bra.j)
         if bra.dual_class() is not self.__class__:
-            result *= self._represent_JyOp(None)[bra.j-bra.m]
+            result *= self._represent_JyKet(None)[bra.j-bra.m]
         else:
             result *= KroneckerDelta(self.j, bra.j) * KroneckerDelta(self.m, bra.m)
         return result
@@ -1307,11 +1319,10 @@ class SpinState(State):
     def _eval_innerproduct_JzBra(self, bra, **hints):
         result = KroneckerDelta(self.j, bra.j)
         if bra.dual_class() is not self.__class__:
-            result *= self._represent_JzOp(None)[bra.j-bra.m]
+            result *= self._represent_JzKet(None)[bra.j-bra.m]
         else:
             result *= KroneckerDelta(self.j, bra.j) * KroneckerDelta(self.m, bra.m)
         return result
-
 
 class JxKet(SpinState, Ket):
     """Eigenket of Jx.
@@ -1742,18 +1753,18 @@ class CoupledSpinState(SpinState):
 
     def _eval_rewrite_as_Jx(self, *args, **options):
         if isinstance(self, Bra):
-            return self._rewrite_basis(Jx, JxBraCoupled, **options)
-        return self._rewrite_basis(Jx, JxKetCoupled, **options)
+            return self._rewrite_basis(JxKet, JxBraCoupled, **options)
+        return self._rewrite_basis(JxKet, JxKetCoupled, **options)
 
     def _eval_rewrite_as_Jy(self, *args, **options):
         if isinstance(self, Bra):
-            return self._rewrite_basis(Jy, JyBraCoupled, **options)
-        return self._rewrite_basis(Jy, JyKetCoupled, **options)
+            return self._rewrite_basis(JyKet, JyBraCoupled, **options)
+        return self._rewrite_basis(JyKet, JyKetCoupled, **options)
 
     def _eval_rewrite_as_Jz(self, *args, **options):
         if isinstance(self, Bra):
-            return self._rewrite_basis(Jz, JzBraCoupled, **options)
-        return self._rewrite_basis(Jz, JzKetCoupled, **options)
+            return self._rewrite_basis(JzKet, JzBraCoupled, **options)
+        return self._rewrite_basis(JzKet, JzKetCoupled, **options)
 
 
 class JxKetCoupled(CoupledSpinState, Ket):
@@ -1776,16 +1787,16 @@ class JxKetCoupled(CoupledSpinState, Ket):
     def uncoupled_class(self):
         return JxKet
 
-    def _represent_default_basis(self, **options):
-        return self._represent_JzOp(None, **options)
+    def _get_default_basis(self, **options):
+        return JzKet
 
-    def _represent_JxOp(self, basis, **options):
+    def _represent_JxKet(self, basis, **options):
         return self._represent_coupled_base(**options)
 
-    def _represent_JyOp(self, basis, **options):
+    def _represent_JyKet(self, basis, **options):
         return self._represent_coupled_base(alpha=3*pi/2, **options)
 
-    def _represent_JzOp(self, basis, **options):
+    def _represent_JzKet(self, basis, **options):
         return self._represent_coupled_base(beta=pi/2, **options)
 
 
@@ -1830,16 +1841,16 @@ class JyKetCoupled(CoupledSpinState, Ket):
     def uncoupled_class(self):
         return JyKet
 
-    def _represent_default_basis(self, **options):
-        return self._represent_JzOp(None, **options)
+    def _get_default_basis(self, **options):
+        return JzKet
 
-    def _represent_JxOp(self, basis, **options):
+    def _represent_JxKet(self, basis, **options):
         return self._represent_coupled_base(gamma=pi/2, **options)
 
-    def _represent_JyOp(self, basis, **options):
+    def _represent_JyKet(self, basis, **options):
         return self._represent_coupled_base(**options)
 
-    def _represent_JzOp(self, basis, **options):
+    def _represent_JzKet(self, basis, **options):
         return self._represent_coupled_base(alpha=3*pi/2,beta=-pi/2,gamma=pi/2, **options)
 
 
@@ -1988,16 +1999,16 @@ class JzKetCoupled(CoupledSpinState, Ket):
     def uncoupled_class(self):
         return JzKet
 
-    def _represent_default_basis(self, **options):
-        return self._represent_JzOp(None, **options)
+    def _get_default_basis(self, **options):
+        return JzKet
 
-    def _represent_JxOp(self, basis, **options):
+    def _represent_JxKet(self, basis, **options):
         return self._represent_coupled_base(beta=3*pi/2, **options)
 
-    def _represent_JyOp(self, basis, **options):
+    def _represent_JyKet(self, basis, **options):
         return self._represent_coupled_base(alpha=3*pi/2,beta=pi/2,gamma=pi/2, **options)
 
-    def _represent_JzOp(self, basis, **options):
+    def _represent_JzKet(self, basis, **options):
         return self._represent_coupled_base(**options)
 
 

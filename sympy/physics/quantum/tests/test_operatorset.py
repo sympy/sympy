@@ -25,9 +25,11 @@ def test_op_to_state():
 
     assert operators_to_state(set([XOp, YOp, ZOp])) == PositionKet3D()
     assert operators_to_state(set([XOp(), YOp(), ZOp()])) == PositionKet3D()
+    assert state_to_operators(operators_to_state(XOp("Q"))) == XOp("Q")
+    assert state_to_operators(operators_to_state(XOp())) == XOp()
 
+    raises(NotImplementedError, 'operators_to_state(XKet)')
 
-@XFAIL
 def test_spin():
     assert operators_to_state(set([J2Op, JxOp])) == JxKet()
     assert operators_to_state(set([J2Op, JyOp])) == JyKet()
@@ -35,11 +37,20 @@ def test_spin():
     assert operators_to_state(set([J2Op(), JxOp()])) ==  JxKet()
     assert operators_to_state(set([J2Op(), JyOp()])) ==  JyKet()
     assert operators_to_state(set([J2Op(), JzOp()])) ==  JzKet()
+    
+    assert state_to_operators(JxKet) == set([J2Op(), JxOp()])
+    assert state_to_operators(JyKet) == set([J2Op(), JyOp()])
+    assert state_to_operators(JzKet) == set([J2Op(), JzOp()])
+    assert state_to_operators(JxBra) == set([J2Op(), JxOp()])
+    assert state_to_operators(JyBra) == set([J2Op(), JyOp()])
+    assert state_to_operators(JzBra) == set([J2Op(), JzOp()])
 
-    assert state_to_operators(operators_to_state(XOp("Q"))) == XOp("Q")
-    assert state_to_operators(operators_to_state(XOp())) == XOp()
-
-    raises(NotImplementedError, 'operators_to_state(XKet)')
+    assert state_to_operators(JxKet()) == set([J2Op(), JxOp()])
+    assert state_to_operators(JyKet()) == set([J2Op(), JyOp()])
+    assert state_to_operators(JzKet()) == set([J2Op(), JzOp()])
+    assert state_to_operators(JxBra()) == set([J2Op(), JxOp()])
+    assert state_to_operators(JyBra()) == set([J2Op(), JyOp()])
+    assert state_to_operators(JzBra()) == set([J2Op(), JzOp()])
 
 def test_state_to_op():
     assert state_to_operators(XKet) == XOp()
@@ -55,42 +66,12 @@ def test_state_to_op():
     assert state_to_operators(PositionKet3D()) == set([XOp(), YOp(), ZOp()])
     assert state_to_operators(PositionBra3D()) == set([XOp(), YOp(), ZOp()])
 
-    assert state_to_operators(JxKet) == set([J2Op(), JxOp()])
-    assert state_to_operators(JyKet) == set([J2Op(), JyOp()])
-    assert state_to_operators(JzKet) == set([J2Op(), JzOp()])
-    assert state_to_operators(JxBra) == set([J2Op(), JxOp()])
-    assert state_to_operators(JyBra) == set([J2Op(), JyOp()])
-    assert state_to_operators(JzBra) == set([J2Op(), JzOp()])
-
-    assert state_to_operators(JxKet()) == set([J2Op(), JxOp()])
-    assert state_to_operators(JyKet()) == set([J2Op(), JyOp()])
-    assert state_to_operators(JzKet()) == set([J2Op(), JzOp()])
-    assert state_to_operators(JxBra()) == set([J2Op(), JxOp()])
-    assert state_to_operators(JyBra()) == set([J2Op(), JyOp()])
-    assert state_to_operators(JzBra()) == set([J2Op(), JzOp()])
-
-def test_op_to_state():
-    assert operators_to_state(XOp) == XKet()
-    assert operators_to_state(PxOp) == PxKet()
-    assert operators_to_state(Operator) == Ket()
-
-    assert state_to_operators(operators_to_state(XOp("Q"))) == XOp("Q")
-    assert state_to_operators(operators_to_state(XOp())) == XOp()
-
-    raises(NotImplementedError, 'operators_to_state(XKet)')
-
-def test_state_to_op():
-    assert state_to_operators(XKet) == XOp()
-    assert state_to_operators(PxKet) == PxOp()
-    assert state_to_operators(XBra) == XOp()
-    assert state_to_operators(PxBra) == PxOp()
-    assert state_to_operators(Ket) == Operator()
-    assert state_to_operators(Bra) == Operator()
-
     assert operators_to_state(state_to_operators(XKet("test"))) == XKet("test")
     assert operators_to_state(state_to_operators(XBra("test"))) == XKet("test")
     assert operators_to_state(state_to_operators(XKet())) == XKet()
     assert operators_to_state(state_to_operators(XBra())) == XKet()
 
     raises(NotImplementedError, 'state_to_operators(XOp)')
+ 
+
 

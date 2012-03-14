@@ -1,9 +1,8 @@
 """Tests for qho.py"""
 
 from sympy import S, Interval, symbols, I, DiracDelta, exp, sqrt, pi, sin, Symbol
-
 from sympy.physics.quantum import L2, qapply, hbar, represent
-from sympy.physics.quantum import KroneckerDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.qho import QHOHamiltonian, QHOBra, QHOKet, m, w
 from sympy.physics.quantum.cartesian import XOp, XKet
 from sympy.physics.quantum.state import Wavefunction
