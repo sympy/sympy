@@ -84,11 +84,12 @@ class Symbol(AtomicExpr, Boolean):
         return (self.name,)
 
     def _hashable_content(self):
-        content = (self.name,)
-        if self._assume_type_keys is not None:
-            content += tuple((k, self._assumptions[k])
-                    for k in sorted(self._assume_type_keys))
-        return content
+        return (self.name,) + tuple(sorted(self.assumptions0.iteritems()))
+
+    @property
+    def assumptions0(self):
+        return dict((key, value) for key, value
+                in self._assumptions.iteritems() if value is not None)
 
     @cacheit
     def sort_key(self, order=None):

@@ -290,16 +290,7 @@ class AssumeMixin(object):
         'nonzero': True, 'positive': True, 'real': True, 'zero': False}
 
         """
-        cls = type(self)
-        A   = self._assumptions
-
-        # assumptions shared:
-        if A is cls.default_assumptions or (self._assume_type_keys is None):
-            assumptions0 = {}
-        else:
-            assumptions0 = dict( (k, A[k]) for k in self._assume_type_keys )
-
-        return assumptions0
+        return {}
 
     def _what_known_about(self, k):
         """tries hard to give an answer to: what is known about fact `k`
