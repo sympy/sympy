@@ -304,8 +304,6 @@ def matrixify(expr):
 
     Calling matrixify after calling these functions will reset classes back to
     their matrix equivalents
-
-    For internal use
     """
     class_dict = {Mul:MatMul, Add:MatAdd, MatMul:MatMul, MatAdd:MatAdd,
             Pow:MatPow, MatPow:MatPow}
