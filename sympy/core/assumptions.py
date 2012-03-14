@@ -102,6 +102,14 @@ class PropertyManager(StdFactKB):
         self.definitions = defs
         self.deduce_all_facts(defs)
 
+        self.evaluator = {}
+        for k in _assume_defined:
+            try:
+                self.evaluator[k] = getattr(cls, '_eval_is_%s' % k)
+            except AttributeError:
+                pass
+
+
     def copy(self):
         return StdFactKB(self)
 
@@ -305,6 +313,7 @@ class AssumeMixin(object):
            is cached in ._assumptions for later quick access.
         """
         assumptions = self._assumptions
+        evaluator = self.default_assumptions.evaluator
 
         # Store None into the assumptions so that recursive attempts at
         # evaluating the same fact don't trigger infinite recursion.
@@ -312,10 +321,11 @@ class AssumeMixin(object):
 
         # First try the assumption evaluation function if it exists
         try:
-            a = getattr(self, '_eval_is_' + k)()
-        except AttributeError:
+            evaluate = evaluator[k]
+        except KeyError:
             pass
         else:
+            a = evaluate(self)
             if a is not None:
                 assumptions.deduce_all_facts(((k, a),))
                 return a
@@ -324,7 +334,7 @@ class AssumeMixin(object):
         for pk in _assume_rules.prereq[k]:
             if pk in assumptions:
                 continue
-            if hasattr(self, '_eval_is_' + pk):
+            if pk in evaluator:
                 self._what_known_about(pk)
 
                 # we might have found the value of k
