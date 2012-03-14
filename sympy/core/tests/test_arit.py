@@ -458,99 +458,99 @@ def test_Mul_is_negative_positive():
     x = Symbol('x', real=True)
     y = Symbol('y', real=False)
 
-    k = Symbol('k', negative=True)
-    n = Symbol('n', positive=True)
-    u = Symbol('u', nonnegative=True)
-    v = Symbol('v', nonpositive=True)
+    neg = Symbol('neg', negative=True)
+    pos = Symbol('pos', positive=True)
+    nneg = Symbol('nneg', nonnegative=True)
+    npos = Symbol('npos', nonpositive=True)
 
-    assert k.is_negative == True
-    assert (-k).is_negative == False
-    assert (2*k).is_negative == True
+    assert neg.is_negative == True
+    assert (-neg).is_negative == False
+    assert (2*neg).is_negative == True
 
-    assert (2*n)._eval_is_negative() == False
-    assert (2*n).is_negative == False
+    assert (2*pos)._eval_is_negative() == False
+    assert (2*pos).is_negative == False
 
-    assert n.is_negative == False
-    assert (-n).is_negative == True
-    assert (2*n).is_negative == False
+    assert pos.is_negative == False
+    assert (-pos).is_negative == True
+    assert (2*pos).is_negative == False
 
-    assert (n*k).is_negative == True
-    assert (2*n*k).is_negative == True
-    assert (-n*k).is_negative == False
-    assert (n*k*y).is_negative == False     # y.is_real=F;  !real -> !neg
+    assert (pos*neg).is_negative == True
+    assert (2*pos*neg).is_negative == True
+    assert (-pos*neg).is_negative == False
+    assert (pos*neg*y).is_negative == False     # y.is_real=F;  !real -> !neg
 
-    assert u.is_negative == False
-    assert (-u).is_negative == None
-    assert (2*u).is_negative == False
+    assert nneg.is_negative == False
+    assert (-nneg).is_negative == None
+    assert (2*nneg).is_negative == False
 
-    assert v.is_negative == None
-    assert (-v).is_negative == False
-    assert (2*v).is_negative == None
+    assert npos.is_negative == None
+    assert (-npos).is_negative == False
+    assert (2*npos).is_negative == None
 
-    assert (u*v).is_negative == None
+    assert (nneg*npos).is_negative == None
 
-    assert (k*u).is_negative == None
-    assert (k*v).is_negative == False
+    assert (neg*nneg).is_negative == None
+    assert (neg*npos).is_negative == False
 
-    assert (n*u).is_negative == False
-    assert (n*v).is_negative == None
+    assert (pos*nneg).is_negative == False
+    assert (pos*npos).is_negative == None
 
-    assert (v*k*u).is_negative == False
-    assert (v*n*u).is_negative == None
+    assert (npos*neg*nneg).is_negative == False
+    assert (npos*pos*nneg).is_negative == None
 
-    assert (-v*k*u).is_negative == None
-    assert (-v*n*u).is_negative == False
+    assert (-npos*neg*nneg).is_negative == None
+    assert (-npos*pos*nneg).is_negative == False
 
-    assert (17*v*k*u).is_negative == False
-    assert (17*v*n*u).is_negative == None
+    assert (17*npos*neg*nneg).is_negative == False
+    assert (17*npos*pos*nneg).is_negative == None
 
-    assert (k*v*n*u).is_negative == False
+    assert (neg*npos*pos*nneg).is_negative == False
 
-    assert (x*k).is_negative == None
-    assert (u*v*n*x*k).is_negative == None
+    assert (x*neg).is_negative == None
+    assert (nneg*npos*pos*x*neg).is_negative == None
 
-    assert k.is_positive == False
-    assert (-k).is_positive == True
-    assert (2*k).is_positive == False
+    assert neg.is_positive == False
+    assert (-neg).is_positive == True
+    assert (2*neg).is_positive == False
 
-    assert n.is_positive == True
-    assert (-n).is_positive == False
-    assert (2*n).is_positive == True
+    assert pos.is_positive == True
+    assert (-pos).is_positive == False
+    assert (2*pos).is_positive == True
 
-    assert (n*k).is_positive == False
-    assert (2*n*k).is_positive == False
-    assert (-n*k).is_positive == True
-    assert (-n*k*y).is_positive == False    # y.is_real=F;  !real -> !neg
+    assert (pos*neg).is_positive == False
+    assert (2*pos*neg).is_positive == False
+    assert (-pos*neg).is_positive == True
+    assert (-pos*neg*y).is_positive == False    # y.is_real=F;  !real -> !neg
 
-    assert u.is_positive == None
-    assert (-u).is_positive == False
-    assert (2*u).is_positive == None
+    assert nneg.is_positive == None
+    assert (-nneg).is_positive == False
+    assert (2*nneg).is_positive == None
 
-    assert v.is_positive == False
-    assert (-v).is_positive == None
-    assert (2*v).is_positive == False
+    assert npos.is_positive == False
+    assert (-npos).is_positive == None
+    assert (2*npos).is_positive == False
 
-    assert (u*v).is_positive == False
+    assert (nneg*npos).is_positive == False
 
-    assert (k*u).is_positive == False
-    assert (k*v).is_positive == None
+    assert (neg*nneg).is_positive == False
+    assert (neg*npos).is_positive == None
 
-    assert (n*u).is_positive == None
-    assert (n*v).is_positive == False
+    assert (pos*nneg).is_positive == None
+    assert (pos*npos).is_positive == False
 
-    assert (v*k*u).is_positive == None
-    assert (v*n*u).is_positive == False
+    assert (npos*neg*nneg).is_positive == None
+    assert (npos*pos*nneg).is_positive == False
 
-    assert (-v*k*u).is_positive == False
-    assert (-v*n*u).is_positive == None
+    assert (-npos*neg*nneg).is_positive == False
+    assert (-npos*pos*nneg).is_positive == None
 
-    assert (17*v*k*u).is_positive == None
-    assert (17*v*n*u).is_positive == False
+    assert (17*npos*neg*nneg).is_positive == None
+    assert (17*npos*pos*nneg).is_positive == False
 
-    assert (k*v*n*u).is_positive == None
+    assert (neg*npos*pos*nneg).is_positive == None
 
-    assert (x*k).is_positive == None
-    assert (u*v*n*x*k).is_positive == None
+    assert (x*neg).is_positive == None
+    assert (nneg*npos*pos*x*neg).is_positive == None
 
 def test_Mul_is_negative_positive_2():
     a = Symbol('a', nonnegative=True)
