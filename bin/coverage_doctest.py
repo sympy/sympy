@@ -350,7 +350,13 @@ if __name__ == "__main__":
     if os.path.isdir(sympy_dir):
         sys.path.insert(0, sympy_top)
 
-    parser = OptionParser()
+    usage = "usage: ./bin/doctest_coverage.py sympy/core"
+
+    parser = OptionParser(
+        description = __doc__,
+        usage = usage,
+    )
+
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
             default=False)
 
