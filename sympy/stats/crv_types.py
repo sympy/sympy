@@ -143,7 +143,7 @@ def Arcsin(a=0, b=1, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Arcsin, Density
+    >>> from sympy.stats import Arcsin, density
     >>> from sympy import Symbol, simplify
 
     >>> a = Symbol("a", real=True)
@@ -152,7 +152,7 @@ def Arcsin(a=0, b=1, symbol=None):
 
     >>> X = Arcsin(a, b, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, 1/(pi*sqrt((-_x + b)*(_x - a))))
 
     References
@@ -202,7 +202,7 @@ def Benini(alpha, beta, sigma, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Benini, Density
+    >>> from sympy.stats import Benini, density
     >>> from sympy import Symbol, simplify, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
@@ -212,7 +212,7 @@ def Benini(alpha, beta, sigma, symbol=None):
 
     >>> X = Benini(alpha, beta, sigma, symbol=x)
 
-    >>> D = Density(X)
+    >>> D = density(X)
     >>> pprint(D, use_unicode=False)
           /                                                             2       \
           |   /                  /  x  \\             /  x  \            /  x  \|
@@ -275,7 +275,7 @@ def Beta(alpha, beta, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Beta, Density, E, Var
+    >>> from sympy.stats import Beta, density, E, variance
     >>> from sympy import Symbol, simplify, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
@@ -284,7 +284,7 @@ def Beta(alpha, beta, symbol=None):
 
     >>> X = Beta(alpha, beta, symbol=x)
 
-    >>> D = Density(X)
+    >>> D = density(X)
     >>> pprint(D, use_unicode=False)
           /    alpha - 1         beta - 1                    \
           |   x         *(-x + 1)        *gamma(alpha + beta)|
@@ -294,7 +294,7 @@ def Beta(alpha, beta, symbol=None):
     >>> simplify(E(X, meijerg=True))
     alpha/(alpha + beta)
 
-    >>> simplify(Var(X, meijerg=True))
+    >>> simplify(variance(X, meijerg=True))
     alpha*beta/((alpha + beta)**2*(alpha + beta + 1))
 
     References
@@ -342,7 +342,7 @@ def BetaPrime(alpha, beta, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import BetaPrime, Density
+    >>> from sympy.stats import BetaPrime, density
     >>> from sympy import Symbol, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
@@ -351,7 +351,7 @@ def BetaPrime(alpha, beta, symbol=None):
 
     >>> X = BetaPrime(alpha, beta, symbol=x)
 
-    >>> D = Density(X)
+    >>> D = density(X)
     >>> pprint(D, use_unicode=False)
           /    alpha - 1        -alpha - beta                    \
           |   x         *(x + 1)             *gamma(alpha + beta)|
@@ -402,7 +402,7 @@ def Cauchy(x0, gamma, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Cauchy, Density
+    >>> from sympy.stats import Cauchy, density
     >>> from sympy import Symbol
 
     >>> x0 = Symbol("x0")
@@ -411,7 +411,7 @@ def Cauchy(x0, gamma, symbol=None):
 
     >>> X = Cauchy(x0, gamma, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, 1/(pi*gamma*(1 + (_x - x0)**2/gamma**2)))
 
     References
@@ -458,7 +458,7 @@ def Chi(k, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Chi, Density, E, Std
+    >>> from sympy.stats import Chi, density, E, std
     >>> from sympy import Symbol, simplify
 
     >>> k = Symbol("k", integer=True)
@@ -466,7 +466,7 @@ def Chi(k, symbol=None):
 
     >>> X = Chi(k, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, 2**(-k/2 + 1)*_x**(k - 1)*exp(-_x**2/2)/gamma(k/2))
 
     References
@@ -516,7 +516,7 @@ def Dagum(p, a, b, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Dagum, Density
+    >>> from sympy.stats import Dagum, density
     >>> from sympy import Symbol, simplify
 
     >>> p = Symbol("p", positive=True)
@@ -526,7 +526,7 @@ def Dagum(p, a, b, symbol=None):
 
     >>> X = Dagum(p, a, b, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, a*p*(_x/b)**(a*p)*((_x/b)**a + 1)**(-p - 1)/_x)
 
     References
@@ -580,7 +580,8 @@ def Exponential(rate, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Exponential, Density, CDF, E, Var, Std, Skewness
+    >>> from sympy.stats import Exponential, density, cdf, E
+    >>> from sympy.stats import variance, std, skewness
     >>> from sympy import Symbol
 
     >>> l = Symbol("lambda", positive=True)
@@ -588,30 +589,30 @@ def Exponential(rate, symbol=None):
 
     >>> X = Exponential(l, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, lambda*exp(-_x*lambda))
 
-    >>> CDF(X)
+    >>> cdf(X)
     Lambda(_z, Piecewise((0, _z < 0), (1 - exp(-_z*lambda), True)))
 
     >>> E(X)
     1/lambda
 
-    >>> Var(X)
+    >>> variance(X)
     lambda**(-2)
 
-    >>> Skewness(X)
+    >>> skewness(X)
     2
 
     >>> X = Exponential(10, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, 10*exp(-10*_x))
 
     >>> E(X)
     1/10
 
-    >>> Std(X)
+    >>> std(X)
     1/10
 
     References
@@ -1626,6 +1627,19 @@ def Weibull(alpha, beta, symbol=None):
     .. [1] http://en.wikipedia.org/wiki/Weibull_distribution
     .. [2] http://mathworld.wolfram.com/WeibullDistribution.html
 
+=======
+    >>> from sympy.stats import Weibull, density, E, var
+    >>> from sympy import symbols, simplify
+    >>> x, a, b = symbols('x a b', positive=True)
+
+    >>> X = Weibull(a, b, symbol=x)
+    >>> density(X)
+    Lambda(_x, b*(_x/a)**(b - 1)*exp(-(_x/a)**b)/a)
+    >>> simplify(E(X))
+    a*gamma(1 + 1/b)
+    >>> simplify(var(X))
+    -a**2*(gamma(1 + 1/b)**2 - gamma(1 + 2/b))
+>>>>>>> Renamed stats functions to lower-case
     """
     return WeibullPSpace(alpha, beta, symbol).value
 

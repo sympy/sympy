@@ -13,16 +13,16 @@ Queries on random expressions can be made using the functions
 -------------------- -----------------------------
  P(condition)         Probability
  E(expression)        Expectation value
- Var(expression)      Variance
- Density(expression)  Probability Density Function
- Sample(expression)   Produce a realization
- Where(condition)     Where the condition is true
+ var(expression)      Variance
+ density(expression)  Probability Density Function
+ sample(expression)   Produce a realization
+ where(condition)     Where the condition is true
 ==================== =============================
 
 Examples
 ========
 
->>> from sympy.stats import P, E, Var, Die, Normal
+>>> from sympy.stats import P, E, var, Die, Normal
 >>> from sympy import Eq, simplify
 >>> X, Y = Die(6), Die(6) # Define two six sided dice
 >>> Z = Normal(0, 1) # Declare a Normal random variable with mean 0, std 1
@@ -30,7 +30,7 @@ Examples
 1/2
 >>> E(X+Y) # Expectation of the sum of two dice
 7
->>> Var(X+Y) # Variance of the sum of two dice
+>>> var(X+Y) # Variance of the sum of two dice
 35/6
 >>> simplify(P(Z>1)) # Probability of Z being greater than 1
 -erf(sqrt(2)/2)/2 + 1/2

@@ -200,14 +200,14 @@ class FinitePSpace(PSpace):
         return sum(expr.subs(dict(elem)) * self.prob_of(elem)
                 for elem in self.domain)
 
-    def P(self, condition):
+    def probability(self, condition):
         cond_symbols = frozenset(rs.symbol for rs in random_symbols(condition))
         assert cond_symbols.issubset(self.symbols)
         return sum(self.prob_of(elem) for elem in self.where(condition))
 
     def conditional_space(self, condition):
         domain = self.where(condition)
-        prob = self.P(condition)
+        prob = self.probability(condition)
         density = dict((key, val / prob)
                 for key, val in self._density.items() if key in domain)
         return FinitePSpace(domain, density)

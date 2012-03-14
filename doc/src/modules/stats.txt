@@ -49,12 +49,12 @@ Interface
 
 .. autofunction:: P
 .. autofunction:: E
-.. autofunction:: Density
-.. autofunction:: Given
-.. autofunction:: Where
-.. autofunction:: Var
-.. autofunction:: Std
-.. autofunction:: Sample
+.. autofunction:: density
+.. autofunction:: given
+.. autofunction:: where
+.. autofunction:: var
+.. autofunction:: std
+.. autofunction:: sample
 .. autofunction:: sample_iter
 
 Mechanics
