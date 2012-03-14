@@ -467,12 +467,12 @@ def test_matAdd():
     assert l._print_MatAdd(C + 2*B) in ['+ 2 B + C', '+ C + 2 B']
 
 def test_latex_RandomDomain():
-    from sympy.stats import Normal, Die, Exponential, pspace, Where
+    from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal(0, 1, symbol=Symbol('x1'))
-    assert latex(Where(X>0)) == "Domain: 0 < x_{1}"
+    assert latex(where(X>0)) == "Domain: 0 < x_{1}"
 
     D = Die(6, symbol=Symbol('d1'))
-    assert latex(Where(D>4)) == r"Domain: d_{1} = 5 \vee d_{1} = 6"
+    assert latex(where(D>4)) == r"Domain: d_{1} = 5 \vee d_{1} = 6"
 
     A = Exponential(1, symbol=Symbol('a'))
     B = Exponential(1, symbol=Symbol('b'))

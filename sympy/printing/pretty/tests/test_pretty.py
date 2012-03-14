@@ -3632,12 +3632,12 @@ def test_expint():
     assert upretty(Chi(x)) == 'Chi(x)'
 
 def test_RandomDomain():
-    from sympy.stats import Normal, Die, Exponential, pspace, Where
+    from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal(0, 1, symbol=Symbol('x1'))
-    assert upretty(Where(X>0)) == u"Domain: 0 < x₁"
+    assert upretty(where(X>0)) == u"Domain: 0 < x₁"
 
     D = Die(6, symbol=Symbol('d1'))
-    assert upretty(Where(D>4)) == u'Domain: d₁ = 5 ∨ d₁ = 6'
+    assert upretty(where(D>4)) == u'Domain: d₁ = 5 ∨ d₁ = 6'
 
     A = Exponential(1, symbol=Symbol('a'))
     B = Exponential(1, symbol=Symbol('b'))
