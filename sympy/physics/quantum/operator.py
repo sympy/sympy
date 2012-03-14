@@ -100,7 +100,7 @@ class Operator(QExpr):
 
     def _represent_XKet(self, basis, **options):
         from sympy.physics.quantum.state import Wavefunction
-        from sympy.physucs.quantum.represent import _append_index
+        from sympy.physics.quantum.represent import _append_index
         index = options.pop('index', 1)
         coord = _append_index(basis.label[0], index)
         func = Function(str(self.label[0]))
