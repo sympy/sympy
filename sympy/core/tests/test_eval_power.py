@@ -76,7 +76,7 @@ def test_negative_one():
 
 def test_issue1263():
     neg = Symbol('neg', negative=True)
-    nonneg = Symbol('nonneg', negative=False)
+    nonneg = Symbol('nonneg', nonnegative=True)
     any = Symbol('any')
     num, den = sqrt(1/neg).as_numer_denom()
     assert num == sqrt(-1)
@@ -119,7 +119,7 @@ def test_issue1263():
     eq=eqn(npos, dpos, pow)
     assert eq.is_Pow and eq.as_numer_denom() == (npos**pow, dpos**pow)
     eq=eqn(npos, dneg, pow)
-    assert eq.is_Pow and eq.as_numer_denom() == (eq, 1)
+    assert eq.is_Pow and eq.as_numer_denom() == ((-npos)**pow, (-dneg)**pow)
     eq=eqn(nneg, dpos, pow)
     assert eq.is_Pow and eq.as_numer_denom() == (nneg**pow, dpos**pow)
     eq=eqn(nneg, dneg, pow)
@@ -127,16 +127,37 @@ def test_issue1263():
     eq=eqn(npos, dpos, -pow)
     assert eq.as_numer_denom() == (dpos**pow, npos**pow)
     eq=eqn(npos, dneg, -pow)
-    assert eq.is_Pow and eq.as_numer_denom() == (1, eq.base**pow)
+    assert eq.is_Pow and eq.as_numer_denom() == ((-dneg)**pow, (-npos)**pow)
     eq=eqn(nneg, dpos, -pow)
     assert eq.is_Pow and eq.as_numer_denom() == (dpos**pow, nneg**pow)
     eq=eqn(nneg, dneg, -pow)
     assert eq.is_Pow and eq.as_numer_denom() == ((-dneg)**pow, (-nneg)**pow)
 
     x = Symbol('x')
+    y = Symbol('y')
     assert ((1/(1 + x/3))**(-S.One)).as_numer_denom() == (3 + x, 3)
-    np = Symbol('np',positive=False)
-    assert (((1 + x/np)**-2)**(-S.One)).as_numer_denom() == ((np + x)**2, np**2)
+    notp = Symbol('notp', positive=False) # not positive does not imply real
+    b = ((1 + x/notp)**-2)
+    assert (b**(-y)).as_numer_denom() == (1, b**y)
+    assert (b**(-S.One)).as_numer_denom() == ((notp + x)**2, notp**2)
+    nonp = Symbol('nonp', nonpositive=True)
+    assert (((1 + x/nonp)**-2)**(-S.One)).as_numer_denom() == ((-nonp - x)**2, nonp**2)
+
+    n = Symbol('n', negative=True)
+    assert (x**n).as_numer_denom() == (1, x**-n)
+    assert sqrt(1/n).as_numer_denom() == (S.ImaginaryUnit, sqrt(-n))
+    n = Symbol('0 or neg', nonpositive=True)
+    # if x and n are split up without negating each term and n is negative
+    # then the answer might be wrong; if n is 0 it won't matter since
+    # 1/oo and 1/zoo are both zero as is sqrt(0)/sqrt(-x) unless x is also
+    # zero (in which case the negative sign doesn't matter):
+    # 1/sqrt(1/-1) = -I but sqrt(-1)/sqrt(1) = I
+    assert (1/sqrt(x/n)).as_numer_denom() == (sqrt(-n), sqrt(-x))
+    c = Symbol('c', complex=True)
+    e = sqrt(1/c)
+    assert e.as_numer_denom() == (e, 1)
+    i = Symbol('i', integer=True)
+    assert (((1 + x/y)**i)).as_numer_denom() == ((x + y)**i, y**i)
 
 def test_Pow_signs():
     """Cf. issues 1496 and 2151"""

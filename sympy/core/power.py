@@ -678,33 +678,30 @@ class Pow(Expr):
             return self, S.One
         base, exp = self.as_base_exp()
         n, d = base.as_numer_denom()
-        if d is not S.One:
-            if d.is_negative and n.is_negative:
-                n, d = -n, -d
-            if exp.is_Integer:
-                if exp.is_negative:
-                    n, d = d, n
-                    exp = -exp
-                return Pow(n, exp), Pow(d, exp)
-            elif exp.is_Rational or d.is_positive:
-                dneg = d.is_negative
-                if dneg is not None:
-                    if dneg is True:
-                        n = -n
-                        d = -d
-                    elif dneg is False:
-                        n, d = d, n
-                        exp = -exp
-                    if _coeff_isneg(exp):
-                        n, d = d, n
-                        exp = -exp
-                    return Pow(n, exp), Pow(d, exp)
-                # else we won't split up base but we check for neg expo below
-        if _coeff_isneg(exp):
-            return S.One, base**-exp
-        # unprocessed float or NumberSymbol exponent
-        # and Mul exp w/o negative sign
-        return self, S.One
+        # this should be the same as ExpBase.as_numer_denom wrt
+        # exponent handling
+        neg_exp = exp.is_negative
+        int_exp = exp.is_integer
+        if not neg_exp and not exp.is_real:
+            neg_exp = _coeff_isneg(exp)
+        # the denominator cannot be separated from the numerator if
+        # its sign is unknown unless the exponent is an integer, e.g.
+        # sqrt(a/b) != sqrt(a)/sqrt(b) when a=1 and b=-1. But if the
+        # denominator is negative the numerator and denominator can
+        # be negated and the denominator (now positive) separated.
+        if not (d.is_real or int_exp):
+            n = base
+            d = S.One
+        dnonpos = d.is_nonpositive
+        if dnonpos:
+            n, d = -n, -d
+        elif dnonpos is None and not int_exp:
+            n = base
+            d = S.One
+        if neg_exp:
+            n, d = d, n
+            exp = -exp
+        return Pow(n, exp), Pow(d, exp)
 
     def matches(self, expr, repl_dict={}):
         expr = _sympify(expr)

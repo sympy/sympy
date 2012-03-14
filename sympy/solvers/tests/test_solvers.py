@@ -638,14 +638,14 @@ def test_unrad():
     raises(ValueError, 'unrad(sqrt(x) + sqrt(x+1) + sqrt(1-sqrt(x)) + 3)')
     raises(ValueError, 'unrad(sqrt(x) + (x+1)**Rational(1,3) + 2*sqrt(y))')
     # same as last but consider only y
-    assert check(unrad(sqrt(x) + (x+1)**Rational(1,3) + 2*sqrt(y), y),
+    assert check(unrad(sqrt(x) + (x + 1)**Rational(1,3) + 2*sqrt(y), y),
            (4*y - (sqrt(x) + (x + 1)**(S(1)/3))**2, [], []))
-    assert check(unrad(sqrt(x/(1 - x)) + (x+1)**Rational(1,3)),
+    assert check(unrad(sqrt(x/(1 - x)) + (x + 1)**Rational(1,3)),
                 (x**3/(-x + 1)**3 - (x + 1)**2, [], [(-x + 1)**3]))
     # same as last but consider only y; no y-containing denominators now
     assert s_check(unrad(sqrt(x/(1 - x)) + 2*sqrt(y), y),
            (x/(-x + 1) - 4*y, [], []))
-    assert check(unrad(sqrt(x)*sqrt(1-x) + 2, x),
+    assert check(unrad(sqrt(x)*sqrt(1 - x) + 2, x),
            (x*(-x + 1) - 4, [], []))
 
     # http://tutorial.math.lamar.edu/
