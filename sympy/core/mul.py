@@ -1050,52 +1050,86 @@ class Mul(AssocOp):
                 return
         return False
 
-    def _eval_is_positive(self):
-        terms = [t for t in self.args if not t.is_positive]
-        if not terms:
+    def _eval_is_zero(self):
+        zero = None
+        for a in self.args:
+            if a.is_zero:
+                zero = True
+                continue
+            bound = a.is_bounded
+            if not bound:
+                return bound
+        if zero:
             return True
-        c = terms[0]
-        if len(terms)==1:
-            if c.is_nonpositive:
-                return False
-            return
-        r = self._new_rawargs(*terms[1:])
-        if c.is_negative and r.is_negative:
-            return True
-        if r.is_negative and c.is_negative:
-            return True
-        # check for nonpositivity, <=0
-        if c.is_negative and r.is_nonnegative:
-            return False
-        if r.is_negative and c.is_nonnegative:
-            return False
-        if c.is_nonnegative and r.is_nonpositive:
-            return False
-        if r.is_nonnegative and c.is_nonpositive:
-            return False
 
+    def _eval_is_positive(self):
+        """Return True if self is positive, False if not, and None if it
+        cannot be determined.
+
+        This algorithm is non-recursive and works by keeping track of the
+        sign which changes when a negative or nonpositive is encountered.
+        Whether a nonpositive or nonnegative is seen is also tracked since
+        the presence of these makes it impossible to return True, but
+        possible to return False if the end result is nonpositive. e.g.
+
+            pos * neg * nonpositive -> pos or zero -> None is returned
+            pos * neg * nonnegative -> neg or zero -> False is returned
+        """
+
+        sign = 1
+        saw_NON = False
+        for t in self.args:
+            if t.is_positive:
+                continue
+            elif t.is_negative:
+                sign = -sign
+            elif t.is_zero:
+                return False
+            elif t.is_nonpositive:
+                sign = -sign
+                saw_NON = True
+            elif t.is_nonnegative:
+                saw_NON = True
+            else:
+                return
+        if sign == 1 and saw_NON is False:
+            return True
+        if sign < 0:
+            return False
 
     def _eval_is_negative(self):
-        terms = [t for t in self.args if not t.is_positive]
-        if not terms:
-            # all terms are either positive -- 2*Symbol('n', positive=T)
-            #               or     unknown  -- 2*Symbol('x')
-            if self.is_positive:
+        """Return True if self is negative, False if not, and None if it
+        cannot be determined.
+
+        This algorithm is non-recursive and works by keeping track of the
+        sign which changes when a negative or nonpositive is encountered.
+        Whether a nonpositive or nonnegative is seen is also tracked since
+        the presence of these makes it impossible to return True, but
+        possible to return False if the end result is nonnegative. e.g.
+
+            pos * neg * nonpositive -> pos or zero -> False is returned
+            pos * neg * nonnegative -> neg or zero -> None is returned
+        """
+
+        sign = 1
+        saw_NON = False
+        for t in self.args:
+            if t.is_positive:
+                continue
+            elif t.is_negative:
+                sign = -sign
+            elif t.is_zero:
                 return False
+            elif t.is_nonpositive:
+                sign = -sign
+                saw_NON = True
+            elif t.is_nonnegative:
+                saw_NON = True
             else:
-                return None
-        c = terms[0]
-        if len(terms)==1:
-            return c.is_negative
-        r = self._new_rawargs(*terms[1:])
-        # check for nonnegativity, >=0
-        if c.is_negative and r.is_nonpositive:
-            return False
-        if r.is_negative and c.is_nonpositive:
-            return False
-        if c.is_nonpositive and r.is_nonpositive:
-            return False
-        if c.is_nonnegative and r.is_nonnegative:
+                return
+        if sign == -1 and saw_NON is False:
+            return True
+        if sign > 0:
             return False
 
     def _eval_is_odd(self):
@@ -1113,7 +1147,6 @@ class Mul(AssocOp):
         # !integer -> !odd
         elif is_integer == False:
             return False
-
 
     def _eval_is_even(self):
         is_integer = self.is_integer
