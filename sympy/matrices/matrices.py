@@ -3241,8 +3241,6 @@ class MutableMatrix(MatrixBase):
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        if len(args)==1 and isinstance(args[0], MutableMatrix):
-            return args[0]
         rows, cols, mat = MatrixBase._handle_creation_inputs(*args, **kwargs)
         self = object.__new__(cls)
         self.rows = rows
