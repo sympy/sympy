@@ -1,3 +1,4 @@
+from sympy.core.assumptions import StdFactKB
 from basic import Basic
 from core import C
 from power import Pow
@@ -73,8 +74,9 @@ class Symbol(AtomicExpr, Boolean):
     def __new_stage2__(cls, name, **assumptions):
         assert isinstance(name, str),repr(type(name))
         obj = Expr.__new__(cls)
-        obj._init_assumptions(assumptions)
         obj.name = name
+        obj._a_inprogress = []
+        obj._assumptions = StdFactKB(assumptions)
         return obj
 
     __xnew__       = staticmethod(__new_stage2__)            # never cached (e.g. dummy)

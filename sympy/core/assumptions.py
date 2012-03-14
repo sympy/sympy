@@ -229,7 +229,6 @@ class AssumeMixin(object):
     _assume_slots = ['_assumptions',    # assumptions
                  '_a_inprogress',   # already-seen requests (when deducing
                                     # through prerequisites -- see CycleDetected)
-                 '_assume_type_keys', # assumptions typeinfo keys
                 ]
     try:
         # This particular __slots__ definition breaks SymPy in Jython.
@@ -238,29 +237,9 @@ class AssumeMixin(object):
     except ImportError:
         __slots__ = []
 
-    def  _init_assumptions(self, assumptions=None):
+    def  _init_assumptions(self):
         self._a_inprogress = []
-
-        # NOTE this could be made lazy -- probably not all instances will need
-        # fully derived assumptions?
-        if assumptions:
-            self._assumptions = self.default_assumptions.copy()
-            self._assumptions.deduce_all_facts(assumptions)
-            #                      ^
-            # FIXME this is slow   |    another NOTE: speeding this up is *not*
-            #        |             |    important. say for %timeit x+y most of
-            # .------'             |    the time is spent elsewhere
-            # |                    |
-            # |  XXX _learn_new_facts could be asked about what *new* facts have
-            # v  XXX been learned -- we'll need this to append to _hashable_content
-            basek = set(self.default_assumptions.keys())
-            k2    = set(self._assumptions.keys())
-            newk  = k2.difference(basek)
-
-            self._assume_type_keys = frozenset(newk)
-        else:
-            self._assumptions  = self.default_assumptions
-            self._assume_type_keys = None
+        self._assumptions  = self.default_assumptions
 
     # XXX better name?
     @property
