@@ -2110,6 +2110,8 @@ def test_is_Identity():
     assert eye(3).as_immutable().is_Identity
     assert not zeros(3).is_Identity
     assert not ones(3).is_Identity
+    # issue 3143
+    assert not Matrix([[1,0,0]]).is_Identity
 
 def test_dot():
     assert ones(1,3).dot(ones(3,1)) == 3
