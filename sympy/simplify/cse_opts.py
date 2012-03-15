@@ -11,7 +11,7 @@ class Neg(Expr):
     __slots__ = []
 
 def sub_pre(e):
-    """ Replace Add(x, Mul(NegativeOne(-1), y)) with Sub(x, y).
+    """ Replace y - x with Neg(x - y) if -1 can be extracted from y - x.
     """
     # make canonical, first
     adds = {}

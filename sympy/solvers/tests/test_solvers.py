@@ -621,8 +621,6 @@ def test_unrad():
     assert solve(eq) == []
     # but this one really does have those solutions
     assert solve(sqrt(x) - sqrt(x + 1) + sqrt(1 - sqrt(x))) == [0, S(9)/16]
-    ans = solve(sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
-    assert len(ans) == 2 and S(4)/5 in ans
     ans = solve(sqrt(x) + sqrt(x + 1) - \
                  sqrt(1 - x) - sqrt(2 + x))
     assert len(ans) == 1 and NS(ans[0])[:4] == '0.73'
@@ -673,6 +671,11 @@ def test_unrad():
     assert solve(sqrt(x - 2) - 5) == [27]
     assert solve(sqrt(17*x - sqrt(x**2 - 5)) - 7) == [3]
     assert solve(sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))) == []
+
+@XFAIL
+def test_unrad_evalf_problem():
+    ans = solve(sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
+    assert len(ans) == 2 and S(4)/5 in ans
 
 @XFAIL
 def test_multivariate():

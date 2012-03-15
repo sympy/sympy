@@ -17,6 +17,7 @@ from sympy.functions import gamma, exp, sqrt, log, root, exp_polar
 from sympy.utilities import flatten, default_sort_key
 
 from sympy.simplify.cse_main import cse
+from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.sqrtdenest import sqrtdenest
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
@@ -2595,7 +2596,7 @@ def combsimp(expr):
 
     return factor(expr)
 
-def signsimp(expr):
+def signsimp(expr, evaluate=True):
     """Make all Add sub-expressions canonical wrt sign.
 
     If an Add subexpression, ``a``, can have a sign extracted,
@@ -2606,8 +2607,8 @@ def signsimp(expr):
     Examples
     ========
 
-    >>> from sympy import signsimp
-    >>> from sympy.abc import x
+    >>> from sympy import signsimp, exp
+    >>> from sympy.abc import x, y
     >>> n = -1 + 1/x
     >>> n/x/(-n)**2 - 1/n/x
     (-1 + 1/x)/(x*(1 - 1/x)**2) - 1/(x*(-1 + 1/x))
@@ -2622,46 +2623,22 @@ def signsimp(expr):
     >>> signsimp(_)
     -(1 - 1/x)**3
 
+    By default, signsimp doesn't leave behind any hollow simplification:
+    if making an Add canonical wrt sign didn't change the expression, the
+    original Add is restored. If this is not desired then the keyword
+    ``evaluate`` can be set to False:
+
+    >>> e = exp(y - x)
+    >>> signsimp(e) == e
+    True
+    >>> signsimp(e, evaluate=False)
+    exp(-(x - y))
+
     """
-    from sympy.utilities.iterables import preorder_traversal
-
-    # collect Add expressions in order of length
-
-    pot = preorder_traversal(sympify(expr))
-    saw = set()
-    adds = []
-    for p in pot:
-        if p in saw:
-            pot.skip()
-            continue
-        if p.is_Add:
-            adds.append(p)
-        saw.add(p)
-
-    # starting from the shortest adds (which were encountered last
-    # during the traversal) see if they can have a sign extracted
-    # and if so, keep them and substitute them into collected longer
-    # expressions
-
-    adds.reverse()
-    negated = []
-    restore = {}
-    for i, a in enumerate(adds):
-        if a.could_extract_minus_sign():
-            d = Dummy()
-            negated.append((a, -d))
-            restore[d] = -a
-        # update others
-        for j in range(i + 1, len(adds)):
-            adds[j] = adds[j].subs(negated)
-
-    # let signs on the dummies work themselves out in expressions
-    # e.g. (-d1)*(-d2) will become d1*d2, and then restore the
-    # original expressions. Since each of the Adds has already
-    # been updated, do them in reverse order (largest first).
-
-    negated.reverse()
-    return expr.subs(negated).xreplace(restore)
+    e = sub_post(sub_pre(expr))
+    if evaluate:
+        e = e.xreplace(dict([(m, -(-m)) for m in e.atoms(Mul) if -(-m) != m]))
+    return e
 
 def simplify(expr, ratio=1.7, measure=count_ops):
     """
@@ -2806,6 +2783,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     # See also https://github.com/sympy/sympy/pull/185.
 
     original_expr = expr
+    expr = signsimp(expr)
 
     def shorter(*choices):
         '''Return the choice that has the fewest ops. In case of a tie,
