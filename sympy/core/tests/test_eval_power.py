@@ -219,6 +219,7 @@ def test_issue_3109():
     assert root((6*I)**(2*I), 3).as_base_exp()[1] == Rational(1, 3) # != 2*I/3
     assert root((6*I)**(I/3), 3).as_base_exp()[1] == I/9
     assert sqrt(exp(3*I)) == exp(3*I/2)
+    assert sqrt(-sqrt(3)*(1 + 2*I)) == sqrt(sqrt(3))*sqrt(-1 - 2*I)
 
 @XFAIL
 def test_issue_3109_fail():

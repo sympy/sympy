@@ -1166,8 +1166,8 @@ def test_Liouville_ODE():
     sol1a = Eq(C1 + C2/x - exp(-f(x)), 0)
     sol2 = sol1
     sol3 = set([Eq(f(x), -sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(C1 + C2*log(x)))])
-    sol4 = set([Eq(f(x), -sqrt(2)*I*sqrt(C1 + C2*exp(x))*exp(-x/2)),
-                Eq(f(x), sqrt(2)*I*sqrt(C1 + C2*exp(x))*exp(-x/2))])
+    sol4 = set([Eq(f(x), sqrt(C1 + C2*exp(x))*exp(-x/2)),
+                Eq(f(x), -sqrt(C1 + C2*exp(x))*exp(-x/2))])
     sol5 = Eq(f(x), log(C1 + C2/x))
     sol1s = constant_renumber(sol1, 'C', 1, 2)
     sol2s = constant_renumber(sol2, 'C', 1, 2)
@@ -1178,7 +1178,7 @@ def test_Liouville_ODE():
     assert dsolve(eq1a, hint=hint) in (sol1, sol1s)
     assert dsolve(eq2, hint=hint) in (sol2, sol2s)
     assert set(dsolve(eq3, hint=hint)) in (sol3, sol3s)
-    assert set(dsolve(eq4, hint=hint)) in (sol4, sol4s) # XXX: remove sqrt(2) factor
+    assert set(dsolve(eq4, hint=hint)) in (sol4, sol4s)
     assert dsolve(eq5, hint=hint) in (sol5, sol5s)
     assert checkodesol(eq1, sol1, order=2, solve_for_func=False)[0]
     assert checkodesol(eq1a, sol1a, order=2, solve_for_func=False)[0]
