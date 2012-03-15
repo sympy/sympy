@@ -539,8 +539,8 @@ class FactKB(dict):
             # --- alpha chains ---
             for k, v in fseq:
                 #new_fact(k, v)
-                if k in self:
-                    assert self[k] is None or self[k] == v, \
+                if k in self and self[k] is not None:
+                    assert self[k] == v, \
                             ('inconsistency between facts', self, k, v)
                     # performance-wise it is important not to fire implied rules
                     # for already-seen fact -- we already did them all.

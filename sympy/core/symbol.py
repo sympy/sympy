@@ -75,7 +75,6 @@ class Symbol(AtomicExpr, Boolean):
         assert isinstance(name, str),repr(type(name))
         obj = Expr.__new__(cls)
         obj.name = name
-        obj._a_inprogress = []
         obj._assumptions = StdFactKB(assumptions)
         return obj
 

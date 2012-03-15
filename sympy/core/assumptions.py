@@ -74,12 +74,6 @@ class StdFactKB(FactKB):
     def copy(self):
         return self.__class__(self)
 
-class CycleDetected(Exception):
-    """(internal) used to detect cycles when evaluating assumptions
-       through prerequisites
-    """
-    pass
-
 def as_property(fact):
     """Convert a fact name to the name of the corresponding property"""
     return 'is_%s' % fact
@@ -226,10 +220,7 @@ class AssumeMixin(object):
 
         - None (if you don't know if the property is True or false)
     """
-    _assume_slots = ['_assumptions',    # assumptions
-                 '_a_inprogress',   # already-seen requests (when deducing
-                                    # through prerequisites -- see CycleDetected)
-                ]
+    _assume_slots = ['_assumptions']
     try:
         # This particular __slots__ definition breaks SymPy in Jython.
         # See issue 1233.
@@ -238,7 +229,6 @@ class AssumeMixin(object):
         __slots__ = []
 
     def  _init_assumptions(self):
-        self._a_inprogress = []
         self._assumptions  = self.default_assumptions
 
     # XXX better name?
@@ -312,45 +302,33 @@ class AssumeMixin(object):
            _learn_new_facts to deduce all its implications, and also the result
            is cached in ._assumptions for later quick access.
         """
-        if k not in _assume_defined:
-            raise AttributeError('undefined assumption %r' % (k))
-
-        seen = self._a_inprogress
-        if k in seen:
-            raise CycleDetected
-        seen.append(k)
-
         assumptions = self._assumptions
+
+        # Store None into the assumptions so that recursive attempts at
+        # evaluating the same fact don't trigger infinite recursion.
+        assumptions.deduce_all_facts(((k, None),))
+
+        # First try the assumption evaluation function if it exists
         try:
-            # First try the assumption evaluation function if it exists
-            if hasattr(self, '_eval_is_' + k):
-                try:
-                    a = getattr(self, '_eval_is_' + k)()
-                except CycleDetected:
-                    pass
-                else:
-                    if a is not None:
-                        assumptions.deduce_all_facts(((k, a),))
-                        return a
+            a = getattr(self, '_eval_is_' + k)()
+        except AttributeError:
+            pass
+        else:
+            if a is not None:
+                assumptions.deduce_all_facts(((k, a),))
+                return a
 
-            # Try assumption's prerequisites
-            for pk in _assume_rules.prereq[k]:
-                if hasattr(self, '_eval_is_' + pk):
-                    # cycle
-                    if pk in seen or pk in assumptions:
-                        continue
-                    a = self._what_known_about(pk)
+        # Try assumption's prerequisites
+        for pk in _assume_rules.prereq[k]:
+            if pk in assumptions:
+                continue
+            if hasattr(self, '_eval_is_' + pk):
+                self._what_known_about(pk)
 
-                    # we might have found the value of k
-                    try:
-                        return assumptions[k]
-                    except KeyError:
-                        pass
-        finally:
-            seen.pop()
+                # we might have found the value of k
+                ret_val = assumptions.get(k)
+                if ret_val is not None:
+                    return ret_val
 
-        # No result -- unknown
-        # cache it  (NB ._learn_new_facts(k, None) to learn other properties,
-        # and because assumptions may not be detached)
-        assumptions.deduce_all_facts(((k,None),))
+        # Note: the result has already been cached
         return None
