@@ -170,8 +170,10 @@ class BeniniPSpace(SingleContinuousPSpace):
     def __new__(cls, alpha, beta, sigma, symbol = None):
         alpha, beta, sigma = sympify(alpha), sympify(beta), sympify(sigma)
         x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = exp(-alpha*log(x/sigma)-beta*log(x/sigma)**2)*(alpha/x+2*beta*log(x/sigma)/x)
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(sigma, oo))
+        pdf = (exp(-alpha*log(x/sigma)-beta*log(x/sigma)**2)
+               *(alpha/x+2*beta*log(x/sigma)/x))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf,
+                                             set = Interval(sigma, oo))
         return obj
 
 def Benini(alpha, beta, sigma, symbol=None):
@@ -181,8 +183,9 @@ def Benini(alpha, beta, sigma, symbol=None):
     The density of the Benini distribution is given by
 
     .. math::
-        f(x) := e^{-\alpha\log{\frac{x}{\sigma}}-\beta\log\left[{\frac{x}{\sigma}}\right]^2}
-        \left(\frac{\alpha}{x}+\frac{2\beta\log{\frac{x}{\sigma}}}{x}\right)
+        f(x) := e^{-\alpha\log{\frac{x}{\sigma}}
+                -\beta\log\left[{\frac{x}{\sigma}}\right]^2}
+                \left(\frac{\alpha}{x}+\frac{2\beta\log{\frac{x}{\sigma}}}{x}\right)
 
     Parameters
     ==========
@@ -210,7 +213,8 @@ def Benini(alpha, beta, sigma, symbol=None):
     >>> X = Benini(alpha, beta, sigma, symbol=x)
 
     >>> Density(X)
-    Lambda(_x, (alpha/_x + 2*beta*log(_x/sigma)/_x)*exp(-alpha*log(_x/sigma) - beta*log(_x/sigma)**2))
+    Lambda(_x, ((alpha/_x + 2*beta*log(_x/sigma)/_x)*exp(-alpha*log(_x/sigma)
+               - beta*log(_x/sigma)**2)))
 
     References
     ==========
@@ -276,7 +280,8 @@ def Beta(alpha, beta, symbol=None):
     >>> X = Beta(alpha, beta, symbol=x)
 
     >>> Density(X)
-    Lambda(_x, _x**(alpha - 1)*(-_x + 1)**(beta - 1)*gamma(alpha + beta)/(gamma(alpha)*gamma(beta)))
+    Lambda(_x, _x**(alpha - 1)*(-_x + 1)**(beta - 1)\
+               *gamma(alpha + beta)/(gamma(alpha)*gamma(beta)))
 
     >>> simplify(E(X, meijerg=True))
     alpha/(alpha + beta)
@@ -339,7 +344,8 @@ def BetaPrime(alpha, beta, symbol=None):
     >>> X = BetaPrime(alpha, beta, symbol=x)
 
     >>> Density(X)
-    Lambda(_x, _x**(alpha - 1)*(_x + 1)**(-alpha - beta)*gamma(alpha + beta)/(gamma(alpha)*gamma(beta)))
+    Lambda(_x, _x**(alpha - 1)*(_x + 1)**(-alpha - beta)\
+               *gamma(alpha + beta)/(gamma(alpha)*gamma(beta)))
 
     References
     ==========
@@ -368,7 +374,8 @@ def Cauchy(x0, gamma, symbol=None):
     The density of the Cauchy distribution is given by
 
     .. math::
-        f(x) := \frac{1}{\pi} \arctan\left(\frac{x-x_0}{\gamma}\right)+\frac{1}{2}
+        f(x) := \frac{1}{\pi} \arctan\left(\frac{x-x_0}{\gamma}\right)
+                +\frac{1}{2}
 
     Parameters
     ==========
@@ -479,7 +486,7 @@ def Dagum(p, a, b, symbol=None):
 
     .. math::
         f(x) := \frac{a p}{x} \left( \frac{(\tfrac{x}{b})^{a p}}
-        {\left((\tfrac{x}{b})^a + 1 \right)^{p+1}} \right)
+                {\left((\tfrac{x}{b})^a + 1 \right)^{p+1}} \right)
 
     with :math:`x > 0`.
 
@@ -664,13 +671,15 @@ def Gamma(k, theta, symbol=None):
     Lambda(_x, _x**(k - 1)*theta**(-k)*exp(-_x/theta)/gamma(k))
 
     >>> CDF(X, meijerg=True)
-    Lambda(_z, Piecewise((0, _z < 0), (-k*lowergamma(k, 0)/gamma(k + 1) + k*lowergamma(k, _z/theta)/gamma(k + 1), True)))
+    Lambda(_z, Piecewise((0, _z < 0), (-k*lowergamma(k, 0)/gamma(k + 1)\
+               + k*lowergamma(k, _z/theta)/gamma(k + 1), True)))
 
     >>> E(X)
     theta*gamma(k + 1)/gamma(k)
 
     >>> Var(X)
-    -theta**2*gamma(k + 1)**2/gamma(k)**2 + theta*theta**(-k)*theta**(k + 1)*gamma(k + 2)/gamma(k)
+    -theta**2*gamma(k + 1)**2/gamma(k)**2 + theta*theta**(-k)*theta**(k + 1)\
+    *gamma(k + 2)/gamma(k)
 
     References
     ==========
@@ -818,7 +827,8 @@ def LogNormal(mean, std, symbol=None):
     The density of the log-normal distribution is given by
 
     .. math::
-        f(x) := \frac{1}{x\sqrt{2\pi\sigma^2}} e^{-\frac{\left(\ln x-\mu\right)^2}{2\sigma^2}}
+        f(x) := \frac{1}{x\sqrt{2\pi\sigma^2}}
+                e^{-\frac{\left(\ln x-\mu\right)^2}{2\sigma^2}}
 
     with :math:`x \geq 0`.
 
@@ -1045,7 +1055,8 @@ def Normal(mean, std, symbol=None):
     Lambda(_x, sqrt(2)*exp(-(_x - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma))
 
     >>> simplify(CDF(X))
-    Lambda(_z, (erf(sqrt(2)*(_z - mu)/(2*sigma)) + 1)*exp((_z - mu)**2/(2*sigma**2) + (-_z**2 + 2*_z*mu - mu**2)/(2*sigma**2))/2)
+    Lambda(_z, (erf(sqrt(2)*(_z - mu)/(2*sigma)) + 1)*exp((_z - mu)**2\
+               /(2*sigma**2) + (-_z**2 + 2*_z*mu - mu**2)/(2*sigma**2))/2)
 
     >>> simplify(Skewness(X))
     0
@@ -1216,8 +1227,8 @@ def StudentT(nu, symbol=None):
 
     .. math::
         f(x) := \frac{\Gamma \left(\frac{\nu+1}{2} \right)}
-        {\sqrt{\nu\pi}\Gamma \left(\frac{\nu}{2} \right)}
-        \left(1+\frac{x^2}{\nu} \right)^{-\frac{\nu+1}{2}}
+                {\sqrt{\nu\pi}\Gamma \left(\frac{\nu}{2} \right)}
+                \left(1+\frac{x^2}{\nu} \right)^{-\frac{\nu+1}{2}}
 
     Parameters
     ==========
@@ -1241,7 +1252,8 @@ def StudentT(nu, symbol=None):
     >>> X = StudentT(nu, symbol=x)
 
     >>> Density(X)
-    Lambda(_x, (_x**2/nu + 1)**(-nu/2 - 1/2)*gamma(nu/2 + 1/2)/(sqrt(pi)*sqrt(nu)*gamma(nu/2)))
+    Lambda(_x, (_x**2/nu + 1)**(-nu/2 - 1/2)*gamma(nu/2 + 1/2)\
+               /(sqrt(pi)*sqrt(nu)*gamma(nu/2)))
 
     References
     ==========
@@ -1431,7 +1443,8 @@ def UniformSum(n, symbol=None):
     The density of the Irwin-Hall distribution is given by
 
     .. math ::
-        f(x) := \frac{1}{(n-1)!}\sum_{k=0}^{\lfloor x\rfloor}(-1)^k\binom{n}{k}(x-k)^{n-1}
+        f(x) := \frac{1}{(n-1)!}\sum_{k=0}^{\lfloor x\rfloor}(-1)^k
+                \binom{n}{k}(x-k)^{n-1}
 
     Parameters
     ==========
@@ -1455,7 +1468,8 @@ def UniformSum(n, symbol=None):
     >>> X = UniformSum(n, symbol=x)
 
     >>> Density(X)
-    Lambda(_x, Sum((-1)**_k*(-_k + _x)**(n - 1)*binomial(n, _k), (_k, 0, floor(_x)))/(n - 1)!)
+    Lambda(_x, Sum((-1)**_k*(-_k + _x)**(n - 1)*binomial(n, _k),
+                   (_k, 0, floor(_x)))/(n - 1)!)
 
     References
     ==========

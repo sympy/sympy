@@ -1,9 +1,12 @@
-from sympy.stats import (P, E, Where, Density, Var, Covar, Skewness, Given, pspace, CDF, ContinuousRV, Sample,
-                         Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, Dagum, Exponential, Gamma, Laplace, Logistic,
-                         LogNormal, Maxwell, Nakagami, Normal, Pareto, Rayleigh, StudentT, Triangular, Uniform, UniformSum,
-                         Weibull, WignerSemicircle)
-from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf, Eq, log, lowergamma, Sum,
-                   symbols, sqrt, And, gamma, beta, Piecewise, Integral, sin, Lambda, factorial, binomial, floor)
+from sympy.stats import (P, E, Where, Density, Var, Covar, Skewness, Given,
+                         pspace, CDF, ContinuousRV, Sample, Arcsin, Benini,
+                         Beta, BetaPrime, Cauchy, Chi, Dagum, Exponential,
+                         Gamma, Laplace, Logistic, LogNormal, Maxwell, Nakagami,
+                         Normal, Pareto, Rayleigh, StudentT, Triangular,
+                         Uniform, UniformSum, Weibull, WignerSemicircle)
+from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
+                   Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
+                   Piecewise, Integral, sin, Lambda, factorial, binomial, floor)
 from sympy.utilities.pytest import raises, XFAIL
 
 oo = S.Infinity
@@ -137,7 +140,8 @@ def test_benini():
     x = Symbol("x")
 
     X = Benini(alpha, b, sigma, symbol=x)
-    assert Density(X) == Lambda(_x, (alpha/_x + 2*b*log(_x/sigma)/_x)*exp(-alpha*log(_x/sigma) - b*log(_x/sigma)**2))
+    assert Density(X) == (Lambda(_x, (alpha/_x + 2*b*log(_x/sigma)/_x)
+                          *exp(-alpha*log(_x/sigma) - b*log(_x/sigma)**2)))
 
 
 def test_beta():
@@ -168,7 +172,8 @@ def test_betaprime():
     x = Symbol("x")
 
     X = BetaPrime(alpha, beta, symbol=x)
-    assert Density(X) == Lambda(_x, _x**(alpha - 1)*(_x + 1)**(-alpha - beta)*gamma(alpha + beta)/(gamma(alpha)*gamma(beta)))
+    assert Density(X) == (Lambda(_x, _x**(alpha - 1)*(_x + 1)**(-alpha - beta)
+                          *gamma(alpha + beta)/(gamma(alpha)*gamma(beta))))
 
 
 def test_cauchy():
@@ -185,7 +190,8 @@ def test_chi():
     x = Symbol("x")
 
     X = Chi(k, symbol=x)
-    assert Density(X) == Lambda(_x, 2**(-k/2 + 1)*_x**(k - 1)*exp(-_x**2/2)/gamma(k/2))
+    assert Density(X) == (Lambda(_x, 2**(-k/2 + 1)*_x**(k - 1)
+                          *exp(-_x**2/2)/gamma(k/2)))
 
 
 def test_dagum():
@@ -195,7 +201,8 @@ def test_dagum():
     x = Symbol("x")
 
     X = Dagum(p, a, b, symbol=x)
-    assert Density(X) == Lambda(_x, a*p*(_x/b)**(a*p)*((_x/b)**a + 1)**(-p - 1)/_x)
+    assert Density(X) == Lambda(_x,
+                                a*p*(_x/b)**(a*p)*((_x/b)**a + 1)**(-p - 1)/_x)
 
 
 def test_exponential():
@@ -218,9 +225,12 @@ def test_gamma():
     x = Symbol("x")
 
     X = Gamma(k, theta, symbol=x)
-    assert Density(X) == Lambda(_x, _x**(k - 1)*theta**(-k)*exp(-_x/theta)/gamma(k))
-    assert CDF(X, meijerg=True) == Lambda(_z, Piecewise((0, _z < 0), (-k*lowergamma(k, 0)/gamma(k + 1) + k*lowergamma(k, _z/theta)/gamma(k + 1), True)))
-    assert Var(X) == -theta**2*gamma(k + 1)**2/gamma(k)**2 + theta*theta**(-k)*theta**(k + 1)*gamma(k + 2)/gamma(k)
+    assert Density(X) == Lambda(_x,
+                                _x**(k - 1)*theta**(-k)*exp(-_x/theta)/gamma(k))
+    assert CDF(X, meijerg=True) == Lambda(_z, Piecewise((0, _z < 0),
+    (-k*lowergamma(k, 0)/gamma(k + 1) + k*lowergamma(k, _z/theta)/gamma(k + 1), True)))
+    assert Var(X) == (-theta**2*gamma(k + 1)**2/gamma(k)**2 +
+           theta*theta**(-k)*theta**(k + 1)*gamma(k + 2)/gamma(k))
 
     k, theta = symbols('k theta', real=True, bounded=True, positive=True)
     X = Gamma(k, theta)
@@ -247,7 +257,8 @@ def test_logistic():
     x = Symbol("x")
 
     X = Logistic(mu, s, symbol=x)
-    assert Density(X) == Lambda(_x, exp((-_x + mu)/s)/(s*(exp((-_x + mu)/s) + 1)**2))
+    assert Density(X) == Lambda(_x,
+                                exp((-_x + mu)/s)/(s*(exp((-_x + mu)/s) + 1)**2))
 
 
 def test_lognormal():
@@ -271,7 +282,8 @@ def test_lognormal():
     x = Symbol("x")
 
     X = LogNormal(mu, sigma, symbol=x)
-    assert Density(X) == Lambda(_x, sqrt(2)*exp(-(-mu + log(_x))**2/(2*sigma**2))/(2*_x*sqrt(pi)*sigma))
+    assert Density(X) == (Lambda(_x, sqrt(2)*exp(-(-mu + log(_x))**2
+                                    /(2*sigma**2))/(2*_x*sqrt(pi)*sigma)))
 
     X = LogNormal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
     assert Density(X) == Lambda(_x, sqrt(2)*exp(-log(_x)**2/2)/(2*_x*sqrt(pi)))
@@ -294,9 +306,12 @@ def test_nakagami():
     x = Symbol("x")
 
     X = Nakagami(mu, omega, symbol=x)
-    assert Density(X) == Lambda(_x, 2*_x**(2*mu - 1)*mu**mu*omega**(-mu)*exp(-_x**2*mu/omega)/gamma(mu))
-    assert simplify(E(X, meijerg=True)) == sqrt(mu)*sqrt(omega)*gamma(mu + S.Half)/gamma(mu + 1)
-    assert simplify(Var(X, meijerg=True)) == omega*(gamma(mu)*gamma(mu + 1) - gamma(mu + S.Half)**2)/(gamma(mu)*gamma(mu + 1))
+    assert Density(X) == (Lambda(_x, 2*_x**(2*mu - 1)*mu**mu*omega**(-mu)
+                                *exp(-_x**2*mu/omega)/gamma(mu)))
+    assert simplify(E(X, meijerg=True)) == (sqrt(mu)*sqrt(omega)
+           *gamma(mu + S.Half)/gamma(mu + 1))
+    assert simplify(Var(X, meijerg=True)) == (omega*(gamma(mu)*gamma(mu + 1)
+                          - gamma(mu + S.Half)**2)/(gamma(mu)*gamma(mu + 1)))
 
 
 def test_pareto():
@@ -337,7 +352,8 @@ def test_studentt():
     x = Symbol("x")
 
     X = StudentT(nu, symbol=x)
-    assert Density(X) == Lambda(_x, (_x**2/nu + 1)**(-nu/2 - S.Half)*gamma(nu/2 + S.Half)/(sqrt(pi)*sqrt(nu)*gamma(nu/2)))
+    assert Density(X) == (Lambda(_x, (_x**2/nu + 1)**(-nu/2 - S.Half)
+                          *gamma(nu/2 + S.Half)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))))
 
 
 @XFAIL
@@ -348,10 +364,11 @@ def test_triangular():
     x = Symbol("x")
 
     X = Triangular(a,b,c, symbol=x)
-    assert Density(X) == Lambda(_x, Piecewise(((2*_x - 2*a)/((-a + b)*(-a + c)), And(a <= _x, _x < c)),
-                                              (2/(-a + b), _x == c),
-                                              ((-2*_x + 2*b)/((-a + b)*(b - c)), And(_x <= b, c < _x)),
-                                              (0, True)))
+    assert Density(X) == Lambda(_x,
+             Piecewise(((2*_x - 2*a)/((-a + b)*(-a + c)), And(a <= _x, _x < c)),
+                       (2/(-a + b), _x == c),
+                       ((-2*_x + 2*b)/((-a + b)*(b - c)), And(_x <= b, c < _x)),
+                       (0, True)))
 
 
 def test_uniform():
@@ -377,7 +394,8 @@ def test_uniformsum():
     _k = Symbol("k")
 
     X = UniformSum(n, symbol=x)
-    assert Density(X) == Lambda(_x, Sum((-1)**_k*(-_k + _x)**(n - 1)*binomial(n, _k), (_k, 0, floor(_x)))/factorial(n - 1))
+    assert Density(X) == (Lambda(_x, Sum((-1)**_k*(-_k + _x)**(n - 1)
+                         *binomial(n, _k), (_k, 0, floor(_x)))/factorial(n - 1)))
 
 
 def test_weibull():
@@ -443,16 +461,16 @@ def test_input_value_assertions():
 def test_unevaluated():
     x = Symbol('x')
     X = Normal(0,1, symbol=x)
-    assert E(X, evaluate=False) == \
-            Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo))
+    assert E(X, evaluate=False) == (
+            Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo)))
 
-    assert E(X+1, evaluate=False) == \
-            Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo)) + 1
+    assert E(X+1, evaluate=False) == (
+            Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo)) + 1)
 
-    assert P(X>0, evaluate=False) == \
-            Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)), (x, 0, oo))
+    assert P(X>0, evaluate=False) == (
+            Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)), (x, 0, oo)))
 
-    assert P(X>0, X**2<1, evaluate=False) == \
+    assert P(X>0, X**2<1, evaluate=False) == (
             Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)*
             Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)),
-                (x, -1, 1))), (x, 0, 1))
+                (x, -1, 1))), (x, 0, 1)))
