@@ -1,13 +1,19 @@
 """Tests for noncommutative symbols and expressions."""
 
 from sympy import (
+    cancel,
     collect,
+    combsimp,
     conjugate,
     expand,
     factor,
+    posify,
     radsimp,
+    ratsimp,
+    rcollect,
     simplify,
     symbols,
+    trigsimp,
     I,
 )
 from sympy.abc import x, y, z
@@ -18,9 +24,18 @@ X, Y = symbols("X Y", commutative=False, real=True)
 Z = X + I*Y
 
 @XFAIL
+def test_cancel():
+    assert cancel(A*B - B*A) == A*B - B*A
+
+@XFAIL
 def test_collect():
-    assert collect(A*B - B*A, A) == B
-    assert collect(A*B - B*A, B) == -A
+    assert collect(A*B - B*A, A) == A*B - B*A
+    assert collect(A*B - B*A, B) == A*B - B*A
+    assert collect(A*B - B*A, x) == A*B - B*A
+
+@XFAIL
+def test_combsimp():
+    assert combsimp(A*B - B*A) == A*B - B*A
 
 def test_complex():
     assert Z.conjugate() == X - I*Y
@@ -44,8 +59,25 @@ def test_expand():
 def test_factor():
     assert factor(A*B - B*A) == A*B - B*A
 
+@XFAIL
+def test_posify():
+    assert posify(A)[0].is_commutative == False
+    for q in (A*B/A, (A*B/A)**2, (A*B)**2, A*B - B*A):
+        p = posify(q)
+        assert p[0].subs(p[1]) == q
+
 def test_radsimp():
     assert radsimp(A*B - B*A) == A*B - B*A
+
+@XFAIL
+def test_ratsimp():
+    assert ratsimp(A*B - B*A) == A*B - B*A
+
+@XFAIL
+def test_rcollect():
+    assert rcollect(A*B - B*A, A) == A*B - B*A
+    assert rcollect(A*B - B*A, B) == A*B - B*A
+    assert rcollect(A*B - B*A, x) == A*B - B*A
 
 def test_simplify():
     assert simplify(A*B - B*A) == A*B - B*A
@@ -57,3 +89,7 @@ def test_subs():
     assert (x*A*x*B).subs(x**2*A, C) == C*B
     assert (A**2*B**2).subs(A*B**2, C) == A*C
     assert (A*A*A + A*B*A).subs(A*A*A, C) == C + A*B*A
+
+@XFAIL
+def test_trigsimp():
+    assert trigsimp(A*sin(x)**2 + A*cos(x)**2) == A
