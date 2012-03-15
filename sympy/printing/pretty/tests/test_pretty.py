@@ -3630,4 +3630,4 @@ def test_RandomDomain():
 
     A = Exponential(1, symbol=Symbol('a'))
     B = Exponential(1, symbol=Symbol('b'))
-    assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ b ∧ 0 ≤ a'
+    assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ a ∧ 0 ≤ b'

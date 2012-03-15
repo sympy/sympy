@@ -30,7 +30,7 @@ class Symbol(AtomicExpr, Boolean):
 
     is_comparable = False
 
-    __slots__ = ['is_commutative', 'name']
+    __slots__ = ['name']
 
     is_Symbol = True
 
@@ -48,7 +48,7 @@ class Symbol(AtomicExpr, Boolean):
         """
         return True
 
-    def __new__(cls, name, commutative=True, **assumptions):
+    def __new__(cls, name, **assumptions):
         """Symbols are identified by name and assumptions::
 
         >>> from sympy import Symbol
@@ -66,13 +66,13 @@ class Symbol(AtomicExpr, Boolean):
                     "\nor symbols(..., cls=Dummy) to create dummy symbols.",
                     SymPyDeprecationWarning)
             if assumptions.pop('dummy'):
-                return Dummy(name, commutative, **assumptions)
-        return Symbol.__xnew_cached_(cls, name, commutative, **assumptions)
+                return Dummy(name, **assumptions)
+        assumptions.setdefault('commutative', True)
+        return Symbol.__xnew_cached_(cls, name, **assumptions)
 
-    def __new_stage2__(cls, name, commutative=True, **assumptions):
+    def __new_stage2__(cls, name, **assumptions):
         assert isinstance(name, str),repr(type(name))
         obj = Expr.__new__(cls, **assumptions)
-        obj.is_commutative = commutative
         obj.name = name
         return obj
 
@@ -80,19 +80,17 @@ class Symbol(AtomicExpr, Boolean):
     __xnew_cached_ = staticmethod(cacheit(__new_stage2__))   # symbols are always cached
 
     def __getnewargs__(self):
-        return (self.name, self.is_commutative)
+        return (self.name,)
 
     def _hashable_content(self):
-        return (self.is_commutative, self.name)
+        return (self.name,)
 
     @cacheit
     def sort_key(self, order=None):
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
     def as_dummy(self):
-        assumptions = self.assumptions0.copy()
-        assumptions.pop('commutative', None)
-        return Dummy(self.name, self.is_commutative, **assumptions)
+        return Dummy(self.name, **self.assumptions0)
 
     def __call__(self, *args):
         from function import Function
@@ -145,11 +143,12 @@ class Dummy(Symbol):
 
     is_Dummy = True
 
-    def __new__(cls, name=None, commutative=True, **assumptions):
+    def __new__(cls, name=None, **assumptions):
         if name is None:
             name = str(Dummy._count)
 
-        obj = Symbol.__xnew__(cls, name, commutative=commutative, **assumptions)
+        assumptions.setdefault('commutative', True)
+        obj = Symbol.__xnew__(cls, name, **assumptions)
 
         Dummy._count += 1
         obj.dummy_index = Dummy._count
@@ -169,6 +168,7 @@ class Wild(Symbol):
     def __new__(cls, name, exclude=(), properties=(), **assumptions):
         exclude = tuple([sympify(x) for x in exclude])
         properties = tuple(properties)
+        assumptions.setdefault('commutative', True)
         return Wild.__xnew__(cls, name, exclude, properties, **assumptions)
 
     def __getnewargs__(self):

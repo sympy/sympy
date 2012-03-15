@@ -549,13 +549,14 @@ class LatexPrinter(Printer):
         return r"\neg %s" % self._print(e.args[0])
 
     def _print_And(self, e):
-        arg = e.args[0]
+        args = sorted(e.args, key=default_sort_key)
+        arg = args[0]
         if arg.is_Boolean and not arg.is_Not:
-            tex = r"\left(%s\right)" % self._print(e.args[0]);
+            tex = r"\left(%s\right)" % self._print(arg)
         else:
-            tex = r"%s" % self._print(e.args[0]);
+            tex = r"%s" % self._print(arg)
 
-        for arg in e.args[1:]:
+        for arg in args[1:]:
             if arg.is_Boolean and not arg.is_Not:
                 tex += r" \wedge \left(%s\right)" % (self._print(arg))
             else:
@@ -564,13 +565,14 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Or(self, e):
-        arg = e.args[0]
+        args = sorted(e.args, key=default_sort_key)
+        arg = args[0]
         if arg.is_Boolean and not arg.is_Not:
-            tex = r"\left(%s\right)" % self._print(e.args[0]);
+            tex = r"\left(%s\right)" % self._print(arg)
         else:
-            tex = r"%s" % self._print(e.args[0]);
+            tex = r"%s" % self._print(arg)
 
-        for arg in e.args[1:]:
+        for arg in args[1:]:
             if arg.is_Boolean and not arg.is_Not:
                 tex += r" \vee \left(%s\right)" % (self._print(arg))
             else:
@@ -1017,7 +1019,7 @@ class LatexPrinter(Printer):
 
     def _print_RandomDomain(self, d):
         try:
-            return 'Domain: '+self._print(d.as_boolean())
+            return 'Domain: '+ self._print(d.as_boolean())
         except:
             try:
                 return ('Domain: ' + self._print(d.symbols) + ' in ' +

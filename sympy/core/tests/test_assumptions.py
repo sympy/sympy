@@ -293,6 +293,18 @@ def test_I():
     assert z.is_prime == False
     assert z.is_composite == False
 
+def test_symbol_real():
+    # issue 749
+    a = Symbol('a', real=False)
+
+    assert a.is_real        == False
+    assert a.is_integer     == False
+    assert a.is_negative    == False
+    assert a.is_positive    == False
+    assert a.is_nonnegative == False
+    assert a.is_nonpositive == False
+    assert a.is_zero        == False
+
 def test_symbol_zero():
     x = Symbol('x',zero=True)
     assert x.is_positive == False
@@ -377,6 +389,17 @@ def test_prime_symbol():
     assert x.is_nonpositive == None
     assert x.is_nonnegative == None
 
+def test_symbol_noncommutative():
+    x = Symbol('x', commutative=True)
+    assert x.is_complex is None
+
+    x = Symbol('x', commutative=False)
+    assert x.is_integer is False
+    assert x.is_rational is False
+    assert x.is_irrational is False
+    assert x.is_real is False
+    assert x.is_complex is False
+
 def test_other_symbol():
     x = Symbol('x', integer=True)
     assert x.is_integer == True
@@ -399,10 +422,20 @@ def test_other_symbol():
     assert x.is_even == False
     assert x.is_integer == True
 
+    x = Symbol('x', odd=False)
+    assert x.is_odd == False
+    assert x.is_even == None
+    assert x.is_integer == None
+
     x = Symbol('x', even=True)
     assert x.is_even == True
     assert x.is_odd == False
     assert x.is_integer == True
+
+    x = Symbol('x', even=False)
+    assert x.is_even == False
+    assert x.is_odd == None
+    assert x.is_integer == None
 
     x = Symbol('x', integer=True, nonnegative=True)
     assert x.is_integer == True
@@ -413,34 +446,6 @@ def test_other_symbol():
     assert x.is_nonpositive == True
 
     raises(AttributeError, "x.is_real = False")
-
-
-def test_other_symbol_fail1():
-    # XXX x.is_even currently will be True
-    x = Symbol('x', odd=False)
-    assert x.is_odd == False
-    assert x.is_even == None
-    assert x.is_integer == None
-
-def test_other_symbol_fail2():
-    # XXX x.is_odd currently will be True
-    x = Symbol('x', even=False)
-    assert x.is_even == False
-    assert x.is_odd == None
-    assert x.is_integer == None
-
-
-def test_issue749():
-    a = Symbol('a', real=False)
-
-    assert a.is_real        == False
-    assert a.is_integer     == False
-    assert a.is_negative    == False
-    assert a.is_positive    == False
-    assert a.is_nonnegative == False
-    assert a.is_nonpositive == False
-    assert a.is_zero        == False
-
 
 def test_issue726():
     """catch: hash instability"""
@@ -468,7 +473,6 @@ def test_hash_vs_typeinfo():
     assert hash(x1) == hash(x2)
     assert x1 == x2
 
-
 def test_hash_vs_typeinfo_2():
     """different typeinfo should mean !eq"""
     # the following two are semantically different
@@ -477,7 +481,6 @@ def test_hash_vs_typeinfo_2():
 
     assert x != x1
     assert hash(x) != hash(x1) # This might fail with very low probability
-
 
 def test_hash_vs_eq():
     """catch: different hash for equal objects"""
@@ -549,3 +552,7 @@ def test_special_assumptions():
     assert (x*z).is_zero == (0*S.Infinity).is_zero
     b = Symbol('b', bounded=None)
     assert (b*z).is_zero is None
+
+def test_inconsistent():
+    # cf. issues 2696 and 2446
+    raises(AssertionError, "Symbol('x', real=True, commutative=False)")
