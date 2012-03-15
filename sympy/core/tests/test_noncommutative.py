@@ -20,8 +20,6 @@ from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
 
 A, B, C = symbols("A B C", commutative=False)
-X, Y = symbols("X Y", commutative=False, real=True)
-Z = X + I*Y
 
 @XFAIL
 def test_cancel():
@@ -37,7 +35,10 @@ def test_collect():
 def test_combsimp():
     assert combsimp(A*B - B*A) == A*B - B*A
 
+@XFAIL
 def test_complex():
+    X, Y = symbols("X Y", commutative=False, real=True)
+    Z = X + I*Y
     assert Z.conjugate() == X - I*Y
     assert (Z*Z.conjugate()).expand() == X**2 + Y**2 + I*Y*X - I*X*Y
 
@@ -59,7 +60,6 @@ def test_expand():
 def test_factor():
     assert factor(A*B - B*A) == A*B - B*A
 
-@XFAIL
 def test_posify():
     assert posify(A)[0].is_commutative == False
     for q in (A*B/A, (A*B/A)**2, (A*B)**2, A*B - B*A):
