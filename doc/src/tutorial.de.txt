@@ -209,14 +209,14 @@ Variablen ausdrücklich deklariert werden::
     >>> y = Symbol('y')
 
 Links steht eine normale Python-Variable, der ein SymPy-Symbol-Objekt
-zugewiesen wird.  Predefined symbols (including those for symbols with
-Greek names) are available for import from abc:
+zugewiesen wird.  Vordefiniert Symbole (inklusiv Symbole mit
+griechischen Namen) sind von Import von abc verfügbar:
 
     >>> from sympy.abc import x, theta
 
-Symbols can also be created with the ``symbols`` or ``var`` functions, the
-latter automatically adding the created symbols to the namespace, and both
-accepting a range notation:
+Symbole können auch mit den ``symbols`` oder ``var`` Funktionen
+erstellt werden.  Die letztere fügt automatisch die Symbole ins
+Namespace, und beide Funktionen nehmen eine Reihe Notation:
 
     >>> from sympy import symbols, var
     >>> a, b, c = symbols('a,b,c')
@@ -475,12 +475,12 @@ Auch uneigentliche Integrale werden unterstützt::
 Komplexe Zahlen
 ---------------
 
-Besides the imaginary unit, I, which is imaginary, symbols can be created with
-attributes (e.g. real, positive, complex, etc...) and this will affect how
-they behave::
+Mit Ausnahme der imaginären Einheit, I, die rein imaginär ist, können
+Symbole mit Attributen (z.B. reale, positive, komplex, usw.) erstellt
+werden, und dies wird Auswirkungen darauf, wie sie sich verhalten::
 
     >>> from sympy import Symbol, exp, I
-    >>> x = Symbol("x") # a plain x with no attributes
+    >>> x = Symbol("x") # einen einzigen x ohne Attribut
     >>> exp(I*x).expand()
      I*x
     e
@@ -701,7 +701,7 @@ Matrizen werden als Instanzen der Matrix-Klasse erzeugt::
     [    ]
     [0  1]
 
-sie können auch Symbole enthalten::
+Sie können auch Symbole enthalten::
 
     >>> x = Symbol('x')
     >>> y = Symbol('y')
@@ -746,11 +746,11 @@ Wenn der Musterabgleich fehlschlägt, wird ``None`` zurückgegeben::
 ausschließen:
 
     >>> p = Wild('p', exclude=[1,x])
-    >>> print (x+1).match(x+p) # 1 is excluded
+    >>> print (x+1).match(x+p) # 1 ist ausgeschlossen
     None
-    >>> print (x+1).match(p+1) # x is excluded
+    >>> print (x+1).match(p+1) # x ist ausgeschlossen
     None
-    >>> print (x+1).match(x+2+p) # -1 is not excluded
+    >>> print (x+1).match(x+2+p) # -1 ist nicht ausgeschlossen
     {p_: -1}
 
 .. _printing-tutorial:
