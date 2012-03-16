@@ -371,7 +371,7 @@ def coverage(module_path, verbose=False):
     total_doctests = c_doctests + f_doctests
     total_members = classes + functions
     if total_members: score = 100 * float(total_doctests) / (total_members)
-    else: score = 0
+    else: score = 100
     score = int(score)
 
     # Sort functions/classes by line number
@@ -410,6 +410,7 @@ def go(sympy_top, file, verbose=False, exact=True):
 
 
 if __name__ == "__main__":
+
 
     bintest_dir = os.path.abspath(os.path.dirname(__file__))   # bin/cover...
     sympy_top  = os.path.split(bintest_dir)[0]      # ../
