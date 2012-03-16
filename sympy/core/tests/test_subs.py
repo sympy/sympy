@@ -474,11 +474,11 @@ def test_Piecewise_subs():
     p = Piecewise((g, x < -1), (g(x), x <= 1))
     assert p.subs(g, h) == Piecewise((h, x < -1), (h(x), x <= 1))
 
-def test_parallel_subs():
+def test_simultaneous_subs():
     from sympy.abc import x, y
     reps = {x: 0, y: 0}
     assert (x/y).subs(reps) != (y/x).subs(reps)
-    assert (x/y).subs(reps, parallel=True) == (y/x).subs(reps, parallel=True)
+    assert (x/y).subs(reps, simultaneous=True) == (y/x).subs(reps, simultaneous=True)
     reps = reps.items()
     assert (x/y).subs(reps) != (y/x).subs(reps)
-    assert (x/y).subs(reps, parallel=True) == (y/x).subs(reps, parallel=True)
+    assert (x/y).subs(reps, simultaneous=True) == (y/x).subs(reps, simultaneous=True)

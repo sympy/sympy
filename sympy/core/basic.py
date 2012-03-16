@@ -757,7 +757,7 @@ class Basic(PicklableWithSlots):
                resulting sorted list is then processed as an iterable container
                (see previous).
 
-        If the keyword ``parallel`` is True, the subexpressions will not be
+        If the keyword ``simultaneous`` is True, the subexpressions will not be
         evaluated until all the substitutions have been made.
 
         Examples
@@ -786,11 +786,11 @@ class Basic(PicklableWithSlots):
         x**4 + y
 
         To delay evaluation until all substitutions have been made,
-        set the keyword ``parallel`` to True:
+        set the keyword ``simultaneous`` to True:
 
         >>> (x/y).subs([(x, 0), (y, 0)])
         0
-        >>> (x/y).subs([(x, 0), (y, 0)], parallel=True)
+        >>> (x/y).subs([(x, 0), (y, 0)], simultaneous=True)
         nan
 
         This has the added feature of not allowing subsequent substitutions
@@ -798,13 +798,13 @@ class Basic(PicklableWithSlots):
 
         >>> ((x + y)/y).subs({x + y: y, y: x + y})
         1
-        >>> ((x + y)/y).subs({x + y: y, y: x + y}, parallel=True)
+        >>> ((x + y)/y).subs({x + y: y, y: x + y}, simultaneous=True)
         y/(x + y)
 
-        When unordered iterables are given they are sorted so a canonical
-        result is obtained, by count_op length, number of arguments and,
-        finally, by the default_sort_key to break any ties. All other
-        iterables are left unsorted
+        In order to obtain a canonical result, unordered iterables are
+        sorted by count_op length, number of arguments and by the
+        default_sort_key to break any ties. All other iterables are left
+        unsorted.
 
         >>> from sympy import sqrt, sin, cos, exp
         >>> from sympy.abc import a, b, c, d, e
@@ -871,7 +871,7 @@ class Basic(PicklableWithSlots):
                 sequence = sorted([(k, v) for (k, v) in sequence.iteritems()],
                                   key=default_sort_key)
 
-        if kwargs.pop('parallel', False): # XXX should this be the default for dict subs?
+        if kwargs.pop('simultaneous', False): # XXX should this be the default for dict subs?
             reps = {}
             rv = self
             for old, new in sequence:
