@@ -317,7 +317,7 @@ def test_matrixify():
     assert matrixify(n+m) == n+m
     assert matrixify(Mul(A,B)) == MatMul(A,B)
 
-def test_dense_converstion():
+def test_dense_conversion():
     X = MatrixSymbol('X', 2,2)
     x00,x01,x10,x11 = symbols('X_00 X_01 X_10 X_11')
     assert ImmutableMatrix(X) == ImmutableMatrix([[x00, x01], [x10, x11]])
