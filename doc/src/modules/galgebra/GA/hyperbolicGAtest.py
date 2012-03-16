@@ -1,7 +1,10 @@
         print 'Example: non-euclidian distance calculation'
 
         metric = '0 # #,# 0 #,# # 1'
-        MV.setup('X Y e',metric)
+        X,Y,e = MV.setup('X Y e',metric)
+        XdotY = sympy.Symbol('(X.Y)')
+        Xdote = sympy.Symbol('(X.e)')
+        Ydote = sympy.Symbol('(Y.e)')
         MV.set_str_format(1)
         L = X^Y^e
         B = L*e
@@ -12,7 +15,7 @@
         print 'B*e*B.rev() =',BeBr
         print 'B^2 =',Bsq
         print 'L^2 =',(L*L)()
-        make_symbols('s c Binv M S C alpha')
+        s,c,Binv,M,S,C,alpha = symbols('s c Binv M S C alpha')
         Bhat = Binv*B # Normalize translation generator
         R = c+s*Bhat # Rotor R = exp(alpha*Bhat/2)
         print 's = sinh(alpha/2) and c = cosh(alpha/2)'

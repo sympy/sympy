@@ -1,6 +1,6 @@
 from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Function, factorial, factorial2, floor, ceiling, Abs, re, im, conjugate,
-    Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
+    Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum, Product,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg, polar_lift,
     Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan, Min, Max,
     cot, coth, re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
@@ -57,7 +57,7 @@ def test_latex_basic():
     assert latex(x & y & z) == r"x \wedge y \wedge z"
     assert latex(x | y) == r"x \vee y"
     assert latex(x | y | z) == r"x \vee y \vee z"
-    assert latex((x & y) | z) == r"\left(x \wedge y\right) \vee z"
+    assert latex((x & y) | z) == r"z \vee \left(x \wedge y\right)"
     assert latex(Implies(x,y)) == r"x \Rightarrow y"
 
     assert latex(~x, symbol_names={x: "x_i"}) == r"\neg x_i"
@@ -69,7 +69,7 @@ def test_latex_basic():
     assert latex(x | y | z, symbol_names={x: "x_i", y: "y_i", z: "z_i"}) == \
         r"x_i \vee y_i \vee z_i"
     assert latex((x & y) | z, symbol_names={x: "x_i", y: "y_i", z: "z_i"}) ==\
-        r"\left(x_i \wedge y_i\right) \vee z_i"
+        r"z_i \vee \left(x_i \wedge y_i\right)"
     assert latex(Implies(x,y), symbol_names={x: "x_i", y: "y_i"}) == \
         r"x_i \Rightarrow y_i"
 
@@ -262,6 +262,14 @@ def test_latex_sum():
         r"\sum_{x=-2}^{2} x^{2}"
     assert latex(Sum(x**2 + y, (x, -2, 2))) == \
         r"\sum_{x=-2}^{2} \left(x^{2} + y\right)"
+
+def test_latex_product():
+    assert latex(Product(x*y**2, (x, -2, 2), (y, -5, 5))) == \
+        r"\prod_{\substack{-2 \leq x \leq 2\\-5 \leq y \leq 5}} x y^{2}"
+    assert latex(Product(x**2, (x, -2, 2))) == \
+        r"\prod_{x=-2}^{2} x^{2}"
+    assert latex(Product(x**2 + y, (x, -2, 2))) == \
+        r"\prod_{x=-2}^{2} \left(x^{2} + y\right)"
 
 def test_latex_limits():
     assert latex(Limit(x, x, oo)) == r"\lim_{x \to \infty} x"
@@ -467,7 +475,7 @@ def test_latex_RandomDomain():
 
     A = Exponential(1, symbol=Symbol('a'))
     B = Exponential(1, symbol=Symbol('b'))
-    assert latex(pspace(Tuple(A,B)).domain) =="Domain: 0 \leq b \wedge 0 \leq a"
+    assert latex(pspace(Tuple(A,B)).domain) =="Domain: 0 \leq a \wedge 0 \leq b"
 
 def test_integral_transforms():
     x = Symbol("x")

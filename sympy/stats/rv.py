@@ -283,12 +283,9 @@ class ProductDomain(RandomDomain):
     sympy.stats.frv.ProductFiniteDomain
     """
     is_ProductDomain = True
-    def __new__(cls, *domains):
 
-        symbolslist = sumsets([domain.symbols for domain in domains])
-        symbols = frozenset(symbolslist)
-        if len(symbols) != len(symbolslist):
-            raise ValueError("Overlapping Domains")
+    def __new__(cls, *domains):
+        symbols = sumsets([domain.symbols for domain in domains])
 
         # Flatten any product of products
         domains2 = []
@@ -338,16 +335,13 @@ class ProductDomain(RandomDomain):
     def as_boolean(self):
         return And(*[domain.as_boolean() for domain in self.domains])
 
-def is_random(x):
-    return isinstance(x, RandomSymbol)
-
 def random_symbols(expr):
     """
     Returns all RandomSymbols within a SymPy Expression.
     """
     try:
-        return [s for s in expr.free_symbols if is_random(s)]
-    except:
+        return list(expr.atoms(RandomSymbol))
+    except AttributeError:
         return []
 
 def pspace(expr):
@@ -523,11 +517,10 @@ def Density(expr, given=None, **kwargs):
 
     Optionally given a second condition
 
-    This density will take on different forms for different types of probability
-    spaces.
-    Discrete RV's produce Dicts
-    Continuous RV's produce a Tuple with expression representing the PDF and
-    a symbol designating the active variable
+    This density will take on different forms for different types of
+    probability spaces.
+    Discrete variables produce Dicts.
+    Continuous variables produce Lambdas.
 
     Examples
     ========
@@ -543,7 +536,7 @@ def Density(expr, given=None, **kwargs):
     >>> Density(2*D)
     {2: 1/6, 4: 1/6, 6: 1/6, 8: 1/6, 10: 1/6, 12: 1/6}
     >>> Density(X)
-    (x, sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)))
+    Lambda(_x, sqrt(2)*exp(-_x**2/2)/(2*sqrt(pi)))
     """
     if given is not None: # If there is a condition
         # Recompute on new conditional expr
@@ -558,11 +551,10 @@ def CDF(expr, given=None, **kwargs):
 
     optionally given a second condition
 
-    This density will take on different forms for different types of probability
-    spaces.
-    Discrete RV's produce list of tuples.
-    Continuous RV's produce a Tuple with expression representing the PDF and
-    a symbol designating the active variable.
+    This density will take on different forms for different types of
+    probability spaces.
+    Discrete variables produce Dicts.
+    Continuous variables produce Lambdas.
 
     Examples
     ========
@@ -581,7 +573,7 @@ def CDF(expr, given=None, **kwargs):
     {9: 1/4, 12: 1/2, 15: 3/4, 18: 1}
 
     >>> CDF(X)
-    (_z, erf(sqrt(2)*_z/2)/2 + 1/2)
+    Lambda(_z, erf(sqrt(2)*_z/2)/2 + 1/2)
     """
     if given is not None: # If there is a condition
         # Recompute on new conditional expr
@@ -660,9 +652,11 @@ def sample_iter(expr, given=None, numsamples=S.Infinity, **kwargs):
     sample_iter_subs
     """
     # lambdify is much faster but not as robust
-    try:          return sample_iter_lambdify(expr, given, numsamples, **kwargs)
+    try:
+        return sample_iter_lambdify(expr, given, numsamples, **kwargs)
     # use subs when lambdify fails
-    except TypeError: return sample_iter_subs(expr, given, numsamples, **kwargs)
+    except TypeError:
+        return sample_iter_subs(expr, given, numsamples, **kwargs)
 
 def sample_iter_lambdify(expr, given=None, numsamples=S.Infinity, **kwargs):
     """
@@ -760,8 +754,10 @@ def sampling_P(condition, given=None, numsamples=1, evalf=True, **kwargs):
             count_false += 1
 
     result = S(count_true) / numsamples
-    if evalf:   return result.evalf()
-    else:       return result
+    if evalf:
+        return result.evalf()
+    else:
+        return result
 
 def sampling_E(condition, given=None, numsamples=1, evalf=True, **kwargs):
     """
@@ -776,8 +772,10 @@ def sampling_E(condition, given=None, numsamples=1, evalf=True, **kwargs):
     samples = sample_iter(condition, given, numsamples=numsamples, **kwargs)
 
     result = Add(*list(samples)) / numsamples
-    if evalf:   return result.evalf()
-    else:       return result
+    if evalf:
+        return result.evalf()
+    else:
+        return result
 
 def dependent(a, b):
     """

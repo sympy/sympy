@@ -107,6 +107,9 @@ class Pow(Expr):
 
     def _eval_power(self, other):
         b, e = self.as_base_exp()
+        ##could process e.is_integer here; for now it's in powdenest
+        #if e.is_integer:
+        #    return Pow(b, e * other)
         if other.is_integer:
             return Pow(b, e * other)
         if b.is_nonnegative and (e.is_real or other.is_real):
@@ -267,7 +270,7 @@ class Pow(Expr):
         """
 
         b, e = self.args
-        if b.is_Rational and b.p == 1 and b is not S.Infinity:
+        if b.is_Rational and b.p == 1:
             return Integer(b.q), -e
         return b, e
 
@@ -343,9 +346,9 @@ class Pow(Expr):
                         return x.is_nonnegative
                     return x.is_polar
                 sifted = sift(b.args, pred)
-                nonneg = sifted.get(True, [])
-                other = sifted.get(None, [])
-                neg = sifted.get(False, [])
+                nonneg = sifted[True]
+                other = sifted[None]
+                neg = sifted[False]
 
                 # make sure the Number gets pulled out
                 if neg and neg[0].is_Number and neg[0] is not S.NegativeOne:
@@ -361,12 +364,23 @@ class Pow(Expr):
                 nonneg += [-n for n in neg]
 
             if nonneg: # then there's a new expression to return
-                other = [Pow(Mul(*other), e)]
+                d = sift(nonneg, lambda x: x.is_commutative is True)
+                c = d[True]
+                nc = d[False]
+                if not e.is_Integer:
+                    other.extend(nc)
+                    nc = []
+                elif len(nc) == 1:
+                    c.extend(nc)
+                    nc = []
+                else:
+                    nc = [Mul._from_args(nc)]*e
+                other = [Pow(Mul(*other), e)] + nc
                 if deep:
                     return Mul(*([Pow(b.expand(deep=deep, **hints), e)\
-                    for b in nonneg] + other))
+                    for b in c] + other))
                 else:
-                    return Mul(*([Pow(b, e) for b in nonneg] + other))
+                    return Mul(*([Pow(b, e) for b in c] + other))
         return Pow(b, e)
 
     def _eval_expand_mul(self, deep=True, **hints):
@@ -544,6 +558,8 @@ class Pow(Expr):
         if self.exp.is_Integer:
             exp = self.exp
             re, im = self.base.as_real_imag(deep=deep)
+            if re.func == C.re or im.func == C.im:
+                return self, S.Zero
             a, b = symbols('a b', cls=Dummy)
             if exp >= 0:
                 if re.is_Number and im.is_Number:
@@ -579,7 +595,8 @@ class Pow(Expr):
             #       x being imaginary there are actually q roots, but
             #       only a single one is returned from here.
             re, im = self.base.as_real_imag(deep=deep)
-
+            if re.func == C.re or im.func == C.im:
+                return self, S.Zero
             r = Pow(Pow(re, 2) + Pow(im, 2), S.Half)
             t = C.atan2(im, re)
 
@@ -590,8 +607,8 @@ class Pow(Expr):
 
             if deep:
                 hints['complex'] = False
-                return (C.re(self.expand(deep, complex=False)),
-                C.im(self. expand(deep, **hints)))
+                return (C.re(self.expand(deep, **hints)),
+                        C.im(self.expand(deep, **hints)))
             else:
                 return (C.re(self), C.im(self))
 
@@ -641,6 +658,18 @@ class Pow(Expr):
                    self.exp >= 0
         else:
             return True
+
+    def _eval_is_rational(self):
+        p = self.func(*self.as_base_exp()) # in case it's unevaluated
+        if not p.is_Pow:
+            return p.is_rational
+        b, e = p.as_base_exp()
+        if e.is_Rational and b.is_Rational:
+            # we didn't check that e is not an Integer
+            # because Rational**Integer autosimplifies
+            return False
+        if e.is_integer:
+            return b.is_rational
 
     def _eval_is_rational_function(self, syms):
         if self.exp.has(*syms):

@@ -49,6 +49,13 @@ class ExpBase(Function):
             return S.One, exp(-self.args[0])
         return self, S.One
 
+    @property
+    def exp(self):
+        """
+        Returns the exponent of the function.
+        """
+        return self.args[0]
+
     def as_base_exp(self):
         """
         Returns the 2-tuple (base, exponent).
@@ -67,6 +74,15 @@ class ExpBase(Function):
                 return False
         if arg.is_bounded:
             return True
+
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
+
     def _eval_is_zero(self):
         return (self.args[0] is S.NegativeInfinity)
 
@@ -178,7 +194,7 @@ class exp(ExpBase):
                 return S.NaN
 
             coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
-            if coeff is not None:
+            if coeff:
                 if (2*coeff).is_integer:
                     if coeff.is_even:
                         return S.One
@@ -232,13 +248,6 @@ class exp(ExpBase):
         Returns the base of the exponential function.
         """
         return S.Exp1
-
-    @property
-    def exp(self):
-        """
-        Returns the exponent of the function.
-        """
-        return self.args[0]
 
     @staticmethod
     @cacheit
@@ -475,7 +484,7 @@ class log(Function):
         elif arg.func is exp and arg.args[0].is_real:
             return arg.args[0]
         elif arg.func is exp_polar:
-            return unpolarify(arg.args[0])
+            return unpolarify(arg.exp)
         #don't autoexpand Pow or Mul (see the issue 252):
         elif not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -582,6 +591,14 @@ class log(Function):
     def _eval_expand_complex(self, deep=True, **hints):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)
         return re_part + im_part*S.ImaginaryUnit
+
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
 
     def _eval_is_real(self):
         return self.args[0].is_positive

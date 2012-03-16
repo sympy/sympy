@@ -278,7 +278,7 @@ class AssumeMixin(object):
         >>> from sympy import Symbol
         >>> from sympy.abc import x
         >>> x.assumptions0
-        {}
+        {'commutative': True}
         >>> x = Symbol("x", positive=True)
         >>> x.assumptions0
         {'commutative': True, 'complex': True, 'imaginary': False,
@@ -387,7 +387,7 @@ class AssumeMixin(object):
 
         # For positive/negative try to ask evalf
         if k in _real_ordering and self.is_comparable:
-            e = self.evalf()
+            e = self.evalf(1)
 
             if e.is_Number:
                 a = _real_cmp0_table[k][cmp(e, 0)]

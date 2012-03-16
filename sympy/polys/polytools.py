@@ -5248,7 +5248,14 @@ def factor(f, *gens, **args):
     (x + 2)**20000000*(x**2 + 1)
 
     """
-    return _generic_factor(f, gens, args, method='factor')
+    try:
+        return _generic_factor(f, gens, args, method='factor')
+    except PolynomialError, msg:
+        if not f.is_commutative:
+            from sympy.core.exprtools import factor_nc
+            return factor_nc(f)
+        else:
+            raise PolynomialError(msg)
 
 def intervals(F, all=False, eps=None, inf=None, sup=None, strict=False, fast=False, sqf=False):
     """
@@ -5479,9 +5486,6 @@ def cancel(f, *gens, **args):
         else:
             p, q = f.as_numer_denom()
 
-            # XXX: remove this when issue #281 is fixed
-            if p.is_zero or q.is_zero:
-                return f
     else:
         p, q = f
 

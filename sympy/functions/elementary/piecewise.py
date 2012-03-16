@@ -1,5 +1,4 @@
-from sympy.core import Add, Basic, Expr, Function, S, sympify
-from sympy.core.containers import Tuple
+from sympy.core import Add, Basic, Expr, Function, S, sympify, Tuple
 from sympy.core.relational import Equality, Relational
 from sympy.logic.boolalg import Boolean
 

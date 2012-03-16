@@ -819,22 +819,48 @@ def test_as_coeff_exponent():
     assert fx.as_coeff_exponent(f(x)) == (fx ,0)
 
 def test_extractions():
-    n = Symbol("n", integer=True)
     assert ((x*y)**3).extract_multiplicatively(x**2 * y) == x*y**2
     assert ((x*y)**3).extract_multiplicatively(x**4 * y) == None
     assert (2*x).extract_multiplicatively(2) == x
     assert (2*x).extract_multiplicatively(3) == None
     assert (2*x).extract_multiplicatively(-1) == None
-    assert (Rational(1,2)*x).extract_multiplicatively(3) == x/6
+    assert (Rational(1, 2)*x).extract_multiplicatively(3) == x/6
     assert (sqrt(x)).extract_multiplicatively(x) == None
-    assert (sqrt(x)).extract_multiplicatively(1/x) == sqrt(x)**3
+    assert (sqrt(x)).extract_multiplicatively(1/x) == None
 
     assert ((x*y)**3).extract_additively(1) == None
-    assert (x+1).extract_additively(x) == 1
-    assert (x+1).extract_additively(2*x) == None
-    assert (x+1).extract_additively(-x) == 1+2*x
-    assert (-x+1).extract_additively(2*x) == 1-3*x
+    assert (x + 1).extract_additively(x) == 1
+    assert (x + 1).extract_additively(2*x) == None
+    assert (x + 1).extract_additively(-x) == None
+    assert (-x + 1).extract_additively(2*x) == None
+    assert (2*x + 3).extract_additively(x) == x + 3
+    assert (2*x + 3).extract_additively(2) == 2*x + 1
+    assert (2*x + 3).extract_additively(3) == 2*x
+    assert (2*x + 3).extract_additively(-2) == None
+    assert (2*x + 3).extract_additively(3*x) == None
+    assert (2*x + 3).extract_additively(2*x) == 3
+    assert x.extract_additively(0) == x
+    assert S(2).extract_additively(x) is None
+    assert S(2.).extract_additively(2) == S.Zero
+    assert S(2*x + 3).extract_additively(x + 1) == x + 2
+    assert S(2*x + 3).extract_additively(y + 1) is None
+    assert S(2*x - 3).extract_additively(x + 1) is None
+    assert S(2*x - 3).extract_additively(y + z) is None
+    assert ((a + 1)*x*4 + y).extract_additively(x).expand() == \
+        4*a*x + 3*x + y
+    assert ((a + 1)*x*4 + 3*y).extract_additively(x + 2*y).expand() == \
+        4*a*x + 3*x + y
+    assert (y*(x + 1)).extract_additively(x + 1) is None
+    assert ((y + 1)*(x + 1) + 3).extract_additively(x + 1) == \
+        y*(x + 1) + 3
+    assert ((x + y)*(x + 1) + x + y + 3).extract_additively(x + y) == \
+        x*(x + y) + 3
+    assert (x + y + 2*((x + y)*(x + 1)) + 3).extract_additively((x + y)*(x + 1)) == \
+        x + y + (x + 1)*(x + y) + 3
+    assert ((y + 1)*(x + 2*y + 1) + 3).extract_additively(y + 1) == \
+        (x + 2*y)*(y + 1) + 3
 
+    n = Symbol("n", integer=True)
     assert (Integer(-3)).could_extract_minus_sign() == True
     assert (-n*x+x).could_extract_minus_sign() != (n*x-x).could_extract_minus_sign()
     assert (x-y).could_extract_minus_sign() != (-x+y).could_extract_minus_sign()
@@ -856,19 +882,19 @@ def test_extractions():
 
 def test_coeff():
     assert (x+1).coeff(x+1) == 1
-    assert (3*x).coeff(0) == None
+    assert (3*x).coeff(0) == 0
     assert (z*(1+x)*x**2).coeff(1+x) == z*x**2
     assert (1+2*x*x**(1+x)).coeff(x*x**(1+x)) == 2
     assert (1+2*x**(y+z)).coeff(x**(y+z)) == 2
-    assert (3+2*x+4*x**2).coeff(1) == None
-    assert (3+2*x+4*x**2).coeff(-1) == None
+    assert (3+2*x+4*x**2).coeff(1) == 0
+    assert (3+2*x+4*x**2).coeff(-1) == 0
     assert (3+2*x+4*x**2).coeff(x) == 2
     assert (3+2*x+4*x**2).coeff(x**2) == 4
-    assert (3+2*x+4*x**2).coeff(x**3) == None
+    assert (3+2*x+4*x**2).coeff(x**3) == 0
 
     assert (-x/8 + x*y).coeff(x) == -S(1)/8 + y
     assert (-x/8 + x*y).coeff(-x) == S(1)/8
-    assert (4*x).coeff(2*x) == None
+    assert (4*x).coeff(2*x) == 0
     assert (2*x).coeff(2*x) == 1
     assert (-oo*x).coeff(x*oo) == -1
 
@@ -878,8 +904,8 @@ def test_coeff():
     assert (n1*n2 + x*n1).coeff(n1) == 1 # 1*n1*(n2+x)
     assert (n2*n1 + x*n1).coeff(n1) == n2 + x
     assert (n2*n1 + x*n1**2).coeff(n1) == n2
-    assert (n1**x).coeff(n1) == None
-    assert (n1*n2 + n2*n1).coeff(n1) == None
+    assert (n1**x).coeff(n1) == 0
+    assert (n1*n2 + n2*n1).coeff(n1) == 0
     assert (2*(n1+n2)*n2).coeff(n1+n2, right=1) == n2
     assert (2*(n1+n2)*n2).coeff(n1+n2, right=0) == 2
 
@@ -889,33 +915,39 @@ def test_coeff():
     expr = z*(x+y)**2
     expr2 = z*(x+y)**2 + z*(2*x + 2*y)**2
     assert expr.coeff(z) == (x+y)**2
-    assert expr.coeff(x+y) == None
+    assert expr.coeff(x+y) == 0
     assert expr2.coeff(z) == (x+y)**2 + (2*x + 2*y)**2
 
     assert (x + y + 3*z).coeff(1) == x + y
     assert (-x + 2*y).coeff(-1) == x
     assert (x - 2*y).coeff(-1) == 2*y
-    assert (3 + 2*x + 4*x**2).coeff(1) == None
+    assert (3 + 2*x + 4*x**2).coeff(1) == 0
     assert (-x - 2*y).coeff(2) == -y
     assert (x + sqrt(2)*x).coeff(sqrt(2)) == x
     assert (3 + 2*x + 4*x**2).coeff(x) ==  2
     assert (3 + 2*x + 4*x**2).coeff(x**2) == 4
-    assert (3 + 2*x + 4*x**2).coeff(x**3) == None
-    assert (z*(x + y)**2).coeff((x+y)**2) == z
-    assert (z*(x + y)**2).coeff(x+y) == None
-    assert (2 + 2*x + (x+1)*y).coeff(x+1) == y
+    assert (3 + 2*x + 4*x**2).coeff(x**3) == 0
+    assert (z*(x + y)**2).coeff((x + y)**2) == z
+    assert (z*(x + y)**2).coeff(x + y) == 0
+    assert (2 + 2*x + (x + 1)*y).coeff(x + 1) == y
+
+    assert (x + 2*y + 3).coeff(1) == x
+    assert (x + 2*y + 3).coeff(x, 0) == 2*y + 3
+    assert (x**2 + 2*y + 3*x).coeff(x**2, 0) == 2*y + 3*x
+    assert x.coeff(0, 0) == 0
+    assert x.coeff(x, 0) == 0
 
     n, m, o, l = symbols('n m o l', commutative=False)
     assert n.coeff(n) ==  1
-    assert y.coeff(n) == None
+    assert y.coeff(n) == 0
     assert (3*n).coeff(n) == 3
-    assert (2 + n).coeff(x*m) == None
+    assert (2 + n).coeff(x*m) == 0
     assert (2*x*n*m).coeff(x) == 2*n*m
-    assert (2 + n).coeff(x*m*n + y) == None
-    assert (2*x*n*m).coeff(3*n) == None
+    assert (2 + n).coeff(x*m*n + y) == 0
+    assert (2*x*n*m).coeff(3*n) == 0
     assert (n*m + m*n*m).coeff(n) == 1 + m
     assert (n*m + m*n*m).coeff(n, right=True) == m # = (1 + m)*n*m
-    assert (n*m + m*n).coeff(n) == None
+    assert (n*m + m*n).coeff(n) == 0
     assert (n*m + o*m*n).coeff(m*n) == o
     assert (n*m + o*m*n).coeff(m*n, right=1) == 1
     assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n # = n*m*(n + 1)
@@ -1265,6 +1297,6 @@ def test_equals():
     p = Symbol('p', positive=True)
     assert diff.subs(x, p).equals(0) is True
 
-@XFAIL
-def test_equals_factorial():
-    assert factorial(x + 1).diff(x).equals(((x + 1)*factorial(x)).diff(x))
+def test_random():
+    from sympy import posify
+    assert posify(x)[0]._random() is not None

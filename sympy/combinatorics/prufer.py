@@ -325,8 +325,7 @@ class Prufer(Basic):
         Prufer([0, 0])
 
         """
-        n = int_tested(n)
-        rank = int_tested(rank)
+        n, rank = int_tested(n, rank)
         L = defaultdict(int)
         for i in xrange(n - 3, -1, -1):
             L[i] = rank % n

@@ -4,7 +4,8 @@ from sympy.utilities.iterables import (postorder_traversal, preorder_traversal,
     dict_merge, prefixes, postfixes, sift, topological_sort, rotate_left,
     rotate_right, multiset_partitions, partitions, binary_partitions,
     generate_bell, generate_involutions, generate_derangements,
-    unrestricted_necklace, generate_oriented_forest, unflatten)
+    unrestricted_necklace, generate_oriented_forest, unflatten,
+    common_prefix, common_suffix)
 
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise
@@ -322,3 +323,17 @@ def test_unflatten():
     assert unflatten(r, 5) == [tuple(r[:5]), tuple(r[5:])]
     raises(ValueError, "unflatten(range(10), 3)")
     raises(ValueError, "unflatten(range(10), -2)")
+
+def test_common_prefix_suffix():
+    assert common_prefix([], [1]) == []
+    assert common_prefix(range(3)) == [0, 1, 2]
+    assert common_prefix(range(3), range(4)) == [0, 1, 2]
+    assert common_prefix([1, 2, 3], [1, 2, 5]) == [1, 2]
+    assert common_prefix([1, 2, 3], [1, 3, 5]) == [1]
+
+    assert common_suffix([], [1]) == []
+    assert common_suffix(range(3)) == [0, 1, 2]
+    assert common_suffix(range(3), range(3)) == [0, 1, 2]
+    assert common_suffix(range(3), range(4)) == []
+    assert common_suffix([1, 2, 3], [9, 2, 3]) == [2, 3]
+    assert common_suffix([1, 2, 3], [9, 7, 3]) == [3]

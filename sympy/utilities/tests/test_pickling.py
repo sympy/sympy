@@ -79,9 +79,8 @@ def test_core_basic():
         check(c)
 
 def test_core_symbol():
-    for c in (Dummy, Dummy("x", False),
-              Symbol, Symbol("x", False),
-              Wild, Wild("x")):
+    for c in (Dummy, Dummy("x", commutative=False), Symbol,
+            Symbol("x", commutative=False), Wild, Wild("x")):
         check(c)
 
 def test_core_numbers():
@@ -298,7 +297,7 @@ from sympy.polys.domains import (
 )
 
 def test_polys():
-    x = Symbol("x")
+    x = Symbol("X")
 
     ZZ = PythonIntegerRing()
     QQ = SymPyRationalField()

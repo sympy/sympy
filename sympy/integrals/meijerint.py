@@ -339,7 +339,7 @@ def _find_splitting_points(expr, x):
     from sympy import Tuple
     p, q = map(lambda n: Wild(n, exclude=[x]), 'pq')
     def compute_innermost(expr, res):
-        if expr.func is Tuple:
+        if isinstance(expr, Tuple):
             return
         m = expr.match(p*x+q)
         if m and m[p] != 0:

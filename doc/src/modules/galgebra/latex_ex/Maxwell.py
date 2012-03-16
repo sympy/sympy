@@ -1,4 +1,4 @@
-import sys
+import sys, sympy
 import sympy.galgebra.GAsympy as GA
 import sympy.galgebra.latex_ex as tex
 
@@ -9,8 +9,8 @@ if __name__ == '__main__':
              '0  0 -1  0,'+\
              '0  0  0 -1'
 
-    vars = GA.make_symbols('t x y z')
-    GA.MV.setup('gamma_t gamma_x gamma_y gamma_z',metric,True,vars)
+    vars = sympy.symbols('t x y z')
+    gamma_t,gamma_x,gamma_y,gamma_z = GA.MV.setup('gamma_t gamma_x gamma_y gamma_z',metric,True,vars)
     tex.Format()
     I = GA.MV(1,'pseudo')
     I.convert_to_blades()

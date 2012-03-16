@@ -146,6 +146,8 @@ class Mul(AssocOp):
         coeff = S.One       # standalone term
                             # e.g. 3 * ...
 
+        iu = []             # ImaginaryUnits, I
+
         c_powers = []       # (base,exp)      n
                             # e.g. (x,n) for x
 
@@ -210,10 +212,17 @@ class Mul(AssocOp):
                 continue
 
             elif o is S.ComplexInfinity:
-                if not coeff or coeff is S.ComplexInfinity:
-                    # we know for sure the result will be nan
+                if not coeff:
+                    # 0 * zoo = NaN
                     return [S.NaN], [], None
+                if coeff is S.ComplexInfinity:
+                    # zoo * zoo = zoo
+                    return [S.ComplexInfinity], [], None
                 coeff = S.ComplexInfinity
+                continue
+
+            elif o is S.ImaginaryUnit:
+                iu.append(o)
                 continue
 
             elif o.is_commutative:
@@ -244,7 +253,7 @@ class Mul(AssocOp):
                     elif b.is_positive or e.is_integer:
                         num_exp.append((b, e))
                         continue
-                c_powers.append((b,e))
+                c_powers.append((b, e))
 
             # NON-COMMUTATIVE
             # TODO: Make non-commutative exponents not combine automatically
@@ -282,6 +291,21 @@ class Mul(AssocOp):
                     else:
                         nc_part.append(o1)
                         nc_part.append(o)
+
+        # handle the ImaginaryUnits
+        if iu:
+            if len(iu) == 1:
+                c_powers.append((iu[0], S.One))
+            else:
+                # a product of I's has one of 4 values; select that value
+                # based on the length of iu:
+                # len(iu) % 4 of (0, 1, 2, 3) has a corresponding value of
+                #                (1, I,-1,-I)
+                niu = len(iu) % 4
+                if niu % 2:
+                    c_powers.append((S.ImaginaryUnit, S.One))
+                if niu in (2, 3):
+                    coeff = -coeff
 
         # We do want a combined exponent if it would not be an Add, such as
         #  y    2y     3y
@@ -426,11 +450,10 @@ class Mul(AssocOp):
             if p.is_Number:
                 coeff *= p
             else:
-                if p.is_Mul:
-                    c, p = p.args
-                    coeff *= c
-                    assert p.is_Pow and p.base is S.NegativeOne
-                    neg1e = p.args[1]
+                c, p = p.as_coeff_Mul()
+                coeff *= c
+                if p.is_Pow and p.base is S.NegativeOne:
+                    neg1e = p.exp
                 for e, b in pnew.iteritems():
                     if e == neg1e and b.is_positive:
                         pnew[e] = -b
@@ -497,26 +520,49 @@ class Mul(AssocOp):
         coeff, b = b.as_coeff_Mul()
         bc, bnc = b.args_cnc()
 
-        bnc = Pow(Mul._from_args(bnc), e, evaluate=False)
+        done = [Pow(Mul._from_args(bnc), e, evaluate=False) if bnc else S.One]
+
         if e.is_Number:
             if e.is_Integer:
                 # (a*b)**2 -> a**2 * b**2
-                return coeff**e*(Mul(*[s**e for s in bc])*bnc)
+                return Mul(*([s**e for s in [coeff] + bc] + done))
 
             if e.is_Rational or e.is_Float:
-                unk=[]
-                nonneg=[]
-                neg=[]
+                unk = []
+                nonneg = []
+                neg = []
+                iu = []
                 for bi in bc:
-                    if bi.is_negative is not None: #then we know the sign
+                    if bi.is_polar:
+                        nonneg.append(bi)
+                    elif bi.is_negative is not None:
                         if bi.is_negative:
                             neg.append(bi)
-                        else:
+                        elif bi.is_nonnegative:
                             nonneg.append(bi)
-                    elif bi.is_polar:
-                        nonneg.append(bi)
+                        elif bi is S.ImaginaryUnit:
+                            iu.append(bi)
+                        else:
+                            unk.append(bi)
                     else:
                         unk.append(bi)
+
+                if iu:
+                    niu = len(iu) % 4
+                    i = S.ImaginaryUnit if niu % 2 else S.One
+                    if niu in (2, 3):
+                        coeff = -coeff
+                    if i is S.ImaginaryUnit:
+                        if unk or e.is_Float:
+                            unk.append(i)
+                        else:
+                            if coeff.is_negative and e.is_Rational:
+                                coeff = -coeff
+                                ie = Rational(4*e.q - e.p, 2*e.q)
+                                done.append(Pow(-1, ie))
+                            else:
+                                done.append(i**e)
+
                 if len(unk) == len(bc) or len(neg) == len(bc) == 1:
                     # if all terms were unknown there is nothing to pull
                     # out except maybe the coeff; if there is a single
@@ -527,7 +573,7 @@ class Mul(AssocOp):
                         bc[0] = -bc[0]
                     if coeff is S.One:
                         return None
-                    return Mul(Pow(coeff, e), Pow(Mul(*bc), e), bnc)
+                    return Mul(*([Pow(coeff, e), Pow(Mul(*bc), e)] + done))
 
                 # otherwise return the new expression expanding out the
                 # known terms; those that are not known can be expanded
@@ -544,14 +590,12 @@ class Mul(AssocOp):
                         unk.append(S.NegativeOne)
                     if len(neg) % 2:
                         unk.append(S.NegativeOne)
-                return Mul(*[Pow(s, e) for s in nonneg + neg + [coeff]])* \
-                   Pow(Mul(*unk), e)*bnc
+
+                done.extend([Pow(s, e) for s in nonneg + neg + [coeff, Mul(*unk)]])
+                return Mul(*done)
 
         if e.is_even and coeff.is_negative:
             return Pow(-coeff, e)*Pow(b, e)
-
-        #if e.has(Wild):
-        #    return Mul(*[t**e for t in b])
 
     @classmethod
     def class_key(cls):
@@ -1006,52 +1050,86 @@ class Mul(AssocOp):
                 return
         return False
 
-    def _eval_is_positive(self):
-        terms = [t for t in self.args if not t.is_positive]
-        if not terms:
+    def _eval_is_zero(self):
+        zero = None
+        for a in self.args:
+            if a.is_zero:
+                zero = True
+                continue
+            bound = a.is_bounded
+            if not bound:
+                return bound
+        if zero:
             return True
-        c = terms[0]
-        if len(terms)==1:
-            if c.is_nonpositive:
-                return False
-            return
-        r = self._new_rawargs(*terms[1:])
-        if c.is_negative and r.is_negative:
-            return True
-        if r.is_negative and c.is_negative:
-            return True
-        # check for nonpositivity, <=0
-        if c.is_negative and r.is_nonnegative:
-            return False
-        if r.is_negative and c.is_nonnegative:
-            return False
-        if c.is_nonnegative and r.is_nonpositive:
-            return False
-        if r.is_nonnegative and c.is_nonpositive:
-            return False
 
+    def _eval_is_positive(self):
+        """Return True if self is positive, False if not, and None if it
+        cannot be determined.
+
+        This algorithm is non-recursive and works by keeping track of the
+        sign which changes when a negative or nonpositive is encountered.
+        Whether a nonpositive or nonnegative is seen is also tracked since
+        the presence of these makes it impossible to return True, but
+        possible to return False if the end result is nonpositive. e.g.
+
+            pos * neg * nonpositive -> pos or zero -> None is returned
+            pos * neg * nonnegative -> neg or zero -> False is returned
+        """
+
+        sign = 1
+        saw_NON = False
+        for t in self.args:
+            if t.is_positive:
+                continue
+            elif t.is_negative:
+                sign = -sign
+            elif t.is_zero:
+                return False
+            elif t.is_nonpositive:
+                sign = -sign
+                saw_NON = True
+            elif t.is_nonnegative:
+                saw_NON = True
+            else:
+                return
+        if sign == 1 and saw_NON is False:
+            return True
+        if sign < 0:
+            return False
 
     def _eval_is_negative(self):
-        terms = [t for t in self.args if not t.is_positive]
-        if not terms:
-            # all terms are either positive -- 2*Symbol('n', positive=T)
-            #               or     unknown  -- 2*Symbol('x')
-            if self.is_positive:
+        """Return True if self is negative, False if not, and None if it
+        cannot be determined.
+
+        This algorithm is non-recursive and works by keeping track of the
+        sign which changes when a negative or nonpositive is encountered.
+        Whether a nonpositive or nonnegative is seen is also tracked since
+        the presence of these makes it impossible to return True, but
+        possible to return False if the end result is nonnegative. e.g.
+
+            pos * neg * nonpositive -> pos or zero -> False is returned
+            pos * neg * nonnegative -> neg or zero -> None is returned
+        """
+
+        sign = 1
+        saw_NON = False
+        for t in self.args:
+            if t.is_positive:
+                continue
+            elif t.is_negative:
+                sign = -sign
+            elif t.is_zero:
                 return False
+            elif t.is_nonpositive:
+                sign = -sign
+                saw_NON = True
+            elif t.is_nonnegative:
+                saw_NON = True
             else:
-                return None
-        c = terms[0]
-        if len(terms)==1:
-            return c.is_negative
-        r = self._new_rawargs(*terms[1:])
-        # check for nonnegativity, >=0
-        if c.is_negative and r.is_nonpositive:
-            return False
-        if r.is_negative and c.is_nonpositive:
-            return False
-        if c.is_nonpositive and r.is_nonpositive:
-            return False
-        if c.is_nonnegative and r.is_nonnegative:
+                return
+        if sign == -1 and saw_NON is False:
+            return True
+        if sign > 0:
             return False
 
     def _eval_is_odd(self):
@@ -1069,7 +1147,6 @@ class Mul(AssocOp):
         # !integer -> !odd
         elif is_integer == False:
             return False
-
 
     def _eval_is_even(self):
         is_integer = self.is_integer

@@ -244,13 +244,14 @@ class SingleFinitePSpace(FinitePSpace, SinglePSpace):
     _count = 0
     _name = 'fx'
 
-def create_SingleFinitePSpace(density, symbol=None, cls = SingleFinitePSpace):
-    symbol = symbol or cls.create_symbol()
-    domain = SingleFiniteDomain(symbol, frozenset(density.keys()))
-    density = dict((frozenset(((symbol, val),)) , prob)
-            for val, prob in density.items())
-    density = Dict(density)
-    return FinitePSpace.__new__(cls, domain, density)
+    @classmethod
+    def fromdict(cls, density, symbol=None):
+        symbol = symbol or cls.create_symbol()
+        domain = SingleFiniteDomain(symbol, frozenset(density.keys()))
+        density = dict((frozenset(((symbol, val),)) , prob)
+                for val, prob in density.items())
+        density = Dict(density)
+        return FinitePSpace.__new__(cls, domain, density)
 
 class ProductFinitePSpace(ProductPSpace, FinitePSpace):
     """

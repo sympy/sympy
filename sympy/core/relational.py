@@ -142,8 +142,9 @@ class Relational(Expr, EvalfMixin):
             except KeyError:
                 msg = "Invalid relational operator symbol: '%r'"
                 raise ValueError(msg % repr(rop))
-        if lhs.is_number and rhs.is_number and (rop in ('==', '!=' ) or
-        lhs.is_real and rhs.is_real):
+        if (lhs.is_number and rhs.is_number and
+           (rop_cls in (Equality, Unequality) or
+            lhs.is_real and rhs.is_real)):
             diff = lhs - rhs
             know = (lhs - rhs).equals(0, failing_expression=True)
             if know is True: # exclude failing expression case

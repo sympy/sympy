@@ -3224,6 +3224,8 @@ class MatrixBase(object):
 
     @property
     def is_Identity(self):
+        if not self.is_square:
+            return False
         for i in xrange(self.rows):
             for j in xrange(self.cols):
                 if i==j and self[i,j] != 1:
