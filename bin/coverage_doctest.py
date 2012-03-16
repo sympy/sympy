@@ -331,6 +331,15 @@ def coverage(module_path, verbose=False):
     else: score = 0
     score = int(score)
 
+    # Sort functions/classes by line number
+    c_md = sorted(c_md, key = lambda x: int(x.split()[1][:-1]))
+    c_mdt = sorted(c_mdt, key = lambda x: int(x.split()[1][:-1]))
+    c_idt = sorted(c_idt, key = lambda x: int(x.split()[1][:-1]))
+
+    f_md = sorted(f_md, key = lambda x: int(x.split()[1][:-1]))
+    f_mdt = sorted(f_mdt, key = lambda x: int(x.split()[1][:-1]))
+    f_idt = sorted(f_idt, key = lambda x: int(x.split()[1][:-1]))
+
     print_coverage(module_path, classes, c_md, c_mdt, c_idt, functions, f_md, f_mdt, f_idt, score, total_doctests, total_members, verbose)
 
 
