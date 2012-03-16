@@ -302,7 +302,7 @@ def coverage(module_path, verbose=False):
             if c_dt: c_doctests += 1
 
             # Iterate through it's members
-            for f_name in dir(obj):
+            for f_name in obj.__dict__:
 
                 if f_name in skip_members: continue
 
