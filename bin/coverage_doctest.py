@@ -24,8 +24,36 @@ import string
 import inspect
 from optparse import OptionParser
 
+# Load color templates, used from sympy/utilities/runtests.py
+color_templates = (
+    ("Black"       , "0;30"),
+    ("Red"         , "0;31"),
+    ("Green"       , "0;32"),
+    ("Brown"       , "0;33"),
+    ("Blue"        , "0;34"),
+    ("Purple"      , "0;35"),
+    ("Cyan"        , "0;36"),
+    ("LightGray"   , "0;37"),
+    ("DarkGray"    , "1;30"),
+    ("LightRed"    , "1;31"),
+    ("LightGreen"  , "1;32"),
+    ("Yellow"      , "1;33"),
+    ("LightBlue"   , "1;34"),
+    ("LightPurple" , "1;35"),
+    ("LightCyan"   , "1;36"),
+    ("White"       , "1;37"),  )
+
+colors = {}
+
+for name, value in color_templates:
+    colors[name] = value
+c_normal = '\033[0m'
+c_color = '\033[%sm'
+
+
 
 def print_header(name, underline=None, overline=None):
+
   print
   print name
   if underline: print underline*len(name)
@@ -34,15 +62,19 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, f, f_md, f_mdt, f_idt, sc
 
     """ Prints details (depending on verbose) of a module """
 
+    if score < 100:
+        score_string = "%s%s%% (%s of %s)%s" % (c_color % (colors["Red"]) \
+           , score , total_doctests, total_members, c_normal)
+    else:
+        score_string = "%s%s%% (%s of %s)%s" % (c_color % (colors["Green"]) \
+           , score , total_doctests, total_members, c_normal)
+
     if verbose:
         print '\n'+'-'*70
         print module_path
         print '-'*70
     else:
-        print "%s: %s%% (%s of %s)" % (module_path, score, total_doctests, total_members)
-
-
-
+        print "%s: %s" % (module_path, score_string)
 
     if verbose:
         print_header('CLASSES', '*')
@@ -86,7 +118,7 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, f, f_md, f_mdt, f_idt, sc
 
     if verbose:
         print '\n'+'-'*70
-        print "SCORE: %s%% (%s of %s)" % (score, total_doctests, total_members)
+        print "SCORE: %s" % (score_string)
         print '-'*70
 
 
@@ -414,6 +446,13 @@ if __name__ == "__main__":
             score = int(score)
         print
         print '='*70
-        print "TOTAL SCORE for %s: %s%% (%s of %s)" % \
-            (get_mod_name(file, sympy_top), score, doctests, num_functions)
+        if score < 100:
+            print "TOTAL SCORE for %s: %s%s%% (%s of %s)%s" % \
+                (get_mod_name(file, sympy_top), c_color % (colors["Red"]),\
+                score, doctests, num_functions, c_normal)
+        else:
+            print "TOTAL SCORE for %s: %s%s%% (%s of %s)%s" % \
+                (get_mod_name(file, sympy_top), c_color % (colors["Green"]),\
+                score, doctests, num_functions, c_normal)
+
         print
