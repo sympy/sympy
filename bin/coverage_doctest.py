@@ -52,15 +52,17 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, f, f_md, f_mdt, f_idt, sc
             if c_md:
                 print_header('Missing docstrings','-')
                 for md in c_md:
-                   print '\t* '+md
+                   print '  * '+md
             if c_mdt:
                 print_header('Missing doctests','-')
                 for md in c_mdt:
-                    print '\t* '+md
+                    print '  * '+md
             if c_idt:
+                # Use "# indirect doctest" in the docstring to
+                # supress this warning.
                 print_header('Indirect doctests', '-')
                 for md in c_idt:
-                    print '\t* '+md
+                    print '  * '+md
 
 
         print_header('FUNCTIONS','*')
@@ -70,15 +72,15 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, f, f_md, f_mdt, f_idt, sc
             if f_md:
                 print_header('Missing docstrings', '-')
                 for md in f_md:
-                   print '\t* '+md
+                   print '  * '+md
             if f_mdt:
                 print_header('Missing doctests', '-')
                 for md in f_mdt:
-                    print '\t* '+md
+                    print '  * '+md
             if f_idt:
                 print_header('Indirect doctests', '-')
                 for md in f_idt:
-                    print '\t* '+md
+                    print '  * '+md
 
 def _is_indirect(member, doc):
 
@@ -248,7 +250,7 @@ def coverage(module_path, verbose=False):
         m = sys.modules[module_path]
     except Exception, a:
         # Most likely cause, absence of __init__
-        print module_path + ' could not be loaded due to, \"' + a.args[0] + '\"'
+        print "%s could not be loaded due to %s." % (module_path, repr(a))
         return 0, 0
 
 
@@ -351,6 +353,7 @@ def go(sympy_top, file, verbose=False, exact=True):
         print "File %s does not exist."%file
         sys.exit(1)
 
+    # Relpath for constructing the module name
     return coverage(get_mod_name(file, sympy_top), verbose)
 
 
