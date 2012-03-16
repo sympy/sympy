@@ -52,20 +52,6 @@ def test_sqrtdenest2():
     z = sqrt(15 - 2*sqrt(31) + 2*sqrt(55 - 10*r29))
     assert sqrtdenest(z) == z
 
-def test_sqrtdenest4():
-    # see Denest_en.pdf in http://code.google.com/p/sympy/issues/detail?id=93
-    # z = 4*sin(pi/60)
-    z = sqrt(8 - r2*sqrt(5 - r5) - sqrt(3)*(1 + r5))
-    # z can be denested to an expression with depth 2; here are two forms
-    # (-sqrt(6) - r2 + r10 + sqrt(30))/4 - sqrt(5+r5 -5*r3/2 - sqrt(15)/2)
-    # r2/4*(-r3 - 1 + r5 + sqrt(15)) - (r3-1)*sqrt(5+r5)/2
-    z1 = sqrtdenest(z)
-    c = sqrt(-r5 + 5)/4
-    assert z1 == -sqrt(15)*c - r3*c + c + r5*c + r2*(-r3/2 - S.Half + r5/2 + sqrt(15)/2)/2
-
-    z= sqrt(2*sqrt(2)*sqrt(sqrt(2) + 2) + 5*sqrt(2) + 4*sqrt(sqrt(2) + 2) + 8)
-    assert sqrtdenest(z) == sqrt(2) + sqrt(sqrt(2) + 2) + 2
-
 def test_sqrtdenest_rec():
     assert sqrtdenest(sqrt(-4*sqrt(14) - 2*r6 + 4*sqrt(21) + 33)) == \
       -r2 + r3 + 2*r7
@@ -94,6 +80,9 @@ def test_sqrtdenest_rec():
     z = sqrt((w**2).expand() + 1)
     assert sqrtdenest(z) == z
 
+    z = sqrt(2*r10 + 6*r2 + 4*r5 + 12 + 10*sqrt(15) + 30*r3)
+    assert sqrtdenest(z) == z
+
 def test_issue3142():
     z = sqrt( -320 + 32*sqrt(5) + 64*sqrt(15))
     assert sqrtdenest(z) == z
@@ -116,6 +105,21 @@ def test_sqrtdenest3():
     r = sqrt(-2*r29 + 11)
     assert sqrtdenest(z) == \
         sqrt(r2*r + r3*r + r10 + sqrt(15) + 5)
+
+def test_sqrtdenest4():
+    # see Denest_en.pdf in http://code.google.com/p/sympy/issues/detail?id=93
+    z = sqrt(8 - r2*sqrt(5 - r5) - sqrt(3)*(1 + r5))
+    z1 = sqrtdenest(z)
+    c = sqrt(-r5 + 5)/4
+    #assert z1 == -sqrt(15)*c - r3*c + c + r5*c + r2*(-r3/2 - S.Half + r5/2 + sqrt(15)/2)/2
+    assert z1 == -sqrt(15)*c - r3*c + c + r5*c - r6/4 - r2/4 + r10/4 + sqrt(30)/4
+
+    z= sqrt(2*r2*sqrt(r2 + 2) + 5*r2 + 4*sqrt(r2 + 2) + 8)
+    assert sqrtdenest(z) == r2 + sqrt(r2 + 2) + 2
+
+    w = 2 + r2 + r3 + (1 + r3)*sqrt(2 + r2 + 5*r3)
+    z = sqrt((w**2).expand())
+    assert sqrtdenest(z) == w.expand()
 
 
 def test_sqrt_symbolic_denest():

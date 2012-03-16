@@ -274,6 +274,8 @@ def _sqrtdenest_rec(expr):
     -sqrt(11) - sqrt(7) + sqrt(2) + 3*sqrt(5)
     """
     from sympy.simplify.simplify import radsimp, split_surds, rad_rationalize
+    if not expr.is_Pow:
+        return sqrtdenest(expr)
     if expr.base < 0:
         return sqrt(-1)*_sqrtdenest_rec(sqrt(-expr.base))
     g, a, b = split_surds(expr.base)
@@ -351,6 +353,10 @@ def _sqrtdenest1(expr, denester=True):
     if not denester or not is_algebraic(expr):
         return expr
 
+    res = sqrt_biquadratic_denest(expr, a, b, r, d2)
+    if res:
+        return res
+
     # now call to the denester
     av0 = [a, b, r, d2]
     z = _denester([radsimp(expr**2)], av0, 0, sqrt_depth(expr))[0]
@@ -376,7 +382,7 @@ def _sqrt_symbolic_denest(a, b, r):
     Examples
     ========
     >>> from sympy.simplify.sqrtdenest import _sqrt_symbolic_denest, sqrtdenest
-    >>> from sympy import sqrt, Symbol, Poly
+    >>> from sympy import sqrt, Symbol
     >>> from sympy.abc import x
 
     >>> a, b, r = 16 - 2*sqrt(29), 2, -10*sqrt(29) + 55
@@ -439,6 +445,60 @@ def _sqrt_numeric_denest(a, b, r, d2):
         vad1 = radsimp(1/vad)
         return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
 
+def sqrt_biquadratic_denest(expr, a, b, r, d2):
+    """denest expr = sqrt(a + b*sqrt(r))
+    where a, b, r are linear combinations of square roots of
+    positive rationals on the rationals (SQRR) and r > 0, b != 0,
+    d2 = a**2 - b**2*r > 0
+
+    If it cannot denest it returns None.
+
+    ALGORITHM
+    Search for a solution A of type SQRR of the biquadratic equation
+    4*A**4 - 4*a*A**2 + b**2*r = 0                               (1)
+    A = +/-sqrt(a/2 +/- sqrt(a**2 - b**2*r)/2)
+    since a, b, r are SQRR, then a**2 - b**2*r is a SQRR,
+    so if sqrt(a**2 - b**2*r) can be denested, it is done by
+    _sqrtdenest_rec, and the result is a SQRR.
+    Similarly for A.
+
+    Define B = b/2*A; eq.(1) implies a = A**2 + B**2*r; then
+    expr**2 = a + b*sqrt(r) = (A + B*sqrt(r))**2
+
+    Examples
+    ========
+    >>> from sympy import sqrt
+    >>> from sympy.simplify.sqrtdenest import _sqrt_match, sqrt_biquadratic_denest
+    >>> z = sqrt((2*sqrt(2) + 4)*sqrt(2 + sqrt(2)) + 5*sqrt(2) + 8)
+    >>> a, b, r = _sqrt_match(z**2)
+    >>> d2 = a**2 - b**2*r
+    >>> sqrt_biquadratic_denest(z, a, b, r, d2)
+    sqrt(2) + sqrt(sqrt(2) + 2) + 2
+    """
+    from sympy.simplify.simplify import radsimp, rad_rationalize
+    if r <= 0 or d2 < 0 or not b or sqrt_depth(expr.base) < 2:
+        return None
+    for x in (a, b, r):
+        for y in x.args:
+            y2 = y**2
+            if not y2.is_Integer or not y2.is_positive:
+                return None
+    sqd = _mexpand(sqrtdenest(sqrt(radsimp(d2))))
+    if sqrt_depth(sqd) > 1:
+        return None
+    x1, x2 = [a/2 + sqd/2, a/2 - sqd/2]
+    # look for a solution A with depth 1
+    for x in (x1, x2):
+        A = sqrtdenest(sqrt(x))
+        if sqrt_depth(A) > 1:
+            continue
+        Bn, Bd = rad_rationalize(b, _mexpand(2*A))
+        B = Bn/Bd
+        z = A + B*sqrt(r)
+        if z < 0:
+            z = -z
+        return _mexpand(z)
+    return None
 
 def _denester(nested, av0, h, max_depth_level):
     """Denests a list of expressions that contain nested square roots.
