@@ -1,6 +1,7 @@
 from sympy.core import S, sympify, diff
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.polys.polyerrors import PolynomialError
+from sympy.functions.elementary.complexes import im
 
 ###############################################################################
 ################################ DELTA FUNCTION ###############################
@@ -218,6 +219,8 @@ class Heaviside(Function):
         arg = sympify(arg)
         if arg is S.NaN:
             return S.NaN
+        elif im(arg).is_nonzero:
+            raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
         elif arg.is_negative:
             return S.Zero
         elif arg.is_zero:
