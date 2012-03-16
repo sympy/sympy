@@ -621,6 +621,40 @@ def test_unrad():
     assert solve(eq) == []
     # but this one really does have those solutions
     assert solve(sqrt(x) - sqrt(x + 1) + sqrt(1 - sqrt(x))) == [0, S(9)/16]
+
+    '''real_root changes the value of the result if the solution is
+    simplified; `a` in the text below is the root that is not 4/5:
+    >>> eq
+    sqrt(x) + sqrt(-x + 1) + sqrt(x + 1) - 6*sqrt(5)/5
+    >>> eq.subs(x, a).n()
+    -0.e-123 + 0.e-127*I
+    >>> real_root(eq.subs(x, a)).n()
+    -0.e-123 + 0.e-127*I
+    >>> (eq.subs(x,simplify(a))).n()
+    -0.e-126
+    >>> real_root(eq.subs(x, simplify(a))).n()
+    0.194825975605452 + 2.15093623885838*I
+
+    >>> sqrt(x).subs(x, real_root(a)).n()
+    0.809823827278194 - 0.e-25*I
+    >>> sqrt(x).subs(x, (a)).n()
+    0.809823827278194 - 0.e-25*I
+    >>> sqrt(x).subs(x, simplify(a)).n()
+    0.809823827278194 - 5.32999467690853e-25*I
+    >>> sqrt(x).subs(x, real_root(simplify(a))).n()
+    0.49864610868139 + 1.44572604257047*I
+    '''
+    eq=(sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
+    ra = S('''-1484/375 - 4*(-1/2 + sqrt(3)*I/2)*(-12459439/52734375 +
+    114*sqrt(12657)/78125)**(1/3) - 172564/(140625*(-1/2 +
+    sqrt(3)*I/2)*(-12459439/52734375 + 114*sqrt(12657)/78125)**(1/3))''')
+    rb = S(4)/5
+    ans = solve(sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
+    assert all(abs(eq.subs(x, i).n()) < 1e-10 for i in (ra, rb)) and \
+        len(ans) == 2 and \
+        sorted([i.n(chop=True) for i in ans]) == \
+        sorted([i.n(chop=True) for i in (ra, rb)])
+
     ans = solve(sqrt(x) + sqrt(x + 1) - \
                  sqrt(1 - x) - sqrt(2 + x))
     assert len(ans) == 1 and NS(ans[0])[:4] == '0.73'
@@ -656,7 +690,7 @@ def test_unrad():
     assert solve(Eq(sqrt(x + 7) + 2, sqrt(3 - x))) == [-6]
     # http://www.purplemath.com/modules/solverad.htm
     assert solve((2*x - 5)**Rational(1, 3) - 3) == [16]
-    assert solve((x**3 - 3*x**2)**Rational(1, 3) + 1 - x) == [S(1)/3]
+    assert solve((x**3 - 3*x**2)**Rational(1, 3) + 1 - x) == []
     assert solve(x + 1 - (x**4 + 4*x**3 - x)**Rational(1, 4)) == \
         [-S(1)/2, -S(1)/3]
     assert solve(sqrt(2*x**2 - 7) - (3 - x)) == [-8, 2]
@@ -671,11 +705,6 @@ def test_unrad():
     assert solve(sqrt(x - 2) - 5) == [27]
     assert solve(sqrt(17*x - sqrt(x**2 - 5)) - 7) == [3]
     assert solve(sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))) == []
-
-@XFAIL
-def test_unrad_evalf_problem():
-    ans = solve(sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
-    assert len(ans) == 2 and S(4)/5 in ans
 
 @XFAIL
 def test_multivariate():
