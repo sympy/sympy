@@ -105,6 +105,20 @@ class PropertyManager(StdFactKB):
     def copy(self):
         return StdFactKB(self)
 
+    def make_property(manager, fact):
+        """Create the automagic property corresponding to a fact."""
+
+        def getit(self):
+            try:
+                return self._assumptions[fact]
+            except KeyError:
+                if self._assumptions is self.default_assumptions:
+                    self._assumptions = self.default_assumptions.copy()
+                return self._what_known_about(fact)
+
+        getit.func_name = as_property(fact)
+        return property(getit)
+
 
 class WithAssumptions(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
@@ -120,11 +134,11 @@ class WithAssumptions(BasicMeta):
     def __init__(cls, *args, **kws):
         BasicMeta.__init__(cls, *args, **kws)
 
-        default_assumptions = PropertyManager(cls)
-        cls.default_assumptions = default_assumptions
+        pmanager = PropertyManager(cls)
+        cls.default_assumptions = pmanager
 
         # Put definite results directly into the class dict, for speed
-        for k, v in default_assumptions.iteritems():
+        for k, v in pmanager.iteritems():
             setattr(cls, as_property(k), v)
 
         # protection e.g. for Integer.is_even=F <- (Rational.is_integer=F)
@@ -134,28 +148,16 @@ class WithAssumptions(BasicMeta):
                 derived_from_bases |= set(base.default_assumptions)
             except AttributeError:
                 continue        #not an assumption-aware class
-        for fact in derived_from_bases - set(default_assumptions):
-            if as_property(fact) not in cls.__dict__:
-                cls.add_property(fact)
+        for fact in derived_from_bases - set(pmanager):
+            pname = as_property(fact)
+            if pname not in cls.__dict__:
+                setattr(cls, pname, pmanager.make_property(fact))
 
         # Finally, add any missing automagic property (e.g. for Basic)
         for fact in _assume_defined:
-            if not hasattr(cls, as_property(fact)):
-                cls.add_property(fact)
-
-    def add_property(cls, fact):
-        """Add to the class the automagic property corresponding to a fact."""
-
-        def getit(self):
-            try:
-                return self._assumptions[fact]
-            except KeyError:
-                if self._assumptions is self.default_assumptions:
-                    self._assumptions = self.default_assumptions.copy()
-                return self._what_known_about(fact)
-
-        getit.func_name = '%s__is_%s' % (cls.__name__, fact)
-        setattr(cls, as_property(fact), property(getit))
+            pname = as_property(fact)
+            if not hasattr(cls, pname):
+                setattr(cls, pname, pmanager.make_property(fact))
 
 
 class AssumeMixin(object):
