@@ -225,11 +225,11 @@ def process_class(c_name, obj, c_md, c_mdt, c_idt, c_has_doctest):
     c_dt = False
     # Get the line number of class
     try:
-      line_no = inspect.getsourcelines(obj)[1]
+      source, line_no = inspect.getsourcelines(obj)
     except IOError:
       # Raised when source does not exist
       # which means the class is not there.
-      return c_dt, c
+      return False, False, None
 
     c = True
     full_name = "LINE %d: %s" % (line_no, c_name)
@@ -237,10 +237,11 @@ def process_class(c_name, obj, c_md, c_mdt, c_idt, c_has_doctest):
     elif not '>>>' in obj.__doc__: c_mdt.append(full_name)
     elif _is_indirect(c_name, obj.__doc__):
         c_idt.append(full_name)
-    else: # indirect doctest
+    else:
         c_dt =  True
         c_has_doctest.append(full_name)
-    return c_dt, c
+
+    return c_dt, c, source
 
 def coverage(module_path, verbose=False):
 
@@ -304,14 +305,18 @@ def coverage(module_path, verbose=False):
         elif inspect.isclass(obj):
 
             # Process the class first
-            c_dt, c = process_class(member, obj, c_md, c_mdt, c_idt, c_has_doctest)
-            if c: classes += 1
+            c_dt, c, source = process_class(member, obj, c_md, c_mdt, c_idt, c_has_doctest)
+            if not c: continue
+            else:  classes += 1
             if c_dt: c_doctests += 1
 
             # Iterate through it's members
             for f_name in obj.__dict__:
 
-                if f_name in skip_members: continue
+                if f_name in skip_members or f_name.startswith('_'): continue
+
+                # Check if def funcname appears in source
+                if not ("def "+f_name) in ' '.join(source): continue
 
                 # Identify the module of the current class member
                 f_obj = getattr(obj, f_name)
@@ -391,22 +396,23 @@ if __name__ == "__main__":
 
     options, args = parser.parse_args()
 
+    # If no arguments, then run script on sympy/
     if len(args) == 0:
-        parser.print_help()
-    else:
-        for file in args:
-            file = os.path.normpath(file)
-            print 'DOCTEST COVERAGE for %s' % (file)
-            print '='*70
-            print
-            doctests, num_functions = go(sympy_top, file, options.verbose)
-            if num_functions == 0:
-                score = 100
-            else:
-                score = 100 * float(doctests) / num_functions
-                score = int(score)
-            print
-            print '='*70
-            print "TOTAL SCORE for %s: %s%% (%s of %s)" % \
-                (get_mod_name(file, sympy_top), score, doctests, num_functions)
-            print
+        args = [os.path.join(sympy_top, 'sympy')]
+
+    for file in args:
+        file = os.path.normpath(file)
+        print 'DOCTEST COVERAGE for %s' % (file)
+        print '='*70
+        print
+        doctests, num_functions = go(sympy_top, file, options.verbose)
+        if num_functions == 0:
+            score = 100
+        else:
+            score = 100 * float(doctests) / num_functions
+            score = int(score)
+        print
+        print '='*70
+        print "TOTAL SCORE for %s: %s%% (%s of %s)" % \
+            (get_mod_name(file, sympy_top), score, doctests, num_functions)
+        print
