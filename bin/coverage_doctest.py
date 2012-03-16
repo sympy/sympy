@@ -131,6 +131,27 @@ def _get_arg_list(name, fobj):
 
     return str_param
 
+def get_mod_name(path, base):
+
+    """ Gets a module name, given the path of file/dir and base
+    dir of sympy """
+
+    rel_path = os.path.relpath(path, base)
+
+    # Remove the file extension
+    rel_path, ign = os.path.splitext(rel_path)
+
+    # Replace separators by . for module path
+    file_module = ""
+    h, t = os.path.split(rel_path)
+    while h or t:
+        if t: file_module = t + '.' + file_module
+        h, t = os.path.split(h)
+
+    return file_module[:-1]
+
+
+
 def process_function(name, c_name, b_obj, mod_path, f_sk, f_md, f_mdt, f_idt, f_has_doctest, sk_list):
 
     """ Processes a function to get information regarding documentation.
@@ -313,12 +334,12 @@ def coverage(module_path, verbose=False):
 
     return total_doctests, total_members
 
-def go(file, verbose=False, exact=True):
+def go(sympy_top, file, verbose=False, exact=True):
 
     if os.path.isdir(file):
         doctests, num_functions = 0, 0
         for F in os.listdir(file):
-            _doctests, _num_functions = go('%s/%s'%(file,F), verbose, exact=False)
+            _doctests, _num_functions = go(sympy_top, '%s/%s'%(file,F), verbose, exact=False)
             doctests += _doctests
             num_functions += _num_functions
         return doctests, num_functions
@@ -330,17 +351,8 @@ def go(file, verbose=False, exact=True):
         print "File %s does not exist."%file
         sys.exit(1)
 
-    # Remove the file extension
-    file, ign = os.path.splitext(file)
+    return coverage(get_mod_name(file, sympy_top), verbose)
 
-    # Replace separators by . for module path
-    file_module = ""
-    h, t = os.path.split(file)
-    while h or t:
-        if t: file_module = t + '.' + file_module
-        h, t = os.path.split(h)
-
-    return coverage(file_module[:-1], verbose)
 
 if __name__ == "__main__":
 
@@ -370,7 +382,7 @@ if __name__ == "__main__":
             print 'DOCTEST COVERAGE for %s' % (file)
             print '='*70
             print
-            doctests, num_functions = go(file, options.verbose)
+            doctests, num_functions = go(sympy_top, file, options.verbose)
             if num_functions == 0:
                 score = 100
             else:
@@ -379,5 +391,5 @@ if __name__ == "__main__":
             print
             print '='*70
             print "TOTAL SCORE for %s: %s%% (%s of %s)" % \
-                (file, score, doctests, num_functions)
+                (get_mod_name(file, sympy_top), score, doctests, num_functions)
             print
