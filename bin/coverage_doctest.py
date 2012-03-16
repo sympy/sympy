@@ -350,7 +350,7 @@ if __name__ == "__main__":
     if os.path.isdir(sympy_dir):
         sys.path.insert(0, sympy_top)
 
-    usage = "usage: ./bin/doctest_coverage.py sympy/core"
+    usage = "usage: ./bin/doctest_coverage.py PATH"
 
     parser = OptionParser(
         description = __doc__,
