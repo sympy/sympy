@@ -1,4 +1,4 @@
-from sympy.core import Add, S, C, sympify, oo, pi
+from sympy.core import Add, S, C, sympify, oo, pi,Rational
 from sympy.core.function import Function, ArgumentIndexError
 from zeta_functions import zeta
 from error_functions import erf
@@ -63,6 +63,72 @@ class gamma(Function):
                         return coeff*sqrt(S.Pi) / 2**n
                     else:
                         return 2**n*sqrt(S.Pi) / coeff
+                        
+                if arg.q ==3 and arg.p not in [-2,-1,1,2]:
+                    
+                    n = abs(arg.p) // arg.q
+                    p = abs(arg.p)-n*arg.q
+                                            
+                    if arg.is_positive:
+                        k, coeff = n, S.One
+                    else:
+                        n = k = n+1
+                        if n & 1 == 0:
+                            coeff = S.One
+                        else:
+                            coeff = S.NegativeOne
+                    
+                    if p == 1:
+                        for i in range(4,3*k,3):
+                            coeff *= i
+                            
+                        if arg.is_positive:
+                            return coeff*(gamma(Rational(1,3)))/ 3**n
+                        else:
+                            return -1*(3**n)*(gamma(Rational(-1,3)))/(3*coeff)
+                    
+                    if p == 2:
+                        for i in range(2,3*k,3):
+                            coeff *= i
+                            
+                        if arg.is_positive:
+                            return coeff*(gamma(Rational(2,3)))/ 3**n
+                        else:
+                            return -2*(3**n)*(gamma(Rational(-2,3)))/(3*coeff)
+                
+                if arg.q ==4 and arg.p not in [-3,-1,1,3]:
+                    
+                    n = abs(arg.p) // arg.q
+                    p = abs(arg.p)-n*arg.q
+                                            
+                    if arg.is_positive:
+                        k, coeff = n, S.One
+                    else:
+                        n = k = n+1
+                        if n & 1 == 0:
+                            coeff = S.One
+                        else:
+                            coeff = S.NegativeOne
+                    if p == 1:
+                    
+                        for i in range(5,4*k,4):
+                            coeff *= i
+                            
+                        if arg.is_positive:
+                            return coeff*(gamma(Rational(1,4)))/ 4**n
+                        else:
+                            return -1*(4**n)*(gamma(Rational(-1,4)))/(4*coeff)
+                    
+                    if p == 3:
+                    
+                        for i in range(3,4*k,4):
+                            coeff *= i
+                            
+                        if arg.is_positive:
+                            return coeff*(gamma(Rational(3,4)))/ 4**n
+                        else:
+                            return -3*(4**n)*(gamma(Rational(-3,4)))/(4*coeff)
+
 
 
     def _eval_expand_func(self, deep=True, **hints):
