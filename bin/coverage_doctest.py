@@ -36,11 +36,12 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, f, f_md, f_mdt, f_idt, sc
 
     if verbose:
         print '\n'+'-'*70
-
-    print "%s: %s%% (%s of %s)" % (module_path, score, total_doctests, total_members)
-
-    if verbose:
+        print module_path
         print '-'*70
+    else:
+        print "%s: %s%% (%s of %s)" % (module_path, score, total_doctests, total_members)
+
+
 
 
     if verbose:
@@ -81,6 +82,12 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, f, f_md, f_mdt, f_idt, sc
                 print_header('Indirect doctests', '-')
                 for md in f_idt:
                     print '  * '+md
+
+    if verbose:
+        print '\n'+'-'*70
+        print "SCORE: %s%% (%s of %s)" % (score, total_doctests, total_members)
+        print '-'*70
+
 
 def _is_indirect(member, doc):
 
