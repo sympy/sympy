@@ -861,7 +861,13 @@ class Basic(PicklableWithSlots):
         if unordered:
             sequence = dict(sequence)
             if not all(k.is_Atom for k in sequence):
-                d = sift(sequence.iteritems(), lambda i: (i[0].count_ops(), len(i[0].args)))
+                d = {}
+                for o, n in sequence.iteritems():
+                    try:
+                        ops = o.count_ops(), len(o.args)
+                    except TypeError:
+                        ops = (0, 0)
+                    d.setdefault(ops, []).append((o, n))
                 newseq = []
                 for k in sorted(d.keys(), reverse=True):
                     newseq.extend(sorted([v[0] for v in d[k]], key=default_sort_key))

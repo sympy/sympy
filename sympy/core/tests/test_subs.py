@@ -467,12 +467,12 @@ def test_issue_3059():
     assert (x - oo).subs(oo, y) == x - y
     assert (x - oo).subs(-oo, y) == x + y
 
-def test_Piecewise_subs():
+def test_Function_subs():
     from sympy.abc import x, y
-    g = Function('g')
-    h = Function('h')
+    f, g, h, i = symbols('f,g,h,i', cls=Function)
     p = Piecewise((g, x < -1), (g(x), x <= 1))
     assert p.subs(g, h) == Piecewise((h, x < -1), (h(x), x <= 1))
+    assert (f(y) + g(x)).subs({f:h,g:i}) == i(x) + h(y)
 
 def test_simultaneous_subs():
     from sympy.abc import x, y
