@@ -70,7 +70,7 @@ class Set(Basic):
 
     def _intersect(self, other):
         """
-        This class should only be used internally
+        This function should only be used internally
 
         self._intersect(other) returns a new, intersected set if self knows how
         to intersect itself with other, otherwise it returns None
@@ -306,8 +306,10 @@ class ProductSet(Set):
 
         Passes operation on to constitent sets
         """
-
-        if len(element) != len(self.args):
+        try:
+            if len(element) != len(self.args):
+                return False
+        except TypeError: # maybe element isn't an iterable
             return False
         return And(*[set.contains(item) for set, item in zip(self.sets, element)])
 
@@ -831,7 +833,7 @@ class Intersection(Set):
 
     @property
     def is_iterable(self):
-        return all(arg.is_iterable for arg in self.args)
+        return any(arg.is_iterable for arg in self.args)
 
     @property
     def _inf(self):
@@ -848,6 +850,15 @@ class Intersection(Set):
     def _contains(self, other):
         from sympy.logic.boolalg import And
         return And(*[set.contains(other) for set in self.args])
+
+    def __iter__(self):
+        for s in self.args:
+            if s.is_iterable:
+                other_sets = set(self.args) - set((s,))
+                other = Intersection(other_sets, evaluate=False)
+                return (x for x in s if x in other)
+
+        raise ValueError("None of the constituent sets are iterable")
 
     @staticmethod
     def reduce(args):
