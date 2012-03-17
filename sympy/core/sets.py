@@ -80,7 +80,7 @@ class Set(Basic):
 
         Used within the Intersection class
         """
-        raise NotImplementedError("(%s)._intersect(%s)" % (self, other))
+        return None
 
     @property
     def complement(self):
