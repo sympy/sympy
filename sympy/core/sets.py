@@ -27,6 +27,8 @@ class Set(Basic):
     is_Interval = False
     is_ProductSet = False
     is_Union = False
+    is_Intersection = None
+    is_EmptySet = None
 
     def union(self, other):
         """
@@ -63,6 +65,7 @@ class Set(Basic):
         [1, 2]
 
         """
+        return Intersection(self, other)
         return self._intersect(other)
 
     def _intersect(self, other):
@@ -299,10 +302,12 @@ class ProductSet(Set):
         if other.is_Union:
             return Union(self.intersect(set) for set in other.args)
         if not other.is_ProductSet:
-            raise TypeError("%s is not a Product Set."%str(other))
+            return None
+            # raise TypeError("%s is not a Product Set."%str(other))
         if len(other.args) != len(self.args):
-            raise ValueError("Sets not the same size Left: %d, Right: %d"
-                    %(len(self.args), len(other.args)))
+            return None
+            # raise ValueError("Sets not the same size Left: %d, Right: %d"
+            #        %(len(self.args), len(other.args)))
         return ProductSet(a.intersect(b)
                 for a, b in zip(self.sets, other.sets))
 
@@ -487,12 +492,12 @@ class Interval(RealSet):
         return self._args[3]
 
     def _intersect(self, other):
-        if not isinstance(other, Interval):
-            return other.intersect(self)
-
+        if not other.is_Interval:
+            return None
         if not self._is_comparable(other):
-            raise NotImplementedError("Intersection of intervals with symbolic "
-                                      "end points is not yet implemented")
+            return None
+            #raise NotImplementedError("Intersection of intervals with symbolic "
+#                                      "end points is not yet implemented")
 
         empty = False
 
@@ -694,26 +699,6 @@ class Union(Set):
         from sympy.functions.elementary.miscellaneous import Max
         return Max(*[set.sup for set in self.args])
 
-    def _intersect(self, other):
-        # Distributivity.
-        if other.is_Interval:
-            intersections = []
-            for interval in self.args:
-                intersections.append(interval.intersect(other))
-            return self.__class__(*intersections)
-
-        if other.is_FiniteSet:
-            return other._intersect(self)
-
-        elif other.is_Union:
-            intersections = []
-            for s in other.args:
-                intersections.append(self.intersect(s))
-            return self.__class__(*intersections)
-
-        else:
-            return other.intersect(self)
-
     @property
     def _complement(self):
         # De Morgan's formula.
@@ -779,6 +764,112 @@ class Union(Set):
     def is_iterable(self):
         return all(arg.is_iterable for arg in self.args)
 
+
+class Intersection(Set):
+    is_Intersection = True
+
+    def __new__(cls, *args, **kwargs):
+        evaluate = kwargs.get('evaluate', True)
+
+        # flatten inputs to merge intersections and iterables
+        args = list(args)
+        def flatten(arg):
+            if isinstance(arg, Set):
+                if arg.is_Intersection:
+                    return sum(map(flatten, arg.args), [])
+                else:
+                    return [arg]
+            if is_flattenable(arg): # and not isinstance(arg, Set) (implicit)
+                return sum(map(flatten, arg), [])
+            raise TypeError("Input must be Sets or iterables of Sets")
+        args = flatten(args)
+
+        # Intersection of no sets is everything
+        if len(args)==0:
+            return S.UniverseSet
+
+        # Reduce sets using known rules
+        if evaluate:
+            return Intersection.reduce(args)
+
+        return Basic.__new__(cls, *args)
+
+    @property
+    def is_iterable(self):
+        return all(arg.is_iterable for arg in self.args)
+
+    @property
+    def _inf(self):
+        raise NotImplementedError()
+
+    @property
+    def _sup(self):
+        raise NotImplementedError()
+
+    @property
+    def _complement(self):
+        raise NotImplementedError()
+
+    def _contains(self, other):
+        from sympy.logic.boolalg import And
+        return And(*[set.contains(other) for set in self.args])
+
+    @staticmethod
+    def reduce(args):
+        """
+        Simplify an intersection using known rules
+
+        We first start with global rules like
+        'if any empty sets return empty set' and 'distribute any unions'
+
+        Then we iterate through all pairs and ask the constituent sets if they
+        can simplify themselves with any other constituent
+        """
+
+        # ===== Global Rules =====
+        # If any EmptySets return EmptySet
+        if any(s.is_EmptySet for s in args):
+            return S.EmptySet
+
+        # If any FiniteSets see which elements of that finite set occur within
+        # all other sets in the intersection
+        for s in args:
+            if s.is_FiniteSet:
+                return s.__class__(x for x in s
+                        if all(x in other for other in args))
+
+        # If any of the sets are unions, return a Union of Intersections
+        for s in args:
+            if s.is_Union:
+                other_sets = set(args) - set((s,))
+                other = Intersection(other_sets)
+                return Union(Intersection(arg, other) for arg in s.args)
+
+        # At this stage we are guaranteed not to have any
+        # EmptySets, FiniteSets, or Unions in the intersection
+
+        # ===== Pair-wise Rules =====
+        # Here we depend on rules built into the constituent sets
+        args = set(args)
+        new_args = True
+        while(new_args):
+            for s in args:
+                new_args = False
+                for t in args - set((s,)):
+                    new_set = s._intersect(t)
+                    # This returns None if s does not know how to intersect
+                    # with t. Returns the newly intersected set otherwise
+                    if new_set is not None:
+                        new_args = (args - set((s, t))).union(set((new_set, )))
+                        break
+                if new_args:
+                    args = new_args
+                    break
+
+        if len(args)==1:
+            return args.pop()
+        else:
+            return Intersection(*args, evaluate=False)
 
 class RealUnion(Union, RealSet):
     """
@@ -913,6 +1004,7 @@ class EmptySet(Set):
 
     """
     __metaclass__ = Singleton
+    is_EmptySet = True
 
     def _intersect(self, other):
         return S.EmptySet
@@ -939,6 +1031,47 @@ class EmptySet(Set):
 
     def __iter__(self):
         return iter([])
+
+class UniverseSet(Set):
+    """
+    Represents the set of all things.
+    The universe set is available as a singleton as S.UniverseSet
+
+    Examples
+    ========
+
+        >>> from sympy import S, Interval
+
+        >>> S.UniverseSet
+        UniverseSet()
+
+        >>> Interval(1, 2).intersect(S.UniverseSet)
+        Interval(1,2)
+
+    """
+
+    __metaclass__ = Singleton
+    is_UniverseSet = True
+
+    def _intersect(self, other):
+        return other
+
+    @property
+    def _complement(self):
+        return S.EmptySet
+
+    @property
+    def _measure(self):
+        return S.Infinity
+
+    def _contains(self, other):
+        return True
+
+    def as_relational(self, symbol):
+        return True
+
+    def union(self, other):
+        return self
 
 class FiniteSet(CountableSet):
     """

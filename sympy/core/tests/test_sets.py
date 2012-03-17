@@ -85,7 +85,6 @@ def test_union():
     assert 2 in X and 3 in X and 3 in XandY
     assert X.subset(XandY) and Y.subset(XandY)
 
-
     raises(TypeError, "Union(1, 2, 3)")
 
 def test_difference():
