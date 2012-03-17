@@ -2670,9 +2670,6 @@ class AtomicExpr(Atom, Expr):
             return S.One
         return S.Zero
 
-    def as_numer_denom(self):
-        return self, S.One
-
     def _eval_is_polynomial(self, syms):
         return True
 

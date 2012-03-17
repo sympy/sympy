@@ -245,6 +245,11 @@ class Number(AtomicExpr):
         # Order(5, x, y) -> Order(1,x,y)
         return C.Order(S.One, *symbols)
 
+    def _eval_subs(self, old, new):
+        if old == -self:
+            return -new
+        return self # there is no other possibility
+
     @classmethod
     def class_key(cls):
         return 1, 0, 'Number'

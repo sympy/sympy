@@ -237,14 +237,12 @@ class Order(Expr):
         return self.contains(obj)
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        if isinstance(old, Symbol) and old in self.variables:
+        if old.is_Symbol and old in self.variables:
             i = list(self.variables).index(old)
             if isinstance(new, Symbol):
-                return Order(self.expr._eval_subs(old, new), *(self.variables[:i]+(new,)+self.variables[i+1:]))
-            return Order(self.expr._eval_subs(old, new), *(self.variables[:i]+self.variables[i+1:]))
-        return Order(self.expr._eval_subs(old, new), *self.variables)
+                return Order(self.expr._subs(old, new), *(self.variables[:i]+(new,)+self.variables[i+1:]))
+            return Order(self.expr._subs(old, new), *(self.variables[:i]+self.variables[i+1:]))
+        return Order(self.expr._subs(old, new), *self.variables)
 
     def _eval_derivative(self, x):
         return self.func(self.expr.diff(x), *self.variables) or self
