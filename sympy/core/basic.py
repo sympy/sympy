@@ -820,6 +820,13 @@ class Basic(PicklableWithSlots):
         >>> expr.subs(dict([A,B,C,D,E]))
         a*c*sin(d*e) + b
 
+        See Also
+        ========
+        replace: replacement capable of doing wildcard-like matching,
+                 parsing of match, and conditional replacements
+        xreplace: exact node replacement in expr tree; also capable of
+                  using matching rules
+
         """
         from sympy.core.expr import Expr
         from sympy.core.containers import Dict
@@ -1005,18 +1012,18 @@ class Basic(PicklableWithSlots):
         Replace occurrences of objects within the expression.
 
         Parameters
-        ----------
+        ==========
         rule : dict-like
             Expresses a replacement rule
 
         Returns
-        -------
+        =======
         xreplace : the result of the replacement
 
         Examples
-        --------
+        ========
         >>> from sympy import symbols, pi, exp
-        >>> x,y, z = symbols('x y z')
+        >>> x, y, z = symbols('x y z')
         >>> (1 + x*y).xreplace({x: pi})
         pi*y + 1
         >>> (1 + x*y).xreplace({x:pi, y:2})
@@ -1050,6 +1057,13 @@ class Basic(PicklableWithSlots):
 
         >>> Integral(x, (x, 1, 2*x)).xreplace({x: 2*y}) #doctest: +SKIP
         ValueError: Invalid limits given: ((2*y, 1, 4*y),)
+
+        See Also
+        ========
+        replace: replacement capable of doing wildcard-like matching,
+                 parsing of match, and conditional replacements
+        subs: substitution of subexpressions as defined by the objects
+              themselves.
 
         """
         if self in rule:
@@ -1174,46 +1188,54 @@ class Basic(PicklableWithSlots):
         possible combinations of queries and replacement values is listed
         below:
 
-        1.1. type -> type
-             obj.replace(sin, tan)
-        1.2. type -> func
-             obj.replace(sin, lambda expr, arg: ...)
-
-        2.1. expr -> expr
-             obj.replace(sin(a), tan(a))
-        2.2. expr -> func
-             obj.replace(sin(a), lambda a: ...)
-
-        3.1. func -> func
-             obj.replace(lambda expr: ..., lambda expr: ...)
-
         Examples
         ========
+            >>> from sympy import log, sin, cos, tan, Wild
+            >>> from sympy.abc import x, y
+            >>> f = log(sin(x)) + tan(sin(x**2))
 
-        >>> from sympy import log, sin, cos, tan, Wild
-        >>> from sympy.abc import x
+        1.1. type -> type
+            obj.replace(sin, tan)
 
-        >>> f = log(sin(x)) + tan(sin(x**2))
+            >>> f.replace(sin, cos)
+            log(cos(x)) + tan(cos(x**2))
+            >>> sin(x).replace(sin, cos, map=True)
+            (cos(x), {sin(x): cos(x)})
 
-        >>> f.replace(sin, cos)
-        log(cos(x)) + tan(cos(x**2))
-        >>> f.replace(sin, lambda arg: sin(2*arg))
-        log(sin(2*x)) + tan(sin(2*x**2))
+        1.2. type -> func
+            obj.replace(sin, lambda arg: ...)
 
-        >>> sin(x).replace(sin, cos, map=True)
-        (cos(x), {sin(x): cos(x)})
+            >>> f.replace(sin, lambda arg: sin(2*arg))
+            log(sin(2*x)) + tan(sin(2*x**2))
 
-        >>> a = Wild('a')
+        2.1. expr -> expr
+            obj.replace(sin(a), tan(a))
 
-        >>> f.replace(sin(a), cos(a))
-        log(cos(x)) + tan(cos(x**2))
-        >>> f.replace(sin(a), lambda a: sin(2*a))
-        log(sin(2*x)) + tan(sin(2*x**2))
+            >>> a = Wild('a')
+            >>> f.replace(sin(a), tan(a))
+            log(tan(x)) + tan(tan(x**2))
 
-        >>> g = 2*sin(x**3)
+        2.2. expr -> func
+            obj.replace(sin(a), lambda a: ...)
 
-        >>> g.replace(lambda expr: expr.is_Number, lambda expr: expr**2)
-        4*sin(x**9)
+            >>> f.replace(sin(a), cos(a))
+            log(cos(x)) + tan(cos(x**2))
+            >>> f.replace(sin(a), lambda a: sin(2*a))
+            log(sin(2*x)) + tan(sin(2*x**2))
+
+        3.1. func -> func
+            obj.replace(lambda expr: ..., lambda expr: ...)
+
+            >>> g = 2*sin(x**3)
+            >>> g.replace(lambda expr: expr.is_Number, lambda expr: expr**2)
+            4*sin(x**9)
+
+        See Also
+        ========
+        subs: substitution of subexpressions as defined by the objects
+              themselves.
+        xreplace: exact node replacement in expr tree; also capable of
+                  using matching rules
 
         """
         if isinstance(query, type):
