@@ -115,6 +115,8 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, f, f_md, f_mdt, f_idt, sc
                 print_header('Indirect doctests', '-')
                 for md in f_idt:
                     print '  * '+md
+                print '\n    Use \"# indirect doctest\" in the docstring to supress this warning'
+
 
     if verbose:
         print '\n'+'-'*70
