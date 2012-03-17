@@ -116,7 +116,8 @@ def test_complement():
     assert -S.EmptySet == S.EmptySet.complement
     assert ~S.EmptySet == S.EmptySet.complement
 
-    assert S.EmptySet.complement == Interval(-oo, oo)
+    assert S.EmptySet.complement == S.UniversalSet
+    assert S.UniversalSet.complement == S.EmptySet
 
     assert Union(Interval(0, 1), Interval(2, 3)).complement == \
            Union(Interval(-oo, 0, True, True), Interval(1, 2, True, True),
@@ -373,7 +374,7 @@ def test_product_basic():
 
     assert (Interval(-10,10)**3).subset(Interval(-5,5)**3)
     assert not (Interval(-5,5)**3).subset(Interval(-10,10)**3)
-    raises(ValueError, "(Interval(-10,10)**2).subset(Interval(-5,5)**3)")
+    assert not (Interval(-10,10)**2).subset(Interval(-5,5)**3)
 
     assert square.subset(Interval(.2,.5)*FiniteSet(.5)) # segment in square
 

@@ -29,6 +29,7 @@ class Set(Basic):
     is_Union = False
     is_Intersection = None
     is_EmptySet = None
+    is_UniversalSet = None
 
     def union(self, other):
         """
@@ -66,9 +67,19 @@ class Set(Basic):
 
         """
         return Intersection(self, other)
-        return self._intersect(other)
 
     def _intersect(self, other):
+        """
+        This class should only be used internally
+
+        self._intersect(other) returns a new, intersected set if self knows how
+        to intersect itself with other, otherwise it returns None
+
+        When making a new set class you can be assured that other will not
+        be a Union, FiniteSet, or EmptySet
+
+        Used within the Intersection class
+        """
         raise NotImplementedError("(%s)._intersect(%s)" % (self, other))
 
     @property
@@ -299,15 +310,10 @@ class ProductSet(Set):
         return And(*[set.contains(item) for set, item in zip(self.sets, element)])
 
     def _intersect(self, other):
-        if other.is_Union:
-            return Union(self.intersect(set) for set in other.args)
         if not other.is_ProductSet:
             return None
-            # raise TypeError("%s is not a Product Set."%str(other))
         if len(other.args) != len(self.args):
-            return None
-            # raise ValueError("Sets not the same size Left: %d, Right: %d"
-            #        %(len(self.args), len(other.args)))
+            return S.EmptySet
         return ProductSet(a.intersect(b)
                 for a, b in zip(self.sets, other.sets))
 
@@ -321,12 +327,10 @@ class ProductSet(Set):
         # We need at least one of the sets to be complemented
         # Consider all 2^n combinations.
         # We can conveniently represent these options easily using a ProductSet
-        switch_sets = ProductSet(FiniteSet(set, set.complement)
-            for set in self.sets)
+        switch_sets = ProductSet(FiniteSet(s, s.complement) for s in self.sets)
         product_sets = (ProductSet(*set) for set in switch_sets)
         # Union of all combinations but this one
         return Union(p for p in product_sets if p != self)
-
 
     @property
     def is_real(self):
@@ -492,12 +496,12 @@ class Interval(RealSet):
         return self._args[3]
 
     def _intersect(self, other):
+        # We only know how to intersect with other intervals
         if not other.is_Interval:
             return None
+        # We can't intersect [0,3] with [x,6] -- we don't know if x>0 or x<0
         if not self._is_comparable(other):
             return None
-            #raise NotImplementedError("Intersection of intervals with symbolic "
-#                                      "end points is not yet implemented")
 
         empty = False
 
@@ -766,6 +770,22 @@ class Union(Set):
 
 
 class Intersection(Set):
+    """
+    Represents an untersection of sets as a Set.
+
+    Examples
+    ========
+
+        >>> from sympy import Intersection, Interval
+
+        >>> Intersection(Interval(1, 3), Interval(2, 4))
+        [2, 3]
+
+        We often use the .intersect method
+
+        >>> Interval(1,3).intersect(Interval(2,4))
+        [2, 3]
+    """
     is_Intersection = True
 
     def __new__(cls, *args, **kwargs):
@@ -786,7 +806,7 @@ class Intersection(Set):
 
         # Intersection of no sets is everything
         if len(args)==0:
-            return S.UniverseSet
+            return S.UniversalSet
 
         # Reduce sets using known rules
         if evaluate:
@@ -1011,7 +1031,7 @@ class EmptySet(Set):
 
     @property
     def _complement(self):
-        return Interval(S.NegativeInfinity, S.Infinity)
+        return S.UniversalSet
 
     @property
     def _measure(self):
@@ -1032,26 +1052,26 @@ class EmptySet(Set):
     def __iter__(self):
         return iter([])
 
-class UniverseSet(Set):
+class UniversalSet(Set):
     """
     Represents the set of all things.
-    The universe set is available as a singleton as S.UniverseSet
+    The universal set is available as a singleton as S.UniversalSet
 
     Examples
     ========
 
         >>> from sympy import S, Interval
 
-        >>> S.UniverseSet
-        UniverseSet()
+        >>> S.UniversalSet
+        UniversalSet()
 
-        >>> Interval(1, 2).intersect(S.UniverseSet)
-        Interval(1,2)
+        >>> Interval(1, 2).intersect(S.UniversalSet)
+        [1, 2]
 
     """
 
     __metaclass__ = Singleton
-    is_UniverseSet = True
+    is_UniversalSet = True
 
     def _intersect(self, other):
         return other
