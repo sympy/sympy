@@ -270,6 +270,8 @@ class ProductSet(Set):
     Notes:
         - Passes most operations down to the argument sets
         - Flattens Products of ProductSets
+
+    http://en.wikipedia.org/wiki/Cartesian_product
     """
     is_ProductSet = True
 
@@ -403,6 +405,8 @@ class Interval(RealSet):
         - Interval(a, b) with a > b will return the empty set
         - Use the evalf() method to turn an Interval into an mpmath
           'mpi' interval instance
+
+    http://en.wikipedia.org/wiki/Interval_(mathematics)
     """
     is_Interval = True
 
@@ -627,6 +631,11 @@ class Union(Set):
         >>> Union(Interval(1, 2), Interval(2, 3))
         [1, 3]
 
+    See Also
+    ========
+    Intersection
+
+    http://en.wikipedia.org/wiki/Union_(set_theory)
     """
     is_Union = True
 
@@ -785,6 +794,12 @@ class Intersection(Set):
 
         >>> Interval(1,3).intersect(Interval(2,4))
         [2, 3]
+
+    See Also
+    ========
+    Union
+
+    http://en.wikipedia.org/wiki/Intersection_(set_theory)
     """
     is_Intersection = True
 
@@ -1022,6 +1037,11 @@ class EmptySet(Set):
         >>> Interval(1, 2).intersect(S.EmptySet)
         EmptySet()
 
+    See Also
+    ========
+    UniversalSet
+
+    http://en.wikipedia.org/wiki/Empty_set
     """
     __metaclass__ = Singleton
     is_EmptySet = True
@@ -1068,6 +1088,11 @@ class UniversalSet(Set):
         >>> Interval(1, 2).intersect(S.UniversalSet)
         [1, 2]
 
+    See Also
+    ========
+    EmptySet
+
+    http://en.wikipedia.org/wiki/Universal_set
     """
 
     __metaclass__ = Singleton
@@ -1107,6 +1132,7 @@ class FiniteSet(CountableSet):
         >>> 3 in FiniteSet(1, 2, 3, 4)
         True
 
+    http://en.wikipedia.org/wiki/Finite_set
     """
     is_FiniteSet = True
 
