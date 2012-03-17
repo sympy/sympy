@@ -343,6 +343,10 @@ def test_sympy__core__sets__Set():
     from sympy.core.sets import Set
     assert _test_args(Set())
 
+def test_sympy__core__sets__Intersection():
+    from sympy.core.sets import Intersection, Interval
+    assert _test_args(Intersection(Interval(0, 3), Interval(2, 4)))
+
 def test_sympy__core__sets__Union():
     from sympy.core.sets import Union, Interval
     assert _test_args(Union(Interval(0, 1), Interval(2, 3)))
