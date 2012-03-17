@@ -50,19 +50,21 @@ for name, value in color_templates:
 c_normal = '\033[0m'
 c_color = '\033[%sm'
 
-
-
 def print_header(name, underline=None, overline=None):
 
   print
   print name
   if underline: print underline*len(name)
 
-def print_coverage(module_path, c, c_md, c_mdt, c_idt, f, f_md, f_mdt, f_idt, score, total_doctests, total_members, verbose=False):
+def print_coverage(module_path, c, c_md, c_mdt, c_idt, f, f_md, f_mdt, f_idt, score, total_doctests, total_members, verbose=False, no_color=False):
 
     """ Prints details (depending on verbose) of a module """
 
-    if score < 100:
+    if no_color:
+        score_string = "%s%% (%s of %s)" % (score, total_doctests, \
+            total_members)
+
+    elif score < 100:
         score_string = "%s%s%% (%s of %s)%s" % (c_color % (colors["Red"]) \
            , score , total_doctests, total_members, c_normal)
     else:
@@ -283,7 +285,7 @@ def process_class(c_name, obj, c_sk, c_md, c_mdt, c_idt, c_has_doctest):
 
     return c_dt, c, source
 
-def coverage(module_path, verbose=False):
+def coverage(module_path, verbose=False, no_color=False):
 
     """ Given a module path, builds an index of all classes and functions
     contained. It then goes through each of the classes/functions to get
@@ -390,17 +392,17 @@ def coverage(module_path, verbose=False):
     f_mdt = sorted(f_mdt, key = lambda x: int(x.split()[1][:-1]))
     f_idt = sorted(f_idt, key = lambda x: int(x.split()[1][:-1]))
 
-    print_coverage(module_path, classes, c_md, c_mdt, c_idt, functions, f_md, f_mdt, f_idt, score, total_doctests, total_members, verbose)
+    print_coverage(module_path, classes, c_md, c_mdt, c_idt, functions, f_md, f_mdt, f_idt, score, total_doctests, total_members, verbose, no_color)
 
 
     return total_doctests, total_members
 
-def go(sympy_top, file, verbose=False, exact=True):
+def go(sympy_top, file, verbose=False, no_color=False, exact=True):
 
     if os.path.isdir(file):
         doctests, num_functions = 0, 0
         for F in os.listdir(file):
-            _doctests, _num_functions = go(sympy_top, '%s/%s'%(file,F), verbose, exact=False)
+            _doctests, _num_functions = go(sympy_top, '%s/%s'%(file,F), verbose, no_color, exact=False)
             doctests += _doctests
             num_functions += _num_functions
         return doctests, num_functions
@@ -413,7 +415,7 @@ def go(sympy_top, file, verbose=False, exact=True):
         sys.exit(1)
 
     # Relpath for constructing the module name
-    return coverage(get_mod_name(file, sympy_top), verbose)
+    return coverage(get_mod_name(file, sympy_top), verbose, no_color)
 
 
 if __name__ == "__main__":
@@ -434,6 +436,7 @@ if __name__ == "__main__":
 
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
             default=False)
+    parser.add_option("--no-color", action="store_true", dest="no_color", help="use no colors", default=False)
 
     options, args = parser.parse_args()
 
@@ -446,7 +449,7 @@ if __name__ == "__main__":
         print 'DOCTEST COVERAGE for %s' % (file)
         print '='*70
         print
-        doctests, num_functions = go(sympy_top, file, options.verbose)
+        doctests, num_functions = go(sympy_top, file, options.verbose, options.no_color)
         if num_functions == 0:
             score = 100
         else:
@@ -454,10 +457,16 @@ if __name__ == "__main__":
             score = int(score)
         print
         print '='*70
-        if score < 100:
+
+        if options.no_color:
+            print "TOTAL SCORE for %s: %s%% (%s of %s)" % \
+                (get_mod_name(file, sympy_top),score, doctests, num_functions)
+
+        elif score < 100:
             print "TOTAL SCORE for %s: %s%s%% (%s of %s)%s" % \
                 (get_mod_name(file, sympy_top), c_color % (colors["Red"]),\
                 score, doctests, num_functions, c_normal)
+
         else:
             print "TOTAL SCORE for %s: %s%s%% (%s of %s)%s" % \
                 (get_mod_name(file, sympy_top), c_color % (colors["Green"]),\
