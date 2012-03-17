@@ -176,6 +176,14 @@ class MatrixExpr(Expr):
         """
         return self.as_explicit().as_mutable()
 
+    def __array__(self):
+        from numpy import empty
+        a = empty(self.shape, dtype=object)
+        for i in range(self.rows):
+            for j in range(self.cols):
+                a[i, j] = self[i, j]
+        return a
+
     def equals(self, other):
         """
         Test elementwise equality between matrices, potentially of different
@@ -294,8 +302,6 @@ def matrixify(expr):
 
     Calling matrixify after calling these functions will reset classes back to
     their matrix equivalents
-
-    For internal use
     """
     class_dict = {Mul:MatMul, Add:MatAdd, MatMul:MatMul, MatAdd:MatAdd,
             Pow:MatPow, MatPow:MatPow}
