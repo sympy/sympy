@@ -84,6 +84,10 @@ class Symbol(AtomicExpr, Boolean):
     def __getnewargs__(self):
         return (self.name,)
 
+    def __getstate__(self):
+        return {'_assumptions': self._assumptions}
+
+
     def _hashable_content(self):
         return (self.name,) + tuple(sorted(self.assumptions0.iteritems()))
 
@@ -160,6 +164,9 @@ class Dummy(Symbol):
         Dummy._count += 1
         obj.dummy_index = Dummy._count
         return obj
+
+    def __getstate__(self):
+        return {'_assumptions': self._assumptions, 'dummy_index': self.dummy_index}
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)

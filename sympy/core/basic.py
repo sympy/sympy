@@ -1,5 +1,5 @@
 """Base class for all the objects in SymPy"""
-
+from copy import copy
 from assumptions import ManagedProperties
 from cache import cacheit
 from core import BasicType, C
@@ -74,7 +74,7 @@ class PicklableWithSlots(object):
             except AttributeError:    # This is needed in cases like Rational :> Half
                 pass
 
-class Basic(PicklableWithSlots):
+class Basic(object):
     """
     Base class for all objects in sympy.
 
@@ -151,10 +151,19 @@ class Basic(PicklableWithSlots):
         return obj
 
 
+    def __reduce_ex__(self, proto):
+        """ Pickling support."""
+        return type(self), self.__getnewargs__(), self.__getstate__()
+
     def __getnewargs__(self):
-        """ Pickling support.
-        """
-        return tuple(self.args)
+        return self.args
+
+    def __getstate__(self):
+        return {}
+
+    def __setstate__(self, state):
+        for k, v in state.iteritems():
+            setattr(self, k, v)
 
     def __hash__(self):
         # hash cannot be cached using cache_it because infinite recurrence
