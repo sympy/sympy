@@ -250,11 +250,16 @@ def process_function(name, c_name, b_obj, mod_path, f_sk, f_md, f_mdt, f_idt, f_
     return f_doctest, function
 
 
-def process_class(c_name, obj, c_md, c_mdt, c_idt, c_has_doctest):
+def process_class(c_name, obj, c_sk, c_md, c_mdt, c_idt, c_has_doctest):
 
     """ Extracts information about the class regarding documentation.
     It is assumed that the function calling this subroutine has already
     checked that the class is valid. """
+
+    # Skip class case
+    if c_name.startswith('_'):
+        c_sk.append(c_name)
+        return False, False, None
 
     c = False
     c_dt = False
@@ -340,7 +345,7 @@ def coverage(module_path, verbose=False):
         elif inspect.isclass(obj):
 
             # Process the class first
-            c_dt, c, source = process_class(member, obj, c_md, c_mdt, c_idt, c_has_doctest)
+            c_dt, c, source = process_class(member, obj, c_skipped, c_md, c_mdt, c_idt, c_has_doctest)
             if not c: continue
             else:  classes += 1
             if c_dt: c_doctests += 1
