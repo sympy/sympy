@@ -220,14 +220,12 @@ class MatrixSymbol(MatrixExpr, Symbol):
         return self.args[0]
 
     def _eval_subs(self, old, new):
-        if self==old:
-            return new
-        else:
-            shape = Tuple(*self.shape).subs(old, new)
-            return MatrixSymbol(self.name, *shape)
+        # only do substitutions in shape
+        shape = Tuple(*self.shape)._subs(old, new)
+        return MatrixSymbol(self.name, *shape)
 
     def __call__(self, *args):
-        raise TypeError( "%s object is not callable"%self.__class__ )
+        raise TypeError( "%s object is not callable" % self.__class__ )
 
     def _entry(self, i, j):
         # MatMul _entry will pass us a Dummy and ask that we remember it

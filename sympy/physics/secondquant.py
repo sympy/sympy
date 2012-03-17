@@ -136,12 +136,6 @@ class Dagger(Expr):
         else:
             return d
 
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        r = Dagger(self.args[0].subs(old, new))
-        return r
-
     def _dagger_(self):
         return self.args[0]
 
@@ -314,12 +308,6 @@ class SqOperator(Expr):
     def __new__(cls, k):
         obj = Basic.__new__(cls, sympify(k), commutative=False)
         return obj
-
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        r = self.__class__(self.args[0].subs(old, new))
-        return r
 
     @property
     def state(self):
@@ -911,13 +899,6 @@ class FockState(Expr):
         obj = Basic.__new__(cls, Tuple(*occupations), commutative=False)
         return obj
 
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        r = self.__class__([o.subs(old, new) for o in self.args[0]])
-        return r
-
-
     def __getitem__(self, i):
         i = int(i)
         return self.args[0][i]
@@ -1384,12 +1365,6 @@ class InnerProduct(Basic):
     def ket(self):
         """Returns the ket part of the state"""
         return self.args[1]
-
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        r = self.__class__(self.bra.subs(old,new), self.ket.subs(old,new))
-        return r
 
     def __repr__(self):
         sbra = repr(self.bra)
@@ -2008,17 +1983,6 @@ class NO(Expr):
         where a,b are above and i,j are below fermi level.
         """
         return NO(self._remove_brackets)
-
-
-    def _eval_subs(self,old,new):
-        if self == old:
-            return new
-        ops = self.args[0].args
-        for i in range(len(ops)):
-            if ops[i] == old:
-                l1 = ops[:i]+(new,)+ops[i+1:]
-                return self.__class__(Mul(*l1))
-        return Expr._eval_subs(self,old,new)
 
     def __getitem__(self,i):
         if isinstance(i,slice):
