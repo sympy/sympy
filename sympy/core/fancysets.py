@@ -1,11 +1,11 @@
-from sympy import ceiling, floor, solve, Dummy
+from sympy import ceiling, floor, solve, Dummy, S
 from sympy.core.sets import *
 oo = S.Infinity
 
-class N(CountableSet):
+class Naturals(CountableSet):
     """
     Represents the Natural Numbers. The Naturals are available as a singleton
-    as S.N
+    as S.Naturals
 
     Examples
     ========
@@ -17,14 +17,10 @@ class N(CountableSet):
     __metaclass__ = Singleton
 
     def _intersect(self, other):
-        if other.is_FiniteSet:
-            return other.intersect(self)
         if other.is_Interval:
             other = other.intersect(Interval(0,oo))
             return FiniteSet(range(ceiling(other.left), floor(other.right)))
-        if other.is_Union:
-            return Union(self._intersect(arg) for arg in other.args)
-        raise NotImplementedError()
+        return None
 
     def _contains(self, other):
         if other<0:
@@ -34,7 +30,7 @@ class N(CountableSet):
 
     def __iter__(self):
         def all_naturals():
-            i = 0
+            i = 1
             while True:
                 yield i
                 i = i + 1
@@ -42,16 +38,16 @@ class N(CountableSet):
 
     @property
     def _inf(self):
-        return -oo
+        return 1
 
     @property
     def _sup(self):
-        return 0
+        return oo
 
-class Z(CountableSet):
+class Integers(CountableSet):
     """
     Represents the Integers. The Integers are available as a singleton
-    as S.Z
+    as S.Integers
 
     Examples
     ========
@@ -63,13 +59,9 @@ class Z(CountableSet):
     __metaclass__ = Singleton
 
     def _intersect(self, other):
-        if other.is_FiniteSet:
-            return other.intersect(self)
         if other.is_Interval:
             return FiniteSet(range(ceiling(other.left), floor(other.right)))
-        if other.is_Union:
-            return Union(self._intersect(arg) for arg in other.args)
-        raise NotImplementedError()
+        return None
 
     def _contains(self, other):
         other = sympify(other)
@@ -100,7 +92,7 @@ class Isomorphic(Set):
     Examples
     --------
     >>> from sympy import Isomorphic, S, FiniteSet
-    >>> squares = Isomorphic(x**2, x, S.N) # {x**2 for x in Naturals}
+    >>> squares = Isomorphic(x**2, x, S.Naturals) # {x**2 for x in Naturals}
     >>> 4 in squares
     True
     >>> 5 in squares
@@ -135,6 +127,10 @@ class Isomorphic(Set):
                 if soln.evalf() in self.base_set:   return True
         return False
 
+    @property
+    def is_iterable(self):
+        return self.base_set.is_iterable
+
 class IsomorphicToN(Isomorphic):
     """
     A set that is isomorphic to the natural numbers through an algebraic
@@ -148,6 +144,7 @@ class IsomorphicToN(Isomorphic):
     True
     >>> 5 in squares
     False
+
     >>> FiniteSet(0,1,2,3,4,5,6,7,9,10).intersect(squares)
     {1, 4}
     >>> square_iterable = iter(squares)
@@ -160,7 +157,7 @@ class IsomorphicToN(Isomorphic):
     16
     """
     def __new__(cls, expr, variable):
-        return Isomorphic.__new__(cls, expr, variable, N())
+        return Isomorphic.__new__(cls, expr, variable, S.Naturals)
 
 x = Dummy('x')
 harmonics = IsomorphicToN(1/x, x)
