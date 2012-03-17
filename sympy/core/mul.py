@@ -1213,10 +1213,12 @@ class Mul(AssocOp):
         rv = None
         n, d = self.as_numer_denom()
         if d is not S.One:
-            was = self
-            self = n/d._subs(old, new)
-            if self != was:
-                rv = self
+            self2 = n._subs(old, new)/d._subs(old, new)
+            if not self2.is_Mul:
+                return self2._subs(old, new)
+            if self2 != self:
+                self = rv = self2
+
         # Now continue with regular substitution.
 
         # handle the leading coefficient and use it to decide if anything
