@@ -120,7 +120,7 @@ class PropertyManager(StdFactKB):
         return property(getit)
 
 
-class WithAssumptions(BasicMeta):
+class ManagedProperties(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
     __metaclass__ = BasicMeta
 
@@ -129,7 +129,7 @@ class WithAssumptions(BasicMeta):
             bases = (AssumeMixin,) + bases
             if '__slots__' in attrdict:
                 attrdict['__slots__'] += AssumeMixin._assume_slots
-        return super(WithAssumptions, mcl).__new__(mcl, name, bases, attrdict)
+        return super(ManagedProperties, mcl).__new__(mcl, name, bases, attrdict)
 
     def __init__(cls, *args, **kws):
         BasicMeta.__init__(cls, *args, **kws)

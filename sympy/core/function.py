@@ -33,7 +33,7 @@ There are two types of functions:
 
 """
 from core import BasicMeta, C
-from assumptions import WithAssumptions
+from assumptions import ManagedProperties
 from basic import Basic
 from singleton import S
 from expr import Expr, AtomicExpr
@@ -80,7 +80,7 @@ class ArgumentIndexError(ValueError):
         return ("Invalid operation with argument number %s for Function %s" %
                         (self.args[1], self.args[0]))
 
-class FunctionClass(WithAssumptions):
+class FunctionClass(ManagedProperties):
     """
     Base class for function classes. FunctionClass is a subclass of type.
 

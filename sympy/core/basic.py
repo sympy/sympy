@@ -1,6 +1,6 @@
 """Base class for all the objects in SymPy"""
 
-from assumptions import WithAssumptions
+from assumptions import ManagedProperties
 from cache import cacheit
 from core import BasicType, C
 from sympify import _sympify, sympify, SympifyError
@@ -104,7 +104,7 @@ class Basic(PicklableWithSlots):
         (x,)
 
     """
-    __metaclass__ = WithAssumptions
+    __metaclass__ = ManagedProperties
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
                 ]
