@@ -1,4 +1,6 @@
-from sympy import ceiling, floor, solve, Dummy, S
+from sympy import (ceiling, floor, solve, Dummy, S, symbols, Lambda, sin, cos,
+        pi)
+from sympy.core.compatibility import iterable
 from sympy.core.sets import *
 oo = S.Infinity
 
@@ -92,7 +94,8 @@ class Isomorphic(Set):
     Examples
     --------
     >>> from sympy import Isomorphic, S, FiniteSet
-    >>> squares = Isomorphic(x**2, x, S.Naturals) # {x**2 for x in Naturals}
+    >>> N = S.Naturals
+    >>> squares = Isomorphic(Lambda(x, x**2), N) # {x**2 for x in N}
     >>> 4 in squares
     True
     >>> 5 in squares
@@ -108,18 +111,27 @@ class Isomorphic(Set):
     9
     16
     """
-    def __new__(cls, expr, variable, base_set):
-        return Basic.__new__(cls, expr, variable, base_set)
+    #def __new__(cls, lambd, base_set):
+    def __new__(cls, lambd, base_set):
+        return Basic.__new__(cls, lambd, base_set)
 
-    expr     = property(lambda self: self.args[0])
-    variable = property(lambda self: self.args[1])
-    base_set = property(lambda self: self.args[2])
+    lambd    = property(lambda self: self.args[0])
+    base_set = property(lambda self: self.args[1])
 
     def __iter__(self):
-        return (self.expr.subs(self.variable, i) for i in self.base_set)
+        return (self.lambd(i) for i in self.base_set)
+
+    def _is_multivariate(self):
+        return len(self.lambd.variables)>1
 
     def _contains(self, other):
-        solns = solve(self.expr - other, self.variable)
+        L = self.lambd
+        if self._is_multivariate():
+            solns = solve([expr-val for val, expr in zip(other, L.expr)],
+                    L.variables)
+        else:
+            solns = solve(L.expr - other, L.variables[0])
+
         for soln in solns:
             try:
                 if soln in self.base_set:           return True
@@ -131,7 +143,7 @@ class Isomorphic(Set):
     def is_iterable(self):
         return self.base_set.is_iterable
 
-class IsomorphicToN(Isomorphic):
+def IsomorphicToN(lambd):
     """
     A set that is isomorphic to the natural numbers through an algebraic
     expressions. A countable set.
@@ -156,9 +168,11 @@ class IsomorphicToN(Isomorphic):
     9
     16
     """
-    def __new__(cls, expr, variable):
-        return Isomorphic.__new__(cls, expr, variable, S.Naturals)
+    return Isomorphic(lambd, S.Naturals)
 
 x = Dummy('x')
-harmonics = IsomorphicToN(1/x, x)
-squares = IsomorphicToN(x**2, x)
+harmonics = IsomorphicToN(Lambda(x, 1/x))
+squares = IsomorphicToN(Lambda(x, x**2))
+r, th = symbols('r, theta', real=True)
+L = Lambda((r, th), (r*cos(th), r*sin(th)))
+halfcircle = Isomorphic(L, Interval(0, 1)*Interval(0, pi))
