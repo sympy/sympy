@@ -930,7 +930,7 @@ class Intersection(Set):
         if len(args)==1:
             return args.pop()
         else:
-            return Intersection(*args, evaluate=False)
+            return Intersection(args, evaluate=False)
 
 class RealUnion(Union, RealSet):
     """
