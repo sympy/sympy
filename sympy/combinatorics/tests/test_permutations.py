@@ -36,6 +36,15 @@ def test_Permutation():
     b = q-p
     assert (a+b).is_Identity
 
+    assert p.conjugate(q) == Permutation([5, 3, 0, 4, 6, 2, 1])
+    assert p.conjugate(q) == ~q*p*q == p**q
+    assert q.conjugate(p) == Permutation([6, 3, 2, 0, 1, 4, 5])
+    assert q.conjugate(p) == ~p*q*p == q**p
+
+    assert p.commutator(q) == Permutation([1, 4, 5, 6, 3, 0, 2])
+    assert q.commutator(p) == Permutation([5, 0, 6, 4, 1, 2, 3])
+    assert p.commutator(q) == ~ q.commutator(p)
+
     assert len(p.atoms()) == 7
     assert q.atoms() == set([0, 1, 2, 3, 4, 5, 6])
 
@@ -121,9 +130,13 @@ def test_Permutation():
     assert p.get_positional_distance(q) == 8
 
     a = [Permutation.unrank_nonlex(4, i) for i in range(5)]
+    iden = Permutation([0, 1, 2, 3])
     for i in range(5):
         for j in range(i+1, 5):
             assert a[i].commutes_with(a[j]) == (a[i]*a[j] == a[j]*a[i])
+            if a[i].commutes_with(a[j]):
+                assert a[i].commutator(a[j]) == iden
+                assert a[j].commutator(a[i]) == iden
 
 def test_josephus():
     assert Permutation.josephus(4, 6, 1) == Permutation([3, 1, 0, 2, 5, 4])

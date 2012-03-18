@@ -428,14 +428,26 @@ don\'t match.")
         """
         Routine for finding powers of a permutation.
 
+        Power notation is also used for conjugation.
+
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([2,0,3,1])
+        >>> q = Permutation([1,0,3,2])
+        >>> r = Permutation([0,2,3,1])
         >>> p**4
         Permutation([0, 1, 2, 3])
+        >>> p**q == p.conjugate(q)
+        True
+        >>> q**p == q.conjugate(p)
+        True
+        >>> (p**q)**r == p**(q * r)
+        True
         """
+        if type(n) == Permutation:
+            return self.conjugate(n)
         n = int(n)
         if n == 0:
             return Permutation(range(self.size))
@@ -1028,6 +1040,36 @@ don\'t match.")
         for i in xrange(n):
             invb[b[i]] = i
         return _new_from_array_form([invb[a[i]] for i in b])
+
+    def commutator(self, x):
+        """
+        Computes the commutator Permutation ``~p*~x*p*x``
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([0,2,1,3])
+        >>> b = Permutation([0,2,3,1])
+        >>> a.commutator(b)
+        Permutation([0, 3, 1, 2])
+        >>> ~a*~b*a*b
+        Permutation([0, 3, 1, 2])
+        """
+
+        a = self.array_form
+        b = x.array_form
+        n = len(a)
+        if len(b) != n:
+            raise ValueError("The number of elements in the permutations \
+don\'t match.")
+        inva = [None]*n
+        for i in xrange(n):
+            inva[a[i]] = i
+        invb = [None]*n
+        for i in xrange(n):
+            invb[b[i]] = i
+        return _new_from_array_form([inva[invb[a[i]]] for i in b])
 
     def signature(self):
         """
