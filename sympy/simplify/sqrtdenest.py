@@ -456,11 +456,26 @@ def sqrt_biquadratic_denest(expr, a, b, r, d2):
     ALGORITHM
     Search for a solution A of type SQRR of the biquadratic equation
     4*A**4 - 4*a*A**2 + b**2*r = 0                               (1)
-    A = +/-sqrt(a/2 +/- sqrt(a**2 - b**2*r)/2)
-    since a, b, r are SQRR, then a**2 - b**2*r is a SQRR,
-    so if sqrt(a**2 - b**2*r) can be denested, it is done by
+    sqd = sqrt(a**2 - b**2*r)
+    Choosing the sqrt to be positive, the possible solutions are
+    A = sqrt(a/2 +/- sqd/2)
+    Since a, b, r are SQRR, then a**2 - b**2*r is a SQRR,
+    so if sqd can be denested, it is done by
     _sqrtdenest_rec, and the result is a SQRR.
     Similarly for A.
+    Examples of solutions (in both cases a and sqd are positive):
+
+      Example of expr with solution sqrt(a/2 + sqd/2) but not
+      solution sqrt(a/2 - sqd/2):
+      expr = sqrt(-sqrt(15) - sqrt(2)*sqrt(-sqrt(5) + 5) - sqrt(3) + 8)
+      a = -sqrt(15) - sqrt(3) + 8; sqd = -2*sqrt(5) - 2 + 4*sqrt(3)
+
+      Example of expr with solution sqrt(a/2 - sqd/2) but not
+      solution sqrt(a/2 + sqd/2):
+      w = 2 + r2 + r3 + (1 + r3)*sqrt(2 + r2 + 5*r3)
+      expr = sqrt((w**2).expand())
+      a = 4*sqrt(6) + 8*sqrt(2) + 47 + 28*sqrt(3)
+      sqd = 29 + 20*sqrt(3)
 
     Define B = b/2*A; eq.(1) implies a = A**2 + B**2*r; then
     expr**2 = a + b*sqrt(r) = (A + B*sqrt(r))**2
@@ -581,15 +596,13 @@ def _denester(nested, av0, h, max_depth_level):
                     av0[1] = None
                     return None, None
 
-                vad1 = radsimp(1/vad)
                 sqvad = _sqrtdenest1(sqrt(vad), denester=False)
                 if not (sqrt_depth(sqvad) <= sqrt_depth(R) + 1):
                     av0[1] = None
                     return None, None
                 sqvad1 = radsimp(1/sqvad)
-                res1 = _mexpand(sqvad/sqrt(2) + (v[1]*sqrt(R)*sqvad1/sqrt(2)))
-                res = _mexpand(sqrt(vad/2) + sign(v[1])*sqrt(_mexpand(v[1]**2*R*vad1/2)))
-                return res1, f
+                res = _mexpand(sqvad/sqrt(2) + (v[1]*sqrt(R)*sqvad1/sqrt(2)))
+                return res, f
 
                       #          sign(v[1])*sqrt(_mexpand(v[1]**2*R*vad1/2))), f
             else: #Solution requires a fourth root
