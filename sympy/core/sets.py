@@ -11,9 +11,10 @@ from sympy.logic.boolalg import And, Or
 
 class Set(Basic):
     """
-    The base class for any kind of set. This is not meant to be used directly
-    as a container of items. It does not behave like the builtin set; see
-    FiniteSet for that.
+    The base class for any kind of set.
+
+    This is not meant to be used directly as a container of items.
+    It does not behave like the builtin set; see FiniteSet for that.
 
     Real intervals are represented by the Interval class and unions of sets
     by the Union class. The empty set is represented by the EmptySet class
@@ -33,11 +34,11 @@ class Set(Basic):
 
     def union(self, other):
         """
-        Returns the union of 'self' and 'other'. As a shortcut it is possible
-        to use the '+' operator:
+        Returns the union of 'self' and 'other'.
+
+        As a shortcut it is possible to use the '+' operator:
 
         >>> from sympy import Interval, FiniteSet
-
         >>> Interval(0, 1).union(Interval(2, 3))
         [0, 1] U [2, 3]
         >>> Interval(0, 1) + Interval(2, 3)
@@ -45,8 +46,7 @@ class Set(Basic):
         >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
         (1, 2] U {3}
 
-        Similarly it is possible to use the '-' operator for set
-        differences:
+        Similarly it is possible to use the '-' operator for set differences:
 
         >>> Interval(0, 2) - Interval(0, 1)
         (1, 2]
@@ -108,7 +108,7 @@ class Set(Basic):
     @property
     def inf(self):
         """
-        The infimum of 'self'.
+        The infimum of 'self'
 
         >>> from sympy import Interval, Union
 
@@ -126,7 +126,8 @@ class Set(Basic):
 
     @property
     def sup(self):
-        """ The supremum of 'self'.
+        """
+        The supremum of 'self'
 
         >>> from sympy import Interval, Union
 
@@ -181,7 +182,7 @@ class Set(Basic):
     @property
     def measure(self):
         """
-        The (Lebesgue) measure of 'self'.
+        The (Lebesgue) measure of 'self'
 
         >>> from sympy import Interval, Union
 
@@ -238,11 +239,10 @@ class ProductSet(Set):
     """
     Represents a Cartesian Product of Sets.
 
-    Usage:
-        Returns a cartesian product given several sets as either an iterable
-        or individual arguments.
+    Returns a cartesian product given several sets as either an iterable
+    or individual arguments.
 
-        Can use '*' operator on any sets for convenient shorthand.
+    Can use '*' operator on any sets for convenient shorthand.
 
     Examples
     ========
@@ -267,11 +267,15 @@ class ProductSet(Set):
         (T, T)
 
 
-    Notes:
-        - Passes most operations down to the argument sets
-        - Flattens Products of ProductSets
+    Notes
+    =====
+    - Passes most operations down to the argument sets
+    - Flattens Products of ProductSets
 
-    http://en.wikipedia.org/wiki/Cartesian_product
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Cartesian_product
     """
     is_ProductSet = True
 
@@ -294,7 +298,7 @@ class ProductSet(Set):
 
     def _contains(self, element):
         """
-        in operator for ProductSets
+        'in' operator for ProductSets
 
         >>> from sympy import Interval
 
@@ -402,13 +406,17 @@ class Interval(RealSet):
     >>> Interval(0, a)
     [0, a]
 
-    Notes:
-        - Only real end points are supported
-        - Interval(a, b) with a > b will return the empty set
-        - Use the evalf() method to turn an Interval into an mpmath
-          'mpi' interval instance
+    Notes
+    =====
+    - Only real end points are supported
+    - Interval(a, b) with a > b will return the empty set
+    - Use the evalf() method to turn an Interval into an mpmath
+      'mpi' interval instance
 
-    http://en.wikipedia.org/wiki/Interval_(mathematics)
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Interval_(mathematics)
     """
     is_Interval = True
 
@@ -442,8 +450,9 @@ class Interval(RealSet):
     @property
     def start(self):
         """
-        The left end point of 'self'. This property takes the same value as the
-        'inf' property.
+        The left end point of 'self'.
+
+        This property takes the same value as the 'inf' property.
 
         >>> from sympy import Interval
 
@@ -458,8 +467,9 @@ class Interval(RealSet):
     @property
     def end(self):
         """
-        The right end point of 'self'. This property takes the same value as the
-        'sup' property.
+        The right end point of 'self'.
+
+        This property takes the same value as the 'sup' property.
 
         >>> from sympy import Interval
 
@@ -637,7 +647,10 @@ class Union(Set):
     ========
     Intersection
 
-    http://en.wikipedia.org/wiki/Union_(set_theory)
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Union_(set_theory)
     """
     is_Union = True
 
@@ -771,8 +784,7 @@ class Union(Set):
         return measure
 
     def as_relational(self, symbol):
-        """Rewrite a Union in terms of equalities and logic operators.
-        """
+        """Rewrite a Union in terms of equalities and logic operators. """
         return Or(*[set.as_relational(symbol) for set in self.args])
 
     @property
@@ -801,7 +813,10 @@ class Intersection(Set):
     ========
     Union
 
-    http://en.wikipedia.org/wiki/Intersection_(set_theory)
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Intersection_(set_theory)
     """
     is_Intersection = True
 
@@ -1052,7 +1067,10 @@ class EmptySet(Set):
     ========
     UniversalSet
 
-    http://en.wikipedia.org/wiki/Empty_set
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Empty_set
     """
     __metaclass__ = Singleton
     is_EmptySet = True
@@ -1103,7 +1121,10 @@ class UniversalSet(Set):
     ========
     EmptySet
 
-    http://en.wikipedia.org/wiki/Universal_set
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Universal_set
     """
 
     __metaclass__ = Singleton
@@ -1143,7 +1164,10 @@ class FiniteSet(CountableSet):
         >>> 3 in FiniteSet(1, 2, 3, 4)
         True
 
-    http://en.wikipedia.org/wiki/Finite_set
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Finite_set
     """
     is_FiniteSet = True
 
@@ -1184,8 +1208,9 @@ class FiniteSet(CountableSet):
 
     def union(self, other):
         """
-        Returns the union of 'self' and 'other'. As a shortcut it is possible
-        to use the '+' operator:
+        Returns the union of 'self' and 'other'.
+
+        As a shortcut it is possible to use the '+' operator:
 
         >>> from sympy import FiniteSet, Interval, Symbol
 
@@ -1214,6 +1239,7 @@ class FiniteSet(CountableSet):
     def _contains(self, other):
         """
         Tests whether an element, other, is in the set.
+
         Relies on Python's set class. This tests for object equality
         All inputs are sympified
 
@@ -1244,8 +1270,7 @@ class FiniteSet(CountableSet):
         return FiniteSet(el for el in self if el not in other)
 
     def as_relational(self, symbol):
-        """Rewrite a FiniteSet in terms of equalities and logic operators.
-        """
+        """Rewrite a FiniteSet in terms of equalities and logic operators. """
         from sympy.core.relational import Eq
         return Or(*[Eq(symbol, elem) for elem in self])
 
@@ -1259,11 +1284,14 @@ class FiniteSet(CountableSet):
 class RealFiniteSet(FiniteSet, RealSet):
     """
     A FiniteSet with all elements Real Numbers.
-    Allows for good integration with Intervals
+
+    Allows for good integration with Intervals.
 
     This class for internal use only. Use FiniteSet to create a RealFiniteSet
 
-    See FiniteSet for more details
+    See Also
+    ========
+    FiniteSet
     """
 
     def _eval_evalf(self, prec):
@@ -1294,8 +1322,7 @@ class RealFiniteSet(FiniteSet, RealSet):
         return Union(*intervals)
 
     def as_relational(self, symbol):
-        """Rewrite a FiniteSet in terms of equalities and logic operators.
-        """
+        """Rewrite a FiniteSet in terms of equalities and logic operators. """
         from sympy.core.relational import Eq
         return Or(*[Eq(symbol, elem) for elem in self])
 
