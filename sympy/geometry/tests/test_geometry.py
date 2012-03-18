@@ -160,6 +160,7 @@ def test_line():
     assert l7.equation() == y - 1
     assert p1 in l1 # is p1 on the line l1?
     assert p1 not in l3
+    assert Line((-x,x),(-x+1,x-1)).coefficients == (1, 1, 0)
 
     assert simplify(l1.equation()) in (x-y, y-x)
     assert simplify(l3.equation()) in (x-x1, x1-x)
