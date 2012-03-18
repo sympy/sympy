@@ -244,9 +244,11 @@ def test_contains():
 
     assert FiniteSet(1,2,3).contains(2)
     assert FiniteSet(1,2,Symbol('x')).contains(Symbol('x'))
-    items = [1,2,S.Infinity, 'ham', -1.1, Interval]
 
-    assert all(item in FiniteSet(items) for item in items)
+    items = [1, 2, S.Infinity, S('ham'), -1.1]
+    fset = FiniteSet(*items)
+    assert all(item in fset for item in items)
+    assert all(fset.contains(item) is True for item in items)
 
     assert Union(Interval(0, 1), Interval(2, 5)).contains(3) == True
     assert Union(Interval(0, 1), Interval(2, 5)).contains(6) == False
