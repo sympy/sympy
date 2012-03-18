@@ -200,6 +200,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Jorge E. Cardona: Cleanup in polys
 #. Sanket Agarwal: Rewrite coverage_doctest.py script
 #. Manoj Babu K.: Improve gamma function
+#. Sai Nikhil: Fix to Heavyside with complex arguments
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
