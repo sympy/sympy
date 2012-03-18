@@ -486,9 +486,9 @@ def test_inverse_laplace_transform():
     # just test inverses of all of the above
     assert ILT(1/s, s, t) == Heaviside(t)
     assert ILT(1/s**2, s, t) == t*Heaviside(t)
-    assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/factorial(4)
+    assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/24
     assert ILT(exp(-a*s)/s, s, t) == Heaviside(t-a)
-    assert ILT(exp(-a*s)/(s+b), s, t) == Heaviside(t - a)*exp(b*(a - t))
+    assert ILT(exp(-a*s)/(s+b), s, t) == exp(b*(a - t))*Heaviside(-a + t)
     assert ILT(a/(s**2 + a**2), s, t) == sin(a*t)*Heaviside(t)
     assert ILT(s/(s**2 + a**2), s, t) == cos(a*t)*Heaviside(t)
     # TODO is there a way around simp_hyp?

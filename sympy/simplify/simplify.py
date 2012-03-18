@@ -2635,8 +2635,11 @@ def signsimp(expr, evaluate=True):
     exp(-(x - y))
 
     """
+    expr = sympify(expr)
+    if not isinstance(expr, Expr) or expr.is_Atom:
+        return expr
     e = sub_post(sub_pre(expr))
-    if evaluate:
+    if evaluate and isinstance(e, Expr):
         e = e.xreplace(dict([(m, -(-m)) for m in e.atoms(Mul) if -(-m) != m]))
     return e
 
@@ -2766,7 +2769,9 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     """
     from sympy.simplify.hyperexpand import hyperexpand
 
-    expr = sympify(expr)
+    original_expr = expr = sympify(expr)
+
+    expr = signsimp(expr)
 
     if not isinstance(expr, Basic): # XXX: temporary hack
         return expr
@@ -2781,9 +2786,6 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
-
-    original_expr = expr
-    expr = signsimp(expr)
 
     def shorter(*choices):
         '''Return the choice that has the fewest ops. In case of a tie,
