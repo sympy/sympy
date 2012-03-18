@@ -133,7 +133,10 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def __print_Boolean(self, e, char):
-        args = sorted(e.args, key=default_sort_key)
+        if isinstance(e, Basic):
+            args = sorted(e.args, key=default_sort_key)
+        else:
+            args = e
         arg = args[0]
         pform = self._print(arg)
 
@@ -183,7 +186,8 @@ class PrettyPrinter(Printer):
 
     def _print_Implies(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, u"\u2192")
+            # don't sort implies' args
+            return self.__print_Boolean(e.args, u"\u2192")
         else:
             return self._print_Function(e)
 
