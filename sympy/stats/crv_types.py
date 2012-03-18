@@ -138,7 +138,7 @@ def Arcsin(a=0, b=1, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -197,7 +197,7 @@ def Benini(alpha, beta, sigma, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -270,7 +270,7 @@ def Beta(alpha, beta, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -337,7 +337,7 @@ def BetaPrime(alpha, beta, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -397,7 +397,7 @@ def Cauchy(x0, gamma, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -453,7 +453,7 @@ def Chi(k, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -511,7 +511,7 @@ def Dagum(p, a, b, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -575,7 +575,7 @@ def Exponential(rate, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -664,7 +664,7 @@ def Gamma(k, theta, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -746,7 +746,7 @@ def Laplace(mu, b, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -803,7 +803,7 @@ def Logistic(mu, s, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -868,7 +868,7 @@ def LogNormal(mean, std, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -940,7 +940,7 @@ def Maxwell(a, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -1003,7 +1003,7 @@ def Nakagami(mu, omega, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -1084,7 +1084,7 @@ def Normal(mean, std, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -1176,7 +1176,7 @@ def Pareto(xm, alpha, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -1232,7 +1232,7 @@ def Rayleigh(sigma, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -1293,7 +1293,7 @@ def StudentT(nu, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -1371,7 +1371,7 @@ def Triangular(a, b, c, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -1446,7 +1446,7 @@ def Uniform(left, right, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -1519,7 +1519,7 @@ def UniformSum(n, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
@@ -1597,7 +1597,7 @@ def Weibull(alpha, beta, symbol=None):
     Returns
     =======
 
-    A `RandomSymbol` X.
+    A RandomSymbol.
 
     Examples
     ========
