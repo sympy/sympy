@@ -199,6 +199,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Matthias Toews: File permissions
 #. Jorge E. Cardona: Cleanup in polys
 #. Sanket Agarwal: Rewrite coverage_doctest.py script
+#. Manoj Babu K.: Improve gamma function
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
