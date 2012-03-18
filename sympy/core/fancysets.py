@@ -13,6 +13,8 @@ class Naturals(CountableSet):
     ========
 
         >>> from sympy import S, Interval
+        >>> 5 in S.Naturals
+        True
 
     """
 
@@ -20,12 +22,11 @@ class Naturals(CountableSet):
 
     def _intersect(self, other):
         if other.is_Interval:
-            other = other.intersect(Interval(0,oo))
-            return FiniteSet(range(ceiling(other.left), floor(other.right)))
+            return Intersection(S.Integers, other, Interval(1, oo))
         return None
 
     def _contains(self, other):
-        if other<0:
+        if other<=0:
             return False
         other = sympify(other)
         return sympify(other).is_integer or (other-int(other)) == 0
@@ -62,7 +63,8 @@ class Integers(CountableSet):
 
     def _intersect(self, other):
         if other.is_Interval:
-            return FiniteSet(range(ceiling(other.left), floor(other.right)))
+            s = FiniteSet(range(ceiling(other.left), floor(other.right)+1))
+            return s.intersect(other) # take out endpoints if open interval
         return None
 
     def _contains(self, other):
@@ -87,15 +89,15 @@ class Integers(CountableSet):
     def _sup(self):
         return oo
 
-class Isomorphic(Set):
+class TransformationSet(Set):
     """
-    A set that is isomorphic to another through some algebraic expressions
+    A set that is a transformation of another through some algebraic expression
 
     Examples
     --------
-    >>> from sympy import Isomorphic, S, FiniteSet
+    >>> from sympy import TransformationSet, S, FiniteSet
     >>> N = S.Naturals
-    >>> squares = Isomorphic(Lambda(x, x**2), N) # {x**2 for x in N}
+    >>> squares = TransformationSet(Lambda(x, x**2), N) # {x**2 for x in N}
     >>> 4 in squares
     True
     >>> 5 in squares
@@ -143,36 +145,9 @@ class Isomorphic(Set):
     def is_iterable(self):
         return self.base_set.is_iterable
 
-def IsomorphicToN(lambd):
-    """
-    A set that is isomorphic to the natural numbers through an algebraic
-    expressions. A countable set.
-
-    Examples
-    --------
-    >>> from sympy import IsomorphicToN, S, FiniteSet
-    >>> squares = IsomorphicToN(x**2, x) # {x**2 for x in Naturals}
-    >>> 4 in squares
-    True
-    >>> 5 in squares
-    False
-
-    >>> FiniteSet(0,1,2,3,4,5,6,7,9,10).intersect(squares)
-    {1, 4}
-    >>> square_iterable = iter(squares)
-    >>> for i in range(5):
-    ...     square_iterable.next()
-    0
-    1
-    4
-    9
-    16
-    """
-    return Isomorphic(lambd, S.Naturals)
-
 x = Dummy('x')
-harmonics = IsomorphicToN(Lambda(x, 1/x))
-squares = IsomorphicToN(Lambda(x, x**2))
+harmonics = TransformationSet(Lambda(x, 1/x), S.Naturals)
+squares = TransformationSet(Lambda(x, x**2), S.Naturals)
 r, th = symbols('r, theta', real=True)
 L = Lambda((r, th), (r*cos(th), r*sin(th)))
-halfcircle = Isomorphic(L, Interval(0, 1)*Interval(0, pi))
+halfcircle = TransformationSet(L, Interval(0, 1)*Interval(0, pi))
