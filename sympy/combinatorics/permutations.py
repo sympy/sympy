@@ -887,6 +887,14 @@ don\'t match.")
 
         An inversion is where i > j but p[i] < p[j].
 
+        For small length of p, it iterates over all i and j
+        values and calculates the number of inversions.
+        For large length of p, it uses a variation of merge
+        sort to calculate the number of inversions.
+        References
+        =========
+        [1] http://www.cp.eng.chula.ac.th/~piak/teaching/algo/algo2008/count-inv.htm
+
         Examples
         ========
 
@@ -894,6 +902,8 @@ don\'t match.")
         >>> p = Permutation([0,1,2,3,4,5])
         >>> p.inversions()
         0
+        >>> Permutation([3,2,1,0]).inversions()
+        6
 
         See Also
         ========
@@ -902,11 +912,26 @@ don\'t match.")
         inversions = 0
         a = self.array_form
         n = len(a)
-        for i in xrange(n - 1):
-            b = a[i]
-            for j in xrange(i + 1, n):
-                if b > a[j]:
-                    inversions += 1
+        if n < 130:
+            for i in xrange(n - 1):
+                b = a[i]
+                for c in a[i + 1:]:
+                    if b > c:
+                        inversions += 1
+        else:
+            k = 1
+            right = 0
+            arr = a[:]
+            temp = a[:]
+            while k < n:
+                i = 0
+                while i + k < n:
+                    right = i + k * 2 - 1
+                    if right >= n:
+                        right = n -1
+                    inversions += _merge(arr, temp, i, i+k, right)
+                    i = i + k * 2;
+                k = k * 2
         return inversions
 
     def conjugate(self, x):
@@ -1603,3 +1628,35 @@ def _new_from_array_form(perm):
     p = Basic.__new__(Permutation, perm)
     p._array_form = perm
     return p
+
+def _merge(arr, temp, left, mid, right):
+    """
+    Helper function for calculating inversions.This method is
+    for internal use only.
+    Merges two sorted arrays and calculates the inversion count.
+    """
+    i = left
+    j = mid
+    k = left
+    inv_count = 0
+    while i < mid and j <= right:
+        if arr[i] < arr[j]:
+            temp[k] = arr[i]
+            k += 1
+            i += 1
+        else:
+            temp[k] = arr[j]
+            k += 1
+            j += 1
+            inv_count += (mid -i)
+    while i < mid:
+        temp[k] = arr[i]
+        k += 1
+        i += 1
+    if j <= right:
+        k += right - j + 1
+        j += right - j + 1
+        arr[left:k + 1] = temp[left:k + 1]
+    else:
+        arr[left:right + 1] = temp[left:right + 1]
+    return inv_count

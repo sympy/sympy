@@ -44,6 +44,7 @@ def test_Permutation():
     assert Permutation.from_inversion_vector(p.inversion_vector()) == p
     assert Permutation.from_inversion_vector(q.inversion_vector()).array_form\
            == q.array_form
+    assert Permutation([i for i in range(500,-1,-1)]).inversions() == 125250
 
     assert Permutation([0, 4, 1, 3, 2]).parity() == 0
     assert Permutation([0, 1, 4, 3, 2]).parity() == 1
