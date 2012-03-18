@@ -192,9 +192,9 @@ def test_intersection():
 
     # Products
     line = Interval(0, 5)
-    i = Intersection(line**2, line)
+    i = Intersection(line**2, line**3, evaluate=False)
     assert (2,2) not in i
-    assert 5 not in i
+    assert (2,2,2) not in i
     raises(ValueError, "list(i)")
 
 def test_interval_subs():
