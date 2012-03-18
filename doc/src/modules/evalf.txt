@@ -203,28 +203,26 @@ imaginary portions of a number with exact zeros:
     3.00000000000000
 
 
-In situations where you wish to remove meaningless digits, re-evaluation and
-the use of the ``round`` function are useful:
+In situations where you wish to remove meaningless digits, re-evaluation or
+the use of the ``round`` method are useful:
 
     >>> Float('.1', '')*Float('.12345', '')
     0.012297
     >>> ans = _
     >>> N(ans, 1)
     0.01
-    >>> round(ans, 2)
+    >>> ans.round(2)
     0.01
 
 
 If you are dealing with a numeric expression that contains no floats, it
-will be evaluable to arbitrary precision. To round the result relative to
-the decimal, the round function is useful:
+can be evaluated to arbitrary precision. To round the result relative to
+a given decimal, the round method is useful:
 
-    >>> from sympy import round
-    >>> 10*pi + cos(1)
-    cos(1) + 10*pi
-    >>> N(_)
+    >>> v = 10*pi + cos(1)
+    >>> N(v)
     31.9562288417661
-    >>> round(_, 3)
+    >>> v.round(3)
     31.956
 
 

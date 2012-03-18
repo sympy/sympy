@@ -4,7 +4,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
     Interval, Lambda, Limit, log, Matrix, nan, O, oo, pi, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
-    WildFunction, zeta, zoo, Dummy, Dict, Tuple, round)
+    WildFunction, zeta, zoo, Dummy, Dict, Tuple)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner
@@ -302,8 +302,8 @@ def test_Float():
     assert str(pi.evalf(1+2))   == '3.14'
     assert str(pi.evalf(1+14))  == '3.14159265358979'
     assert str(pi.evalf(1+64))  == '3.1415926535897932384626433832795028841971693993751058209749445923'
-    assert str(round(pi, -1)) == '0.'
-    assert str((pi**400 - round(pi**400, 1)).n(1)) == '-0.e+91'
+    assert str(pi.round(-1)) == '0.'
+    assert str((pi**400 - (pi**400).round(1)).n(1)) == '-0.e+91'
 
 def test_Relational():
     assert str(Rel(x, y, "<")) == "x < y"
