@@ -4,6 +4,8 @@ from sympy.utilities.pytest import raises
 
 from sympy.core.function import ArgumentIndexError
 
+from sympy.core import I
+
 x,y = symbols('x y')
 
 def test_DiracDelta():
@@ -42,5 +44,9 @@ def test_heaviside():
     assert Heaviside(nan) == nan
 
     assert Heaviside(x).diff(x) == DiracDelta(x)
+    assert Heaviside(x+I).is_Function
+    assert Heaviside(I*x).is_Function
 
     raises(ArgumentIndexError, 'Heaviside(x).fdiff(2)')
+    raises(ValueError, 'Heaviside(I)')
+    raises(ValueError, 'Heaviside(2+3*I)')
