@@ -1,6 +1,6 @@
 from sympy import (Symbol, gamma, oo, nan, zoo, factorial, sqrt, Rational, log,
         polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
-        cos, O, cancel, lowergamma, exp,  erf, beta)
+        cos, O, cancel, lowergamma, exp,  erf, beta, N)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       test_numerically as tn)
@@ -34,6 +34,15 @@ def test_gamma():
 
     assert gamma(Rational(-15, 2)) == Rational(256, 2027025)*sqrt(pi)
 
+    assert N(gamma(Rational(-5, 3))) - gamma(-5.0/3) < 1e-15
+    assert N(gamma(Rational(-4, 3))) - gamma(-4.0/3) < 1e-15
+    assert N(gamma(Rational(5, 3))) - gamma(5.0/3) < 1e-15
+    assert N(gamma(Rational(4, 3))) - gamma(4.0/3) < 1e-15
+    assert N(gamma(Rational(-5,4))) - gamma(-5.0/4) < 1e-15
+    assert N(gamma(Rational(-7, 4))) - gamma(-7.0/4) < 1e-15
+    assert N(gamma(Rational(5, 4))) - gamma(5.0/4) < 1e-15
+    assert N(gamma(Rational(7, 4))) - gamma(7.0/4) < 1e-15
+    
     assert gamma(x).diff(x) == gamma(x)*polygamma(0, x)
 
     assert gamma(x - 1).expand(func=True) == gamma(x)/(x-1)
