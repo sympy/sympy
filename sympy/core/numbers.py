@@ -223,6 +223,9 @@ class Number(AtomicExpr):
             raise TypeError(msg % (type(other).__name__, type(self).__name__))
         return divmod(other, self)
 
+    def __round__(self, *args):
+        return round(float(self), *args)
+
     def _as_mpf_val(self, prec):
         """Evaluation of mpf tuple accurate to at least prec bits."""
         raise NotImplementedError('%s needs ._as_mpf_val() method' % \
@@ -816,9 +819,6 @@ class Float(Number):
 
     def __hash__(self):
         return super(Float, self).__hash__()
-
-    def __round__(self, *args):
-        return round(float(self), *args)
 
     def epsilon_eq(self, other, epsilon="10e-16"):
         return abs(self - other) < Float(epsilon)
