@@ -195,7 +195,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Nathan Alison: Additions to the stats module
 #. Christian Bühler: remove use of set_main() in GA
 #. Carsten Knoll: improvement to preview()
-#. M R Bharath: modified use of int_tested
+#. M R Bharath: modified use of int_tested, improvement to Permutation
 #. Matthias Toews: File permissions
 #. Jorge E. Cardona: Cleanup in polys
 #. Sanket Agarwal: Rewrite coverage_doctest.py script
