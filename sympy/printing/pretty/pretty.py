@@ -132,7 +132,8 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e)
 
-    def __print_Boolean(self, args, char):
+    def __print_Boolean(self, e, char):
+        args = sorted(e.args, key=default_sort_key)
         arg = args[0]
         pform = self._print(arg)
 
@@ -151,47 +152,44 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_And(self, e):
-        args = sorted(e.args, key=default_sort_key)
         if self._use_unicode:
-            return self.__print_Boolean(args, u"\u2227")
+            return self.__print_Boolean(e, u"\u2227")
         else:
             return self._print_Function(e)
 
     def _print_Or(self, e):
-        args = sorted(e.args, key=default_sort_key)
         if self._use_unicode:
-            return self.__print_Boolean(args, u"\u2228")
+            return self.__print_Boolean(e, u"\u2228")
         else:
             return self._print_Function(e)
 
     def _print_Xor(self, e):
-        args = sorted(e.args, key=default_sort_key)
         if self._use_unicode:
-            return self.__print_Boolean(args, u"\u22bb")
+            return self.__print_Boolean(e, u"\u22bb")
         else:
             return self._print_Function(e)
 
     def _print_Nand(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e.args, u"\u22bc")
+            return self.__print_Boolean(e, u"\u22bc")
         else:
             return self._print_Function(e)
 
     def _print_Nor(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e.args, u"\u22bd")
+            return self.__print_Boolean(e, u"\u22bd")
         else:
             return self._print_Function(e)
 
     def _print_Implies(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e.args, u"\u2192")
+            return self.__print_Boolean(e, u"\u2192")
         else:
             return self._print_Function(e)
 
     def _print_Equivalent(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e.args, u"\u2261")
+            return self.__print_Boolean(e, u"\u2261")
         else:
             return self._print_Function(e)
 
