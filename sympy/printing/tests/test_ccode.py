@@ -1,4 +1,5 @@
 from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy
+from sympy.core.cache import clear_cache
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
 from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter
@@ -54,6 +55,7 @@ def test_ccode_functions():
     assert ccode(sin(x) ** cos(x)) == "pow(sin(x), cos(x))"
 
 def test_ccode_inline_function():
+    clear_cache()
     x = symbols('x')
     g = implemented_function('g', Lambda(x, 2*x))
     assert ccode(g(x)) == "2*x"
