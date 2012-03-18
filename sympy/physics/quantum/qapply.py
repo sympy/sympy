@@ -61,7 +61,7 @@ def qapply(e, **options):
     # things like (A+B+C)*|a> and A*(|a>+|b>) and all Commutators and
     # TensorProducts. The only problem with this is that if we can't apply
     # all the Operators, we have just expanded everything.
-    # TODO: don't expand the scalars in front of each Mul.
+    
     e = e.expand(commutator=True, tensorproduct=True)
 
     # If we just have a raw ket, return it.
@@ -86,11 +86,13 @@ def qapply(e, **options):
 
     # We have a Mul where there might be actual operators to apply to kets.
     elif isinstance(e, Mul):
-        result = qapply_Mul(e, **options)
+        # get coeff, so that we dont have to expand it out
+        c_part = e.as_coeff_mul()[0];
+        result = c_part * qapply_Mul(e.extract_multiplicatively(c_part), **options)
         if result == e and dagger:
             return Dagger(qapply_Mul(Dagger(e), **options))
         else:
-            return result
+            return result;
 
     # In all other cases (State, Operator, Pow, Commutator, InnerProduct,
     # OuterProduct) we won't ever have operators to apply to kets.
@@ -172,4 +174,3 @@ def qapply_Mul(e, **options):
         return result*qapply_Mul(e._new_rawargs(*args), **options)
     else:  # result is a scalar times a Mul, Add or TensorProduct
         return qapply(e._new_rawargs(*args)*result, **options)
-
