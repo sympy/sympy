@@ -271,27 +271,27 @@ def test_E():
 
 def test_I():
     z = S.ImaginaryUnit
-    assert z.is_commutative == True
-    assert z.is_integer == False
-    assert z.is_rational == False
-    assert z.is_real == False
-    assert z.is_complex == True
-    assert z.is_noninteger == False
-    assert z.is_irrational == False
-    assert z.is_imaginary == True
-    assert z.is_positive == False
-    assert z.is_negative == False
-    assert z.is_nonpositive == False
-    assert z.is_nonnegative == False
-    assert z.is_even == False
-    assert z.is_odd == False
-    assert z.is_bounded == True
-    assert z.is_unbounded == False
-    assert z.is_finite == True
-    assert z.is_infinitesimal == False
-    assert z.is_comparable == None
-    assert z.is_prime == False
-    assert z.is_composite == False
+    assert z.is_commutative is True
+    assert z.is_integer is False
+    assert z.is_rational is False
+    assert z.is_real is False
+    assert z.is_complex is True
+    assert z.is_noninteger is False
+    assert z.is_irrational is False
+    assert z.is_imaginary is True
+    assert z.is_positive is False
+    assert z.is_negative is False
+    assert z.is_nonpositive is False
+    assert z.is_nonnegative is False
+    assert z.is_even is False
+    assert z.is_odd is False
+    assert z.is_bounded is True
+    assert z.is_unbounded is False
+    assert z.is_finite is True
+    assert z.is_infinitesimal is False
+    assert z.is_comparable is False
+    assert z.is_prime is False
+    assert z.is_composite is False
 
 def test_symbol_real():
     # issue 749

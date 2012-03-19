@@ -437,6 +437,8 @@ class Add(AssocOp):
         return False
 
     def _eval_is_positive(self):
+        if self.is_number:
+            return super(Add, self)._eval_is_positive()
         pos = nonneg = nonpos = unknown_sign = False
         unbounded = set()
         args = [a for a in self.args if not a.is_zero]
@@ -486,6 +488,8 @@ class Add(AssocOp):
             return False
 
     def _eval_is_negative(self):
+        if self.is_number:
+            return super(Add, self)._eval_is_negative()
         neg = nonpos = nonneg = unknown_sign = False
         unbounded = set()
         args = [a for a in self.args if not a.is_zero]

@@ -528,6 +528,22 @@ class Expr(Basic, EvalfMixin):
             return diff
         return None
 
+    def _eval_is_positive(self):
+        if self.is_real and self.is_number:
+            n = self.evalf(1)
+            if n > 0:
+                return True
+            elif n < 0:
+                return False
+
+    def _eval_is_negative(self):
+        if self.is_real and self.is_number:
+            n = self.evalf(1)
+            if n < 0:
+                return True
+            elif n > 0:
+                return False
+
     def _eval_interval(self, x, a, b):
         """
         Returns evaluation over an interval.  For most functions this is:

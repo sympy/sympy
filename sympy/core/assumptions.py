@@ -1,4 +1,3 @@
-from sympy.core.compatibility import cmp
 from sympy.core.facts import FactRules
 from sympy.core.core import BasicMeta
 
@@ -58,26 +57,9 @@ _assume_rules = FactRules([
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()
-_assume_defined.add('comparable')
 _assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
 
-
-###################################
-# positive/negative from .evalf() #
-###################################
-
-# properties that indicate ordering on real axis
-_real_ordering = set(['negative', 'nonnegative', 'positive', 'nonpositive'])
-
-# what can be said from cmp(x.evalf(),0)
-# if x.evalf() is zero we can say nothing so nonpositive is the same as negative
-_real_cmp0_table= {
-        'positive': {1: True,  -1: False, 0: None},
-        'negative': {1: False, -1: True,  0: None},
-        }
-_real_cmp0_table['nonpositive'] = _real_cmp0_table['negative']
-_real_cmp0_table['nonnegative'] = _real_cmp0_table['positive']
 
 class CycleDetected(Exception):
     """(internal) used to detect cycles when evaluating assumptions
@@ -196,7 +178,7 @@ class AssumeMixin(object):
         - infinitesimal - object value is infinitesimal
 
 
-    Examples rules:
+    Example rules:
 
       positive=T            ->  nonpositive=F, real=T
       real=T & positive=F   ->  nonpositive=T
@@ -334,15 +316,6 @@ class AssumeMixin(object):
            so in the latter case if we are looking at what 'even' value is,
            'integer' and 'odd' facts will be asked.
 
-
-           3. evalf() for comparable
-           -------------------------
-
-           as a last resort for comparable objects we get their numerical value
-           -- this helps to determine facts like 'positive' and 'negative'
-
-
-
            In all cases when we settle on some fact value, it is given to
            _learn_new_facts to deduce all its implications, and also the result
            is cached in ._assumptions for later quick access.
@@ -384,17 +357,6 @@ class AssumeMixin(object):
                             pass
         finally:
             seen.pop()
-
-        # For positive/negative try to ask evalf
-        if k in _real_ordering and self.is_comparable:
-            e = self.evalf(1)
-
-            if e.is_Number:
-                a = _real_cmp0_table[k][cmp(e, 0)]
-
-                if a is not None:
-                    self._learn_new_facts( ((k,a),) )
-                    return a
 
         # No result -- unknown
         # cache it  (NB ._learn_new_facts(k, None) to learn other properties,
