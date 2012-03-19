@@ -1,5 +1,5 @@
 from sympy.core.fancysets import TransformationSet
-from sympy import S, Symbol, Lambda, symbols, cos, sin, pi
+from sympy import S, Symbol, Lambda, symbols, cos, sin, pi, oo
 from sympy.core.sets import FiniteSet, Interval
 
 x = Symbol('x')
