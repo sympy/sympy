@@ -122,11 +122,67 @@ class PropertyManager(StdFactKB):
             except KeyError:
                 if self._assumptions is self.default_assumptions:
                     self._assumptions = self.default_assumptions.copy()
-                return self._what_known_about(fact)
+                return self.default_assumptions._ask(fact, self)
 
         getit.func_name = as_property(fact)
         return property(getit)
 
+    def _ask(self, fact, obj):
+        """
+        Find the truth value for a property of an object.
+
+        This function is called when a request is made to see what a fact
+        value is.
+
+        For this we use several techniques:
+
+        First, the fact-evaluation function is tried, if it exists (for
+        example _eval_is_integer). Then we try related facts. For example
+
+            rational   -->   integer
+
+        another example is joined rule:
+
+            integer & !odd  --> even
+
+        so in the latter case if we are looking at what 'even' value is,
+        'integer' and 'odd' facts will be asked.
+
+        In all cases, when we settle on some fact value, its implications are
+        deduced, and the result is cached in ._assumptions.
+        """
+        assumptions = obj._assumptions
+        evaluator = self.evaluator
+
+        # Store None into the assumptions so that recursive attempts at
+        # evaluating the same fact don't trigger infinite recursion.
+        assumptions.deduce_all_facts(((fact, None),))
+
+        # First try the assumption evaluation function if it exists
+        try:
+            evaluate = evaluator[fact]
+        except KeyError:
+            pass
+        else:
+            a = evaluate(obj)
+            if a is not None:
+                assumptions.deduce_all_facts(((fact, a),))
+                return a
+
+        # Try assumption's prerequisites
+        for pk in _assume_rules.prereq[fact]:
+            if pk in assumptions:
+                continue
+            if pk in evaluator:
+                self._ask(pk, obj)
+
+                # we might have found the value of fact
+                ret_val = assumptions.get(fact)
+                if ret_val is not None:
+                    return ret_val
+
+        # Note: the result has already been cached
+        return None
 
 class ManagedProperties(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
@@ -271,76 +327,3 @@ class AssumeMixin(object):
         """
         return {}
 
-    def _what_known_about(self, k):
-        """tries hard to give an answer to: what is known about fact `k`
-
-           NOTE: You should not use this directly -- see make__get_assumption
-                 instead
-
-           This function is called when a request is made to see what a fact
-           value is.
-
-           If we are here, it means that the asked-for fact is not known, and
-           we should try to find a way to find its value.
-
-           For this we use several techniques:
-
-           1. _eval_is_<fact>
-           ------------------
-
-           first fact-evaluation function is tried,  for example
-           _eval_is_integer
-
-
-           2. relations
-           ------------
-
-           if the first step did not succeeded (no such function, or its return
-           is None) then we try related facts. For example
-
-                       means
-             rational   -->   integer
-
-           another example is joined rule:
-
-             integer & !odd  --> even
-
-           so in the latter case if we are looking at what 'even' value is,
-           'integer' and 'odd' facts will be asked.
-
-           In all cases when we settle on some fact value, it is given to
-           _learn_new_facts to deduce all its implications, and also the result
-           is cached in ._assumptions for later quick access.
-        """
-        assumptions = self._assumptions
-        evaluator = self.default_assumptions.evaluator
-
-        # Store None into the assumptions so that recursive attempts at
-        # evaluating the same fact don't trigger infinite recursion.
-        assumptions.deduce_all_facts(((k, None),))
-
-        # First try the assumption evaluation function if it exists
-        try:
-            evaluate = evaluator[k]
-        except KeyError:
-            pass
-        else:
-            a = evaluate(self)
-            if a is not None:
-                assumptions.deduce_all_facts(((k, a),))
-                return a
-
-        # Try assumption's prerequisites
-        for pk in _assume_rules.prereq[k]:
-            if pk in assumptions:
-                continue
-            if pk in evaluator:
-                self._what_known_about(pk)
-
-                # we might have found the value of k
-                ret_val = assumptions.get(k)
-                if ret_val is not None:
-                    return ret_val
-
-        # Note: the result has already been cached
-        return None
