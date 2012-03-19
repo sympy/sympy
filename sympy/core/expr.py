@@ -529,19 +529,47 @@ class Expr(Basic, EvalfMixin):
         return None
 
     def _eval_is_positive(self):
-        if self.is_real and self.is_number:
-            n = self.evalf(1)
-            if n > 0:
-                return True
-            elif n < 0:
+        if self.is_number:
+            if self.is_real is False:
+                return False
+            try:
+                # check to see that we can get a value
+                n2 = self._eval_evalf(1)
+            except AttributeError:
+                n2 = None
+            if n2 is None:
+                return None
+            n, i = self.evalf(2).as_real_imag()
+            if not i.is_Number or not n.is_Number:
+                return False
+            if i:
+                if i._prec != 1:
+                    return False
+            elif n._prec != 1:
+                if n > 0:
+                    return True
                 return False
 
     def _eval_is_negative(self):
-        if self.is_real and self.is_number:
-            n = self.evalf(1)
-            if n < 0:
-                return True
-            elif n > 0:
+        if self.is_number:
+            if self.is_real is False:
+                return False
+            try:
+                # check to see that we can get a value
+                n2 = self._eval_evalf(1)
+            except AttributeError:
+                n2 = None
+            if n2 is None:
+                return None
+            n, i = self.evalf(2).as_real_imag()
+            if not i.is_Number or not n.is_Number:
+                return False
+            if i:
+                if i._prec != 1:
+                    return False
+            elif n._prec != 1:
+                if n < 0:
+                    return True
                 return False
 
     def _eval_interval(self, x, a, b):

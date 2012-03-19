@@ -113,6 +113,14 @@ def test_sign():
     x = 0
     assert sign(x).is_zero == True
 
+def test_as_real_imag():
+    n = pi**1000
+    # the special code for working out the real
+    # and complex parts of a power with Integer exponent
+    # should not run if there is no imaginary part, hence
+    # this should not hang
+    assert n.as_real_imag() == (n, 0)
+
 @XFAIL
 def test_sign_issue_3068():
     n = pi**1000

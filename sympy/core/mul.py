@@ -981,8 +981,8 @@ class Mul(AssocOp):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
+    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
-    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
 
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)
@@ -990,7 +990,6 @@ class Mul(AssocOp):
                all(arg.is_polar or arg.is_positive for arg in self.args)
 
     # I*I -> R,  I*I*I -> -I
-
     def _eval_is_real(self):
         im_count = 0
         is_neither = False
