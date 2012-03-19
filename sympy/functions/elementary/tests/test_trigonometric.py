@@ -309,9 +309,8 @@ def test_tan_subs():
     x,y = symbols('x,y')
     assert tan(x).subs(tan(x), y) == y
     assert tan(x).subs(x, y) == tan(y)
-    assert tan(x).subs(x, S.Pi/2) == S.NaN
-    assert tan(x).subs(x, 3*S.Pi/2) == S.NaN
-
+    assert tan(x).subs(x, S.Pi/2) == zoo
+    assert tan(x).subs(x, 3*S.Pi/2) == zoo
 
 def test_cot():
     x, y = symbols('x,y')
@@ -384,8 +383,8 @@ def test_cot_subs():
     x,y = symbols('x,y')
     assert cot(x).subs(cot(x), y) == y
     assert cot(x).subs(x, y) == cot(y)
-    assert cot(x).subs(x, 0) == S.NaN
-    assert cot(x).subs(x, S.Pi) == S.NaN
+    assert cot(x).subs(x, 0) == zoo
+    assert cot(x).subs(x, S.Pi) == zoo
 
 def test_asin():
     x = Symbol('x')

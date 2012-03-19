@@ -254,19 +254,32 @@ class Piecewise(Function):
         return Piecewise(*[(diff(e, s), c) for e, c in self.args])
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        new_args = []
-        for e, c in self.args:
+        """
+        Piecewise conditions may contain Sets whose modifications
+        requires the use of contains rather than substitution. They
+        may also contain bool which are not of Basic type.
+        """
+        args = list(self.args)
+        for i, (e, c) in enumerate(args):
+            try:
+                e = e._subs(old, new)
+            except TypeError:
+                if e != old:
+                    continue
+                e = new
+
             if isinstance(c, bool):
-                new_args.append((e._eval_subs(old, new), c))
+                pass
             elif isinstance(c, Set):
                 # What do we do if there are more than one symbolic
                 # variable. Which do we put pass to Set.contains?
-                new_args.append((e._eval_subs(old, new),  c.contains(new)))
-            else:
-                new_args.append((e._eval_subs(old, new), c._eval_subs(old, new)))
-        return Piecewise( *new_args )
+                c = c.contains(new)
+            elif isinstance(c, Basic):
+                c = c._subs(old, new)
+
+            args[i] = e, c
+
+        return Piecewise(*args)
 
     def _eval_nseries(self, x, n, logx):
         args = map(lambda ec: (ec.expr._eval_nseries(x, n, logx), ec.cond), \

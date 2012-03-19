@@ -3,7 +3,6 @@ Handlers for predicates related to set membership: integer, rational, etc.
 """
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
-from sympy.functions.elementary.miscellaneous import round
 
 class AskIntegerHandler(CommonHandler):
     """
@@ -15,7 +14,7 @@ class AskIntegerHandler(CommonHandler):
     def _number(expr, assumptions):
         # helper method
         try:
-            i = int(round(expr))
+            i = int(expr.round())
             if not (expr - i).equals(0):
                 raise TypeError
             return True

@@ -133,6 +133,8 @@ def test_creation():
     assert ImmutableMatrix(c) == c.as_immutable()
     assert Matrix(ImmutableMatrix(c)) == ImmutableMatrix(c).as_mutable()
 
+    assert c is not Matrix(c)
+
 def test_tolist():
     x, y, z = symbols('x y z')
     lst = [[S.One,S.Half,x*y,S.Zero],[x,y,z,x**2],[y,-S.One,z*x,3]]

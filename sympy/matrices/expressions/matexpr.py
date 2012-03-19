@@ -176,6 +176,14 @@ class MatrixExpr(Expr):
         """
         return self.as_explicit().as_mutable()
 
+    def __array__(self):
+        from numpy import empty
+        a = empty(self.shape, dtype=object)
+        for i in range(self.rows):
+            for j in range(self.cols):
+                a[i, j] = self[i, j]
+        return a
+
     def equals(self, other):
         """
         Test elementwise equality between matrices, potentially of different
@@ -220,14 +228,12 @@ class MatrixSymbol(MatrixExpr, Symbol):
         return self.args[0]
 
     def _eval_subs(self, old, new):
-        if self==old:
-            return new
-        else:
-            shape = Tuple(*self.shape).subs(old, new)
-            return MatrixSymbol(self.name, *shape)
+        # only do substitutions in shape
+        shape = Tuple(*self.shape)._subs(old, new)
+        return MatrixSymbol(self.name, *shape)
 
     def __call__(self, *args):
-        raise TypeError( "%s object is not callable"%self.__class__ )
+        raise TypeError( "%s object is not callable" % self.__class__ )
 
     def _entry(self, i, j):
         # MatMul _entry will pass us a Dummy and ask that we remember it
@@ -296,8 +302,6 @@ def matrixify(expr):
 
     Calling matrixify after calling these functions will reset classes back to
     their matrix equivalents
-
-    For internal use
     """
     class_dict = {Mul:MatMul, Add:MatAdd, MatMul:MatMul, MatAdd:MatAdd,
             Pow:MatPow, MatPow:MatPow}

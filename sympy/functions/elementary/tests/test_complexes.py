@@ -112,7 +112,7 @@ def test_sign():
 def test_sign_issue_3068():
     n = pi**1000
     i = int(n)
-    assert round(n - i) == 1 # doesn't hang
+    assert (n - i).round() == 1 # doesn't hang
     assert sign(n - i) == 1
     # perhaps it's not possible to get the sign right when
     # only 1 digit is being requested for this situtation;

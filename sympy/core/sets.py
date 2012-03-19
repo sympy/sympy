@@ -1,11 +1,13 @@
-from basic import Basic
-from singleton import Singleton, S
-from evalf import EvalfMixin
-from numbers import Float
-from sympify import _sympify, sympify, SympifyError
-from sympy.mpmath import mpi, mpf
-from containers import Tuple
+from sympy.core.sympify import _sympify, sympify, SympifyError
+from sympy.core.basic import Basic
+from sympy.core.singleton import Singleton, S
+from sympy.core.evalf import EvalfMixin
+from sympy.core.numbers import Float
+from sympy.core.containers import Tuple
 
+from sympy.mpmath import mpi, mpf
+from sympy.assumptions import ask
+from sympy.logic.boolalg import And, Or
 
 class Set(Basic):
     """
@@ -17,6 +19,14 @@ class Set(Basic):
     by the Union class. The empty set is represented by the EmptySet class
     and available as a singleton as S.EmptySet.
     """
+    is_number = False
+    is_iterable = False
+    is_interval = False
+
+    is_FiniteSet = False
+    is_Interval = False
+    is_ProductSet = False
+    is_Union = False
 
     def union(self, other):
         """
@@ -132,7 +142,7 @@ class Set(Basic):
         True
 
         """
-        return self._contains(other)
+        return self._contains(sympify(other, strict=True))
 
     def _contains(self, other):
         raise NotImplementedError("(%s)._contains(%s)" % (self, other))
@@ -200,47 +210,14 @@ class Set(Basic):
         return self.complement
 
     def __contains__(self, other):
-        result = self.contains(other)
-        if not isinstance(result, bool):
-            raise TypeError('contains did not evaluate to a bool: %r' % result)
+        symb = self.contains(other)
+        result = ask(symb)
+        if result is None:
+            raise TypeError('contains did not evaluate to a bool: %r' % symb)
         return result
 
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        new_args = []
-        for arg in self.args:
-            if arg == old:
-                new_args.append(new)
-            elif isinstance(arg, Basic):
-                new_args.append(arg._eval_subs(old, new))
-            else:
-                new_args.append(arg)
-        return self.__class__(*new_args)
-
-    @property
-    def is_number(self):
-        return False
     @property
     def is_real(self):
-        return False
-    @property
-    def is_iterable(self):
-        return False
-    @property
-    def is_interval(self):
-        return False
-    @property
-    def is_FiniteSet(self):
-        return False
-    @property
-    def is_Interval(self):
-        return False
-    @property
-    def is_ProductSet(self):
-        return False
-    @property
-    def is_Union(self):
         return False
 
 class ProductSet(Set):
@@ -280,6 +257,7 @@ class ProductSet(Set):
         - Passes most operations down to the argument sets
         - Flattens Products of ProductSets
     """
+    is_ProductSet = True
 
     def __new__(cls, *sets, **assumptions):
         def flatten(arg):
@@ -315,8 +293,7 @@ class ProductSet(Set):
 
         if len(element) != len(self.args):
             return False
-        from sympy.logic.boolalg import And
-        return And(*[set.contains(item) for set,item in zip(self.sets,element)])
+        return And(*[set.contains(item) for set, item in zip(self.sets, element)])
 
     def _intersect(self, other):
         if other.is_Union:
@@ -368,29 +345,21 @@ class ProductSet(Set):
             measure *= set.measure
         return measure
 
-    @property
-    def is_ProductSet(self):
-        return True
-
 class RealSet(Set, EvalfMixin):
     """
     A set of real values
     """
-    @property
-    def is_real(self):
-        return True
+    is_real = True
 
 class CountableSet(Set):
     """
     Represents a set of countable numbers such as {1, 2, 3, 4} or {1, 2, 3, ...}
     """
+    is_iterable = True
+
     @property
     def _measure(self):
         return 0
-
-    @property
-    def is_iterable(self):
-        return True
 
     def __iter__(self):
         raise NotImplementedError("Iteration not yet implemented")
@@ -426,6 +395,7 @@ class Interval(RealSet):
         - Use the evalf() method to turn an Interval into an mpmath
           'mpi' interval instance
     """
+    is_Interval = True
 
     def __new__(cls, start, end, left_open=False, right_open=False):
 
@@ -565,14 +535,6 @@ class Interval(RealSet):
         return Union(a, b)
 
     def _contains(self, other):
-        # We use the logic module here so that this method is meaningful
-        # when used with symbolic end points.
-        from sympy.logic.boolalg import And
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return False
-
         if self.left_open:
             expr = other > self.start
         else:
@@ -603,9 +565,6 @@ class Interval(RealSet):
         is_comparable &= other.end.is_comparable
 
         return is_comparable
-    @property
-    def is_Interval(self):
-        return True
 
     @property
     def is_left_unbounded(self):
@@ -620,7 +579,6 @@ class Interval(RealSet):
     def as_relational(self, symbol):
         """Rewrite an interval in terms of inequalities and logic operators. """
         from sympy.core.relational import Lt, Le
-        from sympy.logic.boolalg import And
 
         if not self.is_left_unbounded:
             if self.left_open:
@@ -661,9 +619,9 @@ class Union(Set):
         [1, 3]
 
     """
+    is_Union = True
 
     def __new__(cls, *args):
-
         # Flatten out Iterators and Unions to form one list of sets
         args = list(args)
         def flatten(arg):
@@ -765,7 +723,6 @@ class Union(Set):
         return complement
 
     def _contains(self, other):
-        from sympy.logic.boolalg import Or
         or_args = [the_set.contains(other) for the_set in self.args]
         return Or(*or_args)
 
@@ -816,16 +773,12 @@ class Union(Set):
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators.
         """
-        from sympy.logic.boolalg import Or
         return Or(*[set.as_relational(symbol) for set in self.args])
 
     @property
     def is_iterable(self):
         return all(arg.is_iterable for arg in self.args)
 
-    @property
-    def is_Union(self):
-        return True
 
 class RealUnion(Union, RealSet):
     """
@@ -959,7 +912,6 @@ class EmptySet(Set):
         EmptySet()
 
     """
-
     __metaclass__ = Singleton
 
     def _intersect(self, other):
@@ -1003,6 +955,8 @@ class FiniteSet(CountableSet):
         True
 
     """
+    is_FiniteSet = True
+
     def __new__(cls, *args):
         def flatten(arg):
             if is_flattenable(arg):
@@ -1010,10 +964,7 @@ class FiniteSet(CountableSet):
             return [arg]
         args = flatten(list(args))
 
-        # Sympify Arguments
         args = map(sympify, args)
-        # Turn tuples into Tuples
-        args = [Tuple(*arg) if arg.__class__ is tuple else arg for arg in args]
 
         if len(args) == 0:
             return EmptySet()
@@ -1024,7 +975,7 @@ class FiniteSet(CountableSet):
         except AttributeError:
             pass
 
-        elements = frozenset(map(sympify, args))
+        elements = frozenset(args)
         obj = Basic.__new__(cls, elements)
         obj.elements = elements
         return obj
@@ -1063,9 +1014,7 @@ class FiniteSet(CountableSet):
         >>> Interval(1, 2) - FiniteSet(2, 3)
         [1, 2)
 
-
         """
-
         if other == S.EmptySet:
             return self
         if other.is_FiniteSet:
@@ -1086,7 +1035,7 @@ class FiniteSet(CountableSet):
         False
 
         """
-        return sympify(other) in self.elements
+        return other in self.elements
 
     @property
     def _inf(self):
@@ -1108,12 +1057,7 @@ class FiniteSet(CountableSet):
         """Rewrite a FiniteSet in terms of equalities and logic operators.
         """
         from sympy.core.relational import Eq
-        from sympy.logic.boolalg import Or
         return Or(*[Eq(symbol, elem) for elem in self])
-
-    @property
-    def is_FiniteSet(self):
-        return True
 
     @property
     def is_real(self):
@@ -1163,7 +1107,6 @@ class RealFiniteSet(FiniteSet, RealSet):
         """Rewrite a FiniteSet in terms of equalities and logic operators.
         """
         from sympy.core.relational import Eq
-        from sympy.logic.boolalg import Or
         return Or(*[Eq(symbol, elem) for elem in self])
 
 genclass = (1 for i in xrange(2)).__class__

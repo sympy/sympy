@@ -5,7 +5,6 @@ from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 from sympy.ntheory import isprime
 from sympy.ntheory.residue_ntheory import int_tested
-from sympy.functions.elementary.miscellaneous import round
 
 class AskPrimeHandler(CommonHandler):
     """
@@ -19,7 +18,7 @@ class AskPrimeHandler(CommonHandler):
     def _number(expr, assumptions):
         # helper method
         try:
-            i = int(round(expr))
+            i = int(expr.round())
             if not (expr - i).equals(0):
                 raise TypeError
         except TypeError:
@@ -105,7 +104,7 @@ class AskEvenHandler(CommonHandler):
     def _number(expr, assumptions):
         # helper method
         try:
-            i = int(round(expr))
+            i = int(expr.round())
             if not (expr - i).equals(0):
                 raise TypeError
         except TypeError:

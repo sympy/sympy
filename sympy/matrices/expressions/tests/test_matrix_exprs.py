@@ -2,7 +2,7 @@ from sympy.utilities.pytest import raises
 from sympy import S, symbols, Symbol, Tuple, Mul
 from sympy.matrices import (eye, MatrixSymbol, Transpose, Inverse, ShapeError,
         MatMul, Identity, BlockMatrix, BlockDiagMatrix, block_collapse, Matrix,
-        ZeroMatrix, MatAdd, MatPow, matrixify)
+        ZeroMatrix, MatAdd, MatPow, matrixify, ImmutableMatrix)
 
 def test_transpose():
     n, m, l = symbols('n m l', integer=True)
@@ -316,3 +316,9 @@ def test_matrixify():
     B = MatrixSymbol('B', m, l)
     assert matrixify(n+m) == n+m
     assert matrixify(Mul(A,B)) == MatMul(A,B)
+
+def test_dense_conversion():
+    X = MatrixSymbol('X', 2,2)
+    x00,x01,x10,x11 = symbols('X_00 X_01 X_10 X_11')
+    assert ImmutableMatrix(X) == ImmutableMatrix([[x00, x01], [x10, x11]])
+    assert Matrix(X) == Matrix([[x00, x01], [x10, x11]])

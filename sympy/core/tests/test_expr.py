@@ -5,7 +5,7 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     Poly, Function, Derivative, Number, pi, NumberSymbol, zoo, Piecewise, Mul,
     Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
     separate, collect, factorial, apart, combsimp, factor, refine, cancel,
-    Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum)
+    Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E)
 from sympy.core.function import AppliedUndef
 from sympy.abc import a, b, c, d, e, n, t, u, x, y, z
 from sympy.physics.secondquant import FockState
@@ -496,25 +496,6 @@ def test_as_independent():
     # issue 2685
     assert (x + Integral(x, (x, 1, 2))).as_independent(x, strict=True) == \
            (Integral(x, (x, 1, 2)), x)
-
-def test_subs_dict():
-    assert (sin(x))._subs_dict({ x : 1, sin(x) : 2}) == 2
-    assert (sin(x))._subs_dict([(x, 1), (sin(x), 2)]) == 2
-
-    expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
-
-    seq = [ (sqrt(sin(2*x)),a), (cos(2*x),b), (sin(2*x),c), (x,d), (exp(x),e) ]
-    assert expr._subs_dict(seq) == c + a*b*sin(d*e)
-
-    seq = [ (sqrt(sin(2*x)),a), (sin(2*x),c), (cos(2*x),b), (x,d), (exp(x),e) ]
-    assert expr._subs_dict(seq) == c + a*b*sin(d*e)
-
-def test_subs_list():
-    assert (sin(x))._subs_list([(sin(x), 2), (x, 1)]) == 2
-    assert (sin(x))._subs_list([(x, 1), (sin(x), 2)]) == sin(1)
-
-    assert (x+y)._subs_list([(x, 3), (y, x**2)]) == 3 + x**2
-    assert (x+y)._subs_list([(y, x**2), (x, 3)]) == 12
 
 def test_call():
     # Unlike what used to be the case, the following should NOT work.
@@ -1300,3 +1281,77 @@ def test_equals():
 def test_random():
     from sympy import posify
     assert posify(x)[0]._random() is not None
+
+def test_round():
+    from sympy.abc import x
+
+    assert Float('0.1249999').round(2) == 0.12
+    d20 = 12345678901234567890
+    ans = S(d20).round(2)
+    assert ans.is_Float and ans == d20
+    ans = S(d20).round(-2)
+    assert ans.is_Float and ans == 12345678901234567900
+    assert S('1/7').round(4) == 0.1429
+    assert S('.[12345]').round(4) == 0.1235
+    assert S('.1349').round(2) == 0.13
+    n = S(12345)
+    ans = n.round()
+    assert ans.is_Float
+    assert ans == n
+    ans = n.round(1)
+    assert ans.is_Float
+    assert ans == n
+    ans = n.round(4)
+    assert ans.is_Float
+    assert ans == n
+    assert n.round(-1) == 12350
+
+    r = n.round(-4)
+    assert r == 10000
+    # in fact, it should equal many values since __eq__
+    # compares at equal precision
+    assert all(r == i for i in range(9984, 10049))
+
+    assert n.round(-5) == 0
+
+    assert (pi + sqrt(2)).round(2) == 4.56
+    assert (10*(pi + sqrt(2))).round(-1) == 50
+    raises(TypeError, 'round(x + 2, 2)')
+    assert S(2.3).round(1) == 2.3
+    e = S(12.345).round(2)
+    assert e == round(12.345, 2)
+    assert type(e) is Float
+
+    assert (Float(.3, 3) + 2*pi).round() == 7
+    assert (Float(.3, 3) + 2*pi*100).round() == 629
+    assert (Float(.03, 3) + 2*pi/100).round(5) == 0.09283
+    assert (Float(.03, 3) + 2*pi/100).round(4) == 0.0928
+    assert (pi + 2*E*I).round() == 3 + 5*I
+
+    assert S.Zero.round() == 0
+
+    a = (Add(1, Float('1.'+'9'*27, ''), evaluate=0))
+    assert a.round(10) == Float('3.0000000000','')
+    assert a.round(25) == Float('3.0000000000000000000000000','')
+    assert a.round(26) == Float('3.00000000000000000000000000','')
+    assert a.round(27) == Float('2.999999999999999999999999999','')
+    assert a.round(30) == Float('2.999999999999999999999999999','')
+
+    raises(TypeError, 'x.round()')
+
+    # exact magnitude of 10
+    assert str(S(1).round()) == '1.'
+    assert str(S(100).round()) == '100.'
+
+    # applied to real and imaginary portions
+    assert (2*pi + E*I).round() == 6 + 3*I
+    assert (2*pi + I/10).round() == 6
+    assert (pi/10 + 2*I).round() == 2*I
+    # the lhs re and im parts are Float with dps of 2
+    # and those on the right have dps of 15 so they won't compare
+    # equal unless we use string or compare components (which will
+    # then coerce the floats to the same precision) or re-create
+    # the floats
+    assert str((pi/10 + E*I).round(2)) == '0.31 + 2.72*I'
+    assert (pi/10 + E*I).round(2).as_real_imag() == (0.31, 2.72)
+    assert (pi/10 + E*I).round(2) == Float(0.31, 2) +  I*Float(2.72, 3)
