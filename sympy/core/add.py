@@ -301,6 +301,8 @@ class Add(AssocOp):
     def _eval_subs(self, old, new):
         if self == old:
             return new
+        elif self == -old:
+            return -new
         from function import FunctionClass
         if isinstance(old, FunctionClass):
             return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
