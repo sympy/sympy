@@ -555,7 +555,7 @@ class Add(AssocOp):
                     return Add(new, coeff_self, -coeff_old,
                                *[s._subs(old, new) for s in ret_set])
 
-                args_old = (-terms_old).args     # (a+b+c+d).subs(-b-c,x) -> a-x+d
+                args_old = Add.make_args(-terms_old)     # (a+b+c+d).subs(-b-c,x) -> a-x+d
                 old_set = set(args_old)
                 if old_set < self_set:
                     ret_set = self_set - old_set

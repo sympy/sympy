@@ -344,6 +344,10 @@ def test_add():
     # and the change should be made
     assert (0.1 + a).subs(0.1, Rational(1, 10)) == Rational(1, 10) + a
 
+    e = (-x*(-y + 1) - y*(y - 1))
+    ans = (-x*(x) - y*(-x)).expand()
+    assert e.subs(-y + 1, x) == ans
+
 def test_subs_issue910():
     assert (I*Symbol('a')).subs(1, 2) == I*Symbol('a')
 
