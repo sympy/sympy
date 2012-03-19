@@ -187,7 +187,7 @@ class MathMLPrinter(Printer):
 
     def _print_GoldenRatio(self,e):
         """We use unicode #x3c6 for Greek letter phi as defined here
-        http://www.w3.org/Math/characters/"""
+        http://www.w3.org/2003/entities/2007doc/isogrk1.html"""
         x = self.dom.createElement('cn')
         x.appendChild(self.dom.createTextNode(u"\u03c6"))
         return x
@@ -262,6 +262,7 @@ class MathMLPrinter(Printer):
                 return mi
 
         # translate name, supers and subs to unicode characters
+        # taken from http://www.w3.org/2003/entities/2007doc/isogrk1.html
         unitr = {
             'Alpha'   : u'\u0391', 'Beta'     : u'\u0392',
             'Gamma'   : u'\u0393', 'Delta'    : u'\u0394',
