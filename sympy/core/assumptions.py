@@ -202,7 +202,7 @@ class PropertyManager(StdFactKB):
 
         # Store None into the assumptions so that recursive attempts at
         # evaluating the same fact don't trigger infinite recursion.
-        assumptions.deduce_all_facts(((fact, None),))
+        assumptions._tell(fact, None)
 
         # First try the assumption evaluation function if it exists
         try:

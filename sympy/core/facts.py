@@ -491,6 +491,11 @@ class FactRules(object):
             prereq[k] |= pitems
         self.prereq = prereq
 
+class InconsistentAssumptions(ValueError):
+    def __str__(self):
+        kb, fact, value = self.args
+        return "%s, %s=%s" % (kb, fact, value)
+
 class FactKB(dict):
     def __init__(self, rules):
         self.rules = rules
@@ -499,6 +504,20 @@ class FactKB(dict):
         new = self.__class__(self.rules)
         new.update(self)
         return new
+
+    def _tell(self, k, v):
+        """Add fact k=v to the knowledge base.
+
+        Returns True if the KB has actually been updated, False otherwise.
+        """
+        if k in self and self[k] is not None:
+            if self[k] == v:
+                return False
+            else:
+                raise InconsistentAssumptions(self, k, v)
+        else:
+            self[k] = v
+            return True
 
     def deduce_all_facts(self, facts):
         """Deduce all facts from known facts ({} or [] of (k,v))
@@ -519,15 +538,6 @@ class FactKB(dict):
         rels = self.rules.rels
         beta_rules = self.rules.beta_rules
 
-        def x_new_facts(facts):
-            for k, v in facts:
-                if k in self and self[k] is not None:
-                    assert self[k] == v, \
-                            ('inconsistency between facts', self, k, v)
-                    continue
-                else:
-                    self[k] = v
-
         if isinstance(facts, dict):
             fseq = facts.iteritems()
         else:
@@ -538,31 +548,23 @@ class FactKB(dict):
 
             # --- alpha chains ---
             for k, v in fseq:
-                #new_fact(k, v)
-                if k in self and self[k] is not None:
-                    assert self[k] == v, \
-                            ('inconsistency between facts', self, k, v)
-                    # performance-wise it is important not to fire implied rules
-                    # for already-seen fact -- we already did them all.
+                if not self._tell(k, v) or v is None:
                     continue
+
+                # lookup routing tables
+                try:
+                    alpha, beta = rels[(k, v)]
+                except KeyError:
+                    pass
                 else:
-                    self[k] = v
+                    # Now we have routing tables with *all* the needed
+                    # implications for this k. This means we do not have to
+                    # process each implications recursively!
+                    # XXX this ^^^ is true only for alpha chains
+                    for key, value in alpha:
+                        self._tell(key, value)
 
-                # some known fact -- let's follow its implications
-                if v is not None:
-                    # lookup routing tables
-                    try:
-                        alpha, beta = rels[(k, v)]
-                    except KeyError:
-                        pass
-                    else:
-                        # Now we have routing tables with *all* the needed
-                        # implications for this k. This means we do not have to
-                        # process each implications recursively!
-                        # XXX this ^^^ is true only for alpha chains
-                        x_new_facts(alpha)
-
-                        beta_maytrigger.update(beta)
+                    beta_maytrigger.update(beta)
 
             # --- beta chains ---
 
