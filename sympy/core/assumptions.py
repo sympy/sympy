@@ -1,3 +1,49 @@
+"""
+This module contains the machinery handling assumptions.
+
+All symbolic objects have assumption attributes that can be accessed via
+.is_<assumption name> attribute.
+
+Assumptions determine certain properties of symbolic objects. Assumptions
+can have 3 possible values: True, False, None.  None is returned when it is
+impossible to say something about the property. For example, a Symbol is
+not know beforehand to be positive.
+
+By default, all symbolic values are in the largest set in the given context
+without specifying the property. For example, a symbol that has a property
+being integer, is also real, complex, etc.
+
+Here follows a list of possible assumption names:
+
+    - commutative   - object commutes with any other object with
+                        respect to multiplication operation.
+    - real          - object can have only values from the set
+                        of real numbers
+    - integer       - object can have only values from the set
+                        of integers
+    - bounded       - object absolute value is bounded
+    - positive      - object can have only positive values
+    - negative      - object can have only negative values
+    - nonpositive      - object can have only nonpositive values
+    - nonnegative      - object can have only nonnegative values
+    - irrational    - object value cannot be represented exactly by Rational
+    - unbounded     - object value is arbitrarily large
+    - infinitesimal - object value is infinitesimal
+
+
+Implementation note: assumption values are stored in
+._assumption dictionary or are returned by getter methods (with
+property decorators) or are attributes of objects/classes.
+
+Examples
+========
+
+    >>> from sympy import Symbol
+    >>> Symbol('x', real = True)
+    x
+
+"""
+
 from sympy.core.facts import FactRules, FactKB
 from sympy.core.core import BasicMeta
 
@@ -188,13 +234,6 @@ class ManagedProperties(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
     __metaclass__ = BasicMeta
 
-    def __new__(mcl, name, bases, attrdict):
-        if not any(issubclass(base, AssumeMixin) for base in bases):
-            bases = (AssumeMixin,) + bases
-            if '__slots__' in attrdict:
-                attrdict['__slots__'] += AssumeMixin._assume_slots
-        return super(ManagedProperties, mcl).__new__(mcl, name, bases, attrdict)
-
     def __init__(cls, *args, **kws):
         BasicMeta.__init__(cls, *args, **kws)
 
@@ -222,108 +261,4 @@ class ManagedProperties(BasicMeta):
             pname = as_property(fact)
             if not hasattr(cls, pname):
                 setattr(cls, pname, pmanager.make_property(fact))
-
-
-class AssumeMixin(object):
-    """ Define default assumption methods.
-
-    AssumeMeths should be used to derive Basic class only.
-
-    All symbolic objects have assumption attributes that can be accessed via
-    .is_<assumption name> attribute.
-
-    Assumptions determine certain properties of symbolic objects. Assumptions
-    can have 3 possible values: True, False, None.  None is returned when it is
-    impossible to say something about the property. For example, a Symbol is
-    not know beforehand to be positive.
-
-    By default, all symbolic values are in the largest set in the given context
-    without specifying the property. For example, a symbol that has a property
-    being integer, is also real, complex, etc.
-
-    Here follows a list of possible assumption names:
-
-        - commutative   - object commutes with any other object with
-                          respect to multiplication operation.
-        - real          - object can have only values from the set
-                          of real numbers
-        - integer       - object can have only values from the set
-                          of integers
-        - bounded       - object absolute value is bounded
-        - positive      - object can have only positive values
-        - negative      - object can have only negative values
-        - nonpositive      - object can have only nonpositive values
-        - nonnegative      - object can have only nonnegative values
-        - comparable    - object.evalf() returns Number object.
-        - irrational    - object value cannot be represented exactly by Rational
-        - unbounded     - object value is arbitrarily large
-        - infinitesimal - object value is infinitesimal
-
-
-    Example rules:
-
-      positive=T            ->  nonpositive=F, real=T
-      real=T & positive=F   ->  nonpositive=T
-
-      unbounded=F|T         ->  bounded=not unbounded   XXX ok?
-      irrational=T          ->  real=T
-
-
-    Implementation note: assumption values are stored in
-    ._assumption dictionary or are returned by getter methods (with
-    property decorators) or are attributes of objects/classes.
-
-    Examples
-    ========
-
-        - True, when we are sure about a property. For example, when we are
-        working only with real numbers:
-        >>> from sympy import Symbol
-        >>> Symbol('x', real = True)
-        x
-
-        - False
-
-        - None (if you don't know if the property is True or false)
-    """
-    _assume_slots = ['_assumptions']
-    try:
-        # This particular __slots__ definition breaks SymPy in Jython.
-        # See issue 1233.
-        import java
-    except ImportError:
-        __slots__ = []
-
-    def  _init_assumptions(self):
-        self._assumptions  = self.default_assumptions
-
-    # XXX better name?
-    @property
-    def assumptions0(self):
-        """
-        Return object `type` assumptions.
-
-        For example:
-
-          Symbol('x', real=True)
-          Symbol('x', integer=True)
-
-        are different objects. In other words, besides Python type (Symbol in
-        this case), the initial assumptions are also forming their typeinfo.
-
-        Examples
-        ========
-
-        >>> from sympy import Symbol
-        >>> from sympy.abc import x
-        >>> x.assumptions0
-        {'commutative': True}
-        >>> x = Symbol("x", positive=True)
-        >>> x.assumptions0
-        {'commutative': True, 'complex': True, 'imaginary': False,
-        'negative': False, 'nonnegative': True, 'nonpositive': False,
-        'nonzero': True, 'positive': True, 'real': True, 'zero': False}
-
-        """
-        return {}
 

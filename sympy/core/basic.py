@@ -41,6 +41,7 @@ class Basic(object):
     __metaclass__ = ManagedProperties
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
+                 '_assumptions'
                 ]
 
     # To be overridden with True in the appropriate subclasses
@@ -78,9 +79,9 @@ class Basic(object):
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
-        obj._init_assumptions()
-
+        obj._assumptions  = cls.default_assumptions
         obj._mhash = None # will be set by __hash__ method.
+
         obj._args = args  # all items in args must be Basic objects
         return obj
 
@@ -113,6 +114,35 @@ class Basic(object):
         # then this method should be updated accordingly to return
         # relevant attributes as tuple.
         return self._args
+
+    @property
+    def assumptions0(self):
+        """
+        Return object `type` assumptions.
+
+        For example:
+
+          Symbol('x', real=True)
+          Symbol('x', integer=True)
+
+        are different objects. In other words, besides Python type (Symbol in
+        this case), the initial assumptions are also forming their typeinfo.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol
+        >>> from sympy.abc import x
+        >>> x.assumptions0
+        {'commutative': True}
+        >>> x = Symbol("x", positive=True)
+        >>> x.assumptions0
+        {'commutative': True, 'complex': True, 'imaginary': False,
+        'negative': False, 'nonnegative': True, 'nonpositive': False,
+        'nonzero': True, 'positive': True, 'real': True, 'zero': False}
+
+        """
+        return {}
 
     def compare(self, other):
         """
