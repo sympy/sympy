@@ -61,7 +61,11 @@ def alternating(n):
 
 def dihedral(n):
     """
-    Generates the dihedral group of order 2n, D2n.
+    Generates the dihedral group of order 2n, Dn.
+
+    The result is given as a subgroup of Sn, except for the special cases n=1
+    (the group S2) and n=2 (the Klein 4-group) where that's not possible
+    and embeddings in S2 and S4 respectively are given.
 
     Examples
     ========
@@ -77,8 +81,17 @@ def dihedral(n):
     ========
     cyclic
     """
-    gen = range(n)
-    for i in xrange(n):
-        yield Permutation(gen)
-        yield Permutation(gen[::-1])
-        gen = rotate_left(gen, 1)
+    if n == 1:
+        yield Permutation([0, 1])
+        yield Permutation([1, 0])
+    elif n == 2:
+        yield Permutation([0, 1, 2, 3])
+        yield Permutation([1, 0, 3, 2])
+        yield Permutation([2, 3, 0, 1])
+        yield Permutation([3, 2, 1, 0])
+    else:
+        gen = range(n)
+        for i in xrange(n):
+            yield Permutation(gen)
+            yield Permutation(gen[::-1])
+            gen = rotate_left(gen, 1)
