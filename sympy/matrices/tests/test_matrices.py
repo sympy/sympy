@@ -628,8 +628,8 @@ def test_eigen():
     assert max(i.q for i in M._eigenvects[0][2][0]) == 1
     M = Matrix([[S(1)/4, 1], [1, 1]])
     assert M.eigenvects(simplify=True) == [
-      (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[-8/(sqrt(73) - 3)], [1]])]),
-      (S(5)/8 + sqrt(73)/8, 1, [Matrix([[-8/(-3 - sqrt(73))],   [1]])])]
+        (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[8/(-sqrt(73) + 3)], [1]])]),
+        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))],   [1]])])]
     assert M.eigenvects(simplify=False) == [
     (-sqrt(73)/8 + Rational(5, 8), 1,
         [Matrix([[-1/(Rational(-3, 8) + sqrt(73)/8)], [1]])]),

@@ -9,7 +9,7 @@ from sympy.core.sympify import sympify, converter, SympifyError
 from sympy.core.compatibility import is_sequence
 
 from sympy.polys import PurePoly, roots, cancel
-from sympy.simplify import simplify as _simplify
+from sympy.simplify import simplify as _simplify, signsimp
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
@@ -2729,7 +2729,7 @@ class MatrixBase(object):
 
         simplify = flags.pop('simplify', False)
         simpfunc = simplify if isinstance(simplify, FunctionType) else \
-            lambda x: x.as_content_primitive()
+            lambda x: signsimp(x).as_content_primitive()
 
         if 'multiple' in flags:
             del flags['multiple']
