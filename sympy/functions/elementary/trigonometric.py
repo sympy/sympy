@@ -1403,7 +1403,7 @@ class atan2(Function):
         elif x.is_zero:
             if sign_y.is_Number:
                 return sign_y * S.Pi/2
-        else:
+        elif x.is_zero is False:
             abs_yx = C.Abs(y/x)
             if sign_y.is_Number and abs_yx.is_number:
                 phi = C.atan(abs_yx)

@@ -121,13 +121,6 @@ class Pow(Expr):
         if b.is_polar:
             return Pow(b, e * other)
 
-    def _eval_is_comparable(self):
-        c1 = self.base.is_comparable
-        if c1 is None: return
-        c2 = self.exp.is_comparable
-        if c2 is None: return
-        return c1 and c2
-
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
             if self.base.is_even:

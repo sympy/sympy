@@ -631,6 +631,16 @@ class Basic(PicklableWithSlots):
         return False
 
     @property
+    def is_comparable(self):
+        is_real = self.is_real
+        if is_real is False:
+            return False
+        is_number = self.is_number
+        if is_number is False:
+            return False
+        return self.is_real and self.is_number
+
+    @property
     def func(self):
         """
         The top-level function in an expression.

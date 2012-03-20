@@ -8,6 +8,7 @@ def test_symbol_unset():
     assert x.is_integer == True
     assert x.is_imaginary == False
     assert x.is_noninteger == False
+    assert x.is_number is False
 
 def test_zero():
     z = Integer(0)
@@ -32,6 +33,7 @@ def test_zero():
     assert z.is_comparable == True
     assert z.is_prime == False
     assert z.is_composite == False
+    assert z.is_number is True
 
 def test_one():
     z = Integer(1)
@@ -55,6 +57,7 @@ def test_one():
     assert z.is_infinitesimal == False
     assert z.is_comparable == True
     assert z.is_prime == False
+    assert z.is_number is True
 
 @XFAIL
 def test_one_is_composite():
@@ -83,6 +86,7 @@ def test_negativeone():
     assert z.is_comparable == True
     assert z.is_prime == False
     assert z.is_composite == False
+    assert z.is_number is True
 
 def test_infinity():
     oo = S.Infinity
@@ -108,6 +112,7 @@ def test_infinity():
     assert oo.is_comparable     == True
     assert oo.is_prime          == None
     assert oo.is_composite      == None
+    assert oo.is_number is True
 
 def test_neg_infinity():
     mm = S.NegativeInfinity
@@ -133,6 +138,8 @@ def test_neg_infinity():
     assert mm.is_comparable     == True
     assert mm.is_prime          == False
     assert mm.is_composite      == False
+    assert mm.is_number is True
+
 
 def test_nan():
     nan = S.NaN
@@ -158,6 +165,7 @@ def test_nan():
     assert nan.is_comparable    == False
     assert nan.is_prime         == None
     assert nan.is_composite     == None
+    assert nan.is_number is True
 
 def test_pos_rational():
     r = Rational(3,4)
@@ -271,27 +279,27 @@ def test_E():
 
 def test_I():
     z = S.ImaginaryUnit
-    assert z.is_commutative == True
-    assert z.is_integer == False
-    assert z.is_rational == False
-    assert z.is_real == False
-    assert z.is_complex == True
-    assert z.is_noninteger == False
-    assert z.is_irrational == False
-    assert z.is_imaginary == True
-    assert z.is_positive == False
-    assert z.is_negative == False
-    assert z.is_nonpositive == False
-    assert z.is_nonnegative == False
-    assert z.is_even == False
-    assert z.is_odd == False
-    assert z.is_bounded == True
-    assert z.is_unbounded == False
-    assert z.is_finite == True
-    assert z.is_infinitesimal == False
-    assert z.is_comparable == None
-    assert z.is_prime == False
-    assert z.is_composite == False
+    assert z.is_commutative is True
+    assert z.is_integer is False
+    assert z.is_rational is False
+    assert z.is_real is False
+    assert z.is_complex is True
+    assert z.is_noninteger is False
+    assert z.is_irrational is False
+    assert z.is_imaginary is True
+    assert z.is_positive is False
+    assert z.is_negative is False
+    assert z.is_nonpositive is False
+    assert z.is_nonnegative is False
+    assert z.is_even is False
+    assert z.is_odd is False
+    assert z.is_bounded is True
+    assert z.is_unbounded is False
+    assert z.is_finite is True
+    assert z.is_infinitesimal is False
+    assert z.is_comparable is False
+    assert z.is_prime is False
+    assert z.is_composite is False
 
 def test_symbol_real():
     # issue 749

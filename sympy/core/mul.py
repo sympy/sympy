@@ -983,7 +983,6 @@ class Mul(AssocOp):
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
     _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
-    _eval_is_comparable = lambda self: self._eval_template_is_attr('is_comparable')
 
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)

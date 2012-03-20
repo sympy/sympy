@@ -414,7 +414,6 @@ class Add(AssocOp):
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
     _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
-    _eval_is_comparable = lambda self: self._eval_template_is_attr('is_comparable')
 
     def _eval_is_odd(self):
         l = [f for f in self.args if not (f.is_even==True)]
@@ -437,6 +436,8 @@ class Add(AssocOp):
         return False
 
     def _eval_is_positive(self):
+        if self.is_number:
+            return super(Add, self)._eval_is_positive()
         pos = nonneg = nonpos = unknown_sign = False
         unbounded = set()
         args = [a for a in self.args if not a.is_zero]
@@ -486,6 +487,8 @@ class Add(AssocOp):
             return False
 
     def _eval_is_negative(self):
+        if self.is_number:
+            return super(Add, self)._eval_is_negative()
         neg = nonpos = nonneg = unknown_sign = False
         unbounded = set()
         args = [a for a in self.args if not a.is_zero]
