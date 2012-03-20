@@ -1879,8 +1879,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     x**3/2 -> (x, 2), 3
                     x**y -> (x**y, 1), 1
                     x**(2*y/3) -> (x**y, 3), 2
-
-                >>> x+2
+                    exp(x/2) -> (exp(a), 2), 1
 
                 '''
                 if e is not None: # coming from c_powers or from below
@@ -1993,7 +1992,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             # there may be terms still in common_b that were bases that were
             # identified as needing processing, so remove those, too
             for (b, q), e in common_b.items():
-                if b.is_Pow and q is not S.One and not b.exp.is_Rational:
+                if (b.is_Pow or b.func is exp) and \
+                   q is not S.One and not b.exp.is_Rational:
                     b, be = b.as_base_exp()
                     b = b**(be/q)
                 else:

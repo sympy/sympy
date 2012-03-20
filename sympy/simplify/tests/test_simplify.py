@@ -331,6 +331,8 @@ def test_powsimp():
     assert powsimp(eq).exp == eq.exp == 2*a/3 # eq != (x**a)**(2/3) (try x = -1 and a = 3 to see)
     assert powsimp(2**(2*x)) == 4**x # powdenest goes the other direction
 
+    assert powsimp(exp(p/2)) == exp(p/2)
+
 def test_powsimp_polar():
     from sympy import polar_lift, exp_polar
     x, y, z = symbols('x y z')
