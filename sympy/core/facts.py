@@ -345,11 +345,8 @@ class Prover(object):
                 self.process_rule(a, barg)
 
         # a -> b | c    -->  !b & !c -> !a
-        #               -->   a & !b -> c & !b
-        #               -->   a & !c -> b & !c
-        #
-        # NB: the last two rewrites add 1 term, so the rule *grows* in size.
-        # NB: without catching terminating conditions this could continue infinitely
+        #               -->   a & !b -> c
+        #               -->   a & !c -> b
         elif isinstance(b, Or):
             # detect tautology first
             if not isinstance(a, Logic):    # Atom
@@ -361,8 +358,7 @@ class Prover(object):
             for bidx in range(len(b.args)):
                 barg = b.args[bidx]
                 brest= b.args[:bidx] + b.args[bidx+1:]
-                self.process_rule(And(a, Not(barg)),
-                                    And(b.__class__(*brest), Not(barg)))
+                self.process_rule(And(a, Not(barg)), Or(*brest))
 
         # left part
 
