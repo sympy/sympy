@@ -290,8 +290,12 @@ def test_as_numer_denom():
     assert exp(-x).as_numer_denom() == (1, exp(x))
     assert exp(-2*x).as_numer_denom() == (1, exp(2*x))
     assert exp(-2).as_numer_denom() == (1, exp(2))
-    assert exp(n).as_numer_denom() == (exp(n), 1)
-    assert exp(-n).as_numer_denom() == (1, exp(n))
+    assert exp(n).as_numer_denom() == (1, exp(-n))
+    assert exp(-n).as_numer_denom() == (exp(-n), 1)
+    assert exp(-I*x).as_numer_denom() == (1, exp(I*x))
+    assert exp(-I*n).as_numer_denom() == (1, exp(I*n))
+    assert exp(-n).as_numer_denom() == (exp(-n), 1)
+
 
 def test_polar():
     x, y = symbols('x y', polar=True)

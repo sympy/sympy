@@ -4,8 +4,8 @@ from __future__ import division
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve, Eq,
                    erf, exp, Function, I, Integral, LambertW, log, O, pi,
                    Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin,
-                   Piecewise)
-from sympy.abc import x, y, z
+                   Piecewise, symbols)
+x,y,z = symbols('x:z', real=True)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
                                classify_ode, constant_renumber, constantsimp,
                                homogeneous_order, ode_order)
@@ -1166,7 +1166,8 @@ def test_Liouville_ODE():
     sol1a = Eq(C1 + C2/x - exp(-f(x)), 0)
     sol2 = sol1
     sol3 = set([Eq(f(x), -sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(C1 + C2*log(x)))])
-    sol4 = set([Eq(f(x), -sqrt(2)*sqrt(C1 + C2*exp(-x))), Eq(f(x), sqrt(2)*sqrt(C1 + C2*exp(-x)))])
+    sol4 = set([Eq(f(x), sqrt(C1 + C2*exp(x))*exp(-x/2)),
+                Eq(f(x), -sqrt(C1 + C2*exp(x))*exp(-x/2))])
     sol5 = Eq(f(x), log(C1 + C2/x))
     sol1s = constant_renumber(sol1, 'C', 1, 2)
     sol2s = constant_renumber(sol2, 'C', 1, 2)
@@ -1177,7 +1178,7 @@ def test_Liouville_ODE():
     assert dsolve(eq1a, hint=hint) in (sol1, sol1s)
     assert dsolve(eq2, hint=hint) in (sol2, sol2s)
     assert set(dsolve(eq3, hint=hint)) in (sol3, sol3s)
-    assert set(dsolve(eq4, hint=hint)) in (sol4, sol4s) # XXX: remove sqrt(2) factor
+    assert set(dsolve(eq4, hint=hint)) in (sol4, sol4s)
     assert dsolve(eq5, hint=hint) in (sol5, sol5s)
     assert checkodesol(eq1, sol1, order=2, solve_for_func=False)[0]
     assert checkodesol(eq1a, sol1a, order=2, solve_for_func=False)[0]

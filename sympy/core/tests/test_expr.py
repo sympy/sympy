@@ -419,11 +419,6 @@ def test_as_numer_denom():
     assert ((x**2+1)/y).as_numer_denom() == (x**2+1, y)
     assert (x*(y+1)/y**7).as_numer_denom() == (x*(y+1), y**7)
     assert (x**-2).as_numer_denom() == (1, x**2)
-    n = symbols('n', negative=True)
-    assert (x**n).as_numer_denom() == (x**n, 1)
-    assert sqrt(1/n).as_numer_denom() == (I, sqrt(-n))
-    n = Symbol('0 or neg', nonpositive=True)
-    assert (1/sqrt(x/n)).as_numer_denom() == (1, sqrt(x/n))
     assert (a/x + b/2/x + c/3/x).as_numer_denom() == \
             (6*a + 3*b + 2*c, 6*x)
     assert (a/x + b/2/x + c/3/y).as_numer_denom() == \
