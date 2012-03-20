@@ -53,16 +53,17 @@ def test_sqrtdenest2():
     z = sqrt(15 - 2*sqrt(31) + 2*sqrt(55 - 10*r29))
     assert sqrtdenest(z) == z
 
-    # currently cannot denest this; check one does not get a wrong answer
-    z = sqrt(8 - r2*sqrt(5 - r5) - 3*(1 + r5))
-    assert (sqrtdenest(z) - z).evalf() < 1.0e-100
-
 
 @XFAIL
 def test_sqrtdenest_fail():
-    # when this doesn't fail, put the correct value at line 55
-    z = sqrt(8 - r2*sqrt(5 - r5) - 3*(1 + r5))
-    assert sqrtdenest(z) != z
+    # see Denest_en.pdf in http://code.google.com/p/sympy/issues/detail?id=93
+    # z = 4*sin(pi/60)
+    z = sqrt(8 - r2*sqrt(5 - r5) - sqrt(3)*(1 + r5))
+    # z can be denested to an expression with depth 2; here are two forms
+    # (-sqrt(6) - r2 + r10 + sqrt(30))/4 - sqrt(5+r5 -5*r3/2 - sqrt(15)/2)
+    # r2/4*(-r3 - 1 + r5 + sqrt(15)) - (r3-1)*sqrt(5+r5)/2
+    z1 = sqrtdenest(z)
+    assert sqrt_depth(z1) == 2
 
 
 def test_sqrtdenest_rec():
@@ -91,6 +92,10 @@ def test_sqrtdenest_rec():
     w = 1 + r2 + r3 + r5 + r7
     assert sqrtdenest(sqrt((w**2).expand())) == w
     z = sqrt((w**2).expand() + 1)
+    assert sqrtdenest(z) == z
+
+def test_issue3142():
+    z = sqrt( -320 + 32*sqrt(5) + 64*sqrt(15))
     assert sqrtdenest(z) == z
 
 def test_sqrtdenest3():

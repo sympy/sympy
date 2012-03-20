@@ -4,8 +4,8 @@ from __future__ import division
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve, Eq,
                    erf, exp, Function, I, Integral, LambertW, log, O, pi,
                    Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin,
-                   Piecewise)
-from sympy.abc import x, y, z
+                   Piecewise, symbols)
+x,y,z = symbols('x:z', real=True)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
                                classify_ode, constant_renumber, constantsimp,
                                homogeneous_order, ode_order)
@@ -367,7 +367,7 @@ def test_separable2():
     # solve() messes this one up a little bit, so lets test _Integral here
     # We have to test strings with _Integral because y is a dummy variable.
     sol6str = "Integral((_y - 2)/_y**3, (_y, f(x))) == C1 + Integral(x**(-2), x)"
-    sol7 = Eq(-log(-1 + f(x)**2)/2, C1 - log(2 + x))
+    sol7 = Eq(-log(-1 + f(x)**2)/2, C1 - log(x + 2))
     sol8 = Eq(asinh(f(x)), C1 - log(log(x)))
     # integrate cannot handle the integral on the lhs (cos/tan)
     sol9str = "Integral(cos(_y)/tan(_y), (_y, f(x))) == C1 + Integral(-E*exp(x), x)"
@@ -420,16 +420,17 @@ def test_separable5():
                         ((1 - x)*(-x*exp(x) + exp(x))))
     sol19e = Eq(f(x), (C1*(1 - x) - x*(-x*exp(x) + exp(x)) -
                             x*exp(x) + exp(x))/((1 - x)*(-exp(x) + x*exp(x))))
+    sol19f = Eq(f(x), (C1 + (x - 1)*exp(x))*exp(-x)/(-x + 1))
     sol20 = Eq(log(-1 + 3*f(x)**2)/6, C1 + x**2/2)
-    sol21 = Eq(f(x), log(-1/(C1 + exp(x))))
+    sol21 = Eq(-exp(-f(x)), C1 + exp(x))
     assert dsolve(eq15, hint='separable') == sol15
     assert dsolve(eq16, hint='separable', simplify=False) == sol16
     assert dsolve(eq17, hint='separable') == sol17
     assert dsolve(eq18, hint='separable', simplify=False) == sol18
-    assert dsolve(eq19, hint='separable') in [sol19a, sol19b, sol19c,
-                                                    sol19d, sol19e]
+    assert dsolve(eq19, hint='separable') in [sol19f, sol19a, sol19b, sol19c,
+                                              sol19d, sol19e]
     assert dsolve(eq20, hint='separable', simplify=False) == sol20
-    assert dsolve(eq21, hint='separable') == sol21
+    assert dsolve(eq21, hint='separable', simplify=False) == sol21
     assert checkodesol(eq15, sol15, order=1, solve_for_func=False)[0]
     assert checkodesol(eq16, sol16, order=1, solve_for_func=False)[0]
     assert checkodesol(eq17, sol17, order=1, solve_for_func=False)[0]
@@ -1165,7 +1166,8 @@ def test_Liouville_ODE():
     sol1a = Eq(C1 + C2/x - exp(-f(x)), 0)
     sol2 = sol1
     sol3 = set([Eq(f(x), -sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(C1 + C2*log(x)))])
-    sol4 = set([Eq(f(x), -sqrt(2)*sqrt(C1 + C2*exp(-x))), Eq(f(x), sqrt(2)*sqrt(C1 + C2*exp(-x)))])
+    sol4 = set([Eq(f(x), sqrt(C1 + C2*exp(x))*exp(-x/2)),
+                Eq(f(x), -sqrt(C1 + C2*exp(x))*exp(-x/2))])
     sol5 = Eq(f(x), log(C1 + C2/x))
     sol1s = constant_renumber(sol1, 'C', 1, 2)
     sol2s = constant_renumber(sol2, 'C', 1, 2)
@@ -1176,7 +1178,7 @@ def test_Liouville_ODE():
     assert dsolve(eq1a, hint=hint) in (sol1, sol1s)
     assert dsolve(eq2, hint=hint) in (sol2, sol2s)
     assert set(dsolve(eq3, hint=hint)) in (sol3, sol3s)
-    assert set(dsolve(eq4, hint=hint)) in (sol4, sol4s) # XXX: remove sqrt(2) factor
+    assert set(dsolve(eq4, hint=hint)) in (sol4, sol4s)
     assert dsolve(eq5, hint=hint) in (sol5, sol5s)
     assert checkodesol(eq1, sol1, order=2, solve_for_func=False)[0]
     assert checkodesol(eq1a, sol1a, order=2, solve_for_func=False)[0]

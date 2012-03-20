@@ -84,76 +84,88 @@ class MatrixBase(object):
         [0, 2]
 
         """
+        # Matrix(Matrix(...))
         if len(args) == 1 and isinstance(args[0], MatrixBase):
             return args[0].rows, args[0].cols, args[0].mat
 
-        self = object.__new__(cls)
+        # Matrix(MatrixSymbol('X', 2,2))
+        if len(args) == 1 and isinstance(args[0], Basic) and args[0].is_Matrix:
+            return args[0].rows, args[0].cols, args[0].as_explicit().mat
+
+        # Matrix(2, 2, lambda i,j: i+j)
         if len(args) == 3 and callable(args[2]):
             operation = args[2]
-            self.rows = int(args[0])
-            self.cols = int(args[1])
-            self.mat = []
-            for i in range(self.rows):
-                for j in range(self.cols):
-                    self.mat.append(sympify(operation(i, j)))
+            rows = int(args[0])
+            cols = int(args[1])
+            mat = []
+            for i in range(rows):
+                for j in range(cols):
+                    mat.append(sympify(operation(i, j)))
+
+        # Matrix(2, 2, [1,2,3,4])
         elif len(args)==3 and is_sequence(args[2]):
-            self.rows=args[0]
-            self.cols=args[1]
-            mat = args[2]
-            if len(mat) != len(self):
+            rows = args[0]
+            cols = args[1]
+            mat  = args[2]
+            if len(mat) != rows*cols:
                 raise ValueError('List length should be equal to rows*columns')
-            self.mat = map(lambda i: sympify(i), mat)
+            mat = map(lambda i: sympify(i), mat)
+
+        # Matrix(numpy.ones((2,2)))
         elif len(args) == 1:
-            mat = args[0]
-            if hasattr(mat, "__array__"): #pragma: no cover
+            in_mat = args[0]
+            if hasattr(in_mat, "__array__"): #pragma: no cover
                 # NumPy array or matrix or some other object that implements
                 # __array__. So let's first use this method to get a
                 # numpy.array() and then make a python list out of it.
-                arr = mat.__array__()
+                arr = in_mat.__array__()
                 if len(arr.shape) == 2:
-                    self.rows, self.cols = arr.shape[0], arr.shape[1]
-                    self.mat = map(lambda i: sympify(i), arr.ravel())
-                    return self.rows, self.cols, self.mat
+                    rows, cols = arr.shape[0], arr.shape[1]
+                    mat = map(lambda i: sympify(i), arr.ravel())
+                    return rows, cols, mat
                 elif len(arr.shape) == 1:
-                    self.rows, self.cols = 1, arr.shape[0]
-                    self.mat = [0]*self.cols
+                    rows, cols = 1, arr.shape[0]
+                    mat = [0]*cols
                     for i in xrange(len(arr)):
-                        self.mat[i] = sympify(arr[i])
-                    return self.rows, self.cols, self.mat
+                        mat[i] = sympify(arr[i])
+                    return rows, cols, mat
                 else:
                     raise NotImplementedError("SymPy supports just 1D and 2D matrices")
-            elif not is_sequence(mat, include=MatrixBase):
-                raise TypeError("Matrix constructor doesn't accept %s as input" % str(type(mat)))
-            mat = []
+            elif not is_sequence(in_mat, include=MatrixBase):
+                raise TypeError("Matrix constructor doesn't accept %s as input"
+                        % str(type(in_mat)))
+            in_mat = []
             for row in args[0]:
                 if isinstance(row, MatrixBase):
-                    mat.extend(row.tolist())
+                    in_mat.extend(row.tolist())
                 else:
-                    mat.append(row)
-            self.rows = len(mat)
-            if len(mat) != 0:
-                if not is_sequence(mat[0]):
-                    self.cols = 1
-                    self.mat = map(lambda i: sympify(i), mat)
-                    return self.rows, self.cols, self.mat
-                self.cols = len(mat[0])
+                    in_mat.append(row)
+            rows = len(in_mat)
+            if len(in_mat) != 0:
+                if not is_sequence(in_mat[0]):
+                    cols = 1
+                    mat = map(lambda i: sympify(i), in_mat)
+                    return rows, cols, mat
+                cols = len(in_mat[0])
             else:
-                self.cols = 0
-            self.mat = []
-            for j in xrange(self.rows):
-                if len(mat[j]) != self.cols:
+                cols = 0
+            mat = []
+            for j in xrange(rows):
+                if len(in_mat[j]) != cols:
                     raise ValueError("Input %s inconsistant to form a Matrix." %
                         args)
-                for i in xrange(self.cols):
-                    self.mat.append(sympify(mat[j][i]))
+                for i in xrange(cols):
+                    mat.append(sympify(in_mat[j][i]))
+
+        # Matrix()
         elif len(args) == 0:
             # Empty Matrix
-            self.rows = self.cols = 0
-            self.mat = []
+            rows = cols = 0
+            mat = []
         else:
             raise TypeError("Data type not understood")
 
-        return self.rows, self.cols, self.mat
+        return rows, cols, mat
 
     def transpose(self):
         """
@@ -3224,6 +3236,8 @@ class MatrixBase(object):
 
     @property
     def is_Identity(self):
+        if not self.is_square:
+            return False
         for i in xrange(self.rows):
             for j in xrange(self.cols):
                 if i==j and self[i,j] != 1:
@@ -3241,8 +3255,6 @@ class MutableMatrix(MatrixBase):
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        if len(args)==1 and isinstance(args[0], MutableMatrix):
-            return args[0]
         rows, cols, mat = MatrixBase._handle_creation_inputs(*args, **kwargs)
         self = object.__new__(cls)
         self.rows = rows

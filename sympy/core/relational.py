@@ -142,8 +142,9 @@ class Relational(Expr, EvalfMixin):
             except KeyError:
                 msg = "Invalid relational operator symbol: '%r'"
                 raise ValueError(msg % repr(rop))
-        if lhs.is_number and rhs.is_number and (rop in ('==', '!=' ) or
-        lhs.is_real and rhs.is_real):
+        if (lhs.is_number and rhs.is_number and
+           (rop_cls in (Equality, Unequality) or
+            lhs.is_real and rhs.is_real)):
             diff = lhs - rhs
             know = (lhs - rhs).equals(0, failing_expression=True)
             if know is True: # exclude failing expression case
@@ -169,11 +170,6 @@ class Relational(Expr, EvalfMixin):
     @property
     def rhs(self):
         return self._args[1]
-
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        return self.__class__(self.lhs._eval_subs(old, new), self.rhs._eval_subs(old, new))
 
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])

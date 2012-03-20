@@ -152,6 +152,7 @@ def test_issue772():
 
 def test_exponential():
     n = Symbol('n')
+    x = Symbol('x', real=True)
     assert limit((1+x/n)**n,n,oo) == exp(x)
     assert limit((1+x/(2*n))**n,n,oo) == exp(x/2)
     assert limit((1+x/(2*n+1))**n,n,oo) == exp(x/2)

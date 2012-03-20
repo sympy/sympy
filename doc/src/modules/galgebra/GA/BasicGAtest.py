@@ -1,4 +1,4 @@
-        MV.setup('a b c d e')
+        a,b,c,d,e = MV.setup('a b c d e')
         MV.set_str_format(1)
 
         print 'e|(a^b) =',e|(a^b)

@@ -1,6 +1,6 @@
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
-                   Number, zoo, log, Mul, Pow, Tuple, round)
+                   Number, zoo, log, Mul, Pow, Tuple)
 from sympy.core.power import integer_nthroot
 from sympy.utilities.pytest import XFAIL, slow
 
@@ -55,9 +55,9 @@ def test_mod():
 
     a = Float(2.6)
 
-    assert round(a % .2, 15) == 0.2
-    assert round(a % 2, 15) == 0.6
-    assert round(a % 0.5, 15) == 0.1
+    assert (a % .2).round(15) == 0.2
+    assert (a % 2).round(15) == 0.6
+    assert (a % 0.5).round(15) == 0.1
 
     # No rounding required since these numbers can be represented
     # exactly.
@@ -1078,7 +1078,7 @@ def test_zoo():
 
     assert (I*oo).is_Mul # allow directed infinity
     assert zoo + zoo is S.NaN
-    assert zoo * zoo is S.NaN
+    assert zoo * zoo is zoo
     assert zoo - zoo is S.NaN
     assert zoo/zoo is S.NaN
     assert zoo**zoo is S.NaN
@@ -1142,9 +1142,9 @@ def test_hashing_sympy_integers():
     assert hash(S(4)) == hash(int(4))
 
 def test_issue_1073():
-    assert int(round(E**100)) == 26881171418161354484126255515800135873611119
-    assert int(round(pi**100)) == 51878483143196131920862615246303013562686760680406
-    assert int(round(Rational(1)/EulerGamma**100)) == 734833795660954410469466
+    assert int((E**100).round()) == 26881171418161354484126255515800135873611119
+    assert int((pi**100).round()) == 51878483143196131920862615246303013562686760680406
+    assert int((Rational(1)/EulerGamma**100).round()) == 734833795660954410469466
 
 @XFAIL
 def test_mpmath_issues():

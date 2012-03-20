@@ -2,6 +2,7 @@ from sympy.core import Add, S, C, sympify, oo, pi
 from sympy.core.function import Function, ArgumentIndexError
 from zeta_functions import zeta
 from error_functions import erf
+from sympy.core import Dummy,Rational
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -70,6 +71,12 @@ class gamma(Function):
             arg = self.args[0].expand(deep, **hints)
         else:
             arg = self.args[0]
+        if arg.is_Rational:
+            if abs(arg.p) > arg.q:
+                x = Dummy('x')
+                n = arg.p // arg.q
+                p = arg.p - n*arg.q
+                return  gamma(x + n).expand(func=True).subs(x, Rational(p, arg.q))
 
         if arg.is_Add:
             coeff, tail = arg.as_coeff_add()

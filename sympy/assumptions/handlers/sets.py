@@ -13,9 +13,13 @@ class AskIntegerHandler(CommonHandler):
     @staticmethod
     def _number(expr, assumptions):
         # helper method
-        if expr.as_real_imag()[1] == 0:
-            return expr.evalf(1) == expr
-        return False
+        try:
+            i = int(expr.round())
+            if not (expr - i).equals(0):
+                raise TypeError
+            return True
+        except TypeError:
+            return False
 
     @staticmethod
     def Add(expr, assumptions):
@@ -139,7 +143,7 @@ class AskRationalHandler(CommonHandler):
 
     @staticmethod
     def Float(expr, assumptions):
-        # it's finite-precission
+        # it's finite-precision
         return True
 
     @staticmethod

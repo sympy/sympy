@@ -133,6 +133,8 @@ def test_creation():
     assert ImmutableMatrix(c) == c.as_immutable()
     assert Matrix(ImmutableMatrix(c)) == ImmutableMatrix(c).as_mutable()
 
+    assert c is not Matrix(c)
+
 def test_tolist():
     x, y, z = symbols('x y z')
     lst = [[S.One,S.Half,x*y,S.Zero],[x,y,z,x**2],[y,-S.One,z*x,3]]
@@ -2110,6 +2112,8 @@ def test_is_Identity():
     assert eye(3).as_immutable().is_Identity
     assert not zeros(3).is_Identity
     assert not ones(3).is_Identity
+    # issue 3143
+    assert not Matrix([[1,0,0]]).is_Identity
 
 def test_dot():
     assert ones(1,3).dot(ones(3,1)) == 3

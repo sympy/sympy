@@ -132,7 +132,7 @@ def test_dependent_finite():
 
 def test_normality():
     X, Y = Normal(0,1), Normal(0,1)
-    z = Symbol('z', real=True)
-    x, density = Density(X-Y, Eq(X+Y, z))
+    x, z = symbols('x, z', real=True)
+    density = Density(X-Y, Eq(X+Y, z))
 
-    assert integrate(density, (x, -oo, oo)) == 1
+    assert integrate(density(x), (x, -oo, oo)) == 1

@@ -7,7 +7,7 @@ GeometryEntity
 
 """
 
-from sympy.core.compatibility import cmp
+from sympy.core.compatibility import cmp, is_sequence
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
 
@@ -304,3 +304,12 @@ class GeometryEntity(Basic):
             return self == other
         raise NotImplementedError()
 
+    def _eval_subs(self, old, new):
+        from sympy.geometry.point import Point
+        if is_sequence(old) or is_sequence(new):
+            old = Point(old)
+            new = Point(new)
+            return self._subs(old, new)
+
+from sympy.core.sympify import converter, sympify
+converter[GeometryEntity] = lambda x: x

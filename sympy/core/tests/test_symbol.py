@@ -45,10 +45,6 @@ def test_as_dummy():
     assert x1 != x
     assert x1.is_commutative == False
 
-    # issue 2446
-    x = Symbol('x', real=True, commutative=False)
-    assert x.as_dummy().assumptions0 == x.assumptions0
-
 def test_lt_gt():
     from sympy import sympify as S
     x, y = Symbol('x'), Symbol('y')

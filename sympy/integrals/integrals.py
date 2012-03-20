@@ -64,6 +64,52 @@ class Integral(Expr):
     __slots__ = ['is_commutative']
 
     def __new__(cls, function, *symbols, **assumptions):
+        """Create an unevaluated integral.
+
+        Arguments are an integrand followed by one or more limits.
+
+        If no limits are given and there is only one free symbol in the
+        expression, that symbol will be used, otherwise an error will be
+        raised.
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, y
+        >>> Integral(x)
+        Integral(x, x)
+        >>> Integral(y)
+        Integral(y, y)
+
+        When limits are provided, they are interpreted as follows (using
+        ``x`` as though it were the variable of integration):
+
+            (x,) or x - indefinite integral
+            (x, a) - "evaluate at" integral
+            (x, a, b) - definite integral
+
+        Although the same integral will be obtained from an indefinite
+        integral and an "evaluate at" integral when ``a == x``, they
+        respond differently to substitution:
+
+        >>> i = Integral(x, x)
+        >>> at = Integral(x, (x, x))
+        >>> i.doit() == at.doit()
+        True
+        >>> i.subs(x, 1)
+        Integral(1, x)
+        >>> at.subs(x, 1)
+        Integral(x, (x, 1))
+
+        The ``as_dummy`` method can be used to see which symbols cannot be
+        targeted by subs: those with a preppended underscore cannot be
+        changed with ``subs``. (Also, the integration variables themselves --
+        the first element of a limit -- can never be changed by subs.)
+
+        >>> i.as_dummy()
+        Integral(x, x)
+        >>> at.as_dummy()
+        Integral(_x, (_x, x))
+
+        """
 
         # Any embedded piecewise functions need to be brought out to the
         # top level so that integration can go into piecewise mode at the
@@ -77,10 +123,10 @@ class Integral(Expr):
             limits, sign = _process_limits(*symbols)
         else:
             # no symbols provided -- let's compute full anti-derivative
-            limits, sign = [Tuple(s) for s in function.free_symbols], 1
-
-            if len(limits) != 1:
-                raise ValueError("specify integration variables to integrate %s" % function)
+            free = function.free_symbols
+            if len(free) != 1:
+                raise ValueError("specify variables of integration for %s" % function)
+            limits, sign = [Tuple(s) for s in free], 1
 
         while isinstance(function, Integral):
             # denest the integrand
@@ -283,16 +329,21 @@ class Integral(Expr):
         """
         Replace instances of the integration variables with their dummy
         counterparts to make clear what are dummy variables and what
-        are real-world symbols in an Integral. The "integral at" limit
-        that has a length of 1 will be explicated with its length-2
-        equivalent.
+        are real-world symbols in an Integral.
 
         >>> from sympy import Integral
         >>> from sympy.abc import x, y
-        >>> Integral(x).as_dummy()
-        Integral(_x, (_x, x))
         >>> Integral(x, (x, x, y), (y, x, y)).as_dummy()
         Integral(_x, (_x, x, _y), (_y, x, y))
+
+        The "integral at" limit that has a length of 1 is not treated as
+        though the integration symbol is a dummy, but the explicit form
+        of length 2 does treat the integration variable as a dummy.
+
+        >>> Integral(x, x).as_dummy()
+        Integral(x, x)
+        >>> Integral(x, (x, x)).as_dummy()
+        Integral(_x, (_x, x))
 
         If there were no dummies in the original expression, then the
         output of this function will show which symbols cannot be
@@ -310,7 +361,7 @@ class Integral(Expr):
         for i in xrange(-1, -len(limits) - 1, -1):
             xab = list(limits[i])
             if len(xab) == 1:
-                xab = xab*2
+                continue
             x = xab[0]
             xab[0] = x.as_dummy()
             for j in range(1, len(xab)):
@@ -576,7 +627,7 @@ class Integral(Expr):
         >>> from sympy.abc import x, y
         >>> i = Integral(x + y, y, (y, 1, x))
         >>> i.diff(x)
-        Integral(x + y, (y, x)) + Integral(1, (y, y), (y, 1, x))
+        Integral(x + y, (y, x)) + Integral(1, y, (y, 1, x))
         >>> i.doit().diff(x) == i.diff(x).doit()
         True
         >>> i.diff(y)
@@ -612,11 +663,20 @@ class Integral(Expr):
             f = Integral(f, *tuple(limits))
 
         # assemble the pieces
+        def _do(f, ab):
+            dab_dsym = diff(ab, sym)
+            if not dab_dsym:
+                return S.Zero
+            if isinstance(f, Integral):
+                limits = [(x, x) if (len(l) == 1 and l[0] == x) else l
+                          for l in f.limits]
+                f = Integral(f.function, *limits)
+            return f.subs(x, ab)*dab_dsym
         rv = 0
         if b is not None:
-            rv += f.subs(x, b)*diff(b, sym)
+            rv += _do(f, b)
         if a is not None:
-            rv -= f.subs(x, a)*diff(a, sym)
+            rv -= _do(f, a)
         if len(limit) == 1 and sym == x:
             # the dummy variable *is* also the real-world variable
             arg = f
@@ -816,7 +876,8 @@ class Integral(Expr):
     def _eval_subs(self, old, new):
         """
         Substitute old with new in the integrand and the limits, but don't
-        change anything that is (or corresponds to) a variable of integration.
+        change anything that is (or corresponds to) a dummy variable of
+        integration.
 
         The normal substitution semantics -- traversing all arguments looking
         for matching patterns -- should not be applied to the Integrals since
@@ -825,42 +886,65 @@ class Integral(Expr):
         this method just makes changes in the integrand and the limits.
 
         Not all instances of a given variable are conceptually the same: the
-        first argument of the limit tuple and any corresponding variable in
-        the integrand are dummy variables while every other symbol is a symbol
-        that will be unchanged when the integral is evaluated. For example, in
+        first argument of the limit tuple with length greater than 1 and any
+        corresponding variable in the integrand are dummy variables while
+        every other symbol is a symbol that will be unchanged when the integral
+        is evaluated. For example, the dummy variables for ``i`` can be seen
+        as symbols with a preppended underscore:
 
-            Integral(x + a, (a, a, b))
-
-        the dummy variables are shown below with angle-brackets around them and
-        will not be changed by this function:
-
-            Integral(x + <a>, (<a>, a, b))
+        >>> from sympy import Integral
+        >>> from sympy.abc import a, b, x, y
+        >>> i = Integral(a + x, (a, a, b))
+        >>> i.as_dummy()
+        Integral(_a + x, (_a, a, b))
 
         If you want to change the lower limit to 1 there is no reason to
         prohibit this since it is not conceptually related to the integration
-        variable, <a>. Nor is there reason to disallow changing the b to 1.
+        variable, _a. Nor is there reason to disallow changing the b to 1.
 
         If a second limit were added, however, as in:
 
-            Integral(x + a, (a, a, b), (b, 1, 2))
+        >>> i = Integral(x + a, (a, a, b), (b, 1, 2))
 
         the dummy variables become:
 
-            Integral(x + <a>, (<a>, a, <b>), (<b>, a, b))
+        >>> i.as_dummy()
+        Integral(_a + x, (_a, a, _b), (_b, 1, 2))
 
-        Note that the `b` of the first limit is now a dummy variable since `b` is a
-        dummy variable in the second limit.
+        Note that the ``b`` of the first limit is now a dummy variable since
+        ``b`` is a dummy variable in the second limit.
+
+        The "evaluate at" form of an integral allows some flexibility in how
+        the integral will be treated by subs: if there is no second argument,
+        none of the symbols matching the integration symbol are considered to
+        be dummy variables, but if an explicit expression is given for a limit
+        then the usual interpretation of the integration symbol as a dummy
+        symbol applies:
+
+        >>> Integral(x).as_dummy() # implicit integration wrt x
+        Integral(x, x)
+        >>> Integral(x, x).as_dummy()
+        Integral(x, x)
+        >>> _.subs(x, 1)
+        Integral(1, x)
+        >>> i = Integral(x, (x, x))
+        >>> i.as_dummy()
+        Integral(_x, (_x, x))
+        >>> i.subs(x, 1)
+        Integral(x, (x, 1))
 
         Summary: no variable of the integrand or limit can be the target of
         substitution if it appears as a variable of integration in a limit
-        positioned to the right of it.
+        positioned to the right of it. The only exception is for a variable
+        that defines an indefinite integral limit (a single symbol): that
+        symbol *can* be replaced in the integrand.
 
         >>> from sympy import Integral
         >>> from sympy.abc import a, b, c, x, y
 
         >>> i = Integral(a + x, (a, a, 3), (b, x, c))
-        >>> list(i.free_symbols) # only these can be changed
-        [x, a, c]
+        >>> i.free_symbols # only these can be changed
+        set([a, c, x])
         >>> i.subs(a, c) # note that the variable of integration is unchanged
         Integral(a + x, (a, c, 3), (b, x, c))
         >>> i.subs(a + x, b) == i # there is no x + a, only x + <a>
@@ -868,25 +952,18 @@ class Integral(Expr):
         >>> i.subs(x, y - c)
         Integral(a - c + y, (a, a, 3), (b, -c + y, c))
         """
-        if self == old:
-            return new
         integrand, limits = self.function, self.limits
         old_atoms = old.free_symbols
         limits = list(limits)
 
-        # make limits explicit if they are to be targeted by old:
-        # Integral(x, x) -> Integral(x, (x, x)) if old = x
-        if old.is_Symbol:
-            for i, l in enumerate(limits):
-                if len(l) == 1 and l[0] == old:
-                    limits[i] = Tuple(l[0], l[0])
-
         dummies = set()
         for i in xrange(-1, -len(limits) - 1, -1):
             xab = limits[i]
+            if len(xab) == 1:
+                continue
             if not dummies.intersection(old_atoms):
                 limits[i] = Tuple(xab[0],
-                                  *[l.subs(old, new) for l in xab[1:]])
+                                  *[l._subs(old, new) for l in xab[1:]])
             dummies.add(xab[0])
         if not dummies.intersection(old_atoms):
             integrand = integrand.subs(old, new)

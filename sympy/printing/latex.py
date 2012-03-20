@@ -325,6 +325,25 @@ class LatexPrinter(Printer):
 
         return tex
 
+    def _print_Product(self, expr):
+        if len(expr.limits) == 1:
+            tex = r"\prod_{%s=%s}^{%s} " % \
+                tuple([ self._print(i) for i in expr.limits[0] ])
+        else:
+            def _format_ineq(l):
+                return r"%s \leq %s \leq %s" % \
+                    tuple([self._print(s) for s in l[1], l[0], l[2]])
+
+            tex = r"\prod_{\substack{%s}} " % \
+                str.join('\\\\', [ _format_ineq(l) for l in expr.limits ])
+
+        if isinstance(expr.function, Add):
+            tex += r"\left(%s\right)" % self._print(expr.function)
+        else:
+            tex += self._print(expr.function)
+
+        return tex
+
     def _print_Derivative(self, expr):
         dim = len(expr.variables)
 
@@ -530,13 +549,14 @@ class LatexPrinter(Printer):
         return r"\neg %s" % self._print(e.args[0])
 
     def _print_And(self, e):
-        arg = e.args[0]
+        args = sorted(e.args, key=default_sort_key)
+        arg = args[0]
         if arg.is_Boolean and not arg.is_Not:
-            tex = r"\left(%s\right)" % self._print(e.args[0]);
+            tex = r"\left(%s\right)" % self._print(arg)
         else:
-            tex = r"%s" % self._print(e.args[0]);
+            tex = r"%s" % self._print(arg)
 
-        for arg in e.args[1:]:
+        for arg in args[1:]:
             if arg.is_Boolean and not arg.is_Not:
                 tex += r" \wedge \left(%s\right)" % (self._print(arg))
             else:
@@ -545,13 +565,14 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Or(self, e):
-        arg = e.args[0]
+        args = sorted(e.args, key=default_sort_key)
+        arg = args[0]
         if arg.is_Boolean and not arg.is_Not:
-            tex = r"\left(%s\right)" % self._print(e.args[0]);
+            tex = r"\left(%s\right)" % self._print(arg)
         else:
-            tex = r"%s" % self._print(e.args[0]);
+            tex = r"%s" % self._print(arg)
 
-        for arg in e.args[1:]:
+        for arg in args[1:]:
             if arg.is_Boolean and not arg.is_Not:
                 tex += r" \vee \left(%s\right)" % (self._print(arg))
             else:
@@ -998,7 +1019,7 @@ class LatexPrinter(Printer):
 
     def _print_RandomDomain(self, d):
         try:
-            return 'Domain: '+self._print(d.as_boolean())
+            return 'Domain: '+ self._print(d.as_boolean())
         except:
             try:
                 return ('Domain: ' + self._print(d.symbols) + ' in ' +
@@ -1038,6 +1059,9 @@ class LatexPrinter(Printer):
 
     def _print_Union(self, u):
         return r" \cup ".join([self._print(i) for i in u.args])
+
+    def _print_Intersection(self, u):
+        return r" \cap ".join([self._print(i) for i in u.args])
 
     def _print_EmptySet(self, e):
         return r"\emptyset"

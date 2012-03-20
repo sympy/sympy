@@ -160,7 +160,6 @@ class Number(AtomicExpr):
       Rational(1) + sqrt(Rational(2))
     """
     is_commutative = True
-    is_comparable = True
     is_bounded = True
     is_finite = True
     is_number = True
@@ -223,6 +222,9 @@ class Number(AtomicExpr):
             raise TypeError(msg % (type(other).__name__, type(self).__name__))
         return divmod(other, self)
 
+    def __round__(self, *args):
+        return round(float(self), *args)
+
     def _as_mpf_val(self, prec):
         """Evaluation of mpf tuple accurate to at least prec bits."""
         raise NotImplementedError('%s needs ._as_mpf_val() method' % \
@@ -244,6 +246,11 @@ class Number(AtomicExpr):
     def _eval_order(self, *symbols):
         # Order(5, x, y) -> Order(1,x,y)
         return C.Order(S.One, *symbols)
+
+    def _eval_subs(self, old, new):
+        if old == -self:
+            return -new
+        return self # there is no other possibility
 
     @classmethod
     def class_key(cls):
@@ -790,7 +797,7 @@ class Float(Number):
             return False    # sympy > other
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
-        if other.is_comparable:
+        if other.is_real and other.is_number:
             other = other.evalf()
         if isinstance(other, Number):
             return bool(mlib.mpf_lt(self._mpf_, other._as_mpf_val(self._prec)))
@@ -803,7 +810,7 @@ class Float(Number):
             return False    # sympy > other  -->  ! <=
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
-        if other.is_comparable:
+        if other.is_real and other.is_number:
             other = other.evalf()
         if isinstance(other, Number):
             return bool(mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec)))
@@ -811,9 +818,6 @@ class Float(Number):
 
     def __hash__(self):
         return super(Float, self).__hash__()
-
-    def __round__(self, *args):
-        return round(float(self), *args)
 
     def epsilon_eq(self, other, epsilon="10e-16"):
         return abs(self - other) < Float(epsilon)
@@ -1152,7 +1156,7 @@ class Rational(Number):
             return False    # sympy > other  --> not <
         if isinstance(other, NumberSymbol):
             return other.__le__(self)
-        if other.is_comparable and not isinstance(other, Rational):
+        if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Float):
@@ -1168,7 +1172,7 @@ class Rational(Number):
             return False    # sympy > other  -->  not <=
         if isinstance(other, NumberSymbol):
             return other.__lt__(self)
-        if other.is_comparable and not isinstance(other, Rational):
+        if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Float):
@@ -1185,7 +1189,7 @@ class Rational(Number):
             return False    # sympy > other  --> not <
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
-        if other.is_comparable and not isinstance(other, Rational):
+        if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Float):
@@ -1201,7 +1205,7 @@ class Rational(Number):
             return False    # sympy > other  -->  not <=
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
-        if other.is_comparable and not isinstance(other, Rational):
+        if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Float):
@@ -2213,16 +2217,15 @@ class NaN(Number):
     __metaclass__ = Singleton
 
     is_commutative = True
-    is_real        = None
-    is_rational    = None
-    is_integer     = None
-    is_comparable  = False
-    is_finite      = None
-    is_bounded     = None
-    #is_unbounded  = False
-    is_zero        = None
-    is_prime       = None
-    is_positive    = None
+    is_real = None
+    is_rational = None
+    is_integer = None
+    is_comparable = False
+    is_finite = None
+    is_bounded = None
+    is_zero = None
+    is_prime = None
+    is_positive = None
 
     __slots__ = []
 
@@ -2281,10 +2284,9 @@ class ComplexInfinity(AtomicExpr):
     __metaclass__ = Singleton
 
     is_commutative = True
-    is_comparable  = None
-    is_bounded     = False
-    is_real        = None
-    is_number      = True
+    is_bounded = False
+    is_real = None
+    is_number = False
 
     __slots__ = []
 
@@ -2318,7 +2320,6 @@ class NumberSymbol(AtomicExpr):
     __metaclass__ = Singleton
 
     is_commutative = True
-    is_comparable = True
     is_bounded = True
     is_finite = True
     is_number = True
@@ -2370,7 +2371,7 @@ class NumberSymbol(AtomicExpr):
                 if other > u:
                     return True
             return self.evalf() < other
-        if other.is_comparable:
+        if other.is_real and other.is_number:
             other = other.evalf()
             return self.evalf() < other
         return Expr.__lt__(self, other)
@@ -2382,7 +2383,7 @@ class NumberSymbol(AtomicExpr):
             return False    # sympy > other  --> not <=
         if self is other:
             return True
-        if other.is_comparable:
+        if other.is_real and other.is_number:
             other = other.evalf()
         if isinstance(other, Number):
             return self.evalf() <= other

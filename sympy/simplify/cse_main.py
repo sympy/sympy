@@ -137,6 +137,8 @@ def cse(exprs, symbols=None, optimizations=None):
         to_eliminate.insert(index_to_insert, subtree)
 
     for expr in reduced_exprs:
+        if not isinstance(expr, Basic):
+            continue
         for e in expr.as_numer_denom() if not expr.is_Add else [expr]:
             pt = preorder_traversal(e)
             for subtree in pt:

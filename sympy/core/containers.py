@@ -6,8 +6,8 @@
     They are supposed to work seamlessly within the SymPy framework.
 """
 
-from basic import Basic
-from sympify import sympify
+from sympy.core.basic import Basic
+from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
 
 class Tuple(Basic):
@@ -82,6 +82,8 @@ class Tuple(Basic):
 
     def __lt__(self, other):
         return self.args < other.args
+
+converter[tuple] = lambda tup: Tuple(*tup)
 
 def tuple_wrapper(method):
     """
@@ -187,12 +189,6 @@ class Dict(Basic):
     def __len__(self):
         '''x.__len__() <==> len(x)'''
         return self._dict.__len__()
-
-    def __str__(self):
-        return str(self._dict)
-
-    def __repr__(self):
-        return self._dict.__repr__()
 
     def get(self, key, default=None):
         '''D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None.'''
