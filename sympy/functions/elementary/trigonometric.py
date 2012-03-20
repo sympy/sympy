@@ -15,6 +15,16 @@ class TrigonometricFunction(Function):
 
     unbranched = True
 
+def _func_list(call, func, arg):
+        x = arg.args[0] if func in [asin, acos, atan, acot] else arg
+        func_list = {
+        asin : [x, sqrt(1 - x ** 2), x / sqrt(1 - x ** 2), sqrt(1 - x ** 2) / x],
+        atan : [x / sqrt(1 + x ** 2), 1 / sqrt(1 + x ** 2), x, 1 / x],
+        acos : [sqrt(1 - x ** 2), x, sqrt(1 - x ** 2) / x, x / sqrt(1 - x ** 2)],
+        acot : [1 / (sqrt(1 + 1 / x ** 2) * x), 1 / sqrt(1 + 1 / x ** 2), 1 / x , x]
+        }
+        return func_list[func][call-1] if func in func_list else None
+
 def _peeloff_pi(arg):
     """
     Split ARG into two parts, a "rest" and a multiple of pi/2.
@@ -235,21 +245,9 @@ class sin(TrigonometricFunction):
             x, m = _peeloff_pi(arg)
             if m:
                 return sin(m)*cos(x)+cos(m)*sin(x)
-
-        if arg.func is asin:
-            return arg.args[0]
-
-        if arg.func is atan:
-            x = arg.args[0]
-            return x / sqrt(1 + x**2)
-
-        if arg.func is acos:
-            x = arg.args[0]
-            return sqrt(1 - x**2)
-
-        if arg.func is acot:
-            x = arg.args[0];
-            return 1 / (sqrt(1 + 1 / x**2) * x)
+        
+        if arg.func:
+            return _func_list(1, arg.func, arg)
 
     @staticmethod
     @cacheit
@@ -459,22 +457,8 @@ class cos(TrigonometricFunction):
             x, m = _peeloff_pi(arg)
             if m:
                 return cos(m)*cos(x)-sin(m)*sin(x)
-
-        if arg.func is acos:
-            return arg.args[0]
-
-        if arg.func is atan:
-            x = arg.args[0]
-            return 1 / sqrt(1 + x**2)
-
-        if arg.func is asin:
-            x = arg.args[0]
-            return sqrt(1 - x ** 2)
-
-        if arg.func is acot:
-            x = arg.args[0]
-            return 1 / sqrt(1 + 1 / x**2)
-
+        if arg.func:
+            return _func_list(2, arg.func, arg)
 
     @staticmethod
     @cacheit
@@ -666,22 +650,8 @@ class tan(TrigonometricFunction):
                     return tan(x)
                 else:
                     return -cot(x)
-
-        if arg.func is atan:
-            return arg.args[0]
-
-        if arg.func is asin:
-            x = arg.args[0]
-            return x / sqrt(1 - x**2)
-
-        if arg.func is acos:
-            x = arg.args[0]
-            return sqrt(1 - x**2) / x
-
-        if arg.func is acot:
-            x = arg.args[0]
-            return 1 / x
-
+        if arg.func:
+            return _func_list(3, arg.func, arg)
 
     @staticmethod
     @cacheit
@@ -841,22 +811,8 @@ class cot(TrigonometricFunction):
                     return cot(x)
                 else:
                     return -tan(x)
-
-        if arg.func is acot:
-            return arg.args[0]
-
-        if arg.func is atan:
-            x = arg.args[0]
-            return 1 / x
-
-        if arg.func is asin:
-            x = arg.args[0]
-            return sqrt(1 - x**2) / x
-
-        if arg.func is acos:
-            x = arg.args[0]
-            return x / sqrt(1 - x**2)
-
+        if arg.func:
+            return _func_list(4, arg.func, arg)
 
     @staticmethod
     @cacheit
