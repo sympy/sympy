@@ -83,6 +83,15 @@ class Tuple(Basic):
     def __lt__(self, other):
         return self.args < other.args
 
+    def __gt__(self, other):
+        return self.args > other.args
+    
+    def __le__(self, other):
+        return self.args <= other.args
+
+    def __ge__(self, other):
+        return self.args >= other.args
+
 converter[tuple] = lambda tup: Tuple(*tup)
 
 def tuple_wrapper(method):
