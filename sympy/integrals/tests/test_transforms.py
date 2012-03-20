@@ -306,9 +306,10 @@ def test_inverse_mellin_transform():
     assert IMT(gamma(s) + gamma(s-1), s, x, (1, oo)) == (x + 1)*exp(-x)/x
 
     # test factorisation of polys
-    assert simplify(expand_func(IMT(1/(s**2 + 1), s, exp(-x),
-                                    (None, oo))).rewrite(sin)) \
-           == sin(x)*Heaviside(1 - exp(-x))
+    r = symbols('r', real=True)
+    assert IMT(1/(s**2 + 1), s, exp(-x), (None, oo)
+              ).subs(x, r).rewrite(sin).simplify() \
+           == sin(r)*Heaviside(1 - exp(-r))
 
     # test multiplicative substitution
     a, b = symbols('a b', positive=True)
@@ -317,7 +318,8 @@ def test_inverse_mellin_transform():
     assert IMT(factorial(a/b + s/b)/(a+ s), s, x, (-a, oo)) == x**a*exp(-x**b)
 
     from sympy import expand_mul
-    def simp_pows(expr): return expand_mul(simplify(powsimp(expr, force=True)), deep=True).replace(exp_polar, exp) # XXX ?
+    def simp_pows(expr):
+        return expand_mul(simplify(powsimp(expr, force=True)), deep=True).replace(exp_polar, exp) # XXX ?
 
     # Now test the inverses of all direct transforms tested above
 
@@ -387,6 +389,7 @@ def test_inverse_mellin_transform():
                       / (gamma(S(1)/2 - s - a/2)*gamma(1 - 2*s + a)),
                       s, x, (-re(a)/2, S(1)/4))) == \
            exp(-I*pi*a)*cos(sqrt(x))*besselj(a, sqrt(x)*polar_lift(-1))
+
     # TODO this comes out as an amazing mess, but surprisingly enough mysimp is
     #      effective ...
     assert powsimp(powdenest(mysimp(IMT(gamma(a + s)*gamma(S(1)/2 - s) \
@@ -403,8 +406,8 @@ def test_inverse_mellin_transform():
                       / (gamma(-a/2 + b/2 - s + 1)*gamma(a/2 - b/2 - s + 1) \
                          *gamma(a/2 + b/2 - s + 1)),
                       s, x, (-(re(a) + re(b))/2, S(1)/2))) == \
-           exp(-I*pi*a -I*pi*b)*besselj(a, sqrt(x)*polar_lift(-1)) \
-                                    *besselj(b, sqrt(x)*polar_lift(-1))
+            exp(-I*pi*a -I*pi*b)*besselj(a, sqrt(x)*polar_lift(-1)) \
+            *besselj(b, sqrt(x)*polar_lift(-1))
 
     # Section 8.4.20
     # TODO these come out even messier, not worth testing for now
@@ -465,7 +468,10 @@ def test_laplace_transform():
 
     # test a bug in conditions processing
     # TODO the auxiliary condition should be recognised/simplified
-    assert LT(exp(t)*cos(t), t, s)[0:-1] == ((s - 1)/(s**2 - 2*s + 2), -oo)
+    assert LT(exp(t)*cos(t), t, s)[:-1] in [
+        ((s - 1)/(s**2 - 2*s + 2), -oo),
+        ((s - 1)/((s - 1)**2 + 1), -oo),
+        ]
 
 def test_inverse_laplace_transform():
     from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,

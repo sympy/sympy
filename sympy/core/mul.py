@@ -583,11 +583,11 @@ class Mul(AssocOp):
                 # out with a negative sign added and a negative left behind
                 # in the unexpanded terms if there were an odd number of
                 # negatives.
+                if coeff.is_negative:
+                    coeff = -coeff
+                    neg.append(S.NegativeOne)
                 if neg:
                     neg = [-w for w in neg]
-                    if coeff.is_negative:
-                        coeff = -coeff
-                        unk.append(S.NegativeOne)
                     if len(neg) % 2:
                         unk.append(S.NegativeOne)
 

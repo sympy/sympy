@@ -1,7 +1,7 @@
 import itertools
 
 from sympy import (Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-    Matrix, S, sin)
+    Matrix, S, sin, Eq)
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL
 
@@ -132,3 +132,7 @@ def test_issue_921():
 
 def test_issue_1104():
     assert cse(sin(x**x)/x**x) == ([(x0, x**x)], [sin(x0)/x0])
+
+def test_issue_3164():
+    e = Eq(x*(-x + 1) + x*(x - 1), 0)
+    assert cse(e) == ([], [True])

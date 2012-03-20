@@ -45,8 +45,14 @@ class ExpBase(Function):
         >>> exp(x).as_numer_denom()
         (exp(x), 1)
         """
-        if self.args[0].as_coeff_mul()[0].is_negative:
-            return S.One, exp(-self.args[0])
+        # this should be the same as Pow.as_numer_denom wrt
+        # exponent handling
+        exp = self.exp
+        neg_exp = exp.is_negative
+        if not neg_exp and not exp.is_real:
+            neg_exp = _coeff_isneg(exp)
+        if neg_exp:
+            return S.One, self.func(-exp)
         return self, S.One
 
     @property
@@ -87,8 +93,27 @@ class ExpBase(Function):
         return (self.args[0] is S.NegativeInfinity)
 
     def _eval_power(b, e):
-        """exp(b[0])**e -> exp(b[0]*e)"""
-        return b.func(b.args[0] * e)
+        """exp(arg)**e -> exp(arg*e) if assumptions allow it.
+        """
+        f = b.func
+        be = b.exp
+        rv = f(be*e)
+        if e.is_integer:
+            return rv
+        if be.is_real:
+            return rv
+        # "is True" needed below; exp.is_polar returns <property object ...>
+        if f.is_polar is True:
+            return rv
+        if e.is_polar:
+            return rv
+        if be.is_polar:
+            return rv
+        besmall = abs(be) <= S.Pi
+        if besmall:
+            return rv
+        elif besmall is False and e.is_Rational and e.q == 2:
+            return -rv
 
     def _eval_expand_power_exp(self, deep=True, **hints):
         if deep:
@@ -705,3 +730,4 @@ class LambertW(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+from sympy.core.function import _coeff_isneg
