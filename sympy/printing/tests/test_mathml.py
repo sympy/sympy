@@ -130,7 +130,7 @@ def test_mathml_constants():
     mml = mp._print(pi)
     assert mml.nodeName == 'pi'
 
-    assert mathml(GoldenRatio) == u'<cn>\u03c6</cn>'
+    assert mathml(GoldenRatio) == '<cn>&#966;</cn>'
 
     mml = mathml(EulerGamma)
     assert mml == '<eulergamma/>'
@@ -311,11 +311,11 @@ def test_symbol():
     assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
     del mml
 
-def test_mathml_greek()
+def test_mathml_greek():
     mml = mp._print(Symbol('alpha'))
     assert mml.nodeName == 'ci'
     assert mml.childNodes[0].nodeValue == u'\u03b1'
-    
+
     assert mp.doprint(Symbol('alpha')) == '<ci>&#945;</ci>'
     assert mp.doprint(Symbol('beta')) == '<ci>&#946;</ci>'
     assert mp.doprint(Symbol('gamma')) == '<ci>&#947;</ci>'
@@ -341,7 +341,7 @@ def test_mathml_greek()
     assert mp.doprint(Symbol('chi')) == '<ci>&#967;</ci>'
     assert mp.doprint(Symbol('psi')) == '<ci>&#968;</ci>'
     assert mp.doprint(Symbol('omega')) == '<ci>&#969;</ci>'
-    
+
     assert mp.doprint(Symbol('Alpha')) == '<ci>&#913;</ci>'
     assert mp.doprint(Symbol('Beta')) == '<ci>&#914;</ci>'
     assert mp.doprint(Symbol('Gamma')) == '<ci>&#915;</ci>'
@@ -366,7 +366,6 @@ def test_mathml_greek()
     assert mp.doprint(Symbol('Chi')) == '<ci>&#935;</ci>'
     assert mp.doprint(Symbol('Psi')) == '<ci>&#936;</ci>'
     assert mp.doprint(Symbol('Omega')) == '<ci>&#937;</ci>'
-    
 
 def test_mathml_order():
     expr = x**3 + x**2*y + 3*x*y**3 + y**4

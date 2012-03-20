@@ -4,11 +4,13 @@ Javascript code printer
 The JavascriptCodePrinter converts single sympy expressions into single
 Javascript expressions, using the functions defined in the Javascript
 Math object where possible.
+
 """
 
 from sympy.core import S, C
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
+from sympy.utilities.misc import default_sort_key
 
 
 # dictionary mapping sympy function to (argument_conditions, Javascript_function).
@@ -188,11 +190,13 @@ class JavascriptCodePrinter(CodePrinter):
 
     def _print_And(self, expr):
         PREC = precedence(expr)
-        return '&&'.join(self.parenthesize(a, PREC) for a in expr.args)
+        return ' && '.join(self.parenthesize(a, PREC)
+                for a in sorted(expr.args, key=default_sort_key))
 
     def _print_Or(self, expr):
         PREC = precedence(expr)
-        return '||'.join(self.parenthesize(a, PREC) for a in expr.args)
+        return ' || '.join(self.parenthesize(a, PREC)
+                for a in sorted(expr.args, key=default_sort_key))
 
     def _print_Not(self, expr):
         PREC = precedence(expr)
@@ -277,7 +281,7 @@ def jscode(expr, assign_to=None, **settings):
 
 def print_jscode(expr, **settings):
     """Prints the Javascript representation of the given expression.
-    
+
        See jscode for the meaning of the optional arguments.
     """
     print jscode(expr, **settings)
