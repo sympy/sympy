@@ -146,29 +146,16 @@ def _sqrt_match(p):
     [1 + sqrt(2) + sqrt(6), 2, 1 + sqrt(5)]
     """
     from sympy.simplify.simplify import split_surds
-    def r_factor(r, depth):
-        b = S.One
-        if r.is_Mul:
-            bv = []
-            rv = []
-            for x in r.args:
-                if sqrt_depth(x) < depth:
-                    bv.append(x)
-                else:
-                    rv.append(x)
-            b = Mul._from_args(bv)
-            r = Mul._from_args(rv)
-        return b, r
 
     p = _mexpand(p)
     if p.is_Number:
         res = (p, S.Zero, S.Zero)
     elif p.is_Add:
-        if all((x**2).is_Rational for x in p.args):
+        pargs = list(p.args)
+        if all((x**2).is_Rational for x in pargs):
             r, b, a = split_surds(p)
             res = a, b, r
             return list(res)
-        pargs = list(p.args)
         # to make the process canonical, the argument is included in the tuple
         # so when the max is selected, it will be the largest arg having a
         # given depth

@@ -1117,7 +1117,7 @@ def split_surds(expr):
     if not b2 and len(b1) >= 2:
         b1n = [x/g for x in b1]
         b1n = [x for x in b1n if x != 1]
-        # only a common factor has been factores; split again
+        # only a common factor has been factored; split again
         g1, b1n, b2 = _split_gcd(*b1n)
         g2 = g*g1
     a1v, a2v = [], []
