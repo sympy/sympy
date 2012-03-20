@@ -33,7 +33,8 @@ class MathMLPrinter(Printer):
         """
         mathML = Printer._print(self, expr)
         unistr = mathML.toxml()
-        return unistr.encode('ascii', 'xmlcharrefreplace')
+        xmlbstr = unistr.encode('ascii', 'xmlcharrefreplace')
+        return xmlbstr.decode()
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
