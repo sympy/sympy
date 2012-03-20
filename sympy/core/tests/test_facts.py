@@ -1,6 +1,5 @@
 from sympy.core.facts import (deduce_alpha_implications,
-        apply_beta_to_alpha_route, rules_2prereq, split_rules,
-        FactRules, FactKB)
+        apply_beta_to_alpha_route, rules_2prereq, FactRules, FactKB)
 from sympy.core.logic import And, Not
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -115,28 +114,6 @@ def test_apply_beta_to_alpha_route():
     assert APPLY(A,B)  == {'x': (set(['a','b','c','p']), []),
                             'c': (set(['p','a']), []), 'a':Q(0), 'b':Q(0)}
 
-
-def test_split_rules_tf():
-    S = split_rules
-
-    r = {'a': set(['b', Not('c'), 'd']),
-         'b': set(['e', Not('f')]) }
-
-    rel = S(r)
-    assert rel == {('a', True): set([('c', False), ('b', True), ('d', True)]),
-            ('b', False): set([('a', False)]),
-            ('b', True): set([('e', True), ('f', False)]),
-            ('d', False): set([('a', False)]),
-            ('e', False): set([('b', False)])}
-
-    r = {Not('a'): set(['b', Not('c')]),
-         'b' : set(['e', Not('f')]) }
-
-    rel = S(r)
-    assert rel == {('b', False): set([('a', True)]),
-            ('b', True): set([('e', True), ('f', False)]),
-            ('c', True): set([('a', True)]),
-            ('e', False): set([('b', False)])}
 
 def test_FactRules_parse():
     f = FactRules('a -> b')
@@ -272,7 +249,7 @@ def test_FactRules_deduce_staticext():
                    'nneg  == real & !neg',
                    'npos  == real & !pos'])
 
-    assert ('npos', True) in f.rels[('neg', True)][0]
-    assert ('nneg', True) in f.rels[('pos', True)][0]
-    assert ('nneg', True) in f.rels[('zero', True)][0]
-    assert ('npos', True) in f.rels[('zero', True)][0]
+    assert ('npos', True) in f.full_implications[('neg', True)]
+    assert ('nneg', True) in f.full_implications[('pos', True)]
+    assert ('nneg', True) in f.full_implications[('zero', True)]
+    assert ('npos', True) in f.full_implications[('zero', True)]

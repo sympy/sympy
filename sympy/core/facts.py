@@ -221,42 +221,6 @@ def rules_2prereq(rules):
             prereq[i].add(a)
     return prereq
 
-def split_rules(rules):
-    """split alpha-rules into T->T & T->F & F->T & F->F chains
-
-       and also rewrite them to be free of not-names
-
-       Examples
-       -------
-
-       'a' -> ['b', '!c']
-
-       will be split into
-
-       'a' -> ['b'] # tt: a -> b
-       'a' -> ['c'] # tf: a -> !c
-
-       and
-       '!a' -> ['b']
-
-       will become
-
-       'b' -> ['a'] # ft: !b -> a
-    """
-    rel = defaultdict(set)
-    for k, impl in rules.iteritems():
-        if type(k) is not Not:
-            for i in impl:
-                rel[(k, True)].add(_as_pair(i))
-                if not isinstance(i, Not):
-                    rel[(i, False)].add((k, False)) # FF is related to TT
-        else:
-            k = k.arg
-            for i in impl:
-                rel[_as_pair(Not(i))].add((k, True))
-    return rel
-
-
 ################
 # RULES PROVER #
 ################
@@ -407,17 +371,8 @@ class FactRules(object):
        Internals
        ---------
 
-       {} k -> [] of implications:
-
-         .rel_tt      k=T -> k2=T
-         .rel_tf      k=T -> k2=F
-         .rel_ff      k=F -> k2=F
-         .rel_ft      k=F -> k2=T
-
-       .rel_tbeta     k=T -> [] of possibly triggering # of beta-rules
-       .rel_fbeta     k=F -> ------------------//---------------------
-
-       .rels    -- {} k -> tt, tf, ff, ft   (list of implications for k)
+       .full_implications[k, v]: all the implications of fact k=v
+       .beta_triggers[k, v]: beta rules that might be triggered when k=v
        .prereq  -- {} k <- [] of k's prerequisites
 
        .defined_facts -- set of defined fact names
@@ -448,6 +403,7 @@ class FactRules(object):
                 raise ValueError('unknown op %r' % op)
 
         # --- build deduction networks ---
+        self.beta_rules = P.rules_beta
 
         # deduce alpha implications
         impl_a = deduce_alpha_implications(P.rules_alpha)
@@ -460,29 +416,19 @@ class FactRules(object):
         # extract defined fact names
         self.defined_facts = set(_base_fact(k) for k in impl_ab.keys())
 
-        # now split each rule into four logic chains
-        # (removing betaidxs from impl_ab view) (XXX is this needed?)
-        impl_ab_ = dict( (k,impl)  for k, (impl,betaidxs) in impl_ab.iteritems())
-        rel_alpha = split_rules(impl_ab_)
-        rel_beta = {}
-        for k, (impl,betaidxs) in impl_ab.iteritems():
-            rel_beta[_as_pair(k)] = betaidxs
-
-        self.beta_rules = P.rules_beta
-
         # build rels (forward chains)
-        K = set(rel_alpha) | set(rel_beta)
+        full_implications = defaultdict(set)
+        beta_triggers = defaultdict(set)
+        for k, (impl, betaidxs) in impl_ab.iteritems():
+            full_implications[_as_pair(k)] = set(_as_pair(i) for i in impl)
+            beta_triggers[_as_pair(k)] = betaidxs
 
-        rels = {}
-        empty= ()
-        for kv in K:
-            rels[kv] = tuple([rule.get(kv, empty) for rule in rel_alpha, rel_beta])
-
-        self.rels = rels
+        self.full_implications = full_implications
+        self.beta_triggers = beta_triggers
 
         # build prereq (backward chains)
         prereq = defaultdict(set)
-        rel_prereq = rules_2prereq(rel_alpha)
+        rel_prereq = rules_2prereq(full_implications)
         for k, pitems in rel_prereq.iteritems():
             prereq[k] |= pitems
         self.prereq = prereq
@@ -531,7 +477,8 @@ class FactKB(dict):
         """
         # keep frequently used attributes locally, so we'll avoid extra
         # attribute access overhead
-        rels = self.rules.rels
+        full_implications = self.rules.full_implications
+        beta_triggers = self.rules.beta_triggers
         beta_rules = self.rules.beta_rules
 
         if isinstance(facts, dict):
@@ -548,19 +495,10 @@ class FactKB(dict):
                     continue
 
                 # lookup routing tables
-                try:
-                    alpha, beta = rels[(k, v)]
-                except KeyError:
-                    pass
-                else:
-                    # Now we have routing tables with *all* the needed
-                    # implications for this k. This means we do not have to
-                    # process each implications recursively!
-                    # XXX this ^^^ is true only for alpha chains
-                    for key, value in alpha:
-                        self._tell(key, value)
+                for key, value in full_implications[k, v]:
+                    self._tell(key, value)
 
-                    beta_maytrigger.update(beta)
+                beta_maytrigger.update(beta_triggers[k, v])
 
             # --- beta chains ---
 
