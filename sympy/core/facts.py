@@ -403,7 +403,10 @@ class FactRules(object):
                 raise ValueError('unknown op %r' % op)
 
         # --- build deduction networks ---
-        self.beta_rules = P.rules_beta
+        self.beta_rules = []
+        for bcond, bimpl in P.rules_beta:
+            self.beta_rules.append(
+                    (set(_as_pair(a) for a in bcond.args), _as_pair(bimpl)))
 
         # deduce alpha implications
         impl_a = deduce_alpha_implications(P.rules_alpha)
@@ -508,25 +511,11 @@ class FactKB(dict):
             fseq = []
             # let's see which beta-rules to trigger
             for bidx in beta_maytrigger:
-                bcond,bimpl = beta_rules[bidx]
-                # let's see whether bcond is satisfied
-                for bk in bcond.args:
-                    try:
-                        if type(bk) is Not:
-                            bv = fuzzy_not(self[bk.arg])
-                        else:
-                            bv = self[bk]
-                    except KeyError:
-                        break   # fact not found -- bcond not satisfied
-                    # one of bcond's condition does not hold
-                    if not bv:
+                bcond, bimpl = beta_rules[bidx]
+                for k, v in bcond:
+                    val = self.get(k)
+                    if val is not v:
                         break
                 else:
-                    # all of bcond's condition hold -- let's fire this beta rule
-                    if type(bimpl) is Not:
-                        bimpl = bimpl.arg
-                        v = False
-                    else:
-                        v = True
-                    fseq.append( (bimpl,v) )
+                    fseq.append(bimpl)
         return self
