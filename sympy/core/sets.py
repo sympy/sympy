@@ -625,7 +625,8 @@ class Interval(Set, EvalfMixin):
       return self.to_mpi(prec)
 
     def _eval_evalf(self, prec):
-      return Interval(self.left.evalf(), self.right.evalf(),left_open=self.left_open, right_open=self.right_open)
+      return Interval(self.left.evalf(), self.right.evalf(),
+          left_open=self.left_open, right_open=self.right_open)
 
     def _is_comparable(self, other):
         is_comparable = self.start.is_comparable
