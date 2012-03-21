@@ -1,7 +1,7 @@
 from sympy import (symbols, Matrix, SparseMatrix, eye, I, Symbol, Rational,
     Float, wronskian, cos, sin, exp, hessian, sqrt, zeros, ones, randMatrix,
     Poly, S, pi, E, oo, trigsimp, Integer, N, sympify,
-    Pow, simplify, Min, Max, Abs, PurePoly)
+    Pow, simplify, Min, Max, Abs, PurePoly, count_ops, signsimp)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag, GramSchmidt, casoratian,
     SparseMatrix, SparseMatrix, NonSquareMatrixError,
@@ -628,8 +628,8 @@ def test_eigen():
     assert max(i.q for i in M._eigenvects[0][2][0]) == 1
     M = Matrix([[S(1)/4, 1], [1, 1]])
     assert M.eigenvects(simplify=True) == [
-      (-sqrt(73)/8 + Rational(5, 8), 1, [Matrix([[-8/(-3 + sqrt(73))], [1]])]),
-      (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[-8/(-sqrt(73) - 3)], [1]])])]
+        (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[8/(-sqrt(73) + 3)], [1]])]),
+        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))],   [1]])])]
     assert M.eigenvects(simplify=False) == [
     (-sqrt(73)/8 + Rational(5, 8), 1,
         [Matrix([[-1/(Rational(-3, 8) + sqrt(73)/8)], [1]])]),
@@ -2086,10 +2086,10 @@ def test_invertible_check():
     [ x,  1,  1],
     [ 1,  x, -1],])
     assert len(m.rref()[1]) == m.rows
-    # in addition, unless simplified=True in the call to rref, the identity
+    # in addition, unless simplify=True in the call to rref, the identity
     # matrix will be returned even though m is not invertible
     assert m.rref()[0] == eye(3)
-    assert m.rref(simplified=True)[0] != eye(3)
+    assert m.rref(simplify=signsimp)[0] != eye(3)
     raises(ValueError, 'm.inv(method="ADJ")')
     raises(ValueError, 'm.inv(method="GE")')
     raises(ValueError, 'm.inv(method="LU")')
@@ -2119,3 +2119,10 @@ def test_dot():
     assert ones(1,3).dot(ones(3,1)) == 3
     assert ones(1,3).dot([1,1,1]) == 3
 
+def test_simplify():
+    from sympy.abc import x
+    m = Matrix([[1, x], [x + 1/x, x - 1]])
+    m = m.row_join(eye(m.cols))
+    raw = m.rref(simplify=lambda x: x)[0]
+    assert raw != \
+           m.rref(simplify=True)[0]

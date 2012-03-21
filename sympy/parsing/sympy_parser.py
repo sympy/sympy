@@ -7,7 +7,7 @@ from keyword import iskeyword
 from StringIO import StringIO
 import re
 
-from sympy.core.basic import Basic
+from sympy.core.basic import Basic, C
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 
@@ -147,7 +147,23 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
     global_dict = {}
     exec 'from sympy import *' in global_dict
 
+    # keep autosimplification from joining Integer or
+    # minus sign into a Mul; this modification doesn't
+    # prevent the 2-arg Mul from becoming and Add.
+    hit = False
+    if '(' in s:
+        kern = '_kern'
+        while kern in s:
+            kern += "_"
+        s = re.sub(r'(\d *\*|-) *\(', r'\1%s*(' % kern, s)
+        hit = kern in s
+
     code = _transform(s.strip(), local_dict, global_dict, rationalize, convert_xor)
     expr = eval(code, global_dict, local_dict) # take local objects in preference
 
-    return expr
+    if not hit:
+        return expr
+    try:
+        return expr.xreplace({C.Symbol(kern): 1})
+    except (TypeError, AttributeError):
+        return expr
