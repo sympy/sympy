@@ -17,7 +17,7 @@ def _new_Basic(cls, args, state):
     """
     try:
         obj = cls.__new__(cls, *args, evaluate=False)
-    except TypeError:
+    except Exception:
         # Some objects like Numbers do not accept evaluate keyword argument.
         obj = cls.__new__(cls, *args)
     obj.__setstate__(state)
