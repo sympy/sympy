@@ -1,10 +1,10 @@
-from sympy import (Dummy, S, symbols, Lambda,
-        pi, Basic, sympify)
+from sympy import Dummy, S, symbols, Lambda, pi, Basic, sympify
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.core.compatibility import iterable
-from sets import (Set, Interval, FiniteSet, CountableSet,
+from sympy.core.sets import (Set, Interval, FiniteSet, CountableSet,
         Intersection)
 from sympy.core.singleton import Singleton, S
+from sympy.solvers import solve
 oo = S.Infinity
 
 class Naturals(CountableSet):
@@ -150,7 +150,6 @@ class TransformationSet(Set):
         return len(self.lambd.variables)>1
 
     def _contains(self, other):
-        from sympy.solvers import solve
         L = self.lambd
         if self._is_multivariate():
             solns = solve([expr-val for val, expr in zip(other, L.expr)],

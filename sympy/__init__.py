@@ -55,6 +55,7 @@ from functions import *
 from ntheory import *
 from concrete import *
 from simplify import *
+from sets import *
 from solvers import *
 from matrices import *
 from geometry import *

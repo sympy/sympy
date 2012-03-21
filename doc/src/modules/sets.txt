@@ -53,7 +53,7 @@ UniversalSet
 
 Special Sets
 ------------
-.. automodule:: sympy.core.fancysets
+.. automodule:: sympy.sets.fancysets
 
 Naturals
 ^^^^^^^^
