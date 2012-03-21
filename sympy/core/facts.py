@@ -239,11 +239,11 @@ def rules_2prereq(rules):
     """
     prereq = defaultdict(set)
     for (a, _), impl in rules.iteritems():
-        for i in impl:
+        for (i, _) in impl:
             prereq[i].add(a)
     return prereq
 
-def split_rules_tt_tf_ft_ff(rules):
+def split_rules(rules):
     """split alpha-rules into T->T & T->F & F->T & F->F chains
 
        and also rewrite them to be free of not-names
@@ -265,27 +265,18 @@ def split_rules_tt_tf_ft_ff(rules):
 
        'b' -> ['a'] # ft: !b -> a
     """
-    t = defaultdict(set)
-    f = defaultdict(set)
+    rel = defaultdict(set)
     for k, impl in rules.iteritems():
         if type(k) is not Not:
             for i in impl:
-                if type(i) is not Not:
-                    t[(k, True)].add(i)
-                else:
-                    f[(k, True)].add(i.arg)
+                rel[(k, True)].add(_as_pair(i))
+                if not isinstance(i, Not):
+                    rel[(i, False)].add((k, False)) # FF is related to TT
         else:
             k = k.arg
             for i in impl:
-                t[_as_pair(Not(i))].add(k)
-
-    # FF is related to TT
-    for (k, v), impl in t.iteritems():
-        if v is True:
-            for i in impl:
-                f[(i, False)].add(k)
-
-    return t, f
+                rel[_as_pair(Not(i))].add((k, True))
+    return rel
 
 
 ################
@@ -498,36 +489,28 @@ class FactRules(object):
         # now split each rule into four logic chains
         # (removing betaidxs from impl_ab view) (XXX is this needed?)
         impl_ab_ = dict( (k,impl)  for k, (impl,betaidxs) in impl_ab.iteritems())
-        rel_t, rel_f = split_rules_tt_tf_ft_ff(impl_ab_)
+        rel_alpha = split_rules(impl_ab_)
         rel_beta = {}
         for k, (impl,betaidxs) in impl_ab.iteritems():
             rel_beta[_as_pair(k)] = betaidxs
 
-        self.rel_tt = dict((k, impl) for (k,v), impl in rel_t.iteritems() if v)
-        self.rel_tf = dict((k, impl) for (k,v), impl in rel_f.iteritems() if v)
-        self.rel_tbeta  = dict((k, impl) for (k,v), impl in rel_beta.iteritems() if v)
-        self.rel_ff = dict((k, impl) for (k,v), impl in rel_f.iteritems() if not v)
-        self.rel_ft = dict((k, impl) for (k,v), impl in rel_t.iteritems() if not v)
-        self.rel_fbeta  = dict((k, impl) for (k,v), impl in rel_beta.iteritems() if not v)
-
         self.beta_rules = P.rules_beta
 
         # build rels (forward chains)
-        K = set(rel_t) | set(rel_f) | set(rel_beta)
+        K = set(rel_alpha) | set(rel_beta)
 
         rels = {}
         empty= ()
         for kv in K:
-            rels[kv] = tuple([rule.get(kv, empty) for rule in rel_t, rel_f, rel_beta])
+            rels[kv] = tuple([rule.get(kv, empty) for rule in rel_alpha, rel_beta])
 
         self.rels = rels
 
         # build prereq (backward chains)
         prereq = defaultdict(set)
-        for rel in [rel_t, rel_f]:
-            rel_prereq = rules_2prereq(rel)
-            for k, pitems in rel_prereq.iteritems():
-                prereq[k] |= pitems
+        rel_prereq = rules_2prereq(rel_alpha)
+        for k, pitems in rel_prereq.iteritems():
+            prereq[k] |= pitems
         self.prereq = prereq
 
 class FactKB(dict):
@@ -558,8 +541,8 @@ class FactKB(dict):
         rels = self.rules.rels
         beta_rules = self.rules.beta_rules
 
-        def x_new_facts(keys, v):
-            for k in keys:
+        def x_new_facts(facts):
+            for k, v in facts:
                 if k in self and self[k] is not None:
                     assert self[k] == v, \
                             ('inconsistency between facts', self, k, v)
@@ -591,7 +574,7 @@ class FactKB(dict):
                 if v is not None:
                     # lookup routing tables
                     try:
-                        true_facts, false_facts, beta = rels[(k, v)]
+                        alpha, beta = rels[(k, v)]
                     except KeyError:
                         pass
                     else:
@@ -599,8 +582,7 @@ class FactKB(dict):
                         # implications for this k. This means we do not have to
                         # process each implications recursively!
                         # XXX this ^^^ is true only for alpha chains
-                        x_new_facts(true_facts, True)   # k -> i
-                        x_new_facts(false_facts, False)  # k -> !i
+                        x_new_facts(alpha)
 
                         beta_maytrigger.update(beta)
 

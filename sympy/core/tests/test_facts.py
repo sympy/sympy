@@ -1,5 +1,5 @@
 from sympy.core.facts import (deduce_alpha_implications,
-        apply_beta_to_alpha_route, rules_2prereq, split_rules_tt_tf_ft_ff,
+        apply_beta_to_alpha_route, rules_2prereq, split_rules,
         FactRules, FactKB)
 from sympy.core.logic import And, Not
 from sympy.utilities.pytest import XFAIL, raises
@@ -11,7 +11,7 @@ U = None
 def test_deduce_alpha_implications():
     def D(i):
         I = deduce_alpha_implications(i)
-        P = rules_2prereq(dict(((k, True), v) for k, v in I.items()))
+        P = rules_2prereq(dict(((k, True), set([(v, True) for v in S])) for k, S in I.items()))
         return I,P
 
     # transitivity
@@ -117,60 +117,41 @@ def test_apply_beta_to_alpha_route():
 
 
 def test_split_rules_tf():
-    S = split_rules_tt_tf_ft_ff
+    S = split_rules
 
     r = {'a': set(['b', Not('c'), 'd']),
          'b': set(['e', Not('f')]) }
 
-    rel_t, rel_f = S(r)
-    assert tt == {'a': set(['b', 'd']), 'b': set(['e'])}
-    assert tf == {'a': set(['c']),      'b': set(['f'])}
-    assert ft == {}
-    assert ff == {'b': set(['a']), 'd': set(['a']), 'e': set(['b'])}
+    rel = S(r)
+    assert rel == {('a', True): set([('c', False), ('b', True), ('d', True)]),
+            ('b', False): set([('a', False)]),
+            ('b', True): set([('e', True), ('f', False)]),
+            ('d', False): set([('a', False)]),
+            ('e', False): set([('b', False)])}
 
     r = {Not('a'): set(['b', Not('c')]),
          'b' : set(['e', Not('f')]) }
 
-    tt, tf, ft, ff = S(r)
-    assert tt == {'b': set(['e']), 'c': set(['a'])    }
-    assert tf == {'b': set(['f'])    }
-    assert ft == {'b': set(['a'])    }   # XXX ok? maybe vice versa?
-    assert ff == {'e': set(['b']), 'a': set(['c'])    }
+    rel = S(r)
+    assert rel == {('b', False): set([('a', True)]),
+            ('b', True): set([('e', True), ('f', False)]),
+            ('c', True): set([('a', True)]),
+            ('e', False): set([('b', False)])}
 
 def test_FactRules_parse():
     f = FactRules('a -> b')
-    assert f.rel_tt     == {'a': set(['b'])}
-    assert f.rel_tf     == {}
-    assert f.rel_ff     == {'b': set(['a'])}
-    assert f.rel_ft     == {}
     assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('a -> !b')
-    assert f.rel_tt     == {}
-    assert f.rel_tf     == {'a': set(['b']), 'b': set(['a'])}
-    assert f.rel_ff     == {}
-    assert f.rel_ft     == {}
     assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!a -> b')
-    assert f.rel_tt     == {}
-    assert f.rel_tf     == {}
-    assert f.rel_ff     == {}
-    assert f.rel_ft     == {'a': set(['b']), 'b': set(['a'])}
     assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!a -> !b')
-    assert f.rel_tt     == {'b': set(['a'])}
-    assert f.rel_tf     == {}
-    assert f.rel_ff     == {'a': set(['b'])}
-    assert f.rel_ft     == {}
     assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!z == nz')
-    assert f.rel_tt     == {}
-    assert f.rel_tf     == {'nz': set(['z']), 'z': set(['nz'])}
-    assert f.rel_ff     == {}
-    assert f.rel_ft     == {'nz': set(['z']), 'z': set(['nz'])}
     assert f.prereq     == {'z': set(['nz']), 'nz': set(['z'])}
 
 
@@ -291,7 +272,7 @@ def test_FactRules_deduce_staticext():
                    'nneg  == real & !neg',
                    'npos  == real & !pos'])
 
-    assert 'npos' in f.rel_tt['neg']
-    assert 'nneg' in f.rel_tt['pos']
-    assert 'nneg' in f.rel_tt['zero']
-    assert 'npos' in f.rel_tt['zero']
+    assert ('npos', True) in f.rels[('neg', True)][0]
+    assert ('nneg', True) in f.rels[('pos', True)][0]
+    assert ('nneg', True) in f.rels[('zero', True)][0]
+    assert ('npos', True) in f.rels[('zero', True)][0]
