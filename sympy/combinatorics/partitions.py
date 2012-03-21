@@ -4,7 +4,7 @@ from sympy.functions import floor
 
 import random
 
-class Partition(Basic):
+class Partition(C.FiniteSet):
     """
     This class represents an abstract partition.
 
@@ -12,6 +12,8 @@ class Partition(Basic):
     """
 
     _rank = None
+    _super = None
+    _super_list = None
 
     def __new__(cls, *args, **kw_args):
         """
@@ -24,10 +26,10 @@ class Partition(Basic):
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1,2],[3]])
         >>> str(a)
-        '[[1, 2], [3]]'
+        'frozenset([{3}, {1, 2}])'
         """
         partition = args[0]
-        super_set = sum(partition, [])
+        super_set = C.FiniteSet(sum(partition, []))
 
         check = []
         for part in partition:
@@ -36,12 +38,11 @@ class Partition(Basic):
             check.extend(part)
 
         check.sort()
-        super_set.sort()
-
-        if check != super_set:
+        
+        if C.FiniteSet(check) != super_set:
             raise ValueError("The partition provided is not valid.")
-        obj = Basic.__new__(cls, *args, **kw_args)
-        obj.super_set = super_set
+        obj = C.FiniteSet.__new__(cls, map(lambda x: C.FiniteSet(x), partition, **kw_args))
+        obj.partition_list_form = sorted([sorted(i) for i in partition])
         return obj
 
     def next(self):
@@ -52,7 +53,7 @@ class Partition(Basic):
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1,2],[3,4,5]])
         >>> a.next()
-        Partition([[1, 2], [3, 4], [5]])
+        {{1, 2}, {3, 4}, {5}}
         """
         current_rank = RGS_rank(self.RGS)
         next_rgs = RGS_unrank((current_rank + 1) %
@@ -68,7 +69,7 @@ class Partition(Basic):
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1,2],[3,4],[5]])
         >>> a.previous()
-        Partition([[1, 2], [3, 4, 5]])
+        {{1, 2}, {3, 4, 5}}
         """
         current_rank = RGS_rank(self.RGS)
         next_rgs = RGS_unrank((current_rank - 1) %
@@ -87,7 +88,7 @@ class Partition(Basic):
         >>> a.size
         2
         """
-        return len(self.args[0])
+        return len(self)
 
     @property
     def partition(self):
@@ -98,9 +99,9 @@ class Partition(Basic):
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1,2],[3]])
         >>> a.partition
-        [[1, 2], [3]]
+        {{3}, {1, 2}}
         """
-        return self.args[0]
+        return self
 
     @property
     def partition_set(self):
@@ -111,9 +112,15 @@ class Partition(Basic):
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1,2],[3]])
         >>> a.partition_set
-        [1, 2, 3]
+        {1, 2, 3}
         """
-        return self.super_set
+        if self._super != None:
+            return self._super
+        e = C.FiniteSet()
+        for elem in self.elements:
+            e = e.union(elem)
+        self._super = e
+        return self._super
 
     @property
     def partition_set_size(self):
@@ -126,13 +133,29 @@ class Partition(Basic):
         >>> a.partition_set_size
         3
         """
-        return len(self.super_set)
+        return len(self.partition_set)
+
+    @property
+    def partition_set_list(self):
+        """
+        Gets the partition set as a list.
+
+        Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1,2],[3]])
+        >>> a.partition_set_list
+        [1, 2, 3]
+        """
+        if self._super_list != None:
+            return self._super_list
+        self._super_list = sorted(list(self.partition_set))
+        return self._super_list
 
     def __str__(self):
-        return str(self.partition)
+        return str(self.elements)
 
     def __repr__(self):
-        return str(self.partition)
+        return str(self.elements)
 
     def __add__(self, other):
         """
@@ -144,13 +167,13 @@ class Partition(Basic):
         >>> a.rank
         1
         >>> a = a + 3
-        >>> str(a)
-        '[[1], [2], [3]]'
+        >>> a
+        {{1}, {2}, {3}}
         >>> a.rank
         4
         >>> a = a + a
-        >>> str(a)
-        '[[1], [2, 3]]'
+        >>> a
+        {{1}, {2, 3}}
         """
         if isinstance(other, Partition):
             if other.partition_set != self.partition_set:
@@ -174,13 +197,13 @@ class Partition(Basic):
         >>> a.rank
         1
         >>> a = a - 1
-        >>> str(a)
-        '[[1, 2, 3]]'
+        >>> a
+        {{1, 2, 3}}
         >>> a.rank
         0
         >>> a = a + Partition([[1,2],[3]])
         >>> str(a)
-        '[[1, 2], [3]]'
+        'frozenset([{3}, {1, 2}])'
         """
         if isinstance(other, Partition):
             if other.partition_set != self.partition_set:
@@ -207,11 +230,11 @@ class Partition(Basic):
         >>> a = Partition([[1,2],[3,4,5]])
         >>> b = Partition([[1],[2,3],[4],[5]])
         >>> a.compare(b)
-        1
+        -1
         >>> a.compare(a)
         0
         >>> b.compare(a)
-        -1
+        1
         """
         if self.rank > other.rank:
             return -1
@@ -344,9 +367,9 @@ class Partition(Basic):
         """
         rgs = [0] * self.partition_set_size
         a = 0
-        for part in self.partition:
+        for part in self.partition_list_form:
             for i in part:
-                rgs[self.partition_set.index(i)] = a
+                rgs[self.partition_set_list.index(i)] = a
             a += 1
         return rgs
 
@@ -357,11 +380,12 @@ def partition_from_rgs(rgs, superset):
     Examples:
     >>> from sympy.combinatorics.partitions import partition_from_rgs, Partition
     >>> partition_from_rgs([0,1,2,0,1],['a','b','c','d','e'])
-    Partition([['a', 'd'], ['b', 'e'], ['c']])
-    >>> a = Partition([[1,4],[2],[3,5]], [1,2,3,4,5])
-    >>> partition_from_rgs(a.RGS, a.partition_set)
-    Partition([[1, 4], [2], [3, 5]])
+    {{a, d}, {b, e}, {c}}
+    >>> a = Partition([[1,4],[2],[3,5]])
+    >>> partition_from_rgs(a.RGS, a.partition_set_list)
+    {{1, 4}, {2}, {3, 5}}
     """
+    superset = list(superset)
     max_elem = max(rgs) + 1
     partition = [[] for i in xrange(max_elem)]
     j = 0
