@@ -274,7 +274,7 @@ def test_separate():
     assert separate((exp((x*y)**z)*exp(y))**2, deep=True, force=True) == exp(2*x**z*y**z)*exp(2*y)
 
     assert separate((exp(x)*exp(y))**z).is_Pow
-    assert separate((exp(x)*exp(y))**z, force=True) == exp(x*z)*exp(y*z)
+    assert separate((exp(x)*exp(y))**z, force=True) == exp(x)**z*exp(y)**z
 
 def test_powsimp():
     x, y, z, n = symbols('x,y,z,n')
@@ -330,6 +330,8 @@ def test_powsimp():
     eq = x**(2*a/3)
     assert powsimp(eq).exp == eq.exp == 2*a/3 # eq != (x**a)**(2/3) (try x = -1 and a = 3 to see)
     assert powsimp(2**(2*x)) == 4**x # powdenest goes the other direction
+
+    assert powsimp(exp(p/2)) == exp(p/2)
 
 def test_powsimp_polar():
     from sympy import polar_lift, exp_polar
@@ -722,7 +724,7 @@ def test_powdenest():
 
     assert powdenest(x) == x
     assert powdenest(x + 2*(x**(2*a/3))**(3*x)) == (x + 2*(x**(2*a/3))**(3*x))
-    assert powdenest((exp(2*a/3))**(3*x)) == (exp(a/3))**(6*x)
+    assert powdenest((exp(2*a/3))**(3*x)) # -X-> (exp(a/3))**(6*x)
     assert powdenest((x**(2*a/3))**(3*x)) == ((x**(2*a/3))**(3*x))
     assert powdenest(exp(3*x*log(2))) == 2**(3*x)
     assert powdenest(sqrt(p**2)) == p

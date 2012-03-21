@@ -45,8 +45,14 @@ class ExpBase(Function):
         >>> exp(x).as_numer_denom()
         (exp(x), 1)
         """
-        if self.args[0].as_coeff_mul()[0].is_negative:
-            return S.One, exp(-self.args[0])
+        # this should be the same as Pow.as_numer_denom wrt
+        # exponent handling
+        exp = self.exp
+        neg_exp = exp.is_negative
+        if not neg_exp and not exp.is_real:
+            neg_exp = _coeff_isneg(exp)
+        if neg_exp:
+            return S.One, self.func(-exp)
         return self, S.One
 
     @property
@@ -87,8 +93,27 @@ class ExpBase(Function):
         return (self.args[0] is S.NegativeInfinity)
 
     def _eval_power(b, e):
-        """exp(b[0])**e -> exp(b[0]*e)"""
-        return b.func(b.args[0] * e)
+        """exp(arg)**e -> exp(arg*e) if assumptions allow it.
+        """
+        f = b.func
+        be = b.exp
+        rv = f(be*e)
+        if e.is_integer:
+            return rv
+        if be.is_real:
+            return rv
+        # "is True" needed below; exp.is_polar returns <property object ...>
+        if f.is_polar is True:
+            return rv
+        if e.is_polar:
+            return rv
+        if be.is_polar:
+            return rv
+        besmall = abs(be) <= S.Pi
+        if besmall:
+            return rv
+        elif besmall is False and e.is_Rational and e.q == 2:
+            return -rv
 
     def _eval_expand_power_exp(self, deep=True, **hints):
         if deep:
@@ -303,16 +328,14 @@ class exp(ExpBase):
         return (exp(re)*cos, exp(re)*sin)
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
         arg = self.args[0]
         o = old
         if old.is_Pow: # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
-            old = exp(old.exp*log(old.base))
-        if old.func is exp:
+            o = exp(o.exp*log(o.base))
+        if o.func is exp:
             # exp(a*expr) .subs( exp(b*expr), y )  ->  y ** (a/b)
             a, expr_terms = self.args[0].as_coeff_mul()
-            b, expr_terms_= old.args[0].as_coeff_mul()
+            b, expr_terms_= o.args[0].as_coeff_mul()
 
             if expr_terms == expr_terms_:
                 return new**(a/b)
@@ -320,28 +343,27 @@ class exp(ExpBase):
 
             if arg.is_Add: # exp(2*x+a).subs(exp(3*x),y) -> y**(2/3) * exp(a)
                 # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
-                oarg = old.args[0]
+                oarg = o.args[0]
                 new_l = []
-                old_al = []
+                o_al = []
                 coeff2, terms2 = oarg.as_coeff_mul()
                 for a in arg.args:
-                    a = a._eval_subs(old, new)
+                    a = a._subs(o, new)
                     coeff1, terms1 = a.as_coeff_mul()
                     if terms1 == terms2:
                         new_l.append(new**(coeff1/coeff2))
                     else:
-                        old_al.append(a._eval_subs(old, new))
+                        o_al.append(a._subs(o, new))
                 if new_l:
-                    new_l.append(self.func(Add(*old_al)))
+                    new_l.append(self.func(Add(*o_al)))
                     r = Mul(*new_l)
                     return r
-        if old is S.Exp1:
+        if o is S.Exp1:
             # treat this however Pow is being treated
             u = C.Dummy('u')
             return (u**self.args[0]).subs(u, new)
 
-        old = o
-        return Function._eval_subs(self, old, new)
+        return Function._eval_subs(self, o, new)
 
     def _eval_is_real(self):
         return self.args[0].is_real
@@ -708,3 +730,4 @@ class LambertW(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+from sympy.core.function import _coeff_isneg

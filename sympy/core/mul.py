@@ -583,11 +583,11 @@ class Mul(AssocOp):
                 # out with a negative sign added and a negative left behind
                 # in the unexpanded terms if there were an odd number of
                 # negatives.
+                if coeff.is_negative:
+                    coeff = -coeff
+                    neg.append(S.NegativeOne)
                 if neg:
                     neg = [-w for w in neg]
-                    if coeff.is_negative:
-                        coeff = -coeff
-                        unk.append(S.NegativeOne)
                     if len(neg) % 2:
                         unk.append(S.NegativeOne)
 
@@ -983,7 +983,6 @@ class Mul(AssocOp):
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
     _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
-    _eval_is_comparable = lambda self: self._eval_template_is_attr('is_comparable')
 
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)
@@ -1158,19 +1157,11 @@ class Mul(AssocOp):
             return False
 
     def _eval_subs(self, old, new):
+        if not old.is_Mul:
+            return None
 
         from sympy import sign
         from sympy.simplify.simplify import powdenest
-
-        if self == old:
-            return new
-
-
-        def fallback():
-            """Return this value when partial subs has failed."""
-
-            return self.__class__(*[s._eval_subs(old, new) for s in
-                                  self.args])
 
         def breakup(eq):
             """break up powers assuming (not checking) that eq is a Mul:
@@ -1216,8 +1207,18 @@ class Mul(AssocOp):
                 return int(a/b)
             return 0
 
-        if not old.is_Mul:
-            return fallback()
+        # give Muls in the denominator a chance to be changed (see issue 2552)
+        # rv will be the default return value
+        rv = None
+        n, d = self.as_numer_denom()
+        if d is not S.One:
+            self2 = n._subs(old, new)/d._subs(old, new)
+            if not self2.is_Mul:
+                return self2._subs(old, new)
+            if self2 != self:
+                self = rv = self2
+
+        # Now continue with regular substitution.
 
         # handle the leading coefficient and use it to decide if anything
         # should even be started; we always know where to find the Rational
@@ -1233,7 +1234,7 @@ class Mul(AssocOp):
             co_xmul = True
 
         if not co_xmul:
-            return fallback()
+            return rv
 
         (c, nc) = breakup(self)
         (old_c, old_nc) = breakup(old)
@@ -1245,16 +1246,31 @@ class Mul(AssocOp):
             c[co_xmul] = S.One
             old_c.pop(co_old)
 
-        # Do some quick tests to see whether we can succeed:
-        # 1) check for more non-commutative or 2) commutative terms
-        # 3) ... unmatched non-commutative bases
-        # 4) ... unmatched commutative terms
-        # 5) and finally differences in sign
-        if len(old_nc) > len(nc) or len(old_c) > len(c) or \
-                set(_[0] for _ in old_nc).difference(set(_[0] for _ in nc)) or \
-                set(old_c).difference(set(c)) or \
-                any(sign(c[b]) != sign(old_c[b]) for b in old_c):
-            return fallback()
+        # do quick tests to see if we can't succeed
+
+        ok = True
+        if (
+            # more non-commutative terms
+            len(old_nc) > len(nc)):
+            ok = False
+        elif (
+            # more commutative terms
+            len(old_c) > len(c)):
+            ok = False
+        elif (
+            # unmatched non-commutative bases
+            set(_[0] for _ in  old_nc).difference(set(_[0] for _ in nc))):
+            ok = False
+        elif (
+            # unmatched commutative terms
+            set(old_c).difference(set(c))):
+            ok = False
+        elif (
+            # differences in sign
+            any(sign(c[b]) != sign(old_c[b]) for b in old_c)):
+            ok = False
+        if not ok:
+            return rv
 
         if not old_c:
             cdid = None
@@ -1264,7 +1280,7 @@ class Mul(AssocOp):
                 c_e = c[b]
                 rat.append(ndiv(c_e, old_e))
                 if not rat[-1]:
-                    return fallback()
+                    return rv
             cdid = min(rat)
 
         if not old_nc:
@@ -1346,7 +1362,7 @@ class Mul(AssocOp):
             else:
 
                 if not ncdid:
-                    return fallback()
+                    return rv
 
                 # although we didn't fail, certain nc terms may have
                 # failed so we rebuild them after attempting a partial

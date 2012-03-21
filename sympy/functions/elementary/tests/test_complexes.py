@@ -2,6 +2,11 @@ from sympy import symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log, \
         pi, arg, conjugate, expand, exp, sin, cos, Function, Abs, zoo
 from sympy.utilities.pytest import XFAIL
 
+from sympy.utilities.randtest import comp
+def N_equals(a, b):
+    """Check whether two complex numbers are numerically close"""
+    return comp(a.n(), b.n(), 1.e-6)
+
 def test_re():
     x, y = symbols('x,y')
 
@@ -112,7 +117,7 @@ def test_sign():
 def test_sign_issue_3068():
     n = pi**1000
     i = int(n)
-    assert round(n - i) == 1 # doesn't hang
+    assert (n - i).round() == 1 # doesn't hang
     assert sign(n - i) == 1
     # perhaps it's not possible to get the sign right when
     # only 1 digit is being requested for this situtation;
@@ -128,6 +133,8 @@ def test_Abs():
     assert Abs(1) == 1
     assert Abs(-1)== 1
     assert Abs(nan) == nan
+    assert Abs(I * pi) == pi
+
     x = Symbol('x',real=True)
     n = Symbol('n',integer=True)
     assert x**(2*n) == Abs(x)**(2*n)
@@ -235,17 +242,12 @@ def test_periodic_argument():
     x = Symbol('x')
     p = Symbol('p', positive = True)
 
-    def tn(a, b):
-        from sympy.utilities.randtest import test_numerically
-        from sympy import Dummy
-        return test_numerically(a, b, Dummy('x'))
-
     assert unbranched_argument(2 + I) == periodic_argument(2 + I, oo)
     assert unbranched_argument(1 + x) == periodic_argument(1 + x, oo)
-    assert tn(unbranched_argument((1+I)**2), pi/2)
-    assert tn(unbranched_argument((1-I)**2), -pi/2)
-    assert tn(periodic_argument((1+I)**2, 3*pi), pi/2)
-    assert tn(periodic_argument((1-I)**2, 3*pi), -pi/2)
+    assert N_equals(unbranched_argument((1+I)**2), pi/2)
+    assert N_equals(unbranched_argument((1-I)**2), -pi/2)
+    assert N_equals(periodic_argument((1+I)**2, 3*pi), pi/2)
+    assert N_equals(periodic_argument((1-I)**2, 3*pi), -pi/2)
 
     assert unbranched_argument(principal_branch(x, pi)) \
            == periodic_argument(x, pi)
@@ -265,7 +267,7 @@ def test_periodic_argument():
 @XFAIL
 def test_principal_branch_fail():
     # TODO XXX why does abs(x)._eval_evalf() not fall back to global evalf?
-    assert tn(principal_branch((1 + I)**2, pi/2), 0)
+    assert N_equals(principal_branch((1 + I)**2, pi/2), 0)
 
 def test_principal_branch():
     from sympy import principal_branch, polar_lift, exp_polar
@@ -283,20 +285,12 @@ def test_principal_branch():
            principal_branch(exp_polar(I*pi)*x, 2*pi)
     assert principal_branch(neg*exp_polar(pi*I), 2*pi) == neg*exp_polar(-I*pi)
 
-    def tn(a, b):
-        from sympy.utilities.randtest import test_numerically
-        from sympy import Dummy
-        return test_numerically(a, b, Dummy('x'))
-    assert tn(principal_branch((1 + I)**2, 2*pi), 2*I)
-    assert tn(principal_branch((1 + I)**2, 3*pi), 2*I)
-    assert tn(principal_branch((1 + I)**2, 1*pi), 2*I)
+    assert N_equals(principal_branch((1 + I)**2, 2*pi), 2*I)
+    assert N_equals(principal_branch((1 + I)**2, 3*pi), 2*I)
+    assert N_equals(principal_branch((1 + I)**2, 1*pi), 2*I)
 
     # test argument sanitization
     assert principal_branch(x, I).func is principal_branch
     assert principal_branch(x, -4).func is principal_branch
     assert principal_branch(x, -oo).func is principal_branch
     assert principal_branch(x, zoo).func is principal_branch
-
-@XFAIL
-def test_issue_2453():
-    assert abs(I * pi) == pi

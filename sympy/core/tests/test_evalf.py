@@ -285,7 +285,7 @@ def test_old_docstring():
     assert a.n() == 17.25866050002001
 
 def test_issue_1707():
-    assert round(integrate(atan(x)**2, (x, -1, 1)).evalf(), 1) == 0.5
+    assert integrate(atan(x)**2, (x, -1, 1)).evalf().round(1) == 0.5
     assert atan(0, evaluate=False).n() == 0
 
 def test_evalf_mul():

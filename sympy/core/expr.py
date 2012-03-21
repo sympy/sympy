@@ -5,8 +5,10 @@ from evalf import EvalfMixin, pure_complex
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
 from compatibility import reduce, SymPyDeprecationWarning
+from sympy.mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
+from math import log10, ceil
 
 class Expr(Basic, EvalfMixin):
     __slots__ = []
@@ -154,7 +156,6 @@ class Expr(Basic, EvalfMixin):
         return Mod(other, self)
 
     def __int__(self):
-        from sympy import round
         # Although we only need to round to the units position, we'll
         # get one more digit so the extra testing below can be avoided
         # unless the rounded value rounded to an integer, e.g. if an
@@ -167,7 +168,9 @@ class Expr(Basic, EvalfMixin):
         # off by one. So...if our round value is the same as the int value
         # (regardless of how much extra work we do to calculate extra decimal
         # places) we need to test whether we are off by one.
-        r = round(self, 1)
+        r = self.round(1)
+        if not r.is_Number:
+            raise TypeError("can't convert complex to int")
         i = int(r)
         if not i:
             return 0
@@ -524,6 +527,22 @@ class Expr(Basic, EvalfMixin):
         if failing_expression:
             return diff
         return None
+
+    def _eval_is_positive(self):
+        if self.is_real and self.is_number:
+            n = self.evalf(1)
+            if n > 0:
+                return True
+            elif n < 0:
+                return False
+
+    def _eval_is_negative(self):
+        if self.is_real and self.is_number:
+            n = self.evalf(1)
+            if n < 0:
+                return True
+            elif n > 0:
+                return False
 
     def _eval_interval(self, x, a, b):
         """
@@ -2653,6 +2672,94 @@ class Expr(Basic, EvalfMixin):
         from sympy.polys import invert
         return invert(self, g)
 
+    def round(self, p=0):
+        """Return x rounded to the given decimal place.
+
+        If a complex number would results, apply round to the real
+        and imaginary components of the number.
+
+        Examples
+        ========
+        >>> from sympy import pi, E, I, S, Add, Mul, Number
+        >>> S(10.5).round()
+        11.
+        >>> pi.round()
+        3.
+        >>> pi.round(2)
+        3.14
+        >>> (2*pi + E*I).round()              #doctest: +SKIP
+        6. + 3.*I
+
+        The round method has a chopping effect:
+
+        >>> (2*pi + I/10).round()
+        6.
+        >>> (pi/10 + 2*I).round()             #doctest: +SKIP
+        2.*I
+        >>> (pi/10 + E*I).round(2)
+        0.31 + 2.72*I
+
+        Notes
+        =====
+
+        Do not confuse the Python builtin function, round, with the
+        SymPy method of the same name. The former always returns a float
+        (or raises an error if applied to a complex value) while the
+        latter returns either a Number or a complex number:
+
+        >>> isinstance(round(S(123), -2), Number)
+        False
+        >>> isinstance(S(123).round(-2), Number)
+        True
+        >>> isinstance((3*I).round(), Mul)
+        True
+        >>> isinstance((1 + 3*I).round(), Add)
+        True
+
+        """
+        from sympy.functions.elementary.exponential import log
+
+        x = self
+        if not x.is_number:
+            raise TypeError('%s is not a number' % x)
+        if not x.is_real:
+            i, r = x.as_real_imag()
+            return i.round(p) + S.ImaginaryUnit*r.round(p)
+        if not x:
+            return x
+        p = int(p)
+
+        precs = [f._prec for f in x.atoms(C.Float)]
+        dps = prec_to_dps(max(precs)) if precs else None
+
+        xpos = abs(x.n())
+        try:
+            mag_first_dig = int(ceil(log10(xpos)))
+        except (ValueError, OverflowError):
+            mag_first_dig = int(ceil(C.Float(mpf_log(xpos._mpf_, 53))/log(10)))
+        # check that we aren't off by 1
+        if (xpos/10**mag_first_dig) >= 1:
+            mag_first_dig += 1
+            assert .1 <= (xpos/10**mag_first_dig) < 1
+        allow = digits_needed = mag_first_dig + p
+        if dps is not None and allow > dps:
+            allow = dps
+        mag = Pow(10, p) # magnitude needed to bring digit p to units place
+        x += 1/(2*mag) # add the half for rounding
+        i10 = 10*mag*x.n((dps if dps is not None else digits_needed) + 1)
+        rv = Integer(i10)//10
+        q = 1
+        if p > 0:
+            q = mag
+        elif p < 0:
+            rv /= mag
+        rv = Rational(rv, q)
+        if rv.is_Integer:
+            # use str or else it won't be a float
+            return C.Float(str(rv), digits_needed)
+        else:
+            return C.Float(rv, allow)
+
 class AtomicExpr(Atom, Expr):
     """
     A parent class for object which are both atoms and Exprs.
@@ -2669,9 +2776,6 @@ class AtomicExpr(Atom, Expr):
         if self == s:
             return S.One
         return S.Zero
-
-    def as_numer_denom(self):
-        return self, S.One
 
     def _eval_is_polynomial(self, syms):
         return True
@@ -2690,3 +2794,4 @@ from mod import Mod
 from sympify import sympify
 from symbol import Wild
 from exprtools import factor_terms
+from numbers import Integer, Rational

@@ -85,9 +85,10 @@ def test_exp_infinity():
     assert exp(y*I*oo) != nan
 
 def test_exp_subs():
-    x,y = symbols('x,y')
-    assert (exp(3*log(x), evaluate=False)).subs(x**3,y**3) == x**3
-    assert (exp(3*log(x), evaluate=False)).subs(x**2,5) == x**3
+    x, y = symbols('x,y')
+    e = (exp(3*log(x), evaluate=False))
+    assert e.subs(x**3, y**3) == e
+    assert e.subs(x**2, 5) == e
     assert exp(3*log(x)).subs(x**2, y) == x**3
     assert exp(5*x).subs(exp(7*x),y) == y**Rational(5,7)
     assert exp(2*x + 7).subs(exp(3*x),y) == y**Rational(2,3) * exp(7)
@@ -289,8 +290,12 @@ def test_as_numer_denom():
     assert exp(-x).as_numer_denom() == (1, exp(x))
     assert exp(-2*x).as_numer_denom() == (1, exp(2*x))
     assert exp(-2).as_numer_denom() == (1, exp(2))
-    assert exp(n).as_numer_denom() == (exp(n), 1)
-    assert exp(-n).as_numer_denom() == (1, exp(n))
+    assert exp(n).as_numer_denom() == (1, exp(-n))
+    assert exp(-n).as_numer_denom() == (exp(-n), 1)
+    assert exp(-I*x).as_numer_denom() == (1, exp(I*x))
+    assert exp(-I*n).as_numer_denom() == (1, exp(I*n))
+    assert exp(-n).as_numer_denom() == (exp(-n), 1)
+
 
 def test_polar():
     x, y = symbols('x y', polar=True)

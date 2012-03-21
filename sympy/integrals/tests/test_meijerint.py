@@ -582,3 +582,10 @@ def test_messy():
 def test_3023():
     assert integrate(exp(-I*x**2), (x, -oo, oo), meijerg=True) == \
            -I*sqrt(pi)*exp(I*pi/4)
+
+def test_3153():
+    expr = 1/x/(a+b*x)**(S(1)/3)
+    anti = integrate(expr, x, meijerg=True)
+    assert not expr.has(hyper)
+    # XXX the expression is a mess, but actually upon differentiation and
+    # putting in numerical values seems to work...

@@ -1,4 +1,4 @@
-from sympy.core import Add, Basic, Expr, Function, S, sympify, Tuple
+from sympy.core import Add, Basic, Expr, Function, S, Set, sympify, Tuple
 from sympy.core.relational import Equality, Relational
 from sympy.logic.boolalg import Boolean
 
@@ -323,6 +323,33 @@ class Piecewise(Function):
         for int_a, int_b, expr in int_expr:
             ret_fun += expr._eval_interval(sym,  max(a, int_a), min(b, int_b))
         return mul * ret_fun
+
+    def _eval_subs(self, old, new):
+        """
+        Piecewise conditions may contain Sets whose modifications
+        requires the use of contains rather than substitution. They
+        may also contain bool which are not of Basic type.
+        """
+        ecs = list(self.exprcondpairs)
+        for i, (e, c) in enumerate(ecs):
+            try:
+                e = e._subs(old, new)
+            except TypeError:
+                if e != old:
+                    continue
+                e = new
+
+            if isinstance(c, Set):
+                # What do we do if there are more than one symbolic
+                # variable. Which do we put pass to Set.contains?
+                c = c.contains(new)
+            elif isinstance(c, Basic):
+                c = c._subs(old, new)
+
+            ecs[i] = e, c
+        ecs.append(self.otherwise)
+
+        return Piecewise(*ecs)
 
     def _eval_nseries(self, x, n, logx):
         new_args = map(lambda ec: (ec[0]._eval_nseries(x, n, logx), ec[1]), self.exprcondpairs)
