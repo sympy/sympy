@@ -60,8 +60,8 @@ class AskIntegerHandler(CommonHandler):
         else:
             return _output
 
-    Pow = Add
-
+    Pow=Mul
+    
     @staticmethod
     def int(expr, assumptions):
         return True
@@ -224,6 +224,8 @@ class AskRealHandler(CommonHandler):
         Positive**Real        -> Real
         Real**(Integer/Even)  -> Real if base is nonnegative
         Real**(Integer/Odd)   -> Real
+        Imaginary**Real       -> Real if Real%2==0
+                                 Imaginary if Real%2==1
         """
         if expr.is_number:
             return AskRealHandler._number(expr, assumptions)
@@ -238,6 +240,8 @@ class AskRealHandler(CommonHandler):
             elif ask(Q.real(expr.exp), assumptions):
                 if ask(Q.positive(expr.base), assumptions):
                     return True
+        elif (ask(Q.imaginary(expr.base), assumptions)==True):
+            return not ask(Q.imaginary(expr))
 
     @staticmethod
     def Rational(expr, assumptions):
@@ -399,8 +403,32 @@ class AskImaginaryHandler(CommonHandler):
                 return False
             return result
 
-    Pow = Add
-
+    @staticmethod
+    def Pow(expr, assumptions):
+        """
+        Imaginary**integer      -> Imaginary
+                                    if integer%2 ==1
+        Imaginary**integer      -> real
+                                    if integer%2 ==0     
+        Imaginary**Imaginary -> Real
+        """
+        if expr.is_number:
+            return AskRealHandler._number(expr, assumptions)
+        img=0
+        if ask(Q.real(expr.exp)):
+            if expr.args[1]%2 == 1:
+                return True
+            else:
+                return False
+        else:
+            for arg in expr.args:
+                if (ask(Q.imaginary(arg), assumptions)):
+                    img=img+1
+            if img==2:
+                return False
+            else:
+                return
+        
     @staticmethod
     def Number(expr, assumptions):
         return not (expr.as_real_imag()[1] == 0)
