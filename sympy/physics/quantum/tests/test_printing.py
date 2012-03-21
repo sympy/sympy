@@ -347,7 +347,7 @@ def test_innerproduct():
     ip1 = InnerProduct(Bra(), Ket())
     ip2 = InnerProduct(TimeDepBra(),TimeDepKet())
     ip3 = InnerProduct(JzBra(1,1),JzKet(1,1))
-    ip4 = InnerProduct(JzBraCoupled(1,1,1,1),JzKetCoupled(1,1,1,1))
+    ip4 = InnerProduct(JzBraCoupled(1, 1, (1,1)),JzKetCoupled(1, 1, (1,1)))
     ip_tall1 = InnerProduct(Bra(x/2), Ket(x/2))
     ip_tall2 = InnerProduct(Bra(x), Ket(x/2))
     ip_tall3 = InnerProduct(Bra(x/2), Ket(x))
@@ -366,11 +366,11 @@ def test_innerproduct():
     assert upretty(ip3) == u'⟨1,1❘1,1⟩'
     assert latex(ip3) == r'\left\langle 1,1 \right. {\left|1,1\right\rangle }'
     sT(ip3, "InnerProduct(JzBra(Integer(1),Integer(1)),JzKet(Integer(1),Integer(1)))")
-    assert str(ip4) == "<1,1,1,1|1,1,1,1>"
-    assert pretty(ip4) == u'⟨1,1,1,1❘1,1,1,1⟩'
-    assert upretty(ip4) == u'⟨1,1,1,1❘1,1,1,1⟩'
-    assert latex(ip4) == r'\left\langle 1,1,1,1 \right. {\left|1,1,1,1\right\rangle }'
-    sT(ip4, "InnerProduct(JzBraCoupled(Integer(1),Integer(1),Integer(1),Integer(1)),JzKetCoupled(Integer(1),Integer(1),Integer(1),Integer(1)))")
+    assert str(ip4) == "<1,1,j1=1,j2=1|1,1,j1=1,j2=1>"
+    assert pretty(ip4) == u'⟨1,1,j1=1,j2=1❘1,1,j1=1,j2=1⟩'
+    assert upretty(ip4) == u'⟨1,1,j₁=1,j₂=1❘1,1,j₁=1,j₂=1⟩'
+    assert latex(ip4) == r'\left\langle 1,1,j_{1}=1,j_{2}=1 \right. {\left|1,1,j_{1}=1,j_{2}=1\right\rangle }'
+    sT(ip4, "InnerProduct(JzBraCoupled(Integer(1),Integer(1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1)))),JzKetCoupled(Integer(1),Integer(1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1)))))")
     assert str(ip_tall1) == '<x/2|x/2>'
     ascii_str = \
 u"""\
@@ -502,10 +502,12 @@ def test_qubit():
     sT(q2, "IntQubit(8)")
 
 def test_spin():
-    ket = JzKet(1,1)
-    bra = JzBra(1,1)
-    cket = JzKetCoupled(1,1,1,1)
-    cbra = JzBraCoupled(1,1,1,1)
+    ket = JzKet(1,0)
+    bra = JzBra(1,0)
+    cket = JzKetCoupled(1, 0, (1, 2))
+    cbra = JzBraCoupled(1, 0, (1, 2))
+    cket_big = JzKetCoupled(1, 0, (1,2,3))
+    cbra_big = JzBraCoupled(1, 0, (1,2,3))
     rot = Rotation(1,2,3)
     bigd = WignerD(1,2,3,4,5,6)
     smalld = WignerD(1,2,3,0,4,0)
@@ -539,26 +541,38 @@ J \n\
     assert upretty(Jz) == ucode_str
     assert latex(Jz) == 'J_z'
     sT(Jz, "JzOp(Symbol('J'))")
-    assert str(ket) == '|1,1>'
-    assert pretty(ket) == u'❘1,1⟩'
-    assert upretty(ket) == u'❘1,1⟩'
-    assert latex(ket) == r'{\left|1,1\right\rangle }'
-    sT(ket, "JzKet(Integer(1),Integer(1))")
-    assert str(bra) == '<1,1|'
-    assert pretty(bra) == u'⟨1,1❘'
-    assert upretty(bra) == u'⟨1,1❘'
-    assert latex(bra) == r'{\left\langle 1,1\right|}'
-    sT(bra, "JzBra(Integer(1),Integer(1))")
-    assert str(cket) == '|1,1,1,1>'
-    assert pretty(cket) == u'❘1,1,1,1⟩'
-    assert upretty(cket) == u'❘1,1,1,1⟩'
-    assert latex(cket) == r'{\left|1,1,1,1\right\rangle }'
-    sT(cket, "JzKetCoupled(Integer(1),Integer(1),Integer(1),Integer(1))")
-    assert str(cbra) == '<1,1,1,1|'
-    assert pretty(cbra) == u'⟨1,1,1,1❘'
-    assert upretty(cbra) == u'⟨1,1,1,1❘'
-    assert latex(cbra) == r'{\left\langle 1,1,1,1\right|}'
-    sT(cbra, "JzBraCoupled(Integer(1),Integer(1),Integer(1),Integer(1))")
+    assert str(ket) == '|1,0>'
+    assert pretty(ket) == u'❘1,0⟩'
+    assert upretty(ket) == u'❘1,0⟩'
+    assert latex(ket) == r'{\left|1,0\right\rangle }'
+    sT(ket, "JzKet(Integer(1),Integer(0))")
+    assert str(bra) == '<1,0|'
+    assert pretty(bra) == u'⟨1,0❘'
+    assert upretty(bra) == u'⟨1,0❘'
+    assert latex(bra) == r'{\left\langle 1,0\right|}'
+    sT(bra, "JzBra(Integer(1),Integer(0))")
+    assert str(cket) == '|1,0,j1=1,j2=2>'
+    assert pretty(cket) == u'❘1,0,j1=1,j2=2⟩'
+    assert upretty(cket) == u'❘1,0,j₁=1,j₂=2⟩'
+    assert latex(cket) == r'{\left|1,0,j_{1}=1,j_{2}=2\right\rangle }'
+    sT(cket, "JzKetCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(2)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))")
+    assert str(cbra) == '<1,0,j1=1,j2=2|'
+    assert pretty(cbra) == u'⟨1,0,j1=1,j2=2❘'
+    assert upretty(cbra) == u'⟨1,0,j₁=1,j₂=2❘'
+    assert latex(cbra) == r'{\left\langle 1,0,j_{1}=1,j_{2}=2\right|}'
+    sT(cbra, "JzBraCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(2)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))")
+    assert str(cket_big) == '|1,0,j1=1,j2=2,j3=3,j(1,2)=3>'
+    # TODO: Fix non-unicode pretty printing
+    # i.e. j1,2 -> j(1,2)
+    assert pretty(cket_big) == u'❘1,0,j1=1,j2=2,j3=3,j1,2=3⟩'
+    assert upretty(cket_big) == u'❘1,0,j₁=1,j₂=2,j₃=3,j₁,₂=3⟩'
+    assert latex(cket_big) == r'{\left|1,0,j_{1}=1,j_{2}=2,j_{3}=3,j_{1,2}=3\right\rangle }'
+    sT(cket_big, "JzKetCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(2), Integer(3)),Tuple(Tuple(Integer(1), Integer(2), Integer(3)), Tuple(Integer(1), Integer(3), Integer(1))))")
+    assert str(cbra_big) == '<1,0,j1=1,j2=2,j3=3,j(1,2)=3|'
+    assert pretty(cbra_big) == u'⟨1,0,j1=1,j2=2,j3=3,j1,2=3❘'
+    assert upretty(cbra_big) == u'⟨1,0,j₁=1,j₂=2,j₃=3,j₁,₂=3❘'
+    assert latex(cbra_big) == r'{\left\langle 1,0,j_{1}=1,j_{2}=2,j_{3}=3,j_{1,2}=3\right|}'
+    sT(cbra_big, "JzBraCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(2), Integer(3)),Tuple(Tuple(Integer(1), Integer(2), Integer(3)), Tuple(Integer(1), Integer(3), Integer(1))))")
     assert str(rot) == 'R(1,2,3)'
     assert pretty(rot) == u'ℛ (1,2,3)'
     assert upretty(rot) == u'ℛ (1,2,3)'
@@ -675,7 +689,7 @@ def test_big_expr():
     x = symbols('x')
     e1 = Dagger(AntiCommutator(Operator('A')+Operator('B'),Pow(DifferentialOperator(Derivative(f(x), x), f(x)),3))*TensorProduct(Jz**2,Operator('A')+Operator('B')))*(JzBra(1,0)+JzBra(1,1))*(JzKet(0,0)+JzKet(1,-1))
     e2 = Commutator(Jz**2,Operator('A')+Operator('B'))*AntiCommutator(Dagger(Operator('C')*Operator('D')),Operator('E').inv()**2)*Dagger(Commutator(Jz,J2))
-    e3 = Wigner3j(1,2,3,4,5,6)*TensorProduct(Commutator(Operator('A')+Dagger(Operator('B')),Operator('C')+Operator('D')),Jz-J2)*Dagger(OuterProduct(Dagger(JzBra(1,1)),JzBra(1,0)))*TensorProduct(JzKetCoupled(1,1,1,1)+JzKetCoupled(1,0,1,1),JzKetCoupled(1,-1,1,1))
+    e3 = Wigner3j(1,2,3,4,5,6)*TensorProduct(Commutator(Operator('A')+Dagger(Operator('B')),Operator('C')+Operator('D')),Jz-J2)*Dagger(OuterProduct(Dagger(JzBra(1,1)),JzBra(1,0)))*TensorProduct(JzKetCoupled(1,1,(1,1))+JzKetCoupled(1,0,(1,1)),JzKetCoupled(1,-1,(1,1)))
     e4 = (ComplexSpace(1)*ComplexSpace(2)+FockSpace()**2)*(L2(Interval(0,oo))+HilbertSpace())
     assert str(e1) == '(Jz**2)x(Dagger(A) + Dagger(B))*{Dagger(DifferentialOperator(Derivative(f(x), x),f(x)))**3,Dagger(A) + Dagger(B)}*(<1,0| + <1,1|)*(|0,0> + |1,-1>)'
     ascii_str = \
@@ -715,25 +729,25 @@ u"""\
     assert upretty(e2) == ucode_str
     assert latex(e2) == r'\left[\left(J_z\right)^{2},A + B\right] \left\{\left(E\right)^{-2},D^{\dag} C^{\dag}\right\} \left[J^2,J_z\right]'
     sT(e2, "Mul(Commutator(Pow(JzOp(Symbol('J')), Integer(2)),Add(Operator(Symbol('A')), Operator(Symbol('B')))), AntiCommutator(Pow(Operator(Symbol('E')), Integer(-2)),Mul(Dagger(Operator(Symbol('D'))), Dagger(Operator(Symbol('C'))))), Commutator(J2Op(Symbol('J')),JzOp(Symbol('J'))))")
-    assert str(e3) == "Wigner3j(1,3,5,2,4,6)*[Dagger(B) + A,C + D]x(-J2 + Jz)*|1,0><1,1|*(|1,0,1,1> + |1,1,1,1>)x|1,-1,1,1>"
+    assert str(e3) == "Wigner3j(1,3,5,2,4,6)*[Dagger(B) + A,C + D]x(-J2 + Jz)*|1,0><1,1|*(|1,0,j1=1,j2=1> + |1,1,j1=1,j2=1>)x|1,-1,j1=1,j2=1>"
     ascii_str = \
 u"""\
-          [ †          ]  /   2     \\                                               \n\
-/1  3  5\\*[B  + A,C + D]⨂ |- J  + J |*❘1,0⟩⟨1,1❘*(❘1,0,1,1⟩ + ❘1,1,1,1⟩)⨂ ❘1,-1,1,1⟩\n\
-|       |                 \\        z/                                               \n\
-\\2  4  6/                                                                           \
+          [ †          ]  /   2     \\                                                                 \n\
+/1  3  5\\*[B  + A,C + D]⨂ |- J  + J |*❘1,0⟩⟨1,1❘*(❘1,0,j1=1,j2=1⟩ + ❘1,1,j1=1,j2=1⟩)⨂ ❘1,-1,j1=1,j2=1⟩\n\
+|       |                 \\        z/                                                                 \n\
+\\2  4  6/                                                                                             \
 """
     ucode_str = \
 u"""\
-          ⎡ †          ⎤  ⎛   2     ⎞                                               \n\
-⎛1  3  5⎞⋅⎣B  + A,C + D⎦⨂ ⎜- J  + J ⎟⋅❘1,0⟩⟨1,1❘⋅(❘1,0,1,1⟩ + ❘1,1,1,1⟩)⨂ ❘1,-1,1,1⟩\n\
-⎜       ⎟                 ⎝        z⎠                                               \n\
-⎝2  4  6⎠                                                                           \
+          ⎡ †          ⎤  ⎛   2     ⎞                                                                 \n\
+⎛1  3  5⎞⋅⎣B  + A,C + D⎦⨂ ⎜- J  + J ⎟⋅❘1,0⟩⟨1,1❘⋅(❘1,0,j₁=1,j₂=1⟩ + ❘1,1,j₁=1,j₂=1⟩)⨂ ❘1,-1,j₁=1,j₂=1⟩\n\
+⎜       ⎟                 ⎝        z⎠                                                                 \n\
+⎝2  4  6⎠                                                                                             \
 """
     assert pretty(e3) == ascii_str
     assert upretty(e3) == ucode_str
-    assert latex(e3) == r'\left(\begin{array}{ccc} 1 & 3 & 5 \\ 2 & 4 & 6 \end{array}\right) {\left[B^{\dag} + A,C + D\right]}\otimes \left({- J^2 + J_z}\right) {\left|1,0\right\rangle }{\left\langle 1,1\right|} \left({{\left|1,0,1,1\right\rangle } + {\left|1,1,1,1\right\rangle }}\right)\otimes {{\left|1,-1,1,1\right\rangle }}'
-    sT(e3, "Mul(Wigner3j(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6)), TensorProduct(Commutator(Add(Dagger(Operator(Symbol('B'))), Operator(Symbol('A'))),Add(Operator(Symbol('C')), Operator(Symbol('D')))), Add(Mul(Integer(-1), J2Op(Symbol('J'))), JzOp(Symbol('J')))), OuterProduct(JzKet(Integer(1),Integer(0)),JzBra(Integer(1),Integer(1))), TensorProduct(Add(JzKetCoupled(Integer(1),Integer(0),Integer(1),Integer(1)), JzKetCoupled(Integer(1),Integer(1),Integer(1),Integer(1))), JzKetCoupled(Integer(1),Integer(-1),Integer(1),Integer(1))))")
+    assert latex(e3) == r'\left(\begin{array}{ccc} 1 & 3 & 5 \\ 2 & 4 & 6 \end{array}\right) {\left[B^{\dag} + A,C + D\right]}\otimes \left({- J^2 + J_z}\right) {\left|1,0\right\rangle }{\left\langle 1,1\right|} \left({{\left|1,0,j_{1}=1,j_{2}=1\right\rangle } + {\left|1,1,j_{1}=1,j_{2}=1\right\rangle }}\right)\otimes {{\left|1,-1,j_{1}=1,j_{2}=1\right\rangle }}'
+    sT(e3, "Mul(Wigner3j(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6)), TensorProduct(Commutator(Add(Dagger(Operator(Symbol('B'))), Operator(Symbol('A'))),Add(Operator(Symbol('C')), Operator(Symbol('D')))), Add(Mul(Integer(-1), J2Op(Symbol('J'))), JzOp(Symbol('J')))), OuterProduct(JzKet(Integer(1),Integer(0)),JzBra(Integer(1),Integer(1))), TensorProduct(Add(JzKetCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1)))), JzKetCoupled(Integer(1),Integer(1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))), JzKetCoupled(Integer(1),Integer(-1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))))")
     assert str(e4) == '(C(1)*C(2)+F**2)*(L2([0, oo))+H)'
     ascii_str = \
 u"""\
