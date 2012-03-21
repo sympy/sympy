@@ -410,10 +410,10 @@ class Add(AssocOp):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
     # assumption methods
-    _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
-    _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
+    _eval_is_real = lambda self: self._eval_template_is_attr('is_real', when_multiple=None)
+    _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded', when_multiple=None)
+    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
-    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
 
     def _eval_is_odd(self):
         l = [f for f in self.args if not (f.is_even==True)]
