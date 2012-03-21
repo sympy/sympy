@@ -115,18 +115,15 @@ class Application(Basic):
     @cacheit
     def __new__(cls, *args, **options):
         args = map(sympify, args)
+        evaluate = options.pop('evaluate', True)
+        if options:
+            raise ValueError("Unknown options: %s" % options)
 
-        # these lines should be refactored
-        for opt in ["nargs", "dummy", "comparable", "noncommutative",
-                    "commutative"]:
-            if opt in options:
-                del options[opt]
-
-        if options.pop('evaluate', True):
+        if evaluate:
             evaluated = cls.eval(*args)
             if evaluated is not None:
                 return evaluated
-        return super(Application, cls).__new__(cls, *args, **options)
+        return super(Application, cls).__new__(cls, *args)
 
     @classmethod
     def eval(cls, *args):
@@ -224,16 +221,14 @@ class Function(Application, Expr):
                     'plural': 's'*(n != 1),
                     'given': n})
 
-        args = map(sympify, args)
-        evaluate = options.pop('evaluate', True)
-        if evaluate:
-            evaluated = cls.eval(*args)
-            if evaluated is not None:
-                return evaluated
-        result = super(Application, cls).__new__(cls, *args, **options)
-        pr = max(cls._should_evalf(a) for a in args)
-        pr2 = min(cls._should_evalf(a) for a in args)
-        if evaluate and pr2 > 0:
+        evaluate = options.get('evaluate', True)
+        result = super(Function, cls).__new__(cls, *args, **options)
+        if not evaluate or not isinstance(result, cls):
+            return result
+
+        pr = max(cls._should_evalf(a) for a in result.args)
+        pr2 = min(cls._should_evalf(a) for a in result.args)
+        if pr2 > 0:
             return result.evalf(mlib.libmpf.prec_to_dps(pr))
         return result
 
@@ -648,7 +643,7 @@ class AppliedUndef(Function):
     """
     def __new__(cls, *args, **options):
         args = map(sympify, args)
-        result = Expr.__new__(cls, *args, **options)
+        result = super(AppliedUndef, cls).__new__(cls, *args, **options)
         result.nargs = len(args)
         return result
 

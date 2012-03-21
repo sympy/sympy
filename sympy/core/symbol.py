@@ -94,7 +94,7 @@ class Symbol(AtomicExpr, Boolean):
 
     def __call__(self, *args):
         from function import Function
-        return Function(self.name, nargs=len(args))(*args, **self.assumptions0)
+        return Function(self.name)(*args)
 
     def as_real_imag(self, deep=True):
         return (C.re(self), C.im(self))
@@ -195,9 +195,9 @@ class Wild(Symbol):
         repl_dict[self] = expr
         return repl_dict
 
-    def __call__(self, *args, **assumptions):
+    def __call__(self, *args):
         from sympy.core.function import WildFunction
-        return WildFunction(self.name, nargs=len(args))(*args, **assumptions)
+        return WildFunction(self.name)(*args)
 
 _re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
 _re_var_scope = re.compile(r"^(.):(.)$")
