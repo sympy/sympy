@@ -349,17 +349,17 @@ class Partition(Basic):
             a += 1
         return rgs
 
-def from_RGS(rgs, superset):
+def partition_from_rgs(rgs, superset):
     """
     Creates a set partition from a restricted growth string.
 
     Examples:
     >>> from sympy.combinatorics.partitions import from_RGS, Partition
-    >>> from_RGS([0,1,2,0,1],['a','b','c','d','e'])
+    >>> partition_from_rgs([0,1,2,0,1],['a','b','c','d','e'])
     Partition([['a', 'd'], ['b', 'e'], ['c']], \
     ['a', 'b', 'c', 'd', 'e'])
     >>> a = Partition([[1,4],[2],[3,5]], [1,2,3,4,5])
-    >>> from_RGS(a.RGS, a.partition_set)
+    >>> partition_from_rgs(a.RGS, a.partition_set)
     Partition([[1, 4], [2], [3, 5]], [1, 2, 3, 4, 5])
     """
     max_elem = max(rgs) + 1
@@ -373,8 +373,18 @@ def from_RGS(rgs, superset):
 class IntegerPartition(Partition):
     """
     This class represents an abstract partition.
-    A partition is a set of disjoint sets whose
-    union equals a given set.
+
+    In number theory and combinatorics, a partition of a positive integer n,
+    also called an integer partition, is a way of writing n as a sum of positive
+    integers. Two sums that differ only in the order of their summands are
+    considered to be the same partition; if order matters then the sum becomes a
+    composition. For example, 4 can be partitioned in five distinct ways:
+    [[4],[3,1],[2,2],[2,1,1],[1,1,1,1].
+    
+    The order-dependent composition [1, 3] is the same partition as [3, 1],
+    while [1, 2, 1] and [1, 1, 2] are the same partition as [2, 1, 1].
+
+    Reference: Wikipedia
     """
 
     def next(self):
