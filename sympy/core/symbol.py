@@ -72,7 +72,8 @@ class Symbol(AtomicExpr, Boolean):
 
     def __new_stage2__(cls, name, **assumptions):
         assert isinstance(name, str),repr(type(name))
-        obj = Expr.__new__(cls, **assumptions)
+        obj = Expr.__new__(cls)
+        obj._init_assumptions(assumptions)
         obj.name = name
         return obj
 

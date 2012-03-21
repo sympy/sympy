@@ -142,9 +142,9 @@ class Basic(PicklableWithSlots):
         # from test_pickling.py
         return self.is_Float
 
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args):
         obj = object.__new__(cls)
-        obj._init_assumptions(assumptions)
+        obj._init_assumptions()
 
         obj._mhash = None # will be set by __hash__ method.
         obj._args = args  # all items in args must be Basic objects

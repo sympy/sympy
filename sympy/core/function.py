@@ -937,9 +937,6 @@ class Derivative(Expr):
         # after a few differentiations, then we won't need the other variables.
         variablegen = (v for v, count in variable_count for i in xrange(count))
 
-        if expr.is_commutative:
-            assumptions['commutative'] = True
-
         # If we can't compute the derivative of expr (but we wanted to) and
         # expr is itself not a Derivative, finish building an unevaluated
         # derivative class by calling Expr.__new__.
@@ -1071,6 +1068,9 @@ class Derivative(Expr):
             sorted_vars.extend(sorted(symbol_part,
                                       key=default_sort_key))
         return sorted_vars
+
+    def _eval_is_commutative(self):
+        return self.expr.is_commutative
 
     def _eval_derivative(self, v):
         # If the variable s we are diff wrt is not in self.variables, we
@@ -1328,11 +1328,11 @@ class Subs(Expr):
             C.Dummy(str(arg)) for arg in variables ])
         expr = sympify(expr).subs(tuple(zip(variables, new_variables)))
 
-        if expr.is_commutative:
-            assumptions['commutative'] = True
-
-        obj = Expr.__new__(cls, expr, new_variables, point, **assumptions)
+        obj = Expr.__new__(cls, expr, new_variables, point)
         return obj
+
+    def _eval_is_commutative(self):
+        return self.expr.is_commutative
 
     def doit(self):
         return self.expr.doit().subs(zip(self.variables, self.point))

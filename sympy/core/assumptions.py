@@ -219,15 +219,13 @@ class AssumeMixin(object):
     except ImportError:
         __slots__ = []
 
-    def  _init_assumptions(self, assumptions):
+    def  _init_assumptions(self, assumptions=None):
         self._a_inprogress = []
 
         # NOTE this could be made lazy -- probably not all instances will need
         # fully derived assumptions?
         if assumptions:
             self._assumptions = self.default_assumptions.copy()
-            if not assumptions:
-                pass
             self._assumptions.deduce_all_facts(assumptions)
             #                      ^
             # FIXME this is slow   |    another NOTE: speeding this up is *not*
