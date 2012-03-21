@@ -525,6 +525,8 @@ def test_atan():
     assert atan(r).is_real == True
 
     assert atan(-2*I) == -I*atanh(2)
+    assert [-2*atan(2 + sqrt(5)), -2*atan(-sqrt(5) + 2)] == \
+        [-pi + atan(S.Half), atan(S.Half)]
 
 def test_atan_rewrite():
     x = Symbol('x')

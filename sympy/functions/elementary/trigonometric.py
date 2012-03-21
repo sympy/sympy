@@ -1270,6 +1270,10 @@ class atan(Function):
 
             if arg in cst_table:
                 return S.Pi / cst_table[arg]
+            if arg == 2 - sqrt(5):
+                return -cls(S.Half)/2
+            if arg == 2 + sqrt(5):
+                return -cls(S.Half)/2 + S.Pi/2
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
