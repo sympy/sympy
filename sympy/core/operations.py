@@ -202,14 +202,24 @@ class AssocOp(Expr):
 
         return
 
-    def _eval_template_is_attr(self, is_attr):
-        # return True if all elements have the property
-        r = True
+    def _eval_template_is_attr(self, is_attr, when_multiple=False):
+        # return True if all elements have the property;
+        # False if one doesn't have the property; and
+        # if more than one doesn't have property, return
+        #    False if when_multiple = False
+        #    None if when_multiple is not False
+        quick = when_multiple is None
+        multi = False
         for t in self.args:
             a = getattr(t, is_attr)
-            if a is None: return
-            if r and not a: r = False
-        return r
+            if a is True:
+                continue
+            if a is None:
+                return
+            if quick and multi:
+                return None
+            multi = True
+        return not multi
 
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])

@@ -2226,6 +2226,7 @@ class NaN(Number):
     is_zero = None
     is_prime = None
     is_positive = None
+    is_negative = None
 
     __slots__ = []
 

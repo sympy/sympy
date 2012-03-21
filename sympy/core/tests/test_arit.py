@@ -372,6 +372,9 @@ def test_Add_Mul_is_integer():
     assert (k+n*x).is_integer == None
     assert (k+n/3).is_integer == False
 
+    assert ((1 + sqrt(3))*(-sqrt(3) + 1)).is_integer != False
+    assert (1 + (1 + sqrt(3))*(-sqrt(3) + 1)).is_integer != False
+
 def test_Add_Mul_is_bounded():
     x = Symbol('x', real=True, bounded=False)
 
@@ -384,6 +387,10 @@ def test_Add_Mul_is_bounded():
 
     assert (sin(x)-67).is_bounded == True
     assert (sin(x)+exp(x)).is_bounded is not True
+    assert (1 + x).is_bounded is False
+    assert (1 + x**2 + (1 + x)*(1 - x)).is_bounded is None
+    assert (sqrt(2)*(1 + x)).is_bounded is False
+    assert (sqrt(2)*(1 + x)*(1 - x)).is_bounded is False
 
 def test_Mul_is_even_odd():
     x = Symbol('x', integer=True)
@@ -743,6 +750,8 @@ def test_Add_is_negative_positive():
 
     assert (n+x).is_positive == None
     assert (n+x-k).is_positive == None
+
+    assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).is_zero != False
 
 def test_Add_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
@@ -1270,8 +1279,18 @@ def test_issue_2902():
     A = Symbol("A", commutative=False)
     eq = A + A**2
     # it doesn't matter whether it's True or False; they should
-    # just both be the same
-    assert eq.is_commutative == (eq + 1).is_commutative
+    # just all be the same
+    assert (
+        eq.is_commutative ==
+        (eq + 1).is_commutative ==
+        (A + 1).is_commutative)
+
+    B = Symbol("B", commutative=False)
+    # Although commutative terms could cancel we return True
+    # meaning "there are non-commutative symbols; aftersubstitution
+    # that definition can change, e.g. (A*B).subs(B,A**-1) -> 1
+    assert (sqrt(2)*A).is_commutative is False
+    assert (sqrt(2)*A*B).is_commutative is False
 
 def test_polar():
     from sympy import polar_lift

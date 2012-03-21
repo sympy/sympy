@@ -561,6 +561,12 @@ def test_special_assumptions():
     b = Symbol('b', bounded=None)
     assert (b*z).is_zero is None
 
+    e = -3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2
+    assert (e < 0) is False
+    assert (e > 0) is False
+    assert (e == 0) is False # it's not a literal 0
+    assert e.equals(0) is True
+
 def test_inconsistent():
     # cf. issues 2696 and 2446
     raises(AssertionError, "Symbol('x', real=True, commutative=False)")
