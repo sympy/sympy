@@ -14,7 +14,8 @@ from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from entity import GeometryEntity
 from sympy.core.numbers import Float
-from sympy.core.exprtools import factor_terms
+from sympy.logic.boolalg import And
+from sympy.core.relational import Eq
 
 
 class Point(GeometryEntity):
@@ -145,24 +146,25 @@ class Point(GeometryEntity):
         on a straight line). Return True if the points are collinear for all
         values of the free variables, False if they are not and None if it
         is not known.
-        
+
         If the coordinates are floating point values, use `tol` as
         tolerance.
-        
-        If ``conditions`` is True return a list of conditions equivalent to 
-        the collinearity of the points or a boolean.
+
+        If ``condition`` is True return an expression equivalent to
+        the collinearity of the points. This is only interesting if the
+        points have free variables.
 
         Parameters
         ==========
 
         points : sequence of Point
         tol : tolerance for floating point comparisons
-        conditions : return conditions for free variables
+        condition : return BooleanFunction of free variables
 
         Returns
         =======
 
-        is_collinear : boolean, or list of conditions for collinearity
+        is_collinear : boolean, or a BooleanFunction if ``condition`` is True
 
         Notes
         =====
@@ -201,51 +203,53 @@ class Point(GeometryEntity):
         True
         >>> Point.is_collinear(p1, p2, p3, p5)
         False
-        
+
         >>> p_2_x = Point(2, x)
         >>> Point.is_collinear(p1, p2, p_2_x)
         False
-        >>> Point.is_collinear(p1, p2, p_2_x, conditions=True)
-        [x - 2]
+        >>> Point.is_collinear(p1, p2, p_2_x, condition=True)
+        x - 2 == 0
         >>> y = Symbol('y', real=True)
         >>> p_y_3 = Point(y, 3)
-        >>> Point.is_collinear(p1, p2, p_2_x, p_y_3, conditions=True)
-        [x - 2, -y + 3]
-        
+        >>> Point.is_collinear(p1, p2, p_2_x, p_y_3, condition=True)
+        And(x - 2 == 0, -y + 3 == 0)
+
         >>> p3 = Point(2, 2.0001)
         >>> Point.is_collinear(p1, p2, p3, tol=0.00001)
         False
         >>> Point.is_collinear(p1, p2, p3, tol=0.001)
         True
-        
+
         >>> p1 = Point(0, 0)
-        >>> p2 = Point(-25*(-5*sqrt(2)/2 + 5)**2 + (-25*sqrt(2)/2 + 25)**2, 0) # == 0
+        >>> expr = -25*(-5*sqrt(2)/2 + 5)**2 + (-25*sqrt(2)/2 + 25)**2
+        >>> p2 = Point(expr, 0)   # this is 0
         >>> p3 = Point(1, 0)
         >>> p4 = Point(0, 1)
         >>> Point.is_collinear(p1, p2, p3, p4)
         False
         """
-        conditions = kwargs.pop("conditions", False)
+        condition = kwargs.pop("condition", False)
         tol = kwargs.pop("tol", Float("1E-15"))
-        
+
         if len(kwargs) > 0:
-            raise ValueError("Keyword arguments not understood: " + str(kwargs))
-        
+            raise ValueError("Keyword arguments not understood: "
+                                    + str(kwargs))
+
         if len(points) == 0:
             return False
         if len(points) <= 2:
-            return True # two points always form a line
+            return True  # two points always form a line
         points = [Point(a) for a in points]
         first = points.pop(0)
 
-        
         points = [p - first for p in points]
         first = points.pop(0)
-        
-        # drop first Points while they are 0
+
+        # drop Points while they are 0, because we need two different
+        # points for a line through 0 and first
         while True:
             if len(points) == 0:
-                return True
+                return True  # the given points are identical
             all_zero = True
             for x in first.args:
                 if x.is_Float:
@@ -263,29 +267,30 @@ class Point(GeometryEntity):
                 first = points.pop(0)
             else:
                 break
-        
-            
-        failings = []
-        
 
+        # expressions that have to be zero for the points to be collinear
+        failings = []
+
+        # check for all points if they are on a line through 0 and point
         for p in points:
             # for n-dimensional Points this could be used
-            #collin = first.dot(p) ** 2 - first.dot(first) * p.dot(p)
-            
+            #on_line = first.dot(p) ** 2 - first.dot(first) * p.dot(p)
+
             # but for 2 dimensions this is better
-            collin = first.x * p.y - first.y * p.x
-            
-            if collin.is_Float:
-                if collin.epsilon_eq(0, epsilon=tol):
+            # p is on the line iff this is zero
+            on_line = first.x * p.y - first.y * p.x
+
+            if on_line.is_Float:
+                if on_line.epsilon_eq(0, epsilon=tol):
                     continue
                 else:
                     return False
-            
-            is_const = collin.is_constant()
-            
+
+            is_const = on_line.is_constant()
+
             if is_const is True:
-                #speed issue: this calls is_constant again 
-                failing_exp = collin.equals(0, failing_expression=True)
+                #speed issue: this calls is_constant again
+                failing_exp = on_line.equals(0, failing_expression=True)
                 if failing_exp is True:
                     continue
                 elif failing_exp is False:
@@ -293,31 +298,30 @@ class Point(GeometryEntity):
                 else:
                     failings.append(failing_exp)
             elif is_const is False:
-                failing_exp = collin.equals(0, failing_expression=True)
+                failing_exp = on_line.equals(0, failing_expression=True)
                 if failing_exp is True:
                     continue
                 elif failing_exp is False:
-                    if conditions:
-                        failings.append(collin)
+                    if condition:
+                        failings.append(on_line)
                     else:
                         return False
                 else:
-                    if conditions:
-                        failings.append(collin)
+                    if condition:
+                        failings.append(on_line)
                     else:
                         return None
             else:
-                if conditions:
-                    failings.append(collin)
+                if condition:
+                    failings.append(on_line)
                 else:
                     return None
-                
 
         if len(failings) == 0:
             return True
-        
-        if conditions:
-            return failings
+
+        if condition:
+            return And(*[Eq(expr, 0) for expr in failings])
 
 
     def is_concyclic(*points):
