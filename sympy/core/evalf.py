@@ -1007,7 +1007,11 @@ def evalf_sum(expr, prec, options):
             if err <= eps:
                 break
         err = fastlog(evalf(abs(err), 20, options)[0])
-        re, im, re_acc, im_acc = evalf(s, prec2, options)
+        try:
+            re, im, re_acc, im_acc = evalf(s, prec2, options)
+        except TypeError: # issue 3174
+            # when should it try subs if they are in options?
+            raise NotImplementedError
         if re_acc is None:
             re_acc = -err
         if im_acc is None:
