@@ -20,15 +20,15 @@ from sympy.utilities.pytest import raises
 j1,j2,j3,j4,m1,m2,m3,m4 = symbols('j1:5 m1:5')
 j12,j13,j24,j34,j123,j134,mi,mi1,mp = symbols('j12 j13 j24 j34 j123 j134 mi mi1 mp')
 
-def test_represent():
-    # Spin operators
+def test_represent_spin_operators():
     assert represent(Jx) == hbar*Matrix([[0,1],[1,0]])/2
     assert represent(Jx, j=1) == hbar*sqrt(2)*Matrix([[0,1,0],[1,0,1],[0,1,0]])/2
     assert represent(Jy) == hbar*I*Matrix([[0,-1],[1,0]])/2
     assert represent(Jy, j=1) == hbar*I*sqrt(2)*Matrix([[0,-1,0],[1,0,-1],[0,1,0]])/2
     assert represent(Jz) == hbar*Matrix([[1,0],[0,-1]])/2
     assert represent(Jz, j=1) == hbar*Matrix([[1,0,0],[0,0,0],[0,0,-1]])
-    # Spin states
+
+def test_represent_spin_states():
     # Jx basis
     assert represent(JxKet(S(1)/2,S(1)/2), basis=Jx) == Matrix([1,0])
     assert represent(JxKet(S(1)/2,-S(1)/2), basis=Jx) == Matrix([0,1])
@@ -77,7 +77,8 @@ def test_represent():
     assert represent(JzKet(1,1), basis=Jz) == Matrix([1,0,0])
     assert represent(JzKet(1,0), basis=Jz) == Matrix([0,1,0])
     assert represent(JzKet(1,-1), basis=Jz) == Matrix([0,0,1])
-    # Uncoupled states
+
+def test_represent_uncoupled_states():
     # Jx basis
     assert represent(TensorProduct(JxKet(S(1)/2,S(1)/2),JxKet(S(1)/2,S(1)/2)), basis=Jx) == \
         Matrix([1,0,0,0])
@@ -153,7 +154,8 @@ def test_represent():
         Matrix([0,0,1,0])
     assert represent(TensorProduct(JzKet(S(1)/2,-S(1)/2),JzKet(S(1)/2,-S(1)/2)), basis=Jz) == \
         Matrix([0,0,0,1])
-    # Coupled spin states
+
+def test_represent_coupled_states():
     # Jx basis
     assert represent(JxKetCoupled(0, 0, (S(1)/2,S(1)/2)), basis=Jx) == \
         Matrix([1,0,0,0])
@@ -230,14 +232,14 @@ def test_represent():
     assert represent(JzKetCoupled(1, -1, (S(1)/2,S(1)/2)), basis=Jz) == \
         Matrix([0,0,0,1])
 
-def test_rewrite():
+def test_rewrite_same():
     # Rewrite to same basis
     assert JxBra(1,1).rewrite('Jx') == JxBra(1,1)
     assert JxBra(j,m).rewrite('Jx') == JxBra(j,m)
     assert JxKet(1,1).rewrite('Jx') == JxKet(1,1)
     assert JxKet(j,m).rewrite('Jx') == JxKet(j,m)
-    # Rewriting a normal state
-    # Bra
+
+def test_rewrite_Bra():
     # Numerical
     assert JxBra(1,1).rewrite('Jy') == -I*JyBra(1,1)
     assert JxBra(1,0).rewrite('Jy') == JyBra(1,0)
@@ -264,7 +266,8 @@ def test_rewrite():
     assert JyBra(j,m).rewrite('Jz') == Sum(WignerD(j,mi,m,3*pi/2,-pi/2,pi/2) * JzBra(j,mi), (mi, -j, j))
     assert JzBra(j,m).rewrite('Jx') == Sum(WignerD(j,mi,m,0,3*pi/2,0) * JxBra(j,mi), (mi, -j, j))
     assert JzBra(j,m).rewrite('Jy') == Sum(WignerD(j,mi,m,3*pi/2,pi/2,pi/2) * JyBra(j,mi), (mi, -j, j))
-    # Kets
+
+def test_rewrite_Ket():
     # Numerical
     assert JxKet(1,1).rewrite('Jy') == I*JyKet(1,1)
     assert JxKet(1,0).rewrite('Jy') == JyKet(1,0)
@@ -291,7 +294,8 @@ def test_rewrite():
     assert JyKet(j,m).rewrite('Jz') == Sum(WignerD(j,mi,m,3*pi/2,-pi/2,pi/2) * JzKet(j,mi), (mi, -j, j))
     assert JzKet(j,m).rewrite('Jx') == Sum(WignerD(j,mi,m,0,3*pi/2,0) * JxKet(j,mi), (mi, -j, j))
     assert JzKet(j,m).rewrite('Jy') == Sum(WignerD(j,mi,m,3*pi/2,pi/2,pi/2) * JyKet(j,mi), (mi, -j, j))
-    # Rewrite an uncoupled state
+
+def test_rewrite_uncoupled_state():
     # Numerical
     assert TensorProduct(JyKet(1,1),JxKet(1,1)).rewrite('Jx') == -I*TensorProduct(JxKet(1,1),JxKet(1,1))
     assert TensorProduct(JyKet(1,0),JxKet(1,1)).rewrite('Jx') == TensorProduct(JxKet(1,0),JxKet(1,1))
@@ -336,7 +340,8 @@ def test_rewrite():
         TensorProduct(JxKet(j1,m1), Sum(WignerD(j2,mi,m2,0,3*pi/2,0) * JxKet(j2,mi), (mi, -j2, j2)))
     assert TensorProduct(JyKet(j1,m1), JzKet(j2,m2)).rewrite('Jy') == \
         TensorProduct(JyKet(j1,m1), Sum(WignerD(j2,mi,m2,3*pi/2,pi/2,pi/2) * JyKet(j2,mi), (mi, -j2, j2)))
-    # Rewrite a coupled state
+
+def test_rewrite_coupled_state():
     # Numerical
     assert JyKetCoupled(0, 0, (S(1)/2,S(1)/2)).rewrite('Jx') == \
         JxKetCoupled(0, 0, (S(1)/2,S(1)/2))
@@ -399,7 +404,8 @@ def test_rewrite():
         Sum(WignerD(j,mi,m,0,pi/2,0) * JzKetCoupled(j, mi, (j1,j2)), (mi,-j,j))
     assert JyKetCoupled(j, m, (j1,j2)).rewrite('Jz') == \
         Sum(WignerD(j,mi,m,3*pi/2,-pi/2,pi/2) * JzKetCoupled(j, mi, (j1,j2)), (mi,-j,j))
-    # Innerproducts of rewritten states
+
+def test_innerproducts_of_rewritten_states():
     # Numerical
     assert qapply(JxBra(1,1)*JxKet(1,1).rewrite('Jy')).doit() == 1
     assert qapply(JxBra(1,0)*JxKet(1,0).rewrite('Jy')).doit() == 1
@@ -456,9 +462,7 @@ def test_rewrite():
     assert qapply(JzBra(1,-1)*JzKet(1,1).rewrite('Jy')) == 0
     assert qapply(JzBra(1,-1)*JzKet(1,0).rewrite('Jy')).doit() == 0
 
-def test_uncouple():
-    # Uncouple coupled state
-    # 2 coupled spaces
+def test_uncouple_2_coupled_states():
     # j1=1/2, j2=1/2
     assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) )))
@@ -500,7 +504,8 @@ def test_uncouple():
         expand(uncouple(couple( TensorProduct(JzKet(1,-1), JzKet(1,0)) )))
     assert TensorProduct(JzKet(1,-1), JzKet(1,-1)) == \
         expand(uncouple(couple( TensorProduct(JzKet(1,-1), JzKet(1,-1)) )))
-    # 3 coupled spaces
+
+def test_uncouple_3_coupled_states():
     # Default coupling
     # j1=1/2, j2=1/2, j3=1/2
     assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) == \
@@ -587,7 +592,8 @@ def test_uncouple():
         expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)), ((1,3),(1,2)) )))
     assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)), ((1,3),(1,2)) )))
-    # 4 coupled spaces
+
+def test_uncouple_4_coupled_states():
     # j1=1/2, j2=1/2, j3=1/2, j4=1/2
     assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) )))
@@ -753,8 +759,8 @@ def test_uncouple():
         expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
     assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1),JzKet(S(1)/2,S(-1)/2)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
-    # Numerical
-    # 2 coupled spaces
+
+def test_uncouple_2_coupled_states_numerical():
     # j1=1/2, j2=1/2
     assert uncouple(JzKetCoupled(0, 0, (S(1)/2,S(1)/2))) == \
         sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,-S(1)/2))/2 - \
@@ -811,7 +817,8 @@ def test_uncouple():
         sqrt(2)*TensorProduct(JzKet(1,-1),JzKet(1,0))/2
     assert uncouple(JzKetCoupled(2, -2, (1,1))) == \
         TensorProduct(JzKet(1,-1),JzKet(1,-1))
-    # 3 coupled spaces
+
+def test_uncouple_3_coupled_states_numerical():
     # Default coupling
     # j1=1/2, j2=1/2, j3=1/2
     assert uncouple(JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2,S(1)/2,S(1)/2))) == \
@@ -1065,7 +1072,8 @@ def test_uncouple():
         TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,0))/2 - \
         TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,-1))/2 + \
         TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,-1))/2
-    # 4 coupled spaces
+
+def test_uncouple_4_coupled_states_numerical():
     # j1=1/2, j2=1/2, j3=1, j4=1, default coupling
     assert uncouple(JzKetCoupled(3, 3, (S(1)/2,S(1)/2,1,1))) == \
         TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,1))
@@ -1329,7 +1337,8 @@ def test_uncouple():
         sqrt(30)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,0))/20 - \
         sqrt(30)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,-1))/20 + \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1))/5
-    # Symbolic
+
+def test_uncouple_symbolic():
     assert uncouple(JzKetCoupled(j, m, (j1,j2) )) == \
         Sum(CG(j1,m1,j2,m2,j,m) * \
             TensorProduct(JzKet(j1,m1), JzKet(j2,m2)), \
@@ -1351,9 +1360,7 @@ def test_uncouple():
             TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3), JzKet(j4,m4)), \
             (m1,-j1,j1), (m2,-j2,j2), (m3,-j3,j3), (m4,-j4,j4))
 
-def test_couple():
-    # Couple uncoupled state
-    # 2 coupled spaces
+def test_couple_2_states():
     # j1=1/2, j2=1/2
     assert JzKetCoupled(0, 0, (S(1)/2,S(1)/2)) == \
         expand(couple(uncouple( JzKetCoupled(0, 0, (S(1)/2,S(1)/2)) )))
@@ -1412,7 +1419,8 @@ def test_couple():
         expand(couple(uncouple( JzKetCoupled(2, -1, (S(1)/2,S(3)/2)) )))
     assert JzKetCoupled(2, -2, (S(1)/2,S(3)/2)) == \
         expand(couple(uncouple( JzKetCoupled(2, -2, (S(1)/2,S(3)/2)) )))
-    # 3 coupled spaces
+
+def test_couple_3_states():
     # Default coupling
     # j1=1/2, j2=1/2, j3=1/2
     assert JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2)) == \
@@ -1465,7 +1473,8 @@ def test_couple():
         expand(couple(uncouple( JzKetCoupled(S(3)/2, S(-1)/2, (1,S(1)/2,1), ((1,3,1),(1,2,S(3)/2))) ), ((1,3),(1,2)) ))
     assert JzKetCoupled(S(3)/2, S(-3)/2, (1,S(1)/2,1), ((1,3,1),(1,2,S(3)/2))) == \
         expand(couple(uncouple( JzKetCoupled(S(3)/2, S(-3)/2, (1,S(1)/2,1), ((1,3,1),(1,2,S(3)/2))) ), ((1,3),(1,2)) ))
-    # 4 coupled spaces
+
+def test_couple_4_states():
     # Default coupling
     # j1=1/2, j2=1/2, j3=1/2, j4=1/2
     assert JzKetCoupled(1, 1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) == \
@@ -1556,8 +1565,8 @@ def test_couple():
         expand(couple(uncouple( JzKetCoupled(2, -1, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,2))) ), ((1,3),(2,4),(1,2)) ))
     assert JzKetCoupled(2, -2, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,2)) ) == \
         expand(couple(uncouple( JzKetCoupled(2, -2, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,2))) ), ((1,3),(2,4),(1,2)) ))
-    # Numerical
-    # 2 coupled spaces
+
+def test_couple_2_states_numerical():
     # j1=1/2, j2=1/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2))) == \
         JzKetCoupled(1, 1, (S(1)/2,S(1)/2))
@@ -1616,7 +1625,8 @@ def test_couple():
         -sqrt(3)*JzKetCoupled(1,-1,(S(3)/2,S(1)/2))/2 + JzKetCoupled(2,-1,(S(3)/2,S(1)/2))/2
     assert couple(TensorProduct(JzKet(S(3)/2,-S(3)/2), JzKet(S(1)/2,-S(1)/2))) == \
         JzKetCoupled(2,-2,(S(3)/2,S(1)/2))
-    # 3 coupled spaces
+
+def test_couple_3_states_numerical():
     # Default coupling
     # j1=1/2,j2=1/2,j3=1/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2))) == \
@@ -2341,7 +2351,8 @@ def test_couple():
         sqrt(15)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-3)/2)), ((1,3),(1,2)) ) == \
         JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )
-    # Couple 4 spaces
+
+def test_couple_4_states_numerical():
     # Default coupling
     # j1=1/2, j2=1/2, j3=1/2, j4=1/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2))) == \
@@ -2758,7 +2769,8 @@ def test_couple():
         sqrt(10)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1)), ((1,2),(3,4),(1,3)) ) == \
         JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )
-    # Symbolic
+
+def test_couple_symbolic():
     assert couple(TensorProduct(JzKet(j1,m1), JzKet(j2,m2))) == \
         Sum(CG(j1,m1,j2,m2,j,m1+m2) * JzKetCoupled(j, m1+m2, (j1,j2)), (j,m1+m2,j1+j2))
     assert couple(TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3))) == \
