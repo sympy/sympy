@@ -372,7 +372,7 @@ def partition_from_rgs(rgs, superset):
 
 class IntegerPartition(Partition):
     """
-    This class represents an abstract partition.
+    This class represents an integer partition.
 
     In number theory and combinatorics, a partition of a positive integer n,
     also called an integer partition, is a way of writing n as a sum of positive
@@ -387,13 +387,41 @@ class IntegerPartition(Partition):
     Reference: Wikipedia
     """
 
+    def __new__(cls, *args, **kw_args):
+        """
+        Generates a new partition object.
+        
+        It also verifies if the arguments passed are valid and if it is
+        found that they are not then an exception is raised. The arguments
+        taken are the integer partition and the integer itself. We simply
+        check if the argument types are what we expect and if the partition
+        is valid.
+
+        Examples:
+        >>> a = IntegerPartition([5,4,3,1,1,1], 15)
+
+        >>> b = IntegerPartition([5,4,3,1,1,1], 15)
+        
+        """
+        partition = args[0]
+        integer_rep = args[1]
+
+        if not isinstance(partition, list) or sum(partition) != integer_rep:
+            raise ValueError("The partition is not valid")
+
+        list.sort(args[0], key=lambda x: -x)
+
+        obj = Basic.__new__(cls, *args, **kw_args)
+        return obj
+
     def next(self):
         """
         Generates the next partition.
 
         Examples:
         """
-        raise NotImplementedError()
+        raise NotImplementedError("The method to generate the next integer partition
+        is not implemented yet")
 
     def previous(self):
         """
@@ -401,7 +429,8 @@ class IntegerPartition(Partition):
 
         Examples:
         """
-        raise NotImplementedError()
+        raise NotImplementedError("The method to generate the previous integer
+        partition is not implemented yet")
 
     @property
     def size(self):
@@ -508,26 +537,6 @@ class IntegerPartition(Partition):
                 k -= 1
             j += 1
         return b
-
-    def __new__(cls, *args, **kw_args):
-        """
-        Generates a new partition object.
-        It also verifies if the arguments passed are
-        valid and if it is found that they are not then
-        an exception is raised.
-
-        Examples:
-        """
-        partition = args[0]
-        integer_rep = args[1]
-
-        if not isinstance(partition, list) or sum(partition) != integer_rep:
-            raise ValueError("The partition is not valid")
-
-        list.sort(args[0], key = lambda x: -x)
-
-        obj = Basic.__new__(cls, *args, **kw_args)
-        return obj
 
     def _compare(self, other):
         """
