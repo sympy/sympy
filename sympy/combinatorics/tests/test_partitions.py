@@ -3,23 +3,23 @@ from sympy.combinatorics.partitions import (Partition, IntegerPartition,
                                             RGS_enum, RGS_unrank, RGS_rank)
 
 def test_partition():
-    a = Partition([[1,2,3],[4]],[1,2,3,4])
-    b = Partition([[1,2], [3,4]], [1,2,3,4])
+    a = Partition([[1,2,3],[4]])
+    b = Partition([[1,2], [3,4]])
 
     assert (a == b) == False
     assert a > b
     assert (a < b) == False
     assert a != b
 
-    assert (a + b).partition == [[1, 2], [3], [4]]
-    assert (a - b).partition == [[1], [2], [3, 4]]
-    assert (a + 2).partition == [[1, 2], [3, 4]]
-    assert (b - 1).partition == [[1, 2, 4], [3]]
+    assert (a + b).partition_list_form == [[1, 2], [3], [4]]
+    assert (a - b).partition_list_form == [[1], [2], [3, 4]]
+    assert (a + 2).partition_list_form == [[1, 2], [3, 4]]
+    assert (b - 1).partition_list_form == [[1, 2, 3], [4]]
 
-    assert a.previous().partition == [[1, 2, 3, 4]]
-    assert a.next().partition ==  [[1, 2, 4], [3]]
-    assert b.previous().partition == (b - 1).partition
-    assert b.next().partition == [[1, 2], [3], [4]]
+    assert a.previous().partition_list_form == [[1, 2, 3, 4]]
+    assert a.next().partition_list_form == [[1, 2, 3], [4]]
+    assert b.previous().partition_list_form == (b - 1).partition_list_form
+    assert b.next().partition_list_form == [[1, 2], [3], [4]]
 
     assert a.rank == 1
     assert b.rank == 3
