@@ -16,6 +16,9 @@ def test_naturals():
     assert N.intersect(Interval(-5, 5)) == FiniteSet(1, 2, 3, 4, 5)
     assert N.intersect(Interval(-5, 5, True, True)) == FiniteSet(1, 2, 3, 4)
 
+    assert N.inf == 1
+    assert N.sup == oo
+
 def test_integers():
     Z = S.Integers
     assert 5 in Z
@@ -27,6 +30,9 @@ def test_integers():
 
     assert Z.intersect(Interval(-5, 5)) == FiniteSet(range(-5, 6))
     assert Z.intersect(Interval(-5, 5, True, True)) == FiniteSet(range(-4,5))
+
+    assert Z.inf == -oo
+    assert Z.sup == oo
 
 def test_TransformationSet():
     squares = TransformationSet(Lambda(x, x**2), S.Naturals)
@@ -48,3 +54,11 @@ def test_TransformationSet():
     assert (0, -1) not in halfcircle
     assert (0, 0) in halfcircle
 
+    assert not halfcircle.is_iterable
+
+    harmonics = TransforationSet(Lambda(x, 1/x), S.Naturals)
+    assert Rational(1,5) in harmonics
+    assert .25 in harmonics
+    assert .3 not in harmonics
+
+    assert harmonics.is_iterable

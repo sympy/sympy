@@ -1,7 +1,10 @@
-from sympy import (ceiling, floor, solve, Dummy, S, symbols, Lambda, sin, cos,
-        pi)
+from sympy import (Dummy, S, symbols, Lambda,
+        pi, Basic, sympify)
+from sympy.functions.elementary.integers import floor, ceiling
 from sympy.core.compatibility import iterable
-from sympy.core.sets import *
+from sets import (Set, Interval, FiniteSet, CountableSet,
+        Intersection)
+from sympy.core.singleton import Singleton, S
 oo = S.Infinity
 
 class Naturals(CountableSet):
@@ -15,7 +18,15 @@ class Naturals(CountableSet):
         >>> from sympy import S, Interval
         >>> 5 in S.Naturals
         True
-
+        >>> iterable = iter(S.Naturals)
+        >>> print iterable.next()
+        1
+        >>> print iterable.next()
+        2
+        >>> print iterable.next()
+        3
+        >>> S.Naturals.intersect(Interval(0, 10))
+        {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
     """
 
     __metaclass__ = Singleton
@@ -56,7 +67,20 @@ class Integers(CountableSet):
     ========
 
         >>> from sympy import S, Interval
+        >>> 5 in S.Naturals
+        True
+        >>> iterable = iter(S.Integers)
+        >>> print iterable.next()
+        0
+        >>> print iterable.next()
+        1
+        >>> print iterable.next()
+        -1
+        >>> print iterable.next()
+        2
 
+        >>> S.Integers.intersect(Interval(-4, 4))
+        {-4, -3, -2, -1, 0, 1, 2, 3, 4}
     """
 
     __metaclass__ = Singleton
@@ -104,16 +128,15 @@ class TransformationSet(Set):
     False
     >>> FiniteSet(0,1,2,3,4,5,6,7,9,10).intersect(squares)
     {1, 4}
+
     >>> square_iterable = iter(squares)
-    >>> for i in range(5):
+    >>> for i in range(4):
     ...     square_iterable.next()
-    0
     1
     4
     9
     16
     """
-    #def __new__(cls, lambd, base_set):
     def __new__(cls, lambd, base_set):
         return Basic.__new__(cls, lambd, base_set)
 
@@ -127,6 +150,7 @@ class TransformationSet(Set):
         return len(self.lambd.variables)>1
 
     def _contains(self, other):
+        from sympy.solvers import solve
         L = self.lambd
         if self._is_multivariate():
             solns = solve([expr-val for val, expr in zip(other, L.expr)],
@@ -144,10 +168,3 @@ class TransformationSet(Set):
     @property
     def is_iterable(self):
         return self.base_set.is_iterable
-
-x = Dummy('x')
-harmonics = TransformationSet(Lambda(x, 1/x), S.Naturals)
-squares = TransformationSet(Lambda(x, x**2), S.Naturals)
-r, th = symbols('r, theta', real=True)
-L = Lambda((r, th), (r*cos(th), r*sin(th)))
-halfcircle = TransformationSet(L, Interval(0, 1)*Interval(0, pi))
