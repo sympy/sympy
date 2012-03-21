@@ -1,8 +1,7 @@
 from sympy import Dummy, S, symbols, Lambda, pi, Basic, sympify
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.core.compatibility import iterable
-from sympy.core.sets import (Set, Interval, FiniteSet, CountableSet,
-        Intersection)
+from sympy.core.sets import Set, Interval, FiniteSet, CountableSet, Intersection
 from sympy.core.singleton import Singleton, S
 from sympy.solvers import solve
 oo = S.Infinity
@@ -119,15 +118,18 @@ class TransformationSet(Set):
 
     Examples
     --------
-    >>> from sympy import TransformationSet, S, FiniteSet
+    >>> from sympy import Symbol, S, TransformationSet, FiniteSet, Lambda
+
+    >>> x = Symbol('x')
     >>> N = S.Naturals
     >>> squares = TransformationSet(Lambda(x, x**2), N) # {x**2 for x in N}
     >>> 4 in squares
     True
     >>> 5 in squares
     False
+
     >>> FiniteSet(0,1,2,3,4,5,6,7,9,10).intersect(squares)
-    {1, 4}
+    {1, 4, 9}
 
     >>> square_iterable = iter(squares)
     >>> for i in range(4):
