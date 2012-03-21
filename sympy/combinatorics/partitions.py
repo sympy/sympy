@@ -7,11 +7,41 @@ import random
 class Partition(Basic):
     """
     This class represents an abstract partition.
-    A partition is a set of disjoint sets whose
-    union equals a given set.
+
+    A partition is a set of disjoint sets whose union equals a given set.
     """
 
     _rank = None
+
+    def __new__(cls, *args, **kw_args):
+        """
+        Generates a new partition object.
+
+        This method also verifies if the arguments passed are
+        valid and if it is found that they are not then an exception is raised.
+
+        Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1,2],[3]],[1,2,3])
+        >>> str(a)
+        '[[1, 2], [3]]'
+        """
+        partition = args[0]
+        super_set = args[1][:]
+
+        check = []
+        for part in partition:
+            if not isinstance(part, list):
+                raise ValueError("The input has been provided incorrectly")
+            check.extend(part)
+
+        check.sort()
+        super_set.sort()
+
+        if check != super_set:
+            raise ValueError("The partition provided is not valid.")
+        obj = Basic.__new__(cls, *args, **kw_args)
+        return obj
 
     def next(self):
         """
@@ -102,36 +132,6 @@ class Partition(Basic):
 
     def __repr__(self):
         return str(self)
-
-    def __new__(cls, *args, **kw_args):
-        """
-        Generates a new partition object.
-        It also verifies if the arguments passed are
-        valid and if it is found that they are not then
-        an exception is raised.
-
-        Examples:
-        >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]],[1,2,3])
-        >>> str(a)
-        '[[1, 2], [3]]'
-        """
-        partition = args[0]
-        super_set = args[1][:]
-
-        check = []
-        for part in partition:
-            if not isinstance(part, list):
-                raise ValueError("The input has been provided incorrectly")
-            check.extend(part)
-
-        check.sort()
-        super_set.sort()
-
-        if check != super_set:
-            raise ValueError("The partition provided is not valid.")
-        obj = Basic.__new__(cls, *args, **kw_args)
-        return obj
 
     def __add__(self, other):
         """
@@ -326,6 +326,11 @@ class Partition(Basic):
     def RGS(self):
         """
         Returns the restricted growth string of the partition.
+
+        For a set partition of consisting of n elements, the n-character string
+        a_1, a_2,..., a_n, in which each character gives the set block (B_0, B_1, ...)
+        in which the corresponding element belongs is called the restricted growth
+        string or the restricted growth function. 
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
