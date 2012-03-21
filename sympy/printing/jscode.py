@@ -71,7 +71,7 @@ class JavascriptCodePrinter(CodePrinter):
 
     def doprint(self, expr, assign_to=None):
         """
-        Actually format the expression as C code.
+        Actually format the expression as Javascript code.
         """
 
         if isinstance(assign_to, basestring):
