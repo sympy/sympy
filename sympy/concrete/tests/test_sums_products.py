@@ -2,7 +2,7 @@ from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
                    factorial, Function, harmonic, Integral, log, nan, oo, pi,
                    Product, product, Rational, S, sqrt, Sum, summation, Symbol,
                    sympify, zeta, oo)
-from sympy.abc import a, b, c, d, k, m, x, y, z
+from sympy.abc import a, b, c, d, k, m, n, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -337,3 +337,13 @@ def test_free_symbols():
 def test_issue_1072() :
     k = Symbol("k")
     assert summation(factorial(2*k + 1)/factorial(2*k), (k, 0, oo)) == oo
+
+@XFAIL
+def test_issue_3174():
+    # when this passes, the doctests involving Sum in
+    # is_constant can be unskipped
+    assert Sum(x, (x, 1, n)).n(1, subs={n: 0}) == 1
+
+@XFAIL
+def test_issue_3175():
+    assert Sum(x, (x, 1, 0)).n(1) == 1
