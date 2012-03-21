@@ -1035,6 +1035,61 @@ class Mul(AssocOp):
         return (im_count % 2 == 1)
 
 
+    def _eval_is_hermitian(self):
+        nc_count = 0
+        im_count = 0
+        is_neither = False
+        for t in self.args:
+            if not t.is_commutative:
+                nc_count += 1
+                if nc_count > 1:
+                    return None
+            if t.is_antihermitian:
+                im_count += 1
+                continue
+            t_real = t.is_hermitian
+            if t_real:
+                continue
+            elif t_real is False:
+                if is_neither:
+                    return None
+                else:
+                    is_neither = True
+            else:
+                return None
+        if is_neither:
+            return False
+
+        return (im_count % 2 == 0)
+
+    def _eval_is_antihermitian(self):
+        nc_count = 0
+        im_count = 0
+        is_neither = False
+        for t in self.args:
+            if not t.is_commutative:
+                nc_count += 1
+                if nc_count > 1:
+                    return None
+            if t.is_antihermitian:
+                im_count += 1
+                continue
+            t_real = t.is_hermitian
+            if t_real:
+                continue
+            elif t_real is False:
+                if is_neither:
+                    return None
+                else:
+                    is_neither = True
+            else:
+                return None
+        if is_neither:
+            return False
+
+        return (im_count % 2 == 1)
+
+
     def _eval_is_irrational(self):
         for t in self.args:
             a = t.is_irrational

@@ -22,7 +22,9 @@ _assume_rules = FactRules([
     'integer        ->  rational',
     'rational       ->  real',
     'real           ->  complex',
+    'real           ->  hermitian',
     'imaginary      ->  complex',
+    'imaginary      ->  antihermitian',
     'complex        ->  commutative',
 
     'odd            ==  integer & !even',
@@ -176,6 +178,8 @@ class AssumeMixin(object):
         - irrational    - object value cannot be represented exactly by Rational
         - unbounded     - object value is arbitrarily large
         - infinitesimal - object value is infinitesimal
+        - hermitian     - object is equal to its Hermite conjugate
+        - antihermitian - object is equal to the negative of its Hermite conjugate
 
 
     Example rules:
@@ -263,9 +267,10 @@ class AssumeMixin(object):
         {'commutative': True}
         >>> x = Symbol("x", positive=True)
         >>> x.assumptions0
-        {'commutative': True, 'complex': True, 'imaginary': False,
-        'negative': False, 'nonnegative': True, 'nonpositive': False,
-        'nonzero': True, 'positive': True, 'real': True, 'zero': False}
+        {'commutative': True, 'complex': True, 'hermitian': True,
+        'imaginary': False, 'negative': False, 'nonnegative': True,
+        'nonpositive': False, 'nonzero': True, 'positive': True,
+        'real': True, 'zero': False}
 
         """
         cls = type(self)
