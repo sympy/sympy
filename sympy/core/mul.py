@@ -128,7 +128,6 @@ class Mul(AssocOp):
                     else:
                         r, b = b.as_coeff_Add()
                         bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
-                        #bargs.sort(key=hash)
                         ar = a*r
                         if ar:
                             bargs.insert(0, ar)

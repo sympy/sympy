@@ -18,9 +18,9 @@ class Add(AssocOp):
 
     def _hashable_content(self):
         #TODO: noncommutative case.
-        if self._hashable_tuple_chached == None:
-            self._hashable_tuple_chached = tuple(sorted(self._args, key=hash))
-        return self._hashable_tuple_chached
+        if self._hashable_tuple_cached == None:
+            self._hashable_tuple_cached = tuple(sorted(self._args, key=hash))
+        return self._hashable_tuple_cached
 
     @classmethod
     def flatten(cls, seq):
@@ -121,14 +121,9 @@ class Add(AssocOp):
 
             # Add([...])
             elif o.is_Add:
-                # NB: here we assume Add is always commutative
-                # Now we insert nested Add in-place, so we can to do not care
-                # about commutativity.
-                _args = o.args
-                i = len(_args)
-                while i>0:
-                    i -= 1
-                    seq.insert(current_pos, _args[i])
+                # insert nested Add in-place, and continue with their arguments
+                #     [1, (x, y), 2, 3) -->  [1, (x, y), x, y, 2, 3]
+                seq[current_pos:current_pos] = o.args
                 continue
 
             # Mul([...])
@@ -140,11 +135,7 @@ class Add(AssocOp):
                 # it can combine with other terms (just like is done
                 # with the Pow below)
                 if c.is_Number and s.is_Add:
-                    _args = s.args
-                    i = len(_args)
-                    while i>0:
-                        i -= 1
-                        seq.insert(current_pos, c *_args[i])
+                    seq[current_pos:current_pos] = (c*a for a in s.args)
                     continue
 
             # check for unevaluated Pow, e.g. 2**3 or 2**(-1/2)
