@@ -8,7 +8,7 @@ from sympy.integrals.transforms import (mellin_transform,
 from sympy import (gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
                    cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
                    EulerGamma, erf, besselj, bessely, besseli, besselk,
-                   exp_polar, polar_lift, unpolarify, Function)
+                   exp_polar, polar_lift, unpolarify, Function, expint)
 from sympy.utilities.pytest import XFAIL, slow, skip
 from sympy.abc import x, s, a, b
 nu, beta, rho = symbols('nu beta rho')
@@ -486,9 +486,9 @@ def test_inverse_laplace_transform():
     # just test inverses of all of the above
     assert ILT(1/s, s, t) == Heaviside(t)
     assert ILT(1/s**2, s, t) == t*Heaviside(t)
-    assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/factorial(4)
+    assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/24
     assert ILT(exp(-a*s)/s, s, t) == Heaviside(t-a)
-    assert ILT(exp(-a*s)/(s+b), s, t) == exp(-b*(-a + t))*Heaviside(t - a)
+    assert ILT(exp(-a*s)/(s+b), s, t) == exp(b*(a - t))*Heaviside(-a + t)
     assert ILT(a/(s**2 + a**2), s, t) == sin(a*t)*Heaviside(t)
     assert ILT(s/(s**2 + a**2), s, t) == cos(a*t)*Heaviside(t)
     # TODO is there a way around simp_hyp?
@@ -529,7 +529,7 @@ def test_fourier_transform():
     a = symbols('a', positive=True)
     b = symbols('b', positive=True)
 
-    posk = symbols('k', positive=True)
+    posk = symbols('posk', positive=True)
 
     # Test unevaluated form
     assert fourier_transform(f(x), x, k) == FourierTransform(f(x), x, k)
@@ -544,11 +544,12 @@ def test_fourier_transform():
     assert factor(FT(exp(-a*x)*Heaviside(x), x, k), extension=I) \
            == 1/(a + 2*pi*I*k)
     # NOTE: the ift comes out in pieces
-    assert IFT(1/(a + 2*pi*I*x), x, posk, noconds=False) == (exp(-a*posk), True)
+    assert IFT(1/(a + 2*pi*I*x), x, posk,
+            noconds=False) == (exp(-a*posk), True)
     assert IFT(1/(a + 2*pi*I*x), x, -posk,
-               noconds=False) == (0, True)
+            noconds=False) == (0, True)
     assert IFT(1/(a + 2*pi*I*x), x, symbols('k', negative=True),
-               noconds=False) == (0, True)
+            noconds=False) == (0, True)
     # TODO IFT without factoring comes out as meijer g
 
     assert factor(FT(x*exp(-a*x)*Heaviside(x), x, k), extension=I) \

@@ -17,6 +17,7 @@ from sympy.functions import gamma, exp, sqrt, log, root, exp_polar
 from sympy.utilities import flatten, default_sort_key
 
 from sympy.simplify.cse_main import cse
+from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.sqrtdenest import sqrtdenest
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
@@ -2595,6 +2596,53 @@ def combsimp(expr):
 
     return factor(expr)
 
+def signsimp(expr, evaluate=True):
+    """Make all Add sub-expressions canonical wrt sign.
+
+    If an Add subexpression, ``a``, can have a sign extracted,
+    as determined by could_extract_minus_sign, it is replaced
+    with Mul(-1, a, evaluate=False). This allows signs to be
+    extracted from powers and products.
+
+    Examples
+    ========
+
+    >>> from sympy import signsimp, exp
+    >>> from sympy.abc import x, y
+    >>> n = -1 + 1/x
+    >>> n/x/(-n)**2 - 1/n/x
+    (-1 + 1/x)/(x*(1 - 1/x)**2) - 1/(x*(-1 + 1/x))
+    >>> signsimp(_)
+    0
+    >>> x*n + x*-n
+    x*(-1 + 1/x) + x*(1 - 1/x)
+    >>> signsimp(_)
+    0
+    >>> n**3
+    (-1 + 1/x)**3
+    >>> signsimp(_)
+    -(1 - 1/x)**3
+
+    By default, signsimp doesn't leave behind any hollow simplification:
+    if making an Add canonical wrt sign didn't change the expression, the
+    original Add is restored. If this is not desired then the keyword
+    ``evaluate`` can be set to False:
+
+    >>> e = exp(y - x)
+    >>> signsimp(e) == e
+    True
+    >>> signsimp(e, evaluate=False)
+    exp(-(x - y))
+
+    """
+    expr = sympify(expr)
+    if not isinstance(expr, Expr) or expr.is_Atom:
+        return expr
+    e = sub_post(sub_pre(expr))
+    if evaluate and isinstance(e, Expr):
+        e = e.xreplace(dict([(m, -(-m)) for m in e.atoms(Mul) if -(-m) != m]))
+    return e
+
 def simplify(expr, ratio=1.7, measure=count_ops):
     """
     Simplifies the given expression.
@@ -2721,7 +2769,9 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     """
     from sympy.simplify.hyperexpand import hyperexpand
 
-    expr = sympify(expr)
+    original_expr = expr = sympify(expr)
+
+    expr = signsimp(expr)
 
     if not isinstance(expr, Basic): # XXX: temporary hack
         return expr
@@ -2736,8 +2786,6 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
-
-    original_expr = expr
 
     def shorter(*choices):
         '''Return the choice that has the fewest ops. In case of a tie,
