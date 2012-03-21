@@ -681,13 +681,24 @@ class Add(AssocOp):
         return self.func(*terms)
 
     def _eval_expand_mul(self, deep=True, **hints):
+        hit = False
         sargs, terms = self.args, []
         for term in sargs:
-            if hasattr(term, '_eval_expand_mul'):
+            if term.is_Mul:
+                old = term
+                hints['mul'] = True
+                targs = [t._eval_expand_mul(deep=deep, **hints) for t in term.args]
+                hints['mul'] = False
+                term = Mul(*targs)
                 newterm = term._eval_expand_mul(deep=deep, **hints)
+                hit = hit or newterm != old
             else:
-                newterm = term
+                hints['mul'] = True
+                newterm = term._eval_expand_mul(deep=deep, **hints)
             terms.append(newterm)
+        hints['mul'] = True
+        if not hit:
+            return self
         return self.func(*terms)
 
     def _eval_expand_multinomial(self, deep=True, **hints):
@@ -893,7 +904,7 @@ class Add(AssocOp):
 
         return con, prim
 
-from function import FunctionClass
+from function import FunctionClass, expand_mul
 from mul import Mul, _keep_coeff, prod
 from power import Pow
 from sympy.core.numbers import Rational
