@@ -60,7 +60,7 @@ class AskIntegerHandler(CommonHandler):
         else:
             return _output
 
-    Pow=Mul
+    Pow=Add
     
     @staticmethod
     def int(expr, assumptions):
@@ -224,8 +224,6 @@ class AskRealHandler(CommonHandler):
         Positive**Real        -> Real
         Real**(Integer/Even)  -> Real if base is nonnegative
         Real**(Integer/Odd)   -> Real
-        Imaginary**Real       -> Real if Real%2==0
-                                 Imaginary if Real%2==1
         """
         if expr.is_number:
             return AskRealHandler._number(expr, assumptions)
@@ -410,7 +408,8 @@ class AskImaginaryHandler(CommonHandler):
                                     if integer%2 ==1
         Imaginary**integer      -> real
                                     if integer%2 ==0     
-        Imaginary**Imaginary -> Real
+        Imaginary<x>**Imaginary<y> -> Real if sizeof(x.args)==1 and  sizeof(x.args)==1
+                                      else Imaginary  
         """
         if expr.is_number:
             return AskRealHandler._number(expr, assumptions)
@@ -421,11 +420,20 @@ class AskImaginaryHandler(CommonHandler):
             else:
                 return False
         else:
-            for arg in expr.args:
-                if (ask(Q.imaginary(arg), assumptions)):
-                    img=img+1
-            if img==2:
-                return False
+            base_size=0
+            exp_size=0
+            for arg in expr.base.args:
+                base_size=base_size+1
+            for arg in expr.exp.args:
+                exp_size=exp_size+1
+            if ((base_size==1) and  (exp_size==1)):
+                for arg in expr.args:
+                    if (ask(Q.imaginary(arg), assumptions)):
+                        img=img+1
+                if img==2:
+                    return False
+            elif ask(Q.imaginary(expr.base),assumptions) or ask(Q.imaginary(expr.exp),assumptions):
+                 return False
             else:
                 return
         
