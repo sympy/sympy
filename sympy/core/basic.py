@@ -1563,41 +1563,22 @@ def _aresame(a, b):
     >>> 2.0 == S(2)
     True
 
-    The Basic.compare method will indicate that these are not the same, but
-    the same method allows symbols with different assumptions to compare the
-    same:
-
-    >>> S(2).compare(2.0)
-    -1
-    >>> Symbol('x').compare(Symbol('x', positive=True))
-    0
-
-    The Basic.compare method will not work with instances of FunctionClass:
-
-    >>> sin.compare(cos)
-    Traceback (most recent call last):
-    ...
-    TypeError: unbound method compare() must be called with sin instance as first ar
-    gument (got FunctionClass instance instead)
-
     Since a simple 'same or not' result is sometimes useful, this routine was
-    written to provide that query.
+    written to provide that query:
+
+    >>> from sympy.core.basic import _aresame
+    >>> _aresame(S(2.0), S(2))
+    False
 
     """
     from sympy.utilities.iterables import preorder_traversal
     from itertools import izip
 
-    try:
-        if a.compare(b) == 0 and a.is_Symbol and b.is_Symbol:
-            return a.assumptions0 == b.assumptions0
-    except (TypeError, AttributeError):
-        pass
-
     for i, j in izip(preorder_traversal(a), preorder_traversal(b)):
-        if i == j and type(i) == type(j):
-            continue
-        return False
-    return True
+        if i != j or type(i) != type(j):
+            return False
+    else:
+        return True
 
 def _atomic(e):
     """Return atom-like quantities as far as substitution is
