@@ -57,7 +57,7 @@ class Partition(Basic):
         next_rgs = RGS_unrank((current_rank + 1) %
                               RGS_enum(self.partition_set_size),
                               self.partition_set_size)
-        return from_RGS(next_rgs, self.partition_set)
+        return partition_from_rgs(next_rgs, self.partition_set)
 
     def previous(self):
         """
@@ -73,7 +73,7 @@ class Partition(Basic):
         next_rgs = RGS_unrank((current_rank - 1) %
                               RGS_enum(self.partition_set_size),
                               self.partition_set_size)
-        return from_RGS(next_rgs, self.partition_set)
+        return partition_from_rgs(next_rgs, self.partition_set)
 
     @property
     def size(self):
@@ -161,7 +161,7 @@ class Partition(Basic):
             result = RGS_unrank((self.rank + other) %
                                 RGS_enum(self.partition_set_size),
                                 self.partition_set_size)
-        return from_RGS(result, self.partition_set)
+        return partition_from_rgs(result, self.partition_set)
 
     def __sub__(self, other):
         """
@@ -191,7 +191,7 @@ class Partition(Basic):
             result = RGS_unrank((self.rank - other) %
                                 RGS_enum(self.partition_set_size),
                                 self.partition_set_size)
-        return from_RGS(result, self.partition_set)
+        return partition_from_rgs(result, self.partition_set)
 
     def _compare(self, other):
         """
@@ -354,7 +354,7 @@ def partition_from_rgs(rgs, superset):
     Creates a set partition from a restricted growth string.
 
     Examples:
-    >>> from sympy.combinatorics.partitions import from_RGS, Partition
+    >>> from sympy.combinatorics.partitions import partition_from_rgs, Partition
     >>> partition_from_rgs([0,1,2,0,1],['a','b','c','d','e'])
     Partition([['a', 'd'], ['b', 'e'], ['c']], \
     ['a', 'b', 'c', 'd', 'e'])
@@ -398,6 +398,7 @@ class IntegerPartition(Partition):
         is valid.
 
         Examples:
+        >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> a = IntegerPartition([5,4,3,1,1,1], 15)
 
         >>> b = IntegerPartition([5,4,3,1,1,1], 15)
@@ -420,7 +421,7 @@ class IntegerPartition(Partition):
 
         Examples:
         """
-        raise NotImplementedError("The method to generate the next integer partition
+        raise NotImplementedError("The method to generate the next integer partition \
         is not implemented yet")
 
     def previous(self):
@@ -429,7 +430,7 @@ class IntegerPartition(Partition):
 
         Examples:
         """
-        raise NotImplementedError("The method to generate the previous integer
+        raise NotImplementedError("The method to generate the previous integer \
         partition is not implemented yet")
 
     @property
