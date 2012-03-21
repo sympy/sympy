@@ -142,7 +142,7 @@ class Add(AssocOp):
             elif o.is_Pow:
                 b, e = o.as_base_exp()
                 if b.is_Number and (e.is_Integer or (e.is_Rational and e.is_negative)):
-                    seq.append(Pow(b, e))
+                    seq[current_pos:current_pos] = (Pow(b, e), )
                     continue
                 c, s = S.One, o
 
