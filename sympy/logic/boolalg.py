@@ -213,6 +213,34 @@ class Nor(BooleanFunction):
         """
         return Not(Or(*args))
 
+class Xnor(BooleanFunction):
+    """
+    Logical XNOR function.
+
+    Returns the inverse of the exclusive OR (XOR) function
+    """
+    @classmethod
+    def eval(cls, *args):
+        """
+        Logical XNOR function.
+
+        Evaluates the XOR function and returns its inverse
+
+        Examples
+        ========
+
+        >>> from sympy.logic.boolalg import Xnor
+        >>> Xnor(True, False)
+        False
+        >>> Xnor(True, True)
+        True
+        >>> Xnor(False, True)
+        False
+        >>> Xnor(False, False)
+        True
+        """
+        return Not(Xor(*args))
+
 class Implies(BooleanFunction):
     """
     Logical implication.
