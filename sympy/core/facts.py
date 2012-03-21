@@ -222,7 +222,7 @@ def rules_2prereq(rules):
        is a. That's because a=T -> b=T, and b=F -> a=F, but a=F -> b=?
     """
     prereq = defaultdict(set)
-    for a, impl in rules.iteritems():
+    for (a, _), impl in rules.iteritems():
         for i in impl:
             prereq[i].add(a)
     return prereq
@@ -249,31 +249,30 @@ def split_rules_tt_tf_ft_ff(rules):
 
        'b' -> ['a'] # ft: !b -> a
     """
-    tt = defaultdict(set)
-    tf = defaultdict(set)
-    ft = defaultdict(set)
+    t = defaultdict(set)
+    f = defaultdict(set)
     for k, impl in rules.iteritems():
         if type(k) is not Not:
             for i in impl:
                 if type(i) is not Not:
-                    tt[k].add(i)
+                    t[(k, True)].add(i)
                 else:
-                    tf[k].add(i.arg)
+                    f[(k, True)].add(i.arg)
         else:
             k = k.arg
             for i in impl:
                 if type(i) is not Not:
-                    ft[i].add(k)
+                    t[(i, False)].add(k)
                 else:
-                    tt[i.arg].add(k)
+                    t[(i.arg, True)].add(k)
 
     # FF is related to TT
-    ff = defaultdict(set)
-    for k, impl in tt.iteritems():
-        for i in impl:
-            ff[i].add(k)
+    for (k, v), impl in t.iteritems():
+        if v is True:
+            for i in impl:
+                f[(i, False)].add(k)
 
-    return tt, tf, ft, ff
+    return t, f
 
 
 ################
@@ -491,7 +490,7 @@ class FactRules(object):
         # now split each rule into four logic chains
         # (removing betaidxs from impl_ab view) (XXX is this needed?)
         impl_ab_ = dict( (k,impl)  for k, (impl,betaidxs) in impl_ab.iteritems())
-        rel_tt, rel_tf, rel_ft, rel_ff = split_rules_tt_tf_ft_ff(impl_ab_)
+        rel_t, rel_f = split_rules_tt_tf_ft_ff(impl_ab_)
         rel_tbeta = {}
         rel_fbeta = {}
         for k, (impl,betaidxs) in impl_ab.iteritems():
@@ -502,28 +501,28 @@ class FactRules(object):
                 rel_xbeta = rel_tbeta
             rel_xbeta[k] = betaidxs
 
-        self.rel_tt = rel_tt
-        self.rel_tf = rel_tf
+        self.rel_tt = dict((k, impl) for (k,v), impl in rel_t.iteritems() if v)
+        self.rel_tf = dict((k, impl) for (k,v), impl in rel_f.iteritems() if v)
         self.rel_tbeta  = rel_tbeta
-        self.rel_ff = rel_ff
-        self.rel_ft = rel_ft
+        self.rel_ff = dict((k, impl) for (k,v), impl in rel_f.iteritems() if not v)
+        self.rel_ft = dict((k, impl) for (k,v), impl in rel_t.iteritems() if not v)
         self.rel_fbeta  = rel_fbeta
 
         self.beta_rules = P.rules_beta
 
         # build rels (forward chains)
-        K = set (rel_tt.keys())
-        K.update(rel_tf.keys())
-        K.update(rel_ff.keys())
-        K.update(rel_ft.keys())
+        K = set (self.rel_tt.keys())
+        K.update(self.rel_tf.keys())
+        K.update(self.rel_ff.keys())
+        K.update(self.rel_ft.keys())
 
         rels = {}
         empty= ()
         for k in K:
-            tt = rel_tt[k]
-            tf = rel_tf[k]
-            ft = rel_ft[k]
-            ff = rel_ff[k]
+            tt = rel_t.get((k, True), empty)
+            tf = rel_f.get((k, True), empty)
+            ft = rel_t.get((k, False), empty)
+            ff = rel_f.get((k, False), empty)
 
             tbeta = rel_tbeta.get(k,empty)
             fbeta = rel_fbeta.get(k,empty)
@@ -535,7 +534,7 @@ class FactRules(object):
 
         # build prereq (backward chains)
         prereq = defaultdict(set)
-        for rel in [rel_tt, rel_tf, rel_ff, rel_ft]:
+        for rel in [rel_t, rel_f]:
             rel_prereq = rules_2prereq(rel)
             for k, pitems in rel_prereq.iteritems():
                 prereq[k] |= pitems

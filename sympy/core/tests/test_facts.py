@@ -11,7 +11,7 @@ U = None
 def test_deduce_alpha_implications():
     def D(i):
         I = deduce_alpha_implications(i)
-        P = rules_2prereq(I)
+        P = rules_2prereq(dict(((k, True), v) for k, v in I.items()))
         return I,P
 
     # transitivity
@@ -122,7 +122,7 @@ def test_split_rules_tf():
     r = {'a': set(['b', Not('c'), 'd']),
          'b': set(['e', Not('f')]) }
 
-    tt, tf, ft, ff = S(r)
+    rel_t, rel_f = S(r)
     assert tt == {'a': set(['b', 'd']), 'b': set(['e'])}
     assert tf == {'a': set(['c']),      'b': set(['f'])}
     assert ft == {}
@@ -139,41 +139,39 @@ def test_split_rules_tf():
 
 def test_FactRules_parse():
     f = FactRules('a -> b')
-    assert f.rel_tt     == {'a': set(['b']), 'b': set([])}
-    assert f.rel_tf     == {'a': set([]), 'b': set([])}
-    assert f.rel_ff     == {'b': set(['a']), 'a': set([])}
-    assert f.rel_ft     == {'a': set([]), 'b': set([])}
+    assert f.rel_tt     == {'a': set(['b'])}
+    assert f.rel_tf     == {}
+    assert f.rel_ff     == {'b': set(['a'])}
+    assert f.rel_ft     == {}
     assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('a -> !b')
-    assert f.rel_tt     == {'a': set([]), 'b': set([])}
+    assert f.rel_tt     == {}
     assert f.rel_tf     == {'a': set(['b']), 'b': set(['a'])}
-    assert f.rel_ff     == {'a': set([]), 'b': set([])}
-    assert f.rel_ft     == {'a': set([]), 'b': set([])}
+    assert f.rel_ff     == {}
+    assert f.rel_ft     == {}
     assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!a -> b')
-    assert f.rel_tt     == {'a': set([]), 'b': set([])}
-    assert f.rel_tf     == {'a': set([]), 'b': set([])}
-    assert f.rel_ff     == {'a': set([]), 'b': set([])}
+    assert f.rel_tt     == {}
+    assert f.rel_tf     == {}
+    assert f.rel_ff     == {}
     assert f.rel_ft     == {'a': set(['b']), 'b': set(['a'])}
     assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!a -> !b')
-    assert f.rel_tt     == {'a': set([]), 'b': set(['a'])}
-    assert f.rel_tf     == {'a': set([]), 'b': set([])}
-    assert f.rel_ff     == {'a': set(['b']), 'b': set([])}
-    assert f.rel_ft     == {'a': set([]), 'b': set([])}
+    assert f.rel_tt     == {'b': set(['a'])}
+    assert f.rel_tf     == {}
+    assert f.rel_ff     == {'a': set(['b'])}
+    assert f.rel_ft     == {}
     assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!z == nz')
-    assert f.rel_tt     == {'z': set([]), 'nz': set([])}
+    assert f.rel_tt     == {}
     assert f.rel_tf     == {'nz': set(['z']), 'z': set(['nz'])}
-    assert f.rel_ff     == {'z': set([]), 'nz': set([])}
+    assert f.rel_ff     == {}
     assert f.rel_ft     == {'nz': set(['z']), 'z': set(['nz'])}
     assert f.prereq     == {'z': set(['nz']), 'nz': set(['z'])}
-
-    # TODO add parsing with | and & ?
 
 
 def test_FactRules_parse2():
