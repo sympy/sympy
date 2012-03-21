@@ -22,12 +22,12 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]],[1,2,3])
+        >>> a = Partition([[1,2],[3]])
         >>> str(a)
         '[[1, 2], [3]]'
         """
         partition = args[0]
-        super_set = args[1][:]
+        super_set = sum(partition, [])
 
         check = []
         for part in partition:
@@ -41,6 +41,7 @@ class Partition(Basic):
         if check != super_set:
             raise ValueError("The partition provided is not valid.")
         obj = Basic.__new__(cls, *args, **kw_args)
+        obj.super_set = super_set
         return obj
 
     def next(self):
@@ -49,9 +50,9 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
+        >>> a = Partition([[1,2],[3,4,5]])
         >>> a.next()
-        Partition([[1, 2], [3, 4], [5]], [1, 2, 3, 4, 5])
+        Partition([[1, 2], [3, 4], [5]])
         """
         current_rank = RGS_rank(self.RGS)
         next_rgs = RGS_unrank((current_rank + 1) %
@@ -65,9 +66,9 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4],[5]], [1,2,3,4,5])
+        >>> a = Partition([[1,2],[3,4],[5]])
         >>> a.previous()
-        Partition([[1, 2], [3, 4, 5]], [1, 2, 3, 4, 5])
+        Partition([[1, 2], [3, 4, 5]])
         """
         current_rank = RGS_rank(self.RGS)
         next_rgs = RGS_unrank((current_rank - 1) %
@@ -82,7 +83,7 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]],[1,2,3])
+        >>> a = Partition([[1,2],[3]])
         >>> a.size
         2
         """
@@ -95,7 +96,7 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]],[1,2,3])
+        >>> a = Partition([[1,2],[3]])
         >>> a.partition
         [[1, 2], [3]]
         """
@@ -108,11 +109,11 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]],[1,2,3])
+        >>> a = Partition([[1,2],[3]])
         >>> a.partition_set
         [1, 2, 3]
         """
-        return self.args[1]
+        return self.super_set
 
     @property
     def partition_set_size(self):
@@ -121,17 +122,17 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]],[1,2,3])
+        >>> a = Partition([[1,2],[3]])
         >>> a.partition_set_size
         3
         """
-        return len(self.args[1])
+        return len(self.super_set)
 
     def __str__(self):
         return str(self.partition)
 
     def __repr__(self):
-        return str(self)
+        return str(self.partition)
 
     def __add__(self, other):
         """
@@ -139,7 +140,7 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]],[1,2,3])
+        >>> a = Partition([[1,2],[3]])
         >>> a.rank
         1
         >>> a = a + 3
@@ -169,7 +170,7 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]],[1,2,3])
+        >>> a = Partition([[1,2],[3]])
         >>> a.rank
         1
         >>> a = a - 1
@@ -177,7 +178,7 @@ class Partition(Basic):
         '[[1, 2, 3]]'
         >>> a.rank
         0
-        >>> a = a + Partition([[1,2],[3]],[1,2,3])
+        >>> a = a + Partition([[1,2],[3]])
         >>> str(a)
         '[[1, 2], [3]]'
         """
@@ -203,8 +204,8 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
-        >>> b = Partition([[1],[2,3],[4],[5]], [1,2,3,4,5])
+        >>> a = Partition([[1,2],[3,4,5]])
+        >>> b = Partition([[1],[2,3],[4],[5]])
         >>> a.compare(b)
         1
         >>> a.compare(a)
@@ -224,8 +225,8 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
-        >>> b = Partition([[1],[2,3],[4],[5]], [1,2,3,4,5])
+        >>> a = Partition([[1,2],[3,4,5]])
+        >>> b = Partition([[1],[2,3],[4],[5]])
         >>> a == b
         False
         >>> a == a
@@ -239,8 +240,8 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
-        >>> b = Partition([[1],[2,3],[4],[5]], [1,2,3,4,5])
+        >>> a = Partition([[1,2],[3,4,5]])
+        >>> b = Partition([[1],[2,3],[4],[5]])
         >>> a != b
         True
         >>> a != a
@@ -254,8 +255,8 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
-        >>> b = Partition([[1],[2,3],[4],[5]], [1,2,3,4,5])
+        >>> a = Partition([[1,2],[3,4,5]])
+        >>> b = Partition([[1],[2,3],[4],[5]])
         >>> a > b
         True
         """
@@ -267,8 +268,8 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
-        >>> b = Partition([[1],[2,3],[4],[5]], [1,2,3,4,5])
+        >>> a = Partition([[1,2],[3,4,5]])
+        >>> b = Partition([[1],[2,3],[4],[5]])
         >>> a < b
         False
         """
@@ -281,8 +282,8 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
-        >>> b = Partition([[1],[2,3],[4],[5]], [1,2,3,4,5])
+        >>> a = Partition([[1,2],[3,4,5]])
+        >>> b = Partition([[1],[2,3],[4],[5]])
         >>> a >= a
         True
         >>> a >= b
@@ -297,8 +298,8 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
-        >>> b = Partition([[1],[2,3],[4],[5]], [1,2,3,4,5])
+        >>> a = Partition([[1,2],[3,4,5]])
+        >>> b = Partition([[1],[2,3],[4],[5]])
         >>> a <= a
         True
         >>> a <= b
@@ -313,7 +314,7 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3],[4,5]], [1,2,3,4,5])
+        >>> a = Partition([[1,2],[3],[4,5]])
         >>> a.rank
         13
         """
@@ -334,10 +335,10 @@ class Partition(Basic):
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3],[4,5]], [1,2,3,4,5])
+        >>> a = Partition([[1,2],[3],[4,5]])
         >>> a.RGS
         [0, 0, 1, 2, 2]
-        >>> a = Partition([[1,4],[2],[3,5]], [1,2,3,4,5])
+        >>> a = Partition([[1,4],[2],[3,5]])
         >>> a.RGS
         [0, 1, 2, 0, 2]
         """
@@ -356,11 +357,10 @@ def partition_from_rgs(rgs, superset):
     Examples:
     >>> from sympy.combinatorics.partitions import partition_from_rgs, Partition
     >>> partition_from_rgs([0,1,2,0,1],['a','b','c','d','e'])
-    Partition([['a', 'd'], ['b', 'e'], ['c']], \
-    ['a', 'b', 'c', 'd', 'e'])
+    Partition([['a', 'd'], ['b', 'e'], ['c']])
     >>> a = Partition([[1,4],[2],[3,5]], [1,2,3,4,5])
     >>> partition_from_rgs(a.RGS, a.partition_set)
-    Partition([[1, 4], [2], [3, 5]], [1, 2, 3, 4, 5])
+    Partition([[1, 4], [2], [3, 5]])
     """
     max_elem = max(rgs) + 1
     partition = [[] for i in xrange(max_elem)]
@@ -368,7 +368,7 @@ def partition_from_rgs(rgs, superset):
     for i in rgs:
         partition[i].append(superset[j])
         j += 1
-    return Partition(partition, superset)
+    return Partition(partition)
 
 class IntegerPartition(Partition):
     """

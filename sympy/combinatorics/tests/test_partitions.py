@@ -1,5 +1,5 @@
 from sympy.combinatorics.partitions import (Partition, IntegerPartition,
-                                            from_RGS, RGS_generalized,
+                                            partition_from_rgs, RGS_generalized,
                                             RGS_enum, RGS_unrank, RGS_rank)
 
 def test_partition():
@@ -26,6 +26,7 @@ def test_partition():
 
     assert a.RGS == [0, 0, 0, 1]
     assert b.RGS == [0, 0, 1, 1]
+
 
 def test_integer_partition():
     a = IntegerPartition([1,3,4], 8)
