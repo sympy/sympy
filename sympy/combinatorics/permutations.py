@@ -81,8 +81,8 @@ def perm_af_mul(a, b):
     Permutation
     """
     if len(a) != len(b):
-        raise ValueError("The number of elements in the permutations \
-don\'t match.")
+        raise ValueError("The number of elements in the permutations "
+                         "do not match.")
 
     return [a[i] for i in b]
 
@@ -300,12 +300,14 @@ class Permutation(Basic):
         """
         if not args or not is_sequence(args[0]) or len(args) > 1 or \
            len(set(is_sequence(a) for a in args[0])) > 1:
-            raise ValueError('Permutation argument must be a list of ints or a list of lists.')
+            raise ValueError("Permutation argument must be a list of ints "
+                             "or a list of lists.")
 
         # 0, 1, ..., n-1 should all be present
         temp = [int(i) for i in flatten(args[0])]
         if set(range(len(temp))) != set(temp):
-            raise ValueError("Integers 0 through %s must be present." % len(temp))
+            raise ValueError("Integers 0 through %s must be present." %
+                             len(temp))
 
         cform = aform = None
         if args[0] and is_sequence(args[0][0]):
@@ -398,8 +400,8 @@ class Permutation(Basic):
         a = self.array_form
         b = other.array_form
         if len(a) != len(b):
-            raise ValueError("The number of elements in the permutations \
-don\'t match.")
+            raise ValueError("The number of elements in the permutations "
+                             "do not match.")
 
         perm = [a[i] for i in b]
         return _new_from_array_form(perm)
@@ -477,7 +479,8 @@ don\'t match.")
         return _new_from_array_form(b)
 
     def transpositions(self):
-        """a list of transpositions representing the permutation
+        """
+        A list of transpositions representing the permutation.
 
         Examples
         ========
@@ -1034,8 +1037,8 @@ don\'t match.")
         b = x.array_form
         n = len(a)
         if len(b) != n:
-            raise ValueError("The number of elements in the permutations \
-don\'t match.")
+            raise ValueError("The number of elements in the permutations "
+                             "do not match.")
         invb = [None]*n
         for i in xrange(n):
             invb[b[i]] = i
@@ -1061,8 +1064,8 @@ don\'t match.")
         b = x.array_form
         n = len(a)
         if len(b) != n:
-            raise ValueError("The number of elements in the permutations \
-don\'t match.")
+            raise ValueError("The number of elements in the permutations "
+                             "do not match.")
         inva = [None]*n
         for i in xrange(n):
             inva[a[i]] = i
