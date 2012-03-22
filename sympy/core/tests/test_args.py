@@ -329,19 +329,6 @@ def test_sympy__core__sets__ProductSet():
     from sympy.core.sets import ProductSet, Interval
     assert _test_args(ProductSet(Interval(0, 1), Interval(0, 1)))
 
-def test_sympy__core__sets__RealFiniteSet():
-    from sympy.core.sets import RealFiniteSet
-    assert _test_args(RealFiniteSet(1, 2, 3))
-
-@SKIP("does it make sense to test this?")
-def test_sympy__core__sets__RealSet():
-    from sympy.core.sets import RealSet
-    assert _test_args(RealSet())
-
-def test_sympy__core__sets__RealUnion():
-    from sympy.core.sets import RealUnion, Interval
-    assert _test_args(RealUnion(Interval(0, 1), Interval(2, 3)))
-
 @SKIP("does it make sense to test this?")
 def test_sympy__core__sets__Set():
     from sympy.core.sets import Set

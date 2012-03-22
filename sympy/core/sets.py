@@ -295,7 +295,7 @@ class ProductSet(Set):
                     return sum(map(flatten, arg.args), [])
                 else:
                     return [arg]
-            elif is_flattenable(arg):
+            elif iterable(arg):
                 return sum(map(flatten, arg), [])
             raise TypeError("Input must be Sets or iterables of Sets")
         sets = flatten(list(sets))
@@ -719,7 +719,7 @@ class Union(Set):
                     return sum(map(flatten, arg.args), [])
                 else:
                     return [arg]
-            if is_flattenable(arg): # and not isinstance(arg, Set) (implicit)
+            if iterable(arg): # and not isinstance(arg, Set) (implicit)
                 return sum(map(flatten, arg), [])
             raise TypeError("Input must be Sets or iterables of Sets")
         args = flatten(args)
@@ -908,7 +908,7 @@ class Intersection(Set):
                     return sum(map(flatten, arg.args), [])
                 else:
                     return [arg]
-            if is_flattenable(arg): # and not isinstance(arg, Set) (implicit)
+            if iterable(arg): # and not isinstance(arg, Set) (implicit)
                 return sum(map(flatten, arg), [])
             raise TypeError("Input must be Sets or iterables of Sets")
         args = flatten(args)
@@ -1245,10 +1245,3 @@ class FiniteSet(CountableSet):
 
     def _eval_evalf(self, prec):
         return FiniteSet(elem.evalf(prec) for elem in self)
-
-genclass = (1 for i in xrange(2)).__class__
-def is_flattenable(obj):
-    """
-    Checks that an argument to a Set constructor should be flattened
-    """
-    return obj.__class__ in [list, set, genclass]
