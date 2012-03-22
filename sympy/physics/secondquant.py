@@ -1642,7 +1642,7 @@ class Commutator(Function):
     >>> comm = Commutator(Fd(p)*Fd(q),F(i)); comm
     Commutator(CreateFermion(p)*CreateFermion(q), AnnihilateFermion(i))
     >>> comm.doit(wicks=True)
-    -KroneckerDelta(i, p)*CreateFermion(q) + KroneckerDelta(i, q)*CreateFermion(p)
+    -KroneckerDelta(p, i)*CreateFermion(q) + KroneckerDelta(q, i)*CreateFermion(p)
 
     """
 
