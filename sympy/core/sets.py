@@ -4,6 +4,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
 from sympy.core.containers import Tuple
+from sympy.core.compatibility import iterable
 
 from sympy.mpmath import mpi, mpf
 from sympy.assumptions import ask
@@ -1133,11 +1134,8 @@ class FiniteSet(CountableSet):
     is_FiniteSet = True
 
     def __new__(cls, *args):
-        def flatten(arg):
-            if is_flattenable(arg):
-                return sum(map(flatten, arg), [])
-            return [arg]
-        args = flatten(list(args))
+        if len(args)==1 and iterable(args[0]):
+            args = args[0]
 
         args = map(sympify, args)
 
