@@ -87,7 +87,13 @@ class Set(Basic):
         """
         This function should only be used internally
 
-        See Set._union for docstring
+        self._union(other) returns a new, joined set if self knows how
+        to join itself with other, otherwise it returns None.
+        It may also return a python set of SymPy Sets if they are somehow
+        simpler. If it does this it must be idempotent i.e. the sets returned
+        must return None with _union'ed with each other
+
+        Used within the Union class
         """
         return None
 
