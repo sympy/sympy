@@ -67,6 +67,8 @@ class Symbol(AtomicExpr, Boolean):
                     SymPyDeprecationWarning)
             if assumptions.pop('dummy'):
                 return Dummy(name, **assumptions)
+        if assumptions.get('zero', False):
+            return S.Zero
         assumptions.setdefault('commutative', True)
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
