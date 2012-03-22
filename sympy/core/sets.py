@@ -83,6 +83,11 @@ class Set(Basic):
         return None
 
     def _union(self, other):
+        """
+        This function should only be used internally
+
+        See Set._union for docstring
+        """
         return None
 
     @property
@@ -321,6 +326,11 @@ class ProductSet(Set):
         return And(*[set.contains(item) for set, item in zip(self.sets, element)])
 
     def _intersect(self, other):
+        """
+        This function should only be used internally
+
+        See Set._intersect for docstring
+        """
         if not other.is_ProductSet:
             return None
         if len(other.args) != len(self.args):
@@ -510,6 +520,11 @@ class Interval(Set, EvalfMixin):
         return self._args[3]
 
     def _intersect(self, other):
+        """
+        This function should only be used internally
+
+        See Set._intersect for docstring
+        """
         # We only know how to intersect with other intervals
         if not other.is_Interval:
             return None
@@ -552,8 +567,11 @@ class Interval(Set, EvalfMixin):
         return self.__class__(start, end, left_open, right_open)
 
     def _union(self, other):
-        new_self = self
-        new_other = other
+        """
+        This function should only be used internally
+
+        See Set._union for docstring
+        """
         if other.is_FiniteSet:
             # Remove any duplicated elements in the FiniteSet
             new_other = other.__class__(*[x for x in other
@@ -567,6 +585,7 @@ class Interval(Set, EvalfMixin):
                 return None
             else:
                 return set((new_self, new_other))
+
         if other.is_Interval and self._is_comparable(other):
             from sympy.functions.elementary.miscellaneous import Min, Max
             # Non-overlapping intervals
@@ -1138,33 +1157,20 @@ class FiniteSet(CountableSet):
         return self.elements.__iter__()
 
     def _intersect(self, other):
+        """
+        This function should only be used internally
+
+        See Set._intersect for docstring
+        """
         if isinstance(other, self.__class__):
             return self.__class__(*(self.elements & other.elements))
         return self.__class__(el for el in self if el in other)
 
     def _union(self, other):
         """
-        Returns the union of 'self' and 'other'.
+        This function should only be used internally
 
-        As a shortcut it is possible to use the '+' operator:
-
-        >>> from sympy import FiniteSet, Interval, Symbol
-
-        >>> FiniteSet(0, 1).union(FiniteSet(2, 3))
-        {0, 1, 2, 3}
-        >>> FiniteSet(Symbol('x'), 1, 2) + FiniteSet(2, 3)
-        {1, 2, 3, x}
-        >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
-        (1, 2] U {3}
-
-        Similarly it is possible to use the '-' operator for set
-        differences:
-
-        >>> FiniteSet(Symbol('x'), 1, 2) - FiniteSet(2, 3)
-        {1, x}
-        >>> Interval(1, 2) - FiniteSet(2, 3)
-        [1, 2)
-
+        See Set._union for docstring
         """
         if other.is_FiniteSet:
             return FiniteSet(*(self.elements | other.elements))
