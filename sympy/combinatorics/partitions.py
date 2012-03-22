@@ -109,7 +109,7 @@ class Partition(C.FiniteSet):
         if self._super != None:
             return self._super
         e = C.FiniteSet()
-        for elem in self.elements:
+        for elem in self:
             e = e.union(elem)
         self._super = e
         return self._super
@@ -117,7 +117,7 @@ class Partition(C.FiniteSet):
     @property
     def partition_set_size(self):
         """
-        Gets the set of the partition.
+        Gets the total number of elements in the partition set.
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
