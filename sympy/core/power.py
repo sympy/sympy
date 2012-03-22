@@ -278,6 +278,30 @@ class Pow(Expr):
             if expanded != self:
                 return c(expanded)
 
+    def _eval_transpose(self):
+        from sympy.functions.elementary.complexes import transpose
+        i, p = self.exp.is_integer, self.base.is_complex
+        if p:
+            return self.base**self.exp
+        if i:
+            return transpose(self.base)**self.exp
+        if i is False and p is False:
+            expanded = expand_complex(self)
+            if expanded != self:
+                return transpose(expanded)
+
+    def _eval_adjoint(self):
+        from sympy.functions.elementary.complexes import adjoint
+        i, p = self.exp.is_integer, self.base.is_positive
+        if i:
+            return adjoint(self.base)**self.exp
+        if p:
+            return self.base**adjoint(self.exp)
+        if i is False and p is False:
+            expanded = expand_complex(self)
+            if expanded != self:
+                return adjoint(expanded)
+
     def _eval_expand_basic(self, deep=True, **hints):
         sargs, terms = self.args, []
         for term in sargs:

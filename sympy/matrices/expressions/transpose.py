@@ -21,20 +21,8 @@ class Transpose(MatrixExpr):
     is_Transpose = True
     def __new__(cls, mat):
 
-        if not mat.is_Matrix:
-            return mat
-
-        if isinstance(mat, Transpose):
-            return mat.arg
-
         if hasattr(mat, 'transpose'):
             return mat.transpose()
-
-        if mat.is_Mul:
-            return MatMul(*[Transpose(arg) for arg in mat.args[::-1]])
-
-        if mat.is_Add:
-            return MatAdd(*[Transpose(arg) for arg in mat.args])
 
         return Basic.__new__(cls, mat)
 

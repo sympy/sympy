@@ -1466,6 +1466,12 @@ class Mul(AssocOp):
     def _eval_conjugate(self):
         return Mul(*[t.conjugate() for t in self.args])
 
+    def _eval_transpose(self):
+        return Mul(*[t.transpose() for t in self.args[::-1]])
+
+    def _eval_adjoint(self):
+        return Mul(*[t.adjoint() for t in self.args[::-1]])
+
     def _sage_(self):
         s = 1
         for x in self.args:

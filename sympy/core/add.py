@@ -662,6 +662,12 @@ class Add(AssocOp):
     def _eval_conjugate(self):
         return Add(*[t.conjugate() for t in self.args])
 
+    def _eval_transpose(self):
+        return Add(*[t.transpose() for t in self.args])
+
+    def _eval_adjoint(self):
+        return Add(*[t.adjoint() for t in self.args])
+
     def _eval_expand_basic(self, deep=True, **hints):
         sargs, terms = self.args, []
         for term in sargs:
