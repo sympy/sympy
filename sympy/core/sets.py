@@ -666,6 +666,21 @@ class Interval(Set, EvalfMixin):
         else:
             return And(left, right)
 
+def set_sort_fn(s):
+    """
+    Sort by infimum if possible
+
+    Otherwise sort by hash. Try to put these at the end.
+    """
+    try:
+        val = s.inf
+        if val.is_comparable:
+            return val
+        else:
+            return 1e9+abs(hash(s))
+    except NotImplementedError:
+        return 1e9+abs(hash(s))
+
 class Union(Set):
     """
     Represents a union of sets as a Set.
@@ -715,11 +730,13 @@ class Union(Set):
         if len(args)==0:
             return S.EmptySet
 
+        args = sorted(args, key = set_sort_fn)
+
         # Reduce sets using known rules
         if evaluate:
             return Union.reduce(args)
 
-        return Basic.__new__(cls, *frozenset(args))
+        return Basic.__new__(cls, *args)
 
     @staticmethod
     def reduce(args):
@@ -903,6 +920,8 @@ class Intersection(Set):
         # Intersection of no sets is everything
         if len(args)==0:
             return S.UniversalSet
+
+        args = sorted(args, key = set_sort_fn)
 
         # Reduce sets using known rules
         if evaluate:
