@@ -687,7 +687,7 @@ def set_sort_fn(s):
     except NotImplementedError:
         return 1e9+abs(hash(s))
 
-class Union(Set):
+class Union(Set, EvalfMixin):
     """
     Represents a union of sets as a Set.
 
@@ -1124,7 +1124,7 @@ class UniversalSet(Set):
     def _union(self, other):
         return self
 
-class FiniteSet(Set):
+class FiniteSet(Set, EvalfMixin):
     """
     Represents a finite set of discrete numbers
 
