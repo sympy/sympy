@@ -1,5 +1,4 @@
 from sympy.combinatorics.prufer import Prufer
 from sympy.combinatorics.generators import cyclic, alternating, symmetric, dihedral
 from sympy.combinatorics.subsets import Subset
-from sympy.combinatorics.partitions import (Partition, IntegerPartition, RGS_rank, RGS_unrank, RGS_enum,
-                                            partition_from_rgs)
+from sympy.combinatorics.partitions import (Partition, IntegerPartition, RGS_rank, RGS_unrank, RGS_enum)

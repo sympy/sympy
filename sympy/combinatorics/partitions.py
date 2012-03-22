@@ -55,11 +55,7 @@ class Partition(C.FiniteSet):
         >>> a.next()
         {{1, 2}, {3, 4}, {5}}
         """
-        current_rank = RGS_rank(self.RGS)
-        next_rgs = RGS_unrank((current_rank + 1) %
-                              RGS_enum(self.partition_set_size),
-                              self.partition_set_size)
-        return partition_from_rgs(next_rgs, self.partition_set)
+        return self + 1
 
     def previous(self):
         """
@@ -71,11 +67,7 @@ class Partition(C.FiniteSet):
         >>> a.previous()
         {{1, 2}, {3, 4, 5}}
         """
-        current_rank = RGS_rank(self.RGS)
-        next_rgs = RGS_unrank((current_rank - 1) %
-                              RGS_enum(self.partition_set_size),
-                              self.partition_set_size)
-        return partition_from_rgs(next_rgs, self.partition_set)
+        return self - 1
 
     @property
     def size(self):
@@ -175,17 +167,7 @@ class Partition(C.FiniteSet):
         >>> a
         {{1}, {2, 3}}
         """
-        if isinstance(other, Partition):
-            if other.partition_set != self.partition_set:
-                raise ValueError("Partition sets are not equal.")
-            result = RGS_unrank((self.rank + other.rank) %
-                                RGS_enum(self.partition_set_size),
-                                self.partition_set_size)
-        elif isinstance(other, int):
-            result = RGS_unrank((self.rank + other) %
-                                RGS_enum(self.partition_set_size),
-                                self.partition_set_size)
-        return partition_from_rgs(result, self.partition_set)
+        return self._partition_op(other)
 
     def __sub__(self, other):
         """
@@ -205,25 +187,39 @@ class Partition(C.FiniteSet):
         >>> str(a)
         'frozenset([{3}, {1, 2}])'
         """
+        return self._partition_op(other, 1)
+
+    def _partition_op(self, other, op=0):
+        """
+        Helper method for the __add__ and __sub__ methods.
+        """
         if isinstance(other, Partition):
             if other.partition_set != self.partition_set:
                 raise ValueError("Partition sets are not equal.")
-            result = RGS_unrank((self.rank - other.rank) %
+            if op == 0:
+                offset = self.rank + other.rank
+            else:
+                offset = self.rank - other.rank
+            result = RGS_unrank((offset) %
                                 RGS_enum(self.partition_set_size),
                                 self.partition_set_size)
         elif isinstance(other, int):
-            result = RGS_unrank((self.rank - other) %
+            if op == 0:
+                offset = self.rank + other
+            else:
+                offset = self.rank - other
+            result = RGS_unrank((offset) %
                                 RGS_enum(self.partition_set_size),
                                 self.partition_set_size)
-        return partition_from_rgs(result, self.partition_set)
+        return Partition.partition_from_rgs(result, self.partition_set)
+
 
     def _compare(self, other):
         """
         Compares two partitions.
 
         The basis for comparison of two partitions is rank.
-        A partition with a lesser rank is greater than a
-        partition with a greater rank.
+        Partitions are sorted in an ascending order wrt their ranks.
 
         Examples:
         >>> from sympy.combinatorics.partitions import Partition
@@ -341,7 +337,7 @@ class Partition(C.FiniteSet):
         >>> a.rank
         13
         """
-        if self._rank is not None:
+        if self._rank != None:
             return self._rank
         self._rank = RGS_rank(self.RGS)
         return self._rank
@@ -373,28 +369,30 @@ class Partition(C.FiniteSet):
             a += 1
         return rgs
 
-def partition_from_rgs(rgs, superset):
-    """
-    Creates a set partition from a restricted growth string.
+    @classmethod
+    def partition_from_rgs(self, rgs, superset):
+        """
+        Creates a set partition from a restricted growth string.
 
-    Examples:
-    >>> from sympy.combinatorics.partitions import partition_from_rgs, Partition
-    >>> partition_from_rgs([0,1,2,0,1],['a','b','c','d','e'])
-    {{a, d}, {b, e}, {c}}
-    >>> a = Partition([[1,4],[2],[3,5]])
-    >>> partition_from_rgs(a.RGS, a.partition_set_list)
-    {{1, 4}, {2}, {3, 5}}
-    """
-    superset = list(superset)
-    max_elem = max(rgs) + 1
-    partition = [[] for i in xrange(max_elem)]
-    j = 0
-    for i in rgs:
-        partition[i].append(superset[j])
-        j += 1
-    return Partition(partition)
+        Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> Partition.partition_from_rgs([0,1,2,0,1],['a','b','c','d','e'])
+        {{a, d}, {b, e}, {c}}
+        >>> a = Partition([[1,4],[2],[3,5]])
+        >>> Partition.partition_from_rgs(a.RGS, a.partition_set_list)
+        {{1, 4}, {2}, {3, 5}}
+        """
+        superset = list(superset)
+        max_elem = max(rgs) + 1
+        partition = [[] for i in xrange(max_elem)]
+        j = 0
+        for i in rgs:
+            partition[i].append(superset[j])
+            j += 1
+        return Partition(partition)
 
-class IntegerPartition(Partition):
+
+class IntegerPartition(Basic):
     """
     This class represents an integer partition.
 
@@ -403,17 +401,17 @@ class IntegerPartition(Partition):
     integers. Two sums that differ only in the order of their summands are
     considered to be the same partition; if order matters then the sum becomes a
     composition. For example, 4 can be partitioned in five distinct ways:
-    [[4],[3,1],[2,2],[2,1,1],[1,1,1,1].
+    [[4],[3,1],[2,2],[2,1,1],[1,1,1,1]].
     
     The order-dependent composition [1, 3] is the same partition as [3, 1],
     while [1, 2, 1] and [1, 1, 2] are the same partition as [2, 1, 1].
 
-    Reference: Wikipedia
+    Reference: http://en.wikipedia.org/wiki/Partition_(number_theory)
     """
 
     def __new__(cls, *args, **kw_args):
         """
-        Generates a new partition object.
+        Generates a new IntegerPartition object.
         
         It also verifies if the arguments passed are valid and if it is
         found that they are not then an exception is raised. The arguments
@@ -424,9 +422,11 @@ class IntegerPartition(Partition):
         Examples:
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> a = IntegerPartition([5,4,3,1,1,1], 15)
-
-        >>> b = IntegerPartition([5,4,3,1,1,1], 15)
-        
+        >>> a
+        IntegerPartition([5, 4, 3, 1, 1, 1], 15)
+        >>> b = IntegerPartition([5,4,3,1], 13)
+        >>> print b
+        [5, 4, 3, 1]
         """
         partition = args[0]
         integer_rep = args[1]
@@ -437,6 +437,7 @@ class IntegerPartition(Partition):
         list.sort(args[0], key=lambda x: -x)
 
         obj = Basic.__new__(cls, *args, **kw_args)
+        obj.partition = partition
         return obj
 
     def next(self):
@@ -498,44 +499,20 @@ class IntegerPartition(Partition):
         return self.args[0]
 
     @property
-    def conjugate(self):
-        """
-        Find the conjugate of a partition.
-        This is the vector that satisfies
-        len(p) = max(conjugate(p)) and vice versa.
-
-        Examples:
-        >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> a = IntegerPartition([1,3,4], 8)
-        >>> a.conjugate
-        [3, 2, 2, 1]
-        """
-        result = []
-        j = len(self.partition_array)
-        if j <= 0:
-            return result
-        while True:
-            result.append(j)
-            while len(result) >= self.partition_array[j-1]:
-                j -= 1
-                if j == 0:
-                    return result
-
-    @property
-    def is_SelfConjugate(self):
+    def is_self_conjugate(self):
         """
         Checks if the conjugate of a partition equals itself.
 
         Examples:
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> a = IntegerPartition([6,3,3,2,1], 15)
-        >>> a.is_SelfConjugate
+        >>> a.is_self_conjugate
         False
         >>> a = IntegerPartition([3,2,1], 6)
-        >>> a.is_SelfConjugate
+        >>> a.is_self_conjugate
         True
         """
-        return self.conjugate == self.partition_array
+        return self.conjugate_partition == self.partition_array
 
     @property
     def conjugate_partition(self):
@@ -548,9 +525,14 @@ class IntegerPartition(Partition):
         >>> a = IntegerPartition([6,3,3,2,1], 15)
         >>> a.conjugate_partition
         [5, 4, 3, 1, 1, 1]
-        >>> a = IntegerPartition([5,4,3,1,1,1], 15)
-        >>> a.conjugate_partition
-        [6, 3, 3, 2, 1]
+        >>> b = IntegerPartition(a.conjugate_partition, 15)
+        >>> print b.ferrers_representation()
+        #####
+        ####
+        ###
+        #
+        #
+        #
         """
         j = 1
         temp_arr = self.partition_array[:] + [0]
@@ -568,7 +550,13 @@ class IntegerPartition(Partition):
         Compares two partitions.
 
         The basis for comparison of two integer partitions is the
-        majorizing concept.
+        majorizing concept. A majorization is a partial order on
+        vectors of real numbers.
+
+        References:
+
+        [1] Inequalities: Theory of Majorization and Its Applications (1980)
+        Albert W. Marshall, Ingram Olkin, Academic Press 
 
         Examples:
         >>> from sympy.combinatorics.partitions import IntegerPartition
@@ -618,6 +606,9 @@ class IntegerPartition(Partition):
         #
         """
         return "\n".join(['#'*i for i in self.partition_array])
+
+    def __str__(self):
+        return str(self.partition)
 
 def random_integer_partition(n):
     """
