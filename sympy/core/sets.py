@@ -82,6 +82,9 @@ class Set(Basic):
         """
         return None
 
+    def _union(self, other):
+        return None
+
     @property
     def complement(self):
         """
@@ -553,6 +556,41 @@ class Interval(RealSet):
 
         return self.__class__(start, end, left_open, right_open)
 
+    def _union(self, other):
+        new_self = self
+        new_other = other
+        if other.is_FiniteSet:
+            # Remove any duplicated elements in the FiniteSet
+            new_other = other.__class__(*[x for x in other if x not in self])
+            # Fill in open end points if they are contained in FiniteSet
+            open_left  = self.left_open and self.start not in other
+            open_right = self.right_open and self.end not in other
+            new_self = Interval(self.start, self.end, open_left, open_right)
+
+            if new_self == self and new_other == other: # no good done
+                return None
+            else:
+                return set((new_self, new_other))
+        if other.is_Interval and self._is_comparable(other):
+            from sympy.functions.elementary.miscellaneous import Min, Max
+            # Non-overlapping intervals
+            end   = Min(self.end, other.end)
+            start = Max(self.start, other.start)
+            if (end < start or
+               (end==start and (end not in self and end not in other))):
+               return None
+            else:
+                start = Min(self.start, other.start)
+                end   = Max(self.end, other.end)
+
+                left_open  = ((self.start  != start or   self.left_open)  and
+                              (other.start != start or  other.left_open))
+                right_open = ((self.end    != end   or   self.right_open) and
+                              (other.end   != end   or  other.right_open))
+
+                return Interval(start, end, left_open, right_open)
+        return None
+
     @property
     def _complement(self):
         a = Interval(S.NegativeInfinity, self.start, True, not self.left_open)
@@ -654,12 +692,12 @@ class Union(Set):
     """
     is_Union = True
 
-    def __new__(cls, *args):
-        # Flatten out Iterators and Unions to form one list of sets
+    def __new__(cls, *args, **kwargs):
+        evaluate = kwargs.get('evaluate', True)
+
+        # flatten inputs to merge intersections and iterables
         args = list(args)
         def flatten(arg):
-            if arg == S.EmptySet:
-                return []
             if isinstance(arg, Set):
                 if arg.is_Union:
                     return sum(map(flatten, arg.args), [])
@@ -669,49 +707,56 @@ class Union(Set):
                 return sum(map(flatten, arg), [])
             raise TypeError("Input must be Sets or iterables of Sets")
         args = flatten(args)
-        if len(args) == 0:
+
+        # Union of no sets is EmptySet
+        if len(args)==0:
             return S.EmptySet
 
-        # Only real parts? Return a RealUnion
-        if all(arg.is_real for arg in args):
-            return RealUnion(args)
+        # Reduce sets using known rules
+        if evaluate:
+            return Union.reduce(args)
 
-        # Lets find and merge real elements if we have them
-        # Separate into finite, real and other sets
+        return Basic.__new__(cls, *args)
 
-        finite_set = sum([s for s in args if s.is_FiniteSet], S.EmptySet)
-        real_sets = [s for s in args if s.is_real]
-        other_sets = [s for s in args if not s.is_FiniteSet and not s.is_real]
+    @staticmethod
+    def reduce(args):
+        """
+        Simplify a Union using known rules
 
-        # Separate finite_set into real and other part
-        real_finite = RealFiniteSet(i for i in finite_set if i.is_real)
-        other_finite = FiniteSet(i for i in finite_set if not i.is_real)
+        We first start with global rules like
+        'if any empty sets return empty set' and 'distribute any unions'
 
-        # Merge real part of set
-        real_union = RealUnion(real_sets+[real_finite])
+        Then we iterate through all pairs and ask the constituent sets if they
+        can simplify themselves with any other constituent
+        """
 
-        if not real_union: # Real part was empty
-            sets = other_sets + [other_finite]
-        elif real_union.is_FiniteSet: # Real part was just a FiniteSet
-            sets = other_sets + [real_union+other_finite]
-        elif real_union.is_Interval: # Real part was just an Interval
-            sets = [real_union] + other_sets + [other_finite]
-        # If is_RealUnion then separate
-        elif real_union.is_Union and real_union.is_real:
-            intervals = [s for s in real_union.args if s.is_Interval]
-            finite_set = sum([s for s in real_union.args if s.is_FiniteSet] +
-                [other_finite], S.EmptySet) # Join FiniteSet back together
-            sets = intervals + [finite_set] + other_sets
+        # ===== Global Rules =====
+        # none
 
-        # Clear out Empty Sets
-        sets = [set for set in sets if set != S.EmptySet]
+        # ===== Pair-wise Rules =====
+        # Here we depend on rules built into the constituent sets
+        args = set(args)
+        new_args = True
+        while(new_args):
+            for s in args:
+                new_args = False
+                for t in args - set((s,)):
+                    new_set = s._union(t)
+                    # This returns None if s does not know how to intersect
+                    # with t. Returns the newly intersected set otherwise
+                    if new_set is not None:
+                        if not isinstance(new_set, set):
+                            new_set = set((new_set, ))
+                        new_args = (args - set((s, t))).union(new_set)
+                        break
+                if new_args:
+                    args = new_args
+                    break
 
-        # If a single set is left over, don't create a new Union object but
-        # rather return the single set.
-        if len(sets) == 1:
-            return sets[0]
-
-        return Basic.__new__(cls, *sets)
+        if len(args)==1:
+            return args.pop()
+        else:
+            return Union(args, evaluate=False)
 
     @property
     def _inf(self):
@@ -791,6 +836,18 @@ class Union(Set):
     def is_iterable(self):
         return all(arg.is_iterable for arg in self.args)
 
+    def _eval_evalf(self, prec):
+        try:
+            return Union(set.evalf() for set in self.args)
+        except:
+            raise TypeError("Not all sets are evalf-able")
+
+    def __iter__(self):
+        import itertools
+        if all(set.is_iterable for set in self.args):
+            return itertools.chain(*(iter(arg) for arg in self.args))
+        else:
+            raise TypeError("Not all constituent sets are iterable")
 
 class Intersection(Set):
     """
@@ -932,121 +989,6 @@ class Intersection(Set):
         else:
             return Intersection(args, evaluate=False)
 
-class RealUnion(Union, RealSet):
-    """
-    Represents a union of Real Sets (Intervals, RealFiniteSets)
-
-    This class should only be used internally.
-    Please make unions with Union class.
-
-    See Union for details
-    """
-    def __new__(cls, *args):
-
-        intervals, finite_sets, other_sets = [], [], []
-        args = list(args)
-        for arg in args:
-
-            if isinstance(arg, Set):
-                if arg == S.EmptySet:
-                    continue
-                elif arg.is_Union:
-                    args += arg.args
-                elif arg.is_FiniteSet:
-                    finite_sets.append(arg)
-                elif arg.is_Interval:
-                    intervals.append(arg)
-                else:
-                    other_sets.append(arg)
-            elif is_flattenable(arg):
-                args += arg
-            else:
-                raise TypeError("%s: Not a set or iterable of sets"%arg)
-
-        # Sort intervals according to their infimum
-        intervals.sort(key=lambda i: i.start)
-
-        # Merge comparable overlapping intervals
-        i = 0
-        while i < len(intervals) - 1:
-            cur = intervals[i]
-            next = intervals[i + 1]
-
-            merge = False
-            if cur._is_comparable(next):
-                if next.start < cur.end:
-                    merge = True
-                elif next.start == cur.end:
-                    # Must be careful with boundaries.
-                    merge = not(next.left_open and cur.right_open)
-
-            if merge:
-                if cur.start == next.start:
-                    left_open = cur.left_open and next.left_open
-                else:
-                    left_open = cur.left_open
-
-                if cur.end < next.end:
-                    right_open = next.right_open
-                    end = next.end
-                elif cur.end > next.end:
-                    right_open = cur.right_open
-                    end = cur.end
-                else:
-                    right_open = cur.right_open and next.right_open
-                    end = cur.end
-
-                intervals[i] = Interval(cur.start, end, left_open, right_open)
-                del intervals[i + 1]
-            else:
-                i += 1
-
-        # Collect all elements in the finite sets not in any interval
-        if finite_sets:
-            # Merge Finite Sets
-            finite_set = sum(finite_sets, S.EmptySet)
-
-            # Close open intervals if boundary is in finite_set
-            for num, i in enumerate(intervals):
-                closeLeft = i.start in finite_set if i.left_open else False
-                closeRight = i.end in finite_set if i.right_open else False
-                if ((closeLeft and i.left_open)
-                        or (closeRight and i.right_open)):
-                    intervals[num] = Interval(i.start, i.end,
-                            not closeLeft, not closeRight)
-
-            # All elements in finite_set not in any interval
-            finite_complement = FiniteSet(
-                    el for el in finite_set
-                    if not el.is_number
-                    or not any(el in i for i in intervals))
-            if len(finite_complement)>0: # Anything left?
-                other_sets.append(finite_complement)
-
-        # Clear out empty sets
-        sets = [set for set in (intervals + other_sets) if set]
-
-        # If nothing is there then return the empty set
-        if not sets:
-            return S.EmptySet
-
-        # If a single set is left over, don't create a new Union object but
-        # rather return the single set.
-        if len(sets) == 1:
-            return sets[0]
-
-        return Basic.__new__(cls, *sets)
-
-    def _eval_evalf(self, prec):
-        return RealUnion(set.evalf() for set in self.args)
-
-    def __iter__(self):
-        import itertools
-        if all(set.is_iterable for set in self.args):
-            return itertools.chain(*(iter(arg) for arg in self.args))
-        else:
-            raise TypeError("Not all constituent sets are iterable")
-
 class EmptySet(Set):
     """
     Represents the empty set. The empty set is available as a singleton
@@ -1095,7 +1037,7 @@ class EmptySet(Set):
     def __len__(self):
         return 0
 
-    def union(self, other):
+    def _union(self, other):
         return other
 
     def __iter__(self):
@@ -1147,7 +1089,7 @@ class UniversalSet(Set):
     def as_relational(self, symbol):
         return True
 
-    def union(self, other):
+    def _union(self, other):
         return self
 
 class FiniteSet(CountableSet):
@@ -1183,12 +1125,6 @@ class FiniteSet(CountableSet):
         if len(args) == 0:
             return EmptySet()
 
-        try:
-            if all([arg.is_real and arg.is_number for arg in args]):
-                cls = RealFiniteSet
-        except AttributeError:
-            pass
-
         elements = frozenset(args)
         obj = Basic.__new__(cls, elements)
         obj.elements = elements
@@ -1206,7 +1142,7 @@ class FiniteSet(CountableSet):
             return self.__class__(*(self.elements & other.elements))
         return self.__class__(el for el in self if el in other)
 
-    def union(self, other):
+    def _union(self, other):
         """
         Returns the union of 'self' and 'other'.
 
@@ -1230,11 +1166,9 @@ class FiniteSet(CountableSet):
         [1, 2)
 
         """
-        if other == S.EmptySet:
-            return self
         if other.is_FiniteSet:
             return FiniteSet(*(self.elements | other.elements))
-        return Union(self, other) # Resort to default
+        return None
 
     def _contains(self, other):
         """
@@ -1252,6 +1186,30 @@ class FiniteSet(CountableSet):
 
         """
         return other in self.elements
+
+    @property
+    def _complement(self):
+        """
+        The complement of a real finite set is the Union of open Intervals
+        between the elements of the set.
+
+        >>> from sympy import FiniteSet
+        >>> FiniteSet(1, 2, 3).complement
+        (-oo, 1) U (1, 2) U (2, 3) U (3, oo)
+
+
+        """
+        if not all(elem.is_number for elem in self.elements):
+            raise ValueError("%s: Complement not defined for symbolic inputs"
+                    %self)
+        sorted_elements = sorted(list(self.elements))
+
+        intervals = [] # Build up a list of intervals between the elements
+        intervals += [Interval(S.NegativeInfinity,sorted_elements[0],True,True)]
+        for a, b in zip(sorted_elements[:-1], sorted_elements[1:]):
+            intervals.append(Interval(a, b, True, True)) # open intervals
+        intervals.append(Interval(sorted_elements[-1], S.Infinity, True, True))
+        return Union(*intervals, evaluate=False)
 
     @property
     def _inf(self):
@@ -1281,50 +1239,8 @@ class FiniteSet(CountableSet):
     def compare(self, other):
         return (hash(self) - hash(other))
 
-class RealFiniteSet(FiniteSet, RealSet):
-    """
-    A FiniteSet with all elements Real Numbers.
-
-    Allows for good integration with Intervals.
-
-    This class for internal use only. Use FiniteSet to create a RealFiniteSet
-
-    See Also
-    ========
-    FiniteSet
-    """
-
     def _eval_evalf(self, prec):
-        return RealFiniteSet(elem.evalf(prec) for elem in self)
-
-    @property
-    def _complement(self):
-        """
-        The complement of a real finite set is the Union of open Intervals
-        between the elements of the set.
-
-        >>> from sympy import FiniteSet
-        >>> FiniteSet(1, 2, 3).complement
-        (-oo, 1) U (1, 2) U (2, 3) U (3, oo)
-
-
-        """
-        if not all(elem.is_number for elem in self.elements):
-            raise ValueError("%s: Complement not defined for symbolic inputs"
-                    %self)
-        sorted_elements = sorted(list(self.elements))
-
-        intervals = [] # Build up a list of intervals between the elements
-        intervals += [Interval(S.NegativeInfinity,sorted_elements[0],True,True)]
-        for a, b in zip(sorted_elements[:-1], sorted_elements[1:]):
-            intervals.append(Interval(a, b, True, True)) # open intervals
-        intervals.append(Interval(sorted_elements[-1], S.Infinity, True, True))
-        return Union(*intervals)
-
-    def as_relational(self, symbol):
-        """Rewrite a FiniteSet in terms of equalities and logic operators. """
-        from sympy.core.relational import Eq
-        return Or(*[Eq(symbol, elem) for elem in self])
+        return FiniteSet(elem.evalf(prec) for elem in self)
 
 genclass = (1 for i in xrange(2)).__class__
 def is_flattenable(obj):
