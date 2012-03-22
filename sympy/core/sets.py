@@ -254,7 +254,7 @@ class ProductSet(Set):
     """
     Represents a Cartesian Product of Sets.
 
-    Returns a cartesian product given several sets as either an iterable
+    Returns a Cartesian product given several sets as either an iterable
     or individual arguments.
 
     Can use '*' operator on any sets for convenient shorthand.
@@ -323,7 +323,7 @@ class ProductSet(Set):
         >>> (10, 10) in Interval(0, 5) * Interval(0, 5)
         False
 
-        Passes operation on to constitent sets
+        Passes operation on to constituent sets
         """
         try:
             if len(element) != len(self.args):
@@ -566,20 +566,6 @@ class Interval(Set, EvalfMixin):
 
         See Set._union for docstring
         """
-        if other.is_FiniteSet:
-            # Remove any duplicated elements in the FiniteSet
-            new_other = other.__class__(*[x for x in other
-                if self.contains(x) is not True])
-            # Fill in open end points if they are contained in FiniteSet
-            open_left  = self.left_open and self.start not in other
-            open_right = self.right_open and self.end not in other
-            new_self = Interval(self.start, self.end, open_left, open_right)
-
-            if new_self == self and new_other == other: # no good done
-                return None
-            else:
-                return set((new_self, new_other))
-
         if other.is_Interval and self._is_comparable(other):
             from sympy.functions.elementary.miscellaneous import Min, Max
             # Non-overlapping intervals
@@ -598,6 +584,16 @@ class Interval(Set, EvalfMixin):
                               (other.end   != end   or  other.right_open))
 
                 return Interval(start, end, left_open, right_open)
+
+        # If I have open end points and these endpoints are contained in other
+        if ((self.left_open  and other.contains(self.start) is True) or
+            (self.right_open and other.contains(self.end)   is True)):
+            # Fill in my end points and return
+            open_left  = self.left_open  and self.start not in other
+            open_right = self.right_open and self.end   not in other
+            new_self = Interval(self.start, self.end, open_left, open_right)
+            return set((new_self, other))
+
         return None
 
     @property
@@ -750,14 +746,18 @@ class Union(Set, EvalfMixin):
         Simplify a Union using known rules
 
         We first start with global rules like
-        'if any UniversalSets return UniversalSet'
+        'Merge all FiniteSets'
 
         Then we iterate through all pairs and ask the constituent sets if they
         can simplify themselves with any other constituent
         """
 
         # ===== Global Rules =====
-        # none
+        # Merge all finite sets
+        finite_sets = [x for x in args if x.is_FiniteSet]
+        if len(finite_sets) > 1:
+            finite_set = FiniteSet(x for set in finite_sets for x in set)
+            args = [finite_set] + [x for x in args if not x.is_FiniteSet]
 
         # ===== Pair-wise Rules =====
         # Here we depend on rules built into the constituent sets
@@ -817,7 +817,7 @@ class Union(Set, EvalfMixin):
         # triple-wise intersections minus ... etc...
 
         # Sets is a collection of intersections and a set of elementary
-        # sets which made up those interections (called "sos" for set of sets)
+        # sets which made up those intersections (called "sos" for set of sets)
         # An example element might of this list might be:
         #    ( {A,B,C}, A.intersect(B).intersect(C) )
 
@@ -881,7 +881,7 @@ class Union(Set, EvalfMixin):
 
 class Intersection(Set):
     """
-    Represents an untersection of sets as a Set.
+    Represents an intersection of sets as a Set.
 
     Examples
     ========
@@ -1185,6 +1185,13 @@ class FiniteSet(Set, EvalfMixin):
         """
         if other.is_FiniteSet:
             return FiniteSet(*(self.elements | other.elements))
+
+        # If other set contains one of my elements, remove it from myself
+        if any(other.contains(x) is True for x in self):
+            return set((
+                FiniteSet(x for x in self if other.contains(x) is not True),
+                other))
+
         return None
 
     def _contains(self, other):
