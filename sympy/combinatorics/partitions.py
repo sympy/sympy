@@ -26,7 +26,7 @@ class Partition(C.FiniteSet):
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1,2],[3]])
         >>> str(a)
-        'frozenset([{3}, {1, 2}])'
+        '{{3}, {1, 2}}'
         """
         partition = args[0]
         super_set = C.FiniteSet(sum(partition, []))
@@ -143,9 +143,6 @@ class Partition(C.FiniteSet):
         self._super_list = sorted(list(self.partition_set))
         return self._super_list
 
-    def __str__(self):
-        return str(self.elements)
-
     def __repr__(self):
         return str(self.elements)
 
@@ -165,7 +162,7 @@ class Partition(C.FiniteSet):
         4
         >>> a = a + a
         >>> a
-        {{1}, {2, 3}}
+        {{2, 3}, {1}}
         """
         return self._partition_op(other)
 
@@ -185,7 +182,7 @@ class Partition(C.FiniteSet):
         0
         >>> a = a + Partition([[1,2],[3]])
         >>> str(a)
-        'frozenset([{3}, {1, 2}])'
+        '{{1, 2}, {3}}'
         """
         return self._partition_op(other, 1)
 
