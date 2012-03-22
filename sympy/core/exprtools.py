@@ -21,6 +21,11 @@ def decompose_power(expr):
     """
     Decompose power into symbolic base and integer exponent.
 
+    This is strictly only valid if the exponent from which
+    the integer is extracted is itself an integer or the
+    base is positive. These conditions are assumed and not
+    checked here.
+
     Examples
     ========
 
