@@ -727,7 +727,7 @@ class Union(Set):
         Simplify a Union using known rules
 
         We first start with global rules like
-        'if any empty sets return empty set' and 'distribute any unions'
+        'if any UniversalSets return UniversalSet'
 
         Then we iterate through all pairs and ask the constituent sets if they
         can simplify themselves with any other constituent
