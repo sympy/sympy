@@ -236,7 +236,7 @@ class Set(Basic):
 
     @property
     def is_real(self):
-        return False
+        return None
 
 class ProductSet(Set):
     """
@@ -561,7 +561,8 @@ class Interval(RealSet):
         new_other = other
         if other.is_FiniteSet:
             # Remove any duplicated elements in the FiniteSet
-            new_other = other.__class__(*[x for x in other if x not in self])
+            new_other = other.__class__(*[x for x in other
+                if self.contains(x) is not True])
             # Fill in open end points if they are contained in FiniteSet
             open_left  = self.left_open and self.start not in other
             open_right = self.right_open and self.end not in other
@@ -716,7 +717,7 @@ class Union(Set):
         if evaluate:
             return Union.reduce(args)
 
-        return Basic.__new__(cls, *args)
+        return Basic.__new__(cls, *frozenset(args))
 
     @staticmethod
     def reduce(args):
@@ -848,6 +849,10 @@ class Union(Set):
             return itertools.chain(*(iter(arg) for arg in self.args))
         else:
             raise TypeError("Not all constituent sets are iterable")
+
+    @property
+    def is_real(self):
+        return all(set.is_real for set in self.args)
 
 class Intersection(Set):
     """
