@@ -39,7 +39,7 @@ class Naturals(CountableSet):
         if other<=0:
             return False
         other = sympify(other)
-        return sympify(other).is_integer or (other-int(other)) == 0
+        return other.is_integer or (other-int(other)) == 0
 
     def __iter__(self):
         def all_naturals():
@@ -92,7 +92,7 @@ class Integers(CountableSet):
 
     def _contains(self, other):
         other = sympify(other)
-        return sympify(other).is_integer or (other-int(other)) == 0
+        return other.is_integer or (other-int(other)) == 0
 
     def __iter__(self):
         def all_ints():
