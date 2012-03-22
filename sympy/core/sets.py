@@ -365,12 +365,6 @@ class ProductSet(Set):
             measure *= set.measure
         return measure
 
-class RealSet(Set, EvalfMixin):
-    """
-    A set of real values
-    """
-    is_real = True
-
 class CountableSet(Set):
     """
     Represents a set of countable numbers such as {1, 2, 3, 4} or {1, 2, 3, ...}
@@ -384,7 +378,7 @@ class CountableSet(Set):
     def __iter__(self):
         raise NotImplementedError("Iteration not yet implemented")
 
-class Interval(RealSet):
+class Interval(Set, EvalfMixin):
     """
     Represents a real interval as a Set.
 
@@ -422,6 +416,7 @@ class Interval(RealSet):
     .. [1] http://en.wikipedia.org/wiki/Interval_(mathematics)
     """
     is_Interval = True
+    is_real = True
 
     def __new__(cls, start, end, left_open=False, right_open=False):
 
