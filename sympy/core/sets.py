@@ -376,19 +376,6 @@ class ProductSet(Set):
             measure *= set.measure
         return measure
 
-class CountableSet(Set):
-    """
-    Represents a set of countable numbers such as {1, 2, 3, 4} or {1, 2, 3, ...}
-    """
-    is_iterable = True
-
-    @property
-    def _measure(self):
-        return 0
-
-    def __iter__(self):
-        raise NotImplementedError("Iteration not yet implemented")
-
 class Interval(Set, EvalfMixin):
     """
     Represents a real interval as a Set.
@@ -1112,7 +1099,7 @@ class UniversalSet(Set):
     def _union(self, other):
         return self
 
-class FiniteSet(CountableSet):
+class FiniteSet(Set):
     """
     Represents a finite set of discrete numbers
 
@@ -1132,6 +1119,7 @@ class FiniteSet(CountableSet):
     .. [1] http://en.wikipedia.org/wiki/Finite_set
     """
     is_FiniteSet = True
+    is_iterable = True
 
     def __new__(cls, *args):
         if len(args)==1 and iterable(args[0]):
@@ -1224,6 +1212,10 @@ class FiniteSet(CountableSet):
     def _sup(self):
         from sympy.functions.elementary.miscellaneous import Max
         return Max(*self)
+
+    @property
+    def measure(self):
+        return 0
 
     def __len__(self):
         return len(self.elements)

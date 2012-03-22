@@ -303,11 +303,6 @@ def test_sympy__core__relational__Unequality():
     from sympy.core.relational import Unequality
     assert _test_args(Unequality(x, 2))
 
-@XFAIL
-def test_sympy__core__sets__CountableSet():
-    from sympy.core.sets import CountableSet
-    assert _test_args(CountableSet(1, 2, 3))
-
 def test_sympy__core__sets__EmptySet():
     from sympy.core.sets import EmptySet
     assert _test_args(EmptySet())
