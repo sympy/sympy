@@ -1,12 +1,14 @@
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
-        IdentityGate, CGate, gate_simp)
+        IdentityGate, CGate, Phase, gate_simp)
 from sympy.physics.quantum.identitysearch import *
 from sympy.physics.quantum.dagger import Dagger
 
+def create_gate_sequence(qubit=0):
+    gates = (X(qubit), Y(qubit), Z(qubit), H(qubit))
+    return gates
+
 def test_generate_equivalent_ids():
-    x = X(0)
-    y = Y(0)
-    z = Z(0)
+    (x, y, z, h) = create_gate_sequence()
 
     assert generate_equivalent_ids(x) == set([(x,)])
     assert generate_equivalent_ids(x, y) == set([(x, y), (y, x)])
@@ -16,7 +18,6 @@ def test_generate_equivalent_ids():
                       (y, x, z), (x, z, y)])
     assert generate_equivalent_ids(*gate_seq) == gate_rules
 
-    h = H(0)
     gate_seq = (x, y, z, h)
     gate_rules = set([(x, y, z, h), (y, z, h, x),
                       (h, x, y, z), (h, z, y, x),
@@ -87,16 +88,14 @@ def test_is_scalar_matrix():
     assert is_scalar_matrix(xyz_circuit, numqubits, id_only) == False
     assert is_scalar_matrix(cnot_circuit, numqubits, id_only) == True
     assert is_scalar_matrix(hh_circuit, numqubits, id_only) == True
-    
+
     assert is_scalar_sparse_matrix(xhzh_circuit, numqubits, id_only) == True
     assert is_scalar_sparse_matrix(xyz_circuit, numqubits, id_only) == False
     assert is_scalar_sparse_matrix(cnot_circuit, numqubits, id_only) == True
     assert is_scalar_sparse_matrix(hh_circuit, numqubits, id_only) == True
-    
+
 def test_is_degenerate():
-    x = X(0)
-    y = Y(0)
-    z = Z(0)
+    (x, y, z, h) = create_gate_sequence()
 
     gate_id = GateIdentity(x, y, z)
     ids = set([gate_id])
@@ -106,10 +105,7 @@ def test_is_degenerate():
 
 def test_is_reducible():
     nqubits = 2
-
-    x = X(0)
-    y = Y(0)
-    z = Z(0)
+    (x, y, z, h) = create_gate_sequence()
 
     circuit = (x, y, y)
     assert is_reducible(circuit, nqubits, 1, 3) == True
@@ -129,9 +125,7 @@ def test_is_reducible():
 def test_bfs_identity_search():
     assert bfs_identity_search([], 1) == set()
 
-    x = X(0)
-    y = Y(0)
-    z = Z(0)
+    (x, y, z, h) = create_gate_sequence()
 
     gate_list = [x]
     id_set = set([GateIdentity(x, x)])
@@ -139,7 +133,7 @@ def test_bfs_identity_search():
 
     # Set should not contain degenerate quantum circuits
     gate_list = [x, y, z]
-    id_set = set([GateIdentity(x, x), 
+    id_set = set([GateIdentity(x, x),
                   GateIdentity(y, y),
                   GateIdentity(z, z),
                   GateIdentity(x, y, z)])
@@ -155,7 +149,6 @@ def test_bfs_identity_search():
     assert bfs_identity_search(gate_list, 1, max_depth=4) == id_set
     assert bfs_identity_search(gate_list, 1, max_depth=5) == id_set
 
-    h = H(0)
     gate_list = [x, y, z, h]
     id_set = set([GateIdentity(x, x),
                   GateIdentity(y, y),
@@ -221,3 +214,12 @@ def test_bfs_identity_search():
                   GateIdentity(cnot, h, cgate_z, h)])
     assert bfs_identity_search(gate_list, 2, max_depth=4) == id_set
 
+    # Check what should be done about this case.
+    # Fails because Phase(0) is not Hermitian, so Dagger(Phase(0))
+    # returns S(0)**(-1), which is Pow object.  Throws exception
+    # at line 136ish.
+    #s = Phase(0)
+    #t = T(0)
+    #gate_list = [s, t]
+    #id_set = set([])
+    #assert bfs_identity_search(gate_list, 1, max_depth=4) == id_set
