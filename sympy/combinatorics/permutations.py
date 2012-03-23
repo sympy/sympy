@@ -1323,20 +1323,19 @@ don\'t match.")
         ========
 
         >>> from sympy import Matrix
-        >>> from sympy.matrices.matrices import mrepr
-        >>> Matrix._sympystr = mrepr
+        >>> Matrix._sympystr = lambda x, y: x.table()
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation.josephus(3,6,1)
         >>> p
         Permutation([2, 5, 3, 1, 4, 0])
         >>> p.get_precedence_matrix()
-        [0  0  0  0  0  0]
-        [1  0  0  0  1  0]
-        [1  1  0  1  1  1]
-        [1  1  0  0  1  0]
-        [1  0  0  0  0  0]
-        [1  1  0  1  1  0]
+        [0,  0,  0,  0,  0,  0]
+        [1,  0,  0,  0,  1,  0]
+        [1,  1,  0,  1,  1,  1]
+        [1,  1,  0,  0,  1,  0]
+        [1,  0,  0,  0,  0,  0]
+        [1,  1,  0,  1,  1,  0]
 
         See Also
         ========
@@ -1398,25 +1397,24 @@ don\'t match.")
         ========
 
         >>> from sympy import Matrix
-        >>> from sympy.matrices.matrices import mrepr
-        >>> Matrix._sympystr = mrepr
+        >>> Matrix._sympystr = lambda x, y: x.table()
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation.josephus(3,6,1)
         >>> p.get_adjacency_matrix()
-        [0  0  0  0  0  0]
-        [0  0  0  0  1  0]
-        [0  0  0  0  0  1]
-        [0  1  0  0  0  0]
-        [1  0  0  0  0  0]
-        [0  0  0  1  0  0]
+        [0,  0,  0,  0,  0,  0]
+        [0,  0,  0,  0,  1,  0]
+        [0,  0,  0,  0,  0,  1]
+        [0,  1,  0,  0,  0,  0]
+        [1,  0,  0,  0,  0,  0]
+        [0,  0,  0,  1,  0,  0]
         >>> from sympy.combinatorics.permutations import Permutation
         >>> q = Permutation([0, 1, 2, 3])
         >>> q.get_adjacency_matrix()
-        [0  1  0  0]
-        [0  0  1  0]
-        [0  0  0  1]
-        [0  0  0  0]
+        [0,  1,  0,  0]
+        [0,  0,  1,  0]
+        [0,  0,  0,  1]
+        [0,  0,  0,  0]
 
         See Also
         ========

@@ -53,6 +53,9 @@ Formulation of the equations of motion in :mod:`mechanics` starts with creation
 of a ``Kane`` object. Upon initialization of the ``Kane`` object, an inertial
 reference frame needs to be supplied. ::
 
+  >>> from sympy import Matrix
+  >>> Matrix._sympystr = lambda x, y: x.table()
+
   >>> from sympy.physics.mechanics import *
   >>> N = ReferenceFrame('N')
   >>> KM = Kane(N)
@@ -151,8 +154,8 @@ o) x (n + o), or square and the size of all coordinates and speeds. ::
   [1,  0]
   [0, -5]
   >>> KM.forcing_full
-  [ u]
-  [-7]
+  [u(t)]
+  [  -7]
 
 The forcing vector can be linearized as well; its Jacobian is taken only with
 respect to the independent coordinates and speeds. The linearized forcing

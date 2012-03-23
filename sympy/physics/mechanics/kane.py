@@ -59,6 +59,9 @@ class Kane(object):
     derivatives.
     Then we create a point and set its velocity in a frame::
 
+        >>> from sympy import Matrix
+        >>> Matrix._sympystr = lambda x, y: x.table()
+
         >>> from sympy import symbols
         >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
         >>> from sympy.physics.mechanics import Point, Particle, Kane
@@ -78,10 +81,10 @@ class Kane(object):
     assigned to it.
     Finally, a list of all bodies and particles needs to be created::
 
-    >>> kd = [qd - u]
-    >>> FL = [(P, (-k * q - c * u) * N.x)]
-    >>> pa = Particle('pa', P, m)
-    >>> BL = [pa]
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle('pa', P, m)
+        >>> BL = [pa]
 
     Finally we can generate the equations of motion.
     First we create the Kane object and supply an inertial frame.

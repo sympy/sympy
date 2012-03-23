@@ -23,6 +23,9 @@ configuration and three speed variables are need to describe this system, along
 with the disc's mass and radius, and the local gravity (note that mass will
 drop out). ::
 
+  >>> from sympy import Matrix
+  >>> Matrix._sympystr = lambda x, y: x.table()
+
   >>> from sympy import symbols, sin, cos, tan
   >>> from sympy.physics.mechanics import *
   >>> q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')
@@ -97,9 +100,9 @@ dots (time derivatives of the generalized speeds). ::
   >>> rhs = rhs.subs(kdd)
   >>> rhs.simplify()
   >>> mprint(rhs, order=None)
-  [(4*g*sin(q2) + 10*r*u2*u3 - 5*r*u3**2*tan(q2))/(5*r)]
-  [                                          -2*u1*u3/3]
-  [                             (-2*u2 + u3*tan(q2))*u1]
+  [(4*g*sin(q2(t)) + 10*r*u2(t)*u3(t) - 5*r*u3(t)**2*tan(q2(t)))/(5*r)]
+  [                                                   -2*u1(t)*u3(t)/3]
+  [                                (-2*u2(t) + u3(t)*tan(q2(t)))*u1(t)]
 
 This concludes the rolling disc example.
 
@@ -167,13 +170,13 @@ represent the constraint forces in those directions. ::
   >>> rhs = rhs.subs(kdd)
   >>> rhs.simplify()
   >>> mprint(rhs, order=None)
-  [(4*g*sin(q2) + 10*r*u2*u3 - 5*r*u3**2*tan(q2))/(5*r)]
-  [                                          -2*u1*u3/3]
-  [                             (-2*u2 + u3*tan(q2))*u1]
+  [(4*g*sin(q2(t)) + 10*r*u2(t)*u3(t) - 5*r*u3(t)**2*tan(q2(t)))/(5*r)]
+  [                                                   -2*u1(t)*u3(t)/3]
+  [                                (-2*u2(t) + u3(t)*tan(q2(t)))*u1(t)]
   >>> mprint(KM.auxiliary_eqs, order=None)
-  [                                                          -m*(r*u1*u3 + r*u2') + f1]
-  [       -m*((r*(u3*q3' - u1') + r*u2*u3)*cos(q2) + (r*u1**2 + r*u2**2)*sin(q2)) + f2]
-  [-g*m - m*((r*(u3*q3' - u1') + r*u2*u3)*sin(q2) + (-r*u1**2 - r*u2**2)*cos(q2)) + f3]
+  [               -m*(r*u1(t)*u3(t) + r*Derivative(u2(t), t)) + f1(t)]
+  [       -m*((r*(u3(t)*Derivative(q3(t), t) - Derivative(u1(t), t)) + r*u2(t)*u3(t))*cos(q2(t)) + (r*u1(t)**2 + r*u2(t)**2)*sin(q2(t))) + f2(t)]
+  [-g*m - m*((r*(u3(t)*Derivative(q3(t), t) - Derivative(u1(t), t)) + r*u2(t)*u3(t))*sin(q2(t)) + (-r*u1(t)**2 - r*u2(t)**2)*cos(q2(t))) + f3(t)]
 
 The Bicycle
 ===========
