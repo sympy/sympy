@@ -231,7 +231,10 @@ class TableForm(Basic):
                          "automatic" ... gives successive integer labels
                          [[l1, l2, ...], ...] gives labels for each entry in
                              each dimension (can be None for some dimension)
-            alignment ... "left", "center", "right" (alignment of the columns)
+            alignment ... alignment of the columns controlled by values;
+                          "left" or "<"
+                          "center" or "^"
+                          "right" or ">"
 
         Example:
 
@@ -259,7 +262,7 @@ class TableForm(Basic):
                 h2 = range(1, _w + 1)
             _headings = [h1, h2]
 
-        _alignment = alignment
+        _alignment = {'<': 'left', '>': 'right', '^': 'center'}.get(alignment, alignment)
         if column_formats:
             _column_formats = column_formats
         else:
@@ -310,15 +313,18 @@ class TableForm(Basic):
                 new_line.append(s)
             self._headings[1] = new_line
 
-        format_str = ""
+        format_str = []
         for w in column_widths:
             if self._alignment == "left":
                 align = "-"
             elif self._alignment == "right":
                 align = ""
+            elif self._alignment == "center":
+                align = ""
             else:
                 raise NotImplementedError()
-            format_str += "%" + align + str(w) + "s "
+            format_str += ["%" + align + str(w) + "s"]
+        format_str = ' '.join(format_str)
         format_str += "\n"
 
         if self._headings[0]:
@@ -326,20 +332,21 @@ class TableForm(Basic):
             heading_width = max([len(x) for x in self._headings[0]])
             format_str = "%" + str(heading_width) + "s | " + format_str
 
-        s = ""
+        s = []
         if self._headings[1]:
             d = self._headings[1]
             if self._headings[0]:
                 d = [""] + d
             first_line = format_str % tuple(d)
-            s += first_line
-            s += "-" * (len(first_line) - 2) + "\n"
+            s.append(first_line)
+            s.append("-" * (len(first_line) - 2) + "\n")
         for i, line in enumerate(lines):
-            d = line
+            d = [l if self._alignment != 'center' else
+                 l.center(column_widths[j]) for j,l in enumerate(line)]
             if self._headings[0]:
                 d = [self._headings[0][i]] + d
-            s += format_str % tuple(d)
-        return s
+            s.append(format_str % tuple(d))
+        return ''.join(s)
 
     def as_latex(self):
         """
