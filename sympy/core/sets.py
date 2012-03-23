@@ -1124,11 +1124,13 @@ class UniversalSet(Set):
     def _union(self, other):
         return self
 
-def sort_fn(x):
-    if x.is_comparable is True:
-        return x
-    else:
-        return 1e9+abs(hash(x))
+def element_sort_fn(x):
+    try:
+        if x.is_comparable is True:
+            return x
+    except:
+        pass
+    return 1e9+abs(hash(x))
 
 class FiniteSet(Set, EvalfMixin):
     """
@@ -1162,7 +1164,7 @@ class FiniteSet(Set, EvalfMixin):
             return EmptySet()
 
         args = frozenset(args) # remove duplicates
-        args = sorted(args, key = sort_fn)
+        args = sorted(args, key = element_sort_fn)
         obj = Basic.__new__(cls, *args)
         obj.elements = args
         return obj
