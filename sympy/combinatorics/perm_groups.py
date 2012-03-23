@@ -28,7 +28,10 @@ class PermutationGroup(Basic):
         """
         obj = Basic.__new__(cls, *args, **kw_args)
         obj._generators = args[0]
-        obj._perm_size = args[1]
+        size = len(args[0][0].array_form)
+        if not all(len(args[0][i].array_form)==size for i in xrange(1, len(args[0]))):
+                raise ValueError("Permutation group size is not correct")
+        obj._perm_size = size
         return obj
 
     @property
@@ -85,7 +88,7 @@ class PermutationGroup(Basic):
             for j in self.generators:
                 if i == j:
                     continue
-                if i * j != j * i:
+                if i*j != j*i:
                     self._is_abelian = False
                     break
         return self._is_abelian
@@ -103,9 +106,8 @@ class PermutationGroup(Basic):
         >>> c = Permutation([2,0,3,1])
         >>> d = PermutationGroup([a,b,c],4)
         >>> d.schreier_tree(3)
-        >>> d.coset_repr
-        set[Permutation([2, 3, 1, 0]), Permutation([0, 2, 3, 1]), \
-        Permutation([0, 1, 3, 2]), Permutation([0, 1, 2, 3])]
+        >>> d.coset_repr()
+        set([Permutation([0, 1, 2, 3]), Permutation([0, 1, 3, 2]), Permutation([0, 2, 3, 1]), Permutation([2, 3, 1, 0])])
         """
         if (alpha != None):
             self.schreier_tree(alpha)
@@ -131,8 +133,8 @@ class PermutationGroup(Basic):
         """
         if gen == None:
             gen = Permutation([i for i in xrange(self.perm_size)])
-        if self._coset_repr == []:
-            self._coset_repr = [None] * self.perm_size
+        if not self._coset_repr:
+            self._coset_repr = [None]*self.perm_size
         self._coset_repr_n += 1
         self._coset_repr[alpha] = gen
         for i in xrange(len(self.generators)):
@@ -161,19 +163,19 @@ class PermutationGroup(Basic):
         [Permutation([0, 2, 1, 3]), Permutation([0, 2, 3, 1]), Permutation([0,\
         3, 2, 1]), Permutation([0, 1, 3, 2]), Permutation([0, 3, 1, 2])]
         """
-        id = Permutation(list(xrange(0, self.perm_size)))
+        id = Permutation(range(0, self.perm_size))
         order = 0
         element_list = [id]
 
         for i in xrange(len(self.generators)):
             D = element_list[:]
             N = [Permutation(list(xrange(0, self.perm_size)))]
-            while len(N) > 0:
+            while N:
                 A = N[:]
                 N = []
                 for  a in A:
                     for g in self.generators[:i+1]:
-                        ag   = a * g
+                        ag = a*g
                         if ag not in element_list:
                             for d in D:
                                 order += 1
@@ -224,7 +226,7 @@ class PermutationGroup(Basic):
         stabs = []
         for g in self.generate():
             stabilizes = True
-            for point in xrange(0, npoints):
+            for point in xrange(npoints):
                 if g.array_form[point] not in point_set:
                     stabilizes = False
                     break
@@ -252,7 +254,7 @@ class PermutationGroup(Basic):
         >>> d * a == a * d
         True
         """
-        if self._center != []:
+        if self._center:
             return self._center
         group_elems = list(self.generate())
         for x in group_elems:
@@ -281,7 +283,7 @@ class PermutationGroup(Basic):
         >>> c.commutators
         [Permutation([0, 1, 2, 3])]
         """
-        if self._commutators != []:
+        if self._commutators:
             return self._commutators
         group_elems = list(self.generate())
         for x in group_elems:
