@@ -397,16 +397,17 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
     return cont, numer, denom
 
 def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
-    """
-    Compute the GCD of ``terms`` and put them together. If ``isprimitive`` is
-    True the _gcd_terms will not run the primitive method on the terms.
+    """Compute the GCD of ``terms`` and put them together.
+
+    If ``isprimitive`` is True the _gcd_terms will not run the primitive
+    method on the terms.
 
     ``clear`` controls the removal of integers from the denominator of an Add
-    expression. When True, all numerical denominator will be cleared; when
-    False the denominators will be cleared only if all terms had numerical
-    denominators.
+    expression. When True (default), all numerical denominator will be cleared;
+    when False the denominators will be cleared only if all terms had numerical
+    denominators other than 1.
 
-    ``fraction``, when True (default) will put the expression over a common
+    ``fraction``, when True (default), will put the expression over a common
     denominator.
 
     Examples

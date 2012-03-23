@@ -15,15 +15,15 @@ C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C1:11')
 f = Function('f')
 g = Function('g')
 
-# Note that if the ODE solver, the integral engine, solve(), or even
-# simplify(), changes, these tests could fail but still be correct, only
-# written differently. Also note that in differently formatted solutions,
-# the arbitrary constants might not be equal.  Using specific hints in
-# tests can help avoid this.
+# Note: the tests below may fail (but still be correct) if ODE solver,
+# the integral engine, solve(), or even simplify() changes. Also, in
+# differently formatted solutions, the arbitrary constants might not be
+# equal.  Using specific hints in tests can help to avoid this.
 
 # Tests of order higher than 1 should run the solutions through
 # constant_renumber because it will normalize it (constant_renumber causes
 # dsolve() to return different results on different machines)
+
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
@@ -1017,8 +1017,8 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     sol14 = Eq(f(x), C1 - x - sin(2*x)/5 - cos(2*x)/10 + x**2/2 + C2*exp(-x))
     sol15 = Eq(f(x), (C1 + x)*sin(x) + (C2 - x**2)*cos(x))
     sol16 = Eq(f(x), (C1 + x/16)*sin(2*x) + (C2 - x**2/8)*cos(2*x))
-    sol17 = Eq(f(x), (C1 + C2*x + x**4)*exp(-x)/12)
-    sol18 = Eq(f(x), (C1 + C2*x + C3*x**2 - x**5 + 20*x**3)*exp(-x)/60)
+    sol17 = Eq(f(x), (C1 + C2*x + x**4/12)*exp(-x))
+    sol18 = Eq(f(x), (C1 + C2*x + C3*x**2 - x**5/60 + x**3/3)*exp(-x))
     sol19 = Eq(f(x), S(7)/4 - 3*x/2 + x**2/2 + C1*exp(-x) + (C2 - x)*exp(-2*x))
     sol20 = Eq(f(x), C1*exp(x) + C2*exp(2*x) + (6*x + 5)*exp(-x)/36)
     sol21 = Eq(f(x), -S(1)/36 - x/6 + C1*exp(-3*x) + (C2 + x/5)*exp(2*x))
@@ -1152,7 +1152,7 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     sol4 = Eq(f(x), 2 + C1*exp(-x) + C2*exp(-2*x))
     sol5 = Eq(f(x), 2*exp(x) + C1*exp(-x) + C2*exp(-2*x))
     sol6 = Eq(f(x), -x*exp(x) - 2*exp(-x) + C1*exp(-2*x) + C2*exp(4*x))
-    sol7 = Eq(f(x), (C1 + C2*x + x**4)*exp(-x)/12)
+    sol7 = Eq(f(x), (C1 + C2*x + x**4/12)*exp(-x))
     sol8 = Eq(f(x), C1*exp(x) + C2*exp(2*x) + (6*x + 5)*exp(-x)/36)
     sol9 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
     sol10 = Eq(f(x), (C1 + x*(C2 + log(x)))*exp(-x))

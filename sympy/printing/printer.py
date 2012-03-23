@@ -1,7 +1,7 @@
 """Printing subsystem driver
 
 SymPy's printing system works the following way: Any expression can be
-passed to a designated Printer who then is responsible to return a
+passed to a designated Printer who then is responsible to return an
 adequate representation of that expression.
 
 The basic concept is the following:
