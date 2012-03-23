@@ -1124,6 +1124,12 @@ class UniversalSet(Set):
     def _union(self, other):
         return self
 
+def sort_fn(x):
+    if x.is_comparable is True:
+        return x
+    else:
+        return 1e9+abs(hash(x))
+
 class FiniteSet(Set, EvalfMixin):
     """
     Represents a finite set of discrete numbers
@@ -1155,14 +1161,11 @@ class FiniteSet(Set, EvalfMixin):
         if len(args) == 0:
             return EmptySet()
 
-        elements = frozenset(args)
-        obj = Basic.__new__(cls, elements)
-        obj.elements = elements
+        args = frozenset(args) # remove duplicates
+        args = sorted(args, key = sort_fn)
+        obj = Basic.__new__(cls, *args)
+        obj.elements = args
         return obj
-
-    @property
-    def args(self):
-        return tuple(self.elements)
 
     def __iter__(self):
         return self.elements.__iter__()

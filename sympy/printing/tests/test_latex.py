@@ -2,12 +2,13 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Function, factorial, factorial2, floor, ceiling, Abs, re, im, conjugate,
     Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum, Product,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg, polar_lift,
-    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan, Min, Max,
-    cot, coth, re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
-    FallingFactorial, polylog, lerchphi, Ei, expint, Si, Ci, Shi, Chi, gamma, Tuple,
-    MellinTransform, InverseMellinTransform, LaplaceTransform, InverseLaplaceTransform,
-    FourierTransform, InverseFourierTransform, SineTransform, InverseSineTransform,
-    CosineTransform, InverseCosineTransform)
+    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan, Min, Max, cot, coth,
+    re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
+    FallingFactorial, polylog, lerchphi, Ei, expint, Si, Ci, Shi, Chi, gamma,
+    Tuple, MellinTransform, InverseMellinTransform, LaplaceTransform,
+    InverseLaplaceTransform, FourierTransform, InverseFourierTransform,
+    SineTransform, InverseSineTransform, CosineTransform,
+    InverseCosineTransform, FiniteSet)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
@@ -237,6 +238,11 @@ def test_latex_integrals():
         r"\int\int\int\int\int\int x\, dx\, dx\, dx\, dx\, dx\, dx"
     assert latex(Integral(x, x, y, (z, 0, 1))) == \
         r"\int_{0}^{1}\int\int x\, dx\, dy\, dz"
+
+def test_latex_finiteset():
+    assert latex(FiniteSet(range(1, 51)) ==\
+            r'\left{1, 2, 3, ..., 48, 49, 50\right}')
+    assert latex(FiniteSet(range(1, 6)) == r'\left{1, 2, 3, 4, 5\right}')
 
 def test_latex_intervals():
     a = Symbol('a', real=True)
