@@ -149,11 +149,11 @@ def test_list():
 
 def test_Matrix():
     M = Matrix([[x**+1, 1], [y, x+y]])
-    assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
+    assert str(M) == sstr(M) == "Matrix([[x, 1], [y, x + y]])"
     M = Matrix()
-    assert str(M) == sstr(M) == "[]"
+    assert str(M) == sstr(M) == "Matrix(0, 0)"
     M = Matrix(0, 1, lambda i, j: 0)
-    assert str(M) == sstr(M) == "[]"
+    assert str(M) == sstr(M) == "Matrix(0, 1)"
 
 def test_Mul():
     assert str(x/y) == "x/y"
@@ -347,7 +347,7 @@ def test_set():
 
 def test_SparseMatrix():
     M = SparseMatrix([[x**+1, 1], [y, x+y]])
-    assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
+    assert str(M) == sstr(M) == "Matrix([[x, 1], [y, x + y]])"
 
 def test_Sum():
     assert str(summation(cos(3*z), (z, x, y))) == "Sum(cos(3*z), (z, x, y))"

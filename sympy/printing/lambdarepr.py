@@ -13,7 +13,7 @@ class LambdaPrinter(StrPrinter):
     """
 
     def _print_Matrix(self, expr):
-        return "Matrix([%s])"%expr._format_str(self._print, ",")
+        return expr._format_str(self._print)
 
     def _print_Piecewise(self, expr):
         from sympy.core.sets import Interval
