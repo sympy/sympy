@@ -117,6 +117,15 @@ class PermutationGroup(Basic):
         """
         Computes the Schreier Tree.
 
+        A Schreier tree with root a for S is a representation of the orbit of a.
+        Its rooted at a with the elements of a^{G} as its vertices, and its edges
+        describe the elements of S needed to get from a to each vertex, each edge
+        {i, j} in the tree with i closer to the root than j is labeled by a
+        generator s \{\in} S moving from i to j.
+
+        In the current implementation, the entire tree is not stored. We store only
+        a coset representation for each point in the orbit.
+        
         Examples:
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.permutations import Permutation
