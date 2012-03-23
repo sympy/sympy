@@ -1166,11 +1166,11 @@ class FiniteSet(Set, EvalfMixin):
         args = frozenset(args) # remove duplicates
         args = sorted(args, key = element_sort_fn)
         obj = Basic.__new__(cls, *args)
-        obj.elements = args
+        obj._elements = args
         return obj
 
     def __iter__(self):
-        return self.elements.__iter__()
+        return iter(self.args)
 
     def _intersect(self, other):
         """
@@ -1179,7 +1179,7 @@ class FiniteSet(Set, EvalfMixin):
         See Set._intersect for docstring
         """
         if isinstance(other, self.__class__):
-            return self.__class__(*(self.elements & other.elements))
+            return self.__class__(*(self._elements & other._elements))
         return self.__class__(el for el in self if el in other)
 
     def _union(self, other):
@@ -1189,7 +1189,7 @@ class FiniteSet(Set, EvalfMixin):
         See Set._union for docstring
         """
         if other.is_FiniteSet:
-            return FiniteSet(*(self.elements | other.elements))
+            return FiniteSet(*(self._elements | other._elements))
 
         # If other set contains one of my elements, remove it from myself
         if any(other.contains(x) is True for x in self):
@@ -1214,7 +1214,7 @@ class FiniteSet(Set, EvalfMixin):
         False
 
         """
-        return other in self.elements
+        return other in self._elements
 
     @property
     def _complement(self):
@@ -1228,16 +1228,16 @@ class FiniteSet(Set, EvalfMixin):
 
 
         """
-        if not all(elem.is_number for elem in self.elements):
+        if not all(elem.is_number for elem in self):
             raise ValueError("%s: Complement not defined for symbolic inputs"
                     %self)
-        sorted_elements = sorted(list(self.elements))
+        sorted_elements = self.args
 
         intervals = [] # Build up a list of intervals between the elements
-        intervals += [Interval(S.NegativeInfinity,sorted_elements[0],True,True)]
-        for a, b in zip(sorted_elements[:-1], sorted_elements[1:]):
+        intervals += [Interval(S.NegativeInfinity, self.args[0],True,True)]
+        for a, b in zip(self.args[:-1], self.args[1:]):
             intervals.append(Interval(a, b, True, True)) # open intervals
-        intervals.append(Interval(sorted_elements[-1], S.Infinity, True, True))
+        intervals.append(Interval(self.args[-1], S.Infinity, True, True))
         return Union(intervals, evaluate=False)
 
     @property
@@ -1255,7 +1255,7 @@ class FiniteSet(Set, EvalfMixin):
         return 0
 
     def __len__(self):
-        return len(self.elements)
+        return len(self.args)
 
     def __sub__(self, other):
         return FiniteSet(el for el in self if el not in other)
