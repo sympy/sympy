@@ -2495,7 +2495,7 @@ class Expr(Basic, EvalfMixin):
 
         See also lseries().
         """
-        if x and not self.has(x):
+        if x and not x in self.free_symbols:
             return self
         if x is None or x0 or dir != '+':  # {see XPOS above} or (x.is_positive == x.is_negative == None):
             assert logx is None

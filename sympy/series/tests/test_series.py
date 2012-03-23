@@ -1,5 +1,5 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol
+    Function, log, sqrt, Symbol, Subs
 from sympy.abc import x, y, n, k
 from sympy.utilities.pytest import raises
 from sympy.series.gruntz import calculate_series
@@ -63,8 +63,6 @@ def test_2124():
     assert ((sin(x))**y).nseries(x, n=1, logx=logx) == \
         exp(y*logx) + O(x*exp(y*logx), x)
 
-    raises(NotImplementedError, lambda: series(Function("f")(x)))
-
     assert sin(1/x).series(x, oo, n=5) == 1/x - 1/(6*x**3)
     assert abs(x).series(x, oo, n=5, dir='+') == x
     assert abs(x).series(x, -oo, n=5, dir='-') == -x
@@ -79,6 +77,19 @@ def test_2124():
         1 + p**S('3/2')*log(p) + O(p**3*log(p)**3)
 
     assert exp(sin(x)*log(x)).series(n=2) == 1 + x*log(x) + O(x**2*log(x)**2)
+
+def test_879():
+    f = Function('f')
+    assert f(x).series(x, 0, 3, dir='-') == \
+            f(0) + x*Subs(Derivative(f(x), x), (x,), (0,)) + \
+            x**2*Subs(Derivative(f(x), x, x), (x,), (0,))/2 + O(x**3)
+    assert f(x).series(x, 0, 3) == \
+            f(0) + x*Subs(Derivative(f(x), x), (x,), (0,)) + \
+            x**2*Subs(Derivative(f(x), x, x), (x,), (0,))/2 + O(x**3)
+    assert f(x**2).series(x, 0, 3) == \
+            f(0) + x**2*Subs(Derivative(f(x), x), (x,), (0,)) + O(x**3)
+    assert f(x**2+1).series(x, 0, 3) == \
+            f(1) + x**2*Subs(Derivative(f(x), x), (x,), (1,)) + O(x**3)
 
 from sympy.series.acceleration import richardson, shanks
 from sympy import Sum, Integer

@@ -440,11 +440,6 @@ class Function(Application, Expr):
         -1/x - log(x)/x + log(x)/2 + O(1)
 
         """
-        if self.func.nargs is None:
-            from sympy.utilities.misc import filldedent
-            raise NotImplementedError(filldedent('''
-                series for user-defined functions are not
-                supported.'''))
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_bounded is False for t in args0):
@@ -483,7 +478,7 @@ class Function(Application, Expr):
             s = s.removeO()
             s = s.subs(v, zi).expand() + C.Order(o.expr.subs(v, zi), x)
             return s
-        if (self.func.nargs == 1 and args0[0]) or self.func.nargs > 1:
+        if ((self.func.nargs == 1 or isinstance(self.func, UndefinedFunction)) and args0[0]) or self.func.nargs > 1:
             e = self
             e1 = e.expand()
             if e == e1:
@@ -592,7 +587,8 @@ class Function(Application, Expr):
         redefine it to make it faster by using the "previous_terms".
         """
         x = sympify(x)
-        return cls(x).diff(x, n).subs(x, 0) * x**n / C.factorial(n)
+        _x = Dummy('x')
+        return cls(_x).diff(_x, n).subs(_x, x).subs(x, 0) * x**n / C.factorial(n)
 
 
 class AppliedUndef(Function):
