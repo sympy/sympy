@@ -932,10 +932,10 @@ class LatexPrinter(Printer):
             if coeff < 0:
                 tex.append("-")
                 coeff = -coeff
-            else:
+            elif tex:
                 tex.append("+")
 
-            if coeff != 1:
+            if coeff is not S.One:
                 tex.append(self._print(coeff))
             tex.append(self._print(M))
 
@@ -944,11 +944,7 @@ class LatexPrinter(Printer):
     def _print_MatMul(self, expr):
         coeff, tail = expr.as_coeff_Mul()
 
-        if not coeff.is_negative:
-            tex = ""
-        else:
-            coeff = -coeff
-            tex = "- "
+        tex = " " + self._print(coeff)
 
         if not tail.is_Mul:
             return tex + self._print(tail)
