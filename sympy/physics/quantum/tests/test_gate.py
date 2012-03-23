@@ -1,4 +1,4 @@
-from sympy import exp, symbols, sqrt, I, pi, Mul, Integer
+from sympy import exp, symbols, sqrt, I, pi, Mul, Integer, Wild
 from sympy.matrices.matrices import Matrix
 
 from sympy.physics.quantum.gate import (XGate, YGate, ZGate, random_circuit,
@@ -19,6 +19,24 @@ def test_gate():
     h = HadamardGate(1)
     assert h.min_qubits == 2
     assert h.nqubits == 1
+
+    i0 = Wild('i0')
+    i1 = Wild('i1')
+    h0_w1 = HadamardGate(i0)
+    h0_w2 = HadamardGate(i0)
+    h1_w1 = HadamardGate(i1)
+
+    assert h0_w1 == h0_w2
+    assert h0_w1 != h1_w1
+    assert h1_w1 != h0_w2
+
+    cnot_10_w1 = CNOT(i1, i0)
+    cnot_10_w2 = CNOT(i1, i0)
+    cnot_01_w1 = CNOT(i0, i1)
+
+    assert cnot_10_w1 == cnot_10_w2
+    assert cnot_10_w1 != cnot_01_w1
+    assert cnot_10_w2 != cnot_01_w1
 
 def test_UGate():
     a,b,c,d = symbols('a,b,c,d')
