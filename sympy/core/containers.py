@@ -9,6 +9,7 @@
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
+from functools import total_ordering
 
 class Tuple(Basic):
     """
@@ -83,14 +84,6 @@ class Tuple(Basic):
     def __lt__(self, other):
         return self.args < other.args
 
-    def __gt__(self, other):
-        return self.args > other.args
-    
-    def __le__(self, other):
-        return self.args <= other.args
-
-    def __ge__(self, other):
-        return self.args >= other.args
 
 converter[tuple] = lambda tup: Tuple(*tup)
 
