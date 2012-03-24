@@ -1,6 +1,6 @@
 from sympy.external import import_module
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
-        IdentityGate, CGate, Phase, gate_simp)
+        IdentityGate, CGate, PhaseGate, TGate, gate_simp)
 from sympy.physics.quantum.identitysearch import *
 from sympy.physics.quantum.dagger import Dagger
 
@@ -8,77 +8,127 @@ def create_gate_sequence(qubit=0):
     gates = (X(qubit), Y(qubit), Z(qubit), H(qubit))
     return gates
 
-def test_generate_equivalent_ids():
+def test_generate_gate_rules_with_seq():
+    (x, y, z, h) = create_gate_sequence()
+    ph = PhaseGate(0)
+    cgate_t = CGate(0, TGate(1))
+
+    assert generate_gate_rules_with_seq(x) == set([((x,), ())])
+
+    gate_rules = set([((x,y,z), ()), ((y,z,x), ()), ((z,x,y), ()),
+                      ((), (x,z,y)), ((), (y,x,z)), ((), (z,y,x)),
+                      ((x,), (z,y)), ((y,z), (x,)), ((y,), (x,z)),
+                      ((z,x), (y,)), ((z,), (y,x)), ((x,y), (z,))])
+    actual = generate_gate_rules_with_seq(x, y, z)
+    assert actual == gate_rules
+
+    gate_rules = set([((), (h,z,y,x)), ((), (x,h,z,y)), ((), (y,x,h,z)),
+                      ((), (z,y,x,h)), ((h,), (z,y,x)), ((x,), (h,z,y)),
+                      ((y,), (x,h,z)), ((z,), (y,x,h)), ((h,x), (z,y)),
+                      ((x,y), (h,z)), ((y,z), (x,h)), ((z,h), (y,x)),
+                      ((h,x,y), (z,)), ((x,y,z), (h,)), ((y,z,h), (x,)),
+                      ((z,h,x), (y,)), ((h,x,y,z), ()), ((x,y,z,h), ()),
+                      ((y,z,h,x), ()), ((z,h,x,y), ())])
+    actual = generate_gate_rules_with_seq(x, y, z, h)
+    assert actual == gate_rules
+
+    gate_rules = set([((), (cgate_t**(-1), ph**(-1), x)),
+                      ((), (ph**(-1), x, cgate_t**(-1))),
+                      ((), (x, cgate_t**(-1), ph**(-1))),
+                      ((cgate_t,), (ph**(-1), x)),
+                      ((ph,), (x, cgate_t**(-1))),
+                      ((x,), (cgate_t**(-1), ph**(-1))),
+                      ((cgate_t, x), (ph**(-1),)),
+                      ((ph, cgate_t), (x,)),
+                      ((x, ph), (cgate_t**(-1),)),
+                      ((cgate_t, x, ph), ()),
+                      ((ph, cgate_t, x), ()),
+                      ((x, ph, cgate_t), ())])
+    actual = generate_gate_rules_with_seq(x, ph, cgate_t)
+    assert actual == gate_rules
+
+def test_generate_equivalent_ids_with_seq():
     (x, y, z, h) = create_gate_sequence()
 
-    assert generate_equivalent_ids(x) == set([(x,)])
-    assert generate_equivalent_ids(x, y) == set([(x, y), (y, x)])
+    assert generate_equivalent_ids_with_seq(x) == set([(x,)])
+    assert generate_equivalent_ids_with_seq(x, y) == set([(x, y), (y, x)])
 
     gate_seq = (x, y, z)
     gate_rules = set([(x, y, z), (y, z, x), (z, x, y), (z, y, x),
                       (y, x, z), (x, z, y)])
-    assert generate_equivalent_ids(*gate_seq) == gate_rules
+    assert generate_equivalent_ids_with_seq(*gate_seq) == gate_rules
 
     gate_seq = (x, y, z, h)
     gate_rules = set([(x, y, z, h), (y, z, h, x),
                       (h, x, y, z), (h, z, y, x),
                       (z, y, x, h), (y, x, h, z),
                       (z, h, x, y) ,(x, h, z, y)])
-    assert generate_equivalent_ids(*gate_seq) == gate_rules
+    assert generate_equivalent_ids_with_seq(*gate_seq) == gate_rules
 
     gate_seq = (x, y, x, y)
     gate_rules = set([(x, y, x, y), (y, x, y, x)])
-    assert generate_equivalent_ids(*gate_seq) == gate_rules
+    assert generate_equivalent_ids_with_seq(*gate_seq) == gate_rules
 
     cgate_y = CGate((1,), y)
     gate_seq = (y, cgate_y, y, cgate_y)
     gate_rules = set([(y, cgate_y, y, cgate_y), (cgate_y, y, cgate_y, y)])
-    assert generate_equivalent_ids(*gate_seq) == gate_rules
+    assert generate_equivalent_ids_with_seq(*gate_seq) == gate_rules
 
     cnot = CNOT(1,0)
     cgate_z = CGate((0,), Z(1))
     gate_seq = (cnot, h, cgate_z, h)
     gate_rules = set([(cnot, h, cgate_z, h), (h, cgate_z, h, cnot),
                       (h, cnot, h, cgate_z), (cgate_z, h, cnot, h)])
-    assert generate_equivalent_ids(*gate_seq) == gate_rules
+    assert generate_equivalent_ids_with_seq(*gate_seq) == gate_rules
 
 def test_is_scalar_nonsparse_matrix():
     numqubits = 2
     id_only = False
 
     id_gate = (IdentityGate(1),)
-    assert is_scalar_nonsparse_matrix(id_gate, numqubits, id_only) == True
+    actual = is_scalar_nonsparse_matrix(id_gate, numqubits, id_only)
+    assert actual == True
 
     x0 = X(0)
     xx_circuit = (x0, x0)
-    assert is_scalar_nonsparse_matrix(xx_circuit, numqubits, id_only) == True
+    actual = is_scalar_nonsparse_matrix(xx_circuit, numqubits, id_only)
+    assert actual == True
 
     x1 = X(1)
     y1 = Y(1)
     xy_circuit = (x1, y1)
-    assert is_scalar_nonsparse_matrix(xy_circuit, numqubits, id_only) == False
+    actual = is_scalar_nonsparse_matrix(xy_circuit, numqubits, id_only)
+    assert actual == False
 
     z1 = Z(1)
     xyz_circuit = (x1, y1, z1)
-    assert is_scalar_nonsparse_matrix(xyz_circuit, numqubits, id_only) == True
+    actual = is_scalar_nonsparse_matrix(xyz_circuit, numqubits, id_only) 
+    assert actual == True
 
     cnot = CNOT(1,0)
     cnot_circuit = (cnot, cnot)
-    assert is_scalar_nonsparse_matrix(cnot_circuit, numqubits, id_only) == True
+    actual = is_scalar_nonsparse_matrix(cnot_circuit, numqubits, id_only)
+    assert actual == True
 
     h = H(0)
     hh_circuit = (h, h)
-    assert is_scalar_nonsparse_matrix(hh_circuit, numqubits, id_only) == True
+    actual = is_scalar_nonsparse_matrix(hh_circuit, numqubits, id_only)
+    assert actual == True
 
     h1 = H(1)
     xhzh_circuit = (x1, h1, z1, h1)
-    assert is_scalar_nonsparse_matrix(xhzh_circuit, numqubits, id_only) == True
+    actual = is_scalar_nonsparse_matrix(xhzh_circuit, numqubits, id_only)
+    assert actual == True
 
     id_only = True
-    assert is_scalar_nonsparse_matrix(xhzh_circuit, numqubits, id_only) == True
-    assert is_scalar_nonsparse_matrix(xyz_circuit, numqubits, id_only) == False
-    assert is_scalar_nonsparse_matrix(cnot_circuit, numqubits, id_only) == True
-    assert is_scalar_nonsparse_matrix(hh_circuit, numqubits, id_only) == True
+    actual = is_scalar_nonsparse_matrix(xhzh_circuit, numqubits, id_only)
+    assert actual == True
+    actual = is_scalar_nonsparse_matrix(xyz_circuit, numqubits, id_only)
+    assert actual == False
+    actual = is_scalar_nonsparse_matrix(cnot_circuit, numqubits, id_only)
+    assert actual == True
+    actual = is_scalar_nonsparse_matrix(hh_circuit, numqubits, id_only)
+    assert actual == True
 
 def test_is_scalar_sparse_matrix():
     np = import_module('numpy', min_python_version=(2, 6))
@@ -249,12 +299,13 @@ def test_bfs_identity_search():
                   GateIdentity(cnot, h, cgate_z, h)])
     assert bfs_identity_search(gate_list, 2, max_depth=4) == id_set
 
-    # Check what should be done about this case.
-    # Fails because Phase(0) is not Hermitian, so Dagger(Phase(0))
-    # returns S(0)**(-1), which is Pow object.  Throws exception
-    # at line 136ish.
-    #s = Phase(0)
-    #t = T(0)
-    #gate_list = [s, t]
-    #id_set = set([])
-    #assert bfs_identity_search(gate_list, 1, max_depth=4) == id_set
+    s = PhaseGate(0)
+    t = TGate(0)
+    gate_list = [s, t]
+    id_set = set([GateIdentity(s, s, s, s)])
+    assert bfs_identity_search(gate_list, 1, max_depth=4) == id_set
+
+    # Throws an error in represent: "exponent must be >= 0"
+    #gate_list = [Dagger(s), t]
+    #id_set = set([GateIdentity(Dagger(s), t, t)])
+    #assert bfs_identity_search(gate_list, 1, max_depth=3) == id_set

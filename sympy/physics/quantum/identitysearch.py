@@ -2,7 +2,7 @@ from collections import deque
 from random import randint
 
 from sympy.external import import_module
-from sympy import Mul, Basic, Number
+from sympy import Mul, Basic, Number, Pow
 from sympy.matrices import Matrix, eye
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
         IdentityGate, gate_simp)
@@ -12,14 +12,17 @@ from sympy.physics.quantum.operator import (UnitaryOperator,
 from sympy.physics.quantum.dagger import Dagger
 
 __all__ = [
+    'is_scalar_sparse_matrix',
+    'is_scalar_nonsparse_matrix',
     'll_op',
     'lr_op',
     'rl_op',
     'rr_op',
+    'generate_gate_rules_with_seq',
+    'generate_gate_rules',
+    'generate_equivalent_ids_with_seq',
     'generate_equivalent_ids',
     'GateIdentity',
-    'is_scalar_sparse_matrix',
-    'is_scalar_nonsparse_matrix',
     'is_degenerate',
     'is_reducible',
     'bfs_identity_search',
@@ -178,6 +181,12 @@ if np and scipy:
 else:
     is_scalar_matrix = is_scalar_nonsparse_matrix
 
+def _get_min_qubits(a_gate):
+    if isinstance(a_gate, Pow):
+        return a_gate.base.min_qubits
+    else:
+        return a_gate.min_qubits
+
 def ll_op(left, rite):
     """Perform a LL operation.  If LL is possible, it
     returns a 2-tuple representing the new gate rule;
@@ -201,11 +210,12 @@ def ll_op(left, rite):
         >>> ll_op((x, y), (z,))
         ((Y(0),), (X(0), Z(0)))
     """
+
     if (len(left) > 0):
         ll_gate = left[0]
         ll_gate_is_unitary = is_scalar_matrix(
                                  (Dagger(ll_gate), ll_gate),
-                                 ll_gate.min_qubits,
+                                 _get_min_qubits(ll_gate),
                                  True)
 
     if (len(left) > 0 and ll_gate_is_unitary):
@@ -241,11 +251,12 @@ def lr_op(left, rite):
         >>> lr_op((x, y), (z,))
         ((X(0),), (Z(0), Y(0)))
     """
+
     if (len(left) > 0):
         lr_gate = left[len(left)-1]
         lr_gate_is_unitary = is_scalar_matrix(
                                  (Dagger(lr_gate), lr_gate),
-                                 lr_gate.min_qubits,
+                                 _get_min_qubits(lr_gate),
                                  True)
 
     if (len(left) > 0 and lr_gate_is_unitary):
@@ -281,11 +292,12 @@ def rl_op(left, rite):
         >>> rl_op((x, y), (z,))
         ((Z(0), X(0), Y(0)), ())
     """
+
     if (len(rite) > 0):
         rl_gate = rite[0]
         rl_gate_is_unitary = is_scalar_matrix(
                                  (Dagger(rl_gate), rl_gate),
-                                 rl_gate.min_qubits,
+                                 _get_min_qubits(rl_gate),
                                  True)
 
     if (len(rite) > 0 and rl_gate_is_unitary):
@@ -321,12 +333,13 @@ def rr_op(left, rite):
         >>> rr_op((x,), (y, z))
         ((X(0), Z(0)), (Y(0),))
     """
+
     if (len(rite) > 0):
         rr_gate = rite[len(rite)-1]
         rr_gate_is_unitary = is_scalar_matrix(
-                               (Dagger(rr_gate), rr_gate),
-                               rr_gate.min_qubits,
-                               True)
+                                 (Dagger(rr_gate), rr_gate),
+                                 _get_min_qubits(rr_gate),
+                                 True)
 
     if (len(rite) > 0 and rr_gate_is_unitary):
         # Get the new right side w/o the rightmost gate
@@ -338,17 +351,11 @@ def rr_op(left, rite):
 
     return None
 
-def generate_equivalent_ids(*gate_seq):
-    """Returns a set of equivalent gate identities.
-
-    A gate identity is a quantum circuit such that the product
-    of the gates in the circuit is equal to a scalar value.
-    For example, XYZ = i, where X, Y, Z are the Pauli gates and
-    i is the imaginary value, is considered a gate identity.
+def generate_gate_rules_with_seq(*gate_seq):
+    """Returns a set of gate rules.
 
     This function uses the four operations (LL, LR, RL, RR)
-    to generate gate rules and, subsequently, to locate equivalent
-    gate identities.
+    to generate the gate rules.
 
     A gate rule is an expression such as ABC = D or AB = CD, where
     A, B, C, and D are gates.  Each value on either side of the
@@ -379,6 +386,91 @@ def generate_equivalent_ids(*gate_seq):
         RR : right circuit, right multiply
              AB = CD -> ABD = CDD -> ABD = C
 
+    The number of gate rules generated is n*(n+1), where n
+    is the number of gates in the sequence (unproven).
+
+    Parameters
+    ==========
+    gate_seq : tuple, Gate
+        A variable length tuple of Gates whose product is equal to
+        a scalar matrix.
+
+    Examples
+    ========
+
+    Find the gate rules of the current circuit:
+
+        >>> from sympy.physics.quantum.identitysearch import \
+                    generate_gate_rules_with_seq
+        >>> from sympy.physics.quantum.gate import X, Y, Z
+        >>> x = X(0); y = Y(0); z = Z(0)
+        >>> generate_equivalent_ids(x, x)
+        set([(X(0), X(0))])
+
+        >>> generate_equivalent_ids(x, y, z)
+        set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
+             (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))])
+    """
+
+    # Each item in queue is a 3-tuple:
+    #     i)   first item is the left side of an equality
+    #    ii)   second item is the right side of an equality
+    #   iii)   third item is the number of operations performed
+    # The argument, gate_seq, will start on the left side, and
+    # the right side will be empty, implying the presence of an
+    # identity.
+    queue = deque()
+    # A set of gate rules
+    rules = set()
+    # Maximum number of operations to perform
+    max_ops = len(gate_seq)
+
+    def process_new_rule(new_rule, ops):
+        if (new_rule is not None):
+            (new_left, new_rite) = new_rule
+
+            if (new_rule not in rules and (new_rite, new_left) not in rules):
+                rules.add(new_rule)
+            # If haven't reached the max limit on operations
+            if (ops + 1 < max_ops):
+                queue.append(new_rule + (ops + 1,))
+
+    queue.append((gate_seq, (), 0))
+    rules.add((gate_seq, ()))
+
+    while (len(queue) > 0):
+        (left, rite, ops) = queue.popleft()
+        #print((left, rite, ops))
+        # Do a LL
+        new_rule = ll_op(left, rite)
+        process_new_rule(new_rule, ops)
+        # Do a LR
+        new_rule = lr_op(left, rite)
+        process_new_rule(new_rule, ops)
+        # Do a RL
+        new_rule = rl_op(left, rite)
+        process_new_rule(new_rule, ops)
+        # Do a RR
+        new_rule = rr_op(left, rite)
+        process_new_rule(new_rule, ops)
+
+    return rules
+
+def generate_gate_rules(circuit):
+    pass
+
+def generate_equivalent_ids_with_seq(*gate_seq):
+    """Returns a set of equivalent gate identities.
+
+    A gate identity is a quantum circuit such that the product
+    of the gates in the circuit is equal to a scalar value.
+    For example, XYZ = i, where X, Y, Z are the Pauli gates and
+    i is the imaginary value, is considered a gate identity.
+
+    This function uses the four operations (LL, LR, RL, RR)
+    to generate the gate rules and, subsequently, to locate equivalent
+    gate identities.
+
     Note that all equivalent identities are reachable in n operations
     from the starting gate identity, where n is the number of gates
     in the sequence.
@@ -395,7 +487,7 @@ def generate_equivalent_ids(*gate_seq):
     Find equivalent gate identities from the current circuit:
 
         >>> from sympy.physics.quantum.identitysearch import \
-                    generate_equivalent_ids
+                    generate_equivalent_ids_with_seq
         >>> from sympy.physics.quantum.gate import X, Y, Z
         >>> x = X(0); y = Y(0); z = Z(0)
         >>> generate_equivalent_ids(x, x)
@@ -405,7 +497,6 @@ def generate_equivalent_ids(*gate_seq):
         set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
              (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))])
     """
-
     # Each item in queue is a 3-tuple:
     #     i)   first item is the left side of an equality
     #    ii)   second item is the right side of an equality
@@ -484,6 +575,9 @@ def generate_equivalent_ids(*gate_seq):
 
     return eq_ids
 
+def generate_equivalent_ids(circuit):
+    pass
+
 class GateIdentity(Basic):
     """Wrapper class for circuits that reduce to a scalar value.
 
@@ -519,22 +613,26 @@ class GateIdentity(Basic):
     def __new__(cls, *args):
         # args should be a tuple - a variable length argument list
         obj = Basic.__new__(cls, *args)
-        obj._eq_ids = generate_equivalent_ids(*args)
+        obj._circuit = Mul(*args)
+        obj._eq_ids = generate_equivalent_ids_with_seq(*args)
 
         return obj
 
     @property
     def circuit(self):
-        return self.args
+        return self._circuit
 
     @property
     def eq_identities(self):
         return self._eq_ids
 
+    @property
+    def sequence(self):
+        return self.args
+
     def __str__(self):
         """Returns the string of gates in a tuple."""
         return str(self.circuit)
-
 
 def is_degenerate(identity_set, gate_identity):
     """Checks if a gate identity is a permutation of another identity.
@@ -703,7 +801,7 @@ def random_identity_search(gate_list, numgates, nqubits):
     """
 
     gate_size = len(gate_list)
-    circuit = (IdentityGate(0),)
+    circuit = ()
 
     for i in range(numgates):
         next_gate = gate_list[randint(0, gate_size - 1)]

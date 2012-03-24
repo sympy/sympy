@@ -6,6 +6,9 @@ More information about Pyevolve available at:
 
 http://pyevolve.sourceforge.net/index.html
 
+TODO:
+* Implement a mutator operator
+* Implement an evaluator
 """
 
 from random import Random
@@ -113,7 +116,7 @@ class GQCLinear(GQCBase):
 def random_reduce(circuit, gate_ids, seed=None):
     """Shorten the length of a quantum circuit.
 
-    qc_random_reduce looks for circuit identities
+    random_reduce looks for circuit identities
     in circuit, randomly chooses one to remove,
     and returns a shorter yet equivalent circuit.
     If no identities are found, the same circuit
@@ -163,7 +166,7 @@ def random_reduce(circuit, gate_ids, seed=None):
 def random_insert(circuit, choices, seed=None):
     """Insert a circuit into another quantum circuit.
 
-    qc_random_insert randomly selects a circuit from
+    random_insert randomly selects a circuit from
     choices and randomly chooses a location to insert
     into circuit.
 
@@ -213,7 +216,7 @@ def linear_init(genome, **args):
         In many cases, will include an instance of GSimpleGA
     """
 
-    new_circuit = qc_random_insert(
+    new_circuit = random_insert(
                       genome.genome_circuit,
                       genome.insert_choices
                   )
