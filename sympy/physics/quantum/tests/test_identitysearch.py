@@ -1,4 +1,5 @@
 from sympy.external import import_module
+from sympy import Mul
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
         IdentityGate, CGate, PhaseGate, TGate, gate_simp)
 from sympy.physics.quantum.identitysearch import *
@@ -14,6 +15,13 @@ def test_generate_gate_rules_with_seq():
     cgate_t = CGate(0, TGate(1))
 
     assert generate_gate_rules_with_seq(x) == set([((x,), ())])
+
+    gate_rules = set([((x,x), ()), ((x,), (x,))])
+    assert generate_gate_rules_with_seq(x, x) == gate_rules
+
+    gate_rules = set([((x,y,x), ()), ((y,x,x), ()), ((x,x,y), ()),
+                      ((y,x), (x,)), ((x,y), (x,)), ((y,), (x,x))])
+    assert generate_gate_rules_with_seq(x, y, x) == gate_rules
 
     gate_rules = set([((x,y,z), ()), ((y,z,x), ()), ((z,x,y), ()),
                       ((), (x,z,y)), ((), (y,x,z)), ((), (z,y,x)),
@@ -47,10 +55,56 @@ def test_generate_gate_rules_with_seq():
     actual = generate_gate_rules_with_seq(x, ph, cgate_t)
     assert actual == gate_rules
 
+def test_generate_gate_rules():
+    (x, y, z, h) = create_gate_sequence()
+    ph = PhaseGate(0)
+    cgate_t = CGate(0, TGate(1))
+
+    # Note: 1 (type int) is not the same as 1 (type One)
+    assert generate_gate_rules(x) == set([(x, Mul())])
+    assert generate_gate_rules(x*x) == set([(Mul(), Mul())])
+
+    gate_rules = set([(x*y*x, Mul()), (y, Mul()),
+                      (y*x, x), (x*y, x)])
+    assert generate_gate_rules(x*y*x) == gate_rules
+
+    gate_rules = set([(x*y*z, Mul()), (y*z*x, Mul()), (z*x*y, Mul()),
+                      (Mul(), x*z*y), (Mul(), y*x*z), (Mul(), z*y*x),
+                      (x, z*y), (y*z, x), (y, x*z),
+                      (z*x, y), (z, y*x), (x*y, z)])
+    actual = generate_gate_rules(x*y*z)
+    assert actual == gate_rules
+
+    gate_rules = set([(Mul(), h*z*y*x), (Mul(), x*h*z*y), (Mul(), y*x*h*z),
+                      (Mul(), z*y*x*h), (h, z*y*x), (x, h*z*y),
+                      (y, x*h*z), (z, y*x*h), (h*x, z*y),
+                      (x*y, h*z), (y*z, x*h), (z*h, y*x),
+                      (h*x*y, z), (x*y*z, h), (y*z*h, x),
+                      (z*h*x, y), (h*x*y*z, Mul()), (x*y*z*h, Mul()),
+                      (y*z*h*x, Mul()), (z*h*x*y, Mul())])
+    actual = generate_gate_rules(x*y*z*h)
+    assert actual == gate_rules
+
+    gate_rules = set([(Mul(), cgate_t**(-1)*ph**(-1)*x),
+                      (Mul(), ph**(-1)*x*cgate_t**(-1)),
+                      (Mul(), x*cgate_t**(-1)*ph**(-1)),
+                      (cgate_t, ph**(-1)*x),
+                      (ph, x*cgate_t**(-1)),
+                      (x, cgate_t**(-1)*ph**(-1)),
+                      (cgate_t*x, ph**(-1)),
+                      (ph*cgate_t, x),
+                      (x*ph, cgate_t**(-1)),
+                      (cgate_t*x*ph, Mul()),
+                      (ph*cgate_t*x, Mul()),
+                      (x*ph*cgate_t, Mul())])
+    actual = generate_gate_rules(x*ph*cgate_t)
+    assert actual == gate_rules
+
 def test_generate_equivalent_ids_with_seq():
     (x, y, z, h) = create_gate_sequence()
 
     assert generate_equivalent_ids_with_seq(x) == set([(x,)])
+    assert generate_equivalent_ids_with_seq(x, x) == set([(x,x)])
     assert generate_equivalent_ids_with_seq(x, y) == set([(x, y), (y, x)])
 
     gate_seq = (x, y, z)
@@ -80,6 +134,41 @@ def test_generate_equivalent_ids_with_seq():
     gate_rules = set([(cnot, h, cgate_z, h), (h, cgate_z, h, cnot),
                       (h, cnot, h, cgate_z), (cgate_z, h, cnot, h)])
     assert generate_equivalent_ids_with_seq(*gate_seq) == gate_rules
+
+def test_generate_equivalent_ids():
+    (x, y, z, h) = create_gate_sequence()
+
+    assert generate_equivalent_ids(x) == set([x])
+    assert generate_equivalent_ids(x*x) == set([Mul()])
+    assert generate_equivalent_ids(x*y) == set([x*y, y*x])
+
+    circuit = Mul(*(x, y, z))
+    gate_rules = set([x*y*z, y*z*x, z*x*y, z*y*x,
+                      y*x*z, x*z*y])
+    assert generate_equivalent_ids(circuit) == gate_rules
+
+    circuit = Mul(*(x, y, z, h))
+    gate_rules = set([x*y*z*h, y*z*h*x,
+                      h*x*y*z, h*z*y*x,
+                      z*y*x*h, y*x*h*z,
+                      z*h*x*y, x*h*z*y])
+    assert generate_equivalent_ids(circuit) == gate_rules
+
+    circuit = Mul(*(x, y, x, y))
+    gate_rules = set([x*y*x*y, y*x*y*x])
+    assert generate_equivalent_ids(circuit) == gate_rules
+
+    cgate_y = CGate((1,), y)
+    circuit = Mul(*(y, cgate_y, y, cgate_y))
+    gate_rules = set([y*cgate_y*y*cgate_y, cgate_y*y*cgate_y*y])
+    assert generate_equivalent_ids(circuit) == gate_rules
+
+    cnot = CNOT(1,0)
+    cgate_z = CGate((0,), Z(1))
+    circuit = Mul(*(cnot, h, cgate_z, h))
+    gate_rules = set([cnot*h*cgate_z*h, h*cgate_z*h*cnot,
+                      h*cnot*h*cgate_z, cgate_z*h*cnot*h])
+    assert generate_equivalent_ids(circuit) == gate_rules
 
 def test_is_scalar_nonsparse_matrix():
     numqubits = 2

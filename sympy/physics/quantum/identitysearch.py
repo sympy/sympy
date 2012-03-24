@@ -4,7 +4,7 @@ from random import randint
 from sympy.external import import_module
 from sympy import Mul, Basic, Number, Pow
 from sympy.matrices import Matrix, eye
-from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
+from sympy.physics.quantum.gate import (Gate, X, Y, Z, H, S, T, CNOT,
         IdentityGate, gate_simp)
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.operator import (UnitaryOperator,
@@ -12,21 +12,20 @@ from sympy.physics.quantum.operator import (UnitaryOperator,
 from sympy.physics.quantum.dagger import Dagger
 
 __all__ = [
-    'is_scalar_sparse_matrix',
-    'is_scalar_nonsparse_matrix',
-    'll_op',
-    'lr_op',
-    'rl_op',
-    'rr_op',
-    'generate_gate_rules_with_seq',
+    # Public interfaces
     'generate_gate_rules',
-    'generate_equivalent_ids_with_seq',
     'generate_equivalent_ids',
     'GateIdentity',
+    'bfs_identity_search',
+    'random_identity_search',
+
+    # "Private" functions
+    'is_scalar_sparse_matrix',
+    'is_scalar_nonsparse_matrix',
+    'generate_gate_rules_with_seq',
+    'generate_equivalent_ids_with_seq',
     'is_degenerate',
     'is_reducible',
-    'bfs_identity_search',
-    'random_identity_search'
 ]
 
 np = import_module('numpy', min_python_version=(2, 6))
@@ -352,7 +351,9 @@ def rr_op(left, rite):
     return None
 
 def generate_gate_rules_with_seq(*gate_seq):
-    """Returns a set of gate rules.
+    """Returns a set of gate rules.  Each gate rules is represented
+    as 2-tuple of tuples.  An empty tuple represents an arbitrary
+    scalar value.
 
     This function uses the four operations (LL, LR, RL, RR)
     to generate the gate rules.
@@ -404,12 +405,16 @@ def generate_gate_rules_with_seq(*gate_seq):
                     generate_gate_rules_with_seq
         >>> from sympy.physics.quantum.gate import X, Y, Z
         >>> x = X(0); y = Y(0); z = Z(0)
-        >>> generate_equivalent_ids(x, x)
-        set([(X(0), X(0))])
+        >>> generate_gate_rules_with_seq(x, x)
+        set([((X(0),), (X(0),)), ((X(0), X(0)), ())])
 
-        >>> generate_equivalent_ids(x, y, z)
-        set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
-             (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))])
+        >>> generate_gate_rules_with_seq(x, y, z)
+        set([((), (X(0), Z(0), Y(0))), ((), (Y(0), X(0), Z(0))),
+             ((), (Z(0), Y(0), X(0))), ((X(0),), (Z(0), Y(0))),
+             ((Y(0),), (X(0), Z(0))), ((Z(0),), (Y(0), X(0))),
+             ((X(0), Y(0)), (Z(0),)), ((Y(0), Z(0)), (X(0),)),
+             ((Z(0), X(0)), (Y(0),)), ((X(0), Y(0), Z(0)), ()),
+             ((Y(0), Z(0), X(0)), ()), ((Z(0), X(0), Y(0)), ())])
     """
 
     # Each item in queue is a 3-tuple:
@@ -426,21 +431,21 @@ def generate_gate_rules_with_seq(*gate_seq):
     max_ops = len(gate_seq)
 
     def process_new_rule(new_rule, ops):
-        if (new_rule is not None):
-            (new_left, new_rite) = new_rule
+        if new_rule is not None:
+            new_left, new_rite = new_rule
 
-            if (new_rule not in rules and (new_rite, new_left) not in rules):
+            if new_rule not in rules and (new_rite, new_left) not in rules:
                 rules.add(new_rule)
             # If haven't reached the max limit on operations
-            if (ops + 1 < max_ops):
+            if ops + 1 < max_ops:
                 queue.append(new_rule + (ops + 1,))
 
     queue.append((gate_seq, (), 0))
     rules.add((gate_seq, ()))
 
-    while (len(queue) > 0):
-        (left, rite, ops) = queue.popleft()
-        #print((left, rite, ops))
+    while len(queue) > 0:
+        left, rite, ops = queue.popleft()
+
         # Do a LL
         new_rule = ll_op(left, rite)
         process_new_rule(new_rule, ops)
@@ -457,7 +462,51 @@ def generate_gate_rules_with_seq(*gate_seq):
     return rules
 
 def generate_gate_rules(circuit):
-    pass
+    """Returns a set of gate rules.
+
+    Parameters
+    ==========
+    gate_seq : Mul or Number
+        A Mul expression of Gates whose product is equal to
+        a scalar matrix.
+
+    Examples
+    ========
+
+    Find the gate rules of the current circuit:
+
+        >>> from sympy.physics.quantum.identitysearch import \
+                    generate_gate_rules
+        >>> from sympy.physics.quantum.gate import X, Y, Z
+        >>> x = X(0); y = Y(0); z = Z(0)
+        >>> generate_gate_rules(x*x)
+        set([(1, 1)])
+
+        >>> generate_gate_rules(x*y*z)
+        set([(1, X(0)*Z(0)*Y(0)), (1, Y(0)*X(0)*Z(0)),
+             (1, Z(0)*Y(0)*X(0)), (X(0)*Y(0), Z(0)),
+             (Y(0)*Z(0), X(0)), (Z(0)*X(0), Y(0)),
+             (X(0)*Y(0)*Z(0), 1), (Y(0)*Z(0)*X(0), 1),
+             (Z(0)*X(0)*Y(0), 1), (X(0), Z(0)*Y(0)),
+             (Y(0), X(0)*Z(0)), (Z(0), Y(0)*X(0))])
+    """
+
+    # Make sure we have an Add or Mul.
+    if not isinstance(circuit, Mul) and not isinstance(circuit, Gate):
+        if isinstance(circuit, Number):
+            return set([(Mul(), Mul())])
+        else:
+            raise TypeError('Mul or Number expected, got %r' % circuit)
+
+    gate_seq = (circuit,) if isinstance(circuit, Gate) else circuit.args
+    gate_rule_seqs = generate_gate_rules_with_seq(*gate_seq)
+
+    gate_rules = set()
+    for rule in gate_rule_seqs:
+        left, rite = rule           
+        gate_rules.add((Mul(*left), Mul(*rite)))
+
+    return gate_rules
 
 def generate_equivalent_ids_with_seq(*gate_seq):
     """Returns a set of equivalent gate identities.
@@ -475,6 +524,9 @@ def generate_equivalent_ids_with_seq(*gate_seq):
     from the starting gate identity, where n is the number of gates
     in the sequence.
 
+    The max number of gate identities is 2n, where n is the number
+    of gates in the sequence (unproven).
+
     Parameters
     ==========
     gate_seq : tuple, Gate
@@ -490,93 +542,69 @@ def generate_equivalent_ids_with_seq(*gate_seq):
                     generate_equivalent_ids_with_seq
         >>> from sympy.physics.quantum.gate import X, Y, Z
         >>> x = X(0); y = Y(0); z = Z(0)
-        >>> generate_equivalent_ids(x, x)
+        >>> generate_equivalent_ids_with_seq(x, x)
         set([(X(0), X(0))])
 
-        >>> generate_equivalent_ids(x, y, z)
+        >>> generate_equivalent_ids_with_seq(x, y, z)
         set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
              (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))])
     """
-    # Each item in queue is a 3-tuple:
-    #     i)   first item is the left side of an equality
-    #    ii)   second item is the right side of an equality
-    #   iii)   third item is the number of operations performed
-    # The argument, gate_seq, will start on the left side, and
-    # the right side will be empty, implying the presence of an
-    # identity.
-    queue = deque()
-    # visited is a list of equalities that's been visited
-    vis = []
+    # Filter through the gate rules and keep the rules
+    # with an empty tuple either on the left or right side
+
     # A set of equivalent gate identities
     eq_ids = set()
-    # Maximum number of operations to perform
-    max_ops = len(gate_seq)
 
-    queue.append((gate_seq, (), 0))
-    vis.append((gate_seq, ()))
-    eq_ids.add(gate_seq)
-
-    while (len(queue) > 0):
-        rule = queue.popleft()
-        left = rule[0]
-        rite = rule[1]
-        ops = rule[2]
-
-        # Do a LL, if possible
-        new_rule = ll_op(left, rite)
-        if (new_rule is not None):
-            (new_left, new_rite) = new_rule
-
-            # If the left side is empty (left side is scalar)
-            if (len(new_left) == 0 and new_rite not in eq_ids):
-                eq_ids.add(new_rite)
-            # If the equality has not been seen and has not reached the
-            # max limit on operations
-            elif (new_rule not in vis and ops + 1 < max_ops):
-                queue.append(new_rule + (ops + 1,))
-
-            vis.append(new_rule)
-
-        # Do a LR, if possible
-        new_rule = lr_op(left, rite)
-        if (new_rule is not None):
-            (new_left, new_rite) = new_rule
-
-            if (len(new_left) == 0 and new_rite not in eq_ids):
-                eq_ids.add(new_rite)
-            elif (new_rule not in vis and ops + 1 < max_ops):
-                queue.append(new_rule + (ops + 1,))
-
-            vis.append(new_rule)
-
-        # Do a RL, if possible
-        new_rule = rl_op(left, rite)
-        if (new_rule is not None):
-            (new_left, new_rite) = new_rule
-
-            if (len(new_rite) == 0 and new_left not in eq_ids):
-                eq_ids.add(new_left)
-            elif (new_rule not in vis and ops + 1 < max_ops):
-                queue.append(new_rule + (ops + 1,))
-
-            vis.append(new_rule)
-
-        # Do a RR, if possible
-        new_rule = rr_op(left, rite)
-        if (new_rule is not None):
-            (new_left, new_rite) = new_rule
-
-            if (len(new_rite) == 0 and new_left not in eq_ids):
-                eq_ids.add(new_left)
-            elif (new_rule not in vis and ops + 1 < max_ops):
-                queue.append(new_rule + (ops + 1,))
-
-            vis.append(new_rule)
+    gate_rules = generate_gate_rules_with_seq(*gate_seq)
+    for rule in gate_rules:
+        l, r = rule
+        if l == ():
+            eq_ids.add(r)
+        elif r == ():
+            eq_ids.add(l)
 
     return eq_ids
 
 def generate_equivalent_ids(circuit):
-    pass
+    """Returns a set of equivalent gate identities.
+
+    Parameters
+    ==========
+    gate_seq : Mul or Number
+        A Mul expression of Gates whose product is equal to
+        a scalar matrix.
+
+    Examples
+    ========
+
+    Find the gate rules of the current circuit:
+
+        >>> from sympy.physics.quantum.identitysearch import \
+                    generate_equivalent_ids
+        >>> from sympy.physics.quantum.gate import X, Y, Z
+        >>> x = X(0); y = Y(0); z = Z(0)
+        >>> generate_equivalent_ids(x*x)
+        set([1])
+
+        >>> generate_equivalent_ids(x*y*z)
+        set([X(0)*Y(0)*Z(0), X(0)*Z(0)*Y(0), Y(0)*X(0)*Z(0),
+             Y(0)*Z(0)*X(0), Z(0)*X(0)*Y(0), Z(0)*Y(0)*X(0)])
+    """
+
+    # Make sure we have an Add or Mul.
+    if not isinstance(circuit, Mul) and not isinstance(circuit, Gate):
+        if isinstance(circuit, Number):
+            return set([Mul()])
+        else:
+            raise TypeError('Mul or Number expected, got %r' % circuit)
+
+    gate_seq = (circuit,) if isinstance(circuit, Gate) else circuit.args
+    eq_id_seqs = generate_equivalent_ids_with_seq(*gate_seq)
+
+    convert_to_mul = lambda id_seq: Mul(*id_seq)
+    eq_ids = set(map(convert_to_mul, eq_id_seqs))
+
+    return eq_ids
 
 class GateIdentity(Basic):
     """Wrapper class for circuits that reduce to a scalar value.
@@ -602,7 +630,7 @@ class GateIdentity(Basic):
         >>> x = X(0); y = Y(0); z = Z(0)
         >>> an_identity = GateIdentity(x, y, z)
         >>> an_identity.circuit
-        (X(0), Y(0), Z(0))
+        X(0)*Y(0)*Z(0)
 
         >>> an_identity.eq_identities
         set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
@@ -614,6 +642,7 @@ class GateIdentity(Basic):
         # args should be a tuple - a variable length argument list
         obj = Basic.__new__(cls, *args)
         obj._circuit = Mul(*args)
+        obj._rules = generate_gate_rules_with_seq(*args)
         obj._eq_ids = generate_equivalent_ids_with_seq(*args)
 
         return obj
@@ -621,6 +650,10 @@ class GateIdentity(Basic):
     @property
     def circuit(self):
         return self._circuit
+
+    @property
+    def gate_rules(self):
+        return self._rules
 
     @property
     def eq_identities(self):
