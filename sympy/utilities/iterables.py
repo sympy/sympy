@@ -443,23 +443,30 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
 def capture(func):
     """Return the printed output of func().
 
-    `func` should be an argumentless function that produces output with
+    `func` should be a function without arguments that produces output with
     print statements.
 
     >>> from sympy.utilities.iterables import capture
+    >>> from sympy import pprint
+    >>> from sympy.abc import x
     >>> def foo():
     ...     print 'hello world!'
     ...
     >>> 'hello' in capture(foo) # foo, not foo()
     True
+    >>> capture(lambda: pprint(2/x))
+    '2\\n-\\nx\\n'
+
     """
     import StringIO
     import sys
 
     stdout = sys.stdout
     sys.stdout = file = StringIO.StringIO()
-    func()
-    sys.stdout = stdout
+    try:
+        func()
+    finally:
+        sys.stdout = stdout
     return file.getvalue()
 
 def sift(expr, keyfunc):
