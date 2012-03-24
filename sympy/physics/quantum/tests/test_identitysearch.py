@@ -1,5 +1,5 @@
 from sympy.external import import_module
-from sympy import Mul
+from sympy import Mul, Integer
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
         IdentityGate, CGate, PhaseGate, TGate, gate_simp)
 from sympy.physics.quantum.identitysearch import *
@@ -61,42 +61,42 @@ def test_generate_gate_rules():
     cgate_t = CGate(0, TGate(1))
 
     # Note: 1 (type int) is not the same as 1 (type One)
-    assert generate_gate_rules(x) == set([(x, Mul())])
-    assert generate_gate_rules(x*x) == set([(Mul(), Mul())])
+    assert generate_gate_rules(x) == set([(x, Integer(1))])
+    assert generate_gate_rules(x*x) == set([(Integer(1), Integer(1))])
 
-    gate_rules = set([(x*y*x, Mul()), (y, Mul()),
+    gate_rules = set([(x*y*x, Integer(1)), (y, Integer(1)),
                       (y*x, x), (x*y, x)])
     assert generate_gate_rules(x*y*x) == gate_rules
 
-    gate_rules = set([(x*y*z, Mul()), (y*z*x, Mul()), (z*x*y, Mul()),
-                      (Mul(), x*z*y), (Mul(), y*x*z), (Mul(), z*y*x),
+    gate_rules = set([(x*y*z, Integer(1)), (y*z*x, Integer(1)), (z*x*y, Integer(1)),
+                      (Integer(1), x*z*y), (Integer(1), y*x*z), (Integer(1), z*y*x),
                       (x, z*y), (y*z, x), (y, x*z),
                       (z*x, y), (z, y*x), (x*y, z)])
     actual = generate_gate_rules(x*y*z)
     assert actual == gate_rules
 
-    gate_rules = set([(Mul(), h*z*y*x), (Mul(), x*h*z*y), (Mul(), y*x*h*z),
-                      (Mul(), z*y*x*h), (h, z*y*x), (x, h*z*y),
+    gate_rules = set([(Integer(1), h*z*y*x), (Integer(1), x*h*z*y), (Integer(1), y*x*h*z),
+                      (Integer(1), z*y*x*h), (h, z*y*x), (x, h*z*y),
                       (y, x*h*z), (z, y*x*h), (h*x, z*y),
                       (x*y, h*z), (y*z, x*h), (z*h, y*x),
                       (h*x*y, z), (x*y*z, h), (y*z*h, x),
-                      (z*h*x, y), (h*x*y*z, Mul()), (x*y*z*h, Mul()),
-                      (y*z*h*x, Mul()), (z*h*x*y, Mul())])
+                      (z*h*x, y), (h*x*y*z, Integer(1)), (x*y*z*h, Integer(1)),
+                      (y*z*h*x, Integer(1)), (z*h*x*y, Integer(1))])
     actual = generate_gate_rules(x*y*z*h)
     assert actual == gate_rules
 
-    gate_rules = set([(Mul(), cgate_t**(-1)*ph**(-1)*x),
-                      (Mul(), ph**(-1)*x*cgate_t**(-1)),
-                      (Mul(), x*cgate_t**(-1)*ph**(-1)),
+    gate_rules = set([(Integer(1), cgate_t**(-1)*ph**(-1)*x),
+                      (Integer(1), ph**(-1)*x*cgate_t**(-1)),
+                      (Integer(1), x*cgate_t**(-1)*ph**(-1)),
                       (cgate_t, ph**(-1)*x),
                       (ph, x*cgate_t**(-1)),
                       (x, cgate_t**(-1)*ph**(-1)),
                       (cgate_t*x, ph**(-1)),
                       (ph*cgate_t, x),
                       (x*ph, cgate_t**(-1)),
-                      (cgate_t*x*ph, Mul()),
-                      (ph*cgate_t*x, Mul()),
-                      (x*ph*cgate_t, Mul())])
+                      (cgate_t*x*ph, Integer(1)),
+                      (ph*cgate_t*x, Integer(1)),
+                      (x*ph*cgate_t, Integer(1))])
     actual = generate_gate_rules(x*ph*cgate_t)
     assert actual == gate_rules
 
@@ -139,7 +139,7 @@ def test_generate_equivalent_ids():
     (x, y, z, h) = create_gate_sequence()
 
     assert generate_equivalent_ids(x) == set([x])
-    assert generate_equivalent_ids(x*x) == set([Mul()])
+    assert generate_equivalent_ids(x*x) == set([Integer(1)])
     assert generate_equivalent_ids(x*y) == set([x*y, y*x])
 
     circuit = Mul(*(x, y, z))

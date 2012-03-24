@@ -2,7 +2,7 @@ from collections import deque
 from random import randint
 
 from sympy.external import import_module
-from sympy import Mul, Basic, Number, Pow
+from sympy import Mul, Basic, Number, Pow, Integer
 from sympy.matrices import Matrix, eye
 from sympy.physics.quantum.gate import (Gate, X, Y, Z, H, S, T, CNOT,
         IdentityGate, gate_simp)
@@ -494,7 +494,7 @@ def generate_gate_rules(circuit):
     # Make sure we have an Add or Mul.
     if not isinstance(circuit, Mul) and not isinstance(circuit, Gate):
         if isinstance(circuit, Number):
-            return set([(Mul(), Mul())])
+            return set([(Integer(1), Integer(1))])
         else:
             raise TypeError('Mul or Number expected, got %r' % circuit)
 
@@ -594,7 +594,7 @@ def generate_equivalent_ids(circuit):
     # Make sure we have an Add or Mul.
     if not isinstance(circuit, Mul) and not isinstance(circuit, Gate):
         if isinstance(circuit, Number):
-            return set([Mul()])
+            return set([Integer(1)])
         else:
             raise TypeError('Mul or Number expected, got %r' % circuit)
 
