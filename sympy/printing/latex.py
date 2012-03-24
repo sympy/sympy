@@ -920,16 +920,11 @@ class LatexPrinter(Printer):
             return "%s^T"%self._print(mat)
 
     def _print_MatAdd(self, expr):
-        c, terms = expr.as_coeff_Add()
         tex = []
-        if c < 0:
-            tex.append("-")
-            tex.append(self._print(-c))
+        for term in Add.make_args(expr):
+            coeff, tail = term.as_coeff_Mul()
 
-        for term in Add.make_args(terms):
-            coeff, M = term.as_coeff_Mul()
-
-            if coeff < 0:
+            if coeff.is_negative:
                 tex.append("-")
                 coeff = -coeff
             elif tex:
@@ -937,33 +932,28 @@ class LatexPrinter(Printer):
 
             if coeff is not S.One:
                 tex.append(self._print(coeff))
-            tex.append(self._print(M))
+            tex.append(self._print(tail))
 
         return " ".join(tex)
 
     def _print_MatMul(self, expr):
         coeff, tail = expr.as_coeff_Mul()
 
-        tex = " " + self._print(coeff)
+        tex = []
+        if coeff.is_negative:
+            tex.append("-")
+            coeff = -coeff
+        tex.append(self._print(coeff))
 
-        if not tail.is_Mul:
-            return tex + self._print(tail)
-
-        separator = " "
-
-        args = tail.args
-        for term in args:
-            pretty = self._print(term)
+        for term in C.Mul.make_args(tail):
+            pretty = str(self._print(term))
 
             if term.is_Add:
-                term_tex = (r"\left(%s\right)" % pretty)
-            else:
-                term_tex = str(pretty)
+                pretty = (r"\left(%s\right)" % pretty)
 
-            tex += separator
-            tex += term_tex
+            tex.append(pretty)
 
-        return tex[1:]
+        return ' '.join(tex)
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp

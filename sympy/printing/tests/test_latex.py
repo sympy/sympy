@@ -462,6 +462,19 @@ def test_matAdd():
     assert l._print_MatAdd(B - 2*C) in ['B - 2 C', '- 2 C + B']
     assert l._print_MatAdd(B + 2*C) in ['B + 2 C', '2 C + B']
 
+def test_matMul():
+    from sympy import MatrixSymbol
+    from sympy.printing.latex import LatexPrinter
+    A = MatrixSymbol('A', 5, 5)
+    B = MatrixSymbol('B', 5, 5)
+    x = Symbol('x')
+    l = LatexPrinter()
+    assert l._print_MatMul(2*A) == '2 A'
+    assert l._print_MatMul(2*x*A) == '2 x A'
+    assert l._print_MatMul(-2*A) == '- 2 A'
+    assert l._print_MatMul(-2*A*(A+2*B)) in [r'- 2 A \left(A + 2 B\right)',
+        r'- 2 A \left(2 B + A\right)']
+
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, Where
     X = Normal(0, 1, symbol=Symbol('x1'))
