@@ -2,8 +2,8 @@
 
 __all__ = [
     'kmp_table',
-    'find_subcircuit',
-    'remove_subcircuit'
+    'find_subcircuit_with_seq',
+    'remove_subcircuit_with_seq',
 ]
 
 def kmp_table(word):
@@ -37,7 +37,7 @@ def kmp_table(word):
 
     return table
 
-def find_subcircuit(circuit, subcircuit, start=0, end=0):
+def find_subcircuit_with_seq(circuit, subcircuit, start=0, end=0):
     """Finds the subcircuit in circuit, if it exists.
 
     If the subcircuit exists, the index of the start of
@@ -85,7 +85,7 @@ def find_subcircuit(circuit, subcircuit, start=0, end=0):
 
     return -1
 
-def remove_subcircuit(circuit, subcircuit, pos=0):
+def remove_subcircuit_with_seq(circuit, subcircuit, pos=0):
     """Removes subcircuit from circuit, if it exists.
 
     If multiple instances of subcircuit exists, the
@@ -111,7 +111,7 @@ def remove_subcircuit(circuit, subcircuit, pos=0):
         pos = 0
 
     # Look for the subcircuit starting at pos
-    loc = find_subcircuit(circuit, subcircuit, start=pos)
+    loc = find_subcircuit_with_seq(circuit, subcircuit, start=pos)
 
     # If subcircuit was found
     if loc > -1:

@@ -1,3 +1,4 @@
+from sympy import Wild
 from sympy.physics.quantum.circuitutils import *
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
         CGate)
@@ -25,7 +26,7 @@ def test_kmp_table():
     expected_table = [-1, 0, 1, 0, 0]
     assert expected_table == kmp_table(word)
 
-def test_find_subcircuit():
+def test_find_subcircuit_with_seq():
     x = X(0)
     y = Y(0)
     z = Z(0)
@@ -33,32 +34,40 @@ def test_find_subcircuit():
     x1 = X(1)
     y1 = Y(1)
 
+    i0 = Wild('i0')
+    x_i0 = X(i0)
+    y_i0 = Y(i0)
+    z_i0 = Z(i0)
+
     circuit = (x, y, z)
 
-    assert find_subcircuit(circuit, (x,)) == 0
-    assert find_subcircuit(circuit, (x1,)) == -1
-    assert find_subcircuit(circuit, (y,)) == 1
-    assert find_subcircuit(circuit, (h,)) == -1
-    assert find_subcircuit(circuit, (x, h)) == -1
-    assert find_subcircuit(circuit, (x, y, z)) == 0
-    assert find_subcircuit(circuit, (y, z)) == 1
-    assert find_subcircuit(circuit, (x, y, z, h)) == -1
-    assert find_subcircuit(circuit, (z, y, x)) == -1
-    assert find_subcircuit(circuit, (x,), start=2, end=1) == -1
+    assert find_subcircuit_with_seq(circuit, (x,)) == 0
+    assert find_subcircuit_with_seq(circuit, (x1,)) == -1
+    assert find_subcircuit_with_seq(circuit, (y,)) == 1
+    assert find_subcircuit_with_seq(circuit, (h,)) == -1
+    assert find_subcircuit_with_seq(circuit, (x, h)) == -1
+    assert find_subcircuit_with_seq(circuit, (x, y, z)) == 0
+    assert find_subcircuit_with_seq(circuit, (y, z)) == 1
+    assert find_subcircuit_with_seq(circuit, (x, y, z, h)) == -1
+    assert find_subcircuit_with_seq(circuit, (z, y, x)) == -1
+    assert find_subcircuit_with_seq(circuit, (x,), start=2, end=1) == -1
 
     circuit = (x, y, x, y, z)
-    assert find_subcircuit(circuit, (x, y, z)) == 2
-    assert find_subcircuit(circuit, (x,), start=1) == 2
-    assert find_subcircuit(circuit, (x, y), start=1, end=2) == -1
-    assert find_subcircuit(circuit, (x, y), start=1, end=3) == -1
-    assert find_subcircuit(circuit, (x, y), start=1, end=4) == 2
-    assert find_subcircuit(circuit, (x, y), start=2, end=4) == 2
+    assert find_subcircuit_with_seq(circuit, (x, y, z)) == 2
+    assert find_subcircuit_with_seq(circuit, (x,), start=1) == 2
+    assert find_subcircuit_with_seq(circuit, (x, y), start=1, end=2) == -1
+    assert find_subcircuit_with_seq(circuit, (x, y), start=1, end=3) == -1
+    assert find_subcircuit_with_seq(circuit, (x, y), start=1, end=4) == 2
+    assert find_subcircuit_with_seq(circuit, (x, y), start=2, end=4) == 2
 
     circuit = (x, y, z, x1, x, y, z, h, x, y, x1,
                x, y, z, h, y1, h)
-    assert find_subcircuit(circuit, (x, y, z, h, y1)) == 11
+    assert find_subcircuit_with_seq(circuit, (x, y, z, h, y1)) == 11
 
-def test_remove_subcircuit():
+    circuit = (x, y, x_i0, y_i0, z_i0, z)
+    assert find_subcircuit_with_seq(circuit, (x_i0, y_i0, z_i0)) == 2
+
+def test_remove_subcircuit_with_seq():
     x = X(0)
     y = Y(0)
     z = Z(0)
@@ -69,24 +78,24 @@ def test_remove_subcircuit():
     # Standard cases
     circuit = (z, y, x, x)
     remove = (z, y, x)
-    assert remove_subcircuit(circuit, remove) == (x,)
-    assert remove_subcircuit(circuit, remove + (x,)) == ()
-    assert remove_subcircuit(circuit, remove, pos=1) == circuit
-    assert remove_subcircuit(circuit, remove, pos=0) == (x,)
-    assert remove_subcircuit(circuit, (x, x), pos=2) == (z, y)
-    assert remove_subcircuit(circuit, (h,)) == circuit
+    assert remove_subcircuit_with_seq(circuit, remove) == (x,)
+    assert remove_subcircuit_with_seq(circuit, remove + (x,)) == ()
+    assert remove_subcircuit_with_seq(circuit, remove, pos=1) == circuit
+    assert remove_subcircuit_with_seq(circuit, remove, pos=0) == (x,)
+    assert remove_subcircuit_with_seq(circuit, (x, x), pos=2) == (z, y)
+    assert remove_subcircuit_with_seq(circuit, (h,)) == circuit
 
     circuit = (x, y, x, y, z)
     remove = (x, y, z)
-    assert remove_subcircuit(circuit, remove) == (x, y)
+    assert remove_subcircuit_with_seq(circuit, remove) == (x, y)
     remove = (x, y, x, y)
-    assert remove_subcircuit(circuit, remove) == (z,)
+    assert remove_subcircuit_with_seq(circuit, remove) == (z,)
 
     circuit = (x, h, cgate_z, h, cnot)
     remove = (x, h, cgate_z)
-    assert remove_subcircuit(circuit, remove, pos=-1) == (h, cnot)
-    assert remove_subcircuit(circuit, remove, pos=1) == circuit
+    assert remove_subcircuit_with_seq(circuit, remove, pos=-1) == (h, cnot)
+    assert remove_subcircuit_with_seq(circuit, remove, pos=1) == circuit
     remove = (h, h)
-    assert remove_subcircuit(circuit, remove) == circuit
+    assert remove_subcircuit_with_seq(circuit, remove) == circuit
     remove = (h, cgate_z, h, cnot)
-    assert remove_subcircuit(circuit, remove) == (x,)
+    assert remove_subcircuit_with_seq(circuit, remove) == (x,)
