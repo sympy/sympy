@@ -6,8 +6,8 @@ All symbolic objects have assumption attributes that can be accessed via
 
 Assumptions determine certain properties of symbolic objects. Assumptions
 can have 3 possible values: True, False, None.  None is returned when it is
-impossible to say something about the property. For example, a Symbol is
-not know beforehand to be positive.
+impossible to say something about the property. For example, a generic Symbol
+is not known beforehand to be positive.
 
 By default, all symbolic values are in the largest set in the given context
 without specifying the property. For example, a symbol that has a property
@@ -32,7 +32,7 @@ Here follows a list of possible assumption names:
 
 
 Implementation note: assumption values are stored in
-._assumption dictionary or are returned by getter methods (with
+._assumptions dictionary or are returned by getter methods (with
 property decorators) or are attributes of objects/classes.
 
 Examples
