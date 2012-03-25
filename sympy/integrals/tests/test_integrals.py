@@ -733,3 +733,8 @@ def test_issue_1301():
     assert integrate((x**n)*log(x), x) == \
     n*x*x**n*log(x)/(n**2 + 2*n + 1) + x*x**n*log(x)/(n**2 + 2*n + 1) - \
     x*x**n/(n**2 + 2*n + 1)
+
+def test_issue_3154():
+    # Note: this used to raise NotImplementedError
+    assert integrate((sqrt(1-x)+sqrt(1+x))**2/x, x, meijerg=True) == \
+           Integral((sqrt(-x + 1) + sqrt(x + 1))**2/x, x)

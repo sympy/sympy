@@ -836,7 +836,12 @@ class Integral(Expr):
 
             if meijerg is not False and h is None:
                 # rewrite using G functions
-                h = meijerint_indefinite(g, x)
+                try:
+                    h = meijerint_indefinite(g, x)
+                except NotImplementedError:
+                    from sympy.integrals.meijerint import _debug
+                    _debug('NotImplementedError from meijerint_definite')
+                    res = None
                 if h is not None:
                     parts.append(coeff * h)
                     continue
