@@ -14,7 +14,7 @@ def msigma(i):
     ========
 
     >>> from sympy.matrices import Matrix
-    >>> Matrix._sympystr = lambda x, y: x.table()
+    >>> Matrix._sympystr = Matrix.table
     >>> from sympy.physics.matrices import msigma
     >>> msigma(1)
     [0, 1]
@@ -50,7 +50,7 @@ def pat_matrix(m, dx, dy, dz):
     length and 1 unit along the x-axis we get:
 
     >>> from sympy import Matrix
-    >>> Matrix._sympystr = lambda x, y: x.table()
+    >>> Matrix._sympystr = Matrix.table
 
     >>> from sympy.physics.matrices import pat_matrix
     >>> pat_matrix(2,1,0,0)
@@ -91,7 +91,7 @@ def mgamma(mu,lower=False):
     ========
 
     >>> from sympy import Matrix
-    >>> Matrix._sympystr = lambda x, y: x.table()
+    >>> Matrix._sympystr = Matrix.table
 
     >>> from sympy.physics.matrices import mgamma
     >>> mgamma(1)

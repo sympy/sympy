@@ -1323,7 +1323,7 @@ don\'t match.")
         ========
 
         >>> from sympy import Matrix
-        >>> Matrix._sympystr = lambda x, y: x.table()
+        >>> Matrix._sympystr = Matrix.table
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation.josephus(3,6,1)
@@ -1397,7 +1397,7 @@ don\'t match.")
         ========
 
         >>> from sympy import Matrix
-        >>> Matrix._sympystr = lambda x, y: x.table()
+        >>> Matrix._sympystr = Matrix.table
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation.josephus(3,6,1)

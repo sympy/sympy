@@ -60,7 +60,7 @@ class Kane(object):
     Then we create a point and set its velocity in a frame::
 
         >>> from sympy import Matrix
-        >>> Matrix._sympystr = lambda x, y: x.table()
+        >>> Matrix._sympystr = Matrix.table
 
         >>> from sympy import symbols
         >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
