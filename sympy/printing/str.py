@@ -126,14 +126,9 @@ class StrPrinter(Printer):
 
     def _print_FiniteSet(self, s):
         if len(s) > 10:
-            #take ten elements from the set at random
-            q = iter(s)
-            printset = [q.next() for i in xrange(10)]
+            printset = s.args[:3] + ('...',) + s.args[-3:]
         else:
-            printset = s
-        try:
-            printset = sorted(printset)
-        except AttributeError:  pass
+            printset = s.args
         return '{' + ', '.join(self._print(el) for el in printset) + '}'
 
     def _print_Function(self, expr):
