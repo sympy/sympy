@@ -1,6 +1,6 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum)
-from sympy.stats import (Die, Normal, Exponential , P, E, var, covar,
+from sympy.stats import (Die, Normal, Exponential , P, E, variance, covariance,
         skewness, density, given, independent, dependent, where, pspace,
         random_symbols, sample)
 from sympy.stats.rv import ProductPSpace, rs_swap
@@ -89,7 +89,7 @@ def test_Sample():
 
     P(X+Y>0, Y<0, numsamples=10).is_number
     assert E(X+Y, numsamples=10).is_number
-    assert var(X+Y, numsamples=10).is_number
+    assert variance(X+Y, numsamples=10).is_number
 
     raises(ValueError, "P(Y>z, numsamples=5)")
 

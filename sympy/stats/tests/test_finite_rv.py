@@ -1,8 +1,8 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial)
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
-        Hypergeometric, P, E, var, covar, skewness, sample, density, given,
-        independent, dependent, where, FiniteRV, pspace, cdf)
+        Hypergeometric, P, E, variance, covariance, skewness, sample, density,
+        given, independent, dependent, where, FiniteRV, pspace, cdf)
 from sympy.utilities.pytest import raises
 
 oo = S.Infinity
@@ -16,14 +16,14 @@ def test_discreteuniform():
     X = DiscreteUniform([a,b,c])
 
     assert E(X) == (a+b+c)/3
-    assert var(X) == (a**2+b**2+c**2)/3 - (a/3+b/3+c/3)**2
+    assert variance(X) == (a**2+b**2+c**2)/3 - (a/3+b/3+c/3)**2
     assert P(Eq(X, a)) == P(Eq(X, b)) == P(Eq(X, c)) == S('1/3')
 
     Y = DiscreteUniform(range(-5, 5))
 
     # Numeric
     assert E(Y) == S('-1/2')
-    assert var(Y) == S('33/4')
+    assert variance(Y) == S('33/4')
     assert skewness(Y) == 0
     for x in range(-5, 5):
         assert P(Eq(Y, x)) == S('1/10')
@@ -37,14 +37,14 @@ def test_dice():
     a,b = symbols('a b')
 
     assert E(X) == 3+S.Half
-    assert var(X) == S(35)/12
+    assert variance(X) == S(35)/12
     assert E(X+Y) == 7
     assert E(X+X) == 7
     assert E(a*X+b) == a*E(X)+b
-    assert var(X+Y) == var(X) + var(Y)
-    assert var(X+X) == 4 * var(X)
-    assert covar(X,Y) == S.Zero
-    assert covar(X, X+Y) == var(X)
+    assert variance(X+Y) == variance(X) + variance(Y)
+    assert variance(X+X) == 4 * variance(X)
+    assert covariance(X,Y) == S.Zero
+    assert covariance(X, X+Y) == variance(X)
     assert density(Eq(cos(X*S.Pi),1))[True] == S.Half
 
     assert P(X>3) == S.Half
@@ -121,9 +121,9 @@ def test_bernoulli():
     X = Bernoulli(p, 1, 0, symbol='B')
 
     assert E(X) == p
-    assert var(X) == -p**2 + p
+    assert variance(X) == -p**2 + p
     E(a*X+b) == a*E(X)+b
-    var(a*X+b) == a**2 * var(X)
+    variance(a*X+b) == a**2 * variance(X)
 
 def test_cdf():
     D = Die(6)
@@ -156,7 +156,7 @@ def test_binomial_numeric():
         for p in pvals:
             X = Binomial(n, p)
             assert Eq(E(X), n*p)
-            assert Eq(var(X), n*p*(1-p))
+            assert Eq(variance(X), n*p*(1-p))
             if n > 0 and 0 < p < 1:
                 assert Eq(skewness(X), (1-2*p)/sqrt(n*p*(1-p)))
             for k in range(n+1):
@@ -167,7 +167,7 @@ def test_binomial_symbolic():
     p = symbols('p', positive=True)
     X = Binomial(n, p)
     assert Eq(simplify(E(X)), n*p)
-    assert Eq(simplify(var(X)), n*p*(1-p))
+    assert Eq(simplify(variance(X)), n*p*(1-p))
 # Can't detect the equality
 #    assert Eq(simplify(skewness(X)), (1-2*p)/sqrt(n*p*(1-p)))
 
@@ -185,7 +185,7 @@ def test_hypergeometric_numeric():
                 assert sum(density(X).values()) == 1
                 assert E(X) == n * m / N
                 if N > 1:
-                    assert var(X) == n*(m/N)*(N-m)/N*(N-n)/(N-1)
+                    assert variance(X) == n*(m/N)*(N-m)/N*(N-n)/(N-1)
                 # Only test for skewness when defined
                 if N > 2 and 0 < m < N and n < N:
                     assert Eq(skewness(X),simplify((N-2*m)*sqrt(N-1)*(N-2*n)

@@ -1,4 +1,4 @@
-from sympy.stats import (P, E, where, density, var, covar, skewness,
+from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, ContinuousRV, sample)
 from sympy.stats import (Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, Dagum,
                          Exponential, Gamma, Laplace, Logistic, LogNormal,
@@ -10,7 +10,6 @@ from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Piecewise, Integral, sin, Lambda, factorial, binomial, floor)
 from sympy.utilities.pytest import raises, XFAIL
 
-variance = var
 oo = S.Infinity
 
 _x = Dummy("x")
@@ -23,7 +22,7 @@ def test_single_normal():
     Y = X*sigma + mu
 
     assert simplify(E(Y)) == mu
-    assert simplify(var(Y)) == sigma**2
+    assert simplify(variance(Y)) == sigma**2
     pdf = density(Y)
     x = Symbol('x')
     assert pdf(x) == 2**S.Half*exp(-(x - mu)**2/(2*sigma**2))/(2*pi**S.Half*sigma)
@@ -59,13 +58,13 @@ def test_multiple_normal():
     X, Y = Normal(0,1), Normal(0,1)
 
     assert E(X+Y) == 0
-    assert var(X+Y) == 2
-    assert var(X+X) == 4
-    assert covar(X, Y) == 0
-    assert covar(2*X + Y, -X) == -2*var(X)
+    assert variance(X+Y) == 2
+    assert variance(X+X) == 4
+    assert covariance(X, Y) == 0
+    assert covariance(2*X + Y, -X) == -2*variance(X)
 
     assert E(X, Eq(X+Y, 0)) == 0
-    assert var(X, Eq(X+Y, 0)) == S.Half
+    assert variance(X, Eq(X+Y, 0)) == S.Half
 
 def test_symbolic():
     mu1, mu2 = symbols('mu1 mu2', real=True, bounded=True)
@@ -79,8 +78,8 @@ def test_symbolic():
     assert E(X) == mu1
     assert E(X+Y) == mu1+mu2
     assert E(a*X+b) == a*E(X)+b
-    assert var(X) == s1**2
-    assert simplify(var(X+a*Y+b)) == var(X) + a**2*var(Y)
+    assert variance(X) == s1**2
+    assert simplify(variance(X+a*Y+b)) == variance(X) + a**2*variance(Y)
 
     assert E(Z) == 1/rate
     assert E(a*Z+b) == a*E(Z)+b
@@ -122,7 +121,7 @@ def test_ContinuousRV():
     X = ContinuousRV(x, pdf)
     Y = Normal(0, 1)
 
-    assert var(X) == var(Y)
+    assert variance(X) == variance(Y)
     assert P(X>0) == P(Y>0)
 
 
@@ -159,13 +158,13 @@ def test_beta():
 
     # This is too slow
     # assert E(B) == a / (a + b)
-    # assert var(B) == (a*b) / ((a+b)**2 * (a+b+1))
+    # assert variance(B) == (a*b) / ((a+b)**2 * (a+b+1))
 
     # Full symbolic solution is too much, test with numeric version
     a, b = 1, 2
     B = Beta(a, b)
     assert E(B) == a / S(a + b)
-    assert var(B) == (a*b) / S((a+b)**2 * (a+b+1))
+    assert variance(B) == (a*b) / S((a+b)**2 * (a+b+1))
 
 
 def test_betaprime():
@@ -212,7 +211,7 @@ def test_exponential():
     X = Exponential(rate)
 
     assert E(X) == 1/rate
-    assert var(X) == 1/rate**2
+    assert variance(X) == 1/rate**2
     assert skewness(X) == 2
     assert P(X>0) == S(1)
     assert P(X>1) == exp(-rate)
@@ -231,7 +230,7 @@ def test_gamma():
                                 _x**(k - 1)*theta**(-k)*exp(-_x/theta)/gamma(k))
     assert cdf(X, meijerg=True) == Lambda(_z, Piecewise((0, _z < 0),
     (-k*lowergamma(k, 0)/gamma(k + 1) + k*lowergamma(k, _z/theta)/gamma(k + 1), True)))
-    assert var(X) == (-theta**2*gamma(k + 1)**2/gamma(k)**2 +
+    assert variance(X) == (-theta**2*gamma(k + 1)**2/gamma(k)**2 +
            theta*theta**(-k)*theta**(k + 1)*gamma(k + 2)/gamma(k))
 
     k, theta = symbols('k theta', real=True, bounded=True, positive=True)
@@ -239,7 +238,7 @@ def test_gamma():
 
     assert simplify(E(X)) == k*theta
     # can't get things to simplify on this one so we use subs
-    assert var(X).subs(k,5) == (k*theta**2).subs(k, 5)
+    assert variance(X).subs(k,5) == (k*theta**2).subs(k, 5)
     # The following is too slow
     # assert simplify(skewness(X)).subs(k, 5) == (2/sqrt(k)).subs(k, 5)
 
@@ -269,7 +268,7 @@ def test_lognormal():
     X = LogNormal(mean, std)
     # The sympy integrator can't do this too well
     #assert E(X) == exp(mean+std**2/2)
-    #assert var(X) == (exp(std**2)-1) * exp(2*mean + std**2)
+    #assert variance(X) == (exp(std**2)-1) * exp(2*mean + std**2)
 
     # Right now, only density function and sampling works
     # Test sampling: Only e^mean in sample std of 0
@@ -300,7 +299,7 @@ def test_maxwell():
     assert density(X) == (Lambda(_x, sqrt(2)*_x**2*exp(-_x**2/(2*a**2))/
         (sqrt(pi)*a**3)))
     assert E(X) == 2*sqrt(2)*a/sqrt(pi)
-    assert simplify(var(X)) == a**2*(-8 + 3*pi)/pi
+    assert simplify(variance(X)) == a**2*(-8 + 3*pi)/pi
 
 def test_nakagami():
     mu = Symbol("mu", positive=True)
@@ -327,7 +326,7 @@ def test_pareto():
 
     # These fail because SymPy can not deduce that 1/xm != 0
     # assert simplify(E(X)) == alpha*xm/(alpha-1)
-    # assert simplify(var(X)) == xm**2*alpha / ((alpha-1)**2*(alpha-2))
+    # assert simplify(variance(X)) == xm**2*alpha / ((alpha-1)**2*(alpha-2))
 
 def test_weibull_numeric():
     # Test for integers and rationals
@@ -336,7 +335,7 @@ def test_weibull_numeric():
     for b in bvals:
         X = Weibull(a, b)
         assert simplify(E(X)) == simplify(a * gamma(1 + 1/S(b)))
-        assert simplify(var(X)) == simplify(a**2 * gamma(1 + 2/S(b)) - E(X)**2)
+        assert simplify(variance(X)) == simplify(a**2 * gamma(1 + 2/S(b)) - E(X)**2)
         # Not testing Skew... it's slow with int/frac values > 3/2
 
 def test_pareto_numeric():
@@ -385,7 +384,7 @@ def test_uniform():
     X = Uniform(l, l+w)
 
     assert simplify(E(X)) == l + w/2
-    assert simplify(var(X)) == w**2/12
+    assert simplify(variance(X)) == w**2/12
 
     assert P(X<l) == 0 and P(X>l+w) == 0
 

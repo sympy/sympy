@@ -3,7 +3,7 @@ from rv import (probability, expectation, density, where, given, pspace, cdf,
 from sympy import sqrt
 
 __all__ = ['P', 'E', 'density', 'where', 'given', 'sample', 'cdf', 'pspace',
-        'sample_iter', 'var', 'std', 'skewness', 'covar', 'dependent',
+        'sample_iter', 'variance', 'std', 'skewness', 'covariance', 'dependent',
         'independent', 'random_symbols']
 
 def variance(X, condition=None, **kwargs):
@@ -15,23 +15,21 @@ def variance(X, condition=None, **kwargs):
     Examples
     ========
 
-    >>> from sympy.stats import Die, E, Bernoulli, var
+    >>> from sympy.stats import Die, E, Bernoulli, variance
     >>> from sympy import simplify, Symbol
 
     >>> X = Die(6)
     >>> p = Symbol('p')
     >>> B = Bernoulli(p, 1, 0)
 
-    >>> var(2*X)
+    >>> variance(2*X)
     35/3
 
-    >>> simplify(var(B))
+    >>> simplify(variance(B))
     p*(-p + 1)
     """
     return (expectation(X**2, condition, **kwargs) -
             expectation(X, condition, **kwargs)**2)
-var = variance
-
 
 def standard_deviation(X, condition=None, **kwargs):
     """
@@ -65,18 +63,18 @@ def covariance(X, Y, condition=None, **kwargs):
     Examples
     ========
 
-    >>> from sympy.stats import Exponential, covar
+    >>> from sympy.stats import Exponential, covariance
     >>> from sympy import Symbol
 
     >>> rate = Symbol('lambda', positive=True, real=True, bounded = True)
     >>> X = Exponential(rate)
     >>> Y = Exponential(rate)
 
-    >>> covar(X, X)
+    >>> covariance(X, X)
     lambda**(-2)
-    >>> covar(X, Y)
+    >>> covariance(X, Y)
     0
-    >>> covar(X, Y + rate*X)
+    >>> covariance(X, Y + rate*X)
     1/lambda
     """
 
@@ -84,7 +82,6 @@ def covariance(X, Y, condition=None, **kwargs):
             (X - expectation(X, condition, **kwargs)) *
             (Y - expectation(Y, condition, **kwargs)),
                       condition, **kwargs)
-covar = covariance
 
 def skewness(X, condition=None, **kwargs):
 
