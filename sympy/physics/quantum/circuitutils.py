@@ -1,9 +1,13 @@
 """Primitive circuit operations on quantum circuits."""
 
+from sympy import Wild, Integer, Tuple
+from sympy.physics.quantum.gate import Gate
+
 __all__ = [
     'kmp_table',
     'find_subcircuit_with_seq',
     'remove_subcircuit_with_seq',
+    'conv2_symbolic_qubits_with_seq'
 ]
 
 def kmp_table(word):
@@ -124,3 +128,91 @@ def remove_subcircuit_with_seq(circuit, subcircuit, pos=0):
 
     return circuit
 
+def next_symbolic_index(cur):
+    """Returns the "next" symbolic index."""
+
+    # Don't really like this approach of converting Wild
+    # to string.  Advise finding to way to deal with it.
+    symb_str = repr(cur)
+    next_ndx = Integer(symb_str[1:len(symb_str)-1]) + 1
+    return Wild('i%r' % next_ndx)
+
+def conv2_symbolic_qubits_with_seq(*seq, **kargs):
+    """Returns the circuit with symbolic indices and the
+    dictionary mapping symbolic indices to real indices.
+
+    The mapping is 1 to 1 and onto (bijective).
+
+    Parameters
+    ==========
+    seq : tuple, Gate/Integer/tuple
+        A tuple of Gate, Integer, or tuple objects
+    kargs : dict
+        A dictionary of optional arguments.  It is only
+        use to pass in an existing mapping of symbolic
+        indices to real indices and a starting symbolic
+        index.  The type of the starting symbolic index
+        must be a Wild.
+
+    All symbolic indices have the format 'i#', where # is
+    some number >= 0.
+    """
+
+    cur_ndx = Wild('i-1')
+    # keys are symbolic indices; values are real indices
+    ndx_map = {}
+
+    def create_inverse_map(symb_to_real_map):
+        rev_items = lambda item: tuple([item[1], item[0]])
+        return dict(map(rev_items, symb_to_real_map.items()))
+
+    if 'start' in kargs:
+        if not isinstance(kargs['start'], Wild):
+            msg = 'Expected Wild for starting index, got %r.' % kargs['start']
+            raise TypeError(msg)
+        cur_ndx = kargs['start']
+
+    if 'index_map' in kargs:
+        if not isinstance(kargs['index_map'], dict):
+            msg = ('Expected dict for existing map, got ' +
+                   '%r.' % kargs['index_map'])
+            raise TypeError(msg)
+        ndx_map = kargs['index_map']
+
+    # keys are real indices; keys are symbolic indices
+    inv_map = create_inverse_map(ndx_map)
+
+    sym_seq = ()
+    for item in seq:
+        # Nested items, so recurse
+        if isinstance(item, Gate):
+            sym_item, new_map, cur_ndx = conv2_symbolic_qubits_with_seq(
+                                                 *item.args,
+                                                 index_map=ndx_map,
+                                                 start=cur_ndx)
+            ndx_map.update(new_map)
+            inv_map = create_inverse_map(ndx_map)
+
+        elif isinstance(item, tuple) or isinstance(item, Tuple):
+            sym_item, new_map, cur_ndx = conv2_symbolic_qubits_with_seq(
+                                                 *item,
+                                                 index_map=ndx_map,
+                                                 start=cur_ndx)
+            ndx_map.update(new_map)
+            inv_map = create_inverse_map(ndx_map)
+
+        elif item in inv_map:
+            sym_item = inv_map[item]
+
+        else:
+            cur_ndx = next_symbolic_index(cur_ndx)
+            ndx_map[cur_ndx] = item
+            inv_map[item] = cur_ndx
+            sym_item = cur_ndx
+
+        if isinstance(item, Gate):
+            sym_item = item.__class__(*sym_item)
+
+        sym_seq = sym_seq + (sym_item,)
+
+    return sym_seq, ndx_map, cur_ndx
