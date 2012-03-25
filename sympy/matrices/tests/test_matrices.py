@@ -636,6 +636,10 @@ def test_eigen():
     (Rational(5, 8) + sqrt(73)/8, 1,
         [Matrix([[-1/(-sqrt(73)/8 + Rational(-3, 8))], [1]])])]
 
+    M = Matrix(S([ [1, .6, .6], [.6, 1, .9], [.6, .9, 1] ]))
+    assert all(abs(a - b) < 1e-9 for a, b in zip(zip(*M.eigenvects())[0],
+    (0.489531364385073, 0.100000000000000, 2.41046863561493)))
+
 @XFAIL
 def test_sparse_matrix():
     def eye(n):

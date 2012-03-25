@@ -3,13 +3,13 @@ from sympy.core.basic import Basic, C
 from sympy.core.function import count_ops
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Dummy
-from sympy.core.numbers import Integer, ilcm, Rational
+from sympy.core.numbers import Integer, ilcm, Rational, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify, converter, SympifyError
 from sympy.core.compatibility import is_sequence
 
 from sympy.polys import PurePoly, roots, cancel
-from sympy.simplify import simplify as _simplify, signsimp
+from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
@@ -2540,11 +2540,14 @@ class MatrixBase(object):
             else:               # add negative of nonpivot entry to corr vector
                 for j in range(i+1, self.cols):
                     line = pivots.index(i)
-                    if reduced[line, j] != 0:
+                    v = reduced[line, j]
+                    if simplify:
+                        v = simpfunc(v)
+                    if v != 0:
                         if j in pivots:
                             # XXX: Is this the correct error?
                             raise NotImplementedError("Could not compute the nullspace of `self`.")
-                        basis[basiskey.index(j)][i,0] = -1 * reduced[line, j]
+                        basis[basiskey.index(j)][i,0] = -v
         return [self._new(b) for b in basis]
 
     def berkowitz(self):
@@ -2723,18 +2726,20 @@ class MatrixBase(object):
     def eigenvects(self, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
 
-        If the flag ``simplify`` is True, as_content_primitive() will
-        be used to tidy up normalization artifacts; if the flag is a
-        function, that function will be used to do the simplification."""
+        If the flag ``simplify`` is True, as_content_primitive()
+        will be used to tidy up normalization artifacts."""
 
-        simplify = flags.pop('simplify', False)
-        simpfunc = simplify if isinstance(simplify, FunctionType) else \
-            lambda x: signsimp(x).as_content_primitive()
+        simplify = bool(flags.get('simplify', False))
 
-        if 'multiple' in flags:
-            del flags['multiple']
+        # roots doesn't like Floats, so replace them with Rationals
+        float = False
+        if any(v.has(Float) for v in self):
+            float=True
+            self = Matrix(self.rows, self.cols, [nsimplify(v, rational=True) for v in self])
 
-        out, vlist = [], self.eigenvals(**flags)
+        flags.pop('multiple', None) # remove this if it's there
+
+        out, vlist = [], self.eigenvals()
 
         for r, k in vlist.iteritems():
             tmp = self - eye(self.rows)*r
@@ -2744,7 +2749,7 @@ class MatrixBase(object):
             # necessary.
             if not basis:
                 # The nullspace routine failed, try it again with simplification
-                basis = tmp.nullspace(simplify=simpfunc)
+                basis = tmp.nullspace(simplify=simplify)
                 if not basis:
                     raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
             if simplify:
@@ -2754,14 +2759,17 @@ class MatrixBase(object):
                 # denominators.
                 l = 1
                 for i, b in enumerate(basis[0]):
-                    c, p = simpfunc(b)
+                    c, p = signsimp(b).as_content_primitive()
                     if c is not S.One:
                         b = c*p
                         l = ilcm(l, c.q)
                     basis[0][i] = b
                 if l != 1:
                     basis[0] *= l
-            out.append((r, k, [self._new(b) for b in basis]))
+            if float:
+                out.append((r.evalf(), k, [self._new(b).evalf() for b in basis]))
+            else:
+                out.append((r, k, [self._new(b) for b in basis]))
         return out
 
     def singular_values(self):
