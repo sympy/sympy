@@ -69,7 +69,7 @@ def test_all_classes_are_tested():
             if test not in ns:
                 failed.append(module + '.' + name)
 
-    assert not failed, "Missing classes: %s" % ", ".join(failed)
+    assert not failed, "Missing classes: %s.  Please add tests for these to sympy/core/tests/test_args.py." % ", ".join(failed)
 
 def _test_args(obj):
     return all(isinstance(arg, Basic) for arg in obj.args)

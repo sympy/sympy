@@ -390,11 +390,11 @@ class Expr(Basic, EvalfMixin):
         True
         >>> Sum(x, (x, 1, 10)).is_constant()
         True
-        >>> Sum(x, (x, 1, n)).is_constant()
+        >>> Sum(x, (x, 1, n)).is_constant()  # doctest: +SKIP
         False
         >>> Sum(x, (x, 1, n)).is_constant(y)
         True
-        >>> Sum(x, (x, 1, n)).is_constant(n)
+        >>> Sum(x, (x, 1, n)).is_constant(n) # doctest: +SKIP
         False
         >>> Sum(x, (x, 1, n)).is_constant(x)
         True
@@ -451,16 +451,35 @@ class Expr(Basic, EvalfMixin):
         if self.is_zero:
             return True
 
-        # try numerical evaluation to see if we get two different values
+        # try numerical evaluation in reals to see if we get two different
+        # values
         failing_number = None
         if wrt == free:
-            a = self._random()
+            # try 0 and 1 via subsitution
+            a = self.subs(zip(free, [0]*len(free)))
+            if a.is_Rational:
+                b = self.subs(zip(free, [1]*len(free)))
+                if b.is_Rational:
+                    if a != b:
+                        return False
+            # try 0 and 1 via evaluation
+            a = self._random(None, 0, 0, 0, 0)
             if a is not None:
-                b = self._random()
+                b = self._random(None, 1, 0, 1, 0)
                 if b is not None:
                     if a != b:
                         return False
-                    failing_number = a
+                    # try random real
+                    b = self._random(None, -1, 0, 1, 0)
+                    if b is not None:
+                        if a != b:
+                            return False
+                        # try random complex
+                        b = self._random()
+                        if b is not None:
+                            if a != b:
+                                return False
+                            failing_number = a if a.is_number else b
 
         # now we will test each wrt symbol (or all free symbols) to see if the
         # expression depends on them or not using differentiation. This is
@@ -487,11 +506,10 @@ class Expr(Basic, EvalfMixin):
         the result is False.
 
         If ``self`` is a number and has not evaluated to zero, evalf will be
-        used to test the expression evaluates to zero. As long as a value with
-        precision greater than 1 is obtained, this indicates that the
-        computed value has significance (while a precision of 1 indicates
-        that no significant figures were computed by evalf and a precision
-        of -1 indicates that the expression is Rational, thus exact).
+        used to test whether the expression evaluates to zero. If it does so
+        and the result has significance (i.e. the precision is either -1, for
+        a Rational result, or is greater than 1) then the evalf value will be
+        used to return True or False.
 
         """
 
@@ -529,19 +547,47 @@ class Expr(Basic, EvalfMixin):
         return None
 
     def _eval_is_positive(self):
-        if self.is_real and self.is_number:
-            n = self.evalf(1)
-            if n > 0:
-                return True
-            elif n < 0:
+        if self.is_number:
+            if self.is_real is False:
+                return False
+            try:
+                # check to see that we can get a value
+                n2 = self._eval_evalf(1)
+            except AttributeError:
+                n2 = None
+            if n2 is None:
+                return None
+            n, i = self.evalf(2).as_real_imag()
+            if not i.is_Number or not n.is_Number:
+                return False
+            if i:
+                if i._prec != 1:
+                    return False
+            elif n._prec != 1:
+                if n > 0:
+                    return True
                 return False
 
     def _eval_is_negative(self):
-        if self.is_real and self.is_number:
-            n = self.evalf(1)
-            if n < 0:
-                return True
-            elif n > 0:
+        if self.is_number:
+            if self.is_real is False:
+                return False
+            try:
+                # check to see that we can get a value
+                n2 = self._eval_evalf(1)
+            except AttributeError:
+                n2 = None
+            if n2 is None:
+                return None
+            n, i = self.evalf(2).as_real_imag()
+            if not i.is_Number or not n.is_Number:
+                return False
+            if i:
+                if i._prec != 1:
+                    return False
+            elif n._prec != 1:
+                if n < 0:
+                    return True
                 return False
 
     def _eval_interval(self, x, a, b):

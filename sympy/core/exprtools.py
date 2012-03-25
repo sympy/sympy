@@ -21,6 +21,11 @@ def decompose_power(expr):
     """
     Decompose power into symbolic base and integer exponent.
 
+    This is strictly only valid if the exponent from which
+    the integer is extracted is itself an integer or the
+    base is positive. These conditions are assumed and not
+    checked here.
+
     Examples
     ========
 
@@ -65,20 +70,20 @@ class Factors(object):
 
     __slots__ = ['factors', 'gens']
 
-    def __init__(self, factors=None):
+    def __init__(self, factors=None): # Factors
         if factors is None:
             factors = {}
 
         self.factors = factors
         self.gens = frozenset(factors.keys())
 
-    def __hash__(self):
+    def __hash__(self): # Factors
         return hash((tuple(self.factors), self.gens))
 
-    def __repr__(self):
+    def __repr__(self): # Factors
         return "Factors(%s)" % self.factors
 
-    def as_expr(self):
+    def as_expr(self): # Factors
         args = []
         for factor, exp in self.factors.iteritems():
             if exp != 1:
@@ -89,7 +94,7 @@ class Factors(object):
                 args.append(factor)
         return Mul(*args)
 
-    def normal(self, other):
+    def normal(self, other): # Factors
         self_factors = dict(self.factors)
         other_factors = dict(other.factors)
 
@@ -114,7 +119,7 @@ class Factors(object):
 
         return Factors(self_factors), Factors(other_factors)
 
-    def mul(self, other):
+    def mul(self, other): # Factors
         factors = dict(self.factors)
 
         for factor, exp in other.factors.iteritems():
@@ -129,7 +134,7 @@ class Factors(object):
 
         return Factors(factors)
 
-    def div(self, other):
+    def div(self, other): # Factors
         quo, rem = dict(self.factors), {}
 
         for factor, exp in other.factors.iteritems():
@@ -151,13 +156,13 @@ class Factors(object):
 
         return Factors(quo), Factors(rem)
 
-    def quo(self, other):
+    def quo(self, other): # Factors
         return self.div(other)[0]
 
-    def rem(self, other):
+    def rem(self, other): # Factors
         return self.div(other)[1]
 
-    def pow(self, other):
+    def pow(self, other): # Factors
         if type(other) is int and other >= 0:
             factors = {}
 
@@ -169,7 +174,7 @@ class Factors(object):
         else:
             raise ValueError("expected non-negative integer, got %s" % other)
 
-    def gcd(self, other):
+    def gcd(self, other): # Factors
         factors = {}
 
         for factor, exp in self.factors.iteritems():
@@ -179,7 +184,7 @@ class Factors(object):
 
         return Factors(factors)
 
-    def lcm(self, other):
+    def lcm(self, other): # Factors
         factors = dict(self.factors)
 
         for factor, exp in other.factors.iteritems():
@@ -190,19 +195,19 @@ class Factors(object):
 
         return Factors(factors)
 
-    def __mul__(self, other):
+    def __mul__(self, other): # Factors
         if isinstance(other, Factors):
             return self.mul(other)
         else:
             return NotImplemented
 
-    def __divmod__(self, other):
+    def __divmod__(self, other): # Factors
         if isinstance(other, Factors):
             return self.div(other)
         else:
             return NotImplemented
 
-    def __div__(self, other):
+    def __div__(self, other): # Factors
         if isinstance(other, Factors):
             return self.quo(other)
         else:
@@ -210,22 +215,22 @@ class Factors(object):
 
     __truediv__ = __div__
 
-    def __mod__(self, other):
+    def __mod__(self, other): # Factors
         if isinstance(other, Factors):
             return self.rem(other)
         else:
             return NotImplemented
 
-    def __pow__(self, other):
+    def __pow__(self, other): # Factors
         if type(other) is int:
             return self.pow(other)
         else:
             return NotImplemented
 
-    def __eq__(self, other):
+    def __eq__(self, other): # Factors
         return self.factors == other.factors
 
-    def __ne__(self, other):
+    def __ne__(self, other): # Factors
         return not self.__eq__(other)
 
 class Term(object):
@@ -233,7 +238,7 @@ class Term(object):
 
     __slots__ = ['coeff', 'numer', 'denom']
 
-    def __init__(self, term, numer=None, denom=None):
+    def __init__(self, term, numer=None, denom=None): # Term
         if numer is None and denom is None:
             if not term.is_commutative:
                 raise NonCommutativeExpression('commutative expression expected')
@@ -268,16 +273,16 @@ class Term(object):
         self.numer = numer
         self.denom = denom
 
-    def __hash__(self):
+    def __hash__(self): # Term
         return hash((self.coeff, self.numer, self.denom))
 
-    def __repr__(self):
+    def __repr__(self): # Term
         return "Term(%s, %s, %s)" % (self.coeff, self.numer, self.denom)
 
-    def as_expr(self):
+    def as_expr(self): # Term
         return self.coeff*(self.numer.as_expr()/self.denom.as_expr())
 
-    def mul(self, other):
+    def mul(self, other): # Term
         coeff = self.coeff*other.coeff
         numer = self.numer.mul(other.numer)
         denom = self.denom.mul(other.denom)
@@ -286,13 +291,13 @@ class Term(object):
 
         return Term(coeff, numer, denom)
 
-    def inv(self):
+    def inv(self): # Term
         return Term(1/self.coeff, self.denom, self.numer)
 
-    def quo(self, other):
+    def quo(self, other): # Term
         return self.mul(other.inv())
 
-    def pow(self, other):
+    def pow(self, other): # Term
         if other < 0:
             return self.inv().pow(-other)
         else:
@@ -300,23 +305,23 @@ class Term(object):
                         self.numer.pow(other),
                         self.denom.pow(other))
 
-    def gcd(self, other):
+    def gcd(self, other): # Term
         return Term(self.coeff.gcd(other.coeff),
                     self.numer.gcd(other.numer),
                     self.denom.gcd(other.denom))
 
-    def lcm(self, other):
+    def lcm(self, other): # Term
         return Term(self.coeff.lcm(other.coeff),
                     self.numer.lcm(other.numer),
                     self.denom.lcm(other.denom))
 
-    def __mul__(self, other):
+    def __mul__(self, other): # Term
         if isinstance(other, Term):
             return self.mul(other)
         else:
             return NotImplemented
 
-    def __div__(self, other):
+    def __div__(self, other): # Term
         if isinstance(other, Term):
             return self.quo(other)
         else:
@@ -324,24 +329,31 @@ class Term(object):
 
     __truediv__ = __div__
 
-    def __pow__(self, other):
+    def __pow__(self, other): # Term
         if type(other) is int:
             return self.pow(other)
         else:
             return NotImplemented
 
-    def __eq__(self, other):
+    def __eq__(self, other): # Term
         return (self.coeff == other.coeff and
                 self.numer == other.numer and
                 self.denom == other.denom)
 
-    def __ne__(self, other):
+    def __ne__(self, other): # Term
         return not self.__eq__(other)
 
-def _gcd_terms(terms, isprimitive=False):
-    """Helper function for :func:`gcd_terms`. If `isprimitive` is True then the
-    call to primitive for an Add will be skipped. This is useful when the
-    content has already been extrated."""
+def _gcd_terms(terms, isprimitive=False, fraction=True):
+    """Helper function for :func:`gcd_terms`.
+
+    If ``isprimitive`` is True then the call to primitive
+    for an Add will be skipped. This is useful when the
+    content has already been extrated.
+
+    If ``fraction`` is True then the expression will appear over a common
+    denominator, the lcm of all term denominators.
+    """
+
     if isinstance(terms, Basic) and not isinstance(terms, Tuple):
         terms = Add.make_args(terms)
 
@@ -360,16 +372,20 @@ def _gcd_terms(terms, isprimitive=False):
     for i, term in enumerate(terms):
         terms[i] = term.quo(cont)
 
-    denom = terms[0].denom
+    if fraction:
+        denom = terms[0].denom
 
-    for term in terms[1:]:
-        denom = denom.lcm(term.denom)
+        for term in terms[1:]:
+            denom = denom.lcm(term.denom)
 
-    numers = []
+        numers = []
+        for term in terms:
+            numer = term.numer.mul(denom.quo(term.denom))
+            numers.append(term.coeff*numer.as_expr())
+    else:
+        numers = [t.as_expr() for t in terms]
+        denom = Term(S(1)).numer
 
-    for term in terms:
-        numer = term.numer.mul(denom.quo(term.denom))
-        numers.append(term.coeff*numer.as_expr())
 
     cont = cont.as_expr()
     numer = Add(*numers)
@@ -380,15 +396,19 @@ def _gcd_terms(terms, isprimitive=False):
 
     return cont, numer, denom
 
-def gcd_terms(terms, isprimitive=False, clear=True):
-    """
-    Compute the GCD of ``terms`` and put them together. If ``isprimitive`` is
-    True the _gcd_terms will not run the primitive method on the terms.
+def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
+    """Compute the GCD of ``terms`` and put them together.
+
+    If ``isprimitive`` is True the _gcd_terms will not run the primitive
+    method on the terms.
 
     ``clear`` controls the removal of integers from the denominator of an Add
-    expression. When True, all numerical denominator will be cleared; when
-    False the denominators will be cleared only if all terms had numerical
-    denominators.
+    expression. When True (default), all numerical denominator will be cleared;
+    when False the denominators will be cleared only if all terms had numerical
+    denominators other than 1.
+
+    ``fraction``, when True (default), will put the expression over a common
+    denominator.
 
     Examples
     ========
@@ -404,6 +424,21 @@ def gcd_terms(terms, isprimitive=False, clear=True):
     x/2 + 1
     >>> gcd_terms(x/2 + y/2, clear=False)
     (x + y)/2
+    >>> gcd_terms(x/2 + 1/x)
+    (x**2 + 2)/(2*x)
+    >>> gcd_terms(x/2 + 1/x, fraction=False)
+    (x + 2/x)/2
+    >>> gcd_terms(x/2 + 1/x, fraction=False, clear=False)
+    x/2 + 1/x
+
+    >>> gcd_terms(x/2/y + 1/x/y)
+    (x**2 + 2)/(2*x*y)
+    >>> gcd_terms(x/2/y + 1/x/y, fraction=False, clear=False)
+    (x + 2/x)/(2*y)
+
+    See Also
+    ========
+    factor_terms, sympy.polys.polytools.terms_gcd
 
     """
     def mask(terms):
@@ -428,7 +463,7 @@ def gcd_terms(terms, isprimitive=False, clear=True):
         if isexpr: # hence an Add
             terms = list(terms.args)
         terms, reps = mask(terms)
-        cont, numer, denom = _gcd_terms(terms, isprimitive)
+        cont, numer, denom = _gcd_terms(terms, isprimitive, fraction)
         numer = numer.xreplace(reps)
         coeff, factors = cont.as_coeff_Mul()
         return _keep_coeff(coeff, factors*numer/denom, clear=clear)
@@ -449,7 +484,7 @@ def gcd_terms(terms, isprimitive=False, clear=True):
     return terms.func(*[handle(i) for i in terms.args])
 
 
-def factor_terms(expr, radical=False, clear=False):
+def factor_terms(expr, radical=False, clear=False, fraction=False):
     """Remove common factors from terms in all arguments without
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutatives) is performed.
@@ -460,6 +495,9 @@ def factor_terms(expr, radical=False, clear=False):
     If clear=False (default) then coefficients will not be separated
     from a single Add if they can be distributed to leave one or more
     terms with integer coefficients.
+
+    If fraction=True (default is False) then a common denominator will be
+    constructed for the expression.
 
     Examples
     ========
@@ -472,7 +510,7 @@ def factor_terms(expr, radical=False, clear=False):
     >>> factor_terms(x*A + x*A + x*y*A)
     x*(y*A + 2*A)
 
-    When clear is False, a fraction will only appear factored out of an
+    When ``clear`` is False, a rational will only be factored out of an
     Add expression if all terms of the Add have coefficients that are
     fractions:
 
@@ -489,6 +527,10 @@ def factor_terms(expr, radical=False, clear=False):
     >>> factor_terms(x*y/2 + y, clear=False) == _
     True
 
+    See Also
+    ========
+    gcd_terms, sympy.polys.polytools.terms_gcd
+
     """
 
     expr = sympify(expr)
@@ -496,20 +538,32 @@ def factor_terms(expr, radical=False, clear=False):
 
     if not isinstance(expr, Basic) or expr.is_Atom:
         if is_iterable:
-            return type(expr)([factor_terms(i, radical=radical, clear=clear) for i in expr])
+            return type(expr)([factor_terms(i,
+                radical=radical,
+                clear=clear,
+                fraction=fraction) for i in expr])
         return expr
 
     if expr.is_Pow or expr.is_Function or is_iterable or not hasattr(expr, 'args_cnc'):
         args = expr.args
-        newargs = tuple([factor_terms(i, radical=radical, clear=clear) for i in args])
+        newargs = tuple([factor_terms(i,
+            radical=radical,
+            clear=clear,
+            fraction=fraction) for i in args])
         if newargs == args:
             return expr
         return expr.func(*newargs)
 
     cont, p = expr.as_content_primitive(radical=radical)
-    list_args = [gcd_terms(a, isprimitive=True, clear=clear) for a in Add.make_args(p)]
+    list_args = [gcd_terms(a,
+        isprimitive=True,
+        clear=clear,
+        fraction=fraction) for a in Add.make_args(p)]
     p = Add._from_args(list_args) # gcd_terms will fix up ordering
-    p = gcd_terms(p, isprimitive=True, clear=clear)
+    p = gcd_terms(p,
+        isprimitive=True,
+        clear=clear,
+        fraction=fraction)
     return _keep_coeff(cont, p, clear=clear)
 
 def _mask_nc(eq):

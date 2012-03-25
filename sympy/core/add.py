@@ -410,10 +410,10 @@ class Add(AssocOp):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
     # assumption methods
-    _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
-    _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
+    _eval_is_real = lambda self: self._eval_template_is_attr('is_real', when_multiple=None)
+    _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded', when_multiple=None)
+    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
-    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
 
     def _eval_is_odd(self):
         l = [f for f in self.args if not (f.is_even==True)]
@@ -681,13 +681,24 @@ class Add(AssocOp):
         return self.func(*terms)
 
     def _eval_expand_mul(self, deep=True, **hints):
+        hit = False
         sargs, terms = self.args, []
         for term in sargs:
-            if hasattr(term, '_eval_expand_mul'):
+            if term.is_Mul:
+                old = term
+                hints['mul'] = True
+                targs = [t._eval_expand_mul(deep=deep, **hints) for t in term.args]
+                hints['mul'] = False
+                term = Mul(*targs)
                 newterm = term._eval_expand_mul(deep=deep, **hints)
+                hit = hit or newterm != old
             else:
-                newterm = term
+                hints['mul'] = True
+                newterm = term._eval_expand_mul(deep=deep, **hints)
             terms.append(newterm)
+        hints['mul'] = True
+        if not hit:
+            return self
         return self.func(*terms)
 
     def _eval_expand_multinomial(self, deep=True, **hints):
@@ -893,7 +904,7 @@ class Add(AssocOp):
 
         return con, prim
 
-from function import FunctionClass
+from function import FunctionClass, expand_mul
 from mul import Mul, _keep_coeff, prod
 from power import Pow
 from sympy.core.numbers import Rational

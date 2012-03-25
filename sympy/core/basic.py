@@ -638,7 +638,15 @@ class Basic(PicklableWithSlots):
         is_number = self.is_number
         if is_number is False:
             return False
-        return self.is_real and self.is_number
+        if is_real and is_number:
+            return True
+        n, i = self.evalf(2).as_real_imag()
+        if not i.is_Number or not n.is_Number:
+            return False
+        if i:
+            if i._prec != 1:
+                return False
+        return n._prec != 1
 
     @property
     def func(self):

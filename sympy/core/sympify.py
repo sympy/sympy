@@ -5,6 +5,8 @@ from inspect import getmro
 from core import all_classes as sympy_classes
 from sympy.core.compatibility import iterable
 
+import re
+
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
         self.expr = expr
@@ -185,3 +187,5 @@ def _sympify(a):
        see: sympify
     """
     return sympify(a, strict=True)
+
+from sympy.core.basic import C

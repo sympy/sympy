@@ -213,15 +213,15 @@ from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.sympify import sympify
 
-from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt
+from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign
 from sympy.matrices import wronskian
-from sympy.polys import Poly, RootOf
+from sympy.polys import Poly, RootOf, terms_gcd
 from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp
+    simplify, trigsimp, denom
 from sympy.solvers import solve
 
-from sympy.utilities import numbered_symbols, default_sort_key
+from sympy.utilities import numbered_symbols, default_sort_key, sift
 
 # This is a list of hints in the order that they should be applied.  That means
 # that, in general, hints earlier in the list should produce simpler results
@@ -1490,7 +1490,46 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
 
         if not (expr.has(x) and x in expr.free_symbols):
             return constantsymbols[0]
+        new_expr = terms_gcd(expr, clear=False, deep=True)
+        if new_expr.is_Mul:
+            # don't let C1*exp(x) + C2*exp(2*x) become exp(x)*(C1 + C2*exp(x))
+            infac = False
+            asfac = False
+            for m in new_expr.args:
+                if m.func is exp:
+                    asfac = True
+                elif m.is_Add:
+                    infac = any(fi.func is exp for t in m.args for fi in Mul.make_args(t))
+                if asfac and infac:
+                    new_expr = expr
+                    break
+        expr = new_expr
+        # don't allow a number to be factored out of an expression
+        # that has no denominator
         if expr.is_Mul:
+            h, t = expr.as_coeff_Mul()
+            if h != 1 and (t.is_Add or denom(t) == 1):
+                args = list(Mul.make_args(t))
+                for i, a in enumerate(args):
+                    if a.is_Add:
+                        args[i] = h*a
+                        expr = Mul._from_args(args)
+                        break
+            # let numbers absorb into constants of an Add, perhaps
+            # in the base of a power, if all its terms have a constant
+            # symbol in them, e.g. sqrt(2)*(C1 + C2*x) -> C1 + C2*x
+            if expr.is_Mul:
+                d = sift(expr.args, lambda m: m.is_number == True)
+                num = d[True]
+                other = d[False]
+                con_set = set(constantsymbols)
+                if num:
+                    for o in other:
+                        b, e = o.as_base_exp()
+                        if b.is_Add and all(a.args_cnc(cset=True, warn=False)[0] & con_set for a in b.args):
+                            expr = sign(Mul(*num))*Mul._from_args(other)
+                            break
+        if expr.is_Mul: # check again that it's still a Mul
             i, d = expr.as_independent(x, strict=True)
             newi = _take(i)
             if newi != i:
@@ -2902,9 +2941,10 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     >>> pprint(dsolve(f(x).diff(x, 3) - 3*f(x).diff(x, 2) +
     ... 3*f(x).diff(x) - f(x) - exp(x)*log(x), f(x),
     ... hint='nth_linear_constant_coeff_variation_of_parameters'))
-           /                2    3 /log(x)   11\\  x
-    f(x) = |C1 + C2*x + C3*x  + x *|------ - --||*e
-           \                       \  6      36//
+           /                     3                \
+           |                2   x *(6*log(x) - 11)|  x
+    f(x) = |C1 + C2*x + C3*x  + ------------------|*e
+           \                            36        /
 
     References
     ==========

@@ -4,7 +4,8 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float, radsimp, collect_const, hyper)
+    factor, Mul, O, hyper, Add, Float, radsimp, collect_const, hyper,
+    signsimp)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
@@ -156,7 +157,7 @@ def test_simplify():
     f_2 = x*d + y*e + z*f - 1
     f_3 = x*g + y*h + z*i - 1
 
-    solutions = solve([f_1, f_2, f_3], x, y, z, simplified=False)
+    solutions = solve([f_1, f_2, f_3], x, y, z, simplify=False)
 
     assert simplify(solutions[y]) == \
         (a*i+c*d+f*g-a*f-c*g-d*i)/(a*e*i+b*f*g+c*d*h-a*f*h-b*d*i-c*e*g)
@@ -1033,3 +1034,7 @@ def test_unpolarify():
 def test_issue_2998():
     collect(a*y**(2.0*x)+b*y**(2.0*x),y**(x)) == y**(2.0*x)*(a + b)
     collect(a*2**(2.0*x)+b*2**(2.0*x),2**(x)) == 2**(2.0*x)*(a + b)
+
+def test_signsimp():
+    e = x*(-x + 1) + x*(x - 1)
+    assert signsimp(Eq(e, 0)) == True

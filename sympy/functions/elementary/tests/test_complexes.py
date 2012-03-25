@@ -1,5 +1,6 @@
-from sympy import symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log, \
-        pi, arg, conjugate, expand, exp, sin, cos, Function, Abs, zoo
+from sympy import (symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log,
+        pi, arg, conjugate, expand, exp, sin, cos, Function, Abs, zoo, atan2,
+        S)
 from sympy.utilities.pytest import XFAIL
 
 from sympy.utilities.randtest import comp
@@ -112,6 +113,20 @@ def test_sign():
     assert sign(n*m*x) == sign(x)
     x = 0
     assert sign(x).is_zero == True
+
+def test_as_real_imag():
+    n = pi**1000
+    # the special code for working out the real
+    # and complex parts of a power with Integer exponent
+    # should not run if there is no imaginary part, hence
+    # this should not hang
+    assert n.as_real_imag() == (n, 0)
+
+    # issue 3162
+    x = Symbol('x')
+    assert sqrt(x).as_real_imag() == \
+    ((re(x)**2 + im(x)**2)**(S(1)/4)*cos(atan2(im(x), re(x))/2), \
+     (re(x)**2 + im(x)**2)**(S(1)/4)*sin(atan2(im(x), re(x))/2))
 
 @XFAIL
 def test_sign_issue_3068():

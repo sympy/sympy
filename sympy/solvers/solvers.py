@@ -179,7 +179,7 @@ def checksol(f, symbol, sol=None, **flags):
     while 1:
         attempt += 1
         if attempt == 0:
-            val = real_root(f.subs(sol))
+            val = f.subs(sol)
             if val.atoms() & illegal:
                 return False
         elif attempt == 1:

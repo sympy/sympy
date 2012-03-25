@@ -545,21 +545,32 @@ def test_special_is_rational():
     assert (r**r).is_rational is None
     assert (r**x).is_rational is None
 
+@XFAIL
+def test_issue_3176():
+    x = Symbol('x')
+    # both zero or both Muls...but neither "change would be very appreciated.
+    # This is similar to x/x => 1 even though if x = 0, it is really nan.
+    assert type(x*0) == type(0*S.Infinity)
+    if 0*S.Infinity is S.NaN:
+        b = Symbol('b', bounded=None)
+        assert (b*0).is_zero is None
+
 def test_special_assumptions():
     x = Symbol('x')
-    z = Symbol('z', zero=True)
-    z2 = Symbol('z2', zero=True)
+    z2 = z = Symbol('z', zero=True)
+    assert z2 == z == S.Zero
     assert (2*z).is_positive is False
     assert (2*z).is_negative is False
     assert (2*z).is_zero is True
     assert (z2*z).is_positive is False
     assert (z2*z).is_negative is False
     assert (z2*z).is_zero is True
-    # if this doesn't pass, the Mul._eval_is_zero routine
-    # probably needs some attention
-    assert (x*z).is_zero == (0*S.Infinity).is_zero
-    b = Symbol('b', bounded=None)
-    assert (b*z).is_zero is None
+
+    e = -3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2
+    assert (e < 0) is False
+    assert (e > 0) is False
+    assert (e == 0) is False # it's not a literal 0
+    assert e.equals(0) is True
 
 def test_inconsistent():
     # cf. issues 2696 and 2446
