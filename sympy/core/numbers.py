@@ -1795,8 +1795,10 @@ class Zero(IntegerConstant):
     def _eval_power(self, expt):
         if expt.is_positive:
             return self
-        elif expt.is_negative:
+        if expt.is_negative:
             return S.Infinity
+        if expt.is_real is False:
+            return S.NaN
         # infinities are already handled with pos and neg
         # tests above; now throw away leading numbers on Mul
         # exponent
