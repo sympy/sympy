@@ -442,6 +442,9 @@ class InconsistentAssumptions(ValueError):
         return "%s, %s=%s" % (kb, fact, value)
 
 class FactKB(dict):
+    """
+    A simple propositional knowledge base relying on compiled inference rules.
+    """
     def __init__(self, rules):
         self.rules = rules
 
@@ -464,19 +467,15 @@ class FactKB(dict):
             self[k] = v
             return True
 
+    # *********************************************
+    # * This is the workhorse, so keep it *fast*. *
+    # *********************************************
     def deduce_all_facts(self, facts):
-        """Deduce all facts from known facts ({} or [] of (k,v))
+        """
+        Update the KB with all the implications of a list of facts.
 
-           *********************************************
-           * This is the workhorse, so keep it *fast*. *
-           *********************************************
-
-           base  --  previously known facts (must be: fully deduced set)
-                     attention: base is modified *in place*  /optional/
-
-           providing `base` could be needed for performance reasons -- we don't
-           want to spend most of the time just re-deducing base from base
-           (e.g. #base=50, #facts=2)
+        Facts can be specified as a dictionary or as a list of (key, value)
+        pairs.
         """
         # keep frequently used attributes locally, so we'll avoid extra
         # attribute access overhead
@@ -485,15 +484,13 @@ class FactKB(dict):
         beta_rules = self.rules.beta_rules
 
         if isinstance(facts, dict):
-            fseq = facts.iteritems()
-        else:
-            fseq = facts
+            facts = facts.iteritems()
 
-        while True:
+        while facts:
             beta_maytrigger = set()
 
             # --- alpha chains ---
-            for k, v in fseq:
+            for k, v in facts:
                 if not self._tell(k, v) or v is None:
                     continue
 
@@ -504,18 +501,8 @@ class FactKB(dict):
                 beta_maytrigger.update(beta_triggers[k, v])
 
             # --- beta chains ---
-
-            # if no beta-rules may trigger -- it's an end-of-story
-            if not beta_maytrigger:
-                break
-            fseq = []
-            # let's see which beta-rules to trigger
+            facts = []
             for bidx in beta_maytrigger:
                 bcond, bimpl = beta_rules[bidx]
-                for k, v in bcond:
-                    val = self.get(k)
-                    if val is not v:
-                        break
-                else:
-                    fseq.append(bimpl)
-        return self
+                if all(self.get(k) is v for k, v in bcond):
+                    facts.append(bimpl)

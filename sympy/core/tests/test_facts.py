@@ -135,10 +135,12 @@ def test_FactRules_parse():
 def test_FactRules_parse2():
     raises(ValueError, "FactRules('a -> !a')")
 
-
 def test_FactRules_deduce():
     f = FactRules(['a -> b', 'b -> c', 'b -> d', 'c -> e'])
-    D = lambda facts: FactKB(f).deduce_all_facts(facts)
+    def D(facts):
+        kb = FactKB(f)
+        kb.deduce_all_facts(facts)
+        return kb
 
     assert D({'a': T})  == {'a': T, 'b': T, 'c': T, 'd': T, 'e': T}
     assert D({'b': T})  == {        'b': T, 'c': T, 'd': T, 'e': T}
@@ -157,7 +159,10 @@ def test_FactRules_deduce():
 def test_FactRules_deduce2():
     # pos/neg/zero, but the rules are not sufficient to derive all relations
     f = FactRules(['pos -> !neg', 'pos -> !z'])
-    D = lambda facts: FactKB(f).deduce_all_facts(facts)
+    def D(facts):
+        kb = FactKB(f)
+        kb.deduce_all_facts(facts)
+        return kb
 
     assert D({'pos':T}) == {'pos': T, 'neg': F, 'z': F}
     assert D({'pos':F}) == {'pos': F                  }
@@ -168,7 +173,6 @@ def test_FactRules_deduce2():
 
     # pos/neg/zero. rules are sufficient to derive all relations
     f = FactRules(['pos -> !neg', 'neg -> !pos', 'pos -> !z', 'neg -> !z'])
-    D = lambda facts: FactKB(f).deduce_all_facts(facts)
 
     assert D({'pos':T}) == {'pos': T, 'neg': F, 'z': F}
     assert D({'pos':F}) == {'pos': F                  }
@@ -180,10 +184,11 @@ def test_FactRules_deduce2():
 
 def test_FactRules_deduce_multiple():
     # deduction that involves _several_ starting points
-
-    # TODO add the same check for 'npos == real & !pos' ?
     f = FactRules(['real == pos | npos'])
-    D = lambda facts: FactKB(f).deduce_all_facts(facts)
+    def D(facts):
+        kb = FactKB(f)
+        kb.deduce_all_facts(facts)
+        return kb
 
     assert D({'real': T})   == {'real': T}
     assert D({'real': F})   == {'real': F, 'pos': F, 'npos': F}
@@ -200,9 +205,11 @@ def test_FactRules_deduce_multiple():
 
 
 def test_FactRules_deduce_multiple2():
-
     f = FactRules(['real == neg | zero | pos'])
-    D = lambda facts: FactKB(f).deduce_all_facts(facts)
+    def D(facts):
+        kb = FactKB(f)
+        kb.deduce_all_facts(facts)
+        return kb
 
     assert D({'real': T})   == {'real': T}
     assert D({'real': F})   == {'real': F, 'neg': F, 'zero': F, 'pos': F}
