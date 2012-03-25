@@ -1912,7 +1912,7 @@ class MatrixBase(object):
         fill
         """
         if is_sequence(r):
-            warnings.warn(SymPyDeprecationWarning("Pass row and column as zeros(%i, %i)." % r))
+            warnings.warn(SymPyDeprecationWarning("Pass row and column count as zeros(%i, %i)." % r))
             r, c = r
         else:
             c = r if c is None else c
@@ -3790,7 +3790,7 @@ def zeros(r, c=None, cls=MutableMatrix):
     diag
     """
     if is_sequence(r):
-        warnings.warn(SymPyDeprecationWarning("Pass row and column as zeros(%i, %i)." % r))
+        warnings.warn(SymPyDeprecationWarning("Pass row and column count as zeros(%i, %i)." % r))
         r, c = r
     else:
         c = r if c is None else c
@@ -3810,7 +3810,7 @@ def ones(r, c=None):
     """
 
     if is_sequence(r):
-        warnings.warn(SymPyDeprecationWarning("Pass row and column as ones(%i, %i)." % r))
+        warnings.warn(SymPyDeprecationWarning("Pass row and column count as ones(%i, %i)." % r))
         r, c = r
     else:
         c = r if c is None else c
@@ -4510,7 +4510,7 @@ class SparseMatrix(MatrixBase):
         """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
         if ``c`` is omitted a square matrix will be returned."""
         if is_sequence(r):
-            warnings.warn("pass row and column as zeros(%i, %i)" % r, SymPyDeprecationWarning)
+            warnings.warn("Pass row and column count as zeros(%i, %i)." % r, SymPyDeprecationWarning)
             r, c = r
         else:
             c = r if c is None else c
