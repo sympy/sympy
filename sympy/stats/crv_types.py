@@ -203,7 +203,7 @@ def Benini(alpha, beta, sigma, symbol=None):
     ========
 
     >>> from sympy.stats import Benini, Density
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol, simplify, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
@@ -212,9 +212,14 @@ def Benini(alpha, beta, sigma, symbol=None):
 
     >>> X = Benini(alpha, beta, sigma, symbol=x)
 
-    >>> Density(X)
-    Lambda(_x, ((alpha/_x + 2*beta*log(_x/sigma)/_x)*exp(-alpha*log(_x/sigma)
-               - beta*log(_x/sigma)**2)))
+    >>> D = Density(X)
+    >>> pprint(D, use_unicode=False)
+          /                                                             2       \
+          |   /                  /  x  \\             /  x  \            /  x  \|
+          |   |        2*beta*log|-----||  - alpha*log|-----| - beta*log |-----||
+          |   |alpha             \sigma/|             \sigma/            \sigma/|
+    Lambda|x, |----- + -----------------|*e                                     |
+          \   \  x             x        /                                       /
 
     References
     ==========
@@ -271,7 +276,7 @@ def Beta(alpha, beta, symbol=None):
     ========
 
     >>> from sympy.stats import Beta, Density, E, Var
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol, simplify, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
@@ -279,9 +284,12 @@ def Beta(alpha, beta, symbol=None):
 
     >>> X = Beta(alpha, beta, symbol=x)
 
-    >>> Density(X)
-    Lambda(_x, _x**(alpha - 1)*(-_x + 1)**(beta - 1)\
-               *gamma(alpha + beta)/(gamma(alpha)*gamma(beta)))
+    >>> D = Density(X)
+    >>> pprint(D, use_unicode=False)
+          /    alpha - 1         beta - 1                    \
+          |   x         *(-x + 1)        *gamma(alpha + beta)|
+    Lambda|x, -----------------------------------------------|
+          \               gamma(alpha)*gamma(beta)           /
 
     >>> simplify(E(X, meijerg=True))
     alpha/(alpha + beta)
@@ -335,7 +343,7 @@ def BetaPrime(alpha, beta, symbol=None):
     ========
 
     >>> from sympy.stats import BetaPrime, Density
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
@@ -343,9 +351,12 @@ def BetaPrime(alpha, beta, symbol=None):
 
     >>> X = BetaPrime(alpha, beta, symbol=x)
 
-    >>> Density(X)
-    Lambda(_x, _x**(alpha - 1)*(_x + 1)**(-alpha - beta)\
-               *gamma(alpha + beta)/(gamma(alpha)*gamma(beta)))
+    >>> D = Density(X)
+    >>> pprint(D, use_unicode=False)
+          /    alpha - 1        -alpha - beta                    \
+          |   x         *(x + 1)             *gamma(alpha + beta)|
+    Lambda|x, ---------------------------------------------------|
+          \                 gamma(alpha)*gamma(beta)             /
 
     References
     ==========
@@ -659,7 +670,7 @@ def Gamma(k, theta, symbol=None):
     ========
 
     >>> from sympy.stats import Gamma, Density, CDF, E, Var
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, pprint
 
     >>> k = Symbol("k", positive=True)
     >>> theta = Symbol("theta", positive=True)
@@ -667,19 +678,35 @@ def Gamma(k, theta, symbol=None):
 
     >>> X = Gamma(k, theta, symbol=x)
 
-    >>> Density(X)
-    Lambda(_x, _x**(k - 1)*theta**(-k)*exp(-_x/theta)/gamma(k))
+    >>> D = Density(X)
+    >>> pprint(D, use_unicode=False)
+          /                     -x \
+          |                   -----|
+          |    k - 1      -k  theta|
+          |   x     *theta  *e     |
+    Lambda|x, ---------------------|
+          \          gamma(k)      /
 
-    >>> CDF(X, meijerg=True)
-    Lambda(_z, Piecewise((0, _z < 0), (-k*lowergamma(k, 0)/gamma(k + 1)\
-               + k*lowergamma(k, _z/theta)/gamma(k + 1), True)))
+    >>> C = CDF(X, meijerg=True)
+    >>> pprint(C, use_unicode=False)
+    Lambda/z, /                      0                        for z < 0\
+          |   |                                                        |
+          |   |                                   /     z  \           |
+          |   <                       k*lowergamma|k, -----|           |
+          |   |  k*lowergamma(k, 0)               \   theta/           |
+          |   |- ------------------ + ----------------------  otherwise|
+          \   \     gamma(k + 1)           gamma(k + 1)                /
 
     >>> E(X)
     theta*gamma(k + 1)/gamma(k)
 
-    >>> Var(X)
-    -theta**2*gamma(k + 1)**2/gamma(k)**2 + theta*theta**(-k)*theta**(k + 1)\
-    *gamma(k + 2)/gamma(k)
+    >>> V = Var(X)
+    >>> pprint(V, use_unicode=False)
+           2      2                     -k      k + 1
+      theta *gamma (k + 1)   theta*theta  *theta     *gamma(k + 2)
+    - -------------------- + -------------------------------------
+                2                           gamma(k)
+           gamma (k)
 
     References
     ==========
@@ -847,7 +874,7 @@ def LogNormal(mean, std, symbol=None):
     ========
 
     >>> from sympy.stats import LogNormal, Density
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol, simplify, pprint
 
     >>> mu = Symbol("mu", real=True)
     >>> sigma = Symbol("sigma", positive=True)
@@ -855,8 +882,17 @@ def LogNormal(mean, std, symbol=None):
 
     >>> X = LogNormal(mu, sigma, symbol=x)
 
-    >>> Density(X)
-    Lambda(_x, sqrt(2)*exp(-(-mu + log(_x))**2/(2*sigma**2))/(2*_x*sqrt(pi)*sigma))
+    >>> D = Density(X)
+    >>> pprint(D, use_unicode=False)
+          /                         2\
+          |          -(-mu + log(x)) |
+          |          ----------------|
+          |                     2    |
+          |     ___      2*sigma     |
+          |   \/ 2 *e                |
+    Lambda|x, -----------------------|
+          |             ____         |
+          \       2*x*\/ pi *sigma   /
 
     >>> X = LogNormal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
 
@@ -973,7 +1009,7 @@ def Nakagami(mu, omega, symbol=None):
     ========
 
     >>> from sympy.stats import Nakagami, Density, E, Var
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol, simplify, pprint
 
     >>> mu = Symbol("mu", positive=True)
     >>> omega = Symbol("omega", positive=True)
@@ -981,14 +1017,25 @@ def Nakagami(mu, omega, symbol=None):
 
     >>> X = Nakagami(mu, omega, symbol=x)
 
-    >>> Density(X)
-    Lambda(_x, 2*_x**(2*mu - 1)*mu**mu*omega**(-mu)*exp(-_x**2*mu/omega)/gamma(mu))
+    >>> D = Density(X)
+    >>> pprint(D, use_unicode=False)
+          /                                2   \
+          |                              -x *mu|
+          |                              ------|
+          |      2*mu - 1   mu      -mu  omega |
+          |   2*x        *mu  *omega   *e      |
+    Lambda|x, ---------------------------------|
+          \               gamma(mu)            /
 
     >>> simplify(E(X, meijerg=True))
     sqrt(mu)*sqrt(omega)*gamma(mu + 1/2)/gamma(mu + 1)
 
-    >>> simplify(Var(X, meijerg=True))
-    omega*(gamma(mu)*gamma(mu + 1) - gamma(mu + 1/2)**2)/(gamma(mu)*gamma(mu + 1))
+    >>> V = simplify(Var(X, meijerg=True))
+    >>> pprint(V, use_unicode=False)
+          /                               2          \
+    omega*\gamma(mu)*gamma(mu + 1) - gamma (mu + 1/2)/
+    --------------------------------------------------
+                 gamma(mu)*gamma(mu + 1)
 
     References
     ==========
@@ -1043,7 +1090,7 @@ def Normal(mean, std, symbol=None):
     ========
 
     >>> from sympy.stats import Normal, Density, E, Std, CDF, Skewness
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol, simplify, pprint
 
     >>> mu = Symbol("mu")
     >>> sigma = Symbol("sigma", positive=True)
@@ -1054,9 +1101,17 @@ def Normal(mean, std, symbol=None):
     >>> Density(X)
     Lambda(_x, sqrt(2)*exp(-(_x - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma))
 
-    >>> simplify(CDF(X))
-    Lambda(_z, (erf(sqrt(2)*(_z - mu)/(2*sigma)) + 1)*exp((_z - mu)**2\
-               /(2*sigma**2) + (-_z**2 + 2*_z*mu - mu**2)/(2*sigma**2))/2)
+    >>> C = simplify(CDF(X))
+    >>> pprint(C, use_unicode=False)
+          /                                      2      2              2\
+          |                              (z - mu)    - z  + 2*z*mu - mu |
+          |                              --------- + -------------------|
+          |   /   /  ___         \    \          2                2     |
+          |   |   |\/ 2 *(z - mu)|    |   2*sigma          2*sigma      |
+          |   |erf|--------------| + 1|*e                               |
+          |   \   \   2*sigma    /    /                                 |
+    Lambda|z, ----------------------------------------------------------|
+          \                               2                             /
 
     >>> simplify(Skewness(X))
     0
@@ -1244,16 +1299,26 @@ def StudentT(nu, symbol=None):
     ========
 
     >>> from sympy.stats import StudentT, Density, E, Var
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol, simplify, pprint
 
     >>> nu = Symbol("nu", positive=True)
     >>> x = Symbol("x")
 
     >>> X = StudentT(nu, symbol=x)
 
-    >>> Density(X)
-    Lambda(_x, (_x**2/nu + 1)**(-nu/2 - 1/2)*gamma(nu/2 + 1/2)\
-               /(sqrt(pi)*sqrt(nu)*gamma(nu/2)))
+    >>> D = Density(X)
+    >>> pprint(D, use_unicode=False)
+          /             nu   1              \
+          |           - -- - -              |
+          |             2    2              |
+          |   / 2    \                      |
+          |   |x     |              /nu   1\|
+          |   |-- + 1|        *gamma|-- + -||
+          |   \nu    /              \2    2/|
+    Lambda|x, ------------------------------|
+          |        ____   ____      /nu\    |
+          |      \/ pi *\/ nu *gamma|--|    |
+          \                         \2 /    /
 
     References
     ==========
@@ -1460,16 +1525,25 @@ def UniformSum(n, symbol=None):
     ========
 
     >>> from sympy.stats import UniformSum, Density, E, Var
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, pprint
 
     >>> n = Symbol("n", integer=True)
     >>> x = Symbol("x")
 
     >>> X = UniformSum(n, symbol=x)
 
-    >>> Density(X)
-    Lambda(_x, Sum((-1)**_k*(-_k + _x)**(n - 1)*binomial(n, _k),
-                   (_k, 0, floor(_x)))/(n - 1)!)
+    >>> D = Density(X)
+    >>> pprint(D, use_unicode=False)
+          /   floor(x)                        \
+          |     ___                           |
+          |     \  `                          |
+          |      \         k         n - 1 /n\|
+          |       )    (-1) *(-k + x)     *| ||
+          |      /                         \k/|
+          |     /__,                          |
+          |    k = 0                          |
+    Lambda|x, --------------------------------|
+          \               (n - 1)!            /
 
     References
     ==========
