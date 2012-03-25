@@ -1043,53 +1043,58 @@ class PrettyPrinter(Printer):
                 a.append( self._print(S.One) )
             return prettyForm.__mul__(*a)/prettyForm.__mul__(*b)
 
-    def _print_Pow(self, power):
-        # square roots, other roots or n-th roots
-        #test for fraction 1/n or power x**-1
-        if power.is_commutative:
-            if (isinstance(power.exp, C.Rational) and power.exp.p==1 and power.exp.q !=1) or \
-               (   isinstance(power.exp, C.Pow) and
-                   isinstance(power.exp.args[0], C.Symbol) and
-                   power.exp.args[1]==S.NegativeOne):
-                bpretty = self._print(power.base)
+    # A helper function for _print_Pow to print x**(1/n)
+    def _print_nth_root (self, base, expt):
+        bpretty = self._print(base)
 
-                #construct root sign, start with the \/ shape
-                _zZ= xobj('/',1)
-                rootsign = xobj('\\',1)+_zZ
-                #make exponent number to put above it
-                if isinstance(power.exp, C.Rational):
-                    exp = str(power.exp.q)
-                    if exp=='2': exp = ''
-                else: exp = str(power.exp.args[0])
-                exp = exp.ljust(2)
-                if len(exp)>2: rootsign = ' '*(len(exp)-2)+rootsign
-                #stack the exponent
-                rootsign = stringPict(exp+'\n'+rootsign)
-                rootsign.baseline = 0
-                #diagonal: length is one less than height of base
-                linelength = bpretty.height()-1
-                diagonal = stringPict('\n'.join(
-                    ' '*(linelength-i-1)+_zZ+' '*i
-                    for i in range(linelength)
-                    ))
-                #put baseline just below lowest line: next to exp
-                diagonal.baseline = linelength-1
-                #make the root symbol
-                rootsign = prettyForm(*rootsign.right(diagonal))
-                #set the baseline to match contents to fix the height
-                #but if the height of bpretty is one, the rootsign must be one higher
-                rootsign.baseline = max(1, bpretty.baseline)
-                #build result
-                s = prettyForm(hobj('_', 2+ bpretty.width()))
-                s = prettyForm(*bpretty.above(s))
-                s = prettyForm(*s.left(rootsign))
-                return s
-            elif power.exp.is_Rational and power.exp.is_negative:
-                # Things like 1/x
-                return prettyForm("1") / self._print(C.Pow(power.base, -power.exp))
+        # Construct root sign, start with the \/ shape
+        _zZ = xobj('/',1)
+        rootsign = xobj('\\',1) + _zZ
+        # Make exponent number to put above it
+        if isinstance(expt, C.Rational):
+            exp = str(expt.q)
+            if exp == '2':
+                exp = ''
+        else:
+            exp = str(expt.args[0])
+        exp = exp.ljust(2)
+        if len(exp) > 2:
+            rootsign = ' '*(len(exp) - 2) + rootsign
+        # Stack the exponent
+        rootsign = stringPict(exp + '\n' + rootsign)
+        rootsign.baseline = 0
+        # Diagonal: length is one less than height of base
+        linelength = bpretty.height() - 1
+        diagonal = stringPict('\n'.join(
+            ' '*(linelength - i - 1) + _zZ + ' '*i
+            for i in range(linelength)
+            ))
+        # Put baseline just below lowest line: next to exp
+        diagonal.baseline = linelength - 1
+        # Make the root symbol
+        rootsign = prettyForm(*rootsign.right(diagonal))
+        # Det the baseline to match contents to fix the height
+        # but if the height of bpretty is one, the rootsign must be one higher
+        rootsign.baseline = max(1, bpretty.baseline)
+        #build result
+        s = prettyForm(hobj('_', 2 + bpretty.width()))
+        s = prettyForm(*bpretty.above(s))
+        s = prettyForm(*s.left(rootsign))
+        return s
+
+    def _print_Pow(self, power):
+        from sympy import fraction
+        b, e = power.as_base_exp()
+        if power.is_commutative:
+            if e is S.NegativeOne:
+                return prettyForm("1")/self._print(b)
+            n, d = fraction(e)
+            if n is S.One and d.is_Atom and not e.is_Integer:
+                return self._print_nth_root(b, e)
+            if e.is_Rational and e < 0:
+                return prettyForm("1")/self._print(b)**self._print(-e)
 
         # None of the above special forms, do a standard power
-        b,e = power.as_base_exp()
         return self._print(b)**self._print(e)
 
     def __print_numer_denom(self, p, q):
