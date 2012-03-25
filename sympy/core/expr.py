@@ -2530,8 +2530,9 @@ class Expr(Basic, EvalfMixin):
                 func = getattr(expr, '_eval_expand_'+hint, None)
                 if func is not None:
                     expr = func(deep=deep, **hints)
-                else : raise TypeError('Unknown hint %s' % hint)  
-                # This will now raise TypeError if hint in unknown or misspelled
+                else : 
+                    raise TypeError('Unknown hint %s' % hint)  
+                
 
         if modulus is not None:
             modulus = sympify(modulus)
