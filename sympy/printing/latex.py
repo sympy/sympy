@@ -1029,16 +1029,12 @@ class LatexPrinter(Printer):
 
     def _print_FiniteSet(self, s):
         if len(s) > 10:
-            #take ten elements from the set at random
-            q = iter(s)
-            printset = [q.next() for i in xrange(10)]
+            printset = s.args[:3] + ('...',) + s.args[-3:]
         else:
-            printset = s
-        try:
-            printset.sort()
-        except AttributeError:
-            pass
-        return r"\left\{" + r", ".join(self._print(el) for el in printset) + r"\right\}"
+            printset = s.args
+        return (r"\left\{"
+              + r", ".join(self._print(el) for el in printset)
+              + r"\right\}")
     def _print_Interval(self, i):
         if i.start == i.end:
             return r"\left{%s\right}" % self._print(i.start)

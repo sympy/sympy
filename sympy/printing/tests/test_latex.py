@@ -2,12 +2,13 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Function, factorial, factorial2, floor, ceiling, Abs, re, im, conjugate,
     Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum, Product,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg, polar_lift,
-    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan, Min, Max,
-    cot, coth, re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
-    FallingFactorial, polylog, lerchphi, Ei, expint, Si, Ci, Shi, Chi, gamma, Tuple,
-    MellinTransform, InverseMellinTransform, LaplaceTransform, InverseLaplaceTransform,
-    FourierTransform, InverseFourierTransform, SineTransform, InverseSineTransform,
-    CosineTransform, InverseCosineTransform)
+    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan, Min, Max, cot, coth,
+    re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
+    FallingFactorial, polylog, lerchphi, Ei, expint, Si, Ci, Shi, Chi, gamma,
+    Tuple, MellinTransform, InverseMellinTransform, LaplaceTransform,
+    InverseLaplaceTransform, FourierTransform, InverseFourierTransform,
+    SineTransform, InverseSineTransform, CosineTransform,
+    InverseCosineTransform, FiniteSet)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
@@ -238,6 +239,11 @@ def test_latex_integrals():
     assert latex(Integral(x, x, y, (z, 0, 1))) == \
         r"\int_{0}^{1}\int\int x\, dx\, dy\, dz"
 
+def test_latex_finiteset():
+    assert latex(FiniteSet(range(1, 51)) ==\
+            r'\left{1, 2, 3, ..., 48, 49, 50\right}')
+    assert latex(FiniteSet(range(1, 6)) == r'\left{1, 2, 3, 4, 5\right}')
+
 def test_latex_intervals():
     a = Symbol('a', real=True)
     assert latex(Interval(0, a)) == r"\left[0, a\right]"
@@ -253,7 +259,7 @@ def test_latex_union():
     assert latex(Union(Interval(0, 1), Interval(2, 3))) == \
         r"\left[0, 1\right] \cup \left[2, 3\right]"
     assert latex(Union(Interval(1, 1), Interval(2, 2), Interval(3, 4))) == \
-        r"\left[3, 4\right] \cup \left\{1, 2\right\}"
+        r"\left\{1, 2\right\} \cup \left[3, 4\right]"
 
 def test_latex_sum():
     assert latex(Sum(x*y**2, (x, -2, 2), (y, -5, 5))) == \
