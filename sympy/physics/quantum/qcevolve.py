@@ -6,16 +6,23 @@ More information about Pyevolve available at:
 
 http://pyevolve.sourceforge.net/index.html
 
-TODO:
+TODO or THINGS TO CONSIDER:
 * Implement a mutator operator
 * Implement an evaluator
+* Sorting the circuits to deal with 'trivial identities'
+  i.e. X(0)X(1)X(0)X(1)
+  Gate sorting in gate.py limited because can't swap gates that act on
+  same qubit even if they do commute.
+* When inserting circuits, use the dictionary of symbolic to real
+  indices (from the circuit being manipulated) to create a circuit
+  with real indices.
 """
 
 from random import Random
 from sympy import Basic
 from pyevolve.GenomeBase import GenomeBase
 from sympy.physics.quantum.circuitutils import (
-         find_subcircuit, remove_subcircuit)
+         find_subcircuit_with_seq, remove_subcircuit_with_seq)
 
 __all__ = [
     'GQCBase',
@@ -149,7 +156,7 @@ def random_reduce(circuit, gate_ids, seed=None):
 
     # Look for identities in circuit
     for an_id in ids:
-        if find_subcircuit(circuit, an_id) > -1:
+        if find_subcircuit_with_seq(circuit, an_id) > -1:
             ids_found.append(an_id)
 
     if len(ids_found) < 1:
@@ -159,7 +166,7 @@ def random_reduce(circuit, gate_ids, seed=None):
     remove_id = int_gen.randint(0, len(ids_found)-1)
 
     # Remove the identity
-    new_circuit = remove_subcircuit(circuit, ids_found[remove_id])
+    new_circuit = remove_subcircuit_with_seq(circuit, ids_found[remove_id])
 
     return new_circuit
     

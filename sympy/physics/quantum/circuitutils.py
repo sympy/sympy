@@ -1,4 +1,9 @@
-"""Primitive circuit operations on quantum circuits."""
+"""Primitive circuit operations on quantum circuits.
+
+TODO:
+* Change remove_subcircuit_with_seq to replace_subcircuit_with_seq
+* Add wrappers around the seq-based functions to use Mul
+"""
 
 from sympy import Wild, Integer, Tuple
 from sympy.physics.quantum.gate import Gate
