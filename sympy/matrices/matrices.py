@@ -2721,25 +2721,56 @@ class MatrixBase(object):
         """
         return roots(self.berkowitz_charpoly(Dummy('x')), **flags)
 
-    eigenvals = berkowitz_eigenvals
+    def eigenvals(self, **flags):
+        """Return eigen values using the berkowitz_eigenvals routine.
+
+        Since the roots routine doesn't always work well with Floats,
+        they will be replaced with Rationals before calling that
+        routine. If this is not desired, set flag ``rational`` to False.
+        """
+        # roots doesn't like Floats, so replace them with Rationals
+        # unless the nsimplify flag indicates that this has already
+        # been done, e.g. in eigenvects
+        if flags.pop('rational', True):
+            float = False
+            if any(v.has(Float) for v in self):
+                float=True
+                self = self._new(self.rows, self.cols, [nsimplify(v, rational=True) for v in self])
+
+        flags.pop('simplify', None) # pop unsupported flag
+        return self.berkowitz_eigenvals(**flags)
 
     def eigenvects(self, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
 
-        If the flag ``simplify`` is True, as_content_primitive()
-        will be used to tidy up normalization artifacts."""
+        The flag ``simplify`` has two effects:
+            1) if bool(simplify) is True, as_content_primitive()
+            will be used to tidy up normalization artifacts;
+            2) if nullspace needs simplification to compute the
+            basis, the simplify flag will be passed on to the
+            nullspace routine which will interpret it there.
 
-        simplify = bool(flags.get('simplify', False))
+        If the matrix contains any Floats, they will be changed to Rationals
+        for computation purposes, but the answers will be returned after being
+        evaluated with evalf. If it is desired to removed small imaginary
+        portions during the evalf step, pass a value for the ``chop`` flag.
+        """
+
+        simplify = flags.get('simplify', True)
+        primitive = bool(flags.get('simplify', False))
+        chop = flags.pop('chop', False)
+
+        flags.pop('multiple', None) # remove this if it's there
 
         # roots doesn't like Floats, so replace them with Rationals
         float = False
         if any(v.has(Float) for v in self):
-            float=True
-            self = Matrix(self.rows, self.cols, [nsimplify(v, rational=True) for v in self])
+            float = True
+            self = self._new(self.rows, self.cols, [nsimplify(v, rational=True) for v in self])
+            flags['rational'] = False # to tell eigenvals not to do this
 
-        flags.pop('multiple', None) # remove this if it's there
-
-        out, vlist = [], self.eigenvals()
+        out, vlist = [], self.eigenvals(**flags)
+        flags.pop('rational', None)
 
         for r, k in vlist.iteritems():
             tmp = self - eye(self.rows)*r
@@ -2752,7 +2783,7 @@ class MatrixBase(object):
                 basis = tmp.nullspace(simplify=simplify)
                 if not basis:
                     raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
-            if simplify:
+            if primitive:
                 # the relationship A*e = lambda*e will still hold if we change the
                 # eigenvector; so if simplify is True we tidy up any normalization
                 # artifacts with as_content_primtive (default) and remove any pure Integer
@@ -2767,7 +2798,7 @@ class MatrixBase(object):
                 if l != 1:
                     basis[0] *= l
             if float:
-                out.append((r.evalf(), k, [self._new(b).evalf() for b in basis]))
+                out.append((r.evalf(chop=chop), k, [self._new(b).evalf(chop=chop) for b in basis]))
             else:
                 out.append((r, k, [self._new(b) for b in basis]))
         return out
