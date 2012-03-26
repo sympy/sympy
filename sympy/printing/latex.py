@@ -962,6 +962,13 @@ class LatexPrinter(Printer):
     def _print_Dict(self, expr):
         return self._print_dict(expr)
 
+    def _print_set(self, s):
+        items = sorted(s, key=default_sort_key)
+        items = ", ".join(map(self._print, items))
+        return r"\operatorname{%s} {\left(%s\right)}" % (type(s).__name__, items)
+
+    _print_frozenset = _print_set
+
     def _print_DiracDelta(self, expr):
         if len(expr.args) == 1 or expr.args[1] == 0:
             tex = r"\delta\left(%s\right)" % self._print(expr.args[0])
