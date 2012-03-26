@@ -9,6 +9,7 @@
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
+from functools import total_ordering
 
 class Tuple(Basic):
     """
@@ -197,3 +198,6 @@ class Dict(Basic):
     def __contains__(self, key):
         '''D.__contains__(k) -> True if D has a key k, else False'''
         return sympify(key) in self._dict
+
+    def __lt__(self, other):
+        return self.args < other.args
