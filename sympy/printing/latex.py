@@ -887,8 +887,8 @@ class LatexPrinter(Printer):
                                self._print(expr.args[-1].expr))
         else:
             ecpairs.append(r"%s & \text{for}\: %s" % \
-                           (self._print(expr.args[-1].cond),
-                            self._print(expr.args[-1].expr)))
+                           (self._print(expr.args[-1].expr),
+                            self._print(expr.args[-1].cond)))
         tex = r"\begin{cases} %s \end{cases}"
         return tex % r" \\".join(ecpairs)
 
