@@ -546,7 +546,10 @@ class LatexPrinter(Printer):
         return self._do_exponent(tex, exp)
 
     def _print_Not(self, e):
-        return r"\neg %s" % self._print(e.args[0])
+        if (e.args[0].is_Boolean):
+            return r"\neg (%s)" % self._print(e.args[0])
+        else:
+            return r"\neg %s" % self._print(e.args[0])
 
     def _print_And(self, e):
         args = sorted(e.args, key=default_sort_key)
