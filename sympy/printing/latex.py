@@ -1130,7 +1130,7 @@ def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.
 
-    >>> from sympy import latex, sin, asin, Rational
+    >>> from sympy import latex, sin, asin, Matrix, Rational
     >>> from sympy.abc import x, y, mu, tau
 
     >>> latex((2*tau)**Rational(7,2))
@@ -1198,18 +1198,19 @@ def latex(expr, **settings):
     '\\sin^{-1}{\\left (\\frac{7}{2} \\right )}'
 
     mat_str: Which matrix environment string to emit. "smallmatrix", "bmatrix",
-    etc. This paramater currently doesn't work. Defaults to "bmatrix".
+    etc. Defaults to "smallmatrix".
 
-    >>> latex([[1]], mat_str = "bmatrix")
-    '\\begin{bmatrix}\\begin{bmatrix}1\\end{bmatrix}\\end{bmatrix}'
+    >>> latex(Matrix(2, 1, [x, y]), mat_str = "array")
+    '\\left[\\begin{array}x\\\\y\\end{array}\\right]'
 
-    mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(".
-    This parameter currently doesn't work.
+    mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(",
+    or the empty string. Defaults to "[".
 
-    >>> latex([[1]], mat_delim="(")
-    '\\begin{bmatrix}\\begin{bmatrix}1\\end{bmatrix}\\end{bmatrix}'
+    >>> latex(Matrix(2, 1, [x, y]), mat_delim="(")
+    '\\left(\\begin{smallmatrix}x\\\\y\\end{smallmatrix}\\right)'
 
-    symbol_names: Dictionary of symbols and the custom strings they should be emitted as.
+    symbol_names: Dictionary of symbols and the custom strings they should be
+    emitted as.
 
     >>> latex(x**2, symbol_names={x:'x_i'})
     'x_i^{2}'
