@@ -920,40 +920,10 @@ class LatexPrinter(Printer):
             return "%s^T"%self._print(mat)
 
     def _print_MatAdd(self, expr):
-        tex = []
-        for term in Add.make_args(expr):
-            coeff, tail = term.as_coeff_Mul()
-
-            if coeff.is_negative:
-                tex.append("-")
-                coeff = -coeff
-            elif tex:
-                tex.append("+")
-
-            if coeff is not S.One:
-                tex.append(self._print(coeff))
-            tex.append(self._print(tail))
-
-        return " ".join(tex)
+        return self._print_Add(expr)
 
     def _print_MatMul(self, expr):
-        coeff, tail = expr.as_coeff_Mul()
-
-        tex = []
-        if coeff.is_negative:
-            tex.append("-")
-            coeff = -coeff
-        tex.append(self._print(coeff))
-
-        for term in C.Mul.make_args(tail):
-            pretty = str(self._print(term))
-
-            if term.is_Add:
-                pretty = (r"\left(%s\right)" % pretty)
-
-            tex.append(pretty)
-
-        return ' '.join(tex)
+        return self._print_Mul(expr)
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp

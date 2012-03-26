@@ -472,6 +472,10 @@ def test_matMul():
     assert l._print_MatMul(2*A) == '2 A'
     assert l._print_MatMul(2*x*A) == '2 x A'
     assert l._print_MatMul(-2*A) == '- 2 A'
+    assert l._print_MatMul(1.0*A) == '1.0 A'
+    assert l._print_MatMul(sqrt(2)*A) == r'\sqrt{2} A'
+    assert l._print_MatMul(-sqrt(2)*A) == r'- \sqrt{2} A'
+    assert l._print_MatMul(2*sqrt(2)*x*A) == r'2 \sqrt{2} x A'
     assert l._print_MatMul(-2*A*(A+2*B)) in [r'- 2 A \left(A + 2 B\right)',
         r'- 2 A \left(2 B + A\right)']
 
