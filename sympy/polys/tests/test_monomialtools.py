@@ -98,8 +98,8 @@ def test_monomial_key():
     assert monomial_key('grlex') == grlex
     assert monomial_key('grevlex') == grevlex
 
-    raises(ValueError, "monomial_key('foo')")
-    raises(ValueError, "monomial_key(1)")
+    raises(ValueError, lambda: monomial_key('foo'))
+    raises(ValueError, lambda: monomial_key(1))
 
 def test_monomial_mul():
     assert monomial_mul((3,4,1), (1,2,0)) == (4,6,1)
@@ -168,4 +168,4 @@ def test_Monomial():
     assert m**2 == Monomial((6, 8, 2))
     assert m**3 == Monomial((9,12, 3))
 
-    raises(ExactQuotientFailed, "m/Monomial((5, 2, 0))")
+    raises(ExactQuotientFailed, lambda: m/Monomial((5, 2, 0)))

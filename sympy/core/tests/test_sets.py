@@ -22,8 +22,8 @@ def test_interval_arguments():
     assert Interval(1, 1, True, False) == S.EmptySet
     assert Interval(1, 1, True, True) == S.EmptySet
 
-    raises(ValueError, "Interval(0, S.ImaginaryUnit)")
-    raises(ValueError, "Interval(0, Symbol('z'))")
+    raises(ValueError, lambda: Interval(0, S.ImaginaryUnit))
+    raises(ValueError, lambda: Interval(0, Symbol('z')))
 
     assert isinstance(Interval(1, Symbol('a', real=True)), Interval)
 
@@ -84,7 +84,7 @@ def test_union():
     assert 2 in X and 3 in X and 3 in XandY
     assert X.subset(XandY) and Y.subset(XandY)
 
-    raises(TypeError, "Union(1, 2, 3)")
+    raises(TypeError, lambda: Union(1, 2, 3))
 
     assert X.is_iterable == False
 
@@ -184,7 +184,7 @@ def test_intersection():
     x = Symbol('x', real=True)
     i = Intersection(Interval(0, 3), Interval(x, 6))
     assert (5 in i) == False
-    raises(TypeError, "2 in i")
+    raises(TypeError, lambda: 2 in i)
 
     # Singleton special cases
     assert Intersection(Interval(0, 1), S.EmptySet) == S.EmptySet
@@ -195,7 +195,7 @@ def test_intersection():
     i = Intersection(line**2, line**3, evaluate=False)
     assert (2,2) not in i
     assert (2,2,2) not in i
-    raises(ValueError, "list(i)")
+    raises(ValueError, lambda: list(i))
 
 def test_interval_subs():
     a = Symbol('a', real=True)
@@ -253,7 +253,7 @@ def test_subset():
     assert S.EmptySet.subset(Interval(0, 1)) == False
     assert S.EmptySet.subset(S.EmptySet) == True
 
-    raises(ValueError, "S.EmptySet.subset(1)")
+    raises(ValueError, lambda: S.EmptySet.subset(1))
 
 def test_contains():
     assert Interval(0, 2).contains(1) == True
@@ -283,7 +283,7 @@ def test_interval_symbolic():
     x = Symbol('x')
     e = Interval(0, 1)
     assert e.contains(x) == And(0<=x, x<=1)
-    raises(TypeError, "x in e")
+    raises(TypeError, lambda: x in e)
     e = Interval(0, 1, True, True)
     assert e.contains(x) == And(0<x, x<1)
 
@@ -292,7 +292,7 @@ def test_union_contains():
     i1 = Interval(0, 1)
     i2 = Interval(2, 3)
     i3 = Union(i1, i2)
-    raises(TypeError, "x in i3")
+    raises(TypeError, lambda: x in i3)
     e = i3.contains(x)
     assert e == Or(And(0 <= x, x <= 1), And(2 <= x, x <= 3))
     assert e.subs(x, -0.5) is False

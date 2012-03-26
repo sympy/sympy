@@ -28,9 +28,9 @@ def test_deduce_alpha_implications():
     assert D([('a','b'), ('b','a')]) == ({'a': set(['b']), 'b': set(['a'])},  {'a': set(['b']), 'b': set(['a'])})
 
     # see if it catches inconsistency
-    raises(ValueError, "D([('a','!a')])")
-    raises(ValueError, "D([('a','b'), ('b','!a')])")
-    raises(ValueError, "D([('a','b'), ('b','c'), ('b','na'), ('na','!a')])")
+    raises(ValueError, lambda: D([('a','!a')]))
+    raises(ValueError, lambda: D([('a','b'), ('b','!a')]))
+    raises(ValueError, lambda: D([('a','b'), ('b','c'), ('b','na'), ('na','!a')]))
 
 
     # something related to real-world
@@ -176,7 +176,7 @@ def test_FactRules_parse():
 
 
 def test_FactRules_parse2():
-    raises(ValueError, "FactRules('a -> !a')")
+    raises(ValueError, lambda: FactRules('a -> !a'))
 
 
 def test_FactRules_deduce():

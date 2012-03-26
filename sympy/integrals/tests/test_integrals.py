@@ -157,8 +157,8 @@ def test_integrate_omit_var():
 
     assert integrate(x) == x**2/2
 
-    raises(ValueError, "integrate(2)")
-    raises(ValueError, "integrate(x*y)")
+    raises(ValueError, lambda: integrate(2))
+    raises(ValueError, lambda: integrate(x*y))
 
 def test_integrate_poly_accurately():
     y = Symbol('y')
@@ -224,7 +224,7 @@ def test_issue689():
 def test_issue853():
     f = sin(x)
     assert integrate(f, x) == -cos(x)
-    raises(ValueError, "integrate(f, 2*x)")
+    raises(ValueError, lambda: integrate(f, 2*x))
 
 def test_issue1417():
     assert integrate(2**x - 2*x, x) == 2**x/log(2) - x**2
@@ -260,8 +260,8 @@ def test_transform():
     assert a.transform(x, 2*x) == Integral(2*exp(-4*x**2), (x, -oo, oo))
     # < 3 arg limit handled properly
     assert Integral(x, x).transform(x, a*x) == Integral(x*a**2, x)
-    raises(ValueError, "a.transform(x, 1/x)")
-    raises(ValueError, "a.transform(x, 1/x)")
+    raises(ValueError, lambda: a.transform(x, 1/x))
+    raises(ValueError, lambda: a.transform(x, 1/x))
     _3 = S(3)
     assert Integral(x, (x, 0, -_3)).transform(x, 1/x) == \
     Integral(-1/x**3, (x, -oo, -1/_3))
@@ -432,8 +432,8 @@ def test_subs7():
                                                                 (y, 1, 2))
 
 def test_integration_variable():
-    raises(ValueError, "Integral(exp(-x**2), 3)")
-    raises(ValueError, "Integral(exp(-x**2), (3, -oo, oo))")
+    raises(ValueError, lambda: Integral(exp(-x**2), 3))
+    raises(ValueError, lambda: Integral(exp(-x**2), (3, -oo, oo)))
 
 def test_expand_integral():
     assert Integral(cos(x**2)*(sin(x**2)+1),(x, 0, 1)).expand() == Integral(cos(x**2)*sin(x**2) + cos(x**2), (x, 0, 1))
@@ -452,7 +452,7 @@ def test_as_sum_midpoint1():
     assert abs(e.as_sum(4, method="midpoint").n() - e.n()) < 0.5
 
     e = Integral(sqrt(x**3+y**3), (x, 2, 10), (y, 0, 10))
-    raises(NotImplementedError, "e.as_sum(4)")
+    raises(NotImplementedError, lambda: e.as_sum(4))
 
 def test_as_sum_midpoint2():
     e = Integral((x+y)**2, (x, 0, 1))
@@ -477,10 +477,10 @@ def test_as_sum_right():
 
 def test_as_sum_raises():
     e = Integral((x+y)**2, (x, 0, 1))
-    raises(ValueError, "e.as_sum(-1)")
-    raises(ValueError, "e.as_sum(0)")
-    raises(NotImplementedError, "e.as_sum(oo)")
-    raises(NotImplementedError, "e.as_sum(3, method='xxxx2')")
+    raises(ValueError, lambda: e.as_sum(-1))
+    raises(ValueError, lambda: e.as_sum(0))
+    raises(NotImplementedError, lambda: e.as_sum(oo))
+    raises(NotImplementedError, lambda: e.as_sum(3, method='xxxx2'))
 
 def test_nested_doit():
     e = Integral(Integral(x, x), x)

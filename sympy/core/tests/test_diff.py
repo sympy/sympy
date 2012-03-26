@@ -9,7 +9,7 @@ def test_diff():
     assert pi.diff(x) is S.Zero
     assert x.diff(x, 0) == x
     assert (x**2).diff(x, 2, x) == 0
-    raises(ValueError, 'x.diff(1, x)')
+    raises(ValueError, lambda: x.diff(1, x))
 
     a = Symbol("a")
     b = Symbol("b")

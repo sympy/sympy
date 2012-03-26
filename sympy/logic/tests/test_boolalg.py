@@ -105,7 +105,7 @@ def test_Nor():
 def test_Implies():
     A, B, C = map(Boolean, symbols('A,B,C'))
 
-    raises(ValueError, "Implies(A,B,C)")
+    raises(ValueError, lambda: Implies(A,B,C))
     assert Implies(True, True) == True
     assert Implies(True, False) == False
     assert Implies(False, True) == True

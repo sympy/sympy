@@ -40,7 +40,7 @@ def test_erf():
     assert limit((1-erf(x))*exp(x**2)*sqrt(pi)*x, x, oo) == 1
     assert limit(((1-erf(x))*exp(x**2)*sqrt(pi)*x-1)*2*x**2, x, oo) == -1
 
-    raises(ArgumentIndexError, 'erf(x).fdiff(2)')
+    raises(ArgumentIndexError, lambda: erf(x).fdiff(2))
 
 def test_erf_series():
     assert erf(x).series(x, 0, 7) == 2*x/sqrt(pi) - \

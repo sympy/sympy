@@ -248,10 +248,10 @@ def test_new_relational():
                                      '<=', 'le', '>', 'gt', '<', 'lt'):
                 break
 
-        raises(ValueError, "Relational(x, 1, relation_type)" )
+        raises(ValueError, lambda: Relational(x, 1, relation_type))
 
 @XFAIL
 def test_relational_bool_output():
     # XFail test for issue:
     # http://code.google.com/p/sympy/issues/detail?id=2832
-    raises(ValueError, "bool(x > 3)")
+    raises(ValueError, lambda: bool(x > 3))

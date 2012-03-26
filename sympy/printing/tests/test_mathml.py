@@ -337,5 +337,5 @@ def test_mathml_order():
     assert mml.childNodes[4].childNodes[2].childNodes[0].data == '3'
 
 def test_settings():
-    raises(TypeError, 'mathml(Symbol("x"), method="garbage")')
+    raises(TypeError, lambda: mathml(Symbol("x"), method="garbage"))
 

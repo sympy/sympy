@@ -59,7 +59,7 @@ def test_expressions_failing():
 
 def test_NotImplemented():
     z = Symbol('z')
-    raises(NotImplementedError, 'residue(exp(1/z), z, 0)')
+    raises(NotImplementedError, lambda: residue(exp(1/z), z, 0))
 
 def test_bug():
     from sympy.abc import s, z

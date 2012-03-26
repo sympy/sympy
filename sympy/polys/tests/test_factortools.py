@@ -627,7 +627,7 @@ def test_dup_factor_list():
         (ANP([QQ(1,1)], h, QQ), [([ANP([QQ(1,1)], h, QQ), ANP([], h, QQ)], 2),
                                  ([ANP([QQ(1,1)], h, QQ), ANP([], h, QQ), ANP([QQ(2,1)], h, QQ)], 1)])
 
-    raises(DomainError, "dup_factor_list([EX(sin(1))], EX)")
+    raises(DomainError, lambda: dup_factor_list([EX(sin(1))], EX))
 
 def test_dmp_factor_list():
     assert dmp_factor_list([[]], 1, ZZ) == (ZZ(0), [])
@@ -703,8 +703,8 @@ def test_dmp_factor_list():
 
     K = FF(2)
 
-    raises(DomainError, "dmp_factor_list([[K(1)],[],[K(1),K(0),K(0)]], 1, K)")
-    raises(DomainError, "dmp_factor_list([[EX(sin(1))]], 1, EX)")
+    raises(DomainError, lambda: dmp_factor_list([[K(1)],[],[K(1),K(0),K(0)]], 1, K))
+    raises(DomainError, lambda: dmp_factor_list([[EX(sin(1))]], 1, EX))
 
 def test_dup_irreducible_p():
     assert dup_irreducible_p([ZZ(1),ZZ(1),ZZ(1)], ZZ) == True

@@ -439,7 +439,7 @@ def test_latex_RootSum():
         r"\operatorname{RootSum} {\left(x^{5} + x + 3, \Lambda {\left (x, \sin{\left (x \right )} \right )}\right)}"
 
 def test_settings():
-    raises(TypeError, 'latex(x*y, method="garbage")')
+    raises(TypeError, lambda: latex(x*y, method="garbage"))
 
 def test_latex_numbers():
     assert latex(catalan(n)) == r"C_{n}"

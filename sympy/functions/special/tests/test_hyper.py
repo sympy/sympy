@@ -13,7 +13,7 @@ def test_TupleParametersBase():
     assert p.diff(z) == p*2*z
 
 def test_hyper():
-    raises(TypeError, 'hyper(1, 2, z)')
+    raises(TypeError, lambda: hyper(1, 2, z))
 
     assert hyper((1, 2),(1,), z) == hyper(Tuple(1, 2), Tuple(1), z)
 
@@ -80,8 +80,8 @@ def test_radius_of_convergence():
 
 
 def test_meijer():
-    raises(TypeError, 'meijerg(1, z)')
-    raises(TypeError, 'meijerg(((1,), (2,)), (3,), (4,), z)')
+    raises(TypeError, lambda: meijerg(1, z))
+    raises(TypeError, lambda: meijerg(((1,), (2,)), (3,), (4,), z))
 
     assert meijerg(((1, 2), (3,)), ((4,), (5,)), z) == \
            meijerg(Tuple(1, 2), Tuple(3), Tuple(4), Tuple(5), z)
