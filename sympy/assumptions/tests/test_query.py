@@ -458,7 +458,7 @@ def test_I():
     z = (I)**(0)
     assert ask(Q.imaginary(z))        == False
     assert ask(Q.real(z))             == True
-    
+
 @slow
 def test_bounded():
     x, y, z = symbols('x,y,z')
@@ -512,13 +512,13 @@ def test_bounded():
     assert ask(Q.bounded(a), ~Q.bounded(y) & ~Q.positive(x) & Q.positive(y)) == None
     assert ask(Q.bounded(a), ~Q.bounded(y) & ~Q.positive(x) & ~Q.positive(y)) == False
     # ? + ?
-    assert ask(Q.bounded(a),) == None
-    assert ask(Q.bounded(a),Q.positive(x)) == None
-    assert ask(Q.bounded(a),Q.positive(y)) == None
-    assert ask(Q.bounded(a),Q.positive(x) & Q.positive(y)) == None
-    assert ask(Q.bounded(a),Q.positive(x) & ~Q.positive(y)) == None
-    assert ask(Q.bounded(a),~Q.positive(x) & Q.positive(y)) == None
-    assert ask(Q.bounded(a),~Q.positive(x) & ~Q.positive(y)) == None
+    assert ask(Q.bounded(a), ) == None
+    assert ask(Q.bounded(a), Q.positive(x)) == None
+    assert ask(Q.bounded(a), Q.positive(y)) == None
+    assert ask(Q.bounded(a), Q.positive(x) & Q.positive(y)) == None
+    assert ask(Q.bounded(a), Q.positive(x) & ~Q.positive(y)) == None
+    assert ask(Q.bounded(a), ~Q.positive(x) & Q.positive(y)) == None
+    assert ask(Q.bounded(a), ~Q.positive(x) & ~Q.positive(y)) == None
     a = x + y + z
     x, y, z = a.args
     assert ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & Q.bounded(y) & Q.negative(z) & Q.bounded(z)) == True
@@ -773,6 +773,16 @@ def test_bounded_xfail():
     assert ask(Q.bounded(cos(x)**x)) == True
     assert ask(Q.bounded(sin(x) ** x)) == True
 
+@XFAIL
+def test_imaginary_xfail():
+    assert ask(Q.imaginary(0**I)) == None
+    assert ask(Q.imaginary(0**(-I))) == None
+
+@XFAIL
+def test_real_xfail():
+    assert ask(Q.real(0**I)) == None
+    assert ask(Q.real(0**(-I))) == None
+
 def test_commutative():
     """By default objects are Q.commutative that is why it returns True
     for both key=True and key=False"""
@@ -973,22 +983,23 @@ def test_imaginary():
     assert ask(Q.imaginary(I*x), Q.real(x)) == True
     assert ask(Q.imaginary(I*x), Q.imaginary(x)) == False
     assert ask(Q.imaginary(I*x), Q.complex(x)) == None
+    assert ask(Q.imaginary(I**(x)), Q.negative(x)) == None
+    assert ask(Q.imaginary(I**(x)), Q.positive(x)) == None
+    assert ask(Q.imaginary(I**(x)), Q.even(x)) == False
+    assert ask(Q.imaginary(I**(y)), Q.odd(y)) == True
     assert ask(Q.imaginary(x*y), Q.imaginary(x) & Q.real(y)) == True
-
     assert ask(Q.imaginary(x+y+z), Q.real(x) & Q.real(y) & Q.real(z)) == False
     assert ask(Q.imaginary(x+y+z), Q.real(x) & Q.real(y) & Q.imaginary(z)) == None
     assert ask(Q.imaginary(x+y+z), Q.real(x) & Q.imaginary(y) & Q.imaginary(z)) == False
-    assert ask(Q.imaginary(x**0),Q.imaginary(x))                   == False
-    assert ask(Q.real(x**0),Q.imaginary(x))                        == True
-    assert ask(Q.imaginary(x**y),Q.imaginary(x)&Q.imaginary(y))    == None
-    assert ask(Q.imaginary(x**y),Q.imaginary(x)&Q.real(y))         == None
-    assert ask(Q.imaginary(x**y),Q.real(x)&Q.imaginary(y))         == None
-    assert ask(Q.imaginary(x**y),Q.real(x)&Q.real(y))              == False
-    assert ask(Q.real(x**y),Q.imaginary(x)&Q.imaginary(y))         == None
-    assert ask(Q.real(x**y),Q.imaginary(x)&Q.real(y))              == None
-    assert ask(Q.real(x**y),Q.real(x)&Q.imaginary(y))              == None
-    assert ask(Q.real(x**y),Q.real(x)&Q.real(y))                   == True
-    
+    assert ask(Q.imaginary(x**0), Q.imaginary(x))                   == False
+    assert ask(Q.imaginary(x**y), Q.imaginary(x) & Q.imaginary(y))    == None
+    assert ask(Q.imaginary(x**y), Q.imaginary(x) & Q.real(y))         == None
+    assert ask(Q.imaginary(x**y), Q.real(x) & Q.imaginary(y))         == None
+    assert ask(Q.imaginary(x**y), Q.real(x) & Q.real(y))              == None
+    assert ask(Q.imaginary(x**y), Q.imaginary(x) & Q.integer(y))      == None
+    assert ask(Q.imaginary(x**y), Q.imaginary(y) & Q.integer(x))      == None
+    assert ask(Q.imaginary(x**y), Q.imaginary(x) & Q.odd(y))          == True
+    assert ask(Q.imaginary(x**y), Q.imaginary(x) & Q.even(y))         == False
 
 def test_infinitesimal():
     assert ask(Q.infinitesimal(x)) == None
@@ -1193,8 +1204,15 @@ def test_real():
     assert ask(Q.real(x**2), Q.real(x)) == True
     assert ask(Q.real(sqrt(x)), Q.negative(x)) == False
     assert ask(Q.real(x**y), Q.real(x) & Q.integer(y)) == True
-    assert ask(Q.real(x**y), Q.real(x) & Q.real(y)) == True
     assert ask(Q.real(x**y), Q.positive(x) & Q.real(y)) == True
+    assert ask(Q.real(x**y), Q.imaginary(x) & Q.imaginary(y))== None
+    assert ask(Q.real(x**y), Q.imaginary(x) & Q.real(y))    == None
+    assert ask(Q.real(x**y), Q.real(x) & Q.imaginary(y))    == None
+    assert ask(Q.real(x**y), Q.real(x) & Q.real(y))         == None
+    assert ask(Q.real(x**0), Q.imaginary(x))                == True
+    assert ask(Q.real(x**y), Q.imaginary(x) & Q.integer(y)) == None
+    assert ask(Q.real(x**y), Q.imaginary(x) & Q.odd(y))== False
+    assert ask(Q.real(x**y), Q.imaginary(x) & Q.even(y))== True
 
     # trigonometric functions
     assert ask(Q.real(sin(x))) == None
