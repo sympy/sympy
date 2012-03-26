@@ -72,11 +72,7 @@ class ReprPrinter(Printer):
         return "[%s]" % self.reprify(expr, ", ")
 
     def _print_MatrixBase(self, expr):
-        l = []
-        for i in range(expr.rows):
-            l.append([])
-            for j in range(expr.cols):
-                l[-1].append(expr[i,j])
+        l = [[expr[i, j] for j in xrange(expr.cols)] for i in xrange(expr.rows)]
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
 
     def _print_NaN(self, expr):

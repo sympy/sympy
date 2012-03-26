@@ -389,10 +389,7 @@ class MatrixBase(object):
         [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
 
         """
-        ret = [0]*self.rows
-        for i in xrange(self.rows):
-            ret[i] = self.mat[i*self.cols:(i+1)*self.cols]
-        return ret
+        return [[self[i, j] for j in xrange(self.cols)] for i in xrange(self.rows)]
 
     def hash(self):
         """Compute a hash every time, because the matrix elements
@@ -404,7 +401,7 @@ class MatrixBase(object):
         """The shape (dimensions) of the matrix as the 2-tuple (rows, cols)."""
         return (self.rows, self.cols)
 
-    def __rmul__(self,a):
+    def __rmul__(self, a):
         if hasattr(a, "__array__") and a.shape != ():
             return matrix_multiply(a,self)
         out = self._new(self.rows, self.cols, map(lambda i: a*i,self.mat))
@@ -516,13 +513,16 @@ class MatrixBase(object):
         return super(MatrixBase, self).__hash__()
 
     def _format_str(self, strfunc):
+        from sympy.printing.str import StrPrinter
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
-            return 'Matrix(%s, %s)' % (self.rows, self.cols)
-        return 'Matrix(%s)' % self.tolist()
+            return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
+        return "Matrix([\n%s])" % self.table(StrPrinter(), rowsep=',\n')
 
     def __str__(self):
-        return sstr(self)
+        if self.rows == 0 or self.cols == 0:
+            return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
+        return "Matrix(%s)" % str(self.tolist())
 
     def __repr__(self):
         return sstr(self)

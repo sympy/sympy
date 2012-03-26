@@ -153,7 +153,10 @@ class MatrixExpr(Expr):
         >>> M
         I
         >>> M.as_explicit()
-        Matrix([(1, 0, 0), (0, 1, 0), (0, 0, 1)])
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
 
         """
         from sympy.matrices.immutable_matrix import ImmutableMatrix
