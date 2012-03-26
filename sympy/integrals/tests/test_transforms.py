@@ -159,10 +159,11 @@ def test_mellin_transform_bessel():
     # 8.4.19
     assert MT(besselj(a, 2*sqrt(x)), x, s) == \
            (gamma(a/2 + s)/gamma(a/2 - s + 1), (-re(a)/2, S(3)/4), True)
+    res = MT(sin(sqrt(x))*besselj(a, sqrt(x)), x, s)
     assert MT(sin(sqrt(x))*besselj(a, sqrt(x)), x, s) == \
-           (2**a*gamma(S(1)/2 - 2*s)*gamma((a+1)/2 + s) \
-                / (gamma(1 - s- a/2)*gamma(1 + a - 2*s)),
-            (-(re(a) + 1)/2, S(1)/4), True)
+        (2**(a + 2)*gamma(-2*s + S(1)/2)*gamma(a/2 + s + S(1)/2) \
+            /(4*gamma(-a/2 - s + 1)*gamma(a - 2*s + 1)), \
+        (-re(a)/2 - S(1)/2, S(1)/4), True)
     # TODO why does this 2**(a+2)/4 not cancel?
     assert MT(cos(sqrt(x))*besselj(a, sqrt(x)), x, s) == \
            (2**(a+2)*gamma(a/2 + s)*gamma(S(1)/2 - 2*s)

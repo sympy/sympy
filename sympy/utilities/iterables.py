@@ -491,7 +491,7 @@ def sift(expr, keyfunc):
     used dict's .get() method:
 
     >>> sift(x+y, lambda x: x.is_commutative)
-    {True: [y, x]}
+    {True: [x, y]}
     >>> _.get(False, [])
     []
 

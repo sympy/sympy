@@ -439,13 +439,13 @@ Please use the same way as is shown below all across SymPy.
     x**2
 
     >>> (x+y*z).args
-    (y*z, x)
+    (x, y*z)
 
     >>> (x+y*z).args[0]
-    y*z
+    x
 
     >>> (x+y*z).args[1]
-    x
+    y*z
 
     >>> (y*z).args
     (y, z)

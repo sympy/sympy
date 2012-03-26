@@ -2810,8 +2810,8 @@ class MatrixBase(object):
         >>> from sympy import Matrix, Symbol, eye
         >>> x = Symbol('x', real=True)
         >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
-        >>> A.singular_values()
-        [1, sqrt(x**2 + 1), 0]
+        >>> set(A.singular_values())
+        set([0, 1, sqrt(x**2 + 1)])
 
         See Also
         ========
