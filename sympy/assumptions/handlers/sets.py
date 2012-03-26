@@ -3,6 +3,7 @@ Handlers for predicates related to set membership: integer, rational, etc.
 """
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
+from sympy import I
 
 class AskIntegerHandler(CommonHandler):
     """
@@ -60,8 +61,8 @@ class AskIntegerHandler(CommonHandler):
         else:
             return _output
 
-    Pow=Add
-    
+    Pow = Add
+
     @staticmethod
     def int(expr, assumptions):
         return True
@@ -185,7 +186,7 @@ class AskRealHandler(CommonHandler):
 
     @staticmethod
     def _number(expr, assumptions):
-        return not expr.as_real_imag()[1]
+        return not expr.as_real_imag()[1].evalf()
 
     @staticmethod
     def Add(expr, assumptions):
@@ -224,22 +225,34 @@ class AskRealHandler(CommonHandler):
         Positive**Real        -> Real
         Real**(Integer/Even)  -> Real if base is nonnegative
         Real**(Integer/Odd)   -> Real
+        Real**Imaginary       -> ?
+        Imagianty**Real       -> ?
+        Real**Real            -> ?
         """
         if expr.is_number:
             return AskRealHandler._number(expr, assumptions)
-        if ask(Q.real(expr.base), assumptions):
-            if ask(Q.integer(expr.exp), assumptions):
-                return True
-            elif expr.exp.is_Rational:
-                if (expr.exp.q % 2 == 0):
-                    return ask(Q.real(expr.base), assumptions) and \
-                       not ask(Q.negative(expr.base), assumptions)
-                else: return True
-            elif ask(Q.real(expr.exp), assumptions):
-                if ask(Q.positive(expr.base), assumptions):
+        if ask(Q.imaginary(expr.base), assumptions):
+            if ask(Q.real(expr.exp), assumptions):
+                if ask(Q.odd(expr.exp), assumptions):
+                    return False
+                elif ask(Q.even(expr.exp), assumptions):
                     return True
-        elif (ask(Q.imaginary(expr.base), assumptions)==True):
-            return not ask(Q.imaginary(expr))
+        elif ask(Q.real(expr.base), assumptions):
+            if ask(Q.imaginary(expr.exp), assumptions):
+                if expr.base == 1 or expr.base == -1:
+                    return True
+            elif ask(Q.real(expr.exp), assumptions):
+                if expr.exp.is_Rational and \
+                   ask(Q.even(expr.exp.q), assumptions):
+                    return ask(Q.real(expr.base), assumptions) and \
+                           not ask(Q.negative(expr.base), assumptions)
+                elif ask(Q.integer(expr.exp), assumptions):
+                    return True
+                elif ask(Q.negative(expr.base), assumptions) and \
+                     not ask(Q.integer(expr.exp), assumptions):
+                    return False
+                elif ask(Q.positive(expr.base), assumptions):
+                    return True
 
     @staticmethod
     def Rational(expr, assumptions):
@@ -285,6 +298,9 @@ class AskRealHandler(CommonHandler):
             return True
 
     cos, exp = sin, sin
+    @staticmethod
+    def NaN(expr, assumptions):
+        return False
 
 class AskExtendedRealHandler(AskRealHandler):
     """
@@ -355,7 +371,7 @@ class AskImaginaryHandler(CommonHandler):
     @staticmethod
     def _number(expr, assumptions):
         # helper method
-        return not expr.as_real_imag()[0]
+        return not expr.as_real_imag()[0].evalf()
 
     @staticmethod
     def Add(expr, assumptions):
@@ -405,38 +421,25 @@ class AskImaginaryHandler(CommonHandler):
     def Pow(expr, assumptions):
         """
         Imaginary**integer      -> Imaginary
-                                    if integer%2 ==1
+                                    if integer % 2 == 1
         Imaginary**integer      -> real
-                                    if integer%2 ==0     
-        Imaginary<x>**Imaginary<y> -> Real if sizeof(x.args)==1 and  sizeof(x.args)==1
-                                      else Imaginary  
+                                    if integer % 2 == 0
+        Imaginary**Imaginary    -> ?
+        Imaginary**Real         -> ?
         """
         if expr.is_number:
-            return AskRealHandler._number(expr, assumptions)
-        img=0
-        if ask(Q.real(expr.exp)):
-            if expr.args[1]%2 == 1:
-                return True
-            else:
-                return False
-        else:
-            base_size=0
-            exp_size=0
-            for arg in expr.base.args:
-                base_size=base_size+1
-            for arg in expr.exp.args:
-                exp_size=exp_size+1
-            if ((base_size==1) and  (exp_size==1)):
-                for arg in expr.args:
-                    if (ask(Q.imaginary(arg), assumptions)):
-                        img=img+1
-                if img==2:
+            return AskImaginaryHandler._number(expr, assumptions)
+        if ask(Q.imaginary(expr.base), assumptions):
+            if ask(Q.real(expr.exp), assumptions):
+                if ask(Q.odd(expr.exp), assumptions):
+                    return True
+                elif ask(Q.even(expr.exp), assumptions):
                     return False
-            elif ask(Q.imaginary(expr.base),assumptions) or ask(Q.imaginary(expr.exp),assumptions):
-                 return False
-            else:
-                return
-        
+        elif ask(Q.real(expr.base), assumptions):
+            if ask(Q.imaginary(expr.exp), assumptions):
+                if expr.base == 1 or expr.base == -1:
+                    return False
+
     @staticmethod
     def Number(expr, assumptions):
         return not (expr.as_real_imag()[1] == 0)
