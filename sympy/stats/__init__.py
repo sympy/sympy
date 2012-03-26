@@ -8,16 +8,16 @@ Normal, Exponential, Coin, Die, etc...  or built with functions like FiniteRV.
 
 Queries on random expressions can be made using the functions
 
-==================== =============================
+===================== =============================
     Expression                Meaning
--------------------- -----------------------------
- P(condition)         Probability
- E(expression)        Expectation value
- variance(expression) Variance
- density(expression)  Probability Density Function
- sample(expression)   Produce a realization
- where(condition)     Where the condition is true
-==================== =============================
+--------------------- -----------------------------
+ P(condition)          Probability
+ E(expression)         Expectation value
+ variance(expression)  Variance
+ density(expression)   Probability Density Function
+ sample(expression)    Produce a realization
+ where(condition)      Where the condition is true
+===================== =============================
 
 Examples
 ========

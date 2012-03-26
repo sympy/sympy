@@ -158,7 +158,7 @@ def Arcsin(a=0, b=1, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Arcsine_distribution
+    [1] http://en.wikipedia.org/wiki/Arcsine_distribution
     """
 
     return ArcsinPSpace(a, b, symbol).value
@@ -224,7 +224,7 @@ def Benini(alpha, beta, sigma, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Benini_distribution
+    [1] http://en.wikipedia.org/wiki/Benini_distribution
     """
 
     return BeniniPSpace(alpha, beta, sigma, symbol).value
@@ -300,8 +300,8 @@ def Beta(alpha, beta, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Beta_distribution
-    .. [2] http://mathworld.wolfram.com/BetaDistribution.html
+    [1] http://en.wikipedia.org/wiki/Beta_distribution
+    [2] http://mathworld.wolfram.com/BetaDistribution.html
     """
 
     return BetaPSpace(alpha, beta, symbol).value
@@ -361,8 +361,8 @@ def BetaPrime(alpha, beta, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Beta_prime_distribution
-    .. [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
+    [1] http://en.wikipedia.org/wiki/Beta_prime_distribution
+    [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
     """
 
     return BetaPrimePSpace(alpha, beta, symbol).value
@@ -417,8 +417,8 @@ def Cauchy(x0, gamma, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Cauchy_distribution
-    .. [2] http://mathworld.wolfram.com/CauchyDistribution.html
+    [1] http://en.wikipedia.org/wiki/Cauchy_distribution
+    [2] http://mathworld.wolfram.com/CauchyDistribution.html
     """
 
     return CauchyPSpace(x0, gamma, symbol).value
@@ -472,8 +472,8 @@ def Chi(k, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Chi_distribution
-    .. [2] http://mathworld.wolfram.com/ChiDistribution.html
+    [1] http://en.wikipedia.org/wiki/Chi_distribution
+    [2] http://mathworld.wolfram.com/ChiDistribution.html
     """
 
     return ChiPSpace(k, symbol).value
@@ -532,7 +532,7 @@ def Dagum(p, a, b, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Dagum_distribution
+    [1] http://en.wikipedia.org/wiki/Dagum_distribution
     """
 
     return DagumPSpace(p, a, b, symbol).value
@@ -618,8 +618,8 @@ def Exponential(rate, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Exponential_distribution
-    .. [2] http://mathworld.wolfram.com/ExponentialDistribution.html
+    [1] http://en.wikipedia.org/wiki/Exponential_distribution
+    [2] http://mathworld.wolfram.com/ExponentialDistribution.html
     """
 
     return ExponentialPSpace(rate, symbol).value
@@ -712,8 +712,8 @@ def Gamma(k, theta, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gamma_distribution
-    .. [2] http://mathworld.wolfram.com/GammaDistribution.html
+    [1] http://en.wikipedia.org/wiki/Gamma_distribution
+    [2] http://mathworld.wolfram.com/GammaDistribution.html
     """
 
     return GammaPSpace(k, theta, symbol).value
@@ -767,8 +767,8 @@ def Laplace(mu, b, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Laplace_distribution
-    .. [2] http://mathworld.wolfram.com/LaplaceDistribution.html
+    [1] http://en.wikipedia.org/wiki/Laplace_distribution
+    [2] http://mathworld.wolfram.com/LaplaceDistribution.html
     """
 
     return LaplacePSpace(mu, b, symbol).value
@@ -824,8 +824,8 @@ def Logistic(mu, s, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Logistic_distribution
-    .. [2] http://mathworld.wolfram.com/LogisticDistribution.html
+    [1] http://en.wikipedia.org/wiki/Logistic_distribution
+    [2] http://mathworld.wolfram.com/LogisticDistribution.html
     """
 
     return LogisticPSpace(mu, s, symbol).value
@@ -903,8 +903,8 @@ def LogNormal(mean, std, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Lognormal
-    .. [2] http://mathworld.wolfram.com/LogNormalDistribution.html
+    [1] http://en.wikipedia.org/wiki/Lognormal
+    [2] http://mathworld.wolfram.com/LogNormalDistribution.html
     """
 
     return LogNormalPSpace(mean, std, symbol).value
@@ -966,8 +966,8 @@ def Maxwell(a, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Maxwell_distribution
-    .. [2] http://mathworld.wolfram.com/MaxwellDistribution.html
+    [1] http://en.wikipedia.org/wiki/Maxwell_distribution
+    [2] http://mathworld.wolfram.com/MaxwellDistribution.html
     """
 
     return MaxwellPSpace(a, symbol).value
@@ -1041,7 +1041,7 @@ def Nakagami(mu, omega, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Nakagami_distribution
+    [1] http://en.wikipedia.org/wiki/Nakagami_distribution
     """
 
     return NakagamiPSpace(mu, omega, symbol).value
@@ -1130,8 +1130,8 @@ def Normal(mean, std, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Normal_distribution
-    .. [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
+    [1] http://en.wikipedia.org/wiki/Normal_distribution
+    [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
     """
 
     return NormalPSpace(mean, std, symbol).value
@@ -1197,8 +1197,8 @@ def Pareto(xm, alpha, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Pareto_distribution
-    .. [2] http://mathworld.wolfram.com/ParetoDistribution.html
+    [1] http://en.wikipedia.org/wiki/Pareto_distribution
+    [2] http://mathworld.wolfram.com/ParetoDistribution.html
     """
 
     return ParetoPSpace(xm, alpha, symbol).value
@@ -1258,8 +1258,8 @@ def Rayleigh(sigma, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Rayleigh_distribution
-    .. [2] http://mathworld.wolfram.com/RayleighDistribution.html
+    [1] http://en.wikipedia.org/wiki/Rayleigh_distribution
+    [2] http://mathworld.wolfram.com/RayleighDistribution.html
     """
 
     return RayleighPSpace(sigma, symbol).value
@@ -1324,8 +1324,8 @@ def StudentT(nu, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Student_t-distribution
-    .. [2] http://mathworld.wolfram.com/Studentst-Distribution.html
+    [1] http://en.wikipedia.org/wiki/Student_t-distribution
+    [2] http://mathworld.wolfram.com/Studentst-Distribution.html
     """
 
     return StudentTPSpace(nu, symbol).value
@@ -1397,8 +1397,8 @@ def Triangular(a, b, c, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Triangular_distribution
-    .. [2] http://mathworld.wolfram.com/TriangularDistribution.html
+    [1] http://en.wikipedia.org/wiki/Triangular_distribution
+    [2] http://mathworld.wolfram.com/TriangularDistribution.html
     """
 
     return TriangularPSpace(a, b, c, symbol).value
@@ -1479,8 +1479,8 @@ def Uniform(left, right, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29
-    .. [2] http://mathworld.wolfram.com/UniformDistribution.html
+    [1] http://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29
+    [2] http://mathworld.wolfram.com/UniformDistribution.html
     """
 
     return UniformPSpace(left, right, symbol).value
@@ -1549,8 +1549,8 @@ def UniformSum(n, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Uniform_sum_distribution
-    .. [2] http://mathworld.wolfram.com/UniformSumDistribution.html
+    [1] http://en.wikipedia.org/wiki/Uniform_sum_distribution
+    [2] http://mathworld.wolfram.com/UniformSumDistribution.html
     """
 
     return UniformSumPSpace(n, symbol).value
@@ -1624,8 +1624,8 @@ def Weibull(alpha, beta, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Weibull_distribution
-    .. [2] http://mathworld.wolfram.com/WeibullDistribution.html
+    [1] http://en.wikipedia.org/wiki/Weibull_distribution
+    [2] http://mathworld.wolfram.com/WeibullDistribution.html
 
     """
 
@@ -1685,8 +1685,8 @@ def WignerSemicircle(R, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Wigner_semicircle_distribution
-    .. [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
+    [1] http://en.wikipedia.org/wiki/Wigner_semicircle_distribution
+    [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
     """
 
     return WignerSemicirclePSpace(R, symbol).value

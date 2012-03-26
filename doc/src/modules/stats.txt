@@ -52,7 +52,7 @@ Interface
 .. autofunction:: density
 .. autofunction:: given
 .. autofunction:: where
-.. autofunction:: var
+.. autofunction:: variance
 .. autofunction:: std
 .. autofunction:: sample
 .. autofunction:: sample_iter
