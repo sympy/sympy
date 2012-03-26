@@ -1,5 +1,6 @@
 from sympy import (Symbol, symbols, factorial, factorial2, binomial,
-    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan, oo)
+    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan, oo, simplify)
+from sympy.utilities.pytest import XFAIL
 
 def test_rf_eval_apply():
     x, y = symbols('x,y')
@@ -140,3 +141,10 @@ def test_binomial_rewrite():
 
     assert binomial(n, k).rewrite(factorial) == factorial(n)/(factorial(k)*factorial(n - k))
     assert binomial(n, k).rewrite(gamma) == gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
+
+@XFAIL
+def test_factorial_simplify_fail():
+    # simplify(factorial(x + 1).diff(x) - ((x + 1)*factorial(x)).diff(x))) == 0
+    from sympy.abc import x
+    assert simplify(x*polygamma(0, x + 1) - x*polygamma(0, x + 2) +
+    polygamma(0, x + 1) - polygamma(0, x + 2) + 1) == 0

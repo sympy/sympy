@@ -1,12 +1,14 @@
 from core import C
 from basic import Basic, Atom
 from singleton import S
-from evalf import EvalfMixin
+from evalf import EvalfMixin, pure_complex
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
 from compatibility import reduce, SymPyDeprecationWarning
+from sympy.mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
+from math import log10, ceil
 
 class Expr(Basic, EvalfMixin):
     __slots__ = []
@@ -30,15 +32,15 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-            >>> from sympy import Expr
-            >>> e = Expr()
-            >>> e._diff_wrt
-            False
-            >>> class MyClass(Expr):
-            ...     _diff_wrt = True
-            ...
-            >>> (2*MyClass()).diff(MyClass())
-            2
+        >>> from sympy import Expr
+        >>> e = Expr()
+        >>> e._diff_wrt
+        False
+        >>> class MyClass(Expr):
+        ...     _diff_wrt = True
+        ...
+        >>> (2*MyClass()).diff(MyClass())
+        2
         """
         return False
 
@@ -154,7 +156,6 @@ class Expr(Basic, EvalfMixin):
         return Mod(other, self)
 
     def __int__(self):
-        from sympy import round
         # Although we only need to round to the units position, we'll
         # get one more digit so the extra testing below can be avoided
         # unless the rounded value rounded to an integer, e.g. if an
@@ -166,16 +167,18 @@ class Expr(Basic, EvalfMixin):
         # were 1.99, however, this would round to 2.0 and our int value is
         # off by one. So...if our round value is the same as the int value
         # (regardless of how much extra work we do to calculate extra decimal
-        # places) we need to test whether we are off by one or not.
-        r = round(self, 1)
-        i = int(C.Integer(r))
+        # places) we need to test whether we are off by one.
+        r = self.round(1)
+        if not r.is_Number:
+            raise TypeError("can't convert complex to int")
+        i = int(r)
         if not i:
             return 0
         # off-by-one check
-        if i == r:
+        if i == r and not (self - i).equals(0):
             isign = 1 if i > 0 else -1
             x = C.Dummy()
-            # in the following (self - i).evalf(1) will not work while
+            # in the following (self - i).evalf(1) will not always work while
             # (self - r).evalf(1) and the use of subs does; if the test that
             # was added when this comment was added passes, it might be safe
             # to simply use sign to compute this rather than doing this by hand:
@@ -263,26 +266,118 @@ class Expr(Basic, EvalfMixin):
             return False
         return all(obj.is_number for obj in self.iter_basic_args())
 
+    def _random(self, n=None, re_min=-1, im_min=-1, re_max=1, im_max=1):
+        """Return self evaluated, if possible, replacing free symbols with
+        random complex values, if necessary.
+
+        The random complex value for each free symbol is generated
+        by the random_complex_number routine giving real and imaginary
+        parts in the range given by the re_min, re_max, im_min, and im_max
+        values. The returned value is evaluated to a precision of n
+        (if given) else the maximum of 15 and the precision needed
+        to get more than 1 digit of precision. If the expression
+        could not be evaluated to a number, or could not be evaluated
+        to more than 1 digit of precision, then None is returned.
+
+        Examples
+        ========
+
+        >>> from sympy import sqrt
+        >>> from sympy.abc import x, y
+        >>> x._random()                         # doctest: +SKIP
+        0.0392918155679172 + 0.916050214307199*I
+        >>> x._random(2)                        # doctest: +SKIP
+        -0.77 - 0.87*I
+        >>> (x + y/2)._random(2)                # doctest: +SKIP
+        -0.57 + 0.16*I
+        >>> sqrt(2)._random(2)
+        1.4
+
+        See Also
+        ========
+
+        sympy.utilities.randtest.random_complex_number
+        """
+
+        free = self.free_symbols
+        prec = 1
+        if free:
+            from sympy.utilities.randtest import random_complex_number
+            a, c, b, d = re_min, re_max, im_min, im_max
+            reps = dict(zip(free, [random_complex_number(a, b, c, d, rational=True)
+                           for zi in free]))
+            nmag = abs(self.evalf(1, subs=reps))
+        else:
+            reps = {}
+            nmag = abs(self.evalf(1))
+
+        if not hasattr(nmag, '_prec'):
+            # e.g. exp_polar(2*I*pi) doesn't evaluate but is_number is True
+            return None
+
+
+        if nmag._prec == 1:
+            # increase the precision up to the default maximum
+            # precision to see if we can get any significance
+
+            # get the prec steps (patterned after giant_steps in
+            # libintmath) which approximately doubles the prec
+            # each step
+            from sympy.core.evalf import DEFAULT_MAXPREC as target
+            L = [target]
+            start = 2
+            while 1:
+                Li = L[-1]//2 + 2
+                if Li >= L[-1] or Li < start:
+                    if L[-1] != start:
+                        L.append(start)
+                    break
+                L.append(Li)
+            L = L[::-1]
+
+            # evaluate
+            for prec in L:
+                nmag = abs(self.evalf(prec, subs=reps))
+                if nmag._prec != 1:
+                    break
+
+        if nmag._prec != 1:
+            if n is None:
+                n = max(prec, 15)
+            return self.evalf(n, subs=reps)
+
+        # never got any significance
+        return None
+
     def is_constant(self, *wrt, **flags):
-        """Return True if self is constant, otherwise False.
+        """Return True if self is constant, False if not, or None if
+        the constancy could not be determined conclusively.
 
         If an expression has no free symbols then it is a constant. If
         there are free symbols it is possible that the expression is a
-        constant, perhaps (but not necessarily) zero. If an expression
-        with free symbols is a number then it is not a constant.
-        Other free-symbol containing expressions are tested with
-        differentiation with respect to variables in `wrt` (or all free
-        symbols if omitted) to see if the expression is constant or not.
+        constant, perhaps (but not necessarily) zero. To test such
+        expressions, two strategies are tried:
+
+        1) numerical evaluation at two random points. If two such evaluations
+        give two different values and the values have a precision greater than
+        1 then self is not constant. If the evaluations agree or could not be
+        obtained with any precision, no decision is made. The numerical testing
+        is done only if ``wrt`` is different than the free symbols.
+
+        2) differentiation with respect to variables in 'wrt' (or all free
+        symbols if omitted) to see if the expression is constant or not. This
+        will not always lead to an expression that is zero even though an
+        expression is constant (see added test in test_expr.py). If
+        all derivatives are zero then self is constant with respect to the
+        given symbols.
+
+        If neither evaluation nor differentiation can prove the expression is
+        constant, None is returned unless two numerical values happened to be
+        the same and the flag ``failing_number`` is True -- in that case the
+        numerical value will be returned.
 
         If flag simplify=False is passed, self will not be simplified;
         the default is True since self should be simplified before testing.
-
-        Although it is tempting to use numerical methods to test
-        expessions that have free symbols, results thus obtained
-        could only be probabalistic since for any tested values that
-        returned 0, it is possible that these were simply roots of the
-        expression.
-
 
         Examples
         ========
@@ -295,11 +390,11 @@ class Expr(Basic, EvalfMixin):
         True
         >>> Sum(x, (x, 1, 10)).is_constant()
         True
-        >>> Sum(x, (x, 1, n)).is_constant()
+        >>> Sum(x, (x, 1, n)).is_constant()  # doctest: +SKIP
         False
         >>> Sum(x, (x, 1, n)).is_constant(y)
         True
-        >>> Sum(x, (x, 1, n)).is_constant(n)
+        >>> Sum(x, (x, 1, n)).is_constant(n) # doctest: +SKIP
         False
         >>> Sum(x, (x, 1, n)).is_constant(x)
         True
@@ -315,78 +410,185 @@ class Expr(Basic, EvalfMixin):
         False
         >>> (x**x).is_constant()
         False
-        >>> one = cos(x)**2+sin(x)**2
+        >>> one = cos(x)**2 + sin(x)**2
         >>> one.is_constant()
         True
-        >>> ((one-1)**(x+1)).is_constant() # could be 0 or 1
+        >>> ((one - 1)**(x + 1)).is_constant() # could be 0 or 1
         False
         """
 
         simplify = flags.get('simplify', True)
 
-        free = self.free_symbols
-        # only one of these should be necessary since if something is
+        # Except for expressions that contain units, only one of these should
+        # be necessary since if something is
         # known to be a number it should also know that there are no
         # free symbols. But is_number quits as soon as it hits a non-number
         # whereas free_symbols goes until all free symbols have been collected,
         # thus is_number should be faster. But a double check on free symbols
         # is made just in case there is a discrepancy between the two.
-        if self.is_number:
-            return True
         free = self.free_symbols
-        # if this fails, the free_symbols routine needs to recognize that
-        # if the expression is a number then there are no free_symbols
-        assert free
+        if self.is_number or not free:
+            # if the following assertion fails then that object's free_symbols
+            # method needs attention: if an expression is a number it cannot
+            # have free symbols
+            assert not free
+            return True
+
         # if we are only interested in some symbols and they are not in the
         # free symbols then this expression is constant wrt those symbols
-        if wrt and not set(wrt) & free:
+        wrt = set(wrt)
+        if wrt and not wrt & free:
             return True
+        wrt = wrt or free
+
         # simplify unless this has already been done
         if simplify:
             self = self.simplify()
-        # is_zero should be a quick assumptions check; it can be wrong for numbers
-        # (see test_is_not_constant test), giving False when it shouldn't, but hopefully
-        # it will never give True unless it is sure.
+
+        # is_zero should be a quick assumptions check; it can be wrong for
+        # numbers (see test_is_not_constant test), giving False when it
+        # shouldn't, but hopefully it will never give True unless it is sure.
         if self.is_zero:
             return True
+
+        # try numerical evaluation in reals to see if we get two different
+        # values
+        failing_number = None
+        if wrt == free:
+            # try 0 and 1 via subsitution
+            a = self.subs(zip(free, [0]*len(free)))
+            if a.is_Rational:
+                b = self.subs(zip(free, [1]*len(free)))
+                if b.is_Rational:
+                    if a != b:
+                        return False
+            # try 0 and 1 via evaluation
+            a = self._random(None, 0, 0, 0, 0)
+            if a is not None:
+                b = self._random(None, 1, 0, 1, 0)
+                if b is not None:
+                    if a != b:
+                        return False
+                    # try random real
+                    b = self._random(None, -1, 0, 1, 0)
+                    if b is not None:
+                        if a != b:
+                            return False
+                        # try random complex
+                        b = self._random()
+                        if b is not None:
+                            if a != b:
+                                return False
+                            failing_number = a if a.is_number else b
+
         # now we will test each wrt symbol (or all free symbols) to see if the
-        # expression depends on them or not using differentiation.
-        if not wrt:
-            wrt = free
-        wrt = list(wrt)
-        for i in range(len(wrt)):
-            deriv = (self.diff(wrt[0])).simplify()
+        # expression depends on them or not using differentiation. This is
+        # not sufficient for all expressions, however, so we don't return
+        # False if we get a derivative other than 0 with free symbols.
+        for w in wrt:
+            deriv = self.diff(w).simplify()
             if deriv != 0:
+                if not (deriv.is_Number or pure_complex(deriv)):
+                    if flags.get('failing_number', False):
+                        return failing_number
+                    elif deriv.free_symbols:
+                        # dead line provided _random returns None in such cases
+                        return None
                 return False
-            wrt.pop(0)
         return True
 
     def equals(self, other, failing_expression=False):
         """Return True if self == other, False if it doesn't, or None. If
         failing_expression is True then the expression which did not simplify
-        to a 0 will be returned instead of None."""
+        to a 0 will be returned instead of None.
+
+        If ``self`` is a Number (or complex number) that is not zero, then
+        the result is False.
+
+        If ``self`` is a number and has not evaluated to zero, evalf will be
+        used to test whether the expression evaluates to zero. If it does so
+        and the result has significance (i.e. the precision is either -1, for
+        a Rational result, or is greater than 1) then the evalf value will be
+        used to return True or False.
+
+        """
 
         other = sympify(other)
         if self == other:
             return True
 
-        # they aren't the same so see if we can make the difference 0
-        diff = factor_terms((self - other).as_content_primitive()[1]).simplify()
-        if not diff.is_constant(simplify=False):
+        # they aren't the same so see if we can make the difference 0;
+        # don't worry about doing simplification steps one at a time
+        # because if the expression ever goes to 0 then the subsequent
+        # simplification steps that are done will be very fast.
+        diff = (self - other).as_content_primitive()[1]
+        diff = factor_terms(diff.simplify(), radical=True)
+        if not diff:
+            return True
+        elif diff.is_Number or pure_complex(diff):
+            return False
+        constant = diff.is_constant(simplify=False, failing_number=True)
+        if constant is False or \
+           not diff.free_symbols and not diff.is_number:
+            return False
+        elif constant is True:
+            ndiff = diff._random()
+            if ndiff:
+               return False
+
+        # diff has not simplified to zero; constant is either None, True
+        # or the number with significance (prec != 1) that was randomly
+        # calculated twice as the same value.
+        if constant not in (True, None) and constant != 0:
             return False
 
-        # don't worry about doing these steps a little at a time: if there
-        # is not going to be any control over what to try then just
-        # try everything and know that if a 0 is obtained, the additional
-        # step (e.g. factoring) is going to go quickly
-        diff = diff.factor()
-        if diff.is_Number:
-            return diff is S.Zero
-
         if failing_expression:
-            # return the expression that wouldn't simplify to zero
             return diff
         return None
+
+    def _eval_is_positive(self):
+        if self.is_number:
+            if self.is_real is False:
+                return False
+            try:
+                # check to see that we can get a value
+                n2 = self._eval_evalf(1)
+            except AttributeError:
+                n2 = None
+            if n2 is None:
+                return None
+            n, i = self.evalf(2).as_real_imag()
+            if not i.is_Number or not n.is_Number:
+                return False
+            if i:
+                if i._prec != 1:
+                    return False
+            elif n._prec != 1:
+                if n > 0:
+                    return True
+                return False
+
+    def _eval_is_negative(self):
+        if self.is_number:
+            if self.is_real is False:
+                return False
+            try:
+                # check to see that we can get a value
+                n2 = self._eval_evalf(1)
+            except AttributeError:
+                n2 = None
+            if n2 is None:
+                return None
+            n, i = self.evalf(2).as_real_imag()
+            if not i.is_Number or not n.is_Number:
+                return False
+            if i:
+                if i._prec != 1:
+                    return False
+            elif n._prec != 1:
+                if n < 0:
+                    return True
+                return False
 
     def _eval_interval(self, x, a, b):
         """
@@ -423,6 +625,8 @@ class Expr(Basic, EvalfMixin):
         return B - A
 
     def _eval_power(self, other):
+        # subclass to compute self**other for cases when
+        # other is not NaN, 0, or 1
         return None
 
     def _eval_conjugate(self):
@@ -647,13 +851,15 @@ class Expr(Basic, EvalfMixin):
         then an error will be raised unless it is explicitly supressed by
         setting ``warn`` to False.
 
-        Note: -1 is always separated from a Rational.
+        Note: -1 is always separated from a Number.
 
-        >>> from sympy import symbols
+        >>> from sympy import symbols, oo
         >>> A, B = symbols('A B', commutative=0)
         >>> x, y = symbols('x y')
         >>> (-2*x*y).args_cnc()
         [[-1, 2, x, y], []]
+        >>> (-2.5*x).args_cnc()
+        [[-1, 2.5, x], []]
         >>> (-2*x*A*B*y).args_cnc()
         [[-1, 2, x, y], [A, B]]
         >>> (-2*x*y).args_cnc(cset=True)
@@ -663,6 +869,8 @@ class Expr(Basic, EvalfMixin):
 
         >>> (-2 + x + A).args_cnc()
         [[], [x - 2 + A]]
+        >>> (-oo).args_cnc() # -oo is a singleton
+        [[-1, oo], []]
         """
 
         if self.is_Mul:
@@ -678,7 +886,10 @@ class Expr(Basic, EvalfMixin):
             c = args
             nc = []
 
-        if c and c[0].is_Rational and c[0].is_negative and c[0] != S.NegativeOne:
+        if c and (
+            c[0].is_Number and
+            c[0].is_negative and
+            c[0] != S.NegativeOne):
             c[:1] = [S.NegativeOne, -c[0]]
 
         if cset:
@@ -689,9 +900,11 @@ class Expr(Basic, EvalfMixin):
                                  [ci for ci in c if list(self.args).count(ci) > 1])
         return [c, nc]
 
-    def coeff(self, x, right=False):
+    def coeff(self, x, n=1, right=False):
         """
-        Returns the coefficient of the exact term "x" or None if there is no "x".
+        Returns the coefficient from the term containing "x**n" or None if
+        there is no such term. If ``n`` is zero then all terms independent of
+        x will be returned.
 
         When x is noncommutative, the coeff to the left (default) or right of x
         can be returned. The keyword 'right' is ignored when x is commutative.
@@ -709,41 +922,65 @@ class Expr(Basic, EvalfMixin):
 
         You can select terms that have an explicit negative in front of them:
 
-        >>> (-x+2*y).coeff(-1)
+        >>> (-x + 2*y).coeff(-1)
         x
-        >>> (x-2*y).coeff(-1)
+        >>> (x - 2*y).coeff(-1)
         2*y
 
-        You can select terms with no rational coefficient:
+        You can select terms with no Rational coefficient:
 
-        >>> (x+2*y).coeff(1)
+        >>> (x + 2*y).coeff(1)
         x
-        >>> (3+2*x+4*x**2).coeff(1)
+        >>> (3 + 2*x + 4*x**2).coeff(1)
+        0
+
+        You can select terms independent of x by making n=0; in this case
+        expr.as_independent(x)[0] is returned (and 0 will be returned instead
+        of None):
+
+        >>> (3 + 2*x + 4*x**2).coeff(x, 0)
+        3
+        >>> eq = ((x + 1)**3).expand() + 1
+        >>> eq
+        x**3 + 3*x**2 + 3*x + 2
+        >>> [eq.coeff(x, i) for i in reversed(range(4))]
+        [1, 3, 3, 2]
+        >>> eq -= 2
+        >>> [eq.coeff(x, i) for i in reversed(range(4))]
+        [1, 3, 3, 0]
 
         You can select terms that have a numerical term in front of them:
 
-        >>> (-x-2*y).coeff(2)
+        >>> (-x - 2*y).coeff(2)
         -y
         >>> from sympy import sqrt
-        >>> (x+sqrt(2)*x).coeff(sqrt(2))
+        >>> (x + sqrt(2)*x).coeff(sqrt(2))
         x
 
         The matching is exact:
 
-        >>> (3+2*x+4*x**2).coeff(x)
+        >>> (3 + 2*x + 4*x**2).coeff(x)
         2
-        >>> (3+2*x+4*x**2).coeff(x**2)
+        >>> (3 + 2*x + 4*x**2).coeff(x**2)
         4
-        >>> (3+2*x+4*x**2).coeff(x**3)
-        >>> (z*(x+y)**2).coeff((x+y)**2)
+        >>> (3 + 2*x + 4*x**2).coeff(x**3)
+        0
+        >>> (z*(x + y)**2).coeff((x + y)**2)
         z
-        >>> (z*(x+y)**2).coeff(x+y)
+        >>> (z*(x + y)**2).coeff(x + y)
+        0
 
-        In addition, no factoring is done, so 2 + y is not obtained from the
-        following:
+        In addition, no factoring is done, so 1 + z*(1 + y) is not obtained
+        from the following:
 
-        >>> (2*x+2+(x+1)*y).coeff(x+1)
-        y
+        >>> (x + z*(x + x*y)).coeff(x)
+        1
+
+        If such factoring is desired, factor_terms can be used first:
+
+        >>> from sympy import factor_terms
+        >>> factor_terms(x + z*(x + x*y)).coeff(x)
+        z*(y + 1) + 1
 
         >>> n, m, o = symbols('n m o', commutative=False)
         >>> n.coeff(n)
@@ -755,34 +992,61 @@ class Expr(Basic, EvalfMixin):
         >>> (n*m + m*n*m).coeff(n, right=True) # = (1 + m)*n*m
         m
 
-        If there is more than one possible coefficient None is returned:
+        If there is more than one possible coefficient 0 is returned:
 
         >>> (n*m + m*n).coeff(n)
+        0
 
         If there is only one possible coefficient, it is returned:
 
-        >>> (n*m + o*m*n).coeff(m*n)
-        o
-        >>> (n*m + o*m*n).coeff(m*n, right=1)
+        >>> (n*m + x*m*n).coeff(m*n)
+        x
+        >>> (n*m + x*m*n).coeff(m*n, right=1)
         1
+
+        See Also
+        ========
+
+        as_coeff_Add: a method to separate the additive constant from an expression
+        as_coeff_Mul: a method to separate the multiplicative constant from an expression
+        as_independent: a method to separate x dependent terms/factors from others
+
         """
+        from sympy.ntheory.residue_ntheory import int_tested
+
         x = sympify(x)
-        if not x: # 0 or None
-            return None
+        if not isinstance(x, Basic):
+            return S.Zero
+
+        n = int_tested(n)
+
+        if not x:
+            return S.Zero
+
         if x == self:
-            return S.One
+            if n == 1:
+                return S.One
+            return S.Zero
+
         if x is S.One:
-            try:
-                assert Add.make_args(S.Zero) and Mul.make_args(S.One)
-                # replace try/except with this
-                co = [a for a in Add.make_args(self)
-                      if not any(ai.is_number for ai in Mul.make_args(a))]
-            except AssertionError:
-                co = [a for a in (Add.make_args(self) or [S.Zero])
-                      if not any(ai.is_number for ai in (Mul.make_args(a) or [S.One]))]
+            co = [a for a in Add.make_args(self)
+                  if a.as_coeff_Mul()[0] is S.One]
             if not co:
-                return None
+                return S.Zero
             return Add(*co)
+
+        if n == 0:
+            if x.is_Add and self.is_Add:
+                c = self.coeff(x, right=right)
+                if not c:
+                    return S.Zero
+                if not right:
+                    return self - Add(*[a*x for a in Add.make_args(c)])
+                return self - Add(*[x*a for a in Add.make_args(c)])
+            return self.as_independent(x, as_Add=not self.is_Mul)[0]
+
+        # continue with the full method, looking for this power of x:
+        x = x**n
 
         def incommon(l1, l2):
             if not l1 or not l2:
@@ -792,20 +1056,6 @@ class Expr(Basic, EvalfMixin):
                 if l1[i] != l2[i]:
                     return l1[:i]
             return l1[:]
-
-        def arglist(x):
-            """ Return list of x's args when treated as a Mul after checking
-            to see if a negative Rational is present (in which case it is made
-            positive and a -1 is prepended to the list).
-            """
-
-            c, margs = x.as_coeff_mul()
-            if c is not S.One:
-                if c is not S.NegativeOne and c.is_negative:
-                    margs = (S.NegativeOne, -c) + margs
-                else:
-                    margs = (c,) + margs
-            return list(margs)
 
         def find(l, sub, first=True):
             """ Find where list sub appears in list l. When ``first`` is True
@@ -844,23 +1094,23 @@ class Expr(Basic, EvalfMixin):
         self_c = self.is_commutative
         x_c = x.is_commutative
         if self_c and not x_c:
-            return None
+            return S.Zero
 
         if self_c:
-            xargs = set(arglist(x))
+            xargs = x.args_cnc(cset=True, warn=False)[0]
             for a in args:
-                margs = set(arglist(a))
+                margs = a.args_cnc(cset=True, warn=False)[0]
                 if len(xargs) > len(margs):
                     continue
                 resid = margs.difference(xargs)
                 if len(resid) + len(xargs) == len(margs):
                     co.append(Mul(*resid))
             if co == []:
-                return None
+                return S.Zero
             elif co:
                 return Add(*co)
         elif x_c:
-            xargs = set(arglist(x))
+            xargs = x.args_cnc(cset=True, warn=False)[0]
             for a in args:
                 margs, nc = a.args_cnc(cset=True)
                 if len(xargs) > len(margs):
@@ -869,7 +1119,7 @@ class Expr(Basic, EvalfMixin):
                 if len(resid) + len(xargs) == len(margs):
                     co.append(Mul(*(list(resid) + nc)))
             if co == []:
-                return None
+                return S.Zero
             elif co:
                 return Add(*co)
         else: # both nc
@@ -884,7 +1134,7 @@ class Expr(Basic, EvalfMixin):
                     co.append((resid, nc))
             # now check the non-comm parts
             if not co:
-                return None
+                return S.Zero
             if all(n == co[0][1] for r, n in co):
                 ii = find(co[0][1], nx, right)
                 if ii is not None:
@@ -931,7 +1181,7 @@ class Expr(Basic, EvalfMixin):
                     else:
                         return Mul(*n[ii+len(nx):])
 
-            return None
+            return S.Zero
 
     def as_expr(self, *gens):
         """
@@ -1270,7 +1520,7 @@ class Expr(Basic, EvalfMixin):
         - if you don't want to process the arguments of the tail but need the
           tail then use self.as_two_terms() which gives the head and tail;
         - if you want to split self into an independent and dependent parts
-          use self.as_independent(\*deps)
+          use ``self.as_independent(*deps)``
 
         >>> from sympy import S
         >>> from sympy.abc import x, y
@@ -1305,7 +1555,7 @@ class Expr(Basic, EvalfMixin):
         - if you don't want to process the arguments of the tail but need the
           tail then use self.as_two_terms() which gives the head and tail.
         - if you want to split self into an independent and dependent parts
-          use self.as_independent(\*deps)
+          use ``self.as_independent(*deps)``
 
         >>> from sympy import S
         >>> from sympy.abc import x, y
@@ -1351,9 +1601,9 @@ class Expr(Basic, EvalfMixin):
         return c, r
 
     def as_content_primitive(self, radical=False):
-        r"""This method should recursively remove a Rational from all arguments
+        """This method should recursively remove a Rational from all arguments
         and return that (content) and the new self (primitive). The content
-        should always be positive and Mul(*foo.as_content_primitive()) == foo.
+        should always be positive and ``Mul(*foo.as_content_primitive()) == foo``.
         The primitive need no be in canonical form and should try to preserve
         the underlying structure if possible (i.e. expand_mul should not be
         applied to self).
@@ -1522,28 +1772,39 @@ class Expr(Basic, EvalfMixin):
                     return self.base ** (new_exp)
 
     def extract_additively(self, c):
-        """Return None if it's not possible to make self in the form
-           something + c in a nice way, i.e. preserving the properties
-           of arguments of self.
+        """Return self - c if it's possible to subtract c from self and
+        make all matching coefficients move towards zero, else return None.
 
-           >>> from sympy import symbols
+        Examples
+        ========
+        >>> from sympy import S
+        >>> from sympy.abc import x, y
+        >>> e = 2*x + 3
+        >>> e.extract_additively(x + 1)
+        x + 2
+        >>> e.extract_additively(3*x)
+        >>> e.extract_additively(4)
+        >>> (y*(x + 1)).extract_additively(x + 1)
+        >>> ((x + 1)*(x + 2*y + 1) + 3).extract_additively(x + 1)
+        (x + 1)*(x + 2*y) + 3
 
-           >>> x, y = symbols('x,y', real=True)
+        Sometimes auto-expansion will return a less simplified result
+        than desired; gcd_terms might be used in such cases:
 
-           >>> ((x*y)**3).extract_additively(1)
+        >>> from sympy import gcd_terms
+        >>> (4*x*(y + 1) + y).extract_additively(x)
+        4*x*(y + 1) + x*(4*y + 3) - x*(4*y + 4) + y
+        >>> gcd_terms(_)
+        x*(4*y + 3) + y
 
-           >>> (x+1).extract_additively(x)
-           1
-
-           >>> (x+1).extract_additively(2*x)
-
-           >>> (x+1).extract_additively(-x)
-           2*x + 1
-
-           >>> (-x+1).extract_additively(2*x)
-           -3*x + 1
+        See Also
+        ========
+        extract_multiplicatively
+        coeff
+        as_coefficient
 
         """
+
         c = sympify(c)
         if c is S.Zero:
             return self
@@ -1551,60 +1812,67 @@ class Expr(Basic, EvalfMixin):
             return S.Zero
         elif self is S.Zero:
             return None
-        elif c.is_Add:
-            x = self.extract_additively(c.as_two_terms()[0])
-            if x != None:
-                return x.extract_additively(c.as_two_terms()[1])
-        sub = self - c
+
         if self.is_Number:
-            if self.is_Integer:
-                if not sub.is_Integer:
-                    return None
-                elif self.is_positive and sub.is_negative:
-                    return None
-                else:
-                    return sub
-            elif self.is_Rational:
-                if not sub.is_Rational:
-                    return None
-                elif self.is_positive and sub.is_negative:
-                    return None
-                else:
-                    return sub
-            elif self.is_Float:
-                if not sub.is_Float:
-                    return None
-                elif self.is_positive and sub.is_negative:
-                    return None
-                else:
-                    return sub
-        elif self.is_NumberSymbol or self.is_Symbol or self is S.ImaginaryUnit:
-            if sub.is_Mul and len(sub.args) == 2:
-                if sub.args[0].is_Integer and sub.args[0].is_positive and sub.args[1] == self:
-                    return sub
-            elif sub.is_Integer:
-                return sub
-        elif self.is_Add:
-            terms = self.as_two_terms()
-            subs0 = terms[0].extract_additively(c)
-            if subs0 != None:
-                return subs0 + terms[1]
-            else:
-                subs1 = terms[1].extract_additively(c)
-                if subs1 != None:
-                    return subs1 + terms[0]
-        elif self.is_Mul:
-            self_coeff, self_terms = self.as_coeff_Mul(rational=True)
-            if c.is_Mul:
-                c_coeff, c_terms = c.as_coeff_Mul(rational=True)
-                if c_terms == self_terms:
-                    new_coeff = self_coeff.extract_additively(c_coeff)
-                    if new_coeff != None:
-                        return new_coeff * c_terms
-            elif c == self_terms:
-                new_coeff = self_coeff.extract_additively(1)
-                if new_coeff != None:
-                    return new_coeff * c
+            if not c.is_Number:
+                return None
+            co = self
+            diff = co - c
+            # XXX should we match types? i.e should 3 - .1 succeed?
+            if (co > 0 and diff > 0 and diff < co or
+                co < 0 and diff < 0 and diff > co):
+                return diff
+            return None
+
+        if c.is_Number:
+            co, t = self.as_coeff_Add()
+            xa = co.extract_additively(c)
+            if xa is None:
+                return None
+            return xa + t
+
+        # handle the args[0].is_Number case separately
+        # since we will have trouble looking for the coeff of
+        # a number.
+        if c.is_Add and c.args[0].is_Number:
+            # whole term as a term factor
+            co = self.coeff(c)
+            xa0 = (co.extract_additively(1) or 0)*c
+            if xa0:
+                diff = self - co*c
+                return (xa0 + (diff.extract_additively(c) or diff)) or None
+            # term-wise
+            h, t = c.as_coeff_Add()
+            sh, st = self.as_coeff_Add()
+            xa = sh.extract_additively(h)
+            if xa is None:
+                return None
+            xa2 = st.extract_additively(t)
+            if xa2 is None:
+                return None
+            return xa + xa2
+
+        # whole term as a term factor
+        co = self.coeff(c)
+        xa0 = (co.extract_additively(1) or 0)*c
+        if xa0:
+            diff = self - co*c
+            return (xa0 + (diff.extract_additively(c) or diff)) or None
+        # term-wise
+        coeffs = []
+        for a in Add.make_args(c):
+            ac, at = a.as_coeff_Mul()
+            co = self.coeff(at)
+            if not co:
+                return None
+            coc, cot = co.as_coeff_Add()
+            xa = coc.extract_additively(ac)
+            if xa is None:
+                return None
+            self -= co*at
+            coeffs.append((cot + xa)*at)
+        coeffs.append(self)
+        return Add(*coeffs)
 
     def could_extract_minus_sign(self):
         """Canonical way to choose an element in the set {e, -e} where
@@ -1648,7 +1916,7 @@ class Expr(Basic, EvalfMixin):
 
     def extract_branch_factor(self, allow_half=False):
         """
-        Try to write self as exp_polar(2*pi*I*n)*z in a nice way.
+        Try to write self as ``exp_polar(2*pi*I*n)*z`` in a nice way.
         Return (z, n).
 
         >>> from sympy import exp_polar, I, pi
@@ -1684,7 +1952,7 @@ class Expr(Basic, EvalfMixin):
         exps = []
         for arg in args:
             if arg.func is exp_polar:
-                exps += [arg.args[0]]
+                exps += [arg.exp]
             else:
                 res *= arg
         piimult = S(0)
@@ -2228,7 +2496,7 @@ class Expr(Basic, EvalfMixin):
         return self
 
     def as_coeff_exponent(self, x):
-        """ c*x**e -> c,e where x can be any symbolic expression.
+        """ ``c*x**e -> c,e`` where x can be any symbolic expression.
         """
         x = sympify(x)
         wc = Wild('wc')
@@ -2450,14 +2718,99 @@ class Expr(Basic, EvalfMixin):
         from sympy.polys import invert
         return invert(self, g)
 
+    def round(self, p=0):
+        """Return x rounded to the given decimal place.
+
+        If a complex number would results, apply round to the real
+        and imaginary components of the number.
+
+        Examples
+        ========
+        >>> from sympy import pi, E, I, S, Add, Mul, Number
+        >>> S(10.5).round()
+        11.
+        >>> pi.round()
+        3.
+        >>> pi.round(2)
+        3.14
+        >>> (2*pi + E*I).round()              #doctest: +SKIP
+        6. + 3.*I
+
+        The round method has a chopping effect:
+
+        >>> (2*pi + I/10).round()
+        6.
+        >>> (pi/10 + 2*I).round()             #doctest: +SKIP
+        2.*I
+        >>> (pi/10 + E*I).round(2)
+        0.31 + 2.72*I
+
+        Notes
+        =====
+
+        Do not confuse the Python builtin function, round, with the
+        SymPy method of the same name. The former always returns a float
+        (or raises an error if applied to a complex value) while the
+        latter returns either a Number or a complex number:
+
+        >>> isinstance(round(S(123), -2), Number)
+        False
+        >>> isinstance(S(123).round(-2), Number)
+        True
+        >>> isinstance((3*I).round(), Mul)
+        True
+        >>> isinstance((1 + 3*I).round(), Add)
+        True
+
+        """
+        from sympy.functions.elementary.exponential import log
+
+        x = self
+        if not x.is_number:
+            raise TypeError('%s is not a number' % x)
+        if not x.is_real:
+            i, r = x.as_real_imag()
+            return i.round(p) + S.ImaginaryUnit*r.round(p)
+        if not x:
+            return x
+        p = int(p)
+
+        precs = [f._prec for f in x.atoms(C.Float)]
+        dps = prec_to_dps(max(precs)) if precs else None
+
+        xpos = abs(x.n())
+        try:
+            mag_first_dig = int(ceil(log10(xpos)))
+        except (ValueError, OverflowError):
+            mag_first_dig = int(ceil(C.Float(mpf_log(xpos._mpf_, 53))/log(10)))
+        # check that we aren't off by 1
+        if (xpos/10**mag_first_dig) >= 1:
+            mag_first_dig += 1
+            assert .1 <= (xpos/10**mag_first_dig) < 1
+        allow = digits_needed = mag_first_dig + p
+        if dps is not None and allow > dps:
+            allow = dps
+        mag = Pow(10, p) # magnitude needed to bring digit p to units place
+        x += 1/(2*mag) # add the half for rounding
+        i10 = 10*mag*x.n((dps if dps is not None else digits_needed) + 1)
+        rv = Integer(i10)//10
+        q = 1
+        if p > 0:
+            q = mag
+        elif p < 0:
+            rv /= mag
+        rv = Rational(rv, q)
+        if rv.is_Integer:
+            # use str or else it won't be a float
+            return C.Float(str(rv), digits_needed)
+        else:
+            return C.Float(rv, allow)
+
 class AtomicExpr(Atom, Expr):
     """
     A parent class for object which are both atoms and Exprs.
 
-    Examples
-    ========
-
-    Symbol, Number, Rational, Integer, ...
+    For example: Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
 
@@ -2469,9 +2822,6 @@ class AtomicExpr(Atom, Expr):
         if self == s:
             return S.One
         return S.Zero
-
-    def as_numer_denom(self):
-        return self, S.One
 
     def _eval_is_polynomial(self, syms):
         return True
@@ -2490,3 +2840,4 @@ from mod import Mod
 from sympify import sympify
 from symbol import Wild
 from exprtools import factor_terms
+from numbers import Integer, Rational

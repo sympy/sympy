@@ -10,7 +10,7 @@ categories          python
 platforms           darwin
 maintainers         nomaintainer
 homepage            http://sympy.org
-description         Sympy is a Python library for symbolic mathematics
+description         SymPy is a Python library for symbolic mathematics
 long_description    SymPy is a Python library for symbolic mathematics. \
                     It aims to become a full-featured computer algebra \
                     system (CAS) while keeping the code as simple as \

@@ -69,7 +69,7 @@ def test_all_classes_are_tested():
             if test not in ns:
                 failed.append(module + '.' + name)
 
-    assert not failed, "Missing classes: %s" % ", ".join(failed)
+    assert not failed, "Missing classes: %s.  Please add tests for these to sympy/core/tests/test_args.py." % ", ".join(failed)
 
 def _test_args(obj):
     return all(isinstance(arg, Basic) for arg in obj.args)
@@ -303,14 +303,13 @@ def test_sympy__core__relational__Unequality():
     from sympy.core.relational import Unequality
     assert _test_args(Unequality(x, 2))
 
-@XFAIL
-def test_sympy__core__sets__CountableSet():
-    from sympy.core.sets import CountableSet
-    assert _test_args(CountableSet(1, 2, 3))
-
 def test_sympy__core__sets__EmptySet():
     from sympy.core.sets import EmptySet
     assert _test_args(EmptySet())
+
+def test_sympy__core__sets__UniversalSet():
+    from sympy.core.sets import UniversalSet
+    assert _test_args(UniversalSet())
 
 def test_sympy__core__sets__FiniteSet():
     from sympy.core.sets import FiniteSet
@@ -325,23 +324,15 @@ def test_sympy__core__sets__ProductSet():
     from sympy.core.sets import ProductSet, Interval
     assert _test_args(ProductSet(Interval(0, 1), Interval(0, 1)))
 
-def test_sympy__core__sets__RealFiniteSet():
-    from sympy.core.sets import RealFiniteSet
-    assert _test_args(RealFiniteSet(1, 2, 3))
-
-@SKIP("does it make sense to test this?")
-def test_sympy__core__sets__RealSet():
-    from sympy.core.sets import RealSet
-    assert _test_args(RealSet())
-
-def test_sympy__core__sets__RealUnion():
-    from sympy.core.sets import RealUnion, Interval
-    assert _test_args(RealUnion(Interval(0, 1), Interval(2, 3)))
-
 @SKIP("does it make sense to test this?")
 def test_sympy__core__sets__Set():
     from sympy.core.sets import Set
     assert _test_args(Set())
+
+def test_sympy__core__sets__Intersection():
+    from sympy.core.sets import Intersection, Interval
+    assert _test_args(Intersection(Interval(0, 3), Interval(2, 4),
+        evaluate=False))
 
 def test_sympy__core__sets__Union():
     from sympy.core.sets import Union, Interval
@@ -504,37 +495,97 @@ def test_sympy__stats__frv__ProductFinitePSpace():
     yp = SingleFinitePSpace(yd, {(y,1):S.Half, (y,2):S.Half})
     assert _test_args(ProductFinitePSpace(xp, yp))
 
-def test_sympy__stats__crv_types__NormalPSpace():
-    from sympy.stats.crv_types import NormalPSpace
-    assert _test_args(NormalPSpace(0,1))
+def test_sympy__stats__crv_types__ArcsinPSpace():
+    from sympy.stats.crv_types import ArcsinPSpace
+    assert _test_args(ArcsinPSpace(0,1))
 
-def test_sympy__stats__crv_types__LogNormalPSpace():
-    from sympy.stats.crv_types import LogNormalPSpace
-    assert _test_args(LogNormalPSpace(0,1))
-
-def test_sympy__stats__crv_types__ExponentialPSpace():
-    from sympy.stats.crv_types import ExponentialPSpace
-    assert _test_args(ExponentialPSpace(1))
-
-def test_sympy__stats__crv_types__ParetoPSpace():
-    from sympy.stats.crv_types import ParetoPSpace
-    assert _test_args(ParetoPSpace(1,1))
-
-def test_sympy__stats__crv_types__WeibullPSpace():
-    from sympy.stats.crv_types import WeibullPSpace
-    assert _test_args(WeibullPSpace(1,1))
+def test_sympy__stats__crv_types__BeniniPSpace():
+    from sympy.stats.crv_types import BeniniPSpace
+    assert _test_args(BeniniPSpace(1,1,1))
 
 def test_sympy__stats__crv_types__BetaPSpace():
     from sympy.stats.crv_types import BetaPSpace
     assert _test_args(BetaPSpace(1,1))
 
+def test_sympy__stats__crv_types__BetaPrimePSpace():
+    from sympy.stats.crv_types import BetaPrimePSpace
+    assert _test_args(BetaPrimePSpace(1,1))
+
+def test_sympy__stats__crv_types__CauchyPSpace():
+    from sympy.stats.crv_types import CauchyPSpace
+    assert _test_args(CauchyPSpace(0,1))
+
+def test_sympy__stats__crv_types__ChiPSpace():
+    from sympy.stats.crv_types import ChiPSpace
+    assert _test_args(ChiPSpace(1))
+
+def test_sympy__stats__crv_types__DagumPSpace():
+    from sympy.stats.crv_types import DagumPSpace
+    assert _test_args(DagumPSpace(1,1,1))
+
+def test_sympy__stats__crv_types__ExponentialPSpace():
+    from sympy.stats.crv_types import ExponentialPSpace
+    assert _test_args(ExponentialPSpace(1))
+
 def test_sympy__stats__crv_types__GammaPSpace():
     from sympy.stats.crv_types import GammaPSpace
     assert _test_args(GammaPSpace(1,1))
 
+def test_sympy__stats__crv_types__LaplacePSpace():
+    from sympy.stats.crv_types import LaplacePSpace
+    assert _test_args(LaplacePSpace(0,1))
+
+def test_sympy__stats__crv_types__LogisticPSpace():
+    from sympy.stats.crv_types import LogisticPSpace
+    assert _test_args(LogisticPSpace(0,1))
+
+def test_sympy__stats__crv_types__LogNormalPSpace():
+    from sympy.stats.crv_types import LogNormalPSpace
+    assert _test_args(LogNormalPSpace(0,1))
+
+def test_sympy__stats__crv_types__MaxwellPSpace():
+    from sympy.stats.crv_types import MaxwellPSpace
+    assert _test_args(MaxwellPSpace(1))
+
+def test_sympy__stats__crv_types__NakagamiPSpace():
+    from sympy.stats.crv_types import NakagamiPSpace
+    assert _test_args(NakagamiPSpace(1,1))
+
+def test_sympy__stats__crv_types__NormalPSpace():
+    from sympy.stats.crv_types import NormalPSpace
+    assert _test_args(NormalPSpace(0,1))
+
+def test_sympy__stats__crv_types__ParetoPSpace():
+    from sympy.stats.crv_types import ParetoPSpace
+    assert _test_args(ParetoPSpace(1,1))
+
+def test_sympy__stats__crv_types__RayleighPSpace():
+    from sympy.stats.crv_types import RayleighPSpace
+    assert _test_args(RayleighPSpace(1))
+
+def test_sympy__stats__crv_types__StudentTPSpace():
+    from sympy.stats.crv_types import StudentTPSpace
+    assert _test_args(StudentTPSpace(1))
+
+def test_sympy__stats__crv_types__TriangularPSpace():
+    from sympy.stats.crv_types import TriangularPSpace
+    assert _test_args(TriangularPSpace(-1,0,1))
+
 def test_sympy__stats__crv_types__UniformPSpace():
     from sympy.stats.crv_types import UniformPSpace
     assert _test_args(UniformPSpace(0,1))
+
+def test_sympy__stats__crv_types__UniformSumPSpace():
+    from sympy.stats.crv_types import UniformSumPSpace
+    assert _test_args(UniformSumPSpace(1))
+
+def test_sympy__stats__crv_types__WeibullPSpace():
+    from sympy.stats.crv_types import WeibullPSpace
+    assert _test_args(WeibullPSpace(1,1))
+
+def test_sympy__stats__crv_types__WignerSemicirclePSpace():
+    from sympy.stats.crv_types import WignerSemicirclePSpace
+    assert _test_args(WignerSemicirclePSpace(1))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
@@ -1096,6 +1147,14 @@ def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
     assert _test_args(DeferredVector("X"))
 
+@SKIP("abstract class")
+def test_sympy__matrices__expressions__matexpr__MatrixBase():
+    pass
+
+def test_sympy__matrices__immutable_matrix__ImmutableMatrix():
+    from sympy.matrices.immutable_matrix import ImmutableMatrix
+    assert _test_args(ImmutableMatrix([[1,2],[3,4]]))
+
 def test_sympy__matrices__expressions__blockmatrix__BlockDiagMatrix():
     from sympy.matrices.expressions.blockmatrix import BlockDiagMatrix
     from sympy.matrices.expressions import MatrixSymbol
@@ -1288,10 +1347,11 @@ def test_sympy__physics__quantum__gate__TwoQubitGate():
     from sympy.physics.quantum.gate import TwoQubitGate
     assert _test_args(TwoQubitGate(0))
 
-@SKIP("TODO: Add ImmutableMatrix Class")
 def test_sympy__physics__quantum__gate__UGate():
     from sympy.physics.quantum.gate import UGate
-    assert _test_args(UGate())
+    from sympy.matrices.immutable_matrix import ImmutableMatrix
+    from sympy import Integer, Tuple
+    assert _test_args(UGate(Tuple(Integer(1)), ImmutableMatrix([[1,0],[0,2]])))
 
 def test_sympy__physics__quantum__gate__XGate():
     from sympy.physics.quantum.gate import XGate
@@ -1743,6 +1803,54 @@ def test_sympy__tensor__indexed__IndexedBase():
 
 @XFAIL
 def test_as_coeff_add():
+    # the ordering of terms in (3*x, 4*x**2) is system-dependent
     assert (7, (3*x, 4*x**2)) == (7 + 3*x + 4*x**2).as_coeff_add()
 
+def test_sympy__geometry__curve__Curve():
+    from sympy.geometry.curve import Curve
+    assert _test_args(Curve((x, 1), (x, 0, 1)))
 
+def test_sympy__geometry__point__Point():
+    from sympy.geometry.point import Point
+    assert _test_args(Point(0, 1))
+
+def test_sympy__geometry__ellipse__Ellipse():
+    from sympy.geometry.ellipse import Ellipse
+    assert _test_args(Ellipse((0, 1), 2, 3))
+
+def test_sympy__geometry__ellipse__Circle():
+    from sympy.geometry.ellipse import Circle
+    assert _test_args(Circle((0, 1), 2))
+
+def test_sympy__geometry__line__LinearEntity():
+    from sympy.geometry.line import LinearEntity
+    assert _test_args(LinearEntity((0, 1), (2, 3)))
+
+def test_sympy__geometry__line__Line():
+    from sympy.geometry.line import Line
+    assert _test_args(Line((0, 1), (2, 3)))
+
+def test_sympy__geometry__line__Ray():
+    from sympy.geometry.line import Ray
+    assert _test_args(Ray((0, 1), (2, 3)))
+
+def test_sympy__geometry__line__Segment():
+    from sympy.geometry.line import Segment
+    assert _test_args(Segment((0, 1), (2, 3)))
+
+def test_sympy__geometry__polygon__Polygon():
+    from sympy.geometry.polygon import Polygon
+    assert _test_args(Polygon((0, 1), (2, 3), (4, 5), (6, 7)))
+
+def test_sympy__geometry__polygon__RegularPolygon():
+    from sympy.geometry.polygon import RegularPolygon
+    assert _test_args(RegularPolygon((0, 1), 2, 3, 4))
+
+def test_sympy__geometry__polygon__Triangle():
+    from sympy.geometry.polygon import Triangle
+    assert _test_args(Triangle((0, 1), (2, 3), (4, 5)))
+
+def test_sympy__geometry__entity__GeometryEntity():
+    from sympy.geometry.entity import GeometryEntity
+    from sympy.geometry.point import Point
+    assert _test_args(GeometryEntity(Point(1, 0), 1))

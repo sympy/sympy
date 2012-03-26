@@ -1,7 +1,7 @@
 """ Optimizations of the expression tree representation for better CSE
 opportunities.
 """
-from sympy.core import Add, Mul, Expr, S
+from sympy.core import Add, Basic, Expr, Mul, S
 from sympy.core.exprtools import factor_terms
 from sympy.utilities.iterables import preorder_traversal
 
@@ -11,7 +11,7 @@ class Neg(Expr):
     __slots__ = []
 
 def sub_pre(e):
-    """ Replace Add(x, Mul(NegativeOne(-1), y)) with Sub(x, y).
+    """ Replace y - x with Neg(x - y) if -1 can be extracted from y - x.
     """
     # make canonical, first
     adds = {}
@@ -20,9 +20,10 @@ def sub_pre(e):
     e = e.subs([(a, Mul(-1, -a, evaluate=False)
                     if adds[a] else a) for a in adds])
     # now replace any persisting Adds, a, that can have -1 extracted with Neg(-a)
-    reps = dict([(a, Neg(-a)) for a in e.atoms(Add)
-           if adds.get(a, a.could_extract_minus_sign())])
-    e = e.xreplace(reps)
+    if isinstance(e, Basic):
+        reps = dict([(a, Neg(-a)) for a in e.atoms(Add)
+               if adds.get(a, a.could_extract_minus_sign())])
+        e = e.xreplace(reps)
     return e
 
 def sub_post(e):

@@ -325,6 +325,25 @@ class LatexPrinter(Printer):
 
         return tex
 
+    def _print_Product(self, expr):
+        if len(expr.limits) == 1:
+            tex = r"\prod_{%s=%s}^{%s} " % \
+                tuple([ self._print(i) for i in expr.limits[0] ])
+        else:
+            def _format_ineq(l):
+                return r"%s \leq %s \leq %s" % \
+                    tuple([self._print(s) for s in l[1], l[0], l[2]])
+
+            tex = r"\prod_{\substack{%s}} " % \
+                str.join('\\\\', [ _format_ineq(l) for l in expr.limits ])
+
+        if isinstance(expr.function, Add):
+            tex += r"\left(%s\right)" % self._print(expr.function)
+        else:
+            tex += self._print(expr.function)
+
+        return tex
+
     def _print_Derivative(self, expr):
         dim = len(expr.variables)
 
@@ -530,13 +549,14 @@ class LatexPrinter(Printer):
         return r"\neg %s" % self._print(e.args[0])
 
     def _print_And(self, e):
-        arg = e.args[0]
+        args = sorted(e.args, key=default_sort_key)
+        arg = args[0]
         if arg.is_Boolean and not arg.is_Not:
-            tex = r"\left(%s\right)" % self._print(e.args[0]);
+            tex = r"\left(%s\right)" % self._print(arg)
         else:
-            tex = r"%s" % self._print(e.args[0]);
+            tex = r"%s" % self._print(arg)
 
-        for arg in e.args[1:]:
+        for arg in args[1:]:
             if arg.is_Boolean and not arg.is_Not:
                 tex += r" \wedge \left(%s\right)" % (self._print(arg))
             else:
@@ -545,13 +565,14 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Or(self, e):
-        arg = e.args[0]
+        args = sorted(e.args, key=default_sort_key)
+        arg = args[0]
         if arg.is_Boolean and not arg.is_Not:
-            tex = r"\left(%s\right)" % self._print(e.args[0]);
+            tex = r"\left(%s\right)" % self._print(arg)
         else:
-            tex = r"%s" % self._print(e.args[0]);
+            tex = r"%s" % self._print(arg)
 
-        for arg in e.args[1:]:
+        for arg in args[1:]:
             if arg.is_Boolean and not arg.is_Not:
                 tex += r" \vee \left(%s\right)" % (self._print(arg))
             else:
@@ -871,7 +892,7 @@ class LatexPrinter(Printer):
         tex = r"\begin{cases} %s \end{cases}"
         return tex % r" \\".join(ecpairs)
 
-    def _print_Matrix(self, expr):
+    def _print_MatrixBase(self, expr):
         lines = []
 
         for line in range(expr.rows): # horrible, should be 'rows'
@@ -885,6 +906,8 @@ class LatexPrinter(Printer):
             out_str = r'\left' + left_delim + out_str + \
                       r'\right' + right_delim
         return out_str % r"\\".join(lines)
+    _print_ImmutableMatrix = _print_MatrixBase
+    _print_MutableMatrix = _print_MatrixBase
 
     def _print_BlockMatrix(self, expr):
         return self._print(expr.mat)
@@ -996,7 +1019,7 @@ class LatexPrinter(Printer):
 
     def _print_RandomDomain(self, d):
         try:
-            return 'Domain: '+self._print(d.as_boolean())
+            return 'Domain: '+ self._print(d.as_boolean())
         except:
             try:
                 return ('Domain: ' + self._print(d.symbols) + ' in ' +
@@ -1006,16 +1029,12 @@ class LatexPrinter(Printer):
 
     def _print_FiniteSet(self, s):
         if len(s) > 10:
-            #take ten elements from the set at random
-            q = iter(s)
-            printset = [q.next() for i in xrange(10)]
+            printset = s.args[:3] + ('...',) + s.args[-3:]
         else:
-            printset = s
-        try:
-            printset.sort()
-        except AttributeError:
-            pass
-        return r"\left\{" + r", ".join(self._print(el) for el in printset) + r"\right\}"
+            printset = s.args
+        return (r"\left\{"
+              + r", ".join(self._print(el) for el in printset)
+              + r"\right\}")
     def _print_Interval(self, i):
         if i.start == i.end:
             return r"\left{%s\right}" % self._print(i.start)
@@ -1036,6 +1055,9 @@ class LatexPrinter(Printer):
 
     def _print_Union(self, u):
         return r" \cup ".join([self._print(i) for i in u.args])
+
+    def _print_Intersection(self, u):
+        return r" \cap ".join([self._print(i) for i in u.args])
 
     def _print_EmptySet(self, e):
         return r"\emptyset"

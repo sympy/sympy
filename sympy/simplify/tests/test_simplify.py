@@ -4,12 +4,13 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float, radsimp, collect_const)
+    factor, Mul, O, hyper, Add, Float, radsimp, collect_const, hyper,
+    signsimp)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
 
-from sympy.abc import x, y, z, t, a, b, c, d, e
+from sympy.abc import x, y, z, t, a, b, c, d, e, k
 
 def test_ratsimp():
     f, g = 1/x + 1/y, (x + y)/(x*y)
@@ -156,7 +157,7 @@ def test_simplify():
     f_2 = x*d + y*e + z*f - 1
     f_3 = x*g + y*h + z*i - 1
 
-    solutions = solve([f_1, f_2, f_3], x, y, z, simplified=False)
+    solutions = solve([f_1, f_2, f_3], x, y, z, simplify=False)
 
     assert simplify(solutions[y]) == \
         (a*i+c*d+f*g-a*f-c*g-d*i)/(a*e*i+b*f*g+c*d*h-a*f*h-b*d*i-c*e*g)
@@ -181,6 +182,14 @@ def test_simplify_other():
     assert simplify(Eq(sin(x)**2 + cos(x)**2, factorial(x)/gamma(x))) == Eq(1, x)
     nc = symbols('nc', commutative=False)
     assert simplify(x + x*nc) == x*(1 + nc)
+    # issue 3024
+    # f = exp(-I*(k*sqrt(t) + x/(2*sqrt(t)))**2)
+    # ans = integrate(f, (k, -oo, oo), conds='none')
+    ans = I*(-pi*x*exp(-3*I*pi/4 + I*x**2/(4*t))*erf(x*exp(-3*I*pi/4)/\
+        (2*sqrt(t)))/(2*sqrt(t)) + pi*x*exp(-3*I*pi/4 + I*x**2/(4*t))/\
+        (2*sqrt(t)))*exp(-I*x**2/(4*t))/(sqrt(pi)*x) - I*sqrt(pi)*\
+        (-erf(x*exp(I*pi/4)/(2*sqrt(t))) + 1)*exp(I*pi/4)/(2*sqrt(t))
+    assert simplify(ans) == -(-1)**(S(1)/4)*I*sqrt(pi)/sqrt(t)
 
 def test_simplify_ratio():
     # roots of x**3-3*x+5
@@ -243,6 +252,10 @@ def test_fraction():
     assert fraction(x*A/y) == (x*A, y)
     assert fraction(x*A**-1/y) == (x*A**-1, y)
 
+    n = symbols('n', negative=True)
+    assert fraction(exp(n)) == (1, exp(-n))
+    assert fraction(exp(-n)) == (exp(-n), 1)
+
 def test_separate():
     x, y, z = symbols('x,y,z')
 
@@ -262,7 +275,7 @@ def test_separate():
     assert separate((exp((x*y)**z)*exp(y))**2, deep=True, force=True) == exp(2*x**z*y**z)*exp(2*y)
 
     assert separate((exp(x)*exp(y))**z).is_Pow
-    assert separate((exp(x)*exp(y))**z, force=True) == exp(x*z)*exp(y*z)
+    assert separate((exp(x)*exp(y))**z, force=True) == exp(x)**z*exp(y)**z
 
 def test_powsimp():
     x, y, z, n = symbols('x,y,z,n')
@@ -318,6 +331,8 @@ def test_powsimp():
     eq = x**(2*a/3)
     assert powsimp(eq).exp == eq.exp == 2*a/3 # eq != (x**a)**(2/3) (try x = -1 and a = 3 to see)
     assert powsimp(2**(2*x)) == 4**x # powdenest goes the other direction
+
+    assert powsimp(exp(p/2)) == exp(p/2)
 
 def test_powsimp_polar():
     from sympy import polar_lift, exp_polar
@@ -476,7 +491,7 @@ def test_collect_Wild():
     assert collect(a*(x + 1)**y + (x + 1)**y, w1**w2) == (1 + a)*(x + 1)**y
 
 def test_collect_func():
-    f = expand((x + a + 1)**3)
+    f = ((x + a + 1)**3).expand()
 
     assert collect(f, x) == a**3 + 3*a**2 + 3*a + x**3 + x**2*(3*a + 3) + x*(3*a**2 + 6*a + 3) + 1
     assert collect(f, x, factor) == x**3 + 3*x**2*(a + 1) + 3*x*(a + 1)**2 + (a + 1)**3
@@ -520,7 +535,8 @@ def test_separatevars():
     assert separatevars(x*exp(x+y)+x*exp(x)) == x*(1 + exp(y))*exp(x)
     assert separatevars((x*(y+1))**z).is_Pow # != x**z*(1 + y)**z
     assert separatevars(1+x+y+x*y) == (x+1)*(y+1)
-    assert separatevars(y / pi * exp(-(z - x) / cos(n))) == y * exp((x - z) / cos(n)) / pi
+    assert separatevars(y/pi*exp(-(z - x)/cos(n))) == y*exp(x/cos(n))*exp(-z/cos(n))/pi
+    assert separatevars((x + y)*(x - y) + y**2 + 2*x + 1) == (x + 1)**2
     # 1759
     p=Symbol('p',positive=True)
     assert separatevars(sqrt(p**2 + x*p**2)) == p*sqrt(1 + x)
@@ -531,15 +547,27 @@ def test_separatevars():
     assert separatevars(sqrt(x*y), force=True) == sqrt(x)*sqrt(y)
     # 1858
     # any type sequence for symbols is fine
-    assert separatevars(((2*x+2)*y), dict=True, symbols=()) == {'coeff': 2, x: x + 1, y: y}
+    assert separatevars(((2*x+2)*y), dict=True, symbols=()) == {'coeff': 1, x: 2*x + 2, y: y}
     # separable
-    assert separatevars(((2*x+2)*y), dict=True, symbols=[]) == {'coeff': 2, x: x + 1, y: y}
-    assert separatevars(((2*x+2)*y), dict=True) == {'coeff': 2, x: x + 1, y: y}
-    assert separatevars(((2*x+2)*y), dict=True, symbols=None) == {'coeff': 2*y*(x + 1)}
+    assert separatevars(((2*x+2)*y), dict=True, symbols=[x]) == {'coeff': y, x: 2*x + 2}
+    assert separatevars(((2*x+2)*y), dict=True, symbols=[]) == {'coeff': 1, x: 2*x + 2, y: y}
+    assert separatevars(((2*x+2)*y), dict=True) == {'coeff': 1, x: 2*x + 2, y: y}
+    assert separatevars(((2*x+2)*y), dict=True, symbols=None) == {'coeff': y*(2*x + 2)}
     # not separable
+    assert separatevars(3, dict=True) is None
     assert separatevars(2*x+y, dict=True, symbols=()) is None
     assert separatevars(2*x+y, dict=True) is None
     assert separatevars(2*x+y, dict=True, symbols=None) == {'coeff': 2*x + y}
+    # 1709
+    n, m = symbols('n,m', commutative=False)
+    assert separatevars(m + n*m) == (1 + n)*m
+    assert separatevars(x + x*n) == x*(1 + n)
+    # 1811
+    f = Function('f')
+    assert separatevars(f(x) + x*f(x)) == f(x) + x*f(x)
+    # a noncommutable object present
+    eq = x*(1 + hyper((), (), y*z))
+    assert separatevars(eq) == eq
 
 def test_separatevars_advanced_factor():
     x,y,z = symbols('x,y,z')
@@ -696,9 +724,9 @@ def test_powdenest():
     i, j = symbols('i,j', integer=True)
 
     assert powdenest(x) == x
-    assert powdenest(x + 2*(x**(2*a/3))**(3*x)) == x + 2*(x**(a/3))**(6*x)
-    assert powdenest((exp(2*a/3))**(3*x)) == (exp(a/3))**(6*x)
-    assert powdenest((x**(2*a/3))**(3*x)) == (x**(a/3))**(6*x)
+    assert powdenest(x + 2*(x**(2*a/3))**(3*x)) == (x + 2*(x**(2*a/3))**(3*x))
+    assert powdenest((exp(2*a/3))**(3*x)) # -X-> (exp(a/3))**(6*x)
+    assert powdenest((x**(2*a/3))**(3*x)) == ((x**(2*a/3))**(3*x))
     assert powdenest(exp(3*x*log(2))) == 2**(3*x)
     assert powdenest(sqrt(p**2)) == p
     i, j = symbols('i,j', integer=True)
@@ -710,7 +738,7 @@ def test_powdenest():
     assert powdenest(exp(3*(log(a) + log(b)))) == a**3*b**3
     assert powdenest(((x**(2*i))**(3*y))**x) == ((x**(2*i))**(3*y))**x
     assert powdenest(((x**(2*i))**(3*y))**x, force=True) == x**(6*i*x*y)
-    assert powdenest(((x**(2*a/3))**(3*y/i))**x) == ((x**(a/3))**(y/i))**(6*x)
+    assert powdenest(((x**(2*a/3))**(3*y/i))**x) == (((x**(2*a/3))**(3*y/i))**x)
     assert powdenest((x**(2*i)*y**(4*i))**z, force=True) == (x*y**2)**(2*i*z)
     assert powdenest((p**(2*i)*q**(4*i))**j) == (p*q**2)**(2*i*j)
     assert powdenest(((p**(2*a))**(3*y))**x) == p**(6*a*x*y)
@@ -1006,3 +1034,7 @@ def test_unpolarify():
 def test_issue_2998():
     collect(a*y**(2.0*x)+b*y**(2.0*x),y**(x)) == y**(2.0*x)*(a + b)
     collect(a*2**(2.0*x)+b*2**(2.0*x),2**(x)) == 2**(2.0*x)*(a + b)
+
+def test_signsimp():
+    e = x*(-x + 1) + x*(x - 1)
+    assert signsimp(Eq(e, 0)) == True

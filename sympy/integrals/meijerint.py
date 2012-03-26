@@ -339,7 +339,7 @@ def _find_splitting_points(expr, x):
     from sympy import Tuple
     p, q = map(lambda n: Wild(n, exclude=[x]), 'pq')
     def compute_innermost(expr, res):
-        if expr.func is Tuple:
+        if isinstance(expr, Tuple):
             return
         m = expr.match(p*x+q)
         if m and m[p] != 0:
@@ -379,6 +379,8 @@ def _split_mul(f, x):
         else:
             if a.is_Pow:
                 c, t = a.base.as_coeff_mul(x)
+                if t != (x,):
+                    c, t = expand_mul(a.base).as_coeff_mul(x)
                 if t == (x,):
                     po *= x**a.exp
                     fac *= unpolarify(polarify(c**a.exp, subs=False))

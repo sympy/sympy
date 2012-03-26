@@ -1679,6 +1679,13 @@ def test_terms_gcd():
 
     assert terms_gcd(2.0*x**3*y + 4.1*x*y**3) == x*y*(2.0*x**2 + 4.1*y**2)
 
+    assert terms_gcd((3+3*x)*(x+x*y), expand=False) == \
+        (3*x + 3)*(x*y + x)
+    assert terms_gcd((3 + 3*x)*(x + x*sin(3 + 3*y)), expand=False, deep=True) == \
+        3*x*(x + 1)*(sin(Mul(3, y + 1, evaluate=False)) + 1)
+    assert terms_gcd(sin(x + x*y), deep=True) == \
+        sin(x*(y + 1))
+
 def test_trunc():
     f, g = x**5 + 2*x**4 + 3*x**3 + 4*x**2 + 5*x + 6, x**5 - x**4 + x**2 - x
     F, G = Poly(f), Poly(g)
@@ -2662,6 +2669,10 @@ def test_poly():
 
     assert poly(1, x) == Poly(1, x)
     raises(GeneratorsNeeded, "poly(1)")
+
+    # issue 3085
+    assert poly(x + y, x, y) == Poly(x + y, x, y)
+    assert poly(x + y, y, x) == Poly(x + y, y, x)
 
 def test_keep_coeff():
     u = Mul(2, x + 1, evaluate=False)

@@ -36,7 +36,7 @@ def _qsympify_sequence(seq):
     * other => sympify
 
     Strings are passed to Symbol, not sympify to make sure that variables like
-    'pi' are kept as Symbols, not the Sympy built-in number subclasses.
+    'pi' are kept as Symbols, not the SymPy built-in number subclasses.
 
     Examples
     ========

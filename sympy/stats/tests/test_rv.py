@@ -1,5 +1,5 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
-        symbols, simplify, Eq, cos, And, Tuple, integrate, oo)
+        symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum)
 from sympy.stats import (Die, Normal, Exponential , P, E, Var, Covar,
         Skewness, Density, Given, independent, dependent, Where, pspace,
         random_symbols, Sample)
@@ -87,11 +87,17 @@ def test_Sample():
     assert Sample(X) in [1,2,3,4,5,6]
     assert Sample(X+Y).is_Float
 
-    assert P(X+Y>0, Y<0, numsamples=10).is_Rational
-    assert E(X+Y, numsamples=10).is_Float
-    assert Var(X+Y, numsamples=10).is_Float
+    P(X+Y>0, Y<0, numsamples=10).is_number
+    assert E(X+Y, numsamples=10).is_number
+    assert Var(X+Y, numsamples=10).is_number
 
     raises(ValueError, "P(Y>z, numsamples=5)")
+
+    assert P(sin(Y)<=1, numsamples=10) == 1
+    assert P(sin(Y)<=1, cos(Y)<1, numsamples=10) == 1
+
+    # Make sure this doesn't raise an error
+    E(Sum(1/z**Y, (z,1,oo)), Y>2, numsamples=3)
 
 def test_Given():
     X = Normal(0, 1)
@@ -126,7 +132,7 @@ def test_dependent_finite():
 
 def test_normality():
     X, Y = Normal(0,1), Normal(0,1)
-    z = Symbol('z', real=True)
-    x, density = Density(X-Y, Eq(X+Y, z))
+    x, z = symbols('x, z', real=True)
+    density = Density(X-Y, Eq(X+Y, z))
 
-    assert integrate(density, (x, -oo, oo)) == 1
+    assert integrate(density(x), (x, -oo, oo)) == 1

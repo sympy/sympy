@@ -56,7 +56,8 @@ Integral Transforms
 -------------------
 
 .. module:: sympy.integrals.transforms
-Sympy has special support for definite integrals, and integral transforms.
+
+SymPy has special support for definite integrals, and integral transforms.
 
 .. autofunction:: mellin_transform
 .. autofunction:: inverse_mellin_transform
@@ -64,6 +65,10 @@ Sympy has special support for definite integrals, and integral transforms.
 .. autofunction:: inverse_laplace_transform
 .. autofunction:: fourier_transform
 .. autofunction:: inverse_fourier_transform
+.. autofunction:: sine_transform
+.. autofunction:: inverse_sine_transform
+.. autofunction:: cosine_transform
+.. autofunction:: inverse_cosine_transform
 
 
 Internals

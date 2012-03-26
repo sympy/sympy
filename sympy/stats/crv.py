@@ -8,12 +8,13 @@ sympy.stats.rv
 sympy.stats.frv
 """
 
-from rv import (RandomDomain, SingleDomain, ConditionalDomain, ProductDomain,
-        PSpace, SinglePSpace, random_symbols, ProductPSpace)
+from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
+        ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace)
 from sympy.functions.special.delta_functions import DiracDelta
-from sympy import (S, Interval, Dummy, FiniteSet, Mul, Integral, And, Or,
-        Piecewise, solve, cacheit, integrate, oo)
+from sympy import (S, Interval, symbols, Dummy, FiniteSet, Mul, Tuple,
+        Integral, And, Or, Piecewise, solve, cacheit, integrate, oo, Lambda)
 from sympy.solvers.inequalities import reduce_poly_inequalities
+from sympy.polys.polyerrors import PolynomialError
 import random
 
 class ContinuousDomain(RandomDomain):
@@ -45,7 +46,11 @@ class SingleContinuousDomain(ContinuousDomain, SingleDomain):
             return expr
         assert frozenset(variables) == frozenset(self.symbols)
         # assumes only intervals
-        return integrate(expr, (self.symbol, self.set), **kwargs)
+        evaluate = kwargs.pop('evaluate', True)
+        if evaluate:
+            return integrate(expr, (self.symbol, self.set), **kwargs)
+        else:
+            return Integral(expr, (self.symbol, self.set), **kwargs)
 
     def as_boolean(self):
         return self.set.as_relational(self.symbol)
@@ -97,12 +102,12 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                     # Add the appropriate Delta to the integrand
                     integrand *= DiracDelta(cond.lhs-cond.rhs)
                 else:
-                    symbols = FiniteSet(cond.free_symbols) & self.symbols
+                    symbols = cond.free_symbols & set(self.symbols)
                     if len(symbols)!=1: # Can't handle x > y
                         raise NotImplementedError(
                             "Multivariate Inequalities not yet implemented")
                     # Can handle x > 0
-                    symbol = tuple(symbols)[0]
+                    symbol = symbols.pop()
                     # Find the limit with x, such as (x, -oo, oo)
                     for i, limit in enumerate(limits):
                         if limit[0]==symbol:
@@ -118,7 +123,10 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                 raise TypeError(
                         "Condition %s is not a relational or Boolean"%cond)
 
-        return integrate(integrand, *limits, **kwargs)
+        evaluate = kwargs.pop('evaluate', True)
+        if evaluate:
+            return integrate(integrand, *limits, **kwargs)
+        return Integral(integrand, *limits, **kwargs)
 
     def as_boolean(self):
         return And(self.fulldomain.as_boolean(), self.condition)
@@ -162,41 +170,47 @@ class ContinuousPSpace(PSpace):
             # Marginalize all other random symbols out of the density
             density = self.domain.integrate(self.density, set(rs.symbol
                 for rs in self.values - frozenset((expr,))),  **kwargs)
-            return expr.symbol, density
+            return Lambda(expr.symbol, density)
 
-        z = Dummy('z', real=True, finite=True)
-        return z, self.integrate(DiracDelta(expr - z), **kwargs)
+        z = Dummy('z', real=True, bounded=True)
+        return Lambda(z, self.integrate(DiracDelta(expr - z), **kwargs))
 
     def compute_cdf(self, expr, **kwargs):
         if not self.domain.set.is_Interval:
             raise ValueError("CDF not well defined on multivariate expressions")
 
-        x,d = self.compute_density(expr, **kwargs)
-        z = Dummy('z', real=True, finite=True)
+        d = self.compute_density(expr, **kwargs)
+        x, z = symbols('x, z', real=True, bounded=True, cls=Dummy)
         left_bound = self.domain.set.start
 
         # CDF is integral of PDF from left bound to z
-        cdf = integrate(d, (x, left_bound, z), **kwargs)
+        cdf = integrate(d(x), (x, left_bound, z), **kwargs)
         # CDF Ensure that CDF left of left_bound is zero
         cdf = Piecewise((0, z<left_bound), (cdf, True))
-        return z, cdf
+        return Lambda(z, cdf)
 
     def P(self, condition, **kwargs):
+        evaluate = kwargs.get("evaluate", True)
+        z = Dummy('z', real=True, bounded=True)
         # Univariate case can be handled by where
         try:
             domain = self.where(condition)
             rv = [rv for rv in self.values if rv.symbol == domain.symbol][0]
             # Integrate out all other random variables
-            z, pdf = self.compute_density(rv, **kwargs)
-            # Integrate out this last variable over the special domain
-            return integrate(pdf, (z, domain.set), **kwargs)
+            pdf = self.compute_density(rv, **kwargs)
+            # Integrate out the last variable over the special domain
+            if evaluate:
+                return integrate(pdf(z), (z, domain.set), **kwargs)
+            else:
+                return Integral(pdf(z), (z, domain.set), **kwargs)
+
         # Other cases can be turned into univariate case
         # by computing a density handled by density computation
         except NotImplementedError:
             expr = condition.lhs - condition.rhs
-            val, density = self.compute_density(expr, **kwargs)
+            density = self.compute_density(expr, **kwargs)
             # Turn problem into univariate case
-            space = SingleContinuousPSpace(val, density)
+            space = SingleContinuousPSpace(z, density(z))
             return space.P(condition.__class__(space.value, 0))
 
 
@@ -247,17 +261,17 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         compute_cdf
         sample
         """
-        x,d = self.compute_cdf(self.value)
-        z = Dummy('z', real=True, positive=True)
+        d = self.compute_cdf(self.value)
+        x, z = symbols('x, z', real=True, positive=True, cls=Dummy)
         # Invert CDF
         try:
-            inverse_cdf = solve(d-z, x)
+            inverse_cdf = solve(d(x)-z, x)
         except NotImplementedError:
             raise NotImplementedError("Could not invert CDF")
         if len(inverse_cdf) != 1:
             raise NotImplementedError("Could not invert CDF")
 
-        return z, inverse_cdf[0]
+        return Lambda(z, inverse_cdf[0])
 
     def sample(self):
         """
@@ -265,8 +279,8 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        z, icdf = self._inverse_cdf_expression()
-        return {self.value: icdf.subs(z, random.uniform(0,1))}
+        icdf = self._inverse_cdf_expression()
+        return {self.value: icdf(random.uniform(0,1))}
 
 class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     """
@@ -276,14 +290,20 @@ class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     def density(self):
         return Mul(*[space.density for space in self.spaces])
 
+def _reduce_inequalities(conditions, var, **kwargs):
+    try:
+        return reduce_poly_inequalities(conditions, var, **kwargs)
+    except PolynomialError:
+        raise ValueError("Reduction of condition failed %s\n"%conditions[0])
+
 def reduce_poly_inequalities_wrap(condition, var):
     if condition.is_Relational:
-        return reduce_poly_inequalities([[condition]], var, relational=False)
+        return _reduce_inequalities([[condition]], var, relational=False)
     if condition.__class__ is Or:
-        return reduce_poly_inequalities([list(condition.args)],
+        return _reduce_inequalities([list(condition.args)],
                 var, relational=False)
     if condition.__class__ is And:
-        intervals = [reduce_poly_inequalities([[arg]], var, relational=False)
+        intervals = [_reduce_inequalities([[arg]], var, relational=False)
             for arg in condition.args]
         I = intervals[0]
         for i in intervals:

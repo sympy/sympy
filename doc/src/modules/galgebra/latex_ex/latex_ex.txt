@@ -1,7 +1,7 @@
 .. _extended-latex:
 
 **********************************
-  Extended LaTeXModule for Sympy  
+  Extended LaTeXModule for SymPy
 **********************************
 
 :Author: Alan Bromborsky
@@ -66,12 +66,12 @@ One of the main extensions in :mod:`latex_ex` is the ability to encode complex
 symbols (multiple greek letters with accents and superscripts and subscripts) is
 ascii strings containing only letters, numbers, and underscores.  These
 restrictions allow :mod:`sympy` variable names to represent complex symbols. For
-example if we use the  :mod:`GA` module function :func:`make_symbols` as
+example if we use the function :func:`symbols` as
 follows::
 
-   make_symbols('xalpha Gammavec__1_rho delta__j_k')
+   xalpha,Gammavec__1_rho,delta__j_k = symbols('xalpha Gammavec__1_rho delta__j_k')
 
-``make_symbols`` creates the three :mod:`sympy` symbols *xalpha*,
+``symbols`` creates the three :mod:`sympy` symbols *xalpha*,
 *Gammavec__1_rho*, and *delta__j_k*.  If these symbols are printed with the
 :mod:`latex_ex` modules the results are
 
@@ -284,10 +284,7 @@ the string ``'x = '+str(x)`` to the output processor (:func:`xdvi`).  Because
 the string contains an :math:`=` sign the processor treats the string as an
 LaTeX equation (unnumbered).  If ``'x ='``  was not in the print statment a
 LaTeX error would be generated.  In the case of a :class:`GA` multivector one
-does not need the ``'x ='`` if the multivector has been given a name.  In the
-example the :class:`GA` function :func:`make_symbols` has been used to create
-the :class:`sympy` symbols for convenience.  The :class:`sympy` function
-:func:`Symbol` could have also been used.
+does not need the ``'x ='`` if the multivector has been given a name.
 
 
 :program:`Maxwell.py` a multivector example

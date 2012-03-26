@@ -1,7 +1,7 @@
 """Printing subsystem driver
 
 SymPy's printing system works the following way: Any expression can be
-passed to a designated Printer who then is responsible to return a
+passed to a designated Printer who then is responsible to return an
 adequate representation of that expression.
 
 The basic concept is the following:
@@ -123,13 +123,13 @@ class Printer(object):
 
         class CustomStrPrinter(StrPrinter):
             \"\"\"
-            Examples of how to customize the StrPrinter for both a Sympy class and a
-            user defined class subclassed from the Sympy Basic class.
+            Examples of how to customize the StrPrinter for both a SymPy class and a
+            user defined class subclassed from the SymPy Basic class.
             \"\"\"
 
             def _print_Derivative(self, expr):
                 \"\"\"
-                Custom printing of the Sympy Derivative class.
+                Custom printing of the SymPy Derivative class.
 
                 Instead of:
 

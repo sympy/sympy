@@ -2,16 +2,17 @@
 
         metric = '1 0 0 0 0,0 1 0 0 0,0 0 1 0 0,0 0 0 0 2,0 0 0 2 0'
 
-        MV.setup('e0 e1 e2 n nbar',metric,debug=0)
+        e0,e1,e2,n,nbar = MV.setup('e0 e1 e2 n nbar',metric,debug=0)
         MV.set_str_format(1)
         e = n+nbar
         #conformal representation of points
 
-        A = make_vector(e0)    # point a = (1,0,0)  A = F(a)
-        B = make_vector(e1)    # point b = (0,1,0)  B = F(b)
-        C = make_vector(-1*e0) # point c = (-1,0,0) C = F(c)
-        D = make_vector(e2)    # point d = (0,0,1)  D = F(d)
-        X = make_vector('x',3)
+        A = F(e0,n,nbar)    # point a = (1,0,0)  A = F(a)
+        B = F(e1,n,nbar)    # point b = (0,1,0)  B = F(b)
+        C = F(-1*e0,n,nbar) # point c = (-1,0,0) C = F(c)
+        D = F(e2,n,nbar)    # point d = (0,0,1)  D = F(d)
+        x0,x1,x2 = sympy.symbols('x0 x1 x2')
+        X = F(MV([x0,x1,x2],'vector'),n,nbar)
 
         print 'a = e0, b = e1, c = -e0, and d = e2'
         print 'A = F(a) = 1/2*(a*a*n+2*a-nbar), etc.'

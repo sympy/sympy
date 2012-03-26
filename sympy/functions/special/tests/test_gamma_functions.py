@@ -34,6 +34,12 @@ def test_gamma():
 
     assert gamma(Rational(-15, 2)) == Rational(256, 2027025)*sqrt(pi)
 
+    assert gamma(Rational(-11, 8)).expand(func=True) == Rational(64, 33)*gamma(Rational(5, 8))
+    assert gamma(Rational(-10, 3)).expand(func=True) == Rational(81, 280)*gamma(Rational(2, 3))
+    assert gamma(Rational(14, 3)).expand(func=True) == Rational(880, 81)*gamma(Rational(2, 3))
+    assert gamma(Rational(17, 7)).expand(func=True) == Rational(30, 49)*gamma(Rational(3, 7))
+    assert gamma(Rational(19, 8)).expand(func=True) == Rational(33, 64)*gamma(Rational(3, 8))
+
     assert gamma(x).diff(x) == gamma(x)*polygamma(0, x)
 
     assert gamma(x - 1).expand(func=True) == gamma(x)/(x-1)

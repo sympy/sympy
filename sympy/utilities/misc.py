@@ -95,7 +95,7 @@ else:
 
 def debug(*args):
     """
-    Print *args if SYMPY_DEBUG is True, else do nothing.
+    Print ``*args`` if SYMPY_DEBUG is True, else do nothing.
     """
     from sympy import SYMPY_DEBUG
     if SYMPY_DEBUG:

@@ -410,11 +410,10 @@ class Add(AssocOp):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
     # assumption methods
-    _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
-    _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
+    _eval_is_real = lambda self: self._eval_template_is_attr('is_real', when_multiple=None)
+    _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded', when_multiple=None)
+    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
-    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
-    _eval_is_comparable = lambda self: self._eval_template_is_attr('is_comparable')
 
     def _eval_is_odd(self):
         l = [f for f in self.args if not (f.is_even==True)]
@@ -437,48 +436,108 @@ class Add(AssocOp):
         return False
 
     def _eval_is_positive(self):
-        c, r = self.as_two_terms()
-        if c.is_positive and r.is_positive:
-            return True
-        if c.is_unbounded:
-            if r.is_unbounded:
-                # either c or r is negative
-                return
+        if self.is_number:
+            return super(Add, self)._eval_is_positive()
+        pos = nonneg = nonpos = unknown_sign = False
+        unbounded = set()
+        args = [a for a in self.args if not a.is_zero]
+        if not args:
+            return False
+        for a in args:
+            ispos = a.is_positive
+            ubound = a.is_unbounded
+            if ubound:
+                unbounded.add(ispos)
+                if len(unbounded) > 1:
+                    return None
+            if ispos:
+                pos = True
+                continue
+            elif a.is_nonnegative:
+                nonneg = True
+                continue
+            elif a.is_nonpositive:
+                nonpos = True
+                continue
+            elif a.is_zero:
+                continue
+
+            if ubound is None:
+                # sign is unknown; if we don't know the boundedness
+                # we're done: we don't know. That is technically true,
+                # but the only option is that we have something like
+                # oo - oo which is NaN and it really doesn't matter
+                # what sign we apply to that because it (when finally
+                # computed) will trump any sign. So instead of returning
+                # None, we pass.
+                pass
             else:
-                return c.is_positive
-        elif r.is_unbounded:
-            return r.is_positive
-        if c.is_nonnegative and r.is_positive:
+                return None
+            unknown_sign = True
+
+        if unbounded:
+            return unbounded.pop()
+        elif unknown_sign:
+            return None
+        elif not nonpos and not nonneg and pos:
             return True
-        if r.is_nonnegative and c.is_positive:
+        elif not nonpos and pos:
             return True
-        if c.is_nonpositive and r.is_nonpositive:
+        elif not pos and not nonneg:
             return False
 
     def _eval_is_negative(self):
-        c, r = self.as_two_terms()
-        if c.is_negative and r.is_negative:
+        if self.is_number:
+            return super(Add, self)._eval_is_negative()
+        neg = nonpos = nonneg = unknown_sign = False
+        unbounded = set()
+        args = [a for a in self.args if not a.is_zero]
+        if not args:
+            return False
+        for a in args:
+            isneg = a.is_negative
+            ubound = a.is_unbounded
+            if ubound:
+                unbounded.add(isneg)
+                if len(unbounded) > 1:
+                    return None
+            if isneg:
+                neg = True
+                continue
+            elif a.is_nonpositive:
+                nonpos = True
+                continue
+            elif a.is_nonnegative:
+                nonneg = True
+                continue
+            elif a.is_zero:
+                continue
+
+            if ubound is None:
+                # sign is unknown; if we don't know the boundedness
+                # we're done: we don't know. That is technically true,
+                # but the only option is that we have something like
+                # oo - oo which is NaN and it really doesn't matter
+                # what sign we apply to that because it (when finally
+                # computed) will trump any sign. So instead of returning
+                # None, we pass.
+                pass
+            unknown_sign = True
+
+        if unbounded:
+            return unbounded.pop()
+        elif unknown_sign:
+            return None
+        elif not nonneg and not nonpos and neg:
             return True
-        if c.is_unbounded:
-            if r.is_unbounded:
-                # either c or r is positive
-                return
-            else:
-                return c.is_negative
-        elif r.is_unbounded:
-            return r.is_negative
-        if c.is_nonpositive and r.is_negative:
+        elif not nonneg and neg:
             return True
-        if r.is_nonpositive and c.is_negative:
-            return True
-        if c.is_nonnegative and r.is_nonnegative:
+        elif not neg and not nonpos:
             return False
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        if isinstance(old, FunctionClass):
-            return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
+        if not old.is_Add:
+            return None
 
         coeff_self, terms_self = self.as_coeff_Add()
         coeff_old, terms_old = old.as_coeff_Add()
@@ -489,19 +548,22 @@ class Add(AssocOp):
             if terms_self == -terms_old:                      # (2 + a).subs(-3 - a, y) -> -1 - y
                 return Add(-new, coeff_self,  coeff_old)
 
-        if old.is_Add:
-            coeff_self, terms_self = self.as_coeff_add()
-            coeff_old, terms_old = old.as_coeff_add()
-
-            if len(terms_old) < len(terms_self):    # (a+b+c+d).subs(b+c,x) -> a+x+d
-                self_set = set(terms_self)
-                old_set = set(terms_old)
+            args_old, args_self = Add.make_args(terms_old), Add.make_args(terms_self)
+            if len(args_old) < len(args_self):    # (a+b+c+d).subs(b+c,x) -> a+x+d
+                self_set = set(args_self)
+                old_set = set(args_old)
 
                 if old_set < self_set:
                     ret_set = self_set - old_set
-                    return Add(new, coeff_self, -coeff_old, *[s._eval_subs(old, new) for s in ret_set])
+                    return Add(new, coeff_self, -coeff_old,
+                               *[s._subs(old, new) for s in ret_set])
 
-        return self.__class__(*[s._eval_subs(old, new) for s in self.args])
+                args_old = Add.make_args(-terms_old)     # (a+b+c+d).subs(-b-c,x) -> a-x+d
+                old_set = set(args_old)
+                if old_set < self_set:
+                    ret_set = self_set - old_set
+                    return Add(-new, coeff_self, coeff_old,
+                               *[s._subs(old, new) for s in ret_set])
 
     def removeO(self):
         args = [a for a in self.args if not a.is_Order]
@@ -619,13 +681,24 @@ class Add(AssocOp):
         return self.func(*terms)
 
     def _eval_expand_mul(self, deep=True, **hints):
+        hit = False
         sargs, terms = self.args, []
         for term in sargs:
-            if hasattr(term, '_eval_expand_mul'):
+            if term.is_Mul:
+                old = term
+                hints['mul'] = True
+                targs = [t._eval_expand_mul(deep=deep, **hints) for t in term.args]
+                hints['mul'] = False
+                term = Mul(*targs)
                 newterm = term._eval_expand_mul(deep=deep, **hints)
+                hit = hit or newterm != old
             else:
-                newterm = term
+                hints['mul'] = True
+                newterm = term._eval_expand_mul(deep=deep, **hints)
             terms.append(newterm)
+        hints['mul'] = True
+        if not hit:
+            return self
         return self.func(*terms)
 
     def _eval_expand_multinomial(self, deep=True, **hints):
@@ -831,7 +904,7 @@ class Add(AssocOp):
 
         return con, prim
 
-from function import FunctionClass
+from function import FunctionClass, expand_mul
 from mul import Mul, _keep_coeff, prod
 from power import Pow
 from sympy.core.numbers import Rational

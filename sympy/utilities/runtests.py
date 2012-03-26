@@ -4,11 +4,10 @@ This is our testing framework.
 Goals:
 
 * it should be compatible with py.test and operate very similarly
- (or identically)
+  (or identically)
 * doesn't require any external dependencies
 * preferably all the functionality should be in this file only
-* no magic, just import the test file and execute the test functions,
-  that's it
+* no magic, just import the test file and execute the test functions, that's it
 * portable
 
 """

@@ -3,6 +3,7 @@
 Gates are unitary operators that act on the space of qubits.
 
 Medium Term Todo:
+
 * Optimize Gate._apply_operators_Qubit to remove the creation of many
   intermediate Qubit objects.
 * Add commutation relationships to all operators and use this in gate_sort.
@@ -28,6 +29,8 @@ from sympy.physics.quantum.operator import (UnitaryOperator, Operator,
                                             HermitianOperator)
 from sympy.physics.quantum.matrixutils import matrix_tensor_product, matrix_eye
 from sympy.physics.quantum.matrixcache import matrix_cache
+
+from sympy.matrices.matrices import MatrixBase
 
 __all__ = [
     'Gate',
@@ -124,7 +127,7 @@ class Gate(UnitaryOperator):
 
     @classmethod
     def _eval_args(cls, args):
-        args = UnitaryOperator._eval_args(args)
+        args = Tuple(*UnitaryOperator._eval_args(args))
         _validate_targets_controls(args)
         return args
 
@@ -444,7 +447,7 @@ class UGate(Gate):
         targets = Gate._eval_args(targets)
         _validate_targets_controls(targets)
         mat = args[1]
-        if not isinstance(mat, Matrix):
+        if not isinstance(mat, MatrixBase):
             raise TypeError('Matrix expected, got: %r' % mat)
         dim = 2**len(targets)
         if not all(dim == shape for shape in mat.shape):
@@ -698,8 +701,8 @@ class ZGate(HermitianOperator, OneQubitGate):
 class PhaseGate(OneQubitGate):
     """The single qubit phase, or S, gate.
 
-    This gate rotates the phase of the state by pi/2 if the state is |1> and
-    does nothing if the state is |0>.
+    This gate rotates the phase of the state by pi/2 if the state is ``|1>`` and
+    does nothing if the state is ``|0>``.
 
     Parameters
     ----------
@@ -726,8 +729,8 @@ class PhaseGate(OneQubitGate):
 class TGate(OneQubitGate):
     """The single qubit pi/8 gate.
 
-    This gate rotates the phase of the state by pi/4 if the state is |1> and
-    does nothing if the state is |0>.
+    This gate rotates the phase of the state by pi/4 if the state is ``|1>`` and
+    does nothing if the state is ``|0>``.
 
     Parameters
     ----------

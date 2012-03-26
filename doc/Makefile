@@ -28,6 +28,7 @@ help:
 	@echo "  changes    to make an overview over all changed/added/deprecated items"
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  cheatsheet to make the Cheatsheet"
+	@echo "  htmli18n   to make the i18n versions"
 
 clean:
 	-rm -rf _build

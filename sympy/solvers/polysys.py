@@ -2,7 +2,8 @@
 
 from sympy.polys import Poly, groebner, roots
 from sympy.polys.polytools import parallel_poly_from_expr
-from sympy.polys.polyerrors import ComputationFailed, PolificationFailed
+from sympy.polys.polyerrors import (ComputationFailed,
+    PolificationFailed, CoercionFailed)
 from sympy.utilities import postfixes
 from sympy.simplify import rcollect
 from sympy.core import S
@@ -216,7 +217,10 @@ def solve_generic(polys, opt):
 
         return solutions
 
-    result = _solve_reduced_system(polys, opt.gens, entry=True)
+    try:
+        result = _solve_reduced_system(polys, opt.gens, entry=True)
+    except CoercionFailed:
+        raise NotImplementedError
 
     if result is not None:
         return sorted(result)

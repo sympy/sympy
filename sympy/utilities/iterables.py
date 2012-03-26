@@ -122,8 +122,8 @@ def postorder_traversal(node):
     node : sympy expression
         The expression to traverse.
 
-    Yields
-    ------
+    Returns
+    -------
     subtree : sympy expression
         All of the subtrees in the tree.
 
@@ -159,8 +159,8 @@ class preorder_traversal(object):
     node : sympy expression
         The expression to traverse.
 
-    Yields
-    ------
+    Returns
+    -------
     subtree : sympy expression
         All of the subtrees in the tree.
 
@@ -363,8 +363,7 @@ def subsets(seq, k=None, repetition=False):
 
        Examples
        ========
-
-           >>> from sympy.utilities.iterables import subsets
+       >>> from sympy.utilities.iterables import subsets
 
        subsets(seq, k) will return the n!/k!/(n - k)! k-subsets (combinations)
        without repetition, i.e. once an item has been removed, it can no
@@ -422,8 +421,8 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     start : int, optional
         The start number.  By default, it is 0.
 
-    Yields
-    ------
+    Returns
+    -------
     sym : Symbol
         The subscripted symbols.
     """
@@ -444,23 +443,30 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
 def capture(func):
     """Return the printed output of func().
 
-    `func` should be an argumentless function that produces output with
+    `func` should be a function without arguments that produces output with
     print statements.
 
     >>> from sympy.utilities.iterables import capture
+    >>> from sympy import pprint
+    >>> from sympy.abc import x
     >>> def foo():
     ...     print 'hello world!'
     ...
     >>> 'hello' in capture(foo) # foo, not foo()
     True
+    >>> capture(lambda: pprint(2/x))
+    '2\\n-\\nx\\n'
+
     """
     import StringIO
     import sys
 
     stdout = sys.stdout
     sys.stdout = file = StringIO.StringIO()
-    func()
-    sys.stdout = stdout
+    try:
+        func()
+    finally:
+        sys.stdout = stdout
     return file.getvalue()
 
 def sift(expr, keyfunc):
@@ -516,6 +522,60 @@ def dict_merge(*dicts):
         merged.update(dict)
 
     return merged
+
+def common_prefix(*seqs):
+    """Return the subsequence that is a common start of sequences in ``seqs``.
+
+    >>> from sympy.utilities.iterables import common_prefix
+    >>> common_prefix(range(3))
+    [0, 1, 2]
+    >>> common_prefix(range(3), range(4))
+    [0, 1, 2]
+    >>> common_prefix([1, 2, 3], [1, 2, 5])
+    [1, 2]
+    >>> common_prefix([1, 2, 3], [1, 3, 5])
+    [1]
+    """
+    if any(not s for s in seqs):
+        return []
+    elif len(seqs) == 1:
+        return seqs[0]
+    i = 0
+    for i in range(min(len(s) for s in seqs)):
+        if not all(seqs[j][i] == seqs[0][i] for j in xrange(len(seqs))):
+            break
+    else:
+        i += 1
+    return seqs[0][:i]
+
+def common_suffix(*seqs):
+    """Return the subsequence that is a common ending of sequences in ``seqs``.
+
+    >>> from sympy.utilities.iterables import common_suffix
+    >>> common_suffix(range(3))
+    [0, 1, 2]
+    >>> common_suffix(range(3), range(4))
+    []
+    >>> common_suffix([1, 2, 3], [9, 2, 3])
+    [2, 3]
+    >>> common_suffix([1, 2, 3], [9, 7, 3])
+    [3]
+    """
+
+    if any(not s for s in seqs):
+        return []
+    elif len(seqs) == 1:
+        return seqs[0]
+    i = 0
+    for i in range(-1, -min(len(s) for s in seqs) - 1, -1):
+        if not all(seqs[j][i] == seqs[0][i] for j in xrange(len(seqs))):
+            break
+    else:
+        i -= 1
+    if i == -1:
+        return []
+    else:
+        return seqs[0][i + 1:]
 
 def prefixes(seq):
     """

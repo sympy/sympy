@@ -1,8 +1,8 @@
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
-                   Number, zoo, log, Mul, Pow, Tuple, round)
+                   Number, zoo, log, Mul, Pow, Tuple)
 from sympy.core.power import integer_nthroot
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, slow
 
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache
 from sympy.utilities.pytest import raises
@@ -55,9 +55,9 @@ def test_mod():
 
     a = Float(2.6)
 
-    assert round(a % .2, 15) == 0.2
-    assert round(a % 2, 15) == 0.6
-    assert round(a % 0.5, 15) == 0.1
+    assert (a % .2).round(15) == 0.2
+    assert (a % 2).round(15) == 0.6
+    assert (a % 0.5).round(15) == 0.1
 
     # No rounding required since these numbers can be represented
     # exactly.
@@ -89,9 +89,61 @@ def test_divmod():
     assert divmod(S(12), 8) == Tuple(1, 4)
     assert divmod(12, S(8)) == Tuple(1, 4)
 
-@XFAIL
-def test_divmod_rational():
-    assert divmod(S('3/2'), 2) == Tuple(0, S('3/2'))
+    assert divmod(S("2"), S("3/2")) == Tuple(S("1"), S("1/2"))
+    assert divmod(S("3/2"), S("2")) == Tuple(S("0"), S("3/2"))
+    assert divmod(S("2"), S("3.5")) == Tuple(S("0"), S("2"))
+    assert divmod(S("3.5"), S("2")) == Tuple(S("1"), S("1.5"))
+    assert divmod(S("2"), S("1/3")) == Tuple(S("6"), S("0"))
+    assert divmod(S("1/3"), S("2")) == Tuple(S("0"), S("1/3"))
+    assert divmod(S("2"), S("0.1")) == Tuple(S("20"), S("0"))
+    assert divmod(S("0.1"), S("2")) == Tuple(S("0"), S("0.1"))
+    assert divmod(S("2"), 2) == Tuple(S("1"), S("0"))
+    assert divmod(2, S("2")) == Tuple(S("1"), S("0"))
+    assert divmod(S("2"), 1.5) == Tuple(S("1"), S("0.5"))
+    assert divmod(1.5, S("2")) == Tuple(S("0"), S("1.5"))
+    assert divmod(0.3, S("2")) == Tuple(S("0"), S("0.3"))
+    assert divmod(S("3/2"), S("3.5")) == Tuple(S("0"), S("3/2"))
+    assert divmod(S("3.5"), S("3/2")) == Tuple(S("2"), S("0.5"))
+    assert divmod(S("3/2"), S("1/3")) == Tuple(S("4"), Float("1/6"))
+    assert divmod(S("1/3"), S("3/2")) == Tuple(S("0"), S("1/3"))
+    assert divmod(S("3/2"), S("0.1")) == Tuple(S("15"), S("0"))
+    assert divmod(S("0.1"), S("3/2")) == Tuple(S("0"), S("0.1"))
+    assert divmod(S("3/2"), 2) == Tuple(S("0"), S("3/2"))
+    assert divmod(2, S("3/2")) == Tuple(S("1"), S("0.5"))
+    assert divmod(S("3/2"), 1.5) == Tuple(S("1"), S("0"))
+    assert divmod(1.5, S("3/2")) == Tuple(S("1"), S("0"))
+    assert divmod(S("3/2"), 0.3) == Tuple(S("5"), S("0"))
+    assert divmod(0.3, S("3/2")) == Tuple(S("0"), S("0.3"))
+    assert divmod(S("1/3"), S("3.5")) == Tuple(S("0"), S("1/3"))
+    assert divmod(S("3.5"), S("0.1")) == Tuple(S("35"), S("0"))
+    assert divmod(S("0.1"), S("3.5")) == Tuple(S("0"), S("0.1"))
+    assert divmod(S("3.5"), 2) == Tuple(S("1"), S("1.5"))
+    assert divmod(2, S("3.5")) == Tuple(S("0"), S("2"))
+    assert divmod(S("3.5"), 1.5) == Tuple(S("2"), S("0.5"))
+    assert divmod(1.5, S("3.5")) == Tuple(S("0"), S("1.5"))
+    assert divmod(0.3, S("3.5")) == Tuple(S("0"), S("0.3"))
+    assert divmod(S("0.1"), S("1/3")) == Tuple(S("0"), S("0.1"))
+    assert divmod(S("1/3"), 2) == Tuple(S("0"), S("1/3"))
+    assert divmod(2, S("1/3")) == Tuple(S("6"), S("0"))
+    assert divmod(S("1/3"), 1.5) == Tuple(S("0"), S("1/3"))
+    assert divmod(0.3, S("1/3")) == Tuple(S("0"), S("0.3"))
+    assert divmod(S("0.1"), 2) == Tuple(S("0"), S("0.1"))
+    assert divmod(2, S("0.1")) == Tuple(S("20"), S("0"))
+    assert divmod(S("0.1"), 1.5) == Tuple(S("0"), S("0.1"))
+    assert divmod(1.5, S("0.1")) == Tuple(S("15"), S("0"))
+    assert divmod(S("0.1"), 0.3) == Tuple(S("0"), S("0.1"))
+
+    assert str(divmod(S("2"), 0.3)) == '(6, 0.2)'
+    assert str(divmod(S("3.5"), S("1/3"))) == '(10, 0.166666666666667)'
+    assert str(divmod(S("3.5"), 0.3)) == '(11, 0.2)'
+    assert str(divmod(S("1/3"), S("0.1"))) == '(3, 0.0333333333333333)'
+    assert str(divmod(1.5, S("1/3"))) == '(4, 0.166666666666667)'
+    assert str(divmod(S("1/3"), 0.3)) == '(1, 0.0333333333333333)'
+    assert str(divmod(0.3, S("0.1"))) == '(2, 0.1)'
+
+    assert divmod(-3, S(2)) == (-2, 1)
+    assert divmod(S(-3), S(2)) == (-2, 1)
+    assert divmod(S(-3), 2) == (-2, 1)
 
 def test_igcd():
     assert igcd(0, 0) == 0
@@ -307,6 +359,12 @@ def test_Float():
     assert Float('2.0', '') == Float('2', 2)
     raises(ValueError, 'Float("12.3d-4", "")')
     raises(ValueError, 'Float(12.3, "")')
+    raises(ValueError, "Float('.')")
+    raises(ValueError, "Float('-.')")
+    assert Float('-0') == Float('0.0')
+    assert Float('.0') == Float('0.0')
+    assert Float('-.0') == Float('-0.0')
+    assert Float(' .3e2') == Float('0.3e2')
 
 def test_Float_eval():
     a = Float(3.2)
@@ -452,10 +510,11 @@ def test_Infinity():
     assert S.Zero * oo == nan
     assert oo.is_Rational == False
     assert isinstance(oo, Rational) == False
-    assert S.One/oo == oo
-    assert -S.One/oo == -oo
-    assert S.One/-oo == -oo
-    assert -S.One/-oo == oo
+
+    assert S.One/oo == 0
+    assert -S.One/oo == 0
+    assert S.One/-oo == 0
+    assert -S.One/-oo == 0
     assert S.One*oo == oo
     assert -S.One*oo == -oo
     assert S.One*-oo == -oo
@@ -515,6 +574,8 @@ def test_NaN():
     assert nan*S.One == nan
     assert nan + S.One == nan
     assert nan/S.One == nan
+    assert nan**0 == 1 # as per IEEE 754
+    assert 1**nan == 1 # as per IEEE 754
 
 def test_special_numbers():
     assert isinstance(S.NaN, Number) == True
@@ -571,6 +632,10 @@ def test_powers():
     # Test that this is fast
     assert integer_nthroot(2,10**10) == (1, False)
 
+def test_integer_nthroot_overflow():
+    assert integer_nthroot(10**(50*50), 50) == (10**50, True)
+    assert integer_nthroot(10**100000, 10000) == (10**10, True)
+
 def test_powers_Integer():
     """Test Integer._eval_power"""
     # check infinity
@@ -581,7 +646,7 @@ def test_powers_Integer():
     assert S(0) ** S.Infinity == 0
 
     # check Nan
-    assert S(1)  ** S.NaN == S.NaN
+    assert S(1)  ** S.NaN == S.One
     assert S(-1) ** S.NaN == S.NaN
 
     # check for exact roots
@@ -656,6 +721,9 @@ def test_powers_Integer():
     assert (-2)**(1/S(3))*(-3)**(1/S(4))*(-5)**(5/S(6)) == \
            -(-1)**Rational(5, 12)*2**Rational(1, 3)*3**Rational(1, 4)*5**Rational(5, 6)
 
+    assert Integer(-2)**Symbol('', even=True) == Integer(2)**Symbol('', even=True)
+    assert (-1)**Float(.5) == 1.0*I
+
 def test_powers_Rational():
     """Test Rational._eval_power"""
     # check infinity
@@ -693,6 +761,13 @@ def test_powers_Rational():
 
     # negative integer power and negative rational base
     assert Rational(-2, 3) ** Rational(-2, 1) == Rational(9, 4)
+
+    a = Rational(1, 10)
+    assert a**Float(a, 2) == Float(a, 2)**Float(a, 2)
+    assert Rational(-2, 3)**Symbol('', even=True) == Rational(2, 3)**Symbol('', even=True)
+
+def test_powers_Float():
+    assert str((S('-1/10')**S('3/10')).n()) == str(Float(-.1)**(.3))
 
 def test_abs1():
     assert Rational(1,6) != Rational(-1,6)
@@ -1003,7 +1078,7 @@ def test_zoo():
 
     assert (I*oo).is_Mul # allow directed infinity
     assert zoo + zoo is S.NaN
-    assert zoo * zoo is S.NaN
+    assert zoo * zoo is zoo
     assert zoo - zoo is S.NaN
     assert zoo/zoo is S.NaN
     assert zoo**zoo is S.NaN
@@ -1067,9 +1142,9 @@ def test_hashing_sympy_integers():
     assert hash(S(4)) == hash(int(4))
 
 def test_issue_1073():
-    assert int(round(E**100)) == 26881171418161354484126255515800135873611119
-    assert int(round(pi**100)) == 51878483143196131920862615246303013562686760680406
-    assert int(round(Rational(1)/EulerGamma**100)) == 734833795660954410469466
+    assert int((E**100).round()) == 26881171418161354484126255515800135873611119
+    assert int((pi**100).round()) == 51878483143196131920862615246303013562686760680406
+    assert int((Rational(1)/EulerGamma**100).round()) == 734833795660954410469466
 
 @XFAIL
 def test_mpmath_issues():

@@ -50,7 +50,6 @@ expr
 .. module:: sympy.core.expr
 
 .. note:: Pickling of singletons with protocol less than 2
-   ================================================
 
    Note that when pickling a singleton (such as pi or e), the
    object.__getnewargs__() method applies, and this method is only used for
@@ -75,12 +74,12 @@ expr
    >>> sin(picklepi)
    sin(pi)
    >>> sin(picklepi).evalf()
-   .0e-184
+   0.e-184
 
    >>> pi - picklepi
    -pi + pi
    >>> (pi - picklepi).evalf()
-   -.0e-124
+   -0.e-124
 
    >>> pi is picklepi
    False
@@ -109,12 +108,12 @@ expr
    pickle.HIGHEST_PROTOCOL
 
 Expr
-^^^^
+----
 .. autoclass:: Expr
    :members:
 
 AtomicExpr
-^^^^^^^^^^
+----------
 .. autoclass:: AtomicExpr
    :members:
 
@@ -311,12 +310,12 @@ Equality
    :members:
 
 GreaterThan
-^^^^^^^^^^
+^^^^^^^^^^^
 .. autoclass:: GreaterThan
    :members:
 
 LessThan
-^^^^^^^^^^
+^^^^^^^^
 .. autoclass:: LessThan
    :members:
 
@@ -326,12 +325,12 @@ Unequality
    :members:
 
 StrictGreaterThan
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 .. autoclass:: StrictGreaterThan
    :members:
 
 StrictLessThan
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 .. autoclass:: StrictLessThan
    :members:
 
@@ -376,6 +375,32 @@ Function
 ^^^^^^^^
 .. autoclass:: Function
    :members:
+
+.. note:: Not all functions are the same
+
+   SymPy defines many functions (like ``cos`` and ``factorial``). It also
+   allows the user to create generic functions which act as argument
+   holders. Such functions are created just like symbols:
+
+   >>> from sympy import Function, cos
+   >>> from sympy.abc import x
+   >>> f = Function('f')
+   >>> f(2) + f(x)
+   f(2) + f(x)
+
+   If you want to see which functions appear in an expression you can use
+   the atoms method:
+
+   >>> e = (f(x) + cos(x) + 2)
+   >>> e.atoms(Function)
+   set([f(x), cos(x)])
+
+   If you just want the function you defined, not SymPy functions, the
+   thing to search for is AppliedUndef:
+
+   >>> from sympy.core.function import AppliedUndef
+   >>> e.atoms(AppliedUndef)
+   set([f(x)])
 
 Subs
 ^^^^

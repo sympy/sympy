@@ -213,15 +213,15 @@ from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.sympify import sympify
 
-from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt
+from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign
 from sympy.matrices import wronskian
-from sympy.polys import Poly, RootOf
+from sympy.polys import Poly, RootOf, terms_gcd
 from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp
+    simplify, trigsimp, denom
 from sympy.solvers import solve
 
-from sympy.utilities import numbered_symbols, default_sort_key
+from sympy.utilities import numbered_symbols, default_sort_key, sift
 
 # This is a list of hints in the order that they should be applied.  That means
 # that, in general, hints earlier in the list should produce simpler results
@@ -328,9 +328,10 @@ def sub_func_doit(eq, func, new):
     Examples
     ========
 
-    >>> from sympy import Derivative
-    >>> from sympy.abc import x, y, z
+    >>> from sympy import Derivative, symbols, Function
     >>> from sympy.solvers.ode import sub_func_doit
+    >>> x, z = symbols('x, z')
+    >>> y = Function('y')
 
     >>> sub_func_doit(3*Derivative(y(x), x) - 1, y(x), x)
     2
@@ -607,8 +608,10 @@ def classify_ode(eq, func=None, dict=False, prep=True):
     See sympy.ode.allhints or the sympy.ode docstring for a list of all
     supported hints that can be returned from classify_ode.
 
-    Notes on Hint Names
-    ===================
+    Notes
+    =====
+
+    These are remarks on hint names.
 
     *"_Integral"*
 
@@ -759,8 +762,8 @@ def classify_ode(eq, func=None, dict=False, prep=True):
             u = Dummy('u')
             ind, dep = (reduced_eq + u).as_independent(f)
             ind, dep = [tmp.subs(u, 0) for tmp in [ind, dep]]
-        r = {a: dep.coeff(df) or S.Zero, # if we get None for coeff, take 0
-             b: dep.coeff(f(x)) or S.Zero, # ditto
+        r = {a: dep.coeff(df),
+             b: dep.coeff(f(x)),
              c: ind}
         # double check f[a] since the preconditioning may have failed
         if not r[a].has(f) and (r[a]*df + r[b]*f(x) + r[c]).expand() - reduced_eq == 0:
@@ -1487,7 +1490,46 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
 
         if not (expr.has(x) and x in expr.free_symbols):
             return constantsymbols[0]
+        new_expr = terms_gcd(expr, clear=False, deep=True)
+        if new_expr.is_Mul:
+            # don't let C1*exp(x) + C2*exp(2*x) become exp(x)*(C1 + C2*exp(x))
+            infac = False
+            asfac = False
+            for m in new_expr.args:
+                if m.func is exp:
+                    asfac = True
+                elif m.is_Add:
+                    infac = any(fi.func is exp for t in m.args for fi in Mul.make_args(t))
+                if asfac and infac:
+                    new_expr = expr
+                    break
+        expr = new_expr
+        # don't allow a number to be factored out of an expression
+        # that has no denominator
         if expr.is_Mul:
+            h, t = expr.as_coeff_Mul()
+            if h != 1 and (t.is_Add or denom(t) == 1):
+                args = list(Mul.make_args(t))
+                for i, a in enumerate(args):
+                    if a.is_Add:
+                        args[i] = h*a
+                        expr = Mul._from_args(args)
+                        break
+            # let numbers absorb into constants of an Add, perhaps
+            # in the base of a power, if all its terms have a constant
+            # symbol in them, e.g. sqrt(2)*(C1 + C2*x) -> C1 + C2*x
+            if expr.is_Mul:
+                d = sift(expr.args, lambda m: m.is_number == True)
+                num = d[True]
+                other = d[False]
+                con_set = set(constantsymbols)
+                if num:
+                    for o in other:
+                        b, e = o.as_base_exp()
+                        if b.is_Add and all(a.args_cnc(cset=True, warn=False)[0] & con_set for a in b.args):
+                            expr = sign(Mul(*num))*Mul._from_args(other)
+                            break
+        if expr.is_Mul: # check again that it's still a Mul
             i, d = expr.as_independent(x, strict=True)
             newi = _take(i)
             if newi != i:
@@ -1846,11 +1888,11 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     References
     ==========
 
-        - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
-        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-          Dover 1963, pp. 59
+    - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 59
 
-        # indirect doctest
+    # indirect doctest
 
     """
     # There are two substitutions that solve the equation, u1=y/x and u2=x/y
@@ -2899,9 +2941,10 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     >>> pprint(dsolve(f(x).diff(x, 3) - 3*f(x).diff(x, 2) +
     ... 3*f(x).diff(x) - f(x) - exp(x)*log(x), f(x),
     ... hint='nth_linear_constant_coeff_variation_of_parameters'))
-           /                2    3 /log(x)   11\\  x
-    f(x) = |C1 + C2*x + C3*x  + x *|------ - --||*e
-           \                       \  6      36//
+           /                     3                \
+           |                2   x *(6*log(x) - 11)|  x
+    f(x) = |C1 + C2*x + C3*x  + ------------------|*e
+           \                            36        /
 
     References
     ==========
@@ -2921,10 +2964,10 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     return _solve_variation_of_parameters(eq, func, order, match)
 
 def _solve_variation_of_parameters(eq, func, order, match):
-    """	  	
+    """
     Helper function for the method of variation of parameters.
 
-    See the ode_nth_linear_constant_coeff_variation_of_parameters() 	
+    See the ode_nth_linear_constant_coeff_variation_of_parameters()
     docstring for more information on this method.
 
     match should be a dictionary that has the following keys:
@@ -2948,7 +2991,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
         wr = simplify(wr) # We need much better simplification for some ODEs.
         #                   See issue 1563, for example.
 
-        # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1  	
+        # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1
         wr = trigsimp(wr, deep=True, recursive=True)
     if not wr:
         # The wronskian will be 0 iff the solutions are not linearly independent.

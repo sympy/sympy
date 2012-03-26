@@ -8,6 +8,7 @@ Point
 
 from sympy.core import S, sympify
 from sympy.core.compatibility import iterable
+from sympy.core.containers import Tuple
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -23,10 +24,11 @@ class Point(GeometryEntity):
     coords : sequence of 2 coordinate values.
 
     Attributes
+    ==========
 
-    coordinates : 2-tuple of numbers or sympy objects.
-        Stored in `self`. That is self[0] is the first coordinate value, and
-        self[1] is the second coordinate value.
+    x
+    y
+    length
 
     Raises
     ======
@@ -37,8 +39,9 @@ class Point(GeometryEntity):
     TypeError
         When trying to add or subtract points with different dimensions.
 
-    Note
-    ----
+    Notes
+    =====
+
     Currently only 2-dimensional points are supported.
 
     See Also
@@ -62,14 +65,31 @@ class Point(GeometryEntity):
 
     def __new__(cls, *args, **kwargs):
         if iterable(args[0]):
-            coords = tuple([sympify(x) for x in args[0]])
+            coords = Tuple(*args[0])
+        elif isinstance(args[0], Point):
+            coords = args[0].args
         else:
-            coords = tuple([sympify(x) for x in args])
+            coords = Tuple(*args)
 
         if len(coords) != 2:
             raise NotImplementedError("Only two dimensional points currently supported")
 
         return GeometryEntity.__new__(cls, *coords)
+
+    def __hash__(self):
+        return super(Point, self).__hash__()
+
+    def __eq__(self, other):
+        ts, to = type(self), type(other)
+        if ts is not to:
+            return False
+        return self.args == other.args
+
+    def __lt__(self, other):
+        return self.args < other.args
+
+    def __contains__(self, item):
+        return item == self
 
     @property
     def x(self):
@@ -84,7 +104,7 @@ class Point(GeometryEntity):
         >>> p.x
         0
         """
-        return self[0]
+        return self.args[0]
 
     @property
     def y(self):
@@ -99,7 +119,22 @@ class Point(GeometryEntity):
         >>> p.y
         1
         """
-        return self[1]
+        return self.args[1]
+
+    @property
+    def length(self):
+        """
+        Treating a Point as a Line, this returns 0 for the length of a Point.
+
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> p = Point(0, 1)
+        >>> p.length
+        0
+        """
+        return S.Zero
 
     def is_collinear(*points):
         """Is a sequence of points collinear?
@@ -169,10 +204,11 @@ class Point(GeometryEntity):
         p1 = points[0]
         p2 = points[1]
         v1 = p2 - p1
+        x1, y1 = v1.args
         for p3 in points[2:]:
-            v2 = p3 - p1
-            test = simplify(v1[0]*v2[1] - v1[1]*v2[0])
-            if simplify(test) != 0:
+            x2, y2 = (p3 - p1).args
+            test = simplify(x1*y2 - y1*x2)
+            if test != 0:
                 return False
         return True
 
@@ -298,7 +334,8 @@ class Point(GeometryEntity):
         sqrt(x**2 + y**2)
 
         """
-        return sqrt(sum([(a - b)**2 for a, b in zip(self, p)]))
+        p = Point(p)
+        return sqrt(sum([(a - b)**2 for a, b in zip(self.args, p.args)]))
 
     def midpoint(self, p):
         """The midpoint between self and point p.
@@ -327,13 +364,14 @@ class Point(GeometryEntity):
         Point(7, 3)
 
         """
-        return Point([simplify((a + b)*S.Half) for a, b in zip(self, p)])
+        return Point([simplify((a + b)*S.Half) for a, b in zip(self.args, p.args)])
 
-    def evalf(self):
+    def evalf(self, prec=None, **options):
         """Evaluate the coordinates of the point.
 
         This method will, where possible, create and return a new Point
-        where the coordinates are evaluated as floating point numbers.
+        where the coordinates are evaluated as floating point numbers to
+        the precision indicated (default=15).
 
         Returns
         =======
@@ -351,7 +389,12 @@ class Point(GeometryEntity):
         Point(0.5, 1.5)
 
         """
-        return Point([x.evalf() for x in self])
+        if prec is None:
+            return Point(*[x.evalf(**options) for x in self.args])
+        else:
+            return Point(*[x.evalf(prec, **options) for x in self.args])
+
+    n = evalf
 
     def intersection(self, o):
         """The intersection between this point and another point.
@@ -390,36 +433,31 @@ class Point(GeometryEntity):
 
         return o.intersection(self)
 
-    @property
-    def length(self):
-        """
-        The length of a Point.
-        This is needed for compatibility with line.
-
-        Examples
-        ========
-
-        >>> from sympy import Point
-        >>> p = Point(0, 1)
-        >>> p.length
-        0
-        """
-        return S.Zero
-
-    def __len__(self):
-        return 1
+    def dot(self, p2):
+        """Return dot product of self with another Point."""
+        p2 = Point(p2)
+        x1, y1 = self.args
+        x2, y2 = p2.args
+        return x1*x2 + y1*y2
 
     def __add__(self, other):
-        """Add two points, or add a factor to this point's coordinates."""
+        """Add other to self by incrementing self's coordinates by those of other.
+
+        See Also
+        ========
+
+        sympy.geometry.entity.translate
+
+        """
+
         if isinstance(other, Point):
             if len(other.args) == len(self.args):
-                return Point( [simplify(a + b) for a, b in zip(self, other)] )
+                return Point(*[simplify(a + b) for a, b in
+                               zip(self.args, other.args)])
             else:
                 raise TypeError("Points must have the same number of dimensions")
         else:
             raise ValueError('Cannot add non-Point, %s, to a Point' % other)
-            other = sympify(other)
-            return Point([simplify(a + other) for a in self])
 
     def __sub__(self, other):
         """Subtract two points, or subtract a factor from this point's
@@ -429,18 +467,18 @@ class Point(GeometryEntity):
     def __mul__(self, factor):
         """Multiply point's coordinates by a factor."""
         factor = sympify(factor)
-        return Point([x*factor for x in self])
+        return Point([x*factor for x in self.args])
 
     def __div__(self, divisor):
         """Divide point's coordinates by a factor."""
         divisor = sympify(divisor)
-        return Point([x/divisor for x in self])
+        return Point([x/divisor for x in self.args])
 
     __truediv__ = __div__
 
     def __neg__(self):
         """Negate the point."""
-        return Point([-x for x in self])
+        return Point([-x for x in self.args])
 
     def __abs__(self):
         """Returns the distance between this point and the origin."""

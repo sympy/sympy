@@ -132,14 +132,17 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e)
 
-    def __print_Boolean(self, e, char):
-        arg = e.args[0]
+    def __print_Boolean(self, e, char, sort=True):
+        args = e.args
+        if sort:
+            args = sorted(e.args, key=default_sort_key)
+        arg = args[0]
         pform = self._print(arg)
 
         if arg.is_Boolean and not arg.is_Not:
             pform = prettyForm(*pform.parens())
 
-        for arg in e.args[1:]:
+        for arg in args[1:]:
             pform_arg = self._print(arg)
 
             if arg.is_Boolean and not arg.is_Not:
@@ -182,7 +185,7 @@ class PrettyPrinter(Printer):
 
     def _print_Implies(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, u"\u2192")
+            return self.__print_Boolean(e, u"\u2192", sort=False)
         else:
             return self._print_Function(e)
 
@@ -520,17 +523,7 @@ class PrettyPrinter(Printer):
 
         return Lim
 
-    # Matrix is special:
-    #
-    # it can exist in SymPy in two forms:
-    # - as Matrix
-    # - as _MatrixAsBasic
-    #
-    # see _MatrixAsBasic docstring, and #420
-    def _print__MatrixAsBasic(self, e):
-        return self._print_Matrix(e.m)
-
-    def _print_Matrix(self, e):
+    def _print_MatrixBase(self, e):
         M = e   # matrix
         Ms = {}  # i,j -> pretty(M[i,j])
         for i in range(M.rows):
@@ -597,6 +590,8 @@ class PrettyPrinter(Printer):
 
         D = prettyForm(*D.parens('[',']'))
         return D
+    _print_ImmutableMatrix = _print_MatrixBase
+    _print_MutableMatrix = _print_MatrixBase
 
     def _print_Transpose(self, T):
         pform = self._print(T.arg)
@@ -866,7 +861,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_GeometryEntity(self, expr):
-        # GeometryEntity is special -- it's base is tuple
+        # GeometryEntity is based on Tuple but should not print like a Tuple
         return self.emptyPrinter(expr)
 
     def _print_Lambda(self, e):
@@ -1132,22 +1127,14 @@ class PrettyPrinter(Printer):
     def _print_ProductSet(self, p):
         prod_char = u'\xd7'
         return self._print_seq(p.sets, None, None, ' %s '%prod_char,
-                parenthesize = lambda set:set.is_Union )
+                parenthesize = lambda set:set.is_Union or set.is_Intersection)
 
     def _print_FiniteSet(self, s):
         if len(s) > 10:
-            # Take ten elements from the set at random
-            q = iter(s)
-            printset = [q.next() for i in xrange(10)]
-            printset.append('...')
+            printset = s.args[:3] + ('...',) + s.args[-3:]
         else:
-            printset = s
-        try:
-            printset = sorted(printset)
-        except AttributeError:  pass
-
+            printset = s.args
         return self._print_seq(printset, '{', '}', ', ' )
-
 
     def _print_Interval(self, i):
         if i.start == i.end:
@@ -1166,12 +1153,19 @@ class PrettyPrinter(Printer):
 
             return self._print_seq(i.args[:2], left, right)
 
+    def _print_Intersection(self, u):
+
+        delimiter = ' %s ' % pretty_atom('Intersection')
+
+        return self._print_seq(u.args, None, None, delimiter,
+                parenthesize = lambda set:set.is_ProductSet or set.is_Union)
+
     def _print_Union(self, u):
 
         union_delimiter = ' %s ' % pretty_atom('Union')
 
         return self._print_seq(u.args, None, None, union_delimiter,
-                parenthesize = lambda set:set.is_ProductSet)
+             parenthesize = lambda set:set.is_ProductSet or set.is_Intersection)
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False):

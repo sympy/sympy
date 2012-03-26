@@ -136,10 +136,10 @@ def scaled_zero(mag, sign=1):
     >>> Float(ok)
     1.26765060022823e+30
     >>> Float(ok, p)
-    .0e+30
+    0.e+30
     >>> ok, p = scaled_zero(100, -1)
     >>> Float(scaled_zero(ok), p)
-    -.0e+30
+    -0.e+30
     """
     if type(mag) is tuple and len(mag) == 4 and iszero(mag, scaled=True):
         return (mag[0][0],) + mag[1:]
@@ -1007,7 +1007,11 @@ def evalf_sum(expr, prec, options):
             if err <= eps:
                 break
         err = fastlog(evalf(abs(err), 20, options)[0])
-        re, im, re_acc, im_acc = evalf(s, prec2, options)
+        try:
+            re, im, re_acc, im_acc = evalf(s, prec2, options)
+        except TypeError: # issue 3174
+            # when should it try subs if they are in options?
+            raise NotImplementedError
         if re_acc is None:
             re_acc = -err
         if im_acc is None:
@@ -1115,8 +1119,18 @@ def evalf(x, prec, options):
         print "### output", to_str(r[0] or fzero, 50)
         print "### raw", r#r[0], r[2]
         print
-    if options.get("chop"):
-        r = chop_parts(r, prec)
+    chop = options.get('chop', False)
+    if chop:
+        if chop is True:
+            chop_prec = prec
+        else:
+            # convert (approximately) from given tolerance;
+            # the formula here will will make 1e-i rounds to 0 for
+            # i in the range +/-27 while 2e-i will not be chopped
+            chop_prec = int(round(-3.321*math.log10(chop) + 2.5))
+            if chop_prec == 3:
+                chop_prec -= 1
+        r = chop_parts(r, chop_prec)
     if options.get("strict"):
         check_target(x, r, prec)
     return r

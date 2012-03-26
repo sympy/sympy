@@ -244,8 +244,8 @@ class Prufer(Basic):
         labels should be, but all nodes from the smallest through the largest
         must be present.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.combinatorics.prufer import Prufer
         >>> Prufer.edges([1, 2, 3], [2, 4, 5]) # a T
@@ -325,8 +325,7 @@ class Prufer(Basic):
         Prufer([0, 0])
 
         """
-        n = int_tested(n)
-        rank = int_tested(rank)
+        n, rank = int_tested(n, rank)
         L = defaultdict(int)
         for i in xrange(n - 3, -1, -1):
             L[i] = rank % n

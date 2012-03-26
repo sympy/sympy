@@ -385,3 +385,16 @@ def test_geometry():
     assert p == Point(0, 1) and type(p) == Point
     L = sympify(Line(p, (1, 0)))
     assert L == Line((0, 1), (1, 0)) and type(L) == Line
+
+def test_no_autosimplify_into_Mul():
+    s = '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'
+    def clean(s):
+        return ''.join(str(s).split())
+    assert -1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) == -1
+    # sympification should not allow the constant to enter a Mul
+    # or else the structure can change dramatically
+    ss = S(s)
+    assert ss != 1 and ss.simplify() == -1
+    s = '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'.replace('x', '_kern')
+    ss = S(s)
+    assert ss != 1 and ss.simplify() == -1

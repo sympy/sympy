@@ -160,7 +160,7 @@ def period_find(a, N):
     """Finds the period of a in modulo N arithmetic
 
     This is quantum part of Shor's algorithm.It takes two registers,
-    puts first in superposition of states with Hadamards so: |k>|0>
+    puts first in superposition of states with Hadamards so: ``|k>|0>``
     with k being all possible choices. It then does a controlled mod and
     a QFT to determine the order of a.
     """

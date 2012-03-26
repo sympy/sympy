@@ -5,8 +5,6 @@ from sympy.galgebra.GA import *
 from sympy.galgebra.latex_ex import *
 from sympy import *
 
-set_main(sys.modules[__name__])
-
 if __name__ == '__main__':
 
     metric = '1  0  0  0,'+\
@@ -14,10 +12,10 @@ if __name__ == '__main__':
              '0  0 -1  0,'+\
              '0  0  0 -1'
 
-    vars = make_symbols('t x y z')
-    MV.setup('gamma_t gamma_x gamma_y gamma_z',metric,True,vars)
+    vars = symbols('t x y z')
+    gamma_t,gamma_x,gamma_y,gamma_z = MV.setup('gamma_t gamma_x gamma_y gamma_z',metric,True,vars)
     
-    parms = make_symbols('m e')
+    m,e = symbols('m e')
     Format('1 1 1 1')
     I = MV(ONE,'pseudo')
     nvars = len(vars)

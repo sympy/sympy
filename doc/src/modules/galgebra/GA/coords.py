@@ -7,17 +7,15 @@ from sympy import *
 
 import sympy,numpy,sys
 
-set_main(sys.modules[__name__])
-
 if __name__ == '__main__':
     metric = '1 0 0,'+\
              '0 1 0,'+\
              '0 0 1'
 
-    MV.setup('gamma_x gamma_y gamma_z',metric,True)
+    gamma_x,gamma_y,gamma_z = MV.setup('gamma_x gamma_y gamma_z',metric,True)
     Format('1 1 1 1')
 
-    coords = make_symbols('r theta phi')
+    coords = r,theta,phi = symbols('r theta phi')
     x = r*(sympy.cos(theta)*gamma_z+sympy.sin(theta)*\
         (sympy.cos(phi)*gamma_x+sympy.sin(phi)*gamma_y))
     x.set_name('x')

@@ -73,16 +73,16 @@ def test_ccode_exceptions():
     assert ccode(Abs(x)) == "fabs(x)"
 
 def test_ccode_boolean():
-    assert ccode(x&y) == "x&&y"
-    assert ccode(x|y) == "x||y"
+    assert ccode(x & y) == "x && y"
+    assert ccode(x | y) == "x || y"
     assert ccode(~x) == "!x"
-    assert ccode(x&y&z) == "x&&y&&z"
-    assert ccode(x|y|z) == "x||y||z"
-    assert ccode((x&y)|z) == "x&&y||z"
-    assert ccode((x|y)&z) == "(x||y)&&z"
+    assert ccode(x & y & z) == "x && y && z"
+    assert ccode(x | y | z) == "x || y || z"
+    assert ccode((x & y) | z) == "z || x && y"
+    assert ccode((x | y) & z) == "z && (x || y)"
 
 def test_ccode_Piecewise():
-    p = ccode(Piecewise((x,x<1),(x**2,True)))
+    p = ccode(Piecewise((x, x<1), (x**2, True)))
     s = \
 """\
 if (x < 1) {

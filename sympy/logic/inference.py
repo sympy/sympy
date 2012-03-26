@@ -72,22 +72,25 @@ def pl_true(expr, model={}):
         return expr
 
     expr = sympify(expr)
-    if expr.is_Atom:
+
+    if expr.is_Symbol:
         return model.get(expr)
 
     args = expr.args
-    if expr.func is Not:
+    func = expr.func
+
+    if func is Not:
         p = pl_true(args[0], model)
         if p is None: return None
         else: return not p
-    elif expr.func is Or:
+    elif func is Or:
         result = False
         for arg in args:
             p = pl_true(arg, model)
             if p == True: return True
             if p == None: result = None
         return result
-    elif expr.func is And:
+    elif func is And:
         result = True
         for arg in args:
             p = pl_true(arg, model)
@@ -95,11 +98,11 @@ def pl_true(expr, model={}):
             if p == None: result = None
         return result
 
-    elif expr.func is Implies:
+    elif func is Implies:
         p, q = args
         return pl_true(Or(Not(p), q), model)
 
-    elif expr.func is Equivalent:
+    elif func is Equivalent:
         p, q = args
         pt = pl_true(p, model)
         if pt == None:
@@ -139,7 +142,7 @@ class PropKB(KB):
         ========
 
         >>> from sympy.logic.inference import PropKB
-        >>> from sympy.abc import x, y, z
+        >>> from sympy.abc import x, y
         >>> l = PropKB()
         >>> l.clauses
         []
@@ -148,9 +151,9 @@ class PropKB(KB):
         >>> l.clauses
         [Or(x, y)]
 
-        >>> l.tell(y & z)
+        >>> l.tell(y)
         >>> l.clauses
-        [Or(x, y), y, z]
+        [Or(x, y), y]
         """
         for c in conjuncts(to_cnf(sentence)):
             if not c in self.clauses: self.clauses.append(c)

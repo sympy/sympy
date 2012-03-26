@@ -157,7 +157,7 @@ therefore capped, by default to around 100 digits. If we try with the 1000'th
 Fibonacci number, the following happens:
 
     >>> N(fibonacci(1000) - (GoldenRatio)**1000/sqrt(5))
-    .0e+85
+    0.e+85
 
 
 The lack of digits in the returned number indicates that ``N`` failed to achieve
@@ -188,9 +188,9 @@ does not know this:
 
     >>> f = fibonacci(100) - (GoldenRatio**100 - (GoldenRatio-1)**100)/sqrt(5)
     >>> N(f)
-    .0e-104
+    0.e-104
     >>> N(f, maxn=1000)
-    .0e-1336
+    0.e-1336
 
 
 In situations where such cancellations are known to occur, the ``chop`` options
@@ -203,28 +203,26 @@ imaginary portions of a number with exact zeros:
     3.00000000000000
 
 
-In situations where you wish to remove meaningless digits, re-evaluation and
-the use of the ``round`` function are useful:
+In situations where you wish to remove meaningless digits, re-evaluation or
+the use of the ``round`` method are useful:
 
     >>> Float('.1', '')*Float('.12345', '')
     0.012297
     >>> ans = _
     >>> N(ans, 1)
     0.01
-    >>> round(ans, 2)
+    >>> ans.round(2)
     0.01
 
 
 If you are dealing with a numeric expression that contains no floats, it
-will be evaluable to arbitrary precision. To round the result relative to
-the decimal, the round function is useful:
+can be evaluated to arbitrary precision. To round the result relative to
+a given decimal, the round method is useful:
 
-    >>> from sympy import round
-    >>> 10*pi + cos(1)
-    cos(1) + 10*pi
-    >>> N(_)
+    >>> v = 10*pi + cos(1)
+    >>> N(v)
     31.9562288417661
-    >>> round(_, 3)
+    >>> v.round(3)
     31.956
 
 

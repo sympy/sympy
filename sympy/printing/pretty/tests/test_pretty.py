@@ -2596,9 +2596,20 @@ def test_pretty_Boolean():
     assert  pretty(expr) == "Implies(x, y)"
     assert upretty(expr) == u"x → y"
 
+    # don't sort args
+    expr = Implies(y, x, evaluate=False)
+
+    assert  pretty(expr) == "Implies(y, x)"
+    assert upretty(expr) == u"y → x"
+
     expr = Equivalent(x, y, evaluate=False)
 
     assert  pretty(expr) == "Equivalent(x, y)"
+    assert upretty(expr) == u"x ≡ y"
+
+    expr = Equivalent(y, x, evaluate=False)
+
+    assert  pretty(expr) == "Equivalent(y, x)"
     assert upretty(expr) == u"x ≡ y"
 
 def test_pretty_Domain():
@@ -3595,7 +3606,7 @@ atan2⎜───────, ╲╱ x ⎟\n\
 
 def test_pretty_geometry():
     e = Segment((0, 1), (0, 2))
-    assert pretty(e) == 'Segment(Point(0, 2), Point(0, 1))'
+    assert pretty(e) == 'Segment(Point(0, 1), Point(0, 2))'
     e = Ray((1, 1), angle=4.2*pi)
     assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(0.2*pi) + 1))'
 
@@ -3630,4 +3641,4 @@ def test_RandomDomain():
 
     A = Exponential(1, symbol=Symbol('a'))
     B = Exponential(1, symbol=Symbol('b'))
-    assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ b ∧ 0 ≤ a'
+    assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ a ∧ 0 ≤ b'

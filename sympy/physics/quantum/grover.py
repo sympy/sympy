@@ -1,6 +1,7 @@
 """Grover's algorithm and helper functions.
 
 Todo:
+
 * W gate construction (or perhaps -W gate based on Mermin's book)
 * Generalize the algorithm for an unknown function that returns 1 on multiple
   qubit states, not just one.
@@ -33,8 +34,8 @@ def superposition_basis(nqubits):
     nqubits : int
         The number of qubits.
 
-    Return
-    ======
+    Returns
+    =======
 
     state : Qubit
         An equal superposition of the computational basis with nqubits.
@@ -71,7 +72,7 @@ class OracleGate(Gate):
     Examples
     ========
 
-    Apply an Oracle gate that flips the sign of |2> on different qubits::
+    Apply an Oracle gate that flips the sign of ``|2>`` on different qubits::
 
         >>> from sympy.physics.quantum.qubit import IntQubit
         >>> from sympy.physics.quantum.qapply import qapply
@@ -169,8 +170,8 @@ class OracleGate(Gate):
 class WGate(Gate):
     """General n qubit W Gate in Grover's algorithm.
 
-    The gate performs the operation 2|phi><phi| - 1 on some qubits.
-    |phi> = (tensor product of n Hadamards)*(|0> with n qubits)
+    The gate performs the operation ``2|phi><phi| - 1`` on some qubits.
+    ``|phi> = (tensor product of n Hadamards)*(|0> with n qubits)``
 
     Parameters
     ==========

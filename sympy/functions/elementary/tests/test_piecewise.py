@@ -24,7 +24,7 @@ def test_piecewise():
 
     # More subs tests
     p2 = Piecewise((1, x < pi), (-1, x < 2*pi), (0, x > 2*pi))
-    assert p2.subs(x,2) == 1
+    assert p2.subs(x, 2) == 1
     assert p2.subs(x,4) == -1
     assert p2.subs(x,10) == 0
 
@@ -133,8 +133,6 @@ def test_piecewise_solve():
 
     g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False))
     assert solve(g, x) == [5]
-
-    assert solve(Piecewise((x, x < 0), (x, -1))) == [0]
 
 # See issue 1253 (enhance the solver to handle inequalities).
 @XFAIL

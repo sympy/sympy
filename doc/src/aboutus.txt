@@ -47,7 +47,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Vinzent Steinberg: docstring patches, a lot of bug fixes, nsolve (nonlinear equation systems solver), compiling functions to machine code, patches review
 #. Riccardo Gori: improvements and speedups to matrices, many bug fixes
 #. Case Van Horsen: implemented optional support for gmpy in mpmath
-#. Štěpán Roučka: a lot of bug fixes all over sympy (matrix, simplification, limits, series, ...)
+#. Štěpán Roučka: a lot of bug fixes all over SymPy (matrix, simplification, limits, series, ...)
 #. Ali Raza Syed: pretty printing/isympy on windows fix
 #. Stefano Maggiolo: many bug fixes, polishings and improvements
 #. Robert Cimrman: matrix patches
@@ -122,7 +122,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Tom Bachmann: fixes to Real
 #. Yuri Karadzhov: improvements to hyperbolic identities
 #. Vladimir Lagunov: improvements to the geometry module
-#. Matthew Rocklin: stats, sets, matrix expressions 
+#. Matthew Rocklin: stats, sets, matrix expressions
 #. Saptarshi Mandal: Test for an integral
 #. Gilbert Gede: Tests for solvers
 #. Anatolii Koval: Infinite 1D box example
@@ -191,6 +191,17 @@ want to be mentioned here, so see our repository history for a full list).
 #. Martin Povišer: fix problem with rationaltools
 #. Siddhant Jain: See Also documentation for functions/special
 #. Kevin Hunter: Improvements to the inequality classes
+#. Michael Mayorov: Improvement to series
+#. Nathan Alison: Additions to the stats module
+#. Christian Bühler: remove use of set_main() in GA
+#. Carsten Knoll: improvement to preview()
+#. M R Bharath: modified use of int_tested, improvement to Permutation
+#. Matthias Toews: File permissions
+#. Jorge E. Cardona: Cleanup in polys
+#. Sanket Agarwal: Rewrite coverage_doctest.py script
+#. Manoj Babu K.: Improve gamma function
+#. Sai Nikhil: Fix to Heavyside with complex arguments
+#. Aleksandar Makelov: Fixes regarding the dihedral group generator
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
@@ -227,7 +238,7 @@ Financial and Infrastructure Support
 
 * `the Space Telescope Science Institute <http://www.stsci.edu/portal/>`_: STScI hosted 1 GSoC 2007 student (Mateusz)
 
-* `Simula Research Laboratory <http://www.simula.no/>`_: supports Pearu Peterson work in SymPy/Sympy Core projects
+* `Simula Research Laboratory <http://www.simula.no/>`_: supports Pearu Peterson work in SymPy/SymPy Core projects
 
 * `GitHub <https://github.com/about>`_ is providing us with development
   and collaboration tools

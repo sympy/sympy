@@ -342,20 +342,16 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     so it is a good idea to allow for retries:
 
     >>> from sympy.ntheory.generate import cycle_length
-    >>> n=16843009
-    >>> F=lambda x:(2048*pow(x,2,n) + 32767) % n
+    >>> n = 16843009
+    >>> F = lambda x:(2048*pow(x, 2, n) + 32767) % n
     >>> for s in range(5):
-    ...     cycle_length(F, s).next()
+    ...     print 'loop length = %4i; leader length = %3i' % cycle_length(F, s).next()
     ...
-    (2489, 42)
-    (78, 120)
-    (1482, 99)
-    (1482, 285)
-    (1482, 100)
-
-       \    \___leader
-        \______________loop
-
+    loop length = 2489; leader length =  42
+    loop length =   78; leader length = 120
+    loop length = 1482; leader length =  99
+    loop length = 1482; leader length = 285
+    loop length = 1482; leader length = 100
 
     Here is an explicit example where there is a two element leadup to
     a sequence of 3 numbers (11, 14, 4) that then repeat:
@@ -1310,6 +1306,8 @@ def totient(n):
 
     divisor_count
     """
+    from residue_ntheory import int_tested
+    n = int_tested(n)
     if n < 1:
         raise ValueError("n must be a positive integer")
     factors = factorint(n)

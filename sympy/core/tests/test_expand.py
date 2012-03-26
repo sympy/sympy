@@ -1,4 +1,4 @@
-from sympy import log, sqrt, Rational as R, Symbol
+from sympy import log, sqrt, Rational as R, Symbol, I, exp, pi, S, re, im
 
 from sympy.simplify.simplify import expand_numer, expand
 from sympy.utilities.pytest import raises
@@ -22,11 +22,21 @@ def test_expand_negative_integer_powers():
     assert expr.expand() == 1 / (2*x*y + x**2 + y**2)
     assert expr.expand(multinomial=False) == (x+y)**(-2)
 
-def test_expand_non_commutative_multinomial():
-    x = Symbol('x', commutative=False)
-    y = Symbol('x', commutative=False)
-    assert ((x+y)**2).expand() == x*y + y*x + x**2 + y**2
-    assert ((x+y)**3).expand() == x**2*y + y**2*x + x*y**2 + y*x**2 + x**3 + y**3 + x*y*x + y*x*y
+def test_expand_non_commutative():
+    A = x = Symbol('x', commutative=False)
+    B = y = Symbol('y', commutative=False)
+    a = Symbol('a')
+    i = Symbol('i', integer=True)
+    assert ((x + y)**2).expand() == x*y + y*x + x**2 + y**2
+    assert ((x + y)**3).expand() == (x**2*y + y**2*x + x*y**2 + y*x**2 +
+                                     x**3 + y**3 + x*y*x + y*x*y)
+    # 3120
+    assert ((a*A*B*A**-1)**2).expand() == a**2*A*B**2*A**(-1)
+    assert ((a*A*B*A**-1)**2).expand(deep=False) == a**2*A*B**2*A**(-1)
+    assert ((a*A*B*A**-1)**2).expand(force=True) == a**2*A*B**2*A**(-1)
+    assert ((a*A*B)**2).expand() == a**2*A*B*A*B
+    assert ((a*A)**2).expand() == a**2*A**2
+    assert ((a*A*B)**i).expand() == a**i*(A*B)**i
 
 def test_expand_radicals():
     a = (x + y)**R(1,2)
@@ -67,3 +77,24 @@ def test_expand_frac():
         y*(x + y)/(x**2 + x)
     eq = (x+1)**2/y
     assert expand_numer(eq, multinomial=False) == eq
+
+def test_issue_3022():
+    from sympy import cse
+    ans = S('''([
+        (x0, im(x)),
+        (x1, re(x)),
+        (x2, atan2(x0, x1)/2),
+        (x3, sin(x2)), (x4, cos(x2)),
+        (x5, x0**2 + x1**2),
+        (x6, atan2(0, x5)/4),
+        (x7, cos(x6)),
+        (x8, sin(x6)),
+        (x9, x4*x7),
+        (x10, x4*x8),
+        (x11, x3*x8),
+        (x12, x3*x7)],
+        [sqrt(2)*(x10 + I*x10 + x11 - I*x11 + x12 + I*x12 - x9 + I*x9)/
+        (8*pi**(3/2)*x5**(1/4))])''')
+    eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
+    r, e = cse((eq).expand(complex=True))
+    assert abs((eq - e[0].subs(reversed(r))).subs(x, 1 + 3*I)) < 1e-9

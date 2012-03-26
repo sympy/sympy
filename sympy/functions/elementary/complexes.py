@@ -325,7 +325,7 @@ class Abs(Function):
             return known*unk
         if arg is S.NaN:
             return S.NaN
-        if arg.is_zero:
+        if arg.is_zero:#equals(0):
             return arg
         if arg.is_positive:
             return arg
@@ -546,7 +546,7 @@ class periodic_argument(Function):
             if not a.is_polar:
                 unbranched += arg(a)
             elif a.func is exp_polar:
-                unbranched += a.args[0].as_real_imag()[1]
+                unbranched += a.exp.as_real_imag()[1]
             elif a.is_Pow:
                 re, im = a.exp.as_real_imag()
                 unbranched += re*unbranched_argument(a.base) + im*log(abs(a.base))
