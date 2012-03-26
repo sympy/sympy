@@ -1795,8 +1795,10 @@ class Zero(IntegerConstant):
     def _eval_power(self, expt):
         if expt.is_positive:
             return self
-        elif expt.is_negative:
+        if expt.is_negative:
             return S.Infinity
+        if expt.is_real is False:
+            return S.NaN
         # infinities are already handled with pos and neg
         # tests above; now throw away leading numbers on Mul
         # exponent
@@ -2214,6 +2216,39 @@ class NegativeInfinity(Number):
         return other is S.NegativeInfinity
 
 class NaN(Number):
+    """
+    Not a Number.
+
+    This represents the corresponding data type to floating point nan, which
+    is defined in the IEEE 754 floating point standard, and corresponds to the
+    Python ``float('nan')``.
+
+    NaN serves as a place holder for numeric values that are indeterminate,
+    but not infinite.  Most operations on nan, produce another nan.  Most
+    indeterminate forms, such as ``0/0`` or ``oo - oo` produce nan.  Three
+    exceptions are ``0**0``, ``1**oo``, and ``oo**0``, which all produce ``1``
+    (this is consistent with Python's float).
+
+    NaN is a singleton, and can be accessed by ``S.NaN``, or can be imported
+    as ``nan``.
+
+    Examples
+    ========
+
+    >>> from sympy import nan, S, oo
+    >>> nan is S.NaN
+    True
+    >>> oo - oo
+    nan
+    >>> nan + 1
+    nan
+
+    References
+    ==========
+
+    - http://en.wikipedia.org/wiki/NaN
+
+    """
     __metaclass__ = Singleton
 
     is_commutative = True
