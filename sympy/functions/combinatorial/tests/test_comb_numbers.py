@@ -1,9 +1,39 @@
-from sympy import bernoulli, Symbol, symbols, Sum, harmonic, Rational, oo, zoo, pi, I, bell, \
-        fibonacci, lucas, euler, catalan, binomial, gamma, sqrt, hyper, log, polygamma, diff
+from sympy import bernoulli, Symbol, symbols, Sum, harmonic, Rational, oo, \
+                    zoo, pi, I, bell, fibonacci, lucas, euler, catalan, \
+                    binomial, gamma, sqrt, hyper, log, polygamma, diff, \
+                    Expr, sympify
 
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
+
+class IndexedLight(Expr):
+    """Represent the base or stem of an indexed object"""
+    def __new__(cls, label):
+        label = sympify(label)
+        obj = Expr.__new__(cls, label)
+        return obj
+    def __getitem__(self, index):
+            return IndexedItemLight(self, index)
+    @property
+    def label(self):
+        return self.args[0]
+    def _sympystr(self, p):
+        return p.doprint(self.label)
+
+class IndexedItemLight(Expr):
+    """Represents a mathematical object with indices."""
+    is_commutative = True
+    def __new__(cls, base, index):
+        return Expr.__new__(cls, base, index)
+    @property
+    def base(self):
+        return self.args[0]
+    @property
+    def index(self):
+        return self.args[1]
+    def _sympystr(self, p):
+        return "%s[%s]" % (p.doprint(self.base), p.doprint(self.index))
 
 def test_bernoulli():
     assert bernoulli(0) == 1
@@ -55,6 +85,17 @@ def test_bell():
     assert bell(6, 2, X) == 6*X[5]*X[1] + 15*X[4]*X[2] + 10*X[3]**2
     assert bell(6, 3, X) == 15*X[4]*X[1]**2 + 60*X[3]*X[2]*X[1] + 15*X[2]**3
 
+    X = (0, 1, 10, 100, 1000, 10000)
+    assert bell(6, 2, X) == (6 + 15 + 10)*10000
+
+    X = (0, 1, 2, 3, 3, 5)
+    assert bell(6, 2, X) == 6*5 + 15*3*2 + 10*3**2
+
+    X = (0, 1, 2, 3, 5)
+    assert bell(6, 3, X) == 15*5 + 60*3*2 + 15*2**3
+
+    A = IndexedLight('A')
+    assert bell(6, 3, A) == 15*A[4]*A[1]**2 + 60*A[3]*A[2]*A[1] + 15*A[2]**3
 
 def test_harmonic():
     assert harmonic(1,1) == 1

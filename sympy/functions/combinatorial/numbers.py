@@ -8,6 +8,7 @@ the separate 'factorials' module.
 """
 
 from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add
+from sympy.polys.polytools import Poly
 
 from sympy.mpmath import bernfrac
 from sympy.mpmath.libmp import ifib as _ifib
@@ -23,7 +24,7 @@ from sympy.utilities.memoization import recurrence_memo
 
 # Dummy symbol used for computing polynomial sequences
 _sym = Symbol('x')
-_symbols = Function('_x')
+_symbols = Function('x')
 
 
 #----------------------------------------------------------------------------#
@@ -363,7 +364,7 @@ class bell(Function):
 
     @staticmethod
     #@assoc_recurrence_memo([[S.One]])
-    def _bell_incomplete_poly(n, k):
+    def _bell_incomplete_poly(n, k, symbols):
         r"""
         The second kind of Bell polynomials (incomplete Bell polynomials).
 
@@ -384,11 +385,10 @@ class bell(Function):
         elif (n==0) or (k==0):
             return S.Zero
         s = S.Zero
-
-        a = 1
+        a = S.One
         for m in xrange(1, n-k+2):
-            s += a*_symbols(m)*bell._bell_incomplete_poly(n-m, k-1)
-            a = a*(n-m)//m
+            s += a*symbols[m]*bell._bell_incomplete_poly(n-m, k-1, symbols)
+            a = a*(n-m)/m
         return s.expand()
 
     @classmethod
@@ -399,11 +399,8 @@ class bell(Function):
             elif symbols is None:
                 return cls._bell_poly(int(n)).subs(_sym, k_sym)
             else:
-                r = cls._bell_incomplete_poly(int(n), int(k_sym))
-                for i in range(1, n - k_sym +2):
-                    r = r.subs(_symbols(i), symbols[i])
+                r = cls._bell_incomplete_poly(int(n), int(k_sym), symbols)
                 return r
-
 
 #----------------------------------------------------------------------------#
 #                                                                            #
