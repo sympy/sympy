@@ -308,8 +308,8 @@ class bell(Function):
            n           /___   \ k - 1 /    k-1
                        k = 1
 
-    The second kind of Bell polynomials are sometimes called "partial" Bell
-    polynomials or incomplite Bell polynomials) are defined as:
+    The second kind of Bell polynomials (are sometimes called "partial" Bell
+    polynomials or incomplete Bell polynomials) are defined as:
 
                                      ___                 / x   \ j  / x   \ j
                                      \           n!      |  1  |  1 |  2  |  2
@@ -320,14 +320,14 @@ class bell(Function):
                                  j + j + ... = k
                                   1   2
 
-                                 j + 2 * j + 3 * j... = k
+                                 j + 2 * j + 3 * j... = n
                                   1       2       3
 
 
     * bell(n) gives the nth Bell number, B_n
     * bell(n, x) gives the nth Bell polynomial, B_n(x)
-    * bell(n, k, (x_1, x_2, ..., x_{n-k+1})) gives the second kind of Bell
-        polynomial, B_n_k(x_1, x_2,..., x_{n-k+1})
+    * bell(n, k, (x_1, x_2, ..., x_{n-k+1})) gives Bell polynomial of the
+        second kind, B_n_k(x_1, x_2,..., x_{n-k+1})
 
     Notes
     =====
@@ -386,7 +386,7 @@ class bell(Function):
     #@assoc_recurrence_memo([[S.One]])
     def _bell_incomplete_poly(n, k):
         """
-        The second kind of Bell polynomials (incomplite Bell polynomials).
+        The second kind of Bell polynomials (incomplete Bell polynomials).
 
         Calculated by recurrence formula:
 
