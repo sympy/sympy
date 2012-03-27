@@ -228,7 +228,70 @@ def test_conv2_symb_indices_with_seq():
 
     ndx_map = {i0 : Integer(0)}
     actual, act_map, sndx = conv2_symbolic_qubits_with_seq(*args,
-                                    index_map=ndx_map,
+                                    qubit_map=ndx_map,
                                     start=i0)
     assert actual == expected
     assert act_map == exp_map
+
+def test_conv2_real_qubits_with_seq():
+    i0 = Wild('i0')
+    i1 = Wild('i1')
+
+    (x, y, z, h) = create_gate_sequence()
+
+    x_i0 = X(i0)
+    y_i0 = Y(i0)
+    z_i0 = Z(i0)
+    
+    qubit_map = {i0 : Integer(0)}
+    args = (z_i0, y_i0, x_i0)
+    expected = (z, y, x)
+    actual = conv2_real_qubits_with_seq(*args, qubit_map=qubit_map)
+    assert actual == expected
+
+    cnot_10 = CNOT(1,0)
+    cnot_01 = CNOT(0,1)
+    cgate_z_10 = CGate(1, Z(0))
+    cgate_z_01 = CGate(0, Z(1))
+
+    cnot_i1_i0 = CNOT(i1, i0)
+    cnot_i0_i1 = CNOT(i0, i1)
+    cgate_z_i1_i0 = CGate(i1, Z(i0))
+
+    qubit_map = {i0 : Integer(0), i1 : Integer(1)}
+    args = (cnot_i1_i0,)
+    expected = (cnot_10,)
+    actual = conv2_real_qubits_with_seq(*args, qubit_map=qubit_map)
+    assert actual == expected
+
+    args = (cgate_z_i1_i0,)
+    expected = (cgate_z_10,)
+    actual = conv2_real_qubits_with_seq(*args, qubit_map=qubit_map)
+    assert actual == expected
+
+    args = (cnot_i0_i1,)
+    expected = (cnot_01,)
+    actual = conv2_real_qubits_with_seq(*args, qubit_map=qubit_map)
+    assert actual == expected
+
+    qubit_map = {i0 : Integer(1), i1 : Integer(0)}
+    args = (cgate_z_i1_i0,)
+    expected = (cgate_z_01,)
+    actual = conv2_real_qubits_with_seq(*args, qubit_map=qubit_map)
+    assert actual == expected
+
+    i2 = Wild('i2')
+    ccgate_z = CGate(i0, CGate(i1, Z(i2)))
+    ccgate_x = CGate(i1, CGate(i2, X(i0)))
+
+    qubit_map = {i0 : Integer(0), i1 : Integer(1), i2 : Integer(2)}
+    args = (ccgate_z, ccgate_x)
+    expected = (CGate(0, CGate(1, Z(2))), CGate(1, CGate(2, X(0))))
+    actual = conv2_real_qubits_with_seq(*args, qubit_map=qubit_map)
+    assert actual == expected
+
+    qubit_map = {i0 : Integer(1), i2 : Integer(0), i1 : Integer(2)}
+    args = (ccgate_x, ccgate_z)
+    expected = (CGate(2, CGate(0, X(1))), CGate(1, CGate(2, Z(0))))
+    actual = conv2_real_qubits_with_seq(*args, qubit_map=qubit_map)
+    assert actual == expected

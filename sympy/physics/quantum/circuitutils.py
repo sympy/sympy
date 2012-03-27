@@ -11,7 +11,8 @@ __all__ = [
     'kmp_table',
     'find_subcircuit_with_seq',
     'replace_subcircuit_with_seq',
-    'conv2_symbolic_qubits_with_seq'
+    'conv2_symbolic_qubits_with_seq',
+    'conv2_real_qubits_with_seq'
 ]
 
 def kmp_table(word):
@@ -180,12 +181,12 @@ def conv2_symbolic_qubits_with_seq(*seq, **kargs):
             raise TypeError(msg)
         cur_ndx = kargs['start']
 
-    if 'index_map' in kargs:
-        if not isinstance(kargs['index_map'], dict):
+    if 'qubit_map' in kargs:
+        if not isinstance(kargs['qubit_map'], dict):
             msg = ('Expected dict for existing map, got ' +
-                   '%r.' % kargs['index_map'])
+                   '%r.' % kargs['qubit_map'])
             raise TypeError(msg)
-        ndx_map = kargs['index_map']
+        ndx_map = kargs['qubit_map']
 
     # keys are real indices; keys are symbolic indices
     inv_map = create_inverse_map(ndx_map)
@@ -196,7 +197,7 @@ def conv2_symbolic_qubits_with_seq(*seq, **kargs):
         if isinstance(item, Gate):
             sym_item, new_map, cur_ndx = conv2_symbolic_qubits_with_seq(
                                                  *item.args,
-                                                 index_map=ndx_map,
+                                                 qubit_map=ndx_map,
                                                  start=cur_ndx)
             ndx_map.update(new_map)
             inv_map = create_inverse_map(ndx_map)
@@ -204,7 +205,7 @@ def conv2_symbolic_qubits_with_seq(*seq, **kargs):
         elif isinstance(item, tuple) or isinstance(item, Tuple):
             sym_item, new_map, cur_ndx = conv2_symbolic_qubits_with_seq(
                                                  *item,
-                                                 index_map=ndx_map,
+                                                 qubit_map=ndx_map,
                                                  start=cur_ndx)
             ndx_map.update(new_map)
             inv_map = create_inverse_map(ndx_map)
@@ -224,3 +225,45 @@ def conv2_symbolic_qubits_with_seq(*seq, **kargs):
         sym_seq = sym_seq + (sym_item,)
 
     return sym_seq, ndx_map, cur_ndx
+
+def conv2_real_qubits_with_seq(*seq, **kargs):
+    """Returns the circuit with real indices.
+
+    Parameters
+    ==========
+    seq : tuple, Gate/Integer/tuple
+        A tuple of Gate, Integer, or tuple objects
+    kargs : dict
+        Contains a dictionary mapping symbolic indices to real indices.
+    """
+
+    if 'qubit_map' not in kargs:
+        msg = 'Missing dictionary mapping symbolic indices to real indices.'
+        raise ValueError(msg)
+
+    if not isinstance(kargs['qubit_map'], dict):
+        msg = 'Expected dict for qubit_map, got %r.' % kargs['qubit_map']
+        raise TypeError(msg)
+
+    qubit_map = kargs['qubit_map']
+
+    real_seq = ()
+    for item in seq:
+        # Nested items, so recurse
+        if isinstance(item, Gate):
+            real_item = conv2_real_qubits_with_seq(
+                                *item.args, qubit_map=qubit_map)
+
+        elif isinstance(item, tuple) or isinstance(item, Tuple):
+            real_item = conv2_real_qubits_with_seq(
+                                *item, qubit_map=qubit_map)
+
+        else:
+            real_item = qubit_map[item]
+
+        if isinstance(item, Gate):
+            real_item = item.__class__(*real_item)
+
+        real_seq = real_seq + (real_item,)
+
+    return real_seq
