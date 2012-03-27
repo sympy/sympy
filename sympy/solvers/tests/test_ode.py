@@ -392,7 +392,7 @@ def test_separable3():
     eq13 = f(x).diff(x) - f(x)*log(f(x))/tan(x)
     sol11 = Eq(f(x), C1*sqrt(1 + tan(x)**2))
     sol12 = Eq(log(-1 + cos(f(x))**2)/2, C1 + 2*x + 2*log(x - 1))
-    sol13 = Eq(log(log(f(x))), C1 - log(1 + tan(x)**2)/2 + log(tan(x)))
+    sol13 = Eq(log(log(f(x))), C1 + log(cos(x)**2-1)/2 )
     assert dsolve(eq11, hint='separable') == simplify(sol11)
     assert dsolve(eq12, hint='separable', simplify=False) == sol12
     assert dsolve(eq13, hint='separable', simplify=False) == sol13

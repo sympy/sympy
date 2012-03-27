@@ -3,10 +3,10 @@
 import sympy
 from sympy.core import Dummy, Wild, S
 from sympy.core.numbers import Rational
-from sympy.functions import sin, cos, binomial
+from sympy.functions import sin, cos, binomial,tan ,sec
 from sympy.core.cache import cacheit
 
-# TODO add support for tan^m(x) * sec^n(x)
+# TODO support for tan^m(x) * sec^n(x) has been added but integrals like sin*tan,sec*cos,etc need to be implemented
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
 
 # creating each time Wild's and sin/cos/Mul is expensive. Also, our match &
@@ -21,6 +21,12 @@ def _pat_sincos(x):
 
     return pat, a,n,m
 
+def _pat_tansec(x):
+    a, n, m = [Wild(s, exclude=[x]) for s in 'anm']
+    pat1 = tan(a*x)**n * sec(a*x)**m
+
+    return pat1, a, n, m
+
 _u = Dummy('u')
 
 
@@ -28,7 +34,7 @@ _u = Dummy('u')
 def trigintegrate(f, x):
     """Integrate f = Mul(trig) over x
 
-       >>> from sympy import Symbol, sin, cos
+       >>> from sympy import Symbol, sin, cos, tan, sec
        >>> from sympy.integrals.trigonometry import trigintegrate
        >>> from sympy.abc import x
 
@@ -37,6 +43,10 @@ def trigintegrate(f, x):
 
        >>> trigintegrate(sin(x)**2, x)
        x/2 - sin(x)*cos(x)/2
+
+       >>> trigintegrate(tan(x)*sec(x),x)
+       1/cos(x)
+
 
        http://en.wikibooks.org/wiki/Calculus/Further_integration_techniques
 
@@ -48,19 +58,33 @@ def trigintegrate(f, x):
     """
 
     pat, a,n,m = _pat_sincos(x)
+    pat1, p,q,r= _pat_tansec(x)
     ##m - cos
     ##n - sin
+    ##q - tan
+    ##r - sec
 
-    M = f.match(pat)
+    M1= f.match(pat)
+    M2= f.match(pat1)
 
-    if M is None:
+
+    if M1 is None and M2 is None:
         return
 
-    n, m = M[n], M[m]   # should always be there
+    if M1 is not None:  # if sincos pattern is found first check for it
+        n=M1[n]
+        m=M1[m]
+    if M2 is not None:    # if sincos not found then go for tansec
+        n= M2[q]                         # n is the power of sin,q of tan and tan=sin/cos and hence pow(tan)=pow(sin)
+        m= -(M2[q]+M2[r])
+
     if n is S.Zero and m is S.Zero:
         return x
 
-    a = M[a]
+    if M1 is not None:    # it is to give the angle arguments
+        a= M1[a]
+    if M1 is None and M2 is not None:
+        a= M2[p]
 
     if n.is_integer and m.is_integer:
 

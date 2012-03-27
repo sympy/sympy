@@ -586,6 +586,12 @@ class cos(TrigonometricFunction):
         import sage.all as sage
         return sage.cos(self.args[0]._sage_())
 
+class sec(TrigonometricFunction):    #TODO implement rest all functions for sec. see cos, sin, tan.
+
+    def _eval_rewrite_as_cos(self,arg):
+        return (1/cos(arg))
+
+
 class tan(TrigonometricFunction):
     """
     tan(x) -> Returns the tangent of x (measured in radians)
