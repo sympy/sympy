@@ -51,6 +51,11 @@ def test_bell():
     assert bell(2, x) == x**2 + x
     assert bell(5, x) == x**5 + 10*x**4 + 25*x**3 + 15*x**2 + x
 
+    X = symbols('x:6')
+    assert bell(6, 2, X) == 6*X[5]*X[1] + 15*X[4]*X[2] + 10*X[3]**2
+    assert bell(6, 3, X) == 15*X[4]*X[1]**2 + 60*X[3]*X[2]*X[1] + 15*X[2]**3
+
+
 def test_harmonic():
     assert harmonic(1,1) == 1
     assert harmonic(2,1) == Rational(3,2)

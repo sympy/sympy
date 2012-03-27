@@ -23,6 +23,7 @@ from sympy.utilities.memoization import recurrence_memo
 
 # Dummy symbol used for computing polynomial sequences
 _sym = Symbol('x')
+_symbols = Function('_x')
 
 
 #----------------------------------------------------------------------------#
@@ -307,8 +308,26 @@ class bell(Function):
            n           /___   \ k - 1 /    k-1
                        k = 1
 
+    The second kind of Bell polynomials are sometimes called "partial" Bell
+    polynomials or incomplite Bell polynomials) are defined as:
+
+                                     ___                 / x   \ j  / x   \ j
+                                     \           n!      |  1  |  1 |  2  |  2
+        B   /x , ..., x         \ =   )    ------------- | --- |    | --- |  ...
+            \ 1        n - k + 1/    /___   j !  j ! ... \  1! /    \  2! /
+         n,k                               1    2
+
+                                 j + j + ... = k
+                                  1   2
+
+                                 j + 2 * j + 3 * j... = k
+                                  1       2       3
+
+
     * bell(n) gives the nth Bell number, B_n
     * bell(n, x) gives the nth Bell polynomial, B_n(x)
+    * bell(n, k, (x_1, x_2, ..., x_{n-k+1})) gives the second kind of Bell
+        polynomial, B_n_k(x_1, x_2,..., x_{n-k+1})
 
     Notes
     =====
@@ -319,7 +338,7 @@ class bell(Function):
     Examples
     ========
 
-    >>> from sympy import bell, Symbol
+    >>> from sympy import bell, Symbol, symbols
 
     >>> [bell(n) for n in range(11)]
     [1, 1, 2, 5, 15, 52, 203, 877, 4140, 21147, 115975]
@@ -327,6 +346,8 @@ class bell(Function):
     846749014511809332450147
     >>> bell(4, Symbol('t'))
     t**4 + 6*t**3 + 7*t**2 + t
+    >>> bell(6, 2, symbols('x:6'))
+    6*x1*x5 + 15*x2*x4 + 10*x3**2
 
     References
     ==========
@@ -361,13 +382,46 @@ class bell(Function):
             s += a * prev[k-1]
         return (_sym * s).expand()
 
+    @staticmethod
+    #@assoc_recurrence_memo([[S.One]])
+    def _bell_incomplete_poly(n, k):
+        """
+        The second kind of Bell polynomials (incomplite Bell polynomials).
+
+        Calculated by recurrence formula:
+
+            B_{n,k} = \sum_{m=1}^{n-k+1} \binom{n-1}{m-1} g_{m} B_{n-m,k-1}
+
+        where
+            B_{0,0} = 1;
+            B_{n,0} = 0; for n=>1
+            B_{0,k} = 0; for k=>1
+        """
+        if (n==0) and (k==0):
+            return S.One
+        elif (n==0) or (k==0):
+            return S.Zero
+        s = S.Zero
+
+        a = 1
+        for m in xrange(1, n-k+2):
+            a= C.binomial(n-1, m-1)
+            s += a*_symbols(m)*bell._bell_incomplete_poly(n-m, k-1)
+        return s.expand()
+
     @classmethod
-    def eval(cls, n, sym=None):
+    def eval(cls, n, k_sym=None, symbols=None):
         if n.is_Integer and n.is_nonnegative:
-            if sym is None:
+            if k_sym is None:
                 return Integer(cls._bell(int(n)))
+            elif symbols is None:
+                return cls._bell_poly(int(n)).subs(_sym, k_sym)
             else:
-                return cls._bell_poly(int(n)).subs(_sym, sym)
+                r = cls._bell_incomplete_poly(int(n), int(k_sym))
+                for i in range(1, n - k_sym +2):
+                    r = r.subs(_symbols(i), symbols[i])
+                return r
+
 
 #----------------------------------------------------------------------------#
 #                                                                            #
