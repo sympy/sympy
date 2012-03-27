@@ -7,7 +7,7 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
-from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add
+from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add, expand_mul
 
 from sympy.polys.polytools import Poly
 
@@ -361,7 +361,7 @@ class bell(Function):
         for k in xrange(2, n+1):
             a = a * (n-k+1) // (k-1)
             s += a * prev[k-1]
-        return (_sym * s).expand()
+        return expand_mul(_sym * s)
 
     @staticmethod
     #@assoc_recurrence_memo([[S.One]])
@@ -377,8 +377,8 @@ class bell(Function):
 
         where
             B_{0,0} = 1;
-            B_{n,0} = 0; for n=>1
-            B_{0,k} = 0; for k=>1
+            B_{n,0} = 0; for n>=1
+            B_{0,k} = 0; for k>=1
 
         """
         if (n==0) and (k==0):
@@ -391,7 +391,7 @@ class bell(Function):
         for m in xrange(1, n-k+2):
             s += a*bell._bell_incomplete_poly(n-m, k-1, symbols)*symbols[m]
             a = a*(n-m)/m
-        return s.expand()
+        return expand_mul(s)
 
     @classmethod
     def eval(cls, n, k_sym=None, symbols=None):

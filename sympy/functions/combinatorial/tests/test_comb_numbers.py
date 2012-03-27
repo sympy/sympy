@@ -7,35 +7,6 @@ from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
 
-class IndexedLight(Expr):
-    """Represent the base or stem of an indexed object"""
-    is_commutative = True
-    def __new__(cls, label):
-        label = sympify(label)
-        obj = Expr.__new__(cls, label)
-        return obj
-    def __getitem__(self, index):
-            return IndexedItemLight(self, sympify(index))
-    @property
-    def label(self):
-        return self.args[0]
-    def _sympystr(self, p):
-        return p.doprint(self.label)
-
-class IndexedItemLight(Expr):
-    """Represents a mathematical object with indices."""
-    is_commutative = True
-    def __new__(cls, base, index):
-        return Expr.__new__(cls, base, sympify(index))
-    @property
-    def base(self):
-        return self.args[0]
-    @property
-    def index(self):
-        return self.args[1]
-    def _sympystr(self, p):
-        return "%s[%s]" % (p.doprint(self.base), p.doprint(self.index))
-
 def test_bernoulli():
     assert bernoulli(0) == 1
     assert bernoulli(1) == Rational(-1,2)
@@ -94,9 +65,6 @@ def test_bell():
 
     X = (0, 1, 2, 3, 5)
     assert bell(6, 3, X) == 15*5 + 60*3*2 + 15*2**3
-
-    A = IndexedLight('A')
-    assert bell(6, 3, A) == 15*A[4]*A[1]**2 + 60*A[3]*A[2]*A[1] + 15*A[2]**3
 
 def test_harmonic():
     assert harmonic(1,1) == 1
