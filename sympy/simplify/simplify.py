@@ -1078,12 +1078,13 @@ def _split_gcd(*a):
     """
     split the list of integers `a` into a list of integers a1 having
     g = gcd(a1) and a list a2 whose elements are not divisible by g
+    Returns g, a1, a2
 
     Examples
     ========
     >>> from sympy.simplify.simplify import _split_gcd
     >>> _split_gcd(55,35,22,14,77,10)
-    ([55, 35, 10], [22, 14, 77])
+    (5, [55, 35, 10], [22, 14, 77])
     """
     g = a[0]
     b1 = [g]
@@ -1095,7 +1096,7 @@ def _split_gcd(*a):
         else:
             g = g1
             b1.append(x)
-    return b1, b2
+    return g, b1, b2
 
 def split_surds(expr):
     """
@@ -1108,20 +1109,31 @@ def split_surds(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.simplify import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
-    (sqrt(5)/7 + sqrt(10) + sqrt(15), sqrt(6) + 3*sqrt(3))
+    (5, 1/7 + sqrt(2) + sqrt(3), sqrt(6) + 3*sqrt(3))
     """
     coeff_muls =  [x.as_coeff_Mul() for x in expr.args]
     surds = [x[1]**2 for x in coeff_muls if x[1].is_Pow]
-    b1, b2 = _split_gcd(*surds)
+    g, b1, b2 = _split_gcd(*surds)
+    g2 = g
+    if not b2 and len(b1) >= 2:
+        b1n = [x/g for x in b1]
+        b1n = [x for x in b1n if x != 1]
+        # only a common factor has been factored; split again
+        g1, b1n, b2 = _split_gcd(*b1n)
+        g2 = g*g1
     a1v, a2v = [], []
     for c, s in coeff_muls:
-        if s**2 in b1:
-            a1v.append(c*s)
+        if s.is_Pow and s.exp == S.Half:
+            s1 = s.base
+            if s1 in b1:
+                a1v.append(c*sqrt(s1/g2))
+            else:
+                a2v.append(c*s)
         else:
             a2v.append(c*s)
     a = Add(*a1v)
     b = Add(*a2v)
-    return a, b
+    return g2, a, b
 
 def rad_rationalize(num, den):
     """
@@ -1137,7 +1149,8 @@ def rad_rationalize(num, den):
     """
     if not den.is_Add:
         return num, den
-    a, b = split_surds(den)
+    g, a, b = split_surds(den)
+    a = a*sqrt(g)
     num = _mexpand((a - b)*num)
     den = _mexpand(a**2 - b**2)
     return rad_rationalize(num, den)
