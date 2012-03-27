@@ -281,53 +281,32 @@ class bell(Function):
     r"""
     Bell numbers / Bell polynomials
 
-    The Bell numbers satisfy B_0 = 1 and::
+    The Bell numbers satisfy :math:`B_0 = 1` and::
 
-                 n-1
-                 ___
-                \      / n - 1 \
-          B   =  )     |       | * B .
-           n    /___   \   k   /    k
-                k = 0
+    .. math:: B_n = \sum_{k=0}^{n-1} \binom{n-1}{k} B_k
 
     They are also given by::
 
-                      oo
-                     ___    n
-                1   \      k
-          B   = - *  )     --.
-           n    e   /___   k!
-                    k = 0
+    .. math:: B_n = \frac{1}{e} \sum_{k=0}^{\infty} \frac{k^n}{k!}
 
-    The Bell polynomials are given by B_0(x) = 1 and::
+    The Bell polynomials are given by :math:`B_0(x) = 1` and::
 
-                        n-1
-                        ___
-                       \      / n - 1 \
-          B (x)  = x *  )     |       | * B   (x).
-           n           /___   \ k - 1 /    k-1
-                       k = 1
+    .. math:: B_n(x) = x \sum_{k=1}^{n-1} \binom{n-1}{k-1} B_{k-1}(x)
 
     The second kind of Bell polynomials (are sometimes called "partial" Bell
     polynomials or incomplete Bell polynomials) are defined as:
 
-                                     ___                 / x   \ j  / x   \ j
-                                     \           n!      |  1  |  1 |  2  |  2
-        B   /x , ..., x         \ =   )    ------------- | --- |    | --- |  ...
-            \ 1        n - k + 1/    /___   j !  j ! ... \  1! /    \  2! /
-         n,k                               1    2
+    .. math:: B_{n,k}(x_1, x_2,\dotsc x_{n-k+1}) =
+            \sum_{j_1+j_2+j_2+\dotsb=k \atop j_1+2j_2+3j_2+\dotsb=n}
+                \frac{n!}{j_1!j_2!\dotsb j_{n-k+1}!}
+                \left(\frac{x_1}{1!} \right)^{j_1}
+                \left(\frac{x_2}{2!} \right)^{j_2} \dotsb
+                \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}
 
-                                 j + j + ... = k
-                                  1   2
-
-                                 j + 2 * j + 3 * j... = n
-                                  1       2       3
-
-
-    * bell(n) gives the nth Bell number, B_n
-    * bell(n, x) gives the nth Bell polynomial, B_n(x)
-    * bell(n, k, (x_1, x_2, ..., x_{n-k+1})) gives Bell polynomial of the
-        second kind, B_n_k(x_1, x_2,..., x_{n-k+1})
+    * bell(n) gives the nth Bell number, :math:`B_n`
+    * bell(n, x) gives the nth Bell polynomial, :math:`B_n(x)`
+    * bell(n, k, (x1, x2, ...)) gives Bell polynomial of the second kind,
+            :math:`B_n_k(x_1, x_2, \dotsc, x_{n-k+1})`
 
     Notes
     =====
@@ -385,17 +364,20 @@ class bell(Function):
     @staticmethod
     #@assoc_recurrence_memo([[S.One]])
     def _bell_incomplete_poly(n, k):
-        """
+        r"""
         The second kind of Bell polynomials (incomplete Bell polynomials).
 
         Calculated by recurrence formula:
 
-            B_{n,k} = \sum_{m=1}^{n-k+1} \binom{n-1}{m-1} g_{m} B_{n-m,k-1}
+        .. math:: B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1}) =
+                \sum_{m=1}^{n-k+1}
+                \x_m \binom{n-1}{m-1} B_{n-m,k-1}(x_1, x_2, \dotsc, x_{n-m-k})
 
         where
             B_{0,0} = 1;
             B_{n,0} = 0; for n=>1
             B_{0,k} = 0; for k=>1
+
         """
         if (n==0) and (k==0):
             return S.One
