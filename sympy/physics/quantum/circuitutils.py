@@ -1,7 +1,6 @@
 """Primitive circuit operations on quantum circuits.
 
 TODO:
-* Change remove_subcircuit_with_seq to replace_subcircuit_with_seq
 * Add wrappers around the seq-based functions to use Mul
 """
 
@@ -11,7 +10,7 @@ from sympy.physics.quantum.gate import Gate
 __all__ = [
     'kmp_table',
     'find_subcircuit_with_seq',
-    'remove_subcircuit_with_seq',
+    'replace_subcircuit_with_seq',
     'conv2_symbolic_qubits_with_seq'
 ]
 
@@ -94,11 +93,12 @@ def find_subcircuit_with_seq(circuit, subcircuit, start=0, end=0):
 
     return -1
 
-def remove_subcircuit_with_seq(circuit, subcircuit, pos=0):
-    """Removes subcircuit from circuit, if it exists.
+def replace_subcircuit_with_seq(circuit, subcircuit, replace=(), pos=0):
+    """Replaces a subcircuit with another subcircuit in circuit,
+    if it exists.
 
     If multiple instances of subcircuit exists, the
-    first instance is removed.  A location to check may
+    first instance is replaced.  A location to check may
     be optionally given.  If subcircuit can't be found,
     circuit is returned.
 
@@ -107,12 +107,15 @@ def remove_subcircuit_with_seq(circuit, subcircuit, pos=0):
     circuit : tuple, Gate
         A quantum circuit represented by a tuple of Gates
     subcircuit : tuple, Gate
-        A quantum circuit to remove from circuit
+        The circuit to be replaced
+    replace : tuple, Gate
+        The replacement circuit
     pos : int
-        The location to remove subcircuit, if it exists.
-        This may be used if it is known beforehand that
-        multiple instances exist, and it is desirable
-        to remove a specific instance.  If a negative number
+        The location to start search and replace
+        subcircuit, if it exists.  This may be used
+        if it is known beforehand that multiple
+        instances exist, and it is desirable to
+        replace a specific instance.  If a negative number
         is given, pos will be defaulted to 0.
     """
 
@@ -129,7 +132,7 @@ def remove_subcircuit_with_seq(circuit, subcircuit, pos=0):
         # Get the gates to the right of subcircuit
         right = circuit[loc + len(subcircuit):len(circuit)]
         # Recombine the left and right side gates into a circuit
-        circuit = left + right
+        circuit = left + replace + right
 
     return circuit
 

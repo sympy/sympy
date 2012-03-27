@@ -71,7 +71,7 @@ def test_find_subcircuit_with_seq():
     circuit = (x, y, x_i0, y_i0, z_i0, z)
     assert find_subcircuit_with_seq(circuit, (x_i0, y_i0, z_i0)) == 2
 
-def test_remove_subcircuit_with_seq():
+def test_replace_subcircuit_with_seq():
     x = X(0)
     y = Y(0)
     z = Z(0)
@@ -82,27 +82,43 @@ def test_remove_subcircuit_with_seq():
     # Standard cases
     circuit = (z, y, x, x)
     remove = (z, y, x)
-    assert remove_subcircuit_with_seq(circuit, remove) == (x,)
-    assert remove_subcircuit_with_seq(circuit, remove + (x,)) == ()
-    assert remove_subcircuit_with_seq(circuit, remove, pos=1) == circuit
-    assert remove_subcircuit_with_seq(circuit, remove, pos=0) == (x,)
-    assert remove_subcircuit_with_seq(circuit, (x, x), pos=2) == (z, y)
-    assert remove_subcircuit_with_seq(circuit, (h,)) == circuit
+    assert replace_subcircuit_with_seq(circuit, remove) == (x,)
+    assert replace_subcircuit_with_seq(circuit, remove + (x,)) == ()
+    assert replace_subcircuit_with_seq(circuit, remove, pos=1) == circuit
+    assert replace_subcircuit_with_seq(circuit, remove, pos=0) == (x,)
+    assert replace_subcircuit_with_seq(circuit, (x, x), pos=2) == (z, y)
+    assert replace_subcircuit_with_seq(circuit, (h,)) == circuit
 
     circuit = (x, y, x, y, z)
     remove = (x, y, z)
-    assert remove_subcircuit_with_seq(circuit, remove) == (x, y)
+    assert replace_subcircuit_with_seq(circuit, remove) == (x, y)
     remove = (x, y, x, y)
-    assert remove_subcircuit_with_seq(circuit, remove) == (z,)
+    assert replace_subcircuit_with_seq(circuit, remove) == (z,)
 
     circuit = (x, h, cgate_z, h, cnot)
     remove = (x, h, cgate_z)
-    assert remove_subcircuit_with_seq(circuit, remove, pos=-1) == (h, cnot)
-    assert remove_subcircuit_with_seq(circuit, remove, pos=1) == circuit
+    assert replace_subcircuit_with_seq(circuit, remove, pos=-1) == (h, cnot)
+    assert replace_subcircuit_with_seq(circuit, remove, pos=1) == circuit
     remove = (h, h)
-    assert remove_subcircuit_with_seq(circuit, remove) == circuit
+    assert replace_subcircuit_with_seq(circuit, remove) == circuit
     remove = (h, cgate_z, h, cnot)
-    assert remove_subcircuit_with_seq(circuit, remove) == (x,)
+    assert replace_subcircuit_with_seq(circuit, remove) == (x,)
+
+    replace = (h, x)
+    actual = replace_subcircuit_with_seq(circuit, remove,
+                     replace=replace)
+    assert actual == (x, h, x)
+
+    circuit = (x, y, h, x, y, z)
+    remove = (x, y)
+    replace = (cnot, cgate_z)
+    actual = replace_subcircuit_with_seq(circuit, remove,
+                     replace=replace)
+    assert actual == (cnot, cgate_z, h, x, y, z)
+
+    actual = replace_subcircuit_with_seq(circuit, remove,
+                     replace=replace, pos=1)
+    assert actual == (x, y, h, cnot, cgate_z, z)
 
 def test_conv2_symb_indices_with_seq():
     (x, y, z, h) = create_gate_sequence()
