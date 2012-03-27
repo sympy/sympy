@@ -3642,3 +3642,10 @@ def test_RandomDomain():
     A = Exponential(1, symbol=Symbol('a'))
     B = Exponential(1, symbol=Symbol('b'))
     assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ a ∧ 0 ≤ b'
+
+def issue_3186():
+    assert pprint(Mul(Pow(2, -3, evaluate=False),
+                      Pow(2, 4, evaluate=False), evaluate=False)) == \
+                      '2**4/2**3\n'
+    assert pprint(Pow(2, -3, evaluate=False)) == \
+                      '1/2**3\n'

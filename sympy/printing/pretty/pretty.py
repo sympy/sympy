@@ -1011,8 +1011,13 @@ class PrettyPrinter(Printer):
 
         # Gather terms for numerator/denominator
         for item in args:
-            if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
-                b.append(C.Pow(item.base, -item.exp))
+            if (item.is_commutative and \
+                item.is_Pow and item.exp.is_Rational and \
+                item.exp.is_negative):
+                denom = C.Pow(item.base, -item.exp)
+                if denom.as_base_exp()[0] != item.base:
+                    denom = C.Pow(item.base, -item.exp, evaluate=False)
+                b.append(denom)
             elif item.is_Rational and item is not S.Infinity:
                 if item.p != 1:
                     a.append( C.Rational(item.p) )
@@ -1047,7 +1052,9 @@ class PrettyPrinter(Printer):
         # square roots, other roots or n-th roots
         #test for fraction 1/n or power x**-1
         if power.is_commutative:
-            if (isinstance(power.exp, C.Rational) and power.exp.p==1 and power.exp.q !=1) or \
+            if (isinstance(power.exp, C.Rational) and
+                power.exp.p == 1 and
+                power.exp.q !=1) or \
                (   isinstance(power.exp, C.Pow) and
                    isinstance(power.exp.args[0], C.Symbol) and
                    power.exp.args[1]==S.NegativeOne):
@@ -1059,8 +1066,10 @@ class PrettyPrinter(Printer):
                 #make exponent number to put above it
                 if isinstance(power.exp, C.Rational):
                     exp = str(power.exp.q)
-                    if exp=='2': exp = ''
-                else: exp = str(power.exp.args[0])
+                    if exp=='2':
+                        exp = ''
+                else:
+                    exp = str(power.exp.args[0])
                 exp = exp.ljust(2)
                 if len(exp)>2: rootsign = ' '*(len(exp)-2)+rootsign
                 #stack the exponent
@@ -1086,10 +1095,13 @@ class PrettyPrinter(Printer):
                 return s
             elif power.exp.is_Rational and power.exp.is_negative:
                 # Things like 1/x
-                return prettyForm("1") / self._print(C.Pow(power.base, -power.exp))
+                denom = C.Pow(power.base, -power.exp)
+                if denom.as_base_exp()[0] != power.base:
+                    denom = C.Pow(power.base, -power.exp, evaluate=False)
+                return prettyForm("1") / self._print(denom)
 
         # None of the above special forms, do a standard power
-        b,e = power.as_base_exp()
+        b, e = power.as_base_exp()
         return self._print(b)**self._print(e)
 
     def __print_numer_denom(self, p, q):
