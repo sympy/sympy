@@ -1,9 +1,10 @@
 from sympy import (Abs, C, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
-                   simplify, sqrt, symbols)
+                   simplify, sqrt, symbols, tan)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection, centroid)
 from sympy.geometry.line import Undecidable
+from sympy.geometry.entity import rotate, scale, translate
 from sympy.utilities.pytest import raises, XFAIL
 
 x = Symbol('x', real=True)
@@ -46,6 +47,13 @@ def test_curve():
     assert c.arbitrary_point(None) == Point(2*s, s**2)
     assert c.plot_interval() == [t, 0, 2]
     assert c.plot_interval(z) == [z, 0, 2]
+
+    assert Curve([x, x], (x, 0, 1)
+        ).rotate(pi/2, (1, 2)).scale(2, 3).translate(1, 3).arbitrary_point(s
+        ) == \
+            Line((0, 0), (1, 1)
+        ).rotate(pi/2, (1, 2)).scale(2, 3).translate(1, 3).arbitrary_point(s
+        ) == Point(-2*s + 7, 3*s + 6)
 
     raises(ValueError, 'Curve((s), (s, 1, 2))')
     raises(ValueError, 'Curve((x, x * 2), (1, x))')
@@ -118,6 +126,17 @@ def test_point():
     assert Point(a, b).evalf(2) == \
         Point(a.n(2), b.n(2))
     raises(ValueError, 'Point(1, 2) + 1')
+
+    # test transformations
+    p = Point(1, 0)
+    assert p.rotate(pi/2) == Point(0, 1)
+    assert p.rotate(pi/2, p) == p
+    p = Point(1, 1)
+    assert p.scale(2, 3) == Point(2, 3)
+    assert p.translate(1, 2) == Point(2, 3)
+    assert p.translate(1) == Point(2, 1)
+    assert p.translate(y=1) == Point(1, 2)
+    assert p.translate(p) == Point(2, 2)
 
 def test_line():
     p1 = Point(0, 0)
@@ -558,6 +577,12 @@ def test_ellipse():
     assert c1.encloses_point(Point(1, 0)) is False
     assert c1.encloses_point(Point(0.3, 0.4)) is True
 
+    assert e.scale(2, 3) == Ellipse((0, 0), 4, 3)
+    assert e.scale(3, 6) == Ellipse((0, 0), 6, 6)
+    assert e.rotate(pi/3) == e
+    assert e.rotate(pi/3, (1, 2)) == \
+        Ellipse(Point(S(1)/2 + sqrt(3), -sqrt(3)/2 + 1), 2, 1)
+
 def test_ellipse_random_point():
     e3 = Ellipse(Point(0, 0), y1, y1)
     rx, ry = Symbol('rx'), Symbol('ry')
@@ -664,6 +689,12 @@ def test_polygon():
     p1_old = p1
     assert p1.rotate(pi/3) == RegularPolygon(Point(0, 0), 10, 5, 2*pi/3)
     assert p1 == p1_old
+
+    assert p1.area == (-250*sqrt(5) + 1250)/(4*tan(pi/5))
+    assert p1.length == 20*sqrt(-sqrt(5)/8 + S(5)/8)
+    assert p1.scale(2, 2) == RegularPolygon(p1.center, p1.radius*2, p1._n, p1.rotation)
+    assert RegularPolygon((0, 0), 1, 4).scale(2, 3) == \
+        Polygon(Point(2, 0), Point(0, 3), Point(-2, 0), Point(0, -3))
 
     assert `p1` == str(p1)
 
@@ -893,3 +924,9 @@ def test_util():
 
 def test_repr():
     assert repr(Circle((0, 1), 2)) == 'Circle(Point(0, 1), 2)'
+
+def test_transform():
+    p = Point(1, 1)
+    p.transform(rotate(pi/2)) == Point(-1, 1)
+    p.transform(scale(3, 2)) == Point(3, 2)
+    p.transform(translate(1, 2)) == Point(2, 3)
