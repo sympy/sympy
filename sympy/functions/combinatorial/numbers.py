@@ -8,7 +8,6 @@ the separate 'factorials' module.
 """
 
 from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add
-from sympy.polys.polytools import Poly
 
 from sympy.mpmath import bernfrac
 from sympy.mpmath.libmp import ifib as _ifib
@@ -282,7 +281,7 @@ class bell(Function):
     r"""
     Bell numbers / Bell polynomials
 
-    The Bell numbers satisfy :math:`B_0 = 1` and::
+    The Bell numbers satisfy `B_0 = 1` and::
 
     .. math:: B_n = \sum_{k=0}^{n-1} \binom{n-1}{k} B_k
 
@@ -290,7 +289,7 @@ class bell(Function):
 
     .. math:: B_n = \frac{1}{e} \sum_{k=0}^{\infty} \frac{k^n}{k!}
 
-    The Bell polynomials are given by :math:`B_0(x) = 1` and::
+    The Bell polynomials are given by `B_0(x) = 1` and::
 
     .. math:: B_n(x) = x \sum_{k=1}^{n-1} \binom{n-1}{k-1} B_{k-1}(x)
 
@@ -304,10 +303,10 @@ class bell(Function):
                 \left(\frac{x_2}{2!} \right)^{j_2} \dotsb
                 \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}
 
-    * bell(n) gives the nth Bell number, :math:`B_n`
-    * bell(n, x) gives the nth Bell polynomial, :math:`B_n(x)`
+    * bell(n) gives the nth Bell number, `B_n`
+    * bell(n, x) gives the nth Bell polynomial, `B_n(x)`
     * bell(n, k, (x1, x2, ...)) gives Bell polynomial of the second kind,
-            :math:`B_n_k(x_1, x_2, \dotsc, x_{n-k+1})`
+            `B_n_k(x_1, x_2, \dotsc, x_{n-k+1})`
 
     Notes
     =====
