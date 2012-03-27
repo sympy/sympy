@@ -195,7 +195,7 @@ class HermitianOperator(Operator):
     H
     """
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         return self
 
     def _eval_inverse(self):
@@ -234,7 +234,7 @@ class UnitaryOperator(Operator):
     1
     """
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         return self._eval_inverse()
 
 
@@ -328,7 +328,7 @@ class OuterProduct(Operator):
         """Return the bra on the right side of the outer product."""
         return self.args[1]
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
 
     def _sympystr(self, printer, *args):

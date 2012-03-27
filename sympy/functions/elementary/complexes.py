@@ -486,6 +486,19 @@ class adjoint(Function):
     def _eval_transpose(self):
         return conjugate(self.args[0])
 
+    def _latex(self, printer, exp=None, *args):
+        arg = printer._print(self.args[0])
+        tex = r'%s^{\dag}' % arg
+        if exp:
+            tex = r'\left(%s\right)^{%s}' % (tex, printer._print(exp))
+        return tex
+
+    def _pretty(self, printer, *args):
+        from sympy.printing.pretty.stringpict import prettyForm
+        pform = printer._print(self.args[0], *args)
+        pform = pform**prettyForm(u'\u2020')
+        return pform
+
 ###############################################################################
 ############### HANDLING OF POLAR NUMBERS #####################################
 ###############################################################################

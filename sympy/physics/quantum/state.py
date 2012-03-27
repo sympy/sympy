@@ -49,7 +49,7 @@ class StateBase(QExpr):
     """Abstract base class for general abstract states in quantum mechanics.
 
     All other state classes defined will need to inherit from this class. It
-    carries the basic structure for all other states such as dual, _eval_dagger
+    carries the basic structure for all other states such as dual, _eval_adjoint
     and label.
 
     This is an abstract base class and you should not instantiate it directly,
@@ -109,7 +109,7 @@ class StateBase(QExpr):
             'dual_class must be implemented in a subclass'
         )
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         """Compute the dagger of this state using the dual."""
         return self.dual
 
@@ -705,11 +705,11 @@ class Wavefunction(Function):
 
         return Wavefunction(deriv, *self.args[1:])
 
-    def _eval_dagger(self):
-        return conjugate(self)
-
     def _eval_conjugate(self):
         return Wavefunction(conjugate(self.expr), *self.args[1:])
+
+    def _eval_transpose(self):
+        return self
 
     @property
     def free_symbols(self):

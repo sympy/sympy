@@ -175,7 +175,7 @@ class Commutator(Expr):
                 return comm.doit(**hints)
         return (A*B - B*A).doit(**hints)
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         return Commutator(Dagger(self.args[1]), Dagger(self.args[0]))
 
     def _sympyrepr(self, printer, *args):

@@ -4,6 +4,7 @@ from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import is_sequence
 
+from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray, scipy_sparse_matrix,
     to_sympy, to_numpy, to_scipy_sparse
@@ -174,6 +175,14 @@ class QExpr(Expr):
     # _eval_* methods
     #-------------------------------------------------------------------------
 
+    def _eval_adjoint(self):
+        obj = Expr._eval_adjoint(self)
+        if obj is None:
+            obj = Expr.__new__(Dagger, self)
+        if isinstance(obj, QExpr):
+            obj.hilbert_space = self.hilbert_space
+        return obj
+
     @classmethod
     def _eval_args(cls, args):
         """Process the args passed to the __new__ method.
@@ -188,10 +197,6 @@ class QExpr(Expr):
         """
         from sympy.physics.quantum.hilbert import HilbertSpace
         return HilbertSpace()
-
-    def _eval_dagger(self):
-        """Compute the Dagger of this state."""
-        raise NotImplementedError('_eval_dagger not defined on: %r' % self)
 
     #-------------------------------------------------------------------------
     # Printing

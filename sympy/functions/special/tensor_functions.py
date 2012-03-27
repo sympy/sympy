@@ -120,6 +120,7 @@ class KroneckerDelta(Function):
 
     nargs = 2
     is_commutative=True
+    is_integer = True
 
     @classmethod
     def eval(cls, i, j):
@@ -421,12 +422,6 @@ class KroneckerDelta(Function):
                 return 1
         else:
             return 0
-
-    def _dagger_(self):
-        return self
-
-    def _eval_dagger(self):
-        return self
 
     def _sympyrepr(self, printer, *args):
         return "%s(%s, %s)"% (self.__class__.__name__, self.args[0], \
