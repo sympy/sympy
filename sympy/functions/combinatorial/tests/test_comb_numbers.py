@@ -9,12 +9,13 @@ x = Symbol('x')
 
 class IndexedLight(Expr):
     """Represent the base or stem of an indexed object"""
+    is_commutative = True
     def __new__(cls, label):
         label = sympify(label)
         obj = Expr.__new__(cls, label)
         return obj
     def __getitem__(self, index):
-            return IndexedItemLight(self, index)
+            return IndexedItemLight(self, sympify(index))
     @property
     def label(self):
         return self.args[0]
@@ -25,7 +26,7 @@ class IndexedItemLight(Expr):
     """Represents a mathematical object with indices."""
     is_commutative = True
     def __new__(cls, base, index):
-        return Expr.__new__(cls, base, index)
+        return Expr.__new__(cls, base, sympify(index))
     @property
     def base(self):
         return self.args[0]

@@ -9,6 +9,8 @@ the separate 'factorials' module.
 
 from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add
 
+from sympy.polys.polytools import Poly
+
 from sympy.mpmath import bernfrac
 from sympy.mpmath.libmp import ifib as _ifib
 
@@ -383,10 +385,11 @@ class bell(Function):
             return S.One
         elif (n==0) or (k==0):
             return S.Zero
+        #s = Poly(S.Zero, symbols)
         s = S.Zero
         a = S.One
         for m in xrange(1, n-k+2):
-            s += a*symbols[m]*bell._bell_incomplete_poly(n-m, k-1, symbols)
+            s += a*bell._bell_incomplete_poly(n-m, k-1, symbols)*symbols[m]
             a = a*(n-m)/m
         return s.expand()
 
