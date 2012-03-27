@@ -405,8 +405,8 @@ class bell(Function):
 
         a = 1
         for m in xrange(1, n-k+2):
-            a= C.binomial(n-1, m-1)
             s += a*_symbols(m)*bell._bell_incomplete_poly(n-m, k-1)
+            a = a*(n-m)//m
         return s.expand()
 
     @classmethod
