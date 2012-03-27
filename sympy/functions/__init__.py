@@ -23,7 +23,7 @@ from elementary.miscellaneous import sqrt, root, Min, Max, Id, real_root
 from elementary.complexes import (re, im, sign, Abs, conjugate, arg,
                       polar_lift, periodic_argument, unbranched_argument,
                       principal_branch)
-from elementary.trigonometric import acot, cot, tan, cos, sin, asin, acos, atan, atan2
+from elementary.trigonometric import acot, cot, tan, cos, sin, asin, acos, atan, atan2, sec
 from elementary.exponential import exp_polar, exp, log, LambertW
 from elementary.hyperbolic import sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth
 from elementary.integers import floor, ceiling
