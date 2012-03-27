@@ -1115,6 +1115,9 @@ class LatexPrinter(Printer):
     def _print_InverseCosineTransform(self, expr):
         return r"\mathcal{COS}^{-1}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
 
+    def _print_TableForm(self, expr):
+        return expr.as_latex()
+
 
 def latex(expr, **settings):
     r"""

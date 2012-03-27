@@ -1,4 +1,5 @@
-from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet
+from sympy import (Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet,
+        TableForm, array)
 from sympy.core.containers import tuple_wrapper
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import is_sequence, iterable
@@ -114,3 +115,19 @@ def issue_2689():
         pair = [o(*args), o(*reversed(args))]
         assert sorted(pair) == sorted(reversed(pair))
         assert set(o(*args)) # doesn't fail
+
+def test_TableForm():
+    a = array([4, 2, 3])
+    s = str(TableForm(zip(a, a**3)))
+
+    s = str(TableForm([["a", "b"], ["c", "d"], ["e", "f"]],
+        headings="automatic"))
+    s = str(TableForm([["a", "b"], ["c", "d"], ["e", "f"]],
+            headings=("automatic", None)))
+    s = str(TableForm([["a", "b"], ["c", "d"], ["e", "f"]],
+            headings=(None, "automatic")))
+    s = str(TableForm([[5, 7], [4, 2], [10, 3]],
+            headings=[["Group A", "Group B", "Group C"], ["y1", "y2"]]))
+    s = str(TableForm([[5, 7], [4, 2], [10, 3]],
+            headings=[["Group A", "Group B", "Group C"], ["y1", "y2"]],
+            alignment="right"))
