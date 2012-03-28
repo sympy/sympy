@@ -19,6 +19,9 @@ def test_scalars():
     i = Integer(3)
     assert Dagger(i) == i
 
+    A = symbols('A', commutative=False)
+    assert Dagger(A).is_commutative == False
+
 
 def test_matrix():
     x = symbols('x')
