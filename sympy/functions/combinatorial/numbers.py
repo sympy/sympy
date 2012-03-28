@@ -327,7 +327,7 @@ class bell(Function):
     846749014511809332450147
     >>> bell(4, Symbol('t'))
     t**4 + 6*t**3 + 7*t**2 + t
-    >>> bell(6, 2, symbols('x:6'))
+    >>> bell(6, 2, symbols('x:6')[1:])
     6*x1*x5 + 15*x2*x4 + 10*x3**2
 
     References
@@ -389,7 +389,7 @@ class bell(Function):
         s = S.Zero
         a = S.One
         for m in xrange(1, n-k+2):
-            s += a*bell._bell_incomplete_poly(n-m, k-1, symbols)*symbols[m]
+            s += a*bell._bell_incomplete_poly(n-m, k-1, symbols)*symbols[m-1]
             a = a*(n-m)/m
         return expand_mul(s)
 
