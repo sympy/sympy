@@ -35,13 +35,6 @@ def test_collect():
 def test_combsimp():
     assert combsimp(A*B - B*A) == A*B - B*A
 
-@XFAIL
-def test_complex():
-    X, Y = symbols("X Y", commutative=False, real=True)
-    Z = X + I*Y
-    assert Z.conjugate() == X - I*Y
-    assert (Z*Z.conjugate()).expand() == X**2 + Y**2 + I*Y*X - I*X*Y
-
 def test_conjugate():
     assert conjugate(A).is_commutative == False
     assert (A*A).conjugate() == conjugate(A)**2
@@ -49,6 +42,7 @@ def test_conjugate():
     assert (A*B**2).conjugate() == conjugate(A)*conjugate(B)**2
     assert (A*B - B*A).conjugate() == conjugate(A)*conjugate(B) - conjugate(B)*conjugate(A)
     assert (A*B).conjugate() - (B*A).conjugate() == conjugate(A)*conjugate(B) - conjugate(B)*conjugate(A)
+    assert (A + I*B).conjugate() == conjugate(A) - I*conjugate(B)
 
 def test_expand():
     assert expand((A*B)**2) == A*B*A*B
