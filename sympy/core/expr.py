@@ -2779,6 +2779,8 @@ class Expr(Basic, EvalfMixin):
         dps = prec_to_dps(max(precs)) if precs else None
 
         xpos = abs(x.n())
+        if not xpos:
+            return S.Zero
         try:
             mag_first_dig = int(ceil(log10(xpos)))
         except (ValueError, OverflowError):
