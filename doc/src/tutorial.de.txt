@@ -52,7 +52,7 @@ und kannst sie mit einem Python-Interpreter ausprobieren.
     >>> (1/cos(x)).series(x, 0, 10)
     1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
-SymPy kann wie im Beispiel gezeigt benutzt werdeni, und dies ist auch
+SymPy kann wie im Beispiel gezeigt benutzt werden, und dies ist auch
 der übliche Weg, es von einem anderen Programm aus zu verwenden.
 Du kannst es ebenfalls wie jedes andere Modul mithilfe von ``./setup.py install`` 
 installieren. Auch ist es natürlich möglich, einfach ein Paket deiner
@@ -119,7 +119,7 @@ importiert hat und unter anderem die Symbole x, y und z bereits definiert hat:
 .. note::
 
     Benutzereingaben sind fett dargestellt. Was in einem normalen Python-Interpreter
-    drei Zeilen gebraucht hätte, kann mit isympy in nur eine Zeile ausgedrückt werden.
+    drei Zeilen gebraucht hätte, kann mit isympy in nur einer Zeile ausgedrückt werden.
 
 
 Mit SymPy rechnen
@@ -148,7 +148,7 @@ Rational(1,2) repräsentiert also 1/2, Rational(5,2) repräsentiert 5/2 und so w
 
 Beim Arbeiten mit Pythons Ganzzahlen und Fließkommazahlen ist Vorsicht
 geboten, besonders bei Division, da eine Python-Zahl statt einer SymPy-Zahl
-das Ergebnis sein kann. Ein Bruch aus zwei Python-Ganzzahlen hat eine
+das Ergebnis sein kann. Eine Division von zwei Python-Ganzzahlen hat eine
 Fließkommazahl zum Ergebnis -- die "echte Divison" von Python 3 und das
 Standardverhalten von ``isympy``, welches division aus __future__ importiert::
 
@@ -175,7 +175,7 @@ gleichgesetzt::
 
 Es gibt auch einige spezielle Konstanten wie e oder pi, die als Symbole
 behandelt werden (1+pi wird nicht als Zahl ausgerechnet, sondern bleibt
-1+pi) und sind in beliebiger Präzision verfügbar::
+1+pi) und in beliebiger Präzision verfügbar sind::
 
     >>> from sympy import pi, E
     >>> pi**2
@@ -215,8 +215,8 @@ griechischen Namen) sind von Import von abc verfügbar:
     >>> from sympy.abc import x, theta
 
 Symbole können auch mit den ``symbols`` oder ``var`` Funktionen
-erstellt werden.  Die letztere fügt automatisch die Symbole ins
-Namespace, und beide Funktionen nehmen eine Reihe Notation:
+erstellt werden.  Die letztere fügt automatisch die Symbole in den
+Namespace ein, und beide Funktionen akzeptieren eine Reihennotation::
 
     >>> from sympy import symbols, var
     >>> a, b, c = symbols('a,b,c')
@@ -425,7 +425,7 @@ Integralrechnung
 
 SymPy unterstützt unendliche und endliche Integration transzendenter elementarer 
 und spezieller Funktionen durch ``integrate()``, welches den
-starken Risch-Norman-Algorithmus nutzt sowie einige Heuristiken und
+starken Risch-Norman-Algorithmus nutzt, sowie einige Heuristiken und
 Mustererkennungen::
 
     >>> from sympy import integrate, erf, exp, sin, log, oo, pi, sinh, symbols
@@ -477,7 +477,7 @@ Komplexe Zahlen
 
 Mit Ausnahme der imaginären Einheit, I, die rein imaginär ist, können
 Symbole mit Attributen (z.B. reale, positive, komplex, usw.) erstellt
-werden, und dies wird Auswirkungen darauf, wie sie sich verhalten::
+werden, und dies hat Auswirkungen darauf, wie sie sich verhalten::
 
     >>> from sympy import Symbol, exp, I
     >>> x = Symbol("x") # einen einzigen x ohne Attribut
@@ -807,7 +807,7 @@ standardmäßig die Unicode-Fassung verwenden. Dies kann mit dem Parameter
 
 Siehe auch die Wiki-Seite `Pretty Printing
 <https://github.com/sympy/sympy/wiki/Pretty-Printing>`_ für mehr Beispiele
-von hübschen Unicode-Ausgabem.
+von hübschen Unicode-Ausgaben.
 
 Tipp: Die ASCII-Art-Ausgabe kann auch als Standard-Methode gesetzt werden::
 
