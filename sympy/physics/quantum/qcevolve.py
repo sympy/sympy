@@ -22,7 +22,8 @@ from random import Random
 from sympy import Basic
 from pyevolve.GenomeBase import GenomeBase
 from sympy.physics.quantum.circuitutils import (
-         find_subcircuit_with_seq, remove_subcircuit_with_seq)
+         find_subcircuit_with_seq, replace_subcircuit_with_seq,
+         conv2_symbolic_qubits_with_seq, conv2_real_qubits_with_seq)
 
 __all__ = [
     'GQCBase',
@@ -87,14 +88,14 @@ class GQCLinear(GQCBase):
         obj._insert_choices = []
 
         # Doing this is a questionable design
-        if 'GateIdentity' in kargs.keys():
+        if 'GateIdentity' in kargs:
             obj._gate_identities = kargs['GateIdentity']
 
-        if 'choices' in kargs.keys():
+        if 'choices' in kargs:
             obj._insert_choices = kargs['choices']
 
         if obj._gate_identities:
-            collapse_func = lambda acc, an_id: acc + list(an_id.eq_identities)
+            collapse_func = lambda acc, an_id: acc + list(an_id.symbolic_ids)
             ids_flat = reduce(collapse_func, obj._insert_choices, [])
             obj._insert_choices = ids_flat
 
@@ -133,8 +134,8 @@ def random_reduce(circuit, gate_ids, seed=None):
     ==========
     circuit : tuple, Gate
         A tuple of Gates representing a quantum circuit
-    gate_ids : set, GateIdentity
-        Set of gate identities to find in circuit
+    gate_ids : list, GateIdentity
+        List of gate identities to find in circuit
     seed : int
         Seed value for the random number generator
     """
@@ -148,16 +149,18 @@ def random_reduce(circuit, gate_ids, seed=None):
 
     # Flatten the GateIdentity objects (with gate rules)
     # into one single list
-    collapse_func = lambda acc, an_id: acc + list(an_id.eq_identities)
+    collapse_func = lambda acc, an_id: acc + list(an_id.symbolic_ids)
     ids = reduce(collapse_func, gate_ids, [])
 
     # List of identities found in circuit
     ids_found = []
 
+    sym_circuit, mapping, ndx = conv2_symbolic_qubits_with_seq(*circuit)
     # Look for identities in circuit
     for an_id in ids:
-        if find_subcircuit_with_seq(circuit, an_id) > -1:
-            ids_found.append(an_id)
+        if find_subcircuit_with_seq(sym_circuit, an_id) > -1:
+            id_real = conv2_real_qubits_with_seq(*an_id, qubit_map=mapping)
+            ids_found.append(id_real)
 
     if len(ids_found) < 1:
         return circuit
@@ -166,10 +169,10 @@ def random_reduce(circuit, gate_ids, seed=None):
     remove_id = int_gen.randint(0, len(ids_found)-1)
 
     # Remove the identity
-    new_circuit = remove_subcircuit_with_seq(circuit, ids_found[remove_id])
+    new_circuit = replace_subcircuit_with_seq(circuit, ids_found[remove_id])
 
     return new_circuit
-    
+
 def random_insert(circuit, choices, seed=None):
     """Insert a circuit into another quantum circuit.
 
@@ -229,7 +232,6 @@ def linear_init(genome, **args):
                   )
 
     genome.genome_circuit = new_circuit
-    
 
 def linear_mutator(genome, **args):
     """Mutator function for optimizing quantum circuits

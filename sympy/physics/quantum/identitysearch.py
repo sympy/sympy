@@ -10,6 +10,7 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.operator import (UnitaryOperator,
         HermitianOperator)
 from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.circuitutils import conv2_symbolic_qubits_with_seq
 
 __all__ = [
     # Public interfaces
@@ -632,7 +633,7 @@ class GateIdentity(Basic):
         >>> an_identity.circuit
         X(0)*Y(0)*Z(0)
 
-        >>> an_identity.eq_identities
+        >>> an_identity.equivalent_ids
         set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
              (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))])
 
@@ -642,9 +643,14 @@ class GateIdentity(Basic):
         # args should be a tuple - a variable length argument list
         obj = Basic.__new__(cls, *args)
         obj._circuit = Mul(*args)
-        obj._rules = generate_gate_rules_with_seq(*args)
+        obj._rules = generate_gate_rules_with_seq(*args)        
         obj._eq_ids = generate_equivalent_ids_with_seq(*args)
 
+        def conv2_sym(an_id):
+            sym_circuit, mp, ndx = conv2_symbolic_qubits_with_seq(*an_id)
+            return sym_circuit
+
+        obj._sym_ids = set(map(conv2_sym, obj._eq_ids))
         return obj
 
     @property
@@ -656,8 +662,12 @@ class GateIdentity(Basic):
         return self._rules
 
     @property
-    def eq_identities(self):
+    def equivalent_ids(self):
         return self._eq_ids
+
+    @property
+    def symbolic_ids(self):
+        return self._sym_ids
 
     @property
     def sequence(self):
@@ -700,7 +710,7 @@ def is_degenerate(identity_set, gate_identity):
     # For now, just iteratively go through the set and check if the current
     # gate_identity is a permutation of an identity in the set
     for an_id in identity_set:
-        if (gate_identity in an_id.eq_identities):
+        if (gate_identity in an_id.equivalent_ids):
             return True
     return False
 

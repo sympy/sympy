@@ -42,6 +42,7 @@ def test_find_subcircuit_with_seq():
     x_i0 = X(i0)
     y_i0 = Y(i0)
     z_i0 = Z(i0)
+    h_i0 = H(i0)
 
     circuit = (x, y, z)
 
@@ -70,6 +71,11 @@ def test_find_subcircuit_with_seq():
 
     circuit = (x, y, x_i0, y_i0, z_i0, z)
     assert find_subcircuit_with_seq(circuit, (x_i0, y_i0, z_i0)) == 2
+
+    circuit = (x_i0, y_i0, z_i0, x_i0, y_i0, h_i0)
+    subcircuit = (x_i0, y_i0, z_i0)
+    result = find_subcircuit_with_seq(circuit, subcircuit)
+    assert result == 0
 
 def test_replace_subcircuit_with_seq():
     x = X(0)
