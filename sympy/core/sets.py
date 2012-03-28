@@ -5,6 +5,7 @@ from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import iterable
+from sympy.core.decorators import deprecated
 
 from sympy.mpmath import mpi, mpf
 from sympy.assumptions import ask
@@ -618,11 +619,12 @@ class Interval(Set, EvalfMixin):
     def _measure(self):
         return self.end - self.start
 
+    @deprecated
     def to_mpi(self, prec=53):
         return mpi(mpf(self.start.evalf(prec)), mpf(self.end.evalf(prec)))
 
-    def to_mpmath(self, prec=53):
-        return self.to_mpi(prec)
+    def _to_mpmath(self, prec=53):
+        return mpi(mpf(self.start.evalf(prec)), mpf(self.end.evalf(prec)))
 
     def _eval_evalf(self, prec):
         return Interval(self.left.evalf(), self.right.evalf(),
