@@ -72,12 +72,14 @@ class InnerProduct(Expr):
     .. [1] http://en.wikipedia.org/wiki/Inner_product
     """
 
+    is_complex = True
+
     def __new__(cls, bra, ket, **old_assumptions):
         if not isinstance(ket, KetBase):
             raise TypeError('KetBase subclass expected, got: %r' % ket)
         if not isinstance(bra, BraBase):
             raise TypeError('BraBase subclass expected, got: %r' % ket)
-        obj = Expr.__new__(cls, *(bra, ket), **{'commutative':True})
+        obj = Expr.__new__(cls, *(bra, ket), **old_assumptions)
         return obj
 
     @property
@@ -88,11 +90,8 @@ class InnerProduct(Expr):
     def ket(self):
         return self.args[1]
 
-    def _eval_adjoint(self):
-        return InnerProduct(Dagger(self.ket), Dagger(self.bra))
-
     def _eval_conjugate(self):
-        return self._eval_adjoint()
+        return InnerProduct(Dagger(self.ket), Dagger(self.bra))
 
     def _sympyrepr(self, printer, *args):
         return '%s(%s,%s)' % (self.__class__.__name__,

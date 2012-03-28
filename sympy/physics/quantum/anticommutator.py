@@ -74,11 +74,13 @@ class AntiCommutator(Expr):
     .. [1] http://en.wikipedia.org/wiki/Commutator
     """
 
+    is_commutative = False
+
     def __new__(cls, A, B, **old_assumptions):
         r = cls.eval(A, B)
         if r is not None:
             return r
-        obj = Expr.__new__(cls, A, B, **{'commutative': False})
+        obj = Expr.__new__(cls, A, B, **old_assumptions)
         return obj
 
     @classmethod

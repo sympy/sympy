@@ -58,7 +58,7 @@ class RkGate(OneQubitGate):
         elif k == 3:
             return TGate(target)
         args = cls._eval_args(args)
-        inst = Expr.__new__(cls, *args, **{'commutative':False})
+        inst = Expr.__new__(cls, *args, **old_assumptions)
         inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst
 

@@ -87,6 +87,8 @@ class QExpr(Expr):
     # The separator used in printing the label.
     _label_separator = u''
 
+    is_commutative = False
+
     def __new__(cls, *args, **old_assumptions):
         """Construct a new quantum object.
 
@@ -119,13 +121,13 @@ class QExpr(Expr):
         args = cls._eval_args(args)
         if len(args) == 0:
             args = cls._eval_args(tuple(cls.default_args()))
-        inst = Expr.__new__(cls, *args, **{'commutative':False})
+        inst = Expr.__new__(cls, *args, **old_assumptions)
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst
 
     @classmethod
-    def _new_rawargs(cls, hilbert_space, *args):
+    def _new_rawargs(cls, hilbert_space, *args, **old_assumptions):
         """Create new instance of this class with hilbert_space and args.
 
         This is used to bypass the more complex logic in the ``__new__``
@@ -135,7 +137,7 @@ class QExpr(Expr):
         the creation of the object.
         """
 
-        obj = Expr.__new__(cls, *args, **{'commutative':False})
+        obj = Expr.__new__(cls, *args, **old_assumptions)
         obj.hilbert_space = hilbert_space
         return obj
 

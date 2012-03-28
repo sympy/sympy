@@ -195,8 +195,7 @@ class HermitianOperator(Operator):
     H
     """
 
-    def _eval_adjoint(self):
-        return self
+    is_hermitian = True
 
     def _eval_inverse(self):
         if isinstance(self, UnitaryOperator):
@@ -300,6 +299,8 @@ class OuterProduct(Operator):
     .. [1] http://en.wikipedia.org/wiki/Outer_product
     """
 
+    is_commutative = False
+
     def __new__(cls, *args, **old_assumptions):
         from sympy.physics.quantum.state import KetBase, BraBase
         ket = args[0]
@@ -314,7 +315,7 @@ class OuterProduct(Operator):
                 (ket.__class__, bra.__class__)
             )
         # TODO: make sure the hilbert spaces of the bra and ket are compatible
-        obj = Expr.__new__(cls, *args, **{'commutative': False})
+        obj = Expr.__new__(cls, *args, **old_assumptions)
         obj.hilbert_space = ket.hilbert_space
         return obj
 
