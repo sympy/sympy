@@ -2519,6 +2519,8 @@ class MatrixBase(object):
         """
         Returns list of vectors (Matrix objects) that span nullspace of self
         """
+        from sympy import SYMPY_DEBUG
+
         if simplified is not False:
             warnings.warn(filldedent('''
             Use of simplified is deprecated. Set simplify=True to
@@ -2744,8 +2746,8 @@ class MatrixBase(object):
         # roots doesn't like Floats, so replace them with Rationals
         # unless the nsimplify flag indicates that this has already
         # been done, e.g. in eigenvects
+        float = False
         if flags.pop('rational', True):
-            float = False
             if any(v.has(Float) for v in self):
                 float=True
                 self = self._new(self.rows, self.cols, [nsimplify(v, rational=True) for v in self])
@@ -2775,6 +2777,7 @@ class MatrixBase(object):
         Floats present.
 
         """
+        from sympy import SYMPY_DEBUG
 
         simplify = flags.get('simplify', True)
         primitive = bool(flags.get('simplify', False))
@@ -2795,30 +2798,34 @@ class MatrixBase(object):
         flags.pop('rational', None)
 
         for r, k in vlist.items():
-            tmp = self - eye(self.rows)*r
-            basis = tmp.nullspace(chop=chop)
-            if basis:print 0
-            # whether tmp.is_symbolic() is True or False, it is possible that
-            # the basis will come back as [] in which case simplification is
-            # necessary.
-            rex = r.expand(complex=True)
-            if not basis:
-                # see if expanding r helps
-                tmp0 = tmp
-                if rex != r:
-                    tmp = self - eye(self.rows)*rex
-                    basis = tmp.nullspace(chop=chop)
-                    if basis: print 1
+            for ii in range(2):
+                tmp = self - eye(self.rows)*r
+                basis = tmp.nullspace(chop=chop)
+                if basis and SYMPY_DEBUG: print 0+ii*100
+                # whether tmp.is_symbolic() is True or False, it is possible that
+                # the basis will come back as [] in which case simplification is
+                # necessary.
+                rex = r.expand(complex=True)
                 if not basis:
-                    # try it again with simplification
-                    basis = tmp.nullspace(simplify=simplify, chop=chop)
-                    if basis: print 2
-                if not basis and rex != r:
-                    # try it again with simplification
-                    basis = tmp0.nullspace(simplify=simplify, chop=chop)
-                    if basis: print 3
-                if not basis:
-                    raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
+                    # see if expanding r helps
+                    tmp0 = tmp
+                    if rex != r:
+                        tmp = self - eye(self.rows)*rex
+                        basis = tmp.nullspace(chop=chop)
+                        if basis and SYMPY_DEBUG: print 1+ii*100
+                    if not basis:
+                        # try it again with simplification
+                        basis = tmp.nullspace(simplify=simplify, chop=chop)
+                        if basis and SYMPY_DEBUG: print 2+ii*100
+                    if not basis and rex != r:
+                        # try it again with simplification
+                        basis = tmp0.nullspace(simplify=simplify, chop=chop)
+                        if basis and SYMPY_DEBUG: print 3+ii*100
+                    if not basis:
+                        if ii == 0 and float and r.has(Pow):
+                            r = r.evalf()
+                            continue
+                        raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
             if rex.count_ops() < r.count_ops():
                 vlist.pop(r)
                 r = rex
