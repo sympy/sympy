@@ -239,6 +239,16 @@ def test_conv2_symb_indices_with_seq():
     assert actual == expected
     assert act_map == exp_map
 
+    i3 = Wild('i3')
+    cgate_x0_c321 = CGate((3,2,1), X(0))
+    exp_map = {i0 : Integer(3), i1 : Integer(2),
+               i2 : Integer(1), i3 : Integer(0)}
+    expected = (CGate((i0, i1, i2), X(i3)),)
+    args = (cgate_x0_c321,)
+    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(*args)
+    assert actual == expected
+    assert act_map == exp_map
+
 def test_conv2_real_qubits_with_seq():
     i0 = Wild('i0')
     i1 = Wild('i1')

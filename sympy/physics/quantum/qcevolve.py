@@ -9,6 +9,7 @@ http://pyevolve.sourceforge.net/index.html
 TODO or THINGS TO CONSIDER:
 * Implement a mutator operator
 * Implement an evaluator
+* Implement a random replace (similar to reduce)
 * Sorting the circuits to deal with 'trivial identities'
   i.e. X(0)X(1)X(0)X(1)
   Gate sorting in gate.py limited because can't swap gates that act on
@@ -173,7 +174,7 @@ def random_reduce(circuit, gate_ids, seed=None):
 
     return new_circuit
 
-def random_insert(circuit, choices, seed=None):
+def random_insert(circuit, choices, symbolic=True, seed=None):
     """Insert a circuit into another quantum circuit.
 
     random_insert randomly selects a circuit from
@@ -186,6 +187,9 @@ def random_insert(circuit, choices, seed=None):
         A tuple of Gates representing a quantum circuit
     choices : list
         Set of circuit choices
+    symbolic : bool
+        Indicates whether the circuit choices use symbolic indices or
+        not.  By default, assumes the choices are symbolic.
     seed : int
         Seed value for the random number generator
     """
@@ -200,6 +204,11 @@ def random_insert(circuit, choices, seed=None):
     insert_loc = int_gen.randint(0, len(circuit))
     insert_circuit_loc = int_gen.randint(0, len(choices)-1)
     insert_circuit = choices[insert_circuit_loc]
+
+    if symbolic:
+        sym_circuit, mapping, ndx = conv2_symbolic_qubits_with_seq(*circuit)
+        insert_circuit = conv2_real_qubits_with_seq(*insert_circuit,
+                                 qubit_map=mapping)
 
     left = circuit[0:insert_loc]
     right = circuit[insert_loc:len(circuit)]

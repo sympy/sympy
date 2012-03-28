@@ -1,3 +1,4 @@
+from sympy import Wild
 from sympy.physics.quantum.qcevolve import *
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
         CGate)
@@ -61,23 +62,55 @@ def test_random_insert():
     choices = [(x, x)]
     circuit = (y, y)
     # insert location: 0;
-    assert random_insert(circuit, choices, seed=seed) == (x, x, y, y)
+    actual = random_insert(circuit, choices, symbolic=False, seed=seed)
+    assert actual == (x, x, y, y)
 
     seed = 8
     circuit = (x, y, z, h)
     choices = [(h, h), (x, y, z)]
     expected = (x, x, y, z, y, z, h)
     # insert location: 1; circuit choice: 1
-    assert random_insert(circuit, choices, seed=seed) == expected
+    actual = random_insert(circuit, choices, symbolic=False, seed=seed)
+    assert actual == expected
 
     gate_list = [x, y, z, h, cnot, cgate_z]
     ids = list(bfs_identity_search(gate_list, 2, max_depth=4))
 
-    collapse_func = lambda acc, an_id: acc + list(an_id.equivalent_ids)
-    ids = reduce(collapse_func, ids, [])
+    collapse_eq_ids = lambda acc, an_id: acc + list(an_id.equivalent_ids)
+    eq_ids = reduce(collapse_eq_ids, ids, [])
 
     circuit = (x, y, h, cnot, cgate_z)
     expected = (x, y, z, y, z, y, h, cnot, cgate_z)
     # insert location: 1; circuit choice: 30
-    actual = random_insert(circuit, ids, seed=seed)
+    actual = random_insert(circuit, eq_ids, symbolic=False, seed=seed)
+    assert actual == expected
+
+    i0 = Wild('i0')
+    x_i0 = X(i0)
+    y_i0 = Y(i0)
+    z_i0 = Z(i0)
+    h_i0 = H(i0)
+
+    seed = 1
+    choices = [(x_i0, x_i0)]
+    circuit = (y, y)
+    # insert location: 0;
+    actual = random_insert(circuit, choices, seed=seed)
+    assert actual == (x, x, y, y)
+
+    seed = 8
+    circuit = (x, y, z, h)
+    choices = [(h_i0, h_i0), (x_i0, y_i0, z_i0)]
+    expected = (x, x, y, z, y, z, h)
+    # insert location: 1; circuit choice: 1
+    actual = random_insert(circuit, choices, seed=seed)
+    assert actual == expected
+
+    collapse_sym_ids = lambda acc, an_id: acc + list(an_id.symbolic_ids)
+    sym_ids = reduce(collapse_sym_ids, ids, [])
+
+    circuit = (x, y, h, cnot, cgate_z)
+    expected = (x, y, z, y, z, y, h, cnot, cgate_z)
+    # insert location: 1; circuit choice: 30
+    actual = random_insert(circuit, sym_ids, seed=seed)
     assert actual == expected
