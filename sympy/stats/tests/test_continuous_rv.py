@@ -328,16 +328,6 @@ def test_pareto():
     # assert simplify(E(X)) == alpha*xm/(alpha-1)
     # assert simplify(variance(X)) == xm**2*alpha / ((alpha-1)**2*(alpha-2))
 
-def test_weibull_numeric():
-    # Test for integers and rationals
-    a = 1
-    bvals = [S.Half, 1, S(3)/2, 5]
-    for b in bvals:
-        X = Weibull(a, b)
-        assert simplify(E(X)) == simplify(a * gamma(1 + 1/S(b)))
-        assert simplify(variance(X)) == simplify(a**2 * gamma(1 + 2/S(b)) - E(X)**2)
-        # Not testing Skew... it's slow with int/frac values > 3/2
-
 def test_pareto_numeric():
     xm, beta = 3, 2
     alpha = beta + 5
