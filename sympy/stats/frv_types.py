@@ -48,15 +48,15 @@ class DiscreteUniformPSpace(SingleFinitePSpace):
     Examples
     ========
 
-    >>> from sympy.stats import DiscreteUniform, Density
+    >>> from sympy.stats import DiscreteUniform, density
     >>> from sympy import symbols
 
     >>> X = DiscreteUniform(symbols('a b c')) # equally likely over a, b, c
-    >>> Density(X)
+    >>> density(X)
     {a: 1/3, b: 1/3, c: 1/3}
 
     >>> Y = DiscreteUniform(range(5)) # distribution over a range
-    >>> Density(Y)
+    >>> density(Y)
     {0: 1/5, 1: 1/5, 2: 1/5, 3: 1/5, 4: 1/5}
     """
     def __new__(cls, items, symbol=None):
@@ -74,15 +74,15 @@ def DiscreteUniform(items, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import DiscreteUniform, Density
+    >>> from sympy.stats import DiscreteUniform, density
     >>> from sympy import symbols
 
     >>> X = DiscreteUniform(symbols('a b c')) # equally likely over a, b, c
-    >>> Density(X)
+    >>> density(X)
     {a: 1/3, b: 1/3, c: 1/3}
 
     >>> Y = DiscreteUniform(range(5)) # distribution over a range
-    >>> Density(Y)
+    >>> density(Y)
     {0: 1/5, 1: 1/5, 2: 1/5, 3: 1/5, 4: 1/5}
 
     """
@@ -96,14 +96,14 @@ class DiePSpace(DiscreteUniformPSpace):
 
     Create Dice Random Symbols using Die function
 
-    >>> from sympy.stats import Die, Density
+    >>> from sympy.stats import Die, density
 
     >>> X = Die(6) # Six sided Die
-    >>> Density(X)
+    >>> density(X)
     {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}
 
     >>> X = Die(4) # Four sided Die
-    >>> Density(X)
+    >>> density(X)
     {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
     """
     _count = 0
@@ -117,14 +117,14 @@ def Die(sides=6, symbol=None):
 
     Returns a RandomSymbol.
 
-    >>> from sympy.stats import Die, Density
+    >>> from sympy.stats import Die, density
 
     >>> X = Die(6) # Six sided Die
-    >>> Density(X)
+    >>> density(X)
     {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}
 
     >>> X = Die(4) # Four sided Die
-    >>> Density(X)
+    >>> density(X)
     {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
     """
 
@@ -140,15 +140,15 @@ class BernoulliPSpace(SingleFinitePSpace):
 
     Create Bernoulli Random Symbols using Bernoulli function.
 
-    >>> from sympy.stats import Bernoulli, Density
+    >>> from sympy.stats import Bernoulli, density
     >>> from sympy import S
 
     >>> X = Bernoulli(S(3)/4) # 1-0 Bernoulli variable, probability = 3/4
-    >>> Density(X)
+    >>> density(X)
     {0: 1/4, 1: 3/4}
 
     >>> X = Bernoulli(S.Half, 'Heads', 'Tails') # A fair coin toss
-    >>> Density(X)
+    >>> density(X)
     {Heads: 1/2, Tails: 1/2}
     """
 
@@ -164,15 +164,15 @@ def Bernoulli(p, succ=1, fail=0, symbol=None):
 
     Returns a RandomSymbol
 
-    >>> from sympy.stats import Bernoulli, Density
+    >>> from sympy.stats import Bernoulli, density
     >>> from sympy import S
 
     >>> X = Bernoulli(S(3)/4, 1, 0) # 1-0 Bernoulli variable, probability = 3/4
-    >>> Density(X)
+    >>> density(X)
     {0: 1/4, 1: 3/4}
 
     >>> X = Bernoulli(S.Half, 'Heads', 'Tails') # A fair coin toss
-    >>> Density(X)
+    >>> density(X)
     {Heads: 1/2, Tails: 1/2}
     """
 
@@ -188,15 +188,15 @@ class CoinPSpace(BernoulliPSpace):
 
     Create Coin's using Coin function
 
-    >>> from sympy.stats import Coin, Density
+    >>> from sympy.stats import Coin, density
     >>> from sympy import Rational
 
     >>> X = Coin() # A fair coin toss
-    >>> Density(X)
+    >>> density(X)
     {H: 1/2, T: 1/2}
 
     >>> X = Coin(Rational(3, 5)) # An unfair coin
-    >>> Density(X)
+    >>> density(X)
     {H: 3/5, T: 2/5}
     """
     _count = 0
@@ -212,15 +212,15 @@ def Coin(p=S.Half, symbol=None):
 
     Returns a RandomSymbol.
 
-    >>> from sympy.stats import Coin, Density
+    >>> from sympy.stats import Coin, density
     >>> from sympy import Rational
 
     >>> X = Coin() # A fair coin toss
-    >>> Density(X)
+    >>> density(X)
     {H: 1/2, T: 1/2}
 
     >>> X = Coin(Rational(3, 5)) # An unfair coin
-    >>> Density(X)
+    >>> density(X)
     {H: 3/5, T: 2/5}
     """
     return CoinPSpace(p, symbol).value
@@ -236,11 +236,11 @@ class BinomialPSpace(SingleFinitePSpace):
     Examples
     ========
 
-    >>> from sympy.stats import Binomial, Density
+    >>> from sympy.stats import Binomial, density
     >>> from sympy import S
 
     >>> X = Binomial(4, S.Half) # Four "coin flips"
-    >>> Density(X)
+    >>> density(X)
     {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}
     """
 
@@ -259,11 +259,11 @@ def Binomial(n, p, succ=1, fail=0, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Binomial, Density
+    >>> from sympy.stats import Binomial, density
     >>> from sympy import S
 
     >>> X = Binomial(4, S.Half) # Four "coin flips"
-    >>> Density(X)
+    >>> density(X)
     {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}
     """
 
@@ -280,11 +280,11 @@ class HypergeometricPSpace(SingleFinitePSpace):
     Examples
     ========
 
-    >>> from sympy.stats import Hypergeometric, Density
+    >>> from sympy.stats import Hypergeometric, density
     >>> from sympy import S
 
     >>> X = Hypergeometric(10, 5, 3) # 10 marbles, 5 white (success), 3 draws
-    >>> Density(X)
+    >>> density(X)
     {0: 1/12, 1: 5/12, 2: 5/12, 3: 1/12}
     """
 
@@ -303,11 +303,11 @@ def Hypergeometric(N, m, n, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Hypergeometric, Density
+    >>> from sympy.stats import Hypergeometric, density
     >>> from sympy import S
 
     >>> X = Hypergeometric(10, 5, 3) # 10 marbles, 5 white (success), 3 draws
-    >>> Density(X)
+    >>> density(X)
     {0: 1/12, 1: 5/12, 2: 5/12, 3: 1/12}
     """
 
