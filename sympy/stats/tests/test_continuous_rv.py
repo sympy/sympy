@@ -1,9 +1,10 @@
-from sympy.stats import (P, E, Where, Density, Var, Covar, Skewness, Given,
-                         pspace, CDF, ContinuousRV, Sample, Arcsin, Benini,
-                         Beta, BetaPrime, Cauchy, Chi, Dagum, Exponential,
-                         Gamma, Laplace, Logistic, LogNormal, Maxwell, Nakagami,
-                         Normal, Pareto, Rayleigh, StudentT, Triangular,
-                         Uniform, UniformSum, Weibull, WignerSemicircle)
+from sympy.stats import (P, E, where, density, variance, covariance, skewness,
+                         given, pspace, cdf, ContinuousRV, sample)
+from sympy.stats import (Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, Dagum,
+                         Exponential, Gamma, Laplace, Logistic, LogNormal,
+                         Maxwell, Nakagami, Normal, Pareto, Rayleigh, StudentT,
+                         Triangular, Uniform, UniformSum, Weibull,
+                         WignerSemicircle)
 from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, Lambda, factorial, binomial, floor)
@@ -21,8 +22,8 @@ def test_single_normal():
     Y = X*sigma + mu
 
     assert simplify(E(Y)) == mu
-    assert simplify(Var(Y)) == sigma**2
-    pdf = Density(Y)
+    assert simplify(variance(Y)) == sigma**2
+    pdf = density(Y)
     x = Symbol('x')
     assert pdf(x) == 2**S.Half*exp(-(x - mu)**2/(2*sigma**2))/(2*pi**S.Half*sigma)
 
@@ -33,9 +34,9 @@ def test_single_normal():
 @XFAIL
 def test_conditional_1d():
     X = Normal(0,1)
-    Y = Given(X, X>=0)
+    Y = given(X, X>=0)
 
-    assert Density(Y) == 2 * Density(X)
+    assert density(Y) == 2 * density(X)
 
     assert Y.pspace.domain.set == Interval(0, oo)
     assert E(Y) == sqrt(2) / sqrt(pi)
@@ -44,12 +45,12 @@ def test_conditional_1d():
 
 def test_ContinuousDomain():
     X = Normal(0,1)
-    assert Where(X**2<=1).set == Interval(-1,1)
-    assert Where(X**2<=1).symbol == X.symbol
-    Where(And(X**2<=1, X>=0)).set == Interval(0,1)
-    raises(ValueError, "Where(sin(X)>1)")
+    assert where(X**2<=1).set == Interval(-1,1)
+    assert where(X**2<=1).symbol == X.symbol
+    where(And(X**2<=1, X>=0)).set == Interval(0,1)
+    raises(ValueError, "where(sin(X)>1)")
 
-    Y = Given(X, X>=0)
+    Y = given(X, X>=0)
 
     assert Y.pspace.domain.set == Interval(0, oo)
 
@@ -57,13 +58,13 @@ def test_multiple_normal():
     X, Y = Normal(0,1), Normal(0,1)
 
     assert E(X+Y) == 0
-    assert Var(X+Y) == 2
-    assert Var(X+X) == 4
-    assert Covar(X, Y) == 0
-    assert Covar(2*X + Y, -X) == -2*Var(X)
+    assert variance(X+Y) == 2
+    assert variance(X+X) == 4
+    assert covariance(X, Y) == 0
+    assert covariance(2*X + Y, -X) == -2*variance(X)
 
     assert E(X, Eq(X+Y, 0)) == 0
-    assert Var(X, Eq(X+Y, 0)) == S.Half
+    assert variance(X, Eq(X+Y, 0)) == S.Half
 
 def test_symbolic():
     mu1, mu2 = symbols('mu1 mu2', real=True, bounded=True)
@@ -77,39 +78,39 @@ def test_symbolic():
     assert E(X) == mu1
     assert E(X+Y) == mu1+mu2
     assert E(a*X+b) == a*E(X)+b
-    assert Var(X) == s1**2
-    assert simplify(Var(X+a*Y+b)) == Var(X) + a**2*Var(Y)
+    assert variance(X) == s1**2
+    assert simplify(variance(X+a*Y+b)) == variance(X) + a**2*variance(Y)
 
     assert E(Z) == 1/rate
     assert E(a*Z+b) == a*E(Z)+b
     assert E(X+a*Z+b) == mu1 + a/rate + b
 
-def test_CDF():
+def test_cdf():
     X = Normal(0,1)
 
-    d = CDF(X)
+    d = cdf(X)
     assert P(X<1) == d(1)
     assert d(0) == S.Half
 
-    d = CDF(X, X>0) # given X>0
+    d = cdf(X, X>0) # given X>0
     assert d(0) == 0
 
     Y = Exponential(10)
-    d = CDF(Y)
+    d = cdf(Y)
     assert d(-5) == 0
     assert P(Y > 3) == 1 - d(3)
 
-    raises(ValueError, "CDF(X+Y)")
+    raises(ValueError, "cdf(X+Y)")
 
     Z = Exponential(1)
-    cdf = CDF(Z)
+    f = cdf(Z)
     z = Symbol('z')
-    assert cdf(z) == Piecewise((0, z < 0), (1 - exp(-z), True))
+    assert f(z) == Piecewise((0, z < 0), (1 - exp(-z), True))
 
 def test_sample():
     z = Symbol('z')
     Z = ContinuousRV(z, exp(-z), set=Interval(0,oo))
-    assert Sample(Z) in Z.pspace.domain.set
+    assert sample(Z) in Z.pspace.domain.set
     sym, val = Z.pspace.sample().items()[0]
     assert sym == Z and val in Interval(0, oo)
 
@@ -120,7 +121,7 @@ def test_ContinuousRV():
     X = ContinuousRV(x, pdf)
     Y = Normal(0, 1)
 
-    assert Var(X) == Var(Y)
+    assert variance(X) == variance(Y)
     assert P(X>0) == P(Y>0)
 
 
@@ -130,7 +131,7 @@ def test_arcsin():
     x = Symbol("x")
 
     X = Arcsin(a, b, symbol=x)
-    assert Density(X) == Lambda(_x, 1/(pi*sqrt((-_x + b)*(_x - a))))
+    assert density(X) == Lambda(_x, 1/(pi*sqrt((-_x + b)*(_x - a))))
 
 
 def test_benini():
@@ -140,7 +141,7 @@ def test_benini():
     x = Symbol("x")
 
     X = Benini(alpha, b, sigma, symbol=x)
-    assert Density(X) == (Lambda(_x, (alpha/_x + 2*b*log(_x/sigma)/_x)
+    assert density(X) == (Lambda(_x, (alpha/_x + 2*b*log(_x/sigma)/_x)
                           *exp(-alpha*log(_x/sigma) - b*log(_x/sigma)**2)))
 
 
@@ -151,19 +152,19 @@ def test_beta():
 
     assert pspace(B).domain.set == Interval(0, 1)
 
-    dens = Density(B)
+    dens = density(B)
     x = Symbol('x')
     assert dens(x) == x**(a-1)*(1-x)**(b-1) / beta(a,b)
 
     # This is too slow
     # assert E(B) == a / (a + b)
-    # assert Var(B) == (a*b) / ((a+b)**2 * (a+b+1))
+    # assert variance(B) == (a*b) / ((a+b)**2 * (a+b+1))
 
     # Full symbolic solution is too much, test with numeric version
     a, b = 1, 2
     B = Beta(a, b)
     assert E(B) == a / S(a + b)
-    assert Var(B) == (a*b) / S((a+b)**2 * (a+b+1))
+    assert variance(B) == (a*b) / S((a+b)**2 * (a+b+1))
 
 
 def test_betaprime():
@@ -172,7 +173,7 @@ def test_betaprime():
     x = Symbol("x")
 
     X = BetaPrime(alpha, beta, symbol=x)
-    assert Density(X) == (Lambda(_x, _x**(alpha - 1)*(_x + 1)**(-alpha - beta)
+    assert density(X) == (Lambda(_x, _x**(alpha - 1)*(_x + 1)**(-alpha - beta)
                           *gamma(alpha + beta)/(gamma(alpha)*gamma(beta))))
 
 
@@ -182,7 +183,7 @@ def test_cauchy():
     x = Symbol("x")
 
     X = Cauchy(x0, gamma, symbol=x)
-    assert Density(X) == Lambda(_x, 1/(pi*gamma*(1 + (_x - x0)**2/gamma**2)))
+    assert density(X) == Lambda(_x, 1/(pi*gamma*(1 + (_x - x0)**2/gamma**2)))
 
 
 def test_chi():
@@ -190,7 +191,7 @@ def test_chi():
     x = Symbol("x")
 
     X = Chi(k, symbol=x)
-    assert Density(X) == (Lambda(_x, 2**(-k/2 + 1)*_x**(k - 1)
+    assert density(X) == (Lambda(_x, 2**(-k/2 + 1)*_x**(k - 1)
                           *exp(-_x**2/2)/gamma(k/2)))
 
 
@@ -201,7 +202,7 @@ def test_dagum():
     x = Symbol("x")
 
     X = Dagum(p, a, b, symbol=x)
-    assert Density(X) == Lambda(_x,
+    assert density(X) == Lambda(_x,
                                 a*p*(_x/b)**(a*p)*((_x/b)**a + 1)**(-p - 1)/_x)
 
 
@@ -210,13 +211,13 @@ def test_exponential():
     X = Exponential(rate)
 
     assert E(X) == 1/rate
-    assert Var(X) == 1/rate**2
-    assert Skewness(X) == 2
+    assert variance(X) == 1/rate**2
+    assert skewness(X) == 2
     assert P(X>0) == S(1)
     assert P(X>1) == exp(-rate)
     assert P(X>10) == exp(-10*rate)
 
-    assert Where(X<=1).set == Interval(0,1)
+    assert where(X<=1).set == Interval(0,1)
 
 
 def test_gamma():
@@ -225,11 +226,11 @@ def test_gamma():
     x = Symbol("x")
 
     X = Gamma(k, theta, symbol=x)
-    assert Density(X) == Lambda(_x,
+    assert density(X) == Lambda(_x,
                                 _x**(k - 1)*theta**(-k)*exp(-_x/theta)/gamma(k))
-    assert CDF(X, meijerg=True) == Lambda(_z, Piecewise((0, _z < 0),
+    assert cdf(X, meijerg=True) == Lambda(_z, Piecewise((0, _z < 0),
     (-k*lowergamma(k, 0)/gamma(k + 1) + k*lowergamma(k, _z/theta)/gamma(k + 1), True)))
-    assert Var(X) == (-theta**2*gamma(k + 1)**2/gamma(k)**2 +
+    assert variance(X) == (-theta**2*gamma(k + 1)**2/gamma(k)**2 +
            theta*theta**(-k)*theta**(k + 1)*gamma(k + 2)/gamma(k))
 
     k, theta = symbols('k theta', real=True, bounded=True, positive=True)
@@ -237,9 +238,9 @@ def test_gamma():
 
     assert simplify(E(X)) == k*theta
     # can't get things to simplify on this one so we use subs
-    assert Var(X).subs(k,5) == (k*theta**2).subs(k, 5)
+    assert variance(X).subs(k,5) == (k*theta**2).subs(k, 5)
     # The following is too slow
-    # assert simplify(Skewness(X)).subs(k, 5) == (2/sqrt(k)).subs(k, 5)
+    # assert simplify(skewness(X)).subs(k, 5) == (2/sqrt(k)).subs(k, 5)
 
 
 def test_laplace():
@@ -248,7 +249,7 @@ def test_laplace():
     x = Symbol("x")
 
     X = Laplace(mu, b, symbol=x)
-    assert Density(X) == Lambda(_x, exp(-Abs(_x - mu)/b)/(2*b))
+    assert density(X) == Lambda(_x, exp(-Abs(_x - mu)/b)/(2*b))
 
 
 def test_logistic():
@@ -257,7 +258,7 @@ def test_logistic():
     x = Symbol("x")
 
     X = Logistic(mu, s, symbol=x)
-    assert Density(X) == Lambda(_x,
+    assert density(X) == Lambda(_x,
                                 exp((-_x + mu)/s)/(s*(exp((-_x + mu)/s) + 1)**2))
 
 
@@ -267,13 +268,13 @@ def test_lognormal():
     X = LogNormal(mean, std)
     # The sympy integrator can't do this too well
     #assert E(X) == exp(mean+std**2/2)
-    #assert Var(X) == (exp(std**2)-1) * exp(2*mean + std**2)
+    #assert variance(X) == (exp(std**2)-1) * exp(2*mean + std**2)
 
     # Right now, only density function and sampling works
     # Test sampling: Only e^mean in sample std of 0
     for i in range(3):
         X = LogNormal(i, 0)
-        assert S(Sample(X)) == N(exp(i))
+        assert S(sample(X)) == N(exp(i))
     # The sympy integrator can't do this too well
     #assert E(X) ==
 
@@ -282,11 +283,11 @@ def test_lognormal():
     x = Symbol("x")
 
     X = LogNormal(mu, sigma, symbol=x)
-    assert Density(X) == (Lambda(_x, sqrt(2)*exp(-(-mu + log(_x))**2
+    assert density(X) == (Lambda(_x, sqrt(2)*exp(-(-mu + log(_x))**2
                                     /(2*sigma**2))/(2*_x*sqrt(pi)*sigma)))
 
     X = LogNormal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
-    assert Density(X) == Lambda(_x, sqrt(2)*exp(-log(_x)**2/2)/(2*_x*sqrt(pi)))
+    assert density(X) == Lambda(_x, sqrt(2)*exp(-log(_x)**2/2)/(2*_x*sqrt(pi)))
 
 
 def test_maxwell():
@@ -295,10 +296,10 @@ def test_maxwell():
 
     X = Maxwell(a, symbol=x)
 
-    assert Density(X) == Lambda(_x, sqrt(2)*_x**2*exp(-_x**2/(2*a**2))/(sqrt(pi)*a**3))
+    assert density(X) == (Lambda(_x, sqrt(2)*_x**2*exp(-_x**2/(2*a**2))/
+        (sqrt(pi)*a**3)))
     assert E(X) == 2*sqrt(2)*a/sqrt(pi)
-    assert simplify(Var(X)) == a**2*(-8 + 3*pi)/pi
-
+    assert simplify(variance(X)) == a**2*(-8 + 3*pi)/pi
 
 def test_nakagami():
     mu = Symbol("mu", positive=True)
@@ -306,27 +307,26 @@ def test_nakagami():
     x = Symbol("x")
 
     X = Nakagami(mu, omega, symbol=x)
-    assert Density(X) == (Lambda(_x, 2*_x**(2*mu - 1)*mu**mu*omega**(-mu)
+    assert density(X) == (Lambda(_x, 2*_x**(2*mu - 1)*mu**mu*omega**(-mu)
                                 *exp(-_x**2*mu/omega)/gamma(mu)))
     assert simplify(E(X, meijerg=True)) == (sqrt(mu)*sqrt(omega)
            *gamma(mu + S.Half)/gamma(mu + 1))
-    assert simplify(Var(X, meijerg=True)) == (omega*(gamma(mu)*gamma(mu + 1)
-                          - gamma(mu + S.Half)**2)/(gamma(mu)*gamma(mu + 1)))
-
+    assert (simplify(variance(X, meijerg=True)) ==
+                            (omega*(gamma(mu)*gamma(mu + 1)
+                          - gamma(mu + S.Half)**2)/(gamma(mu)*gamma(mu + 1))))
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True, bounded=True)
     alpha = beta + 5
     X = Pareto(xm, alpha)
 
-    density = Density(X)
+    dens = density(X)
     x = Symbol('x')
-    assert density(x) == x**(-(alpha+1))*xm**(alpha)*(alpha)
+    assert dens(x) == x**(-(alpha+1))*xm**(alpha)*(alpha)
 
     # These fail because SymPy can not deduce that 1/xm != 0
     # assert simplify(E(X)) == alpha*xm/(alpha-1)
-    # assert simplify(Var(X)) == xm**2*alpha / ((alpha-1)**2*(alpha-2))
-
+    # assert simplify(variance(X)) == xm**2*alpha / ((alpha-1)**2*(alpha-2))
 
 def test_pareto_numeric():
     xm, beta = 3, 2
@@ -334,27 +334,25 @@ def test_pareto_numeric():
     X = Pareto(xm, alpha)
 
     assert E(X) == alpha*xm/S(alpha-1)
-    assert Var(X) == xm**2*alpha / S(((alpha-1)**2*(alpha-2)))
-
+    assert variance(X) == xm**2*alpha / S(((alpha-1)**2*(alpha-2)))
+    # Skewness tests too slow. Try shortcutting function?
 
 def test_rayleigh():
     sigma = Symbol("sigma", positive=True)
     x = Symbol("x")
 
     X = Rayleigh(sigma, symbol=x)
-    assert Density(X) == Lambda(_x, _x*exp(-_x**2/(2*sigma**2))/sigma**2)
+    assert density(X) == Lambda(_x, _x*exp(-_x**2/(2*sigma**2))/sigma**2)
     assert E(X) == sqrt(2)*sqrt(pi)*sigma/2
-    assert Var(X) == -pi*sigma**2/2 + 2*sigma**2
-
+    assert variance(X) == -pi*sigma**2/2 + 2*sigma**2
 
 def test_studentt():
     nu = Symbol("nu", positive=True)
     x = Symbol("x")
 
     X = StudentT(nu, symbol=x)
-    assert Density(X) == (Lambda(_x, (_x**2/nu + 1)**(-nu/2 - S.Half)
-                          *gamma(nu/2 + S.Half)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))))
-
+    assert density(X) == (Lambda(_x, (_x**2/nu + 1)**(-nu/2 - S.Half)
+                        *gamma(nu/2 + S.Half)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))))
 
 @XFAIL
 def test_triangular():
@@ -370,14 +368,13 @@ def test_triangular():
                        ((-2*_x + 2*b)/((-a + b)*(b - c)), And(_x <= b, c < _x)),
                        (0, True)))
 
-
 def test_uniform():
     l = Symbol('l', real=True, bounded=True)
     w = Symbol('w', positive=True, bounded=True)
     X = Uniform(l, l+w)
 
     assert simplify(E(X)) == l + w/2
-    assert simplify(Var(X)) == w**2/12
+    assert simplify(variance(X)) == w**2/12
 
     assert P(X<l) == 0 and P(X>l+w) == 0
 
@@ -394,18 +391,16 @@ def test_uniformsum():
     _k = Symbol("k")
 
     X = UniformSum(n, symbol=x)
-    assert Density(X) == (Lambda(_x, Sum((-1)**_k*(-_k + _x)**(n - 1)
-                         *binomial(n, _k), (_k, 0, floor(_x)))/factorial(n - 1)))
-
+    assert density(X) == (Lambda(_x, Sum((-1)**_k*(-_k + _x)**(n - 1)
+                        *binomial(n, _k), (_k, 0, floor(_x)))/factorial(n - 1)))
 
 def test_weibull():
     a, b = symbols('a b', positive=True)
     X = Weibull(a, b)
 
     assert simplify(E(X)) == simplify(a * gamma(1 + 1/b))
-    assert simplify(Var(X)) == simplify(a**2 * gamma(1 + 2/b) - E(X)**2)
+    assert simplify(variance(X)) == simplify(a**2 * gamma(1 + 2/b) - E(X)**2)
     # Skewness tests too slow. Try shortcutting function?
-
 
 def test_weibull_numeric():
     # Test for integers and rationals
@@ -414,18 +409,17 @@ def test_weibull_numeric():
     for b in bvals:
         X = Weibull(a, b)
         assert simplify(E(X)) == simplify(a * gamma(1 + 1/S(b)))
-        assert simplify(Var(X)) == simplify(a**2 * gamma(1 + 2/S(b)) - E(X)**2)
+        assert simplify(variance(X)) == simplify(
+                a**2 * gamma(1 + 2/S(b)) - E(X)**2)
         # Not testing Skew... it's slow with int/frac values > 3/2
-
 
 def test_wignersemicircle():
     R = Symbol("R", positive=True)
     x = Symbol("x")
 
     X = WignerSemicircle(R, symbol=x)
-    assert Density(X) == Lambda(_x, 2*sqrt(-_x**2 + R**2)/(pi*R**2))
+    assert density(X) == Lambda(_x, 2*sqrt(-_x**2 + R**2)/(pi*R**2))
     assert E(X) == 0
-
 
 def test_prefab_sampling():
     N = Normal(0, 1)
@@ -441,7 +435,7 @@ def test_prefab_sampling():
     niter = 10
     for var in variables:
         for i in xrange(niter):
-            assert Sample(var) in var.pspace.domain.set
+            assert sample(var) in var.pspace.domain.set
 
 def test_input_value_assertions():
     a, b = symbols('a b')

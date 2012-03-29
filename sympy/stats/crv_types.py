@@ -143,7 +143,7 @@ def Arcsin(a=0, b=1, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Arcsin, Density
+    >>> from sympy.stats import Arcsin, density
     >>> from sympy import Symbol, simplify
 
     >>> a = Symbol("a", real=True)
@@ -152,13 +152,13 @@ def Arcsin(a=0, b=1, symbol=None):
 
     >>> X = Arcsin(a, b, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, 1/(pi*sqrt((-_x + b)*(_x - a))))
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Arcsine_distribution
+    [1] http://en.wikipedia.org/wiki/Arcsine_distribution
     """
 
     return ArcsinPSpace(a, b, symbol).value
@@ -202,7 +202,7 @@ def Benini(alpha, beta, sigma, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Benini, Density
+    >>> from sympy.stats import Benini, density
     >>> from sympy import Symbol, simplify, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
@@ -212,7 +212,7 @@ def Benini(alpha, beta, sigma, symbol=None):
 
     >>> X = Benini(alpha, beta, sigma, symbol=x)
 
-    >>> D = Density(X)
+    >>> D = density(X)
     >>> pprint(D, use_unicode=False)
           /                                                             2       \
           |   /                  /  x  \\             /  x  \            /  x  \|
@@ -224,7 +224,7 @@ def Benini(alpha, beta, sigma, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Benini_distribution
+    [1] http://en.wikipedia.org/wiki/Benini_distribution
     """
 
     return BeniniPSpace(alpha, beta, sigma, symbol).value
@@ -275,7 +275,7 @@ def Beta(alpha, beta, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Beta, Density, E, Var
+    >>> from sympy.stats import Beta, density, E, variance
     >>> from sympy import Symbol, simplify, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
@@ -284,7 +284,7 @@ def Beta(alpha, beta, symbol=None):
 
     >>> X = Beta(alpha, beta, symbol=x)
 
-    >>> D = Density(X)
+    >>> D = density(X)
     >>> pprint(D, use_unicode=False)
           /    alpha - 1         beta - 1                    \
           |   x         *(-x + 1)        *gamma(alpha + beta)|
@@ -294,14 +294,14 @@ def Beta(alpha, beta, symbol=None):
     >>> simplify(E(X, meijerg=True))
     alpha/(alpha + beta)
 
-    >>> simplify(Var(X, meijerg=True))
+    >>> simplify(variance(X, meijerg=True))
     alpha*beta/((alpha + beta)**2*(alpha + beta + 1))
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Beta_distribution
-    .. [2] http://mathworld.wolfram.com/BetaDistribution.html
+    [1] http://en.wikipedia.org/wiki/Beta_distribution
+    [2] http://mathworld.wolfram.com/BetaDistribution.html
     """
 
     return BetaPSpace(alpha, beta, symbol).value
@@ -342,7 +342,7 @@ def BetaPrime(alpha, beta, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import BetaPrime, Density
+    >>> from sympy.stats import BetaPrime, density
     >>> from sympy import Symbol, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
@@ -351,7 +351,7 @@ def BetaPrime(alpha, beta, symbol=None):
 
     >>> X = BetaPrime(alpha, beta, symbol=x)
 
-    >>> D = Density(X)
+    >>> D = density(X)
     >>> pprint(D, use_unicode=False)
           /    alpha - 1        -alpha - beta                    \
           |   x         *(x + 1)             *gamma(alpha + beta)|
@@ -361,8 +361,8 @@ def BetaPrime(alpha, beta, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Beta_prime_distribution
-    .. [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
+    [1] http://en.wikipedia.org/wiki/Beta_prime_distribution
+    [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
     """
 
     return BetaPrimePSpace(alpha, beta, symbol).value
@@ -402,7 +402,7 @@ def Cauchy(x0, gamma, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Cauchy, Density
+    >>> from sympy.stats import Cauchy, density
     >>> from sympy import Symbol
 
     >>> x0 = Symbol("x0")
@@ -411,14 +411,14 @@ def Cauchy(x0, gamma, symbol=None):
 
     >>> X = Cauchy(x0, gamma, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, 1/(pi*gamma*(1 + (_x - x0)**2/gamma**2)))
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Cauchy_distribution
-    .. [2] http://mathworld.wolfram.com/CauchyDistribution.html
+    [1] http://en.wikipedia.org/wiki/Cauchy_distribution
+    [2] http://mathworld.wolfram.com/CauchyDistribution.html
     """
 
     return CauchyPSpace(x0, gamma, symbol).value
@@ -458,7 +458,7 @@ def Chi(k, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Chi, Density, E, Std
+    >>> from sympy.stats import Chi, density, E, std
     >>> from sympy import Symbol, simplify
 
     >>> k = Symbol("k", integer=True)
@@ -466,14 +466,14 @@ def Chi(k, symbol=None):
 
     >>> X = Chi(k, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, 2**(-k/2 + 1)*_x**(k - 1)*exp(-_x**2/2)/gamma(k/2))
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Chi_distribution
-    .. [2] http://mathworld.wolfram.com/ChiDistribution.html
+    [1] http://en.wikipedia.org/wiki/Chi_distribution
+    [2] http://mathworld.wolfram.com/ChiDistribution.html
     """
 
     return ChiPSpace(k, symbol).value
@@ -516,7 +516,7 @@ def Dagum(p, a, b, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Dagum, Density
+    >>> from sympy.stats import Dagum, density
     >>> from sympy import Symbol, simplify
 
     >>> p = Symbol("p", positive=True)
@@ -526,13 +526,13 @@ def Dagum(p, a, b, symbol=None):
 
     >>> X = Dagum(p, a, b, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, a*p*(_x/b)**(a*p)*((_x/b)**a + 1)**(-p - 1)/_x)
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Dagum_distribution
+    [1] http://en.wikipedia.org/wiki/Dagum_distribution
     """
 
     return DagumPSpace(p, a, b, symbol).value
@@ -580,7 +580,8 @@ def Exponential(rate, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Exponential, Density, CDF, E, Var, Std, Skewness
+    >>> from sympy.stats import Exponential, density, cdf, E
+    >>> from sympy.stats import variance, std, skewness
     >>> from sympy import Symbol
 
     >>> l = Symbol("lambda", positive=True)
@@ -588,37 +589,37 @@ def Exponential(rate, symbol=None):
 
     >>> X = Exponential(l, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, lambda*exp(-_x*lambda))
 
-    >>> CDF(X)
+    >>> cdf(X)
     Lambda(_z, Piecewise((0, _z < 0), (1 - exp(-_z*lambda), True)))
 
     >>> E(X)
     1/lambda
 
-    >>> Var(X)
+    >>> variance(X)
     lambda**(-2)
 
-    >>> Skewness(X)
+    >>> skewness(X)
     2
 
     >>> X = Exponential(10, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, 10*exp(-10*_x))
 
     >>> E(X)
     1/10
 
-    >>> Std(X)
+    >>> std(X)
     1/10
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Exponential_distribution
-    .. [2] http://mathworld.wolfram.com/ExponentialDistribution.html
+    [1] http://en.wikipedia.org/wiki/Exponential_distribution
+    [2] http://mathworld.wolfram.com/ExponentialDistribution.html
     """
 
     return ExponentialPSpace(rate, symbol).value
@@ -669,7 +670,7 @@ def Gamma(k, theta, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Gamma, Density, CDF, E, Var
+    >>> from sympy.stats import Gamma, density, cdf, E, variance
     >>> from sympy import Symbol, pprint
 
     >>> k = Symbol("k", positive=True)
@@ -678,7 +679,7 @@ def Gamma(k, theta, symbol=None):
 
     >>> X = Gamma(k, theta, symbol=x)
 
-    >>> D = Density(X)
+    >>> D = density(X)
     >>> pprint(D, use_unicode=False)
           /                     -x \
           |                   -----|
@@ -687,7 +688,7 @@ def Gamma(k, theta, symbol=None):
     Lambda|x, ---------------------|
           \          gamma(k)      /
 
-    >>> C = CDF(X, meijerg=True)
+    >>> C = cdf(X, meijerg=True)
     >>> pprint(C, use_unicode=False)
     Lambda/z, /                      0                        for z < 0\
           |   |                                                        |
@@ -700,7 +701,7 @@ def Gamma(k, theta, symbol=None):
     >>> E(X)
     theta*gamma(k + 1)/gamma(k)
 
-    >>> V = Var(X)
+    >>> V = variance(X)
     >>> pprint(V, use_unicode=False)
            2      2                     -k      k + 1
       theta *gamma (k + 1)   theta*theta  *theta     *gamma(k + 2)
@@ -711,8 +712,8 @@ def Gamma(k, theta, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gamma_distribution
-    .. [2] http://mathworld.wolfram.com/GammaDistribution.html
+    [1] http://en.wikipedia.org/wiki/Gamma_distribution
+    [2] http://mathworld.wolfram.com/GammaDistribution.html
     """
 
     return GammaPSpace(k, theta, symbol).value
@@ -751,7 +752,7 @@ def Laplace(mu, b, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Laplace, Density
+    >>> from sympy.stats import Laplace, density
     >>> from sympy import Symbol
 
     >>> mu = Symbol("mu")
@@ -760,14 +761,14 @@ def Laplace(mu, b, symbol=None):
 
     >>> X = Laplace(mu, b, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, exp(-Abs(_x - mu)/b)/(2*b))
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Laplace_distribution
-    .. [2] http://mathworld.wolfram.com/LaplaceDistribution.html
+    [1] http://en.wikipedia.org/wiki/Laplace_distribution
+    [2] http://mathworld.wolfram.com/LaplaceDistribution.html
     """
 
     return LaplacePSpace(mu, b, symbol).value
@@ -808,7 +809,7 @@ def Logistic(mu, s, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Logistic, Density
+    >>> from sympy.stats import Logistic, density
     >>> from sympy import Symbol
 
     >>> mu = Symbol("mu", real=True)
@@ -817,14 +818,14 @@ def Logistic(mu, s, symbol=None):
 
     >>> X = Logistic(mu, s, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, exp((-_x + mu)/s)/(s*(exp((-_x + mu)/s) + 1)**2))
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Logistic_distribution
-    .. [2] http://mathworld.wolfram.com/LogisticDistribution.html
+    [1] http://en.wikipedia.org/wiki/Logistic_distribution
+    [2] http://mathworld.wolfram.com/LogisticDistribution.html
     """
 
     return LogisticPSpace(mu, s, symbol).value
@@ -873,7 +874,7 @@ def LogNormal(mean, std, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import LogNormal, Density
+    >>> from sympy.stats import LogNormal, density
     >>> from sympy import Symbol, simplify, pprint
 
     >>> mu = Symbol("mu", real=True)
@@ -882,7 +883,7 @@ def LogNormal(mean, std, symbol=None):
 
     >>> X = LogNormal(mu, sigma, symbol=x)
 
-    >>> D = Density(X)
+    >>> D = density(X)
     >>> pprint(D, use_unicode=False)
           /                         2\
           |          -(-mu + log(x)) |
@@ -896,14 +897,14 @@ def LogNormal(mean, std, symbol=None):
 
     >>> X = LogNormal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, sqrt(2)*exp(-log(_x)**2/2)/(2*_x*sqrt(pi)))
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Lognormal
-    .. [2] http://mathworld.wolfram.com/LogNormalDistribution.html
+    [1] http://en.wikipedia.org/wiki/Lognormal
+    [2] http://mathworld.wolfram.com/LogNormalDistribution.html
     """
 
     return LogNormalPSpace(mean, std, symbol).value
@@ -945,7 +946,7 @@ def Maxwell(a, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Maxwell, Density, E, Var
+    >>> from sympy.stats import Maxwell, density, E, variance
     >>> from sympy import Symbol, simplify
 
     >>> a = Symbol("a", positive=True)
@@ -953,20 +954,20 @@ def Maxwell(a, symbol=None):
 
     >>> X = Maxwell(a, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, sqrt(2)*_x**2*exp(-_x**2/(2*a**2))/(sqrt(pi)*a**3))
 
     >>> E(X)
     2*sqrt(2)*a/sqrt(pi)
 
-    >>> simplify(Var(X))
+    >>> simplify(variance(X))
     a**2*(-8 + 3*pi)/pi
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Maxwell_distribution
-    .. [2] http://mathworld.wolfram.com/MaxwellDistribution.html
+    [1] http://en.wikipedia.org/wiki/Maxwell_distribution
+    [2] http://mathworld.wolfram.com/MaxwellDistribution.html
     """
 
     return MaxwellPSpace(a, symbol).value
@@ -1008,7 +1009,7 @@ def Nakagami(mu, omega, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Nakagami, Density, E, Var
+    >>> from sympy.stats import Nakagami, density, E, variance
     >>> from sympy import Symbol, simplify, pprint
 
     >>> mu = Symbol("mu", positive=True)
@@ -1017,7 +1018,7 @@ def Nakagami(mu, omega, symbol=None):
 
     >>> X = Nakagami(mu, omega, symbol=x)
 
-    >>> D = Density(X)
+    >>> D = density(X)
     >>> pprint(D, use_unicode=False)
           /                                2   \
           |                              -x *mu|
@@ -1030,7 +1031,7 @@ def Nakagami(mu, omega, symbol=None):
     >>> simplify(E(X, meijerg=True))
     sqrt(mu)*sqrt(omega)*gamma(mu + 1/2)/gamma(mu + 1)
 
-    >>> V = simplify(Var(X, meijerg=True))
+    >>> V = simplify(variance(X, meijerg=True))
     >>> pprint(V, use_unicode=False)
           /                               2          \
     omega*\gamma(mu)*gamma(mu + 1) - gamma (mu + 1/2)/
@@ -1040,7 +1041,7 @@ def Nakagami(mu, omega, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Nakagami_distribution
+    [1] http://en.wikipedia.org/wiki/Nakagami_distribution
     """
 
     return NakagamiPSpace(mu, omega, symbol).value
@@ -1089,7 +1090,7 @@ def Normal(mean, std, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Normal, Density, E, Std, CDF, Skewness
+    >>> from sympy.stats import Normal, density, E, std, cdf, skewness
     >>> from sympy import Symbol, simplify, pprint
 
     >>> mu = Symbol("mu")
@@ -1098,10 +1099,10 @@ def Normal(mean, std, symbol=None):
 
     >>> X = Normal(mu, sigma, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, sqrt(2)*exp(-(_x - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma))
 
-    >>> C = simplify(CDF(X))
+    >>> C = simplify(cdf(X))
     >>> pprint(C, use_unicode=False)
           /                                      2      2              2\
           |                              (z - mu)    - z  + 2*z*mu - mu |
@@ -1113,24 +1114,24 @@ def Normal(mean, std, symbol=None):
     Lambda|z, ----------------------------------------------------------|
           \                               2                             /
 
-    >>> simplify(Skewness(X))
+    >>> simplify(skewness(X))
     0
 
     >>> X = Normal(0, 1, symbol=x) # Mean 0, standard deviation 1
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, sqrt(2)*exp(-_x**2/2)/(2*sqrt(pi)))
 
     >>> E(2*X + 1)
     1
 
-    >>> simplify(Std(2*X + 1))
+    >>> simplify(std(2*X + 1))
     2
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Normal_distribution
-    .. [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
+    [1] http://en.wikipedia.org/wiki/Normal_distribution
+    [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
     """
 
     return NormalPSpace(mean, std, symbol).value
@@ -1181,7 +1182,7 @@ def Pareto(xm, alpha, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Pareto, Density
+    >>> from sympy.stats import Pareto, density
     >>> from sympy import Symbol
 
     >>> xm = Symbol("xm", positive=True)
@@ -1190,14 +1191,14 @@ def Pareto(xm, alpha, symbol=None):
 
     >>> X = Pareto(xm, beta, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, _x**(-beta - 1)*beta*xm**beta)
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Pareto_distribution
-    .. [2] http://mathworld.wolfram.com/ParetoDistribution.html
+    [1] http://en.wikipedia.org/wiki/Pareto_distribution
+    [2] http://mathworld.wolfram.com/ParetoDistribution.html
     """
 
     return ParetoPSpace(xm, alpha, symbol).value
@@ -1237,7 +1238,7 @@ def Rayleigh(sigma, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Rayleigh, Density, E, Var
+    >>> from sympy.stats import Rayleigh, density, E, variance
     >>> from sympy import Symbol, simplify
 
     >>> sigma = Symbol("sigma", positive=True)
@@ -1245,20 +1246,20 @@ def Rayleigh(sigma, symbol=None):
 
     >>> X = Rayleigh(sigma, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, _x*exp(-_x**2/(2*sigma**2))/sigma**2)
 
     >>> E(X)
     sqrt(2)*sqrt(pi)*sigma/2
 
-    >>> Var(X)
+    >>> variance(X)
     -pi*sigma**2/2 + 2*sigma**2
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Rayleigh_distribution
-    .. [2] http://mathworld.wolfram.com/RayleighDistribution.html
+    [1] http://en.wikipedia.org/wiki/Rayleigh_distribution
+    [2] http://mathworld.wolfram.com/RayleighDistribution.html
     """
 
     return RayleighPSpace(sigma, symbol).value
@@ -1298,7 +1299,7 @@ def StudentT(nu, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import StudentT, Density, E, Var
+    >>> from sympy.stats import StudentT, density, E, variance
     >>> from sympy import Symbol, simplify, pprint
 
     >>> nu = Symbol("nu", positive=True)
@@ -1306,7 +1307,7 @@ def StudentT(nu, symbol=None):
 
     >>> X = StudentT(nu, symbol=x)
 
-    >>> D = Density(X)
+    >>> D = density(X)
     >>> pprint(D, use_unicode=False)
           /             nu   1              \
           |           - -- - -              |
@@ -1323,8 +1324,8 @@ def StudentT(nu, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Student_t-distribution
-    .. [2] http://mathworld.wolfram.com/Studentst-Distribution.html
+    [1] http://en.wikipedia.org/wiki/Student_t-distribution
+    [2] http://mathworld.wolfram.com/Studentst-Distribution.html
     """
 
     return StudentTPSpace(nu, symbol).value
@@ -1376,7 +1377,7 @@ def Triangular(a, b, c, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Triangular, Density, E, Var
+    >>> from sympy.stats import Triangular, density, E
     >>> from sympy import Symbol
 
     >>> a = Symbol("a")
@@ -1386,7 +1387,7 @@ def Triangular(a, b, c, symbol=None):
 
     >>> X = Triangular(a,b,c, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, Piecewise(((2*_x - 2*a)/((-a + b)*(-a + c)),
                          And(a <= _x, _x < c)),
                          (2/(-a + b), _x == c),
@@ -1396,8 +1397,8 @@ def Triangular(a, b, c, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Triangular_distribution
-    .. [2] http://mathworld.wolfram.com/TriangularDistribution.html
+    [1] http://en.wikipedia.org/wiki/Triangular_distribution
+    [2] http://mathworld.wolfram.com/TriangularDistribution.html
     """
 
     return TriangularPSpace(a, b, c, symbol).value
@@ -1451,7 +1452,7 @@ def Uniform(left, right, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Uniform, Density, CDF, E, Var, Skewness
+    >>> from sympy.stats import Uniform, density, cdf, E, variance, skewness
     >>> from sympy import Symbol, simplify
 
     >>> a = Symbol("a")
@@ -1460,26 +1461,26 @@ def Uniform(left, right, symbol=None):
 
     >>> X = Uniform(a, b, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, Piecewise((0, _x < a), (0, _x > b), (1/(-a + b), True)))
 
-    >>> CDF(X)
+    >>> cdf(X)
     Lambda(_z, _z/(-a + b) - a/(-a + b))
 
     >>> simplify(E(X))
     a/2 + b/2
 
-    >>> simplify(Var(X))
+    >>> simplify(variance(X))
     a**2/12 - a*b/6 + b**2/12
 
-    >>> simplify(Skewness(X))
+    >>> simplify(skewness(X))
     0
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29
-    .. [2] http://mathworld.wolfram.com/UniformDistribution.html
+    [1] http://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29
+    [2] http://mathworld.wolfram.com/UniformDistribution.html
     """
 
     return UniformPSpace(left, right, symbol).value
@@ -1524,7 +1525,7 @@ def UniformSum(n, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import UniformSum, Density, E, Var
+    >>> from sympy.stats import UniformSum, density
     >>> from sympy import Symbol, pprint
 
     >>> n = Symbol("n", integer=True)
@@ -1532,7 +1533,7 @@ def UniformSum(n, symbol=None):
 
     >>> X = UniformSum(n, symbol=x)
 
-    >>> D = Density(X)
+    >>> D = density(X)
     >>> pprint(D, use_unicode=False)
           /   floor(x)                        \
           |     ___                           |
@@ -1548,8 +1549,8 @@ def UniformSum(n, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Uniform_sum_distribution
-    .. [2] http://mathworld.wolfram.com/UniformSumDistribution.html
+    [1] http://en.wikipedia.org/wiki/Uniform_sum_distribution
+    [2] http://mathworld.wolfram.com/UniformSumDistribution.html
     """
 
     return UniformSumPSpace(n, symbol).value
@@ -1602,7 +1603,7 @@ def Weibull(alpha, beta, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Weibull, Density, E, Var
+    >>> from sympy.stats import Weibull, density, E, variance
     >>> from sympy import Symbol, simplify
 
     >>> l = Symbol("lambda", positive=True)
@@ -1611,22 +1612,23 @@ def Weibull(alpha, beta, symbol=None):
 
     >>> X = Weibull(l, k, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, k*(_x/lambda)**(k - 1)*exp(-(_x/lambda)**k)/lambda)
 
     >>> simplify(E(X))
     lambda*gamma(1 + 1/k)
 
-    >>> simplify(Var(X))
+    >>> simplify(variance(X))
     -lambda**2*(gamma(1 + 1/k)**2 - gamma(1 + 2/k))
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Weibull_distribution
-    .. [2] http://mathworld.wolfram.com/WeibullDistribution.html
+    [1] http://en.wikipedia.org/wiki/Weibull_distribution
+    [2] http://mathworld.wolfram.com/WeibullDistribution.html
 
     """
+
     return WeibullPSpace(alpha, beta, symbol).value
 
 #-------------------------------------------------------------------------------
@@ -1666,7 +1668,7 @@ def WignerSemicircle(R, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import WignerSemicircle, Density, E, Std
+    >>> from sympy.stats import WignerSemicircle, density, E
     >>> from sympy import Symbol, simplify
 
     >>> R = Symbol("R", positive=True)
@@ -1674,7 +1676,7 @@ def WignerSemicircle(R, symbol=None):
 
     >>> X = WignerSemicircle(R, symbol=x)
 
-    >>> Density(X)
+    >>> density(X)
     Lambda(_x, 2*sqrt(-_x**2 + R**2)/(pi*R**2))
 
     >>> E(X)
@@ -1683,8 +1685,8 @@ def WignerSemicircle(R, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Wigner_semicircle_distribution
-    .. [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
+    [1] http://en.wikipedia.org/wiki/Wigner_semicircle_distribution
+    [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
     """
 
     return WignerSemicirclePSpace(R, symbol).value
