@@ -43,7 +43,7 @@ class Naturals(Set):
 
     def __iter__(self):
         def all_naturals():
-            i = 1
+            i = S(1)
             while True:
                 yield i
                 i = i + 1
@@ -51,7 +51,7 @@ class Naturals(Set):
 
     @property
     def _inf(self):
-        return 1
+        return S.One
 
     @property
     def _sup(self):
@@ -96,8 +96,8 @@ class Integers(Set):
 
     def __iter__(self):
         def all_ints():
-            yield 0
-            i = 1
+            yield S.Zero
+            i = S(1)
             while True:
                 yield i
                 yield -i
@@ -139,20 +139,20 @@ class TransformationSet(Set):
     9
     16
     """
-    def __new__(cls, lambd, base_set):
-        return Basic.__new__(cls, lambd, base_set)
+    def __new__(cls, lamda, base_set):
+        return Basic.__new__(cls, lamda, base_set)
 
-    lambd    = property(lambda self: self.args[0])
+    lamda    = property(lambda self: self.args[0])
     base_set = property(lambda self: self.args[1])
 
     def __iter__(self):
-        return (self.lambd(i) for i in self.base_set)
+        return (self.lamda(i) for i in self.base_set)
 
     def _is_multivariate(self):
-        return len(self.lambd.variables)>1
+        return len(self.lamda.variables)>1
 
     def _contains(self, other):
-        L = self.lambd
+        L = self.lamda
         if self._is_multivariate():
             solns = solve([expr-val for val, expr in zip(other, L.expr)],
                     L.variables)

@@ -1,6 +1,6 @@
 from sympy.sets.fancysets import TransformationSet
 from sympy.core.sets import FiniteSet, Interval
-from sympy import S, Symbol, Lambda, symbols, cos, sin, pi, oo
+from sympy import S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic
 
 x = Symbol('x')
 
@@ -12,6 +12,7 @@ def test_naturals():
     ni = iter(N)
     a,b,c,d = ni.next(), ni.next(), ni.next(), ni.next()
     assert (a,b,c,d) == (1,2,3,4)
+    assert isinstance(a, Basic)
 
     assert N.intersect(Interval(-5, 5)) == FiniteSet(1, 2, 3, 4, 5)
     assert N.intersect(Interval(-5, 5, True, True)) == FiniteSet(1, 2, 3, 4)
@@ -27,6 +28,7 @@ def test_integers():
     zi = iter(Z)
     a,b,c,d = zi.next(), zi.next(), zi.next(), zi.next()
     assert (a,b,c,d) == (0, 1, -1, 2)
+    assert isinstance(a, Basic)
 
     assert Z.intersect(Interval(-5, 5)) == FiniteSet(range(-5, 6))
     assert Z.intersect(Interval(-5, 5, True, True)) == FiniteSet(range(-4,5))
