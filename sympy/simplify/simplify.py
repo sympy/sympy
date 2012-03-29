@@ -2261,18 +2261,6 @@ def combsimp(expr):
     # probably makes sense to retain them
     as_gamma = not expr.has(factorial, binomial)
 
-    def as_coeff_Add(expr):
-        if expr.is_Add:
-            coeff, args = expr.args[0], expr.args[1:]
-
-            if coeff.is_Number:
-                if len(args) == 1:
-                    return coeff, args[0]
-                else:
-                    return coeff, expr._new_rawargs(*args)
-
-        return S.Zero, expr
-
     class rf(Function):
         @classmethod
         def eval(cls, a, b):
@@ -2357,9 +2345,8 @@ def combsimp(expr):
             return expr.func(*args)
         numer_gammas = []
         denom_gammas = []
-        numer_others = []
         denom_others = []
-        newargs = list(args[:])
+        newargs, numer_others = expr.func(*args).args_cnc()
         while newargs:
             arg = newargs.pop()
             if arg.is_Pow and arg.exp.is_Integer:
