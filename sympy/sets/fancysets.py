@@ -1,4 +1,4 @@
-from sympy import Dummy, S, symbols, Lambda, pi, Basic, sympify
+from sympy import Dummy, S, symbols, Lambda, pi, Basic, sympify, ask, Q
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.core.compatibility import iterable
 from sympy.core.sets import Set, Interval, FiniteSet, Intersection
@@ -29,6 +29,7 @@ class Naturals(Set):
     """
 
     __metaclass__ = Singleton
+    is_iterable = True
 
     def _intersect(self, other):
         if other.is_Interval:
@@ -36,10 +37,9 @@ class Naturals(Set):
         return None
 
     def _contains(self, other):
-        if other<=0:
-            return False
-        other = sympify(other)
-        return other.is_integer or (other - int(other)) == 0
+        if ask(Q.positive(other)) and ask(Q.integer(other)):
+            return True
+        return False
 
     def __iter__(self):
         def all_naturals():
@@ -83,6 +83,7 @@ class Integers(Set):
     """
 
     __metaclass__ = Singleton
+    is_iterable = True
 
     def _intersect(self, other):
         if other.is_Interval:
@@ -91,8 +92,9 @@ class Integers(Set):
         return None
 
     def _contains(self, other):
-        other = sympify(other)
-        return other.is_integer or (other - int(other)) == 0
+        if ask(Q.integer(other)):
+            return True
+        return False
 
     def __iter__(self):
         def all_ints():
