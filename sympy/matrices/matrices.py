@@ -2234,6 +2234,67 @@ class MatrixBase(object):
         else:
             return self == self.transpose()
 
+    def is_anti_symmetric(self, simplify=True):
+        """
+        Check if matrix is an antisymmetric matrix,
+        that is a square matrix and is equal to the negative of its transpose.
+
+        By default, simplifications occur before testing anti_symmetry.
+        They can be skipped using 'simplify=False'; while speeding things a bit,
+        this may however induce false negatives.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> m = Matrix(2,2,[0, 1, -1, 2])
+        >>> m
+        [0, 1]
+        [-1, 2]
+        >>> m.is_anti_symmetric()
+        True
+
+        >>> m = Matrix(2,2,[0, y, -y, 0])
+        >>> m
+        [0, y]
+        [-y, 0]
+        >>> m.is_anti_symmetric()
+        True
+
+        >>> m = Matrix(2,3,[0, 0, x, -y, 0, 0])
+        >>> m
+        [0, 0, 0]
+        [0, 0, 0]
+        >>> m.is_anti_symmetric()
+        False
+
+        >>> from sympy.abc import x, y
+        >>> m = Matrix(3,3,[0, x**2 + 2*x + 1, y, -(x + 1)**2 , y, y, -y, 0, 0])
+        >>> m
+        [         0, x**2 + 2*x + 1,    y]
+        [-(x + 1)**2,              0, x*y]
+        [        -y,              -x*y, 0]
+        >>> m.is_symmetric()
+        True
+
+        If the matrix is already simplified, you may speed-up is_symmetric()
+        test by using 'simplify=False'.
+
+        >>> m.is_symmetric(simplify=False)
+        False
+        >>> m1 = m.expand()
+        >>> m1.is_symmetric(simplify=False)
+        True
+        """
+        if not self.is_square:
+            return False
+        if simplify:
+            delta = self + self.transpose()
+            delta.simplify()
+            return delta.equals(self.zeros(self.rows, self.cols))
+        else:
+            return self == -self.transpose()
+            
     def is_diagonal(self):
         """
         Check if matrix is diagonal,
@@ -2292,12 +2353,14 @@ class MatrixBase(object):
         Possible values for "method":
           bareis ... det_bareis
           berkowitz ... berkowitz_det
+          lu_decomposition ... det_lu_decomposition
 
         See Also
         ========
-
+        
         det_bareis
         berkowitz_det
+        det_lu_decomposition
         """
 
         # if methods were made internal and all determinant calculations
@@ -2311,6 +2374,8 @@ class MatrixBase(object):
             return self.det_bareis()
         elif method == "berkowitz":
             return self.berkowitz_det()
+        elif method == "lu_decomposition":
+            return self.lu_decomposition()
         else:
             raise ValueError("Determinant method unrecognized")
 
@@ -2374,6 +2439,43 @@ class MatrixBase(object):
 
         return det.expand()
 
+    def det_LU_decomposition(self):
+        """Compute matrix determinant using LU decomposition
+
+        TODO: Implement algorithm for sparse matrices (SFF).
+
+        See Also
+        ========
+
+        det
+        det_bareis
+        berkowitz_det
+        """
+        if not self.is_square:
+            raise NonSquareMatrixError()
+        if not self:
+            return S.One
+
+        M, n = self[:,:], self.rows
+
+        if n == 1:
+            det = M[0, 0]
+        elif n == 2:
+            det = M[0, 0]*M[1, 1] - M[0, 1]*M[1, 0]
+        else:
+            sign = 1 # track current sign in case of column swap
+
+                    l, u, p = M.LUdecomposition()
+        produ = 1 
+        prodl = 1
+        for k in range(n):
+            produ = produ*u[k,k]
+            prodl = prodl*l[k,k]    
+        # currently ignoring p returned...what do I need to do to get this right? comer.d    
+        det = sign * produ * prodl
+        
+        return det.expand()
+        
     def adjugate(self, method="berkowitz"):
         """
         Returns the adjugate matrix.
