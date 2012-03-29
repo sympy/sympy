@@ -1021,6 +1021,10 @@ class Intersection(Set):
         else:
             return Intersection(args, evaluate=False)
 
+    def as_relational(self, symbol):
+        """Rewrite an Intersection in terms of equalities and logic operators"""
+        return And(*[set.as_relational(symbol) for set in self.args])
+
 class EmptySet(Set):
     """
     Represents the empty set. The empty set is available as a singleton
