@@ -437,3 +437,29 @@ class KroneckerDelta(Function):
         j = printer._print(self.args[1], *args)
         return '\\delta_{%s %s}' % (i, j)
 
+#    def dual_matrix_element(self,i,j):
+#       n = self.rows
+#        accum = 0
+#        for k in range(n):
+#            for l in range(n):
+#                accum = accum + LeviCivita(i,j,k,l)*self[k,l]
+#            
+#        return accum/2
+
+    def dual_matrix(self):
+        from sympy import LeviCivita
+        M, n = self[:,;], self.rows
+        work = zeros(n)
+        if self.is_symmetric():
+            print "Dual of a symmetric matrix is the zero matrix !"
+            return work
+        for i in range(n):
+            for j in range(n):
+                accum = 0
+                for k in range(n):
+                    for l in range(n):
+                        accum = accum + LeviCivita(i,j,k,l)*M[k,l]
+                work[i,j] = accum/2
+            
+        return work
+
