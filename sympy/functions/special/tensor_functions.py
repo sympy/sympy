@@ -448,7 +448,7 @@ class KroneckerDelta(Function):
 
     def dual_matrix(self):
         from sympy import LeviCivita
-        M, n = self[:,;], self.rows
+        M, n = self[:,:], self.rows
         work = zeros(n)
         if self.is_symmetric():
             print "Dual of a symmetric matrix is the zero matrix !"
