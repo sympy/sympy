@@ -1,12 +1,12 @@
 from sympy import Dummy, S, symbols, Lambda, pi, Basic, sympify
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.core.compatibility import iterable
-from sympy.core.sets import Set, Interval, FiniteSet, CountableSet, Intersection
+from sympy.core.sets import Set, Interval, FiniteSet, Intersection
 from sympy.core.singleton import Singleton, S
 from sympy.solvers import solve
 oo = S.Infinity
 
-class Naturals(CountableSet):
+class Naturals(Set):
     """
     Represents the Natural Numbers. The Naturals are available as a singleton
     as S.Naturals
@@ -57,7 +57,7 @@ class Naturals(CountableSet):
     def _sup(self):
         return oo
 
-class Integers(CountableSet):
+class Integers(Set):
     """
     Represents the Integers. The Integers are available as a singleton
     as S.Integers
