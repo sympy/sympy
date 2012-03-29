@@ -288,16 +288,22 @@ def get_integer_part(expr, no, options, return_ints=False):
     margin = 10
 
     if gap >= -margin:
-        ire, iim, ire_acc, iim_acc = evalf(expr, margin+assumed_size+gap, options)
+        ire, iim, ire_acc, iim_acc = \
+             evalf(expr, margin+assumed_size+gap, options)
 
     # We can now easily find the nearest integer, but to find floor/ceil, we
     # must also calculate whether the difference to the nearest integer is
-    # positive or negative (which may fail if very close)
+    # positive or negative (which may fail if very close).
     def calc_part(expr, nexpr):
         nint = int(to_int(nexpr, rnd))
         expr = C.Add(expr, -nint, evaluate=False)
         x, _, x_acc, _ = evalf(expr, 10, options)
-        check_target(expr, (x, None, x_acc, None), 3)
+        try:
+            check_target(expr, (x, None, x_acc, None), 3)
+        except PrecisionExhausted:
+            if not expr.equals(0):
+                raise PrecisionExhausted
+            x = fzero
         nint += int(no*(mpf_cmp(x or fzero, fzero) == no))
         nint = from_int(nint)
         return nint, fastlog(nint) + 10
