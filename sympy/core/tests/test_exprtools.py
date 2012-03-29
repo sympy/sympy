@@ -99,6 +99,10 @@ def test_gcd_terms():
     s = (a/(x - alpha)).subs(*rep).series(x, 0, 1)
     assert simplify(collect(s, x)) == -sqrt(5)/2 - S(3)/2 + O(x)
 
+    # issue 2818
+    assert _gcd_terms([S.Zero, S.Zero]) == (0, 0, 1)
+    assert _gcd_terms([2*x + 4]) == (2, x + 2, 1)
+
 def test_factor_terms():
     A = Symbol('A', commutative=False)
     assert factor_terms(9*(x + x*y + 1) + (3*x + 3)**(2 + 2*x)) == \
