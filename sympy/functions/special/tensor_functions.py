@@ -450,6 +450,6 @@ class KroneckerDelta(Function):
                 for k in range(n):
                     for l in range(n):
                         accum = accum + LeviCivita(i,j,k,l)*M[k,l]
-                work[i,j] = accum/2    
+                work[i,j] = accum/2
         return work
 
