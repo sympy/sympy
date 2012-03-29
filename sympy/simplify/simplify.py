@@ -814,13 +814,15 @@ def trigsimp_recursive(expr, deep = False):
         (a*tan(b)**c/sin(b)**c, a/cos(b)**c),
         (a*cot(b)**c/cos(b)**c, a/sin(b)**c),
         (a*cot(b)**c*tan(b)**c, a),
+		(a/cot(b)**c, a*tan(b)**c),
 
         (a*sinh(b)**c/cosh(b)**c, a*tanh(b)**c),
         (a*tanh(b)**c*cosh(b)**c, a*sinh(b)**c),
         (a*coth(b)**c*sinh(b)**c, a*cosh(b)**c),
         (a*tanh(b)**c/sinh(b)**c, a/cosh(b)**c),
         (a*coth(b)**c/cosh(b)**c, a/sinh(b)**c),
-        (a*coth(b)**c*tanh(b)**c, a)
+        (a*coth(b)**c*tanh(b)**c, a),
+		(a/coth(b)**c, a*tanh(b)**c),
         )
     # for cos(x)**2 + sin(x)**2 -> 1
     matchers_identity = (
