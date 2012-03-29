@@ -39,7 +39,7 @@ class Naturals(Set):
         if other<=0:
             return False
         other = sympify(other)
-        return other.is_integer or (other-int(other)) == 0
+        return other.is_integer or (other - int(other)) == 0
 
     def __iter__(self):
         def all_naturals():
@@ -86,13 +86,13 @@ class Integers(Set):
 
     def _intersect(self, other):
         if other.is_Interval:
-            s = FiniteSet(range(ceiling(other.left), floor(other.right)+1))
+            s = FiniteSet(range(ceiling(other.left), floor(other.right) + 1))
             return s.intersect(other) # take out endpoints if open interval
         return None
 
     def _contains(self, other):
         other = sympify(other)
-        return other.is_integer or (other-int(other)) == 0
+        return other.is_integer or (other - int(other)) == 0
 
     def __iter__(self):
         def all_ints():
@@ -159,12 +159,12 @@ class TransformationSet(Set):
         return iterator()
 
     def _is_multivariate(self):
-        return len(self.lamda.variables)>1
+        return len(self.lamda.variables) > 1
 
     def _contains(self, other):
         L = self.lamda
         if self._is_multivariate():
-            solns = solve([expr-val for val, expr in zip(other, L.expr)],
+            solns = solve([expr - val for val, expr in zip(other, L.expr)],
                     L.variables)
         else:
             solns = solve(L.expr - other, L.variables[0])
