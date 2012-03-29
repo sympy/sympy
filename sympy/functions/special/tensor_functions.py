@@ -437,15 +437,6 @@ class KroneckerDelta(Function):
         j = printer._print(self.args[1], *args)
         return '\\delta_{%s %s}' % (i, j)
 
-#    def dual_matrix_element(self,i,j):
-#       n = self.rows
-#        accum = 0
-#        for k in range(n):
-#            for l in range(n):
-#                accum = accum + LeviCivita(i,j,k,l)*self[k,l]
-#            
-#        return accum/2
-
     def dual_matrix(self):
         from sympy import LeviCivita
         M, n = self[:,:], self.rows
