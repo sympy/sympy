@@ -306,11 +306,11 @@ def scale(x, y):
 
 def rotate(th):
     """Return the matrix to rotate a 2-D point about the origin by ``angle``.
-    
+
     The angle is measured in radians. To Point a point about a point other
     then the origin, translate the Point, do the rotation, and
     translate it back:
-    
+
     >>> from sympy.geometry.entity import rotate, translate
     >>> from sympy import Point, pi
     >>> rot_about_11 = translate(-1, -1)*rotate(pi/2)*translate(1, 1)

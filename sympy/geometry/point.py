@@ -517,7 +517,7 @@ class Point(GeometryEntity):
     def transform(self, matrix):
         """Return the point after applying the transformation described
         by the 3x3 Matrix, ``matrix``.
-        
+
         See Also
         ========
         geometry.entity.rotate
