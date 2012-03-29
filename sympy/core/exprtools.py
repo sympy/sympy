@@ -357,39 +357,46 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
     if isinstance(terms, Basic) and not isinstance(terms, Tuple):
         terms = Add.make_args(terms)
 
-    if len(terms) <= 1:
-        if not terms:
-            return S.Zero, S.Zero, S.One
-        else:
-            return terms[0], S.One, S.One
+    terms = map(Term, [t for t in terms if t])
 
-    terms = map(Term, terms)
-    cont = terms[0]
+    # there is some simplification that may happen if we leave this
+    # here rather than duplicate it before the mapping of Term onto
+    # the terms
+    if len(terms) == 0:
+        return S.Zero, S.Zero, S.One
 
-    for term in terms[1:]:
-        cont = cont.gcd(term)
 
-    for i, term in enumerate(terms):
-        terms[i] = term.quo(cont)
+    if len(terms) == 1:
+        cont = terms[0].coeff
+        numer = terms[0].numer.as_expr()
+        denom = terms[0].denom.as_expr()
 
-    if fraction:
-        denom = terms[0].denom
-
-        for term in terms[1:]:
-            denom = denom.lcm(term.denom)
-
-        numers = []
-        for term in terms:
-            numer = term.numer.mul(denom.quo(term.denom))
-            numers.append(term.coeff*numer.as_expr())
     else:
-        numers = [t.as_expr() for t in terms]
-        denom = Term(S(1)).numer
+        cont = terms[0]
+        for term in terms[1:]:
+            cont = cont.gcd(term)
 
+        for i, term in enumerate(terms):
+            terms[i] = term.quo(cont)
 
-    cont = cont.as_expr()
-    numer = Add(*numers)
-    denom = denom.as_expr()
+        if fraction:
+            denom = terms[0].denom
+
+            for term in terms[1:]:
+                denom = denom.lcm(term.denom)
+
+            numers = []
+            for term in terms:
+                numer = term.numer.mul(denom.quo(term.denom))
+                numers.append(term.coeff*numer.as_expr())
+        else:
+            numers = [t.as_expr() for t in terms]
+            denom = Term(S(1)).numer
+
+        cont = cont.as_expr()
+        numer = Add(*numers)
+        denom = denom.as_expr()
+
     if not isprimitive and numer.is_Add:
         _cont, numer = numer.primitive()
         cont *= _cont
