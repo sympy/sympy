@@ -202,6 +202,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Manoj Babu K.: Improve gamma function
 #. Sai Nikhil: Fix to Heavyside with complex arguments
 #. Aleksandar Makelov: Fixes regarding the dihedral group generator
+#. Sachin: changes to allow Dict sorting
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
