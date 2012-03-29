@@ -161,15 +161,11 @@ class Application(Basic):
         return self.__class__
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        elif old.is_Function and new.is_Function:
-            if old == self.func:
-                nargs = len(self.args)
-                if (nargs == new.nargs or new.nargs is None or
-                        (isinstance(new.nargs, tuple) and nargs in new.nargs)):
-                    return new(*self.args)
-        return self.func(*[s.subs(old, new) for s in self.args])
+        if (old.is_Function and new.is_Function and
+            old == self.func and
+            (self.nargs == new.nargs or not new.nargs or
+             isinstance(new.nargs, tuple) and self.nargs in new.nargs)):
+            return new(*self.args)
 
     @deprecated
     def __contains__(self, obj):
@@ -329,18 +325,6 @@ class Function(Application, Expr):
             mpmath.mp.prec = orig
 
         return Expr._from_mpmath(v, prec)
-
-    def _eval_is_comparable(self):
-        if self.is_Function:
-            r = True
-            for s in self.args:
-                c = s.is_comparable
-                if c is None:
-                    return
-                if not c:
-                    r = False
-            return r
-        return
 
     def _eval_derivative(self, s):
         # f(x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
@@ -1136,15 +1120,13 @@ class Derivative(Expr):
         return self.expr.free_symbols
 
     def _eval_subs(self, old, new):
-        if self==old:
-            return new
         # Subs should only be used in situations where new is not a valid
         # variable for differentiating wrt. Previously, Subs was used for
         # anything that was not a Symbol, but that was too broad.
         if old in self.variables and not new._diff_wrt:
             # Issue 1620
             return Subs(self, old, new)
-        return Derivative(*map(lambda x: x._eval_subs(old, new), self.args))
+        return Derivative(*map(lambda x: x._subs(old, new), self.args))
 
     def _eval_lseries(self, x):
         dx = self.args[1:]

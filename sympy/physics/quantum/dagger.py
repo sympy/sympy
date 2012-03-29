@@ -124,10 +124,6 @@ class Dagger(Expr):
         else:
             return d
 
-    def _eval_subs(self, old, new):
-        r = Dagger(self.args[0].subs(old, new))
-        return r
-
     def _eval_dagger(self):
         return self.args[0]
 

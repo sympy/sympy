@@ -12,7 +12,7 @@ source code files that are compilable without further modifications.
 from sympy.core import S, C
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-
+from sympy.utilities.misc import default_sort_key
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_Function(self)
@@ -175,11 +175,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_And(self, expr):
         PREC = precedence(expr)
-        return '&&'.join(self.parenthesize(a, PREC) for a in expr.args)
+        return ' && '.join(self.parenthesize(a, PREC)
+                for a in sorted(expr.args, key=default_sort_key))
 
     def _print_Or(self, expr):
         PREC = precedence(expr)
-        return '||'.join(self.parenthesize(a, PREC) for a in expr.args)
+        return ' || '.join(self.parenthesize(a, PREC)
+                for a in sorted(expr.args, key=default_sort_key))
 
     def _print_Not(self, expr):
         PREC = precedence(expr)

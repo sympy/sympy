@@ -8,7 +8,7 @@ from sympy.integrals.transforms import (mellin_transform,
 from sympy import (gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
                    cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
                    EulerGamma, erf, besselj, bessely, besseli, besselk,
-                   exp_polar, polar_lift, unpolarify, Function)
+                   exp_polar, polar_lift, unpolarify, Function, expint)
 from sympy.utilities.pytest import XFAIL, slow, skip
 from sympy.abc import x, s, a, b
 nu, beta, rho = symbols('nu beta rho')
@@ -306,9 +306,10 @@ def test_inverse_mellin_transform():
     assert IMT(gamma(s) + gamma(s-1), s, x, (1, oo)) == (x + 1)*exp(-x)/x
 
     # test factorisation of polys
-    assert simplify(expand_func(IMT(1/(s**2 + 1), s, exp(-x),
-                                    (None, oo))).rewrite(sin)) \
-           == sin(x)*Heaviside(1 - exp(-x))
+    r = symbols('r', real=True)
+    assert IMT(1/(s**2 + 1), s, exp(-x), (None, oo)
+              ).subs(x, r).rewrite(sin).simplify() \
+           == sin(r)*Heaviside(1 - exp(-r))
 
     # test multiplicative substitution
     a, b = symbols('a b', positive=True)
@@ -317,7 +318,8 @@ def test_inverse_mellin_transform():
     assert IMT(factorial(a/b + s/b)/(a+ s), s, x, (-a, oo)) == x**a*exp(-x**b)
 
     from sympy import expand_mul
-    def simp_pows(expr): return expand_mul(simplify(powsimp(expr, force=True)), deep=True).replace(exp_polar, exp) # XXX ?
+    def simp_pows(expr):
+        return expand_mul(simplify(powsimp(expr, force=True)), deep=True).replace(exp_polar, exp) # XXX ?
 
     # Now test the inverses of all direct transforms tested above
 
@@ -374,42 +376,45 @@ def test_inverse_mellin_transform():
            erf(sqrt(x))
 
     # 8.4.19
-    # TODO these come out ugly
-    def mysimp(expr):
-        return powsimp(powdenest(expand(unpolarify(simplify(expand(combsimp(expand_func(expr.rewrite(besselj))))))), polar=True))
+    # "mysimp" used to be an ad-hoc mess of rewrites.
+    # Now that simplify has besselsimp, we are good.
+    mysimp = simplify
     assert mysimp(IMT(gamma(a/2 + s)/gamma(a/2 - s + 1), s, x, (-re(a)/2, S(3)/4))) \
-           == besselj(a, 2*sqrt(x)*polar_lift(-1))*exp(-I*pi*a)
+           == besselj(a, 2*sqrt(x))
     assert mysimp(IMT(2**a*gamma(S(1)/2 - 2*s)*gamma(s + (a + 1)/2) \
                       / (gamma(1 - s - a/2)*gamma(1 - 2*s + a)),
                       s, x, (-(re(a) + 1)/2, S(1)/4))) == \
-           exp(-I*pi*a)*sin(sqrt(x))*besselj(a, sqrt(x)*polar_lift(-1))
+           sin(sqrt(x))*besselj(a, sqrt(x))
     assert mysimp(IMT(2**a*gamma(a/2 + s)*gamma(S(1)/2 - 2*s) \
                       / (gamma(S(1)/2 - s - a/2)*gamma(1 - 2*s + a)),
                       s, x, (-re(a)/2, S(1)/4))) == \
-           exp(-I*pi*a)*cos(sqrt(x))*besselj(a, sqrt(x)*polar_lift(-1))
+           cos(sqrt(x))*besselj(a, sqrt(x))
     # TODO this comes out as an amazing mess, but surprisingly enough mysimp is
     #      effective ...
-    assert powsimp(powdenest(mysimp(IMT(gamma(a + s)*gamma(S(1)/2 - s) \
+    assert mysimp(IMT(gamma(a + s)*gamma(S(1)/2 - s) \
                       / (sqrt(pi)*gamma(1 - s)*gamma(1 + a - s)),
-                      s, x, (-re(a), S(1)/2))), polar=True)) == \
-           exp(-2*I*pi*a)*besselj(a, sqrt(x)*polar_lift(-1))**2
-    # NOTE the next is indeed an even function of sqrt(x), so the result is
-    #      correct
+                      s, x, (-re(a), S(1)/2))) == \
+           besselj(a, sqrt(x))**2
     assert mysimp(IMT(gamma(s)*gamma(S(1)/2 - s) \
                       / (sqrt(pi)*gamma(1 - s - a)*gamma(1 + a - s)),
                       s, x, (0, S(1)/2))) == \
-           besselj(-a, polar_lift(-1)*sqrt(x))*besselj(a, polar_lift(-1)*sqrt(x))
+           besselj(-a, sqrt(x))*besselj(a, sqrt(x))
     assert mysimp(IMT(4**s*gamma(-2*s + 1)*gamma(a/2 + b/2 + s) \
                       / (gamma(-a/2 + b/2 - s + 1)*gamma(a/2 - b/2 - s + 1) \
                          *gamma(a/2 + b/2 - s + 1)),
                       s, x, (-(re(a) + re(b))/2, S(1)/2))) == \
-           exp(-I*pi*a -I*pi*b)*besselj(a, sqrt(x)*polar_lift(-1)) \
-                                    *besselj(b, sqrt(x)*polar_lift(-1))
+           besselj(a, sqrt(x))*besselj(b, sqrt(x))
 
     # Section 8.4.20
-    # TODO these come out even messier, not worth testing for now
-
-    # TODO the other bessel functions, when simplification is there
+    # TODO this can be further simplified!
+    assert mysimp(IMT(-2**(2*s)*cos(pi*a/2 - pi*b/2 + pi*s)*gamma(-2*s + 1) * \
+                      gamma(a/2 - b/2 + s)*gamma(a/2 + b/2 + s) / \
+                      (pi*gamma(a/2 - b/2 - s + 1)*gamma(a/2 + b/2 - s + 1)),
+                      s, x,
+                      (Max(-re(a)/2 - re(b)/2, -re(a)/2 + re(b)/2), S(1)/2))) == \
+           (-cos(pi*b)*besselj(b, sqrt(x)) + besselj(-b, sqrt(x))) * \
+             besselj(a, sqrt(x))/sin(pi*b)*(-1)
+    # TODO more
 
     # for coverage
 
@@ -465,7 +470,10 @@ def test_laplace_transform():
 
     # test a bug in conditions processing
     # TODO the auxiliary condition should be recognised/simplified
-    assert LT(exp(t)*cos(t), t, s)[0:-1] == ((s - 1)/(s**2 - 2*s + 2), -oo)
+    assert LT(exp(t)*cos(t), t, s)[:-1] in [
+        ((s - 1)/(s**2 - 2*s + 2), -oo),
+        ((s - 1)/((s - 1)**2 + 1), -oo),
+        ]
 
 def test_inverse_laplace_transform():
     from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,
@@ -480,9 +488,9 @@ def test_inverse_laplace_transform():
     # just test inverses of all of the above
     assert ILT(1/s, s, t) == Heaviside(t)
     assert ILT(1/s**2, s, t) == t*Heaviside(t)
-    assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/factorial(4)
+    assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/24
     assert ILT(exp(-a*s)/s, s, t) == Heaviside(t-a)
-    assert ILT(exp(-a*s)/(s+b), s, t) == exp(-b*(-a + t))*Heaviside(t - a)
+    assert ILT(exp(-a*s)/(s+b), s, t) == exp(b*(a - t))*Heaviside(-a + t)
     assert ILT(a/(s**2 + a**2), s, t) == sin(a*t)*Heaviside(t)
     assert ILT(s/(s**2 + a**2), s, t) == cos(a*t)*Heaviside(t)
     # TODO is there a way around simp_hyp?
@@ -498,14 +506,13 @@ def test_inverse_laplace_transform():
     assert ILT(exp(-a*s)/sqrt(1 + s**2), s, t) == \
         Heaviside(t - a)*besselj(0, a - t) # note: besselj(0, x) is even
 
-    # TODO besselsimp would be good to have
     # XXX ILT turns these branch factor into trig functions ...
     assert simplify(ILT(a**b*(s + sqrt(s**2 - a**2))**(-b)/sqrt(s**2 - a**2),
                     s, t).rewrite(exp)) == \
-        exp(-I*pi*b)*Heaviside(t)*besseli(b, a*t*exp_polar(I*pi))
+        Heaviside(t)*besseli(b, a*t)
     assert ILT(a**b*(s + sqrt(s**2 + a**2))**(-b)/sqrt(s**2 + a**2),
-                          s, t).rewrite(besselj).rewrite(exp) == \
-        exp(-I*pi*b)*Heaviside(t)*besselj(b, a*t*exp_polar(I*pi))
+                          s, t).rewrite(exp) == \
+        Heaviside(t)*besselj(b, a*t)
 
     assert ILT(1/(s*sqrt(s+1)), s, t) == Heaviside(t)*erf(sqrt(t))
     # TODO can we make erf(t) work?
@@ -523,7 +530,7 @@ def test_fourier_transform():
     a = symbols('a', positive=True)
     b = symbols('b', positive=True)
 
-    posk = symbols('k', positive=True)
+    posk = symbols('posk', positive=True)
 
     # Test unevaluated form
     assert fourier_transform(f(x), x, k) == FourierTransform(f(x), x, k)
@@ -538,11 +545,12 @@ def test_fourier_transform():
     assert factor(FT(exp(-a*x)*Heaviside(x), x, k), extension=I) \
            == 1/(a + 2*pi*I*k)
     # NOTE: the ift comes out in pieces
-    assert IFT(1/(a + 2*pi*I*x), x, posk, noconds=False) == (exp(-a*posk), True)
+    assert IFT(1/(a + 2*pi*I*x), x, posk,
+            noconds=False) == (exp(-a*posk), True)
     assert IFT(1/(a + 2*pi*I*x), x, -posk,
-               noconds=False) == (0, True)
+            noconds=False) == (0, True)
     assert IFT(1/(a + 2*pi*I*x), x, symbols('k', negative=True),
-               noconds=False) == (0, True)
+            noconds=False) == (0, True)
     # TODO IFT without factoring comes out as meijer g
 
     assert factor(FT(x*exp(-a*x)*Heaviside(x), x, k), extension=I) \

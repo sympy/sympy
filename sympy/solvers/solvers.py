@@ -34,7 +34,7 @@ from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together, factor
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
-from sympy.utilities.iterables import preorder_traversal
+from sympy.utilities.iterables import preorder_traversal, sift
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import default_sort_key, filldedent
 from sympy.mpmath import findroot
@@ -179,7 +179,7 @@ def checksol(f, symbol, sol=None, **flags):
     while 1:
         attempt += 1
         if attempt == 0:
-            val = real_root(f.subs(sol))
+            val = f.subs(sol)
             if val.atoms() & illegal:
                 return False
         elif attempt == 1:
@@ -1186,9 +1186,10 @@ def _solve_system(exprs, symbols, **flags):
         else:
             if len(symbols) != len(polys):
                 from sympy.utilities.iterables import subsets
-                free = reduce(set.union,
+                free = list(reduce(set.union,
                                 [p.free_symbols for p in polys], set()
-                                ).intersection(symbols)
+                                ).intersection(symbols))
+                free.sort(key=default_sort_key)
                 for syms in subsets(free, len(polys)):
                     try:
                         # returns [] or list of tuples of solutions for syms
@@ -1243,8 +1244,12 @@ def _solve_system(exprs, symbols, **flags):
         legal = set(symbols) # what we are interested in
         simplify_flag = flags.get('simplify', None)
         do_simplify = flags.get('simplify', True)
-        # sort so equation with the fewest potential symbols is first
-        failed.sort(key=lambda x: len((x.free_symbols - solved_syms) & legal))
+        # sort so equation with the fewest potential symbols is first; break ties with
+        # count_ops and sort_key
+        short = sift(failed, lambda x: len((x.free_symbols - solved_syms) & legal))
+        failed = []
+        for k in sorted(short):
+            failed.extend(sorted(short[k], key=lambda x: (x.count_ops(), x.sort_key())))
         for eq in failed:
             newresult = []
             got_s = None
@@ -1252,12 +1257,11 @@ def _solve_system(exprs, symbols, **flags):
             for r in result:
                 # update eq with everything that is known so far
                 eq2 = eq.subs(r)
-                if eq2.is_number:
-                    b = checksol(u, u, eq2, minimal=True)
-                    if b is not None:
-                        if b:
-                            newresult.append(r)
-                        continue
+                b = checksol(u, u, eq2, minimal=True)
+                if b is not None:
+                    if b:
+                        newresult.append(r)
+                    continue
                 # search for a symbol amongst those available that
                 # can be solved for
                 ok_syms = (eq2.free_symbols - solved_syms) & legal

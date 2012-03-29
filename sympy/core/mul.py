@@ -583,11 +583,11 @@ class Mul(AssocOp):
                 # out with a negative sign added and a negative left behind
                 # in the unexpanded terms if there were an odd number of
                 # negatives.
+                if coeff.is_negative:
+                    coeff = -coeff
+                    neg.append(S.NegativeOne)
                 if neg:
                     neg = [-w for w in neg]
-                    if coeff.is_negative:
-                        coeff = -coeff
-                        unk.append(S.NegativeOne)
                     if len(neg) % 2:
                         unk.append(S.NegativeOne)
 
@@ -981,9 +981,8 @@ class Mul(AssocOp):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
+    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
-    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
-    _eval_is_comparable = lambda self: self._eval_template_is_attr('is_comparable')
 
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)
@@ -991,7 +990,6 @@ class Mul(AssocOp):
                all(arg.is_polar or arg.is_positive for arg in self.args)
 
     # I*I -> R,  I*I*I -> -I
-
     def _eval_is_real(self):
         im_count = 0
         is_neither = False
@@ -1050,52 +1048,86 @@ class Mul(AssocOp):
                 return
         return False
 
-    def _eval_is_positive(self):
-        terms = [t for t in self.args if not t.is_positive]
-        if not terms:
+    def _eval_is_zero(self):
+        zero = None
+        for a in self.args:
+            if a.is_zero:
+                zero = True
+                continue
+            bound = a.is_bounded
+            if not bound:
+                return bound
+        if zero:
             return True
-        c = terms[0]
-        if len(terms)==1:
-            if c.is_nonpositive:
-                return False
-            return
-        r = self._new_rawargs(*terms[1:])
-        if c.is_negative and r.is_negative:
-            return True
-        if r.is_negative and c.is_negative:
-            return True
-        # check for nonpositivity, <=0
-        if c.is_negative and r.is_nonnegative:
-            return False
-        if r.is_negative and c.is_nonnegative:
-            return False
-        if c.is_nonnegative and r.is_nonpositive:
-            return False
-        if r.is_nonnegative and c.is_nonpositive:
-            return False
 
+    def _eval_is_positive(self):
+        """Return True if self is positive, False if not, and None if it
+        cannot be determined.
+
+        This algorithm is non-recursive and works by keeping track of the
+        sign which changes when a negative or nonpositive is encountered.
+        Whether a nonpositive or nonnegative is seen is also tracked since
+        the presence of these makes it impossible to return True, but
+        possible to return False if the end result is nonpositive. e.g.
+
+            pos * neg * nonpositive -> pos or zero -> None is returned
+            pos * neg * nonnegative -> neg or zero -> False is returned
+        """
+
+        sign = 1
+        saw_NON = False
+        for t in self.args:
+            if t.is_positive:
+                continue
+            elif t.is_negative:
+                sign = -sign
+            elif t.is_zero:
+                return False
+            elif t.is_nonpositive:
+                sign = -sign
+                saw_NON = True
+            elif t.is_nonnegative:
+                saw_NON = True
+            else:
+                return
+        if sign == 1 and saw_NON is False:
+            return True
+        if sign < 0:
+            return False
 
     def _eval_is_negative(self):
-        terms = [t for t in self.args if not t.is_positive]
-        if not terms:
-            # all terms are either positive -- 2*Symbol('n', positive=T)
-            #               or     unknown  -- 2*Symbol('x')
-            if self.is_positive:
+        """Return True if self is negative, False if not, and None if it
+        cannot be determined.
+
+        This algorithm is non-recursive and works by keeping track of the
+        sign which changes when a negative or nonpositive is encountered.
+        Whether a nonpositive or nonnegative is seen is also tracked since
+        the presence of these makes it impossible to return True, but
+        possible to return False if the end result is nonnegative. e.g.
+
+            pos * neg * nonpositive -> pos or zero -> False is returned
+            pos * neg * nonnegative -> neg or zero -> None is returned
+        """
+
+        sign = 1
+        saw_NON = False
+        for t in self.args:
+            if t.is_positive:
+                continue
+            elif t.is_negative:
+                sign = -sign
+            elif t.is_zero:
                 return False
+            elif t.is_nonpositive:
+                sign = -sign
+                saw_NON = True
+            elif t.is_nonnegative:
+                saw_NON = True
             else:
-                return None
-        c = terms[0]
-        if len(terms)==1:
-            return c.is_negative
-        r = self._new_rawargs(*terms[1:])
-        # check for nonnegativity, >=0
-        if c.is_negative and r.is_nonpositive:
-            return False
-        if r.is_negative and c.is_nonpositive:
-            return False
-        if c.is_nonpositive and r.is_nonpositive:
-            return False
-        if c.is_nonnegative and r.is_nonnegative:
+                return
+        if sign == -1 and saw_NON is False:
+            return True
+        if sign > 0:
             return False
 
     def _eval_is_odd(self):
@@ -1114,7 +1146,6 @@ class Mul(AssocOp):
         elif is_integer == False:
             return False
 
-
     def _eval_is_even(self):
         is_integer = self.is_integer
 
@@ -1125,19 +1156,11 @@ class Mul(AssocOp):
             return False
 
     def _eval_subs(self, old, new):
+        if not old.is_Mul:
+            return None
 
         from sympy import sign
         from sympy.simplify.simplify import powdenest
-
-        if self == old:
-            return new
-
-
-        def fallback():
-            """Return this value when partial subs has failed."""
-
-            return self.__class__(*[s._eval_subs(old, new) for s in
-                                  self.args])
 
         def breakup(eq):
             """break up powers assuming (not checking) that eq is a Mul:
@@ -1183,8 +1206,18 @@ class Mul(AssocOp):
                 return int(a/b)
             return 0
 
-        if not old.is_Mul:
-            return fallback()
+        # give Muls in the denominator a chance to be changed (see issue 2552)
+        # rv will be the default return value
+        rv = None
+        n, d = self.as_numer_denom()
+        if d is not S.One:
+            self2 = n._subs(old, new)/d._subs(old, new)
+            if not self2.is_Mul:
+                return self2._subs(old, new)
+            if self2 != self:
+                self = rv = self2
+
+        # Now continue with regular substitution.
 
         # handle the leading coefficient and use it to decide if anything
         # should even be started; we always know where to find the Rational
@@ -1200,7 +1233,7 @@ class Mul(AssocOp):
             co_xmul = True
 
         if not co_xmul:
-            return fallback()
+            return rv
 
         (c, nc) = breakup(self)
         (old_c, old_nc) = breakup(old)
@@ -1212,16 +1245,31 @@ class Mul(AssocOp):
             c[co_xmul] = S.One
             old_c.pop(co_old)
 
-        # Do some quick tests to see whether we can succeed:
-        # 1) check for more non-commutative or 2) commutative terms
-        # 3) ... unmatched non-commutative bases
-        # 4) ... unmatched commutative terms
-        # 5) and finally differences in sign
-        if len(old_nc) > len(nc) or len(old_c) > len(c) or \
-                set(_[0] for _ in old_nc).difference(set(_[0] for _ in nc)) or \
-                set(old_c).difference(set(c)) or \
-                any(sign(c[b]) != sign(old_c[b]) for b in old_c):
-            return fallback()
+        # do quick tests to see if we can't succeed
+
+        ok = True
+        if (
+            # more non-commutative terms
+            len(old_nc) > len(nc)):
+            ok = False
+        elif (
+            # more commutative terms
+            len(old_c) > len(c)):
+            ok = False
+        elif (
+            # unmatched non-commutative bases
+            set(_[0] for _ in  old_nc).difference(set(_[0] for _ in nc))):
+            ok = False
+        elif (
+            # unmatched commutative terms
+            set(old_c).difference(set(c))):
+            ok = False
+        elif (
+            # differences in sign
+            any(sign(c[b]) != sign(old_c[b]) for b in old_c)):
+            ok = False
+        if not ok:
+            return rv
 
         if not old_c:
             cdid = None
@@ -1231,7 +1279,7 @@ class Mul(AssocOp):
                 c_e = c[b]
                 rat.append(ndiv(c_e, old_e))
                 if not rat[-1]:
-                    return fallback()
+                    return rv
             cdid = min(rat)
 
         if not old_nc:
@@ -1313,7 +1361,7 @@ class Mul(AssocOp):
             else:
 
                 if not ncdid:
-                    return fallback()
+                    return rv
 
                 # although we didn't fail, certain nc terms may have
                 # failed so we rebuild them after attempting a partial

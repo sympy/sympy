@@ -7,7 +7,9 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
-from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add
+from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add, expand_mul
+
+from sympy.polys.polytools import Poly
 
 from sympy.mpmath import bernfrac
 from sympy.mpmath.libmp import ifib as _ifib
@@ -23,6 +25,7 @@ from sympy.utilities.memoization import recurrence_memo
 
 # Dummy symbol used for computing polynomial sequences
 _sym = Symbol('x')
+_symbols = Function('x')
 
 
 #----------------------------------------------------------------------------#
@@ -280,35 +283,32 @@ class bell(Function):
     r"""
     Bell numbers / Bell polynomials
 
-    The Bell numbers satisfy B_0 = 1 and::
+    The Bell numbers satisfy `B_0 = 1` and::
 
-                 n-1
-                 ___
-                \      / n - 1 \
-          B   =  )     |       | * B .
-           n    /___   \   k   /    k
-                k = 0
+    .. math:: B_n = \sum_{k=0}^{n-1} \binom{n-1}{k} B_k
 
     They are also given by::
 
-                      oo
-                     ___    n
-                1   \      k
-          B   = - *  )     --.
-           n    e   /___   k!
-                    k = 0
+    .. math:: B_n = \frac{1}{e} \sum_{k=0}^{\infty} \frac{k^n}{k!}
 
-    The Bell polynomials are given by B_0(x) = 1 and::
+    The Bell polynomials are given by `B_0(x) = 1` and::
 
-                        n-1
-                        ___
-                       \      / n - 1 \
-          B (x)  = x *  )     |       | * B   (x).
-           n           /___   \ k - 1 /    k-1
-                       k = 1
+    .. math:: B_n(x) = x \sum_{k=1}^{n-1} \binom{n-1}{k-1} B_{k-1}(x)
 
-    * bell(n) gives the nth Bell number, B_n
-    * bell(n, x) gives the nth Bell polynomial, B_n(x)
+    The second kind of Bell polynomials (are sometimes called "partial" Bell
+    polynomials or incomplete Bell polynomials) are defined as:
+
+    .. math:: B_{n,k}(x_1, x_2,\dotsc x_{n-k+1}) =
+            \sum_{j_1+j_2+j_2+\dotsb=k \atop j_1+2j_2+3j_2+\dotsb=n}
+                \frac{n!}{j_1!j_2!\dotsb j_{n-k+1}!}
+                \left(\frac{x_1}{1!} \right)^{j_1}
+                \left(\frac{x_2}{2!} \right)^{j_2} \dotsb
+                \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}
+
+    * bell(n) gives the nth Bell number, `B_n`
+    * bell(n, x) gives the nth Bell polynomial, `B_n(x)`
+    * bell(n, k, (x1, x2, ...)) gives Bell polynomial of the second kind,
+            `B_n_k(x_1, x_2, \dotsc, x_{n-k+1})`
 
     Notes
     =====
@@ -319,7 +319,7 @@ class bell(Function):
     Examples
     ========
 
-    >>> from sympy import bell, Symbol
+    >>> from sympy import bell, Symbol, symbols
 
     >>> [bell(n) for n in range(11)]
     [1, 1, 2, 5, 15, 52, 203, 877, 4140, 21147, 115975]
@@ -327,6 +327,8 @@ class bell(Function):
     846749014511809332450147
     >>> bell(4, Symbol('t'))
     t**4 + 6*t**3 + 7*t**2 + t
+    >>> bell(6, 2, symbols('x:6')[1:])
+    6*x1*x5 + 15*x2*x4 + 10*x3**2
 
     References
     ==========
@@ -359,15 +361,48 @@ class bell(Function):
         for k in xrange(2, n+1):
             a = a * (n-k+1) // (k-1)
             s += a * prev[k-1]
-        return (_sym * s).expand()
+        return expand_mul(_sym * s)
+
+    @staticmethod
+    #@assoc_recurrence_memo([[S.One]])
+    def _bell_incomplete_poly(n, k, symbols):
+        r"""
+        The second kind of Bell polynomials (incomplete Bell polynomials).
+
+        Calculated by recurrence formula:
+
+        .. math:: B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1}) =
+                \sum_{m=1}^{n-k+1}
+                \x_m \binom{n-1}{m-1} B_{n-m,k-1}(x_1, x_2, \dotsc, x_{n-m-k})
+
+        where
+            B_{0,0} = 1;
+            B_{n,0} = 0; for n>=1
+            B_{0,k} = 0; for k>=1
+
+        """
+        if (n==0) and (k==0):
+            return S.One
+        elif (n==0) or (k==0):
+            return S.Zero
+        #s = Poly(S.Zero, symbols)
+        s = S.Zero
+        a = S.One
+        for m in xrange(1, n-k+2):
+            s += a*bell._bell_incomplete_poly(n-m, k-1, symbols)*symbols[m-1]
+            a = a*(n-m)/m
+        return expand_mul(s)
 
     @classmethod
-    def eval(cls, n, sym=None):
+    def eval(cls, n, k_sym=None, symbols=None):
         if n.is_Integer and n.is_nonnegative:
-            if sym is None:
+            if k_sym is None:
                 return Integer(cls._bell(int(n)))
+            elif symbols is None:
+                return cls._bell_poly(int(n)).subs(_sym, k_sym)
             else:
-                return cls._bell_poly(int(n)).subs(_sym, sym)
+                r = cls._bell_incomplete_poly(int(n), int(k_sym), symbols)
+                return r
 
 #----------------------------------------------------------------------------#
 #                                                                            #

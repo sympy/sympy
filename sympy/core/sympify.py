@@ -5,6 +5,8 @@ from inspect import getmro
 from core import all_classes as sympy_classes
 from sympy.core.compatibility import iterable
 
+import re
+
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
         self.expr = expr
@@ -122,10 +124,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     if strict:
         raise SympifyError(a)
 
-    if isinstance(a, tuple):
-        from containers import Tuple
-        return Tuple(*[sympify(x, locals=locals, convert_xor=convert_xor,
-            rational=rational) for x in a])
     if iterable(a):
         try:
             return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
@@ -189,3 +187,5 @@ def _sympify(a):
        see: sympify
     """
     return sympify(a, strict=True)
+
+from sympy.core.basic import C

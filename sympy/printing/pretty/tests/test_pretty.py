@@ -2596,9 +2596,20 @@ def test_pretty_Boolean():
     assert  pretty(expr) == "Implies(x, y)"
     assert upretty(expr) == u"x → y"
 
+    # don't sort args
+    expr = Implies(y, x, evaluate=False)
+
+    assert  pretty(expr) == "Implies(y, x)"
+    assert upretty(expr) == u"y → x"
+
     expr = Equivalent(x, y, evaluate=False)
 
     assert  pretty(expr) == "Equivalent(x, y)"
+    assert upretty(expr) == u"x ≡ y"
+
+    expr = Equivalent(y, x, evaluate=False)
+
+    assert  pretty(expr) == "Equivalent(y, x)"
     assert upretty(expr) == u"x ≡ y"
 
 def test_pretty_Domain():
@@ -3621,13 +3632,13 @@ def test_expint():
     assert upretty(Chi(x)) == 'Chi(x)'
 
 def test_RandomDomain():
-    from sympy.stats import Normal, Die, Exponential, pspace, Where
+    from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal(0, 1, symbol=Symbol('x1'))
-    assert upretty(Where(X>0)) == u"Domain: 0 < x₁"
+    assert upretty(where(X>0)) == u"Domain: 0 < x₁"
 
     D = Die(6, symbol=Symbol('d1'))
-    assert upretty(Where(D>4)) == u'Domain: d₁ = 5 ∨ d₁ = 6'
+    assert upretty(where(D>4)) == u'Domain: d₁ = 5 ∨ d₁ = 6'
 
     A = Exponential(1, symbol=Symbol('a'))
     B = Exponential(1, symbol=Symbol('b'))
-    assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ b ∧ 0 ≤ a'
+    assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ a ∧ 0 ≤ b'

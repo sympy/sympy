@@ -470,7 +470,6 @@ class Ellipse(GeometryEntity):
         if hr == vr:
             return (c, c)
 
-
         # calculate focus distance manually, since focus_distance calls this routine
         fd = sqrt(self.major**2 - self.minor**2)
         if hr == self.minor:
@@ -479,6 +478,34 @@ class Ellipse(GeometryEntity):
         elif hr == self.major:
             # foci on the x-axis
             return (c + Point(-fd, 0), c + Point(fd, 0))
+
+    def rotate(self, angle=0, pt=None):
+        """Rotate ``angle`` radians counterclockwise about Point ``pt``.
+
+        Note: since the general ellipse is not supported, the axes of
+        the ellipse will not be rotated. Only the center is rotated to
+        a new position.
+
+        >>> from sympy import Ellipse, pi
+        >>> Ellipse((1, 0), 2, 1).rotate(pi/2)
+        Ellipse(Point(0, 1), 2, 1)
+        """
+        return super(Ellipse, self).rotate(angle, pt)
+
+    def scale(self, x=1, y=1):
+        """Override GeometryEntity.scale since it is the major and minor
+        axes which must be scaled.
+
+        >>> from sympy import Ellipse
+        >>> Ellipse((0, 0), 2, 1).scale(2, 4)
+        Circle(Point(0, 0), 4)
+        >>> Ellipse((0, 0), 2, 1).scale(2)
+        Ellipse(Point(0, 0), 4, 1)
+        """
+        c = self.center
+        h = self.hradius
+        v = self.vradius
+        return self.func(c, hradius=h*x, vradius=v*y)
 
     def encloses_point(self, p):
         """

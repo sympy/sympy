@@ -1,7 +1,7 @@
 from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
-        Float)
+        Float,Pow)
 
 from sympy.utilities.pytest import XFAIL
 
@@ -91,6 +91,15 @@ def test_sin_rewrite():
     assert sin(x).rewrite(exp) == -I*(exp(I*x) - exp(-I*x))/2
     assert sin(x).rewrite(tan) == 2*tan(x/2)/(1 + tan(x/2)**2)
     assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
+    assert sin(sinh(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, sinh(3)).n()
+    assert sin(cosh(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, cosh(3)).n()
+    assert sin(tanh(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, tanh(3)).n()
+    assert sin(coth(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, coth(3)).n()
+    assert sin(sin(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, sin(3)).n()
+    assert sin(cos(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, cos(3)).n()
+    assert sin(tan(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, tan(3)).n()
+    assert sin(cot(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, cot(3)).n()
+    assert sin(log(x)).rewrite(Pow)  == I*x**-I / 2 - I*x**I /2
 
 def test_sin_expansion():
     x,y = symbols('x,y')
@@ -227,6 +236,15 @@ def test_cos_rewrite():
     assert cos(x).rewrite(exp) == exp(I*x)/2 + exp(-I*x)/2
     assert cos(x).rewrite(tan) == (1 - tan(x/2)**2)/(1 + tan(x/2)**2)
     assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
+    assert cos(sinh(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, sinh(3)).n()
+    assert cos(cosh(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, cosh(3)).n()
+    assert cos(tanh(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, tanh(3)).n()
+    assert cos(coth(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, coth(3)).n()
+    assert cos(sin(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, sin(3)).n()
+    assert cos(cos(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, cos(3)).n()
+    assert cos(tan(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, tan(3)).n()
+    assert cos(cot(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, cot(3)).n()
+    assert cos(log(x)).rewrite(Pow) == x**I/2 + x**-I/2
 
 def test_cos_expansion():
     x,y = symbols('x,y')
@@ -304,14 +322,22 @@ def test_tan_rewrite():
     assert tan(x).rewrite(sin) == 2*sin(x)**2/sin(2*x)
     assert tan(x).rewrite(cos) == -cos(x + S.Pi/2)/cos(x)
     assert tan(x).rewrite(cot) == 1/cot(x)
+    assert tan(sinh(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sinh(3)).n()
+    assert tan(cosh(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cosh(3)).n()
+    assert tan(tanh(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, tanh(3)).n()
+    assert tan(coth(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, coth(3)).n()
+    assert tan(sin(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sin(3)).n()
+    assert tan(cos(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cos(3)).n()
+    assert tan(tan(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, tan(3)).n()
+    assert tan(cot(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cot(3)).n()
+    assert tan(log(x)).rewrite(Pow) == I*(x**-I - x**I)/(x**-I + x**I)
 
 def test_tan_subs():
     x,y = symbols('x,y')
     assert tan(x).subs(tan(x), y) == y
     assert tan(x).subs(x, y) == tan(y)
-    assert tan(x).subs(x, S.Pi/2) == S.NaN
-    assert tan(x).subs(x, 3*S.Pi/2) == S.NaN
-
+    assert tan(x).subs(x, S.Pi/2) == zoo
+    assert tan(x).subs(x, 3*S.Pi/2) == zoo
 
 def test_cot():
     x, y = symbols('x,y')
@@ -379,13 +405,20 @@ def test_cot_rewrite():
     assert cot(x).rewrite(sin) == 2*sin(2*x)/sin(x)**2
     assert cot(x).rewrite(cos) == -cos(x)/cos(x + S.Pi/2)
     assert cot(x).rewrite(tan) == 1/tan(x)
+    assert cot(sinh(x)).rewrite(exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, sinh(3)).n()
+    assert cot(cosh(x)).rewrite(exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, cosh(3)).n()
+    assert cot(tanh(x)).rewrite(exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, tanh(3)).n()
+    assert cot(coth(x)).rewrite(exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, coth(3)).n()
+    assert cot(sin(x)).rewrite(exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, sin(3)).n()
+    assert cot(tan(x)).rewrite(exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, tan(3)).n()
+    assert cot(log(x)).rewrite(Pow) == -I*(x**-I + x**I)/(x**-I - x**I)
 
 def test_cot_subs():
     x,y = symbols('x,y')
     assert cot(x).subs(cot(x), y) == y
     assert cot(x).subs(x, y) == cot(y)
-    assert cot(x).subs(x, 0) == S.NaN
-    assert cot(x).subs(x, S.Pi) == S.NaN
+    assert cot(x).subs(x, 0) == zoo
+    assert cot(x).subs(x, S.Pi) == zoo
 
 def test_asin():
     x = Symbol('x')

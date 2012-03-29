@@ -1679,6 +1679,13 @@ def test_terms_gcd():
 
     assert terms_gcd(2.0*x**3*y + 4.1*x*y**3) == x*y*(2.0*x**2 + 4.1*y**2)
 
+    assert terms_gcd((3+3*x)*(x+x*y), expand=False) == \
+        (3*x + 3)*(x*y + x)
+    assert terms_gcd((3 + 3*x)*(x + x*sin(3 + 3*y)), expand=False, deep=True) == \
+        3*x*(x + 1)*(sin(Mul(3, y + 1, evaluate=False)) + 1)
+    assert terms_gcd(sin(x + x*y), deep=True) == \
+        sin(x*(y + 1))
+
 def test_trunc():
     f, g = x**5 + 2*x**4 + 3*x**3 + 4*x**2 + 5*x + 6, x**5 - x**4 + x**2 - x
     F, G = Poly(f), Poly(g)
@@ -2047,6 +2054,12 @@ def test_factor():
     assert isinstance(PurePoly(x**3 + x + 1).factor_list()[1][0][0], PurePoly) == True
 
     assert factor(sqrt(-x)) == sqrt(-x)
+
+    # issue 2818
+    e = (-2*x*(-x + 1)*(x - 1)*(-x*(-x + 1)*(x - 1) - x*(x - 1)**2)*(x**2*(x -
+    1) - x*(x - 1) - x) - (-2*x**2*(x - 1)**2 - x*(-x + 1)*(-x*(-x + 1) +
+    x*(x - 1)))*(x**2*(x - 1)**4 - x*(-x*(-x + 1)*(x - 1) - x*(x - 1)**2)))
+    assert factor(e) == 0
 
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567

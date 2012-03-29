@@ -5,7 +5,7 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     Poly, Function, Derivative, Number, pi, NumberSymbol, zoo, Piecewise, Mul,
     Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
     separate, collect, factorial, apart, combsimp, factor, refine, cancel,
-    Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum)
+    Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E)
 from sympy.core.function import AppliedUndef
 from sympy.abc import a, b, c, d, e, n, t, u, x, y, z
 from sympy.physics.secondquant import FockState
@@ -419,11 +419,6 @@ def test_as_numer_denom():
     assert ((x**2+1)/y).as_numer_denom() == (x**2+1, y)
     assert (x*(y+1)/y**7).as_numer_denom() == (x*(y+1), y**7)
     assert (x**-2).as_numer_denom() == (1, x**2)
-    n = symbols('n', negative=True)
-    assert (x**n).as_numer_denom() == (x**n, 1)
-    assert sqrt(1/n).as_numer_denom() == (I, sqrt(-n))
-    n = Symbol('0 or neg', nonpositive=True)
-    assert (1/sqrt(x/n)).as_numer_denom() == (1, sqrt(x/n))
     assert (a/x + b/2/x + c/3/x).as_numer_denom() == \
             (6*a + 3*b + 2*c, 6*x)
     assert (a/x + b/2/x + c/3/y).as_numer_denom() == \
@@ -496,25 +491,6 @@ def test_as_independent():
     # issue 2685
     assert (x + Integral(x, (x, 1, 2))).as_independent(x, strict=True) == \
            (Integral(x, (x, 1, 2)), x)
-
-def test_subs_dict():
-    assert (sin(x))._subs_dict({ x : 1, sin(x) : 2}) == 2
-    assert (sin(x))._subs_dict([(x, 1), (sin(x), 2)]) == 2
-
-    expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
-
-    seq = [ (sqrt(sin(2*x)),a), (cos(2*x),b), (sin(2*x),c), (x,d), (exp(x),e) ]
-    assert expr._subs_dict(seq) == c + a*b*sin(d*e)
-
-    seq = [ (sqrt(sin(2*x)),a), (sin(2*x),c), (cos(2*x),b), (x,d), (exp(x),e) ]
-    assert expr._subs_dict(seq) == c + a*b*sin(d*e)
-
-def test_subs_list():
-    assert (sin(x))._subs_list([(sin(x), 2), (x, 1)]) == 2
-    assert (sin(x))._subs_list([(x, 1), (sin(x), 2)]) == sin(1)
-
-    assert (x+y)._subs_list([(x, 3), (y, x**2)]) == 3 + x**2
-    assert (x+y)._subs_list([(y, x**2), (x, 3)]) == 12
 
 def test_call():
     # Unlike what used to be the case, the following should NOT work.
@@ -819,22 +795,48 @@ def test_as_coeff_exponent():
     assert fx.as_coeff_exponent(f(x)) == (fx ,0)
 
 def test_extractions():
-    n = Symbol("n", integer=True)
     assert ((x*y)**3).extract_multiplicatively(x**2 * y) == x*y**2
     assert ((x*y)**3).extract_multiplicatively(x**4 * y) == None
     assert (2*x).extract_multiplicatively(2) == x
     assert (2*x).extract_multiplicatively(3) == None
     assert (2*x).extract_multiplicatively(-1) == None
-    assert (Rational(1,2)*x).extract_multiplicatively(3) == x/6
+    assert (Rational(1, 2)*x).extract_multiplicatively(3) == x/6
     assert (sqrt(x)).extract_multiplicatively(x) == None
-    assert (sqrt(x)).extract_multiplicatively(1/x) == sqrt(x)**3
+    assert (sqrt(x)).extract_multiplicatively(1/x) == None
 
     assert ((x*y)**3).extract_additively(1) == None
-    assert (x+1).extract_additively(x) == 1
-    assert (x+1).extract_additively(2*x) == None
-    assert (x+1).extract_additively(-x) == 1+2*x
-    assert (-x+1).extract_additively(2*x) == 1-3*x
+    assert (x + 1).extract_additively(x) == 1
+    assert (x + 1).extract_additively(2*x) == None
+    assert (x + 1).extract_additively(-x) == None
+    assert (-x + 1).extract_additively(2*x) == None
+    assert (2*x + 3).extract_additively(x) == x + 3
+    assert (2*x + 3).extract_additively(2) == 2*x + 1
+    assert (2*x + 3).extract_additively(3) == 2*x
+    assert (2*x + 3).extract_additively(-2) == None
+    assert (2*x + 3).extract_additively(3*x) == None
+    assert (2*x + 3).extract_additively(2*x) == 3
+    assert x.extract_additively(0) == x
+    assert S(2).extract_additively(x) is None
+    assert S(2.).extract_additively(2) == S.Zero
+    assert S(2*x + 3).extract_additively(x + 1) == x + 2
+    assert S(2*x + 3).extract_additively(y + 1) is None
+    assert S(2*x - 3).extract_additively(x + 1) is None
+    assert S(2*x - 3).extract_additively(y + z) is None
+    assert ((a + 1)*x*4 + y).extract_additively(x).expand() == \
+        4*a*x + 3*x + y
+    assert ((a + 1)*x*4 + 3*y).extract_additively(x + 2*y).expand() == \
+        4*a*x + 3*x + y
+    assert (y*(x + 1)).extract_additively(x + 1) is None
+    assert ((y + 1)*(x + 1) + 3).extract_additively(x + 1) == \
+        y*(x + 1) + 3
+    assert ((x + y)*(x + 1) + x + y + 3).extract_additively(x + y) == \
+        x*(x + y) + 3
+    assert (x + y + 2*((x + y)*(x + 1)) + 3).extract_additively((x + y)*(x + 1)) == \
+        x + y + (x + 1)*(x + y) + 3
+    assert ((y + 1)*(x + 2*y + 1) + 3).extract_additively(y + 1) == \
+        (x + 2*y)*(y + 1) + 3
 
+    n = Symbol("n", integer=True)
     assert (Integer(-3)).could_extract_minus_sign() == True
     assert (-n*x+x).could_extract_minus_sign() != (n*x-x).could_extract_minus_sign()
     assert (x-y).could_extract_minus_sign() != (-x+y).could_extract_minus_sign()
@@ -1240,10 +1242,6 @@ def test_is_constant():
     assert (3*meter).is_constant() is True
     assert (x*meter).is_constant() is False
 
-@XFAIL
-def test_is_not_constant():
-    assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).is_zero != False
-
 def test_equals():
     assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).equals(0)
     assert (x**2 - 1).equals((x + 1)*(x - 1))
@@ -1274,3 +1272,80 @@ def test_equals():
 def test_random():
     from sympy import posify
     assert posify(x)[0]._random() is not None
+
+def test_round():
+    from sympy.abc import x
+
+    assert Float('0.1249999').round(2) == 0.12
+    d20 = 12345678901234567890
+    ans = S(d20).round(2)
+    assert ans.is_Float and ans == d20
+    ans = S(d20).round(-2)
+    assert ans.is_Float and ans == 12345678901234567900
+    assert S('1/7').round(4) == 0.1429
+    assert S('.[12345]').round(4) == 0.1235
+    assert S('.1349').round(2) == 0.13
+    n = S(12345)
+    ans = n.round()
+    assert ans.is_Float
+    assert ans == n
+    ans = n.round(1)
+    assert ans.is_Float
+    assert ans == n
+    ans = n.round(4)
+    assert ans.is_Float
+    assert ans == n
+    assert n.round(-1) == 12350
+
+    r = n.round(-4)
+    assert r == 10000
+    # in fact, it should equal many values since __eq__
+    # compares at equal precision
+    assert all(r == i for i in range(9984, 10049))
+
+    assert n.round(-5) == 0
+
+    assert (pi + sqrt(2)).round(2) == 4.56
+    assert (10*(pi + sqrt(2))).round(-1) == 50
+    raises(TypeError, 'round(x + 2, 2)')
+    assert S(2.3).round(1) == 2.3
+    e = S(12.345).round(2)
+    assert e == round(12.345, 2)
+    assert type(e) is Float
+
+    assert (Float(.3, 3) + 2*pi).round() == 7
+    assert (Float(.3, 3) + 2*pi*100).round() == 629
+    assert (Float(.03, 3) + 2*pi/100).round(5) == 0.09283
+    assert (Float(.03, 3) + 2*pi/100).round(4) == 0.0928
+    assert (pi + 2*E*I).round() == 3 + 5*I
+
+    assert S.Zero.round() == 0
+
+    a = (Add(1, Float('1.'+'9'*27, ''), evaluate=0))
+    assert a.round(10) == Float('3.0000000000','')
+    assert a.round(25) == Float('3.0000000000000000000000000','')
+    assert a.round(26) == Float('3.00000000000000000000000000','')
+    assert a.round(27) == Float('2.999999999999999999999999999','')
+    assert a.round(30) == Float('2.999999999999999999999999999','')
+
+    raises(TypeError, 'x.round()')
+
+    # exact magnitude of 10
+    assert str(S(1).round()) == '1.'
+    assert str(S(100).round()) == '100.'
+
+    # applied to real and imaginary portions
+    assert (2*pi + E*I).round() == 6 + 3*I
+    assert (2*pi + I/10).round() == 6
+    assert (pi/10 + 2*I).round() == 2*I
+    # the lhs re and im parts are Float with dps of 2
+    # and those on the right have dps of 15 so they won't compare
+    # equal unless we use string or compare components (which will
+    # then coerce the floats to the same precision) or re-create
+    # the floats
+    assert str((pi/10 + E*I).round(2)) == '0.31 + 2.72*I'
+    assert (pi/10 + E*I).round(2).as_real_imag() == (0.31, 2.72)
+    assert (pi/10 + E*I).round(2) == Float(0.31, 2) +  I*Float(2.72, 3)
+
+    # issue 3815
+    assert (I**(I+3)).round(3) == Float('-0.208','')*I

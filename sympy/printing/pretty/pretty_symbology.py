@@ -392,7 +392,8 @@ atoms_table = {
     #'ImaginaryUnit'     :   U('MATHEMATICAL ITALIC SMALL I'),
     'ImaginaryUnit'     :   U('DOUBLE-STRUCK ITALIC SMALL I'),
     'EmptySet'          :   U('EMPTY SET'),
-    'Union'             :   U('UNION')
+    'Union'             :   U('UNION'),
+    'Intersection'      :   U('INTERSECTION')
 }
 
 def pretty_atom(atom_name, default=None):

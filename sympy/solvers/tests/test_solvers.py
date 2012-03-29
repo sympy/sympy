@@ -176,7 +176,7 @@ def test_solve_rational():
     assert solve( ( x - y**3 )/( (y**2)*sqrt(1 - y**2) ), x) == [y**3]
 
 def test_linear_system():
-    n, t = symbols('n,t')
+    x, y, z, t, n = symbols('x, y, z, t, n')
 
     assert solve([x - 1, x - y, x - 2*y, y - 1], [x,y]) is None
 
@@ -194,6 +194,8 @@ def test_linear_system():
 
     assert solve([x + y + z + t, -z - t], x, y, z, t) == {x: -y, z: -t}
 
+def test_linear_system_function():
+    a = Function('a')
     assert solve([a(0, 0) + a(0, 1) + a(1, 0) + a(1, 1), -a(1, 0) - a(1, 1)],
         a(0, 0), a(0, 1), a(1, 0), a(1, 1)) == {a(1, 0): -a(1, 1), a(0, 0): -a(0, 1)}
 
@@ -211,15 +213,15 @@ def test_linear_systemLU():
 # in such a way that a different branch is chosen
 def test_tsolve():
     assert solve(exp(x)-3, x) == [log(3)]
-    assert solve((a*x+b)*(exp(x)-3), x) == [-b/a, log(3)]
+    assert set(solve((a*x+b)*(exp(x)-3), x)) == set([-b/a, log(3)])
     assert solve(cos(x)-y, x) == [acos(y)]
     assert solve(2*cos(x)-y,x)== [acos(y/2)]
     assert solve(Eq(cos(x), sin(x)), x) == [-3*pi/4, pi/4]
 
-    assert solve(exp(x) + exp(-x) - y, x) == [
+    assert set(solve(exp(x) + exp(-x) - y, x)) == set([
                         log(y/2 - sqrt(y**2 - 4)/2),
                         log(y/2 + sqrt(y**2 - 4)/2),
-                        ]
+                        ])
     assert solve(exp(x)-3, x) == [log(3)]
     assert solve(Eq(exp(x), 3), x) == [log(3)]
     assert solve(log(x)-3, x) == [exp(3)]
@@ -241,7 +243,7 @@ def test_tsolve():
     assert solve(2*x+5+log(3*x-2), x) == \
         [Rational(2,3) + LambertW(2*exp(-Rational(19, 3))/3)/2]
     assert solve(3*x+log(4*x), x) == [LambertW(Rational(3,4))/3]
-    assert solve((2*x+8)*(8+exp(x)), x) == [-4, log(8) + pi*I]
+    assert set(solve((2*x+8)*(8+exp(x)), x)) == set([S(-4), log(8) + pi*I])
     eq = 2*exp(3*x+4)-3
     ans = solve(eq, x)
     assert len(ans) == 3 and all(eq.subs(x, a).n(chop=True) == 0 for a in ans)
@@ -376,7 +378,7 @@ def test_issue_1694():
     assert len(ans) == 5 and all(eq.subs(x, a).n(chop=True) == 0 for a in ans)
     assert solve(log(x**2) - y**2/exp(x), x, y) == [{y: -sqrt(exp(x)*log(x**2))},
                                                     {y: sqrt(exp(x)*log(x**2))}]
-    assert solve(x**2*z**2 - z**2*y**2) == [{x: -y}, {x: y}]
+    assert solve(x**2*z**2 - z**2*y**2) in ([{x: y}, {x: -y}], [{x: -y}, {x: y}])
     assert solve((x - 1)/(1 + 1/(x - 1))) == []
     assert solve(x**(y*z) - x, x) == [1]
     raises(NotImplementedError, 'solve(log(x) - exp(x), x)')
@@ -398,8 +400,11 @@ def test_issue_1694():
     assert solve(1/(5 + x)**(S(1)/5) - 9, x) == [-295244/S(59049)]
 
     assert solve(sqrt(x) + sqrt(sqrt(x)) - 4) == [-9*sqrt(17)/2 + 49*S.Half]
-    assert solve(Poly(sqrt(exp(x)) + sqrt(exp(-x)) - 4)) == \
-            [2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2)]
+    assert solve(Poly(sqrt(exp(x)) + sqrt(exp(-x)) - 4)) in \
+            [
+            [2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2)],
+            [log(-4*sqrt(3) + 7), log(4*sqrt(3) + 7)],
+            ]
     assert solve(Poly(exp(x) + exp(-x) - 4)) == [log(-sqrt(3) + 2), log(sqrt(3) + 2)]
     assert solve(x**y + x**(2*y) - 1, x) == \
         [(-S.Half + sqrt(5)/2)**(1/y), (-S.Half - sqrt(5)/2)**(1/y)]
@@ -437,8 +442,8 @@ def test_failing():
     assert solve((2*(3*x+4)**5 - 6*7**(3*x+9)).expand(), x)
 
 def test_checking():
-    assert solve(x*(x - y/x),x, check=False) == [0, -sqrt(y), sqrt(y)]
-    assert solve(x*(x - y/x),x, check=True) == [-sqrt(y), sqrt(y)]
+    assert set(solve(x*(x - y/x),x, check=False)) == set([sqrt(y), S(0), -sqrt(y)])
+    assert set(solve(x*(x - y/x),x, check=True)) == set([sqrt(y), -sqrt(y)])
     # {x: 0, y: 4} sets denominator to 0 in the following so system should return None
     assert solve((1/(1/x + 2), 1/(y - 3) - 1)) is None
     # 0 sets denominator of 1/x to zero so [] is returned
@@ -616,8 +621,40 @@ def test_unrad():
     assert solve(eq) == []
     # but this one really does have those solutions
     assert solve(sqrt(x) - sqrt(x + 1) + sqrt(1 - sqrt(x))) == [0, S(9)/16]
+
+    '''real_root changes the value of the result if the solution is
+    simplified; `a` in the text below is the root that is not 4/5:
+    >>> eq
+    sqrt(x) + sqrt(-x + 1) + sqrt(x + 1) - 6*sqrt(5)/5
+    >>> eq.subs(x, a).n()
+    -0.e-123 + 0.e-127*I
+    >>> real_root(eq.subs(x, a)).n()
+    -0.e-123 + 0.e-127*I
+    >>> (eq.subs(x,simplify(a))).n()
+    -0.e-126
+    >>> real_root(eq.subs(x, simplify(a))).n()
+    0.194825975605452 + 2.15093623885838*I
+
+    >>> sqrt(x).subs(x, real_root(a)).n()
+    0.809823827278194 - 0.e-25*I
+    >>> sqrt(x).subs(x, (a)).n()
+    0.809823827278194 - 0.e-25*I
+    >>> sqrt(x).subs(x, simplify(a)).n()
+    0.809823827278194 - 5.32999467690853e-25*I
+    >>> sqrt(x).subs(x, real_root(simplify(a))).n()
+    0.49864610868139 + 1.44572604257047*I
+    '''
+    eq=(sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
+    ra = S('''-1484/375 - 4*(-1/2 + sqrt(3)*I/2)*(-12459439/52734375 +
+    114*sqrt(12657)/78125)**(1/3) - 172564/(140625*(-1/2 +
+    sqrt(3)*I/2)*(-12459439/52734375 + 114*sqrt(12657)/78125)**(1/3))''')
+    rb = S(4)/5
     ans = solve(sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
-    assert len(ans) == 2 and S(4)/5 in ans
+    assert all(abs(eq.subs(x, i).n()) < 1e-10 for i in (ra, rb)) and \
+        len(ans) == 2 and \
+        sorted([i.n(chop=True) for i in ans]) == \
+        sorted([i.n(chop=True) for i in (ra, rb)])
+
     ans = solve(sqrt(x) + sqrt(x + 1) - \
                  sqrt(1 - x) - sqrt(2 + x))
     assert len(ans) == 1 and NS(ans[0])[:4] == '0.73'
@@ -633,14 +670,14 @@ def test_unrad():
     raises(ValueError, 'unrad(sqrt(x) + sqrt(x+1) + sqrt(1-sqrt(x)) + 3)')
     raises(ValueError, 'unrad(sqrt(x) + (x+1)**Rational(1,3) + 2*sqrt(y))')
     # same as last but consider only y
-    assert check(unrad(sqrt(x) + (x+1)**Rational(1,3) + 2*sqrt(y), y),
+    assert check(unrad(sqrt(x) + (x + 1)**Rational(1,3) + 2*sqrt(y), y),
            (4*y - (sqrt(x) + (x + 1)**(S(1)/3))**2, [], []))
-    assert check(unrad(sqrt(x/(1 - x)) + (x+1)**Rational(1,3)),
+    assert check(unrad(sqrt(x/(1 - x)) + (x + 1)**Rational(1,3)),
                 (x**3/(-x + 1)**3 - (x + 1)**2, [], [(-x + 1)**3]))
     # same as last but consider only y; no y-containing denominators now
     assert s_check(unrad(sqrt(x/(1 - x)) + 2*sqrt(y), y),
            (x/(-x + 1) - 4*y, [], []))
-    assert check(unrad(sqrt(x)*sqrt(1-x) + 2, x),
+    assert check(unrad(sqrt(x)*sqrt(1 - x) + 2, x),
            (x*(-x + 1) - 4, [], []))
 
     # http://tutorial.math.lamar.edu/
@@ -653,7 +690,7 @@ def test_unrad():
     assert solve(Eq(sqrt(x + 7) + 2, sqrt(3 - x))) == [-6]
     # http://www.purplemath.com/modules/solverad.htm
     assert solve((2*x - 5)**Rational(1, 3) - 3) == [16]
-    assert solve((x**3 - 3*x**2)**Rational(1, 3) + 1 - x) == [S(1)/3]
+    assert solve((x**3 - 3*x**2)**Rational(1, 3) + 1 - x) == []
     assert solve(x + 1 - (x**4 + 4*x**3 - x)**Rational(1, 4)) == \
         [-S(1)/2, -S(1)/3]
     assert solve(sqrt(2*x**2 - 7) - (3 - x)) == [-8, 2]
@@ -889,19 +926,22 @@ def test_issue_2574():
     assert checksol(eq, x, 2, numerical=False) is None
 
 def test_exclude():
-    R, C, Ri, Vout, V1, Rf, Vminus, Vplus, s = \
-        symbols('R, C, Ri, Vout, V1, Rf, Vminus, Vplus, s')
+    R, C, Ri, Vout, V1, Vminus, Vplus, s = \
+        symbols('R, C, Ri, Vout, V1, Vminus, Vplus, s')
+    Rf = symbols('Rf', positive=True) # to eliminate Rf = 0 soln
     eqs = [C*V1*s + Vplus*(-2*C*s - 1/R),
            Vminus*(-1/Ri - 1/Rf) + Vout/Rf,
            C*Vplus*s + V1*(-C*s - 1/R) + Vout/R,
            -Vminus + Vplus]
     assert solve(eqs, exclude=s*C*R) == [
-                {Vminus: Vplus,
-                 Vout: Vplus*(C**2*R**2*s**2 + 3*C*R*s + 1)/(C*R*s),
-                 V1: Vplus*(2*C*R*s + 1)/(C*R*s),
-                 Ri: C*R*Rf*s/(C*R*s + 1)**2}]
+        {
+        Rf: Ri*(C*R*s + 1)**2/(C*R*s),
+        Vminus: Vplus,
+        V1: Vplus*(2*C*R*s + 1)/(C*R*s),
+        Vout: Vplus*(C**2*R**2*s**2 + 3*C*R*s + 1)/(C*R*s)}]
     assert solve(eqs, exclude=[Vplus, s, C]) == [
-                {Vminus: Vplus,
-                 Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
-                 R: Vplus/(C*s*(V1 - 2*Vplus)),
-                 Ri: Rf*Vplus*(V1 - 2*Vplus)/(V1 - Vplus)**2}]
+        {
+        Rf: Ri*(V1 - Vplus)**2/(Vplus*(V1 - 2*Vplus)),
+        Vminus: Vplus,
+        Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
+        R: Vplus/(C*s*(V1 - 2*Vplus))}]

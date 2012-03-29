@@ -13,10 +13,11 @@ from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff
 from sympy.core.rules import Transform
 
-from sympy.utilities import flatten, default_sort_key
 from sympy.functions import gamma, exp, sqrt, log, root, exp_polar
+from sympy.utilities import flatten, default_sort_key
 
 from sympy.simplify.cse_main import cse
+from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.sqrtdenest import sqrtdenest
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
@@ -88,6 +89,8 @@ def fraction(expr, exact=False):
                     denom.append(b)
                 else:
                     denom.append(Pow(b, -ex))
+            elif ex.is_positive:
+                numer.append(term)
             elif not exact and ex.is_Mul:
                 n, d = term.as_numer_denom()
                 numer.append(n)
@@ -160,7 +163,7 @@ def separate(expr, deep=False, force=False):
        2**y*sin(x)**y + 2**y*cos(x)**y
 
        >>> separate((2*exp(y))**x)
-       2**x*exp(x*y)
+       2**x*exp(y)**x
 
        >>> separate((2*cos(x))**y)
        2**y*cos(x)**y
@@ -594,11 +597,17 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     string 'coeff'. (Passing None for symbols will return the
     expression in a dictionary keyed to 'coeff'.)
 
-    If force=True, then power bases will only be separated if assumptions
-    allow.
+    If force=True, then bases of powers will be separated regardless
+    of assumptions on the symbols involved.
 
-    Note: the order of the factors is determined by Mul, so that the
+    Notes
+    =====
+    The order of the factors is determined by Mul, so that the
     separated expressions may not necessarily be grouped together.
+
+    Although factoring is necessary to separate variables in some
+    expressions, it is not necessary in all cases, so one should not
+    count on the returned factors being factored.
 
     Examples
     ========
@@ -609,39 +618,52 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     (x*y)**y
     >>> separatevars((x*y)**y, force=True)
     x**y*y**y
-    >>> separatevars(2*x**2*z*sin(y)+2*z*x**2)
-    2*x**2*z*(sin(y) + 1)
 
-    >>> separatevars(2*x+y*sin(x))
-    2*x + y*sin(x)
-    >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, symbols=(x, y), dict=True)
+    >>> e = 2*x**2*z*sin(y)+2*z*x**2
+    >>> separatevars(e)
+    2*x**2*z*(sin(y) + 1)
+    >>> separatevars(e, symbols=(x, y), dict=True)
     {'coeff': 2*z, x: x**2, y: sin(y) + 1}
-    >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, [x, y, alpha], dict=True)
+    >>> separatevars(e, [x, y, alpha], dict=True)
     {'coeff': 2*z, alpha: 1, x: x**2, y: sin(y) + 1}
 
     If the expression is not really separable, or is only partially
-    separable, separatevars will do the best it can to separate it.
+    separable, separatevars will do the best it can to separate it
+    by using factoring.
 
-    >>> separatevars(x+x*y-3*(x**2))
+    >>> separatevars(x + x*y - 3*x**2)
     -x*(3*x - y - 1)
 
     If the expression is not separable then expr is returned unchanged
     or (if dict=True) then None is returned.
 
-    >>> eq = 2*x+y*sin(x)
+    >>> eq = 2*x + y*sin(x)
     >>> separatevars(eq) == eq
     True
-    >>> separatevars(2*x+y*sin(x), symbols=(x, y), dict=True) == None
+    >>> separatevars(2*x + y*sin(x), symbols=(x, y), dict=True) == None
     True
 
     """
-
+    expr = sympify(expr)
     if dict:
         return _separatevars_dict(_separatevars(expr, force), symbols)
     else:
         return _separatevars(expr, force)
 
 def _separatevars(expr, force):
+    if len(expr.free_symbols) == 1:
+        return expr
+    # don't destroy a Mul since much of the work may already be done
+    if expr.is_Mul:
+        args = list(expr.args)
+        changed = False
+        for i, a in enumerate(args):
+            args[i] = separatevars(a, force)
+            changed = changed or args[i] != a
+        if changed:
+            expr = Mul(*args)
+        return expr
+
     # get a Pow ready for expansion
     if expr.is_Pow:
         expr = Pow(separatevars(expr.base, force=force), expr.exp)
@@ -649,55 +671,40 @@ def _separatevars(expr, force):
     # First try other expansion methods
     expr = expr.expand(mul=False, multinomial=False, force=force)
 
-    _expr = expr.expand(power_exp=False, deep=False, force=force)
+    _expr = expr
+    if expr.is_commutative: # factor fails for nc
+        _expr, reps = posify(expr) if force else (expr, {})
+        expr = factor(_expr).subs(reps)
 
-    if not force:
-        # factor will expand bases so we mask them off now
-        pows = [p for p in _expr.atoms(Pow) if p.base.is_Mul]
-        dums = [Dummy(str(i)) for i in xrange(len(pows))]
-        _expr = _expr.subs(dict(zip(pows, dums)))
-
-    _expr = factor(_expr, expand=False)
-
-    if not force:
-        # and retore them
-        _expr = _expr.subs(dict(zip(dums, pows)))
-
-
-
-    if not _expr.is_Add:
-        expr = _expr
-
-    if expr.is_Add:
-
-        nonsepar = sympify(0)
-        # Find any common coefficients to pull out
-        commoncsetlist = []
-        for i in expr.args:
-            if i.is_Mul:
-                commoncsetlist.append(set(i.args))
-            else:
-                commoncsetlist.append(set((i,)))
-        commoncset = set(flatten(commoncsetlist))
-        commonc = sympify(1)
-
-        for i in commoncsetlist:
-            commoncset = commoncset.intersection(i)
-        commonc = Mul(*commoncset)
-
-        for i in expr.args:
-            coe = i.extract_multiplicatively(commonc)
-            if coe == None:
-                nonsepar += sympify(1)
-            else:
-                nonsepar += coe
-        if nonsepar == 0:
-            return commonc
-        else:
-            return commonc*nonsepar
-
-    else:
+    if not expr.is_Add:
         return expr
+
+    # Find any common coefficients to pull out
+    args = list(expr.args)
+    commonc = args[0].args_cnc(cset=True, warn=False)[0]
+    for i in args[1:]:
+        commonc &= i.args_cnc(cset=True, warn=False)[0]
+    commonc = Mul(*commonc)
+    commonc = commonc.as_coeff_Mul()[1] # ignore constants
+    commonc_set = commonc.args_cnc(cset=True, warn=False)[0]
+
+    # remove them
+    for i, a in enumerate(args):
+        c, nc = a.args_cnc(cset=True, warn=False)
+        c = c - commonc_set
+        args[i] = Mul(*c)*Mul(*nc)
+    nonsepar = Add(*args)
+
+    if len(nonsepar.free_symbols) > 1:
+        _expr = nonsepar
+        _expr, reps = posify(_expr) if force else (_expr, {})
+        _expr = (factor(_expr)).subs(reps)
+
+        if not _expr.is_Add:
+            nonsepar = _expr
+
+    return commonc*nonsepar
+
 
 def _separatevars_dict(expr, symbols):
     if symbols:
@@ -710,7 +717,7 @@ def _separatevars_dict(expr, symbols):
         if not symbols:
             return None
 
-    ret = dict(((i, S.One) for i in symbols + ['coeff']))
+    ret = dict(((i, []) for i in symbols + ['coeff']))
 
     for i in Mul.make_args(expr):
         expsym = i.free_symbols
@@ -719,9 +726,13 @@ def _separatevars_dict(expr, symbols):
             return None
         if len(intersection) == 0:
             # There are no symbols, so it is part of the coefficient
-            ret['coeff'] *= i
+            ret['coeff'].append(i)
         else:
-            ret[intersection.pop()] *= i
+            ret[intersection.pop()].append(i)
+
+    # rebuild
+    for k, v in ret.items():
+        ret[k] = Mul(*v)
 
     return ret
 
@@ -764,7 +775,7 @@ def trigsimp(expr, deep=False, recursive=False):
     Examples
     ========
 
-    >>> from sympy import trigsimp, sin, cos, log
+    >>> from sympy import trigsimp, sin, cos, log, cosh, sinh
     >>> from sympy.abc import x, y
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e)
@@ -775,103 +786,102 @@ def trigsimp(expr, deep=False, recursive=False):
     log(2)
 
     """
-    sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
-    if not expr.has(sin, cos, tan, cot):
+    if not expr.has(C.TrigonometricFunction) and not expr.has(C.HyperbolicFunction):
         return expr
 
     if recursive:
         w, g = cse(expr)
-        g = trigsimp_nonrecursive(g[0])
+        g = trigsimp_recursive(g[0])
 
         for sub in reversed(w):
             g = g.subs(sub[0], sub[1])
-            g = trigsimp_nonrecursive(g)
+            g = trigsimp_recursive(g)
         result = g
     else:
-        result = trigsimp_nonrecursive(expr, deep)
+        result = trigsimp_recursive(expr, deep)
 
     return result
 
-
-def trigsimp_nonrecursive(expr, deep=False):
-    """
-    A nonrecursive trig simplifier, used from trigsimp. Reduces expression by
-    using known trig identities
-
-    Notes
-    =====
-
-    deep -> apply trigsimp inside functions
-
-    Examples
-    ========
-
-    >>> from sympy import cos, sin, log
-    >>> from sympy.simplify.simplify import trigsimp, trigsimp_nonrecursive
-    >>> from sympy.abc import x, y
-    >>> e = 2*sin(x)**2 + 2*cos(x)**2
-    >>> trigsimp(e)
-    2
-    >>> trigsimp_nonrecursive(log(e))
-    log(2*sin(x)**2 + 2*cos(x)**2)
-    >>> trigsimp_nonrecursive(log(e), deep=True)
-    log(2)
-
-    """
+def trigsimp_recursive(expr, deep = False):
+    a,b,c = map(Wild, 'abc')
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
+    sinh, cosh, tanh, coth = C.sinh, C.cosh, C.tanh, C.coth
+    # for the simplifications like sinh/cosh -> tanh:
+    matchers_division = (
+        (a*sin(b)**c/cos(b)**c, a*tan(b)**c),
+        (a*tan(b)**c*cos(b)**c, a*sin(b)**c),
+        (a*cot(b)**c*sin(b)**c, a*cos(b)**c),
+        (a*tan(b)**c/sin(b)**c, a/cos(b)**c),
+        (a*cot(b)**c/cos(b)**c, a/sin(b)**c),
+        (a*cot(b)**c*tan(b)**c, a),
+
+        (a*sinh(b)**c/cosh(b)**c, a*tanh(b)**c),
+        (a*tanh(b)**c*cosh(b)**c, a*sinh(b)**c),
+        (a*coth(b)**c*sinh(b)**c, a*cosh(b)**c),
+        (a*tanh(b)**c/sinh(b)**c, a/cosh(b)**c),
+        (a*coth(b)**c/cosh(b)**c, a/sinh(b)**c),
+        (a*coth(b)**c*tanh(b)**c, a)
+        )
+    # for cos(x)**2 + sin(x)**2 -> 1
+    matchers_identity = (
+        (a*sin(b)**2,  a - a*cos(b)**2),
+        (a*tan(b)**2,  a*(1/cos(b))**2 - a),
+        (a*cot(b)**2,  a*(1/sin(b))**2 - a),
+
+        (a*sinh(b)**2, a*cosh(b)**2 - a),
+        (a*tanh(b)**2, a - a*(1/cosh(b))**2),
+        (a*coth(b)**2, a + a*(1/sinh(b))**2)
+        )
+    # Reduce any lingering artefacts, such as sin(x)**2 changing
+    # to 1-cos(x)**2 when sin(x)**2 was "simpler"
+    artifacts = (
+        (a - a*cos(b)**2 + c,        a*sin(b)**2 + c, cos),
+        (a - a*(1/cos(b))**2 + c,   -a*tan(b)**2 + c, cos),
+        (a - a*(1/sin(b))**2 + c,   -a*cot(b)**2 + c, sin),
+
+        (a - a*cosh(b)**2 + c,      -a*sinh(b)**2 + c, cosh),
+        (a - a*(1/cosh(b))**2 + c,   a*tanh(b)**2 + c, cosh),
+        (a + a*(1/sinh(b))**2 + c,   a*coth(b)**2 + c, sinh)
+        )
 
     if expr.is_Function:
         if deep:
-            return expr.func(trigsimp_nonrecursive(expr.args[0], deep))
+            return expr.func(trigsimp_recursive(expr.args[0], deep))
     elif expr.is_Mul:
         # do some simplifications like sin/cos -> tan:
-        a,b,c = map(Wild, 'abc')
-        matchers = (
-                (a*sin(b)**c/cos(b)**c, a*tan(b)**c),
-                (a*tan(b)**c*cos(b)**c, a*sin(b)**c),
-                (a*cot(b)**c*sin(b)**c, a*cos(b)**c),
-                (a*tan(b)**c/sin(b)**c, a/cos(b)**c),
-                (a*cot(b)**c/cos(b)**c, a/sin(b)**c),
-        )
-        for pattern, simp in matchers:
+        for pattern, simp in matchers_division:
             res = expr.match(pattern)
             if res is not None:
                 # if c is missing or zero, do nothing:
                 if (not c in res) or res[c] == 0:
                     continue
-                # if "a" contains any of sin("b"), cos("b"), tan("b") or cot("b),
+                # if "a" contains any of sin("b"), cos("b"), tan("b"), cot("b),
+                # sinh("b"), cosh("b"), tanh("b") or coth("b),
                 # skip the simplification:
-                if res[a].has(cos(res[b]), sin(res[b]), tan(res[b]), cot(res[b])):
+                if res[a].has(C.TrigonometricFunction) or res[a].has(C.HyperbolicFunction):
                     continue
                 # simplify and finish:
                 expr = simp.subs(res)
                 break
         if not expr.is_Mul:
-            return trigsimp_nonrecursive(expr, deep)
+            return trigsimp_recursive(expr, deep)
         ret = S.One
         for x in expr.args:
-            ret *= trigsimp_nonrecursive(x, deep)
+            ret *= trigsimp_recursive(x, deep)
         return ret
     elif expr.is_Pow:
-        return Pow(trigsimp_nonrecursive(expr.base, deep),
-                trigsimp_nonrecursive(expr.exp, deep))
+        return Pow(trigsimp_recursive(expr.base, deep),
+                trigsimp_recursive(expr.exp, deep))
     elif expr.is_Add:
         # TODO this needs to be faster
 
-        # The types of trig functions we are looking for
-        a,b,c = map(Wild, 'abc')
-        matchers = (
-            (a*sin(b)**2, a - a*cos(b)**2),
-            (a*tan(b)**2, a*(1/cos(b))**2 - a),
-            (a*cot(b)**2, a*(1/sin(b))**2 - a)
-        )
-
+        # The types of hyper functions we are looking for
         # Scan for the terms we need
         ret = S.Zero
         for term in expr.args:
-            term = trigsimp_nonrecursive(term, deep)
+            term = trigsimp_recursive(term, deep)
             res = None
-            for pattern, result in matchers:
+            for pattern, result in matchers_identity:
                 res = term.match(pattern)
                 if res is not None:
                     ret += result.subs(res)
@@ -881,12 +891,6 @@ def trigsimp_nonrecursive(expr, deep=False):
 
         # Reduce any lingering artifacts, such as sin(x)**2 changing
         # to 1-cos(x)**2 when sin(x)**2 was "simpler"
-        artifacts = (
-            (a - a*cos(b)**2 + c, a*sin(b)**2 + c, cos),
-            (a - a*(1/cos(b))**2 + c, -a*tan(b)**2 + c, cos),
-            (a - a*(1/sin(b))**2 + c, -a*cot(b)**2 + c, sin)
-        )
-
         expr = ret
         for pattern, result, ex in artifacts:
             # Substitute a new wild that excludes some function(s)
@@ -907,6 +911,7 @@ def trigsimp_nonrecursive(expr, deep=False):
 
         return expr
     return expr
+
 
 def collect_sqrt(expr, evaluate=True):
     """Return expr with terms having common square roots collected together.
@@ -1067,12 +1072,13 @@ def _split_gcd(*a):
     """
     split the list of integers `a` into a list of integers a1 having
     g = gcd(a1) and a list a2 whose elements are not divisible by g
+    Returns g, a1, a2
 
     Examples
     ========
     >>> from sympy.simplify.simplify import _split_gcd
     >>> _split_gcd(55,35,22,14,77,10)
-    ([55, 35, 10], [22, 14, 77])
+    (5, [55, 35, 10], [22, 14, 77])
     """
     g = a[0]
     b1 = [g]
@@ -1084,7 +1090,7 @@ def _split_gcd(*a):
         else:
             g = g1
             b1.append(x)
-    return b1, b2
+    return g, b1, b2
 
 def split_surds(expr):
     """
@@ -1097,20 +1103,31 @@ def split_surds(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.simplify import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
-    (sqrt(5)/7 + sqrt(10) + sqrt(15), sqrt(6) + 3*sqrt(3))
+    (5, 1/7 + sqrt(2) + sqrt(3), sqrt(6) + 3*sqrt(3))
     """
     coeff_muls =  [x.as_coeff_Mul() for x in expr.args]
     surds = [x[1]**2 for x in coeff_muls if x[1].is_Pow]
-    b1, b2 = _split_gcd(*surds)
+    g, b1, b2 = _split_gcd(*surds)
+    g2 = g
+    if not b2 and len(b1) >= 2:
+        b1n = [x/g for x in b1]
+        b1n = [x for x in b1n if x != 1]
+        # only a common factor has been factored; split again
+        g1, b1n, b2 = _split_gcd(*b1n)
+        g2 = g*g1
     a1v, a2v = [], []
     for c, s in coeff_muls:
-        if s**2 in b1:
-            a1v.append(c*s)
+        if s.is_Pow and s.exp == S.Half:
+            s1 = s.base
+            if s1 in b1:
+                a1v.append(c*sqrt(s1/g2))
+            else:
+                a2v.append(c*s)
         else:
             a2v.append(c*s)
     a = Add(*a1v)
     b = Add(*a2v)
-    return a, b
+    return g2, a, b
 
 def rad_rationalize(num, den):
     """
@@ -1126,7 +1143,8 @@ def rad_rationalize(num, den):
     """
     if not den.is_Add:
         return num, den
-    a, b = split_surds(den)
+    g, a, b = split_surds(den)
+    a = a*sqrt(g)
     num = _mexpand((a - b)*num)
     den = _mexpand(a**2 - b**2)
     return rad_rationalize(num, den)
@@ -1330,12 +1348,12 @@ def posify(eq):
             reps.update(dict((v, k) for k, v in posify(s)[1].items()))
         for i, e in enumerate(eq):
             eq[i] = e.subs(reps)
-        return f(eq), dict([(r,s) for s, r in reps.iteritems()])
+        return f(eq), dict([(r, s) for s, r in reps.iteritems()])
 
     reps = dict([(s, Dummy(s.name, positive=True))
                  for s in eq.atoms(Symbol) if s.is_positive is None])
     eq = eq.subs(reps)
-    return eq, dict([(r,s) for s, r in reps.iteritems()])
+    return eq, dict([(r, s) for s, r in reps.iteritems()])
 
 def _polarify(eq, lift, pause=False):
     from sympy import polar_lift
@@ -1415,7 +1433,7 @@ def _unpolarify(eq, exponents_only, pause=False):
         return base**expo
 
     if eq.func is exp_polar and not pause:
-        return exp(_unpolarify(eq.args[0], exponents_only))
+        return exp(_unpolarify(eq.exp, exponents_only))
     if eq.is_Function and getattr(eq.func, 'unbranched', False):
         return eq.func(*[_unpolarify(x, exponents_only, exponents_only) for x in eq.args])
     if eq.func is principal_branch and eq.args[1] == 2*pi and not pause:
@@ -1433,7 +1451,7 @@ def _unpolarify(eq, exponents_only, pause=False):
 
 def unpolarify(eq, subs={}, exponents_only=False):
     """
-    If p denotes the projection from the riemann surface of the logarithm to
+    If p denotes the projection from the Riemann surface of the logarithm to
     the complex line, return a simplified version eq' of `eq` such that
     p(eq') == p(eq).
     Also apply the substitution subs in the end. (This is a convenience, since
@@ -1481,9 +1499,8 @@ def _denest_pow(eq):
     if b is S.Exp1 and e.is_Mul:
         logs = []
         other = []
-        for ei in Mul.make_args(e):
-            if any(aj.func is C.log for a in Mul.make_args(ei)
-                    for ai in Add.make_args(a) for aj in Mul.make_args(ai)):
+        for ei in e.args:
+            if any(ai.func is C.log for ai in Add.make_args(ei)):
                 logs.append(ei)
             else:
                 other.append(ei)
@@ -1769,18 +1786,25 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     y = Dummy('y')
     if expr.is_Pow:
         if deep:
-            return powsimp(y*powsimp(expr.base, deep, combine, force)**powsimp(\
-            expr.exp, deep, combine, force), deep, combine, force)/y
+            return powsimp(y*powsimp(expr.base, deep, combine, force, measure
+                                     )**powsimp(
+                                      expr.exp, deep, combine, force, measure
+                                      ), deep, combine, force, measure)/y
         else:
-            return powsimp(y*expr, deep, combine, force)/y # Trick it into being a Mul
-    elif expr.is_Function and not expr == exp_polar(1) and not expr == exp_polar(0):
+            return powsimp(y*expr, deep, combine, force, measure)/y # Trick it into being a Mul
+    elif (expr.is_Function and not
+          expr == exp_polar(1) and not
+          expr == exp_polar(0)):
         if (expr.func is exp or expr.func is exp_polar) and deep:
             # Exp should really be like Pow
-            return powsimp(y*expr.func(powsimp(expr.args[0], deep, combine, force)), deep, combine, force)/y
+            return powsimp(y*expr.func(powsimp(expr.args[0],
+                                               deep, combine, force, measure)
+                                       ), deep, combine, force, measure)/y
         elif (expr.func is exp or expr.func is exp_polar) and not deep:
-            return powsimp(y*expr, deep, combine, force)/y
+            return powsimp(y*expr, deep, combine, force, measure)/y
         elif deep:
-            return expr.func(*[powsimp(t, deep, combine, force) for t in expr.args])
+            return expr.func(*[powsimp(t, deep, combine, force, measure)
+                               for t in expr.args])
         else:
             return expr
     elif expr.is_Add:
@@ -1793,18 +1817,22 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if combine == 'all' and deep and any((t.is_Add for t in expr.args)):
                 # Once we get to 'base', there is no more 'exp', so we need to
                 # distribute here.
-                return powsimp(expand_mul(expr, deep=False), deep, combine, force)
+                return powsimp(expand_mul(expr, deep=False),
+                               deep, combine, force, measure)
             c_powers = defaultdict(list)
             nc_part = []
             newexpr = []
             for term in expr.args:
                 if term.is_Add and deep:
-                    newexpr.append(powsimp(term, deep, combine, force))
+                    newexpr.append(powsimp(term,
+                                           deep, combine, force, measure))
                 else:
                     if term.is_commutative:
                         b, e = term.as_base_exp()
                         if deep:
-                            b, e = [powsimp(i, deep, combine, force) for i in  [b, e]]
+                            b, e = [powsimp(i,
+                                            deep, combine, force, measure)
+                                    for i in [b, e]]
                         c_powers[b].append(e)
                     else:
                         # This is the logic that combines exponents for equal,
@@ -1859,8 +1887,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     x**3/2 -> (x, 2), 3
                     x**y -> (x**y, 1), 1
                     x**(2*y/3) -> (x**y, 3), 2
-
-                >>> x+2
+                    exp(x/2) -> (exp(a), 2), 1
 
                 '''
                 if e is not None: # coming from c_powers or from below
@@ -1973,7 +2000,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             # there may be terms still in common_b that were bases that were
             # identified as needing processing, so remove those, too
             for (b, q), e in common_b.items():
-                if b.is_Pow and q is not S.One and not b.exp.is_Rational:
+                if (b.is_Pow or b.func is exp) and \
+                   q is not S.One and not b.exp.is_Rational:
                     b, be = b.as_base_exp()
                     b = b**(be/q)
                 else:
@@ -1993,19 +2021,25 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 if deep:
                     newexpr = expand_mul(newexpr, deep=False)
                 if newexpr.is_Add:
-                    return powsimp(Mul(*nc_part), deep, combine='base', force=force) * \
-                           Add(*[powsimp(i, deep, combine='base', force=force)
-                                 for i in newexpr.args])
+                    return powsimp(Mul(*nc_part),
+                        deep, combine='base', force=force, measure=measure)*\
+                    Add(*[powsimp(i,
+                        deep, combine='base', force=force, measure=measure)
+                          for i in newexpr.args])
                 else:
-                    return powsimp(Mul(*nc_part), deep, combine='base', force=force)*\
-                    powsimp(newexpr, deep, combine='base', force=force)
+                    return powsimp(Mul(*nc_part),
+                        deep, combine='base', force=force, measure=measure)*\
+                            powsimp(newexpr,
+                        deep, combine='base', force=force, measure=measure)
 
         else:
             # combine is 'base'
             if deep:
                 expr = expand_mul(expr, deep=False)
             if expr.is_Add:
-                return Add(*[powsimp(i, deep, combine, force) for i in expr.args])
+                return Add(*[powsimp(i,
+                                     deep, combine, force, measure)
+                             for i in expr.args])
             else:
                 # Build c_powers and nc_part.  These must both be lists not
                 # dicts because exp's are not combined.
@@ -2044,7 +2078,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             c_exp = defaultdict(list)
             for b, e in c_powers:
                 if deep:
-                    e = powsimp(e, deep, combine, force)
+                    e = powsimp(e, deep, combine, force, measure)
                 c_exp[e].append(b)
             del c_powers
 
@@ -2569,6 +2603,53 @@ def combsimp(expr):
 
     return factor(expr)
 
+def signsimp(expr, evaluate=True):
+    """Make all Add sub-expressions canonical wrt sign.
+
+    If an Add subexpression, ``a``, can have a sign extracted,
+    as determined by could_extract_minus_sign, it is replaced
+    with Mul(-1, a, evaluate=False). This allows signs to be
+    extracted from powers and products.
+
+    Examples
+    ========
+
+    >>> from sympy import signsimp, exp
+    >>> from sympy.abc import x, y
+    >>> n = -1 + 1/x
+    >>> n/x/(-n)**2 - 1/n/x
+    (-1 + 1/x)/(x*(1 - 1/x)**2) - 1/(x*(-1 + 1/x))
+    >>> signsimp(_)
+    0
+    >>> x*n + x*-n
+    x*(-1 + 1/x) + x*(1 - 1/x)
+    >>> signsimp(_)
+    0
+    >>> n**3
+    (-1 + 1/x)**3
+    >>> signsimp(_)
+    -(1 - 1/x)**3
+
+    By default, signsimp doesn't leave behind any hollow simplification:
+    if making an Add canonical wrt sign didn't change the expression, the
+    original Add is restored. If this is not desired then the keyword
+    ``evaluate`` can be set to False:
+
+    >>> e = exp(y - x)
+    >>> signsimp(e) == e
+    True
+    >>> signsimp(e, evaluate=False)
+    exp(-(x - y))
+
+    """
+    expr = sympify(expr)
+    if not isinstance(expr, Expr) or expr.is_Atom:
+        return expr
+    e = sub_post(sub_pre(expr))
+    if evaluate and isinstance(e, Expr):
+        e = e.xreplace(dict([(m, -(-m)) for m in e.atoms(Mul) if -(-m) != m]))
+    return e
+
 def simplify(expr, ratio=1.7, measure=count_ops):
     """
     Simplifies the given expression.
@@ -2694,8 +2775,11 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     from the input expression by doing this.
     """
     from sympy.simplify.hyperexpand import hyperexpand
+    from sympy.functions.special.bessel import BesselBase
 
-    expr = sympify(expr)
+    original_expr = expr = sympify(expr)
+
+    expr = signsimp(expr)
 
     if not isinstance(expr, Basic): # XXX: temporary hack
         return expr
@@ -2711,8 +2795,6 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
 
-    original_expr = expr
-
     def shorter(*choices):
         '''Return the choice that has the fewest ops. In case of a tie,
         the expression listed first is selected.'''
@@ -2726,20 +2808,35 @@ def simplify(expr, ratio=1.7, measure=count_ops):
             return expr1
         return shorter(expr1, expr)
 
-    expr1 = cancel(powsimp(expr))
+    expr0 = powsimp(expr)
+    expr1 = cancel(expr0)
     expr2 = together(expr1.expand(), deep=True)
+    # sometimes the expansions applied to Muls
+    # give shorter expressions, so make this a
+    # Mul if it's an Add (issue 3024)
+    if expr.is_Add:
+        y = Dummy()
+        expr0b = powsimp(expr*y)/y
+        if expr0b != expr0:
+            expr1b = cancel(expr0b)
+            expr2b = together(expr1b.expand(), deep=True)
+            if shorter(expr2b, expr) == expr2b:
+                expr1, expr2 = expr1b, expr2b
+
     if ratio is S.Infinity:
         expr = expr2
     else:
         expr = shorter(expr2, expr1, expr)
-
     if not isinstance(expr, Basic): # XXX: temporary hack
         return expr
 
     # hyperexpand automatically only works on hypergeometric terms
     expr = hyperexpand(expr)
 
-    if expr.has(C.TrigonometricFunction):
+    if expr.has(BesselBase):
+        expr = besselsimp(expr)
+
+    if expr.has(C.TrigonometricFunction) or expr.has(C.HyperbolicFunction):
         expr = trigsimp(expr)
 
     if expr.has(C.log):
@@ -2967,15 +3064,14 @@ def _logcombine(expr, force=False):
             return flatten(args)
         return None
 
-    if type(expr) in (int, float) or expr.is_Number or expr.is_Rational or \
-        expr.is_NumberSymbol or type(expr) == C.Integral:
+    if expr.is_Number or expr.is_NumberSymbol or type(expr) == C.Integral:
         return expr
 
     if isinstance(expr, Equality):
         retval = Equality(_logcombine(expr.lhs-expr.rhs, force),\
         Integer(0))
         # If logcombine couldn't do much with the equality, try to make it like
-        # it was.  Hopefully extract_additively won't become smart enought to
+        # it was.  Hopefully extract_additively won't become smart enough to
         # take logs apart :)
         right = retval.lhs.extract_additively(expr.lhs)
         if right:
@@ -3042,7 +3138,7 @@ def _logcombine(expr, force=False):
         else:
             return _logcombine(expr.args[0], force)*reduce(lambda x, y:\
              _logcombine(x, force)*_logcombine(y, force),\
-             expr.args[1:], 1)
+             expr.args[1:], S.One)
 
     if expr.is_Function:
         return expr.func(*map(lambda t: _logcombine(t, force), expr.args))
@@ -3050,5 +3146,72 @@ def _logcombine(expr, force=False):
     if expr.is_Pow:
         return _logcombine(expr.args[0], force)**\
         _logcombine(expr.args[1], force)
+
+    return expr
+
+def besselsimp(expr):
+    """
+    Simplify bessel-type functions.
+
+    This routine tries to simplify bessel-type functions. Currently it only
+    works on the Bessel J and I functions, however. It works by looking at all
+    such functions in turn, and eliminating factors of "I" and "-1" (actually
+    their polar equivalents) in front of the argument. After that, functions of
+    half-integer order are rewritten using trigonometric functions.
+
+    >>> from sympy import besselj, besseli, besselsimp, polar_lift, I, S
+    >>> from sympy.abc import z, nu
+    >>> besselsimp(besselj(nu, z*polar_lift(-1)))
+    exp(I*pi*nu)*besselj(nu, z)
+    >>> besselsimp(besseli(nu, z*polar_lift(-I)))
+    exp(-I*pi*nu/2)*besselj(nu, z)
+    >>> besselsimp(besseli(S(-1)/2, z))
+    sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
+    """
+    from sympy import besselj, besseli, jn, I, pi, Dummy
+    # TODO
+    # - extension to more types of functions
+    #   (at least rewriting functions of half integer order should be straight
+    #    forward also for Y and K)
+    # - better algorithm?
+    # - simplify (cos(pi*b)*besselj(b,z) - besselj(-b,z))/sin(pi*b) ...
+    # - use contiguity relations?
+
+    def replacer(fro, to, factors):
+        factors = set(factors)
+        def repl(nu, z):
+            if factors.intersection(Mul.make_args(z)):
+                return to(nu, z)
+            return fro(nu, z)
+        return repl
+    def torewrite(fro, to):
+        def tofunc(nu, z):
+            return fro(nu, z).rewrite(to)
+        return tofunc
+    def tominus(fro):
+        def tofunc(nu, z):
+            return exp(I*pi*nu)*fro(nu, exp_polar(-I*pi)*z)
+        return tofunc
+
+    ifactors = [I, exp_polar(I*pi/2), exp_polar(-I*pi/2)]
+    expr = expr.replace(besselj, replacer(besselj,
+                                          torewrite(besselj, besseli), ifactors))
+    expr = expr.replace(besseli, replacer(besseli,
+                                          torewrite(besseli, besselj), ifactors))
+
+    minusfactors = [-1, exp_polar(I*pi)]
+    expr = expr.replace(besselj, replacer(besselj, tominus(besselj), minusfactors))
+    expr = expr.replace(besseli, replacer(besseli, tominus(besseli), minusfactors))
+
+    z0 = Dummy('z')
+    def expander(fro):
+        def repl(nu, z):
+            if (nu % 1) != S(1)/2:
+                return fro(nu, z)
+            return unpolarify(fro(nu, z0).rewrite(besselj).rewrite(jn).expand(func=True)).subs(z0, z)
+        return repl
+
+    expr = expr.replace(besselj, expander(besselj))
+    expr = expr.replace(besseli, expander(besseli))
 
     return expr

@@ -1,5 +1,7 @@
-from sympy import bernoulli, Symbol, symbols, Sum, harmonic, Rational, oo, zoo, pi, I, bell, \
-        fibonacci, lucas, euler, catalan, binomial, gamma, sqrt, hyper, log, polygamma, diff
+from sympy import bernoulli, Symbol, symbols, Sum, harmonic, Rational, oo, \
+                    zoo, pi, I, bell, fibonacci, lucas, euler, catalan, \
+                    binomial, gamma, sqrt, hyper, log, polygamma, diff, \
+                    Expr, sympify
 
 from sympy.utilities.pytest import XFAIL
 
@@ -50,6 +52,23 @@ def test_bell():
     assert bell(1, x) == x
     assert bell(2, x) == x**2 + x
     assert bell(5, x) == x**5 + 10*x**4 + 25*x**3 + 15*x**2 + x
+
+    X = symbols('x:6')
+    # X = (x0, x1, .. x5)
+    # at the same time: X[1] = x1, X[2] = x2 for standard readablity.
+    # but we must supply zero-based indexed object X[1:] = (x1, .. x5)
+
+    assert bell(6, 2, X[1:]) == 6*X[5]*X[1] + 15*X[4]*X[2] + 10*X[3]**2
+    assert bell(6, 3, X[1:]) == 15*X[4]*X[1]**2 + 60*X[3]*X[2]*X[1] + 15*X[2]**3
+
+    X = (1, 10, 100, 1000, 10000)
+    assert bell(6, 2, X) == (6 + 15 + 10)*10000
+
+    X = (1, 2, 3, 3, 5)
+    assert bell(6, 2, X) == 6*5 + 15*3*2 + 10*3**2
+
+    X = (1, 2, 3, 5)
+    assert bell(6, 3, X) == 15*5 + 60*3*2 + 15*2**3
 
 def test_harmonic():
     assert harmonic(1,1) == 1

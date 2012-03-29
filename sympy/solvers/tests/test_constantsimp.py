@@ -120,7 +120,7 @@ def test_constant_multiple():
 def test_ode_solutions():
     # only a few examples here, the rest will be tested in the actual dsolve tests
     assert constant_renumber(constantsimp(C1*exp(2*x)+exp(x)*(C2+C3), x, 3), 'C', 1, 3) == \
-        constant_renumber(C1*exp(x)+C2*exp(2*x), 'C', 1, 2)
+        constant_renumber((C1*exp(x) + C2*exp(2*x)), 'C', 1, 2)
     assert constant_renumber(constantsimp(Eq(f(x),I*C1*sinh(x/3) + C2*cosh(x/3)), x, 2),
         'C', 1, 2) == constant_renumber(Eq(f(x), C1*sinh(x/3) + C2*cosh(x/3)), 'C', 1, 2)
     assert constant_renumber(constantsimp(Eq(f(x),acos((-C1)/cos(x))), x, 1), 'C', 1, 1) == \
@@ -140,9 +140,8 @@ def test_ode_solutions():
         Eq(-Integral(-1/(u2*sqrt(1 - u2**2)), (u2, _a, x/f(x))) + \
         log(C1*f(x)), 0)
     assert [constant_renumber(constantsimp(i, x, 1), 'C', 1, 1) for i in
-        [Eq(f(x), sqrt(-C1*x + x**2)), Eq(f(x), -sqrt(-C1*x +
-        x**2))]] == [Eq(f(x), sqrt(C1*x + x**2)),
-        Eq(f(x), -sqrt(C1*x + x**2))]
+        [Eq(f(x), sqrt(-C1*x + x**2)), Eq(f(x), -sqrt(-C1*x + x**2))]] == \
+        [Eq(f(x), sqrt(x*(C1 + x))), Eq(f(x), -sqrt(x*(C1 + x)))]
 
 def test_constant_Eq():
     # C1 on the rhs is well-tested, but the lhs is only tested here
