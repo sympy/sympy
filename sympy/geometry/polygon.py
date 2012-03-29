@@ -1,6 +1,6 @@
 from sympy.core import Expr, S, sympify, oo, pi, Symbol
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.elementary.trigonometric import cos, sin, tan, sqrt
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.matrices import Matrix
@@ -1058,6 +1058,43 @@ class RegularPolygon(Polygon):
         return 'RegularPolygon(%s, %s, %s, %s)' % tuple(self.args)
 
     @property
+    def area(self):
+        """Returns the area.
+
+        Examples
+        ========
+        >>> from sympy.geometry import RegularPolygon
+        >>> square = RegularPolygon((0, 0), 1, 4)
+        >>> square.area
+        2
+        >>> _ == square.length**2
+        True
+        """
+        c, r, n, rot = self.args
+        return n*self.length**2/(4*tan(pi/n))
+
+    @property
+    def length(self):
+        """Returns the length of the sides.
+
+        The half-length of the side and the apothem form two legs
+        of a right triangle whose hypotenuse is the radius of the
+        regular polygon.
+
+        Examples
+        ========
+        >>> from sympy.geometry import RegularPolygon
+        >>> from sympy import sqrt
+        >>> s = square_in_unit_circle = RegularPolygon((0, 0), 1, 4)
+        >>> s.length
+        sqrt(2)
+        >>> sqrt((_/2)**2 + s.apothem**2) == s.radius
+        True
+
+        """
+        return self.radius*2*sin(pi/self._n)
+
+    @property
     def center(self):
         """The center of the RegularPolygon
 
@@ -1432,6 +1469,29 @@ class RegularPolygon(Polygon):
         r = type(self)(*self.args) # need a copy or else changes are in-place
         r._rot += angle
         return GeometryEntity.rotate(r, angle, pt)
+
+    def scale(self, x=1, y=1):
+        """Override GeometryEntity.scale since it is the radius that must be
+        scaled (if x == y) or else a new Polygon must be returned.
+
+        >>> from sympy import RegularPolygon
+
+        Symmetric scaling returns a RegularPolygon:
+
+        >>> RegularPolygon((0, 0), 1, 4).scale(2, 2)
+        RegularPolygon(Point(0, 0), 2, 4, 0)
+
+        Asymmetric scaling returns a kite as a Polygon:
+
+        >>> RegularPolygon((0, 0), 1, 4).scale(2, 1)
+        Polygon(Point(2, 0), Point(0, 1), Point(-2, 0), Point(0, -1))
+
+        """
+        if x != y:
+            return Polygon(*self.vertices).scale(x, y)
+        c, r, n, rot = self.args
+        r *= x
+        return self.func(c, r, n, rot)
 
     @property
     def vertices(self):
