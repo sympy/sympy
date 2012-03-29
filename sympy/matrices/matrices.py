@@ -2465,7 +2465,7 @@ class MatrixBase(object):
         else:
             sign = 1 # track current sign in case of column swap
 
-                    l, u, p = M.LUdecomposition()
+        l, u, p = M.LUdecomposition()
         produ = 1 
         prodl = 1
         for k in range(n):
