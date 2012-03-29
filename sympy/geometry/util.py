@@ -141,6 +141,8 @@ def intersection(*entities):
     if len(entities) <= 1:
         return []
 
+    entities = list(entities)
+
     for i, e in enumerate(entities):
         if not isinstance(e, GeometryEntity):
             try:
