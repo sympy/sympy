@@ -156,11 +156,14 @@ def test_tan_cot():
     ### ???
     assert tan(x) == 1/cot(x)
 
-@XFAIL
 def test_tan_cot2():
     x = Symbol('x')
     assert trigsimp(tan(x) - 1/cot(x)) == 0
     assert trigsimp(3*tanh(x)**7 - 2/coth(x)**7) == tanh(x)**7
+
+def test_tan_cot3():
+    x = Symbol('x')
+    assert trigsimp(tan(x)*cot(x)) == 1
 
 @XFAIL
 def test_factorial_simplify():
