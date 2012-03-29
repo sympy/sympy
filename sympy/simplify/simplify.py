@@ -2781,6 +2781,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     from the input expression by doing this.
     """
     from sympy.simplify.hyperexpand import hyperexpand
+    from sympy.functions.special.bessel import BesselBase
 
     original_expr = expr = sympify(expr)
 
@@ -2837,6 +2838,9 @@ def simplify(expr, ratio=1.7, measure=count_ops):
 
     # hyperexpand automatically only works on hypergeometric terms
     expr = hyperexpand(expr)
+
+    if expr.has(BesselBase):
+        expr = besselsimp(expr)
 
     if expr.has(C.TrigonometricFunction):
         expr = trigsimp(expr)
@@ -3148,5 +3152,72 @@ def _logcombine(expr, force=False):
     if expr.is_Pow:
         return _logcombine(expr.args[0], force)**\
         _logcombine(expr.args[1], force)
+
+    return expr
+
+def besselsimp(expr):
+    """
+    Simplify bessel-type functions.
+
+    This routine tries to simplify bessel-type functions. Currently it only
+    works on the Bessel J and I functions, however. It works by looking at all
+    such functions in turn, and eliminating factors of "I" and "-1" (actually
+    their polar equivalents) in front of the argument. After that, functions of
+    half-integer order are rewritten using trigonometric functions.
+
+    >>> from sympy import besselj, besseli, besselsimp, polar_lift, I, S
+    >>> from sympy.abc import z, nu
+    >>> besselsimp(besselj(nu, z*polar_lift(-1)))
+    exp(I*pi*nu)*besselj(nu, z)
+    >>> besselsimp(besseli(nu, z*polar_lift(-I)))
+    exp(-I*pi*nu/2)*besselj(nu, z)
+    >>> besselsimp(besseli(S(-1)/2, z))
+    sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
+    """
+    from sympy import besselj, besseli, jn, I, pi, Dummy
+    # TODO
+    # - extension to more types of functions
+    #   (at least rewriting functions of half integer order should be straight
+    #    forward also for Y and K)
+    # - better algorithm?
+    # - simplify (cos(pi*b)*besselj(b,z) - besselj(-b,z))/sin(pi*b) ...
+    # - use contiguity relations?
+
+    def replacer(fro, to, factors):
+        factors = set(factors)
+        def repl(nu, z):
+            if factors.intersection(Mul.make_args(z)):
+                return to(nu, z)
+            return fro(nu, z)
+        return repl
+    def torewrite(fro, to):
+        def tofunc(nu, z):
+            return fro(nu, z).rewrite(to)
+        return tofunc
+    def tominus(fro):
+        def tofunc(nu, z):
+            return exp(I*pi*nu)*fro(nu, exp_polar(-I*pi)*z)
+        return tofunc
+
+    ifactors = [I, exp_polar(I*pi/2), exp_polar(-I*pi/2)]
+    expr = expr.replace(besselj, replacer(besselj,
+                                          torewrite(besselj, besseli), ifactors))
+    expr = expr.replace(besseli, replacer(besseli,
+                                          torewrite(besseli, besselj), ifactors))
+
+    minusfactors = [-1, exp_polar(I*pi)]
+    expr = expr.replace(besselj, replacer(besselj, tominus(besselj), minusfactors))
+    expr = expr.replace(besseli, replacer(besseli, tominus(besseli), minusfactors))
+
+    z0 = Dummy('z')
+    def expander(fro):
+        def repl(nu, z):
+            if (nu % 1) != S(1)/2:
+                return fro(nu, z)
+            return unpolarify(fro(nu, z0).rewrite(besselj).rewrite(jn).expand(func=True)).subs(z0, z)
+        return repl
+
+    expr = expr.replace(besselj, expander(besselj))
+    expr = expr.replace(besseli, expander(besseli))
 
     return expr

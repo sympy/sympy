@@ -5,7 +5,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
     factor, Mul, O, hyper, Add, Float, radsimp, collect_const, hyper,
-    signsimp)
+    signsimp, besselsimp)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
@@ -1038,3 +1038,16 @@ def test_issue_2998():
 def test_signsimp():
     e = x*(-x + 1) + x*(x - 1)
     assert signsimp(Eq(e, 0)) == True
+
+def test_besselsimp():
+    from sympy import besselj, besseli, besselk, bessely, jn, yn, exp_polar, cosh
+    assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
+           besselj(y, z)
+    assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
+           besselj(a, 2*sqrt(x))
+    assert besselsimp(sqrt(2)*sqrt(pi)*x**(S(1)/4)*exp(I*pi/4)*exp(-I*pi*a/2) * \
+                      besseli(-S(1)/2, sqrt(x)*exp_polar(I*pi/2)) * \
+                      besseli(a, sqrt(x)*exp_polar(I*pi/2))/2) == \
+           besselj(a, sqrt(x)) * cos(sqrt(x))
+    assert besselsimp(besseli(S(-1)/2, z)) == sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
+    assert besselsimp(besseli(a, z*exp_polar(-I*pi/2))) == exp(-I*pi*a/2)*besselj(a, z)
