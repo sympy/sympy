@@ -60,6 +60,7 @@ def test_latex_basic():
     assert latex(x | y | z) == r"x \vee y \vee z"
     assert latex((x & y) | z) == r"z \vee \left(x \wedge y\right)"
     assert latex(Implies(x,y)) == r"x \Rightarrow y"
+    assert latex(~(x >> ~y)) == r"\neg (x \Rightarrow \neg y)"
 
     assert latex(~x, symbol_names={x: "x_i"}) == r"\neg x_i"
     assert latex(x & y, symbol_names={x: "x_i", y: "y_i"}) == \
@@ -244,6 +245,16 @@ def test_latex_finiteset():
             r'\left{1, 2, 3, ..., 48, 49, 50\right}')
     assert latex(FiniteSet(range(1, 6)) == r'\left{1, 2, 3, 4, 5\right}')
 
+def test_latex_frozenset():
+    assert latex(frozenset(range(1, 51)) ==\
+            r'\left{1, 2, 3, ..., 48, 49, 50\right}')
+    assert latex(frozenset(range(1, 6)) == r'\left{1, 2, 3, 4, 5\right}')
+
+def test_latex_set():
+    assert latex(set(range(1, 51)) ==\
+            r'\left{1, 2, 3, ..., 48, 49, 50\right}')
+    assert latex(set(range(1, 6)) == r'\left{1, 2, 3, 4, 5\right}')
+
 def test_latex_intervals():
     a = Symbol('a', real=True)
     assert latex(Interval(0, a)) == r"\left[0, a\right]"
@@ -340,6 +351,9 @@ def test_latex_Piecewise():
                        " \\text{otherwise} \\end{cases}"
     assert latex(p, itex=True) == "\\begin{cases} x & \\text{for}\: x \\lt 1 \\\\x^{2} &" \
                                   " \\text{otherwise} \\end{cases}"
+    p = Piecewise((x, x < 0), (0, x >= 0))
+    assert latex(p) == "\\begin{cases} x & \\text{for}\\: x < 0 \\\\0 &" \
+                       " \\text{for}\\: x \\geq 0 \\end{cases}"
 
 def test_latex_Matrix():
     M = Matrix([[1+x, y],[y, x-1]])
