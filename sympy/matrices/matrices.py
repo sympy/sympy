@@ -2375,7 +2375,7 @@ class MatrixBase(object):
         elif method == "berkowitz":
             return self.berkowitz_det()
         elif method == "lu_decomposition":
-            return self.det_lu_decomposition()
+            return self.det_LU_decomposition()
         else:
             raise ValueError("Determinant method unrecognized")
 
@@ -2458,23 +2458,13 @@ class MatrixBase(object):
 
         M, n = self[:,:], self.rows
 
-        if n == 1:
-            det = M[0, 0]
-        elif n == 2:
-            det = M[0, 0]*M[1, 1] - M[0, 1]*M[1, 0]
-        else:
-            sign = 1 # track current sign in case of column swap
-
         l, u, p = M.LUdecomposition()
-        produ = 1
-        prodl = 1
+        prod = 1
         for k in range(n):
-            produ = produ*u[k,k]
-            prodl = prodl*l[k,k]
-        # currently ignoring p returned...what do I need to do to get this right? comer.d
-        det = sign * produ * prodl
+            prod = prod*u[k,k]*l[k,k]
+# currently ignoring p returned...what do I need to do to get this right? comer.d
 
-        return det.expand()
+        return prod.expand()
 
     def adjugate(self, method="berkowitz"):
         """

@@ -145,7 +145,7 @@ def test_determinant():
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
 
     for M in [Matrix(), Matrix([[1]])]:
-        assert M.det() == M.det_bareis() == M.berkowitz_det() == M.det_lu_decomposition() == 1
+        assert M.det() == M.det_bareis() == M.berkowitz_det() == M.det_LU_decomposition() == 1
 
     M = Matrix(( (-3,  2),
                  ( 8, -5) ))
