@@ -2294,7 +2294,7 @@ class MatrixBase(object):
             return delta.equals(self.zeros(self.rows, self.cols))
         else:
             return self == -self.transpose()
-            
+
     def is_diagonal(self):
         """
         Check if matrix is diagonal,
@@ -2357,7 +2357,7 @@ class MatrixBase(object):
 
         See Also
         ========
-        
+
         det_bareis
         berkowitz_det
         det_lu_decomposition
@@ -2466,16 +2466,16 @@ class MatrixBase(object):
             sign = 1 # track current sign in case of column swap
 
         l, u, p = M.LUdecomposition()
-        produ = 1 
+        produ = 1
         prodl = 1
         for k in range(n):
             produ = produ*u[k,k]
-            prodl = prodl*l[k,k]    
-        # currently ignoring p returned...what do I need to do to get this right? comer.d    
+            prodl = prodl*l[k,k]
+        # currently ignoring p returned...what do I need to do to get this right? comer.d
         det = sign * produ * prodl
-        
+
         return det.expand()
-        
+
     def adjugate(self, method="berkowitz"):
         """
         Returns the adjugate matrix.
