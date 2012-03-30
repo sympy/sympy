@@ -2375,7 +2375,7 @@ class MatrixBase(object):
         elif method == "berkowitz":
             return self.berkowitz_det()
         elif method == "lu_decomposition":
-            return self.lu_decomposition()
+            return self.det_lu_decomposition()
         else:
             raise ValueError("Determinant method unrecognized")
 
