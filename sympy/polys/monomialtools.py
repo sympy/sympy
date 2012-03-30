@@ -288,6 +288,18 @@ def monomial_min(*monoms):
 
     return tuple(M)
 
+def monomial_deg(M):
+    """
+    Returns the total degree of a monomial.
+
+    For example, the total degree of `xy^2` is 3:
+
+    >>> from sympy.polys.monomialtools import monomial_deg
+    >>> monomial_deg((1, 2))
+    3
+    """
+    return sum(M)
+
 class Monomial(PicklableWithSlots):
     """Class representing a monomial, i.e. a product of powers. """
 
