@@ -210,13 +210,10 @@ def test_bessel():
 
     # TODO more orthogonality integrals
 
-    # TODO there is some improvement possible here:
-    #  - the result can be simplified to besselj(y, z))
-    assert powdenest(simplify(integrate(sin(z*x)*(x**2-1)**(-(y+S(1)/2)),
+    assert simplify(integrate(sin(z*x)*(x**2-1)**(-(y+S(1)/2)),
                               (x, 1, oo), meijerg=True, conds='none')
-                              *2/((z/2)**y*sqrt(pi)*gamma(S(1)/2-y))),
-                     polar=True) == \
-           exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))
+                              *2/((z/2)**y*sqrt(pi)*gamma(S(1)/2-y))) == \
+           besselj(y, z)
 
     # Werner Rosenheinrich
     # SOME INDEFINITE INTEGRALS OF BESSEL FUNCTIONS

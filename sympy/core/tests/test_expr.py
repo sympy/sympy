@@ -1346,3 +1346,6 @@ def test_round():
     assert str((pi/10 + E*I).round(2)) == '0.31 + 2.72*I'
     assert (pi/10 + E*I).round(2).as_real_imag() == (0.31, 2.72)
     assert (pi/10 + E*I).round(2) == Float(0.31, 2) +  I*Float(2.72, 3)
+
+    # issue 3815
+    assert (I**(I+3)).round(3) == Float('-0.208','')*I

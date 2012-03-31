@@ -145,12 +145,17 @@ def _sqrt_match(p):
     >>> _sqrt_match(1 + sqrt(2) + sqrt(2)*sqrt(3) +  2*sqrt(1+sqrt(5)))
     [1 + sqrt(2) + sqrt(6), 2, 1 + sqrt(5)]
     """
+    from sympy.simplify.simplify import split_surds
 
     p = _mexpand(p)
     if p.is_Number:
         res = (p, S.Zero, S.Zero)
     elif p.is_Add:
         pargs = list(p.args)
+        if all((x**2).is_Rational for x in pargs):
+            r, b, a = split_surds(p)
+            res = a, b, r
+            return list(res)
         # to make the process canonical, the argument is included in the tuple
         # so when the max is selected, it will be the largest arg having a
         # given depth
@@ -159,9 +164,10 @@ def _sqrt_match(p):
         if nmax[0] == 0:
             res = []
         else:
+            # select r
             depth, _, i = nmax
             r = pargs.pop(i)
-            a = Add._from_args(pargs)
+            v.pop(i)
             b = S.One
             if r.is_Mul:
                 bv = []
@@ -171,9 +177,31 @@ def _sqrt_match(p):
                         bv.append(x)
                     else:
                         rv.append(x)
-
                 b = Mul._from_args(bv)
                 r = Mul._from_args(rv)
+            # collect terms comtaining r
+            a1 = []
+            b1 = [b]
+            for x in v:
+                if x[0] < depth:
+                    a1.append(x[1])
+                else:
+                    x1 = x[1]
+                    if x1 == r:
+                        b1.append(1)
+                    else:
+                        if x1.is_Mul:
+                            x1args = list(x1.args)
+                            if r in x1:
+                                x1args.remove(r)
+                                b1.append(Mul(*x1args))
+                            else:
+                                a1.append(x[1])
+                        else:
+                            a1.append(x[1])
+            a = Add(*a1)
+            b = Add(*b1)
+            #a = Add._from_args(pargs)
             res = (a, b, r**2)
     else:
         b, r = p.as_coeff_Mul()
@@ -233,14 +261,18 @@ def _sqrtdenest_rec(expr):
     -sqrt(11) - sqrt(7) + sqrt(2) + 3*sqrt(5)
     """
     from sympy.simplify.simplify import radsimp, split_surds, rad_rationalize
+    if not expr.is_Pow:
+        return sqrtdenest(expr)
     if expr.base < 0:
         return sqrt(-1)*_sqrtdenest_rec(sqrt(-expr.base))
-    a, b = split_surds(expr.base)
+    g, a, b = split_surds(expr.base)
+    a = a*sqrt(g)
     if a < b:
         a, b = b, a
     c2 = _mexpand(a**2 - b**2)
     if len(c2.args) > 2:
-        a1, b1 = split_surds(c2)
+        g, a1, b1 = split_surds(c2)
+        a1 = a1*sqrt(g)
         if a1 < b1:
             a1, b1 = b1, a1
         c2_1 = _mexpand(a1**2 - b1**2)
@@ -265,7 +297,7 @@ def _sqrtdenest_rec(expr):
     r = radsimp(r)
     return _mexpand(r)
 
-def _sqrtdenest1(expr):
+def _sqrtdenest1(expr, denester=True):
     """Return denested expr after denesting with simpler methods or, that
     failing, using the denester."""
 
@@ -305,15 +337,21 @@ def _sqrtdenest1(expr):
         if z is not None:
             return z
 
-    if not is_algebraic(expr):
+    if not denester or not is_algebraic(expr):
         return expr
+
+    res = sqrt_biquadratic_denest(expr, a, b, r, d2)
+    if res:
+        return res
 
     # now call to the denester
     av0 = [a, b, r, d2]
-    z = _denester([radsimp(expr**2)], av0, 0, sqrt_depth(expr) - 1)[0]
+    z = _denester([radsimp(expr**2)], av0, 0, sqrt_depth(expr))[0]
     if av0[1] is None:
         return expr
     if z is not None:
+        if sqrt_depth(z) == sqrt_depth(expr) and count_ops(z) > count_ops(expr):
+            return expr
         return z
     return expr
 
@@ -331,7 +369,7 @@ def _sqrt_symbolic_denest(a, b, r):
     Examples
     ========
     >>> from sympy.simplify.sqrtdenest import _sqrt_symbolic_denest, sqrtdenest
-    >>> from sympy import sqrt, Symbol, Poly
+    >>> from sympy import sqrt, Symbol
     >>> from sympy.abc import x
 
     >>> a, b, r = 16 - 2*sqrt(29), 2, -10*sqrt(29) + 55
@@ -394,6 +432,75 @@ def _sqrt_numeric_denest(a, b, r, d2):
         vad1 = radsimp(1/vad)
         return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
 
+def sqrt_biquadratic_denest(expr, a, b, r, d2):
+    """denest expr = sqrt(a + b*sqrt(r))
+    where a, b, r are linear combinations of square roots of
+    positive rationals on the rationals (SQRR) and r > 0, b != 0,
+    d2 = a**2 - b**2*r > 0
+
+    If it cannot denest it returns None.
+
+    ALGORITHM
+    Search for a solution A of type SQRR of the biquadratic equation
+    4*A**4 - 4*a*A**2 + b**2*r = 0                               (1)
+    sqd = sqrt(a**2 - b**2*r)
+    Choosing the sqrt to be positive, the possible solutions are
+    A = sqrt(a/2 +/- sqd/2)
+    Since a, b, r are SQRR, then a**2 - b**2*r is a SQRR,
+    so if sqd can be denested, it is done by
+    _sqrtdenest_rec, and the result is a SQRR.
+    Similarly for A.
+    Examples of solutions (in both cases a and sqd are positive):
+
+      Example of expr with solution sqrt(a/2 + sqd/2) but not
+      solution sqrt(a/2 - sqd/2):
+      expr = sqrt(-sqrt(15) - sqrt(2)*sqrt(-sqrt(5) + 5) - sqrt(3) + 8)
+      a = -sqrt(15) - sqrt(3) + 8; sqd = -2*sqrt(5) - 2 + 4*sqrt(3)
+
+      Example of expr with solution sqrt(a/2 - sqd/2) but not
+      solution sqrt(a/2 + sqd/2):
+      w = 2 + r2 + r3 + (1 + r3)*sqrt(2 + r2 + 5*r3)
+      expr = sqrt((w**2).expand())
+      a = 4*sqrt(6) + 8*sqrt(2) + 47 + 28*sqrt(3)
+      sqd = 29 + 20*sqrt(3)
+
+    Define B = b/2*A; eq.(1) implies a = A**2 + B**2*r; then
+    expr**2 = a + b*sqrt(r) = (A + B*sqrt(r))**2
+
+    Examples
+    ========
+    >>> from sympy import sqrt
+    >>> from sympy.simplify.sqrtdenest import _sqrt_match, sqrt_biquadratic_denest
+    >>> z = sqrt((2*sqrt(2) + 4)*sqrt(2 + sqrt(2)) + 5*sqrt(2) + 8)
+    >>> a, b, r = _sqrt_match(z**2)
+    >>> d2 = a**2 - b**2*r
+    >>> sqrt_biquadratic_denest(z, a, b, r, d2)
+    sqrt(2) + sqrt(sqrt(2) + 2) + 2
+    """
+    from sympy.simplify.simplify import radsimp, rad_rationalize
+    if r <= 0 or d2 < 0 or not b or sqrt_depth(expr.base) < 2:
+        return None
+    for x in (a, b, r):
+        for y in x.args:
+            y2 = y**2
+            if not y2.is_Integer or not y2.is_positive:
+                return None
+    sqd = _mexpand(sqrtdenest(sqrt(radsimp(d2))))
+    if sqrt_depth(sqd) > 1:
+        return None
+    x1, x2 = [a/2 + sqd/2, a/2 - sqd/2]
+    # look for a solution A with depth 1
+    for x in (x1, x2):
+        A = sqrtdenest(sqrt(x))
+        if sqrt_depth(A) > 1:
+            continue
+        Bn, Bd = rad_rationalize(b, _mexpand(2*A))
+        B = Bn/Bd
+        z = A + B*sqrt(r)
+        if z < 0:
+            z = -z
+        return _mexpand(z)
+    return None
 
 def _denester(nested, av0, h, max_depth_level):
     """Denests a list of expressions that contain nested square roots.
@@ -454,11 +561,12 @@ def _denester(nested, av0, h, max_depth_level):
             nested2 = [_mexpand(v[0]**2) -
                        _mexpand(R*v[1]**2) for v in values] + [R]
         d, f = _denester(nested2, av0, h + 1, max_depth_level)
+        #d = sqrtdenest(d)
         if not f:
             return None, None
         if not any(f[i] for i in range(len(nested))):
             v = values[-1]
-            return sqrt(v[0] + v[1]*d), f
+            return sqrt(v[0] + _mexpand(v[1]*d)), f
         else:
             p = Mul(*[nested[i] for i in range(len(nested)) if f[i]])
             v = _sqrt_match(p)
@@ -470,14 +578,20 @@ def _denester(nested, av0, h, max_depth_level):
                 if vad <= 0:
                     # return the radicand from the previous invocation.
                     return sqrt(nested[-1]), [0]*len(nested)
-                if not(sqrt_depth(vad) < sqrt_depth(R) + 1 or
+                if not(sqrt_depth(vad) <= sqrt_depth(R) + 1 or
                        (vad**2).is_Number):
                     av0[1] = None
                     return None, None
 
-                vad1 = radsimp(1/vad)
-                return _mexpand(sqrt(vad/2) +
-                                sign(v[1])*sqrt(_mexpand(v[1]**2*R*vad1/2))), f
+                sqvad = _sqrtdenest1(sqrt(vad), denester=False)
+                if not (sqrt_depth(sqvad) <= sqrt_depth(R) + 1):
+                    av0[1] = None
+                    return None, None
+                sqvad1 = radsimp(1/sqvad)
+                res = _mexpand(sqvad/sqrt(2) + (v[1]*sqrt(R)*sqvad1/sqrt(2)))
+                return res, f
+
+                      #          sign(v[1])*sqrt(_mexpand(v[1]**2*R*vad1/2))), f
             else: #Solution requires a fourth root
                 s2 = _mexpand(v[1]*R) + d
                 if s2 <= 0:

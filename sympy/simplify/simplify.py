@@ -775,7 +775,7 @@ def trigsimp(expr, deep=False, recursive=False):
     Examples
     ========
 
-    >>> from sympy import trigsimp, sin, cos, log
+    >>> from sympy import trigsimp, sin, cos, log, cosh, sinh
     >>> from sympy.abc import x, y
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e)
@@ -786,103 +786,102 @@ def trigsimp(expr, deep=False, recursive=False):
     log(2)
 
     """
-    sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
-    if not expr.has(sin, cos, tan, cot):
+    if not expr.has(C.TrigonometricFunction) and not expr.has(C.HyperbolicFunction):
         return expr
 
     if recursive:
         w, g = cse(expr)
-        g = trigsimp_nonrecursive(g[0])
+        g = trigsimp_recursive(g[0])
 
         for sub in reversed(w):
             g = g.subs(sub[0], sub[1])
-            g = trigsimp_nonrecursive(g)
+            g = trigsimp_recursive(g)
         result = g
     else:
-        result = trigsimp_nonrecursive(expr, deep)
+        result = trigsimp_recursive(expr, deep)
 
     return result
 
-
-def trigsimp_nonrecursive(expr, deep=False):
-    """
-    A nonrecursive trig simplifier, used from trigsimp. Reduces expression by
-    using known trig identities
-
-    Notes
-    =====
-
-    deep -> apply trigsimp inside functions
-
-    Examples
-    ========
-
-    >>> from sympy import cos, sin, log
-    >>> from sympy.simplify.simplify import trigsimp, trigsimp_nonrecursive
-    >>> from sympy.abc import x, y
-    >>> e = 2*sin(x)**2 + 2*cos(x)**2
-    >>> trigsimp(e)
-    2
-    >>> trigsimp_nonrecursive(log(e))
-    log(2*sin(x)**2 + 2*cos(x)**2)
-    >>> trigsimp_nonrecursive(log(e), deep=True)
-    log(2)
-
-    """
+def trigsimp_recursive(expr, deep = False):
+    a,b,c = map(Wild, 'abc')
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
+    sinh, cosh, tanh, coth = C.sinh, C.cosh, C.tanh, C.coth
+    # for the simplifications like sinh/cosh -> tanh:
+    matchers_division = (
+        (a*sin(b)**c/cos(b)**c, a*tan(b)**c),
+        (a*tan(b)**c*cos(b)**c, a*sin(b)**c),
+        (a*cot(b)**c*sin(b)**c, a*cos(b)**c),
+        (a*tan(b)**c/sin(b)**c, a/cos(b)**c),
+        (a*cot(b)**c/cos(b)**c, a/sin(b)**c),
+        (a*cot(b)**c*tan(b)**c, a),
+
+        (a*sinh(b)**c/cosh(b)**c, a*tanh(b)**c),
+        (a*tanh(b)**c*cosh(b)**c, a*sinh(b)**c),
+        (a*coth(b)**c*sinh(b)**c, a*cosh(b)**c),
+        (a*tanh(b)**c/sinh(b)**c, a/cosh(b)**c),
+        (a*coth(b)**c/cosh(b)**c, a/sinh(b)**c),
+        (a*coth(b)**c*tanh(b)**c, a)
+        )
+    # for cos(x)**2 + sin(x)**2 -> 1
+    matchers_identity = (
+        (a*sin(b)**2,  a - a*cos(b)**2),
+        (a*tan(b)**2,  a*(1/cos(b))**2 - a),
+        (a*cot(b)**2,  a*(1/sin(b))**2 - a),
+
+        (a*sinh(b)**2, a*cosh(b)**2 - a),
+        (a*tanh(b)**2, a - a*(1/cosh(b))**2),
+        (a*coth(b)**2, a + a*(1/sinh(b))**2)
+        )
+    # Reduce any lingering artefacts, such as sin(x)**2 changing
+    # to 1-cos(x)**2 when sin(x)**2 was "simpler"
+    artifacts = (
+        (a - a*cos(b)**2 + c,        a*sin(b)**2 + c, cos),
+        (a - a*(1/cos(b))**2 + c,   -a*tan(b)**2 + c, cos),
+        (a - a*(1/sin(b))**2 + c,   -a*cot(b)**2 + c, sin),
+
+        (a - a*cosh(b)**2 + c,      -a*sinh(b)**2 + c, cosh),
+        (a - a*(1/cosh(b))**2 + c,   a*tanh(b)**2 + c, cosh),
+        (a + a*(1/sinh(b))**2 + c,   a*coth(b)**2 + c, sinh)
+        )
 
     if expr.is_Function:
         if deep:
-            return expr.func(trigsimp_nonrecursive(expr.args[0], deep))
+            return expr.func(trigsimp_recursive(expr.args[0], deep))
     elif expr.is_Mul:
         # do some simplifications like sin/cos -> tan:
-        a,b,c = map(Wild, 'abc')
-        matchers = (
-                (a*sin(b)**c/cos(b)**c, a*tan(b)**c),
-                (a*tan(b)**c*cos(b)**c, a*sin(b)**c),
-                (a*cot(b)**c*sin(b)**c, a*cos(b)**c),
-                (a*tan(b)**c/sin(b)**c, a/cos(b)**c),
-                (a*cot(b)**c/cos(b)**c, a/sin(b)**c),
-        )
-        for pattern, simp in matchers:
+        for pattern, simp in matchers_division:
             res = expr.match(pattern)
             if res is not None:
                 # if c is missing or zero, do nothing:
                 if (not c in res) or res[c] == 0:
                     continue
-                # if "a" contains any of sin("b"), cos("b"), tan("b") or cot("b),
+                # if "a" contains any of sin("b"), cos("b"), tan("b"), cot("b),
+                # sinh("b"), cosh("b"), tanh("b") or coth("b),
                 # skip the simplification:
-                if res[a].has(cos(res[b]), sin(res[b]), tan(res[b]), cot(res[b])):
+                if res[a].has(C.TrigonometricFunction) or res[a].has(C.HyperbolicFunction):
                     continue
                 # simplify and finish:
                 expr = simp.subs(res)
                 break
         if not expr.is_Mul:
-            return trigsimp_nonrecursive(expr, deep)
+            return trigsimp_recursive(expr, deep)
         ret = S.One
         for x in expr.args:
-            ret *= trigsimp_nonrecursive(x, deep)
+            ret *= trigsimp_recursive(x, deep)
         return ret
     elif expr.is_Pow:
-        return Pow(trigsimp_nonrecursive(expr.base, deep),
-                trigsimp_nonrecursive(expr.exp, deep))
+        return Pow(trigsimp_recursive(expr.base, deep),
+                trigsimp_recursive(expr.exp, deep))
     elif expr.is_Add:
         # TODO this needs to be faster
 
-        # The types of trig functions we are looking for
-        a,b,c = map(Wild, 'abc')
-        matchers = (
-            (a*sin(b)**2, a - a*cos(b)**2),
-            (a*tan(b)**2, a*(1/cos(b))**2 - a),
-            (a*cot(b)**2, a*(1/sin(b))**2 - a)
-        )
-
+        # The types of hyper functions we are looking for
         # Scan for the terms we need
         ret = S.Zero
         for term in expr.args:
-            term = trigsimp_nonrecursive(term, deep)
+            term = trigsimp_recursive(term, deep)
             res = None
-            for pattern, result in matchers:
+            for pattern, result in matchers_identity:
                 res = term.match(pattern)
                 if res is not None:
                     ret += result.subs(res)
@@ -892,12 +891,6 @@ def trigsimp_nonrecursive(expr, deep=False):
 
         # Reduce any lingering artifacts, such as sin(x)**2 changing
         # to 1-cos(x)**2 when sin(x)**2 was "simpler"
-        artifacts = (
-            (a - a*cos(b)**2 + c, a*sin(b)**2 + c, cos),
-            (a - a*(1/cos(b))**2 + c, -a*tan(b)**2 + c, cos),
-            (a - a*(1/sin(b))**2 + c, -a*cot(b)**2 + c, sin)
-        )
-
         expr = ret
         for pattern, result, ex in artifacts:
             # Substitute a new wild that excludes some function(s)
@@ -918,6 +911,7 @@ def trigsimp_nonrecursive(expr, deep=False):
 
         return expr
     return expr
+
 
 def collect_sqrt(expr, evaluate=True):
     """Return expr with terms having common square roots collected together.
@@ -1078,12 +1072,13 @@ def _split_gcd(*a):
     """
     split the list of integers `a` into a list of integers a1 having
     g = gcd(a1) and a list a2 whose elements are not divisible by g
+    Returns g, a1, a2
 
     Examples
     ========
     >>> from sympy.simplify.simplify import _split_gcd
     >>> _split_gcd(55,35,22,14,77,10)
-    ([55, 35, 10], [22, 14, 77])
+    (5, [55, 35, 10], [22, 14, 77])
     """
     g = a[0]
     b1 = [g]
@@ -1095,7 +1090,7 @@ def _split_gcd(*a):
         else:
             g = g1
             b1.append(x)
-    return b1, b2
+    return g, b1, b2
 
 def split_surds(expr):
     """
@@ -1108,20 +1103,31 @@ def split_surds(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.simplify import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
-    (sqrt(5)/7 + sqrt(10) + sqrt(15), sqrt(6) + 3*sqrt(3))
+    (5, 1/7 + sqrt(2) + sqrt(3), sqrt(6) + 3*sqrt(3))
     """
     coeff_muls =  [x.as_coeff_Mul() for x in expr.args]
     surds = [x[1]**2 for x in coeff_muls if x[1].is_Pow]
-    b1, b2 = _split_gcd(*surds)
+    g, b1, b2 = _split_gcd(*surds)
+    g2 = g
+    if not b2 and len(b1) >= 2:
+        b1n = [x/g for x in b1]
+        b1n = [x for x in b1n if x != 1]
+        # only a common factor has been factored; split again
+        g1, b1n, b2 = _split_gcd(*b1n)
+        g2 = g*g1
     a1v, a2v = [], []
     for c, s in coeff_muls:
-        if s**2 in b1:
-            a1v.append(c*s)
+        if s.is_Pow and s.exp == S.Half:
+            s1 = s.base
+            if s1 in b1:
+                a1v.append(c*sqrt(s1/g2))
+            else:
+                a2v.append(c*s)
         else:
             a2v.append(c*s)
     a = Add(*a1v)
     b = Add(*a2v)
-    return a, b
+    return g2, a, b
 
 def rad_rationalize(num, den):
     """
@@ -1137,7 +1143,8 @@ def rad_rationalize(num, den):
     """
     if not den.is_Add:
         return num, den
-    a, b = split_surds(den)
+    g, a, b = split_surds(den)
+    a = a*sqrt(g)
     num = _mexpand((a - b)*num)
     den = _mexpand(a**2 - b**2)
     return rad_rationalize(num, den)
@@ -2768,6 +2775,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     from the input expression by doing this.
     """
     from sympy.simplify.hyperexpand import hyperexpand
+    from sympy.functions.special.bessel import BesselBase
 
     original_expr = expr = sympify(expr)
 
@@ -2825,7 +2833,10 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     # hyperexpand automatically only works on hypergeometric terms
     expr = hyperexpand(expr)
 
-    if expr.has(C.TrigonometricFunction):
+    if expr.has(BesselBase):
+        expr = besselsimp(expr)
+
+    if expr.has(C.TrigonometricFunction) or expr.has(C.HyperbolicFunction):
         expr = trigsimp(expr)
 
     if expr.has(C.log):
@@ -3135,5 +3146,72 @@ def _logcombine(expr, force=False):
     if expr.is_Pow:
         return _logcombine(expr.args[0], force)**\
         _logcombine(expr.args[1], force)
+
+    return expr
+
+def besselsimp(expr):
+    """
+    Simplify bessel-type functions.
+
+    This routine tries to simplify bessel-type functions. Currently it only
+    works on the Bessel J and I functions, however. It works by looking at all
+    such functions in turn, and eliminating factors of "I" and "-1" (actually
+    their polar equivalents) in front of the argument. After that, functions of
+    half-integer order are rewritten using trigonometric functions.
+
+    >>> from sympy import besselj, besseli, besselsimp, polar_lift, I, S
+    >>> from sympy.abc import z, nu
+    >>> besselsimp(besselj(nu, z*polar_lift(-1)))
+    exp(I*pi*nu)*besselj(nu, z)
+    >>> besselsimp(besseli(nu, z*polar_lift(-I)))
+    exp(-I*pi*nu/2)*besselj(nu, z)
+    >>> besselsimp(besseli(S(-1)/2, z))
+    sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
+    """
+    from sympy import besselj, besseli, jn, I, pi, Dummy
+    # TODO
+    # - extension to more types of functions
+    #   (at least rewriting functions of half integer order should be straight
+    #    forward also for Y and K)
+    # - better algorithm?
+    # - simplify (cos(pi*b)*besselj(b,z) - besselj(-b,z))/sin(pi*b) ...
+    # - use contiguity relations?
+
+    def replacer(fro, to, factors):
+        factors = set(factors)
+        def repl(nu, z):
+            if factors.intersection(Mul.make_args(z)):
+                return to(nu, z)
+            return fro(nu, z)
+        return repl
+    def torewrite(fro, to):
+        def tofunc(nu, z):
+            return fro(nu, z).rewrite(to)
+        return tofunc
+    def tominus(fro):
+        def tofunc(nu, z):
+            return exp(I*pi*nu)*fro(nu, exp_polar(-I*pi)*z)
+        return tofunc
+
+    ifactors = [I, exp_polar(I*pi/2), exp_polar(-I*pi/2)]
+    expr = expr.replace(besselj, replacer(besselj,
+                                          torewrite(besselj, besseli), ifactors))
+    expr = expr.replace(besseli, replacer(besseli,
+                                          torewrite(besseli, besselj), ifactors))
+
+    minusfactors = [-1, exp_polar(I*pi)]
+    expr = expr.replace(besselj, replacer(besselj, tominus(besselj), minusfactors))
+    expr = expr.replace(besseli, replacer(besseli, tominus(besseli), minusfactors))
+
+    z0 = Dummy('z')
+    def expander(fro):
+        def repl(nu, z):
+            if (nu % 1) != S(1)/2:
+                return fro(nu, z)
+            return unpolarify(fro(nu, z0).rewrite(besselj).rewrite(jn).expand(func=True)).subs(z0, z)
+        return repl
+
+    expr = expr.replace(besselj, expander(besselj))
+    expr = expr.replace(besseli, expander(besseli))
 
     return expr

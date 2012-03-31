@@ -917,54 +917,10 @@ class LatexPrinter(Printer):
             return "%s^T"%self._print(mat)
 
     def _print_MatAdd(self, expr):
-        c, terms = expr.as_coeff_Add()
-        tex = []
-        if c < 0:
-            tex.append("-")
-            tex.append(self._print(-c))
-
-        for term in Add.make_args(terms):
-            coeff, M = term.as_coeff_Mul()
-
-            if coeff < 0:
-                tex.append("-")
-                coeff = -coeff
-            else:
-                tex.append("+")
-
-            if coeff != 1:
-                tex.append(self._print(coeff))
-            tex.append(self._print(M))
-
-        return " ".join(tex)
+        return self._print_Add(expr)
 
     def _print_MatMul(self, expr):
-        coeff, tail = expr.as_coeff_Mul()
-
-        if not coeff.is_negative:
-            tex = ""
-        else:
-            coeff = -coeff
-            tex = "- "
-
-        if not tail.is_Mul:
-            return tex + self._print(tail)
-
-        separator = " "
-
-        args = tail.args
-        for term in args:
-            pretty = self._print(term)
-
-            if term.is_Add:
-                term_tex = (r"\left(%s\right)" % pretty)
-            else:
-                term_tex = str(pretty)
-
-            tex += separator
-            tex += term_tex
-
-        return tex[1:]
+        return self._print_Mul(expr)
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
@@ -1026,16 +982,12 @@ class LatexPrinter(Printer):
 
     def _print_FiniteSet(self, s):
         if len(s) > 10:
-            #take ten elements from the set at random
-            q = iter(s)
-            printset = [q.next() for i in xrange(10)]
+            printset = s.args[:3] + ('...',) + s.args[-3:]
         else:
-            printset = s
-        try:
-            printset.sort()
-        except AttributeError:
-            pass
-        return r"\left\{" + r", ".join(self._print(el) for el in printset) + r"\right\}"
+            printset = s.args
+        return (r"\left\{"
+              + r", ".join(self._print(el) for el in printset)
+              + r"\right\}")
     def _print_Interval(self, i):
         if i.start == i.end:
             return r"\left{%s\right}" % self._print(i.start)

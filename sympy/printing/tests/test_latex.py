@@ -2,12 +2,13 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Function, factorial, factorial2, floor, ceiling, Abs, re, im, conjugate,
     Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum, Product,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg, polar_lift,
-    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan, Min, Max,
-    cot, coth, re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
-    FallingFactorial, polylog, lerchphi, Ei, expint, Si, Ci, Shi, Chi, gamma, Tuple,
-    MellinTransform, InverseMellinTransform, LaplaceTransform, InverseLaplaceTransform,
-    FourierTransform, InverseFourierTransform, SineTransform, InverseSineTransform,
-    CosineTransform, InverseCosineTransform)
+    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan, Min, Max, cot, coth,
+    re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
+    FallingFactorial, polylog, lerchphi, Ei, expint, Si, Ci, Shi, Chi, gamma,
+    Tuple, MellinTransform, InverseMellinTransform, LaplaceTransform,
+    InverseLaplaceTransform, FourierTransform, InverseFourierTransform,
+    SineTransform, InverseSineTransform, CosineTransform,
+    InverseCosineTransform, FiniteSet)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
@@ -238,6 +239,11 @@ def test_latex_integrals():
     assert latex(Integral(x, x, y, (z, 0, 1))) == \
         r"\int_{0}^{1}\int\int x\, dx\, dy\, dz"
 
+def test_latex_finiteset():
+    assert latex(FiniteSet(range(1, 51)) ==\
+            r'\left{1, 2, 3, ..., 48, 49, 50\right}')
+    assert latex(FiniteSet(range(1, 6)) == r'\left{1, 2, 3, 4, 5\right}')
+
 def test_latex_intervals():
     a = Symbol('a', real=True)
     assert latex(Interval(0, a)) == r"\left[0, a\right]"
@@ -253,7 +259,7 @@ def test_latex_union():
     assert latex(Union(Interval(0, 1), Interval(2, 3))) == \
         r"\left[0, 1\right] \cup \left[2, 3\right]"
     assert latex(Union(Interval(1, 1), Interval(2, 2), Interval(3, 4))) == \
-        r"\left[3, 4\right] \cup \left\{1, 2\right\}"
+        r"\left\{1, 2\right\} \cup \left[3, 4\right]"
 
 def test_latex_sum():
     assert latex(Sum(x*y**2, (x, -2, 2), (y, -5, 5))) == \
@@ -462,16 +468,35 @@ def test_matAdd():
     C = MatrixSymbol('C', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     l = LatexPrinter()
-    assert l._print_MatAdd(C - 2*B) in ['- 2 B + C', '+ C - 2 B']
-    assert l._print_MatAdd(C + 2*B) in ['+ 2 B + C', '+ C + 2 B']
+    assert l._print_MatAdd(C - 2*B) in ['- 2 B + C', 'C - 2 B']
+    assert l._print_MatAdd(C + 2*B) in ['2 B + C', 'C + 2 B']
+    assert l._print_MatAdd(B - 2*C) in ['B - 2 C', '- 2 C + B']
+    assert l._print_MatAdd(B + 2*C) in ['B + 2 C', '2 C + B']
+
+def test_matMul():
+    from sympy import MatrixSymbol
+    from sympy.printing.latex import LatexPrinter
+    A = MatrixSymbol('A', 5, 5)
+    B = MatrixSymbol('B', 5, 5)
+    x = Symbol('x')
+    l = LatexPrinter()
+    assert l._print_MatMul(2*A) == '2 A'
+    assert l._print_MatMul(2*x*A) == '2 x A'
+    assert l._print_MatMul(-2*A) == '- 2 A'
+    assert l._print_MatMul(1.0*A) == '1.0 A'
+    assert l._print_MatMul(sqrt(2)*A) == r'\sqrt{2} A'
+    assert l._print_MatMul(-sqrt(2)*A) == r'- \sqrt{2} A'
+    assert l._print_MatMul(2*sqrt(2)*x*A) == r'2 \sqrt{2} x A'
+    assert l._print_MatMul(-2*A*(A+2*B)) in [r'- 2 A \left(A + 2 B\right)',
+        r'- 2 A \left(2 B + A\right)']
 
 def test_latex_RandomDomain():
-    from sympy.stats import Normal, Die, Exponential, pspace, Where
+    from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal(0, 1, symbol=Symbol('x1'))
-    assert latex(Where(X>0)) == "Domain: 0 < x_{1}"
+    assert latex(where(X>0)) == "Domain: 0 < x_{1}"
 
     D = Die(6, symbol=Symbol('d1'))
-    assert latex(Where(D>4)) == r"Domain: d_{1} = 5 \vee d_{1} = 6"
+    assert latex(where(D>4)) == r"Domain: d_{1} = 5 \vee d_{1} = 6"
 
     A = Exponential(1, symbol=Symbol('a'))
     B = Exponential(1, symbol=Symbol('b'))

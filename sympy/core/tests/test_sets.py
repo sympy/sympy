@@ -349,6 +349,12 @@ def test_Union_as_relational():
     assert (Interval(0,1, True, True) + FiniteSet(1)).as_relational(x) ==\
             And(Lt(0, x), Le(x, 1))
 
+def test_Intersection_as_relational():
+    x = Symbol('x')
+    assert (Intersection(Interval(0,1), FiniteSet(2),
+            evaluate=False).as_relational(x)
+            == And(And(Le(0, x), Le(x, 1)), Eq(x, 2)))
+
 def test_EmptySet_as_relational():
     assert S.EmptySet.as_relational(Symbol('x')) == False
 

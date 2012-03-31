@@ -13,7 +13,7 @@ from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from entity import GeometryEntity
-
+from sympy.matrices.matrices import Matrix
 
 class Point(GeometryEntity):
     """A point in a 2-dimensional Euclidean space.
@@ -432,6 +432,100 @@ class Point(GeometryEntity):
             return []
 
         return o.intersection(self)
+
+    def rotate(self, angle, pt=None):
+        """Rotate ``angle`` radians counterclockwise about Point ``pt``.
+
+        See Also
+        ========
+
+        rotate, scale
+
+        Examples
+        ========
+
+        >>> from sympy import Point, pi
+        >>> t = Point(1, 0)
+        >>> t.rotate(pi/2)
+        Point(0, 1)
+        >>> t.rotate(pi/2, (2, 0))
+        Point(2, -1)
+
+        """
+        from sympy import cos, sin, Point
+
+        c = cos(angle)
+        s = sin(angle)
+
+        rv = self
+        if pt is not None:
+            pt = Point(pt)
+            rv -= pt
+        x, y = rv.args
+        rv = Point(c*x - s*y, s*x + c*y)
+        if pt is not None:
+            rv += pt
+        return rv
+
+    def scale(self, x=1, y=1):
+        """Scale the coordinates of the Point by multiplying by x and y.
+
+        See Also
+        ========
+
+        rotate, translate
+
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> t = Point(1, 1)
+        >>> t.scale(2)
+        Point(2, 1)
+        >>> t.scale(2, 2)
+        Point(2, 2)
+
+        """
+        return Point(self.x*x, self.y*y)
+
+    def translate(self, x=0, y=0):
+        """Shift the Point by adding x and y to the coordinates of the Point.
+
+        See Also
+        ========
+
+        rotate, scale
+
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> t = Point(0, 1)
+        >>> t.translate(2)
+        Point(2, 1)
+        >>> t.translate(2, 2)
+        Point(2, 3)
+
+        """
+        from sympy import Point
+        if not isinstance(x, Point):
+            pt = Point(x, y)
+        else:
+            pt = x
+        return self + pt
+
+    def transform(self, matrix):
+        """Return the point after applying the transformation described
+        by the 3x3 Matrix, ``matrix``.
+
+        See Also
+        ========
+        geometry.entity.rotate
+        geometry.entity.scale
+        geometry.entity.translate
+        """
+        x, y = self.args
+        return Point(*(Matrix(1, 3, [x, y, 1])*matrix).tolist()[0][:2])
 
     def dot(self, p2):
         """Return dot product of self with another Point."""
