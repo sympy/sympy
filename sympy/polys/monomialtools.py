@@ -119,6 +119,86 @@ class ReversedGradedLexOrder(MonomialOrder):
     def key(self, monomial):
         return (sum(monomial), tuple(reversed([-m for m in monomial])))
 
+class ProductOrder(MonomialOrder):
+    """
+    A product order built from other monomial orders.
+
+    Given (not necessarily total) orders O1, O2, ..., On, their product order
+    P is defined as M1 > M2 iff there exists i such that O1(M1) = O2(M2),
+    ..., Oi(M1) = Oi(M2), O{i+1}(M1) > O{i+1}(M2).
+
+    Product orders are typically built from monomial orders on different sets
+    of variables.
+
+    ProductOrder is constructed by passing a list of pairs
+    [(O1, L1), (O2, L2), ...] where Oi are MonomialOrders and Li are callables.
+    Upon comparison, the Li are passed the total monomial, and should filter
+    out the part of the monomial to pass to Oi.
+
+    Examples
+    ========
+
+    We can use a lexicographic order on x_1, x_2 and also on
+    y_1, y_2, y_3, and their product on {x_i, y_i} as follows:
+
+    >>> from sympy.polys.monomialtools import lex, grlex, ProductOrder
+    >>> P = ProductOrder(
+    ...     (lex, lambda m: m[:2]), # lex order on x_1 and x_2 of monomial
+    ...     (grlex, lambda m: m[2:]) # grlex on y_1, y_2, y_3
+    ... )
+    >>> P((2, 1, 1, 0, 0)) > P((1, 10, 0, 2, 0))
+    True
+
+    Here the exponent `2` of `x_1` in the first monomial
+    (`x_1^2 x_2 y_1`) is bigger than the exponent `1` of `x_1` in the
+    second monomial (`x_1 x_2^10 y_2^2`), so the first monomial is greater
+    in the product ordering.
+
+    >>> P((2, 1, 1, 0, 0)) < P((2, 1, 0, 2, 0))
+    True
+
+    Here the exponents of `x_1` and `x_2` agree, so the grlex order on
+    `y_1, y_2, y_3` is used to decide the ordering. In this case the monomial
+    `y_2^2` is ordered larger than `y_1`, since for the grlex order the degree
+    of the monomial is most important.
+    """
+
+    def __init__(self, *args):
+        self.args = args
+
+    def key(self, monomial):
+        return tuple(O(lamda(monomial)) for (O, lamda) in self.args)
+
+class InverseOrder(MonomialOrder):
+    """
+    The "inverse" of another monomial order.
+
+    If O is any monomial order, we can construct another monomial order iO
+    such that `A >_{iO} B` if and only if `B >_O A`. This is useful for
+    constructing local orders.
+
+    Note that many algorithms only work with *global* orders.
+
+    For example, in the inverse lexicographic order on a single variable `x`,
+    high powers of `x` count as small:
+
+    >>> from sympy.polys.monomialtools import lex, InverseOrder
+    >>> ilex = InverseOrder(lex)
+    >>> ilex((5,)) < ilex((0,))
+    True
+    """
+
+    def __init__(self, O):
+        self.O = O
+
+    def key(self, monomial):
+        from sympy.core.compatibility import iterable
+        def inv(l):
+            if iterable(l):
+                return tuple(inv(x) for x in l)
+            return -l
+        return inv(self.O.key(monomial))
+
 lex = LexOrder()
 grlex = GradedLexOrder()
 grevlex = ReversedGradedLexOrder()

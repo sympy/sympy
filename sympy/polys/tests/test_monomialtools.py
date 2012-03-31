@@ -8,6 +8,7 @@ from sympy.polys.monomialtools import (
     monomial_max, monomial_min,
     monomial_divides,
     Monomial,
+    InverseOrder, ProductOrder
 )
 
 from sympy.polys.polyerrors import ExactQuotientFailed
@@ -91,6 +92,17 @@ def test_grevlex_order():
 
     assert grevlex((0,1,1)) > grevlex((0,0,2))
     assert grevlex((0,3,1)) < grevlex((2,2,1))
+
+def test_InverseOrder():
+    ilex = InverseOrder(lex)
+    igrlex = InverseOrder(grlex)
+
+    assert ilex((1,2,3)) > ilex((2, 0, 3))
+    assert igrlex((1, 2, 3)) < igrlex((0, 2, 3))
+
+def test_ProductOrder():
+    P = ProductOrder((grlex, lambda m: m[:2]), (grlex, lambda m: m[2:]))
+    assert P((1, 3, 3, 4, 5)) > P((2, 1, 5, 5, 5))
 
 def test_monomial_key():
     assert monomial_key() == lex
