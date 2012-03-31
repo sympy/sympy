@@ -9,7 +9,6 @@
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
-from functools import total_ordering
 
 class Tuple(Basic):
     """

@@ -242,11 +242,12 @@ class AskRealHandler(CommonHandler):
                 if expr.base == 1 or expr.base == -1:
                     return True
             elif ask(Q.real(expr.exp), assumptions):
-                if ask(Q.integer(expr.exp), assumptions):
+                if expr.exp.is_Rational and \
+                   ask(Q.even(expr.exp.q), assumptions):
+                    return ask(Q.real(expr.base), assumptions) and \
+                           not ask(Q.negative(expr.base), assumptions)
+                elif ask(Q.integer(expr.exp), assumptions):
                     return True
-                elif ask(Q.negative(expr.base), assumptions) and \
-                     not ask(Q.integer(expr.exp), assumptions):
-                    return False
                 elif ask(Q.positive(expr.base), assumptions):
                     return True
 
@@ -431,6 +432,11 @@ class AskImaginaryHandler(CommonHandler):
         elif ask(Q.real(expr.base), assumptions):
             if ask(Q.imaginary(expr.exp), assumptions):
                 if expr.base == 1 or expr.base == -1:
+                    return False
+            elif ask(Q.real(expr.exp), assumptions):
+                if ask(Q.integer(expr.exp), assumptions):
+                    return False
+                elif ask(Q.positive(expr.base), assumptions):
                     return False
 
     @staticmethod

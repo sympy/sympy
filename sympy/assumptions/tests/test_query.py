@@ -1000,6 +1000,8 @@ def test_imaginary():
     assert ask(Q.imaginary(x**y), Q.imaginary(y) & Q.integer(x))      == None
     assert ask(Q.imaginary(x**y), Q.imaginary(x) & Q.odd(y))          == True
     assert ask(Q.imaginary(x**y), Q.imaginary(x) & Q.even(y))         == False
+    assert ask(Q.imaginary(x**(y)), Q.real(x) & Q.integer(y))         == False
+    assert ask(Q.imaginary(x**(y)), Q.positive(x) & Q.real(y))        == False
 
 def test_infinitesimal():
     assert ask(Q.infinitesimal(x)) == None
