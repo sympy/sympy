@@ -74,30 +74,37 @@ def sdm_monomial_divides(A, B):
 
     Positive examples:
 
-    `A = f_1` and `B = f_1`
+    In the following examples, the monomial is given in terms of x, y and the
+    generator(s), f_1, f_2 etc. The tuple form of that monomial is used in
+    the call to sdm_monomial_divides.
+    Note: the generator appears last in the expression but first in the tuple
+    and other factors appear in the same order that they appear in the monomial
+    expression.
+
+    `A = f_1` divides `B = f_1`
     >>> from sympy.polys.distributedmodules import sdm_monomial_divides
     >>> sdm_monomial_divides((1, 0, 0), (1, 0, 0))
     True
 
-    `A = f_1` and `B = x^2 y f_1`
+    `A = f_1` divides `B = x^2 y f_1`
     >>> sdm_monomial_divides((1, 0, 0), (1, 2, 1))
     True
 
-    `A = xy f_5` and `B = x^2 y f_5`
+    `A = xy f_5` divides `B = x^2 y f_5`
     >>> sdm_monomial_divides((5, 1, 1), (5, 2, 1))
     True
 
     Negative examples:
 
-    `A = f_1` and `B = f_2`
+    `A = f_1` does not divide `B = f_2`
     >>> sdm_monomial_divides((1, 0, 0), (2, 0, 0))
     False
 
-    `A = x f_1` and `B = f_1`
+    `A = x f_1` does not divide `B = f_1`
     >>> sdm_monomial_divides((1, 1, 0), (1, 0, 0))
     False
 
-    `A = xy^2 f_5` and `B = y f_5`
+    `A = xy^2 f_5` does not divide `B = y f_5`
     >>> sdm_monomial_divides((5, 1, 2), (5, 0, 1))
     False
     """

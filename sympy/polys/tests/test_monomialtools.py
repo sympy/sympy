@@ -6,6 +6,7 @@ from sympy.polys.monomialtools import (
     monomial_mul, monomial_div,
     monomial_gcd, monomial_lcm,
     monomial_max, monomial_min,
+    monomial_divides,
     Monomial,
 )
 
@@ -118,6 +119,10 @@ def test_monomial_max():
 
 def test_monomial_min():
     assert monomial_min((3,4,5), (0,5,1), (6,3,9)) == (0,3,1)
+
+def test_monomial_divides():
+    assert monomial_divides((1,2,3), (4,5,6)) is True
+    assert monomial_divides((1,2,3), (0,5,6)) is False
 
 def test_Monomial():
     m = Monomial((3, 4, 1), (x, y, z))
