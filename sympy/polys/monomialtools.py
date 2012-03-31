@@ -242,6 +242,9 @@ def monomial_lcm(A, B):
     """
     return tuple([ max(a, b) for a, b in zip(A, B) ])
 
+def monomial_divides(A, B):
+    return all(a <= b for a, b in zip(A, B))
+
 @cythonized("i,n")
 def monomial_max(*monoms):
     """
