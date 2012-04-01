@@ -1257,7 +1257,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             changed = True
 
             # now match for a radical
-            if len(d.args) == 4:
+            if d.is_Add and len(d.args) == 4:
                 r = d.match(a + b*sqrt(c) + D*sqrt(E))
                 va, vb, vc, vd, ve = r[a], r[b], r[c], r[D], r[E]
                 nmul = va - vb*sqrt(vc) - vd*sqrt(ve)

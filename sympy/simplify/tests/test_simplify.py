@@ -287,6 +287,13 @@ def test_simplify_fail1():
     e = (x+y)**2/(-4*x*y**2-2*y**3-2*x**2*y)
     assert simplify(e) == 1 / (-2*y)
 
+def test_simplify_issue_3214():
+    c, p = symbols('c p', positive=True)
+    s = sqrt(c**2 - p**2)
+    b = (c + I*p - s)/(c + I*p + s)
+    a = radsimp(b)
+    assert radsimp(b) == (c*p - p*s + I*(-c**2 + c*s + p**2))/(c*p)
+
 def test_fraction():
     x, y, z = map(Symbol, 'xyz')
     A = Symbol('A', commutative=False)
