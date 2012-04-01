@@ -1259,9 +1259,8 @@ def radsimp(expr, symbolic=True, max_terms=4):
             # now match for a radical
             if d.is_Add and len(d.args) == 4:
                 r = d.match(a + b*sqrt(c) + D*sqrt(E))
-                va, vb, vc, vd, ve = r[a], r[b], r[c], r[D], r[E]
-                nmul = va - vb*sqrt(vc) - vd*sqrt(ve)
-                d = va**2 - vc*vb**2 - ve*vd**2 - 2*vb*vd*sqrt(vc*ve)
+                nmul = (a - b*sqrt(c) - D*sqrt(E)).xreplace(r)
+                d = (a**2 - c*b**2 - E*D**2 - 2*b*D*sqrt(c*E)).xreplace(r)
                 n1 = n/d
                 if denom(n1) is not S.One:
                     n = -(-n/d)
