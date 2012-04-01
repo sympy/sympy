@@ -3,11 +3,10 @@
 import sympy
 from sympy.core import Dummy, Wild, S
 from sympy.core.numbers import Rational
-from sympy.functions import sin, cos, binomial,tan ,sec
+from sympy.functions import sin, cos, binomial, tan, sec
 from sympy.core.cache import cacheit
 
-# TODO support for tan^m(x) * sec^n(x) has been added but integrals
-# like sin*tan,sec*cos,etc need to be implemented
+# TODO add support for sin*tan, sin*sec integrals
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
 
 # creating each time Wild's and sin/cos/Mul is expensive. Also, our match &
@@ -73,19 +72,21 @@ def trigintegrate(f, x):
         return
 
     if M1 is not None:  # if sincos pattern is found first check for it
-        n = M1[n]
-        m = M1[m]
+        n=M1[n]
+        m=M1[m]
     if M2 is not None:    # if sincos not found then go for tansec
-        n = M2[q]                         # n is the power of sin,q of tan and tan=sin/cos and hence pow(tan)=pow(sin)
-        m = -(M2[q]+M2[r])
+        n= M2[q]                         # n is the power of sin, q of tan and tan=sin/cos and hence pow(tan)=pow(sin)
+        m= -(M2[q]+M2[r])
 
     if n is S.Zero and m is S.Zero:
         return x
 
     if M1 is not None:    # it is to give the angle arguments
-        a = M1[a]
+        a= M1[a]
     if M1 is None and M2 is not None:
-        a = M2[p]
+        a= M2[p]
+
+
 
     if n.is_integer and m.is_integer:
 
