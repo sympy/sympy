@@ -149,15 +149,6 @@ class PSpace(Basic):
     def integrate(self, expr):
         raise NotImplementedError()
 
-    _count = 0
-    _name = 'space'
-
-    @classmethod
-    def create_symbol(cls):
-        cls._count += 1
-        return Symbol('%s%d'%(cls._name, cls._count),
-                real=True, finite=True, bounded=True)
-
 class SinglePSpace(PSpace):
     """
     Represents the probabilities of a set of random events that can be
@@ -355,7 +346,7 @@ def pspace(expr):
 
     >>> from sympy.stats import pspace, Normal
     >>> from sympy.stats.rv import ProductPSpace
-    >>> X, Y = Normal(0, 1), Normal(0, 1)
+    >>> X = Normal('X', 0, 1)
     >>> pspace(2*X + 1) == X.pspace
     True
     """
@@ -403,7 +394,7 @@ def given(expr, condition=None, **kwargs):
     ========
 
     >>> from sympy.stats import given, density, Die
-    >>> X = Die(6)
+    >>> X = Die('X', 6)
     >>> Y = given(X, X>3)
     >>> density(Y)
     {4: 1/3, 5: 1/3, 6: 1/3}
@@ -444,7 +435,7 @@ def expectation(expr, condition=None, numsamples=None, **kwargs):
     ========
 
     >>> from sympy.stats import E, Die
-    >>> X = Die(6)
+    >>> X = Die('X', 6)
     >>> E(X)
     7/2
     >>> E(2*X + 1)
@@ -493,7 +484,7 @@ def probability(condition, given_condition=None, numsamples=None,  **kwargs):
 
     >>> from sympy.stats import P, Die
     >>> from sympy import Eq
-    >>> X, Y = Die(6), Die(6)
+    >>> X, Y = Die('X', 6), Die('Y', 6)
     >>> P(X>3)
     1/2
     >>> P(Eq(X, 5), X>2) # Probability that X == 5 given that X > 2
@@ -529,8 +520,8 @@ def density(expr, condition=None, **kwargs):
     >>> from sympy.stats import density, Die, Normal
     >>> from sympy import Symbol
 
-    >>> D = Die(6)
-    >>> X = Normal(0, 1, symbol=Symbol('x'))
+    >>> D = Die('D', 6)
+    >>> X = Normal('x', 0, 1)
 
     >>> density(D)
     {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}
@@ -563,8 +554,8 @@ def cdf(expr, condition=None, **kwargs):
     >>> from sympy.stats import density, Die, Normal, cdf
     >>> from sympy import Symbol
 
-    >>> D = Die(6)
-    >>> X = Normal(0, 1)
+    >>> D = Die('D', 6)
+    >>> X = Normal('X', 0, 1)
 
     >>> density(D)
     {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}
@@ -594,8 +585,8 @@ def where(condition, given_condition=None, **kwargs):
     >>> from sympy import symbols, And
 
     >>> x, a, b = symbols('x a b')
-    >>> D1, D2 = Die(6, symbol=a), Die(6, symbol=b)
-    >>> X = Normal(0, 1, symbol=x)
+    >>> D1, D2 = Die(a, 6), Die(b, 6)
+    >>> X = Normal(x, 0, 1)
 
     >>> where(X**2<1)
     Domain: And(-1 < x, x < 1)
@@ -621,7 +612,7 @@ def sample(expr, condition=None, **kwargs):
     ========
 
     >>> from sympy.stats import Die, sample
-    >>> X, Y, Z = Die(6), Die(6), Die(6)
+    >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
 
     >>> die_roll = sample(X+Y+Z) # A random realization of three dice
     """
@@ -638,7 +629,7 @@ def sample_iter(expr, condition=None, numsamples=S.Infinity, **kwargs):
     Examples
     --------
     >>> from sympy.stats import Normal, sample_iter
-    >>> X = Normal(0,1)
+    >>> X = Normal('X', 0, 1)
     >>> expr = X*X + 3
     >>> iterator = sample_iter(expr, numsamples=3)
     >>> list(iterator) # doctest: +SKIP
@@ -795,7 +786,7 @@ def dependent(a, b):
     >>> from sympy.stats import Normal, dependent, given
     >>> from sympy import Tuple, Eq
 
-    >>> X, Y = Normal(0, 1), Normal(0, 1)
+    >>> X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
     >>> dependent(X, Y)
     False
     >>> dependent(2*X + Y, -Y)
@@ -830,7 +821,7 @@ def independent(a, b):
     >>> from sympy.stats import Normal, independent, given
     >>> from sympy import Tuple, Eq
 
-    >>> X, Y = Normal(0, 1), Normal(0, 1)
+    >>> X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
     >>> independent(X, Y)
     True
     >>> independent(2*X + Y, -Y)
