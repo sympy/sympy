@@ -814,15 +814,13 @@ def trigsimp_recursive(expr, deep = False):
         (a*tan(b)**c/sin(b)**c, a/cos(b)**c),
         (a*cot(b)**c/cos(b)**c, a/sin(b)**c),
         (a*cot(b)**c*tan(b)**c, a),
-        (a/cot(b)**c, a*tan(b)**c),
 
         (a*sinh(b)**c/cosh(b)**c, a*tanh(b)**c),
         (a*tanh(b)**c*cosh(b)**c, a*sinh(b)**c),
         (a*coth(b)**c*sinh(b)**c, a*cosh(b)**c),
         (a*tanh(b)**c/sinh(b)**c, a/cosh(b)**c),
         (a*coth(b)**c/cosh(b)**c, a/sinh(b)**c),
-        (a*coth(b)**c*tanh(b)**c, a),
-        (a/coth(b)**c, a*tanh(b)**c),
+        (a*coth(b)**c*tanh(b)**c, a)
         )
     # for cos(x)**2 + sin(x)**2 -> 1
     matchers_identity = (
@@ -833,6 +831,13 @@ def trigsimp_recursive(expr, deep = False):
         (a*sinh(b)**2, a*cosh(b)**2 - a),
         (a*tanh(b)**2, a - a*(1/cosh(b))**2),
         (a*coth(b)**2, a + a*(1/sinh(b))**2)
+        )
+    # for 1/tan(x)=cot(x), 1/tan(x)=cot(x) etc.
+    matchers_tancot = (
+        (a/cot(b)**c, a*tan(b)**c),
+        (a/tan(b)**c, a*cot(b)**c),
+        (a/coth(b)**c, a*tanh(b)**c),
+        (a/tanh(b)**c, a*coth(b)**c)
         )
     # Reduce any lingering artefacts, such as sin(x)**2 changing
     # to 1-cos(x)**2 when sin(x)**2 was "simpler"
@@ -872,6 +877,14 @@ def trigsimp_recursive(expr, deep = False):
             ret *= trigsimp_recursive(x, deep)
         return ret
     elif expr.is_Pow:
+        # to handle 1/cot(x)**c, 1/tan(x)**c etc. for positive c
+        for pattern, simp in matchers_tancot:
+            res = expr.match(pattern)
+            if res is not None:
+                if res[c].is_positive:
+                    expr = simp.subs(res)
+        if not expr.is_Pow:
+            return trigsimp_recursive(expr, deep)
         return Pow(trigsimp_recursive(expr.base, deep),
                 trigsimp_recursive(expr.exp, deep))
     elif expr.is_Add:
