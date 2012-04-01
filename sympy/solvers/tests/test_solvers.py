@@ -1,7 +1,7 @@
 from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
     sqrt, LambertW, pi, I, sin, asin, Function, diff, Derivative, symbols,
     S, sympify, sstr, Wild, solve_linear, Integral,
-    And, Or, Lt, Gt, Q, re, im, expand, tan, Poly, cosh, sinh, atanh,
+    And, Or, Lt, Gt, Q, re, im, expand, tan, cot, Poly, cosh, sinh, atanh,
     atan, Dummy, Float, tanh)
 from sympy.abc import a, b, c, d, x, y, z, t
 from sympy.core.function import nfloat
@@ -486,8 +486,8 @@ def test_issue_2033():
     r, t = symbols('r,t')
     assert solve([r - x**2 - y**2, tan(t) - y/x], [x, y]) == \
      [
-     (-sqrt(r*sin(t)**2)/tan(t), -sqrt(r*sin(t)**2)),
-     (sqrt(r*sin(t)**2)/tan(t), sqrt(r*sin(t)**2))]
+     (-sqrt(r*sin(t)**2)*cot(t), -sqrt(r*sin(t)**2)),
+     (sqrt(r*sin(t)**2)*cot(t), sqrt(r*sin(t)**2))]
     assert solve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
         [(log(sin(S(1)/3)), S(1)/3)]
     assert solve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \

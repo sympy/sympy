@@ -92,9 +92,9 @@ def test_trigsimp3():
     assert trigsimp(sin(x)**3/cos(x)**3) == tan(x)**3
     assert trigsimp(sin(x)**10/cos(x)**10) == tan(x)**10
 
-    assert trigsimp(cos(x)/sin(x)) == 1/tan(x)
-    assert trigsimp(cos(x)**2/sin(x)**2) == 1/tan(x)**2
-    assert trigsimp(cos(x)**10/sin(x)**10) == 1/tan(x)**10
+    assert trigsimp(cos(x)/sin(x)) == cot(x)
+    assert trigsimp(cos(x)**2/sin(x)**2) == cot(x)**2
+    assert trigsimp(cos(x)**10/sin(x)**10) == cot(x)**10
 
     assert trigsimp(tan(x)) == trigsimp(sin(x)/cos(x))
 
@@ -122,7 +122,7 @@ def test_hyperbolic_simp():
 
     assert trigsimp(sinh(x)/cosh(x)) == tanh(x)
     assert trigsimp(tanh(x)) == trigsimp(sinh(x)/cosh(x))
-    assert trigsimp(cosh(x)/sinh(x)) == 1/tanh(x)
+    assert trigsimp(cosh(x)/sinh(x)) == coth(x)
     assert trigsimp(2*tanh(x)*cosh(x)) == 2*sinh(x)
     assert trigsimp(coth(x)**3*sinh(x)**3) == cosh(x)**3
     assert trigsimp(y*tanh(x)**2/sinh(x)**2) == y/cosh(x)**2
@@ -141,11 +141,11 @@ def test_hyperbolic_simp():
     assert trigsimp(sinh(x)**2/cosh(x)**2) == tanh(x)**2
     assert trigsimp(sinh(x)**3/cosh(x)**3) == tanh(x)**3
     assert trigsimp(sinh(x)**10/cosh(x)**10) == tanh(x)**10
-    assert trigsimp(cosh(x)**3/sinh(x)**3) == 1/tanh(x)**3
+    assert trigsimp(cosh(x)**3/sinh(x)**3) == coth(x)**3
 
-    assert trigsimp(cosh(x)/sinh(x)) == 1/tanh(x)
-    assert trigsimp(cosh(x)**2/sinh(x)**2) == 1/tanh(x)**2
-    assert trigsimp(cosh(x)**10/sinh(x)**10) == 1/tanh(x)**10
+    assert trigsimp(cosh(x)/sinh(x)) == coth(x)
+    assert trigsimp(cosh(x)**2/sinh(x)**2) == coth(x)**2
+    assert trigsimp(cosh(x)**10/sinh(x)**10) == coth(x)**10
 
     assert trigsimp(x*cosh(x)*tanh(x)) == x*sinh(x)
     assert trigsimp(-sinh(x) + cosh(x)*tanh(x)) == 0
