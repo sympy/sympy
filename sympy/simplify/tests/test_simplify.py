@@ -291,7 +291,6 @@ def test_simplify_issue_3214():
     c, p = symbols('c p', positive=True)
     s = sqrt(c**2 - p**2)
     b = (c + I*p - s)/(c + I*p + s)
-    a = radsimp(b)
     assert radsimp(b) == (c*p - p*s + I*(-c**2 + c*s + p**2))/(c*p)
 
 def test_fraction():
