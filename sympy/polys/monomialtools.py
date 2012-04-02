@@ -173,6 +173,11 @@ class ProductOrder(MonomialOrder):
         from sympy.core import Tuple
         return "ProductOrder" + str(Tuple(*[x[0] for x in self.args]))
 
+    def __eq__(self, other):
+        if not isinstance(other, ProductOrder):
+            return False
+        return self.args == other.args
+
 class InverseOrder(MonomialOrder):
     """
     The "inverse" of another monomial order.
@@ -257,6 +262,49 @@ def monomial_key(order=None):
         return order
     else:
         raise ValueError("monomial ordering specification must be a string or a callable, got %s" % order)
+
+class _ItemGetter(object):
+    """Helper class to return a subsequence of values."""
+
+    def __init__(self, seq):
+        self.seq = tuple(seq)
+
+    def __call__(self, m):
+        return tuple(m[idx] for idx in self.seq)
+
+    def __eq__(self, other):
+        if not isinstance(other, _ItemGetter):
+            return False
+        return self.seq == other.seq
+
+def build_product_order(arg, gens):
+    """
+    Build a monomial order on ``gens``.
+
+    ``arg`` should be a tuple of iterables. The first element of each iterable
+    should be a string or monomial order (will be passed to monomial_key),
+    the others should be subsets of the generators. This function will build
+    the corresponding product order.
+
+    For example, build a product of two grlex orders:
+
+    >>> from sympy.polys.monomialtools import grlex, build_product_order
+    >>> from sympy.abc import x, y, z, t
+    >>> O = build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])
+    >>> O((1, 2, 3, 4))
+    ((3, (1, 2)), (7, (3, 4)))
+    """
+    gens2idx = {}
+    for i, g in enumerate(gens):
+        gens2idx[g] = i
+    order = []
+    for expr in arg:
+        name = expr[0]
+        var = expr[1:]
+        def makelambda(var):
+            return _ItemGetter(gens2idx[g] for g in var)
+        order.append((monomial_key(name), makelambda(var)))
+    return ProductOrder(*order)
 
 @cythonized("a,b")
 def monomial_mul(A, B):
