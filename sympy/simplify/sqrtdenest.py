@@ -192,7 +192,7 @@ def _sqrt_match(p):
                     else:
                         if x1.is_Mul:
                             x1args = list(x1.args)
-                            if r in x1:
+                            if r in x1args:
                                 x1args.remove(r)
                                 b1.append(Mul(*x1args))
                             else:
