@@ -73,7 +73,7 @@ class CCodePrinter(CodePrinter):
         # We treat top level Piecewise here to get if tests outside loops
         lines = []
         if isinstance(expr, C.Piecewise):
-            for i, (e, c) in enumerate(expr.args):
+            for i, (e, c) in enumerate(expr.exprcondpairs):
                 if i == 0:
                     lines.append("if (%s) {" % self._print(c))
                 elif i == len(expr.args)-1 and c == True:
@@ -81,6 +81,11 @@ class CCodePrinter(CodePrinter):
                 else:
                     lines.append("else if (%s) {" % self._print(c))
                 code0 = self._doprint_a_piece(e, assign_to)
+                lines.extend(code0)
+                lines.append("}")
+            if expr.otherwise is not S.NaN:
+                lines.append("else {")
+                code0 = self._doprint_a_piece(expr.otherwise, assign_to)
                 lines.extend(code0)
                 lines.append("}")
         else:
@@ -162,14 +167,10 @@ class CCodePrinter(CodePrinter):
         # This method is called only for inline if constructs
         # Top level piecewise is handled in doprint()
         ecpairs = ["(%s) {\n%s\n}\n" % (self._print(c), self._print(e)) \
-                       for e, c in expr.args[:-1]]
+                       for e, c in expr.exprcondpairs]
         last_line = ""
-        if expr.args[-1].cond == True:
-            last_line = "else {\n%s\n}" % self._print(expr.args[-1].expr)
-        else:
-            ecpairs.append("(%s) {\n%s\n" % \
-                           (self._print(expr.args[-1].cond),
-                            self._print(expr.args[-1].expr)))
+        if expr.otherwise is not None:
+            last_line = "else {\n%s\n}" % self._print(expr.otherwise)
         code = "if %s" + last_line
         return code % "else if ".join(ecpairs)
 

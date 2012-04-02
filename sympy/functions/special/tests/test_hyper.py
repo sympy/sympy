@@ -191,17 +191,17 @@ def test_hyperrep():
         def _expr_big(cls, x, n): return c*n
         @classmethod
         def _expr_big_minus(cls, x, n): return d*n
-    assert myrep(z).rewrite('nonrep') == Piecewise((0, abs(z) > 1), (a, True))
+    assert myrep(z).rewrite('nonrep') == Piecewise((0, abs(z) > 1), a)
     assert myrep(exp_polar(I*pi)*z).rewrite('nonrep') == \
-           Piecewise((0, abs(z) > 1), (b, True))
+           Piecewise((0, abs(z) > 1), b)
     assert myrep(exp_polar(2*I*pi)*z).rewrite('nonrep') == \
-           Piecewise((c, abs(z) > 1), (a, True))
+           Piecewise((c, abs(z) > 1), a)
     assert myrep(exp_polar(3*I*pi)*z).rewrite('nonrep') == \
-           Piecewise((d, abs(z) > 1), (b, True))
+           Piecewise((d, abs(z) > 1), b)
     assert myrep(exp_polar(4*I*pi)*z).rewrite('nonrep') == \
-           Piecewise((2*c, abs(z) > 1), (a, True))
+           Piecewise((2*c, abs(z) > 1), a)
     assert myrep(exp_polar(5*I*pi)*z).rewrite('nonrep') == \
-           Piecewise((2*d, abs(z) > 1), (b, True))
+           Piecewise((2*d, abs(z) > 1), b)
     assert myrep(z).rewrite('nonrepsmall') == a
     assert myrep(exp_polar(I*pi)*z).rewrite('nonrepsmall') == b
 

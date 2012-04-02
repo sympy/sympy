@@ -1,10 +1,10 @@
 from __future__ import division
 
-from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
-    factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
-    Interval, Lambda, Limit, log, Matrix, nan, O, oo, pi, Rational, Float, Rel,
-    S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
-    WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet)
+from sympy import (Abs, Catalan, cos, Derivative, Dict, Dummy, E, EulerGamma, exp,
+    factorial, factorial2, FiniteSet, Float, Function, GoldenRatio, I, Integer,
+    Integral, Interval, Lambda, Limit, log, Matrix, nan, O, oo, pi, Piecewise,
+    Rational, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols,
+    Tuple, Wild, WildFunction, zeta, zoo)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner
@@ -192,6 +192,14 @@ def test_Order():
 
 def test_Pi():
     assert str(pi) == "pi"
+
+def test_Piecewise():
+    p1 = Piecewise( (x, x < 1), x**2 )
+    p2 = Piecewise( (x, x < 1), (x**2, x >= 1))
+    p3 = Piecewise(x, evaluate=False)
+    assert str(p1) == "Piecewise((x, x < 1), x**2)"
+    assert str(p2) == "Piecewise((x, x < 1), (x**2, x >= 1))"
+    assert str(p3) == "Piecewise(x)"
 
 def test_Poly():
     assert str(Poly(0, x)) == "Poly(0, x, domain='ZZ')"

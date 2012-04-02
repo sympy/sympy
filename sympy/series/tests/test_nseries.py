@@ -412,7 +412,7 @@ def test_abs():
     assert abs(sin(x)).nseries(x, n=4) == x - Rational(1, 6)*x**3 + O(x**4)
     assert abs(sin(-x)).nseries(x, n=4) == x - Rational(1, 6)*x**3 + O(x**4)
     assert abs(x - a).nseries(x, 1) == Piecewise((x - 1, Eq(1 - a, 0)),
-                                                ((x - a)*sign(1 - a), True))
+                                                (x - a)*sign(1 - a))
 
 def test_dir():
     x = Symbol('x')

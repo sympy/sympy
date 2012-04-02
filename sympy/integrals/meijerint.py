@@ -603,7 +603,8 @@ def _eval_cond(cond):
     """ Re-evaluate the conditions. """
     if isinstance(cond, bool):
         return cond
-    return _condsimp(cond.doit())
+    # Keep Piecewises from being evaluated
+    return _condsimp(cond.doit(**{'piecewise': False}))
 
 ####################################################################
 # Now the "backbone" functions to do actual integration.
@@ -877,14 +878,39 @@ def _check_antecedents(g1, g2, x):
     def lambda_s0(c1, c2):
         return c1*(q-p)*abs(omega)**(1/(q-p))*sin(psi) \
              + c2*(v-u)*abs(sigma)**(1/(v-u))*sin(theta)
-    lambda_s = Piecewise(
-        ((lambda_s0(+1, +1)*lambda_s0(-1, -1)),
-         And(Eq(arg(sigma), 0), Eq(arg(omega), 0))),
-        (lambda_s0(sign(arg(omega)), +1)*lambda_s0(sign(arg(omega)), -1),
-         And(Eq(arg(sigma), 0), Ne(arg(omega), 0))),
-        (lambda_s0(+1, sign(arg(sigma)))*lambda_s0(-1, sign(arg(sigma))),
-         And(Ne(arg(sigma), 0), Eq(arg(omega), 0))),
-        (lambda_s0(sign(arg(omega)), sign(arg(sigma))), True))
+
+    # TODO: Requires Issue 3025
+    # Can't set evaluate=False, due to possible boolean conditions
+    # must parse expr/conds and deal with conds accordingly
+    otherwise = lambda_s0(sign(arg(omega)), sign(arg(sigma)))
+    piecewise_args = [(lambda_s0(+1, +1)*lambda_s0(-1, -1),
+                      And(Eq(arg(sigma), 0), Eq(arg(omega), 0))),
+                     (lambda_s0(sign(arg(omega)), +1)*lambda_s0(sign(arg(omega)), -1),
+                      And(Eq(arg(sigma), 0), Ne(arg(omega), 0))),
+                     (lambda_s0(+1, sign(arg(sigma)))*lambda_s0(-1, sign(arg(sigma))),
+                      And(Ne(arg(sigma), 0), Eq(arg(omega), 0)))
+                     ]
+    new_args = []
+    for e, c in piecewise_args:
+        if c is False:
+            continue
+        if c is True:
+            new_args.append(e)
+            break
+        new_args.append((e,c))
+    else:
+        new_args.append(otherwise)
+    lambda_s = Piecewise(*new_args)
+    #lambda_s = Piecewise(
+    #    ((lambda_s0(+1, +1)*lambda_s0(-1, -1)),
+    #     And(Eq(arg(sigma), 0), Eq(arg(omega), 0))),
+    #    (lambda_s0(sign(arg(omega)), +1)*lambda_s0(sign(arg(omega)), -1),
+    #     And(Eq(arg(sigma), 0), Ne(arg(omega), 0))),
+    #    (lambda_s0(+1, sign(arg(sigma)))*lambda_s0(-1, sign(arg(sigma))),
+    #     And(Ne(arg(sigma), 0), Eq(arg(omega), 0))),
+    #    lambda_s0(sign(arg(omega)), sign(arg(sigma))),
+    #    **{'evaluate': False}
+    #)
 
     _debug('Checking antecedents:')
     _debug('  sigma=%s, s=%s, t=%s, u=%s, v=%s, b*=%s, rho=%s'
@@ -1400,7 +1426,7 @@ def _rewrite_single(f, x, recursive=True):
             res, cond = r
             res = _my_unpolarify(hyperexpand(res, rewrite='nonrepsmall'))
             return Piecewise((res, cond),
-                             (Integral(f, (x, 0, oo)), True))
+                              Integral(f, (x, 0, oo)))
         return Integral(f, (x, 0, oo))
     try:
         F, strip, _ = mellin_transform(f, x, s, integrator=my_integrator,
@@ -1547,13 +1573,17 @@ def _meijerint_indefinite_1(f, x):
     res = piecewise_fold(res)
     if res.is_Piecewise:
         nargs = []
-        for expr, cond in res.args:
+        for expr, cond in res.exprcondpairs:
             expr = _my_unpolarify(Add(*expand_mul(expr).as_coeff_add(x)[1]))
-            nargs += [(expr, cond)]
+            nargs.append((expr, cond))
+        if res.otherwise is not S.NaN:
+            expr = _my_unpolarify(Add(*expand_mul(res.otherwise).as_coeff_add(x)[1]))
+            nargs.append(expr)
+            cond = True
         res = Piecewise(*nargs)
     else:
         res = _my_unpolarify(Add(*expand_mul(res).as_coeff_add(x)[1]))
-    return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
+    return Piecewise((res, _my_unpolarify(cond)), Integral(f, x))
 
 @timeit
 def meijerint_definite(f, x, a, b):
@@ -1891,4 +1921,4 @@ def meijerint_inversion(f, x, t):
             if not isinstance(cond, bool):
                 cond = cond.subs(t, t + shift)
             return Piecewise((res.subs(t, t_), cond),
-                             (Integral(f_*exp(x*t), (x, c - oo*I, c + oo*I)).subs(t, t_), True))
+                              Integral(f_*exp(x*t), (x, c - oo*I, c + oo*I)).subs(t, t_))

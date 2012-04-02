@@ -144,7 +144,6 @@ class CodePrinter(StrPrinter):
     _print_ComplexInfinity = _print_not_supported
     _print_Derivative = _print_not_supported
     _print_dict = _print_not_supported
-    _print_ExprCondPair = _print_not_supported
     _print_GeometryEntity = _print_not_supported
     _print_Infinity = _print_not_supported
     _print_Integral = _print_not_supported

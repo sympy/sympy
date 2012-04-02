@@ -329,10 +329,10 @@ def test_meijerg_expand():
     # wikipedia
     assert hyperexpand(meijerg([1], [], [], [0], z)) == \
        Piecewise((0, abs(z) < 1), (1, abs(1/z) < 1),
-                 (meijerg([1], [], [], [0], z), True))
+                 meijerg([1], [], [], [0], z))
     assert hyperexpand(meijerg([], [1], [0], [], z)) == \
        Piecewise((1, abs(z) < 1), (0, abs(1/z) < 1),
-                 (meijerg([], [1], [0], [], z), True))
+                 meijerg([], [1], [0], [], z))
 
     # The Special Functions and their Approximations
     assert can_do_meijer([], [], [a + b/2], [a, a - b/2, a + S.Half])
@@ -356,7 +356,7 @@ def test_meijerg_expand():
     assert hyperexpand(meijerg([0, 2], [], [], [-1, 1], z)) == \
         Piecewise((0, abs(z) < 1),
                   (z*(1 - 1/z**2)/2, abs(1/z) < 1),
-                  (meijerg([0, 2], [], [], [-1, 1], z), True))
+                  meijerg([0, 2], [], [], [-1, 1], z))
 
     # Test that the simplest possible answer is returned:
     assert combsimp(simplify(hyperexpand(meijerg([1], [1-a], [-a/2, -a/2 + S(1)/2],
@@ -460,9 +460,9 @@ def test_meijerg_confluence():
         a, b = sympify([a, b])
         m_ = m
         m = hyperexpand(m)
-        if not m == Piecewise((a, abs(z) < 1), (b, abs(1/z) < 1), (m_, True)):
+        if not m == Piecewise((a, abs(z) < 1), (b, abs(1/z) < 1), m_):
             return False
-        if not (m.args[0].args[0] == a and m.args[1].args[0] == b):
+        if not (m.exprcondpairs[0].args[0] == a and m.exprcondpairs[1].args[0] == b):
             return False
         z0 = randcplx()/10
         if abs(m.subs(z, z0).n() - a.subs(z, z0).n()).n() > 1e-10:

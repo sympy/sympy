@@ -118,9 +118,6 @@ class StrPrinter(Printer):
     def _print_Exp1(self, expr):
         return 'E'
 
-    def _print_ExprCondPair(self, expr):
-        return '(%s, %s)' % (expr.expr, expr.cond)
-
     def _print_factorial(self, expr):
         return "%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Pow"])
 
@@ -279,6 +276,12 @@ class StrPrinter(Printer):
 
     def _print_Pi(self, expr):
         return 'pi'
+
+    def _print_Piecewise(self, expr):
+        args = list(expr.exprcondpairs)
+        if expr.otherwise is not S.NaN:
+            args.append(expr.otherwise)
+        return expr.func.__name__ + "(%s)"%self.stringify(args, ", ")
 
     def _print_Poly(self, expr):
         terms, gens = [], [ self._print(s) for s in expr.gens ]

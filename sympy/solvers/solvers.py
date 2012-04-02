@@ -923,25 +923,22 @@ def _solve(f, *symbols, **flags):
 
     elif f.is_Piecewise:
         result = set()
-        for expr, cond in f.args:
+        # check expr/cond
+        for expr, cond in f.exprcondpairs:
             candidates = _solve(expr, *symbols)
-            if cond is True:
-                # Only include solutions that do not match the condition
-                # of any of the other pieces.
-                for candidate in candidates:
-                    matches_other_piece = False
-                    for other_expr, other_cond in f.args:
-                        if other_cond is True:
-                            continue
-                        if bool(other_cond.subs(symbol, candidate)):
-                            matches_other_piece = True
-                            break
-                    if not matches_other_piece:
-                        result.add(candidate)
-            else:
-                for candidate in candidates:
-                    if bool(cond.subs(symbol, candidate)):
-                        result.add(candidate)
+            for candidate in candidates:
+                if bool(cond.subs(symbol, candidate)):
+                    result.add(candidate)
+        # check otherwise
+        candidates = _solve(f.otherwise, *symbols)
+        for candidate in candidates:
+            matches_other_piece = False
+            for other_expr, other_cond in f.exprcondpairs:
+                if bool(other_cond.subs(symbol, candidate)):
+                    matches_other_piece = True
+                    break
+            if not matches_other_piece:
+                result.add(candidate)
         check = False
     else:
         # first see if it really depends on symbol and whether there

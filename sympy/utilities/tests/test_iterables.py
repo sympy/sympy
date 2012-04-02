@@ -8,7 +8,7 @@ from sympy.utilities.iterables import (postorder_traversal, preorder_traversal,
     common_prefix, common_suffix)
 
 from sympy.core.singleton import S
-from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.utilities.pytest import raises
 
 w,x,y,z= symbols('w,x,y,z')
@@ -20,18 +20,17 @@ def test_postorder_traversal():
     expected3 = [w, y, x, x + y, w*(x + y), z, z + w*(x + y)]
     assert list(postorder_traversal(expr)) in [expected1, expected2, expected3]
 
-    expr = Piecewise((x,x<1),(x**2,True))
+    expr = Piecewise((x,x<1),x**2)
     assert list(postorder_traversal(expr)) == [
-        x, x, 1, x < 1, ExprCondPair(x, x < 1), x, 2, x**2,
-        ExprCondPair.true_sentinel,
-        ExprCondPair(x**2, True), Piecewise((x, x < 1), (x**2, True))
+        x, x, 1, x < 1, Tuple(x, x < 1), x, 2, x**2,
+        Piecewise((x, x < 1), x**2)
     ]
-    assert list(preorder_traversal(Integral(x**2, (x, 0, 1)))) == [
-        Integral(x**2, (x, 0, 1)), x**2, x, 2, Tuple(x, 0, 1), x, 0, 1
+    assert list(postorder_traversal(Integral(x**2, (x, 0, 1)))) == [
+        x, 2, x**2, x, 0, 1, Tuple(x, 0, 1),
+        Integral(x**2, Tuple(x, 0, 1))
     ]
-    assert list(preorder_traversal(('abc', ('d', 'ef')))) == [
-        ('abc', ('d', 'ef')), 'abc', ('d', 'ef'), 'd', 'ef']
-
+    assert list(postorder_traversal(('abc', ('d', 'ef')))) == [
+        'abc', 'd', 'ef', ('d', 'ef'), ('abc', ('d', 'ef'))]
 
 
 def test_preorder_traversal():
@@ -41,17 +40,16 @@ def test_preorder_traversal():
     expected3 = [z + w*(x + y), w*(x + y), w, x + y, y, x, z]
     assert list(preorder_traversal(expr)) in [expected1, expected2, expected3]
 
-    expr = Piecewise((x,x<1),(x**2,True))
+    expr = Piecewise((x,x<1),x**2)
     assert list(preorder_traversal(expr)) == [
-        Piecewise((x, x < 1), (x**2, True)), ExprCondPair(x, x < 1), x, x < 1,
-        x, 1, ExprCondPair(x**2, True), x**2, x, 2, ExprCondPair.true_sentinel
+        Piecewise((x, x < 1), x**2), Tuple(x, x < 1),
+        x, x < 1, x, 1, x**2, x, 2
     ]
-    assert list(postorder_traversal(Integral(x**2, (x, 0, 1)))) == [
-        x, 2, x**2, x, 0, 1, Tuple(x, 0, 1),
-        Integral(x**2, Tuple(x, 0, 1))
+    assert list(preorder_traversal(Integral(x**2, (x, 0, 1)))) == [
+        Integral(x**2, (x, 0, 1)), x**2, x, 2, Tuple(x, 0, 1), x, 0, 1
     ]
-    assert list(postorder_traversal(('abc', ('d', 'ef')))) == [
-        'abc', 'd', 'ef', ('d', 'ef'), ('abc', ('d', 'ef'))]
+    assert list(preorder_traversal(('abc', ('d', 'ef')))) == [
+        ('abc', ('d', 'ef')), 'abc', ('d', 'ef'), 'd', 'ef']
 
     expr = (x**(y**z)) ** (x**(y**z))
     expected = [(x**(y**z))**(x**(y**z)), x**(y**z), x**(y**z)]

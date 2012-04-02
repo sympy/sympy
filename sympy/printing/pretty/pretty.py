@@ -626,17 +626,18 @@ class PrettyPrinter(Printer):
         return self._print_seq(expr.args, None, None, ' + ')
 
     def _print_Piecewise(self, pexpr):
-
         P = {}
-        for n, ec in enumerate(pexpr.args):
-            P[n,0] = self._print(ec.expr)
-            if ec.cond == True:
-                P[n,1] = prettyForm('otherwise')
-            else:
-                P[n,1] = prettyForm(*prettyForm('for ').right(self._print(ec.cond)))
+        n = -1
+        for n, (e,c) in enumerate(pexpr.exprcondpairs):
+            P[n,0] = self._print(e)
+            P[n,1] = prettyForm(*prettyForm('for ').right(self._print(c)))
+        if pexpr.otherwise is not S.NaN:
+            n += 1
+            P[n,0] = self._print(pexpr.otherwise)
+            P[n,1] = prettyForm('otherwise')
         hsep = 2
         vsep = 1
-        len_args = len(pexpr.args)
+        len_args = n+1
 
         # max widths
         maxw = [max([P[i,j].width() for i in xrange(len_args)]) \
@@ -653,8 +654,9 @@ class PrettyPrinter(Printer):
                 assert p.width() <= maxw[j]
 
                 wdelta = maxw[j] - p.width()
-                wleft  = wdelta // 2
-                wright = wdelta - wleft
+                # left justify conditions and expressions
+                wleft  = 0
+                wright = wdelta
 
                 p = prettyForm(*p.right(' '*wright))
                 p = prettyForm(*p.left (' '*wleft))

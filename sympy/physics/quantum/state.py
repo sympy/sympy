@@ -591,13 +591,13 @@ class Wavefunction(Function):
     Particle in a box, specifying bounds in the more primitive way of
     using Piecewise
 
-        >>> from sympy import Symbol, Piecewise, pi, N
+        >>> from sympy import S, Symbol, Piecewise, pi, N
         >>> from sympy.functions import sqrt, sin
         >>> from sympy.physics.quantum.state import Wavefunction
         >>> x = Symbol('x')
         >>> n = 1
         >>> L = 1
-        >>> g = Piecewise((0, x < 0), (0, x > L), (sqrt(2//L)*sin(n*pi*x/L), True))
+        >>> g = Piecewise((0, x < 0), (0, x > L), sqrt(S(2)/L)*sin(n*pi*x/L))
         >>> f = Wavefunction(g, x)
         >>> f.norm
         1

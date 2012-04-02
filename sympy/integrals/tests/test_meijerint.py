@@ -546,9 +546,9 @@ def test_expint():
     assert integrate(expint(1, x)*sin(x), (x, 0, oo), meijerg=True) == log(2)/2
 
 def test_messy():
-    from sympy import (laplace_transform, Si, Ci, Shi, Chi, atan, Piecewise,
-                       atanh, acoth, E1, besselj, acosh, asin, Ne, And, re,
-                       fourier_transform, sqrt, Abs)
+    from sympy import (laplace_transform, Si, Shi, Chi, atan, Piecewise, acoth,
+                       E1, besselj, acosh, asin, And, re, fourier_transform,
+                       sqrt)
     assert laplace_transform(Si(x), x, s) == ((pi - 2*atan(s))/(2*s), 0, True)
 
     assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, True)
@@ -564,7 +564,7 @@ def test_messy():
     # NOTE s < 0 can be done, but argument reduction is not good enough yet
     assert fourier_transform(besselj(1, x)/x, x, s, noconds=False) == \
            (Piecewise((0, 1 < 4*abs(pi**2*s**2)),
-                      (2*sqrt(-4*pi**2*s**2 + 1), True)), 0 < s)
+                       2*sqrt(-4*pi**2*s**2 + 1)), 0 < s)
     # TODO FT(besselj(0,x)) - conditions are messy (but for acceptable reasons)
     #                       - folding could be better
 
@@ -574,7 +574,7 @@ def test_messy():
            == log(S(1)/2 + sqrt(2)/2)
 
     assert integrate(1/x/sqrt(1 - x**2), x, meijerg=True) == \
-           Piecewise((-acosh(1/x), 1 < abs(x**(-2))), (I*asin(1/x), True))
+           Piecewise((-acosh(1/x), 1 < abs(x**(-2))), I*asin(1/x))
 
 def test_3023():
     assert integrate(exp(-I*x**2), (x, -oo, oo), meijerg=True) == \

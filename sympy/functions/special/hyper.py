@@ -1,10 +1,8 @@
 """Hypergeometric and Meijer G-functions"""
 
 from sympy import S
-from sympy.core.compatibility import iterable
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.containers import Tuple
-from sympy.core.sympify import sympify
 from sympy.core.mul import Mul
 
 # TODO should __new__ accept **options?
@@ -540,7 +538,7 @@ class meijerg(TupleParametersBase):
         12*pi
         """
         # This follows from slater's theorem.
-        from sympy import oo, ilcm, pi, Min, Mod
+        from sympy import oo, ilcm, pi, Mod
         def compute(l):
             # first check that no two differ by an integer
             for i, b in enumerate(l):
@@ -688,7 +686,7 @@ class HyperRep(Function):
 
         if big == small:
             return small
-        return Piecewise((big, abs(x) > 1), (small, True))
+        return Piecewise((big, abs(x) > 1), small)
 
     def _eval_rewrite_as_nonrepsmall(self, *args):
         x, n = self.args[-1].extract_branch_factor(allow_half=True)
