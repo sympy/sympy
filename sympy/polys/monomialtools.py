@@ -169,6 +169,10 @@ class ProductOrder(MonomialOrder):
     def key(self, monomial):
         return tuple(O(lamda(monomial)) for (O, lamda) in self.args)
 
+    def __str__(self):
+        from sympy.core import Tuple
+        return "ProductOrder" + str(Tuple(*[x[0] for x in self.args]))
+
 class InverseOrder(MonomialOrder):
     """
     The "inverse" of another monomial order.
@@ -191,6 +195,9 @@ class InverseOrder(MonomialOrder):
     def __init__(self, O):
         self.O = O
 
+    def __str__(self):
+        return "i" + str(self.O)
+
     def key(self, monomial):
         from sympy.core.compatibility import iterable
         def inv(l):
@@ -202,11 +209,17 @@ class InverseOrder(MonomialOrder):
 lex = LexOrder()
 grlex = GradedLexOrder()
 grevlex = ReversedGradedLexOrder()
+ilex = InverseOrder(lex)
+igrlex = InverseOrder(grlex)
+igrevlex = InverseOrder(grevlex)
 
 _monomial_key = {
-    'lex'     : lex,
-    'grlex'   : grlex,
-    'grevlex' : grevlex,
+    'lex'      : lex,
+    'grlex'    : grlex,
+    'grevlex'  : grevlex,
+    'ilex'     : ilex,
+    'igrlex'   : igrlex,
+    'igrevlex' : igrevlex
 }
 
 def monomial_key(order=None):
@@ -222,6 +235,7 @@ def monomial_key(order=None):
     1. lex       - lexicographic order (default)
     2. grlex     - graded lexicographic order
     3. grevlex   - reversed graded lexicographic order
+    4. ilex, igrlex, igrevlex - the corresponding inverse orders
 
     If the input argument is not a string but has ``__call__`` attribute,
     then it will pass through with an assumption that the callable object

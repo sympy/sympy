@@ -99,10 +99,13 @@ def test_InverseOrder():
 
     assert ilex((1,2,3)) > ilex((2, 0, 3))
     assert igrlex((1, 2, 3)) < igrlex((0, 2, 3))
+    assert str(ilex) == "ilex"
+    assert str(igrlex) == "igrlex"
 
 def test_ProductOrder():
     P = ProductOrder((grlex, lambda m: m[:2]), (grlex, lambda m: m[2:]))
     assert P((1, 3, 3, 4, 5)) > P((2, 1, 5, 5, 5))
+    assert str(P) == "ProductOrder(grlex, grlex)"
 
 def test_monomial_key():
     assert monomial_key() == lex
