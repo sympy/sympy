@@ -827,10 +827,16 @@ def trigsimp_recursive(expr, deep = False):
         (a*sin(b)**2,  a - a*cos(b)**2),
         (a*tan(b)**2,  a*(1/cos(b))**2 - a),
         (a*cot(b)**2,  a*(1/sin(b))**2 - a),
+    
 
         (a*sinh(b)**2, a*cosh(b)**2 - a),
         (a*tanh(b)**2, a - a*(1/cosh(b))**2),
         (a*coth(b)**2, a + a*(1/sinh(b))**2)
+        )
+    matchers_add = (
+        (a*sin(b+c),  a*(sin(b)*cos(c) + sin(c)*cos(b))),
+        (a*cos(b+c),  a*(cos(b)*cos(c) - sin(b)*sin(c))),
+        (a*tan(b+c),  a*((tan(b) + tan(c)/(1 - tan(b)*tan(c)))))
         )
     # Reduce any lingering artefacts, such as sin(x)**2 changing
     # to 1-cos(x)**2 when sin(x)**2 was "simpler"
@@ -881,7 +887,7 @@ def trigsimp_recursive(expr, deep = False):
         for term in expr.args:
             term = trigsimp_recursive(term, deep)
             res = None
-            for pattern, result in matchers_identity:
+            for pattern, result in matchers_identity + matchers_add:
                 res = term.match(pattern)
                 if res is not None:
                     ret += result.subs(res)
