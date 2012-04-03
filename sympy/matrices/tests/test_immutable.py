@@ -1,4 +1,5 @@
 from sympy import ImmutableMatrix, Matrix, eye, zeros
+from sympy.abc import x, y
 from sympy.utilities.pytest import raises, XFAIL
 
 IM = ImmutableMatrix([[1,2,3], [4,5,6], [7,8,9]])
@@ -15,6 +16,17 @@ def test_immutability():
 def test_slicing():
     IM[1,:] == ImmutableMatrix([[4,5,6]])
     IM[:2, :2] == ImmutableMatrix([[1,2],[4,5]])
+
+def test_subs():
+    A = ImmutableMatrix([[1,2],[3,4]])
+    B = ImmutableMatrix([[1,2],[x,4]])
+    C = ImmutableMatrix([[-x,x*y],[-(x+y),y**2]])
+    assert B.subs(x, 3) == A
+    assert (x*B).subs(x, 3) == 3*A
+    assert (x*eye(2) + B).subs(x, 3) == 3*eye(2) + A
+    assert C.subs([[x,-1],[y,-2]]) == A
+    assert C.subs([(x,-1),(y,-2)]) == A
+    assert C.subs({x:-1,y:-2}) == A
 
 def test_as_immutable():
     X = Matrix([[1,2], [3,4]])
