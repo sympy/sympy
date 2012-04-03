@@ -83,7 +83,7 @@ because here absolute value of 0 is zero so multiplication any value is zero.
 And whereas 
 >>> 0*oo 
 NAN
-One explanation for this is  x/x=1 but when x=0 then it is indeed NaN.
+This is similar to x/x => 1 even though if x = 0, it is really Nan.
 
 Decimal issues
 --------------
