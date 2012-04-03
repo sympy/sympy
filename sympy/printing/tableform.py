@@ -14,23 +14,29 @@ class TableForm(object):
 
     """
 
-    def __new__(cls, data, headings=None, alignment="left",
-            column_formats=None):
+    def __new__(cls, data, **kwarg):
         """
         Creates a TableForm.
 
         Parameters:
 
-            data ... 2D data to be put into the table
-            headings ... gives the labels for entries in each dimension:
-                         None ... no labels in any dimension
-                         "automatic" ... gives successive integer labels
-                         [[l1, l2, ...], ...] gives labels for each entry in
-                             each dimension (can be None for some dimension)
-            alignment ... alignment of the columns controlled by values;
-                          "left" or "<"
-                          "center" or "^"
-                          "right" or ">"
+            data ...        2D data to be put into the table
+
+            headings ...    gives the labels for entries in each dimension:
+                            None ... no labels in any dimension
+                            "automatic" ... gives successive integer labels
+                            [[l1, l2, ...], ...] gives labels for each entry in
+                                each dimension (can be None for some dimension)
+                            [default: (None, None)]
+
+            alignment ...   alignment of the columns controlled by values;
+                            "left" or "<"
+                            "center" or "^"
+                            "right" or ">"
+                            [default: left]
+
+            wipe_zeros ...  Wipe zeros, don't show them in the table
+                            [default: True].
 
         Example:
 
@@ -46,9 +52,8 @@ class TableForm(object):
             assert len(line) == _w
         _lines = Tuple(*data)
 
-        if headings is None:
-            _headings = [None, None]
-        elif headings == "automatic":
+        headings = kwarg.get("headings", [None, None])
+        if headings == "automatic":
             _headings = [range(1, _h + 1), range(1, _w + 1)]
         else:
             h1, h2 = headings
@@ -58,11 +63,12 @@ class TableForm(object):
                 h2 = range(1, _w + 1)
             _headings = [h1, h2]
 
+        alignment = kwarg.get("alignment", "left")
         _alignment = {'<': 'left', '>': 'right', '^': 'center'}.get(alignment, alignment)
-        if column_formats:
-            _column_formats = column_formats
-        else:
-            _column_formats = [None]*_w
+
+        _column_formats = kwarg.get("column_formats", [None]*_w)
+
+        _wipe_zeros = kwarg.get("wipe_zeros", True)
 
         obj = object.__new__(cls)
         obj._w = _w
@@ -71,6 +77,7 @@ class TableForm(object):
         obj._headings = _headings
         obj._alignment = _alignment
         obj._column_formats = _column_formats
+        obj._wipe_zeros = _wipe_zeros
         return obj
 
     def __repr__(self):
@@ -107,6 +114,8 @@ class TableForm(object):
             for i in range(self._w):
                 # Format the item somehow if needed:
                 s = str(line[i])
+                if self._wipe_zeros and (s == "0"):
+                    s = " "
                 w = len(s)
                 if w > column_widths[i]:
                     column_widths[i] = w
@@ -202,7 +211,11 @@ class TableForm(object):
                 if self._column_formats[j]:
                     d.append(self._column_formats[j] % x)
                 else:
-                    d.append("$%s$" % printer._print(x))
+                    v = printer._print(x)
+                    if self._wipe_zeros and (v == "0"):
+                        d.append(" ")
+                    else:
+                        d.append("$%s$" % v)
             if self._headings[0]:
                 d = [self._headings[0][i]] + d
             s += " & ".join(d) + r" \\" + "\n"
