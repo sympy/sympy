@@ -184,7 +184,11 @@ class TableForm(object):
         if self._headings[0]:
             self._headings[0] = [str(x) for x in self._headings[0]]
 
-        s = r"\begin{tabular}{" + " ".join(["c" for x in self._lines[0]]) + "}\n"
+        align_list = ["c" for x in self._lines[0]]
+        if self._headings[0]:
+            align_list = ["c"] + align_list
+        s = r"\begin{tabular}{" + " ".join(align_list) + "}\n"
+
         if self._headings[1]:
             d = self._headings[1]
             if self._headings[0]:
@@ -198,7 +202,7 @@ class TableForm(object):
                 if self._column_formats[j]:
                     d.append(self._column_formats[j] % x)
                 else:
-                    d.append(printer._print(x))
+                    d.append("$%s$" % printer._print(x))
             if self._headings[0]:
                 d = [self._headings[0][i]] + d
             s += " & ".join(d) + r" \\" + "\n"
