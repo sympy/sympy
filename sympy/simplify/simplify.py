@@ -836,7 +836,7 @@ def trigsimp_recursive(expr, deep = False):
     matchers_add = (
         (a*sin(b+c),  a*(sin(b)*cos(c) + sin(c)*cos(b))),
         (a*cos(b+c),  a*(cos(b)*cos(c) - sin(b)*sin(c))),
-        (a*tan(b+c),  a*((tan(b) + tan(c)/(1 - tan(b)*tan(c)))))
+        (a*tan(b+c),  a*((tan(b) + tan(c))/(1 - tan(b)*tan(c))))
         )
     # Reduce any lingering artefacts, such as sin(x)**2 changing
     # to 1-cos(x)**2 when sin(x)**2 was "simpler"
