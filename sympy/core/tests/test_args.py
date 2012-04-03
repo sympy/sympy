@@ -131,10 +131,6 @@ def test_sympy__core__containers__Dict():
     from sympy.core.containers import Dict
     assert _test_args(Dict({x: y, y: z}))
 
-def test_sympy__core__containers__TableForm():
-    from sympy.core.containers import TableForm
-    assert _test_args(TableForm([[5, 7], [4, 2], [10, 3]]))
-
 def test_sympy__core__containers__Tuple():
     from sympy.core.containers import Tuple
     assert _test_args(Tuple(x, y, z, 2))

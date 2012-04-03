@@ -74,11 +74,11 @@ class TableForm(object):
         return obj
 
     def __repr__(self):
-        from sstr import sstr
+        from str import sstr
         return sstr(self, order=None)
 
     def __str__(self):
-        from sstr import sstr
+        from str import sstr
         return sstr(self, order=None)
 
     def as_str(self):
