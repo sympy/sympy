@@ -75,16 +75,6 @@ Mpmath uses arbitrary precision integers for both the mantissa and the exponent,
 
 For further details on how the arithmetic is implemented, refer to the mpmath source code. The basic arithmetic operations are found in the ``libmp`` directory; many functions there are commented extensively.
 
-NAN
----
->>>0*x 
-0 
-because here absolute value of 0 is zero so multiplication any value is zero. 
-And whereas 
->>> 0*oo 
-NAN
-This is similar to x/x => 1 even though if x = 0, it is really Nan.
-
 Decimal issues
 --------------
 

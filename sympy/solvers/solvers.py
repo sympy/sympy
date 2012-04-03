@@ -539,7 +539,7 @@ def solve(f, *symbols, **flags):
            >>>solve([x - y, y], [x, y])
            {x: 0, y: 0}
             >>>solve([x - y, y],x)
-            
+           none(blank)
             It treats y as a constant, and then the matrix operations assume that there are no solutions
             when it gets to y == 0, which looks inconsistent to it.
             Also note that if you pass no variables, it will automatically choose all of them for you:
