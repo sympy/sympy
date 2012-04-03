@@ -2,7 +2,7 @@
 
 from sympy.polys.monomialtools import (
     monomials, monomial_count,
-    monomial_key, lex, grlex, grevlex,
+    monomial_key, lex, grlex, grevlex, ilex, igrlex, igrevlex,
     monomial_mul, monomial_div,
     monomial_gcd, monomial_lcm,
     monomial_max, monomial_min,
@@ -50,6 +50,8 @@ def test_lex_order():
     assert lex((1,1,3)) < lex((1,2,3))
     assert lex((1,2,2)) < lex((1,2,3))
 
+    assert lex.is_global is True
+
 def test_grlex_order():
     assert grlex((1,2,3)) == (6, (1,2,3))
     assert str(grlex) == 'grlex'
@@ -69,6 +71,8 @@ def test_grlex_order():
 
     assert grlex((0,2,3)) < grlex((1,2,2))
     assert grlex((1,1,3)) < grlex((1,2,2))
+
+    assert grlex.is_global is True
 
 def test_grevlex_order():
     assert grevlex((1,2,3)) == (6, (-3,-2,-1))
@@ -93,6 +97,8 @@ def test_grevlex_order():
     assert grevlex((0,1,1)) > grevlex((0,0,2))
     assert grevlex((0,3,1)) < grevlex((2,2,1))
 
+    assert grevlex.is_global is True
+
 def test_InverseOrder():
     ilex = InverseOrder(lex)
     igrlex = InverseOrder(grlex)
@@ -101,11 +107,16 @@ def test_InverseOrder():
     assert igrlex((1, 2, 3)) < igrlex((0, 2, 3))
     assert str(ilex) == "ilex"
     assert str(igrlex) == "igrlex"
+    assert ilex.is_global is False
+    assert igrlex.is_global is False
 
 def test_ProductOrder():
     P = ProductOrder((grlex, lambda m: m[:2]), (grlex, lambda m: m[2:]))
     assert P((1, 3, 3, 4, 5)) > P((2, 1, 5, 5, 5))
     assert str(P) == "ProductOrder(grlex, grlex)"
+    assert P.is_global is True
+    assert ProductOrder((grlex, None), (ilex, None)).is_global is None
+    assert ProductOrder((igrlex, None), (ilex, None)).is_global is False
 
 def test_monomial_key():
     assert monomial_key() == lex

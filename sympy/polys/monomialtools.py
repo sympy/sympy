@@ -85,6 +85,7 @@ class MonomialOrder(object):
     """Base class for monomial orderings. """
 
     alias = None
+    is_global = None
 
     def key(self, monomial):
         raise NotImplementedError
@@ -99,6 +100,7 @@ class LexOrder(MonomialOrder):
     """Lexicographic order of monomials. """
 
     alias = 'lex'
+    is_global = True
 
     def key(self, monomial):
         return monomial
@@ -107,6 +109,7 @@ class GradedLexOrder(MonomialOrder):
     """Graded lexicographic order of monomials. """
 
     alias = 'grlex'
+    is_global = True
 
     def key(self, monomial):
         return (sum(monomial), monomial)
@@ -115,6 +118,7 @@ class ReversedGradedLexOrder(MonomialOrder):
     """Reversed graded lexicographic order of monomials. """
 
     alias = 'grevlex'
+    is_global = True
 
     def key(self, monomial):
         return (sum(monomial), tuple(reversed([-m for m in monomial])))
@@ -178,6 +182,14 @@ class ProductOrder(MonomialOrder):
             return False
         return self.args == other.args
 
+    @property
+    def is_global(self):
+        if all(o.is_global is True for o, _ in self.args):
+            return True
+        if all(o.is_global is False for o, _ in self.args):
+            return False
+        return None
+
 class InverseOrder(MonomialOrder):
     """
     The "inverse" of another monomial order.
@@ -210,6 +222,14 @@ class InverseOrder(MonomialOrder):
                 return tuple(inv(x) for x in l)
             return -l
         return inv(self.O.key(monomial))
+
+    @property
+    def is_global(self):
+        if self.O.is_global is True:
+            return False
+        if self.O.is_global is False:
+            return True
+        return None
 
 lex = LexOrder()
 grlex = GradedLexOrder()
