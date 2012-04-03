@@ -14,6 +14,8 @@ from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from entity import GeometryEntity
 from sympy.matrices.matrices import Matrix
+from sympy.core.numbers import Float 
+from sympy.simplify.simplify import nsimplify
 
 class Point(GeometryEntity):
     """A point in a 2-dimensional Euclidean space.
@@ -60,6 +62,8 @@ class Point(GeometryEntity):
     Point(1, 2)
     >>> Point(0, x)
     Point(0, x)
+    >>> Point(0.5, 0.25)
+    Point(1/2, 1/4)
 
     """
 
@@ -73,6 +77,12 @@ class Point(GeometryEntity):
 
         if len(coords) != 2:
             raise NotImplementedError("Only two dimensional points currently supported")
+        elif coords[0].is_Float and coords[1].is_Float:
+            coords = (nsimplify(str(coords[0])), nsimplify(str(coords[1])))
+        elif coords[0].is_Float:
+            coords = (nsimplify(str(coords[0])), coords[1])
+        elif coords[1].is_Float:
+            coords = (coords[0], nsimplify(str(coords[1])))
 
         return GeometryEntity.__new__(cls, *coords)
 
