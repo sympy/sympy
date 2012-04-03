@@ -217,14 +217,14 @@ class Xnor(BooleanFunction):
     """
     Logical XNOR function.
 
-    Returns the inverse of the exclusive OR (XOR) function
+    Returns the inverse of the exclusive OR (XOR) function.
     """
     @classmethod
     def eval(cls, *args):
         """
         Logical XNOR function.
 
-        Evaluates the XOR function and returns its inverse
+        Evaluates the XOR function and returns its inverse.
 
         Examples
         ========
