@@ -160,7 +160,7 @@ class TableForm(object):
             s.append(format_str % tuple(d))
         return ''.join(s)
 
-    def _latex(self, p):
+    def _latex(self, printer):
         """
         Returns the string representation of 'self'.
 
@@ -198,7 +198,7 @@ class TableForm(object):
                 if self._column_formats[j]:
                     d.append(self._column_formats[j] % x)
                 else:
-                    d.append(str(x))
+                    d.append(printer._print(x))
             if self._headings[0]:
                 d = [self._headings[0][i]] + d
             s += " & ".join(d) + r" \\" + "\n"
