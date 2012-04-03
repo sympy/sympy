@@ -1,6 +1,7 @@
 from sympy.core import S, C, Basic, Interval
 from sympy.core.function import _coeff_isneg
 from sympy.utilities import group
+from sympy.core.sympify import SympifyError
 
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
@@ -1429,6 +1430,18 @@ class PrettyPrinter(Printer):
                 return pform
             except:
                 return self._print(None)
+
+    def _print_DMP(self, p):
+        try:
+            if p.ring is not None:
+                # TODO incorporate order
+                return self._print(p.ring.to_sympy(p))
+        except SympifyError:
+            pass
+        return self._print(repr(p))
+
+    def _print_DMF(self, p):
+        return self._print_DMP(p)
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

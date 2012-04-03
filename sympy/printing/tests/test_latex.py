@@ -534,6 +534,14 @@ def test_latex_RandomDomain():
     B = Exponential(1, symbol=Symbol('b'))
     assert latex(pspace(Tuple(A,B)).domain) =="Domain: 0 \leq a \wedge 0 \leq b"
 
+def test_PrettyPoly():
+    from sympy.polys.domains import QQ
+    F = QQ.frac_field(x, y)
+    R = QQ[x, y]
+
+    assert latex(F.convert(x/(x + y))) == latex(x/(x + y))
+    assert latex(R.convert(x + y)) == latex(x + y)
+
 def test_integral_transforms():
     x = Symbol("x")
     k = Symbol("k")

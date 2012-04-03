@@ -23,8 +23,8 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
 
         lev = len(gens) - 1
 
-        self.zero = self.dtype.zero(lev, dom)
-        self.one  = self.dtype.one(lev, dom)
+        self.zero = self.dtype.zero(lev, dom, ring=self)
+        self.one  = self.dtype.one(lev, dom, ring=self)
 
         self.dom  = dom
         self.gens = gens
@@ -37,10 +37,12 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
 
     def __call__(self, a):
         """Construct an element of `self` domain from `a`. """
-        return DMP(a, self.dom, len(self.gens)-1)
+        return DMP(a, self.dom, len(self.gens)-1, ring=self)
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
+        if not isinstance(other, PolynomialRing):
+            return False
         return self.dtype == other.dtype and self.dom == other.dom and self.gens == other.gens
 
     def __ne__(self, other):

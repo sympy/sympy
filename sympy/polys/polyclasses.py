@@ -1,6 +1,7 @@
 """OO layer for several polynomial representations. """
 
 from sympy.polys.polyutils import PicklableWithSlots
+from sympy.polys.polyerrors import CoercionFailed, NotReversible
 
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
@@ -135,9 +136,9 @@ def init_normal_DMP(rep, lev, dom):
 class DMP(PicklableWithSlots):
     """Dense Multivariate Polynomials over `K`. """
 
-    __slots__ = ['rep', 'lev', 'dom']
+    __slots__ = ['rep', 'lev', 'dom', 'ring']
 
-    def __init__(self, rep, dom, lev=None):
+    def __init__(self, rep, dom, lev=None, ring=None):
         if lev is not None:
             if type(rep) is dict:
                 rep = dmp_from_dict(rep, lev, dom)
@@ -149,24 +150,29 @@ class DMP(PicklableWithSlots):
         self.rep = rep
         self.lev = lev
         self.dom = dom
+        self.ring = ring
 
     def __repr__(f):
-        return "%s(%s, %s)" % (f.__class__.__name__, f.rep, f.dom)
+        return "%s(%s, %s, %s)" % (f.__class__.__name__, f.rep, f.dom, f.ring)
 
     def __hash__(f):
-        return hash((f.__class__.__name__, f.to_tuple(), f.lev, f.dom))
+        return hash((f.__class__.__name__, f.to_tuple(), f.lev, f.dom, f.ring))
 
     def unify(f, g):
         """Unify representations of two multivariate polynomials. """
-        return f.lev, f.dom, f.per, f.rep, g.rep
-
         if not isinstance(g, DMP) or f.lev != g.lev:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
-        if f.dom == g.dom:
+        if f.dom == g.dom and f.ring == g.ring:
             return f.lev, f.dom, f.per, f.rep, g.rep
         else:
             lev, dom = f.lev, f.dom.unify(g.dom)
+            ring = f.ring
+            if g.ring is not None:
+                if ring is not None:
+                    ring = ring.unify(g.ring)
+                else:
+                    ring = g.ring
 
             F = dmp_convert(f.rep, lev, f.dom, dom)
             G = dmp_convert(g.rep, lev, g.dom, dom)
@@ -178,11 +184,11 @@ class DMP(PicklableWithSlots):
                     else:
                         lev -= 1
 
-                return DMP(rep, dom, lev)
+                return DMP(rep, dom, lev, ring)
 
             return lev, dom, per, F, G
 
-    def per(f, rep, dom=None, kill=False):
+    def per(f, rep, dom=None, kill=False, ring=None):
         """Create a DMP out of the given representation. """
         lev = f.lev
 
@@ -195,15 +201,18 @@ class DMP(PicklableWithSlots):
         if dom is None:
             dom = f.dom
 
-        return DMP(rep, dom, lev)
+        if ring is None:
+            ring = f.ring
+
+        return DMP(rep, dom, lev, ring)
 
     @classmethod
-    def zero(cls, lev, dom):
-        return DMP(0, dom, lev)
+    def zero(cls, lev, dom, ring=None):
+        return DMP(0, dom, lev, ring)
 
     @classmethod
-    def one(cls, lev, dom):
-        return DMP(1, dom, lev)
+    def one(cls, lev, dom, ring=None):
+        return DMP(1, dom, lev, ring)
 
     @classmethod
     def from_list(cls, rep, lev, dom):
@@ -242,8 +251,8 @@ class DMP(PicklableWithSlots):
         return cls(dmp_from_dict(rep, lev, dom), dom, lev)
 
     @classmethod
-    def from_monoms_coeffs(cls, monoms, coeffs, lev, dom):
-        return DMP(dict(zip(monoms, coeffs)), dom, lev)
+    def from_monoms_coeffs(cls, monoms, coeffs, lev, dom, ring=None):
+        return DMP(dict(zip(monoms, coeffs)), dom, lev, ring)
 
     def to_ring(f):
         """Make the ground domain a field. """
@@ -827,6 +836,11 @@ class DMP(PicklableWithSlots):
                 g = f.per(dmp_ground(f.dom.convert(g), f.lev))
             except TypeError:
                 return NotImplemented
+            except CoercionFailed as e:
+                if f.ring is not None:
+                    g = f.ring.convert(g)
+                else:
+                    raise e
 
         return f.add(g)
 
@@ -839,6 +853,11 @@ class DMP(PicklableWithSlots):
                 g = f.per(dmp_ground(f.dom.convert(g), f.lev))
             except TypeError:
                 return NotImplemented
+            except CoercionFailed as e:
+                if f.ring is not None:
+                    g = f.ring.convert(g)
+                else:
+                    raise e
 
         return f.sub(g)
 
@@ -853,6 +872,11 @@ class DMP(PicklableWithSlots):
                 return f.mul_ground(g)
             except TypeError:
                 return NotImplemented
+            except CoercionFailed as e:
+                if f.ring is not None:
+                    return f.mul(f.ring.convert(g))
+                else:
+                    raise e
 
     def __rmul__(f, g):
         return f.__mul__(g)
@@ -929,9 +953,9 @@ def init_normal_DMF(num, den, lev, dom):
 class DMF(PicklableWithSlots):
     """Dense Multivariate Fractions over `K`. """
 
-    __slots__ = ['num', 'den', 'lev', 'dom']
+    __slots__ = ['num', 'den', 'lev', 'dom', 'ring']
 
-    def __init__(self, rep, dom, lev=None):
+    def __init__(self, rep, dom, lev=None, ring=None):
         num, den, lev = self._parse(rep, dom, lev)
         num, den = dmp_cancel(num, den, lev, dom)
 
@@ -939,9 +963,10 @@ class DMF(PicklableWithSlots):
         self.den = den
         self.lev = lev
         self.dom = dom
+        self.ring = ring
 
     @classmethod
-    def new(cls, rep, dom, lev=None):
+    def new(cls, rep, dom, lev=None, ring=None):
         num, den, lev = cls._parse(rep, dom, lev)
 
         obj = object.__new__(cls)
@@ -950,6 +975,7 @@ class DMF(PicklableWithSlots):
         obj.den = den
         obj.lev = lev
         obj.dom = dom
+        obj.ring = ring
 
         return obj
 
@@ -998,28 +1024,35 @@ class DMF(PicklableWithSlots):
         return num, den, lev
 
     def __repr__(f):
-        return "%s((%s, %s), %s)" % (f.__class__.__name__, f.num, f.den, f.dom)
+        return "%s((%s, %s), %s, %s)" % (f.__class__.__name__, f.num, f.den,
+                                         f.dom, f.ring)
 
     def __hash__(f):
         return hash((f.__class__.__name__, dmp_to_tuple(f.num, f.lev),
-            dmp_to_tuple(f.den, f.lev), f.lev, f.dom))
+            dmp_to_tuple(f.den, f.lev), f.lev, f.dom, f.ring))
 
     def poly_unify(f, g):
         """Unify a multivariate fraction and a polynomial. """
         if not isinstance(g, DMP) or f.lev != g.lev:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
-        if f.dom == g.dom:
+        if f.dom == g.dom and f.ring == g.ring:
             return (f.lev, f.dom, f.per, (f.num, f.den), g.rep)
         else:
             lev, dom = f.lev, f.dom.unify(g.dom)
+            ring = f.ring
+            if g.ring is not None:
+                if ring is not None:
+                    ring = ring.unify(g.ring)
+                else:
+                    ring = g.ring
 
             F = (dmp_convert(f.num, lev, f.dom, dom),
                  dmp_convert(f.den, lev, f.dom, dom))
 
             G = dmp_convert(g.rep, lev, g.dom, dom)
 
-            def per(num, den, cancel=True, kill=False):
+            def per(num, den, cancel=True, kill=False, lev=lev):
                 if kill:
                     if not lev:
                         return num/den
@@ -1029,7 +1062,7 @@ class DMF(PicklableWithSlots):
                 if cancel:
                     num, den = dmp_cancel(num, den, lev, dom)
 
-                return f.__class__.new((num, den), dom, lev)
+                return f.__class__.new((num, den), dom, lev, ring=ring)
 
             return lev, dom, per, F, G
 
@@ -1038,11 +1071,17 @@ class DMF(PicklableWithSlots):
         if not isinstance(g, DMF) or f.lev != g.lev:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
-        if f.dom == g.dom:
+        if f.dom == g.dom and f.ring == g.ring:
             return (f.lev, f.dom, f.per, (f.num, f.den),
                                          (g.num, g.den))
         else:
             lev, dom = f.lev, f.dom.unify(g.dom)
+            ring = f.ring
+            if g.ring is not None:
+                if ring is not None:
+                    ring = ring.unify(g.ring)
+                else:
+                    ring = g.ring
 
             F = (dmp_convert(f.num, lev, f.dom, dom),
                  dmp_convert(f.den, lev, f.dom, dom))
@@ -1050,7 +1089,7 @@ class DMF(PicklableWithSlots):
             G = (dmp_convert(g.num, lev, g.dom, dom),
                  dmp_convert(g.den, lev, g.dom, dom))
 
-            def per(num, den, cancel=True, kill=False):
+            def per(num, den, cancel=True, kill=False, lev=lev):
                 if kill:
                     if not lev:
                         return num/den
@@ -1060,11 +1099,11 @@ class DMF(PicklableWithSlots):
                 if cancel:
                     num, den = dmp_cancel(num, den, lev, dom)
 
-                return f.__class__.new((num, den), dom, lev)
+                return f.__class__.new((num, den), dom, lev, ring=ring)
 
             return lev, dom, per, F, G
 
-    def per(f, num, den, cancel=True, kill=False):
+    def per(f, num, den, cancel=True, kill=False, ring=None):
         """Create a DMF out of the given representation. """
         lev, dom = f.lev, f.dom
 
@@ -1077,7 +1116,10 @@ class DMF(PicklableWithSlots):
         if cancel:
             num, den = dmp_cancel(num, den, lev, dom)
 
-        return f.__class__.new((num, den), dom, lev)
+        if ring is None:
+            ring = f.ring
+
+        return f.__class__.new((num, den), dom, lev, ring=ring)
 
     def half_per(f, rep, kill=False):
         """Create a DMP out of the given representation. """
@@ -1092,12 +1134,12 @@ class DMF(PicklableWithSlots):
         return DMP(rep, f.dom, lev)
 
     @classmethod
-    def zero(cls, lev, dom):
-        return cls.new(0, dom, lev)
+    def zero(cls, lev, dom, ring=None):
+        return cls.new(0, dom, lev, ring=ring)
 
     @classmethod
-    def one(cls, lev, dom):
-        return cls.new(1, dom, lev)
+    def one(cls, lev, dom, ring=None):
+        return cls.new(1, dom, lev, ring=ring)
 
     def numer(f):
         """Returns numerator of `f`. """
@@ -1179,13 +1221,20 @@ class DMF(PicklableWithSlots):
             num = dmp_mul(F_num, G_den, lev, dom)
             den = dmp_mul(F_den, G_num, lev, dom)
 
-        return per(num, den)
+        res = per(num, den)
+        if f.ring is not None and res not in f.ring:
+            from sympy.polys.polyerrors import ExactQuotientFailed
+            raise ExactQuotientFailed(f, g, f.ring)
+        return res
 
     exquo = quo
 
-    def invert(f):
+    def invert(f, check=True):
         """Computes inverse of a fraction `f`. """
-        return f.per(f.den, f.num, cancel=False)
+        if check and f.ring is not None and not f.ring.is_unit(f):
+            raise NotReversible(f, f.ring)
+        res = f.per(f.den, f.num, cancel=False)
+        return res
 
     @property
     def is_zero(f):
@@ -1209,6 +1258,11 @@ class DMF(PicklableWithSlots):
             return f.add(f.half_per(g))
         except TypeError:
             return NotImplemented
+        except CoercionFailed as e:
+            if f.ring is not None:
+                return f.add(f.ring.convert(g))
+            else:
+                raise e
 
     def __radd__(f, g):
         return f.__add__(g)
@@ -1233,6 +1287,11 @@ class DMF(PicklableWithSlots):
             return f.mul(f.half_per(g))
         except TypeError:
             return NotImplemented
+        except CoercionFailed as e:
+            if f.ring is not None:
+                return f.mul(f.ring.convert(g))
+            else:
+                raise e
 
     def __rmul__(f, g):
         return f.__mul__(g)
@@ -1248,8 +1307,21 @@ class DMF(PicklableWithSlots):
             return f.quo(f.half_per(g))
         except TypeError:
             return NotImplemented
+        except CoercionFailed as e:
+            if f.ring is not None:
+                return f.quo(f.ring.convert(g))
+            else:
+                raise e
+
+    def __rdiv__(self, g):
+        r = self.invert(check=False)*g
+        if self.ring and r not in self.ring:
+            from sympy.polys.polyerrors import ExactQuotientFailed
+            raise ExactQuotientFailed(g, self, self.ring)
+        return r
 
     __truediv__ = __div__
+    __rtruediv__ = __rdiv__
 
     def __eq__(f, g):
         try:
