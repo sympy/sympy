@@ -1,5 +1,4 @@
-from sympy import (Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet,
-        array)
+from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet
 from sympy.core.containers import tuple_wrapper
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import is_sequence, iterable
