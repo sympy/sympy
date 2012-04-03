@@ -2672,6 +2672,16 @@ def test_pretty_Domain():
     assert  pretty(expr) == "ZZ(x, y)"
     assert upretty(expr) == u"ℤ(x, y)"
 
+    expr = QQ.poly_ring(x, y, order="lex")
+
+    assert  pretty(expr) == "QQ[x, y, order=lex]"
+    assert upretty(expr) == u"ℚ[x, y, order=lex]"
+
+    expr = QQ.poly_ring(x, y, order="ilex")
+
+    assert  pretty(expr) == "QQ[x, y, order=ilex]"
+    assert upretty(expr) == u"ℚ[x, y, order=ilex]"
+
 def test_pretty_prec():
     assert xpretty(S("0.3"), full_prec=True) == "0.300000000000000"
     assert xpretty(S("0.3"), full_prec="auto") == "0.300000000000000"

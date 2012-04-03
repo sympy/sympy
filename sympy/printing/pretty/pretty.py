@@ -1334,8 +1334,11 @@ class PrettyPrinter(Printer):
         else:
             return prettyForm('CC')
 
-    def _print_PolynomialRing(self, expr):
-        pform = self._print_seq(expr.gens, '[', ']')
+    def _print_PolynomialRingBase(self, expr):
+        g = expr.gens
+        if str(expr.order) != str(expr.default_order):
+            g = g + ("order=" + str(expr.order),)
+        pform = self._print_seq(g, '[', ']')
         pform = prettyForm(*pform.left(self._print(expr.dom)))
 
         return pform

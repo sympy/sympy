@@ -101,7 +101,7 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
-    def from_PolynomialRing(K1, a, K0):
+    def from_GlobalPolynomialRing(K1, a, K0):
         """Convert a `DMF` object to `dtype`. """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
