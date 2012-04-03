@@ -106,6 +106,9 @@ class MatrixExpr(Expr):
     def eval_inverse(self):
         raise NotImplementedError()
 
+    def conjugate(self):
+        return MatMul(*[arg.conjugate() for arg in self.args])
+
     def transpose(self):
         if isinstance(self, Transpose):
             return self.arg
@@ -117,6 +120,9 @@ class MatrixExpr(Expr):
             return MatAdd(*[Transpose(arg) for arg in self.args])
 
         return Basic.__new__(Transpose, self)
+
+    def adjoint(self):
+        return MatMul(*[arg.adjoint() for arg in self.args[::-1]])
 
     @property
     def T(self):
