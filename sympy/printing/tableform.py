@@ -73,7 +73,23 @@ class TableForm(object):
         obj._column_formats = _column_formats
         return obj
 
+    def __repr__(self):
+        from sstr import sstr
+        return sstr(self, order=None)
+
+    def __str__(self):
+        from sstr import sstr
+        return sstr(self, order=None)
+
     def as_str(self):
+        # obsolated ?
+        return str(self)
+
+    def as_latex(self):
+        from latex import latex
+        return latex(self)
+
+    def _sympystr(self, p):
         """
         Returns the string representation of 'self'.
 
@@ -144,7 +160,7 @@ class TableForm(object):
             s.append(format_str % tuple(d))
         return ''.join(s)
 
-    def as_latex(self):
+    def _latex(self, p):
         """
         Returns the string representation of 'self'.
 
