@@ -31,7 +31,6 @@ def test_collect():
     assert collect(A*B - B*A, B) == A*B - B*A
     assert collect(A*B - B*A, x) == A*B - B*A
 
-@XFAIL
 def test_combsimp():
     assert combsimp(A*B - B*A) == A*B - B*A
 
