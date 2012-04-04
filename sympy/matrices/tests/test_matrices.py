@@ -1005,6 +1005,8 @@ def test_subs():
         Matrix([[-1,2],[-3,4]])
     assert Matrix([[x,2],[x+y,4]]).subs({x:-1,y:-2}) == \
         Matrix([[-1,2],[-3,4]])
+    assert Matrix([x*y]).subs({x:y-1, y:x-1}, simultaneous=True) == \
+        Matrix([(x-1)*(y-1)])
 
 def test_simplify():
     x,y,f,n = symbols('x y f n')

@@ -382,12 +382,12 @@ class MatrixBase(object):
                 map(lambda i: i.expand(**hints), self.mat))
         return out
 
-    def subs(self, *args):
+    def subs(self, *args, **kwargs):
         """
         Create substituted expressions for each element with `Expr.subs`.
         """
         out = self._new(self.rows, self.cols,
-                map(lambda i: i.subs(*args),self.mat))
+                map(lambda i: i.subs(*args, **kwargs), self.mat))
         return out
 
     def __sub__(self,a):
