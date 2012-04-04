@@ -479,7 +479,11 @@ class DMP(PicklableWithSlots):
     def exquo(f, g):
         """Computes polynomial exact quotient of `f` and `g`. """
         lev, dom, per, F, G = f.unify(g)
-        return per(dmp_exquo(F, G, lev, dom))
+        res = per(dmp_exquo(F, G, lev, dom))
+        if f.ring and res not in f.ring:
+            from sympy.polys.polyerrors import ExactQuotientFailed
+            raise ExactQuotientFailed(f, g, f.ring)
+        return res
 
     def degree(f, j=0):
         """Returns the leading degree of `f` in `x_j`. """
@@ -877,6 +881,31 @@ class DMP(PicklableWithSlots):
                     return f.mul(f.ring.convert(g))
                 else:
                     raise e
+
+    def __div__(f, g):
+        if isinstance(g, DMP):
+            return f.exquo(g)
+        else:
+            try:
+                return f.mul_ground(g)
+            except TypeError:
+                return NotImplemented
+            except CoercionFailed as e:
+                if f.ring is not None:
+                    return f.exquo(f.ring.convert(g))
+                else:
+                    raise e
+
+    def __rdiv__(f, g):
+        if isinstance(g, DMP):
+            return g.exquo(f)
+        elif f.ring is not None:
+            return f.ring.convert(g).exquo(f)
+        else:
+            return NotImplemented
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
 
     def __rmul__(f, g):
         return f.__mul__(g)

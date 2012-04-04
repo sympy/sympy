@@ -26,6 +26,10 @@ def test_globalring():
     assert X * y == X * Y == R.convert(x * y) == x * Y
     assert X + y == X + Y == R.convert(x + y)
     assert X + 1 == R.convert(x + 1)
+    raises(ExactQuotientFailed, 'X/Y')
+    raises(ExactQuotientFailed, 'x/Y')
+    raises(ExactQuotientFailed, 'X/y')
+    assert X**2 / X == X
 
     assert R.from_GlobalPolynomialRing(ZZ[x, y].convert(x), ZZ[x, y]) == X
     assert R.from_FractionField(Qxy.convert(x), Qxy) == X
@@ -49,6 +53,7 @@ def test_localring():
     raises(ExactQuotientFailed, 'X/y')
     assert X + y == X + Y == R.convert(x + y)
     assert X + 1 == R.convert(x + 1)
+    assert X**2 / X == X
 
     assert R.from_GlobalPolynomialRing(ZZ[x, y].convert(x), ZZ[x, y]) == X
     assert R.from_FractionField(Qxy.convert(x), Qxy) == X
