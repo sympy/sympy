@@ -186,6 +186,9 @@ class Domain(object):
         """Convert a `EX` object to `dtype`. """
         return K1.from_sympy(a.ex)
 
+    def from_GeneralizedPolynomialRing(K1, a, K0):
+        return K1.from_FractionField(a, K0)
+
     def unify(K0, K1, gens=None):
         """Returns a maximal domain containg `K0` and `K1`. """
         if gens is not None:
