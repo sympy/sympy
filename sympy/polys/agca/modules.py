@@ -1,14 +1,64 @@
-"""Computations with modules over polynomial rings."""
+"""
+Computations with modules over polynomial rings.
+
+This module implements various classes that encapsulate groebner basis
+computations for modules. Most of them should not be instantiated by hand.
+Instead, use the constructing routines on objects you already have.
+
+For example, to construct a free module over ``QQ[x, y]``, call
+``QQ[x, y].free_module(rank)`` instead of the ``FreeModule`` constructor.
+In fact ``FreeModule`` is an abstract base class that should not be
+instantiated, the ``free_module`` method instead returns the implementing class
+``FreeModulePolyRing``.
+
+In general, the abstract base classes implement most functionality in terms of
+a few non-implemented methods. The concrete base classes supply only these
+non-implemented methods. They may also supply new implementations of the
+convenience methods, for example if there are faster algorithms available.
+"""
+
+from copy import copy
 
 from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.monomialtools import ProductOrder, monomial_key
+from sympy.polys.domains import Field
 
 from sympy.core.compatibility import iterable
 
-class Module(object):
-    """Base class for modules."""
+# TODO
+# - intersection
+# - quotient modules
+# - modules over quotient rings
+# - module quotient / saturation
+# - free resoltutions / syzygies
+# - homomorphisms
+# - ...
 
-    #self.dtype - type representing elements
-    #self.ring - containing ring
+class Module(object):
+    """
+    Abstract base class for modules.
+
+    Do not instantiate - use ring explicit constructors instead:
+
+    >>> from sympy import QQ
+    >>> from sympy.abc import x
+    >>> QQ[x].free_module(2)
+    QQ[x]**2
+
+    Attributes:
+
+    - dtype - type of elements
+    - ring - containing ring
+
+    Non-implemented methods:
+
+    - submodule
+    - quotient_module
+    - is_zero
+    - is_submodule
+
+    The method convert likely needs to be changed in subclasses.
+    """
 
     def __init__(self, ring):
         self.ring = ring
@@ -27,6 +77,10 @@ class Module(object):
         """Generate a submodule."""
         raise NotImplementedError
 
+    def quotient_module(self, other):
+        """Generate a quotient module."""
+        raise NotImplementedError
+
     def contains(self, elem):
         """Return True if ``elem`` is an element of this module."""
         try:
@@ -38,11 +92,54 @@ class Module(object):
     def __contains__(self, elem):
         return self.contains(elem)
 
-class ModuleElement(object):
-    """Base class for module element wrappers."""
+    def subset(self, other):
+        """
+        Returns True if ``other`` is is a subset of ``self``.
 
-    #self.module - containing module
-    #self.data - data
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> F = QQ[x].free_module(2)
+        >>> F.subset([(1, x), (x, 2)])
+        True
+        >>> F.subset([(1/x, x), (x, 2)])
+        False
+        """
+        return all(self.contains(x) for x in other)
+
+    def __eq__(self, other):
+        return self.is_submodule(other) and other.is_submodule(self)
+
+    def __ne__(self, other):
+        return not (self == other)
+
+    def is_zero(self):
+        """Returns True if ``self`` is a zero module."""
+        raise NotImplementedError
+
+    def is_submodule(self, other):
+        """Returns True if ``other`` is a submodule of ``self``."""
+        raise NotImplementedError
+
+class ModuleElement(object):
+    """
+    Base class for module element wrappers.
+
+    Use this class to wrap primitive data types as module elements. It stores
+    a reference to the containing module, and implements all the arithmetic
+    operators.
+
+    Attributes:
+
+    - module - containing module
+    - data - internal data
+
+    Methods that likely need change in subclasses:
+
+    - add
+    - mul
+    - div
+    - eq
+    """
 
     def __init__(self, module, data):
         self.module = module
@@ -58,7 +155,7 @@ class ModuleElement(object):
 
     def div(self, m, d):
         """Divide module data ``m`` by coefficient d."""
-        raise NotImplementedError
+        return m / d
 
     def eq(self, d1, d2):
         """Return true if d1 and d2 represent the same element."""
@@ -119,10 +216,23 @@ class FreeModuleElement(ModuleElement):
         from sympy import sstr
         return '[' + ', '.join(sstr(x) for x in self.data) + ']'
 
-class FreeModule(Module):
-    """Base class for free modules."""
+    def __iter__(self):
+        return self.data.__iter__()
 
-    #self.rank - rank of the free module
+class FreeModule(Module):
+    """
+    Abstract base class for free modules.
+
+    Additional attributes:
+
+    - rank - rank of the free module
+
+    Non-implemented methods:
+
+    - quotient_module
+    - submodule
+    """
+
     dtype = FreeModuleElement
 
     def __init__(self, ring, rank):
@@ -132,12 +242,40 @@ class FreeModule(Module):
     def __repr__(self):
         return repr(self.ring) + "**" + repr(self.rank)
 
-    def __eq__(self, other):
-        if not isinstance(other, FreeModule):
-            return False
-        return self.ring == other.ring and self.rank == other.rank
+    def is_submodule(self, other):
+        """
+        Returns True if ``other`` is a submodule of ``self``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> F = QQ[x].free_module(2)
+        >>> M = F.submodule([2, x])
+        >>> F.is_submodule(F)
+        True
+        >>> F.is_submodule(M)
+        True
+        >>> M.is_submodule(F)
+        False
+        """
+        if isinstance(other, SubModule):
+            return other.container == self
+        if isinstance(other, FreeModule):
+            return other.ring == self.ring and other.rank == self.rank
+        return False
 
     def convert(self, elem, M=None):
+        """
+        Convert ``elem`` into the internal representation.
+
+        This method is called implicitly whenever computations involve elements
+        not in the internal representation.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> F = QQ[x].free_module(2)
+        >>> F.convert([1, 0])
+        [1, 0]
+        """
         if isinstance(elem, FreeModuleElement):
             if elem.module == self:
                 return elem
@@ -150,5 +288,279 @@ class FreeModule(Module):
             if len(tpl) != self.rank:
                 raise CoercionFailed
             return FreeModuleElement(self, tpl)
+        elif elem == 0:
+            return FreeModuleElement(self, (self.ring.convert(0),)*self.rank)
         else:
             raise CoercionFailed
+
+    def is_zero(self):
+        """
+        Returns True if ``self`` is a zero module.
+
+        (If, as this implementation assumes, the coefficient ring is not the
+        zero ring, then this is equivalent to the rank being zero.)
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> QQ[x].free_module(0).is_zero()
+        True
+        >>> QQ[x].free_module(1).is_zero()
+        False
+        """
+        return self.rank == 0
+
+    def basis(self):
+        """
+        Return a set of basis elements.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> QQ[x].free_module(3).basis()
+        ([1, 0, 0], [0, 1, 0], [0, 0, 1])
+        """
+        from sympy.matrices import eye
+        M = eye(self.rank)
+        return tuple(self.convert(M.row(i)) for i in range(self.rank))
+
+class FreeModulePolyRing(FreeModule):
+    """
+    Free module over a generalized polynomial ring.
+
+    Do not instantiate this, use the constructor method of the ring instead:
+
+    >>> from sympy.abc import x
+    >>> from sympy import QQ
+    >>> F = QQ[x].free_module(3)
+    >>> F
+    QQ[x]**3
+    >>> F.contains([x, 1, 0])
+    True
+    >>> F.contains([1/x, 0, 1])
+    False
+    """
+
+    def __init__(self, ring, rank):
+        from sympy.polys.domains.polynomialring import PolynomialRingBase
+        FreeModule.__init__(self, ring, rank)
+        if not isinstance(ring, PolynomialRingBase):
+            raise NotImplementedError('This implementation only works over '
+                                      + 'polynomial rings, got %s' % ring)
+        if not isinstance(ring.dom, Field):
+            raise NotImplementedError('Ground domain must be a field, '
+                                      + 'got %s' % ring.dom)
+
+    def submodule(self, *gens, **opts):
+        """
+        Generate a submodule.
+
+        >>> from sympy.abc import x, y
+        >>> from sympy import QQ
+        >>> M = QQ[x, y].free_module(2).submodule([x, x + y])
+        >>> M
+        <[x, x + y]>
+        >>> M.contains([2*x, 2*x + 2*y])
+        True
+        >>> M.contains([x, y])
+        False
+        """
+        return SubModulePolyRing(gens, self, **opts)
+
+class SubModule(Module):
+    """
+    Base class for submodules.
+
+    Attributes:
+
+    - container - containing module
+    - gens - generators (subset of containing module)
+    - rank - rank of containing module
+
+    Non-implemented methods:
+
+    - _contains
+    """
+
+    def __init__(self, gens, container):
+        Module.__init__(self, container.ring)
+        self.gens = tuple(container.convert(x) for x in gens)
+        self.container = container
+        self.rank = container.rank
+        self.ring = container.ring
+        self.dtype = container.dtype
+
+    def __repr__(self):
+        return "<" + ", ".join(repr(x) for x in self.gens) + ">"
+
+    def _contains(self, other):
+        """Implementation of containment.
+           Other is guaranteed to be FreeModuleElement."""
+        raise NotImplementedError
+
+    def convert(self, elem, M=None):
+        """
+        Convert ``elem`` into the internal represantition.
+
+        Mostly called implicitly.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> M = QQ[x].free_module(2).submodule([1, x])
+        >>> M.convert([2, 2*x])
+        [2, 2*x]
+        """
+        r = copy(self.container.convert(elem, M))
+        r.module = self
+        if not self._contains(r):
+            raise CoercionFailed
+        return r
+
+    def _intersect(self, other):
+        """Implementation of intersection.
+           Other is guaranteed to be a submodule of same free module."""
+        raise NotImplementedError
+
+    def intersect(self, other):
+        """Returns the intersection of ``self`` with submodule ``other``."""
+        if not isinstance(other, SubModule):
+            raise TypeError('%s is not a SubModule' % other)
+        if other.container != self.container:
+            raise ValueError('%s is contained in a different free module' % other)
+        return self._intersect(other)
+
+    def union(self, other):
+        """
+        Returns the module generated by the union of ``self`` and ``other``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> F = QQ[x].free_module(1)
+        >>> M = F.submodule([x**2 + x]) # <x(x+1)>
+        >>> N = F.submodule([x**2 - 1]) # <(x-1)(x+1)>
+        >>> M.union(N) == F.submodule([x+1])
+        True
+        """
+        if not isinstance(other, SubModule):
+            raise TypeError('%s is not a SubModule' % other)
+        if other.container != self.container:
+            raise ValueError('%s is contained in a different free module' % other)
+        return self.__class__(self.gens + other.gens, self.container)
+
+    def is_zero(self):
+        """
+        Return True if ``self`` is a zero module.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> F = QQ[x].free_module(2)
+        >>> F.submodule([x, 1]).is_zero()
+        False
+        >>> F.submodule([0, 0]).is_zero()
+        True
+        """
+        return all(x == 0 for x in self.gens)
+
+    def submodule(self, *gens):
+        """
+        Generate a submodule.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> M = QQ[x].free_module(2).submodule([x, 1])
+        >>> M.submodule([x**2, x])
+        <[x**2, x]>
+        """
+        if not self.subset(gens):
+            raise ValueError('%s not a subset of %s' % (gens, self))
+        return self.__class__(gens, self.container)
+
+    def is_full_module(self):
+        """
+        Return True if ``self`` is the entire free module.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> F = QQ[x].free_module(2)
+        >>> F.submodule([x, 1]).is_full_module()
+        False
+        >>> F.submodule([1, 1], [1, 2]).is_full_module()
+        True
+        """
+        return all(self.contains(x) for x in self.container.basis())
+
+    def is_submodule(self, other):
+        """
+        Returns True if ``other`` is a submodule of ``self``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> F = QQ[x].free_module(2)
+        >>> M = F.submodule([2, x])
+        >>> N = M.submodule([2*x, x**2])
+        >>> M.is_submodule(M)
+        True
+        >>> M.is_submodule(N)
+        True
+        >>> N.is_submodule(M)
+        False
+        """
+        if isinstance(other, SubModule):
+            return self.container == other.container and \
+                   all(self.contains(x) for x in other.gens)
+        if isinstance(other, FreeModule):
+            return self.container == other and self.is_full_module()
+        return False
+
+_subs0 = lambda x: x[0]
+_subs1 = lambda x: x[1:]
+class ModuleOrder(ProductOrder):
+    """A product monomial order with a zeroth term as module index."""
+
+    def __init__(self, o1, o2):
+        ProductOrder.__init__(self, (o1, _subs0), (o2, _subs1))
+
+class SubModulePolyRing(SubModule):
+    """
+    Submodule of a free module over a generalized polynomial ring.
+
+    Do not instantiate this, use the constructor method of FreeModule instead:
+
+    >>> from sympy.abc import x, y
+    >>> from sympy import QQ
+    >>> F = QQ[x, y].free_module(2)
+    >>> F.submodule([x, y], [1, 0])
+    <[x, y], [1, 0]>
+
+    Attributes:
+
+    - order - monomial order used
+    """
+
+    #self._gb - cached groebner basis
+
+    def __init__(self, gens, container, order="lex"):
+        SubModule.__init__(self, gens, container)
+        if not isinstance(container, FreeModulePolyRing):
+            raise NotImplementedError('This implementation is for submodules of '
+                             + 'FreeModulePolyRing, got %s' % container)
+        self.order = ModuleOrder(monomial_key(order), self.ring.order)
+        self._gb = None
+
+    def __eq__(self, other):
+        if isinstance(other, SubModulePolyRing) and self.order != other.order:
+            return False
+        return SubModule.__eq__(self, other)
+
+    def _groebner(self):
+        """Returns a standard basis in sdm form."""
+        from sympy.polys.distributedmodules import sdm_groebner, sdm_nf_mora
+        if self._gb is None:
+            self._gb = tuple(sdm_groebner(
+               [self.ring._vector_to_sdm(x, self.order) for x in self.gens],
+               sdm_nf_mora, self.order, self.ring.dom))
+        return self._gb
+
+    def _contains(self, x):
+        from sympy.polys.distributedmodules import sdm_zero, sdm_nf_mora
+        return sdm_nf_mora(self.ring._vector_to_sdm(x, self.order),
+                           self._groebner(), self.order, self.ring.dom) == \
+               sdm_zero()
