@@ -355,7 +355,7 @@ class DMP(PicklableWithSlots):
         >>> from sympy.polys.domains import ZZ
 
         >>> DMP([[[ZZ(1)]], [[ZZ(1)], [ZZ(2)]]], ZZ).exclude()
-        ([2], DMP([[1], [1, 2]], ZZ))
+        ([2], DMP([[1], [1, 2]], ZZ, None))
 
         """
         J, F, u = dmp_exclude(f.rep, f.lev, f.dom)
@@ -372,10 +372,10 @@ class DMP(PicklableWithSlots):
         >>> from sympy.polys.domains import ZZ
 
         >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 0, 2])
-        DMP([[[2], []], [[1, 0], []]], ZZ)
+        DMP([[[2], []], [[1, 0], []]], ZZ, None)
 
         >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 2, 0])
-        DMP([[[1], []], [[2, 0], []]], ZZ)
+        DMP([[[1], []], [[2, 0], []]], ZZ, None)
 
         """
         return f.per(dmp_permute(f.rep, P, f.lev, f.dom))

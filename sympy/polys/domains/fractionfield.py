@@ -133,7 +133,7 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         >>> ZZx = ZZ.frac_field(x)
 
         >>> QQx.from_FractionField(f, ZZx)
-        DMF(([1/1, 2/1], [1/1, 1/1]), QQ)
+        (x + 2)/(x + 1)
 
         """
         if K1.gens == K0.gens:
