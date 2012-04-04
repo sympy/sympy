@@ -6,7 +6,7 @@ from sympy.integrals.transforms import (mellin_transform,
     LaplaceTransform, FourierTransform, SineTransform, CosineTransform,
     InverseLaplaceTransform, InverseFourierTransform, InverseSineTransform, InverseCosineTransform)
 from sympy import (gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
-                   cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
+                   cos, S, And, sin, sqrt, I, log, tan, cot, hyperexpand, meijerg,
                    EulerGamma, erf, besselj, bessely, besseli, besselk,
                    exp_polar, polar_lift, unpolarify, Function, expint)
 from sympy.utilities.pytest import XFAIL, slow, skip
@@ -131,8 +131,8 @@ def test_mellin_transform():
     assert MT(log(x)**3*Heaviside(x-1), x, s) == (6/s**4, (-oo, 0), True)
     assert MT(log(x + 1), x, s) == (pi/(s*sin(pi*s)), (-1, 0), True)
     assert MT(log(1/x + 1), x, s) == (pi/(s*sin(pi*s)), (0, 1), True)
-    assert MT(log(abs(1 - x)), x, s) == (pi/(s*tan(pi*s)), (-1, 0), True)
-    assert MT(log(abs(1 - 1/x)), x, s) == (pi/(s*tan(pi*s)), (0, 1), True)
+    assert MT(log(abs(1 - x)), x, s) == (pi*cot(pi*s)/s, (-1, 0), True)
+    assert MT(log(abs(1 - 1/x)), x, s) == (pi*cot(pi*s)/s, (0, 1), True)
 
     # TODO we cannot currently do these (needs summation of 3F2(-1))
     #      this also implies that they cannot be written as a single g-function
