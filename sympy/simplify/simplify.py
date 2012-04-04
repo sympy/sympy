@@ -827,11 +827,18 @@ def trigsimp_recursive(expr, deep = False):
         (a*sin(b)**2,  a - a*cos(b)**2),
         (a*tan(b)**2,  a*(1/cos(b))**2 - a),
         (a*cot(b)**2,  a*(1/sin(b))**2 - a),
+        (a*sin(b + c),  a*(sin(b)*cos(c) + sin(c)*cos(b))),
+        (a*cos(b + c),  a*(cos(b)*cos(c) - sin(b)*sin(c))),
+        (a*tan(b + c),  a*((tan(b) + tan(c))/(1 - tan(b)*tan(c)))),
 
         (a*sinh(b)**2, a*cosh(b)**2 - a),
         (a*tanh(b)**2, a - a*(1/cosh(b))**2),
-        (a*coth(b)**2, a + a*(1/sinh(b))**2)
+        (a*coth(b)**2, a + a*(1/sinh(b))**2),
+        (a*sinh(b + c),  a*(sinh(b)*cosh(c) + sinh(c)*cosh(b))),
+        (a*cosh(b + c),  a*(cosh(b)*cosh(c) + sinh(b)*sinh(c))),
+        (a*tanh(b + c),  a*((tanh(b) + tanh(c))/(1 + tanh(b)*tanh(c))))
         )
+
     # Reduce any lingering artefacts, such as sin(x)**2 changing
     # to 1-cos(x)**2 when sin(x)**2 was "simpler"
     artifacts = (
