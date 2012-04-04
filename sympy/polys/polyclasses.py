@@ -878,9 +878,11 @@ class DMP(PicklableWithSlots):
                 return NotImplemented
             except CoercionFailed, e:
                 if f.ring is not None:
-                    return f.mul(f.ring.convert(g))
-                else:
-                    raise e
+                    try:
+                        return f.mul(f.ring.convert(g))
+                    except CoercionFailed:
+                        pass
+                return NotImplemented
 
     def __div__(f, g):
         if isinstance(g, DMP):
@@ -900,9 +902,11 @@ class DMP(PicklableWithSlots):
         if isinstance(g, DMP):
             return g.exquo(f)
         elif f.ring is not None:
-            return f.ring.convert(g).exquo(f)
-        else:
-            return NotImplemented
+            try:
+                return f.ring.convert(g).exquo(f)
+            except CoercionFailed:
+                pass
+        return NotImplemented
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
