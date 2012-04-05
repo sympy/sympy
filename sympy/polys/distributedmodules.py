@@ -120,10 +120,10 @@ sdm_to_dict = sdp_to_dict
 
 def sdm_add(f, g, O, K):
     """
-    Add two module elements `f`, `g`.
+    Add two module elements ``f``, ``g``.
 
-    Addition is done over the ground field `K`, monomials are ordered
-    according to `O`.
+    Addition is done over the ground field ``K``, monomials are ordered
+    according to ``O``.
 
     All examples use lexicographic order.
 
@@ -150,7 +150,7 @@ def sdm_add(f, g, O, K):
 
 def sdm_LM(f):
     r"""
-    Returns the leading monomial of `f`.
+    Returns the leading monomial of ``f``.
 
     Only valid if `f \ne 0`.
 
@@ -164,7 +164,7 @@ def sdm_LM(f):
 
 def sdm_LT(f):
     r"""
-    Returns the leading term of `f`.
+    Returns the leading term of ``f``.
 
     Only valid if `f \ne 0`.
 
@@ -178,7 +178,10 @@ def sdm_LT(f):
 
 def sdm_mul_term(f, term, O, K):
     """
-    Multiply a distributed module element by a (polynomial) term.
+    Multiply a distributed module element ``f`` by a (polynomial) term ``term``.
+
+    Multiplication of coefficients is done over the ground field ``K``, and
+    monomials are ordered according to ``O``.
 
     `0 f_1 = 0`
     >>> from sympy.polys.distributedmodules import sdm_mul_term
@@ -212,14 +215,15 @@ def sdm_mul_term(f, term, O, K):
             return [ (sdm_monomial_mul(f_M, X), f_c * c) for f_M, f_c in f ]
 
 def sdm_zero():
+    """Return the zero module element."""
     return []
 
 def sdm_deg(f):
     """
-    Degree of `f`.
+    Degree of ``f``.
 
     This is the maximum of the degrees of all its monomials.
-    Invalid if f is zero.
+    Invalid if ``f`` is zero.
 
     >>> from sympy.polys.distributedmodules import sdm_deg
     >>> sdm_deg([((1, 2, 3), 1), ((10, 0, 1), 1), ((2, 3, 4), 4)])
@@ -233,6 +237,10 @@ def sdm_deg(f):
 def sdm_from_vector(vec, O, K, **opts):
     """
     Create an sdm from an iterable of expressions.
+
+    Coefficients are created in the ground field ``K``, and terms are ordered
+    according to monomial order ``O``. Named arguments are passed on to the
+    polys conversion code and can be used to specify for example generators.
 
     >>> from sympy.polys.distributedmodules import sdm_from_vector
     >>> from sympy.abc import x, y, z
@@ -249,10 +257,11 @@ def sdm_from_vector(vec, O, K, **opts):
 
 def sdm_to_vector(f, gens, K, n=None):
     """
-    Convert sdm into a list of polynomial expressions.
+    Convert sdm ``f`` into a list of polynomial expressions.
 
     The generators for the polynomial ring are specified via ``gens``. The rank
-    of the module is guessed, or passed via ``n``.
+    of the module is guessed, or passed via ``n``. The ground field is assumed
+    to be ``K``.
 
     >>> from sympy.polys.distributedmodules import sdm_to_vector
     >>> from sympy.abc import x, y, z
@@ -278,9 +287,12 @@ def sdm_to_vector(f, gens, K, n=None):
 
 def sdm_spoly(f, g, O, K):
     """
-    Compute the generalized s-polynomial of `f` and `g`.
+    Compute the generalized s-polynomial of ``f`` and ``g``.
 
-    This is invalid if either of `f` or `g` is zero.
+    The ground field is assumed to be ``K``, and monomials ordered according to
+    ``O``.
+
+    This is invalid if either of ``f`` or ``g`` is zero.
 
     If the leading terms of `f` and `g` involve different basis elements of
     `F`, their s-poly is defined to be zero. Otherwise it is a certain linear
@@ -313,7 +325,7 @@ def sdm_spoly(f, g, O, K):
 
 def sdm_ecart(f):
     """
-    Compute the ecart of `f`.
+    Compute the ecart of ``f``.
 
     This is defined to be the difference of the total degree of `f` and the
     total degree of the leading monomial of `f` [SCA, defn 2.3.7].
@@ -330,14 +342,17 @@ def sdm_ecart(f):
 
 def sdm_nf_mora(f, G, O, K):
     r"""
-    Compute a weak normal form of `f` with respect to `G` and order `O`.
+    Compute a weak normal form of ``f`` with respect to ``G`` and order ``O``.
+
+    The ground field is assumed to be ``K``, and monomials ordered according to
+    ``O``.
 
     Weak normal forms are defined in [SCA, defn 2.3.3]. They are not unique.
     This function deterministically computes a weak normal form, depending on
     the order of `G`.
 
     The most important property of a weak normal form is the following: if
-    `R` is the ring associated to the monomial ordering (if the ordering is
+    `R` is the ring associated with the monomial ordering (if the ordering is
     global, we just have `R = K[x_1, \dots, x_n]`, otherwise it is a certain
     localization thereof), `I` any ideal of `R` and `G` a standard basis for
     `I`, then for any `f \in R`, we have `f \in I` if and only if
@@ -362,7 +377,11 @@ def sdm_nf_mora(f, G, O, K):
 
 def sdm_groebner(G, NF, O, K):
     """
-    Compute a minimal standard basis of `G` with respect to order `O`.
+    Compute a minimal standard basis of ``G`` with respect to order ``O``.
+
+    The algorithm uses a normal form ``NF``, for example ``sdm_nf_mora``.
+    The ground field is assumed to be ``K``, and monomials ordered according
+    to ``O``.
 
     Let `N` denote the submodule generated by elements of `G`. A standard
     basis for `N` is a subset `S` of `N`, such that `in(S) = in(N)`, where for
@@ -376,7 +395,6 @@ def sdm_groebner(G, NF, O, K):
     Minimal standard bases are not unique. This algorithm computes a
     deterministic result, depending on the particular order of `G`.
 
-    The algorithm uses a normal form ``NF``, for example ``sdm_nf_mora``.
     See [SCA, algorithm 2.3.8, and remark 1.6.3].
     """
     # First compute a standard basis
