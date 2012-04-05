@@ -181,7 +181,7 @@ class Nand(BooleanFunction):
         >>> Nand(True, True)
         False
         """
-        return Not(And(*args))
+        return reduce((lambda x,y : Not(x&y)),args)
 
 class Nor(BooleanFunction):
     """
@@ -211,7 +211,7 @@ class Nor(BooleanFunction):
         >>> Nor(False, False)
         True
         """
-        return Not(Or(*args))
+        return reduce((lambda x,y : Not(x|y)),args)
 
 class Implies(BooleanFunction):
     """
