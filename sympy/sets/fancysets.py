@@ -42,12 +42,10 @@ class Naturals(Set):
         return False
 
     def __iter__(self):
-        def all_naturals():
-            i = S(1)
-            while True:
-                yield i
-                i = i + 1
-        return all_naturals()
+        i = S(1)
+        while True:
+            yield i
+            i = i + 1
 
     @property
     def _inf(self):
@@ -97,14 +95,12 @@ class Integers(Set):
         return False
 
     def __iter__(self):
-        def all_ints():
-            yield S.Zero
-            i = S(1)
-            while True:
-                yield i
-                yield -i
-                i = i + 1
-        return all_ints()
+        yield S.Zero
+        i = S(1)
+        while True:
+            yield i
+            yield -i
+            i = i + 1
 
     @property
     def _inf(self):
