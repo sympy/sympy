@@ -8,7 +8,8 @@ from sympy.polys.monomialtools import (
     monomial_max, monomial_min,
     monomial_divides,
     Monomial,
-    InverseOrder, ProductOrder, build_product_order
+    InverseOrder, ProductOrder, build_product_order,
+    LexOrder
 )
 
 from sympy.polys.polyerrors import ExactQuotientFailed
@@ -51,6 +52,8 @@ def test_lex_order():
     assert lex((1,2,2)) < lex((1,2,3))
 
     assert lex.is_global is True
+    assert lex == LexOrder()
+    assert lex != grlex
 
 def test_grlex_order():
     assert grlex((1,2,3)) == (6, (1,2,3))
@@ -109,6 +112,8 @@ def test_InverseOrder():
     assert str(igrlex) == "igrlex"
     assert ilex.is_global is False
     assert igrlex.is_global is False
+    assert ilex != igrlex
+    assert ilex == InverseOrder(LexOrder())
 
 def test_ProductOrder():
     P = ProductOrder((grlex, lambda m: m[:2]), (grlex, lambda m: m[2:]))
@@ -135,6 +140,9 @@ def test_build_product_order():
 
     assert build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t]) == \
                build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])
+    assert (build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t]) != \
+               build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])) \
+           is False
 
 def test_monomial_mul():
     assert monomial_mul((3,4,1), (1,2,0)) == (4,6,1)

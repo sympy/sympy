@@ -96,6 +96,15 @@ class MonomialOrder(object):
     def __call__(self, monomial):
         return self.key(monomial)
 
+    def __eq__(self, other):
+        return self.__class__ == other.__class__
+
+    def __hash__(self):
+        return hash(self.__class__)
+
+    def __ne__(self, other):
+        return not (self == other)
+
 class LexOrder(MonomialOrder):
     """Lexicographic order of monomials. """
 
@@ -182,6 +191,9 @@ class ProductOrder(MonomialOrder):
             return False
         return self.args == other.args
 
+    def __hash__(self):
+        return hash((self.__class__, self.args))
+
     @property
     def is_global(self):
         if all(o.is_global is True for o, _ in self.args):
@@ -230,6 +242,12 @@ class InverseOrder(MonomialOrder):
         if self.O.is_global is False:
             return True
         return None
+
+    def __eq__(self, other):
+        return isinstance(other, InverseOrder) and other.O == self.O
+
+    def __hash__(self, other):
+        return hash((self.__class__, self.O))
 
 lex = LexOrder()
 grlex = GradedLexOrder()
