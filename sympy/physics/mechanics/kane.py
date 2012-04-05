@@ -468,10 +468,6 @@ class Kane(object):
                     # redefine I about mass center
                     # have I S/O, want I S/S*
                     # I S/O = I S/S* + I S*/O; I S/S* = I S/O - I S*/O
-
-                    # This block of code needs to have a test written for it
-                    print('This functionality has not yet been tested yet, '
-                          'use at your own risk.')
                     f = v.frame
                     d = v.mc.pos_from(P)
                     I -= m * (((f.x | f.x) + (f.y | f.y) + (f.z | f.z)) *
