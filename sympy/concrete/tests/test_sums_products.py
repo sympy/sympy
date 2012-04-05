@@ -297,6 +297,13 @@ def test_is_zero():
         assert func(0, (x, 1, 1)).is_zero is True
         assert func(x, (x, 1, 1)).is_zero is None
 
+def test_is_commutative():
+    assert Sum(1, (x, 1, 1)).is_commutative is True
+    assert Sum(1, (x, 1, x)).is_commutative is True
+    assert Sum(0, (x, y, z)).is_commutative is True
+    assert Sum(x, (y, 1, 2)).is_commutative is True
+    assert Sum(x, (x, 1, 2)).is_commutative is True
+    assert Sum(x*y, (x, 1, 2), (y, 1, 3)).is_commutative is True
 def test_is_number():
     assert Sum(1, (x, 1, 1)).is_number is True
     assert Sum(1, (x, 1, x)).is_number is False

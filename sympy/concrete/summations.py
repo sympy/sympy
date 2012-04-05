@@ -90,7 +90,9 @@ class Sum(Expr):
         cancel out. This only answers whether the summand zero."""
 
         return self.function.is_zero
-
+    @property
+    def is_commutative(self):
+        return all(s.is_commutative for s in self.free_symbols)
     @property
     def is_number(self):
         """
