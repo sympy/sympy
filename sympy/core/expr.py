@@ -451,35 +451,30 @@ class Expr(Basic, EvalfMixin):
         if self.is_zero:
             return True
 
-        # try numerical evaluation in reals to see if we get two different
-        # values
+        # try numerical evaluation to see if we get two different values
         failing_number = None
         if wrt == free:
-            # try 0 and 1 via subsitution
+            # try 0 and 1
             a = self.subs(zip(free, [0]*len(free)))
-            if a.is_Rational:
+            if a is S.NaN:
+                a = self._random(None, 0, 0, 0, 0)
+            if a is not None and a is not S.NaN:
                 b = self.subs(zip(free, [1]*len(free)))
-                if b.is_Rational:
+                if b is S.NaN:
+                    b = self._random(None, 1, 0, 1, 0)
+                if b is not None and b is not S.NaN:
+                    if b.equals(a) is False:
+                        return False
+                # try random real
+                b = self._random(None, -1, 0, 1, 0)
+                if b is not None and b is not S.NaN and b.equals(a) is False:
+                    return False
+                # try random complex
+                b = self._random()
+                if b is not None and b is not S.NaN:
                     if a != b:
                         return False
-            # try 0 and 1 via evaluation
-            a = self._random(None, 0, 0, 0, 0)
-            if a is not None:
-                b = self._random(None, 1, 0, 1, 0)
-                if b is not None:
-                    if a != b:
-                        return False
-                    # try random real
-                    b = self._random(None, -1, 0, 1, 0)
-                    if b is not None:
-                        if a != b:
-                            return False
-                        # try random complex
-                        b = self._random()
-                        if b is not None:
-                            if a != b:
-                                return False
-                            failing_number = a if a.is_number else b
+                    failing_number = a if a.is_number else b
 
         # now we will test each wrt symbol (or all free symbols) to see if the
         # expression depends on them or not using differentiation. This is
@@ -523,10 +518,16 @@ class Expr(Basic, EvalfMixin):
         # simplification steps that are done will be very fast.
         diff = (self - other).as_content_primitive()[1]
         diff = factor_terms(diff.simplify(), radical=True)
+
         if not diff:
             return True
-        elif diff.is_Number or pure_complex(diff):
+
+        if all(f.is_Atom for m in Add.make_args(diff)
+                           for f in Mul.make_args(m)):
+            # if there is no expanding to be done after simplifying
+            # then this can't be a zero
             return False
+
         constant = diff.is_constant(simplify=False, failing_number=True)
         if constant is False or \
            not diff.free_symbols and not diff.is_number:
