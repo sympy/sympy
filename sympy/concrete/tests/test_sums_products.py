@@ -300,6 +300,13 @@ def test_is_zero():
         assert func(0, (x, 1, 1)).is_zero is True
         assert func(x, (x, 1, 1)).is_zero is None
 
+def test_is_commutative():
+    assert Sum(z, (z, 1, 1)).is_commutative is True
+    assert Sum(z*y, (z, 1, 6)).is_commutative is True
+    from sympy.physics.secondquant import NO, F, Fd
+    assert Sum(NO(Fd(x)*F(y))*z, (z, 1, 2)).is_commutative is False
+    m=Symbol('m',commutative=False)
+    assert Sum(m*x, (x, 1, 2)).is_commutative is False
 def test_is_number():
     assert Sum(1, (x, 1, 1)).is_number is True
     assert Sum(1, (x, 1, x)).is_number is False
