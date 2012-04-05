@@ -76,7 +76,9 @@ class MathMLPrinter(Printer):
         Prints the expression as MathML.
         """
         mathML = Printer._print(self, expr)
-        return mathML.toxml()
+        unistr = mathML.toxml()
+        xmlbstr = unistr.encode('ascii', 'xmlcharrefreplace')
+        return xmlbstr.decode()
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -230,7 +232,7 @@ class MathMLPrinter(Printer):
 
     def _print_GoldenRatio(self,e):
         """We use unicode #x3c6 for Greek letter phi as defined here
-        http://www.w3.org/Math/characters/"""
+        http://www.w3.org/2003/entities/2007doc/isogrk1.html"""
         x = self.dom.createElement('cn')
         x.appendChild(self.dom.createTextNode(u"\u03c6"))
         return x
@@ -304,7 +306,47 @@ class MathMLPrinter(Printer):
                 mi.appendChild(self.dom.createTextNode(items[0]))
                 return mi
 
+        # translate name, supers and subs to unicode characters
+        # taken from http://www.w3.org/2003/entities/2007doc/isogrk1.html
+        unitr = {
+            'Alpha'   : u'\u0391', 'Beta'     : u'\u0392',
+            'Gamma'   : u'\u0393', 'Delta'    : u'\u0394',
+            'Epsilon' : u'\u0395', 'Zeta'     : u'\u0396',
+            'Eta'     : u'\u0397', 'Theta'    : u'\u0398',
+            'Iota'    : u'\u0399', 'Kapa'     : u'\u039A',
+            'Lambda'  : u'\u039B', 'Mu'       : u'\u039C',
+            'Nu'      : u'\u039D', 'Xi'       : u'\u039E',
+            'Omicron' : u'\u039F', 'Pi'       : u'\u03A0',
+            'Rho'     : u'\u03A1', 'Sigma'    : u'\u03A3',
+            'Tau'     : u'\u03A4', 'Upsilon'  : u'\u03A5',
+            'Phi'     : u'\u03A6', 'Chi'      : u'\u03A7',
+            'Psi'     : u'\u03A8', 'Omega'    : u'\u03A9',
+            'alpha'   : u'\u03B1', 'beta'     : u'\u03B2',
+            'gamma'   : u'\u03B3', 'delta'    : u'\u03B4',
+            'epsilon' : u'\u03B5', 'zeta'     : u'\u03B6',
+            'eta'     : u'\u03B7', 'theta'    : u'\u03B8',
+            'iota'    : u'\u03B9', 'kapa'     : u'\u03BA',
+            'lambda'  : u'\u03BB', 'mu'       : u'\u03BC',
+            'nu'      : u'\u03BD', 'xi'       : u'\u03BE',
+            'omicron' : u'\u03BF', 'pi'       : u'\u03C0',
+            'rho'     : u'\u03C1', 'varsigma' : u'\u03C2',
+            'sigma'   : u'\u03C3', 'tau'      : u'\u03C4',
+            'upsilon' : u'\u03C5', 'phi'      : u'\u03C6',
+            'chi'     : u'\u03C7', 'psi'      : u'\u03C8',
+            'omega'   : u'\u03C9',
+        }
+
+        def translate(s):
+            if s in unitr:
+                return unitr[s]
+            else:
+                return s
+
         name, supers, subs = split_super_sub(sym.name)
+        name = translate(name)
+        supers = [translate(sup) for sup in supers]
+        subs = [translate(sub) for sub in subs]
+
         mname = self.dom.createElement('mml:mi')
         mname.appendChild(self.dom.createTextNode(name))
         if len(supers) == 0:
