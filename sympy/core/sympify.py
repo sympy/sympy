@@ -155,6 +155,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     from sympy.parsing.sympy_parser import parse_expr, TokenError
 
     try:
+        a = a.replace('\n', '')
         expr = parse_expr(a, locals or {}, rational, convert_xor)
     except (TokenError, SyntaxError):
         raise SympifyError('could not parse %r' % a)
