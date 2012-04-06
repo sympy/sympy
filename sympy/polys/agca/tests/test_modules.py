@@ -5,6 +5,15 @@ from sympy.polys import CoercionFailed, QQ, lex, grlex, ilex, ZZ
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import raises
 
+def test_FreeModuleElement():
+    e = QQ[x].free_module(3).convert([1, x, x**2])
+    f = [QQ[x].convert(1), QQ[x].convert(x), QQ[x].convert(x**2)]
+    assert list(e) == f
+    assert f[0] == e[0]
+    assert f[1] == e[1]
+    assert f[2] == e[2]
+    raises(IndexError, lambda: e[3])
+
 def test_FreeModule():
     M1 = FreeModule(QQ[x], 2)
     assert M1 == FreeModule(QQ[x], 2)

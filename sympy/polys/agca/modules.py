@@ -220,6 +220,9 @@ class FreeModuleElement(ModuleElement):
     def __iter__(self):
         return self.data.__iter__()
 
+    def __getitem__(self, idx):
+        return self.data[idx]
+
 class FreeModule(Module):
     """
     Abstract base class for free modules.
