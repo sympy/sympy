@@ -383,6 +383,7 @@ class SubModule(Module):
 
     - _contains
     - _syzygies
+    - _in_terms_of_generators
     """
 
     def __init__(self, gens, container):
@@ -403,6 +404,10 @@ class SubModule(Module):
 
     def _syzygies(self):
         """Implementation of syzygy computation wrt self generators."""
+        raise NotImplementedError
+
+    def _in_terms_of_generators(self, e):
+        """Implementation of expression in terms of generators."""
         raise NotImplementedError
 
     def convert(self, elem, M=None):
@@ -550,6 +555,23 @@ class SubModule(Module):
         return F.submodule(*[x for x in self._syzygies() if F.convert(x) != 0],
                            **opts)
 
+    def in_terms_of_generators(self, e):
+        """
+        Express element ``e`` of ``self`` in terms of the generators.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> F = QQ[x].free_module(2)
+        >>> M = F.submodule([1, 0], [1, 1])
+        >>> M.in_terms_of_generators([x, x**2])
+        [-x**2 + x, x**2]
+        """
+        try:
+            e = self.convert(e)
+        except CoercionFailed:
+            raise ValueError('%s is not an element of %s' % (e, self))
+        return self._in_terms_of_generators(e)
+
 _subs0 = lambda x: x[0]
 _subs1 = lambda x: x[1:]
 class ModuleOrder(ProductOrder):
@@ -640,3 +662,13 @@ class SubModulePolyRing(SubModule):
 
         # Fourth and fifth bullet points: we are done
         return G0
+
+    def _in_terms_of_generators(self, e):
+        """Expression in terms of generators. See [SCA, 2.8.1]."""
+        # NOTE: if gens is a standard basis, this can be done more efficiently
+        M = self.ring.free_module(self.rank).submodule(*((e,) + self.gens))
+        S = M.syzygy_module(order="ilex") # We want decreasing order!
+        G = S._groebner_vec()
+        # This list cannot not be empty since e is an element
+        e = list(filter(lambda x: self.ring.is_unit(x[0]), G))[0]
+        return [-x/e[0] for x in e[1:]]

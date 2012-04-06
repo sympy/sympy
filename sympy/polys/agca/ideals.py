@@ -286,3 +286,15 @@ class ModuleImplementedIdeal(Ideal):
             raise NotImplementedError
         return self.__class__(self.ring, self._module.submodule(
                 *[[x*y] for [x] in self._module.gens for [y] in J._module.gens]))
+
+    def in_terms_of_generators(self, e):
+        """
+        Express ``e`` in terms of the generators of ``self``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> I = QQ[x].ideal(x**2 + 1, x)
+        >>> I.in_terms_of_generators(1)
+        [1, -x]
+        """
+        return self._module.in_terms_of_generators([e])

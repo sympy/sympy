@@ -38,6 +38,8 @@ def test_ideal_operations():
     assert T.contains(x*y)
     assert T.subset([x, y])
 
+    assert T.in_terms_of_generators(x) == [R(1), R(0)]
+
 def test_exceptions():
     I = QQ[x].ideal(x)
     J = QQ[y].ideal(1)

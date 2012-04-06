@@ -4,6 +4,7 @@ from sympy.polys.agca.modules import FreeModule, ModuleOrder, FreeModulePolyRing
 from sympy.polys import CoercionFailed, QQ, lex, grlex, ilex, ZZ
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import raises
+from sympy import S
 
 def test_FreeModuleElement():
     e = QQ[x].free_module(3).convert([1, x, x**2])
@@ -186,3 +187,9 @@ def test_syzygy():
 
     F = R.free_module(3)
     assert F.submodule(*F.basis()).syzygy_module() == F.submodule()
+
+def test_in_terms_of_generators():
+    R = QQ.poly_ring(x, order="ilex")
+    M = R.free_module(2).submodule([2*x, 0], [1, 2])
+    assert M.in_terms_of_generators([x, x]) == [R.convert(S(1)/4), R.convert(x/2)]
+    raises(ValueError, lambda: M.in_terms_of_generators([1, 0]))
