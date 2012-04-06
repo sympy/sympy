@@ -395,22 +395,26 @@ def sdm_groebner(G, NF, O, K):
                      (tuple(g), tuple(f)) not in remove)]
 
     while P:
+        # TODO better data structures!!!
         #print len(P), len(S)
-        f, g = P.pop()
+        # Use the "normal selection strategy"
+        lcms = [(i, monomial_lcm(sdm_LM(f)[1:], sdm_LM(g)[1:]), sdm_LM(f)[0]) for \
+                i, (f, g) in enumerate(P)]
+        i = min(lcms, key=lambda x: O((x[0],) + x[1]))[0]
+        f, g = P.pop(i)
         h = NF(sdm_spoly(f, g, O, K), S, O, K)
         if h:
             S.append(h)
-            P.extend((h, f) for f in S)
+            P.extend((h, f) for f in S if sdm_LM(h)[0] == sdm_LM(f)[0])
             P = prune(P, S, h)
 
-    # Now interreduce it.
+    # Now interreduce it. (TODO again, better data structures)
     S = set(tuple(f) for f in S)
-    S2 = set(S)
     for a, b in permutations(S, 2):
         A = sdm_LM(list(a))
         B = sdm_LM(list(b))
-        if sdm_monomial_divides(A, B) and b in S2 and a in S2:
-            S2.remove(b)
+        if sdm_monomial_divides(A, B) and b in S and a in S:
+            S.remove(b)
 
-    return sorted((list(f) for f in S2), key=lambda f: O(sdm_LM(f)),
+    return sorted((list(f) for f in S), key=lambda f: O(sdm_LM(f)),
                   reverse=True)
