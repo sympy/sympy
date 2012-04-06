@@ -40,6 +40,11 @@ def test_ideal_operations():
 
     assert T.in_terms_of_generators(x) == [R(1), R(0)]
 
+    assert T**0 == R.ideal(1)
+    assert T**1 == T
+    assert T**2 == R.ideal(x**2, y**2, x*y)
+    assert I**5 == R.ideal(x**5)
+
 def test_exceptions():
     I = QQ[x].ideal(x)
     J = QQ[y].ideal(1)

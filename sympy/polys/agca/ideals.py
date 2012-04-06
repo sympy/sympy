@@ -209,6 +209,12 @@ class Ideal(object):
 
     __rmul__ = __mul__
 
+    def __pow__(self, exp):
+        if exp < 0:
+            raise NotImplementedError
+        # TODO exponentiate by squaring
+        return reduce(lambda x, y: x*y, [self]*exp, self.ring.ideal(1))
+
     def __eq__(self, e):
         if not isinstance(e, Ideal) or e.ring != self.ring:
             return False
