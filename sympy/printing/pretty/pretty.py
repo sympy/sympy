@@ -1517,6 +1517,9 @@ class PrettyPrinter(Printer):
     def _print_FreeModule(self, M):
         return self._print(M.ring)**self._print(M.rank)
 
+    def _print_ModuleImplementedIdeal(self, M):
+        return self._print_seq([x for [x] in M._module.gens], '<', '>')
+
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 

@@ -32,6 +32,7 @@ from sympy.core.compatibility import iterable
 # - module quotient / saturation
 # - free resoltutions / syzygies
 # - homomorphisms
+# - finding small/minimal generating sets
 # - ...
 
 class Module(object):

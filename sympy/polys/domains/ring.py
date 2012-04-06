@@ -58,3 +58,7 @@ class Ring(Domain):
     def free_module(self, rank):
         """Generate a free module of rank ``rank`` over self."""
         raise NotImplementedError
+
+    def ideal(self, *gens, **opts):
+        """Generate an ideal of self."""
+        raise NotImplementedError

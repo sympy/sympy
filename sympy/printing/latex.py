@@ -1240,6 +1240,10 @@ class LatexPrinter(Printer):
         return r"\left< %s \right>" % ",".join(
                 '{' + self._print(x) + '}' for x in m.gens)
 
+    def _print_ModuleImplementedIdeal(self, m):
+        return r"\left< %s \right>" % ",".join(
+                '{' + self._print(x) + '}' for [x] in m._module.gens)
+
 
 def latex(expr, **settings):
     r"""
