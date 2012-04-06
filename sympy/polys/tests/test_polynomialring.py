@@ -72,3 +72,22 @@ def test_conversion():
     assert L.convert(x) == L.convert(G.convert(x), G)
     assert G.convert(x) == G.convert(L.convert(x), L)
     raises(CoercionFailed, lambda: G.convert(L.convert(1/(1+x)), L))
+
+def test_units():
+    R = QQ[x]
+    assert R.is_unit(R.convert(1))
+    assert R.is_unit(R.convert(2))
+    assert not R.is_unit(R.convert(x))
+    assert not R.is_unit(R.convert(1 + x))
+
+    R = QQ.poly_ring(x, order='ilex')
+    assert R.is_unit(R.convert(1))
+    assert R.is_unit(R.convert(2))
+    assert not R.is_unit(R.convert(x))
+    assert R.is_unit(R.convert(1 + x))
+
+    R = ZZ[x]
+    assert R.is_unit(R.convert(1))
+    assert not R.is_unit(R.convert(2))
+    assert not R.is_unit(R.convert(x))
+    assert not R.is_unit(R.convert(1 + x))

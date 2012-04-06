@@ -6,7 +6,8 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.fractionfield import FractionField
 
 from sympy.polys.polyclasses import DMP, DMF
-from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError, CoercionFailed
+from sympy.polys.polyerrors import (GeneratorsNeeded, PolynomialError,
+        CoercionFailed, ExactQuotientFailed, NotReversible)
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 
 from sympy.polys.monomialtools import monomial_key, build_product_order
@@ -132,6 +133,12 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
     def frac_field(self, *gens):
         """Returns a fraction field, i.e. `K(X)`. """
         raise NotImplementedError('nested domains not allowed')
+
+    def revert(self, a):
+        try:
+            return 1/a
+        except (ExactQuotientFailed, ZeroDivisionError):
+            raise NotReversible('%s is not a unit' % a)
 
     def gcdex(self, a, b):
         """Extended GCD of `a` and `b`. """
