@@ -92,7 +92,7 @@ def limit(e, z, z0, dir="+"):
         if ex.is_number:
             if c is None:
                 base = b.subs(z, z0)
-                if base.is_bounded and (ex.is_bounded or base is not S.One):
+                if base.is_finite and (ex.is_bounded or base is not S.One):
                     return base**ex
             else:
                 if z0 == 0 and ex < 0:
