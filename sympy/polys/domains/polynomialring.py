@@ -158,6 +158,32 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         """
         raise NotImplementedError
 
+    def _sdm_to_dics(self, s, n):
+        """Helper for _sdm_to_vector."""
+        from sympy.polys.distributedmodules import sdm_to_dict
+        dic = sdm_to_dict(s)
+        res = [{} for _ in range(n)]
+        for k, v in dic.iteritems():
+            res[k[0]][k[1:]] = v
+        return res
+
+    def _sdm_to_vector(self, s, n):
+        """
+        For internal use by the modules class.
+
+        Convert a sparse distributed module into a list of length ``n``.
+
+        >>> from sympy import QQ, ilex
+        >>> from sympy.abc import x, y
+        >>> R = QQ.poly_ring(x, y, order=ilex)
+        >>> L = [((1, 1, 1), QQ(1)), ((0, 1, 0), QQ(1)), ((0, 0, 1), QQ(2))]
+        >>> R._sdm_to_vector(L, 2)
+        [x + 2*y, x*y]
+        """
+        dics = self._sdm_to_dics(s, n)
+        # NOTE this works for global and local rings!
+        return [self(x) for x in dics]
+
     def free_module(self, rank):
         """
         Generate a free module of rank ``rank`` over ``self``.
