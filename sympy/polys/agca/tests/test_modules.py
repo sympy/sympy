@@ -25,6 +25,8 @@ def test_FreeModule():
     assert e/2 == [x/2, (x**2 + 1)/2]
     assert x*e == [x**2, x**3 + x]
     assert e*x == [x**2, x**3 + x]
+    assert X*e == [x**2, x**3 + x]
+    assert e*X == [x**2, x**3 + x]
 
     assert [x, 1] in M2
     assert [x] not in M2
@@ -41,6 +43,8 @@ def test_FreeModule():
     assert x*e == [x**2, x**3 + x]
     assert e*x == [x**2, x**3 + x]
     assert e/(1 + x) == [x/(1 + x), (x**2 + 1)/(1 + x)]
+    assert X*e == [x**2, x**3 + x]
+    assert e*X == [x**2, x**3 + x]
 
     M3 = FreeModule(QQ[x, y], 2)
     assert M3.convert(e) == M3.convert([x, x**2 + 1])
