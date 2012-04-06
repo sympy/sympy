@@ -419,6 +419,11 @@ class AskAlgebraicHandler(CommonHandler):
         return test_closed_group(expr, assumptions, Q.algebraic)
 
     @staticmethod
+    def exp(expr, assumptions):
+        if ask(Q.algebraic(expr.exp), assumptions):
+            return False
+
+    @staticmethod
     def Mul(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.algebraic)
 
@@ -441,6 +446,18 @@ class AskAlgebraicHandler(CommonHandler):
     @staticmethod
     def AlgebraicNumber(expr, assumptions):
         return True
+
+    @staticmethod
+    def Exp1(expr, assumptions):
+        return False
+
+    @staticmethod
+    def GoldenRatio(expr, assumptions):
+        return True
+
+    @staticmethod
+    def Pi(sympy, assumptions):
+        return False
 
 #### Helper methods
 
