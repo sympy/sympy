@@ -80,6 +80,23 @@ class Ring(Domain):
                 *[[x] for x in gens]))
 
     def quotient_ring(self, e):
+        """
+        Form a quotient ring of ``self``.
+
+        Here ``e`` can be an ideal or an iterable.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> QQ[x].quotient_ring(QQ[x].ideal(x**2))
+        QQ[x]/<x**2>
+        >>> QQ[x].quotient_ring([x**2])
+        QQ[x]/<x**2>
+
+        The division operator has been overloaded for this:
+
+        >>> QQ[x]/[x**2]
+        QQ[x]/<x**2>
+        """
         from sympy.polys.agca.ideals import Ideal
         from sympy.polys.domains import QuotientRing
         if not isinstance(e, Ideal):

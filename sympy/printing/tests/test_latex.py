@@ -625,3 +625,10 @@ def test_Modules():
 
     I = R.ideal(x**2, y)
     assert latex(I) == r"\left< {x^{2}},{y} \right>"
+
+def test_QuotientRing():
+    from sympy.polys.domains import QQ
+    R = QQ[x]/[x**2 + 1]
+
+    assert latex(R) == r"\frac{\mathbb{Q}\left[x\right]}{\left< {x^{2} + 1} \right>}"
+    assert latex(R.one) == r"{1} + {\left< {x^{2} + 1} \right>}"

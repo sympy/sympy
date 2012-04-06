@@ -6,6 +6,7 @@ from sympy.polys.polyerrors import NotReversible, CoercionFailed
 # TODO
 # - successive quotients (when quotient ideals are implemented)
 # - poly rings over quotients?
+# - division by non-units in integral domains?
 
 class QuotientRingElement(object):
     """
@@ -69,6 +70,9 @@ class QuotientRingElement(object):
 
     __truediv__ = __div__
 
+    def __pow__(self, oth):
+        return self.ring(self.data**oth)
+
     def __eq__(self, om):
         if not isinstance(om, self.__class__) or om.ring != self.ring:
             return False
@@ -80,6 +84,23 @@ class QuotientRingElement(object):
 class QuotientRing(Ring):
     """
     Class representing (commutative) quotient rings.
+
+    You should not usually instatiate this by hand, instead use the constructor
+    from the ring you are quotienting out by:
+
+    >>> from sympy.abc import x
+    >>> from sympy import QQ
+    >>> I = QQ[x].ideal(x**3 + 1)
+    >>> QQ[x].quotient_ring(I)
+    QQ[x]/<x**3 + 1>
+
+    Shorter versions are possible:
+
+    >>> QQ[x]/I
+    QQ[x]/<x**3 + 1>
+
+    >>> QQ[x]/[x**3 + 1]
+    QQ[x]/<x**3 + 1>
 
     Attributes:
 

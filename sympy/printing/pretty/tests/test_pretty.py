@@ -3797,3 +3797,40 @@ u"""\
 
     assert upretty(I) == ucode_str
     assert  pretty(I) == ascii_str
+
+def test_QuotientRing():
+    R = QQ[x]/[x**2 + 1]
+
+    ucode_str = \
+u"""\
+  ℚ[x]  \n\
+────────\n\
+╱ 2    ╲\n\
+╲x  + 1╱\
+"""
+
+    ascii_str = \
+"""\
+ QQ[x]  \n\
+--------\n\
+  2     \n\
+<x  + 1>\
+"""
+
+    assert upretty(R) == ucode_str
+    assert  pretty(R) == ascii_str
+
+    ucode_str = \
+u"""\
+    ╱ 2    ╲\n\
+1 + ╲x  + 1╱\
+"""
+
+    ascii_str = \
+"""\
+      2     \n\
+1 + <x  + 1>\
+"""
+
+    assert upretty(R.one) == ucode_str
+    assert  pretty(R.one) == ascii_str
