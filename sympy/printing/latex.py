@@ -1244,6 +1244,13 @@ class LatexPrinter(Printer):
         return r"\left< %s \right>" % ",".join(
                 '{' + self._print(x) + '}' for [x] in m._module.gens)
 
+    def _print_QuotientRing(self, R):
+        # TODO nicer fractions for few generators...
+        return r"\frac{%s}{%s}" % (self._print(R.ring), self._print(R.base_ideal))
+
+    def _print_QuotientRingElement(self, x):
+        return r"{%s} + {%s}" % (self._print(x.data), self._print(x.ring.base_ideal))
+
 
 def latex(expr, **settings):
     r"""

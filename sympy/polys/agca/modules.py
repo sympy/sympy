@@ -384,6 +384,10 @@ class SubModule(Module):
     - _contains
     - _syzygies
     - _in_terms_of_generators
+
+    Methods that likely need change in subclasses:
+
+    - reduce_element
     """
 
     def __init__(self, gens, container):
@@ -572,6 +576,15 @@ class SubModule(Module):
             raise ValueError('%s is not an element of %s' % (e, self))
         return self._in_terms_of_generators(e)
 
+    def reduce_element(self, x):
+        """
+        Reduce the element ``x`` of our ring modulo the ideal ``self``.
+
+        Here "reduce" has no specific meaning, it could return a unique normal
+        form, simplify the expression a bit, or just do nothing.
+        """
+        return x
+
 _subs0 = lambda x: x[0]
 _subs1 = lambda x: x[1:]
 class ModuleOrder(ProductOrder):
@@ -672,3 +685,10 @@ class SubModulePolyRing(SubModule):
         # This list cannot not be empty since e is an element
         e = list(filter(lambda x: self.ring.is_unit(x[0]), G))[0]
         return [-x/e[0] for x in e[1:]]
+
+    def reduce_element(self, x):
+        from sympy.polys.distributedmodules import sdm_nf_mora
+        return self.container.convert(self.ring._sdm_to_vector(sdm_nf_mora(
+                self.ring._vector_to_sdm(x, self.order), self._groebner(),
+                    self.order, self.ring.dom),
+                self.rank))

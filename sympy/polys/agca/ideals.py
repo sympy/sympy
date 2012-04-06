@@ -31,6 +31,10 @@ class Ideal(object):
     - is_principal
     - height, depth
     - radical
+
+    Methods that likely should be overridden in subclasses:
+
+    - reduce_element
     """
 
     def _contains_elem(self, x):
@@ -190,9 +194,23 @@ class Ideal(object):
         self._check_ideal(J)
         return self._product(J)
 
+    def reduce_element(self, x):
+        """
+        Reduce the element ``x`` of our ring modulo the ideal ``self``.
+
+        Here "reduce" has no specific meaning: it could return a unique normal
+        form, simplify the expression a bit, or just do nothing.
+        """
+        return x
+
     def __add__(self, e):
         if not isinstance(e, Ideal):
-            return NotImplemented
+            R = self.ring.quotient_ring(self)
+            if isinstance(e, R.dtype):
+                return e
+            if isinstance(e, R.ring.dtype):
+                return R(e)
+            return R.convert(e)
         self._check_ideal(e)
         return self.union(e)
 
@@ -304,3 +322,6 @@ class ModuleImplementedIdeal(Ideal):
         [1, -x]
         """
         return self._module.in_terms_of_generators([e])
+
+    def reduce_element(self, x):
+        return self._module.reduce_element([x])[0]

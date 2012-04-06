@@ -49,8 +49,6 @@ def test_exceptions():
     I = QQ[x].ideal(x)
     J = QQ[y].ideal(1)
     raises(ValueError, lambda: I.union(x))
-    raises(TypeError, lambda: I + x)
-    raises(TypeError, lambda: x + I)
     raises(ValueError, lambda: I + J)
     raises(ValueError, lambda: I * J)
     raises(ValueError, lambda: I.union(J))

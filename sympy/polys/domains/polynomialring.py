@@ -202,19 +202,6 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         """
         return FreeModulePolyRing(self, rank)
 
-    def ideal(self, *gens):
-        """
-        Generate an ideal of ``self``.
-
-        >>> from sympy.abc import x
-        >>> from sympy import QQ
-        >>> QQ[x].ideal(x**2)
-        <x**2>
-        """
-        from sympy.polys.agca.ideals import ModuleImplementedIdeal
-        return ModuleImplementedIdeal(self, self.free_module(1).submodule(
-                *[[x] for x in gens]))
-
 def _vector_to_sdm_helper(v, order):
     """Helper method for common code in Global and Local poly rings."""
     from sympy.polys.distributedmodules import sdm_from_dict

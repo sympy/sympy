@@ -1520,6 +1520,12 @@ class PrettyPrinter(Printer):
     def _print_ModuleImplementedIdeal(self, M):
         return self._print_seq([x for [x] in M._module.gens], '<', '>')
 
+    def _print_QuotientRing(self, R):
+        return self._print(R.ring) / self._print(R.base_ideal)
+
+    def _print_QuotientRingElement(self, R):
+        return self._print(R.data) + self._print(R.ring.base_ideal)
+
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 

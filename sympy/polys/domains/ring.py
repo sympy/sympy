@@ -66,6 +66,27 @@ class Ring(Domain):
         """Generate a free module of rank ``rank`` over self."""
         raise NotImplementedError
 
-    def ideal(self, *gens, **opts):
-        """Generate an ideal of self."""
-        raise NotImplementedError
+    def ideal(self, *gens):
+        """
+        Generate an ideal of ``self``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> QQ[x].ideal(x**2)
+        <x**2>
+        """
+        from sympy.polys.agca.ideals import ModuleImplementedIdeal
+        return ModuleImplementedIdeal(self, self.free_module(1).submodule(
+                *[[x] for x in gens]))
+
+    def quotient_ring(self, e):
+        from sympy.polys.agca.ideals import Ideal
+        from sympy.polys.domains import QuotientRing
+        if not isinstance(e, Ideal):
+            e = self.ideal(*e)
+        return QuotientRing(self, e)
+
+    def __div__(self, e):
+        return self.quotient_ring(e)
+
+    __truediv__ = __div__
