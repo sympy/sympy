@@ -177,3 +177,12 @@ def test_SubModulePolyRing_nontriv_local():
     assert not contains([x+y+z, x*y+x*z+y*z, x*y*z], x**2)
     assert contains([x*(1+x+y), y*(1+z)], x)
     assert contains([x*(1+x+y), y*(1+z)], x + y)
+
+def test_syzygy():
+    R = QQ[x, y, z]
+    M = R.free_module(1).submodule([x*y], [y*z], [x*z])
+    S = R.free_module(3).submodule([0, x, -y], [z, -x, 0])
+    assert M.syzygy_module() == S
+
+    F = R.free_module(3)
+    assert F.submodule(*F.basis()).syzygy_module() == F.submodule()
