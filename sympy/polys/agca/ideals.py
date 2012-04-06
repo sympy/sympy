@@ -192,10 +192,7 @@ class Ideal(object):
 
     def __add__(self, e):
         if not isinstance(e, Ideal):
-            try:
-                e = self.ring.ideal(e)
-            except CoercionFailed:
-                return NotImplemented
+            return NotImplemented
         self._check_ideal(e)
         return self.union(e)
 
@@ -213,7 +210,8 @@ class Ideal(object):
     __rmul__ = __mul__
 
     def __eq__(self, e):
-        self._check_ideal(e)
+        if not isinstance(e, Ideal) or e.ring != self.ring:
+            return False
         return self._equals(e)
 
     def __ne__(self, e):
@@ -250,10 +248,32 @@ class ModuleImplementedIdeal(Ideal):
             raise NotImplementedError
         return self.__class__(self.ring, self._module.union(J._module))
 
-    def _is_zero(self):
+    def is_zero(self):
+        """
+        Return True if ``self`` is the zero ideal.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> QQ[x].ideal(x).is_zero()
+        False
+        >>> QQ[x].ideal().is_zero()
+        True
+        """
         return self._module.is_zero()
 
     def is_whole_ring(self):
+        """
+        Return True if ``self`` is the whole ring, i.e. one generator is a unit.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ, ilex
+        >>> QQ[x].ideal(x).is_whole_ring()
+        False
+        >>> QQ[x].ideal(3).is_whole_ring()
+        True
+        >>> QQ.poly_ring(x, order=ilex).ideal(2 + x).is_whole_ring()
+        True
+        """
         return self._module.is_full_module()
 
     def __repr__(self):

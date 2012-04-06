@@ -622,3 +622,6 @@ def test_Modules():
     assert latex(F) == r"{\mathbb{Q}\left[x, y\right]}^{2}"
     assert latex(M) == \
         r"\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>"
+
+    I = R.ideal(x**2, y)
+    assert latex(I) == r"\left< {x^{2}},{y} \right>"

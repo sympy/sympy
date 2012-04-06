@@ -3779,3 +3779,21 @@ u"""\
 
     assert upretty(M) == ucode_str
     assert  pretty(M) == ascii_str
+
+    I = R.ideal(x**2, y)
+
+    ucode_str = \
+u"""\
+╱ 2   ╲\n\
+╲x , y╱\
+"""
+
+    ascii_str = \
+"""\
+  2    \n\
+<x , y>\
+"""
+
+
+    assert upretty(I) == ucode_str
+    assert  pretty(I) == ascii_str

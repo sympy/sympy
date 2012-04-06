@@ -1,4 +1,4 @@
-"""Test modules.py code"""
+"""Test modules.py code."""
 
 from sympy.polys.agca.modules import FreeModule, ModuleOrder, FreeModulePolyRing
 from sympy.polys import CoercionFailed, QQ, lex, grlex, ilex, ZZ
