@@ -444,10 +444,6 @@ class AskAlgebraicHandler(CommonHandler):
         return True
 
     @staticmethod
-    def AlgebraicNumber(expr, assumptions):
-        return True
-
-    @staticmethod
     def Exp1(expr, assumptions):
         return False
 
@@ -458,6 +454,10 @@ class AskAlgebraicHandler(CommonHandler):
     @staticmethod
     def Pi(sympy, assumptions):
         return False
+
+    @staticmethod
+    def AlgebraicNumber(expr, assumptions):
+        return True
 
 #### Helper methods
 

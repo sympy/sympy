@@ -1159,6 +1159,8 @@ def test_algebraic():
     assert ask(Q.algebraic(2*I)) == True
     assert ask(Q.algebraic(I/3)) == True
 
+    assert ask(Q.algebraic(GoldenRatio)) == True
+
     assert ask(Q.algebraic(sqrt(7))) == True
     assert ask(Q.algebraic(2*sqrt(7))) == True
     assert ask(Q.algebraic(sqrt(7)/3)) == True
@@ -1166,12 +1168,22 @@ def test_algebraic():
     assert ask(Q.algebraic(I*sqrt(3))) == True
     assert ask(Q.algebraic(sqrt(1+I*sqrt(3)))) == True
 
+    assert(Q.algebraic(exp(I*pi))) == True
+
     assert ask(Q.algebraic((1+I*sqrt(3)**(S(17)/31)))) == True
     assert ask(Q.algebraic((1+I*sqrt(3)**(S(17)/pi)))) == False
 
     assert ask(Q.algebraic(sin(7))) == None
     assert ask(Q.algebraic(sqrt(sin(7)))) == None
     assert ask(Q.algebraic(sqrt(y+I*sqrt(7)))) == None
+
+    assert ask(Q.algebraic(E**pi)) == None
+    assert ask(Q.algebraic(E + pi)) == None
+
+    assert ask(Q.algebraic(pi)) == False
+    
+    assert ask(Q.algebraic(E)) == False
+    assert ask(Q.algebraic(exp(3))) == False
 
     assert ask(Q.algebraic(oo)) == False
     assert ask(Q.algebraic(-oo)) == False
