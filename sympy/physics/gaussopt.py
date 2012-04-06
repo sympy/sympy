@@ -14,9 +14,14 @@ The conventions for the distances are as follows:
     image distance - positive for real images
 """
 
-from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
-    together)
+from sympy import (atan2, cos, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
+    together, symbols)
 from sympy.utilities.misc import filldedent
+from sympy import Plot
+from sympy.external import import_module
+from sympy.core.compatibility import is_sequence
+from numpy import arange, empty
+# sample = import_module('sympy.examples.intermidiate.sample')
 
 ###
 # A, B, C, D matrices
@@ -322,6 +327,37 @@ class ThinLens(RayTransferMatrix):
         return RayTransferMatrix.__new__(cls, 1, 0, -1/f, 1)
 
 
+class SingleRightAnglePrism(RayTransferMatrix) :
+    """
+    Ray Transfer Matrix for a single right andle prism.
+    
+    Parameters
+    ==========
+
+    n: refraction index
+    d: prism pass length
+    k: beam expansion factor
+
+    See Also
+    ========
+
+    RayTransferMatrix
+    
+    BeamExansionFactor
+
+    Examples
+    ========
+
+    >>> from sympy.physics.gaussopt import SingleRightAndlePrism
+    >>> from sympy import symbols
+    >>> n,d,k = symbols('n d k')
+    >>> SingleRightAnglePrism(n,d,k)
+    [   k, d/(nk)]
+    [   0, 1/k   ]
+    """    
+    def __new__(cls, n, d, k) :
+        n, d, k = sympify((n, d, k))
+        return RayTransferMatrix.__new__(cls, k, d/n/k, 0, 1/k)
 ###
 # Representation for geometric ray
 ###
@@ -407,7 +443,62 @@ class GeometricRay(Matrix):
         """
         return self[1]
 
+class BeamExpansionFactor(Expr) :
+    """ Definition of beam expansion factor k = cos(phi) * cos(psi)
+    
+    Parameters
+    ==========
+    phi: the angle of incidence
+    psi: the angle of refraction
+    
+    Examples
+    ========
+    >>> from sympy.physics.gaussopt import BeamExpansionFactor, SingleRightAnglePrism
+    >>> from sympy import symbols
+    >>> phi, psi = symbols('phi psi')
+    >>> bExp = BeamExapansionFactor(phi, psi)
+    >>> n,d = symbols('n d')
+    >>> SinleRightAnglePrism(n,d,bExp)
+    [   bExp, d/(nk)]
+    [   0, 1/bExp   ]
+    """
+    def __new__(cls, phi, psi) :
+        phi, psi = sympify((phi, psi))
+        return cos(phi)*cos(psi)
+    
+    @property
+    def incidence(self) :
+        """
+        The angle of icidence
 
+        Examples
+        ========
+
+        >>> from sympy.physics.gaussopt import BeamExpansionFactor
+        >>> from sympy import symbols
+        >>> phi, psi = symbols('phi psi')
+        >>> bExp = BeamExpansionFactor(psi, phi)
+        >>> gRay.incidence
+        phi
+        """
+        return self.phi
+    
+    @property
+    def refraction(self) :
+        """
+        The angle of refraction 
+
+        Examples
+        ========
+
+        >>> from sympy.physics.gaussopt import BeamExpansionFactor
+        >>> from sympy import symbols
+        >>> phi, psi = symbols('phi psi')
+        >>> bExp = BeamExpansionFactor(psi, phi)
+        >>> gRay.refraction
+        psi        
+        """
+        return self.psi
 ###
 # Representation for gauss beam
 ###
@@ -794,10 +885,147 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
             The functions expects the focal length as a named argument'''))
     return (s_in, s_out, f)
 
-#TODO
-#def plot_beam():
-#    """Plot the beam radius as it propagates in space."""
-#    pass
+def plot_beam(beam, **kwargs):
+    """Plot the beam radius as it propagates in space.
+    Uses pyglet and ctype libraries
+
+    Parameters
+    ==========
+    
+    beam : BeamParameter for gaussian beam
+    z_range : plot range for the beam propagation coordinate
+
+    See Also
+    ========    
+    
+    BeamParameter
+    plot_beam2
+    
+    Examples
+    ========
+    
+    >>> from sympy.physics.gaussopt import BeamParameter, plot_beam
+    >>> b = BeamParameter(530e-9, 1, w=1e-5)
+    >>> plot_beam(b,z_range=2*b.z_r)    
+    """
+    
+    if len(kwargs) != 1:
+        raise ValueError("The function expects only one named argument")    
+    elif 'z_range' in kwargs :
+        z_range = sympify(kwargs['z_range'])
+    else :
+        raise ValueError(filldedent('''
+            The functions expects the z_range as a named argument'''))
+
+    x = symbols('x')
+    # TODO beam.w_0 * 
+    # pyglet needs to have better zoom adjustment for geting a normal view
+    weist_d = sqrt(1+(x/beam.z_r)**2)
+    
+    p = Plot(visible=False)
+    
+    p[1] = weist_d, 'color=black', [x, -z_range, z_range, int(beam.w_0**-1)]
+    p[2] = -weist_d, 'color=black', [x, -z_range, z_range, int(beam.w_0**-1)]
+    
+    p.adjust_all_bounds()
+    p.show()
+    
+def plot_beam2(beam, x_n, **kwargs) :
+    """Plot the beam radius as it propagates in space.
+    Uses external matplotlib library.
+
+    Parameters
+    ==========
+    
+    beam : BeamParameter for gaussian beam
+    x_n : number of samples to plot function
+    z_range : plot range for the beam propagation coordinate
+
+    See Also
+    ========    
+    
+    BeamParameter
+    plot_beam
+    
+    Examples
+    ========
+        
+    >>> from sympy.physics.gaussopt import BeamParameter, plot_beam2
+    >>> b = BeamParameter(530e-9,1,w=1e-5)
+    >>> plot_beam2(b,100,z_range=2*b.z_r)    
+    """
+    
+    if len(kwargs) != 1:
+        raise ValueError("The function expects only one named argument")    
+    elif 'z_range' in kwargs :
+        z_range = sympify(kwargs['z_range'])
+    else :
+        raise ValueError(filldedent('''
+            The functions expects the z_range as a named argument'''))
+    
+    x = symbols('x')
+    
+    weist_d = beam.w_0*sqrt(1+(x/beam.z_r)**2)
+    
+    mplot2d([weist_d, -weist_d], (x, -z_range, z_range, x_n))
+
+def mplot2d(f, var, show=True):
+    """
+    Plot a 2d function using matplotlib/Tk.
+    """
+
+    import warnings
+    warnings.filterwarnings("ignore", "Could not match \S")
+    
+    p = import_module('pylab')
+    if not p:
+        sys.exit("Matplotlib is required to use mplot2d.")
+
+    if not is_sequence(f):
+        f = [f,]
+    
+    for f_i in f:
+        x, y = sample2d(f_i, var)
+        p.plot(x, y,'black')
+
+    p.draw()
+    
+    p.ylabel("Transverse beam cordinate")
+    p.xlabel("Propagation coordinate")
+    p.grid(True)
+    
+    if show:
+        p.show()
+
+def sample2d(f, x_args):
+    """
+    Samples a 2d function f over specified intervals and returns two
+    arrays (X, Y) suitable for plotting with matlab (matplotlib)
+    syntax. See examples\mplot2d.py.
+
+    f is a function of one variable, such as x**2.
+    x_args is an interval given in the form (var, min, max, n)
+    """
+    try:
+        f = sympify(f)
+    except SympifyError:
+        raise ValueError("f could not be interpretted as a SymPy function")
+    try:
+        x, x_min, x_max, x_n = x_args
+    except AttributeError:
+        raise ValueError("x_args must be a tuple of the form (var, min, max, n)")
+
+    x_l = float(x_max - x_min)
+    x_d = x_l/float(x_n)
+    X = arange(float(x_min), float(x_max)+x_d, x_d)
+
+    Y = empty(len(X))
+    for i in range(len(X)):
+        try:
+            Y[i] = float(f.subs(x, X[i]))
+        except TypeError:
+            Y[i] = None
+    return X, Y
 
 #TODO
 #def plot_beam_conjugation():
@@ -811,4 +1039,4 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
 #
 #    conjugate_gauss_beams
 #    """
-#    pass
+#    pass 
