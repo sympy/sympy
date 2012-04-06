@@ -1,0 +1,11 @@
+
+Scalpel version 1.60 audit file
+Started at Fri Apr  6 02:10:10 2012
+Command line:
+scalpel /dev/sda1 -i complex.py /home/botouls/recover 
+
+Output directory: /home/botouls/sympy/scalpel-output
+Configuration file: /etc/scalpel/scalpel.conf
+
+
+Completed at Fri Apr  6 02:10:10 2012

@@ -1,0 +1,19 @@
+
+Scalpel version 1.60 audit file
+Started at Fri Apr  6 02:10:55 2012
+Command line:
+scalpel /dev/sda1 -o output 
+
+Output directory: /home/botouls/sympy/output
+Configuration file: /etc/scalpel/scalpel.conf
+
+Opening target "/dev/sda1"
+
+The following files were carved:
+File		  Start			Chop		Length		Extracted From
+ERROR: The configuration file didn't specify any file types to carve.
+(If you're using the default configuration file, you'll have to
+uncomment some of the file types.)
+
+
+Completed at Fri Apr  6 02:10:58 2012
