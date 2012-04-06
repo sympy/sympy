@@ -590,3 +590,9 @@ def test_3153():
 def test_3249():
     assert integrate(exp(I*x)/(1 + x**2), (x, -oo, oo)).simplify().rewrite(exp) \
            == pi*exp(-1)
+
+def test_fresnel():
+    from sympy import fresnels, fresnelc
+
+    assert integrate(sin(pi*x**2/2),x) == 3*fresnels(x)*gamma(S(3)/4)/(4*gamma(S(7)/4))
+    assert integrate(cos(pi*x**2/2),x) == fresnelc(x)*gamma(S(1)/4)/(4*gamma(S(5)/4))
