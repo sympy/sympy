@@ -396,8 +396,10 @@ class Float(Number):
     >>> from sympy import Float
     >>> Float(3.5) # convert from Python float or int
     3.50000000000000
-    >>> Float(3)
+    >>> Float(3) # reverts to Integer
     3
+    >>> Float(3, '') # forced to Float
+    3.
 
     Floats can be created from a string representations of Python floats
     to force ints to Float or to enter high-precision (> 15 significant
@@ -411,7 +413,8 @@ class Float(Number):
     0.00100
 
     Float can automatically count significant figures if a null string
-    is sent for the precision; space are also allowed in the string:
+    is sent for the precision; space are also allowed in the string. (Auto-
+    counting is only allowed for strings, ints and longs).
 
     >>> Float('123 456 789 . 123 456', '')
     123456789.123456
@@ -520,7 +523,15 @@ class Float(Number):
         elif not num:
             return C.Zero()
         if prec == '':
-            if not isinstance(num, basestring):
+            if isinstance(num, (int, long, Integer)):
+                # an int is unambiguous, but if someone enters
+                # .99999999999999999, Python automatically converts
+                # this to 1.0 and although 1.0 == 1, this is not
+                # really what the user typed, so we avoid guessing --
+                # even if num == int(num) -- because we don't know how
+                # it became that exact float.
+                num = str(num)
+            elif not isinstance(num, basestring):
                 raise ValueError('The null string can only be used when '
                 'the number to Float is passed as a string.')
             ok = None
@@ -532,22 +543,24 @@ class Float(Number):
                 else:
                     num, dps = _decimal_to_Rational_prec(Num)
                     ok = True
+                    if num.is_Integer:
+                        dps = len(str(num))
             if ok is None:
                 raise ValueError('string-float not recognized: %s' % num)
         else:
             dps = prec
-        prec = mlib.libmpf.dps_to_prec(dps)
 
-        if isinstance(num, (int, long, Integer)):
+        if prec != '' and isinstance(num, (int, long, Integer)):
             # if this is changed here it has to be changed in _new, too
             return Integer(num)
 
+        prec = mlib.libmpf.dps_to_prec(dps)
         if isinstance(num, float):
             _mpf_ = mlib.from_float(num, prec, rnd)
+        elif isinstance(num, (str, decimal.Decimal, Integer)):
+            _mpf_ = mlib.from_str(str(num), prec, rnd)
         elif isinstance(num, Rational):
             _mpf_ = mlib.from_rational(num.p, num.q, prec, rnd)
-        elif isinstance(num, (str, decimal.Decimal)):
-            _mpf_ = mlib.from_str(str(num), prec, rnd)
         elif isinstance(num, tuple) and len(num) in (3, 4):
             if type(num[1]) is str:
                 # it's a hexadecimal (coming from a pickled object)
