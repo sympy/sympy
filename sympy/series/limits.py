@@ -1,5 +1,7 @@
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul, oo, C
 from sympy.functions import tan, cot
+from sympy.simplify.simplify import fraction
+from sympy import diff
 from gruntz import gruntz
 
 def limit(e, z, z0, dir="+"):
@@ -92,7 +94,7 @@ def limit(e, z, z0, dir="+"):
         if ex.is_number:
             if c is None:
                 base = b.subs(z, z0)
-                if base.is_bounded and (ex.is_bounded or base is not S.One):
+                if base.is_finite and (ex.is_bounded or base is not S.One):
                     return base**ex
             else:
                 if z0 == 0 and ex < 0:
@@ -116,6 +118,23 @@ def limit(e, z, z0, dir="+"):
             i, d = e.as_independent(z)
             if i is not S.One and i.is_bounded:
                 return i*limit(d, z, z0, dir)
+            # L'Hopital's Rule for polynomial numerator and denominator
+            p, q = fraction(d)
+            if p.as_independent(z)[1] != 1 and q.as_independent(z)[1] != 1:
+                if p.is_polynomial(z) and q.is_polynomial(z):
+                    p_limit = limit(p, z, z0, dir);
+                    q_limit = limit(q, z, z0, dir);
+                    if p_limit == q_limit:
+                        if p_limit == 0 or p_limit.is_unbounded:
+                            m = p_limit
+                            while p_limit == m and q_limit == m:
+                                p = diff(p, z)
+                                q = diff(q, z)
+                                p_limit = limit(p, z, z0, dir)
+                                q_limit = limit(q, z, z0, dir)
+                            return i*limit(p, z, z0, dir)/limit(q, z, z0, dir)
+                    else:
+                        return p_limit/q_limit
         else:
             i, d = S.One, e
         if not z0:
