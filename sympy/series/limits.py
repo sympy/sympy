@@ -121,7 +121,7 @@ def limit(e, z, z0, dir="+"):
             # L'Hopital's Rule for polynomial numerator and denominator
             p, q = fraction(d)
             if p.as_independent(z)[1] != 1 and q.as_independent(z)[1] != 1:
-                if p.is_polynomial(z) and q.is_polynomial(z):
+                if p.is_polynomial(z) or q.is_polynomial(z):
                     p_limit = limit(p, z, z0, dir);
                     q_limit = limit(q, z, z0, dir);
                     if p_limit == q_limit:
@@ -130,6 +130,8 @@ def limit(e, z, z0, dir="+"):
                             while p_limit == m and q_limit == m:
                                 p = diff(p, z)
                                 q = diff(q, z)
+                                f = p/q
+                                p, q = fraction(f)
                                 p_limit = limit(p, z, z0, dir)
                                 q_limit = limit(q, z, z0, dir)
                             return i*limit(p, z, z0, dir)/limit(q, z, z0, dir)
