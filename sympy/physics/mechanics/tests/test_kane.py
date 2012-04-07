@@ -212,8 +212,8 @@ def test_aux():
 
 def test_parallel_axis():
     # This is for a 2 dof inverted pendulum on a cart.
-    # This test the parallel axis code in Kane.
-    ## Defining the constants and knowns of the system 
+    # This tests the parallel axis code in Kane. The inertia of the pendulum is defined about the cart, not about the mass center.
+    ## Defining the constants and knowns of the system
     gravity        = symbols('g')
     k, ls          = symbols('k ls')
     a, mA, mC      = symbols('a mA mC')
@@ -242,9 +242,8 @@ def test_parallel_axis():
 
     ## Defining velocities of the points
     O.set_vel(N, 0)
-    C.set_vel(N, u1*N.x)
-    Ao.v2pt_theory(C , N , A)
-       
+    C.set_vel(N, u1 * N.x)
+    Ao.v2pt_theory(C, N, A)
     Cart     = Particle('Cart', C, mC)
     Pendulum = RigidBody('Pendulum', Ao, A, mA, (inertia(A, Ix, Iy, Iz), C))
 
