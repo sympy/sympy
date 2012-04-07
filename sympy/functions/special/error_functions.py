@@ -898,6 +898,12 @@ class FresnelIntegral(Function):
         return (re, im)
 
     def as_real_imag(self, deep=True, **hints):
+        # Fresnel S
+        # http://functions.wolfram.com/06.32.19.0003.01
+        # http://functions.wolfram.com/06.32.19.0006.01
+        # Fresnel C
+        # http://functions.wolfram.com/06.33.19.0003.01
+        # http://functions.wolfram.com/06.33.19.0006.01
         x, y = self._as_real_imag(deep=deep, **hints)
         sq = -y**2/x**2
         re = S.Half*(self.func(x+x*sqrt(sq))+self.func(x-x*sqrt(sq)))
@@ -994,10 +1000,10 @@ class fresnels(FresnelIntegral):
                 p = previous_terms[-1]
                 return (-pi**2*x**4*(4*n - 1)/(8*n*(2*n + 1)*(4*n + 3))) * p
             else:
-                return x**3*(-x**4)**n*(S(2)**(-2*n-1)*pi**(2*n+1))/((4*n+3)*C.factorial(2*n+1))
+                return x**3 * (-x**4)**n * (S(2)**(-2*n - 1)*pi**(2*n + 1)) / ((4*n + 3)*C.factorial(2*n + 1))
 
     def _eval_rewrite_as_erf(self, z):
-        return (S.One+I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) - I*erf((S.One-I)/2*sqrt(pi)*z))
+        return (S.One + I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) - I*erf((S.One - I)/2*sqrt(pi)*z))
 
 
 class fresnelc(FresnelIntegral):
@@ -1085,10 +1091,10 @@ class fresnelc(FresnelIntegral):
                 p = previous_terms[-1]
                 return (-pi**2*x**4*(4*n - 3)/(8*n*(2*n - 1)*(4*n + 1))) * p
             else:
-                return x*(-x**4)**n*(S(2)**(-2*n)*pi**(2*n))/((4*n+1)*C.factorial(2*n))
+                return x * (-x**4)**n * (S(2)**(-2*n)*pi**(2*n)) / ((4*n + 1)*C.factorial(2*n))
 
     def _eval_rewrite_as_erf(self, z):
-        return (S.One-I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) + I*erf((S.One-I)/2*sqrt(pi)*z))
+        return (S.One - I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) + I*erf((S.One - I)/2*sqrt(pi)*z))
 
 
 ###############################################################################

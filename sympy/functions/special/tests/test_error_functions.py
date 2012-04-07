@@ -269,7 +269,7 @@ def test_fresnel():
 
     assert fresnelc(z).diff(z) == cos(pi*z**2/2)
 
-    assert fresnelc(z).rewrite(erf) == (S.One-I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) + I*erf((S.One-I)/2*sqrt(pi)*z))
+    assert fresnelc(z).rewrite(erf) == (S.One - I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) + I*erf((S.One - I)/2*sqrt(pi)*z))
 
     assert fresnelc(z).series(z, n=15) == z - pi**2*z**5/40 + pi**4*z**9/3456 - pi**6*z**13/599040 + O(z**15)
 

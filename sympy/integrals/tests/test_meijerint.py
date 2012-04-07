@@ -1,6 +1,6 @@
 from sympy import (meijerg, I, S, integrate, Integral, oo, gamma,
                    hyperexpand, exp, simplify, sqrt, pi, erf, sin, cos,
-                   exp_polar, polar_lift, polygamma, hyper, log)
+                   exp_polar, polar_lift, polygamma, hyper, log, expand_func)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
          meijerint_indefinite, _inflate_g, _create_lookup_table,
          meijerint_definite, meijerint_inversion)
@@ -594,5 +594,5 @@ def test_3249():
 def test_fresnel():
     from sympy import fresnels, fresnelc
 
-    assert integrate(sin(pi*x**2/2),x) == 3*fresnels(x)*gamma(S(3)/4)/(4*gamma(S(7)/4))
-    assert integrate(cos(pi*x**2/2),x) == fresnelc(x)*gamma(S(1)/4)/(4*gamma(S(5)/4))
+    assert expand_func(integrate(sin(pi*x**2/2),x)) == fresnels(x)
+    assert expand_func(integrate(cos(pi*x**2/2),x)) == fresnelc(x)
