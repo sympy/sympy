@@ -33,7 +33,7 @@ from sympy.polys.monomialtools import (
 )
 
 from sympy.polys.distributedpolys import (
-    sdp_LC, sdp_from_dict, sdp_to_dict, sdp_add
+    sdp_LC, sdp_from_dict, sdp_to_dict, sdp_add, sdp_strip
 )
 
 from sympy.polys.polytools import Poly
@@ -124,8 +124,21 @@ def sdm_monomial_divides(A, B):
 
 # These can be re-used without change:
 sdm_LC = sdp_LC
-sdm_from_dict = sdp_from_dict
 sdm_to_dict = sdp_to_dict
+
+def sdm_from_dict(d, O):
+    """
+    Create an sdm from a dictionary.
+
+    Here ``O`` is the monomial order to use.
+
+    >>> from sympy.polys.distributedmodules import sdm_from_dict
+    >>> from sympy.polys import QQ, lex
+    >>> dic = {(1, 1, 0): QQ(1), (1, 0, 0): QQ(2), (0, 1, 0): QQ(0)}
+    >>> sdm_from_dict(dic, lex)
+    [((1, 1, 0), 1/1), ((1, 0, 0), 2/1)]
+    """
+    return sdp_strip(sdp_from_dict(d, O))
 
 def sdm_add(f, g, O, K):
     """

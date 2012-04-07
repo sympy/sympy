@@ -115,6 +115,7 @@ def test_conversion():
     assert sdm_from_vector(f, lex, QQ) == g
     assert sdm_from_vector([x, 1], lex, QQ) == [((1, 0), QQ(1)), ((0, 1), QQ(1))]
     assert sdm_to_vector([((1, 1, 0, 0), 1)], [x, y, z], QQ, n=3) == [0, x, 0]
+    assert sdm_from_vector([0, 0], lex, QQ, gens=[x, y]) == sdm_zero()
 
 def test_nontrivial():
     gens = [x, y, z]
@@ -161,4 +162,13 @@ def test_local():
     assert not contains([x+y+z, x*y+x*z+y*z, x*y*z], x**2)
     assert contains([x*(1+x+y), y*(1+z)], x)
     assert contains([x*(1+x+y), y*(1+z)], x + y)
+
+def test_uncovered_line():
+    gens = [x, y]
+    f1 = sdm_zero()
+    f2 = sdm_from_vector([x, 0], lex, QQ, gens=gens)
+    f3 = sdm_from_vector([0, y], lex, QQ, gens=gens)
+
+    assert sdm_spoly(f1, f2, lex, QQ) == sdm_zero()
+    assert sdm_spoly(f3, f2, lex, QQ) == sdm_zero()
 
