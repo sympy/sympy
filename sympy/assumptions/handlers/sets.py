@@ -125,6 +125,11 @@ class AskRationalHandler(CommonHandler):
     Mul = Add
 
     @staticmethod
+    def exp(expr, assumptions):
+        if ask(Q.algebraic(expr.exp), assumptions):
+            return False
+
+    @staticmethod
     def Pow(expr, assumptions):
         """
         Rational ** Integer      -> Rational
@@ -145,6 +150,10 @@ class AskRationalHandler(CommonHandler):
     def Float(expr, assumptions):
         # it's finite-precision
         return True
+
+    @staticmethod
+    def GoldenRatio(expr, assumptions):
+        return False
 
     @staticmethod
     def ImaginaryUnit(expr, assumptions):
@@ -432,10 +441,14 @@ class AskAlgebraicHandler(CommonHandler):
         if ask(Q.algebraic(expr.exp), assumptions) and ask(Q.algebraic(expr.base), assumptions):
             if not ask(Q.rational(expr.exp), assumptions):
                 return False
-            elif ask(Q.rational(expr.base), assumptions):
+            else:
                 return True
-        elif (not ask(Q.algebraic(expr.base), assumptions)) and ask(Q.rational(expr.exp), assumptions):
+        elif ask(Q.algebraic(expr.base), assumptions) == False and ask(Q.rational(expr.exp), assumptions):
             return False
+
+    @staticmethod
+    def Float(expr, assumptions):
+        return ask(Q.rational(expr))
 
     @staticmethod
     def Number(expr, assumptions):
