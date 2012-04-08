@@ -68,7 +68,35 @@ def _make_message(ipython=True, quiet=False, source=None):
 
     return message
 
-def _init_ipython_session(argv=[], auto=False):
+def enable_automatic_symbols(app):
+    """Allow IPython to automatially create symbols (``isympy -a``). """
+    import re
+    re_nameerror = re.compile("name '(?P<symbol>[A-Za-z_][A-Za-z0-9_]*)' is not defined")
+
+    def _handler(self, etype, value, tb, tb_offset=None):
+        """Handle :exc:`NameError` exception and allow injection of missing symbols. """
+        if etype is NameError and tb.tb_next and not tb.tb_next.tb_next:
+            match = re_nameerror.match(str(value))
+
+            if match is not None:
+                # XXX: Make sure Symbol is in scope. Otherwise you'll get infinite recursion.
+                self.run_cell("%(symbol)s = Symbol('%(symbol)s')" %
+                    {'symbol': match.group("symbol")}, store_history=False)
+
+                try:
+                    code = self.user_ns['In'][-1]
+                except (KeyError, IndexError):
+                    pass
+                else:
+                    self.run_cell(code, store_history=False)
+                    return None
+
+        stb = self.InteractiveTB.structured_traceback(etype, value, tb, tb_offset=tb_offset)
+        self._showtraceback(etype, value, stb)
+
+    app.shell.set_custom_exc((NameError,), _handler)
+
+def init_ipython_session(argv=[], auto=False):
     """Construct new IPython session. """
     import IPython
 
@@ -81,38 +109,15 @@ def _init_ipython_session(argv=[], auto=False):
         app.display_banner = False
         app.initialize(argv)
 
-        import re
-        re_nameerror = re.compile("name '(?P<symbol>[A-Za-z_][A-Za-z0-9_]*)' is not defined")
-
-        def _handler(self, etype, value, tb, tb_offset=None):
-            """Handle :exc:`NameError` exception and allow injection of missing symbols. """
-            if etype is NameError and tb.tb_next and not tb.tb_next.tb_next:
-                match = re_nameerror.match(str(value))
-
-                if match is not None:
-                    self.run_cell("%(symbol)s = Symbol('%(symbol)s')" %
-                        {'symbol': match.group("symbol")}, store_history=False)
-
-                    try:
-                        code = self.user_ns_hidden['In'][-1]
-                    except (KeyError, IndexError):
-                        pass
-                    else:
-                        self.run_cell(code, store_history=False)
-                        return None
-
-            stb = self.InteractiveTB.structured_traceback(etype, value, tb, tb_offset=tb_offset)
-            self._showtraceback(etype, value, stb)
-
         if auto:
-            app.shell.set_custom_exc((NameError,), _handler)
+            enable_automatic_symbols(app)
 
         return app.shell
     else:
         from IPython.Shell import make_IPython
         return make_IPython(argv)
 
-def _init_python_session():
+def init_python_session():
     """Construct new Python session. """
     from code import InteractiveConsole
 
@@ -222,7 +227,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
     in_ipython = False
 
     if ipython is False:
-        ip = _init_python_session()
+        ip = init_python_session()
         mainloop = ip.interact
     else:
         try:
@@ -231,7 +236,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
             if ipython is not True:
                 if not quiet:
                     print no_ipython
-                ip = _init_python_session()
+                ip = init_python_session()
                 mainloop = ip.interact
             else:
                 raise RuntimeError("IPython is not available on this system")
@@ -251,7 +256,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
             if ip is not None:
                 in_ipython = True
             else:
-                ip = _init_ipython_session(argv=argv, auto=auto)
+                ip = init_ipython_session(argv=argv, auto=auto)
 
             if IPython.__version__ >= '0.11':
                 # runsource is gone, use run_cell instead, which doesn't

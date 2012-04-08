@@ -29,7 +29,7 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify)
-from sympy.simplify.sqrtdenest import sqrt_depth
+from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together, factor
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
@@ -2179,13 +2179,14 @@ def unrad(eq, *syms, **flags):
     if cov is None:
         cov = []
 
-    eq, reps = posify(eq)
-    if syms:
-        syms = [s.subs([(v, k) for k, v in reps.items()]) for s in syms]
     eq = powdenest(eq)
     eq, d = eq.as_numer_denom()
+    eq = _mexpand(eq)
     if _take(d):
         dens.add(d)
+
+    if not eq.free_symbols:
+        return eq, cov, list(dens)
 
     poly = eq.as_poly()
 
@@ -2276,10 +2277,6 @@ def unrad(eq, *syms, **flags):
     neq = unrad(eq, *syms, **dict(cov=cov, dens=dens, n=len(rterms)))
     if neq:
         eq = neq[0]
-    eq = eq.subs(reps)
     if eq.could_extract_minus_sign():
         eq = -eq
-    return (expand_mul(expand_multinomial(eq)),
-            [(c[0], c[1].subs(reps)) for c in cov],
-            [d.subs(reps) for d in dens]
-            )
+    return (_mexpand(eq), cov, list(dens))

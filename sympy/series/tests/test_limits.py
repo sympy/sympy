@@ -33,6 +33,22 @@ def test_basic1():
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN
     assert limit(Order(2)*x, x, S.NaN) == S.NaN
+    assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
+    assert limit(gamma(1/x + 3), x, oo) == 2
+    assert limit(S.NaN, x, -oo) == S.NaN
+    assert limit(Order(2)*x, x, S.NaN) == S.NaN
+    assert limit(1/(x-1), x, 1, dir="+") == oo
+    assert limit(1/(x-1), x, 1, dir="-") == -oo
+    assert limit(1/(5-x)**3, x, 5, dir="+") == -oo
+    assert limit(1/(5-x)**3, x, 5, dir="-") == oo
+    assert limit(1/sin(x), x, pi, dir="+") == -oo
+    assert limit(1/sin(x), x, pi, dir="-") == oo
+    assert limit(1/cos(x), x, pi/2, dir="+") == -oo
+    assert limit(1/cos(x), x, pi/2, dir="-") == oo
+    assert limit(1/tan(x**3), x, (2*pi)**(S(1)/3), dir="+") == oo
+    assert limit(1/tan(x**3), x, (2*pi)**(S(1)/3), dir="-") == -oo
+    assert limit(1/cot(x)**3, x, (3*pi/2), dir="+") == -oo
+    assert limit(1/cot(x)**3, x, (3*pi/2), dir="-") == oo
 
     # approaching 0
     # from dir="+"
