@@ -1,7 +1,7 @@
 """Tests for the PolynomialRing classes. """
 
 from sympy.polys.domains import QQ, ZZ, PolynomialRing
-from sympy.polys.polyerrors import ExactQuotientFailed, CoercionFailed
+from sympy.polys.polyerrors import ExactQuotientFailed, CoercionFailed, NotReversible
 
 from sympy.abc import x, y
 
@@ -25,6 +25,7 @@ def test_globalring():
     assert X * (Y**2 + 1) == R.convert(x * (y**2 + 1))
     assert X * y == X * Y == R.convert(x * y) == x * Y
     assert X + y == X + Y == R.convert(x + y) == x + Y
+    assert X - y == X - Y == R.convert(x - y) == x - Y
     assert X + 1 == R.convert(x + 1)
     raises(ExactQuotientFailed, lambda: X/Y)
     raises(ExactQuotientFailed, lambda: x/Y)
@@ -54,12 +55,15 @@ def test_localring():
     raises(ExactQuotientFailed, lambda: x/Y)
     raises(ExactQuotientFailed, lambda: X/y)
     assert X + y == X + Y == R.convert(x + y) == x + Y
+    assert X - y == X - Y == R.convert(x - y) == x - Y
     assert X + 1 == R.convert(x + 1)
     assert X**2 / X == X
 
     assert R.from_GlobalPolynomialRing(ZZ[x, y].convert(x), ZZ[x, y]) == X
     assert R.from_FractionField(Qxy.convert(x), Qxy) == X
     raises(CoercionFailed, lambda: R.from_FractionField(Qxy.convert(x)/y, Qxy))
+    raises(ExactQuotientFailed, lambda: X/Y)
+    raises(NotReversible, lambda: X.invert())
 
     assert R._sdm_to_vector(R._vector_to_sdm([X/(X + 1), Y/(1 + X*Y)], R.order),
                                              2) == \

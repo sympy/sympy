@@ -7,13 +7,25 @@ from sympy.utilities.pytest import raises
 from sympy import S
 
 def test_FreeModuleElement():
-    e = QQ[x].free_module(3).convert([1, x, x**2])
+    M = QQ[x].free_module(3)
+    e = M.convert([1, x, x**2])
     f = [QQ[x].convert(1), QQ[x].convert(x), QQ[x].convert(x**2)]
     assert list(e) == f
     assert f[0] == e[0]
     assert f[1] == e[1]
     assert f[2] == e[2]
     raises(IndexError, lambda: e[3])
+
+    g = M.convert([x, 0, 0])
+    assert e + g == M.convert([x + 1, x, x**2])
+    assert f + g == M.convert([x + 1, x, x**2])
+    assert -e == M.convert([-1, -x, -x**2])
+    assert e - g == M.convert([1 - x, x, x**2])
+    assert e != g
+
+    assert M.convert([x, x, x]) / QQ[x].convert(x) == [1, 1, 1]
+    R = QQ.poly_ring(x, order="ilex")
+    assert R.free_module(1).convert([x]) / R.convert(x) == [1]
 
 def test_FreeModule():
     M1 = FreeModule(QQ[x], 2)
@@ -60,8 +72,13 @@ def test_FreeModule():
     M3 = FreeModule(QQ[x, y], 2)
     assert M3.convert(e) == M3.convert([x, x**2 + 1])
 
+    assert not M3.is_submodule(0)
+    assert not M3.is_zero()
+
     raises(NotImplementedError, lambda: ZZ[x].free_module(2))
     raises(NotImplementedError, lambda: FreeModulePolyRing(ZZ, 2))
+    raises(CoercionFailed, lambda: M1.convert(QQ[x].free_module(3).convert([1, 2, 3])))
+    raises(CoercionFailed, lambda: M3.convert(1))
 
 def test_ModuleOrder():
     o1 = ModuleOrder(lex, grlex)
@@ -100,6 +117,7 @@ def test_SubModulePolyRing_global():
 
     assert not F.submodule([1 + x, 0, 0]) == F.submodule([1, 0, 0])
     assert F.submodule([1, 0, 0], [0, 1, 0]).union(F.submodule([0, 0, 1])) == F
+    assert not M.is_submodule(0)
 
     m = F.convert([x**2 + y**2, 1, 0])
     n = M.convert(m)
@@ -107,6 +125,10 @@ def test_SubModulePolyRing_global():
     assert n.module is M
 
     raises(ValueError, lambda: M.submodule([1, 0, 0]))
+    raises(TypeError, lambda: M.union(1))
+    raises(ValueError, lambda: M.union(R.free_module(1).submodule([x])))
+
+    assert F.submodule([x, x, x]) != F.submodule([x, x, x], order="ilex")
 
 def test_SubModulePolyRing_local():
     R = QQ.poly_ring(x, y, order=ilex)

@@ -43,3 +43,7 @@ def test_QuotientRing():
     assert R.to_sympy(X) == x
 
     raises(ValueError, lambda: QQ[x]/QQ[x, y].ideal(x))
+
+    R = QQ.poly_ring(x, order="ilex")
+    I = R.ideal(x)
+    assert R.convert(1) + I == (R/I).convert(1)
