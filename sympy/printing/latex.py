@@ -1251,6 +1251,15 @@ class LatexPrinter(Printer):
     def _print_QuotientRingElement(self, x):
         return r"{%s} + {%s}" % (self._print(x.data), self._print(x.ring.base_ideal))
 
+    def _print_QuotientModuleElement(self, m):
+        return r"{%s} + {%s}" % (self._print(m.data),
+                                 self._print(m.module.killed_module))
+
+    def _print_QuotientModule(self, M):
+        # TODO nicer fractions for few generators...
+        return r"\frac{%s}{%s}" % (self._print(M.base),
+                                   self._print(M.killed_module))
+
 
 def latex(expr, **settings):
     r"""

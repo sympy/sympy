@@ -27,13 +27,16 @@ from sympy.core.compatibility import iterable
 
 # TODO
 # - intersection
-# - quotient modules
 # - modules over quotient rings
 # - module quotient / saturation
 # - free resoltutions / syzygies
 # - homomorphisms
 # - finding small/minimal generating sets
 # - ...
+
+##########################################################################
+## Abstract base classes #################################################
+##########################################################################
 
 class Module(object):
     """
@@ -81,6 +84,13 @@ class Module(object):
     def quotient_module(self, other):
         """Generate a quotient module."""
         raise NotImplementedError
+
+    def __div__(self, e):
+        if not isinstance(e, Module):
+            e = self.submodule(*e)
+        return self.quotient_module(e)
+
+    __truediv__ = __div__
 
     def contains(self, elem):
         """Return True if ``elem`` is an element of this module."""
@@ -164,7 +174,10 @@ class ModuleElement(object):
 
     def __add__(self, om):
         if not isinstance(om, self.__class__) or om.module != self.module:
-            om = self.module.convert(om)
+            try:
+                om = self.module.convert(om)
+            except CoercionFailed:
+                return NotImplemented
         return self.__class__(self.module, self.add(self.data, om.data))
 
     __radd__ = __add__
@@ -174,6 +187,11 @@ class ModuleElement(object):
                        self.module.ring.convert(-1)))
 
     def __sub__(self, om):
+        if not isinstance(om, self.__class__) or om.module != self.module:
+            try:
+                om = self.module.convert(om)
+            except CoercionFailed:
+                return NotImplemented
         return self.__add__(-om)
 
     def __rsub__(self, om):
@@ -181,14 +199,20 @@ class ModuleElement(object):
 
     def __mul__(self, o):
         if not isinstance(o, self.module.ring.dtype):
-            o = self.module.ring.convert(o)
+            try:
+                o = self.module.ring.convert(o)
+            except CoercionFailed:
+                return NotImplemented
         return self.__class__(self.module, self.mul(self.data, o))
 
     __rmul__ = __mul__
 
     def __div__(self, o):
         if not isinstance(o, self.module.ring.dtype):
-            o = self.module.ring.convert(o)
+            try:
+                o = self.module.ring.convert(o)
+            except CoercionFailed:
+                return NotImplemented
         return self.__class__(self.module, self.div(self.data, o))
 
     __truediv__ = __div__
@@ -200,6 +224,10 @@ class ModuleElement(object):
 
     def __ne__(self, om):
         return not self.__eq__(om)
+
+##########################################################################
+## Free Modules ##########################################################
+##########################################################################
 
 class FreeModuleElement(ModuleElement):
     """Element of a free module. Data stored as a tuple."""
@@ -233,7 +261,6 @@ class FreeModule(Module):
 
     Non-implemented methods:
 
-    - quotient_module
     - submodule
     """
 
@@ -326,6 +353,23 @@ class FreeModule(Module):
         M = eye(self.rank)
         return tuple(self.convert(M.row(i)) for i in range(self.rank))
 
+    def quotient_module(self, submodule):
+        """
+        Return a quotient module.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> M = QQ[x].free_module(2)
+        >>> M.quotient_module(M.submodule([1, x], [x, 2]))
+        QQ[x]**2/<[1, x], [x, 2]>
+
+        Or more conicisely, using the overloaded division operator:
+
+        >>> QQ[x].free_module(2) / [[1, x], [x, 2]]
+        QQ[x]**2/<[1, x], [x, 2]>
+        """
+        return QuotientModule(self.ring, self, submodule)
+
 class FreeModulePolyRing(FreeModule):
     """
     Free module over a generalized polynomial ring.
@@ -368,6 +412,10 @@ class FreeModulePolyRing(FreeModule):
         False
         """
         return SubModulePolyRing(gens, self, **opts)
+
+##########################################################################
+## Submodules and subquotients ###########################################
+##########################################################################
 
 class SubModule(Module):
     """
@@ -524,7 +572,7 @@ class SubModule(Module):
         if isinstance(other, SubModule):
             return self.container == other.container and \
                    all(self.contains(x) for x in other.gens)
-        if isinstance(other, FreeModule):
+        if isinstance(other, (FreeModule, QuotientModule)):
             return self.container == other and self.is_full_module()
         return False
 
@@ -584,6 +632,67 @@ class SubModule(Module):
         form, simplify the expression a bit, or just do nothing.
         """
         return x
+
+    def quotient_module(self, other, **opts):
+        """
+        Return a quotient module.
+
+        This is the same as taking a submodule of a quotient of the containing
+        module.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> F = QQ[x].free_module(2)
+        >>> S1 = F.submodule([x, 1])
+        >>> S2 = F.submodule([x**2, x])
+        >>> S1.quotient_module(S2)
+        <[x, 1] + <[x**2, x]>>
+
+        Or more coincisely, using the overloaded division operator:
+
+        >>> F.submodule([x, 1]) / [(x**2, x)]
+        <[x, 1] + <[x**2, x]>>
+        """
+        if not self.is_submodule(other):
+            raise ValueError('%s not a submodule of %s' % (other, self))
+        return SubQuotientModule(self.gens,
+                self.container.quotient_module(other), **opts)
+
+    def __add__(self, oth):
+        return self.container.quotient_module(self).convert(oth)
+
+    __radd__ = __add__
+
+class SubQuotientModule(SubModule):
+    """
+    Submodule of a quotient module.
+
+    Equivalently, quotient module of a submodule.
+
+    Do not instantiate this, instead use the submodule or quotient_module
+    constructing methods:
+
+    >>> from sympy.abc import x
+    >>> from sympy import QQ
+    >>> F = QQ[x].free_module(2)
+    >>> S = F.submodule([1, 0], [1, x])
+    >>> Q = F/[(1, 0)]
+    >>> S/[(1, 0)] == Q.submodule([5, x])
+    True
+
+    Attributes:
+
+    - base - base module we are quotient of
+    - killed_module - submodule we are quotienting by
+    """
+    def __init__(self, gens, container, **opts):
+        SubModule.__init__(self, gens, container)
+        self.killed_module = self.container.killed_module
+        self.base = self.container.base.submodule(
+                        *[x.data for x in self.gens], **opts).union(self.killed_module)
+
+    def _contains(self, elem):
+        return self.base.contains(elem.data)
 
 _subs0 = lambda x: x[0]
 _subs1 = lambda x: x[1:]
@@ -687,8 +796,128 @@ class SubModulePolyRing(SubModule):
         return [-x/e[0] for x in e[1:]]
 
     def reduce_element(self, x):
+        """
+        Reduce the element ``x`` of our container modulo ``self``.
+
+        This method computes a (non-unique!) normal form of ``x``.
+        """
         from sympy.polys.distributedmodules import sdm_nf_mora
         return self.container.convert(self.ring._sdm_to_vector(sdm_nf_mora(
                 self.ring._vector_to_sdm(x, self.order), self._groebner(),
                     self.order, self.ring.dom),
                 self.rank))
+
+##########################################################################
+## Quotient Modules ######################################################
+##########################################################################
+
+class QuotientModuleElement(ModuleElement):
+    """Element of a quotient module."""
+
+    def eq(self, d1, d2):
+        """Equality comparison."""
+        return self.module.killed_module.contains(d1 - d2)
+
+    def __repr__(self):
+        from sympy import sstr
+        return repr(self.data) + " + " + repr(self.module.killed_module)
+
+class QuotientModule(Module):
+    """
+    Class for quotient modules.
+
+    Do not instantiate this directly. For subquotients, see the
+    SubQuotientModule class.
+
+    Attributes:
+
+    - base - the base module we are a quotient of
+    - killed_module - the submodule we are quotienting by
+    - rank of the base
+    """
+
+    dtype = QuotientModuleElement
+
+    def __init__(self, ring, base, submodule):
+        Module.__init__(self, ring)
+        if not base.is_submodule(submodule):
+            raise ValueError('%s is not a submodule of %s' % (submodule, base))
+        self.base = base
+        self.killed_module = submodule
+        self.rank = base.rank
+
+    def __repr__(self):
+        return repr(self.base) + "/" + repr(self.killed_module)
+
+    def is_zero(self):
+        """
+        Return True if ``self`` is a zero module.
+
+        This happens if and only if the base module is the same as the
+        submodule being killed.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> F = QQ[x].free_module(2)
+        >>> (F/[(1, 0)]).is_zero()
+        False
+        >>> (F/[(1, 0), (0, 1)]).is_zero()
+        True
+        """
+        return self.base == self.killed_module
+
+    def is_submodule(self, other):
+        """
+        Return True if ``other`` is a submodule of ``self``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> Q = QQ[x].free_module(2) / [(x, 1)]
+        >>> S = Q.submodule([1, 0])
+        >>> Q.is_submodule(S)
+        True
+        >>> S.is_submodule(Q)
+        False
+        """
+        if isinstance(other, QuotientModule):
+            return self.killed_module == other.killed_module and \
+                   self.base.is_submodule(other.base)
+        if isinstance(other, SubQuotientModule):
+            return other.container == self
+        return False
+
+    def submodule(self, *gens, **opts):
+        """
+        Generate a submodule.
+
+        This is the same as taking a quotient of a submodule of the base
+        module.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> Q = QQ[x].free_module(2) / [(x, x)]
+        >>> Q.submodule([x, 0])
+        <[x, 0] + <[x, x]>>
+        """
+        return SubQuotientModule(gens, self, **opts)
+
+    def convert(self, elem, M=None):
+        """
+        Convert ``elem`` into the internal representation.
+
+        This method is called implicitly whenever computations involve elements
+        not in the internal representation.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> F = QQ[x].free_module(2) / [(1, 2), (1, x)]
+        >>> F.convert([1, 0])
+        [1, 0] + <[1, 2], [1, x]>
+        """
+        if isinstance(elem, QuotientModuleElement):
+            if elem.module == self:
+                return elem
+            if self.killed_module.is_submodule(elem.module.killed_module):
+                return QuotientModuleElement(self, self.base.convert(elem.data))
+            raise CoercionFailed
+        return QuotientModuleElement(self, self.base.convert(elem))

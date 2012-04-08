@@ -626,6 +626,11 @@ def test_Modules():
     I = R.ideal(x**2, y)
     assert latex(I) == r"\left< {x^{2}},{y} \right>"
 
+    Q = F / M
+    assert latex(Q) == r"\frac{{\mathbb{Q}\left[x, y\right]}^{2}}{\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}"
+    assert latex(Q.submodule([1, x**3/2], [2, y])) == \
+        r"\left< {{\left[ {1},{\frac{1}{2} x^{3}} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}},{{\left[ {2},{y} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}} \right>"
+
 def test_QuotientRing():
     from sympy.polys.domains import QQ
     R = QQ[x]/[x**2 + 1]

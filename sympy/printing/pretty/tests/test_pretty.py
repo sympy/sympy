@@ -3794,9 +3794,50 @@ u"""\
 <x , y>\
 """
 
-
     assert upretty(I) == ucode_str
     assert  pretty(I) == ascii_str
+
+    Q = F / M
+
+    ucode_str = \
+u"""\
+            2    \n\
+     ℚ[x, y]     \n\
+─────────────────\n\
+╱        ⎡    2⎤╲\n\
+╲[x, y], ⎣1, x ⎦╱\
+"""
+
+    ascii_str = \
+"""\
+            2    \n\
+    QQ[x, y]     \n\
+-----------------\n\
+              2  \n\
+<[x, y], [1, x ]>\
+"""
+
+    assert upretty(Q) == ucode_str
+    assert  pretty(Q) == ascii_str
+
+    expr = Q.submodule([1, x**3/2], [2, y])
+
+    ucode_str = \
+u"""\
+╱⎡    3⎤                                                ╲\n\
+│⎢   x ⎥   ╱        ⎡    2⎤╲           ╱        ⎡    2⎤╲│\n\
+│⎢1, ──⎥ + ╲[x, y], ⎣1, x ⎦╱, [2, y] + ╲[x, y], ⎣1, x ⎦╱│\n\
+╲⎣   2 ⎦                                                ╱\
+"""
+
+    ascii_str = \
+"""\
+      3                                                  \n\
+     x                   2                           2   \n\
+<[1, --] + <[x, y], [1, x ]>, [2, y] + <[x, y], [1, x ]>>\n\
+     2                                                   \
+"""
+
 
 def test_QuotientRing():
     R = QQ[x]/[x**2 + 1]

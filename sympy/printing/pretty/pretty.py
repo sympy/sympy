@@ -1526,6 +1526,12 @@ class PrettyPrinter(Printer):
     def _print_QuotientRingElement(self, R):
         return self._print(R.data) + self._print(R.ring.base_ideal)
 
+    def _print_QuotientModuleElement(self, m):
+        return self._print(m.data) + self._print(m.module.killed_module)
+
+    def _print_QuotientModule(self, M):
+        return self._print(M.base) / self._print(M.killed_module)
+
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 
