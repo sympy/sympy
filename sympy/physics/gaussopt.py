@@ -17,11 +17,6 @@ The conventions for the distances are as follows:
 from sympy import (atan2, cos, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
     together, symbols)
 from sympy.utilities.misc import filldedent
-from sympy import Plot
-from sympy.external import import_module
-from sympy.core.compatibility import is_sequence
-from numpy import arange, empty
-# sample = import_module('sympy.examples.intermidiate.sample')
 
 ###
 # A, B, C, D matrices
