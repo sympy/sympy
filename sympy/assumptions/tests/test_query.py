@@ -719,6 +719,10 @@ def test_bounded():
     assert ask(Q.bounded(cos(x) + sin(x))) == True
 
 @XFAIL
+def test_algebraic_xfail():
+    """We need to add support to Q.algebraic to make this work correctly"""
+    assert ask(Q.algebraic(log(3))) == False
+
 def test_bounded_xfail():
     """We need to support relations in ask for this to work"""
     assert ask(Q.bounded(sin(x)**x)) == True
