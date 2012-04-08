@@ -1258,16 +1258,18 @@ def test_equals():
     assert (3*meter**2).equals(0) is False
 
     # from integrate(x*sqrt(1+2*x), x);
-    # diff is zero, but differentiation does not show it
+    # diff is zero only when assumptions allow
     i = 2*sqrt(2)*x**(S(5)/2)*(1 + 1/(2*x))**(S(5)/2)/5 + \
         2*sqrt(2)*x**(S(3)/2)*(1 + 1/(2*x))**(S(5)/2)/(-6 - 3/x)
     ans = sqrt(2*x + 1)*(6*x**2 + x - 1)/15
     diff = i - ans
-    assert diff.equals(0) is not False # should be True, but now it's None
-    # XXX TODO add a force=True option to equals to posify both
-    # self and other before beginning comparisions
+    assert diff.equals(0) is False
+    assert diff.subs(x, -S.Half/2) == 7*sqrt(2)/120
+    # there are regions for x for which the expression is True, for
+    # example, when x < -1/2 or x > 0 the expression is zero
     p = Symbol('p', positive=True)
     assert diff.subs(x, p).equals(0) is True
+    assert diff.subs(x, -1).equals(0) is True
 
 def test_random():
     from sympy import posify
