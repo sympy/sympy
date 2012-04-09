@@ -42,12 +42,12 @@ class RayTransferMatrix(Matrix):
 
     >>> mat = RayTransferMatrix(1, 2, 3, 4)
     >>> mat
-    [1,  2]
-    [3,  4]
+    [1, 2]
+    [3, 4]
 
     >>> RayTransferMatrix(Matrix([[1, 2], [3, 4]]))
-    [1,  2]
-    [3,  4]
+    [1, 2]
+    [3, 4]
 
     >>> mat.A
     1
@@ -169,7 +169,8 @@ class FreeSpace(RayTransferMatrix):
     Parameters
     ==========
 
-    distance
+    d : distance
+    n : refraction index (default = 1.0)
 
     See Also
     ========
@@ -185,9 +186,24 @@ class FreeSpace(RayTransferMatrix):
     >>> FreeSpace(d)
     [1, d]
     [0, 1]
+    
+    >>> FreeSpace(d, n=2)
+    [1, d/2]
+    [0,   1]
+    
+    >>> n = symbols('n')
+    >>> FreeSpace(d, n)
+    [1, d/n]
+    [0,   1]
     """
-    def __new__(cls, d):
-        return RayTransferMatrix.__new__(cls, 1, d, 0, 1)
+    def __new__(cls, d, n=1):
+        return RayTransferMatrix.__new__(cls, 1, d/n, 0, 1)
+    
+    def __mul__(self, other):
+        if isinstance(other, FreeSpace):
+            return FreeSpace(self.B + other.B)
+        else :
+            return RayTransferMatrix.__mul__(self, other)
 
 class FlatRefraction(RayTransferMatrix):
     """
