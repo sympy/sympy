@@ -638,12 +638,11 @@ class Add(AssocOp):
 
         unbounded = [t for t in self.args if t.is_unbounded]
         if unbounded:
-            print unbounded
             return Add._from_args(unbounded)
 
         self = Add(*[t.as_leading_term(x) for t in self.args])
         if not self.is_Add:
-            return self
+            return self # already computed leading term
 
         # of those that have x as a base, keep only the smallest exponent
         other, xbase = self.as_coeff_add(x)
@@ -669,6 +668,7 @@ class Add(AssocOp):
                 rv = Add(*other)
                 if x not in rv.free_symbols:
                     return rv
+            # the following line collects all terms with x as base
             xbase = [Add(*[c for b,e,c in xbase if e == min_e])*x**min_e]
             self = Add(*(xbase + other))
             if not self.is_Add:
@@ -679,7 +679,7 @@ class Add(AssocOp):
         if not self.is_Add:
             return self.as_leading_term(x)
 
-        # return self # but in case I'm wrong check it
+        # return self # but in case I'm wrong, check it
         n = 0
         while 1:
             n += 1
@@ -687,7 +687,6 @@ class Add(AssocOp):
             if not s.is_Order:
                 break
         s = s.removeO()
-        s = s.collect(x) # could be 1/x + 1/(y*x)
         if s.is_Add:
             lst = s.extract_leading_order(x)
             rv = Add(*[e for (e,f) in lst])

@@ -195,6 +195,7 @@ def test_as_leading_term():
     assert (x+1).as_leading_term(x) == 1
     assert (x+x**2).as_leading_term(x) == x
     assert (x**2).as_leading_term(x) == x**2
+    assert (x + oo).as_leading_term(x) == oo
 
 def test_leadterm2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).leadterm(x) == \
