@@ -45,8 +45,7 @@ class Wigner3j(Expr):
         >>> from sympy.physics.quantum.cg import Wigner3j
         >>> w3j = Wigner3j(6,0,4,0,2,0)
         >>> w3j
-        (6, 4, 2)
-        (0, 0, 0)
+        Wigner3j(6,4,2,0,0,0)
         >>> w3j.doit()
         sqrt(715)/143
 
@@ -87,18 +86,12 @@ class Wigner3j(Expr):
     def is_symbolic(self):
         return not all([arg.is_number for arg in self.args])
 
-    # This is modified from the _print_Matrix method
     def _sympystr(self, printer, *args):
-        res = [[printer._print(self.j1), printer._print(self.j2), printer._print(self.j3)], \
-            [printer._print(self.m1), printer._print(self.m2), printer._print(self.m3)]]
-        maxw = [-1] * 3
-        for j in range(3):
-            maxw[j] = max([ len(res[i][j]) for i in range(2) ])
-        for i, row in enumerate(res):
-            for j, elem in enumerate(row):
-                row[j] = elem.rjust(maxw[j])
-            res[i] = "(" + ", ".join(row) + ")"
-        return '\n'.join(res)
+        return '%s(%s,%s,%s,%s,%s,%s)' % (
+            self.__class__.__name__,
+            printer._print(self.j1), printer._print(self.j2), printer._print(self.j3),
+            printer._print(self.m1), printer._print(self.m2), printer._print(self.m3)
+        )
 
     # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
@@ -190,9 +183,10 @@ class CG(Wigner3j):
         return clebsch_gordan(self.j1,self.j2, self.j3, self.m1, self.m2, self.m3)
 
     def _sympystr(self, printer, *args):
-        return 'CG(%s, %s, %s, %s, %s, %s)' % \
-            (printer._print(self.j1), printer._print(self.m1), printer._print(self.j2), \
-            printer._print(self.m2), printer._print(self.j3), printer._print(self.m3))
+        return 'CG(%s, %s, %s, %s, %s, %s)' % (
+            printer._print(self.j1), printer._print(self.m1), printer._print(self.j2), \
+            printer._print(self.m2), printer._print(self.j3), printer._print(self.m3)
+        )
 
     def _pretty(self, printer, *args):
         bot = printer._print(self.j1)
