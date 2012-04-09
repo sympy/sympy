@@ -274,6 +274,12 @@ def test_issue835():
     assert limit((1 + x**log(3))**(1/x), x, 0) == 1
     assert limit((5**(1/x) + 3**(1/x))**x, x, 0) == 5
 
+def test_calculate_series():
+    # needs gruntz calculate_series to go to n = 32
+    assert limit(x**(S(77)/3)/(1 + x**(S(77)/3)), x, oo) == 1
+    # needs gruntz calculate_series to go to n = 128
+    assert limit(x**101.1/(1 + x**101.1), x, oo) == 1
+
 def test_newissue():
     assert limit(exp(1/sin(x))/exp(cot(x)), x, 0) == 1
 
