@@ -14,8 +14,12 @@ The conventions for the distances are as follows:
     image distance - positive for real images
 """
 
+from numpy import arange, empty
+
 from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
-    together)
+    together, symbols)
+from sympy.external import import_module
+from sympy.core.compatibility import is_sequence
 from sympy.utilities.misc import filldedent
 
 ###
@@ -66,7 +70,7 @@ class RayTransferMatrix(Matrix):
 
     GeometricRay, BeamParameter,
     FreeSpace, FlatRefraction, CurvedRefraction,
-    FlatMirror, CurvedMirror, ThinLens
+    FlatMirror, CurvedMirror, ThinLens, ThinPrism
 
     References
     ==========
@@ -75,7 +79,6 @@ class RayTransferMatrix(Matrix):
     """
 
     def __new__(cls, *args):
-
         if len(args) == 4:
             temp = ((args[0], args[1]), (args[2], args[3]))
         elif len(args) == 1 \
@@ -186,11 +189,11 @@ class FreeSpace(RayTransferMatrix):
     >>> FreeSpace(d)
     [1, d]
     [0, 1]
-    
+
     >>> FreeSpace(d, n=2)
     [1, d/2]
     [0,   1]
-    
+
     >>> n = symbols('n')
     >>> FreeSpace(d, n)
     [1, d/n]
@@ -198,10 +201,12 @@ class FreeSpace(RayTransferMatrix):
     """
     def __new__(cls, d, n=1):
         return RayTransferMatrix.__new__(cls, 1, d/n, 0, 1)
-    
+
     def __mul__(self, other):
         if isinstance(other, FreeSpace):
             return FreeSpace(self.B + other.B)
+        elif isinstance(other, CurvedRefraction):
+            return RayTransferMatrix(Matrix([[1 + other.C*self.B, self.B],[other.C, 1]]))
         else:
             return RayTransferMatrix.__mul__(self, other)
 
@@ -236,7 +241,7 @@ class CurvedRefraction(RayTransferMatrix):
     R: radius of curvature (positive for concave),
     n1: refractive index of one medium
     n2: refractive index of other medium
-    D: optical power ((n2 - n1) / R = 1/f, where f - focal length)
+    P: optical power ((n2 - n1) / R = 1/f, where f - focal length)
 
     See Also
     ========
@@ -252,32 +257,35 @@ class CurvedRefraction(RayTransferMatrix):
     >>> CurvedRefraction(R, n1, n2)
     [          1, 0]
     [(n1 - n2)/R, 1]
-    
+
     >>> CurvedRefraction((n2-n1)/R)
     [            1, 0]
     [-(-n1 + n2)/R, 1]
-    
-    >>> D1, D2 = symbols('D1 D2')
-    >>> CurvedRefraction(D1)*CurvedRefraction(D2)
+
+    >>> P1, P2 = symbols('P1 P2')
+    >>> CurvedRefraction(P1)*CurvedRefraction(P2)
     [       1, 0]
-    [-D1 - D2, 1]
+    [-P1 - P2, 1]
     """
     def __new__(cls, *args):
+        # TODO add incidence angle
         if len(args) == 1:
-            return RayTransferMatrix.__new__(cls, 1, 0, -args[0], 1)        
+            return RayTransferMatrix.__new__(cls, 1, 0, -args[0], 1)
         elif len(args) == 3:
             R, n1 , n2 = sympify((args[0], args[1], args[2]))
             return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R, 1)
         else :
             raise ValueError(filldedent('''
                 Expecting focal length or the 3 elements n1, n2, R
-                but got %s''' % str(args)))
-        
+                or optical power but got %s''' % str(args)))
+
     def __mul__(self, other):
         if isinstance(other, CurvedRefraction):
-            return CurvedRefraction(- self.C - other.C)
+            return CurvedRefraction(-self.C - other.C)
+        elif instance(other, FreeSpace):
+            return RayTransferMatrix(Matrix([[1, other.B],[self.C, 1 + self.C*other.B]]))
         elif isinstance(other, ThinLens):
-            return ThinLens(- self.C - other.C)
+            return ThinLens(-self.C - other.C)
         else:
             return ReyTransferMatrix.__mul__(self, other)
 
@@ -319,12 +327,13 @@ class CurvedMirror(RayTransferMatrix):
     >>> from sympy import symbols
     >>> R = symbols('R')
     >>> CurvedMirror(R)
-    [   1, 0]
-    [-2/R, 1]
+    [  1, 0]
+    [2/R, 1]
     """
-    def __new__(cls, R):
+    def __new__(cls, R, n=1):
+        # TODO add incidence angle
         R = sympify(R)
-        return RayTransferMatrix.__new__(cls, 1, 0, -2/R, 1)
+        return RayTransferMatrix.__new__(cls, 1, 0, 2*n/R, 1)
 
 class ThinLens(CurvedRefraction):
     """
@@ -339,6 +348,7 @@ class ThinLens(CurvedRefraction):
     ========
 
     RayTransferMatrix
+    CurvedRefratcion
 
     Examples
     ========
@@ -353,8 +363,59 @@ class ThinLens(CurvedRefraction):
     def __new__(cls, f):
         f = sympify(f)
         return RayTransferMatrix.__new__(cls, 1, 0, -1/f, 1)
-    
 
+class ThinPrism(Matrix):
+    """Ray Transfer matrix for thin prism
+
+    Adds delta = -n1 * angle * (n2 - n1) to optical direction cosine
+    [1, 0] + [                      0]
+    [0, 1]   [-n1 * angle * (n2 - n1)]
+
+    Parameters
+    ==========
+
+    angle: top angle of the prism
+    n1: refractive index of one medium (default=1.0)
+    n2: refractive index of other medium
+
+    See Also
+    ========
+
+    Matrix
+
+    [1] Matrix Methods for Optical Layouts, Gerhaed Kloos,
+        Bellingham, Washington USA, ISBN 978-0-8194-6780-5
+
+    Examples
+    ========
+    >>> from sympy import symbols
+    >>> from sympy.physics.gaussopt import ThinPrism
+    >>> alpha, n2, n1 = symbols('alpha n2 n1')
+    >>> ThinPrism(alpha, n2, n1)
+    [                   0]
+    [-alpha*n1*(-n1 + n2)]
+
+    >>> from sympy.physics.gaussopt import GeometricRay
+    >>> h, angle = symbols('h angle')
+    >>> ThinPrism(alpha, n2)*GeometricRay(h, angle)
+    [                      h]
+    [alpha*(-n2 + 1) + angle]
+    """
+    def __new__(cls, angle, n2, n1=1):
+        angle, n2, n1 = sympify((angle, n2, n1))
+        return Matrix.__new__(cls, [[0,], [-n1 * (n2 - n1) * angle,]])
+
+    def __mul__(self, other):
+        if isinstance(other, Matrix) and other.shape == (2, 1):
+            if isinstance(other, GeometricRay):
+                return GeometricRay(Matrix.__add__(self,other))
+            else:
+                return Matrix.__add__(self,other)
+        else:
+            raise ValueError("Only 2x1 Matrix can be multiplied with ThinPrism")
+
+# TODO Add "Duct" (radially variad index and gain)
+# TODO Add class OpticalSystem which will contain optical elements
 
 ###
 # Representation for geometric ray
@@ -367,7 +428,10 @@ class GeometricRay(Matrix):
     Parameters
     ==========
 
-    height and angle or 2x1 matrix (Matrix(2, 1, [height, angle]))
+    height: distance to optical axis
+    angle: optical direction cosine
+    or
+    2x1 matrix (Matrix(2, 1, [height, angle]))
     n : refraction index (default = 1.0)
 
     Examples
@@ -388,12 +452,12 @@ class GeometricRay(Matrix):
     >>> GeometricRay( Matrix( ((h,), (angle,)) ) )
     [    h]
     [angle]
-    
+
     >>> ni = symbols('ni')
     >>> GeometricRay(h, angle, n=ni)
     [       h]
     [angle*ni]
-    
+
     See Also
     ========
 
@@ -403,9 +467,7 @@ class GeometricRay(Matrix):
 
     def __new__(cls, *args, **kwargs):
         if len(kwargs) > 1:
-            raise VelueError(filldedent('''
-                Expecting only 1 named agrument
-                n (refraction) index but got %s''' % str(args)))
+            raise ValueError('Constructor expects exactly one named argument.')
         else:
             if 'n' in kwargs:
                 n = kwargs['n']
@@ -442,7 +504,7 @@ class GeometricRay(Matrix):
     @property
     def angle(self):
         """
-        The angle with the optical axis.
+        Optical direction cosine
 
         Examples
         ========
@@ -843,10 +905,102 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
             The functions expects the focal length as a named argument'''))
     return (s_in, s_out, f)
 
+def plot_beam(beam, x_n, **kwargs) :
+    """Plot the beam radius as it propagates in space.
+    Uses external matplotlib library.
+
+    Parameters
+    ==========
+    beam : BeamParameter for gaussian beam
+    x_n : number of samples to plot function
+    z_range : plot range for the beam propagation coordinate
+
+    See Also
+    ========
+    BeamParameter
+
+    Examples
+    ========
+    >>> from sympy.physics.gaussopt import BeamParameter, plot_beam
+    >>> b = BeamParameter(530e-9,1,w=1e-5)
+    >>> plot_beam(b,100,z_range=2*b.z_r)
+    """
+
+    if len(kwargs) != 1:
+        raise ValueError("The function expects only one named argument")
+    elif 'z_range' in kwargs :
+        z_range = sympify(kwargs['z_range'])
+    else :
+        raise ValueError(filldedent('''
+            The functions expects the z_range as a named argument'''))
+
+    x = symbols('x')
+
+    weist_d = beam.w_0*sqrt(1+(x/beam.z_r)**2)
+
+    _mplot2d([weist_d, -weist_d], (x, -z_range, z_range, x_n))
+
+def _mplot2d(f, var, show=True):
+    """
+    Plot a 2d function using matplotlib/Tk.
+    """
+
+    import warnings
+    warnings.filterwarnings("ignore", "Could not match \S")
+
+    p = import_module('pylab')
+    if not p:
+        sys.exit("Matplotlib is required to use mplot2d.")
+
+    if not is_sequence(f):
+        f = [f,]
+
+    for f_i in f:
+        x, y = _sample2d(f_i, var)
+        p.plot(x, y,'black')
+
+    p.draw()
+
+    p.ylabel("Transverse beam cordinate")
+    p.xlabel("Propagation coordinate")
+    p.grid(True)
+
+    if show:
+        p.show()
+
+def _sample2d(f, x_args):
+    """
+    Samples a 2d function f over specified intervals and returns two
+    arrays (X, Y) suitable for plotting with matlab (matplotlib)
+    syntax. See examples\mplot2d.py.
+
+    f is a function of one variable, such as x**2.
+    x_args is an interval given in the form (var, min, max, n)
+    """
+    try:
+        f = sympify(f)
+    except SympifyError:
+        raise ValueError("f could not be interpretted as a SymPy function")
+    try:
+        x, x_min, x_max, x_n = x_args
+    except AttributeError:
+        raise ValueError("x_args must be a tuple of the form (var, min, max, n)")
+
+    x_l = float(x_max - x_min)
+    x_d = x_l/float(x_n)
+    X = arange(float(x_min), float(x_max)+x_d, x_d)
+
+    Y = empty(len(X))
+    for i in range(len(X)):
+        try:
+            Y[i] = float(f.subs(x, X[i]))
+        except TypeError:
+            Y[i] = None
+    return X, Y
+
 #TODO
-#def plot_beam():
-#    """Plot the beam radius as it propagates in space."""
-#    pass
+# Add utillites for calculation of optical power and the special points
+# of complex optical system
 
 #TODO
 #def plot_beam_conjugation():
