@@ -201,22 +201,31 @@ def limit(e, z, z0, dir="+"):
 def heuristics(e, z, z0, dir):
     if z0 == oo:
         return limit(e.subs(z, 1/z), z, sympify(0), "+")
-    elif e.is_Mul:
+
+    rv = None
+    bad = (S.Infinity, S.NegativeInfinity, S.NaN, None)
+    if e.is_Mul:
         r = []
         for a in e.args:
             if not a.is_bounded:
                 r.append(a.limit(z, z0, dir))
-        if r:
-            return Mul(*r)
-    elif e.is_Add:
-        r = []
-        for a in e.args:
-            r.append(a.limit(z, z0, dir))
-        return Add(*r)
-    elif e.is_Function:
-        return e.subs(e.args[0], limit(e.args[0], z, z0, dir))
-    msg = "Don't know how to calculate the limit(%s, %s, %s, dir=%s), sorry."
-    raise PoleError(msg % (e, z, z0, dir))
+                if r[-1] in bad:
+                    break
+        else:
+            if r:
+                rv = Mul(*r)
+        if rv is None:
+            n, d = e.as_numer_denom()
+            if d != 1:
+                enew = 1/(d/n).expand()
+                if enew != e:
+                    return limit(enew, z, z0, dir)
+    if rv is None and e.is_Add or e.is_Pow or e.is_Function:
+        rv = e.func(*[limit(a, z, z0, dir) for a in e.args])
+    if rv in bad:
+        msg = "Don't know how to calculate the limit(%s, %s, %s, dir=%s), sorry."
+        raise PoleError(msg % (e, z, z0, dir))
+    return rv
 
 
 class Limit(Expr):

@@ -274,6 +274,12 @@ def test_issue835():
     assert limit((1 + x**log(3))**(1/x), x, 0) == 1
     assert limit((5**(1/x) + 3**(1/x))**x, x, 0) == 5
 
+def test_issue2856():
+    assert limit((x**16)/(1+x**16), x, oo) == 1
+    assert limit(x**(77/3)/(1+x**(77/3)), x, oo) == 1
+    assert limit(x**101.1/(1+x**101.1), x, oo) == 1
+    assert limit(x**sqrt(300)/(1+x**sqrt(300)), x, oo) == 1
+
 def test_newissue():
     assert limit(exp(1/sin(x))/exp(cot(x)), x, 0) == 1
 
