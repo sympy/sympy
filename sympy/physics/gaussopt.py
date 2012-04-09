@@ -202,18 +202,12 @@ class FreeSpace(RayTransferMatrix):
     def __mul__(self, other):
         if isinstance(other, FreeSpace):
             return FreeSpace(self.B + other.B)
-        else :
+        else:
             return RayTransferMatrix.__mul__(self, other)
 
 class FlatRefraction(RayTransferMatrix):
     """
     Ray Transfer Matrix for refraction.
-
-    Parameters
-    ==========
-
-    n1: refractive index of one medium
-    n2: refractive index of other medium
 
     See Also
     ========
@@ -225,14 +219,12 @@ class FlatRefraction(RayTransferMatrix):
 
     >>> from sympy.physics.gaussopt import FlatRefraction
     >>> from sympy import symbols
-    >>> n1, n2 = symbols('n1 n2')
-    >>> FlatRefraction(n1, n2)
-    [1,     0]
-    [0, n1/n2]
+    >>> FlatRefraction()
+    [1, 0]
+    [0, 1]
     """
-    def __new__(cls, n1, n2):
-        n1, n2 = sympify((n1, n2))
-        return RayTransferMatrix.__new__(cls, 1, 0, 0, n1/n2)
+    def __new__(cls):
+        return RayTransferMatrix.__new__(cls, 1, 0, 0, 1)
 
 class CurvedRefraction(RayTransferMatrix):
     """
@@ -244,6 +236,7 @@ class CurvedRefraction(RayTransferMatrix):
     R: radius of curvature (positive for concave),
     n1: refractive index of one medium
     n2: refractive index of other medium
+    D: optical opwer ((n2 - n1) / R = 1/f, where f - focal length)
 
     See Also
     ========
@@ -257,12 +250,31 @@ class CurvedRefraction(RayTransferMatrix):
     >>> from sympy import symbols
     >>> R, n1, n2 = symbols('R n1 n2')
     >>> CurvedRefraction(R, n1, n2)
-    [               1,     0]
-    [(n1 - n2)/(R*n2), n1/n2]
+    [          1, 0]
+    [(n1 - n2)/R, 1]
+    
+    >>> CurvedRefraction((n2-n1)/R)
+    [            1, 0]
+    [-(-n1 + n2)/R, 1]
+    
+    >>> D1, D2 = symbols('D1 D2')
+    >>> CurvedRefraction(D1)*CurvedRefraction(D2)
+    [       1, 0]
+    [-D1 - D2, 1]
     """
-    def __new__(cls, R, n1, n2):
-        R, n1 , n2 = sympify((R, n1, n2))
-        return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R/n2, n1/n2)
+    def __new__(cls, *args):
+        if len(args) == 1:
+            return RayTransferMatrix.__new__(cls, 1, 0, -args[0], 1)        
+        elif len(args) == 3:
+            R, n1 , n2 = sympify((args[0], args[1], args[2]))
+            return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R, 1)
+        else :
+            raise ValueError(filldedent('''
+                Expecting focal length or the 3 elements n1, n2, R
+                but got %s''' % str(args)))            
+    def __mul__(self, other):
+        if isinstance(other, CurvedRefraction):
+            return CurvedRefraction(- self.C - other.C)
 
 class FlatMirror(RayTransferMatrix):
     """
@@ -350,6 +362,7 @@ class GeometricRay(Matrix):
     ==========
 
     height and angle or 2x1 matrix (Matrix(2, 1, [height, angle]))
+    n : refraction index (default = 1.0)
 
     Examples
     =======
@@ -369,7 +382,12 @@ class GeometricRay(Matrix):
     >>> GeometricRay( Matrix( ((h,), (angle,)) ) )
     [    h]
     [angle]
-
+    
+    >>> ni = symbols('ni')
+    >>> GeometricRay(h, angle, n=ni)
+    [       h]
+    [angle*ni]
+    
     See Also
     ========
 
@@ -377,12 +395,21 @@ class GeometricRay(Matrix):
 
     """
 
-    def __new__(cls, *args):
+    def __new__(cls, *args, **kwargs):
+        if len(kwargs) > 1:
+            raise VelueError(filldedent('''
+                Expecting only 1 named agrument
+                n (refraction) index but got %s''' % str(args)))
+        else:
+            if 'n' in kwargs:
+                n = kwargs['n']
+            else:
+                n = 1
         if len(args) == 1 and isinstance(args[0], Matrix) \
                           and args[0].shape == (2, 1):
             temp = args[0]
         elif len(args) == 2:
-            temp = ((args[0],), (args[1],))
+            temp = ((args[0],), (args[1]*n,))
         else:
             raise ValueError(filldedent('''
                 Expecting 2x1 Matrix or the 2 elements of
@@ -828,3 +855,7 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
 #    conjugate_gauss_beams
 #    """
 #    pass
+
+if __name__ == '__main__' :
+    import doctest
+    doctest.testmod()

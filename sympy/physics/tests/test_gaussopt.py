@@ -15,14 +15,15 @@ def test_gauss_opt():
     assert mat == RayTransferMatrix( Matrix([[1,2],[3,4]]) )
     assert [mat.A, mat.B, mat.C, mat.D] == [1, 2, 3, 4]
 
-    d, f, h, n1, n2, R = symbols('d f h n1 n2 R')
+    d, f, h, n1, n2, R, D1, D2 = symbols('d f h n1 n2 R D1 D2')
     lens = ThinLens(f)
     assert lens == Matrix([[   1, 0], [-1/f, 1]])
     assert lens.C == -1/f
     assert FreeSpace(d) == Matrix([[ 1, d], [0, 1]])
     assert FreeSpace(d, n1) == Matrix([[1, d/n1], [0,   1]])
     assert FlatRefraction(n1, n2) == Matrix([[1,     0], [0, n1/n2]])
-    assert CurvedRefraction(R, n1, n2) == Matrix([[1, 0], [(n1 - n2)/(R*n2), n1/n2]])
+    assert CurvedRefraction(R, n1, n2) == Matrix([[1, 0], [(n1 - n2)/R, 1]])
+    assert CurvedRefraction(D1)*CurvedRefraction(D2) == Matrix([[       1, 0],[-D1 - D2, 1]])
     assert FlatMirror() == Matrix([[1, 0], [0, 1]])
     assert CurvedMirror(R) == Matrix([[   1, 0], [-2/R, 1]])
     assert ThinLens(f) == Matrix([[   1, 0], [-1/f, 1]])
@@ -41,6 +42,8 @@ def test_gauss_opt():
     assert GeometricRay( Matrix( ((h,),(angle,)) ) ) == Matrix([[h], [angle]])
     assert (FreeSpace(d)*GeometricRay(h,angle)).height == angle*d + h
     assert (FreeSpace(d)*GeometricRay(h,angle)).angle == angle
+    ni = symbols('ni')
+    assert GeometricRay(h, angle, n=ni) == Matrix([[    h], [angle*ni]])
 
     p = BeamParameter(530e-9, 1, w=1e-3)
     assert streq(p.q, 1 + 1.88679245283019*I*pi)
