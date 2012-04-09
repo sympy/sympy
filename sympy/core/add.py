@@ -628,24 +628,74 @@ class Add(AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x):
-        # TODO this does not need to call nseries!
-        coeff, terms = self.collect(x).as_coeff_add(x)
-        has_unbounded = bool([f for f in self.args if f.is_unbounded])
-        if has_unbounded:
-            if isinstance(terms, Basic):
-                terms = terms.args
-            terms = [f for f in terms if not f.is_bounded]
-        n = 1
-        s = self.nseries(x, n=n).collect(x) # could be 1/x + 1/(y*x)
-        while s.is_Order:
-            n +=1
+        from sympy import expand_mul
+
+        old = self
+
+        self = expand_mul(self)
+        if not self.is_Add:
+            return self.as_leading_term(x)
+
+        unbounded = [t for t in self.args if t.is_unbounded]
+        if unbounded:
+            print unbounded
+            return Add._from_args(unbounded)
+
+        self = Add(*[t.as_leading_term(x) for t in self.args])
+        if not self.is_Add:
+            return self
+
+        # of those that have x as a base, keep only the smallest exponent
+        other, xbase = self.as_coeff_add(x)
+        other = [other] if other else []
+        xbase = list(xbase)
+        for i, a in enumerate(xbase):
+            c, m = a.as_coeff_mul(x)
+            if len(m) == 1:
+                b, e = m[0].as_base_exp()
+                if b == x and e.is_number:
+                    xbase[i] = (b, e, c)
+                    continue
+            other.append(a)
+            xbase[i] = 0
+        xbase = [w for w in xbase if w]
+        rv = None
+        if xbase:
+            min_e = min(e for b,e,c in xbase)
+            if min_e < 0:
+                # x**neg is bigger than any non-x value
+                other = [o for o in other if x in o.free_symbols]
+            elif other:
+                rv = Add(*other)
+                if x not in rv.free_symbols:
+                    return rv
+            xbase = [Add(*[c for b,e,c in xbase if e == min_e])*x**min_e]
+            self = Add(*(xbase + other))
+            if not self.is_Add:
+                return self.as_leading_term(x)
+
+        lst = self.extract_leading_order(x)
+        self = Add(*[e for (e, f) in lst])
+        if not self.is_Add:
+            return self.as_leading_term(x)
+
+        # return self # but in case I'm wrong check it
+        n = 0
+        while 1:
+            n += 1
             s = self.nseries(x, n=n)
-        if s.is_Add:
-            s = s.removeO()
+            if not s.is_Order:
+                break
+        s = s.removeO()
+        s = s.collect(x) # could be 1/x + 1/(y*x)
         if s.is_Add:
             lst = s.extract_leading_order(x)
-            return Add(*[e for (e,f) in lst])
-        return s.as_leading_term(x)
+            rv = Add(*[e for (e,f) in lst])
+        else:
+            rv = s.as_leading_term(x)
+
+        assert rv == self # if this ever fails the while-loop is needed
+        return rv
 
     def _eval_conjugate(self):
         return Add(*[t.conjugate() for t in self.args])
