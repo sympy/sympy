@@ -236,7 +236,7 @@ class CurvedRefraction(RayTransferMatrix):
     R: radius of curvature (positive for concave),
     n1: refractive index of one medium
     n2: refractive index of other medium
-    D: optical opwer ((n2 - n1) / R = 1/f, where f - focal length)
+    D: optical power ((n2 - n1) / R = 1/f, where f - focal length)
 
     See Also
     ========
@@ -271,10 +271,15 @@ class CurvedRefraction(RayTransferMatrix):
         else :
             raise ValueError(filldedent('''
                 Expecting focal length or the 3 elements n1, n2, R
-                but got %s''' % str(args)))            
+                but got %s''' % str(args)))
+        
     def __mul__(self, other):
         if isinstance(other, CurvedRefraction):
             return CurvedRefraction(- self.C - other.C)
+        elif isinstance(other, ThinLens):
+            return ThinLens(- self.C - other.C)
+        else:
+            return ReyTransferMatrix.__mul__(self, other)
 
 class FlatMirror(RayTransferMatrix):
     """
@@ -321,7 +326,7 @@ class CurvedMirror(RayTransferMatrix):
         R = sympify(R)
         return RayTransferMatrix.__new__(cls, 1, 0, -2/R, 1)
 
-class ThinLens(RayTransferMatrix):
+class ThinLens(CurvedRefraction):
     """
     Ray Transfer Matrix for a thin lens.
 
@@ -348,6 +353,7 @@ class ThinLens(RayTransferMatrix):
     def __new__(cls, f):
         f = sympify(f)
         return RayTransferMatrix.__new__(cls, 1, 0, -1/f, 1)
+    
 
 
 ###
