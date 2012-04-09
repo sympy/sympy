@@ -5,6 +5,7 @@ Generating and counting primes.
 import random
 from bisect import bisect
 from primetest import isprime
+from sympy.utilities.misc import normalize_args
 
 # Using arrays for sieving instead of lists greatly reduces
 # memory consumption
@@ -32,6 +33,8 @@ class Sieve:
     def extend(self, N):
         """Grow the sieve to cover all numbers <= N.
 
+        N must be an integer (a rational will work as well).
+
         Examples
         ========
 
@@ -42,9 +45,11 @@ class Sieve:
         """
         if N <= self._list[-1]:
             return
+        N = int(N)
 
-        # We need to sieve against all bases up to sqrt(n). If there
-        # are too few, extend the list recursively.
+        # We need to sieve against all bases up to sqrt(n).
+        # This is a recursive call that will do nothing if there are enough
+        # known bases already.
         maxbase = int(N**0.5)+1
         self.extend(maxbase)
 
@@ -63,8 +68,11 @@ class Sieve:
         # Merge the sieves
         self._list += _array('l', [x for x in newsieve if x])
 
+    @normalize_args(None, int)
     def extend_to_no(self, n):
-        """Extend to include (at least) the nth prime numbers
+        """Extend to include (at least) the nth prime number.
+
+        n must be an integer.
 
         Examples
         ========
@@ -74,12 +82,13 @@ class Sieve:
         >>> sieve[10] == 29
         True
         """
-        n = int_tested(n, strict=False)
         while len(self._list) < n:
             self.extend(int(self._list[-1] * 1.5))
 
     def primerange(self, a, b):
         """Generate all prime numbers in the range [a, b).
+
+        a and b must be integers or rationals.
 
         Examples
         ========
@@ -107,6 +116,8 @@ class Sieve:
         """For n >= 2, return the tightest a, b such that
         self[a] <= n <= self[b]
 
+        n must be an integer (a rational will work as well).
+
         Examples
         ========
 
@@ -114,9 +125,8 @@ class Sieve:
         >>> sieve.search(25)
         (9, 10)
         """
-        n = int_tested(n, strict=False)
         if n < 2:
-            raise ValueError("n must be greater than 1")
+            raise ValueError("n must be at least 2")
         if n > self._list[-1]:
             self.extend(n)
         b = bisect(self._list, n)
@@ -126,11 +136,14 @@ class Sieve:
             return b, b+1
 
     def __contains__(self, n):
+        if n != int(n):
+            return False
         if n < 2:
             return False
         a, b = self.search(n)
         return a == b
 
+    @normalize_args(None, int)
     def __getitem__(self, n):
         """Return the nth prime number"""
         self.extend_to_no(n)
@@ -140,11 +153,13 @@ class Sieve:
 # Generate a global object for repeated use in trial division etc
 sieve = Sieve()
 
-
+@normalize_args(int)
 def prime(n):
     """ Return the nth prime, with the primes indexed as prime(1) = 2,
         prime(2) = 3, etc.... The nth prime is approximately n*log(n) and
         can never be larger than 2**n.
+
+        n must be an integer.
 
         References
         ==========
@@ -167,15 +182,15 @@ def prime(n):
         primerange : Generate all primes in a given range
         primepi : Return the number of primes less than or equal to n
     """
-    n = int_tested(n, strict=False)
     if n < 1:
-        raise ValueError("n must be a positive number");
+        raise ValueError("n must be a positive integer");
     return sieve[n]
 
 def primepi(n):
     """ Return the value of the prime counting function pi(n) = the number
-        of prime numbers less than or equal to n. The number n need not
-        necessarily be an integer.
+        of prime numbers less than or equal to n.
+
+        n must be an integer (a rational will work as well).
 
         Examples
         ========
@@ -191,15 +206,18 @@ def primepi(n):
         primerange : Generate all primes in a given range
         prime : Return the nth prime
     """
-    n = int_tested(n, strict=False)
+    n = int(n)
     if n < 2:
         return 0
     else:
-        n = int(n)
         return sieve.search(n)[0]
 
+@normalize_args(None, int)
 def nextprime(n, i=1):
     """ Return the ith prime greater than n.
+
+        n must be an integer (a rational will work as well).
+        i must be an integer.
 
         Potential primes are located at 6*j +/- 1.
 
@@ -216,7 +234,6 @@ def nextprime(n, i=1):
         primerange : Generate all primes in a given range
 
     """
-    n = int_tested(n, strict=False)
     if i > 1:
         pr = n
         j = 1
@@ -256,6 +273,8 @@ def nextprime(n, i=1):
 def prevprime(n):
     """ Return the largest prime smaller than n.
 
+        n must be an integer (a rational will work as well).
+
         Potential primes are located at 6*j +/- 1.
 
         >>> from sympy import prevprime
@@ -268,7 +287,7 @@ def prevprime(n):
         nextprime : Return the ith prime greater than n
         primerange : Generates all primes in a given range
     """
-    n = int_tested(n, strict=False)
+    n = int(n)
     if n < 3:
         raise ValueError("no preceding primes")
     if n < 8:
@@ -291,6 +310,8 @@ def prevprime(n):
 
 def primerange(a, b):
     """ Generate a list of all prime numbers in the range [a, b).
+
+        a and b must integers (rationals will work as well).
 
         Some famous conjectures about the occurence of primes in a given
         range are [1]:
@@ -343,6 +364,8 @@ def primerange(a, b):
 def randprime(a, b):
     """ Return a random prime number in the range [a, b).
 
+        a and b must be integers (rationals will work as well).
+
         Bertrand's postulate assures that
         randprime(a, 2*a) will always succeed for a > 1.
 
@@ -375,10 +398,13 @@ def randprime(a, b):
         raise ValueError("no primes exist in the specified range")
     return p
 
+@normalize_args(int)
 def primorial(n, nth=True):
     """
     Returns the product of either 1. the first n primes (default) or
     2. the primes less than or equal to n (when ``nth=False``).
+
+    n must be an integer.
 
     >>> from sympy.ntheory.generate import primorial, randprime, primerange
     >>> from sympy import factorint, Mul, primefactors
@@ -411,7 +437,6 @@ def primorial(n, nth=True):
     primerange : Generate all primes in a given range
 
     """
-    n = int_tested(n, strict=False)
     if n < 1:
         raise ValueError("primorial argument must be >= 1")
     p = 1
@@ -508,5 +533,3 @@ def cycle_length(f, x0, nmax=None, values=False):
         if mu:
             mu -= 1
         yield lam, mu
-
-from sympy.ntheory.residue_ntheory import int_tested
