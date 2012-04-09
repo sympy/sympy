@@ -1,5 +1,5 @@
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
-        multinomial_coefficients, Mul, S, Pow
+        multinomial_coefficients, Mul, S, Pow, sieve
 from sympy import factorial as fac
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
@@ -118,6 +118,7 @@ def test_prime():
     assert prime(4096) == 38873
     assert prime(9096) == 94321
     assert prime(25023) == 287341
+    raises(ValueError, 'prime(0)')
 
 def test_primepi():
     assert primepi(1) == 0
@@ -542,3 +543,10 @@ def test_modular():
     assert solve_congruence(*zip([-10, 2, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
     assert solve_congruence(*zip((1, 1, 2),(3, 2, 4))) is None
     raises(ValueError, 'solve_congruence(*zip([3, 4, 2], [12.1, 35, 17]))')
+
+def test_search():
+    assert 2 in sieve
+    assert 2.1 not in sieve
+    assert 1 not in sieve
+    assert 2**1000 not in sieve
+    raises(ValueError, 'sieve.search(1)')
