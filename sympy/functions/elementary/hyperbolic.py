@@ -139,7 +139,7 @@ class sinh(HyperbolicFunction):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return S.One
         else:
             return self.func(arg)
@@ -273,7 +273,7 @@ class cosh(HyperbolicFunction):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return S.One
         else:
             return self.func(arg)
@@ -410,7 +410,7 @@ class tanh(HyperbolicFunction):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return S.One
         else:
             return self.func(arg)
@@ -541,7 +541,7 @@ class coth(HyperbolicFunction):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return S.One
         else:
             return self.func(arg)
@@ -624,7 +624,7 @@ class asinh(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -733,7 +733,7 @@ class acosh(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -804,7 +804,7 @@ class atanh(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -872,7 +872,7 @@ class acoth(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return arg
         else:
             return self.func(arg)
