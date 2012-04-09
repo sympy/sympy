@@ -1,6 +1,7 @@
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple)
+from sympy.core.basic import _aresame
 from sympy.core.power import integer_nthroot
 from sympy.utilities.pytest import XFAIL, slow
 
@@ -337,8 +338,12 @@ def test_Float():
     assert Float(S.One) is S.One
 
     i = 12345678901234567890
-    assert Float(i) == Float(i, 20)
-    assert Float(12) == 12.0
+    assert _aresame(Float(12), Integer(12))
+    assert _aresame(Float(12, ''), Float('12', ''))
+    assert _aresame(Float(i), Integer(i))
+    assert _aresame(Float(Integer(i), ''), Float(i, ''))
+    assert _aresame(Float(i, ''), Float(str(i), 20))
+    assert not _aresame(Float(str(i)), Float(i, ''))
 
     # inexact floats (repeating binary = denom not multiple of 2)
     # cannot have precision greater than 15
@@ -357,6 +362,7 @@ def test_Float():
     assert Float('.125', '') == Float(.125, 3)
     assert Float('.100', '') == Float(.1, 3)
     assert Float('2.0', '') == Float('2', 2)
+
     raises(ValueError, 'Float("12.3d-4", "")')
     raises(ValueError, 'Float(12.3, "")')
     raises(ValueError, "Float('.')")
