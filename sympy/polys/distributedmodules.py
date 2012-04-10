@@ -48,6 +48,9 @@ def sdm_monomial_mul(M, X):
     Multiply tuple ``X`` representing a monomial of `K[X]` into the tuple
     ``M`` representing a monomial of `F`.
 
+    Examples
+    ========
+
     Multiplying `xy^3` into `x f_1` yields `x^2 y^3 f_1`:
 
     >>> from sympy.polys.distributedmodules import sdm_monomial_mul
@@ -60,6 +63,9 @@ def sdm_monomial_deg(M):
     """
     Return the total degree of ``M``.
 
+    Examples
+    ========
+
     For example, the total degree of `x^2 y f_5` is 3:
 
     >>> from sympy.polys.distributedmodules import sdm_monomial_deg
@@ -71,6 +77,9 @@ def sdm_monomial_deg(M):
 def sdm_monomial_divides(A, B):
     """
     Does there exist a (polynomial) monomial X such that XA = B?
+
+    Examples
+    ========
 
     Positive examples:
 
@@ -125,6 +134,9 @@ def sdm_add(f, g, O, K):
     Addition is done over the ground field ``K``, monomials are ordered
     according to ``O``.
 
+    Examples
+    ========
+
     All examples use lexicographic order.
 
     `(xy f_1) + (f_2) = f_2 + xy f_1`
@@ -154,6 +166,9 @@ def sdm_LM(f):
 
     Only valid if `f \ne 0`.
 
+    Examples
+    ========
+
     >>> from sympy.polys.distributedmodules import sdm_LM, sdm_from_dict
     >>> from sympy.polys import QQ, lex
     >>> dic = {(1, 2, 3): QQ(1), (4, 0, 0): QQ(1), (4, 0, 1): QQ(1)}
@@ -167,6 +182,9 @@ def sdm_LT(f):
     Returns the leading term of ``f``.
 
     Only valid if `f \ne 0`.
+
+    Examples
+    ========
 
     >>> from sympy.polys.distributedmodules import sdm_LT, sdm_from_dict
     >>> from sympy.polys import QQ, lex
@@ -182,6 +200,9 @@ def sdm_mul_term(f, term, O, K):
 
     Multiplication of coefficients is done over the ground field ``K``, and
     monomials are ordered according to ``O``.
+
+    Examples
+    ========
 
     `0 f_1 = 0`
     >>> from sympy.polys.distributedmodules import sdm_mul_term
@@ -225,6 +246,9 @@ def sdm_deg(f):
     This is the maximum of the degrees of all its monomials.
     Invalid if ``f`` is zero.
 
+    Examples
+    ========
+
     >>> from sympy.polys.distributedmodules import sdm_deg
     >>> sdm_deg([((1, 2, 3), 1), ((10, 0, 1), 1), ((2, 3, 4), 4)])
     7
@@ -241,6 +265,9 @@ def sdm_from_vector(vec, O, K, **opts):
     Coefficients are created in the ground field ``K``, and terms are ordered
     according to monomial order ``O``. Named arguments are passed on to the
     polys conversion code and can be used to specify for example generators.
+
+    Examples
+    ========
 
     >>> from sympy.polys.distributedmodules import sdm_from_vector
     >>> from sympy.abc import x, y, z
@@ -262,6 +289,9 @@ def sdm_to_vector(f, gens, K, n=None):
     The generators for the polynomial ring are specified via ``gens``. The rank
     of the module is guessed, or passed via ``n``. The ground field is assumed
     to be ``K``.
+
+    Examples
+    ========
 
     >>> from sympy.polys.distributedmodules import sdm_to_vector
     >>> from sympy.abc import x, y, z
@@ -299,6 +329,9 @@ def sdm_spoly(f, g, O, K):
     combination of `f` and `g` in which the leading terms cancel.
     See [SCA, defn 2.3.6] for details.
 
+    Examples
+    ========
+
     >>> from sympy.polys.distributedmodules import sdm_spoly
     >>> from sympy.polys import QQ, lex
     >>> f = [((2, 1, 1), QQ(1)), ((1, 0, 1), QQ(1))]
@@ -331,6 +364,9 @@ def sdm_ecart(f):
     total degree of the leading monomial of `f` [SCA, defn 2.3.7].
 
     Invalid if f is zero.
+
+    Examples
+    ========
 
     >>> from sympy.polys.distributedmodules import sdm_ecart
     >>> sdm_ecart([((1, 2, 3), 1), ((1, 0, 1), 1)])
