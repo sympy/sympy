@@ -2,6 +2,7 @@
 
 from sympy.polys.domains.ring import Ring
 from sympy.polys.polyerrors import NotReversible, CoercionFailed
+from sympy.polys.agca.modules import FreeModuleQuotientRing
 
 # TODO
 # - successive quotients (when quotient ideals are implemented)
@@ -187,3 +188,14 @@ class QuotientRing(Ring):
 
     def is_zero(self, a):
         return self.base_ideal.contains(a.data)
+
+    def free_module(self, rank):
+        """
+        Generate a free module of rank ``rank`` over ``self``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> (QQ[x]/[x**2 + 1]).free_module(2)
+        (QQ[x]/<x**2 + 1>)**2
+        """
+        return FreeModuleQuotientRing(self, rank)

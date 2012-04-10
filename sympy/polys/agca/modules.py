@@ -22,6 +22,7 @@ from copy import copy
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.monomialtools import ProductOrder, monomial_key
 from sympy.polys.domains import Field
+from sympy.polys.agca.ideals import Ideal
 
 from sympy.core.compatibility import iterable
 
@@ -60,6 +61,7 @@ class Module(object):
     - quotient_module
     - is_zero
     - is_submodule
+    - multiply_ideal
 
     The method convert likely needs to be changed in subclasses.
     """
@@ -130,6 +132,22 @@ class Module(object):
     def is_submodule(self, other):
         """Returns True if ``other`` is a submodule of ``self``."""
         raise NotImplementedError
+
+    def multiply_ideal(self, other):
+        """
+        Multiply ``self`` by the ideal ``other``.
+        """
+        raise NotImplementedError
+
+    def __mul__(self, e):
+        if not isinstance(e, Ideal):
+            try:
+                e = self.ring.ideal(e)
+            except (CoercionFailed, NotImplementedError):
+                return NotImplemented
+        return self.multiply_ideal(e)
+
+    __rmul__ = __mul__
 
 class ModuleElement(object):
     """
@@ -219,7 +237,10 @@ class ModuleElement(object):
 
     def __eq__(self, om):
         if not isinstance(om, self.__class__) or om.module != self.module:
-            om = self.module.convert(om)
+            try:
+                om = self.module.convert(om)
+            except CoercionFailed:
+                return False
         return self.eq(self.data, om.data)
 
     def __ne__(self, om):
@@ -370,6 +391,19 @@ class FreeModule(Module):
         """
         return QuotientModule(self.ring, self, submodule)
 
+    def multiply_ideal(self, other):
+        """
+        Multiply ``self`` by the ideal ``other``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> I = QQ[x].ideal(x)
+        >>> F = QQ[x].free_module(2)
+        >>> F.multiply_ideal(I)
+        <[x, 0], [0, x]>
+        """
+        return self.submodule(*self.basis()).multiply_ideal(other)
+
 class FreeModulePolyRing(FreeModule):
     """
     Free module over a generalized polynomial ring.
@@ -412,6 +446,91 @@ class FreeModulePolyRing(FreeModule):
         False
         """
         return SubModulePolyRing(gens, self, **opts)
+
+class FreeModuleQuotientRing(FreeModule):
+    """
+    Free module over a quotient ring.
+
+    Do not instantiate this, use the constructor method of the ring instead:
+
+    >>> from sympy.abc import x
+    >>> from sympy import QQ
+    >>> F = (QQ[x]/[x**2 + 1]).free_module(3)
+    >>> F
+    (QQ[x]/<x**2 + 1>)**3
+
+    Attributes
+
+    - quot - the quotient module `R^n / IR^n`, where `R/I` is our ring
+    """
+
+    def __init__(self, ring, rank):
+        from sympy.polys.domains import QuotientRing
+        FreeModule.__init__(self, ring, rank)
+        if not isinstance(ring, QuotientRing):
+            raise NotImplementedError('This implementation only works over '
+                             + 'quotient rings, got %s' % ring)
+        F = self.ring.ring.free_module(self.rank)
+        self.quot = F / (self.ring.base_ideal*F)
+
+    def __repr__(self):
+        return "(" + repr(self.ring) + ")" + "**" + repr(self.rank)
+
+    def submodule(self, *gens, **opts):
+        """
+        Generate a submodule.
+
+        >>> from sympy.abc import x, y
+        >>> from sympy import QQ
+        >>> M = (QQ[x, y]/[x**2 - y**2]).free_module(2).submodule([x, x + y])
+        >>> M
+        <[x + <x**2 - y**2>, x + y + <x**2 - y**2>]>
+        >>> M.contains([y**2, x**2 + x*y])
+        True
+        >>> M.contains([x, y])
+        False
+        """
+        return SubModuleQuotientRing(gens, self, **opts)
+
+    def lift(self, elem):
+        """
+        Lift the element ``elem`` of self to the module self.quot.
+
+        Note that self.quot is the same set as self, just as an R-module
+        and not as an R/I-module, so this makes sense.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> F = (QQ[x]/[x**2 + 1]).free_module(2)
+        >>> e = F.convert([1, 0])
+        >>> e
+        [1 + <x**2 + 1>, 0 + <x**2 + 1>]
+        >>> L = F.quot
+        >>> l = F.lift(e)
+        >>> l
+        [1, 0] + <[x**2 + 1, 0], [0, x**2 + 1]>
+        >>> L.contains(l)
+        True
+        """
+        return self.quot.convert([x.data for x in elem])
+
+    def unlift(self, elem):
+        """
+        Push down an element of self.quot to self.
+
+        This undoes ``lift``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> F = (QQ[x]/[x**2 + 1]).free_module(2)
+        >>> e = F.convert([1, 0])
+        >>> l = F.lift(e)
+        >>> e == l
+        False
+        >>> e == F.unlift(l)
+        True
+        """
+        return self.convert(elem.data)
 
 ##########################################################################
 ## Submodules and subquotients ###########################################
@@ -663,6 +782,19 @@ class SubModule(Module):
 
     __radd__ = __add__
 
+    def multiply_ideal(self, I):
+        """
+        Multiply ``self`` by the ideal ``I``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> I = QQ[x].ideal(x**2)
+        >>> M = QQ[x].free_module(2).submodule([1, 1])
+        >>> I*M
+        <[x**2, x**2]>
+        """
+        return self.submodule(*[x*g for [x] in I._module.gens for g in self.gens])
+
 class SubQuotientModule(SubModule):
     """
     Submodule of a quotient module.
@@ -688,11 +820,30 @@ class SubQuotientModule(SubModule):
     def __init__(self, gens, container, **opts):
         SubModule.__init__(self, gens, container)
         self.killed_module = self.container.killed_module
+        # XXX it is important for some code below that the generators of base
+        #     are in this particular order!
         self.base = self.container.base.submodule(
                         *[x.data for x in self.gens], **opts).union(self.killed_module)
 
     def _contains(self, elem):
         return self.base.contains(elem.data)
+
+    def _syzygies(self):
+        # let N = self.killed_module be generated by e_1, ..., e_r
+        # let F = self.base be generated by f_1, ..., f_s and e_1, ..., e_r
+        # Then self = F/N.
+        # Let phi: R**s --> self be the evident surjection.
+        # Similarly psi: R**(s + r) --> F.
+        # We need to find generators for ker(phi). Let chi: R**s --> F be the
+        # evident lift of phi. For X in R**s, phi(X) = 0 iff chi(X) is
+        # contained in N, iff there exists Y in R**r such that
+        # psi(X, Y) = 0.
+        # Hence if alpha: R**(s + r) --> R**s is the projection map, then
+        # ker(phi) = alpha ker(psi).
+        return [X[:len(self.gens)] for X in self.base._syzygies()]
+
+    def _in_terms_of_generators(self, e):
+        return self.base._in_terms_of_generators(e.data)[:len(self.gens)]
 
 _subs0 = lambda x: x[0]
 _subs1 = lambda x: x[1:]
@@ -806,6 +957,43 @@ class SubModulePolyRing(SubModule):
                 self.ring._vector_to_sdm(x, self.order), self._groebner(),
                     self.order, self.ring.dom),
                 self.rank))
+
+class SubModuleQuotientRing(SubModule):
+    """
+    Class for submodules of free modules over quotient rings.
+
+    Do not instantiate this. Instead use the submodule methods.
+
+    >>> from sympy.abc import x, y
+    >>> from sympy import QQ
+    >>> M = (QQ[x, y]/[x**2 - y**2]).free_module(2).submodule([x, x + y])
+    >>> M
+    <[x + <x**2 - y**2>, x + y + <x**2 - y**2>]>
+    >>> M.contains([y**2, x**2 + x*y])
+    True
+    >>> M.contains([x, y])
+    False
+
+    Attributes:
+
+    - quot - the subquotient of `R^n/IR^n` generated by lifts of our generators
+    """
+
+    def __init__(self, gens, container):
+        SubModule.__init__(self, gens, container)
+        self.quot = self.container.quot.submodule(
+            *[self.container.lift(x) for x in self.gens])
+
+    def _contains(self, elem):
+        return self.quot._contains(self.container.lift(elem))
+
+    def _syzygies(self):
+        return [tuple(self.ring.convert(y, self.quot.ring) for y in x)
+                    for x in self.quot._syzygies()]
+
+    def _in_terms_of_generators(self, elem):
+        return [self.ring.convert(x, self.quot.ring) for x in \
+            self.quot._in_terms_of_generators(self.container.lift(elem))]
 
 ##########################################################################
 ## Quotient Modules ######################################################

@@ -207,6 +207,10 @@ def test_syzygy():
     S = R.free_module(3).submodule([0, x, -y], [z, -x, 0])
     assert M.syzygy_module() == S
 
+    M2 = M / ([x*y*z],)
+    S2 = R.free_module(3).submodule([z, 0, 0], [0, x, 0], [0, 0, y])
+    assert M2.syzygy_module() == S2
+
     F = R.free_module(3)
     assert F.submodule(*F.basis()).syzygy_module() == F.submodule()
 
@@ -215,6 +219,10 @@ def test_in_terms_of_generators():
     M = R.free_module(2).submodule([2*x, 0], [1, 2])
     assert M.in_terms_of_generators([x, x]) == [R.convert(S(1)/4), R.convert(x/2)]
     raises(ValueError, lambda: M.in_terms_of_generators([1, 0]))
+
+    M = R.free_module(2) / ([x, 0], [1, 1])
+    SM = M.submodule([1, x])
+    assert SM.in_terms_of_generators([2, 0]) == [R.convert(2)]
 
 def test_QuotientModuleElement():
     R = QQ[x]
