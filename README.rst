@@ -1,6 +1,9 @@
 SymPy
 =====
 
+.. image:: https://secure.travis-ci.org/vipulnsward/sympy.png?branch=master
+   :target: http://travis-ci.org/vipulnsward/sympy
+
 A Python library for symbolic mathematics.
 
 http://sympy.org/
