@@ -14,11 +14,10 @@ The conventions for the distances are as follows:
     image distance - positive for real images
 """
 
-from numpy import arange, empty
-
 from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
     together, symbols)
 from sympy.external import import_module
+from sympy.mpmath import arange
 from sympy.core.compatibility import is_sequence
 from sympy.utilities.misc import filldedent
 
@@ -990,12 +989,12 @@ def _sample2d(f, x_args):
     x_d = x_l/float(x_n)
     X = arange(float(x_min), float(x_max)+x_d, x_d)
 
-    Y = empty(len(X))
+    Y = []
     for i in range(len(X)):
         try:
-            Y[i] = float(f.subs(x, X[i]))
+            Y.append(float(f.subs(x, X[i])))
         except TypeError:
-            Y[i] = None
+            Y.append(None)
     return X, Y
 
 #TODO
@@ -1015,7 +1014,3 @@ def _sample2d(f, x_args):
 #    conjugate_gauss_beams
 #    """
 #    pass
-
-if __name__ == '__main__' :
-    import doctest
-    doctest.testmod()
