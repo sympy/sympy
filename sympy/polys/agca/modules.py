@@ -872,7 +872,7 @@ class QuotientModule(Module):
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
-        >>> Q = QQ[x].free_module(2) / [(x, 1)]
+        >>> Q = QQ[x].free_module(2) / [(x, x)]
         >>> S = Q.submodule([1, 0])
         >>> Q.is_submodule(S)
         True

@@ -215,3 +215,63 @@ def test_in_terms_of_generators():
     M = R.free_module(2).submodule([2*x, 0], [1, 2])
     assert M.in_terms_of_generators([x, x]) == [R.convert(S(1)/4), R.convert(x/2)]
     raises(ValueError, lambda: M.in_terms_of_generators([1, 0]))
+
+def test_QuotientModuleElement():
+    R = QQ[x]
+    F = R.free_module(3)
+    N = F.submodule([1, x, x**2])
+    M = F/N
+    e = M.convert([x**2, 2, 0])
+
+    assert M.convert([x+1, x**2+x, x**3+x**2]) == 0
+    assert e == [x**2, 2, 0] + N == F.convert([x**2, 2, 0]) + N == \
+           M.convert(F.convert([x**2, 2, 0]))
+
+    assert M.convert([x**2 + 1, 2*x + 2, x**2]) == e + [0, x, 0] == \
+           e + M.convert([0, x, 0]) == e + F.convert([0, x, 0])
+    assert M.convert([x**2 + 1, 2, x**2]) == e - [0, x, 0] == \
+           e - M.convert([0, x, 0]) == e - F.convert([0, x, 0])
+    assert M.convert([0, 2, 0]) == M.convert([x**2, 4, 0]) - e == \
+           [x**2, 4, 0] - e == F.convert([x**2, 4, 0]) - e
+    assert M.convert([x**3 + x**2, 2*x + 2, 0]) == (1 + x)*e == \
+           R.convert(1 + x)*e == e*(1 + x) == e*R.convert(1 + x)
+    assert -e == [-x**2, -2, 0]
+
+    f = [x, x, 0] + N
+    assert M.convert([1, 1, 0]) == f / x == f / R.convert(x)
+
+    M2 = F/[(2, 2*x, 2*x**2), (0, 0, 1)]
+    G = R.free_module(2)
+    M3 = G/[[1, x]]
+    M4 = F.submodule([1, x, x**2], [1, 0, 0]) / N
+    raises(CoercionFailed, lambda: M.convert(G.convert([1, x])))
+    raises(CoercionFailed, lambda: M.convert(M3.convert([1, x])))
+    raises(CoercionFailed, lambda: M.convert(M2.convert([1, x, x])))
+    assert M2.convert(M.convert([2, x, x**2])) == [2, x, 0]
+    assert M.convert(M4.convert([2, 0, 0])) == [2, 0, 0]
+
+def test_QuotientModule():
+    R = QQ[x]
+    F = R.free_module(3)
+    N = F.submodule([1, x, x**2])
+    M = F/N
+
+    assert M != F
+    assert M != N
+    assert M == F / [(1, x, x**2)]
+    assert not M.is_zero()
+    assert (F / F.basis()).is_zero()
+
+    SQ = F.submodule([1, x, x**2], [2, 0, 0]) / N
+    assert SQ == M.submodule([2, x, x**2])
+    assert SQ != M.submodule([2, 1, 0])
+    assert SQ != M
+    assert M.is_submodule(SQ)
+
+    raises(ValueError, lambda: N/F)
+    raises(ValueError, lambda: F.submodule([2, 0, 0]) / N)
+    raises(ValueError, lambda: R.free_module(2)/F)
+
+    M1 = F / [[1, 1, 1]]
+    M2 = M1.submodule([1, 0, 0], [0, 1, 0])
+    assert M1 == M2
