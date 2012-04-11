@@ -5,9 +5,8 @@ python:
   - "2.7"
   - "3.2"
 install:
-  #  Run bin/use2to3 before starting the tests under 3.x
-  - "if [[ $TRAVIS_PYTHON_VERSION == '3.2' ]]; then ./bin/use2to3; fi"
+  #  TODO: Run bin/use2to3 before starting the tests under 3.x
+  
 script: 
   - ./setup.py test
-  - ./bin/test --slow
   - ./bin/doctest  
