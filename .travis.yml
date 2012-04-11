@@ -3,8 +3,10 @@ python:
   - "2.5"
   - "2.6"
   - "2.7"
-  - "3.2"
+
+# - "3.2"
 install:
+  - python setup.py install
   #  TODO: Run bin/use2to3 before starting the tests under 3.x
   
 script: 
