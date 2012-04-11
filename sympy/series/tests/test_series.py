@@ -93,3 +93,7 @@ def test_1484():
 def test_issue_3219():
     eq = (1/x)**(S(2)/3)
     assert (eq + 1).as_leading_term(x) == eq
+
+def test_x_is_base_detection():
+    eq = (x**2)**(S(2)/3)
+    assert eq.series() == eq

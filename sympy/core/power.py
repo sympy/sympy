@@ -794,8 +794,12 @@ class Pow(Expr):
         if e.has(Symbol):
             return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
 
-        if b == x:
-            return powsimp(self, deep=True, combine='exp')
+        # see if the base is as simple as possible
+        bx = b
+        while bx.is_Pow and bx.exp.is_Rational:
+            bx = bx.base
+        if bx == x:
+            return self
 
         # work for b(x)**e where e is not an Integer and does not contain x
         # and hopefully has no other symbols

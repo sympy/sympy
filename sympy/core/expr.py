@@ -2467,9 +2467,9 @@ class Expr(Basic, EvalfMixin):
         ========
 
         >>> from sympy.abc import x
-        >>> (1+x+x**2).as_leading_term(x)
+        >>> (1 + x + x**2).as_leading_term(x)
         1
-        >>> (1/x**2+x+x**2).as_leading_term(x)
+        >>> (1/x**2 + x + x**2).as_leading_term(x)
         x**(-2)
 
         Note:
