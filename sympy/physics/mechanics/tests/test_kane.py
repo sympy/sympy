@@ -212,42 +212,44 @@ def test_aux():
 
 def test_parallel_axis():
     # This is for a 2 dof inverted pendulum on a cart.
-    # This tests the parallel axis code in Kane. The inertia of the pendulum is defined about the cart, not about the mass center.
-    ## Defining the constants and knowns of the system
+    # This tests the parallel axis code in Kane. The inertia of the pendulum is
+    # defined about the cart, not about the mass center.
+
+    # Defining the constants and knowns of the system
     gravity        = symbols('g')
     k, ls          = symbols('k ls')
     a, mA, mC      = symbols('a mA mC')
     F              = dynamicsymbols('F')
     Ix, Iy, Iz     = symbols('Ix Iy Iz')
 
-    ## Declaring the Generalized coordinates and speeds
+    # Declaring the Generalized coordinates and speeds
     q1, q2   = dynamicsymbols('q1 q2')
     q1d, q2d = dynamicsymbols('q1 q2', 1)
     u1, u2   = dynamicsymbols('u1 u2')
     u1d, u2d = dynamicsymbols('u1 u2', 1)
 
-    ## Creating reference frames
+    # Creating reference frames
     N = ReferenceFrame('N')
     A = ReferenceFrame('A')
 
     A.orient(N, 'Axis', [-q2, N.z])
     A.set_ang_vel(N, -u2 * N.z)
 
-    ## Origin of Newtonian reference frame
+    # Origin of Newtonian reference frame
     O = Point('O')
 
-    ## Creating and Locating the positions of the cart,C, and mass center of the pendulum, A
+    # Creating and Locating the positions of the cart,C, and mass center of the pendulum, A
     C  = O.locatenew('C',  q1 * N.x)
     Ao = C.locatenew('Ao', a * A.y)
 
-    ## Defining velocities of the points
+    # Defining velocities of the points
     O.set_vel(N, 0)
     C.set_vel(N, u1 * N.x)
     Ao.v2pt_theory(C, N, A)
     Cart     = Particle('Cart', C, mC)
     Pendulum = RigidBody('Pendulum', Ao, A, mA, (inertia(A, Ix, Iy, Iz), C))
 
-    ## kinematical differential equations
+    # kinematical differential equations
 
     kindiffs  = [q1d - u1, q2d - u2]
 
@@ -263,7 +265,5 @@ def test_parallel_axis():
     km.speeds([u1, u2])
     km.kindiffeq(kindiffs)
     (fr,frstar) = km.kanes_equations(forceList, bodyList)
-    kdd = km.kindiffdict()
-    zero = fr + frstar
     mm = km.mass_matrix_full
     assert mm[3, 3] == -Iz
