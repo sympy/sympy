@@ -28,7 +28,6 @@ from sympy.core.compatibility import iterable
 
 # TODO
 # - intersection
-# - modules over quotient rings
 # - module quotient / saturation
 # - free resoltutions / syzygies
 # - homomorphisms
@@ -844,6 +843,21 @@ class SubQuotientModule(SubModule):
 
     def _in_terms_of_generators(self, e):
         return self.base._in_terms_of_generators(e.data)[:len(self.gens)]
+
+    def is_full_module(self):
+        """
+        Return True if ``self`` is the entire free module.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> F = QQ[x].free_module(2)
+        >>> F.submodule([x, 1]).is_full_module()
+        False
+        >>> F.submodule([1, 1], [1, 2]).is_full_module()
+        True
+        """
+        return self.base.is_full_module()
+
 
 _subs0 = lambda x: x[0]
 _subs1 = lambda x: x[1:]
