@@ -2263,8 +2263,8 @@ class MatrixBase(object):
 
         >>> m = Matrix(2,3,[0, 0, x, -y, 0, 0])
         >>> m
-        [0, 0, 0]
-        [0, 0, 0]
+        [0, 0, x]
+        [-y, 0, 0]
         >>> m.is_anti_symmetric()
         False
 
@@ -2353,7 +2353,7 @@ class MatrixBase(object):
         Possible values for "method":
           bareis ... det_bareis
           berkowitz ... berkowitz_det
-          lu_decomposition ... det_lu_decomposition
+          lu_decomposition ... det_LU_decomposition
 
         See Also
         ========
@@ -2442,6 +2442,10 @@ class MatrixBase(object):
     def det_LU_decomposition(self):
         """Compute matrix determinant using LU decomposition
 
+        Note that this method fails if the LU decomposition itself
+        fails. In particular, if the matrix has no inverse this method
+        will fail.
+        
         TODO: Implement algorithm for sparse matrices (SFF).
 
         See Also
@@ -2457,13 +2461,15 @@ class MatrixBase(object):
             return S.One
 
         M, n = self[:,:], self.rows
-
+        p, prod = [] , 1
         l, u, p = M.LUdecomposition()
-        prod = 1
+        if  len(p)%2 <> 0:
+            prod = -1
+        
         for k in range(n):
-            prod = prod*u[k,k]*l[k,k]
-# currently ignoring p returned...what do I need to do to get this right? comer.d
-
+            prod = prod*u[k,k]*l[k,k] #for the LU decomp used the diagonal elements of L are unity
+                                      # so this mult by l[k,k] is strictly uncecessary
+       
         return prod.expand()
 
     def adjugate(self, method="berkowitz"):
