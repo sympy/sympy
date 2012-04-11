@@ -1,5 +1,13 @@
 language: python
+python:
+  - "2.5"
+  - "2.6"
+  - "2.7"
+  - "3.2"
 install:
-    - python setup.py install
-script:
-    - ./setup.py test
+  #  Run bin/use2to3 before starting the tests under 3.x
+  - "if [[ $TRAVIS_PYTHON_VERSION == '3.2' ]]; then ./bin/use2to3; fi"
+script: 
+  - ./setup.py test
+  - ./bin/test --slow
+  - ./bin/doctest  
