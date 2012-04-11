@@ -2477,7 +2477,7 @@ class Expr(Basic, EvalfMixin):
         self is assumed to be the result returned by Basic.series().
         """
         from sympy import powsimp
-        if len(symbols)>1:
+        if len(symbols) > 1:
             c = self
             for x in symbols:
                 c = c.as_leading_term(x)
@@ -2485,8 +2485,9 @@ class Expr(Basic, EvalfMixin):
         elif not symbols:
             return self
         x = sympify(symbols[0])
-        assert x.is_Symbol, repr(x)
-        if not self.has(x):
+        if not x.is_Symbol:
+            raise ValueError('expecting a Symbol but got %s' % x)
+        if x not in self.free_symbols:
             return self
         obj = self._eval_as_leading_term(x)
         if obj is not None:
