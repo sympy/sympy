@@ -2380,7 +2380,7 @@ class Expr(Basic, EvalfMixin):
             yield series - e
             e = series
 
-    def nseries(self, x=None, x0=0, n=6, dir='+',logx=None):
+    def nseries(self, x=None, x0=0, n=6, dir='+', logx=None):
         """
         Wrapper to _eval_nseries if assumptions allow, else to series.
 

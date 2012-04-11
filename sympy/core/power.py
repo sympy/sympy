@@ -843,20 +843,22 @@ class Pow(Expr):
                 raise ValueError('expecting numerical exponent but got %s' % ei)
 
             nuse = n - ei
-            lt = b.compute_leading_term(x, logx=logx) # arg = sin(x); lt = x
-            #  XXX o is not used -- was this to be used as o and o2 below to compute a new e?
-            o = order*lt**(1 - e)
             bs = b._eval_nseries(x, n=nuse, logx=logx)
-            if bs.is_Add:
-                bs = bs.removeO()
-            if bs.is_Add:
+            terms = bs.removeO()
+            if terms.is_Add:
+                bs = terms
+                lt = terms.as_leading_term(x)
+
                 # bs -> lt + rest -> lt*(1 + (bs/lt - 1))
                 return ((Pow(lt, e)*
                          Pow((bs/lt).expand(), e).
                          nseries(x, n=nuse, logx=logx)).expand() +
                          order)
 
-            return bs**e + order
+            rv = bs**e
+            if terms != bs:
+                rv += order
+            return rv
 
         # either b0 is bounded but neither 1 nor 0 or e is unbounded
         # b -> b0 + (b-b0) -> b0 * (1 + (b/b0-1))
