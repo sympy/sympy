@@ -583,28 +583,28 @@ class Add(AssocOp):
         ========
 
         >>> from sympy.abc import x
-        >>> (x+1+1/x**5).extract_leading_order(x)
+        >>> (x + 1 + 1/x**5).extract_leading_order(x)
         ((x**(-5), O(x**(-5))),)
-        >>> (1+x).extract_leading_order(x)
+        >>> (1 + x).extract_leading_order(x)
         ((1, O(1)),)
-        >>> (x+x**2).extract_leading_order(x)
+        >>> (x + x**2).extract_leading_order(x)
         ((x, O(x)),)
 
         """
         lst = []
         seq = [(f, C.Order(f, *symbols)) for f in self.args]
-        for ef,of in seq:
-            for e,o in lst:
+        for ef, of in seq:
+            for e, o in lst:
                 if o.contains(of) and o != of:
                     of = None
                     break
             if of is None:
                 continue
-            new_lst = [(ef,of)]
-            for e,o in lst:
+            new_lst = [(ef, of)]
+            for e, o in lst:
                 if of.contains(o) and o != of:
                     continue
-                new_lst.append((e,o))
+                new_lst.append((e, o))
             lst = new_lst
         return tuple(lst)
 
@@ -628,7 +628,7 @@ class Add(AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x):
-        from sympy import expand_mul
+        from sympy import expand_mul, factor_terms
 
         old = self
 
@@ -648,40 +648,14 @@ class Add(AssocOp):
         elif not self.is_Add:
             return self
         else:
-            # of those that have x as a base, keep only the smallest exponent
-            other, xbase = self.as_coeff_add(x)
-            other = [other] if other else []
-            xbase = list(xbase)
-            for i, a in enumerate(xbase):
-                c, e = a.as_coeff_exponent(x)
-                if e and e.is_number:
-                    xbase[i] = (c, e)
-                    continue
-                other.append(a)
-                xbase[i] = 0
-            xbase = filter(None, xbase)
-            if xbase:
-                min_e = min(e for c, e in xbase)
-
-                if min_e < 0:
-                    # x**neg is bigger than any non-x value
-                    other = [o for o in other if x in o.free_symbols]
-                elif other:
-                    # all the x-based terms are smaller than anything
-                    # left in others
-                    xbase = []
-
-                # the following line collects all terms with x as base
-                # having an exponent of min_e
-                xbase = [Add(*[c for c, e in xbase if e == min_e])*x**min_e]
-                self = Add(*(xbase + other))
-                if not self.is_Add:
-                    return self
-            else:
-                self = Add(*other)
-
-            i, d = self.as_independent(x, as_Add=True)
-            return d or i
+            plain = Add(*[s for s, _ in self.extract_leading_order(x)])
+            rv = factor_terms(plain, fraction=False)
+            rv_fraction = factor_terms(rv, fraction=True)
+            # if it simplifies to an x-free expression, return that;
+            # tests don't fail if we don't but it seems nicer to do this
+            if x not in rv_fraction.free_symbols:
+                return rv_fraction
+            return rv
 
     def _eval_conjugate(self):
         return Add(*[t.conjugate() for t in self.args])
