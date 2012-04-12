@@ -117,7 +117,8 @@ def limit(e, z, z0, dir="+"):
                 # XXX todo: this should probably be stated in the
                 # negative -- i.e. to exclude expressions that should
                 # not be handled this way but I'm not sure what that
-                # condition is
+                # condition is; when ok is True it means that the leading
+                # term approach is going to succeed (hopefully)
                 ok = lambda w: (z in w.free_symbols and
                      any(a.is_polynomial(z) or
                      any(z in m.free_symbols and m.is_polynomial(z)

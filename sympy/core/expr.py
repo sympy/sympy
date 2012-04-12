@@ -2533,13 +2533,13 @@ class Expr(Basic, EvalfMixin):
 
         self is assumed to be the result returned by Basic.series().
         """
-        from sympy import powsimp
-        x = sympify(x)
-        c, e = self.normal().as_leading_term(x).as_coeff_exponent(x)
-        c = powsimp(c, deep=True, combine='exp')
-        if not c.has(x):
-            return c, e
-        raise ValueError("cannot compute leadterm(%s, %s), got c=%s" % (self, x, c))
+        c, e = self.as_leading_term(x).as_coeff_exponent(x)
+        if x in c.free_symbols:
+            from sympy.utilities.misc import filldedent
+            raise ValueError(filldedent("""
+                cannot compute leadterm(%s, %s). The coefficient
+                should have been free of x but got %s""" % (self, x, c)))
+        return c, e
 
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product. """
