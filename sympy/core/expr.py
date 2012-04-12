@@ -2477,9 +2477,6 @@ class Expr(Basic, EvalfMixin):
         >>> (1/x**2 + x + x**2).as_leading_term(x)
         x**(-2)
 
-        Note:
-
-        self is assumed to be the result returned by Basic.series().
         """
         from sympy import powsimp
         if len(symbols) > 1:
@@ -2529,9 +2526,6 @@ class Expr(Basic, EvalfMixin):
         >>> (1/x**2+x+x**2).leadterm(x)
         (1, -2)
 
-        Note:
-
-        self is assumed to be the result returned by Basic.series().
         """
         c, e = self.as_leading_term(x).as_coeff_exponent(x)
         if x in c.free_symbols:
