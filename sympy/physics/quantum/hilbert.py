@@ -35,7 +35,7 @@ class HilbertSpace(Basic):
     """An abstract Hilbert space for quantum mechanics.
 
     In short, a Hilbert space is an abstract vector space that is complete
-    with inner products defined [1].
+    with inner products defined [1]_.
 
     Examples
     ========
@@ -48,7 +48,7 @@ class HilbertSpace(Basic):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Hilbert_space
+    .. [1] http://en.wikipedia.org/wiki/Hilbert_space
     """
 
     def __new__(cls):
@@ -110,9 +110,9 @@ class ComplexSpace(HilbertSpace):
     of the vector on the right.
 
     A classic example of this type of Hilbert space is spin-1/2, which is
-    ComplexSpace(2). Likewise, for spin-s, the space is ComplexSpace(2*s+1).
-    Quantum computing with N qubits is done with the direct product space
-    ComplexSpace(2)**N.
+    ``ComplexSpace(2)``. Generalizing to spin-s, the space is
+    ``ComplexSpace(2*s+1)``.  Quantum computing with N qubits is done with the
+    direct product space ``ComplexSpace(2)**N``.
 
     Examples
     ========
@@ -235,7 +235,7 @@ class FockSpace(HilbertSpace):
     """The Hilbert space for second quantization.
 
     Technically, this Hilbert space is a infinite direct sum of direct
-    products of single particle Hilbert spaces [1]. This is a mess, so we have
+    products of single particle Hilbert spaces [1]_. This is a mess, so we have
     a class to represent it directly.
 
     Examples
@@ -251,7 +251,7 @@ class FockSpace(HilbertSpace):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Fock_space
+    .. [1] http://en.wikipedia.org/wiki/Fock_space
     """
 
     def __new__(cls):
@@ -278,15 +278,16 @@ class FockSpace(HilbertSpace):
 
 
 class TensorProductHilbertSpace(HilbertSpace):
-    """A tensor product of Hilbert spaces [1].
+    """A tensor product of Hilbert spaces [1]_.
 
     The tensor product between Hilbert spaces is represented by the
-    operator "*" Products of the same Hilbert space will be combined into
+    operator ``*`` Products of the same Hilbert space will be combined into
     tensor powers.
 
-    A TensorProductHilbertSpace object takes in an indefinite number of
-    HilbertSpace objects as its arguments. In addition, multiplication of
-    HilbertSpace objects will automatically return a Tensor product object.
+    A ``TensorProductHilbertSpace`` object takes in an arbitrary number of
+    ``HilbertSpace`` objects as its arguments. In addition, multiplication of
+    ``HilbertSpace`` objects will automatically return this tensor product
+    object.
 
     Examples
     ========
@@ -316,7 +317,7 @@ class TensorProductHilbertSpace(HilbertSpace):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
+    .. [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
     """
 
     def __new__(cls, *args):
@@ -431,14 +432,14 @@ class TensorProductHilbertSpace(HilbertSpace):
 
 
 class DirectSumHilbertSpace(HilbertSpace):
-    """A direct sum of Hilbert spaces [1].
+    """A direct sum of Hilbert spaces [1]_.
 
-    This class uses the "+" operator to represent direct sums between
+    This class uses the ``+`` operator to represent direct sums between
     different Hilbert spaces.
 
-    A DirectSumHilbertSpace object takes in an indefinite number of
-    HilbertSpace objects as its arguments. Also, addition of HilbertSpace
-    objects will automatically return a direct sum object.
+    A ``DirectSumHilbertSpace`` object takes in an arbitrary number of
+    ``HilbertSpace`` objects as its arguments. Also, addition of
+    ``HilbertSpace`` objects will automatically return a direct sum object.
 
     Examples
     ========
@@ -459,7 +460,7 @@ class DirectSumHilbertSpace(HilbertSpace):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Hilbert_space#Direct_sums
+    .. [1] http://en.wikipedia.org/wiki/Hilbert_space#Direct_sums
     """
     def __new__(cls, *args):
         r = cls.eval(args)
@@ -539,14 +540,14 @@ class DirectSumHilbertSpace(HilbertSpace):
 
 
 class TensorPowerHilbertSpace(HilbertSpace):
-    """An exponentiated Hilbert space [1].
+    """An exponentiated Hilbert space [1]_.
 
     Tensor powers (repeated tensor products) are represented by the
-    operator "**" Identical Hilbert spaces that are multiplied together
+    operator ``**`` Identical Hilbert spaces that are multiplied together
     will be automatically combined into a single tensor power object.
 
     Any Hilbert space, product, or sum may be raised to a tensor power. The
-    TensorPowerHilbertSpace takes two arguments: the Hilbert space; and the
+    ``TensorPowerHilbertSpace`` takes two arguments: the Hilbert space; and the
     tensor power (number).
 
     Examples
@@ -573,7 +574,7 @@ class TensorPowerHilbertSpace(HilbertSpace):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
+    .. [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
     """
 
     def __new__(cls, *args):

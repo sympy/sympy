@@ -28,7 +28,8 @@ class Wigner3j(Expr):
 
     Wigner 3j-symbols are coefficients determined by the coupling of
     two angular momenta. When created, they are expressed as symbolic
-    quantities that can be evaluated using the doit() method [1]_.
+    quantities that, for numerical parameters, can be evaluated using the
+    ``.doit()`` method [1]_.
 
     Parameters
     ==========
@@ -49,6 +50,11 @@ class Wigner3j(Expr):
         (0, 0, 0)
         >>> w3j.doit()
         sqrt(715)/143
+
+    See Also
+    ========
+
+    CG: Clebsch-Gordan coefficients
 
     References
     ==========
@@ -178,6 +184,11 @@ class CG(Wigner3j):
         >>> cg.doit()
         sqrt(3)/2
 
+    See Also
+    ========
+
+    Wigner3j: Wigner-3j symbols
+
     References
     ==========
 
@@ -227,7 +238,14 @@ class CG(Wigner3j):
 
 
 class Wigner6j(Expr):
-    """Class for the Wigner-6j symbols"""
+    """Class for the Wigner-6j symbols
+
+    See Also
+    ========
+
+    Wigner3j: Wigner-3j symbols
+
+    """
     def __new__(cls, j1, j2, j12, j3, j, j23):
         j1,j2,j12,j3,j,j23 = map(sympify, (j1,j2,j12,j3,j,j23))
         return Expr.__new__(cls, j1, j2, j12, j3, j, j23)
@@ -321,7 +339,14 @@ class Wigner6j(Expr):
 
 
 class Wigner9j(Expr):
-    """Class for the Wigner-9j symbols"""
+    """Class for the Wigner-9j symbols
+
+    See Also
+    ========
+
+    Wigner3j: Wigner-3j symbols
+
+    """
     def __new__(cls, j1, j2, j12, j3, j4, j34, j13, j24, j):
         j1,j2,j12,j3,j4,j34,j13,j24,j = map(sympify, (j1,j2, j12, j3, j4, j34, j13, j24, j))
         return Expr.__new__(cls, j1, j2, j12, j3, j4, j34, j13, j24, j)
@@ -447,6 +472,11 @@ def cg_simp(e):
         >>> c = CG(1,-1,0,0,1,-1)
         >>> cg_simp(a+b+c)
         3
+
+    See Also
+    ========
+
+    CG: Clebsh-Gordan coefficients
 
     References
     ==========

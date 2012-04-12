@@ -38,11 +38,12 @@ def qapply(e, **options):
         A dict of key/value pairs that determine how the operator actions
         are carried out.
 
-    The following options are valid:
+        The following options are valid:
 
-    * ``dagger``: try to apply Dagger operators to the left (default: False).
-    * ``ip_doit``: call ``.doit()`` in inner products when they are
-      encountered (default: True).
+        * ``dagger``: try to apply Dagger operators to the left
+          (default: False).
+        * ``ip_doit``: call ``.doit()`` in inner products when they are
+          encountered (default: True).
 
     Returns
     =======
