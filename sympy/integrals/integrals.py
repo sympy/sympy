@@ -374,13 +374,11 @@ class Integral(Expr):
     def transform(self, x, mapping, z, inverse=False):
         """
         Replace the integration variable x in the integrand with the
-        expression given by `mapping`, e.g. 2*x or 1/x. The integrand and
+        expression given by `mapping`, e.g. 2*y or 1/y. The integrand and
         endpoints are rescaled to preserve the value of the original
         integral.
 
-        In effect, this performs a variable substitution (although the
-        symbol remains unchanged; follow up with subs to obtain a
-        new symbol.)
+        In effect, this performs a variable substitution.
 
         With inverse=True, the inverse transformation is performed.
 
@@ -392,9 +390,9 @@ class Integral(Expr):
 
             >>> from sympy.abc import a, b, c
             >>> from sympy import Integral, S
-            >>> Integral(a*b + 2 + c, (c, -1, S(1)/2)).transform(a, c*2)
+            >>> Integral(a*b + 2 + c, (c, -1, S(1)/2)).transform(a, c*2, c)
             Integral(a*b + c + 2, (c, -1, 1/2))
-            >>> Integral(a**2 + 1, (a, -1, 2)).transform(a, 1 + 2*a)
+            >>> Integral(a**2 + 1, (a, -1, 2)).transform(a, 1 + 2*a, a)
             Integral(2*(2*a + 1)**2 + 2, (a, -1, 1/2))
 
         See Also
