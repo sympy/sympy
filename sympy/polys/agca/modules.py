@@ -148,6 +148,10 @@ class Module(object):
 
     __rmul__ = __mul__
 
+    def identity_hom(self):
+        """Return the identity homomorphism on ``self``."""
+        raise NotImplementedError
+
 class ModuleElement(object):
     """
     Base class for module element wrappers.
@@ -402,6 +406,19 @@ class FreeModule(Module):
         <[x, 0], [0, x]>
         """
         return self.submodule(*self.basis()).multiply_ideal(other)
+
+    def identity_hom(self):
+        """
+        Return the identity homomorphism on ``self``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> QQ[x].free_module(2).identity_hom()
+        [1, 0]
+        [0, 1] : QQ[x]**2 -> QQ[x]**2
+        """
+        from sympy.polys.agca.homomorphisms import homomorphism
+        return homomorphism(self, self, self.basis())
 
 class FreeModulePolyRing(FreeModule):
     """
@@ -794,6 +811,33 @@ class SubModule(Module):
         """
         return self.submodule(*[x*g for [x] in I._module.gens for g in self.gens])
 
+    def inclusion_hom(self):
+        """
+        Return a homomorphism representing the inclusion map of ``self``.
+
+        That is, the natural map from ``self`` to ``self.container``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> QQ[x].free_module(2).submodule([x, x]).inclusion_hom()
+        [1, 0]
+        [0, 1] : <[x, x]> -> QQ[x]**2
+        """
+        return self.container.identity_hom().restrict_domain(self)
+
+    def identity_hom(self):
+        """
+        Return the identity homomorphism on ``self``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> QQ[x].free_module(2).submodule([x, x]).identity_hom()
+        [1, 0]
+        [0, 1] : <[x, x]> -> <[x, x]>
+        """
+        return self.container.identity_hom().restrict_domain(
+            self).restrict_codomain(self)
+
 class SubQuotientModule(SubModule):
     """
     Submodule of a quotient module.
@@ -857,6 +901,21 @@ class SubQuotientModule(SubModule):
         True
         """
         return self.base.is_full_module()
+
+    def quotient_hom(self):
+        """
+        Return the quotient homomorphism to self.
+
+        That is, return the natural map from ``self.base`` to ``self``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> M = (QQ[x].free_module(2) / [(1, x)]).submodule([1, 0])
+        >>> M.quotient_hom()
+        [1, 0]
+        [0, 1] : <[1, 0], [1, x]> -> <[1, 0] + <[1, x]>, [1, x] + <[1, x]>>
+        """
+        return self.base.identity_hom().quotient_codomain(self.killed_module)
 
 
 _subs0 = lambda x: x[0]
@@ -1123,3 +1182,34 @@ class QuotientModule(Module):
                 return QuotientModuleElement(self, self.base.convert(elem.data))
             raise CoercionFailed
         return QuotientModuleElement(self, self.base.convert(elem))
+
+    def identity_hom(self):
+        """
+        Return the identity homomorphism on ``self``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> M = QQ[x].free_module(2) / [(1, 2), (1, x)]
+        >>> M.identity_hom()
+        [1, 0]
+        [0, 1] : QQ[x]**2/<[1, 2], [1, x]> -> QQ[x]**2/<[1, 2], [1, x]>
+        """
+        return self.base.identity_hom().quotient_codomain(
+            self.killed_module).quotient_domain(self.killed_module)
+
+    def quotient_hom(self):
+        """
+        Return the quotient homomorphism to ``self``.
+
+        That is, return a homomorphism representing the natural map from
+        ``self.base`` to ``self``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> M = QQ[x].free_module(2) / [(1, 2), (1, x)]
+        >>> M.quotient_hom()
+        [1, 0]
+        [0, 1] : QQ[x]**2 -> QQ[x]**2/<[1, 2], [1, x]>
+        """
+        return self.base.identity_hom().quotient_codomain(
+            self.killed_module)

@@ -1532,6 +1532,12 @@ class PrettyPrinter(Printer):
     def _print_QuotientModule(self, M):
         return self._print(M.base) / self._print(M.killed_module)
 
+    def _print_MatrixHomomorphism(self, h):
+        matrix = self._print(h._sympy_matrix())
+        matrix.baseline = matrix.height() // 2
+        pform = prettyForm(*matrix.right(' : ', self._print(h.source), ' %s> ' % hobj('-', 2), self._print(h.target)))
+        return pform
+
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 
