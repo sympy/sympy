@@ -162,7 +162,8 @@ class QExpr(Expr):
 
     @classmethod
     def default_args(self):
-        """If no arguments are specified, then this will return a default set of arguments to be run through the constructor.
+        """If no arguments are specified, then this will return a default set
+        of arguments to be run through the constructor.
 
         NOTE: Any classes that override this MUST return a tuple of arguments.
         Should be overidden by subclasses to specify the default arguments for kets and operators

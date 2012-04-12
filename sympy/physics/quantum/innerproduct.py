@@ -19,7 +19,7 @@ __all__ = [
 # which simplifies the design of everything.
 
 class InnerProduct(Expr):
-    """An unevaluated inner product between a Bra and a Ket.
+    """An unevaluated inner product between a Bra and a Ket [1].
 
     Parameters
     ==========
@@ -69,7 +69,7 @@ class InnerProduct(Expr):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Inner_product
+    .. [1] http://en.wikipedia.org/wiki/Inner_product
     """
 
     def __new__(cls, bra, ket, **old_assumptions):
