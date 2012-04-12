@@ -371,16 +371,14 @@ class Integral(Expr):
         f = f.subs(reps)
         return Integral(f, *limits)
 
-    def transform(self, x, mapping, inverse=False):
+    def transform(self, x, mapping, z, inverse=False):
         """
         Replace the integration variable x in the integrand with the
-        expression given by `mapping`, e.g. 2*x or 1/x. The integrand and
+        expression given by `mapping`, e.g. 2*y or 1/y. The integrand and
         endpoints are rescaled to preserve the value of the original
         integral.
 
-        In effect, this performs a variable substitution (although the
-        symbol remains unchanged; follow up with subs to obtain a
-        new symbol.)
+        In effect, this performs a variable substitution.
 
         With inverse=True, the inverse transformation is performed.
 
@@ -392,9 +390,9 @@ class Integral(Expr):
 
             >>> from sympy.abc import a, b, c
             >>> from sympy import Integral, S
-            >>> Integral(a*b + 2 + c, (c, -1, S(1)/2)).transform(a, c*2)
+            >>> Integral(a*b + 2 + c, (c, -1, S(1)/2)).transform(a, c*2, c)
             Integral(a*b + c + 2, (c, -1, 1/2))
-            >>> Integral(a**2 + 1, (a, -1, 2)).transform(a, 1 + 2*a)
+            >>> Integral(a**2 + 1, (a, -1, 2)).transform(a, 1 + 2*a, a)
             Integral(2*(2*a + 1)**2 + 2, (a, -1, 1/2))
 
         See Also
@@ -408,22 +406,22 @@ class Integral(Expr):
         limits = self.limits
         function = self.function
         y = Dummy('y')
-        inverse_mapping = solve(mapping.subs(x, y) - x, y)
-        if len(inverse_mapping) != 1 or x not in inverse_mapping[0].free_symbols:
+        inverse_mapping = solve(mapping.subs(z, y) - z, y)
+        if len(inverse_mapping) != 1 or z not in inverse_mapping[0].free_symbols:
             raise ValueError("The mapping must be uniquely invertible")
         inverse_mapping = inverse_mapping[0]
         if inverse:
             mapping, inverse_mapping = inverse_mapping, mapping
-        function = function.subs(x, mapping) * mapping.diff(x)
+        function = function.subs(x, mapping) * mapping.diff(z)
 
         def _calc_limit(a, b):
             """
             replace x with a, using subs if possible, otherwise limit
             where sign of b is considered
             """
-            wok = inverse_mapping.subs(x, a)
+            wok = inverse_mapping.subs(z, a)
             if wok is S.NaN or wok.is_bounded is False and a.is_bounded:
-                return limit(sign(b)*inverse_mapping, x, a)
+                return limit(sign(b)*inverse_mapping, z, a)
             return wok
 
         newlimits = []
@@ -438,10 +436,13 @@ class Integral(Expr):
                 if a > b:
                     a, b = b, a
                     function = -function
-                newlimits.append((sym, a, b))
+                newlimits.append((z, a, b))
+            elif len(xab) == 3:
+                print "in elif part"
+                newlimits.append(z,xab[1:])
             else:
-                newlimits.append(xab)
-        return Integral(function, *newlimits)
+                newlimits.append(z)
+            return Integral(function, *newlimits)
 
 
     def doit(self, **hints):
