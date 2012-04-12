@@ -398,8 +398,8 @@ def test_ceiling():
     assert ceiling(-x).series(x) == 0
     assert ceiling(sin(x)).series(x) == 1
     assert ceiling(sin(-x)).series(x) == 0
-    assert ceiling(1-cos(x)).series(x) == 0
-    assert ceiling(1-cos(-x)).series(x) == 0
+    assert ceiling(1-cos(x)).series(x) == 1
+    assert ceiling(1-cos(-x)).series(x) == 1
     assert ceiling(x).series(x, 2) == 3
     assert ceiling(-x).series(x, 2) == -2
 

@@ -2466,7 +2466,10 @@ class Expr(Basic, EvalfMixin):
     @cacheit
     def as_leading_term(self, *symbols):
         """
-        Returns the leading term.
+        Returns the leading (nonzero) term of the series expansion of self.
+
+        The _eval_as_leading_term routines are used to do this, and they must
+        always return a non-zero value.
 
         Examples
         ========

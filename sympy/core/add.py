@@ -641,60 +641,66 @@ class Add(AssocOp):
             return Add._from_args(unbounded)
 
         self = Add(*[t.as_leading_term(x) for t in self.args])
-        if not self.is_Add:
+        if not self:
+            # a non-zero term of the series must be computed;
+            # gruntz's compute_series could be used but we will try
+            # to not calculate too many terms by just starting at
+            # n = 2 and incrementing by 1 rather than doubling the
+            # number of terms requested (as happens in compute_series)
+            self = old
+            n = 1
+            while 1:
+                n += 1
+                s = self.nseries(x, n=n)
+                if not s.is_Order:
+                    break
+            s = s.removeO()
+            if s.is_Add:
+                lst = s.extract_leading_order(x)
+                rv = Add(*[e for (e,f) in lst])
+            else:
+                rv = s.as_leading_term(x)
+            return rv
+
+        elif not self.is_Add:
             return self # already computed leading term
 
-        # of those that have x as a base, keep only the smallest exponent
-        other, xbase = self.as_coeff_add(x)
-        other = [other] if other else []
-        xbase = list(xbase)
-        for i, a in enumerate(xbase):
-            c, m = a.as_coeff_mul(x)
-            if len(m) == 1:
-                b, e = m[0].as_base_exp()
-                if b == x and e.is_number:
-                    xbase[i] = (b, e, c)
-                    continue
-            other.append(a)
-            xbase[i] = 0
-        xbase = [w for w in xbase if w]
-        rv = None
-        if xbase:
-            min_e = min(e for b,e,c in xbase)
-            if min_e < 0:
-                # x**neg is bigger than any non-x value
-                other = [o for o in other if x in o.free_symbols]
-            elif other:
-                rv = Add(*other)
-                if x not in rv.free_symbols:
-                    return rv
-            # the following line collects all terms with x as base
-            xbase = [Add(*[c for b,e,c in xbase if e == min_e])*x**min_e]
-            self = Add(*(xbase + other))
+        else:
+            # of those that have x as a base, keep only the smallest exponent
+            other, xbase = self.as_coeff_add(x)
+            other = [other] if other else []
+            xbase = list(xbase)
+            for i, a in enumerate(xbase):
+                c, m = a.as_coeff_mul(x)
+                if len(m) == 1:
+                    b, e = m[0].as_base_exp()
+                    if b == x and e.is_number:
+                        xbase[i] = (b, e, c)
+                        continue
+                other.append(a)
+                xbase[i] = 0
+            xbase = [w for w in xbase if w]
+            rv = None
+            if xbase:
+                min_e = min(e for b,e,c in xbase)
+                if min_e < 0:
+                    # x**neg is bigger than any non-x value
+                    other = [o for o in other if x in o.free_symbols]
+                elif other:
+                    rv = Add(*other)
+                    if x not in rv.free_symbols:
+                        return rv
+                # the following line collects all terms with x as base
+                xbase = [Add(*[c for b,e,c in xbase if e == min_e])*x**min_e]
+                self = Add(*(xbase + other))
+                if not self.is_Add:
+                    return self.as_leading_term(x)
+
+            lst = self.extract_leading_order(x)
+            self = Add(*[e for (e, f) in lst])
             if not self.is_Add:
                 return self.as_leading_term(x)
-
-        lst = self.extract_leading_order(x)
-        self = Add(*[e for (e, f) in lst])
-        if not self.is_Add:
-            return self.as_leading_term(x)
-
-        # return self # but in case I'm wrong, check it
-        n = 0
-        while 1:
-            n += 1
-            s = self.nseries(x, n=n)
-            if not s.is_Order:
-                break
-        s = s.removeO()
-        if s.is_Add:
-            lst = s.extract_leading_order(x)
-            rv = Add(*[e for (e,f) in lst])
-        else:
-            rv = s.as_leading_term(x)
-
-        assert rv == self # if this ever fails the while-loop is needed
-        return rv
+            return self
 
     def _eval_conjugate(self):
         return Add(*[t.conjugate() for t in self.args])
