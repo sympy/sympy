@@ -640,67 +640,48 @@ class Add(AssocOp):
         if unbounded:
             return Add._from_args(unbounded)
 
-        self = Add(*[t.as_leading_term(x) for t in self.args])
+        self = Add(*[t.as_leading_term(x) for t in self.args]).removeO()
         if not self:
-            # a non-zero term of the series must be computed;
-            # gruntz's compute_series could be used but we will try
-            # to not calculate too many terms by just starting at
-            # n = 2 and incrementing by 1 rather than doubling the
-            # number of terms requested (as happens in compute_series)
-            self = old
-            n = 1
-            while 1:
-                n += 1
-                s = self.nseries(x, n=n)
-                if not s.is_Order:
-                    break
-            s = s.removeO()
-            if s.is_Add:
-                lst = s.extract_leading_order(x)
-                rv = Add(*[e for (e,f) in lst])
-            else:
-                rv = s.as_leading_term(x)
-            return rv
-
+            # simple leading term analysis gave us 0 but we have to send
+            # back a term, so compute the leading term (via series)
+            return old.compute_leading_term(x)
         elif not self.is_Add:
-            return self # already computed leading term
-
+            return self
         else:
             # of those that have x as a base, keep only the smallest exponent
             other, xbase = self.as_coeff_add(x)
             other = [other] if other else []
             xbase = list(xbase)
             for i, a in enumerate(xbase):
-                c, m = a.as_coeff_mul(x)
-                if len(m) == 1:
-                    b, e = m[0].as_base_exp()
-                    if b == x and e.is_number:
-                        xbase[i] = (b, e, c)
-                        continue
+                c, e = a.as_coeff_exponent(x)
+                if e and e.is_number:
+                    xbase[i] = (c, e)
+                    continue
                 other.append(a)
                 xbase[i] = 0
-            xbase = [w for w in xbase if w]
-            rv = None
+            xbase = filter(None, xbase)
             if xbase:
-                min_e = min(e for b,e,c in xbase)
+                min_e = min(e for c, e in xbase)
+
                 if min_e < 0:
                     # x**neg is bigger than any non-x value
                     other = [o for o in other if x in o.free_symbols]
                 elif other:
-                    rv = Add(*other)
-                    if x not in rv.free_symbols:
-                        return rv
+                    # all the x-based terms are smaller than anything
+                    # left in others
+                    xbase = []
+
                 # the following line collects all terms with x as base
-                xbase = [Add(*[c for b,e,c in xbase if e == min_e])*x**min_e]
+                # having an exponent of min_e
+                xbase = [Add(*[c for c, e in xbase if e == min_e])*x**min_e]
                 self = Add(*(xbase + other))
                 if not self.is_Add:
-                    return self.as_leading_term(x)
+                    return self
+            else:
+                self = Add(*other)
 
-            lst = self.extract_leading_order(x)
-            self = Add(*[e for (e, f) in lst])
-            if not self.is_Add:
-                return self.as_leading_term(x)
-            return self
+            i, d = self.as_independent(x, as_Add=True)
+            return d or i
 
     def _eval_conjugate(self):
         return Add(*[t.conjugate() for t in self.args])
