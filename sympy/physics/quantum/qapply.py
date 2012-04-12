@@ -11,7 +11,7 @@ from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.innerproduct import InnerProduct
-from sympy.physics.quantum.operator import OuterProduct, Operator
+from sympy.physics.quantum.operator import OuterProduct, Operator, DifferentialOperator
 from sympy.physics.quantum.state import State, KetBase, BraBase, Wavefunction
 from sympy.physics.quantum.tensorproduct import TensorProduct
 
@@ -150,7 +150,10 @@ def qapply_Mul(e, **options):
         result = lhs._apply_operator(rhs, **options)
     except (NotImplementedError, AttributeError):
         try:
-            result = rhs._apply_operator(lhs, **options)
+            if not isinstance(rhs, DifferentialOperator):
+                result = rhs._apply_operator(lhs, **options)
+            else:
+                result = None
         except (NotImplementedError, AttributeError):
             if isinstance(lhs, BraBase) and isinstance(rhs, KetBase):
                 result = InnerProduct(lhs, rhs)

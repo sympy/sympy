@@ -54,3 +54,11 @@ __all__.extend(tensorproduct.__all__)
 import constants
 from constants import *
 __all__.extend(constants.__all__)
+
+import operatorset
+from operatorset import *
+__all__.extend(operatorset.__all__)
+
+import cartesian
+from cartesian import *
+__all__.extend(cartesian.__all__)

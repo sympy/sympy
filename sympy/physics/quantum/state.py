@@ -1,10 +1,10 @@
 """Dirac notation for states."""
 
-
-from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
-                   Tuple)
+from sympy import (Add, cacheit, conjugate, DiracDelta, expand, Expr,
+                   Function, integrate, Lambda, Mul, oo, sqrt, Symbol, Tuple)
 from sympy.printing.pretty.stringpict import prettyForm
-from sympy.physics.quantum.qexpr import QExpr, dispatch_method
+from sympy.physics.quantum.operator import Operator
+from sympy.physics.quantum.qexpr import QExpr, dispatch_method, _qsympify_sequence
 
 __all__ = [
     'KetBase',
@@ -60,11 +60,24 @@ class StateBase(QExpr):
     def _operators_to_state(self, ops, **options):
         """ Returns the eigenstate instance for the passed operators.
 
-        This method should be overridden in subclasses. It will handle
-        being passed either an Operator instance or set of Operator
-        instances. It should return the corresponding state INSTANCE
-        or simply raise a NotImplementedError. See cartesian.py for an
-        example.
+        This method should be overridden in subclasses. It will handle being
+        passed either an Operator instance or set of Operator instances. It
+        should return the corresponding state INSTANCE or simply raise a
+        NotImplementedError. See cartesian.py for an example.
+
+        Parameters
+        ==========
+
+        ops : Operator or set of Operators
+            The operator or set of commuting operators that we wish to get an
+            eigenstate of
+
+        Returns
+        =======
+
+        state : State
+            The eigenstate instance of the given operator or set of operators
+
         """
 
         raise NotImplementedError("Cannot map operators to states in this class. Method not implemented!")
@@ -73,12 +86,27 @@ class StateBase(QExpr):
         """ Returns the operators which this state instance is an
         eigenstate of.
 
-        This method should be overridden in subclasses. It will be
-        called on state instances and be passed the operator classes
-        that we wish to make into instances. The state instance will
-        then transform the classes appropriately, or raise a
-        NotImplementedError if it cannot return operator
-        instances. See cartesian.py for examples,
+        This method should be overridden in subclasses. It will be called on
+        state instances and be passed the operator classes that we wish to make
+        into instances. The state instance will then transform the classes to
+        return an Operator or set of Operator instances, or raise a
+        NotImplementedError if it cannot return operator instances. See
+        cartesian.py for examples.
+
+        Parameters
+        ==========
+
+        op_classes : Operator class or set of Operator classes
+            The operator class or set of commuting operator classes we wish to
+            receive instances of
+
+        Returns
+        =======
+
+        operators : Operator or set of Operator instances
+            The operator or set of commuting operator instances that correspond
+            to the eigenstate the method was called on
+
         """
 
         raise NotImplementedError("Cannot map this state to operators. Method not implemented!")
@@ -89,12 +117,6 @@ class StateBase(QExpr):
         from operatorset import state_to_operators #import internally to avoid circular import errors
         return state_to_operators(self)
 
-    def _enumerate_state(self, num_states, **options):
-        raise NotImplementedError("Cannot enumerate this state!")
-
-    def _represent_default_basis(self, **options):
-        return self._represent(basis=self.operators)
-
     #-------------------------------------------------------------------------
     # Dagger/dual
     #-------------------------------------------------------------------------
@@ -102,7 +124,8 @@ class StateBase(QExpr):
     @property
     def dual(self):
         """Return the dual state of this one."""
-        return self.dual_class()._new_rawargs(self.hilbert_space, *self.args)
+        return self.dual_class()._new_rawargs(\
+            self.hilbert_space, self.label_assumptions, *self.args)
 
     @classmethod
     def dual_class(self):
@@ -159,6 +182,12 @@ class KetBase(StateBase):
     @classmethod
     def dual_class(self):
         return BraBase
+
+    def _represent_XKet(self, basis, **options):
+        from sympy.physics.quantum.represent import _append_index
+        coord = _append_index(basis.label[0], options.pop('index', 1))
+        psi = Function(str(self.label[0]))
+        return Wavefunction(psi(coord), coord)
 
     def __mul__(self, other):
         """KetBase*other"""
@@ -238,13 +267,13 @@ class BraBase(StateBase):
     def _state_to_operators(self, op_classes, **options):
         return self.dual._state_to_operators(op_classes, **options)
 
-    def _enumerate_state(self, num_states, **options):
-        dual_states = self.dual._enumerate_state(num_states, **options)
-        return map(lambda x: x.dual, dual_states)
-
     @classmethod
     def default_args(self):
         return self.dual_class().default_args()
+
+    @classmethod
+    def def_label_assumptions(self):
+        return self.dual_class().def_label_assumptions()
 
     @classmethod
     def dual_class(self):
@@ -271,6 +300,9 @@ class BraBase(StateBase):
         from sympy.physics.quantum.dagger import Dagger
         return Dagger(self.dual._represent(**options))
 
+    def _get_default_basis(self, **options):
+        """Get the default basis of the corresponding ket."""
+        return self.dual._get_default_basis(**options)
 
 class State(StateBase):
     """General abstract quantum state used as a base class for Ket and Bra."""
@@ -572,9 +604,14 @@ class TimeDepBra(TimeDepState, BraBase):
 class Wavefunction(Function):
     """Class for representations in continuous bases
 
-    This class takes an expression and coordinates in its
-    constructor. It can be used to easily calculate normalizations and
-    probabilities.
+    This class takes an expression and coordinates in its constructor. It can be
+    used to easily calculate normalizations and probabilities.
+
+    If the ``keep_delta`` options is specified as False in the
+    constructor, then any DiracDeltas which appear in a Mul will be
+    factored out of the Wavefunction. This options exists to make
+    integration easier when representing in continuous bases. See the
+    examples below. ``keep_delta`` is True by default
 
     Parameters
     ==========
@@ -584,12 +621,14 @@ class Wavefunction(Function):
 
     coords : Symbol or tuple
            The coordinates to be integrated over, and their bounds
+           In general, the call could be of the form
+           Wavefunction(expr, x, (y, a, b), (z, c, d))
 
     Examples
     ========
 
-    Particle in a box, specifying bounds in the more primitive way of
-    using Piecewise
+    Particle in a box, specifying bounds in the more primitive way of using
+    Piecewise
 
         >>> from sympy import Symbol, Piecewise, pi, N
         >>> from sympy.functions import sqrt, sin
@@ -615,8 +654,8 @@ class Wavefunction(Function):
         >>> N(p(0.85*L))
         0.412214747707527
 
-    Additionally, you can specify the bounds of the function and the
-    indices in a more compact way.
+    Additionally, you can specify the bounds of the function and the indices in
+    a more compact way.
 
         >>> from sympy import symbols, pi, diff
         >>> from sympy.functions import sqrt, sin
@@ -653,22 +692,31 @@ class Wavefunction(Function):
         >>> diff(f, x)
         Wavefunction(2*x, x)
 
+    The ``keep_delta`` option can be used to factor DiracDelta functions out of
+    the Wavefunction
+
+    >>> from sympy.functions import DiracDelta
+    >>> Wavefunction(x*DiracDelta(x), x)
+    Wavefunction(x*DiracDelta(x), x)
+    >>> Wavefunction(x*DiracDelta(x), x, keep_delta=False)
+    DiracDelta(x)*Wavefunction(x, x)
+
     """
 
     #Any passed tuples for coordinates and their bounds need to be
     #converted to Tuples before Function's constructor is called, to
     #avoid errors from calling is_Float in the constructor
     def __new__(cls, *args, **options):
-        new_args = [None for i in args]
-        ct = 0
-        for arg in args:
-            if isinstance(arg, tuple):
-                new_args[ct] = Tuple(*arg)
-            else:
-                new_args[ct] = arg
-            ct+=1
+        args = _qsympify_sequence(args)
 
-        return super(Function, cls).__new__(cls, *new_args, **options)
+        obj = super(Function, cls).__new__(cls, *args, **options)
+
+        keep_delta = options.pop('keep_delta', True)
+
+        if not keep_delta:
+            return obj._remove_delta(**options)
+        else:
+            return obj
 
     def __call__(self, *args, **options):
         var = self.variables
@@ -716,6 +764,21 @@ class Wavefunction(Function):
     def _eval_conjugate(self):
         return Wavefunction(conjugate(self.expr), *self.args[1:])
 
+    def _eval_expand_wavefunction(self, **hints):
+        exp = expand(self.expr, **hints)
+
+        wf_vars = self.args[1:]
+        if exp.is_Add:
+            add_args = exp.args
+            new_args = map(lambda x: Wavefunction(x, *wf_vars), add_args)
+
+            return Add(*new_args)
+        else:
+            return Wavefunction(exp, *wf_vars)
+
+    def _eval_power(self, power):
+        return Wavefunction((self.expr)**power, *self.args[1:])
+
     @property
     def free_symbols(self):
         return self.expr.free_symbols
@@ -723,8 +786,8 @@ class Wavefunction(Function):
     @property
     def is_commutative(self):
         """
-        Override Function's is_commutative so that order is preserved
-        in represented expressions
+        Override Function's is_commutative so that order is preserved in
+        represented expressions
         """
         return False
 
@@ -757,8 +820,8 @@ class Wavefunction(Function):
     @property
     def limits(self):
         """
-        Return the limits of the coordinates which the w.f. depends on
-        If no limits are specified, defaults to (-oo, oo)
+        Return the limits of the coordinates which the w.f. depends on. If no
+        limits are specified, defaults to (-oo, oo)
 
         Examples
         ========
@@ -784,8 +847,7 @@ class Wavefunction(Function):
     @property
     def expr(self):
         """
-        Return the expression which is the functional form of the
-        Wavefunction
+        Return the expression which is the functional form of the Wavefunction
 
         Examples
         ========
@@ -828,8 +890,10 @@ class Wavefunction(Function):
         """
         Return the normalization of the specified functional form.
 
-        This function integrates over the coordinates of the Wavefunction,
-        with the bounds specified.
+        This function integrates over the coordinates of the Wavefunction, with
+        the bounds specified.
+
+        Note: The norm computed is the L2 norm
 
         Examples
         ========
@@ -905,3 +969,71 @@ class Wavefunction(Function):
         """
 
         return Wavefunction(self.expr*conjugate(self.expr), *self.variables)
+
+    def _remove_delta(self, **options):
+        """Utility function to remove Delta functions from the Wf for easier integration"""
+        expr = self.expr
+        args = self.args
+
+        if isinstance(expr, DiracDelta): #Only a delta in the Wf
+            return expr
+
+        if expr.is_Mul and expr.has(DiracDelta):
+            delta = []
+            rest = []
+            for arg in expr.args:
+                if isinstance(arg, DiracDelta):
+                    delta.append(arg)
+                else:
+                    rest.append(arg)
+
+            args = list(args)
+            args[0] = Mul(*rest)
+            wf = self.__class__(*args)
+
+            if len(rest) == 0:
+                return Mul(*delta)
+            else:
+                return Mul(wf, *delta)
+
+        return self
+
+    def _combine_wf(self, other, expr_class):
+        """Utility function to combine two Wavefunction objects into a single Wf
+        whose expression is of expr_class (e.g. Add, Mul, etc.)"""
+
+        expr1 = self.expr
+        expr2 = other.expr
+        limits1 = self.limits
+        limits2 = other.limits
+
+        new_lims = []
+
+        for key in limits1:
+            if not key in limits2:
+                lims = limits1[key]
+                if lims == (-oo, oo):
+                    new_lims.append(key)
+                else:
+                    new_lims.append((key, lims[0], lims[1]))
+            else:
+                lims1 = limits1[key]
+                lims2 = limits2[key]
+                low_lim = max(lims1[0], lims2[0])
+                up_lim = min(lims1[1], lims2[1])
+                if low_lim == -oo and up_lim == oo:
+                    new_lims.append(key)
+                else:
+                    new_lims.append((key, low_lim, up_lim))
+                limits2.pop(key)
+
+        for key in limits2:
+            lims = limits2[key]
+            if lims == (-oo, oo):
+                new_lims.append(key)
+            else:
+                new_lims.append((key, lims[0], lims[1]))
+
+        new_expr = expr_class(expr1, expr2)
+
+        return Wavefunction(new_expr, *new_lims)

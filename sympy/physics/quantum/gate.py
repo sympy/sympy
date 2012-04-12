@@ -31,6 +31,7 @@ from sympy.physics.quantum.matrixutils import matrix_tensor_product, matrix_eye
 from sympy.physics.quantum.matrixcache import matrix_cache
 
 from sympy.matrices.matrices import MatrixBase
+from sympy.physics.quantum.qubit import Qubit
 
 __all__ = [
     'Gate',
@@ -232,10 +233,10 @@ class Gate(UnitaryOperator):
     # Represent
     #-------------------------------------------------------------------------
 
-    def _represent_default_basis(self, **options):
-        return self._represent_ZGate(None, **options)
+    def _get_default_basis(self, **options):
+        return Qubit(0)
 
-    def _represent_ZGate(self, basis, **options):
+    def _represent_Qubit(self, basis, **options):
         format = options.get('format','sympy')
         nqubits = options.get('nqubits',0)
         if nqubits == 0:
@@ -908,7 +909,7 @@ class SwapGate(TwoQubitGate):
         circ_plot.swap_point(gate_idx, min_wire)
         circ_plot.swap_point(gate_idx, max_wire)
 
-    def _represent_ZGate(self, basis, **options):
+    def _represent_Qubit(self, basis, **options):
         """Represent the SWAP gate in the computational basis.
 
         The following representation is used to compute this:

@@ -23,6 +23,8 @@ from sympy.physics.quantum.gate import (
     Gate, HadamardGate, SwapGate, OneQubitGate, CGate, PhaseGate, TGate, ZGate
 )
 
+from sympy.physics.quantum.qubit import Qubit
+
 __all__ = [
     'QFT',
     'IQFT',
@@ -102,10 +104,10 @@ class Fourier(Gate):
             raise QuantumError("Start must be smaller than finish")
         return Gate._eval_args(args)
 
-    def _represent_default_basis(self, **options):
-        return self._represent_ZGate(None, **options)
+    def _get_default_basis(self, **options):
+        return Qubit(0)
 
-    def _represent_ZGate(self, basis, **options):
+    def _represent_Qubit(self, basis, **options):
         """
             Represents the (I)QFT In the Z Basis
         """

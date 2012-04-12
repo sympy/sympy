@@ -5,8 +5,8 @@ TODO:
 
 """
 
-from sympy import DiracDelta, exp, I, Interval, pi, S, sqrt
-
+from sympy import (DiracDelta, Derivative, exp, Function, I, Interval,
+                   pi, S, sqrt, Symbol)
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import L2
 from sympy.physics.quantum.operator import DifferentialOperator, HermitianOperator
@@ -42,6 +42,10 @@ class XOp(HermitianOperator):
         return ("X",)
 
     @classmethod
+    def def_label_assumptions(self):
+        return {"real" : True}
+
+    @classmethod
     def _eval_hilbert_space(self, args):
         return L2(Interval(S.NegativeInfinity, S.Infinity))
 
@@ -55,15 +59,25 @@ class XOp(HermitianOperator):
         return ket.position_x*ket
 
     def _represent_PxKet(self, basis, **options):
-        index = options.pop("index", 1)
+        from sympy.physics.quantum.represent import enumerate_states
 
-        states = basis._enumerate_state(2, start_index = index)
+        index = options.pop("index", 1)
+        states = enumerate_states(basis, index, 2)
         coord1 = states[0].momentum
         coord2 = states[1].momentum
-        d = DifferentialOperator(coord1)
+        f = Function('f')
+        d = DifferentialOperator(Derivative(f(coord1), coord1), f(coord1))
         delta = DiracDelta(coord1 - coord2)
 
-        return I*hbar*(d*delta)
+        return I*hbar*delta*d
+
+    def _represent_XKet(self, basis, **options):
+        from sympy.physics.quantum.represent import expectation_helper
+        options['basis'] = basis
+        return expectation_helper(self, wrap_wavefunction=True, **options)
+
+    def _get_default_basis(self, **options):
+        return XKet
 
 class YOp(HermitianOperator):
     """ Y cartesian coordinate operator (for 2D or 3D systems) """
@@ -71,6 +85,10 @@ class YOp(HermitianOperator):
     @classmethod
     def default_args(self):
         return ("Y",)
+
+    @classmethod
+    def def_label_assumptions(self):
+        return {"real" : True}
 
     @classmethod
     def _eval_hilbert_space(self, args):
@@ -85,6 +103,10 @@ class ZOp(HermitianOperator):
     @classmethod
     def default_args(self):
         return ("Z",)
+
+    @classmethod
+    def def_label_assumptions(self):
+        return {"real" : True}
 
     @classmethod
     def _eval_hilbert_space(self, args):
@@ -105,6 +127,10 @@ class PxOp(HermitianOperator):
         return ("Px",)
 
     @classmethod
+    def def_label_assumptions(self):
+        return {"real" : True}
+
+    @classmethod
     def _eval_hilbert_space(self, args):
         return L2(Interval(S.NegativeInfinity, S.Infinity))
 
@@ -112,15 +138,25 @@ class PxOp(HermitianOperator):
         return ket.momentum*ket
 
     def _represent_XKet(self, basis, **options):
-        index = options.pop("index", 1)
+        from sympy.physics.quantum.represent import enumerate_states
 
-        states = basis._enumerate_state(2, start_index = index)
+        index = options.pop("index", 1)
+        states = enumerate_states(basis, index, 2)
         coord1 = states[0].position
         coord2 = states[1].position
-        d = DifferentialOperator(coord1)
+        f = Function('f')
+        d = DifferentialOperator(Derivative(f(coord1), coord1), f(coord1))
         delta = DiracDelta(coord1 - coord2)
 
-        return -I*hbar*(d*delta)
+        return -I*hbar*delta*d
+
+    def _represent_PxKet(self, basis, **options):
+        from sympy.physics.quantum.represent import expectation_helper
+        options['basis'] = basis
+        return expectation_helper(self, wrap_wavefunction=True, **options)
+
+    def _get_default_basis(self, **options):
+        return PxKet
 
 X = XOp('X')
 Y = YOp('Y')
@@ -147,6 +183,10 @@ class XKet(Ket):
         return ("x",)
 
     @classmethod
+    def def_label_assumptions(self):
+        return {"real" : True}
+
+    @classmethod
     def dual_class(self):
         return XBra
 
@@ -155,21 +195,27 @@ class XKet(Ket):
         """The position of the state."""
         return self.label[0]
 
-    def _enumerate_state(self, num_states, **options):
-        return _enumerate_continuous_1D(self, num_states, **options)
-
     def _eval_innerproduct_XBra(self, bra, **hints):
         return DiracDelta(self.position-bra.position)
 
     def _eval_innerproduct_PxBra(self, bra, **hints):
         return exp(-I*self.position*bra.momentum/hbar)/sqrt(2*pi*hbar)
 
+    def _represent_XKet(self, basis, **options):
+        from sympy.physics.quantum.represent import innerproduct_helper
+        options['basis'] = basis
+        return innerproduct_helper(self, wrap_wavefunction=True, **options)
+
+    def _represent_PxKet(self, basis, **options):
+        from sympy.physics.quantum.represent import innerproduct_helper
+        options['basis'] = basis
+        return innerproduct_helper(self, wrap_wavefunction=True, **options)
+
+    def _get_default_basis(self, **options):
+        return XKet
+
 class XBra(Bra):
     """1D cartesian position eigenbra."""
-
-    @classmethod
-    def default_args(self):
-        return ("x",)
 
     @classmethod
     def dual_class(self):
@@ -183,17 +229,41 @@ class XBra(Bra):
 class PositionState3D(State):
     """ Base class for 3D cartesian position eigenstates """
 
-    @classmethod
-    def _operators_to_state(self, op, **options):
-        return self.__new__(self, *_lowercase_labels(op), **options)
+    _label_separator = ','
 
-    def _state_to_operators(self, op_class, **options):
-        return op_class.__new__(op_class, \
-                                *_uppercase_labels(self), **options)
+    @classmethod
+    def _operators_to_state(self, ops, **options):
+        if not isinstance(ops, set) or len(ops) != 3:
+            raise TypeError("This is not the set of commuting operators expected!")
+
+        op_list = list(ops)
+        order = [XOp, YOp, ZOp]
+        op_list.sort(lambda a, b: _class_cmp(order, a, b))
+        return self.__new__(self, *_lowercase_labels(op_list), **options)
+
+    def _state_to_operators(self, op_classes, **options):
+        if not isinstance(op_classes, set) or len(op_classes) != 3:
+            raise TypeError("This is not the set of commuting operators expected!")
+
+        op_list = list(op_classes)
+        order = [XOp, YOp, ZOp]
+        op_list.sort(lambda a, b: _class_cmp(order, a, b, is_class=True))
+
+        labs = _uppercase_labels(self)
+        op_insts = [None for op in op_list]
+
+        for i, cls in enumerate(op_list):
+            op_insts[i] = cls.__new__(cls, labs[i], **options)
+
+        return set(op_insts)
 
     @classmethod
     def default_args(self):
         return ("x", "y", "z")
+
+    @classmethod
+    def def_label_assumptions(self):
+        return {"real" : True}
 
     @property
     def position_x(self):
@@ -251,6 +321,10 @@ class PxKet(Ket):
         return ("px",)
 
     @classmethod
+    def def_label_assumptions(self):
+        return {"real" : True}
+
+    @classmethod
     def dual_class(self):
         return PxBra
 
@@ -259,21 +333,28 @@ class PxKet(Ket):
         """The momentum of the state."""
         return self.label[0]
 
-    def _enumerate_state(self, *args, **options):
-        return _enumerate_continuous_1D(self, *args, **options)
-
     def _eval_innerproduct_XBra(self, bra, **hints):
         return exp(I*self.momentum*bra.position/hbar)/sqrt(2*pi*hbar)
 
     def _eval_innerproduct_PxBra(self, bra, **hints):
         return DiracDelta(self.momentum-bra.momentum)
 
+    def _represent_PxKet(self, basis, **options):
+        from sympy.physics.quantum.represent import innerproduct_helper
+        options['basis'] = basis
+        return innerproduct_helper(self, wrap_wavefunction=True, **options)
+
+    def _represent_XKet(self, basis, **options):
+        from sympy.physics.quantum.represent import innerproduct_helper
+        options['basis'] = basis
+        return innerproduct_helper(self, wrap_wavefunction=True, **options)
+
+    def _get_default_basis(self, **options):
+        return PxKet
+
+
 class PxBra(Bra):
     """1D cartesian momentum eigenbra."""
-
-    @classmethod
-    def default_args(self):
-        return ("px",)
 
     @classmethod
     def dual_class(self):
@@ -288,35 +369,34 @@ class PxBra(Bra):
 # Global helper functions
 #-------------------------------------------------------------------------
 
-def _enumerate_continuous_1D(*args, **options):
-    state = args[0]
-    num_states = args[1]
-    state_class = state.__class__
-    index_list = options.pop('index_list', [])
-
-    if len(index_list) == 0:
-        start_index = options.pop('start_index', 1)
-        index_list = range(start_index, start_index + num_states)
-
-    enum_states = [0 for i in range(len(index_list))]
-
-    for i, ind in enumerate(index_list):
-        label = state.args[0]
-        enum_states[i] = state_class(str(label) + "_" + str(ind), **options)
-
-    return enum_states
-
 def _lowercase_labels(ops):
-    if not isinstance(ops, set):
+    if not isinstance(ops, list):
         ops = [ops]
 
     return [str(arg.label[0]).lower() for arg in ops]
 
-def _uppercase_labels(ops):
-    if not isinstance(ops, set):
-        ops = [ops]
-
-    new_args = [str(arg.label[0])[0].upper() + \
-                str(arg.label[0])[1:] for arg in ops]
+def _uppercase_labels(state):
+    new_args = [str(lab)[0].upper() + \
+                str(lab)[1:] for lab in state.label]
 
     return new_args
+
+def _class_cmp(ordering, a, b, **options):
+    ordering = list(ordering)
+
+    is_class = options.pop("is_class", False)
+
+    if not is_class:
+        a = a.__class__
+        b = b.__class__
+
+    try:
+        ind1 = ordering.index(a)
+        ind2 = ordering.index(b)
+    except ValueError:
+        raise TypeError("Expected Operators for this eigenstate not found!")
+
+    if ind1 < ind2:
+        return -1
+    else:
+        return 1

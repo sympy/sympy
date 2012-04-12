@@ -3,9 +3,10 @@ from sympy.external import import_module
 from sympy.utilities.pytest import skip
 
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.represent import (represent, rep_innerproduct,
-                                             rep_expectation, enumerate_states)
-from sympy.physics.quantum.state import Bra, Ket
+from sympy.physics.quantum.represent import (enumerate_states,
+                                             expectation_helper,
+                                             innerproduct_helper, represent)
+from sympy.physics.quantum.state import Bra, Ket, TimeDepKet
 from sympy.physics.quantum.operator import Operator, OuterProduct
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.tensorproduct import matrix_tensor_product
@@ -15,7 +16,7 @@ from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.matrixutils import (numpy_ndarray,
                                                scipy_sparse_matrix, to_numpy,
                                                to_scipy_sparse, to_sympy)
-from sympy.physics.quantum.cartesian import XKet, XOp, XBra
+from sympy.physics.quantum.cartesian import XKet, XOp, XBra, PositionKet3D
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.operatorset import operators_to_state
 
@@ -29,10 +30,10 @@ class AKet(Ket):
     def dual_class(self):
         return ABra
 
-    def _represent_default_basis(self, **options):
-        return self._represent_AOp(None, **options)
+    def _get_default_basis(self, **options):
+        return AKet
 
-    def _represent_AOp(self, basis, **options):
+    def _represent_AKet(self, basis, **options):
         return Avec
 
 
@@ -45,19 +46,19 @@ class ABra(Bra):
 
 class AOp(Operator):
 
-    def _represent_default_basis(self, **options):
-        return self._represent_AOp(None, **options)
+    def _get_default_basis(self, **options):
+        return AKet
 
-    def _represent_AOp(self, basis, **options):
+    def _represent_AKet(self, basis, **options):
         return Amat
 
 
 class BOp(Operator):
 
-    def _represent_default_basis(self, **options):
-        return self._represent_AOp(None, **options)
+    def _get_default_basis(self, **options):
+        return AKet
 
-    def _represent_AOp(self, basis, **options):
+    def _represent_AKet(self, basis, **options):
         return Bmat
 
 
@@ -95,7 +96,7 @@ _tests = [
 
 def test_format_sympy():
     for test in _tests:
-        lhs = represent(test[0], basis=A, format='sympy')
+        lhs = represent(test[0], basis=k, format='sympy')
         rhs = to_sympy(test[1])
         assert lhs == rhs
 
@@ -112,7 +113,7 @@ def test_format_numpy():
         skip("numpy not installed or Python too old.")
 
     for test in _tests:
-        lhs = represent(test[0], basis=A, format='numpy')
+        lhs = represent(test[0], basis=k, format='numpy')
         rhs = to_numpy(test[1])
         if isinstance(lhs, numpy_ndarray):
             assert (lhs == rhs).all()
@@ -137,7 +138,7 @@ def test_format_scipy_sparse():
         skip("scipy not installed.")
 
     for test in _tests:
-        lhs = represent(test[0], basis=A, format='scipy.sparse')
+        lhs = represent(test[0], basis=k, format='scipy.sparse')
         rhs = to_scipy_sparse(test[1])
         if isinstance(lhs, scipy_sparse_matrix):
             assert np.linalg.norm((lhs-rhs).todense()) == 0.0
@@ -159,19 +160,26 @@ x_bra = XBra('x')
 x_op = XOp('X')
 
 def test_innerprod_represent():
-    assert rep_innerproduct(x_ket) == InnerProduct(XBra("x_1"), x_ket).doit()
-    assert rep_innerproduct(x_bra) == InnerProduct(x_bra, XKet("x_1")).doit()
+   assert innerproduct_helper(x_ket, basis=XKet()) == InnerProduct(XBra("x_1"), x_ket).doit()
+   assert innerproduct_helper(x_bra, basis=XKet()) == InnerProduct(x_bra, XKet("x_1")).doit()
 
-    try:
-        rep_innerproduct(x_op)
-    except TypeError:
-        return True
+   try:
+       test = innerproduct_helper(x_op)
+   except TypeError:
+       return True
 
 def test_operator_represent():
-    basis_kets = enumerate_states(operators_to_state(x_op), 1, 2)
-    assert rep_expectation(x_op) == qapply(basis_kets[1].dual*x_op*basis_kets[0])
+   basis_kets = enumerate_states(operators_to_state(x_op), 1, 2)
+   assert expectation_helper(x_op, basis=XKet()) == qapply(basis_kets[1].dual*x_op*basis_kets[0])
 
 def test_enumerate_states():
     test = XKet("foo")
     assert enumerate_states(test, 1, 1) == [XKet("foo_1")]
     assert enumerate_states(test, [1, 2, 4]) == [XKet("foo_1"), XKet("foo_2"), XKet("foo_4")]
+
+    test2 = PositionKet3D()
+    assert enumerate_states(test2, 1, 2) == \
+           [PositionKet3D("x_1","y_1","z_1"), PositionKet3D("x_2","y_2","z_2")]
+    assert enumerate_states(test2, [4, 7]) == \
+           [PositionKet3D("x_4","y_4","z_4"), PositionKet3D("x_7","y_7","z_7")]
+

@@ -1,6 +1,8 @@
 """Tests for cartesian.py"""
 
-from sympy import S, Interval, symbols, I, DiracDelta, exp, sqrt, pi
+from sympy import (
+    S, Interval, symbols, I, DiracDelta, exp, sqrt, pi, Derivative, Function
+)
 
 from sympy.physics.quantum import qapply, represent, L2, Dagger
 from sympy.physics.quantum import Commutator, hbar
@@ -9,9 +11,11 @@ from sympy.physics.quantum.cartesian import (
     PositionKet3D, PositionBra3D
 )
 from sympy.physics.quantum.operator import DifferentialOperator
+from sympy.physics.quantum.state import Wavefunction
 
-x, y, z, x_1, x_2, x_3, y_1, z_1 = symbols('x,y,z,x_1,x_2,x_3,y_1,z_1')
-px, py, px_1, px_2 = symbols('px py px_1 px_2')
+x, y, z, x_1, x_2, x_3, y_1, z_1 = symbols('x,y,z,x_1,x_2,x_3,y_1,z_1', real=True)
+px, py, px_1, px_2 = symbols('px py px_1 px_2', real=True)
+f = Function('f')
 
 
 def test_x():
@@ -23,23 +27,26 @@ def test_x():
     assert (Dagger(XKet(y))*XKet(x)).doit() == DiracDelta(x-y)
     assert (PxBra(px)*XKet(x)).doit() ==\
         exp(-I*x*px/hbar)/sqrt(2*pi*hbar)
-    assert represent(XKet(x)) == DiracDelta(x-x_1)
-    assert represent(XBra(x)) == DiracDelta(-x + x_1)
+    assert represent(XKet(x)) == DiracDelta(x - x_1)
+    assert represent(XOp()) == DiracDelta(x - x_1)*Wavefunction(x, x)
+    assert represent(XBra(x)) == DiracDelta(x - x_1)
     assert XBra(x).position == x
-    assert represent(XOp()*XKet()) == x*DiracDelta(x-x_2)
+    assert represent(XOp()*XKet()) == DiracDelta(x-x_1)*Wavefunction(x, x)
     assert represent(XOp()*XKet()*XBra('y')) == \
-           x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
-    assert represent(XBra("y")*XKet()) == DiracDelta(x - y)
-    assert represent(XKet()*XBra()) == DiracDelta(x - x_2) * DiracDelta(x_1 - x)
+           DiracDelta(x - x_2)*DiracDelta(y - x_1)*Wavefunction(x, x)
+    assert represent(XBra("y")*XKet()) == DiracDelta(y - x)
+    assert represent(XKet()*XBra()) == \
+           DiracDelta(x - x_1)*DiracDelta(x - x_2)
 
     rep_p = represent(XOp(), basis = PxOp)
-    assert rep_p == hbar*I*DiracDelta(px_1 - px_2)*DifferentialOperator(px_1)
+    diff_op1 = DifferentialOperator(Derivative(f(px), px), f(px))
+    assert rep_p == hbar*I*DiracDelta(px - px_1)*diff_op1
     assert rep_p == represent(XOp(), basis = PxOp())
     assert rep_p == represent(XOp(), basis = PxKet)
     assert rep_p == represent(XOp(), basis = PxKet())
 
-    assert represent(XOp()*PxKet(), basis = PxKet) == \
-           hbar*I*DiracDelta(px - px_2)*DifferentialOperator(px)
+    #assert represent(XOp()*PxKet(), basis = PxKet) == \
+    #       Wavefunction(-hbar*I*DiracDelta(px - px_2, 1), px)
 
 def test_p():
     assert Px.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))
@@ -49,18 +56,20 @@ def test_p():
     assert (Dagger(PxKet(py))*PxKet(px)).doit() == DiracDelta(px-py)
     assert (XBra(x)*PxKet(px)).doit() ==\
         exp(I*x*px/hbar)/sqrt(2*pi*hbar)
-    assert represent(PxKet(px)) == DiracDelta(px-px_1)
+    assert represent(PxKet(px)) == DiracDelta(px - px_1)
 
     rep_x = represent(PxOp(), basis = XOp)
-    assert rep_x == -hbar*I*DiracDelta(x_1 - x_2)*DifferentialOperator(x_1)
+    diff_op1 = DifferentialOperator(Derivative(f(x), x), f(x))
+    assert rep_x == -hbar*I*DiracDelta(x - x_1)*diff_op1
     assert rep_x == represent(PxOp(), basis = XOp())
     assert rep_x == represent(PxOp(), basis = XKet)
     assert rep_x == represent(PxOp(), basis = XKet())
 
-    assert represent(PxOp()*XKet(), basis=XKet) == \
-           -hbar*I*DiracDelta(x - x_2)*DifferentialOperator(x)
-    assert represent(XBra("y")*PxOp()*XKet(), basis=XKet) == \
-           -hbar*I*DiracDelta(x-y)*DifferentialOperator(x)
+    diff_op = DifferentialOperator(Derivative(f(x), x), f(x))
+    #assert represent(PxOp()*XKet(), basis=XKet) == \
+    #       Wavefunction(hbar*I*DiracDelta(x - x_2, 1), x)
+    #assert represent(XBra("y")*PxOp()*XKet(), basis=XKet) == \
+    #       Wavefunction(hbar*I*DiracDelta(x - y, 1), x, y)
 
 def test_3dpos():
     assert Y.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))
