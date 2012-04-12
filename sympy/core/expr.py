@@ -1651,10 +1651,15 @@ class Expr(Basic, EvalfMixin):
         return S.One, self
 
     def as_numer_denom(self):
-        """ a/b -> a,b
+        """ expression -> a/b -> a, b
 
         This is just a stub that should be defined by
-        an object's class methods to get anything else."""
+        an object's class methods to get anything else.
+
+        See Also
+        ========
+        normal: return a/b instead of a, b
+        """
 
         return self, S.One
 
