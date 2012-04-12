@@ -2505,15 +2505,13 @@ class Expr(Basic, EvalfMixin):
     def as_coeff_exponent(self, x):
         """ ``c*x**e -> c,e`` where x can be any symbolic expression.
         """
-        x = sympify(x)
-        wc = Wild('wc')
-        we = Wild('we')
-        p  = wc*x**we
         from sympy import collect
         s = collect(self, x)
-        d = s.match(p)
-        if d is not None and we in d:
-            return d[wc], d[we]
+        c, p = s.as_coeff_mul(x)
+        if len(p) == 1:
+            b, e = p[0].as_base_exp()
+            if b == x:
+                return c, e
         return s, S.Zero
 
     def leadterm(self, x):
