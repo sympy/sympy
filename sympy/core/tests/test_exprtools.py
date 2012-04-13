@@ -103,6 +103,9 @@ def test_gcd_terms():
     assert _gcd_terms([S.Zero, S.Zero]) == (0, 0, 1)
     assert _gcd_terms([2*x + 4]) == (2, x + 2, 1)
 
+    eq = x/(x + 1/x)
+    assert gcd_terms(eq, fraction=False) == eq
+
 def test_factor_terms():
     A = Symbol('A', commutative=False)
     assert factor_terms(9*(x + x*y + 1) + (3*x + 3)**(2 + 2*x)) == \
@@ -135,6 +138,10 @@ def test_factor_terms():
     e = 1/sqrt(a/2 + 1)
     assert factor_terms(e, clear=False) == 1/sqrt(a/2 + 1)
     assert factor_terms(e, clear=True) == sqrt(2)/sqrt(a + 2)
+
+    eq = x/(x + 1/x) + 1/(x**2 + 1)
+    assert factor_terms(eq, fraction=False) == eq
+    assert factor_terms(eq, fraction=True) == 1
 
 def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)
