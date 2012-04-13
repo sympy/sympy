@@ -7,7 +7,7 @@ from expr import Expr, AtomicExpr
 from cache import cacheit
 from function import FunctionClass
 from sympy.logic.boolalg import Boolean
-from sympy.core.compatibility import SymPyDeprecationWarning
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 import re
 import warnings
@@ -61,10 +61,9 @@ class Symbol(AtomicExpr, Boolean):
 
         if 'dummy' in assumptions:
             warnings.warn(
-                    "\nThe syntax Symbol('x', dummy=True) is deprecated and will"
-                    "\nbe dropped in a future version of SymPy. Please use Dummy()"
-                    "\nor symbols(..., cls=Dummy) to create dummy symbols.",
-                    SymPyDeprecationWarning)
+                SymPyDeprecationWarning(
+                    feature="Symbol('x', dummy=True)",
+                    useinstead="Dummy() or symbols(..., cls=Dummy)"))
             if assumptions.pop('dummy'):
                 return Dummy(name, **assumptions)
         if assumptions.get('zero', False):
@@ -287,9 +286,10 @@ def symbols(names, **args):
     """
     result = []
     if 'each_char' in args:
-        warnings.warn("The each_char option to symbols() and var() is "
-            "deprecated.  Separate symbol names by spaces or commas instead.",
-            SymPyDeprecationWarning)
+        warnings.warn(
+            SymPyDeprecationWarning(
+                feature="each_char in the options to symbols() and var()",
+                useinstead="spaces or commas between symbol names"))
 
     if isinstance(names, basestring):
         names = names.strip()

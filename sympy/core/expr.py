@@ -4,7 +4,7 @@ from singleton import S
 from evalf import EvalfMixin, pure_complex
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
-from compatibility import reduce, SymPyDeprecationWarning
+from compatibility import reduce
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
@@ -1491,8 +1491,9 @@ class Expr(Basic, EvalfMixin):
         This method is deprecated. Use .as_coeff_mul() instead.
         """
         import warnings
-        warnings.warn("\nuse as_coeff_mul() instead of as_coeff_terms().",
-                      SymPyDeprecationWarning)
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        warnings.warn(SymPyDeprecationWarning(feature="as_coeff_terms()",
+                                              useinstead="as_coeff_mul()"))
         return self.as_coeff_mul(*deps)
 
     def as_coeff_factors(self, *deps):
@@ -1500,8 +1501,9 @@ class Expr(Basic, EvalfMixin):
         This method is deprecated.  Use .as_coeff_add() instead.
         """
         import warnings
-        warnings.warn("\nuse as_coeff_add() instead of as_coeff_factors().",
-                      SymPyDeprecationWarning)
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        warnings.warn(SymPyDeprecationWarning(feature="as_coeff_factors()",
+                                              useinstead="as_coeff_add()"))
         return self.as_coeff_add(*deps)
 
     def as_coeff_mul(self, *deps):
