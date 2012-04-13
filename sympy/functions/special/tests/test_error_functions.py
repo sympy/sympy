@@ -30,7 +30,7 @@ def test_erf():
 
     assert conjugate(erf(z)) == erf(conjugate(z))
 
-    assert erf(x).as_leading_term(x) == x
+    assert erf(x).as_leading_term(x) == 2*x/sqrt(pi)
     assert erf(1/x).as_leading_term(x) == erf(1/x)
 
     assert erf(z).rewrite('uppergamma') == sqrt(z**2)*erf(sqrt(z**2))/z

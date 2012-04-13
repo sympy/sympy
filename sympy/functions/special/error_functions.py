@@ -143,6 +143,14 @@ class erf(Function):
     def _eval_rewrite_as_tractable(self, z):
         return S.One - _erfs(z)*C.exp(-z**2)
 
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
+            return 2*x/sqrt(pi)
+        else:
+            return self.func(arg)
+
 
 ###############################################################################
 #################### EXPONENTIAL INTEGRALS ####################################
