@@ -458,10 +458,12 @@ def test_leading_term():
     x = Symbol('x')
     for func in [sinh, cosh, tanh, coth]:
         assert func(x).as_leading_term(x) == 1
-        assert func(1/x).as_leading_term(x) == func(1/x)
     for func in [asinh, acosh, atanh, acoth]:
         assert func(x).as_leading_term(x) == x
-        assert func(1/x).as_leading_term(x) == func(1/x)
+    for func in [sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth]:
+        for arg in (1/x, S.Half):
+            eq = func(arg)
+            assert eq.as_leading_term(x) == eq
 
 def test_complex():
     a,b = symbols('a,b', real=True)

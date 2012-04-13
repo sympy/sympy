@@ -329,7 +329,7 @@ class sin(TrigonometricFunction):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -559,7 +559,7 @@ class cos(TrigonometricFunction):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return S.One
         else:
             return self.func(arg)
@@ -768,7 +768,7 @@ class tan(TrigonometricFunction):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -948,7 +948,7 @@ class cot(TrigonometricFunction):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return 1/arg
         else:
             return self.func(arg)
@@ -1064,7 +1064,7 @@ class asin(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -1173,7 +1173,7 @@ class acos(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -1289,7 +1289,7 @@ class atan(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -1386,7 +1386,7 @@ class acot(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return arg
         else:
             return self.func(arg)

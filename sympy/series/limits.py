@@ -112,6 +112,24 @@ def limit(e, z, z0, dir="+"):
 
     if e.is_Mul or not z0 and e.is_Pow and b.func is log:
         if e.is_Mul:
+            if abs(z0) is S.Infinity:
+                n, d = e.as_numer_denom()
+                # XXX todo: this should probably be stated in the
+                # negative -- i.e. to exclude expressions that should
+                # not be handled this way but I'm not sure what that
+                # condition is; when ok is True it means that the leading
+                # term approach is going to succeed (hopefully)
+                ok = lambda w: (z in w.free_symbols and
+                     any(a.is_polynomial(z) or
+                     any(z in m.free_symbols and m.is_polynomial(z)
+                     for m in Mul.make_args(a))
+                     for a in Add.make_args(w)))
+                if all(ok(w) for w in (n, d)):
+                    u = C.Dummy(positive=(z0 is S.Infinity))
+                    inve = (n/d).subs(z, 1/u)
+                    return limit(inve.as_leading_term(u), u,
+                        S.Zero, "+" if z0 is S.Infinity else "-")
+
             # weed out the z-independent terms
             i, d = e.as_independent(z)
             if i is not S.One and i.is_bounded:
@@ -194,29 +212,32 @@ def limit(e, z, z0, dir="+"):
         r = gruntz(e, z, z0, dir)
         if r is S.NaN:
             raise PoleError()
-    except PoleError:
+    except (PoleError, ValueError):
         r = heuristics(e, z, z0, dir)
     return r
 
 def heuristics(e, z, z0, dir):
-    if z0 == oo:
-        return limit(e.subs(z, 1/z), z, sympify(0), "+")
-    elif e.is_Mul:
+    if abs(z0) is S.Infinity:
+        return limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
+
+    rv = None
+    bad = (S.Infinity, S.NegativeInfinity, S.NaN, None)
+    if e.is_Mul:
         r = []
         for a in e.args:
             if not a.is_bounded:
                 r.append(a.limit(z, z0, dir))
-        if r:
-            return Mul(*r)
-    elif e.is_Add:
-        r = []
-        for a in e.args:
-            r.append(a.limit(z, z0, dir))
-        return Add(*r)
-    elif e.is_Function:
-        return e.subs(e.args[0], limit(e.args[0], z, z0, dir))
-    msg = "Don't know how to calculate the limit(%s, %s, %s, dir=%s), sorry."
-    raise PoleError(msg % (e, z, z0, dir))
+                if r[-1] in bad:
+                    break
+        else:
+            if r:
+                rv = Mul(*r)
+    if rv is None and (e.is_Add or e.is_Pow or e.is_Function):
+        rv = e.func(*[limit(a, z, z0, dir) for a in e.args])
+    if rv in bad:
+        msg = "Don't know how to calculate the limit(%s, %s, %s, dir=%s), sorry."
+        raise PoleError(msg % (e, z, z0, dir))
+    return rv
 
 
 class Limit(Expr):

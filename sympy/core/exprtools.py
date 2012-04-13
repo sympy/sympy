@@ -480,14 +480,15 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
 
     if terms.is_Mul:
         c, args = terms.as_coeff_mul()
-        return _keep_coeff(c, Mul(*[gcd_terms(i, isprimitive, clear) for i in args]), clear=clear)
+        return _keep_coeff(c, Mul(*[gcd_terms(i, isprimitive, clear, fraction)
+            for i in args]), clear=clear)
 
     def handle(a):
         if iterable(a):
             if isinstance(a, Basic):
                 return a.func(*[gcd_terms(i, isprimitive, clear) for i in a.args])
-            return type(a)([gcd_terms(i, isprimitive, clear) for i in a])
-        return gcd_terms(a, isprimitive, clear)
+            return type(a)([gcd_terms(i, isprimitive, clear, fraction) for i in a])
+        return gcd_terms(a, isprimitive, clear, fraction)
     return terms.func(*[handle(i) for i in terms.args])
 
 

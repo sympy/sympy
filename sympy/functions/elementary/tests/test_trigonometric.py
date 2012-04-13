@@ -631,7 +631,9 @@ def test_as_leading_term_issue2173():
 def test_leading_terms():
     x = Symbol('x')
     for func in [sin, cos, tan, cot, asin, acos, atan, acot]:
-        assert func(1/x).as_leading_term(x) == func(1/x)
+        for arg in (1/x, S.Half):
+            eq = func(arg)
+            assert eq.as_leading_term(x) == eq
 
 def test_atan2_expansion():
     x, y = symbols("x,y")
