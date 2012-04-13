@@ -197,7 +197,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Carsten Knoll: improvement to preview()
 #. M R Bharath: modified use of int_tested, improvement to Permutation
 #. Matthias Toews: File permissions
-#. Sergiu Ivanov: Fixes to zoo
+#. Sergiu Ivanov: Fixes to zoo, SymPyDeprecationWarning
 #. Jorge E. Cardona: Cleanup in polys
 #. Sanket Agarwal: Rewrite coverage_doctest.py script
 #. Manoj Babu K.: Improve gamma function
