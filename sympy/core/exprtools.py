@@ -578,66 +578,104 @@ def _mask_nc(eq):
     symbols. A dictionary that can be used to restore the original
     values is returned: if it is None, the expression is
     noncommutative and cannot be made commutative. The third value
-    returned is a list of any non-commutative symbols that appeared
-    in the equation.
+    returned is a list of any non-commutative symbols that appear
+    in the returned equation.
 
     Notes
     =====
-    All commutative objects (other than Symbol) will be replaced;
-    if the only non-commutative obects are Symbols, if there is only
-    1 Symbol, it will be replaced; if there are more than one then
-    they will not be replaced; the calling routine should handle
+    All non-commutative objects other than Symbols are replaced with
+    a non-commutative Symbol. Identical objects will be identified
+    by identical symbols.
+
+    If there is only 1 non-commutative object in an expression it will
+    be replaced with a commutative symbol. Otherwise, the non-commutative
+    entities are retained and the calling routine should handle
     replacements in this case since some care must be taken to keep
     track of the ordering of symbols when they occur within Muls.
 
     Examples
     ========
     >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
-    >>> from sympy import Dummy, symbols
+    >>> from sympy import Dummy, symbols, Sum
     >>> from sympy.abc import x, y
     >>> from sympy.core.exprtools import _mask_nc
     >>> A, B, C = symbols('A,B,C', commutative=False)
     >>> Dummy._count = 0 # reset for doctest purposes
+
+    One nc-symbol:
+
     >>> _mask_nc(A**2 - x**2)
     (_0**2 - x**2, {_0: A}, [])
+
+    Multiple nc-symbols:
+
     >>> _mask_nc(A**2 - B**2)
     (A**2 - B**2, None, [A, B])
+
+    An nc-object with nc-symbols but no others outside of it:
+
     >>> _mask_nc(1 + x*Commutator(A, B))
-    (_1*x + 1, {_1: Commutator(A, B)}, [A, B])
+    (_1*x + 1, {_1: Commutator(A, B)}, [])
     >>> _mask_nc(NO(Fd(x)*F(y)))
     (_2, {_2: NO(CreateFermion(x)*AnnihilateFermion(y))}, [])
+
+    An nc-object without nc-symbols:
+
+    >>> _mask_nc(x + x*Sum(x, (x, 1, 2)))
+    (_3*x + x, {_3: Sum(x, (x, 1, 2))}, [])
+
+    Multiple nc-objects:
+
+    >>> eq = x*Commutator(A, B) + x*Commutator(A, C)*Commutator(A, B)
+    >>> _mask_nc(eq)
+    (x*_4*_5 + x*_5, {_4: Commutator(A, C), _5: Commutator(A, B)}, [_4, _5])
+
+    Multiple nc-objects and nc-symbols:
+
+    >>> eq = A*Commutator(A, B) + B*Commutator(A, C)
+    >>> _mask_nc(eq)
+    (A*_7 + B*_6, {_6: Commutator(A, C), _7: Commutator(A, B)}, [_6, _7, A, B])
 
     """
     expr = eq
     if expr.is_commutative:
         return eq, {}, []
-    # if there is only one nc symbol, it can be factored regularly but
-    # polys is going to complain, so replace it with a dummy
+
+    # identify nc-objects; symbols and other
     rep = []
-    nc_syms = [s for s in expr.free_symbols if not s.is_commutative]
-    if len(nc_syms) == 1:
-        nc = Dummy()
-        rep.append((nc_syms.pop(), nc))
-        expr = expr.subs(rep)
-    # even though the noncommutative symbol may be gone, the expression
-    # might still appear noncommutative; if it's a non-elementary object
-    # we will replace it, but if it is a Symbol, Add, Mul, Pow we leave
-    # it alone.
+    nc_obj = set()
+    nc_syms = set()
+    pot = preorder_traversal(expr)
+    for i, a in enumerate(pot):
+        if any(a == r[0] for r in rep):
+            pot.skip()
+        elif not a.is_commutative:
+            if a.is_Symbol:
+                nc_syms.add(a)
+            elif not (a.is_Add or a.is_Mul or a.is_Pow):
+                if all(s.is_commutative for s in a.free_symbols):
+                    rep.append((a, Dummy()))
+                else:
+                    nc_obj.add(a)
+                pot.skip()
+
+    # If there is only one nc symbol or object, it can be factored regularly
+    # but polys is going to complain, so replace it with a Dummy.
+    if len(nc_obj) == 1 and not nc_syms:
+        rep.append((nc_obj.pop(), Dummy()))
+    elif len(nc_syms) == 1 and not nc_obj:
+        rep.append((nc_syms.pop(), Dummy()))
+
+    # Any remaining nc-objects will be replaced with an nc-Dummy and
+    # identified as an nc-Symbol to watch out for
+    while nc_obj:
+        nc = Dummy(commutative=False)
+        rep.append((nc_obj.pop(), nc))
+        nc_syms.add(nc)
+    expr = expr.subs(rep)
+
+    nc_syms = list(nc_syms)
     nc_syms.sort(key=default_sort_key)
-    if nc_syms or not expr.is_commutative:
-        pot = preorder_traversal(expr)
-        for i, a in enumerate(pot):
-            if any(a == r[0] for r in rep):
-                pass
-            elif (
-                not a.is_commutative and
-                not (a.is_Symbol or a.is_Add or a.is_Mul or a.is_Pow)
-                ):
-                rep.append((a, Dummy()))
-            else:
-                continue # don't skip
-            pot.skip() # don't go any further
-        expr = expr.subs(rep)
     return expr, dict([(v, k) for k, v in rep]) or None, nc_syms
 
 def factor_nc(expr):

@@ -182,3 +182,13 @@ def test_factor_nc():
 
     assert factor_nc(n*(n + n*m)) == n**2*(1 + m)
     assert factor_nc(m*(m*n + n*m*n**2)) == m*(m + n*m*n)*n
+    eq = m*sin(n) - sin(n)*m
+    assert factor_nc(eq) == eq
+
+    # for coverage:
+    from sympy.physics.secondquant import Commutator
+    from sympy import factor
+    eq = 1 + x*Commutator(m, n)
+    assert factor_nc(eq) == eq
+    eq = x*Commutator(m, n) + x*Commutator(m, o)*Commutator(m, n)
+    assert factor(eq) == x*(1 + Commutator(m, o))*Commutator(m, n)
