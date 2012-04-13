@@ -212,6 +212,13 @@ def test_as_leading_term3():
     assert (2+pi+x).as_leading_term(x) == 2 + pi
     assert (2*x+pi*x+x**2).as_leading_term(x) == (2+pi)*x
 
+def test_as_leading_term_stub():
+    class foo(Function):
+        pass
+    assert foo(1/x).as_leading_term(x) == foo(1/x)
+    assert foo(1).as_leading_term(x) == foo(1)
+    raises(NotImplementedError, 'foo(x).as_leading_term(x)')
+
 def test_atoms():
     assert sorted(list(x.atoms())) == [x]
     assert sorted(list((1+x).atoms())) == sorted([1, x])
