@@ -1651,10 +1651,15 @@ class Expr(Basic, EvalfMixin):
         return S.One, self
 
     def as_numer_denom(self):
-        """ a/b -> a,b
+        """ expression -> a/b -> a, b
 
         This is just a stub that should be defined by
-        an object's class methods to get anything else."""
+        an object's class methods to get anything else.
+
+        See Also
+        ========
+        normal: return a/b instead of a, b
+        """
 
         return self, S.One
 
@@ -2461,7 +2466,10 @@ class Expr(Basic, EvalfMixin):
     @cacheit
     def as_leading_term(self, *symbols):
         """
-        Returns the leading term.
+        Returns the leading (nonzero) term of the series expansion of self.
+
+        The _eval_as_leading_term routines are used to do this, and they must
+        always return a non-zero value.
 
         Examples
         ========
@@ -2472,9 +2480,6 @@ class Expr(Basic, EvalfMixin):
         >>> (1/x**2 + x + x**2).as_leading_term(x)
         x**(-2)
 
-        Note:
-
-        self is assumed to be the result returned by Basic.series().
         """
         from sympy import powsimp
         if len(symbols) > 1:
@@ -2500,15 +2505,13 @@ class Expr(Basic, EvalfMixin):
     def as_coeff_exponent(self, x):
         """ ``c*x**e -> c,e`` where x can be any symbolic expression.
         """
-        x = sympify(x)
-        wc = Wild('wc')
-        we = Wild('we')
-        p  = wc*x**we
         from sympy import collect
         s = collect(self, x)
-        d = s.match(p)
-        if d is not None and we in d:
-            return d[wc], d[we]
+        c, p = s.as_coeff_mul(x)
+        if len(p) == 1:
+            b, e = p[0].as_base_exp()
+            if b == x:
+                return c, e
         return s, S.Zero
 
     def leadterm(self, x):
@@ -2524,17 +2527,14 @@ class Expr(Basic, EvalfMixin):
         >>> (1/x**2+x+x**2).leadterm(x)
         (1, -2)
 
-        Note:
-
-        self is assumed to be the result returned by Basic.series().
         """
-        from sympy import powsimp
-        x = sympify(x)
-        c, e = self.normal().as_leading_term(x).as_coeff_exponent(x)
-        c = powsimp(c, deep=True, combine='exp')
-        if not c.has(x):
-            return c, e
-        raise ValueError("cannot compute leadterm(%s, %s), got c=%s" % (self, x, c))
+        c, e = self.as_leading_term(x).as_coeff_exponent(x)
+        if x in c.free_symbols:
+            from sympy.utilities.misc import filldedent
+            raise ValueError(filldedent("""
+                cannot compute leadterm(%s, %s). The coefficient
+                should have been free of x but got %s""" % (self, x, c)))
+        return c, e
 
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product. """

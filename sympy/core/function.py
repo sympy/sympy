@@ -401,6 +401,8 @@ class Function(Application, Expr):
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_bounded == False for t in args0):
             from sympy import oo, zoo, nan
+            # XXX could use t.as_leading_term(x) here but it's a little
+            # slower
             a = [t.compute_leading_term(x, logx=logx) for t in args]
             a0 = [t.limit(x, 0) for t in a]
             if any ([t.has(oo, -oo, zoo, nan) for t in a0]):
@@ -602,14 +604,31 @@ class Function(Application, Expr):
         return Derivative(self,self.args[argindex-1],evaluate=False)
 
     def _eval_as_leading_term(self, x):
-        """General method for the leading term"""
-        # XXX This seems broken to me!
-        arg = self.args[0].as_leading_term(x)
-
-        if C.Order(1,x).contains(arg):
-            return arg
+        """Stub that should be overridden by new Functions to return
+        the first non-zero term in a series if ever an x-dependent
+        argument whose leading term vanishes as x -> 0 might be encountered.
+        See, for example, cos._eval_as_leading_term.
+        """
+        args = [a.as_leading_term(x) for a in self.args]
+        o = C.Order(1, x)
+        if any(x in a.free_symbols and o.contains(a) for a in args):
+            # Whereas x and any finite number are contained in O(1, x),
+            # expressions like 1/x are not. If any arg simplified to a
+            # vanishing expression as x -> 0 (like x or x**2, but not
+            # 3, 1/x, etc...) then the _eval_as_leading_term is needed
+            # to supply the first non-zero term of the series,
+            #
+            # e.g. expression    leading term
+            #      ----------    ------------
+            #      cos(1/x)      cos(1/x)
+            #      cos(cos(x))   cos(1)
+            #      cos(x)        1        <- _eval_as_leading_term needed
+            #      sin(x)        x        <- _eval_as_leading_term needed
+            #
+            raise NotImplementedError(
+                '%s has no _eval_as_leading_term routine' % self.func)
         else:
-            return self.func(arg)
+            return self.func(*args)
 
     @classmethod
     def taylor_term(cls, n, x, *previous_terms):
