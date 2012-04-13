@@ -252,10 +252,10 @@ def test_transform():
     a = Integral(x**2+1, (x, -1, 2))
     assert a.doit() == a.transform(x, 3*y+1,y).doit()
     assert a.transform(x, 3*y+1,y).transform(y, 3*x+1, x, inverse=True) == a
-    assert a.transform(x, 3*y+1, y, inverse=True).transform(x, 3*y+1, y) == a
+    assert a.transform(x, 3*y+1, y, inverse=True).transform(y, 3*x+1, x) == a
     a = Integral(sin(1/x), (x, 0, 1))
     assert a.transform(x, 1/y, y) == Integral(sin(x)/x**2, (x, 1, oo))
-    assert a.transform(x, 1/y, y).transform(x, 1/y, y) == a
+    assert a.transform(x, 1/y, y).transform(y, 1/x, x) == a
     a = Integral(exp(-x**2), (x, -oo, oo))
     assert a.transform(x, 2*y, y) == Integral(2*exp(-4*x**2), (x, -oo, oo))
     # < 3 arg limit handled properly
