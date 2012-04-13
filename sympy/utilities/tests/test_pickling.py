@@ -24,7 +24,8 @@ from sympy.core.multidimensional import vectorize
 from sympy.functions import exp
 #from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
-from sympy.core.compatibility import callable, SymPyDeprecationWarning
+from sympy.core.compatibility import callable
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy import symbols
 
