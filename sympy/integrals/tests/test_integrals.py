@@ -254,17 +254,17 @@ def test_transform():
     assert a.transform(x, 3*y+1,y).transform(y, 3*x+1, x, inverse=True) == a
     assert a.transform(x, 3*y+1, y, inverse=True).transform(y, 3*x+1, x) == a
     a = Integral(sin(1/x), (x, 0, 1))
-    assert a.transform(x, 1/y, y) == Integral(sin(x)/x**2, (x, 1, oo))
+    assert a.transform(x, 1/y, y) == Integral(sin(y)/y**2, (y, 1, oo))
     assert a.transform(x, 1/y, y).transform(y, 1/x, x) == a
     a = Integral(exp(-x**2), (x, -oo, oo))
-    assert a.transform(x, 2*y, y) == Integral(2*exp(-4*x**2), (x, -oo, oo))
+    assert a.transform(x, 2*y, y) == Integral(2*exp(-4*y**2), (y, -oo, oo))
     # < 3 arg limit handled properly
-    assert Integral(x, x).transform(x, a*y, y).doit() == Integral(x*a**2, x).doit()
+    assert Integral(x, x).transform(x, a*y, y).doit() == Integral(y*a**2, y).doit()
     _3 = S(3)
     assert Integral(x, (x, 0, -_3)).transform(x, 1/y, y).doit() == \
     Integral(-1/x**3, (x, -oo, -1/_3)).doit()
     assert Integral(x, (x, 0, _3)).transform(x, 1/y, y) == \
-    Integral(x**(-3), (x, 1/_3, oo))
+    Integral(y**(-3), (y, 1/_3, oo))
 
 def test_issue953():
     f = S(1)/2*asin(x) + x*sqrt(1 - x**2)/2
