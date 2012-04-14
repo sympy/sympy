@@ -327,7 +327,7 @@ class Abs(Function):
             return S.NaN
         if arg.is_zero:#equals(0):
             return arg
-        if arg.is_positive:
+        if arg.is_nonnegative:
             return arg
         if arg.is_negative:
             return -arg
