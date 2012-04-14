@@ -285,7 +285,7 @@ sin(ax+b). Note that many other oscillatory integrals can be transformed to
 this form with a change of variables:
 
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
-    >>> intgrl = Integral(sin(1/x), (x, 0, 1)).transform(x, 1/x)
+    >>> intgrl = Integral(sin(1/x), (x, 0, 1)).transform(x, 1/x,x)
     >>> intgrl
      oo
       /
