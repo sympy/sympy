@@ -338,6 +338,20 @@ def test_sympy__core__sets__Union():
     from sympy.core.sets import Union, Interval
     assert _test_args(Union(Interval(0, 1), Interval(2, 3)))
 
+def test_sympy__sets__fancysets__Naturals():
+    from sympy.sets.fancysets import Naturals
+    assert _test_args(Naturals())
+
+def test_sympy__sets__fancysets__Integers():
+    from sympy.sets.fancysets import Integers
+    assert _test_args(Integers())
+
+def test_sympy__sets__fancysets__TransformationSet():
+    from sympy.sets.fancysets import TransformationSet
+    from sympy import S, Lambda, Symbol
+    x = Symbol('x')
+    assert _test_args(TransformationSet(Lambda(x, x**2), S.Naturals))
+
 # STATS
 def normal_pdf(x):
     from sympy import pi, exp, sqrt
