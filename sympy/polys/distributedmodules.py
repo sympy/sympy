@@ -292,7 +292,7 @@ def sdm_from_vector(vec, O, K, **opts):
     dic = {}
     for i, d in enumerate(dics):
         for k, v in d.iteritems():
-            dic[(i,) + k] = K(v)
+            dic[(i,) + k] = K.convert(v)
     return sdm_from_dict(dic, O)
 
 def sdm_to_vector(f, gens, K, n=None):
