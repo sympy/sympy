@@ -23,23 +23,21 @@ __all__ = [
 #-----------------------------------------------------------------------------
 # States, bras and kets.
 #-----------------------------------------------------------------------------
-# Unicode brackets
-# LIGHT VERTICAL BAR
-_straight_bracket_ucode = u"\u2758"
-
-# MATHEMATICAL ANGLE BRACKETS
-_lbracket_ucode = u"\u27E8"
-_rbracket_ucode = u"\u27E9"
 
 # ASCII brackets
 _lbracket = "<"
 _rbracket = ">"
 _straight_bracket = "|"
 
-# Other options for unicode printing of <, > and | for Dirac notation.
 
-# VERTICAL LINE
-# _straight_bracket = u"\u007C"
+# Unicode brackets
+# MATHEMATICAL ANGLE BRACKETS
+_lbracket_ucode = u"\u27E8"
+_rbracket_ucode = u"\u27E9"
+# LIGHT VERTICAL BAR
+_straight_bracket_ucode = u"\u2758"
+
+# Other options for unicode printing of <, > and | for Dirac notation.
 
 # LEFT-POINTING ANGLE BRACKET
 # _lbracket = u"\u2329"
@@ -48,6 +46,9 @@ _straight_bracket = "|"
 # LEFT ANGLE BRACKET
 # _lbracket = u"\u3008"
 # _rbracket = u"\u3009"
+
+# VERTICAL LINE
+# _straight_bracket = u"\u007C"
 
 
 class StateBase(QExpr):
@@ -122,29 +123,41 @@ class StateBase(QExpr):
     # Printing
     #-------------------------------------------------------------------------
 
-    def _pretty_print_tall_brackets(self, bracket, height, printer, *args):
-        # This is a nasty hack job that just works
-        # Ideally, this could be done by pform.parens
-        # but it does not support the angled < and >
-        if height % 2 == 1:
-            height += 1
-        if printer._use_unicode:
-            slash = u'\u2571'
-            bslash = u'\u2572'
-            vert = u'\u2502'
+    def _pretty_brackets(self, height, use_unicode=True):
+        # Return pretty printed brackets for the state
+        # Ideally, this could be done by pform.parens but it does not support the angled < and >
+
+        # Setup for unicode vs ascii
+        if use_unicode:
+            lbracket, rbracket = self.lbracket_ucode, self.rbracket_ucode
+            slash, bslash, vert = u'\u2571', u'\u2572', u'\u2502'
         else:
-            slash = '/'
-            bslash = '\\'
-            vert = '|'
-        if bracket == '<':
-            bracket_args = [ ' '*(height/2-i-1) + slash for i in range(height/2)]
-            bracket_args.extend([ ' '*i + bslash for i in range(height/2)])
-        elif bracket == '>':
-            bracket_args = [ ' '*i + bslash for i in range(height/2)]
-            bracket_args.extend([ ' '*(height/2-i-1) + slash for i in range(height/2)])
-        elif bracket == '|':
-            bracket_args = [vert for i in range(height)]
-        return stringPict('\n'.join(bracket_args), baseline=height/2)
+            lbracket, rbracket = self.lbracket, self.rbracket
+            slash, bslash, vert = '/', '\\', '|'
+
+        # If height is 1, just return brackets
+        if height == 1:
+            return stringPict(lbracket), stringPict(rbracket)
+        # Make height even
+        height += (height % 2)
+
+        brackets = []
+        for bracket in lbracket, rbracket:
+            # Create left bracket
+            if bracket in set([_lbracket, _lbracket_ucode]):
+                bracket_args = [ ' ' * (height//2-i-1) + slash for i in range(height // 2)]
+                bracket_args.extend([ ' ' * i + bslash for i in range(height // 2)])
+            # Create right bracket
+            elif bracket in set([_rbracket, _rbracket_ucode]):
+                bracket_args = [ ' ' * i + bslash for i in range(height // 2)]
+                bracket_args.extend([ ' ' * (height//2-i-1) + slash for i in range(height // 2)])
+            # Create straight bracket
+            elif bracket in set([_straight_bracket, _straight_bracket_ucode]):
+                bracket_args = [vert for i in range(height)]
+            else:
+                raise ValueError(bracket)
+            brackets.append(stringPict('\n'.join(bracket_args), baseline=height//2))
+        return brackets
 
     def _sympystr(self, printer, *args):
         contents = self._print_contents(printer, *args)
@@ -152,17 +165,10 @@ class StateBase(QExpr):
 
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
+        # Get brackets
         pform = self._print_contents_pretty(printer, *args)
-        if pform.height() == 1:
-            if printer._use_unicode:
-                lbracket = self.lbracket_pretty_ucode
-                rbracket = self.rbracket_pretty_ucode
-            else:
-                lbracket = self.lbracket_pretty
-                rbracket = self.rbracket_pretty
-        else:
-            lbracket = self._pretty_print_tall_brackets(self.lbracket_pretty_tall, pform.height(), printer)
-            rbracket = self._pretty_print_tall_brackets(self.rbracket_pretty_tall, pform.height(), printer)
+        lbracket, rbracket = self._pretty_brackets(pform.height(), printer._use_unicode)
+        # Put together state
         pform = prettyForm(*pform.left(lbracket))
         pform = prettyForm(*pform.right(rbracket))
         return pform
@@ -182,14 +188,10 @@ class KetBase(StateBase):
     use Ket.
     """
 
-    lbracket = '|'
-    rbracket = '>'
-    lbracket_pretty = prettyForm(_straight_bracket)
-    rbracket_pretty = prettyForm(_rbracket)
-    lbracket_pretty_ucode = prettyForm(_straight_bracket_ucode)
-    rbracket_pretty_ucode = prettyForm(_rbracket_ucode)
-    lbracket_pretty_tall = lbracket
-    rbracket_pretty_tall = rbracket
+    lbracket = _straight_bracket
+    rbracket = _rbracket
+    lbracket_ucode = _straight_bracket_ucode
+    rbracket_ucode = _rbracket_ucode
     lbracket_latex = r'\left|'
     rbracket_latex = r'\right\rangle '
 
@@ -264,14 +266,10 @@ class BraBase(StateBase):
     instead use Bra.
     """
 
-    lbracket = '<'
-    rbracket = '|'
-    lbracket_pretty = prettyForm(_lbracket)
-    rbracket_pretty = prettyForm(_straight_bracket)
-    lbracket_pretty_ucode = prettyForm(_lbracket_ucode)
-    rbracket_pretty_ucode = prettyForm(_straight_bracket_ucode)
-    lbracket_pretty_tall = lbracket
-    rbracket_pretty_tall = rbracket
+    lbracket = _lbracket
+    rbracket = _straight_bracket
+    lbracket_ucode = _lbracket_ucode
+    rbracket_ucode = _straight_bracket_ucode
     lbracket_latex = r'\left\langle '
     rbracket_latex = r'\right|'
 

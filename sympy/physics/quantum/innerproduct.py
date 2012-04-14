@@ -104,25 +104,17 @@ class InnerProduct(Expr):
         return '%s|%s' % (sbra[:-1], sket[1:])
 
     def _pretty(self, printer, *args):
+        # Print state contents
         bra = self.bra._print_contents_pretty(printer, *args)
         ket = self.ket._print_contents_pretty(printer, *args)
+        # Print brackets
         height = max(bra.height(), ket.height())
-        if height == 1:
-            if printer._use_unicode:
-                lbracket = self.bra.lbracket_pretty_ucode
-                sbracket = self.ket.lbracket_pretty_ucode
-                rbracket = self.ket.rbracket_pretty_ucode
-            else:
-                lbracket = self.bra.lbracket_pretty
-                sbracket = self.ket.lbracket_pretty
-                rbracket = self.ket.rbracket_pretty
-        else:
-            lbracket = self.bra._pretty_print_tall_brackets(self.bra.lbracket_pretty_tall, height, printer)
-            sbracket = self.ket._pretty_print_tall_brackets(self.ket.lbracket_pretty_tall, height, printer)
-            rbracket = self.ket._pretty_print_tall_brackets(self.ket.rbracket_pretty_tall, height, printer)
-        pform = lbracket
-        pform = prettyForm(*pform.right(bra))
-        pform = prettyForm(*pform.right(sbracket))
+        use_unicode = printer._use_unicode
+        lbracket, _ = self.bra._pretty_brackets(height, use_unicode)
+        cbracket, rbracket = self.ket._pretty_brackets(height, use_unicode)
+        # Build innerproduct
+        pform = prettyForm(*bra.left(lbracket))
+        pform = prettyForm(*pform.right(cbracket))
         pform = prettyForm(*pform.right(ket))
         pform = prettyForm(*pform.right(rbracket))
         return pform
