@@ -145,16 +145,13 @@ class TransformationSet(Set):
 
     def __iter__(self):
         already_seen = set()
-        def iterator():
-            for i in self.base_set:
-                val = self.lamda(i)
-                if val in already_seen:
-                    continue
-                else:
-                    already_seen.add(val)
-                    yield val
-
-        return iterator()
+        for i in self.base_set:
+            val = self.lamda(i)
+            if val in already_seen:
+                continue
+            else:
+                already_seen.add(val)
+                yield val
 
     def _is_multivariate(self):
         return len(self.lamda.variables) > 1
