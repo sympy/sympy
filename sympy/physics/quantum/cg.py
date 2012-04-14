@@ -12,10 +12,10 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.wigner import clebsch_gordan, wigner_3j, wigner_6j, wigner_9j
 
 __all__ = [
+    'CG',
     'Wigner3j',
     'Wigner6j',
     'Wigner9j',
-    'CG',
     'cg_simp'
 ]
 
@@ -46,7 +46,7 @@ class Wigner3j(Expr):
         >>> from sympy.physics.quantum.cg import Wigner3j
         >>> w3j = Wigner3j(6,0,4,0,2,0)
         >>> w3j
-        Wigner3j(6,4,2,0,0,0)
+        Wigner3j(6, 0, 4, 0, 2, 0)
         >>> w3j.doit()
         sqrt(715)/143
 
@@ -61,8 +61,8 @@ class Wigner3j(Expr):
     .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
     def __new__(cls, j1, m1, j2, m2, j3, m3):
-        j1,m1,j2,m2,j3,m3 = map(sympify, (j1,m1,j2,m2,j3,m3))
-        return Expr.__new__(cls, j1, m1, j2, m2, j3, m3)
+        args = map(sympify, (j1,m1,j2,m2,j3,m3))
+        return Expr.__new__(cls, *args)
 
     @property
     def j1(self):
@@ -91,13 +91,6 @@ class Wigner3j(Expr):
     @property
     def is_symbolic(self):
         return not all([arg.is_number for arg in self.args])
-
-    def _sympystr(self, printer, *args):
-        return '%s(%s,%s,%s,%s,%s,%s)' % (
-            self.__class__.__name__,
-            printer._print(self.j1), printer._print(self.j2), printer._print(self.j3),
-            printer._print(self.m1), printer._print(self.m2), printer._print(self.m3)
-        )
 
     # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
@@ -136,9 +129,9 @@ class Wigner3j(Expr):
         return D
 
     def _latex(self, printer, *args):
+        label = map(printer._print, (self.j1, self.j2, self.j3, self.m1, self.m2, self.m3))
         return r'\left(\begin{array}{ccc} %s & %s & %s \\ %s & %s & %s \end{array}\right)' % \
-            (printer._print(self.j1), printer._print(self.j2), printer._print(self.j3), \
-            printer._print(self.m1), printer._print(self.m2), printer._print(self.m3))
+                tuple(label)
 
     def doit(self, **hints):
         if self.is_symbolic:
@@ -193,28 +186,14 @@ class CG(Wigner3j):
             raise ValueError("Coefficients must be numerical")
         return clebsch_gordan(self.j1,self.j2, self.j3, self.m1, self.m2, self.m3)
 
-    def _sympystr(self, printer, *args):
-        return 'CG(%s, %s, %s, %s, %s, %s)' % (
-            printer._print(self.j1), printer._print(self.m1), printer._print(self.j2), \
-            printer._print(self.m2), printer._print(self.j3), printer._print(self.m3)
-        )
-
     def _pretty(self, printer, *args):
-        bot = printer._print(self.j1)
-        bot = prettyForm(*bot.right(','))
-        bot = prettyForm(*bot.right(printer._print(self.m1)))
-        bot = prettyForm(*bot.right(','))
-        bot = prettyForm(*bot.right(printer._print(self.j2)))
-        bot = prettyForm(*bot.right(','))
-        bot = prettyForm(*bot.right(printer._print(self.m2)))
-        top = printer._print(self.j3)
-        top = prettyForm(*top.right(','))
-        top = prettyForm(*top.right(printer._print(self.m3)))
+        bot = printer._print_seq((self.j1, self.m1, self.j2, self.m2), delimiter=',')
+        top = printer._print_seq((self.j3, self.m3), delimiter=',')
 
         pad = max(top.width(), bot.width())
-
         bot = prettyForm(*bot.left(' '))
         top = prettyForm(*top.left(' '))
+
         if not pad == bot.width():
             bot = prettyForm(*bot.right(' ' * (pad-bot.width())))
         if not pad == top.width():
@@ -225,10 +204,8 @@ class CG(Wigner3j):
         return s
 
     def _latex(self, printer, *args):
-        return r'C^{%s,%s}_{%s,%s,%s,%s}' % \
-            (printer._print(self.j3), printer._print(self.m3),
-            printer._print(self.j1), printer._print(self.m1),
-            printer._print(self.j2), printer._print(self.m2))
+        label = map(printer._print, (self.j3, self.m3, self.j1, self.m1, self.j2, self.m2))
+        return r'C^{%s,%s}_{%s,%s,%s,%s}' % tuple(label)
 
 
 class Wigner6j(Expr):
@@ -241,8 +218,8 @@ class Wigner6j(Expr):
 
     """
     def __new__(cls, j1, j2, j12, j3, j, j23):
-        j1,j2,j12,j3,j,j23 = map(sympify, (j1,j2,j12,j3,j,j23))
-        return Expr.__new__(cls, j1, j2, j12, j3, j, j23)
+        args = map(sympify, (j1,j2,j12,j3,j,j23))
+        return Expr.__new__(cls, *args)
 
     @property
     def j1(self):
@@ -271,19 +248,6 @@ class Wigner6j(Expr):
     @property
     def is_symbolic(self):
         return not all([arg.is_number for arg in self.args])
-
-    # This is modified from the _print_Matrix method
-    def _sympystr(self, printer, *args):
-        res = [[printer._print(self.j1), printer._print(self.j2), printer._print(self.j12)], \
-            [printer._print(self.j3), printer._print(self.j), printer._print(self.j23)]]
-        maxw = [-1] * 3
-        for j in range(3):
-            maxw[j] = max([ len(res[i][j]) for i in range(2) ])
-        for i, row in enumerate(res):
-            for j, elem in enumerate(row):
-                row[j] = elem.rjust(maxw[j])
-            res[i] = "{" + ", ".join(row) + "}"
-        return '\n'.join(res)
 
     # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
@@ -322,9 +286,9 @@ class Wigner6j(Expr):
         return D
 
     def _latex(self, printer, *args):
+        label = map(printer._print, (self.j1, self.j2, self.j12, self.j3, self.j, self.j23))
         return r'\left{\begin{array}{ccc} %s & %s & %s \\ %s & %s & %s \end{array}\right}' % \
-            (printer._print(self.j1), printer._print(self.j2), printer._print(self.j12), \
-            printer._print(self.j3), printer._print(self.j), printer._print(self.j23))
+                tuple(label)
 
     def doit(self, **hints):
         if self.is_symbolic:
@@ -342,8 +306,8 @@ class Wigner9j(Expr):
 
     """
     def __new__(cls, j1, j2, j12, j3, j4, j34, j13, j24, j):
-        j1,j2,j12,j3,j4,j34,j13,j24,j = map(sympify, (j1,j2, j12, j3, j4, j34, j13, j24, j))
-        return Expr.__new__(cls, j1, j2, j12, j3, j4, j34, j13, j24, j)
+        args = map(sympify, (j1,j2, j12, j3, j4, j34, j13, j24, j))
+        return Expr.__new__(cls, *args)
 
     @property
     def j1(self):
@@ -386,20 +350,6 @@ class Wigner9j(Expr):
         return not all([arg.is_number for arg in self.args])
 
     # This is modified from the _print_Matrix method
-    def _sympystr(self, printer, *args):
-        res = [[printer._print(self.j1), printer._print(self.j2), printer._print(self.j12)], \
-            [printer._print(self.j3), printer._print(self.j4), printer._print(self.j34)], \
-            [printer._print(self.j13), printer._print(self.j24), printer._print(self.j)]]
-        maxw = [-1] * 3
-        for j in range(3):
-            maxw[j] = max([ len(res[i][j]) for i in range(2) ])
-        for i, row in enumerate(res):
-            for j, elem in enumerate(row):
-                row[j] = elem.rjust(maxw[j])
-            res[i] = "{" + ", ".join(row) + "}"
-        return '\n'.join(res)
-
-    # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
         m = ((printer._print(self.j1), printer._print(self.j3), printer._print(self.j13)), \
             (printer._print(self.j2), printer._print(self.j4), printer._print(self.j24)), \
@@ -436,10 +386,10 @@ class Wigner9j(Expr):
         return D
 
     def _latex(self, printer, *args):
+        label = map(printer._print, (self.j1, self.j2, self.j12, self.j3,
+                self.j4, self.j34, self.j13, self.j24, self.j))
         return r'\left{\begin{array}{ccc} %s & %s & %s \\ %s & %s & %s \\ %s & %s & %s \end{array}\right}' % \
-            (printer._print(self.j1), printer._print(self.j2), printer._print(self.j12), \
-            printer._print(self.j3), printer._print(self.j4), printer._print(self.j34), \
-            printer._print(self.j13), printer._print(self.j24), printer._print(self.j))
+                tuple(label)
 
     def doit(self, **hints):
         if self.is_symbolic:
