@@ -814,7 +814,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
                 if all([monomial_div(m, lmg) is None for lmg in leading_monomials]):
                     S.append(m)
 
-        return [Monomial(*s).as_expr(*opt.gens) for s in S]
+        return [Monomial(s).as_expr(*opt.gens) for s in S]
 
     def _ratsimpmodprime(a, b, N=0, D=0):
         """
