@@ -66,6 +66,12 @@ def test_ratsimpmodprime():
     assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
         (3*x + 4*y + 5)/(5*x + 5*y + 7)
 
+    a = x*y - x - 2*y + 4
+    b = x + y**2 - 2*y
+    F = [x - 2, y - 3]
+    assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
+        Rational(2, 5)
+
 def test_trigsimp1():
     x, y = symbols('x,y')
 
