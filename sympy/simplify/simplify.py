@@ -20,12 +20,6 @@ from sympy.core.compatibility import reduce
 
 import sympy.mpmath as mpmath
 
-from sympy import sin, cos, var
-
-var('x')
-
-
-
 def fraction(expr, exact=False):
     """Returns a pair with expression's numerator and denominator.
        If the given expression is not a fraction then this function
@@ -736,15 +730,22 @@ def trigsimp(expr, deep=False, recursive=False):
         log(2)
 
     """
+    
+    sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
+   
+    
     def tan(x):
         sin(x)/cos(x)
         return sin(x)/cos(x)
-  
-    def cot(x):
-        cos(x)/sin(x)
-        return cos(x)/sin(x)   
 
     
+    def cot(x):
+        cos(x)/sin(x)
+        return cos(x)/sin(x)
+
+           
+	 		
+        
     if not expr.has(sin, cos, tan, cot):
         return expr
 
@@ -787,7 +788,9 @@ def trigsimp_nonrecursive(expr, deep=False):
         log(2)
 
     """
-    
+    sin, cos, C.tan, C.cot = C.sin, C.cos, C.tan, C.cot
+
+     	
 
     if expr.is_Function:
         if deep:

@@ -47,6 +47,15 @@ def test_ratsimp():
 
     assert ratsimp(f) == A*B/8 - A*C/8 - A/(4*erf(x) - 4)
 
+
+def test_trigsimp3204():
+    x, y = symbol ('x,y')
+
+    assert trigsimp(tan(x) - 1/cot(x))==0
+    assert trigsimp((tan(x))*2) - 1/(cot(x))**2)==0
+    
+   
+
 def test_trigsimp1():
     x, y = symbols('x,y')
 
@@ -748,7 +757,7 @@ def test_logcombine_1():
     assert logcombine(cos(-2*log(z)+b*log(w))) in [cos(log(w**b/z**2)),
                                                    cos(log(z**2/w**b))]
     assert logcombine(log(log(x)-log(y))-log(z), force=True) == \
-        log(log((x/y)**(1/z)))
+        og(log((x/y)**(1/z)))
     assert logcombine((2+I)*log(x), force=True) == I*log(x)+log(x**2)
     assert logcombine((x**2+log(x)-log(y))/(x*y), force=True) == \
         log(x**(1/(x*y))*y**(-1/(x*y)))+x/y
