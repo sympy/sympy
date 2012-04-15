@@ -615,6 +615,7 @@ def test_categories():
 
 def test_Modules():
     from sympy.polys.domains import QQ
+    from sympy import homomorphism
     R = QQ[x, y]
     F = R.free_module(2)
     M = F.submodule([x, y], [1, x**2])
@@ -630,6 +631,10 @@ def test_Modules():
     assert latex(Q) == r"\frac{{\mathbb{Q}\left[x, y\right]}^{2}}{\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}"
     assert latex(Q.submodule([1, x**3/2], [2, y])) == \
         r"\left< {{\left[ {1},{\frac{1}{2} x^{3}} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}},{{\left[ {2},{y} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}} \right>"
+
+    h = homomorphism(QQ[x].free_module(2), QQ[x].free_module(2), [0, 0])
+
+    assert latex(h) == r"{\left[\begin{smallmatrix}0 & 0\\0 & 0\end{smallmatrix}\right]} : {{\mathbb{Q}\left[x\right]}^{2}} \to {{\mathbb{Q}\left[x\right]}^{2}}"
 
 def test_QuotientRing():
     from sympy.polys.domains import QQ

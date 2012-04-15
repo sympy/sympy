@@ -1535,7 +1535,8 @@ class PrettyPrinter(Printer):
     def _print_MatrixHomomorphism(self, h):
         matrix = self._print(h._sympy_matrix())
         matrix.baseline = matrix.height() // 2
-        pform = prettyForm(*matrix.right(' : ', self._print(h.source), ' %s> ' % hobj('-', 2), self._print(h.target)))
+        pform = prettyForm(*matrix.right(' : ', self._print(h.domain),
+            ' %s> ' % hobj('-', 2), self._print(h.codomain)))
         return pform
 
 def pretty(expr, **settings):

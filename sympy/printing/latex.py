@@ -1260,6 +1260,10 @@ class LatexPrinter(Printer):
         return r"\frac{%s}{%s}" % (self._print(M.base),
                                    self._print(M.killed_module))
 
+    def _print_MatrixHomomorphism(self, h):
+        return r"{%s} : {%s} \to {%s}" % (self._print(h._sympy_matrix()),
+            self._print(h.domain), self._print(h.codomain))
+
 
 def latex(expr, **settings):
     r"""
