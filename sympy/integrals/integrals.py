@@ -426,8 +426,7 @@ class Integral(Expr):
 
         newlimits = []
         for xab in limits:
-            sym = xab[0]
-            if sym == x and len(xab) == 3:
+            if  len(xab) == 3:
                 a, b = xab[1:]
                 a, b = _calc_limit(a, b), _calc_limit(b, a)
                 if a == b:
@@ -437,9 +436,6 @@ class Integral(Expr):
                     a, b = b, a
                     function = -function
                 newlimits.append((z, a, b))
-            elif len(xab) == 3:
-                print "in elif part"
-                newlimits.append(z,xab[1:])
             else:
                 newlimits.append(z)
             return Integral(function, *newlimits)
