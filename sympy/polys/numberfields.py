@@ -19,7 +19,6 @@ from sympy.polys.polyerrors import (
     NotAlgebraic,
 )
 
-from sympy.printing.lambdarepr import LambdaPrinter
 
 from sympy.utilities import (
     numbered_symbols, variations, lambdify,

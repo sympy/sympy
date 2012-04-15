@@ -51,8 +51,8 @@ def test_ratsimp():
 def test_trigsimp3204():
     x, y = symbol ('x,y')
 
-    assert trigsimp(tan(x) - 1/cot(x))==0
-    assert trigsimp((tan(x))*2) - 1/(cot(x))**2)==0
+    assert trigsimp(tan(x) - cot(x)**(-1))==0
+    assert trigsimp((tan(x))**2) - (cot(x))**(- 2))==0
     
    
 
