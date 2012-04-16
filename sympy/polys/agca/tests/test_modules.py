@@ -290,6 +290,7 @@ def test_QuotientModule():
     raises(ValueError, lambda: N/F)
     raises(ValueError, lambda: F.submodule([2, 0, 0]) / N)
     raises(ValueError, lambda: R.free_module(2)/F)
+    raises(CoercionFailed, lambda: F.convert(M.convert([1, x, x**2])))
 
     M1 = F / [[1, 1, 1]]
     M2 = M1.submodule([1, 0, 0], [0, 1, 0])

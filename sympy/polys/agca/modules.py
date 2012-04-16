@@ -332,7 +332,7 @@ class FreeModule(Module):
         [1, 0]
         """
         if isinstance(elem, FreeModuleElement):
-            if elem.module == self:
+            if elem.module is self:
                 return elem
             if elem.module.rank != self.rank:
                 raise CoercionFailed
@@ -343,7 +343,7 @@ class FreeModule(Module):
             if len(tpl) != self.rank:
                 raise CoercionFailed
             return FreeModuleElement(self, tpl)
-        elif elem == 0:
+        elif elem is 0:
             return FreeModuleElement(self, (self.ring.convert(0),)*self.rank)
         else:
             raise CoercionFailed
@@ -609,6 +609,8 @@ class SubModule(Module):
         >>> M.convert([2, 2*x])
         [2, 2*x]
         """
+        if isinstance(elem, self.container.dtype) and elem.module is self:
+            return elem
         r = copy(self.container.convert(elem, M))
         r.module = self
         if not self._contains(r):
@@ -1176,7 +1178,7 @@ class QuotientModule(Module):
         [1, 0] + <[1, 2], [1, x]>
         """
         if isinstance(elem, QuotientModuleElement):
-            if elem.module == self:
+            if elem.module is self:
                 return elem
             if self.killed_module.is_submodule(elem.module.killed_module):
                 return QuotientModuleElement(self, self.base.convert(elem.data))
