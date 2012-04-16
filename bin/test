@@ -56,6 +56,7 @@ if not options.cache:
 if options.types:
     os.environ['SYMPY_GROUND_TYPES'] = options.types
 
-import sympy
+
+
 
 
