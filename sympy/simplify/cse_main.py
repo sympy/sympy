@@ -3,7 +3,7 @@
 import bisect
 import difflib
 
-from sympy import Basic, Mul, Add
+from sympy import Basic, Mul, Add, Tuple
 from sympy.utilities.iterables import preorder_traversal, numbered_symbols
 
 import cse_opts
@@ -144,6 +144,9 @@ def cse(exprs, symbols=None, optimizations=None):
             for subtree in pt:
                 if subtree.is_Atom:
                     # Exclude atoms, since there is no point in renaming them.
+                    continue
+
+                if isinstance(subtree, Tuple):
                     continue
 
                 if subtree in seen_subexp:
