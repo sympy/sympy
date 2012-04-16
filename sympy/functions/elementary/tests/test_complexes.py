@@ -236,6 +236,10 @@ def test_issue936():
     assert sign(x).expand(trig=True)    == sign(x)
     assert arg(x).expand(trig=True)     == arg(x)
 
+def test_issue3206():
+    x = Symbol('x')
+    assert Abs(Abs(x)) == Abs(x)
+
 def test_issue1655_derivative_conjugate():
     x = Symbol('x')
     f = Function('f')
