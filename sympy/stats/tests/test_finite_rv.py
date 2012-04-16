@@ -79,8 +79,8 @@ def test_given():
     sample(X, X>5) == 6
 
 def test_domains():
-    x, y = symbols('x y')
-    X, Y= Die(x, 6), Die(y, 6)
+    X, Y= Die('x', 6), Die('y', 6)
+    x, y = X.symbol, Y.symbol
     # Domains
     d = where(X>Y)
     assert d.condition == (x > y)
@@ -91,7 +91,7 @@ def test_domains():
 
     assert len(pspace(X+Y).domain.elements) == 36
 
-    Z = Die(x, 4)
+    Z = Die('x', 4)
 
     raises(ValueError, lambda: P(X>Z)) # Two domains with same internal symbol
 

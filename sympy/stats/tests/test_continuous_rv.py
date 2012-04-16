@@ -25,7 +25,8 @@ def test_single_normal():
     assert simplify(variance(Y)) == sigma**2
     pdf = density(Y)
     x = Symbol('x')
-    assert pdf(x) == 2**S.Half*exp(-(x - mu)**2/(2*sigma**2))/(2*pi**S.Half*sigma)
+    assert (pdf(x) ==
+            2**S.Half*exp(-(x - mu)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
 
     assert P(X**2 < 1) == erf(2**S.Half/2)
 
@@ -128,9 +129,8 @@ def test_ContinuousRV():
 def test_arcsin():
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
-    x = Symbol("x")
 
-    X = Arcsin(x, a, b)
+    X = Arcsin('x', a, b)
     assert density(X) == Lambda(_x, 1/(pi*sqrt((-_x + b)*(_x - a))))
 
 
@@ -138,9 +138,8 @@ def test_benini():
     alpha = Symbol("alpha", positive=True)
     b = Symbol("beta", positive=True)
     sigma = Symbol("sigma", positive=True)
-    x = Symbol("x")
 
-    X = Benini(x, alpha, b, sigma)
+    X = Benini('x', alpha, b, sigma)
     assert density(X) == (Lambda(_x, (alpha/_x + 2*b*log(_x/sigma)/_x)
                           *exp(-alpha*log(_x/sigma) - b*log(_x/sigma)**2)))
 
@@ -170,9 +169,8 @@ def test_beta():
 def test_betaprime():
     alpha = Symbol("alpha", positive=True)
     beta = Symbol("beta", positive=True)
-    x = Symbol("x")
 
-    X = BetaPrime(x, alpha, beta)
+    X = BetaPrime('x', alpha, beta)
     assert density(X) == (Lambda(_x, _x**(alpha - 1)*(_x + 1)**(-alpha - beta)
                           *gamma(alpha + beta)/(gamma(alpha)*gamma(beta))))
 
@@ -180,17 +178,15 @@ def test_betaprime():
 def test_cauchy():
     x0 = Symbol("x0")
     gamma = Symbol("gamma", positive=True)
-    x = Symbol("x")
 
-    X = Cauchy(x, x0, gamma)
+    X = Cauchy('x', x0, gamma)
     assert density(X) == Lambda(_x, 1/(pi*gamma*(1 + (_x - x0)**2/gamma**2)))
 
 
 def test_chi():
     k = Symbol("k", integer=True)
-    x = Symbol("x")
 
-    X = Chi(x, k)
+    X = Chi('x', k)
     assert density(X) == (Lambda(_x, 2**(-k/2 + 1)*_x**(k - 1)
                           *exp(-_x**2/2)/gamma(k/2)))
 
@@ -199,9 +195,8 @@ def test_dagum():
     p = Symbol("p", positive=True)
     b = Symbol("b", positive=True)
     a = Symbol("a", positive=True)
-    x = Symbol("x")
 
-    X = Dagum(x, p, a, b)
+    X = Dagum('x', p, a, b)
     assert density(X) == Lambda(_x,
                                 a*p*(_x/b)**(a*p)*((_x/b)**a + 1)**(-p - 1)/_x)
 
@@ -223,9 +218,8 @@ def test_exponential():
 def test_gamma():
     k = Symbol("k", positive=True)
     theta = Symbol("theta", positive=True)
-    x = Symbol("x")
 
-    X = Gamma(x, k, theta)
+    X = Gamma('x', k, theta)
     assert density(X) == Lambda(_x,
                                 _x**(k - 1)*theta**(-k)*exp(-_x/theta)/gamma(k))
     assert cdf(X, meijerg=True) == Lambda(_z, Piecewise((0, _z < 0),
@@ -234,8 +228,7 @@ def test_gamma():
            theta*theta**(-k)*theta**(k + 1)*gamma(k + 2)/gamma(k))
 
     k, theta = symbols('k theta', real=True, bounded=True, positive=True)
-    X = Gamma(x, k, theta)
-
+    X = Gamma('x', k, theta)
     assert simplify(E(X)) == k*theta
     # can't get things to simplify on this one so we use subs
     assert variance(X).subs(k,5) == (k*theta**2).subs(k, 5)
@@ -246,18 +239,16 @@ def test_gamma():
 def test_laplace():
     mu = Symbol("mu")
     b = Symbol("b", positive=True)
-    x = Symbol("x")
 
-    X = Laplace(x, mu, b)
+    X = Laplace('x', mu, b)
     assert density(X) == Lambda(_x, exp(-Abs(_x - mu)/b)/(2*b))
 
 
 def test_logistic():
     mu = Symbol("mu", real=True)
     s = Symbol("s", positive=True)
-    x = Symbol("x")
 
-    X = Logistic(x, mu, s)
+    X = Logistic('x', mu, s)
     assert density(X) == Lambda(_x,
                                 exp((-_x + mu)/s)/(s*(exp((-_x + mu)/s) + 1)**2))
 
@@ -280,9 +271,8 @@ def test_lognormal():
 
     mu = Symbol("mu", real=True)
     sigma = Symbol("sigma", positive=True)
-    x = Symbol("x")
 
-    X = LogNormal(x, mu, sigma)
+    X = LogNormal('x', mu, sigma)
     assert density(X) == (Lambda(_x, sqrt(2)*exp(-(-mu + log(_x))**2
                                     /(2*sigma**2))/(2*_x*sqrt(pi)*sigma)))
 
@@ -292,9 +282,8 @@ def test_lognormal():
 
 def test_maxwell():
     a = Symbol("a", positive=True)
-    x = Symbol("x")
 
-    X = Maxwell(x, a)
+    X = Maxwell('x', a)
 
     assert density(X) == (Lambda(_x, sqrt(2)*_x**2*exp(-_x**2/(2*a**2))/
         (sqrt(pi)*a**3)))
@@ -304,9 +293,8 @@ def test_maxwell():
 def test_nakagami():
     mu = Symbol("mu", positive=True)
     omega = Symbol("omega", positive=True)
-    x = Symbol("x")
 
-    X = Nakagami(x, mu, omega)
+    X = Nakagami('x', mu, omega)
     assert density(X) == (Lambda(_x, 2*_x**(2*mu - 1)*mu**mu*omega**(-mu)
                                 *exp(-_x**2*mu/omega)/gamma(mu)))
     assert simplify(E(X, meijerg=True)) == (sqrt(mu)*sqrt(omega)
@@ -339,18 +327,16 @@ def test_pareto_numeric():
 
 def test_rayleigh():
     sigma = Symbol("sigma", positive=True)
-    x = Symbol("x")
 
-    X = Rayleigh(x, sigma)
+    X = Rayleigh('x', sigma)
     assert density(X) == Lambda(_x, _x*exp(-_x**2/(2*sigma**2))/sigma**2)
     assert E(X) == sqrt(2)*sqrt(pi)*sigma/2
     assert variance(X) == -pi*sigma**2/2 + 2*sigma**2
 
 def test_studentt():
     nu = Symbol("nu", positive=True)
-    x = Symbol("x")
 
-    X = StudentT(x, nu)
+    X = StudentT('x', nu)
     assert density(X) == (Lambda(_x, (_x**2/nu + 1)**(-nu/2 - S.Half)
                         *gamma(nu/2 + S.Half)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))))
 
@@ -359,9 +345,8 @@ def test_triangular():
     a = Symbol("a")
     b = Symbol("b")
     c = Symbol("c")
-    x = Symbol("x")
 
-    X = Triangular(x, a,b,c)
+    X = Triangular('x', a,b,c)
     assert Density(X) == Lambda(_x,
              Piecewise(((2*_x - 2*a)/((-a + b)*(-a + c)), And(a <= _x, _x < c)),
                        (2/(-a + b), _x == c),
@@ -387,10 +372,9 @@ def test_uniform():
 @XFAIL
 def test_uniformsum():
     n = Symbol("n", integer=True)
-    x = Symbol("x")
     _k = Symbol("k")
 
-    X = UniformSum(x, n)
+    X = UniformSum('x', n)
     assert density(X) == (Lambda(_x, Sum((-1)**_k*(-_k + _x)**(n - 1)
                         *binomial(n, _k), (_k, 0, floor(_x)))/factorial(n - 1)))
 
@@ -415,9 +399,8 @@ def test_weibull_numeric():
 
 def test_wignersemicircle():
     R = Symbol("R", positive=True)
-    x = Symbol("x")
 
-    X = WignerSemicircle(x, R)
+    X = WignerSemicircle('x', R)
     assert density(X) == Lambda(_x, 2*sqrt(-_x**2 + R**2)/(pi*R**2))
     assert E(X) == 0
 
@@ -453,8 +436,7 @@ def test_input_value_assertions():
 
 @XFAIL
 def test_unevaluated():
-    x = Symbol('x')
-    X = Normal(x, 0,1)
+    X = Normal('x', 0,1)
     assert E(X, evaluate=False) == (
             Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo)))
 

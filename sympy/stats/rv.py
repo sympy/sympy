@@ -584,9 +584,9 @@ def where(condition, given_condition=None, **kwargs):
     >>> from sympy.stats import where, Die, Normal
     >>> from sympy import symbols, And
 
-    >>> x, a, b = symbols('x a b')
-    >>> D1, D2 = Die(a, 6), Die(b, 6)
-    >>> X = Normal(x, 0, 1)
+    >>> D1, D2 = Die('a', 6), Die('b', 6)
+    >>> a, b = D1.symbol, D2.symbol
+    >>> X = Normal('x', 0, 1)
 
     >>> where(X**2<1)
     Domain: And(-1 < x, x < 1)
