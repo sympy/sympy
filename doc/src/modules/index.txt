@@ -36,6 +36,7 @@ access any SymPy module, or use this contens:
    assumptions/index.txt
    rewriting.txt
    series.txt
+   sets.txt
    simplify/simplify.txt
    simplify/hyperexpand.txt
    statistics.txt
