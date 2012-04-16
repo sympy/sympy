@@ -325,11 +325,9 @@ class Abs(Function):
             return known*unk
         if arg is S.NaN:
             return S.NaN
-        if arg.is_zero:#equals(0):
+        if arg.is_nonnegative and arg.is_real:
             return arg
-        if arg.is_nonnegative:
-            return arg
-        if arg.is_negative:
+        if arg.is_nonpositive and arg.is_real:
             return -arg
         if arg.is_real is False:
             from sympy import expand_mul
