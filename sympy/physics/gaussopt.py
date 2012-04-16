@@ -240,6 +240,7 @@ class CurvedRefraction(RayTransferMatrix):
     R: radius of curvature (positive for concave),
     n1: refractive index of one medium
     n2: refractive index of other medium
+    or
     P: optical power ((n2 - n1) / R = 1/f, where f - focal length)
 
     See Also
@@ -904,102 +905,14 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
             The functions expects the focal length as a named argument'''))
     return (s_in, s_out, f)
 
-def plot_beam(beam, x_n, **kwargs) :
-    """Plot the beam radius as it propagates in space.
-    Uses external matplotlib library.
-
-    Parameters
-    ==========
-    beam : BeamParameter for gaussian beam
-    x_n : number of samples to plot function
-    z_range : plot range for the beam propagation coordinate
-
-    See Also
-    ========
-    BeamParameter
-
-    Examples
-    ========
-    >>> from sympy.physics.gaussopt import BeamParameter, plot_beam
-    >>> b = BeamParameter(530e-9,1,w=1e-5)
-    >>> plot_beam(b,100,z_range=2*b.z_r)
-    """
-
-    if len(kwargs) != 1:
-        raise ValueError("The function expects only one named argument")
-    elif 'z_range' in kwargs :
-        z_range = sympify(kwargs['z_range'])
-    else :
-        raise ValueError(filldedent('''
-            The functions expects the z_range as a named argument'''))
-
-    x = symbols('x')
-
-    weist_d = beam.w_0*sqrt(1+(x/beam.z_r)**2)
-
-    _mplot2d([weist_d, -weist_d], (x, -z_range, z_range, x_n))
-
-def _mplot2d(f, var, show=True):
-    """
-    Plot a 2d function using matplotlib/Tk.
-    """
-
-    import warnings
-    warnings.filterwarnings("ignore", "Could not match \S")
-
-    p = import_module('pylab')
-    if not p:
-        sys.exit("Matplotlib is required to use mplot2d.")
-
-    if not is_sequence(f):
-        f = [f,]
-
-    for f_i in f:
-        x, y = _sample2d(f_i, var)
-        p.plot(x, y,'black')
-
-    p.draw()
-
-    p.ylabel("Transverse beam cordinate")
-    p.xlabel("Propagation coordinate")
-    p.grid(True)
-
-    if show:
-        p.show()
-
-def _sample2d(f, x_args):
-    """
-    Samples a 2d function f over specified intervals and returns two
-    arrays (X, Y) suitable for plotting with matlab (matplotlib)
-    syntax. See examples\mplot2d.py.
-
-    f is a function of one variable, such as x**2.
-    x_args is an interval given in the form (var, min, max, n)
-    """
-    try:
-        f = sympify(f)
-    except SympifyError:
-        raise ValueError("f could not be interpretted as a SymPy function")
-    try:
-        x, x_min, x_max, x_n = x_args
-    except AttributeError:
-        raise ValueError("x_args must be a tuple of the form (var, min, max, n)")
-
-    x_l = float(x_max - x_min)
-    x_d = x_l/float(x_n)
-    X = arange(float(x_min), float(x_max)+x_d, x_d)
-
-    Y = []
-    for i in range(len(X)):
-        try:
-            Y.append(float(f.subs(x, X[i])))
-        except TypeError:
-            Y.append(None)
-    return X, Y
-
 #TODO
 # Add utillites for calculation of optical power and the special points
 # of complex optical system
+
+#TODO
+#def plot_beam():
+#    """Plot the beam radius as it propagates in space."""
+#    pass
 
 #TODO
 #def plot_beam_conjugation():
