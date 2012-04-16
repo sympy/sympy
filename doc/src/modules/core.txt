@@ -448,40 +448,6 @@ nfloat
 ^^^^^^
 .. autofunction:: nfloat
 
-sets
-----
-.. module:: sympy.core.sets
-
-Set
-^^^
-.. autoclass:: Set
-   :members:
-
-Interval
-^^^^^^^^
-.. autoclass:: Interval
-   :members:
-
-Union
-^^^^^
-.. autoclass:: Union
-   :members:
-
-EmptySet
-^^^^^^^^
-.. autoclass:: EmptySet
-   :members:
-
-FiniteSet
-^^^^^^^^^
-.. autoclass:: FiniteSet
-   :members:
-
-ProductSet
-^^^^^^^^^^
-.. autoclass: ProductSet
-   :members:
-
 evalf
 -----
 .. module:: sympy.core.evalf
