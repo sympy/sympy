@@ -2392,8 +2392,8 @@ def test_any_object_in_sequence():
     assert upretty(expr) == u"[Basic(Basic()), Basic()]"
 
     expr = set([b2, b1])
-    assert pretty(expr) == "set(Basic(), Basic(Basic()))"
-    assert upretty(expr) == u"set(Basic(), Basic(Basic()))"
+    assert pretty(expr) == "set([Basic(), Basic(Basic())])"
+    assert upretty(expr) == u"set([Basic(), Basic(Basic())])"
 
     expr = {b2:b1, b1:b2}
     expr2 = Dict({b2:b1, b1:b2})
@@ -2401,6 +2401,17 @@ def test_any_object_in_sequence():
     assert pretty(expr2) == "{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
     assert upretty(expr) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
     assert upretty(expr2) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
+
+def test_pretty_sets():
+    for s in (frozenset, set):
+        assert pretty(s([x*y, x**2])) == \
+"""\
+%s   2       \n\
+%s([x , x*y])\
+""" % (" " * len(s.__name__), s.__name__)
+        assert pretty(s(range(1, 6))) == "%s([1, 2, 3, 4, 5])" % s.__name__
+        assert pretty(s(range(1, 13))) == \
+            "%s([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])" % s.__name__
 
 def test_pretty_limits():
     expr = Limit(x, x, oo)

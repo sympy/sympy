@@ -1240,7 +1240,8 @@ class PrettyPrinter(Printer):
 
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
-        pretty = self._print_seq(items, '(', ')')
+        pretty = self._print_seq(items, '[', ']')
+        pretty = prettyForm(*pretty.parens('(', ')', ifascii_nougly=True))
         pretty = prettyForm(*stringPict.next(type(s).__name__, pretty))
         return pretty
 
