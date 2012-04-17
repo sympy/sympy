@@ -2,7 +2,7 @@ from sympy.core.containers import Tuple
 
 class TableForm(object):
     """
-    Allows to create nice table representation of data.
+    Create a nice table representation of data.
 
     Example::
 
@@ -14,7 +14,7 @@ class TableForm(object):
 
     """
 
-    def __new__(cls, data, **kwarg):
+    def __init__(self, data, **kwarg):
         """
         Creates a TableForm.
 
@@ -48,8 +48,7 @@ class TableForm(object):
         from sympy.core.numbers import Integer
         _w = Integer(len(data[0]))
         _h = Integer(len(data))
-        for line in data:
-            assert len(line) == _w
+        assert all(len(line) == _w for line in data)
         _lines = Tuple(*data)
 
         headings = kwarg.get("headings", [None, None])
@@ -70,15 +69,13 @@ class TableForm(object):
 
         _wipe_zeros = kwarg.get("wipe_zeros", True)
 
-        obj = object.__new__(cls)
-        obj._w = _w
-        obj._h = _h
-        obj._lines = _lines
-        obj._headings = _headings
-        obj._alignment = _alignment
-        obj._column_formats = _column_formats
-        obj._wipe_zeros = _wipe_zeros
-        return obj
+        self._w = _w
+        self._h = _h
+        self._lines = _lines
+        self._headings = _headings
+        self._alignment = _alignment
+        self._column_formats = _column_formats
+        self._wipe_zeros = _wipe_zeros
 
     def __repr__(self):
         from str import sstr
@@ -172,13 +169,6 @@ class TableForm(object):
     def _latex(self, printer):
         """
         Returns the string representation of 'self'.
-
-        Example:
-
-        >>> from sympy import TableForm
-        >>> t = TableForm([[5, 7], [4, 2], [10, 3]])
-        >>> s = t.as_latex()
-
         """
         # Check heading:
         if self._headings[1]:

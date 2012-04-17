@@ -54,7 +54,7 @@ Group C | 10  3\n\
     s = latex(TableForm([["a", x**3], ["c", S(1)/4], [sqrt(x), sin(x**2)]],
             headings=("automatic", "automatic")))
     assert s == """\
-\\begin{tabular}{c c c}\n\
+\\begin{tabular}{l l l}\n\
  & 1 & 2 \\\\\n\
 \\hline\n\
 1 & $a$ & $x^{3}$ \\\\\n\
@@ -65,7 +65,7 @@ Group C | 10  3\n\
 
     s = latex(TableForm([["a", x**3], ["c", S(1)/4], [sqrt(x), sin(x**2)]]))
     assert s == """\
-\\begin{tabular}{c c}\n\
+\\begin{tabular}{l l}\n\
 $a$ & $x^{3}$ \\\\\n\
 $c$ & $\\frac{1}{4}$ \\\\\n\
 $\\sqrt{x}$ & $\\sin{\\left (x^{2} \\right )}$ \\\\\n\
