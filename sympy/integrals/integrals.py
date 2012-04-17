@@ -413,7 +413,11 @@ class Integral(Expr):
         The integral will be returned unchanged if `x` is not a variable of
         integration.
 
-        `x` must be (or contain) only one of of the integration variables.
+        `x` must be (or contain) only one of of the integration variables. If
+        `u` has more than one free symbol then it should be sent as a tuple
+        (`u`, `uvar`) where `uvar` identifies which variable is replacing
+        the integration variable.
+        XXX can it contain another integration variable?
 
         Examples
         ========
@@ -428,33 +432,48 @@ class Integral(Expr):
         >>> i.transform(x, u)
         Integral(u*cos(u**2 - 1), (u, 0, 1))
 
-        transform can perform u-substitution
+        transform can perform u-substitution as long as a unique
+        integrand is obtained:
 
         >>> i.transform(x**2 - 1, u)
         Integral(cos(u)/2, (u, -1, 0))
 
+        This attempt fails because x = +/-sqrt(u + 1) and the
+        sign does not cancel out of the integrand:
+
+        >>> Integral(cos(x**2 - 1), (x, 0, 1)).transform(x**2 - 1, u)
+        Traceback (most recent call last):
+        ...
+        ValueError:
+        The mapping between F(x) and f(u) did not give a unique integrand.
+
         transform can do a substitution. Here, the previous
-        result is transformed back into the original expression:
+        result is transformed back into the original expression
+        using "u-substitution":
 
         >>> ui = _
         >>> _.transform(sqrt(u + 1), x) == i
         True
 
-        But the substitution can only be done if there is a unique
-        result. Here, the attempt to transform ui back to i with a
-        substution fails because F(u) has two solutions, +/-sqrt(u + 1),
-        so the upper limit could be +/-1:
+        We can accomplish the same with a regular substitution:
 
         >>> ui.transform(u, x**2 - 1) == i
-        Traceback (most recent call last):
-        ...
-        ValueError: f and F must give a unique change
+        True
 
         If the `x` does not contain a symbol of integration then
-        the integral will be returned unchanged:
+        the integral will be returned unchanged. Integral `i` does
+        not have an integration variable `a` so no change is made.
 
         >>> i.transform(a, x) == i
         True
+
+        When `u` has more than one free symbol the symbol that is
+        replacing `x` must be identified by passing `u` as a tuple:
+
+        >>> Integral(x, (x, 0, 1)).transform(x, (u + a, u))
+        Integral(a + u, (u, -a, -a + 1))
+        >>> Integral(x, (x, 0, 1)).transform(x, (u + a, a))
+        Integral(a + u, (a, -u, -u + 1))
 
         See Also
         ========
@@ -472,18 +491,31 @@ class Integral(Expr):
         if xvar not in self.variables:
             return self
 
+        u = sympify(u)
+        if isinstance(u, Expr):
+            ufree = u.free_symbols
+            if len(ufree) != 1:
+                raise ValueError(filldedent('''
+                When f(u) has more than one free symbol, the one replacing x
+                must be identified: pass f(u) as (f(u), u)'''))
+            uvar = ufree.pop()
+        else:
+            u, uvar = u
+            if uvar not in u.free_symbols:
+                raise ValueError(filldedent('''
+                Expecting a tuple (expr, symbol) where symbol identified
+                a free symbol in expr, but symbol is not in expr's free
+                symbols.'''))
+            if not isinstance(uvar, Symbol):
+                raise ValueError(filldedent('''
+                Expecting a tuple (expr, symbol) but didn't get
+                a symbol; got %s''' % uvar))
+
         if x.is_Symbol and u.is_Symbol:
             return self.xreplace({x: u})
 
         if not x.is_Symbol and not u.is_Symbol:
             raise ValueError('either x or u must be a symbol')
-
-        ufree = u.free_symbols
-        if len(ufree) != 1:
-            # XXX allow for tuple input (f(u, v), u) where u defines which is the new
-            # integration variable
-            raise ValueError('f(u) must contain only one free variable, but got %s' % list(ufree))
-        uvar = ufree.pop()
 
         if uvar == xvar:
             return self.transform(x, u.subs(uvar, d)).xreplace({d: uvar})
@@ -510,7 +542,9 @@ class Integral(Expr):
 
         newfuncs = set([(self.function.subs(xvar, fi)* fi.diff(d)).subs(d, uvar) for fi in f])
         if len(newfuncs) > 1:
-            raise ValueError('The mapping between F(x) and f(u) did not give a unique integrand.')
+            raise ValueError(filldedent('''
+            The mapping between F(x) and f(u) did not give
+            a unique integrand.'''))
         newfunc = newfuncs.pop()
 
         def _calc_limit_1(F, a, b):
@@ -530,7 +564,9 @@ class Integral(Expr):
             """
             avals = list(set([_calc_limit_1(Fi, a, b) for Fi in F])) # [ai for ai in set([_calc_limit_1(Fi, a, b) for Fi in F]) if any(fi.subs(d, ai) == a for fi in f)]
             if len(avals) > 1:
-                raise ValueError('The mapping between F(x) and f(u) did not give a unique limit.')
+                raise ValueError(filldedent('''
+                The mapping between F(x) and f(u) did not
+                give a unique limit.'''))
             return avals[0]
 
         newlimits = []
@@ -540,8 +576,6 @@ class Integral(Expr):
                 if len(xab) == 3:
                     a, b = xab[1:]
                     a, b = _calc_limit(a, b), _calc_limit(b, a)
-                    if a == b:
-                        raise ValueError("The mapping between F(x) and f(u) did not transform the endpoints into separate points.")
                     if a > b:
                         a, b = b, a
                         newfunc = -newfunc
