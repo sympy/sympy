@@ -3,9 +3,10 @@
 import bisect
 import difflib
 
-from sympy import Basic, Mul, Add, Tuple
-from sympy.utilities.iterables import preorder_traversal, numbered_symbols
+from sympy import Basic, Mul, Add, Tuple, sympify
 from sympy.core.compatibility import iterable
+from sympy.utilities.iterables import preorder_traversal, numbered_symbols, \
+    sift, topological_sort
 
 import cse_opts
 
@@ -22,6 +23,66 @@ import cse_opts
 # postprocessor.
 
 cse_optimizations = list(cse_opts.default_optimizations)
+
+# sometimes we want the output in a different format; here are
+# some common idioms
+# ============================================================
+
+# reverse reps so they are ready to use in a subs call to restore
+# an expression
+cse_reversed = lambda r, e: [list(reversed(r)), e]
+
+# return a single dictionary and the single expression
+# from cse(expr); the replacement dictionary can be used with
+# xreplace
+cse_dict_expr = lambda r, e: [dict(r), e[0]]
+
+def reps_toposort(r):
+    """Sort replacements `r` so (k1, v1) appears before (k2, v2)
+    if k2 is in v1's free symbols. This orders items in the
+    way that cse returns its results (hence, in order to use the
+    replacements in a substitution option it would make sense
+    to reverse the order).
+
+    Examples
+    ========
+    >>> from sympy.simplify.cse_main import reps_toposort
+    >>> from sympy.abc import x, y
+    >>> from sympy import Eq
+    >>> for l, r in reps_toposort([(x, y + 1), (y, 2)]):
+    ...     print Eq(l, r)
+    ...
+    y == 2
+    x == y + 1
+
+    """
+    r = sympify(r)
+    E = []
+    for c1, (k1, v1) in enumerate(r):
+        for c2, (k2, v2) in enumerate(r):
+          if k1 in v2.free_symbols:
+              E.append((c1, c2))
+    return [r[i] for i in topological_sort((range(len(r)), E))]
+
+def cse_separate(r, e):
+    """Move expressions that are in the form (symbol, expr) out of the
+    expressions and sort them into the replacements using the reps_toposort.
+
+    Examples
+    ========
+    >>> from sympy.simplify.cse_main import cse_separate
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import cos, exp, cse, Eq
+    >>> eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
+    >>> cse([eq, Eq(x, z + 1), z - 2], postprocess=cse_separate)
+    [[(x0, y + 1), (x, z + 1), (x1, x + 1)], [x1 + exp(x1/x0) + cos(x0), z - 2]]
+    """
+    syms = set([k for k, v in r])
+    d = sift(e, lambda w: w.is_Equality and not bool(w.free_symbols & set(syms)))
+    r, e = [r + [w.args for w in d[True]], d[False]]
+    return [reps_toposort(r), e]
+
+# ====end of cse postprocess idioms===========================
 
 def preprocess_for_cse(expr, optimizations):
     """ Preprocess an expression to optimize for common subexpression
@@ -69,7 +130,7 @@ def postprocess_for_cse(expr, optimizations):
             expr = post(expr)
     return expr
 
-def cse(exprs, symbols=None, optimizations=None):
+def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     """ Perform common subexpression elimination on an expression.
 
     Parameters
@@ -85,6 +146,9 @@ def cse(exprs, symbols=None, optimizations=None):
     optimizations : list of (callable, callable) pairs, optional
         The (preprocessor, postprocessor) pairs. If not provided,
         ``sympy.simplify.cse.cse_optimizations`` is used.
+    postprocess : a function which accepts the two return values of cse and returns
+        the desired form of output from cse, e.g. if you want the replacements
+        reversed the function might be lambda r, e: return reversed(r), e
 
     Returns
     =======
@@ -258,4 +322,6 @@ def cse(exprs, symbols=None, optimizations=None):
 
     if isinstance(exprs, Matrix):
         reduced_exprs = [Matrix(exprs.rows, exprs.cols, reduced_exprs)]
-    return replacements, reduced_exprs
+    if postprocess is None:
+        return replacements, reduced_exprs
+    return postprocess(replacements, reduced_exprs)
