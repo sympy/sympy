@@ -386,7 +386,7 @@ class cos(TrigonometricFunction):
         if pi_coeff is not None:
             if not pi_coeff.is_Rational:
                 if pi_coeff.is_integer:
-                    even = pi_coeff.is_even
+                    return (S.NegativeOne)**pi_coeff
                     if even:
                         return S.One
                     elif even is False:
@@ -728,14 +728,7 @@ class tan(TrigonometricFunction):
         if arg.is_imaginary:
             return True
 
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        arg = self.args[0]
-        argnew = arg.subs(old, new)
-        if arg != argnew and (argnew/(S.Pi/2)).is_odd:
-            return S.NaN
-        return tan(argnew)
+    
 
     def _sage_(self):
         import sage.all as sage
