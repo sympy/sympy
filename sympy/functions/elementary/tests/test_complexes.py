@@ -114,6 +114,10 @@ def test_sign():
     x = 0
     assert sign(x).is_zero == True
 
+    nz = Symbol('nz', nonzero=True, integer=True)
+    assert sign(nz)**2 == 1
+    assert (sign(nz)**3).args == (sign(nz), 3)
+
 def test_as_real_imag():
     n = pi**1000
     # the special code for working out the real
