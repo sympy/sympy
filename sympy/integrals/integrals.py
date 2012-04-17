@@ -11,7 +11,7 @@ from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
 from sympy.utilities import xthreaded, flatten
 from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
-from sympy.solvers import solve
+from sympy.solvers.solvers import solve, posify
 from sympy.functions import Piecewise, sqrt, sign
 from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
@@ -463,7 +463,6 @@ class Integral(Expr):
         as_dummy : Replace integration variables with dummy ones
         """
         d = Dummy('d')
-        _sign = sign(Dummy('+/-', integer=True, nonzero=True))
 
         xfree = x.free_symbols.intersection(self.variables)
         if len(xfree) > 1:
@@ -494,42 +493,45 @@ class Integral(Expr):
             u must contain the same variable as in x
             or a variable that is not already an integration variable'''))
 
-        def _valid(f):
-            if len(f) == 2 and f[0] + f[1] == 0:
-                f = _sign*f[0]
-            elif len(f) == 1:
-                f = f[0]
-            else:
-                raise ValueError('f and F must give a unique change')
-            return f
-
         if not x.is_Symbol:
-            F = x.subs(xvar, d)
+            F = [x.subs(xvar, d)]
             soln = solve(u - x, xvar, check=False)
-            f = _valid(soln).subs(uvar, d)
+            if len(soln) == 0:
+                raise ValueError('no solution for solve(F(x) - f(u), x)')
+            f = [fi.subs(uvar, d) for fi in soln]
         else:
-            f = u.subs(uvar, d)
-            soln = solve(u - x, uvar, check=False)
-            F = _valid(soln).subs(xvar, d)
+            f = [u.subs(uvar, d)]
+            pdiff, reps = posify(u - x)
+            puvar = uvar.subs([(v, k) for k, v in reps.iteritems()])
+            soln = [s.subs(reps) for s in solve(pdiff, puvar)]
+            if len(soln) == 0:
+                raise ValueError('no solution for solve(F(x) - f(u), u)')
+            F = [fi.subs(xvar, d) for fi in soln]
 
-        mapping = f
-        inverse_mapping = F
+        newfuncs = set([(self.function.subs(xvar, fi)* fi.diff(d)).subs(d, uvar) for fi in f])
+        if len(newfuncs) > 1:
+            raise ValueError('The mapping between F(x) and f(u) did not give a unique integrand.')
+        newfunc = newfuncs.pop()
 
-        newfunc = (self.function.subs(xvar, f)* f.diff(d)).subs(d, uvar)
-        if newfunc.has(_sign):
-            raise ValueError('f and F must give a unique change')
+        def _calc_limit_1(F, a, b):
+            """
+            replace d with a, using subs if possible, otherwise limit
+            where sign of b is considered
+            """
+            wok = F.subs(d, a)
+            if wok is S.NaN or wok.is_bounded is False and a.is_bounded:
+                return limit(sign(b)*F, d, a)
+            return wok
 
         def _calc_limit(a, b):
             """
             replace d with a, using subs if possible, otherwise limit
             where sign of b is considered
             """
-            wok = inverse_mapping.subs(d, a)
-            if wok is S.NaN or wok.is_bounded is False and a.is_bounded:
-                return limit(sign(b)*inverse_mapping, d, a)
-            if wok.has(_sign):
-                raise ValueError('f and F must give a unique change')
-            return wok
+            avals = list(set([_calc_limit_1(Fi, a, b) for Fi in F])) # [ai for ai in set([_calc_limit_1(Fi, a, b) for Fi in F]) if any(fi.subs(d, ai) == a for fi in f)]
+            if len(avals) > 1:
+                raise ValueError('The mapping between F(x) and f(u) did not give a unique limit.')
+            return avals[0]
 
         newlimits = []
         for xab in self.limits:
@@ -539,8 +541,7 @@ class Integral(Expr):
                     a, b = xab[1:]
                     a, b = _calc_limit(a, b), _calc_limit(b, a)
                     if a == b:
-                        raise ValueError("The mapping must transform the "
-                            "endpoints into separate points")
+                        raise ValueError("The mapping between F(x) and f(u) did not transform the endpoints into separate points.")
                     if a > b:
                         a, b = b, a
                         newfunc = -newfunc
@@ -549,7 +550,6 @@ class Integral(Expr):
                     a = _calc_limit(xab[1], 1)
                     newlimits.append((uvar, a))
                 else:
-                    # XXX raise error
                     newlimits.append(uvar)
             else:
                 newlimits.append(xab)
