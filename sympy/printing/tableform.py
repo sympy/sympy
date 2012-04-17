@@ -193,9 +193,10 @@ class TableForm(object):
         if self._headings[0]:
             self._headings[0] = [str(x) for x in self._headings[0]]
 
-        align_list = ["c" for x in self._lines[0]]
+        align_char = {'left': 'l', 'right':'r', 'center':'c'}.get(self._alignment)
+        align_list = [align_char] * len(self._lines[0])
         if self._headings[0]:
-            align_list = ["c"] + align_list
+            align_list = [align_char] + align_list
         s = r"\begin{tabular}{" + " ".join(align_list) + "}\n"
 
         if self._headings[1]:
