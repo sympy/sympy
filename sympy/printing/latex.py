@@ -988,15 +988,19 @@ class LatexPrinter(Printer):
 
     def _print_FiniteSet(self, s):
         if len(s) > 10:
-            printset = s.args[:3] + ('...',) + s.args[-3:]
+            printset = s.args[:3] + (r"\ldots",) + s.args[-3:]
         else:
             printset = s.args
         return (r"\left\{"
               + r", ".join(self._print(el) for el in printset)
               + r"\right\}")
 
-    _print_frozenset = _print_FiniteSet
-    _print_set = _print_FiniteSet
+    def _print_set(self, s):
+        items = sorted(s, key=default_sort_key)
+        items = ", ".join(map(self._print, items))
+        return r"\left\{%s\right\}" % items
+
+    _print_frozenset = _print_set
 
     def _print_Interval(self, i):
         if i.start == i.end:
