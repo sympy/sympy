@@ -45,9 +45,8 @@ class TableForm(object):
 
         """
         # We only support 2D data. Check the consistency:
-        from sympy.core.numbers import Integer
-        _w = Integer(len(data[0]))
-        _h = Integer(len(data))
+        _w = len(data[0])
+        _h = len(data)
         assert all(len(line) == _w for line in data)
         _lines = Tuple(*data)
 
