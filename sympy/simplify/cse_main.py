@@ -4,6 +4,8 @@ import bisect
 import difflib
 
 from sympy import Basic, Mul, Add, Tuple, sympify
+from sympy.functions.elementary.complexes import sign
+from sympy.core.function import _coeff_isneg
 from sympy.core.compatibility import iterable
 from sympy.utilities.iterables import preorder_traversal, numbered_symbols, \
     sift, topological_sort
@@ -160,6 +162,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
         The reduced expressions with all of the replacements above.
     """
     from sympy.matrices import Matrix
+    from sympy.simplify.simplify import fraction
 
     if symbols is None:
         symbols = numbered_symbols()
@@ -204,27 +207,36 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     for expr in reduced_exprs:
         if not isinstance(expr, Basic):
             continue
-        for e in expr.as_numer_denom() if not expr.is_Add else [expr]:
-            pt = preorder_traversal(e)
-            for subtree in pt:
-                if subtree.is_Atom or iterable(subtree):
-                    # Exclude atoms, since there is no point in renaming them.
-                    continue
+        pt = preorder_traversal(expr)
+        for subtree in pt:
 
-                if isinstance(subtree, Tuple):
-                    continue
+            inv = 1/subtree if subtree.is_Pow else None
 
-                if subtree in seen_subexp:
-                    insert(subtree)
-                    pt.skip()
-                    continue
+            if subtree.is_Atom or iterable(subtree) or inv and inv.is_Atom:
+                # Exclude atoms, since there is no point in renaming them.
+                continue
 
-                if subtree.is_Mul:
-                    muls.add(subtree)
-                elif subtree.is_Add:
-                    adds.add(subtree)
+            if subtree in seen_subexp:
+                if inv and _coeff_isneg(subtree.exp):
+                    # save the form with positive exponent
+                    subtree = inv
+                insert(subtree)
+                pt.skip()
+                continue
 
-                seen_subexp.add(subtree)
+            if inv and inv in seen_subexp:
+                if _coeff_isneg(subtree.exp):
+                    # save the form with positive exponent
+                    subtree = inv
+                insert(subtree)
+                pt.skip()
+                continue
+            elif subtree.is_Mul:
+                muls.add(subtree)
+            elif subtree.is_Add:
+                adds.add(subtree)
+
+            seen_subexp.add(subtree)
 
     # process adds - any adds that weren't repeated might contain
     # subpatterns that are repeated, e.g. x+y+z and x+y have x+y in common
@@ -298,7 +310,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
             sym = symbols.next()
         hit = False
         if subtree.is_Pow and subtree.exp.is_Rational:
-            update = lambda x: x.xreplace({subtree: sym})
+            update = lambda x: x.xreplace({subtree: sym, 1/subtree: 1/sym})
         else:
             update = lambda x: x.subs(subtree, sym)
         # Make the substitution in all of the target expressions.

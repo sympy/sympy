@@ -1,7 +1,7 @@
 import itertools
 
 from sympy import (Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-    Matrix, S, sin, Eq)
+    Matrix, S, cos, sin, Eq)
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL
@@ -162,3 +162,23 @@ def test_dont_cse_tuples():
     assert name_val == [(x0, x + y)]
     assert expr == (Subs(f(x, y), (x, y), (0, x0))
             + Subs(g(x, y), (x, y), (0, x0)))
+
+def test_pow_invpow():
+    assert cse(1/x**2 + x**2) == \
+        ([(x0, x**2)], [x0 + 1/x0])
+    assert cse(x**2 + (1 + 1/x**2)/x**2) == \
+        ([(x0, x**2)], [x0 + (1 + 1/x0)/x0])
+    assert cse(1/x**2 + (1 + 1/x**2)*x**2) == \
+        ([(x0, x**2)], [x0*(1 + 1/x0) + 1/x0])
+    assert cse(cos(1/x**2) + sin(1/x**2)) == \
+        ([(x0, x**2)], [sin(1/x0) + cos(1/x0)])
+    assert cse(cos(x**2) + sin(x**2)) == \
+        ([(x0, x**2)], [sin(x0) + cos(x0)])
+    assert cse(y/(2 + x**2) + z/x**2/y) == \
+        ([(x0, x**2)], [y/(x0 + 2) + z/(x0*y)])
+    assert cse(exp(x**2) + x**2*cos(1/x**2)) == \
+        ([(x0, x**2)], [x0*cos(1/x0) + exp(x0)])
+    assert cse((1 + 1/x**2)/x**2) == \
+        ([(x0, x**2)], [(1 + 1/x0)/x0])
+    assert cse(x**(2*y) + x**(-2*y)) == \
+        ([(x0, x**(2*y))], [x0 + 1/x0])
