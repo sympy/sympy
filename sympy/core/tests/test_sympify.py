@@ -372,6 +372,9 @@ def test_issue1689():
 def test_issue1699_None():
     assert S(None) is None
 
+def test_issue3218():
+    assert sympify("x+\ny") == x + y
+
 def test_issue1889_builtins():
     C = Symbol('C')
     vars = {}

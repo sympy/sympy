@@ -289,8 +289,7 @@ class ProductSet(Set):
 
     References
     ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Cartesian_product
+    http://en.wikipedia.org/wiki/Cartesian_product
     """
     is_ProductSet = True
 
@@ -417,7 +416,7 @@ class Interval(Set, EvalfMixin):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Interval_(mathematics)
+    <http://en.wikipedia.org/wiki/Interval_(mathematics)>
     """
     is_Interval = True
     is_real = True
@@ -707,8 +706,7 @@ class Union(Set, EvalfMixin):
 
     References
     ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Union_(set_theory)
+    <http://en.wikipedia.org/wiki/Union_(set_theory)>
     """
     is_Union = True
 
@@ -902,8 +900,7 @@ class Intersection(Set):
 
     References
     ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Intersection_(set_theory)
+    <http://en.wikipedia.org/wiki/Intersection_(set_theory)>
     """
     is_Intersection = True
 
@@ -1021,6 +1018,10 @@ class Intersection(Set):
         else:
             return Intersection(args, evaluate=False)
 
+    def as_relational(self, symbol):
+        """Rewrite an Intersection in terms of equalities and logic operators"""
+        return And(*[set.as_relational(symbol) for set in self.args])
+
 class EmptySet(Set):
     """
     Represents the empty set. The empty set is available as a singleton
@@ -1043,8 +1044,7 @@ class EmptySet(Set):
 
     References
     ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Empty_set
+    http://en.wikipedia.org/wiki/Empty_set
     """
     __metaclass__ = Singleton
     is_EmptySet = True
@@ -1097,8 +1097,7 @@ class UniversalSet(Set):
 
     References
     ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Universal_set
+    http://en.wikipedia.org/wiki/Universal_set
     """
 
     __metaclass__ = Singleton
@@ -1148,8 +1147,7 @@ class FiniteSet(Set, EvalfMixin):
 
     References
     ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Finite_set
+    http://en.wikipedia.org/wiki/Finite_set
     """
     is_FiniteSet = True
     is_iterable = True

@@ -244,6 +244,15 @@ class sign(Function):
     def _eval_is_zero(self):
         return (self.args[0] is S.Zero)
 
+    def _eval_power(self, other):
+        if (
+            self.args[0].is_real and
+            self.args[0].is_nonzero and
+            other.is_integer and
+            other.is_even
+            ):
+            return S.One
+
     def _sage_(self):
         import sage.all as sage
         return sage.sgn(self.args[0]._sage_())
@@ -325,11 +334,9 @@ class Abs(Function):
             return known*unk
         if arg is S.NaN:
             return S.NaN
-        if arg.is_zero:#equals(0):
+        if arg.is_nonnegative:
             return arg
-        if arg.is_positive:
-            return arg
-        if arg.is_negative:
+        if arg.is_nonpositive:
             return -arg
         if arg.is_real is False:
             from sympy import expand_mul
@@ -348,7 +355,7 @@ class Abs(Function):
     def _eval_conjugate(self):
         return self
 
-    def _eval_power(self,other):
+    def _eval_power(self, other):
         if self.args[0].is_real and other.is_integer:
             if other.is_even:
                 return self.args[0]**other

@@ -13,7 +13,7 @@ __all__ = [
 ]
 
 class HBar(NumberSymbol):
-    """Reduced Plank's constant in numerical and symbolic form [1].
+    """Reduced Plank's constant in numerical and symbolic form [1]_.
 
     Examples
     ========
@@ -25,7 +25,7 @@ class HBar(NumberSymbol):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Planck_constant
+    .. [1] http://en.wikipedia.org/wiki/Planck_constant
     """
 
     is_real = True

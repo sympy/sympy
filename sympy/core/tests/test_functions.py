@@ -1,7 +1,7 @@
 from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma,
-        Tuple, Dummy, Eq, Expr, symbols)
+        Tuple, Dummy, Eq, Expr, symbols, nfloat)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError
@@ -467,3 +467,17 @@ def test_unhandled():
 def test_issue_1612() :
    x = Symbol("x")
    assert Symbol('f')(x) == f(x)
+
+def test_nfloat():
+    from sympy.core.basic import _aresame
+    x = Symbol("x")
+    eq = x**(S(4)/3) + 4*x**(S(1)/3)/3
+    assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(S(1)/3))
+    assert _aresame(nfloat(eq, exponent=True), x**(4.0/3) + (4.0/3)*x**(1.0/3))
+    eq = x**(S(4)/3) + 4*x**(x/3)/3
+    assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(x/3))
+    big = 12345678901234567890
+    Float_big = Float(big, '')
+    assert _aresame(nfloat(x**big, exponent=True),
+                           x**Float_big)
+    assert _aresame(nfloat(big), Float_big)

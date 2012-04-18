@@ -114,6 +114,10 @@ def test_sign():
     x = 0
     assert sign(x).is_zero == True
 
+    nz = Symbol('nz', nonzero=True, integer=True)
+    assert sign(nz)**2 == 1
+    assert (sign(nz)**3).args == (sign(nz), 3)
+
 def test_as_real_imag():
     n = pi**1000
     # the special code for working out the real
@@ -167,7 +171,7 @@ def test_Abs():
     a = Symbol('a', positive=True)
     assert Abs(2*pi*x*a) == 2*pi*a*Abs(x)
 
-def test_abs_real():
+def test_Abs_real():
     # test some properties of abs that only apply
     # to real numbers
     x = Symbol('x', complex=True)
@@ -178,7 +182,13 @@ def test_abs_real():
     assert sqrt(x**2) == Abs(x)
     assert Abs(x**2) == x**2
 
-def test_abs_properties():
+    # if the symbol is zero, the following will still apply
+    nn = Symbol('nn', nonnegative=True, real=True)
+    np = Symbol('np', nonpositive=True, real=True)
+    assert Abs(nn) == nn
+    assert Abs(np) == -np
+
+def test_Abs_properties():
     x = Symbol('x')
     assert Abs(x).is_real == True
     assert Abs(x).is_positive == None
@@ -195,6 +205,8 @@ def test_abs_properties():
     assert Abs(q).is_zero == False
 
 def test_abs():
+    # this tests that abs calls Abs; don't rename to
+    # test_Abs since that test is already above
     a = Symbol('a', positive=True)
     assert abs(I*(1 + a)**2) == (1 + a)**2
 
@@ -235,6 +247,10 @@ def test_issue936():
     assert Abs(x).expand(trig=True)     == Abs(x)
     assert sign(x).expand(trig=True)    == sign(x)
     assert arg(x).expand(trig=True)     == arg(x)
+
+def test_issue3206():
+    x = Symbol('x')
+    assert Abs(Abs(x)) == Abs(x)
 
 def test_issue1655_derivative_conjugate():
     x = Symbol('x')

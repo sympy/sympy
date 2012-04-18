@@ -7,7 +7,7 @@ from sympy.abc import a, b, c, d, x, y, z, t
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,\
      solve_undetermined_coeffs
-from sympy.solvers.solvers import _invert, unrad, checksol
+from sympy.solvers.solvers import _invert, unrad, checksol, posify
 
 from sympy.utilities.pytest import XFAIL, raises, skip
 
@@ -705,6 +705,14 @@ def test_unrad():
     assert solve(sqrt(x - 2) - 5) == [27]
     assert solve(sqrt(17*x - sqrt(x**2 - 5)) - 7) == [3]
     assert solve(sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))) == []
+
+    # don't posify the expession in unrad and use _mexpand
+    z = sqrt(2*x + 1)/sqrt(x) - sqrt(2 + 1/x)
+    p = posify(z)[0]
+    assert solve(p) == []
+    assert solve(z) == []
+    assert solve(z + 6*I) == [-S(1)/11]
+    assert solve(p + 6*I) == []
 
 @XFAIL
 def test_multivariate():

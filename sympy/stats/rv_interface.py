@@ -1,12 +1,12 @@
-from rv import (P, E, Density, Where, Given, pspace, CDF, Sample, sample_iter,
-        random_symbols, independent, dependent)
+from rv import (probability, expectation, density, where, given, pspace, cdf,
+        sample, sample_iter, random_symbols, independent, dependent)
 from sympy import sqrt
 
-__all__ = ['P', 'E', 'Density', 'Where', 'Given', 'Sample', 'CDF', 'pspace',
-        'sample_iter', 'Var', 'Std', 'Skewness', 'Covar', 'dependent',
+__all__ = ['P', 'E', 'density', 'where', 'given', 'sample', 'cdf', 'pspace',
+        'sample_iter', 'variance', 'std', 'skewness', 'covariance', 'dependent',
         'independent', 'random_symbols']
 
-def variance(X, given=None, **kwargs):
+def variance(X, condition=None, **kwargs):
     """
     Variance of a random expression
 
@@ -15,24 +15,23 @@ def variance(X, given=None, **kwargs):
     Examples
     ========
 
-    >>> from sympy.stats import Die, E, Bernoulli, Var
+    >>> from sympy.stats import Die, E, Bernoulli, variance
     >>> from sympy import simplify, Symbol
 
     >>> X = Die(6)
     >>> p = Symbol('p')
     >>> B = Bernoulli(p, 1, 0)
 
-    >>> Var(2*X)
+    >>> variance(2*X)
     35/3
 
-    >>> simplify(Var(B))
+    >>> simplify(variance(B))
     p*(-p + 1)
     """
-    return E(X**2, given, **kwargs) - E(X, given, **kwargs)**2
-Var = variance
+    return (expectation(X**2, condition, **kwargs) -
+            expectation(X, condition, **kwargs)**2)
 
-
-def standard_deviation(X, given=None, **kwargs):
+def standard_deviation(X, condition=None, **kwargs):
     """
     Standard Deviation of a random expression
 
@@ -41,19 +40,19 @@ def standard_deviation(X, given=None, **kwargs):
     Examples
     ========
 
-    >>> from sympy.stats import Bernoulli, Std
+    >>> from sympy.stats import Bernoulli, std
     >>> from sympy import Symbol
 
     >>> p = Symbol('p')
     >>> B = Bernoulli(p, 1, 0)
 
-    >>> Std(B)
+    >>> std(B)
     sqrt(-p**2 + p)
     """
-    return sqrt(variance(X, given, **kwargs))
-Std = standard_deviation
+    return sqrt(variance(X, condition, **kwargs))
+std = standard_deviation
 
-def covariance(X, Y, given=None, **kwargs):
+def covariance(X, Y, condition=None, **kwargs):
     """
     Covariance of two random expressions
 
@@ -64,29 +63,31 @@ def covariance(X, Y, given=None, **kwargs):
     Examples
     ========
 
-    >>> from sympy.stats import Exponential, Covar
+    >>> from sympy.stats import Exponential, covariance
     >>> from sympy import Symbol
 
     >>> rate = Symbol('lambda', positive=True, real=True, bounded = True)
     >>> X = Exponential(rate)
     >>> Y = Exponential(rate)
 
-    >>> Covar(X, X)
+    >>> covariance(X, X)
     lambda**(-2)
-    >>> Covar(X, Y)
+    >>> covariance(X, Y)
     0
-    >>> Covar(X, Y + rate*X)
+    >>> covariance(X, Y + rate*X)
     1/lambda
     """
 
-    return E( (X-E(X, given, **kwargs)) * (Y-E(Y, given, **kwargs)),
-            given, **kwargs)
-Covar = covariance
+    return expectation(
+            (X - expectation(X, condition, **kwargs)) *
+            (Y - expectation(Y, condition, **kwargs)),
+                      condition, **kwargs)
 
-def skewness(X, given=None, **kwargs):
+def skewness(X, condition=None, **kwargs):
 
-    mu = E(X, given, **kwargs)
-    sigma = Std(X, given, **kwargs)
-    return E( ((X-mu)/sigma) ** 3 , given, **kwargs)
-Skewness = skewness
+    mu = expectation(X, condition, **kwargs)
+    sigma = std(X, condition, **kwargs)
+    return expectation( ((X-mu)/sigma) ** 3 , condition, **kwargs)
 
+P = probability
+E = expectation

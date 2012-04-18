@@ -25,6 +25,50 @@ class MathMLPrinter(Printer):
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
         from xml.dom.minidom import Document
+
+        # Applying the patch of xml.dom.minidom bug
+        # Date: 2011-11-18
+        # Description: http://ronrothman.com/public/leftbraned/xml-dom-minidom-\
+        #                   toprettyxml-and-silly-whitespace/#best-solution
+        # Issue: http://bugs.python.org/issue4147
+        # Patch: http://hg.python.org/cpython/rev/7262f8f276ff/
+
+        from xml.dom.minidom import Element, Text, Node, _write_data
+
+        def writexml(self, writer, indent="", addindent="", newl=""):
+            # indent = current indentation
+            # addindent = indentation to add to higher levels
+            # newl = newline string
+            writer.write(indent+"<" + self.tagName)
+
+            attrs = self._get_attributes()
+            a_names = attrs.keys()
+            a_names.sort()
+
+            for a_name in a_names:
+                writer.write(" %s=\"" % a_name)
+                _write_data(writer, attrs[a_name].value)
+                writer.write("\"")
+            if self.childNodes:
+                writer.write(">")
+                if (len(self.childNodes) == 1 and
+                    self.childNodes[0].nodeType == Node.TEXT_NODE):
+                    self.childNodes[0].writexml(writer, '', '', '')
+                else:
+                    writer.write(newl)
+                    for node in self.childNodes:
+                        node.writexml(writer, indent+addindent, addindent, newl)
+                    writer.write(indent)
+                writer.write("</%s>%s" % (self.tagName, newl))
+            else:
+                writer.write("/>%s"%(newl))
+        Element.writexml = writexml
+
+        def writexml(self, writer, indent="", addindent="", newl=""):
+            _write_data(writer, "%s%s%s"%(indent, self.data, newl))
+        Text.writexml = writexml
+        # end of the patch
+
         self.dom = Document()
 
     def doprint(self, expr):
@@ -381,12 +425,8 @@ def print_mathml(expr, **settings):
     >>> print_mathml(x+1) #doctest: +NORMALIZE_WHITESPACE
     <apply>
         <plus/>
-        <ci>
-                x
-        </ci>
-        <cn>
-                1
-        </cn>
+        <ci>x</ci>
+        <cn>1</cn>
     </apply>
 
     """

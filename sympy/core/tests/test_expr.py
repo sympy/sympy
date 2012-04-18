@@ -198,6 +198,7 @@ def test_as_leading_term():
     assert (x+1).as_leading_term(x) == 1
     assert (x+x**2).as_leading_term(x) == x
     assert (x**2).as_leading_term(x) == x**2
+    assert (x + oo).as_leading_term(x) == oo
 
 def test_leadterm2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).leadterm(x) == \
@@ -213,6 +214,13 @@ def test_as_leading_term2():
 def test_as_leading_term3():
     assert (2+pi+x).as_leading_term(x) == 2 + pi
     assert (2*x+pi*x+x**2).as_leading_term(x) == (2+pi)*x
+
+def test_as_leading_term_stub():
+    class foo(Function):
+        pass
+    assert foo(1/x).as_leading_term(x) == foo(1/x)
+    assert foo(1).as_leading_term(x) == foo(1)
+    raises(NotImplementedError, 'foo(x).as_leading_term(x)')
 
 def test_atoms():
     assert sorted(list(x.atoms())) == [x]
@@ -1261,16 +1269,18 @@ def test_equals():
     assert (3*meter**2).equals(0) is False
 
     # from integrate(x*sqrt(1+2*x), x);
-    # diff is zero, but differentiation does not show it
+    # diff is zero only when assumptions allow
     i = 2*sqrt(2)*x**(S(5)/2)*(1 + 1/(2*x))**(S(5)/2)/5 + \
         2*sqrt(2)*x**(S(3)/2)*(1 + 1/(2*x))**(S(5)/2)/(-6 - 3/x)
     ans = sqrt(2*x + 1)*(6*x**2 + x - 1)/15
     diff = i - ans
-    assert diff.equals(0) is not False # should be True, but now it's None
-    # XXX TODO add a force=True option to equals to posify both
-    # self and other before beginning comparisions
+    assert diff.equals(0) is False
+    assert diff.subs(x, -S.Half/2) == 7*sqrt(2)/120
+    # there are regions for x for which the expression is True, for
+    # example, when x < -1/2 or x > 0 the expression is zero
     p = Symbol('p', positive=True)
     assert diff.subs(x, p).equals(0) is True
+    assert diff.subs(x, -1).equals(0) is True
 
 def test_random():
     from sympy import posify
@@ -1349,3 +1359,6 @@ def test_round():
     assert str((pi/10 + E*I).round(2)) == '0.31 + 2.72*I'
     assert (pi/10 + E*I).round(2).as_real_imag() == (0.31, 2.72)
     assert (pi/10 + E*I).round(2) == Float(0.31, 2) +  I*Float(2.72, 3)
+
+    # issue 3815
+    assert (I**(I+3)).round(3) == Float('-0.208','')*I

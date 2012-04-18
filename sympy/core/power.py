@@ -794,8 +794,12 @@ class Pow(Expr):
         if e.has(Symbol):
             return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
 
-        if b == x:
-            return powsimp(self, deep=True, combine='exp')
+        # see if the base is as simple as possible
+        bx = b
+        while bx.is_Pow and bx.exp.is_Rational:
+            bx = bx.base
+        if bx == x:
+            return self
 
         # work for b(x)**e where e is not an Integer and does not contain x
         # and hopefully has no other symbols
@@ -843,20 +847,22 @@ class Pow(Expr):
                 raise ValueError('expecting numerical exponent but got %s' % ei)
 
             nuse = n - ei
-            lt = b.compute_leading_term(x, logx=logx) # arg = sin(x); lt = x
-            #  XXX o is not used -- was this to be used as o and o2 below to compute a new e?
-            o = order*lt**(1 - e)
             bs = b._eval_nseries(x, n=nuse, logx=logx)
-            if bs.is_Add:
-                bs = bs.removeO()
-            if bs.is_Add:
+            terms = bs.removeO()
+            if terms.is_Add:
+                bs = terms
+                lt = terms.as_leading_term(x)
+
                 # bs -> lt + rest -> lt*(1 + (bs/lt - 1))
                 return ((Pow(lt, e)*
                          Pow((bs/lt).expand(), e).
                          nseries(x, n=nuse, logx=logx)).expand() +
                          order)
 
-            return bs**e + order
+            rv = bs**e
+            if terms != bs:
+                rv += order
+            return rv
 
         # either b0 is bounded but neither 1 nor 0 or e is unbounded
         # b -> b0 + (b-b0) -> b0 * (1 + (b/b0-1))

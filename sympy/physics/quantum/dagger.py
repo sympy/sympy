@@ -15,8 +15,8 @@ __all__ = [
 class Dagger(Expr):
     """General Hermitian conjugate operation.
 
-    For matrices this operation is equivalent to transpose and complex
-    conjugate [1].
+    Take the Hermetian conjugate of an argument [1]_. For matrices this
+    operation is equivalent to transpose and complex conjugate [2]_.
 
     Parameters
     ==========
@@ -72,7 +72,8 @@ class Dagger(Expr):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Hermitian_transpose
+    .. [1] http://en.wikipedia.org/wiki/Hermitian_adjoint
+    .. [2] http://en.wikipedia.org/wiki/Hermitian_transpose
     """
 
     def __new__(cls, arg, **old_assumptions):

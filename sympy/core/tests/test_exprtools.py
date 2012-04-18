@@ -1,7 +1,7 @@
 """Tests for tools for manipulating of large commutative expressions. """
 
 from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple,
-                   Interval, O, symbols, simplify, collect, Sum)
+                   Interval, O, symbols, simplify, collect, Sum, Basic, Dict)
 from sympy.abc import a, b, t, x, y, z
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
                                   gcd_terms, factor_terms, factor_nc)
@@ -78,8 +78,20 @@ def test_gcd_terms():
     assert _gcd_terms(f) == ((S(6)/5)*((1 + x)/(1 + x**2)), 5 + x, 1)
     assert _gcd_terms(Add.make_args(f)) == ((S(6)/5)*((1 + x)/(1 + x**2)), 5 + x, 1)
 
-    assert gcd_terms(f) == (S(6)/5)*((1 + x)*(5 + x)/(1 + x**2))
-    assert gcd_terms(Add.make_args(f)) == (S(6)/5)*((1 + x)*(5 + x)/(1 + x**2))
+    newf = (S(6)/5)*((1 + x)*(5 + x)/(1 + x**2))
+    assert gcd_terms(f) == newf
+    args = Add.make_args(f)
+    # non-Basic sequences of terms treated as terms of Add
+    assert gcd_terms(list(args)) == newf
+    assert gcd_terms(tuple(args)) == newf
+    assert gcd_terms(set(args)) == newf
+    # but a Basic sequence is treated as a container
+    assert gcd_terms(Tuple(*args)) != newf
+    assert gcd_terms(Basic(Tuple(1,3*y + 3*x*y), Tuple(1, 3))) == \
+        Basic((1, 3*y*(x + 1)), (1, 3))
+    # but we shouldn't change keys of a dictionary or some may be lost
+    assert gcd_terms(Dict((x*(1 + y), 2),(x + x*y, y + x*y))) == \
+                    Dict({x*(y + 1): 2, x + x*y: y*(1 + x)})
 
     assert gcd_terms((2*x + 2)**3 + (2*x + 2)**2) == 4*(x + 1)**2*(2*x + 3)
 
@@ -98,6 +110,13 @@ def test_gcd_terms():
     rep = (alpha, (1 + sqrt(5))/2 + alpha1*x + alpha2*x**2 + alpha3*x**3)
     s = (a/(x - alpha)).subs(*rep).series(x, 0, 1)
     assert simplify(collect(s, x)) == -sqrt(5)/2 - S(3)/2 + O(x)
+
+    # issue 2818
+    assert _gcd_terms([S.Zero, S.Zero]) == (0, 0, 1)
+    assert _gcd_terms([2*x + 4]) == (2, x + 2, 1)
+
+    eq = x/(x + 1/x)
+    assert gcd_terms(eq, fraction=False) == eq
 
 def test_factor_terms():
     A = Symbol('A', commutative=False)
@@ -131,6 +150,10 @@ def test_factor_terms():
     e = 1/sqrt(a/2 + 1)
     assert factor_terms(e, clear=False) == 1/sqrt(a/2 + 1)
     assert factor_terms(e, clear=True) == sqrt(2)/sqrt(a + 2)
+
+    eq = x/(x + 1/x) + 1/(x**2 + 1)
+    assert factor_terms(eq, fraction=False) == eq
+    assert factor_terms(eq, fraction=True) == 1
 
 def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)
@@ -178,3 +201,13 @@ def test_factor_nc():
 
     assert factor_nc(n*(n + n*m)) == n**2*(1 + m)
     assert factor_nc(m*(m*n + n*m*n**2)) == m*(m + n*m*n)*n
+    eq = m*sin(n) - sin(n)*m
+    assert factor_nc(eq) == eq
+
+    # for coverage:
+    from sympy.physics.secondquant import Commutator
+    from sympy import factor
+    eq = 1 + x*Commutator(m, n)
+    assert factor_nc(eq) == eq
+    eq = x*Commutator(m, n) + x*Commutator(m, o)*Commutator(m, n)
+    assert factor(eq) == x*(1 + Commutator(m, o))*Commutator(m, n)

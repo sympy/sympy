@@ -2,6 +2,7 @@ import itertools
 
 from sympy import (Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
     Matrix, S, sin, Eq)
+from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL
 
@@ -44,23 +45,27 @@ def test_cse_single():
     # Simple substitution.
     e = Add(Pow(x+y,2), sqrt(x+y))
     substs, reduced = cse([e], optimizations=[])
-    assert substs == [(x0, x+y)]
+    assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
 
 def test_cse_single2():
     # Simple substitution, test for being able to pass the expression directly
     e = Add(Pow(x+y,2), sqrt(x+y))
     substs, reduced = cse(e, optimizations=[])
-    assert substs == [(x0, x+y)]
+    assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
     assert isinstance(cse(Matrix([[1]]))[1][0], Matrix)
 
 def test_cse_not_possible():
     # No substitution possible.
-    e = Add(x,y)
+    e = Add(x, y)
     substs, reduced = cse([e], optimizations=[])
     assert substs == []
-    assert reduced == [x+y]
+    assert reduced == [x + y]
+    # issue 3230
+    eq = (meijerg((1, 2), (y, 4), (5,), [], x) + \
+          meijerg((1, 3), (y, 4), (5,), [], x))
+    assert cse(eq) == ([], [eq])
 
 def test_nested_substitution():
     # Substitution within a substitution.
@@ -136,3 +141,24 @@ def test_issue_1104():
 def test_issue_3164():
     e = Eq(x*(-x + 1) + x*(x - 1), 0)
     assert cse(e) == ([], [True])
+
+def test_dont_cse_tuples():
+    from sympy import Subs, Function
+    f = Function("f")
+    g = Function("g")
+
+    name_val, (expr,) = cse(
+            Subs(f(x, y), (x, y), (0, 1))
+            + Subs(g(x, y), (x, y), (0, 1)))
+
+    assert name_val == []
+    assert expr == (Subs(f(x, y), (x, y), (0, 1))
+            + Subs(g(x, y), (x, y), (0, 1)))
+
+    name_val, (expr,) = cse(
+            Subs(f(x, y), (x, y), (0, x + y))
+            + Subs(g(x, y), (x, y), (0, x + y)))
+
+    assert name_val == [(x0, x + y)]
+    assert expr == (Subs(f(x, y), (x, y), (0, x0))
+            + Subs(g(x, y), (x, y), (0, x0)))

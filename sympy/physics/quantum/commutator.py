@@ -20,12 +20,13 @@ __all__ = [
 class Commutator(Expr):
     """The standard commutator, in an unevaluated state.
 
-    The commutator is defined [1] as: [A, B] = A*B - B*A, but in this class
-    the commutator is initially unevaluated. To expand the commutator out,
-    use the ``doit`` method.
+    Evaluating a commutator is defined [1]_ as: ``[A, B] = A*B - B*A``. This
+    class returns the commutator in an unevaluated form. To evaluate the
+    commutator, use the ``.doit()`` method.
 
-    The arguments of the commutator are put into canonical order using
-    ``__cmp__``, so that [B,A] becomes -[A,B].
+    Cannonical ordering of a commutator is ``[A, B]`` for ``A < B``. The
+    arguments of the commutator are put into canonical order using ``__cmp__``.
+    If ``B < A``, then ``[B, A]`` is returned as ``-[A, B]``.
 
     Parameters
     ==========
@@ -38,49 +39,52 @@ class Commutator(Expr):
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.physics.quantum import Commutator, Dagger
-    >>> x, y = symbols('x,y')
-    >>> A, B, C = symbols('A,B,C', commutative=False)
+    >>> from sympy.physics.quantum import Commutator, Dagger, Operator
+    >>> from sympy.abc import x, y
+    >>> A = Operator('A')
+    >>> B = Operator('B')
+    >>> C = Operator('C')
 
-    Create some commutators and use ``doit`` to multiply them out.
+    Create a commutator and use ``.doit()`` to evaluate it:
 
-    >>> comm = Commutator(A,B); comm
+    >>> comm = Commutator(A, B)
+    >>> comm
     [A,B]
     >>> comm.doit()
     A*B - B*A
 
     The commutator orders it arguments in canonical order:
 
-    >>> comm = Commutator(B,A); comm
+    >>> comm = Commutator(B, A); comm
     -[A,B]
 
-    Scalar constants are factored out:
+    Commutative constants are factored out:
 
-    >>> Commutator(3*x*A,x*y*B)
+    >>> Commutator(3*x*A, x*y*B)
     3*x**2*y*[A,B]
 
-    Using ``expand(commutator=True)``, the standard commutator expansion rules
+    Using ``.expand(commutator=True)``, the standard commutator expansion rules
     can be applied:
 
-    >>> Commutator(A+B,C).expand(commutator=True)
+    >>> Commutator(A+B, C).expand(commutator=True)
     [A,C] + [B,C]
-    >>> Commutator(A,B+C).expand(commutator=True)
+    >>> Commutator(A, B+C).expand(commutator=True)
     [A,B] + [A,C]
-    >>> Commutator(A*B,C).expand(commutator=True)
-    A*[B,C] + [A,C]*B
-    >>> Commutator(A,B*C).expand(commutator=True)
-    B*[A,C] + [A,B]*C
+    >>> Commutator(A*B, C).expand(commutator=True)
+    [A,C]*B + A*[B,C]
+    >>> Commutator(A, B*C).expand(commutator=True)
+    [A,B]*C + B*[A,C]
 
-    Commutator works with Dagger:
+    Adjoint operations applied to the commutator are properly applied to the
+    arguments:
 
-    >>> Dagger(Commutator(A,B))
+    >>> Dagger(Commutator(A, B))
     -[Dagger(A),Dagger(B)]
 
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Commutator
+    .. [1] http://en.wikipedia.org/wiki/Commutator
     """
 
     def __new__(cls, A, B, **old_assumptions):
@@ -92,8 +96,6 @@ class Commutator(Expr):
 
     @classmethod
     def eval(cls, a, b):
-        """The Commutator [A,B] is on canonical form if A < B.
-        """
         if not (a and b): return S.Zero
         if a == b: return S.Zero
         if a.is_commutative or b.is_commutative:
@@ -108,6 +110,7 @@ class Commutator(Expr):
             return Mul(Mul(*c_part), cls(Mul._from_args(nca), Mul._from_args(ncb)))
 
         # Canonical ordering of arguments
+        # The Commutator [A,B] is on canonical form if A < B.
         if a.compare(b) == 1:
             return S.NegativeOne*cls(b,a)
 
@@ -157,6 +160,7 @@ class Commutator(Expr):
             return result
 
     def doit(self, **hints):
+        """ Evaluate commutator """
         A = self.args[0]
         B = self.args[1]
         if isinstance(A, Operator) and isinstance(B, Operator):
@@ -175,8 +179,9 @@ class Commutator(Expr):
         return Commutator(Dagger(self.args[1]), Dagger(self.args[0]))
 
     def _sympyrepr(self, printer, *args):
-        return "%s(%s,%s)" % (self.__class__.__name__, self.args[0],\
-        self.args[1])
+        return "%s(%s,%s)" % (
+            self.__class__.__name__, printer._print(self.args[0]), printer._print(self.args[1])
+        )
 
     def _sympystr(self, printer, *args):
         return "[%s,%s]" % (self.args[0], self.args[1])

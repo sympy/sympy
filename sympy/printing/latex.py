@@ -546,7 +546,10 @@ class LatexPrinter(Printer):
         return self._do_exponent(tex, exp)
 
     def _print_Not(self, e):
-        return r"\neg %s" % self._print(e.args[0])
+        if (e.args[0].is_Boolean):
+            return r"\neg (%s)" % self._print(e.args[0])
+        else:
+            return r"\neg %s" % self._print(e.args[0])
 
     def _print_And(self, e):
         args = sorted(e.args, key=default_sort_key)
@@ -887,8 +890,8 @@ class LatexPrinter(Printer):
                                self._print(expr.args[-1].expr))
         else:
             ecpairs.append(r"%s & \text{for}\: %s" % \
-                           (self._print(expr.args[-1].cond),
-                            self._print(expr.args[-1].expr)))
+                           (self._print(expr.args[-1].expr),
+                            self._print(expr.args[-1].cond)))
         tex = r"\begin{cases} %s \end{cases}"
         return tex % r" \\".join(ecpairs)
 
@@ -991,6 +994,10 @@ class LatexPrinter(Printer):
         return (r"\left\{"
               + r", ".join(self._print(el) for el in printset)
               + r"\right\}")
+
+    _print_frozenset = _print_FiniteSet
+    _print_set = _print_FiniteSet
+
     def _print_Interval(self, i):
         if i.start == i.end:
             return r"\left{%s\right}" % self._print(i.start)
@@ -1120,7 +1127,7 @@ def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.
 
-    >>> from sympy import latex, sin, asin, Rational
+    >>> from sympy import latex, sin, asin, Matrix, Rational
     >>> from sympy.abc import x, y, mu, tau
 
     >>> latex((2*tau)**Rational(7,2))
@@ -1188,18 +1195,19 @@ def latex(expr, **settings):
     '\\sin^{-1}{\\left (\\frac{7}{2} \\right )}'
 
     mat_str: Which matrix environment string to emit. "smallmatrix", "bmatrix",
-    etc. This paramater currently doesn't work. Defaults to "bmatrix".
+    etc. Defaults to "smallmatrix".
 
-    >>> latex([[1]], mat_str = "bmatrix")
-    '\\begin{bmatrix}\\begin{bmatrix}1\\end{bmatrix}\\end{bmatrix}'
+    >>> latex(Matrix(2, 1, [x, y]), mat_str = "array")
+    '\\left[\\begin{array}x\\\\y\\end{array}\\right]'
 
-    mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(".
-    This parameter currently doesn't work.
+    mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(",
+    or the empty string. Defaults to "[".
 
-    >>> latex([[1]], mat_delim="(")
-    '\\begin{bmatrix}\\begin{bmatrix}1\\end{bmatrix}\\end{bmatrix}'
+    >>> latex(Matrix(2, 1, [x, y]), mat_delim="(")
+    '\\left(\\begin{smallmatrix}x\\\\y\\end{smallmatrix}\\right)'
 
-    symbol_names: Dictionary of symbols and the custom strings they should be emitted as.
+    symbol_names: Dictionary of symbols and the custom strings they should be
+    emitted as.
 
     >>> latex(x**2, symbol_names={x:'x_i'})
     'x_i^{2}'

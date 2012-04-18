@@ -3,8 +3,9 @@
 import bisect
 import difflib
 
-from sympy import Basic, Mul, Add
+from sympy import Basic, Mul, Add, Tuple
 from sympy.utilities.iterables import preorder_traversal, numbered_symbols
+from sympy.core.compatibility import iterable
 
 import cse_opts
 
@@ -142,8 +143,11 @@ def cse(exprs, symbols=None, optimizations=None):
         for e in expr.as_numer_denom() if not expr.is_Add else [expr]:
             pt = preorder_traversal(e)
             for subtree in pt:
-                if subtree.is_Atom:
+                if subtree.is_Atom or iterable(subtree):
                     # Exclude atoms, since there is no point in renaming them.
+                    continue
+
+                if isinstance(subtree, Tuple):
                     continue
 
                 if subtree in seen_subexp:

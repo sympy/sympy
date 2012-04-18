@@ -450,12 +450,12 @@ def test_settings():
     raises(TypeError, lambda: sstr(S(4), method="garbage"))
 
 def test_RandomDomain():
-    from sympy.stats import Normal, Die, Exponential, pspace, Where
+    from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal(0, 1, symbol=Symbol('x1'))
-    assert str(Where(X>0)) == "Domain: 0 < x1"
+    assert str(where(X>0)) == "Domain: 0 < x1"
 
     D = Die(6, symbol=Symbol('d1'))
-    assert str(Where(D>4)) == "Domain: Or(d1 == 5, d1 == 6)"
+    assert str(where(D>4)) == "Domain: Or(d1 == 5, d1 == 6)"
 
     A = Exponential(1, symbol=Symbol('a'))
     B = Exponential(1, symbol=Symbol('b'))

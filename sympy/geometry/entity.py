@@ -10,6 +10,8 @@ GeometryEntity
 from sympy.core.compatibility import cmp, is_sequence
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
+from sympy.functions import cos, sin
+from sympy.matrices.matrices import eye
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
@@ -61,12 +63,9 @@ class GeometryEntity(Basic):
         raise NotImplementedError()
 
     def rotate(self, angle, pt=None):
-        """Rotate the object about pt by the given angle (in radians).
+        """Rotate ``angle`` radians counterclockwise about Point ``pt``.
 
         The default pt is the origin, Point(0, 0)
-
-        XXX geometry needs a modify_points method which operates
-        on only the points of the object
 
         See Also
         ========
@@ -84,21 +83,6 @@ class GeometryEntity(Basic):
         Triangle(Point(0, 1), Point(-sqrt(3)/2, -1/2), Point(sqrt(3)/2, -1/2))
 
         """
-        from sympy import cos, sin, Point
-
-        c = cos(angle)
-        s = sin(angle)
-
-        if isinstance(self, Point):
-            rv = self
-            if pt is not None:
-                rv -= pt
-            x, y = rv.args
-            rv = Point(c*x - s*y, s*x + c*y)
-            if pt is not None:
-                rv += pt
-            return rv
-
         newargs = []
         for a in self.args:
             if isinstance(a, GeometryEntity):
@@ -128,9 +112,6 @@ class GeometryEntity(Basic):
         Triangle(Point(2, 0), Point(-1, sqrt(3)), Point(-1, -sqrt(3)))
 
         """
-        from sympy import Point
-        if isinstance(self, Point):
-            return Point(self.x*x, self.y*y)
         newargs = []
         for a in self.args:
             if isinstance(a, GeometryEntity):
@@ -165,8 +146,6 @@ class GeometryEntity(Basic):
             pt = Point(x, y)
         else:
             pt = x
-        if isinstance(self, Point):
-            return self + pt
         newargs = []
         for a in self.args:
             if isinstance(a, GeometryEntity):
@@ -310,6 +289,42 @@ class GeometryEntity(Basic):
             old = Point(old)
             new = Point(new)
             return self._subs(old, new)
+
+def translate(x, y):
+    """Return the matrix to translate a 2-D point by x and y."""
+    rv = eye(3)
+    rv[2, 0] = x
+    rv[2, 1] = y
+    return rv
+
+def scale(x, y):
+    """Return the matrix to multiply a 2-D point's coordinates by x and y."""
+    rv = eye(3)
+    rv[0, 0] = x
+    rv[1, 1] = y
+    return rv
+
+def rotate(th):
+    """Return the matrix to rotate a 2-D point about the origin by ``angle``.
+
+    The angle is measured in radians. To Point a point about a point other
+    then the origin, translate the Point, do the rotation, and
+    translate it back:
+
+    >>> from sympy.geometry.entity import rotate, translate
+    >>> from sympy import Point, pi
+    >>> rot_about_11 = translate(-1, -1)*rotate(pi/2)*translate(1, 1)
+    >>> Point(1, 1).transform(rot_about_11)
+    Point(1, 1)
+    >>> Point(0, 0).transform(rot_about_11)
+    Point(2, 0)
+    """
+    s = sin(th)
+    rv = eye(3)*cos(th)
+    rv [0, 1] = s
+    rv[1, 0] = -s
+    rv[2, 2] = 1
+    return rv
 
 from sympy.core.sympify import converter, sympify
 converter[GeometryEntity] = lambda x: x

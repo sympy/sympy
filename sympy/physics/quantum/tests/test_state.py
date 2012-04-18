@@ -167,14 +167,6 @@ def test_bra_ket_dagger():
     e = 2*I*k + x*k2
     assert Dagger(e) == conjugate(x)*Dagger(k2) - 2*I*Dagger(k)
 
-
-def test_printing():
-    psi = Ket('psi')
-    assert pretty(psi, use_unicode=True) == u'\u2758\u03c8\u27e9'
-    assert pretty(Dagger(psi), use_unicode=True) == u'\u27e8\u03c8\u2758'
-    assert latex(psi) == r"{\left|\psi\right\rangle }"
-    assert latex(Dagger(psi)) == r"{\left\langle \psi\right|}"
-
 def test_wavefunction():
     x, L = symbols('x,L', real=True)
     n = symbols('n', integer=True)

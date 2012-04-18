@@ -2,6 +2,7 @@ from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
                    Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
                    sin, sqrt, sstr, Sum, sympify, S, integrate, atan, product)
 from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
+from sympy.mpmath import inf, ninf, nan
 from sympy.abc import n, x, y
 from sympy.mpmath.libmp.libmpf import from_float
 from sympy.utilities.pytest import raises, XFAIL
@@ -166,9 +167,10 @@ def test_evalf_integer_parts():
     raises(PrecisionExhausted, lambda: a.evalf())
     assert a.evalf(chop=True) == 3
     assert a.evalf(maxn=500) == 2
-    raises(PrecisionExhausted, lambda: b.evalf())
-    raises(PrecisionExhausted, lambda: b.evalf(maxn=500))
-    assert b.evalf(chop=True) == 3
+    assert b.evalf() == 3
+    # equals, as a fallback, can still fail but it might succeed as here
+    assert ceiling(10*(sin(1)**2 + cos(1)**2)) == 10
+
     assert int(floor(factorial(50)/E,evaluate=False).evalf()) == \
         11188719610782480504630258070757734324011354208865721592720336800L
     assert int(ceiling(factorial(50)/E,evaluate=False).evalf()) == \
@@ -308,3 +310,8 @@ def test_scaled_zero():
 def test_chop_value():
     for i in range(-27, 28):
         assert (Pow(10, i)*2).n(chop=10**i) and not (Pow(10, i)).n(chop=10**i)
+
+def test_infinities():
+    assert oo.evalf(chop=True) == inf
+    assert (-oo).evalf(chop=True) == ninf
+    assert S.NaN.evalf(chop=True) == nan

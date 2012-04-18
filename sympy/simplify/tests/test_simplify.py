@@ -1,11 +1,12 @@
 from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     collect, Function, powsimp, separate, sin, exp, Rational, fraction,
     simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate,
+    sinh, cosh, tanh, coth,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
     factor, Mul, O, hyper, Add, Float, radsimp, collect_const, hyper,
-    signsimp)
+    signsimp, besselsimp, ratsimpmodprime)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
@@ -46,6 +47,31 @@ def test_ratsimp():
 
     assert ratsimp(f) == A*B/8 - A*C/8 - A/(4*erf(x) - 4)
 
+def test_ratsimpmodprime():
+    a = y**5 + x + y
+    b = x - y
+    F = [x*y**5 - x - y]
+    assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
+        (x**2 + x*y + x + y) / (x**2 - x*y)
+
+    a = x + y**2 - 2
+    b = x + y**2 - y - 1
+    F = [x*y - 1]
+    assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
+        (x - y - 1)/(x - y)
+
+    a = 5*x**3 + 21*x**2 + 4*x*y + 23*x + 12*y + 15
+    b = 7*x**3 - y*x**2 + 31*x**2 + 2*x*y + 15*y + 37*x + 21
+    F = [x**2 + y**2 - 1]
+    assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
+        (3*x + 4*y + 5)/(5*x + 5*y + 7)
+
+    a = x*y - x - 2*y + 4
+    b = x + y**2 - 2*y
+    F = [x - 2, y - 3]
+    assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
+        Rational(2, 5)
+
 def test_trigsimp1():
     x, y = symbols('x,y')
 
@@ -69,6 +95,20 @@ def test_trigsimp1():
     assert trigsimp(y*tan(x)**2/sin(x)**2) == y/cos(x)**2
     assert trigsimp(cot(x)/cos(x)) == 1/sin(x)
 
+    assert trigsimp(sin(x + y) + sin(x - y)) == 2*sin(x)*cos(y)
+    assert trigsimp(sin(x + y) - sin(x - y)) == 2*sin(y)*cos(x)
+    assert trigsimp(cos(x + y) + cos(x - y)) == 2*cos(x)*cos(y)
+    assert trigsimp(cos(x + y) - cos(x - y)) == -2*sin(x)*sin(y)
+    assert ratsimp(trigsimp(tan(x + y) - tan(x)/(1 - tan(x)*tan(y)))) == \
+        -tan(y)/(tan(x)*tan(y) -1)
+
+    assert trigsimp(sinh(x + y) + sinh(x - y)) == 2*sinh(x)*cosh(y)
+    assert trigsimp(sinh(x + y) - sinh(x - y)) == 2*sinh(y)*cosh(x)
+    assert trigsimp(cosh(x + y) + cosh(x - y)) == 2*cosh(x)*cosh(y)
+    assert trigsimp(cosh(x + y) - cosh(x - y)) == 2*sinh(x)*sinh(y)
+    assert ratsimp(trigsimp(tanh(x + y) - tanh(x)/(1 + tanh(x)*tanh(y)))) == \
+        tanh(y)/(tanh(x)*tanh(y) + 1)
+
     assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1
     e = 2*sin(x)**2 + 2*cos(x)**2
     assert trigsimp(log(e), deep=True) == log(2)
@@ -82,7 +122,7 @@ def test_trigsimp2():
 
 def test_issue1274():
     x = Symbol("x")
-    assert abs(trigsimp(2.0*sin(x)**2+2.0*cos(x)**2)-2.0) < 1e-10
+    assert abs(trigsimp(2.0*sin(x)**2 + 2.0*cos(x)**2)-2.0) < 1e-10
 
 def test_trigsimp3():
     x, y = symbols('x,y')
@@ -101,6 +141,65 @@ def test_trigsimp_issue_2515():
     x = Symbol('x')
     assert trigsimp(x*cos(x)*tan(x)) == x*sin(x)
     assert trigsimp(-sin(x)+cos(x)*tan(x)) == 0
+
+def test_hyperbolic_simp():
+    x, y = symbols('x,y')
+
+    assert trigsimp(sinh(x)**2 + 1) == cosh(x)**2
+    assert trigsimp(cosh(x)**2 - 1) == sinh(x)**2
+    assert trigsimp(cosh(x)**2 - sinh(x)**2) == 1
+    assert trigsimp(1 - tanh(x)**2) == 1/cosh(x)**2
+    assert trigsimp(1 - 1/cosh(x)**2) == tanh(x)**2
+    assert trigsimp(tanh(x)**2 + 1/cosh(x)**2) == 1
+    assert trigsimp(coth(x)**2 - 1) == 1/sinh(x)**2
+    assert trigsimp(1/sinh(x)**2 + 1) == coth(x)**2
+    assert trigsimp(coth(x)**2 - 1/sinh(x)**2) == 1
+
+    assert trigsimp(5*cosh(x)**2 - 5*sinh(x)**2) == 5
+    assert trigsimp(5*cosh(x/2)**2 - 2*sinh(x/2)**2) in \
+                [2 + 3*cosh(x/2)**2, 5 + 3*sinh(x/2)**2]
+
+    assert trigsimp(sinh(x)/cosh(x)) == tanh(x)
+    assert trigsimp(tanh(x)) == trigsimp(sinh(x)/cosh(x))
+    assert trigsimp(cosh(x)/sinh(x)) == 1/tanh(x)
+    assert trigsimp(2*tanh(x)*cosh(x)) == 2*sinh(x)
+    assert trigsimp(coth(x)**3*sinh(x)**3) == cosh(x)**3
+    assert trigsimp(y*tanh(x)**2/sinh(x)**2) == y/cosh(x)**2
+    assert trigsimp(coth(x)/cosh(x)) == 1/sinh(x)
+
+    e = 2*cosh(x)**2 - 2*sinh(x)**2
+    assert trigsimp(log(e), deep=True) == log(2)
+
+    assert trigsimp(cosh(x)**2*cosh(y)**2 - cosh(x)**2*sinh(y)**2 - sinh(x)**2,
+            recursive=True) == 1
+    assert trigsimp(sinh(x)**2*sinh(y)**2 - sinh(x)**2*cosh(y)**2 + cosh(x)**2,
+            recursive=True) == 1
+
+    assert abs(trigsimp(2.0*cosh(x)**2 - 2.0*sinh(x)**2)-2.0) < 1e-10
+
+    assert trigsimp(sinh(x)**2/cosh(x)**2) == tanh(x)**2
+    assert trigsimp(sinh(x)**3/cosh(x)**3) == tanh(x)**3
+    assert trigsimp(sinh(x)**10/cosh(x)**10) == tanh(x)**10
+    assert trigsimp(cosh(x)**3/sinh(x)**3) == 1/tanh(x)**3
+
+    assert trigsimp(cosh(x)/sinh(x)) == 1/tanh(x)
+    assert trigsimp(cosh(x)**2/sinh(x)**2) == 1/tanh(x)**2
+    assert trigsimp(cosh(x)**10/sinh(x)**10) == 1/tanh(x)**10
+
+    assert trigsimp(x*cosh(x)*tanh(x)) == x*sinh(x)
+    assert trigsimp(-sinh(x) + cosh(x)*tanh(x)) == 0
+
+@XFAIL
+def test_tan_cot():
+    x = Symbol('x')
+    ### ???
+    assert tan(x) == 1/cot(x)
+
+@XFAIL
+def test_tan_cot2():
+    x = Symbol('x')
+    assert trigsimp(tan(x) - 1/cot(x)) == 0
+    assert trigsimp(3*tanh(x)**7 - 2/coth(x)**7) == tanh(x)**7
 
 @XFAIL
 def test_factorial_simplify():
@@ -226,6 +325,12 @@ def test_simplify_fail1():
     y = Symbol('y')
     e = (x+y)**2/(-4*x*y**2-2*y**3-2*x**2*y)
     assert simplify(e) == 1 / (-2*y)
+
+def test_simplify_issue_3214():
+    c, p = symbols('c p', positive=True)
+    s = sqrt(c**2 - p**2)
+    b = (c + I*p - s)/(c + I*p + s)
+    assert radsimp(b) == (c*p - p*s + I*(-c**2 + c*s + p**2))/(c*p)
 
 def test_fraction():
     x, y, z = map(Symbol, 'xyz')
@@ -1038,3 +1143,16 @@ def test_issue_2998():
 def test_signsimp():
     e = x*(-x + 1) + x*(x - 1)
     assert signsimp(Eq(e, 0)) == True
+
+def test_besselsimp():
+    from sympy import besselj, besseli, besselk, bessely, jn, yn, exp_polar, cosh
+    assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
+           besselj(y, z)
+    assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
+           besselj(a, 2*sqrt(x))
+    assert besselsimp(sqrt(2)*sqrt(pi)*x**(S(1)/4)*exp(I*pi/4)*exp(-I*pi*a/2) * \
+                      besseli(-S(1)/2, sqrt(x)*exp_polar(I*pi/2)) * \
+                      besseli(a, sqrt(x)*exp_polar(I*pi/2))/2) == \
+           besselj(a, sqrt(x)) * cos(sqrt(x))
+    assert besselsimp(besseli(S(-1)/2, z)) == sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
+    assert besselsimp(besseli(a, z*exp_polar(-I*pi/2))) == exp(-I*pi*a/2)*besselj(a, z)

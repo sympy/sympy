@@ -3608,7 +3608,7 @@ def test_pretty_geometry():
     e = Segment((0, 1), (0, 2))
     assert pretty(e) == 'Segment(Point(0, 1), Point(0, 2))'
     e = Ray((1, 1), angle=4.2*pi)
-    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(0.2*pi) + 1))'
+    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(pi/5) + 1))'
 
 def test_expint():
     expr = Ei(x)
@@ -3632,13 +3632,17 @@ def test_expint():
     assert upretty(Chi(x)) == 'Chi(x)'
 
 def test_RandomDomain():
-    from sympy.stats import Normal, Die, Exponential, pspace, Where
+    from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal(0, 1, symbol=Symbol('x1'))
-    assert upretty(Where(X>0)) == u"Domain: 0 < x₁"
+    assert upretty(where(X>0)) == u"Domain: 0 < x₁"
 
     D = Die(6, symbol=Symbol('d1'))
-    assert upretty(Where(D>4)) == u'Domain: d₁ = 5 ∨ d₁ = 6'
+    assert upretty(where(D>4)) == u'Domain: d₁ = 5 ∨ d₁ = 6'
 
     A = Exponential(1, symbol=Symbol('a'))
     B = Exponential(1, symbol=Symbol('b'))
     assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ a ∧ 0 ≤ b'
+
+def test_issue_3186():
+    assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
+    assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '

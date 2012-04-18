@@ -1,0 +1,72 @@
+Sets
+===========
+
+.. automodule:: sympy.core.sets
+
+Set
+^^^
+.. autoclass:: Set
+   :members:
+
+Elementary Sets
+---------------
+
+Interval
+^^^^^^^^
+.. autoclass:: Interval
+   :members:
+
+FiniteSet
+^^^^^^^^^
+.. autoclass:: FiniteSet
+   :members:
+
+Compound Sets
+-------------
+Union
+^^^^^
+.. autoclass:: Union
+   :members:
+
+Intersection
+^^^^^^^^^^^^
+.. autoclass:: Intersection 
+   :members:
+
+ProductSet
+^^^^^^^^^^
+.. autoclass:: ProductSet
+   :members:
+
+Singleton Sets
+--------------
+
+EmptySet
+^^^^^^^^
+.. autoclass:: EmptySet
+   :members:
+
+UniversalSet
+^^^^^^^^^^^^
+.. autoclass:: UniversalSet 
+   :members:
+
+Special Sets
+------------
+.. automodule:: sympy.sets.fancysets
+
+Naturals
+^^^^^^^^
+.. autoclass:: Naturals 
+   :members:
+
+Integers
+^^^^^^^^
+.. autoclass:: Integers 
+   :members:
+
+TransformationSet
+^^^^^^^^^^^^^^^^^
+.. autoclass:: TransformationSet 
+   :members:
+

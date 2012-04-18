@@ -33,6 +33,22 @@ def test_basic1():
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN
     assert limit(Order(2)*x, x, S.NaN) == S.NaN
+    assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
+    assert limit(gamma(1/x + 3), x, oo) == 2
+    assert limit(S.NaN, x, -oo) == S.NaN
+    assert limit(Order(2)*x, x, S.NaN) == S.NaN
+    assert limit(1/(x-1), x, 1, dir="+") == oo
+    assert limit(1/(x-1), x, 1, dir="-") == -oo
+    assert limit(1/(5-x)**3, x, 5, dir="+") == -oo
+    assert limit(1/(5-x)**3, x, 5, dir="-") == oo
+    assert limit(1/sin(x), x, pi, dir="+") == -oo
+    assert limit(1/sin(x), x, pi, dir="-") == oo
+    assert limit(1/cos(x), x, pi/2, dir="+") == -oo
+    assert limit(1/cos(x), x, pi/2, dir="-") == oo
+    assert limit(1/tan(x**3), x, (2*pi)**(S(1)/3), dir="+") == oo
+    assert limit(1/tan(x**3), x, (2*pi)**(S(1)/3), dir="-") == -oo
+    assert limit(1/cot(x)**3, x, (3*pi/2), dir="+") == -oo
+    assert limit(1/cot(x)**3, x, (3*pi/2), dir="-") == oo
 
     # approaching 0
     # from dir="+"
@@ -258,6 +274,18 @@ def test_issue835():
     assert limit((1 + x**log(3))**(1/x), x, 0) == 1
     assert limit((5**(1/x) + 3**(1/x))**x, x, 0) == 5
 
+def test_calculate_series():
+    # needs gruntz calculate_series to go to n = 32
+    assert limit(x**(S(77)/3)/(1 + x**(S(77)/3)), x, oo) == 1
+    # needs gruntz calculate_series to go to n = 128
+    assert limit(x**101.1/(1 + x**101.1), x, oo) == 1
+
+def test_issue2856():
+    assert limit((x**16)/(1 + x**16), x, oo) == 1
+    assert limit((x**100)/(1 + x**100), x, oo) == 1
+    assert limit((x**1885)/(1 + x**1885), x, oo) == 1
+    assert limit((x**1000/((x + 1)**1000 + exp(-x))), x, oo) == 1
+
 def test_newissue():
     assert limit(exp(1/sin(x))/exp(cot(x)), x, 0) == 1
 
@@ -284,3 +312,7 @@ def test_issue2337():
 def test_Limit_dir():
     raises(TypeError, lambda: Limit(x, x, 0, dir=0))
     raises(ValueError, lambda: Limit(x, x, 0, dir='0'))
+
+def test_polynomial():
+    assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, oo) == 1
+    assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, -oo) == 1
