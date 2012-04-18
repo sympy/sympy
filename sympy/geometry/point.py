@@ -14,6 +14,8 @@ from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from entity import GeometryEntity
 from sympy.matrices.matrices import Matrix
+from sympy.core.numbers import Float
+from sympy.simplify.simplify import nsimplify
 
 class Point(GeometryEntity):
     """A point in a 2-dimensional Euclidean space.
@@ -61,6 +63,14 @@ class Point(GeometryEntity):
     >>> Point(0, x)
     Point(0, x)
 
+    Floats are automatically converted to Rational unless the
+    evaluate flag is False:
+
+    >>> Point(0.5, 0.25)
+    Point(1/2, 1/4)
+    >>> Point(0.5, 0.25, evaluate=False)
+    Point(0.5, 0.25)
+
     """
 
     def __new__(cls, *args, **kwargs):
@@ -73,6 +83,8 @@ class Point(GeometryEntity):
 
         if len(coords) != 2:
             raise NotImplementedError("Only two dimensional points currently supported")
+        if kwargs.get('evaluate', True):
+            coords = [nsimplify(c) for c in coords]
 
         return GeometryEntity.__new__(cls, *coords)
 
@@ -390,9 +402,10 @@ class Point(GeometryEntity):
 
         """
         if prec is None:
-            return Point(*[x.evalf(**options) for x in self.args])
+            coords = [x.evalf(**options) for x in self.args]
         else:
-            return Point(*[x.evalf(prec, **options) for x in self.args])
+            coords = [x.evalf(prec, **options) for x in self.args]
+        return Point(*coords, evaluate=False)
 
     n = evalf
 
