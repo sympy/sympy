@@ -213,7 +213,7 @@ def test_aux():
 def test_parallel_axis():
     # This is for a 2 dof inverted pendulum on a cart.
     # This tests the parallel axis code in Kane. The inertia of the pendulum is
-    # defined about the cart, not about the mass center.
+    # defined about the hinge, not about the mass center.
 
     # Defining the constants and knowns of the system
     gravity        = symbols('g')

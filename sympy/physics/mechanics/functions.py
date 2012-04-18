@@ -7,7 +7,8 @@ __all__ = ['cross',
            'mprint',
            'mpprint',
            'mlatex',
-           'kinematic_equations']
+           'kinematic_equations',
+           'inertia_of_point_mass']
 
 from sympy.physics.mechanics.essential import (Vector, Dyadic, ReferenceFrame,
                                                MechanicsStrPrinter,
@@ -94,6 +95,23 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     ol += sympify(iyz) * (frame.z | frame.y)
     ol += sympify(izz) * (frame.z | frame.z)
     return ol
+
+def inertia_of_point_mass(m, p, frame):
+    """Determine the Inertia dyadic of a particle.
+
+    Input:
+        m:  Mass
+        p:  Position from point O to mass m
+        F:  Reference frame to express the dyad entries with respect to.
+
+    Output:
+        Inertia Dyadic relative to O of a particle of mass m, located relative
+        to the point O by the position vector p.
+
+    """
+    return m * (((frame.x | frame.x) + (frame.y | frame.y) + (frame.z | frame.z)) *
+                              (p & p) - (p | p))
+    
 
 def mechanics_printing():
     """Sets up interactive printing for mechanics' derivatives.
@@ -365,4 +383,6 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         return list(edots.T - 0.5 * w.T * E.T)
     else:
         raise ValueError('Not an approved rotation type for this function')
+
+
 

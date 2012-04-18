@@ -6,6 +6,7 @@ from sympy.physics.mechanics.essential import ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.point import Point
 from sympy.physics.mechanics.rigidbody import RigidBody
+from sympy.physics.mechanics.functions import inertia_of_point_mass
 
 class Kane(object):
     """Kane's method object.
@@ -470,8 +471,7 @@ class Kane(object):
                     # I S/O = I S/S* + I S*/O; I S/S* = I S/O - I S*/O
                     f = v.frame
                     d = v.mc.pos_from(P)
-                    I -= m * (((f.x | f.x) + (f.y | f.y) + (f.z | f.z)) *
-                              (d & d) - (d | d))
+                    I -= inertia_of_point_mass(m, d, f)
                 templist = []
                 # One could think of r star as a collection of coefficients of
                 # the udots plus another term. What we do here is get all of
