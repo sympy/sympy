@@ -12,6 +12,7 @@ from sympy.mpmath.libmp import (bitcount, from_int, from_man_exp,
         mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin, mpf_sqrt,
         normalize, round_nearest, to_int, to_str)
 from sympy.mpmath.libmp.backend import MPZ
+from sympy.mpmath.libmp.libmpc import _infs_nan
 from sympy.mpmath.libmp.libmpf import dps_to_prec
 
 from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
@@ -241,9 +242,9 @@ def chop_parts(value, prec):
     """
     re, im, re_acc, im_acc = value
     # Method 1: chop based on absolute value
-    if re and (fastlog(re) < -prec+4):
+    if re and re not in _infs_nan and (fastlog(re) < -prec+4):
         re, re_acc = None, None
-    if im and (fastlog(im) < -prec+4):
+    if im and im not in _infs_nan and (fastlog(im) < -prec+4):
         im, im_acc = None, None
     # Method 2: chop if inaccurate and relatively small
     if re and im:
