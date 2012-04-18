@@ -47,6 +47,15 @@ def test_ratsimp():
 
     assert ratsimp(f) == A*B/8 - A*C/8 - A/(4*erf(x) - 4)
 
+
+def test_trigsimp3204():
+    x, y = symbol ('x,y')
+
+    assert trigsimp(tan(x) - cot(x)**(-1))==0
+    assert trigsimp((tan(x))**2) - (cot(x))**(- 2))==0
+    
+   
+
 def test_trigsimp1():
     x, y = symbols('x,y')
 

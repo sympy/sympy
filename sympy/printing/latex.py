@@ -6,7 +6,7 @@ from sympy.core import S, C, Add
 from sympy.core.function import _coeff_isneg
 from printer import Printer
 from conventions import split_super_sub
-from sympy.simplify import fraction
+from sympy.simplify.simplify import fraction
 
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
