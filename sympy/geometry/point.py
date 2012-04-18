@@ -62,8 +62,14 @@ class Point(GeometryEntity):
     Point(1, 2)
     >>> Point(0, x)
     Point(0, x)
+
+    Floats are automatically converted to Rational unless the
+    evaluate flag is False:
+
     >>> Point(0.5, 0.25)
     Point(1/2, 1/4)
+    >>> Point(0.5, 0.25, evaluate=False)
+    Point(0.5, 0.25)
 
     """
 
@@ -77,12 +83,8 @@ class Point(GeometryEntity):
 
         if len(coords) != 2:
             raise NotImplementedError("Only two dimensional points currently supported")
-        elif coords[0].is_Float and coords[1].is_Float:
-            coords = (nsimplify(str(coords[0])), nsimplify(str(coords[1])))
-        elif coords[0].is_Float:
-            coords = (nsimplify(str(coords[0])), coords[1])
-        elif coords[1].is_Float:
-            coords = (coords[0], nsimplify(str(coords[1])))
+        if kwargs.get('evaluate', True):
+            coords = [nsimplify(c) for c in coords]
 
         return GeometryEntity.__new__(cls, *coords)
 
@@ -400,9 +402,10 @@ class Point(GeometryEntity):
 
         """
         if prec is None:
-            return Point(*[x.evalf(**options) for x in self.args])
+            coords = [x.evalf(**options) for x in self.args]
         else:
-            return Point(*[x.evalf(prec, **options) for x in self.args])
+            coords = [x.evalf(prec, **options) for x in self.args]
+        return Point(*coords, evaluate=False)
 
     n = evalf
 
