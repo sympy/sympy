@@ -17,7 +17,9 @@ if not USE_PYTEST:
 
         ``code`` may be a callable, such as a lambda expression or function
         name.
+
         Alternatively, ``code`` may be a string, which is compiled.
+
         If ``code`` is not given or None, ``raises`` will return a context
         manager for use in ``with`` statements; the code to execute then
         comes from the scope of the ``with``. The calling module must have
@@ -55,6 +57,23 @@ if not USE_PYTEST:
         Traceback (most recent call last):
         ...
         AssertionError: DID NOT RAISE
+
+        Note that you cannot test multiple statements via
+        ``with raises``:
+        >>> with raises(ZeroDivisionError): # doctest: +SKIP
+        ...     n = 1/0    # will execute and raise, aborting the ``with``
+        ...     n = 9999/0 # never executed
+
+        This is just what ``with`` is supposed to do: abort the
+        contained statement sequence at the first exception and let
+        the context manager deal with the exception.
+
+        To test multiple statements, you'll need a separate ``with``
+        for each:
+        >>> with raises(ZeroDivisionError): # doctest: +SKIP
+        ...     n = 1/0    # will execute and raise, aborting the ``with``
+        ... with raises(ZeroDivisionError):
+        ...     n = 9999/0 # never executed
 
         """
         if code is None:
