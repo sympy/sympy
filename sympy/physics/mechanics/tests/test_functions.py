@@ -1,7 +1,8 @@
 from sympy import symbols, sin, cos
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols, express,
                                      ReferenceFrame, inertia,
-                                     kinematic_equations, Vector)
+                                     kinematic_equations, Vector,
+                                     inertia_of_point_mass)
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -256,21 +257,25 @@ def test_inertia_of_point_mass():
 
     px = r * N.x
     I = inertia_of_point_mass(m, px, N)
-    assert I == m*r**2*(N.y|N.y) + m*r**2*(N.z|N.z)
+    assert I == m * r**2 * (N.y | N.y) + m * r**2 * (N.z | N.z)
 
     py = s * N.y
     I = inertia_of_point_mass(m, py, N)
-    assert I == m*s**2*(N.x|N.x) + m*s**2*(N.z|N.z)
+    assert I == m * s**2 * (N.x | N.x) + m * s**2 * (N.z | N.z)
 
     pz = t * N.z
     I = inertia_of_point_mass(m, pz, N)
-    assert I == m * t**2 * (N.x|N.x) + m * t**2 * (N.y|N.y)
+    assert I == m * t**2 * (N.x | N.x) + m * t**2 * (N.y | N.y)
 
     p = px + py + pz
     I = inertia_of_point_mass(m, p, N)
-    assert I == (m * s**2 + m * t**2) * (N.x|N.x) - m * r * s * (N.x|N.y) \
-		- m* r * t * (N.x|N.z) - m * r * s * (N.y|N.x) \
-		+ (m * r**2 + m * t**2) * (N.y|N.y) - m * s * t * (N.y|N.z) \
-		- m * r * t * (N.z|N.x) - m * s * t * (N.z|N.y) \
-		+ (m * r**2 + m * s**2) * (N.z|N.z)
+    assert I == (m * (s**2 + t**2) * (N.x | N.x) -
+                 m * r * s * (N.x | N.y) -
+                 m * r * t * (N.x | N.z) -
+                 m * r * s * (N.y | N.x) +
+                 m * (r**2 + t**2) * (N.y | N.y) -
+                 m * s * t * (N.y | N.z) -
+                 m * r * t * (N.z | N.x) -
+                 m * s * t * (N.z | N.y) +
+                 m * (r**2 + s**2) * (N.z | N.z))
 

@@ -96,22 +96,38 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     ol += sympify(izz) * (frame.z | frame.z)
     return ol
 
-def inertia_of_point_mass(m, p, frame):
+def inertia_of_point_mass(mass, pos_vec, frame):
     """Determine the Inertia dyadic of a particle.
 
-    Input:
-        m:  Mass
-        p:  Position from point O to mass m
-        F:  Reference frame to express the dyad entries with respect to.
+    Inertia Dyadic relative to O of a point mass m, located relative
+    to the point O by the position vector p.
 
-    Output:
-        Inertia Dyadic relative to O of a particle of mass m, located relative
-        to the point O by the position vector p.
+    Parameters
+    ==========
+
+    mass : Sympifyable
+        Mass of the point mass
+    pos_vec : Vector
+        Position from point O to point mass
+    frame : ReferenceFrame
+        Reference frame to express the dyad entries with respect to.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import ReferenceFrame, inertia_of_point_mass
+    >>> N = ReferenceFrame('N')
+    >>> r, m = symbols('r m')
+    >>> px = r * N.x
+    >>> inertia_of_point_mass(m, px, N)
+    m*r**2*(N.y|N.y) + m*r**2*(N.z|N.z)
 
     """
-    return m * (((frame.x | frame.x) + (frame.y | frame.y) + (frame.z | frame.z)) *
-                              (p & p) - (p | p))
-    
+
+    return mass * (((frame.x | frame.x) + (frame.y | frame.y) +
+                   (frame.z | frame.z)) * (pos_vec & pos_vec) -
+                   (pos_vec | pos_vec))
 
 def mechanics_printing():
     """Sets up interactive printing for mechanics' derivatives.
