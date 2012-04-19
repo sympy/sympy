@@ -55,7 +55,18 @@ def epsilon(i,j,k):
         return 0
 
 class Pauli(Symbol):
-    """
+    """ The class, representing algebraic properties of Pauli matrices
+
+    If the left multiplication of symbol or number with Pauli matrix needed,
+    please use round brackets to separate Pauli and symbolic multiplication
+    (for example: 2*I*(Pauli(3)*Pauli(2)))
+
+    Another variant is to use eval_sigma function to evaluate the product
+    of Pauli matricex and other symbols (with commutative multiply rules)
+
+    Examples
+    ========
+
     >>> from sympy.physics.paulialgebra import Pauli
     >>> Pauli(1)
     sigma1
@@ -67,6 +78,17 @@ class Pauli(Symbol):
     1
     >>> Pauli(1)*Pauli(2)*Pauli(3)
     I
+
+    >>> from sympy import I
+    >>> I*(Pauli(2)*Pauli(3))
+    -sigma1
+
+    >>> from sympy.physics.paulialgebra import eval_sigma
+    >>> f = I*Pauli(2)*Pauli(3)
+    >>> f
+    I*sigma2*sigma3
+    >>> eval_sigma(f)
+    -sigma1
 
     """
 
@@ -96,3 +118,33 @@ class Pauli(Symbol):
     def _eval_power(b, e):
         if e.is_Integer and e.is_positive:
             return super(Pauli, b).__pow__(int(e) % 2)
+
+def eval_sigma(arg):
+    ''' Help function to evaluate Pauli matrices product
+    with symbolic obejcts
+
+    Parameters
+    ==========
+    arg: symbolic expression that contains Paulimatrices
+
+    Examples
+    ========
+
+    >>> from sympy.physics.paulialgebra import Pauli, eval_sigma
+    >>> from sympy import I
+    >>> eval_sigma(I*Pauli(1)*Pauli(2))
+    -sigma3
+
+    >>> from sympy.abc import x,y
+    >>> eval_sigma(x**2*Pauli(2)*Pauli(1))
+    -I*x**2*sigma3
+    '''
+    tmp = arg.as_coeff_mul()
+    sigma_product = 1
+    com_product = 1
+    for el in tmp[1]:
+        if isinstance(el, Pauli):
+            sigma_product *= el
+        else:
+            com_product *= el
+    return (sigma_product*com_product)
