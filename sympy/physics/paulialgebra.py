@@ -57,18 +57,19 @@ def epsilon(i,j,k):
         return 0
 
 class Pauli(Symbol):
-    """ The class representing algebraic properties of Pauli matrices
+    """The class representing algebraic properties of Pauli matrices
 
     If the left multiplication of symbol or number with Pauli matrix is needed,
-    please use parantheses to separate Pauli and symbolic multiplication
+    please use parentheses  to separate Pauli and symbolic multiplication
     (for example: 2*I*(Pauli(3)*Pauli(2)))
 
-    Another variant is to use eval_sigma function to evaluate the product
-    of Pauli matrices and other symbols (with commutative multiply rules)
+    Another variant is to use evaluate_pauli_product function to evaluate
+    the product of Pauli matrices and other symbols (with commutative
+    multiply rules)
 
     See Also
     =======
-    eval_sigma
+    evaluate_pauli_product
 
     Examples
     ========
@@ -89,11 +90,11 @@ class Pauli(Symbol):
     >>> I*(Pauli(2)*Pauli(3))
     -sigma1
 
-    >>> from sympy.physics.paulialgebra import eval_sigma
+    >>> from sympy.physics.paulialgebra import evaluate_pauli_product
     >>> f = I*Pauli(2)*Pauli(3)
     >>> f
     I*sigma2*sigma3
-    >>> eval_sigma(f)
+    >>> evaluate_pauli_product(f)
     -sigma1
 
     """
@@ -126,23 +127,24 @@ class Pauli(Symbol):
             return super(Pauli, b).__pow__(int(e) % 2)
 
 def evaluate_pauli_product(arg):
-    ''' Help function to evaluate Pauli matrices product
-    with symbolic obejcts
+    '''Help function to evaluate Pauli matrices product
+    with symbolic objects
 
     Parameters
     ==========
+
     arg: symbolic expression that contains Paulimatrices
 
     Examples
     ========
 
-    >>> from sympy.physics.paulialgebra import Pauli, eval_sigma
+    >>> from sympy.physics.paulialgebra import Pauli, evaluate_pauli_product
     >>> from sympy import I
-    >>> eval_sigma(I*Pauli(1)*Pauli(2))
+    >>> evaluate_pauli_product(I*Pauli(1)*Pauli(2))
     -sigma3
 
     >>> from sympy.abc import x,y
-    >>> eval_sigma(x**2*Pauli(2)*Pauli(1))
+    >>> evaluate_pauli_product(x**2*Pauli(2)*Pauli(1))
     -I*x**2*sigma3
     '''
     tmp = arg.as_coeff_mul()
