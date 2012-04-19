@@ -452,25 +452,41 @@ def E1(z):
     return expint(1, z)
 
 ###############################################################################
-########################### FRESNAL INTEGRALS #################################
+########################### FRESNEL INTEGRALS #################################
 ###############################################################################
 class FresnelS(Function):
     """The Fresnel sine integral
-    S(x)=sqrt(2/pi)*int_0^x\sin(t^2)dt
-    
-    Exampls
-    =======
+    Is defined through:
+
+    .. math:: \operatorname{S}_(x)
+              =   \int_x^\infty \sin(t) \mathrm{d}t,
+
+    Both with Fresnel cosine integral C(x), Fresnel integrals areused in optics,
+    arise in the description of near field Fresnel diffraction phenomena.
+    Parametric plot of S(t) against C(t) forms Euler (Cornu) spiral.
+
+    SeeAlso
+    ========
+    FresnelC
+
+    See detailed information in:
+    [1] Keith B. Oldham, Jan Myland, Jerome Spanier, An atlas of functions, Springer (2008).
+
+    Examples
+    ========
+
     >>> from sympy.functions.special.error_functions import FresnelS
     >>> from sympy.abc import x, y
     >>> FresnelS(x)
     FresnelS(x)
     """
-    
+
     def fdiff(self, argindex=1):
         """Derivative for Fresnel S(x) integral
-        
+
         Examples
         ========
+
         >>> from sympy.functions.special.error_functions import FresnelS
         >>> from sympy import symbols, diff
         >>> b, z = symbols(('b z'))
@@ -478,12 +494,14 @@ class FresnelS(Function):
         sqrt(2)*b*sin(b**2*z**2)/sqrt(pi)
         """
         if argindex == 1:
-            return sqrt(2/S.Pi)*C.sin(self.args[0]**2)
+            return sqrt(2 / S.Pi) * C.sin(self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
-        
+
     @classmethod
     def eval(cls, arg):
+	"""Evaluates the Fresnel sine integral (asymptotics)
+	"""
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -495,27 +513,227 @@ class FresnelS(Function):
                 return S.Zero
 
         if arg.could_extract_minus_sign():
-            return -cls(-arg)    
-    
-    def expansion_term(self, x, n):
-        """The most generalized and simple expansion term
-        
-        Example
-        =======
-        
+            return -cls(-arg)
+
+    def _eval_expansion_term(self, x, n):
+        """The most generalized and simple expansion term (for any x range)
+
+        Examples
+        ========
+
         >>> from sympy.functions.special.error_functions import FresnelS
-        >>> from sympy.abc import x
-        >>> FresnelS(x).expansion_term(x, 1)
-        -sqrt(2)*x**7/(63*sqrt(pi))
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> FresnelS(x)._eval_expansion_term(x,1)
+        -0.00633241714922909*x**7
         """
-        return sqrt(2 / S.Pi)*(x**3 / 3)*(-x**4 * n) / \
-               (4 * n + 3) / factorial(2 * n + 1)
-    
+        return (sqrt(2. / S.Pi).n()*(x**3 / 3.))*((-x**4)**n) / \
+               (4. * n + 3.) / C.factorial(2 * n + 1).n()
+
+    def _eval_num(self, x, e=1e-10):
+        """Calculates the Fresnel sine integral value by obtaining
+	the expansion series sum.
+	Convergence parameter e is set as argument (default = 1e-10)
+
+	Examples
+	========
+
+        >>> from sympy.functions.special.error_functions import FresnelS
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> FresnelS(x)._eval_num(0.3, 1e-10)
+        -1.38454275461121e-6
+
+        >>> FresnelS(x)._eval_num(2, 1e-10)
+        0.342912025443553
+
+        >>> FresnelS(x)._eval_num(6, 1e-10)
+        -11.8950276574637
+        """
+        sum, i = 0, 1
+        if abs(x) <= 0.5:
+            while True:
+                tsum = sum
+                sum += self._eval_expansion_term(x, i)
+                if abs(tsum-sum) < e:
+                    break
+                i += 1
+        elif abs(x) > 0.5 and abs(x) <= 4:
+            while True:
+                tsum = sum
+                sum += ((-x**4)**i)/C.factorial(2 * i + 1).n()/(4 * i - 1)
+                if abs(tsum-sum) < e:
+                    break
+                i += 1
+            sum = (-1./sqrt(8 * S.Pi).n()/x**3) * (C.sin(x**2).n() +
+                        2 * x**2 * C.cos(x**2).n() + (3 * x**2) * sum)
+        else:
+            while True:
+                tsum = sum
+                sum += x * C.sin(x**2).n() * ((-4*x**4)**i) / \
+                    C.factorial2(4 * i + 1).n() - \
+                    2 * x**3 * C.cos(x**2).n() * ((-4*x**4)**i) / \
+                    C.factorial2(4 * i + 3).n()
+                if abs(tsum-sum) < e:
+                    break
+                i +=1
+        return sum
+
+    def _eval_rewrite_as_erf(self):
+	"""Rewrites the Fresnel sine integral using erf function
+
+	SeeAlso
+	========
+	erf
+
+        Examples
+        ========
+        >>> from sympy.functions.special.error_functions import FresnelS
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> FresnelS(x)._eval_rewrite_as_erf()
+        pi*((-1)**(1/4)*erf((-1)**(1/4)*x) + (-1)**(3/4)*erf((-1)**(3/4)*x))/4
+        """
+        return (S.Pi/4)*(sqrt(I) * erf(sqrt(I)*self.args[0]) + \
+                         sqrt(-I) * erf(sqrt(-I)*self.args[0]))
+
+
 class FresnelC(Function):
     """The Fresnel cosine integral
-    C(x)=sqrt(2/pi)*int_0^x\cos(t^2)dt
+    Is defined through:
+
+    .. math:: \operatorname{C}_(x)
+              =   \int_x^\infty \cos(t) \mathrm{d}t,
+
+    SeeAlso
+    ========
+
+    FresnelS
+
+    Examples
+    ========
+
+    >>> from sympy.functions.special.error_functions import FresnelC
+    >>> from sympy.abc import x, y
+    >>> FresnelC(x)
+    FresnelC(x)
+
+    >>> from sympy.core import S
+    >>> FresnelC(S.NaN)
+    nan
     """
-    pass
+
+    def fdiff(self, argindex=1):
+        """Derivative for Fresnel C(x) integral
+
+        Examples
+        ========
+
+        >>> from sympy.functions.special.error_functions import FresnelC
+        >>> from sympy import symbols, diff
+        >>> b, z = symbols(('b z'))
+        >>> diff(FresnelC(b*z), z)
+        sqrt(2)*b*cos(b**2*z**2)/sqrt(pi)
+        """
+        if argindex == 1:
+            return sqrt(2 / S.Pi) * C.cos(self.args[0]**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, arg):
+        """Evaluates the Fresnel sine integral (asymptotics)
+        """
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return sqrt(2 * S.Pi) / 4
+            elif arg is S.NegativeInfinity:
+                return -sqrt(2 * S.Pi) / 4
+            elif arg is S.Zero:
+                return S.Zero
+
+        if arg.could_extract_minus_sign():
+            return -cls(-arg)
+
+    def _eval_expansion_term(self, x, n):
+        """The most generalized and simple expansion term
+
+        Example
+        =======
+
+        >>> from sympy.functions.special.error_functions import FresnelC
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> FresnelC(x)._eval_expansion_term(x,1)
+        -0.0797884560802865*x**5
+        """
+        return sqrt(2. / S.Pi).n() * x * ((-x**4)**n) / \
+               (4. * n + 1.) / C.factorial(2 * n).n()
+
+    def _eval_num(self, x, e=1e-10):
+	"""Calculates the Fresnel cosine integral value by obtaining the expansion series sum.
+	Convergence parameter e is set as argument (default = 1e-10)
+
+	Examples
+	========
+
+        >>> from sympy.functions.special.error_functions import FresnelC
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> FresnelC(x)._eval_num(0.3, 1e-10)
+        -0.000193813254635152
+
+        >>> FresnelC(x)._eval_num(2, 1e-10)
+        0.645179597047508
+
+        >>> FresnelC(x)._eval_num(6, 1e-10)
+        144.083852773606
+        """
+        sum, i = 0, 1
+        if abs(x) <= 0.5:
+            while True:
+                tsum = sum
+                sum += self._eval_expansion_term(x, i)
+                if abs(tsum-sum) < e:
+                    break
+                i += 1
+        elif abs(x) > 0.5 and abs(x) <= 4:
+            while True:
+                tsum = sum
+                sum += ((-x**4)**i) / C.factorial(2 * i).n() / (4 * i - 3)
+                if abs(tsum-sum) < e:
+                    break
+                i += 1
+            sum = (-1. / sqrt(8 * S.Pi).n() / x**3) * (C.cos(x**2).n() +
+                        2 * x**2 * C.sin(x**2).n() + 3 * sum)
+        else:
+            while True:
+                tsum = sum
+                sum += x * C.cos(x**2).n() * ((-4 * x**4)**i) / \
+                    C.factorial2(4 * i + 1).n() + \
+                    2 * x**3 * C.sin(x**2).n() * ((-4 * x**4)**i) / \
+                    C.factorial2(4 * i + 3).n()
+                if abs(tsum-sum) < e:
+                    break
+                i +=1
+        return sum
+
+    def _eval_rewrite_as_erf(self):
+        """Revrites the Fresnel cosine integral using erf function
+
+        Examples
+        ========
+
+        >>> from sympy.functions.special.error_functions import FresnelC
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> FresnelC(x)._eval_rewrite_as_erf()
+        pi*(-(-1)**(3/4)*erf((-1)**(1/4)*x) - (-1)**(1/4)*erf((-1)**(3/4)*x))/4
+        """
+        return (S.Pi/4) * (sqrt(-I) * erf(sqrt(I) * self.args[0]) + \
+                         sqrt(I) * erf(sqrt(-I) * self.args[0]))
 
 ###############################################################################
 #################### TRIGONOMETRIC INTEGRALS ##################################
