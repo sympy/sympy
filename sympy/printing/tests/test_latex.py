@@ -272,6 +272,11 @@ def test_latex_union():
     assert latex(Union(Interval(1, 1), Interval(2, 2), Interval(3, 4))) == \
         r"\left\{1, 2\right\} \cup \left[3, 4\right]"
 
+def test_latex_productset():
+    line = Interval(0,1)
+    assert latex(line**2) == r"%s \times %s"%(latex(line), latex(line))
+    assert latex(line**3) == r"%s \times %s \times %s"%((latex(line),)*3)
+
 def test_latex_Naturals():
     assert latex(S.Naturals) == r"\mathbb{N}"
     assert latex(S.Integers) == r"\mathbb{Z}"

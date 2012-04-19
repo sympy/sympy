@@ -974,7 +974,7 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_ProductSet(self, p):
-        return r" \cross ".join(self._print(set) for set in p.sets)
+        return r" \times ".join(self._print(set) for set in p.sets)
 
     def _print_RandomDomain(self, d):
         try:
