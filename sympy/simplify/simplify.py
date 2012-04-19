@@ -783,7 +783,11 @@ def ratsimpmodprime(expr, G, *gens, **args):
     from sympy.polys.polyerrors import PolificationFailed
     from sympy import monomials, symbols, solve, Monomial
     from sympy.polys.monomialtools import monomial_div
-    from sympy.core.compatibility import product
+    from sympy.core.compatibility import combinations_with_replacement
+    from sympy.utilities.misc import debug
+
+    quick = args.pop('quick', True)
+    debug('ratsimpmodprime', expr)
 
     # usual preparation of polynomials:
 
@@ -803,21 +807,26 @@ def ratsimpmodprime(expr, G, *gens, **args):
 
     # compute only once
     leading_monomials = [g.LM(opt.order) for g in polys[2:]]
+    tested = set()
 
     def staircase(n):
         """
         Compute all monomials with degree less than ``n`` that are
         not divisible by any element of ``leading_monomials``.
         """
+        if n == 0:
+            return [1]
         S = []
-        for m in product(*([xrange(n + 1)] * len(opt.gens))):
-            if sum(m) <= n:
-                if all([monomial_div(m, lmg) is None for lmg in leading_monomials]):
-                    S.append(m)
+        for mi in combinations_with_replacement(xrange(len(opt.gens)), n):
+            m = [0]*len(opt.gens)
+            for i in mi:
+                m[i] += 1
+            if all([monomial_div(m, lmg) is None for lmg in leading_monomials]):
+                S.append(m)
 
-        return [Monomial(s).as_expr(*opt.gens) for s in S]
+        return [Monomial(s).as_expr(*opt.gens) for s in S] + staircase(n - 1)
 
-    def _ratsimpmodprime(a, b, N=0, D=0):
+    def _ratsimpmodprime(a, b, allsol, N=0, D=0):
         """
         Computes a rational simplification of ``a/b`` which minimizes
         the sum of the total degrees of the numerator and the denominator.
@@ -837,31 +846,40 @@ def ratsimpmodprime(expr, G, *gens, **args):
         After a simpler representation has been found, the algorithm
         tries to reduce the degree of the numerator and denominator
         and returns the result afterwards.
+
+        As an extension, if quick=False, we look at all possible degrees such
+        that the total degree is less than *or equal to* the best current
+        solution. We retain a list of all solutions of minimal degree, and try
+        to find the best one at the end.
         """
         c, d = a, b
         steps = 0
 
-        while N + D < a.total_degree() + b.total_degree():
+        maxdeg = a.total_degree() + b.total_degree()
+        if quick:
+            bound = maxdeg - 1
+        else:
+            bound = maxdeg
+        while N + D <= bound:
+            if (N, D) in tested:
+                break
+            tested.add((N, D))
+
             M1 = staircase(N)
             M2 = staircase(D)
+            debug('%s / %s: %s, %s' % (N, D, M1, M2))
 
-            Cs = symbols("c:%d" % len(M1))
-            Ds = symbols("d:%d" % len(M2))
+            Cs = symbols("c:%d" % len(M1), cls=Dummy)
+            Ds = symbols("d:%d" % len(M2), cls=Dummy)
+            ng = Cs + Ds
 
-            c_hat = Poly(sum([Cs[i] * M1[i] for i in xrange(len(M1))]), opt.gens)
-            d_hat = Poly(sum([Ds[i] * M2[i] for i in xrange(len(M2))]), opt.gens)
+            c_hat = Poly(sum([Cs[i] * M1[i] for i in xrange(len(M1))]), opt.gens + ng)
+            d_hat = Poly(sum([Ds[i] * M2[i] for i in xrange(len(M2))]), opt.gens + ng)
 
-            r = reduced(a * d_hat - b * c_hat, G, opt.gens, order=opt.order, polys=True)[1]
+            r = reduced(a * d_hat - b * c_hat, G, opt.gens + ng, order=opt.order, polys=True)[1]
 
-            S = r.coeffs()
-            sol = solve(S, Cs + Ds)
-
-            # If nontrivial solutions exist, solve will give them
-            # parametrized, i.e. the values of some keys will be
-            # exprs. Set these to any value different from 0 to obtain
-            # one nontrivial solution:
-            for key in sol.keys():
-                sol[key] = sol[key].subs(dict(zip(Cs + Ds, [1] * (len(Cs) + len(Ds)))))
+            S = Poly(r, gens=opt.gens).coeffs()
+            sol = solve(S, Cs + Ds, minimal=True, quick=True)
 
             if sol and not all([s == 0 for s in sol.itervalues()]):
                 c = c_hat.subs(sol)
@@ -875,31 +893,45 @@ def ratsimpmodprime(expr, G, *gens, **args):
 
                 c = Poly(c, opt.gens)
                 d = Poly(d, opt.gens)
+                if d == 0:
+                    raise ValueError('Ideal not prime?')
+
+                allsol.append((c_hat, d_hat, S, Cs + Ds))
+                if N + D != maxdeg:
+                    allsol = [allsol[-1]]
 
                 break
 
+            steps += 1
             N += 1
             D += 1
-            steps += 1
 
         if steps > 0:
-            c, d = _ratsimpmodprime(c, d, N, D - steps)
-            c, d = _ratsimpmodprime(c, d, N - steps, D)
+            c, d, allsol = _ratsimpmodprime(c, d, allsol, N, D - steps)
+            c, d, allsol = _ratsimpmodprime(c, d, allsol, N - steps, D)
 
-        return c, d
+        return c, d, allsol
 
     # preprocessing. this improves performance a bit when deg(num)
     # and deg(denom) are large:
     num = reduced(num, G, opt.gens, order=opt.order)[1]
     denom = reduced(denom, G, opt.gens, order=opt.order)[1]
 
-    c, d = _ratsimpmodprime(Poly(num, opt.gens), Poly(denom, opt.gens))
+    c, d, allsol = _ratsimpmodprime(Poly(num, opt.gens), Poly(denom, opt.gens), [])
+    if not quick and allsol:
+        debug('Looking for best minimal solution. Got: %s' % len(allsol))
+        newsol = []
+        for c_hat, d_hat, S, ng in allsol:
+            sol = solve(S, ng, minimal=True, quick=False)
+            newsol.append((c_hat.subs(sol), d_hat.subs(sol)))
+        c, d = min(newsol, key=lambda x: len(x[0].terms()) + len(x[1].terms()))
 
     if not domain.has_Field:
-        c = c.clear_denoms(convert=True)[1]
-        d = d.clear_denoms(convert=True)[1]
+        cn, c = c.clear_denoms(convert=True)
+        dn, d = d.clear_denoms(convert=True)
+    r = Rational(cn, dn)
 
-    return c/d
+    return (c*r.q)/(d*r.p)
 
 def trigsimp(expr, deep=False, recursive=False):
     """
