@@ -500,8 +500,7 @@ class FresnelS(Function):
 
     @classmethod
     def eval(cls, arg):
-	"""Evaluates the Fresnel sine integral (asymptotics)
-	"""
+        """Evaluates the Fresnel sine integral (asymptotics)"""
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -531,12 +530,12 @@ class FresnelS(Function):
                (4. * n + 3.) / C.factorial(2 * n + 1).n()
 
     def _eval_num(self, x, e=1e-10):
-        """Calculates the Fresnel sine integral value by obtaining
-	the expansion series sum.
-	Convergence parameter e is set as argument (default = 1e-10)
+        """Calculates the Fresnel sine integral value by obtaining the
+        expansion series sum.
+        Convergence parameter e is set as argument (default = 1e-10)
 
-	Examples
-	========
+        Examples
+        ========
 
         >>> from sympy.functions.special.error_functions import FresnelS
         >>> from sympy import Symbol
@@ -580,11 +579,11 @@ class FresnelS(Function):
         return sum
 
     def _eval_rewrite_as_erf(self):
-	"""Rewrites the Fresnel sine integral using erf function
+        """Rewrites the Fresnel sine integral using erf function
 
-	SeeAlso
-	========
-	erf
+        SeeAlso
+        =======
+        erf
 
         Examples
         ========
@@ -673,11 +672,12 @@ class FresnelC(Function):
                (4. * n + 1.) / C.factorial(2 * n).n()
 
     def _eval_num(self, x, e=1e-10):
-	"""Calculates the Fresnel cosine integral value by obtaining the expansion series sum.
-	Convergence parameter e is set as argument (default = 1e-10)
+        """Calculates the Fresnel cosine integral value by obtaining the
+        expansion series sum.
+        Convergence parameter e is set as argument (default = 1e-10)
 
-	Examples
-	========
+        Examples
+        ========
 
         >>> from sympy.functions.special.error_functions import FresnelC
         >>> from sympy import Symbol
