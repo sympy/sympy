@@ -1172,6 +1172,15 @@ class PrettyPrinter(Printer):
         return self._print_seq(u.args, None, None, union_delimiter,
              parenthesize = lambda set:set.is_ProductSet or set.is_Intersection)
 
+    def _print_TransformationSet(self, ts):
+        variables = self._print_seq(ts.lamda.variables)
+        expr = self._print(ts.lamda.expr)
+        bar = self._print("|")
+        inn = self._print("in")
+        base = self._print(ts.base_set)
+
+        return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
+
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False):
         s = None
