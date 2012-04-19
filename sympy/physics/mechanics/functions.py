@@ -97,10 +97,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     return ol
 
 def inertia_of_point_mass(mass, pos_vec, frame):
-    """Determine the Inertia dyadic of a particle.
-
-    Inertia Dyadic relative to O of a point mass m, located relative
-    to the point O by the position vector p.
+    """Inertia dyadic of a point mass realtive to point O.
 
     Parameters
     ==========
@@ -110,7 +107,7 @@ def inertia_of_point_mass(mass, pos_vec, frame):
     pos_vec : Vector
         Position from point O to point mass
     frame : ReferenceFrame
-        Reference frame to express the dyad entries with respect to.
+        Reference frame to express the dyadic in
 
     Examples
     ========
