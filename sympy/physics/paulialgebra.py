@@ -62,7 +62,11 @@ class Pauli(Symbol):
     (for example: 2*I*(Pauli(3)*Pauli(2)))
 
     Another variant is to use eval_sigma function to evaluate the product
-    of Pauli matricex and other symbols (with commutative multiply rules)
+    of Pauli matrices and other symbols (with commutative multiply rules)
+
+    See Also
+    =======
+    eval_sigma
 
     Examples
     ========
