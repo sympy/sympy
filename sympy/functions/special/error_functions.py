@@ -451,6 +451,45 @@ def E1(z):
     """
     return expint(1, z)
 
+###############################################################################
+########################### FRESNAL INTEGRALS #################################
+###############################################################################
+class FresnelS(Function):
+    """The Fresnel sine integral
+    S(x)=sqrt(2/pi)*int_0^x\sin(t^2)dt
+    """
+    
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return sqrt(2/S.Pi)*C.sin(self.args[0]**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+        
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return sqrt(2*S.Pi)/4
+            elif arg is S.NegativeInfinity:
+                return -sqrt(2*S.Pi)/4
+            elif arg is S.Zero:
+                return S.Zero
+
+        #t = arg.extract_multiplicatively(S.ImaginaryUnit)
+        #if t == S.Infinity or t == S.NegativeInfinity:
+        #    return arg
+
+        if arg.could_extract_minus_sign():
+            return -cls(-arg)    
+    
+    def _eval_nseries(self, x, n):
+    
+class FresnelC(Function):
+    """The Fresnel cosine integral
+    C(x)=sqrt(2/pi)*int_0^x\cos(t^2)dt
+    """
 
 ###############################################################################
 #################### TRIGONOMETRIC INTEGRALS ##################################
