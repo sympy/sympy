@@ -1490,20 +1490,18 @@ class Expr(Basic, EvalfMixin):
         """
         This method is deprecated. Use .as_coeff_mul() instead.
         """
-        import warnings
         from sympy.utilities.exceptions import SymPyDeprecationWarning
-        warnings.warn(SymPyDeprecationWarning(feature="as_coeff_terms()",
-                                              useinstead="as_coeff_mul()"))
+        SymPyDeprecationWarning(feature="as_coeff_terms()",
+                                useinstead="as_coeff_mul()").warn()
         return self.as_coeff_mul(*deps)
 
     def as_coeff_factors(self, *deps):
         """
         This method is deprecated.  Use .as_coeff_add() instead.
         """
-        import warnings
         from sympy.utilities.exceptions import SymPyDeprecationWarning
-        warnings.warn(SymPyDeprecationWarning(feature="as_coeff_factors()",
-                                              useinstead="as_coeff_add()"))
+        SymPyDeprecationWarning(feature="as_coeff_factors()",
+                                useinstead="as_coeff_add()").warn()
         return self.as_coeff_add(*deps)
 
     def as_coeff_mul(self, *deps):

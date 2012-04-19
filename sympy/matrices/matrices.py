@@ -21,7 +21,6 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.decorators import call_highest_priority
 
 import random
-import warnings
 from types import FunctionType
 
 class MatrixError(Exception):
@@ -1912,7 +1911,9 @@ class MatrixBase(object):
         fill
         """
         if is_sequence(r):
-            warnings.warn(SymPyDeprecationWarning("Pass row and column count as zeros(%i, %i)." % r))
+            SymPyDeprecationWarning(
+            "Pass row and column count as zeros(%i, %i)." % r
+            ).warn()
             r, c = r
         else:
             c = r if c is None else c
@@ -2476,11 +2477,11 @@ class MatrixBase(object):
         [0, 1], [0, 1])
         """
         if simplified is not False:
-            warnings.warn(filldedent('''
-            Use of simplified is deprecated. Set simplify=True to
-            use SymPy's simplify function or set simplify to your
-            own custom simplification function.
-            '''))
+            SymPyDeprecationWarning(
+            feature="'simplified' as a keyword to rref",
+            useinstead="simplify=True or set simplify equal to your " +
+                       "own custom simplification function"
+            ).warn()
             simplify = simplify or True
         simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
         pivot, r = 0, self[:,:].as_mutable()        # pivot: index of next row to contain a pivot
@@ -2515,11 +2516,11 @@ class MatrixBase(object):
         Returns list of vectors (Matrix objects) that span nullspace of self
         """
         if simplified is not False:
-            warnings.warn(filldedent('''
-            Use of simplified is deprecated. Set simplify=True to
-            use SymPy's simplify function or set simplify to your
-            own custom simplification function.
-            '''))
+            SymPyDeprecationWarning(
+            feature="'simplified' as a keyword to rref",
+            useinstead="simplify=True or set simplify equal to your " +
+                       "own custom simplification function"
+            ).warn()
             simplify = simplify or True
         simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
         reduced, pivots = self.rref(simplify=simpfunc)
@@ -3829,7 +3830,9 @@ def zeros(r, c=None, cls=MutableMatrix):
     diag
     """
     if is_sequence(r):
-        warnings.warn(SymPyDeprecationWarning("Pass row and column count as zeros(%i, %i)." % r))
+        SymPyDeprecationWarning(
+        "Pass row and column count as zeros(%i, %i)." % r
+        ).warn()
         r, c = r
     else:
         c = r if c is None else c
@@ -3849,7 +3852,9 @@ def ones(r, c=None):
     """
 
     if is_sequence(r):
-        warnings.warn(SymPyDeprecationWarning("Pass row and column count as ones(%i, %i)." % r))
+        SymPyDeprecationWarning(
+        "Pass row and column count as ones(%i, %i)." % r
+        ).warn()
         r, c = r
     else:
         c = r if c is None else c
@@ -4549,7 +4554,9 @@ class SparseMatrix(MatrixBase):
         """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
         if ``c`` is omitted a square matrix will be returned."""
         if is_sequence(r):
-            warnings.warn("Pass row and column count as zeros(%i, %i)." % r, SymPyDeprecationWarning)
+            SymPyDeprecationWarning(
+            "Pass row and column count as zeros(%i, %i)." % r
+            ).warn()
             r, c = r
         else:
             c = r if c is None else c
