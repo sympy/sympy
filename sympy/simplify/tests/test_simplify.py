@@ -211,6 +211,31 @@ def test_tan_cot2():
     assert trigsimp(tan(x) - 1/cot(x)) == 0
     assert trigsimp(3*tanh(x)**7 - 2/coth(x)**7) == tanh(x)**7
 
+def test_trigsimp_groebner():
+    from sympy.simplify.simplify import trigsimp_groebner
+
+    ex = (4*sin(x)*cos(x) + 12*sin(x) + 5*cos(x)**3
+          + 21*cos(x)**2 + 23*cos(x) + 15) \
+       / (-sin(x)*cos(x)**2 + 2*sin(x)*cos(x) + 15*sin(x)
+          + 7*cos(x)**3 + 31*cos(x)**2 + 37*cos(x) + 21)
+    res = (5*sin(x) - 5*cos(x) + 1) / (8*sin(x) - 6*cos(x))
+    assert trigsimp_groebner(ex) == res
+    assert trigsimp_groebner(sin(x)/cos(x), hints=[tan]) == tan(x)
+
+    assert trigsimp((-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1), groebner=True) \
+           == 2/cos(x)
+
+    # Test quick=False works
+    assert trigsimp_groebner(ex, hints=[2]) == res
+
+    # test "I"
+    ex2 = trigsimp_groebner(ex.subs(x, I*x), quick=True).subs(x, -I*x)
+    assert trigsimp_groebner(ex2 - ex) == 0
+
+    # test hyperbolic / sums
+    assert trigsimp_groebner((tanh(x)+tanh(y))/(1+tanh(x)*tanh(y)),
+                             hints=[(tanh,x,y)]) == tanh(x + y)
+
 @XFAIL
 def test_factorial_simplify():
     # There are more tests in test_factorials.py. These are just to
