@@ -457,9 +457,26 @@ def E1(z):
 class FresnelS(Function):
     """The Fresnel sine integral
     S(x)=sqrt(2/pi)*int_0^x\sin(t^2)dt
+    
+    Exampls
+    =======
+    >>> from sympy.functions.special.error_functions import FresnelS
+    >>> from sympy.abc import x, y
+    >>> FresnelS(x)
+    FresnelS(x)
     """
     
     def fdiff(self, argindex=1):
+        """Derivative for Fresnel S(x) integral
+        
+        Examples
+        ========
+        >>> from sympy.functions.special.error_functions import FresnelS
+        >>> from sympy import symbols, diff
+        >>> b, z = symbols(('b z'))
+        >>> diff(FresnelS(b*z), z)
+        sqrt(2)*b*sin(b**2*z**2)/sqrt(pi)
+        """
         if argindex == 1:
             return sqrt(2/S.Pi)*C.sin(self.args[0]**2)
         else:
@@ -471,25 +488,34 @@ class FresnelS(Function):
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
-                return sqrt(2*S.Pi)/4
+                return sqrt(2 * S.Pi) / 4
             elif arg is S.NegativeInfinity:
-                return -sqrt(2*S.Pi)/4
+                return -sqrt(2 * S.Pi) / 4
             elif arg is S.Zero:
                 return S.Zero
-
-        #t = arg.extract_multiplicatively(S.ImaginaryUnit)
-        #if t == S.Infinity or t == S.NegativeInfinity:
-        #    return arg
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)    
     
-    def _eval_nseries(self, x, n):
+    def expansion_term(self, x, n):
+        """The most generalized and simple expansion term
+        
+        Example
+        =======
+        
+        >>> from sympy.functions.special.error_functions import FresnelS
+        >>> from sympy.abc import x
+        >>> FresnelS(x).expansion_term(x, 1)
+        -sqrt(2)*x**7/(63*sqrt(pi))
+        """
+        return sqrt(2 / S.Pi)*(x**3 / 3)*(-x**4 * n) / \
+               (4 * n + 3) / factorial(2 * n + 1)
     
 class FresnelC(Function):
     """The Fresnel cosine integral
     C(x)=sqrt(2/pi)*int_0^x\cos(t^2)dt
     """
+    pass
 
 ###############################################################################
 #################### TRIGONOMETRIC INTEGRALS ##################################
