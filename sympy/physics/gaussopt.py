@@ -100,7 +100,6 @@ class RayTransferMatrix(Matrix):
     """
 
     def __new__(cls, *args):
-
         if len(args) == 4:
             temp = ((args[0], args[1]), (args[2], args[3]))
         elif len(args) == 1 \
@@ -339,13 +338,15 @@ class CurvedMirror(RayTransferMatrix):
     >>> from sympy import symbols
     >>> R = symbols('R')
     >>> CurvedMirror(R)
-    [   1, 0]
-    [ 2/R, 1]
+    [  1, 0]
+    [2/R, 1]
     """
     @isunimodular
-    def __new__(cls, R):
+    def __new__(cls, R, **kwargs):
         R = sympify(R)
-        return RayTransferMatrix.__new__(cls, 1, 0, -2/R, 1)
+        if kwargs['unimodular'] == False:
+            return RayTransferMatrix.__new__(cls, 1, 0, -2/R, 1)
+        return RayTransferMatrix.__new__(cls, 1, 0, 2/R, 1)
 
 class ThinLens(RayTransferMatrix):
     """
@@ -375,6 +376,64 @@ class ThinLens(RayTransferMatrix):
         f = sympify(f)
         return RayTransferMatrix.__new__(cls, 1, 0, -1/f, 1)
 
+class ThinPrism(Matrix):
+    """Ray Transfer matrix for thin prism
+
+    Adds delta = -n1 * angle * (n2 - n1) to optical direction cosine
+    [1, 0] + [                      0]
+    [0, 1]   [-n1 * angle * (n2 - n1)]
+
+    Parameters
+    ==========
+
+    angle: top angle of the prism
+    n1: refractive index of one medium (default=1.0)
+    n2: refractive index of other medium
+
+    See Also
+    ========
+
+    Matrix
+
+    [1] Matrix Methods for Optical Layouts, Gerhaed Kloos,
+        Bellingham, Washington USA, ISBN 978-0-8194-6780-5
+
+    Examples
+    ========
+    >>> from sympy import symbols
+    >>> from sympy.physics.gaussopt import ThinPrism
+    >>> alpha, n2, n1 = symbols('alpha n2 n1')
+    >>> ThinPrism(alpha, n2, n1)
+    [                   0]
+    [-alpha*n1*(-n1 + n2)]
+
+    >>> from sympy.physics.gaussopt import GeometricRay
+    >>> h, angle = symbols('h angle')
+    >>> ThinPrism(alpha, n2)*GeometricRay(h, angle)
+    [                      h]
+    [alpha*(-n2 + 1) + angle]
+    >>> ThinPrism(alpha, n2, n1)*GeometricRay(h, angle)
+    [                           h]
+    [-alpha*n1*(-n1 + n2) + angle]
+    """
+    @isunimodular
+    def __new__(cls, angle, n2, n1=1, **kwargs):
+        angle, n2, n1 = sympify((angle, n2, n1))
+        if kwargs['unimodular'] == False:
+            return Matrix.__new__(cls, [[0,], [(n1 - n2) * angle,]])
+        return Matrix.__new__(cls, [[0,], [-n1 * (n2 - n1) * angle,]])
+
+    def __mul__(self, other):
+        if isinstance(other, Matrix) and other.shape == (2, 1):
+            if isinstance(other, GeometricRay):
+                return GeometricRay(Matrix.__add__(self,other))
+            else:
+                return Matrix.__add__(self,other)
+        else:
+            raise ValueError("Only 2x1 Matrix can be multiplied with ThinPrism")
+
+# TODO Add "Duct" (radially variad index and gain)
+# TODO Add class OpticalSystem which will contain optical elements
 
 ###
 # Representation for geometric ray
