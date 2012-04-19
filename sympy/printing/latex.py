@@ -1025,6 +1025,18 @@ class LatexPrinter(Printer):
     def _print_EmptySet(self, e):
         return r"\emptyset"
 
+    def _print_Naturals(self, n):
+        return r"\mathbb{N}"
+
+    def _print_Integers(self, i):
+        return r"\mathbb{Z}"
+
+    def _print_TransformationSet(self, s):
+        return r"\left\{%s\; |\; %s \in %s\right\}"%(
+                self._print(s.lamda.expr),
+                ', '.join([self._print(var) for var in s.lamda.variables]),
+                self._print(s.base_set))
+
     def _print_FiniteField(self, expr):
         return r"\mathbb{F}_{%s}" % expr.mod
 

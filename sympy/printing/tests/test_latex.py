@@ -8,7 +8,7 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Tuple, MellinTransform, InverseMellinTransform, LaplaceTransform,
     InverseLaplaceTransform, FourierTransform, InverseFourierTransform,
     SineTransform, InverseSineTransform, CosineTransform,
-    InverseCosineTransform, FiniteSet)
+    InverseCosineTransform, FiniteSet, TransformationSet)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
@@ -271,6 +271,15 @@ def test_latex_union():
         r"\left[0, 1\right] \cup \left[2, 3\right]"
     assert latex(Union(Interval(1, 1), Interval(2, 2), Interval(3, 4))) == \
         r"\left\{1, 2\right\} \cup \left[3, 4\right]"
+
+def test_latex_Naturals():
+    assert latex(S.Naturals) == r"\mathbb{N}"
+    assert latex(S.Integers) == r"\mathbb{Z}"
+
+def test_latex_TransformationSet():
+    x = Symbol('x')
+    assert latex(TransformationSet(Lambda(x, x**2), S.Naturals)) == \
+            r"\left\{x^{2}\; |\; x \in \mathbb{N}\right\}"
 
 def test_latex_sum():
     assert latex(Sum(x*y**2, (x, -2, 2), (y, -5, 5))) == \
