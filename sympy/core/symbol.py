@@ -10,7 +10,6 @@ from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 import re
-import warnings
 
 class Symbol(AtomicExpr, Boolean):
     """
@@ -60,10 +59,10 @@ class Symbol(AtomicExpr, Boolean):
         """
 
         if 'dummy' in assumptions:
-            warnings.warn(
-                SymPyDeprecationWarning(
-                    feature="Symbol('x', dummy=True)",
-                    useinstead="Dummy() or symbols(..., cls=Dummy)"))
+            SymPyDeprecationWarning(
+                feature="Symbol('x', dummy=True)",
+                useinstead="Dummy() or symbols(..., cls=Dummy)"
+                ).warn()
             if assumptions.pop('dummy'):
                 return Dummy(name, **assumptions)
         if assumptions.get('zero', False):
@@ -286,10 +285,10 @@ def symbols(names, **args):
     """
     result = []
     if 'each_char' in args:
-        warnings.warn(
-            SymPyDeprecationWarning(
-                feature="each_char in the options to symbols() and var()",
-                useinstead="spaces or commas between symbol names"))
+        SymPyDeprecationWarning(
+            feature="each_char in the options to symbols() and var()",
+            useinstead="spaces or commas between symbol names"
+            ).warn()
 
     if isinstance(names, basestring):
         names = names.strip()

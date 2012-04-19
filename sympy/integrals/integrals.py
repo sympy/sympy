@@ -9,8 +9,9 @@ from sympy.integrals.rationaltools import ratint
 from sympy.integrals.risch import heurisch
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
 from sympy.utilities import xthreaded, flatten
+from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
-from sympy.solvers import solve
+from sympy.solvers.solvers import solve, posify
 from sympy.functions import Piecewise, sqrt, sign
 from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
@@ -371,31 +372,111 @@ class Integral(Expr):
         f = f.subs(reps)
         return Integral(f, *limits)
 
-    def transform(self, x, mapping, inverse=False):
+    def transform(self, x, u, inverse=False):
         """
-        Replace the integration variable x in the integrand with the
-        expression given by `mapping`, e.g. 2*x or 1/x. The integrand and
-        endpoints are rescaled to preserve the value of the original
-        integral.
+        Performs a change of variables from `x` to `u` using the relationship
+        given by `x` and `u` which will define the transformations `f` and `F`
+        (which are inverses of each other) as follows:
 
-        In effect, this performs a variable substitution (although the
-        symbol remains unchanged; follow up with subs to obtain a
-        new symbol.)
+        1) If `x` is a Symbol (which is a variable of integration) then `u`
+           will be interpreted as some function, f(u), with inverse F(u).
+           This, in effect, just makes the substitution of x with f(x).
 
-        With inverse=True, the inverse transformation is performed.
+        2) If `u` is a Symbol then `x` will be interpreted as some function,
+           F(x), with inverse f(u). This is commonly referred to as
+           u-substitution.
 
-        The mapping must be uniquely invertible (e.g. a linear or linear
-        fractional transformation).
+        The `inverse` option will reverse `x` and `u`. It is a deprecated option
+        since `x` and `u` can just be passed in reverse order.
+
+        Once f and F have been identified, the transformation is made as
+        follows:
+
+                       F(b)
+          b              /
+          /             |
+         |              |       d
+         |  x dx  -->   |  f(x)*--(f(x)) dx  where F(x) is the inverse of f(x)
+         |              |       dx
+        /               |
+        a              /
+                      F(a)
+
+        where the limits and integrand have been corrected so as to retain the
+        same value after integration.
+
+        Notes
+        =====
+        The mappings, F(x) or f(u), must lead to a unique integral. Linear
+        or rational linear expression, `2*x`, `1/x` and `sqrt(x)`, will
+        always work; quadratic expressions like `x**2 - 1` are acceptable
+        as long as the resulting integrand does not depend on the sign of
+        the solutions (see examples).
+
+        The integral will be returned unchanged if `x` is not a variable of
+        integration.
+
+        `x` must be (or contain) only one of of the integration variables. If
+        `u` has more than one free symbol then it should be sent as a tuple
+        (`u`, `uvar`) where `uvar` identifies which variable is replacing
+        the integration variable.
+        XXX can it contain another integration variable?
 
         Examples
         ========
 
-            >>> from sympy.abc import a, b, c
-            >>> from sympy import Integral, S
-            >>> Integral(a*b + 2 + c, (c, -1, S(1)/2)).transform(a, c*2)
-            Integral(a*b + c + 2, (c, -1, 1/2))
-            >>> Integral(a**2 + 1, (a, -1, 2)).transform(a, 1 + 2*a)
-            Integral(2*(2*a + 1)**2 + 2, (a, -1, 1/2))
+        >>> from sympy.abc import a, b, c, d, x, u, y
+        >>> from sympy import Integral, S, cos, sqrt
+
+        >>> i = Integral(x*cos(x**2 - 1), (x, 0, 1))
+
+        transform can change the variable of integration
+
+        >>> i.transform(x, u)
+        Integral(u*cos(u**2 - 1), (u, 0, 1))
+
+        transform can perform u-substitution as long as a unique
+        integrand is obtained:
+
+        >>> i.transform(x**2 - 1, u)
+        Integral(cos(u)/2, (u, -1, 0))
+
+        This attempt fails because x = +/-sqrt(u + 1) and the
+        sign does not cancel out of the integrand:
+
+        >>> Integral(cos(x**2 - 1), (x, 0, 1)).transform(x**2 - 1, u)
+        Traceback (most recent call last):
+        ...
+        ValueError:
+        The mapping between F(x) and f(u) did not give a unique integrand.
+
+        transform can do a substitution. Here, the previous
+        result is transformed back into the original expression
+        using "u-substitution":
+
+        >>> ui = _
+        >>> _.transform(sqrt(u + 1), x) == i
+        True
+
+        We can accomplish the same with a regular substitution:
+
+        >>> ui.transform(u, x**2 - 1) == i
+        True
+
+        If the `x` does not contain a symbol of integration then
+        the integral will be returned unchanged. Integral `i` does
+        not have an integration variable `a` so no change is made:
+
+        >>> i.transform(a, x) == i
+        True
+
+        When `u` has more than one free symbol the symbol that is
+        replacing `x` must be identified by passing `u` as a tuple:
+
+        >>> Integral(x, (x, 0, 1)).transform(x, (u + a, u))
+        Integral(a + u, (u, -a, -a + 1))
+        >>> Integral(x, (x, 0, 1)).transform(x, (u + a, a))
+        Integral(a + u, (a, -u, -u + 1))
 
         See Also
         ========
@@ -403,46 +484,129 @@ class Integral(Expr):
         variables : Lists the integration variables
         as_dummy : Replace integration variables with dummy ones
         """
-        if x not in self.variables:
-            return self
-        limits = self.limits
-        function = self.function
-        y = Dummy('y')
-        inverse_mapping = solve(mapping.subs(x, y) - x, y)
-        if len(inverse_mapping) != 1 or x not in inverse_mapping[0].free_symbols:
-            raise ValueError("The mapping must be uniquely invertible")
-        inverse_mapping = inverse_mapping[0]
+
         if inverse:
-            mapping, inverse_mapping = inverse_mapping, mapping
-        function = function.subs(x, mapping) * mapping.diff(x)
+            # when this is removed, update the docstring
+            from sympy.utilities.exceptions import SymPyDeprecationWarning
+            SymPyDeprecationWarning(
+            feature="transform(x, f(x), inverse=True)",
+            useinstead="transform(f(x), x)"
+            ).warn()
+            # in the old style x and u contained the same variable so
+            # don't worry about using the old-style feature with the
+            # new style input...but it will still work:
+            # i.transform(x, u).transform(x, u, inverse=True) -> i
+            x, u = u, x
+
+        d = Dummy('d')
+
+        xfree = x.free_symbols.intersection(self.variables)
+        if len(xfree) > 1:
+            raise ValueError('F(x) can only contain one of: %s' % self.variables)
+        xvar = xfree.pop() if xfree else d
+
+        if xvar not in self.variables:
+            return self
+
+        u = sympify(u)
+        if isinstance(u, Expr):
+            ufree = u.free_symbols
+            if len(ufree) != 1:
+                raise ValueError(filldedent('''
+                When f(u) has more than one free symbol, the one replacing x
+                must be identified: pass f(u) as (f(u), u)'''))
+            uvar = ufree.pop()
+        else:
+            u, uvar = u
+            if uvar not in u.free_symbols:
+                raise ValueError(filldedent('''
+                Expecting a tuple (expr, symbol) where symbol identified
+                a free symbol in expr, but symbol is not in expr's free
+                symbols.'''))
+            if not isinstance(uvar, Symbol):
+                raise ValueError(filldedent('''
+                Expecting a tuple (expr, symbol) but didn't get
+                a symbol; got %s''' % uvar))
+
+        if x.is_Symbol and u.is_Symbol:
+            return self.xreplace({x: u})
+
+        if not x.is_Symbol and not u.is_Symbol:
+            raise ValueError('either x or u must be a symbol')
+
+        if uvar == xvar:
+            return self.transform(x, u.subs(uvar, d)).xreplace({d: uvar})
+
+        if uvar in self.limits:
+            raise ValueError(filldedent('''
+            u must contain the same variable as in x
+            or a variable that is not already an integration variable'''))
+
+        if not x.is_Symbol:
+            F = [x.subs(xvar, d)]
+            soln = solve(u - x, xvar, check=False)
+            if len(soln) == 0:
+                raise ValueError('no solution for solve(F(x) - f(u), x)')
+            f = [fi.subs(uvar, d) for fi in soln]
+        else:
+            f = [u.subs(uvar, d)]
+            pdiff, reps = posify(u - x)
+            puvar = uvar.subs([(v, k) for k, v in reps.iteritems()])
+            soln = [s.subs(reps) for s in solve(pdiff, puvar)]
+            if len(soln) == 0:
+                raise ValueError('no solution for solve(F(x) - f(u), u)')
+            F = [fi.subs(xvar, d) for fi in soln]
+
+        newfuncs = set([(self.function.subs(xvar, fi)*fi.diff(d)
+                        ).subs(d, uvar) for fi in f])
+        if len(newfuncs) > 1:
+            raise ValueError(filldedent('''
+            The mapping between F(x) and f(u) did not give
+            a unique integrand.'''))
+        newfunc = newfuncs.pop()
+
+        def _calc_limit_1(F, a, b):
+            """
+            replace d with a, using subs if possible, otherwise limit
+            where sign of b is considered
+            """
+            wok = F.subs(d, a)
+            if wok is S.NaN or wok.is_bounded is False and a.is_bounded:
+                return limit(sign(b)*F, d, a)
+            return wok
 
         def _calc_limit(a, b):
             """
-            replace x with a, using subs if possible, otherwise limit
+            replace d with a, using subs if possible, otherwise limit
             where sign of b is considered
             """
-            wok = inverse_mapping.subs(x, a)
-            if wok is S.NaN or wok.is_bounded is False and a.is_bounded:
-                return limit(sign(b)*inverse_mapping, x, a)
-            return wok
+            avals = list(set([_calc_limit_1(Fi, a, b) for Fi in F]))
+            if len(avals) > 1:
+                raise ValueError(filldedent('''
+                The mapping between F(x) and f(u) did not
+                give a unique limit.'''))
+            return avals[0]
 
         newlimits = []
-        for xab in limits:
+        for xab in self.limits:
             sym = xab[0]
-            if sym == x and len(xab) == 3:
-                a, b = xab[1:]
-                a, b = _calc_limit(a, b), _calc_limit(b, a)
-                if a == b:
-                    raise ValueError("The mapping must transform the "
-                        "endpoints into separate points")
-                if a > b:
-                    a, b = b, a
-                    function = -function
-                newlimits.append((sym, a, b))
+            if sym == xvar:
+                if len(xab) == 3:
+                    a, b = xab[1:]
+                    a, b = _calc_limit(a, b), _calc_limit(b, a)
+                    if a > b:
+                        a, b = b, a
+                        newfunc = -newfunc
+                    newlimits.append((uvar, a, b))
+                elif len(xab) == 2:
+                    a = _calc_limit(xab[1], 1)
+                    newlimits.append((uvar, a))
+                else:
+                    newlimits.append(uvar)
             else:
                 newlimits.append(xab)
-        return Integral(function, *newlimits)
 
+        return Integral(newfunc, *newlimits)
 
     def doit(self, **hints):
         """
