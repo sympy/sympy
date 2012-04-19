@@ -12,6 +12,19 @@ The conventions for the distances are as follows:
     focal distance - positive for convergent lenses
     object distance - positive for real objects
     image distance - positive for real images
+
+Module uses dual formalism to represent ray transfer matrix and geometric
+ray. One of formalisms uses unimodular matrices (det(M) = 1) in which
+geometric ray is represented by two paramaeters: distance to optical axis
+and optical-direction cosine (which equals n*u, n - refractive index,
+u - angle to optical axis). The second formalism uses distance and angle
+to optical axis. The first formalism is set by default.
+
+See Also
+========
+
+[1] Gerrard, Anthony; Burch, James M. (1994).
+    Introduction to matrix methods in optics. Courier Dover.
 """
 
 from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
@@ -20,11 +33,12 @@ from sympy.utilities.misc import filldedent
 
 
 def isunimodular(function):
+    """Review kwargs argument in function and deside
+    wheather unimodular or non-unimodular formalism needed
+    """
     def _isunimodular(*args, **kwargs):
-    # do some with code before function
-    # fuction gets called
         if len(kwargs) > 1:
-            raise ValueError('''To many named aguments''')
+            raise ValueError('''To many named aguments only one needed''')
         elif len(kwargs) == 1:
             if 'unimodular' in kwargs:
                 if kwargs['unimodular'] == True:
@@ -32,15 +46,13 @@ def isunimodular(function):
                 elif kwargs['unimodular'] == False:
                     pass
                 else:
-                    raise ValueError('''unimodular can be only True of false''')
+                    raise ValueError('''unimodular can be only True of False''')
             else:
                 raise ValueError('''Only unimodular can be named agument''')
         elif len(kwargs) == 0:
             kwargs['unimodular'] = True
         res = function(*args, **kwargs)
-        # do some stuf after
         return res
-    # returns the subfunction
     return _isunimodular
 
 ###
@@ -67,12 +79,12 @@ class RayTransferMatrix(Matrix):
 
     >>> mat = RayTransferMatrix(1, 2, 3, 4)
     >>> mat
-    [1,  2]
-    [3,  4]
+    [1, 2]
+    [3, 4]
 
     >>> RayTransferMatrix(Matrix([[1, 2], [3, 4]]))
-    [1,  2]
-    [3,  4]
+    [1, 2]
+    [3, 4]
 
     >>> mat.A
     1
@@ -85,6 +97,9 @@ class RayTransferMatrix(Matrix):
 
     >>> lens.C
     -1/f
+
+    >>> mat._is_unimodular()
+    False
 
     See Also
     ========
@@ -185,7 +200,7 @@ class RayTransferMatrix(Matrix):
         4
         """
         return self[1, 1]
-    
+
     def _is_unimodular(self):
         """Defines whether matrix is unimodular or not
         """
@@ -199,11 +214,14 @@ class FreeSpace(RayTransferMatrix):
     ==========
 
     distance
+    n index or refractoin (oly for unimodular case)
+    and
+    unimodular (default = True)
 
     See Also
     ========
 
-    RayTransferMatrix
+    RayTransferMatrix, unimodular
 
     Examples
     ========
@@ -214,15 +232,15 @@ class FreeSpace(RayTransferMatrix):
     >>> FreeSpace(d)
     [1, d]
     [0, 1]
-    
+
     >>> FreeSpace(d, n)
     [1, d/n]
     [0,   1]
-    
+
     >>> FreeSpace(d, n)._is_unimodular()
     True
     """
-    
+
     @isunimodular
     def __new__(cls, d, n=1, **kwargs):
         d = sympify((d))
@@ -240,11 +258,13 @@ class FlatRefraction(RayTransferMatrix):
 
     n1: refractive index of one medium
     n2: refractive index of other medium
+    and
+    unimodular (default = True)
 
     See Also
     ========
 
-    RayTransferMatrix
+    RayTransferMatrix, unimodular
 
     Examples
     ========
@@ -273,11 +293,15 @@ class CurvedRefraction(RayTransferMatrix):
     R: radius of curvature (positive for concave),
     n1: refractive index of one medium
     n2: refractive index of other medium
+    or
+    P: optical power ((n2 - n1) / R = 1/f, where f - focal length)
+    and
+    unimodular (default = True)
 
     See Also
     ========
 
-    RayTransferMatrix
+    RayTransferMatrix, unimodular
 
     Examples
     ========
@@ -288,7 +312,7 @@ class CurvedRefraction(RayTransferMatrix):
     >>> CurvedRefraction(R, n1, n2)
     [          1, 0]
     [(n1 - n2)/R, 1]
-    
+
     >>> CurvedRefraction(R, n1, n2, unimodular=False)
     [               1,     0]
     [(n1 - n2)/(R*n2), n1/n2]
@@ -296,7 +320,6 @@ class CurvedRefraction(RayTransferMatrix):
     @isunimodular
     def __new__(cls, R, n1, n2, **kwargs):
         if kwargs['unimodular'] == False:
-            R, n1 , n2 = sympify((R, n1, n2))
             return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R/n2, n1/n2)
         return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R, 1)
 
@@ -304,7 +327,14 @@ class FlatMirror(RayTransferMatrix):
     """
     Ray Transfer Matrix for reflection.
 
-    See Also: RayTransferMatrix
+    Parameters
+    ==========
+    unimodular (default = True)
+
+    See Also
+    ========
+
+    RayTransferMatrix, unimodular
 
     Examples
     ========
@@ -325,6 +355,8 @@ class CurvedMirror(RayTransferMatrix):
     ==========
 
     radius of curvature (positive for concave)
+    and
+    unimodular (default = True)
 
     See Also
     ========
@@ -388,7 +420,7 @@ class ThinPrism(Matrix):
 
     angle: top angle of the prism
     n1: refractive index of one medium (default=1.0)
-    n2: refractive index of other medium
+    n2: refractive index of prism medium
 
     See Also
     ========
@@ -446,7 +478,12 @@ class GeometricRay(Matrix):
     Parameters
     ==========
 
-    height and angle or 2x1 matrix (Matrix(2, 1, [height, angle]))
+    n : refraction index (default = 1.0), needed only for unimodular formalism
+    height: distance to optical axis
+    angle: optical direction angle; equals n*u in case of unimodular formalism,
+    where u - angle to optical axis)
+    or
+    2x1 matrix (Matrix(2, 1, [height, angle]))
 
     Examples
     =======
@@ -467,19 +504,26 @@ class GeometricRay(Matrix):
     [    h]
     [angle]
 
+    >>> ni = symbols('ni')
+    >>> GeometricRay(h, angle, ni)
+    [       h]
+    [angle*ni]
+
     See Also
     ========
 
     RayTransferMatrix
 
     """
-
-    def __new__(cls, *args):
+    @isunimodular
+    def __new__(cls, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], Matrix) \
                           and args[0].shape == (2, 1):
             temp = args[0]
         elif len(args) == 2:
             temp = ((args[0],), (args[1],))
+        elif kwargs['unimodular'] == True and len(args) == 3:
+            temp = ((args[0],), (args[1]*args[2],))
         else:
             raise ValueError(filldedent('''
                 Expecting 2x1 Matrix or the 2 elements of
@@ -556,6 +600,15 @@ class BeamParameter(Expr):
     0.00101413072159615
     >>> p1.w.n()
     0.00210803120913829
+
+    >>> from sympy.physics.gaussopt import CurvedMirror
+    >>> from sympy import symbols
+    >>> R, t, n = 1.5, 2.0, 1.76
+    >>> Resonator = FreeSpace(t,n)*CurvedMirror(R)*\
+    FreeSpace(t,n)*CurvedMirror(-R)
+    >>> outp = (Resonator**10)*BeamParameter(530e-9, 1, w=1e-3)
+    >>> outp.w.n()
+    0.00260674329962508
 
     See Also
     ========

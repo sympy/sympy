@@ -2,7 +2,7 @@ from sympy import atan2, factor, Float, I, Matrix, N, oo, pi, sqrt, symbols
 
 from sympy.physics.gaussopt import (BeamParameter, CurvedMirror,
   CurvedRefraction, FlatMirror, FlatRefraction, FreeSpace, GeometricRay,
-  RayTransferMatrix, ThinLens, conjugate_gauss_beams,
+  RayTransferMatrix, ThinLens, ThinPrism, conjugate_gauss_beams,
   gaussian_conj , geometric_conj_ab, geometric_conj_af, geometric_conj_bf,
   rayleigh2waist, waist2rayleigh)
 
@@ -15,19 +15,24 @@ def test_gauss_opt():
     assert mat == RayTransferMatrix( Matrix([[1,2],[3,4]]) )
     assert [mat.A, mat.B, mat.C, mat.D] == [1, 2, 3, 4]
 
-    d, f, h, n1, n2, R = symbols('d f h n1 n2 R')
+    d, f, h, n1, n2, R, P1, P2 = symbols('d f h n1 n2 R P1 P2')
     lens = ThinLens(f)
     assert lens == Matrix([[   1, 0], [-1/f, 1]])
     assert lens.C == -1/f
     assert FreeSpace(d) == Matrix([[ 1, d], [0, 1]])
-    assert FlatRefraction(n1, n2) == Matrix([[1,     0], [0, n1/n2]])
-    assert CurvedRefraction(R, n1, n2) == Matrix([[1, 0], [(n1 - n2)/(R*n2), n1/n2]])
+    assert FreeSpace(d, n1) == Matrix([[1, d/n1], [0,   1]])
+    assert FlatRefraction(n1, n2) == Matrix([[1, 0], [0, 1]])
+    assert CurvedRefraction(R, n1, n2) == Matrix([[1, 0], [(n1 - n2)/R, 1]])
     assert FlatMirror() == Matrix([[1, 0], [0, 1]])
-    assert CurvedMirror(R) == Matrix([[   1, 0], [-2/R, 1]])
+    assert CurvedMirror(R) == Matrix([[   1, 0], [2/R, 1]])
     assert ThinLens(f) == Matrix([[   1, 0], [-1/f, 1]])
 
+    angle, alpha = symbols('angle alpha')
+    assert ThinPrism(alpha, n2, n1) == Matrix([[0,],[-alpha*n1*(-n1 + n2),]])
+    assert ThinPrism(alpha, n2)*GeometricRay(h, angle) == Matrix([[h,], [alpha*(-n2 + 1) + angle,]])
+
     mul = CurvedMirror(R)*FreeSpace(d)
-    mul_mat = Matrix([[   1, 0], [-2/R, 1]])*Matrix([[ 1, d], [0, 1]])
+    mul_mat = Matrix([[   1, 0], [2/R, 1]])*Matrix([[ 1, d], [0, 1]])
     assert mul.A == mul_mat[0,0]
     assert mul.B == mul_mat[0,1]
     assert mul.C == mul_mat[1,0]
@@ -36,9 +41,12 @@ def test_gauss_opt():
     angle = symbols('angle')
     assert GeometricRay(h,angle) == Matrix([[    h], [angle]])
     assert FreeSpace(d)*GeometricRay(h,angle) == Matrix([[angle*d + h], [angle]])
+    assert FreeSpace(d)*FreeSpace(d + 1) == Matrix([[1, 2*d + 1], [0,       1]])
     assert GeometricRay( Matrix( ((h,),(angle,)) ) ) == Matrix([[h], [angle]])
     assert (FreeSpace(d)*GeometricRay(h,angle)).height == angle*d + h
     assert (FreeSpace(d)*GeometricRay(h,angle)).angle == angle
+    ni = symbols('ni')
+    assert GeometricRay(h, angle, ni) == Matrix([[    h], [angle*ni]])
 
     p = BeamParameter(530e-9, 1, w=1e-3)
     assert streq(p.q, 1 + 1.88679245283019*I*pi)
