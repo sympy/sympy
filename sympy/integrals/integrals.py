@@ -372,7 +372,7 @@ class Integral(Expr):
         f = f.subs(reps)
         return Integral(f, *limits)
 
-    def transform(self, x, u):
+    def transform(self, x, u, inverse=False):
         """
         Performs a change of variables from `x` to `u` using the relationship
         given by `x` and `u` which will define the transformations `f` and `F`
@@ -385,6 +385,9 @@ class Integral(Expr):
         2) If `u` is a Symbol then `x` will be interpreted as some function,
            F(x), with inverse f(u). This is commonly referred to as
            u-substitution.
+
+        The `inverse` option will reverse `x` and `u`. It is a deprecated option
+        since `x` and `u` can just be passed in reverse order.
 
         Once f and F have been identified, the transformation is made as
         follows:
@@ -462,7 +465,7 @@ class Integral(Expr):
 
         If the `x` does not contain a symbol of integration then
         the integral will be returned unchanged. Integral `i` does
-        not have an integration variable `a` so no change is made.
+        not have an integration variable `a` so no change is made:
 
         >>> i.transform(a, x) == i
         True
@@ -481,6 +484,20 @@ class Integral(Expr):
         variables : Lists the integration variables
         as_dummy : Replace integration variables with dummy ones
         """
+
+        if inverse:
+            # when this is removed, update the docstring
+            from sympy.utilities.exceptions import SymPyDeprecationWarning
+            SymPyDeprecationWarning(
+            feature="transform(x, f(x), inverse=True)",
+            useinstead="transform(f(x), x)"
+            ).warn()
+            # in the old style x and u contained the same variable so
+            # don't worry about using the old-style feature with the
+            # new style input...but it will still work:
+            # i.transform(x, u).transform(x, u, inverse=True) -> i
+            x, u = u, x
+
         d = Dummy('d')
 
         xfree = x.free_symbols.intersection(self.variables)
@@ -540,7 +557,8 @@ class Integral(Expr):
                 raise ValueError('no solution for solve(F(x) - f(u), u)')
             F = [fi.subs(xvar, d) for fi in soln]
 
-        newfuncs = set([(self.function.subs(xvar, fi)* fi.diff(d)).subs(d, uvar) for fi in f])
+        newfuncs = set([(self.function.subs(xvar, fi)*fi.diff(d)
+                        ).subs(d, uvar) for fi in f])
         if len(newfuncs) > 1:
             raise ValueError(filldedent('''
             The mapping between F(x) and f(u) did not give
@@ -562,7 +580,7 @@ class Integral(Expr):
             replace d with a, using subs if possible, otherwise limit
             where sign of b is considered
             """
-            avals = list(set([_calc_limit_1(Fi, a, b) for Fi in F])) # [ai for ai in set([_calc_limit_1(Fi, a, b) for Fi in F]) if any(fi.subs(d, ai) == a for fi in f)]
+            avals = list(set([_calc_limit_1(Fi, a, b) for Fi in F]))
             if len(avals) > 1:
                 raise ValueError(filldedent('''
                 The mapping between F(x) and f(u) did not
