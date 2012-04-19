@@ -405,7 +405,7 @@ class Point(GeometryEntity):
             coords = [x.evalf(**options) for x in self.args]
         else:
             coords = [x.evalf(prec, **options) for x in self.args]
-        return Point(*coords, evaluate=False)
+        return Point(*coords, **dict(evaluate=False))
 
     n = evalf
 

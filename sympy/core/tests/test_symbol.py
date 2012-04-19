@@ -203,13 +203,11 @@ def test_symbols_each_char():
     z = Symbol('z')
 
     # First, test the warning
-    warnings.filterwarnings("error", "The each_char option to symbols\(\) and var\(\) is "
-        "deprecated.  Separate symbol names by spaces or commas instead.")
-    raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=True))
-    raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=False))
+    warnings.filterwarnings("error")
+    raises(UserWarning, lambda: symbols('xyz', each_char=True))
+    raises(UserWarning, lambda: symbols('xyz', each_char=False))
     # now test the actual output
-    warnings.filterwarnings("ignore",  "The each_char option to symbols\(\) and var\(\) is "
-        "deprecated.  Separate symbol names by spaces or commas instead.")
+    warnings.filterwarnings("ignore")
     assert symbols(['wx', 'yz'], each_char=True) == [(w, x), (y, z)]
     assert all(w.is_Function for w in flatten(symbols(['wx', 'yz'], each_char=True, cls=Function)))
     assert symbols('xyz', each_char=True) == (x, y, z)

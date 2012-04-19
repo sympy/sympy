@@ -46,7 +46,6 @@ from sympy.core.compatibility import reduce
 
 from sympy.assumptions import Q, ask
 
-from warnings import warn
 from types import GeneratorType
 from collections import defaultdict
 
@@ -1742,7 +1741,10 @@ def _generate_patterns():
 
 
 def tsolve(eq, sym):
-    warn(SymPyDeprecationWarning(feature="tsolve()", useinstead="solve()"))
+    SymPyDeprecationWarning(
+    feature="tsolve()",
+    useinstead="solve()"
+    ).warn()
     return _tsolve(eq, sym)
 
 

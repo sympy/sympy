@@ -249,24 +249,26 @@ def test_integrate_derivatives():
     assert integrate(Derivative(f(y), y), x) == x*Derivative(f(y), y)
 
 def test_transform():
-    a = Integral(x**2+1, (x, -1, 2))
-    assert a.doit() == a.transform(x, 3*x+1).doit()
-    assert a.transform(x, 3*x+1).transform(x, 3*x+1, inverse=True) == a
-    assert a.transform(x, 3*x+1, inverse=True).transform(x, 3*x+1) == a
+    a = Integral(x**2 + 1, (x, -1, 2))
+    fx = x
+    fy = 3*y + 1
+    assert a.doit() == a.transform(fx, fy).doit()
+    assert a.transform(fx, fy).transform(fy, fx) == a
+    fx = 3*x + 1
+    fy = y
+    assert a.transform(fx, fy).transform(fy, fx) == a
     a = Integral(sin(1/x), (x, 0, 1))
-    assert a.transform(x, 1/x) == Integral(sin(x)/x**2, (x, 1, oo))
-    assert a.transform(x, 1/x).transform(x, 1/x) == a
+    assert a.transform(x, 1/y) == Integral(sin(y)/y**2, (y, 1, oo))
+    assert a.transform(x, 1/y).transform(y, 1/x) == a
     a = Integral(exp(-x**2), (x, -oo, oo))
-    assert a.transform(x, 2*x) == Integral(2*exp(-4*x**2), (x, -oo, oo))
+    assert a.transform(x, 2*y) == Integral(2*exp(-4*y**2), (y, -oo, oo))
     # < 3 arg limit handled properly
-    assert Integral(x, x).transform(x, a*x) == Integral(x*a**2, x)
-    raises(ValueError, lambda: a.transform(x, 1/x))
-    raises(ValueError, lambda: a.transform(x, 1/x))
+    assert Integral(x, x).transform(x, a*y).doit() == Integral(y*a**2, y).doit()
     _3 = S(3)
-    assert Integral(x, (x, 0, -_3)).transform(x, 1/x) == \
-    Integral(-1/x**3, (x, -oo, -1/_3))
-    assert Integral(x, (x, 0, _3)).transform(x, 1/x) == \
-    Integral(x**(-3), (x, 1/_3, oo))
+    assert Integral(x, (x, 0, -_3)).transform(x, 1/y).doit() == \
+    Integral(-1/x**3, (x, -oo, -1/_3)).doit()
+    assert Integral(x, (x, 0, _3)).transform(x, 1/y) == \
+    Integral(y**(-3), (y, 1/_3, oo))
 
 def test_issue953():
     f = S(1)/2*asin(x) + x*sqrt(1 - x**2)/2
