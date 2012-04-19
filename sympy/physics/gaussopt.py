@@ -214,7 +214,7 @@ class FreeSpace(RayTransferMatrix):
     ==========
 
     distance
-    n index or refractoin (oly for unimodular case)
+    n index or refraction (oly for unimodular case)
     and
     unimodular (default = True)
 
