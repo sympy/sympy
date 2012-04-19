@@ -19,27 +19,29 @@ from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
 from sympy.utilities.misc import filldedent
 
 
-def unimodular(function):
-    _unimodular(*args, **kwargs):
-        # do some with code before function
-        # fuction gets called
-        if kwargs > 1:
+def isunimodular(function):
+    def _isunimodular(*args, **kwargs):
+    # do some with code before function
+    # fuction gets called
+        if len(kwargs) > 1:
             raise ValueError('''To many named aguments''')
-        elif kwargs == 1:
-            if 'unimodular' in kwags:
-                if kwars[unimodular] == True:
+        elif len(kwargs) == 1:
+            if 'unimodular' in kwargs:
+                if kwargs['unimodular'] == True:
                     pass
-                elif kwargs[unimodular] == False:
+                elif kwargs['unimodular'] == False:
                     pass
                 else:
                     raise ValueError('''unimodular can be only True of false''')
             else:
                 raise ValueError('''Only unimodular can be named agument''')
+        elif len(kwargs) == 0:
+            kwargs['unimodular'] = True
         res = function(*args, **kwargs)
         # do some stuf after
         return res
     # returns the subfunction
-    return _unimodular
+    return _isunimodular
 
 ###
 # A, B, C, D matrices
@@ -186,7 +188,9 @@ class RayTransferMatrix(Matrix):
         return self[1, 1]
     
     def _is_unimodular(self):
-        return self
+        """Defines whether matrix is unimodular or not
+        """
+        return (1 == (self.A*self.D - self.B*self.C))
 
 class FreeSpace(RayTransferMatrix):
     """
@@ -207,13 +211,26 @@ class FreeSpace(RayTransferMatrix):
 
     >>> from sympy.physics.gaussopt import FreeSpace
     >>> from sympy import symbols
-    >>> d = symbols('d')
+    >>> d,n = symbols('d n')
     >>> FreeSpace(d)
     [1, d]
     [0, 1]
+    
+    >>> FreeSpace(d, n)
+    [1, d/n]
+    [0,   1]
+    
+    >>> FreeSpace(d, n)._is_unimodular()
+    True
     """
-    def __new__(cls, d):
-        return RayTransferMatrix.__new__(cls, 1, d, 0, 1)
+    
+    @isunimodular
+    def __new__(cls, d, n=1, **kwargs):
+        d = sympify((d))
+        if kwargs['unimodular'] == False:
+            return RayTransferMatrix.__new__(cls, 1, d, 0, 1)
+        n = sympify((n))
+        return RayTransferMatrix.__new__(cls, 1, d/n, 0, 1)
 
 class FlatRefraction(RayTransferMatrix):
     """
@@ -236,13 +253,16 @@ class FlatRefraction(RayTransferMatrix):
     >>> from sympy.physics.gaussopt import FlatRefraction
     >>> from sympy import symbols
     >>> n1, n2 = symbols('n1 n2')
-    >>> FlatRefraction(n1, n2)
+    >>> FlatRefraction(n1, n2, unimodular=False)
     [1,     0]
     [0, n1/n2]
     """
-    def __new__(cls, n1, n2):
-        n1, n2 = sympify((n1, n2))
-        return RayTransferMatrix.__new__(cls, 1, 0, 0, n1/n2)
+    @isunimodular
+    def __new__(cls, n1, n2, **kwargs):
+        if kwargs['unimodular'] == False:
+            n1, n2 = sympify((n1, n2))
+            return RayTransferMatrix.__new__(cls, 1, 0, 0, n1/n2)
+        return RayTransferMatrix.__new__(cls, 1, 0, 0, 1)
 
 class CurvedRefraction(RayTransferMatrix):
     """
@@ -267,12 +287,19 @@ class CurvedRefraction(RayTransferMatrix):
     >>> from sympy import symbols
     >>> R, n1, n2 = symbols('R n1 n2')
     >>> CurvedRefraction(R, n1, n2)
+    [          1, 0]
+    [(n1 - n2)/R, 1]
+    
+    >>> CurvedRefraction(R, n1, n2, unimodular=False)
     [               1,     0]
     [(n1 - n2)/(R*n2), n1/n2]
     """
-    def __new__(cls, R, n1, n2):
-        R, n1 , n2 = sympify((R, n1, n2))
-        return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R/n2, n1/n2)
+    @isunimodular
+    def __new__(cls, R, n1, n2, **kwargs):
+        if kwargs['unimodular'] == False:
+            R, n1 , n2 = sympify((R, n1, n2))
+            return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R/n2, n1/n2)
+        return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R, 1)
 
 class FlatMirror(RayTransferMatrix):
     """
@@ -313,8 +340,9 @@ class CurvedMirror(RayTransferMatrix):
     >>> R = symbols('R')
     >>> CurvedMirror(R)
     [   1, 0]
-    [-2/R, 1]
+    [ 2/R, 1]
     """
+    @isunimodular
     def __new__(cls, R):
         R = sympify(R)
         return RayTransferMatrix.__new__(cls, 1, 0, -2/R, 1)
