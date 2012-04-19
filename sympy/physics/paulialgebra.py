@@ -10,6 +10,8 @@ See also:
 
 from sympy import Symbol, I
 
+__all__ = ['evaluate_pauli_product']
+
 def delta(i,j):
     """
     Returns 1 if i == j, else 0.
@@ -55,10 +57,10 @@ def epsilon(i,j,k):
         return 0
 
 class Pauli(Symbol):
-    """ The class, representing algebraic properties of Pauli matrices
+    """ The class representing algebraic properties of Pauli matrices
 
-    If the left multiplication of symbol or number with Pauli matrix needed,
-    please use round brackets to separate Pauli and symbolic multiplication
+    If the left multiplication of symbol or number with Pauli matrix is needed,
+    please use parantheses to separate Pauli and symbolic multiplication
     (for example: 2*I*(Pauli(3)*Pauli(2)))
 
     Another variant is to use eval_sigma function to evaluate the product
@@ -123,7 +125,7 @@ class Pauli(Symbol):
         if e.is_Integer and e.is_positive:
             return super(Pauli, b).__pow__(int(e) % 2)
 
-def eval_sigma(arg):
+def evaluate_pauli_product(arg):
     ''' Help function to evaluate Pauli matrices product
     with symbolic obejcts
 
