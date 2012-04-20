@@ -301,7 +301,7 @@ def test_is_commutative():
     assert Sum(1, (z, 1, 1)).is_commutative is True
     assert Sum(z, (a, 1, z)).is_commutative is True
     x=Symbol('x',commutative=False)
-    y=Symbol('y',commutative=False)	
+    y=Symbol('y',commutative=False)
     assert Sum(x, (x, 1, 2)).is_commutative is True
     assert Sum(y, (x, 1, 2)).is_commutative is False
     assert Sum(x*y, (x, 1, 2), (y, 1, 3)).is_commutative is True

@@ -96,9 +96,7 @@ class Sum(Expr):
         rv = getattr(self.function, 'is_commutative')
         if rv is None:
             return all(s.is_commutative for s in self.free_symbols)
-        return rv 
-    
-    
+        return rv
     @property
     def is_number(self):
         """
