@@ -783,7 +783,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
     from sympy.polys.polyerrors import PolificationFailed
     from sympy import monomials, symbols, solve, Monomial
     from sympy.polys.monomialtools import monomial_div
-    from itertools import product
+    from sympy.core.compatibility import product
 
     # usual preparation of polynomials:
 
