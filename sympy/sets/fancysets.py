@@ -210,6 +210,9 @@ class Range(Set):
             return S.EmptySet
 
         start, stop, step = map(sympify, (start, stop, step))
+        if not all(ask(Q.integer(x)) for x in (start, stop, step)):
+            raise ValueError("Inputs to Range must be Integer Valued\n"+
+                    "Use TransformationSets of Ranges for other cases")
 
         return Basic.__new__(cls, start, stop, step)
 
@@ -229,18 +232,15 @@ class Range(Set):
             return Range(start, stop, step)
 
         if other == S.Naturals:
-            if ask(Q.integer(self.step)) and ask(Q.integer(self.start)):
-                return self._intersect(Interval(1,oo))
+            return self._intersect(Interval(1,oo))
 
         if other == S.Integers:
-            if ask(Q.integer(self.step)) and ask(Q.integer(self.start)):
-                return self
+            return self
 
         return None
 
     def _contains(self, other):
-        mn, mx = Min(self.start, self.stop), Max(self.start, self.stop)
-        return (other>=mn and other<mx and
+        return (other>=self.inf and other<self.sup and
                 ask(Q.integer((self.start - other)/self.step)))
 
     def __iter__(self):
@@ -254,10 +254,16 @@ class Range(Set):
     def _inf(self):
         if self.start < self.stop:
             return self.start
-        return Max(*self)
+        if ask(Q.integer((self.stop - self.start)/self.step)):
+            return self.stop - self.step
+        return Min(*self)
 
     @property
     def _sup(self):
+        if self.start > self.stop:
+            return self.start
+        if ask(Q.integer((self.stop - self.start)/self.step)):
+            return self.stop - self.step
         return Max(*self)
 
     def __len__(self):
