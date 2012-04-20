@@ -199,11 +199,11 @@ class Range(Set):
     is_iterable = True
 
     def __new__(cls, *args):
-        if len(args) == 1:
+        if len(args) == 1:                      # Range(5) = {0, 1, 2, 3, 4, 5}
             start, stop, step = 0, args[0], 1
-        if len(args) == 2:
+        if len(args) == 2:                      # Range(1, 5) = {1, 2, 3, 4, 5}
             start, stop, step = args[0], args[1], 1
-        if len(args) == 3:
+        if len(args) == 3:                      # Range(1, 6, 2) = {1, 3, 5}
             start, stop, step = args[0], args[1], args[2]
 
         if (stop <= start and step>0):
@@ -223,11 +223,13 @@ class Range(Set):
     def _intersect(self, other):
         if other.is_Interval:
             start = Max(self.start, ceiling(other.left ))
-            stop  = Min(self.stop ,   floor(other.right))
+            while(start not in self): # walk forward until we reach a step point
+                start += 1
+            stop  = Min(self.stop ,   floor(other.right) + 1)
             step  = self.step
             if other.left_open and start==other.left:
                 start = start + step
-            if other.right_open and stop==other.right:
+            if other.right_open and stop==other.right + 1:
                 stop  = stop - step
             return Range(start, stop, step)
 
@@ -240,7 +242,7 @@ class Range(Set):
         return None
 
     def _contains(self, other):
-        return (other>=self.inf and other<self.sup and
+        return (other>=self.inf and other<=self.sup and
                 ask(Q.integer((self.start - other)/self.step)))
 
     def __iter__(self):
@@ -250,21 +252,20 @@ class Range(Set):
             yield i
             i = i + self.step
 
+    def _ith_element(self, i):
+        return self.start + i * self.step
+
+    @property
+    def _last_element(self):
+        return self._ith_element(len(self) - 1)
+
     @property
     def _inf(self):
-        if self.start < self.stop:
-            return self.start
-        if ask(Q.integer((self.stop - self.start)/self.step)):
-            return self.stop - self.step
-        return Min(*self)
+        return Min(self.start, self._last_element)
 
     @property
     def _sup(self):
-        if self.start > self.stop:
-            return self.start
-        if ask(Q.integer((self.stop - self.start)/self.step)):
-            return self.stop - self.step
-        return Max(*self)
+        return Max(self.start, self._last_element)
 
     def __len__(self):
         return floor((self.stop - self.start)/self.step)
