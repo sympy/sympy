@@ -238,7 +238,7 @@ class Range(Set):
             while(inf not in self):
                 inf += 1
 
-            return Range(inf, sup, self.step)
+            return Range(inf, sup+1, abs(self.step))
 
         if other == S.Naturals:
             return self._intersect(Interval(1, oo))
