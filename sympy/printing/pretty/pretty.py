@@ -1141,9 +1141,15 @@ class PrettyPrinter(Printer):
         return self._print_seq(items, '{', '}', ', ' )
 
     def _print_Range(self, s):
+
+        if self._use_unicode:
+            dots = u"\u2026"
+        else:
+            dots = '...'
+
         if len(s) > 4:
             it = iter(s)
-            printset = it.next(), it.next(), '...', s._last_element
+            printset = it.next(), it.next(), dots, s._last_element
         else:
             printset = tuple(s)
 
@@ -1181,10 +1187,13 @@ class PrettyPrinter(Printer):
              parenthesize = lambda set:set.is_ProductSet or set.is_Intersection)
 
     def _print_TransformationSet(self, ts):
+        if self._use_unicode:
+            inn = u"\u220a"
+        else:
+            inn = 'in'
         variables = self._print_seq(ts.lamda.variables)
         expr = self._print(ts.lamda.expr)
         bar = self._print("|")
-        inn = self._print(u"\u220a")
         base = self._print(ts.base_set)
 
         return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
