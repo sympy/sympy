@@ -6,6 +6,7 @@ from singleton import S
 from expr import Expr, AtomicExpr
 from cache import cacheit
 from function import FunctionClass
+from sympy.core.logic import fuzzy_and, fuzzy_bool
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -67,7 +68,11 @@ class Symbol(AtomicExpr, Boolean):
                 return Dummy(name, **assumptions)
         if assumptions.get('zero', False):
             return S.Zero
-        assumptions.setdefault('commutative', True)
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        if is_commutative is None:
+            raise ValueError(
+                '''Symbol commutativity must be True or False.''')
+        assumptions['commutative'] = is_commutative
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
