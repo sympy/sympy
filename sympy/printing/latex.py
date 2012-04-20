@@ -996,6 +996,17 @@ class LatexPrinter(Printer):
 
     _print_frozenset = _print_set
 
+    def _print_Range(self, s):
+        if len(s) > 4:
+            it = iter(s)
+            printset = it.next(), it.next(), '\ldots', s._last_element
+        else:
+            printset = tuple(s)
+
+        return (r"\left\{"
+              + r", ".join(self._print(el) for el in printset)
+              + r"\right\}")
+
     def _print_Interval(self, i):
         if i.start == i.end:
             return r"\left\{%s\right\}" % self._print(i.start)

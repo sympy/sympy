@@ -8,7 +8,7 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Tuple, MellinTransform, InverseMellinTransform, LaplaceTransform,
     InverseLaplaceTransform, FourierTransform, InverseFourierTransform,
     SineTransform, InverseSineTransform, CosineTransform,
-    InverseCosineTransform, FiniteSet, TransformationSet)
+    InverseCosineTransform, FiniteSet, TransformationSet, Range)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
@@ -246,6 +246,11 @@ def test_latex_sets():
         assert latex(s(range(1, 6))) == r"\left\{1, 2, 3, 4, 5\right\}"
         assert latex(s(range(1, 13))) == \
             r"\left\{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12\right\}"
+
+def test_latex_Range():
+    assert latex(Range(1, 51)) ==\
+            r'\left\{1, 2, \ldots, 50\right\}'
+    assert latex(Range(1, 4)) == r'\left\{1, 2, 3\right\}'
 
 def test_latex_intervals():
     a = Symbol('a', real=True)
