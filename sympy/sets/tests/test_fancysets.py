@@ -103,3 +103,7 @@ def test_range():
     assert len(Range(10, 38, 10)) == 3
 
     assert Range(0, 0, 5) == S.EmptySet
+
+def test_fun():
+    assert (FiniteSet(TransformationSet(Lambda(x, sin(pi*x/4)), Range(-10,11)))
+            == FiniteSet(-1, -sqrt(2)/2, 0, sqrt(2)/2, 1))

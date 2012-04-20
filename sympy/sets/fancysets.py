@@ -192,7 +192,7 @@ class Range(Set):
         >>> Range(10, 20, 2) # 10 to 20 in steps of 2
         {10, 12, 14, 16, 18}
         >>> Range(20, 10, -2)
-        {20, 18, 16, 14, 12} # 20 10 10 backward in steps of 2
+        {20, 18, 16, 14, 12} # 20 to 10 backward in steps of 2
 
     """
 
