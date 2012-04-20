@@ -548,6 +548,9 @@ class Expr(Basic, EvalfMixin):
             return diff
         return None
 
+    def _eval_is_commutative(self):
+        return fuzzy_and(a.is_commutative for a in self.args)
+
     def _eval_is_positive(self):
         if self.is_number:
             if self.is_real is False:
@@ -2850,3 +2853,4 @@ from function import Derivative, expand_mul
 from mod import Mod
 from exprtools import factor_terms
 from numbers import Integer, Rational
+from sympy.core.logic import fuzzy_and

@@ -398,16 +398,6 @@ class Function(Application, Expr):
             l.append(df * da)
         return Add(*l)
 
-    def _eval_is_commutative(self):
-        r = True
-        for a in self._args:
-            c = a.is_commutative
-            if c is None:
-                return None
-            if not c:
-                r = False
-        return r
-
     def as_base_exp(self):
         """
         Returns the method as the 2-tuple (base, exponent).
