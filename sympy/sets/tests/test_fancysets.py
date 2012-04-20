@@ -1,6 +1,7 @@
 from sympy.sets.fancysets import TransformationSet, Range
 from sympy.core.sets import FiniteSet, Interval
-from sympy import S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic, Rational
+from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
+        Rational, sqrt)
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')

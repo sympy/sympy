@@ -128,7 +128,7 @@ class TransformationSet(Set):
     >>> 5 in squares
     False
 
-    >>> FiniteSet(0,1,2,3,4,5,6,7,9,10).intersect(squares)
+    >>> FiniteSet(0, 1, 2, 3, 4, 5, 6, 7, 9, 10).intersect(squares)
     {1, 4, 9}
 
     >>> square_iterable = iter(squares)
@@ -199,12 +199,10 @@ class Range(Set):
     is_iterable = True
 
     def __new__(cls, *args):
-        if len(args) == 1:                      # Range(5) = {0, 1, 2, 3, 4, 5}
-            start, stop, step = 0, args[0], 1
-        if len(args) == 2:                      # Range(1, 5) = {1, 2, 3, 4, 5}
-            start, stop, step = args[0], args[1], 1
-        if len(args) == 3:                      # Range(1, 6, 2) = {1, 3, 5}
-            start, stop, step = args[0], args[1], args[2]
+        s = slice(*args)
+        start = s.start or 0
+        stop  = s.stop
+        step  = s.step  or 1
 
         start, stop, step = map(sympify, (start, stop, step))
         if not all(ask(Q.integer(x)) for x in (start, stop, step)):
@@ -224,19 +222,26 @@ class Range(Set):
 
     def _intersect(self, other):
         if other.is_Interval:
-            start = Max(self.start, ceiling(other.left ))
-            while(start not in self): # walk forward until we reach a step point
-                start += 1
-            stop  = Min(self.stop ,   floor(other.right) + 1)
-            step  = self.step
-            if other.left_open and start==other.left:
-                start = start + step
-            if other.right_open and stop==other.right + 1:
-                stop  = stop - step
-            return Range(start, stop, step)
+            osup = other.sup
+            oinf = other.inf
+            # if other is [0, 10) we can only go up to 9
+            if osup.is_integer and other.right_open:
+                osup -= 1
+            if oinf.is_integer and other.left_open:
+                oinf += 1
+
+            # Take the most restrictive of the bounds set by the two sets
+            # round inwards
+            inf = ceiling(Max(self.inf, oinf))
+            sup = floor(Min(self.sup, osup))
+            # walk forward until we reach a step point
+            while(inf not in self):
+                inf += 1
+
+            return Range(inf, sup, self.step)
 
         if other == S.Naturals:
-            return self._intersect(Interval(1,oo))
+            return self._intersect(Interval(1, oo))
 
         if other == S.Integers:
             return self
@@ -244,7 +249,7 @@ class Range(Set):
         return None
 
     def _contains(self, other):
-        return (other>=self.inf and other<=self.sup and
+        return (other >= self.inf and other <= self.sup and
                 ask(Q.integer((self.start - other)/self.step)))
 
     def __iter__(self):
@@ -253,6 +258,9 @@ class Range(Set):
         while(s*i < s*self.stop):
             yield i
             i = i + self.step
+
+    def __len__(self):
+        return ceiling((self.stop - self.start)/self.step)
 
     def _ith_element(self, i):
         return self.start + i * self.step
@@ -268,6 +276,3 @@ class Range(Set):
     @property
     def _sup(self):
         return Max(self.start, self._last_element)
-
-    def __len__(self):
-        return ceiling((self.stop - self.start)/self.step)
