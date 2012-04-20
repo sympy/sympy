@@ -1141,8 +1141,13 @@ class PrettyPrinter(Printer):
         return self._print_seq(items, '{', '}', ', ' )
 
     def _print_Range(self, s):
-        from sympy.core.sets import FiniteSet
-        return self._print_FiniteSet(FiniteSet(*s))
+        if len(s) > 4:
+            it = iter(s)
+            printset = it.next(), it.next(), '...', s._last_element
+        else:
+            printset = tuple(s)
+
+        return self._print_seq(printset, '{', '}', ', ' )
 
     def _print_Interval(self, i):
         if i.start == i.end:
