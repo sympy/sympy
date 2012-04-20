@@ -206,15 +206,17 @@ class Range(Set):
         if len(args) == 3:                      # Range(1, 6, 2) = {1, 3, 5}
             start, stop, step = args[0], args[1], args[2]
 
-        if (stop <= start and step>0):
-            return S.EmptySet
-
         start, stop, step = map(sympify, (start, stop, step))
         if not all(ask(Q.integer(x)) for x in (start, stop, step)):
             raise ValueError("Inputs to Range must be Integer Valued\n"+
                     "Use TransformationSets of Ranges for other cases")
 
-        return Basic.__new__(cls, start, stop, step)
+        s = Basic.__new__(cls, start, stop, step)
+
+        if len(s) == 0:
+            return S.EmptySet
+
+        return s
 
     start = property(lambda self : self.args[0])
     stop  = property(lambda self : self.args[1])
@@ -268,4 +270,4 @@ class Range(Set):
         return Max(self.start, self._last_element)
 
     def __len__(self):
-        return floor((self.stop - self.start)/self.step)
+        return ceiling((self.stop - self.start)/self.step)
