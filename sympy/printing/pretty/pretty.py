@@ -1178,7 +1178,7 @@ class PrettyPrinter(Printer):
         variables = self._print_seq(ts.lamda.variables)
         expr = self._print(ts.lamda.expr)
         bar = self._print("|")
-        inn = self._print("in")
+        inn = self._print(u"\u220a")
         base = self._print(ts.base_set)
 
         return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
