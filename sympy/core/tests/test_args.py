@@ -883,6 +883,14 @@ def test_sympy__functions__special__error_functions__Ei():
     from sympy.functions.special.error_functions import Ei
     assert _test_args(Ei(2))
 
+def test_sympy__functions__special__error_functions__FresnelS():
+    from sympy.functions.special.error_functions import FresnelS
+    assert _test_args(FresnelS(2))
+
+def test_sympy__functions__special__error_functions__FresnelC():
+    from sympy.functions.special.error_functions import FresnelC
+    assert _test_args(FresnelC(2))
+
 @SKIP("abstract class")
 def test_sympy__functions__special__error_functions__TrigonometricIntegral():
     pass
