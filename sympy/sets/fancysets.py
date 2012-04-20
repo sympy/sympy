@@ -1,5 +1,7 @@
-from sympy import Dummy, S, symbols, Lambda, pi, Basic, sympify, ask, Q
+from sympy import (Dummy, S, symbols, Lambda, pi, Basic, sympify, ask, Q, Min,
+        Max)
 from sympy.functions.elementary.integers import floor, ceiling
+from sympy.functions.elementary.complexes import sign
 from sympy.core.compatibility import iterable
 from sympy.core.sets import Set, Interval, FiniteSet, Intersection
 from sympy.core.singleton import Singleton, S
@@ -174,3 +176,89 @@ class TransformationSet(Set):
     @property
     def is_iterable(self):
         return self.base_set.is_iterable
+
+class Range(Set):
+    """
+    Represents a range of integers.
+
+    Examples
+    ========
+
+        >>> from sympy import Range
+        >>> Range(5) # 0 to 5
+        {0, 1, 2, 3, 4}
+        >>> Range(10, 15) # 10 to 15
+        {10, 11, 12, 13, 14}
+        >>> Range(10, 20, 2) # 10 to 20 in steps of 2
+        {10, 12, 14, 16, 18}
+        >>> Range(20, 10, -2)
+        {20, 18, 16, 14, 12} # 20 10 10 backward in steps of 2
+
+    """
+
+    is_iterable = True
+
+    def __new__(cls, *args):
+        if len(args) == 1:
+            start, stop, step = 0, args[0], 1
+        if len(args) == 2:
+            start, stop, step = args[0], args[1], 1
+        if len(args) == 3:
+            start, stop, step = args[0], args[1], args[2]
+
+        if (stop <= start and step>0):
+            return S.EmptySet
+
+        start, stop, step = map(sympify, (start, stop, step))
+
+        return Basic.__new__(cls, start, stop, step)
+
+    start = property(lambda self : self.args[0])
+    stop  = property(lambda self : self.args[1])
+    step  = property(lambda self : self.args[2])
+
+    def _intersect(self, other):
+        if other.is_Interval:
+            start = Max(self.start, ceiling(other.left ))
+            stop  = Min(self.stop ,   floor(other.right))
+            step  = self.step
+            if other.left_open and start==other.left:
+                start = start + step
+            if other.right_open and stop==other.right:
+                stop  = stop - step
+            return Range(start, stop, step)
+
+        if other == S.Naturals:
+            if ask(Q.integer(self.step)) and ask(Q.integer(self.start)):
+                return self._intersect(Interval(1,oo))
+
+        if other == S.Integers:
+            if ask(Q.integer(self.step)) and ask(Q.integer(self.start)):
+                return self
+
+        return None
+
+    def _contains(self, other):
+        mn, mx = Min(self.start, self.stop), Max(self.start, self.stop)
+        return (other>=mn and other<mx and
+                ask(Q.integer((self.start - other)/self.step)))
+
+    def __iter__(self):
+        i = self.start
+        s = sign(self.step)
+        while(s*i < s*self.stop):
+            yield i
+            i = i + self.step
+
+    @property
+    def _inf(self):
+        if self.start < self.stop:
+            return self.start
+        return Max(*self)
+
+    @property
+    def _sup(self):
+        return Max(*self)
+
+    def __len__(self):
+        return floor((self.stop - self.start)/self.step)

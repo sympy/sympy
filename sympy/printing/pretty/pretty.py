@@ -1140,6 +1140,10 @@ class PrettyPrinter(Printer):
         items = sorted(s.args, key=default_sort_key)
         return self._print_seq(items, '{', '}', ', ' )
 
+    def _print_Range(self, s):
+        from sympy.core.sets import FiniteSet
+        return self._print_FiniteSet(FiniteSet(*s))
+
     def _print_Interval(self, i):
         if i.start == i.end:
             return self._print_seq(i.args[:1], '{', '}')
