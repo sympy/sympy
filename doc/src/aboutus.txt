@@ -208,6 +208,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Ashwini Oruganti: Changes to Pow printing
 #. Andreas Kloeckner: Fix to cse()
 #. Prateek Papriwal: improve summation documentation
+#. Angadh Nanjangud: in physics.mechanics, added a function and tests for the parallel axis theorem
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
