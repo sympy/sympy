@@ -1140,7 +1140,7 @@ class PrettyPrinter(Printer):
         items = sorted(s.args, key=default_sort_key)
         return self._print_seq(items, '{', '}', ', ' )
 
-    def _print_Range(self, s):
+    def _print_RangeSet(self, s):
 
         if self._use_unicode:
             dots = u"\u2026"
