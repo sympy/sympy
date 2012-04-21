@@ -352,6 +352,10 @@ def test_sympy__sets__fancysets__TransformationSet():
     x = Symbol('x')
     assert _test_args(TransformationSet(Lambda(x, x**2), S.Naturals))
 
+def test_sympy__sets__fancysets__RangeSet():
+    from sympy.sets.fancysets import RangeSet
+    assert _test_args(RangeSet(1, 5, 1))
+
 # STATS
 def normal_pdf(x):
     from sympy import pi, exp, sqrt
