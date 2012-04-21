@@ -88,8 +88,8 @@ def test_RangeSet():
     assert 11 not in r
     assert 30 not in r
 
-    assert list(RangeSet(0, 5)) == [0, 1, 2, 3, 4]
-    assert list(RangeSet(5, 0, -1)) == [5, 4, 3, 2, 1]
+    assert list(RangeSet(0, 5)) == range(5)
+    assert list(RangeSet(5, 0, -1)) == range(1, 6)
 
     assert RangeSet(5, 15).sup == 14
     assert RangeSet(5, 15).inf == 5
@@ -118,9 +118,9 @@ def test_range_interval_intersection():
 
     # Going backwards
     assert FiniteSet(RangeSet(10, -9, -3).intersect(Interval(-5, 6))) == \
-            FiniteSet(4, 1, -2, -5)
+            FiniteSet(-5, -2, 1, 4)
     assert FiniteSet(RangeSet(10, -9, -3).intersect(Interval(-5, 6, True))) == \
-            FiniteSet(4, 1, -2)
+            FiniteSet(-2, 1, 4)
 
 def test_fun():
     assert (FiniteSet(TransformationSet(Lambda(x, sin(pi*x/4)),

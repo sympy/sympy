@@ -6,6 +6,8 @@ from sympy.core.compatibility import iterable
 from sympy.core.sets import Set, Interval, FiniteSet, Intersection
 from sympy.core.singleton import Singleton, S
 from sympy.solvers import solve
+from sympy.ntheory.residue_ntheory import int_tested
+
 oo = S.Infinity
 
 class Naturals(Set):
@@ -186,35 +188,37 @@ class RangeSet(Set):
 
         >>> from sympy import RangeSet
         >>> RangeSet(5) # 0 to 5
-        {0, 1, 2, 3, 4}
+        RangeSet(0, 5, 1) or {0, 1, 2, 3, 4}
         >>> RangeSet(10, 15) # 10 to 15
-        {10, 11, 12, 13, 14}
+        RangeSet(10, 15, 1) or {10, 11, 12, 13, 14}
         >>> RangeSet(10, 20, 2) # 10 to 20 in steps of 2
-        {10, 12, 14, 16, 18}
-        >>> RangeSet(20, 10, -2)
-        {20, 18, 16, 14, 12} # 20 to 10 backward in steps of 2
+        RangeSet(10, 20, 2) or {10, 12, 14, 16, 18}
+        >>> RangeSet(20, 10, -2) # 20 to 10 backward in steps of 2
+        RangeSet(12, 22, 2) or {12, 14, 16, 18, 20}
 
     """
 
     is_iterable = True
 
     def __new__(cls, *args):
-        s = slice(*args)
-        start = s.start or 0
-        stop  = s.stop
-        step  = s.step  or 1
-
-        start, stop, step = map(sympify, (start, stop, step))
-        if not all(ask(Q.integer(x)) for x in (start, stop, step)):
+        # expand range
+        slc = slice(*args)
+        start, stop, step = slc.start or 0, slc.stop, slc.step or 1
+        try:
+            start, stop, step = [S(int_tested(w)) for w in (start, stop, step)]
+        except ValueError:
             raise ValueError("Inputs to RangeSet must be Integer Valued\n"+
                     "Use TransformationSets of Ranges for other cases")
-
-        s = Basic.__new__(cls, start, stop, step)
-
-        if len(s) == 0:
+        n = ceiling((stop - start)/step)
+        if n <= 0:
             return S.EmptySet
+        
+        # normalize args: regardless of how they are entered they will show
+        # canonically as RangeSet(inf, sup, step) with step > 0
+        start, stop = sorted((start, start + (n - 1)*step))
+        step = abs(step)
 
-        return s
+        return Basic.__new__(cls, start, stop + step, step)
 
     start = property(lambda self : self.args[0])
     stop  = property(lambda self : self.args[1])
@@ -224,6 +228,8 @@ class RangeSet(Set):
         if other.is_Interval:
             osup = other.sup
             oinf = other.inf
+            # XXX shouldn't inf give lowest element *in* the interval
+            # and hence do this automatically?
             # if other is [0, 10) we can only go up to 9
             if osup.is_integer and other.right_open:
                 osup -= 1
@@ -234,11 +240,12 @@ class RangeSet(Set):
             # round inwards
             inf = ceiling(Max(self.inf, oinf))
             sup = floor(Min(self.sup, osup))
-            # walk forward until we reach a step point
-            while(inf not in self):
-                inf += 1
+            # if we are off the sequence, get back on
+            off = (inf - self.inf) % self.step
+            if off:
+                inf += self.step - off
 
-            return RangeSet(inf, sup+1, abs(self.step))
+            return RangeSet(inf, sup + 1, self.step)
 
         if other == S.Naturals:
             return self._intersect(Interval(1, oo))
@@ -254,13 +261,12 @@ class RangeSet(Set):
 
     def __iter__(self):
         i = self.start
-        s = sign(self.step)
-        while(s*i < s*self.stop):
+        while(i < self.stop):
             yield i
             i = i + self.step
 
     def __len__(self):
-        return ceiling((self.stop - self.start)/self.step)
+        return ((self.stop - self.start)//self.step)
 
     def _ith_element(self, i):
         return self.start + i * self.step
@@ -271,8 +277,8 @@ class RangeSet(Set):
 
     @property
     def _inf(self):
-        return Min(self.start, self._last_element)
+        return self.start
 
     @property
     def _sup(self):
-        return Max(self.start, self._last_element)
+        return self.stop - self.step
