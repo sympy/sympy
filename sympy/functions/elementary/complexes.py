@@ -384,6 +384,11 @@ class Abs(Function):
             **{'evaluate': True})) + im(self.args[0]) * im(Derivative(self.args[0],
                 x, **{'evaluate': True}))) / Abs(self.args[0])
 
+    def _eval_rewrite_as_Heaviside(self, arg):
+        # Note this only holds for real arg (since Heaviside is not defined
+        # for complex arguments).
+        return arg*(C.Heaviside(arg) - C.Heaviside(-arg))
+
 class arg(Function):
     """Returns the argument (in radians) of a complex number"""
 

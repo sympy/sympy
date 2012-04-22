@@ -1,6 +1,6 @@
 from sympy import (symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log,
         pi, arg, conjugate, expand, exp, sin, cos, Function, Abs, zoo, atan2,
-        S)
+        S, Heaviside)
 from sympy.utilities.pytest import XFAIL
 
 from sympy.utilities.randtest import comp
@@ -170,6 +170,13 @@ def test_Abs():
     assert Abs(2*pi*x*y) == 2*pi*Abs(x*y)
     a = Symbol('a', positive=True)
     assert Abs(2*pi*x*a) == 2*pi*a*Abs(x)
+
+def test_Abs_rewrite():
+    x = Symbol('x', real=True)
+    a = Abs(x).rewrite(Heaviside).expand()
+    assert a == x*Heaviside(x) - x*Heaviside(-x)
+    for i in [-2, -1, 0, 1, 2]:
+        assert a.subs(x, i) == abs(i)
 
 def test_Abs_real():
     # test some properties of abs that only apply
