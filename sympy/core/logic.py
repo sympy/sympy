@@ -58,21 +58,16 @@ class Logic(object):
     # {} 'op' -> LogicClass
     op_2class = {}
 
-    def __new__(cls, args):
+    def __new__(cls, *args):
         obj = object.__new__(cls)
-        obj.args = tuple(args)
-
-        # XXX do we need this:
-        #print 'L: %s' % (obj.args,)
-        assert not isinstance(obj.args[0], tuple)
-
+        obj.args = args
         return obj
 
     def __getnewargs__(self):
         return self.args
 
     def __hash__(self):
-        return hash( (type(self).__name__, self.args) )
+        return hash( (type(self).__name__,) + tuple(self.args) )
 
 
     def __eq__(a, b):
@@ -172,7 +167,7 @@ class AndOr_Base(Logic):
         elif len(args) == 0:
             return not cls.op_x_notx
 
-        return Logic.__new__(cls, sorted(args, key=hash))
+        return Logic.__new__(cls, *sorted(args, key=hash))
 
 
     @classmethod
@@ -236,7 +231,7 @@ class Not(Logic):
 
     def __new__(cls, arg):
         if isinstance(arg, str):
-            return Logic.__new__(cls, (arg,))
+            return Logic.__new__(cls, arg)
 
         elif isinstance(arg, bool):
             return not arg

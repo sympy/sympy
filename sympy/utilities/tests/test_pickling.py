@@ -208,6 +208,13 @@ def test_integrals():
     for c in (Integral, Integral(x)):
         check(c)
 
+#==================== logic =====================
+from sympy.core.logic import Logic
+
+def test_logic():
+    for c in (Logic, Logic(1)):
+        check(c)
+
 #================== matrices ====================
 from sympy.matrices.matrices import Matrix, SparseMatrix
 
