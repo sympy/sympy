@@ -45,8 +45,6 @@ def test_gauss_opt():
     assert GeometricRay( Matrix( ((h,),(angle,)) ) ) == Matrix([[h], [angle]])
     assert (FreeSpace(d)*GeometricRay(h,angle)).height == angle*d + h
     assert (FreeSpace(d)*GeometricRay(h,angle)).angle == angle
-    ni = symbols('ni')
-    assert GeometricRay(h, angle, ni) == Matrix([[    h], [angle*ni]])
 
     p = BeamParameter(530e-9, 1, w=1e-3)
     assert streq(p.q, 1 + 1.88679245283019*I*pi)

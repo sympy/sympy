@@ -46,7 +46,7 @@ def isunimodular(function):
                 elif kwargs['unimodular'] == False:
                     pass
                 else:
-                    raise ValueError('''unimodular can be only True of False''')
+                    raise ValueError('''Unimodular can be only True of False''')
             else:
                 raise ValueError('''Only unimodular can be named agument''')
         elif len(kwargs) == 0:
@@ -82,7 +82,7 @@ class RayTransferMatrix(Matrix):
     [1, 2]
     [3, 4]
 
-    >>> RayTransferMatrix(Matrix([[1, 2], [3, 4]]))
+    >>> RayTransferMatrix(Matrix([[1, 2], [3, 4]]), unimodular=False)
     [1, 2]
     [3, 4]
 
@@ -98,9 +98,6 @@ class RayTransferMatrix(Matrix):
     >>> lens.C
     -1/f
 
-    >>> mat._is_unimodular()
-    False
-
     See Also
     ========
 
@@ -114,7 +111,9 @@ class RayTransferMatrix(Matrix):
     [1] http://en.wikipedia.org/wiki/Ray_transfer_matrix_analysis
     """
 
-    def __new__(cls, *args):
+    _unimodular = True
+
+    def __new__(cls, *args, **kwargs):
         if len(args) == 4:
             temp = ((args[0], args[1]), (args[2], args[3]))
         elif len(args) == 1 \
@@ -125,13 +124,25 @@ class RayTransferMatrix(Matrix):
             raise ValueError(filldedent('''
                 Expecting 2x2 Matrix or the 4 elements of
                 the Matrix but got %s''' % str(args)))
-        return Matrix.__new__(cls, temp)
+        return super(RayTransferMatrix, cls).__new__(cls, temp)
+
+    @isunimodular
+    def __init__(self, *args, **kwargs):
+        self._unimodular = kwargs['unimodular']
 
     def __mul__(self, other):
         if isinstance(other, RayTransferMatrix):
-            return RayTransferMatrix(Matrix.__mul__(self, other))
+            if self.unimodular != other.unimodular:
+                raise ValueError('''Only unimodular or non-unimodular formalism
+                can be applied''')
+            return RayTransferMatrix(Matrix.__mul__(self, other),
+                                     unimodular=self.unimodular)
         elif isinstance(other, GeometricRay):
-            return GeometricRay(Matrix.__mul__(self, other))
+            if self.unimodular != other.unimodular:
+                raise ValueError('''Only unimodular or non-unimodular formalism
+                can be applied''')
+            return GeometricRay(Matrix.__mul__(self, other),
+                                unimodular=self.unimodular)
         elif isinstance(other, BeamParameter):
             temp = self*Matrix(((other.q,), (1,)))
             q = (temp[0]/temp[1]).expand(complex=True)
@@ -140,6 +151,10 @@ class RayTransferMatrix(Matrix):
                                  z_r = together(im(q)))
         else:
             return Matrix.__mul__(self, other)
+
+    @property
+    def unimodular(self):
+        return self._unimodular
 
     @property
     def A(self):
@@ -201,11 +216,6 @@ class RayTransferMatrix(Matrix):
         """
         return self[1, 1]
 
-    def _is_unimodular(self):
-        """Defines whether matrix is unimodular or not
-        """
-        return (1 == (self.A*self.D - self.B*self.C))
-
 class FreeSpace(RayTransferMatrix):
     """
     Ray Transfer Matrix for free space.
@@ -221,7 +231,7 @@ class FreeSpace(RayTransferMatrix):
     See Also
     ========
 
-    RayTransferMatrix, unimodular
+    RayTransferMatrix
 
     Examples
     ========
@@ -237,17 +247,22 @@ class FreeSpace(RayTransferMatrix):
     [1, d/n]
     [0,   1]
 
-    >>> FreeSpace(d, n)._is_unimodular()
+    >>> FreeSpace(d, n).unimodular
     True
+
+    >>> FreeSpace(d, unimodular=False).unimodular
+    False
     """
 
     @isunimodular
     def __new__(cls, d, n=1, **kwargs):
         d = sympify((d))
         if kwargs['unimodular'] == False:
-            return RayTransferMatrix.__new__(cls, 1, d, 0, 1)
+            return RayTransferMatrix.__new__(cls, 1, d, 0, 1,
+                                             unimodular=kwargs['unimodular'])
         n = sympify((n))
-        return RayTransferMatrix.__new__(cls, 1, d/n, 0, 1)
+        return RayTransferMatrix.__new__(cls, 1, d/n, 0, 1,
+                                         unimodular=kwargs['unimodular'])
 
 class FlatRefraction(RayTransferMatrix):
     """
@@ -264,7 +279,7 @@ class FlatRefraction(RayTransferMatrix):
     See Also
     ========
 
-    RayTransferMatrix, unimodular
+    RayTransferMatrix
 
     Examples
     ========
@@ -275,13 +290,18 @@ class FlatRefraction(RayTransferMatrix):
     >>> FlatRefraction(n1, n2, unimodular=False)
     [1,     0]
     [0, n1/n2]
+
+    >>> FlatRefraction(n1, n2, unimodular=False).unimodular
+    False
     """
     @isunimodular
     def __new__(cls, n1, n2, **kwargs):
         if kwargs['unimodular'] == False:
             n1, n2 = sympify((n1, n2))
-            return RayTransferMatrix.__new__(cls, 1, 0, 0, n1/n2)
-        return RayTransferMatrix.__new__(cls, 1, 0, 0, 1)
+            return RayTransferMatrix.__new__(cls, 1, 0, 0, n1/n2,
+                                             unimodular=kwargs['unimodular'])
+        return RayTransferMatrix.__new__(cls, 1, 0, 0, 1,
+                                         unimodular=kwargs['unimodular'])
 
 class CurvedRefraction(RayTransferMatrix):
     """
@@ -301,7 +321,7 @@ class CurvedRefraction(RayTransferMatrix):
     See Also
     ========
 
-    RayTransferMatrix, unimodular
+    RayTransferMatrix
 
     Examples
     ========
@@ -317,11 +337,14 @@ class CurvedRefraction(RayTransferMatrix):
     [               1,     0]
     [(n1 - n2)/(R*n2), n1/n2]
     """
+
     @isunimodular
     def __new__(cls, R, n1, n2, **kwargs):
         if kwargs['unimodular'] == False:
-            return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R/n2, n1/n2)
-        return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R, 1)
+            return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R/n2, n1/n2,
+                                             unimodular=kwargs['unimodular'])
+        return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R, 1,
+                                         unimodular=kwargs['unimodular'])
 
 class FlatMirror(RayTransferMatrix):
     """
@@ -334,7 +357,7 @@ class FlatMirror(RayTransferMatrix):
     See Also
     ========
 
-    RayTransferMatrix, unimodular
+    RayTransferMatrix
 
     Examples
     ========
@@ -344,8 +367,11 @@ class FlatMirror(RayTransferMatrix):
     [1, 0]
     [0, 1]
     """
-    def __new__(cls):
-        return RayTransferMatrix.__new__(cls, 1, 0, 0, 1)
+
+    @isunimodular
+    def __new__(cls, **kwargs):
+        return RayTransferMatrix.__new__(cls, 1, 0, 0, 1,
+                                         unimodular=kwargs['unimodular'])
 
 class CurvedMirror(RayTransferMatrix):
     """
@@ -373,12 +399,15 @@ class CurvedMirror(RayTransferMatrix):
     [  1, 0]
     [2/R, 1]
     """
+
     @isunimodular
     def __new__(cls, R, **kwargs):
         R = sympify(R)
         if kwargs['unimodular'] == False:
-            return RayTransferMatrix.__new__(cls, 1, 0, -2/R, 1)
-        return RayTransferMatrix.__new__(cls, 1, 0, 2/R, 1)
+            return RayTransferMatrix.__new__(cls, 1, 0, -2/R, 1,
+                                             unimodular=kwargs['unimodular'])
+        return RayTransferMatrix.__new__(cls, 1, 0, 2/R, 1,
+                                         unimodular=kwargs['unimodular'])
 
 class ThinLens(RayTransferMatrix):
     """
@@ -404,9 +433,12 @@ class ThinLens(RayTransferMatrix):
     [   1, 0]
     [-1/f, 1]
     """
-    def __new__(cls, f):
+
+    @isunimodular
+    def __new__(cls, f, **kwargs):
         f = sympify(f)
-        return RayTransferMatrix.__new__(cls, 1, 0, -1/f, 1)
+        return RayTransferMatrix.__new__(cls, 1, 0, -1/f, 1,
+                                         unimodular=kwargs['unimodular'])
 
 class ThinPrism(Matrix):
     """Ray Transfer matrix for thin prism
@@ -440,14 +472,17 @@ class ThinPrism(Matrix):
     [-alpha*n1*(-n1 + n2)]
 
     >>> from sympy.physics.gaussopt import GeometricRay
-    >>> h, angle = symbols('h angle')
-    >>> ThinPrism(alpha, n2)*GeometricRay(h, angle)
-    [                      h]
-    [alpha*(-n2 + 1) + angle]
-    >>> ThinPrism(alpha, n2, n1)*GeometricRay(h, angle)
-    [                           h]
-    [-alpha*n1*(-n1 + n2) + angle]
+    >>> h, angle, n = symbols('h angle n')
+    >>> ThinPrism(alpha, n2)*GeometricRay(h, angle*n)
+    [                        h]
+    [alpha*(-n2 + 1) + angle*n]
+    >>> ThinPrism(alpha, n2, n1)*GeometricRay(h, angle*n)
+    [                             h]
+    [-alpha*n1*(-n1 + n2) + angle*n]
     """
+
+    _unimodular = True
+
     @isunimodular
     def __new__(cls, angle, n2, n1=1, **kwargs):
         angle, n2, n1 = sympify((angle, n2, n1))
@@ -455,14 +490,23 @@ class ThinPrism(Matrix):
             return Matrix.__new__(cls, [[0,], [(n1 - n2) * angle,]])
         return Matrix.__new__(cls, [[0,], [-n1 * (n2 - n1) * angle,]])
 
+    @isunimodular
+    def __init__(self, *args, **kwargs):
+        self._unimodular = kwargs['unimodular']
+
     def __mul__(self, other):
         if isinstance(other, Matrix) and other.shape == (2, 1):
             if isinstance(other, GeometricRay):
-                return GeometricRay(Matrix.__add__(self,other))
+                return GeometricRay(Matrix.__add__(self,other),
+                                    unimodular=self.unimodular)
             else:
                 return Matrix.__add__(self,other)
         else:
             raise ValueError("Only 2x1 Matrix can be multiplied with ThinPrism")
+
+    @property
+    def unimodular(self):
+        return self._unimodular
 
 # TODO Add "Duct" (radially variad index and gain)
 # TODO Add class OpticalSystem which will contain optical elements
@@ -490,24 +534,19 @@ class GeometricRay(Matrix):
 
     >>> from sympy.physics.gaussopt import GeometricRay, FreeSpace
     >>> from sympy import symbols, Matrix
-    >>> d, h, angle = symbols('d, h, angle')
+    >>> d, h, angle, n = symbols('d h angle n')
 
-    >>> GeometricRay(h, angle)
-    [    h]
-    [angle]
+    >>> GeometricRay(h, angle*n)
+    [      h]
+    [angle*n]
 
-    >>> FreeSpace(d)*GeometricRay(h, angle)
-    [angle*d + h]
-    [      angle]
+    >>> FreeSpace(d)*GeometricRay(h, angle*n)
+    [angle*d*n + h]
+    [      angle*n]
 
-    >>> GeometricRay( Matrix( ((h,), (angle,)) ) )
-    [    h]
-    [angle]
-
-    >>> ni = symbols('ni')
-    >>> GeometricRay(h, angle, ni)
-    [       h]
-    [angle*ni]
+    >>> GeometricRay( Matrix( ((h,), (angle*n,)) ))
+    [      h]
+    [angle*n]
 
     See Also
     ========
@@ -515,6 +554,9 @@ class GeometricRay(Matrix):
     RayTransferMatrix
 
     """
+
+    _unimodular = True
+
     @isunimodular
     def __new__(cls, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], Matrix) \
@@ -522,13 +564,15 @@ class GeometricRay(Matrix):
             temp = args[0]
         elif len(args) == 2:
             temp = ((args[0],), (args[1],))
-        elif kwargs['unimodular'] == True and len(args) == 3:
-            temp = ((args[0],), (args[1]*args[2],))
         else:
             raise ValueError(filldedent('''
                 Expecting 2x1 Matrix or the 2 elements of
                 the Matrix but got %s''' % str(args)))
         return Matrix.__new__(cls, temp)
+
+    @isunimodular
+    def __init__(self, *args, **kwargs):
+        self._unimodular = kwargs['unimodular']
 
     @property
     def height(self):
@@ -541,7 +585,7 @@ class GeometricRay(Matrix):
         >>> from sympy.physics.gaussopt import GeometricRay
         >>> from sympy import symbols
         >>> h, angle = symbols('h, angle')
-        >>> gRay = GeometricRay(h, angle)
+        >>> gRay = GeometricRay(h, angle, unimodular=False)
         >>> gRay.height
         h
         """
@@ -558,11 +602,15 @@ class GeometricRay(Matrix):
         >>> from sympy.physics.gaussopt import GeometricRay
         >>> from sympy import symbols
         >>> h, angle = symbols('h, angle')
-        >>> gRay = GeometricRay(h, angle)
+        >>> gRay = GeometricRay(h, angle, unimodular=False)
         >>> gRay.angle
         angle
         """
         return self[1]
+
+    @property
+    def unimodular(self):
+        return self._unimodular
 
 
 ###
