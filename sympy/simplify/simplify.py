@@ -768,8 +768,13 @@ def ratsimpmodprime(expr, G, *gens, **args):
     >>> ratsimpmodprime((x + y**5 + y)/(x - y), [x*y**5 - x - y], x, y, order='lex')
     (x**2 + x*y + x + y)/(x**2 - x*y)
 
-    The algorithm computes a rational simplification which minimizes
-    the sum of the total degrees of the numerator and the denominator.
+    If ``polynomial`` is False, the algorithm computes a rational simplification
+    which minimizes the sum of the total degrees of the numerator and the
+    denominator.
+
+    If ``polynomial`` is True, this function just brings numerator and
+    denominator into a canonical form. This is much faster, but has
+    potentially worse results.
 
     References
     ==========
@@ -787,6 +792,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
     from sympy.utilities.misc import debug
 
     quick = args.pop('quick', True)
+    polynomial = args.pop('polynomial', False)
     debug('ratsimpmodprime', expr)
 
     # usual preparation of polynomials:
@@ -917,6 +923,9 @@ def ratsimpmodprime(expr, G, *gens, **args):
     num = reduced(num, G, opt.gens, order=opt.order)[1]
     denom = reduced(denom, G, opt.gens, order=opt.order)[1]
 
+    if polynomial:
+        return (num/denom).cancel()
+
     c, d, allsol = _ratsimpmodprime(Poly(num, opt.gens), Poly(denom, opt.gens), [])
     if not quick and allsol:
         debug('Looking for best minimal solution. Got: %s' % len(allsol))
@@ -933,7 +942,8 @@ def ratsimpmodprime(expr, G, *gens, **args):
 
     return (c*r.q)/(d*r.p)
 
-def trigsimp_groebner(expr, hints=[], quick=False, order="grlex"):
+def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
+                      polynomial=False):
     """
     Simplify trigonometric expressions using a groebner basis algorithm.
 
@@ -942,6 +952,12 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex"):
     total degree. Some attempts are made to choose the simplest possible
     expression of the minimal degree, but this is non-rigorous, and also
     very slow (see the ``quick=True`` option).
+
+    If ``polynomial`` is set to True, instead of simplifying numerator and
+    denominator together, this function just brings numerator and denominator
+    into a canonical form. This is much faster, but has potentially worse
+    results. However, if the input is a polynomial, then the result is
+    guaranteed to be an equivalent polynomial of minimal degree.
 
     The most important option is hints. Its entries can be any of the
     following:
@@ -1256,6 +1272,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex"):
 
     myI = Dummy('I')
     expr = expr.subs(S.ImaginaryUnit, myI)
+    subs = [(myI, S.ImaginaryUnit)]
 
     num, denom = cancel(expr).as_numer_denom()
     (pnum, pdenom), opt = parallel_poly_from_expr([num, denom])
@@ -1302,7 +1319,8 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex"):
                     g.has_only_gens(*ourgens.intersection(g.gens))]
             res.append(Mul(*[a**b for a, b in zip(freegens, monom)]) * \
                        ratsimpmodprime(coeff/denom, ourG, order=order,
-                                       gens=realgens, quick=quick, domain=ZZ))
+                                       gens=realgens, quick=quick, domain=ZZ,
+                                       polynomial=polynomial).subs(subs))
         return Add(*res)
         # NOTE The following is simpler and has less assumptions on the
         #      groebner basis algorithm. If the above turns out to be broken,
@@ -1313,7 +1331,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex"):
                      for monom, coeff in num.terms()])
     else:
         return ratsimpmodprime(expr, list(G), order=order, gens=freegens+gens,
-                               quick=quick, domain=ZZ).subs(myI, S.ImaginaryUnit)
+                               quick=quick, domain=ZZ, polynomial=polynomial).subs(subs)
 
 def trigsimp(expr, **opts):
     """

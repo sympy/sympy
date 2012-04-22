@@ -224,13 +224,14 @@ def test_trigsimp_groebner():
 
     assert trigsimp((-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1), groebner=True) \
            == 2/cos(x)
+    assert trigsimp((-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1),
+                    groebner=True, polynomial=True) == 2/cos(x)
 
     # Test quick=False works
     assert trigsimp_groebner(ex, hints=[2]) == res
 
     # test "I"
-    ex2 = trigsimp_groebner(ex.subs(x, I*x), quick=True).subs(x, -I*x)
-    assert trigsimp_groebner(ex2 - ex) == 0
+    assert trigsimp_groebner(sin(I*x)/cos(I*x), hints=[tanh]) == I*tanh(x)
 
     # test hyperbolic / sums
     assert trigsimp_groebner((tanh(x)+tanh(y))/(1+tanh(x)*tanh(y)),
