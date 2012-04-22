@@ -187,14 +187,14 @@ class RangeSet(Set):
     ========
 
         >>> from sympy import RangeSet
-        >>> RangeSet(5) # 0 to 5
-        RangeSet(0, 5, 1) or {0, 1, 2, 3, 4}
-        >>> RangeSet(10, 15) # 10 to 15
-        RangeSet(10, 15, 1) or {10, 11, 12, 13, 14}
-        >>> RangeSet(10, 20, 2) # 10 to 20 in steps of 2
-        RangeSet(10, 20, 2) or {10, 12, 14, 16, 18}
-        >>> RangeSet(20, 10, -2) # 20 to 10 backward in steps of 2
-        RangeSet(12, 22, 2) or {12, 14, 16, 18, 20}
+        >>> list(RangeSet(5)) # 0 to 5
+        [0, 1, 2, 3, 4]
+        >>> list(RangeSet(10, 15)) # 10 to 15
+        [10, 11, 12, 13, 14]
+        >>> list(RangeSet(10, 20, 2)) # 10 to 20 in steps of 2
+        [10, 12, 14, 16, 18]
+        >>> list(RangeSet(20, 10, -2)) # 20 to 10 backward in steps of 2
+        [12, 14, 16, 18, 20]
 
     """
 
@@ -212,7 +212,7 @@ class RangeSet(Set):
         n = ceiling((stop - start)/step)
         if n <= 0:
             return S.EmptySet
-        
+
         # normalize args: regardless of how they are entered they will show
         # canonically as RangeSet(inf, sup, step) with step > 0
         start, stop = sorted((start, start + (n - 1)*step))
@@ -228,8 +228,6 @@ class RangeSet(Set):
         if other.is_Interval:
             osup = other.sup
             oinf = other.inf
-            # XXX shouldn't inf give lowest element *in* the interval
-            # and hence do this automatically?
             # if other is [0, 10) we can only go up to 9
             if osup.is_integer and other.right_open:
                 osup -= 1
