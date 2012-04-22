@@ -117,9 +117,6 @@ class StdFactKB(FactKB):
         if facts:
             self.deduce_all_facts(facts)
 
-    def copy(self):
-        return self.__class__(self)
-
 def as_property(fact):
     """Convert a fact name to the name of the corresponding property"""
     return 'is_%s' % fact
@@ -138,11 +135,11 @@ class PropertyManager(StdFactKB):
                 local_defs[k] = v
 
         defs = {}
-        for base in reversed(cls.__bases__):
-            try:
+        try:
+            for base in reversed(cls.__bases__):
                 defs.update(base.default_assumptions.definitions)
-            except AttributeError:
-                pass
+        except AttributeError:
+            pass
         defs.update(local_defs)
 
         self.definitions = defs
@@ -154,10 +151,6 @@ class PropertyManager(StdFactKB):
                 self.evaluator[k] = getattr(cls, '_eval_is_%s' % k)
             except AttributeError:
                 pass
-
-
-    def copy(self):
-        return StdFactKB(self)
 
     def make_property(manager, fact):
         """Create the automagic property corresponding to a fact."""
