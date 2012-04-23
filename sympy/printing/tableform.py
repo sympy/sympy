@@ -1,5 +1,7 @@
 from sympy.core.containers import Tuple
 
+from types import FunctionType
+
 class TableForm(object):
     """
     Create a nice table representation of data.
@@ -35,6 +37,11 @@ class TableForm(object):
                             "right" or ">"
                             [default: left]
 
+            formats ...     a list of format strings or functions that accept
+                            3 arguments (entry, row number, col number) and
+                            return a string for the table entry. (If a function
+                            returns None then the _print method will be used.)
+
             wipe_zeros ...  Wipe zeros, don't show them in the table
                             [default: True].
 
@@ -68,7 +75,7 @@ class TableForm(object):
         if _alignment not in ('l', 'r', 'c'):
             raise ValueError('alignment "%s" unrecognized' % alignment)
 
-        _column_formats = kwarg.get("column_formats", [None]*_w)
+        _column_formats = kwarg.get("formats", [None]*_w)
 
         _wipe_zeros = kwarg.get("wipe_zeros", True)
 
@@ -197,14 +204,21 @@ class TableForm(object):
         for i, line in enumerate(self._lines):
             d = []
             for j, x in enumerate(line):
-                if self._column_formats[j]:
-                    d.append(self._column_formats[j] % x)
+                if self._wipe_zeros and (x in (0, "0")):
+                    d.append(" ")
+                    continue
+                f = self._column_formats[j]
+                if f:
+                    if isinstance(f, FunctionType):
+                        v = f(x, i, j)
+                        if v is None:
+                            v = printer._print(x)
+                    else:
+                        v = f % x
+                    d.append(v)
                 else:
                     v = printer._print(x)
-                    if self._wipe_zeros and (v == "0"):
-                        d.append(" ")
-                    else:
-                        d.append("$%s$" % v)
+                    d.append("$%s$" % v)
             if self._headings[0]:
                 d = [self._headings[0][i]] + d
             s += " & ".join(d) + r" \\" + "\n"
