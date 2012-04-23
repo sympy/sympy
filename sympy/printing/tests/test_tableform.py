@@ -91,7 +91,15 @@ Group C | 10  3\n\
 3 & $\\sqrt{x}$ & $\\sin{\\left (x^{2} \\right )}$ \\\\\n\
 \\end{tabular}\
 """
-
+    s = latex(TableForm([["a", x**3], ["c", S(1)/4], [sqrt(x), sin(x**2)]],
+            column_formats=['(%s)', None], headings=("automatic", "automatic")))
+    assert s == r"""\begin{tabular}{l l l}
+ & 1 & 2 \\
+\hline
+1 & (a) & $x^{3}$ \\
+2 & (c) & $\frac{1}{4}$ \\
+3 & (sqrt(x)) & $\sin{\left (x^{2} \right )}$ \\
+\end{tabular}"""
     s = latex(TableForm([["a", x**3], ["c", S(1)/4], [sqrt(x), sin(x**2)]]))
     assert s == """\
 \\begin{tabular}{l l}\n\
