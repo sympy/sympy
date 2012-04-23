@@ -153,7 +153,15 @@ class Ideal(object):
         return self._quotient(J)
 
     def intersect(self, J):
-        """Compute the intersection of self with ideal J."""
+        """
+        Compute the intersection of self with ideal J.
+
+        >>> from sympy.abc import x, y
+        >>> from sympy import QQ
+        >>> R = QQ[x, y]
+        >>> R.ideal(x).intersect(R.ideal(y))
+        <x*y>
+        """
         self._check_ideal(J)
         return self._intersect(J)
 

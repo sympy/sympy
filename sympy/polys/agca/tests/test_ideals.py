@@ -94,3 +94,14 @@ def test_nontriv_local():
     assert not contains([x+y+z, x*y+x*z+y*z, x*y*z], x**2)
     assert contains([x*(1+x+y), y*(1+z)], x)
     assert contains([x*(1+x+y), y*(1+z)], x + y)
+
+def test_intersection():
+    R = QQ[x, y, z]
+    # SCA, example 1.8.11
+    assert R.ideal(x, y).intersect(R.ideal(y**2, z)) == R.ideal(y**2, y*z, x*z)
+
+    assert R.ideal(x, y).intersect(R.ideal()).is_zero()
+
+    R = QQ.poly_ring(x, y, z, order="ilex")
+    assert R.ideal(x, y).intersect(R.ideal(y**2 + y**2*z, z + z*x**3*y)) == \
+           R.ideal(y**2, y*z, x*z)

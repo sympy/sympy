@@ -347,3 +347,17 @@ def test_module_mul():
 
     assert I*M == M*I == S1 == x*M == M*x
     assert I*S1 == S2 == x*S1
+
+def test_intersection():
+    # SCA, example 2.8.5
+    F = QQ[x, y].free_module(2)
+    M1 = F.submodule([x, y], [y, 1])
+    M2 = F.submodule([0, y - 1], [x, 1], [y, x])
+    I = F.submodule([x, y], [y**2 - y, y - 1], [x*y + y, x + 1])
+    I1, rel1, rel2 = M1.intersect(M2, relations=True)
+    assert I1 == M2.intersect(M1) == I
+    for i, g in enumerate(I1.gens):
+        assert g == sum(c*x for c, x in zip(rel1[i], M1.gens)) \
+                 == sum(d*y for d, y in zip(rel2[i], M2.gens))
+
+    assert F.submodule([x, y]).intersect(F.submodule([y, x])).is_zero()
