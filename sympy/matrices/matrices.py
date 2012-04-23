@@ -2295,8 +2295,7 @@ class MatrixBase(object):
         >>> m.is_anti_symmetric(simplify=False)
         True
         """
-        # accept custom simplification, but if none is given use
-        # a lambda that just returns self
+        # accept custom simplification
         simpfunc = simplify if isinstance(simplify, FunctionType) else \
                    _simplify if simplify else False
 
