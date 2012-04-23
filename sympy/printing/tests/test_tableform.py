@@ -7,6 +7,7 @@ from sympy.functions.elementary.trigonometric import sin
 from sympy.utilities.pytest import raises
 
 from textwrap import dedent
+from sympy.my import rawlines
 
 def test_TableForm():
     s = str(TableForm([["a", "b"], ["c", "d"], ["e", 0]],
@@ -125,3 +126,9 @@ def test_TableForm():
     '$\\sqrt{x}$ & $\\sin{\\left (x^{2} \\right )}$ \\\\\n'
     '\\end{tabular}'
     )
+
+    s = str(TableForm([[None, "-", 2],[1]], pad='?'))
+    assert s == dedent('''\
+        ? - 2
+        1 ? ?
+        ''')

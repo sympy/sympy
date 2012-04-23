@@ -45,16 +45,40 @@ class TableForm(object):
             wipe_zeros ...  Wipe zeros, don't show them in the table
                             [default: True].
 
+            pad ...         the string to use to indicate a missing value (e.g.
+                            if an element is None or if elements at the end of
+                            a row are missing.
+
         Example:
 
         >>> from sympy import TableForm
         >>> t = TableForm([[5, 7], [4, 2], [10, 3]])
 
         """
+        from sympy import Symbol, S
+        from sympy.core.sympify import SympifyError
+        pad = kwarg.get('pad', None)
         # We only support 2D data. Check the consistency:
         _w = len(data[0])
         _h = len(data)
-        assert all(len(line) == _w for line in data)
+        if pad is None:
+            assert all(len(line) == _w for line in data)
+        else:
+            pad = Symbol(pad)
+            _w = max(len(line) for line in data)
+            for i, line in enumerate(data):
+                if len(line) != _w:
+                    line.extend([pad]*(_w - len(line)))
+                for j, lj in enumerate(line):
+                    if lj is None:
+                        lj = pad
+                    else:
+                        try:
+                            lj = S(lj)
+                        except SympifyError:
+                            lj = Symbol(str(lj))
+                    line[j] = lj
+                data[i] = line
         _lines = Tuple(*data)
 
         headings = kwarg.get("headings", [None, None])
