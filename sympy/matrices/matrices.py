@@ -2237,57 +2237,90 @@ class MatrixBase(object):
 
     def is_anti_symmetric(self, simplify=True):
         """
-        Check if matrix is an antisymmetric matrix,
-        that is a square matrix and is equal to the negative of its transpose.
+        Check if matrix M is an antisymmetric matrix,
+        that is, M is a square matrix with all M[i, j] == -M[j, i].
 
-        By default, simplifications occur before testing anti_symmetry.
-        They can be skipped using 'simplify=False'; while speeding things a bit,
-        this may however induce false negatives.
+        When `simplify=True` (default), the sum M[i, j] + M[j, i] is
+        simplified before testing to see if it is zero. By default,
+        the SymPy simplify function is used. To use a custom function
+        set simplify to a function that accepts a single argument which
+        returns a simplified expression. To skip simplification, set
+        simplify to False but note that although this will be faster,
+        it may induce false negatives.
 
         Examples
         ========
 
-        >>> from sympy import Matrix
+        >>> from sympy import Matrix, symbols
         >>> m = Matrix(2,2,[0, 1, -1, 0])
         >>> m
-        [0, 1]
+        [ 0, 1]
         [-1, 0]
         >>> m.is_anti_symmetric()
         True
-        >>> x,y = symbols('x y')
+        >>> x, y = symbols('x y')
         >>> m = Matrix(2,3,[0, 0, x, -y, 0, 0])
         >>> m
-        [0, 0, x]
+        [ 0, 0, x]
         [-y, 0, 0]
         >>> m.is_anti_symmetric()
         False
 
         >>> from sympy.abc import x, y
-        >>> m1 = Matrix(3,3,[0, x**2 + 2*x + 1, y, -x**2 - 2*x - 1 , 0, x*y, -y, -x*y, 0])
-        >>> m1
-        [         0, x**2 + 2*x + 1,    y]
-        [-x**2 - 2*x - 1,              0, x*y]
-        [        -y,              -x*y, 0]
-        >>> m1.is_anti_symmetric()
+        >>> m = Matrix(3, 3, [0, x**2 + 2*x + 1, y,
+        ...                   -(x + 1)**2 , 0, x*y,
+        ...                   -y, -x*y, 0])
+
+        Simplification of matrix elements is done by default so even
+        though two elements which should be equal and opposite wouldn't
+        pass an equality test, the matrix is still reported as
+        anti-symmetric:
+
+        >>> m[0, 1] == -m[1, 0]
+        False
+        >>> m.is_anti_symmetric()
         True
 
-        If the matrix is already simplified, you may speed-up is_anti_symmetric()
-        test by using 'simplify=False'.
+        If 'simplify=False' is used for the case when a Matrix is already
+        simplified, this will speed things up. Here, we see that without
+        simplification the matrix does not appear anti-symmetric:
 
         >>> m.is_anti_symmetric(simplify=False)
         False
-        >>> m1 = m.expand()
-        >>> m1.is_anti_symmetric(simplify=False)
+
+        But if the matrix were already expanded, then it would appear
+        anti-symmetric and simplification in the is_anti_symmetric routine
+        is not needed:
+
+        >>> m = m.expand()
+        >>> m.is_anti_symmetric(simplify=False)
         True
         """
+        # accept custom simplification
+        simpfunc = simplify if isinstance(simplify, FunctionType) else \
+                   _simplify if simplify else False
+
         if not self.is_square:
             return False
+        n = self.rows
         if simplify:
-            delta = self + self.transpose()
-            delta.simplify()
-            return delta.equals(self.zeros(self.rows, self.cols))
+            for i in xrange(n):
+                # diagonal
+                if not simpfunc(self[i, i]).is_zero:
+                    return False
+                # others
+                for j in xrange(i + 1, n):
+                    diff = self[i, j] + self[j, i]
+                    if not simpfunc(diff).is_zero:
+                        return False
+            return True
         else:
-            return self.equals(-self.transpose())
+            for i in xrange(n):
+                for j in xrange(i, n):
+                    if self[i, j] != -self[j, i]:
+                        return False
+            return True
+
 
     def is_diagonal(self):
         """
@@ -3411,35 +3444,39 @@ class MatrixBase(object):
     def dual(self):
         """
         Returns the dual of a matrix, which is:
-             (1/2)*levicivita(i,j,k,l)*M(k,l) summed over indices k and l
-        Since the levicivita method is anti_symmetric for any pairwise exchange of indices,
-        the dual of a symmetric matrix is the zero matrix.  Strictly speaking the dual
-        defined here assumes that the 'matrix' M is a contravariant anti_symmetric
-        second rank tensor, so that the dual is a covariant second rank tensor.
+
+        `(1/2)*levicivita(i,j,k,l)*M(k,l)` summed over indices `k` and `l`
+
+        Since the levicivita method is anti_symmetric for any pairwise
+        exchange of indices, the dual of a symmetric matrix is the zero
+        matrix. Strictly speaking the dual defined here assumes that the
+        'matrix' `M` is a contravariant anti_symmetric second rank tensor,
+        so that the dual is a covariant second rank tensor.
 
         """
         from sympy import LeviCivita
+
         M, n = self[:,:], self.rows
         work = zeros(n)
-        acum1 = 0
-        acum2 = 0
         if self.is_symmetric():
             return work
-        for i in range(1,n):
-            for j in range(1,n):
-                acum1 = 0
-                for k in range(1,n):
-                    acum1 = acum1 + LeviCivita(i,j,0,k)*M[0,k]
-                work[i,j] = acum1
-                work[j,i] = -acum1
+
+        for i in range(1, n):
+            for j in range(1, n):
+                acum = 0
+                for k in range(1, n):
+                    acum += LeviCivita(i, j, 0, k)*M[0, k]
+                work[i, j] = acum
+                work[j, i] = -acum
 
         for l in range(1,n):
-            acum2 = 0
+            acum = 0
             for a in range(1,n):
                 for b in range(1,n):
-                    acum2 = acum2 -LeviCivita(0,l,a,b)*M[a,b]
-            work[0,l] = acum2/2
-            work[l,0] = -acum2/2
+                    acum += LeviCivita(0, l, a, b)*M[a, b]
+            acum /= 2
+            work[0, l] = -acum
+            work[l, 0] = acum
 
         return work
 
