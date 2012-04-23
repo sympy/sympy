@@ -3,7 +3,6 @@
 from sympy.core import Symbol, Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.core.singleton import S
-from sympy.core.decorators import deprecated
 
 from sympy.assumptions import ask, AppliedPredicate, Q
 from sympy.functions import re, im, Abs
