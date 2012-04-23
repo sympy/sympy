@@ -162,7 +162,7 @@ class TableForm(object):
                 d = [""] + d
             first_line = format_str % tuple(d)
             s.append(first_line)
-            s.append("-" * (len(first_line) - 2) + "\n")
+            s.append("-" * (len(first_line) - 1) + "\n")
         for i, line in enumerate(lines):
             d = [l if self._alignment != 'c' else
                  l.center(column_widths[j]) for j,l in enumerate(line)]
