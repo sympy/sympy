@@ -1,4 +1,5 @@
-from sympy import Wild, Integer
+from sympy import Symbol, Integer, Mul
+from sympy.utilities import numbered_symbols
 from sympy.physics.quantum.circuitutils import *
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
         CGate)
@@ -30,7 +31,7 @@ def test_kmp_table():
     expected_table = [-1, 0, 1, 0, 0]
     assert expected_table == kmp_table(word)
 
-def test_find_subcircuit_with_seq():
+def test_find_subcircuit():
     x = X(0)
     y = Y(0)
     z = Z(0)
@@ -38,7 +39,7 @@ def test_find_subcircuit_with_seq():
     x1 = X(1)
     y1 = Y(1)
 
-    i0 = Wild('i0')
+    i0 = Symbol('i0')
     x_i0 = X(i0)
     y_i0 = Y(i0)
     z_i0 = Z(i0)
@@ -46,38 +47,38 @@ def test_find_subcircuit_with_seq():
 
     circuit = (x, y, z)
 
-    assert find_subcircuit_with_seq(circuit, (x,)) == 0
-    assert find_subcircuit_with_seq(circuit, (x1,)) == -1
-    assert find_subcircuit_with_seq(circuit, (y,)) == 1
-    assert find_subcircuit_with_seq(circuit, (h,)) == -1
-    assert find_subcircuit_with_seq(circuit, (x, h)) == -1
-    assert find_subcircuit_with_seq(circuit, (x, y, z)) == 0
-    assert find_subcircuit_with_seq(circuit, (y, z)) == 1
-    assert find_subcircuit_with_seq(circuit, (x, y, z, h)) == -1
-    assert find_subcircuit_with_seq(circuit, (z, y, x)) == -1
-    assert find_subcircuit_with_seq(circuit, (x,), start=2, end=1) == -1
+    assert find_subcircuit(circuit, (x,)) == 0
+    assert find_subcircuit(circuit, (x1,)) == -1
+    assert find_subcircuit(circuit, (y,)) == 1
+    assert find_subcircuit(circuit, (h,)) == -1
+    assert find_subcircuit(circuit, Mul(x, h)) == -1
+    assert find_subcircuit(circuit, Mul(x, y, z)) == 0
+    assert find_subcircuit(circuit, Mul(y, z)) == 1
+    assert find_subcircuit(Mul(*circuit), (x, y, z, h)) == -1
+    assert find_subcircuit(Mul(*circuit), (z, y, x)) == -1
+    assert find_subcircuit(circuit, (x,), start=2, end=1) == -1
 
     circuit = (x, y, x, y, z)
-    assert find_subcircuit_with_seq(circuit, (x, y, z)) == 2
-    assert find_subcircuit_with_seq(circuit, (x,), start=1) == 2
-    assert find_subcircuit_with_seq(circuit, (x, y), start=1, end=2) == -1
-    assert find_subcircuit_with_seq(circuit, (x, y), start=1, end=3) == -1
-    assert find_subcircuit_with_seq(circuit, (x, y), start=1, end=4) == 2
-    assert find_subcircuit_with_seq(circuit, (x, y), start=2, end=4) == 2
+    assert find_subcircuit(Mul(*circuit), Mul(x, y, z)) == 2
+    assert find_subcircuit(circuit, (x,), start=1) == 2
+    assert find_subcircuit(circuit, (x, y), start=1, end=2) == -1
+    assert find_subcircuit(Mul(*circuit), (x, y), start=1, end=3) == -1
+    assert find_subcircuit(circuit, (x, y), start=1, end=4) == 2
+    assert find_subcircuit(circuit, (x, y), start=2, end=4) == 2
 
     circuit = (x, y, z, x1, x, y, z, h, x, y, x1,
                x, y, z, h, y1, h)
-    assert find_subcircuit_with_seq(circuit, (x, y, z, h, y1)) == 11
+    assert find_subcircuit(circuit, (x, y, z, h, y1)) == 11
 
     circuit = (x, y, x_i0, y_i0, z_i0, z)
-    assert find_subcircuit_with_seq(circuit, (x_i0, y_i0, z_i0)) == 2
+    assert find_subcircuit(circuit, (x_i0, y_i0, z_i0)) == 2
 
     circuit = (x_i0, y_i0, z_i0, x_i0, y_i0, h_i0)
     subcircuit = (x_i0, y_i0, z_i0)
-    result = find_subcircuit_with_seq(circuit, subcircuit)
+    result = find_subcircuit(circuit, subcircuit)
     assert result == 0
 
-def test_replace_subcircuit_with_seq():
+def test_replace_subcircuit():
     x = X(0)
     y = Y(0)
     z = Z(0)
@@ -88,91 +89,91 @@ def test_replace_subcircuit_with_seq():
     # Standard cases
     circuit = (z, y, x, x)
     remove = (z, y, x)
-    assert replace_subcircuit_with_seq(circuit, remove) == (x,)
-    assert replace_subcircuit_with_seq(circuit, remove + (x,)) == ()
-    assert replace_subcircuit_with_seq(circuit, remove, pos=1) == circuit
-    assert replace_subcircuit_with_seq(circuit, remove, pos=0) == (x,)
-    assert replace_subcircuit_with_seq(circuit, (x, x), pos=2) == (z, y)
-    assert replace_subcircuit_with_seq(circuit, (h,)) == circuit
+    assert replace_subcircuit(circuit, Mul(*remove)) == (x,)
+    assert replace_subcircuit(circuit, remove + (x,)) == ()
+    assert replace_subcircuit(circuit, remove, pos=1) == circuit
+    assert replace_subcircuit(circuit, remove, pos=0) == (x,)
+    assert replace_subcircuit(circuit, (x, x), pos=2) == (z, y)
+    assert replace_subcircuit(circuit, (h,)) == circuit
 
     circuit = (x, y, x, y, z)
     remove = (x, y, z)
-    assert replace_subcircuit_with_seq(circuit, remove) == (x, y)
+    assert replace_subcircuit(Mul(*circuit), Mul(*remove)) == (x, y)
     remove = (x, y, x, y)
-    assert replace_subcircuit_with_seq(circuit, remove) == (z,)
+    assert replace_subcircuit(circuit, remove) == (z,)
 
     circuit = (x, h, cgate_z, h, cnot)
     remove = (x, h, cgate_z)
-    assert replace_subcircuit_with_seq(circuit, remove, pos=-1) == (h, cnot)
-    assert replace_subcircuit_with_seq(circuit, remove, pos=1) == circuit
+    assert replace_subcircuit(circuit, Mul(*remove), pos=-1) == (h, cnot)
+    assert replace_subcircuit(circuit, remove, pos=1) == circuit
     remove = (h, h)
-    assert replace_subcircuit_with_seq(circuit, remove) == circuit
+    assert replace_subcircuit(circuit, remove) == circuit
     remove = (h, cgate_z, h, cnot)
-    assert replace_subcircuit_with_seq(circuit, remove) == (x,)
+    assert replace_subcircuit(circuit, remove) == (x,)
 
     replace = (h, x)
-    actual = replace_subcircuit_with_seq(circuit, remove,
+    actual = replace_subcircuit(circuit, remove,
                      replace=replace)
     assert actual == (x, h, x)
 
     circuit = (x, y, h, x, y, z)
     remove = (x, y)
     replace = (cnot, cgate_z)
-    actual = replace_subcircuit_with_seq(circuit, remove,
-                     replace=replace)
+    actual = replace_subcircuit(circuit, remove,
+                     replace=Mul(*replace))
     assert actual == (cnot, cgate_z, h, x, y, z)
 
-    actual = replace_subcircuit_with_seq(circuit, remove,
+    actual = replace_subcircuit(circuit, remove,
                      replace=replace, pos=1)
     assert actual == (x, y, h, cnot, cgate_z, z)
 
-def test_conv2_symb_indices_with_seq():
+def test_convert_to_symbolic_indices():
     (x, y, z, h) = create_gate_sequence()
 
-    i0 = Wild('i0')
+    i0 = Symbol('i0')
     exp_map = {i0 : Integer(0)}
-    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(x)
+    actual, act_map, sndx, gen = convert_to_symbolic_indices((x,))
     assert actual == (X(i0),)
     assert act_map == exp_map
 
     expected = (X(i0), Y(i0), Z(i0), H(i0))
     exp_map = {i0 : Integer(0)}
-    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(x, y, z, h)
+    actual, act_map, sndx, gen = convert_to_symbolic_indices((x, y, z, h))
     assert actual == expected
     assert exp_map == act_map
 
     (x1, y1, z1, h1) = create_gate_sequence(1)
-    i1 = Wild('i1')
+    i1 = Symbol('i1')
 
     expected = (X(i0), Y(i0), Z(i0), H(i0))
     exp_map = {i0 : Integer(1)}
-    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(x1, y1, z1, h1)
+    actual, act_map, sndx, gen = convert_to_symbolic_indices((x1, y1, z1, h1))
     assert actual == expected
     assert act_map == exp_map
 
     expected = (X(i0), Y(i0), Z(i0), H(i0), X(i1), Y(i1), Z(i1), H(i1))
     exp_map = {i0 : Integer(0), i1 : Integer(1)}
-    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(x, y, z, h,
-                                    x1, y1, z1, h1)
+    actual, act_map, sndx, gen = convert_to_symbolic_indices((x, y, z, h,
+                                         x1, y1, z1, h1))
     assert actual == expected
     assert act_map == exp_map
 
     exp_map = {i0 : Integer(1), i1 : Integer(0)}
-    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(x1, y1, z1, h1,
-                                    x, y, z, h)
+    actual, act_map, sndx, gen = convert_to_symbolic_indices(Mul(x1, y1,
+                                         z1, h1, x, y, z, h))
     assert actual == expected
     assert act_map == exp_map
 
     expected = (X(i0), X(i1), Y(i0), Y(i1), Z(i0), Z(i1), H(i0), H(i1))
     exp_map = {i0 : Integer(0), i1 : Integer(1)}
-    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(x, x1, y, y1,
-                                    z, z1, h, h1)
+    actual, act_map, sndx, gen = convert_to_symbolic_indices(Mul(x, x1,
+                                         y, y1, z, z1, h, h1))
     assert actual == expected
     assert act_map == exp_map
 
     exp_map = {i0 : Integer(1), i1 : Integer(0)}
-    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(x1, x, y1, y,
-                                    z1, z, h1, h)
+    actual, act_map, sndx, gen = convert_to_symbolic_indices((x1, x, y1, y,
+                                         z1, z, h1, h))
     assert actual == expected
     assert act_map == exp_map
 
@@ -187,7 +188,7 @@ def test_conv2_symb_indices_with_seq():
     exp_map = {i0 : Integer(0), i1 : Integer(1)}
     args = (x, x1, y, y1, z, z1, h, h1, cnot_10, cnot_01,
             cgate_z_10, cgate_z_01)
-    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(*args)
+    actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
 
@@ -197,61 +198,63 @@ def test_conv2_symb_indices_with_seq():
                 H(i0), H(i1), CNOT(i0, i1), CNOT(i1, i0),
                 CGate(i0, Z(i1)), CGate(i1, Z(i0)))
     exp_map = {i0 : Integer(1), i1 : Integer(0)}
-    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(*args)
+    actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
 
     args = (cnot_10, h, cgate_z_01, h)
     expected = (CNOT(i0, i1), H(i1), CGate(i1, Z(i0)), H(i1))
     exp_map = {i0 : Integer(1), i1 : Integer(0)}
-    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(*args)
+    actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
 
     args = (cnot_01, h1, cgate_z_10, h1)
     exp_map = {i0 : Integer(0), i1 : Integer(1)}
-    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(*args)
+    actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
 
     args = (cnot_10, h1, cgate_z_01, h1)
     expected = (CNOT(i0, i1), H(i0), CGate(i1, Z(i0)), H(i0))
     exp_map = {i0 : Integer(1), i1 : Integer(0)}
-    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(*args)
+    actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
 
-    i2 = Wild('i2')
+    i2 = Symbol('i2')
     ccgate_z = CGate(0, CGate(1, Z(2)))
     ccgate_x = CGate(1, CGate(2, X(0)))
     args = (ccgate_z, ccgate_x)
 
     expected = (CGate(i0, CGate(i1, Z(i2))), CGate(i1, CGate(i2, X(i0))))
     exp_map = {i0 : Integer(0), i1 : Integer(1), i2 : Integer(2)}
-    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(*args)
+    actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
 
     ndx_map = {i0 : Integer(0)}
-    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(*args,
-                                    qubit_map=ndx_map,
-                                    start=i0)
+    index_gen = numbered_symbols(prefix='i', start=1)
+    actual, act_map, sndx, gen = convert_to_symbolic_indices(args,
+                                         qubit_map=ndx_map,
+                                         start=i0,
+                                         gen = index_gen)
     assert actual == expected
     assert act_map == exp_map
 
-    i3 = Wild('i3')
+    i3 = Symbol('i3')
     cgate_x0_c321 = CGate((3,2,1), X(0))
     exp_map = {i0 : Integer(3), i1 : Integer(2),
                i2 : Integer(1), i3 : Integer(0)}
     expected = (CGate((i0, i1, i2), X(i3)),)
     args = (cgate_x0_c321,)
-    actual, act_map, sndx = conv2_symbolic_qubits_with_seq(*args)
+    actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
 
-def test_conv2_real_qubits_with_seq():
-    i0 = Wild('i0')
-    i1 = Wild('i1')
+def test_convert_to_real_indices():
+    i0 = Symbol('i0')
+    i1 = Symbol('i1')
 
     (x, y, z, h) = create_gate_sequence()
 
@@ -259,10 +262,10 @@ def test_conv2_real_qubits_with_seq():
     y_i0 = Y(i0)
     z_i0 = Z(i0)
     
-    qubit_map = {i0 : Integer(0)}
+    qubit_map = {i0 : 0}
     args = (z_i0, y_i0, x_i0)
     expected = (z, y, x)
-    actual = conv2_real_qubits_with_seq(*args, qubit_map=qubit_map)
+    actual = convert_to_real_indices(args, qubit_map)
     assert actual == expected
 
     cnot_10 = CNOT(1,0)
@@ -274,40 +277,40 @@ def test_conv2_real_qubits_with_seq():
     cnot_i0_i1 = CNOT(i0, i1)
     cgate_z_i1_i0 = CGate(i1, Z(i0))
 
-    qubit_map = {i0 : Integer(0), i1 : Integer(1)}
+    qubit_map = {i0 : 0, i1 : 1}
     args = (cnot_i1_i0,)
     expected = (cnot_10,)
-    actual = conv2_real_qubits_with_seq(*args, qubit_map=qubit_map)
+    actual = convert_to_real_indices(args, qubit_map)
     assert actual == expected
 
     args = (cgate_z_i1_i0,)
     expected = (cgate_z_10,)
-    actual = conv2_real_qubits_with_seq(*args, qubit_map=qubit_map)
+    actual = convert_to_real_indices(args, qubit_map)
     assert actual == expected
 
     args = (cnot_i0_i1,)
     expected = (cnot_01,)
-    actual = conv2_real_qubits_with_seq(*args, qubit_map=qubit_map)
+    actual = convert_to_real_indices(args, qubit_map)
     assert actual == expected
 
-    qubit_map = {i0 : Integer(1), i1 : Integer(0)}
+    qubit_map = {i0 : 1, i1 : 0}
     args = (cgate_z_i1_i0,)
     expected = (cgate_z_01,)
-    actual = conv2_real_qubits_with_seq(*args, qubit_map=qubit_map)
+    actual = convert_to_real_indices(args, qubit_map)
     assert actual == expected
 
-    i2 = Wild('i2')
+    i2 = Symbol('i2')
     ccgate_z = CGate(i0, CGate(i1, Z(i2)))
     ccgate_x = CGate(i1, CGate(i2, X(i0)))
 
-    qubit_map = {i0 : Integer(0), i1 : Integer(1), i2 : Integer(2)}
+    qubit_map = {i0 : 0, i1 : 1, i2 : 2}
     args = (ccgate_z, ccgate_x)
     expected = (CGate(0, CGate(1, Z(2))), CGate(1, CGate(2, X(0))))
-    actual = conv2_real_qubits_with_seq(*args, qubit_map=qubit_map)
+    actual = convert_to_real_indices(Mul(*args), qubit_map)
     assert actual == expected
 
-    qubit_map = {i0 : Integer(1), i2 : Integer(0), i1 : Integer(2)}
+    qubit_map = {i0 : 1, i2 : 0, i1 : 2}
     args = (ccgate_x, ccgate_z)
     expected = (CGate(2, CGate(0, X(1))), CGate(1, CGate(2, Z(0))))
-    actual = conv2_real_qubits_with_seq(*args, qubit_map=qubit_map)
+    actual = convert_to_real_indices(args, qubit_map)
     assert actual == expected

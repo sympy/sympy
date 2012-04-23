@@ -4,15 +4,16 @@ TODO:
 * Add wrappers around the seq-based functions to use Mul
 """
 
-from sympy import Wild, Integer, Tuple
+from sympy import Symbol, Integer, Tuple, Mul, sympify
+from sympy.utilities import numbered_symbols
 from sympy.physics.quantum.gate import Gate
 
 __all__ = [
     'kmp_table',
-    'find_subcircuit_with_seq',
-    'replace_subcircuit_with_seq',
-    'conv2_symbolic_qubits_with_seq',
-    'conv2_real_qubits_with_seq'
+    'find_subcircuit',
+    'replace_subcircuit',
+    'convert_to_symbolic_indices',
+    'convert_to_real_indices'
 ]
 
 def kmp_table(word):
@@ -46,7 +47,7 @@ def kmp_table(word):
 
     return table
 
-def find_subcircuit_with_seq(circuit, subcircuit, start=0, end=0):
+def find_subcircuit(circuit, subcircuit, start=0, end=0):
     """Finds the subcircuit in circuit, if it exists.
 
     If the subcircuit exists, the index of the start of
@@ -56,10 +57,10 @@ def find_subcircuit_with_seq(circuit, subcircuit, start=0, end=0):
 
     Parameters
     ==========
-    circuit : tuple, Gate
-        A tuple of Gates representing a quantum circuit
-    subcircuit : tuple, Gate
-        A tuple of Gates to check if circuit contains
+    circuit : tuple, Gate or Mul
+        A tuple of Gates or Mul representing a quantum circuit
+    subcircuit : tuple, Gate or Mul
+        A tuple of Gates or Mul to find in circuit
     start : int
         The location to start looking for subcircuit.
         If start is the same or past end, -1 is returned.
@@ -67,7 +68,36 @@ def find_subcircuit_with_seq(circuit, subcircuit, start=0, end=0):
         The last place to look for a subcircuit.  If end
         is less than 1 (one), then the length of circuit
         is taken to be end.
+
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum.circuitutils import find_subcircuit
+        >>> from sympy.physics.quantum.gate import X, Y, Z, H
+        >>> circuit = X(0)*Z(0)*Y(0)*H(0)
+        >>> subcircuit = Z(0)*Y(0)
+        >>> find_subcircuit(circuit, subcircuit)
+        1
+
+        >>> find_subcircuit(circuit, subcircuit, start=1)
+        1
+
+        >>> find_subcircuit(circuit, subcircuit, start=2)
+        -1
+
+        >>> circuit = circuit*subcircuit
+        >>> find_subcircuit(circuit, subcircuit, start=2)
+        4
+
+        >>> find_subcircuit(circuit, subcircuit, start=2, end=2)
+        -1
     """
+
+    if isinstance(circuit, Mul):
+        circuit = circuit.args
+
+    if isinstance(subcircuit, Mul):
+        subcircuit = subcircuit.args
 
     if len(subcircuit) == 0 or len(subcircuit) > len(circuit):
         return -1
@@ -94,7 +124,7 @@ def find_subcircuit_with_seq(circuit, subcircuit, start=0, end=0):
 
     return -1
 
-def replace_subcircuit_with_seq(circuit, subcircuit, replace=(), pos=0):
+def replace_subcircuit(circuit, subcircuit, replace=None, pos=0):
     """Replaces a subcircuit with another subcircuit in circuit,
     if it exists.
 
@@ -105,11 +135,11 @@ def replace_subcircuit_with_seq(circuit, subcircuit, replace=(), pos=0):
 
     Parameters
     ==========
-    circuit : tuple, Gate
-        A quantum circuit represented by a tuple of Gates
-    subcircuit : tuple, Gate
+    circuit : tuple, Gate or Mul
+        A quantum circuit
+    subcircuit : tuple, Gate or Mul
         The circuit to be replaced
-    replace : tuple, Gate
+    replace : tuple, Gate or Mul
         The replacement circuit
     pos : int
         The location to start search and replace
@@ -118,13 +148,40 @@ def replace_subcircuit_with_seq(circuit, subcircuit, replace=(), pos=0):
         instances exist, and it is desirable to
         replace a specific instance.  If a negative number
         is given, pos will be defaulted to 0.
+
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum.circuitutils import replace_subcircuit
+        >>> from sympy.physics.quantum.gate import X, Y, Z, H
+        >>> circuit = X(0)*Z(0)*Y(0)*H(0)*X(0)*H(0)*Y(0)
+        >>> subcircuit = Z(0)*Y(0)
+        >>> replace_subcircuit(circuit, subcircuit)
+        (X(0), H(0), X(0), H(0), Y(0))
+
+        >>> replace_subcircuit(circuit, subcircuit, pos=1)
+        (X(0), H(0), X(0), H(0), Y(0))
+
+        >>> replace_subcircuit(circuit, subcircuit, pos=2)
+        (X(0), Z(0), Y(0), H(0), X(0), H(0), Y(0))
     """
 
     if pos < 0:
         pos = 0
 
+    if isinstance(circuit, Mul):
+        circuit = circuit.args
+
+    if isinstance(subcircuit, Mul):
+        subcircuit = subcircuit.args
+
+    if isinstance(replace, Mul):
+        replace = replace.args
+    elif replace is None:
+        replace = ()
+
     # Look for the subcircuit starting at pos
-    loc = find_subcircuit_with_seq(circuit, subcircuit, start=pos)
+    loc = find_subcircuit(circuit, subcircuit, start=pos)
 
     # If subcircuit was found
     if loc > -1:
@@ -137,16 +194,13 @@ def replace_subcircuit_with_seq(circuit, subcircuit, replace=(), pos=0):
 
     return circuit
 
-def next_symbolic_index(cur):
-    """Returns the "next" symbolic index."""
+def _sympify_qubit_map(mapping):
+    new_map = {}
+    for key in mapping:
+        new_map[key] = sympify(mapping[key])
+    return new_map
 
-    # Don't really like this approach of converting Wild
-    # to string.  Advise finding to way to deal with it.
-    symb_str = repr(cur)
-    next_ndx = Integer(symb_str[1:len(symb_str)-1]) + 1
-    return Wild('i%r' % next_ndx)
-
-def conv2_symbolic_qubits_with_seq(*seq, **kargs):
+def convert_to_symbolic_indices(seq, start=None, gen=None, qubit_map=None):
     """Returns the circuit with symbolic indices and the
     dictionary mapping symbolic indices to real indices.
 
@@ -154,20 +208,26 @@ def conv2_symbolic_qubits_with_seq(*seq, **kargs):
 
     Parameters
     ==========
-    seq : tuple, Gate/Integer/tuple
-        A tuple of Gate, Integer, or tuple objects
-    kargs : dict
-        A dictionary of optional arguments.  It is only
-        use to pass in an existing mapping of symbolic
-        indices to real indices and a starting symbolic
-        index.  The type of the starting symbolic index
-        must be a Wild.
+    seq : tuple, Gate/Integer/tuple or Mul
+        A tuple of Gate, Integer, or tuple objects, or a Mul
+    start : Symbol
+        An optional starting symbolic index
+    gen : object
+        An optional numbered symbol generator
+    qubit_map : dict
+        An existing mapping of symbolic indices to real indices
 
     All symbolic indices have the format 'i#', where # is
     some number >= 0.
     """
 
-    cur_ndx = Wild('i-1')
+    if isinstance(seq, Mul):
+        seq = seq.args
+
+    # A numbered symbol generator
+    index_gen = numbered_symbols(prefix='i', start=-1)
+    cur_ndx = index_gen.next()
+
     # keys are symbolic indices; values are real indices
     ndx_map = {}
 
@@ -175,19 +235,26 @@ def conv2_symbolic_qubits_with_seq(*seq, **kargs):
         rev_items = lambda item: tuple([item[1], item[0]])
         return dict(map(rev_items, symb_to_real_map.items()))
 
-    if 'start' in kargs:
-        if not isinstance(kargs['start'], Wild):
-            msg = 'Expected Wild for starting index, got %r.' % kargs['start']
+    if start is not None:
+        if not isinstance(start, Symbol):
+            msg = 'Expected Symbol for starting index, got %r.' % start
             raise TypeError(msg)
-        cur_ndx = kargs['start']
+        cur_ndx = start
 
-    if 'qubit_map' in kargs:
-        if not isinstance(kargs['qubit_map'], dict):
+    if gen is not None:
+        if not isinstance(gen, numbered_symbols().__class__):
+            msg = 'Expected a generator, got %r.' % gen
+            raise TypeError(msg)
+        index_gen = gen
+
+    if qubit_map is not None:
+        if not isinstance(qubit_map, dict):
             msg = ('Expected dict for existing map, got ' +
-                   '%r.' % kargs['qubit_map'])
+                   '%r.' % qubit_map)
             raise TypeError(msg)
-        ndx_map = kargs['qubit_map']
+        ndx_map = qubit_map
 
+    ndx_map = _sympify_qubit_map(ndx_map)
     # keys are real indices; keys are symbolic indices
     inv_map = create_inverse_map(ndx_map)
 
@@ -195,18 +262,20 @@ def conv2_symbolic_qubits_with_seq(*seq, **kargs):
     for item in seq:
         # Nested items, so recurse
         if isinstance(item, Gate):
-            sym_item, new_map, cur_ndx = conv2_symbolic_qubits_with_seq(
-                                                 *item.args,
+            result = convert_to_symbolic_indices(item.args,
                                                  qubit_map=ndx_map,
-                                                 start=cur_ndx)
+                                                 start=cur_ndx,
+                                                 gen=index_gen)
+	    sym_item, new_map, cur_ndx, index_gen = result
             ndx_map.update(new_map)
             inv_map = create_inverse_map(ndx_map)
 
         elif isinstance(item, tuple) or isinstance(item, Tuple):
-            sym_item, new_map, cur_ndx = conv2_symbolic_qubits_with_seq(
-                                                 *item,
+            result = convert_to_symbolic_indices(item,
                                                  qubit_map=ndx_map,
-                                                 start=cur_ndx)
+                                                 start=cur_ndx,
+                                                 gen=index_gen)
+	    sym_item, new_map, cur_ndx, index_gen = result
             ndx_map.update(new_map)
             inv_map = create_inverse_map(ndx_map)
 
@@ -214,7 +283,7 @@ def conv2_symbolic_qubits_with_seq(*seq, **kargs):
             sym_item = inv_map[item]
 
         else:
-            cur_ndx = next_symbolic_index(cur_ndx)
+            cur_ndx = gen.next()
             ndx_map[cur_ndx] = item
             inv_map[item] = cur_ndx
             sym_item = cur_ndx
@@ -224,39 +293,49 @@ def conv2_symbolic_qubits_with_seq(*seq, **kargs):
 
         sym_seq = sym_seq + (sym_item,)
 
-    return sym_seq, ndx_map, cur_ndx
+    return sym_seq, ndx_map, cur_ndx, index_gen
 
-def conv2_real_qubits_with_seq(*seq, **kargs):
+def convert_to_real_indices(seq, qubit_map):
     """Returns the circuit with real indices.
 
     Parameters
     ==========
-    seq : tuple, Gate/Integer/tuple
-        A tuple of Gate, Integer, or tuple objects
-    kargs : dict
-        Contains a dictionary mapping symbolic indices to real indices.
+    seq : tuple, Gate/Integer/tuple or Mul
+        A tuple of Gate, Integer, or tuple objects or a Mul
+    qubit_map : dict
+        A dictionary mapping symbolic indices to real indices.
+
+    Examples
+    ========
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.quantum.circuitutils import \
+                    convert_to_real_indices
+        >>> from sympy.physics.quantum.gate import X, Y, Z, H
+        >>> i0 = Symbol('i0'); i1 = Symbol('i1')
+        >>> index_map = {i0 : 0, i1 : 1}
+        >>> convert_to_real_indices(X(i0)*Y(i1)*H(i0)*X(i1), index_map)
+        (X(0), Y(1), H(0), X(1))
     """
 
-    if 'qubit_map' not in kargs:
-        msg = 'Missing dictionary mapping symbolic indices to real indices.'
-        raise ValueError(msg)
+    if isinstance(seq, Mul):
+        seq = seq.args
 
-    if not isinstance(kargs['qubit_map'], dict):
-        msg = 'Expected dict for qubit_map, got %r.' % kargs['qubit_map']
+    if not isinstance(qubit_map, dict):
+        msg = 'Expected dict for qubit_map, got %r.' % qubit_map
         raise TypeError(msg)
 
-    qubit_map = kargs['qubit_map']
-
+    qubit_map = _sympify_qubit_map(qubit_map)
     real_seq = ()
     for item in seq:
         # Nested items, so recurse
         if isinstance(item, Gate):
-            real_item = conv2_real_qubits_with_seq(
-                                *item.args, qubit_map=qubit_map)
+            real_item = convert_to_real_indices(
+                                item.args, qubit_map)
 
         elif isinstance(item, tuple) or isinstance(item, Tuple):
-            real_item = conv2_real_qubits_with_seq(
-                                *item, qubit_map=qubit_map)
+            real_item = convert_to_real_indices(
+                                item, qubit_map)
 
         else:
             real_item = qubit_map[item]
