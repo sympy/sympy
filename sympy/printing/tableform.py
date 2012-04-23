@@ -62,7 +62,11 @@ class TableForm(object):
             _headings = [h1, h2]
 
         alignment = kwarg.get("alignment", "left")
-        _alignment = {'<': 'left', '>': 'right', '^': 'center'}.get(alignment, alignment)
+        _alignment = {'<': 'l', '>': 'r', '^': 'c'}.get(
+                    alignment.strip().lower(), alignment)
+        _alignment = alignment[0] if _alignment else ""
+        if _alignment not in ('l', 'r', 'c'):
+            raise ValueError('alignment "%s" unrecognized' % alignment)
 
         _column_formats = kwarg.get("column_formats", [None]*_w)
 
@@ -72,7 +76,7 @@ class TableForm(object):
         self._h = _h
         self._lines = _lines
         self._headings = _headings
-        self._alignment = _alignment
+        self._alignment = _alignment[0]
         self._column_formats = _column_formats
         self._wipe_zeros = _wipe_zeros
 
@@ -85,7 +89,7 @@ class TableForm(object):
         return sstr(self, order=None)
 
     def as_str(self):
-        # obsolated ?
+        # XXX obsolete ?
         return str(self)
 
     def as_latex(self):
@@ -132,15 +136,10 @@ class TableForm(object):
 
         format_str = []
         for w in column_widths:
-            if self._alignment == "left":
-                align = "-"
-            elif self._alignment == "right":
-                align = ""
-            elif self._alignment == "center":
-                align = ""
-            else:
-                raise NotImplementedError()
-            format_str += ["%" + align + str(w) + "s"]
+            format_str.append(
+                '%%%s%ss' % (
+                    ("-" if self._alignment == "l" else ""),
+                    str(w)))
         format_str = ' '.join(format_str)
         format_str += "\n"
 
@@ -158,7 +157,7 @@ class TableForm(object):
             s.append(first_line)
             s.append("-" * (len(first_line) - 2) + "\n")
         for i, line in enumerate(lines):
-            d = [l if self._alignment != 'center' else
+            d = [l if self._alignment != 'c' else
                  l.center(column_widths[j]) for j,l in enumerate(line)]
             if self._headings[0]:
                 d = [self._headings[0][i]] + d
@@ -182,7 +181,7 @@ class TableForm(object):
         if self._headings[0]:
             self._headings[0] = [str(x) for x in self._headings[0]]
 
-        align_char = {'left': 'l', 'right':'r', 'center':'c'}.get(self._alignment)
+        align_char = self._alignment
         align_list = [align_char] * len(self._lines[0])
         if self._headings[0]:
             align_list = [align_char] + align_list
