@@ -105,3 +105,8 @@ def test_intersection():
     R = QQ.poly_ring(x, y, z, order="ilex")
     assert R.ideal(x, y).intersect(R.ideal(y**2 + y**2*z, z + z*x**3*y)) == \
            R.ideal(y**2, y*z, x*z)
+
+def test_quotient():
+    # SCA, example 1.8.13
+    R = QQ[x, y, z]
+    assert R.ideal(x, y).quotient(R.ideal(y**2, z)) == R.ideal(x, y)

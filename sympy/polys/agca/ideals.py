@@ -142,15 +142,21 @@ class Ideal(object):
             return self._contains_ideal(other)
         return all(self._contains_elem(x) for x in other)
 
-    def quotient(self, J):
+    def quotient(self, J, **opts):
         r"""
         Compute the ideal quotient of ``self`` by ``J``.
 
         That is, if ``self`` is the ideal `I`, compute the set
         `I : J = \{x \in R | xJ \subset I \}`.
+
+        >>> from sympy.abc import x, y
+        >>> from sympy import QQ
+        >>> R = QQ[x, y]
+        >>> R.ideal(x*y).quotient(R.ideal(x))
+        <y>
         """
         self._check_ideal(J)
-        return self._quotient(J)
+        return self._quotient(J, **opts)
 
     def intersect(self, J):
         """
@@ -274,6 +280,11 @@ class ModuleImplementedIdeal(Ideal):
         if not isinstance(J, ModuleImplementedIdeal):
             raise NotImplementedError
         return self.__class__(self.ring, self._module.intersect(J._module))
+
+    def _quotient(self, J, **opts):
+        if not isinstance(J, ModuleImplementedIdeal):
+            raise NotImplementedError
+        return self._module.module_quotient(J._module, **opts)
 
     def _union(self, J):
         if not isinstance(J, ModuleImplementedIdeal):

@@ -361,3 +361,10 @@ def test_intersection():
                  == sum(d*y for d, y in zip(rel2[i], M2.gens))
 
     assert F.submodule([x, y]).intersect(F.submodule([y, x])).is_zero()
+
+def test_quotient():
+    # SCA, example 2.8.6
+    F = QQ[x, y, z].free_module(2)
+    assert F.submodule([x*y, x*z], [y*z, x*y]).module_quotient(
+        F.submodule([y,z], [z,y])) == QQ[x, y, z].ideal(x**2*y**2 - x*y*z**2)
+    assert F.submodule([x, y]).module_quotient(F.submodule()).is_whole_ring()
