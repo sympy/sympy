@@ -2235,6 +2235,93 @@ class MatrixBase(object):
         else:
             return self == self.transpose()
 
+    def is_anti_symmetric(self, simplify=True):
+        """
+        Check if matrix M is an antisymmetric matrix,
+        that is, M is a square matrix with all M[i, j] == -M[j, i].
+
+        When `simplify=True` (default), the sum M[i, j] + M[j, i] is
+        simplified before testing to see if it is zero. By default,
+        the SymPy simplify function is used. To use a custom function
+        set simplify to a function that accepts a single argument which
+        returns a simplified expression. To skip simplification, set
+        simplify to False but note that although this will be faster,
+        it may induce false negatives.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, symbols
+        >>> m = Matrix(2,2,[0, 1, -1, 0])
+        >>> m
+        [ 0, 1]
+        [-1, 0]
+        >>> m.is_anti_symmetric()
+        True
+        >>> x, y = symbols('x y')
+        >>> m = Matrix(2,3,[0, 0, x, -y, 0, 0])
+        >>> m
+        [ 0, 0, x]
+        [-y, 0, 0]
+        >>> m.is_anti_symmetric()
+        False
+
+        >>> from sympy.abc import x, y
+        >>> m = Matrix(3, 3, [0, x**2 + 2*x + 1, y,
+        ...                   -(x + 1)**2 , 0, x*y,
+        ...                   -y, -x*y, 0])
+
+        Simplification of matrix elements is done by default so even
+        though two elements which should be equal and opposite wouldn't
+        pass an equality test, the matrix is still reported as
+        anti-symmetric:
+
+        >>> m[0, 1] == -m[1, 0]
+        False
+        >>> m.is_anti_symmetric()
+        True
+
+        If 'simplify=False' is used for the case when a Matrix is already
+        simplified, this will speed things up. Here, we see that without
+        simplification the matrix does not appear anti-symmetric:
+
+        >>> m.is_anti_symmetric(simplify=False)
+        False
+
+        But if the matrix were already expanded, then it would appear
+        anti-symmetric and simplification in the is_anti_symmetric routine
+        is not needed:
+
+        >>> m = m.expand()
+        >>> m.is_anti_symmetric(simplify=False)
+        True
+        """
+        # accept custom simplification
+        simpfunc = simplify if isinstance(simplify, FunctionType) else \
+                   _simplify if simplify else False
+
+        if not self.is_square:
+            return False
+        n = self.rows
+        if simplify:
+            for i in xrange(n):
+                # diagonal
+                if not simpfunc(self[i, i]).is_zero:
+                    return False
+                # others
+                for j in xrange(i + 1, n):
+                    diff = self[i, j] + self[j, i]
+                    if not simpfunc(diff).is_zero:
+                        return False
+            return True
+        else:
+            for i in xrange(n):
+                for j in xrange(i, n):
+                    if self[i, j] != -self[j, i]:
+                        return False
+            return True
+
+
     def is_diagonal(self):
         """
         Check if matrix is diagonal,
@@ -2293,12 +2380,14 @@ class MatrixBase(object):
         Possible values for "method":
           bareis ... det_bareis
           berkowitz ... berkowitz_det
+          lu_decomposition ... det_LU
 
         See Also
         ========
 
         det_bareis
         berkowitz_det
+        det_LU
         """
 
         # if methods were made internal and all determinant calculations
@@ -2312,6 +2401,8 @@ class MatrixBase(object):
             return self.det_bareis()
         elif method == "berkowitz":
             return self.berkowitz_det()
+        elif method == "det_LU":
+            return self.det_LU_decomposition()
         else:
             raise ValueError("Determinant method unrecognized")
 
@@ -2374,6 +2465,38 @@ class MatrixBase(object):
             det = sign * M[n-1, n-1]
 
         return det.expand()
+
+    def det_LU_decomposition(self):
+        """Compute matrix determinant using LU decomposition
+
+        Note that this method fails if the LU decomposition itself
+        fails. In particular, if the matrix has no inverse this method
+        will fail.
+
+        TODO: Implement algorithm for sparse matrices (SFF).
+
+        See Also
+        ========
+
+        det
+        det_bareis
+        berkowitz_det
+        """
+        if not self.is_square:
+            raise NonSquareMatrixError()
+        if not self:
+            return S.One
+
+        M, n = self[:,:], self.rows
+        p, prod = [] , 1
+        l, u, p = M.LUdecomposition()
+        if  len(p)%2 != 0:
+            prod = -1
+
+        for k in range(n):
+            prod = prod*u[k,k]*l[k,k]
+
+        return prod.expand()
 
     def adjugate(self, method="berkowitz"):
         """
@@ -3317,6 +3440,45 @@ class MatrixBase(object):
                 if i!=j and self[i,j] != 0:
                     return False
         return True
+
+    def dual(self):
+        """
+        Returns the dual of a matrix, which is:
+
+        `(1/2)*levicivita(i,j,k,l)*M(k,l)` summed over indices `k` and `l`
+
+        Since the levicivita method is anti_symmetric for any pairwise
+        exchange of indices, the dual of a symmetric matrix is the zero
+        matrix. Strictly speaking the dual defined here assumes that the
+        'matrix' `M` is a contravariant anti_symmetric second rank tensor,
+        so that the dual is a covariant second rank tensor.
+
+        """
+        from sympy import LeviCivita
+
+        M, n = self[:,:], self.rows
+        work = zeros(n)
+        if self.is_symmetric():
+            return work
+
+        for i in range(1, n):
+            for j in range(1, n):
+                acum = 0
+                for k in range(1, n):
+                    acum += LeviCivita(i, j, 0, k)*M[0, k]
+                work[i, j] = acum
+                work[j, i] = -acum
+
+        for l in range(1,n):
+            acum = 0
+            for a in range(1,n):
+                for b in range(1,n):
+                    acum += LeviCivita(0, l, a, b)*M[a, b]
+            acum /= 2
+            work[0, l] = -acum
+            work[l, 0] = acum
+
+        return work
 
 class MutableMatrix(MatrixBase):
 

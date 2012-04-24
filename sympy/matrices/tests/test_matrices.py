@@ -147,7 +147,12 @@ def test_determinant():
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
 
     for M in [Matrix(), Matrix([[1]])]:
-        assert M.det() == M.det_bareis() == M.berkowitz_det() == 1
+        assert (
+        M.det() ==
+        M.det_bareis() ==
+        M.berkowitz_det() ==
+        M.det_LU_decomposition() ==
+        1)
 
     M = Matrix(( (-3,  2),
                  ( 8, -5) ))
@@ -155,11 +160,13 @@ def test_determinant():
     assert M.det(method="bareis") == -1
     assert M.det(method="berkowitz") == -1
 
+
     M = Matrix(( (x,   1),
                  (y, 2*y) ))
 
     assert M.det(method="bareis") == 2*x*y-y
     assert M.det(method="berkowitz") == 2*x*y-y
+
 
     M = Matrix(( (1, 1, 1),
                  (1, 2, 3),
@@ -167,6 +174,7 @@ def test_determinant():
 
     assert M.det(method="bareis") == 1
     assert M.det(method="berkowitz") == 1
+
 
     M = Matrix(( ( 3, -2,  0, 5),
                  (-2,  1, -2, 2),
@@ -176,6 +184,7 @@ def test_determinant():
     assert M.det(method="bareis") == -289
     assert M.det(method="berkowitz") == -289
 
+
     M = Matrix(( ( 1,  2,  3,  4),
                  ( 5,  6,  7,  8),
                  ( 9, 10, 11, 12),
@@ -183,6 +192,8 @@ def test_determinant():
 
     assert M.det(method="bareis") == 0
     assert M.det(method="berkowitz") == 0
+
+
 
     M = Matrix(( (3, 2, 0, 0, 0),
                  (0, 3, 2, 0, 0),
@@ -193,6 +204,7 @@ def test_determinant():
     assert M.det(method="bareis") == 275
     assert M.det(method="berkowitz") == 275
 
+
     M = Matrix(( (1, 0,  1,  2, 12),
                  (2, 0,  1,  1,  4),
                  (2, 1,  1, -1,  3),
@@ -201,6 +213,7 @@ def test_determinant():
 
     assert M.det(method="bareis") == -55
     assert M.det(method="berkowitz") == -55
+
 
     M = Matrix(( (-5,  2,  3,  4,  5),
                  ( 1, -4,  3,  4,  5),
@@ -211,6 +224,7 @@ def test_determinant():
     assert M.det(method="bareis") == 11664
     assert M.det(method="berkowitz") == 11664
 
+
     M = Matrix(( ( 2,  7, -1, 3, 2),
                  ( 0,  0,  1, 0, 1),
                  (-2,  0,  7, 0, 2),
@@ -220,12 +234,82 @@ def test_determinant():
     assert M.det(method="bareis") == 123
     assert M.det(method="berkowitz") == 123
 
+
     M = Matrix(( (x,y,z),
                  (1,0,0),
                  (y,z,x) ))
 
     assert M.det(method="bareis") == z**2 - x*y
     assert M.det(method="berkowitz") == z**2 - x*y
+
+
+    def test_det_LU_decomposition():
+        x, y, z = symbols('x y z')
+
+    for M in [Matrix(), Matrix([[1]])]:
+        assert M.det(method="det_LU") == 1
+
+    M = Matrix(( (-3,  2),
+                 ( 8, -5) ))
+
+    assert M.det(method="det_LU") == -1
+
+    M = Matrix(( (x,   1),
+                 (y, 2*y) ))
+
+    assert M.det(method="det_LU") == 2*x*y-y
+
+    M = Matrix(( (1, 1, 1),
+                 (1, 2, 3),
+                 (1, 3, 6) ))
+
+    assert M.det(method="det_LU") == 1
+
+    M = Matrix(( ( 3, -2,  0, 5),
+                 (-2,  1, -2, 2),
+                 ( 0, -2,  5, 0),
+                 ( 5,  0,  3, 4) ))
+
+    assert M.det(method="det_LU") == -289
+
+    M = Matrix(( (3, 2, 0, 0, 0),
+                 (0, 3, 2, 0, 0),
+                 (0, 0, 3, 2, 0),
+                 (0, 0, 0, 3, 2),
+                 (2, 0, 0, 0, 3) ))
+
+    assert M.det(method="det_LU") == 275
+
+    M = Matrix(( (1, 0,  1,  2, 12),
+                 (2, 0,  1,  1,  4),
+                 (2, 1,  1, -1,  3),
+                 (3, 2, -1,  1,  8),
+                 (1, 1,  1,  0,  6) ))
+
+    assert M.det(method="det_LU") == -55
+
+    M = Matrix(( (-5,  2,  3,  4,  5),
+                 ( 1, -4,  3,  4,  5),
+                 ( 1,  2, -3,  4,  5),
+                 ( 1,  2,  3, -2,  5),
+                 ( 1,  2,  3,  4, -1) ))
+
+    assert M.det(method="det_LU") == 11664
+
+    M = Matrix(( ( 2,  7, -1, 3, 2),
+                 ( 0,  0,  1, 0, 1),
+                 (-2,  0,  7, 0, 2),
+                 (-3, -2,  4, 5, 3),
+                 ( 1,  0,  0, 0, 1) ))
+
+    assert M.det(method="det_LU") == 123
+
+    M = Matrix(( (x,y,z),
+                 (1,0,0),
+                 (y,z,x) ))
+
+    assert M.det(method="det_LU") == z**2 - x*y
+
 
 def test_berkowitz_minors():
     B = Matrix(2, 2, [1, 2, 2, 1])
@@ -1706,6 +1790,8 @@ def test_errors():
         lambda: Matrix([[1, 2, 3],[4, 5, 6],[7,  8, 9]])**(0.5))
     raises(IndexError, lambda: eye(3)[5,2])
     raises(IndexError, lambda: eye(3)[2,5])
+    M = Matrix(((1,2,3,4),(5,6,7,8),(9,10,11,12),(13,14,15,16)))
+    raises(ValueError, lambda: M.det('method=LU_decomposition()'))
 
 def test_len():
     assert len(Matrix()) == 0
@@ -2138,3 +2224,41 @@ def test_simplify():
     raw = m.rref(simplify=lambda x: x)[0]
     assert raw != \
            m.rref(simplify=True)[0]
+
+def test_dual():
+    B_x, B_y, B_z, E_x, E_y, E_z = symbols('B_x B_y B_z E_x E_y E_z',real=True)
+    F =  Matrix((
+    (0,E_x,E_y,E_z),
+    (-E_x,0,B_z,-B_y),
+    (-E_y,-B_z,0,B_x),
+    (-E_z,B_y,-B_x,0)
+    ))
+    Fd = Matrix( (
+    (0,-B_x,-B_y,-B_z),
+    (B_x,0,E_z,-E_y),
+    (B_y,-E_z,0,E_x),
+    (B_z,E_y,-E_x,0)) )
+    assert F.dual().equals(Fd)
+    assert eye(3).dual().equals(zeros(3))
+    assert F.dual().dual().equals(-F)
+
+def test_anti_symmetric():
+    x, y = symbols('x y')
+    assert Matrix([1, 2]).is_anti_symmetric() is False
+    m = Matrix(3, 3, [0, x**2 + 2*x + 1, y,
+                      -(x + 1)**2 , 0, x*y,
+                      -y, -x*y, 0])
+    assert m.is_anti_symmetric() is True
+    assert m.is_anti_symmetric(simplify=False) is False
+    assert m.is_anti_symmetric(simplify=lambda x: x) is False
+
+    # tweak to fail
+    m[2, 1] = -m[2, 1]
+    assert m.is_anti_symmetric() is False
+    # untweak
+    m[2, 1] = -m[2, 1]
+
+    m = m.expand()
+    assert m.is_anti_symmetric(simplify=False) is True
+    m[0, 0] = 1
+    assert m.is_anti_symmetric() is False
