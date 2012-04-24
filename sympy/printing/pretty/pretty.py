@@ -1133,8 +1133,12 @@ class PrettyPrinter(Printer):
             return self.emptyPrinter(expr)
 
     def _print_ProductSet(self, p):
-        prod_char = u'\xd7'
-        return self._print_seq(p.sets, None, None, ' %s '%prod_char,
+        if len(set(p.sets)) == 1 and len(p.sets) > 1:
+            from sympy import Pow
+            return self._print(Pow(p.sets[0], len(p.sets), evaluate=False))
+        else:
+            prod_char = u'\xd7'
+            return self._print_seq(p.sets, None, None, ' %s '%prod_char,
                 parenthesize = lambda set:set.is_Union or set.is_Intersection)
 
     def _print_FiniteSet(self, s):
