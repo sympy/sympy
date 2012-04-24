@@ -934,3 +934,7 @@ def test_prudnikov_fail_other():
 
     # XXX this does not *evaluate* right??
     assert can_do([], [a, a + S.Half, 2*a-1])
+
+def test_bug():
+    h = hyper([-1, 1], [z], -1)
+    assert hyperexpand(h) == (z + 1)/z
