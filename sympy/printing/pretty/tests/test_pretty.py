@@ -7,7 +7,7 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
     Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict,
     euler, groebner, catalan, Product, KroneckerDelta, Ei, expint, Shi, Chi, Si,
-    Ci, Segment, Ray)
+    Ci, Segment, Ray, FiniteSet)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -2403,6 +2403,14 @@ def test_any_object_in_sequence():
     assert upretty(expr2) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
 
 def test_pretty_sets():
+    s = FiniteSet
+    assert pretty(s([x*y, x**2])) == \
+"""\
+  2      \n\
+{x , x*y}\
+"""
+    assert pretty(s(range(1, 6))) == "{1, 2, 3, 4, 5}"
+    assert pretty(s(range(1, 13))) == "{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
     for s in (frozenset, set):
         assert pretty(s([x*y, x**2])) == \
 """\

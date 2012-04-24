@@ -240,13 +240,8 @@ def test_latex_integrals():
     assert latex(Integral(x, x, y, (z, 0, 1))) == \
         r"\int_{0}^{1}\int\int x\, dx\, dy\, dz"
 
-def test_latex_finiteset():
-    assert latex(FiniteSet(range(1, 51))) == \
-            r"\left\{1, 2, 3, \ldots, 48, 49, 50\right\}"
-    assert latex(FiniteSet(range(1, 6))) == r"\left\{1, 2, 3, 4, 5\right\}"
-
 def test_latex_sets():
-    for s in (frozenset, set):
+    for s in (FiniteSet, frozenset, set):
         assert latex(s([x*y, x**2])) == r"\left\{x^{2}, x y\right\}"
         assert latex(s(range(1, 6))) == r"\left\{1, 2, 3, 4, 5\right\}"
         assert latex(s(range(1, 13))) == \

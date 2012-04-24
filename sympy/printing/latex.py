@@ -987,13 +987,7 @@ class LatexPrinter(Printer):
                 return 'Domain on ' + self._print(d.symbols)
 
     def _print_FiniteSet(self, s):
-        if len(s) > 10:
-            printset = s.args[:3] + (r"\ldots",) + s.args[-3:]
-        else:
-            printset = s.args
-        return (r"\left\{"
-              + r", ".join(self._print(el) for el in printset)
-              + r"\right\}")
+        return self._print_set(s.args)
 
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
