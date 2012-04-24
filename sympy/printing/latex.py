@@ -975,7 +975,6 @@ class LatexPrinter(Printer):
 
     def _print_ProductSet(self, p):
         if len(set(p.sets)) == 1 and len(p.sets) > 1:
-            from sympy import Pow
             return self._print(p.sets[0]) + "^%d"%len(p.sets)
         else:
             return r" \times ".join(self._print(set) for set in p.sets)
