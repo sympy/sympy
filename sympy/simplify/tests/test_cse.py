@@ -182,3 +182,9 @@ def test_pow_invpow():
         ([(x0, x**2)], [(1 + 1/x0)/x0])
     assert cse(x**(2*y) + x**(-2*y)) == \
         ([(x0, x**(2*y))], [x0 + 1/x0])
+
+def test_postprocess():
+    eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
+    assert cse([eq, Eq(x, z + 1), z - 2],
+           postprocess=cse_main.cse_separate) == \
+    [[(x0, y + 1), (x, z + 1), (x1, x + 1)], [x1 + exp(x1/x0) + cos(x0), z - 2]]

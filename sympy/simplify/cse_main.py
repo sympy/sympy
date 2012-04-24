@@ -26,18 +26,9 @@ import cse_opts
 
 cse_optimizations = list(cse_opts.default_optimizations)
 
-# sometimes we want the output in a different format; here are
-# some common idioms
-# ============================================================
-
-# reverse reps so they are ready to use in a subs call to restore
-# an expression
-cse_reversed = lambda r, e: [list(reversed(r)), e]
-
-# return a single dictionary and the single expression
-# from cse(expr); the replacement dictionary can be used with
-# xreplace
-cse_dict_expr = lambda r, e: [dict(r), e[0]]
+# sometimes we want the output in a different format; non-trivial
+# transformations can be put here for users
+# ===============================================================
 
 def reps_toposort(r):
     """Sort replacements `r` so (k1, v1) appears before (k2, v2)
