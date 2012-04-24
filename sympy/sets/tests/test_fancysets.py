@@ -1,4 +1,4 @@
-from sympy.sets.fancysets import TransformationSet, RangeSet
+from sympy.sets.fancysets import TransformationSet, Range
 from sympy.core.sets import FiniteSet, Interval
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
         Rational, sqrt)
@@ -79,49 +79,49 @@ def test_transformation_iterator_not_injetive():
     # No repeats here
     assert (i.next(), i.next(), i.next(), i.next()) == (0, 2, 4, 6)
 
-def test_RangeSet():
-    assert RangeSet(5) == RangeSet(0, 5) == RangeSet(0, 5, 1)
+def test_Range():
+    assert Range(5) == Range(0, 5) == Range(0, 5, 1)
 
-    r = RangeSet(10, 20, 2)
+    r = Range(10, 20, 2)
     assert 12 in r
     assert 8 not in r
     assert 11 not in r
     assert 30 not in r
 
-    assert list(RangeSet(0, 5)) == range(5)
-    assert list(RangeSet(5, 0, -1)) == range(1, 6)
+    assert list(Range(0, 5)) == range(5)
+    assert list(Range(5, 0, -1)) == range(1, 6)
 
-    assert RangeSet(5, 15).sup == 14
-    assert RangeSet(5, 15).inf == 5
-    assert RangeSet(15, 5, -1).sup == 15
-    assert RangeSet(15, 5, -1).inf == 6
-    assert RangeSet(10, 67, 10).sup == 60
-    assert RangeSet(60, 7, -10).inf == 10
+    assert Range(5, 15).sup == 14
+    assert Range(5, 15).inf == 5
+    assert Range(15, 5, -1).sup == 15
+    assert Range(15, 5, -1).inf == 6
+    assert Range(10, 67, 10).sup == 60
+    assert Range(60, 7, -10).inf == 10
 
-    assert len(RangeSet(10, 38, 10)) == 3
+    assert len(Range(10, 38, 10)) == 3
 
-    assert RangeSet(0, 0, 5) == S.EmptySet
+    assert Range(0, 0, 5) == S.EmptySet
 
 
 def test_range_interval_intersection():
     # Intersection with intervals
-    assert FiniteSet(RangeSet(0, 10, 1).intersect(Interval(2, 6))) == \
+    assert FiniteSet(Range(0, 10, 1).intersect(Interval(2, 6))) == \
             FiniteSet(2, 3, 4, 5, 6)
 
     # Open Intervals are removed
-    assert (FiniteSet(RangeSet(0, 10, 1).intersect(Interval(2, 6, True, True)))
+    assert (FiniteSet(Range(0, 10, 1).intersect(Interval(2, 6, True, True)))
             == FiniteSet(3, 4, 5))
 
     # Try this with large steps
-    assert (FiniteSet(RangeSet(0, 100, 10).intersect(Interval(15, 55))) ==
+    assert (FiniteSet(Range(0, 100, 10).intersect(Interval(15, 55))) ==
             FiniteSet(20, 30, 40, 50))
 
     # Going backwards
-    assert FiniteSet(RangeSet(10, -9, -3).intersect(Interval(-5, 6))) == \
+    assert FiniteSet(Range(10, -9, -3).intersect(Interval(-5, 6))) == \
             FiniteSet(-5, -2, 1, 4)
-    assert FiniteSet(RangeSet(10, -9, -3).intersect(Interval(-5, 6, True))) == \
+    assert FiniteSet(Range(10, -9, -3).intersect(Interval(-5, 6, True))) == \
             FiniteSet(-2, 1, 4)
 
 def test_fun():
     assert (FiniteSet(TransformationSet(Lambda(x, sin(pi*x/4)),
-        RangeSet(-10,11))) == FiniteSet(-1, -sqrt(2)/2, 0, sqrt(2)/2, 1))
+        Range(-10,11))) == FiniteSet(-1, -sqrt(2)/2, 0, sqrt(2)/2, 1))

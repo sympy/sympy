@@ -179,21 +179,21 @@ class TransformationSet(Set):
     def is_iterable(self):
         return self.base_set.is_iterable
 
-class RangeSet(Set):
+class Range(Set):
     """
     Represents a range of integers.
 
     Examples
     ========
 
-        >>> from sympy import RangeSet
-        >>> list(RangeSet(5)) # 0 to 5
+        >>> from sympy import Range
+        >>> list(Range(5)) # 0 to 5
         [0, 1, 2, 3, 4]
-        >>> list(RangeSet(10, 15)) # 10 to 15
+        >>> list(Range(10, 15)) # 10 to 15
         [10, 11, 12, 13, 14]
-        >>> list(RangeSet(10, 20, 2)) # 10 to 20 in steps of 2
+        >>> list(Range(10, 20, 2)) # 10 to 20 in steps of 2
         [10, 12, 14, 16, 18]
-        >>> list(RangeSet(20, 10, -2)) # 20 to 10 backward in steps of 2
+        >>> list(Range(20, 10, -2)) # 20 to 10 backward in steps of 2
         [12, 14, 16, 18, 20]
 
     """
@@ -207,14 +207,14 @@ class RangeSet(Set):
         try:
             start, stop, step = [S(int_tested(w)) for w in (start, stop, step)]
         except ValueError:
-            raise ValueError("Inputs to RangeSet must be Integer Valued\n"+
+            raise ValueError("Inputs to Range must be Integer Valued\n"+
                     "Use TransformationSets of Ranges for other cases")
         n = ceiling((stop - start)/step)
         if n <= 0:
             return S.EmptySet
 
         # normalize args: regardless of how they are entered they will show
-        # canonically as RangeSet(inf, sup, step) with step > 0
+        # canonically as Range(inf, sup, step) with step > 0
         start, stop = sorted((start, start + (n - 1)*step))
         step = abs(step)
 
@@ -243,7 +243,7 @@ class RangeSet(Set):
             if off:
                 inf += self.step - off
 
-            return RangeSet(inf, sup + 1, self.step)
+            return Range(inf, sup + 1, self.step)
 
         if other == S.Naturals:
             return self._intersect(Interval(1, oo))
