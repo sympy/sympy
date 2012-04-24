@@ -1137,11 +1137,8 @@ class PrettyPrinter(Printer):
                 parenthesize = lambda set:set.is_Union or set.is_Intersection)
 
     def _print_FiniteSet(self, s):
-        if len(s) > 10:
-            printset = s.args[:3] + ('...',) + s.args[-3:]
-        else:
-            printset = s.args
-        return self._print_seq(printset, '{', '}', ', ' )
+        items = sorted(s.args, key=default_sort_key)
+        return self._print_seq(items, '{', '}', ', ' )
 
     def _print_Interval(self, i):
         if i.start == i.end:
@@ -1251,7 +1248,8 @@ class PrettyPrinter(Printer):
 
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
-        pretty = self._print_seq(items, '(', ')')
+        pretty = self._print_seq(items, '[', ']')
+        pretty = prettyForm(*pretty.parens('(', ')', ifascii_nougly=True))
         pretty = prettyForm(*stringPict.next(type(s).__name__, pretty))
         return pretty
 
