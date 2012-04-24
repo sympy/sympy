@@ -1040,6 +1040,9 @@ class LatexPrinter(Printer):
     def _print_Integers(self, i):
         return r"\mathbb{Z}"
 
+    def _print_Reals(self, i):
+        return r"\mathbb{R}"
+
     def _print_TransformationSet(self, s):
         return r"\left\{%s\; |\; %s \in %s\right\}"%(
                 self._print(s.lamda.expr),

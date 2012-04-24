@@ -346,6 +346,10 @@ def test_sympy__sets__fancysets__Integers():
     from sympy.sets.fancysets import Integers
     assert _test_args(Integers())
 
+def test_sympy__sets__fancysets__Reals():
+    from sympy.sets.fancysets import Reals
+    assert _test_args(Reals())
+
 def test_sympy__sets__fancysets__TransformationSet():
     from sympy.sets.fancysets import TransformationSet
     from sympy import S, Lambda, Symbol

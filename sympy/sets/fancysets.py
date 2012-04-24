@@ -114,6 +114,11 @@ class Integers(Set):
     def _sup(self):
         return oo
 
+class Reals(Interval):
+    __metaclass__ = Singleton
+    def __new__(cls):
+        return Interval.__new__(cls, -oo, oo)
+
 class TransformationSet(Set):
     """
     A set that is a transformation of another through some algebraic expression
