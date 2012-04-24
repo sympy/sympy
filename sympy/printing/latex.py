@@ -996,7 +996,7 @@ class LatexPrinter(Printer):
 
     _print_frozenset = _print_set
 
-    def _print_RangeSet(self, s):
+    def _print_Range(self, s):
         if len(s) > 4:
             it = iter(s)
             printset = it.next(), it.next(), '\ldots', s._last_element
