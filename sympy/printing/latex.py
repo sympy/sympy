@@ -974,7 +974,11 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_ProductSet(self, p):
-        return r" \times ".join(self._print(set) for set in p.sets)
+        if len(set(p.sets)) == 1 and len(p.sets) > 1:
+            from sympy import Pow
+            return self._print(p.sets[0]) + "^%d"%len(p.sets)
+        else:
+            return r" \times ".join(self._print(set) for set in p.sets)
 
     def _print_RandomDomain(self, d):
         try:
