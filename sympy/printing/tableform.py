@@ -33,29 +33,32 @@ class TableForm(object):
 
         Parameters:
 
-            data ...        2D data to be put into the table; data can be
+            data ...
+                            2D data to be put into the table; data can be
                             given as a Matrix
 
-            headings ...    gives the labels for rows and columns:
+            headings ...
+                            gives the labels for rows and columns:
 
                             Can be a single argument that applies to both
                             dimensions:
-                                None ... no labels
-                                "automatic" ... labels are 1, 2, 3, ...
+
+                                - None ... no labels
+                                - "automatic" ... labels are 1, 2, 3, ...
 
                             Can be a list of labels for rows and columns:
                             The lables for each dimension can be given
-                            as None, "automatic", or [l1, l2, ...]
-                                e.g. ["automatic", None] will number the
-                                rows
+                            as None, "automatic", or [l1, l2, ...] e.g.
+                            ["automatic", None] will number the rows
 
                             [default: None]
 
-            alignments ...  alignment of the columns controlled given as:
+            alignments ...
+                            alignment of the columns with:
 
-                                "left" or "<"
-                                "center" or "^"
-                                "right" or ">"
+                                - "left" or "<"
+                                - "center" or "^"
+                                - "right" or ">"
 
                             When given as a single value, the value is used for
                             all columns. The row headings (if given) will be
@@ -64,26 +67,30 @@ class TableForm(object):
 
                             [default: "left"]
 
-            formats ...     a list of format strings or functions that accept
+            formats ...
+                            a list of format strings or functions that accept
                             3 arguments (entry, row number, col number) and
                             return a string for the table entry. (If a function
                             returns None then the _print method will be used.)
 
-            wipe_zeros ...  Don't show zeros in the table.
+            wipe_zeros ...
+                            Don't show zeros in the table.
 
                             [default: True]
 
-            pad ...         the string to use to indicate a missing value (e.g.
+            pad ...
+                            the string to use to indicate a missing value (e.g.
                             elements that are None or those that are missing
                             from the end of a row (i.e. any row that is shorter
                             than the rest is assumed to have missing values).
-                            When None, nothing will be shown for values in
-                            that are missing from the end of a row but values
-                            that are None will be shown.
+                            When None, nothing will be shown for values that
+                            are missing from the end of a row; values that are
+                            None, however, will be shown.
 
                             [default: None]
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import TableForm, Matrix
         >>> TableForm([[5, 7], [4, 2], [10, 3]])
