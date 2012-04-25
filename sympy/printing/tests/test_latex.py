@@ -272,8 +272,11 @@ def test_latex_union():
 
 def test_latex_productset():
     line = Interval(0,1)
-    assert latex(line**2) == r"%s \times %s"%(latex(line), latex(line))
-    assert latex(line**3) == r"%s \times %s \times %s"%((latex(line),)*3)
+    bigline = Interval(0, 10)
+    fset = FiniteSet(1, 2, 3)
+    assert latex(line**2) == r"%s^2"%latex(line)
+    assert latex(line * bigline * fset) == r"%s \times %s \times %s"%(
+            latex(line), latex(bigline), latex(fset))
 
 def test_latex_Naturals():
     assert latex(S.Naturals) == r"\mathbb{N}"
