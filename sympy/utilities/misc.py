@@ -9,7 +9,7 @@ from textwrap import fill, dedent
 # put a \n as the first line and fill replaces \n with spaces
 # so we strip off any leading and trailing \n since printed wrapped
 # text should not have leading or trailing spaces.
-filldedent = lambda s: '\n' + fill(dedent(s).strip('\n'))
+filldedent = lambda s, w=70: '\n' + fill(dedent(str(s)).strip('\n'), width=w)
 
 def default_sort_key(item, order=None):
     """A default sort key for lists of SymPy objects to pass to functions
