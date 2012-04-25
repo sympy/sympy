@@ -8,11 +8,22 @@ class TableForm(object):
 
     Example::
 
-        >>> from sympy import TableForm
-        >>> t = TableForm([[5, 7], [4, 2], [10, 3]])
+    >>> from sympy import TableForm
+    >>> t = TableForm([[5, 7], [4, 2], [10, 3]])
+    >>> print t
+    5  7
+    4  2
+    10 3
 
-    Then use "print t" to print the table. You can use the SymPy's printing
-    system to produce tables in any format (ascii, latex, html, ...).
+    You can use the SymPy's printing system to produce tables in any
+    format (ascii, latex, html, ...).
+
+    >>> print t.as_latex()
+    \\begin{tabular}{l l}
+    $5$ & $7$ \\\\
+    $4$ & $2$ \\\\
+    $10$ & $3$ \\\\
+    \end{tabular}
 
     """
 
@@ -22,63 +33,107 @@ class TableForm(object):
 
         Parameters:
 
-            data ...        2D data to be put into the table
+            data ...        2D data to be put into the table; data can be
+                            given as a Matrix
 
-            headings ...    gives the labels for entries in each dimension:
-                            None ... no labels in any dimension
-                            "automatic" ... gives successive integer labels
-                            [[l1, l2, ...], ...] gives labels for each entry in
-                                each dimension (can be None for some dimension)
-                            [default: (None, None)]
+            headings ...    gives the labels for rows and columns:
 
-            alignment ...   alignment of the columns controlled by values;
-                            "left" or "<"
-                            "center" or "^"
-                            "right" or ">"
-                            [default: left]
+                            Can be a single argument that applies to both
+                            dimensions:
+                                None ... no labels
+                                "automatic" ... labels are 1, 2, 3, ...
+
+                            Can be a list of labels for rows and columns:
+                            The lables for each dimension can be given
+                            as None, "automatic", or [l1, l2, ...]
+                                e.g. ["automatic", None] will number the
+                                rows
+
+                            [default: None]
+
+            alignments ...  alignment of the columns controlled given as:
+
+                                "left" or "<"
+                                "center" or "^"
+                                "right" or ">"
+
+                            When given as a single value, the value is used for
+                            all columns. The row headings (if given) will be
+                            right justified unless an explicit alignment is
+                            given for it and all other columns.
+
+                            [default: "left"]
 
             formats ...     a list of format strings or functions that accept
                             3 arguments (entry, row number, col number) and
                             return a string for the table entry. (If a function
                             returns None then the _print method will be used.)
 
-            wipe_zeros ...  Wipe zeros, don't show them in the table
-                            [default: True].
+            wipe_zeros ...  Don't show zeros in the table.
+
+                            [default: True]
 
             pad ...         the string to use to indicate a missing value (e.g.
-                            if an element is None or if elements at the end of
-                            a row are missing.
+                            elements that are None or those that are missing
+                            from the end of a row (i.e. any row that is shorter
+                            than the rest is assumed to have missing values).
+                            When None, nothing will be shown for values in
+                            that are missing from the end of a row but values
+                            that are None will be shown.
+
+                            [default: None]
 
         Example:
 
-        >>> from sympy import TableForm
-        >>> t = TableForm([[5, 7], [4, 2], [10, 3]])
-
+        >>> from sympy import TableForm, Matrix
+        >>> TableForm([[5, 7], [4, 2], [10, 3]])
+        5  7
+        4  2
+        10 3
+        >>> TableForm([list('.'*i) for i in range(1, 4)], headings='automatic')
+          | 1 2 3
+        ---------
+        1 | .
+        2 | . .
+        3 | . . .
+        >>> TableForm([['.'*(j if not i%2 else 1) for i in range(3)]
+        ...            for j in range(4)], alignments='rcl')
+            .
+          . . .
+         .. . ..
+        ... . ...
         """
-        from sympy import Symbol, S
+        from sympy import Symbol, S, Matrix
         from sympy.core.sympify import SympifyError
-        pad = kwarg.get('pad', None)
+
         # We only support 2D data. Check the consistency:
+        if isinstance(data, Matrix):
+            data = data.tolist()
         _w = len(data[0])
         _h = len(data)
+
+        # fill out any short lines
+        pad = kwarg.get('pad', None)
+        ok_None = False
         if pad is None:
-            assert all(len(line) == _w for line in data)
-        else:
-            pad = Symbol(pad)
-            _w = max(len(line) for line in data)
-            for i, line in enumerate(data):
-                if len(line) != _w:
-                    line.extend([pad]*(_w - len(line)))
-                for j, lj in enumerate(line):
-                    if lj is None:
+            pad = " "
+            ok_None = True
+        pad = Symbol(pad)
+        _w = max(len(line) for line in data)
+        for i, line in enumerate(data):
+            if len(line) != _w:
+                line.extend([pad]*(_w - len(line)))
+            for j, lj in enumerate(line):
+                if lj is None:
+                    if not ok_None:
                         lj = pad
-                    else:
-                        try:
-                            lj = S(lj)
-                        except SympifyError:
-                            lj = Symbol(str(lj))
-                    line[j] = lj
-                data[i] = line
+                else:
+                    try:
+                        lj = S(lj)
+                    except SympifyError:
+                        lj = Symbol(str(lj))
+                line[j] = lj
+            data[i] = line
         _lines = Tuple(*data)
 
         headings = kwarg.get("headings", [None, None])
@@ -92,12 +147,34 @@ class TableForm(object):
                 h2 = range(1, _w + 1)
             _headings = [h1, h2]
 
-        alignment = kwarg.get("alignment", "left")
-        _alignment = {'<': 'l', '>': 'r', '^': 'c'}.get(
-                    alignment.strip().lower(), alignment)
-        _alignment = alignment[0] if _alignment else ""
-        if _alignment not in ('l', 'r', 'c'):
-            raise ValueError('alignment "%s" unrecognized' % alignment)
+        allow = ('l', 'r', 'c')
+        alignments = kwarg.get("alignments", "l")
+        def _std_align(a):
+            a = a.strip().lower()
+            if len(a) > 1:
+                return {'left': 'l', 'right': 'r', 'center': 'c'}.get(a, a)
+            else:
+                return {'<': 'l', '>': 'r', '^': 'c'}.get(a, a)
+        std_align = _std_align(alignments)
+        if std_align in allow:
+            _alignments = [std_align]*_w
+        else:
+            _alignments = []
+            for a in alignments:
+                std_align = _std_align(a)
+                _alignments.append(std_align)
+                if std_align not in ('l', 'r', 'c'):
+                    raise ValueError('alignment "%s" unrecognized' %
+                        alignments)
+        if _headings[0] and len(_alignments) == _w + 1:
+            _head_align = _alignments[0]
+            _alignments = _alignments[1:]
+        else:
+            _head_align = 'r'
+        if len(_alignments) != _w:
+            raise ValueError(
+            'wrong number of alignments: expected %s but got %s' %
+            (_w, len(_alignments)))
 
         _column_formats = kwarg.get("formats", [None]*_w)
 
@@ -107,7 +184,8 @@ class TableForm(object):
         self._h = _h
         self._lines = _lines
         self._headings = _headings
-        self._alignment = _alignment[0]
+        self._head_align = _head_align
+        self._alignments = _alignments
         self._column_formats = _column_formats
         self._wipe_zeros = _wipe_zeros
 
@@ -118,6 +196,27 @@ class TableForm(object):
     def __str__(self):
         from str import sstr
         return sstr(self, order=None)
+
+    def as_matrix(self):
+        """Returns the data of the table in Matrix form.
+
+        Examples
+        ========
+        >>> from sympy import TableForm
+        >>> t = TableForm([[5, 7], [4, 2], [10, 3]], headings='automatic')
+        >>> t
+          | 1  2
+        --------
+        1 | 5  7
+        2 | 4  2
+        3 | 10 3
+        >>> t.as_matrix()
+        [ 5, 7]
+        [ 4, 2]
+        [10, 3]
+        """
+        from sympy import Matrix
+        return Matrix(self._lines)
 
     def as_str(self):
         # XXX obsolete ?
@@ -154,6 +253,10 @@ class TableForm(object):
             lines.append(new_line)
 
         # Check heading:
+        if self._headings[0]:
+            self._headings[0] = [str(x) for x in self._headings[0]]
+            _head_width = max([len(x) for x in self._headings[0]])
+
         if self._headings[1]:
             new_line = []
             for i in range(self._w):
@@ -166,18 +269,16 @@ class TableForm(object):
             self._headings[1] = new_line
 
         format_str = []
-        for w in column_widths:
-            format_str.append(
-                '%%%s%ss' % (
-                    ("-" if self._alignment == "l" else ""),
-                    str(w)))
-        format_str = ' '.join(format_str)
-        format_str += "\n"
-
+        def _align(align, w):
+            return '%%%s%ss' % (
+                    ("-" if align == "l" else ""),
+                    str(w))
+        format_str = [_align(align, w) for align, w in
+                      zip(self._alignments, column_widths)]
         if self._headings[0]:
-            self._headings[0] = [str(x) for x in self._headings[0]]
-            heading_width = max([len(x) for x in self._headings[0]])
-            format_str = "%" + str(heading_width) + "s | " + format_str
+            format_str.insert(0, _align(self._head_align, _head_width))
+            format_str.insert(1,'|')
+        format_str = ' '.join(format_str) + '\n'
 
         s = []
         if self._headings[1]:
@@ -188,12 +289,15 @@ class TableForm(object):
             s.append(first_line)
             s.append("-" * (len(first_line) - 1) + "\n")
         for i, line in enumerate(lines):
-            d = [l if self._alignment != 'c' else
+            d = [l if self._alignments[j] != 'c' else
                  l.center(column_widths[j]) for j,l in enumerate(line)]
             if self._headings[0]:
-                d = [self._headings[0][i]] + d
+                l = self._headings[0][i]
+                l = (l if self._head_align != 'c' else
+                     l.center(_head_width))
+                d = [l] + d
             s.append(format_str % tuple(d))
-        return ''.join(s)
+        return ''.join(s)[:-1] # don't include trailing newline
 
     def _latex(self, printer):
         """
@@ -209,14 +313,13 @@ class TableForm(object):
                 new_line.append(s)
             self._headings[1] = new_line
 
+        alignments = []
         if self._headings[0]:
             self._headings[0] = [str(x) for x in self._headings[0]]
+            alignments = [self._head_align]
+        alignments.extend(self._alignments)
 
-        align_char = self._alignment
-        align_list = [align_char] * len(self._lines[0])
-        if self._headings[0]:
-            align_list = [align_char] + align_list
-        s = r"\begin{tabular}{" + " ".join(align_list) + "}\n"
+        s = r"\begin{tabular}{" + " ".join(alignments) + "}\n"
 
         if self._headings[1]:
             d = self._headings[1]
