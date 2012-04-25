@@ -1347,18 +1347,15 @@ class InnerProduct(Basic):
     def __new__(cls, bra, ket):
         assert isinstance(bra, FockStateBra), 'must be a bra'
         assert isinstance(ket, FockStateKet), 'must be a key'
-        r = cls.eval(bra, ket)
-        if isinstance(r, Basic):
-            return r
-        obj = Basic.__new__(cls, bra, ket)
-        return obj
+        return cls.eval(bra, ket)
 
     @classmethod
     def eval(cls, bra, ket):
         result = S.One
         for i,j in zip(bra.args[0], ket.args[0]):
             result *= KroneckerDelta(i,j)
-            if result == 0: break
+            if result == 0:
+                break
         return result
 
     @property
