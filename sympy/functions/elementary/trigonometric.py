@@ -1,11 +1,11 @@
 from sympy.core.add import Add
-from sympy.core.numbers import Rational, Float
+from sympy.core.numbers import Rational
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
 from sympy.core.function import Function, ArgumentIndexError
-from miscellaneous import sqrt
-from exponential import log
-from sympy.functions.elementary.hyperbolic import HyperbolicFunction,sinh,cosh,tanh,coth
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
