@@ -1,6 +1,6 @@
 __all__ = ['Point']
 
-from sympy.physics.mechanics.essential import Vector, ReferenceFrame
+from sympy.physics.mechanics.essential import _check_frame, _check_vector
 
 class Point(object):
     """This object represents a point in a dynamic system.
@@ -24,20 +24,9 @@ class Point(object):
 
     __repr__ = __str__
 
-    def _check_frame(self, other):
-        if not isinstance(other, ReferenceFrame):
-            raise TypeError('A ReferenceFrame must be supplied')
-
     def _check_point(self, other):
         if not isinstance(other, Point):
             raise TypeError('A Point must be supplied')
-
-    def _check_vector(self, other):
-        if isinstance(other, int):
-            if other == 0:
-                return
-        if not isinstance(other, Vector):
-            raise TypeError('A Vector must be supplied')
 
     def _pdict_list(self, other, num):
         """Creates a list from self to other using _dcm_dict. """
@@ -102,8 +91,8 @@ class Point(object):
 
         """
 
-        self._check_frame(outframe)
-        self._check_frame(interframe)
+        _check_frame(outframe)
+        _check_frame(interframe)
         self._check_point(otherpoint)
         dist = self.pos_from(otherpoint)
         v = self.vel(interframe)
@@ -151,8 +140,8 @@ class Point(object):
 
         """
 
-        self._check_frame(outframe)
-        self._check_frame(fixedframe)
+        _check_frame(outframe)
+        _check_frame(fixedframe)
         self._check_point(otherpoint)
         dist = self.pos_from(otherpoint)
         a = otherpoint.acc(outframe)
@@ -182,7 +171,7 @@ class Point(object):
 
         """
 
-        self._check_frame(frame)
+        _check_frame(frame)
         if not (frame in self._acc_dict):
             if self._vel_dict[frame] != 0:
                 return (self._vel_dict[frame]).dt(frame)
@@ -213,7 +202,7 @@ class Point(object):
 
         if not isinstance(name, str):
             raise TypeError('Must supply a valid name')
-        self._check_vector(value)
+        value = _check_vector(value)
         p = Point(name)
         p.set_pos(self, value)
         self.set_pos(p, -value)
@@ -270,8 +259,8 @@ class Point(object):
 
         """
 
-        self._check_vector(value)
-        self._check_frame(frame)
+        value = _check_vector(value)
+        _check_frame(frame)
         self._acc_dict.update({frame: value})
 
     def set_pos(self, otherpoint, value):
@@ -298,7 +287,7 @@ class Point(object):
 
         """
 
-        self._check_vector(value)
+        value = _check_vector(value)
         self._check_point(otherpoint)
         self._pos_dict.update({otherpoint: value})
         otherpoint._pos_dict.update({self: -value})
@@ -326,8 +315,8 @@ class Point(object):
 
         """
 
-        self._check_vector(value)
-        self._check_frame(frame)
+        value = _check_vector(value)
+        _check_frame(frame)
         self._vel_dict.update({frame: value})
 
     def v1pt_theory(self, otherpoint, outframe, interframe):
@@ -370,8 +359,8 @@ class Point(object):
 
         """
 
-        self._check_frame(outframe)
-        self._check_frame(interframe)
+        _check_frame(outframe)
+        _check_frame(interframe)
         self._check_point(otherpoint)
         dist = self.pos_from(otherpoint)
         v1 = self.vel(interframe)
@@ -416,8 +405,8 @@ class Point(object):
 
         """
 
-        self._check_frame(outframe)
-        self._check_frame(fixedframe)
+        _check_frame(outframe)
+        _check_frame(fixedframe)
         self._check_point(otherpoint)
         dist = self.pos_from(otherpoint)
         v = otherpoint.vel(outframe)
@@ -446,7 +435,7 @@ class Point(object):
 
         """
 
-        self._check_frame(frame)
+        _check_frame(frame)
         if not (frame in self._vel_dict):
             raise ValueError('Velocity of point ' + self.name + ' has not been'
                              ' defined in ReferenceFrame ' + frame.name)

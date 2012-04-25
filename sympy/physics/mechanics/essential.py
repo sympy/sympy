@@ -64,10 +64,7 @@ class Dyadic(object):
 
     def __add__(self, other):
         """The add operator for Dyadic. """
-        if isinstance(other, (int, type(Zero()))):
-            if other == 0:
-                return self
-        self._check_dyadic(other)
+        other = _check_dyadic(other)
         return Dyadic(self.args + other.args)
 
     def __and__(self, other):
@@ -93,15 +90,15 @@ class Dyadic(object):
 
         """
 
-        if isinstance(other, (int, type(Zero()))):
-            if other == 0:
-                return 0
-        ol = 0
         if isinstance(other, Dyadic):
+            other = _check_dyadic(other)
+            ol = Dyadic([])
             for i, v in enumerate(self.args):
                 for i2, v2 in enumerate(other.args):
                     ol += v[0] * v2[0] * (v[2] & v2[1]) * (v[1] | v2[2])
         elif isinstance(other, Vector):
+            other = _check_vector(other)
+            ol = Vector([])
             for i, v in enumerate(self.args):
                 ol += v[0] * v[1] * (v[2] & other)
         else:
@@ -121,12 +118,11 @@ class Dyadic(object):
 
         """
 
-        if isinstance(other, (int, type(Zero()))):
-            if (other == 0) & (self.args == []):
-                return True
-            elif other == 0:
-                return False
-        self._check_dyadic(other)
+        other = _check_dyadic(other)
+        if (self.args == []) and (other.args == []):
+            return True
+        elif (self.args == []) or (other.args == []):
+            return False
         return set(self.args) == set(other.args)
 
     def __mul__(self, other):
@@ -269,15 +265,10 @@ class Dyadic(object):
 
         """
 
-        if isinstance(other, (int, type(Zero()))):
-            if other == 0:
-                return 0
-        ol = 0
-        if isinstance(other, Vector):
-            for i, v in enumerate(self.args):
-                ol += v[0] * v[2] * (v[1] & other)
-        else:
-            raise TypeError('Need to supply a Vector or Dyadic')
+        other = _check_vector(other)
+        ol = Vector([])
+        for i, v in enumerate(self.args):
+            ol += v[0] * v[2] * (v[1] & other)
         return ol
 
     def __rsub__(self, other):
@@ -303,11 +294,8 @@ class Dyadic(object):
 
         """
 
-        if isinstance(other, (int, type(Zero()))):
-            if (other == 0):
-                return 0
-        self._check_vector(other)
-        ol = 0
+        other = _check_vector(other)
+        ol = Dyadic([])
         for i, v in enumerate(self.args):
             ol += v[0] * ((other ^ v[1]) | v[2])
         return ol
@@ -369,32 +357,11 @@ class Dyadic(object):
 
         """
 
-        if isinstance(other, (int, type(Zero()))):
-            if (other == 0):
-                return 0
-        self._check_vector(other)
-        ol = 0
+        other = _check_vector(other)
+        ol = Dyadic([])
         for i, v in enumerate(self.args):
             ol += v[0] * (v[1] | (v[2] ^ other))
         return ol
-
-    def _check_frame(self, other):
-        if not isinstance(other, ReferenceFrame):
-            raise TypeError('A ReferenceFrame must be supplied')
-
-    def _check_dyadic(self, other):
-        if isinstance(other, (int, type(Zero()))):
-            if other == 0:
-                return
-        if not isinstance(other, Dyadic):
-            raise TypeError('A Dyadic must be supplied')
-
-    def _check_vector(self, other):
-        if isinstance(other, (int, type(Zero()))):
-            if other == 0:
-                return
-        if not isinstance(other, Vector):
-            raise TypeError('A Vector must be supplied')
 
     _sympystr = __str__
     _sympyrepr = _sympystr
@@ -433,8 +400,8 @@ class Dyadic(object):
 
         if frame2 == None:
             frame2 = frame1
-        self._check_frame(frame1)
-        self._check_frame(frame2)
+        _check_frame(frame1)
+        _check_frame(frame2)
         ol = 0
         for i, v in enumerate(self.args):
             ol += v[0] * (v[1].express(frame1) | v[2].express(frame2))
@@ -462,7 +429,7 @@ class Dyadic(object):
 
         """
 
-        self._check_frame(frame)
+        _check_frame(frame)
         t = dynamicsymbols._t
         ol = 0
         for i, v in enumerate(self.args):
@@ -627,17 +594,6 @@ class ReferenceFrame(object):
 
     __repr__ = __str__
 
-    def _check_frame(self, other):
-        if not isinstance(other, ReferenceFrame):
-            raise TypeError('A ReferenceFrame must be supplied')
-
-    def _check_vector(self, other):
-        if isinstance(other, (int, type(Zero()))):
-            if other == 0:
-                return
-        if not isinstance(other, Vector):
-            raise TypeError('A Vector must be supplied')
-
     def _dict_list(self, other, num):
         """Creates a list from self to other using _dcm_dict. """
         outlist = [[self]]
@@ -697,7 +653,7 @@ class ReferenceFrame(object):
 
         """
 
-        self._check_frame(otherframe)
+        _check_frame(otherframe)
         if otherframe in self._ang_acc_dict:
             return self._ang_acc_dict[otherframe]
         else:
@@ -730,9 +686,9 @@ class ReferenceFrame(object):
 
         """
 
-        self._check_frame(otherframe)
+        _check_frame(otherframe)
         flist = self._dict_list(otherframe, 1)
-        outvec = 0
+        outvec = Vector([])
         for i in range(len(flist) - 1):
             outvec += flist[i]._ang_vel_dict[flist[i + 1]]
         return outvec
@@ -765,7 +721,7 @@ class ReferenceFrame(object):
 
         """
 
-        self._check_frame(otherframe)
+        _check_frame(otherframe)
         flist = self._dict_list(otherframe, 0)
         outdcm = eye(3)
         for i in range(len(flist) - 1):
@@ -835,7 +791,7 @@ class ReferenceFrame(object):
 
         """
 
-        self._check_frame(parent)
+        _check_frame(parent)
         amounts = list(amounts)
         for i, v in enumerate(amounts):
             if not isinstance(v, Vector):
@@ -874,7 +830,7 @@ class ReferenceFrame(object):
                 raise TypeError('Amounts are a list or tuple of length 2')
             theta = amounts[0]
             axis = amounts[1]
-            self._check_vector(axis)
+            axis = _check_vector(axis)
             if not axis.dt(parent) == 0:
                 raise ValueError('Axis cannot be time-varying')
             axis = axis.express(parent).normalize()
@@ -1016,8 +972,8 @@ class ReferenceFrame(object):
 
         """
 
-        self._check_vector(value)
-        self._check_frame(otherframe)
+        value = _check_vector(value)
+        _check_frame(otherframe)
         self._ang_acc_dict.update({otherframe: value})
         otherframe._ang_acc_dict.update({self: -value})
 
@@ -1050,8 +1006,8 @@ class ReferenceFrame(object):
 
         """
 
-        self._check_vector(value)
-        self._check_frame(otherframe)
+        value = _check_vector(value)
+        _check_frame(otherframe)
         self._ang_vel_dict.update({otherframe: value})
         otherframe._ang_vel_dict.update({self: -value})
 
@@ -1122,10 +1078,7 @@ class Vector(object):
 
     def __add__(self, other):
         """The add operator for Vector. """
-        if isinstance(other, (int, type(Zero()))):
-            if (other == 0):
-                return self
-        self._check_vector(other)
+        other = _check_vector(other)
         return Vector(self.args + other.args)
 
     def __and__(self, other):
@@ -1158,10 +1111,7 @@ class Vector(object):
 
         if isinstance(other, Dyadic):
             return NotImplemented
-        if isinstance(other, (int, type(Zero()))):
-            if (other == 0):
-                return 0
-        self._check_vector(other)
+        other = _check_vector(other)
         out = 0
         for i, v1 in enumerate(self.args):
             for j, v2 in enumerate(other.args):
@@ -1191,12 +1141,11 @@ class Vector(object):
 
         """
 
-        if isinstance(other, (int, type(Zero()))):
-            if other == 0:
-                if self.args == []:
-                    return True
-                else:
-                    return False
+        other = _check_vector(other)
+        if (self.args == []) and (other.args == []):
+            return True
+        elif (self.args == []) or (other.args == []):
+            return False
 
         frame = self.args[0][1]
         for v in frame:
@@ -1258,10 +1207,8 @@ class Vector(object):
 
         """
 
-        if isinstance(other, (int, type(Zero()))):
-            if (other == 0):
-                return 0
-        ol = 0
+        other = _check_vector(other)
+        ol = Dyadic([])
         for i, v in enumerate(self.args):
             for i2, v2 in enumerate(other.args):
                 # it looks this way because if we are in the same frame and
@@ -1374,11 +1321,8 @@ class Vector(object):
 
         """
 
-        if isinstance(other, (int, type(Zero()))):
-            if (other == 0):
-                return 0
-
-        ol = 0
+        other = _check_vector(other)
+        ol = Dyadic([])
         for i, v in enumerate(other.args):
             for i2, v2 in enumerate(self.args):
                 # it looks this way because if we are in the same frame and
@@ -1465,10 +1409,9 @@ class Vector(object):
 
         if isinstance(other, Dyadic):
             return NotImplemented
-        if isinstance(other, (int, type(Zero()))):
-            if (other == 0):
-                return self * 0
-        self._check_vector(other)
+        other = _check_vector(other)
+        if other.args == []:
+            return self * 0
 
         def _det(mat):
             """This is needed as a little method for to find the determinant
@@ -1494,17 +1437,6 @@ class Vector(object):
                 Vector([ar[i]]) & tempy, Vector([ar[i]]) & tempz]])
             outvec += _det(tempm)
         return outvec
-
-    def _check_frame(self, other):
-        if not isinstance(other, ReferenceFrame):
-            raise TypeError('A ReferenceFrame must be supplied')
-
-    def _check_vector(self, other):
-        if isinstance(other, (int, type(Zero()))):
-            if other == 0:
-                return
-        if not isinstance(other, Vector):
-            raise TypeError('A Vector must be supplied')
 
     _sympystr = __str__
     _sympyrepr = _sympystr
@@ -1554,7 +1486,7 @@ class Vector(object):
         """
 
         wrt = sympify(wrt)
-        self._check_frame(otherframe)
+        _check_frame(otherframe)
         outvec = 0
         for i,v in enumerate(self.args):
             if v[1] == otherframe:
@@ -1599,7 +1531,7 @@ class Vector(object):
         """
 
         outvec = 0
-        self._check_frame(otherframe)
+        _check_frame(otherframe)
         for i, v in enumerate(self.args):
             if v[1] == otherframe:
                 outvec += Vector([(v[0].diff(dynamicsymbols._t), otherframe)])
@@ -1632,7 +1564,7 @@ class Vector(object):
 
         """
 
-        self._check_frame(otherframe)
+        _check_frame(otherframe)
         outvec = Vector(self.args + [])
         for i, v in enumerate(self.args):
             if v[1] != otherframe:
@@ -1926,6 +1858,30 @@ class MechanicsPrettyPrinter(PrettyPrinter):
         pform.prettyArgs = prettyArgs
         return pform
 
+
+def _check_dyadic(other):
+    if not isinstance(other, Dyadic):
+        other = sympify(other)
+        if other != 0:
+            raise TypeError('A Dyadic must be supplied')
+        else:
+            other = Dyadic([])
+    return other
+
+
+def _check_frame(other):
+    if not isinstance(other, ReferenceFrame):
+        raise TypeError('A ReferenceFrame must be supplied')
+
+
+def _check_vector(other):
+    if not isinstance(other, Vector):
+        other = sympify(other)
+        if other != 0:
+            raise TypeError('A Vector must be supplied')
+        else:
+            other = Vector([])
+    return other
 
 def dynamicsymbols(names, level=0):
     """Uses symbols and Function for functions of time.
