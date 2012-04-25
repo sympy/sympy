@@ -4602,14 +4602,14 @@ class SparseMatrix(MatrixBase):
         Add two sparse matrices with dictionary representation.
 
         >>> from sympy.matrices.matrices import SparseMatrix
-        >>> A = SparseMatrix(5, 5, lambda i, j : i * j + i)
+        >>> A = SparseMatrix(5, 5, lambda i, j: i * j + i)
         >>> A
         [0, 0,  0,  0,  0]
         [1, 2,  3,  4,  5]
         [2, 4,  6,  8, 10]
         [3, 6,  9, 12, 15]
         [4, 8, 12, 16, 20]
-        >>> B = SparseMatrix(5, 5, lambda i, j : i + 2 * j)
+        >>> B = SparseMatrix(5, 5, lambda i, j: i + 2 * j)
         >>> B
         [0, 2, 4,  6,  8]
         [1, 3, 5,  7,  9]

@@ -160,10 +160,10 @@ def test_Wild_properties():
 
     given_patterns = [ x, y, p, k, -k, n, -n, sympify(-3), sympify(3), pi, Rational(3,2), I ]
 
-    integerp = lambda k : k.is_integer
-    positivep = lambda k : k.is_positive
-    symbolp = lambda k : k.is_Symbol
-    realp = lambda k : k.is_real
+    integerp = lambda k: k.is_integer
+    positivep = lambda k: k.is_positive
+    symbolp = lambda k: k.is_Symbol
+    realp = lambda k: k.is_real
 
     S = Wild("S", properties=[symbolp])
     R = Wild("R", properties=[realp])

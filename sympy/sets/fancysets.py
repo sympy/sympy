@@ -225,9 +225,9 @@ class Range(Set):
 
         return Basic.__new__(cls, start, stop + step, step)
 
-    start = property(lambda self : self.args[0])
-    stop  = property(lambda self : self.args[1])
-    step  = property(lambda self : self.args[2])
+    start = property(lambda self: self.args[0])
+    stop  = property(lambda self: self.args[1])
+    step  = property(lambda self: self.args[2])
 
     def _intersect(self, other):
         if other.is_Interval:
@@ -272,7 +272,7 @@ class Range(Set):
         return ((self.stop - self.start)//self.step)
 
     def _ith_element(self, i):
-        return self.start + i * self.step
+        return self.start + i*self.step
 
     @property
     def _last_element(self):
