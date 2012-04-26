@@ -9,6 +9,7 @@ to define all objects before the existence of the unit system.
 """
 
 from __future__ import division
+from copy import copy
 
 from sympy import Rational, Matrix, AtomicExpr
 
@@ -93,15 +94,53 @@ PREFIXES = {
 
 class Unit(AtomicExpr):
 
-    def __init__(self, abbrev, dimension):
+    #used to check if the unit is part of an unit system, and if it's one of
+    #the base unit in it; should not be modified by hand
+    _system = None
+
+    def __init__(self, abbrev, dimension, value=1):
         self.abbrev = abbrev
+        self._value = value
         self.dimension = dimension
 
-class UnitSystem():
+    @property
+    def value(self):
+        return self._value
 
-    def __init__(self, base, units=None):
+    @property
+    def is_base_unit(self):
+        """
+        Check if the unit is part of the base unit of the system which is
+        currently used.
+        """
+        if self._system is not None:
+            if self in self._system._base_units:
+                return True
+
+        return False
+
+    @property
+    def has_system(self):
+        if self._system is not None:
+            return True
+
+        return False
+
+
+class UnitSystem():
+    """
+    Representation of an unit system.
+
+    _base_units is a tuple of the units which form the basis. _units is also
+    a tuple.
+    """
+
+    def __init__(self, base, units=(), name='', description=''):
+        self.name = name
+        self.description = description
+
         self._base_units = base
-        self._units = units
+        self._units = list(units) + [u for u in base if u not in units]
 
         self._list_dim()
         self._compute_dim_matrix()
@@ -110,6 +149,12 @@ class UnitSystem():
             # TODO: check precisely which test failed
             raise AttributeError('The base units can not well-defined an unit '
                                  'system.')
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return '<UnitSystem: %s>' % self.name
 
     def _list_dim(self):
         """
@@ -144,3 +189,27 @@ class UnitSystem():
             return False
 
         return True
+
+    def get_unit(self, unit):
+        """
+        Find a specific unit which is part of the system. Modify its attribute
+        to say in which system it is.
+
+        unit can be a string or an unit object.
+        """
+        found_unit = None
+
+        if isinstance(unit, str):
+            for u in self._units:
+                if unit in (u.abbrev,):
+                    found_unit = copy(u)
+
+        if isinstance(unit, Unit):
+            if unit in self._units:
+                found_unit = copy(unit)
+
+        if found_unit is not None:
+            found_unit._system = self
+
+        return found_unit
+
