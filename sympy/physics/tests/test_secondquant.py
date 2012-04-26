@@ -434,7 +434,7 @@ def test_contraction():
     assert contraction(Fd(a),F(i)) == 0
     assert contraction(F(i),Fd(a)) == 0
     assert contraction(Fd(i),F(a)) == 0
-    assert contraction(Fd(i),F(p)) == KroneckerDelta(p,i)
+    assert contraction(Fd(i),F(p)) == KroneckerDelta(i, p)
     restr = evaluate_deltas(contraction(Fd(p),F(q)))
     assert restr.is_only_below_fermi
     restr = evaluate_deltas(contraction(F(p),Fd(q)))

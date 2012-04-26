@@ -161,25 +161,9 @@ class Basic(PicklableWithSlots):
         # occurs as hash is needed for setting cache dictionary keys
         h = self._mhash
         if h is None:
-            h = (type(self).__name__,) + self._hashable_content()
-
-            if self._assume_type_keys is not None:
-                a = []
-                kv= self._assumptions
-                for k in sorted(self._assume_type_keys):
-                    a.append( (k, kv[k]) )
-
-                h = hash( h + tuple(a) )
-
-            else:
-                h = hash( h )
-
-
+            h = hash((type(self).__name__,) + self._hashable_content())
             self._mhash = h
-            return h
-
-        else:
-            return h
+        return h
 
     def _hashable_content(self):
         # If class defines additional attributes, like name in Symbol,
@@ -394,11 +378,8 @@ class Basic(PicklableWithSlots):
             if type(self) is not type(other):
                 return False
 
-        # type(self) == type(other)
-        st = self._hashable_content()
-        ot = other._hashable_content()
+        return self._hashable_content() == other._hashable_content()
 
-        return st == ot and self._assume_type_keys == other._assume_type_keys
 
     def __ne__(self, other):
         """a != b  -> Compare two symbolic trees and see whether they are different
@@ -419,11 +400,7 @@ class Basic(PicklableWithSlots):
             if type(self) is not type(other):
                 return True
 
-        # type(self) == type(other)
-        st = self._hashable_content()
-        ot = other._hashable_content()
-
-        return (st != ot) or self._assume_type_keys != other._assume_type_keys
+        return self._hashable_content() != other._hashable_content()
 
     def dummy_eq(self, other, symbol=None):
         """
@@ -1563,41 +1540,22 @@ def _aresame(a, b):
     >>> 2.0 == S(2)
     True
 
-    The Basic.compare method will indicate that these are not the same, but
-    the same method allows symbols with different assumptions to compare the
-    same:
-
-    >>> S(2).compare(2.0)
-    -1
-    >>> Symbol('x').compare(Symbol('x', positive=True))
-    0
-
-    The Basic.compare method will not work with instances of FunctionClass:
-
-    >>> sin.compare(cos)
-    Traceback (most recent call last):
-    ...
-    TypeError: unbound method compare() must be called with sin instance as first ar
-    gument (got FunctionClass instance instead)
-
     Since a simple 'same or not' result is sometimes useful, this routine was
-    written to provide that query.
+    written to provide that query:
+
+    >>> from sympy.core.basic import _aresame
+    >>> _aresame(S(2.0), S(2))
+    False
 
     """
     from sympy.utilities.iterables import preorder_traversal
     from itertools import izip
 
-    try:
-        if a.compare(b) == 0 and a.is_Symbol and b.is_Symbol:
-            return a.assumptions0 == b.assumptions0
-    except (TypeError, AttributeError):
-        pass
-
     for i, j in izip(preorder_traversal(a), preorder_traversal(b)):
-        if i == j and type(i) == type(j):
-            continue
-        return False
-    return True
+        if i != j or type(i) != type(j):
+            return False
+    else:
+        return True
 
 def _atomic(e):
     """Return atom-like quantities as far as substitution is

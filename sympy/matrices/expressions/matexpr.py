@@ -125,13 +125,15 @@ class MatrixExpr(Expr):
 
     def __getitem__(self, key):
         if isinstance(key, tuple) and len(key)==2:
-            key = sympify(key)
-            i,j = key
+            i, j = key
+            if isinstance(i, slice) or isinstance(j, slice):
+                raise NotImplementedError("Slicing is not implemented")
+            i, j = sympify(i), sympify(j)
             if self.valid_index(i, j) is not False:
-                return self._entry(*key)
+                return self._entry(i, j)
             else:
-                raise IndexError("Invalid indices (%s, %s)"%(str(i), str(j)))
-        raise IndexError("Invalid index, wanted %s[i,j]"%str(self))
+                raise IndexError("Invalid indices (%s, %s)" % (i, j))
+        raise IndexError("Invalid index, wanted %s[i,j]" % self)
 
     def as_explicit(self):
         """

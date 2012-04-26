@@ -61,7 +61,7 @@ def test_block_index():
     assert BI.as_explicit().equals(eye(6))
 
 def test_slicing():
-    raises(IndexError, "W[3,:]")
+    raises(NotImplementedError, "W[3,:]")
     A.as_explicit()[0,:] # does not raise an error
 
 def test_errors():
