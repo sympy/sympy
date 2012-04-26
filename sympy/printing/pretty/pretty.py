@@ -79,6 +79,7 @@ class PrettyPrinter(Printer):
     _print_EmptySet         = _print_Atom
     _print_Naturals         = _print_Atom
     _print_Integers         = _print_Atom
+    _print_Reals            = _print_Atom
 
     def _print_factorial(self, e):
         x = e.args[0]
@@ -1132,13 +1133,32 @@ class PrettyPrinter(Printer):
             return self.emptyPrinter(expr)
 
     def _print_ProductSet(self, p):
-        prod_char = u'\xd7'
-        return self._print_seq(p.sets, None, None, ' %s '%prod_char,
+        if len(set(p.sets)) == 1 and len(p.sets) > 1:
+            from sympy import Pow
+            return self._print(Pow(p.sets[0], len(p.sets), evaluate=False))
+        else:
+            prod_char = u'\xd7'
+            return self._print_seq(p.sets, None, None, ' %s '%prod_char,
                 parenthesize = lambda set:set.is_Union or set.is_Intersection)
 
     def _print_FiniteSet(self, s):
         items = sorted(s.args, key=default_sort_key)
         return self._print_seq(items, '{', '}', ', ' )
+
+    def _print_Range(self, s):
+
+        if self._use_unicode:
+            dots = u"\u2026"
+        else:
+            dots = '...'
+
+        if len(s) > 4:
+            it = iter(s)
+            printset = it.next(), it.next(), dots, s._last_element
+        else:
+            printset = tuple(s)
+
+        return self._print_seq(printset, '{', '}', ', ' )
 
     def _print_Interval(self, i):
         if i.start == i.end:
@@ -1172,10 +1192,13 @@ class PrettyPrinter(Printer):
              parenthesize = lambda set:set.is_ProductSet or set.is_Intersection)
 
     def _print_TransformationSet(self, ts):
+        if self._use_unicode:
+            inn = u"\u220a"
+        else:
+            inn = 'in'
         variables = self._print_seq(ts.lamda.variables)
         expr = self._print(ts.lamda.expr)
         bar = self._print("|")
-        inn = self._print(u"\u220a")
         base = self._print(ts.base_set)
 
         return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')

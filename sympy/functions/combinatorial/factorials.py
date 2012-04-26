@@ -463,6 +463,8 @@ class binomial(CombinatorialFunction):
                     return result
         elif k.is_negative:
             return S.Zero
+        elif (n - k).simplify().is_negative:
+            return S.Zero
         else:
             d = n - k
 

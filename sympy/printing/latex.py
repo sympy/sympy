@@ -974,7 +974,10 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_ProductSet(self, p):
-        return r" \times ".join(self._print(set) for set in p.sets)
+        if len(set(p.sets)) == 1 and len(p.sets) > 1:
+            return self._print(p.sets[0]) + "^%d"%len(p.sets)
+        else:
+            return r" \times ".join(self._print(set) for set in p.sets)
 
     def _print_RandomDomain(self, d):
         try:
@@ -995,6 +998,17 @@ class LatexPrinter(Printer):
         return r"\left\{%s\right\}" % items
 
     _print_frozenset = _print_set
+
+    def _print_Range(self, s):
+        if len(s) > 4:
+            it = iter(s)
+            printset = it.next(), it.next(), '\ldots', s._last_element
+        else:
+            printset = tuple(s)
+
+        return (r"\left\{"
+              + r", ".join(self._print(el) for el in printset)
+              + r"\right\}")
 
     def _print_Interval(self, i):
         if i.start == i.end:
@@ -1028,6 +1042,9 @@ class LatexPrinter(Printer):
 
     def _print_Integers(self, i):
         return r"\mathbb{Z}"
+
+    def _print_Reals(self, i):
+        return r"\mathbb{R}"
 
     def _print_TransformationSet(self, s):
         return r"\left\{%s\; |\; %s \in %s\right\}"%(

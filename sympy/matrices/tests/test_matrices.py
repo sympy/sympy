@@ -1705,8 +1705,8 @@ def test_SparseMatrix_CL_RL():
 def test_SparseMatrix_add():
     assert SparseMatrix(((1,0), (0,1))) + SparseMatrix(((0,1), (1,0))) == \
         SparseMatrix(((1,1), (1,1)))
-    a = SparseMatrix(100, 100, lambda i, j : int(j != 0 and i % j == 0))
-    b = SparseMatrix(100, 100, lambda i, j : int(i != 0 and j % i == 0))
+    a = SparseMatrix(100, 100, lambda i, j: int(j != 0 and i % j == 0))
+    b = SparseMatrix(100, 100, lambda i, j: int(i != 0 and j % i == 0))
     assert (len(a.mat) + len(b.mat) - len((a+b).mat) > 0)
 
 def test_has():

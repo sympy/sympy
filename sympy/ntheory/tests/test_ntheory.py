@@ -274,7 +274,7 @@ def test_factorint():
     # "close" and have a trivial factorization
     a=nextprime(2**2**8) # 78 digits
     b=nextprime(a + 2**2**4)
-    assert 'Fermat' in capture(lambda : factorint(a*b, verbose=1))
+    assert 'Fermat' in capture(lambda: factorint(a*b, verbose=1))
 
     raises(ValueError, lambda: pollard_rho(4))
     raises(ValueError, lambda: pollard_pm1(3))
@@ -291,14 +291,14 @@ def test_factorint():
     # exceed 1st
     n=nextprime(2**17)
     n*=nextprime(n)
-    assert '1000' in capture(lambda : factorint(n, limit=1000, verbose=1))
+    assert '1000' in capture(lambda: factorint(n, limit=1000, verbose=1))
     n*=nextprime(n)
     assert len(factorint(n)) == 3
     assert len(factorint(n, limit=p1)) == 3
     n*=nextprime(2*n)
     # exceed 2nd
-    assert '2001' in capture(lambda : factorint(n, limit=2000, verbose=1))
-    assert capture(lambda : factorint(n, limit=4000, verbose=1)).count('Pollard') == 2
+    assert '2001' in capture(lambda: factorint(n, limit=2000, verbose=1))
+    assert capture(lambda: factorint(n, limit=4000, verbose=1)).count('Pollard') == 2
     # non-prime pm1 result
     n=nextprime(8069)
     n*=nextprime(2*n)*nextprime(2*n, 2)

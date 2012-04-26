@@ -394,6 +394,7 @@ atoms_table = {
     'EmptySet'          :   U('EMPTY SET'),
     'Naturals'          :   U('DOUBLE-STRUCK CAPITAL N'),
     'Integers'          :   U('DOUBLE-STRUCK CAPITAL Z'),
+    'Reals'             :   U('DOUBLE-STRUCK CAPITAL R'),
     'Union'             :   U('UNION'),
     'Intersection'      :   U('INTERSECTION')
 }

@@ -289,6 +289,9 @@ def test_hypersum():
     assert s.args[0].args[0] == -1/(x*(1 - 1/x)**2)
     assert s.args[0].args[1] == (abs(1/x) < 1)
 
+    m = Symbol('n', integer=True, positive=True)
+    assert summation(binomial(m, k), (k, 0, m)) == 2**m
+
 def test_issue_1071():
     assert summation(1/factorial(k), (k, 0, oo)) == E
 
