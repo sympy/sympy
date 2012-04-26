@@ -1,6 +1,7 @@
-from sympy import Matrix
+from sympy import Matrix, eye
 from sympy.physics.units.units import PREFIXES, Unit, UnitSystem
-from sympy.physics.units.mks import length, time, velocity
+from sympy.physics.units.mks import mks, m, v, length, time, velocity
+from sympy.utilities.pytest import raises
 
 def test_prefix_operations():
     m = PREFIXES['m']
@@ -12,9 +13,9 @@ def test_prefix_operations():
     assert k/m == M
 
 def test_unitsystem():
-    matrix = Matrix(((1,0),(1,-1)))
-    m = Unit(abbrev='m', dimension=length)
-    v = Unit(abbrev='v', dimension=velocity)
-    us = UnitSystem(base=(m, v))
-    assert us._dim_matrix == matrix
+    raises(AttributeError, 'UnitSystem(base=(m, m))')
+    assert mks._transf_matrix == eye(3)
 
+    matrix = Matrix(((1,1),(0,-1)))
+    us = UnitSystem(base=(m, v))
+    assert us._transf_matrix == matrix

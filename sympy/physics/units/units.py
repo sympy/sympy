@@ -4,18 +4,47 @@
 Units for physical quantities.
 
 Also define prefixes.
+
+The philosophy of this module is the following. We can consider an unit system
+as a vector space on the integer, where the unit are the vector and
+multiplication is the composition law. For example, if you choose the meter m
+and the second s as the basic units, then you can express any unit as
+u = m^a s^b where a and b are two integers, and it can be represented by the
+column vector (a, b). Then the multiplication of two units u1 and u2 correspond
+to the addition of the column vector. Exponentiation of units correspond to
+scalar multiplication.
+
 We speak of canonical basis concerning the original dimensions/units/etc. used
-to define all objects before the existence of the unit system.
+to define all objects before the existence of the unit system. Then we can
+use linear algebra (transformation matrices...) to go from one system to
+another one.
 """
 
 from __future__ import division
 from copy import copy
 
-from sympy import Rational, Matrix, AtomicExpr
+from sympy import Rational, Matrix, AtomicExpr, Mul
 
 # Is it a good idea to combine prefixes with between them, instead of just
 # keeping them to better print results when the user asks for it?
 # So do we want not to care about prefixes until the end?
+
+_UNIT_SYSTEM = None
+
+def set_system(system):
+    """
+    Define the default unit system used in computations.
+
+    Results are expressed in units of this system. If it occurs that quantities
+    are expressed in an unit not defined in this system, it will be converted.
+
+    In arithmetic operations, the unit system used is determined in this order:
+    1. general system, 2. left unit system and 3. right unit system.
+    """
+
+    global _UNIT_SYSTEM
+    _UNIT_SYSTEM = system
+
 
 class Prefix(object):
     """
@@ -98,14 +127,14 @@ class Unit(AtomicExpr):
     #the base unit in it; should not be modified by hand
     _system = None
 
-    def __init__(self, abbrev, dimension, value=1):
+    def __init__(self, abbrev, dimension, factor=1):
         self.abbrev = abbrev
-        self._value = value
+        self._factor = factor
         self.dimension = dimension
 
     @property
-    def value(self):
-        return self._value
+    def factor(self):
+        return self._factor
 
     @property
     def is_base_unit(self):
@@ -126,6 +155,10 @@ class Unit(AtomicExpr):
 
         return False
 
+    def __eq__(self, other):
+        return (isinstance(other, Unit) and self.factor == other.factor
+                and self.dimension == other.dimension)
+
 
 class UnitSystem():
     """
@@ -133,6 +166,8 @@ class UnitSystem():
 
     _base_units is a tuple of the units which form the basis. _units is also
     a tuple.
+
+    The base matrix is a multiple of the identity.
     """
 
     def __init__(self, base, units=(), name='', description=''):
@@ -143,7 +178,7 @@ class UnitSystem():
         self._units = list(units) + [u for u in base if u not in units]
 
         self._list_dim()
-        self._compute_dim_matrix()
+        self._compute_can_transf_matrix()
 
         if self._system_is_well_defined() is False:
             # TODO: check precisely which test failed
@@ -166,12 +201,18 @@ class UnitSystem():
         gen = reduce(lambda x,y: x*y, dims)
         self._list_dim = sorted(gen.keys())
 
-    def _compute_dim_matrix(self):
-        dim_tab = []
-        for unit in self._base_units:
-            row = []
-            dim_tab.append(self.can_dim_vector(unit.dimension))
-        self._dim_matrix = Matrix(dim_tab)
+    def _compute_can_transf_matrix(self):
+        """
+        Compute the canonical transformation matrix from the canonical to the
+        base unit basis.
+
+        It's simply the matrix where columns are the vector of base units in
+        canonical basis.
+        """
+
+        self._transf_matrix = reduce(lambda x, y: x.row_join(y),
+                                     [self.can_dim_vector(unit.dimension)
+                                            for unit in self._base_units])
 
     def can_dim_vector(self, dimension):
         """
@@ -180,12 +221,20 @@ class UnitSystem():
         vec = []
         for dim in self._list_dim:
             vec.append(dimension.get(dim, 0))
-        return vec
+        return Matrix(vec)
+
+    def dim_vector(self, dimension):
+        """
+        Vector representation in terms of the base dimensions.
+        """
+
+        return self._transf_matrix * self.can_dim_vector(dimension)
 
     def _system_is_well_defined(self):
         # check redundancy between base units, i.e. if we can invert the
-        # matrices:
-        if self._dim_matrix.det() == 0:
+        # matrices
+        #if self._transf_matrix.det() == 0:
+        if self._transf_matrix.is_square is False:
             return False
 
         return True
@@ -212,4 +261,3 @@ class UnitSystem():
             found_unit._system = self
 
         return found_unit
-

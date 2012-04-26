@@ -19,4 +19,8 @@ m = Unit(abbrev='m', dimension=length)
 kg = Unit(abbrev='kg', dimension=mass)
 s = Unit(abbrev='s', dimension=time)
 
-mks = UnitSystem(base=(m, kg, s), name='MKS')
+v = Unit(abbrev='v', dimension=velocity)
+J = Unit(abbrev='J', dimension=energy)
+#kg * m**2 * s-2
+
+mks = UnitSystem(base=(m, kg, s), units=(J,), name='MKS')
