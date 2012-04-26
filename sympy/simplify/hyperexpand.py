@@ -1892,7 +1892,7 @@ def hyperexpand_special(ap, bq, z):
     # This code is very ad-hoc. There are many clever algorithms
     # (notably Zeilberger's) related to this problem.
     # For now we just want a few simple cases to work.
-    from sympy import gamma, simplify, cos, unpolarify
+    from sympy import gamma, simplify, cos, unpolarify, pi
     p, q = len(ap), len(bq)
     z_ = z
     z = unpolarify(z)
