@@ -8,6 +8,8 @@ from __future__ import division
 
 from sympy import Rational, Number
 
+# TODO: define the DImension as a commutative Symbol, see paulialgebra module.
+
 class Dimension(dict):
     """
     This class represent the dimension of a physical units.

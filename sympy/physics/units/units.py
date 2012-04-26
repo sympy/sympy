@@ -4,11 +4,13 @@
 Units for physical quantities.
 
 Also define prefixes.
+We speak of canonical basis concerning the original dimensions/units/etc. used
+to define all objects before the existence of the unit system.
 """
 
 from __future__ import division
 
-from sympy import Rational
+from sympy import Rational, Matrix, AtomicExpr
 
 # Is it a good idea to combine prefixes with between them, instead of just
 # keeping them to better print results when the user asks for it?
@@ -89,3 +91,56 @@ PREFIXES = {
     'y': Prefix('yocto', 'y', -24)
 }
 
+class Unit(AtomicExpr):
+
+    def __init__(self, abbrev, dimension):
+        self.abbrev = abbrev
+        self.dimension = dimension
+
+class UnitSystem():
+
+    def __init__(self, base, units=None):
+        self._base_units = base
+        self._units = units
+
+        self._list_dim()
+        self._compute_dim_matrix()
+
+        if self._system_is_well_defined() is False:
+            # TODO: check precisely which test failed
+            raise AttributeError('The base units can not well-defined an unit '
+                                 'system.')
+
+    def _list_dim(self):
+        """
+        Do a list of all the base dimensions, and sort them. It is then
+        interpreted as a vector basis.
+        """
+
+        dims = [unit.dimension for unit in self._base_units]
+        gen = reduce(lambda x,y: x*y, dims)
+        self._list_dim = sorted(gen.keys())
+
+    def _compute_dim_matrix(self):
+        dim_tab = []
+        for unit in self._base_units:
+            row = []
+            dim_tab.append(self.can_dim_vector(unit.dimension))
+        self._dim_matrix = Matrix(dim_tab)
+
+    def can_dim_vector(self, dimension):
+        """
+        Canonical vector representation of a dimension.
+        """
+        vec = []
+        for dim in self._list_dim:
+            vec.append(dimension.get(dim, 0))
+        return vec
+
+    def _system_is_well_defined(self):
+        # check redundancy between base units, i.e. if we can invert the
+        # matrices:
+        if self._dim_matrix.det() == 0:
+            return False
+
+        return True

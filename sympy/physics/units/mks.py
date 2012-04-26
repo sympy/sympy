@@ -8,10 +8,8 @@ from __future__ import division
 
 from dimensions import Dimension
 
-length = Dimension(symbol='L', length=1)
-mass = Dimension(symbol='M', mass=1)
-time = Dimension(symbol='T', time=1)
-velocity = Dimension(length=1, time=-1)
-energy = Dimension(mass=1, length=2, time=-2)
-
-
+length = Dimension(name='length', symbol='L', length=1)
+mass = Dimension(name='mass', symbol='M', mass=1)
+time = Dimension(name='time', symbol='T', time=1)
+velocity = Dimension(name='velocity', length=1, time=-1)
+energy = Dimension(name='energy', mass=1, length=2, time=-2)
