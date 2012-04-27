@@ -614,7 +614,7 @@ class PermutationGroup(Basic):
             return h
         else:
             return _new_from_array_form(h)
-        
+
     def random(self, af=False):
         """return a random group element
         """

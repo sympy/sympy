@@ -12,7 +12,6 @@ def test_new():
         b = Permutation([0, 2, 1, 3, 4])
         g = PermutationGroup([a, b])
     raises(ValueError, 'test1()')
-    
 
 def test_generate():
     a = Permutation([1, 0])
