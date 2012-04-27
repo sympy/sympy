@@ -5,7 +5,7 @@ from sympy.polys.distributedmodules import (
     sdm_add, sdm_LM, sdm_LT, sdm_mul_term, sdm_zero, sdm_deg,
     sdm_LC, sdm_from_dict, sdm_to_dict,
     sdm_spoly, sdm_ecart, sdm_nf_mora, sdm_groebner,
-    sdm_from_vector, sdm_to_vector
+    sdm_from_vector, sdm_to_vector, sdm_monomial_lcm
 )
 
 from sympy.polys.monomialtools import (
@@ -21,6 +21,9 @@ def test_sdm_monomial_mul():
 
 def test_sdm_monomial_deg():
     assert sdm_monomial_deg((5, 2, 1)) == 3
+
+def test_sdm_monomial_lcm():
+    assert sdm_monomial_lcm((1, 2, 3), (1, 5, 0)) == (1, 5, 3)
 
 def test_sdm_monomial_divides():
     assert sdm_monomial_divides((1, 0, 0), (1, 0, 0)) is True

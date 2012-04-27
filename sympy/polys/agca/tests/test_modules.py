@@ -227,7 +227,7 @@ def test_in_terms_of_generators():
 
     M = R.free_module(2) / ([x, 0], [1, 1])
     SM = M.submodule([1, x])
-    assert SM.in_terms_of_generators([2, 0]) == [R.convert(2)]
+    assert SM.in_terms_of_generators([2, 0]) == [R.convert(-2/(x - 1))]
 
     R = QQ[x, y] / [x**2 - y**2]
     M = R.free_module(2)

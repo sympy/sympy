@@ -74,6 +74,22 @@ def sdm_monomial_deg(M):
     """
     return monomial_deg(M[1:])
 
+def sdm_monomial_lcm(A, B):
+    """
+    Return the "least common multiple" of ``A`` and ``B``.
+
+    IF `A = M e_j` and `B = N e_j`, where `M` and `N` are polynomial monomials,
+    this returns `\lcm(M, N) e_j`. Note that ``A`` and ``B`` involve distinct
+    monomials.
+
+    Otherwise the result is undefined.
+
+    >>> from sympy.polys.distributedmodules import sdm_monomial_lcm
+    >>> sdm_monomial_lcm((1, 2, 3), (1, 0, 5))
+    (1, 2, 5)
+    """
+    return (A[0],) + monomial_lcm(A[1:], B[1:])
+
 def sdm_monomial_divides(A, B):
     """
     Does there exist a (polynomial) monomial X such that XA = B?
@@ -458,48 +474,82 @@ def sdm_groebner(G, NF, O, K):
     Minimal standard bases are not unique. This algorithm computes a
     deterministic result, depending on the particular order of `G`.
 
-    See [SCA, algorithm 2.3.8, and remark 1.6.3].
+    This functions implements the "sugar" strategy, see
+
+    Giovini et al: "One sugar cube, please" OR Selection strategies in
+    Buchberger algorithm.
     """
-    # First compute a standard basis
-    S = [f for f in G if f]
-    P = list(combinations(S, 2))
 
-    def prune(P, S, h):
-        """
-        Prune the pair-set by applying the chain criterion
-        [SCA, remark 2.5.11].
-        """
+    # The critical pair set.
+    # A critical pair is stored as (i, j, s, t) where (i, j) defines the pair
+    # (by indexing S), s is the sugar of the pair, and t is the lcm of their
+    # leading monomials.
+    P = []
+
+    # The eventual standard basis.
+    S = []
+    Sugars = []
+
+    def Ssugar(i, j):
+        """Compute the sugar of the S-poly corresponding to (i, j)."""
+        LMi = sdm_LM(S[i])
+        LMj = sdm_LM(S[j])
+        return max(Sugars[i] - sdm_monomial_deg(LMi),
+                   Sugars[j] - sdm_monomial_deg(LMj)) \
+               + sdm_monomial_deg(sdm_monomial_lcm(LMi, LMj))
+
+    ourkey = lambda p: (p[2], O(p[3]), p[1])
+
+    def update(f, sugar, P):
+        """Add f with sugar ``sugar`` to S, update P."""
+        if not f:
+            return P
+        k = len(S)
+        S.append(f)
+        Sugars.append(sugar)
+
+        LMf = sdm_LM(f)
+        def removethis(pair):
+            i, j, s, t = pair
+            if LMf[0] != t[0]:
+                return False
+            tik = sdm_monomial_lcm(LMf, sdm_LM(S[i]))
+            tjk = sdm_monomial_lcm(LMf, sdm_LM(S[j]))
+            return tik != t and tjk != t and sdm_monomial_divides(tik, t) and \
+                                             sdm_monomial_divides(tjk, t)
+        # apply the chain criterion
+        P = [p for p in P if not removethis(p)]
+
+        # new-pair set
+        N = [(i, k, Ssugar(i, k), sdm_monomial_lcm(LMf, sdm_LM(S[i])))
+             for i in range(k) if LMf[0] == sdm_LM(S[i])[0]]
+        # TODO apply the product criterion?
+        N.sort(key=ourkey)
         remove = set()
-        retain = set()
-        for (a, b, c) in permutations(S, 3):
-            A = sdm_LM(a)
-            B = sdm_LM(b)
-            C = sdm_LM(c)
-            if len(set([A[0], B[0], C[0]])) != 1 or not h in [a, b, c] or \
-               any(tuple(x) in retain for x in [a, b, c]):
-                continue
-            if monomial_divides(B[1:], monomial_lcm(A[1:], C[1:])):
-                remove.add((tuple(a), tuple(c)))
-                retain.update([tuple(b), tuple(c), tuple(a)])
-        return [(f, g) for (f, g) in P if (h not in [f, g]) or \
-                    ((tuple(f), tuple(g)) not in remove and \
-                     (tuple(g), tuple(f)) not in remove)]
+        for i, p in enumerate(N):
+            for j in range(i + 1, len(N)):
+                if sdm_monomial_divides(p[3], N[j][3]):
+                    remove.add(j)
 
+        # TODO mergesort?
+        P.extend(reversed([p for i, p in enumerate(N) if not i in remove]))
+        P.sort(key=ourkey, reverse=True)
+        # NOTE reverse-sort, because we want to pop from the end
+        return P
+
+    # First add all the elements of G to S
+    for f in G:
+        P = update(f, sdm_deg(f), P)
+
+    # Now carry out the buchberger algorithm.
     while P:
-        # TODO better data structures!!!
-        #print len(P), len(S)
-        # Use the "normal selection strategy"
-        lcms = [(i, sdm_LM(f)[:1] + monomial_lcm(sdm_LM(f)[1:], sdm_LM(g)[1:])) for \
-                i, (f, g) in enumerate(P)]
-        i = min(lcms, key=lambda x: O(x[1]))[0]
-        f, g = P.pop(i)
+        i, j, s, t = P.pop()
+        f, sf, g, sg = S[i], Sugars[i], S[j], Sugars[j]
         h = NF(sdm_spoly(f, g, O, K), S, O, K)
-        if h:
-            S.append(h)
-            P.extend((h, f) for f in S if sdm_LM(h)[0] == sdm_LM(f)[0])
-            P = prune(P, S, h)
+        P = update(h, Ssugar(i, j), P)
 
-    # Now interreduce it. (TODO again, better data structures)
+    # Finally interreduce the standard basis.
+    # (TODO again, better data structures)
     S = set(tuple(f) for f in S)
     for a, b in permutations(S, 2):
         A = sdm_LM(list(a))
