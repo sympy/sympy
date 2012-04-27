@@ -1014,6 +1014,7 @@ class SubModulePolyRing(SubModule):
     """
 
     #self._gb - cached groebner basis
+    #self._gbe - cached groebner basis relations
 
     def __init__(self, gens, container, order="lex", TOP=False):
         SubModule.__init__(self, gens, container)
@@ -1022,25 +1023,40 @@ class SubModulePolyRing(SubModule):
                              + 'FreeModulePolyRing, got %s' % container)
         self.order = ModuleOrder(monomial_key(order), self.ring.order, TOP)
         self._gb = None
+        self._gbe = None
 
     def __eq__(self, other):
         if isinstance(other, SubModulePolyRing) and self.order != other.order:
             return False
         return SubModule.__eq__(self, other)
 
-    def _groebner(self):
+    def _groebner(self, extended=False):
         """Returns a standard basis in sdm form."""
         from sympy.polys.distributedmodules import sdm_groebner, sdm_nf_mora
+        if self._gbe is None and extended:
+            gb, gbe = sdm_groebner(
+               [self.ring._vector_to_sdm(x, self.order) for x in self.gens],
+               sdm_nf_mora, self.order, self.ring.dom, extended=True)
+            self._gb, self._gbe = tuple(gb), tuple(gbe)
         if self._gb is None:
             self._gb = tuple(sdm_groebner(
                [self.ring._vector_to_sdm(x, self.order) for x in self.gens],
                sdm_nf_mora, self.order, self.ring.dom))
-        return self._gb
+        if extended:
+            return self._gb, self._gbe
+        else:
+            return self._gb
 
-    def _groebner_vec(self):
+    def _groebner_vec(self, extended=False):
         """Returns a standard basis in element form."""
-        return [self.convert(self.ring._sdm_to_vector(x, self.rank)) \
-                for x in self._groebner()]
+        if not extended:
+            return [self.convert(self.ring._sdm_to_vector(x, self.rank))
+                    for x in self._groebner()]
+        gb, gbe = self._groebner(extended=True)
+        return ([self.convert(self.ring._sdm_to_vector(x, self.rank))
+                 for x in gb],
+                [self.ring._sdm_to_vector(x, len(self.gens)) for x in gbe])
+
 
     def _contains(self, x):
         from sympy.polys.distributedmodules import sdm_zero, sdm_nf_mora

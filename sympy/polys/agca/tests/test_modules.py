@@ -368,3 +368,9 @@ def test_quotient():
     assert F.submodule([x*y, x*z], [y*z, x*y]).module_quotient(
         F.submodule([y,z], [z,y])) == QQ[x, y, z].ideal(x**2*y**2 - x*y*z**2)
     assert F.submodule([x, y]).module_quotient(F.submodule()).is_whole_ring()
+
+def test_groebner_extendend():
+    M = QQ[x,y,z].free_module(3).submodule([x + 1, y, 1], [x*y, z, z**2])
+    G, R = M._groebner_vec(extended=True)
+    for i, g in enumerate(G):
+        assert g == sum(c*gen for c, gen in zip(R[i], M.gens))
