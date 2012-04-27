@@ -159,6 +159,29 @@ class Unit(AtomicExpr):
         return (isinstance(other, Unit) and self.factor == other.factor
                 and self.dimension == other.dimension)
 
+    def __mul__(self, other):
+        system = _UNIT_SYSTEM or self._system
+
+        if isinstance(other, Unit):
+            system = system or other.system
+
+            factor = self.factor * other.factor
+            dim = self.dimension * other.dimension
+            unit = Unit(abbrev, dim, factor)
+
+            if system is None:
+                abbrev = '%s %s' % (self.abbrev, other.abbrev)
+                return unit
+            else:
+                u = system.get_unit(unit)
+                if u != []:
+                    return u
+                else:
+                    system.can_dim_vector()
+
+        else:
+            return Mul(self, other)
+
 
 class UnitSystem():
     """
@@ -199,7 +222,7 @@ class UnitSystem():
 
         dims = [unit.dimension for unit in self._base_units]
         gen = reduce(lambda x,y: x*y, dims)
-        self._list_dim = sorted(gen.keys())
+        self._list_dim = sorted(gen.names)
 
     def _compute_can_transf_matrix(self):
         """

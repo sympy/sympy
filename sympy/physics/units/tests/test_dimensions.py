@@ -1,5 +1,18 @@
 from sympy.physics.units.dimensions import Dimension
 from sympy.physics.units.mks import length, mass, time, velocity, energy
+from sympy.utilities.pytest import raises
+
+def test_dimension_definition():
+    raises(TypeError, 'Dimension(["length", 1, 2])')
+
+    assert length.as_dict == {'length': 1}
+    assert length.get('length') == 1
+    assert length.get('time') is None
+    assert length.get('time', 'def') == 'def'
+    assert energy.as_dict == dict(zip(energy.names, energy.powers))
+    assert energy.items() == zip(energy.names, energy.powers)
+
+    assert length.is_dimensionless is False
 
 def test_dimension_symbols():
     assert length.symbol == 'L'
@@ -14,3 +27,8 @@ def test_dimension_operations():
     assert velocity == length * (1 / time)
     assert energy == mass * length**2 / time**2
     assert 1 / length == Dimension(length=-1)
+
+    raises(TypeError, 'length + 1')
+    raises(TypeError, 'length + time')
+    raises(TypeError, 'length - 1')
+    raises(TypeError, 'length - time')
