@@ -1105,14 +1105,17 @@ class SubModulePolyRing(SubModule):
         e = list(filter(lambda x: self.ring.is_unit(x[0]), G))[0]
         return [-x/e[0] for x in e[1:]]
 
-    def reduce_element(self, x):
+    def reduce_element(self, x, NF=None):
         """
         Reduce the element ``x`` of our container modulo ``self``.
 
-        This method computes a (non-unique!) normal form of ``x``.
+        This applies the normal form ``NF`` to ``x``. If ``NF`` is passed
+        as none, the default Mora normal form is used (which is not unique!).
         """
         from sympy.polys.distributedmodules import sdm_nf_mora
-        return self.container.convert(self.ring._sdm_to_vector(sdm_nf_mora(
+        if NF is None:
+            NF = sdm_nf_mora
+        return self.container.convert(self.ring._sdm_to_vector(NF(
                 self.ring._vector_to_sdm(x, self.order), self._groebner(),
                     self.order, self.ring.dom),
                 self.rank))

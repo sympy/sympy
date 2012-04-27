@@ -354,5 +354,5 @@ class ModuleImplementedIdeal(Ideal):
         """
         return self._module.in_terms_of_generators([e])
 
-    def reduce_element(self, x):
-        return self._module.reduce_element([x])[0]
+    def reduce_element(self, x, **options):
+        return self._module.reduce_element([x], **options)[0]

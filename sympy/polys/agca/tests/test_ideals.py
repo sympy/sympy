@@ -110,3 +110,11 @@ def test_quotient():
     # SCA, example 1.8.13
     R = QQ[x, y, z]
     assert R.ideal(x, y).quotient(R.ideal(y**2, z)) == R.ideal(x, y)
+
+def test_reduction():
+    from sympy.polys.distributedmodules import sdm_nf_buchberger_reduced
+    R = QQ[x, y]
+    I = R.ideal(x**5, y)
+    e = R.convert(x**3 + y**2)
+    assert I.reduce_element(e) == e
+    assert I.reduce_element(e, NF=sdm_nf_buchberger_reduced) == R.convert(x**3)
