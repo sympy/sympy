@@ -1016,7 +1016,7 @@ class SubModulePolyRing(SubModule):
     #self._gb - cached groebner basis
     #self._gbe - cached groebner basis relations
 
-    def __init__(self, gens, container, order="lex", TOP=False):
+    def __init__(self, gens, container, order="lex", TOP=True):
         SubModule.__init__(self, gens, container)
         if not isinstance(container, FreeModulePolyRing):
             raise NotImplementedError('This implementation is for submodules of '
@@ -1083,8 +1083,9 @@ class SubModulePolyRing(SubModule):
             for i in range(k):
                 m[r + i] = im[j, i]
             newgens.append(Rkr.convert(m))
-        # Note: we need *descending* order on module index
-        F = Rkr.submodule(*newgens, **{'order': 'ilex'})
+        # Note: we need *descending* order on module index, and TOP=False to
+        #       get an eliminetaion order
+        F = Rkr.submodule(*newgens, **{'order': 'ilex', 'TOP': False})
 
         # Second bullet point: standard basis of F
         G = F._groebner_vec()
@@ -1099,7 +1100,7 @@ class SubModulePolyRing(SubModule):
         """Expression in terms of generators. See [SCA, 2.8.1]."""
         # NOTE: if gens is a standard basis, this can be done more efficiently
         M = self.ring.free_module(self.rank).submodule(*((e,) + self.gens))
-        S = M.syzygy_module(order="ilex") # We want decreasing order!
+        S = M.syzygy_module(order="ilex", TOP=False) # We want decreasing order!
         G = S._groebner_vec()
         # This list cannot not be empty since e is an element
         e = list(filter(lambda x: self.ring.is_unit(x[0]), G))[0]
@@ -1156,7 +1157,7 @@ class SubModulePolyRing(SubModule):
             gi = [list(x) + [0] for x in self.gens]
             # NOTE: We *need* to use an elimination order
             M = self.ring.free_module(self.rank + 1).submodule(*([g1] + gi),
-                                                               **{'order': 'ilex'})
+                                            **{'order': 'ilex', 'TOP': False})
             if not relations:
                 return self.ring.ideal(*[x[-1] for x in M._groebner_vec() if
                                          all(y == self.ring.zero for y in x[:-1])])
