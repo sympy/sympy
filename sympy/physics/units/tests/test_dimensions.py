@@ -1,3 +1,4 @@
+from sympy import sympify
 from sympy.physics.units.dimensions import Dimension
 from sympy.physics.units.mks import length, mass, time, velocity, energy
 from sympy.utilities.pytest import raises
@@ -5,12 +6,11 @@ from sympy.utilities.pytest import raises
 def test_dimension_definition():
     raises(TypeError, 'Dimension(["length", 1, 2])')
 
-    assert length.as_dict == {'length': 1}
+    assert dict(length) == {sympify('length'): 1}
     assert length.get('length') == 1
     assert length.get('time') is None
     assert length.get('time', 'def') == 'def'
-    assert energy.as_dict == dict(zip(energy.names, energy.powers))
-    assert energy.items() == zip(energy.names, energy.powers)
+    #assert energy.as_dict == dict(zip(energy.names, energy.powers))
 
     assert length.is_dimensionless is False
 

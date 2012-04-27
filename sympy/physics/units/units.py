@@ -222,7 +222,7 @@ class UnitSystem():
 
         dims = [unit.dimension for unit in self._base_units]
         gen = reduce(lambda x,y: x*y, dims)
-        self._list_dim = sorted(gen.names)
+        self._list_dim = sorted(gen.keys())
 
     def _compute_can_transf_matrix(self):
         """

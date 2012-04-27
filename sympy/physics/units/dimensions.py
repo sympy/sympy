@@ -7,13 +7,14 @@ Dimension for physical quantities.
 from __future__ import division
 from copy import copy
 
+from sympy.core.containers import Dict
 from sympy import Rational, Number
 
 # TODO: define the Dimension as a commutative Symbol, see paulialgebra module.
 # TODO: define a dimensionless fixed dimension, which is returned instead of 1
 #       in operations
 
-class Dimension():
+class Dimension(Dict):
     """
     This class represent the dimension of a physical units.
 
@@ -25,12 +26,12 @@ class Dimension():
     {length: 1, time: -1}
     """
 
-    def __init__(self, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):
 
         # before setting the dict, check if a name or a symbol are defined
         # if so, remove them from the dict
-        self.name = kwargs.pop('name', None)
-        self.symbol = kwargs.pop('symbol', None)
+        name = kwargs.pop('name', None)
+        symbol = kwargs.pop('symbol', None)
 
         pairs = []
 
@@ -49,20 +50,11 @@ class Dimension():
 
         pairs.extend(kwargs.items())
 
-        self.names, self.powers = map(tuple, zip(*sorted(pairs)))
+        new = Dict.__new__(cls, *pairs)
+        new.name = name
+        new.symbol = symbol
 
-    def __getitem__(self, key):
-        return self.as_dict[key]
-
-    def __len__(self):
-        return len(self.names)
-
-    def __hash__(self):
-        try:
-            return self._cached_hash
-        except AttributeError:
-            h = self._cached_hash = hash(frozenset((self.names, self.powers)))
-            return h
+        return new
 
     #TODO: use unit system to pretty print the dimension
     #def __str__(self):
@@ -70,17 +62,9 @@ class Dimension():
         #    return self.symbol
         #return dict.__str__(self)
         #s = ''.join()
-    def __str__(self):
-        return str(self.as_dict)
 
     def __repr__(self):
-        return "<Dimension: %s>" % self.as_dict
-
-    def __eq__(self, other):
-        if isinstance(other, Dimension):
-            return self.names == other.names and self.powers == other.powers
-        else:
-            raise TypeError("Dimension can be compared only to dimensions.")
+        return "<Dimension: %s>" % self
 
     def __add__(self, other):
         """
@@ -103,8 +87,8 @@ class Dimension():
             #TODO: improve to not raise error
             raise TypeError('Only dimension can be multiplied.')
 
-        d = self.as_dict
-        for key in other.as_dict:
+        d = dict(self)
+        for key in other:
             try:
                 d[key] += other[key]
             except KeyError:
@@ -122,8 +106,8 @@ class Dimension():
         if not isinstance(other, Dimension):
             raise TypeError('Only dimension can be divided.')
 
-        d = self.as_dict
-        for key in other.as_dict:
+        d = dict(self)
+        for key in other:
             try:
                 d[key] -= other[key]
             except KeyError:
@@ -163,26 +147,13 @@ class Dimension():
         """
 
     @property
-    def as_dict(self):
-        return dict(self.items())
-
-    def get(self, key, default=None):
-        try:
-            return self[key]
-        except KeyError:
-            return default
-
-    def items(self):
-        return zip(self.names, self.powers)
-
-    @property
     def is_dimensionless(self):
         """
         Check if the dimension object really has a dimension.
         """
 
-        for val in self.powers:
-            if val != 0:
+        for key in self:
+            if self[key] != 0:
                 return False
         else:
             return True
