@@ -204,8 +204,8 @@ def test_symbols_each_char():
 
     # First, test the warning
     warnings.filterwarnings("error")
-    raises(UserWarning, lambda: symbols('xyz', each_char=True))
-    raises(UserWarning, lambda: symbols('xyz', each_char=False))
+    raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=True))
+    raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=False))
     # now test the actual output
     warnings.filterwarnings("ignore")
     assert symbols(['wx', 'yz'], each_char=True) == [(w, x), (y, z)]
