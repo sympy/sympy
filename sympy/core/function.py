@@ -1988,12 +1988,15 @@ def nfloat(expr, n=15, exponent=False):
 
     if not exponent:
         bases = {}
-        reps = dict([(p, Pow(bases.setdefault(p.base,
-            nfloat(p.base, n, exponent)), Dummy(), evaluate=False))
-            for p in expr.atoms(Pow)])
-        rv = expr.xreplace(reps).n(n).xreplace(
-            dict([(v, Pow(bases[k.base], k.exp, evaluate=False))
-            for k, v in reps.iteritems()]))
+        expos = {}
+        reps = {}
+        for p in expr.atoms(Pow):
+            b, e = p.as_base_exp()
+            b = bases.setdefault(p.base, nfloat(p.base, n, exponent))
+            e = expos.setdefault(e, Dummy())
+            reps[p] = Pow(b, e, evaluate=False)
+        rv = expr.xreplace(dict(reps)).n(n).xreplace(
+            dict([(v, k) for k, v in expos.iteritems()]))
     else:
         intex = lambda x: x.is_Pow and x.exp.is_Integer
         floex = lambda x: Pow(x.base, Float(x.exp, ''), evaluate=False)
