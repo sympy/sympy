@@ -22,8 +22,6 @@ __all__ = [
     # "Private" functions
     'is_scalar_sparse_matrix',
     'is_scalar_nonsparse_matrix',
-    'generate_gate_rules_with_seq',
-    'generate_equivalent_ids_with_seq',
     'is_degenerate',
     'is_reducible',
 ]
@@ -41,7 +39,7 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
 
     Parameters
     ==========
-    circuit : tuple, Gate
+    circuit : Gate tuple
         Sequence of quantum gates representing a quantum circuit
     nqubits : int
         Number of qubits in the circuit
@@ -142,7 +140,7 @@ def is_scalar_nonsparse_matrix(circuit, nqubits, identity_only):
 
     Parameters
     ==========
-    circuit : tuple, Gate
+    circuit : Gate tuple
         Sequence of quantum gates representing a quantum circuit
     nqubits : int
         Number of qubits in the circuit
@@ -205,9 +203,9 @@ def ll_op(left, right):
 
     Parameters
     ==========
-    left : tuple, Gate
+    left : Gate tuple
         The left circuit of a gate rule expression.
-    right : tuple, Gate
+    right : Gate tuple
         The right circuit of a gate rule expression.
 
     Examples
@@ -256,9 +254,9 @@ def lr_op(left, right):
 
     Parameters
     ==========
-    left : tuple, Gate
+    left : Gate tuple
         The left circuit of a gate rule expression.
-    right : tuple, Gate
+    right : Gate tuple
         The right circuit of a gate rule expression.
 
     Examples
@@ -307,9 +305,9 @@ def rl_op(left, right):
 
     Parameters
     ==========
-    left : tuple, Gate
+    left : Gate tuple
         The left circuit of a gate rule expression.
-    right : tuple, Gate
+    right : Gate tuple
         The right circuit of a gate rule expression.
 
     Examples
@@ -358,9 +356,9 @@ def rr_op(left, right):
 
     Parameters
     ==========
-    left : tuple, Gate
+    left : Gate tuple
         The left circuit of a gate rule expression.
-    right : tuple, Gate
+    right : Gate tuple
         The right circuit of a gate rule expression.
 
     Examples
@@ -395,9 +393,9 @@ def rr_op(left, right):
 
     return None
 
-def generate_gate_rules_with_seq(*gate_seq):
+def generate_gate_rules(gate_seq, return_as_muls=False):
     """Returns a set of gate rules.  Each gate rules is represented
-    as 2-tuple of tuples.  An empty tuple represents an arbitrary
+    as a 2-tuple of tuples or Muls.  An empty tuple represents an arbitrary
     scalar value.
 
     This function uses the four operations (LL, LR, RL, RR)
@@ -437,30 +435,54 @@ def generate_gate_rules_with_seq(*gate_seq):
 
     Parameters
     ==========
-    gate_seq : tuple, Gate
-        A variable length tuple of Gates whose product is equal to
-        a scalar matrix.
+    gate_seq : Gate tuple, Mul, or Number
+        A variable length tuple or Mul of Gates whose product is equal to
+        a scalar matrix
+    return_as_muls : bool
+        True to return a set of Muls; False to return a set of tuples
 
     Examples
     ========
 
-    Find the gate rules of the current circuit:
+    Find the gate rules of the current circuit using tuples:
 
         >>> from sympy.physics.quantum.identitysearch import \
-                    generate_gate_rules_with_seq
+                    generate_gate_rules
         >>> from sympy.physics.quantum.gate import X, Y, Z
         >>> x = X(0); y = Y(0); z = Z(0)
-        >>> generate_gate_rules_with_seq(x, x)
+        >>> generate_gate_rules((x, x))
         set([((X(0),), (X(0),)), ((X(0), X(0)), ())])
 
-        >>> generate_gate_rules_with_seq(x, y, z)
+        >>> generate_gate_rules((x, y, z))
         set([((), (X(0), Z(0), Y(0))), ((), (Y(0), X(0), Z(0))),
              ((), (Z(0), Y(0), X(0))), ((X(0),), (Z(0), Y(0))),
              ((Y(0),), (X(0), Z(0))), ((Z(0),), (Y(0), X(0))),
              ((X(0), Y(0)), (Z(0),)), ((Y(0), Z(0)), (X(0),)),
              ((Z(0), X(0)), (Y(0),)), ((X(0), Y(0), Z(0)), ()),
              ((Y(0), Z(0), X(0)), ()), ((Z(0), X(0), Y(0)), ())])
+
+    Find the gate rules of the current circuit using Muls:
+
+        >>> generate_gate_rules(x*x, return_as_muls=True)
+        set([(1, 1)])
+
+        >>> generate_gate_rules(x*y*z, return_as_muls=True)
+        set([(1, X(0)*Z(0)*Y(0)), (1, Y(0)*X(0)*Z(0)),
+             (1, Z(0)*Y(0)*X(0)), (X(0)*Y(0), Z(0)),
+             (Y(0)*Z(0), X(0)), (Z(0)*X(0), Y(0)),
+             (X(0)*Y(0)*Z(0), 1), (Y(0)*Z(0)*X(0), 1),
+             (Z(0)*X(0)*Y(0), 1), (X(0), Z(0)*Y(0)),
+             (Y(0), X(0)*Z(0)), (Z(0), Y(0)*X(0))])
     """
+
+    if isinstance(gate_seq, Number):
+        if return_as_muls:
+            return set([(Integer(1), Integer(1))])
+        else:
+            return set([((), ())])
+
+    elif isinstance(gate_seq, Mul):
+        gate_seq = gate_seq.args
 
     # Each item in queue is a 3-tuple:
     #     i)   first item is the left side of an equality
@@ -504,56 +526,18 @@ def generate_gate_rules_with_seq(*gate_seq):
         new_rule = rr_op(left, right)
         process_new_rule(new_rule, ops)
 
+    if return_as_muls:
+        # Convert each rule as tuples into a rule as muls
+        mul_rules = set()
+        for rule in rules:
+            left, right = rule
+            mul_rules.add((Mul(*left), Mul(*right)))
+
+        rules = mul_rules
+
     return rules
 
-def generate_gate_rules(circuit):
-    """Returns a set of gate rules.
-
-    Parameters
-    ==========
-    gate_seq : Mul or Number
-        A Mul expression of Gates whose product is equal to
-        a scalar matrix.
-
-    Examples
-    ========
-
-    Find the gate rules of the current circuit:
-
-        >>> from sympy.physics.quantum.identitysearch import \
-                    generate_gate_rules
-        >>> from sympy.physics.quantum.gate import X, Y, Z
-        >>> x = X(0); y = Y(0); z = Z(0)
-        >>> generate_gate_rules(x*x)
-        set([(1, 1)])
-
-        >>> generate_gate_rules(x*y*z)
-        set([(1, X(0)*Z(0)*Y(0)), (1, Y(0)*X(0)*Z(0)),
-             (1, Z(0)*Y(0)*X(0)), (X(0)*Y(0), Z(0)),
-             (Y(0)*Z(0), X(0)), (Z(0)*X(0), Y(0)),
-             (X(0)*Y(0)*Z(0), 1), (Y(0)*Z(0)*X(0), 1),
-             (Z(0)*X(0)*Y(0), 1), (X(0), Z(0)*Y(0)),
-             (Y(0), X(0)*Z(0)), (Z(0), Y(0)*X(0))])
-    """
-
-    # Make sure we have an Add or Mul.
-    if not isinstance(circuit, Mul) and not isinstance(circuit, Gate):
-        if isinstance(circuit, Number):
-            return set([(Integer(1), Integer(1))])
-        else:
-            raise TypeError('Mul or Number expected, got %r' % circuit)
-
-    gate_seq = (circuit,) if isinstance(circuit, Gate) else circuit.args
-    gate_rule_seqs = generate_gate_rules_with_seq(*gate_seq)
-
-    gate_rules = set()
-    for rule in gate_rule_seqs:
-        left, right = rule
-        gate_rules.add((Mul(*left), Mul(*right)))
-
-    return gate_rules
-
-def generate_equivalent_ids_with_seq(*gate_seq):
+def generate_equivalent_ids(gate_seq, return_as_muls=False):
     """Returns a set of equivalent gate identities.
 
     A gate identity is a quantum circuit such that the product
@@ -574,33 +558,50 @@ def generate_equivalent_ids_with_seq(*gate_seq):
 
     Parameters
     ==========
-    gate_seq : tuple, Gate
-        A variable length tuple of Gates whose product is equal to
+    gate_seq : Gate tuple, Mul, or Number
+        A variable length tuple or Mul of Gates whose product is equal to
         a scalar matrix.
+    return_as_muls: bool
+        True to return as Muls; False to return as tuples
 
     Examples
     ========
 
-    Find equivalent gate identities from the current circuit:
+    Find equivalent gate identities from the current circuit with tuples:
 
         >>> from sympy.physics.quantum.identitysearch import \
-                    generate_equivalent_ids_with_seq
+                    generate_equivalent_ids
         >>> from sympy.physics.quantum.gate import X, Y, Z
         >>> x = X(0); y = Y(0); z = Z(0)
-        >>> generate_equivalent_ids_with_seq(x, x)
+        >>> generate_equivalent_ids((x, x))
         set([(X(0), X(0))])
 
-        >>> generate_equivalent_ids_with_seq(x, y, z)
+        >>> generate_equivalent_ids((x, y, z))
         set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
              (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))])
+
+    Find equivalent gate identities from the current circuit with Muls:
+
+        >>> generate_equivalent_ids(x*x, return_as_muls=True)
+        set([1])
+
+        >>> generate_equivalent_ids(x*y*z, return_as_muls=True)
+        set([X(0)*Y(0)*Z(0), X(0)*Z(0)*Y(0), Y(0)*X(0)*Z(0),
+             Y(0)*Z(0)*X(0), Z(0)*X(0)*Y(0), Z(0)*Y(0)*X(0)])
     """
+
+    if isinstance(gate_seq, Number):
+        return set([Integer(1)])
+    elif isinstance(gate_seq, Mul):
+        gate_seq = gate_seq.args
+
     # Filter through the gate rules and keep the rules
     # with an empty tuple either on the left or right side
 
     # A set of equivalent gate identities
     eq_ids = set()
 
-    gate_rules = generate_gate_rules_with_seq(*gate_seq)
+    gate_rules = generate_gate_rules(gate_seq)
     for rule in gate_rules:
         l, r = rule
         if l == ():
@@ -608,46 +609,9 @@ def generate_equivalent_ids_with_seq(*gate_seq):
         elif r == ():
             eq_ids.add(l)
 
-    return eq_ids
-
-def generate_equivalent_ids(circuit):
-    """Returns a set of equivalent gate identities.
-
-    Parameters
-    ==========
-    gate_seq : Mul or Number
-        A Mul expression of Gates whose product is equal to
-        a scalar matrix.
-
-    Examples
-    ========
-
-    Find the gate rules of the current circuit:
-
-        >>> from sympy.physics.quantum.identitysearch import \
-                    generate_equivalent_ids
-        >>> from sympy.physics.quantum.gate import X, Y, Z
-        >>> x = X(0); y = Y(0); z = Z(0)
-        >>> generate_equivalent_ids(x*x)
-        set([1])
-
-        >>> generate_equivalent_ids(x*y*z)
-        set([X(0)*Y(0)*Z(0), X(0)*Z(0)*Y(0), Y(0)*X(0)*Z(0),
-             Y(0)*Z(0)*X(0), Z(0)*X(0)*Y(0), Z(0)*Y(0)*X(0)])
-    """
-
-    # Make sure we have an Add or Mul.
-    if not isinstance(circuit, Mul) and not isinstance(circuit, Gate):
-        if isinstance(circuit, Number):
-            return set([Integer(1)])
-        else:
-            raise TypeError('Mul or Number expected, got %r' % circuit)
-
-    gate_seq = (circuit,) if isinstance(circuit, Gate) else circuit.args
-    eq_id_seqs = generate_equivalent_ids_with_seq(*gate_seq)
-
-    convert_to_mul = lambda id_seq: Mul(*id_seq)
-    eq_ids = set(map(convert_to_mul, eq_id_seqs))
+    if return_as_muls:
+        convert_to_mul = lambda id_seq: Mul(*id_seq)
+        eq_ids = set(map(convert_to_mul, eq_ids))
 
     return eq_ids
 
@@ -661,7 +625,7 @@ class GateIdentity(Basic):
 
     Parameters
     ==========
-    args : tuple, Gate
+    args : Gate tuple
         A variable length tuple of Gates that form an identity.
 
     Examples
@@ -680,15 +644,14 @@ class GateIdentity(Basic):
         >>> an_identity.equivalent_ids
         set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
              (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))])
-
     """
 
     def __new__(cls, *args):
         # args should be a tuple - a variable length argument list
         obj = Basic.__new__(cls, *args)
         obj._circuit = Mul(*args)
-        obj._rules = generate_gate_rules_with_seq(*args)
-        obj._eq_ids = generate_equivalent_ids_with_seq(*args)
+        obj._rules = generate_gate_rules(args)
+        obj._eq_ids = generate_equivalent_ids(args)
 
         return obj
 
@@ -755,7 +718,7 @@ def is_reducible(circuit, nqubits, begin, end):
 
     Parameters
     ==========
-    circuit : tuple, Gate
+    circuit : Gate tuple
         A tuple of Gates representing a circuit.  The circuit to check
         if a gate identity is contained in a subcircuit.
     nqubits : int
