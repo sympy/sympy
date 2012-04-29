@@ -129,3 +129,8 @@ def test_reduce_inequalities_errors():
 def test_hacky_inequalities():
     assert reduce_inequalities(x + y < 1, symbols=[x]) == (x < 1 - y)
     assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x >= 1 - y)
+
+def test_issue_3244():
+    eq = -3*x**2/2 - 45*x/4 + S(33)/2 > 0
+    assert reduce_inequalities(eq, Q.real(x)) == \
+        And(x < -S(15)/4 + sqrt(401)/4, -sqrt(401)/4 - S(15)/4 < x)
