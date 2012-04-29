@@ -10,7 +10,6 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.operator import (UnitaryOperator,
         HermitianOperator)
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.circuitutils import conv2_symbolic_qubits_with_seq
 
 __all__ = [
     # Public interfaces
@@ -55,6 +54,8 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
     Examples
     ========
 
+    Check if the circuit is a scalar matrix:
+
         >>> from sympy.physics.quantum.identitysearch import \
                     is_scalar_sparse_matrix
         >>> from sympy.physics.quantum.gate import X, Y, Z
@@ -63,6 +64,9 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         >>> circuit = (x, y, z)
         >>> is_scalar_sparse_matrix(circuit, nqubits, False)
         True
+
+    Check if the circuit equals to the identity matrix:
+
         >>> is_scalar_sparse_matrix(circuit, nqubits, True)
         False
     """
@@ -187,28 +191,38 @@ def _get_min_qubits(a_gate):
     else:
         return a_gate.min_qubits
 
-def ll_op(left, rite):
-    """Perform a LL operation.  If LL is possible, it
-    returns a 2-tuple representing the new gate rule;
-    otherwise None is returned.
+def ll_op(left, right):
+    """Perform a LL operation.
+
+    A LL operation multiplies both left and right circuits
+    with the dagger of the left circuit's leftmost gate, and
+    the dagger is multiplied on the left side of both circuits.
+
+    If a LL is possible, it returns the new gate rule as a
+    2-tuple (LHS, RHS), where LHS is the left circuit and
+    and RHS is the right circuit of the new rule.
+    If a LL is not possible, None is returned.
 
     Parameters
     ==========
     left : tuple, Gate
         The left circuit of a gate rule expression.
-    rite : tuple, Gate
+    right : tuple, Gate
         The right circuit of a gate rule expression.
 
     Examples
     ========
+
+    Generate a new gate rule using a LL operation:
 
         >>> from sympy.physics.quantum.identitysearch import ll_op
         >>> from sympy.physics.quantum.gate import X, Y, Z
         >>> x = X(0); y = Y(0); z = Z(0)
         >>> ll_op((x, y, z), ())
         ((Y(0), Z(0)), (X(0),))
-        >>> ll_op((x, y), (z,))
-        ((Y(0),), (X(0), Z(0)))
+
+        >>> ll_op((y, z), (x,))
+        ((Z(0),), (Y(0), X(0)))
     """
 
     if (len(left) > 0):
@@ -222,32 +236,42 @@ def ll_op(left, rite):
         # Get the new left side w/o the leftmost gate
         new_left = left[1:len(left)]
         # Add the leftmost gate to the left position on the right side
-        new_rite = (Dagger(ll_gate),) + rite
+        new_right = (Dagger(ll_gate),) + right
         # Return the new gate rule
-        return (new_left, new_rite)
-       
+        return (new_left, new_right)
+
     return None
 
-def lr_op(left, rite):
-    """Perform a LR operation.  If LR is possible, it
-    returns a 2-tuple representing the new gate rule;
-    otherwise None is returned.
+def lr_op(left, right):
+    """Perform a LR operation.
+
+    A LR operation multiplies both left and right circuits
+    with the dagger of the left circuit's rightmost gate, and
+    the dagger is multiplied on the right side of both circuits.
+
+    If a LR is possible, it returns the new gate rule as a
+    2-tuple (LHS, RHS), where LHS is the left circuit and
+    and RHS is the right circuit of the new rule.
+    If a LR is not possible, None is returned.
 
     Parameters
     ==========
     left : tuple, Gate
         The left circuit of a gate rule expression.
-    rite : tuple, Gate
+    right : tuple, Gate
         The right circuit of a gate rule expression.
 
     Examples
     ========
+
+    Generate a new gate rule using a LR operation:
 
         >>> from sympy.physics.quantum.identitysearch import lr_op
         >>> from sympy.physics.quantum.gate import X, Y, Z
         >>> x = X(0); y = Y(0); z = Z(0)
         >>> lr_op((x, y, z), ())
         ((X(0), Y(0)), (Z(0),))
+
         >>> lr_op((x, y), (z,))
         ((X(0),), (Z(0), Y(0)))
     """
@@ -263,91 +287,111 @@ def lr_op(left, rite):
         # Get the new left side w/o the rightmost gate
         new_left = left[0:len(left)-1]
         # Add the rightmost gate to the right position on the right side
-        new_rite = rite + (Dagger(lr_gate),)
+        new_right = right + (Dagger(lr_gate),)
         # Return the new gate rule
-        return (new_left, new_rite)
+        return (new_left, new_right)
 
     return None
 
-def rl_op(left, rite):
-    """Perform a RL operation.  If RL is possible, it
-    returns a 2-tuple representing the new gate rule;
-    otherwise None is returned.
+def rl_op(left, right):
+    """Perform a RL operation.
+
+    A RL operation multiplies both left and right circuits
+    with the dagger of the right circuit's leftmost gate, and
+    the dagger is multiplied on the left side of both circuits.
+
+    If a RL is possible, it returns the new gate rule as a
+    2-tuple (LHS, RHS), where LHS is the left circuit and
+    and RHS is the right circuit of the new rule.
+    If a RL is not possible, None is returned.
 
     Parameters
     ==========
     left : tuple, Gate
         The left circuit of a gate rule expression.
-    rite : tuple, Gate
+    right : tuple, Gate
         The right circuit of a gate rule expression.
 
     Examples
     ========
+
+    Generate a new gate rule using a RL operation:
 
         >>> from sympy.physics.quantum.identitysearch import rl_op
         >>> from sympy.physics.quantum.gate import X, Y, Z
         >>> x = X(0); y = Y(0); z = Z(0)
         >>> rl_op((x,), (y, z))
         ((Y(0), X(0)), (Z(0),))
+
         >>> rl_op((x, y), (z,))
         ((Z(0), X(0), Y(0)), ())
     """
 
-    if (len(rite) > 0):
-        rl_gate = rite[0]
+    if (len(right) > 0):
+        rl_gate = right[0]
         rl_gate_is_unitary = is_scalar_matrix(
                                  (Dagger(rl_gate), rl_gate),
                                  _get_min_qubits(rl_gate),
                                  True)
 
-    if (len(rite) > 0 and rl_gate_is_unitary):
+    if (len(right) > 0 and rl_gate_is_unitary):
         # Get the new right side w/o the leftmost gate
-        new_rite = rite[1:len(rite)]
+        new_right = right[1:len(right)]
         # Add the leftmost gate to the left position on the left side
         new_left = (Dagger(rl_gate),) + left
         # Return the new gate rule
-        return (new_left, new_rite)
+        return (new_left, new_right)
 
     return None
 
-def rr_op(left, rite):
-    """Perform a RR operation.  If RR is possible, it
-    returns a 2-tuple representing the new gate rule;
-    otherwise None is returned.
+def rr_op(left, right):
+    """Perform a RR operation.
+
+    A RR operation multiplies both left and right circuits
+    with the dagger of the right circuit's rightmost gate, and
+    the dagger is multiplied on the right side of both circuits.
+
+    If a RR is possible, it returns the new gate rule as a
+    2-tuple (LHS, RHS), where LHS is the left circuit and
+    and RHS is the right circuit of the new rule.
+    If a RR is not possible, None is returned.
 
     Parameters
     ==========
     left : tuple, Gate
         The left circuit of a gate rule expression.
-    rite : tuple, Gate
+    right : tuple, Gate
         The right circuit of a gate rule expression.
 
     Examples
     ========
+
+    Generate a new gate rule using a RR operation:
 
         >>> from sympy.physics.quantum.identitysearch import rr_op
         >>> from sympy.physics.quantum.gate import X, Y, Z
         >>> x = X(0); y = Y(0); z = Z(0)
         >>> rr_op((x, y), (z,))
         ((X(0), Y(0), Z(0)), ())
+
         >>> rr_op((x,), (y, z))
         ((X(0), Z(0)), (Y(0),))
     """
 
-    if (len(rite) > 0):
-        rr_gate = rite[len(rite)-1]
+    if (len(right) > 0):
+        rr_gate = right[len(right)-1]
         rr_gate_is_unitary = is_scalar_matrix(
                                  (Dagger(rr_gate), rr_gate),
                                  _get_min_qubits(rr_gate),
                                  True)
 
-    if (len(rite) > 0 and rr_gate_is_unitary):
+    if (len(right) > 0 and rr_gate_is_unitary):
         # Get the new right side w/o the rightmost gate
-        new_rite = rite[0:len(rite)-1]
+        new_right = right[0:len(right)-1]
         # Add the rightmost gate to the right position on the right side
         new_left = left + (Dagger(rr_gate),)
         # Return the new gate rule
-        return (new_left, new_rite)
+        return (new_left, new_right)
 
     return None
 
@@ -433,9 +477,9 @@ def generate_gate_rules_with_seq(*gate_seq):
 
     def process_new_rule(new_rule, ops):
         if new_rule is not None:
-            new_left, new_rite = new_rule
+            new_left, new_right = new_rule
 
-            if new_rule not in rules and (new_rite, new_left) not in rules:
+            if new_rule not in rules and (new_right, new_left) not in rules:
                 rules.add(new_rule)
             # If haven't reached the max limit on operations
             if ops + 1 < max_ops:
@@ -445,19 +489,19 @@ def generate_gate_rules_with_seq(*gate_seq):
     rules.add((gate_seq, ()))
 
     while len(queue) > 0:
-        left, rite, ops = queue.popleft()
+        left, right, ops = queue.popleft()
 
         # Do a LL
-        new_rule = ll_op(left, rite)
+        new_rule = ll_op(left, right)
         process_new_rule(new_rule, ops)
         # Do a LR
-        new_rule = lr_op(left, rite)
+        new_rule = lr_op(left, right)
         process_new_rule(new_rule, ops)
         # Do a RL
-        new_rule = rl_op(left, rite)
+        new_rule = rl_op(left, right)
         process_new_rule(new_rule, ops)
         # Do a RR
-        new_rule = rr_op(left, rite)
+        new_rule = rr_op(left, right)
         process_new_rule(new_rule, ops)
 
     return rules
@@ -504,8 +548,8 @@ def generate_gate_rules(circuit):
 
     gate_rules = set()
     for rule in gate_rule_seqs:
-        left, rite = rule           
-        gate_rules.add((Mul(*left), Mul(*rite)))
+        left, right = rule
+        gate_rules.add((Mul(*left), Mul(*right)))
 
     return gate_rules
 
@@ -643,14 +687,9 @@ class GateIdentity(Basic):
         # args should be a tuple - a variable length argument list
         obj = Basic.__new__(cls, *args)
         obj._circuit = Mul(*args)
-        obj._rules = generate_gate_rules_with_seq(*args)        
+        obj._rules = generate_gate_rules_with_seq(*args)
         obj._eq_ids = generate_equivalent_ids_with_seq(*args)
 
-        def conv2_sym(an_id):
-            sym_circuit, mp, ndx = conv2_symbolic_qubits_with_seq(*an_id)
-            return sym_circuit
-
-        obj._sym_ids = set(map(conv2_sym, obj._eq_ids))
         return obj
 
     @property
@@ -664,10 +703,6 @@ class GateIdentity(Basic):
     @property
     def equivalent_ids(self):
         return self._eq_ids
-
-    @property
-    def symbolic_ids(self):
-        return self._sym_ids
 
     @property
     def sequence(self):
@@ -715,7 +750,8 @@ def is_degenerate(identity_set, gate_identity):
     return False
 
 def is_reducible(circuit, nqubits, begin, end):
-    """Determines if a subcircuit in circuit is reducible to a scalar value.
+    """Determines if a circuit is reducible by checking
+    if its subcircuits are scalar values.
 
     Parameters
     ==========
@@ -732,12 +768,16 @@ def is_reducible(circuit, nqubits, begin, end):
     Examples
     ========
 
+    Check if the circuit can be reduced:
+
         >>> from sympy.physics.quantum.identitysearch import \
                     GateIdentity, is_reducible
         >>> from sympy.physics.quantum.gate import X, Y, Z
         >>> x = X(0); y = Y(0); z = Z(0)
         >>> is_reducible((x, y, z), 1, 0, 3)
         True
+
+    Check if an interval in the circuit can be reduced:
 
         >>> is_reducible((x, y, z), 1, 1, 3)
         False
@@ -758,7 +798,8 @@ def is_reducible(circuit, nqubits, begin, end):
 
     return False
 
-def bfs_identity_search(gate_list, nqubits, **kwargs):
+def bfs_identity_search(gate_list, nqubits, max_depth=None,
+       identity_only=False):
     """Constructs a set of gate identities from the list of possible gates.
 
     Performs a breadth first search over the space of gate identities.
@@ -780,6 +821,7 @@ def bfs_identity_search(gate_list, nqubits, **kwargs):
     ========
 
     Find a list of gate identities:
+
         >>> from sympy.physics.quantum.identitysearch import \
                     bfs_identity_search
         >>> from sympy.physics.quantum.gate import X, Y, Z, H
@@ -791,19 +833,17 @@ def bfs_identity_search(gate_list, nqubits, **kwargs):
         set([GateIdentity(X(0), X(0)), GateIdentity(Y(0), Y(0)),
              GateIdentity(Z(0), Z(0)), GateIdentity(X(0), Y(0), Z(0))])
 
+    Find a list of identities that only equal to 1:
+
         >>> bfs_identity_search([x, y, z], 1, identity_only=True)
         set([GateIdentity(X(0), X(0)), GateIdentity(Y(0), Y(0)),
              GateIdentity(Z(0), Z(0))])
     """
 
-    # If max depth of a path isn't given, use the length of the gate_list
-    if ("max_depth" in kwargs and kwargs["max_depth"] > 0):
-        max_depth = kwargs["max_depth"]
-    else:
+    if max_depth is None or max_depth <= 0:
         max_depth = len(gate_list)
 
-    id_only = (kwargs["identity_only"] if "identity_only" in kwargs else
-                     False)
+    id_only = identity_only
 
     # Start with an empty sequence (implicitly contains an IdentityGate)
     queue = deque([()])
