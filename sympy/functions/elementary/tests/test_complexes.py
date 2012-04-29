@@ -12,6 +12,7 @@ def test_re():
     x, y = symbols('x,y')
 
     r = Symbol('r', real=True)
+    i = Symbol('i', imaginary=True)
 
     assert re(nan) == nan
 
@@ -30,6 +31,8 @@ def test_re():
     assert re(x*I) == -im(x)
     assert re(r*I) == 0
     assert re(r) == r
+    assert re(i*I) == I * i
+    assert re(i) == 0
 
     assert re(x + y) == re(x + y)
     assert re(x + r) == re(x) + r
@@ -55,6 +58,7 @@ def test_im():
     x, y = symbols('x,y')
 
     r = Symbol('r', real=True)
+    i = Symbol('i', imaginary=True)
 
     assert im(nan) == nan
 
@@ -73,6 +77,8 @@ def test_im():
     assert im(x*I) == re(x)
     assert im(r*I) == r
     assert im(r) == 0
+    assert im(i*I) == 0
+    assert im(i) == -I * i
 
     assert im(x + y) == im(x + y)
     assert im(x + r) == im(x)
