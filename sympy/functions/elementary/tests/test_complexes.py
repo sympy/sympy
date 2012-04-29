@@ -54,6 +54,9 @@ def test_re():
 
     assert re(x).as_real_imag() == (re(x), 0)
 
+    assert re(i*r*x).diff(r) == re(i*x)
+    assert re(i*r*x).diff(i) == -I * im(r*x)
+
 def test_im():
     x, y = symbols('x,y')
 
@@ -100,6 +103,9 @@ def test_im():
     assert conjugate(im(x)) == im(x)
 
     assert im(x).as_real_imag() == (im(x), 0)
+
+    assert im(i*r*x).diff(r) == im(i*x)
+    assert im(i*r*x).diff(i) == -I * re(r*x)
 
 def test_sign():
     assert sign(1.2) == 1
@@ -220,6 +226,9 @@ def test_Abs():
     assert (1/Abs(x)).args == (Abs(x), -1)
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
 
+    x = Symbol('x', imaginary=True)
+    assert Abs(x).diff(x) == -sign(x)
+
 def test_Abs_real():
     # test some properties of abs that only apply
     # to real numbers
@@ -302,19 +311,24 @@ def test_issue3206():
     assert Abs(Abs(x)) == Abs(x)
 
 def test_issue1655_derivative_conjugate():
-    x = Symbol('x')
+    x = Symbol('x', real=True)
+    y = Symbol('y', imaginary=True)
     f = Function('f')
     assert (f(x).conjugate()).diff(x) == (f(x).diff(x)).conjugate()
+    assert (f(y).conjugate()).diff(y) == -(f(y).diff(y)).conjugate()
 
 def test_derivatives_issue1658():
-    x = Symbol('x')
+    x = Symbol('x', real=True)
+    y = Symbol('y', imaginary=True)
     f = Function('f')
     assert re(f(x)).diff(x) == re(f(x).diff(x))
     assert im(f(x)).diff(x) == im(f(x).diff(x))
-
-    x = Symbol('x', real=True)
+    assert re(f(y)).diff(y) == -I*im(f(y).diff(y))
+    assert im(f(y)).diff(y) == -I*re(f(y).diff(y))
     assert Abs(f(x)).diff(x).subs(f(x), 1+I*x).doit() == x/sqrt(1 + x**2)
     assert arg(f(x)).diff(x).subs(f(x), 1+I*x**2).doit() == 2*x/(1+x**4)
+    assert Abs(f(y)).diff(y).subs(f(y), 1+y).doit() == -y/sqrt(1 - y**2)
+    assert arg(f(y)).diff(y).subs(f(y), I+y**2).doit() == 2*y/(1 + y**4)
 
 def test_periodic_argument():
     from sympy import (periodic_argument, unbranched_argument, oo,

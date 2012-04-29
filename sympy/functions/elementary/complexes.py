@@ -85,7 +85,12 @@ class re(Function):
         return self.args[0].as_real_imag()[0]
 
     def _eval_derivative(self, x):
-        return re(Derivative(self.args[0], x, **{'evaluate': True}))
+        if x.is_real or self.args[0].is_real:
+            return re(Derivative(self.args[0], x, **{'evaluate': True}))
+        if x.is_imaginary or self.args[0].is_imaginary:
+            return -S.ImaginaryUnit \
+                * im(Derivative(self.args[0], x, **{'evaluate': True}))
+
 
 class im(Function):
     """
@@ -174,7 +179,12 @@ class im(Function):
         return self.args[0].as_real_imag()[1]
 
     def _eval_derivative(self, x):
-        return im(Derivative(self.args[0], x, **{'evaluate': True}))
+        if x.is_real or self.args[0].is_real:
+            return im(Derivative(self.args[0], x, **{'evaluate': True}))
+        if x.is_imaginary or self.args[0].is_imaginary:
+            return -S.ImaginaryUnit \
+                * re(Derivative(self.args[0], x, **{'evaluate': True}))
+
 
 ###############################################################################
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################
@@ -410,11 +420,12 @@ class Abs(Function):
         return sage.abs_symbolic(self.args[0]._sage_())
 
     def _eval_derivative(self, x):
-        if self.args[0].is_real:
-            return Derivative(self.args[0], x, **{'evaluate': True}) * sign(self.args[0])
-        return (re(self.args[0]) * re(Derivative(self.args[0], x,
-            **{'evaluate': True})) + im(self.args[0]) * im(Derivative(self.args[0],
-                x, **{'evaluate': True}))) / Abs(self.args[0])
+        if self.args[0].is_real or self.args[0].is_imaginary:
+            return Derivative(self.args[0], x, **{'evaluate': True}) \
+                * sign(conjugate(self.args[0]))
+        return (re(self.args[0]) * Derivative(re(self.args[0]), x,
+            **{'evaluate': True}) + im(self.args[0]) * Derivative(im(self.args[0]),
+                x, **{'evaluate': True})) / Abs(self.args[0])
 
 class arg(Function):
     """Returns the argument (in radians) of a complex number"""
@@ -469,7 +480,10 @@ class conjugate(Function):
         return self.args[0]
 
     def _eval_derivative(self, x):
-        return conjugate(Derivative(self.args[0], x, **{'evaluate': True}))
+        if x.is_real:
+            return conjugate(Derivative(self.args[0], x, **{'evaluate': True}))
+        elif x.is_imaginary:
+            return -conjugate(Derivative(self.args[0], x, **{'evaluate': True}))
 
 ###############################################################################
 ############### HANDLING OF POLAR NUMBERS #####################################
