@@ -70,9 +70,6 @@ class re(Function):
 
                 return cls(a) - im(b) + c
 
-    def _eval_conjugate(self):
-        return self
-
     def as_real_imag(self, deep=True):
         """
         Returns the real number with a zero complex part.
@@ -152,9 +149,6 @@ class im(Function):
                     [included, reverted, excluded])
 
                 return cls(a) + re(b) + c
-
-    def _eval_conjugate(self):
-        return self
 
     def as_real_imag(self, deep=True):
         """
@@ -352,9 +346,6 @@ class Abs(Function):
     def _eval_is_positive(self):
         return self.is_nonzero
 
-    def _eval_conjugate(self):
-        return self
-
     def _eval_power(self, other):
         if self.args[0].is_real and other.is_integer:
             if other.is_even:
@@ -398,9 +389,6 @@ class arg(Function):
         arg = C.atan2(y, x)
         if arg.is_number:
             return arg
-
-    def _eval_conjugate(self):
-        return self
 
     def _eval_derivative(self, t):
         x, y = re(self.args[0]), im(self.args[0])

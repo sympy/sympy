@@ -13,9 +13,11 @@ def test_complex():
 def test_conjugate():
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
+    c = Symbol("c", imaginary=True)
+    d = Symbol("d", imaginary=True)
     x = Symbol('x')
-    z = a + I*b
-    zc = a - I*b
+    z = a + I*b + c + I*d
+    zc = a - I*b - c + I*d
     assert conjugate(z) == zc
     assert conjugate(exp(z)) == exp(zc)
     assert conjugate(exp(I*x)) == exp(-I*conjugate(x))
