@@ -1,8 +1,4 @@
-"""Primitive circuit operations on quantum circuits.
-
-TODO:
-* Add wrappers around the seq-based functions to use Mul
-"""
+"""Primitive circuit operations on quantum circuits."""
 
 from sympy import Symbol, Integer, Tuple, Mul, sympify
 from sympy.utilities import numbered_symbols
@@ -20,7 +16,8 @@ def kmp_table(word):
     """Build the 'partial match' table of the
        Knuth-Morris-Pratt algorithm.
 
-    Note: This is applicable to strings or quantum circuits.
+    Note: This is applicable to strings or
+    quantum circuits represented as tuples.
     """
 
     # Current position in subcircuit
@@ -72,12 +69,16 @@ def find_subcircuit(circuit, subcircuit, start=0, end=0):
     Examples
     ========
 
+    Find the first instance of a subcircuit:
+
         >>> from sympy.physics.quantum.circuitutils import find_subcircuit
         >>> from sympy.physics.quantum.gate import X, Y, Z, H
         >>> circuit = X(0)*Z(0)*Y(0)*H(0)
         >>> subcircuit = Z(0)*Y(0)
         >>> find_subcircuit(circuit, subcircuit)
         1
+
+    Find the first instance starting at a specific position:
 
         >>> find_subcircuit(circuit, subcircuit, start=1)
         1
@@ -88,6 +89,8 @@ def find_subcircuit(circuit, subcircuit, start=0, end=0):
         >>> circuit = circuit*subcircuit
         >>> find_subcircuit(circuit, subcircuit, start=2)
         4
+
+    Find the subcircuit within some interval:
 
         >>> find_subcircuit(circuit, subcircuit, start=2, end=2)
         -1
@@ -152,6 +155,8 @@ def replace_subcircuit(circuit, subcircuit, replace=None, pos=0):
     Examples
     ========
 
+    Find and remove the subcircuit:
+
         >>> from sympy.physics.quantum.circuitutils import replace_subcircuit
         >>> from sympy.physics.quantum.gate import X, Y, Z, H
         >>> circuit = X(0)*Z(0)*Y(0)*H(0)*X(0)*H(0)*Y(0)
@@ -159,11 +164,19 @@ def replace_subcircuit(circuit, subcircuit, replace=None, pos=0):
         >>> replace_subcircuit(circuit, subcircuit)
         (X(0), H(0), X(0), H(0), Y(0))
 
+    Remove the subcircuit given a starting search point:
+
         >>> replace_subcircuit(circuit, subcircuit, pos=1)
         (X(0), H(0), X(0), H(0), Y(0))
 
         >>> replace_subcircuit(circuit, subcircuit, pos=2)
         (X(0), Z(0), Y(0), H(0), X(0), H(0), Y(0))
+
+    Replace the subcircuit:
+
+        >>> replacement = H(0)*Z(0)
+        >>> replace_subcircuit(circuit, subcircuit, replace=replacement)
+        (X(0), H(0), Z(0), H(0), X(0), H(0), Y(0))
     """
 
     if pos < 0:
@@ -307,6 +320,8 @@ def convert_to_real_indices(seq, qubit_map):
 
     Examples
     ========
+
+    Change the symbolic indices to real integers:
 
         >>> from sympy import Symbol
         >>> from sympy.physics.quantum.circuitutils import \
