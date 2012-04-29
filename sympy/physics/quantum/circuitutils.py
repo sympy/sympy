@@ -1,5 +1,6 @@
 """Primitive circuit operations on quantum circuits."""
 
+from random import Random
 from sympy import Symbol, Integer, Tuple, Mul, sympify
 from sympy.utilities import numbered_symbols
 from sympy.physics.quantum.gate import Gate
@@ -9,7 +10,9 @@ __all__ = [
     'find_subcircuit',
     'replace_subcircuit',
     'convert_to_symbolic_indices',
-    'convert_to_real_indices'
+    'convert_to_real_indices',
+    'random_reduce',
+    'random_insert'
 ]
 
 def kmp_table(word):
@@ -361,3 +364,87 @@ def convert_to_real_indices(seq, qubit_map):
         real_seq = real_seq + (real_item,)
 
     return real_seq
+
+def random_reduce(circuit, gate_ids, seed=None):
+    """Shorten the length of a quantum circuit.
+
+    random_reduce looks for circuit identities
+    in circuit, randomly chooses one to remove,
+    and returns a shorter yet equivalent circuit.
+    If no identities are found, the same circuit
+    is returned.
+
+    Parameters
+    ==========
+    circuit : Gate tuple of Mul
+        A tuple of Gates representing a quantum circuit
+    gate_ids : list, GateIdentity
+        List of gate identities to find in circuit
+    seed : int
+        Seed value for the random number generator
+    """
+
+    if len(gate_ids) < 1:
+        return circuit
+
+    if isinstance(circuit, Mul):
+        circuit = circuit.args
+
+    # Create the random integer generator with the seed
+    int_gen = Random()
+    int_gen.seed(seed)
+
+    # Flatten the GateIdentity objects (with gate rules)
+    # into one single list
+    collapse_func = lambda acc, an_id: acc + list(an_id.equivalent_ids)
+    ids = reduce(collapse_func, gate_ids, [])
+    found = False
+
+    # Look for an identity in circuit
+    while len(ids) > 0 and not found:
+        remove_index = int_gen.randint(0, len(ids) - 1)
+        remove_id = ids[remove_index]
+        ids.remove(remove_id)
+        found = find_subcircuit(circuit, remove_id) > -1
+
+    # Remove the identity
+    if found:
+        circuit = replace_subcircuit(circuit, remove_id)
+
+    return circuit
+
+def random_insert(circuit, choices, seed=None):
+    """Insert a circuit into another quantum circuit.
+
+    random_insert randomly selects a circuit from
+    choices and randomly chooses a location to insert
+    into circuit.
+
+    Parameters
+    ==========
+    circuit : Gate tuple or Mul
+        A tuple or Mul of Gates representing a quantum circuit
+    choices : list
+        Set of circuit choices
+    seed : int
+        Seed value for the random number generator
+    """
+
+    if len(choices) < 1:
+        return circuit
+
+    if isinstance(circuit, Mul):
+        circuit = circuit.args
+
+    # Create the random integer generator with the seed
+    int_gen = Random()
+    int_gen.seed(seed)
+
+    insert_loc = int_gen.randint(0, len(circuit))
+    insert_circuit_loc = int_gen.randint(0, len(choices)-1)
+    insert_circuit = choices[insert_circuit_loc]
+
+    left = circuit[0:insert_loc]
+    right = circuit[insert_loc:len(circuit)]
+
+    return left + insert_circuit + right

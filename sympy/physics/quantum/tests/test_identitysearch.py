@@ -264,7 +264,7 @@ def test_is_scalar_nonsparse_matrix():
 
     z1 = Z(1)
     xyz_circuit = (x1, y1, z1)
-    actual = is_scalar_nonsparse_matrix(xyz_circuit, numqubits, id_only) 
+    actual = is_scalar_nonsparse_matrix(xyz_circuit, numqubits, id_only)
     assert actual == True
 
     cnot = CNOT(1,0)

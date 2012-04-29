@@ -3,6 +3,7 @@ from sympy.utilities import numbered_symbols
 from sympy.physics.quantum.circuitutils import *
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
         CGate)
+from sympy.physics.quantum.identitysearch import bfs_identity_search
 
 def create_gate_sequence(qubit=0):
     gates = (X(qubit), Y(qubit), Z(qubit), H(qubit))
@@ -261,7 +262,7 @@ def test_convert_to_real_indices():
     x_i0 = X(i0)
     y_i0 = Y(i0)
     z_i0 = Z(i0)
-    
+
     qubit_map = {i0 : 0}
     args = (z_i0, y_i0, x_i0)
     expected = (z, y, x)
@@ -313,4 +314,96 @@ def test_convert_to_real_indices():
     args = (ccgate_x, ccgate_z)
     expected = (CGate(2, CGate(0, X(1))), CGate(1, CGate(2, Z(0))))
     actual = convert_to_real_indices(args, qubit_map)
+    assert actual == expected
+
+def test_random_reduce():
+    x = X(0)
+    y = Y(0)
+    z = Z(0)
+    h = H(0)
+    cnot = CNOT(1,0)
+    cgate_z = CGate((0,), Z(1))
+
+    seed = 1
+    gate_list = [x, y, z]
+    ids = list(bfs_identity_search(gate_list, 1, max_depth=4))
+
+    circuit = (x, y, h, z, cnot)
+    assert random_reduce(circuit, []) == circuit
+    assert random_reduce(circuit, ids) == circuit
+
+    circuit = (x, y, z, x, y, h)
+    # seed = 1, indices to attempt removal: 2, 11, 9, 3
+    # removed id: y, z, x
+    actual = random_reduce(circuit, ids, seed=seed)
+    assert actual == (x, y, h)
+
+    circuit = (x, x, y, y, z, z)
+    # seed = 1, indices to attempt removal: 2, 11, 9
+    # removed id: y, y
+    actual = random_reduce(circuit, ids, seed=seed)
+    assert actual == (x, x, z, z)
+
+    seed = 2
+    # seed = 2, indices: 14, 13, 0, 1, 9, 7
+    # removed id: x, x
+    actual = random_reduce(circuit, ids, seed=seed)
+    assert random_reduce(circuit, ids, seed=seed) == (y, y, z, z)
+
+    gate_list = [x, y, z, h, cnot, cgate_z]
+    ids = list(bfs_identity_search(gate_list, 2, max_depth=4))
+
+    circuit = (x, y, z, y, h, y, h, cgate_z, h, cnot)
+    expected = (x, y, z, cgate_z, h, cnot)
+    # seed = 2, indices: 30, 29, 1
+    # removed id: y, h, y, h
+    actual = random_reduce(circuit, ids, seed=seed)
+    assert actual == expected
+
+    circuit = Mul(*(x, y, z, y, h, y, h, cgate_z, h, cnot))
+    expected = (x, y, z, cgate_z, h, cnot)
+    # seed = 2, indices: 30, 29, 1
+    # removed id: y, h, y, h
+    actual = random_reduce(circuit, ids, seed=seed)
+    assert actual == expected
+
+def test_random_insert():
+    x = X(0)
+    y = Y(0)
+    z = Z(0)
+    h = H(0)
+    cnot = CNOT(1,0)
+    cgate_z = CGate((0,), Z(1))
+
+    seed = 1
+    choices = [(x, x)]
+    circuit = (y, y)
+    # insert location: 0;
+    actual = random_insert(circuit, choices, seed=seed)
+    assert actual == (x, x, y, y)
+
+    seed = 8
+    circuit = (x, y, z, h)
+    choices = [(h, h), (x, y, z)]
+    expected = (x, x, y, z, y, z, h)
+    # insert location: 1; circuit choice: 1
+    actual = random_insert(circuit, choices, seed=seed)
+    assert actual == expected
+
+    gate_list = [x, y, z, h, cnot, cgate_z]
+    ids = list(bfs_identity_search(gate_list, 2, max_depth=4))
+
+    collapse_eq_ids = lambda acc, an_id: acc + list(an_id.equivalent_ids)
+    eq_ids = reduce(collapse_eq_ids, ids, [])
+
+    circuit = (x, y, h, cnot, cgate_z)
+    expected = (x, y, z, y, z, y, h, cnot, cgate_z)
+    # insert location: 1; circuit choice: 30
+    actual = random_insert(circuit, eq_ids, seed=seed)
+    assert actual == expected
+
+    circuit = Mul(*(x, y, h, cnot, cgate_z))
+    expected = (x, y, z, y, z, y, h, cnot, cgate_z)
+    # insert location: 1; circuit choice: 30
+    actual = random_insert(circuit, eq_ids, seed=seed)
     assert actual == expected
