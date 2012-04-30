@@ -586,3 +586,7 @@ def test_3153():
     assert not expr.has(hyper)
     # XXX the expression is a mess, but actually upon differentiation and
     # putting in numerical values seems to work...
+
+def test_3249():
+    assert integrate(exp(I*x)/(1 + x**2), (x, -oo, oo)).simplify().rewrite(exp) \
+           == pi*exp(-1)
