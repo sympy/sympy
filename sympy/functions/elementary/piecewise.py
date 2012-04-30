@@ -178,19 +178,35 @@ class Piecewise(Function):
         # following papers;
         #     http://portal.acm.org/citation.cfm?id=281649
         #     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&rep=rep1&type=pdf
-        int_expr = []
         mul = 1
         if a > b:
             a, b, mul = b, a, -1
-        default = None
 
         # Determine what intervals the expr,cond pairs affect.
-        # 1) If cond is True, then log it as default
-        # 1.1) Currently if cond can't be evaluated, throw NotImplementedError.
-        # 2) For each inequality, if previous cond defines part of the interval
-        #    update the new conds interval.
-        #    -  eg x < 1, x < 3 -> [oo,1],[1,3] instead of [oo,1],[oo,3]
-        # 3) Sort the intervals to make it easier to find correct exprs
+        int_expr = self._sort_expr_cond(sym, a, b)
+
+        # Finally run through the intervals and sum the evaluation.
+        ret_fun = 0
+        for int_a, int_b, expr in int_expr:
+            ret_fun += expr._eval_interval(sym,  max(a, int_a), min(b, int_b))
+        return mul * ret_fun
+
+    def _sort_expr_cond(self, sym, a, b, targetcond = None):
+        """Determine what intervals the expr, cond pairs affect.
+
+        1) If cond is True, then log it as default
+        1.1) Currently if cond can't be evaluated, throw NotImplementedError.
+        2) For each inequality, if previous cond defines part of the interval
+           update the new conds interval.
+           -  eg x < 1, x < 3 -> [oo,1],[1,3] instead of [oo,1],[oo,3]
+        3) Sort the intervals to make it easier to find correct exprs
+
+        Under normal use, we return the expr,cond pairs in increasing order
+        along the real axis corresponding to the symbol sym.  If targetcond
+        is given, we return a list of (lowerbound, upperbound) pairs for
+        this condition."""
+        default = None
+        int_expr = []
         for expr, cond in self.args:
             if cond is True:
                 default = expr
@@ -222,6 +238,8 @@ class Piecewise(Function):
                     upper = int_expr[n][0]
             if self.__eval_cond(lower < upper):  # Is it still an interval?
                 int_expr.append((lower, upper, expr))
+            if cond is targetcond:
+                return [(lower, upper)]
         int_expr.sort(key=lambda x:x[0])
 
         # Add holes to list of intervals if there is a default value,
@@ -239,16 +257,14 @@ class Piecewise(Function):
 
         if holes and default is not None:
             int_expr.extend(holes)
+            if targetcond is True:
+                return [(h[0], h[1]) for h in holes]
         elif holes and default == None:
             raise ValueError("Called interval evaluation over piecewise " \
                              "function on undefined intervals %s" % \
                              ", ".join([str((h[0], h[1])) for h in holes]))
 
-        # Finally run through the intervals and sum the evaluation.
-        ret_fun = 0
-        for int_a, int_b, expr in int_expr:
-            ret_fun += expr._eval_interval(sym,  max(a, int_a), min(b, int_b))
-        return mul * ret_fun
+        return int_expr
 
     def _eval_derivative(self, s):
         return Piecewise(*[(diff(e, s), c) for e, c in self.args])
