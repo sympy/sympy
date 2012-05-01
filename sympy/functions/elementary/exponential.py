@@ -167,11 +167,15 @@ class exp_polar(ExpBase):
 
     def _eval_evalf(self, prec):
         """ Careful! any evalf of polar numbers is flaky """
-        from sympy import im, pi
+        from sympy import im, pi, re
         i = im(self.args[0])
         if i <= -pi or i > pi:
             return self # cannot evalf for this argument
-        return exp(self.args[0])._eval_evalf(prec)
+        res = exp(self.args[0])._eval_evalf(prec)
+        if i > 0 and im(res) < 0:
+            # i ~ pi, but exp(I*i) evaluated to argument slightly bigger than pi
+            return re(res)
+        return res
 
     def as_base_exp(self):
         # XXX exp_polar(0) is special!

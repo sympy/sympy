@@ -1974,7 +1974,11 @@ class Expr(Basic, EvalfMixin):
                     piimult += coeff
                     continue
             extras += [exp]
-        coeff, tail = piimult.as_coeff_add()
+        if not piimult.free_symbols:
+            coeff = piimult
+            tail = ()
+        else:
+            coeff, tail = piimult.as_coeff_add(*piimult.free_symbols)
         # round down to nearest multiple of 2
         branchfact = ceiling(coeff/2 - S(1)/2)*2
         n += branchfact/2

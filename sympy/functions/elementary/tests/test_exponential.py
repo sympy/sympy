@@ -309,3 +309,6 @@ def test_polar():
     assert log(x**z).expand() == z*log(x)
 
     assert exp_polar(3).exp == 3
+
+    # Compare exp(1.0*pi*I).
+    assert (exp_polar(1.0*pi*I).n(n=5)).as_real_imag()[1] >= 0
