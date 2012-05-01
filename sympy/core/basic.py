@@ -792,6 +792,9 @@ class Basic(object):
         ========
         replace: replacement capable of doing wildcard-like matching,
                  parsing of match, and conditional replacements
+        rewrite: rewrite a function in terms of another function or
+                 make a generic function explicit, e.g. f(x) ->
+                 x**2 regardless of x
         xreplace: exact node replacement in expr tree; also capable of
                   using matching rules
 
@@ -1025,10 +1028,13 @@ class Basic(object):
 
         See Also
         ========
-        replace: replacement capable of doing wildcard-like matching,
-                 parsing of match, and conditional replacements
         subs: substitution of subexpressions as defined by the objects
               themselves.
+        replace: replacement capable of doing wildcard-like matching,
+                 parsing of match, and conditional replacements
+        rewrite: rewrite a function in terms of another function or
+                 make a generic function explicit, e.g. f(x) ->
+                 x**2 regardless of x
 
         """
         if self in rule:
@@ -1199,6 +1205,9 @@ class Basic(object):
         ========
         subs: substitution of subexpressions as defined by the objects
               themselves.
+        rewrite: rewrite a function in terms of another function or
+                 make a generic function explicit, e.g. f(x) ->
+                 x**2 regardless of x
         xreplace: exact node replacement in expr tree; also capable of
                   using matching rules
 
@@ -1416,30 +1425,63 @@ class Basic(object):
         return self.func(*terms)
 
     def rewrite(self, *args, **hints):
-        """Rewrites expression containing applications of functions
-           of one kind in terms of functions of different kind. For
-           example you can rewrite trigonometric functions as complex
-           exponentials or combinatorial functions as gamma function.
+        """Rewrites expression containing applications of functions of
+        one kind in terms of functions of different kind. For example you
+        can rewrite trigonometric functions as complex exponentials or
+        combinatorial functions as gamma function.
 
-           As a pattern this function accepts a list of functions to
-           to rewrite (instances of DefinedFunction class). As rule
-           you can use string or a destination function instance (in
-           this case rewrite() will use the str() function).
+        You can also rewrite a generic function like f(x, y) as a given
+        expression, e.g. make f(x, y) -> x**y.
 
-           There is also possibility to pass hints on how to rewrite
-           the given expressions. For now there is only one such hint
-           defined called 'deep'. When 'deep' is set to False it will
-           forbid functions to rewrite their contents.
+        As a pattern this function accepts either:
 
-           >>> from sympy import sin, exp, I
-           >>> from sympy.abc import x, y
+        (1) a generic function with Symbol arguments and a function that
+        it maps to, e.g. f(x, y), x**y
 
-           >>> sin(x).rewrite(sin, exp)
-           -I*(exp(I*x) - exp(-I*x))/2
+        (2) a list of functions to rewrite (instances of DefinedFunction
+        class). As rule you can use string or a destination function
+        instance (in this case rewrite() will use the str() function).
 
+        There is also possibility to pass hints on how to rewrite the
+        given expressions. For now there is only one such hint defined
+        called 'deep'. When 'deep' is set to False it will forbid
+        functions to rewrite their contents. This applies only to case (2)
+        above.
+
+        Examples
+        ========
+        >>> from sympy import sin, exp, I, Function
+        >>> from sympy.abc import x, y
+
+        >>> sin(x).rewrite(sin, exp)
+        -I*(exp(I*x) - exp(-I*x))/2
+
+        Rewriting a generic function is more powerful than doing a
+        replacement since the arguments of the generic function can be
+        handled in the re-write:
+
+        >>> f = Function('f')
+        >>> (f(x, y) + f(x + 1, y)).rewrite(f(x, y), x**y)
+        x**y + (x + 1)**y
+
+        If subs were used to do this, each instance of f() would have to
+        be targetted separately, once for each different argument.
+
+        See Also
+        ========
+        subs: substitution of subexpressions as defined by the objects
+              themselves.
+        replace: replacement capable of doing wildcard-like matching,
+              parsing of match, and conditional replacements
+        xreplace: exact node replacement in expr tree; also capable of
+              using matching rules
         """
         if self.is_Atom or not args:
             return self
+        elif (len(args) == 2 and isinstance(args[0], C.Function)
+            and all(a.is_Symbol for a in args[0].args)):
+            foo = lambda *x: args[1].subs(zip(args[0].args, x))
+            return self.replace(args[0].func, foo)
         else:
             pattern = args[:-1]
             if isinstance(args[-1], basestring):

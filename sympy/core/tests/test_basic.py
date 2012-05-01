@@ -2,6 +2,7 @@
 of Basic or Atom."""
 
 from sympy.core.basic import Basic, Atom
+from sympy.core.function import Function
 from sympy.core.singleton import S, Singleton
 
 from sympy.utilities.pytest import raises
@@ -103,3 +104,8 @@ def test_Singleton():
     assert instanciated == 2
     assert MySingleton_sub() is not MySingleton()
     assert MySingleton_sub() is MySingleton_sub()
+
+def test_rewrite():
+    from sympy.abc import x, y, a, b
+    f = Function('f')
+    assert (f(x, y) + f(x + 1, y)).rewrite(f(a, b), a**b) == x**y + (x + 1)**y
