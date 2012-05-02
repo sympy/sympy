@@ -1,6 +1,6 @@
 from sympy import (symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
         LambertW, sqrt, Rational, expand_log, S, sign, nextprime, conjugate,
-        sin, cos, sinh, cosh, exp_polar)
+        sin, cos, sinh, cosh, exp_polar, re)
 
 def test_exp_values():
 
@@ -198,6 +198,20 @@ def test_log_symbolic():
     assert (log(p**-5)**-1).expand() == -1/log(p)/5
     assert log(-x).func is log and log(-x).args[0] == -x
     assert log(-p).func is log and log(-p).args[0] == -p
+
+def test_exp_assumptions():
+    x = Symbol('x')
+    r = Symbol('r', real=True)
+    i = Symbol('i', imaginary=True)
+    for e in exp, exp_polar:
+        assert e(x).is_real is None
+        assert e(x).is_imaginary is None
+        assert e(i).is_real is None
+        assert e(i).is_imaginary is None
+        assert e(r).is_real is True
+        assert e(r).is_imaginary is False
+        assert e(re(x)).is_real is True
+        assert e(re(x)).is_imaginary is False
 
 def test_log_assumptions():
     p = symbols('p', positive=True)

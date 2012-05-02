@@ -159,12 +159,11 @@ class exp_polar(ExpBase):
     sympy.simplify.simplify.powsimp
     sympy.functions.elementary.complexes.polar_lift
     sympy.functions.elementary.complexes.periodic_argument
-    sympy.fucntions.elementary.complexes.principal_branch
+    sympy.functions.elementary.complexes.principal_branch
     """
 
     is_polar = True
     is_comparable = False # cannot be evalf'd
-    is_real = False
 
     def _eval_Abs(self):
         from sympy import expand_mul
@@ -177,6 +176,10 @@ class exp_polar(ExpBase):
         if i <= -pi or i > pi:
             return self # cannot evalf for this argument
         return exp(self.args[0])._eval_evalf(prec)
+
+    def _eval_is_real(self):
+        if self.args[0].is_real:
+            return True
 
     def as_base_exp(self):
         # XXX exp_polar(0) is special!
@@ -371,11 +374,18 @@ class exp(ExpBase):
         return Function._eval_subs(self, o, new)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        if self.args[0].is_real:
+            return True
+        elif self.args[0].is_imaginary:
+            arg2 = -S(2) * S.ImaginaryUnit * self.args[0] / S.Pi
+            return arg2.is_even
 
     def _eval_is_positive(self):
         if self.args[0].is_real:
-            return True
+            return not self.args[0] is S.NegativeInfinity
+        elif self.args[0].is_imaginary:
+            arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
+            return arg2.is_even
 
     def _eval_lseries(self, x):
         s = self.args[0]
