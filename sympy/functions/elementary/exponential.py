@@ -7,6 +7,7 @@ from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
 
 from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 
 # NOTE IMPORTANT
@@ -164,6 +165,10 @@ class exp_polar(ExpBase):
     is_polar = True
     is_comparable = False # cannot be evalf'd
     is_real = False
+
+    def _eval_Abs(self):
+        from sympy import expand_mul
+        return sqrt( expand_mul(self * self.conjugate()) )
 
     def _eval_evalf(self, prec):
         """ Careful! any evalf of polar numbers is flaky """

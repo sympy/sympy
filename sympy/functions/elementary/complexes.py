@@ -318,6 +318,10 @@ class Abs(Function):
 
     @classmethod
     def eval(cls, arg):
+        if hasattr(arg, '_eval_Abs'):
+            obj = arg._eval_Abs()
+            if obj is not None:
+                return obj
         if arg.is_Mul:
             known = []
             unk = []
@@ -336,7 +340,11 @@ class Abs(Function):
             return arg
         if arg.is_nonpositive:
             return -arg
-        if arg.is_real is False:
+        if arg.is_imaginary:
+            arg2 = -S.ImaginaryUnit * arg
+            if arg2.is_nonnegative:
+                return arg2
+        if arg.is_real is False and arg.is_imaginary is False:
             from sympy import expand_mul
             return sqrt( expand_mul(arg * arg.conjugate()) )
         if arg.is_Pow:
@@ -424,6 +432,9 @@ class conjugate(Function):
         obj = arg._eval_conjugate()
         if obj is not None:
             return obj
+
+    def _eval_Abs(self):
+        return Abs(self.args[0], **{'evaluate': True})
 
     def _eval_conjugate(self):
         return self.args[0]
