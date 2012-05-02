@@ -205,6 +205,11 @@ class sign(Function):
 
     nargs = 1
 
+    def doit(self):
+        if self.args[0].is_nonzero:
+            return self.args[0] / Abs(self.args[0])
+        return self
+
     @classmethod
     def eval(cls, arg):
         if arg is S.NaN:
@@ -218,29 +223,53 @@ class sign(Function):
         if arg.is_Function:
             if arg.func is sign:
                 return arg
+        if arg.is_imaginary:
+            arg2 = -S.ImaginaryUnit * arg
+            if arg2.is_positive:
+                return S.ImaginaryUnit
+            if arg2.is_negative:
+                return -S.ImaginaryUnit
         if arg.is_Mul:
             c, args = arg.as_coeff_mul()
             unk = []
+            is_imag = c.is_imaginary
             is_neg = c.is_negative
             for ai in args:
-                if ai.is_negative is None:
-                    unk.append(ai)
-                elif ai.is_negative:
+                ai2 = -S.ImaginaryUnit * ai
+                if ai.is_negative:
                     is_neg = not is_neg
+                elif ai.is_imaginary and ai2.is_positive:
+                    is_imag = not is_imag
+                elif ai.is_negative is None or \
+                    (ai.is_imaginary is None or ai2.is_positive is None):
+                    unk.append(ai)
             if c is S.One and len(unk) == len(args):
                 return None
-            return (S.NegativeOne if is_neg else S.One) * cls(arg._new_rawargs(*unk))
+            return (S.NegativeOne if is_neg else S.One) \
+                * (S.ImaginaryUnit if is_imag else S.One) \
+                * cls(arg._new_rawargs(*unk))
 
     is_bounded = True
 
-    def _eval_derivative(self, x):
-        return S.Zero
+    def _eval_Abs(self):
+        if self.args[0].is_nonzero:
+            return S.One
 
     def _eval_conjugate(self):
-        return self
+        return sign(conjugate(self.args[0]))
+
+    def _eval_derivative(self, x):
+        if self.args[0].is_real:
+            from sympy.functions.special.delta_functions import DiracDelta
+            return 2 * Derivative(self.args[0], x, **{'evaluate': True}) \
+                * DiracDelta(self.args[0])
+        elif self.args[0].is_imaginary:
+            from sympy.functions.special.delta_functions import DiracDelta
+            return 2 * Derivative(self.args[0], x, **{'evaluate': True}) \
+                * DiracDelta(-S.ImaginaryUnit * self.args[0])
 
     def _eval_is_zero(self):
-        return (self.args[0] is S.Zero)
+        return self.args[0].is_zero
 
     def _eval_power(self, other):
         if (

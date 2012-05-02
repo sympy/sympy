@@ -23,7 +23,7 @@ def test_conjugate():
     assert conjugate(exp(I*x)) == exp(-I*conjugate(x))
     assert conjugate(z**5) == zc**5
     assert conjugate(abs(x)) == abs(x)
-    assert conjugate(sign(x)) == sign(x)
+    assert conjugate(sign(z)) == sign(zc)
     assert conjugate(sin(z)) == sin(zc)
     assert conjugate(cos(z)) == cos(zc)
     assert conjugate(tan(z)) == tan(zc)

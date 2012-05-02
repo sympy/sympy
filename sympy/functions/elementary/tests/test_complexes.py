@@ -1,6 +1,6 @@
 from sympy import (symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log,
         pi, arg, conjugate, expand, exp, sin, cos, Function, Abs, zoo, atan2,
-        S)
+        S, DiracDelta)
 from sympy.utilities.pytest import XFAIL
 
 from sympy.utilities.randtest import comp
@@ -104,21 +104,56 @@ def test_im():
 def test_sign():
     assert sign(1.2) == 1
     assert sign(-1.2) == -1
+    assert sign(3*I) == I
+    assert sign(-3*I) == -I
     assert sign(0) == 0
     assert sign(nan) == nan
+
     x = Symbol('x')
-    assert sign(x).is_zero == False
+    assert sign(x).is_zero == None
+    assert sign(x).doit() == sign(x)
+    assert sign(1.2*x) == sign(x)
     assert sign(2*x) == sign(x)
-    assert sign(x).diff(x) == 0
-    assert conjugate(sign(x)) == sign(x)
+    assert sign(I*x) == I*sign(x)
+    assert sign(-2*I*x) == -I*sign(x)
+    assert sign(conjugate(x)) == conjugate(sign(x))
+
     p = Symbol('p', positive = True)
     n = Symbol('n', negative = True)
     m = Symbol('m', negative = True)
     assert sign(2*p*x) == sign(x)
     assert sign(n*x) == -sign(x)
     assert sign(n*m*x) == sign(x)
+
+    x = Symbol('x', imaginary=True)
+    assert sign(x).is_zero == False
+    assert sign(x).diff(x) == 2*DiracDelta(-I*x)
+    assert sign(x).doit() == x / Abs(x)
+    assert conjugate(sign(x)) == -sign(x)
+
+    x = Symbol('x', real=True)
+    assert sign(x).is_zero == None
+    assert sign(x).diff(x) == 2*DiracDelta(x)
+    assert sign(x).doit() == sign(x)
+    assert conjugate(sign(x)) == sign(x)
+
+    x = Symbol('x', nonzero=True)
+    assert sign(x).is_zero == False
+    assert sign(x).doit() == x / Abs(x)
+    assert sign(Abs(x)) == 1
+    assert Abs(sign(x)) == 1
+
+    x = Symbol('x', positive=True)
+    assert sign(x).is_zero == False
+    assert sign(x).doit() == x / Abs(x)
+    assert sign(Abs(x)) == 1
+    assert Abs(sign(x)) == 1
+
     x = 0
     assert sign(x).is_zero == True
+    assert sign(x).doit() == 0
+    assert sign(Abs(x)) == 0
+    assert Abs(sign(x)) == 0
 
     nz = Symbol('nz', nonzero=True, integer=True)
     assert sign(nz)**2 == 1
