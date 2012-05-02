@@ -368,7 +368,7 @@ def test_meijerg_expand():
            z**a*gamma(a)*hyper((a,), (a + 1, a + 1), z*exp_polar(I*pi))/gamma(a + 1)**2
 
 def test_meijerg_lookup():
-    from sympy import uppergamma
+    from sympy import uppergamma, Si, Ci
     assert hyperexpand(meijerg([a], [], [b, a], [], z)) == \
            z**b*exp(z)*gamma(-a + b + 1)*uppergamma(a - b, z)
     assert hyperexpand(meijerg([0], [], [0, 0], [], z)) == \
@@ -376,6 +376,13 @@ def test_meijerg_lookup():
     assert can_do_meijer([a], [], [b, a+1], [])
     assert can_do_meijer([a], [], [b+2, a], [])
     assert can_do_meijer([a], [], [b-2, a], [])
+
+    assert hyperexpand(meijerg([a], [], [a, a, a - S(1)/2], [], z)) == \
+           -sqrt(pi)*z**(a - S(1)/2)*(2*cos(2*sqrt(z))*(Si(2*sqrt(z)) - pi/2)
+                                      - 2*sin(2*sqrt(z))*Ci(2*sqrt(z))) == \
+           hyperexpand(meijerg([a], [], [a, a - S(1)/2, a], [], z)) == \
+           hyperexpand(meijerg([a], [], [a - S(1)/2, a, a], [], z))
+    assert can_do_meijer([a - 1], [], [a + 2, a - S(3)/2, a + 1], [])
 
 @XFAIL
 def test_meijerg_expand_fail():
