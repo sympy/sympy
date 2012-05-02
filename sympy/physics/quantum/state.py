@@ -589,7 +589,7 @@ class Wavefunction(Function):
         >>> from sympy import Symbol, Piecewise, pi, N
         >>> from sympy.functions import sqrt, sin
         >>> from sympy.physics.quantum.state import Wavefunction
-        >>> x = Symbol('x')
+        >>> x = Symbol('x', real=True)
         >>> n = 1
         >>> L = 1
         >>> g = Piecewise((0, x < 0), (0, x > L), (sqrt(2//L)*sin(n*pi*x/L), True))

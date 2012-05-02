@@ -5,7 +5,7 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     Poly, Function, Derivative, Number, pi, NumberSymbol, zoo, Piecewise, Mul,
     Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
     separate, collect, factorial, apart, combsimp, factor, refine, cancel,
-    Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E)
+    Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E, exp_polar)
 from sympy.core.function import AppliedUndef
 from sympy.abc import a, b, c, d, e, n, t, u, x, y, z
 from sympy.physics.secondquant import FockState
@@ -1362,3 +1362,6 @@ def test_round():
 
     # issue 3815
     assert (I**(I+3)).round(3) == Float('-0.208','')*I
+
+def test_extract_branch_factor():
+    assert exp_polar(2.0*I*pi).extract_branch_factor() == (1, 1)
