@@ -590,7 +590,7 @@ def test_ellipse_random_point():
         r = e3.random_point()
         # substitution should give zero*y1**2
         assert e3.equation(rx, ry).subs(zip((rx, ry), r.args)
-                                        ).n(3).as_coeff_Mul()[0] < 1e-10
+                                        ).n(3).as_coeff_Mul()[0] < 1e-7
 
 def test_polygon():
     t = Triangle(Point(0, 0), Point(2, 0), Point(3, 3))
