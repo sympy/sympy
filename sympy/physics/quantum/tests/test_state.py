@@ -168,7 +168,7 @@ def test_bra_ket_dagger():
     assert Dagger(e) == conjugate(x)*Dagger(k2) - 2*I*Dagger(k)
 
 def test_wavefunction():
-    x, L = symbols('x,L', real=True)
+    x, y, L = symbols('x,y,L', real=True)
     n = symbols('n', integer=True)
 
     f = Wavefunction(x**2, x)
