@@ -274,7 +274,7 @@ def add_formulae(formulae):
 
 
 def add_meijerg_formulae(formulae):
-    from sympy import Matrix, gamma, uppergamma, exp
+    from sympy import Matrix, gamma, uppergamma, exp, Si, Ci, sin, cos, sqrt, pi
 
     a, b, c, z = map(Dummy, 'abcz')
     rho = Dummy('rho')
@@ -303,6 +303,43 @@ def add_meijerg_formulae(formulae):
         Matrix([[1, 0]]),
         Matrix([[rho+z, -1], [0, a+rho]]),
         detect_uppergamma)
+
+    def detect_3113(iq):
+        """http://functions.wolfram.com/07.34.03.0984.01"""
+        x = iq.an[0]
+        u, v, w = iq.bm
+        if Mod((u - v).simplify(), 1) == 0:
+            if Mod((v - w).simplify(), 1) == 0:
+                return
+            sig = (S(1)/2, S(1)/2, S(0))
+            x1, x2, y = u, v, w
+        else:
+            if Mod((x - u).simplify(), 1) == 0:
+                sig = (S(1)/2, S(0), S(1)/2)
+                x1, y, x2 = u, v, w
+            else:
+                sig = (S(0), S(1)/2, S(1)/2)
+                y, x1, x2 = u, v, w
+
+        if (Mod((x - x1).simplify(), 1) != 0 or
+            Mod((x - x2).simplify(), 1) != 0 or
+            Mod((x - y).simplify(), 1) != S(1)/2 or
+            x > x1 or x > x2):
+            return
+
+        return {a: x}, IndexQuadruple([x], [], [x - S(1)/2 + t for t in sig], [])
+
+    s = sin(2*sqrt(z))
+    c_ = cos(2*sqrt(z))
+    S_ = Si(2*sqrt(z)) - pi/2
+    C = Ci(2*sqrt(z))
+    add([a], [], [a, a, a - S(1)/2], [],
+        Matrix([sqrt(pi)*z**(a - S(1)/2)*(c_*S_ - s*C),
+                sqrt(pi)*z**a*(s*S_ + c_*C),
+                sqrt(pi)*z**a]),
+        Matrix([[-2, 0, 0]]),
+        Matrix([[a - S(1)/2, -1, 0], [z, a, S(1)/2], [0, 0, a]]),
+        detect_3113)
 
 
 def make_simp(z):

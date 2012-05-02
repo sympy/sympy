@@ -596,7 +596,7 @@ def test_sine_transform():
     assert inverse_sine_transform(sqrt(2)*w*exp(-w**2/(4*a))/(4*a**(S(3)/2)), w, t) == t*exp(-a*t**2)
 
 def test_cosine_transform():
-    from sympy import sinh, cosh
+    from sympy import sinh, cosh, Si, Ci
 
     t = symbols("t")
     w = symbols("w")
@@ -620,7 +620,7 @@ def test_cosine_transform():
 
     assert cosine_transform(exp(-a*sqrt(t))*cos(a*sqrt(t)), t, w) == a*(-sinh(a**2/(2*w)) + cosh(a**2/(2*w)))/(2*w**(S(3)/2))
 
-    assert cosine_transform(1/(a+t), t, w) == sqrt(2)*meijerg(((S(1)/2, 0), ()), ((S(1)/2, 0, 0), (S(1)/2,)), a**2*w**2/4)/(2*pi)
+    assert cosine_transform(1/(a+t), t, w) == -sqrt(2)*((2*Si(a*w) - pi)*sin(a*w) + 2*cos(a*w)*Ci(a*w))/(2*sqrt(pi))
     assert inverse_cosine_transform(sqrt(2)*meijerg(((S(1)/2, 0), ()), ((S(1)/2, 0, 0), (S(1)/2,)), a**2*w**2/4)/(2*pi), w, t) == 1/(a + t)
 
     assert cosine_transform(1/sqrt(a**2+t**2), t, w) == sqrt(2)*meijerg(((S(1)/2,), ()), ((0, 0), (S(1)/2,)), a**2*w**2/4)/(2*sqrt(pi))
