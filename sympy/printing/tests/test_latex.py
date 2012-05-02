@@ -8,7 +8,7 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Tuple, MellinTransform, InverseMellinTransform, LaplaceTransform,
     InverseLaplaceTransform, FourierTransform, InverseFourierTransform,
     SineTransform, InverseSineTransform, CosineTransform,
-    InverseCosineTransform, FiniteSet)
+    InverseCosineTransform, FiniteSet, TransformationSet, Range)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
@@ -240,23 +240,21 @@ def test_latex_integrals():
     assert latex(Integral(x, x, y, (z, 0, 1))) == \
         r"\int_{0}^{1}\int\int x\, dx\, dy\, dz"
 
-def test_latex_finiteset():
-    assert latex(FiniteSet(range(1, 51)) ==\
-            r'\left{1, 2, 3, ..., 48, 49, 50\right}')
-    assert latex(FiniteSet(range(1, 6)) == r'\left{1, 2, 3, 4, 5\right}')
+def test_latex_sets():
+    for s in (FiniteSet, frozenset, set):
+        assert latex(s([x*y, x**2])) == r"\left\{x^{2}, x y\right\}"
+        assert latex(s(range(1, 6))) == r"\left\{1, 2, 3, 4, 5\right\}"
+        assert latex(s(range(1, 13))) == \
+            r"\left\{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12\right\}"
 
-def test_latex_frozenset():
-    assert latex(frozenset(range(1, 51)) ==\
-            r'\left{1, 2, 3, ..., 48, 49, 50\right}')
-    assert latex(frozenset(range(1, 6)) == r'\left{1, 2, 3, 4, 5\right}')
-
-def test_latex_set():
-    assert latex(set(range(1, 51)) ==\
-            r'\left{1, 2, 3, ..., 48, 49, 50\right}')
-    assert latex(set(range(1, 6)) == r'\left{1, 2, 3, 4, 5\right}')
+def test_latex_Range():
+    assert latex(Range(1, 51)) ==\
+            r'\left\{1, 2, \ldots, 50\right\}'
+    assert latex(Range(1, 4)) == r'\left\{1, 2, 3\right\}'
 
 def test_latex_intervals():
     a = Symbol('a', real=True)
+    assert latex(Interval(0, 0)) == r"\left\{0\right\}"
     assert latex(Interval(0, a)) == r"\left[0, a\right]"
     assert latex(Interval(0, a, False, False)) == r"\left[0, a\right]"
     assert latex(Interval(0, a, True, False)) == r"\left(0, a\right]"
@@ -271,6 +269,23 @@ def test_latex_union():
         r"\left[0, 1\right] \cup \left[2, 3\right]"
     assert latex(Union(Interval(1, 1), Interval(2, 2), Interval(3, 4))) == \
         r"\left\{1, 2\right\} \cup \left[3, 4\right]"
+
+def test_latex_productset():
+    line = Interval(0,1)
+    bigline = Interval(0, 10)
+    fset = FiniteSet(1, 2, 3)
+    assert latex(line**2) == r"%s^2"%latex(line)
+    assert latex(line * bigline * fset) == r"%s \times %s \times %s"%(
+            latex(line), latex(bigline), latex(fset))
+
+def test_latex_Naturals():
+    assert latex(S.Naturals) == r"\mathbb{N}"
+    assert latex(S.Integers) == r"\mathbb{Z}"
+
+def test_latex_TransformationSet():
+    x = Symbol('x')
+    assert latex(TransformationSet(Lambda(x, x**2), S.Naturals)) == \
+            r"\left\{x^{2}\; |\; x \in \mathbb{N}\right\}"
 
 def test_latex_sum():
     assert latex(Sum(x*y**2, (x, -2, 2), (y, -5, 5))) == \

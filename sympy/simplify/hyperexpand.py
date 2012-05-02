@@ -1892,7 +1892,7 @@ def hyperexpand_special(ap, bq, z):
     # This code is very ad-hoc. There are many clever algorithms
     # (notably Zeilberger's) related to this problem.
     # For now we just want a few simple cases to work.
-    from sympy import gamma, simplify, cos, unpolarify
+    from sympy import gamma, simplify, cos, unpolarify, pi
     p, q = len(ap), len(bq)
     z_ = z
     z = unpolarify(z)
@@ -1932,7 +1932,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     is multiplied by premult. Then ops0 is applied.
     premult must be a*z**prem for some a independent of z.
     """
-    from sympy.simplify import powdenest, simplify, polarify
+    from sympy.simplify import powdenest, simplify, polarify, unpolarify
     z = polarify(z, subs=False)
     if rewrite == 'default':
         rewrite = 'nonrepsmall'
@@ -1977,7 +1977,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
         debug('  Recognised polynomial.')
         p = apply_operators(res, ops, lambda f: z0*f.diff(z0))
         p = apply_operators(p*premult, ops0, lambda f: z0*f.diff(z0))
-        return simplify(p).subs(z0, z)
+        return unpolarify(simplify(p).subs(z0, z))
 
     # Try to recognise a shifted sum.
     p = S(0)
@@ -1993,7 +1993,6 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     p = simplify(p).subs(z0, z)
 
     # Try special expansions early.
-    from sympy import unpolarify
     if unpolarify(z) in [1, -1] and (len(nip.ap), len(nip.bq)) == (2, 1):
         f = build_hypergeometric_formula(nip)
         r = carryout_plan(f, ops).replace(hyper, hyperexpand_special)

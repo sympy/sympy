@@ -336,7 +336,7 @@ def centroid(*args):
     Point(20/3, 40/3)
     >>> p, q = Segment((0, 0), (2, 0)), Segment((0, 0), (2, 2))
     >>> centroid(p, q)
-    Point(1, 2*sqrt(2)/(2 + 2*sqrt(2)))
+    Point(1, -sqrt(2) + 2)
     >>> centroid(Point(0, 0), Point(2, 0))
     Point(1, 0)
 

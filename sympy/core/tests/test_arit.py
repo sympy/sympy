@@ -936,14 +936,24 @@ def test_Pow_is_even_odd():
     k = Symbol('k', even=True)
     n = Symbol('n', odd=True)
     m = Symbol('m', integer=True, nonnegative=True)
+    p = Symbol('p', integer=True, positive=True)
 
     assert (k**2).is_even == True
     assert (n**2).is_even == False
     assert (2**k).is_even == None
     assert (x**2).is_even == None
 
-    assert (k**m).is_even == True
+    assert (k**m).is_even == None
     assert (n**m).is_even == False
+
+    assert (k**p).is_even == True
+    assert (n**p).is_even == False
+
+    assert (m**k).is_even == None
+    assert (p**k).is_even == None
+
+    assert (m**n).is_even == None
+    assert (p**n).is_even == None
 
     assert (k**x).is_even == None
     assert (n**x).is_even == None
@@ -952,8 +962,17 @@ def test_Pow_is_even_odd():
     assert (n**2).is_odd == True
     assert (3**k).is_odd == None
 
-    assert (k**m).is_odd == False
+    assert (k**m).is_odd == None
     assert (n**m).is_odd == True
+
+    assert (k**p).is_odd == False
+    assert (n**p).is_odd == True
+
+    assert (m**k).is_odd == None
+    assert (p**k).is_odd == None
+
+    assert (m**n).is_odd == None
+    assert (p**n).is_odd == None
 
     assert (k**x).is_odd == None
     assert (n**x).is_odd == None

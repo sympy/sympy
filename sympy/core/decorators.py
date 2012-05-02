@@ -7,7 +7,6 @@ dependencies, so that they can be easily imported anywhere in sympy/core.
 
 from functools import wraps
 from sympify import SympifyError, sympify
-import warnings
 
 def deprecated(func):
     """This is a decorator which can be used to mark functions
@@ -16,7 +15,10 @@ def deprecated(func):
     @wraps(func)
     def new_func(*args, **kwargs):
         from sympy.utilities.exceptions import SymPyDeprecationWarning
-        warnings.warn(SymPyDeprecationWarning("Call to deprecated function.", feature=func.__name__ + "()"))
+        SymPyDeprecationWarning(
+            "Call to deprecated function.",
+            feature=func.__name__ + "()"
+            ).warn()
         return func(*args, **kwargs)
     return new_func
 

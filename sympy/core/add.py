@@ -414,6 +414,7 @@ class Add(AssocOp):
     _eval_is_antihermitian = lambda self: self._eval_template_is_attr('is_antihermitian', when_multiple=None)
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded', when_multiple=None)
     _eval_is_hermitian = lambda self: self._eval_template_is_attr('is_hermitian', when_multiple=None)
+    _eval_is_imaginary = lambda self: self._eval_template_is_attr('is_imaginary', when_multiple=None)
     _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
 

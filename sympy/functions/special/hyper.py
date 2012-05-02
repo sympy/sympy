@@ -1,6 +1,6 @@
 """Hypergeometric and Meijer G-functions"""
 
-from sympy import S
+from sympy import S, I
 from sympy.core.compatibility import iterable
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.containers import Tuple
@@ -565,6 +565,48 @@ class meijerg(TupleParametersBase):
     def _eval_expand_func(self, deep=True, **hints):
         from sympy import hyperexpand
         return hyperexpand(self)
+
+    def _eval_evalf(self, prec):
+        # The default code is insufficient for polar arguments.
+        # mpmath provides an optional argument "r", which evaluates
+        # G(z**(1/r)). I am not sure what its intended use is, but we hijack it
+        # here in the following way: to evaluate at a number z of |argument|
+        # less than (say) n*pi, we put r=1/n, compute z' = root(z, n)
+        # (carefully so as not to loose the branch information), and evaluate
+        # G(z'**(1/r)) = G(z'**n) = G(z).
+        from sympy.functions import exp_polar, ceiling, exp
+        from sympy import mpmath, Expr
+        z = self.argument
+        znum = self.argument._eval_evalf(prec)
+        if znum.has(exp_polar):
+            znum, branch = znum.as_coeff_mul(exp_polar)
+            if len(branch) != 1:
+                return
+            branch = branch[0].args[0]/I
+        else:
+            branch = S(0)
+        n = ceiling(abs(branch/S.Pi)) + 1
+        znum = znum**(S(1)/n)*exp(I*branch / n)
+        #print znum, branch, n
+
+        # Convert all args to mpf or mpc
+        try:
+            [z, r, ap, bq] = [arg._to_mpmath(prec)
+                              for arg in [znum, 1/n, self.args[0], self.args[1]]]
+        except ValueError:
+            return
+
+        # Set mpmath precision and apply. Make sure precision is restored
+        # afterwards
+        orig = mpmath.mp.prec
+        try:
+            mpmath.mp.prec = prec
+            v = mpmath.meijerg(ap, bq, z, r)
+            #print ap, bq, z, r, v
+        finally:
+            mpmath.mp.prec = orig
+
+        return Expr._from_mpmath(v, prec)
 
     def integrand(self, s):
         """ Get the defining integrand D(s). """

@@ -209,7 +209,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function
-    >>> f = implemented_function(Function('f'), lambda x : x+1)
+    >>> f = implemented_function(Function('f'), lambda x: x+1)
     >>> func = lambdify(x, f(x))
     >>> func(4)
     5
@@ -339,8 +339,8 @@ def _imp_namespace(expr, namespace=None):
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.lambdify import implemented_function, _imp_namespace
     >>> from sympy import Function
-    >>> f = implemented_function(Function('f'), lambda x : x+1)
-    >>> g = implemented_function(Function('g'), lambda x : x*10)
+    >>> f = implemented_function(Function('f'), lambda x: x+1)
+    >>> g = implemented_function(Function('g'), lambda x: x*10)
     >>> namespace = _imp_namespace(f(g(x)))
     >>> sorted(namespace.keys())
     ['f', 'g']
@@ -403,7 +403,7 @@ def implemented_function(symfunc, implementation):
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function
-    >>> f = implemented_function(Function('f'), lambda x : x+1)
+    >>> f = implemented_function(Function('f'), lambda x: x+1)
     >>> lam_f = lambdify(x, f(x))
     >>> lam_f(4)
     5

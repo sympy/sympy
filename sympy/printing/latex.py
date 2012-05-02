@@ -974,7 +974,10 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_ProductSet(self, p):
-        return r" \cross ".join(self._print(set) for set in p.sets)
+        if len(set(p.sets)) == 1 and len(p.sets) > 1:
+            return self._print(p.sets[0]) + "^%d"%len(p.sets)
+        else:
+            return r" \times ".join(self._print(set) for set in p.sets)
 
     def _print_RandomDomain(self, d):
         try:
@@ -987,20 +990,29 @@ class LatexPrinter(Printer):
                 return 'Domain on ' + self._print(d.symbols)
 
     def _print_FiniteSet(self, s):
-        if len(s) > 10:
-            printset = s.args[:3] + ('...',) + s.args[-3:]
+        return self._print_set(s.args)
+
+    def _print_set(self, s):
+        items = sorted(s, key=default_sort_key)
+        items = ", ".join(map(self._print, items))
+        return r"\left\{%s\right\}" % items
+
+    _print_frozenset = _print_set
+
+    def _print_Range(self, s):
+        if len(s) > 4:
+            it = iter(s)
+            printset = it.next(), it.next(), '\ldots', s._last_element
         else:
-            printset = s.args
+            printset = tuple(s)
+
         return (r"\left\{"
               + r", ".join(self._print(el) for el in printset)
               + r"\right\}")
 
-    _print_frozenset = _print_FiniteSet
-    _print_set = _print_FiniteSet
-
     def _print_Interval(self, i):
         if i.start == i.end:
-            return r"\left{%s\right}" % self._print(i.start)
+            return r"\left\{%s\right\}" % self._print(i.start)
 
         else:
             if i.left_open:
@@ -1024,6 +1036,21 @@ class LatexPrinter(Printer):
 
     def _print_EmptySet(self, e):
         return r"\emptyset"
+
+    def _print_Naturals(self, n):
+        return r"\mathbb{N}"
+
+    def _print_Integers(self, i):
+        return r"\mathbb{Z}"
+
+    def _print_Reals(self, i):
+        return r"\mathbb{R}"
+
+    def _print_TransformationSet(self, s):
+        return r"\left\{%s\; |\; %s \in %s\right\}"%(
+                self._print(s.lamda.expr),
+                ', '.join([self._print(var) for var in s.lamda.variables]),
+                self._print(s.base_set))
 
     def _print_FiniteField(self, expr):
         return r"\mathbb{F}_{%s}" % expr.mod

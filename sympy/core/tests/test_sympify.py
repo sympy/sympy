@@ -202,12 +202,12 @@ def test_bug496():
 @XFAIL
 def test_lambda():
     x = Symbol('x')
-    assert sympify('lambda : 1') == Lambda((), 1)
+    assert sympify('lambda: 1') == Lambda((), 1)
     assert sympify('lambda x: 2*x') == Lambda(x, 2*x)
     assert sympify('lambda x, y: 2*x+y') == Lambda([x, y], 2*x+y)
 
 def test_lambda_raises():
-    raises(SympifyError, "_sympify('lambda : 1')")
+    raises(SympifyError, "_sympify('lambda: 1')")
 
 def test_sympify_raises():
     raises(SympifyError, 'sympify("fx)")')

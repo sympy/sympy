@@ -1576,7 +1576,7 @@ def _aresame(a, b):
 
     >>> sin.compare(cos)
     Traceback (most recent call last):
-     File "<stdin>", line 1, in <module>
+    ...
     TypeError: unbound method compare() must be called with sin instance as first ar
     gument (got FunctionClass instance instead)
 

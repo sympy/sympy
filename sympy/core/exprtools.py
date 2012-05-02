@@ -1,7 +1,7 @@
 """Tools for manipulating of large commutative expressions. """
 
 from sympy.core.add import Add
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic
@@ -12,7 +12,7 @@ from sympy.core.numbers import Rational, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.coreerrors import NonCommutativeExpression
-from sympy.core.containers import Tuple
+from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
                                        preorder_traversal, variations)
@@ -406,6 +406,9 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
 def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     """Compute the GCD of ``terms`` and put them together.
 
+    ``terms`` can be an expression or a non-Basic sequence of expressions
+    which will be handled as though they are terms from a sum.
+
     If ``isprimitive`` is True the _gcd_terms will not run the primitive
     method on the terms.
 
@@ -464,16 +467,24 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
                 args[i] = c
         return args, dict(reps)
 
-    terms = sympify(terms)
-    isexpr = isinstance(terms, Expr)
-    if not isexpr or terms.is_Add:
-        if isexpr: # hence an Add
+    isadd = isinstance(terms, Add)
+    addlike = isadd or not isinstance(terms, Basic) and \
+              is_sequence(terms, include=set) and \
+              not isinstance(terms, Dict)
+
+    if addlike:
+        if isadd: # i.e. an Add
             terms = list(terms.args)
+        else:
+            terms = sympify(terms)
         terms, reps = mask(terms)
         cont, numer, denom = _gcd_terms(terms, isprimitive, fraction)
         numer = numer.xreplace(reps)
         coeff, factors = cont.as_coeff_Mul()
         return _keep_coeff(coeff, factors*numer/denom, clear=clear)
+
+    if not isinstance(terms, Basic):
+        return terms
 
     if terms.is_Atom:
         return terms
@@ -484,11 +495,15 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
             for i in args]), clear=clear)
 
     def handle(a):
-        if iterable(a):
+        # don't treate internal args like terms of an Add
+        if not isinstance(a, Expr):
             if isinstance(a, Basic):
-                return a.func(*[gcd_terms(i, isprimitive, clear) for i in a.args])
-            return type(a)([gcd_terms(i, isprimitive, clear, fraction) for i in a])
+                return a.func(*[handle(i) for i in a.args])
+            return type(a)([handle(i) for i in a])
         return gcd_terms(a, isprimitive, clear, fraction)
+
+    if isinstance(terms, Dict):
+        return Dict(*[(k, handle(v)) for k, v in terms.args])
     return terms.func(*[handle(i) for i in terms.args])
 
 

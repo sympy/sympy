@@ -1521,20 +1521,18 @@ class Expr(Basic, EvalfMixin):
         """
         This method is deprecated. Use .as_coeff_mul() instead.
         """
-        import warnings
         from sympy.utilities.exceptions import SymPyDeprecationWarning
-        warnings.warn(SymPyDeprecationWarning(feature="as_coeff_terms()",
-                                              useinstead="as_coeff_mul()"))
+        SymPyDeprecationWarning(feature="as_coeff_terms()",
+                                useinstead="as_coeff_mul()").warn()
         return self.as_coeff_mul(*deps)
 
     def as_coeff_factors(self, *deps):
         """
         This method is deprecated.  Use .as_coeff_add() instead.
         """
-        import warnings
         from sympy.utilities.exceptions import SymPyDeprecationWarning
-        warnings.warn(SymPyDeprecationWarning(feature="as_coeff_factors()",
-                                              useinstead="as_coeff_add()"))
+        SymPyDeprecationWarning(feature="as_coeff_factors()",
+                                useinstead="as_coeff_add()").warn()
         return self.as_coeff_add(*deps)
 
     def as_coeff_mul(self, *deps):
@@ -2007,7 +2005,11 @@ class Expr(Basic, EvalfMixin):
                     piimult += coeff
                     continue
             extras += [exp]
-        coeff, tail = piimult.as_coeff_add()
+        if not piimult.free_symbols:
+            coeff = piimult
+            tail = ()
+        else:
+            coeff, tail = piimult.as_coeff_add(*piimult.free_symbols)
         # round down to nearest multiple of 2
         branchfact = ceiling(coeff/2 - S(1)/2)*2
         n += branchfact/2

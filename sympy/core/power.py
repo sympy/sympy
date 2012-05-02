@@ -125,10 +125,7 @@ class Pow(Expr):
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
-            if self.base.is_even:
-                return True
-            if self.base.is_integer:
-                return False
+            return self.base.is_even
 
     def _eval_is_positive(self):
         if self.base.is_positive:
@@ -215,8 +212,11 @@ class Pow(Expr):
                     return ok
 
     def _eval_is_odd(self):
-        if not (self.base.is_integer and self.exp.is_nonnegative): return
-        return self.base.is_odd
+        if self.exp.is_integer:
+            if self.exp.is_positive:
+                return self.base.is_odd
+            elif self.exp.is_nonnegative and self.base.is_odd:
+                return True
 
     def _eval_is_bounded(self):
         if self.exp.is_negative:
