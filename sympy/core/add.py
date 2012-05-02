@@ -412,6 +412,7 @@ class Add(AssocOp):
     # assumption methods
     _eval_is_real = lambda self: self._eval_template_is_attr('is_real', when_multiple=None)
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded', when_multiple=None)
+    _eval_is_imaginary = lambda self: self._eval_template_is_attr('is_imaginary', when_multiple=None)
     _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
 

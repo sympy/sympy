@@ -256,7 +256,7 @@ class Ei(Function):
     @classmethod
     def eval(cls, z):
         from sympy import polar_lift, exp_polar
-        if z.is_negative:
+        if not z.is_polar and z.is_negative:
             # Note: is this a good idea?
             return Ei(polar_lift(z)) - pi*I
         nz, n = z.extract_branch_factor()
