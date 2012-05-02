@@ -3,6 +3,8 @@ from expr import Expr
 from evalf import EvalfMixin
 from sympify import _sympify
 
+from sympy.logic.boolalg import Boolean
+
 __all__ = (
  'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
  'Relational', 'Equality', 'Unequality', 'StrictLessThan', 'LessThan',
@@ -122,7 +124,7 @@ def Ge(a, b):
     """
     return Relational(a,b,'>=')
 
-class Relational(Expr, EvalfMixin):
+class Relational(Boolean, Expr, EvalfMixin):
 
     __slots__ = []
 
@@ -350,7 +352,7 @@ class GreaterThan(_Greater):
     True
 
     However, it is also perfectly valid to instantiate a ``*Than`` class less
-    succinctly and less conviently:
+    succinctly and less conveniently:
 
     >>> rels = Rel(x, 1, '>='), Relational(x, 1, '>='), GreaterThan(x, 1)
     >>> print '%s\\n%s\\n%s' % rels
