@@ -106,6 +106,12 @@ def test_Singleton():
     assert MySingleton_sub() is MySingleton_sub()
 
 def test_rewrite():
-    from sympy.abc import x, y, a, b
+    from sympy.abc import x, y, a, b, c
     f = Function('f')
     assert (f(x, y) + f(x + 1, y)).rewrite(f(a, b), a**b) == x**y + (x + 1)**y
+    assert (f(x, y) + f(x + 1, y)).rewrite(f(a - c, b), a**b) == \
+        (c + x)**y + (c + x + 1)**y
+    assert (f(x, y) + f(x + 1, y)).rewrite(f(1/a - c, b), a**b) == \
+        (1/(c + x))**y + (1/(c + x + 1))**y
+    assert (f(x, y) + f(x + 1, y)).rewrite(f(c**2, b), a**b) == 2*a**y
+    raises(NotImplementedError, 'f(x).rewrite(f(a**2), a)')

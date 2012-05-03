@@ -1478,10 +1478,40 @@ class Basic(object):
         """
         if self.is_Atom or not args:
             return self
-        elif (len(args) == 2 and isinstance(args[0], C.Function)
-            and all(a.is_Symbol for a in args[0].args)):
-            foo = lambda *x: args[1].subs(zip(args[0].args, x))
-            return self.replace(args[0].func, foo)
+        elif len(args) == 2 and isinstance(args[0], C.Function):
+
+            def _ok(a):
+                """check that `a` is:
+                * a Symbol or
+                * independent of args[1]'s free symbols or
+                * is linear in exactly one of the free symbols of args[1], f.
+
+                In case of the latter, replace `a` in fargs with a dummy, d,
+                and replace it in the args[1] with the linear solution to
+                `solve_linear(a - d, f)`
+                """
+                from sympy import solve_linear, Dummy
+                if a.is_Symbol:
+                    return True
+                afree = a.free_symbols & free
+                if not afree:
+                    return True
+                if len(afree) == 1:
+                    s = afree.pop()
+                    d = Dummy()
+                    islinear = solve_linear(a - d, symbols=[s])
+                    if islinear and islinear[0] == s:
+                        fargs[fargs.index(a)] = d
+                        args[1] = args[1].subs(*islinear)
+                        return True
+
+            args = list(args)
+            fargs = list(args[0].args)
+            free = args[1].free_symbols
+            if all(_ok(a) for a in fargs):
+                foo = lambda *x: args[1].subs(zip(fargs, x))
+                return self.replace(args[0].func, foo)
+            raise NotImplementedError('Could not rewrite function args as symbols.')
         else:
             pattern = args[:-1]
             if isinstance(args[-1], basestring):

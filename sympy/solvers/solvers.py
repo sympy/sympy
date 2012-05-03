@@ -28,7 +28,7 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
                              asinh, atanh, acoth, Abs)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
-                            nsimplify)
+                            nsimplify, signsimp)
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together, factor
@@ -1442,7 +1442,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
                         irep = [(i, i.doit()) for i in vi.atoms(C.Integral) if
                                 i.function.is_number]
                         # do a slight bit of simplification
-                        vi = expand_mul(vi.subs(irep))
+                        vi = signsimp(expand_mul(vi.subs(irep)))
                         return xi, vi
 
         if all_zero:
