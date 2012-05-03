@@ -636,7 +636,7 @@ def test_has_piecewise():
     f = (x*y + 3/y)**(3 + 2)
     g = Function('g')
     h = Function('h')
-    p = Piecewise((g, x < -1), (1, x <= 1), (f, True))
+    p = Piecewise((g(x), x < -1), (1, x <= 1), (f, True))
 
     assert p.has(x)
     assert p.has(y)
@@ -691,9 +691,6 @@ def test_has_tuple():
     assert not Tuple(f(x), g(x)).has(y)
     assert Tuple(f(x), g(x)).has(f)
     assert Tuple(f(x), g(x)).has(f(x))
-    assert not Tuple(f, g).has(x)
-    assert Tuple(f, g).has(f)
-    assert not Tuple(f, g).has(h)
 
 def test_has_units():
     from sympy.physics.units import m, s

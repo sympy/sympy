@@ -1086,19 +1086,16 @@ class Basic(object):
 
             return False
 
-        def _match(pattern):
-            pattern = sympify(pattern)
+        pattern = sympify(pattern)
 
-            if isinstance(pattern, BasicType):
-                return lambda expr: (isinstance(expr, pattern) or
-                    (isinstance(expr, BasicType) and expr == pattern))
-            elif pattern.is_Add or pattern.is_Mul:
-                c, nc = _ncsplit(pattern)
-                return lambda expr: _contains(expr, pattern, c, nc)
+        if isinstance(pattern, BasicType):
+            match = lambda expr: (isinstance(expr, pattern))
+        elif pattern.is_Add or pattern.is_Mul:
+            c, nc = _ncsplit(pattern)
+            match = lambda expr: _contains(expr, pattern, c, nc)
+        else:
+            match = lambda expr: expr == pattern
 
-            return lambda expr: expr == pattern
-
-        match = _match(pattern)
         return any(match(arg) for arg in preorder_traversal(self))
 
 
