@@ -10,8 +10,10 @@ class MatrixDerivative(MatrixExpr):
 
         evaluate = assumptions.pop('evaluate', True)
 
-        if not variables:
-            variables = expr.free_symbols
+        if not variables and evaluate:
+            # MatrixDerivative(X*Y) = X'Y + XY'
+            mat_symbols = [X for X in expr.free_symbols if X.is_MatrixExpr]
+            return MatAdd(*[MatrixDerivative(expr, var) for var in mat_symbols])
 
         if evaluate:
             if hasattr(expr, '_eval_derivative'):
@@ -40,3 +42,5 @@ class MatrixDerivative(MatrixExpr):
         if x == self._deep_symbol():
             return MatrixDerivative(self, evaluate=False)
         return ZeroMatrix(*self.shape)
+
+from matadd import MatAdd
