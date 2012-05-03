@@ -59,4 +59,7 @@ class Inverse(MatPow):
     def shape(self):
         return self.arg.shape
 
+    def _eval_derivative(self, x):
+        return - self * self.arg.diff(x) * self
+
 from matmul import MatMul

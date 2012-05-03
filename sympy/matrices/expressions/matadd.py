@@ -55,4 +55,7 @@ class MatAdd(MatrixExpr, Add):
     def _entry(self, i, j):
         return Add(*[arg._entry(i,j) for arg in self.args])
 
+    def _eval_derivative(self, x):
+        return MatAdd(*[arg.diff(x) for arg in self.args])
+
 from matmul import MatMul
