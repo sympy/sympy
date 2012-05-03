@@ -1065,19 +1065,15 @@ class Basic(object):
                         cpart.append(arg)
                     else:
                         ncpart.append(arg)
-            elif expr.is_commutative:
-                cpart, ncpart = [expr], []
-            else:
-                cpart, ncpart = [], [expr]
 
             return set(cpart), ncpart
 
-        def _contains(expr, subexpr, iterative, c, nc):
+        def _contains(expr, subexpr, c, nc):
             if expr == subexpr:
                 return True
             elif not isinstance(expr, Basic):
                 return False
-            elif iterative and (expr.is_Add or expr.is_Mul):
+            elif expr.is_Add or expr.is_Mul:
                 _c, _nc = _ncsplit(expr)
 
                 if (c & _c) == c:
@@ -1097,8 +1093,8 @@ class Basic(object):
                 return lambda expr: (isinstance(expr, pattern) or
                     (isinstance(expr, BasicType) and expr == pattern))
             elif pattern.is_Add or pattern.is_Mul:
-                iterative, (c, nc) = True, _ncsplit(pattern)
-                return lambda expr: _contains(expr, pattern, iterative, c, nc)
+                c, nc = _ncsplit(pattern)
+                return lambda expr: _contains(expr, pattern, c, nc)
 
             return lambda expr: expr == pattern
 
