@@ -92,10 +92,10 @@ def perm_af_muln(*a):
         raise ValueError("No element")
     m = len(a)
     n = len(a[0])
-    for i in range(1, m):
+    for i in xrange(1, m):
         if len(a[i]) != n:
-            raise ValueError("The number of elements in the permutations \
-don\'t match.")
+            raise ValueError("The number of elements in the permutations "
+                             "don't match.")
     if m == 1:
         return a[0]
     if m == 2:
@@ -120,7 +120,6 @@ don\'t match.")
         p1 = perm_af_muln(*a[m//2:])
         return [p0[i] for i in p1]
 
-
 def perm_af_invert(a):
     n = len(a)
     inv_form = [0] * n
@@ -130,8 +129,8 @@ def perm_af_invert(a):
 
 def perm_af_commutes_with(a, b):
     if len(a) != len(b):
-        raise ValueError("The number of elements in the permutations \
-don\'t match.")
+        raise ValueError("The number of elements in the permutations "
+                         "don't match.")
     for i in range(len(a)-1):
         if a[b[i]] != b[a[i]]:
             return False
