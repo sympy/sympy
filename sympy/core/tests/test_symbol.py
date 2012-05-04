@@ -319,3 +319,4 @@ def test_symbols():
 def test_call():
     f = Symbol('f')
     assert f(2)
+    raises(TypeError, "Wild('x')(1)")

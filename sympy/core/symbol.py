@@ -209,9 +209,8 @@ class Wild(Symbol):
         repl_dict[self] = expr
         return repl_dict
 
-    def __call__(self, *args):
-        from sympy.core.function import WildFunction
-        return WildFunction(self.name)(*args)
+    def __call__(self, *args, **kwargs):
+        raise TypeError("'%s' object is not callable" % type(self).__name__)
 
 _re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
 _re_var_scope = re.compile(r"^(.):(.)$")
