@@ -406,7 +406,8 @@ class Lambdifier(object):
         Examples:
         >>> from sympy.abc import x, y, z
         >>> from sympy import Integral, sin
-        >>> from sympy.plotting.experimental_lambdify import str2tree
+        >>> from sympy.plotting.experimental_lambdify import Lambdifier
+        >>> str2tree = Lambdifier([x], x).str2tree
 
         >>> str2tree(str(Integral(x, (x, 1, y))))
         ('', ('Integral(', 'x, (x, 1, y)'), ')')
@@ -446,7 +447,9 @@ class Lambdifier(object):
         Examples:
         >>> from sympy.abc import x, y, z
         >>> from sympy import Integral, sin
-        >>> from sympy.plotting.experimental_lambdify import str2tree, tree2str
+        >>> from sympy.plotting.experimental_lambdify import Lambdifier
+        >>> str2tree = Lambdifier([x], x).str2tree
+        >>> tree2str = Lambdifier([x], x).tree2str
 
         >>> tree2str(str2tree(str(x+y*sin(z)+1)))
         'x + y*sin(z) + 1'
