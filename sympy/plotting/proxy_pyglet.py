@@ -1,5 +1,5 @@
 from warnings import warn
-from sympy.core.compatibility import SymPyDeprecationWarning
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from pygletplot import PygletPlot
 
 def Plot(*args, **kwargs):
