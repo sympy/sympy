@@ -159,6 +159,7 @@ def plot_and_save(name):
 def test_matplotlib():
     try:
         import matplotlib
+        import numpy
         if matplotlib.__version__ < '1.2.0':
             return
         plot_and_save('test')

@@ -69,7 +69,8 @@ from sympy import Symbol, NumberSymbol, I, zoo, oo
 # args) tree and creating the namespace at the same time. That actually sounds
 # good.
 
-import numpy as np
+from sympy.external import import_module
+np = import_module('numpy')
 import warnings
 
 #TODO debuging output
