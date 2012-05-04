@@ -29,6 +29,8 @@ from sympy.external import import_module
 
 from experimental_lambdify import vectorized_lambdify
 
+#TODO probably all of the imports after this line can be put inside function to
+# speed up the `from sympy import *` command.
 np = import_module('numpy')
 
 # Backend specific imports - matplotlib
@@ -65,7 +67,7 @@ class Plot(object):
     lists of coordinates of points, etc. Plot has a private attribute _series that
     contains all data series to be plotted (expressions for lines or surfaces,
     lists of points, etc (all subclasses of BaseSeries)). Those data series are
-    instances of classes private to the module. They are listed below.
+    instances of classes not imported by ``from sympy import *``.
 
     The customization of the figure is on two levels. Global options that
     concern the figure as a whole (eg title, xlabel, scale, etc) and
@@ -81,6 +83,8 @@ class Plot(object):
     - a function of two variables (the first and second coordinate or
     parameters)
     - a function of three variables (only in nonparametric 3D plots)
+    Their implementation depends on the backend so they may not work in some
+    backends.
 
     If the plot is parametric and the arity of the aesthetic function permits
     it the aesthetic is calculated over parameters and not over coordinates.
@@ -91,22 +95,7 @@ class Plot(object):
     the paremetric plots to plot in polar, spherical and cylindrical
     coordinates.
 
-    The arguments for the constructor Plot can be any of the following:
-    - [x coords], [y coords] - 2D list plot
-        implemented in ListSeries
-    - expr, (var, start, end) - 2D function plot
-        implemented in LineOver1DRangeSeries
-    - expr_x, expr_y, (var, start, end) - 2D parametric plot
-        implemented in Parametric2DLineSeries
-    - expr_x, expr_y, expr_z, (var, start, end) - 3D parametric line plot
-        implemented in Parametric3DLineSeries
-    - expr, (var_x, start, end), (var_y, start, end) - surface plot
-        implemented in SurfaceOver2DRangeSeries
-    - expr_x, expr_y, expr_z, (var_u, start, end), (var_v, start, end) - 3D
-      parametric surface plot
-        implemented in ParametricSurfaceSeries
-    - subclasses of BaseSeries
-    - tuples containing any of the aforementioned options
+    The arguments for the constructor Plot must be subclasses of BaseSeries.
 
     Any global option can be specified as a keyword argument.
 
@@ -167,18 +156,7 @@ class Plot(object):
         # Contains the data objects to be plotted. The backend should be smart
         # enough to iterate over this list.
         self._series = []
-
-        # The arguments are either:
-        #  - arguments for the Series subclass or instances
-        # of subclasses of BaseSeries
-        #  - list of tuples containing the above
-        args = sympify(args)
-        if len(args) != 0:
-            if not all([isinstance(a, Tuple) for a in args]):
-                self._series.append(Series(*args))
-            else:
-                for a in args:
-                    self._series.append(Series(*a))
+        self._series.extend(args)
 
         # The backend type. On every show() a new backend instance is created
         # in self._backend which is tightly coupled to the Plot instance
@@ -212,7 +190,12 @@ class Plot(object):
         return self._series[index]
 
     def __setitem__(self, index, *args):
-        self._series[index] = Series(*args[0])
+        # XXX for ease of use here we permit also arguments for plot()
+        if len(args)==1 and isinstance(args[0], BaseSeries):
+            self._series[index] = args
+        else:
+            p = plot(*args, show=False)
+            self.extend(p)
 
     def __delitem__(self, index):
         del self._series[index]
@@ -224,130 +207,132 @@ class Plot(object):
         else:
             self._series.append(Series(*args))
 
-    def extend(self, plot):
+    def extend(self, arg):
         """Adds the series from another plot or a list of series."""
-        if isinstance(plot, Plot):
-            self._series.extend(plot._series)
+        if isinstance(arg, Plot):
+            self._series.extend(arg._series)
         else:
-            self._series.extend(plot)
+            self._series.extend(arg)
 
 
 def plot(*args, **kwargs):
-    """Convenient interface for the *new* Plot class.
+    """A plot function for interactive use.
 
-    This function has a more relaxed input requirements than the Plot class
-    and shows the figure immediately. As such is better suited for interactive
-    work.
-
-    It can also plot a list of equations.
-
-    It returns a Plot object with a matplotlib backend.
-    For the more advanced options, detailed documentation and other types of
-    plots see the Plot class from sympy.plotting.plot.
-
-    The new Plot class is not as of yet imported by 'from sympy import *'.
-    For compability with older versions of sympy 'from sympy import *' still
-    imports the old Plot class which now resides in sympy.plotting.pygletplot.
-
-    All keyword arguments that Plot supports are also supported by plot (like
-    title, etc).
+    It implements many heuristics in order to guess what the user wants on
+    incomplete input.
 
     There is also the 'show' argument that defaults to True (immediately
     showing the plot).
 
+    The input arguments can be:
+      - lists with coordinates for ploting a line in 2D or 3D
+      - the expressions and variable lists with ranges in order to plot any of
+        the following: 2d line, 2d parametric line, 3d parametric line,
+        surface, parametric surface
+         - if the variable lists do not provide ranges a default range is used
+         - if the variables are not provided, the free variables are
+           automatically detected
+         - if neither variables nor ranges are provided, both are guessed
+         - if multiple expressions are provided in a list all of them are
+           plotted
+      - an instance of BaseSeries() subclass
+      - another Plot() instance
+      - tuples containing any of the above mentioned options, for plotting them
+        together
+
     Examples:
     ---------
 
-    Plot lists:
-    >> listx = range(10)
-    >> listy = [x**2 for x in listx]
-    >> p0 = plot(listx, listy)
-
     Plot expressions:
-    >> p1 = plot(x**2) # with default [-10,+10] range
-    >> p2 = plot(x**2, (0, 5)) # it finds the free variable itself
-    >> p3 = plot(x**2, (x, 0, 5)) # fully explicit
+    >>> from sympy import plot, cos, sin, symbols
+    >>> x,y,u,v = symbols('x y u v')
+    >>> p1 = plot(x**2, show=False) # with default [-10,+10] range
+    >>> p2 = plot(x**2, (0, 5), show=False) # it finds the free variable itself
+    >>> p3 = plot(x**2, (x, 0, 5), show=False) # fully explicit
 
     Fully implicit examples (finding the free variable and using default
     range). For the explicit versions just add the tuples with ranges:
-    >> p4 = plot(x**2) # cartesian line
-    >> p5 = plot(cos(u), sin(u)) # parametric line
-    >> p6 = plot(cos(u), sin(u), u) # parametric line in 3d
-    >> p7 = plot(x**2 + y**2) # cartesian surface
-    >> p8 = plot(u, v, u+v) # parametric surface
+    >>> p4 = plot(x**2, show=False) # cartesian line
+    >>> p5 = plot(cos(u), sin(u), show=False) # parametric line
+    >>> p6 = plot(cos(u), sin(u), u, show=False) # parametric line in 3d
+    >>> p7 = plot(x**2 + y**2, show=False) # cartesian surface
+    >>> p8 = plot(u, v, u+v, show=False) # parametric surface
 
     Multiple plots per figure:
-    >> p9 = plot((x**2), (cos(u), sin(u))) # cartesian and parametric lines
+    >>> p9 = plot((x**2, ), (cos(u), sin(u)), show=False) # cartesian and parametric lines
 
     Set title or other options:
-    >> p10 = plot(x**2, title='second order polynomial')
+    >>> p10 = plot(x**2, title='second order polynomial', show=False)
 
     Plot a list of expressions:
-    >> p11 = plot([x, x**2, x**3])
-    >> p12 = plot([x, x**2, x**3], (0,2)) # explicit range
-    >> p13 = plot([x*y, -x*y]) # list of surfaces
+    >>> p11 = plot([x, x**2, x**3], show=False)
+    >>> p12 = plot([x, x**2, x**3], (0,2), show=False) # explicit range
+    >>> p13 = plot([x*y, -x*y], show=False) # list of surfaces
 
     And you can even plot a Plot or a Series object:
-    >> a = plot(x, show=False)
-    >> p14 = plot(a) # plotting a plot object
-    >> p15 = plot(a[0]) # plotting a series object
+    >>> a = plot(x, show=False)
+    >>> p14 = plot(a, show=False) # plotting a plot object
+    >>> p15 = plot(a[0], show=False) # plotting a series object
+
     """
-    # The idea of this function is to permint more ambiguous input than Plot
-    # and Series. It uses default values to make the input understandable for
-    # Plot. It also shows the plots immediately.
-
-    # We check if the user wants to plot one graph or multiple graps and then
-    # add the necessary ranges and free variables if they are not explicitly
-    # stated. All tuples are converted to lists for ease of work.
-
-    # The code assumes that the only use for tuples is to give the range of the
-    # plot either as (x, -4, +2) or just (-4, +2).
 
     plot_arguments = [p for p in args if isinstance(p, Plot)]
     series_arguments = [p for p in args if isinstance(p, BaseSeries)]
     args = sympify([np for np in args if not isinstance(np, (Plot, BaseSeries))])
 
-    #
-    # The case of a list of expressions.
-    # The Series factory class does not understand this so we do something
-    # special.
-    #
-    if args and isinstance(args[0], list) and all(isinstance(e, Expr) for e in args[0]):
-        new_args = [args[0],]
-        new_args.extend(repeat(a) for a in args[1:])
-        return plot(*zip(*new_args), **kwargs)
 
-    #
-    # The case of two lists with point coordinates, or tuples with expressions
-    # or Plot instances.
-    # All this is stuff that can be handled by the Series factory class after
-    # explicit ranges are added.
-    #
-    default_range = Tuple(-10, 10)
-
+    # Are the arguments for only one plot or are they tuples with arguments
+    # for many plots. If it is the latter make the Tuples into list so they are
+    # mutable.
+    # args = (x, (x, 10, 20)) vs args = ((x, (x, 10, 20)), (y, (y, 20, 30)))
     if all([isinstance(a, Tuple) for a in args]):
         list_of_plots = map(list, args)
     else:
         list_of_plots = [list(args), ]
 
-    for pl_index, pl in enumerate(list_of_plots):
-        if any([isinstance(e, Expr) for e in pl]):
-            free_vars = set.union(*[expr.free_symbols for expr in pl
-                                                if isinstance(expr, Expr)])
-            while len([t for t in pl if isinstance(t, Tuple)]) < len(free_vars):
-                pl.append(default_range)
-            for index, item in enumerate(pl):
-                if isinstance(item, Expr):
-                    pass
-                elif len(item) == 3:
-                    free_vars.discard(item[0])
-                elif len(item) == 2:
-                    pl[index] = Tuple(free_vars.pop(), item[0], item[1])
-        list_of_plots[pl_index] = Tuple(*pl)
+    # Check for arguments containing lists of expressions for the same ranges.
+    # args = (x**2, (x, 10, 20)) vs args = ([x**3, x**2], (x, 10, 20))
+    list_arguments = [p for p in list_of_plots
+                              if any(isinstance(a, list) for a in p)]
+    list_of_plots = [p for p in list_of_plots
+                             if not any(isinstance(a, list) for a in p)]
+
+    def expand(the_args):
+        lists = [l for l in the_args if isinstance(l, list)]
+        not_lists = [l for l in the_args if not isinstance(l, list)]
+        return [list(l)+not_lists for l in zip(*lists)]
+
+    for a in list_arguments:
+        list_of_plots.extend(expand(a))
+
+    # args = (x**2, ) --> args = (x**2, (x,-10,10)) and others
+    def add_variables_and_ranges(the_args):
+        default_range = Tuple(-10, 10)
+        free_vars = set.union(*[expr.free_symbols for expr in pl
+                                                  if isinstance(expr, Expr)])
+        # remove from free_vars all variables that already have defined ranges
+        for item in the_args:
+            if isinstance(item, Tuple) and (len(item)==3 or len(item)==1):
+                free_vars.discard(item[0])
+        # add the missing variables to all len=2 Tuples
+        # add the missing ranges to all len=1 Tuples
+        for index, item in enumerate(the_args):
+            if not isinstance(item, Tuple):
+                pass
+            elif len(item) == 2:
+                the_args[index] = Tuple(free_vars.pop(), item[0], item[1])
+            elif len(item) == 1:
+                the_args[index] = Tuple(item[0], default_range[0], default_range[1])
+        # add the missing len=3 Tuples
+        the_args.extend([Tuple(v, default_range[0], default_range[1]) for v in free_vars])
+        return the_args
+
+    list_of_plots = [Tuple(*add_variables_and_ranges(pl)) for pl in list_of_plots]
+
+    series_arguments.extend([OverloadedSeriesFactory(*pl) for pl in list_of_plots])
 
     show = kwargs.pop('show', True)
-    p = Plot(*list_of_plots, **kwargs)
-    p.extend(series_arguments)
+    p = Plot(*series_arguments, **kwargs)
     for plot_argument in plot_arguments:
         p.extend(plot_argument)
     if show:
@@ -759,20 +744,13 @@ class ContourSeries(BaseSeries):
 
 
 ### Factory class
-class Series(BaseSeries):
+class OverloadedSeriesFactory(BaseSeries):
     """ Construct a data series representation that makes sense for the given
-    arguments. It does not work for contour plot for the moment.
+    arguments. It works for a small subset of all possible plots.
     """
     # overloading would be great here :(
     # or the new function signature stuff from PEP 362
     def __new__(cls, *args):
-        if isinstance(args[0], BaseSeries):
-            return args[0]
-        if (len(args) == 2
-            and isinstance(args[0], list)
-            and isinstance(args[1], list)):
-            return List2DSeries(*args)
-
         args = sympify(args)
         if (len(args) == 2
               and isinstance(args[0], Expr)

@@ -11,9 +11,9 @@ u = Symbol('u')
 v = Symbol('v')
 expr = x**2 - 1
 
-a = plot(lx, ly, show=False)  # list plot
+#a = plot(lx, ly, show=False)  # list plot
 b = plot(expr, (x, 2, 4), show=False) # cartesian plot
-c = plot((lx, ly), (expr, (x, 2, 4)), ('x*cos(x)', 'x*sin(x)', (x, 0, 15)), show=False) # list, cartesian and parametric plot
+#c = plot((lx, ly), (expr, (x, 2, 4)), ('x*cos(x)', 'x*sin(x)', (x, 0, 15)), show=False) # list, cartesian and parametric plot
 #d = plot(1/(x**2+y**2+1), (x, -10, 10), (y, -10, 10), 'contour') # contour plot
 e = plot(exp(-x),(x, 0, 4), show=False) # cartesian plot (and coloring, see below)
 f = plot(sin(x), cos(x), x, (x,0,10), show=False)  # 3d parametric line plot
@@ -21,10 +21,10 @@ g = plot(sin(x)*cos(y), (x, -5, 5), (y, -10, 10), show=False) # 3d surface carte
 h = plot(cos(u)*v,sin(u)*v,u,(u,0,10),(v,-2,2), show=False) # 3d parametric surface plot
 
 # Some global options
-c.title = 'Big nice title'
-c.xlabel = 'my argument'
-c.ylabel = 'my function'
-c.legend = True
+#c.title = 'Big nice title'
+#c.xlabel = 'my argument'
+#c.ylabel = 'my function'
+#c.legend = True
 
 # Some aesthetics
 e[0].line_color = lambda x : x/4
