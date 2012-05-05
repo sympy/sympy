@@ -81,3 +81,7 @@ def test_nsolve_symbolic_expressions():
     #assert nsolve(t,(x,z),Matrix([0,0]))._imp_(1)[0] == 1.0
     # some strange error: TypeError: cannot create mpf from [0]
     # AND returns [0]
+
+    # testing the arg_order argument
+    assert (nsolve(x*y/z-1.,x,10.,arg_order=[y,z])._imp_(10.,1. )
+         == nsolve(x*y/z-1.,x,10.,arg_order=[z,y])._imp_(1. ,10.))

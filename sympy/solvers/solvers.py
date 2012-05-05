@@ -1904,7 +1904,9 @@ def nsolve(*args, **kwargs):
     substituted with floats. When used in this manner the `imp_function`
     argument can be supplied to give a name to the newly created function. For
     more details see the docstring of `implemented_function`. Otherwise a
-    default name will be used.
+    default name will be used. Optionally, if you wish to enforce a certain order for the
+    arguments you can use the ``arg_order`` argument specifying a list
+    containing the arguments in the preferred order.
 
     >>> from sympy import tanh, nsolve
     >>> from sympy.abc import x, y
@@ -1988,13 +1990,12 @@ def nsolve(*args, **kwargs):
     return x
 
 def _nsolve_implemented_function(f, fargs, x0, **kwargs):
-    #TODO the order of the substitutions is random
-    # add another kwargs to fix it
     free = list(f.free_symbols - set(fargs))
+    arg_order = kwargs.pop('arg_order', free)
     name = kwargs.pop('imp_function', 'nsolve_root')
-    imp_func = lambda *args : nsolve(f.subs(zip(free, args)), fargs, x0,
+    imp_func = lambda *args : nsolve(f.subs(zip(arg_order, args)), fargs, x0,
                                      **kwargs)
-    return implemented_function(name, imp_func)(*free)
+    return implemented_function(name, imp_func)(*arg_order)
 
 
 def _invert(eq, *symbols, **kwargs):
