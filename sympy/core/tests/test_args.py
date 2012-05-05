@@ -1895,3 +1895,35 @@ def test_sympy__geometry__entity__GeometryEntity():
     from sympy.geometry.entity import GeometryEntity
     from sympy.geometry.point import Point
     assert _test_args(GeometryEntity(Point(1, 0), 1))
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__Manifold():
+    from sympy.differential_geometry import Manifold
+    assert _test_args(Manifold('name', 3))
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__Patch():
+    from sympy.differential_geometry import Manifold, Patch
+    assert _test_args(Patch('name', Manifold('name', 3)))
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__CoordSystem():
+    from sympy.differential_geometry import Manifold, Patch, CoordSystem
+    assert _test_args(CoordSystem('name', Patch('name', Manifold('name', 3))))
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__Point():
+    from sympy.differential_geometry import Manifold, Patch, CoordSystem, Point
+    assert _test_args(Point(CoordSystem('name', Patch('name', Manifold('name', 3)))), [x, y])
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__ScalarField():
+    from sympy.differential_geometry import Manifold, Patch, CoordSystem, ScalarField
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    assert _test_args(ScalarField(cs, [x, y], x))
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__VectorField():
+    from sympy.differential_geometry import Manifold, Patch, CoordSystem, VectorField
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    assert _test_args(VectorField(cs, [x, y], [x, y]))
