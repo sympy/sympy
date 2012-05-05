@@ -273,6 +273,9 @@ def test_imps():
     f2 = implemented_function("f", lambda x: x + 101)
     raises(ValueError, 'lambdify(x, f(f2(x)))')
 
+def test_imps_wrong_args():
+    raises(ValueError, 'implemented_function(sin, lambda x:x)')
+
 def test_lambdify_imps():
     # Test lambdify with implemented functions
     # first test basic (sympy) lambdify
