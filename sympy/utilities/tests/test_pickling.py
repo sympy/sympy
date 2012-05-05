@@ -400,3 +400,8 @@ def test_concrete():
     for c in (Product, Product(x, (x, 2, 4)), Sum, Sum(x, (x, 2, 4))):
         check(c)
 
+def test_deepcopy():
+    # Issue 2684
+    mul = Mul(3, 4, evaluate=False)
+    mul_copy =  copy.deepcopy(mul)
+    assert isinstance(mul_copy, Mul)

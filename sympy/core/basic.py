@@ -8,6 +8,21 @@ from compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
+def _new_Basic(cls, args, state):
+    """
+    Creates a new object while pickling. We need to call the __new__ method
+    with keyword argument evaluate=False because some evaluation can occur
+    at creation time and we don't want that while deepcopying an object..
+    This function is called by the __reduce__ method.
+    """
+    try:
+        obj = cls.__new__(cls, *args, evaluate=False)
+    except Exception:
+        # Some objects like Numbers do not accept evaluate keyword argument.
+        obj = cls.__new__(cls, *args)
+    obj.__setstate__(state)
+    return obj
+
 class PicklableWithSlots(object):
     """
     Mixin class that allows to pickle objects with ``__slots__``.
@@ -46,6 +61,18 @@ class PicklableWithSlots(object):
     """
 
     __slots__ = []
+
+    def __reduce__(self):
+        """
+        Fixes Issue 2684.
+        Sends all arguments to recreate a deepcopy of self. We need this
+        because __new__ needs to be called with keyword argument evaluate=False.
+        See :http://stackoverflow.com/questions/5238252/unpickling-new-style-with-kwargs-not-possible
+        """
+        if hasattr(self, '__getnewargs__') and hasattr(self, '__getstate__'):
+            return _new_Basic, (self.__class__, self.__getnewargs__(), self.__getstate__()), None
+        else:
+            return super(PicklableWithSlots, self).__reduce__()
 
     def __getstate__(self, cls=None):
         if cls is None:
