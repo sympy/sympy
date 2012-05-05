@@ -1,6 +1,6 @@
 """OO layer for several polynomial representations. """
 
-from sympy.core.basic import PicklableWithSlots
+from sympy.polys.polyutils import PicklableWithSlots
 
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """

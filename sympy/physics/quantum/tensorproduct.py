@@ -89,8 +89,9 @@ class TensorProduct(Expr):
         >>> tp.expand(tensorproduct=True)
         AxC + BxC
     """
+    is_commutative = False
 
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args):
         if isinstance(args[0], (Matrix, numpy_ndarray, scipy_sparse_matrix)):
             return matrix_tensor_product(*args)
         c_part, new_args = cls.flatten(sympify(args))
@@ -100,7 +101,7 @@ class TensorProduct(Expr):
         elif len(new_args) == 1:
             return c_part*new_args[0]
         else:
-            tp = Expr.__new__(cls, *new_args, **{'commutative': False})
+            tp = Expr.__new__(cls, *new_args)
             return c_part*tp
 
     @classmethod

@@ -37,11 +37,10 @@ __all__ = [
 
 class RkGate(OneQubitGate):
     """This is the R_k gate of the QTF."""
-
     gate_name = u'Rk'
     gate_name_latex = u'R'
 
-    def __new__(cls, *args, **old_assumptions):
+    def __new__(cls, *args):
         if len(args) != 2:
             raise QuantumError(
                 'Rk gates only take two arguments, got: %r' % args
@@ -58,7 +57,7 @@ class RkGate(OneQubitGate):
         elif k == 3:
             return TGate(target)
         args = cls._eval_args(args)
-        inst = Expr.__new__(cls, *args, **{'commutative':False})
+        inst = Expr.__new__(cls, *args)
         inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst
 
