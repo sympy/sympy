@@ -5,6 +5,7 @@ from sympy.core import Add, S, C, sympify, cacheit, pi, I
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.complexes import polar_lift
+from sympy.functions.special.hyper import hyper
 
 # TODO series expansions
 # TODO see the "Note:" in Ei
@@ -1005,6 +1006,9 @@ class fresnels(FresnelIntegral):
     def _eval_rewrite_as_erf(self, z):
         return (S.One + I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) - I*erf((S.One - I)/2*sqrt(pi)*z))
 
+    def _eval_rewrite_as_hyper(self, z):
+        return pi*z**3/6 * hyper([S(3)/4], [S(3)/2, S(7)/4], -pi**2*z**4/16)
+
 
 class fresnelc(FresnelIntegral):
     r"""
@@ -1095,6 +1099,9 @@ class fresnelc(FresnelIntegral):
 
     def _eval_rewrite_as_erf(self, z):
         return (S.One - I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) + I*erf((S.One - I)/2*sqrt(pi)*z))
+
+    def _eval_rewrite_as_hyper(self, z):
+        return z * hyper([S.One/4], [S.One/2, S(5)/4], -pi**2*z**4/16)
 
 
 ###############################################################################

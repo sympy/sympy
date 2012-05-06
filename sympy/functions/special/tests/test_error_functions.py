@@ -1,6 +1,6 @@
 from sympy import (symbols, expand, erf, nan, oo, Float, conjugate, sqrt, sin, cos, pi, re, im, Abs, O,
                    factorial, exp_polar, polar_lift, Symbol, I, exp, uppergamma, expint, log, loggamma, limit,
-                   meijerg, gamma, S, Shi, Chi, Si, Ci, E1, Ei, sin, cos, sinh, cosh, fresnels, fresnelc)
+                   hyper, meijerg, gamma, S, Shi, Chi, Si, Ci, E1, Ei, sin, cos, sinh, cosh, fresnels, fresnelc)
 
 from sympy.functions.special.error_functions import _erfs
 
@@ -246,6 +246,8 @@ def test_fresnel():
 
     assert fresnels(z).rewrite(erf) == (S.One+I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) - I*erf((S.One-I)/2*sqrt(pi)*z))
 
+    assert fresnels(z).rewrite(hyper) == pi*z**3/6 * hyper([S(3)/4], [S(3)/2, S(7)/4], -pi**2*z**4/16)
+
     assert fresnels(z).series(z, n=15) == pi*z**3/6 - pi**3*z**7/336 + pi**5*z**11/42240 + O(z**15)
 
     assert fresnels(w).is_real is True
@@ -270,6 +272,8 @@ def test_fresnel():
     assert fresnelc(z).diff(z) == cos(pi*z**2/2)
 
     assert fresnelc(z).rewrite(erf) == (S.One - I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) + I*erf((S.One - I)/2*sqrt(pi)*z))
+
+    assert fresnelc(z).rewrite(hyper) == z * hyper([S.One/4], [S.One/2, S(5)/4], -pi**2*z**4/16)
 
     assert fresnelc(z).series(z, n=15) == z - pi**2*z**5/40 + pi**4*z**9/3456 - pi**6*z**13/599040 + O(z**15)
 
