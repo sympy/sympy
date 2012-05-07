@@ -5,7 +5,7 @@ from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 
 from sympy.core import sympify
-from sympy.core.basic import PicklableWithSlots
+from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import DomainError
 
 class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):

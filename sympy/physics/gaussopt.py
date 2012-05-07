@@ -462,7 +462,7 @@ class BeamParameter(Expr):
 
     def __new__(cls, wavelen, z, **kwargs):
         wavelen, z = sympify((wavelen, z))
-        inst = Expr.__new__(cls, wavelen, z, **kwargs)
+        inst = Expr.__new__(cls, wavelen, z)
         inst.wavelen = wavelen
         inst.z = z
         if len(kwargs) !=1:
