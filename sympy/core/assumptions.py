@@ -120,44 +120,10 @@ class StdFactKB(FactKB):
     def copy(self):
         return self.__class__(self)
 
+
 def as_property(fact):
     """Convert a fact name to the name of the corresponding property"""
     return 'is_%s' % fact
-
-class PropertyManager(StdFactKB):
-    """This object is responsible for ensuring the consistency of class
-    properties obeying a set of logic rules."""
-    def __init__(self, cls):
-        local_defs = {}
-        for k in _assume_defined:
-            attrname = as_property(k)
-            v = cls.__dict__.get(attrname, '')
-            if isinstance(v, (bool, int, long, type(None))):
-                if v is not None:
-                    v = bool(v)
-                local_defs[k] = v
-
-        defs = {}
-        for base in reversed(cls.__bases__):
-            try:
-                defs.update(base.default_assumptions.definitions)
-            except AttributeError:
-                pass
-        defs.update(local_defs)
-
-        self.definitions = defs
-        self.deduce_all_facts(defs)
-
-        self.evaluator = {}
-        for k in _assume_defined:
-            try:
-                self.evaluator[k] = getattr(cls, '_eval_is_%s' % k)
-            except AttributeError:
-                pass
-
-
-    def copy(self):
-        return StdFactKB(self)
 
 def make_property(fact):
     """Create the automagic property corresponding to a fact."""
@@ -237,12 +203,35 @@ class ManagedProperties(BasicMeta):
     def __init__(cls, *args, **kws):
         BasicMeta.__init__(cls, *args, **kws)
 
-        pmanager = PropertyManager(cls)
-        cls.default_assumptions = pmanager
-        cls._prop_handler = pmanager.evaluator
+        local_defs = {}
+        for k in _assume_defined:
+            attrname = as_property(k)
+            v = cls.__dict__.get(attrname, '')
+            if isinstance(v, (bool, int, long, type(None))):
+                if v is not None:
+                    v = bool(v)
+                local_defs[k] = v
+
+        defs = {}
+        for base in reversed(cls.__bases__):
+            try:
+                defs.update(base._explicit_class_assumptions)
+            except AttributeError:
+                pass
+        defs.update(local_defs)
+
+        cls._explicit_class_assumptions = defs
+        cls.default_assumptions = StdFactKB(defs)
+
+        cls._prop_handler = {}
+        for k in _assume_defined:
+            try:
+                cls._prop_handler[k] = getattr(cls, '_eval_is_%s' % k)
+            except AttributeError:
+                pass
 
         # Put definite results directly into the class dict, for speed
-        for k, v in pmanager.iteritems():
+        for k, v in cls.default_assumptions.iteritems():
             setattr(cls, as_property(k), v)
 
         # protection e.g. for Integer.is_even=F <- (Rational.is_integer=F)
@@ -252,7 +241,7 @@ class ManagedProperties(BasicMeta):
                 derived_from_bases |= set(base.default_assumptions)
             except AttributeError:
                 continue        #not an assumption-aware class
-        for fact in derived_from_bases - set(pmanager):
+        for fact in derived_from_bases - set(cls.default_assumptions):
             pname = as_property(fact)
             if pname not in cls.__dict__:
                 setattr(cls, pname, make_property(fact))
@@ -262,4 +251,3 @@ class ManagedProperties(BasicMeta):
             pname = as_property(fact)
             if not hasattr(cls, pname):
                 setattr(cls, pname, make_property(fact))
-
