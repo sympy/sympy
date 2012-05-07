@@ -124,6 +124,8 @@ def Ge(a, b):
     """
     return Relational(a,b,'>=')
 
+# Note, see issue 1887.  Ideally, we wouldn't want to subclass both Boolean
+# and Expr.
 class Relational(Boolean, Expr, EvalfMixin):
 
     __slots__ = []
