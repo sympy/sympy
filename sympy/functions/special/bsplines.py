@@ -140,4 +140,3 @@ def bspline_basis_set(d, knots, x):
     """
     n_splines = len(knots)-d-1
     return [bspline_basis(d, knots, i, x) for i in range(n_splines)]
-

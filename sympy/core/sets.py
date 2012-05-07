@@ -572,7 +572,7 @@ class Interval(Set, EvalfMixin):
             start = Max(self.start, other.start)
             if (end < start or
                (end==start and (end not in self and end not in other))):
-               return None
+                return None
             else:
                 start = Min(self.start, other.start)
                 end   = Max(self.end, other.end)

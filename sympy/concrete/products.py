@@ -238,4 +238,3 @@ def product(*args, **kwargs):
         return prod.doit(deep=False)
     else:
         return prod
-

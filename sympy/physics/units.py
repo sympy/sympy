@@ -305,4 +305,3 @@ def find_unit(quantity):
 
 # Delete this so it doesn't pollute the namespace
 del Rational, pi
-

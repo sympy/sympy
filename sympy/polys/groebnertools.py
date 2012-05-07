@@ -135,7 +135,7 @@ def buchberger(f, u, O, K, gens='', verbose=False):
             if monomial_mul(mh, mg) == LCMhg or (
                 not any(lcm_divides(ipx) for ipx in C) and
                 not any(lcm_divides(pr[1]) for pr in D)):
-                    D.add((ih, ig))
+                D.add((ih, ig))
 
         E = set()
 

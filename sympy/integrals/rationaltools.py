@@ -369,4 +369,3 @@ def log_to_real(h, q, x, t):
         result += r*log(h.as_expr().subs(t, r))
 
     return result
-

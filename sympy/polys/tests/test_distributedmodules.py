@@ -171,4 +171,3 @@ def test_uncovered_line():
 
     assert sdm_spoly(f1, f2, lex, QQ) == sdm_zero()
     assert sdm_spoly(f3, f2, lex, QQ) == sdm_zero()
-

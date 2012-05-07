@@ -444,7 +444,7 @@ class expint(Function):
 
     def _eval_rewrite_as_Si(self, nu, z):
         if nu != 1:
-           return self
+            return self
         return Shi(z) - Chi(z)
     _eval_rewrite_as_Ci = _eval_rewrite_as_Si
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si

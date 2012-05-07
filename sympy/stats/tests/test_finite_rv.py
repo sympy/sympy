@@ -200,4 +200,3 @@ def test_FiniteRV():
 
     assert pspace(F).domain.as_boolean() == Or(
             *[Eq(F.symbol, i) for i in [1,2,3]])
-

@@ -173,4 +173,3 @@ def qapply_Mul(e, **options):
         return result*qapply_Mul(e._new_rawargs(*args), **options)
     else:  # result is a scalar times a Mul, Add or TensorProduct
         return qapply(e._new_rawargs(*args)*result, **options)
-

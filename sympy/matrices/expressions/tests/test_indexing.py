@@ -67,5 +67,3 @@ def test_slicing():
 def test_errors():
     raises(IndexError, "Identity(2)[1,2,3,4,5]")
     raises(IndexError, "Identity(2)[[1,2,3,4,5]]")
-
-

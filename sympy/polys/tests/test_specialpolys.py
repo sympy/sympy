@@ -109,4 +109,3 @@ def test_fateman_poly_F_3():
     F,G,H = dmp_fateman_poly_F_3(3, ZZ)
 
     assert [ t.rep.rep for t in [f,g,h] ] == [F,G,H]
-

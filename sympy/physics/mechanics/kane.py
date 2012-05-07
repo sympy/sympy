@@ -865,4 +865,3 @@ class Kane(object):
             raise ValueError('Need to compute Fr, Fr* first.')
         f1 = self._k_ku * Matrix(self._u) + self._f_k
         return -Matrix([f1, self._f_d, self._f_dnh])
-

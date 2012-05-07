@@ -82,4 +82,3 @@ def test_viete():
     raises(ValueError, "viete(x**2 + 1, [r1])")
 
     raises(MultivariatePolynomialError, "viete(x + y, [r1])")
-

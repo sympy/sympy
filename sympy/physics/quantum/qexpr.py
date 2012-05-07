@@ -399,4 +399,3 @@ def dispatch_method(self, basename, arg, **options):
         "%s.%s can't handle: %r" % \
             (self.__class__.__name__, basename, arg)
     )
-

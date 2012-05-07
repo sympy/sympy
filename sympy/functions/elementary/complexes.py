@@ -634,9 +634,9 @@ class periodic_argument(Function):
         if period == oo:
             return unbranched
         if period != oo:
-             n = ceiling(unbranched/period - S(1)/2)*period
-             if not n.has(ceiling):
-                 return unbranched - n
+            n = ceiling(unbranched/period - S(1)/2)*period
+            if not n.has(ceiling):
+                return unbranched - n
 
     def _eval_evalf(self, prec):
         from sympy import ceiling, oo

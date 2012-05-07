@@ -501,7 +501,7 @@ class cos(TrigonometricFunction):
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
         if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction) :
-           arg = arg.func(arg.args[0]).rewrite(exp)
+            arg = arg.func(arg.args[0]).rewrite(exp)
         return (exp(arg*I) + exp(-arg*I)) / 2
 
     def _eval_rewrite_as_Pow(self, arg):
@@ -926,7 +926,7 @@ class cot(TrigonometricFunction):
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
         if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction) :
-           arg = arg.func(arg.args[0]).rewrite(exp)
+            arg = arg.func(arg.args[0]).rewrite(exp)
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(pos_exp+neg_exp)/(pos_exp-neg_exp)
 

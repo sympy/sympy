@@ -104,4 +104,3 @@ def test_point_pos():
     assert Q.pos_from(P) == 10 * N.y + 5 * B.y
     assert Q.pos_from(O) == 10 * N.x + 10 * N.y + 5 * B.x + 5 * B.y
     assert O.pos_from(Q) == -10 * N.x - 10 * N.y - 5 * B.x - 5 * B.y
-
