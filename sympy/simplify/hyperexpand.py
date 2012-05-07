@@ -248,12 +248,30 @@ def add_formulae(formulae):
          Matrix([[-S.Half, S.Half, 0], [0, -S.Half, S.Half], [0, 2*z, 0]]))
 
     # FresnelS
-    #add([S(3)/4], [S(3)/2,S(7)/4], fresnels(root(-16*z/pi**2, 4)) * 6/(pi*(root(-16*z/pi**2, 4))**3) )
-    add([S(3)/4], [S(3)/2,S(7)/4], fresnels(2/sqrt(pi)*root(-z,4)) * 6/(pi*8*(-z)**(S(3)/4)/pi**(S(3)/2) ) )
+    # Basic rule
+    #add([S(3)/4], [S(3)/2,S(7)/4], 6*fresnels( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( pi * (exp(pi*I/4)*root(z,4)*2/sqrt(pi))**3 ) )
+    # Manually tuned rule
+    addb([S(3)/4], [S(3)/2,S(7)/4],
+         Matrix([ fresnels( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( pi * (exp(pi*I/4)*root(z,4)*2/sqrt(pi))**3 ),
+                  sinh(2*sqrt(z))/sqrt(z),
+                  cosh(2*sqrt(z)) ]),
+         Matrix([[6, 0, 0]]),
+         Matrix([[-S(3)/4,  S(1)/16, 0],
+                 [ 0,      -S(1)/2,  1],
+                 [ 0,       z,       0]]))
 
     # FresnelC
-    #add([S(1)/4], [S(1)/2,S(5)/4], fresnelc(root(-16*z/pi**2, 4)) / (pi*(root(-16*z/pi**2, 4))) )
-    add([S(1)/4], [S(1)/2,S(5)/4], fresnelc(2/sqrt(pi)*root(-z,4)) / (2/sqrt(pi)*root(-z,4)) )
+    # Basic rule
+    #add([S(1)/4], [S(1)/2,S(5)/4], fresnelc( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) )
+    # Manually tuned rule
+    addb([S(1)/4], [S(1)/2,S(5)/4],
+         Matrix([ sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(2*root(z,4)),
+                  cosh(2*sqrt(z)),
+                  sinh(2*sqrt(z))*sqrt(z) ]),
+         Matrix([[1, 0, 0]]),
+         Matrix([[-S(1)/4,  S(1)/4, 0     ],
+                 [ 0,       0,      1     ],
+                 [ 0,       z,      S(1)/2]]))
 
     # 2F3
     # XXX with this five-parameter formula is pretty slow with the current
