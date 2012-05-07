@@ -929,21 +929,15 @@ class Expr(Basic, EvalfMixin):
         ex = self
         p = sympify(p)
         assert not p.is_Add and p.is_commutative and ex.is_commutative
-        if ex.is_Mul:
-            pre = []
-            got = []
-            for f in ex.args:
-                g = f.multinomial_coeff(p)
-                if g:
-                    got.append(g)
-                else:
-                    pre.append(f)
-            if got:
-                return Mul(*(pre + got))
+        free = p.free_symbols
+
+        if free - ex.free_symbols:
             return S.Zero
 
-        if p.free_symbols - ex.free_symbols:
-            return S.Zero
+        if ex.is_Mul:
+            pre, ex = ex.as_independent(*free)
+            return pre*ex.multinomial_coeff(p)
+
         co = []
         pex = p = powsimp(p)
         bases = [f.as_base_exp() for f in Mul.make_args(p)]
