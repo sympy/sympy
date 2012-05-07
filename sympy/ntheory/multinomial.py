@@ -1,22 +1,55 @@
 from itertools import ifilter
 from collections import defaultdict
+from residue_ntheory import int_tested
+
+def multinomial(*powers):
+    """Return the integer coefficient of x**i*y**j...z**k for
+    (x + y + ... + z)**n where n = i + j + ... + k.
+
+    Examples
+    ========
+    >>> from sympy import multinomial, multinomial_coefficients
+    >>> from sympy.abc import x, y, z
+    >>> multinomial_coefficients(2, 2)
+    {(0, 2): 1, (1, 1): 2, (2, 0): 1}
+    >>> multinomial(0, 2), multinomial(1, 1), multinomial(2, 0)
+    (1, 2, 1)
+    >>> multinomial(1, 1, 2) == ((x + y + z)**4).expand().coeff(x*y*z**2)
+    True
+    >>> multinomial(10) == (x**10).coeff(x**10)
+    True
+    """
+
+    if not powers or all(p == 0 for p in powers):
+        raise ValueError('at least 1 exponent must be non-zero')
+    if not all(p >= 0 for p in powers):
+        raise ValueError('exponents must be non-negative')
+    powers = int_tested(*powers)
+    if type(powers) is int:
+        return 1
+    n = sum(powers)
+    k = len(powers)
+    for k, v in multinomial_coefficients_iterator(k, n):
+        if k == powers:
+            return v
+    assert None # should never get here
 
 def binomial_coefficients(n):
     """Return a dictionary containing pairs :math:`{(k1,k2) : C_kn}` where
     :math:`C_kn` are binomial coefficients and :math:`n=k1+k2`.
+
     Examples
     ========
-
     >>> from sympy.ntheory import binomial_coefficients
-    >>> binomial_coefficients(9)
-    {(0, 9): 1, (1, 8): 9, (2, 7): 36, (3, 6): 84, (4, 5): 126, (5, 4): 126, (6, 3): 84, (7, 2): 36, (8, 1): 9, (9, 0): 1}
+    >>> binomial_coefficients(5)
+    {(0, 5): 1, (1, 4): 5, (2, 3): 10, (3, 2): 10, (4, 1): 5, (5, 0): 1}
 
     See Also
     ========
-
     binomial_coefficients_list, multinomial_coefficients
     """
-    d = {(0, n):1, (n, 0):1}
+    n = int_tested(n)
+    d = {(0, n): 1, (n, 0): 1}
     a = 1
     for k in xrange(1, n//2+1):
         a = (a * (n-k+1))//k
@@ -29,21 +62,20 @@ def binomial_coefficients_list(n):
 
     Examples
     ========
-
     >>> from sympy.ntheory import binomial_coefficients_list
     >>> binomial_coefficients_list(9)
     [1, 9, 36, 84, 126, 126, 84, 36, 9, 1]
 
     See Also
     ========
-
     binomial_coefficients, multinomial_coefficients
     """
-    d = [1] * (n+1)
+    n = int_tested(n)
+    d = [1]*(n + 1)
     a = 1
-    for k in xrange(1, n//2+1):
-        a = (a * (n-k+1))//k
-        d[k] = d[n-k] = a
+    for k in xrange(1, n//2 + 1):
+        a = (a * (n - k + 1))//k
+        d[k] = d[n - k] = a
     return d
 
 def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
@@ -51,10 +83,10 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
     where ``C_kn`` are multinomial coefficients such that
     ``n=k1+k2+..+km``.
 
-    For example:
-
-    >>> from sympy import multinomial_coefficients
-    >>> multinomial_coefficients(2, 5) # indirect doctest
+    Examples
+    ========
+    >>> from sympy.ntheory.multinomial import multinomial_coefficients0
+    >>> multinomial_coefficients0(2, 5) # indirect doctest
     {(0, 5): 1, (1, 4): 5, (2, 3): 10, (3, 2): 10, (4, 1): 5, (5, 0): 1}
 
     The algorithm is based on the following result:
@@ -74,6 +106,7 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
        where ``a(n,0) = p_0^n``.
     """
 
+    m, n = int_tested(m, n)
     if not m:
         if n:
             return {}
@@ -109,10 +142,12 @@ def multinomial_coefficients(m, n):
     where ``C_kn`` are multinomial coefficients such that
     ``n=k1+k2+..+km``.
 
-    For example:
-
+    Examples
+    ========
     >>> from sympy.ntheory import multinomial_coefficients
-    >>> multinomial_coefficients(2, 5) # indirect doctest
+    >>> terms = 2
+    >>> power = 5
+    >>> multinomial_coefficients(terms, power) # indirect doctest
     {(0, 5): 1, (1, 4): 5, (2, 3): 10, (3, 2): 10, (4, 1): 5, (5, 0): 1}
 
     The algorithm is based on the following result:
@@ -129,6 +164,7 @@ def multinomial_coefficients(m, n):
 
     binomial_coefficients_list, binomial_coefficients
     """
+    m, n = int_tested(m, n)
     if not m:
         if n:
             return {}
@@ -194,6 +230,7 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
     >>> it.next()
     ((3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), 1)
     """
+    m, n = int_tested(m, n)
     if m < 2*n or n == 1:
         mc = multinomial_coefficients(m, n)
         for k, v in mc.iteritems():

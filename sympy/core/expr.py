@@ -904,6 +904,131 @@ class Expr(Basic, EvalfMixin):
                                  [ci for ci in c if list(self.args).count(ci) > 1])
         return [c, nc]
 
+    def multinomial_coeff(self, p):
+        """
+        Gives the coefficient of a term without expanding the expression.
+
+        Examples
+        ========
+        >>> from sympy.abc import a, b, x, y
+        >>> ((a+b*a**x)**8).multinomial_coeff(a**6)
+        28*a**(2*x)*b**2
+        >>> ((a+b*a**x)**300).multinomial_coeff(a**298*a**(2*x)*b**2)
+        44850
+        >>> ((a+b*a**x)**300).multinomial_coeff(a**298)
+        44850*a**(2*x)*b**2
+        >>> ((a+b*a**x)**300).multinomial_coeff(a**x*b)
+        300*a**299
+        >>> (x + x*y).multinomial_coeff(x)
+        y + 1
+        >>> (x + a*(x + x*y)).multinomial_coeff(x)
+        a*(y + 1) + 1
+        """
+        from sympy import powsimp, Dummy, solve, multinomial
+
+        ex = self
+        p = sympify(p)
+        assert not p.is_Add and p.is_commutative and ex.is_commutative
+        if ex.is_Mul:
+            pre = []
+            got = []
+            for f in ex.args:
+                g = f.multinomial_coeff(p)
+                if g:
+                    got.append(g)
+                else:
+                    pre.append(f)
+            if got:
+                return Mul(*(pre + got))
+            return S.Zero
+
+        if p.free_symbols - ex.free_symbols:
+            return S.Zero
+        co = []
+        pex = p = powsimp(p)
+        bases = [f.as_base_exp() for f in Mul.make_args(p)]
+        ball = [b for b, e in bases]
+        bases = [(b, e, e.free_symbols) for b, e in bases]
+        for t in Add.make_args(ex):
+            if t.is_Pow and t.base.is_Add and t.exp.is_Integer:
+                tb, te = t.as_base_exp()
+                args = tb.args
+                pat = zip(args, [Dummy(integer=True) for a in args])
+                dum = [pi[1] for pi in pat]
+                dums = set(dum)
+                pat = powsimp(Mul(*[a**b for a, b in pat]).expand())
+                eqs = []
+                for f in Mul.make_args(pat):
+                    b, e = f.as_base_exp()
+                    hit = 0
+                    free = e.free_symbols - dums
+                    for i, (bi, ei, fi) in enumerate(bases):
+                        if bi:
+                            df = (free - fi)
+                            if b == bi and (not df or ei.as_independent(*df)[0] != 0):
+                                if not hit:
+                                    eqs.append(e - ei)
+                                    bases[i] = [None]*3
+                                    hit += 1
+                                else:
+                                    assert None # multiple matches
+                    if not hit:
+                        eqs.append(e - 0)
+                if any(b[0] for b in bases):
+                    assert None
+                new = []
+                for i, e in enumerate(eqs):
+                    efre = e.free_symbols
+                    if len(efre & dums) != 1:
+                        other = efre - dums
+                        for o in other:
+                            ind, de = e.as_independent(o)
+                            fr = de.free_symbols
+                            fr.remove(o)
+                            if len(fr) != 1:
+                                assert None
+                            s = fr.pop()
+                            soln = solve(de, s)
+                            if not soln or len(soln) != 1:
+                                assert None
+                            new.append(s-soln[0])
+                            e = ind
+                        eqs[i] = None
+                        new.append(ind)
+                eqs = filter(None, eqs)
+                eqs.extend(new)
+                soln = solve(eqs, dums)
+                from collections import defaultdict
+                ss = defaultdict(int)
+                ss.update(soln)
+                soln = ss
+                tot = sum([soln[d] for d in dum])
+                if tot == te:
+                    co.append(multinomial(*[soln[d] for d in dum]))
+                elif tot < te:
+                    from sympy.core.compatibility import permutations
+                    from sympy.utilities.iterables import partitions
+                    from sympy import flatten
+                    assign = [d for d in dum if not soln[d]]
+                    if assign:
+                        supplied = set()
+                        for p in partitions(te - tot, len(assign)):
+                            if sum([v for k,v in p.iteritems()]) != len(assign):
+                                continue
+                            for perm in permutations(flatten([[k]*v for k,v in p.iteritems()])):
+                                supplied.add(tuple(zip(assign, perm)))
+                        for s in supplied:
+                            soln.update(dict(s))
+                            cos = [soln[d] for d in dum]
+                            co.append(powsimp(multinomial(*cos)*pat.subs(soln)/pex))
+            elif t.is_Mul:
+                co.append(t.multinomial_coeff(pex))
+            else:
+                co.append(t.coeff(p))
+        rv = Add(*co)
+        assert ex.expand().coeff(pex.expand()) == rv.expand()
+        return rv
+
     def coeff(self, x, n=1, right=False):
         """
         Returns the coefficient from the term containing "x**n" or None if
