@@ -448,11 +448,6 @@ class FactKB(dict):
     def __init__(self, rules):
         self.rules = rules
 
-    def copy(self):
-        new = self.__class__(self.rules)
-        new.update(self)
-        return new
-
     def _tell(self, k, v):
         """Add fact k=v to the knowledge base.
 
