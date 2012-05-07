@@ -159,76 +159,76 @@ class PropertyManager(StdFactKB):
     def copy(self):
         return StdFactKB(self)
 
-    def make_property(manager, fact):
-        """Create the automagic property corresponding to a fact."""
+def make_property(fact):
+    """Create the automagic property corresponding to a fact."""
 
-        def getit(self):
-            try:
-                return self._assumptions[fact]
-            except KeyError:
-                if self._assumptions is self.default_assumptions:
-                    self._assumptions = self.default_assumptions.copy()
-                return self.default_assumptions._ask(fact, self)
-
-        getit.func_name = as_property(fact)
-        return property(getit)
-
-    def _ask(self, fact, obj):
-        """
-        Find the truth value for a property of an object.
-
-        This function is called when a request is made to see what a fact
-        value is.
-
-        For this we use several techniques:
-
-        First, the fact-evaluation function is tried, if it exists (for
-        example _eval_is_integer). Then we try related facts. For example
-
-            rational   -->   integer
-
-        another example is joined rule:
-
-            integer & !odd  --> even
-
-        so in the latter case if we are looking at what 'even' value is,
-        'integer' and 'odd' facts will be asked.
-
-        In all cases, when we settle on some fact value, its implications are
-        deduced, and the result is cached in ._assumptions.
-        """
-        assumptions = obj._assumptions
-        evaluator = self.evaluator
-
-        # Store None into the assumptions so that recursive attempts at
-        # evaluating the same fact don't trigger infinite recursion.
-        assumptions._tell(fact, None)
-
-        # First try the assumption evaluation function if it exists
+    def getit(self):
         try:
-            evaluate = evaluator[fact]
+            return self._assumptions[fact]
         except KeyError:
-            pass
-        else:
-            a = evaluate(obj)
-            if a is not None:
-                assumptions.deduce_all_facts(((fact, a),))
-                return a
+            if self._assumptions is self.default_assumptions:
+                self._assumptions = self.default_assumptions.copy()
+            return _ask(fact, self)
 
-        # Try assumption's prerequisites
-        for pk in _assume_rules.prereq[fact]:
-            if pk in assumptions:
-                continue
-            if pk in evaluator:
-                self._ask(pk, obj)
+    getit.func_name = as_property(fact)
+    return property(getit)
 
-                # we might have found the value of fact
-                ret_val = assumptions.get(fact)
-                if ret_val is not None:
-                    return ret_val
+def _ask(fact, obj):
+    """
+    Find the truth value for a property of an object.
 
-        # Note: the result has already been cached
-        return None
+    This function is called when a request is made to see what a fact
+    value is.
+
+    For this we use several techniques:
+
+    First, the fact-evaluation function is tried, if it exists (for
+    example _eval_is_integer). Then we try related facts. For example
+
+        rational   -->   integer
+
+    another example is joined rule:
+
+        integer & !odd  --> even
+
+    so in the latter case if we are looking at what 'even' value is,
+    'integer' and 'odd' facts will be asked.
+
+    In all cases, when we settle on some fact value, its implications are
+    deduced, and the result is cached in ._assumptions.
+    """
+    assumptions = obj._assumptions
+    handler_map = obj._prop_handler
+
+    # Store None into the assumptions so that recursive attempts at
+    # evaluating the same fact don't trigger infinite recursion.
+    assumptions._tell(fact, None)
+
+    # First try the assumption evaluation function if it exists
+    try:
+        evaluate = handler_map[fact]
+    except KeyError:
+        pass
+    else:
+        a = evaluate(obj)
+        if a is not None:
+            assumptions.deduce_all_facts(((fact, a),))
+            return a
+
+    # Try assumption's prerequisites
+    for pk in _assume_rules.prereq[fact]:
+        if pk in assumptions:
+            continue
+        if pk in handler_map:
+            _ask(pk, obj)
+
+            # we might have found the value of fact
+            ret_val = assumptions.get(fact)
+            if ret_val is not None:
+                return ret_val
+
+    # Note: the result has already been cached
+    return None
 
 class ManagedProperties(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
@@ -239,6 +239,7 @@ class ManagedProperties(BasicMeta):
 
         pmanager = PropertyManager(cls)
         cls.default_assumptions = pmanager
+        cls._prop_handler = pmanager.evaluator
 
         # Put definite results directly into the class dict, for speed
         for k, v in pmanager.iteritems():
@@ -254,11 +255,11 @@ class ManagedProperties(BasicMeta):
         for fact in derived_from_bases - set(pmanager):
             pname = as_property(fact)
             if pname not in cls.__dict__:
-                setattr(cls, pname, pmanager.make_property(fact))
+                setattr(cls, pname, make_property(fact))
 
         # Finally, add any missing automagic property (e.g. for Basic)
         for fact in _assume_defined:
             pname = as_property(fact)
             if not hasattr(cls, pname):
-                setattr(cls, pname, pmanager.make_property(fact))
+                setattr(cls, pname, make_property(fact))
 
