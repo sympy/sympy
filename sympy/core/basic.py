@@ -1,6 +1,6 @@
 """Base class for all the objects in SymPy"""
-
-from assumptions import WithAssumptions
+from copy import copy
+from assumptions import ManagedProperties
 from cache import cacheit
 from core import BasicType, C
 from sympify import _sympify, sympify, SympifyError
@@ -8,73 +8,7 @@ from compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
-class PicklableWithSlots(object):
-    """
-    Mixin class that allows to pickle objects with ``__slots__``.
-
-    Examples
-    --------
-
-    First define a class that mixes :class:`PicklableWithSlots` in::
-
-        >>> from sympy.core.basic import PicklableWithSlots
-
-        >>> class Some(PicklableWithSlots):
-        ...     __slots__ = ['foo', 'bar']
-        ...
-        ...     def __init__(self, foo, bar):
-        ...         self.foo = foo
-        ...         self.bar = bar
-
-    To make :mod:`pickle` happy in doctest we have to use this hack::
-
-        >>> import __builtin__ as builtin
-        >>> builtin.Some = Some
-
-    Next lets see if we can create an instance, pickle it and unpickle::
-
-        >>> some = Some('abc', 10)
-        >>> some.foo, some.bar
-        ('abc', 10)
-
-        >>> from pickle import dumps, loads
-        >>> some2 = loads(dumps(some))
-
-        >>> some2.foo, some2.bar
-        ('abc', 10)
-
-    """
-
-    __slots__ = []
-
-    def __getstate__(self, cls=None):
-        if cls is None:
-            # This is the case for the instance that gets pickled
-            cls = self.__class__
-
-        d = {}
-
-        # Get all data that should be stored from super classes
-        for c in cls.__bases__:
-            if hasattr(c, "__getstate__"):
-                d.update(c.__getstate__(self, c))
-
-        # Get all information that should be stored from cls and return the dict
-        for name in cls.__slots__:
-            if hasattr(self, name):
-                d[name] = getattr(self, name)
-
-        return d
-
-    def __setstate__(self, d):
-        # All values that were pickled are now assigned to a fresh instance
-        for name, value in d.iteritems():
-            try:
-                setattr(self, name, value)
-            except AttributeError:    # This is needed in cases like Rational :> Half
-                pass
-
-class Basic(PicklableWithSlots):
+class Basic(object):
     """
     Base class for all objects in sympy.
 
@@ -104,9 +38,10 @@ class Basic(PicklableWithSlots):
         (x,)
 
     """
-    __metaclass__ = WithAssumptions
+    __metaclass__ = ManagedProperties
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
+                 '_assumptions'
                 ]
 
     # To be overridden with True in the appropriate subclasses
@@ -142,50 +77,72 @@ class Basic(PicklableWithSlots):
         # from test_pickling.py
         return self.is_Float
 
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args):
         obj = object.__new__(cls)
-        obj._init_assumptions(assumptions)
-
+        obj._assumptions  = cls.default_assumptions
         obj._mhash = None # will be set by __hash__ method.
+
         obj._args = args  # all items in args must be Basic objects
         return obj
 
 
+    def __reduce_ex__(self, proto):
+        """ Pickling support."""
+        return type(self), self.__getnewargs__(), self.__getstate__()
+
     def __getnewargs__(self):
-        """ Pickling support.
-        """
-        return tuple(self.args)
+        return self.args
+
+    def __getstate__(self):
+        return {}
+
+    def __setstate__(self, state):
+        for k, v in state.iteritems():
+            setattr(self, k, v)
 
     def __hash__(self):
         # hash cannot be cached using cache_it because infinite recurrence
         # occurs as hash is needed for setting cache dictionary keys
         h = self._mhash
         if h is None:
-            h = (type(self).__name__,) + self._hashable_content()
-
-            if self._assume_type_keys is not None:
-                a = []
-                kv= self._assumptions
-                for k in sorted(self._assume_type_keys):
-                    a.append( (k, kv[k]) )
-
-                h = hash( h + tuple(a) )
-
-            else:
-                h = hash( h )
-
-
+            h = hash((type(self).__name__,) + self._hashable_content())
             self._mhash = h
-            return h
-
-        else:
-            return h
+        return h
 
     def _hashable_content(self):
         # If class defines additional attributes, like name in Symbol,
         # then this method should be updated accordingly to return
         # relevant attributes as tuple.
         return self._args
+
+    @property
+    def assumptions0(self):
+        """
+        Return object `type` assumptions.
+
+        For example:
+
+          Symbol('x', real=True)
+          Symbol('x', integer=True)
+
+        are different objects. In other words, besides Python type (Symbol in
+        this case), the initial assumptions are also forming their typeinfo.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol
+        >>> from sympy.abc import x
+        >>> x.assumptions0
+        {'commutative': True}
+        >>> x = Symbol("x", positive=True)
+        >>> x.assumptions0
+        {'commutative': True, 'complex': True, 'imaginary': False,
+        'negative': False, 'nonnegative': True, 'nonpositive': False,
+        'nonzero': True, 'positive': True, 'real': True, 'zero': False}
+
+        """
+        return {}
 
     def compare(self, other):
         """
@@ -394,11 +351,8 @@ class Basic(PicklableWithSlots):
             if type(self) is not type(other):
                 return False
 
-        # type(self) == type(other)
-        st = self._hashable_content()
-        ot = other._hashable_content()
+        return self._hashable_content() == other._hashable_content()
 
-        return st == ot and self._assume_type_keys == other._assume_type_keys
 
     def __ne__(self, other):
         """a != b  -> Compare two symbolic trees and see whether they are different
@@ -419,11 +373,7 @@ class Basic(PicklableWithSlots):
             if type(self) is not type(other):
                 return True
 
-        # type(self) == type(other)
-        st = self._hashable_content()
-        ot = other._hashable_content()
-
-        return (st != ot) or self._assume_type_keys != other._assume_type_keys
+        return self._hashable_content() != other._hashable_content()
 
     def dummy_eq(self, other, symbol=None):
         """
@@ -1563,41 +1513,22 @@ def _aresame(a, b):
     >>> 2.0 == S(2)
     True
 
-    The Basic.compare method will indicate that these are not the same, but
-    the same method allows symbols with different assumptions to compare the
-    same:
-
-    >>> S(2).compare(2.0)
-    -1
-    >>> Symbol('x').compare(Symbol('x', positive=True))
-    0
-
-    The Basic.compare method will not work with instances of FunctionClass:
-
-    >>> sin.compare(cos)
-    Traceback (most recent call last):
-    ...
-    TypeError: unbound method compare() must be called with sin instance as first ar
-    gument (got FunctionClass instance instead)
-
     Since a simple 'same or not' result is sometimes useful, this routine was
-    written to provide that query.
+    written to provide that query:
+
+    >>> from sympy.core.basic import _aresame
+    >>> _aresame(S(2.0), S(2))
+    False
 
     """
     from sympy.utilities.iterables import preorder_traversal
     from itertools import izip
 
-    try:
-        if a.compare(b) == 0 and a.is_Symbol and b.is_Symbol:
-            return a.assumptions0 == b.assumptions0
-    except (TypeError, AttributeError):
-        pass
-
     for i, j in izip(preorder_traversal(a), preorder_traversal(b)):
-        if i == j and type(i) == type(j):
-            continue
-        return False
-    return True
+        if i != j or type(i) != type(j):
+            return False
+    else:
+        return True
 
 def _atomic(e):
     """Return atom-like quantities as far as substitution is

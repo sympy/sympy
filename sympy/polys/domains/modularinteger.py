@@ -2,7 +2,7 @@
 
 import operator
 
-from sympy.core.basic import PicklableWithSlots
+from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import CoercionFailed
 
 class ModularInteger(PicklableWithSlots):

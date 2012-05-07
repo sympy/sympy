@@ -1045,7 +1045,7 @@ class WignerD(Expr):
         evaluate = hints.get('evaluate', False)
         if evaluate:
             return Expr.__new__(cls, *args)._eval_wignerd()
-        return Expr.__new__(cls, *args, **{'evaluate': False})
+        return Expr.__new__(cls, *args)
 
     @property
     def j(self):
