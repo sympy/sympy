@@ -64,4 +64,3 @@ def test_state_to_op():
     assert operators_to_state(state_to_operators(XBra())) == XKet()
 
     raises(NotImplementedError, 'state_to_operators(XOp)')
-

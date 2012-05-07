@@ -158,27 +158,27 @@ def test_meijerg_formulae():
     formulae = MeijerFormulaCollection().formulae
     for sig in formulae:
         for formula in formulae[sig]:
-          g = meijerg(formula.indices.an, formula.indices.ap,
-                      formula.indices.bm, formula.indices.bq,
-                      formula.z)
-          rep = {}
-          for sym in formula.symbols:
-              rep[sym] = randcplx()
+            g = meijerg(formula.indices.an, formula.indices.ap,
+                        formula.indices.bm, formula.indices.bq,
+                        formula.z)
+            rep = {}
+            for sym in formula.symbols:
+                rep[sym] = randcplx()
 
-          # first test if the closed-form is actually correct
-          g = g.subs(rep)
-          closed_form = formula.closed_form.subs(rep)
-          z = formula.z
-          assert tn(g, closed_form, z)
-          #print closed_form
+            # first test if the closed-form is actually correct
+            g = g.subs(rep)
+            closed_form = formula.closed_form.subs(rep)
+            z = formula.z
+            assert tn(g, closed_form, z)
+            #print closed_form
 
-          # now test the computed matrix
-          cl = (formula.C * formula.B)[0].subs(rep)
-          assert tn(closed_form, cl, z)
-          deriv1 = z*formula.B.diff(z)
-          deriv2 = formula.M * formula.B
-          for d1, d2 in zip(deriv1, deriv2):
-              assert tn(d1.subs(rep), d2.subs(rep), z)
+            # now test the computed matrix
+            cl = (formula.C * formula.B)[0].subs(rep)
+            assert tn(closed_form, cl, z)
+            deriv1 = z*formula.B.diff(z)
+            deriv2 = formula.M * formula.B
+            for d1, d2 in zip(deriv1, deriv2):
+                assert tn(d1.subs(rep), d2.subs(rep), z)
 
 def op(f): return z*f.diff(z)
 
@@ -646,12 +646,12 @@ def test_prudnikov_2():
     assert can_do([-h, 1], [h])
 
     for p in [-h, h]:
-      for n in [-h, h, 1, 3*h, 2, 5*h, 3, 7*h, 4]:
-          for m in [-h, h, 3*h, 5*h, 7*h]:
-              assert can_do([p, n], [m])
-      for n in [1, 2, 3, 4]:
-          for m in [1, 2, 3, 4]:
-              assert can_do([p, n], [m])
+        for n in [-h, h, 1, 3*h, 2, 5*h, 3, 7*h, 4]:
+            for m in [-h, h, 3*h, 5*h, 7*h]:
+                assert can_do([p, n], [m])
+        for n in [1, 2, 3, 4]:
+            for m in [1, 2, 3, 4]:
+                assert can_do([p, n], [m])
 
 @slow
 def test_prudnikov_3():
@@ -663,21 +663,21 @@ def test_prudnikov_3():
     assert can_do([S(3)/4, S(5)/4], [3*h])
 
     for p in [1, 2, 3, 4]:
-      for n in [-h, h, 1, 3*h, 2, 5*h, 3, 7*h, 4, 9*h]:
-          for m in [1, 3*h, 2, 5*h, 3, 7*h, 4]:
-              assert can_do([p, m], [n])
+        for n in [-h, h, 1, 3*h, 2, 5*h, 3, 7*h, 4, 9*h]:
+            for m in [1, 3*h, 2, 5*h, 3, 7*h, 4]:
+                assert can_do([p, m], [n])
 
 
 @slow
 def test_prudnikov_4():
     h = S.Half
     for p in [3*h, 5*h, 7*h]:
-      for n in [-h, h, 3*h, 5*h, 7*h]:
-          for m in [3*h, 2, 5*h, 3, 7*h, 4]:
-              assert can_do([p, m], [n])
-      for n in [1, 2, 3, 4]:
-          for m in [2, 3, 4]:
-              assert can_do([p, m], [n])
+        for n in [-h, h, 3*h, 5*h, 7*h]:
+            for m in [3*h, 2, 5*h, 3, 7*h, 4]:
+                assert can_do([p, m], [n])
+        for n in [1, 2, 3, 4]:
+            for m in [2, 3, 4]:
+                assert can_do([p, m], [n])
 
 @slow
 def test_prudnikov_5():
@@ -710,16 +710,16 @@ def test_prudnikov_6():
         for n in [1, 2, 3]:
             for q in [h, 1, 2]:
                 for p in [1, 2, 3]:
-                     assert can_do([h, q, p], [m, n])
+                    assert can_do([h, q, p], [m, n])
             for q in [1, 2, 3]:
                 for p in [3*h, 5*h]:
-                     assert can_do([h, q, p], [m, n])
+                    assert can_do([h, q, p], [m, n])
 
     for q in [1, 2]:
-      for p in [1, 2, 3]:
-         for m in [1, 2, 3]:
-             for n in [1, 2, 3]:
-                 assert can_do([h, q, p], [m, n])
+        for p in [1, 2, 3]:
+            for m in [1, 2, 3]:
+                for n in [1, 2, 3]:
+                    assert can_do([h, q, p], [m, n])
 
     assert can_do([h, h, 5*h], [3*h, 3*h])
     assert can_do([h, 1, 5*h], [3*h, 3*h])
@@ -777,22 +777,22 @@ def test_prudnikov_10():
     # 7.14.2
     h = S.Half
     for p in [-h, h, 1, 3*h, 2, 5*h, 3, 7*h, 4]:
-      for m in [1, 2, 3, 4]:
-          for n in range(m, 5):
-              assert can_do([p], [m, n])
+        for m in [1, 2, 3, 4]:
+            for n in range(m, 5):
+                assert can_do([p], [m, n])
 
     for p in [1, 2, 3, 4]:
-      for n in [h, 3*h, 5*h, 7*h]:
-          for m in [1, 2, 3, 4]:
-              assert can_do([p], [n, m])
+        for n in [h, 3*h, 5*h, 7*h]:
+            for m in [1, 2, 3, 4]:
+                assert can_do([p], [n, m])
 
     for p in [3*h, 5*h, 7*h]:
-      for m in [h, 1, 2, 5*h, 3, 7*h, 4]:
-         assert can_do([p], [h, m])
-         assert can_do([p], [3*h, m])
+        for m in [h, 1, 2, 5*h, 3, 7*h, 4]:
+            assert can_do([p], [h, m])
+            assert can_do([p], [3*h, m])
 
     for m in [h, 1, 2, 5*h, 3, 7*h, 4]:
-       assert can_do([7*h], [5*h, m])
+        assert can_do([7*h], [5*h, m])
 
     assert can_do([-S(1)/2], [S(1)/2, S(1)/2]) # shine-integral shi
 

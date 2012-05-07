@@ -1067,4 +1067,3 @@ def test_check_case_false_positive():
     except CodeGenError, e:
         if e.args[0].startswith("Fortran ignores case."):
             raise AssertionError("This exception should not be raised!")
-

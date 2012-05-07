@@ -554,4 +554,3 @@ def to_int_repr(clauses, symbols):
 
     return [set(append_symbol(arg, symbols) for arg in Or.make_args(c)) \
                                                             for c in clauses]
-

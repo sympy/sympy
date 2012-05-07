@@ -424,4 +424,3 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
         abs_reduced.append(reduce_abs_inequalities(exprs, gen, assume))
 
     return And(*(poly_reduced + abs_reduced))
-

@@ -154,8 +154,8 @@ def test_meijerint():
     # Test a bug
     def res(n): return (1/(1+x**2)).diff(x, n).subs(x,1)*(-1)**n
     for n in range(6):
-       assert integrate(exp(-x)*sin(x)*x**n, (x, 0, oo), meijerg=True) == \
-        res(n)
+        assert integrate(exp(-x)*sin(x)*x**n, (x, 0, oo), meijerg=True) == \
+         res(n)
 
     # This used to test trigexpand... now it is done by linear substitution
     assert simplify(integrate(exp(-x)*sin(x + a), (x, 0, oo), meijerg=True)

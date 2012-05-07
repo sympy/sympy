@@ -352,4 +352,3 @@ def laguerre_l(n, alpha, x):
 
     """
     return laguerre_poly(n, x, alpha)
-

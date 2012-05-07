@@ -315,4 +315,3 @@ def tensor_product_simp(e, **hints):
         return AntiCommutator(*[tensor_product_simp(arg) for arg in e.args])
     else:
         return e
-

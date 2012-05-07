@@ -213,4 +213,3 @@ def test_pmint_lambertw():
 # g = x/2 - mu*ln(x) - ln(WhittakerW(mu, nu, x))
 
 # - Wright omega
-

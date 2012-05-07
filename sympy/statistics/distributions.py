@@ -509,4 +509,3 @@ class PDF(ContinuousProbability):
             newPdf += (self.pdf(var)/abs(funcdiff)).subs(var,x)
 
         return PDF(newPdf, (w, func.subs(var, self.domain[0]), func.subs(var, self.domain[1])))
-

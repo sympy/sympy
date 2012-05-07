@@ -338,4 +338,3 @@ def test_mathml_order():
 
 def test_settings():
     raises(TypeError, 'mathml(Symbol("x"), method="garbage")')
-
