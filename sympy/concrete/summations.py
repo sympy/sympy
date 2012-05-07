@@ -92,6 +92,12 @@ class Sum(Expr):
         return self.function.is_zero
 
     @property
+    def is_commutative(self):
+        rv = getattr(self.function, 'is_commutative')
+        if rv is None:
+            return all(s.is_commutative for s in self.free_symbols)
+        return rv
+    @property
     def is_number(self):
         """
         Return True if the Sum will result in a number, else False.
