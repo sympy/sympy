@@ -1,5 +1,5 @@
-from sympy import (symbols, expand, erf, nan, oo, Float, conjugate, sqrt, sin, cos, pi, re, im, Abs, O,
-                   factorial, exp_polar, polar_lift, Symbol, I, exp, uppergamma, expint, log, loggamma, limit,
+from sympy import (symbols, expand, expand_func, erf, nan, oo, Float, conjugate, sqrt, sin, cos, pi, re, im, Abs, O,
+                   factorial, exp_polar, polar_lift, Symbol, I, integrate, exp, uppergamma, expint, log, loggamma, limit,
                    hyper, meijerg, gamma, S, Shi, Chi, Si, Ci, E1, Ei, sin, cos, sinh, cosh, fresnels, fresnelc)
 
 from sympy.functions.special.error_functions import _erfs
@@ -258,6 +258,8 @@ def test_fresnel():
 
     assert fresnels(2+3*I).as_real_imag() == (fresnels(2 + 3*I)/2 + fresnels(2 - 3*I)/2, I*(fresnels(2 - 3*I) - fresnels(2 + 3*I))/2)
 
+    assert expand_func(integrate(fresnels(z), z)) == z*fresnels(z) + cos(pi*z**2/2)/pi
+
     assert fresnelc(0) == 0
     assert fresnelc(oo) == S.Half
     assert fresnelc(-oo) == -S.Half
@@ -284,3 +286,5 @@ def test_fresnel():
                                            re(z)*Abs(im(z))/(2*im(z)*Abs(re(z)))))
 
     assert fresnelc(2+3*I).as_real_imag() == (fresnelc(2 - 3*I)/2 + fresnelc(2 + 3*I)/2, I*(fresnelc(2 - 3*I) - fresnelc(2 + 3*I))/2)
+
+    assert expand_func(integrate(fresnelc(z), z)) == z*fresnelc(z) - sin(pi*z**2/2)/pi

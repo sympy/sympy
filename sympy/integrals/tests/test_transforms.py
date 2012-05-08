@@ -421,6 +421,7 @@ def test_inverse_mellin_transform():
     assert IMT(pi/cos(pi*s), s, x, (0, S(1)/2)) == sqrt(x)/(x + 1)
 
 def test_laplace_transform():
+    from sympy import (fresnels, fresnelc, hyper)
     LT = laplace_transform
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
@@ -475,9 +476,18 @@ def test_laplace_transform():
         ((s - 1)/((s - 1)**2 + 1), -oo),
         ]
 
+    # Fresnel functions
+    assert laplace_transform(fresnels(t), t, s) == \
+           (-(2*s*hyper((1,), (S(3)/4, S(5)/4), -s**4/(16*pi**2)) - pi*sin(s**2/(2*pi)) \
+              - pi*cos(s**2/(2*pi)))/(2*pi*s), 0, True)
+    assert laplace_transform(fresnelc(t), t, s) == \
+           ((2*s**3*hyper((1,), (S(5)/4, S(7)/4), -s**4/(16*pi**2)) - 3*pi**2*sin(s**2/(2*pi)) \
+             + 3*pi**2*cos(s**2/(2*pi)))/(6*pi**2*s), 0, True)
+
+
 def test_inverse_laplace_transform():
     from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,
-                       unpolarify, simplify)
+                       unpolarify, simplify, fresnels, fresnelc)
     ILT = inverse_laplace_transform
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
