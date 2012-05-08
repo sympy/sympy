@@ -163,6 +163,13 @@ def add_formulae(formulae):
     # This one is redundant.
     add([-S.Half], [S.Half], exp(z) - sqrt(pi*z)*(-I)*erf(I*sqrt(z)))
 
+    # Added to get nice results for Laplace transform of Fresnel functions
+    # http://functions.wolfram.com/07.22.03.6437.01
+    add([1], [S(3)/4, S(5)/4],
+        sqrt(pi) * (cos(2*sqrt(polar_lift(-1)*z))*fresnelc(2*root(polar_lift(-1)*z,4)/sqrt(pi)) +
+                    sin(2*sqrt(polar_lift(-1)*z))*fresnels(2*root(polar_lift(-1)*z,4)/sqrt(pi)))
+        / (2*root(polar_lift(-1)*z,4)))
+
     # 2F2
     addb([S.Half, a], [S(3)/2, a + 1],
          Matrix([a/(2*a - 1)*(-I)*sqrt(pi/z)*erf(I*sqrt(z)),
