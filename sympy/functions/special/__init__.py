@@ -3,5 +3,5 @@ import error_functions
 import zeta_functions
 import tensor_functions
 import delta_functions
-
+import inversejacobian
 import polynomials
