@@ -478,12 +478,11 @@ def test_laplace_transform():
 
     # Fresnel functions
     assert laplace_transform(fresnels(t), t, s) == \
-           (-(2*s*hyper((1,), (S(3)/4, S(5)/4), -s**4/(16*pi**2)) - pi*sin(s**2/(2*pi)) \
-              - pi*cos(s**2/(2*pi)))/(2*pi*s), 0, True)
+           ((2*sin(s**2/(2*pi))*fresnels(s/pi) - sin(s**2/(2*pi)) + 2*cos(s**2/(2*pi))*fresnelc(s/pi) \
+             - cos(s**2/(2*pi)))/(2*s)*(-1), 0, True)
     assert laplace_transform(fresnelc(t), t, s) == \
-           ((2*s**3*hyper((1,), (S(5)/4, S(7)/4), -s**4/(16*pi**2)) - 3*pi**2*sin(s**2/(2*pi)) \
-             + 3*pi**2*cos(s**2/(2*pi)))/(6*pi**2*s), 0, True)
-
+           ((-2*sin(s**2/(2*pi))*fresnelc(s/pi) + sin(s**2/(2*pi)) + 2*cos(s**2/(2*pi))*fresnels(s/pi) \
+             - cos(s**2/(2*pi)))/(2*s)*(-1), 0, True)
 
 def test_inverse_laplace_transform():
     from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,
