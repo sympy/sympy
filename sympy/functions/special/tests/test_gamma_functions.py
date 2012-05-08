@@ -54,6 +54,10 @@ def test_gamma():
     # Test a bug:
     assert expand_func(gamma(x + Rational(3, 4))) == gamma(x + Rational(3, 4))
 
+    assert gamma(3*exp_polar(I*pi)/4).is_nonnegative == False
+    assert gamma(3*exp_polar(I*pi)/4).is_nonpositive == True
+
+
 def test_gamma_series():
     assert gamma(x + 1).series(x, 0, 3) == \
         1 - EulerGamma*x + x**2*(EulerGamma**2/2 + pi**2/12) + O(x**3)
