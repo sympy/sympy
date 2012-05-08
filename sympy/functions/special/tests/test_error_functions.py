@@ -1,6 +1,6 @@
 from sympy import (symbols, expand, erf, nan, oo, Float, conjugate, sqrt, exp, pi, O, I, Ei,
                    exp_polar, polar_lift, Symbol, I, exp, uppergamma, expint, log, loggamma, limit,
-                   meijerg, gamma, S, Shi, Chi, Si, Ci, E1, sin, cos, sinh, cosh)
+                   meijerg, gamma, S, Shi, Chi, Si, Ci, E1, FresnelS, FresnelC, sin, cos, sinh, cosh, diff)
 
 from sympy.functions.special.error_functions import _erfs
 
@@ -157,6 +157,26 @@ def tn_arg(func):
            test(exp_polar(-I*pi/2), -I, 1) and \
            test(exp_polar(I*pi), -1, I) and \
            test(exp_polar(-I*pi), -1, -I)
+
+def test_fresnel():
+    b, z = symbols(('b z'))
+    assert FresnelS(oo) == sqrt(2)*sqrt(pi)/4
+    assert FresnelS(-z) == -FresnelS(z)
+    assert diff(FresnelS(b*z), z) == sqrt(2)*b*sin(b**2*z**2)/sqrt(pi)
+    c, d = FresnelS(x)._eval_expansion_term(x,1).as_two_terms()
+    assert round(c, 5) == -0.00633
+    assert d == x**7
+    assert FresnelS(x)._eval_rewrite_as_erf() ==  \
+          (S.Pi/4) * (sqrt(I) * erf(sqrt(I) * x) + sqrt(-I) * erf(sqrt(-I) * x))
+
+    assert FresnelC(oo) == sqrt(2)*sqrt(pi)/4
+    assert FresnelC(-z) == -FresnelC(z)
+    assert diff(FresnelC(b*z), z) == sqrt(2)*b*cos(b**2*z**2)/sqrt(pi)
+    c, d = FresnelC(x)._eval_expansion_term(x,1).as_two_terms()
+    assert round(c, 5) == -0.07979
+    assert d == x**5
+    assert FresnelC(x)._eval_rewrite_as_erf() ==  \
+          (S.Pi/4) * (sqrt(-I) * erf(sqrt(I) * x) + sqrt(I) * erf(sqrt(-I) * x))
 
 def test_si():
     assert Si(I*x) == I*Shi(x)
