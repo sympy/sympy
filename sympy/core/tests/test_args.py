@@ -842,6 +842,10 @@ def test_sympy__functions__elementary__trigonometric__cot():
 def test_sympy__functions__elementary__trigonometric__sin():
     assert _test_args(sin(2))
 
+def test_sympy__functions__elementary__trigonometric__sec():
+    from sympy.functions.elementary.trigonometric import sec
+    assert _test_args(sec(2))
+
 def test_sympy__functions__elementary__trigonometric__tan():
     from sympy.functions.elementary.trigonometric import tan
     assert _test_args(tan(2))
