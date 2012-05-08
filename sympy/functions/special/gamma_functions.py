@@ -595,4 +595,3 @@ def beta(x, y):
 
     """
     return gamma(x)*gamma(y) / gamma(x+y)
-

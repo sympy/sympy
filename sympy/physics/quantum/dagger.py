@@ -144,4 +144,3 @@ class Dagger(Expr):
     def _latex(self, printer, *args):
         arg = printer._print(self.args[0])
         return '%s^{\\dag}' % arg
-

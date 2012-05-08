@@ -65,4 +65,3 @@ class PIABBra(Bra):
     @classmethod
     def dual_class(self):
         return PIABKet
-

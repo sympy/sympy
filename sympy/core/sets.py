@@ -1,9 +1,8 @@
-from sympy.core.sympify import _sympify, sympify, SympifyError
+from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
-from sympy.core.containers import Tuple
 from sympy.core.compatibility import iterable
 
 from sympy.mpmath import mpi, mpf
@@ -572,7 +571,7 @@ class Interval(Set, EvalfMixin):
             start = Max(self.start, other.start)
             if (end < start or
                (end==start and (end not in self and end not in other))):
-               return None
+                return None
             else:
                 start = Min(self.start, other.start)
                 end   = Max(self.end, other.end)
@@ -1229,10 +1228,9 @@ class FiniteSet(Set, EvalfMixin):
         if not all(elem.is_number for elem in self):
             raise ValueError("%s: Complement not defined for symbolic inputs"
                     %self)
-        sorted_elements = self.args
 
         intervals = [] # Build up a list of intervals between the elements
-        intervals += [Interval(S.NegativeInfinity, self.args[0],True,True)]
+        intervals += [Interval(S.NegativeInfinity, self.args[0], True, True)]
         for a, b in zip(self.args[:-1], self.args[1:]):
             intervals.append(Interval(a, b, True, True)) # open intervals
         intervals.append(Interval(self.args[-1], S.Infinity, True, True))

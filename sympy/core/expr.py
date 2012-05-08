@@ -1,4 +1,5 @@
 from core import C
+from sympify import sympify
 from basic import Basic, Atom
 from singleton import S
 from evalf import EvalfMixin, pure_complex
@@ -535,7 +536,7 @@ class Expr(Basic, EvalfMixin):
         elif constant is True:
             ndiff = diff._random()
             if ndiff:
-               return False
+                return False
 
         # diff has not simplified to zero; constant is either None, True
         # or the number with significance (prec != 1) that was randomly
@@ -2847,7 +2848,5 @@ from add import Add
 from power import Pow
 from function import Derivative, expand_mul
 from mod import Mod
-from sympify import sympify
-from symbol import Wild
 from exprtools import factor_terms
 from numbers import Integer, Rational

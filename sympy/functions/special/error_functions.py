@@ -4,6 +4,7 @@
 from sympy.core import Add, S, C, sympify, cacheit, pi, I
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import polar_lift
 
 # TODO series expansions
 # TODO fresnel integrals
@@ -255,7 +256,6 @@ class Ei(Function):
 
     @classmethod
     def eval(cls, z):
-        from sympy import polar_lift, exp_polar
         if not z.is_polar and z.is_negative:
             # Note: is this a good idea?
             return Ei(polar_lift(z)) - pi*I
@@ -272,19 +272,17 @@ class Ei(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from sympy import polar_lift
         if (self.args[0]/polar_lift(-1)).is_positive:
             return Function._eval_evalf(self, prec) + (I*pi)._eval_evalf(prec)
         return Function._eval_evalf(self, prec)
 
     def _eval_rewrite_as_uppergamma(self, z):
-        from sympy import uppergamma, polar_lift
+        from sympy import uppergamma
         # XXX this does not currently work usefully because uppergamma
         #     immediately turns into expint
         return -uppergamma(0, polar_lift(-1)*z) - I*pi
 
     def _eval_rewrite_as_expint(self, z):
-        from sympy import polar_lift
         return -expint(1, polar_lift(-1)*z) - I*pi
 
     def _eval_rewrite_as_Si(self, z):
@@ -427,7 +425,7 @@ class expint(Function):
         return z**(nu - 1)*uppergamma(1 - nu, z)
 
     def _eval_rewrite_as_Ei(self, nu, z):
-        from sympy import exp_polar, unpolarify, exp, factorial, Add
+        from sympy import exp_polar, unpolarify, exp, factorial
         if nu == 1:
             return -Ei(z*exp_polar(-I*pi)) - I*pi
         elif nu.is_Integer and nu > 1:
@@ -444,7 +442,7 @@ class expint(Function):
 
     def _eval_rewrite_as_Si(self, nu, z):
         if nu != 1:
-           return self
+            return self
         return Shi(z) - Chi(z)
     _eval_rewrite_as_Ci = _eval_rewrite_as_Si
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
@@ -471,7 +469,6 @@ class TrigonometricIntegral(Function):
 
     @classmethod
     def eval(cls, z):
-        from sympy import Dummy, polar_lift
         if z == 0:
             return cls._atzero
         nz = z.extract_multiplicatively(polar_lift(I))
@@ -589,7 +586,6 @@ class Si(TrigonometricIntegral):
         return I*Shi(z)*sign
 
     def _eval_rewrite_as_expint(self, z):
-        from sympy import polar_lift
         # XXX should we polarify z?
         return pi/2 + (E1(polar_lift(I)*z) - E1(polar_lift(-I)*z))/2/I
 
@@ -677,7 +673,6 @@ class Ci(TrigonometricIntegral):
         return Chi(z) + I*pi/2*sign
 
     def _eval_rewrite_as_expint(self, z):
-        from sympy import polar_lift
         return -(E1(polar_lift(I)*z) + E1(polar_lift(-I)*z))/2
 
 class Shi(TrigonometricIntegral):

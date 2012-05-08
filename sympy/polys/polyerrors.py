@@ -118,4 +118,3 @@ class OptionError(BasePolynomialError):
 
 class FlagError(OptionError):
     pass
-

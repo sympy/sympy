@@ -197,4 +197,3 @@ class Commutator(Expr):
     def _latex(self, printer, *args):
         return "\\left[%s,%s\\right]" % tuple([
             printer._print(arg, *args) for arg in self.args])
-

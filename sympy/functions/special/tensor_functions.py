@@ -436,4 +436,3 @@ class KroneckerDelta(Function):
         i = printer._print(self.args[0], *args)
         j = printer._print(self.args[1], *args)
         return '\\delta_{%s %s}' % (i, j)
-

@@ -1631,10 +1631,10 @@ def meijerint_definite(f, x, a, b):
         return -meijerint_definite(f, x, b, oo)
 
     if (a, b) == (0, oo):
-       # This is a common case - try it directly first.
-       res = _meijerint_definite_2(f, x)
-       if res is not None and not res[0].has(meijerg):
-           return res
+        # This is a common case - try it directly first.
+        res = _meijerint_definite_2(f, x)
+        if res is not None and not res[0].has(meijerg):
+            return res
 
     results = []
     if b == oo:

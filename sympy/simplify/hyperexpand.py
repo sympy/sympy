@@ -771,23 +771,23 @@ class FormulaCollection(object):
     """ A collection of formulae to use as origins. """
 
     def __init__(self):
-            """ Doing this globally at module init time is a pain ... """
-            self.symbolic_formulae = {}
-            self.concrete_formulae = {}
-            self.formulae = []
+        """ Doing this globally at module init time is a pain ... """
+        self.symbolic_formulae = {}
+        self.concrete_formulae = {}
+        self.formulae = []
 
-            add_formulae(self.formulae)
+        add_formulae(self.formulae)
 
-            # Now process the formulae into a helpful form.
-            # These dicts are indexed by (p, q).
+        # Now process the formulae into a helpful form.
+        # These dicts are indexed by (p, q).
 
-            for f in self.formulae:
-                sizes = f.indices.sizes
-                if len(f.symbols) > 0:
-                    self.symbolic_formulae.setdefault(sizes, []).append(f)
-                else:
-                    inv = f.indices.build_invariants()
-                    self.concrete_formulae.setdefault(sizes, {})[inv] = f
+        for f in self.formulae:
+            sizes = f.indices.sizes
+            if len(f.symbols) > 0:
+                self.symbolic_formulae.setdefault(sizes, []).append(f)
+            else:
+                inv = f.indices.build_invariants()
+                self.concrete_formulae.setdefault(sizes, {})[inv] = f
 
     def lookup_origin(self, ip):
         """
