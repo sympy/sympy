@@ -179,10 +179,8 @@ def _create_lookup_table(table):
     # TODO exp(-x)*erf(I*x) does not work
 
     # Fresnel Integrals
-    add(fresnels(t), [], [1], [S(3)/4], [S(1)/4, 0], -pi**2*t**4/16,
-        pi*t**(S(9)/4)/(sqrt(2)*(t**2)**(S(3)/4)*(-t)**(S(3)/4)))
-    add(fresnelc(t), [], [1], [S(1)/4], [S(3)/4, 0], -pi**2*t**4/16,
-        pi*t**(S(3)/4)/(sqrt(2)*(t**2)**(S(1)/4)*(-t)**(S(1)/4)))
+    add(fresnels(t),  [1], [], [S(3)/4], [0, S(1)/4], pi**2*t**4/16, S(1)/2)
+    add(fresnelc(t),  [1], [], [S(1)/4], [0, S(3)/4], pi**2*t**4/16, S(1)/2)
 
     ##### bessel-type functions #####
     from sympy import besselj, bessely, besseli, besselk
