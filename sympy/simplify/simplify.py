@@ -581,6 +581,19 @@ def rcollect(expr, *vars):
         else:
             return expr
 
+def separatevars_additively(expr, symbols=[]):
+    free = set(symbols) or expr.free_symbols
+    d = {}
+    while free:
+        f = free.pop()
+        expr, dep = expr.as_independent(f, as_Add=True)
+        if dep.has(*free):
+            return None
+        d[f] = dep
+    if expr:
+        d[0] = expr
+    return d
+
 def separatevars(expr, symbols=[], dict=False, force=False):
     """
     Separates variables in an expression, if possible.  By

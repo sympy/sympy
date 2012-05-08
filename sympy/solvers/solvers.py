@@ -878,6 +878,36 @@ def _solve(f, *symbols, **flags):
                 soln = solve_undetermined_coeffs(f, symbols, ex)
             except NotImplementedError:
                 pass
+        elif len(ex) > 1:
+            from sympy.simplify.simplify import separatevars_additively
+            parts = separatevars_additively(f, symbols)
+            if parts is not None:
+                const = parts.pop(0, 0)
+                syms, parts = zip(*parts.items())
+                sols = []
+                if const:
+                    from sympy.utilities.iterables import partitions, flatten
+                    from sympy.core.compatibility import permutations
+                    const = Add.make_args(const)
+                    parts = list(parts)
+                    save = parts[:]
+                    for p in partitions(len(const), len(parts)):
+                        ii = 0
+                        for k, v in p.iteritems():
+                            arrange = []
+                            for j in range(v):
+                                arrange.append(Add(*const[ii: ii + k]))
+                                ii += k
+                            arrange.extend([0]*(len(parts) - len(arrange)))
+                            for permu in permutations(arrange):
+                                for i in range(len(parts)):
+                                    parts[i] += permu[i]
+                                s = solve(parts, *syms)
+                                sols.extend(s)
+                                parts = save[:]
+                else:
+                    sols.append(solve(parts, *syms))
+            soln = sols
         if soln:
             return soln
         # find first successful solution

@@ -829,8 +829,8 @@ def test_issue_2802():
     assert solve([f(x) - 3*f(x).diff(x), f(x)**2 - y + 4], f(x), y) == \
         [{f(x): 3*D, y: 9*D**2 + 4}]
     assert solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a), h(a), g(a)) == \
-        [{g(a): -sqrt(h(a)**2 + G/f(a)**2)},
-        {g(a): sqrt(h(a)**2 + G/f(a)**2)}]
+        [(0, -sqrt(G)/f(a)), (0, sqrt(G)/f(a)),
+         (-sqrt(-G)/f(a), 0), (sqrt(-G)/f(a), 0)]
     args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
     assert solve(*args) == \
         [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
