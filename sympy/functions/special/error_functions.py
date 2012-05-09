@@ -5,7 +5,7 @@ from sympy.core import Add, S, C, sympify, cacheit, pi, I
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.complexes import polar_lift
-from sympy.functions.special.hyper import hyper
+from sympy.functions.special.hyper import hyper, meijerg
 
 # TODO series expansions
 # TODO see the "Note:" in Ei
@@ -1009,6 +1009,9 @@ class fresnels(FresnelIntegral):
     def _eval_rewrite_as_hyper(self, z):
         return pi*z**3/6 * hyper([S(3)/4], [S(3)/2, S(7)/4], -pi**2*z**4/16)
 
+    def _eval_rewrite_as_meijerg(self, z):
+        return (pi*z**(S(9)/4) / (sqrt(2)*(z**2)**(S(3)/4)*(-z)**(S(3)/4))
+                * meijerg([],[1],[S(3)/4],[S(1)/4,0],-pi**2*z**4/16))
 
 class fresnelc(FresnelIntegral):
     r"""
@@ -1103,6 +1106,9 @@ class fresnelc(FresnelIntegral):
     def _eval_rewrite_as_hyper(self, z):
         return z * hyper([S.One/4], [S.One/2, S(5)/4], -pi**2*z**4/16)
 
+    def _eval_rewrite_as_meijerg(self, z):
+        return (pi*z**(S(3)/4) / (sqrt(2)*root(z**2,4)*root(-z,4))
+                * meijerg([],[1],[S(1)/4],[S(3)/4,0],-pi**2*z**4/16))
 
 ###############################################################################
 #################### HELPER FUNCTIONS #########################################
