@@ -1,7 +1,7 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
 from sympy.core import S, C, Symbol, Mul, Tuple
-from sympy.core.basic import PicklableWithSlots
+from sympy.polys.polyutils import PicklableWithSlots
 from sympy.utilities import cythonized
 from sympy.polys.polyerrors import ExactQuotientFailed
 

@@ -466,7 +466,7 @@ def solve(f, *symbols, **flags):
           >>> solve(x + exp(x)**2, exp(x))
           [-sqrt(-x), sqrt(-x)]
 
-        * To solve for a *symbol* implicitly, use 'implict=True':
+        * To solve for a *symbol* implicitly, use 'implicit=True':
 
             >>> solve(x + exp(x), x)
             [-LambertW(1)]

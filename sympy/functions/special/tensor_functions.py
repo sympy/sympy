@@ -144,7 +144,7 @@ class KroneckerDelta(Function):
         # indirect doctest
 
         """
-        if i > j:
+        if (i > j) is True:
             return cls(j, i)
 
         diff = C.Abs(i - j)
