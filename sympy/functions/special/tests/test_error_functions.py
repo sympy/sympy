@@ -260,6 +260,9 @@ def test_fresnel():
 
     assert expand_func(integrate(fresnels(z), z)) == z*fresnels(z) + cos(pi*z**2/2)/pi
 
+    assert fresnels(z).rewrite(meijerg) == sqrt(2)*pi*z**(S(9)/4)* \
+           meijerg(((), (1,)), ((S(3)/4,), (S(1)/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S(3)/4)*(z**2)**(S(3)/4))
+
     assert fresnelc(0) == 0
     assert fresnelc(oo) == S.Half
     assert fresnelc(-oo) == -S.Half
@@ -288,3 +291,7 @@ def test_fresnel():
     assert fresnelc(2+3*I).as_real_imag() == (fresnelc(2 - 3*I)/2 + fresnelc(2 + 3*I)/2, I*(fresnelc(2 - 3*I) - fresnelc(2 + 3*I))/2)
 
     assert expand_func(integrate(fresnelc(z), z)) == z*fresnelc(z) - sin(pi*z**2/2)/pi
+
+    assert fresnelc(z).rewrite(meijerg) == sqrt(2)*pi*z**(S(3)/4)* \
+           meijerg(((), (1,)), ((S(1)/4,), (S(3)/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S(1)/4)*(z**2)**(S(1)/4))
+
