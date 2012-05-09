@@ -1,6 +1,6 @@
-from sympy import (Symbol, gamma, oo, nan, zoo, factorial, sqrt, Rational, log,
+from sympy import (Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, log,
         polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
-        cos, O, cancel, lowergamma, exp,  erf, beta)
+        cos, O, cancel, lowergamma, exp,  erf, beta, exp_polar)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       test_numerically as tn)
