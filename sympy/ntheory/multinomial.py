@@ -19,6 +19,7 @@ def multinomial(*powers):
     >>> multinomial(10) == (x**10).coeff(x**10)
     True
     """
+    from sympy.functions.combinatorial.factorials import factorial
 
     if not powers or all(p == 0 for p in powers):
         raise ValueError('at least 1 exponent must be non-zero')
@@ -28,11 +29,10 @@ def multinomial(*powers):
     if type(powers) is int:
         return 1
     n = sum(powers)
-    k = len(powers)
-    for k, v in multinomial_coefficients_iterator(k, n):
-        if k == powers:
-            return v
-    assert None # should never get here
+    ans = factorial(n)
+    for p in powers:
+        ans //= factorial(p)
+    return int(ans)
 
 def binomial_coefficients(n):
     """Return a dictionary containing pairs :math:`{(k1,k2) : C_kn}` where
