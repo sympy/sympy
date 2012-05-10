@@ -340,7 +340,7 @@ def test_settings():
     raises(TypeError, 'mathml(Symbol("x"), method="garbage")')
 
 def test_toprettyxml_hooking():
-    # test that patch of don't influence on standard library.
+    # test that the patch doesn't influence the behavior of the standard library
     import xml.dom.minidom
     doc = xml.dom.minidom.parseString("<apply><plus/><ci>x</ci><cn>1</cn></apply>")
     prettyxml_old = doc.toprettyxml()
