@@ -16,6 +16,8 @@ from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
                                        preorder_traversal, variations)
 
+from collections import defaultdict
+
 def decompose_power(expr):
     """
     Decompose power into symbolic base and integer exponent.
@@ -243,7 +245,7 @@ class Term(object):
                 raise NonCommutativeExpression('commutative expression expected')
 
             coeff, factors = term.as_coeff_mul()
-            numer, denom = {}, {}
+            numer, denom = defaultdict(int), defaultdict(int)
 
             for factor in factors:
                 base, exp = decompose_power(factor)
@@ -253,9 +255,9 @@ class Term(object):
                     coeff *= cont**exp
 
                 if exp > 0:
-                    numer[base] = exp
+                    numer[base] += exp
                 else:
-                    denom[base] = -exp
+                    denom[base] += -exp
 
             numer = Factors(numer)
             denom = Factors(denom)
