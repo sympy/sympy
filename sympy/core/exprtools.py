@@ -494,7 +494,7 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
             for i in args]), clear=clear)
 
     def handle(a):
-        # don't treate internal args like terms of an Add
+        # don't treat internal args like terms of an Add
         if not isinstance(a, Expr):
             if isinstance(a, Basic):
                 return a.func(*[handle(i) for i in a.args])

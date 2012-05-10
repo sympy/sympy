@@ -145,12 +145,13 @@ class Relational(Expr, EvalfMixin):
         if (lhs.is_number and rhs.is_number and
            (rop_cls in (Equality, Unequality) or
             lhs.is_real and rhs.is_real)):
-            know = (lhs - rhs).equals(0, failing_expression=True)
+            diff = lhs - rhs
+            know = diff.equals(0, failing_expression=True)
             if know is True: # exclude failing expression case
                 Nlhs = S.Zero
             elif know is False:
                 from sympy import sign
-                Nlhs = sign((lhs - rhs).n(1))
+                Nlhs = sign(diff.n(1))
             else:
                 Nlhs = None
                 lhs = know

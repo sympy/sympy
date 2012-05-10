@@ -3403,10 +3403,11 @@ class MatrixBase(object):
         return (None, Jcells)
 
     def _jordan_split(self, algebraical, geometrical):
-        "return a list which sum is equal to 'algebraical' and length is equal to 'geometrical'"
+        """return a list of integers with sum equal to 'algebraical'
+        and length equal to 'geometrical'"""
         n1 = algebraical // geometrical
         res = [n1] * geometrical
-        res[len(res)-1] += algebraical % geometrical
+        res[len(res) - 1] += algebraical % geometrical
         assert sum(res) == algebraical
         return res
 
