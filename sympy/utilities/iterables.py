@@ -1258,3 +1258,45 @@ def generate_oriented_forest(n):
                     break
             else:
                 break
+
+def tallies(n, *syms):
+    """Return a dictionary with values assigned to syms that sum to n.
+    >>> from sympy.utilities.iterables import tallies
+    >>> from sympy.abc import i, j
+    >>> for ti in tallies(2, i, j):
+    ...  print ti
+    ...
+    defaultdict(<type 'int'>, {i: 2})
+    defaultdict(<type 'int'>, {j: 2})
+    defaultdict(<type 'int'>, {j: 1, i: 1})
+    """
+    for p in partitions(n, len(syms)):
+     take = sum([v for v in p.values()])
+     vals = flatten([[k]*v for k, v in p.iteritems()])
+     for s in subsets(syms, take):
+      d = defaultdict(int)
+      for i, si in enumerate(s):
+          d[si] = vals[i]
+      yield d
+
+
+def valid_tally(cond, *nsyms):
+    """See which dictionaries are valid:
+    >>> from sympy.abc import i,j,k,l,m,n
+    >>> from sympy.utilities.iterables import valid_tally
+    >>> cond = lambda d,i,j,k,l,m,n: d[i]*d[k]+d[l]+d[m]==3 and d[j]*d[k]+d[l]+d[n]==8
+    >>> for vi in valid_tally(cond, (2,i,j), (4,k,l), (3,m,n)):
+    ...     print vi
+    ...
+    {k: 4, m: 3, j: 2, l: 0, n: 0, i: 0}
+    {k: 1, m: 0, j: 2, l: 3, n: 3, i: 0}
+    {k: 2, m: 1, j: 2, l: 2, n: 2, i: 0}
+    """
+
+    syms = flatten([n[1:] for n in nsyms])
+    for dd in cartes(*[tallies(*n) for n in nsyms]):
+       d = defaultdict(int)
+       for di in dd:
+           d.update(di)
+       if cond(*([d]+syms)):
+           yield dict(d)
