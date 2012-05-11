@@ -1279,6 +1279,9 @@ def unique_permutations(iterable, r=None):
 
 def tallies(n, *syms):
     """Return a dictionary with values assigned to syms that sum to n.
+
+    Examples
+    ========
     >>> from sympy.utilities.iterables import tallies
     >>> from sympy.abc import i, j
     >>> for ti in tallies(2, i, j):
@@ -1288,15 +1291,9 @@ def tallies(n, *syms):
     {j: 2, i: 0}
     {j: 1, i: 1}
     """
-    for p in partitions(n, len(syms)):
-        take = sum([v for v in p.values()])
-        expos = flatten([[k]*v for k, v in p.iteritems()])
-        for vals in unique_permutations(expos):
-            for s in subsets(syms, take):
-                d = defaultdict(int)
-                for i, si in enumerate(s):
-                    d[si] = vals[i]
-                yield dict([(k,d[k]) for k in syms])
+    from sympy.ntheory.multinomial import multinomial_coefficients_iterator
+    for k, v in multinomial_coefficients_iterator(len(syms), n):
+        yield dict(zip(syms, k))
 
 def valid_tally(cond, *nsyms):
     """See which dictionaries are valid:
@@ -1306,8 +1303,9 @@ def valid_tally(cond, *nsyms):
     >>> for vi in valid_tally(cond, (2,i,j), (4,k,l), (3,m,n)):
     ...     print vi
     ...
-    {k: 4, m: 3, j: 2, l: 0, n: 0, i: 0}
     {k: 1, m: 0, j: 2, l: 3, n: 3, i: 0}
+    {k: 4, m: 3, j: 2, l: 0, n: 0, i: 0}
+    {k: 3, m: 2, j: 2, l: 1, n: 1, i: 0}
     {k: 2, m: 1, j: 2, l: 2, n: 2, i: 0}
     """
 
