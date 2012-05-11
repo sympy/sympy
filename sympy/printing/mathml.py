@@ -25,50 +25,6 @@ class MathMLPrinter(Printer):
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
         from xml.dom.minidom import Document
-
-        # Applying the patch of xml.dom.minidom bug
-        # Date: 2011-11-18
-        # Description: http://ronrothman.com/public/leftbraned/xml-dom-minidom-\
-        #                   toprettyxml-and-silly-whitespace/#best-solution
-        # Issue: http://bugs.python.org/issue4147
-        # Patch: http://hg.python.org/cpython/rev/7262f8f276ff/
-
-        from xml.dom.minidom import Element, Text, Node, _write_data
-
-        def writexml(self, writer, indent="", addindent="", newl=""):
-            # indent = current indentation
-            # addindent = indentation to add to higher levels
-            # newl = newline string
-            writer.write(indent+"<" + self.tagName)
-
-            attrs = self._get_attributes()
-            a_names = attrs.keys()
-            a_names.sort()
-
-            for a_name in a_names:
-                writer.write(" %s=\"" % a_name)
-                _write_data(writer, attrs[a_name].value)
-                writer.write("\"")
-            if self.childNodes:
-                writer.write(">")
-                if (len(self.childNodes) == 1 and
-                    self.childNodes[0].nodeType == Node.TEXT_NODE):
-                    self.childNodes[0].writexml(writer, '', '', '')
-                else:
-                    writer.write(newl)
-                    for node in self.childNodes:
-                        node.writexml(writer, indent+addindent, addindent, newl)
-                    writer.write(indent)
-                writer.write("</%s>%s" % (self.tagName, newl))
-            else:
-                writer.write("/>%s"%(newl))
-        Element.writexml = writexml
-
-        def writexml(self, writer, indent="", addindent="", newl=""):
-            _write_data(writer, "%s%s%s"%(indent, self.data, newl))
-        Text.writexml = writexml
-        # end of the patch
-
         self.dom = Document()
 
     def doprint(self, expr):
@@ -76,7 +32,9 @@ class MathMLPrinter(Printer):
         Prints the expression as MathML.
         """
         mathML = Printer._print(self, expr)
-        return mathML.toxml()
+
+        res = mathML.toxml()
+        return res
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -408,6 +366,57 @@ class MathMLPrinter(Printer):
         dom_element.appendChild(self.dom.createTextNode(str(p)))
         return dom_element
 
+    def apply_patch(self):
+        # Applying the patch of xml.dom.minidom bug
+        # Date: 2011-11-18
+        # Description: http://ronrothman.com/public/leftbraned/xml-dom-minidom-\
+        #                   toprettyxml-and-silly-whitespace/#best-solution
+        # Issue: http://bugs.python.org/issue4147
+        # Patch: http://hg.python.org/cpython/rev/7262f8f276ff/
+
+        from xml.dom.minidom import Element, Text, Node, _write_data
+
+        def writexml(self, writer, indent="", addindent="", newl=""):
+            # indent = current indentation
+            # addindent = indentation to add to higher levels
+            # newl = newline string
+            writer.write(indent+"<" + self.tagName)
+
+            attrs = self._get_attributes()
+            a_names = attrs.keys()
+            a_names.sort()
+
+            for a_name in a_names:
+                writer.write(" %s=\"" % a_name)
+                _write_data(writer, attrs[a_name].value)
+                writer.write("\"")
+            if self.childNodes:
+                writer.write(">")
+                if (len(self.childNodes) == 1 and
+                    self.childNodes[0].nodeType == Node.TEXT_NODE):
+                    self.childNodes[0].writexml(writer, '', '', '')
+                else:
+                    writer.write(newl)
+                    for node in self.childNodes:
+                        node.writexml(writer, indent+addindent, addindent, newl)
+                    writer.write(indent)
+                writer.write("</%s>%s" % (self.tagName, newl))
+            else:
+                writer.write("/>%s"%(newl))
+        self._Element_writexml_old = Element.writexml
+        Element.writexml = writexml
+
+        def writexml(self, writer, indent="", addindent="", newl=""):
+            _write_data(writer, "%s%s%s"%(indent, self.data, newl))
+        self._Text_writexml_old = Text.writexml
+        Text.writexml = writexml
+
+    def restore_patch(self):
+        from xml.dom.minidom import Element, Text
+        Element.writexml = self._Element_writexml_old
+        Text.writexml = self._Text_writexml_old
+
+
 def mathml(expr, **settings):
     """Returns the MathML representation of expr"""
     return MathMLPrinter(settings).doprint(expr)
@@ -431,4 +440,9 @@ def print_mathml(expr, **settings):
 
     """
     s = MathMLPrinter(settings)
-    print s._print(sympify(expr)).toprettyxml()
+    xml = s._print(sympify(expr))
+    s.apply_patch()
+    pretty_xml = xml.toprettyxml()
+    s.restore_patch()
+
+    print pretty_xml
