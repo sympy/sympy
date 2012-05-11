@@ -1,6 +1,8 @@
+from residue_ntheory import int_tested
+from sympy.core.sympify import sympify
+
 from itertools import ifilter
 from collections import defaultdict
-from residue_ntheory import int_tested
 
 def multinomial(*powers):
     """Return the integer coefficient of x**i*y**j...z**k for
@@ -9,7 +11,7 @@ def multinomial(*powers):
     Examples
     ========
     >>> from sympy import multinomial, multinomial_coefficients
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import a, b, x, y, z
     >>> multinomial_coefficients(2, 2)
     {(0, 2): 1, (1, 1): 2, (2, 0): 1}
     >>> multinomial(0, 2), multinomial(1, 1), multinomial(2, 0)
@@ -18,6 +20,8 @@ def multinomial(*powers):
     True
     >>> multinomial(10) == (x**10).coeff(x**10)
     True
+    >>> multinomial(a, b, 3)
+    (a + b + 3)!/(6*a!*b!)
     """
     from sympy.functions.combinatorial.factorials import factorial
 
@@ -25,14 +29,14 @@ def multinomial(*powers):
         raise ValueError('at least 1 exponent must be non-zero')
     if not all(p >= 0 for p in powers):
         raise ValueError('exponents must be non-negative')
-    powers = int_tested(*powers)
+    powers = [int_tested(p) if sympify(p).is_Number else p for p in powers]
     if type(powers) is int:
-        return 1
+        return S.One
     n = sum(powers)
     ans = factorial(n)
     for p in powers:
-        ans //= factorial(p)
-    return int(ans)
+        ans /= factorial(p)
+    return ans
 
 def binomial_coefficients(n):
     """Return a dictionary containing pairs :math:`{(k1,k2) : C_kn}` where
