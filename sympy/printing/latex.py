@@ -733,6 +733,22 @@ class LatexPrinter(Printer):
     def _print_hankel2(self, expr, exp=None):
         return self._hprint_BesselBase(expr, exp, 'H^{(2)}')
 
+    def _print_fresnels(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"S^{%s}%s" % (exp, tex)
+        else:
+            return r"S%s" % tex
+
+    def _print_fresnelc(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"C^{%s}%s" % (exp, tex)
+        else:
+            return r"C%s" % tex
+
     def _print_hyper(self, expr, exp=None):
         tex = r"{{}_{%s}F_{%s}\left.\left(\begin{matrix} %s \\ %s \end{matrix}" \
               r"\right| {%s} \right)}" % \
