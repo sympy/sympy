@@ -964,6 +964,14 @@ class fresnels(FresnelIntegral):
     >>> diff(fresnels(z), z)
     sin(pi*z**2/2)
 
+    Defining the Fresnel functions via an integral
+
+    >>> from sympy import integrate, pi, sin, gamma, expand_func
+    >>> integrate(sin(pi*z**2/2), z)
+    3*fresnels(z)*gamma(3/4)/(4*gamma(7/4))
+    >>> expand_func(integrate(sin(pi*z**2/2), z))
+    fresnels(z)
+
     We can numerically evaluate the Fresnel integral to arbitrary precision
     on the whole complex plane:
 
@@ -1060,6 +1068,14 @@ class fresnelc(FresnelIntegral):
     >>> from sympy import diff
     >>> diff(fresnelc(z), z)
     cos(pi*z**2/2)
+
+    Defining the Fresnel functions via an integral
+
+    >>> from sympy import integrate, pi, cos, gamma, expand_func
+    >>> integrate(cos(pi*z**2/2), z)
+    fresnelc(z)*gamma(1/4)/(4*gamma(5/4))
+    >>> expand_func(integrate(cos(pi*z**2/2), z))
+    fresnelc(z)
 
     We can numerically evaluate the Fresnel integral to arbitrary precision
     on the whole complex plane:
