@@ -1259,6 +1259,24 @@ def generate_oriented_forest(n):
             else:
                 break
 
+def unique_permutations(iterable, r=None):
+    """Return the unique permutations of length `r` selected from iterables.
+
+    Examples
+    ========
+    >>> from sympy.utilities.iterables import unique_permutations
+    >>> list(unique_permutations([1, 1, 1]))
+    [(1, 1, 1)]
+    >>> list(unique_permutations([1, 1, 2, 3], 2))
+    [(1, 1), (1, 2), (1, 3), (2, 1), (2, 3), (3, 1), (3, 2)]
+    """
+    from sympy.core.compatibility import permutations
+    previous = tuple()
+    for p in permutations(sorted(iterable), r):
+        if p > previous:
+            previous = p
+            yield p
+
 def tallies(n, *syms):
     """Return a dictionary with values assigned to syms that sum to n.
     >>> from sympy.utilities.iterables import tallies
