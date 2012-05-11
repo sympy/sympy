@@ -1266,9 +1266,9 @@ def tallies(n, *syms):
     >>> for ti in tallies(2, i, j):
     ...  print ti
     ...
-    defaultdict(<type 'int'>, {i: 2})
-    defaultdict(<type 'int'>, {j: 2})
-    defaultdict(<type 'int'>, {j: 1, i: 1})
+    {j: 0, i: 2}
+    {j: 2, i: 0}
+    {j: 1, i: 1}
     """
     for p in partitions(n, len(syms)):
      take = sum([v for v in p.values()])
@@ -1277,7 +1277,7 @@ def tallies(n, *syms):
       d = defaultdict(int)
       for i, si in enumerate(s):
           d[si] = vals[i]
-      yield d
+      yield dict([(k,d[k]) for k in syms])
 
 
 def valid_tally(cond, *nsyms):
