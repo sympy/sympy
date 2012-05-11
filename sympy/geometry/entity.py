@@ -38,6 +38,9 @@ class GeometryEntity(Basic):
     def __new__(cls, *args, **kwargs):
         return Basic.__new__(cls, *sympify(args))
 
+    def _sympy_(self):
+        return self
+
     def __getnewargs__(self):
         return tuple(self.args)
 
@@ -326,5 +329,3 @@ def rotate(th):
     rv[2, 2] = 1
     return rv
 
-from sympy.core.sympify import converter, sympify
-converter[GeometryEntity] = lambda x: x
