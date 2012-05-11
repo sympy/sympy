@@ -2,11 +2,12 @@
 
 from __future__ import print_function, division
 
-from sympy import S, pi, I
-from sympy.core.function import Function, ArgumentIndexError, expand_func
+from sympy import S, pi, I, Rational
+from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import re, im
+from sympy.functions.special.gamma_functions import gamma
 from sympy.core.compatibility import xrange
 
 # TODO
@@ -711,8 +712,8 @@ def jn_zeros(n, k, method="sympy", dps=15):
         from sympy import Expr
         prec = dps_to_prec(dps)
         return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
-                                              int(k)), prec)
-                for k in xrange(1, k + 1)]
+                                              int(l)), prec)
+                for l in xrange(1, k + 1)]
     elif method == "scipy":
         from scipy.special import sph_jn
         from scipy.optimize import newton
@@ -737,3 +738,116 @@ def jn_zeros(n, k, method="sympy", dps=15):
         root = solver(f, root + pi)
         roots.append(root)
     return roots
+
+##################
+# Airy functions #
+##################
+
+class airy_ai(Function):
+    r"""
+    Airy function Ai
+
+    """
+
+    nargs = 1
+    unbranched = True
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Zero
+            elif arg is S.NegativeInfinity:
+                return S.Zero
+            elif arg is S.Zero:
+                return S.One / (3**Rational(2,3) * gamma(Rational(2,3)))
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return airy_aiprime(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+
+class airy_bi(Function):
+    r"""
+    Airy function Bi
+
+    """
+
+    nargs = 1
+    unbranched = True
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Infinity
+            elif arg is S.NegativeInfinity:
+                return S.Zero
+            elif arg is S.Zero:
+                return S.One / (3**Rational(1,6) * gamma(Rational(2,3)))
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return airy_biprime(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+
+class airy_aiprime(Function):
+    r"""
+    Airy function Ai'
+
+    """
+
+    nargs = 1
+    unbranched = True
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Zero
+            elif arg is S.Zero:
+                return -S.One / (3**Rational(1,3) * gamma(Rational(1,3)))
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return self.args[0]*airy_ai(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+
+class airy_biprime(Function):
+    r"""
+    Airy function Bi'
+
+    """
+
+    nargs = 1
+    unbranched = True
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Infinity
+            elif arg is S.NegativeInfinity:
+                return S.Zero
+            elif arg is S.Zero:
+                return 3**Rational(1,6) / gamma(Rational(1,3))
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return self.args[0]*airy_bi(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
