@@ -104,7 +104,7 @@ when `a_I \ne 0` and `r \ne 0`. Substituting `a_I - 1` for
 following rules:
 
 * An index `a_I` can be decremented if `a_I \ne 1` and
-  `a_I \ne b_j` for all `b_j`. 
+  `a_I \ne b_j` for all `b_j`.
 * An index `b_J` can be
   incremented if `b_J \ne -1` and `b_J \ne a_i` for all
   `a_i`.
@@ -316,7 +316,7 @@ Also
     \Gamma(1 - a_j + l_u + b + t) =
         \Gamma(1 - a_j + l_u + b) (1 - a_j + l_u + b)_t
 
-and 
+and
 
 .. math ::
     res_{s = b + l_u + t} \Gamma(b - s) = -\frac{(-1)^{l_u + t}}{(l_u + t)!}
@@ -384,6 +384,85 @@ good way of testing this, other than observing very messy output). In this
 case the matrices `B`, `C` and `M` should be computed by hand. Then the helper
 ``addb`` can be used to declare a hypergeometric formula with hand-computed
 basis.
+
+An example
+==========
+
+Because this explanation might be too theoretical, we walk through an explicit
+example now. We take the Fresnel function :math:`C(z)` which obeys the following
+hypergeometric representation:
+
+.. math ::
+    C(z) = z \cdot {}_{1}F_{2}\left.\left(
+        \begin{matrix} \frac{1}{4} \\
+                       \frac{1}{2}, \frac{5}{4}
+        \end{matrix} \right| -\frac{\pi^2 z^4}{16}\right) \,.
+
+First we try to add this formula to the lookup table by using the
+(simpler) function ``add(ap, bq, res)``. The two first arguments
+are simply the lists containing the parameters of :math:`{}_{1}F_{2}`.
+The ``res`` argument is a little bit more complicated. We only know
+:math:`C(z)` in terms of :math:`{}_{1}F_{2}(\ldots | f(z))` with :math:`f`
+a function of :math:`z`, in our case
+
+.. math ::
+   f(z) = -\frac{\pi^2 z^4}{16} \,.
+
+What we need is a formula where the hypergeometric function has
+only :math:`z` as argument :math:`{}_{1}F_{2}(\ldots | z)`. We
+introduce the new complex symbol :math:`w` and search a function
+:math:`g(w)` such that
+
+.. math ::
+   f(g(w)) = w
+
+holds. Then we can replace every :math:`z` in the original formula
+of :math:`C(z)` by :math:`g(w)`. In the case of our example the
+function :math:`g` could look like
+
+.. math ::
+   g(w) = \frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}} \,.
+
+We get these functions mainly by guessing and testing the result. Hence
+we proceed by computing :math:`f(g(w))` (and simplifying naively)
+
+.. math ::
+   f(g(w)) &= -\frac{\pi^2 g(w)^4}{16} \\
+   	   &= -\frac{\pi^2 g(\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}})^4}{16} \\
+	   &= -\frac{\pi^2 \frac{2^4}{\sqrt{\pi}^4} \exp\left(\frac{i \pi}{4}\right)^4 w^{\frac{1}{4}}^4}{16} \\
+	   &= -\exp\left(i \pi\right) w \\
+	   &= w
+
+and indeed get back :math:`w`. Hence we can write the formula as
+
+.. math ::
+   C(g(w)) = g(w) \cdot {}_{1}F_{2}\left.\left(
+        \begin{matrix} \frac{1}{4} \\
+                       \frac{1}{2}, \frac{5}{4}
+        \end{matrix} \right| w\right) \,.
+
+and trivially
+
+.. math ::
+   {}_{1}F_{2}\left.\left(
+   \begin{matrix} \frac{1}{4} \\
+                  \frac{1}{2}, \frac{5}{4}
+   \end{matrix} \right| w\right)
+   = \frac{C(g(w))}{g(w)}
+   = \frac{C\left(\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}}\right)}
+          {\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}}}
+
+which is exactly what we stick into ``add`` for the
+third parameter ``res``. Finally, the whole function call to add
+this rule to the table looks like::
+
+  add([S(1)/4],
+      [S(1)/2, S(5)/4],
+      fresnelc(exp(pi*I/4)*root(z,4)*2/sqrt(pi)) / (exp(pi*I/4)*root(z,4)*2/sqrt(pi))
+     )
+
+Using this rule we will find that it works but the results are not really nice
+in terms of simplicity and number of special function instances inluded.
 
 Implemented Hypergeometric Formulae
 ***********************************
