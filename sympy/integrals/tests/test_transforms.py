@@ -486,7 +486,7 @@ def test_laplace_transform():
 
 def test_inverse_laplace_transform():
     from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,
-                       unpolarify, simplify, fresnels, fresnelc)
+                       unpolarify, simplify)
     ILT = inverse_laplace_transform
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')

@@ -1,6 +1,8 @@
-from sympy import (symbols, expand, expand_func, erf, nan, oo, Float, conjugate, sqrt, sin, cos, pi, re, im, Abs, O,
-                   factorial, exp_polar, polar_lift, Symbol, I, integrate, exp, uppergamma, expint, log, loggamma, limit,
-                   hyper, meijerg, gamma, S, Shi, Chi, Si, Ci, E1, Ei, sin, cos, sinh, cosh, fresnels, fresnelc)
+from sympy import (symbols, expand, expand_func, erf, nan, oo, Float, conjugate,
+                   sqrt, sin, cos, pi, re, im, Abs, O, factorial, exp_polar,
+                   polar_lift, Symbol, I, integrate, exp, uppergamma, expint,
+                   log, loggamma, limit, hyper, meijerg, gamma, S, Shi, Chi,
+                   Si, Ci, E1, Ei, sin, cos, sinh, cosh, fresnels, fresnelc)
 
 from sympy.functions.special.error_functions import _erfs
 
@@ -295,3 +297,15 @@ def test_fresnel():
     assert fresnelc(z).rewrite(meijerg) == sqrt(2)*pi*z**(S(3)/4)* \
            meijerg(((), (1,)), ((S(1)/4,), (S(3)/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S(1)/4)*(z**2)**(S(1)/4))
 
+
+    from sympy.utilities.randtest import test_numerically
+
+    test_numerically(re(fresnels(z)), fresnels(z).as_real_imag()[0], z)
+    test_numerically(im(fresnels(z)), fresnels(z).as_real_imag()[1], z)
+    test_numerically(fresnels(z), fresnels(z).rewrite(hyper), z)
+    test_numerically(fresnels(z), fresnels(z).rewrite(meijerg), z)
+
+    test_numerically(re(fresnelc(z)), fresnelc(z).as_real_imag()[0], z)
+    test_numerically(im(fresnelc(z)), fresnelc(z).as_real_imag()[1], z)
+    test_numerically(fresnelc(z), fresnelc(z).rewrite(hyper), z)
+    test_numerically(fresnelc(z), fresnelc(z).rewrite(meijerg), z)
