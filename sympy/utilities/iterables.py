@@ -1289,14 +1289,14 @@ def tallies(n, *syms):
     {j: 1, i: 1}
     """
     for p in partitions(n, len(syms)):
-     take = sum([v for v in p.values()])
-     vals = flatten([[k]*v for k, v in p.iteritems()])
-     for s in subsets(syms, take):
-      d = defaultdict(int)
-      for i, si in enumerate(s):
-          d[si] = vals[i]
-      yield dict([(k,d[k]) for k in syms])
-
+        take = sum([v for v in p.values()])
+        expos = flatten([[k]*v for k, v in p.iteritems()])
+        for vals in unique_permutations(expos):
+            for s in subsets(syms, take):
+                d = defaultdict(int)
+                for i, si in enumerate(s):
+                    d[si] = vals[i]
+                yield dict([(k,d[k]) for k in syms])
 
 def valid_tally(cond, *nsyms):
     """See which dictionaries are valid:
