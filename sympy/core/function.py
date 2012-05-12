@@ -366,8 +366,12 @@ class Function(Application, Expr):
                 return
 
         # Convert all args to mpf or mpc
+        # Convert the arguments to *higher* precision than requested for the
+        # final result.
+        # XXX + 5 is a guess, it is similar to what is used in evalf.py. Should
+        #     we be more intelligent about it?
         try:
-            args = [arg._to_mpmath(prec) for arg in self.args]
+            args = [arg._to_mpmath(prec + 5) for arg in self.args]
         except ValueError:
             return
 
