@@ -128,11 +128,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
             except KeyError:
                 continue
 
-    try:
-        return a._sympy_()
-    except AttributeError:
-        pass
-
     if not isinstance(a, basestring):
         for coerce in (float, int):
             try:
@@ -142,6 +137,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
 
     if strict:
         raise SympifyError(a)
+
+    try:
+        return a._sympy_()
+    except AttributeError:
+        pass
 
     if iterable(a):
         try:
