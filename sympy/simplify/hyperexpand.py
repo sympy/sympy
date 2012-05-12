@@ -165,10 +165,24 @@ def add_formulae(formulae):
 
     # Added to get nice results for Laplace transform of Fresnel functions
     # http://functions.wolfram.com/07.22.03.6437.01
-    add([1], [S(3)/4, S(5)/4],
-        sqrt(pi) * (cos(2*sqrt(polar_lift(-1)*z))*fresnelc(2*root(polar_lift(-1)*z,4)/sqrt(pi)) +
-                    sin(2*sqrt(polar_lift(-1)*z))*fresnels(2*root(polar_lift(-1)*z,4)/sqrt(pi)))
-        / (2*root(polar_lift(-1)*z,4)))
+    # Basic rule
+    #add([1], [S(3)/4, S(5)/4],
+    #    sqrt(pi) * (cos(2*sqrt(polar_lift(-1)*z))*fresnelc(2*root(polar_lift(-1)*z,4)/sqrt(pi)) +
+    #                sin(2*sqrt(polar_lift(-1)*z))*fresnels(2*root(polar_lift(-1)*z,4)/sqrt(pi)))
+    #    / (2*root(polar_lift(-1)*z,4)))
+    # Manually tuned rule
+    addb([1], [S(3)/4, S(5)/4],
+         Matrix([ sqrt(pi)*(I*sinh(2*sqrt(z))*fresnels(2*root(z,4)*exp(I*pi/4)/sqrt(pi))
+                            + cosh(2*sqrt(z))*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi)))
+                  * exp(-I*pi/4)/(2*root(z,4)),
+                  sqrt(pi)*root(z,4)*(sinh(2*sqrt(z))*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))
+                                      + I*cosh(2*sqrt(z))*fresnels(2*root(z,4)*exp(I*pi/4)/sqrt(pi)))
+                  *exp(-I*pi/4)/2,
+                  1 ]),
+         Matrix([[1, 0, 0]]),
+         Matrix([[-S(1)/4, 1,      S(1)/4],
+                 [ z,      S(1)/4, 0],
+                 [ 0,      0,      0]]))
 
     # 2F2
     addb([S.Half, a], [S(3)/2, a + 1],
