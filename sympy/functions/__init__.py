@@ -9,7 +9,6 @@ from sympy.functions.combinatorial.factorials import (factorial, factorial2,
         rf, ff, binomial, RisingFactorial, FallingFactorial)
 from sympy.functions.combinatorial.numbers import (fibonacci, lucas, harmonic,
         bernoulli, bell, euler, catalan)
-
 from sympy.functions.elementary.miscellaneous import (sqrt, root, Min, Max,
         Id, real_root)
 from sympy.functions.elementary.complexes import (re, im, sign, Abs,
@@ -23,9 +22,8 @@ from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
         asinh, acosh, atanh, acoth)
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
-
-from sympy.functions.special.error_functions import (erf, Ei, expint, E1,
-        Si, Ci, Shi, Chi)
+from sympy.functions.special.error_functions import (erf, Ei, expint,
+        E1, Si, Ci, Shi, Chi, fresnels, fresnelc)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma,
         uppergamma, polygamma, loggamma, digamma, trigamma, beta)
 from sympy.functions.special.zeta_functions import (dirichlet_eta, zeta,

@@ -156,7 +156,7 @@ def _create_lookup_table(table):
     # TODO
 
     # Section 8.4.11
-    from sympy import Ei, I, expint, Si, Ci, Shi, Chi
+    from sympy import Ei, I, expint, Si, Ci, Shi, Chi, fresnels, fresnelc
     addi(Ei(t),
          constant(-I*pi) + [(S(-1), meijerg([], [1], [0, 0], [], t*polar_lift(-1)))],
          True)
@@ -178,6 +178,9 @@ def _create_lookup_table(table):
     add(erf(t), [1], [], [S(1)/2], [0], t**2, 1/sqrt(pi))
     # TODO exp(-x)*erf(I*x) does not work
 
+    # Fresnel Integrals
+    add(fresnels(t),  [1], [], [S(3)/4], [0, S(1)/4], pi**2*t**4/16, S(1)/2)
+    add(fresnelc(t),  [1], [], [S(1)/4], [0, S(3)/4], pi**2*t**4/16, S(1)/2)
 
     ##### bessel-type functions #####
     from sympy import besselj, bessely, besseli, besselk

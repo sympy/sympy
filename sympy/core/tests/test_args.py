@@ -904,6 +904,18 @@ def test_sympy__functions__special__error_functions__erf():
     from sympy.functions.special.error_functions import erf
     assert _test_args(erf(2))
 
+@SKIP("abstract class")
+def test_sympy__functions__special__error_functions__FresnelIntegral():
+    pass
+
+def test_sympy__functions__special__error_functions__fresnels():
+    from sympy.functions.special.error_functions import fresnels
+    assert _test_args(fresnels(2))
+
+def test_sympy__functions__special__error_functions__fresnelc():
+    from sympy.functions.special.error_functions import fresnelc
+    assert _test_args(fresnelc(2))
+
 def test_sympy__functions__special__error_functions__erfs():
     from sympy.functions.special.error_functions import _erfs
     assert _test_args(_erfs(2))

@@ -212,6 +212,14 @@ def test_latex_bessel():
     assert latex(jn(n, z)) == r'j_{n}\left(z\right)'
     assert latex(yn(n, z)) == r'y_{n}\left(z\right)'
 
+def test_latex_fresnel():
+    from sympy.functions.special.error_functions import (fresnels, fresnelc)
+    from sympy.abc import z
+    assert latex(fresnels(z)) == r'S\left(z\right)'
+    assert latex(fresnelc(z)) == r'C\left(z\right)'
+    assert latex(fresnels(z)**2) == r'S^{2}\left(z\right)'
+    assert latex(fresnelc(z)**2) == r'C^{2}\left(z\right)'
+
 def test_latex_brackets():
     assert latex((-1)**x) == r"\left(-1\right)^{x}"
 
