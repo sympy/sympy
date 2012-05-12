@@ -1,8 +1,6 @@
-"""Bessel type functions"""
-
 from __future__ import print_function, division
 
-from sympy import S, pi, I, Rational
+from sympy import S, pi, I, Rational, Symbol, Wild
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.miscellaneous import sqrt, root
@@ -814,6 +812,34 @@ class airyai(AiryBase):
         pf2 = z / (root(3,3)*gamma(S(1)/3))
         return pf1 * hyper([], [S(2)/3], z**3/9) - pf2 * hyper([], [S(4)/3], z**3/9)
 
+    def _eval_expand_func(self, **hints):
+        arg = self.args[0]
+        symbs = arg.atoms(Symbol)
+
+        if len(symbs) == 1:
+            z = symbs.pop()
+            print(z)
+
+            c = Wild("c", exclude=[z])
+            d = Wild("d", exclude=[z])
+            m = Wild("m", exclude=[z])
+            n = Wild("n", exclude=[z])
+
+            # 03.05.16.0001.01
+            M = arg.match(c*(d*z**n)**m)
+
+            if M is not None:
+                print(M)
+                m = M[m]
+                if (3*m).is_integer:
+                    c = M[c]
+                    d = M[d]
+                    n = M[n]
+
+                    pf = (d*z**n)**m / (d**m*z**(m*n))
+                    newarg = c*d**m*z**(m*n)
+                    return S.Half*(pf + S.One)*airyai(newarg) - S.One/(2*sqrt(3))*(pf - S.One)*airybi(newarg)
+
 
 class airybi(AiryBase):
     r"""
@@ -847,6 +873,34 @@ class airybi(AiryBase):
         pf2 = z*root(3,6) / gamma(S(1)/3)
         return pf1 * hyper([], [S(2)/3], z**3/9) + pf2 * hyper([], [S(4)/3], z**3/9)
 
+    def _eval_expand_func(self, **hints):
+        arg = self.args[0]
+        symbs = arg.atoms(Symbol)
+
+        if len(symbs) == 1:
+            z = symbs.pop()
+            print(z)
+
+            c = Wild("c", exclude=[z])
+            d = Wild("d", exclude=[z])
+            m = Wild("m", exclude=[z])
+            n = Wild("n", exclude=[z])
+
+            # 03.06.16.0001.01
+            M = arg.match(c*(d*z**n)**m)
+
+            if M is not None:
+                print(M)
+                m = M[m]
+                if (3*m).is_integer:
+                    c = M[c]
+                    d = M[d]
+                    n = M[n]
+
+                    pf = (d*z**n)**m / (d**m*z**(m*n))
+                    newarg = c*d**m*z**(m*n)
+                    return S.Half*(sqrt(3)*(S.One - pf)*airyai(newarg) + (pf + S.One)*airybi(newarg))
+
 
 class airyaiprime(AiryBase):
     r"""
@@ -877,6 +931,35 @@ class airyaiprime(AiryBase):
         pf1 = z**2 / (2*3**(S(2)/3)*gamma(S(2)/3))
         pf2 = 1 / (root(3,3)*gamma(S(1)/3))
         return pf1 * hyper([], [S(5)/3], z**3/9) - pf2 * hyper([], [S(1)/3], z**3/9)
+
+    def _eval_expand_func(self, **hints):
+        arg = self.args[0]
+        symbs = arg.atoms(Symbol)
+
+        if len(symbs) == 1:
+            z = symbs.pop()
+            print(z)
+
+            c = Wild("c", exclude=[z])
+            d = Wild("d", exclude=[z])
+            m = Wild("m", exclude=[z])
+            n = Wild("n", exclude=[z])
+
+            # 03.07.16.0001.01
+            # No 'n' in that formula, is it really correct?
+            M = arg.match(c*(d*z**n)**m)
+
+            if M is not None:
+                print(M)
+                m = M[m]
+                if (3*m).is_integer:
+                    c = M[c]
+                    d = M[d]
+                    n = M[n]
+
+                    pf = (d*z**3)**(2*m) / (d**(2*m)*z**(6*m))
+                    newarg = c*d**m*z**(3*m)
+                    return S.Half*(pf + S.One)*airyaiprime(newarg) - S.One/(2*sqrt(3))*(S.One - pf)*airybiprime(newarg)
 
 
 class airybiprime(AiryBase):
@@ -910,3 +993,32 @@ class airybiprime(AiryBase):
         pf1 = z**2 / (2*root(3,6)*gamma(S(2)/3))
         pf2 = root(3,6) / gamma(S(1)/3)
         return pf1 * hyper([], [S(5)/3], z**3/9) + pf2 * hyper([], [S(1)/3], z**3/9)
+
+    def _eval_expand_func(self, **hints):
+        arg = self.args[0]
+        symbs = arg.atoms(Symbol)
+
+        if len(symbs) == 1:
+            z = symbs.pop()
+            print(z)
+
+            c = Wild("c", exclude=[z])
+            d = Wild("d", exclude=[z])
+            m = Wild("m", exclude=[z])
+            n = Wild("n", exclude=[z])
+
+            # 03.08.16.0001.01
+            # No 'n' in that formula, is it really correct?
+            M = arg.match(c*(d*z**n)**m)
+
+            if M is not None:
+                print(M)
+                m = M[m]
+                if (3*m).is_integer:
+                    c = M[c]
+                    d = M[d]
+                    n = M[n]
+
+                    pf = (d*z**3)**(2*m) / (d**(2*m)*z**(6*m))
+                    newarg = c*d**m*z**(3*m)
+                    return S.Half*((S.One + pf)*airybiprime(newarg) - sqrt(3)*(S.One - pf)*airyaiprime(newarg))
