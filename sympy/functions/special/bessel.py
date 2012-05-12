@@ -770,6 +770,12 @@ class airyai(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
 
 class airybi(Function):
     r"""
@@ -798,6 +804,12 @@ class airybi(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
 
 class airyaiprime(Function):
     r"""
@@ -823,6 +835,12 @@ class airyaiprime(Function):
             return self.args[0]*airyai(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
 
 
 class airybiprime(Function):
@@ -851,3 +869,9 @@ class airybiprime(Function):
             return self.args[0]*airybi(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
