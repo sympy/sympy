@@ -115,7 +115,8 @@ u"""\
 """
     assert pretty(wigner3j) == ascii_str
     assert upretty(wigner3j) == ucode_str
-    assert latex(wigner3j) == r'\left(\begin{array}{ccc} 1 & 3 & 5 \\ 2 & 4 & 6 \end{array}\right)'
+    assert latex(wigner3j) == \
+        r'\left(\begin{array}{ccc} 1 & 3 & 5 \\ 2 & 4 & 6 \end{array}\right)'
     sT(wigner3j, "Wigner3j(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6))")
     assert str(wigner6j) == 'Wigner6j(1, 2, 3, 4, 5, 6)'
     ascii_str = \
@@ -132,7 +133,8 @@ u"""\
 """
     assert pretty(wigner6j) == ascii_str
     assert upretty(wigner6j) == ucode_str
-    assert latex(wigner6j) == r'\left{\begin{array}{ccc} 1 & 2 & 3 \\ 4 & 5 & 6 \end{array}\right}'
+    assert latex(wigner6j) == \
+        r'\left\{\begin{array}{ccc} 1 & 2 & 3 \\ 4 & 5 & 6 \end{array}\right\}'
     sT(wigner6j, "Wigner6j(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6))")
     assert str(wigner9j) == 'Wigner9j(1, 2, 3, 4, 5, 6, 7, 8, 9)'
     ascii_str = \
@@ -153,7 +155,8 @@ u"""\
 """
     assert pretty(wigner9j) == ascii_str
     assert upretty(wigner9j) == ucode_str
-    assert latex(wigner9j) == r'\left{\begin{array}{ccc} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{array}\right}'
+    assert latex(wigner9j) == \
+        r'\left\{\begin{array}{ccc} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{array}\right\}'
     sT(wigner9j, "Wigner9j(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6), Integer(7), Integer(8), Integer(9))")
 
 def test_commutator():
@@ -398,7 +401,8 @@ def test_innerproduct():
     assert str(ip2) == '<psi;t|psi;t>'
     assert pretty(ip2) == '<psi;t|psi;t>'
     assert upretty(ip2) == u'⟨ψ;t❘ψ;t⟩'
-    assert latex(ip2) == r'\left\langle \psi;t \right. {\left|\psi;t\right\rangle }'
+    assert latex(ip2) == \
+        r'\left\langle \psi;t \right. {\left|\psi;t\right\rangle }'
     sT(ip2, "InnerProduct(TimeDepBra(Symbol('psi'),Symbol('t')),TimeDepKet(Symbol('psi'),Symbol('t')))")
     assert str(ip3) == "<1,1|1,1>"
     assert pretty(ip3) == '<1,1|1,1>'
@@ -408,7 +412,8 @@ def test_innerproduct():
     assert str(ip4) == "<1,1,j1=1,j2=1|1,1,j1=1,j2=1>"
     assert pretty(ip4) == '<1,1,j1=1,j2=1|1,1,j1=1,j2=1>'
     assert upretty(ip4) == u'⟨1,1,j₁=1,j₂=1❘1,1,j₁=1,j₂=1⟩'
-    assert latex(ip4) == r'\left\langle 1,1,j_{1}=1,j_{2}=1 \right. {\left|1,1,j_{1}=1,j_{2}=1\right\rangle }'
+    assert latex(ip4) == \
+        r'\left\langle 1,1,j_{1}=1,j_{2}=1 \right. {\left|1,1,j_{1}=1,j_{2}=1\right\rangle }'
     sT(ip4, "InnerProduct(JzBraCoupled(Integer(1),Integer(1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1)))),JzKetCoupled(Integer(1),Integer(1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1)))))")
     assert str(ip_tall1) == '<x/2|x/2>'
     ascii_str = \
@@ -427,7 +432,8 @@ u"""\
 """
     assert pretty(ip_tall1) == ascii_str
     assert upretty(ip_tall1) == ucode_str
-    assert latex(ip_tall1) == r'\left\langle \frac{1}{2} x \right. {\left|\frac{1}{2} x\right\rangle }'
+    assert latex(ip_tall1) == \
+        r'\left\langle \frac{1}{2} x \right. {\left|\frac{1}{2} x\right\rangle }'
     sT(ip_tall1, "InnerProduct(Bra(Mul(Rational(1, 2), Symbol('x'))),Ket(Mul(Rational(1, 2), Symbol('x'))))")
     assert str(ip_tall2) == '<x|x/2>'
     ascii_str = \
@@ -446,7 +452,8 @@ u"""\
 """
     assert pretty(ip_tall2) == ascii_str
     assert upretty(ip_tall2) == ucode_str
-    assert latex(ip_tall2) == r'\left\langle x \right. {\left|\frac{1}{2} x\right\rangle }'
+    assert latex(ip_tall2) == \
+        r'\left\langle x \right. {\left|\frac{1}{2} x\right\rangle }'
     sT(ip_tall2, "InnerProduct(Bra(Symbol('x')),Ket(Mul(Rational(1, 2), Symbol('x'))))")
     assert str(ip_tall3) == '<x/2|x>'
     ascii_str = \
@@ -465,7 +472,8 @@ u"""\
 """
     assert pretty(ip_tall3) == ascii_str
     assert upretty(ip_tall3) == ucode_str
-    assert latex(ip_tall3) == r'\left\langle \frac{1}{2} x \right. {\left|x\right\rangle }'
+    assert latex(ip_tall3) == \
+        r'\left\langle \frac{1}{2} x \right. {\left|x\right\rangle }'
     sT(ip_tall3, "InnerProduct(Bra(Mul(Rational(1, 2), Symbol('x'))),Ket(Symbol('x')))")
 
 def test_operator():
@@ -511,7 +519,8 @@ DifferentialOperator⎜──(f(x)),f(x)⎟\n\
 """
     assert pretty(d) == ascii_str
     assert upretty(d) == ucode_str
-    assert latex(d) == r'DifferentialOperator\left(\frac{\partial}{\partial x} \operatorname{f}{\left (x \right )},\operatorname{f}{\left (x \right )}\right)'
+    assert latex(d) == \
+        r'DifferentialOperator\left(\frac{\partial}{\partial x} \operatorname{f}{\left (x \right )},\operatorname{f}{\left (x \right )}\right)'
     sT(d, "DifferentialOperator(Derivative(Function('f')(Symbol('x')), Symbol('x')),Function('f')(Symbol('x')))")
     assert str(b) == 'Operator(B,t,1/2)'
     assert pretty(b) == 'Operator(B,t,1/2)'
@@ -627,12 +636,14 @@ J \n\
     # i.e. j1,2 -> j(1,2)
     assert pretty(cket_big) == '|1,0,j1=1,j2=2,j3=3,j1,2=3>'
     assert upretty(cket_big) == u'❘1,0,j₁=1,j₂=2,j₃=3,j₁,₂=3⟩'
-    assert latex(cket_big) == r'{\left|1,0,j_{1}=1,j_{2}=2,j_{3}=3,j_{1,2}=3\right\rangle }'
+    assert latex(cket_big) == \
+        r'{\left|1,0,j_{1}=1,j_{2}=2,j_{3}=3,j_{1,2}=3\right\rangle }'
     sT(cket_big, "JzKetCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(2), Integer(3)),Tuple(Tuple(Integer(1), Integer(2), Integer(3)), Tuple(Integer(1), Integer(3), Integer(1))))")
     assert str(cbra_big) == '<1,0,j1=1,j2=2,j3=3,j(1,2)=3|'
     assert pretty(cbra_big) == u'<1,0,j1=1,j2=2,j3=3,j1,2=3|'
     assert upretty(cbra_big) == u'⟨1,0,j₁=1,j₂=2,j₃=3,j₁,₂=3❘'
-    assert latex(cbra_big) == r'{\left\langle 1,0,j_{1}=1,j_{2}=2,j_{3}=3,j_{1,2}=3\right|}'
+    assert latex(cbra_big) == \
+        r'{\left\langle 1,0,j_{1}=1,j_{2}=2,j_{3}=3,j_{1,2}=3\right|}'
     sT(cbra_big, "JzBraCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(2), Integer(3)),Tuple(Tuple(Integer(1), Integer(2), Integer(3)), Tuple(Integer(1), Integer(3), Integer(1))))")
     assert str(rot) == 'R(1,2,3)'
     assert pretty(rot) == 'R (1,2,3)'
@@ -746,7 +757,8 @@ def test_tensorproduct():
     assert str(tp) == '|1,1>x|1,0>'
     assert pretty(tp) == '|1,1>x |1,0>'
     assert upretty(tp) == u'❘1,1⟩⨂ ❘1,0⟩'
-    assert latex(tp) == r'{{\left|1,1\right\rangle }}\otimes {{\left|1,0\right\rangle }}'
+    assert latex(tp) == \
+        r'{{\left|1,1\right\rangle }}\otimes {{\left|1,0\right\rangle }}'
     sT(tp, "TensorProduct(JzKet(Integer(1),Integer(1)), JzKet(Integer(1),Integer(0)))")
 
 def test_big_expr():
@@ -775,7 +787,8 @@ u"""\
 """
     assert pretty(e1) == ascii_str
     assert upretty(e1) == ucode_str
-    assert latex(e1) == r'{\left(J_z\right)^{2}}\otimes \left({A^{\dag} + B^{\dag}}\right) \left\{\left(DifferentialOperator\left(\frac{\partial}{\partial x} \operatorname{f}{\left (x \right )},\operatorname{f}{\left (x \right )}\right)^{\dag}\right)^{3},A^{\dag} + B^{\dag}\right\} \left({\left\langle 1,0\right|} + {\left\langle 1,1\right|}\right) \left({\left|0,0\right\rangle } + {\left|1,-1\right\rangle }\right)'
+    assert latex(e1) == \
+        r'{\left(J_z\right)^{2}}\otimes \left({A^{\dag} + B^{\dag}}\right) \left\{\left(DifferentialOperator\left(\frac{\partial}{\partial x} \operatorname{f}{\left (x \right )},\operatorname{f}{\left (x \right )}\right)^{\dag}\right)^{3},A^{\dag} + B^{\dag}\right\} \left({\left\langle 1,0\right|} + {\left\langle 1,1\right|}\right) \left({\left|0,0\right\rangle } + {\left|1,-1\right\rangle }\right)'
     sT(e1, "Mul(TensorProduct(Pow(JzOp(Symbol('J')), Integer(2)), Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), AntiCommutator(Pow(Dagger(DifferentialOperator(Derivative(Function('f')(Symbol('x')), Symbol('x')),Function('f')(Symbol('x')))), Integer(3)),Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), Add(JzBra(Integer(1),Integer(0)), JzBra(Integer(1),Integer(1))), Add(JzKet(Integer(0),Integer(0)), JzKet(Integer(1),Integer(-1))))")
     assert str(e2) == '[Jz**2,A + B]*{E**(-2),Dagger(D)*Dagger(C)}*[J2,Jz]'
     ascii_str = \
@@ -792,9 +805,11 @@ u"""\
 """
     assert pretty(e2) == ascii_str
     assert upretty(e2) == ucode_str
-    assert latex(e2) == r'\left[\left(J_z\right)^{2},A + B\right] \left\{\left(E\right)^{-2},D^{\dag} C^{\dag}\right\} \left[J^2,J_z\right]'
+    assert latex(e2) == \
+        r'\left[\left(J_z\right)^{2},A + B\right] \left\{\left(E\right)^{-2},D^{\dag} C^{\dag}\right\} \left[J^2,J_z\right]'
     sT(e2, "Mul(Commutator(Pow(JzOp(Symbol('J')), Integer(2)),Add(Operator(Symbol('A')), Operator(Symbol('B')))), AntiCommutator(Pow(Operator(Symbol('E')), Integer(-2)),Mul(Dagger(Operator(Symbol('D'))), Dagger(Operator(Symbol('C'))))), Commutator(J2Op(Symbol('J')),JzOp(Symbol('J'))))")
-    assert str(e3) == "Wigner3j(1, 2, 3, 4, 5, 6)*[Dagger(B) + A,C + D]x(-J2 + Jz)*|1,0><1,1|*(|1,0,j1=1,j2=1> + |1,1,j1=1,j2=1>)x|1,-1,j1=1,j2=1>"
+    assert str(e3) == \
+        "Wigner3j(1, 2, 3, 4, 5, 6)*[Dagger(B) + A,C + D]x(-J2 + Jz)*|1,0><1,1|*(|1,0,j1=1,j2=1> + |1,1,j1=1,j2=1>)x|1,-1,j1=1,j2=1>"
     ascii_str = \
 """\
           [ +          ]  /   2     \\                                                                 \n\
@@ -811,7 +826,8 @@ u"""\
 """
     assert pretty(e3) == ascii_str
     assert upretty(e3) == ucode_str
-    assert latex(e3) == r'\left(\begin{array}{ccc} 1 & 3 & 5 \\ 2 & 4 & 6 \end{array}\right) {\left[B^{\dag} + A,C + D\right]}\otimes \left({- J^2 + J_z}\right) {\left|1,0\right\rangle }{\left\langle 1,1\right|} \left({{\left|1,0,j_{1}=1,j_{2}=1\right\rangle } + {\left|1,1,j_{1}=1,j_{2}=1\right\rangle }}\right)\otimes {{\left|1,-1,j_{1}=1,j_{2}=1\right\rangle }}'
+    assert latex(e3) == \
+        r'\left(\begin{array}{ccc} 1 & 3 & 5 \\ 2 & 4 & 6 \end{array}\right) {\left[B^{\dag} + A,C + D\right]}\otimes \left({- J^2 + J_z}\right) {\left|1,0\right\rangle }{\left\langle 1,1\right|} \left({{\left|1,0,j_{1}=1,j_{2}=1\right\rangle } + {\left|1,1,j_{1}=1,j_{2}=1\right\rangle }}\right)\otimes {{\left|1,-1,j_{1}=1,j_{2}=1\right\rangle }}'
     sT(e3, "Mul(Wigner3j(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6)), TensorProduct(Commutator(Add(Dagger(Operator(Symbol('B'))), Operator(Symbol('A'))),Add(Operator(Symbol('C')), Operator(Symbol('D')))), Add(Mul(Integer(-1), J2Op(Symbol('J'))), JzOp(Symbol('J')))), OuterProduct(JzKet(Integer(1),Integer(0)),JzBra(Integer(1),Integer(1))), TensorProduct(Add(JzKetCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1)))), JzKetCoupled(Integer(1),Integer(1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))), JzKetCoupled(Integer(1),Integer(-1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))))")
     assert str(e4) == '(C(1)*C(2)+F**2)*(L2([0, oo))+H)'
     ascii_str = \
@@ -826,5 +842,6 @@ u"""\
 """
     assert pretty(e4) == ascii_str
     assert upretty(e4) == ucode_str
-    assert latex(e4) == r'\left(\left(\mathcal{C}^{1}\otimes \mathcal{C}^{2}\right)\oplus {\mathcal{F}}^{\otimes 2}\right)\otimes \left({\mathcal{L}^2}\left( \left[0, \infty\right) \right)\oplus \mathcal{H}\right)'
+    assert latex(e4) == \
+        r'\left(\left(\mathcal{C}^{1}\otimes \mathcal{C}^{2}\right)\oplus {\mathcal{F}}^{\otimes 2}\right)\otimes \left({\mathcal{L}^2}\left( \left[0, \infty\right) \right)\oplus \mathcal{H}\right)'
     sT(e4, "TensorProductHilbertSpace((DirectSumHilbertSpace(TensorProductHilbertSpace(ComplexSpace(Integer(1)),ComplexSpace(Integer(2))),TensorPowerHilbertSpace(FockSpace(),Integer(2)))),(DirectSumHilbertSpace(L2(Interval(Integer(0), oo, False, True)),HilbertSpace())))")
