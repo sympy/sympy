@@ -5,9 +5,10 @@ from __future__ import print_function, division
 from sympy import S, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.complexes import re, im
 from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.hyper import hyper
 from sympy.core.compatibility import xrange
 
 # TODO
@@ -808,6 +809,11 @@ class airyai(AiryBase):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_rewrite_as_hyper(self, z):
+        pf1 = S.One / (3**(S(2)/3)*gamma(S(2)/3))
+        pf2 = z / (root(3,3)*gamma(S(1)/3))
+        return pf1 * hyper([], [S(2)/3], z**3/9) - pf2 * hyper([], [S(4)/3], z**3/9)
+
 
 class airybi(AiryBase):
     r"""
@@ -836,6 +842,11 @@ class airybi(AiryBase):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_rewrite_as_hyper(self, z):
+        pf1 = S.One / (root(3,6)*gamma(S(2)/3))
+        pf2 = z*root(3,6) / gamma(S(1)/3)
+        return pf1 * hyper([], [S(2)/3], z**3/9) + pf2 * hyper([], [S(4)/3], z**3/9)
+
 
 class airyaiprime(AiryBase):
     r"""
@@ -861,6 +872,11 @@ class airyaiprime(AiryBase):
             return self.args[0]*airyai(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_hyper(self, z):
+        pf1 = z**2 / (2*3**(S(2)/3)*gamma(S(2)/3))
+        pf2 = 1 / (root(3,3)*gamma(S(1)/3))
+        return pf1 * hyper([], [S(5)/3], z**3/9) - pf2 * hyper([], [S(1)/3], z**3/9)
 
 
 class airybiprime(AiryBase):
@@ -890,3 +906,7 @@ class airybiprime(AiryBase):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_rewrite_as_hyper(self, z):
+        pf1 = z**2 / (2*root(3,6)*gamma(S(2)/3))
+        pf2 = root(3,6) / gamma(S(1)/3)
+        return pf1 * hyper([], [S(5)/3], z**3/9) + pf2 * hyper([], [S(1)/3], z**3/9)
