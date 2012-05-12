@@ -851,6 +851,22 @@ class LatexPrinter(Printer):
         else:
             return r"\operatorname{E}_{%s}%s" % (nu, tex)
 
+    def _print_fresnels(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"S^{%s}%s" % (exp, tex)
+        else:
+            return r"S%s" % tex
+
+    def _print_fresnelc(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"C^{%s}%s" % (exp, tex)
+        else:
+            return r"C%s" % tex
+
     def _print_subfactorial(self, expr, exp=None):
         x = expr.args[0]
         if self._needs_brackets(x):
@@ -958,21 +974,33 @@ class LatexPrinter(Printer):
     def _print_hankel2(self, expr, exp=None):
         return self._hprint_BesselBase(expr, exp, 'H^{(2)}')
 
-    def _print_fresnels(self, expr, exp=None):
+    def _hprint_airy(self, expr, exp=None, notation=""):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"S^{%s}%s" % (exp, tex)
+            return r"%s^{%s}%s" % (notation, exp, tex)
         else:
-            return r"S%s" % tex
+            return r"%s%s" % (notation, tex)
 
-    def _print_fresnelc(self, expr, exp=None):
+    def _hprint_airy_prime(self, expr, exp=None, notation=""):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"C^{%s}%s" % (exp, tex)
+            return r"{%s^\prime}^{%s}%s" % (notation, exp, tex)
         else:
-            return r"C%s" % tex
+            return r"%s^\prime%s" % (notation, tex)
+
+    def _print_airyai(self, expr, exp=None):
+        return self._hprint_airy(expr, exp, 'Ai')
+
+    def _print_airybi(self, expr, exp=None):
+        return self._hprint_airy(expr, exp, 'Bi')
+
+    def _print_airyaiprime(self, expr, exp=None):
+        return self._hprint_airy_prime(expr, exp, 'Ai')
+
+    def _print_airybiprime(self, expr, exp=None):
+        return self._hprint_airy_prime(expr, exp, 'Bi')
 
     def _print_hyper(self, expr, exp=None):
         tex = r"{{}_{%s}F_{%s}\left(\begin{matrix} %s \\ %s \end{matrix}" \
