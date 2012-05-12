@@ -7,6 +7,30 @@ from sympy.mpmath.libmp.libintmath import ifac
 
 import random
 
+def cyclic(a, n):
+    """convert cycles from standard 1-based to cycle form
+    accepted by Partition
+
+    >>> from sympy.combinatorics.permutations import cyclic
+    >>> a = [(1,2,3)]
+    >>> cyclic(a, 5)
+    [[0, 1, 2], [3], [4]]
+    >>> a = [(1,2,3),(4,5)]
+    >>> cyclic(a, 5)
+    [[0, 1, 2], [3, 4]]
+    """
+    a1 = []
+    v = []
+    for x in a:
+        x = [y-1 for y in x]
+        a1 += x
+        v.append(x)
+    #print 'DB1 v=', v
+    for i in range(n):
+        if i not in a1:
+            v.append([i])
+    return v
+
 def perm_af_parity(pi):
     """
     Computes the parity of a permutation in array form.
@@ -61,6 +85,56 @@ def perm_af_mul(a, b):
 don\'t match.")
 
     return [a[i] for i in b]
+
+
+def perm_af_muln(*a):
+    if not a:
+        raise ValueError("No element")
+    m = len(a)
+    n = len(a[0])
+    for i in xrange(1, m):
+        if len(a[i]) != n:
+            raise ValueError("The number of elements in the permutations "
+                             "don't match.")
+    if m == 1:
+        return a[0]
+    if m == 2:
+        return perm_af_mul(a[0], a[1])
+    if m == 3:
+       p0, p1, p2 = a
+       return [p0[p1[i]] for i in p2]
+    if m == 4:
+       p0, p1, p2, p3 = a
+       return [p0[p1[p2[i]]] for i in p3]
+    if m == 5:
+       p0, p1, p2, p3, p4 = a
+       return [p0[p1[p2[p3[i]]]] for i in p4]
+    if m == 6:
+       p0, p1, p2, p3, p4, p5 = a
+       return [p0[p1[p2[p3[p4[i]]]]] for i in p5]
+    if m == 7:
+       p0, p1, p2, p3, p4, p5, p6 = a
+       return [p0[p1[p2[p3[p4[p5[i]]]]]] for i in p6]
+    if m > 7:
+        p0 = perm_af_muln(*a[:m//2])
+        p1 = perm_af_muln(*a[m//2:])
+        return [p0[i] for i in p1]
+
+def perm_af_invert(a):
+    n = len(a)
+    inv_form = [0] * n
+    for i in xrange(n):
+        inv_form[a[i]] = i
+    return inv_form
+
+def perm_af_commutes_with(a, b):
+    if len(a) != len(b):
+        raise ValueError("The number of elements in the permutations "
+                         "don't match.")
+    for i in range(len(a)-1):
+        if a[b[i]] != b[a[i]]:
+            return False
+    return True
 
 class Permutation(Basic):
     """
@@ -348,13 +422,7 @@ don\'t match.")
         """
         a = self.array_form
         b = other.array_form
-        if len(a) != len(b):
-            raise ValueError("The number of elements in the permutations \
-don\'t match.")
-        for i in range(len(a)-1):
-            if a[b[i]] != b[a[i]]:
-                return False
-        return True
+        return perm_af_commutes_with(a, b)
 
     def __pow__(self, n):
         """
