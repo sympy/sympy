@@ -62,12 +62,7 @@ from sympy.functions.special.hyper import hyper
 from sympy.core.compatibility import default_sort_key
 from sympy import SYMPY_DEBUG
 
-from sympy.utilities.timeutils import timethis
-_timeit = timethis('meijerg')
-
 # leave add formulae at the top for easy reference
-
-
 def add_formulae(formulae):
     """ Create our knowledge base. """
 
@@ -2018,7 +2013,6 @@ def hyperexpand_special(ap, bq, z):
 _collection = None
 
 
-@_timeit
 def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
                  rewrite='default'):
     """
@@ -2253,7 +2247,6 @@ def devise_plan_meijer(fro, to, z):
 _meijercollection = None
 
 
-@_timeit
 def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
     """
     Try to find an expression for the Meijer G function specified
