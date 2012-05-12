@@ -743,7 +743,41 @@ def jn_zeros(n, k, method="sympy", dps=15):
 # Airy functions #
 ##################
 
-class airyai(Function):
+class AiryBase(Function):
+    """
+    Abstract base class for Airy functions.
+
+    This class is meant to reduce code duplication.
+    """
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _as_real_imag(self, deep=True, **hints):
+        if self.args[0].is_real:
+            if deep:
+                hints['complex'] = False
+                return (self.expand(deep, **hints), S.Zero)
+            else:
+                return (self, S.Zero)
+        if deep:
+            re, im = self.args[0].expand(deep, **hints).as_real_imag()
+        else:
+            re, im = self.args[0].as_real_imag()
+        return (re, im)
+
+    def as_real_imag(self, deep=True, **hints):
+        x, y = self._as_real_imag(deep=deep, **hints)
+        sq = -y**2/x**2
+        re = S.Half*(self.func(x+x*sqrt(sq))+self.func(x-x*sqrt(sq)))
+        im = x/(2*y) * sqrt(sq) * (self.func(x-x*sqrt(sq)) - self.func(x+x*sqrt(sq)))
+        return (re, im)
+
+
+class airyai(AiryBase):
     r"""
     Airy function Ai
 
@@ -770,14 +804,8 @@ class airyai(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
 
-    def _eval_is_real(self):
-        return self.args[0].is_real
-
-
-class airybi(Function):
+class airybi(AiryBase):
     r"""
     Airy function Bi
 
@@ -804,14 +832,8 @@ class airybi(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
 
-    def _eval_is_real(self):
-        return self.args[0].is_real
-
-
-class airyaiprime(Function):
+class airyaiprime(AiryBase):
     r"""
     Airy function Ai'
 
@@ -836,14 +858,8 @@ class airyaiprime(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
 
-    def _eval_is_real(self):
-        return self.args[0].is_real
-
-
-class airybiprime(Function):
+class airybiprime(AiryBase):
     r"""
     Airy function Bi'
 
@@ -870,8 +886,3 @@ class airybiprime(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
-
-    def _eval_is_real(self):
-        return self.args[0].is_real
