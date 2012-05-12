@@ -1,6 +1,6 @@
-from sympy import (Symbol, gamma, oo, nan, zoo, factorial, sqrt, Rational, log,
+from sympy import (Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, log,
         polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
-        cos, O, cancel, lowergamma, exp,  erf, beta)
+        cos, O, cancel, lowergamma, exp,  erf, beta, exp_polar)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       test_numerically as tn)
@@ -53,6 +53,10 @@ def test_gamma():
 
     # Test a bug:
     assert expand_func(gamma(x + Rational(3, 4))) == gamma(x + Rational(3, 4))
+
+    assert gamma(3*exp_polar(I*pi)/4).is_nonnegative == False
+    assert gamma(3*exp_polar(I*pi)/4).is_nonpositive == True
+
 
 def test_gamma_series():
     assert gamma(x + 1).series(x, 0, 3) == \
