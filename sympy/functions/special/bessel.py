@@ -743,7 +743,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
 # Airy functions #
 ##################
 
-class airy_ai(Function):
+class airyai(Function):
     r"""
     Airy function Ai
 
@@ -766,12 +766,12 @@ class airy_ai(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return airy_aiprime(self.args[0])
+            return airyaiprime(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
 
-class airy_bi(Function):
+class airybi(Function):
     r"""
     Airy function Bi
 
@@ -794,12 +794,12 @@ class airy_bi(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return airy_biprime(self.args[0])
+            return airybiprime(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
 
-class airy_aiprime(Function):
+class airyaiprime(Function):
     r"""
     Airy function Ai'
 
@@ -820,12 +820,12 @@ class airy_aiprime(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return self.args[0]*airy_ai(self.args[0])
+            return self.args[0]*airyai(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
 
-class airy_biprime(Function):
+class airybiprime(Function):
     r"""
     Airy function Bi'
 
@@ -848,6 +848,6 @@ class airy_biprime(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return self.args[0]*airy_bi(self.args[0])
+            return self.args[0]*airybi(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
