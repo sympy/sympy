@@ -1,8 +1,9 @@
 from __future__ import print_function, division
 
-from sympy import S, pi, I, Rational, Symbol, Wild
+from sympy import S, C, pi, I, Rational, Symbol, Wild, cacheit, sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.complexes import re, im
 from sympy.functions.special.gamma_functions import gamma
@@ -807,6 +808,21 @@ class airyai(AiryBase):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n < 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            if len(previous_terms) > 1:
+                p = previous_terms[-1]
+                return ((3**(S(1)/3)*x)**(-n)*(3**(S(1)/3)*x)**(n + 1)*sin(pi*(2*n/3 + S(4)/3))*C.factorial(n)
+                        *gamma(n/3 + S(2)/3)/(sin(pi*(2*n/3 + S(2)/3))*C.factorial(n + 1)*gamma(n/3 + S(1)/3)) * p)
+            else:
+                return (S.One/(3**(S(2)/3)*pi) * gamma((n+S.One)/S(3)) * sin(2*pi*(n+S.One)/S(3))
+                        / C.factorial(n) * (root(3,3)*x)**n)
+
     def _eval_rewrite_as_hyper(self, z):
         pf1 = S.One / (3**(S(2)/3)*gamma(S(2)/3))
         pf2 = z / (root(3,3)*gamma(S(1)/3))
@@ -867,6 +883,21 @@ class airybi(AiryBase):
             return airybiprime(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n < 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            if len(previous_terms) > 1:
+                p = previous_terms[-1]
+                return (3**(S(1)/3)*x * Abs(sin(2*pi*(n + S.One)/S(3))) * C.factorial((n - S.One)/S(3))
+                        / ((n + S.One) * Abs(cos(2*pi*(n + S.Half)/S(3))) * C.factorial((n - 2)/S(3))) * p)
+            else:
+                return (S.One/(root(3,6)*pi) * gamma((n+S.One)/S(3)) * Abs(sin(2*pi*(n+S.One)/S(3)))
+                        / C.factorial(n) * (root(3,3)*x)**n)
 
     def _eval_rewrite_as_hyper(self, z):
         pf1 = S.One / (root(3,6)*gamma(S(2)/3))
