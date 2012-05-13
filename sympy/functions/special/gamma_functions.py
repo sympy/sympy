@@ -78,6 +78,17 @@ class gamma(Function):
                 p = arg.p - n*arg.q
                 return  gamma(x + n).expand(func=True).subs(x, Rational(p, arg.q))
 
+        if arg.is_Mul:
+            # Gamma(n*z) -> ... for n>0 \in N
+            s = arg.free_symbols
+            if len(s) == 1:
+                z = s.pop()
+                n = arg.as_coefficient(z)
+                if n.is_integer and n.is_positive:
+                    k = Dummy("k")
+                    return (n**(n*z-Rational(1,2)) * (2*pi)**((S.One-n)/S(2)) *
+                            C.Product(gamma(z + k/n), (k,0,n-S.One)))
+
         if arg.is_Add:
             coeff, tail = arg.as_coeff_add()
             if coeff and coeff.q != 1:
