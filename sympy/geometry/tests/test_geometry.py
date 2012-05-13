@@ -5,6 +5,7 @@ from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             are_similar, convex_hull, intersection, centroid)
 from sympy.geometry.line import Undecidable
 from sympy.geometry.entity import rotate, scale, translate
+from sympy.geometry.polygon import _asa as asa, rad, deg
 from sympy.utilities.pytest import raises, XFAIL
 
 x = Symbol('x', real=True)
@@ -930,3 +931,36 @@ def test_transform():
     p.transform(rotate(pi/2)) == Point(-1, 1)
     p.transform(scale(3, 2)) == Point(3, 2)
     p.transform(translate(1, 2)) == Point(2, 3)
+
+def test_line_intersection():
+    assert asa(120, 8, 52) == \
+                     Triangle(
+                         Point(0, 0),
+                         Point(8, 0),
+                         Point(
+                            8*tan(32*pi/45)/(tan(32*pi/45) + sqrt(3)),
+                            (24*tan(32*pi/45) - 8*sqrt(3)*tan(32*pi/45)**2)/
+                                (-3 + tan(32*pi/45)**2)))
+    assert Line((0,0), (1,1)).intersection(Ray((1,0), (1,2))) == [Point(1,1)]
+    assert Line((0,0), (1,1)).intersection(Segment((1,0), (1,2))) == [Point(1,1)]
+    assert Ray((0,0), (1,1)).intersection(Ray((1,0), (1,2))) == [Point(1,1)]
+    assert Ray((0,0), (1,1)).intersection(Segment((1,0), (1,2))) == [Point(1,1)]
+    assert Ray((0,0), (10,10)).contains(Segment((1,1), (2,2))) is True
+    assert Segment((1,1),(2,2)) in Line((0,0),(10,10))
+    x = 8*tan(13*pi/45)/(tan(13*pi/45) + sqrt(3))
+    y = (-8*sqrt(3)*tan(13*pi/45)**2 + 24*tan(13*pi/45))/\
+        (-3 + tan(13*pi/45)**2)
+
+    # whereas contains is fuzzy in logic, 'in' raises an error if it can't decide
+    assert Line(Point(0, 0), Point(1, -sqrt(3))).contains(Point(x, y)) is None
+    raises(Undecidable, 'Point(x, y) in Line(Point(0, 0), Point(1, -sqrt(3)))')
+
+def test_triangle_kwargs():
+    assert Triangle(sss=(3, 4, 5)) == \
+        Triangle(Point(0, 0), Point(3, 0), Point(3, 4))
+    assert Triangle(asa=(30, 2, 30)) == \
+        Triangle(Point(0, 0), Point(2, 0), Point(1, sqrt(3)/3))
+    assert Triangle(sas=(3, 90, 4)) == \
+        Triangle(Point(0, 0), Point(3, 0), Point(3, 4))
+    assert Triangle(sss=(1,2,5)) is None
+    assert deg(rad(180)) == 180
