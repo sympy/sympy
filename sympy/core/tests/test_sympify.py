@@ -407,3 +407,5 @@ def test_sympify_iter_to_matrix():
     assert sympify([x,y], iter_to_matrix=True) == Matrix([x,y])
     assert sympify([[x],[y]], iter_to_matrix=True) == Matrix([[x],[y]])
     assert sympify([[x,y],], iter_to_matrix=True) == Matrix([[x,y],])
+
+    assert sympify(Matrix([1,2]), iter_to_matrix=True) == Matrix([1,2])

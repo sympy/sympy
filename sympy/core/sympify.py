@@ -142,6 +142,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     try:
         return a._sympy_()
+    except SympifyError, e:
+        if iter_to_matrix and e.expr=='Matrix cannot be sympified':
+            return a
+        else:
+            raise e
     except AttributeError:
         pass
 
