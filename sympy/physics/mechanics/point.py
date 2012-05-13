@@ -451,4 +451,3 @@ class Point(object):
             raise ValueError('Velocity of point ' + self.name + ' has not been'
                              ' defined in ReferenceFrame ' + frame.name)
         return self._vel_dict[frame]
-

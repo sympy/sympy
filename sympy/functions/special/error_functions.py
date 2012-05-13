@@ -3,10 +3,11 @@
 
 from sympy.core import Add, S, C, sympify, cacheit, pi, I
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, root
+from sympy.functions.elementary.complexes import polar_lift
+from sympy.functions.special.hyper import hyper, meijerg
 
 # TODO series expansions
-# TODO fresnel integrals
 # TODO see the "Note:" in Ei
 
 ###############################################################################
@@ -255,7 +256,6 @@ class Ei(Function):
 
     @classmethod
     def eval(cls, z):
-        from sympy import polar_lift, exp_polar
         if not z.is_polar and z.is_negative:
             # Note: is this a good idea?
             return Ei(polar_lift(z)) - pi*I
@@ -272,19 +272,17 @@ class Ei(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from sympy import polar_lift
         if (self.args[0]/polar_lift(-1)).is_positive:
             return Function._eval_evalf(self, prec) + (I*pi)._eval_evalf(prec)
         return Function._eval_evalf(self, prec)
 
     def _eval_rewrite_as_uppergamma(self, z):
-        from sympy import uppergamma, polar_lift
+        from sympy import uppergamma
         # XXX this does not currently work usefully because uppergamma
         #     immediately turns into expint
         return -uppergamma(0, polar_lift(-1)*z) - I*pi
 
     def _eval_rewrite_as_expint(self, z):
-        from sympy import polar_lift
         return -expint(1, polar_lift(-1)*z) - I*pi
 
     def _eval_rewrite_as_Si(self, z):
@@ -427,7 +425,7 @@ class expint(Function):
         return z**(nu - 1)*uppergamma(1 - nu, z)
 
     def _eval_rewrite_as_Ei(self, nu, z):
-        from sympy import exp_polar, unpolarify, exp, factorial, Add
+        from sympy import exp_polar, unpolarify, exp, factorial
         if nu == 1:
             return -Ei(z*exp_polar(-I*pi)) - I*pi
         elif nu.is_Integer and nu > 1:
@@ -444,7 +442,7 @@ class expint(Function):
 
     def _eval_rewrite_as_Si(self, nu, z):
         if nu != 1:
-           return self
+            return self
         return Shi(z) - Chi(z)
     _eval_rewrite_as_Ci = _eval_rewrite_as_Si
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
@@ -471,7 +469,6 @@ class TrigonometricIntegral(Function):
 
     @classmethod
     def eval(cls, z):
-        from sympy import Dummy, polar_lift
         if z == 0:
             return cls._atzero
         nz = z.extract_multiplicatively(polar_lift(I))
@@ -589,7 +586,6 @@ class Si(TrigonometricIntegral):
         return I*Shi(z)*sign
 
     def _eval_rewrite_as_expint(self, z):
-        from sympy import polar_lift
         # XXX should we polarify z?
         return pi/2 + (E1(polar_lift(I)*z) - E1(polar_lift(-I)*z))/2/I
 
@@ -677,7 +673,6 @@ class Ci(TrigonometricIntegral):
         return Chi(z) + I*pi/2*sign
 
     def _eval_rewrite_as_expint(self, z):
-        from sympy import polar_lift
         return -(E1(polar_lift(I)*z) + E1(polar_lift(-I)*z))/2
 
 class Shi(TrigonometricIntegral):
@@ -834,10 +829,306 @@ class Chi(TrigonometricIntegral):
         from sympy import exp_polar
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
 
+
+###############################################################################
+#################### FRESNEL INTEGRALS ########################################
+###############################################################################
+
+class FresnelIntegral(Function):
+    """ Base class for the Fresnel integrals."""
+
+    nargs = 1
+    unbranched = True
+
+    @classmethod
+    def eval(cls, z):
+        # Value at zero
+        if z is S.Zero:
+            return S(0)
+
+        # Try to pull out factors of -1 and I
+        prefact = S.One
+        newarg = z
+        changed = False
+
+        nz = newarg.extract_multiplicatively(-1)
+        if nz is not None:
+            prefact = -prefact
+            newarg = nz
+            changed = True
+
+        nz = newarg.extract_multiplicatively(I)
+        if nz is not None:
+            prefact = cls._sign*I*prefact
+            newarg = nz
+            changed = True
+
+        if changed:
+            return prefact*cls(newarg)
+
+        # Values at positive infinities signs
+        # if any were extracted automatically
+        if z is S.Infinity:
+            return S.Half
+        elif z is I*S.Infinity:
+            return cls._sign*I*S.Half
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return self._trigfunc(S.Half*pi*self.args[0]**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _as_real_imag(self, deep=True, **hints):
+        if self.args[0].is_real:
+            if deep:
+                hints['complex'] = False
+                return (self.expand(deep, **hints), S.Zero)
+            else:
+                return (self, S.Zero)
+        if deep:
+            re, im = self.args[0].expand(deep, **hints).as_real_imag()
+        else:
+            re, im = self.args[0].as_real_imag()
+        return (re, im)
+
+    def as_real_imag(self, deep=True, **hints):
+        # Fresnel S
+        # http://functions.wolfram.com/06.32.19.0003.01
+        # http://functions.wolfram.com/06.32.19.0006.01
+        # Fresnel C
+        # http://functions.wolfram.com/06.33.19.0003.01
+        # http://functions.wolfram.com/06.33.19.0006.01
+        x, y = self._as_real_imag(deep=deep, **hints)
+        sq = -y**2/x**2
+        re = S.Half*(self.func(x+x*sqrt(sq))+self.func(x-x*sqrt(sq)))
+        im = x/(2*y) * sqrt(sq) * (self.func(x-x*sqrt(sq)) - self.func(x+x*sqrt(sq)))
+        return (re, im)
+
+    def _eval_expand_complex(self, deep=True, **hints):
+        re_part, im_part = self.as_real_imag(deep=deep, **hints)
+        return re_part + im_part*S.ImaginaryUnit
+
+
+class fresnels(FresnelIntegral):
+    r"""
+    Fresnel integral S.
+
+    This function is defined by
+
+    .. math:: \operatorname{S}(z) = \int_0^z \sin{\frac{\pi}{2} t^2} \mathrm{d}t.
+
+    It is an entire function.
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, fresnels
+    >>> from sympy.abc import z
+
+    Several special values are known:
+
+    >>> fresnels(0)
+    0
+    >>> fresnels(oo)
+    1/2
+    >>> fresnels(-oo)
+    -1/2
+    >>> fresnels(I*oo)
+    -I/2
+    >>> fresnels(-I*oo)
+    I/2
+
+    In general one can pull out factors of -1 and I from the argument:
+    >>> fresnels(-z)
+    -fresnels(z)
+
+    >>> fresnels(I*z)
+    -I*fresnels(z)
+
+    The Fresnel S integral obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(fresnels(z))
+    fresnels(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(fresnels(z), z)
+    sin(pi*z**2/2)
+
+    Defining the Fresnel functions via an integral
+
+    >>> from sympy import integrate, pi, sin, gamma, expand_func
+    >>> integrate(sin(pi*z**2/2), z)
+    3*fresnels(z)*gamma(3/4)/(4*gamma(7/4))
+    >>> expand_func(integrate(sin(pi*z**2/2), z))
+    fresnels(z)
+
+    We can numerically evaluate the Fresnel integral to arbitrary precision
+    on the whole complex plane:
+
+    >>> fresnels(2).evalf(30)
+    0.343415678363698242195300815958
+
+    >>> fresnels(-2*I).evalf(30)
+    0.343415678363698242195300815958*I
+
+    See Also
+    ========
+
+    fresnelc
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Fresnel_integral
+    .. [2] http://dlmf.nist.gov/7
+    .. [3] http://mathworld.wolfram.com/FresnelIntegrals.html
+    .. [4] http://functions.wolfram.com/GammaBetaErf/FresnelS
+    """
+
+    _trigfunc = C.sin
+    _sign = -S.One
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n < 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            if len(previous_terms) > 1:
+                p = previous_terms[-1]
+                return (-pi**2*x**4*(4*n - 1)/(8*n*(2*n + 1)*(4*n + 3))) * p
+            else:
+                return x**3 * (-x**4)**n * (S(2)**(-2*n - 1)*pi**(2*n + 1)) / ((4*n + 3)*C.factorial(2*n + 1))
+
+    def _eval_rewrite_as_erf(self, z):
+        return (S.One + I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) - I*erf((S.One - I)/2*sqrt(pi)*z))
+
+    def _eval_rewrite_as_hyper(self, z):
+        return pi*z**3/6 * hyper([S(3)/4], [S(3)/2, S(7)/4], -pi**2*z**4/16)
+
+    def _eval_rewrite_as_meijerg(self, z):
+        return (pi*z**(S(9)/4) / (sqrt(2)*(z**2)**(S(3)/4)*(-z)**(S(3)/4))
+                * meijerg([],[1],[S(3)/4],[S(1)/4,0],-pi**2*z**4/16))
+
+class fresnelc(FresnelIntegral):
+    r"""
+    Fresnel integral C.
+
+    This function is defined by
+
+    .. math:: \operatorname{C}(z) = \int_0^z \cos{\frac{\pi}{2} t^2} \mathrm{d}t.
+
+    It is an entire function.
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, fresnelc
+    >>> from sympy.abc import z
+
+    Several special values are known:
+
+    >>> fresnelc(0)
+    0
+    >>> fresnelc(oo)
+    1/2
+    >>> fresnelc(-oo)
+    -1/2
+    >>> fresnelc(I*oo)
+    I/2
+    >>> fresnelc(-I*oo)
+    -I/2
+
+    In general one can pull out factors of -1 and I from the argument:
+    >>> fresnelc(-z)
+    -fresnelc(z)
+
+    >>> fresnelc(I*z)
+    I*fresnelc(z)
+
+    The Fresnel C integral obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(fresnelc(z))
+    fresnelc(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(fresnelc(z), z)
+    cos(pi*z**2/2)
+
+    Defining the Fresnel functions via an integral
+
+    >>> from sympy import integrate, pi, cos, gamma, expand_func
+    >>> integrate(cos(pi*z**2/2), z)
+    fresnelc(z)*gamma(1/4)/(4*gamma(5/4))
+    >>> expand_func(integrate(cos(pi*z**2/2), z))
+    fresnelc(z)
+
+    We can numerically evaluate the Fresnel integral to arbitrary precision
+    on the whole complex plane:
+
+    >>> fresnelc(2).evalf(30)
+    0.488253406075340754500223503357
+
+    >>> fresnelc(-2*I).evalf(30)
+    -0.488253406075340754500223503357*I
+
+    See Also
+    ========
+
+    fresnels
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Fresnel_integral
+    .. [2] http://dlmf.nist.gov/7
+    .. [3] http://mathworld.wolfram.com/FresnelIntegrals.html
+    .. [4] http://functions.wolfram.com/GammaBetaErf/FresnelC
+    """
+
+    _trigfunc = C.cos
+    _sign = S.One
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n < 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            if len(previous_terms) > 1:
+                p = previous_terms[-1]
+                return (-pi**2*x**4*(4*n - 3)/(8*n*(2*n - 1)*(4*n + 1))) * p
+            else:
+                return x * (-x**4)**n * (S(2)**(-2*n)*pi**(2*n)) / ((4*n + 1)*C.factorial(2*n))
+
+    def _eval_rewrite_as_erf(self, z):
+        return (S.One - I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) + I*erf((S.One - I)/2*sqrt(pi)*z))
+
+    def _eval_rewrite_as_hyper(self, z):
+        return z * hyper([S.One/4], [S.One/2, S(5)/4], -pi**2*z**4/16)
+
+    def _eval_rewrite_as_meijerg(self, z):
+        return (pi*z**(S(3)/4) / (sqrt(2)*root(z**2,4)*root(-z,4))
+                * meijerg([],[1],[S(1)/4],[S(3)/4,0],-pi**2*z**4/16))
+
 ###############################################################################
 #################### HELPER FUNCTIONS #########################################
 ###############################################################################
-
 
 class _erfs(Function):
     """

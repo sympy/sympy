@@ -56,4 +56,4 @@ def test_classof():
     assert classof(A,A) == MutableMatrix
     assert classof(B,B) == ImmutableMatrix
     assert classof(A,B) == MutableMatrix
-    raises(TypeError, lambda: classof(A,C))
+    raises(TypeError, lambda:classof(A,C))

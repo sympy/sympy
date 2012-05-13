@@ -40,7 +40,7 @@ IS_WINDOWS = (os.name == 'nt')
 
 
 class Skipped(Exception):
-        pass
+    pass
 
 def _indent(s, indent=4):
     """

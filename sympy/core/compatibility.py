@@ -236,7 +236,7 @@ except ImportError: # < python 2.6
         value. So if the input elements are unique, there will be no repeat
         values in each combination.
 
-        See also: combinations_with_replacements
+        See also: combinations_with_replacement
 
         Examples
         ========

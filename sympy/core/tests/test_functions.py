@@ -466,8 +466,8 @@ def test_unhandled():
 
 @XFAIL
 def test_issue_1612() :
-   x = Symbol("x")
-   assert Symbol('f')(x) == f(x)
+    x = Symbol("x")
+    assert Symbol('f')(x) == f(x)
 
 def test_nfloat():
     from sympy.core.basic import _aresame

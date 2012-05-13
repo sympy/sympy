@@ -53,8 +53,8 @@ def reps_toposort(r):
     E = []
     for c1, (k1, v1) in enumerate(r):
         for c2, (k2, v2) in enumerate(r):
-          if k1 in v2.free_symbols:
-              E.append((c1, c2))
+            if k1 in v2.free_symbols:
+                E.append((c1, c2))
     return [r[i] for i in topological_sort((range(len(r)), E))]
 
 def cse_separate(r, e):

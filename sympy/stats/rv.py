@@ -870,4 +870,3 @@ def rv_subs(expr, symbols=None):
         symbols = random_symbols(expr)
     swapdict = dict([(rv, rv.symbol) for rv in symbols])
     return expr.subs(swapdict)
-

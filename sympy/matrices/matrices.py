@@ -5,7 +5,7 @@ from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.numbers import Integer, ilcm, Rational, Float
 from sympy.core.singleton import S
-from sympy.core.sympify import sympify, converter, SympifyError
+from sympy.core.sympify import sympify, SympifyError
 from sympy.core.compatibility import is_sequence
 
 from sympy.polys import PurePoly, roots, cancel
@@ -72,6 +72,10 @@ class MatrixBase(object):
 
     is_Matrix = True
     _class_priority = 3
+
+    def _sympy_(self):
+        #return self.as_immutable()
+        raise SympifyError('Matrix cannot be sympified')
 
     @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
@@ -3403,12 +3407,13 @@ class MatrixBase(object):
         return (None, Jcells)
 
     def _jordan_split(self, algebraical, geometrical):
-            "return a list which sum is equal to 'algebraical' and length is equal to 'geometrical'"
-            n1 = algebraical // geometrical
-            res = [n1] * geometrical
-            res[len(res)-1] += algebraical % geometrical
-            assert sum(res) == algebraical
-            return res
+        """return a list of integers with sum equal to 'algebraical'
+        and length equal to 'geometrical'"""
+        n1 = algebraical // geometrical
+        res = [n1] * geometrical
+        res[len(res) - 1] += algebraical % geometrical
+        assert sum(res) == algebraical
+        return res
 
     def has(self, *patterns):
         """
@@ -4296,12 +4301,6 @@ def casoratian(seqs, n, zero=True):
 
     return MutableMatrix(k, k, f).det()
 
-# Add sympify converters
-def _matrix_sympify(matrix):
-    #return matrix.as_immutable()
-    raise SympifyError('Matrix cannot be sympified')
-converter[MatrixBase] = _matrix_sympify
-del _matrix_sympify
 
 
 class SparseMatrix(MatrixBase):

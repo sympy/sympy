@@ -104,4 +104,3 @@ from partfrac import (
 
 from polyoptions import Options
 import polycontext as ctx
-

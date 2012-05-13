@@ -50,7 +50,7 @@ MPMATH_TRANSLATIONS = {
     "Shi":"shi",
     "Chi":"chi",
     "Si":"si",
-    "Ci":"ci",
+    "Ci":"ci"
 }
 
 NUMPY_TRANSLATIONS = {

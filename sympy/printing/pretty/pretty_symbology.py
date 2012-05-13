@@ -453,18 +453,10 @@ def pretty_symbol(symb_name):
 
     # glue the results into one string
     if pretty_subs is None: # nice formatting of sups/subs did not work
-        if len(sups) > 0:
-            sups_result = '^' + '^'.join(sups)
-        else:
-            sups_result = ''
-        if len(subs) > 0:
-            subs_result = '_' + '_'.join(subs)
-        else:
-            subs_result = ''
+        return symb_name
     else:
         sups_result = ' '.join(pretty_sups)
         subs_result = ' '.join(pretty_subs)
-
 
     return ''.join([name, sups_result, subs_result])
 

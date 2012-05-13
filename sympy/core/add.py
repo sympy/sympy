@@ -1,5 +1,4 @@
 from core import C
-from basic import Basic
 from singleton import S
 from operations import AssocOp
 from cache import cacheit
@@ -127,7 +126,7 @@ class Add(AssocOp):
             elif o.is_Pow:
                 b, e = o.as_base_exp()
                 if b.is_Number and (e.is_Integer or (e.is_Rational and e.is_negative)):
-                    seq.append(Pow(b, e))
+                    seq.append(b**e)
                     continue
                 c, s = S.One, o
 
@@ -907,7 +906,7 @@ class Add(AssocOp):
                 for q in common_q:
                     g = reduce(igcd, [r[q] for r in rads], 0)
                     if g != 1:
-                        G.append(Pow(g, Rational(1, q)))
+                        G.append(g**Rational(1, q))
                 if G:
                     G = Mul(*G)
                     args = [ai/G for ai in args]
@@ -915,7 +914,5 @@ class Add(AssocOp):
 
         return con, prim
 
-from function import FunctionClass, expand_mul
 from mul import Mul, _keep_coeff, prod
-from power import Pow
 from sympy.core.numbers import Rational

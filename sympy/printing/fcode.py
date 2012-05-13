@@ -425,4 +425,3 @@ def print_fcode(expr, **settings):
        See fcode for the meaning of the optional arguments.
     """
     print fcode(expr, **settings)
-

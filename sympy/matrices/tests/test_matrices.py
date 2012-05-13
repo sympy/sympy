@@ -2154,8 +2154,8 @@ def test_GramSchmidt():
         [Matrix(1, 2, [1, 2]), Matrix(1, 2, [R(2)/5, R(-1)/5])]
 
 def test_casoratian():
-     assert casoratian([1, 2, 3, 4], 1) == 0
-     assert casoratian([1, 2, 3, 4], 1, zero=False) == 0
+    assert casoratian([1, 2, 3, 4], 1) == 0
+    assert casoratian([1, 2, 3, 4], 1, zero=False) == 0
 
 def test_zero_dimension_multiply():
     assert (Matrix()*zeros(0, 3)).shape == (0, 3)

@@ -278,4 +278,3 @@ def test_inertia_of_point_mass():
                  m * r * t * (N.z | N.x) -
                  m * s * t * (N.z | N.y) +
                  m * (r**2 + s**2) * (N.z | N.z))
-

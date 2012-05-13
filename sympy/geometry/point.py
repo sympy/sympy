@@ -203,7 +203,6 @@ class Point(GeometryEntity):
         False
 
         """
-
         if len(points) == 0:
             return False
         if len(points) <= 2:
@@ -217,12 +216,15 @@ class Point(GeometryEntity):
         p2 = points[1]
         v1 = p2 - p1
         x1, y1 = v1.args
+        rv = True
         for p3 in points[2:]:
             x2, y2 = (p3 - p1).args
-            test = simplify(x1*y2 - y1*x2)
-            if test != 0:
+            test = simplify(x1*y2 - y1*x2).equals(0)
+            if test is False:
                 return False
-        return True
+            if rv and not test:
+                  rv = test
+        return rv
 
     def is_concyclic(*points):
         """Is a sequence of points concyclic?

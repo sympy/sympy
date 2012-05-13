@@ -97,4 +97,3 @@ def test_laguerre():
     # works:
     for i in range(10):
         assert laguerre_l(i, 0, x).expand() == laguerre_poly(i, x)
-

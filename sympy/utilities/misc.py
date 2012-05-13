@@ -122,9 +122,10 @@ def rawlines(s):
         that
         ''')
 
-    >>> print rawlines(\"\"\"this
+    >>> s = \"\"\"this
     ... is a triple '''
-    ... \"\"\")
+    ... \"\"\"
+    >>> print rawlines(s)
     dedent(\"\"\"\\
         this
         is a triple '''

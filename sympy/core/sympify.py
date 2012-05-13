@@ -5,7 +5,6 @@ from inspect import getmro
 from core import all_classes as sympy_classes
 from sympy.core.compatibility import iterable
 
-import re
 
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
@@ -19,7 +18,7 @@ class SympifyError(ValueError):
             "raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__,
             str(self.base_exc)))
 
-converter = {}
+converter = {} #See sympify docstring.
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     """
@@ -75,17 +74,37 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     SympifyError: SympifyError: True
 
     To extend `sympify` to convert custom objects (not derived from `Basic`),
-    the static dictionary `convert` is provided. The custom converters are
-    usually added at import time, and will apply to all objects of the given
-    class or its derived classes.
+    just define a `_sympy_` method to your class. You can do that even to
+    classes that you do not own by subclassing or adding the method at runtime.
 
-    For example, all geometry objects derive from `GeometryEntity` class, and
-    should not be altered by the converter, so we add the following after
-    defining that class:
+    >>> from sympy import Matrix
+    >>> class MyList1(object):
+    ...     def __iter__(self):
+    ...         yield 1
+    ...         yield 2
+    ...         raise StopIteration
+    ...     def __getitem__(self, i): return list(self)[i]
+    ...     def _sympy_(self): return Matrix(self)
+    >>> sympify(MyList1())
+    [1]
+    [2]
 
+    If you do not have control over the class definition you could also use the
+    `converter` global dictionary. The key is the class and the value is a
+    function that takes a single argument and returns the desired SymPy
+    object, e.g. `converter[MyList] = lambda x: Matrix(x)`.
+
+    >>> class MyList2(object):   # XXX Do not do this if you control the class!
+    ...     def __iter__(self):  #     Use _sympy_!
+    ...         yield 1
+    ...         yield 2
+    ...         raise StopIteration
+    ...     def __getitem__(self, i): return list(self)[i]
     >>> from sympy.core.sympify import converter
-    >>> from sympy.geometry.entity import GeometryEntity
-    >>> converter[GeometryEntity] = lambda x: x
+    >>> converter[MyList2] = lambda x: Matrix(x)
+    >>> sympify(MyList2())
+    [1]
+    [2]
 
     """
     try:
@@ -188,5 +207,3 @@ def _sympify(a):
        see: sympify
     """
     return sympify(a, strict=True)
-
-from sympy.core.basic import C

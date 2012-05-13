@@ -91,4 +91,3 @@ def test_solve_triangualted():
 
     assert solve_triangulated([f_1, f_2, f_3], x, y, z, domain=dom) == \
         [(a, a, a), (0, 0, 1), (0, 1, 0), (b, b, b), (1, 0, 0)]
-

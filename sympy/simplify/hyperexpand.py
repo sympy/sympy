@@ -81,9 +81,10 @@ def add_formulae(formulae):
     # Luke, Y. L. (1969), The Special Functions and Their Approximations,
     # Volume 1, section 6.2
 
-    from sympy import (exp, sqrt, cosh, log, asin, atan, I, lowergamma, cos,
+    from sympy import (exp, sqrt, root, cosh, log, asin, atan, I, lowergamma, cos,
                        atanh, besseli, gamma, erf, pi, sin, besselj, Ei,
-                       EulerGamma, Shi, sinh, cosh, Chi, diag, Matrix)
+                       EulerGamma, Shi, sinh, cosh, Chi, diag, Matrix,
+                       fresnels, fresnelc)
     from sympy.functions.special.hyper import (HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
@@ -161,6 +162,27 @@ def add_formulae(formulae):
          Matrix([[-a, 1], [0, z]]))
     # This one is redundant.
     add([-S.Half], [S.Half], exp(z) - sqrt(pi*z)*(-I)*erf(I*sqrt(z)))
+
+    # Added to get nice results for Laplace transform of Fresnel functions
+    # http://functions.wolfram.com/07.22.03.6437.01
+    # Basic rule
+    #add([1], [S(3)/4, S(5)/4],
+    #    sqrt(pi) * (cos(2*sqrt(polar_lift(-1)*z))*fresnelc(2*root(polar_lift(-1)*z,4)/sqrt(pi)) +
+    #                sin(2*sqrt(polar_lift(-1)*z))*fresnels(2*root(polar_lift(-1)*z,4)/sqrt(pi)))
+    #    / (2*root(polar_lift(-1)*z,4)))
+    # Manually tuned rule
+    addb([1], [S(3)/4, S(5)/4],
+         Matrix([ sqrt(pi)*(I*sinh(2*sqrt(z))*fresnels(2*root(z,4)*exp(I*pi/4)/sqrt(pi))
+                            + cosh(2*sqrt(z))*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi)))
+                  * exp(-I*pi/4)/(2*root(z,4)),
+                  sqrt(pi)*root(z,4)*(sinh(2*sqrt(z))*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))
+                                      + I*cosh(2*sqrt(z))*fresnels(2*root(z,4)*exp(I*pi/4)/sqrt(pi)))
+                  *exp(-I*pi/4)/2,
+                  1 ]),
+         Matrix([[1, 0, 0]]),
+         Matrix([[-S(1)/4, 1,      S(1)/4],
+                 [ z,      S(1)/4, 0],
+                 [ 0,      0,      0]]))
 
     # 2F2
     addb([S.Half, a], [S(3)/2, a + 1],
@@ -245,6 +267,32 @@ def add_formulae(formulae):
                  cosh(2*sqrt(z))]),
          Matrix([[1, 0, 0]]),
          Matrix([[-S.Half, S.Half, 0], [0, -S.Half, S.Half], [0, 2*z, 0]]))
+
+    # FresnelS
+    # Basic rule
+    #add([S(3)/4], [S(3)/2,S(7)/4], 6*fresnels( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( pi * (exp(pi*I/4)*root(z,4)*2/sqrt(pi))**3 ) )
+    # Manually tuned rule
+    addb([S(3)/4], [S(3)/2,S(7)/4],
+         Matrix([ fresnels( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( pi * (exp(pi*I/4)*root(z,4)*2/sqrt(pi))**3 ),
+                  sinh(2*sqrt(z))/sqrt(z),
+                  cosh(2*sqrt(z)) ]),
+         Matrix([[6, 0, 0]]),
+         Matrix([[-S(3)/4,  S(1)/16, 0],
+                 [ 0,      -S(1)/2,  1],
+                 [ 0,       z,       0]]))
+
+    # FresnelC
+    # Basic rule
+    #add([S(1)/4], [S(1)/2,S(5)/4], fresnelc( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) )
+    # Manually tuned rule
+    addb([S(1)/4], [S(1)/2,S(5)/4],
+         Matrix([ sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(2*root(z,4)),
+                  cosh(2*sqrt(z)),
+                  sinh(2*sqrt(z))*sqrt(z) ]),
+         Matrix([[1, 0, 0]]),
+         Matrix([[-S(1)/4,  S(1)/4, 0     ],
+                 [ 0,       0,      1     ],
+                 [ 0,       z,      S(1)/2]]))
 
     # 2F3
     # XXX with this five-parameter formula is pretty slow with the current
@@ -771,23 +819,23 @@ class FormulaCollection(object):
     """ A collection of formulae to use as origins. """
 
     def __init__(self):
-            """ Doing this globally at module init time is a pain ... """
-            self.symbolic_formulae = {}
-            self.concrete_formulae = {}
-            self.formulae = []
+        """ Doing this globally at module init time is a pain ... """
+        self.symbolic_formulae = {}
+        self.concrete_formulae = {}
+        self.formulae = []
 
-            add_formulae(self.formulae)
+        add_formulae(self.formulae)
 
-            # Now process the formulae into a helpful form.
-            # These dicts are indexed by (p, q).
+        # Now process the formulae into a helpful form.
+        # These dicts are indexed by (p, q).
 
-            for f in self.formulae:
-                sizes = f.indices.sizes
-                if len(f.symbols) > 0:
-                    self.symbolic_formulae.setdefault(sizes, []).append(f)
-                else:
-                    inv = f.indices.build_invariants()
-                    self.concrete_formulae.setdefault(sizes, {})[inv] = f
+        for f in self.formulae:
+            sizes = f.indices.sizes
+            if len(f.symbols) > 0:
+                self.symbolic_formulae.setdefault(sizes, []).append(f)
+            else:
+                inv = f.indices.build_invariants()
+                self.concrete_formulae.setdefault(sizes, {})[inv] = f
 
     def lookup_origin(self, ip):
         """

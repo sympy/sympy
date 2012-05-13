@@ -339,3 +339,13 @@ def test_mathml_order():
 def test_settings():
     raises(TypeError, lambda: mathml(Symbol("x"), method="garbage"))
 
+def test_toprettyxml_hooking():
+    # test that the patch doesn't influence the behavior of the standard library
+    import xml.dom.minidom
+    doc = xml.dom.minidom.parseString("<apply><plus/><ci>x</ci><cn>1</cn></apply>")
+    prettyxml_old = doc.toprettyxml()
+
+    mp.apply_patch()
+    mp.restore_patch()
+
+    assert prettyxml_old == doc.toprettyxml()

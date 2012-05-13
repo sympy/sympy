@@ -203,4 +203,3 @@ class IQFT(Fourier):
     @property
     def omega(self):
         return exp(-2*pi*I/self.size)
-

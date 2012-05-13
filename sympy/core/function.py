@@ -36,11 +36,13 @@ from core import BasicMeta, C
 from assumptions import ManagedProperties
 from basic import Basic
 from singleton import S
+from sympify import sympify
 from expr import Expr, AtomicExpr
 from decorators import _sympifyit, deprecated
 from compatibility import iterable,is_sequence
 from cache import cacheit
 from numbers import Rational, Float
+from add import Add
 
 from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
@@ -364,8 +366,12 @@ class Function(Application, Expr):
                 return
 
         # Convert all args to mpf or mpc
+        # Convert the arguments to *higher* precision than requested for the
+        # final result.
+        # XXX + 5 is a guess, it is similar to what is used in evalf.py. Should
+        #     we be more intelligent about it?
         try:
-            args = [arg._to_mpmath(prec) for arg in self.args]
+            args = [arg._to_mpmath(prec + 5) for arg in self.args]
         except ValueError:
             return
 
@@ -2026,6 +2032,7 @@ def nfloat(expr, n=15, exponent=False):
     x**4.0 + y**0.5
 
     """
+    from sympy.core import Pow
     if iterable(expr, exclude=basestring):
         if isinstance(expr, (dict, Dict)):
             return type(expr)([(k, nfloat(v, n, exponent)) for k, v in
@@ -2063,7 +2070,4 @@ def nfloat(expr, n=15, exponent=False):
     return rv.subs([(f, f.func(*[nfloat(a, n, exponent)
                      for a in f.args])) for f in funcs])
 
-from sympify import sympify
-from add import Add
-from power import Pow
 from sympy.core.symbol import Dummy
