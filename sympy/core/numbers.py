@@ -1789,6 +1789,8 @@ class Zero(IntegerConstant):
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
+        #if not isinstance(other, Basic):
+        #    raise NotImplementedError
         if other is S.NaN or \
            other is S.NegativeInfinity or \
            other is S.Infinity or \

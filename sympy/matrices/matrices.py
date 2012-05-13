@@ -74,8 +74,7 @@ class MatrixBase(object):
     _class_priority = 3
 
     def _sympy_(self):
-        #return self.as_immutable()
-        raise SympifyError('Matrix cannot be sympified')
+        return self
 
     @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
