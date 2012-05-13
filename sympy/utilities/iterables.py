@@ -920,9 +920,12 @@ def partitions(n, m=None, k=None):
         modified from Tim Peter's version to allow for k and m values:
         code.activestate.com/recipes/218332-generator-for-integer-partitions/
     """
+    from sympy.ntheory.residue_ntheory import int_tested
 
     if n < 0:
         raise ValueError("n must be >= 0")
+    if m == 0:
+        raise ValueError("m must be > 0")
     m = min(m or n, n)
     if m < 1:
         raise ValueError("maximum numbers in partition, m, must be > 0")
@@ -933,6 +936,7 @@ def partitions(n, m=None, k=None):
     if m*k < n:
         return
 
+    n, m, k = int_tested(n, m, k)
     q, r = divmod(n, k)
     ms = {k: q}
     keys = [k]  # ms.keys(), from largest to smallest
@@ -1254,3 +1258,61 @@ def generate_oriented_forest(n):
                     break
             else:
                 break
+
+def unique_permutations(iterable, r=None):
+    """Return the unique permutations of length `r` selected from iterables.
+
+    Examples
+    ========
+    >>> from sympy.utilities.iterables import unique_permutations
+    >>> list(unique_permutations([1, 1, 1]))
+    [(1, 1, 1)]
+    >>> list(unique_permutations([1, 1, 2, 3], 2))
+    [(1, 1), (1, 2), (1, 3), (2, 1), (2, 3), (3, 1), (3, 2)]
+    """
+    from sympy.core.compatibility import permutations
+    previous = tuple()
+    for p in permutations(sorted(iterable), r):
+        if p > previous:
+            previous = p
+            yield p
+
+def tallies(n, *syms):
+    """Return a dictionary with values assigned to syms that sum to n.
+
+    Examples
+    ========
+    >>> from sympy.utilities.iterables import tallies
+    >>> from sympy.abc import i, j
+    >>> for ti in tallies(2, i, j):
+    ...  print ti
+    ...
+    {j: 0, i: 2}
+    {j: 2, i: 0}
+    {j: 1, i: 1}
+    """
+    from sympy.ntheory.multinomial import multinomial_coefficients_iterator
+    for k, v in multinomial_coefficients_iterator(len(syms), n):
+        yield dict(zip(syms, k))
+
+def valid_tally(cond, *nsyms):
+    """See which dictionaries are valid:
+    >>> from sympy.abc import i,j,k,l,m,n
+    >>> from sympy.utilities.iterables import valid_tally
+    >>> cond = lambda d,i,j,k,l,m,n: d[i]*d[k]+d[l]+d[m]==3 and d[j]*d[k]+d[l]+d[n]==8
+    >>> for vi in valid_tally(cond, (2,i,j), (4,k,l), (3,m,n)):
+    ...     print vi
+    ...
+    {k: 1, m: 0, j: 2, l: 3, n: 3, i: 0}
+    {k: 4, m: 3, j: 2, l: 0, n: 0, i: 0}
+    {k: 3, m: 2, j: 2, l: 1, n: 1, i: 0}
+    {k: 2, m: 1, j: 2, l: 2, n: 2, i: 0}
+    """
+
+    syms = flatten([n[1:] for n in nsyms])
+    for dd in cartes(*[tallies(*n) for n in nsyms]):
+       d = defaultdict(int)
+       for di in dd:
+           d.update(di)
+       if cond(*([d]+syms)):
+           yield dict(d)

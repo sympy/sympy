@@ -485,23 +485,14 @@ class Pow(Expr):
                 # (x+y)**3 -> x**3 + 3*x**2*y + 3*x*y**2 + y**3
                 # in this particular example:
                 # p = [x,y]; n = 3
-                # so now it's easy to get the correct result -- we get the
-                # coefficients first:
-                from sympy import multinomial_coefficients
-                expansion_dict = multinomial_coefficients(len(p), n)
-                # in our example: {(3, 0): 1, (1, 2): 3, (0, 3): 1, (2, 1): 3}
-                # and now construct the expression.
+                # so now it's easy to get the correct result:
 
-                # An elegant way would be to use Poly, but unfortunately it is
-                # slower than the direct method below, so it is commented out:
-                #b = {}
-                #for k in expansion_dict:
-                #    b[k] = Integer(expansion_dict[k])
-                #return Poly(b, *p).as_expr()
-
-                from sympy.polys.polyutils import basic_from_dict
-                result = basic_from_dict(expansion_dict, *p)
-                return result
+                # get the coefficient corresponding to each tuple of exponents
+                # e.g., in our example: {(3, 0): 1, (1, 2): 3, (0, 3): 1, (2, 1): 3}
+                from sympy.ntheory.multinomial import multinomial_coefficients_iterator
+                expansion = multinomial_coefficients_iterator(len(p), n)
+                return Add(*[c*Mul(*[p[i]**expo[i] for i in xrange(len(p))])
+                    for expo, c in expansion])
             else:
                 if n == 2:
                     return Add(*[f*g for f in base.args for g in base.args])
