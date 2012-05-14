@@ -79,6 +79,15 @@ class gamma(Function):
                 p = arg.p - n*arg.q
                 return  gamma(x + n).expand(func=True).subs(x, Rational(p, arg.q))
 
+        if arg.is_Add:
+            coeff, tail = arg.as_coeff_add()
+            if coeff and coeff.q != 1:
+                intpart = floor(coeff)
+                tail = (coeff - intpart,) + tail
+                coeff = intpart
+            tail = arg._new_rawargs(*tail, **dict(reeval=False))
+            return gamma(tail)*C.RisingFactorial(tail, coeff)
+
         if arg.is_Mul:
             # Gamma(n*z) -> ... for n > 0 \in N
             # Try to pull out explicit integer literals
@@ -100,15 +109,6 @@ class gamma(Function):
                 k = Dummy("k")
                 return (n**(n*z-Rational(1,2)) * (2*pi)**((S.One-n)/S(2)) *
                         C.Product(gamma(z + k/n), (k,0,n-S.One)))
-
-        if arg.is_Add:
-            coeff, tail = arg.as_coeff_add()
-            if coeff and coeff.q != 1:
-                intpart = floor(coeff)
-                tail = (coeff - intpart,) + tail
-                coeff = intpart
-            tail = arg._new_rawargs(*tail, **dict(reeval=False))
-            return gamma(tail)*C.RisingFactorial(tail, coeff)
 
         return self.func(*self.args)
 
