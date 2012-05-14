@@ -24,7 +24,7 @@ from elementary.complexes import (re, im, sign, Abs, conjugate, arg,
                       polar_lift, periodic_argument, unbranched_argument,
                       principal_branch)
 from elementary.trigonometric import (acos, acot, asin, atan, atan2, cos,
-                                  cot, sec, sin, tan)
+                                        cosec, cot, sec, sin, tan)
 from elementary.exponential import exp_polar, exp, log, LambertW
 from elementary.hyperbolic import (acosh, acoth, asinh, atanh, cosh,
                               coth, sinh, tanh)
