@@ -1,13 +1,14 @@
-from sympy.core import Add, S, C, sympify, oo, pi
+from sympy.core import Add, S, C, sympify, oo, pi, Dummy,Rational
+from sympy.core.exprtools import gcd_terms, factor_terms
 from sympy.core.function import Function, ArgumentIndexError
 from zeta_functions import zeta
 from error_functions import erf
-from sympy.core import Dummy,Rational
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.combinatorial.numbers import bernoulli
 from sympy.functions.combinatorial.factorials import rf
+from sympy.utilities.iterables import sift
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -79,15 +80,26 @@ class gamma(Function):
                 return  gamma(x + n).expand(func=True).subs(x, Rational(p, arg.q))
 
         if arg.is_Mul:
-            # Gamma(n*z) -> ... for n>0 \in N
-            s = arg.free_symbols
-            if len(s) == 1:
-                z = s.pop()
-                n = arg.as_coefficient(z)
-                if n.is_integer and n.is_positive:
-                    k = Dummy("k")
-                    return (n**(n*z-Rational(1,2)) * (2*pi)**((S.One-n)/S(2)) *
-                            C.Product(gamma(z + k/n), (k,0,n-S.One)))
+            # Gamma(n*z) -> ... for n > 0 \in N
+            # Try to pull out explicit integer literals
+            nlit, z = gcd_terms(arg, clear=False).as_coeff_Mul()
+            # Drop negative integers
+            if nlit < 1:
+                nlit = -nlit
+                z = -z
+            # Try to pull out positive integer symbols
+            u = factor_terms(z)
+            sifted = sift(C.Mul.make_args(u), lambda w: w.is_integer and w.is_positive)
+            nsym = C.Mul(*sifted.pop(True,[]))
+
+            n = nlit * nsym
+            z = u / nsym
+            # Invariant: arg = n*z now
+
+            if n != 1:
+                k = Dummy("k")
+                return (n**(n*z-Rational(1,2)) * (2*pi)**((S.One-n)/S(2)) *
+                        C.Product(gamma(z + k/n), (k,0,n-S.One)))
 
         if arg.is_Add:
             coeff, tail = arg.as_coeff_add()
