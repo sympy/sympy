@@ -232,6 +232,14 @@ def test_represent_coupled_states():
     assert represent(JzKetCoupled(1, -1, (S(1)/2,S(1)/2)), basis=Jz) == \
         Matrix([0,0,0,1])
 
+def test_represent_rotation():
+    assert represent(Rotation(0, pi/2, 0)) == \
+        Matrix([[WignerD(S(1)/2, S(1)/2, S(1)/2, 0, pi/2, 0), WignerD(S(1)/2, S(1)/2, -S(1)/2, 0, pi/2, 0)], \
+                [WignerD(S(1)/2, -S(1)/2, S(1)/2, 0, pi/2, 0), WignerD(S(1)/2, -S(1)/2, -S(1)/2, 0, pi/2, 0)]])
+    assert represent(Rotation(0, pi/2, 0), doit=True) == \
+        Matrix([[sqrt(2)/2, -sqrt(2)/2], \
+                [sqrt(2)/2, sqrt(2)/2]])
+
 def test_rewrite_same():
     # Rewrite to same basis
     assert JxBra(1,1).rewrite('Jx') == JxBra(1,1)
