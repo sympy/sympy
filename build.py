@@ -50,4 +50,3 @@ setup(
     },
     ext_modules = extensions
 )
-

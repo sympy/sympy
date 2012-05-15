@@ -964,3 +964,4 @@ def test_triangle_kwargs():
         Triangle(Point(0, 0), Point(3, 0), Point(3, 4))
     assert Triangle(sss=(1,2,5)) is None
     assert deg(rad(180)) == 180
+
