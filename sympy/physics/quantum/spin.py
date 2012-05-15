@@ -587,6 +587,7 @@ class Rotation(UnitaryOperator):
 
     def _represent_base(self, basis, **options):
         j = sympify(options.get('j', Rational(1,2)))
+        # TODO: move evaluation up to represent function/implement elsewhere
         evaluate = sympify(options.get('doit'))
         size, mvals = m_values(j)
         result = zeros(size, size)
