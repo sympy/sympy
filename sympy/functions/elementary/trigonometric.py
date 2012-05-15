@@ -612,7 +612,7 @@ class sec(TrigonometricFunction):    #TODO implement rest all functions for sec.
         if self/sec(self.args[0]) is S.One:
             return True
 
-class cosec(TrigonometricFunction):    #TODO implement rest all functions for cosec. see cos, sin, tan.
+class csc(TrigonometricFunction):    #TODO implement rest all functions for csc. see cos, sin, tan.
 
     def _eval_rewrite_as_sin(self,arg):
         return (1/sin(arg))
@@ -621,7 +621,7 @@ class cosec(TrigonometricFunction):    #TODO implement rest all functions for co
         return cos(arg)/(sin(arg)*cos(arg))
 
     def _is_Trig(self):
-        if self/cosec(self.args[0]) is S.One:
+        if self/csc(self.args[0]) is S.One:
             return True
 
 class tan(TrigonometricFunction):

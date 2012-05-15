@@ -3,7 +3,7 @@
 import sympy
 from sympy.core import Dummy, Wild, S
 from sympy.core.numbers import Rational
-from sympy.functions import sin, cos, binomial, tan, sec, cosec, cot
+from sympy.functions import sin, cos, binomial, tan, sec, csc, cot
 from sympy.core.cache import cacheit
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
@@ -31,7 +31,7 @@ _u = Dummy('u')
 
 def Trig_Check(s):
   if sin(s.args[0])/s is S.One or cos(s.args[0])/s is S.One \
-     or cosec(s.args[0])/s is S.One or sec(s.args[0])/s is S.One \
+     or csc(s.args[0])/s is S.One or sec(s.args[0])/s is S.One \
          or tan(s.args[0])/s is S.One or cot(s.args[0])/s is S.One:
       return True
 
@@ -40,7 +40,7 @@ def Trig_Check(s):
 def trigintegrate(f, x):
     """Integrate f = Mul(trig) over x
 
-       >>> from sympy import Symbol, sin, cos, tan, sec, cosec, cot
+       >>> from sympy import Symbol, sin, cos, tan, sec, csc, cot
        >>> from sympy.integrals.trigonometry import trigintegrate
        >>> from sympy.abc import x
 
