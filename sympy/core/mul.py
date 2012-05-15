@@ -1241,9 +1241,13 @@ class Mul(AssocOp):
         # update the coefficients if we had an extraction
 
         if getattr(co_xmul, 'is_Rational', False):
-            c.pop(co_self)
+            c[co_self] -= 1
+            if not c[co_self]:
+                c.pop(co_self)
             c[co_xmul] = S.One
-            old_c.pop(co_old)
+            old_c[co_old] -= 1
+            if not old_c[co_old]:
+                old_c.pop(co_old)
 
         # do quick tests to see if we can't succeed
 

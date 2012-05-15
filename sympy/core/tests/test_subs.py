@@ -202,6 +202,10 @@ def test_mul():
     assert (x*A*B*C*A*B).subs(x*A*B, C) == C**2*A*B
     assert (-I*a*b).subs(a*b, 2) == -2*I
 
+    # issue 3262
+    assert (-8*I*a).subs(-2*a, 1) == 4*I
+    assert (-I*a).subs(-a, 1) == I
+
 def test_subs_simple():
     a = symbols('a', commutative=True)
     x = symbols('x', commutative=False)
