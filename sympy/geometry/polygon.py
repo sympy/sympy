@@ -2196,4 +2196,3 @@ def _sas(l1, d, l2):
     p2 = Point(l1, 0)
     p3 = p2 + Point(cos(rad(d))*l2, sin(rad(d))*l2)
     return Triangle(p1, p2, p3)
-

@@ -14,13 +14,13 @@ if __name__ == '__main__':
 
     vars = symbols('t x y z')
     gamma_t,gamma_x,gamma_y,gamma_z = MV.setup('gamma_t gamma_x gamma_y gamma_z',metric,True,vars)
-    
+
     m,e = symbols('m e')
     Format('1 1 1 1')
     I = MV(ONE,'pseudo')
     nvars = len(vars)
     psi = MV('psi','spinor',fct=True)
-    A = MV('A','vector',fct=True)    
+    A = MV('A','vector',fct=True)
     sig_x = gamma_x*gamma_t
     sig_y = gamma_y*gamma_t
     sig_z = gamma_z*gamma_t
@@ -36,4 +36,3 @@ if __name__ == '__main__':
     Format('mv=3')
     print r'\nabla \bm{\psi} I \sigma_{z}-eA\bm{\psi}-m\bm{\psi}\gamma_{t} = ',dirac_eq,' = 0'
     xdvi(filename='Dirac.tex')
-    
