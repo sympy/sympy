@@ -812,9 +812,9 @@ def test_sympy__functions__elementary__trigonometric__cos():
     from sympy.functions.elementary.trigonometric import cos
     assert _test_args(cos(2))
 
-def test_sympy__functions__elementary__trigonometric__cosec():
-    from sympy.functions.elementary.trigonometric import cosec
-    assert _test_args(cosec(2))
+def test_sympy__functions__elementary__trigonometric__csc():
+    from sympy.functions.elementary.trigonometric import csc
+    assert _test_args(csc(2))
 
 def test_sympy__functions__elementary__trigonometric__cot():
     from sympy.functions.elementary.trigonometric import cot
