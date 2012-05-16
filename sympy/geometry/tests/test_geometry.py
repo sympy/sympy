@@ -950,10 +950,7 @@ def test_line_intersection():
     x = 8*tan(13*pi/45)/(tan(13*pi/45) + sqrt(3))
     y = (-8*sqrt(3)*tan(13*pi/45)**2 + 24*tan(13*pi/45))/\
         (-3 + tan(13*pi/45)**2)
-
-    # whereas contains is fuzzy in logic, 'in' raises an error if it can't decide
-    assert Line(Point(0, 0), Point(1, -sqrt(3))).contains(Point(x, y)) is None
-    raises(Undecidable, 'Point(x, y) in Line(Point(0, 0), Point(1, -sqrt(3)))')
+    assert Line(Point(0, 0), Point(1, -sqrt(3))).contains(Point(x, y)) is True
 
 def test_triangle_kwargs():
     assert Triangle(sss=(3, 4, 5)) == \
