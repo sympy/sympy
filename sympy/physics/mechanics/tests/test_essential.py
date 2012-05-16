@@ -230,4 +230,3 @@ def test_Vector_diffs():
     assert v4.diff(q1d, B) == 0
     assert v4.diff(q2d, B) == A.x - q3 * cos(q3) * N.z
     assert v4.diff(q3d, B) == B.x + q3 * N.x + N.y
-

@@ -84,7 +84,8 @@ def solve_poly_inequality(poly, rel):
 
         right, right_open = S.Infinity, True
 
-        for left, multiplicity in reversed(reals):
+        reals.sort(key=lambda w: w[0], reverse=True)
+        for left, multiplicity in reals:
             if multiplicity % 2:
                 if sign == eq_sign:
                     intervals.insert(0, Interval(left, right, not equal, right_open))
@@ -423,4 +424,3 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
         abs_reduced.append(reduce_abs_inequalities(exprs, gen, assume))
 
     return And(*(poly_reduced + abs_reduced))
-

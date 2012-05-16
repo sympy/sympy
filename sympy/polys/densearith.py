@@ -1958,4 +1958,3 @@ def dmp_expand(polys, u, K):
         f = dmp_mul(f, g, u, K)
 
     return f
-

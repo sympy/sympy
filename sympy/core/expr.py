@@ -1,4 +1,5 @@
 from core import C
+from sympify import sympify
 from basic import Basic, Atom
 from singleton import S
 from evalf import EvalfMixin, pure_complex
@@ -535,7 +536,7 @@ class Expr(Basic, EvalfMixin):
         elif constant is True:
             ndiff = diff._random()
             if ndiff:
-               return False
+                return False
 
         # diff has not simplified to zero; constant is either None, True
         # or the number with significance (prec != 1) that was randomly
@@ -633,6 +634,8 @@ class Expr(Basic, EvalfMixin):
     def _eval_conjugate(self):
         if self.is_real:
             return self
+        elif self.is_imaginary:
+            return -self
 
     def conjugate(self):
         from sympy.functions.elementary.complexes import conjugate as c
@@ -1490,20 +1493,18 @@ class Expr(Basic, EvalfMixin):
         """
         This method is deprecated. Use .as_coeff_mul() instead.
         """
-        import warnings
         from sympy.utilities.exceptions import SymPyDeprecationWarning
-        warnings.warn(SymPyDeprecationWarning(feature="as_coeff_terms()",
-                                              useinstead="as_coeff_mul()"))
+        SymPyDeprecationWarning(feature="as_coeff_terms()",
+                                useinstead="as_coeff_mul()").warn()
         return self.as_coeff_mul(*deps)
 
     def as_coeff_factors(self, *deps):
         """
         This method is deprecated.  Use .as_coeff_add() instead.
         """
-        import warnings
         from sympy.utilities.exceptions import SymPyDeprecationWarning
-        warnings.warn(SymPyDeprecationWarning(feature="as_coeff_factors()",
-                                              useinstead="as_coeff_add()"))
+        SymPyDeprecationWarning(feature="as_coeff_factors()",
+                                useinstead="as_coeff_add()").warn()
         return self.as_coeff_add(*deps)
 
     def as_coeff_mul(self, *deps):
@@ -1976,7 +1977,11 @@ class Expr(Basic, EvalfMixin):
                     piimult += coeff
                     continue
             extras += [exp]
-        coeff, tail = piimult.as_coeff_add()
+        if not piimult.free_symbols:
+            coeff = piimult
+            tail = ()
+        else:
+            coeff, tail = piimult.as_coeff_add(*piimult.free_symbols)
         # round down to nearest multiple of 2
         branchfact = ceiling(coeff/2 - S(1)/2)*2
         n += branchfact/2
@@ -2843,7 +2848,5 @@ from add import Add
 from power import Pow
 from function import Derivative, expand_mul
 from mod import Mod
-from sympify import sympify
-from symbol import Wild
 from exprtools import factor_terms
 from numbers import Integer, Rational

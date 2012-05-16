@@ -91,4 +91,3 @@ def test_div():
     assert x/h == h/x == 'high'
     assert l/x != 'low'
     assert x/l != 'low'
-

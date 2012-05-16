@@ -14,6 +14,8 @@ from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from entity import GeometryEntity
 from sympy.matrices.matrices import Matrix
+from sympy.core.numbers import Float
+from sympy.simplify.simplify import nsimplify
 
 class Point(GeometryEntity):
     """A point in a 2-dimensional Euclidean space.
@@ -61,6 +63,14 @@ class Point(GeometryEntity):
     >>> Point(0, x)
     Point(0, x)
 
+    Floats are automatically converted to Rational unless the
+    evaluate flag is False:
+
+    >>> Point(0.5, 0.25)
+    Point(1/2, 1/4)
+    >>> Point(0.5, 0.25, evaluate=False)
+    Point(0.5, 0.25)
+
     """
 
     def __new__(cls, *args, **kwargs):
@@ -73,6 +83,8 @@ class Point(GeometryEntity):
 
         if len(coords) != 2:
             raise NotImplementedError("Only two dimensional points currently supported")
+        if kwargs.get('evaluate', True):
+            coords = [nsimplify(c) for c in coords]
 
         return GeometryEntity.__new__(cls, *coords)
 
@@ -191,7 +203,6 @@ class Point(GeometryEntity):
         False
 
         """
-
         if len(points) == 0:
             return False
         if len(points) <= 2:
@@ -205,12 +216,15 @@ class Point(GeometryEntity):
         p2 = points[1]
         v1 = p2 - p1
         x1, y1 = v1.args
+        rv = True
         for p3 in points[2:]:
             x2, y2 = (p3 - p1).args
-            test = simplify(x1*y2 - y1*x2)
-            if test != 0:
+            test = simplify(x1*y2 - y1*x2).equals(0)
+            if test is False:
                 return False
-        return True
+            if rv and not test:
+                  rv = test
+        return rv
 
     def is_concyclic(*points):
         """Is a sequence of points concyclic?
@@ -390,9 +404,10 @@ class Point(GeometryEntity):
 
         """
         if prec is None:
-            return Point(*[x.evalf(**options) for x in self.args])
+            coords = [x.evalf(**options) for x in self.args]
         else:
-            return Point(*[x.evalf(prec, **options) for x in self.args])
+            coords = [x.evalf(prec, **options) for x in self.args]
+        return Point(*coords, **dict(evaluate=False))
 
     n = evalf
 

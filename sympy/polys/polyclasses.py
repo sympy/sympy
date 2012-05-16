@@ -1,6 +1,6 @@
 """OO layer for several polynomial representations. """
 
-from sympy.core.basic import PicklableWithSlots
+from sympy.polys.polyutils import PicklableWithSlots
 
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
@@ -631,7 +631,7 @@ class DMP(PicklableWithSlots):
         lev, dom, per, F, G = f.unify(g)
 
         if include:
-                    F, G = dmp_cancel(F, G, lev, dom, include=True)
+            F, G = dmp_cancel(F, G, lev, dom, include=True)
         else:
             cF, cG, F, G = dmp_cancel(F, G, lev, dom, include=False)
 

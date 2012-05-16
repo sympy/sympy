@@ -421,6 +421,7 @@ def test_inverse_mellin_transform():
     assert IMT(pi/cos(pi*s), s, x, (0, S(1)/2)) == sqrt(x)/(x + 1)
 
 def test_laplace_transform():
+    from sympy import (fresnels, fresnelc, hyper)
     LT = laplace_transform
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
@@ -474,6 +475,14 @@ def test_laplace_transform():
         ((s - 1)/(s**2 - 2*s + 2), -oo),
         ((s - 1)/((s - 1)**2 + 1), -oo),
         ]
+
+    # Fresnel functions
+    assert laplace_transform(fresnels(t), t, s) == \
+           ((2*sin(s**2/(2*pi))*fresnels(s/pi) - sin(s**2/(2*pi)) + 2*cos(s**2/(2*pi))*fresnelc(s/pi) \
+             - cos(s**2/(2*pi)))/(2*s)*(-1), 0, True)
+    assert laplace_transform(fresnelc(t), t, s) == \
+           ((-2*sin(s**2/(2*pi))*fresnelc(s/pi) + sin(s**2/(2*pi)) + 2*cos(s**2/(2*pi))*fresnels(s/pi) \
+             - cos(s**2/(2*pi)))/(2*s)*(-1), 0, True)
 
 def test_inverse_laplace_transform():
     from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,
@@ -596,7 +605,7 @@ def test_sine_transform():
     assert inverse_sine_transform(sqrt(2)*w*exp(-w**2/(4*a))/(4*a**(S(3)/2)), w, t) == t*exp(-a*t**2)
 
 def test_cosine_transform():
-    from sympy import sinh, cosh
+    from sympy import sinh, cosh, Si, Ci
 
     t = symbols("t")
     w = symbols("w")
@@ -620,7 +629,7 @@ def test_cosine_transform():
 
     assert cosine_transform(exp(-a*sqrt(t))*cos(a*sqrt(t)), t, w) == a*(-sinh(a**2/(2*w)) + cosh(a**2/(2*w)))/(2*w**(S(3)/2))
 
-    assert cosine_transform(1/(a+t), t, w) == sqrt(2)*meijerg(((S(1)/2, 0), ()), ((S(1)/2, 0, 0), (S(1)/2,)), a**2*w**2/4)/(2*pi)
+    assert cosine_transform(1/(a+t), t, w) == -sqrt(2)*((2*Si(a*w) - pi)*sin(a*w) + 2*cos(a*w)*Ci(a*w))/(2*sqrt(pi))
     assert inverse_cosine_transform(sqrt(2)*meijerg(((S(1)/2, 0), ()), ((S(1)/2, 0, 0), (S(1)/2,)), a**2*w**2/4)/(2*pi), w, t) == 1/(a + t)
 
     assert cosine_transform(1/sqrt(a**2+t**2), t, w) == sqrt(2)*meijerg(((S(1)/2,), ()), ((0, 0), (S(1)/2,)), a**2*w**2/4)/(2*sqrt(pi))

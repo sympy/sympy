@@ -270,8 +270,11 @@ def test_imps():
     my_f = implemented_function(func, lambda x: 2*x)
     assert hasattr(func, '_imp_')
     # Error for functions with same name and different implementation
-    f2 = implemented_function("f", lambda x : x+101)
+    f2 = implemented_function("f", lambda x: x + 101)
     raises(ValueError, 'lambdify(x, f(f2(x)))')
+
+def test_imps_wrong_args():
+    raises(ValueError, 'implemented_function(sin, lambda x:x)')
 
 def test_lambdify_imps():
     # Test lambdify with implemented functions
@@ -281,7 +284,7 @@ def test_lambdify_imps():
     assert lambdify(x, 1 + f(x))(0) == 2
     assert lambdify((x, y), y + f(x))(0, 1) == 2
     # make an implemented function and test
-    f = implemented_function("f", lambda x : x+100)
+    f = implemented_function("f", lambda x: x + 100)
     assert lambdify(x, f(x))(0) == 100
     assert lambdify(x, 1 + f(x))(0) == 101
     assert lambdify((x, y), y + f(x))(0, 1) == 101
@@ -299,7 +302,7 @@ def test_lambdify_imps():
     lam = lambdify(x, {x: f(x)})
     assert lam(3) == {3: 103}
     # Check that imp preferred to other namespaces by default
-    d = {'f': lambda x : x + 99}
+    d = {'f': lambda x: x + 99}
     lam = lambdify(x, f(x), d)
     assert lam(3) == 103
     # Unless flag passed

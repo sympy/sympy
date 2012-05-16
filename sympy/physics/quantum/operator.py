@@ -299,6 +299,7 @@ class OuterProduct(Operator):
 
     .. [1] http://en.wikipedia.org/wiki/Outer_product
     """
+    is_commutative = False
 
     def __new__(cls, *args, **old_assumptions):
         from sympy.physics.quantum.state import KetBase, BraBase
@@ -314,7 +315,7 @@ class OuterProduct(Operator):
                 (ket.__class__, bra.__class__)
             )
         # TODO: make sure the hilbert spaces of the bra and ket are compatible
-        obj = Expr.__new__(cls, *args, **{'commutative': False})
+        obj = Expr.__new__(cls, *args)
         obj.hilbert_space = ket.hilbert_space
         return obj
 

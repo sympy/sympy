@@ -1,16 +1,13 @@
 from sympy.core import S, C, sympify
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
-from sympy.core.numbers import Rational, Integer
+from sympy.core.numbers import Rational
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import Application, Lambda
 from sympy.core.expr import Expr
-from sympy.core.power import Pow
 from sympy.core.singleton import Singleton
 from sympy.core.rules import Transform
 from sympy.ntheory.residue_ntheory import int_tested
-from sympy.mpmath.libmp import mpf_log
-from math import log10, ceil
 
 class IdentityFunction(Lambda):
     """

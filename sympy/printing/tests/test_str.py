@@ -164,11 +164,11 @@ def test_Mul():
     assert str(-2*x/3)  == '-2*x/3'
 
     class CustomClass1(Expr):
-        pass
+        is_commutative = True
     class CustomClass2(Expr):
-        pass
-    cc1 = CustomClass1(commutative=True)
-    cc2 = CustomClass2(commutative=True)
+        is_commutative = True
+    cc1 = CustomClass1()
+    cc2 = CustomClass2()
     assert str(Rational(2)*cc1) == '2*CustomClass1()'
     assert str(cc1*Rational(2)) == '2*CustomClass1()'
     assert str(cc1*Float("1.5")) == '1.5*CustomClass1()'

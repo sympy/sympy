@@ -71,13 +71,14 @@ class InnerProduct(Expr):
 
     .. [1] http://en.wikipedia.org/wiki/Inner_product
     """
+    is_complex = True
 
-    def __new__(cls, bra, ket, **old_assumptions):
+    def __new__(cls, bra, ket):
         if not isinstance(ket, KetBase):
             raise TypeError('KetBase subclass expected, got: %r' % ket)
         if not isinstance(bra, BraBase):
             raise TypeError('BraBase subclass expected, got: %r' % ket)
-        obj = Expr.__new__(cls, *(bra, ket), **{'commutative':True})
+        obj = Expr.__new__(cls, bra, ket)
         return obj
 
     @property

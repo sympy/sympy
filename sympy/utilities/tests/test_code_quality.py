@@ -39,6 +39,7 @@ message_str_raise = "File contains string exception: %s, line %s"
 message_gen_raise = "File contains generic exception: %s, line %s"
 message_old_raise = "File contains old-style raise statement: %s, line %s, \"%s\""
 message_eof = "File does not end with a newline: %s, line %s"
+message_multi_eof = "File ends with more than 1 newline: %s, line %s"
 
 implicit_test_re = re.compile('^\s*(>>> )?(\.\.\. )?from .* import .*\*')
 str_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise(\s+(\'|\")|\s*(\(\s*)+(\'|\"))')
@@ -76,7 +77,7 @@ def test_files():
       o no lines contains a trailing whitespace
       o no lines end with \r\n
       o no line uses tabs instead of spaces
-      o that the file ends with a newline
+      o that the file ends with a single newline
       o there are no general or string exceptions
       o there are no old style raise statements
     """
@@ -104,16 +105,19 @@ def test_files():
                 assert False, message_gen_raise % (fname, idx+1)
             if (implicit_test_re.search(line) and
                 not filter(lambda ex: ex in fname, import_exclude)):
-                    assert False, message_implicit % (fname, idx+1)
+                assert False, message_implicit % (fname, idx+1)
 
             result = old_raise_re.search(line)
 
             if result is not None:
                 assert False, message_old_raise % (fname, idx+1, result.group(2))
 
-        if line is not None and not line.endswith('\n'):
-            # eof newline check
-            assert False, message_eof % (fname, idx+1)
+        if line is not None:
+            if line == '\n' and idx > 0:
+                assert False, message_multi_eof % (fname, idx+1)
+            elif not line.endswith('\n'):
+                # eof newline check
+                assert False, message_eof % (fname, idx+1)
 
     exclude = set([
         "%(sep)smpmath%(sep)s" % sepd,

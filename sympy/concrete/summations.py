@@ -479,13 +479,15 @@ def eval_sum_symbolic(f, limits):
 def _eval_sum_hyper(f, i, a):
     """ Returns (res, cond). Sums from a to oo. """
     from sympy.functions import hyper
-    from sympy.simplify import hyperexpand, hypersimp, fraction
+    from sympy.simplify import hyperexpand, hypersimp, fraction, simplify
     from sympy.polys.polytools import Poly, factor
 
     if a != 0:
         return _eval_sum_hyper(f.subs(i, i + a), i, 0)
 
     if f.subs(i, 0) == 0:
+        if simplify(f.subs(i, Dummy('i', integer=True, positive=True))) == 0:
+            return S(0), True
         return _eval_sum_hyper(f.subs(i, i + 1), i, 0)
 
     hs = hypersimp(f, i)
@@ -532,7 +534,15 @@ def eval_sum_hyper(f, (i, a, b)):
             if res is not None:
                 return Piecewise(res, (Sum(f, (i, a, b)), True))
         else:
-            return None
+            res1 = _eval_sum_hyper(f, i, a)
+            res2 = _eval_sum_hyper(f, i, b + 1)
+            if res1 is None or res2 is None:
+                return None
+            (res1, cond1), (res2, cond2) = res1, res2
+            cond = And(cond1, cond2)
+            if cond is False:
+                return None
+        return Piecewise((res1 - res2, cond), (Sum(f, (i, a, b)), True))
 
     if a == -oo:
         res1 = _eval_sum_hyper(f.subs(i, -i), i, 1)

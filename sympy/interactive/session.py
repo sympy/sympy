@@ -181,7 +181,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
         if False, printing will initialize for a normal console;
         The default is None, which does what False does.
     argv: list of arguments for IPython
-        See sympy.bin.isympy for options that can be used to intialize IPython.
+        See sympy.bin.isympy for options that can be used to initialize IPython.
 
     See Also
     ========

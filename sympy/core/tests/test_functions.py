@@ -5,6 +5,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError
+from sympy.solvers import solve
 from sympy.utilities.iterables import subsets, variations
 
 f, g, h = symbols('f g h', cls=Function)
@@ -465,8 +466,8 @@ def test_unhandled():
 
 @XFAIL
 def test_issue_1612() :
-   x = Symbol("x")
-   assert Symbol('f')(x) == f(x)
+    x = Symbol("x")
+    assert Symbol('f')(x) == f(x)
 
 def test_nfloat():
     from sympy.core.basic import _aresame
@@ -481,3 +482,7 @@ def test_nfloat():
     assert _aresame(nfloat(x**big, exponent=True),
                            x**Float_big)
     assert _aresame(nfloat(big), Float_big)
+
+    # issues 3243
+    f = S('x*lamda + lamda**3*(x/2 + 1/2) + lamda**2 + 1/4')
+    assert not any(a.free_symbols for a in solve(f.subs(x, -0.139)))

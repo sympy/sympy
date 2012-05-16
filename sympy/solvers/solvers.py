@@ -46,7 +46,6 @@ from sympy.core.compatibility import reduce
 
 from sympy.assumptions import Q, ask
 
-from warnings import warn
 from types import GeneratorType
 from collections import defaultdict
 
@@ -467,7 +466,7 @@ def solve(f, *symbols, **flags):
           >>> solve(x + exp(x)**2, exp(x))
           [-sqrt(-x), sqrt(-x)]
 
-        * To solve for a *symbol* implicitly, use 'implict=True':
+        * To solve for a *symbol* implicitly, use 'implicit=True':
 
             >>> solve(x + exp(x), x)
             [-LambertW(1)]
@@ -1742,7 +1741,10 @@ def _generate_patterns():
 
 
 def tsolve(eq, sym):
-    warn(SymPyDeprecationWarning(feature="tsolve()", useinstead="solve()"))
+    SymPyDeprecationWarning(
+    feature="tsolve()",
+    useinstead="solve()"
+    ).warn()
     return _tsolve(eq, sym)
 
 

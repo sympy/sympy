@@ -310,6 +310,3 @@ def block_collapse(expr):
         for i in range(1, expr.exp):
             rv = rv._blockmul(expr.base)
         return rv
-
-
-

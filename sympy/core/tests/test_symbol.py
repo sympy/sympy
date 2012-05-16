@@ -160,10 +160,10 @@ def test_Wild_properties():
 
     given_patterns = [ x, y, p, k, -k, n, -n, sympify(-3), sympify(3), pi, Rational(3,2), I ]
 
-    integerp = lambda k : k.is_integer
-    positivep = lambda k : k.is_positive
-    symbolp = lambda k : k.is_Symbol
-    realp = lambda k : k.is_real
+    integerp = lambda k: k.is_integer
+    positivep = lambda k: k.is_positive
+    symbolp = lambda k: k.is_Symbol
+    realp = lambda k: k.is_real
 
     S = Wild("S", properties=[symbolp])
     R = Wild("R", properties=[realp])
@@ -203,13 +203,11 @@ def test_symbols_each_char():
     z = Symbol('z')
 
     # First, test the warning
-    warnings.filterwarnings("error", "The each_char option to symbols\(\) and var\(\) is "
-        "deprecated.  Separate symbol names by spaces or commas instead.")
+    warnings.filterwarnings("error")
     raises(SymPyDeprecationWarning, "symbols('xyz', each_char=True)")
     raises(SymPyDeprecationWarning, "symbols('xyz', each_char=False)")
     # now test the actual output
-    warnings.filterwarnings("ignore",  "The each_char option to symbols\(\) and var\(\) is "
-        "deprecated.  Separate symbol names by spaces or commas instead.")
+    warnings.filterwarnings("ignore")
     assert symbols(['wx', 'yz'], each_char=True) == [(w, x), (y, z)]
     assert all(w.is_Function for w in flatten(symbols(['wx', 'yz'], each_char=True, cls=Function)))
     assert symbols('xyz', each_char=True) == (x, y, z)
@@ -321,3 +319,4 @@ def test_symbols():
 def test_call():
     f = Symbol('f')
     assert f(2)
+    raises(TypeError, "Wild('x')(1)")

@@ -7,7 +7,7 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
     Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict,
     euler, groebner, catalan, Product, KroneckerDelta, Ei, expint, Shi, Chi, Si,
-    Ci, Segment, Ray)
+    Ci, Segment, Ray, FiniteSet)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -2392,8 +2392,8 @@ def test_any_object_in_sequence():
     assert upretty(expr) == u"[Basic(Basic()), Basic()]"
 
     expr = set([b2, b1])
-    assert pretty(expr) == "set(Basic(), Basic(Basic()))"
-    assert upretty(expr) == u"set(Basic(), Basic(Basic()))"
+    assert pretty(expr) == "set([Basic(), Basic(Basic())])"
+    assert upretty(expr) == u"set([Basic(), Basic(Basic())])"
 
     expr = {b2:b1, b1:b2}
     expr2 = Dict({b2:b1, b1:b2})
@@ -2401,6 +2401,25 @@ def test_any_object_in_sequence():
     assert pretty(expr2) == "{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
     assert upretty(expr) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
     assert upretty(expr2) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
+
+def test_pretty_sets():
+    s = FiniteSet
+    assert pretty(s([x*y, x**2])) == \
+"""\
+  2      \n\
+{x , x*y}\
+"""
+    assert pretty(s(range(1, 6))) == "{1, 2, 3, 4, 5}"
+    assert pretty(s(range(1, 13))) == "{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
+    for s in (frozenset, set):
+        assert pretty(s([x*y, x**2])) == \
+"""\
+%s   2       \n\
+%s([x , x*y])\
+""" % (" " * len(s.__name__), s.__name__)
+        assert pretty(s(range(1, 6))) == "%s([1, 2, 3, 4, 5])" % s.__name__
+        assert pretty(s(range(1, 13))) == \
+            "%s([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])" % s.__name__
 
 def test_pretty_limits():
     expr = Limit(x, x, oo)
@@ -3608,7 +3627,7 @@ def test_pretty_geometry():
     e = Segment((0, 1), (0, 2))
     assert pretty(e) == 'Segment(Point(0, 1), Point(0, 2))'
     e = Ray((1, 1), angle=4.2*pi)
-    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(0.2*pi) + 1))'
+    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(pi/5) + 1))'
 
 def test_expint():
     expr = Ei(x)
@@ -3646,3 +3665,7 @@ def test_RandomDomain():
 def test_issue_3186():
     assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
     assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
+
+def test_complicated_symbol_unchanged():
+    for symb_name in ["dexpr2_d1tau", "dexpr2^d1tau"]:
+        assert pretty(Symbol(symb_name)) == symb_name

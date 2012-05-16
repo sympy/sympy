@@ -80,6 +80,7 @@ modules = [
     'sympy.printing',
     'sympy.printing.pretty',
     'sympy.series',
+    'sympy.sets',
     'sympy.simplify',
     'sympy.solvers',
     'sympy.statistics',

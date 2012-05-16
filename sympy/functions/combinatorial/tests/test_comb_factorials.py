@@ -120,6 +120,7 @@ def test_binomial():
     assert binomial(n, u) == 0
     assert binomial(n, v).func == binomial
     assert binomial(n, k).func == binomial
+    assert binomial(n, n + v) == 0
 
 def test_binomial_diff():
     n = Symbol('n', integer=True)

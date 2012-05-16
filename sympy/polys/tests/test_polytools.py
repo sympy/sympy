@@ -292,7 +292,7 @@ def test_Poly__new__():
     assert Poly(x**2 + x + 1.0).get_domain() == RR
 
 def test_Poly__args():
-    assert Poly(x**2 + 1).args == [x**2 + 1]
+    assert Poly(x**2 + 1).args == (x**2 + 1,)
 
 def test_Poly__gens():
     assert Poly((x-p)*(x-q), x).gens == (x,)
