@@ -16,7 +16,7 @@ from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.printing import sstr
 from sympy.functions.elementary.trigonometric import cos, sin
 
-from sympy.core.compatibility import callable, reduce
+from sympy.core.compatibility import iterable, callable, reduce
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.decorators import call_highest_priority
 
@@ -3855,7 +3855,10 @@ def force_mutable(x):
     Safely turn a Matrix object into a Mutable Matrix
     """
     if not isinstance(x, Basic):
-        return x
+        if hasattr(x, '__array__') or not iterable(x):
+            return x
+        else:
+            return msympify(x)
     if not x.is_Matrix:
         return x
     if x.is_MatrixExpr:
@@ -4962,6 +4965,28 @@ def rot_axis1(theta):
            (0,ct,st),
            (0,-st,ct))
     return MutableMatrix(mat)
+
+def msympify(a, **kwargs):
+    """Sympify and transform iterables to matrices.
+
+    >>> from sympy import msympify, Matrix
+    >>> from sympy.abc import x, y
+    >>> msympify([x,y])
+    [x]
+    [y]
+    >>> msympify([[x],[y]])
+    [x]
+    [y]
+    >>> msympify([[x,y],])
+    [x, y]
+
+    """
+    if isinstance(a, MatrixBase):
+        return a
+    elif iterable(a):
+        return MutableMatrix([sympify(i, **kwargs) for i in a])
+    else:
+        return sympify(a, **kwargs)
 
 Matrix = MutableMatrix
 Matrix.__name__ = "Matrix"

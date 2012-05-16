@@ -6,7 +6,8 @@ matrix, etc.
 from matrices import (SparseMatrix, zeros, ones, eye, diag,
      hessian, randMatrix, GramSchmidt, wronskian, casoratian,
      list2numpy, matrix2numpy, DeferredVector, symarray, ShapeError,
-     NonSquareMatrixError, rot_axis1, rot_axis2, rot_axis3)
+     NonSquareMatrixError, rot_axis1, rot_axis2, rot_axis3,
+     msympify)
 
 from matrices import MutableMatrix as Matrix
 
