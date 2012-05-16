@@ -1,12 +1,12 @@
-from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
-    collect, Function, powsimp, separate, sin, exp, Rational, fraction,
-    simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate,
-    sinh, cosh, tanh, coth,
-    solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
-    S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
-    separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float, radsimp, collect_const, hyper,
-    signsimp, besselsimp, ratsimpmodprime)
+from sympy import (
+    Add, Derivative, E, Eq, Float, Function, GoldenRatio, I, Integer,
+    Integral, Matrix, Mul, O, Rational, S, Symbol, Wild, acos, atan,
+    besselsimp, binomial, collect, collect_const, combsimp, cos, cosh,
+    cot, coth, count_ops, diff, erf, exp, expand, factor, factorial,
+    fraction, gamma, hyper, hyper, hypersimp, integrate, log, logcombine,
+    nsimplify, oo, pi, posify, powdenest, powsimp, radsimp, ratsimp,
+    ratsimpmodprime, rcollect, separate, separatevars, signsimp, simplify,
+    sin, sinh, solve, sqrt, symbols, sympify, tan, tanh, trigsimp, Dummy)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
@@ -438,6 +438,10 @@ def test_powsimp():
     assert powsimp(2**(2*x)) == 4**x # powdenest goes the other direction
 
     assert powsimp(exp(p/2)) == exp(p/2)
+
+    # issue 3269
+    eq = Mul(*[sqrt(Dummy(imaginary=True)) for i in range(3)])
+    assert powsimp(eq) == eq and eq.is_Mul
 
 def test_powsimp_polar():
     from sympy import polar_lift, exp_polar

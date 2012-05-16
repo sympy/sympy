@@ -2248,11 +2248,10 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     nonneg=[]
                     neg=[]
                     for bi in bases:
-                        if bi.is_negative is not None: #then we know the sign
-                            if bi.is_negative:
-                                neg.append(bi)
-                            else:
-                                nonneg.append(bi)
+                        if bi.is_negative:
+                            neg.append(bi)
+                        elif bi.is_nonnegative:
+                            nonneg.append(bi)
                         elif bi.is_polar:
                             nonneg.append(bi) # polar can be treated like non-negative
                         else:
