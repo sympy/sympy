@@ -193,7 +193,8 @@ class LinearEntity(GeometryEntity):
         try:
             # Get the intersection (if parallel)
             p = lines[0].intersection(lines[1])
-            if len(p) == 0: return False
+            if len(p) == 0:
+                return False
 
             # Make sure the intersection is on every linear entity
             for line in lines[2:]:
@@ -1056,7 +1057,13 @@ class Line(LinearEntity):
     def contains(self, o):
         """Return True if o is on this Line, or False otherwise."""
         if isinstance(o, Point):
-            return Point.is_collinear(self.p1, self.p2, o)
+            x, y = Dummy(), Dummy()
+            eq = self.equation(x, y)
+            if not eq.has(y):
+                return (solve(eq, x)[0] - o.x).equals(0)
+            if not eq.has(x):
+                return (solve(eq, y)[0] - o.y).equals(0)
+            return (solve(eq.subs(x, o.x), y)[0] - o.y).equals(0)
         elif not isinstance(o, LinearEntity):
             return False
         elif isinstance(o, Line):
