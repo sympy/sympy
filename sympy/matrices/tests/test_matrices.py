@@ -2259,3 +2259,27 @@ def test_anti_symmetric():
     assert m.is_anti_symmetric(simplify=False) is True
     m[0, 0] = 1
     assert m.is_anti_symmetric() is False
+
+def test_interaction_with_iterables():
+    assert Matrix([[1,2],[3,4]])*[1,2] == Matrix([[1,2],[3,4]])*Matrix([1,2])
+    assert Matrix([[1,2],[3,4]])*[[1,2],[3,4]] == Matrix([[1,2],[3,4]])**2
+    assert [[1,2],]*Matrix([[1,2],[3,4]]) == Matrix([[1,2],])*Matrix([[1,2],[3,4]])
+    assert [[1,2],[3,4]]*Matrix([[1,2],[3,4]]) == Matrix([[1,2],[3,4]])**2
+
+    assert Matrix([1,2]) + [1,2] == 2*Matrix([1,2])
+    assert [[1,2],[3,4]] + Matrix([[1,2],[3,4]]) == 2*Matrix([[1,2],[3,4]])
+    assert [[1,2],] + Matrix([[1,2],]) == 2*Matrix([[1,2],])
+    assert [[1,2],] - Matrix([[1,2],]) == 0*Matrix([[1,2],])
+
+
+    # TODO immutable matrix inherits __mul__ and co from MatExpr, so you should
+    # change them there
+    #assert ImmutableMatrix([[1,2],[3,4]])*[1,2] == ImmutableMatrix([[1,2],[3,4]])*ImmutableMatrix([1,2])
+    #assert ImmutableMatrix([[1,2],[3,4]])*[[1,2],[3,4]] == ImmutableMatrix([[1,2],[3,4]])**2
+    #assert [[1,2],]*ImmutableMatrix([[1,2],[3,4]]) == ImmutableMatrix([[1,2],])*ImmutableMatrix([[1,2],[3,4]])
+    #assert [[1,2],[3,4]]*ImmutableMatrix([[1,2],[3,4]]) == ImmutableMatrix([[1,2],[3,4]])**2
+
+    #assert ImmutableMatrix([1,2]) + [1,2] == 2*ImmutableMatrix([1,2])
+    #assert [[1,2],[3,4]] + ImmutableMatrix([[1,2],[3,4]]) == 2*ImmutableMatrix([[1,2],[3,4]])
+    #assert [[1,2],] + ImmutableMatrix([[1,2],]) == 2*ImmutableMatrix([[1,2],])
+    #assert [[1,2],] - ImmutableMatrix([[1,2],]) == 0*ImmutableMatrix([[1,2],])
