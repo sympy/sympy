@@ -14,6 +14,7 @@ from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.str import StrPrinter
 from sympy.utilities import group
+from sympy.core.compatibility import reduce
 
 class Dyadic(object):
     """A Dyadic object.
@@ -1956,20 +1957,12 @@ def dynamicsymbols(names, level=0):
     """
 
     esses = symbols(names, cls=Function)
-    try:
-        esses = [i.__call__(dynamicsymbols._t) for i in list(esses)]
-        ol = esses
-        for i in range(level):
-            ol = []
-            for j, v in enumerate(esses):
-                ol.append(diff(v, dynamicsymbols._t))
-            esses = ol
-        return list(ol)
-    except TypeError:
-        esses = esses.__call__(dynamicsymbols._t)
-        for i in range(level):
-            esses = diff(esses, dynamicsymbols._t)
+    t = dynamicsymbols._t
+    if hasattr(esses, '__iter__'):
+        esses = [reduce(diff, [t]*level, e(t)) for e in esses]
         return esses
+    else:
+        return reduce(diff, [t]*level, esses(t))
 
 dynamicsymbols._t = Symbol('t')
 dynamicsymbols._str = '\''
