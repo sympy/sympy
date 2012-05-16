@@ -858,24 +858,22 @@ def test_powdenest():
     assert powdenest((x**2*y**6)**i) == (x*y**3)**(2*i)
     assert powdenest((x**(2*i/3)*y**(i/2))**(2*i)) == (x**(S(4)/3)*y)**(i**2)
     assert powdenest(sqrt(x**(2*i)*y**(6*i))) == (x*y**3)**i
-    # issue 2706
-    assert powdenest(((gamma(x)*hyper((),(),x))*pi)**2) == (pi*gamma(x)*hyper((), (), x))**2
 
     assert powdenest(4**x) == 2**(2*x)
     assert powdenest((4**x)**y) == 2**(2*x*y)
     assert powdenest(4**x*y) == 2**(2*x)*y
 
 def test_powdenest_polar():
-    from sympy import powdenest
     x, y, z = symbols('x y z', polar=True)
     a, b, c = symbols('a b c')
     assert powdenest((x*y*z)**a) == x**a*y**a*z**a
     assert powdenest((x**a*y**b)**c) == x**(a*c)*y**(b*c)
     assert powdenest(((x**a)**b*y**c)**c) == x**(a*b*c)*y**(c**2)
 
-@XFAIL
 def test_issue_2706():
-    assert (((gamma(x)*hyper((),(),x))*pi)**2).is_positive is None
+    arg = ((gamma(x)*hyper((),(),x))*pi)**2
+    assert powdenest(arg) == (pi*gamma(x)*hyper((), (), x))**2
+    assert arg.is_positive is None
 
 def test_issue_1095():
     # simplify should call cancel
