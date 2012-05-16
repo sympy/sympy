@@ -845,6 +845,8 @@ class LinearEntity(GeometryEntity):
         return _norm(*self.coefficients) == _norm(*other.coefficients)
 
     def __contains__(self, other):
+        """Return a definitive answer or else raise an error if it cannot
+        be determined that other is on the boundaries of self."""
         result = self.contains(other)
 
         if result is not None:
@@ -853,7 +855,10 @@ class LinearEntity(GeometryEntity):
             raise Undecidable("can't decide whether '%s' contains '%s'" % (self, other))
 
     def contains(self, other):
-        """Subclasses should implement this method."""
+        """Subclasses should implement this method and should return
+            True if other is on the boundaries of self;
+            False if not on the boundaries of self;
+            None if a determination cannot be made."""
         raise NotImplementedError()
 
     def __eq__(self, other):
