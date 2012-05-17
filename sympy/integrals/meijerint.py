@@ -1749,6 +1749,7 @@ def _meijerint_definite_3(f, x):
 def _my_unpolarify(f):
     from sympy import unpolarify
     return _eval_cond(unpolarify(f))
+
 @timeit
 def _meijerint_definite_4(f, x, only_double=False):
     """

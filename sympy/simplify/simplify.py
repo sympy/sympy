@@ -1577,26 +1577,31 @@ def _unpolarify(eq, exponents_only, pause=False):
     if isinstance(eq, bool) or eq.is_Atom:
         return eq
 
+    if not pause:
+        if eq.func is exp_polar:
+            return exp(_unpolarify(eq.exp, exponents_only))
+        if eq.func is principal_branch and eq.args[1] == 2*pi:
+            return _unpolarify(eq.args[0], exponents_only)
+        if (
+            eq.is_Add or eq.is_Mul or eq.is_Boolean or
+            eq.is_Relational and (
+                eq.rel_op in ('==', '!=') and 0 in eq.args or
+                eq.rel_op not in ('==', '!='))
+            ):
+            return eq.func(*[_unpolarify(x, exponents_only) for x in eq.args])
+        if eq.func is polar_lift:
+            return _unpolarify(eq.args[0], exponents_only)
+
     if eq.is_Pow:
         expo = _unpolarify(eq.exp, exponents_only)
-        base = _unpolarify(eq.base, exponents_only, not (expo.is_integer and not pause))
+        base = _unpolarify(eq.base, exponents_only,
+            not (expo.is_integer and not pause))
         return base**expo
 
-    if eq.func is exp_polar and not pause:
-        return exp(_unpolarify(eq.exp, exponents_only))
     if eq.is_Function and getattr(eq.func, 'unbranched', False):
-        return eq.func(*[_unpolarify(x, exponents_only, exponents_only) for x in eq.args])
-    if eq.func is principal_branch and eq.args[1] == 2*pi and not pause:
-        return _unpolarify(eq.args[0], exponents_only)
+        return eq.func(*[_unpolarify(x, exponents_only, exponents_only)
+            for x in eq.args])
 
-    if (eq.is_Add or eq.is_Mul or eq.is_Boolean or \
-        (eq.is_Relational and eq.rel_op in ('==', '!=') \
-         and (eq.lhs == 0 or eq.rhs == 0)) or \
-        (eq.is_Relational and not eq.rel_op in ('==', '!='))) \
-       and not pause:
-        return eq.func(*[_unpolarify(x, exponents_only) for x in eq.args])
-    if eq.func is polar_lift and not pause:
-        return _unpolarify(eq.args[0], exponents_only)
     return eq.func(*[_unpolarify(x, exponents_only, True) for x in eq.args])
 
 def unpolarify(eq, subs={}, exponents_only=False):
@@ -1605,7 +1610,7 @@ def unpolarify(eq, subs={}, exponents_only=False):
     the complex line, return a simplified version eq' of `eq` such that
     p(eq') == p(eq).
     Also apply the substitution subs in the end. (This is a convenience, since
-    ``unpolarify`` in a certain sense undoes polarify.)
+    ``unpolarify``, in a certain sense, undoes polarify.)
 
     >>> from sympy import unpolarify, polar_lift, sin, I
     >>> unpolarify(polar_lift(I + 2))
