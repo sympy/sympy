@@ -2275,16 +2275,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 c_powers[new_base].append(e)
 
             # break out the powers from c_powers now
-            c_part = []
-            if combine == 'all':
-                #...joining the exponents
-                for b, e in c_powers.iteritems():
-                    c_part.append(Pow(b, Add(*e)))
-            else:
-                #...joining nothing
-                for b, e in c_powers.iteritems():
-                    for ei in e:
-                        c_part.append(Pow(b, ei))
+            c_part = [Pow(b, ei) for b, e in c_powers.iteritems() for ei in e]
 
             # we're done
             return Mul(*(c_part + nc_part))
