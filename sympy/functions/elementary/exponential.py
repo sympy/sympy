@@ -484,8 +484,11 @@ class log(Function):
         if base is not None:
             base = sympify(base)
 
-            if arg.is_positive and arg.is_Integer and \
-               base.is_positive and base.is_Integer:
+            if base.is_Number and base == S.One:
+                return S.ComplexInfinity
+
+            if (arg.is_positive and arg.is_Integer and
+                base.is_positive and base.is_Integer):
                 base = int(base)
                 arg = int(arg)
                 n = multiplicity(base, arg)
