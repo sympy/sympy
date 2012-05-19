@@ -1134,7 +1134,6 @@ class PermutationGroup(Basic):
                         stab_gens.append(schreier_gen)
         return PermutationGroup(list(stab_gens))
 
-
     def schreier_vector(self, alpha):
         """
         Computes the schreier vector for ``alpha``.
@@ -1493,7 +1492,6 @@ def SymmetricGroup(n):
     G._is_transitive = True
     G._order = factorial(n)
     return G
-
 
 def CyclicGroup(n):
     """

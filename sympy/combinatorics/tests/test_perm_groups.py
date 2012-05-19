@@ -235,6 +235,7 @@ def test_direct_product():
     assert H.order() == 32
     assert H.is_abelian == False
 
+
 def test_SymmetricGroup():
     G = SymmetricGroup(5)
     elements = list(G.generate())

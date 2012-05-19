@@ -229,6 +229,8 @@ class Permutation(Basic):
 
     [7] http://en.wikipedia.org/wiki/Lehmer_code
 
+    (7) http://en.wikipedia.org/wiki/Lehmer_code
+
     """
 
     is_Permutation = True
@@ -317,6 +319,13 @@ class Permutation(Basic):
         cyclic_form.sort(key=lambda t: -t[0])
         self._cyclic_form = cyclic_form
         return self.cyclic_form
+
+    @property
+    def reduced_cyclic_form(self):
+        return [a for a in self.cyclic_form if len(a)>1]
+
+
+
 
     @property
     def size(self):
