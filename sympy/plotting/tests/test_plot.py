@@ -1,4 +1,5 @@
-from sympy import plot, pi, sin, cos, Symbol, Integral, summation, sqrt, log, oo
+from sympy import (plot, pi, sin, cos, Symbol, Integral, summation, sqrt, log,
+oo, LambertW, I)
 from tempfile import NamedTemporaryFile
 
 def tmp_file(name=''):
@@ -122,6 +123,20 @@ def plot_and_save(name):
     p[0].only_integers = True
     p[0].steps = True
     p.save(tmp_file('%s_advanced_fin_sum.png' % name))
+
+
+    ###
+    # Test expressions that can not be translated to np and generate complex
+    # results.
+    ###
+
+    # TODO use raises to check that the warnings are correctly raised.
+    plot(sqrt(sqrt(-x))).save(tmp_file())
+    plot(LambertW(x)).save(tmp_file())
+    plot(sqrt(LambertW(x))).save(tmp_file()) # TODO this line raises a warning
+    #in experimental_lambdify because it uses the failback evalf vectorize
+    plot(sin(x)+I*cos(x)).save(tmp_file())
+
 
     ###
     # Test all valid input args for plot()
