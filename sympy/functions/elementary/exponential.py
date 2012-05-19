@@ -484,8 +484,11 @@ class log(Function):
         if base is not None:
             base = sympify(base)
 
-            if base.is_Number and base == S.One:
-                return S.ComplexInfinity
+            if base.is_Number and base == 1:
+                if arg.is_number and arg == 1:
+                    return S.NaN
+                else:
+                    return S.ComplexInfinity
 
             if (arg.is_positive and arg.is_Integer and
                 base.is_positive and base.is_Integer):
