@@ -11,6 +11,7 @@ Contents
    :maxdepth: 2
 
    permutations.txt
+   perm_groups.txt
    prufer.txt
    subsets.txt
    graycode.txt
