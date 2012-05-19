@@ -481,10 +481,15 @@ class log(Function):
     @classmethod
     def eval(cls, arg, base=None):
         from sympy import unpolarify
-        if base is not None:
-            if base == 1:
-                return S.ComplexInfinity
+        arg = sympify(arg)
 
+        if base is not None:
+            base = sympify(base)
+            if base == 1:
+                if arg == 1:
+                    return S.NaN
+                else:
+                    return S.ComplexInfinity
             try:
                 if not (base.is_positive and arg.is_positive):
                     raise ValueError
@@ -496,8 +501,6 @@ class log(Function):
                 return cls(arg)/cls(base)
             else:
                 return cls(arg)
-
-        arg = sympify(arg)
 
         if arg.is_Number:
             if arg is S.Zero:
