@@ -443,6 +443,17 @@ def test_powsimp():
     eq = Mul(*[sqrt(Dummy(imaginary=True)) for i in range(3)])
     assert powsimp(eq) == eq and eq.is_Mul
 
+    # coverage of Mul changing to something else in combine='base' block of Mul
+    # handling
+    i = symbols('i', integer=True)
+    assert -powsimp(((1 + a**i)*(1 - a**i) - 1)*a**i,
+           combine='base', deep=True) == a**(3*i)
+    assert powsimp((x**2 + x*(-x + 1))/x, combine='base', deep=True) == 1
+    assert powsimp(x**2*(x**2 + x*(-x + 1))/x, combine='base', deep=True) == x**2
+    # coverage for combine='all' for Mul at the end of the if-block
+    eq = (x**2 + x*(-x + 1) + x + 2)*(1 + x)/x
+    assert powsimp(eq, combine='all', deep=True) == 2*x + 4 + 2/x
+
 def test_powsimp_polar():
     from sympy import polar_lift, exp_polar
     x, y, z = symbols('x y z')
