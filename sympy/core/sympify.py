@@ -20,7 +20,8 @@ class SympifyError(ValueError):
 
 converter = {} #See sympify docstring.
 
-def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
+def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
+        iter_to_matrix=False):
     """
     Converts an arbitrary expression to a type that can be used inside sympy.
 
@@ -106,6 +107,17 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     [1]
     [2]
 
+    Finally there is the option to sympify all iterables to matrices. As there
+    is tension between the internals of sympy relying much on the assumption
+    that all objects are instances of subclasses of Basic, this may cause
+    problems.
+
+    >>> sympify(['x', 'y']) # Returns a list
+    [x, y]
+    >>> sympify(['x', 'y'], iter_to_matrix=True) # Returns a Matrix instance
+    [x]
+    [y]
+
     """
     try:
         cls = a.__class__
@@ -130,6 +142,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
 
     try:
         return a._sympy_()
+    except SympifyError, e:
+        if iter_to_matrix and e.expr=='Matrix cannot be sympified':
+            return a
+        else:
+            raise e
     except AttributeError:
         pass
 
@@ -144,12 +161,17 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
         raise SympifyError(a)
 
     if iterable(a):
-        try:
-            return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
+        if iter_to_matrix:
+            from sympy.matrices import Matrix
+            return Matrix([sympify(x, locals=locals, convert_xor=convert_xor,
                 rational=rational) for x in a])
-        except TypeError:
-            # Not all iterables are rebuildable with their type.
-            pass
+        else:
+            try:
+                return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
+                    rational=rational) for x in a])
+            except TypeError:
+                # Not all iterables are rebuildable with their type.
+                pass
     if isinstance(a, dict):
         try:
             return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,

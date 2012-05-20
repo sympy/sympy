@@ -6,6 +6,7 @@ from sympy.core.decorators import _sympifyit
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
+from sympy.matrices import Matrix
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 
 from sympy import mpmath
@@ -401,3 +402,10 @@ def test_no_autosimplify_into_Mul():
     s = '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'.replace('x', '_kern')
     ss = S(s)
     assert ss != 1 and ss.simplify() == -1
+
+def test_sympify_iter_to_matrix():
+    assert sympify([x,y], iter_to_matrix=True) == Matrix([x,y])
+    assert sympify([[x],[y]], iter_to_matrix=True) == Matrix([[x],[y]])
+    assert sympify([[x,y],], iter_to_matrix=True) == Matrix([[x,y],])
+
+    assert sympify(Matrix([1,2]), iter_to_matrix=True) == Matrix([1,2])
