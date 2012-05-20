@@ -1542,20 +1542,43 @@ def _meijerint_indefinite_1(f, x):
         r = hyperexpand(r.subs(t, a*x**b))
 
         # now substitute back
-        # Note: we really do want to powers of x to combine.
+        # Note: we really do want the powers of x to combine.
         res += powdenest(fac_*r, polar=True)
 
-    # This multiplies out superfluous powers of x we created, and chops off
-    # constants (e.g. x*(exp(x)/x - 1/x) -> exp(x))
+    def _clean(res):
+        """This multiplies out superfluous powers of x we created, and chops off
+        constants:
+
+            >> _clean(x*(exp(x)/x - 1/x) + 3)
+            exp(x)
+
+        cancel is used before mul_expand since it is possible for an
+        expression to have an additive constant that doesn't become isolated
+        with simple expansion. Such a situation was identified in issue 3270:
+
+
+        >>> from sympy import sqrt, cancel
+        >>> from sympy.abc import x
+        >>> a = sqrt(2*x + 1)
+        >>> bad = (3*x*a**5 + 2*x - a**5 + 1)/a**2
+        >>> bad.expand().as_independent(x)[0]
+        0
+        >>> cancel(bad).expand().as_independent(x)[0]
+        1
+        """
+        from sympy import cancel
+        res= expand_mul(cancel(res), deep=False)
+        return Add._from_args(res.as_coeff_add(x)[1])
+
     res = piecewise_fold(res)
     if res.is_Piecewise:
         nargs = []
         for expr, cond in res.args:
-            expr = _my_unpolarify(Add(*expand_mul(expr).as_coeff_add(x)[1]))
+            expr = _my_unpolarify(_clean(expr))
             nargs += [(expr, cond)]
         res = Piecewise(*nargs)
     else:
-        res = _my_unpolarify(Add(*expand_mul(res).as_coeff_add(x)[1]))
+        res = _my_unpolarify(_clean(res))
     return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
 
 @timeit
@@ -1749,6 +1772,7 @@ def _meijerint_definite_3(f, x):
 def _my_unpolarify(f):
     from sympy import unpolarify
     return _eval_cond(unpolarify(f))
+
 @timeit
 def _meijerint_definite_4(f, x, only_double=False):
     """

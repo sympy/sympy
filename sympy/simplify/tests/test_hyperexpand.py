@@ -83,7 +83,7 @@ def test_polynomial():
 
 def test_hyperexpand_bases():
     assert hyperexpand(hyper([2], [a], z)) == \
-  a + z**(-a + 1)*(-a**2 + 3*a + z*(a - 1) - 2)*exp(z)*lowergamma(a - 1, z) - 1
+        a + z**(-a + 1)*(-a**2 + 3*a + z*(a - 1) - 2)*exp(z)*lowergamma(a - 1, z) - 1
     # TODO [a+1, a-S.Half], [2*a]
     assert hyperexpand(hyper([1, 2], [3], z)) == -2/z - 2*log(-z + 1)/z**2
     assert hyperexpand(hyper([S.Half, 2], [S(3)/2], z)) == \

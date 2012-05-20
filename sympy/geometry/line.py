@@ -193,7 +193,8 @@ class LinearEntity(GeometryEntity):
         try:
             # Get the intersection (if parallel)
             p = lines[0].intersection(lines[1])
-            if len(p) == 0: return False
+            if len(p) == 0:
+                return False
 
             # Make sure the intersection is on every linear entity
             for line in lines[2:]:
@@ -844,6 +845,8 @@ class LinearEntity(GeometryEntity):
         return _norm(*self.coefficients) == _norm(*other.coefficients)
 
     def __contains__(self, other):
+        """Return a definitive answer or else raise an error if it cannot
+        be determined that other is on the boundaries of self."""
         result = self.contains(other)
 
         if result is not None:
@@ -852,7 +855,10 @@ class LinearEntity(GeometryEntity):
             raise Undecidable("can't decide whether '%s' contains '%s'" % (self, other))
 
     def contains(self, other):
-        """Subclasses should implement this method."""
+        """Subclasses should implement this method and should return
+            True if other is on the boundaries of self;
+            False if not on the boundaries of self;
+            None if a determination cannot be made."""
         raise NotImplementedError()
 
     def __eq__(self, other):
@@ -1056,7 +1062,13 @@ class Line(LinearEntity):
     def contains(self, o):
         """Return True if o is on this Line, or False otherwise."""
         if isinstance(o, Point):
-            return Point.is_collinear(self.p1, self.p2, o)
+            x, y = Dummy(), Dummy()
+            eq = self.equation(x, y)
+            if not eq.has(y):
+                return (solve(eq, x)[0] - o.x).equals(0)
+            if not eq.has(x):
+                return (solve(eq, y)[0] - o.y).equals(0)
+            return (solve(eq.subs(x, o.x), y)[0] - o.y).equals(0)
         elif not isinstance(o, LinearEntity):
             return False
         elif isinstance(o, Line):

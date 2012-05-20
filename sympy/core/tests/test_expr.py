@@ -5,7 +5,8 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     Poly, Function, Derivative, Number, pi, NumberSymbol, zoo, Piecewise, Mul,
     Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
     separate, collect, factorial, apart, combsimp, factor, refine, cancel,
-    Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E, exp_polar)
+    Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E, exp_polar,
+    Lambda)
 from sympy.core.function import AppliedUndef
 from sympy.abc import a, b, c, d, e, n, t, u, x, y, z
 from sympy.physics.secondquant import FockState
@@ -504,11 +505,19 @@ def test_as_independent():
            (Integral(x, (x, 1, 2)), x)
 
 def test_call():
-    # Unlike what used to be the case, the following should NOT work.
-    # See issue 1927.
+    # See the long history of this in issues 1927 and 2006.
 
-    raises(TypeError, lambda: sin(x)({ x : 1, sin(x) : 2}))
-    raises(TypeError, lambda: sin(x)(1))
+    # No effect as there are no callables
+    assert sin(x)(1) == sin(x)
+    assert (1+sin(x))(1) == 1+sin(x)
+
+    # Effect in the pressence of callables
+    l = Lambda(x, 2*x)
+    assert (l+x)(y) == 2*y+x
+    assert (x**l)(2) == x**4
+    # TODO UndefinedFunction does not subclass Expr
+    #f = Function('f')
+    #assert (2*f)(x) == 2*f(x)
 
 def test_replace():
     f = log(sin(x)) + tan(sin(x**2))

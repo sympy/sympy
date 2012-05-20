@@ -156,6 +156,9 @@ def test_factor_terms():
     assert factor_terms(eq, fraction=False) == eq
     assert factor_terms(eq, fraction=True) == 1
 
+    assert factor_terms((1/(x**3 + x**2) + 2/x**2)*y) == \
+        y*(2 + 1/(x + 1))/x**2
+
 def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)
     assert e.xreplace({}) == e

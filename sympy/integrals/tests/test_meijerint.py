@@ -518,9 +518,9 @@ def test_expint():
     assert integrate(sin(x)/x, (x, 0, z), meijerg=True) == Si(z)
     assert integrate(sinh(x)/x, (x, 0, z), meijerg=True) == Shi(z)
     assert integrate(exp(-x)/x, x, meijerg=True).expand().rewrite(expint) == \
-           -expint(1, x)
+           I*pi - expint(1, x)
     assert integrate(exp(-x)/x**2, x, meijerg=True).rewrite(expint).expand() \
-           == expint(1, x) - exp(-x)/x
+           == expint(1, x) - exp(-x)/x - I*pi
 
     u = Symbol('u', polar=True)
     assert integrate(cos(u)/u, u, meijerg=True).expand().as_independent(u)[1] \

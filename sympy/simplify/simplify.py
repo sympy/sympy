@@ -1577,26 +1577,31 @@ def _unpolarify(eq, exponents_only, pause=False):
     if isinstance(eq, bool) or eq.is_Atom:
         return eq
 
+    if not pause:
+        if eq.func is exp_polar:
+            return exp(_unpolarify(eq.exp, exponents_only))
+        if eq.func is principal_branch and eq.args[1] == 2*pi:
+            return _unpolarify(eq.args[0], exponents_only)
+        if (
+            eq.is_Add or eq.is_Mul or eq.is_Boolean or
+            eq.is_Relational and (
+                eq.rel_op in ('==', '!=') and 0 in eq.args or
+                eq.rel_op not in ('==', '!='))
+            ):
+            return eq.func(*[_unpolarify(x, exponents_only) for x in eq.args])
+        if eq.func is polar_lift:
+            return _unpolarify(eq.args[0], exponents_only)
+
     if eq.is_Pow:
         expo = _unpolarify(eq.exp, exponents_only)
-        base = _unpolarify(eq.base, exponents_only, not (expo.is_integer and not pause))
+        base = _unpolarify(eq.base, exponents_only,
+            not (expo.is_integer and not pause))
         return base**expo
 
-    if eq.func is exp_polar and not pause:
-        return exp(_unpolarify(eq.exp, exponents_only))
     if eq.is_Function and getattr(eq.func, 'unbranched', False):
-        return eq.func(*[_unpolarify(x, exponents_only, exponents_only) for x in eq.args])
-    if eq.func is principal_branch and eq.args[1] == 2*pi and not pause:
-        return _unpolarify(eq.args[0], exponents_only)
+        return eq.func(*[_unpolarify(x, exponents_only, exponents_only)
+            for x in eq.args])
 
-    if (eq.is_Add or eq.is_Mul or eq.is_Boolean or \
-        (eq.is_Relational and eq.rel_op in ('==', '!=') \
-         and (eq.lhs == 0 or eq.rhs == 0)) or \
-        (eq.is_Relational and not eq.rel_op in ('==', '!='))) \
-       and not pause:
-        return eq.func(*[_unpolarify(x, exponents_only) for x in eq.args])
-    if eq.func is polar_lift and not pause:
-        return _unpolarify(eq.args[0], exponents_only)
     return eq.func(*[_unpolarify(x, exponents_only, True) for x in eq.args])
 
 def unpolarify(eq, subs={}, exponents_only=False):
@@ -1605,7 +1610,7 @@ def unpolarify(eq, subs={}, exponents_only=False):
     the complex line, return a simplified version eq' of `eq` such that
     p(eq') == p(eq).
     Also apply the substitution subs in the end. (This is a convenience, since
-    ``unpolarify`` in a certain sense undoes polarify.)
+    ``unpolarify``, in a certain sense, undoes polarify.)
 
     >>> from sympy import unpolarify, polar_lift, sin, I
     >>> unpolarify(polar_lift(I + 2))
@@ -1848,6 +1853,7 @@ def powdenest(eq, force=False, polar=False):
     new = powsimp(sympify(eq))
     return new.xreplace(Transform(_denest_pow, filter=lambda m: m.is_Pow or m.func is exp))
 
+_y = Dummy('y')
 def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
     reduces expression by combining powers with similar bases and exponents.
@@ -1931,58 +1937,61 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     x*y*sqrt(x*sqrt(y))
 
     """
-    if combine not in ['all', 'exp', 'base']:
+    if combine not in ['all', 'exp', 'base', '_all']:
         raise ValueError("combine must be one of ('all', 'exp', 'base').")
-    y = Dummy('y')
+
+    def recurse(arg, **kwargs):
+        _deep = kwargs.get('deep', deep)
+        _combine = kwargs.get('combine', combine)
+        _force = kwargs.get('force', force)
+        _measure = kwargs.get('measure', measure)
+        return powsimp(arg, _deep, _combine, _force, _measure)
+
     if expr.is_Pow:
         if deep:
-            return powsimp(y*powsimp(expr.base, deep, combine, force, measure
-                                     )**powsimp(
-                                      expr.exp, deep, combine, force, measure
-                                      ), deep, combine, force, measure)/y
-        else:
-            return powsimp(y*expr, deep, combine, force, measure)/y # Trick it into being a Mul
+            expr = expr.func(*[recurse(w) for w in expr.args])
+        if expr.is_Pow:
+            return recurse(expr*_y)/_y
+        return recurse(expr)
     elif (expr.is_Function and not
           expr == exp_polar(1) and not
           expr == exp_polar(0)):
         if (expr.func is exp or expr.func is exp_polar) and deep:
             # Exp should really be like Pow
-            return powsimp(y*expr.func(powsimp(expr.args[0],
-                                               deep, combine, force, measure)
-                                       ), deep, combine, force, measure)/y
+            expr = expr.func(*[recurse(w) for w in expr.args])
+            if expr.func is exp or expr.func is exp_polar:
+                return recurse(expr*_y)/_y
+            return recurse(expr)
         elif (expr.func is exp or expr.func is exp_polar) and not deep:
-            return powsimp(y*expr, deep, combine, force, measure)/y
+            return recurse(expr*_y)/_y
         elif deep:
-            return expr.func(*[powsimp(t, deep, combine, force, measure)
-                               for t in expr.args])
+            return expr.func(*[recurse(t) for t in expr.args])
         else:
             return expr
     elif expr.is_Add:
-        return Add(*[powsimp(t, deep, combine, force) for t in expr.args])
+        return Add(*[recurse(t) for t in expr.args])
 
     elif expr.is_Mul:
-        if combine in ('exp', 'all'):
+        if combine in ('exp', 'all', '_all'):
             # Collect base/exp data, while maintaining order in the
             # non-commutative parts of the product
             if combine == 'all' and deep and any((t.is_Add for t in expr.args)):
                 # Once we get to 'base', there is no more 'exp', so we need to
                 # distribute here.
-                return powsimp(expand_mul(expr, deep=False),
-                               deep, combine, force, measure)
+                return recurse(expand_mul(expr, deep=False), combine='_all')
+            elif combine == '_all':
+                combine = 'all'
             c_powers = defaultdict(list)
             nc_part = []
             newexpr = []
             for term in expr.args:
                 if term.is_Add and deep:
-                    newexpr.append(powsimp(term,
-                                           deep, combine, force, measure))
+                    newexpr.append(recurse(term))
                 else:
                     if term.is_commutative:
                         b, e = term.as_base_exp()
                         if deep:
-                            b, e = [powsimp(i,
-                                            deep, combine, force, measure)
-                                    for i in [b, e]]
+                            b, e = [recurse(i) for i in [b, e]]
                         c_powers[b].append(e)
                     else:
                         # This is the logic that combines exponents for equal,
@@ -2171,44 +2180,38 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 if deep:
                     newexpr = expand_mul(newexpr, deep=False)
                 if newexpr.is_Add:
-                    return powsimp(Mul(*nc_part),
-                        deep, combine='base', force=force, measure=measure)*\
-                    Add(*[powsimp(i,
-                        deep, combine='base', force=force, measure=measure)
-                          for i in newexpr.args])
+                    return recurse(Mul(*nc_part), combine='base')*\
+                    Add(*[recurse(i, combine='base') for i in newexpr.args])
                 else:
-                    return powsimp(Mul(*nc_part),
-                        deep, combine='base', force=force, measure=measure)*\
-                            powsimp(newexpr,
-                        deep, combine='base', force=force, measure=measure)
+                    return recurse(Mul(*nc_part), combine='base')*\
+                    recurse(newexpr, combine='base')
 
-        else:
-            # combine is 'base'
+        else: # combine is 'base' for this Mul
             if deep:
                 expr = expand_mul(expr, deep=False)
-            if expr.is_Add:
-                return Add(*[powsimp(i,
-                                     deep, combine, force, measure)
-                             for i in expr.args])
-            else:
-                # Build c_powers and nc_part.  These must both be lists not
-                # dicts because exp's are not combined.
-                c_powers = []
-                nc_part = []
-                for term in expr.args:
-                    if term.is_commutative:
-                        c_powers.append(list(term.as_base_exp()))
-                    else:
-                        # This is the logic that combines bases that are
-                        # different and non-commutative, but with equal and
-                        # commutative exponents: A**x*B**x == (A*B)**x.
-                        if nc_part:
-                            b1, e1 = nc_part[-1].as_base_exp()
-                            b2, e2 = term.as_base_exp()
-                            if (e1 == e2 and e2.is_commutative):
-                                nc_part[-1] = Pow(Mul(b1, b2), e1)
-                                continue
-                        nc_part.append(term)
+                if not expr.is_Mul:
+                    if not expr.args:
+                        return expr
+                    return expr.func(*[recurse(i) for i in expr.args])
+
+            # Build c_powers and nc_part.  These must both be lists not
+            # dicts because exp's are not combined.
+            c_powers = []
+            nc_part = []
+            for term in expr.args:
+                if term.is_commutative:
+                    c_powers.append(list(term.as_base_exp()))
+                else:
+                    # This is the logic that combines bases that are
+                    # different and non-commutative, but with equal and
+                    # commutative exponents: A**x*B**x == (A*B)**x.
+                    if nc_part:
+                        b1, e1 = nc_part[-1].as_base_exp()
+                        b2, e2 = term.as_base_exp()
+                        if (e1 == e2 and e2.is_commutative):
+                            nc_part[-1] = Pow(Mul(b1, b2), e1)
+                            continue
+                    nc_part.append(term)
 
             # Pull out numerical coefficients from exponent if assumptions allow
             # e.g., 2**(2*x) => 4**x
@@ -2228,7 +2231,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             c_exp = defaultdict(list)
             for b, e in c_powers:
                 if deep:
-                    e = powsimp(e, deep, combine, force, measure)
+                    e = recurse(e)
                 c_exp[e].append(b)
             del c_powers
 
@@ -2248,11 +2251,10 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     nonneg=[]
                     neg=[]
                     for bi in bases:
-                        if bi.is_negative is not None: #then we know the sign
-                            if bi.is_negative:
-                                neg.append(bi)
-                            else:
-                                nonneg.append(bi)
+                        if bi.is_negative:
+                            neg.append(bi)
+                        elif bi.is_nonnegative:
+                            nonneg.append(bi)
                         elif bi.is_polar:
                             nonneg.append(bi) # polar can be treated like non-negative
                         else:
@@ -2276,16 +2278,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 c_powers[new_base].append(e)
 
             # break out the powers from c_powers now
-            c_part = []
-            if combine == 'all':
-                #...joining the exponents
-                for b, e in c_powers.iteritems():
-                    c_part.append(Pow(b, Add(*e)))
-            else:
-                #...joining nothing
-                for b, e in c_powers.iteritems():
-                    for ei in e:
-                        c_part.append(Pow(b, ei))
+            c_part = [Pow(b, ei) for b, e in c_powers.iteritems() for ei in e]
 
             # we're done
             return Mul(*(c_part + nc_part))
