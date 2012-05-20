@@ -158,7 +158,8 @@ def test_log_base():
     assert log(6, 3) == 1 + log(2)/log(3)
     assert log(2**3, 2) == 3
     assert log(3**3, 3) == 3
-
+    assert log(5, 1) == zoo
+    assert log(1, 1) == nan
 
 def test_log_symbolic():
     x, y = symbols('x,y')
