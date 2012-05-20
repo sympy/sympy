@@ -38,8 +38,12 @@ def test_multiplicity():
             assert multiplicity(b, (b**i) * 1000249) == i
     # Should be fast
     assert multiplicity(10, 10**10023) == 10023
-    # Should exit quick
-    assert multiplicity(1, 1) == 1
+    # Should exit quickly
+    assert multiplicity(10**10, 10**10) == 1
+    # Should raise errors for bad input
+    raises(ValueError, 'multiplicity(1, 1)')
+    raises(ValueError, 'multiplicity(1, 2)')
+    raises(ValueError, 'multiplicity(1.3, 2)')
 
 def test_perfect_power():
     assert perfect_power(0) is False
