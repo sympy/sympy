@@ -212,7 +212,7 @@ class Point(Basic):
     """
     def __init__(self, coord_sys, coords):
         super(Point, self).__init__()
-        self.coord_sys = coord_sys
+        self._coord_sys = coord_sys
         self._coords = Matrix(coords)
 
     def coords(self, to_sys=None):
@@ -221,7 +221,7 @@ class Point(Basic):
         If `to_sys` is None it returns the coordinates in the system in
         which the point was defined."""
         if to_sys:
-            return self.coord_sys.coord_transform_to(to_sys, self._coords)
+            return self._coord_sys.coord_transform_to(to_sys, self._coords)
         else:
             return self._coords
 
@@ -266,15 +266,15 @@ class ScalarField(Expr):
     """
     def __init__(self, coord_sys, coords, expr):
         super(ScalarField, self).__init__()
-        self.coord_sys = coord_sys
+        self._coord_sys = coord_sys
         coords, (expr, ) = dummyfy(coords, (expr, ))
-        self.coords = coords
-        self.expr = expr
-        self._args = self.coord_sys, self.coords, self.expr
+        self._coords = coords
+        self._expr = expr
+        self._args = self._coord_sys, self._coords, self._expr
 
     def __call__(self, point):
-        coords = point.coords(self.coord_sys)
-        return self.expr.subs(zip(self.coords, coords))
+        coords = point.coords(self._coord_sys)
+        return self._expr.subs(zip(self._coords, coords))
 
 
 class VectorField(Expr):
@@ -318,19 +318,19 @@ class VectorField(Expr):
     """
     def __init__(self, coord_sys, coords, components):
         super(VectorField, self).__init__()
-        self.coord_sys = coord_sys
+        self._coord_sys = coord_sys
         coords, components = dummyfy(coords, components)
-        self.coords = coords
-        self.components = components
-        self._args = self.coord_sys, self.coords, self.components
+        self._coords = coords
+        self._components = components
+        self._args = self._coord_sys, self._coords, self._components
 
     def __call__(self, scalar_field):
-        scalar_expr = scalar_field(Point(self.coord_sys, self.coords))
-        diff_scalar_expr = (diff(scalar_expr, c) for c in self.coords)
-        projected = sum(e[0]*e[1] for e in zip(diff_scalar_expr, self.components))
+        scalar_expr = scalar_field(Point(self._coord_sys, self._coords))
+        diff_scalar_expr = (diff(scalar_expr, c) for c in self._coords)
+        projected = sum(e[0]*e[1] for e in zip(diff_scalar_expr, self._components))
         # TODO This is the simplest to write, however is it the smartest
         # routine for applying vector field on a scalar field?
-        return ScalarField(self.coord_sys, self.coords, projected)
+        return ScalarField(self._coord_sys, self._coords, projected)
 
 
 def dummyfy(args, exprs):
