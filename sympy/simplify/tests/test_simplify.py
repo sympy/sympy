@@ -288,7 +288,7 @@ def test_simplify_other():
         (2*sqrt(t)))/(2*sqrt(t)) + pi*x*exp(-3*I*pi/4 + I*x**2/(4*t))/\
         (2*sqrt(t)))*exp(-I*x**2/(4*t))/(sqrt(pi)*x) - I*sqrt(pi)*\
         (-erf(x*exp(I*pi/4)/(2*sqrt(t))) + 1)*exp(I*pi/4)/(2*sqrt(t))
-    assert simplify(ans) == -(-1)**(S(1)/4)*I*sqrt(pi)/sqrt(t)
+    assert simplify(ans.normal()) == -(-1)**(S(1)/4)*I*sqrt(pi)/sqrt(t)
 
 def test_simplify_ratio():
     # roots of x**3-3*x+5
@@ -401,10 +401,9 @@ def test_powsimp():
     # This should remain factored, because 'exp' with deep=True is supposed
     # to act like old automatic exponent combining.
     assert powsimp((1 + E*exp(E))*exp(-E), combine='exp', deep=True) == (1 + exp(1 + E))*exp(-E)
-    assert powsimp((1 + E*exp(E))*exp(-E), deep=True) == exp(1) + exp(-E)
-    # This should not change without deep.  Otherwise, simplify() will fail.
-    assert powsimp((1 + E*exp(E))*exp(-E)) == (1 + E*exp(E))*exp(-E)
-    assert powsimp((1 + E*exp(E))*exp(-E), combine='exp') == (1 + E*exp(E))*exp(-E)
+    assert powsimp((1 + E*exp(E))*exp(-E), deep=True) == (1 + exp(1 + E))*exp(-E)
+    assert powsimp((1 + E*exp(E))*exp(-E)) == (1 + exp(1 + E))*exp(-E)
+    assert powsimp((1 + E*exp(E))*exp(-E), combine='exp') == (1 + exp(1 + E))*exp(-E)
     assert powsimp((1 + E*exp(E))*exp(-E), combine='base') == (1 + E*exp(E))*exp(-E)
     x,y = symbols('x,y', nonnegative=True)
     n = Symbol('n', real=True)
@@ -442,17 +441,6 @@ def test_powsimp():
     # issue 3269
     eq = Mul(*[sqrt(Dummy(imaginary=True)) for i in range(3)])
     assert powsimp(eq) == eq and eq.is_Mul
-
-    # coverage of Mul changing to something else in combine='base' block of Mul
-    # handling
-    i = symbols('i', integer=True)
-    assert -powsimp(((1 + a**i)*(1 - a**i) - 1)*a**i,
-           combine='base', deep=True) == a**(3*i)
-    assert powsimp((x**2 + x*(-x + 1))/x, combine='base', deep=True) == 1
-    assert powsimp(x**2*(x**2 + x*(-x + 1))/x, combine='base', deep=True) == x**2
-    # coverage for combine='all' for Mul at the end of the if-block
-    eq = (x**2 + x*(-x + 1) + x + 2)*(1 + x)/x
-    assert powsimp(eq, combine='all', deep=True) == 2*x + 4 + 2/x
 
 def test_powsimp_polar():
     from sympy import polar_lift, exp_polar

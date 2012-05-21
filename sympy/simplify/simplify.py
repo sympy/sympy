@@ -1937,7 +1937,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     x*y*sqrt(x*sqrt(y))
 
     """
-    if combine not in ['all', 'exp', 'base', '_all']:
+    if combine not in ['all', 'exp', 'base']:
         raise ValueError("combine must be one of ('all', 'exp', 'base').")
 
     def recurse(arg, **kwargs):
@@ -1947,63 +1947,39 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         _measure = kwargs.get('measure', measure)
         return powsimp(arg, _deep, _combine, _force, _measure)
 
+    expr = sympify(expr)
+    if not isinstance(expr, Basic) or expr.is_Atom or expr in (exp_polar(0), exp_polar(1)):
+        return expr
+    if deep or expr.is_Add or expr.is_Mul and _y not in expr.args:
+        expr = expr.func(*[recurse(w) for w in expr.args])
     if expr.is_Pow:
-        if deep:
-            expr = expr.func(*[recurse(w) for w in expr.args])
-        if expr.is_Pow:
-            return recurse(expr*_y)/_y
-        return recurse(expr)
-    elif (expr.is_Function and not
-          expr == exp_polar(1) and not
-          expr == exp_polar(0)):
-        if (expr.func is exp or expr.func is exp_polar) and deep:
-            # Exp should really be like Pow
-            expr = expr.func(*[recurse(w) for w in expr.args])
-            if expr.func is exp or expr.func is exp_polar:
-                return recurse(expr*_y)/_y
-            return recurse(expr)
-        elif (expr.func is exp or expr.func is exp_polar) and not deep:
-            return recurse(expr*_y)/_y
-        elif deep:
-            return expr.func(*[recurse(t) for t in expr.args])
-        else:
-            return expr
-    elif expr.is_Add:
-        return Add(*[recurse(t) for t in expr.args])
-
-    elif expr.is_Mul:
-        if combine in ('exp', 'all', '_all'):
+        return recurse(expr*_y, deep=False)/_y
+    elif not expr.is_Mul:
+        return expr
+    else:
+        if combine in ('exp', 'all'):
             # Collect base/exp data, while maintaining order in the
             # non-commutative parts of the product
-            if combine == 'all' and deep and any((t.is_Add for t in expr.args)):
-                # Once we get to 'base', there is no more 'exp', so we need to
-                # distribute here.
-                return recurse(expand_mul(expr, deep=False), combine='_all')
-            elif combine == '_all':
-                combine = 'all'
             c_powers = defaultdict(list)
             nc_part = []
             newexpr = []
             for term in expr.args:
-                if term.is_Add and deep:
-                    newexpr.append(recurse(term))
+                if term.is_commutative:
+                    b, e = term.as_base_exp()
+                    if deep:
+                        b, e = [recurse(i) for i in [b, e]]
+                    c_powers[b].append(e)
                 else:
-                    if term.is_commutative:
-                        b, e = term.as_base_exp()
-                        if deep:
-                            b, e = [recurse(i) for i in [b, e]]
-                        c_powers[b].append(e)
-                    else:
-                        # This is the logic that combines exponents for equal,
-                        # but non-commutative bases: A**x*A**y == A**(x+y).
-                        if nc_part:
-                            b1, e1 = nc_part[-1].as_base_exp()
-                            b2, e2 = term.as_base_exp()
-                            if (b1 == b2 and
-                                e1.is_commutative and e2.is_commutative):
-                                nc_part[-1] = Pow(b1, Add(e1, e2))
-                                continue
-                        nc_part.append(term)
+                    # This is the logic that combines exponents for equal,
+                    # but non-commutative bases: A**x*A**y == A**(x+y).
+                    if nc_part:
+                        b1, e1 = nc_part[-1].as_base_exp()
+                        b2, e2 = term.as_base_exp()
+                        if (b1 == b2 and
+                            e1.is_commutative and e2.is_commutative):
+                            nc_part[-1] = Pow(b1, Add(e1, e2))
+                            continue
+                    nc_part.append(term)
 
             # add up exponents of common bases
             for b, e in c_powers.iteritems():
@@ -2176,23 +2152,10 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if combine == 'exp':
                 return Mul(newexpr, Mul(*nc_part))
             else:
-                # combine is 'all', get stuff ready for 'base'
-                if deep:
-                    newexpr = expand_mul(newexpr, deep=False)
-                if newexpr.is_Add:
-                    return recurse(Mul(*nc_part), combine='base')*\
-                    Add(*[recurse(i, combine='base') for i in newexpr.args])
-                else:
-                    return recurse(Mul(*nc_part), combine='base')*\
+                return recurse(Mul(*nc_part), combine='base')*\
                     recurse(newexpr, combine='base')
 
         else: # combine is 'base' for this Mul
-            if deep:
-                expr = expand_mul(expr, deep=False)
-                if not expr.is_Mul:
-                    if not expr.args:
-                        return expr
-                    return expr.func(*[recurse(i) for i in expr.args])
 
             # Build c_powers and nc_part.  These must both be lists not
             # dicts because exp's are not combined.
@@ -2282,9 +2245,6 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
             # we're done
             return Mul(*(c_part + nc_part))
-
-    else:
-        return expr
 
 def hypersimp(f, k):
     """Given combinatorial term f(k) simplify its consecutive term ratio

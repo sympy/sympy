@@ -936,7 +936,7 @@ class Pow(Expr):
         >>> eq.as_content_primitive()
         (9, 3**(2*x))
         >>> powsimp(Mul(*_))
-        9*9**x
+        9**(x + 1)
 
         >>> eq = (2 + 2*x)**y
         >>> s = separate(eq); s.is_Mul, s
