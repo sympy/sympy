@@ -288,7 +288,7 @@ def test_simplify_other():
         (2*sqrt(t)))/(2*sqrt(t)) + pi*x*exp(-3*I*pi/4 + I*x**2/(4*t))/\
         (2*sqrt(t)))*exp(-I*x**2/(4*t))/(sqrt(pi)*x) - I*sqrt(pi)*\
         (-erf(x*exp(I*pi/4)/(2*sqrt(t))) + 1)*exp(I*pi/4)/(2*sqrt(t))
-    assert simplify(ans.normal()) == -(-1)**(S(1)/4)*I*sqrt(pi)/sqrt(t)
+    assert simplify(ans) == -(-1)**(S(1)/4)*I*sqrt(pi)/sqrt(t)
 
 def test_simplify_ratio():
     # roots of x**3-3*x+5
@@ -441,6 +441,14 @@ def test_powsimp():
     # issue 3269
     eq = Mul(*[sqrt(Dummy(imaginary=True)) for i in range(3)])
     assert powsimp(eq) == eq and eq.is_Mul
+
+def test_issue_3268():
+    z = -5*sqrt(2)/(2*sqrt(2*sqrt(29) + 29)) + sqrt(-sqrt(29)/29 + S(1)/2)
+    assert Mul(*[powsimp(a) for a in Mul.make_args(z.normal())]) == 0
+    assert powsimp(z.normal()) == 0
+    assert simplify(z) == 0
+    assert powsimp(sqrt(2 + sqrt(3))*sqrt(2 - sqrt(3)) + 1) == 2
+    assert powsimp(z) != 0
 
 def test_powsimp_polar():
     from sympy import polar_lift, exp_polar
