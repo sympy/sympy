@@ -222,10 +222,10 @@ def test_trigsimp_groebner():
     assert trigsimp_groebner(ex) == res
     assert trigsimp_groebner(sin(x)/cos(x), hints=[tan]) == tan(x)
 
-    assert trigsimp((-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1), groebner=True) \
-           == 2/cos(x)
     assert trigsimp((-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1),
-                    groebner=True, polynomial=True) == 2/cos(x)
+                    method='groebner') == 2/cos(x)
+    assert trigsimp((-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1),
+                    method='groebner', polynomial=True) == 2/cos(x)
 
     # Test quick=False works
     assert trigsimp_groebner(ex, hints=[2]) == res

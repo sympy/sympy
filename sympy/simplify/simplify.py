@@ -1120,6 +1120,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     from sympy.utilities.misc import debug
     from sympy import symbols
     from sympy.polys import parallel_poly_from_expr, groebner, ZZ
+    from sympy.polys.polyerrors import PolificationFailed
 
     sin, cos, tan = C.sin, C.cos, C.tan
     sinh, cosh, tanh = C.sinh, C.cosh, C.tanh
@@ -1275,7 +1276,10 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     subs = [(myI, S.ImaginaryUnit)]
 
     num, denom = cancel(expr).as_numer_denom()
-    (pnum, pdenom), opt = parallel_poly_from_expr([num, denom])
+    try:
+        (pnum, pdenom), opt = parallel_poly_from_expr([num, denom])
+    except PolificationFailed:
+        return expr
     debug('initial gens:', opt.gens)
     ideal, freegens, gens = analyse_gens(opt.gens, hints)
     debug('ideal:', ideal)
@@ -1283,6 +1287,8 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     debug('free gens:', freegens, " -- len", len(gens))
     # NOTE we force the domain to be ZZ to stop polys from injecting generators
     #      (which is usually a sign of a bug in the way we build the ideal)
+    if not gens:
+        return expr
     G = groebner(ideal, order=order, gens=gens, domain=ZZ)
     debug('groebner basis:', list(G), " -- len", len(G))
 
@@ -1348,8 +1354,14 @@ def trigsimp(expr, **opts):
     trigsimp recursively (this is quite expensive if the
     expression is large)
 
-    groebner:
-    - Call experimental groebner basis algorithm trigsimp_groebner.
+    method:
+    - Determine the method to use. Valid choices are 'matching' (default),
+    'groebner' and 'combined'. If 'matching', simplify the expression
+    recursively by pattern matching. If 'groebner', apply an experimental
+    groebner basis algorithm. In this case further options are forwarded to
+    ``trigsimp_groebner``, please refer to its docstring. If 'combined', first
+    run the groebner basis algorithm with small default parameters, then run
+    the 'matching' algorithm.
 
     Examples
     ========
@@ -1364,28 +1376,49 @@ def trigsimp(expr, **opts):
     >>> trigsimp(log(e), deep=True)
     log(2)
 
+    Using `method="groebner"` (or `"combined"`) can sometimes lead to a lot
+    more simplification:
+
+    >>> e = (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
+    >>> trigsimp(e)
+    (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
+    >>> trigsimp(e, method="groebner")
+    2/cos(x)
+
     """
+    from sympy import tan
     if not expr.has(C.TrigonometricFunction, C.HyperbolicFunction):
         return expr
 
-    groebner = opts.pop('groebner', False)
     recursive = opts.pop('recursive', False)
     deep = opts.pop('deep', False)
+    method = opts.pop('method', 'matching')
 
-    ts = lambda e: _trigsimp(e, deep)
-    if groebner:
-        ts = lambda e: trigsimp_groebner(e, *opts)
+    def groebnersimp(ex, deep, **opts):
+        # TODO implement 'deep'
+        return trigsimp_groebner(ex, **opts)
+
+    trigsimpfunc = {
+        'matching': (lambda x, d: _trigsimp(x, d)),
+        'groebner': (lambda x, d: groebnersimp(x, d, **opts)),
+        'combined': (lambda x, d: _trigsimp(groebnersimp(x,
+                                       d, polynomial=True, hints=[2, tan]),
+                                   d))
+                   }[method]
+
+    if not expr.has(C.TrigonometricFunction) and not expr.has(C.HyperbolicFunction):
+        return expr
 
     if recursive:
         w, g = cse(expr)
-        g = ts(g[0])
+        g = trigsimpfunc(g[0], deep)
 
         for sub in reversed(w):
             g = g.subs(sub[0], sub[1])
-            g = ts(g)
+            g = trigsimpfunc(g, deep)
         result = g
     else:
-        result = ts(expr)
+        result = trigsimpfunc(expr, deep)
 
     return result
 
