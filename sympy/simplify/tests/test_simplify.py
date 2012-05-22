@@ -237,6 +237,17 @@ def test_trigsimp_groebner():
     assert trigsimp_groebner((tanh(x)+tanh(y))/(1+tanh(x)*tanh(y)),
                              hints=[(tanh,x,y)]) == tanh(x + y)
 
+    # test "deep"
+    expr = sin(2*x).expand(trig=True)
+    assert trigsimp(atan(expr), method='groebner', deep=False, hints=[2]) == \
+           atan(expr)
+    assert trigsimp(atan(expr), method='groebner', deep=True, hints=[2]) == \
+           atan(sin(2*x))
+    assert trigsimp(atan(atan(expr)), method='groebner', deep=True, hints=[2]) == \
+           atan(atan(sin(2*x)))
+    assert trigsimp(2**(expr), method='groebner', deep=True, hints=[2]) == \
+           2**sin(2*x)
+
 @XFAIL
 def test_factorial_simplify():
     # There are more tests in test_factorials.py. These are just to

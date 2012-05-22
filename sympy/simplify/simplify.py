@@ -1395,7 +1395,15 @@ def trigsimp(expr, **opts):
     method = opts.pop('method', 'matching')
 
     def groebnersimp(ex, deep, **opts):
-        # TODO implement 'deep'
+        def traverse(e):
+            if e.is_Atom:
+                return e
+            args = [traverse(x) for x in e.args]
+            if e.is_Function or e.is_Pow:
+                args = [trigsimp_groebner(x, **opts) for x in args]
+            return e.func(*args)
+        if deep:
+            ex = traverse(ex)
         return trigsimp_groebner(ex, **opts)
 
     trigsimpfunc = {
