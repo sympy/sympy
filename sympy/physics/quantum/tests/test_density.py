@@ -10,7 +10,23 @@ from sympy.physics.quantum.operator import *
 from sympy.functions import sqrt
 
 def test_eval_args():
-    pass
+    # check if sequence
+    d = Density([Ket(0),0.5],[Ket(1),0.5])
+
+    #TODO: Need to implement Qubit based Density before
+    #this test is done
+    #d = Density([Qubit('01'),0.5], [Qubit('01'),0.5])
+
+    # check for value error
+    #d = Density([Ket(0)],[Ket(1)])
+
+    #check for value error
+    #d = Density(1,1)
+
+    #check for valid state
+    #d = Density([Ket(0),0.5],(Ket(1),0.25),(1,0.25))
+
+
 
 def test_doit():
     pass
@@ -36,3 +52,34 @@ def test_latex():
            r'0.5\end{pmatrix},\begin{pmatrix}{\left|1\right\rangle }, & '
            r'0.5\end{pmatrix}\right)')
     assert latex(d) == result
+
+
+if __name__ == '__main__':
+    #test_latex()
+    #d = Density([Ket(),0.5],[Ket(),0.5])
+    test_eval_args()
+    #print d
+    #pprint(d)
+    #print latex(d)
+    #pprint(d)
+    #k = Ket()
+    #pprint(k)
+    #print k
+
+
+    #o = OuterProduct(Ket(),Bra())
+    #print latex(o)
+
+    #k = Ket('k')
+    #b = Bra('b')
+    #op = OuterProduct(k, b)
+    #print latex(op)
+
+#def test_representDensity():
+#    assert represent(Density([Qubit('01'),1]), nqubits=2) == mat*Dagger(mat)
+
+#def test_apply_operators_density():
+#    assert apply_operators(Density([Qubit('00'),1]).operate_on(HadamardGate(0)\
+#           *HadamardGate(1)))\
+#        == Density([apply_operators(HadamardGate(0)*HadamardGate(1)*Qubit('00')),1])
+

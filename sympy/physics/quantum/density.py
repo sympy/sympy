@@ -3,10 +3,36 @@ from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.operator import HermitianOperator, OuterProduct
 from sympy.physics.quantum.represent import represent
+from sympy.physics.quantum.state import Ket
+from sympy.physics.quantum.qubit import Qubit
 from matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
+
 
 class Density(HermitianOperator):
     """Density operator for representing mixed states."""
+
+    @classmethod
+    def _eval_args(cls, args):
+        print cls
+        print args
+        # call this to qsympify the args
+        args = super(Density, cls)._eval_args(args)
+
+        sum_prob=0.0
+        for arg in args:
+            # Check if arg is a tuple
+            print "Type = " , type(arg[0]), type(arg[1])
+            if not (isinstance(arg, Tuple) and
+                     len(arg) == 2 ):
+                raise ValueError("Each argument should be of form [state,prob]"
+                                 " or ( state, prob )")
+
+            #TODO: need to add isinstance(arg[0], Qubit )) check
+            if not ( isinstance(arg[0], Ket) ):
+                     raise ValueError("State parameters must be of type Ket"
+                                      " or  Qubit, got : %s " % type(arg[0]))
+
+        return args
 
     def states(self):
         return Tuple(*[arg[0] for arg in self.args])
@@ -44,14 +70,14 @@ class Density(HermitianOperator):
 
 def entropy(density):
     """Compute the entropy of a density matrix.
-    
+
     This computes -Tr(density*ln(density)) using the eigenvalue decomposition
     of density, which is given as either a Density instance or a matrix
     (numpy.ndarray, sympy.Matrix or scipy.sparse).
     """
     if isinstance(density, Density):
         density = represent(density, format='numpy')
-        
+
     if isinstance(density, scipy_sparse_matrix):
         density = to_numpy(density)
 
