@@ -27,8 +27,8 @@ g = Function('g')
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
-    raises(ValueError, 'checkodesol(f(x, y).diff(x), Eq(f(x, y), x))')
-    raises(ValueError, 'checkodesol(f(x).diff(x), Eq(f(x, y), x), f(x, y))')
+    raises(ValueError, lambda: checkodesol(f(x, y).diff(x), Eq(f(x, y), x)))
+    raises(ValueError, lambda: checkodesol(f(x).diff(x), Eq(f(x, y), x), f(x, y)))
     assert checkodesol(f(x).diff(x), Eq(f(x, y), x)) == \
         (False, -f(x).diff(x) + f(x, y).diff(x) - 1)
     assert checkodesol(f(x).diff(x), Eq(f(x), x)) is not True
@@ -118,8 +118,8 @@ def test_dsolve_options():
     assert b['1st_homogeneous_coeff_subs_indep_div_dep_Integral'].has(Integral)
     assert b['separable_Integral'].has(Integral)
     assert sorted(c.keys()) == Integral_keys
-    raises(ValueError, "dsolve(eq, hint='notarealhint')")
-    raises(ValueError, "dsolve(eq, hint='Liouville')")
+    raises(ValueError, lambda: dsolve(eq, hint='notarealhint'))
+    raises(ValueError, lambda: dsolve(eq, hint='Liouville'))
     assert dsolve(f(x).diff(x) - 1/f(x)**2, hint='all')['best'] == \
         dsolve(f(x).diff(x) - 1/f(x)**2, hint='best')
     assert dsolve(f(x) + f(x).diff(x) + sin(x).diff(x) + 1, f(x),
@@ -151,7 +151,7 @@ def test_classify_ode():
         ) == ('Bernoulli', 'Bernoulli_Integral')
     assert 'Riccati_special_minus2' in\
         classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2), f(x))
-    raises(ValueError, "classify_ode(x + f(x, y).diff(x).diff(y), f(x, y))")
+    raises(ValueError, lambda: classify_ode(x + f(x, y).diff(x).diff(y), f(x, y)))
     # 2077
     k = Symbol('k')
     assert classify_ode(f(x).diff(x)/(k*f(x) + k*x*f(x)) +
@@ -479,7 +479,7 @@ def test_homogeneous_order():
     assert homogeneous_order(x + O(x**2), x, y) == None
     assert homogeneous_order(x**pi, x) == pi
     assert homogeneous_order(x**x, x) == None
-    raises(ValueError, "homogeneous_order(x*y)")
+    raises(ValueError, lambda: homogeneous_order(x*y))
 
 def test_1st_homogeneous_coeff_ode():
     #skip("These tests pass but take too long.")
@@ -1277,11 +1277,11 @@ def test_1686():
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
 
 def test_1726():
-    raises(ValueError, "dsolve(f(x, y).diff(x) - y*f(x, y), f(x))")
+    raises(ValueError, lambda: dsolve(f(x, y).diff(x) - y*f(x, y), f(x)))
     assert classify_ode(f(x, y).diff(x) - y*f(x, y), f(x), dict=True) == \
     {'default': None, 'order': 0}
     # See also issue 694, test Z13.
-    raises(ValueError, "dsolve(f(x).diff(x), f(y))")
+    raises(ValueError, lambda: dsolve(f(x).diff(x), f(y)))
     assert classify_ode(f(x).diff(x), f(y), dict=True) == \
         {'default': None, 'order': 0}
 

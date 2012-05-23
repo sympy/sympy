@@ -195,8 +195,8 @@ def test_args():
     assert p._array_form == [0, 3, 1, 2]
     assert Permutation([0]) == Permutation((0, ))
     assert Permutation([[0], [1]]) == Permutation(((0, ), (1, ))) == Permutation(((0, ), [1]))
-    raises(ValueError, 'Permutation([[1, 2], [3]])') # 0, 1, 2 should be present
-    raises(ValueError, 'Permutation([1, 2, 3])') # 0, 1, 2 should be present
-    raises(ValueError, 'Permutation(0, 1, 2)') # enclosing brackets needed
-    raises(ValueError, 'Permutation([1, 2], [0])') # enclosing brackets needed
-    raises(ValueError, 'Permutation([[1, 2], 0])') # enclosing brackets needed on 0
+    raises(ValueError, lambda: Permutation([[1, 2], [3]])) # 0, 1, 2 should be present
+    raises(ValueError, lambda: Permutation([1, 2, 3])) # 0, 1, 2 should be present
+    raises(ValueError, lambda: Permutation(0, 1, 2)) # enclosing brackets needed
+    raises(ValueError, lambda: Permutation([1, 2], [0])) # enclosing brackets needed
+    raises(ValueError, lambda: Permutation([[1, 2], 0])) # enclosing brackets needed on 0

@@ -228,8 +228,8 @@ def test_telescopic_sums():
 def test_sum_reconstruct():
     s = Sum(n**2, (n, -1, 1))
     assert s == Sum(*s.args)
-    raises(ValueError, 'Sum(x, x)')
-    raises(ValueError, 'Sum(x, (x, 1))')
+    raises(ValueError, lambda: Sum(x, x))
+    raises(ValueError, lambda: Sum(x, (x, 1)))
 
 def test_Sum_limit_subs():
     assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b, 2)
@@ -259,8 +259,8 @@ def test_Sum_interface():
     assert Sum(0, (n, 0, 2)).doit() == 0
     assert isinstance(Sum(0, (n, 0, oo)), Sum)
     assert Sum(0, (n, 0, oo)).doit() == 0
-    raises(ValueError, "Sum(1)")
-    raises(ValueError, "summation(1)")
+    raises(ValueError, lambda: Sum(1))
+    raises(ValueError, lambda: summation(1))
 
 def test_eval_diff():
     assert Sum(x, (x, 1, 2)).diff(x) == 0

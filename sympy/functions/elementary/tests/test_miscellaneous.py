@@ -72,7 +72,7 @@ def test_Min():
     assert Min(p, p_).func is Min
 
     # lists
-    raises(ValueError, 'Min()')
+    raises(ValueError, lambda: Min())
     assert Min(x, y) == Min(y, x)
     assert Min(x, y, z) == Min(z, y, x)
     assert Min(x, Min(y, z)) == Min(z, y, x)
@@ -86,10 +86,10 @@ def test_Min():
     assert Min(cos(x), sin(x)) == Min(cos(x), sin(x))
     assert Min(cos(x), sin(x)).subs(x, 1) == cos(1)
     assert Min(cos(x), sin(x)).subs(x, S(1)/2) == sin(S(1)/2)
-    raises(ValueError, 'Min(cos(x), sin(x)).subs(x, I)')
-    raises(ValueError, 'Min(I)')
-    raises(ValueError, 'Min(I, x)')
-    raises(ValueError, 'Min(S.ComplexInfinity, x)')
+    raises(ValueError, lambda: Min(cos(x), sin(x)).subs(x, I))
+    raises(ValueError, lambda: Min(I))
+    raises(ValueError, lambda: Min(I, x))
+    raises(ValueError, lambda: Min(S.ComplexInfinity, x))
 
 
 def test_Max():
@@ -107,7 +107,7 @@ def test_Max():
 
     # lists
 
-    raises(ValueError, 'Max()')
+    raises(ValueError, lambda: Max())
     assert Max(x, y) == Max(y, x)
     assert Max(x, y, z) == Max(z, y, x)
     assert Max(x, Max(y, z)) == Max(z, y, x)
@@ -121,10 +121,10 @@ def test_Max():
     assert Max(cos(x), sin(x)) == Max(sin(x), cos(x))
     assert Max(cos(x), sin(x)).subs(x, 1) == sin(1)
     assert Max(cos(x), sin(x)).subs(x, S(1)/2) == cos(S(1)/2)
-    raises(ValueError, 'Max(cos(x), sin(x)).subs(x, I)')
-    raises(ValueError, 'Max(I)')
-    raises(ValueError, 'Max(I, x)')
-    raises(ValueError, 'Max(S.ComplexInfinity, 1)')
+    raises(ValueError, lambda: Max(cos(x), sin(x)).subs(x, I))
+    raises(ValueError, lambda: Max(I))
+    raises(ValueError, lambda: Max(I, x))
+    raises(ValueError, lambda: Max(S.ComplexInfinity, 1))
     # interesting:
     # Max(n, -oo, n_,  p, 2) == Max(p, 2)
     # True

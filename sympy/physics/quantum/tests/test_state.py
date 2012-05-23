@@ -181,7 +181,7 @@ def test_wavefunction():
     assert p(10) == 10000
     assert lims[x] == (-oo, oo)
     assert diff(f, x) == Wavefunction(2*x, x)
-    raises(NotImplementedError, 'f.normalize()')
+    raises(NotImplementedError, lambda: f.normalize())
     assert conjugate(f) == Wavefunction(conjugate(f.expr), x)
     assert conjugate(f) == Dagger(f)
 

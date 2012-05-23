@@ -11,12 +11,23 @@ except ImportError:
     USE_PYTEST = False
 
 if not USE_PYTEST:
-    def raises(ExpectedException, code):
+    def raises(expectedException, code=None):
         """
-        Tests that ``code`` raises the exception ``ExpectedException``.
+        Tests that ``code`` raises the exception ``expectedException``.
 
-        Does nothing if the right exception is raised, otherwise raises an
-        AssertionError.
+        ``code`` may be a callable, such as a lambda expression or function
+        name.
+
+        Alternatively, ``code`` may be a string, which is compiled.
+
+        If ``code`` is not given or None, ``raises`` will return a context
+        manager for use in ``with`` statements; the code to execute then
+        comes from the scope of the ``with``. The calling module must have
+        ``from __future__ import with_statement`` as its first code line
+        for compatibility with Python 2.5 in that case.
+
+        raises does nothing if the callable raises the expected exception,
+        otherwise it raises an AssertionError.
 
         Examples
         ========
@@ -28,16 +39,73 @@ if not USE_PYTEST:
         ...
         AssertionError: DID NOT RAISE
 
+        >>> raises(ZeroDivisionError, lambda: 1/0)
+        >>> raises(ZeroDivisionError, lambda: 1/2)
+        Traceback (most recent call last):
+        ...
+        AssertionError: DID NOT RAISE
+
+        (Python 2.5's doctest cannot support with statements due to a bug in
+        its __import__ handling. That's why the following examples are
+        excluded from doctesting; the doctest: annotations can go once SymPy
+        stops Python 2.5 support.)
+
+        >>> with raises(ZeroDivisionError): # doctest: +SKIP
+        ...     n = 1/0
+        >>> with raises(ZeroDivisionError): # doctest: +SKIP
+        ...     n = 1/2
+        Traceback (most recent call last):
+        ...
+        AssertionError: DID NOT RAISE
+
+        Note that you cannot test multiple statements via
+        ``with raises``:
+        >>> with raises(ZeroDivisionError): # doctest: +SKIP
+        ...     n = 1/0    # will execute and raise, aborting the ``with``
+        ...     n = 9999/0 # never executed
+
+        This is just what ``with`` is supposed to do: abort the
+        contained statement sequence at the first exception and let
+        the context manager deal with the exception.
+
+        To test multiple statements, you'll need a separate ``with``
+        for each:
+        >>> with raises(ZeroDivisionError): # doctest: +SKIP
+        ...     n = 1/0    # will execute and raise, aborting the ``with``
+        ... with raises(ZeroDivisionError):
+        ...     n = 9999/0 # never executed
+
         """
-        if not isinstance(code, str):
-            raise TypeError('raises() expects a code string for the 2nd argument.')
-        frame = sys._getframe(1)
-        loc = frame.f_locals.copy()
-        try:
-            exec code in frame.f_globals, loc
-        except ExpectedException:
-            return
-        raise AssertionError("DID NOT RAISE")
+        if code is None:
+            return RaisesContext(expectedException)
+        elif callable(code):
+            try:
+                code()
+            except expectedException:
+                return
+            raise AssertionError("DID NOT RAISE")
+        elif isinstance(code, str):
+            frame = sys._getframe(1)
+            loc = frame.f_locals.copy()
+            try:
+                exec code in frame.f_globals, loc
+            except expectedException:
+                return
+            raise AssertionError("DID NOT RAISE")
+        else:
+            raise TypeError(
+                'raises() expects a callable or a code string '
+                'for the 2nd argument.')
+
+    class RaisesContext(object):
+        def __init__(self, expectedException):
+            self.expectedException = expectedException
+        def __enter__(self):
+            return None
+        def __exit__(self, exc_type, exc_value, traceback):
+            if exc_type is None:
+                raise AssertionError("DID NOT RAISE")
+            return issubclass(exc_type, self.expectedException)
 
     class XFail(Exception):
         pass

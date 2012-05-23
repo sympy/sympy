@@ -55,8 +55,8 @@ def test_subs():
 
     assert b21.subs({b1: b2, b2: b1}) == Basic(b2, b2)
 
-    raises(ValueError, "b21.subs('bad arg')")
-    raises(ValueError, "b21.subs(b1, b2, b3)")
+    raises(ValueError, lambda: b21.subs('bad arg'))
+    raises(ValueError, lambda: b21.subs(b1, b2, b3))
 
 def test_atoms():
     assert b21.atoms() == set()
@@ -78,8 +78,8 @@ def test_xreplace():
     assert Basic(b1, b2).xreplace({b1: b2, b2: b1}) == Basic(b2, b1)
     assert Atom(b1).xreplace({b1: b2}) == Atom(b1)
     assert Atom(b1).xreplace({Atom(b1): b2}) == b2
-    raises(TypeError, 'b1.xreplace()')
-    raises(TypeError, 'b1.xreplace([b1,b2])')
+    raises(TypeError, lambda: b1.xreplace())
+    raises(TypeError, lambda: b1.xreplace([b1,b2]))
 
 def test_Singleton():
     global instanciated

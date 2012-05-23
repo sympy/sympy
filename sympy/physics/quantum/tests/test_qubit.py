@@ -45,7 +45,7 @@ def test_IntQubit():
     assert IntQubit(3).dual_class() == IntQubitBra
     assert IntQubitBra(3).dual_class() == IntQubit
 
-    raises(ValueError, 'IntQubit(4, 1)')
+    raises(ValueError, lambda: IntQubit(4, 1))
 
 def test_superposition_of_states():
     assert qapply(CNOT(0,1)*HadamardGate(0)*(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10'))).expand() == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 +\
