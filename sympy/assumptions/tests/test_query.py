@@ -1224,7 +1224,7 @@ def test_incompatible_resolutors():
         def Number(expr, assumptions):
             return True
     register_handler('prime', Prime2AskHandler)
-    raises(ValueError, 'ask(Q.prime(4))')
+    raises(ValueError, lambda: ask(Q.prime(4)))
     remove_handler('prime', Prime2AskHandler)
 
     class InconclusiveHandler(AskHandler):
@@ -1237,7 +1237,7 @@ def test_incompatible_resolutors():
 def test_key_extensibility():
     """test that you can add keys to the ask system at runtime"""
     # make sure the key is not defined
-    raises(AttributeError, "ask(Q.my_key(x))")
+    raises(AttributeError, lambda: ask(Q.my_key(x)))
     class MyAskHandler(AskHandler):
         @staticmethod
         def Symbol(expr, assumptions):
@@ -1247,7 +1247,7 @@ def test_key_extensibility():
     assert ask(Q.my_key(x+1)) == None
     remove_handler('my_key', MyAskHandler)
     del Q.my_key
-    raises(AttributeError, "ask(Q.my_key(x))")
+    raises(AttributeError, lambda: ask(Q.my_key(x)))
 
 def test_type_extensibility():
     """test that new types can be added to the ask system at runtime

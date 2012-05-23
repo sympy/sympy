@@ -2720,7 +2720,7 @@ def test_pretty_no_wrap_line():
 
 
 def test_settings():
-    raises(TypeError, 'pretty(S(4), method="garbage")')
+    raises(TypeError, lambda: pretty(S(4), method="garbage"))
 
 @XFAIL
 def test_pretty_sum():

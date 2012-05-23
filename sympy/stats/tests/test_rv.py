@@ -24,7 +24,8 @@ def test_where():
     assert XX.pspace.domain.set == Interval(0, 1)
     assert XX.pspace.domain.as_boolean() == And(0 <= X.symbol, X.symbol**2 <= 1)
 
-    raises(TypeError, "XX = given(X, X+3)")
+    with raises(TypeError):
+        XX = given(X, X+3)
 
 def test_random_symbols():
     X, Y = Normal(0,1), Normal(0,1)
@@ -66,7 +67,7 @@ def test_overlap():
     X = Normal(0, 1, symbol=Symbol('x'))
     Y = Normal(0, 2, symbol=Symbol('x'))
 
-    raises(ValueError, "P(X>Y)")
+    raises(ValueError, lambda: P(X>Y))
 
 def test_ProductPSpace():
     X = Normal(0, 1)
@@ -91,7 +92,7 @@ def test_Sample():
     assert E(X+Y, numsamples=10).is_number
     assert variance(X+Y, numsamples=10).is_number
 
-    raises(ValueError, "P(Y>z, numsamples=5)")
+    raises(ValueError, lambda: P(Y>z, numsamples=5))
 
     assert P(sin(Y)<=1, numsamples=10) == 1
     assert P(sin(Y)<=1, cos(Y)<1, numsamples=10) == 1

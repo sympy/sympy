@@ -35,7 +35,7 @@ def test_apart():
 
     assert apart(Eq((x**2 + 1)/(x + 1), x), x) == Eq(x - 1 + 2/(x + 1), x)
 
-    raises(NotImplementedError, "apart(1/(x + 1)/(y + 2))")
+    raises(NotImplementedError, lambda: apart(1/(x + 1)/(y + 2)))
 
 def test_apart_matrix():
     M = Matrix(2, 2, lambda i, j: 1/(x + i + 1)/(x + j))

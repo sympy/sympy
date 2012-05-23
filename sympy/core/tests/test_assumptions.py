@@ -455,7 +455,8 @@ def test_other_symbol():
     assert x.is_integer == True
     assert x.is_nonpositive == True
 
-    raises(AttributeError, "x.is_real = False")
+    with raises(AttributeError):
+        x.is_real = False
 
 def test_issue726():
     """catch: hash instability"""
@@ -576,4 +577,4 @@ def test_special_assumptions():
 
 def test_inconsistent():
     # cf. issues 2696 and 2446
-    raises(InconsistentAssumptions, "Symbol('x', real=True, commutative=False)")
+    raises(InconsistentAssumptions, lambda: Symbol('x', real=True, commutative=False))

@@ -103,12 +103,12 @@ def test_logic_fromstring():
     assert S('a & b & c')   == And('a','b','c')
     assert S('a | b | c')   == Or ('a','b','c')
 
-    raises(ValueError, "S('| a')")
-    raises(ValueError, "S('& a')")
-    raises(ValueError, "S('a | | b')")
-    raises(ValueError, "S('a | & b')")
-    raises(ValueError, "S('a & & b')")
-    raises(ValueError, "S('a |')")
+    raises(ValueError, lambda: S('| a'))
+    raises(ValueError, lambda: S('& a'))
+    raises(ValueError, lambda: S('a | | b'))
+    raises(ValueError, lambda: S('a | & b'))
+    raises(ValueError, lambda: S('a & & b'))
+    raises(ValueError, lambda: S('a |'))
 
 def test_logic_not():
     assert Not('a') != '!a'

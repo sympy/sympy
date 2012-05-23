@@ -10,8 +10,8 @@ def test_nsolve():
     assert nsolve(sin(x), 2) - pi.evalf() < 1e-15
     assert nsolve(Eq(2*x, 2), x, -10) == nsolve(2*x - 2, -10)
     # Testing checks on number of inputs
-    raises(TypeError, "nsolve(Eq(2*x,2))")
-    raises(TypeError, "nsolve(Eq(2*x,2),x,1,2)")
+    raises(TypeError, lambda: nsolve(Eq(2*x,2)))
+    raises(TypeError, lambda: nsolve(Eq(2*x,2),x,1,2))
     # Issue 1730
     assert nsolve(x**2/(1-x)/(1-2*x)**2-100, x, 0) # doesn't fail
     # multidimensional

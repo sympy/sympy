@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
     Function, I, S, sqrt, srepr, Rational, Tuple
 from sympy.abc import x, y
@@ -106,14 +107,14 @@ def test_sympify3():
     assert sympify("x^3") == x**3
     assert sympify("1/2") == Integer(1)/2
 
-    raises(SympifyError, "_sympify('x**3')")
-    raises(SympifyError, "_sympify('1/2')")
+    raises(SympifyError, lambda: _sympify('x**3'))
+    raises(SympifyError, lambda: _sympify('1/2'))
 
 def test_sympify_keywords():
-    raises(SympifyError, "sympify('if')")
-    raises(SympifyError, "sympify('for')")
-    raises(SympifyError, "sympify('while')")
-    raises(SympifyError, "sympify('lambda')")
+    raises(SympifyError, lambda: sympify('if'))
+    raises(SympifyError, lambda: sympify('for'))
+    raises(SympifyError, lambda: sympify('while'))
+    raises(SympifyError, lambda: sympify('lambda'))
 
 def test_sympify_float():
     assert sympify("1e-64") != 0
@@ -177,11 +178,11 @@ def test_sympify_factorial():
     assert sympify('y*x!!') == y*factorial2(x)
     assert sympify('factorial2(x)!') == factorial(factorial2(x))
 
-    raises(SympifyError, 'sympify("+!!")')
-    raises(SympifyError, 'sympify(")!!")')
-    raises(SympifyError, 'sympify("!")')
-    raises(SympifyError, 'sympify("(!)")')
-    raises(SympifyError, 'sympify("x!!!")')
+    raises(SympifyError, lambda: sympify("+!!"))
+    raises(SympifyError, lambda: sympify(")!!"))
+    raises(SympifyError, lambda: sympify("!"))
+    raises(SympifyError, lambda: sympify("(!)"))
+    raises(SympifyError, lambda: sympify("x!!!"))
 
 def test_sage():
     # how to effectivelly test for the _sage_() method without having SAGE
@@ -207,10 +208,11 @@ def test_lambda():
     assert sympify('lambda x, y: 2*x+y') == Lambda([x, y], 2*x+y)
 
 def test_lambda_raises():
-    raises(SympifyError, "_sympify('lambda: 1')")
+    with raises(SympifyError):
+        _sympify('lambda: 1')
 
 def test_sympify_raises():
-    raises(SympifyError, 'sympify("fx)")')
+    raises(SympifyError, lambda: sympify("fx)"))
 
 def test__sympify():
     x = Symbol('x')
@@ -231,8 +233,8 @@ def test__sympify():
     assert _sympify(a)      == Integer(5)
 
     # negative _sympify
-    raises(SympifyError, "_sympify('1')")
-    raises(SympifyError, "_sympify([1,2,3])")
+    raises(SympifyError, lambda: _sympify('1'))
+    raises(SympifyError, lambda: _sympify([1,2,3]))
 
 
 def test_sympifyit():
@@ -258,7 +260,7 @@ def test_sympifyit():
     assert add_raises(x, 0.5) == x + Float('0.5')
     assert add_raises(x, y) == x + y
 
-    raises(SympifyError, "add_raises(x, '1')")
+    raises(SympifyError, lambda: add_raises(x, '1'))
 
 def test_int_float():
     class F1_1(object):
