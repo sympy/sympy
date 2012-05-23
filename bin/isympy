@@ -75,8 +75,8 @@ COMMAND LINE OPTIONS
     'rev-grevlex', 'old', or 'none'.
 
     Note that for very large expressions, ORDER='none' may speed up printing
-    considerably, with the tradeoff that the order of the terms in the printed
-    expression will have no canonical order.
+    considerably, with the tradeoff that the terms in the printed expression
+    will have no canonical order.
 
 -q, --quiet
 
