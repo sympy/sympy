@@ -10,7 +10,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
 from sympy.core.compatibility import iterable, reduce
 from sympy.core.numbers import igcd, Float
 from sympy.core.function import expand_log, count_ops
-from sympy.core.mul import _keep_coeff
+from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
 
 from sympy.functions import gamma, exp, sqrt, log, root, exp_polar
@@ -1937,8 +1937,6 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     x*y*sqrt(x*sqrt(y))
 
     """
-    if combine not in ['all', 'exp', 'base', '_all']:
-        raise ValueError("combine must be one of ('all', 'exp', 'base').")
 
     def recurse(arg, **kwargs):
         _deep = kwargs.get('deep', deep)
@@ -1947,344 +1945,326 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         _measure = kwargs.get('measure', measure)
         return powsimp(arg, _deep, _combine, _force, _measure)
 
+    expr = sympify(expr)
+
+    if not isinstance(expr, Basic) or expr.is_Atom or expr in (exp_polar(0), exp_polar(1)):
+        return expr
+
+    if deep or expr.is_Add or expr.is_Mul and _y not in expr.args:
+        expr = expr.func(*[recurse(w) for w in expr.args])
+
     if expr.is_Pow:
-        if deep:
-            expr = expr.func(*[recurse(w) for w in expr.args])
-        if expr.is_Pow:
-            return recurse(expr*_y)/_y
-        return recurse(expr)
-    elif (expr.is_Function and not
-          expr == exp_polar(1) and not
-          expr == exp_polar(0)):
-        if (expr.func is exp or expr.func is exp_polar) and deep:
-            # Exp should really be like Pow
-            expr = expr.func(*[recurse(w) for w in expr.args])
-            if expr.func is exp or expr.func is exp_polar:
-                return recurse(expr*_y)/_y
-            return recurse(expr)
-        elif (expr.func is exp or expr.func is exp_polar) and not deep:
-            return recurse(expr*_y)/_y
-        elif deep:
-            return expr.func(*[recurse(t) for t in expr.args])
-        else:
-            return expr
-    elif expr.is_Add:
-        return Add(*[recurse(t) for t in expr.args])
+        return recurse(expr*_y, deep=False)/_y
 
-    elif expr.is_Mul:
-        if combine in ('exp', 'all', '_all'):
-            # Collect base/exp data, while maintaining order in the
-            # non-commutative parts of the product
-            if combine == 'all' and deep and any((t.is_Add for t in expr.args)):
-                # Once we get to 'base', there is no more 'exp', so we need to
-                # distribute here.
-                return recurse(expand_mul(expr, deep=False), combine='_all')
-            elif combine == '_all':
-                combine = 'all'
-            c_powers = defaultdict(list)
-            nc_part = []
-            newexpr = []
-            for term in expr.args:
-                if term.is_Add and deep:
-                    newexpr.append(recurse(term))
-                else:
-                    if term.is_commutative:
-                        b, e = term.as_base_exp()
-                        if deep:
-                            b, e = [recurse(i) for i in [b, e]]
-                        c_powers[b].append(e)
-                    else:
-                        # This is the logic that combines exponents for equal,
-                        # but non-commutative bases: A**x*A**y == A**(x+y).
-                        if nc_part:
-                            b1, e1 = nc_part[-1].as_base_exp()
-                            b2, e2 = term.as_base_exp()
-                            if (b1 == b2 and
-                                e1.is_commutative and e2.is_commutative):
-                                nc_part[-1] = Pow(b1, Add(e1, e2))
-                                continue
-                        nc_part.append(term)
+    if not expr.is_Mul:
+        return expr
 
-            # add up exponents of common bases
-            for b, e in c_powers.iteritems():
-                c_powers[b] = Add(*e)
+    # handle the Mul
 
-            # check for base and inverted base pairs
-            be = c_powers.items()
-            skip = set() # skip if we already saw them
-            for b, e in be:
-                if b in skip:
-                    continue
-                bpos = b.is_positive or b.is_polar
-                if bpos:
-                    binv = 1/b
-                    if b != binv and binv in c_powers:
-                        if b.as_numer_denom()[0] is S.One:
-                            c_powers.pop(b)
-                            c_powers[binv] -= e
-                        else:
-                            skip.add(binv)
-                            e = c_powers.pop(binv)
-                            c_powers[b] -= e
-
-            # filter c_powers and convert to a list
-            c_powers = [(b, e) for b, e in c_powers.iteritems() if e]
-
-            # ==============================================================
-            # check for Mul bases of Rational powers that can be combined with
-            # separated bases, e.g. x*sqrt(x*y)*sqrt(x*sqrt(x*y)) -> (x*sqrt(x*y))**(3/2)
-            # ---------------- helper functions
-            def ratq(x):
-                '''Return Rational part of x's exponent as it appears in the bkey.
-                '''
-                return bkey(x)[0][1]
-
-            def bkey(b, e=None):
-                '''Return (b**s, c.q), c.p where e -> c*s. If e is not given then
-                it will be taken by using as_base_exp() on the input b.
-                e.g.
-                    x**3/2 -> (x, 2), 3
-                    x**y -> (x**y, 1), 1
-                    x**(2*y/3) -> (x**y, 3), 2
-                    exp(x/2) -> (exp(a), 2), 1
-
-                '''
-                if e is not None: # coming from c_powers or from below
-                    if e.is_Integer:
-                        return (b, S.One), e
-                    elif e.is_Rational:
-                        return (b, Integer(e.q)), Integer(e.p)
-                    else:
-                        c, m = e.as_coeff_Mul(rational=True)
-                        if c is not S.One:
-                            return (b**m, Integer(c.q)), Integer(c.p)
-                        else:
-                            return (b**e, S.One), S.One
-                else:
-                    return bkey(*b.as_base_exp())
-
-            def update(b):
-                '''Decide what to do with base, b. If its exponent is now an
-                integer multiple of the Rational denominator, then remove it
-                and put the factors of its base in the common_b dictionary or
-                update the existing bases if necessary. If it has been zeroed
-                out, simply remove the base.
-                '''
-                newe, r = divmod(common_b[b], b[1])
-                if not r:
-                    common_b.pop(b)
-                    if newe:
-                        for m in Mul.make_args(b[0]**newe):
-                            b, e = bkey(m)
-                            if b not in common_b:
-                                common_b[b] = 0
-                            common_b[b] += e
-                            if b[1] != 1:
-                                bases.append(b)
-            # ---------------- end of helper functions
-
-            # assemble a dictionary of the factors having a Rational power
-            common_b = {}
-            done = []
-            bases = []
-            for b, e in c_powers:
-                b, e = bkey(b, e)
-                common_b[b] = e
-                if b[1] != 1 and b[0].is_Mul:
-                    bases.append(b)
-            bases.sort(key=default_sort_key) # this makes tie-breaking canonical
-            bases.sort(key=measure, reverse= True) # handle longest first
-            for base in bases:
-                if base not in common_b: # it may have been removed already
-                    continue
-                b, exponent = base
-                last = False # True when no factor of base is a radical
-                qlcm = 1 # the lcm of the radical denominators
-                while True:
-                    bstart = b
-                    qstart = qlcm
-
-                    bb = [] # list of factors
-                    ee = [] # (factor's exponent, current value of that exponent in common_b)
-                    for bi in Mul.make_args(b):
-                        bib, bie = bkey(bi)
-                        if bib not in common_b or common_b[bib] < bie:
-                            ee = bb = [] # failed
-                            break
-                        ee.append([bie, common_b[bib]])
-                        bb.append(bib)
-                    if ee:
-                        # find the number of extractions possible
-                        # e.g. [(1, 2), (2, 2)] -> min(2/1, 2/2) -> 1
-                        min1 = ee[0][1]/ee[0][0]
-                        for i in xrange(len(ee)):
-                            rat = ee[i][1]/ee[i][0]
-                            if rat < 1:
-                                break
-                            min1 = min(min1, rat)
-                        else:
-                            # update base factor counts
-                            # e.g. if ee = [(2, 5), (3, 6)] then min1 = 2
-                            # and the new base counts will be 5-2*2 and 6-2*3
-                            for i in xrange(len(bb)):
-                                common_b[bb[i]] -= min1*ee[i][0]
-                                update(bb[i])
-                            # update the count of the base
-                            # e.g. x**2*y*sqrt(x*sqrt(y)) the count of x*sqrt(y)
-                            # will increase by 4 to give bkey (x*sqrt(y), 2, 5)
-                            common_b[base] += min1*qstart*exponent
-                    if (last # no more radicals in base
-                        or len(common_b) == 1 # nothing left to join with
-                        or all(k[1] == 1 for k in common_b) # no radicals left in common_b
-                        ):
-                        break
-                    # see what we can exponentiate base by to remove any radicals
-                    # so we know what to search for
-                    # e.g. if base were x**(1/2)*y**(1/3) then we should exponentiate
-                    # by 6 and look for powers of x and y in the ratio of 2 to 3
-                    qlcm = lcm([ratq(bi) for bi in Mul.make_args(bstart)])
-                    if qlcm == 1:
-                        break # we are done
-                    b = bstart**qlcm
-                    qlcm *= qstart
-                    if all(ratq(bi) == 1 for bi in Mul.make_args(b)):
-                        last = True # we are going to be done after this next pass
-                # this base no longer can find anything to join with and
-                # since it was longer than any other we are done with it
-                b, q = base
-                done.append((b, common_b.pop(base)*Rational(1, q)))
-
-            # update c_powers and get ready to continue with powsimp
-            c_powers = done
-            # there may be terms still in common_b that were bases that were
-            # identified as needing processing, so remove those, too
-            for (b, q), e in common_b.items():
-                if (b.is_Pow or b.func is exp) and \
-                   q is not S.One and not b.exp.is_Rational:
-                    b, be = b.as_base_exp()
-                    b = b**(be/q)
-                else:
-                    b = root(b, q)
-                c_powers.append((b, e))
-            check = len(c_powers)
-            c_powers = dict(c_powers)
-            assert len(c_powers) == check # there should have been no duplicates
-            # ==============================================================
-
-            # rebuild the expression
-            newexpr = Mul(*(newexpr + [Pow(b, e) for b, e in c_powers.iteritems()]))
-            if combine == 'exp':
-                return Mul(newexpr, Mul(*nc_part))
+    if combine in ('exp', 'all'):
+        # Collect base/exp data, while maintaining order in the
+        # non-commutative parts of the product
+        c_powers = defaultdict(list)
+        nc_part = []
+        newexpr = []
+        for term in expr.args:
+            if term.is_commutative:
+                b, e = term.as_base_exp()
+                if deep:
+                    b, e = [recurse(i) for i in [b, e]]
+                c_powers[b].append(e)
             else:
-                # combine is 'all', get stuff ready for 'base'
-                if deep:
-                    newexpr = expand_mul(newexpr, deep=False)
-                if newexpr.is_Add:
-                    return recurse(Mul(*nc_part), combine='base')*\
-                    Add(*[recurse(i, combine='base') for i in newexpr.args])
-                else:
-                    return recurse(Mul(*nc_part), combine='base')*\
-                    recurse(newexpr, combine='base')
+                # This is the logic that combines exponents for equal,
+                # but non-commutative bases: A**x*A**y == A**(x+y).
+                if nc_part:
+                    b1, e1 = nc_part[-1].as_base_exp()
+                    b2, e2 = term.as_base_exp()
+                    if (b1 == b2 and
+                        e1.is_commutative and e2.is_commutative):
+                        nc_part[-1] = Pow(b1, Add(e1, e2))
+                        continue
+                nc_part.append(term)
 
-        else: # combine is 'base' for this Mul
+        # add up exponents of common bases
+        for b, e in c_powers.iteritems():
+            c_powers[b] = Add(*e)
+
+        # check for base and inverted base pairs
+        be = c_powers.items()
+        skip = set() # skip if we already saw them
+        for b, e in be:
+            if b in skip:
+                continue
+            bpos = b.is_positive or b.is_polar
+            if bpos:
+                binv = 1/b
+                if b != binv and binv in c_powers:
+                    if b.as_numer_denom()[0] is S.One:
+                        c_powers.pop(b)
+                        c_powers[binv] -= e
+                    else:
+                        skip.add(binv)
+                        e = c_powers.pop(binv)
+                        c_powers[b] -= e
+
+        # filter c_powers and convert to a list
+        c_powers = [(b, e) for b, e in c_powers.iteritems() if e]
+
+        # ==============================================================
+        # check for Mul bases of Rational powers that can be combined with
+        # separated bases, e.g. x*sqrt(x*y)*sqrt(x*sqrt(x*y)) -> (x*sqrt(x*y))**(3/2)
+        # ---------------- helper functions
+        def ratq(x):
+            '''Return Rational part of x's exponent as it appears in the bkey.
+            '''
+            return bkey(x)[0][1]
+
+        def bkey(b, e=None):
+            '''Return (b**s, c.q), c.p where e -> c*s. If e is not given then
+            it will be taken by using as_base_exp() on the input b.
+            e.g.
+                x**3/2 -> (x, 2), 3
+                x**y -> (x**y, 1), 1
+                x**(2*y/3) -> (x**y, 3), 2
+                exp(x/2) -> (exp(a), 2), 1
+
+            '''
+            if e is not None: # coming from c_powers or from below
+                if e.is_Integer:
+                    return (b, S.One), e
+                elif e.is_Rational:
+                    return (b, Integer(e.q)), Integer(e.p)
+                else:
+                    c, m = e.as_coeff_Mul(rational=True)
+                    if c is not S.One:
+                        return (b**m, Integer(c.q)), Integer(c.p)
+                    else:
+                        return (b**e, S.One), S.One
+            else:
+                return bkey(*b.as_base_exp())
+
+        def update(b):
+            '''Decide what to do with base, b. If its exponent is now an
+            integer multiple of the Rational denominator, then remove it
+            and put the factors of its base in the common_b dictionary or
+            update the existing bases if necessary. If it has been zeroed
+            out, simply remove the base.
+            '''
+            newe, r = divmod(common_b[b], b[1])
+            if not r:
+                common_b.pop(b)
+                if newe:
+                    for m in Mul.make_args(b[0]**newe):
+                        b, e = bkey(m)
+                        if b not in common_b:
+                            common_b[b] = 0
+                        common_b[b] += e
+                        if b[1] != 1:
+                            bases.append(b)
+        # ---------------- end of helper functions
+
+        # assemble a dictionary of the factors having a Rational power
+        common_b = {}
+        done = []
+        bases = []
+        for b, e in c_powers:
+            b, e = bkey(b, e)
+            common_b[b] = e
+            if b[1] != 1 and b[0].is_Mul:
+                bases.append(b)
+        bases.sort(key=default_sort_key) # this makes tie-breaking canonical
+        bases.sort(key=measure, reverse= True) # handle longest first
+        for base in bases:
+            if base not in common_b: # it may have been removed already
+                continue
+            b, exponent = base
+            last = False # True when no factor of base is a radical
+            qlcm = 1 # the lcm of the radical denominators
+            while True:
+                bstart = b
+                qstart = qlcm
+
+                bb = [] # list of factors
+                ee = [] # (factor's exponent, current value of that exponent in common_b)
+                for bi in Mul.make_args(b):
+                    bib, bie = bkey(bi)
+                    if bib not in common_b or common_b[bib] < bie:
+                        ee = bb = [] # failed
+                        break
+                    ee.append([bie, common_b[bib]])
+                    bb.append(bib)
+                if ee:
+                    # find the number of extractions possible
+                    # e.g. [(1, 2), (2, 2)] -> min(2/1, 2/2) -> 1
+                    min1 = ee[0][1]/ee[0][0]
+                    for i in xrange(len(ee)):
+                        rat = ee[i][1]/ee[i][0]
+                        if rat < 1:
+                            break
+                        min1 = min(min1, rat)
+                    else:
+                        # update base factor counts
+                        # e.g. if ee = [(2, 5), (3, 6)] then min1 = 2
+                        # and the new base counts will be 5-2*2 and 6-2*3
+                        for i in xrange(len(bb)):
+                            common_b[bb[i]] -= min1*ee[i][0]
+                            update(bb[i])
+                        # update the count of the base
+                        # e.g. x**2*y*sqrt(x*sqrt(y)) the count of x*sqrt(y)
+                        # will increase by 4 to give bkey (x*sqrt(y), 2, 5)
+                        common_b[base] += min1*qstart*exponent
+                if (last # no more radicals in base
+                    or len(common_b) == 1 # nothing left to join with
+                    or all(k[1] == 1 for k in common_b) # no radicals left in common_b
+                    ):
+                    break
+                # see what we can exponentiate base by to remove any radicals
+                # so we know what to search for
+                # e.g. if base were x**(1/2)*y**(1/3) then we should exponentiate
+                # by 6 and look for powers of x and y in the ratio of 2 to 3
+                qlcm = lcm([ratq(bi) for bi in Mul.make_args(bstart)])
+                if qlcm == 1:
+                    break # we are done
+                b = bstart**qlcm
+                qlcm *= qstart
+                if all(ratq(bi) == 1 for bi in Mul.make_args(b)):
+                    last = True # we are going to be done after this next pass
+            # this base no longer can find anything to join with and
+            # since it was longer than any other we are done with it
+            b, q = base
+            done.append((b, common_b.pop(base)*Rational(1, q)))
+
+        # update c_powers and get ready to continue with powsimp
+        c_powers = done
+        # there may be terms still in common_b that were bases that were
+        # identified as needing processing, so remove those, too
+        for (b, q), e in common_b.items():
+            if (b.is_Pow or b.func is exp) and \
+               q is not S.One and not b.exp.is_Rational:
+                b, be = b.as_base_exp()
+                b = b**(be/q)
+            else:
+                b = root(b, q)
+            c_powers.append((b, e))
+        check = len(c_powers)
+        c_powers = dict(c_powers)
+        assert len(c_powers) == check # there should have been no duplicates
+        # ==============================================================
+
+        # rebuild the expression
+        newexpr = Mul(*(newexpr + [Pow(b, e) for b, e in c_powers.iteritems()]))
+        if combine == 'exp':
+            return Mul(newexpr, Mul(*nc_part))
+        else:
+            return recurse(Mul(*nc_part), combine='base')*\
+                recurse(newexpr, combine='base')
+
+    elif combine == 'base':
+
+        # Build c_powers and nc_part.  These must both be lists not
+        # dicts because exp's are not combined.
+        c_powers = []
+        nc_part = []
+        for term in expr.args:
+            if term.is_commutative:
+                c_powers.append(list(term.as_base_exp()))
+            else:
+                # This is the logic that combines bases that are
+                # different and non-commutative, but with equal and
+                # commutative exponents: A**x*B**x == (A*B)**x.
+                if nc_part:
+                    b1, e1 = nc_part[-1].as_base_exp()
+                    b2, e2 = term.as_base_exp()
+                    if (e1 == e2 and e2.is_commutative):
+                        nc_part[-1] = Pow(Mul(b1, b2), e1)
+                        continue
+                nc_part.append(term)
+
+        # Pull out numerical coefficients from exponent if assumptions allow
+        # e.g., 2**(2*x) => 4**x
+        for i in xrange(len(c_powers)):
+            b, e = c_powers[i]
+            if not (b.is_nonnegative or e.is_integer or force or b.is_polar):
+                continue
+            exp_c, exp_t = e.as_coeff_Mul(rational=True)
+            if exp_c is not S.One and exp_t is not S.One:
+                c_powers[i] = [Pow(b, exp_c), exp_t]
+
+
+        # Combine bases whenever they have the same exponent and
+        # assumptions allow
+
+        # first gather the potential bases under the common exponent
+        c_exp = defaultdict(list)
+        for b, e in c_powers:
             if deep:
-                expr = expand_mul(expr, deep=False)
-                if not expr.is_Mul:
-                    if not expr.args:
-                        return expr
-                    return expr.func(*[recurse(i) for i in expr.args])
+                e = recurse(e)
+            c_exp[e].append(b)
+        del c_powers
 
-            # Build c_powers and nc_part.  These must both be lists not
-            # dicts because exp's are not combined.
-            c_powers = []
-            nc_part = []
-            for term in expr.args:
-                if term.is_commutative:
-                    c_powers.append(list(term.as_base_exp()))
-                else:
-                    # This is the logic that combines bases that are
-                    # different and non-commutative, but with equal and
-                    # commutative exponents: A**x*B**x == (A*B)**x.
-                    if nc_part:
-                        b1, e1 = nc_part[-1].as_base_exp()
-                        b2, e2 = term.as_base_exp()
-                        if (e1 == e2 and e2.is_commutative):
-                            nc_part[-1] = Pow(Mul(b1, b2), e1)
-                            continue
-                    nc_part.append(term)
+        # Merge back in the results of the above to form a new product
+        c_powers = defaultdict(list)
+        for e in c_exp:
+            bases = c_exp[e]
 
-            # Pull out numerical coefficients from exponent if assumptions allow
-            # e.g., 2**(2*x) => 4**x
-            for i in xrange(len(c_powers)):
-                b, e = c_powers[i]
-                if not (b.is_nonnegative or e.is_integer or force or b.is_polar):
-                    continue
-                exp_c, exp_t = e.as_coeff_Mul(rational=True)
-                if exp_c is not S.One and exp_t is not S.One:
-                    c_powers[i] = [Pow(b, exp_c), exp_t]
+            # calculate the new base for e
+            if len(bases) == 1:
+                new_base = bases[0]
+            elif e.is_integer or force:
+                new_base = Mul(*bases)
+            else:
+                # see which ones can be joined
+                unk=[]
+                nonneg=[]
+                neg=[]
+                for bi in bases:
+                    if bi.is_negative:
+                        neg.append(bi)
+                    elif bi.is_nonnegative:
+                        nonneg.append(bi)
+                    elif bi.is_polar:
+                        nonneg.append(bi) # polar can be treated like non-negative
+                    else:
+                        unk.append(bi)
+                if len(unk) == 1 and not neg or len(neg) == 1 and not unk:
+                    # a single neg or a single unk can join the rest
+                    nonneg.extend(unk + neg)
+                    unk = neg = []
+                elif neg:
+                    # their negative signs cancel in pairs
+                    neg = [-w for w in neg]
+                    if len(neg) % 2:
+                        unk.append(S.NegativeOne)
 
+                # these shouldn't be joined
+                for b in unk:
+                    c_powers[b].append(e)
+                # here is a new joined base
+                new_base = Mul(*(nonneg + neg))
+                # if there are positive parts they will just get separated again
+                # unless some change is made
+                def _terms(e):
+                    # return the number of terms of this expression
+                    # when multiplied out -- assuming no joining of terms
+                    if e.is_Add:
+                        return sum([_terms(ai) for ai in e.args])
+                    if e.is_Mul:
+                        return prod([_terms(mi) for mi in e.args])
+                    return 1
+                xnew_base = expand_mul(new_base, deep=False)
+                if len(Add.make_args(xnew_base)) < _terms(new_base):
+                    new_base = factor_terms(xnew_base)
 
-            # Combine bases whenever they have the same exponent and
-            # assumptions allow
+            c_powers[new_base].append(e)
 
-            # first gather the potential bases under the common exponent
-            c_exp = defaultdict(list)
-            for b, e in c_powers:
-                if deep:
-                    e = recurse(e)
-                c_exp[e].append(b)
-            del c_powers
+        # break out the powers from c_powers now
+        c_part = [Pow(b, ei) for b, e in c_powers.iteritems() for ei in e]
 
-            # Merge back in the results of the above to form a new product
-            c_powers = defaultdict(list)
-            for e in c_exp:
-                bases = c_exp[e]
-
-                # calculate the new base for e
-                if len(bases) == 1:
-                    new_base = bases[0]
-                elif e.is_integer or force:
-                    new_base = Mul(*bases)
-                else:
-                    # see which ones can be joined
-                    unk=[]
-                    nonneg=[]
-                    neg=[]
-                    for bi in bases:
-                        if bi.is_negative:
-                            neg.append(bi)
-                        elif bi.is_nonnegative:
-                            nonneg.append(bi)
-                        elif bi.is_polar:
-                            nonneg.append(bi) # polar can be treated like non-negative
-                        else:
-                            unk.append(bi)
-                    if len(unk) == 1 and not neg or len(neg) == 1 and not unk:
-                        # a single neg or a single unk can join the rest
-                        nonneg.extend(unk + neg)
-                        unk = neg = []
-                    elif neg:
-                        # their negative signs cancel in pairs
-                        neg = [-w for w in neg]
-                        if len(neg) % 2:
-                            unk.append(S.NegativeOne)
-
-                    # these shouldn't be joined
-                    for b in unk:
-                        c_powers[b].append(e)
-                    # here is a new joined base
-                    new_base = Mul(*(nonneg + neg))
-
-                c_powers[new_base].append(e)
-
-            # break out the powers from c_powers now
-            c_part = [Pow(b, ei) for b, e in c_powers.iteritems() for ei in e]
-
-            # we're done
-            return Mul(*(c_part + nc_part))
+        # we're done
+        return Mul(*(c_part + nc_part))
 
     else:
-        return expr
+        raise ValueError("combine must be one of ('all', 'exp', 'base').")
 
 def hypersimp(f, k):
     """Given combinatorial term f(k) simplify its consecutive term ratio
@@ -2941,12 +2921,12 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     expr0 = powsimp(expr)
     expr1 = cancel(expr0)
     expr2 = together(expr1.expand(), deep=True)
-    # sometimes the expansions applied to Muls
-    # give shorter expressions, so make this a
-    # Mul if it's an Add (issue 3024)
-    if expr.is_Add:
-        y = Dummy()
-        expr0b = powsimp(expr*y)/y
+
+    # sometimes factors in the denominators need to be allowed to join
+    # factors in numerators (see issue 3270)
+    n, d = expr.as_numer_denom()
+    if (n, d) != fraction(expr):
+        expr0b = powsimp(n)/powsimp(d)
         if expr0b != expr0:
             expr1b = cancel(expr0b)
             expr2b = together(expr1b.expand(), deep=True)
