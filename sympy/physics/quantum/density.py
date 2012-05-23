@@ -21,7 +21,6 @@ class Density(HermitianOperator):
         sum_prob=0.0
         for arg in args:
             # Check if arg is a tuple
-            print "Type = " , type(arg[0]), type(arg[1])
             if not (isinstance(arg, Tuple) and
                      len(arg) == 2 ):
                 raise ValueError("Each argument should be of form [state,prob]"

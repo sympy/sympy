@@ -8,24 +8,22 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.operator import *
 from sympy.functions import sqrt
+from sympy.utilities.pytest import raises
 
 def test_eval_args():
-    # check if sequence
-    d = Density([Ket(0),0.5],[Ket(1),0.5])
+    # check instance created
+    assert(isinstance(Density([Ket(0), 0.5], [Ket(1), 0.5]), Density))
 
-    #TODO: Need to implement Qubit based Density before
-    #this test is done
-    #d = Density([Qubit('01'),0.5], [Qubit('01'),0.5])
-
-    # check for value error
-    #d = Density([Ket(0)],[Ket(1)])
-
-    #check for value error
-    #d = Density(1,1)
+    # check for value error, when prob is not provided
+    raises(ValueError, 'Density([Ket(0)], [Ket(1)])')
 
     #check for valid state
-    #d = Density([Ket(0),0.5],(Ket(1),0.25),(1,0.25))
+    raises(ValueError, 'Density(1,1)')
+    raises(ValueError, 'Density([Ket(0), 0.5], (Ket(1), 0.25), (1, 0.25))')
 
+    #TODO: Need to implement Qubit based Density before
+    #this test is done.
+    #assert(isinstance(Density([Qubit('01'),0.5], [Qubit('01'),0.5]), Density))
 
 
 def test_doit():
