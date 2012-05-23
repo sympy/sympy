@@ -214,4 +214,3 @@ def period_find(a, N):
     g = getr(answer, 2**t, N)
     print g
     return g
-

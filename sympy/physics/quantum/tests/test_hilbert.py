@@ -97,4 +97,3 @@ def test_direct_sum():
     h = hs1 + f + hs2
     assert h.dimension == oo
     assert h.spaces == (hs1, f, hs2)
-

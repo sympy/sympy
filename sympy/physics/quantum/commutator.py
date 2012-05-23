@@ -86,14 +86,13 @@ class Commutator(Expr):
 
     .. [1] http://en.wikipedia.org/wiki/Commutator
     """
-
     is_commutative = False
 
-    def __new__(cls, A, B, **old_assumptions):
+    def __new__(cls, A, B):
         r = cls.eval(A, B)
         if r is not None:
             return r
-        obj = Expr.__new__(cls, *(A, B), **old_assumptions)
+        obj = Expr.__new__(cls, A, B)
         return obj
 
     @classmethod
@@ -198,4 +197,3 @@ class Commutator(Expr):
     def _latex(self, printer, *args):
         return "\\left[%s,%s\\right]" % tuple([
             printer._print(arg, *args) for arg in self.args])
-

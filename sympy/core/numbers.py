@@ -63,7 +63,6 @@ def _decimal_to_Rational_prec(dec):
         rv = Rational(int(dec))
     else:
         s = (-1)**s
-        n = len(d)
         d = sum([di*10**i for i, di in enumerate(reversed(d))])
         rv = Rational(s*d, 10**-e)
     return rv, prec
@@ -624,15 +623,7 @@ class Float(Number):
         return (mlib.to_pickable(self._mpf_),)
 
     def __getstate__(self):
-        d = Expr.__getstate__(self).copy()
-        del d["_mpf_"]
-        return mlib.to_pickable(self._mpf_), d
-
-    def __setstate__(self, state):
-        _mpf_, d = state
-        _mpf_ = mlib.from_pickable(_mpf_)
-        self._mpf_ = _mpf_
-        Expr.__setstate__(self, d)
+        return {'_prec': self._prec}
 
     def _hashable_content(self):
         return (self._mpf_, self._prec)
@@ -2704,7 +2695,6 @@ _intcache[0] = S.Zero
 _intcache[1] = S.One
 _intcache[-1]= S.NegativeOne
 
-from function import _coeff_isneg
 from power import Pow, integer_nthroot
 from mul import Mul
 Mul.identity = One()

@@ -277,7 +277,7 @@ def test_wrap_fortran_keep_d0():
     assert printer._wrap_fortran(lines) == expected
 
 def test_settings():
-    raises(TypeError, 'fcode(S(4), method="garbage")')
+    raises(TypeError, lambda: fcode(S(4), method="garbage"))
 
 def test_free_form_code_line():
     x, y = symbols('x,y')

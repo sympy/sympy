@@ -90,7 +90,7 @@ def test_solve_args():
         [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
     # failed single equation
     assert solve(1/(1/x - y + exp(y))) ==  []
-    raises(NotImplementedError, 'solve(exp(x) + sin(x) + exp(y) + sin(y))')
+    raises(NotImplementedError, lambda: solve(exp(x) + sin(x) + exp(y) + sin(y)))
     # failed system
     # --  when no symbols given, 1 fails
     assert solve([y, exp(x) + x]) == [{x: -LambertW(1), y: 0}]
@@ -99,7 +99,7 @@ def test_solve_args():
     # --  when symbols given
     solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
     #symbol is not a symbol or function
-    raises(TypeError, "solve(x**2-pi, pi)")
+    raises(TypeError, lambda: solve(x**2-pi, pi))
     # no equations
     assert solve([], [x]) == []
     # overdetermined system
@@ -340,7 +340,7 @@ def test_solve_linear():
     assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y, symbols=[x]) == (0, 1)
     assert solve_linear(Eq(x, 3)) == (x, 3)
     assert solve_linear(1/(1/x - 2)) == (0, 0)
-    raises(ValueError, 'solve_linear(Eq(x, 3), 3)')
+    raises(ValueError, lambda: solve_linear(Eq(x, 3), 3))
 
 def test_solve_undetermined_coeffs():
     assert solve_undetermined_coeffs(a*x**2 + b*x**2 + b*x  + 2*c*x + c + 1, [a, b, c], x) == \
@@ -381,7 +381,7 @@ def test_issue_1694():
     assert solve(x**2*z**2 - z**2*y**2) in ([{x: y}, {x: -y}], [{x: -y}, {x: y}])
     assert solve((x - 1)/(1 + 1/(x - 1))) == []
     assert solve(x**(y*z) - x, x) == [1]
-    raises(NotImplementedError, 'solve(log(x) - exp(x), x)')
+    raises(NotImplementedError, lambda: solve(log(x) - exp(x), x))
 
     # 2072
     assert solve(sqrt(x)) == solve(sqrt(x**3)) == [0]
@@ -453,8 +453,8 @@ def test_issue_1572_1364_1368():
     assert solve((sqrt(x**2 - 1) - 2)) in ([sqrt(5), -sqrt(5)],
                                            [-sqrt(5), sqrt(5)])
     assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [
-        -sqrt(x*(-log(log(2)) + log(log(2) + I*pi))),
-         sqrt(x*(-log(log(2)) + log(log(2) + I*pi)))]
+        -sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi)),
+         sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi))]
 
     C1, C2 = symbols('C1 C2')
     f = Function('f')
@@ -667,8 +667,8 @@ def test_unrad():
     ans = 2*F/7 - sqrt(2)*F/14
     assert any((a - ans).expand().is_zero for a in Y)
 
-    raises(ValueError, 'unrad(sqrt(x) + sqrt(x+1) + sqrt(1-sqrt(x)) + 3)')
-    raises(ValueError, 'unrad(sqrt(x) + (x+1)**Rational(1,3) + 2*sqrt(y))')
+    raises(ValueError, lambda: unrad(sqrt(x) + sqrt(x+1) + sqrt(1-sqrt(x)) + 3))
+    raises(ValueError, lambda: unrad(sqrt(x) + (x+1)**Rational(1,3) + 2*sqrt(y)))
     # same as last but consider only y
     assert check(unrad(sqrt(x) + (x + 1)**Rational(1,3) + 2*sqrt(y), y),
            (4*y - (sqrt(x) + (x + 1)**(S(1)/3))**2, [], []))
@@ -756,7 +756,7 @@ def test_issue_2015():
 
 def test_misc():
     # make sure that the right variables is picked up in tsolve
-    raises(NotImplementedError, 'solve((exp(x) + 1)**x)')
+    raises(NotImplementedError, lambda: solve((exp(x) + 1)**x))
 
 def test_issue_2750():
     I1, I2, I3, I4, I5, I6 = symbols('I1:7')
@@ -845,7 +845,7 @@ def test_issue_2802():
     # anything but a Mul or Add; it now raises an error if it gets anything
     # but a symbol and solve handles the substitutions necessary so solve_linear
     # won't make this error
-    raises(ValueError, 'solve_linear(f(x) + f(x).diff(x), symbols=[f(x)])')
+    raises(ValueError, lambda: solve_linear(f(x) + f(x).diff(x), symbols=[f(x)]))
     assert solve_linear(f(x) + f(x).diff(x), symbols=[x]) == \
         (f(x) + Derivative(f(x), x), 1)
     assert solve_linear(f(x) + Integral(x, (x, y)), symbols=[x]) == \

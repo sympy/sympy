@@ -188,15 +188,15 @@ def test_hyper_printing():
 
     assert latex(meijerg(Tuple(pi, pi, x), Tuple(1), \
                          (0,1), Tuple(1, 2, 3/pi),z)) == \
-             r'{G_{4, 5}^{2, 3}\left.\left(\begin{matrix} \pi, \pi, x & 1 \\0, 1 & 1, 2, \frac{3}{\pi} \end{matrix} \right| {z} \right)}'
+             r'{G_{4, 5}^{2, 3}\left(\begin{matrix} \pi, \pi, x & 1 \\0, 1 & 1, 2, \frac{3}{\pi} \end{matrix} \middle| {z} \right)}'
     assert latex(meijerg(Tuple(), Tuple(1), (0,), Tuple(),z)) == \
-             r'{G_{1, 1}^{1, 0}\left.\left(\begin{matrix}  & 1 \\0 &  \end{matrix} \right| {z} \right)}'
+             r'{G_{1, 1}^{1, 0}\left(\begin{matrix}  & 1 \\0 &  \end{matrix} \middle| {z} \right)}'
     assert latex(hyper((x, 2), (3,), z)) == \
-               r'{{}_{2}F_{1}\left.\left(\begin{matrix} x, 2 ' \
-               r'\\ 3 \end{matrix}\right| {z} \right)}'
+               r'{{}_{2}F_{1}\left(\begin{matrix} x, 2 ' \
+               r'\\ 3 \end{matrix}\middle| {z} \right)}'
     assert latex(hyper(Tuple(), Tuple(1), z)) == \
-               r'{{}_{0}F_{1}\left.\left(\begin{matrix}  ' \
-               r'\\ 1 \end{matrix}\right| {z} \right)}'
+               r'{{}_{0}F_{1}\left(\begin{matrix}  ' \
+               r'\\ 1 \end{matrix}\middle| {z} \right)}'
 
 def test_latex_bessel():
     from sympy.functions.special.bessel import (besselj, bessely, besseli,
@@ -211,6 +211,14 @@ def test_latex_bessel():
     assert latex(hankel2(n, z)) == r'H^{(2)}_{n}\left(z\right)'
     assert latex(jn(n, z)) == r'j_{n}\left(z\right)'
     assert latex(yn(n, z)) == r'y_{n}\left(z\right)'
+
+def test_latex_fresnel():
+    from sympy.functions.special.error_functions import (fresnels, fresnelc)
+    from sympy.abc import z
+    assert latex(fresnels(z)) == r'S\left(z\right)'
+    assert latex(fresnelc(z)) == r'C\left(z\right)'
+    assert latex(fresnels(z)**2) == r'S^{2}\left(z\right)'
+    assert latex(fresnelc(z)**2) == r'C^{2}\left(z\right)'
 
 def test_latex_brackets():
     assert latex((-1)**x) == r"\left(-1\right)^{x}"
@@ -468,7 +476,7 @@ def test_latex_RootSum():
         r"\operatorname{RootSum} {\left(x^{5} + x + 3, \Lambda {\left (x, \sin{\left (x \right )} \right )}\right)}"
 
 def test_settings():
-    raises(TypeError, 'latex(x*y, method="garbage")')
+    raises(TypeError, lambda: latex(x*y, method="garbage"))
 
 def test_latex_numbers():
     assert latex(catalan(n)) == r"C_{n}"

@@ -84,6 +84,8 @@ class QExpr(Expr):
     # The Hilbert space a quantum Object belongs to.
     __slots__ = ['hilbert_space']
 
+    is_commutative = False
+
     # The separator used in printing the label.
     _label_separator = u''
 
@@ -404,4 +406,3 @@ def dispatch_method(self, basename, arg, **options):
         "%s.%s can't handle: %r" % \
             (self.__class__.__name__, basename, arg)
     )
-

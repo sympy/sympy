@@ -35,16 +35,16 @@ def test_var():
     assert v  == [d, e, fg]
 
     # see if var() really injects into global namespace
-    raises(NameError, "z1")
+    raises(NameError, lambda: z1)
     make_z1()
     assert z1 == Symbol("z1")
 
-    raises(NameError, "z2")
+    raises(NameError, lambda: z2)
     make_z2()
     assert z2 == Symbol("z2")
 
 def test_var_return():
-    raises(ValueError, "var('')")
+    raises(ValueError, lambda: var(''))
     v2 = var('q')
     v3 = var('q p')
 

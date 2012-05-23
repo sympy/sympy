@@ -6,7 +6,6 @@ from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
-from sympy.core.function import expand_mul
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, Integer
 from sympy.core.singleton import S
@@ -16,6 +15,8 @@ from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
                                        preorder_traversal, variations)
+
+from collections import defaultdict
 
 def decompose_power(expr):
     """
@@ -244,7 +245,7 @@ class Term(object):
                 raise NonCommutativeExpression('commutative expression expected')
 
             coeff, factors = term.as_coeff_mul()
-            numer, denom = {}, {}
+            numer, denom = defaultdict(int), defaultdict(int)
 
             for factor in factors:
                 base, exp = decompose_power(factor)
@@ -254,9 +255,9 @@ class Term(object):
                     coeff *= cont**exp
 
                 if exp > 0:
-                    numer[base] = exp
+                    numer[base] += exp
                 else:
-                    denom[base] = -exp
+                    denom[base] += -exp
 
             numer = Factors(numer)
             denom = Factors(denom)
@@ -495,7 +496,7 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
             for i in args]), clear=clear)
 
     def handle(a):
-        # don't treate internal args like terms of an Add
+        # don't treat internal args like terms of an Add
         if not isinstance(a, Expr):
             if isinstance(a, Basic):
                 return a.func(*[handle(i) for i in a.args])
@@ -578,11 +579,14 @@ def factor_terms(expr, radical=False, clear=False, fraction=False):
         return expr.func(*newargs)
 
     cont, p = expr.as_content_primitive(radical=radical)
-    list_args = [gcd_terms(a,
+    if p.is_Add:
+        list_args = [gcd_terms(a,
         isprimitive=True,
         clear=clear,
         fraction=fraction) for a in Add.make_args(p)]
-    p = Add._from_args(list_args) # gcd_terms will fix up ordering
+        p = Add._from_args(list_args) # gcd_terms will fix up ordering
+    elif p.args:
+        p = p.func(*[factor_terms(a, radical, clear, fraction) for a in p.args])
     p = gcd_terms(p,
         isprimitive=True,
         clear=clear,

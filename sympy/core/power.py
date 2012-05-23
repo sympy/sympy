@@ -116,7 +116,7 @@ class Pow(Expr):
         smallarg = (abs(e) <= abs(S.Pi/log(b)))
         if (other.is_Rational and other.q == 2 and
             e.is_real is False and smallarg is False):
-                return -Pow(b, e*other)
+            return -Pow(b, e*other)
         if (other.is_integer or
             e.is_real and (b_nneg or abs(e) < 1) or
             e.is_real is False and smallarg is True or
@@ -960,7 +960,7 @@ class Pow(Expr):
         >>> eq.as_content_primitive()
         (9, 3**(2*x))
         >>> powsimp(Mul(*_))
-        9*9**x
+        9**(x + 1)
 
         >>> eq = (2 + 2*x)**y
         >>> s = separate(eq); s.is_Mul, s

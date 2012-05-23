@@ -37,24 +37,23 @@ class AntiCommutator(Expr):
     Examples
     ========
 
+    >>> from sympy import symbols
     >>> from sympy.physics.quantum import AntiCommutator
     >>> from sympy.physics.quantum import Operator, Dagger
-    >>> from sympy.abc import x, y
+    >>> x, y = symbols('x,y')
     >>> A = Operator('A')
     >>> B = Operator('B')
 
     Create an anticommutator and use ``doit()`` to multiply them out.
 
-    >>> ac = AntiCommutator(A,B)
-    >>> ac
+    >>> ac = AntiCommutator(A,B); ac
     {A,B}
     >>> ac.doit()
     A*B + B*A
 
     The commutator orders it arguments in canonical order:
 
-    >>> ac = AntiCommutator(B,A)
-    >>> ac
+    >>> ac = AntiCommutator(B,A); ac
     {A,B}
 
     Commutative constants are factored out:
@@ -73,14 +72,13 @@ class AntiCommutator(Expr):
 
     .. [1] http://en.wikipedia.org/wiki/Commutator
     """
-
     is_commutative = False
 
-    def __new__(cls, A, B, **old_assumptions):
+    def __new__(cls, A, B):
         r = cls.eval(A, B)
         if r is not None:
             return r
-        obj = Expr.__new__(cls, A, B, **old_assumptions)
+        obj = Expr.__new__(cls, A, B)
         return obj
 
     @classmethod
@@ -144,4 +142,3 @@ class AntiCommutator(Expr):
     def _latex(self, printer, *args):
         return "\\left\\{%s,%s\\right\\}" % tuple([
             printer._print(arg, *args) for arg in self.args])
-

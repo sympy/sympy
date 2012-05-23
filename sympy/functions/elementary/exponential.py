@@ -6,7 +6,6 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
 
-from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 
@@ -482,21 +481,26 @@ class log(Function):
     @classmethod
     def eval(cls, arg, base=None):
         from sympy import unpolarify
+        arg = sympify(arg)
+
         if base is not None:
             base = sympify(base)
-
-            if arg.is_positive and arg.is_Integer and \
-               base.is_positive and base.is_Integer:
-                base = int(base)
-                arg = int(arg)
+            if base == 1:
+                if arg == 1:
+                    return S.NaN
+                else:
+                    return S.ComplexInfinity
+            try:
+                if not (base.is_positive and arg.is_positive):
+                    raise ValueError
                 n = multiplicity(base, arg)
-                return S(n) + log(arg // base ** n) / log(base)
+                return n + log(arg // base ** n) / log(base)
+            except ValueError:
+                pass
             if base is not S.Exp1:
                 return cls(arg)/cls(base)
             else:
                 return cls(arg)
-
-        arg = sympify(arg)
 
         if arg.is_Number:
             if arg is S.Zero:

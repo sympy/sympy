@@ -48,7 +48,7 @@ def test_ContinuousDomain():
     assert where(X**2<=1).set == Interval(-1,1)
     assert where(X**2<=1).symbol == X.symbol
     where(And(X**2<=1, X>=0)).set == Interval(0,1)
-    raises(ValueError, "where(sin(X)>1)")
+    raises(ValueError, lambda: where(sin(X)>1))
 
     Y = given(X, X>=0)
 
@@ -100,7 +100,7 @@ def test_cdf():
     assert d(-5) == 0
     assert P(Y > 3) == 1 - d(3)
 
-    raises(ValueError, "cdf(X+Y)")
+    raises(ValueError, lambda: cdf(X+Y))
 
     Z = Exponential(1)
     f = cdf(Z)
@@ -441,15 +441,15 @@ def test_input_value_assertions():
     a, b = symbols('a b')
     p, q = symbols('p q', positive=True)
 
-    raises(ValueError, "Normal(3, 0)")
-    raises(ValueError, "Normal(a, b)")
+    raises(ValueError, lambda: Normal(3, 0))
+    raises(ValueError, lambda: Normal(a, b))
     Normal(a, p) # No error raised
-    raises(ValueError, "Exponential(a)")
+    raises(ValueError, lambda: Exponential(a))
     Exponential(p) # No error raised
-    for fn_name in ['Pareto', 'Weibull', 'Beta', 'Gamma']:
-        raises(ValueError, "%s(a, p)" % fn_name)
-        raises(ValueError, "%s(p, a)" % fn_name)
-        eval("%s(p, q)" % fn_name) # No error raised
+    for fn in [Pareto, Weibull, Beta, Gamma]:
+        raises(ValueError, lambda: fn(a, p))
+        raises(ValueError, lambda: fn(p, a))
+        fn(p, q) # No error raised
 
 @XFAIL
 def test_unevaluated():

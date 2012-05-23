@@ -50,7 +50,7 @@ MPMATH_TRANSLATIONS = {
     "Shi":"shi",
     "Chi":"chi",
     "Si":"si",
-    "Ci":"ci",
+    "Ci":"ci"
 }
 
 NUMPY_TRANSLATIONS = {
@@ -378,20 +378,24 @@ def _imp_namespace(expr, namespace=None):
     return namespace
 
 def implemented_function(symfunc, implementation):
-    """ Add numerical `implementation` to function `symfunc`
+    """ Add numerical ``implementation`` to function ``symfunc``.
 
-    `symfunc` can by a Function, or a name, in which case we make an
-    anonymous function with this name.  The function is anonymous in the
-    sense that the name is not unique in the sympy namespace.
+    ``symfunc`` can be an ``UndefinedFunction`` instance, or a name sting.
+    In the latter case we create an ``UndefinedFunction`` instance with that
+    name.
+
+    Be aware that this is a quick workaround, not a general method to create
+    special symbolic functions. If you want to create a symbolic function to be
+    used by all the machinery of sympy you should subclass the ``Function``
+    class.
 
     Parameters
     ----------
-    symfunc : str or ``sympy.FunctionClass`` instance
-       If str, then create new anonymous sympy function with this as
-       name.  If `symfunc` is a sympy function, attach implementation to
-       function
+    symfunc : ``str`` or ``UndefinedFunction`` instance
+       If ``str``, then create new ``UndefinedFunction`` with this as
+       name.  If `symfunc` is a sympy function, attach implementation to it.
     implementation : callable
-       numerical implementation of function for use in ``lambdify``
+       numerical implementation to be called by ``evalf()`` or ``lambdify``
 
     Returns
     -------
@@ -410,9 +414,12 @@ def implemented_function(symfunc, implementation):
     """
     # Delayed import to avoid circular imports
     from sympy.core.function import UndefinedFunction
-    # if name, create anonymous function to hold implementation
+    # if name, create function to hold implementation
     if isinstance(symfunc, basestring):
         symfunc = UndefinedFunction(symfunc)
+    elif not isinstance(symfunc, UndefinedFunction):
+        raise ValueError('symfunc should be either a string or'
+                         ' an UndefinedFunction instance.')
     # We need to attach as a method because symfunc will be a class
     symfunc._imp_ = staticmethod(implementation)
     return symfunc

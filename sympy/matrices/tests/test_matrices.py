@@ -23,7 +23,7 @@ def test_sum():
     m = Matrix([[1,2,3],[x,y,x],[2*y,-50,z*x]])
     assert m+m == Matrix([[2,4,6],[2*x,2*y,2*x],[4*y,-100,2*z*x]])
     n = Matrix(1, 2, [1, 2])
-    raises(ShapeError, "m+n")
+    raises(ShapeError, lambda: m+n)
 
 def test_multiplication():
     a=Matrix((
@@ -53,7 +53,7 @@ def test_multiplication():
     assert h[1,1]==6
     assert h[2,0]==0
     assert h[2,1]==0
-    raises(ShapeError, 'matrix_multiply_elementwise(a, b)')
+    raises(ShapeError, lambda: matrix_multiply_elementwise(a, b))
 
     x = Symbol("x")
 
@@ -75,7 +75,7 @@ def test_multiplication():
     assert c[1,1] == 0
 
 def test_power():
-    raises(NonSquareMatrixError, 'Matrix((1, 2))**2')
+    raises(NonSquareMatrixError, lambda: Matrix((1, 2))**2)
 
     R = Rational
     A = Matrix([[2,3],[4,5]])
@@ -95,10 +95,12 @@ def test_power():
     assert (A**(S(1)/2))**2 == A
 
 def test_creation():
-    raises(ValueError, 'Matrix(5, 5, range(20))')
-    raises(IndexError, 'Matrix((1, 2))[2]')
-    raises(IndexError, 'Matrix((1, 2))[1:2] = 5')
-    raises(IndexError, 'Matrix((1, 2))[3] = 5')
+    raises(ValueError, lambda: Matrix(5, 5, range(20)))
+    raises(IndexError, lambda: Matrix((1, 2))[2])
+    with raises(IndexError):
+         Matrix((1, 2))[1:2] = 5
+    with raises(IndexError):
+         Matrix((1, 2))[3] = 5
 
     x = Symbol("x")
     a = Matrix([[x, 0], [0, 0]])
@@ -359,8 +361,8 @@ def test_extract():
     assert m.extract([0,1,3],[0,1]) == Matrix(3,2,[0,1,3,4,9,10])
     assert m.extract([0,3],[0,0,2]) == Matrix(2,3,[0,0,2,9,9,11])
     assert m.extract(range(4),range(3)) == m
-    raises(IndexError, 'm.extract([4], [0])')
-    raises(IndexError, 'm.extract([0], [3])')
+    raises(IndexError, lambda: m.extract([4], [0]))
+    raises(IndexError, lambda: m.extract([0], [3]))
 
 def test_reshape():
     m0 = eye(3)
@@ -1140,7 +1142,7 @@ def test_conjugate():
                            [5,0]])
 
 def test_conj_dirac():
-    raises(AttributeError, "eye(3).D")
+    raises(AttributeError, lambda: eye(3).D)
 
     M = Matrix([[1,I,I,I],
                  [0,1,I,I],
@@ -1363,11 +1365,11 @@ def test_nonvectorJacobian():
     x, y, z = symbols('x y z')
     X = Matrix([[exp(x + y + z), exp(x + y + z)],
                  [exp(x + y + z), exp(x + y + z)] ])
-    raises(TypeError, 'X.jacobian(Matrix([x, y, z]))')
+    raises(TypeError, lambda: X.jacobian(Matrix([x, y, z])))
     X = X[0,:]
     Y = Matrix([[x, y], [x,z]])
-    raises(TypeError, 'X.jacobian(Y)')
-    raises(TypeError, 'X.jacobian(Matrix([ [x, y], [x, z] ]))')
+    raises(TypeError, lambda: X.jacobian(Y))
+    raises(TypeError, lambda: X.jacobian(Matrix([ [x, y], [x, z] ])))
 
 def test_vec():
     m = Matrix([[1,3], [2,4]])
@@ -1395,11 +1397,11 @@ def test_vech():
 
 def test_vech_errors():
     m = Matrix([[1,3]])
-    raises(ShapeError, 'm.vech()')
+    raises(ShapeError, lambda: m.vech())
     m = Matrix([[1,3], [2,4]])
-    raises(ValueError, 'm.vech()')
-    raises(ShapeError, 'Matrix([ [1,3] ]).vech()')
-    raises(ValueError, 'Matrix([ [1,3], [2,4] ]).vech()')
+    raises(ValueError, lambda: m.vech())
+    raises(ShapeError, lambda: Matrix([ [1,3] ]).vech())
+    raises(ValueError, lambda: Matrix([ [1,3], [2,4] ]).vech())
 
 def test_diag():
     x, y, z = symbols("x y z")
@@ -1487,8 +1489,8 @@ def test_creation_args():
     Check that matrix dimensions can be specified using any reasonable type
     (see issue 1515).
     """
-    raises(ValueError, 'zeros(3, -1)')
-    raises(TypeError, 'zeros(1, 2, 3, 4)')
+    raises(ValueError, lambda: zeros(3, -1))
+    raises(TypeError, lambda: zeros(1, 2, 3, 4))
     assert zeros(3L) == zeros(3)
     assert zeros(Integer(3)) == zeros(3)
     assert zeros(3.) == zeros(3)
@@ -1496,9 +1498,9 @@ def test_creation_args():
     assert eye(Integer(3)) == eye(3)
     assert eye(3.) == eye(3)
     assert ones(3L, Integer(4)) == ones(3, 4)
-    raises(TypeError, 'Matrix(5)')
-    raises(TypeError, 'Matrix(1, 2)')
-    raises(TypeError, 'SparseMatrix(1, 2)')
+    raises(TypeError, lambda: Matrix(5))
+    raises(TypeError, lambda: Matrix(1, 2))
+    raises(TypeError, lambda: SparseMatrix(1, 2))
 
 def test_diagonal_symmetrical():
     m = Matrix(2,2,[0, 1, 1, 0])
@@ -1537,7 +1539,7 @@ def test_diagonalization():
     m = Matrix(3,2,[-3, 1, -3, 20, 3, 10])
     assert not m.is_diagonalizable()
     assert not m.is_symmetric()
-    raises(NonSquareMatrixError, 'm.diagonalize()')
+    raises(NonSquareMatrixError, lambda: m.diagonalize())
 
     # diagonalizable
     m = diag(1, 2, 3)
@@ -1581,7 +1583,7 @@ def test_diagonalization():
     # diagonalizable, complex only
     m = Matrix(2,2,[0, 1, -1, 0])
     assert not m.is_diagonalizable(True)
-    raises(MatrixError, '(D, P) = m.diagonalize(True)')
+    raises(MatrixError, lambda: m.diagonalize(True))
     assert m.is_diagonalizable()
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
@@ -1589,11 +1591,11 @@ def test_diagonalization():
     # not diagonalizable
     m = Matrix(2,2,[0, 1, 0, 0])
     assert not m.is_diagonalizable()
-    raises(MatrixError, '(D, P) = m.diagonalize()')
+    raises(MatrixError, lambda: m.diagonalize())
 
     m = Matrix(3,3,[-3, 1, -3, 20, 3, 10, 2, -2, 4])
     assert not m.is_diagonalizable()
-    raises(MatrixError, '(D, P) = m.diagonalize()')
+    raises(MatrixError, lambda: m.diagonalize())
 
     # symbolic
     a, b, c, d = symbols('a b c d')
@@ -1604,17 +1606,17 @@ def test_diagonalization():
 @XFAIL
 def test_eigen_vects():
     m = Matrix(2,2,[1, 0, 0, I])
-    raises(NotImplementedError, 'm.is_diagonalizable(True)')
+    raises(NotImplementedError, lambda: m.is_diagonalizable(True))
     # !!! bug because of eigenvects() or roots(x**2 + (-1 - I)*x + I, x)
     # see issue 2193
     assert not m.is_diagonalizable(True)
-    raises(MatrixError, '(P, D) = m.diagonalize(True)')
+    raises(MatrixError, lambda: m.diagonalize(True))
     (P, D) = m.diagonalize(True)
 
 def test_jordan_form():
 
     m = Matrix(3,2,[-3, 1, -3, 20, 3, 10])
-    raises(NonSquareMatrixError, 'm.jordan_form()')
+    raises(NonSquareMatrixError, lambda: m.jordan_form())
 
     # diagonalizable
     m = Matrix(3, 3, [7, -12, 6, 10, -19, 10, 12, -24, 13])
@@ -1719,76 +1721,77 @@ def test_has():
 
 def test_errors():
     # Note, some errors not tested.  See 'XXX' in code.
-    raises(ValueError, "Matrix([[1, 2], [1]])")
-    raises(IndexError, "Matrix([[1, 2]])[1.2, 5]")
-    raises(IndexError, "Matrix([[1, 2]])[1, 5.2]")
-    raises(ValueError, "randMatrix(3, c=4, symmetric=True)")
-    raises(IndexError, "Matrix([1, 2]).slice2bounds('a', 4)")
-    raises(ValueError, "Matrix([1, 2]).reshape(4, 6)")
+    raises(ValueError, lambda: Matrix([[1, 2], [1]]))
+    raises(IndexError, lambda: Matrix([[1, 2]])[1.2, 5])
+    raises(IndexError, lambda: Matrix([[1, 2]])[1, 5.2])
+    raises(ValueError, lambda: randMatrix(3, c=4, symmetric=True))
+    raises(IndexError, lambda: Matrix([1, 2]).slice2bounds('a', 4))
+    raises(ValueError, lambda: Matrix([1, 2]).reshape(4, 6))
     raises(ShapeError,
-        "Matrix([[1, 2], [3, 4]]).copyin_matrix([1, 0], Matrix([1, 2]))")
-    raises(TypeError, "Matrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([]))")
-    raises(NonSquareMatrixError, "Matrix([[1, 2, 3], [2, 3, 0]]).inv()")
+        lambda: Matrix([[1, 2], [3, 4]]).copyin_matrix([1, 0], Matrix([1, 2])))
+    raises(TypeError, lambda: Matrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([])))
+    raises(NonSquareMatrixError, lambda: Matrix([[1, 2, 3], [2, 3, 0]]).inv())
     raises(ShapeError,
-        "Matrix(1, 2, [1, 2]).row_join(Matrix([[1, 2], [3, 4]]))")
-    raises(ShapeError, "Matrix([1, 2]).col_join(Matrix([[1, 2], [3, 4]]))")
-    raises(ShapeError, "Matrix([1]).row_insert(1, Matrix([[1, 2], [3, 4]]))")
-    raises(ShapeError, "Matrix([1]).col_insert(1, Matrix([[1, 2], [3, 4]]))")
-    raises(NonSquareMatrixError, "Matrix([1, 2]).trace()")
-    raises(TypeError, "Matrix([1]).applyfunc(1)")
-    raises(ShapeError, "Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]]))")
-    raises(MatrixError, "Matrix([[1,2,3],[4,5,6],[7,8,9]]).QRdecomposition()")
-    raises(MatrixError, "Matrix(1, 2, [1, 2]).QRdecomposition()")
-    raises(NonSquareMatrixError, "Matrix([1, 2]).LUdecomposition_Simple()")
-    raises(ValueError, "Matrix([[1, 2], [3, 4]]).minorEntry(4, 5)")
-    raises(ValueError, "Matrix([[1, 2], [3, 4]]).minorMatrix(4, 5)")
-    raises(TypeError, "Matrix([1, 2, 3]).cross(1)")
-    raises(TypeError, "Matrix([1, 2, 3]).dot(1)")
-    raises(ShapeError, "Matrix([1, 2, 3]).dot(Matrix([1, 2]))")
-    raises(ShapeError, "Matrix([1, 2]).dot([])")
-    raises(TypeError, "Matrix([1, 2]).dot('a')")
-    raises(NotImplementedError, "Matrix([[0,1,2],[0,0,-1], [0,0,0]]).exp()")
-    raises(NonSquareMatrixError, "Matrix([1, 2, 3]).exp()")
-    raises(ShapeError, "Matrix([[1, 2], [3, 4]]).normalized()")
-    raises(ValueError, "Matrix([1, 2]).inv(method='not a method')")
-    raises(NonSquareMatrixError, "Matrix([1, 2]).inverse_GE()")
-    raises(ValueError, "Matrix([[1, 2], [1, 2]]).inverse_GE()")
-    raises(NonSquareMatrixError, "Matrix([1, 2]).inverse_ADJ()")
-    raises(ValueError, "Matrix([[1, 2], [1, 2]]).inverse_ADJ()")
-    raises(NonSquareMatrixError, "Matrix([1, 2]).inverse_LU()")
-    raises(NonSquareMatrixError, "Matrix([1,2]).is_nilpotent()")
-    raises(NonSquareMatrixError, "Matrix([1,2]).det()")
+        lambda: Matrix(1, 2, [1, 2]).row_join(Matrix([[1, 2], [3, 4]])))
+    raises(ShapeError, lambda: Matrix([1, 2]).col_join(Matrix([[1, 2], [3, 4]])))
+    raises(ShapeError, lambda: Matrix([1]).row_insert(1, Matrix([[1, 2], [3, 4]])))
+    raises(ShapeError, lambda: Matrix([1]).col_insert(1, Matrix([[1, 2], [3, 4]])))
+    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).trace())
+    raises(TypeError, lambda: Matrix([1]).applyfunc(1))
+    raises(ShapeError, lambda: Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]])))
+    raises(MatrixError, lambda: Matrix([[1,2,3],[4,5,6],[7,8,9]]).QRdecomposition())
+    raises(MatrixError, lambda: Matrix(1, 2, [1, 2]).QRdecomposition())
+    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).LUdecomposition_Simple())
+    raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minorEntry(4, 5))
+    raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minorMatrix(4, 5))
+    raises(TypeError, lambda: Matrix([1, 2, 3]).cross(1))
+    raises(TypeError, lambda: Matrix([1, 2, 3]).dot(1))
+    raises(ShapeError, lambda: Matrix([1, 2, 3]).dot(Matrix([1, 2])))
+    raises(ShapeError, lambda: Matrix([1, 2]).dot([]))
+    raises(TypeError, lambda: Matrix([1, 2]).dot('a'))
+    raises(NotImplementedError, lambda: Matrix([[0,1,2],[0,0,-1], [0,0,0]]).exp())
+    raises(NonSquareMatrixError, lambda: Matrix([1, 2, 3]).exp())
+    raises(ShapeError, lambda: Matrix([[1, 2], [3, 4]]).normalized())
+    raises(ValueError, lambda: Matrix([1, 2]).inv(method='not a method'))
+    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).inverse_GE())
+    raises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inverse_GE())
+    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).inverse_ADJ())
+    raises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inverse_ADJ())
+    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).inverse_LU())
+    raises(NonSquareMatrixError, lambda: Matrix([1,2]).is_nilpotent())
+    raises(NonSquareMatrixError, lambda: Matrix([1,2]).det())
     raises(ValueError,
-        "Matrix([[1, 2], [3, 4]]).det(method='Not a real method')")
-    raises(NonSquareMatrixError, "Matrix([1, 2]).det_bareis()")
-    raises(NonSquareMatrixError, "Matrix([1, 2]).berkowitz()")
-    raises(NonSquareMatrixError, "Matrix([1, 2]).berkowitz_det()")
+        lambda: Matrix([[1, 2], [3, 4]]).det(method='Not a real method'))
+    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).det_bareis())
+    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).berkowitz())
+    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).berkowitz_det())
     raises(ValueError,
-        "hessian(Matrix([[1, 2], [3, 4]]), Matrix([[1, 2], [2, 1]]))")
-    raises(ValueError, "hessian(Matrix([[1, 2], [3, 4]]), [])")
-    raises(ValueError, "hessian(Symbol('x')**2, 'a')")
-    raises(TypeError, "SparseMatrix(1.4, 2, lambda i, j: 0)")
-    raises(ValueError, "SparseMatrix([1, 2, 3], [1, 2])")
-    raises(ValueError, "SparseMatrix([[1, 2], [3, 4]])[(1, 2, 3)]")
-    raises(ValueError, "SparseMatrix([[1, 2], [3, 4]]).rowdecomp(5)")
-    raises(ValueError, "SparseMatrix([[1, 2], [3, 4]])[1, 2, 3] = 4")
+        lambda: hessian(Matrix([[1, 2], [3, 4]]), Matrix([[1, 2], [2, 1]])))
+    raises(ValueError, lambda: hessian(Matrix([[1, 2], [3, 4]]), []))
+    raises(ValueError, lambda: hessian(Symbol('x')**2, 'a'))
+    raises(TypeError, lambda: SparseMatrix(1.4, 2, lambda i, j: 0))
+    raises(ValueError, lambda: SparseMatrix([1, 2, 3], [1, 2]))
+    raises(ValueError, lambda: SparseMatrix([[1, 2], [3, 4]])[(1, 2, 3)])
+    raises(ValueError, lambda: SparseMatrix([[1, 2], [3, 4]]).rowdecomp(5))
+    with raises(ValueError):
+      SparseMatrix([[1, 2], [3, 4]])[1, 2, 3] = 4
     raises(TypeError,
-        "SparseMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([]))")
-    raises(IndexError, "SparseMatrix([[1, 2], [3, 4]]).submatrix((1, 2))")
-    raises(TypeError, "SparseMatrix([1, 2, 3]).cross(1)")
-    raises(IndexError, "SparseMatrix(1, 2, [1, 2])[3]")
+        lambda: SparseMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([])))
+    raises(IndexError, lambda: SparseMatrix([[1, 2], [3, 4]]).submatrix((1, 2)))
+    raises(TypeError, lambda: SparseMatrix([1, 2, 3]).cross(1))
+    raises(IndexError, lambda: SparseMatrix(1, 2, [1, 2])[3])
     raises(ShapeError,
-        "SparseMatrix(1, 2, [1, 2]) + SparseMatrix(2, 1, [2, 1])")
+        lambda: SparseMatrix(1, 2, [1, 2]) + SparseMatrix(2, 1, [2, 1]))
     raises(ValueError,
-        ("Matrix([[5, 10, 7],[0, -1, 2],[8,  3, 4]]"
-         ").LUdecomposition_Simple(iszerofunc=lambda x:abs(x)<=4)"))
-    raises(NotImplementedError, "Matrix([[1, 0],[1, 1]])**(S(1)/2)")
+        lambda: Matrix([[5, 10, 7],[0, -1, 2],[8,  3, 4]]
+        ).LUdecomposition_Simple(iszerofunc=lambda x:abs(x)<=4))
+    raises(NotImplementedError, lambda: Matrix([[1, 0],[1, 1]])**(S(1)/2))
     raises(NotImplementedError,
-        "Matrix([[1, 2, 3],[4, 5, 6],[7,  8, 9]])**(0.5)")
-    raises(IndexError, "eye(3)[5,2]")
-    raises(IndexError, "eye(3)[2,5]")
+        lambda: Matrix([[1, 2, 3],[4, 5, 6],[7,  8, 9]])**(0.5))
+    raises(IndexError, lambda: eye(3)[5,2])
+    raises(IndexError, lambda: eye(3)[2,5])
     M = Matrix(((1,2,3,4),(5,6,7,8),(9,10,11,12),(13,14,15,16)))
-    raises(ValueError,"M.det('method=LU_decomposition()')")
+    raises(ValueError, lambda: M.det('method=LU_decomposition()'))
 
 def test_len():
     assert len(Matrix()) == 0
@@ -1829,7 +1832,7 @@ def test_diff():
 def test_getattr():
     x, y = symbols('x,y')
     A = Matrix(((1,4,x),(y,2,4),(10,5,x**2+1)))
-    raises (AttributeError, 'A.nonexistantattribute')
+    raises (AttributeError, lambda: A.nonexistantattribute)
     assert getattr(A, 'diff')(x) == Matrix(((0,0,1),(0,0,0),(0,0,2*x)))
 
 def test_hessenberg():
@@ -1844,16 +1847,16 @@ def test_hessenberg():
     assert not A.is_upper_hessenberg()
 
 def test_cholesky():
-    raises(NonSquareMatrixError, 'Matrix((1, 2)).cholesky()')
-    raises(ValueError, 'Matrix(((1, 2), (3, 4))).cholesky()')
+    raises(NonSquareMatrixError, lambda: Matrix((1, 2)).cholesky())
+    raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).cholesky())
     A = Matrix(((25,15,-5),(15,18,0),(-5,0,11)))
     assert A.cholesky() * A.cholesky().T == A
     assert A.cholesky().is_lower()
     assert A.cholesky() == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
 
 def test_LDLdecomposition():
-    raises(NonSquareMatrixError, 'Matrix((1, 2)).LDLdecomposition()')
-    raises(ValueError, 'Matrix(((1, 2), (3, 4))).LDLdecomposition()')
+    raises(NonSquareMatrixError, lambda: Matrix((1, 2)).LDLdecomposition())
+    raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).LDLdecomposition())
     A = Matrix(((25,15,-5), (15,18,0), (-5,0,11)))
     L, D = A.LDLdecomposition()
     assert L * D * L.T == A
@@ -1898,12 +1901,12 @@ def test_lower_triangular_solve():
     x, y = symbols('x y')
 
     raises(NonSquareMatrixError,
-        'Matrix([1, 0]).lower_triangular_solve(Matrix([0, 1]))')
+        lambda: Matrix([1, 0]).lower_triangular_solve(Matrix([0, 1])))
     raises(ShapeError,
-        'Matrix([[1, 0], [0, 1]]).lower_triangular_solve(Matrix([1]))')
+        lambda: Matrix([[1, 0], [0, 1]]).lower_triangular_solve(Matrix([1])))
     raises(ValueError,
-        ('Matrix([[2, 1], [1, 2]]).lower_triangular_solve('
-        'Matrix([[1, 0], [0, 1]]))'))
+        lambda: Matrix([[2, 1], [1, 2]]).lower_triangular_solve(
+                Matrix([[1, 0], [0, 1]])))
 
     A = Matrix([[1, 0], [0, 1]])
     B = Matrix([[x, y], [y, x]])
@@ -1916,12 +1919,12 @@ def test_upper_triangular_solve():
     x, y = symbols('x y')
 
     raises(NonSquareMatrixError,
-        'Matrix([1, 0]).upper_triangular_solve(Matrix([0, 1]))')
+        lambda: Matrix([1, 0]).upper_triangular_solve(Matrix([0, 1])))
     raises(TypeError,
-        'Matrix([[1, 0], [0, 1]]).upper_triangular_solve(Matrix([1]))')
+        lambda: Matrix([[1, 0], [0, 1]]).upper_triangular_solve(Matrix([1])))
     raises(TypeError,
-        ('Matrix([[2, 1], [1, 2]]).upper_triangular_solve('
-        'Matrix([[1, 0], [0, 1]]))'))
+        lambda: Matrix([[2, 1], [1, 2]]).upper_triangular_solve(
+                Matrix([[1, 0], [0, 1]])))
 
     A = Matrix([[1, 0], [0, 1]])
     B = Matrix([[x, y], [y, x]])
@@ -1931,7 +1934,7 @@ def test_upper_triangular_solve():
     assert A.upper_triangular_solve(C) == Matrix([2, 3])
 
 def test_diagonal_solve():
-    raises(TypeError, 'Matrix([1, 1]).diagonal_solve(Matrix([1]))')
+    raises(TypeError, lambda: Matrix([1, 1]).diagonal_solve(Matrix([1])))
 
 def test_matrix_norm():
     # Vector Tests
@@ -2151,8 +2154,8 @@ def test_GramSchmidt():
         [Matrix(1, 2, [1, 2]), Matrix(1, 2, [R(2)/5, R(-1)/5])]
 
 def test_casoratian():
-     assert casoratian([1, 2, 3, 4], 1) == 0
-     assert casoratian([1, 2, 3, 4], 1, zero=False) == 0
+    assert casoratian([1, 2, 3, 4], 1) == 0
+    assert casoratian([1, 2, 3, 4], 1, zero=False) == 0
 
 def test_zero_dimension_multiply():
     assert (Matrix()*zeros(0, 3)).shape == (0, 3)
@@ -2165,15 +2168,15 @@ def test_slice_issue_2884():
     assert m[-1,:] == Matrix([[2, 3]])
     assert m[:,1] == Matrix([[1, 3]]).T
     assert m[:,-1] == Matrix([[1, 3]]).T
-    raises(IndexError, 'm[2,:]')
-    raises(IndexError, 'm[2,2]')
+    raises(IndexError, lambda: m[2,:])
+    raises(IndexError, lambda: m[2,2])
 
 def test_invertible_check():
     x = symbols('x')
     # sometimes a singular matrix will have a pivot vector shorter than
     # the number of rows in a matrix...
     assert Matrix([[1, 2], [1, 2]]).rref() == (Matrix([[1, 2], [0, 0]]), [0])
-    raises(ValueError, 'Matrix([[1, 2], [1, 2]]).inv()')
+    raises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inv())
     # ... but sometimes it won't, so that is an insufficient test of
     # whether something is invertible.
     m = Matrix([
@@ -2185,9 +2188,9 @@ def test_invertible_check():
     # matrix will be returned even though m is not invertible
     assert m.rref()[0] == eye(3)
     assert m.rref(simplify=signsimp)[0] != eye(3)
-    raises(ValueError, 'm.inv(method="ADJ")')
-    raises(ValueError, 'm.inv(method="GE")')
-    raises(ValueError, 'm.inv(method="LU")')
+    raises(ValueError, lambda: m.inv(method="ADJ"))
+    raises(ValueError, lambda: m.inv(method="GE"))
+    raises(ValueError, lambda: m.inv(method="LU"))
 
 @XFAIL
 def test_issue_860():

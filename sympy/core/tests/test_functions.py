@@ -122,8 +122,8 @@ def test_Lambda_symbols():
     assert Lambda(x, x*y).free_symbols == set([y])
 
 def test_Lambda_arguments():
-    raises(TypeError, 'Lambda(x, 2*x)(x, y)')
-    raises(TypeError, 'Lambda((x, y), x+y)(x)')
+    raises(TypeError, lambda: Lambda(x, 2*x)(x, y))
+    raises(TypeError, lambda: Lambda((x, y), x+y)(x))
 
 def test_Lambda_equality():
     assert Lambda(x, 2*x) != Lambda((x,y), 2*x)
@@ -138,8 +138,8 @@ def test_Subs():
     assert Subs(f(x**2), x**2, 0).doit() == f(0)
     assert Subs(f(x, y), (x, y), (0, 1)).doit() == f(0, 1)
     assert Subs(Subs(f(x, y), x, 0), y, 1).doit() == f(0, 1)
-    raises(ValueError, 'Subs(f(x, y), (x, y), (0, 0, 1))')
-    raises(ValueError, 'Subs(f(x, y), (x, x, y), (0, 0, 1))')
+    raises(ValueError, lambda: Subs(f(x, y), (x, y), (0, 0, 1)))
+    raises(ValueError, lambda: Subs(f(x, y), (x, x, y), (0, 0, 1)))
 
     assert len(Subs(f(x, y), (x, y), (0, 1)).variables) == 2
     assert all(isinstance(v, Dummy) for v in Subs(f(x, y),
@@ -282,9 +282,9 @@ def test_function__eval_nseries():
     assert acos(1-x**2)._eval_nseries(x,2,None) == sqrt(2)*x + O(x**2)
     assert polygamma(n,x+1)._eval_nseries(x,2,None) == \
                    polygamma(n,1) + polygamma(n+1,1)*x + O(x**2)
-    raises(PoleError, 'sin(1/x)._eval_nseries(x,2,None)')
-    raises(PoleError, 'acos(1-x)._eval_nseries(x,2,None)')
-    raises(PoleError, 'acos(1+x)._eval_nseries(x,2,None)')
+    raises(PoleError, lambda: sin(1/x)._eval_nseries(x,2,None))
+    raises(PoleError, lambda: acos(1-x)._eval_nseries(x,2,None))
+    raises(PoleError, lambda: acos(1+x)._eval_nseries(x,2,None))
     assert loggamma(1/x)._eval_nseries(x,0,None) \
            == log(x)/2 - log(x)/x - 1/x + O(1, x)
     assert loggamma(log(1/x)).nseries(x,n=1,logx=y) == loggamma(-y)
@@ -325,7 +325,7 @@ def test_issue2300():
             if ok(v):
                 noraise = eq.diff(*v)
             else:
-                raises(ValueError, 'eq.diff(*v)')
+                raises(ValueError, lambda: eq.diff(*v))
 
 def test_derivative_numerically():
     from random import random
@@ -340,7 +340,7 @@ def test_fdiff_argument_index_error():
             raise ArgumentIndexError
     mf = myfunc(x)
     assert mf.diff(x) == Derivative(mf, x)
-    raises(TypeError, 'myfunc(x, x)')
+    raises(TypeError, lambda: myfunc(x, x))
 
 def test_deriv_wrt_function():
     x = f(t)
@@ -405,9 +405,9 @@ def test_diff_wrt():
     assert diff(f(g(x)),g(x)) == Derivative(f(g(x)),g(x))
 
 def test_diff_wrt_not_allowed():
-    raises(ValueError, 'diff(sin(x**2),x**2)')
-    raises(ValueError, 'diff(exp(x*y)),x*y')
-    raises(ValueError, 'diff(1+x,1+x)')
+    raises(ValueError, lambda: diff(sin(x**2),x**2))
+    raises(ValueError, lambda: diff(exp(x*y),x*y))
+    raises(ValueError, lambda: diff(1+x,1+x))
 
 def test_klein_gordon_lagrangian():
     m = Symbol('m')
@@ -466,8 +466,8 @@ def test_unhandled():
 
 @XFAIL
 def test_issue_1612() :
-   x = Symbol("x")
-   assert Symbol('f')(x) == f(x)
+    x = Symbol("x")
+    assert Symbol('f')(x) == f(x)
 
 def test_nfloat():
     from sympy.core.basic import _aresame

@@ -1366,7 +1366,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     # First, see if they are already solved
     if sol.lhs == func and not sol.rhs.has(func) or\
         sol.rhs == func and not sol.lhs.has(func):
-            return -2
+        return -2
     # We are not so lucky, try solving manually
     if trysolving:
         try:

@@ -21,21 +21,23 @@ def test_levicivita():
 def test_kronecker_delta():
     i, j = symbols('i,j')
     k = Symbol('k', nonzero=True)
+    assert KroneckerDelta(1, 1) == 1
+    assert KroneckerDelta(1, 2) == 0
+    assert KroneckerDelta(x, x) == 1
+    assert KroneckerDelta(x**2-y**2, x**2-y**2) == 1
+    assert KroneckerDelta(i, i) == 1
+    assert KroneckerDelta(i, i + 1) == 0
+    assert KroneckerDelta(0, 0) == 1
+    assert KroneckerDelta(0, 1) == 0
+    assert KroneckerDelta(i + k, i + k) == 1
+    assert KroneckerDelta(i + k, i + 1 + k) == 0
+    assert KroneckerDelta(i, j).subs(dict(i=1, j=0)) == 0
+    assert KroneckerDelta(i, j).subs(dict(i=3, j=3)) == 1
+
+
+def test_kronecker_delta_secondquant():
+    """secondquant-specific methods"""
     D = KroneckerDelta
-    assert D(1, 1) == 1
-    assert D(1, 2) == 0
-    assert D(x, x) == 1
-    assert D(x**2-y**2, x**2-y**2) == 1
-    assert D(i, i) == 1
-    assert D(i, i + 1) == 0
-    assert D(0, 0) == 1
-    assert D(0, 1) == 0
-    assert D(i + k, i + k) == 1
-    assert D(i + k, i + 1 + k) == 0
-    assert D(i, j).subs(dict(i=1, j=0)) == 0
-    assert D(i, j).subs(dict(i=3, j=3)) == 1
-
-
     i,j,v,w = symbols('i j v w',below_fermi=True,cls=Dummy)
     a,b,t,u = symbols('a b t u',above_fermi=True, cls=Dummy)
     p,q,r,s = symbols('p q r s',cls=Dummy)
@@ -84,8 +86,8 @@ def test_kronecker_delta():
     assert D(q,i).killable_index == q
     assert D(q,v).preferred_index == v
     assert D(q,v).killable_index == q
-    assert D(q,p).preferred_index == p
-    assert D(q,p).killable_index == q
+    assert D(q, p).preferred_index == q
+    assert D(q, p).killable_index == p
 
 
     EV = evaluate_deltas

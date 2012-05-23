@@ -298,7 +298,6 @@ class OuterProduct(Operator):
 
     .. [1] http://en.wikipedia.org/wiki/Outer_product
     """
-
     is_commutative = False
 
     def __new__(cls, *args, **old_assumptions):

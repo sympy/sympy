@@ -33,14 +33,16 @@ There are two types of functions:
 
 """
 from core import BasicMeta, C
-from assumptions import WithAssumptions
+from assumptions import ManagedProperties
 from basic import Basic
 from singleton import S
+from sympify import sympify
 from expr import Expr, AtomicExpr
 from decorators import _sympifyit, deprecated
 from compatibility import iterable,is_sequence
 from cache import cacheit
 from numbers import Rational, Float
+from add import Add
 
 from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
@@ -80,7 +82,7 @@ class ArgumentIndexError(ValueError):
         return ("Invalid operation with argument number %s for Function %s" %
                         (self.args[1], self.args[0]))
 
-class FunctionClass(WithAssumptions):
+class FunctionClass(ManagedProperties):
     """
     Base class for function classes. FunctionClass is a subclass of type.
 
@@ -115,18 +117,15 @@ class Application(Basic):
     @cacheit
     def __new__(cls, *args, **options):
         args = map(sympify, args)
+        evaluate = options.pop('evaluate', True)
+        if options:
+            raise ValueError("Unknown options: %s" % options)
 
-        # these lines should be refactored
-        for opt in ["nargs", "dummy", "comparable", "noncommutative",
-                    "commutative"]:
-            if opt in options:
-                del options[opt]
-
-        if options.pop('evaluate', True):
+        if evaluate:
             evaluated = cls.eval(*args)
             if evaluated is not None:
                 return evaluated
-        return super(Application, cls).__new__(cls, *args, **options)
+        return super(Application, cls).__new__(cls, *args)
 
     @classmethod
     def eval(cls, *args):
@@ -283,16 +282,14 @@ class Function(Application, Expr):
                     'plural': 's'*(n != 1),
                     'given': n})
 
-        args = map(sympify, args)
-        evaluate = options.pop('evaluate', True)
-        if evaluate:
-            evaluated = cls.eval(*args)
-            if evaluated is not None:
-                return evaluated
-        result = super(Application, cls).__new__(cls, *args, **options)
-        pr = max(cls._should_evalf(a) for a in args)
-        pr2 = min(cls._should_evalf(a) for a in args)
-        if evaluate and pr2 > 0:
+        evaluate = options.get('evaluate', True)
+        result = super(Function, cls).__new__(cls, *args, **options)
+        if not evaluate or not isinstance(result, cls):
+            return result
+
+        pr = max(cls._should_evalf(a) for a in result.args)
+        pr2 = min(cls._should_evalf(a) for a in result.args)
+        if pr2 > 0:
             return result.evalf(mlib.libmpf.prec_to_dps(pr))
         return result
 
@@ -369,8 +366,12 @@ class Function(Application, Expr):
                 return
 
         # Convert all args to mpf or mpc
+        # Convert the arguments to *higher* precision than requested for the
+        # final result.
+        # XXX + 5 is a guess, it is similar to what is used in evalf.py. Should
+        #     we be more intelligent about it?
         try:
-            args = [arg._to_mpmath(prec) for arg in self.args]
+            args = [arg._to_mpmath(prec + 5) for arg in self.args]
         except ValueError:
             return
 
@@ -707,7 +708,7 @@ class AppliedUndef(Function):
     """
     def __new__(cls, *args, **options):
         args = map(sympify, args)
-        result = Expr.__new__(cls, *args, **options)
+        result = super(AppliedUndef, cls).__new__(cls, *args, **options)
         result.nargs = len(args)
         return result
 
@@ -1001,9 +1002,6 @@ class Derivative(Expr):
         # after a few differentiations, then we won't need the other variables.
         variablegen = (v for v, count in variable_count for i in xrange(count))
 
-        if expr.is_commutative:
-            assumptions['commutative'] = True
-
         # If we can't compute the derivative of expr (but we wanted to) and
         # expr is itself not a Derivative, finish building an unevaluated
         # derivative class by calling Expr.__new__.
@@ -1135,6 +1133,9 @@ class Derivative(Expr):
             sorted_vars.extend(sorted(symbol_part,
                                       key=default_sort_key))
         return sorted_vars
+
+    def _eval_is_commutative(self):
+        return self.expr.is_commutative
 
     def _eval_derivative(self, v):
         # If the variable s we are diff wrt is not in self.variables, we
@@ -1392,11 +1393,11 @@ class Subs(Expr):
             C.Dummy(str(arg)) for arg in variables ])
         expr = sympify(expr).subs(tuple(zip(variables, new_variables)))
 
-        if expr.is_commutative:
-            assumptions['commutative'] = True
-
-        obj = Expr.__new__(cls, expr, new_variables, point, **assumptions)
+        obj = Expr.__new__(cls, expr, new_variables, point)
         return obj
+
+    def _eval_is_commutative(self):
+        return self.expr.is_commutative
 
     def doit(self):
         return self.expr.doit().subs(zip(self.variables, self.point))
@@ -2031,6 +2032,7 @@ def nfloat(expr, n=15, exponent=False):
     x**4.0 + y**0.5
 
     """
+    from sympy.core import Pow
     if iterable(expr, exclude=basestring):
         if isinstance(expr, (dict, Dict)):
             return type(expr)([(k, nfloat(v, n, exponent)) for k, v in
@@ -2068,7 +2070,4 @@ def nfloat(expr, n=15, exponent=False):
     return rv.subs([(f, f.func(*[nfloat(a, n, exponent)
                      for a in f.args])) for f in funcs])
 
-from sympify import sympify
-from add import Add
-from power import Pow
 from sympy.core.symbol import Dummy

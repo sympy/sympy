@@ -73,28 +73,24 @@ Intersection of medians
 -----------------------
 ::
 
-    >>> from sympy import Symbol
+    >>> from sympy import symbols
     >>> from sympy.geometry import Point, Triangle, intersection
 
-    >>> a = Symbol("a")
-    >>> b = Symbol("b")
-    >>> c = Symbol("c")
+    >>> a, b = symbols("a,b", positive=True)
 
-    >>> x = Point(0,0)
-    >>> y = Point(c,0)
-    >>> z = Point(a,b)
-    >>> t = Triangle(x,y,z)
+    >>> x = Point(0, 0)
+    >>> y = Point(a, 0)
+    >>> z = Point(2*a, b)
+    >>> t = Triangle(x, y, z)
 
     >>> t.area
-    b*c/2
+    a*b/2
 
-    >>> t.medians #doctest: +NORMALIZE_WHITESPACE
-    {Point(0, 0): Segment(Point(0, 0), Point(a/2 + c/2, b/2)),
-     Point(a, b): Segment(Point(a, b), Point(c/2, 0)),
-     Point(c, 0): Segment(Point(c, 0), Point(a/2, b/2))}
+    >>> t.medians[x]
+    Segment(Point(0, 0), Point(3*a/2, b/2))
 
     >>> intersection(t.medians[x], t.medians[y], t.medians[z])
-    [Point(a/3 + c/3, b/3)]
+    [Point(a, b/3)]
 
 An in-depth example: Pappus' Theorem
 ------------------------------------

@@ -8,12 +8,10 @@ from sympy.core.basic import Atom, Basic
 from sympy.core.core import BasicMeta, BasicType, ClassRegistry
 from sympy.core.singleton import SingletonRegistry
 from sympy.core.symbol import Dummy, Symbol, Wild
-from sympy.core.numbers import Catalan, ComplexInfinity, EulerGamma, Exp1,\
-        GoldenRatio, Half, ImaginaryUnit, Infinity, Integer, NaN,\
-        NegativeInfinity,  NegativeOne, Number, NumberSymbol, One, Pi,\
-        Rational, Float, Zero
-from sympy.core.relational import ( Equality, GreaterThan, LessThan, Relational,
-        StrictGreaterThan, StrictLessThan, Unequality )
+from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer, Number,
+        NumberSymbol, Rational, Float)
+from sympy.core.relational import (Equality, GreaterThan, LessThan, Relational,
+        StrictGreaterThan, StrictLessThan, Unequality)
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
@@ -27,8 +25,9 @@ from sympy.functions import exp
 from sympy.core.compatibility import callable
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy import symbols
+from sympy import symbols, S
 
+excluded_attrs = set(['_assumptions', '_mhash'])
 
 def check(a, check_attr=True):
     """ Check that pickling and copying round-trips.
@@ -55,14 +54,14 @@ def check(a, check_attr=True):
 
         if not check_attr:
             continue
-        def c(a,b,d):
+        def c(a, b, d):
             for i in d:
-                if not hasattr(a,i):
+                if not hasattr(a, i) or i in excluded_attrs:
                     continue
-                attr = getattr(a,i)
+                attr = getattr(a, i)
                 if not hasattr(attr, "__call__"):
                     assert hasattr(b,i), i
-                    assert getattr(b,i)==attr
+                    assert getattr(b,i) == attr
         c(a,b,d1)
         c(b,a,d2)
 
@@ -85,13 +84,7 @@ def test_core_symbol():
         check(c)
 
 def test_core_numbers():
-    for c in (Catalan, Catalan(), ComplexInfinity, ComplexInfinity(),
-              EulerGamma, EulerGamma(), Exp1, Exp1(), GoldenRatio, GoldenRatio(),
-              Half, Half(), ImaginaryUnit, ImaginaryUnit(), Infinity, Infinity(),
-              Integer, Integer(2), NaN, NaN(), NegativeInfinity,
-              NegativeInfinity(), NegativeOne, NegativeOne(), Number, Number(15),
-              NumberSymbol, NumberSymbol(), One, One(), Pi, Pi(), Rational,
-              Rational(1,2), Float, Float("1.2"), Zero, Zero()):
+    for c in (Integer(2), Rational(2, 3), Float("1.2")):
         check(c)
 
 def test_core_relational():
@@ -138,13 +131,19 @@ def test_core_multidimensional():
     for c in (vectorize, vectorize(0)):
         check(c)
 
-# This doesn't have to be pickable.
-#@XFAIL
-#def test_core_astparser():
-#    # This probably fails because of importing the global sympy scope.
-#    for c in (SymPyParser, SymPyParser(), SymPyTransformer,
-#              SymPyTransformer({},{})):
-#        check(c)
+def test_Singletons():
+    protocols = [0, 1, 2]
+    if sys.version_info[0] > 2:
+        protocols.extend([3])
+    copiers = [copy.copy, copy.deepcopy]
+    copiers += [lambda x: pickle.loads(pickle.dumps(x, proto))
+            for proto in protocols]
+
+    for obj in (Integer(-1), Integer(0), Integer(1), Rational(1, 2), pi, E, I,
+            oo, -oo, zoo, nan, S.GoldenRatio, S.EulerGamma, S.Catalan,
+            S.EmptySet, S.IdentityFunction):
+        for func in copiers:
+            assert func(obj) is obj
 
 
 #================== functions ===================
@@ -158,10 +157,8 @@ from sympy.functions import (Piecewise, lowergamma, acosh,
         conjugate, tan, chebyshevu_root, floor, atanh, sqrt,
         RisingFactorial, sin, atan, ff, FallingFactorial, lucas, atan2,
         polygamma, exp)
-from sympy.core import pi, oo, nan, zoo, E, I
 
 def test_functions():
-    zero_var = (pi, oo, nan, zoo, E, I)
     one_var = (acosh, ln, Heaviside, factorial, bernoulli, coth, tanh,
             sign, arg, asin, DiracDelta, re, Abs, sinh, cos, cot, acos, acot,
             gamma, bell, harmonic, LambertW, zeta, log, factorial, asinh,
@@ -173,8 +170,6 @@ def test_functions():
     others = (chebyshevt_root, chebyshevu_root, Eijk(x, y, z),
             Piecewise( (0, x<-1), (x**2, x<=1), (x**3, True)),
             assoc_legendre)
-    for a in zero_var:
-        check(a)
     for cls in one_var:
         check(cls)
         c = cls(x)
@@ -211,6 +206,13 @@ from sympy.integrals.integrals import Integral
 def test_integrals():
     x = Symbol("x")
     for c in (Integral, Integral(x)):
+        check(c)
+
+#==================== logic =====================
+from sympy.core.logic import Logic
+
+def test_logic():
+    for c in (Logic, Logic(1)):
         check(c)
 
 #================== matrices ====================
@@ -399,4 +401,3 @@ def test_concrete():
     x = Symbol("x")
     for c in (Product, Product(x, (x, 2, 4)), Sum, Sum(x, (x, 2, 4))):
         check(c)
-

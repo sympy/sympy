@@ -92,7 +92,7 @@ def test_domains():
 
     Z = Die(4, symbol=x)
 
-    raises(ValueError, "P(X>Z)") # Two domains with same internal symbol
+    raises(ValueError, lambda: P(X>Z)) # Two domains with same internal symbol
 
     pspace(X+Y).domain.set == FiniteSet(1,2,3,4,5,6)**2
 
@@ -146,7 +146,7 @@ def test_coins():
 
     assert d.as_boolean() == Or(Eq(C.symbol, H), Eq(C.symbol, T))
 
-    raises(ValueError, "P(C>D)") # Can't intelligently compare H to T
+    raises(ValueError, lambda: P(C>D)) # Can't intelligently compare H to T
 
 def test_binomial_numeric():
     nvals = range(5)
@@ -200,4 +200,3 @@ def test_FiniteRV():
 
     assert pspace(F).domain.as_boolean() == Or(
             *[Eq(F.symbol, i) for i in [1,2,3]])
-

@@ -211,6 +211,8 @@ want to be mentioned here, so see our repository history for a full list).
 #. Angadh Nanjangud: in physics.mechanics, added a function and tests for the parallel axis theorem
 #. Comer Duncan: added dual, is_antisymmetric, and det_lu_decomposition to matrices.py
 #. Jens H. Nielsen: added sets to modules listing
+#. Joseph Dougherty: modified whitespace cleaning to remove multiple newlines at eof
+#. marshall2389: Spelling correction
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

@@ -3,7 +3,7 @@ Integrals
 
 .. module:: sympy.integrals
 
-The *integrals* module in SymPy implements methdos calculating definite un undefinite integrals of expressions.
+The *integrals* module in SymPy implements methods to calculate definite and indefinite integrals of expressions.
 
 Principal method in this module is integrate()
 

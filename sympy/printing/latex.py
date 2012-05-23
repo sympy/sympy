@@ -733,9 +733,25 @@ class LatexPrinter(Printer):
     def _print_hankel2(self, expr, exp=None):
         return self._hprint_BesselBase(expr, exp, 'H^{(2)}')
 
+    def _print_fresnels(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"S^{%s}%s" % (exp, tex)
+        else:
+            return r"S%s" % tex
+
+    def _print_fresnelc(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"C^{%s}%s" % (exp, tex)
+        else:
+            return r"C%s" % tex
+
     def _print_hyper(self, expr, exp=None):
-        tex = r"{{}_{%s}F_{%s}\left.\left(\begin{matrix} %s \\ %s \end{matrix}" \
-              r"\right| {%s} \right)}" % \
+        tex = r"{{}_{%s}F_{%s}\left(\begin{matrix} %s \\ %s \end{matrix}" \
+              r"\middle| {%s} \right)}" % \
              (self._print(len(expr.ap)), self._print(len(expr.bq)),
               self._hprint_vec(expr.ap), self._hprint_vec(expr.bq),
               self._print(expr.argument))
@@ -745,8 +761,8 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_meijerg(self, expr, exp=None):
-        tex = r"{G_{%s, %s}^{%s, %s}\left.\left(\begin{matrix} %s & %s \\" \
-              r"%s & %s \end{matrix} \right| {%s} \right)}" % \
+        tex = r"{G_{%s, %s}^{%s, %s}\left(\begin{matrix} %s & %s \\" \
+              r"%s & %s \end{matrix} \middle| {%s} \right)}" % \
              (self._print(len(expr.ap)), self._print(len(expr.bq)),
               self._print(len(expr.bm)), self._print(len(expr.an)),
               self._hprint_vec(expr.an), self._hprint_vec(expr.aother),

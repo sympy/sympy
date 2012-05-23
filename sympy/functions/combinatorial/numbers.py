@@ -9,8 +9,6 @@ the separate 'factorials' module.
 
 from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add, expand_mul
 
-from sympy.polys.polytools import Poly
-
 from sympy.mpmath import bernfrac
 from sympy.mpmath.libmp import ifib as _ifib
 
@@ -364,7 +362,6 @@ class bell(Function):
         return expand_mul(_sym * s)
 
     @staticmethod
-    #@assoc_recurrence_memo([[S.One]])
     def _bell_incomplete_poly(n, k, symbols):
         r"""
         The second kind of Bell polynomials (incomplete Bell polynomials).
@@ -385,7 +382,6 @@ class bell(Function):
             return S.One
         elif (n==0) or (k==0):
             return S.Zero
-        #s = Poly(S.Zero, symbols)
         s = S.Zero
         a = S.One
         for m in xrange(1, n-k+2):

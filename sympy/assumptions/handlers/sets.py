@@ -575,4 +575,3 @@ def test_closed_group(expr, assumptions, key):
             else: break
     else:
         return result
-

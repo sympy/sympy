@@ -38,8 +38,12 @@ def test_multiplicity():
             assert multiplicity(b, (b**i) * 1000249) == i
     # Should be fast
     assert multiplicity(10, 10**10023) == 10023
-    # Should exit quick
-    assert multiplicity(1, 1) == 1
+    # Should exit quickly
+    assert multiplicity(10**10, 10**10) == 1
+    # Should raise errors for bad input
+    raises(ValueError, 'multiplicity(1, 1)')
+    raises(ValueError, 'multiplicity(1, 2)')
+    raises(ValueError, 'multiplicity(1.3, 2)')
 
 def test_perfect_power():
     assert perfect_power(0) is False
@@ -160,9 +164,9 @@ def test_generate():
 
     assert nextprime(2, 2) == 5
 
-    raises(ValueError, 'totient(0)')
+    raises(ValueError, lambda: totient(0))
 
-    raises(ValueError, 'primorial(0)')
+    raises(ValueError, lambda: primorial(0))
 
     assert mr(1, [2]) == False
 
@@ -180,7 +184,7 @@ def test_randprime():
     assert randprime(2, 3) == 2
     assert randprime(1, 3) == 2
     assert randprime(3, 5) == 3
-    raises(ValueError, 'randprime(20, 22)')
+    raises(ValueError, lambda: randprime(20, 22))
     for a in [100, 300, 500, 250000]:
         for b in [100, 300, 500, 250000]:
             p = randprime(a, a+b)
@@ -276,9 +280,9 @@ def test_factorint():
     b=nextprime(a + 2**2**4)
     assert 'Fermat' in capture(lambda: factorint(a*b, verbose=1))
 
-    raises(ValueError, 'pollard_rho(4)')
-    raises(ValueError, 'pollard_pm1(3)')
-    raises(ValueError, 'pollard_pm1(10, B=2)')
+    raises(ValueError, lambda: pollard_rho(4))
+    raises(ValueError, lambda: pollard_pm1(3))
+    raises(ValueError, lambda: pollard_pm1(10, B=2))
     # verbose coverage
     n = nextprime(2**16)*nextprime(2**17)*nextprime(1901)
     assert 'with primes' in capture(lambda: factorint(n, verbose=1))
@@ -369,14 +373,14 @@ def test_residue():
     assert is_quad_residue(2, 27) == False
     assert [j for j in range(14) if is_quad_residue(j, 14)] == \
            [0, 1, 2, 4, 7, 8, 9, 11]
-    raises(ValueError, 'is_quad_residue(1.1, 2)')
+    raises(ValueError, lambda: is_quad_residue(1.1, 2))
 
     assert legendre_symbol(5, 11) == 1
     assert legendre_symbol(25, 41) == 1
     assert legendre_symbol(67, 101) == -1
     assert legendre_symbol(0, 13) == 0
     assert legendre_symbol(9, 3) == 0
-    raises(ValueError, 'legendre_symbol(2, 4)')
+    raises(ValueError, lambda: legendre_symbol(2, 4))
 
     assert jacobi_symbol(25, 41) == 1
     assert jacobi_symbol(-23, 83) == -1
@@ -388,7 +392,7 @@ def test_residue():
     assert jacobi_symbol(0, 1) == 1
     assert jacobi_symbol(2, 1) == 1
     assert jacobi_symbol(1, 3) == 1
-    raises(ValueError, 'jacobi_symbol(3, 8)')
+    raises(ValueError, lambda: jacobi_symbol(3, 8))
 
 def test_hex_pi_nth_digits():
     assert pi_hex_digits(0) == '3243f6a8885a30'
@@ -542,11 +546,11 @@ def test_modular():
     assert solve_congruence(*zip([-10, -5, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
     assert solve_congruence(*zip([-10, 2, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
     assert solve_congruence(*zip((1, 1, 2),(3, 2, 4))) is None
-    raises(ValueError, 'solve_congruence(*zip([3, 4, 2], [12.1, 35, 17]))')
+    raises(ValueError, lambda: solve_congruence(*zip([3, 4, 2], [12.1, 35, 17])))
 
 def test_search():
     assert 2 in sieve
     assert 2.1 not in sieve
     assert 1 not in sieve
     assert 2**1000 not in sieve
-    raises(ValueError, 'sieve.search(1)')
+    raises(ValueError, lambda: sieve.search(1))

@@ -39,7 +39,7 @@ def test_Expand_preprocess():
     assert Expand.preprocess(0) is False
     assert Expand.preprocess(1) is True
 
-    raises(OptionError, "Expand.preprocess(x)")
+    raises(OptionError, lambda: Expand.preprocess(x))
 
 def test_Expand_postprocess():
     opt = {'expand': True}
@@ -54,8 +54,8 @@ def test_Gens_preprocess():
 
     a = Symbol('a', commutative=False)
 
-    raises(GeneratorsError, "Gens.preprocess((x, x, y))")
-    raises(GeneratorsError, "Gens.preprocess((x, y, a))")
+    raises(GeneratorsError, lambda: Gens.preprocess((x, x, y)))
+    raises(GeneratorsError, lambda: Gens.preprocess((x, y, a)))
 
 def test_Gens_postprocess():
     opt = {'gens': (x, y)}
@@ -75,8 +75,8 @@ def test_Wrt_preprocess():
     assert Wrt.preprocess(' x,  y') == ['x', 'y']
     assert Wrt.preprocess([x, y]) == ['x', 'y']
 
-    raises(OptionError, "Wrt.preprocess(',')")
-    raises(OptionError, "Wrt.preprocess(0)")
+    raises(OptionError, lambda: Wrt.preprocess(','))
+    raises(OptionError, lambda: Wrt.preprocess(0))
 
 def test_Wrt_postprocess():
     opt = {'wrt': ['x']}
@@ -91,8 +91,8 @@ def test_Sort_preprocess():
     assert Sort.preprocess('x > y > z') == ['x', 'y', 'z']
     assert Sort.preprocess('x>y>z') == ['x', 'y', 'z']
 
-    raises(OptionError, "Sort.preprocess(0)")
-    raises(OptionError, "Sort.preprocess(set([x, y, z]))")
+    raises(OptionError, lambda: Sort.preprocess(0))
+    raises(OptionError, lambda: Sort.preprocess(set([x, y, z])))
 
 def test_Sort_postprocess():
     opt = {'sort': 'x > y'}
@@ -116,7 +116,7 @@ def test_Field_preprocess():
     assert Field.preprocess(0) is False
     assert Field.preprocess(1) is True
 
-    raises(OptionError, "Field.preprocess(x)")
+    raises(OptionError, lambda: Field.preprocess(x))
 
 def test_Field_postprocess():
     opt = {'field': True}
@@ -131,7 +131,7 @@ def test_Greedy_preprocess():
     assert Greedy.preprocess(0) is False
     assert Greedy.preprocess(1) is True
 
-    raises(OptionError, "Greedy.preprocess(x)")
+    raises(OptionError, lambda: Greedy.preprocess(x))
 
 def test_Greedy_postprocess():
     opt = {'greedy': True}
@@ -157,7 +157,7 @@ def test_Domain_preprocess():
     assert Domain.preprocess('FF(23)') == FF(23)
     assert Domain.preprocess('GF(23)') == GF(23)
 
-    raises(OptionError, "Domain.preprocess('Z[]')")
+    raises(OptionError, lambda: Domain.preprocess('Z[]'))
 
     assert Domain.preprocess('Z[x]') == ZZ[x]
     assert Domain.preprocess('Q[x]') == QQ[x]
@@ -171,7 +171,7 @@ def test_Domain_preprocess():
     assert Domain.preprocess('ZZ[x,y]') == ZZ[x,y]
     assert Domain.preprocess('QQ[x,y]') == QQ[x,y]
 
-    raises(OptionError, "Domain.preprocess('Z()')")
+    raises(OptionError, lambda: Domain.preprocess('Z()'))
 
     assert Domain.preprocess('Z(x)') == ZZ.frac_field(x)
     assert Domain.preprocess('Q(x)') == QQ.frac_field(x)
@@ -191,10 +191,10 @@ def test_Domain_preprocess():
     assert Domain.preprocess('Q<sqrt(2), I>') == QQ.algebraic_field(sqrt(2), I)
     assert Domain.preprocess('QQ<sqrt(2), I>') == QQ.algebraic_field(sqrt(2), I)
 
-    raises(OptionError, "Domain.preprocess('abc')")
+    raises(OptionError, lambda: Domain.preprocess('abc'))
 
 def test_Domain_postprocess():
-    raises(GeneratorsError, "Domain.postprocess({'gens': (x, y), 'domain': ZZ[y, z]})")
+    raises(GeneratorsError, lambda: Domain.postprocess({'gens': (x, y), 'domain': ZZ[y, z]}))
 
 def test_Split_preprocess():
     assert Split.preprocess(False) is False
@@ -203,10 +203,10 @@ def test_Split_preprocess():
     assert Split.preprocess(0) is False
     assert Split.preprocess(1) is True
 
-    raises(OptionError, "Split.preprocess(x)")
+    raises(OptionError, lambda: Split.preprocess(x))
 
 def test_Split_postprocess():
-    raises(NotImplementedError, "Split.postprocess({'split': True})")
+    raises(NotImplementedError, lambda: Split.postprocess({'split': True}))
 
 def test_Gaussian_preprocess():
     assert Gaussian.preprocess(False) is False
@@ -215,7 +215,7 @@ def test_Gaussian_preprocess():
     assert Gaussian.preprocess(0) is False
     assert Gaussian.preprocess(1) is True
 
-    raises(OptionError, "Gaussian.preprocess(x)")
+    raises(OptionError, lambda: Gaussian.preprocess(x))
 
 def test_Gaussian_postprocess():
     opt = {'gaussian': True}
@@ -238,8 +238,8 @@ def test_Extension_preprocess():
 
     assert Extension.preprocess([sqrt(2), I]) == set([sqrt(2), I])
 
-    raises(OptionError, "Extension.preprocess(False)")
-    raises(OptionError, "Extension.preprocess(0)")
+    raises(OptionError, lambda: Extension.preprocess(False))
+    raises(OptionError, lambda: Extension.preprocess(0))
 
 def test_Extension_postprocess():
     opt = {'extension': set([sqrt(2)])}
@@ -259,8 +259,8 @@ def test_Modulus_preprocess():
     assert Modulus.preprocess(23) == 23
     assert Modulus.preprocess(Integer(23)) == 23
 
-    raises(OptionError, "Modulus.preprocess(0)")
-    raises(OptionError, "Modulus.preprocess(x)")
+    raises(OptionError, lambda: Modulus.preprocess(0))
+    raises(OptionError, lambda: Modulus.preprocess(x))
 
 def test_Modulus_postprocess():
     opt = {'modulus': 5}
@@ -287,7 +287,7 @@ def test_Symmetric_preprocess():
     assert Symmetric.preprocess(0) is False
     assert Symmetric.preprocess(1) is True
 
-    raises(OptionError, "Symmetric.preprocess(x)")
+    raises(OptionError, lambda: Symmetric.preprocess(x))
 
 def test_Symmetric_postprocess():
     opt = {'symmetric': True}
@@ -302,7 +302,7 @@ def test_Strict_preprocess():
     assert Strict.preprocess(0) is False
     assert Strict.preprocess(1) is True
 
-    raises(OptionError, "Strict.preprocess(x)")
+    raises(OptionError, lambda: Strict.preprocess(x))
 
 def test_Strict_postprocess():
     opt = {'strict': True}
@@ -317,7 +317,7 @@ def test_Auto_preprocess():
     assert Auto.preprocess(0) is False
     assert Auto.preprocess(1) is True
 
-    raises(OptionError, "Auto.preprocess(x)")
+    raises(OptionError, lambda: Auto.preprocess(x))
 
 def test_Auto_postprocess():
     opt = {'auto': True}
@@ -332,7 +332,7 @@ def test_Frac_preprocess():
     assert Frac.preprocess(0) is False
     assert Frac.preprocess(1) is True
 
-    raises(OptionError, "Frac.preprocess(x)")
+    raises(OptionError, lambda: Frac.preprocess(x))
 
 def test_Frac_postprocess():
     opt = {'frac': True}
@@ -347,7 +347,7 @@ def test_Formal_preprocess():
     assert Formal.preprocess(0) is False
     assert Formal.preprocess(1) is True
 
-    raises(OptionError, "Formal.preprocess(x)")
+    raises(OptionError, lambda: Formal.preprocess(x))
 
 def test_Formal_postprocess():
     opt = {'formal': True}
@@ -362,7 +362,7 @@ def test_Polys_preprocess():
     assert Polys.preprocess(0) is False
     assert Polys.preprocess(1) is True
 
-    raises(OptionError, "Polys.preprocess(x)")
+    raises(OptionError, lambda: Polys.preprocess(x))
 
 def test_Polys_postprocess():
     opt = {'polys': True}
@@ -377,7 +377,7 @@ def test_Include_preprocess():
     assert Include.preprocess(0) is False
     assert Include.preprocess(1) is True
 
-    raises(OptionError, "Include.preprocess(x)")
+    raises(OptionError, lambda: Include.preprocess(x))
 
 def test_Include_postprocess():
     opt = {'include': True}
@@ -392,7 +392,7 @@ def test_All_preprocess():
     assert All.preprocess(0) is False
     assert All.preprocess(1) is True
 
-    raises(OptionError, "All.preprocess(x)")
+    raises(OptionError, lambda: All.preprocess(x))
 
 def test_All_postprocess():
     opt = {'all': True}
@@ -410,7 +410,7 @@ def test_Gen_postprocess():
     assert opt == {'gen': x}
 
 def test_Symbols_preprocess():
-    raises(OptionError, "Symbols.preprocess(x)")
+    raises(OptionError, lambda: Symbols.preprocess(x))
 
 def test_Symbols_postprocess():
     opt = {'symbols': [x, y, z]}
@@ -419,7 +419,7 @@ def test_Symbols_postprocess():
     assert opt == {'symbols': [x, y, z]}
 
 def test_Method_preprocess():
-    raises(OptionError, "Method.preprocess(10)")
+    raises(OptionError, lambda: Method.preprocess(10))
 
 def test_Method_postprocess():
     opt = {'method': 'f5b'}

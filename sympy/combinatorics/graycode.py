@@ -81,12 +81,12 @@ class GrayCode(Basic):
             raise ValueError('Gray code dimension must be a positive integer, not %i' % n)
         n = int(n)
         args = (n,) + args
-        obj = Basic.__new__(cls, *args, **kw_args)
-        if kw_args.has_key("start"):
+        obj = Basic.__new__(cls, *args)
+        if 'start' in kw_args:
             obj._current = kw_args["start"]
             if len(obj._current) > n:
                 raise ValueError('Gray code start has length %i but should not be greater than %i' % (len(obj._current), n))
-        elif kw_args.has_key("rank"):
+        elif 'rank' in kw_args:
             if int(kw_args["rank"]) != kw_args["rank"]:
                 raise ValueError('Gray code rank must be a positive integer, not %i' % kw_args["rank"])
             obj._rank = int(kw_args["rank"]) % obj.selections

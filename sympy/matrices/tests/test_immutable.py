@@ -11,7 +11,8 @@ def test_immutable_creation():
     assert IM[2,2] == 9
 
 def test_immutability():
-    raises(TypeError, "IM[2,2] = 5")
+    with raises(TypeError):
+        IM[2,2] = 5
 
 def test_slicing():
     IM[1,:] == ImmutableMatrix([[4,5,6]])

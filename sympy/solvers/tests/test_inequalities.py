@@ -106,7 +106,7 @@ def test_reduce_abs_inequalities():
     assert reduce_inequalities(abs(x - 4) + abs(3*x - 5) < 7, assume=real) == And(Lt(S(1)/2, x), Lt(x, 4))
     assert reduce_inequalities(abs(x - 4) + abs(3*abs(x) - 5) < 7, assume=real) == Or(And(S(-2) < x, x < -1), And(S(1)/2 < x, x < 4))
 
-    raises(NotImplementedError, "reduce_inequalities(abs(x - 5) < 3)")
+    raises(NotImplementedError, lambda: reduce_inequalities(abs(x - 5) < 3))
 
 def test_reduce_inequalities_boolean():
     assert reduce_inequalities([Eq(x**2, 0), True]) == And(Eq(re(x), 0), Eq(im(x), 0))
@@ -122,9 +122,9 @@ def test_reduce_inequalities_multivariate():
             And(Or(Le(re(y), -1), Le(1, re(y))), Eq(im(y), 0)))
 
 def test_reduce_inequalities_errors():
-    raises(NotImplementedError, "reduce_inequalities(Ge(sin(x) + x, 1))")
-    raises(NotImplementedError, "reduce_inequalities(Ge(x**2*y + y, 1))")
-    raises(NotImplementedError, "reduce_inequalities(Ge(sqrt(2)*x, 1))")
+    raises(NotImplementedError, lambda: reduce_inequalities(Ge(sin(x) + x, 1)))
+    raises(NotImplementedError, lambda: reduce_inequalities(Ge(x**2*y + y, 1)))
+    raises(NotImplementedError, lambda: reduce_inequalities(Ge(sqrt(2)*x, 1)))
 
 def test_hacky_inequalities():
     assert reduce_inequalities(x + y < 1, symbols=[x]) == (x < 1 - y)

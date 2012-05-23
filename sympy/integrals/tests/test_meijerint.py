@@ -1,6 +1,6 @@
 from sympy import (meijerg, I, S, integrate, Integral, oo, gamma,
                    hyperexpand, exp, simplify, sqrt, pi, erf, sin, cos,
-                   exp_polar, polar_lift, polygamma, hyper, log)
+                   exp_polar, polar_lift, polygamma, hyper, log, expand_func)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
          meijerint_indefinite, _inflate_g, _create_lookup_table,
          meijerint_definite, meijerint_inversion)
@@ -154,8 +154,8 @@ def test_meijerint():
     # Test a bug
     def res(n): return (1/(1+x**2)).diff(x, n).subs(x,1)*(-1)**n
     for n in range(6):
-       assert integrate(exp(-x)*sin(x)*x**n, (x, 0, oo), meijerg=True) == \
-        res(n)
+        assert integrate(exp(-x)*sin(x)*x**n, (x, 0, oo), meijerg=True) == \
+         res(n)
 
     # This used to test trigexpand... now it is done by linear substitution
     assert simplify(integrate(exp(-x)*sin(x + a), (x, 0, oo), meijerg=True)
@@ -518,9 +518,9 @@ def test_expint():
     assert integrate(sin(x)/x, (x, 0, z), meijerg=True) == Si(z)
     assert integrate(sinh(x)/x, (x, 0, z), meijerg=True) == Shi(z)
     assert integrate(exp(-x)/x, x, meijerg=True).expand().rewrite(expint) == \
-           -expint(1, x)
+           I*pi - expint(1, x)
     assert integrate(exp(-x)/x**2, x, meijerg=True).rewrite(expint).expand() \
-           == expint(1, x) - exp(-x)/x
+           == expint(1, x) - exp(-x)/x - I*pi
 
     u = Symbol('u', polar=True)
     assert integrate(cos(u)/u, u, meijerg=True).expand().as_independent(u)[1] \
@@ -586,3 +586,13 @@ def test_3153():
     assert not expr.has(hyper)
     # XXX the expression is a mess, but actually upon differentiation and
     # putting in numerical values seems to work...
+
+def test_3249():
+    assert integrate(exp(I*x)/(1 + x**2), (x, -oo, oo)).simplify().rewrite(exp) \
+           == pi*exp(-1)
+
+def test_fresnel():
+    from sympy import fresnels, fresnelc
+
+    assert expand_func(integrate(sin(pi*x**2/2),x)) == fresnels(x)
+    assert expand_func(integrate(cos(pi*x**2/2),x)) == fresnelc(x)

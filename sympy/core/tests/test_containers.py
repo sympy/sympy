@@ -36,8 +36,8 @@ def test_Tuple_concatenation():
     assert Tuple(1, 2) + Tuple(3, 4) == Tuple(1, 2, 3, 4)
     assert (1, 2) + Tuple(3, 4) == Tuple(1, 2, 3, 4)
     assert Tuple(1, 2) + (3, 4) == Tuple(1, 2, 3, 4)
-    raises(TypeError, 'Tuple(1, 2) + 3')
-    raises(TypeError, '1 + Tuple(2, 3)')
+    raises(TypeError, lambda: Tuple(1, 2) + 3)
+    raises(TypeError, lambda: 1 + Tuple(2, 3))
 
     #the Tuple case in __radd__ is only reached when a subclass is involved
     class Tuple2(Tuple):
@@ -89,7 +89,7 @@ def test_Dict():
     d = Dict({x:1, y:2, z:3})
     assert d[x] == 1
     assert d[y] == 2
-    raises(KeyError, 'd[2]')
+    raises(KeyError, lambda: d[2])
     assert len(d) == 3
     assert set(d.keys()) == set((x,y,z))
     assert set(d.values()) == set((S(1),S(2),S(3)))
@@ -103,8 +103,9 @@ def test_Dict():
     assert (Dict({x:1, y:2, z:3}) ==
             Dict((x,1), (y,2), (z,3)))
 
-    raises(TypeError, "Dict(((x,1), (y,2), (z,3)))")
-    raises(NotImplementedError, "d[5] = 6") # assert immutability
+    raises(TypeError, lambda: Dict(((x,1), (y,2), (z,3))))
+    with raises(NotImplementedError):
+        d[5] = 6 # assert immutability
 
     assert set(d.items()) == set((Tuple(x,S(1)), Tuple(y,S(2)), Tuple(z,S(3))))
     assert set(d) == set([x,y,z])
