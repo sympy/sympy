@@ -1057,42 +1057,39 @@ class Basic(object):
     def _has(self, pattern):
         """Helper for .has()"""
         def _ncsplit(expr):
-            if expr.is_Add or expr.is_Mul:
-                cpart, ncpart = [], []
-
-                for arg in expr.args:
-                    if arg.is_commutative:
-                        cpart.append(arg)
-                    else:
-                        ncpart.append(arg)
-
+            cpart, ncpart = [], []
+            for arg in expr.args:
+                if arg.is_commutative:
+                    cpart.append(arg)
+                else:
+                    ncpart.append(arg)
             return set(cpart), ncpart
 
-        def _contains(expr, subexpr, c, nc):
-            if expr == subexpr:
-                return True
-            elif not isinstance(expr, Basic):
+        def assoc_matcher(pattern):
+            c, nc = _ncsplit(pattern)
+            def is_in(expr):
+                if expr == pattern:
+                    return True
+                elif not isinstance(expr, Basic):
+                    return False
+                elif expr.is_Add or expr.is_Mul:
+                    _c, _nc = _ncsplit(expr)
+                    if (c & _c) == c:
+                        if not nc:
+                            return True
+                        elif len(nc) <= len(_nc):
+                            for i in xrange(len(_nc) - len(nc)):
+                                if _nc[i:i+len(nc)] == nc:
+                                    return True
                 return False
-            elif expr.is_Add or expr.is_Mul:
-                _c, _nc = _ncsplit(expr)
-
-                if (c & _c) == c:
-                    if not nc:
-                        return True
-                    elif len(nc) <= len(_nc):
-                        for i in xrange(len(_nc) - len(nc)):
-                            if _nc[i:i+len(nc)] == nc:
-                                return True
-
-            return False
+            return is_in
 
         pattern = sympify(pattern)
 
         if isinstance(pattern, BasicType):
             match = lambda expr: (isinstance(expr, pattern))
         elif pattern.is_Add or pattern.is_Mul:
-            c, nc = _ncsplit(pattern)
-            match = lambda expr: _contains(expr, pattern, c, nc)
+            match = assoc_matcher(pattern)
         else:
             match = lambda expr: expr == pattern
 
