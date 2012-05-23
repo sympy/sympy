@@ -288,7 +288,9 @@ def test_simplify_other():
         (2*sqrt(t)))/(2*sqrt(t)) + pi*x*exp(-3*I*pi/4 + I*x**2/(4*t))/\
         (2*sqrt(t)))*exp(-I*x**2/(4*t))/(sqrt(pi)*x) - I*sqrt(pi)*\
         (-erf(x*exp(I*pi/4)/(2*sqrt(t))) + 1)*exp(I*pi/4)/(2*sqrt(t))
-    assert simplify(ans) == -(-1)**(S(1)/4)*I*sqrt(pi)/sqrt(t)
+    assert simplify(ans) == -(-1)**(S(3)/4)*sqrt(pi)/sqrt(t)
+    # issue 3271
+    assert simplify(2**(2 + x)/4) == 2**x
 
 def test_simplify_ratio():
     # roots of x**3-3*x+5
@@ -1092,7 +1094,7 @@ def test_combsimp_gamma():
     assert combsimp(1/gamma(x+3)/gamma(1-x)) == sin(pi*x)/(pi*x*(x+1)*(x+2))
 
     assert simplify(combsimp(gamma(x)*gamma(x+S(1)/2)*gamma(y)/gamma(x+y))) \
-           == 2**(-2*x + 1)*sqrt(pi)*gamma(2*x)*gamma(y)/gamma(x + y)
+           == 2*4**-x*sqrt(pi)*gamma(2*x)*gamma(y)/gamma(x + y)
     assert combsimp(1/gamma(x)/gamma(x-S(1)/3)/gamma(x+S(1)/3)) == \
            3**(3*x + S(1)/2)/(18*pi*gamma(3*x - 1))
     assert simplify(gamma(S(1)/2 + x/2)*gamma(1 + x/2)/gamma(1+x)/sqrt(pi)*2**x) \
@@ -1100,7 +1102,7 @@ def test_combsimp_gamma():
     assert combsimp(gamma(S(-1)/4)*gamma(S(-3)/4)) == 16*sqrt(2)*pi/3
 
     assert simplify(combsimp(gamma(2*x)/gamma(x))) == \
-           2**(2*x - 1)*gamma(x + S(1)/2)/sqrt(pi)
+           4**x*gamma(x + S(1)/2)/sqrt(pi)/2
 
 def test_unpolarify():
     from sympy import (exp_polar, polar_lift, exp, unpolarify, sin,
