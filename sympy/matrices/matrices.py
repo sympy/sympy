@@ -419,6 +419,8 @@ class MatrixBase(object):
                 if n%2:
                     a *= s
                     n -= 1
+                if not n:
+                    break
                 s *= s
                 n //= 2
             return a
