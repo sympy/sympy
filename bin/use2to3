@@ -134,6 +134,17 @@ for filepath in modified_files + modified_txt_files:
 
     text, n = whitespace.subn("", text)
 
+    # Also make sure that each file ends with exactly one newline.  These are
+    # important because they are tested by test_code_quality.py.
+
+    for i, char in enumerate(reversed(text)):
+        if char != '\n':
+            break
+
+    if i != 1:
+        text = text[:-i] + '\n'
+        n += 1
+
     if n > 0:
         sys.stdout.write("Removed trailing whitespace from %s\n" % filepath)
 
