@@ -35,8 +35,8 @@ def test_doit():
 
      # check for kets with expr in them
      d_with_sym = Density([XKet(x*y),0.5],[PxKet(x*y),0.5])
-     assert ((0.5*PxKet()*Dagger(PxKet()) +
-              0.5*XKet()*Dagger(XKet())) == d_with_sym.doit())
+     assert ((0.5*PxKet(x*y)*Dagger(PxKet(x*y)) +
+              0.5*XKet(x*y)*Dagger(XKet(x*y))) == d_with_sym.doit())
 
 
      #TODO: Need to implement Qubit based density to check for qubit related
@@ -45,18 +45,18 @@ def test_doit():
 def test_represent():
     x,y = symbols('x y')
     d = Density([XKet(),0.5],[PxKet(),0.5])
-    assert (represent(0.5*OuterProduct(PxKet(), Dagger(PxKet()))) +
-            represent(0.5*OuterProduct(XKet(), Dagger(XKet()))) == represent(d))
+    assert (represent(0.5*PxKet()*Dagger(PxKet())) +
+            represent(0.5*XKet()*Dagger(XKet())) == represent(d))
 
     # check for kets with expr in them
     d_with_sym = Density([XKet(x*y),0.5],[PxKet(x*y),0.5])
-    assert(represent ( 0.5*OuterProduct(PxKet(x*y),Dagger(PxKet(x*y)))) +
-           represent(0.5*OuterProduct(XKet(x*y),Dagger(XKet(x*y)))) ==
-           represent(d_with_sym)  )
+    assert(represent ( 0.5*PxKet(x*y)*Dagger(PxKet(x*y))) +
+           represent(0.5*XKet(x*y)*Dagger(XKet(x*y))) ==
+           represent(d_with_sym))
 
     # check when given explicit basis
-    assert(represent(0.5*OuterProduct(XKet(), Dagger(XKet())), basis=PxOp()) +
-           represent(0.5*OuterProduct(PxKet(), Dagger(PxKet())), basis=PxOp()) ==
+    assert(represent(0.5*XKet()*Dagger(XKet()), basis=PxOp()) +
+           represent(0.5*PxKet()*Dagger(PxKet()), basis=PxOp()) ==
            represent(d, basis=PxOp()))
 
 
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     #d = Density([Ket(),0.5],[Ket(),0.5])
     #test_eval_args()
     #test_doit()
-    test_represent()
+    #test_represent()
     #print d
     #pprint(d)
     #print latex(d)
