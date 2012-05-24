@@ -79,8 +79,8 @@ def test_latex():
            r'0.5\end{pmatrix}\right)')
     assert latex(d) == result
 
-
 if __name__ == '__main__':
+    pass
     #test_latex()
     #d = Density([Ket(),0.5],[Ket(),0.5])
     #test_eval_args()
