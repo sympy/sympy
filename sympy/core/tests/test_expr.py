@@ -665,6 +665,10 @@ def test_has_iterative():
     assert not f.has(x*sin(x)*A*C*B)
     assert not f.has(x*sin(y)*A*B*C)
     assert f.has(x*gamma(x))
+    assert not f.has(x + sin(x))
+
+    assert (x & y & z).has(x & z)
+
 
 def test_has_integrals():
     f = Integral(x**2 + sin(x*y*z), (x, 0, x + y + z))
