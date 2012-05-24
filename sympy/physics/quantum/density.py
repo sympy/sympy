@@ -3,7 +3,7 @@ from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.operator import HermitianOperator, OuterProduct
 from sympy.physics.quantum.represent import represent
-from sympy.physics.quantum.state import Ket
+from sympy.physics.quantum.state import KetBase
 from sympy.physics.quantum.qubit import Qubit
 from matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
 
@@ -13,8 +13,6 @@ class Density(HermitianOperator):
 
     @classmethod
     def _eval_args(cls, args):
-        print cls
-        print args
         # call this to qsympify the args
         args = super(Density, cls)._eval_args(args)
 
@@ -27,7 +25,7 @@ class Density(HermitianOperator):
                                  " or ( state, prob )")
 
             #TODO: need to add isinstance(arg[0], Qubit )) check
-            if not ( isinstance(arg[0], Ket) ):
+            if not (isinstance(arg[0], (KetBase, Qubit))):
                      raise ValueError("State parameters must be of type Ket"
                                       " or  Qubit, got : %s " % type(arg[0]))
 
@@ -54,7 +52,7 @@ class Density(HermitianOperator):
     def doit(self, **hints):
         terms = []
         for (state, prob) in self.args:
-            terms.append(prob*state*Dagger(state))
+            terms.append(prob* OuterProduct(state,Dagger(state)))
         return Add(*terms)
 
     def _represent(self, **options):

@@ -1,4 +1,4 @@
-from sympy import pprint, latex
+from sympy import pprint, latex, symbols
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.state import Ket, Bra
 from sympy.physics.quantum.qubit import Qubit
@@ -7,6 +7,7 @@ from sympy.physics.quantum.gate import HadamardGate
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.operator import *
+from sympy.physics.quantum.cartesian import XKet, PxKet, PxOp
 from sympy.functions import sqrt
 from sympy.utilities.pytest import raises
 
@@ -27,10 +28,37 @@ def test_eval_args():
 
 
 def test_doit():
-    pass
+     x,y = symbols('x y')
+     d = Density([XKet(),0.5],[PxKet(),0.5])
+     assert ( ( 0.5*OuterProduct(PxKet(),Dagger(PxKet())) +
+                0.5*OuterProduct(XKet(),Dagger(XKet()))) == d.doit()  )
+
+     # check for kets with expr in them
+     d_with_sym = Density([XKet(x*y),0.5],[PxKet(x*y),0.5])
+     assert ( ( 0.5*OuterProduct(PxKet(x*y),Dagger(PxKet(x*y))) +
+                0.5*OuterProduct(XKet(x*y),Dagger(XKet(x*y)))) == d_with_sym.doit()  )
+
+
+     #TODO: Need to implement Qubit based density to check for qubit related
+     #ops.
 
 def test_represent():
-    pass
+    x,y = symbols('x y')
+    d = Density([XKet(),0.5],[PxKet(),0.5])
+    assert (represent(0.5*OuterProduct(PxKet(), Dagger(PxKet()))) +
+            represent(0.5*OuterProduct(XKet(), Dagger(XKet()))) == represent(d))
+
+    # check for kets with expr in them
+    d_with_sym = Density([XKet(x*y),0.5],[PxKet(x*y),0.5])
+    assert(represent ( 0.5*OuterProduct(PxKet(x*y),Dagger(PxKet(x*y)))) +
+           represent(0.5*OuterProduct(XKet(x*y),Dagger(XKet(x*y)))) ==
+           represent(d_with_sym)  )
+
+    # check when given explicit basis
+    assert(represent(0.5*OuterProduct(XKet(), Dagger(XKet())), basis=PxOp()) +
+           represent(0.5*OuterProduct(PxKet(), Dagger(PxKet())), basis=PxOp()) ==
+           represent(d, basis=PxOp()))
+
 
 def test_entropy():
     pass
@@ -55,7 +83,9 @@ def test_latex():
 if __name__ == '__main__':
     #test_latex()
     #d = Density([Ket(),0.5],[Ket(),0.5])
-    test_eval_args()
+    #test_eval_args()
+    #test_doit()
+    test_represent()
     #print d
     #pprint(d)
     #print latex(d)
