@@ -18,6 +18,8 @@ from point import Point
 from line import LinearEntity, Line
 from util import _symbol, idiff
 
+import random
+
 class Ellipse(GeometryEntity):
     """An elliptical GeometryEntity.
 
@@ -769,7 +771,7 @@ class Ellipse(GeometryEntity):
         t = _symbol(parameter)
         return [t, -S.Pi, S.Pi]
 
-    def random_point(self):
+    def random_point(self, seed=None):
         """A random point on the ellipse.
 
         Returns
@@ -795,23 +797,57 @@ class Ellipse(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Point, Ellipse
+        >>> from sympy import Point, Ellipse, Segment
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
-        >>> p1 = e1.random_point()
-        >>> # a random point may not appear to be on the ellipse because of
-        >>> # floating point rounding error
-        >>> p1 in e1 # doctest: +SKIP
-        True
-        >>> p1 # doctest +ELLIPSIS
+        >>> e1.random_point() # gives some random point
         Point(...)
+        >>> p1 = e1.random_point(seed=0); p1.n(2)
+        Point(2.1, 1.4)
+
+        The random_point method assures that the point will test as being
+        in the ellipse:
+
+        >>> p1 in e1
+        True
+
+        Notes
+        =====
+
+        An arbitrary_point with a random value of t substituted into it may
+        not test as being on the ellipse because the expression tested that
+        a point is on the ellipse doesn't simplify to zero and doesn't evaluate
+        exactly to zero:
+
+        >>> from sympy.abc import t
+        >>> e1.arbitrary_point(t)
+        Point(3*cos(t), 2*sin(t))
+        >>> p2 = _.subs(t, 0.1)
+        >>> p2 in e1
+        False
+
+        Note that arbitrary_point routine does not take this approach. A value for
+        cos(t) and sin(t) (not t) is substituted into the arbitrary point. There is
+        a small chance that this will give a point that will not test as being
+        in the ellipse, so the process is repeated (up to 10 times) until a
+        valid point is obtained.
 
         """
-        from random import random
+        from sympy import nsimplify, sin, cos
         t = _symbol('t')
         x, y = self.arbitrary_point(t).args
-        # get a random value in [-pi, pi)
-        subs_val = float(S.Pi)*(2*random() - 1)
-        return Point(x.subs(t, subs_val), y.subs(t, subs_val))
+        # get a random value in [-1, 1) corresponding to cos(t)
+        # and confirm that it will test as being in the ellipse
+        if seed is not None:
+            rng = random.Random(seed)
+        else:
+            rng = random
+        for i in range(10): # should be enough?
+            c = nsimplify(2*rng.random() - 1)
+            s = sqrt(1 - c**2)
+            p1 = Point(x.subs(cos(t), c), y.subs(sin(t), s))
+            if p1 in self:
+                return p1
+        raise GeometryError('Having problems generating a point in the ellipse.')
 
     def equation(self, x='x', y='y'):
         """The equation of the ellipse.
