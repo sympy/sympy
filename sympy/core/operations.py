@@ -215,12 +215,13 @@ class AssocOp(Expr):
             return set(cpart), ncpart
 
         c, nc = _ncsplit(self)
+        cls = self.__class__
         def is_in(expr):
             if expr == self:
                 return True
             elif not isinstance(expr, Basic):
                 return False
-            elif expr.is_Add or expr.is_Mul:
+            elif isinstance(expr, cls):
                 _c, _nc = _ncsplit(expr)
                 if (c & _c) == c:
                     if not nc:
