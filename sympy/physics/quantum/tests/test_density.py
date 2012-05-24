@@ -30,13 +30,13 @@ def test_eval_args():
 def test_doit():
      x,y = symbols('x y')
      d = Density([XKet(),0.5],[PxKet(),0.5])
-     assert ( ( 0.5*OuterProduct(PxKet(),Dagger(PxKet())) +
-                0.5*OuterProduct(XKet(),Dagger(XKet()))) == d.doit()  )
+     assert ( ( 0.5*PxKet()*Dagger(PxKet()) +
+                0.5*XKet()*Dagger(XKet())) == d.doit()  )
 
      # check for kets with expr in them
      d_with_sym = Density([XKet(x*y),0.5],[PxKet(x*y),0.5])
-     assert ( ( 0.5*OuterProduct(PxKet(x*y),Dagger(PxKet(x*y))) +
-                0.5*OuterProduct(XKet(x*y),Dagger(XKet(x*y)))) == d_with_sym.doit()  )
+     assert ((0.5*PxKet()*Dagger(PxKet()) +
+              0.5*XKet()*Dagger(XKet())) == d_with_sym.doit())
 
 
      #TODO: Need to implement Qubit based density to check for qubit related

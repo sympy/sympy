@@ -52,7 +52,7 @@ class Density(HermitianOperator):
     def doit(self, **hints):
         terms = []
         for (state, prob) in self.args:
-            terms.append(prob* OuterProduct(state,Dagger(state)))
+            terms.append(prob*state*Dagger(state))
         return Add(*terms)
 
     def _represent(self, **options):
