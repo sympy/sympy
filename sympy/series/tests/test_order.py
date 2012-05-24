@@ -23,7 +23,7 @@ def test_simple_1():
     assert Order(x**(5*o/3)).expr == x**(5*o/3)
     assert Order(x**2 + x + y, x) == O(1, x)
     assert Order(x**2 + x + y, y) == O(1, y)
-    raises(NotImplementedError, 'Order(x, 2 - x)')
+    raises(NotImplementedError, lambda: Order(x, 2 - x))
 
 def test_simple_2():
     assert Order(2*x)*x == Order(x**2)
@@ -197,7 +197,7 @@ def test_getn():
     assert O(x/log(x)).getn() == 1
     assert O(x**2/log(x)**2).getn() == 2
     assert O(x*log(x)).getn() == 1
-    raises(NotImplementedError, '(O(x) + O(y)).getn()')
+    raises(NotImplementedError, lambda: (O(x) + O(y)).getn())
 
 def test_diff():
     assert O(x**2).diff(x) == O(x)
@@ -209,7 +209,7 @@ def test_getO():
     assert (O(x)).removeO() == 0
     assert (z + O(x) + O(y)).getO() == O(x) + O(y)
     assert (z + O(x) + O(y)).removeO() == z
-    raises(NotImplementedError, '(O(x)+O(y)).getn()')
+    raises(NotImplementedError, lambda: (O(x)+O(y)).getn())
 
 def test_leading_term():
     from sympy import digamma

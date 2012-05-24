@@ -1,8 +1,7 @@
 from sympy import sqrt, root, S, Symbol, sqrtdenest, Integral, cos
-from sympy.utilities.pytest import XFAIL
 from sympy.simplify.sqrtdenest import subsets
 
-r2, r3, r5, r6, r7, r10, r29 = [sqrt(x) for x in [2, 3, 5, 6, 7, 10, 29]]
+r2, r3, r5, r6, r7, r10, r15, r29 = [sqrt(x) for x in [2,3,5,6,7,10,15,29]]
 
 
 def test_sqrtdenest():
@@ -49,22 +48,8 @@ def test_sqrtdenest2():
 
     assert sqrtdenest(sqrt(r6 + sqrt(15))) == sqrt(r6 + sqrt(15))
 
-    # no assertion error when the 'r's are not the same in _denester
     z = sqrt(15 - 2*sqrt(31) + 2*sqrt(55 - 10*r29))
     assert sqrtdenest(z) == z
-
-
-@XFAIL
-def test_sqrtdenest_fail():
-    # see Denest_en.pdf in http://code.google.com/p/sympy/issues/detail?id=93
-    # z = 4*sin(pi/60)
-    z = sqrt(8 - r2*sqrt(5 - r5) - sqrt(3)*(1 + r5))
-    # z can be denested to an expression with depth 2; here are two forms
-    # (-sqrt(6) - r2 + r10 + sqrt(30))/4 - sqrt(5+r5 -5*r3/2 - sqrt(15)/2)
-    # r2/4*(-r3 - 1 + r5 + sqrt(15)) - (r3-1)*sqrt(5+r5)/2
-    z1 = sqrtdenest(z)
-    assert sqrt_depth(z1) == 2
-
 
 def test_sqrtdenest_rec():
     assert sqrtdenest(sqrt(-4*sqrt(14) - 2*r6 + 4*sqrt(21) + 33)) == \
@@ -76,7 +61,7 @@ def test_sqrtdenest_rec():
     assert sqrtdenest(sqrt(468*r3 + 3024*r2 + 2912*r6 + 19735)) == \
       9*r3 + 26 + 56*r6
     z = sqrt(-490*r3 - 98*sqrt(115) - 98*sqrt(345) - 2107)
-    assert sqrtdenest(z) == sqrt(-1)*(7*r5 + 7*sqrt(15) + 7*sqrt(23))
+    assert sqrtdenest(z) == sqrt(-1)*(7*r5 + 7*r15 + 7*sqrt(23))
     z = sqrt(-4*sqrt(14) - 2*r6 + 4*sqrt(21) + 34)
     assert sqrtdenest(z) == z
     assert sqrtdenest(sqrt(-8*r2 - 2*r5 + 18)) == -r10 + 1 + r2 + r5
@@ -86,22 +71,24 @@ def test_sqrtdenest_rec():
         -r10/3 + r2 + r5 + 3
     assert sqrtdenest(sqrt(sqrt(2*r6 + 5) + sqrt(2*r7 + 8))) == \
       sqrt(1 + r2 + r3 + r7)
-    assert sqrtdenest(sqrt(4*sqrt(15) + 8*r5 + 12*r3 + 24)) == \
-      1 + r3 + r5 + sqrt(15)
+    assert sqrtdenest(sqrt(4*r15 + 8*r5 + 12*r3 + 24)) == 1 + r3 + r5 + r15
 
     w = 1 + r2 + r3 + r5 + r7
     assert sqrtdenest(sqrt((w**2).expand())) == w
     z = sqrt((w**2).expand() + 1)
     assert sqrtdenest(z) == z
 
+    z = sqrt(2*r10 + 6*r2 + 4*r5 + 12 + 10*r15 + 30*r3)
+    assert sqrtdenest(z) == z
+
 def test_issue3142():
-    z = sqrt( -320 + 32*sqrt(5) + 64*sqrt(15))
+    z = sqrt( -320 + 32*sqrt(5) + 64*r15)
     assert sqrtdenest(z) == z
 
 def test_sqrtdenest3():
     z = sqrt(13 - 2*r10 + 2*r2*sqrt(-2*r10 + 11))
     assert sqrtdenest(z) == -1 + r2 + r10
-    assert sqrtdenest(z, max_iter=1) == sqrt(-2*r10 - 2*r2 + 4*r5 + 13)
+    assert sqrtdenest(z, max_iter=1) == -1 + sqrt(2) + sqrt(10)
     n = sqrt(2*r6/7 + 2*r7/7 + 2*sqrt(42)/7 + 2)
     d = sqrt(16 - 2*r29 + 2*sqrt(55 - 10*r29))
     assert sqrtdenest(n/d).equals(
@@ -114,8 +101,22 @@ def test_sqrtdenest3():
         r10 + 5 + 4*r2 + 3*r5
     z = sqrt(5 + sqrt(2*r6 + 5)*sqrt(-2*r29 + 2*sqrt(-10*r29 + 55) + 16))
     r = sqrt(-2*r29 + 11)
-    assert sqrtdenest(z) == \
-        sqrt(r2*r + r3*r + r10 + sqrt(15) + 5)
+    assert sqrtdenest(z) == sqrt(r2*r + r3*r + r10 + r15 + 5)
+
+def test_sqrtdenest4():
+    # see Denest_en.pdf in http://code.google.com/p/sympy/issues/detail?id=93
+    z = sqrt(8 - r2*sqrt(5 - r5) - sqrt(3)*(1 + r5))
+    z1 = sqrtdenest(z)
+    c = sqrt(-r5 + 5)
+    z1 = ((-r15*c - r3*c + c + r5*c - r6 - r2 + r10 + sqrt(30))/4).expand()
+    assert sqrtdenest(z) == z1
+
+    z= sqrt(2*r2*sqrt(r2 + 2) + 5*r2 + 4*sqrt(r2 + 2) + 8)
+    assert sqrtdenest(z) == r2 + sqrt(r2 + 2) + 2
+
+    w = 2 + r2 + r3 + (1 + r3)*sqrt(2 + r2 + 5*r3)
+    z = sqrt((w**2).expand())
+    assert sqrtdenest(z) == w.expand()
 
 
 def test_sqrt_symbolic_denest():

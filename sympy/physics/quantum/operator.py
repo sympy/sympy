@@ -29,8 +29,9 @@ __all__ = [
 class Operator(QExpr):
     """Base class for non-commuting quantum operators.
 
-    An operator maps one ket to another [1]. In quantum mechanics, Hermitian
-    operators correspond to observables [2].
+    An operator maps between quantum states [1]_. In quantum mechanics,
+    observables (including, but not limited to, measured physical values) are
+    represented as Hermitian operators [2]_.
 
     Parameters
     ==========
@@ -88,8 +89,8 @@ class Operator(QExpr):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Operator
-    [2] http://en.wikipedia.org/wiki/Observable
+    .. [1] http://en.wikipedia.org/wiki/Operator_(physics)
+    .. [2] http://en.wikipedia.org/wiki/Observable
     """
 
     @classmethod
@@ -240,9 +241,9 @@ class UnitaryOperator(Operator):
 class OuterProduct(Operator):
     """An unevaluated outer product between a ket and bra.
 
-    This constructs an outer product between any subclass of KetBase and
-    BraBase as ``|a><b|``. An OuterProduct inherits from Operator as they act as
-    operators in quantum expressions.  For reference see [1].
+    This constructs an outer product between any subclass of ``KetBase`` and
+    ``BraBase`` as ``|a><b|``. An ``OuterProduct`` inherits from Operator as they act as
+    operators in quantum expressions.  For reference see [1]_.
 
     Parameters
     ==========
@@ -296,8 +297,9 @@ class OuterProduct(Operator):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Outer_product
+    .. [1] http://en.wikipedia.org/wiki/Outer_product
     """
+    is_commutative = False
 
     def __new__(cls, *args, **old_assumptions):
         from sympy.physics.quantum.state import KetBase, BraBase
@@ -313,7 +315,7 @@ class OuterProduct(Operator):
                 (ket.__class__, bra.__class__)
             )
         # TODO: make sure the hilbert spaces of the bra and ket are compatible
-        obj = Expr.__new__(cls, *args, **{'commutative': False})
+        obj = Expr.__new__(cls, *args)
         obj.hilbert_space = ket.hilbert_space
         return obj
 
@@ -352,31 +354,29 @@ class OuterProduct(Operator):
         return k*b
 
 class DifferentialOperator(Operator):
-    """
-    An operator for representing the differential operator, i.e. d/dx
+    """An operator for representing the differential operator, i.e. d/dx
 
-    It is initialized by passing two arguments. The first is an
-    arbitrary expression that involves a function, such as
-    Derivative(f(x), x). The second is the function (e.g. f(x)) which
-    we are to replace with the Wavefunction that this
-    DifferentialOperator is applied to.
+    It is initialized by passing two arguments. The first is an arbitrary
+    expression that involves a function, such as ``Derivative(f(x), x)``. The
+    second is the function (e.g. ``f(x)``) which we are to replace with the
+    ``Wavefunction`` that this ``DifferentialOperator`` is applied to.
 
     Parameters
     ==========
 
     expr : Expr
-           The arbitrary expression which the appropriate Wavefunction
-           is to be substituted into
+           The arbitrary expression which the appropriate Wavefunction is to be
+           substituted into
 
     func : Expr
-           A function (e.g. f(x)) which is to be replaced with the
-           appropriate Wavefunction when this DifferentialOperator is applied
+           A function (e.g. f(x)) which is to be replaced with the appropriate
+           Wavefunction when this DifferentialOperator is applied
 
     Examples
     ========
 
-    You can define a completely arbitrary expression and specify where
-    the Wavefunction is to be substituted
+    You can define a completely arbitrary expression and specify where the
+    Wavefunction is to be substituted
 
     >>> from sympy import Derivative, Function, Symbol
     >>> from sympy.physics.quantum.operator import DifferentialOperator
@@ -398,8 +398,8 @@ class DifferentialOperator(Operator):
     @property
     def variables(self):
         """
-        Returns the variables with which the function
-        in the specified arbitrary expression is evaluated
+        Returns the variables with which the function in the specified
+        arbitrary expression is evaluated
 
         Examples
         ========
@@ -447,8 +447,8 @@ class DifferentialOperator(Operator):
     @property
     def expr(self):
         """
-        Returns the arbitary expression which is to have the
-        Wavefunction substituted into it
+        Returns the arbitary expression which is to have the Wavefunction
+        substituted into it
 
         Examples
         ========

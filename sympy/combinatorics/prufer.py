@@ -215,7 +215,7 @@ class Prufer(Basic):
         tree = []
         last = []
         n = len(prufer) + 2
-        d = defaultdict(lambda : 1)
+        d = defaultdict(lambda: 1)
         for p in prufer:
             d[p] += 1
         for i in prufer:

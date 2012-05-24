@@ -53,6 +53,6 @@ def split_super_sub(text):
     m = re.match('(^[a-zA-Z]+)([0-9]+)$', name)
     if m is not None:
         name, sub = m.groups()
-        subs.append(sub)
+        subs.insert(0, sub)
 
     return name, supers, subs

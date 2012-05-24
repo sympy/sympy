@@ -63,7 +63,6 @@ def _decimal_to_Rational_prec(dec):
         rv = Rational(int(dec))
     else:
         s = (-1)**s
-        n = len(d)
         d = sum([di*10**i for i, di in enumerate(reversed(d))])
         rv = Rational(s*d, 10**-e)
     return rv, prec
@@ -396,8 +395,10 @@ class Float(Number):
     >>> from sympy import Float
     >>> Float(3.5) # convert from Python float or int
     3.50000000000000
-    >>> Float(3)
+    >>> Float(3) # reverts to Integer
     3
+    >>> Float(3, '') # forced to Float
+    3.
 
     Floats can be created from a string representations of Python floats
     to force ints to Float or to enter high-precision (> 15 significant
@@ -411,7 +412,8 @@ class Float(Number):
     0.00100
 
     Float can automatically count significant figures if a null string
-    is sent for the precision; space are also allowed in the string:
+    is sent for the precision; space are also allowed in the string. (Auto-
+    counting is only allowed for strings, ints and longs).
 
     >>> Float('123 456 789 . 123 456', '')
     123456789.123456
@@ -520,7 +522,15 @@ class Float(Number):
         elif not num:
             return C.Zero()
         if prec == '':
-            if not isinstance(num, basestring):
+            if isinstance(num, (int, long, Integer)):
+                # an int is unambiguous, but if someone enters
+                # .99999999999999999, Python automatically converts
+                # this to 1.0 and although 1.0 == 1, this is not
+                # really what the user typed, so we avoid guessing --
+                # even if num == int(num) -- because we don't know how
+                # it became that exact float.
+                num = str(num)
+            elif not isinstance(num, basestring):
                 raise ValueError('The null string can only be used when '
                 'the number to Float is passed as a string.')
             ok = None
@@ -532,22 +542,24 @@ class Float(Number):
                 else:
                     num, dps = _decimal_to_Rational_prec(Num)
                     ok = True
+                    if num.is_Integer:
+                        dps = len(str(num))
             if ok is None:
                 raise ValueError('string-float not recognized: %s' % num)
         else:
             dps = prec
-        prec = mlib.libmpf.dps_to_prec(dps)
 
-        if isinstance(num, (int, long, Integer)):
+        if prec != '' and isinstance(num, (int, long, Integer)):
             # if this is changed here it has to be changed in _new, too
             return Integer(num)
 
+        prec = mlib.libmpf.dps_to_prec(dps)
         if isinstance(num, float):
             _mpf_ = mlib.from_float(num, prec, rnd)
+        elif isinstance(num, (str, decimal.Decimal, Integer)):
+            _mpf_ = mlib.from_str(str(num), prec, rnd)
         elif isinstance(num, Rational):
             _mpf_ = mlib.from_rational(num.p, num.q, prec, rnd)
-        elif isinstance(num, (str, decimal.Decimal)):
-            _mpf_ = mlib.from_str(str(num), prec, rnd)
         elif isinstance(num, tuple) and len(num) in (3, 4):
             if type(num[1]) is str:
                 # it's a hexadecimal (coming from a pickled object)
@@ -611,15 +623,7 @@ class Float(Number):
         return (mlib.to_pickable(self._mpf_),)
 
     def __getstate__(self):
-        d = Expr.__getstate__(self).copy()
-        del d["_mpf_"]
-        return mlib.to_pickable(self._mpf_), d
-
-    def __setstate__(self, state):
-        _mpf_, d = state
-        _mpf_ = mlib.from_pickable(_mpf_)
-        self._mpf_ = _mpf_
-        Expr.__setstate__(self, d)
+        return {'_prec': self._prec}
 
     def _hashable_content(self):
         return (self._mpf_, self._prec)
@@ -1795,8 +1799,10 @@ class Zero(IntegerConstant):
     def _eval_power(self, expt):
         if expt.is_positive:
             return self
-        elif expt.is_negative:
+        if expt.is_negative:
             return S.Infinity
+        if expt.is_real is False:
+            return S.NaN
         # infinities are already handled with pos and neg
         # tests above; now throw away leading numbers on Mul
         # exponent
@@ -2214,6 +2220,39 @@ class NegativeInfinity(Number):
         return other is S.NegativeInfinity
 
 class NaN(Number):
+    """
+    Not a Number.
+
+    This represents the corresponding data type to floating point nan, which
+    is defined in the IEEE 754 floating point standard, and corresponds to the
+    Python ``float('nan')``.
+
+    NaN serves as a place holder for numeric values that are indeterminate,
+    but not infinite.  Most operations on nan, produce another nan.  Most
+    indeterminate forms, such as ``0/0`` or ``oo - oo` produce nan.  Three
+    exceptions are ``0**0``, ``1**oo``, and ``oo**0``, which all produce ``1``
+    (this is consistent with Python's float).
+
+    NaN is a singleton, and can be accessed by ``S.NaN``, or can be imported
+    as ``nan``.
+
+    Examples
+    ========
+
+    >>> from sympy import nan, S, oo
+    >>> nan is S.NaN
+    True
+    >>> oo - oo
+    nan
+    >>> nan + 1
+    nan
+
+    References
+    ==========
+
+    - http://en.wikipedia.org/wiki/NaN
+
+    """
     __metaclass__ = Singleton
 
     is_commutative = True
@@ -2656,7 +2695,6 @@ _intcache[0] = S.Zero
 _intcache[1] = S.One
 _intcache[-1]= S.NegativeOne
 
-from function import _coeff_isneg
 from power import Pow, integer_nthroot
 from mul import Mul
 Mul.identity = One()

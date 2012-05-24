@@ -11,4 +11,4 @@ from preview import preview
 from repr import srepr
 from tree import print_tree
 from str import StrPrinter, sstr, sstrrepr
-
+from tableform import TableForm

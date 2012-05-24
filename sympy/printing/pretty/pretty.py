@@ -77,6 +77,9 @@ class PrettyPrinter(Printer):
     _print_Infinity         = _print_Atom
     _print_NegativeInfinity = _print_Atom
     _print_EmptySet         = _print_Atom
+    _print_Naturals         = _print_Atom
+    _print_Integers         = _print_Atom
+    _print_Reals            = _print_Atom
 
     def _print_factorial(self, e):
         x = e.args[0]
@@ -1043,53 +1046,58 @@ class PrettyPrinter(Printer):
                 a.append( self._print(S.One) )
             return prettyForm.__mul__(*a)/prettyForm.__mul__(*b)
 
-    def _print_Pow(self, power):
-        # square roots, other roots or n-th roots
-        #test for fraction 1/n or power x**-1
-        if power.is_commutative:
-            if (isinstance(power.exp, C.Rational) and power.exp.p==1 and power.exp.q !=1) or \
-               (   isinstance(power.exp, C.Pow) and
-                   isinstance(power.exp.args[0], C.Symbol) and
-                   power.exp.args[1]==S.NegativeOne):
-                bpretty = self._print(power.base)
+    # A helper function for _print_Pow to print x**(1/n)
+    def _print_nth_root (self, base, expt):
+        bpretty = self._print(base)
 
-                #construct root sign, start with the \/ shape
-                _zZ= xobj('/',1)
-                rootsign = xobj('\\',1)+_zZ
-                #make exponent number to put above it
-                if isinstance(power.exp, C.Rational):
-                    exp = str(power.exp.q)
-                    if exp=='2': exp = ''
-                else: exp = str(power.exp.args[0])
-                exp = exp.ljust(2)
-                if len(exp)>2: rootsign = ' '*(len(exp)-2)+rootsign
-                #stack the exponent
-                rootsign = stringPict(exp+'\n'+rootsign)
-                rootsign.baseline = 0
-                #diagonal: length is one less than height of base
-                linelength = bpretty.height()-1
-                diagonal = stringPict('\n'.join(
-                    ' '*(linelength-i-1)+_zZ+' '*i
-                    for i in range(linelength)
-                    ))
-                #put baseline just below lowest line: next to exp
-                diagonal.baseline = linelength-1
-                #make the root symbol
-                rootsign = prettyForm(*rootsign.right(diagonal))
-                #set the baseline to match contents to fix the height
-                #but if the height of bpretty is one, the rootsign must be one higher
-                rootsign.baseline = max(1, bpretty.baseline)
-                #build result
-                s = prettyForm(hobj('_', 2+ bpretty.width()))
-                s = prettyForm(*bpretty.above(s))
-                s = prettyForm(*s.left(rootsign))
-                return s
-            elif power.exp.is_Rational and power.exp.is_negative:
-                # Things like 1/x
-                return prettyForm("1") / self._print(C.Pow(power.base, -power.exp))
+        # Construct root sign, start with the \/ shape
+        _zZ = xobj('/',1)
+        rootsign = xobj('\\',1) + _zZ
+        # Make exponent number to put above it
+        if isinstance(expt, C.Rational):
+            exp = str(expt.q)
+            if exp == '2':
+                exp = ''
+        else:
+            exp = str(expt.args[0])
+        exp = exp.ljust(2)
+        if len(exp) > 2:
+            rootsign = ' '*(len(exp) - 2) + rootsign
+        # Stack the exponent
+        rootsign = stringPict(exp + '\n' + rootsign)
+        rootsign.baseline = 0
+        # Diagonal: length is one less than height of base
+        linelength = bpretty.height() - 1
+        diagonal = stringPict('\n'.join(
+            ' '*(linelength - i - 1) + _zZ + ' '*i
+            for i in range(linelength)
+            ))
+        # Put baseline just below lowest line: next to exp
+        diagonal.baseline = linelength - 1
+        # Make the root symbol
+        rootsign = prettyForm(*rootsign.right(diagonal))
+        # Det the baseline to match contents to fix the height
+        # but if the height of bpretty is one, the rootsign must be one higher
+        rootsign.baseline = max(1, bpretty.baseline)
+        #build result
+        s = prettyForm(hobj('_', 2 + bpretty.width()))
+        s = prettyForm(*bpretty.above(s))
+        s = prettyForm(*s.left(rootsign))
+        return s
+
+    def _print_Pow(self, power):
+        from sympy import fraction
+        b, e = power.as_base_exp()
+        if power.is_commutative:
+            if e is S.NegativeOne:
+                return prettyForm("1")/self._print(b)
+            n, d = fraction(e)
+            if n is S.One and d.is_Atom and not e.is_Integer:
+                return self._print_nth_root(b, e)
+            if e.is_Rational and e < 0:
+                return prettyForm("1")/self._print(b)**self._print(-e)
 
         # None of the above special forms, do a standard power
-        b,e = power.as_base_exp()
         return self._print(b)**self._print(e)
 
     def __print_numer_denom(self, p, q):
@@ -1125,15 +1133,31 @@ class PrettyPrinter(Printer):
             return self.emptyPrinter(expr)
 
     def _print_ProductSet(self, p):
-        prod_char = u'\xd7'
-        return self._print_seq(p.sets, None, None, ' %s '%prod_char,
+        if len(set(p.sets)) == 1 and len(p.sets) > 1:
+            from sympy import Pow
+            return self._print(Pow(p.sets[0], len(p.sets), evaluate=False))
+        else:
+            prod_char = u'\xd7'
+            return self._print_seq(p.sets, None, None, ' %s '%prod_char,
                 parenthesize = lambda set:set.is_Union or set.is_Intersection)
 
     def _print_FiniteSet(self, s):
-        if len(s) > 10:
-            printset = s.args[:3] + ('...',) + s.args[-3:]
+        items = sorted(s.args, key=default_sort_key)
+        return self._print_seq(items, '{', '}', ', ' )
+
+    def _print_Range(self, s):
+
+        if self._use_unicode:
+            dots = u"\u2026"
         else:
-            printset = s.args
+            dots = '...'
+
+        if len(s) > 4:
+            it = iter(s)
+            printset = it.next(), it.next(), dots, s._last_element
+        else:
+            printset = tuple(s)
+
         return self._print_seq(printset, '{', '}', ', ' )
 
     def _print_Interval(self, i):
@@ -1166,6 +1190,18 @@ class PrettyPrinter(Printer):
 
         return self._print_seq(u.args, None, None, union_delimiter,
              parenthesize = lambda set:set.is_ProductSet or set.is_Intersection)
+
+    def _print_TransformationSet(self, ts):
+        if self._use_unicode:
+            inn = u"\u220a"
+        else:
+            inn = 'in'
+        variables = self._print_seq(ts.lamda.variables)
+        expr = self._print(ts.lamda.expr)
+        bar = self._print("|")
+        base = self._print(ts.base_set)
+
+        return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False):
@@ -1235,7 +1271,8 @@ class PrettyPrinter(Printer):
 
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
-        pretty = self._print_seq(items, '(', ')')
+        pretty = self._print_seq(items, '[', ']')
+        pretty = prettyForm(*pretty.parens('(', ')', ifascii_nougly=True))
         pretty = prettyForm(*stringPict.next(type(s).__name__, pretty))
         return pretty
 
@@ -1438,3 +1475,20 @@ def pretty_print(expr, **settings):
     print pretty(expr, **settings)
 
 pprint = pretty_print
+
+def pager_print(expr, **settings):
+    """Prints expr using the pager, in pretty form.
+
+    This invokes a pager command using pydoc. Lines are not wrapped
+    automatically. This routine is meant to be used with a pager that allows
+    sideways scrolling, like ``less -S``.
+
+    Parameters are the same as for ``pretty_print``. If you wish to wrap lines,
+    pass ``num_columns=None`` to auto-detect the width of the terminal.
+
+    """
+    from pydoc import pager
+    from locale import getpreferredencoding
+    if 'num_columns' not in settings:
+        settings['num_columns'] = 500000 # disable line wrap
+    pager(pretty(expr, **settings).encode(getpreferredencoding()))

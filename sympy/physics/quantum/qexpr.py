@@ -83,10 +83,12 @@ class QExpr(Expr):
     # The Hilbert space a quantum Object belongs to.
     __slots__ = ['hilbert_space']
 
+    is_commutative = False
+
     # The separator used in printing the label.
     _label_separator = u''
 
-    def __new__(cls, *args, **old_assumptions):
+    def __new__(cls, *args):
         """Construct a new quantum object.
 
         Parameters
@@ -118,7 +120,7 @@ class QExpr(Expr):
         args = cls._eval_args(args)
         if len(args) == 0:
             args = cls._eval_args(tuple(cls.default_args()))
-        inst = Expr.__new__(cls, *args, **{'commutative':False})
+        inst = Expr.__new__(cls, *args)
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst
@@ -134,7 +136,7 @@ class QExpr(Expr):
         the creation of the object.
         """
 
-        obj = Expr.__new__(cls, *args, **{'commutative':False})
+        obj = Expr.__new__(cls, *args)
         obj.hilbert_space = hilbert_space
         return obj
 
@@ -162,7 +164,8 @@ class QExpr(Expr):
 
     @classmethod
     def default_args(self):
-        """If no arguments are specified, then this will return a default set of arguments to be run through the constructor.
+        """If no arguments are specified, then this will return a default set
+        of arguments to be run through the constructor.
 
         NOTE: Any classes that override this MUST return a tuple of arguments.
         Should be overidden by subclasses to specify the default arguments for kets and operators
@@ -396,4 +399,3 @@ def dispatch_method(self, basename, arg, **options):
         "%s.%s can't handle: %r" % \
             (self.__class__.__name__, basename, arg)
     )
-

@@ -7,8 +7,6 @@ dependencies, so that they can be easily imported anywhere in sympy/core.
 
 from functools import wraps
 from sympify import SympifyError, sympify
-from sympy.core.compatibility import SymPyDeprecationWarning
-import warnings
 
 def deprecated(func):
     """This is a decorator which can be used to mark functions
@@ -16,8 +14,11 @@ def deprecated(func):
     when the function is used."""
     @wraps(func)
     def new_func(*args, **kwargs):
-        warnings.warn("Call to deprecated function %s." % func.__name__,
-                      category=SymPyDeprecationWarning)
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(
+            "Call to deprecated function.",
+            feature=func.__name__ + "()"
+            ).warn()
         return func(*args, **kwargs)
     return new_func
 
@@ -105,4 +106,3 @@ def call_highest_priority(method_name):
             return func(self, other)
         return binary_op_wrapper
     return priority_decorator
-

@@ -189,7 +189,7 @@ class ContinuousPSpace(PSpace):
         cdf = Piecewise((0, z<left_bound), (cdf, True))
         return Lambda(z, cdf)
 
-    def P(self, condition, **kwargs):
+    def probability(self, condition, **kwargs):
         evaluate = kwargs.get("evaluate", True)
         z = Dummy('z', real=True, bounded=True)
         # Univariate case can be handled by where
@@ -211,7 +211,7 @@ class ContinuousPSpace(PSpace):
             density = self.compute_density(expr, **kwargs)
             # Turn problem into univariate case
             space = SingleContinuousPSpace(z, density(z))
-            return space.P(condition.__class__(space.value, 0))
+            return space.probability(condition.__class__(space.value, 0))
 
 
     def where(self, condition):

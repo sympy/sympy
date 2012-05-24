@@ -1,6 +1,7 @@
 """Logic for representing operators in state in various bases.
 
 TODO:
+
 * Get represent working with continuous hilbert spaces.
 * Document default basis functionality.
 """
@@ -395,23 +396,23 @@ def integrate_result(orig_expr, result, **options):
 
 def get_basis(expr, **options):
     """
-    Returns a basis state instance corresponding to the basis
-    specified in options=s. If no basis is specified, the function
-    tries to form a default basis state of the given expression.
+    Returns a basis state instance corresponding to the basis specified in
+    options=s. If no basis is specified, the function tries to form a default
+    basis state of the given expression.
 
     There are three behaviors:
 
-    1) The basis specified in options is already an instance of
-    StateBase. If this is the case, it is simply returned. If the
-    class is specified but not an instance, a default instance is returned.
+    1. The basis specified in options is already an instance of StateBase. If
+       this is the case, it is simply returned. If the class is specified but
+       not an instance, a default instance is returned.
 
-    2) The basis specified is an operator or set of operators. If this
-    is the case, the operator_to_state mapping method is used.
+    2. The basis specified is an operator or set of operators. If this
+       is the case, the operator_to_state mapping method is used.
 
-    3) No basis is specified. If expr is a state, then a default
-    instance of its class is returned.
-    If expr is an operator, then it is mapped to the corresponding state.
-    If it is neither, then we cannot obtain the basis state.
+    3. No basis is specified. If expr is a state, then a default instance of
+       its class is returned.  If expr is an operator, then it is mapped to the
+       corresponding state.  If it is neither, then we cannot obtain the basis
+       state.
 
     If the basis cannot be mapped, then it is not changed.
 
@@ -490,13 +491,12 @@ def enumerate_states(*args, **options):
 
     Operates in two different modes:
 
-    1) Two arguments are passed to it. The first is the base state
-    which is to be indexed, and the second argument is a list of
-    indices to append.
+    1. Two arguments are passed to it. The first is the base state which is to
+       be indexed, and the second argument is a list of indices to append.
 
-    2) Three arguments are passed. The first is again the base state
-    to be indexed. The second is the start index for counting.
-    The final argument is the number of kets you wish to receive.
+    2. Three arguments are passed. The first is again the base state to be
+       indexed. The second is the start index for counting.  The final argument
+       is the number of kets you wish to receive.
 
     Tries to call state._enumerate_state. If this fails, returns an empty list
 

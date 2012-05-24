@@ -277,10 +277,10 @@ class Poly(Expr):
         >>> from sympy.abc import x
 
         >>> Poly(x**2 + 1, x).args
-        [x**2 + 1]
+        (x**2 + 1,)
 
         """
-        return [self.as_expr()]
+        return (self.as_expr(),)
 
     @property
     def gen(self):

@@ -80,6 +80,7 @@ modules = [
     'sympy.printing',
     'sympy.printing.pretty',
     'sympy.series',
+    'sympy.sets',
     'sympy.simplify',
     'sympy.solvers',
     'sympy.statistics',
@@ -165,40 +166,7 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        tests_successful = True
-
-        try:
-            if not sympy.test():
-                # some regular test fails, so set the tests_successful
-                # flag to false and continue running the doctests
-                tests_successful = False
-
-            if not sympy.doctest():
-                tests_successful = False
-
-            print
-            sys.path.append("examples")
-            from all import run_examples # examples/all.py
-            if not run_examples(quiet=True):
-                tests_successful = False
-
-            if not (sys.platform == "win32" or sys.version_info[0] == 3):
-                # run Sage tests; Sage currently doesn't support Windows or Python 3
-                dev_null = open(os.devnull, 'w')
-                if subprocess.call("sage -v", shell = True, stdout = dev_null, stderr = dev_null) == 0:
-                    if subprocess.call("sage -python bin/test sympy/external/tests/test_sage.py", shell = True) != 0:
-                        tests_successful = False
-
-            if tests_successful:
-                return
-            else:
-                # Return nonzero exit code
-                sys.exit(1)
-        except KeyboardInterrupt:
-            print
-            print("DO *NOT* COMMIT!")
-            sys.exit(1)
-
+        sympy.utilities.runtests.run_all_tests()
 
 class run_benchmarks(Command):
     """Runs all SymPy benchmarks"""

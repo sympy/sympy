@@ -28,7 +28,8 @@ class Wigner3j(Expr):
 
     Wigner 3j-symbols are coefficients determined by the coupling of
     two angular momenta. When created, they are expressed as symbolic
-    quantities that can be evaluated using the doit() method [1]_.
+    quantities that, for numerical parameters, can be evaluated using the
+    ``.doit()`` method [1]_.
 
     Parameters
     ==========
@@ -45,10 +46,14 @@ class Wigner3j(Expr):
         >>> from sympy.physics.quantum.cg import Wigner3j
         >>> w3j = Wigner3j(6,0,4,0,2,0)
         >>> w3j
-        (6, 4, 2)
-        (0, 0, 0)
+        Wigner3j(6,4,2,0,0,0)
         >>> w3j.doit()
         sqrt(715)/143
+
+    See Also
+    ========
+
+    CG: Clebsch-Gordan coefficients
 
     References
     ==========
@@ -87,18 +92,12 @@ class Wigner3j(Expr):
     def is_symbolic(self):
         return not all([arg.is_number for arg in self.args])
 
-    # This is modified from the _print_Matrix method
     def _sympystr(self, printer, *args):
-        res = [[printer._print(self.j1), printer._print(self.j2), printer._print(self.j3)], \
-            [printer._print(self.m1), printer._print(self.m2), printer._print(self.m3)]]
-        maxw = [-1] * 3
-        for j in range(3):
-            maxw[j] = max([ len(res[i][j]) for i in range(2) ])
-        for i, row in enumerate(res):
-            for j, elem in enumerate(row):
-                row[j] = elem.rjust(maxw[j])
-            res[i] = "(" + ", ".join(row) + ")"
-        return '\n'.join(res)
+        return '%s(%s,%s,%s,%s,%s,%s)' % (
+            self.__class__.__name__,
+            printer._print(self.j1), printer._print(self.j2), printer._print(self.j3),
+            printer._print(self.m1), printer._print(self.m2), printer._print(self.m3)
+        )
 
     # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
@@ -178,6 +177,11 @@ class CG(Wigner3j):
         >>> cg.doit()
         sqrt(3)/2
 
+    See Also
+    ========
+
+    Wigner3j: Wigner-3j symbols
+
     References
     ==========
 
@@ -190,9 +194,10 @@ class CG(Wigner3j):
         return clebsch_gordan(self.j1,self.j2, self.j3, self.m1, self.m2, self.m3)
 
     def _sympystr(self, printer, *args):
-        return 'CG(%s, %s, %s, %s, %s, %s)' % \
-            (printer._print(self.j1), printer._print(self.m1), printer._print(self.j2), \
-            printer._print(self.m2), printer._print(self.j3), printer._print(self.m3))
+        return 'CG(%s, %s, %s, %s, %s, %s)' % (
+            printer._print(self.j1), printer._print(self.m1), printer._print(self.j2), \
+            printer._print(self.m2), printer._print(self.j3), printer._print(self.m3)
+        )
 
     def _pretty(self, printer, *args):
         bot = printer._print(self.j1)
@@ -227,7 +232,14 @@ class CG(Wigner3j):
 
 
 class Wigner6j(Expr):
-    """Class for the Wigner-6j symbols"""
+    """Class for the Wigner-6j symbols
+
+    See Also
+    ========
+
+    Wigner3j: Wigner-3j symbols
+
+    """
     def __new__(cls, j1, j2, j12, j3, j, j23):
         j1,j2,j12,j3,j,j23 = map(sympify, (j1,j2,j12,j3,j,j23))
         return Expr.__new__(cls, j1, j2, j12, j3, j, j23)
@@ -321,7 +333,14 @@ class Wigner6j(Expr):
 
 
 class Wigner9j(Expr):
-    """Class for the Wigner-9j symbols"""
+    """Class for the Wigner-9j symbols
+
+    See Also
+    ========
+
+    Wigner3j: Wigner-3j symbols
+
+    """
     def __new__(cls, j1, j2, j12, j3, j4, j34, j13, j24, j):
         j1,j2,j12,j3,j4,j34,j13,j24,j = map(sympify, (j1,j2, j12, j3, j4, j34, j13, j24, j))
         return Expr.__new__(cls, j1, j2, j12, j3, j4, j34, j13, j24, j)
@@ -447,6 +466,11 @@ def cg_simp(e):
         >>> c = CG(1,-1,0,0,1,-1)
         >>> cg_simp(a+b+c)
         3
+
+    See Also
+    ========
+
+    CG: Clebsh-Gordan coefficients
 
     References
     ==========

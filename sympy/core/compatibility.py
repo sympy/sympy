@@ -3,13 +3,6 @@ Reimplementations of constructs introduced in later versions of Python than
 we support.
 """
 
-class SymPyDeprecationWarning(DeprecationWarning):
-    def __init__(self, value):
-        self.parameter = value
-
-    def __str__(self):
-        return repr(self.parameter)
-
 # These are in here because telling if something is an iterable just by calling
 # hasattr(obj, "__iter__") behaves differently in Python 2 and Python 3.  In
 # particular, hasattr(str, "__iter__") is False in Python 2 and True in Python 3.
@@ -243,7 +236,7 @@ except ImportError: # < python 2.6
         value. So if the input elements are unique, there will be no repeat
         values in each combination.
 
-        See also: combinations_with_replacements
+        See also: combinations_with_replacement
 
         Examples
         ========

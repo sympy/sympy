@@ -38,11 +38,12 @@ def qapply(e, **options):
         A dict of key/value pairs that determine how the operator actions
         are carried out.
 
-    The following options are valid:
+        The following options are valid:
 
-    * ``dagger``: try to apply Dagger operators to the left (default: False).
-    * ``ip_doit``: call ``.doit()`` in inner products when they are
-      encountered (default: True).
+        * ``dagger``: try to apply Dagger operators to the left
+          (default: False).
+        * ``ip_doit``: call ``.doit()`` in inner products when they are
+          encountered (default: True).
 
     Returns
     =======
@@ -172,4 +173,3 @@ def qapply_Mul(e, **options):
         return result*qapply_Mul(e._new_rawargs(*args), **options)
     else:  # result is a scalar times a Mul, Add or TensorProduct
         return qapply(e._new_rawargs(*args)*result, **options)
-

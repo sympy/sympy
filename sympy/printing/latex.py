@@ -546,7 +546,10 @@ class LatexPrinter(Printer):
         return self._do_exponent(tex, exp)
 
     def _print_Not(self, e):
-        return r"\neg %s" % self._print(e.args[0])
+        if (e.args[0].is_Boolean):
+            return r"\neg (%s)" % self._print(e.args[0])
+        else:
+            return r"\neg %s" % self._print(e.args[0])
 
     def _print_And(self, e):
         args = sorted(e.args, key=default_sort_key)
@@ -730,9 +733,25 @@ class LatexPrinter(Printer):
     def _print_hankel2(self, expr, exp=None):
         return self._hprint_BesselBase(expr, exp, 'H^{(2)}')
 
+    def _print_fresnels(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"S^{%s}%s" % (exp, tex)
+        else:
+            return r"S%s" % tex
+
+    def _print_fresnelc(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"C^{%s}%s" % (exp, tex)
+        else:
+            return r"C%s" % tex
+
     def _print_hyper(self, expr, exp=None):
-        tex = r"{{}_{%s}F_{%s}\left.\left(\begin{matrix} %s \\ %s \end{matrix}" \
-              r"\right| {%s} \right)}" % \
+        tex = r"{{}_{%s}F_{%s}\left(\begin{matrix} %s \\ %s \end{matrix}" \
+              r"\middle| {%s} \right)}" % \
              (self._print(len(expr.ap)), self._print(len(expr.bq)),
               self._hprint_vec(expr.ap), self._hprint_vec(expr.bq),
               self._print(expr.argument))
@@ -742,8 +761,8 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_meijerg(self, expr, exp=None):
-        tex = r"{G_{%s, %s}^{%s, %s}\left.\left(\begin{matrix} %s & %s \\" \
-              r"%s & %s \end{matrix} \right| {%s} \right)}" % \
+        tex = r"{G_{%s, %s}^{%s, %s}\left(\begin{matrix} %s & %s \\" \
+              r"%s & %s \end{matrix} \middle| {%s} \right)}" % \
              (self._print(len(expr.ap)), self._print(len(expr.bq)),
               self._print(len(expr.bm)), self._print(len(expr.an)),
               self._hprint_vec(expr.an), self._hprint_vec(expr.aother),
@@ -887,8 +906,8 @@ class LatexPrinter(Printer):
                                self._print(expr.args[-1].expr))
         else:
             ecpairs.append(r"%s & \text{for}\: %s" % \
-                           (self._print(expr.args[-1].cond),
-                            self._print(expr.args[-1].expr)))
+                           (self._print(expr.args[-1].expr),
+                            self._print(expr.args[-1].cond)))
         tex = r"\begin{cases} %s \end{cases}"
         return tex % r" \\".join(ecpairs)
 
@@ -920,54 +939,10 @@ class LatexPrinter(Printer):
             return "%s^T"%self._print(mat)
 
     def _print_MatAdd(self, expr):
-        c, terms = expr.as_coeff_Add()
-        tex = []
-        if c < 0:
-            tex.append("-")
-            tex.append(self._print(-c))
-
-        for term in Add.make_args(terms):
-            coeff, M = term.as_coeff_Mul()
-
-            if coeff < 0:
-                tex.append("-")
-                coeff = -coeff
-            else:
-                tex.append("+")
-
-            if coeff != 1:
-                tex.append(self._print(coeff))
-            tex.append(self._print(M))
-
-        return " ".join(tex)
+        return self._print_Add(expr)
 
     def _print_MatMul(self, expr):
-        coeff, tail = expr.as_coeff_Mul()
-
-        if not coeff.is_negative:
-            tex = ""
-        else:
-            coeff = -coeff
-            tex = "- "
-
-        if not tail.is_Mul:
-            return tex + self._print(tail)
-
-        separator = " "
-
-        args = tail.args
-        for term in args:
-            pretty = self._print(term)
-
-            if term.is_Add:
-                term_tex = (r"\left(%s\right)" % pretty)
-            else:
-                term_tex = str(pretty)
-
-            tex += separator
-            tex += term_tex
-
-        return tex[1:]
+        return self._print_Mul(expr)
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
@@ -1015,7 +990,10 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_ProductSet(self, p):
-        return r" \cross ".join(self._print(set) for set in p.sets)
+        if len(set(p.sets)) == 1 and len(p.sets) > 1:
+            return self._print(p.sets[0]) + "^%d"%len(p.sets)
+        else:
+            return r" \times ".join(self._print(set) for set in p.sets)
 
     def _print_RandomDomain(self, d):
         try:
@@ -1028,16 +1006,29 @@ class LatexPrinter(Printer):
                 return 'Domain on ' + self._print(d.symbols)
 
     def _print_FiniteSet(self, s):
-        if len(s) > 10:
-            printset = s.args[:3] + ('...',) + s.args[-3:]
+        return self._print_set(s.args)
+
+    def _print_set(self, s):
+        items = sorted(s, key=default_sort_key)
+        items = ", ".join(map(self._print, items))
+        return r"\left\{%s\right\}" % items
+
+    _print_frozenset = _print_set
+
+    def _print_Range(self, s):
+        if len(s) > 4:
+            it = iter(s)
+            printset = it.next(), it.next(), '\ldots', s._last_element
         else:
-            printset = s.args
+            printset = tuple(s)
+
         return (r"\left\{"
               + r", ".join(self._print(el) for el in printset)
               + r"\right\}")
+
     def _print_Interval(self, i):
         if i.start == i.end:
-            return r"\left{%s\right}" % self._print(i.start)
+            return r"\left\{%s\right\}" % self._print(i.start)
 
         else:
             if i.left_open:
@@ -1061,6 +1052,21 @@ class LatexPrinter(Printer):
 
     def _print_EmptySet(self, e):
         return r"\emptyset"
+
+    def _print_Naturals(self, n):
+        return r"\mathbb{N}"
+
+    def _print_Integers(self, i):
+        return r"\mathbb{Z}"
+
+    def _print_Reals(self, i):
+        return r"\mathbb{R}"
+
+    def _print_TransformationSet(self, s):
+        return r"\left\{%s\; |\; %s \in %s\right\}"%(
+                self._print(s.lamda.expr),
+                ', '.join([self._print(var) for var in s.lamda.variables]),
+                self._print(s.base_set))
 
     def _print_FiniteField(self, expr):
         return r"\mathbb{F}_{%s}" % expr.mod
@@ -1164,7 +1170,7 @@ def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.
 
-    >>> from sympy import latex, sin, asin, Rational
+    >>> from sympy import latex, sin, asin, Matrix, Rational
     >>> from sympy.abc import x, y, mu, tau
 
     >>> latex((2*tau)**Rational(7,2))
@@ -1232,18 +1238,19 @@ def latex(expr, **settings):
     '\\sin^{-1}{\\left (\\frac{7}{2} \\right )}'
 
     mat_str: Which matrix environment string to emit. "smallmatrix", "bmatrix",
-    etc. This paramater currently doesn't work. Defaults to "bmatrix".
+    etc. Defaults to "smallmatrix".
 
-    >>> latex([[1]], mat_str = "bmatrix")
-    '\\begin{bmatrix}\\begin{bmatrix}1\\end{bmatrix}\\end{bmatrix}'
+    >>> latex(Matrix(2, 1, [x, y]), mat_str = "array")
+    '\\left[\\begin{array}x\\\\y\\end{array}\\right]'
 
-    mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(".
-    This parameter currently doesn't work.
+    mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(",
+    or the empty string. Defaults to "[".
 
-    >>> latex([[1]], mat_delim="(")
-    '\\begin{bmatrix}\\begin{bmatrix}1\\end{bmatrix}\\end{bmatrix}'
+    >>> latex(Matrix(2, 1, [x, y]), mat_delim="(")
+    '\\left(\\begin{smallmatrix}x\\\\y\\end{smallmatrix}\\right)'
 
-    symbol_names: Dictionary of symbols and the custom strings they should be emitted as.
+    symbol_names: Dictionary of symbols and the custom strings they should be
+    emitted as.
 
     >>> latex(x**2, symbol_names={x:'x_i'})
     'x_i^{2}'

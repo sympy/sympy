@@ -12,15 +12,14 @@ Contents
 .. toctree::
     :maxdepth: 3
 
-    units.txt
+    gaussopt.txt
     hydrogen.txt
     matrices.txt
     paulialgebra.txt
     qho_1d.txt
-    secondquant.txt
     sho.txt
+    secondquant.txt
     wigner.txt
-    gaussopt.txt
+    units.txt
     mechanics/index.txt
     quantum/index.txt
-    quantum/computation/index.txt

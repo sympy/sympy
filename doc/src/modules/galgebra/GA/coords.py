@@ -28,13 +28,13 @@ if __name__ == '__main__':
     dpsi = psi.grad()
     print 'Gradient of Scalar Function $\\psi$'
     print '\\nabla\\psi =',dpsi
-    
+
     #A = MV.vector_fct('A')
     A = MV('A','vector',fct=True)
     #A.name = 'A'
     print 'Div and Curl of Vector Function $A$'
     print A
-        
+
     gradA = A.grad()
     I = MV(ONE,'pseudo')
     divA = A.grad_int()
@@ -42,5 +42,5 @@ if __name__ == '__main__':
     print '\\nabla \\cdot A =',divA
     Format('mv=3')
     print '-I\\lp\\nabla \\W A\\rp =',curlA
-    
+
     xdvi(filename='coords.tex')

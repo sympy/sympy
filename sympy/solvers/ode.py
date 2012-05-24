@@ -206,7 +206,8 @@ anything is broken, one of those tests will surely fail.
 from collections import defaultdict
 
 from sympy.core import Add, C, S, Mul, Pow, oo
-from sympy.core.compatibility import iterable, is_sequence, set_union, SymPyDeprecationWarning
+from sympy.core.compatibility import iterable, is_sequence, set_union
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative, AppliedUndef, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
@@ -1131,14 +1132,17 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     # ----------
     # assume, during deprecation that sol and func are reversed
     if hasattr(sol, '_is_Function') and isinstance(sol, AppliedUndef) and len(sol.args) == 1:
-        import warnings
         msg = "sol appears to be a valid function. " +\
               "The order of sol and func will be reversed. " +\
               "If this is not desired, send sol as Eq(sol, 0)."
-        warnings.warn(msg, category=SymPyDeprecationWarning)
+        SymPyDeprecationWarning(msg
+        ).warn()
         sol, func = func, sol
     elif not (isinstance(func, AppliedUndef) and len(func.args) == 1):
-        raise ValueError("func (or sol, during deprecation) must be a function of one variable. Got sol = %s, func = %s" % (sol, func))
+        from sympy.utilities.misc import filldedent
+        raise ValueError(filldedent('''
+        func (or sol, during deprecation) must be a function
+        of one variable. Got sol = %s, func = %s''' % (sol, func)))
     # ========== end of deprecation handling
     if is_sequence(sol, set):
         return type(sol)(map(lambda i: checkodesol(ode, i, order=order,
@@ -1362,7 +1366,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     # First, see if they are already solved
     if sol.lhs == func and not sol.rhs.has(func) or\
         sol.rhs == func and not sol.lhs.has(func):
-            return -2
+        return -2
     # We are not so lucky, try solving manually
     if trysolving:
         try:

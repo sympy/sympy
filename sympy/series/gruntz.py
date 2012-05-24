@@ -150,7 +150,7 @@ from sympy.utilities.timeutils import timethis
 timeit = timethis('gruntz')
 
 def tree(subtrees):
-    "Only debugging purposes: prints a tree"
+    """Only debugging purposes: prints a tree"""
     def indent(s, type=1):
         x = s.split("\n")
         r = "+-%s\n"%x[0]
@@ -173,7 +173,7 @@ def tree(subtrees):
 tmp = []
 iter = 0
 def maketree(f, *args, **kw):
-    "Only debugging purposes: prints a tree"
+    """Only debugging purposes: prints a tree"""
     global tmp
     global iter
     oldtmp = tmp
@@ -502,21 +502,17 @@ def calculate_series(e, x, skip_abs=False, logx=None):
 
     This is a place that fails most often, so it is in its own function.
     """
-
-    f = e
-    for n in [1, 2, 4, 6, 8, 16]:
-        series = f.nseries(x, n=n, logx=logx)
+    n = 1
+    while 1:
+        series = e.nseries(x, n=n, logx=logx)
         if not series.has(O):
             # The series expansion is locally exact.
             return series
 
         series = series.removeO()
-        if series:
-            if (not skip_abs) or series.has(x):
-                break
-    else:
-        raise ValueError('(%s).series(%s, n=16) gave no terms.' % (f, x))
-    return series
+        if series and ((not skip_abs) or series.has(x)):
+            return series
+        n *= 2
 
 @debug
 @timeit

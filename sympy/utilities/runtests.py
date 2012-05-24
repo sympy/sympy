@@ -40,7 +40,7 @@ IS_WINDOWS = (os.name == 'nt')
 
 
 class Skipped(Exception):
-        pass
+    pass
 
 def _indent(s, indent=4):
     """
@@ -134,6 +134,66 @@ def setup_pprint():
     # hook our nice, hash-stable strprinter
     init_printing(pretty_print=False)
 
+def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
+    doctest_kwargs={}, examples_args=(), examples_kwargs={'quiet':True}):
+    """
+    Run all tests.
+
+    Right now, this runs the regular tests (bin/test), the doctests
+    (bin/doctest), the examples (examples/all.py), and the sage tests (see
+    sympy/external/tests/test_sage.py).
+
+    This is what ``setup.py test`` uses.
+
+    You can pass arguments and keyword arguments to the test functions that
+    support them (for now, test,  doctest, and the examples).  See the docstrings of those
+    functions for a description of the available options.
+
+    For example, to run the solvers tests with colors turned off:
+
+    >>> from sympy.utilities.runtests import run_all_tests
+
+    >>> run_all_tests(test_args=("solvers",), test_kwargs={"colors:False"}) # doctest: +SKIP
+
+    """
+    tests_successful = True
+
+    try:
+        # Regular tests
+        if not test(*test_args, **test_kwargs):
+            # some regular test fails, so set the tests_successful
+            # flag to false and continue running the doctests
+            tests_successful = False
+
+        # Doctests
+        if not doctest(*doctest_args, **doctest_kwargs):
+            tests_successful = False
+
+        # Examples
+        print
+        sys.path.append("examples")
+        from all import run_examples # examples/all.py
+        if not run_examples(*examples_args, **examples_kwargs):
+            tests_successful = False
+
+        # Sage tests
+        if not (sys.platform == "win32" or sys.version_info[0] == 3):
+            # run Sage tests; Sage currently doesn't support Windows or Python 3
+            dev_null = open(os.devnull, 'w')
+            if subprocess.call("sage -v", shell=True, stdout=dev_null, stderr=dev_null) == 0:
+                if subprocess.call("sage -python bin/test sympy/external/tests/test_sage.py", shell=True) != 0:
+                    tests_successful = False
+
+        if tests_successful:
+            return
+        else:
+            # Return nonzero exit code
+            sys.exit(1)
+    except KeyboardInterrupt:
+        print
+        print("DO *NOT* COMMIT!")
+        sys.exit(1)
+
 def test(*paths, **kwargs):
     """
     Run tests in the specified test_*.py files.
@@ -216,6 +276,10 @@ def test(*paths, **kwargs):
 
     >>> sympy.test(colors=False)    # doctest: +SKIP
 
+    Force colors, even when the output is not to a terminal (this is useful,
+    e.g., if you are piping to ``less -r`` and you still want colors)
+
+    >>> sympy.test(force_colors=False    # doctest: +SKIP
     The traceback verboseness can be set to "short" or "no" (default is
     "short")
 
@@ -227,13 +291,14 @@ def test(*paths, **kwargs):
     kw = kwargs.get("kw", "")
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
+    force_colors = kwargs.get("force_colors", False)
     sort = kwargs.get("sort", True)
     seed = kwargs.get("seed", None)
     if seed is None:
         seed = random.randrange(100000000)
     timeout = kwargs.get("timeout", False)
     slow = kwargs.get("slow", False)
-    r = PyTestReporter(verbose, tb, colors)
+    r = PyTestReporter(verbose=verbose, tb=tb, colors=colors, force_colors=force_colors)
     t = SymPyTests(r, kw, post_mortem, seed)
 
     # Disable warnings for external modules
@@ -1083,10 +1148,11 @@ class PyTestReporter(Reporter):
     Py.test like reporter. Should produce output identical to py.test.
     """
 
-    def __init__(self, verbose=False, tb="short", colors=True):
+    def __init__(self, verbose=False, tb="short", colors=True, force_colors=False):
         self._verbose = verbose
         self._tb_style = tb
         self._colors = colors
+        self._force_colors = force_colors
         self._xfailed = 0
         self._xpassed = []
         self._failed = []
@@ -1168,7 +1234,7 @@ class PyTestReporter(Reporter):
 
         return width
 
-    def write(self, text, color="", align="left", width=None):
+    def write(self, text, color="", align="left", width=None, force_colors=False):
         """
         Prints a text on the screen.
 
@@ -1218,7 +1284,7 @@ class PyTestReporter(Reporter):
                 self.write("\n")
             self.write(" "*(width-self._write_pos-len(text)))
 
-        if hasattr(sys.stdout, 'isatty') and not sys.stdout.isatty():
+        if not self._force_colors and hasattr(sys.stdout, 'isatty') and not sys.stdout.isatty():
             # the stdout is not a terminal, this for example happens if the
             # output is piped to less, e.g. "bin/test | less". In this case,
             # the terminal control sequences would be printed verbatim, so
@@ -1441,4 +1507,3 @@ class PyTestReporter(Reporter):
         self.write("\n")
 
 sympy_dir = get_sympy_dir()
-

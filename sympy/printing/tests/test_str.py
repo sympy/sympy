@@ -164,11 +164,11 @@ def test_Mul():
     assert str(-2*x/3)  == '-2*x/3'
 
     class CustomClass1(Expr):
-        pass
+        is_commutative = True
     class CustomClass2(Expr):
-        pass
-    cc1 = CustomClass1(commutative=True)
-    cc2 = CustomClass2(commutative=True)
+        is_commutative = True
+    cc1 = CustomClass1()
+    cc2 = CustomClass2()
     assert str(Rational(2)*cc1) == '2*CustomClass1()'
     assert str(cc1*Rational(2)) == '2*CustomClass1()'
     assert str(cc1*Float("1.5")) == '1.5*CustomClass1()'
@@ -447,15 +447,15 @@ def test_empty_printer():
     assert str_printer.emptyPrinter(32) == "32"
 
 def test_settings():
-    raises(TypeError, 'sstr(S(4), method="garbage")')
+    raises(TypeError, lambda: sstr(S(4), method="garbage"))
 
 def test_RandomDomain():
-    from sympy.stats import Normal, Die, Exponential, pspace, Where
+    from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal(0, 1, symbol=Symbol('x1'))
-    assert str(Where(X>0)) == "Domain: 0 < x1"
+    assert str(where(X>0)) == "Domain: 0 < x1"
 
     D = Die(6, symbol=Symbol('d1'))
-    assert str(Where(D>4)) == "Domain: Or(d1 == 5, d1 == 6)"
+    assert str(where(D>4)) == "Domain: Or(d1 == 5, d1 == 6)"
 
     A = Exponential(1, symbol=Symbol('a'))
     B = Exponential(1, symbol=Symbol('b'))

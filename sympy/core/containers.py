@@ -83,6 +83,9 @@ class Tuple(Basic):
     def __lt__(self, other):
         return self.args < other.args
 
+    def __le__(self, other):
+        return self.args <= other.args
+
 converter[tuple] = lambda tup: Tuple(*tup)
 
 def tuple_wrapper(method):
@@ -197,3 +200,6 @@ class Dict(Basic):
     def __contains__(self, key):
         '''D.__contains__(k) -> True if D has a key k, else False'''
         return sympify(key) in self._dict
+
+    def __lt__(self, other):
+        return self.args < other.args

@@ -40,6 +40,10 @@ trigsimp
 
 .. autofunction:: trigsimp_nonrecursive
 
+besselsimp
+----------
+.. autofunction:: besselsimp
+
 powsimp
 -------
 .. autofunction:: powsimp

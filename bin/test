@@ -21,6 +21,8 @@ parser.add_option("--pdb", action="store_true", dest="pdb",
         default=False, help="Run post mortem pdb on each failure")
 parser.add_option("--no-colors", action="store_false", dest="colors",
         default=True, help="Do not report colored [OK] and [FAIL]")
+parser.add_option("--force-colors", action="store_true", dest="force_colors",
+        default=False, help="Always use colors, even if the output is not to a terminal.")
 parser.add_option("-k", dest="kw",
         help="only run tests matching the given keyword expression",
         metavar="KEYWORD", default="")
@@ -58,7 +60,8 @@ import sympy
 
 ok = sympy.test(*args, **{"verbose": options.verbose, "kw": options.kw,
     "tb": options.tb, "pdb": options.pdb, "colors": options.colors,
-    "sort": options.sort, "seed": options.seed, "slow": options.slow, "timeout": options.timeout})
+    "force_colors": options.force_colors, "sort": options.sort, "seed":
+    options.seed, "slow": options.slow, "timeout": options.timeout})
 
 if ok:
     sys.exit(0)

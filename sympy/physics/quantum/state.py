@@ -60,25 +60,23 @@ class StateBase(QExpr):
     def _operators_to_state(self, ops, **options):
         """ Returns the eigenstate instance for the passed operators.
 
-        This method should be overridden in subclasses. It will handle
-        being passed either an Operator instance or set of Operator
-        instances. It should return the corresponding state INSTANCE
-        or simply raise a NotImplementedError. See cartesian.py for an
-        example.
+        This method should be overridden in subclasses. It will handle being
+        passed either an Operator instance or set of Operator instances. It
+        should return the corresponding state INSTANCE or simply raise a
+        NotImplementedError. See cartesian.py for an example.
         """
 
         raise NotImplementedError("Cannot map operators to states in this class. Method not implemented!")
 
     def _state_to_operators(self, op_classes, **options):
-        """ Returns the operators which this state instance is an
-        eigenstate of.
+        """ Returns the operators which this state instance is an eigenstate
+        of.
 
-        This method should be overridden in subclasses. It will be
-        called on state instances and be passed the operator classes
-        that we wish to make into instances. The state instance will
-        then transform the classes appropriately, or raise a
-        NotImplementedError if it cannot return operator
-        instances. See cartesian.py for examples,
+        This method should be overridden in subclasses. It will be called on
+        state instances and be passed the operator classes that we wish to make
+        into instances. The state instance will then transform the classes
+        appropriately, or raise a NotImplementedError if it cannot return
+        operator instances. See cartesian.py for examples,
         """
 
         raise NotImplementedError("Cannot map this state to operators. Method not implemented!")
@@ -140,9 +138,9 @@ class StateBase(QExpr):
 class KetBase(StateBase):
     """Base class for Kets.
 
-    This class defines the dual property and the brackets for printing. This
-    is an abstract base class and you should not instantiate it directly,
-    instead use Ket.
+    This class defines the dual property and the brackets for printing. This is
+    an abstract base class and you should not instantiate it directly, instead
+    use Ket.
     """
 
     lbracket = '|'
@@ -284,7 +282,7 @@ class Ket(State, KetBase):
     Inherits from State and KetBase. This class should be used as the base
     class for all physical, time-independent Kets in a system. This class
     and its subclasses will be the main classes that users will use for
-    expressing Kets in Dirac notation.
+    expressing Kets in Dirac notation [1]_.
 
     Parameters
     ==========
@@ -335,7 +333,7 @@ class Ket(State, KetBase):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Bra-ket_notation
+    .. [1] http://en.wikipedia.org/wiki/Bra-ket_notation
     """
 
     @classmethod
@@ -418,10 +416,9 @@ class TimeDepState(StateBase):
     ==========
 
     args : tuple
-        The list of numbers or parameters that uniquely specify the
-        ket. This will usually be its symbol or its quantum numbers. For
-        time-dependent state, this will include the time as the final
-        argument.
+        The list of numbers or parameters that uniquely specify the ket. This
+        will usually be its symbol or its quantum numbers. For time-dependent
+        state, this will include the time as the final argument.
     """
 
     #-------------------------------------------------------------------------
@@ -491,17 +488,17 @@ class TimeDepState(StateBase):
 class TimeDepKet(TimeDepState, KetBase):
     """General time-dependent Ket in quantum mechanics.
 
-    This inherits from TimeDepState and KetBase and is the main class that
-    should be used for Kets that vary with time. Its dual is a TimeDepBra.
+    This inherits from ``TimeDepState`` and ``KetBase`` and is the main class
+    that should be used for Kets that vary with time. Its dual is a
+    ``TimeDepBra``.
 
     Parameters
     ==========
 
     args : tuple
-        The list of numbers or parameters that uniquely specify the
-        ket. This will usually be its symbol or its quantum numbers. For
-        time-dependent state, this will include the time as the final
-        argument.
+        The list of numbers or parameters that uniquely specify the ket. This
+        will usually be its symbol or its quantum numbers. For time-dependent
+        state, this will include the time as the final argument.
 
     Examples
     ========
@@ -542,10 +539,9 @@ class TimeDepBra(TimeDepState, BraBase):
     ==========
 
     args : tuple
-        The list of numbers or parameters that uniquely specify the
-        ket. This will usually be its symbol or its quantum numbers. For
-        time-dependent state, this will include the time as the final
-        argument.
+        The list of numbers or parameters that uniquely specify the ket. This
+        will usually be its symbol or its quantum numbers. For time-dependent
+        state, this will include the time as the final argument.
 
     Examples
     ========
@@ -572,9 +568,8 @@ class TimeDepBra(TimeDepState, BraBase):
 class Wavefunction(Function):
     """Class for representations in continuous bases
 
-    This class takes an expression and coordinates in its
-    constructor. It can be used to easily calculate normalizations and
-    probabilities.
+    This class takes an expression and coordinates in its constructor. It can
+    be used to easily calculate normalizations and probabilities.
 
     Parameters
     ==========
@@ -588,13 +583,13 @@ class Wavefunction(Function):
     Examples
     ========
 
-    Particle in a box, specifying bounds in the more primitive way of
-    using Piecewise
+    Particle in a box, specifying bounds in the more primitive way of using
+    Piecewise:
 
         >>> from sympy import Symbol, Piecewise, pi, N
         >>> from sympy.functions import sqrt, sin
         >>> from sympy.physics.quantum.state import Wavefunction
-        >>> x = Symbol('x')
+        >>> x = Symbol('x', real=True)
         >>> n = 1
         >>> L = 1
         >>> g = Piecewise((0, x < 0), (0, x > L), (sqrt(2//L)*sin(n*pi*x/L), True))
@@ -615,8 +610,8 @@ class Wavefunction(Function):
         >>> N(p(0.85*L))
         0.412214747707527
 
-    Additionally, you can specify the bounds of the function and the
-    indices in a more compact way.
+    Additionally, you can specify the bounds of the function and the indices in
+    a more compact way:
 
         >>> from sympy import symbols, pi, diff
         >>> from sympy.functions import sqrt, sin
@@ -640,15 +635,15 @@ class Wavefunction(Function):
         >>> f.is_commutative
         False
 
-    All arguments are automatically sympified, so you can define the
-    variables as strings rather than symbols
+    All arguments are automatically sympified, so you can define the variables
+    as strings rather than symbols:
 
         >>> expr = x**2
         >>> f = Wavefunction(expr, 'x')
         >>> type(f.variables[0])
         <class 'sympy.core.symbol.Symbol'>
 
-    Derivatives of Wavefunctions will return Wavefunctions
+    Derivatives of Wavefunctions will return Wavefunctions:
 
         >>> diff(f, x)
         Wavefunction(2*x, x)
@@ -723,8 +718,8 @@ class Wavefunction(Function):
     @property
     def is_commutative(self):
         """
-        Override Function's is_commutative so that order is preserved
-        in represented expressions
+        Override Function's is_commutative so that order is preserved in
+        represented expressions
         """
         return False
 
@@ -757,8 +752,8 @@ class Wavefunction(Function):
     @property
     def limits(self):
         """
-        Return the limits of the coordinates which the w.f. depends on
-        If no limits are specified, defaults to (-oo, oo)
+        Return the limits of the coordinates which the w.f. depends on If no
+        limits are specified, defaults to ``(-oo, oo)``.
 
         Examples
         ========
@@ -784,8 +779,7 @@ class Wavefunction(Function):
     @property
     def expr(self):
         """
-        Return the expression which is the functional form of the
-        Wavefunction
+        Return the expression which is the functional form of the Wavefunction
 
         Examples
         ========
@@ -828,8 +822,8 @@ class Wavefunction(Function):
         """
         Return the normalization of the specified functional form.
 
-        This function integrates over the coordinates of the Wavefunction,
-        with the bounds specified.
+        This function integrates over the coordinates of the Wavefunction, with
+        the bounds specified.
 
         Examples
         ========

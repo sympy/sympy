@@ -26,16 +26,16 @@ __all__ = [
 class TensorProduct(Expr):
     """The tensor product of two or more arguments.
 
-    For matrices, this uses ``matrix_tensor_product`` to compute the
-    Kronecker or tensor product matrix. For other objects a symbolic
-    ``TensorProduct`` instance is returned. The tensor product is a
-    non-commutative multiplication that is used primarily with operators
-    and states in quantum mechanics.
+    For matrices, this uses ``matrix_tensor_product`` to compute the Kronecker
+    or tensor product matrix. For other objects a symbolic ``TensorProduct``
+    instance is returned. The tensor product is a non-commutative
+    multiplication that is used primarily with operators and states in quantum
+    mechanics.
 
     Currently, the tensor product distinguishes between commutative and non-
-    commutative arguments.  Commutative arguments are assumed to be scalars
-    and are pulled out in front of the ``TensorProduct``. Non-commutative
-    arguments remain in the resulting ``TensorProduct``.
+    commutative arguments.  Commutative arguments are assumed to be scalars and
+    are pulled out in front of the ``TensorProduct``. Non-commutative arguments
+    remain in the resulting ``TensorProduct``.
 
     Parameters
     ==========
@@ -64,7 +64,7 @@ class TensorProduct(Expr):
         [0, 0, 1, 2]
         [0, 0, 3, 4]
 
-    We can also construct tensor products of non-commutative symbols::
+    We can also construct tensor products of non-commutative symbols:
 
         >>> from sympy import Symbol
         >>> A = Symbol('A',commutative=False)
@@ -73,14 +73,14 @@ class TensorProduct(Expr):
         >>> tp
         AxB
 
-    We can take the dagger of a tensor product (note the order does NOT
-    reverse like the dagger of a normal product)::
+    We can take the dagger of a tensor product (note the order does NOT reverse
+    like the dagger of a normal product):
 
         >>> from sympy.physics.quantum import Dagger
         >>> Dagger(tp)
         Dagger(A)xDagger(B)
 
-    Expand can be used to distribute a tensor product across addition::
+    Expand can be used to distribute a tensor product across addition:
 
         >>> C = Symbol('C',commutative=False)
         >>> tp = TensorProduct(A+B,C)
@@ -89,8 +89,9 @@ class TensorProduct(Expr):
         >>> tp.expand(tensorproduct=True)
         AxC + BxC
     """
+    is_commutative = False
 
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args):
         if isinstance(args[0], (Matrix, numpy_ndarray, scipy_sparse_matrix)):
             return matrix_tensor_product(*args)
         c_part, new_args = cls.flatten(sympify(args))
@@ -100,7 +101,7 @@ class TensorProduct(Expr):
         elif len(new_args) == 1:
             return c_part*new_args[0]
         else:
-            tp = Expr.__new__(cls, *new_args, **{'commutative': False})
+            tp = Expr.__new__(cls, *new_args)
             return c_part*tp
 
     @classmethod
@@ -196,11 +197,11 @@ class TensorProduct(Expr):
 def tensor_product_simp_Mul(e):
     """Simplify a Mul with TensorProducts.
 
-    Current the main use of this is to simplify a ``Mul`` of
-    ``TensorProduct``s to a ``TensorProduct`` of ``Muls``. It currently only
-    works for relatively simple cases where the initial ``Mul`` only has
-    scalars and raw ``TensorProduct``s, not ``Add``, ``Pow``, ``Commutator``s
-    of ``TensorProduct``s.
+    Current the main use of this is to simplify a ``Mul`` of ``TensorProduct``s
+    to a ``TensorProduct`` of ``Muls``. It currently only works for relatively
+    simple cases where the initial ``Mul`` only has scalars and raw
+    ``TensorProduct``s, not ``Add``, ``Pow``, ``Commutator``s of
+    ``TensorProduct``s.
 
     Parameters
     ==========
@@ -272,10 +273,9 @@ def tensor_product_simp(e, **hints):
     """Try to simplify and combine TensorProducts.
 
     In general this will try to pull expressions inside of ``TensorProducts``.
-    It currently only works for relatively simple cases where the products
-    have only scalars, raw ``TensorProducts``, not ``Add``, ``Pow``,
-    ``Commutators`` of ``TensorProducts``. It is best to see what it does by
-    showing examples.
+    It currently only works for relatively simple cases where the products have
+    only scalars, raw ``TensorProducts``, not ``Add``, ``Pow``, ``Commutators``
+    of ``TensorProducts``. It is best to see what it does by showing examples.
 
     Examples
     ========
@@ -296,8 +296,8 @@ def tensor_product_simp(e, **hints):
     >>> tensor_product_simp(e)
     (A*C)x(B*D)
 
-    This is the core logic of this function, and it works inside, powers,
-    sums, commutators and anticommutators as well:
+    This is the core logic of this function, and it works inside, powers, sums,
+    commutators and anticommutators as well:
 
     >>> tensor_product_simp(e**2)
     (A*C)x(B*D)**2
@@ -315,4 +315,3 @@ def tensor_product_simp(e, **hints):
         return AntiCommutator(*[tensor_product_simp(arg) for arg in e.args])
     else:
         return e
-

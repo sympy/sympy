@@ -3,7 +3,7 @@ from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
 )
 
 from sympy.utilities.pytest import raises, XFAIL
-from sympy.core.compatibility import SymPyDeprecationWarning
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 def test_Symbol():
     a = Symbol("a")
@@ -25,7 +25,7 @@ def test_Symbol():
     c,d = symbols('c,d', cls=Dummy)
     assert isinstance(c, Dummy)
     assert isinstance(d, Dummy)
-    raises(TypeError, 'Symbol()')
+    raises(TypeError, lambda: Symbol())
 
 def test_Dummy():
     assert Dummy() != Dummy()
@@ -88,7 +88,7 @@ def test_lt_gt():
 def test_no_len():
     # there should be no len for numbers
     x = Symbol('x')
-    raises(TypeError, "len(x)")
+    raises(TypeError, lambda: len(x))
 
 def test_ineq_unequal():
     S = sympify
@@ -160,10 +160,10 @@ def test_Wild_properties():
 
     given_patterns = [ x, y, p, k, -k, n, -n, sympify(-3), sympify(3), pi, Rational(3,2), I ]
 
-    integerp = lambda k : k.is_integer
-    positivep = lambda k : k.is_positive
-    symbolp = lambda k : k.is_Symbol
-    realp = lambda k : k.is_real
+    integerp = lambda k: k.is_integer
+    positivep = lambda k: k.is_positive
+    symbolp = lambda k: k.is_Symbol
+    realp = lambda k: k.is_real
 
     S = Wild("S", properties=[symbolp])
     R = Wild("R", properties=[realp])
@@ -203,13 +203,11 @@ def test_symbols_each_char():
     z = Symbol('z')
 
     # First, test the warning
-    warnings.filterwarnings("error", "The each_char option to symbols\(\) and var\(\) is "
-        "deprecated.  Separate symbol names by spaces or commas instead.")
-    raises(SymPyDeprecationWarning, "symbols('xyz', each_char=True)")
-    raises(SymPyDeprecationWarning, "symbols('xyz', each_char=False)")
+    warnings.filterwarnings("error")
+    raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=True))
+    raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=False))
     # now test the actual output
-    warnings.filterwarnings("ignore",  "The each_char option to symbols\(\) and var\(\) is "
-        "deprecated.  Separate symbol names by spaces or commas instead.")
+    warnings.filterwarnings("ignore")
     assert symbols(['wx', 'yz'], each_char=True) == [(w, x), (y, z)]
     assert all(w.is_Function for w in flatten(symbols(['wx', 'yz'], each_char=True, cls=Function)))
     assert symbols('xyz', each_char=True) == (x, y, z)
@@ -275,10 +273,10 @@ def test_symbols():
     assert symbols(['x', 'y', 'z']) == [x, y, z]
     assert symbols(set(['x', 'y', 'z'])) == set([x, y, z])
 
-    raises(ValueError, "symbols('')")
-    raises(ValueError, "symbols(',')")
-    raises(ValueError, "symbols('x,,y,,z')")
-    raises(ValueError, "symbols(('x', '', 'y', '', 'z'))")
+    raises(ValueError, lambda: symbols(''))
+    raises(ValueError, lambda: symbols(','))
+    raises(ValueError, lambda: symbols('x,,y,,z'))
+    raises(ValueError, lambda: symbols(('x', '', 'y', '', 'z')))
 
     a, b = symbols('x,y', real=True)
     assert a.is_real and b.is_real
@@ -321,3 +319,4 @@ def test_symbols():
 def test_call():
     f = Symbol('f')
     assert f(2)
+    raises(TypeError, "Wild('x')(1)")

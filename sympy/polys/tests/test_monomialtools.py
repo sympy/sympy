@@ -6,7 +6,9 @@ from sympy.polys.monomialtools import (
     monomial_mul, monomial_div,
     monomial_gcd, monomial_lcm,
     monomial_max, monomial_min,
+    monomial_divides,
     Monomial,
+    InverseOrder, ProductOrder
 )
 
 from sympy.polys.polyerrors import ExactQuotientFailed
@@ -91,6 +93,20 @@ def test_grevlex_order():
     assert grevlex((0,1,1)) > grevlex((0,0,2))
     assert grevlex((0,3,1)) < grevlex((2,2,1))
 
+def test_InverseOrder():
+    ilex = InverseOrder(lex)
+    igrlex = InverseOrder(grlex)
+
+    assert ilex((1,2,3)) > ilex((2, 0, 3))
+    assert igrlex((1, 2, 3)) < igrlex((0, 2, 3))
+    assert str(ilex) == "ilex"
+    assert str(igrlex) == "igrlex"
+
+def test_ProductOrder():
+    P = ProductOrder((grlex, lambda m: m[:2]), (grlex, lambda m: m[2:]))
+    assert P((1, 3, 3, 4, 5)) > P((2, 1, 5, 5, 5))
+    assert str(P) == "ProductOrder(grlex, grlex)"
+
 def test_monomial_key():
     assert monomial_key() == lex
 
@@ -98,8 +114,8 @@ def test_monomial_key():
     assert monomial_key('grlex') == grlex
     assert monomial_key('grevlex') == grevlex
 
-    raises(ValueError, "monomial_key('foo')")
-    raises(ValueError, "monomial_key(1)")
+    raises(ValueError, lambda: monomial_key('foo'))
+    raises(ValueError, lambda: monomial_key(1))
 
 def test_monomial_mul():
     assert monomial_mul((3,4,1), (1,2,0)) == (4,6,1)
@@ -118,6 +134,10 @@ def test_monomial_max():
 
 def test_monomial_min():
     assert monomial_min((3,4,5), (0,5,1), (6,3,9)) == (0,3,1)
+
+def test_monomial_divides():
+    assert monomial_divides((1,2,3), (4,5,6)) is True
+    assert monomial_divides((1,2,3), (0,5,6)) is False
 
 def test_Monomial():
     m = Monomial((3, 4, 1), (x, y, z))
@@ -168,4 +188,4 @@ def test_Monomial():
     assert m**2 == Monomial((6, 8, 2))
     assert m**3 == Monomial((9,12, 3))
 
-    raises(ExactQuotientFailed, "m/Monomial((5, 2, 0))")
+    raises(ExactQuotientFailed, lambda: m/Monomial((5, 2, 0)))

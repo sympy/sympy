@@ -118,4 +118,3 @@ class FiniteField(Field, SimpleDomain):
 
         if q == 1:
             return K1.dtype(self.dom.dtype(p))
-
