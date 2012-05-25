@@ -126,7 +126,7 @@ class vectorized_lambdify(object):
                 # Solution: demand the use of np.complex128.
                 args = (np.array(a, dtype=np.complex) for a in args)
                 results = np.real(self.vector_func(*args))
-                warnings.warn('Complex values encountered. Returning only the real part.')
+                warnings.warn('Complex values as arguments to numpy functions encountered.')
             elif ((isinstance(e, TypeError)
                    and 'unhashable type: \'numpy.ndarray\'' in str(e))
                   or
@@ -140,22 +140,23 @@ class vectorized_lambdify(object):
                 #   sin(ndarray(...)) raises "unhashable type"
                 #   Integral(x, (x, 0, ndarray(...))) raises "Invalid limits"
                 #   other ugly exceptions that are not well understood (marked with XXX)
+                # TODO: Cleanup the ugly special cases marked with xxx above.
                 # Solution: use math and vectorize the final lambda.
                 self.lambda_func = experimental_lambdify(self.args, self.expr, use_python_math=True)
                 self.vector_func = np.vectorize(self.lambda_func, otypes=[np.float])
                 results = self.__call__(*args)
-            elif (isinstance(e, ValueError)
-                  and
-                  ('Symbolic value, can\'t compute' in str(e) or 'math domain error' in str(e))):
+            elif ((isinstance(e, TypeError) and 'can\'t convert complex to float' in str(e))
+                    or
+                  (isinstance(e, ValueError) and 'math domain error' in str(e))):
                 # Almost all functions were translated to python math, but some
                 # were left as sympy functions. They produced complex numbers.
-                #   float(a+I*b) raises "Symbolic value, can't compute"
-                #   math.sqrt(-1) raises "math domain error"
+                #   float(a+I*b) raises TypeError "can't convert complex to float")
+                #   math.sqrt(-1) raises ValueError "math domain error"
                 # Solution: use cmath and vectorize the final lambda.
                 self.lambda_func = experimental_lambdify(self.args, self.expr, use_python_cmath=True)
                 self.vector_func = np.vectorize(self.lambda_func, otypes=[np.complex])
                 results = np.real(self.__call__(*args))
-                warnings.warn('Complex values encountered. Returning only the real part.')
+                warnings.warn('Complex values as arguments to python math functions encountered.')
             else:
                 # Complete failure. One last try with no translations, only
                 # wrapping in complex((...).evalf()) and returning the real
