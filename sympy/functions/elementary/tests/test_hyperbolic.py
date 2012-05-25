@@ -476,9 +476,7 @@ def test_complex():
         assert tanh(z).expand(complex=True,deep=deep) == sinh(a)*cosh(a)/(cos(b)**2+sinh(a)**2) + I*sin(b)*cos(b)/(cos(b)**2+sinh(a)**2)
         assert coth(z).expand(complex=True,deep=deep) == sinh(a)*cosh(a)/(sin(b)**2+sinh(a)**2) - I*sin(b)*cos(b)/(sin(b)**2+sinh(a)**2)
 
-@XFAIL
 def test_complex_2899():
-    # infinite recursion in coth, https://code.google.com/p/sympy/issues/detail?id=2899
     a,b = symbols('a,b', real=True)
     for deep in [True,False]:
         for func in [sinh, cosh, tanh, coth]:
