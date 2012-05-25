@@ -466,12 +466,12 @@ DifferentialOperator⎜──(f(x)),f(x)⎟\n\
 """
     assert pretty(d) == ascii_str
     assert upretty(d) == ucode_str
-    assert latex(d) == r'DifferentialOperator(\frac{\partial}{\partial x} \operatorname{f}{\left (x \right )},\operatorname{f}{\left (x \right )})'
+    assert latex(d) == r'DifferentialOperator\left(\frac{\partial}{\partial x} \operatorname{f}{\left (x \right )},\operatorname{f}{\left (x \right )}\right)'
     sT(d, "DifferentialOperator(Derivative(Function('f')(Symbol('x')), Symbol('x')),Function('f')(Symbol('x')))")
     assert str(b) == 'Operator(B,t,1/2)'
     assert pretty(b) == 'Operator(B,t,1/2)'
     assert upretty(b) == u'Operator(B,t,1/2)'
-    assert latex(b) == r'Operator(B,t,\frac{1}{2})'
+    assert latex(b) == r'Operator\left(B,t,\frac{1}{2}\right)'
     sT(b, "Operator(Symbol('B'),Symbol('t'),Rational(1, 2))")
     assert str(op) == '|psi><psi|'
     assert pretty(op) == u'❘psi⟩⟨psi❘'
@@ -576,7 +576,7 @@ J \n\
     assert str(rot) == 'R(1,2,3)'
     assert pretty(rot) == u'ℛ (1,2,3)'
     assert upretty(rot) == u'ℛ (1,2,3)'
-    assert latex(rot) == r'Rotation(1,2,3)'
+    assert latex(rot) == r'Rotation\left(1,2,3\right)'
     sT(rot, "Rotation(Integer(1),Integer(2),Integer(3))")
     assert str(bigd) == 'WignerD(1, 2, 3, 4, 5, 6)'
     ascii_str = \
@@ -710,7 +710,7 @@ u"""\
 """
     assert pretty(e1) == ascii_str
     assert upretty(e1) == ucode_str
-    assert latex(e1) == r'{\left(J_z\right)^{2}}\otimes \left({A^{\dag} + B^{\dag}}\right) \left\{\left(DifferentialOperator(\frac{\partial}{\partial x} \operatorname{f}{\left (x \right )},\operatorname{f}{\left (x \right )})^{\dag}\right)^{3},A^{\dag} + B^{\dag}\right\} \left({\left\langle 1,0\right|} + {\left\langle 1,1\right|}\right) \left({\left|0,0\right\rangle } + {\left|1,-1\right\rangle }\right)'
+    assert latex(e1) == r'{\left(J_z\right)^{2}}\otimes \left({A^{\dag} + B^{\dag}}\right) \left\{\left(DifferentialOperator\left(\frac{\partial}{\partial x} \operatorname{f}{\left (x \right )},\operatorname{f}{\left (x \right )}\right)^{\dag}\right)^{3},A^{\dag} + B^{\dag}\right\} \left({\left\langle 1,0\right|} + {\left\langle 1,1\right|}\right) \left({\left|0,0\right\rangle } + {\left|1,-1\right\rangle }\right)'
     sT(e1, "Mul(TensorProduct(Pow(JzOp(Symbol('J')), Integer(2)), Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), AntiCommutator(Pow(Dagger(DifferentialOperator(Derivative(Function('f')(Symbol('x')), Symbol('x')),Function('f')(Symbol('x')))), Integer(3)),Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), Add(JzBra(Integer(1),Integer(0)), JzBra(Integer(1),Integer(1))), Add(JzKet(Integer(0),Integer(0)), JzKet(Integer(1),Integer(-1))))")
     assert str(e2) == '[Jz**2,A + B]*{E**(-2),Dagger(D)*Dagger(C)}*[J2,Jz]'
     ascii_str = \
