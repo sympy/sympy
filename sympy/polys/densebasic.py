@@ -518,7 +518,7 @@ def dup_convert(f, K0, K1):
     [1, 2]
 
     >>> dup_convert([ZZ(1), ZZ(2)], ZZ, ZZ['x'])
-    [DMP([1], ZZ), DMP([2], ZZ)]
+    [DMP([1], ZZ, ZZ[x]), DMP([2], ZZ, ZZ[x])]
 
     """
     if K0 is not None and K0 == K1:
@@ -545,7 +545,7 @@ def dmp_convert(f, u, K0, K1):
     [[1], [2]]
 
     >>> dmp_convert(g, 1, ZZ, ZZ['x'])
-    [[DMP([1], ZZ)], [DMP([2], ZZ)]]
+    [[DMP([1], ZZ, ZZ[x])], [DMP([2], ZZ, ZZ[x])]]
 
     """
     if not u:
@@ -1588,7 +1588,7 @@ def dmp_eject(f, u, K, front=False):
     >>> K = ZZ['x', 'y']
 
     >>> dmp_eject([[[1]], [[1], [2]]], 2, K)
-    [DMP([[1]], ZZ), DMP([[1], [2]], ZZ)]
+    [DMP([[1]], ZZ, ZZ[x,y]), DMP([[1], [2]], ZZ, ZZ[x,y])]
 
     """
     f, h = dmp_to_dict(f, u), {}
