@@ -2672,6 +2672,16 @@ def test_pretty_Domain():
     assert  pretty(expr) == "ZZ(x, y)"
     assert upretty(expr) == u"ℤ(x, y)"
 
+    expr = QQ.poly_ring(x, y, order="lex")
+
+    assert  pretty(expr) == "QQ[x, y, order=lex]"
+    assert upretty(expr) == u"ℚ[x, y, order=lex]"
+
+    expr = QQ.poly_ring(x, y, order="ilex")
+
+    assert  pretty(expr) == "QQ[x, y, order=ilex]"
+    assert upretty(expr) == u"ℚ[x, y, order=ilex]"
+
 def test_pretty_prec():
     assert xpretty(S("0.3"), full_prec=True) == "0.300000000000000"
     assert xpretty(S("0.3"), full_prec="auto") == "0.300000000000000"
@@ -3661,6 +3671,18 @@ def test_RandomDomain():
     A = Exponential(1, symbol=Symbol('a'))
     B = Exponential(1, symbol=Symbol('b'))
     assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ a ∧ 0 ≤ b'
+
+def test_PrettyPoly():
+    F = QQ.frac_field(x, y)
+    R = QQ[x, y]
+
+    expr = F.convert(x/(x + y))
+    assert pretty(expr) == pretty(x/(x + y))
+    assert upretty(expr) == upretty(x/(x + y))
+
+    expr = R.convert(x + y)
+    assert pretty(expr) == pretty(x + y)
+    assert upretty(expr) == upretty(x + y)
 
 def test_issue_3186():
     assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
