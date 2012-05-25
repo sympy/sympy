@@ -5,11 +5,46 @@ from sympy.physics.quantum.operator import HermitianOperator, OuterProduct
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.state import KetBase
 from sympy.physics.quantum.qubit import Qubit
+from sympy.physics.quantum.qapply import qapply
 from matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
 
 
 class Density(HermitianOperator):
-    """Density operator for representing mixed states."""
+    """Density operator for representing mixed states.
+
+    Density operator used to represent mixed states.
+
+    TODO: Density operator support for Qubits
+
+    Parameters
+    ==========
+
+    values : tuples/lists
+    Each tuple/list should be of form (state, prob) or [state,prob]
+
+    Examples:
+    =========
+
+    Create a density operator with 2 states represented by Kets:
+
+    >>> from sympy.physics.quantum.state import Ket
+    >>> from sympy.physics.quantum.density import Density
+    >>> d = Density([Ket(0), 0.5], [Ket(1),0.5])
+    >>> d
+    'Density'((|0>, 0.5),(|1>, 0.5))
+
+    We can obtain all states and probs:
+    >>> d.states()
+    (|0>, |1>)
+    >>> d.states()[1]
+    |1>
+
+    >>> d.probs()
+    (0.5, 0.5)
+    >>> d.probs()[1]
+    0.500000000000000
+
+   """
 
     @classmethod
     def _eval_args(cls, args):
@@ -24,32 +59,33 @@ class Density(HermitianOperator):
                 raise ValueError("Each argument should be of form [state,prob]"
                                  " or ( state, prob )")
 
-            #TODO: need to add isinstance(arg[0], Qubit )) check
-            if not (isinstance(arg[0], (KetBase, Qubit))):
-                     raise ValueError("State parameters must be of type Ket"
-                                      " or  Qubit, got : %s " % type(arg[0]))
-
         return args
 
     def states(self):
+        """Return list of all states"""
         return Tuple(*[arg[0] for arg in self.args])
 
     def probs(self):
+        """Return list of all probabilities"""
         return Tuple(*[arg[1] for arg in self.args])
 
     def get_state(self, index):
+        """Return specfic state by index"""
         state = self.args[index][0]
         return state
 
     def get_prob(self, index):
+        """Return probability of specific state by index"""
         prob = self.args[index][1]
         return prob
 
     def operate_on(self, op):
+        """op operates on each individual state"""
         new_args = [(op*state, prob) for (state, prob) in self.args]
         return Density(*new_args)
 
     def doit(self, **hints):
+        """Expands the density operator into the matrix format"""
         terms = []
         for (state, prob) in self.args:
             terms.append(prob*state*Dagger(state))
@@ -63,30 +99,3 @@ class Density(HermitianOperator):
 
     def _print_operator_name_pretty(self, printer, *args):
         return prettyForm(u"\u03C1")
-
-
-def entropy(density):
-    """Compute the entropy of a density matrix.
-
-    This computes -Tr(density*ln(density)) using the eigenvalue decomposition
-    of density, which is given as either a Density instance or a matrix
-    (numpy.ndarray, sympy.Matrix or scipy.sparse).
-    """
-    if isinstance(density, Density):
-        density = represent(density, format='numpy')
-
-    if isinstance(density, scipy_sparse_matrix):
-        density = to_numpy(density)
-
-    if isinstance(density, Matrix):
-        eigvals = density.eigenvals().keys()
-        return expand(-sum(e*log(e) for e in eigvals))
-
-    elif isinstance(density, numpy_ndarray):
-        import numpy as np
-        eigvals = np.linalg.eigvals(density)
-        return -np.sum(eigvals*np.log(eigvals))
-
-    else:
-        raise ValueError("numpy.ndarray, scipy.sparse or sympy matrix expected")
-

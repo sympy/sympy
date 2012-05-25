@@ -10,7 +10,7 @@ from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.spin import Jx, Jy, Jz, Jplus, Jminus, J2, JzKet
 from sympy.physics.quantum.state import Ket
-
+from sympy.physics.quantum.density import Density
 
 j, jp, m, mp = symbols("j j' m m'")
 
@@ -90,3 +90,7 @@ def test_issue2974():
     B = Operator('B')
     assert qapply(A) == A
     assert qapply(A.dual*B) == A.dual*B
+
+def test_density():
+    d = Density([Jz*mo, 0.5], [Jz*po, 0.5])
+    assert(qapply(d) == Density([-hbar*mo,0.5],[hbar*po,0.5]))

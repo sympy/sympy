@@ -6,8 +6,7 @@ from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.gate import HadamardGate
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.operator import *
-from sympy.physics.quantum.cartesian import XKet, PxKet, PxOp
+from sympy.physics.quantum.cartesian import XKet, PxKet, PxOp, XOp
 from sympy.functions import sqrt
 from sympy.utilities.pytest import raises
 
@@ -18,39 +17,31 @@ def test_eval_args():
     # check for value error, when prob is not provided
     raises(ValueError, 'Density([Ket(0)], [Ket(1)])')
 
-    #check for valid state
-    raises(ValueError, 'Density(1,1)')
-    raises(ValueError, 'Density([Ket(0), 0.5], (Ket(1), 0.25), (1, 0.25))')
-
-    #TODO: Need to implement Qubit based Density before
-    #this test is done.
-    #assert(isinstance(Density([Qubit('01'),0.5], [Qubit('01'),0.5]), Density))
-
-
 def test_doit():
      x,y = symbols('x y')
-     d = Density([XKet(),0.5],[PxKet(),0.5])
-     assert ( ( 0.5*PxKet()*Dagger(PxKet()) +
-                0.5*XKet()*Dagger(XKet())) == d.doit()  )
+     d = Density([XKet(),0.5], [PxKet(),0.5])
+     assert((0.5*PxKet()*Dagger(PxKet()) +
+             0.5*XKet()*Dagger(XKet())) == d.doit())
 
      # check for kets with expr in them
-     d_with_sym = Density([XKet(x*y),0.5],[PxKet(x*y),0.5])
-     assert ((0.5*PxKet(x*y)*Dagger(PxKet(x*y)) +
-              0.5*XKet(x*y)*Dagger(XKet(x*y))) == d_with_sym.doit())
+     d_with_sym = Density([XKet(x*y),0.5], [PxKet(x*y),0.5])
+     assert((0.5*PxKet(x*y)*Dagger(PxKet(x*y)) +
+             0.5*XKet(x*y)*Dagger(XKet(x*y))) == d_with_sym.doit())
 
-
-     #TODO: Need to implement Qubit based density to check for qubit related
-     #ops.
+def test_operate_on():
+    d = Density([Ket(0), 0.5], [Ket(1), 0.5])
+    assert(d.operate_on(XOp()) == Density([XOp()*Ket(0), 0.5],
+                                          [XOp()*Ket(1), 0.5]))
 
 def test_represent():
     x,y = symbols('x y')
-    d = Density([XKet(),0.5],[PxKet(),0.5])
+    d = Density([XKet(),0.5], [PxKet(),0.5])
     assert (represent(0.5*PxKet()*Dagger(PxKet())) +
             represent(0.5*XKet()*Dagger(XKet())) == represent(d))
 
     # check for kets with expr in them
-    d_with_sym = Density([XKet(x*y),0.5],[PxKet(x*y),0.5])
-    assert(represent ( 0.5*PxKet(x*y)*Dagger(PxKet(x*y))) +
+    d_with_sym = Density([XKet(x*y),0.5], [PxKet(x*y),0.5])
+    assert(represent(0.5*PxKet(x*y)*Dagger(PxKet(x*y))) +
            represent(0.5*XKet(x*y)*Dagger(XKet(x*y))) ==
            represent(d_with_sym))
 
@@ -59,55 +50,30 @@ def test_represent():
            represent(0.5*PxKet()*Dagger(PxKet()), basis=PxOp()) ==
            represent(d, basis=PxOp()))
 
+def test_states():
+    d = Density([Ket(0), 0.5], [Ket(1), 0.5])
+    states = d.states()
+    assert (states[0] == Ket(0) and states[1] == Ket(1))
 
-def test_entropy():
-    pass
+def test_probs():
+    d = Density([Ket(0), .75], [Ket(1), 0.25])
+    probs = d.probs()
+    assert (probs[0] == 0.75 and probs[1] == 0.25)
 
-def entropy():
-    pass
+    #probs can be symbols
+    x,y = symbols('x y')
+    d = Density([Ket(0), x], [Ket(1), y])
+    probs = d.probs()
+    assert(probs[0] == x and probs[1] == y)
 
-def test_reduced_density():
-    pass
+def test_get_state():
+    x,y = symbols('x y')
+    d = Density([Ket(0), x], [Ket(1), y])
+    states = (d.get_state(0), d.get_state(1))
+    assert(states[0] == Ket(0) and states[1] == Ket(1))
 
-def test_entropy_of_entanglement():
-    pass
-
-def test_latex():
-    d = Density([Ket(0),0.5],[Ket(1),0.5])
-    result =  (r'\rho\left(\begin{pmatrix}{\left|0\right\rangle }, & '
-           r'0.5\end{pmatrix},\begin{pmatrix}{\left|1\right\rangle }, & '
-           r'0.5\end{pmatrix}\right)')
-    assert latex(d) == result
-
-if __name__ == '__main__':
-    pass
-    #test_latex()
-    #d = Density([Ket(),0.5],[Ket(),0.5])
-    #test_eval_args()
-    #test_doit()
-    #test_represent()
-    #print d
-    #pprint(d)
-    #print latex(d)
-    #pprint(d)
-    #k = Ket()
-    #pprint(k)
-    #print k
-
-
-    #o = OuterProduct(Ket(),Bra())
-    #print latex(o)
-
-    #k = Ket('k')
-    #b = Bra('b')
-    #op = OuterProduct(k, b)
-    #print latex(op)
-
-#def test_representDensity():
-#    assert represent(Density([Qubit('01'),1]), nqubits=2) == mat*Dagger(mat)
-
-#def test_apply_operators_density():
-#    assert apply_operators(Density([Qubit('00'),1]).operate_on(HadamardGate(0)\
-#           *HadamardGate(1)))\
-#        == Density([apply_operators(HadamardGate(0)*HadamardGate(1)*Qubit('00')),1])
-
+def test_get_prob():
+    x,y = symbols('x y')
+    d = Density([Ket(0), x], [Ket(1), y])
+    probs = (d.get_prob(0), d.get_prob(1))
+    assert ( probs[0] == x and probs[1] == y)
