@@ -8,23 +8,23 @@ class RigidBody(object):
     """An idealized rigid body.
 
     This is essentially a container which holds the various components which
-    describe a rigid body: a name, mass, point, reference frame, and inertia.
+    describe a rigid body: a name, point, reference frame, mass, and inertia.
 
     All of these need to be supplied on creation, but can be changed
     afterwards.
 
     Attributes
     ==========
-    name : str
-        The body's name
-    mass : Sympifyable
-        The body's mass
-    inertia : (Dyadic, Point)
-        The body's inertia about a point; stored in a tuple as shown above
-    mc : Point
-        The point which represents the mass center of the rigid body
+    name : string
+        The body's name.
+    masscenter : Point
+        The point which represents the mass center of the rigid body.
     frame : ReferenceFrame
-        The ReferenceFrame which the rigid body is fixed in
+        The ReferenceFrame which the rigid body is fixed in.
+    mass : Sympifyable
+        The body's mass.
+    inertia : (Dyadic, Point)
+        The body's inertia about a point; stored in a tuple as shown above.
 
     Examples
     ========
@@ -36,19 +36,19 @@ class RigidBody(object):
     >>> A = ReferenceFrame('A')
     >>> P = Point('P')
     >>> I = outer (A.x, A.x)
-    >>> Inertia_tuple = (I, P)
-    >>> B = RigidBody('B', P, A, m, Inertia_tuple)
+    >>> inertia_tuple = (I, P)
+    >>> B = RigidBody('B', P, A, m, inertia_tuple)
     >>> # Or you could change them afterwards
     >>> m2 = Symbol('m2')
     >>> B.mass = m2
 
     """
 
-    def __init__(self, name, mc, frame, mass, inertia):
+    def __init__(self, name, masscenter, frame, mass, inertia):
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
         self._name = name
-        self.set_mc(mc)
+        self.set_mc(masscenter)
         self.set_mass(mass)
         self.set_frame(frame)
         self.set_inertia(inertia)
@@ -57,7 +57,6 @@ class RigidBody(object):
         return self._name
 
     __repr__ = __str__
-
 
     def get_frame(self):
         return self._frame
