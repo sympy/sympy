@@ -1,6 +1,7 @@
 from sympy import (plot, pi, sin, cos, Symbol, Integral, summation, sqrt, log,
 oo, LambertW, I)
 from tempfile import NamedTemporaryFile
+import warnings
 
 def tmp_file(name=''):
     return NamedTemporaryFile(suffix='.png').name
@@ -130,11 +131,23 @@ def plot_and_save(name):
     # results.
     ###
 
-    # TODO use raises to check that the warnings are correctly raised.
-    plot(sqrt(sqrt(-x))).save(tmp_file())
-    plot(LambertW(x)).save(tmp_file())
-    plot(sqrt(LambertW(x))).save(tmp_file()) # TODO this line raises a warning
-    #in experimental_lambdify because it uses the failback evalf vectorize
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        plot(sqrt(sqrt(-x)), show=False).save(tmp_file())
+        assert len(w) == 1
+        assert "Complex values as arguments to numpy functions encountered." == str(w[-1].message)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        plot(LambertW(x), show=False).save(tmp_file())
+        assert len(w) > 10 #TODO trace where do the other warnings come from
+        assert "Complex values as arguments to python math functions encountered." == str(w[-1].message)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        plot(sqrt(LambertW(x)), show=False).save(tmp_file())
+        assert len(w) == 1
+        assert "Complex values as arguments to python math functions encountered." == str(w[-1].message)
+    #TODO this one does not work properly:
     plot(sin(x)+I*cos(x)).save(tmp_file())
 
 
