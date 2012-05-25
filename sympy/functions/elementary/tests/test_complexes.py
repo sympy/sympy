@@ -1,6 +1,6 @@
 from sympy import (symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log,
         pi, arg, conjugate, expand, exp, sin, cos, Function, Abs, zoo, atan2,
-        S, DiracDelta)
+        S, DiracDelta, Rational)
 from sympy.utilities.pytest import XFAIL
 
 from sympy.utilities.randtest import comp
@@ -10,6 +10,7 @@ def N_equals(a, b):
 
 def test_re():
     x, y = symbols('x,y')
+    a, b = symbols('a,b', real=True)
 
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
@@ -57,8 +58,12 @@ def test_re():
     assert re(i*r*x).diff(r) == re(i*x)
     assert re(i*r*x).diff(i) == -I * im(r*x)
 
+    assert re(sqrt(a + b*I)) == (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)
+    assert re(a * (2 + b*I)) == 2*a
+
 def test_im():
     x, y = symbols('x,y')
+    a, b = symbols('a,b', real=True)
 
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
@@ -106,6 +111,9 @@ def test_im():
 
     assert im(i*r*x).diff(r) == im(i*x)
     assert im(i*r*x).diff(i) == -I * re(r*x)
+
+    assert im(sqrt(a + b*I)) == (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)
+    assert im(a * (2 + b*I)) == a*b
 
 def test_sign():
     assert sign(1.2) == 1
