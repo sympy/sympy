@@ -7,6 +7,7 @@ from sympy.core.function import _coeff_isneg
 from printer import Printer
 from conventions import split_super_sub
 from sympy.simplify import fraction
+from sympy.core.sympify import SympifyError
 
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
@@ -1083,10 +1084,13 @@ class LatexPrinter(Printer):
     def _print_ComplexDomain(self, expr):
         return r"\mathbb{C}"
 
-    def _print_PolynomialRing(self, expr):
+    def _print_PolynomialRingBase(self, expr):
         domain = self._print(expr.dom)
         gens = ", ".join(map(self._print, expr.gens))
-        return r"%s\left\[%s\right\]" % (domain, gens)
+        inv = ""
+        if not expr.is_Poly:
+            inv = r"S_<^{-1}"
+        return r"%s%s\left[%s\right]" % (inv, domain, gens)
 
     def _print_FractionField(self, expr):
         domain = self._print(expr.dom)
@@ -1164,6 +1168,18 @@ class LatexPrinter(Printer):
 
     def _print_InverseCosineTransform(self, expr):
         return r"\mathcal{COS}^{-1}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
+    def _print_DMP(self, p):
+        try:
+            if p.ring is not None:
+                # TODO incorporate order
+                return self._print(p.ring.to_sympy(p))
+        except SympifyError:
+            pass
+        return self._print(repr(p))
+
+    def _print_DMF(self, p):
+        return self._print_DMP(p)
 
 
 def latex(expr, **settings):

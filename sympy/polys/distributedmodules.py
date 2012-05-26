@@ -456,14 +456,17 @@ def sdm_groebner(G, NF, O, K):
         [SCA, remark 2.5.11].
         """
         remove = set()
+        retain = set()
         for (a, b, c) in permutations(S, 3):
             A = sdm_LM(a)
             B = sdm_LM(b)
             C = sdm_LM(c)
-            if len(set([A[0], B[0], C[0]])) != 1 or not h in [a, b, c]:
+            if len(set([A[0], B[0], C[0]])) != 1 or not h in [a, b, c] or \
+               any(tuple(x) in retain for x in [a, b, c]):
                 continue
             if monomial_divides(B[1:], monomial_lcm(A[1:], C[1:])):
                 remove.add((tuple(a), tuple(c)))
+                retain.update([tuple(b), tuple(c), tuple(a)])
         return [(f, g) for (f, g) in P if (h not in [f, g]) or \
                     ((tuple(f), tuple(g)) not in remove and \
                      (tuple(g), tuple(f)) not in remove)]
@@ -472,9 +475,9 @@ def sdm_groebner(G, NF, O, K):
         # TODO better data structures!!!
         #print len(P), len(S)
         # Use the "normal selection strategy"
-        lcms = [(i, monomial_lcm(sdm_LM(f)[1:], sdm_LM(g)[1:]), sdm_LM(f)[0]) for \
+        lcms = [(i, sdm_LM(f)[:1] + monomial_lcm(sdm_LM(f)[1:], sdm_LM(g)[1:])) for \
                 i, (f, g) in enumerate(P)]
-        i = min(lcms, key=lambda x: O((x[0],) + x[1]))[0]
+        i = min(lcms, key=lambda x: O(x[1]))[0]
         f, g = P.pop(i)
         h = NF(sdm_spoly(f, g, O, K), S, O, K)
         if h:
