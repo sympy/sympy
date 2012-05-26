@@ -2,14 +2,14 @@ from sympy import sympify, Dummy, Matrix, Basic, Expr, solve, diff
 
 # TODO order the imports and make them explicit
 # TODO issue 2070: all the stuff about .args and rebuilding
-# TODO better dosctrings and more distributed doctests
 # TODO maybe a common class Field makes sense
 
 class Manifold(Basic):
     """Object representing a mathematical manifold.
 
-    The only role that it plays is to keep a list of all patches defined on the
-    manifold.
+    The only role that this object plays is to keep a list of all patches
+    defined on the manifold. It does not provide any means to study the
+    topological characteristics of the manifold that it represents.
     """
     def __init__(self, name, dim):
         super(Manifold, self).__init__()
@@ -24,8 +24,13 @@ class Manifold(Basic):
 class Patch(Basic):
     """Object representing a patch on a manifold.
 
-    It serves as a container/parent for all coordinate system charts that can
-    be defined on this patch.
+    On a manifold one can have many patches that do not always include the
+    whole manifold. On these patches coordinate charts can be defined that
+    permit the parametrization of any point on the patch in terms of a tuple
+    of real numbers (the coordinates).
+
+    This object serves as a container/parent for all coordinate system charts
+    that can be defined on the patch it represents.
 
     Examples:
     =========
@@ -70,7 +75,7 @@ class CoordSystem(Basic):
     True
 
     Connect the coordinate systems. An inverse transformation is automatically
-    found by `solve`:
+    found by `solve` when possible:
     >>> polar.connect_to(rect, [r, theta], [r*cos(theta), r*sin(theta)])
     >>> polar.coord_transform_to(rect, [0, 2])
     [0]
@@ -88,10 +93,22 @@ class CoordSystem(Basic):
     [-sqrt(2)/2]
     [ sqrt(2)/2]
 
+    Define a basis scalar field (i.e. a coordinate function), that takes a
+    point and returns its coordinates. It is an instance of `ScalarField`.
     >>> rect.coord_function(0)(p)
     -sqrt(2)/2
     >>> rect.coord_function(1)(p)
     sqrt(2)/2
+
+    Define a basis vector field (i.e. a unit vector field along the coordinate
+    line). Vectors are also differential operators on scalar fields. It is an
+    instance of `VectorField`.
+    >>> v_x = rect.base_vector(0)
+    >>> x = rect.coord_function(0)
+    >>> v_x(x)(p)
+    1
+    >>> v_x(v_x(x))(p)
+    0
 
     """
     #  Contains a reference to the parent patch in order to be able to access
@@ -152,7 +169,9 @@ class CoordSystem(Basic):
         pass
 
     def coord_transform_to(self, to_sys, coords):
-        """Transform `coords` to coord system `to_sys`."""
+        """Transform `coords` to coord system `to_sys`.
+
+        See the docstring of `CoordSystem` for examples."""
         coords = Matrix(coords)
         if self != to_sys:
             transf = self.transforms[to_sys]
@@ -160,24 +179,37 @@ class CoordSystem(Basic):
         return coords
 
     def coord_function(self, coord_index):
-        """Return a ScalarField that takes a point and returns one of the coords."""
+        """Return a `ScalarField` that takes a point and returns one of the coords.
+
+        Takes a point and returns its coordinate in this coordinate system.
+
+        See the docstring of `CoordSystem` for examples."""
         args = [Dummy() for i in range(self.patch.manifold.dim)]
         result = args[coord_index]
         return ScalarField(self, args, result)
 
     def base_vector(self, coord_index):
-        """Return a basis VectorField."""
+        """Return a basis VectorField.
+
+        The basis vector field for this coordinate system. It is also an
+        operator on scalar fields.
+
+        See the docstring of `CoordSystem` for examples."""
         args = [Dummy() for i in range(self.patch.manifold.dim)]
         result = [0,] * self.patch.manifold.dim
         result[coord_index] = 1
         return VectorField(self, args, result)
 
     def point(self, coords):
-        """Create a `Point` with coordinates given in this coord system."""
+        """Create a `Point` with coordinates given in this coord system.
+
+        See the docstring of `CoordSystem` for examples."""
         return Point(self, coords)
 
     def point_to_coords(self, point):
-        """Calculate the coordinates of a point in this coord system."""
+        """Calculate the coordinates of a point in this coord system.
+
+        See the docstring of `CoordSystem` for examples."""
         return point.coords(self)
 
 
@@ -185,6 +217,11 @@ class Point(Basic):
     """Point in a Manifold object.
 
     To define a point you must supply coordinates and a coordinate system.
+
+    The usage of this object after its definition is independent of the
+    coordinate system that was used in order to define it, however due to
+    limitations in the simplification routines you can arrive at complicated
+    expressions if you use inappropriate coordinate systems.
 
     Examples:
     =========
@@ -233,6 +270,11 @@ class ScalarField(Expr):
 
     To define a scalar field you need to choose a coordinate system and define
     the scalar field in terms of that coordinate system.
+
+    The use of the scalar field after its definition is independent of the
+    coordinate system in which it was defined, however due to limitations in
+    the simplification routines you may arrive at more complicated
+    expression if you use unappropriate coordinate systems.
 
     Examples:
     =========
@@ -286,17 +328,22 @@ class VectorField(Expr):
     To define a vector field you need to choose a coordinate system and define
     the vector field in terms of that coordinate system.
 
+    The use of the vector field after its definition is independent of the
+    coordinate system in which it was defined, however due to limitations in
+    the simplification routines you may arrive at more complicated
+    expression if you use unappropriate coordinate systems.
+
     Examples:
     =========
 
-    Use the predefined R2 manifold
+    Use the predefined R2 manifold, setup some boilerplate.
     >>> from sympy import symbols, sin, cos, pi, Function
     >>> from sympy.differential_geometry.Rn import R2, R2_p, R2_r
     >>> from sympy.differential_geometry import ScalarField, VectorField
     >>> x, y, r, theta = symbols('x, y, r, theta')
     >>> x0, y0, r0, theta0 = symbols('x0, y0, r0, theta0')
 
-    Points to be used as arguments for the filed:
+    Points to be used as arguments for the field:
     >>> point_p = R2_p.point([r0, theta0])
     >>> point_r = R2_r.point([x0, y0])
 
