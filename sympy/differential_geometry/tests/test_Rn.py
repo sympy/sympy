@@ -1,9 +1,15 @@
 from sympy.differential_geometry.Rn import R2, R2_p, R2_r
-from sympy.differential_geometry import ScalarField, VectorField
+from sympy.differential_geometry import (ScalarField, VectorField,
+        intcurve_series, intcurve_diffequ)
 from sympy import (symbols, simplify, sqrt, atan2, Matrix, sin, cos, Function,
         Derivative)
 # TODO explicit and well ordered imports
 
+# Most of the functionality is covered in the
+# test_functional_differential_geometry_ch* tests which are based on the
+# example from the paper of Sussman nad Wisdom.
+# If they do not cover something, additional tests are added in other test
+# functions.
 
 def test_functional_differential_geometry_ch2():
     # From "Functional Differential Geometry" as of 2011
@@ -43,7 +49,7 @@ def test_functional_differential_geometry_ch3():
     # From "Functional Differential Geometry" as of 2011
     # by Sussman and Wisdom.
     x0, y0, r0, theta0 = symbols('x0, y0, r0, theta0', real=True)
-    x, y, r, theta = symbols('x, y, r, theta', real=True)
+    x, y, r, theta, t = symbols('x, y, r, theta, t', real=True)
     f = Function('f')
     b1 = Function('b1')
     b2 = Function('b2')
@@ -58,6 +64,12 @@ def test_functional_differential_geometry_ch3():
     s = R2.r**2 + 3*R2.x
     assert v(s)(p_r) == 2*x0 + 4*y0 + 3
 
+    circ = -R2.y*R2.d_dx + R2.x*R2.d_dy
+    series = intcurve_series(circ, t, R2_r.point([1, 0]))
+    series_x, series_y = zip(*series)
+    assert all([term == cos(t).taylor_term(i,t) for i, term in enumerate(series_x)])
+    assert all([term == sin(t).taylor_term(i,t) for i, term in enumerate(series_y)])
+
 
 def test_R2():
     x0, y0, r0, theta0 = symbols('x0, y0, r0, theta0', real=True)
@@ -69,3 +81,14 @@ def test_R2():
     assert simplify( (R2.r**2 - R2.x**2 - R2.y**2)(point_p) ) == 0
 
     assert simplify( R2.d_dr(R2.x**2+R2.y**2)(point_p) ) == 2*r0
+
+def test_intcurve_diffequ():
+    t = symbols('t')
+    start_point = R2_r.point([1, 0])
+    vector_field = -R2.y*R2.d_dx + R2.x*R2.d_dy
+    equations, init_cond = intcurve_diffequ(vector_field, t, start_point)
+    assert str(equations) == '[f_1(t) + Derivative(f_0(t), t), -f_0(t) + Derivative(f_1(t), t)]'
+    assert str(init_cond) == '[f_0(0) - 1, f_1(0)]'
+    equations, init_cond = intcurve_diffequ(vector_field, t, start_point, R2_p)
+    #TODO correct but too complicated: equations
+    assert str(init_cond) == '[f_0(0) - 1, f_1(0)]'

@@ -1,4 +1,6 @@
-from sympy import sympify, Dummy, Matrix, Basic, Expr, solve, diff
+from sympy import (sympify, Dummy, Matrix, Basic, Expr, solve, diff, factorial,
+        Function)
+from sympy.core.compatibility import reduce
 
 # TODO order the imports and make them explicit
 # TODO issue 2070: all the stuff about .args and rebuilding
@@ -188,6 +190,12 @@ class CoordSystem(Basic):
         result = args[coord_index]
         return ScalarField(self, args, result)
 
+    def coord_functions(self):
+        """Returns a list of all coordinate functions.
+
+        For more details see the coord_function method of this class."""
+        return [self.coord_function(i) for i in range(self.patch.manifold.dim)]
+
     def base_vector(self, coord_index):
         """Return a basis VectorField.
 
@@ -315,6 +323,12 @@ class ScalarField(Expr):
         self._args = self._coord_sys, self._coords, self._expr
 
     def __call__(self, point):
+        # XXX see the if statement
+        #this is necessary in order to construct vector fields from stuff
+        # like scalar field * vector field, however it need more justification
+        # It is the method used in Functional Differential Geometry
+        if not isinstance(point, Point):
+            return self
         coords = point.coords(self._coord_sys)
         return self._expr.subs(zip(self._coords, coords))
 
@@ -377,9 +391,162 @@ class VectorField(Expr):
         projected = sum(e[0]*e[1] for e in zip(diff_scalar_expr, self._components))
         # TODO This is the simplest to write, however is it the smartest
         # routine for applying vector field on a scalar field?
+        # TODO Document the nontrivial jump-through-hoops that is done wrt to
+        # coordinate systems here
         return ScalarField(self._coord_sys, self._coords, projected)
 
 
+###############################################################################
+# Itegral curves on vector fields
+###############################################################################
+def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None):
+    """Return the series expansion for an integral curve of the field.
+
+    Itegral curve is a function `gamma` taking a parameter in R to a point
+    in the manifold. It verifies the equation:
+
+    `vector_field(f)(gamma(param)) = diff(f(gamma(t)), t)`
+
+    for any value `t` for the parameter and any scalar field `f`.
+
+    This function returns a series expansion of `gamma(t)` in terms of the
+    coordinate system `coord_sys`. The equations and expansions are necessarily
+    done in coordinate-system-dependent way as there is no other way to
+    represent movement between points on the manifold (i.e. there is no such
+    thing as a difference of points for a general manifold).
+
+    Arguments:
+    ==========
+
+    - vector_field - the vector field for which an integral curve will be given
+    - param - the argument of the function `gamma` from R to the curve
+    - start_point - the point which coresponds to `gamma(0)`
+    - n - the order to which to expand
+    - coord_sys - the coordinate system in which to expand
+
+    See Also: intcurve_diffequ
+
+    Examples:
+    =========
+
+    Use the predefined R2 manifold:
+    >>> from sympy.abc import t, x, y
+    >>> from sympy.differential_geometry.Rn import R2, R2_p, R2_r
+    >>> from sympy.differential_geometry import intcurve_series
+
+    Specify a starting point and a vector field:
+    >>> start_point = R2_r.point([x, y])
+    >>> vector_field = R2_r.d_dx
+
+    Calculate the series:
+    >>> series = intcurve_series(vector_field, t, start_point, n=3)
+    >>> series[0]
+    [x]
+    [y]
+    >>> series[1]
+    [t]
+    [0]
+    >>> series[2]
+    [0]
+    [0]
+
+    The series in the polar coordinate system: #TODO check by hand for correctness
+    >>> series = intcurve_series(vector_field, t, start_point, 3, R2_p)
+    >>> series[0]
+    [sqrt(x**2 + y**2)]
+    [      atan2(y, x)]
+    >>> series[1]
+    [t*x/sqrt(x**2 + y**2)]
+    [   -t*y/(x**2 + y**2)]
+    >>> series[2]
+    [t**2*(-x**2/(x**2 + y**2)**(3/2) + 1/sqrt(x**2 + y**2))/2]
+    [                                t**2*x*y/(x**2 + y**2)**2]
+
+    """
+    def iter_vfield(scalar_field, i):
+        """Return `vector_field` called `i` times on `scalar_field`."""
+        return reduce(lambda s, v: v(s), [vector_field,]*i, scalar_field)
+    def taylor_terms_per_coord(coord_function):
+        """Return the series for one of the coordinates."""
+        return [param**i*iter_vfield(coord_function, i)(start_point)/factorial(i)
+                for i in range(n)]
+    coord_sys = coord_sys if coord_sys else start_point._coord_sys
+    coord_functions = coord_sys.coord_functions()
+    taylor_terms = zip(*[taylor_terms_per_coord(f) for f in coord_functions])
+    return [Matrix(t) for t in taylor_terms]
+
+
+def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
+    """Return the differential equation for an integral curve of the field.
+
+    Itegral curve is a function `gamma` taking a parameter in R to a point
+    in the manifold. It verifies the equation:
+
+    `vector_field(f)(gamma(param)) = diff(f(gamma(t)), t)`
+
+    for any value `t` for the parameter and any scalar field `f`.
+
+    This function returns the differential equation of `gamma(t)` in terms of the
+    coordinate system `coord_sys`. The equations and expansions are necessarily
+    done in coordinate-system-dependent way as there is no other way to
+    represent movement between points on the manifold (i.e. there is no such
+    thing as a difference of points for a general manifold).
+
+    Arguments:
+    ==========
+
+    - vector_field - the vector field for which an integral curve will be given
+    - param - the argument of the function `gamma` from R to the curve
+    - start_point - the point which coresponds to `gamma(0)`
+    - coord_sys - the coordinate system in which to give the equations
+
+    Returns:
+    ========
+    a tuple of (equations, initial conditions)
+
+    See Also: intcurve_series
+
+    Examples:
+    =========
+
+    Use the predefined R2 manifold:
+    >>> from sympy.abc import t
+    >>> from sympy.differential_geometry.Rn import R2, R2_p, R2_r
+    >>> from sympy.differential_geometry import intcurve_diffequ
+
+    Specify a starting point and a vector field:
+    >>> start_point = R2_r.point([1, 0])
+    >>> vector_field = -R2.y*R2.d_dx + R2.x*R2.d_dy
+
+    Get the equation:
+    >>> equations, init_cond = intcurve_diffequ(vector_field, t, start_point)
+    >>> equations
+    [f_1(t) + Derivative(f_0(t), t), -f_0(t) + Derivative(f_1(t), t)]
+    >>> init_cond
+    [f_0(0) - 1, f_1(0)]
+
+    The series in the polar coordinate system: #TODO check by hand for correctness
+    >>> equations, init_cond = intcurve_diffequ(vector_field, t, start_point, R2_p)
+    >>> #TODO correct but too complicated >>> equations
+    >>> init_cond
+    [f_0(0) - 1, f_1(0)]
+
+    """
+    coord_sys = coord_sys if coord_sys else start_point._coord_sys
+    # TODO on the next line the argument in range is hilariously long.
+    gammas = [Function('f_%d'%i)(param) for i in range(start_point._coord_sys.patch.manifold.dim)]
+    arbitrary_p = Point(coord_sys, gammas)
+    coord_functions = coord_sys.coord_functions()
+    equations = [diff(cf(arbitrary_p), param) - vector_field(cf)(arbitrary_p)
+                 for cf in coord_functions]
+    init_cond = [cf(arbitrary_p).subs(param,0) - cf(start_point)
+                 for cf in coord_functions]
+    return equations, init_cond
+
+
+###############################################################################
+# Helpers
+###############################################################################
 def dummyfy(args, exprs):
     # TODO Is this a good idea?
     d_args = Matrix([s.as_dummy() for s in args])
