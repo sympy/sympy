@@ -345,25 +345,27 @@ def test_random_reduce():
     assert actual == (x, x, z, z)
 
     seed = 2
-    # seed = 2, indices: 14, 13, 0, 1, 9, 7
-    # removed id: x, x
+    # seed = 2, indices: 14, 13, 0
+    # removed id: z, z
     actual = random_reduce(circuit, ids, seed=seed)
-    assert random_reduce(circuit, ids, seed=seed) == (y, y, z, z)
+    assert random_reduce(circuit, ids, seed=seed) == (x, x, y, y)
 
     gate_list = [x, y, z, h, cnot, cgate_z]
     ids = list(bfs_identity_search(gate_list, 2, max_depth=4))
 
     circuit = (x, y, z, y, h, y, h, cgate_z, h, cnot)
-    expected = (x, y, z, cgate_z, h, cnot)
-    # seed = 2, indices: 30, 29, 1
-    # removed id: y, h, y, h
+    expected = (x, y, z, y, h, y)
+    # seed = 2, indices: 30, 29, 1, 2, 23, 19, 17, 7, 14, 13, 12, 3, 8
+    #                    7, 13, 16, 15, 8, 6, 3
+    # removed id: h, cgate_z, h, cnot
     actual = random_reduce(circuit, ids, seed=seed)
     assert actual == expected
 
     circuit = Mul(*(x, y, z, y, h, y, h, cgate_z, h, cnot))
-    expected = (x, y, z, cgate_z, h, cnot)
-    # seed = 2, indices: 30, 29, 1
-    # removed id: y, h, y, h
+    expected = (x, y, z, y, h, y)
+    # seed = 2, indices: 30, 29, 1, 2, 23, 19, 17, 7, 14, 13, 12, 3, 8
+    #                    7, 13, 16, 15, 8, 6, 3
+    # removed id: h, cgate_z, h, cnot
     actual = random_reduce(circuit, ids, seed=seed)
     assert actual == expected
 
