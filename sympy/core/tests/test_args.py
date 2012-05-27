@@ -161,6 +161,7 @@ def test_sympy__core__function__Derivative():
     from sympy.core.function import Derivative
     assert _test_args(Derivative(2, x, y, 3))
 
+
 @SKIP("abstract class")
 def test_sympy__core__function__Function():
     pass
@@ -1540,7 +1541,6 @@ def test_sympy__physics__quantum__density__Density():
     from sympy.physics.quantum.density import Density
     from sympy.physics.quantum.state import Ket
     assert _test_args(Density([Ket(0),0.5], [Ket(1),0.5]))
-
 
 @SKIP("TODO: sympy.physics.quantum.shor: Cmod Not Implemented")
 def test_sympy__physics__quantum__shor__CMod():
