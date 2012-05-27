@@ -160,10 +160,13 @@ class Application(Basic):
         return self.__class__
 
     def _eval_subs(self, old, new):
-        if (old.is_Function and new.is_Function and
-            old == self.func and
-            (self.nargs == new.nargs or not new.nargs or
-             isinstance(new.nargs, tuple) and self.nargs in new.nargs)):
+        if (
+         old.is_Function and
+         old == self.func and
+         new.is_Function and
+           (self.nargs == new.nargs or
+            not new.nargs or
+            isinstance(new.nargs, tuple) and self.nargs in new.nargs)):
             return new(*self.args)
 
     @deprecated
