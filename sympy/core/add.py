@@ -916,3 +916,4 @@ class Add(AssocOp):
 
 from mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational
+from sympy.core.logic import fuzzy_and

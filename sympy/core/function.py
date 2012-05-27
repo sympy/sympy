@@ -100,6 +100,7 @@ class FunctionClass(ManagedProperties):
     def __contains__(self, obj):
         return (self == obj)
 
+
 class Application(Basic):
     """
     Base class for applied functions.
@@ -397,6 +398,9 @@ class Function(Application, Expr):
                 df = Function.fdiff(self, i)
             l.append(df * da)
         return Add(*l)
+
+    def _eval_is_commutative(self):
+        return fuzzy_and(a.is_commutative for a in self.args)
 
     def as_base_exp(self):
         """
@@ -2057,3 +2061,4 @@ def nfloat(expr, n=15, exponent=False):
                      for a in f.args])) for f in funcs])
 
 from sympy.core.symbol import Dummy
+from sympy.core.logic import fuzzy_and
