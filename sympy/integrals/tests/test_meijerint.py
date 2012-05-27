@@ -204,7 +204,7 @@ def test_bessel():
                        powdenest)
     assert simplify(integrate(besselj(a, z)*besselj(b, z)/z, (z, 0, oo),
                      meijerg=True, conds='none')) == \
-           2*sin(pi*a/2 - pi*b/2)/(pi*(a - b)*(a + b))
+           2*sin(pi*(a/2 - b/2))/(pi*(a - b)*(a + b))
     assert simplify(integrate(besselj(a, z)*besselj(a, z)/z, (z, 0, oo),
                      meijerg=True, conds='none')) == 1/(2*a)
 
@@ -549,7 +549,7 @@ def test_messy():
     from sympy import (laplace_transform, Si, Ci, Shi, Chi, atan, Piecewise,
                        atanh, acoth, E1, besselj, acosh, asin, Ne, And, re,
                        fourier_transform, sqrt, Abs)
-    assert laplace_transform(Si(x), x, s) == ((pi - 2*atan(s))/(2*s), 0, True)
+    assert laplace_transform(Si(x), x, s) == ((-atan(s) + pi/2)/s, 0, True)
 
     assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, True)
 
