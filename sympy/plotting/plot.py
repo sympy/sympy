@@ -26,6 +26,7 @@ from inspect import getargspec
 from itertools import repeat, izip
 from sympy import sympify, Expr, Tuple
 from sympy.external import import_module
+from sympy.core.compatibility import reduce
 
 from experimental_lambdify import vectorized_lambdify
 
@@ -194,7 +195,7 @@ class Plot(object):
         if len(args)==1 and isinstance(args[0], BaseSeries):
             self._series[index] = args
         else:
-            p = plot(*args, show=False)
+            p = plot(*args, **{'show':False})
             self.extend(p)
 
     def __delitem__(self, index):
@@ -308,7 +309,9 @@ def plot(*args, **kwargs):
     # args = (x**2, ) --> args = (x**2, (x,-10,10)) and others
     def add_variables_and_ranges(the_args):
         default_range = Tuple(-10, 10)
-        free_vars = set.union(*[expr.free_symbols for expr in pl
+        #TODO when we drop 2.5 remove this ugly reduce and just call set.union
+        #on the list
+        free_vars = reduce(set.union, [expr.free_symbols for expr in pl
                                                   if isinstance(expr, Expr)])
         # remove from free_vars all variables that already have defined ranges
         for item in the_args:
