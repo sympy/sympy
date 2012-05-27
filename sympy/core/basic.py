@@ -792,8 +792,8 @@ class Basic(object):
         ========
         replace: replacement capable of doing wildcard-like matching,
                  parsing of match, and conditional replacements
-        rewrite: rewrite a function in terms of another function or
-                 make a generic function explicit, e.g. f(x) ->
+        rewrite: rewrite a function in terms of another function
+        inline:  make a generic function explicit, e.g. f(x) ->
                  x**2 regardless of x
         xreplace: exact node replacement in expr tree; also capable of
                   using matching rules
@@ -1032,9 +1032,10 @@ class Basic(object):
               themselves.
         replace: replacement capable of doing wildcard-like matching,
                  parsing of match, and conditional replacements
-        rewrite: rewrite a function in terms of another function or
-                 make a generic function explicit, e.g. f(x) ->
+        rewrite: rewrite a function in terms of another function
+        inline:  make a generic function explicit, e.g. f(x) ->
                  x**2 regardless of x
+
 
         """
         if self in rule:
@@ -1205,8 +1206,8 @@ class Basic(object):
         ========
         subs: substitution of subexpressions as defined by the objects
               themselves.
-        rewrite: rewrite a function in terms of another function or
-                 make a generic function explicit, e.g. f(x) ->
+        rewrite: rewrite a function in terms of another function
+        inline:  make a generic function explicit, e.g. f(x) ->
                  x**2 regardless of x
         xreplace: exact node replacement in expr tree; also capable of
                   using matching rules
@@ -1430,17 +1431,10 @@ class Basic(object):
         can rewrite trigonometric functions as complex exponentials or
         combinatorial functions as gamma function.
 
-        You can also rewrite a generic function like f(x, y) as a given
-        expression, e.g. make f(x, y) -> x**y.
-
-        As a pattern this function accepts either:
-
-        (1) a generic function with Symbol arguments and a function that
-        it maps to, e.g. f(x, y), x**y
-
-        (2) a list of functions to rewrite (instances of DefinedFunction
-        class). As rule you can use string or a destination function
-        instance (in this case rewrite() will use the str() function).
+        As a pattern this function accepts a list of functions to rewrite
+        (instances of DefinedFunction class). As rule you can use string
+        or a destination function instance (in this case rewrite() will
+        use the str() function).
 
         There is also possibility to pass hints on how to rewrite the
         given expressions. For now there is only one such hint defined
@@ -1455,17 +1449,6 @@ class Basic(object):
 
         >>> sin(x).rewrite(sin, exp)
         -I*(exp(I*x) - exp(-I*x))/2
-
-        Rewriting a generic function is more powerful than doing a
-        replacement since the arguments of the generic function can be
-        handled in the re-write:
-
-        >>> f = Function('f')
-        >>> (f(x, y) + f(x + 1, y)).rewrite(f(x, y), x**y)
-        x**y + (x + 1)**y
-
-        If subs were used to do this, each instance of f() would have to
-        be targetted separately, once for each different argument.
 
         See Also
         ========
@@ -1531,6 +1514,74 @@ class Basic(object):
                     return self._eval_rewrite(tuple(pattern), rule, **hints)
                 else:
                     return self
+
+    def inline(self, func, definition):
+        """Rewrite a generic function like f(x, y) as a given
+        expression, e.g. make f(x, y) -> x**y.
+
+        Examples
+        ========
+        >>> from sympy import Function
+        >>> from sympy.abc import x, y
+
+        Rewriting a generic function is more powerful than doing a
+        replacement since the arguments of the generic function can be
+        handled in the re-write:
+
+        >>> f = Function('f')
+        >>> (f(x, y) + f(x + 1, y)).inline(f(x, y), x**y)
+        x**y + (x + 1)**y
+
+        If subs were used to do this, each instance of f() would have to
+        be targetted separately, once for each different argument.
+
+        See Also
+        ========
+        subs: substitution of subexpressions as defined by the objects
+              themselves.
+        replace: replacement capable of doing wildcard-like matching,
+              parsing of match, and conditional replacements
+        rewrite: rewrite a function in terms of another function
+        xreplace: exact node replacement in expr tree; also capable of
+              using matching rules
+        """
+        args = func, definition
+        if not isinstance(args[0], C.Function):
+            raise ValueError(
+            'inline expected first arg to be a function but got %s' % func)
+
+        def _ok(a):
+            """check that `a` is:
+            * a Symbol or
+            * independent of args[1]'s free symbols or
+            * is linear in exactly one of the free symbols of args[1], f.
+
+            In case of the latter, replace `a` in fargs with a dummy, d,
+            and replace it in the args[1] with the linear solution to
+            `solve_linear(a - d, f)`
+            """
+            from sympy import solve_linear, Dummy
+            if a.is_Symbol:
+                return True
+            afree = a.free_symbols & free
+            if not afree:
+                return True
+            if len(afree) == 1:
+                s = afree.pop()
+                d = Dummy()
+                islinear = solve_linear(a - d, symbols=[s])
+                if islinear and islinear[0] == s:
+                    fargs[fargs.index(a)] = d
+                    args[1] = args[1].subs(*islinear)
+                    return True
+
+        args = list(args)
+        fargs = list(args[0].args)
+        free = args[1].free_symbols
+        if all(_ok(a) for a in fargs):
+            foo = lambda *x: args[1].subs(zip(fargs, x))
+            return self.replace(args[0].func, foo)
+        raise NotImplementedError('Could not rewrite function args as symbols.')
 
 class Atom(Basic):
     """
