@@ -1,9 +1,11 @@
 from sympy import Symbol, Integer, Mul
 from sympy.utilities import numbered_symbols
-from sympy.physics.quantum.circuitutils import *
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
         CGate)
 from sympy.physics.quantum.identitysearch import bfs_identity_search
+from sympy.physics.quantum.circuitutils import (kmp_table, find_subcircuit,
+        replace_subcircuit, convert_to_symbolic_indices,
+        convert_to_real_indices, random_reduce, random_insert)
 
 def create_gate_sequence(qubit=0):
     gates = (X(qubit), Y(qubit), Z(qubit), H(qubit))

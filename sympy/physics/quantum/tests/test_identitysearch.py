@@ -1,9 +1,12 @@
 from sympy.external import import_module
 from sympy import Mul, Integer
+from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
         IdentityGate, CGate, PhaseGate, TGate, gate_simp)
-from sympy.physics.quantum.identitysearch import *
-from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.identitysearch import (generate_gate_rules,
+        generate_equivalent_ids, GateIdentity, bfs_identity_search,
+        random_identity_search, is_scalar_sparse_matrix,
+        is_scalar_nonsparse_matrix, is_degenerate, is_reducible)
 
 def create_gate_sequence(qubit=0):
     gates = (X(qubit), Y(qubit), Z(qubit), H(qubit))

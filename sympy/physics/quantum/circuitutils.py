@@ -282,7 +282,7 @@ def convert_to_symbolic_indices(seq, start=None, gen=None, qubit_map=None):
                                                  qubit_map=ndx_map,
                                                  start=cur_ndx,
                                                  gen=index_gen)
-	    sym_item, new_map, cur_ndx, index_gen = result
+            sym_item, new_map, cur_ndx, index_gen = result
             ndx_map.update(new_map)
             inv_map = create_inverse_map(ndx_map)
 
@@ -291,7 +291,7 @@ def convert_to_symbolic_indices(seq, start=None, gen=None, qubit_map=None):
                                                  qubit_map=ndx_map,
                                                  start=cur_ndx,
                                                  gen=index_gen)
-	    sym_item, new_map, cur_ndx, index_gen = result
+            sym_item, new_map, cur_ndx, index_gen = result
             ndx_map.update(new_map)
             inv_map = create_inverse_map(ndx_map)
 
