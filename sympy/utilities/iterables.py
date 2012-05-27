@@ -920,9 +920,12 @@ def partitions(n, m=None, k=None):
         modified from Tim Peter's version to allow for k and m values:
         code.activestate.com/recipes/218332-generator-for-integer-partitions/
     """
+    from sympy.ntheory.residue_ntheory import int_tested
 
     if n < 0:
         raise ValueError("n must be >= 0")
+    if m == 0:
+        raise ValueError("m must be > 0")
     m = min(m or n, n)
     if m < 1:
         raise ValueError("maximum numbers in partition, m, must be > 0")
@@ -933,6 +936,7 @@ def partitions(n, m=None, k=None):
     if m*k < n:
         return
 
+    n, m, k = int_tested(n, m, k)
     q, r = divmod(n, k)
     ms = {k: q}
     keys = [k]  # ms.keys(), from largest to smallest
