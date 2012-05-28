@@ -728,11 +728,15 @@ class Basic(object):
         If the keyword ``simultaneous`` is True, the subexpressions will not be
         evaluated until all the substitutions have been made.
 
+        Use the keyword ``inline`` to make a function definition explicit, as in
+        defining f(x, y) to be the sum of its arguments so that f(a, b) + f(c, d)
+        --> a + b + c + d. In this case, only a single old/new pair may be given.
+
         Examples
         ========
 
         >>> from sympy import pi, exp
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import a, b, x, y
         >>> (1 + x*y).subs(x, pi)
         pi*y + 1
         >>> (1 + x*y).subs({x:pi, y:2})
@@ -752,6 +756,20 @@ class Basic(object):
 
         >>> (x**2 + x**4).xreplace({x**2: y})
         x**4 + y
+
+        It is possible to replace generic functions with either new
+        functions or explicit expressions computed from the arguments:
+
+        >>> from sympy import Function
+        >>> f = Function('f')
+        >>> f(x).subs(f, exp)
+        exp(x)
+        >>> (f(x, y) + f(x + 1, y)).subs(f(a, b), a**b, inline=True)
+        x**y + (x + 1)**y
+
+            Without the ``inline`` keyword, the substitution is literal:
+            >>> (f(x, y) + f(x + 1, y)).subs(f(a, b), a**b)
+            f(x, y) + f(x + 1, y)
 
         To delay evaluation until all substitutions have been made,
         set the keyword ``simultaneous`` to True:
@@ -792,6 +810,7 @@ class Basic(object):
         ========
         replace: replacement capable of doing wildcard-like matching,
                  parsing of match, and conditional replacements
+        rewrite: rewrite a function in terms of another function
         xreplace: exact node replacement in expr tree; also capable of
                   using matching rules
 
@@ -813,6 +832,8 @@ class Basic(object):
                    When a single argument is passed to subs
                    it should be an iterable of (old, new) tuples."""))
         elif len(args) == 2:
+            if kwargs.get('inline', False):
+                return self._inline(*args)
             sequence = [args]
         else:
             raise ValueError("subs accepts either 1 or 2 arguments")
@@ -866,6 +887,74 @@ class Basic(object):
                 if not isinstance(rv, Basic):
                     break
             return rv
+
+    def _inline(self, func, definition):
+        """Rewrite a generic function like f(x, y) as a given
+        expression, e.g. make f(x, y) -> x**y.
+
+        Examples
+        ========
+        >>> from sympy import Function
+        >>> from sympy.abc import x, y
+
+        Rewriting a generic function is more powerful than doing a
+        replacement since the arguments of the generic function can be
+        handled in the re-write:
+
+        >>> f = Function('f')
+        >>> (f(x, y) + f(x + 1, y))._inline(f(x, y), x**y)
+        x**y + (x + 1)**y
+
+        If subs were used to do this, each instance of f() would have to
+        be targetted separately, once for each different argument.
+
+        See Also
+        ========
+        subs: substitution of subexpressions as defined by the objects
+              themselves.
+        replace: replacement capable of doing wildcard-like matching,
+              parsing of match, and conditional replacements
+        rewrite: rewrite a function in terms of another function
+        xreplace: exact node replacement in expr tree; also capable of
+              using matching rules
+        """
+        args = func, definition
+        if not isinstance(args[0], C.Function):
+            raise ValueError(
+            'inline expected first arg to be a function but got %s' % func)
+
+        def _ok(a):
+            """check that `a` is:
+            * a Symbol or
+            * independent of args[1]'s free symbols or
+            * is linear in exactly one of the free symbols of args[1], f.
+
+            In case of the latter, replace `a` in fargs with a dummy, d,
+            and replace it in the args[1] with the linear solution to
+            `solve_linear(a - d, f)`
+            """
+            from sympy import solve_linear, Dummy
+            if a.is_Symbol:
+                return True
+            afree = a.free_symbols & free
+            if not afree:
+                return True
+            if len(afree) == 1:
+                s = afree.pop()
+                d = Dummy()
+                islinear = solve_linear(a - d, symbols=[s])
+                if islinear and islinear[0] == s:
+                    fargs[fargs.index(a)] = d
+                    args[1] = args[1].subs(*islinear)
+                    return True
+
+        args = list(args)
+        fargs = list(args[0].args)
+        free = args[1].free_symbols
+        if all(_ok(a) for a in fargs):
+            foo = lambda *x: args[1].subs(zip(fargs, x))
+            return self.replace(args[0].func, foo)
+        raise NotImplementedError('Could not rewrite function args as symbols.')
 
     @cacheit
     def _subs(self, old, new, **hints):
@@ -1025,10 +1114,11 @@ class Basic(object):
 
         See Also
         ========
-        replace: replacement capable of doing wildcard-like matching,
-                 parsing of match, and conditional replacements
         subs: substitution of subexpressions as defined by the objects
               themselves.
+        replace: replacement capable of doing wildcard-like matching,
+                 parsing of match, and conditional replacements
+        rewrite: rewrite a function in terms of another function
 
         """
         if self in rule:
@@ -1199,6 +1289,7 @@ class Basic(object):
         ========
         subs: substitution of subexpressions as defined by the objects
               themselves.
+        rewrite: rewrite a function in terms of another function
         xreplace: exact node replacement in expr tree; also capable of
                   using matching rules
 
@@ -1416,30 +1507,75 @@ class Basic(object):
         return self.func(*terms)
 
     def rewrite(self, *args, **hints):
-        """Rewrites expression containing applications of functions
-           of one kind in terms of functions of different kind. For
-           example you can rewrite trigonometric functions as complex
-           exponentials or combinatorial functions as gamma function.
+        """Rewrites expression containing applications of functions of
+        one kind in terms of functions of different kind. For example you
+        can rewrite trigonometric functions as complex exponentials or
+        combinatorial functions as gamma function.
 
-           As a pattern this function accepts a list of functions to
-           to rewrite (instances of DefinedFunction class). As rule
-           you can use string or a destination function instance (in
-           this case rewrite() will use the str() function).
+        As a pattern this function accepts a list of functions to rewrite
+        (instances of DefinedFunction class). As rule you can use string
+        or a destination function instance (in this case rewrite() will
+        use the str() function).
 
-           There is also possibility to pass hints on how to rewrite
-           the given expressions. For now there is only one such hint
-           defined called 'deep'. When 'deep' is set to False it will
-           forbid functions to rewrite their contents.
+        There is also possibility to pass hints on how to rewrite the
+        given expressions. For now there is only one such hint defined
+        called 'deep'. When 'deep' is set to False it will forbid
+        functions to rewrite their contents. This applies only to case (2)
+        above.
 
-           >>> from sympy import sin, exp, I
-           >>> from sympy.abc import x, y
+        Examples
+        ========
+        >>> from sympy import sin, exp, I, Function
+        >>> from sympy.abc import x, y
 
-           >>> sin(x).rewrite(sin, exp)
-           -I*(exp(I*x) - exp(-I*x))/2
+        >>> sin(x).rewrite(sin, exp)
+        -I*(exp(I*x) - exp(-I*x))/2
 
+        See Also
+        ========
+        subs: substitution of subexpressions as defined by the objects
+              themselves.
+        replace: replacement capable of doing wildcard-like matching,
+              parsing of match, and conditional replacements
+        xreplace: exact node replacement in expr tree; also capable of
+              using matching rules
         """
         if self.is_Atom or not args:
             return self
+        elif len(args) == 2 and isinstance(args[0], C.Function):
+
+            def _ok(a):
+                """check that `a` is:
+                * a Symbol or
+                * independent of args[1]'s free symbols or
+                * is linear in exactly one of the free symbols of args[1], f.
+
+                In case of the latter, replace `a` in fargs with a dummy, d,
+                and replace it in the args[1] with the linear solution to
+                `solve_linear(a - d, f)`
+                """
+                from sympy import solve_linear, Dummy
+                if a.is_Symbol:
+                    return True
+                afree = a.free_symbols & free
+                if not afree:
+                    return True
+                if len(afree) == 1:
+                    s = afree.pop()
+                    d = Dummy()
+                    islinear = solve_linear(a - d, symbols=[s])
+                    if islinear and islinear[0] == s:
+                        fargs[fargs.index(a)] = d
+                        args[1] = args[1].subs(*islinear)
+                        return True
+
+            args = list(args)
+            fargs = list(args[0].args)
+            free = args[1].free_symbols
+            if all(_ok(a) for a in fargs):
+                foo = lambda *x: args[1].subs(zip(fargs, x))
+                return self.replace(args[0].func, foo)
+            raise NotImplementedError('Could not rewrite function args as symbols.')
         else:
             pattern = args[:-1]
             if isinstance(args[-1], basestring):
