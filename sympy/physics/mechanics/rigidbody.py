@@ -8,7 +8,8 @@ class RigidBody(object):
     """An idealized rigid body.
 
     This is essentially a container which holds the various components which
-    describe a rigid body: a name, point, reference frame, mass, and inertia.
+    describe a rigid body: a name, mass center, reference frame, mass, and
+    inertia.
 
     All of these need to be supplied on creation, but can be changed
     afterwards.
