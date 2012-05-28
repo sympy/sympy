@@ -2590,7 +2590,7 @@ class MatrixBase(object):
         return self.adjugate()/d
 
     def rref(self, simplified=False, iszerofunc=_iszero,
-            simplify=False):
+            simplify=False, chop=False):
         """
         Return reduced row-echelon form of matrix and indices of pivot vars.
 
@@ -2621,9 +2621,14 @@ class MatrixBase(object):
             if simplify:
                 r[pivot,i] = simpfunc(r[pivot,i])
             if iszerofunc(r[pivot,i]):
-                for k in range(pivot, r.rows):
-                    if simplify and k > pivot:
+                k = pivot
+                for k in range(pivot + 1, r.rows):
+                    if simplify:
                         r[k,i] = simpfunc(r[k,i])
+                    if chop: # does this ever help? watch for bingo
+                        was = r[k,i]
+                        r[k,i] = r[k,i].evalf(chop=True)
+                        if r[k,i]==0 and was !=0:print 'bingo'
                     if not iszerofunc(r[k,i]):
                         break
                 if k == r.rows - 1 and iszerofunc(r[k,i]):
@@ -2640,10 +2645,12 @@ class MatrixBase(object):
             pivot += 1
         return self._new(r), pivotlist
 
-    def nullspace(self, simplified=False, simplify=False):
+    def nullspace(self, simplified=False, simplify=False, chop=False):
         """
         Returns list of vectors (Matrix objects) that span nullspace of self
         """
+        from sympy import SYMPY_DEBUG
+
         if simplified is not False:
             SymPyDeprecationWarning(
             feature="'simplified' as a keyword to rref",
@@ -2652,12 +2659,15 @@ class MatrixBase(object):
             ).warn()
             simplify = simplify or True
         simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
-        reduced, pivots = self.rref(simplify=simpfunc)
+        reduced, pivots = self.rref(simplify=simpfunc, chop=chop)
 
         basis = []
         # create a set of vectors for the basis
         for i in range(self.cols - len(pivots)):
             basis.append(zeros(self.cols, 1))
+        if not basis:
+            print -1
+            return []
         # contains the variable index to which the vector corresponds
         basiskey, cur = [-1]*len(basis), 0
         for i in range(self.cols):
@@ -2673,6 +2683,8 @@ class MatrixBase(object):
                     v = reduced[line, j]
                     if simplify:
                         v = simpfunc(v)
+                    if chop:
+                        v = v.evalf(chop=True) # XXX at what precision?
                     if v != 0:
                         if j in pivots:
                             # XXX: Is this the correct error?
@@ -2854,6 +2866,9 @@ class MatrixBase(object):
     def eigenvals(self, **flags):
         """Return eigen values using the berkowitz_eigenvals routine.
 
+        The eignevals are returned as a dictionary with the keys being
+        the eigenvalues and the values being the multiplicity.func_closure
+
         Since the roots routine doesn't always work well with Floats,
         they will be replaced with Rationals before calling that
         routine. If this is not desired, set flag ``rational`` to False.
@@ -2861,8 +2876,8 @@ class MatrixBase(object):
         # roots doesn't like Floats, so replace them with Rationals
         # unless the nsimplify flag indicates that this has already
         # been done, e.g. in eigenvects
+        float = False
         if flags.pop('rational', True):
-            float = False
             if any(v.has(Float) for v in self):
                 float=True
                 self = self._new(self.rows, self.cols, [nsimplify(v, rational=True) for v in self])
@@ -2882,37 +2897,69 @@ class MatrixBase(object):
 
         If the matrix contains any Floats, they will be changed to Rationals
         for computation purposes, but the answers will be returned after being
-        evaluated with evalf. If it is desired to removed small imaginary
-        portions during the evalf step, pass a value for the ``chop`` flag.
+        evaluated with evalf. If this is not desired, set the flag ``rational``
+        to False.bit_length
+
+        If it is desired to removed small imaginary portions during the
+        calculation of eigenvalues and in the final evalf step, pass a value
+        (e.g. True or some small number below which numbers are to be as zero)
+        for the ``chop`` flag. Note: chop is automatically enabled if there are
+        Floats present.
+
         """
+        from sympy import SYMPY_DEBUG
 
         simplify = flags.get('simplify', True)
         primitive = bool(flags.get('simplify', False))
-        chop = flags.pop('chop', False)
+        symbolic = self.is_symbolic()
 
         flags.pop('multiple', None) # remove this if it's there
 
         # roots doesn't like Floats, so replace them with Rationals
         float = False
-        if any(v.has(Float) for v in self):
+        if flags.get('rational', True) and any(v.has(Float) for v in self):
             float = True
             self = self._new(self.rows, self.cols, [nsimplify(v, rational=True) for v in self])
             flags['rational'] = False # to tell eigenvals not to do this
+        chop = flags.pop('chop', None)
+        chop = chop or float and chop is not False
 
         out, vlist = [], self.eigenvals(**flags)
         flags.pop('rational', None)
 
-        for r, k in vlist.iteritems():
-            tmp = self - eye(self.rows)*r
-            basis = tmp.nullspace()
-            # whether tmp.is_symbolic() is True or False, it is possible that
-            # the basis will come back as [] in which case simplification is
-            # necessary.
-            if not basis:
-                # The nullspace routine failed, try it again with simplification
-                basis = tmp.nullspace(simplify=simplify)
+        for r, k in vlist.items():
+            for ii in range(2):
+                tmp = self - eye(self.rows)*r
+                basis = tmp.nullspace(chop=chop)
+                if basis and SYMPY_DEBUG: print 0+ii*100
+                # whether tmp.is_symbolic() is True or False, it is possible that
+                # the basis will come back as [] in which case simplification is
+                # necessary.
+                rex = r.expand(complex=True)
                 if not basis:
-                    raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
+                    # see if expanding r helps
+                    tmp0 = tmp
+                    if rex != r:
+                        tmp = self - eye(self.rows)*rex
+                        basis = tmp.nullspace(chop=chop)
+                        if basis and SYMPY_DEBUG: print 1+ii*100
+                    if not basis:
+                        # try it again with simplification
+                        basis = tmp.nullspace(simplify=simplify, chop=chop)
+                        if basis and SYMPY_DEBUG: print 2+ii*100
+                    if not basis and rex != r:
+                        # try it again with simplification
+                        basis = tmp0.nullspace(simplify=simplify, chop=chop)
+                        if basis and SYMPY_DEBUG: print 3+ii*100
+                    if not basis:
+                        if ii == 0 and float and r.has(Pow):
+                            r = r.evalf()
+                            continue
+                        raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
+            if rex.count_ops() < r.count_ops():
+                vlist.pop(r)
+                r = rex
+                vlist[r] = k
             if primitive:
                 # the relationship A*e = lambda*e will still hold if we change the
                 # eigenvector; so if simplify is True we tidy up any normalization
