@@ -1,4 +1,4 @@
-from sympy import Eq, Matrix, pi, sin, sqrt, Symbol
+from sympy import Eq, Expr, Matrix, pi, sin, sqrt, Symbol, tanh, Tuple
 from sympy.mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
@@ -43,3 +43,45 @@ def test_nsolve():
     a = Symbol('a')
     assert nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3).ae(
         mpf('0.31883011387318591'))
+
+def test_nsolve_symbolic_expressions():
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+
+    raises(TypeError, 'nsolve(tanh(x*y)-x,10)')
+
+    r1 = nsolve(tanh(x*y)-x,x,10)
+    assert isinstance(r1, Expr)
+    assert r1.evalf(subs={y : 0.2}) == 0
+
+    r2 = nsolve((y-x, x+z), (x, z), (0, 0), imp_function='root2')
+    assert isinstance(r2, Expr)
+    # TODO: evalf does not play well with mpmath matrix.
+    # For the moment I'm only testing _imp_.
+    #assert r2.evalf(subs={y : 1.2})[0] == 1.2
+    assert r2._imp_(1.2)[0] == 1.2
+    #assert r2.evalf(subs={y : 1.2})[1] == -1.2
+    assert r2._imp_(1.2)[1] == -1.2
+
+    # testing all combinations of Tuple,list,Matrix arguments
+    # TODO: fix evalf so you can use it directly and not _imp_
+    # TODO: fix the commented out tests
+    t = Tuple(x-y,z-y)
+    l = list(t)
+    m = Matrix(l)
+    assert nsolve(t,(x,z),(0,0))._imp_(1)[0] == 1.0
+    assert nsolve(l,(x,z),(0,0))._imp_(1)[0] == 1.0
+    assert nsolve(m,(x,z),(0,0))._imp_(1)[0] == 1.0
+    assert nsolve(t,(x,z),(0,0))._imp_(1)[0] == 1.0
+    assert nsolve(t,[x,z],(0,0))._imp_(1)[0] == 1.0
+    #assert nsolve(t,Matrix([x,z]),(0,0))._imp_(1)[0] == 1.0
+    # it return nsolve_root(z,y)
+    assert nsolve(t,(x,z),[0,0])._imp_(1)[0] == 1.0
+    #assert nsolve(t,(x,z),Matrix([0,0]))._imp_(1)[0] == 1.0
+    # some strange error: TypeError: cannot create mpf from [0]
+    # AND returns [0]
+
+    # testing the arg_order argument
+    assert (nsolve(x*y/z-1.,x,10.,arg_order=[y,z])._imp_(10.,1. )
+         == nsolve(x*y/z-1.,x,10.,arg_order=[z,y])._imp_(1. ,10.))

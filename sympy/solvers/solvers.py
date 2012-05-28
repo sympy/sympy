@@ -15,7 +15,8 @@ This module contain solvers for all kinds of equations:
 from sympy.core.compatibility import iterable, is_sequence
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.sympify import sympify
-from sympy.core import C, S, Add, Symbol, Wild, Equality, Dummy, Basic, Expr
+from sympy.core import Add, Basic, C, Dummy, Equality, Expr, S, Symbol, Wild
+from sympy.core.containers import Tuple
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
                           count_ops)
@@ -35,7 +36,7 @@ from sympy.polys import roots, cancel, Poly, together, factor
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.iterables import preorder_traversal, sift
-from sympy.utilities.lambdify import lambdify
+from sympy.utilities.lambdify import lambdify, implemented_function
 from sympy.utilities.misc import default_sort_key, filldedent
 from sympy.mpmath import findroot
 
@@ -1861,7 +1862,7 @@ def nsolve(*args, **kwargs):
     r"""
     Solve a nonlinear equation system numerically::
 
-        nsolve(f, [args,] x0, modules=['mpmath'], **kwargs)
+        nsolve(f, [args,] x0, modules=['mpmath'], imp_function=None, **kwargs)
 
     f is a vector function of symbolic expressions representing the system.
     args are the variables. If there is only one variable, this argument can
@@ -1897,14 +1898,50 @@ def nsolve(*args, **kwargs):
 
     mpmath.findroot is used, you can find there more extensive documentation,
     especially concerning keyword parameters and available solvers.
+
+    If there are too many free variables in the equations a symbolic function
+    is created. It can be evaluated to find the root when the free variables are
+    substituted with floats. When used in this manner the `imp_function`
+    argument can be supplied to give a name to the newly created function. For
+    more details see the docstring of `implemented_function`. Otherwise a
+    default name will be used. Optionally, if you wish to enforce a certain order for the
+    arguments you can use the ``arg_order`` argument specifying a list
+    containing the arguments in the preferred order.
+
+    >>> from sympy import tanh, nsolve
+    >>> from sympy.abc import x, y
+    >>> r = nsolve(tanh(y*x)-x, x, 1, imp_function='root_of_equ')
+    >>> r
+    root_of_equ(y)
+    >>> r.evalf(subs={y : 0.9})
+    0
+    >>> r.evalf(subs={y : 1.1})
+    0.502940574944642
+    >>> nsolve(x-y,x,0) # Default name
+    nsolve_root(y)
     """
     # interpret arguments
     if len(args) == 3:
         f = args[0]
+        # TODO: Ugly workaround for sympification of a matrix
+        # and the lack of free_symbols property.
+        # TODO: Same problem with lists.
+        f = Tuple(*tuple(f)) if isinstance(f, (Matrix, list)) else sympify(f)
         fargs = args[1]
         x0 = args[2]
+        # check if you are nsolving now or creating a symbolic Function
+        if not isinstance(fargs, (tuple, list)):
+            fargs = (fargs,)
+        if len(f.free_symbols) > len(fargs):
+            return _nsolve_implemented_function(f, fargs, x0, **kwargs)
     elif len(args) == 2:
         f = args[0]
+        # TODO the already mentioned ugly workaround
+        f = Tuple(*tuple(f)) if isinstance(f, (Matrix, list)) else sympify(f)
+        if len(f.free_symbols) > 1:
+            raise TypeError('The expression in nsolve has too many free'
+                            ' symbols. Try to specify the variables wrt'
+                            ' which you are solving.')
         fargs = None
         x0 = args[1]
     elif len(args) < 2:
@@ -1914,14 +1951,14 @@ def nsolve(*args, **kwargs):
         raise TypeError('nsolve expected at most 3 arguments, got %i'
                         % len(args))
     modules = kwargs.get('modules', ['mpmath'])
-    if isinstance(f, (list, tuple)):
+    if isinstance(f, (list, Tuple)):
         f = Matrix(f).T
     if not isinstance(f, Matrix):
         # assume it's a sympy expression
         if isinstance(f, Equality):
             f = f.lhs - f.rhs
         f = f.evalf()
-        atoms = f.atoms(Symbol)
+        atoms = f.free_symbols
         if fargs is None:
             fargs = atoms.copy().pop()
         if not (len(atoms) == 1 and (fargs in atoms or fargs[0] in atoms)):
@@ -1951,6 +1988,14 @@ def nsolve(*args, **kwargs):
     # solve the system numerically
     x = findroot(f, x0, J=J, **kwargs)
     return x
+
+def _nsolve_implemented_function(f, fargs, x0, **kwargs):
+    free = list(f.free_symbols - set(fargs))
+    arg_order = kwargs.pop('arg_order', free)
+    name = kwargs.pop('imp_function', 'nsolve_root')
+    imp_func = lambda *args : nsolve(f.subs(zip(arg_order, args)), fargs, x0,
+                                     **kwargs)
+    return implemented_function(name, imp_func)(*arg_order)
 
 
 def _invert(eq, *symbols, **kwargs):
