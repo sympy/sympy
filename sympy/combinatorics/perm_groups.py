@@ -2,7 +2,7 @@ from sympy.combinatorics import Permutation
 from sympy.core import Basic
 from sympy.combinatorics.permutations import perm_af_mul, \
  _new_from_array_form, perm_af_commutes_with, perm_af_invert, perm_af_muln
-from random import randint
+from random import randint, choice
 from sympy.functions.combinatorial.factorials import factorial
 
 def _smallest_change(h, alpha):
@@ -334,6 +334,9 @@ class PermutationGroup(Basic):
         obj._coset_repr = []
         obj._coset_repr_n = []
         obj._stabilizers_gens = []
+
+        # these attributes are assigned after running _pr_init
+        obj._random_gens = []
         return obj
 
     def __mul__(self, other):
@@ -1436,6 +1439,39 @@ class PermutationGroup(Basic):
                 return False
             order = order1
         return True
+
+    def _pr_init(self, r, n):
+        deg = self.degree
+        random_gens = self.generators[:]
+        k = len(random_gens)
+        if k < r:
+            for i in range(k,r):
+                random_gens.append(random_gens[i-k])
+        acc = _new_from_array_form(range(deg))
+        random_gens.append(acc)
+        self._random_gens = random_gens
+        for i in range(n):
+            self.pr_random()
+
+    def pr_random(self):
+        if self._random_gens == []:
+            self._pr_init(11, 50)
+        random_gens = self._random_gens
+        r = len(random_gens)-1
+        temp = range(r)
+        s = choice(temp)
+        temp[s] = r - 1
+        t = choice(temp)
+        x = choice([1,2])
+        e = choice([-1,1])
+        if x == 1:
+            random_gens[s] = random_gens[s]*random_gens[t]**e
+            random_gens[r] = random_gens[r]*random_gens[s]
+        else:
+            random_gens[s] = (random_gens[t]**e)*random_gens[s]
+            random_gens[r] = random_gens[s]*random_gens[r]
+        return random_gens[r]
+
 
 def SymmetricGroup(n):
     """
