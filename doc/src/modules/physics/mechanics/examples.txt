@@ -23,6 +23,9 @@ configuration and three speed variables are need to describe this system, along
 with the disc's mass and radius, and the local gravity (note that mass will
 drop out). ::
 
+  >>> from sympy import Matrix
+  >>> Matrix._sympystr = Matrix.table
+
   >>> from sympy import symbols, sin, cos, tan
   >>> from sympy.physics.mechanics import *
   >>> q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')

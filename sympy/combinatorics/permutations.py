@@ -1390,6 +1390,9 @@ don\'t match.")
         Examples
         ========
 
+        >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
+
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation.josephus(3,6,1)
         >>> p
@@ -1460,6 +1463,9 @@ don\'t match.")
 
         Examples
         ========
+
+        >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation.josephus(3,6,1)

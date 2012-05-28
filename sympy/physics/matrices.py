@@ -13,6 +13,8 @@ def msigma(i):
     Examples
     ========
 
+    >>> from sympy.matrices import Matrix
+    >>> Matrix._sympystr = Matrix.table
     >>> from sympy.physics.matrices import msigma
     >>> msigma(1)
     [0, 1]
@@ -42,9 +44,14 @@ def pat_matrix(m, dx, dy, dz):
     matrix a distance of (dx, dy, dz) for a body of mass m.
 
     Examples
-    --------
+    ========
+
     If the point we want the inertia about is a distance of 2 units of
     length and 1 unit along the x-axis we get:
+
+    >>> from sympy import Matrix
+    >>> Matrix._sympystr = Matrix.table
+
     >>> from sympy.physics.matrices import pat_matrix
     >>> pat_matrix(2,1,0,0)
     [0, 0, 0]
@@ -82,6 +89,9 @@ def mgamma(mu,lower=False):
 
     Examples
     ========
+
+    >>> from sympy import Matrix
+    >>> Matrix._sympystr = Matrix.table
 
     >>> from sympy.physics.matrices import mgamma
     >>> mgamma(1)

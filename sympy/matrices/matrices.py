@@ -83,10 +83,11 @@ class MatrixBase(object):
         Matrix can be constructed with values or a rule.
 
         >>> from sympy import Matrix, I
-        >>> Matrix( ((1,2+I), (3,4)) ) #doctest:+NORMALIZE_WHITESPACE
+        >>> Matrix._sympystr = Matrix.table
+        >>> Matrix( ((1,2+I), (3,4)) )
         [1, 2 + I]
         [3,     4]
-        >>> Matrix(2, 2, lambda i,j: (i+1)*j ) #doctest:+NORMALIZE_WHITESPACE
+        >>> Matrix(2, 2, lambda i,j: (i+1)*j )
         [0, 1]
         [0, 2]
 
@@ -174,16 +175,47 @@ class MatrixBase(object):
 
         return rows, cols, mat
 
+    def table(self, p, rowsep='\n', colsep=', ', align='right'):
+        import string
+        # Handle zero dimensions:
+        if self.rows == 0 or self.cols == 0:
+            return '[]'
+        # Build table of string representations of the elements
+        res = []
+        # Track per-column max lengths for pretty alignment
+        maxlen = [0] * self.cols
+        for i in range(self.rows):
+            res.append([])
+            for j in range(self.cols):
+                s = p._print(self[i,j])
+                res[-1].append(s)
+                maxlen[j] = max(len(s), maxlen[j])
+        # Patch strings together
+        align = {
+            'left': string.ljust,
+            'right': string.rjust,
+            'center': string.center,
+            '<': string.ljust,
+            '>': string.rjust,
+            '^': string.center,
+            }[align]
+        for i, row in enumerate(res):
+            for j, elem in enumerate(row):
+                row[j] = align(elem, maxlen[j])
+            res[i] = "[" + colsep.join(row) + "]"
+        return rowsep.join(res)
+
     def transpose(self):
         """
         Matrix transposition.
 
         >>> from sympy import Matrix, I
-        >>> m=Matrix(((1,2+I),(3,4)))
-        >>> m  #doctest: +NORMALIZE_WHITESPACE
+        >>> Matrix._sympystr = Matrix.table
+        >>> m = Matrix(((1,2+I),(3,4)))
+        >>> m
         [1, 2 + I]
         [3,     4]
-        >>> m.transpose() #doctest: +NORMALIZE_WHITESPACE
+        >>> m.transpose()
         [    1, 3]
         [2 + I, 4]
         >>> m.T == m.transpose()
@@ -223,11 +255,12 @@ class MatrixBase(object):
         Hermite conjugation.
 
         >>> from sympy import Matrix, I
-        >>> m=Matrix(((1,2+I),(3,4)))
-        >>> m  #doctest: +NORMALIZE_WHITESPACE
+        >>> Matrix._sympystr = Matrix.table
+        >>> m = Matrix(((1,2+I),(3,4)))
+        >>> m
         [1, 2 + I]
         [3,     4]
-        >>> m.H #doctest: +NORMALIZE_WHITESPACE
+        >>> m.H
         [    1, 3]
         [2 - I, 4]
 
@@ -262,8 +295,9 @@ class MatrixBase(object):
     def __getitem__(self,key):
         """
         >>> from sympy import Matrix, I
-        >>> m=Matrix(((1,2+I),(3,4)))
-        >>> m  #doctest: +NORMALIZE_WHITESPACE
+        >>> Matrix._sympystr = Matrix.table
+        >>> m = Matrix(((1,2+I),(3,4)))
+        >>> m
         [1, 2 + I]
         [3,     4]
         >>> m[1,0]
@@ -315,7 +349,8 @@ class MatrixBase(object):
         """
         Returns a Mutable version of this Matrix
 
-        >>> from sympy import ImmutableMatrix
+        >>> from sympy import ImmutableMatrix, Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> X = ImmutableMatrix([[1,2],[3,4]])
         >>> Y = X.as_mutable()
         >>> Y[1,1] = 5 # Can set values in Y
@@ -348,7 +383,8 @@ class MatrixBase(object):
         Return the Matrix converted in a python list.
 
         >>> from sympy import Matrix
-        >>> m=Matrix(3, 3, range(9))
+        >>> Matrix._sympystr = Matrix.table
+        >>> m = Matrix(3, 3, range(9))
         >>> m
         [0, 1, 2]
         [3, 4, 5]
@@ -357,10 +393,7 @@ class MatrixBase(object):
         [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
 
         """
-        ret = [0]*self.rows
-        for i in xrange(self.rows):
-            ret[i] = self.mat[i*self.cols:(i+1)*self.cols]
-        return ret
+        return [[self[i, j] for j in xrange(self.cols)] for i in xrange(self.rows)]
 
     def hash(self):
         """Compute a hash every time, because the matrix elements
@@ -372,7 +405,7 @@ class MatrixBase(object):
         """The shape (dimensions) of the matrix as the 2-tuple (rows, cols)."""
         return (self.rows, self.cols)
 
-    def __rmul__(self,a):
+    def __rmul__(self, a):
         if hasattr(a, "__array__") and a.shape != ():
             return matrix_multiply(a,self)
         out = self._new(self.rows, self.cols, map(lambda i: a*i,self.mat))
@@ -485,30 +518,17 @@ class MatrixBase(object):
     def __hash__(self):
         return super(MatrixBase, self).__hash__()
 
-    def _format_str(self, strfunc, rowsep='\n'):
+    def _format_str(self, strfunc):
+        from sympy.printing.str import StrPrinter
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
-            return '[]'
-        # Build table of string representations of the elements
-        res = []
-        # Track per-column max lengths for pretty alignment
-        maxlen = [0] * self.cols
-        for i in range(self.rows):
-            res.append([])
-            for j in range(self.cols):
-                string = strfunc(self[i,j])
-                res[-1].append(string)
-                maxlen[j] = max(len(string), maxlen[j])
-        # Patch strings together
-        for i, row in enumerate(res):
-            for j, elem in enumerate(row):
-                # Pad each element up to maxlen so the columns line up
-                row[j] = elem.rjust(maxlen[j])
-            res[i] = "[" + ", ".join(row) + "]"
-        return rowsep.join(res)
+            return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
+        return "Matrix([\n%s])" % self.table(StrPrinter(), rowsep=',\n')
 
     def __str__(self):
-        return sstr(self)
+        if self.rows == 0 or self.cols == 0:
+            return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
+        return "Matrix(%s)" % str(self.tolist())
 
     def __repr__(self):
         return sstr(self)
@@ -522,6 +542,7 @@ class MatrixBase(object):
         and non-singular matrix
 
         >>> from sympy.matrices import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> A = Matrix(((25,15,-5),(15,18,0),(-5,0,11)))
         >>> A.cholesky()
         [ 5, 0, 0]
@@ -570,6 +591,7 @@ class MatrixBase(object):
         and non-singular matrix.
 
         >>> from sympy.matrices import Matrix, eye
+        >>> Matrix._sympystr = Matrix.table
         >>> A = Matrix(((25,15,-5),(15,18,0),(-5,0,11)))
         >>> L, D = A.LDLdecomposition()
         >>> L
@@ -831,6 +853,7 @@ class MatrixBase(object):
         Concatenates two matrices along self's last and rhs's first column
 
         >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> M = Matrix(3,3,lambda i,j: i+j)
         >>> V = Matrix(3,1,lambda i,j: 3+i+j)
         >>> M.row_join(V)
@@ -857,6 +880,7 @@ class MatrixBase(object):
         Concatenates two matrices along self's last and bott's first row
 
         >>> from sympy import Matrix, ones
+        >>> Matrix._sympystr = Matrix.table
         >>> M = ones(3, 3)
         >>> V = Matrix([[7,7,7]])
         >>> M.col_join(V)
@@ -884,6 +908,7 @@ class MatrixBase(object):
         Insert a row at the given position.
 
         >>> from sympy import Matrix, zeros
+        >>> Matrix._sympystr = Matrix.table
         >>> M = Matrix(3,3,lambda i,j: i+j)
         >>> M
         [0, 1, 2]
@@ -927,6 +952,7 @@ class MatrixBase(object):
         Insert a column at the given position.
 
         >>> from sympy import Matrix, zeros
+        >>> Matrix._sympystr = Matrix.table
         >>> M = Matrix(3,3,lambda i,j: i+j)
         >>> M
         [0, 1, 2]
@@ -970,8 +996,8 @@ class MatrixBase(object):
         """
         Calculate the trace of a (square) matrix.
 
-        >>> import sympy
-        >>> M = sympy.matrices.eye(3)
+        >>> from sympy.matrices import eye
+        >>> M = eye(3)
         >>> M.trace()
         3
 
@@ -989,18 +1015,19 @@ class MatrixBase(object):
         Get a slice/submatrix of the matrix using the given slice.
 
         >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> m = Matrix(4,4,lambda i,j: i+j)
-        >>> m   #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [0, 1, 2, 3]
         [1, 2, 3, 4]
         [2, 3, 4, 5]
         [3, 4, 5, 6]
-        >>> m[:1, 1]   #doctest: +NORMALIZE_WHITESPACE
+        >>> m[:1, 1]
         [1]
-        >>> m[:2, :1] #doctest: +NORMALIZE_WHITESPACE
+        >>> m[:2, :1]
         [0]
         [1]
-        >>> m[2:4, 2:4] #doctest: +NORMALIZE_WHITESPACE
+        >>> m[2:4, 2:4]
         [4, 5]
         [5, 6]
 
@@ -1026,27 +1053,28 @@ class MatrixBase(object):
         ========
 
         >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> m = Matrix(4, 3, range(12))
-        >>> m   #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [0,  1,  2]
         [3,  4,  5]
         [6,  7,  8]
         [9, 10, 11]
-        >>> m.extract([0,1,3],[0,1])   #doctest: +NORMALIZE_WHITESPACE
+        >>> m.extract([0,1,3],[0,1])
         [0,  1]
         [3,  4]
         [9, 10]
 
         Rows or columns can be repeated:
 
-        >>> m.extract([0,0,1], [-1])   #doctest: +NORMALIZE_WHITESPACE
+        >>> m.extract([0,0,1], [-1])
         [2]
         [2]
         [5]
 
         Every other row can be taken by using range to provide the indices:
 
-        >>> m.extract(range(0, m.rows, 2),[-1])   #doctest: +NORMALIZE_WHITESPACE
+        >>> m.extract(range(0, m.rows, 2),[-1])
         [2]
         [8]
 
@@ -1134,11 +1162,12 @@ class MatrixBase(object):
         Apply a function to each element of the matrix.
 
         >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> m = Matrix(2,2,lambda i,j: i*2+j)
-        >>> m   #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [0, 1]
         [2, 3]
-        >>> m.applyfunc(lambda i: 2*i)  #doctest: +NORMALIZE_WHITESPACE
+        >>> m.applyfunc(lambda i: 2*i)
         [0, 2]
         [4, 6]
 
@@ -1165,13 +1194,14 @@ class MatrixBase(object):
         Reshape the matrix. Total number of elements must remain the same.
 
         >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> m = Matrix(2,3,lambda i,j: 1)
-        >>> m   #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [1, 1, 1]
         [1, 1, 1]
-        >>> m.reshape(1,6)  #doctest: +NORMALIZE_WHITESPACE
+        >>> m.reshape(1,6)
         [1, 1, 1, 1, 1, 1]
-        >>> m.reshape(3,2)  #doctest: +NORMALIZE_WHITESPACE
+        >>> m.reshape(3,2)
         [1, 1]
         [1, 1]
         [1, 1]
@@ -1188,16 +1218,17 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> from sympy import Matrix, matrices
+        >>> from sympy import Matrix, eye
+        >>> Matrix._sympystr = Matrix.table
         >>> m = Matrix(2,3,lambda i,j: i*3+j)
-        >>> m           #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [0, 1, 2]
         [3, 4, 5]
-        >>> m.print_nonzero()   #doctest: +NORMALIZE_WHITESPACE
+        >>> m.print_nonzero()
         [ XX]
         [XXX]
-        >>> m = matrices.eye(4)
-        >>> m.print_nonzero("x")    #doctest: +NORMALIZE_WHITESPACE
+        >>> m = eye(4)
+        >>> m.print_nonzero("x")
         [x   ]
         [ x  ]
         [  x ]
@@ -1259,6 +1290,7 @@ class MatrixBase(object):
         ========
 
         >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> a = Matrix([[4, 3], [6, 3]])
         >>> L, U, _ = a.LUdecomposition()
         >>> L
@@ -1458,18 +1490,19 @@ class MatrixBase(object):
         Examples
         ========
 
-            >>> from sympy import sin, cos, Matrix
-            >>> from sympy.abc import rho, phi
-            >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
-            >>> Y = Matrix([rho, phi])
-            >>> X.jacobian(Y)
-            [cos(phi), -rho*sin(phi)]
-            [sin(phi),  rho*cos(phi)]
-            [   2*rho,             0]
-            >>> X = Matrix([rho*cos(phi), rho*sin(phi)])
-            >>> X.jacobian(Y)
-            [cos(phi), -rho*sin(phi)]
-            [sin(phi),  rho*cos(phi)]
+        >>> from sympy import sin, cos, Matrix
+        >>> Matrix._sympystr = Matrix.table
+        >>> from sympy.abc import rho, phi
+        >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
+        >>> Y = Matrix([rho, phi])
+        >>> X.jacobian(Y)
+        [cos(phi), -rho*sin(phi)]
+        [sin(phi),  rho*cos(phi)]
+        [   2*rho,             0]
+        >>> X = Matrix([rho*cos(phi), rho*sin(phi)])
+        >>> X.jacobian(Y)
+        [cos(phi), -rho*sin(phi)]
+        [sin(phi),  rho*cos(phi)]
 
         See Also
         ========
@@ -1508,6 +1541,7 @@ class MatrixBase(object):
         This is the example from wikipedia:
 
         >>> from sympy import Matrix, eye
+        >>> Matrix._sympystr = Matrix.table
         >>> A = Matrix([[12,-51,4],[6,167,-68],[-4,24,-41]])
         >>> Q, R = A.QRdecomposition()
         >>> Q
@@ -1654,6 +1688,7 @@ class MatrixBase(object):
         must match the length of b).
 
         >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> M = Matrix([[1,2,3], [4,5,6], [7,8,9]])
         >>> v = [1, 1, 1]
         >>> M.row(0).dot(v)
@@ -1697,6 +1732,7 @@ class MatrixBase(object):
         """Return the Hadamard product (elementwise product) of A and B
 
         >>> from sympy.matrices.matrices import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
         >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
         >>> A.multiply_elementwise(B)
@@ -1810,6 +1846,7 @@ class MatrixBase(object):
         """Return the projection of ``self`` onto the line containing ``v``.
 
         >>> from sympy import Matrix, S, sqrt
+        >>> Matrix._sympystr = Matrix.table
         >>> V = Matrix([sqrt(3)/2,S.Half])
         >>> x = Matrix([[1, 0]])
         >>> V.project(x)
@@ -1823,8 +1860,9 @@ class MatrixBase(object):
         """
         Permute the rows of the matrix with the given permutation in reverse.
 
-        >>> import sympy
-        >>> M = sympy.matrices.eye(3)
+        >>> from sympy.matrices import Matrix, eye
+        >>> Matrix._sympystr = Matrix.table
+        >>> M = eye(3)
         >>> M.permuteBkwd([[0,1],[0,2]])
         [0, 1, 0]
         [0, 0, 1]
@@ -1844,8 +1882,9 @@ class MatrixBase(object):
         """
         Permute the rows of the matrix with the given permutation.
 
-        >>> import sympy
-        >>> M = sympy.matrices.eye(3)
+        >>> from sympy.matrices import Matrix, eye
+        >>> Matrix._sympystr = Matrix.table
+        >>> M = eye(3)
         >>> M.permuteFwd([[0,1],[0,2]])
         [0, 0, 1]
         [1, 0, 0]
@@ -1868,9 +1907,10 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> import sympy
-        >>> I = sympy.matrices.eye(4)
-        >>> I.delRowCol(1,2)
+        >>> from sympy.matrices import Matrix, eye
+        >>> Matrix._sympystr = Matrix.table
+        >>> M = eye(4)
+        >>> M.delRowCol(1,2)
         [1, 0, 0]
         [0, 0, 0]
         [0, 0, 1]
@@ -2021,6 +2061,7 @@ class MatrixBase(object):
         ========
 
         >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> m = Matrix(2,2,[1, 0, 0, 1])
         >>> m
         [1, 0]
@@ -2064,6 +2105,7 @@ class MatrixBase(object):
         ========
 
         >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> m = Matrix(2,2,[1, 0, 0, 1])
         >>> m
         [1, 0]
@@ -2111,6 +2153,7 @@ class MatrixBase(object):
         ========
 
         >>> from sympy.matrices import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> a = Matrix([[1,4,2,3],[3,4,1,7],[0,2,3,4],[0,0,1,3]])
         >>> a
         [1, 4, 2, 3]
@@ -2143,6 +2186,7 @@ class MatrixBase(object):
         ========
 
         >>> from sympy.matrices import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> a = Matrix([[1,2,0,0],[5,2,3,0],[3,4,3,7],[5,6,1,1]])
         >>> a
         [1, 2, 0, 0]
@@ -2171,9 +2215,9 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> import sympy
+        >>> from sympy.matrices import Matrix
         >>> from sympy.abc import x, y
-        >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
+        >>> M = Matrix([[x, y], [1, 0]])
         >>> M.is_symbolic()
         True
 
@@ -2193,6 +2237,7 @@ class MatrixBase(object):
         ========
 
         >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> m = Matrix(2,2,[0, 1, 1, 2])
         >>> m
         [0, 1]
@@ -2231,6 +2276,7 @@ class MatrixBase(object):
         >>> m1 = m.expand()
         >>> m1.is_symmetric(simplify=False)
         True
+
         """
         if not self.is_square:
             return False
@@ -2337,6 +2383,7 @@ class MatrixBase(object):
         ========
 
         >>> from sympy import Matrix, diag
+        >>> Matrix._sympystr = Matrix.table
         >>> m = Matrix(2,2,[1, 0, 0, 2])
         >>> m
         [1, 0]
@@ -2604,6 +2651,7 @@ class MatrixBase(object):
         >>> m.rref()
         ([1, 0]
         [0, 1], [0, 1])
+
         """
         if simplified is not False:
             SymPyDeprecationWarning(
@@ -2999,9 +3047,10 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> import sympy
+        >>> from sympy.matrices import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> from sympy.abc import x, y
-        >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
+        >>> M = Matrix([[x, y], [1, 0]])
         >>> M.integrate((x,))
         [x**2/2, x*y]
         [     x,   0]
@@ -3025,9 +3074,10 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> import sympy
+        >>> from sympy.matrices import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> from sympy.abc import x, y
-        >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
+        >>> M = Matrix([[x, y], [1, 0]])
         >>> M.limit(x, 2)
         [2, y]
         [1, 0]
@@ -3048,9 +3098,10 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> import sympy
+        >>> from sympy.matrices import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> from sympy.abc import x, y
-        >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
+        >>> M = Matrix([[x, y], [1, 0]])
         >>> M.diff(x)
         [1, 0]
         [0, 0]
@@ -3069,7 +3120,8 @@ class MatrixBase(object):
         Return the Matrix converted into a one column matrix by stacking columns
 
         >>> from sympy import Matrix
-        >>> m=Matrix([[1,3], [2,4]])
+        >>> Matrix._sympystr = Matrix.table
+        >>> m = Matrix([[1,3], [2,4]])
         >>> m
         [1, 3]
         [2, 4]
@@ -3096,7 +3148,8 @@ class MatrixBase(object):
         check_symmetry -- checks symmetry of self but not completely reliably
 
         >>> from sympy import Matrix
-        >>> m=Matrix([[1,2], [2,3]])
+        >>> Matrix._sympystr = Matrix.table
+        >>> m = Matrix([[1,2], [2,3]])
         >>> m
         [1, 2]
         [2, 3]
@@ -3145,6 +3198,7 @@ class MatrixBase(object):
         ========
 
         >>> from sympy import Matrix, symbols
+        >>> Matrix._sympystr = Matrix.table
         >>> from sympy.abc import x, y, z
         >>> A = Matrix([[1, 3, 0, 0], [y, z*z, 0, 0], [0, 0, x, 0], [0, 0, 0, 0]])
         >>> a1, a2, a3 = A.get_diag_blocks()
@@ -3193,6 +3247,7 @@ class MatrixBase(object):
         ========
 
         >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> m = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
         >>> m
         [1,  2, 0]
@@ -3250,6 +3305,7 @@ class MatrixBase(object):
         ========
 
         >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> m = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
         >>> m
         [1,  2, 0]
@@ -3325,6 +3381,7 @@ class MatrixBase(object):
         ========
 
         >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
         >>> m
         [ 6,  5, -2, -3]
@@ -3368,6 +3425,7 @@ class MatrixBase(object):
         ========
 
         >>> from sympy import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
         >>> m
         [ 6,  5, -2, -3]
@@ -3508,12 +3566,13 @@ class MutableMatrix(MatrixBase):
     def __setitem__(self, key, value):
         """
         >>> from sympy import Matrix, I
-        >>> m=Matrix(((1,2+I),(3,4)))
-        >>> m  #doctest: +NORMALIZE_WHITESPACE
+        >>> Matrix._sympystr = Matrix.table
+        >>> m = Matrix(((1,2+I),(3,4)))
+        >>> m
         [1, 2 + I]
         [3,     4]
         >>> m[1,0]=9
-        >>> m  #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [1, 2 + I]
         [9,     4]
 
@@ -3576,9 +3635,10 @@ class MutableMatrix(MatrixBase):
         Examples
         ========
 
-        >>> import sympy
-        >>> M = sympy.matrices.Matrix([[0,1],[2,3]])
-        >>> I = sympy.matrices.eye(5)
+        >>> from sympy.matrices import Matrix, eye
+        >>> Matrix._sympystr = Matrix.table
+        >>> M = Matrix([[0,1],[2,3]])
+        >>> I = eye(5)
         >>> I.copyin_matrix((slice(0,2), slice(0,2)),M)
         >>> I
         [0, 1, 0, 0, 0]
@@ -3617,8 +3677,9 @@ class MutableMatrix(MatrixBase):
         Examples
         ========
 
-        >>> import sympy
-        >>> I = sympy.matrices.eye(5)
+        >>> from sympy.matrices import Matrix, eye
+        >>> Matrix._sympystr = Matrix.table
+        >>> I = eye(5)
         >>> I.copyin_list((slice(0,2), slice(0,1)), [1,2])
         >>> I
         [1, 0, 0, 0, 0]
@@ -3641,7 +3702,8 @@ class MutableMatrix(MatrixBase):
         Elementary row selector (default) or operation using functor
         which is a function two args interpreted as (self[i, j], j).
 
-        >>> from sympy import ones
+        >>> from sympy import ones, Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> I = ones(3)
         >>> I.row(1, lambda v,i: v*3)
         >>> I
@@ -3671,7 +3733,8 @@ class MutableMatrix(MatrixBase):
         Elementary column selector (default) or operation using functor
         which is a function two args interpreted as (self[i, j], i).
 
-        >>> from sympy import ones
+        >>> from sympy import ones, Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> I = ones(3)
         >>> I.col(0, lambda v, i: v*3)
         >>> I
@@ -3703,6 +3766,7 @@ class MutableMatrix(MatrixBase):
         Swap the two given rows of the matrix in-place.
 
         >>> from sympy.matrices import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> M = Matrix([[0,1],[1,0]])
         >>> M
         [0, 1]
@@ -3726,6 +3790,7 @@ class MutableMatrix(MatrixBase):
         Swap the two given columns of the matrix in-place.
 
         >>> from sympy.matrices import Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> M = Matrix([[1,0],[1,0]])
         >>> M
         [1, 0]
@@ -3748,10 +3813,11 @@ class MutableMatrix(MatrixBase):
         """
         Delete the given row.
 
-        >>> import sympy
-        >>> M = sympy.matrices.eye(3)
+        >>> from sympy.matrices import Matrix, eye
+        >>> Matrix._sympystr = Matrix.table
+        >>> M = eye(3)
         >>> M.row_del(1)
-        >>> M   #doctest: +NORMALIZE_WHITESPACE
+        >>> M
         [1, 0, 0]
         [0, 0, 1]
 
@@ -3768,10 +3834,11 @@ class MutableMatrix(MatrixBase):
         """
         Delete the given column.
 
-        >>> import sympy
-        >>> M = sympy.matrices.eye(3)
+        >>> from sympy.matrices import Matrix, eye
+        >>> Matrix._sympystr = Matrix.table
+        >>> M = eye(3)
         >>> M.col_del(1)
-        >>> M   #doctest: +NORMALIZE_WHITESPACE
+        >>> M
         [1, 0]
         [0, 0]
         [0, 1]
@@ -3874,9 +3941,9 @@ def classof(A,B):
 
     >>> from sympy import Matrix, ImmutableMatrix
     >>> from sympy.matrices.matrices import classof
-    >>> M = Matrix([[1,2],[3,4]]) # a Mutable Matrix
-    >>> IM = ImmutableMatrix([[1,2],[3,4]])
-    >>> classof(M, IM)
+    >>> M = Matrix([[1,2], [3,4]]) # a Mutable Matrix
+    >>> IM = ImmutableMatrix([[1,2], [3,4]])
+    >>> print classof(M, IM)
     <class 'sympy.matrices.matrices.Matrix'>
     """
     from immutable_matrix import ImmutableMatrix
@@ -3906,6 +3973,7 @@ def matrix_multiply(A, B):
     ========
 
     >>> from sympy import Matrix
+    >>> Matrix._sympystr = Matrix.table
     >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
     >>> B = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     >>> A*B
@@ -3951,6 +4019,7 @@ def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
 
     >>> from sympy.matrices.matrices import Matrix, matrix_multiply_elementwise
+    >>> Matrix._sympystr = Matrix.table
     >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
     >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
     >>> matrix_multiply_elementwise(A, B)
@@ -4055,6 +4124,7 @@ def diag(*values):
     ========
 
     >>> from sympy.matrices import diag, Matrix
+    >>> Matrix._sympystr = Matrix.table
     >>> diag(1, 2, 3)
     [1, 0, 0]
     [0, 2, 0]
@@ -4108,7 +4178,8 @@ def jordan_cell(eigenval, n):
     Examples
     ========
 
-    >>> from sympy.matrices.matrices import jordan_cell
+    >>> from sympy.matrices.matrices import jordan_cell, Matrix
+    >>> Matrix._sympystr = Matrix.table
     >>> from sympy.abc import x
     >>> jordan_cell(x, 4)
     [x, 1, 0, 0]
@@ -4132,7 +4203,8 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False):
     Examples
     ========
 
-    >>> from sympy.matrices import randMatrix
+    >>> from sympy.matrices import randMatrix, Matrix
+    >>> Matrix._sympystr = Matrix.table
     >>> randMatrix(3) # doctest:+SKIP
     [25, 45, 27]
     [44, 54,  9]
@@ -4387,7 +4459,7 @@ class SparseMatrix(MatrixBase):
             raise ValueError("`key` must be of length 2.")
 
         if isinstance(key[0], int) and isinstance(key[1], int):
-            i,j=self.key2ij(key)
+            i,j = self.key2ij(key)
             if (i, j) in self.mat:
                 return self.mat[(i,j)]
             else:
@@ -4423,7 +4495,7 @@ class SparseMatrix(MatrixBase):
             if is_sequence(value):
                 self.copyin_list(key, value)
         else:
-            i,j=self.key2ij(key)
+            i,j = self.key2ij(key)
             testval = sympify(value)
             if testval != 0:
                 self.mat[(i,j)] = testval
@@ -4437,8 +4509,9 @@ class SparseMatrix(MatrixBase):
         Examples
         ========
 
-        >>> import sympy
-        >>> M = sympy.matrices.SparseMatrix([[0,0],[0,1]])
+        >>> from sympy.matrices import Matrix, SparseMatrix
+        >>> Matrix._sympystr = Matrix.table
+        >>> M = SparseMatrix([[0,0],[0,1]])
         >>> M
         [0, 0]
         [0, 1]
@@ -4470,8 +4543,9 @@ class SparseMatrix(MatrixBase):
         Examples
         ========
 
-        >>> import sympy
-        >>> M = sympy.matrices.SparseMatrix([[0,0],[0,1]])
+        >>> from sympy.matrices import Matrix, SparseMatrix
+        >>> Matrix._sympystr = Matrix.table
+        >>> M = SparseMatrix([[0,0],[0,1]])
         >>> M
         [0, 0]
         [0, 1]
@@ -4516,8 +4590,11 @@ class SparseMatrix(MatrixBase):
         """
         Returns a Row-sorted list of non-zero elements of the matrix.
 
-        >>> from sympy.matrices import SparseMatrix
-        >>> a=SparseMatrix((1,2),(3,4))
+        Examples
+        ========
+        >>> from sympy.matrices import SparseMatrix, Matrix
+        >>> Matrix._sympystr = Matrix.table
+        >>> a = SparseMatrix((1,2),(3,4))
         >>> a
         [1, 2]
         [3, 4]
@@ -4543,8 +4620,12 @@ class SparseMatrix(MatrixBase):
     def col_list(self):
         """
         Returns a Column-sorted list of non-zero elements of the matrix.
-        >>> from sympy.matrices import SparseMatrix
-        >>> a=SparseMatrix((1,2),(3,4))
+
+        Examples
+        ========
+        >>> from sympy.matrices import SparseMatrix, Matrix
+        >>> Matrix._sympystr = Matrix.table
+        >>> a = SparseMatrix((1,2),(3,4))
         >>> a
         [1, 2]
         [3, 4]
@@ -4569,7 +4650,12 @@ class SparseMatrix(MatrixBase):
     def transpose(self):
         """
         Returns the transposed SparseMatrix of this SparseMatrix
-        >>> from sympy.matrices import SparseMatrix
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix, Matrix
+        >>> Matrix._sympystr = Matrix.table
         >>> a = SparseMatrix((1,2),(3,4))
         >>> a
         [1, 2]
@@ -4602,15 +4688,19 @@ class SparseMatrix(MatrixBase):
         """
         Add two sparse matrices with dictionary representation.
 
-        >>> from sympy.matrices.matrices import SparseMatrix
-        >>> A = SparseMatrix(5, 5, lambda i, j: i * j + i)
+        Examples
+        ========
+
+        >>> from sympy.matrices.matrices import SparseMatrix, Matrix
+        >>> Matrix._sympystr = Matrix.table
+        >>> A = SparseMatrix(5, 5, lambda i, j : i * j + i)
         >>> A
         [0, 0,  0,  0,  0]
         [1, 2,  3,  4,  5]
         [2, 4,  6,  8, 10]
         [3, 6,  9, 12, 15]
         [4, 8, 12, 16, 20]
-        >>> B = SparseMatrix(5, 5, lambda i, j: i + 2 * j)
+        >>> B = SparseMatrix(5, 5, lambda i, j : i + 2 * j)
         >>> B
         [0, 2, 4,  6,  8]
         [1, 3, 5,  7,  9]
@@ -4786,7 +4876,7 @@ def symarray(prefix, shape):
     arrays, as SymPy symbols with identical names are the same object.
 
     Parameters
-    ----------
+    ==========
 
     prefix : string
       A prefix prepended to the name of every symbol.
@@ -4796,10 +4886,11 @@ def symarray(prefix, shape):
       more than one dimension the shape must be a tuple.
 
     Examples
-    --------
+    ========
     These doctests require numpy.
 
-    >>> from sympy import symarray
+    >>> from sympy import symarray, Matrix
+    >>> Matrix._sympystr = Matrix.table
     >>> symarray('', 3) #doctest: +SKIP
     [_0, _1, _2]
 
@@ -4850,10 +4941,11 @@ def rot_axis3(theta):
     the 3-axis.
 
     Examples
-    --------
+    ========
 
-    >>> from sympy import pi
+    >>> from sympy import pi, Matrix
     >>> from sympy.matrices import rot_axis3
+    >>> Matrix._sympystr = Matrix.table
 
     A rotation of pi/3 (60 degrees):
 
@@ -4890,10 +4982,11 @@ def rot_axis2(theta):
     the 2-axis.
 
     Examples
-    --------
+    ========
 
-    >>> from sympy import pi
+    >>> from sympy import pi, Matrix
     >>> from sympy.matrices import rot_axis2
+    >>> Matrix._sympystr = Matrix.table
 
     A rotation of pi/3 (60 degrees):
 
@@ -4930,10 +5023,11 @@ def rot_axis1(theta):
     the 1-axis.
 
     Examples
-    --------
+    ========
 
-    >>> from sympy import pi
+    >>> from sympy import pi, Matrix
     >>> from sympy.matrices import rot_axis1
+    >>> Matrix._sympystr = Matrix.table
 
     A rotation of pi/3 (60 degrees):
 

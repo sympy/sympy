@@ -8,7 +8,7 @@ from collections import defaultdict
 
 from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
                    KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
-                   zeros)
+                   Matrix, zeros)
 from sympy.core.compatibility import reduce
 from sympy.printing.str import StrPrinter
 
@@ -1385,6 +1385,8 @@ def matrix_rep(op, basis):
     ========
 
     >>> from sympy.physics.secondquant import VarBosonicBasis, B, matrix_rep
+    >>> from sympy.matrices import Matrix
+    >>> Matrix._sympystr = Matrix.table
     >>> b = VarBosonicBasis(5)
     >>> o = B(0)
     >>> matrix_rep(o, b)
@@ -1395,6 +1397,7 @@ def matrix_rep(op, basis):
     [0, 0,       0,       0, 0]
     """
     a = zeros(len(basis))
+
     for i in range(len(basis)):
         for j in range(len(basis)):
             a[i,j] = apply_operators(Dagger(basis[i])*op*basis[j])

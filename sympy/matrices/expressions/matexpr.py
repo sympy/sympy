@@ -142,16 +142,22 @@ class MatrixExpr(Expr):
         Returns an object of type ImmutableMatrix.
 
         See Also
-        --------
+        ========
         as_mutable: returns MutableMatrix type
+
+        Examples
+        ========
+
         >>> from sympy import Identity
-        >>> I = Identity(3)
-        >>> I
+        >>> M = Identity(3)
+        >>> M
         I
-        >>> I.as_explicit()
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
+        >>> M.as_explicit()
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
+
         """
         from sympy.matrices.immutable_matrix import ImmutableMatrix
         return ImmutableMatrix([[    self[i,j]
