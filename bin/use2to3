@@ -104,8 +104,13 @@ try:
                 modified_txt_files.append(dst)
         elif filename in relevant_no_extension:
             modified_files.append(dst)
-except CalledProcessError:
-    print("git not found, exiting...")
+except (CalledProcessError, WindowsError):
+    print("git was not found: make sure it is in your PATH "
+    "environment or hardcode it into use2to3, changing\n"
+    "  files = check_output(['git', 'ls-files'])\n"
+    "to something like the following (for Windows)\n"
+    "  files = check_output(['C:/Program Files/Git/bin/git', 'ls-files'])\n"
+    "Exiting...")
     exit(1)
 
 
