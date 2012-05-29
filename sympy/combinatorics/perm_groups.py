@@ -2,8 +2,10 @@ from sympy.combinatorics import Permutation
 from sympy.core import Basic
 from sympy.combinatorics.permutations import perm_af_mul, \
  _new_from_array_form, perm_af_commutes_with, perm_af_invert, perm_af_muln
-from random import randint, choice
+from random import randint, randrange, choice
 from sympy.functions.combinatorial.factorials import factorial
+from math import log
+from sympy.ntheory import isprime
 
 def _smallest_change(h, alpha):
     """
@@ -323,6 +325,8 @@ class PermutationGroup(Basic):
         obj._center = []
         obj._is_abelian = None
         obj._is_transitive = None
+        obj._is_sym = None
+        obj._is_alt = None
         size = len(args[0][0].array_form)
         obj._r = len(obj._generators)
         if not all(len(args[0][i].array_form)==size for i in xrange(1, len(args[0]))):
@@ -466,6 +470,14 @@ class PermutationGroup(Basic):
 
         """
         if self._order != None:
+            return self._order
+        if self._is_sym:
+            n = self.degree
+            self._order = factorial(n)
+            return self._order
+        if self._is_alt:
+            n = self.degree
+            self._order = factorial(n)/2
             return self._order
         self.schreier_sims()
         m = 1
@@ -1445,8 +1457,8 @@ class PermutationGroup(Basic):
         random_gens = self.generators[:]
         k = len(random_gens)
         if k < r:
-            for i in range(k,r):
-                random_gens.append(random_gens[i-k])
+            for i in range(k, r):
+                random_gens.append(random_gens[i - k])
         acc = _new_from_array_form(range(deg))
         random_gens.append(acc)
         self._random_gens = random_gens
@@ -1457,21 +1469,49 @@ class PermutationGroup(Basic):
         if self._random_gens == []:
             self._pr_init(11, 50)
         random_gens = self._random_gens
-        r = len(random_gens)-1
-        temp = range(r)
-        s = choice(temp)
-        temp[s] = r - 1
-        t = choice(temp)
-        x = choice([1,2])
-        e = choice([-1,1])
+        r = len(random_gens) - 1
+        s = randrange(r)
+        t = randrange(r - 1)
+        if t == s:
+            t = r - 1
+        x = choice([1, 2])
+        e = choice([-1, 1])
         if x == 1:
-            random_gens[s] = random_gens[s]*random_gens[t]**e
+            random_gens[s] = random_gens[s]*(random_gens[t]**e)
             random_gens[r] = random_gens[r]*random_gens[s]
         else:
             random_gens[s] = (random_gens[t]**e)*random_gens[s]
             random_gens[r] = random_gens[s]*random_gens[r]
         return random_gens[r]
 
+    def is_alt_sym(self, eps = 0.01):
+        n = self.degree
+        if n < 8:
+            return False
+        if not self.is_transitive:
+            return False
+        if n < 17:
+            c_n = 0.34
+        else:
+            c_n = 0.57
+        d_n = (c_n*log(2))/log(n)
+        N_eps = int(-log(eps)/d_n)
+        for i in range(N_eps):
+            perm = self.pr_random()
+            if _check_cycles_alt_sym(perm):
+                return True
+        return False
+
+    def alt_or_sym(self):
+        if self.is_alt_sym():
+            gens = self.generators
+            for perm in gens:
+                if perm.is_odd:
+                    self._is_sym = True
+                    return 'S'
+            self._is_alt = True
+            return 'A'
+        return False
 
 def SymmetricGroup(n):
     """
@@ -1526,7 +1566,7 @@ def SymmetricGroup(n):
         G._is_abelian = False
     G._degree = n
     G._is_transitive = True
-    G._order = factorial(n)
+    G._is_sym = True
     return G
 
 def CyclicGroup(n):
@@ -1676,5 +1716,25 @@ def AlternatingGroup(n):
         G._is_abelian = False
     G._degree = n
     G._is_transitive = True
-    G._order = factorial(n)/2
+    G._is_alt = True
     return G
+
+def _check_cycles_alt_sym(perm):
+    n = perm.size
+    af = perm.array_form
+    current_len = 0
+    total_len = 0
+    used = set()
+    for i in xrange(n/2):
+        if not i in used and i < n/2 - total_len:
+            current_len = 1
+            used.add(i)
+            j = i
+            while(af[j] != i):
+                current_len += 1
+                j = af[j]
+                used.add(j)
+            total_len += current_len
+            if current_len > n/2 and current_len < n-2 and isprime(current_len):
+                return True
+    return False
