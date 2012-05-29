@@ -8,7 +8,7 @@ class RigidBody(object):
     """An idealized rigid body.
 
     This is essentially a container which holds the various components which
-    describe a rigid body: a name, mass center, reference frame, mass, and
+    describe a rigid body: a name, mass, center of mass, reference frame, and
     inertia.
 
     All of these need to be supplied on creation, but can be changed
@@ -19,7 +19,7 @@ class RigidBody(object):
     name : string
         The body's name.
     masscenter : Point
-        The point which represents the mass center of the rigid body.
+        The point which represents the center of mass of the rigid body.
     frame : ReferenceFrame
         The ReferenceFrame which the rigid body is fixed in.
     mass : Sympifyable
@@ -74,7 +74,7 @@ class RigidBody(object):
 
     def set_masscenter(self, p):
         if not isinstance(p, Point):
-            raise TypeError("RigidBody mass center must be a Point object.")
+            raise TypeError("RigidBody center of mass must be a Point object.")
         self._masscenter = p
 
     masscenter = property(get_masscenter, set_masscenter)

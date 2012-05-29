@@ -466,7 +466,7 @@ class Kane(object):
                 I, P = v.inertia
                 I = I.subs(uadz).subs(uaz)
                 if P != v.masscenter:
-                    # redefine I about mass center
+                    # redefine I about the center of mass
                     # have I S/O, want I S/S*
                     # I S/O = I S/S* + I S*/O; I S/S* = I S/O - I S*/O
                     f = v.frame
