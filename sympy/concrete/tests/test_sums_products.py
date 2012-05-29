@@ -310,13 +310,6 @@ def test_is_commutative():
 
         assert f(NO(Fd(x)*F(y))*z, (z, 1, 2)).is_commutative is False
 
-    raises(ValueError, 'Sum(m, (m, 1, 2))')
-    raises(ValueError, 'Sum(m, (x, m, 2))')
-    raises(ValueError, 'Product(m, (m, 1, 2))')
-    raises(ValueError, 'Product(m, (x, m, 2))')
-    raises(ValueError, 'Integral(m, (m, 1, 2))')
-    raises(ValueError, 'Integral(m, (x, m, 2))')
-
 def test_is_number():
     assert Sum(1, (x, 1, 1)).is_number is True
     assert Sum(1, (x, 1, x)).is_number is False

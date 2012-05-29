@@ -57,11 +57,6 @@ def _process_limits(*symbols):
 
         raise ValueError('Invalid limits given: %s' % str(symbols))
 
-    if len(limits) > 1:
-        for v in limits:
-            for vi in v:
-                if not vi.is_commutative:
-                    raise ValueError('non-commutative limit element: %s' % vi)
     return limits, sign
 
 class Integral(Expr):
