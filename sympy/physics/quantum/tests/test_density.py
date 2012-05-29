@@ -12,43 +12,43 @@ from sympy.utilities.pytest import raises
 
 def test_eval_args():
     # check instance created
-    assert(isinstance(Density([Ket(0), 0.5], [Ket(1), 0.5]), Density))
+    assert isinstance(Density([Ket(0), 0.5], [Ket(1), 0.5]), Density)
 
     # check for value error, when prob is not provided
     raises(ValueError, 'Density([Ket(0)], [Ket(1)])')
 
 def test_doit():
-     x,y = symbols('x y')
-     d = Density([XKet(),0.5], [PxKet(),0.5])
-     assert((0.5*PxKet()*Dagger(PxKet()) +
-             0.5*XKet()*Dagger(XKet())) == d.doit())
+    x,y = symbols('x y')
+    d = Density([XKet(),0.5], [PxKet(),0.5])
+    assert (0.5*PxKet()*Dagger(PxKet()) +
+            0.5*XKet()*Dagger(XKet())) == d.doit()
 
-     # check for kets with expr in them
-     d_with_sym = Density([XKet(x*y),0.5], [PxKet(x*y),0.5])
-     assert((0.5*PxKet(x*y)*Dagger(PxKet(x*y)) +
-             0.5*XKet(x*y)*Dagger(XKet(x*y))) == d_with_sym.doit())
+    # check for kets with expr in them
+    d_with_sym = Density([XKet(x*y),0.5], [PxKet(x*y),0.5])
+    assert (0.5*PxKet(x*y)*Dagger(PxKet(x*y)) +
+            0.5*XKet(x*y)*Dagger(XKet(x*y))) == d_with_sym.doit()
 
 def test_operate_on():
     d = Density([Ket(0), 0.5], [Ket(1), 0.5])
-    assert(d.operate_on(XOp()) == Density([XOp()*Ket(0), 0.5],
-                                          [XOp()*Ket(1), 0.5]))
+    assert d.operate_on(XOp()) == Density([XOp()*Ket(0), 0.5],
+                                          [XOp()*Ket(1), 0.5])
 
 def test_represent():
     x,y = symbols('x y')
     d = Density([XKet(),0.5], [PxKet(),0.5])
     assert (represent(0.5*PxKet()*Dagger(PxKet())) +
-            represent(0.5*XKet()*Dagger(XKet())) == represent(d))
+            represent(0.5*XKet()*Dagger(XKet()))) == represent(d)
 
     # check for kets with expr in them
     d_with_sym = Density([XKet(x*y),0.5], [PxKet(x*y),0.5])
-    assert(represent(0.5*PxKet(x*y)*Dagger(PxKet(x*y))) +
-           represent(0.5*XKet(x*y)*Dagger(XKet(x*y))) ==
-           represent(d_with_sym))
+    assert (represent(0.5*PxKet(x*y)*Dagger(PxKet(x*y))) +
+            represent(0.5*XKet(x*y)*Dagger(XKet(x*y)))) == \
+        represent(d_with_sym)
 
     # check when given explicit basis
-    assert(represent(0.5*XKet()*Dagger(XKet()), basis=PxOp()) +
-           represent(0.5*PxKet()*Dagger(PxKet()), basis=PxOp()) ==
-           represent(d, basis=PxOp()))
+    assert (represent(0.5*XKet()*Dagger(XKet()), basis=PxOp()) +
+            represent(0.5*PxKet()*Dagger(PxKet()), basis=PxOp())) == \
+        represent(d, basis=PxOp())
 
 def test_states():
     d = Density([Ket(0), 0.5], [Ket(1), 0.5])
