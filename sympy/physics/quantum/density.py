@@ -171,3 +171,29 @@ class Density(HermitianOperator):
 
     def _print_operator_name_pretty(self, printer, *args):
         return prettyForm(u"\u03C1")
+
+    def entropy(density):
+        """Compute the entropy of a density matrix.
+
+    This computes -Tr(density*ln(density)) using the eigenvalue decomposition
+    of density, which is given as either a Density instance or a matrix
+    (numpy.ndarray, sympy.Matrix or scipy.sparse).
+    """
+    if isinstance(density, Density):
+        density = represent(density, format='numpy')
+
+    if isinstance(density, scipy_sparse_matrix):
+        density = to_numpy(density)
+
+    if isinstance(density, Matrix):
+        eigvals = density.eigenvals().keys()
+        return expand(-sum(e*log(e) for e in eigvals))
+
+    elif isinstance(density, numpy_ndarray):
+        import numpy as np
+        eigvals = np.linalg.eigvals(density)
+        return -np.sum(eigvals*np.log(eigvals))
+
+    else:
+        raise ValueError("numpy.ndarray, scipy.sparse or sympy matrix expected")
+

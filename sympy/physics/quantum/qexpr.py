@@ -63,6 +63,11 @@ def __qsympify_sequence_helper(seq):
         else:
             return sympify(seq)
 
+    # base condition, when seq is QExpr and also
+    # is iterable.
+    if isinstance(seq, QExpr):
+        return seq
+
     #if list, recurse on each item in the list
     result = [__qsympify_sequence_helper(item) for item in seq]
 
