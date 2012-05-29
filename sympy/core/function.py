@@ -45,6 +45,7 @@ from numbers import Rational, Float
 from add import Add
 
 from sympy.core.containers import Tuple, Dict
+from sympy.core.logic import fuzzy_and
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
 
@@ -2061,4 +2062,3 @@ def nfloat(expr, n=15, exponent=False):
                      for a in f.args])) for f in funcs])
 
 from sympy.core.symbol import Dummy
-from sympy.core.logic import fuzzy_and
