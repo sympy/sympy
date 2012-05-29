@@ -72,7 +72,7 @@ frame, and an inertia tuple::
   >>> B = RigidBody('B', P, A, m, (I, P))
 
 The mass is specified exactly as is in a particle. Similar to the
-``Particle``'s ``.point``, the ``RigidBody``'s center of mass, ``.masscenter``
+``Particle``'s ``.point``, the ``RigidBody``'s center of mass, ``.com``
 must be specified. The reference frame is stored in an analogous fashion and
 holds information about the body's orientation and angular velocity. Finally,
 the inertia for a rigid body needs to be specified about a point. In
