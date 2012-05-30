@@ -51,7 +51,6 @@ class Density(HermitianOperator):
         # call this to qsympify the args
         args = super(Density, cls)._eval_args(args)
 
-        sum_prob=0.0
         for arg in args:
             # Check if arg is a tuple
             if not (isinstance(arg, Tuple) and
@@ -85,10 +84,11 @@ class Density(HermitianOperator):
         return Density(*new_args)
 
     def doit(self, **hints):
-        """Expands the density operator into the matrix format"""
+        """Expands the density operator into an outer product format"""
         terms = []
         for (state, prob) in self.args:
-            terms.append(prob*state*Dagger(state))
+            terms.append(prob*(state*Dagger(state)))
+
         return Add(*terms)
 
     def _represent(self, **options):

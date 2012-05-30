@@ -20,13 +20,13 @@ def test_eval_args():
 def test_doit():
     x,y = symbols('x y')
     d = Density([XKet(),0.5], [PxKet(),0.5])
-    assert (0.5*PxKet()*Dagger(PxKet()) +
-            0.5*XKet()*Dagger(XKet())) == d.doit()
+    assert (0.5*(PxKet()*Dagger(PxKet())) +
+            0.5*(XKet()*Dagger(XKet()))) == d.doit()
 
     # check for kets with expr in them
     d_with_sym = Density([XKet(x*y),0.5], [PxKet(x*y),0.5])
-    assert (0.5*PxKet(x*y)*Dagger(PxKet(x*y)) +
-            0.5*XKet(x*y)*Dagger(XKet(x*y))) == d_with_sym.doit()
+    assert (0.5*(PxKet(x*y)*Dagger(PxKet(x*y))) +
+            0.5*(XKet(x*y)*Dagger(XKet(x*y)))) == d_with_sym.doit()
 
 def test_operate_on():
     d = Density([Ket(0), 0.5], [Ket(1), 0.5])
@@ -36,18 +36,18 @@ def test_operate_on():
 def test_represent():
     x,y = symbols('x y')
     d = Density([XKet(),0.5], [PxKet(),0.5])
-    assert (represent(0.5*PxKet()*Dagger(PxKet())) +
-            represent(0.5*XKet()*Dagger(XKet()))) == represent(d)
+    assert (represent(0.5*(PxKet()*Dagger(PxKet()))) +
+            represent(0.5*(XKet()*Dagger(XKet())))) == represent(d)
 
     # check for kets with expr in them
     d_with_sym = Density([XKet(x*y),0.5], [PxKet(x*y),0.5])
-    assert (represent(0.5*PxKet(x*y)*Dagger(PxKet(x*y))) +
-            represent(0.5*XKet(x*y)*Dagger(XKet(x*y)))) == \
+    assert (represent(0.5*(PxKet(x*y)*Dagger(PxKet(x*y)))) +
+            represent(0.5*(XKet(x*y)*Dagger(XKet(x*y))))) == \
         represent(d_with_sym)
 
     # check when given explicit basis
-    assert (represent(0.5*XKet()*Dagger(XKet()), basis=PxOp()) +
-            represent(0.5*PxKet()*Dagger(PxKet()), basis=PxOp())) == \
+    assert (represent(0.5*(XKet()*Dagger(XKet())), basis=PxOp()) +
+            represent(0.5*(PxKet()*Dagger(PxKet())), basis=PxOp())) == \
         represent(d, basis=PxOp())
 
 def test_states():
