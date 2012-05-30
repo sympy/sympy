@@ -122,6 +122,11 @@ class Density(HermitianOperator):
     def apply_op(self, op):
         """op will operate on each individual state.
 
+        Parameters
+        ==========
+
+        op : Operator
+
         Examples
         =========
 
