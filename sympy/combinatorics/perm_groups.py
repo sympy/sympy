@@ -5,7 +5,7 @@ from sympy.combinatorics.permutations import perm_af_mul, \
 from random import randint, randrange, choice
 from sympy.functions.combinatorial.factorials import factorial
 from math import log
-from sympy.ntheory import isprime
+from sympy.ntheory import isprime, sieve
 
 def _smallest_change(h, alpha):
     """
@@ -327,6 +327,8 @@ class PermutationGroup(Basic):
         obj._is_transitive = None
         obj._is_sym = None
         obj._is_alt = None
+        obj._is_primitive = None
+        obj._max_div = None
         size = len(args[0][0].array_form)
         obj._r = len(obj._generators)
         if not all(len(args[0][i].array_form)==size for i in xrange(1, len(args[0]))):
@@ -1484,7 +1486,7 @@ class PermutationGroup(Basic):
             random_gens[r] = random_gens[s]*random_gens[r]
         return random_gens[r]
 
-    def is_alt_sym(self, eps = 0.01):
+    def is_alt_sym(self, eps = 0.05):
         n = self.degree
         if n < 8:
             return False
@@ -1512,6 +1514,82 @@ class PermutationGroup(Basic):
             self._is_alt = True
             return 'A'
         return False
+
+    def minimal_block(self, points):
+        if not self.is_transitive:
+            return False
+        n = self.degree
+        gens = self.generators
+        parents = range(n)
+        ranks = [1]*n
+        not_rep = []
+        max_rank = self._max_div
+        k = len(points)
+        if k > max_rank:
+            return False
+        for i in xrange(k-1):
+            parents[points[i+1]] = points[0]
+            not_rep.append(points[i+1])
+        ranks[points[0]] = k
+        i = 0
+        len_not_rep = k-1
+        while i < len_not_rep:
+            temp = not_rep[i]
+            i += 1
+            for gen in gens:
+                delta = self._union_find_rep(temp, parents)
+                len_not_rep += self._union_find_merge(gen(temp), gen(delta), ranks,\
+                                                 parents, not_rep)
+        for i in xrange(n):
+            self._union_find_rep(i, parents)
+        return parents
+
+    def _union_find_rep(self, num, parents):
+        rep, parent = num, parents[num]
+        while parent != rep:
+            rep = parent
+            parent = parents[rep]
+        #path compression
+        temp, parent = num, parents[num]
+        while parent != rep:
+            parents[temp] = rep
+            temp = parent
+            parent = parents[temp]
+        return rep
+
+    def _union_find_merge(self, first, second, ranks, parents, not_rep):
+        rep_first = self._union_find_rep(first, parents)
+        rep_second = self._union_find_rep(second, parents)
+        if rep_first != rep_second:
+            #union by rank
+            if ranks[rep_first] >= ranks[rep_second]:
+                new1, new2 = rep_first, rep_second
+            else:
+                new1, new2 = rep_second, rep_first
+            parents[new2] = new1
+            ranks[new1] = ranks[new1] + ranks[new2]
+            not_rep.append(new2)
+            return True
+        return False
+
+    @property
+    def max_div(self):
+        if self._max_div != None:
+            return self._max_div
+        n = self.degree
+        for x in sieve:
+            if n % x == 0:
+                d = n/x
+                self._max_div = d
+                return d
+
+    @property
+    def is_primitive(self):
+        if self._is_primitive != None:
+            return self._is_primitive
+        stab = self.stabilizer(0)
+        orbs = stab.orbits()
+
 
 def SymmetricGroup(n):
     """
