@@ -230,6 +230,12 @@ class QExpr(Expr):
     # Printing of labels (i.e. args)
 
     def _print_label(self, printer, *args):
+        """Prints the label of the QExpr
+
+        This method prints self.label, using self._label_separator to separate
+        the elements. This method should not be overridden, instead, override
+        _print_contents to change printing behavior.
+        """
         return self._print_sequence(
             self.label, self._label_separator, printer, *args
         )
@@ -252,6 +258,13 @@ class QExpr(Expr):
     # Printing of contents (default to label)
 
     def _print_contents(self, printer, *args):
+        """Printer for contents of QExpr
+
+        Handles the printing of any unique identifying contents of a QExpr to
+        print as its contents, such as any variables or quantum numbers. The
+        default is to print the label, which is almost always the args. This
+        should not include printing of any brackets or parenteses.
+        """
         return self._print_label(printer, *args)
 
     def _print_contents_pretty(self, printer, *args):
@@ -260,9 +273,18 @@ class QExpr(Expr):
     def _print_contents_latex(self, printer, *args):
         return self._print_label_latex(printer, *args)
 
-    # Main methods
+    # Main printing methods
 
     def _sympystr(self, printer, *args):
+        """Default printing behavior of QExpr objects
+
+        Handles the default printing of a QExpr. To add other things to the
+        printing of the object, such as an operator name to operators or
+        brackets to states, the class should override the _print/_pretty/_latex
+        functions directly and make calls to _print_contents where appropriate.
+        This allows things like InnerProduct to easily control its printing the
+        printing of contents.
+        """
         return self._print_contents(printer, *args)
 
     def _sympyrepr(self, printer, *args):
