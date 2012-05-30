@@ -78,7 +78,7 @@ class Density(HermitianOperator):
         prob = self.args[index][1]
         return prob
 
-    def operate_on(self, op):
+    def apply_op(self, op):
         """op operates on each individual state"""
         new_args = [(op*state, prob) for (state, prob) in self.args]
         return Density(*new_args)

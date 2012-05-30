@@ -28,9 +28,9 @@ def test_doit():
     assert (0.5*(PxKet(x*y)*Dagger(PxKet(x*y))) +
             0.5*(XKet(x*y)*Dagger(XKet(x*y)))) == d_with_sym.doit()
 
-def test_operate_on():
+def test_apply_op():
     d = Density([Ket(0), 0.5], [Ket(1), 0.5])
-    assert d.operate_on(XOp()) == Density([XOp()*Ket(0), 0.5],
+    assert d.apply_op(XOp()) == Density([XOp()*Ket(0), 0.5],
                                           [XOp()*Ket(1), 0.5])
 
 def test_represent():
