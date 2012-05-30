@@ -488,15 +488,21 @@ class Ellipse(GeometryEntity):
         the ellipse will not be rotated. Only the center is rotated to
         a new position.
 
+        Examples
+        ========
+
         >>> from sympy import Ellipse, pi
         >>> Ellipse((1, 0), 2, 1).rotate(pi/2)
         Ellipse(Point(0, 1), 2, 1)
         """
         return super(Ellipse, self).rotate(angle, pt)
 
-    def scale(self, x=1, y=1):
+    def scale(self, x=1, y=1, pt=None):
         """Override GeometryEntity.scale since it is the major and minor
-        axes which must be scaled.
+        axes which must be scaled and they are not GeometryEntities.
+
+        Examples
+        ========
 
         >>> from sympy import Ellipse
         >>> Ellipse((0, 0), 2, 1).scale(2, 4)
@@ -505,9 +511,12 @@ class Ellipse(GeometryEntity):
         Ellipse(Point(0, 0), 4, 1)
         """
         c = self.center
+        if pt:
+            pt = Point(pt)
+            return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         h = self.hradius
         v = self.vradius
-        return self.func(c, hradius=h*x, vradius=v*y)
+        return self.func(c.scale(x, y), hradius=h*x, vradius=v*y)
 
     def encloses_point(self, p):
         """
@@ -1284,5 +1293,29 @@ class Circle(Ellipse):
             return ret
 
         return Ellipse.intersection(self, o)
+
+    def scale(self, x=1, y=1, pt=None):
+        """Override GeometryEntity.scale since the radius
+        is not a GeometryEntity.
+
+        Examples
+        ========
+
+        >>> from sympy import Circle
+        >>> Circle((0, 0), 1).scale(2, 2)
+        Circle(Point(0, 0), 2)
+        >>> Circle((0, 0), 1).scale(2, 4)
+        Ellipse(Point(0, 0), 2, 4)
+        """
+        c = self.center
+        if pt:
+            pt = Point(pt)
+            return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
+        c = c.scale(x, y)
+        if x == y:
+            return self.func(c, x*self.radius)
+        h = v = self.radius
+        return Ellipse(c, hradius=h*x, vradius=v*y)
+
 
 from polygon import Polygon
