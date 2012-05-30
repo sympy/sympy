@@ -53,27 +53,27 @@ def test_represent():
 def test_states():
     d = Density([Ket(0), 0.5], [Ket(1), 0.5])
     states = d.states()
-    assert (states[0] == Ket(0) and states[1] == Ket(1))
+    assert states[0] == Ket(0) and states[1] == Ket(1)
 
 def test_probs():
     d = Density([Ket(0), .75], [Ket(1), 0.25])
     probs = d.probs()
-    assert (probs[0] == 0.75 and probs[1] == 0.25)
+    assert probs[0] == 0.75 and probs[1] == 0.25
 
     #probs can be symbols
     x,y = symbols('x y')
     d = Density([Ket(0), x], [Ket(1), y])
     probs = d.probs()
-    assert(probs[0] == x and probs[1] == y)
+    assert probs[0] == x and probs[1] == y
 
 def test_get_state():
     x,y = symbols('x y')
     d = Density([Ket(0), x], [Ket(1), y])
     states = (d.get_state(0), d.get_state(1))
-    assert(states[0] == Ket(0) and states[1] == Ket(1))
+    assert states[0] == Ket(0) and states[1] == Ket(1)
 
 def test_get_prob():
     x,y = symbols('x y')
     d = Density([Ket(0), x], [Ket(1), y])
     probs = (d.get_prob(0), d.get_prob(1))
-    assert ( probs[0] == x and probs[1] == y)
+    assert probs[0] == x and probs[1] == y
