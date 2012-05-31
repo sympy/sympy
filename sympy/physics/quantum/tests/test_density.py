@@ -1,5 +1,6 @@
-from sympy import pprint, latex, symbols
-from sympy.physics.quantum.density import Density
+from sympy import pprint, latex, symbols, S, log
+from sympy.matrices.matrices import Matrix
+from sympy.physics.quantum.density import Density, entropy
 from sympy.physics.quantum.state import Ket, Bra
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.qapply import qapply
@@ -7,8 +8,11 @@ from sympy.physics.quantum.gate import HadamardGate
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.cartesian import XKet, PxKet, PxOp, XOp
+from sympy.physics.quantum.spin import JzKet, Jz
 from sympy.functions import sqrt
 from sympy.utilities.pytest import raises
+from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
+
 
 def test_eval_args():
     # check instance created
@@ -84,3 +88,21 @@ def test_get_prob():
     d = Density([Ket(0), x], [Ket(1), y])
     probs = (d.get_prob(0), d.get_prob(1))
     assert probs[0] == x and probs[1] == y
+
+def test_entropy():
+    up = JzKet(S(1)/2,S(1)/2)
+    down = JzKet(S(1)/2,-S(1)/2)
+    d = Density((up,0.5),(down,0.5))
+
+    # test for density object
+    ent = entropy(d)
+    assert  ent.real == 0.69314718055994529 and ent.imag == 0
+
+    #test for matrix
+    mat = represent(d)
+    assert isinstance(mat, Matrix) and entropy(mat) == 0.5*log(2)
+
+    #test for sparse matrix
+    mat = represent(d, format="scipy.sparse")
+    assert isinstance(mat, scipy_sparse_matrix) and ent.real == \
+           0.69314718055994529 and ent.imag == 0

@@ -172,12 +172,39 @@ class Density(HermitianOperator):
     def _print_operator_name_pretty(self, printer, *args):
         return prettyForm(u"\u03C1")
 
-    def entropy(density):
-        """Compute the entropy of a density matrix.
+def entropy(density):
+    """Compute the entropy of a density matrix.
 
     This computes -Tr(density*ln(density)) using the eigenvalue decomposition
     of density, which is given as either a Density instance or a matrix
     (numpy.ndarray, sympy.Matrix or scipy.sparse).
+
+    Parameters
+    ==========
+
+    density : density matrix of type Density, sympy matrix,
+    scipy.sparse or numpy.ndarray
+
+    Examples:
+    ========
+
+    >>> from sympy.physics.quantum.density import Density, entropy
+    >>> from sympy.physics.quantum.represent import represent
+    >>> from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
+    >>> from sympy.physics.quantum.spin import JzKet, Jz
+    >>> from sympy import S, log
+    >>> up = JzKet(S(1)/2,S(1)/2)
+    >>> down = JzKet(S(1)/2,-S(1)/2)
+    >>> d = Density((up,0.5),(down,0.5))
+    >>> entropy(d)
+    (0.69314718056-0j)
+    >>> entropy(represent(d,format="numpy"))
+    (0.69314718056-0j)
+    >>> entropy(represent(d))
+    log(2)/2
+    >>> entropy(represent(d,format="scipy.sparse"))
+    (0.69314718056-0j)
+
     """
     if isinstance(density, Density):
         density = represent(density, format='numpy')
@@ -188,12 +215,9 @@ class Density(HermitianOperator):
     if isinstance(density, Matrix):
         eigvals = density.eigenvals().keys()
         return expand(-sum(e*log(e) for e in eigvals))
-
     elif isinstance(density, numpy_ndarray):
         import numpy as np
         eigvals = np.linalg.eigvals(density)
         return -np.sum(eigvals*np.log(eigvals))
-
     else:
         raise ValueError("numpy.ndarray, scipy.sparse or sympy matrix expected")
-
