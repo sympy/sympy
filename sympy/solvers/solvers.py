@@ -356,6 +356,8 @@ def solve(f, *symbols, **flags):
           e.g. solve(f, [x, y])
 
     * flags
+        'dict'=True (default is False)
+            return list (perhaps empty) of solution mappings
         'exclude=[] (default)'
             don't try to solve for any of the free symbols in exclude;
             if expressions are given, the free symbols in them will
@@ -400,11 +402,19 @@ def solve(f, *symbols, **flags):
 
         >>> from sympy import solve, Poly, Eq, Function, exp
         >>> from sympy.abc import x, y, z, a, b
+        >>> f = Function('f')
 
     * boolean or univariate Relational
 
         >>> solve(x < 3)
         And(im(x) == 0, re(x) < 3)
+
+    * to always get a list of solution mappings, use flag dict=True
+
+        >>> solve(x - 3, dict=True)
+        [{x: 3}]
+        >>> solve([x - 3, y - 1], dict=True)
+        [{x: 3, y: 1}]
 
     * single expression and single symbol that is in the expression
 
@@ -424,14 +434,16 @@ def solve(f, *symbols, **flags):
     * single expression with no symbol that is in the expression
 
         >>> solve(3, x)
+        []
         >>> solve(x - 3, y)
+        []
 
-    * when no symbol is given (or are given as an unordered set) then
-      all free symbols will be used. A univariate equation will always
-      return a list of solutions; otherwise, a list of mappings will be
-      returned.
+    * single expression with no symbol given
 
-        * for single equations
+          In this case, all free symbols will be selected as potential
+          symbols to solve for. If the equation is univariate then a list
+          of solutionsis returned; otherwise -- as is the case when symbols are
+          given as an iterable of length > 1 -- a list of mappings will be returned.
 
             >>> solve(x - 3)
             [3]
@@ -441,14 +453,6 @@ def solve(f, *symbols, **flags):
             [{x: -y}, {x: y}]
             >>> solve(z**2*x - z**2*y**2)
             [{x: y**2}]
-
-        * for systems of equations
-
-            >>> solve([x - 2, x**2 + y])
-            [{x: 2, y: -4}]
-            >>> f = Function('f')
-            >>> solve([x - 2, x**2 + f(x)], set([f(x), x]))
-            [{x: 2, f(x): -4}]
 
     * when a Function or Derivative is given as a symbol, it is
       isolated algebraically and an implicit solution may be obtained;
@@ -527,11 +531,27 @@ def solve(f, *symbols, **flags):
             * without a solution
 
                 >>> solve([x + 3, x - 3])
+                []
 
         * when the system is not linear
 
             >>> solve([x**2 + y -2, y**2 - 4], x, y)
             [(-2, -2), (0, 2), (0, 2), (2, -2)]
+
+        * if no symbols are given, all free symbols will be selected and a list
+          of mappings returned
+
+            >>> solve([x - 2, x**2 + y])
+            [{x: 2, y: -4}]
+            >>> solve([x - 2, x**2 + f(x)], set([f(x), x]))
+            [{x: 2, f(x): -4}]
+
+        * if any equation doesn't depend on the symbol(s) given it will be
+          eliminated from the equation set and an answer may be given
+          implicitly in terms of variables that were not of interest
+
+            >>> solve([x - y, y - 3], x)
+            {x: y}
 
     Notes
     =====
@@ -545,6 +565,7 @@ def solve(f, *symbols, **flags):
 
         >>> from sympy import sin, limit
         >>> solve(sin(x)/x)
+        []
 
     If check=False then a solution to the numerator being zero is found: x = 0.
     In this case, this is a spurious solution since sin(x)/x has the well known
@@ -558,6 +579,7 @@ def solve(f, *symbols, **flags):
 
         >>> eq = x**2*(1/x - z**2/x)
         >>> solve(eq, x)
+        []
         >>> solve(eq, x, check=False)
         [0]
         >>> limit(eq, x, 0, '-')
@@ -662,12 +684,54 @@ def solve(f, *symbols, **flags):
     else:
         swap_sym = {}
 
+    # this is needed in the next two events
+    symset = set(symbols)
+
+    # get rid of equations that have no symbols of interest; we don't
+    # try to solve them because the user didn't ask and they might be
+    # hard to solve; this means that solutions may be give in terms
+    # of the eliminated equations e.g. solve((x-y, y-3), x) -> {x: y}
+    newf = []
+    for fi in f:
+        # let the solver handle equations that..
+        # - have no symbols but are expressions
+        # - have symbols of interest
+        # - have no symbols of interest but are constant
+        # but when an expression is not constant and has no symbols of
+        # interest, it can't change what we obtain for a solution from
+        # the remaining equations so we don't include it; and if it's
+        # zero it can be removed and if it's not zero, there is no
+        # solution for the equation set as a whole
+        #
+        # The reason for doing this filtering is to allow an answer
+        # to be obtained to queries like solve((x - y, y), x); without
+        # this mod the return value is []
+        ok = False
+        if fi.has(*symset):
+            ok = True
+        else:
+            free = fi.free_symbols
+            if not free:
+                if fi.is_Number:
+                    if fi.is_zero:
+                        continue
+                    return []
+                ok = True
+            else:
+              if fi.is_constant():
+                ok = True
+        if ok:
+            newf.append(fi)
+    if not newf:
+        return []
+    f = newf
+    del newf
+
     # mask off any Object that we aren't going to invert: Derivative,
     # Integral, etc... so that solving for anything that they contain will
     # give an implicit solution
     seen = set()
     non_inverts = set()
-    symset = set(symbols)
     for fi in f:
         pot = preorder_traversal(fi)
         for p in pot:
@@ -826,7 +890,8 @@ def solve(f, *symbols, **flags):
                 if test:
                     continue
                 if test is False:
-                    return None
+                    no_False = None
+                    break
                 a_None = True
             else:
                 no_False = solution
@@ -855,7 +920,21 @@ def solve(f, *symbols, **flags):
     # done
     ###########################################################################
 
-    return solution or None
+    if not flags.get('dict', False):
+        return solution or []
+
+    # make return a list of mappings or []
+    if not solution:
+        solution = []
+    else:
+        if isinstance(solution, dict):
+            solution = [solution]
+        elif iterable(solution[0]):
+            solution = [dict(zip(symbols, s)) for s in solution]
+        else:
+            assert len(symbols) == 1
+            solution = [{symbols[0]: s} for s in solution]
+    return solution
 
 
 def _solve(f, *symbols, **flags):
@@ -1618,7 +1697,7 @@ def solve_linear_system(system, *symbols, **flags):
 
         return solutions
     else:
-        return None   # no solutions
+        return []   # no solutions
 
 
 def solve_undetermined_coeffs(equ, coeffs, sym, **flags):

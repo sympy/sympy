@@ -558,7 +558,7 @@ class Integral(Expr):
         if not x.is_Symbol:
             F = [x.subs(xvar, d)]
             soln = solve(u - x, xvar, check=False)
-            if len(soln) == 0:
+            if not soln:
                 raise ValueError('no solution for solve(F(x) - f(u), x)')
             f = [fi.subs(uvar, d) for fi in soln]
         else:
@@ -566,7 +566,7 @@ class Integral(Expr):
             pdiff, reps = posify(u - x)
             puvar = uvar.subs([(v, k) for k, v in reps.iteritems()])
             soln = [s.subs(reps) for s in solve(pdiff, puvar)]
-            if len(soln) == 0:
+            if not soln:
                 raise ValueError('no solution for solve(F(x) - f(u), u)')
             F = [fi.subs(xvar, d) for fi in soln]
 
