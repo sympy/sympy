@@ -79,7 +79,7 @@ def test_solve_args():
     assert set(int(tmp) for tmp in solve(x**2-4)) == set([2,-2])
     assert solve([x+y-3,x-y-5]) == {x: 4, y: -1}
     #no symbol to solve for
-    assert solve(42) == []
+    assert solve(42) is None
     assert solve([1, 2]) is None
     #multiple symbols: take the first linear solution
     assert solve(x + y - 3, [x, y]) == [{x: 3 - y}]
@@ -89,7 +89,7 @@ def test_solve_args():
     assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b) == \
         [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
     # failed single equation
-    assert solve(1/(1/x - y + exp(y))) ==  []
+    assert solve(1/(1/x - y + exp(y))) is None
     raises(NotImplementedError, lambda: solve(exp(x) + sin(x) + exp(y) + sin(y)))
     # failed system
     # --  when no symbols given, 1 fails
@@ -101,7 +101,7 @@ def test_solve_args():
     #symbol is not a symbol or function
     raises(TypeError, lambda: solve(x**2-pi, pi))
     # no equations
-    assert solve([], [x]) == []
+    assert solve([], [x]) is None
     # overdetermined system
     # - nonlinear
     assert solve([(x + y)**2 - 4, x + y - 2]) == [{x: -y + 2}]
@@ -145,7 +145,7 @@ def test_solve_polynomial1():
                    sqrt(1 - sqrt(a)), -sqrt(1 - sqrt(a))])
 
 def test_solve_polynomial2():
-    assert solve(4, x) == []
+    assert solve(4, x) is None
 
 def test_solve_polynomial_cv_1a():
     """
@@ -226,8 +226,8 @@ def test_tsolve():
     assert solve(Eq(exp(x), 3), x) == [log(3)]
     assert solve(log(x)-3, x) == [exp(3)]
     assert solve(sqrt(3*x)-4, x) == [Rational(16,3)]
-    assert solve(3**(x+2), x) == []
-    assert solve(3**(2-x), x) == []
+    assert solve(3**(x+2), x) is None
+    assert solve(3**(2-x), x) is None
     assert solve(x+2**x, x) == [-LambertW(log(2))/log(2)]
     assert solve(3*x+5+2**(-5*x+3), x) in [
         [-((25*log(2) - 3*LambertW(-10240*2**(Rational(1, 3))*log(2)/3))/(15*log(2)))],
@@ -363,15 +363,15 @@ def test_solve_inequalities():
         Or(And(Lt(-sqrt(2), x), Lt(x, -1)), And(Lt(1, x), Lt(x, sqrt(2))))
 
 def test_issue_1694():
-    assert solve(1/x) == []
+    assert solve(1/x) is None
     assert solve(x*(1 - 5/x)) == [5]
     assert solve(x + sqrt(x) - 2) == [1]
-    assert solve(-(1 + x)/(2 + x)**2 + 1/(2 + x)) == []
-    assert solve(-x**2 - 2*x + (x + 1)**2 - 1) == []
-    assert solve((x/(x + 1) + 3)**(-2)) == []
+    assert solve(-(1 + x)/(2 + x)**2 + 1/(2 + x)) is None
+    assert solve(-x**2 - 2*x + (x + 1)**2 - 1) is None
+    assert solve((x/(x + 1) + 3)**(-2)) is None
     assert solve(x/sqrt(x**2 + 1),x) == [0]
     assert solve(exp(x) - y, x) == [log(y)]
-    assert solve(exp(x)) == []
+    assert solve(exp(x)) is None
     assert solve(x**2 + x + sin(y)**2 + cos(y)**2 - 1, x) in [[0, -1], [-1, 0]]
     eq = 4*3**(5*x + 2) - 7
     ans = solve(eq, x)
@@ -379,7 +379,7 @@ def test_issue_1694():
     assert solve(log(x**2) - y**2/exp(x), x, y) == [{y: -sqrt(exp(x)*log(x**2))},
                                                     {y: sqrt(exp(x)*log(x**2))}]
     assert solve(x**2*z**2 - z**2*y**2) in ([{x: y}, {x: -y}], [{x: -y}, {x: y}])
-    assert solve((x - 1)/(1 + 1/(x - 1))) == []
+    assert solve((x - 1)/(1 + 1/(x - 1))) is None
     assert solve(x**(y*z) - x, x) == [1]
     raises(NotImplementedError, lambda: solve(log(x) - exp(x), x))
 
@@ -388,7 +388,7 @@ def test_issue_1694():
     assert solve(sqrt(x - 1)) == [1]
     # 1363
     a = Symbol('a')
-    assert solve(-3*a/sqrt(x),x) == []
+    assert solve(-3*a/sqrt(x),x) is None
     # 1387
     assert solve(2*x/(x + 2) - 1,x) == [2]
     # 1397
@@ -419,7 +419,7 @@ def test_issue_1694():
 
 def test_issue_2098():
     x = Symbol('x', real=True)
-    assert solve(x**2 + 1, x) == []
+    assert solve(x**2 + 1, x) is None
     n = Symbol('n', integer=True, positive=True)
     assert solve((n - 1)*(n + 2)*(2*n - 1), n) == [1]
     x = Symbol('x', positive=True)
@@ -446,8 +446,8 @@ def test_checking():
     assert set(solve(x*(x - y/x),x, check=True)) == set([sqrt(y), -sqrt(y)])
     # {x: 0, y: 4} sets denominator to 0 in the following so system should return None
     assert solve((1/(1/x + 2), 1/(y - 3) - 1)) is None
-    # 0 sets denominator of 1/x to zero so [] is returned
-    assert solve(1/(1/x + 2)) == []
+    # 0 sets denominator of 1/x to zero so None is returned
+    assert solve(1/(1/x + 2)) is None
 
 def test_issue_1572_1364_1368():
     assert solve((sqrt(x**2 - 1) - 2)) in ([sqrt(5), -sqrt(5)],
@@ -618,7 +618,7 @@ def test_unrad():
     assert check(unrad(eq),
                (16*x**3 - 9*x**2, [], []))
     assert solve(eq, check=False) == [0, S(9)/16]
-    assert solve(eq) == []
+    assert solve(eq) is None
     # but this one really does have those solutions
     assert solve(sqrt(x) - sqrt(x + 1) + sqrt(1 - sqrt(x))) == [0, S(9)/16]
 
@@ -684,13 +684,13 @@ def test_unrad():
     #        Classes/Alg/SolveRadicalEqns.aspx#Solve_Rad_Ex2_a
     assert solve(Eq(x, sqrt(x + 6))) == [3]
     assert solve(Eq(x + sqrt(x - 4), 4)) == [4]
-    assert solve(Eq(1, x + sqrt(2*x - 3))) == []
+    assert solve(Eq(1, x + sqrt(2*x - 3))) is None
     assert solve(Eq(sqrt(5*x + 6) - 2, x)) == [-1, 2]
     assert solve(Eq(sqrt(2*x - 1) - sqrt(x - 4), 2)) == [5, 13]
     assert solve(Eq(sqrt(x + 7) + 2, sqrt(3 - x))) == [-6]
     # http://www.purplemath.com/modules/solverad.htm
     assert solve((2*x - 5)**Rational(1, 3) - 3) == [16]
-    assert solve((x**3 - 3*x**2)**Rational(1, 3) + 1 - x) == []
+    assert solve((x**3 - 3*x**2)**Rational(1, 3) + 1 - x) is None
     assert solve(x + 1 - (x**4 + 4*x**3 - x)**Rational(1, 4)) == \
         [-S(1)/2, -S(1)/3]
     assert solve(sqrt(2*x**2 - 7) - (3 - x)) == [-8, 2]
@@ -700,19 +700,19 @@ def test_unrad():
     assert solve(sqrt(x - 3) + sqrt(x) - 3) == [4]
     assert solve(sqrt(9*x**2 + 4) - (3*x + 2)) == [0]
     assert solve(sqrt(x) - 2 - 5) == [49]
-    assert solve(sqrt(x - 3) - sqrt(x) - 3) == []
+    assert solve(sqrt(x - 3) - sqrt(x) - 3) is None
     assert solve(sqrt(x - 1) - x + 7) == [10]
     assert solve(sqrt(x - 2) - 5) == [27]
     assert solve(sqrt(17*x - sqrt(x**2 - 5)) - 7) == [3]
-    assert solve(sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))) == []
+    assert solve(sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))) is None
 
     # don't posify the expession in unrad and use _mexpand
     z = sqrt(2*x + 1)/sqrt(x) - sqrt(2 + 1/x)
     p = posify(z)[0]
-    assert solve(p) == []
-    assert solve(z) == []
+    assert solve(p) is None
+    assert solve(z) is None
     assert solve(z + 6*I) == [-S(1)/11]
-    assert solve(p + 6*I) == []
+    assert solve(p + 6*I) is None
 
 @XFAIL
 def test_multivariate():
@@ -735,7 +735,7 @@ def test__invert():
 def test_issue_1364():
     assert solve(-a*x + 2*x*log(x), x) == [exp(a/2)]
     assert solve(a/x + exp(x/2), x) == [2*LambertW(-a/2)]
-    assert solve(x**x) == []
+    assert solve(x**x) is None
     assert solve(x**x - 2) == [exp(LambertW(log(2)))]
     assert solve(((x - 3)*(x - 2))**((x - 3)*(x - 4))) == [2]
     assert solve((a/x + exp(x/2)).diff(x), x) == [4*LambertW(sqrt(2)*sqrt(a)/4)]
@@ -867,8 +867,7 @@ def test_issue_2802():
         [-sqrt(-x), sqrt(-x)]
     assert solve(x + exp(x), x, implicit=True) == \
         [-exp(x)]
-    assert solve(cos(x) - sin(x), x, implicit=True) == \
-        []
+    assert solve(cos(x) - sin(x), x, implicit=True) is None
     assert solve(x - sin(x), x, implicit=True) == \
         [sin(x)]
     assert solve(x**2 + x - 3, x, implicit=True) == \
@@ -918,7 +917,7 @@ def test_solve_abs():
     assert solve(abs(x - 7) - 8) == [-1, 15]
 
 def test_issue_2957():
-    assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
+    assert solve(tanh(x + 3)*tanh(x - 3) - 1) is None
     assert solve(tanh(x - 1)*tanh(x + 1) + 1) == [
         -log(2)/2 + log(-1 - I),
         -log(2)/2 + log(-1 + I),

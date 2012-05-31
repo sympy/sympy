@@ -424,9 +424,7 @@ def solve(f, *symbols, **flags):
     * single expression with no symbol that is in the expression
 
         >>> solve(3, x)
-        []
         >>> solve(x - 3, y)
-        []
 
     * when no symbol is given (or are given as an unordered set) then
       all free symbols will be used. A univariate equation will always
@@ -547,7 +545,6 @@ def solve(f, *symbols, **flags):
 
         >>> from sympy import sin, limit
         >>> solve(sin(x)/x)
-        []
 
     If check=False then a solution to the numerator being zero is found: x = 0.
     In this case, this is a spurious solution since sin(x)/x has the well known
@@ -561,7 +558,6 @@ def solve(f, *symbols, **flags):
 
         >>> eq = x**2*(1/x - z**2/x)
         >>> solve(eq, x)
-        []
         >>> solve(eq, x, check=False)
         [0]
         >>> limit(eq, x, 0, '-')
@@ -784,83 +780,82 @@ def solve(f, *symbols, **flags):
     if floats and solution and flags.get('rational', None) is None:
         solution = nfloat(solution, exponent=False)
 
-    if not check or not solution:
-        return solution
+    if check and solution:
 
-    warning = flags.get('warn', False)
-    got_None = [] # solutions for which one or more symbols gave None
-    no_False = [] # solutions for which no symbols gave False
-    if type(solution) is list:
-        if type(solution[0]) is tuple:
-            for sol in solution:
-                for symb, val in zip(symbols, sol):
-                    test = check_assumptions(val, **symb.assumptions0)
+        warning = flags.get('warn', False)
+        got_None = [] # solutions for which one or more symbols gave None
+        no_False = [] # solutions for which no symbols gave False
+        if type(solution) is list:
+            if type(solution[0]) is tuple:
+                for sol in solution:
+                    for symb, val in zip(symbols, sol):
+                        test = check_assumptions(val, **symb.assumptions0)
+                        if test is False:
+                            break
+                        if test is None:
+                            got_None.append(sol)
+                    else:
+                        no_False.append(sol)
+            elif type(solution[0]) is dict:
+                for sol in solution:
+                    a_None = False
+                    for symb, val in sol.iteritems():
+                        test = check_assumptions(val, **symb.assumptions0)
+                        if test:
+                            continue
+                        if test is False:
+                            break
+                        a_None = True
+                    else:
+                        no_False.append(sol)
+                        if a_None:
+                            got_None.append(sol)
+            else: # list of expressions
+                for sol in solution:
+                    test = check_assumptions(sol, **symbols[0].assumptions0)
                     if test is False:
-                        break
+                        continue
+                    no_False.append(sol)
                     if test is None:
                         got_None.append(sol)
-                else:
-                    no_False.append(sol)
-        elif type(solution[0]) is dict:
-            for sol in solution:
-                a_None = False
-                for symb, val in sol.iteritems():
-                    test = check_assumptions(val, **symb.assumptions0)
-                    if test:
-                        continue
-                    if test is False:
-                        break
-                    a_None = True
-                else:
-                    no_False.append(sol)
-                    if a_None:
-                        got_None.append(sol)
-        else: # list of expressions
-            for sol in solution:
-                test = check_assumptions(sol, **symbols[0].assumptions0)
-                if test is False:
+
+        elif type(solution) is dict:
+            a_None = False
+            for symb, val in solution.iteritems():
+                test = check_assumptions(val, **symb.assumptions0)
+                if test:
                     continue
-                no_False.append(sol)
-                if test is None:
-                    got_None.append(sol)
+                if test is False:
+                    return None
+                a_None = True
+            else:
+                no_False = solution
+                if a_None:
+                    got_None.append(solution)
 
-    elif type(solution) is dict:
-        a_None = False
-        for symb, val in solution.iteritems():
-            test = check_assumptions(val, **symb.assumptions0)
-            if test:
-                continue
-            if test is False:
-                return None
-            a_None = True
+        elif isinstance(solution, (Relational, And, Or)):
+            assert len(symbols) == 1
+            if warning and symbols[0].assumptions0:
+                print(filldedent("""
+                    \tWarning: assumptions about variable '%s' are
+                    not handled currently.""" %symbols[0]))
+            # TODO: check also variable assumptions for inequalities
+
         else:
-            no_False = solution
-            if a_None:
-                got_None.append(solution)
+            raise TypeError('Unrecognized solution') # improve the checker
 
-    elif isinstance(solution, (Relational, And, Or)):
-        assert len(symbols) == 1
-        if warning and symbols[0].assumptions0:
+        solution = no_False
+        if warning and got_None:
             print(filldedent("""
-                \tWarning: assumptions about variable '%s' are
-                not handled currently.""" %symbols[0]))
-        # TODO: check also variable assumptions for inequalities
-
-    else:
-        raise TypeError('Unrecognized solution') # improve the checker
-
-    solution = no_False
-    if warning and got_None:
-        print(filldedent("""
-            \tWarning: assumptions concerning following solution(s)
-            can't be checked:""" + '\n\t' +
-            ', '.join(str(s) for s in got_None)))
+                \tWarning: assumptions concerning following solution(s)
+                can't be checked:""" + '\n\t' +
+                ', '.join(str(s) for s in got_None)))
 
     #
     # done
     ###########################################################################
 
-    return solution
+    return solution or None
 
 
 def _solve(f, *symbols, **flags):

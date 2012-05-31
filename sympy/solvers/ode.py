@@ -1016,7 +1016,7 @@ def odesimp(eq, func, order, hint):
         # The solution is not solved, so try to solve it
         try:
             eqsol = solve(eq, func)
-            if eqsol == []:
+            if eqsol is None:
                 raise NotImplementedError
         except NotImplementedError:
             eq = [eq]
@@ -1159,7 +1159,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         (sol.rhs == func and not sol.lhs.has(func)):
         try:
             solved = solve(sol, func)
-            if solved == []:
+            if solved is None:
                 raise NotImplementedError
         except NotImplementedError:
             pass
@@ -1230,7 +1230,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
                     ds = sol.diff(x)
                     try:
                         sdf = solve(ds,func.diff(x, i))
-                        if len(sdf) != 1:
+                        if sdf is None:
                             raise NotImplementedError
                     except NotImplementedError:
                         testnum += 1
