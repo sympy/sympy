@@ -931,6 +931,8 @@ def solve(f, *symbols, **flags):
             solution = [solution]
         elif iterable(solution[0]):
             solution = [dict(zip(symbols, s)) for s in solution]
+        elif isinstance(solution[0], dict):
+            pass
         else:
             assert len(symbols) == 1
             solution = [{symbols[0]: s} for s in solution]
@@ -945,6 +947,9 @@ def _solve(f, *symbols, **flags):
         soln = None
         free = f.free_symbols
         ex = free - set(symbols)
+        if len(ex) != 1:
+            ind, dep = f.as_independent(*symbols)
+            ex = ind.free_symbols & dep.free_symbols
         if len(ex) == 1:
             ex = ex.pop()
             try:
