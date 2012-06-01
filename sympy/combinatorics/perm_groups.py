@@ -949,8 +949,8 @@ class PermutationGroup(Basic):
         Compute the orbit of alpha `\{g(\alpha) | g \in G\}` as a set.
 
         The time complexity of the algorithm used here is `O(|Orb|*r)` where
-        `|Orb|` is the size of the orbit and `r` is the number of generators
-        of the group. For a proof of correctness, see [1], p.78.
+        `|Orb|` is the size of the orbit and `r` is the number of generators of
+        the group. For a more detailed analysis, see [1], p.78, [2], pp.19-21.
 
         Examples
         ========
@@ -974,6 +974,9 @@ class PermutationGroup(Basic):
 
         [1] Holt, D., Eick, B., O'Brien, E.
         "Handbook of computational group theory"
+
+        [2] Seress, A.
+        "Permutation group algorithms"
 
         """
         orb = [alpha]
@@ -1207,7 +1210,7 @@ class PermutationGroup(Basic):
                     v[temp] = i
         return v
 
-    def orbit_rep(self, alpha, beta):
+    def orbit_rep(self, alpha, beta, schreier_vector = None):
         """
         Return a group element which sends ``alpha`` to ``beta``.
 
@@ -1236,17 +1239,18 @@ class PermutationGroup(Basic):
         "Handbook of computational group theory"
 
         """
-        v = self.schreier_vector(alpha)
-        if v[beta] == None:
+        if schreier_vector == None:
+            schreier_vector = self.schreier_vector(alpha)
+        if schreier_vector[beta] == None:
             return False
         n = self.degree
         u = _new_from_array_form(range(n))
-        k = v[beta]
+        k = schreier_vector[beta]
         gens = self.generators
         while k != -1:
             u = u*gens[k]
             beta = (~gens[k])(beta)
-            k = v[beta]
+            k = schreier_vector[beta]
         return u
 
     def is_normal(self, gr):
@@ -1523,10 +1527,9 @@ class PermutationGroup(Basic):
         parents = range(n)
         ranks = [1]*n
         not_rep = []
-        max_rank = self._max_div
         k = len(points)
-        if k > max_rank:
-            return False
+        if k > self.max_div:
+            return [0]*n
         for i in xrange(k-1):
             parents[points[i+1]] = points[0]
             not_rep.append(points[i+1])
@@ -1538,9 +1541,12 @@ class PermutationGroup(Basic):
             i += 1
             for gen in gens:
                 delta = self._union_find_rep(temp, parents)
-                len_not_rep += self._union_find_merge(gen(temp), gen(delta), ranks,\
+                temp = self._union_find_merge(gen(temp), gen(delta), ranks,\
                                                  parents, not_rep)
-        for i in xrange(n):
+                if temp == -1:
+                    return [0]*n
+                len_not_rep += temp
+        for i in range(n):
             self._union_find_rep(i, parents)
         return parents
 
@@ -1563,14 +1569,17 @@ class PermutationGroup(Basic):
         if rep_first != rep_second:
             #union by rank
             if ranks[rep_first] >= ranks[rep_second]:
-                new1, new2 = rep_first, rep_second
+                new_1, new_2 = rep_first, rep_second
             else:
-                new1, new2 = rep_second, rep_first
-            parents[new2] = new1
-            ranks[new1] = ranks[new1] + ranks[new2]
-            not_rep.append(new2)
-            return True
-        return False
+                new_1, new_2 = rep_second, rep_first
+            total_rank = ranks[new_1] + ranks[new_2]
+            if total_rank > self.max_div:
+                return -1
+            parents[new_2] = new_1
+            ranks[new_1] = total_rank
+            not_rep.append(new_2)
+            return 1
+        return 0
 
     @property
     def max_div(self):
@@ -1583,12 +1592,35 @@ class PermutationGroup(Basic):
                 self._max_div = d
                 return d
 
-    @property
-    def is_primitive(self):
+
+    def is_primitive(self, randomized = True):
         if self._is_primitive != None:
             return self._is_primitive
-        stab = self.stabilizer(0)
-        orbs = stab.orbits()
+        n = self.degree
+        if randomized == True:
+            r = len(self.generators)
+            random_stab_gens = []
+            v = self.schreier_vector(0)
+            for i in range(r):
+                random_stab_gens.append(self.random_stab(0, v))
+            stab = PermutationGroup(random_stab_gens)
+        else:
+            stab = self.stabilizer(0)
+        orbits = stab.orbits()
+        for orb in orbits:
+            x = orb.pop()
+            if x != 0 and self.minimal_block([0, x]) != [0]*n:
+                return False
+        return True
+
+    def random_stab(self, alpha, schreier_vector = None):
+        if schreier_vector == None:
+            schreier_vector = self.schreier_vector(alpha)
+        rand = self.pr_random()
+        beta = rand(alpha)
+        h = self.orbit_rep(alpha, beta, schreier_vector)
+        return (~h)*rand
+
 
 
 def SymmetricGroup(n):
