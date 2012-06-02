@@ -471,3 +471,18 @@ def test_PrettyPoly():
     R = QQ[x, y]
     assert sstr(F.convert(x/(x + y))) == sstr(x/(x + y))
     assert sstr(R.convert(x + y)) == sstr(x + y)
+
+def test_categories():
+    from sympy.categories import Object, Morphism
+
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+
+    f = Morphism(A, B, "f")
+    g = Morphism(B, C, "g")
+
+    assert str(A) == 'Object("A")'
+    assert str(f) == 'Morphism(Object("A"), Object("B"), "f")'
+    assert str(g * f) == '[Morphism(Object("A"), Object("B"), "f"), \
+Morphism(Object("B"), Object("C"), "g")]'

@@ -526,7 +526,18 @@ class StrPrinter(Printer):
     def _print_DMF(self, expr):
         return self._print_DMP(expr)
 
+    def _print_Object(self, object):
+        return 'Object("%s")' % object.name
 
+    def _print_Morphism(self, morphism):
+        if len(morphism.components) == 1:
+            return 'Morphism(%s, %s, "%s")' % \
+                   (morphism.domain, morphism.codomain, morphism.name)
+        else:
+            names = ""
+            for component in morphism.components:
+                names += str(component) + ", "
+            return "[%s]" % names[:-2]
 
 def sstr(expr, **settings):
     """Returns the expression as a string.
