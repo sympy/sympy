@@ -7,6 +7,7 @@ from sympy.core.function import _coeff_isneg
 from printer import Printer
 from conventions import split_super_sub
 from sympy.simplify import fraction
+from sympy.core.sympify import SympifyError
 
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
@@ -733,9 +734,25 @@ class LatexPrinter(Printer):
     def _print_hankel2(self, expr, exp=None):
         return self._hprint_BesselBase(expr, exp, 'H^{(2)}')
 
+    def _print_fresnels(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"S^{%s}%s" % (exp, tex)
+        else:
+            return r"S%s" % tex
+
+    def _print_fresnelc(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"C^{%s}%s" % (exp, tex)
+        else:
+            return r"C%s" % tex
+
     def _print_hyper(self, expr, exp=None):
-        tex = r"{{}_{%s}F_{%s}\left.\left(\begin{matrix} %s \\ %s \end{matrix}" \
-              r"\right| {%s} \right)}" % \
+        tex = r"{{}_{%s}F_{%s}\left(\begin{matrix} %s \\ %s \end{matrix}" \
+              r"\middle| {%s} \right)}" % \
              (self._print(len(expr.ap)), self._print(len(expr.bq)),
               self._hprint_vec(expr.ap), self._hprint_vec(expr.bq),
               self._print(expr.argument))
@@ -745,8 +762,8 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_meijerg(self, expr, exp=None):
-        tex = r"{G_{%s, %s}^{%s, %s}\left.\left(\begin{matrix} %s & %s \\" \
-              r"%s & %s \end{matrix} \right| {%s} \right)}" % \
+        tex = r"{G_{%s, %s}^{%s, %s}\left(\begin{matrix} %s & %s \\" \
+              r"%s & %s \end{matrix} \middle| {%s} \right)}" % \
              (self._print(len(expr.ap)), self._print(len(expr.bq)),
               self._print(len(expr.bm)), self._print(len(expr.an)),
               self._hprint_vec(expr.an), self._hprint_vec(expr.aother),
@@ -974,7 +991,10 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_ProductSet(self, p):
-        return r" \times ".join(self._print(set) for set in p.sets)
+        if len(set(p.sets)) == 1 and len(p.sets) > 1:
+            return self._print(p.sets[0]) + "^%d"%len(p.sets)
+        else:
+            return r" \times ".join(self._print(set) for set in p.sets)
 
     def _print_RandomDomain(self, d):
         try:
@@ -987,20 +1007,29 @@ class LatexPrinter(Printer):
                 return 'Domain on ' + self._print(d.symbols)
 
     def _print_FiniteSet(self, s):
-        if len(s) > 10:
-            printset = s.args[:3] + ('...',) + s.args[-3:]
+        return self._print_set(s.args)
+
+    def _print_set(self, s):
+        items = sorted(s, key=default_sort_key)
+        items = ", ".join(map(self._print, items))
+        return r"\left\{%s\right\}" % items
+
+    _print_frozenset = _print_set
+
+    def _print_Range(self, s):
+        if len(s) > 4:
+            it = iter(s)
+            printset = it.next(), it.next(), '\ldots', s._last_element
         else:
-            printset = s.args
+            printset = tuple(s)
+
         return (r"\left\{"
               + r", ".join(self._print(el) for el in printset)
               + r"\right\}")
 
-    _print_frozenset = _print_FiniteSet
-    _print_set = _print_FiniteSet
-
     def _print_Interval(self, i):
         if i.start == i.end:
-            return r"\left{%s\right}" % self._print(i.start)
+            return r"\left\{%s\right\}" % self._print(i.start)
 
         else:
             if i.left_open:
@@ -1031,6 +1060,9 @@ class LatexPrinter(Printer):
     def _print_Integers(self, i):
         return r"\mathbb{Z}"
 
+    def _print_Reals(self, i):
+        return r"\mathbb{R}"
+
     def _print_TransformationSet(self, s):
         return r"\left\{%s\; |\; %s \in %s\right\}"%(
                 self._print(s.lamda.expr),
@@ -1052,10 +1084,13 @@ class LatexPrinter(Printer):
     def _print_ComplexDomain(self, expr):
         return r"\mathbb{C}"
 
-    def _print_PolynomialRing(self, expr):
+    def _print_PolynomialRingBase(self, expr):
         domain = self._print(expr.dom)
         gens = ", ".join(map(self._print, expr.gens))
-        return r"%s\left\[%s\right\]" % (domain, gens)
+        inv = ""
+        if not expr.is_Poly:
+            inv = r"S_<^{-1}"
+        return r"%s%s\left[%s\right]" % (inv, domain, gens)
 
     def _print_FractionField(self, expr):
         domain = self._print(expr.dom)
@@ -1133,6 +1168,18 @@ class LatexPrinter(Printer):
 
     def _print_InverseCosineTransform(self, expr):
         return r"\mathcal{COS}^{-1}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
+    def _print_DMP(self, p):
+        try:
+            if p.ring is not None:
+                # TODO incorporate order
+                return self._print(p.ring.to_sympy(p))
+        except SympifyError:
+            pass
+        return self._print(repr(p))
+
+    def _print_DMF(self, p):
+        return self._print_DMP(p)
 
 
 def latex(expr, **settings):

@@ -101,6 +101,12 @@ def test_sympy__combinatorics__permutations__Permutation():
     assert _test_args(Permutation([0, 1, 2, 3]))
 
 @XFAIL
+def test_sympy__combinatorics__perm_groups__PermutationGroup():
+    from sympy.combinatorics.permutations import Permutation
+    from sympy.combinatorics.perm_groups import PermutationGroup
+    assert _test_args(PermutationGroup([Permutation([0, 1])]))
+
+@XFAIL
 def test_sympy__combinatorics__prufer__Prufer():
     from sympy.combinatorics.prufer import Prufer
     assert _test_args(Prufer([[0, 1], [0, 2], [0, 3]], 4))
@@ -346,11 +352,20 @@ def test_sympy__sets__fancysets__Integers():
     from sympy.sets.fancysets import Integers
     assert _test_args(Integers())
 
+@XFAIL # This fails for the same reason Interval fails. Not all args are Basic
+def test_sympy__sets__fancysets__Reals():
+    from sympy.sets.fancysets import Reals
+    assert _test_args(Reals())
+
 def test_sympy__sets__fancysets__TransformationSet():
     from sympy.sets.fancysets import TransformationSet
     from sympy import S, Lambda, Symbol
     x = Symbol('x')
     assert _test_args(TransformationSet(Lambda(x, x**2), S.Naturals))
+
+def test_sympy__sets__fancysets__Range():
+    from sympy.sets.fancysets import Range
+    assert _test_args(Range(1, 5, 1))
 
 # STATS
 def normal_pdf(x):
@@ -888,6 +903,18 @@ def test_sympy__functions__special__delta_functions__Heaviside():
 def test_sympy__functions__special__error_functions__erf():
     from sympy.functions.special.error_functions import erf
     assert _test_args(erf(2))
+
+@SKIP("abstract class")
+def test_sympy__functions__special__error_functions__FresnelIntegral():
+    pass
+
+def test_sympy__functions__special__error_functions__fresnels():
+    from sympy.functions.special.error_functions import fresnels
+    assert _test_args(fresnels(2))
+
+def test_sympy__functions__special__error_functions__fresnelc():
+    from sympy.functions.special.error_functions import fresnelc
+    assert _test_args(fresnelc(2))
 
 def test_sympy__functions__special__error_functions__erfs():
     from sympy.functions.special.error_functions import _erfs

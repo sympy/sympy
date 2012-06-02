@@ -7,5 +7,3 @@ q = exp(3*x)
 
 def timeit_exp_subs():
     e.subs(q, y)
-
-

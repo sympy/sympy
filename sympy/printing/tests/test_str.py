@@ -164,11 +164,11 @@ def test_Mul():
     assert str(-2*x/3)  == '-2*x/3'
 
     class CustomClass1(Expr):
-        pass
+        is_commutative = True
     class CustomClass2(Expr):
-        pass
-    cc1 = CustomClass1(commutative=True)
-    cc2 = CustomClass2(commutative=True)
+        is_commutative = True
+    cc1 = CustomClass1()
+    cc2 = CustomClass2()
     assert str(Rational(2)*cc1) == '2*CustomClass1()'
     assert str(cc1*Rational(2)) == '2*CustomClass1()'
     assert str(cc1*Float("1.5")) == '1.5*CustomClass1()'
@@ -447,7 +447,7 @@ def test_empty_printer():
     assert str_printer.emptyPrinter(32) == "32"
 
 def test_settings():
-    raises(TypeError, 'sstr(S(4), method="garbage")')
+    raises(TypeError, lambda: sstr(S(4), method="garbage"))
 
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
@@ -464,3 +464,10 @@ def test_RandomDomain():
 def test_FiniteSet():
     assert str(FiniteSet(range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
     assert str(FiniteSet(range(1, 6))) == '{1, 2, 3, 4, 5}'
+
+def test_PrettyPoly():
+    from sympy.polys.domains import QQ
+    F = QQ.frac_field(x, y)
+    R = QQ[x, y]
+    assert sstr(F.convert(x/(x + y))) == sstr(x/(x + y))
+    assert sstr(R.convert(x + y)) == sstr(x + y)

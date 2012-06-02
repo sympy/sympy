@@ -1,6 +1,6 @@
+from sympy.core.assumptions import StdFactKB
 from basic import Basic
 from core import C
-from power import Pow
 from sympify import sympify
 from singleton import S
 from expr import Expr, AtomicExpr
@@ -72,8 +72,9 @@ class Symbol(AtomicExpr, Boolean):
 
     def __new_stage2__(cls, name, **assumptions):
         assert isinstance(name, str),repr(type(name))
-        obj = Expr.__new__(cls, **assumptions)
+        obj = Expr.__new__(cls)
         obj.name = name
+        obj._assumptions = StdFactKB(assumptions)
         return obj
 
     __xnew__       = staticmethod(__new_stage2__)            # never cached (e.g. dummy)
@@ -82,8 +83,17 @@ class Symbol(AtomicExpr, Boolean):
     def __getnewargs__(self):
         return (self.name,)
 
+    def __getstate__(self):
+        return {'_assumptions': self._assumptions}
+
+
     def _hashable_content(self):
-        return (self.name,)
+        return (self.name,) + tuple(sorted(self.assumptions0.iteritems()))
+
+    @property
+    def assumptions0(self):
+        return dict((key, value) for key, value
+                in self._assumptions.iteritems() if value is not None)
 
     @cacheit
     def sort_key(self, order=None):
@@ -94,7 +104,7 @@ class Symbol(AtomicExpr, Boolean):
 
     def __call__(self, *args):
         from function import Function
-        return Function(self.name, nargs=len(args))(*args, **self.assumptions0)
+        return Function(self.name)(*args)
 
     def as_real_imag(self, deep=True):
         return (C.re(self), C.im(self))
@@ -154,6 +164,9 @@ class Dummy(Symbol):
         obj.dummy_index = Dummy._count
         return obj
 
+    def __getstate__(self):
+        return {'_assumptions': self._assumptions, 'dummy_index': self.dummy_index}
+
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
 
@@ -183,7 +196,7 @@ class Wild(Symbol):
         return obj
 
     def _hashable_content(self):
-        return (self.name, self.exclude, self.properties )
+        return super(Wild, self)._hashable_content() + (self.exclude, self.properties)
 
     # TODO add check against another Wild
     def matches(self, expr, repl_dict={}):
@@ -195,9 +208,8 @@ class Wild(Symbol):
         repl_dict[self] = expr
         return repl_dict
 
-    def __call__(self, *args, **assumptions):
-        from sympy.core.function import WildFunction
-        return WildFunction(self.name, nargs=len(args))(*args, **assumptions)
+    def __call__(self, *args, **kwargs):
+        raise TypeError("'%s' object is not callable" % type(self).__name__)
 
 _re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
 _re_var_scope = re.compile(r"^(.):(.)$")

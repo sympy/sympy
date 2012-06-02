@@ -4,7 +4,7 @@ from sympy.galgebra.GA import *
 from sympy.galgebra.latex_ex import *
 
 if __name__ == '__main__':
-    
+
     metric = '1  0  0  0,'+\
              '0 -1  0  0,'+\
              '0  0 -1  0,'+\
@@ -44,12 +44,3 @@ if __name__ == '__main__':
     print 'Curl $E$ and Div $B$ equations'
     print '<\\nabla F>_3 =',gradF.project(3),' = 0'
     xdvi(filename='Maxwell.tex')
-
-
-
-
-
-
-
-
-

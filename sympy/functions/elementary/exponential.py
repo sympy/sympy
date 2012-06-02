@@ -6,7 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
 
-from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 
 # NOTE IMPORTANT
@@ -158,20 +158,31 @@ class exp_polar(ExpBase):
     sympy.simplify.simplify.powsimp
     sympy.functions.elementary.complexes.polar_lift
     sympy.functions.elementary.complexes.periodic_argument
-    sympy.fucntions.elementary.complexes.principal_branch
+    sympy.functions.elementary.complexes.principal_branch
     """
 
     is_polar = True
     is_comparable = False # cannot be evalf'd
-    is_real = False
+
+    def _eval_Abs(self):
+        from sympy import expand_mul
+        return sqrt( expand_mul(self * self.conjugate()) )
 
     def _eval_evalf(self, prec):
         """ Careful! any evalf of polar numbers is flaky """
-        from sympy import im, pi
+        from sympy import im, pi, re
         i = im(self.args[0])
         if i <= -pi or i > pi:
             return self # cannot evalf for this argument
-        return exp(self.args[0])._eval_evalf(prec)
+        res = exp(self.args[0])._eval_evalf(prec)
+        if i > 0 and im(res) < 0:
+            # i ~ pi, but exp(I*i) evaluated to argument slightly bigger than pi
+            return re(res)
+        return res
+
+    def _eval_is_real(self):
+        if self.args[0].is_real:
+            return True
 
     def as_base_exp(self):
         # XXX exp_polar(0) is special!
@@ -366,11 +377,18 @@ class exp(ExpBase):
         return Function._eval_subs(self, o, new)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        if self.args[0].is_real:
+            return True
+        elif self.args[0].is_imaginary:
+            arg2 = -S(2) * S.ImaginaryUnit * self.args[0] / S.Pi
+            return arg2.is_even
 
     def _eval_is_positive(self):
         if self.args[0].is_real:
-            return True
+            return not self.args[0] is S.NegativeInfinity
+        elif self.args[0].is_imaginary:
+            arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
+            return arg2.is_even
 
     def _eval_lseries(self, x):
         s = self.args[0]
@@ -463,21 +481,26 @@ class log(Function):
     @classmethod
     def eval(cls, arg, base=None):
         from sympy import unpolarify
+        arg = sympify(arg)
+
         if base is not None:
             base = sympify(base)
-
-            if arg.is_positive and arg.is_Integer and \
-               base.is_positive and base.is_Integer:
-                base = int(base)
-                arg = int(arg)
+            if base == 1:
+                if arg == 1:
+                    return S.NaN
+                else:
+                    return S.ComplexInfinity
+            try:
+                if not (base.is_positive and arg.is_positive):
+                    raise ValueError
                 n = multiplicity(base, arg)
-                return S(n) + log(arg // base ** n) / log(base)
+                return n + log(arg // base ** n) / log(base)
+            except ValueError:
+                pass
             if base is not S.Exp1:
                 return cls(arg)/cls(base)
             else:
                 return cls(arg)
-
-        arg = sympify(arg)
 
         if arg.is_Number:
             if arg is S.Zero:

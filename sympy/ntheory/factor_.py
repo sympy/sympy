@@ -190,12 +190,15 @@ def multiplicity(p, n):
     [0, 1, 2, 3, 3]
 
     """
+    from residue_ntheory import int_tested
 
-    p, n = int(p), int(n)
-    if p == n:
-        return 1
+    p, n = int_tested(p, n)
     if p == 2:
         return trailing(n)
+    if p < 2:
+        raise ValueError('p must be an integer, 2 or larger, but got %s' % p)
+    if p == n:
+        return 1
 
     m = 0
     n, rem = divmod(n, p)

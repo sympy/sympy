@@ -7,7 +7,7 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
     Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict,
     euler, groebner, catalan, Product, KroneckerDelta, Ei, expint, Shi, Chi, Si,
-    Ci, Segment, Ray)
+    Ci, Segment, Ray, FiniteSet)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -2392,8 +2392,8 @@ def test_any_object_in_sequence():
     assert upretty(expr) == u"[Basic(Basic()), Basic()]"
 
     expr = set([b2, b1])
-    assert pretty(expr) == "set(Basic(), Basic(Basic()))"
-    assert upretty(expr) == u"set(Basic(), Basic(Basic()))"
+    assert pretty(expr) == "set([Basic(), Basic(Basic())])"
+    assert upretty(expr) == u"set([Basic(), Basic(Basic())])"
 
     expr = {b2:b1, b1:b2}
     expr2 = Dict({b2:b1, b1:b2})
@@ -2401,6 +2401,25 @@ def test_any_object_in_sequence():
     assert pretty(expr2) == "{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
     assert upretty(expr) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
     assert upretty(expr2) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
+
+def test_pretty_sets():
+    s = FiniteSet
+    assert pretty(s([x*y, x**2])) == \
+"""\
+  2      \n\
+{x , x*y}\
+"""
+    assert pretty(s(range(1, 6))) == "{1, 2, 3, 4, 5}"
+    assert pretty(s(range(1, 13))) == "{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
+    for s in (frozenset, set):
+        assert pretty(s([x*y, x**2])) == \
+"""\
+%s   2       \n\
+%s([x , x*y])\
+""" % (" " * len(s.__name__), s.__name__)
+        assert pretty(s(range(1, 6))) == "%s([1, 2, 3, 4, 5])" % s.__name__
+        assert pretty(s(range(1, 13))) == \
+            "%s([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])" % s.__name__
 
 def test_pretty_limits():
     expr = Limit(x, x, oo)
@@ -2653,6 +2672,16 @@ def test_pretty_Domain():
     assert  pretty(expr) == "ZZ(x, y)"
     assert upretty(expr) == u"ℤ(x, y)"
 
+    expr = QQ.poly_ring(x, y, order="lex")
+
+    assert  pretty(expr) == "QQ[x, y, order=lex]"
+    assert upretty(expr) == u"ℚ[x, y, order=lex]"
+
+    expr = QQ.poly_ring(x, y, order="ilex")
+
+    assert  pretty(expr) == "QQ[x, y, order=ilex]"
+    assert upretty(expr) == u"ℚ[x, y, order=ilex]"
+
 def test_pretty_prec():
     assert xpretty(S("0.3"), full_prec=True) == "0.300000000000000"
     assert xpretty(S("0.3"), full_prec="auto") == "0.300000000000000"
@@ -2701,7 +2730,7 @@ def test_pretty_no_wrap_line():
 
 
 def test_settings():
-    raises(TypeError, 'pretty(S(4), method="garbage")')
+    raises(TypeError, lambda: pretty(S(4), method="garbage"))
 
 @XFAIL
 def test_pretty_sum():
@@ -3643,6 +3672,22 @@ def test_RandomDomain():
     B = Exponential(1, symbol=Symbol('b'))
     assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ a ∧ 0 ≤ b'
 
+def test_PrettyPoly():
+    F = QQ.frac_field(x, y)
+    R = QQ[x, y]
+
+    expr = F.convert(x/(x + y))
+    assert pretty(expr) == pretty(x/(x + y))
+    assert upretty(expr) == upretty(x/(x + y))
+
+    expr = R.convert(x + y)
+    assert pretty(expr) == pretty(x + y)
+    assert upretty(expr) == upretty(x + y)
+
 def test_issue_3186():
     assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
     assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
+
+def test_complicated_symbol_unchanged():
+    for symb_name in ["dexpr2_d1tau", "dexpr2^d1tau"]:
+        assert pretty(Symbol(symb_name)) == symb_name

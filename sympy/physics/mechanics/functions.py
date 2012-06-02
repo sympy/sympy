@@ -396,6 +396,3 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         return list(edots.T - 0.5 * w.T * E.T)
     else:
         raise ValueError('Not an approved rotation type for this function')
-
-
-

@@ -1,4 +1,5 @@
 from core import C
+from sympify import sympify
 from basic import Basic, Atom
 from singleton import S
 from evalf import EvalfMixin, pure_complex
@@ -9,6 +10,7 @@ from sympy.mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
 from math import log10, ceil
+from inspect import getmro
 
 class Expr(Basic, EvalfMixin):
     __slots__ = []
@@ -73,6 +75,28 @@ class Expr(Basic, EvalfMixin):
         exp = exp.sort_key(order=order)
 
         return expr.class_key(), args, exp, coeff
+
+    def __call__(self, *args):
+        # (x+Lambda(y, 2*y))(z) -> x+2*z
+        return Expr._recursive_call(self, args)
+
+    @staticmethod
+    def _recursive_call(expr_to_call, on_args):
+        def the_call_method_is_overridden(expr):
+            for cls in getmro(type(expr)):
+                if '__call__' in cls.__dict__:
+                    return cls != Expr
+
+        if callable(expr_to_call) and the_call_method_is_overridden(expr_to_call):
+            if isinstance(expr_to_call, C.Symbol):# XXX When you call a Symbol it is
+                return expr_to_call               # transformed into an UndefFunction
+            else:
+                return expr_to_call(*on_args)
+        elif expr_to_call.args:
+            args = (Expr._recursive_call(sub, on_args) for sub in expr_to_call.args)
+            return type(expr_to_call)(*args)
+        else:
+            return expr_to_call
 
 
     # ***************
@@ -535,7 +559,7 @@ class Expr(Basic, EvalfMixin):
         elif constant is True:
             ndiff = diff._random()
             if ndiff:
-               return False
+                return False
 
         # diff has not simplified to zero; constant is either None, True
         # or the number with significance (prec != 1) that was randomly
@@ -633,6 +657,8 @@ class Expr(Basic, EvalfMixin):
     def _eval_conjugate(self):
         if self.is_real:
             return self
+        elif self.is_imaginary:
+            return -self
 
     def conjugate(self):
         from sympy.functions.elementary.complexes import conjugate as c
@@ -1974,7 +2000,11 @@ class Expr(Basic, EvalfMixin):
                     piimult += coeff
                     continue
             extras += [exp]
-        coeff, tail = piimult.as_coeff_add()
+        if not piimult.free_symbols:
+            coeff = piimult
+            tail = ()
+        else:
+            coeff, tail = piimult.as_coeff_add(*piimult.free_symbols)
         # round down to nearest multiple of 2
         branchfact = ceiling(coeff/2 - S(1)/2)*2
         n += branchfact/2
@@ -2841,7 +2871,5 @@ from add import Add
 from power import Pow
 from function import Derivative, expand_mul
 from mod import Mod
-from sympify import sympify
-from symbol import Wild
 from exprtools import factor_terms
 from numbers import Integer, Rational

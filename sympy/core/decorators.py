@@ -106,4 +106,3 @@ def call_highest_priority(method_name):
             return func(self, other)
         return binary_op_wrapper
     return priority_decorator
-

@@ -1,6 +1,7 @@
 from sympy.core import S, C, Basic, Interval
 from sympy.core.function import _coeff_isneg
 from sympy.utilities import group
+from sympy.core.sympify import SympifyError
 
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
@@ -79,6 +80,7 @@ class PrettyPrinter(Printer):
     _print_EmptySet         = _print_Atom
     _print_Naturals         = _print_Atom
     _print_Integers         = _print_Atom
+    _print_Reals            = _print_Atom
 
     def _print_factorial(self, e):
         x = e.args[0]
@@ -1132,15 +1134,31 @@ class PrettyPrinter(Printer):
             return self.emptyPrinter(expr)
 
     def _print_ProductSet(self, p):
-        prod_char = u'\xd7'
-        return self._print_seq(p.sets, None, None, ' %s '%prod_char,
+        if len(set(p.sets)) == 1 and len(p.sets) > 1:
+            from sympy import Pow
+            return self._print(Pow(p.sets[0], len(p.sets), evaluate=False))
+        else:
+            prod_char = u'\xd7'
+            return self._print_seq(p.sets, None, None, ' %s '%prod_char,
                 parenthesize = lambda set:set.is_Union or set.is_Intersection)
 
     def _print_FiniteSet(self, s):
-        if len(s) > 10:
-            printset = s.args[:3] + ('...',) + s.args[-3:]
+        items = sorted(s.args, key=default_sort_key)
+        return self._print_seq(items, '{', '}', ', ' )
+
+    def _print_Range(self, s):
+
+        if self._use_unicode:
+            dots = u"\u2026"
         else:
-            printset = s.args
+            dots = '...'
+
+        if len(s) > 4:
+            it = iter(s)
+            printset = it.next(), it.next(), dots, s._last_element
+        else:
+            printset = tuple(s)
+
         return self._print_seq(printset, '{', '}', ', ' )
 
     def _print_Interval(self, i):
@@ -1175,10 +1193,13 @@ class PrettyPrinter(Printer):
              parenthesize = lambda set:set.is_ProductSet or set.is_Intersection)
 
     def _print_TransformationSet(self, ts):
+        if self._use_unicode:
+            inn = u"\u220a"
+        else:
+            inn = 'in'
         variables = self._print_seq(ts.lamda.variables)
         expr = self._print(ts.lamda.expr)
         bar = self._print("|")
-        inn = self._print(u"\u220a")
         base = self._print(ts.base_set)
 
         return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
@@ -1251,7 +1272,8 @@ class PrettyPrinter(Printer):
 
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
-        pretty = self._print_seq(items, '(', ')')
+        pretty = self._print_seq(items, '[', ']')
+        pretty = prettyForm(*pretty.parens('(', ')', ifascii_nougly=True))
         pretty = prettyForm(*stringPict.next(type(s).__name__, pretty))
         return pretty
 
@@ -1312,8 +1334,11 @@ class PrettyPrinter(Printer):
         else:
             return prettyForm('CC')
 
-    def _print_PolynomialRing(self, expr):
-        pform = self._print_seq(expr.gens, '[', ']')
+    def _print_PolynomialRingBase(self, expr):
+        g = expr.gens
+        if str(expr.order) != str(expr.default_order):
+            g = g + ("order=" + str(expr.order),)
+        pform = self._print_seq(g, '[', ']')
         pform = prettyForm(*pform.left(self._print(expr.dom)))
 
         return pform
@@ -1408,6 +1433,18 @@ class PrettyPrinter(Printer):
                 return pform
             except:
                 return self._print(None)
+
+    def _print_DMP(self, p):
+        try:
+            if p.ring is not None:
+                # TODO incorporate order
+                return self._print(p.ring.to_sympy(p))
+        except SympifyError:
+            pass
+        return self._print(repr(p))
+
+    def _print_DMF(self, p):
+        return self._print_DMP(p)
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

@@ -83,7 +83,7 @@ def test_polynomial():
 
 def test_hyperexpand_bases():
     assert hyperexpand(hyper([2], [a], z)) == \
-  a + z**(-a + 1)*(-a**2 + 3*a + z*(a - 1) - 2)*exp(z)*lowergamma(a - 1, z) - 1
+        a + z**(-a + 1)*(-a**2 + 3*a + z*(a - 1) - 2)*exp(z)*lowergamma(a - 1, z) - 1
     # TODO [a+1, a-S.Half], [2*a]
     assert hyperexpand(hyper([1, 2], [3], z)) == -2/z - 2*log(-z + 1)/z**2
     assert hyperexpand(hyper([S.Half, 2], [S(3)/2], z)) == \
@@ -158,36 +158,38 @@ def test_meijerg_formulae():
     formulae = MeijerFormulaCollection().formulae
     for sig in formulae:
         for formula in formulae[sig]:
-          g = meijerg(formula.indices.an, formula.indices.ap,
-                      formula.indices.bm, formula.indices.bq,
-                      formula.z)
-          rep = {}
-          for sym in formula.symbols:
-              rep[sym] = randcplx()
+            g = meijerg(formula.indices.an, formula.indices.ap,
+                        formula.indices.bm, formula.indices.bq,
+                        formula.z)
+            rep = {}
+            for sym in formula.symbols:
+                rep[sym] = randcplx()
 
-          # first test if the closed-form is actually correct
-          g = g.subs(rep)
-          closed_form = formula.closed_form.subs(rep)
-          z = formula.z
-          assert tn(g, closed_form, z)
-          #print closed_form
+            # first test if the closed-form is actually correct
+            g = g.subs(rep)
+            closed_form = formula.closed_form.subs(rep)
+            z = formula.z
+            assert tn(g, closed_form, z)
+            #print closed_form
 
-          # now test the computed matrix
-          cl = (formula.C * formula.B)[0].subs(rep)
-          assert tn(closed_form, cl, z)
-          deriv1 = z*formula.B.diff(z)
-          deriv2 = formula.M * formula.B
-          for d1, d2 in zip(deriv1, deriv2):
-              assert tn(d1.subs(rep), d2.subs(rep), z)
+            # now test the computed matrix
+            cl = (formula.C * formula.B)[0].subs(rep)
+            assert tn(closed_form, cl, z)
+            deriv1 = z*formula.B.diff(z)
+            deriv2 = formula.M * formula.B
+            for d1, d2 in zip(deriv1, deriv2):
+                assert tn(d1.subs(rep), d2.subs(rep), z)
 
 def op(f): return z*f.diff(z)
 
 def test_plan():
     assert devise_plan(IndexPair([0], ()), IndexPair([0], ()), z) == []
-    raises(ValueError, 'devise_plan(IndexPair([1], ()), IndexPair((), ()), z)')
-    raises(ValueError, 'devise_plan(IndexPair([2], [1]), IndexPair([2], [2]), z)')
+    raises(ValueError,
+        lambda: devise_plan(IndexPair([1], ()), IndexPair((), ()), z))
+    raises(ValueError,
+        lambda: devise_plan(IndexPair([2], [1]), IndexPair([2], [2]), z))
     raises(KeyError,
-           'devise_plan(IndexPair([2], []), IndexPair([S("1/2")], []), z)')
+        lambda: devise_plan(IndexPair([2], []), IndexPair([S("1/2")], []), z))
 
     # We cannot use pi/(10000 + n) because polys is insanely slow.
     a1, a2, b1 = map(lambda n: randcplx(n), range(3))
@@ -249,8 +251,8 @@ def test_shift_operators():
     a1, a2, b1, b2, b3 = map(lambda n: randcplx(n), range(5))
     h = hyper((a1, a2), (b1, b2, b3), z)
 
-    raises(ValueError, 'ShiftA(0)')
-    raises(ValueError, 'ShiftB(1)')
+    raises(ValueError,  lambda: ShiftA(0))
+    raises(ValueError,  lambda: ShiftB(1))
 
     assert tn(ShiftA(a1).apply(h, op), hyper((a1 + 1, a2), (b1, b2, b3), z), z)
     assert tn(ShiftA(a2).apply(h, op), hyper((a1, a2 + 1), (b1, b2, b3), z), z)
@@ -262,10 +264,10 @@ def test_ushift_operators():
     a1, a2, b1, b2, b3 = map(lambda n: randcplx(n), range(5))
     h = hyper((a1, a2), (b1, b2, b3), z)
 
-    raises(ValueError, 'UnShiftA((1,), (), 0, z)')
-    raises(ValueError, 'UnShiftB((), (-1,), 0, z)')
-    raises(ValueError, 'UnShiftA((1,), (0, -1, 1), 0, z)')
-    raises(ValueError, 'UnShiftB((0, 1), (1,), 0, z)')
+    raises(ValueError,  lambda: UnShiftA((1,), (), 0, z))
+    raises(ValueError,  lambda: UnShiftB((), (-1,), 0, z))
+    raises(ValueError,  lambda: UnShiftA((1,), (0, -1, 1), 0, z))
+    raises(ValueError,  lambda: UnShiftB((0, 1), (1,), 0, z))
 
     s = UnShiftA((a1, a2), (b1, b2, b3), 0, z)
     assert tn(s.apply(h, op), hyper((a1 - 1, a2), (b1, b2, b3), z), z)
@@ -368,7 +370,7 @@ def test_meijerg_expand():
            z**a*gamma(a)*hyper((a,), (a + 1, a + 1), z*exp_polar(I*pi))/gamma(a + 1)**2
 
 def test_meijerg_lookup():
-    from sympy import uppergamma
+    from sympy import uppergamma, Si, Ci
     assert hyperexpand(meijerg([a], [], [b, a], [], z)) == \
            z**b*exp(z)*gamma(-a + b + 1)*uppergamma(a - b, z)
     assert hyperexpand(meijerg([0], [], [0, 0], [], z)) == \
@@ -376,6 +378,13 @@ def test_meijerg_lookup():
     assert can_do_meijer([a], [], [b, a+1], [])
     assert can_do_meijer([a], [], [b+2, a], [])
     assert can_do_meijer([a], [], [b-2, a], [])
+
+    assert hyperexpand(meijerg([a], [], [a, a, a - S(1)/2], [], z)) == \
+           -sqrt(pi)*z**(a - S(1)/2)*(2*cos(2*sqrt(z))*(Si(2*sqrt(z)) - pi/2)
+                                      - 2*sin(2*sqrt(z))*Ci(2*sqrt(z))) == \
+           hyperexpand(meijerg([a], [], [a, a - S(1)/2, a], [], z)) == \
+           hyperexpand(meijerg([a], [], [a - S(1)/2, a, a], [], z))
+    assert can_do_meijer([a - 1], [], [a + 2, a - S(3)/2, a + 1], [])
 
 @XFAIL
 def test_meijerg_expand_fail():
@@ -639,12 +648,12 @@ def test_prudnikov_2():
     assert can_do([-h, 1], [h])
 
     for p in [-h, h]:
-      for n in [-h, h, 1, 3*h, 2, 5*h, 3, 7*h, 4]:
-          for m in [-h, h, 3*h, 5*h, 7*h]:
-              assert can_do([p, n], [m])
-      for n in [1, 2, 3, 4]:
-          for m in [1, 2, 3, 4]:
-              assert can_do([p, n], [m])
+        for n in [-h, h, 1, 3*h, 2, 5*h, 3, 7*h, 4]:
+            for m in [-h, h, 3*h, 5*h, 7*h]:
+                assert can_do([p, n], [m])
+        for n in [1, 2, 3, 4]:
+            for m in [1, 2, 3, 4]:
+                assert can_do([p, n], [m])
 
 @slow
 def test_prudnikov_3():
@@ -656,21 +665,21 @@ def test_prudnikov_3():
     assert can_do([S(3)/4, S(5)/4], [3*h])
 
     for p in [1, 2, 3, 4]:
-      for n in [-h, h, 1, 3*h, 2, 5*h, 3, 7*h, 4, 9*h]:
-          for m in [1, 3*h, 2, 5*h, 3, 7*h, 4]:
-              assert can_do([p, m], [n])
+        for n in [-h, h, 1, 3*h, 2, 5*h, 3, 7*h, 4, 9*h]:
+            for m in [1, 3*h, 2, 5*h, 3, 7*h, 4]:
+                assert can_do([p, m], [n])
 
 
 @slow
 def test_prudnikov_4():
     h = S.Half
     for p in [3*h, 5*h, 7*h]:
-      for n in [-h, h, 3*h, 5*h, 7*h]:
-          for m in [3*h, 2, 5*h, 3, 7*h, 4]:
-              assert can_do([p, m], [n])
-      for n in [1, 2, 3, 4]:
-          for m in [2, 3, 4]:
-              assert can_do([p, m], [n])
+        for n in [-h, h, 3*h, 5*h, 7*h]:
+            for m in [3*h, 2, 5*h, 3, 7*h, 4]:
+                assert can_do([p, m], [n])
+        for n in [1, 2, 3, 4]:
+            for m in [2, 3, 4]:
+                assert can_do([p, m], [n])
 
 @slow
 def test_prudnikov_5():
@@ -703,16 +712,16 @@ def test_prudnikov_6():
         for n in [1, 2, 3]:
             for q in [h, 1, 2]:
                 for p in [1, 2, 3]:
-                     assert can_do([h, q, p], [m, n])
+                    assert can_do([h, q, p], [m, n])
             for q in [1, 2, 3]:
                 for p in [3*h, 5*h]:
-                     assert can_do([h, q, p], [m, n])
+                    assert can_do([h, q, p], [m, n])
 
     for q in [1, 2]:
-      for p in [1, 2, 3]:
-         for m in [1, 2, 3]:
-             for n in [1, 2, 3]:
-                 assert can_do([h, q, p], [m, n])
+        for p in [1, 2, 3]:
+            for m in [1, 2, 3]:
+                for n in [1, 2, 3]:
+                    assert can_do([h, q, p], [m, n])
 
     assert can_do([h, h, 5*h], [3*h, 3*h])
     assert can_do([h, 1, 5*h], [3*h, 3*h])
@@ -770,22 +779,22 @@ def test_prudnikov_10():
     # 7.14.2
     h = S.Half
     for p in [-h, h, 1, 3*h, 2, 5*h, 3, 7*h, 4]:
-      for m in [1, 2, 3, 4]:
-          for n in range(m, 5):
-              assert can_do([p], [m, n])
+        for m in [1, 2, 3, 4]:
+            for n in range(m, 5):
+                assert can_do([p], [m, n])
 
     for p in [1, 2, 3, 4]:
-      for n in [h, 3*h, 5*h, 7*h]:
-          for m in [1, 2, 3, 4]:
-              assert can_do([p], [n, m])
+        for n in [h, 3*h, 5*h, 7*h]:
+            for m in [1, 2, 3, 4]:
+                assert can_do([p], [n, m])
 
     for p in [3*h, 5*h, 7*h]:
-      for m in [h, 1, 2, 5*h, 3, 7*h, 4]:
-         assert can_do([p], [h, m])
-         assert can_do([p], [3*h, m])
+        for m in [h, 1, 2, 5*h, 3, 7*h, 4]:
+            assert can_do([p], [h, m])
+            assert can_do([p], [3*h, m])
 
     for m in [h, 1, 2, 5*h, 3, 7*h, 4]:
-       assert can_do([7*h], [5*h, m])
+        assert can_do([7*h], [5*h, m])
 
     assert can_do([-S(1)/2], [S(1)/2, S(1)/2]) # shine-integral shi
 
@@ -934,3 +943,7 @@ def test_prudnikov_fail_other():
 
     # XXX this does not *evaluate* right??
     assert can_do([], [a, a + S.Half, 2*a-1])
+
+def test_bug():
+    h = hyper([-1, 1], [z], -1)
+    assert hyperexpand(h) == (z + 1)/z

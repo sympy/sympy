@@ -1,7 +1,7 @@
-from sympy.core import Expr, S, sympify, oo, pi, Symbol
+from sympy.core import Expr, S, sympify, oo, pi, Symbol, zoo
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan, sqrt
-from sympy.simplify import simplify
+from sympy.simplify import simplify, nsimplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.matrices import Matrix
 from sympy.solvers import solve
@@ -682,7 +682,7 @@ class Polygon(GeometryEntity):
             for side in self.sides:
                 current = side.distance(o)
                 if current == 0:
-                    return S(0)
+                    return S.Zero
                 elif current < dist:
                     dist = current
             return dist
@@ -732,8 +732,8 @@ class Polygon(GeometryEntity):
         '''Tests for a possible intersection between the polygons and outputs a warning'''
         e1_center = e1.centroid
         e2_center = e2.centroid
-        e1_max_radius = S(0)
-        e2_max_radius = S(0)
+        e1_max_radius = S.Zero
+        e2_max_radius = S.Zero
         for vertex in e1.vertices:
             r = Point.distance(e1_center, vertex)
             if e1_max_radius < r:
@@ -791,7 +791,7 @@ class Polygon(GeometryEntity):
 
         e1_current = e1_ymax
         e2_current = e2_ymin
-        support_line = Line(Point(S(0), S(0)), Point(S(1), S(0)))
+        support_line = Line(Point(S.Zero, S.Zero), Point(S.One, S.Zero))
 
         '''
         Determine which point in e1 and e2 will be selected after e2_ymin and e1_ymax,
@@ -1543,6 +1543,7 @@ class Triangle(Polygon):
     ==========
 
     points : sequence of Points
+    keyword: asa, sas, or sss to specify sides/angles of the triangle
 
     Attributes
     ==========
@@ -1563,7 +1564,7 @@ class Triangle(Polygon):
 
     GeometryError
         If the number of vertices is not equal to three, or one of the vertices
-        is not a Point.
+        is not a Point, or a valid keyword is not given.
 
     See Also
     ========
@@ -1577,11 +1578,29 @@ class Triangle(Polygon):
     >>> Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
     Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
 
+    Keywords sss, sas, or asa can be used to give the desired
+    side lengths (in order) and interior angles (in degrees) that
+    define the triangle:
+
+    >>> Triangle(sss=(3, 4, 5))
+    Triangle(Point(0, 0), Point(3, 0), Point(3, 4))
+    >>> Triangle(asa=(30, 1, 30))
+    Triangle(Point(0, 0), Point(1, 0), Point(1/2, sqrt(3)/6))
+    >>> Triangle(sas=(1, 45, 2))
+    Triangle(Point(0, 0), Point(2, 0), Point(sqrt(2)/2, sqrt(2)/2))
+
     """
 
     def __new__(cls, *args, **kwargs):
         if len(args) != 3:
-            raise GeometryError("Triangle.__new__ requires three points")
+            if 'sss' in kwargs:
+                return _sss(*[nsimplify(a) for a in kwargs['sss']])
+            if 'asa' in kwargs:
+                return _asa(*[nsimplify(a) for a in kwargs['asa']])
+            if 'sas' in kwargs:
+                return _sas(*[nsimplify(a) for a in kwargs['sas']])
+            msg = "Triangle instantiates with three points or a valid keyword."
+            raise GeometryError(msg)
 
         vertices = [Point(a) for a in args]
 
@@ -2141,3 +2160,38 @@ class Triangle(Polygon):
     #def excircles(self):
     #    """Returns a list of the three excircles for this triangle."""
     #    pass
+
+def rad(d):
+    """Return the radian value for the given degrees (pi = 180 degrees)."""
+    return d*pi/180
+
+def deg(r):
+    """Return the degree value for the given radians (pi = 180 degrees)."""
+    return r/pi*180
+
+def _slope(d):
+    rv = tan(rad(d))
+    return rv
+
+def _asa(d1, l, d2):
+    """Return triangle having side with length l on the x-axis."""
+    xy = Line((0, 0), slope=_slope(d1)).intersection(
+         Line((l, 0), slope=_slope(180 - d2)))[0]
+    return Triangle((0,0),(l,0),xy)
+
+def _sss(l1, l2, l3):
+    """Return triangle having side of length l1 on the x-axis."""
+    c1 = Circle((0,0), l3)
+    c2 = Circle((l1, 0), l2)
+    inter = [a for a in c1.intersection(c2) if a.y.is_nonnegative]
+    if not inter:
+        return None
+    pt = inter[0]
+    return Triangle((0,0), (l1,0), pt)
+
+def _sas(l1, d, l2):
+    """Return triangle having side with length l2 on the x-axis."""
+    p1 = Point(0, 0)
+    p2 = Point(l2, 0)
+    p3 = Point(cos(rad(d))*l1, sin(rad(d))*l1)
+    return Triangle(p1, p2, p3)

@@ -70,21 +70,21 @@ def test_RootOf___new__():
     assert RootOf(x**4 + 3*x**3, 2) == 0
     assert RootOf(x**4 + 3*x**3, 3) == 0
 
-    raises(GeneratorsNeeded, "RootOf(0, 0)")
-    raises(GeneratorsNeeded, "RootOf(1, 0)")
+    raises(GeneratorsNeeded, lambda: RootOf(0, 0))
+    raises(GeneratorsNeeded, lambda: RootOf(1, 0))
 
-    raises(PolynomialError, "RootOf(Poly(0, x), 0)")
-    raises(PolynomialError, "RootOf(Poly(1, x), 0)")
+    raises(PolynomialError, lambda: RootOf(Poly(0, x), 0))
+    raises(PolynomialError, lambda: RootOf(Poly(1, x), 0))
 
-    raises(PolynomialError, "RootOf(x - y, 0)")
+    raises(PolynomialError, lambda: RootOf(x - y, 0))
 
-    raises(NotImplementedError, "RootOf(x**3 - x + sqrt(2), 0)")
-    raises(NotImplementedError, "RootOf(x**3 - x + I, 0)")
+    raises(NotImplementedError, lambda: RootOf(x**3 - x + sqrt(2), 0))
+    raises(NotImplementedError, lambda: RootOf(x**3 - x + I, 0))
 
-    raises(IndexError, "RootOf(x**2 - 1,-4)")
-    raises(IndexError, "RootOf(x**2 - 1,-3)")
-    raises(IndexError, "RootOf(x**2 - 1, 2)")
-    raises(IndexError, "RootOf(x**2 - 1, 3)")
+    raises(IndexError, lambda: RootOf(x**2 - 1,-4))
+    raises(IndexError, lambda: RootOf(x**2 - 1,-3))
+    raises(IndexError, lambda: RootOf(x**2 - 1, 2))
+    raises(IndexError, lambda: RootOf(x**2 - 1, 3))
 
     assert RootOf(Poly(x - y, x), 0) == y
 
@@ -94,7 +94,7 @@ def test_RootOf___new__():
     assert RootOf(Poly(x**3 - y, x), 0) == y**Rational(1,3)
 
     assert RootOf(y*x**3 + y*x + 2*y, x, 0) == -1
-    raises(NotImplementedError, "RootOf(x**3 + x + 2*y, x, 0)")
+    raises(NotImplementedError, lambda: RootOf(x**3 + x + 2*y, x, 0))
 
     assert RootOf(x**3 + x + 1, 0).is_commutative == True
 
@@ -181,8 +181,8 @@ def test_RootSum___new__():
     # Issue 2472
     assert hash(RootSum((x - 7)*f**3, g)) == hash(log(7*x) + 3*RootSum(f, g))
 
-    raises(MultivariatePolynomialError, "RootSum(x**3 + x + y)")
-    raises(ValueError, "RootSum(x**2 + 3, lambda x: x)")
+    raises(MultivariatePolynomialError, lambda: RootSum(x**3 + x + y))
+    raises(ValueError, lambda: RootSum(x**2 + 3, lambda x: x))
 
     assert RootSum(f, exp) == RootSum(f, Lambda(x, exp(x)))
     assert RootSum(f, log) == RootSum(f, Lambda(x, log(x)))
@@ -283,4 +283,3 @@ def test_RootSum_independent():
     r1 = RootSum(x**4 - b, h, x)
 
     assert RootSum(f, g, x).as_ordered_terms() == [10*r0, 15*r1, 126]
-

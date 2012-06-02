@@ -10,6 +10,7 @@ Segment
 """
 from sympy.core import S, C, sympify, Dummy
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
+from sympy.core.logic import fuzzy_and
 from sympy.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
@@ -41,7 +42,7 @@ class LinearEntity(GeometryEntity):
     Subclasses should implement the following methods:
 
         * __eq__
-        * __contains__
+        * contains
 
     See Also
     ========
@@ -192,7 +193,8 @@ class LinearEntity(GeometryEntity):
         try:
             # Get the intersection (if parallel)
             p = lines[0].intersection(lines[1])
-            if len(p) == 0: return False
+            if len(p) == 0:
+                return False
 
             # Make sure the intersection is on every linear entity
             for line in lines[2:]:
@@ -652,7 +654,7 @@ class LinearEntity(GeometryEntity):
             a1, b1, c1 = self.coefficients
             a2, b2, c2 = o.coefficients
             t = simplify(a1*b2 - a2*b1)
-            if t == 0: # are parallel?
+            if t.equals(0) is not False: # assume they are parallel
                 if isinstance(self, Line):
                     if o.p1 in self:
                         return [o]
@@ -723,8 +725,38 @@ class LinearEntity(GeometryEntity):
             px = simplify((b1*c2 - c1*b2) / t)
             py = simplify((a2*c1 - a1*c2) / t)
             inter = Point(px, py)
-            if inter in self and inter in o:
-                return [inter]
+            # we do not use a simplistic 'inter in self and inter in o'
+            # because that requires an equality test that is fragile;
+            # instead we employ some diagnostics to see if the intersection
+            # is valid
+            def inseg(self):
+                def _between(a, b, c):
+                    return c >= a and c <= b or c <= a and c >= b
+                if _between(self.p1.x, self.p2.x, inter.x) and \
+                   _between(self.p1.y, self.p2.y, inter.y):
+                    return True
+            def inray(self):
+                sray = Ray(self.p1, inter)
+                if sray.xdirection == self.xdirection and \
+                   sray.ydirection == self.ydirection:
+                    return True
+            for i in range(2):
+                if isinstance(self, Line):
+                    if isinstance(o, Line):
+                        return [inter]
+                    elif isinstance(o, Ray) and inray(o):
+                        return [inter]
+                    elif isinstance(o, Segment) and inseg(o):
+                        return [inter]
+                elif isinstance(self, Ray) and inray(self):
+                    if isinstance(o, Ray) and inray(o):
+                        return [inter]
+                    elif isinstance(o, Segment) and inseg(o):
+                        return [inter]
+                elif isinstance(self, Segment) and inseg(self):
+                    if isinstance(o, Segment) and inseg(o):
+                        return [inter]
+                self, o = o, self
             return []
 
         return o.intersection(self)
@@ -812,6 +844,23 @@ class LinearEntity(GeometryEntity):
                 return c
         return _norm(*self.coefficients) == _norm(*other.coefficients)
 
+    def __contains__(self, other):
+        """Return a definitive answer or else raise an error if it cannot
+        be determined that other is on the boundaries of self."""
+        result = self.contains(other)
+
+        if result is not None:
+            return result
+        else:
+            raise Undecidable("can't decide whether '%s' contains '%s'" % (self, other))
+
+    def contains(self, other):
+        """Subclasses should implement this method and should return
+            True if other is on the boundaries of self;
+            False if not on the boundaries of self;
+            None if a determination cannot be made."""
+        raise NotImplementedError()
+
     def __eq__(self, other):
         """Subclasses should implement this method."""
         raise NotImplementedError()
@@ -827,7 +876,7 @@ class Line(LinearEntity):
     as defined using keyword `slope`.
 
     Notes
-    -----
+    =====
 
     At the moment only lines in a 2D space can be declared, because
     Points can be defined only for 2D spaces.
@@ -1010,10 +1059,16 @@ class Line(LinearEntity):
         a, b, c = self.coefficients
         return simplify(a*x + b*y + c)
 
-    def __contains__(self, o):
+    def contains(self, o):
         """Return True if o is on this Line, or False otherwise."""
         if isinstance(o, Point):
-            return Point.is_collinear(self.p1, self.p2, o)
+            x, y = Dummy(), Dummy()
+            eq = self.equation(x, y)
+            if not eq.has(y):
+                return (solve(eq, x)[0] - o.x).equals(0)
+            if not eq.has(x):
+                return (solve(eq, y)[0] - o.y).equals(0)
+            return (solve(eq.subs(x, o.x), y)[0] - o.y).equals(0)
         elif not isinstance(o, LinearEntity):
             return False
         elif isinstance(o, Line):
@@ -1332,32 +1387,30 @@ class Ray(LinearEntity):
     def __hash__(self):
         return super(Ray, self).__hash__()
 
-    def __contains__(self, o):
+    def contains(self, o):
         """Is other GeometryEntity contained in this Ray?"""
         if isinstance(o, Ray):
-            return (Point.is_collinear(self.p1, self.p2, o.p1, o.p2)
-                    and (self.xdirection == o.xdirection)
-                    and (self.ydirection == o.ydirection))
+            return (Point.is_collinear(self.p1, self.p2, o.p1, o.p2) and
+                    self.xdirection == o.xdirection and
+                    self.ydirection == o.ydirection)
         elif isinstance(o, Segment):
-            return (o.p1 in self) and (o.p2 in self)
+            return o.p1 in self and o.p2 in self
         elif isinstance(o, Point):
             if Point.is_collinear(self.p1, self.p2, o):
-                if (not self.p1.x.free_symbols and not self.p1.y.free_symbols
-                        and not self.p2.x.free_symbols and not self.p2.y.free_symbols):
-                    if self.xdirection is S.Infinity:
-                        return o.x >= self.source.x
-                    elif self.xdirection is S.NegativeInfinity:
-                        return o.x <= self.source.x
-                    elif self.ydirection is S.Infinity:
-                        return o.y >= self.source.y
-                    return o.y <= self.source.y
+                if self.xdirection is S.Infinity:
+                    rv = o.x >= self.source.x
+                elif self.xdirection is S.NegativeInfinity:
+                    rv = o.x <= self.source.x
+                elif self.ydirection is S.Infinity:
+                    rv = o.y >= self.source.y
                 else:
-                    # There are symbols lying around, so assume that o
-                    # is contained in this ray (for now)
-                    return True
+                    rv = o.y <= self.source.y
+                if isinstance(rv, bool):
+                    return rv
+                raise Undecidable('Cannot determine if %s is in %s' % (o, self))
             else:
                 # Points are not collinear, so the rays are not parallel
-                # and hence it isimpossible for self to contain o
+                # and hence it is impossible for self to contain o
                 return False
 
         # No other known entity can be contained in a Ray
@@ -1642,7 +1695,7 @@ class Segment(LinearEntity):
 
     def contains(self, other):
         """
-        Is the other GeometryEntity contained within this Ray?
+        Is the other GeometryEntity contained within this Segment?
 
         Examples
         ========
@@ -1670,11 +1723,3 @@ class Segment(LinearEntity):
 
         # No other known entity can be contained in a Ray
         return False
-
-    def __contains__(self, other):
-        result = self.contains(other)
-
-        if result is not None:
-            return result
-        else:
-            raise Undecidable("can't decide whether '%s' contains '%s'" % (self, other))

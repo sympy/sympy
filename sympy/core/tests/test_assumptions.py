@@ -2,6 +2,8 @@ from sympy.core import Symbol, S, Rational, Integer
 from sympy.utilities.pytest import raises, XFAIL
 from sympy import I, sqrt, log, exp
 
+from sympy.core.facts import InconsistentAssumptions
+
 def test_symbol_unset():
     x = Symbol('x',real=True, integer=True)
     assert x.is_real == True
@@ -453,7 +455,8 @@ def test_other_symbol():
     assert x.is_integer == True
     assert x.is_nonpositive == True
 
-    raises(AttributeError, "x.is_real = False")
+    with raises(AttributeError):
+        x.is_real = False
 
 def test_issue726():
     """catch: hash instability"""
@@ -574,4 +577,4 @@ def test_special_assumptions():
 
 def test_inconsistent():
     # cf. issues 2696 and 2446
-    raises(AssertionError, "Symbol('x', real=True, commutative=False)")
+    raises(InconsistentAssumptions, lambda: Symbol('x', real=True, commutative=False))

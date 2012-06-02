@@ -1,10 +1,10 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import Symbol, symbols, oo, I, pi, Float
+from sympy import Symbol, symbols, oo, I, pi, Float, And, Or, Not, Implies, Xor
 from sympy.core.relational import ( Relational, Equality, Unequality,
     GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Rel, Eq, Lt, Le,
     Gt, Ge, Ne )
 
-x,y,z = symbols('x,y,z')
+x, y, z, t = symbols('x,y,z,t')
 
 
 def test_rel_ne():
@@ -248,10 +248,26 @@ def test_new_relational():
                                      '<=', 'le', '>', 'gt', '<', 'lt'):
                 break
 
-        raises(ValueError, "Relational(x, 1, relation_type)" )
+        raises(ValueError, lambda: Relational(x, 1, relation_type))
 
 @XFAIL
 def test_relational_bool_output():
     # XFail test for issue:
     # http://code.google.com/p/sympy/issues/detail?id=2832
-    raises(ValueError, "bool(x > 3)")
+    raises(ValueError, lambda: bool(x > 3))
+
+def test_relational_logic_symbols():
+    # See issue 3105
+    assert (x < y) & (z < t) == And(x < y, z < t)
+    assert (x < y) | (z < t) == Or(x < y, z < t)
+    assert ~(x < y) == Not(x < y)
+    assert (x < y) >> (z < t) == Implies(x < y, z < t)
+    assert (x < y) << (z < t) == Implies(z < t, x < y)
+    assert (x < y) ^ (z < t) == Xor(x < y, z < t)
+
+    assert isinstance((x < y) & (z < t), And)
+    assert isinstance((x < y) | (z < t), Or)
+    assert isinstance(~(x < y), Not)
+    assert isinstance((x < y) >> (z < t), Implies)
+    assert isinstance((x < y) << (z < t), Implies)
+    assert isinstance((x < y) ^ (z < t), (Or, Xor))

@@ -97,9 +97,9 @@ dots (time derivatives of the generalized speeds). ::
   >>> rhs = rhs.subs(kdd)
   >>> rhs.simplify()
   >>> mprint(rhs, order=None)
-  [(4*g*sin(q2) + 10*r*u2*u3 - 5*r*u3**2*tan(q2))/(5*r)]
-  [                                          -2*u1*u3/3]
-  [                             (-2*u2 + u3*tan(q2))*u1]
+  [(4*g*sin(q2)/5 + 2*r*u2*u3 - r*u3**2*tan(q2))/r]
+  [                                     -2*u1*u3/3]
+  [                        (-2*u2 + u3*tan(q2))*u1]
 
 This concludes the rolling disc example.
 
@@ -167,13 +167,13 @@ represent the constraint forces in those directions. ::
   >>> rhs = rhs.subs(kdd)
   >>> rhs.simplify()
   >>> mprint(rhs, order=None)
-  [(4*g*sin(q2) + 10*r*u2*u3 - 5*r*u3**2*tan(q2))/(5*r)]
-  [                                          -2*u1*u3/3]
-  [                             (-2*u2 + u3*tan(q2))*u1]
+  [(4*g*sin(q2)/5 + 2*r*u2*u3 - r*u3**2*tan(q2))/r]
+  [                                     -2*u1*u3/3]
+  [                        (-2*u2 + u3*tan(q2))*u1]
   >>> mprint(KM.auxiliary_eqs, order=None)
-  [                                                          -m*(r*u1*u3 + r*u2') + f1]
-  [       -m*((r*(u3*q3' - u1') + r*u2*u3)*cos(q2) + (r*u1**2 + r*u2**2)*sin(q2)) + f2]
-  [-g*m - m*((r*(u3*q3' - u1') + r*u2*u3)*sin(q2) + (-r*u1**2 - r*u2**2)*cos(q2)) + f3]
+  [                                                  -m*(r*u1*u3 + r*u2') + f1]
+  [       -m*r*((u1**2 + u2**2)*sin(q2) + (u2*u3 + u3*q3' - u1')*cos(q2)) + f2]
+  [-g*m - m*r*((-u1**2 - u2**2)*cos(q2) + (u2*u3 + u3*q3' - u1')*sin(q2)) + f3]
 
 The Bicycle
 ===========

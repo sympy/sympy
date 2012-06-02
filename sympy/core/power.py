@@ -116,7 +116,7 @@ class Pow(Expr):
         smallarg = (abs(e) <= abs(S.Pi/log(b)))
         if (other.is_Rational and other.q == 2 and
             e.is_real is False and smallarg is False):
-                return -Pow(b, e*other)
+            return -Pow(b, e*other)
         if (other.is_integer or
             e.is_real and (b_nneg or abs(e) < 1) or
             e.is_real is False and smallarg is True or
@@ -125,10 +125,7 @@ class Pow(Expr):
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
-            if self.base.is_even:
-                return True
-            if self.base.is_integer:
-                return False
+            return self.base.is_even
 
     def _eval_is_positive(self):
         if self.base.is_positive:
@@ -215,8 +212,11 @@ class Pow(Expr):
                     return ok
 
     def _eval_is_odd(self):
-        if not (self.base.is_integer and self.exp.is_nonnegative): return
-        return self.base.is_odd
+        if self.exp.is_integer:
+            if self.exp.is_positive:
+                return self.base.is_odd
+            elif self.exp.is_nonnegative and self.base.is_odd:
+                return True
 
     def _eval_is_bounded(self):
         if self.exp.is_negative:
@@ -936,7 +936,7 @@ class Pow(Expr):
         >>> eq.as_content_primitive()
         (9, 3**(2*x))
         >>> powsimp(Mul(*_))
-        9*9**x
+        9**(x + 1)
 
         >>> eq = (2 + 2*x)**y
         >>> s = separate(eq); s.is_Mul, s

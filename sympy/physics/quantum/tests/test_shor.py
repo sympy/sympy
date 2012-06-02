@@ -26,4 +26,3 @@ def test_continued_frac():
     assert arr(5,3) == [1,0,1]
     assert arr(4,3) == [1,0,0]
     assert arr(8,5) == [0,1,0,0,0]
-

@@ -168,7 +168,7 @@ def test_bra_ket_dagger():
     assert Dagger(e) == conjugate(x)*Dagger(k2) - 2*I*Dagger(k)
 
 def test_wavefunction():
-    x, L = symbols('x,L', real=True)
+    x, y, L = symbols('x,y,L', real=True)
     n = symbols('n', integer=True)
 
     f = Wavefunction(x**2, x)
@@ -181,7 +181,7 @@ def test_wavefunction():
     assert p(10) == 10000
     assert lims[x] == (-oo, oo)
     assert diff(f, x) == Wavefunction(2*x, x)
-    raises(NotImplementedError, 'f.normalize()')
+    raises(NotImplementedError, lambda: f.normalize())
     assert conjugate(f) == Wavefunction(conjugate(f.expr), x)
     assert conjugate(f) == Dagger(f)
 

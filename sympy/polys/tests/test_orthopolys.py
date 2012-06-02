@@ -14,7 +14,7 @@ from sympy.polys.orthopolys import (
 from sympy.abc import x, a
 
 def test_chebyshevt_poly():
-    raises(ValueError, "chebyshevt_poly(-1, x)")
+    raises(ValueError, lambda: chebyshevt_poly(-1, x))
 
     assert chebyshevt_poly(1, x, polys=True) == Poly(x)
 
@@ -30,7 +30,7 @@ def test_chebyshevt_poly():
     assert chebyshevt_poly(1, polys=True) == Poly(x)
 
 def test_chebyshevu_poly():
-    raises(ValueError, "chebyshevu_poly(-1, x)")
+    raises(ValueError, lambda: chebyshevu_poly(-1, x))
 
     assert chebyshevu_poly(1, x, polys=True) == Poly(2*x)
 
@@ -46,7 +46,7 @@ def test_chebyshevu_poly():
     assert chebyshevu_poly(1, polys=True) == Poly(2*x)
 
 def test_hermite_poly():
-    raises(ValueError, "hermite_poly(-1, x)")
+    raises(ValueError, lambda: hermite_poly(-1, x))
 
     assert hermite_poly(1, x, polys=True) == Poly(2*x)
 
@@ -62,7 +62,7 @@ def test_hermite_poly():
     assert hermite_poly(1, polys=True) == Poly(2*x)
 
 def test_legendre_poly():
-    raises(ValueError, "legendre_poly(-1, x)")
+    raises(ValueError, lambda: legendre_poly(-1, x))
 
     assert legendre_poly(1, x, polys=True) == Poly(x)
 
@@ -78,7 +78,7 @@ def test_legendre_poly():
     assert legendre_poly(1, polys=True) == Poly(x)
 
 def test_laguerre_poly():
-    raises(ValueError, "laguerre_poly(-1, x)")
+    raises(ValueError, lambda: laguerre_poly(-1, x))
 
     assert laguerre_poly(1, x, polys=True) == Poly(-x + 1)
 

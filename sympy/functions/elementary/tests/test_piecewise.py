@@ -11,8 +11,8 @@ def test_piecewise():
     assert Piecewise((x, x < 1), (0, True)) == Piecewise((x, x < 1), (0, True))
     assert Piecewise((x, x < 1), (0, False), (-1, 1>2)) == Piecewise((x, x < 1))
     assert Piecewise((x, True)) == x
-    raises(TypeError,"Piecewise(x)")
-    raises(TypeError,"Piecewise((x,x**2))")
+    raises(TypeError, lambda: Piecewise(x))
+    raises(TypeError, lambda: Piecewise((x,x**2)))
 
     # Test subs
     p = Piecewise((-1, x < -1), (x**2, x < 0), (log(x), x >=0))
@@ -69,7 +69,7 @@ def test_piecewise():
     p = Piecewise((0, x < 0), (1,x < 1), (0, x < 2), (1, x < 3), (0, True))
     assert integrate(p, (x,-oo,oo)) == 2
     p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
-    raises(ValueError, "integrate(p,(x,-2,2))")
+    raises(ValueError, lambda: integrate(p,(x,-2,2)))
 
     # Test commutativity
     assert p.is_commutative is True

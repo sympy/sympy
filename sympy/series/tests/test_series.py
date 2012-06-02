@@ -28,8 +28,8 @@ def test_2124():
     assert series(1, x) == 1
     assert S(0).lseries(x).next() == 0
     assert cos(x).series() == cos(x).series(x)
-    raises(ValueError, 'cos(x+y).series()')
-    raises(ValueError, 'x.series(dir="")')
+    raises(ValueError, lambda: cos(x+y).series())
+    raises(ValueError, lambda: x.series(dir=""))
 
     assert (cos(x).series(x, 1).removeO().subs(x, x - 1) -
             cos(x + 1).series(x).removeO().subs(x, x - 1)).expand() == 0
@@ -57,7 +57,7 @@ def test_2124():
     assert ((sin(x))**y).nseries(x, n=1, logx = logx) \
            == exp(y*logx) + O(x*exp(y*logx), x)
 
-    raises(NotImplementedError, 'series(Function("f")(x))')
+    raises(NotImplementedError, lambda: series(Function("f")(x)))
 
     assert sin(1/x).series(x, oo, n=5) == 1/x - 1/(6*x**3)
     assert abs(x).series(x, oo, n=5, dir='+') == x

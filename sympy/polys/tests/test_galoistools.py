@@ -207,10 +207,10 @@ def test_gf_arith():
     assert gf_sqr([2,0,0,1,7], 11, ZZ) == [4,0,0,4,6,0,1,3,5]
 
 def test_gf_division():
-    raises(ZeroDivisionError, "gf_div([1,2,3], [], 11, ZZ)")
-    raises(ZeroDivisionError, "gf_rem([1,2,3], [], 11, ZZ)")
-    raises(ZeroDivisionError, "gf_quo([1,2,3], [], 11, ZZ)")
-    raises(ZeroDivisionError, "gf_quo([1,2,3], [], 11, ZZ)")
+    raises(ZeroDivisionError, lambda: gf_div([1,2,3], [], 11, ZZ))
+    raises(ZeroDivisionError, lambda: gf_rem([1,2,3], [], 11, ZZ))
+    raises(ZeroDivisionError, lambda: gf_quo([1,2,3], [], 11, ZZ))
+    raises(ZeroDivisionError, lambda: gf_quo([1,2,3], [], 11, ZZ))
 
     assert gf_div([1], [1,2,3], 7, ZZ) == ([], [1])
     assert gf_rem([1], [1,2,3], 7, ZZ) == [1]
@@ -222,7 +222,7 @@ def test_gf_division():
     assert gf_rem(f, g, 7, ZZ) == r
     assert gf_quo(f, g, 7, ZZ) == q
 
-    raises(ExactQuotientFailed, "gf_exquo(f, g, 7, ZZ)")
+    raises(ExactQuotientFailed, lambda: gf_exquo(f, g, 7, ZZ))
 
     f, g, q, r = [5,4,3,2,1,0], [1,2,3,0], [5,1,0], [6,1,0]
 
@@ -230,7 +230,7 @@ def test_gf_division():
     assert gf_rem(f, g, 7, ZZ) == r
     assert gf_quo(f, g, 7, ZZ) == q
 
-    raises(ExactQuotientFailed, "gf_exquo(f, g, 7, ZZ)")
+    raises(ExactQuotientFailed, lambda: gf_exquo(f, g, 7, ZZ))
 
     assert gf_quo([1,2,1], [1,1], 11, ZZ) == [1,1]
 
@@ -421,7 +421,7 @@ def test_gf_irreducible_p():
     assert gf_irreducible_p([7,3,1], 11, ZZ) == False
 
     config.setup('GF_IRRED_METHOD', 'other')
-    raises(KeyError, "gf_irreducible_p([7], 11, ZZ)")
+    raises(KeyError, lambda: gf_irreducible_p([7], 11, ZZ))
     config.setup('GF_IRRED_METHOD')
 
     f = [1, 9,  9, 13, 16, 15,  6,  7,  7,  7, 10]
@@ -774,7 +774,7 @@ def test_gf_factor():
     assert gf_factor_sqf(f, p, ZZ) == g
 
     config.setup('GF_FACTOR_METHOD', 'other')
-    raises(KeyError, "gf_factor([1,1], 11, ZZ)")
+    raises(KeyError, lambda: gf_factor([1,1], 11, ZZ))
     config.setup('GF_FACTOR_METHOD')
 
 def test_gf_csolve():

@@ -1,12 +1,12 @@
-from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
-    collect, Function, powsimp, separate, sin, exp, Rational, fraction,
-    simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate,
-    sinh, cosh, tanh, coth,
-    solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
-    S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
-    separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float, radsimp, collect_const, hyper,
-    signsimp, besselsimp, ratsimpmodprime)
+from sympy import (
+    Add, Derivative, E, Eq, Float, Function, GoldenRatio, I, Integer,
+    Integral, Matrix, Mul, O, Rational, S, Symbol, Wild, acos, atan,
+    besselsimp, binomial, collect, collect_const, combsimp, cos, cosh,
+    cot, coth, count_ops, diff, erf, exp, expand, factor, factorial,
+    fraction, gamma, hyper, hyper, hypersimp, integrate, log, logcombine,
+    nsimplify, oo, pi, posify, powdenest, powsimp, radsimp, ratsimp,
+    ratsimpmodprime, rcollect, separate, separatevars, signsimp, simplify,
+    sin, sinh, solve, sqrt, symbols, sympify, tan, tanh, trigsimp, Dummy)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
@@ -288,7 +288,9 @@ def test_simplify_other():
         (2*sqrt(t)))/(2*sqrt(t)) + pi*x*exp(-3*I*pi/4 + I*x**2/(4*t))/\
         (2*sqrt(t)))*exp(-I*x**2/(4*t))/(sqrt(pi)*x) - I*sqrt(pi)*\
         (-erf(x*exp(I*pi/4)/(2*sqrt(t))) + 1)*exp(I*pi/4)/(2*sqrt(t))
-    assert simplify(ans) == -(-1)**(S(1)/4)*I*sqrt(pi)/sqrt(t)
+    assert simplify(ans) == -(-1)**(S(3)/4)*sqrt(pi)/sqrt(t)
+    # issue 3271
+    assert simplify(2**(2 + x)/4) == 2**x
 
 def test_simplify_ratio():
     # roots of x**3-3*x+5
@@ -401,10 +403,9 @@ def test_powsimp():
     # This should remain factored, because 'exp' with deep=True is supposed
     # to act like old automatic exponent combining.
     assert powsimp((1 + E*exp(E))*exp(-E), combine='exp', deep=True) == (1 + exp(1 + E))*exp(-E)
-    assert powsimp((1 + E*exp(E))*exp(-E), deep=True) == exp(1) + exp(-E)
-    # This should not change without deep.  Otherwise, simplify() will fail.
-    assert powsimp((1 + E*exp(E))*exp(-E)) == (1 + E*exp(E))*exp(-E)
-    assert powsimp((1 + E*exp(E))*exp(-E), combine='exp') == (1 + E*exp(E))*exp(-E)
+    assert powsimp((1 + E*exp(E))*exp(-E), deep=True) == (1 + exp(1 + E))*exp(-E)
+    assert powsimp((1 + E*exp(E))*exp(-E)) == (1 + exp(1 + E))*exp(-E)
+    assert powsimp((1 + E*exp(E))*exp(-E), combine='exp') == (1 + exp(1 + E))*exp(-E)
     assert powsimp((1 + E*exp(E))*exp(-E), combine='base') == (1 + E*exp(E))*exp(-E)
     x,y = symbols('x,y', nonnegative=True)
     n = Symbol('n', real=True)
@@ -438,6 +439,18 @@ def test_powsimp():
     assert powsimp(2**(2*x)) == 4**x # powdenest goes the other direction
 
     assert powsimp(exp(p/2)) == exp(p/2)
+
+    # issue 3269
+    eq = Mul(*[sqrt(Dummy(imaginary=True)) for i in range(3)])
+    assert powsimp(eq) == eq and eq.is_Mul
+
+def test_issue_3268():
+    z = -5*sqrt(2)/(2*sqrt(2*sqrt(29) + 29)) + sqrt(-sqrt(29)/29 + S(1)/2)
+    assert Mul(*[powsimp(a) for a in Mul.make_args(z.normal())]) == 0
+    assert powsimp(z.normal()) == 0
+    assert simplify(z) == 0
+    assert powsimp(sqrt(2 + sqrt(3))*sqrt(2 - sqrt(3)) + 1) == 2
+    assert powsimp(z) != 0
 
 def test_powsimp_polar():
     from sympy import polar_lift, exp_polar
@@ -858,24 +871,22 @@ def test_powdenest():
     assert powdenest((x**2*y**6)**i) == (x*y**3)**(2*i)
     assert powdenest((x**(2*i/3)*y**(i/2))**(2*i)) == (x**(S(4)/3)*y)**(i**2)
     assert powdenest(sqrt(x**(2*i)*y**(6*i))) == (x*y**3)**i
-    # issue 2706
-    assert powdenest(((gamma(x)*hyper((),(),x))*pi)**2) == (pi*gamma(x)*hyper((), (), x))**2
 
     assert powdenest(4**x) == 2**(2*x)
     assert powdenest((4**x)**y) == 2**(2*x*y)
     assert powdenest(4**x*y) == 2**(2*x)*y
 
 def test_powdenest_polar():
-    from sympy import powdenest
     x, y, z = symbols('x y z', polar=True)
     a, b, c = symbols('a b c')
     assert powdenest((x*y*z)**a) == x**a*y**a*z**a
     assert powdenest((x**a*y**b)**c) == x**(a*c)*y**(b*c)
     assert powdenest(((x**a)**b*y**c)**c) == x**(a*b*c)*y**(c**2)
 
-@XFAIL
 def test_issue_2706():
-    assert (((gamma(x)*hyper((),(),x))*pi)**2).is_positive is None
+    arg = ((gamma(x)*hyper((),(),x))*pi)**2
+    assert powdenest(arg) == (pi*gamma(x)*hyper((), (), x))**2
+    assert arg.is_positive is None
 
 def test_issue_1095():
     # simplify should call cancel
@@ -1083,7 +1094,7 @@ def test_combsimp_gamma():
     assert combsimp(1/gamma(x+3)/gamma(1-x)) == sin(pi*x)/(pi*x*(x+1)*(x+2))
 
     assert simplify(combsimp(gamma(x)*gamma(x+S(1)/2)*gamma(y)/gamma(x+y))) \
-           == 2**(-2*x + 1)*sqrt(pi)*gamma(2*x)*gamma(y)/gamma(x + y)
+           == 2*4**-x*sqrt(pi)*gamma(2*x)*gamma(y)/gamma(x + y)
     assert combsimp(1/gamma(x)/gamma(x-S(1)/3)/gamma(x+S(1)/3)) == \
            3**(3*x + S(1)/2)/(18*pi*gamma(3*x - 1))
     assert simplify(gamma(S(1)/2 + x/2)*gamma(1 + x/2)/gamma(1+x)/sqrt(pi)*2**x) \
@@ -1091,7 +1102,7 @@ def test_combsimp_gamma():
     assert combsimp(gamma(S(-1)/4)*gamma(S(-3)/4)) == 16*sqrt(2)*pi/3
 
     assert simplify(combsimp(gamma(2*x)/gamma(x))) == \
-           2**(2*x - 1)*gamma(x + S(1)/2)/sqrt(pi)
+           4**x*gamma(x + S(1)/2)/sqrt(pi)/2
 
 def test_unpolarify():
     from sympy import (exp_polar, polar_lift, exp, unpolarify, sin,

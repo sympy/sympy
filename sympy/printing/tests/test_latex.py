@@ -8,7 +8,7 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Tuple, MellinTransform, InverseMellinTransform, LaplaceTransform,
     InverseLaplaceTransform, FourierTransform, InverseFourierTransform,
     SineTransform, InverseSineTransform, CosineTransform,
-    InverseCosineTransform, FiniteSet, TransformationSet)
+    InverseCosineTransform, FiniteSet, TransformationSet, Range)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
@@ -188,15 +188,15 @@ def test_hyper_printing():
 
     assert latex(meijerg(Tuple(pi, pi, x), Tuple(1), \
                          (0,1), Tuple(1, 2, 3/pi),z)) == \
-             r'{G_{4, 5}^{2, 3}\left.\left(\begin{matrix} \pi, \pi, x & 1 \\0, 1 & 1, 2, \frac{3}{\pi} \end{matrix} \right| {z} \right)}'
+             r'{G_{4, 5}^{2, 3}\left(\begin{matrix} \pi, \pi, x & 1 \\0, 1 & 1, 2, \frac{3}{\pi} \end{matrix} \middle| {z} \right)}'
     assert latex(meijerg(Tuple(), Tuple(1), (0,), Tuple(),z)) == \
-             r'{G_{1, 1}^{1, 0}\left.\left(\begin{matrix}  & 1 \\0 &  \end{matrix} \right| {z} \right)}'
+             r'{G_{1, 1}^{1, 0}\left(\begin{matrix}  & 1 \\0 &  \end{matrix} \middle| {z} \right)}'
     assert latex(hyper((x, 2), (3,), z)) == \
-               r'{{}_{2}F_{1}\left.\left(\begin{matrix} x, 2 ' \
-               r'\\ 3 \end{matrix}\right| {z} \right)}'
+               r'{{}_{2}F_{1}\left(\begin{matrix} x, 2 ' \
+               r'\\ 3 \end{matrix}\middle| {z} \right)}'
     assert latex(hyper(Tuple(), Tuple(1), z)) == \
-               r'{{}_{0}F_{1}\left.\left(\begin{matrix}  ' \
-               r'\\ 1 \end{matrix}\right| {z} \right)}'
+               r'{{}_{0}F_{1}\left(\begin{matrix}  ' \
+               r'\\ 1 \end{matrix}\middle| {z} \right)}'
 
 def test_latex_bessel():
     from sympy.functions.special.bessel import (besselj, bessely, besseli,
@@ -211,6 +211,14 @@ def test_latex_bessel():
     assert latex(hankel2(n, z)) == r'H^{(2)}_{n}\left(z\right)'
     assert latex(jn(n, z)) == r'j_{n}\left(z\right)'
     assert latex(yn(n, z)) == r'y_{n}\left(z\right)'
+
+def test_latex_fresnel():
+    from sympy.functions.special.error_functions import (fresnels, fresnelc)
+    from sympy.abc import z
+    assert latex(fresnels(z)) == r'S\left(z\right)'
+    assert latex(fresnelc(z)) == r'C\left(z\right)'
+    assert latex(fresnels(z)**2) == r'S^{2}\left(z\right)'
+    assert latex(fresnelc(z)**2) == r'C^{2}\left(z\right)'
 
 def test_latex_brackets():
     assert latex((-1)**x) == r"\left(-1\right)^{x}"
@@ -240,23 +248,21 @@ def test_latex_integrals():
     assert latex(Integral(x, x, y, (z, 0, 1))) == \
         r"\int_{0}^{1}\int\int x\, dx\, dy\, dz"
 
-def test_latex_finiteset():
-    assert latex(FiniteSet(range(1, 51)) ==\
-            r'\left{1, 2, 3, ..., 48, 49, 50\right}')
-    assert latex(FiniteSet(range(1, 6)) == r'\left{1, 2, 3, 4, 5\right}')
+def test_latex_sets():
+    for s in (FiniteSet, frozenset, set):
+        assert latex(s([x*y, x**2])) == r"\left\{x^{2}, x y\right\}"
+        assert latex(s(range(1, 6))) == r"\left\{1, 2, 3, 4, 5\right\}"
+        assert latex(s(range(1, 13))) == \
+            r"\left\{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12\right\}"
 
-def test_latex_frozenset():
-    assert latex(frozenset(range(1, 51)) ==\
-            r'\left{1, 2, 3, ..., 48, 49, 50\right}')
-    assert latex(frozenset(range(1, 6)) == r'\left{1, 2, 3, 4, 5\right}')
-
-def test_latex_set():
-    assert latex(set(range(1, 51)) ==\
-            r'\left{1, 2, 3, ..., 48, 49, 50\right}')
-    assert latex(set(range(1, 6)) == r'\left{1, 2, 3, 4, 5\right}')
+def test_latex_Range():
+    assert latex(Range(1, 51)) ==\
+            r'\left\{1, 2, \ldots, 50\right\}'
+    assert latex(Range(1, 4)) == r'\left\{1, 2, 3\right\}'
 
 def test_latex_intervals():
     a = Symbol('a', real=True)
+    assert latex(Interval(0, 0)) == r"\left\{0\right\}"
     assert latex(Interval(0, a)) == r"\left[0, a\right]"
     assert latex(Interval(0, a, False, False)) == r"\left[0, a\right]"
     assert latex(Interval(0, a, True, False)) == r"\left(0, a\right]"
@@ -274,8 +280,11 @@ def test_latex_union():
 
 def test_latex_productset():
     line = Interval(0,1)
-    assert latex(line**2) == r"%s \times %s"%(latex(line), latex(line))
-    assert latex(line**3) == r"%s \times %s \times %s"%((latex(line),)*3)
+    bigline = Interval(0, 10)
+    fset = FiniteSet(1, 2, 3)
+    assert latex(line**2) == r"%s^2"%latex(line)
+    assert latex(line * bigline * fset) == r"%s \times %s \times %s"%(
+            latex(line), latex(bigline), latex(fset))
 
 def test_latex_Naturals():
     assert latex(S.Naturals) == r"\mathbb{N}"
@@ -467,7 +476,7 @@ def test_latex_RootSum():
         r"\operatorname{RootSum} {\left(x^{5} + x + 3, \Lambda {\left (x, \sin{\left (x \right )} \right )}\right)}"
 
 def test_settings():
-    raises(TypeError, 'latex(x*y, method="garbage")')
+    raises(TypeError, lambda: latex(x*y, method="garbage"))
 
 def test_latex_numbers():
     assert latex(catalan(n)) == r"C_{n}"
@@ -525,6 +534,14 @@ def test_latex_RandomDomain():
     B = Exponential(1, symbol=Symbol('b'))
     assert latex(pspace(Tuple(A,B)).domain) =="Domain: 0 \leq a \wedge 0 \leq b"
 
+def test_PrettyPoly():
+    from sympy.polys.domains import QQ
+    F = QQ.frac_field(x, y)
+    R = QQ[x, y]
+
+    assert latex(F.convert(x/(x + y))) == latex(x/(x + y))
+    assert latex(R.convert(x + y)) == latex(x + y)
+
 def test_integral_transforms():
     x = Symbol("x")
     k = Symbol("k")
@@ -546,3 +563,9 @@ def test_integral_transforms():
 
     assert latex(SineTransform(f(x), x, k)) == r"\mathcal{SIN}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
     assert latex(InverseSineTransform(f(k), k, x)) == r"\mathcal{SIN}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+
+def test_PolynomialRing():
+    from sympy.polys.domains import QQ
+    assert latex(QQ[x, y]) == r"\mathbb{Q}\left[x, y\right]"
+    assert latex(QQ.poly_ring(x, y, order="ilex")) == \
+            r"S_<^{-1}\mathbb{Q}\left[x, y\right]"

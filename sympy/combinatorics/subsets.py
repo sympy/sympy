@@ -10,7 +10,7 @@ class Subset(Basic):
     We generate subsets using essentially two techniques,
     binary enumeration and lexicographic enumeration.
     The Subset class takes two arguments, the first one
-    describes the intial subset to consider and the second
+    describes the initial subset to consider and the second
     describes the superset.
 
     Examples

@@ -74,7 +74,7 @@ def test_flatten():
     assert flatten(ls, levels=2) == [-2, -1, 1, 2, 0, 0]
     assert flatten(ls, levels=3) == [-2, -1, 1, 2, 0, 0]
 
-    raises(ValueError, "flatten(ls, levels=-1)")
+    raises(ValueError, lambda: flatten(ls, levels=-1))
 
     class MyOp(Basic):
         pass
@@ -221,7 +221,7 @@ def test_topological_sort():
     assert topological_sort((V, E)) == [3, 5, 7, 8, 11, 2, 9, 10]
     assert topological_sort((V, E), key=lambda v: -v) == [7, 5, 11, 3, 10, 8, 9, 2]
 
-    raises(ValueError, "topological_sort((V, E + [(10, 7)]))")
+    raises(ValueError, lambda: topological_sort((V, E + [(10, 7)])))
 
 def test_rotate():
     A = [0, 1, 2, 3, 4]
@@ -263,6 +263,11 @@ def test_partitions():
 
     assert [p.copy() for p in partitions(8, k=4, m=3)] == [{4: 2},\
     {1: 1, 3: 1, 4: 1}, {2: 2, 4: 1}, {2: 1, 3: 2}]
+
+    assert [p.copy() for p in partitions(S(3), 2)] == \
+    [{3: 1}, {1: 1, 2: 1}]
+
+    raises(ValueError, 'list(partitions(3, 0))')
 
 def test_binary_partitions():
     assert [i[:] for i in binary_partitions(10)] == [[8, 2], [8, 1, 1], \
@@ -323,8 +328,8 @@ def test_unflatten():
     r = range(10)
     assert unflatten(r) == zip(r[::2], r[1::2])
     assert unflatten(r, 5) == [tuple(r[:5]), tuple(r[5:])]
-    raises(ValueError, "unflatten(range(10), 3)")
-    raises(ValueError, "unflatten(range(10), -2)")
+    raises(ValueError, lambda: unflatten(range(10), 3))
+    raises(ValueError, lambda: unflatten(range(10), -2))
 
 def test_common_prefix_suffix():
     assert common_prefix([], [1]) == []
