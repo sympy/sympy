@@ -3298,3 +3298,109 @@ class PermutationGroup(Basic):
 
 
 PermGroup = PermutationGroup
+
+def orbit(genv, alpha):
+    """
+    compute the orbit {g[i] for g in G}
+
+    It returns the orbit as a set.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.perm_groups import PermutationGroup
+    >>> from sympy.combinatorics.permutations import Permutation
+    >>> a = Permutation([2, 0, 1])
+    >>> b = Permutation([2, 1, 0])
+    >>> g = PermutationGroup([a, b])
+    >>> g.orbit(0)
+    set([0, 1, 2])
+    >>> g.orbits()
+    [set([0, 1, 2])]
+    >>> g.orbits(rep=True)
+    [0]
+    """
+    n = len(genv[0])
+    orb = set([alpha])
+    h = 0
+    r = len(genv)
+    stg = [range(n)]
+    sta = [alpha]
+    pos = [0]*n
+    while 1:
+        # backtrack when finished iterating over generators
+        if pos[h] >= r:
+            if h == 0:
+                return orb
+            pos[h] = 0
+            h -= 1
+            sta.pop()
+            stg.pop()
+            continue
+        g = genv[pos[h]]
+        pos[h] += 1
+        alpha = sta[-1]
+        ag = g[alpha]
+
+        if ag not in orb:
+            gen1 = perm_af_mul(g, stg[-1])
+            orb.add(ag)
+            sta.append(ag)
+            stg.append(gen1)
+            h += 1
+
+def orbit_transversal(genv, alpha, af=False):
+    """
+    compute the orbit traversal
+
+    Output: list of group elements; applying each to alpha
+    one gets the orbit of alpha
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.permutations import Permutation
+    >>> from sympy.combinatorics.perm_groups import PermutationGroup, orbit_transversal
+    >>> a = Permutation([0, 2, 1])
+    >>> b = Permutation([1, 0, 2])
+    >>> G = PermutationGroup([a, b])
+    >>> orbit_transversal([p.array_form for p in G.generators], 1, af=True)
+    [[1, 0, 2], [0, 1, 2], [0, 2, 1]]
+    """
+    #print 'DB0 traversal genv=%s alpha=%s' %(genv, alpha)
+    n = len(genv[0])
+    coset_repr = [None]*n
+    if af:
+        coset_repr[alpha] = range(n)
+    else:
+        coset_repr[alpha] = Permutation(range(n))
+    h = 0
+    r = len(genv)
+    stg = [range(n)]
+    sta = [alpha]
+    pos = [0]*n
+    while 1:
+        # backtrack when finished iterating over generators
+        if pos[h] >= r:
+            if h == 0:
+                #print 'DB10 traversal', [p for p in coset_repr if p]
+                return [p for p in coset_repr if p]
+            pos[h] = 0
+            h -= 1
+            sta.pop()
+            stg.pop()
+            continue
+        g = genv[pos[h]]
+        pos[h] += 1
+        alpha = sta[-1]
+        ag = g[alpha]
+
+        if coset_repr[ag] == None:
+            gen1 = perm_af_mul(g, stg[-1])
+            if af:
+                coset_repr[ag] = gen1
+            else:
+                coset_repr[ag] = Permutation(gen1)
+            sta.append(ag)
+            stg.append(gen1)
+            h += 1
