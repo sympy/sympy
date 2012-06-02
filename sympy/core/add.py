@@ -608,7 +608,7 @@ class Add(AssocOp):
             lst = new_lst
         return tuple(lst)
 
-    def as_real_imag(self, deep=True):
+    def as_real_imag(self, deep=True, **hints):
         """
         returns a tuple represeting a complex numbers
 

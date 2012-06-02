@@ -106,8 +106,11 @@ class Symbol(AtomicExpr, Boolean):
         from function import Function
         return Function(self.name)(*args)
 
-    def as_real_imag(self, deep=True):
-        return (C.re(self), C.im(self))
+    def as_real_imag(self, deep=True, **hints):
+        if hints.get('ignore') == self:
+            return None
+        else:
+            return (C.re(self), C.im(self))
 
     def _eval_expand_complex(self, deep=True, **hints):
         re, im = self.as_real_imag()
