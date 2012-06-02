@@ -56,7 +56,7 @@ class Morphism(Basic):
         If new_name is not an empty string, the new morphism will have
         the name new_name.  Otherwise the name of the new morphism
         will the juxtaposition of the names of morphisms in the
-        components list, in reversed order.
+        components list, in reversed order, interspersed with '*'.
 
         Examples
         ========
@@ -70,7 +70,7 @@ class Morphism(Basic):
 
         if not new_name:
             for component in reversed(composite.components):
-                composite.name += component.name + " "
+                composite.name += component.name + "*"
             composite.name = composite.name[:-1]
 
         return composite
@@ -101,7 +101,7 @@ class Morphism(Basic):
         If new_name is not an empty string, the new morphism will have
         the name new_name.  Otherwise the name of the new morphism
         will be the juxtaposition of the names of morphisms in
-        self.components, in reversed order.
+        self.components, in reversed order, interspersed with *.
 
         Examples
         ========
@@ -115,7 +115,7 @@ class Morphism(Basic):
 
         if not new_name:
             for component in reversed(self.components):
-                flattened.name += component.name + " "
+                flattened.name += component.name + "*"
             flattened.name = flattened.name[:-1]
 
         return flattened
