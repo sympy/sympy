@@ -172,6 +172,39 @@ class Density(HermitianOperator):
     def _print_operator_name_pretty(self, printer, *args):
         return prettyForm(u"\u03C1")
 
+
+
+class QubitDensity(Density):
+    """Density operator to handle qubit related operations
+
+    Examples
+    ========
+
+    TODO:
+
+
+    """
+
+    def reduced_density(self, qubit, **options):
+        """Compute the reduced density matrix by tracing out one qubit."""
+
+        def find_index_that_is_projected(j, k, qubit):
+            bit_mask = 2**qubit - 1
+            return ((j >> qubit) << (1 + qubit)) + (j & bit_mask) + (k << qubit)
+
+        old_density = represent(self, **options)
+        old_size = old_density.cols
+        new_size = old_size/2
+        new_density = Matrix().zeros(new_size)
+        for i in xrange(new_size):
+            for j in xrange(new_size):
+                for k in xrange(2):
+                    col = find_index_that_is_projected(j,k,qubit)
+                    row = find_index_that_is_projected(i,k,qubit)
+                    new_density[i,j] += old_density[row, col]
+        return Matrix(new_density)
+
+
 def entropy(density):
     """Compute the entropy of a density matrix.
 
@@ -221,3 +254,4 @@ def entropy(density):
         return -np.sum(eigvals*np.log(eigvals))
     else:
         raise ValueError("numpy.ndarray, scipy.sparse or sympy matrix expected")
+
