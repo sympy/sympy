@@ -38,7 +38,7 @@ class Patch(Basic):
     =========
 
     Define a Manifold and a Patch on that Manifold:
-    >>> from sympy.differential_geometry import Manifold, Patch
+    >>> from sympy.diffgeom import Manifold, Patch
     >>> m = Manifold('M', 3)
     >>> p = Patch('P', m)
     >>> p in m.patches
@@ -67,7 +67,7 @@ class CoordSystem(Basic):
     Define a Manifold and a Patch, and then define two coord systems on that
     patch:
     >>> from sympy import symbols, sin, cos, pi
-    >>> from sympy.differential_geometry import Manifold, Patch, CoordSystem
+    >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
     >>> x, y, r, theta = symbols('x, y, r, theta')
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
@@ -236,7 +236,7 @@ class Point(Basic):
 
     Define the boilerplate Manifold, Patch and coordinate systems:
     >>> from sympy import symbols, sin, cos, pi
-    >>> from sympy.differential_geometry import (
+    >>> from sympy.diffgeom import (
     ...        Manifold, Patch, CoordSystem, Point)
     >>> x, y, r, theta = symbols('x, y, r, theta')
     >>> m = Manifold('M', 2)
@@ -289,7 +289,7 @@ class ScalarField(Expr):
 
     Define boilerplate Manifold, Patch and coordinate systems:
     >>> from sympy import symbols, sin, cos, pi, Function
-    >>> from sympy.differential_geometry import (
+    >>> from sympy.diffgeom import (
     ...        Manifold, Patch, CoordSystem, Point, ScalarField)
     >>> x, y, r, theta = symbols('x, y, r, theta')
     >>> m = Manifold('M', 2)
@@ -352,8 +352,8 @@ class VectorField(Expr):
 
     Use the predefined R2 manifold, setup some boilerplate.
     >>> from sympy import symbols, sin, cos, pi, Function
-    >>> from sympy.differential_geometry.Rn import R2, R2_p, R2_r
-    >>> from sympy.differential_geometry import ScalarField, VectorField
+    >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
+    >>> from sympy.diffgeom import ScalarField, VectorField
     >>> x, y, r, theta = symbols('x, y, r, theta')
     >>> x0, y0, r0, theta0 = symbols('x0, y0, r0, theta0')
 
@@ -431,12 +431,12 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None):
 
     Use the predefined R2 manifold:
     >>> from sympy.abc import t, x, y
-    >>> from sympy.differential_geometry.Rn import R2, R2_p, R2_r
-    >>> from sympy.differential_geometry import intcurve_series
+    >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
+    >>> from sympy.diffgeom import intcurve_series
 
     Specify a starting point and a vector field:
     >>> start_point = R2_r.point([x, y])
-    >>> vector_field = R2_r.d_dx
+    >>> vector_field = R2_r.e_x
 
     Calculate the series:
     >>> series = intcurve_series(vector_field, t, start_point, n=3)
@@ -511,12 +511,12 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 
     Use the predefined R2 manifold:
     >>> from sympy.abc import t
-    >>> from sympy.differential_geometry.Rn import R2, R2_p, R2_r
-    >>> from sympy.differential_geometry import intcurve_diffequ
+    >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
+    >>> from sympy.diffgeom import intcurve_diffequ
 
     Specify a starting point and a vector field:
     >>> start_point = R2_r.point([1, 0])
-    >>> vector_field = -R2.y*R2.d_dx + R2.x*R2.d_dy
+    >>> vector_field = -R2.y*R2.e_x + R2.x*R2.e_y
 
     Get the equation:
     >>> equations, init_cond = intcurve_diffequ(vector_field, t, start_point)

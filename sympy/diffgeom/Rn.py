@@ -8,7 +8,7 @@ as attributes of the coordinate systems (eg `R2_r.x` and `R2_p.theta`), or by
 using the usual `coord_sys.coord_function(index, name)` interface.
 """
 
-from differential_geometry import Manifold, Patch, CoordSystem
+from diffgeom import Manifold, Patch, CoordSystem
 from sympy import sqrt, atan2, sin, cos, Dummy
 
 ###############################################################################
@@ -50,16 +50,16 @@ R2.theta = R2_p.theta
 # Defining the basis vector fields and adding shortcuts for them to the
 # manifold and the patch.
 ## for rectangular chart
-R2_r.d_dx = R2_r.base_vector(0)
-R2_origin.d_dx = R2_r.d_dx
-R2.d_dx = R2_r.d_dx
-R2_r.d_dy = R2_r.base_vector(1)
-R2_origin.d_dy = R2_r.d_dy
-R2.d_dy = R2_r.d_dy
+R2_r.e_x = R2_r.base_vector(0)
+R2_origin.e_x = R2_r.e_x
+R2.e_x = R2_r.e_x
+R2_r.e_y = R2_r.base_vector(1)
+R2_origin.e_y = R2_r.e_y
+R2.e_y = R2_r.e_y
 ## for polar chart
-R2_p.d_dr = R2_p.base_vector(0)
-R2_origin.d_dr = R2_p.d_dr
-R2.d_dr = R2_p.d_dr
-R2_p.d_dtheta = R2_p.base_vector(1)
-R2_origin.d_dtheta = R2_p.d_dtheta
-R2.d_dtheta = R2_p.d_dtheta
+R2_p.e_r = R2_p.base_vector(0)
+R2_origin.e_r = R2_p.e_r
+R2.e_r = R2_p.e_r
+R2_p.e_theta = R2_p.base_vector(1)
+R2_origin.e_theta = R2_p.e_theta
+R2.e_theta = R2_p.e_theta
