@@ -387,7 +387,10 @@ class Abs(Function):
     def _eval_rewrite_as_Heaviside(self, arg):
         # Note this only holds for real arg (since Heaviside is not defined
         # for complex arguments).
-        return arg*(C.Heaviside(arg) - C.Heaviside(-arg))
+        if arg.is_real:
+            return arg*(C.Heaviside(arg) - C.Heaviside(-arg))
+        else:
+            return self
 
 class arg(Function):
     """Returns the argument (in radians) of a complex number"""

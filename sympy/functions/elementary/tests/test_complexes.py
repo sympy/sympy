@@ -177,6 +177,8 @@ def test_Abs_rewrite():
     assert a == x*Heaviside(x) - x*Heaviside(-x)
     for i in [-2, -1, 0, 1, 2]:
         assert a.subs(x, i) == abs(i)
+    y = Symbol('y')
+    assert Abs(y).rewrite(Heaviside) == Abs(y)
 
 def test_Abs_real():
     # test some properties of abs that only apply
