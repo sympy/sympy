@@ -358,6 +358,8 @@ def solve(f, *symbols, **flags):
     * flags
         'dict'=True (default is False)
             return list (perhaps empty) of solution mappings
+        'set'=True (default is False)
+            return list of symbols and set of tuple(s) of solution(s)
         'exclude=[] (default)'
             don't try to solve for any of the free symbols in exclude;
             if expressions are given, the free symbols in them will
@@ -415,6 +417,11 @@ def solve(f, *symbols, **flags):
         [{x: 3}]
         >>> solve([x - 3, y - 1], dict=True)
         [{x: 3, y: 1}]
+
+    * to get a list of symbols and set of solution(s) use flag set=True
+
+        >>> solve([x**2 - 3, y - 1], set=True)
+        ([x, y], set([(-sqrt(3), 1), (sqrt(3), 1)]))
 
     * single expression and single symbol that is in the expression
 
@@ -831,10 +838,6 @@ def solve(f, *symbols, **flags):
             ):
         solution = [tuple([r[s].subs(r) for s in symbols]) for r in solution]
 
-    # Make sure that a list of solutions is ordered in a canonical way.
-    if isinstance(solution, list):
-        solution = sorted(solution, key=default_sort_key)
-
     # Get assumptions about symbols, to filter solutions.
     # Note that if assumptions about a solution can't be verified, it is still
     # returned.
@@ -920,7 +923,14 @@ def solve(f, *symbols, **flags):
     # done
     ###########################################################################
 
-    if not flags.get('dict', False):
+    as_dict = flags.get('dict', False)
+    as_set = flags.get('set', False)
+
+    if not as_set and isinstance(solution, list):
+        # Make sure that a list of solutions is ordered in a canonical way.
+        solution.sort(key=default_sort_key)
+
+    if not as_dict and not as_set:
         return solution or []
 
     # make return a list of mappings or []
@@ -936,7 +946,13 @@ def solve(f, *symbols, **flags):
         else:
             assert len(symbols) == 1
             solution = [{symbols[0]: s} for s in solution]
-    return solution
+    if as_dict:
+        return solution
+    assert as_set
+    if not solution:
+        return [], set()
+    k = sorted(solution[0].keys(), key=lambda i: i.sort_key())
+    return k, set([tuple([s[ki] for ki in k]) for s in solution])
 
 
 def _solve(f, *symbols, **flags):
