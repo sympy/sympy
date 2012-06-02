@@ -62,7 +62,18 @@ class Morphism(Basic):
         ========
         TODO: Add examples.
         """
-        pass
+        if g.codomain != self.domain:
+            return None
+
+        composite = Morphism(g.domain, self.codomain, new_name)
+        composite.components = g.components + self.components
+
+        if not new_name:
+            for component in reversed(composite.components):
+                composite.name += component.name + " "
+            composite.name = composite.name[:-1]
+
+        return composite
 
     def __mul__(self, g):
         """
@@ -100,4 +111,11 @@ class Morphism(Basic):
         ========
         compose
         """
-        pass
+        flattened = Morphism(self.domain, self.codomain, new_name)
+
+        if not new_name:
+            for component in reversed(self.components):
+                flattened.name += component.name + " "
+            flattened.name = flattened.name[:-1]
+
+        return flattened
