@@ -51,22 +51,6 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
 
     Examples
     ========
-
-    Check if the circuit is a scalar matrix:
-
-        >>> from sympy.physics.quantum.identitysearch import \
-                    is_scalar_sparse_matrix
-        >>> from sympy.physics.quantum.gate import X, Y, Z
-        >>> x = X(0); y = Y(0); z = Z(0)
-        >>> nqubits = 2
-        >>> circuit = (x, y, z)
-        >>> is_scalar_sparse_matrix(circuit, nqubits, False)
-        True
-
-    Check if the circuit equals to the identity matrix:
-
-        >>> is_scalar_sparse_matrix(circuit, nqubits, True)
-        False
     """
 
     if not np or not scipy:
