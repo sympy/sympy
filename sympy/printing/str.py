@@ -530,14 +530,12 @@ class StrPrinter(Printer):
         return 'Object("%s")' % object.name
 
     def _print_Morphism(self, morphism):
-        if len(morphism.components) == 1:
-            return 'Morphism(%s, %s, "%s")' % \
-                   (morphism.domain, morphism.codomain, morphism.name)
-        else:
-            names = ""
-            for component in morphism.components:
-                names += str(component) + ", "
-            return "[%s]" % names[:-2]
+        result = ""
+        for component in reversed(morphism.components):
+            result += 'Morphism(%s, %s, "%s") * ' % \
+                      (component.domain, component.codomain, component.name)
+        return result[:-3]
+
 
 def sstr(expr, **settings):
     """Returns the expression as a string.
