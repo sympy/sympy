@@ -53,11 +53,6 @@ class Morphism(Basic):
         concatenation of g.components and self.components, in this
         order.
 
-        If new_name is not an empty string, the new morphism will have
-        the name new_name.  Otherwise the name of the new morphism
-        will the juxtaposition of the names of morphisms in the
-        components list, in reversed order, interspersed with '*'.
-
         Examples
         ========
         TODO: Add examples.
@@ -67,11 +62,6 @@ class Morphism(Basic):
 
         composite = Morphism(g.domain, self.codomain, new_name)
         composite.components = g.components + self.components
-
-        if not new_name:
-            for component in reversed(composite.components):
-                composite.name += component.name + "*"
-            composite.name = composite.name[:-1]
 
         return composite
 
@@ -98,11 +88,6 @@ class Morphism(Basic):
         Note that comparing self with the new morphism need NOT return
         True.
 
-        If new_name is not an empty string, the new morphism will have
-        the name new_name.  Otherwise the name of the new morphism
-        will be the juxtaposition of the names of morphisms in
-        self.components, in reversed order, interspersed with *.
-
         Examples
         ========
         TODO: Add examples.
@@ -111,11 +96,4 @@ class Morphism(Basic):
         ========
         compose
         """
-        flattened = Morphism(self.domain, self.codomain, new_name)
-
-        if not new_name:
-            for component in reversed(self.components):
-                flattened.name += component.name + "*"
-            flattened.name = flattened.name[:-1]
-
-        return flattened
+        return Morphism(self.domain, self.codomain, new_name)

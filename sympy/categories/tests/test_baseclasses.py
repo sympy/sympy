@@ -36,7 +36,7 @@ def test_morphism():
 
     assert k.domain == A
     assert k.codomain == C
-    assert k.name == "g*f"
+    assert k.name == ""
     assert k.components == [f, g]
 
     assert h * k == u
@@ -44,14 +44,14 @@ def test_morphism():
 
     assert u.domain == A
     assert u.codomain == D
-    assert u.name == "h*g*f"
+    assert u.name == ""
     assert u.components == [f, g, h]
 
     u1 = u.flatten()
 
     assert u1.domain == A
     assert u1.codomain == D
-    assert u1.name == "h*g*f"
+    assert u1.name == ""
     assert u1.components == [u1]
 
     u1 = u.flatten("u")
