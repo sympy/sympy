@@ -4,7 +4,7 @@ from sympy.core.add import Add
 from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
-from sympy.core.basic import Basic
+from sympy.core.basic import Basic, preorder_traversal
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, Integer
@@ -14,7 +14,7 @@ from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-                                       preorder_traversal, variations)
+        variations)
 
 from collections import defaultdict
 

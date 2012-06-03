@@ -1,8 +1,9 @@
-from core import C
-from expr import Expr
-from sympify import _sympify, sympify
-from cache import cacheit
-from compatibility import cmp
+from sympy.core.core import C
+from sympy.core.expr import Expr
+from sympy.core.sympify import _sympify, sympify
+from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
+from sympy.core.compatibility import cmp
 
 # from add import Add /cyclic/
 # from mul import Mul /cyclic/
@@ -201,6 +202,36 @@ class AssocOp(Expr):
                         return d2
 
         return
+
+    def _has_matcher(self):
+        """Helper for .has()"""
+        def _ncsplit(expr):
+            cpart, ncpart = [], []
+            for arg in expr.args:
+                if arg.is_commutative:
+                    cpart.append(arg)
+                else:
+                    ncpart.append(arg)
+            return set(cpart), ncpart
+
+        c, nc = _ncsplit(self)
+        cls = self.__class__
+        def is_in(expr):
+            if expr == self:
+                return True
+            elif not isinstance(expr, Basic):
+                return False
+            elif isinstance(expr, cls):
+                _c, _nc = _ncsplit(expr)
+                if (c & _c) == c:
+                    if not nc:
+                        return True
+                    elif len(nc) <= len(_nc):
+                        for i in xrange(len(_nc) - len(nc)):
+                            if _nc[i:i+len(nc)] == nc:
+                                return True
+            return False
+        return is_in
 
     def _eval_template_is_attr(self, is_attr, when_multiple=False):
         # return True if all elements have the property;
