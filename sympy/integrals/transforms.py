@@ -332,6 +332,7 @@ def mellin_transform(f, x, s, **hints):
     ========
 
     inverse_mellin_transform, laplace_transform, fourier_transform
+    hankel_transform, inverse_hankel_transform
     """
     return MellinTransform(f, x, s).doit(**hints)
 
@@ -820,6 +821,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
     ========
 
     mellin_transform
+    hankel_transform, inverse_hankel_transform
     """
     return InverseMellinTransform(F, s, x, strip[0], strip[1]).doit(**hints)
 
@@ -1064,6 +1066,7 @@ def laplace_transform(f, t, s, **hints):
     ========
 
     inverse_laplace_transform, mellin_transform, fourier_transform
+    hankel_transform, inverse_hankel_transform
     """
     return LaplaceTransform(f, t, s).doit(**hints)
 
@@ -1207,6 +1210,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     ========
 
     laplace_transform
+    hankel_transform, inverse_hankel_transform
     """
     return InverseLaplaceTransform(F, s, t, plane).doit(**hints)
 
@@ -1299,6 +1303,7 @@ def fourier_transform(f, x, k, **hints):
     inverse_fourier_transform
     sine_transform, inverse_sine_transform
     cosine_transform, inverse_cosine_transform
+    hankel_transform, inverse_hankel_transform
     mellin_transform, laplace_transform
     """
     return FourierTransform(f, x, k).doit(**hints)
@@ -1347,6 +1352,7 @@ def inverse_fourier_transform(F, k, x, **hints):
     fourier_transform
     sine_transform, inverse_sine_transform
     cosine_transform, inverse_cosine_transform
+    hankel_transform, inverse_hankel_transform
     mellin_transform, laplace_transform
     """
     return InverseFourierTransform(F, k, x).doit(**hints)
@@ -1442,6 +1448,7 @@ def sine_transform(f, x, k, **hints):
     fourier_transform, inverse_fourier_transform
     inverse_sine_transform
     cosine_transform, inverse_cosine_transform
+    hankel_transform, inverse_hankel_transform
     mellin_transform, laplace_transform
     """
     return SineTransform(f, x, k).doit(**hints)
@@ -1488,6 +1495,7 @@ def inverse_sine_transform(F, k, x, **hints):
     fourier_transform, inverse_fourier_transform
     sine_transform
     cosine_transform, inverse_cosine_transform
+    hankel_transform, inverse_hankel_transform
     mellin_transform, laplace_transform
     """
     return InverseSineTransform(F, k, x).doit(**hints)
@@ -1534,6 +1542,7 @@ def cosine_transform(f, x, k, **hints):
     fourier_transform, inverse_fourier_transform,
     sine_transform, inverse_sine_transform
     inverse_cosine_transform
+    hankel_transform, inverse_hankel_transform
     mellin_transform, laplace_transform
     """
     return CosineTransform(f, x, k).doit(**hints)
@@ -1580,6 +1589,7 @@ def inverse_cosine_transform(F, k, x, **hints):
     fourier_transform, inverse_fourier_transform,
     sine_transform, inverse_sine_transform
     cosine_transform
+    hankel_transform, inverse_hankel_transform
     mellin_transform, laplace_transform
     """
     return InverseCosineTransform(F, k, x).doit(**hints)
@@ -1611,7 +1621,6 @@ def _hankel_transform(f, r, k, nu, name, simplify=True):
 
     return _simplify(F, simplify), cond
 
-
 class HankelTypeTransform(IntegralTransform):
     """ Base class for Hankel transforms.
     """
@@ -1639,7 +1648,6 @@ class HankelTypeTransform(IntegralTransform):
                                  self.transform_variable,
                                  self.args[3])
 
-
 class HankelTransform(HankelTypeTransform):
     """
     Class representing unevaluated Hankel transforms.
@@ -1652,7 +1660,6 @@ class HankelTransform(HankelTypeTransform):
 
     _name = 'Hankel'
 
-
 def hankel_transform(f, r, k, nu, **hints):
     r"""
     Compute the Hankel transform of `f`, defined as
@@ -1660,14 +1667,29 @@ def hankel_transform(f, r, k, nu, **hints):
     .. math:: F_\nu(k) = \int_{0}^\infty f(r) J_\nu(k r) r \mathrm{d} r.
 
     If the transform cannot be computed in closed form, this
-    function returns an unevaluated HankelTransform object.
+    function returns an unevaluated :class:`HankelTransform` object.
 
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
     Note that for this transform, by default ``noconds=True``.
 
-    >>> from sympy import hankel_transform, exp
-    >>> from sympy.abc import x, k
+    >>> from sympy import hankel_transform, inverse_hankel_transform
+    >>> from sympy import gamma, exp, sinh, cosh
+    >>> from sympy.abc import r, k, m, nu, a
+
+    >>> ht = hankel_transform(1/r**m, r, k, nu)
+    >>> ht
+    2**(-m + 1)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
+
+    >>> inverse_hankel_transform(ht, k, r, nu)
+    r**(-m)
+
+    >>> ht = hankel_transform(exp(-a*r), r, k, 0)
+    >>> ht
+    a/(k**3*(a**2/k**2 + 1)**(3/2))
+
+    >>> inverse_hankel_transform(ht, k, r, 0)
+    -sinh(a*r) + cosh(a*r)
 
     See Also
     ========
@@ -1675,6 +1697,7 @@ def hankel_transform(f, r, k, nu, **hints):
     fourier_transform, inverse_fourier_transform
     sine_transform, inverse_sine_transform
     cosine_transform, inverse_cosine_transform
+    inverse_hankel_transform
     mellin_transform, laplace_transform
     """
     return HankelTransform(f, r, k, nu).doit(**hints)
@@ -1698,14 +1721,29 @@ def inverse_hankel_transform(F, k, r, nu, **hints):
     .. math:: f(r) = \int_{0}^\infty F_\nu(k) J_\nu(k r) k \mathrm{d} k.
 
     If the transform cannot be computed in closed form, this
-    function returns an unevaluated InverseHankelTransform object.
+    function returns an unevaluated :class:`InverseHankelTransform` object.
 
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
     Note that for this transform, by default ``noconds=True``.
 
-    >>> from sympy import inverse_hankel_transform, exp, sqrt, pi
-    >>> from sympy.abc import x, k
+    >>> from sympy import hankel_transform, inverse_hankel_transform, gamma
+    >>> from sympy import gamma, exp, sinh, cosh
+    >>> from sympy.abc import r, k, m, nu, a
+
+    >>> ht = hankel_transform(1/r**m, r, k, nu)
+    >>> ht
+    2**(-m + 1)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
+
+    >>> inverse_hankel_transform(ht, k, r, nu)
+    r**(-m)
+
+    >>> ht = hankel_transform(exp(-a*r), r, k, 0)
+    >>> ht
+    a/(k**3*(a**2/k**2 + 1)**(3/2))
+
+    >>> inverse_hankel_transform(ht, k, r, 0)
+    -sinh(a*r) + cosh(a*r)
 
     See Also
     ========
@@ -1713,6 +1751,7 @@ def inverse_hankel_transform(F, k, r, nu, **hints):
     fourier_transform, inverse_fourier_transform
     sine_transform, inverse_sine_transform
     cosine_transform, inverse_cosine_transform
+    hankel_transform
     mellin_transform, laplace_transform
     """
     return InverseHankelTransform(F, k, r, nu).doit(**hints)
