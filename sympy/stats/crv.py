@@ -267,8 +267,8 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         try:
             inverse_cdf = solve(d(x)-z, x)
         except NotImplementedError:
-            raise NotImplementedError("Could not invert CDF")
-        if len(inverse_cdf) != 1:
+            inverse_cdf = None
+        if not inverse_cdf or len(inverse_cdf) != 1:
             raise NotImplementedError("Could not invert CDF")
 
         return Lambda(z, inverse_cdf[0])
