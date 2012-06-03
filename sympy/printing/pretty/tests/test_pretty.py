@@ -3691,3 +3691,40 @@ def test_issue_3186():
 def test_complicated_symbol_unchanged():
     for symb_name in ["dexpr2_d1tau", "dexpr2^d1tau"]:
         assert pretty(Symbol(symb_name)) == symb_name
+
+def test_categories():
+    from sympy.categories import Object, Morphism
+    A1 = Object("A1")
+    A2 = Object("A2")
+    A3 = Object("A3")
+
+    f1 = Morphism(A1, A2, "f1")
+    f2 = Morphism(A2, A3, "f2")
+    anonymous = Morphism(A1, A3, "")
+
+    assert pretty(A1) == "A1"
+    assert upretty(A1) == u"A₁"
+
+    assert pretty(f1) == "f1:A1->A2"
+    assert upretty(f1) == u"f₁:A₁→A₂"
+    assert pretty(anonymous) == "A1->A3"
+    assert upretty(anonymous) == u"A₁→A₃"
+
+    assert pretty(f2*f1) == "f2*f1:A1->A3"
+    assert upretty(f2*f1) == u"f₂∘f₁:A₁→A₃"
+
+    # Some further tests for anonymous objects and morphisms.
+    assert pretty(Object("")) == "."
+    assert upretty(Object("")) == u"•"
+
+    h = Morphism(A2, A3, "").compose(Morphism(A1, A2, ""), "h")
+    assert pretty(h) == "h:A1->A3"
+    assert upretty(h) == u"h:A₁→A₃"
+
+    h = Morphism(A2, A3, "") * Morphism(A1, A2, "")
+    assert pretty(h) == "A1->A3"
+    assert upretty(h) == u"A₁→A₃"
+
+    h = Morphism(A2, A3, "f") * Morphism(A1, A2, "")
+    assert pretty(h) == "A1->A3"
+    assert upretty(h) == u"A₁→A₃"

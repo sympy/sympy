@@ -1446,6 +1446,43 @@ class PrettyPrinter(Printer):
     def _print_DMF(self, p):
         return self._print_DMP(p)
 
+    def _print_Object(self, object):
+        if object.name:
+            return self._print(pretty_symbol(object.name))
+        else:
+            if self._use_unicode:
+                return self._print(u"\u2022")
+            else:
+                return self._print(".")
+
+    def _print_Morphism(self, morphism):
+        arrow = "->"
+        circle = "*"
+        if self._use_unicode:
+            arrow = u"\u2192"
+            circle = u"\u2218"
+
+        domain = self._print(morphism.domain)
+        codomain = self._print(morphism.codomain)
+        tail = domain.right(arrow, codomain)[0]
+
+        pretty_name = morphism.name
+        if pretty_name:
+            pretty_name = pretty_symbol(pretty_name)
+        else:
+            for component in reversed(morphism.components):
+                if not component.name:
+                    # Composition with an anonymous morphism is an
+                    # anonymous morphism.
+                    return prettyForm(tail)
+
+                pretty_name += pretty_symbol(component.name) + circle
+
+            pretty_name = pretty_name[:-1]
+
+        pretty_name_form = self._print(pretty_name)
+        return prettyForm(pretty_name_form.right(":", tail)[0])
+
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 
