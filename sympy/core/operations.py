@@ -3,6 +3,7 @@ from expr import Expr
 from sympify import _sympify, sympify
 from cache import cacheit
 from compatibility import cmp
+from sympy.core.logic import fuzzy_and
 
 # from add import Add /cyclic/
 # from mul import Mul /cyclic/
@@ -38,7 +39,8 @@ class AssocOp(Expr):
             return args[0]
 
         c_part, nc_part, order_symbols = cls.flatten(args)
-        obj = cls._from_args(c_part + nc_part, not nc_part)
+        is_commutative = not nc_part
+        obj = cls._from_args(c_part + nc_part, is_commutative)
 
         if order_symbols is not None:
             return C.Order(obj, *order_symbols)
@@ -54,7 +56,7 @@ class AssocOp(Expr):
 
         obj = Expr.__new__(cls, *args)
         if is_commutative is None:
-            is_commutative = all(a.is_commutative for a in args)
+            is_commutative = fuzzy_and(a.is_commutative for a in args)
         obj.is_commutative = is_commutative
         return obj
 

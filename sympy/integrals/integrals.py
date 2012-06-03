@@ -138,7 +138,7 @@ class Integral(Expr):
         arglist = [sign*function]
         arglist.extend(limits)
         obj._args = tuple(arglist)
-        obj.is_commutative = all(s.is_commutative for s in obj.free_symbols)
+        obj.is_commutative = function.is_commutative # limits already checked
 
         return obj
 

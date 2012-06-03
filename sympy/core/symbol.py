@@ -6,6 +6,7 @@ from singleton import S
 from expr import Expr, AtomicExpr
 from cache import cacheit
 from function import FunctionClass
+from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -67,7 +68,11 @@ class Symbol(AtomicExpr, Boolean):
                 return Dummy(name, **assumptions)
         if assumptions.get('zero', False):
             return S.Zero
-        assumptions.setdefault('commutative', True)
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        if is_commutative is None:
+            raise ValueError(
+                '''Symbol commutativity must be True or False.''')
+        assumptions['commutative'] = is_commutative
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
@@ -160,7 +165,11 @@ class Dummy(Symbol):
         if name is None:
             name = str(Dummy._count)
 
-        assumptions.setdefault('commutative', True)
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        if is_commutative is None:
+            raise ValueError(
+                '''Dummy's commutativity must be True or False.''')
+        assumptions['commutative'] = is_commutative
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
         Dummy._count += 1
@@ -184,7 +193,11 @@ class Wild(Symbol):
     def __new__(cls, name, exclude=(), properties=(), **assumptions):
         exclude = tuple([sympify(x) for x in exclude])
         properties = tuple(properties)
-        assumptions.setdefault('commutative', True)
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        if is_commutative is None:
+            raise ValueError(
+                '''Wild's commutativity must be True or False.''')
+        assumptions['commutative'] = is_commutative
         return Wild.__xnew__(cls, name, exclude, properties, **assumptions)
 
     def __getnewargs__(self):

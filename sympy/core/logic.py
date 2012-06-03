@@ -21,30 +21,52 @@ def fuzzy_bool(x):
 def fuzzy_and(*args):
     """Return True (all True), False (any False) or None.
 
-    If `a` is an iterable it must have more than one element."""
+    If `a` is an iterable it must not be empty; it
+    can be an iterator.
 
-    if (len(args) == 1 and iterable(args[0]) or
+    >>> from sympy.core.logic import fuzzy_and
+    >>> from sympy import Dummy
+
+    If you had a list of objects to test the commutivity of
+    and you want the fuzzy_and logic applied, passing an
+    iterator will allow the commutativity to only be computed
+    as many times as necessary. With this list, False can be
+    returned after analyzing the first symbol:
+
+    >>> syms = [Dummy(commutative=False), Dummy()]
+    >>> fuzzy_and(s.is_commutative for s in syms)
+    False
+
+    That False would require less work than if a list of pre-computed
+    items was sent:
+
+    >>> fuzzy_and([s.is_commutative for s in syms])
+    False
+    """
+
+    if len(args) == 2:
+        a, b = [fuzzy_bool(i) for i in args]
+        if a is True and b is True:
+            return True
+        elif a is False or b is False:
+            return False
+    elif (len(args) == 1 and iterable(args[0]) or
         len(args) > 2):
         if len(args) == 1:
             args = args[0]
-        rv = True
-        i = 0
-        for ai in args:
-            ai = fuzzy_bool(ai)
-            if ai is False:
-                return False
-            if rv: # this will stop updating if a None is ever trapped
-                rv = ai
-            i += 1
-        if i < 2:
-            raise ValueError('iterables must have 2 or more elements')
-        return rv
-
-    a, b = [fuzzy_bool(i) for i in args]
-    if a is True and b is True:
-        return True
-    elif a is False or b is False:
-        return False
+        if args:
+            rv = True
+            for ai in args:
+                ai = fuzzy_bool(ai)
+                if ai is False:
+                    return False
+                if rv: # this will stop updating if a None is ever trapped
+                    rv = ai
+            return rv
+    if not args:
+        raise ValueError('fuzzy_and needs at least 1 argument')
+    elif len(args) == 1:
+        return fuzzy_bool(args[0])
 
 def fuzzy_not(v):
     """'not' in fuzzy logic"""
