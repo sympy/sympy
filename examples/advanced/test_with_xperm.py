@@ -7,19 +7,38 @@ References:
 
   [2] test_xperm.c in cadabra by Kasper Peeters, http://cadabra.phi-sci.com/
 
+Test that the tensor canonicalization in the case of tensor without
+free indices gives the same result with xperm.c
+
+In the end of this file choose the slot generators and `g` representing
+the tensor.
+
+From this directory run:
 python test_with_xperm.py > test_xperm.cc
+
+For instance with the choice put below one gets
+(advanced)$ pyt test_with_xperm.py > test_xperm.cc
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 10, 48, 11, 14, 13, 16, 15, 18, 17, 20, 19, 22, 21, 24, 23, 26, 25, 28, 27, 30, 29, 32, 31, 34, 33, 36, 35, 38, 37, 40, 39, 42, 41, 44, 43, 46, 45, 49, 47, 50, 51, 52]
 
 In stderr appears the result, in the form of the result
 of running test_xperm, see example test_xperm.cc in [2];
-test_xperm.c is compiled with xperm.c, see [1]
+compile test_xperm.c with xperm.c, see [2]
+
+run ./test_xperm > test_output
+if xperm.c gives different result from the one shown in the stderr,
+an error message appears in stderr (except in the case in which
+the result is the identity; so if there is an error message, check
+in test_output if the result is the identity; if the stderr of the
+python program is also the identity, the result is correct))
 """
 
 import sys
-sys.path.insert(0, '../../../')
+sys.path.insert(0,'../..')
 from time import time
 from sympy.combinatorics.permutations import Permutation, cyclic, perm_af_invert
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.perm_algorithms import double_coset_can_rep
+
 
 def str_head(gens, size):
     num_gens = len(gens)
@@ -109,8 +128,6 @@ def run(gens, g):
     t0 = time()
     res = double_coset_can_rep(0, sgens, g)
     t1 = time()
-    #sys.stderr.write('gens= %s\n' % gens)
-    #sys.stderr.write('g= %s\n' % g)
     result = [x+1 for x in perm_af_invert(res)]
     sys.stderr.write('%s\n' % result)
     sys.stderr.write('%f\n' %(t1-t0))
@@ -118,10 +135,8 @@ def run(gens, g):
 
 
 if __name__ == '__main__':
-    gens = [[2,1,0,3,4,5,6,7], [4,1,2,3,0,5,6,7]]
-    g = [0,1,2,3,4,5,6,7]
 
-    n = 50
+    n = 90
     # The last two indices of the permutations represent the sign.
     # slot symmetry generators
     gens = [Permutation(cyclic(a, n)).array_form + [n,n+1] for a in
