@@ -9,9 +9,9 @@ class Class(Set):
     member of another class is a proper class.  The class {1, 2} is a
     set; the class of all sets is a proper class.
 
-    This class is essentially a synonym for sympy.core.Set.  The goal
-    of this class is to assure easier migration to the eventual proper
-    implementation of set theory.
+    This class is essentially a synonym for :class:`sympy.core.Set`.
+    The goal of this class is to assure easier migration to the
+    eventual proper implementation of set theory.
     """
     is_proper = False
 
@@ -71,14 +71,15 @@ class Morphism(Basic):
 
     def compose(self, g, new_name=""):
         """
-        If self is a morphism from B to C and g is a morphism from A
-        to B, returns the morphism from A to C which results from the
-        composition of these morphisms.  Otherwise, returns None.
+        If ``self`` is a morphism from B to C and ``g`` is a morphism
+        from A to B, returns the morphism from A to C which results
+        from the composition of these morphisms.  Otherwise, returns
+        ``None``.
 
-        If either self or g are morphisms resulted from some previous
-        composition, components in the resulting morphism will be the
-        concatenation of g.components and self.components, in this
-        order.
+        If either ``self`` or ``g`` are morphisms resulted from some
+        previous composition, components in the resulting morphism
+        will be the concatenation of ``g.components`` and
+        ``self.components``, in this order.
 
         Examples
         ========
@@ -94,11 +95,11 @@ class Morphism(Basic):
 
     def __mul__(self, g):
         """
-        Returns the result of the composition of self with the
+        Returns the result of the composition of ``self`` with the
         argument, if this composition is defined.
 
-        The semantics of multiplication is as follows: f * g =
-        f.compose(g).
+        The semantics of multiplication is as follows: ``f * g =
+        f.compose(g)``.
 
         See Also
         =======
@@ -108,12 +109,12 @@ class Morphism(Basic):
 
     def flatten(self, new_name=""):
         """
-        If self resulted from composition of other morphisms, returns
-        a new morphism without any information about the morphisms it
-        resulted from.
+        If ``self`` resulted from composition of other morphisms,
+        returns a new morphism without any information about the
+        morphisms it resulted from.
 
-        Note that comparing self with the new morphism need NOT return
-        True.
+        Note that comparing ``self`` with the new morphism need NOT
+        return ``True``.
 
         Examples
         ========
