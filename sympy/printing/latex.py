@@ -2,7 +2,7 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
-from sympy.core import S, C, Add
+from sympy.core import S, C, Add, Symbol
 from sympy.core.function import _coeff_isneg
 from printer import Printer
 from conventions import split_super_sub
@@ -1181,6 +1181,32 @@ class LatexPrinter(Printer):
     def _print_DMF(self, p):
         return self._print_DMP(p)
 
+    def _print_Object(self, object):
+        if object.name:
+            return self._print(Symbol(object.name))
+        else:
+            return "\\bullet"
+
+    def _print_Morphism(self, morphism):
+        domain = self._print(morphism.domain)
+        codomain = self._print(morphism.codomain)
+        tail = "%s\\rightarrow %s" % (domain, codomain)
+
+        pretty_name = morphism.name
+        if pretty_name:
+            pretty_name = self._print(Symbol(pretty_name))
+        else:
+            for component in reversed(morphism.components):
+                if not component.name:
+                    # Composition with an anonymous morphism is an
+                    # anonymous morphism.
+                    return tail
+
+                pretty_name += self._print(Symbol(component.name)) + "\\circ "
+
+            pretty_name = pretty_name[:-6]
+
+        return "%s:%s" % (pretty_name, tail)
 
 def latex(expr, **settings):
     r"""
