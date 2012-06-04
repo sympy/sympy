@@ -356,7 +356,6 @@ class Permutation(Basic):
         >>> q
         Permutation([[0, 1], [2]])
         """
-        """
         if not args or not is_sequence(args[0]) or len(args) > 1 or \
            len(set(is_sequence(a) for a in args[0])) > 1:
             raise ValueError('Permutation argument must be a list of ints or a list of lists.')
@@ -366,7 +365,6 @@ class Permutation(Basic):
         temp = [int(i) for i in flatten(args[0])]
         if set(range(len(temp))) != set(temp):
             raise ValueError("Integers 0 through %s must be present." % len(temp))
-        """
 
         cform = aform = None
         if args[0] and is_sequence(args[0][0]):
@@ -1782,3 +1780,5 @@ def _merge(arr, temp, left, mid, right):
     else:
         arr[left:right + 1] = temp[left:right + 1]
     return inv_count
+
+Perm = Permutation

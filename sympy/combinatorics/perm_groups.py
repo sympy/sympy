@@ -341,7 +341,7 @@ class PermutationGroup(Basic):
         obj._coset_repr_n = []
         obj._stabilizers_gens = []
 
-        # these attributes are assigned after running _pr_init
+        # these attributes are assigned after running _random_pr_init
         obj._random_gens = []
         return obj
 
@@ -358,8 +358,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import (PermutationGroup,
-        ... CyclicGroup)
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.named_groups import CyclicGroup
         >>> G = CyclicGroup(5)
         >>> H = G*G
         >>> H
@@ -944,13 +944,22 @@ class PermutationGroup(Basic):
         else:
             raise ValueError('there is not this method')
 
-    def orbit(self, alpha):
+    def orbit(self, alpha, action = 'tuples'):
         r"""
         Compute the orbit of alpha `\{g(\alpha) | g \in G\}` as a set.
 
         The time complexity of the algorithm used here is `O(|Orb|*r)` where
         `|Orb|` is the size of the orbit and `r` is the number of generators of
         the group. For a more detailed analysis, see [1], p.78, [2], pp.19-21.
+        Here alpha can be a single point, or a list of points.
+
+        If alpha is a single point, the ordinary orbit is computed.
+        if alpha is a list of points, there are three available options:
+
+        'union' - computes the union of the orbits of the points in the list
+        'tuples' - computes the orbit of the list interpreted as an ordered
+        tuple under the group action ( i.e., g((1,2,3)) = (g(1), g(2), g(3)) )
+        'sets' - computes the orbit of the list interpreted as a sets
 
         Examples
         ========
@@ -961,8 +970,8 @@ class PermutationGroup(Basic):
         >>> G = PermutationGroup([a])
         >>> G.orbit(0)
         set([0, 1, 2])
-        >>> G.orbit(4)
-        set([3, 4, 5, 6])
+        >>> G.orbit([0,4], 'union')
+        set([0, 1, 2, 3, 4, 5, 6])
 
         See Also
         ========
@@ -979,17 +988,57 @@ class PermutationGroup(Basic):
         "Permutation group algorithms"
 
         """
-        orb = [alpha]
-        used = [False]*self.degree
-        used[alpha] = True
-        gens = self.generators
-        for b in orb:
-            for gen in gens:
-                temp = gen(b)
-                if used[temp] == False:
-                    orb.append(temp)
-                    used[temp] = True
-        return set(orb)
+        if isinstance(alpha, int):
+            orb = [alpha]
+            used = [False]*self.degree
+            used[alpha] = True
+            gens = self.generators
+            for b in orb:
+                for gen in gens:
+                    temp = gen(b)
+                    if used[temp] == False:
+                        orb.append(temp)
+                        used[temp] = True
+            return set(orb)
+
+        if isinstance(alpha, list):
+            if action == 'union':
+                orb = alpha
+                used = [False]*self.degree
+                for el in alpha:
+                    used[el] = True
+                gens = self.generators
+                for b in orb:
+                    for gen in gens:
+                        temp = gen(b)
+                        if used[temp] == False:
+                            orb.append(temp)
+                            used[temp] = True
+                return set(orb)
+            if action == 'tuples':
+                alpha = tuple(alpha)
+                orb = [alpha]
+                used = set([alpha])
+                gens = self.generators
+                for b in orb:
+                    for gen in gens:
+                        temp = tuple([gen(x) for x in b])
+                        if temp not in used:
+                            orb.append(temp)
+                            used.add(temp)
+                return set(orb)
+            if action == 'sets':
+                alpha = frozenset(alpha)
+                orb = [alpha]
+                used = set([alpha])
+                gens = self.generators
+                for b in orb:
+                    for gen in gens:
+                        temp = frozenset([gen(x) for x in b])
+                        if temp not in used:
+                            orb.append(temp)
+                            used.add(temp)
+                return set([tuple(x) for x in orb])
 
     def orbit_transversal(self, alpha, pairs=False):
         r"""
@@ -1005,8 +1054,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import (PermutationGroup,
-        ... DihedralGroup)
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> G = DihedralGroup(6)
         >>> G.orbit_transversal(0)
         [Permutation([0, 1, 2, 3, 4, 5]), Permutation([1, 2, 3, 4, 5, 0]),
@@ -1114,8 +1163,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import (PermutationGroup,
-        ... DihedralGroup)
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> G = DihedralGroup(6)
         >>> G.stabilizer(5)
         PermutationGroup([Permutation([4, 3, 2, 1, 0, 5]),
@@ -1210,7 +1259,7 @@ class PermutationGroup(Basic):
                     v[temp] = i
         return v
 
-    def orbit_rep(self, alpha, beta, schreier_vector = None):
+    def orbit_rep(self, alpha, beta, schreier_vector=None):
         """
         Return a group element which sends ``alpha`` to ``beta``.
 
@@ -1221,8 +1270,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import (PermutationGroup,
-        ... AlternatingGroup)
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.named_groups import AlternatingGroup
         >>> G = AlternatingGroup(5)
         >>> G.orbit_rep(0,4)
         Permutation([4, 2, 3, 0, 1])
@@ -1458,7 +1507,61 @@ class PermutationGroup(Basic):
             order = order1
         return True
 
-    def _pr_init(self, r, n):
+    def _random_pr_init(self, r, n, _random_prec_n=None):
+        r"""
+        Initializes random generators for the product replacement algorithm.
+
+        The implementation uses a modification of the original product
+        replacement algorithm due to Leedham-Green, as described in [1],
+        pp.69-71; also, see [2], pp.27-29 for a detailed theoretical
+        analysis of the original product replacement algorithm, and [3].
+
+        The product replacement algorithm is used for producing random,
+        uniformly distributed elements of a group `G` with a set of generators
+        `S`. For the initialization ``_random_pr_init``, a list `R` of
+        `\max\{r, |S|\}` group generators is created as the attribute
+        ``G._random_gens``, repeating elements of `S` if necessary, and the
+        identity element of `G` is appended to `R` - we shall refer to this
+        last element as the accumulator. Then the function ``random_pr()``
+        is called ``n`` times, randomizing the list `R` while preserving
+        the generation of `G` by `R`. The function ``random_pr()`` itself
+        takes two random elements `g, h` among all elements of `R` but
+        the accumulator and replaces `g` with a randomly chosen element
+        from `\{gh, g(~h), hg, (~h)g\}`. Then the accumulator is multiplied
+        by whatever `g` was replaced by. The new value of the accumulator is
+        then returned by ``random_pr()``.
+
+        The elements returned will eventually (for ``n`` large enough) become
+        uniformly distributed across `G` ([4]). For practical purposes however,
+        the values ``n = 50, r = 11`` are suggested in [1].
+
+        Notes
+        =====
+
+        THIS FUNCTION HAS SIDE EFFECTS: it changes the attribute
+        self._random_gens
+
+        See Also
+        ========
+
+        random_pr
+
+        References
+        ==========
+
+        [1] Holt, D., Eick, B., O'Brien, E.
+        "Handbook of computational group theory"
+
+        [2] Seress, A. "Permutation group algorithms"
+
+        [3] http://en.wikipedia.org/wiki/Nielsen_transformation
+        #Product_replacement_algorithm
+
+        [4] Frank Celler, Charles R.Leedham-Green, Scott H.Murray,
+        Alice C.Niemeyer, and E.A.O'Brien. "Generating random
+        elements of a finite group"
+
+        """
         deg = self.degree
         random_gens = self.generators[:]
         k = len(random_gens)
@@ -1468,20 +1571,51 @@ class PermutationGroup(Basic):
         acc = _new_from_array_form(range(deg))
         random_gens.append(acc)
         self._random_gens = random_gens
-        for i in range(n):
-            self.pr_random()
 
-    def pr_random(self):
+        # handle randomized input for testing purposes
+        if _random_prec_n == None:
+            for i in range(n):
+                self.random_pr()
+        else:
+            for i in range(n):
+                self.random_pr(_random_prec = _random_prec_n[i])
+
+    def random_pr(self, gen_count=11, iterations=50, _random_prec=None):
+        """
+        Return a random group element using product replacement.
+
+        For the details of the product replacement algorithm, see
+        ``_random_pr_init`` In ``random_pr`` the actual 'product replacement'
+        is performed. Notice that if the attribute ``_random_gens``
+        is empty, it needs to be initialized by ``_random_pr_init``.
+
+        See Also
+        ========
+
+        _random_pr_init
+
+        """
         if self._random_gens == []:
-            self._pr_init(11, 50)
+            self._random_pr_init(gen_count, iterations)
         random_gens = self._random_gens
         r = len(random_gens) - 1
-        s = randrange(r)
-        t = randrange(r - 1)
-        if t == s:
-            t = r - 1
-        x = choice([1, 2])
-        e = choice([-1, 1])
+
+        # handle randomized input for testing purposes
+        if _random_prec == None:
+            s = randrange(r)
+            t = randrange(r - 1)
+            if t == s:
+                t = r - 1
+            x = choice([1, 2])
+            e = choice([-1, 1])
+        else:
+            s = _random_prec['s']
+            t = _random_prec['t']
+            if t == s:
+                t = r - 1
+            x = _random_prec['x']
+            e = _random_prec['e']
+
         if x == 1:
             random_gens[s] = random_gens[s]*(random_gens[t]**e)
             random_gens[r] = random_gens[r]*random_gens[s]
@@ -1490,25 +1624,98 @@ class PermutationGroup(Basic):
             random_gens[r] = random_gens[s]*random_gens[r]
         return random_gens[r]
 
-    def is_alt_sym(self, eps = 0.05):
-        n = self.degree
-        if n < 8:
+    def is_alt_sym(self, eps=0.05, _random_prec=None):
+        r"""
+        Monte Carlo test for the symmetric/alternating group for degrees >= 8.
+
+        More specifically, it is one-sided Monte Carlo with the
+        answer True (i.e., G is symmetric/alternating) guaranteed to be correct,
+        and the answer False being incorrect with probability eps.
+
+        Notes
+        =====
+
+        The algorithm itself uses some nontrivial results from group theory and
+        number theory:
+        1) If a transitive group `G` of degree ``n`` contains an element
+        with a cycle of length `n/2 < p < n-2` for `p` a prime, `G` is the
+        symmetric or alternating group ([1], pp.81-82)
+        2) The proportion of elements in the symmetric/alternating group having
+        the property described in 1) is approximately `\log(2)/\log(n)`
+        ([1], p.82; [2], pp.226-227).
+        The helper function ``_check_cycles_alt_sym`` is used to
+        go over the cycles in a permutation and look for ones satisfying 1).
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.named_groups import DihedralGroup
+        >>> D = DihedralGroup(10)
+        >>> D.is_alt_sym()
+        False
+
+        See Also
+        ========
+
+        alt_or_sym, _check_cycles_alt_sym
+
+        References
+        ==========
+
+        [1] Holt, D., Eick, B., O'Brien, E.
+        "Handbook of computational group theory"
+
+        [2] Seress, A. "Permutation group algorithms"
+
+        """
+        if _random_prec == None:
+            n = self.degree
+            if n < 8:
+                return False
+            if not self.is_transitive:
+                return False
+            if n < 17:
+                c_n = 0.34
+            else:
+                c_n = 0.57
+            d_n = (c_n*log(2))/log(n)
+            N_eps = int(-log(eps)/d_n)
+            for i in range(N_eps):
+                perm = self.random_pr()
+                if _check_cycles_alt_sym(perm):
+                    return True
             return False
-        if not self.is_transitive:
-            return False
-        if n < 17:
-            c_n = 0.34
         else:
-            c_n = 0.57
-        d_n = (c_n*log(2))/log(n)
-        N_eps = int(-log(eps)/d_n)
-        for i in range(N_eps):
-            perm = self.pr_random()
-            if _check_cycles_alt_sym(perm):
-                return True
-        return False
+            for i in range(_random_prec['N_eps']):
+                perm = _random_prec[i]
+                if _check_cycles_alt_sym(perm):
+                    return True
+            return False
 
     def alt_or_sym(self):
+        """
+        If a group is known to be alternating or symmetric, determines which one
+        it is.
+
+        This is to be applied if is_alt_sym returns True (which is guaranteed to
+        be correct). The algorithm simply tests if all the generators are even
+        permutations.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.named_groups import AlternatingGroup
+        >>> A = AlternatingGroup(20)
+        >>> A.alt_or_sym()
+        'A'
+
+        See Also
+        ========
+
+        is_alt_sym
+        """
         if self.is_alt_sym():
             gens = self.generators
             for perm in gens:
@@ -1520,14 +1727,68 @@ class PermutationGroup(Basic):
         return False
 
     def minimal_block(self, points):
+        r"""
+        For a transitive group, finds the block system generated by ``points``.
+
+        If a group `G` acts on a set `S`, a nonempty subset `B` of `S` is
+        called a block under the action of `G` if for all `g` in `G` we have
+        `gB = B` (`g` fixes `B`) or `gB` and `B` have no common points
+        (`g` moves `B` entirely). ([1], p.23; [2]).
+        The distinct translates `gB` of a block `B` for `g` in `G` partition
+        the set `S` and this set of translates is known as a block system.
+        Moreover, we obviously have that all blocks in the partition have
+        the same size, hence the block size divides `|S|` ([1], p.23).
+        A `G`-congruence is an equivalence relation `~` on the set `S` such that
+        `a ~ b` implies `g(a) ~ g(b)` for all `g` in `G`. For a
+        transitive group, the equivalence classes of a `G`-congruence and the
+        blocks of a block system are the same thing ([1], p.23).
+        The algorithm below checks the group for transitivity, and then finds
+        the `G`-congruence generated by the pairs `(p_0, p_1), (p_0, p_2), ...,
+        (p_0,p_{k-1})` which is the same as finding the maximal block system
+        (i.e., the one with minimum block size) such that
+        `p_0, ..., p_{k-1}` are in the same block ([1], p.83).
+        It is an implementation of Atkinson's algorithm, as suggested in [1],
+        and manipulates an equivalence relation on the set `S` using a
+        union-find data structure. The running time is just above
+        `O(|points||S|)`. ([1], pp.83-87; [3]).
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.named_groups import DihedralGroup
+        >>> D = DihedralGroup(10)
+        >>> D.minimal_block([0,5])
+        [0, 6, 2, 8, 4, 0, 6, 2, 8, 4]
+        >>> D.minimal_block([0,1])
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        See Also
+        ========
+
+        _union_find_rep, _union_find_merge, is_transitive, is_primitive
+
+        References
+        ==========
+
+        [1] Holt, D., Eick, B., O'Brien, E.
+        "Handbook of computational group theory"
+
+        [2] http://en.wikipedia.org/wiki/Block_%28permutation_group_theory%29
+
+        [3] http://www.algorithmist.com/index.php/Union_Find
+
+        """
         if not self.is_transitive:
             return False
         n = self.degree
         gens = self.generators
+        # initialize the list of equivalence class representatives
         parents = range(n)
         ranks = [1]*n
         not_rep = []
         k = len(points)
+        # the block size must divide the degree of the group
         if k > self.max_div:
             return [0]*n
         for i in xrange(k-1):
@@ -1540,22 +1801,56 @@ class PermutationGroup(Basic):
             temp = not_rep[i]
             i += 1
             for gen in gens:
+                # find has side effects: performs path compression on the list
+                # of representatives
                 delta = self._union_find_rep(temp, parents)
+                # union has side effects: performs union by rank on the list
+                # of representatives
                 temp = self._union_find_merge(gen(temp), gen(delta), ranks,\
                                                  parents, not_rep)
                 if temp == -1:
                     return [0]*n
                 len_not_rep += temp
         for i in range(n):
+            # force path compression to get the final state of the equivalence
+            # relation
             self._union_find_rep(i, parents)
         return parents
 
     def _union_find_rep(self, num, parents):
+        """
+        Find representative of a class in a union-find data structure.
+
+        Used in the implementation of Atkinson's algorithm as suggested in [1],
+        pp.83-87. After the representative of the class to which ``num``
+        belongs is found, path compression is performed as an optimization
+        ([2]).
+
+        Notes
+        =====
+
+        THIS FUNCTION HAS SIDE EFFECTS: the list of class representatives,
+        ``parents``, is altered due to path compression.
+
+        See Also
+        ========
+
+        minimal_block, _union_find_merge
+
+        References
+        ==========
+
+        [1] Holt, D., Eick, B., O'Brien, E.
+        "Handbook of computational group theory"
+
+        [2] http://www.algorithmist.com/index.php/Union_Find
+
+        """
         rep, parent = num, parents[num]
         while parent != rep:
             rep = parent
             parent = parents[rep]
-        #path compression
+        # path compression
         temp, parent = num, parents[num]
         while parent != rep:
             parents[temp] = rep
@@ -1564,10 +1859,39 @@ class PermutationGroup(Basic):
         return rep
 
     def _union_find_merge(self, first, second, ranks, parents, not_rep):
+        """
+        Merges two classes in a union-find data structure.
+
+        Used in the implementation of Atkinson's algorithm as suggested in [1],
+        pp.83-87. The class merging process uses union by rank as an
+        optimization. ([2])
+
+        Notes
+        =====
+
+        THIS FUNCTION HAS SIDE EFFECTS: the list of class representatives,
+        ``parents``, the list of class sizes, ``ranks``, and the list of
+        elements that are not representatives, ``not_rep``, are changed due to
+        class merging.
+
+        See Also
+        ========
+
+        minimal_block, _union_find_rep
+
+        References
+        ==========
+
+        [1] Holt, D., Eick, B., O'Brien, E.
+        "Handbook of computational group theory"
+
+        [2] http://www.algorithmist.com/index.php/Union_Find
+
+        """
         rep_first = self._union_find_rep(first, parents)
         rep_second = self._union_find_rep(second, parents)
         if rep_first != rep_second:
-            #union by rank
+            # union by rank
             if ranks[rep_first] >= ranks[rep_second]:
                 new_1, new_2 = rep_first, rep_second
             else:
@@ -1583,9 +1907,38 @@ class PermutationGroup(Basic):
 
     @property
     def max_div(self):
+        """
+        Maximum proper divisor of the degree of a permutation group.
+
+        Notes
+        =====
+
+        Obviously, this is the degree divided by its minimal proper divisor
+        (larger than `1`, if one exists). As it is guaranteed to be prime,
+        the ``sieve`` from ``sympy.ntheory`` is used.
+        This function is also used as an optimization tool for the functions
+        ``minimal_block`` and ``_union_find_merge``.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> G = PermutationGroup([Permutation([0,2,1,3])])
+        >>> G.max_div
+        2
+
+        See Also
+        ========
+
+        minimal_block, _union_find_merge
+
+        """
         if self._max_div != None:
             return self._max_div
         n = self.degree
+        if n == 1:
+            return 1
         for x in sieve:
             if n % x == 0:
                 d = n/x
@@ -1593,11 +1946,49 @@ class PermutationGroup(Basic):
                 return d
 
 
-    def is_primitive(self, randomized = True):
+    def is_primitive(self, randomized=True):
+        """
+        Test a group for primitivity.
+
+        A permutation group `G` acting on a set `S` is called primitive if
+        `S` contains no nontrivial block under the action of `G`
+        (a block is nontrivial if its cardinality is more than `1`).
+
+        Notes
+        =====
+
+        The algorithm is described in [1], p.83, and uses the function
+        minimal_block to search for blocks of the form `\{0, k\}` for `k`
+        ranging over representatives for the orbits of `G_0`, the stabilizer of
+        `0`. This algorithm has complexity `O(n^2)` where `n` is the degree
+        of the group, and will perform badly if `G_0` is small.
+
+        There are two implementations offered: one finds `G_0`
+        deterministically using the function ``stabilizer``, and the other
+        (default) produces random elements of `G_0` using ``random_stab``,
+        hoping that they generate a subgroup of `G_0` with not too many more
+        orbits than G_0 (this is suggested in [1], p.83). Behavior is changed
+        by the ``randomized`` flag.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.named_groups import DihedralGroup
+        >>> D = DihedralGroup(10)
+        >>> D.is_primitive()
+        False
+
+        See Also
+        ========
+
+        minimal_block, random_stab
+
+        """
         if self._is_primitive != None:
             return self._is_primitive
         n = self.degree
-        if randomized == True:
+        if randomized:
             r = len(self.generators)
             random_stab_gens = []
             v = self.schreier_vector(0)
@@ -1610,226 +2001,50 @@ class PermutationGroup(Basic):
         for orb in orbits:
             x = orb.pop()
             if x != 0 and self.minimal_block([0, x]) != [0]*n:
+                self._is_primitive = False
                 return False
+        self._is_primitive = True
         return True
 
-    def random_stab(self, alpha, schreier_vector = None):
+    def random_stab(self, alpha, schreier_vector=None, _random_prec=None):
+        """
+        Random element from the stabilizer of ``alpha``.
+
+        The schreier vector for ``alpha`` is an optional argument used
+        for speeding up repeated calls. The algorithm is described in [1], p.81
+
+        See Also
+        ========
+
+        random_pr, orbit_rep
+
+        References
+        ==========
+
+        [1] Holt, D., Eick, B., O'Brien, E.
+        "Handbook of computational group theory"
+
+        """
         if schreier_vector == None:
             schreier_vector = self.schreier_vector(alpha)
-        rand = self.pr_random()
+        if _random_prec == None:
+            rand = self.random_pr()
+        else:
+            rand = _random_prec['rand']
         beta = rand(alpha)
         h = self.orbit_rep(alpha, beta, schreier_vector)
         return (~h)*rand
 
-
-
-def SymmetricGroup(n):
-    """
-    Generates the symmetric group on ``n`` elements as a permutation group.
-
-    The generators taken are the ``n``-cycle
-    ``(0 1 2 ... n-1)`` and the transposition ``(0 1)`` (in cycle notation).
-    (See [1]). After the group is generated, some of its basic properties
-    are set.
-
-    Examples
-    ========
-
-    >>> from sympy.combinatorics.perm_groups import SymmetricGroup
-    >>> G = SymmetricGroup(4)
-    >>> G.order()
-    24
-    >>> list(G.generate_schreier_sims(af=True))
-    [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 1, 3], [0, 2, 3, 1], [0, 3, 1, 2],
-    [0, 3, 2, 1], [1, 2, 3, 0], [1, 2, 0, 3], [1, 3, 2, 0],
-    [1, 3, 0, 2], [1, 0, 2, 3], [1, 0, 3, 2], [2, 3, 0, 1], [2, 3, 1, 0],
-    [2, 0, 3, 1], [2, 0, 1, 3], [2, 1, 3, 0], [2, 1, 0, 3], [3, 0, 1, 2],
-    [3, 0, 2, 1], [3, 1, 0, 2], [3, 1, 2, 0], [3, 2, 0, 1], [3, 2, 1, 0]]
-
-    See Also
-    ========
-
-    CyclicGroup, DihedralGroup, AlternatingGroup
-
-    References
-    ==========
-
-    [1] http://en.wikipedia.org/wiki/Symmetric_group#Generators_and_relations
-
-    """
-    if n == 1:
-        G = PermutationGroup([Permutation([0])])
-    elif n == 2:
-        G = PermutationGroup([Permutation([1, 0])])
-    else:
-        a = range(1,n)
-        a.append(0)
-        gen1 = _new_from_array_form(a)
-        a = range(n)
-        a[0], a[1] = a[1], a[0]
-        gen2 = _new_from_array_form(a)
-        G = PermutationGroup([gen1, gen2])
-
-    if n<3:
-        G._is_abelian = True
-    else:
-        G._is_abelian = False
-    G._degree = n
-    G._is_transitive = True
-    G._is_sym = True
-    return G
-
-def CyclicGroup(n):
-    """
-    Generates the cyclic group of order ``n`` as a permutation group.
-
-    The generator taken is the ``n``-cycle ``(0 1 2 ... n-1)``
-    (in cycle notation). After the group is generated, some of its basic
-    properties are set.
-
-    Examples
-    ========
-
-    >>> from sympy.combinatorics.perm_groups import CyclicGroup
-    >>> G = CyclicGroup(6)
-    >>> G.order()
-    6
-    >>> list(G.generate_schreier_sims(af=True))
-    [[0, 1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 0], [2, 3, 4, 5, 0, 1],
-    [3, 4, 5, 0, 1, 2], [4, 5, 0, 1, 2, 3], [5, 0, 1, 2, 3, 4]]
-
-    See Also
-    ========
-
-    SymmetricGroup, DihedralGroup, AlternatingGroup
-
-    """
-    a = range(1, n)
-    a.append(0)
-    gen = _new_from_array_form(a)
-    G = PermutationGroup([gen])
-
-    G._is_abelian = True
-    G._degree = n
-    G._is_transitive = True
-    G._order = n
-    return G
-
-def DihedralGroup(n):
-    r"""
-    Generates the dihedral group `D_n` as a permutation group.
-
-    The dihedral group `D_n` is the group of symmetries of the regular
-    ``n``-gon. The generators taken are the ``n``-cycle ``a = (0 1 2 ... n-1)``
-    (a rotation of the ``n``-gon) and ``b = (0 n-1)(1 n-2)...``
-    (a reflection of the ``n``-gon) in cycle rotation. It is easy to see that
-    these satisfy ``a**n = b**2 = 1`` and ``bab = ~a`` so they indeed generate
-    `D_n` (See [1]). After the group is generated, some of its basic properties
-    are set.
-
-    Examples
-    ========
-
-    >>> from sympy.combinatorics.perm_groups import DihedralGroup
-    >>> G = DihedralGroup(5)
-    >>> a = list(G.generate_dimino())
-    >>> [perm.cyclic_form for perm in a]
-    [[[4], [3], [2], [1], [0]], [[0, 1, 2, 3, 4]], [[0, 2, 4, 1, 3]],
-    [[0, 3, 1, 4, 2]], [[0, 4, 3, 2, 1]], [[2], [1, 3], [0, 4]],
-    [[2, 3], [1, 4], [0]], [[3], [2, 4], [0, 1]], [[3, 4], [1], [0, 2]],
-    [[4], [1, 2], [0, 3]]]
-
-    See Also
-    ========
-
-    SymmetricGroup, CyclicGroup, AlternatingGroup
-
-    References
-    ==========
-
-    [1] http://en.wikipedia.org/wiki/Dihedral_group
-
-    """
-    # small cases are special
-    if n == 1:
-        return PermutationGroup([Permutation([1, 0])])
-    if n == 2:
-        return PermutationGroup([Permutation([1, 0, 3, 2]),
-               Permutation([2, 3, 0, 1]), Permutation([3, 2, 1, 0])])
-
-    a = range(1, n)
-    a.append(0)
-    gen1 = _new_from_array_form(a)
-    a = range(n)
-    a.reverse()
-    gen2 = _new_from_array_form(a)
-    G = PermutationGroup([gen1, gen2])
-
-    G._is_abelian = False
-    G._degree = n
-    G._is_transitive = True
-    G._order = 2*n
-    return G
-
-def AlternatingGroup(n):
-    """
-    Generates the alternating group on ``n`` elements as a permutation group.
-
-    For ``n > 2``, the generators taken are ``(0 1 2), (0 1 2 ... n-1)`` for
-    ``n`` odd
-    and ``(0 1 2), (1 2 ... n-1)`` for ``n`` even (See [1], p.31, ex.6.9.).
-    After the group is generated, some of its basic properties are set.
-    The cases ``n = 1, 2`` are handled separately.
-
-    Examples
-    ========
-
-    >>> from sympy.combinatorics.perm_groups import AlternatingGroup
-    >>> G = AlternatingGroup(4)
-    >>> a = list(G.generate_dimino())
-    >>> len(a)
-    12
-    >>> [perm.is_even for perm in a]
-    [True, True, True, True, True, True, True, True, True, True, True, True]
-
-    See Also
-    ========
-
-    SymmetricGroup, CyclicGroup, DihedralGroup
-
-    References
-    ==========
-
-    [1] Armstrong, M. "Groups and Symmetry"
-
-    """
-    # small cases are special
-    if n == 1 or n == 2:
-        return PermutationGroup([Permutation([0])])
-
-    a = range(n)
-    a[0], a[1], a[2] = a[1], a[2], a[0]
-    gen1 = _new_from_array_form(a)
-    if n % 2 == 1:
-        a = range(1, n)
-        a.append(0)
-        gen2 = _new_from_array_form(a)
-    else:
-        a = range(2, n)
-        a.append(1)
-        gen2 = _new_from_array_form([0] + a)
-    G = PermutationGroup([gen1, gen2])
-
-    if n<4:
-        G._is_abelian = True
-    else:
-        G._is_abelian = False
-    G._degree = n
-    G._is_transitive = True
-    G._is_alt = True
-    return G
-
 def _check_cycles_alt_sym(perm):
+    """
+    Checks for cycles of prime length p with n/2 < p < n-2.
+
+    Helper function for the function is_alt_sym.
+
+    See Also
+    ========
+    is_alt_sym
+    """
     n = perm.size
     af = perm.array_form
     current_len = 0
@@ -1848,3 +2063,5 @@ def _check_cycles_alt_sym(perm):
             if current_len > n/2 and current_len < n-2 and isprime(current_len):
                 return True
     return False
+
+PermGroup = PermutationGroup
