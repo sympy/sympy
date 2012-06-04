@@ -1,4 +1,4 @@
-from sympy.core import Set, Basic
+from sympy.core import Set, Basic, EmptySet
 
 class Class(Set):
     """
@@ -201,3 +201,44 @@ class Morphism(Basic):
 
     def __hash__(self):
         return hash((self.name, self.domain, self.codomain))
+
+class Category(Basic):
+    """
+    An (abstract) category.
+
+    A category [JoyOfCats] is a quadruple K = (O, hom, id, *)
+    consisting of
+
+    * a (set-theoretical) class O, whose members are called K-objects,
+
+    * for each pair (A, B) of K-objects, a set hom(A, B) whose members
+      are called K-morphisms from A to B,
+
+    * for a each K-object A, a morphism id:A->A, called the K-identity
+      on A,
+
+    * a composition law associating with every K-morphisms f:A->B and
+      g:B->C a K-morphism g*f:A->C, called the composite of f and g.
+
+    Composition is associative, K-identities are identities with
+    respect to composition, and the sets hom(A, B) are pairwise
+    disjoint.
+
+    This class nothing about its objects and morphisms.  Concrete
+    cases of (abstract) categories should be implemented as classes
+    derived from this one.
+    """
+    objects = None
+    name = ""
+
+    def __init__(self, name, objects=EmptySet()):
+        self.name = name
+        self.objects = objects
+
+    def hom(self, A, B):
+        raise NotImplementedError(
+            "hom-sets are not implemented in Category.")
+
+    def all_morphisms(self):
+        raise NotImplementedError(
+            "Obtaining the class of morphisms is not implemented in Category.")

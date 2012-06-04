@@ -17,4 +17,4 @@ from
 
 """
 
-from baseclasses import Object, Morphism
+from baseclasses import Object, Morphism, Category
