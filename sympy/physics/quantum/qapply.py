@@ -15,7 +15,6 @@ from sympy.physics.quantum.operator import OuterProduct, Operator
 from sympy.physics.quantum.state import State, KetBase, BraBase, Wavefunction
 from sympy.physics.quantum.tensorproduct import TensorProduct
 
-
 __all__ = [
     'qapply'
 ]
@@ -51,6 +50,7 @@ def qapply(e, **options):
     e : Expr
         The original expression, but with the operators applied to states.
     """
+    from sympy.physics.quantum.density import Density
 
     dagger = options.get('dagger', False)
 
@@ -76,6 +76,11 @@ def qapply(e, **options):
         for arg in e.args:
             result += qapply(arg, **options)
         return result
+
+    # For a Density operator call qapply on its state
+    elif isinstance(e, Density):
+        new_args = [(qapply(state, **options),prob) for (state,prob) in e.args]
+        return Density(*new_args)
 
     # For a raw TensorProduct, call qapply on its args.
     elif isinstance(e, TensorProduct):
