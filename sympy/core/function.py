@@ -969,10 +969,11 @@ class Derivative(Expr):
                 raise ValueError(filldedent('''
                 Can\'t differentiate wrt the variable: %s, %s''' % (v, count)))
 
-            variable_count.append((v, count))
-
             if all_zero and not count == 0:
                 all_zero = False
+
+            if count:
+                variable_count.append((v, count))
 
         # We make a special case for 0th derivative, because there is no
         # good way to unambiguously print this.
