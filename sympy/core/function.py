@@ -45,6 +45,7 @@ from numbers import Rational, Float
 from add import Add
 
 from sympy.core.containers import Tuple, Dict
+from sympy.core.logic import fuzzy_and
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
 
@@ -99,6 +100,7 @@ class FunctionClass(ManagedProperties):
     @deprecated
     def __contains__(self, obj):
         return (self == obj)
+
 
 class Application(Basic):
     """
@@ -403,14 +405,7 @@ class Function(Application, Expr):
         return Add(*l)
 
     def _eval_is_commutative(self):
-        r = True
-        for a in self._args:
-            c = a.is_commutative
-            if c is None:
-                return None
-            if not c:
-                r = False
-        return r
+        return fuzzy_and(a.is_commutative for a in self.args)
 
     def as_base_exp(self):
         """
