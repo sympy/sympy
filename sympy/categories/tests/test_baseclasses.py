@@ -5,6 +5,13 @@ def test_object():
 
     assert A.name == "A"
 
+    assert A == Object("A")
+    assert A != Object("A1")
+    assert Object("") != A
+    assert Object("") != Object("")
+
+    assert hash(A) == hash(Object("A"))
+
 def test_morphism():
     A = Object("A")
     B = Object("B")
@@ -60,3 +67,10 @@ def test_morphism():
     assert u1.codomain == D
     assert u1.name == "u"
     assert u1.components == [u1]
+
+    assert f == Morphism(A, B, "f")
+    assert f != g
+    assert f != Morphism(A, B, "")
+    assert Morphism(A, B, "") != Morphism(A, B, "")
+
+    assert hash(f) == hash(Morphism(A, B, "f"))
