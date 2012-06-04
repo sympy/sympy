@@ -25,6 +25,17 @@ class Object(Basic):
 
     Two objects with the same name are the same object.  An unnamed
     object is not equal to any other object.
+
+    Examples
+    ========
+
+    >>> from sympy.categories import Object
+    >>> Object("A") == Object("A")
+    True
+
+    >>> Object("A") == Object("")
+    False
+
     """
     def __init__(self, name=""):
         self.name = name
@@ -61,6 +72,26 @@ class Morphism(Basic):
     in the same order (which guarantees the equality of domains and
     codomains).  The names of such composed morphisms are not taken in
     consideration at comparison.
+
+    Examples
+    ========
+
+    >>> from sympy.categories import Object, Morphism
+    >>> A = Object("A"); B = Object("B"); C = Object("C")
+    >>> f = Morphism(A, B, "f")
+    >>> g = Morphism(B, C, "g")
+
+    >>> f == Morphism(A, B, "f")
+    True
+    >>> f == Morphism(A, B, "")
+    False
+
+    >>> f * g is None
+    True
+    >>> g * f
+    Morphism(Object("B"), Object("C"), "g") *
+    Morphism(Object("A"), Object("B"), "f")
+
     """
     def __init__(self, domain, codomain, name=""):
         self.domain = domain
@@ -83,7 +114,22 @@ class Morphism(Basic):
 
         Examples
         ========
-        TODO: Add examples.
+
+        >>> from sympy.categories import Object, Morphism
+        >>> A = Object("A"); B = Object("B"); C = Object("C")
+        >>> f = Morphism(A, B, "f")
+        >>> g = Morphism(B, C, "g")
+
+        >>> f.compose(g) is None
+        True
+
+        >>> g.compose(f)
+        Morphism(Object("B"), Object("C"), "g") *
+        Morphism(Object("A"), Object("B"), "f")
+
+        >>> (g.compose(f, "h")).name
+        'h'
+
         """
         if g.codomain != self.domain:
             return None
@@ -118,7 +164,14 @@ class Morphism(Basic):
 
         Examples
         ========
-        TODO: Add examples.
+
+        >>> from sympy.categories import Object, Morphism
+        >>> A = Object("A"); B = Object("B"); C = Object("C")
+        >>> f = Morphism(A, B, "f")
+        >>> g = Morphism(B, C, "g")
+
+        >>> (g * f).flatten("h")
+        Morphism(Object("A"), Object("C"), "h")
 
         See Also
         ========
