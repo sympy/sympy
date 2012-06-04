@@ -137,7 +137,7 @@ def test_point():
     assert p.translate(1, 2) == Point(2, 3)
     assert p.translate(1) == Point(2, 1)
     assert p.translate(y=1) == Point(1, 2)
-    assert p.translate(p) == Point(2, 2)
+    assert p.translate(*p.args) == Point(2, 2)
 
 def test_line():
     p1 = Point(0, 0)
@@ -590,8 +590,7 @@ def test_ellipse_random_point():
     for ind in xrange(0, 5):
         r = e3.random_point()
         # substitution should give zero*y1**2
-        assert e3.equation(rx, ry).subs(zip((rx, ry), r.args)
-                                        ).n(3).as_coeff_Mul()[0] < 1e-7
+        assert e3.equation(rx, ry).subs(zip((rx, ry), r.args)).equals(0)
 
 def test_polygon():
     t = Triangle(Point(0, 0), Point(2, 0), Point(3, 3))
@@ -908,8 +907,8 @@ def test_free_symbols():
     assert RegularPolygon((a,b),c,d,e).free_symbols == set([e, a, b, c, d])
 
 def test_util_centroid():
-    p = Polygon((0,0),(10,0),(10,10))
-    q = p.translate(0,20)
+    p = Polygon((0, 0), (10, 0), (10, 10))
+    q = p.translate(0, 20)
     assert centroid(p, q) == Point(20, 40)/3
     p = Segment((0,0),(2,0))
     q = Segment((0,0),(2,2))
@@ -961,3 +960,41 @@ def test_triangle_kwargs():
         Triangle(Point(0, 0), Point(2, 0), Point(sqrt(2)/2, sqrt(2)/2))
     assert Triangle(sss=(1,2,5)) is None
     assert deg(rad(180)) == 180
+
+def test_geometry_transforms():
+    from sympy import Tuple
+    c = Curve((x, x**2), (x, 0, 1))
+    pts = [Point(0, 0), Point(S(1)/2, S(1)/4), Point(1, 1)]
+    cout = Curve((2*x - 4, 3*x**2 - 10), (x, 0, 1))
+    pts_out = [Point(-4, -10), Point(-3, -S(37)/4), Point(-2, -7)]
+    assert c.scale(2, 3, (4, 5)) == cout
+    assert [c.subs(x, xi/2) for xi in Tuple(0, 1, 2)] == pts
+    assert [cout.subs(x, xi/2) for xi in Tuple(0, 1, 2)] == pts_out
+    assert Triangle(*pts).scale(2, 3, (4, 5)) == Triangle(*pts_out)
+
+    assert Ellipse((0, 0), 2, 3).scale(2, 3, (4, 5)) == \
+        Ellipse(Point(-4, -10), 4, 9)
+    assert Circle((0, 0), 2).scale(2, 3, (4, 5)) == \
+        Ellipse(Point(-4, -10), 4, 6)
+    assert Ellipse((0, 0), 2, 3).scale(3, 3, (4, 5)) == \
+        Ellipse(Point(-8, -10), 6, 9)
+    assert Circle((0, 0), 2).scale(3, 3, (4, 5)) == \
+        Circle(Point(-8, -10), 6)
+    assert Circle(Point(-8, -10), 6).scale(S(1)/3, S(1)/3, (4, 5)) == \
+        Circle((0, 0), 2)
+    assert Curve((x + y, 3*x), (x, 0, 1)).subs(y, S.Half) == \
+        Curve((x + S(1)/2, 3*x), (x, 0, 1))
+    assert Curve((x, 3*x), (x, 0, 1)).translate(4, 5) == \
+        Curve((x + 4, 3*x + 5), (x, 0, 1))
+    assert Circle((0, 0), 2).translate(4, 5) == \
+        Circle((4, 5), 2)
+    assert Circle((0, 0), 2).scale(3, 3) == \
+        Circle((0, 0), 6)
+    assert Point(1, 1).scale(2, 3, (4, 5)) == \
+        Point(-2, -7)
+    assert Point(1, 1).translate(4, 5) == \
+        Point(5, 6)
+    assert scale(1, 2, (3, 4)).tolist() == \
+        [[1,  0, 0], [0,  2, 0], [0, -4, 1]]
+    assert RegularPolygon((0, 0), 1, 4).scale(2, 3, (4, 5)) == \
+        Polygon(Point(-2, -10), Point(-4, -7), Point(-6, -10), Point(-4, -13))
