@@ -1208,6 +1208,9 @@ class LatexPrinter(Printer):
 
         return "%s:%s" % (pretty_name, tail)
 
+    def _print_Category(self, morphism):
+        return "\\mathbf{%s}" % self._print(Symbol(morphism.name))
+
 def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.

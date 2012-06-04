@@ -3693,7 +3693,7 @@ def test_complicated_symbol_unchanged():
         assert pretty(Symbol(symb_name)) == symb_name
 
 def test_categories():
-    from sympy.categories import Object, Morphism
+    from sympy.categories import Object, Morphism, Category
     A1 = Object("A1")
     A2 = Object("A2")
     A3 = Object("A3")
@@ -3701,6 +3701,8 @@ def test_categories():
     f1 = Morphism(A1, A2, "f1")
     f2 = Morphism(A2, A3, "f2")
     anonymous = Morphism(A1, A3, "")
+
+    K1 = Category("K1")
 
     assert pretty(A1) == "A1"
     assert upretty(A1) == u"A₁"
@@ -3712,6 +3714,9 @@ def test_categories():
 
     assert pretty(f2*f1) == "f2*f1:A1->A3"
     assert upretty(f2*f1) == u"f₂∘f₁:A₁→A₃"
+
+    assert pretty(K1) == "K1"
+    assert upretty(K1) == u"K₁"
 
     # Some further tests for anonymous objects and morphisms.
     assert pretty(Object("")) == "."

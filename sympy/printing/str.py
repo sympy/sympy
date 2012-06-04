@@ -536,6 +536,9 @@ class StrPrinter(Printer):
                       (component.domain, component.codomain, component.name)
         return result[:-3]
 
+    def _print_Category(self, category):
+        return 'Category("%s")' % category.name
+
 
 def sstr(expr, **settings):
     """Returns the expression as a string.

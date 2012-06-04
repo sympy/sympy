@@ -571,7 +571,7 @@ def test_PolynomialRing():
             r"S_<^{-1}\mathbb{Q}\left[x, y\right]"
 
 def test_categories():
-    from sympy.categories import Object, Morphism
+    from sympy.categories import Object, Morphism, Category
     A1 = Object("A1")
     A2 = Object("A2")
     A3 = Object("A3")
@@ -580,10 +580,14 @@ def test_categories():
     f2 = Morphism(A2, A3, "f2")
     anonymous = Morphism(A1, A3, "")
 
+    K1 = Category("K1")
+
     assert latex(A1) == "A_{1}"
     assert latex(f1) == "f_{1}:A_{1}\\rightarrow A_{2}"
     assert latex(anonymous) == "A_{1}\\rightarrow A_{3}"
     assert latex(f2*f1) == "f_{2}\\circ f_{1}:A_{1}\\rightarrow A_{3}"
+
+    assert latex(K1) == "\mathbf{K_{1}}"
 
     assert latex(Object("")) == "\\bullet"
 

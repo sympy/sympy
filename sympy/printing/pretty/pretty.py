@@ -1483,6 +1483,9 @@ class PrettyPrinter(Printer):
         pretty_name_form = self._print(pretty_name)
         return prettyForm(pretty_name_form.right(":", tail)[0])
 
+    def _print_Category(self, category):
+        return self._print(pretty_symbol(category.name))
+
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 
