@@ -23,24 +23,25 @@ randon != 0  random canonical tensor
 In stderr appears the input and the output canonical tensor as products of Riemann tensors,
 and the list in the form of the output of test_xperm
 
-Compile test_xperm.c with xperm.c, as done in [2]
+Compile the output test_xperm.cc with the version of xperm.c in [3]
 
 run ./test_xperm > test_output
 if xperm.c gives different result from the one shown in the stderr of the Python program,
 an error message appears in stderr (except in the case in which
 the result is the identity; so if there is an error message, check
 in test_output if the result is the identity; if the stderr of the
-python program is also the identity, the result is correct))
+python program is also the identity, the result is correct)
 
 
 References:
 
   [1] J. M. Martin-Garcia, Comp. Phys. Commun. 179 (2008) 597-603 , arXiv: 0803.0862
-      xperm.c part of XPerm written by J. M. Martin-Garcia
+  [2] xperm.c part of XPerm written by J. M. Martin-Garcia
       http://www.xact.es/index.html
 
-  [2] test_xperm.c in cadabra by Kasper Peeters, http://cadabra.phi-sci.com/
-
+  [3] cadabra by Kasper Peeters, http://cadabra.phi-sci.com/
+      compile test_xperm.cc with the version of xterm.c dated 6 May 2006,
+      which is included in cadabra-1.31/src/modules
 """
 
 import sys
