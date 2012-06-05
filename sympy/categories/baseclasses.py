@@ -242,3 +242,141 @@ class Category(Basic):
     def all_morphisms(self):
         raise NotImplementedError(
             "Obtaining the class of morphisms is not implemented in Category.")
+
+class Diagram(Basic):
+    r"""
+    Represents a diagram in a certain category.
+
+    Informally, a diagram is a collection of objects of a category and
+    certain morphisms between them.  A diagram is still a monoid with
+    respect to morphism composition; i.e., identity morphisms, as well
+    as all composites of morphisms included in the diagram belong to
+    the diagram.  For a more formal approach to this notion see
+    [Pare1970].
+
+    A commutative diagram is often accompanied by a statement of the
+    following kind: "if such morphisms with such properties exist,
+    then such morphisms which such properties exist and the diagram is
+    commutative".  To represent this, an instance of :class:`Diagram`
+    includes a list of morphisms which are the premises and another
+    list of conclusions.  ``premises`` and ``conclusions`` associate
+    morphisms belonging to the corresponding categories with the
+    :class:`FiniteSet`'s of their properties.
+
+    While ``premises`` and ``conclusions`` are public attributes of
+    this class, it is highly discouraged to directly modify them.
+    This may result in inconsistent behaviour.  Use ``add_premise``
+    and ``add_conclusion`` instead.
+
+    No checks are carried out of whether the supplied object and
+    morphisms do belong to one and the same category.
+
+    Examples
+    ========
+    TODO: Add examples.
+
+    References
+    ==========
+    [Pare1970] B. Pareigis: Categories and functors.  Academic Press,
+    1970.
+    """
+    def __init__(self):
+        self.premises = {}
+        self.conclusions = {}
+
+    def add_premise(self, morphism, *props):
+        """
+        Adds a morphism and its properties to the premises of this
+        diagram.
+
+        ``morphism`` should be compatible with :class:`Morphism`.  A
+        property is a string.
+
+        When another morphisms is added to the diagram, all necessary
+        morphisms are added to keep the diagram a monoid with respect
+        to composition: the identity morphisms of the domain and the
+        codomain, as well as all possible compositions with the
+        morphisms already included in the diagram.  The set of
+        properties of a composite morphism is the intersection of the
+        sets of properties of its components.
+
+        Examples
+        ========
+        TODO: Add examples.
+
+        See Also
+        ========
+        Morphism
+        """
+        pass
+
+    def add_conclusion(self, morphism, *props):
+        """
+        Adds a morphism and its properties to the conclusions of this
+        diagram.
+
+        ``morphism`` should be compatible with :class:`Morphism`.  A
+        property is a string.  The domain and codomain of the morphism
+        should be among the domains and codomains of the morphisms
+        listed as the premises of this diagram.
+
+        When another morphisms is added to the diagram, all necessary
+        morphisms are added to keep the diagram a monoid with respect
+        to composition: the identity morphisms of the domain and the
+        codomain, as well as all possible compositions with the
+        morphisms already included in the diagram.  The set of
+        properties of a composite morphism is the intersection of the
+        sets of properties of its components.
+
+        Examples
+        ========
+        TODO: Add examples.
+
+        See Also
+        ========
+        Morphism, add_premise
+        """
+        pass
+
+    def list_objects(self):
+        """
+        Returns the set of objects which appear in this diagram.
+
+        A :class:`Diagram` does not explicitly store a list of objects
+        and constructs it from the domains and codomains of the
+        included morphisms.
+
+        Examples
+        ========
+        TODO: Add examples.
+
+        See Also
+        ========
+        Object
+        """
+        pass
+
+    def hom(self, A, B):
+        """
+        Returns a 2-tuple of sets of morphisms between objects A and
+        B: one set of morphisms listed as premises, and the other set
+        of morphisms listed as conclusions.
+
+        Examples
+        ========
+        TODO: Add examples.
+
+        See Also
+        ========
+        Object, Morphism
+        """
+        pass
+
+    def __eq__(self, other):
+        pass
+
+    def __eq__(self, other):
+        pass
+
+    def hash(self):
+        pass
