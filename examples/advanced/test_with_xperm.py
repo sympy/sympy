@@ -44,6 +44,7 @@ References:
 """
 
 import sys
+sys.path.insert(0, '../..')
 from time import time
 from sympy.combinatorics.permutations import Permutation, cyclic, perm_af_invert , perm_af_muln
 from sympy.combinatorics.perm_groups import PermutationGroup
@@ -202,7 +203,7 @@ def str_code(gens, g, result):
     s = str_head(gens, size) + str_perm(len(gens), g, result)
     return s
 
-def run(gens, g):
+def run(gens, g, ind):
     """
     gens slot symmetry generators
     `g` permutation corresponding to the tensor, with the last two
@@ -217,13 +218,14 @@ def run(gens, g):
     t0 = time()
     res = double_coset_can_rep(0, sgens, g)
     t1 = time()
+    sys.stderr.write('\noutput %s\n' % str_riemann(ind, res))
     if res:
         result = [x+1 for x in perm_af_invert(res)]
         sys.stderr.write('%s\n' % result)
     else:
         sys.stderr.write('0\n')
         result = [0]*size
-    sys.stderr.write('%f\n' %(t1-t0))
+    sys.stderr.write('double_coset_can_rep: %f\n' %(t1-t0))
     return str_code(gens, g, result)
 
 def riemann_products(nr, random_input):
@@ -248,7 +250,6 @@ def riemann_products(nr, random_input):
         shuffle(g)
     g += [n, n+1]
 
-    #g1 = double_coset_can_rep(0, sgens, g)
     ind = []
     for i in range(n//2):
         ind.append('d%s' % (i+1))
@@ -262,10 +263,14 @@ def riemann_products(nr, random_input):
     # use random slot and dummy symmetries to bring the tensor to a random equivalent form
     dsgs = [Permutation(x) for x in dsgs]
     sgens = [Permutation(x) for x in sgens]
-    D = PermutationGroup(dsgs)
+    t0 = time()
     S = PermutationGroup(sgens)
-    D_ord = D.order()
     S_ord = S.order()
+    t1 = time()
+    D = PermutationGroup(dsgs)
+    D_ord = D.order()
+    t2 = time()
+    sys.stderr.write('setup Schreier-Sims S: %.2f D:%.2f\n' %(t1-t0,t2-t1))
     js = randint(0, S_ord-1)
     jd = randint(0, D_ord-1)
     s = S.coset_unrank(js).array_form
@@ -276,9 +281,7 @@ def riemann_products(nr, random_input):
         g1[-2] = size-2
         g1[-1] = size-1
     sys.stderr.write('input %s\n' % str_riemann(ind, g1))
-    res1 = double_coset_can_rep(0, sgensp, g1)
-    sys.stderr.write('\noutput %s\n' % str_riemann(ind, res1))
-    result = run(gens, g1)
+    result = run(gens, g1, ind)
     print result
 
 if __name__ == '__main__':
