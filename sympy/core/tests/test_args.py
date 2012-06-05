@@ -1536,6 +1536,11 @@ def test_sympy__physics__quantum__qubit__QubitState():
     from sympy.physics.quantum.qubit import QubitState
     assert _test_args(QubitState(0, 1))
 
+def test_sympy__physics__quantum__density__Density():
+    from sympy.physics.quantum.density import Density
+    from sympy.physics.quantum.state import Ket
+    assert _test_args(Density([Ket(0),0.5], [Ket(1),0.5]))
+
 @SKIP("TODO: sympy.physics.quantum.shor: Cmod Not Implemented")
 def test_sympy__physics__quantum__shor__CMod():
     from sympy.physics.quantum.shor import CMod
