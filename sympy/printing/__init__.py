@@ -6,6 +6,7 @@ from mathml import mathml, print_mathml
 from python import python, print_python
 from ccode import ccode, print_ccode
 from fcode import fcode, print_fcode
+from jscode import jscode, print_jscode
 from gtk import *
 from preview import preview
 from repr import srepr
