@@ -530,7 +530,8 @@ def cycle_length(f, x0, nmax=None, values=False):
     """For a given iterated sequence, return a generator that gives
     the length of the iterated cycle (lambda) and the length of terms
     before the cycle begins (mu); if ``values`` is True then the
-    terms of the sequence will be returned instead.
+    terms of the sequence will be returned instead. The sequence is
+    started with value ``x0``.
 
     Note: more than the first lambda + mu terms may be returned and this
     is the cost of cycle detection with Brent's method; there are, however,
@@ -538,7 +539,6 @@ def cycle_length(f, x0, nmax=None, values=False):
     proper ending point were determined, e.g. by using Floyd's method.
 
     >>> from sympy.ntheory.generate import cycle_length
-    >>> from random import Random
 
     This will yield successive values of i <-- func(i):
 
@@ -553,7 +553,7 @@ def cycle_length(f, x0, nmax=None, values=False):
 
         >>> func = lambda i: (i**2 + 1) % 51
 
-    and given a seed of 2 and the mu and lambda terms calculated:
+    and given a seed of 4 and the mu and lambda terms calculated:
 
         >>> cycle_length(func, 4).next()
         (6, 2)
