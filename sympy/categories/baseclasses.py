@@ -41,12 +41,18 @@ class Object(Basic):
         self.name = name
 
     def __eq__(self, obj):
+        if not isinstance(obj, Object):
+            return False
+
         if (not obj.name) or (not self.name):
             return False
 
         return self.name == obj.name
 
     def __ne__(self, obj):
+        if not isinstance(obj, Object):
+            return True
+
         if (not obj.name) or (not self.name):
             return True
 
@@ -207,6 +213,9 @@ class Morphism(Basic):
         return Morphism(self.domain, self.codomain, new_name)
 
     def __eq__(self, g):
+        if not isinstance(g, Morphism):
+            return False
+
         if self.identity and g.identity:
             # All identities are equal.
             return self.domain == g.domain

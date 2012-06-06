@@ -14,6 +14,8 @@ def test_object():
 
     assert hash(A) == hash(Object("A"))
 
+    assert A != None
+
 def test_morphism():
     A = Object("A")
     B = Object("B")
@@ -28,6 +30,8 @@ def test_morphism():
     assert f.domain == A
     assert f.codomain == B
     assert f.components == [f]
+
+    assert f != None
 
     assert f * g == None
     assert f * f == None
