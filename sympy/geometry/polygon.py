@@ -1824,8 +1824,9 @@ class Triangle(Polygon):
     def altitudes(self):
         """The altitudes of the triangle.
 
-        An altitude of a triangle is a straight line through a vertex and
-        perpendicular to the opposite side.
+        An altitude of a triangle is a segment through a vertex,
+        perpendicular to the opposite side, with length being the
+        height of the vertex measured from the line containing the side.
 
         Returns
         =======
@@ -1884,7 +1885,7 @@ class Triangle(Polygon):
         """
         a = self.altitudes
         v = self.vertices
-        return a[v[0]].intersection(a[v[1]])[0]
+        return Line(a[v[0]]).intersection(Line(a[v[1]]))[0]
 
     @property
     def circumcenter(self):
