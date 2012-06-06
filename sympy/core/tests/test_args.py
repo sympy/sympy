@@ -344,6 +344,11 @@ def test_sympy__core__sets__Union():
     from sympy.core.sets import Union, Interval
     assert _test_args(Union(Interval(0, 1), Interval(2, 3)))
 
+def test__sympy__core__trace__Tr():
+    from sympy.core.trace import Tr
+    a,b = symbols('a b')
+    assert _test_args(Tr(a+b))
+
 def test_sympy__sets__fancysets__Naturals():
     from sympy.sets.fancysets import Naturals
     assert _test_args(Naturals())

@@ -1,7 +1,7 @@
 from sympy import Tuple, Add, Matrix, log, expand
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.operator import HermitianOperator, OuterProduct
+from sympy.physics.quantum.operator import HermitianOperator, OuterProduct, Operator
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.state import KetBase
 from sympy.physics.quantum.qubit import Qubit
@@ -172,37 +172,16 @@ class Density(HermitianOperator):
     def _print_operator_name_pretty(self, printer, *args):
         return prettyForm(u"\u03C1")
 
-
-
-class QubitDensity(Density):
-    """Density operator to handle qubit related operations
-
-    Examples
-    ========
-
-    TODO:
-
-
-    """
-
-    def reduced_density(self, qubit, **options):
-        """Compute the reduced density matrix by tracing out one qubit."""
-
-        def find_index_that_is_projected(j, k, qubit):
-            bit_mask = 2**qubit - 1
-            return ((j >> qubit) << (1 + qubit)) + (j & bit_mask) + (k << qubit)
-
-        old_density = represent(self, **options)
-        old_size = old_density.cols
-        new_size = old_size/2
-        new_density = Matrix().zeros(new_size)
-        for i in xrange(new_size):
-            for j in xrange(new_size):
-                for k in xrange(2):
-                    col = find_index_that_is_projected(j,k,qubit)
-                    row = find_index_that_is_projected(i,k,qubit)
-                    new_density[i,j] += old_density[row, col]
-        return Matrix(new_density)
+    def _eval_trace(self,**kwargs):
+        expr = self.doit(); # get sum of scalars*OuterProduct
+        if isinstance(expr, Add):
+            result = 0;
+            for mul in expr.args:
+                result = result + mul.args[0]*mul.args[1]._eval_trace();
+            return result
+        else: # only one mul expr
+            if ( isinstance(expr.args[1], Operator)):
+                return expr.args[1]._eval_trace();
 
 
 def entropy(density):

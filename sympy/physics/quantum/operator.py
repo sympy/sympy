@@ -175,6 +175,10 @@ class Operator(QExpr):
         # TODO: make non-commutative Exprs print powers using A**-1, not 1/A.
         return self**(-1)
 
+    def _eval_trace(self):
+        raise NotImplementedError('This should be implemented in the subclasses')
+
+
 
 class HermitianOperator(Operator):
     """A Hermitian operator that satisfies H == Dagger(H).
@@ -215,6 +219,10 @@ class HermitianOperator(Operator):
         else:
             return Operator._eval_power(self, exp)
 
+    def _eval_trace(self):
+        raise NotImplementedError('Method under development')
+
+
 class UnitaryOperator(Operator):
     """A unitary operator that satisfies U*Dagger(U) == 1.
 
@@ -236,6 +244,9 @@ class UnitaryOperator(Operator):
 
     def _eval_dagger(self):
         return self._eval_inverse()
+
+    def _eval_trace(self):
+        raise NotImplementedError('This method is under development')
 
 
 class OuterProduct(Operator):
@@ -352,6 +363,12 @@ class OuterProduct(Operator):
         k = self.ket._represent(**options)
         b = self.bra._represent(**options)
         return k*b
+
+    def _eval_trace(self,**kwargs):
+        raise NotImplementedError('%s: This method is under construction' % \
+                                  self.__class__.__name__)
+
+
 
 class DifferentialOperator(Operator):
     """An operator for representing the differential operator, i.e. d/dx
