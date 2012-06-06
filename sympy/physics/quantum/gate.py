@@ -29,6 +29,7 @@ from sympy.physics.quantum.operator import (UnitaryOperator, Operator,
                                             HermitianOperator)
 from sympy.physics.quantum.matrixutils import matrix_tensor_product, matrix_eye
 from sympy.physics.quantum.matrixcache import matrix_cache
+from sympy.physics.quantum.dagger import Dagger
 
 from sympy.matrices.matrices import MatrixBase
 
@@ -90,7 +91,7 @@ def _validate_targets_controls(tandc):
     tandc = list(tandc)
     # Check for integers
     for bit in tandc:
-        if not bit.is_Integer:
+        if not bit.is_Integer and not bit.is_Symbol:
             raise TypeError('Integer expected, got: %r' % tandc[bit])
     # Detect duplicates
     if len(list(set(tandc))) != len(tandc):
@@ -421,6 +422,32 @@ class CGate(Gate):
             circ_plot.control_point(gate_idx, int(c))
         self.gate.plot_gate(circ_plot, gate_idx)
 
+    #-------------------------------------------------------------------------
+    # Miscellaneous
+    #-------------------------------------------------------------------------
+
+    def _eval_dagger(self):
+        if isinstance(self.gate, HermitianOperator):
+            return self
+        else:
+            return Gate._eval_dagger(self)
+
+    def _eval_inverse(self):
+        if isinstance(self.gate, HermitianOperator):
+            return self
+        else:
+            return Gate._eval_inverse(self)
+
+    def _eval_power(self, exp):
+        if isinstance(self.gate, HermitianOperator):
+            if exp == -1:
+                return Gate._eval_power(self, exp)
+            elif abs(exp) % 2 == 0:
+                return self*(Gate._eval_inverse(self))
+            else:
+                return self
+        else:
+            return Gate._eval_power(self, exp)
 
 class UGate(Gate):
     """General gate specified by a set of targets and a target matrix.
@@ -568,7 +595,7 @@ class IdentityGate(OneQubitGate):
         return Integer(2)*other
 
 
-class HadamardGate(OneQubitGate):
+class HadamardGate(HermitianOperator, OneQubitGate):
     """The single qubit Hadamard gate.
 
     Parameters
@@ -768,7 +795,7 @@ Phase = S = PhaseGate
 #-----------------------------------------------------------------------------
 
 
-class CNotGate(CGate, TwoQubitGate):
+class CNotGate(HermitianOperator, CGate, TwoQubitGate):
     """Two qubit controlled-NOT.
 
     This gate performs the NOT or X gate on the target qubit if the control
@@ -872,7 +899,6 @@ class CNotGate(CGate, TwoQubitGate):
             return Integer(0)
         else:
             raise NotImplementedError('Commutator not implemented: %r' % other)
-
 
 class SwapGate(TwoQubitGate):
     """Two qubit SWAP gate.
