@@ -1,5 +1,5 @@
 from sympy.categories import Object, Morphism, Diagram
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 from sympy import FiniteSet, EmptySet
 
 def test_object():
@@ -76,6 +76,19 @@ def test_morphism():
     assert Morphism(A, B, "") != Morphism(A, B, "")
 
     assert hash(f) == hash(Morphism(A, B, "f"))
+
+    id_A = Morphism(A, A, identity=True)
+    id_B = Morphism(B, B, identity=True)
+
+    assert id_A.identity == True
+    assert id_A == Morphism(A, A, name="f", identity=True)
+    assert id_A != Morphism(A, A, name="f")
+
+    assert id_A * id_A == id_A
+    assert f * id_A == f
+    assert id_B * f == f
+
+    raises(ValueError, lambda: Morphism(A, B, identity=True))
 
 @XFAIL
 def test_diagram():

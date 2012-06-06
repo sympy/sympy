@@ -73,6 +73,11 @@ class Morphism(Basic):
     codomains).  The names of such composed morphisms are not taken in
     consideration at comparison.
 
+    Morphisms with the same domain and codomain can be defined to be
+    identity morphisms.  Identity morphisms with the same (co)domains
+    are equal.  Identity morphisms are identities with respect to
+    composition.
+
     Examples
     ========
 
@@ -92,15 +97,28 @@ class Morphism(Basic):
     Morphism(Object("B"), Object("C"), "g") *
     Morphism(Object("A"), Object("B"), "f")
 
+    >>> id_A = Morphism(A, A, identity=True)
+    >>> id_A == Morphism(A, A, identity=True)
+    True
+
+    >>> f * id_A == f
+    True
+
     """
-    def __new__(cls, domain, codomain, name=""):
-        new_morphism = Basic.__new__(cls, domain, codomain, name)
+    def __new__(cls, domain, codomain, name="", identity=False):
+        new_morphism = Basic.__new__(cls, domain, codomain, name, identity)
 
         new_morphism.domain = domain
         new_morphism.codomain = codomain
         new_morphism.name = name
 
         new_morphism.components = [new_morphism]
+
+        new_morphism.identity = identity
+
+        if identity and (domain != codomain):
+            raise ValueError(
+                "identity morphisms must have the same domain and codomain")
 
         return new_morphism
 
@@ -137,6 +155,11 @@ class Morphism(Basic):
         """
         if g.codomain != self.domain:
             return None
+
+        if self.identity:
+            return g
+        if g.identity:
+            return self
 
         composite = Morphism(g.domain, self.codomain, new_name)
         composite.components = g.components + self.components
@@ -184,6 +207,13 @@ class Morphism(Basic):
         return Morphism(self.domain, self.codomain, new_name)
 
     def __eq__(self, g):
+        if self.identity and g.identity:
+            # All identities are equal.
+            return self.domain == g.domain
+        elif self.identity or g.identity:
+            # One of the morphisms is an identity, but not both.
+            return False
+
         if (len(self.components) == 1) and (len(g.components) == 1):
             # We are comparing two simple morphisms.
             if (not self.name) or (not g.name):
