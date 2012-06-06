@@ -253,15 +253,6 @@ def double_coset_can_rep(sym, sgens, g):
     S = PermutationGroup(sgens)
     # strong generating set for S
     sgens = [h.array_form for h in sgens]
-    signed = False
-    if sym == 1:
-        signed = True
-    else:
-        for h in sgens:
-            if h[-1] != size - 1:
-                signed = True
-                break
-
     # strong base generators for Sx; start with Sx=S
     sgensx = sgens + S.stabilizers_gens()
     S_cosets = S.coset_repr()
@@ -340,18 +331,17 @@ def double_coset_can_rep(sym, sgens, g):
         TAB = TAB1
         # if TAB contains equal permutations, keep only one of them;
         # if TAB contains equal permutations up to the sign, return 0
-        if signed:
-            TAB.sort(key=lambda x: x[-1])
-            prev = [0]*size
-            TAB1 = []
-            for s, d, h in TAB:
-                if h[:-2] == prev[:-2]:
-                    if h[-1] != prev[-1]:
-                        return 0
-                else:
-                    TAB1.append((s, d, h))
-                prev = h
-            TAB = TAB1
+        TAB.sort(key=lambda x: x[-1])
+        prev = [0]*size
+        TAB1 = []
+        for s, d, h in TAB:
+            if h[:-2] == prev[:-2]:
+                if h[-1] != prev[-1]:
+                    return 0
+            else:
+                TAB1.append((s, d, h))
+            prev = h
+        TAB = TAB1
 
         # stabilize the SGS
         sgensx = [h for h in sgensx if h[b] == b]

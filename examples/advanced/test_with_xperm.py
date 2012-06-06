@@ -3,13 +3,14 @@
 Canonicalization of Riemann invariants.
 --------------------------------------
 
-In [1] it is remarked that the products of tensors in the form (- sign for covariant index)
+In [1] it is remarked that the products of tensors with the form
+(- sign for covariant index)
    R(d1,d2,-d3,-d4)*R(d3,d4,-d5,-d6)*...*R(dn,dn,-d1,-d2)                 (1)
 
 are the hardest Riemann invariants to canonicalize.
 
-Here these invariants are computed; the input is equivalent to (1); it is obtained by application
-of random slot and dummy symmetries.
+Here these invariants are computed; the input is equivalent to (1); it is
+obtained by application of random slot and dummy symmetries.
 The result is compared with xperm.c
 
 Usage:
@@ -18,16 +19,16 @@ python test_with_xperm.py nr random > test_xperm.cc
 
 where nr is the number of Riemann tensors;
 random=0     means that the canonical tensor has the form (1);
-randon != 0  random canonical tensor
+random != 0  random canonical tensor
 
-In stderr appears the input and the output canonical tensor as products of Riemann tensors,
-and the list in the form of the output of test_xperm
+In stderr appears the input and the output canonical tensor as products of
+Riemann tensors, and the list in the form of the output of test_xperm
 
 Compile the output test_xperm.cc with the version of xperm.c in [3]
 
 run ./test_xperm > test_output
-if xperm.c gives different result from the one shown in the stderr of the Python program,
-an error message appears in stderr (except in the case in which
+if xperm.c gives different result from the one shown in the stderr of the
+Python program, an error message appears in stderr (except in the case in which
 the result is the identity; so if there is an error message, check
 in test_output if the result is the identity; if the stderr of the
 python program is also the identity, the result is correct)
@@ -40,7 +41,7 @@ References:
       http://www.xact.es/index.html
 
   [3] cadabra by Kasper Peeters, http://cadabra.phi-sci.com/
-      compile test_xperm.cc with the version of xterm.c dated 6 May 2006,
+      compile test_xperm.cc with the version of xperm.c dated 6 May 2006,
       which is included in cadabra-1.31/src/modules
 """
 
@@ -219,8 +220,8 @@ def run(gens, g, ind):
     t0 = time()
     res = double_coset_can_rep(0, sgens, g)
     t1 = time()
-    sys.stderr.write('\noutput %s\n' % str_riemann(ind, res))
     if res:
+        sys.stderr.write('\noutput %s\n' % str_riemann(ind, res))
         result = [x+1 for x in perm_af_invert(res)]
         sys.stderr.write('%s\n' % result)
     else:
