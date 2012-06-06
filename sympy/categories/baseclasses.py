@@ -93,12 +93,16 @@ class Morphism(Basic):
     Morphism(Object("A"), Object("B"), "f")
 
     """
-    def __init__(self, domain, codomain, name=""):
-        self.domain = domain
-        self.codomain = codomain
-        self.name = name
+    def __new__(cls, domain, codomain, name=""):
+        new_morphism = Basic.__new__(cls, domain, codomain, name)
 
-        self.components = [self]
+        new_morphism.domain = domain
+        new_morphism.codomain = codomain
+        new_morphism.name = name
+
+        new_morphism.components = [new_morphism]
+
+        return new_morphism
 
     def compose(self, g, new_name=""):
         """
