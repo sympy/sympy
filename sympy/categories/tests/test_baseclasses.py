@@ -109,8 +109,8 @@ def test_diagram():
 
     assert d1.list_objects() == FiniteSet(A, B)
     assert d1.hom(A, B) == (FiniteSet(f), empty)
-    assert d1.hom(A, A) == (FiniteSet(Morphism(A, A, "")), empty)
-    assert d1.hom(B, B) == (FiniteSet(Morphism(B, B, "")), empty)
+    assert d1.hom(A, A) == (FiniteSet(Morphism(A, A, identity=True)), empty)
+    assert d1.hom(B, B) == (FiniteSet(Morphism(B, B, identity=True)), empty)
 
     # Test the addition of composites.
     d2 = Diagram()
