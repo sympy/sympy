@@ -365,6 +365,11 @@ class OuterProduct(Operator):
         return k*b
 
     def _eval_trace(self,**kwargs):
+
+        # call either ket._eval_trace(bra)
+        # or
+        # if operands are tensorproducts call tensortproducts _eval_trace
+
         raise NotImplementedError('%s: This method is under construction' % \
                                   self.__class__.__name__)
 

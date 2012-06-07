@@ -30,7 +30,7 @@ class Tr(Expr):
         """ Construct a Trace object. Return the following expr.
 
         a) Trace(A+B) = Tr(A) + Tr(B)
-
+        b) Trace(scalar*Operator) = scalar*Trace(Operator)
 
 
         """
