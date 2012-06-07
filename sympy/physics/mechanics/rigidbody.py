@@ -18,7 +18,7 @@ class RigidBody(object):
     ==========
     name : string
         The body's name.
-    com : Point
+    masscenter : Point
         The point which represents the center of mass of the rigid body.
     frame : ReferenceFrame
         The ReferenceFrame which the rigid body is fixed in.
@@ -45,11 +45,11 @@ class RigidBody(object):
 
     """
 
-    def __init__(self, name, com, frame, mass, inertia):
+    def __init__(self, name, masscenter, frame, mass, inertia):
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
         self._name = name
-        self.set_com(com)
+        self.set_masscenter(masscenter)
         self.set_mass(mass)
         self.set_frame(frame)
         self.set_inertia(inertia)
@@ -69,15 +69,15 @@ class RigidBody(object):
 
     frame = property(get_frame, set_frame)
 
-    def get_com(self):
-        return self._com
+    def get_masscenter(self):
+        return self._masscenter
 
-    def set_com(self, p):
+    def set_masscenter(self, p):
         if not isinstance(p, Point):
             raise TypeError("RigidBody center of mass must be a Point object.")
-        self._com = p
+        self._masscenter = p
 
-    com = property(get_com, set_com)
+    masscenter = property(get_masscenter, set_masscenter)
 
     def get_mass(self):
         return self._mass
