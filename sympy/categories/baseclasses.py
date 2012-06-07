@@ -1,4 +1,4 @@
-from sympy.core import Set, Basic, EmptySet
+from sympy.core import Set, Basic, FiniteSet, EmptySet
 
 class Class(Set):
     """
@@ -316,7 +316,25 @@ class Diagram(Basic):
 
     Examples
     ========
-    TODO: Add examples.
+
+    >>> from sympy.categories import Object, Morphism, Diagram
+    >>> from sympy import FiniteSet
+    >>> A = Object("A"); B = Object("B"); C = Object("C")
+    >>> f = Morphism(A, B, "f"); g = Morphism(B, C, "g")
+    >>> d = Diagram()
+
+    >>> d.add_premise(f)
+    >>> d.add_premise(g)
+
+    >>> Morphism(A, A, identity=True) in d.premises.keys()
+    True
+
+    >>> g * f in d.premises.keys()
+    True
+
+    >>> d.add_conclusion(g * f, "unique")
+    >>> d.conclusions[g * f] == FiniteSet("unique")
+    True
 
     References
     ==========
@@ -326,6 +344,28 @@ class Diagram(Basic):
     def __init__(self):
         self.premises = {}
         self.conclusions = {}
+
+    @staticmethod
+    def _set_dict_union(dictionary, key, value):
+        """
+        If ``key`` is in ``dictionary``, set the new value of ``key``
+        to be the union between the old value and ``value``.
+        Otherwise, set the value of ``key`` to ``value.
+
+        Returns ``True`` if the key already was in the dictionary and
+        ``False`` otherwise.
+
+        If ``key`` is ``None``, returns True and does nothing.
+        """
+        if not key:
+            return True
+
+        if key in dictionary:
+            dictionary[key] = dictionary[key] | value
+            return True
+        else:
+            dictionary[key] = value
+            return False
 
     def add_premise(self, morphism, *props):
         """
@@ -345,13 +385,47 @@ class Diagram(Basic):
 
         Examples
         ========
-        TODO: Add examples.
+
+        >>> from sympy.categories import Object, Morphism, Diagram
+        >>> from sympy import FiniteSet
+        >>> A = Object("A"); B = Object("B")
+        >>> f = Morphism(A, B, "f")
+        >>> d = Diagram()
+        >>> d.add_premise(f)
+
+        >>> f in d.premises.keys()
+        True
+
+        >>> Morphism(A, A, identity=True) in d.premises.keys()
+        True
 
         See Also
         ========
         Morphism
         """
-        pass
+        props = FiniteSet(props)
+        if self._set_dict_union(self.premises, morphism, props) == False:
+            # We have just added a new morphism.
+
+            if morphism.identity:
+                return
+
+            empty = EmptySet()
+
+            # Add the identity morphisms for the domain and the
+            # codomain.
+            id_dom = Morphism(morphism.domain, morphism.domain, identity=True)
+            id_cod = Morphism(morphism.codomain, morphism.codomain, identity=True)
+            self._set_dict_union(self.premises, id_dom, empty)
+            self._set_dict_union(self.premises, id_cod, empty)
+
+            # Add all possible compositions
+            for existing_morphism in self.premises.keys():
+                left = morphism * existing_morphism
+                right = existing_morphism * morphism
+
+                self._set_dict_union(self.premises, left, props)
+                self._set_dict_union(self.premises, right, props)
 
     def add_conclusion(self, morphism, *props):
         """
@@ -373,13 +447,48 @@ class Diagram(Basic):
 
         Examples
         ========
-        TODO: Add examples.
+
+        >>> from sympy.categories import Object, Morphism, Diagram
+        >>> from sympy import FiniteSet
+        >>> A = Object("A"); B = Object("B"); C = Object("C")
+        >>> f = Morphism(A, B, "f"); g = Morphism(B, C, "g")
+        >>> d = Diagram()
+        >>> d.add_premise(f)
+        >>> d.add_premise(g)
+
+        >>> d.add_conclusion(g * f, "unique")
+        >>> d.conclusions[g * f] == FiniteSet("unique")
+        True
 
         See Also
         ========
         Morphism, add_premise
         """
-        pass
+        objects = self.list_objects()
+        if (morphism.domain not in objects) or \
+           (morphism.codomain not in objects):
+            return
+
+        props = FiniteSet(props)
+        if self._set_dict_union(self.conclusions, morphism, props) == False:
+            # We have just added a new morphism.
+
+            if morphism.identity:
+                return
+
+            empty = EmptySet()
+
+            # We don't need to add more identities, because the domain
+            # and the codomain of ``morphism`` are already in the
+            # premises.
+
+            # Add all possible compositions
+            for existing_morphism in self.conclusions.keys():
+                left = morphism * existing_morphism
+                right = existing_morphism * morphism
+
+                self._set_dict_union(self.conclusions, left, props)
+                self._set_dict_union(self.conclusions, right, props)
 
     def list_objects(self):
         """
@@ -391,13 +500,31 @@ class Diagram(Basic):
 
         Examples
         ========
-        TODO: Add examples.
+
+        >>> from sympy.categories import Object, Morphism, Diagram
+        >>> from sympy import FiniteSet
+        >>> A = Object("A"); B = Object("B"); C = Object("C")
+        >>> f = Morphism(A, B, "f"); g = Morphism(B, C, "g")
+        >>> d = Diagram()
+
+        >>> d.add_premise(f)
+        >>> d.add_premise(g)
+
+        >>> d.list_objects() == FiniteSet(A, B, C)
+        True
 
         See Also
         ========
         Object
         """
-        pass
+        objects = EmptySet()
+
+        # Note that morphisms in the conclusions list cannot introduce
+        # new objects.
+        for morphism in self.premises.keys():
+            objects |= FiniteSet(morphism.domain, morphism.codomain)
+
+        return objects
 
     def hom(self, A, B):
         """
@@ -407,19 +534,41 @@ class Diagram(Basic):
 
         Examples
         ========
-        TODO: Add examples.
+
+        >>> from sympy.categories import Object, Morphism, Diagram
+        >>> from sympy import FiniteSet
+        >>> A = Object("A"); B = Object("B"); C = Object("C")
+        >>> f = Morphism(A, B, "f"); g = Morphism(B, C, "g")
+        >>> d = Diagram()
+        >>> d.add_premise(f)
+        >>> d.add_premise(g)
+        >>> d.add_conclusion(g * f, "unique")
+
+        >>> d.hom(A, C) == (FiniteSet(g * f), FiniteSet(g * f))
+        True
 
         See Also
         ========
         Object, Morphism
         """
-        pass
+        premises = EmptySet()
+        conclusions = EmptySet()
+
+        for morphism in self.premises.keys():
+            if (morphism.domain == A) and (morphism.codomain == B):
+                premises |= FiniteSet(morphism)
+        for morphism in self.conclusions.keys():
+            if (morphism.domain == A) and (morphism.codomain == B):
+                conclusions |= FiniteSet(morphism)
+
+        return (premises, conclusions)
 
     def __eq__(self, other):
-        pass
+        if not isinstance(other, Diagram):
+            return False
 
-    def __eq__(self, other):
-        pass
+        return (self.premises == other.premises) and \
+               (self.conclusions == other.conclusions)
 
-    def hash(self):
-        pass
+    def __ne__(self, other):
+        return not (self == other)

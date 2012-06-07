@@ -94,7 +94,6 @@ def test_morphism():
 
     raises(ValueError, lambda: Morphism(A, B, identity=True))
 
-@XFAIL
 def test_diagram():
     A = Object("A")
     B = Object("B")
