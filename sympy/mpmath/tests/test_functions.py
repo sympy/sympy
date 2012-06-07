@@ -393,6 +393,8 @@ def test_complex_functions():
             assert tanh(mpc(z)).ae(cmath.tanh(z))
 
 def test_complex_inverse_functions():
+    mp.dps = 15
+    iv.dps = 15
     for (z1, z2) in random_complexes(30):
         # apparently cmath uses a different branch, so we
         # can't use it for comparison
@@ -474,7 +476,7 @@ def test_arg_sign():
     assert arg(inf) == 0
     assert arg(-inf).ae(pi)
     assert isnan(arg(nan))
-    #assert arg(inf*j).ae(pi/2)
+    assert arg(inf*j).ae(pi/2)
     assert sign(0) == 0
     assert sign(3) == 1
     assert sign(-3) == -1

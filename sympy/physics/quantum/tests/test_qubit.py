@@ -1,15 +1,16 @@
-from sympy.physics.quantum.qubit import (measure_all, measure_partial,
-        matrix_to_qubit, qubit_to_matrix, IntQubit, IntQubitBra, QubitBra)
-from sympy.physics.quantum.gate import (HadamardGate, CNOT, XGate, ZGate,
-        YGate, PhaseGate)
-from sympy.physics.quantum.represent import represent
-from sympy.physics.quantum.qapply import qapply
-from sympy import symbols, Rational, sqrt
-from sympy.core.numbers import Integer
-from sympy.physics.quantum.shor import Qubit
-from sympy.core.containers import Tuple
-from sympy.matrices.matrices import Matrix
 import random
+
+from sympy import Integer, Matrix, Rational, sqrt, symbols
+from sympy.physics.quantum.qubit import (measure_all, measure_partial,
+                                         matrix_to_qubit, qubit_to_matrix,
+                                         IntQubit, IntQubitBra, QubitBra)
+from sympy.physics.quantum.gate import (HadamardGate, CNOT, XGate, YGate,
+                                        ZGate, PhaseGate)
+from sympy.physics.quantum.qapply import qapply
+from sympy.physics.quantum.represent import represent
+from sympy.physics.quantum.shor import Qubit
+from sympy.utilities.pytest import raises
+
 x, y = symbols('x,y')
 
 epsilon = .000001
@@ -43,6 +44,8 @@ def test_IntQubit():
     #test Dual Classes
     assert IntQubit(3).dual_class() == IntQubitBra
     assert IntQubitBra(3).dual_class() == IntQubit
+
+    raises(ValueError, lambda: IntQubit(4, 1))
 
 def test_superposition_of_states():
     assert qapply(CNOT(0,1)*HadamardGate(0)*(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10'))).expand() == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 +\

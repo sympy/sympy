@@ -5,7 +5,7 @@ from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 
 from sympy.polys.polyclasses import DMF
-from sympy.polys.polyerrors import GeneratorsNeeded, GeneratorsError
+from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 
 class FractionField(Field, CharacteristicZero, CompositeDomain):
@@ -23,8 +23,8 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
 
         lev = len(gens) - 1
 
-        self.zero = self.dtype.zero(lev, dom)
-        self.one  = self.dtype.one(lev, dom)
+        self.zero = self.dtype.zero(lev, dom, ring=self)
+        self.one  = self.dtype.one(lev, dom, ring=self)
 
         self.dom  = dom
         self.gens = gens
@@ -37,10 +37,12 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
 
     def __call__(self, a):
         """Construct an element of `self` domain from `a`. """
-        return DMF(a, self.dom, len(self.gens)-1)
+        return DMF(a, self.dom, len(self.gens)-1, ring=self)
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
+        if not isinstance(other, FractionField):
+            return False
         return self.dtype == other.dtype and self.dom == other.dom and self.gens == other.gens
 
     def __ne__(self, other):
@@ -99,7 +101,7 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
-    def from_PolynomialRing(K1, a, K0):
+    def from_GlobalPolynomialRing(K1, a, K0):
         """Convert a `DMF` object to `dtype`. """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
@@ -118,7 +120,8 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         """
         Convert a fraction field element to another fraction field.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy.polys.polyclasses import DMF
         >>> from sympy.polys.domains import ZZ, QQ
@@ -130,7 +133,7 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         >>> ZZx = ZZ.frac_field(x)
 
         >>> QQx.from_FractionField(f, ZZx)
-        DMF(([1/1, 2/1], [1/1, 1/1]), QQ)
+        (x + 2)/(x + 1)
 
         """
         if K1.gens == K0.gens:

@@ -1,16 +1,17 @@
 from __future__ import division
-from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,
-    Function, GoldenRatio, I, Integer, Integral, Interval, Lambda, Limit, log,
-    Matrix, nan, O, oo, pi, Rational, Float, Rel, S, sin, SparseMatrix, sqrt,
-    summation, Sum, Symbol, symbols, Wild, WildFunction, zeta, zoo,
-    Dummy, Dict)
+
+from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
+    factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
+    Interval, Lambda, Limit, log, Matrix, nan, O, oo, pi, Rational, Float, Rel,
+    S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
+    WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner
 from sympy.statistics.distributions import Normal, Sample, Uniform
 from sympy.geometry import Point, Circle
 
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 
@@ -86,6 +87,10 @@ def test_factorial():
     assert str(factorial(7)) == "5040"
     assert str(factorial(n)) == "n!"
     assert str(factorial(2*n)) == "(2*n)!"
+    assert str(factorial(factorial(n))) == '(n!)!'
+    assert str(factorial(factorial2(n))) == '(n!!)!'
+    assert str(factorial2(factorial(n))) == '(n!)!!'
+    assert str(factorial2(factorial2(n))) == '(n!!)!!'
 
 def test_Function():
     f = Function('f')
@@ -108,7 +113,7 @@ def test_ImaginaryUnit():
 
 def test_Infinity():
     assert str(oo) == "oo"
-    assert str(I * oo) == "oo*I"
+    assert str(oo*I) == "oo*I"
 
 def test_Integer():
     assert str(Integer(-1)) == "-1"
@@ -159,11 +164,11 @@ def test_Mul():
     assert str(-2*x/3)  == '-2*x/3'
 
     class CustomClass1(Expr):
-        pass
+        is_commutative = True
     class CustomClass2(Expr):
-        pass
-    cc1 = CustomClass1(commutative=True)
-    cc2 = CustomClass2(commutative=True)
+        is_commutative = True
+    cc1 = CustomClass1()
+    cc2 = CustomClass2()
     assert str(Rational(2)*cc1) == '2*CustomClass1()'
     assert str(cc1*Rational(2)) == '2*CustomClass1()'
     assert str(cc1*Float("1.5")) == '1.5*CustomClass1()'
@@ -228,6 +233,7 @@ def test_Pow():
     assert str(x**Rational(1, 3)) == "x**(1/3)"
     assert str(1/x**Rational(1, 3)) == "x**(-1/3)"
     assert str(sqrt(sqrt(x))) == "x**(1/4)"
+    assert str(x**-1.0) == '1/x'
 
 def test_sqrt():
     assert str(sqrt(x)) == "sqrt(x)"
@@ -236,7 +242,7 @@ def test_sqrt():
     assert str(1/sqrt(x**2)) == "1/sqrt(x**2)"
     assert str(y/sqrt(x)) == "y/sqrt(x)"
     assert str(x**(1/2)) == "x**0.5"
-    assert str(1/x**(1/2)) == "x**-0.5"
+    assert str(1/x**(1/2)) == "x**(-0.5)"
 
 def test_Rational():
     n1 = Rational(1,4)
@@ -296,6 +302,8 @@ def test_Float():
     assert str(pi.evalf(1+2))   == '3.14'
     assert str(pi.evalf(1+14))  == '3.14159265358979'
     assert str(pi.evalf(1+64))  == '3.1415926535897932384626433832795028841971693993751058209749445923'
+    assert str(pi.round(-1)) == '0.'
+    assert str((pi**400 - (pi**400).round(1)).n(1)) == '-0.e+91'
 
 def test_Relational():
     assert str(Rel(x, y, "<")) == "x < y"
@@ -404,7 +412,7 @@ def test_sstrrepr():
     assert sstrrepr(e)  == "['a', 'b', 'c', x]"
 
 def test_infinity():
-    assert sstr(I*oo) == "oo*I"
+    assert sstr(oo*I) == "oo*I"
 
 def test_full_prec():
     assert sstr(S("0.3"), full_prec=True) == "0.300000000000000"
@@ -439,4 +447,27 @@ def test_empty_printer():
     assert str_printer.emptyPrinter(32) == "32"
 
 def test_settings():
-    raises(TypeError, 'sstr(S(4), method="garbage")')
+    raises(TypeError, lambda: sstr(S(4), method="garbage"))
+
+def test_RandomDomain():
+    from sympy.stats import Normal, Die, Exponential, pspace, where
+    X = Normal(0, 1, symbol=Symbol('x1'))
+    assert str(where(X>0)) == "Domain: 0 < x1"
+
+    D = Die(6, symbol=Symbol('d1'))
+    assert str(where(D>4)) == "Domain: Or(d1 == 5, d1 == 6)"
+
+    A = Exponential(1, symbol=Symbol('a'))
+    B = Exponential(1, symbol=Symbol('b'))
+    assert str(pspace(Tuple(A,B)).domain) =="Domain: And(0 <= a, 0 <= b)"
+
+def test_FiniteSet():
+    assert str(FiniteSet(range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
+    assert str(FiniteSet(range(1, 6))) == '{1, 2, 3, 4, 5}'
+
+def test_PrettyPoly():
+    from sympy.polys.domains import QQ
+    F = QQ.frac_field(x, y)
+    R = QQ[x, y]
+    assert sstr(F.convert(x/(x + y))) == sstr(x/(x + y))
+    assert sstr(R.convert(x + y)) == sstr(x + y)

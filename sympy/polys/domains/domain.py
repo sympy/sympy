@@ -8,8 +8,6 @@ from sympy.polys.polyerrors import (
     DomainError,
 )
 
-from sympy.polys.domains.groundtypes import python_factorial
-
 class Domain(object):
     """Represents an abstract domain. """
 
@@ -175,7 +173,7 @@ class Domain(object):
         """Convert a `ANP` object to `dtype`. """
         return None
 
-    def from_PolynomialRing(K1, a, K0):
+    def from_GlobalPolynomialRing(K1, a, K0):
         """Convert a `DMP` object to `dtype`. """
         if a.degree() <= 0:
             return K1.convert(a.LC(), K0.dom)
@@ -187,6 +185,9 @@ class Domain(object):
     def from_ExpressionDomain(K1, a, K0):
         """Convert a `EX` object to `dtype`. """
         return K1.from_sympy(a.ex)
+
+    def from_GeneralizedPolynomialRing(K1, a, K0):
+        return K1.from_FractionField(a, K0)
 
     def unify(K0, K1, gens=None):
         """Returns a maximal domain containg `K0` and `K1`. """
@@ -354,10 +355,10 @@ class Domain(object):
         else:
             return self.poly_ring(gens)
 
-    def poly_ring(self, *gens):
+    def poly_ring(self, *gens, **opts):
         """Returns a polynomial ring, i.e. `K[X]`. """
         from sympy.polys.domains import PolynomialRing
-        return PolynomialRing(self, *gens)
+        return PolynomialRing(self, *gens, **opts)
 
     def frac_field(self, *gens):
         """Returns a fraction field, i.e. `K(X)`. """
@@ -476,9 +477,14 @@ class Domain(object):
         """Returns square root of `a`. """
         raise NotImplementedError
 
-    def evalf(self, a, **args):
+    def evalf(self, a, prec=None, **args):
         """Returns numerical approximation of `a`. """
-        return self.to_sympy(a).evalf(**args)
+        if prec is None:
+            return self.to_sympy(a).evalf(**args)
+        else:
+            return self.to_sympy(a).evalf(prec, **args)
+
+    n = evalf
 
     def real(self, a):
         return a

@@ -2,9 +2,12 @@ from sympy import (legendre, Symbol, hermite, chebyshevu, chebyshevt,
         chebyshevt_root, chebyshevu_root, assoc_legendre, Rational,
         roots, sympify, S, laguerre_l, laguerre_poly, sqrt)
 
+from sympy.utilities.pytest import raises
+
 x = Symbol('x')
 
 def test_legendre():
+    raises(ValueError, lambda: legendre(-1, x))
     assert legendre(0, x) == 1
     assert legendre(1, x) == x
     assert legendre(2, x) == ((3*x**2-1)/2).expand()
@@ -50,8 +53,13 @@ def test_assoc_legendre():
     assert Plm(3,-2, x) ==  Plm(3, 2, x)/120
     assert Plm(3,-1, x) == -Plm(3, 1, x)/12
 
+    raises(ValueError, lambda: Plm(-1, 0, x))
+    raises(ValueError, lambda: Plm(0, 1, x))
+
 
 def test_chebyshev():
+    raises(ValueError, lambda: chebyshevt(-1, x))
+    raises(ValueError, lambda: chebyshevu(-1, x))
     assert chebyshevt(0, x) == 1
     assert chebyshevt(1, x) == x
     assert chebyshevt(2, x) == 2*x**2-1
@@ -60,10 +68,12 @@ def test_chebyshev():
         for k in range(n):
             z = chebyshevt_root(n, k)
             assert chebyshevt(n, z) == 0
+        raises(ValueError, lambda: chebyshevt_root(n, n))
     for n in range(1, 4):
         for k in range(n):
             z = chebyshevu_root(n, k)
             assert chebyshevu(n, z) == 0
+        raises(ValueError, lambda: chebyshevu_root(n, n))
 
 def test_hermite():
     assert hermite(6, x) == 64*x**6 - 480*x**4 + 720*x**2 - 120
@@ -87,4 +97,3 @@ def test_laguerre():
     # works:
     for i in range(10):
         assert laguerre_l(i, 0, x).expand() == laguerre_poly(i, x)
-

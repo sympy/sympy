@@ -11,8 +11,8 @@ def test_piecewise():
     assert Piecewise((x, x < 1), (0, True)) == Piecewise((x, x < 1), (0, True))
     assert Piecewise((x, x < 1), (0, False), (-1, 1>2)) == Piecewise((x, x < 1))
     assert Piecewise((x, True)) == x
-    raises(TypeError,"Piecewise(x)")
-    raises(TypeError,"Piecewise((x,x**2))")
+    raises(TypeError, lambda: Piecewise(x))
+    raises(TypeError, lambda: Piecewise((x,x**2)))
 
     # Test subs
     p = Piecewise((-1, x < -1), (x**2, x < 0), (log(x), x >=0))
@@ -24,7 +24,7 @@ def test_piecewise():
 
     # More subs tests
     p2 = Piecewise((1, x < pi), (-1, x < 2*pi), (0, x > 2*pi))
-    assert p2.subs(x,2) == 1
+    assert p2.subs(x, 2) == 1
     assert p2.subs(x,4) == -1
     assert p2.subs(x,10) == 0
 
@@ -69,7 +69,7 @@ def test_piecewise():
     p = Piecewise((0, x < 0), (1,x < 1), (0, x < 2), (1, x < 3), (0, True))
     assert integrate(p, (x,-oo,oo)) == 2
     p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
-    raises(ValueError, "integrate(p,(x,-2,2))")
+    raises(ValueError, lambda: integrate(p,(x,-2,2)))
 
     # Test commutativity
     assert p.is_commutative is True
@@ -134,8 +134,6 @@ def test_piecewise_solve():
     g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False))
     assert solve(g, x) == [5]
 
-    assert solve(Piecewise((x, x < 0), (x, -1))) == [0]
-
 # See issue 1253 (enhance the solver to handle inequalities).
 @XFAIL
 def test_piecewise_solve2():
@@ -148,6 +146,9 @@ def test_piecewise_fold():
 
     assert piecewise_fold(x*p) == Piecewise((x**2, x < 1), (x, 1 <= x))
     assert piecewise_fold(p+p) == Piecewise((2*x, x < 1), (2, 1 <= x))
+    assert piecewise_fold(Piecewise((1, x < 0), (2, True)) \
+                          + Piecewise((10, x < 0), (-10, True))) == \
+           Piecewise((11, x < 0), (-8, True))
 
     p1 = Piecewise((0, x < 0), (x, x <= 1), (0, True))
     p2 = Piecewise((0, x < 0), (1 - x, x <=1), (0, True))

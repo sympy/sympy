@@ -4,6 +4,7 @@ import random
 from sympy.core import Basic, C
 from sympy.core.compatibility import is_sequence, iterable #logically, these belong here
 from sympy.core.compatibility import product as cartes, combinations, combinations_with_replacement
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 def flatten(iterable, levels=None, cls=None):
     """
@@ -122,8 +123,8 @@ def postorder_traversal(node):
     node : sympy expression
         The expression to traverse.
 
-    Yields
-    ------
+    Returns
+    -------
     subtree : sympy expression
         All of the subtrees in the tree.
 
@@ -159,8 +160,8 @@ class preorder_traversal(object):
     node : sympy expression
         The expression to traverse.
 
-    Yields
-    ------
+    Returns
+    -------
     subtree : sympy expression
         All of the subtrees in the tree.
 
@@ -311,21 +312,25 @@ def variations(seq, n=None, repetition=False):
     """Returns a generator of the variations (size n) of the list `seq` (size N).
     `repetition` controls whether items in seq can appear more than once;
 
-    Examples:
+    Examples
+    ========
 
     variations(seq, n) will return N! / (N - n)! permutations without
     repetition of seq's elements:
+
         >>> from sympy.utilities.iterables import variations
         >>> list(variations([1, 2], 2))
         [(1, 2), (2, 1)]
 
     variations(seq, n, True) will return the N**n permutations obtained
     by allowing repetition of elements:
+
         >>> list(variations([1, 2], 2, repetition=True))
         [(1, 1), (1, 2), (2, 1), (2, 2)]
 
     If you ask for more items than are in the set you get the empty set unless
     you allow repetitions:
+
         >>> list(variations([0, 1], 3, repetition=False))
         []
         >>> list(variations([0, 1], 3, repetition=True))[:4]
@@ -357,12 +362,14 @@ def subsets(seq, k=None, repetition=False):
        whereas there are 2**n subsets all together. If k is None then all
        2**n subsets will be returned from shortest to longest.
 
-       Examples:
-           >>> from sympy.utilities.iterables import subsets
+       Examples
+       ========
+       >>> from sympy.utilities.iterables import subsets
 
        subsets(seq, k) will return the n!/k!/(n - k)! k-subsets (combinations)
        without repetition, i.e. once an item has been removed, it can no
        longer be "taken":
+
            >>> list(subsets([1, 2], 2))
            [(1, 2)]
            >>> list(subsets([1, 2]))
@@ -373,15 +380,18 @@ def subsets(seq, k=None, repetition=False):
 
        subsets(seq, k, repetition=True) will return the (n - 1 + k)!/k!/(n - 1)!
        combinations *with* repetition:
+
            >>> list(subsets([1, 2], 2, repetition=True))
            [(1, 1), (1, 2), (2, 2)]
 
        If you ask for more items than are in the set you get the empty set unless
        you allow repetitions:
+
            >>> list(subsets([0, 1], 3, repetition=False))
            []
            >>> list(subsets([0, 1], 3, repetition=True))
            [(0, 0, 0), (0, 0, 1), (0, 1, 1), (1, 1, 1)]
+
        """
     if k is None:
         for k in range(len(seq) + 1):
@@ -412,16 +422,17 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     start : int, optional
         The start number.  By default, it is 0.
 
-    Yields
-    ------
+    Returns
+    -------
     sym : Symbol
         The subscripted symbols.
     """
     if cls is None:
         if 'dummy' in assumptions and assumptions.pop('dummy'):
-            import warnings
-            warnings.warn("\nuse cls=Dummy to create dummy symbols",
-                          DeprecationWarning)
+            SymPyDeprecationWarning(
+                feature="'dummy' in assumptions",
+                useinstead="cls=Dummy to create dummy symbols"
+                ).warn()
             cls = C.Dummy
         else:
             cls = C.Symbol
@@ -434,23 +445,30 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
 def capture(func):
     """Return the printed output of func().
 
-    `func` should be an argumentless function that produces output with
+    `func` should be a function without arguments that produces output with
     print statements.
 
     >>> from sympy.utilities.iterables import capture
+    >>> from sympy import pprint
+    >>> from sympy.abc import x
     >>> def foo():
     ...     print 'hello world!'
     ...
     >>> 'hello' in capture(foo) # foo, not foo()
     True
+    >>> capture(lambda: pprint(2/x))
+    '2\\n-\\nx\\n'
+
     """
     import StringIO
     import sys
 
     stdout = sys.stdout
     sys.stdout = file = StringIO.StringIO()
-    func()
-    sys.stdout = stdout
+    try:
+        func()
+    finally:
+        sys.stdout = stdout
     return file.getvalue()
 
 def sift(expr, keyfunc):
@@ -507,12 +525,66 @@ def dict_merge(*dicts):
 
     return merged
 
+def common_prefix(*seqs):
+    """Return the subsequence that is a common start of sequences in ``seqs``.
+
+    >>> from sympy.utilities.iterables import common_prefix
+    >>> common_prefix(range(3))
+    [0, 1, 2]
+    >>> common_prefix(range(3), range(4))
+    [0, 1, 2]
+    >>> common_prefix([1, 2, 3], [1, 2, 5])
+    [1, 2]
+    >>> common_prefix([1, 2, 3], [1, 3, 5])
+    [1]
+    """
+    if any(not s for s in seqs):
+        return []
+    elif len(seqs) == 1:
+        return seqs[0]
+    i = 0
+    for i in range(min(len(s) for s in seqs)):
+        if not all(seqs[j][i] == seqs[0][i] for j in xrange(len(seqs))):
+            break
+    else:
+        i += 1
+    return seqs[0][:i]
+
+def common_suffix(*seqs):
+    """Return the subsequence that is a common ending of sequences in ``seqs``.
+
+    >>> from sympy.utilities.iterables import common_suffix
+    >>> common_suffix(range(3))
+    [0, 1, 2]
+    >>> common_suffix(range(3), range(4))
+    []
+    >>> common_suffix([1, 2, 3], [9, 2, 3])
+    [2, 3]
+    >>> common_suffix([1, 2, 3], [9, 7, 3])
+    [3]
+    """
+
+    if any(not s for s in seqs):
+        return []
+    elif len(seqs) == 1:
+        return seqs[0]
+    i = 0
+    for i in range(-1, -min(len(s) for s in seqs) - 1, -1):
+        if not all(seqs[j][i] == seqs[0][i] for j in xrange(len(seqs))):
+            break
+    else:
+        i -= 1
+    if i == -1:
+        return []
+    else:
+        return seqs[0][i + 1:]
+
 def prefixes(seq):
     """
     Generate all prefixes of a sequence.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.utilities.iterables import prefixes
 
@@ -529,8 +601,8 @@ def postfixes(seq):
     """
     Generate all postfixes of a sequence.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.utilities.iterables import postfixes
 
@@ -558,7 +630,8 @@ def topological_sort(graph, key=None):
         (e.g. lexicographic) ordering is used (in this case the base type
         must implement ordering relations).
 
-    **Examples**
+    Examples
+    ========
 
     Consider a graph::
 
@@ -656,7 +729,9 @@ def rotate_left(x, y):
     Left rotates a list x by the number of steps specified
     in y.
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.utilities.iterables import rotate_left
     >>> a = [0, 1, 2]
     >>> rotate_left(a, 1)
@@ -672,7 +747,9 @@ def rotate_right(x, y):
     Left rotates a list x by the number of steps specified
     in y.
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.utilities.iterables import rotate_right
     >>> a = [0, 1, 2]
     >>> rotate_right(a, 1)
@@ -692,7 +769,9 @@ def multiset_partitions(multiset, m):
     m-partitions, that is, all partitions having exactly size m
     using auxiliary arrays as described in the book.
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.utilities.iterables import multiset_partitions
     >>> list(multiset_partitions([1,2,3,4], 2))
     [[[1, 2, 3], [4]], [[1, 3], [2, 4]], [[1], [2, 3, 4]], [[1, 2], \
@@ -716,7 +795,7 @@ def multiset_partitions(multiset, m):
     def f(m_arr, n_arr, sigma, n, a):
         if m_arr <= 2:
             v = visit(n, a)
-            if not v is None:
+            if v is not None:
                 yield v
         else:
             for v in f(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2, n, a):
@@ -724,12 +803,12 @@ def multiset_partitions(multiset, m):
         if n_arr == m_arr + 1:
             a[m_arr] = m_arr - 1
             v = visit(n, a)
-            if not v is None:
+            if v is not None:
                 yield v
             while a[n_arr] > 0:
                 a[n_arr] = a[n_arr] - 1
                 v = visit(n, a)
-                if not v is None:
+                if v is not None:
                     yield v
         elif n_arr > m_arr + 1:
             if (m_arr + sigma) % 2 == 1:
@@ -750,16 +829,16 @@ def multiset_partitions(multiset, m):
     def b(m_arr, n_arr, sigma, n, a):
         if n_arr == m_arr + 1:
             v = visit(n, a)
-            if not v is None:
+            if v is not None:
                 yield v
             while a[n_arr] < m_arr - 1:
                 a[n_arr] = a[n_arr] + 1
                 v = visit(n, a)
-                if not v is None:
+                if v is not None:
                     yield v
             a[m_arr] = 0
             v = visit(n, a)
-            if not v is None:
+            if v is not None:
                 yield v
         elif n_arr > m_arr + 1:
             func = [f, b][(a[n_arr] + sigma) % 2]
@@ -778,7 +857,7 @@ def multiset_partitions(multiset, m):
                 a[m_arr] = 0
         if m_arr <= 2:
             v = visit(n, a)
-            if not v is None:
+            if v is not None:
                 yield v
         else:
             for v in b(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2, n, a):
@@ -841,9 +920,12 @@ def partitions(n, m=None, k=None):
         modified from Tim Peter's version to allow for k and m values:
         code.activestate.com/recipes/218332-generator-for-integer-partitions/
     """
+    from sympy.ntheory.residue_ntheory import int_tested
 
     if n < 0:
         raise ValueError("n must be >= 0")
+    if m == 0:
+        raise ValueError("m must be > 0")
     m = min(m or n, n)
     if m < 1:
         raise ValueError("maximum numbers in partition, m, must be > 0")
@@ -854,6 +936,7 @@ def partitions(n, m=None, k=None):
     if m*k < n:
         return
 
+    n, m, k = int_tested(n, m, k)
     q, r = divmod(n, k)
     ms = {k: q}
     keys = [k]  # ms.keys(), from largest to smallest
@@ -911,7 +994,9 @@ def binary_partitions(n):
 
     Reference: TAOCP 4, section 7.2.1.5, problem 64
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.utilities.iterables import binary_partitions
     >>> for i in binary_partitions(5):
     ...     print i
@@ -960,8 +1045,9 @@ def uniq(seq):
     Returns a sequence of the same type of the input, or a list if the input
     was not a sequence.
 
-    Examples:
-    --------
+    Examples
+    ========
+
     >>> from sympy.utilities.iterables import uniq
     >>> uniq([1,4,1,5,4,2,1,2])
     [1, 4, 5, 2]
@@ -989,9 +1075,11 @@ def generate_bell(n):
 
     Reference:
     [1] Generating involutions, derangements, and relatives by ECO
-        Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
+    Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.utilities.iterables import generate_bell
     >>> list(generate_bell(3))
     [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 0, 1), (2, 1, 0)]
@@ -1032,7 +1120,9 @@ def generate_involutions(n):
     Reference:
     http://mathworld.wolfram.com/PermutationInvolution.html
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.utilities.iterables import generate_involutions
     >>> generate_involutions(3)
     [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 1, 0)]
@@ -1070,7 +1160,9 @@ def generate_derangements(perm):
     ECO operator approach once the permutations
     branch is in master.
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.utilities.iterables import generate_derangements
     >>> list(generate_derangements([0,1,2]))
     [[1, 2, 0], [2, 0, 1]]
@@ -1100,7 +1192,9 @@ def unrestricted_necklace(n, k):
     Reference:
     http://mathworld.wolfram.com/Necklace.html
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.utilities.iterables import unrestricted_necklace
     >>> [i[:] for i in unrestricted_necklace(3, 2)]
     [[0, 0, 0], [0, 1, 1]]
@@ -1136,10 +1230,11 @@ def generate_oriented_forest(n):
     Reference:
     [1] T. Beyer and S.M. Hedetniemi: constant time generation of \
         rooted trees, SIAM J. Computing Vol. 9, No. 4, November 1980
-    [2] http://stackoverflow.com/questions/1633833/
-        oriented-forest-taocp-algorithm-in-python
+    [2] http://stackoverflow.com/questions/1633833/oriented-forest-taocp-algorithm-in-python
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.utilities.iterables import generate_oriented_forest
     >>> list(generate_oriented_forest(4))
     [[0, 1, 2, 3], [0, 1, 2, 2], [0, 1, 2, 1], [0, 1, 2, 0], \

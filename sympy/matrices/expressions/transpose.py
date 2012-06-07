@@ -1,4 +1,4 @@
-from matexpr import MatrixExpr, ShapeError
+from matexpr import MatrixExpr
 from sympy import Basic
 
 class Transpose(MatrixExpr):
@@ -45,6 +45,9 @@ class Transpose(MatrixExpr):
     @property
     def shape(self):
         return self.arg.shape[::-1]
+
+    def _entry(self, i, j):
+        return self.arg._entry(j, i)
 
 from matmul import MatMul
 from matadd import MatAdd

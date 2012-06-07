@@ -75,9 +75,23 @@ def mr(n, bases):
     """Perform a Miller-Rabin strong pseudoprime test on n using a
     given list of bases/witnesses.
 
-    Reference:
-    Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-    A Computational Perspective", Springer, 2nd edition, 135-138
+    References
+    ==========
+
+    - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+      A Computational Perspective", Springer, 2nd edition, 135-138
+
+    A list of thresholds and the bases they require are here:
+    http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import mr
+    >>> mr(1373651, [2, 3])
+    False
+    >>> mr(479001599, [31, 73])
+    True
     """
     n = int(n)
     for base in bases:
@@ -107,15 +121,17 @@ def _mr_safe(n):
     _mr_safe_helper can be used to generate this info-tag.
 
     References for the bounds:
-    [1] http://primes.utm.edu/prove/prove2_3.html
-    [2] http://www.trnicely.net/misc/mpzspsp.html
-    [3] http://en.wikipedia.org/wiki/Miller-Rabin_primality_test#
+    ==========================
+
+    1. http://primes.utm.edu/prove/prove2_3.html
+    2. http://www.trnicely.net/misc/mpzspsp.html
+    3. http://en.wikipedia.org/wiki/Miller-Rabin_primality_test#
         Accuracy_of_the_test
-    [4] http://zdu.spaces.live.com/?_c11_BlogPart_pagedir=
+    4. http://zdu.spaces.live.com/?_c11_BlogPart_pagedir=
         Next&_c11_BlogPart_handle=cns!C95152CB25EF2037!
         138&_c11_BlogPart_BlogPart=blogview&_c=BlogPart
-    [5] http://primes.utm.edu/glossary/xpage/Pseudoprime.html
-    [6] http://uucode.com/obf/dalbec/alg.html#sprp
+    5. http://primes.utm.edu/glossary/xpage/Pseudoprime.html
+    6. http://uucode.com/obf/dalbec/alg.html#sprp
     """
 
     if n < 1373653:
@@ -169,14 +185,21 @@ def isprime(n):
     pseudoprime as a prime with an error of about 4**-k. The current value
     of k is 46 so the error is about 2 x 10**-28.
 
-    Example usage
-    =============
+    Examples
+    ========
+
     >>> from sympy.ntheory import isprime
     >>> isprime(13)
     True
     >>> isprime(15)
     False
 
+    See Also
+    ========
+
+    sympy.ntheory.generate.primerange : Generates all primes in a given range
+    sympy.ntheory.generate.primepi : Return the number of primes less than or equal to n
+    sympy.ntheory.generate.prime : Return the nth prime
     """
     n = int(n)
     if n < 2:

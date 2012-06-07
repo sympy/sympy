@@ -589,9 +589,9 @@ warnings. ::
 Two additional operations can be done with vectors: normalizing the vector to
 length 1, and getting its magnitude. These are done as follows:
 
-  >>> (N.x + N.y).unit
+  >>> (N.x + N.y).normalize()
   sqrt(2)/2*N.x + sqrt(2)/2*N.y
-  >>> (N.x + N.y).mag
+  >>> (N.x + N.y).magnitude()
   sqrt(2)
 
 Vector Calculus, in Mechanics
@@ -607,7 +607,7 @@ SymPy has a ``diff`` function, but it does not currently work with
 :mod:`mechanics` Vectors, so please use ``Vector``'s ``diff`` method.  The
 reason for this is that when differentiating a ``Vector``, the frame of
 reference must be specified in addition to what you are taking the derivative
-with respect to; Sympy's ``diff`` function doesn't fit this mold.
+with respect to; SymPy's ``diff`` function doesn't fit this mold.
 
 The more interesting case arise with multiple reference frames. If we introduce
 a second reference frame, :math:`\mathbf{A}`, we now have two frames. Note that
@@ -765,3 +765,4 @@ bi-directionally; in that when you orient ``A`` to ``N`` you are setting ``A``'s
 orientation dictionary to include ``N`` and its ``Matrix``, but also you also
 are setting ``N``'s orientation dictionary to include ``A`` and its ``Matrix``
 (that DCM being the transpose of the other).
+

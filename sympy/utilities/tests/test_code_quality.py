@@ -6,6 +6,7 @@ from os.path import split, join, abspath, exists
 from glob import glob
 import re
 import random
+import sys
 
 # System path separator (usually slash or backslash) to be
 # used with excluded files, e.g.
@@ -27,6 +28,8 @@ EXAMPLES_PATH = abspath(reduce(join, [PATH, pardir, "examples"]))
 if not exists(EXAMPLES_PATH):
     EXAMPLES_PATH = ""
 
+IS_PYTHON_3 = (sys.version_info[0] == 3)
+
 # Error messages
 message_space = "File contains trailing whitespace: %s, line %s."
 message_implicit = "File contains an implicit import: %s, line %s."
@@ -36,6 +39,7 @@ message_str_raise = "File contains string exception: %s, line %s"
 message_gen_raise = "File contains generic exception: %s, line %s"
 message_old_raise = "File contains old-style raise statement: %s, line %s, \"%s\""
 message_eof = "File does not end with a newline: %s, line %s"
+message_multi_eof = "File ends with more than 1 newline: %s, line %s"
 
 implicit_test_re = re.compile('^\s*(>>> )?(\.\.\. )?from .* import .*\*')
 str_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise(\s+(\'|\")|\s*(\(\s*)+(\'|\"))')
@@ -73,36 +77,45 @@ def test_files():
       o no lines contains a trailing whitespace
       o no lines end with \r\n
       o no line uses tabs instead of spaces
-      o that the file ends with a newline
+      o that the file ends with a single newline
       o there are no general or string exceptions
       o there are no old style raise statements
     """
 
     def test(fname):
-        # without "t" the lines from all systems may appear to be \n terminated
-        with open(fname, "rt") as test_file:
-            line = None # to flag the case where there were no lines in file
-            for idx, line in enumerate(test_file):
-                if line.endswith(" \n"):
-                    assert False, message_space % (fname, idx+1)
-                if line.endswith("\r\n"):
-                    assert False, message_carriage % (fname, idx+1)
-                if tab_in_leading(line):
-                    assert False, message_tabs % (fname, idx+1)
-                if str_raise_re.search(line):
-                    assert False, message_str_raise % (fname, idx+1)
-                if gen_raise_re.search(line):
-                    assert False, message_gen_raise % (fname, idx+1)
-                if (implicit_test_re.search(line) and
-                    not filter(lambda ex: ex in fname, import_exclude)):
-                        assert False, message_implicit % (fname, idx+1)
+        if IS_PYTHON_3:
+            with open(fname, "rt", encoding="utf8") as test_file:
+                test_this_file(fname, test_file)
+        else:
+            with open(fname, "rt") as test_file:
+                test_this_file(fname, test_file)
 
-                result = old_raise_re.search(line)
+    def test_this_file(fname, test_file):
+        line = None # to flag the case where there were no lines in file
+        for idx, line in enumerate(test_file):
+            if line.endswith(" \n") or line.endswith("\t\n"):
+                assert False, message_space % (fname, idx+1)
+            if line.endswith("\r\n"):
+                assert False, message_carriage % (fname, idx+1)
+            if tab_in_leading(line):
+                assert False, message_tabs % (fname, idx+1)
+            if str_raise_re.search(line):
+                assert False, message_str_raise % (fname, idx+1)
+            if gen_raise_re.search(line):
+                assert False, message_gen_raise % (fname, idx+1)
+            if (implicit_test_re.search(line) and
+                not filter(lambda ex: ex in fname, import_exclude)):
+                assert False, message_implicit % (fname, idx+1)
 
-                if result is not None:
-                    assert False, message_old_raise % (fname, idx+1, result.group(2))
+            result = old_raise_re.search(line)
 
-            if line is not None and not line.endswith('\n'):
+            if result is not None:
+                assert False, message_old_raise % (fname, idx+1, result.group(2))
+
+        if line is not None:
+            if line == '\n' and idx > 0:
+                assert False, message_multi_eof % (fname, idx+1)
+            elif not line.endswith('\n'):
                 # eof newline check
                 assert False, message_eof % (fname, idx+1)
 

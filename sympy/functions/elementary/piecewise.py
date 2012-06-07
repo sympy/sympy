@@ -1,36 +1,40 @@
-from sympy.core import Basic, S, Function, diff, Number, sympify
+from sympy.core import Basic, S, Function, diff, Tuple
 from sympy.core.relational import Equality, Relational
 from sympy.logic.boolalg import Boolean
 from sympy.core.sets import Set
+from sympy.core.symbol import Dummy
 
-class ExprCondPair(Function):
+class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
 
-    def __new__(cls, *args, **assumptions):
-        if isinstance(args[0], cls):
-            expr = args[0].expr
-            cond = args[0].cond
-        elif len(args) == 2:
-            expr = sympify(args[0])
-            cond = sympify(args[1])
-        else:
-            raise TypeError("args must be a (expr, cond) pair")
-        return Basic.__new__(cls, expr, cond, **assumptions)
+    true_sentinel = Dummy('True')
+
+    def __new__(cls, expr, cond):
+        if cond is True:
+            cond = ExprCondPair.true_sentinel
+        return Tuple.__new__(cls, expr, cond)
 
     @property
     def expr(self):
+        """
+        Returns the expression of this pair.
+        """
         return self.args[0]
 
     @property
     def cond(self):
+        """
+        Returns the condition of this pair.
+        """
+        if self.args[1] == ExprCondPair.true_sentinel:
+            return True
         return self.args[1]
 
     @property
-    def is_commutative(self):
-        return self.expr.is_commutative
-
-    @property
     def free_symbols(self):
+        """
+        Return the free symbols of this pair.
+        """
         # Overload Basic.free_symbols because self.args[1] may contain non-Basic
         result = self.expr.free_symbols
         if hasattr(self.cond, 'free_symbols'):
@@ -45,8 +49,8 @@ class Piecewise(Function):
     """
     Represents a piecewise function.
 
-    Usage
-    =====
+    Usage:
+
       Piecewise( (expr,cond), (expr,cond), ... )
         - Each argument is a 2-tuple defining a expression and condition
         - The conds are evaluated in turn returning the first that is True.
@@ -58,6 +62,7 @@ class Piecewise(Function):
 
     Examples
     ========
+
       >>> from sympy import Piecewise, log
       >>> from sympy.abc import x
       >>> f = x**2
@@ -68,6 +73,10 @@ class Piecewise(Function):
       >>> p.subs(x,5)
       log(5)
 
+    See Also
+    ========
+
+    piecewise_fold
     """
 
     nargs = None
@@ -78,14 +87,16 @@ class Piecewise(Function):
         newargs = []
         for ec in args:
             pair = ExprCondPair(*ec)
-            cond_type = type(pair.cond)
-            if not (cond_type is bool or issubclass(cond_type, Relational) or \
-                    issubclass(cond_type, Number) or \
-                    issubclass(cond_type, Set) or issubclass(cond_type, Boolean)):
+            cond = pair.cond
+            if cond is False:
+                continue
+            if not isinstance(cond, (bool, Relational, Set, Boolean)):
                 raise TypeError(
                     "Cond %s is of type %s, but must be a bool," \
-                    " Relational, Number or Set" % (pair.cond, cond_type))
+                    " Relational, Number or Set" % (cond, type(cond)))
             newargs.append(pair)
+            if cond is ExprCondPair.true_sentinel:
+                break
 
         if options.pop('evaluate', True):
             r = cls.eval(*newargs)
@@ -97,15 +108,9 @@ class Piecewise(Function):
         else:
             return r
 
-    def __getnewargs__(self):
-        # Convert ExprCondPair objects to tuples.
-        args = []
-        for expr, condition in self.args:
-            args.append((expr, condition))
-        return tuple(args)
-
     @classmethod
     def eval(cls, *args):
+        from sympy import Or
         # Check for situations where we can evaluate the Piecewise object.
         # 1) Hit an unevaluable cond (e.g. x<1) -> keep object
         # 2) Hit a true condition -> return that expr
@@ -113,6 +118,7 @@ class Piecewise(Function):
         all_conds_evaled = True    # Do all conds eval to a bool?
         piecewise_again = False    # Should we pass args to Piecewise again?
         non_false_ecpairs = []
+        or1 = Or(*[cond for (_, cond) in args if cond is not True])
         for expr, cond in args:
             # Check here if expr is a Piecewise and collapse if one of
             # the conds in expr matches cond. This allows the collapsing
@@ -123,10 +129,11 @@ class Piecewise(Function):
             # having different intervals, but this will probably require
             # using the new assumptions.
             if isinstance(expr, Piecewise):
+                or2 = Or(*[c for (_, c) in expr.args if c is not True])
                 for e, c in expr.args:
                     # Don't collapse if cond is "True" as this leads to
                     # incorrect simplifications with nested Piecewises.
-                    if c == cond and cond is not True:
+                    if c == cond and (or1 == or2 or cond is not True):
                         expr = e
                         piecewise_again = True
             cond_eval = cls.__eval_cond(cond)
@@ -143,6 +150,9 @@ class Piecewise(Function):
         return None
 
     def doit(self, **hints):
+        """
+        Evaluate this piecewise function.
+        """
         newargs = []
         for e, c in self.args:
             if hints.get('deep', True):
@@ -153,9 +163,13 @@ class Piecewise(Function):
             newargs.append((e, c))
         return Piecewise(*newargs)
 
+    @property
+    def is_commutative(self):
+        return all(expr.is_commutative for expr, _ in self.args)
+
     def _eval_integral(self,x):
         from sympy.integrals import integrate
-        return  Piecewise(*[(integrate(e, x), c) for e, c in self.args])
+        return Piecewise(*[(integrate(e, x), c) for e, c in self.args])
 
     def _eval_interval(self, sym, a, b):
         """Evaluates the function along the sym in a given interval ab"""
@@ -178,32 +192,36 @@ class Piecewise(Function):
         #    -  eg x < 1, x < 3 -> [oo,1],[1,3] instead of [oo,1],[oo,3]
         # 3) Sort the intervals to make it easier to find correct exprs
         for expr, cond in self.args:
-            if isinstance(cond, bool) or cond.is_Number:
-                if cond:
-                    default = expr
-                    break
-                else:
-                    continue
+            if cond is True:
+                default = expr
+                break
             elif isinstance(cond, Equality):
                 continue
-            curr = list(cond.args)
-            if cond.args[0].has(sym):
-                curr[0] = S.NegativeInfinity
-            elif cond.args[1].has(sym):
-                curr[1] = S.Infinity
+
+            lower, upper = cond.lts, cond.gts # part 1: initialize with givens
+            if cond.lts.has(sym):     # part 1a: expand the side ...
+                lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
+            elif cond.gts.has(sym):   # part 1a: ... that can be expanded
+                upper = S.Infinity           # e.g. x >= 0 --->  oo >= 0
             else:
-                raise NotImplementedError(\
-                        "Unable handle interval evaluation of expression.")
-            curr = [max(a, curr[0]), min(b, curr[1])]
+                raise NotImplementedError(
+                        "Unable to handle interval evaluation of expression.")
+
+            # part 1b: Reduce (-)infinity to what was passed in.
+            lower, upper = max(a, lower), min(b, upper)
+
             for n in xrange(len(int_expr)):
-                if self.__eval_cond(curr[0] < int_expr[n][1]) and \
-                        self.__eval_cond(curr[0] >= int_expr[n][0]):
-                    curr[0] = int_expr[n][1]
-                if self.__eval_cond(curr[1] > int_expr[n][0]) and \
-                        self.__eval_cond(curr[1] <= int_expr[n][1]):
-                    curr[1] = int_expr[n][0]
-            if self.__eval_cond(curr[0] < curr[1]):
-                int_expr.append(curr + [expr])
+                # Part 2: remove any interval overlap.  For any conflicts, the
+                # iterval already there wins, and the incoming interval updates
+                # its bounds accordingly.
+                if self.__eval_cond(lower < int_expr[n][1]) and \
+                        self.__eval_cond(lower >= int_expr[n][0]):
+                    lower = int_expr[n][1]
+                if self.__eval_cond(upper > int_expr[n][0]) and \
+                        self.__eval_cond(upper <= int_expr[n][1]):
+                    upper = int_expr[n][0]
+            if self.__eval_cond(lower < upper):  # Is it still an interval?
+                int_expr.append((lower, upper, expr))
         int_expr.sort(key=lambda x:x[0])
 
         # Add holes to list of intervals if there is a default value,
@@ -236,35 +254,47 @@ class Piecewise(Function):
         return Piecewise(*[(diff(e, s), c) for e, c in self.args])
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        new_args = []
-        for e, c in self.args:
+        """
+        Piecewise conditions may contain Sets whose modifications
+        requires the use of contains rather than substitution. They
+        may also contain bool which are not of Basic type.
+        """
+        args = list(self.args)
+        for i, (e, c) in enumerate(args):
+            try:
+                e = e._subs(old, new)
+            except TypeError:
+                if e != old:
+                    continue
+                e = new
+
             if isinstance(c, bool):
-                new_args.append((e._eval_subs(old, new), c))
+                pass
             elif isinstance(c, Set):
                 # What do we do if there are more than one symbolic
                 # variable. Which do we put pass to Set.contains?
-                new_args.append((e._eval_subs(old, new),  c.contains(new)))
-            else:
-                new_args.append((e._eval_subs(old, new), c._eval_subs(old, new)))
-        return Piecewise( *new_args )
+                c = c.contains(new)
+            elif isinstance(c, Basic):
+                c = c._subs(old, new)
+
+            args[i] = e, c
+
+        return Piecewise(*args)
 
     def _eval_nseries(self, x, n, logx):
         args = map(lambda ec: (ec.expr._eval_nseries(x, n, logx), ec.cond), \
                    self.args)
         return self.func(*args)
 
+    def _eval_as_leading_term(self, x):
+        # This is completely wrong, cf. issue 3110
+        return self.args[0][0].as_leading_term(x)
+
     @classmethod
     def __eval_cond(cls, cond):
-        """Returns S.One if True, S.Zero if False, or None if undecidable."""
-        if type(cond) == bool or cond.is_number:
-            if cond:
-                return S.One
-            else:
-                return S.Zero
-        elif type(cond) == Set:
-            return None
+        """Return the truth value of the condition."""
+        if cond is True:
+            return True
         return None
 
 def piecewise_fold(expr):
@@ -272,12 +302,19 @@ def piecewise_fold(expr):
     Takes an expression containing a piecewise function and returns the
     expression in piecewise form.
 
-    >>> from sympy import Piecewise, piecewise_fold
+    Examples
+    ========
+
+    >>> from sympy import Piecewise, piecewise_fold, sympify as S
     >>> from sympy.abc import x
-    >>> p = Piecewise((x, x < 1), (1, 1 <= x))
+    >>> p = Piecewise((x, x < 1), (1, S(1) <= x))
     >>> piecewise_fold(x*p)
     Piecewise((x**2, x < 1), (x, 1 <= x))
 
+    See Also
+    ========
+
+    Piecewise
     """
     if not isinstance(expr, Basic) or not expr.has(Piecewise):
         return expr
@@ -295,4 +332,3 @@ def piecewise_fold(expr):
         if len(piecewise_args) > 1:
             return piecewise_fold(Piecewise(*new_args))
     return Piecewise(*new_args)
-

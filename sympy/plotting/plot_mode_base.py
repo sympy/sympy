@@ -81,7 +81,7 @@ class PlotModeBase(PlotMode):
     """
     A list of the render styles. Do not modify.
     """
-    styles = {'wireframe':1, 'solid':2, 'both':3}
+    styles = {'wireframe': 1, 'solid': 2, 'both': 3}
 
     """
     style_override
@@ -97,8 +97,8 @@ class PlotModeBase(PlotMode):
         in PlotModeBase.
     """
 
-    default_wireframe_color = (0.85,0.85,0.85)
-    default_solid_color = (0.6,0.6,0.9)
+    default_wireframe_color = (0.85, 0.85, 0.85)
+    default_solid_color = (0.6, 0.6, 0.9)
     default_rot_preset = 'xy'
 
     ##
@@ -132,8 +132,12 @@ class PlotModeBase(PlotMode):
     def __init__(self, *args, **kwargs):
         self.verts = []
         self.cverts = []
-        self.bounds  = [ [S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0] ]
-        self.cbounds = [ [S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0] ]
+        self.bounds = [[S.Infinity, -S.Infinity, 0],
+                       [S.Infinity, -S.Infinity, 0],
+                       [S.Infinity, -S.Infinity, 0]]
+        self.cbounds = [[S.Infinity, -S.Infinity, 0],
+                        [S.Infinity, -S.Infinity, 0],
+                        [S.Infinity, -S.Infinity, 0]]
 
         self._draw_lock = RLock()
 
@@ -234,7 +238,8 @@ class PlotModeBase(PlotMode):
     @synchronized
     def draw(self):
         for f in self.predraw:
-            if callable(f): f()
+            if callable(f):
+                f()
         if self.style_override:
             style = self.styles[self.style_override]
         else:
@@ -250,7 +255,8 @@ class PlotModeBase(PlotMode):
             if dl > 0 and GL_TRUE == glIsList(dl):
                 self._draw_wireframe_display_list(dl)
         for f in self.postdraw:
-            if callable(f): f()
+            if callable(f):
+                f()
 
     def _on_change_color(self, color):
         Thread(target=self._calculate_cverts).start()
@@ -263,20 +269,26 @@ class PlotModeBase(PlotMode):
         self._calculate_cverts()
 
     def _calculate_verts(self):
-        if self._calculating_verts.isSet(): return
+        if self._calculating_verts.isSet():
+            return
         self._calculating_verts.set()
-        try: self._on_calculate_verts()
-        finally: self._calculating_verts.clear()
+        try:
+            self._on_calculate_verts()
+        finally:
+            self._calculating_verts.clear()
         if callable(self.bounds_callback):
             self.bounds_callback()
 
     def _calculate_cverts(self):
-        if self._calculating_verts.isSet(): return
+        if self._calculating_verts.isSet():
+            return
         while self._calculating_cverts.isSet():
             sleep(0) # wait for previous calculation
         self._calculating_cverts.set()
-        try: self._on_calculate_cverts()
-        finally: self._calculating_cverts.clear()
+        try:
+            self._on_calculate_cverts()
+        finally:
+            self._calculating_cverts.clear()
 
     def _get_calculating_verts(self):
         return self._calculating_verts.isSet()
@@ -302,22 +314,25 @@ class PlotModeBase(PlotMode):
 
     @synchronized
     def _set_style(self, v):
-        if v is None: return
+        if v is None:
+            return
         if v == '':
             step_max = 0
             for i in self.intervals:
-                if i.v_steps is None: continue
+                if i.v_steps is None:
+                    continue
                 step_max = max([step_max, i.v_steps])
             v = ['both', 'solid'][step_max > 40]
         #try:
         assert v in self.styles
-        if v == self._style: return
+        if v == self._style:
+            return
         self._style = v
         #except Exception, e:
             #raise RuntimeError(("Style change failed. "
-                             #"Reason: %s is not a valid "
-                             #"style. Use one of %s.") %
-                             #(str(v), ', '.join(self.styles.iterkeys())))
+            #                 "Reason: %s is not a valid "
+            #                 "style. Use one of %s.") %
+            #                 (str(v), ', '.join(self.styles.iterkeys())))
 
     def _get_color(self):
         return self._color
@@ -328,13 +343,15 @@ class PlotModeBase(PlotMode):
             if v is not None:
                 if is_sequence(v):
                     v = ColorScheme(*v)
-                else: v = ColorScheme(v)
-            if repr(v) == repr(self._color): return
+                else:
+                    v = ColorScheme(v)
+            if repr(v) == repr(self._color):
+                return
             self._on_change_color(v)
             self._color = v
         except Exception, e:
             raise RuntimeError(("Color change failed. "
-                             "Reason: %s" % (str(e))))
+                                "Reason: %s" % (str(e))))
 
     style = property(_get_style, _set_style)
     color = property(_get_color, _set_color)
@@ -357,10 +374,10 @@ class PlotModeBase(PlotMode):
     def __repr__(self):
         f = ", ".join(str(d) for d in self.d_vars)
         i = ", ".join(str(i) for i in self.intervals)
-        d = [ ( 'mode',  self.primary_alias ),
-              ( 'color', str(self.color) ),
-              ( 'style', str(self.style) ) ]
+        d = [('mode', self.primary_alias),
+             ('color', str(self.color)),
+             ('style', str(self.style))]
 
-        o = "'%s'" % (("; ".join("%s=%s" % (k,v)
-                                for k,v in d if v != 'None')))
+        o = "'%s'" % (("; ".join("%s=%s" % (k, v)
+                                for k, v in d if v != 'None')))
         return ", ".join([f, i, o])

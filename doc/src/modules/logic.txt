@@ -38,16 +38,28 @@ Like most types in SymPy, Boolean expressions inherit from :class:`Basic`::
     >>> (x | y).atoms()
     set([x, y])
 
-Other boolean functions
+Boolean functions
 -----------------------
 
-.. automethod:: sympy.logic.boolalg.Xor
+.. autofunction:: sympy.logic.boolalg.to_cnf
 
-.. automethod:: sympy.logic.boolalg.Nand
+.. autoclass:: sympy.logic.boolalg.And
 
-.. automethod:: sympy.logic.boolalg.Nor
+.. autoclass:: sympy.logic.boolalg.Or
 
-.. automethod:: sympy.logic.boolalg.Equivalent
+.. autoclass:: sympy.logic.boolalg.Not
+
+.. autoclass:: sympy.logic.boolalg.Xor
+
+.. autoclass:: sympy.logic.boolalg.Nand
+
+.. autoclass:: sympy.logic.boolalg.Nor
+
+.. autoclass:: sympy.logic.boolalg.Implies
+
+.. autoclass:: sympy.logic.boolalg.Equivalent
+
+.. autoclass:: sympy.logic.boolalg.ITE
 
 Inference
 ---------
@@ -75,6 +87,6 @@ is satisfiable with both x and y being True.
 As you see, when a sentence is satisfiable, it returns a model that makes that
 sentence True. If it is not satisfiable it will return False
 
-.. automethod:: sympy.logic.inference.satisfiable
+.. autofunction:: sympy.logic.inference.satisfiable
 
 .. TODO: write about CNF file format

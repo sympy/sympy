@@ -127,6 +127,10 @@ def _sort_factors(factors, **args):
     else:
         return sorted(factors, key=order_no_multiple_key)
 
+def _not_a_coeff(expr):
+    """Do not treat NaN and infinities as valid polynomial coefficients. """
+    return expr in [S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity]
+
 def _parallel_dict_from_expr_if_gens(exprs, opt):
     """Transform expressions into a multinomial form given generators. """
     k, indices = len(opt.gens), {}
@@ -146,7 +150,7 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
             coeff, monom = [], [0]*k
 
             for factor in Mul.make_args(term):
-                if factor.is_Number:
+                if not _not_a_coeff(factor) and factor.is_Number:
                     coeff.append(factor)
                 else:
                     try:
@@ -200,7 +204,7 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
             coeff, elements = [], {}
 
             for factor in Mul.make_args(term):
-                if factor.is_Number or _is_coeff(factor):
+                if not _not_a_coeff(factor) and (factor.is_Number or _is_coeff(factor)):
                     coeff.append(factor)
                 else:
                     base, exp = decompose_power(factor)
@@ -339,3 +343,68 @@ def _dict_reorder(rep, gens, new_gens):
                 new_M.append(0)
 
     return map(tuple, new_monoms), coeffs
+
+class PicklableWithSlots(object):
+    """
+    Mixin class that allows to pickle objects with ``__slots__``.
+
+    Examples
+    --------
+
+    First define a class that mixes :class:`PicklableWithSlots` in::
+
+        >>> from sympy.polys.polyutils import PicklableWithSlots
+        >>> class Some(PicklableWithSlots):
+        ...     __slots__ = ['foo', 'bar']
+        ...
+        ...     def __init__(self, foo, bar):
+        ...         self.foo = foo
+        ...         self.bar = bar
+
+    To make :mod:`pickle` happy in doctest we have to use this hack::
+
+        >>> import __builtin__ as builtin
+        >>> builtin.Some = Some
+
+    Next lets see if we can create an instance, pickle it and unpickle::
+
+        >>> some = Some('abc', 10)
+        >>> some.foo, some.bar
+        ('abc', 10)
+
+        >>> from pickle import dumps, loads
+        >>> some2 = loads(dumps(some))
+
+        >>> some2.foo, some2.bar
+        ('abc', 10)
+
+    """
+
+    __slots__ = []
+
+    def __getstate__(self, cls=None):
+        if cls is None:
+            # This is the case for the instance that gets pickled
+            cls = self.__class__
+
+        d = {}
+
+        # Get all data that should be stored from super classes
+        for c in cls.__bases__:
+            if hasattr(c, "__getstate__"):
+                d.update(c.__getstate__(self, c))
+
+        # Get all information that should be stored from cls and return the dict
+        for name in cls.__slots__:
+            if hasattr(self, name):
+                d[name] = getattr(self, name)
+
+        return d
+
+    def __setstate__(self, d):
+        # All values that were pickled are now assigned to a fresh instance
+        for name, value in d.iteritems():
+            try:
+                setattr(self, name, value)
+            except AttributeError:    # This is needed in cases like Rational :> Half
+                pass

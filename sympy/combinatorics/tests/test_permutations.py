@@ -1,5 +1,5 @@
 from sympy.combinatorics.permutations import (Permutation, perm_af_parity,
-    perm_af_mul)
+    perm_af_mul, perm_af_muln, cyclic)
 
 from sympy.utilities.pytest import raises
 
@@ -16,6 +16,7 @@ def test_Permutation():
     assert perm_af_mul([2, 5, 1, 6, 3, 0, 4], [3, 1, 4, 5, 0, 6, 2]) == \
         [6, 5, 3, 0, 2, 4, 1]
 
+    assert cyclic([(2,3,5)], 5) == [[1, 2, 4], [0], [3]]
     assert (Permutation([[1,2,3],[0,4]])*Permutation([[1,2,4],[0],[3]])).cyclic_form == \
         [[1, 3], [0, 4, 2]]
     assert q.array_form == [3, 1, 4, 5, 0, 6, 2]
@@ -44,6 +45,7 @@ def test_Permutation():
     assert Permutation.from_inversion_vector(p.inversion_vector()) == p
     assert Permutation.from_inversion_vector(q.inversion_vector()).array_form\
            == q.array_form
+    assert Permutation([i for i in range(500,-1,-1)]).inversions() == 125250
 
     assert Permutation([0, 4, 1, 3, 2]).parity() == 0
     assert Permutation([0, 1, 4, 3, 2]).parity() == 1
@@ -94,12 +96,12 @@ def test_Permutation():
     assert q.length() == 7
     assert r.length() == 4
 
-    assert not p.is_Positive()
-    assert p.is_Negative()
-    assert not q.is_Positive()
-    assert q.is_Negative()
-    assert r.is_Positive()
-    assert not r.is_Negative()
+    assert not p.is_Positive
+    assert p.is_Negative
+    assert not q.is_Positive
+    assert q.is_Negative
+    assert r.is_Positive
+    assert not r.is_Negative
 
     assert p.runs() == [[1, 5], [2], [0, 3, 6], [4]]
     assert q.runs() == [[4], [2, 3, 5], [0, 6], [1]]
@@ -174,6 +176,16 @@ def test_ranking():
     assert Permutation([3, 2, 0, 1]).next_nonlex() == Permutation([1, 3, 0, 2])
     assert [Permutation(pa).rank_nonlex() for pa in a] == range(24)
 
+def test_muln():
+    n = 6
+    m = 8
+    a = [Permutation.unrank_nonlex(n, i).array_form for i in range(m)]
+    h = range(n)
+    for i in range(m):
+        h = perm_af_mul(h, a[i])
+        h2 = perm_af_muln(*a[:i+1])
+        assert h == h2
+
 def test_args():
     p = Permutation([(0, 3, 1, 2), (4, 5)])
     assert p.cyclic_form == [[0, 3, 1, 2], [4, 5]]
@@ -183,8 +195,8 @@ def test_args():
     assert p._array_form == [0, 3, 1, 2]
     assert Permutation([0]) == Permutation((0, ))
     assert Permutation([[0], [1]]) == Permutation(((0, ), (1, ))) == Permutation(((0, ), [1]))
-    raises(ValueError, 'Permutation([[1, 2], [3]])') # 0, 1, 2 should be present
-    raises(ValueError, 'Permutation([1, 2, 3])') # 0, 1, 2 should be present
-    raises(ValueError, 'Permutation(0, 1, 2)') # enclosing brackets needed
-    raises(ValueError, 'Permutation([1, 2], [0])') # enclosing brackets needed
-    raises(ValueError, 'Permutation([[1, 2], 0])') # enclosing brackets needed on 0
+    raises(ValueError, lambda: Permutation([[1, 2], [3]])) # 0, 1, 2 should be present
+    raises(ValueError, lambda: Permutation([1, 2, 3])) # 0, 1, 2 should be present
+    raises(ValueError, lambda: Permutation(0, 1, 2)) # enclosing brackets needed
+    raises(ValueError, lambda: Permutation([1, 2], [0])) # enclosing brackets needed
+    raises(ValueError, lambda: Permutation([[1, 2], 0])) # enclosing brackets needed on 0

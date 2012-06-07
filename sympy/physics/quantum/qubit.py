@@ -22,6 +22,7 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray, scipy_sparse_matrix
 )
+from sympy.mpmath.libmp.libintmath import bitcount
 
 __all__ = [
     'Qubit',
@@ -118,10 +119,11 @@ class Qubit(QubitState, Ket):
     """A multi-qubit ket in the computational (z) basis.
 
     We use the normal convention that the least significant qubit is on the
-    right, so |00001> has a 1 in the least significant qubit.
+    right, so ``|00001>`` has a 1 in the least significant qubit.
 
     Parameters
     ==========
+
     values : list, str
         The qubit values as a list of ints ([0,0,0,1,1,]) or a string ('011').
 
@@ -207,16 +209,18 @@ class QubitBra(QubitState, Bra):
     """A multi-qubit bra in the computational (z) basis.
 
     We use the normal convention that the least significant qubit is on the
-    right, so |00001> has a 1 in the least significant qubit.
+    right, so ``|00001>`` has a 1 in the least significant qubit.
 
     Parameters
     ==========
+
     values : list, str
         The qubit values as a list of ints ([0,0,0,1,1,]) or a string ('011').
 
-    Examples
+    See also
     ========
-    See ``Qubit`` for examples.
+
+    Qubit: Examples using qubits
 
     """
     @classmethod
@@ -236,15 +240,15 @@ class IntQubitState(QubitState):
         # that integer with the minimal number of bits.
         if len(args) == 1 and args[0] > 1:
             #rvalues is the minimum number of bits needed to express the number
-            rvalues = reversed(
-                range(int(math.ceil(math.log(args[0], 2)+.01)+.001))
-            )
+            rvalues = reversed(xrange(bitcount(abs(args[0]))))
             qubit_values = [(args[0]>>i)&1 for i in rvalues]
             return QubitState._eval_args(qubit_values)
         # For two numbers, the second number is the number of bits
         # on which it is expressed, so IntQubit(0,5) == |00000>.
         elif len(args) == 2 and args[1] > 1:
-            #TODO Raise error if there are not enough bits
+            need = bitcount(abs(args[0]))
+            if args[1] < need:
+                raise ValueError('cannot represent %s with %s bits' % (args[0], args[1]))
             qubit_values = [(args[0]>>i)&1 for i in reversed(range(args[1]))]
             return QubitState._eval_args(qubit_values)
         else:
@@ -282,6 +286,7 @@ class IntQubit(IntQubitState, Qubit):
 
     Parameters
     ==========
+
     values : int, tuple
         If a single argument, the integer we want to represent in the qubit
         values. This integer will be represented using the fewest possible
@@ -425,6 +430,7 @@ def measure_all(qubit, format='sympy', normalize=True):
 
     Parameters
     ==========
+
     qubit : Qubit, Add
         The qubit to measure. This can be any Qubit or a linear combination
         of them.
@@ -435,6 +441,7 @@ def measure_all(qubit, format='sympy', normalize=True):
 
     Returns
     =======
+
     result : list
         A list that consists of primitive states and their probabilities.
 
@@ -479,6 +486,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
 
     Parameters
     ==========
+
     qubits : Qubit
         The qubit to measure.  This can be any Qubit or a linear combination
         of them.
@@ -491,6 +499,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
 
     Returns
     =======
+
     result : list
         A list that consists of primitive states and their probabilities.
 

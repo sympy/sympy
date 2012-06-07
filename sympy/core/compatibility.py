@@ -1,6 +1,6 @@
 """
-Reimplementations of constructs introduced in later versions of Python than we
-support.
+Reimplementations of constructs introduced in later versions of Python than
+we support.
 """
 
 # These are in here because telling if something is an iterable just by calling
@@ -19,7 +19,8 @@ def iterable(i, exclude=(basestring, dict)):
 
     See also: is_sequence
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.utilities.iterables import iterable
     >>> from sympy import Tuple
@@ -65,7 +66,8 @@ def is_sequence(i, include=None):
 
     See also: iterable
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.utilities.iterables import is_sequence
     >>> from types import GeneratorType
@@ -155,7 +157,9 @@ except ImportError: # Python 2.5
         of repetitions with the optional repeat keyword argument. For example,
         product(A, repeat=4) means the same as product(A, A, A, A).
 
-        Examples:
+        Examples
+        ========
+
         >>> from sympy.core.compatibility import product
         >>> [''.join(p) for p in list(product('ABC', 'xy'))]
         ['Ax', 'Ay', 'Bx', 'By', 'Cx', 'Cy']
@@ -232,9 +236,11 @@ except ImportError: # < python 2.6
         value. So if the input elements are unique, there will be no repeat
         values in each combination.
 
-        See also: combinations_with_replacements
+        See also: combinations_with_replacement
 
-        Examples:
+        Examples
+        ========
+
         >>> from sympy.core.compatibility import combinations
         >>> list(combinations('ABC', 2))
         [('A', 'B'), ('A', 'C'), ('B', 'C')]
@@ -272,7 +278,9 @@ except ImportError: # < python 2.6
 
         See also: combinations
 
-        Example:
+        Examples
+        ========
+
         >>> from sympy.core.compatibility import combinations_with_replacement
         >>> list(combinations_with_replacement('AB', 2))
         [('A', 'A'), ('A', 'B'), ('B', 'B')]
@@ -325,3 +333,21 @@ def set_union(*sets):
     for s in sets:
         rv |= s
     return rv
+
+try:
+    bin = bin
+except NameError: # Python 2.5
+    def bin(x):
+        """
+        bin(number) -> string
+
+        Stringifies an int or long in base 2.
+        """
+        if x < 0: return '-' + bin(-x)
+        out = []
+        if x == 0: out.append('0')
+        while x > 0:
+            out.append('01'[x & 1])
+            x >>= 1
+            pass
+        return '0b' + ''.join(reversed(out))

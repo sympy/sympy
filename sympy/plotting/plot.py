@@ -7,7 +7,8 @@ from threading import RLock
 try:
     from pyglet.gl import *
 except ImportError:
-    raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
+    raise ImportError("pyglet is required for plotting.\n "
+                      "visit http://www.pyglet.org/")
 
 from plot_object import PlotObject
 from plot_axes import PlotAxes
@@ -140,6 +141,7 @@ class Plot(object):
     Close Window:     ESCAPE
 
     =============================
+
     """
 
     def __init__(self, *fargs, **win_args):
@@ -322,7 +324,8 @@ class Plot(object):
         """
         i = 0
         self._render_lock.acquire()
-        while i in self._functions: i += 1
+        while i in self._functions:
+            i += 1
         self._render_lock.release()
         return i
 
@@ -376,7 +379,8 @@ class Plot(object):
         for f in self._functions:
             a = self._functions[f]._get_calculating_verts
             b = self._functions[f]._get_calculating_cverts
-            while a() or b(): sleep(0)
+            while a() or b():
+                sleep(0)
         self._render_lock.release()
 
 
@@ -402,9 +406,10 @@ class ScreenShot:
         size_x, size_y = self._plot._window.get_size()
         size = size_x*size_y*4*sizeof(c_ubyte)
         image = create_string_buffer(size)
-        glReadPixels(0,0,size_x,size_y, GL_RGBA, GL_UNSIGNED_BYTE, image)
+        glReadPixels(0, 0, size_x, size_y, GL_RGBA, GL_UNSIGNED_BYTE, image)
         from PIL import Image
-        im = Image.frombuffer('RGBA',(size_x,size_y),image.raw, 'raw', 'RGBA', 0, 1)
+        im = Image.frombuffer('RGBA', (size_x, size_y),
+                              image.raw, 'raw', 'RGBA', 0, 1)
         im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile, self.format)
 
         self.flag = 0
@@ -430,17 +435,17 @@ class ScreenShot:
             self.invisibleMode = True
 
         if self.outfile is None:
-            self.outfile=self._create_unique_path()
+            self.outfile = self._create_unique_path()
             print self.outfile
 
     def _create_unique_path(self):
         cwd = getcwd()
         l = listdir(cwd)
         path = ''
-        i=0
+        i = 0
         while True:
-            if not 'plot_%s.png'%i in l:
-                path = cwd+'/plot_%s.png'%i
+            if not 'plot_%s.png' % i in l:
+                path = cwd + '/plot_%s.png' % i
                 break
-            i+=1
+            i += 1
         return path

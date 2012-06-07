@@ -15,11 +15,12 @@ __all__ = [
 class Dagger(Expr):
     """General Hermitian conjugate operation.
 
-    For matrices this operation is equivalent to transpose and complex
-    conjugate [1].
+    Take the Hermetian conjugate of an argument [1]_. For matrices this
+    operation is equivalent to transpose and complex conjugate [2]_.
 
     Parameters
     ==========
+
     arg : Expr
         The sympy expression that we want to take the dagger of.
 
@@ -71,7 +72,8 @@ class Dagger(Expr):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Hermitian_transpose
+    .. [1] http://en.wikipedia.org/wiki/Hermitian_adjoint
+    .. [2] http://en.wikipedia.org/wiki/Hermitian_transpose
     """
 
     def __new__(cls, arg, **old_assumptions):
@@ -82,14 +84,13 @@ class Dagger(Expr):
         r = cls.eval(arg)
         if isinstance(r, Expr):
             return r
-        #make unevaluated dagger commutative or non-commutative depending on arg
-        if arg.is_commutative:
-            obj = Expr.__new__(cls, arg, **{'commutative':True})
-        else:
-            obj = Expr.__new__(cls, arg, **{'commutative':False})
+        obj = Expr.__new__(cls, arg)
         if isinstance(obj, QExpr):
             obj.hilbert_space = arg.hilbert_space
         return obj
+
+    def _eval_is_commutative(self):
+        return self.args[0].is_commutative
 
     @classmethod
     def eval(cls, arg):
@@ -109,10 +110,12 @@ class Dagger(Expr):
                 if arg.is_Pow:
                     return Pow(Dagger(arg.args[0]),arg.args[1])
                 else:
-                    if arg.is_Number or arg.is_Function or arg.is_Derivative\
+                    if arg.is_Number \
+                                     or arg.is_Function or arg.is_Derivative\
                                      or arg.is_Integer or arg.is_NumberSymbol\
+                                     or arg.is_number\
                                      or arg.is_complex or arg.is_integer\
-                                     or arg.is_real or arg.is_number:
+                                     or arg.is_real:
                         return arg.conjugate()
                     else:
                         return None
@@ -120,10 +123,6 @@ class Dagger(Expr):
                 return None
         else:
             return d
-
-    def _eval_subs(self, old, new):
-        r = Dagger(self.args[0].subs(old, new))
-        return r
 
     def _eval_dagger(self):
         return self.args[0]
@@ -139,10 +138,12 @@ class Dagger(Expr):
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
-        pform = pform**prettyForm(u'\u2020')
+        if printer._use_unicode:
+            pform = pform**prettyForm(u'\u2020')
+        else:
+            pform = pform**prettyForm('+')
         return pform
 
     def _latex(self, printer, *args):
         arg = printer._print(self.args[0])
         return '%s^{\\dag}' % arg
-

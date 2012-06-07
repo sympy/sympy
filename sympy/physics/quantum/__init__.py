@@ -35,10 +35,6 @@ import innerproduct
 from innerproduct import *
 __all__.extend(innerproduct.__all__)
 
-import kronecker
-from kronecker import *
-__all__.extend(kronecker.__all__)
-
 import operator
 from operator import *
 __all__.extend(operator.__all__)

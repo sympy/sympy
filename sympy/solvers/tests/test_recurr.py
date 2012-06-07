@@ -1,5 +1,5 @@
-from sympy import Function, symbols, S, sqrt, rf, factorial
-from sympy.solvers.recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
+from sympy import factorial, Function, rf, S, sqrt, symbols
+from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
 
 y = Function('y')
 n, k = symbols('n,k', integer=True)

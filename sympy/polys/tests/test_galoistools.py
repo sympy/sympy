@@ -24,14 +24,13 @@ from sympy.polys.galoistools import (
     gf_berlekamp, gf_zassenhaus, gf_shoup,
     gf_factor_sqf, gf_factor,
     gf_value, linear_congruence, csolve_prime, gf_csolve,
-    solve_congruence
 )
 
 from sympy.polys.polyerrors import (
     ExactQuotientFailed,
 )
 
-from sympy.polys.polyconfig import setup
+from sympy.polys import polyconfig as config
 
 from sympy.polys.domains import ZZ
 from sympy import pi, nextprime
@@ -208,10 +207,10 @@ def test_gf_arith():
     assert gf_sqr([2,0,0,1,7], 11, ZZ) == [4,0,0,4,6,0,1,3,5]
 
 def test_gf_division():
-    raises(ZeroDivisionError, "gf_div([1,2,3], [], 11, ZZ)")
-    raises(ZeroDivisionError, "gf_rem([1,2,3], [], 11, ZZ)")
-    raises(ZeroDivisionError, "gf_quo([1,2,3], [], 11, ZZ)")
-    raises(ZeroDivisionError, "gf_quo([1,2,3], [], 11, ZZ)")
+    raises(ZeroDivisionError, lambda: gf_div([1,2,3], [], 11, ZZ))
+    raises(ZeroDivisionError, lambda: gf_rem([1,2,3], [], 11, ZZ))
+    raises(ZeroDivisionError, lambda: gf_quo([1,2,3], [], 11, ZZ))
+    raises(ZeroDivisionError, lambda: gf_quo([1,2,3], [], 11, ZZ))
 
     assert gf_div([1], [1,2,3], 7, ZZ) == ([], [1])
     assert gf_rem([1], [1,2,3], 7, ZZ) == [1]
@@ -223,7 +222,7 @@ def test_gf_division():
     assert gf_rem(f, g, 7, ZZ) == r
     assert gf_quo(f, g, 7, ZZ) == q
 
-    raises(ExactQuotientFailed, "gf_exquo(f, g, 7, ZZ)")
+    raises(ExactQuotientFailed, lambda: gf_exquo(f, g, 7, ZZ))
 
     f, g, q, r = [5,4,3,2,1,0], [1,2,3,0], [5,1,0], [6,1,0]
 
@@ -231,7 +230,7 @@ def test_gf_division():
     assert gf_rem(f, g, 7, ZZ) == r
     assert gf_quo(f, g, 7, ZZ) == q
 
-    raises(ExactQuotientFailed, "gf_exquo(f, g, 7, ZZ)")
+    raises(ExactQuotientFailed, lambda: gf_exquo(f, g, 7, ZZ))
 
     assert gf_quo([1,2,1], [1,1], 11, ZZ) == [1,1]
 
@@ -409,21 +408,21 @@ def test_gf_irreducible_p():
     assert gf_irred_p_rabin([7,3], 11, ZZ) == True
     assert gf_irred_p_rabin([7,3,1], 11, ZZ) == False
 
-    setup('GF_IRRED_METHOD', 'ben-or')
+    config.setup('GF_IRRED_METHOD', 'ben-or')
 
     assert gf_irreducible_p([7], 11, ZZ) == True
     assert gf_irreducible_p([7,3], 11, ZZ) == True
     assert gf_irreducible_p([7,3,1], 11, ZZ) == False
 
-    setup('GF_IRRED_METHOD', 'rabin')
+    config.setup('GF_IRRED_METHOD', 'rabin')
 
     assert gf_irreducible_p([7], 11, ZZ) == True
     assert gf_irreducible_p([7,3], 11, ZZ) == True
     assert gf_irreducible_p([7,3,1], 11, ZZ) == False
 
-    setup('GF_IRRED_METHOD', 'other')
-    raises(KeyError, "gf_irreducible_p([7], 11, ZZ)")
-    setup('GF_IRRED_METHOD')
+    config.setup('GF_IRRED_METHOD', 'other')
+    raises(KeyError, lambda: gf_irreducible_p([7], 11, ZZ))
+    config.setup('GF_IRRED_METHOD')
 
     f = [1, 9,  9, 13, 16, 15,  6,  7,  7,  7, 10]
     g = [1, 7, 16,  7, 15, 13, 13, 11, 16, 10,  9]
@@ -572,19 +571,19 @@ def test_gf_factor():
     assert gf_factor_sqf([1], 11, ZZ) == (1, [])
     assert gf_factor_sqf([1,1], 11, ZZ) == (1, [[1, 1]])
 
-    setup('GF_FACTOR_METHOD', 'berlekamp')
+    config.setup('GF_FACTOR_METHOD', 'berlekamp')
 
     assert gf_factor_sqf([], 11, ZZ) == (0, [])
     assert gf_factor_sqf([1], 11, ZZ) == (1, [])
     assert gf_factor_sqf([1,1], 11, ZZ) == (1, [[1, 1]])
 
-    setup('GF_FACTOR_METHOD', 'zassenhaus')
+    config.setup('GF_FACTOR_METHOD', 'zassenhaus')
 
     assert gf_factor_sqf([], 11, ZZ) == (0, [])
     assert gf_factor_sqf([1], 11, ZZ) == (1, [])
     assert gf_factor_sqf([1,1], 11, ZZ) == (1, [[1, 1]])
 
-    setup('GF_FACTOR_METHOD', 'shoup')
+    config.setup('GF_FACTOR_METHOD', 'shoup')
 
     assert gf_factor_sqf([], 11, ZZ) == (0, [])
     assert gf_factor_sqf([1], 11, ZZ) == (1, [])
@@ -596,26 +595,26 @@ def test_gf_factor():
              ([1, 1], 1),
              ([1, 1, 1], 1)])
 
-    setup('GF_FACTOR_METHOD', 'berlekamp')
+    config.setup('GF_FACTOR_METHOD', 'berlekamp')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'zassenhaus')
+    config.setup('GF_FACTOR_METHOD', 'zassenhaus')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'shoup')
+    config.setup('GF_FACTOR_METHOD', 'shoup')
     assert gf_factor(f, p, ZZ) == g
 
     g = (1, [[1, 0],
              [1, 1],
              [1, 1, 1]])
 
-    setup('GF_FACTOR_METHOD', 'berlekamp')
+    config.setup('GF_FACTOR_METHOD', 'berlekamp')
     assert gf_factor_sqf(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'zassenhaus')
+    config.setup('GF_FACTOR_METHOD', 'zassenhaus')
     assert gf_factor_sqf(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'shoup')
+    config.setup('GF_FACTOR_METHOD', 'shoup')
     assert gf_factor_sqf(f, p, ZZ) == g
 
     f, p = gf_from_int_poly([1,-3,1,-3,-1,-3,1], 11), 11
@@ -624,39 +623,39 @@ def test_gf_factor():
              ([1, 5, 3], 1),
              ([1, 2, 3, 4], 1)])
 
-    setup('GF_FACTOR_METHOD', 'berlekamp')
+    config.setup('GF_FACTOR_METHOD', 'berlekamp')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'zassenhaus')
+    config.setup('GF_FACTOR_METHOD', 'zassenhaus')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'shoup')
+    config.setup('GF_FACTOR_METHOD', 'shoup')
     assert gf_factor(f, p, ZZ) == g
 
     f, p = [1, 5, 8, 4], 11
 
     g = (1, [([1, 1], 1), ([1, 2], 2)])
 
-    setup('GF_FACTOR_METHOD', 'berlekamp')
+    config.setup('GF_FACTOR_METHOD', 'berlekamp')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'zassenhaus')
+    config.setup('GF_FACTOR_METHOD', 'zassenhaus')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'shoup')
+    config.setup('GF_FACTOR_METHOD', 'shoup')
     assert gf_factor(f, p, ZZ) == g
 
     f, p = [1, 1, 10, 1, 0, 10, 10, 10, 0, 0], 11
 
     g = (1, [([1, 0], 2), ([1, 9, 5], 1), ([1, 3, 0, 8, 5, 2], 1)])
 
-    setup('GF_FACTOR_METHOD', 'berlekamp')
+    config.setup('GF_FACTOR_METHOD', 'berlekamp')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'zassenhaus')
+    config.setup('GF_FACTOR_METHOD', 'zassenhaus')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'shoup')
+    config.setup('GF_FACTOR_METHOD', 'shoup')
     assert gf_factor(f, p, ZZ) == g
 
     f, p = gf_from_dict({32: 1, 0: 1}, 11, ZZ), 11
@@ -664,13 +663,13 @@ def test_gf_factor():
     g = (1, [([1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 10], 1),
              ([1, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 10], 1)])
 
-    setup('GF_FACTOR_METHOD', 'berlekamp')
+    config.setup('GF_FACTOR_METHOD', 'berlekamp')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'zassenhaus')
+    config.setup('GF_FACTOR_METHOD', 'zassenhaus')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'shoup')
+    config.setup('GF_FACTOR_METHOD', 'shoup')
     assert gf_factor(f, p, ZZ) == g
 
     f, p = gf_from_dict({32: 8, 0: 5}, 11, ZZ), 11
@@ -685,13 +684,13 @@ def test_gf_factor():
              ([1, 0, 0, 0, 1, 0, 0, 0, 6], 1),
              ([1, 0, 0, 0, 10, 0, 0, 0, 6], 1)])
 
-    setup('GF_FACTOR_METHOD', 'berlekamp')
+    config.setup('GF_FACTOR_METHOD', 'berlekamp')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'zassenhaus')
+    config.setup('GF_FACTOR_METHOD', 'zassenhaus')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'shoup')
+    config.setup('GF_FACTOR_METHOD', 'shoup')
     assert gf_factor(f, p, ZZ) == g
 
     f, p = gf_from_dict({63: 8, 0: 5}, 11, ZZ), 11
@@ -710,13 +709,13 @@ def test_gf_factor():
              ([1, 10, 4, 7, 10, 7, 4], 1),
              ([1, 10, 10, 1, 4, 9, 4], 1)])
 
-    setup('GF_FACTOR_METHOD', 'berlekamp')
+    config.setup('GF_FACTOR_METHOD', 'berlekamp')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'zassenhaus')
+    config.setup('GF_FACTOR_METHOD', 'zassenhaus')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'shoup')
+    config.setup('GF_FACTOR_METHOD', 'shoup')
     assert gf_factor(f, p, ZZ) == g
 
     # Gathen polynomials: x**n + x + 1 (mod p > 2**n * pi)
@@ -731,10 +730,10 @@ def test_gf_factor():
              ([1, 86276, 56779, 14859, 31575], 1),
              ([1, 15347, 95022, 84569, 94508, 92335], 1)])
 
-    setup('GF_FACTOR_METHOD', 'zassenhaus')
+    config.setup('GF_FACTOR_METHOD', 'zassenhaus')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'shoup')
+    config.setup('GF_FACTOR_METHOD', 'shoup')
     assert gf_factor(f, p, ZZ) == g
 
     g = (1, [[1, 22730, 68144],
@@ -742,10 +741,10 @@ def test_gf_factor():
              [1, 86276, 56779, 14859, 31575],
              [1, 15347, 95022, 84569, 94508, 92335]])
 
-    setup('GF_FACTOR_METHOD', 'zassenhaus')
+    config.setup('GF_FACTOR_METHOD', 'zassenhaus')
     assert gf_factor_sqf(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'shoup')
+    config.setup('GF_FACTOR_METHOD', 'shoup')
     assert gf_factor_sqf(f, p, ZZ) == g
 
     # Shoup polynomials: f = a_0 x**n + a_1 x**(n-1) + ... + a_n
@@ -759,24 +758,24 @@ def test_gf_factor():
     g = (1, [([1, 44, 26], 1),
              ([1, 11, 25, 18, 30], 1)])
 
-    setup('GF_FACTOR_METHOD', 'zassenhaus')
+    config.setup('GF_FACTOR_METHOD', 'zassenhaus')
     assert gf_factor(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'shoup')
+    config.setup('GF_FACTOR_METHOD', 'shoup')
     assert gf_factor(f, p, ZZ) == g
 
     g = (1, [[1, 44, 26],
              [1, 11, 25, 18, 30]])
 
-    setup('GF_FACTOR_METHOD', 'zassenhaus')
+    config.setup('GF_FACTOR_METHOD', 'zassenhaus')
     assert gf_factor_sqf(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'shoup')
+    config.setup('GF_FACTOR_METHOD', 'shoup')
     assert gf_factor_sqf(f, p, ZZ) == g
 
-    setup('GF_FACTOR_METHOD', 'other')
-    raises(KeyError, "gf_factor([1,1], 11, ZZ)")
-    setup('GF_FACTOR_METHOD')
+    config.setup('GF_FACTOR_METHOD', 'other')
+    raises(KeyError, lambda: gf_factor([1,1], 11, ZZ))
+    config.setup('GF_FACTOR_METHOD')
 
 def test_gf_csolve():
     assert gf_value([1, 7, 2, 4], 11) == 2204
@@ -799,15 +798,3 @@ def test_gf_csolve():
     assert gf_csolve([1, 1, 7], 189) == [13, 49, 76, 112, 139, 175]
     assert gf_csolve([1, 3, 4, 1, 30], 60) ==  [10, 30]
     assert gf_csolve([1, 1, 7], 15) == []
-
-def test_solve_congruence():
-    assert solve_congruence(*zip([3, 4, 2], [12, 35, 17])) == (1719, 7140)
-    assert solve_congruence(*zip([3, 4, 2], [12, 6, 17])) is None
-    assert solve_congruence(*zip([3, 4, 2], [13, 7, 17])) == (172, 1547)
-    assert solve_congruence(*zip([-10, -3, -15], [13, 7, 17])) == (172, 1547)
-    assert solve_congruence(*zip([-10, -3, 1, -15], [13, 7, 7, 17])) is None
-    assert solve_congruence(*zip([-10, -5, 2, -15], [13, 7, 7, 17])) == (835, 1547)
-    assert solve_congruence(*zip([-10, -5, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
-    assert solve_congruence(*zip([-10, 2, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
-    assert solve_congruence(*zip((1, 1, 2),(3, 2, 4))) is None
-    raises(ValueError, 'solve_congruence(*zip([3, 4, 2], [12.1, 35, 17]))')

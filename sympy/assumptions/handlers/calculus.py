@@ -59,7 +59,7 @@ class AskBoundedHandler(CommonHandler):
 
     Test that an expression is bounded respect to all its variables.
 
-    Example of usage:
+    Examples of usage:
 
     >>> from sympy import Symbol, Q
     >>> from sympy.assumptions.handlers.calculus import AskBoundedHandler
@@ -77,7 +77,7 @@ class AskBoundedHandler(CommonHandler):
         """
         Handles Symbol.
 
-        Example:
+        Examples:
 
         >>> from sympy import Symbol, Q
         >>> from sympy.assumptions.handlers.calculus import AskBoundedHandler
@@ -98,29 +98,65 @@ class AskBoundedHandler(CommonHandler):
         """
         Return True if expr is bounded, False if not and None if unknown.
 
-               TRUTH TABLE
+        Truth Table:
 
-              B    U     ?
-                 + - x + - x
-            +---+-----+-----+
-        B   | B |  U  |? ? ?|  legend:
-            +---+-----+-----+    B  = Bounded
-          +     |U ? ?|U ? ?|    U  = Unbounded
-        U -     |? U ?|? U ?|    ?  = unknown boundedness
-          x     |? ? ?|? ? ?|    +  = positive sign
-                +-----+--+--+    -  = negative sign
-        ?             |? ? ?|    x  = sign unknown
-                      +--+--+
+        +-------+-----+-----------+-----------+
+        |       |     |           |           |
+        |       |  B  |     U     |     ?     |
+        |       |     |           |           |
+        +-------+-----+---+---+---+---+---+---+
+        |       |     |   |   |   |   |   |   |
+        |       |     |'+'|'-'|'x'|'+'|'-'|'x'|
+        |       |     |   |   |   |   |   |   |
+        +-------+-----+---+---+---+---+---+---+
+        |       |     |           |           |
+        |   B   |  B  |     U     |     ?     |
+        |       |     |           |           |
+        +---+---+-----+---+---+---+---+---+---+
+        |   |   |     |   |   |   |   |   |   |
+        |   |'+'|     | U | ? | ? | U | ? | ? |
+        |   |   |     |   |   |   |   |   |   |
+        |   +---+-----+---+---+---+---+---+---+
+        |   |   |     |   |   |   |   |   |   |
+        | U |'-'|     | ? | U | ? | ? | U | ? |
+        |   |   |     |   |   |   |   |   |   |
+        |   +---+-----+---+---+---+---+---+---+
+        |   |   |     |           |           |
+        |   |'x'|     |     ?     |     ?     |
+        |   |   |     |           |           |
+        +---+---+-----+---+---+---+---+---+---+
+        |       |     |           |           |
+        |   ?   |     |           |     ?     |
+        |       |     |           |           |
+        +-------+-----+-----------+---+---+---+
 
+            * 'B' = Bounded
 
-        All Bounded -> True
-        1 Unbounded and the rest Bounded -> False
-        >1 Unbounded, all with same known sign -> False
-        Any Unknown and unknown sign -> None
-        Else -> None
+            * 'U' = Unbounded
+
+            * '?' = unknown boundedness
+
+            * '+' = positive sign
+
+            * '-' = negative sign
+
+            * 'x' = sign unknown
+
+|
+
+            * All Bounded -> True
+
+            * 1 Unbounded and the rest Bounded -> False
+
+            * >1 Unbounded, all with same known sign -> False
+
+            * Any Unknown and unknown sign -> None
+
+            * Else -> None
 
         When the signs are not the same you can have an undefined
         result as in oo - oo, hence 'bounded' is also undefined.
+
         """
 
         sign = -1 # sign of unknown or unbounded
@@ -148,17 +184,39 @@ class AskBoundedHandler(CommonHandler):
         """
         Return True if expr is bounded, False if not and None if unknown.
 
-               TRUTH TABLE
+        Truth Table:
 
-              B   U     ?
-                      s   /s
-            +---+---+---+---+
-         B  | B | U |   ?   |  legend:
-            +---+---+---+---+    B  = Bounded
-         U      | U | U | ? |    U  = Unbounded
-                +---+---+---+    ?  = unknown boundedness
-         ?          |   ?   |    s  = signed (hence nonzero)
-                    +---+---+    /s = not signed
+        +---+---+---+--------+
+        |   |   |   |        |
+        |   | B | U |   ?    |
+        |   |   |   |        |
+        +---+---+---+---+----+
+        |   |   |   |   |    |
+        |   |   |   | s | /s |
+        |   |   |   |   |    |
+        +---+---+---+---+----+
+        |   |   |   |        |
+        | B | B | U |   ?    |
+        |   |   |   |        |
+        +---+---+---+---+----+
+        |   |   |   |   |    |
+        | U |   | U | U | ?  |
+        |   |   |   |   |    |
+        +---+---+---+---+----+
+        |   |   |   |        |
+        | ? |   |   |   ?    |
+        |   |   |   |        |
+        +---+---+---+---+----+
+
+            * B = Bounded
+
+            * U = Unbounded
+
+            * ? = unknown boundedness
+
+            * s = signed (hence nonzero)
+
+            * /s = not signed
 
         """
         result = True

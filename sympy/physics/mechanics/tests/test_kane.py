@@ -1,5 +1,4 @@
-from sympy import (symbols, Matrix, sin, cos, tan, expand,
-                   solve_linear_system_LU)
+from sympy import cos, expand, Matrix, sin, symbols, tan
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, Kane, inertia, Particle)
 
@@ -15,9 +14,7 @@ def test_one_dof():
 
     kd = [qd - u]
     FL = [(P, (-k * q - c * u) * N.x)]
-    pa = Particle()
-    pa.mass = m
-    pa.point = P
+    pa = Particle('pa', P, m)
     BL = [pa]
 
     KM = Kane(N)
@@ -29,7 +26,7 @@ def test_one_dof():
     forcing = KM.forcing
     rhs = MM.inv() * forcing
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
-    assert KM.linearize() == (Matrix([[0, 1], [k, c]]), Matrix([]))
+    assert KM.linearize() == (Matrix([[0, 1], [k, c]]), Matrix([]), Matrix([]))
 
 def test_two_dof():
     # This is for a 2 d.o.f., 2 particle spring-mass-damper.
@@ -50,12 +47,8 @@ def test_two_dof():
     # particle, then create a list of all particles.
     FL = [(P1, (-k1 * q1 - c1 * u1 + k2 * q2 + c2 * u2) * N.x), (P2, (-k2 *
         q2 - c2 * u2) * N.x)]
-    pa1 = Particle()
-    pa2 = Particle()
-    pa1.mass = m
-    pa2.mass = m
-    pa1.point = P1
-    pa2.point = P2
+    pa1 = Particle('pa1', P1, m)
+    pa2 = Particle('pa2', P2, m)
     BL = [pa1, pa2]
 
     # Finally we create the Kane object, specify the inertial frame, pass
@@ -83,9 +76,7 @@ def test_pend():
     kd = [qd - u]
 
     FL = [(P, m * g * N.x)]
-    pa = Particle()
-    pa.mass = m
-    pa.point = P
+    pa = Particle('pa', P, m)
     BL = [pa]
 
     KM = Kane(N)
@@ -105,7 +96,7 @@ def test_rolling_disc():
     # Here the rolling disc is formed from the contact point up, removing the
     # need to introduce generalized speeds. Only 3 configuration and three
     # speed variables are need to describe this system, along with the disc's
-    # mass and radius, and the local graivty (note that mass will drop out).
+    # mass and radius, and the local gravity (note that mass will drop out).
     q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1 q2 q3 u1 u2 u3')
     q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
     r, m, g = symbols('r m g')
@@ -144,11 +135,7 @@ def test_rolling_disc():
     # mass center attribute, a ReferenceFrame to the frame attribute, and mass
     # and inertia. Then we form the body list.
     ForceList = [(Dmc, - m * g * Y.z)]
-    BodyD = RigidBody()
-    BodyD.mc = Dmc
-    BodyD.inertia = (I, Dmc)
-    BodyD.frame = R
-    BodyD.mass = m
+    BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
     BodyList = [BodyD]
 
     # Finally we form the equations of motion, using the same steps we did
@@ -201,18 +188,13 @@ def test_aux():
     kd = [q1d - u3/cos(q3), q2d - u1, q3d - u2 + u3 * tan(q2)]
 
     ForceList = [(Dmc, - m * g * Y.z), (C, f1 * L.x + f2 * (Y.z ^ L.x))]
-    BodyD = RigidBody()
-    BodyD.mc = Dmc
-    BodyD.inertia = (I, Dmc)
-    BodyD.frame = R
-    BodyD.mass = m
+    BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
     BodyList = [BodyD]
 
     KM = Kane(N)
     KM.coords([q1, q2, q3])
     KM.speeds([u1, u2, u3, u4, u5])
     KM.kindiffeq(kd)
-    kdd = KM.kindiffdict()
     (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
     fr = fr.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})
     frstar = frstar.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})
@@ -227,3 +209,61 @@ def test_aux():
 
     assert fr.expand() == fr2.expand()
     assert frstar.expand() == frstar2.expand()
+
+def test_parallel_axis():
+    # This is for a 2 dof inverted pendulum on a cart.
+    # This tests the parallel axis code in Kane. The inertia of the pendulum is
+    # defined about the hinge, not about the mass center.
+
+    # Defining the constants and knowns of the system
+    gravity        = symbols('g')
+    k, ls          = symbols('k ls')
+    a, mA, mC      = symbols('a mA mC')
+    F              = dynamicsymbols('F')
+    Ix, Iy, Iz     = symbols('Ix Iy Iz')
+
+    # Declaring the Generalized coordinates and speeds
+    q1, q2   = dynamicsymbols('q1 q2')
+    q1d, q2d = dynamicsymbols('q1 q2', 1)
+    u1, u2   = dynamicsymbols('u1 u2')
+    u1d, u2d = dynamicsymbols('u1 u2', 1)
+
+    # Creating reference frames
+    N = ReferenceFrame('N')
+    A = ReferenceFrame('A')
+
+    A.orient(N, 'Axis', [-q2, N.z])
+    A.set_ang_vel(N, -u2 * N.z)
+
+    # Origin of Newtonian reference frame
+    O = Point('O')
+
+    # Creating and Locating the positions of the cart,C, and mass center of the pendulum, A
+    C  = O.locatenew('C',  q1 * N.x)
+    Ao = C.locatenew('Ao', a * A.y)
+
+    # Defining velocities of the points
+    O.set_vel(N, 0)
+    C.set_vel(N, u1 * N.x)
+    Ao.v2pt_theory(C, N, A)
+    Cart     = Particle('Cart', C, mC)
+    Pendulum = RigidBody('Pendulum', Ao, A, mA, (inertia(A, Ix, Iy, Iz), C))
+
+    # kinematical differential equations
+
+    kindiffs  = [q1d - u1, q2d - u2]
+
+    bodyList  = [Cart, Pendulum]
+
+    forceList = [(Ao, -N.y * gravity * mA),
+                 (C,  -N.y * gravity * mC),
+                 (C,  -N.x * k * (q1 - ls)),
+                 (C,   N.x * F)]
+
+    km=Kane(N)
+    km.coords([q1, q2])
+    km.speeds([u1, u2])
+    km.kindiffeq(kindiffs)
+    (fr,frstar) = km.kanes_equations(forceList, bodyList)
+    mm = km.mass_matrix_full
+    assert mm[3, 3] == -Iz

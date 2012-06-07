@@ -73,28 +73,24 @@ Intersection of medians
 -----------------------
 ::
 
-    >>> from sympy import Symbol
+    >>> from sympy import symbols
     >>> from sympy.geometry import Point, Triangle, intersection
 
-    >>> a = Symbol("a")
-    >>> b = Symbol("b")
-    >>> c = Symbol("c")
+    >>> a, b = symbols("a,b", positive=True)
 
-    >>> x = Point(0,0)
-    >>> y = Point(c,0)
-    >>> z = Point(a,b)
-    >>> t = Triangle(x,y,z)
+    >>> x = Point(0, 0)
+    >>> y = Point(a, 0)
+    >>> z = Point(2*a, b)
+    >>> t = Triangle(x, y, z)
 
     >>> t.area
-    b*c/2
+    a*b/2
 
-    >>> t.medians #doctest: +NORMALIZE_WHITESPACE
-    {Point(0, 0): Segment(Point(0, 0), Point(a/2 + c/2, b/2)),
-     Point(a, b): Segment(Point(a, b), Point(c/2, 0)),
-     Point(c, 0): Segment(Point(c, 0), Point(a/2, b/2))}
+    >>> t.medians[x]
+    Segment(Point(0, 0), Point(3*a/2, b/2))
 
     >>> intersection(t.medians[x], t.medians[y], t.medians[z])
-    [Point(a/3 + c/3, b/3)]
+    [Point(a, b/3)]
 
 An in-depth example: Pappus' Theorem
 ------------------------------------
@@ -110,7 +106,7 @@ An in-depth example: Pappus' Theorem
     ...    """Take an arbitrary point and make it a fixed point."""
     ...    t = Symbol('t', real=True)
     ...    ap = l.arbitrary_point()
-    ...    return Point(ap[0].subs(t, val), ap[1].subs(t, val))
+    ...    return Point(ap.x.subs(t, val), ap.y.subs(t, val))
     ...
     >>> p11 = subs_point(l1, 5)
     >>> p12 = subs_point(l1, 6)
@@ -131,7 +127,7 @@ An in-depth example: Pappus' Theorem
     >>> pp2 = intersection(ll2, ll5)[0]
     >>> pp3 = intersection(ll4, ll6)[0]
     >>>
-    >>> print Point.is_collinear(pp1, pp2, pp3)
+    >>> Point.is_collinear(pp1, pp2, pp3)
     True
 
 Miscellaneous Notes
@@ -188,3 +184,85 @@ Geometry Visualization
 The plotting module is capable of plotting geometric entities. See
 `Plotting Geometric Entities <https://github.com/sympy/sympy/wiki/Plotting-Module>`_ in
 the plotting module entry.
+
+API Reference
+-------------
+
+Entities
+~~~~~~~~
+
+.. module:: sympy.geometry.entity
+
+.. autoclass:: sympy.geometry.entity.GeometryEntity
+   :members:
+
+Utils
+~~~~~
+
+.. module:: sympy.geometry.util
+
+.. autofunction:: intersection
+
+.. autofunction:: convex_hull
+
+.. autofunction:: are_similar
+
+.. autofunction:: centroid
+
+Points
+~~~~~~
+
+.. module:: sympy.geometry.point
+
+.. autoclass:: Point
+   :members:
+
+Lines
+~~~~~
+
+.. module:: sympy.geometry.line
+
+.. autoclass:: LinearEntity
+   :members:
+
+.. autoclass:: Line
+   :members:
+
+.. autoclass:: Ray
+   :members:
+
+.. autoclass:: Segment
+   :members:
+
+Curves
+~~~~~~
+
+.. module:: sympy.geometry.curve
+
+.. autoclass:: Curve
+   :members:
+
+Ellipses
+~~~~~~~~
+
+.. module:: sympy.geometry.ellipse
+
+.. autoclass:: Ellipse
+   :members:
+
+.. autoclass:: Circle
+   :members:
+
+Polygons
+~~~~~~~~
+
+.. module:: sympy.geometry.polygon
+
+.. autoclass:: Polygon
+   :members:
+
+.. autoclass:: RegularPolygon
+   :members:
+
+.. autoclass:: Triangle
+   :members:

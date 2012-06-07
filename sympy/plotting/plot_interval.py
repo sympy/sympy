@@ -8,7 +8,8 @@ class PlotInterval(object):
     def require_all_args(f):
         def check(self, *args, **kwargs):
             for g in [self._v, self._v_min, self._v_max, self._v_steps]:
-                if g is None: raise ValueError("PlotInterval is incomplete.")
+                if g is None:
+                    raise ValueError("PlotInterval is incomplete.")
             return f(self, *args, **kwargs)
         return check
 
@@ -20,7 +21,7 @@ class PlotInterval(object):
             elif isinstance(args[0], str):
                 try:
                     args = eval(args[0])
-                except:
+                except TypeError:
                     s_eval_error = "Could not interpret string %s."
                     raise ValueError(s_eval_error % (args[0]))
             elif isinstance(args[0], (tuple, list)):
@@ -34,7 +35,7 @@ class PlotInterval(object):
         args = list(args)
         if len(args) > 0 and (args[0] is None or isinstance(args[0], Symbol)):
             self.v = args.pop(0)
-        if len(args) in [2,3]:
+        if len(args) in [2, 3]:
             self.v_min = args.pop(0)
             self.v_max = args.pop(0)
             if len(args) == 1:
@@ -42,7 +43,9 @@ class PlotInterval(object):
         elif len(args) == 1:
             self.v_steps = args.pop(0)
 
-    def get_v(self): return self._v
+    def get_v(self):
+        return self._v
+
     def set_v(self, v):
         if v is None:
             self._v = None
@@ -51,7 +54,8 @@ class PlotInterval(object):
             raise ValueError("v must be a sympy Symbol.")
         self._v = v
 
-    def get_v_min(self): return self._v_min
+    def get_v_min(self):
+        return self._v_min
     def set_v_min(self, v_min):
         if v_min is None:
             self._v_min = None
@@ -59,10 +63,11 @@ class PlotInterval(object):
         try:
             self._v_min = sympify(v_min)
             float(self._v_min.evalf())
-        except:
+        except TypeError:
             raise ValueError("v_min could not be interpreted as a number.")
 
-    def get_v_max(self): return self._v_max
+    def get_v_max(self):
+        return self._v_max
     def set_v_max(self, v_max):
         if v_max is None:
             self._v_max = None
@@ -70,10 +75,12 @@ class PlotInterval(object):
         try:
             self._v_max = sympify(v_max)
             float(self._v_max.evalf())
-        except:
+        except TypeError:
             raise ValueError("v_max could not be interpreted as a number.")
 
-    def get_v_steps(self): return self._v_steps
+    def get_v_steps(self):
+        return self._v_steps
+
     def set_v_steps(self, v_steps):
         if v_steps is None:
             self._v_steps = None
@@ -88,7 +95,7 @@ class PlotInterval(object):
 
     @require_all_args
     def get_v_len(self):
-        return self.v_steps+1
+        return self.v_steps + 1
 
     v = property(get_v, set_v)
     v_min = property(get_v_min, set_v_min)
@@ -97,10 +104,14 @@ class PlotInterval(object):
     v_len = property(get_v_len)
 
     def fill_from(self, b):
-        if b.v is not None: self.v = b.v
-        if b.v_min is not None: self.v_min = b.v_min
-        if b.v_max is not None: self.v_max = b.v_max
-        if b.v_steps is not None: self.v_steps = b.v_steps
+        if b.v is not None:
+            self.v = b.v
+        if b.v_min is not None:
+            self.v_min = b.v_min
+        if b.v_max is not None:
+            self.v_max = b.v_max
+        if b.v_steps is not None:
+            self.v_steps = b.v_steps
 
     @staticmethod
     def try_parse(*args):
@@ -112,12 +123,12 @@ class PlotInterval(object):
             return args[0]
         try:
             return PlotInterval(*args)
-        except:
+        except ValueError:
             return None
 
     def _str_base(self):
-        return ",".join([str(self.v),str(self.v_min),
-                         str(self.v_max),str(self.v_steps)])
+        return ",".join([str(self.v), str(self.v_min),
+                         str(self.v_max), str(self.v_steps)])
 
     def __repr__(self):
         """

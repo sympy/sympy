@@ -4,16 +4,18 @@
 # -Implement new simpifications
 """Clebsch-Gordon Coefficients."""
 
-from sympy import Add, expand, Eq, Expr, Function, Mul, Piecewise, Pow, sqrt, Sum, symbols, sympify, Wild
+from sympy import (Add, expand, Eq, Expr, Mul, Piecewise, Pow, sqrt, Sum,
+                   symbols, sympify, Wild)
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
-from sympy.physics.quantum.kronecker import KroneckerDelta
-from sympy.physics.wigner import wigner_3j, clebsch_gordan
-
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.physics.wigner import clebsch_gordan, wigner_3j, wigner_6j, wigner_9j
 
 __all__ = [
-    'Wigner3j',
     'CG',
+    'Wigner3j',
+    'Wigner6j',
+    'Wigner9j',
     'cg_simp'
 ]
 
@@ -26,7 +28,8 @@ class Wigner3j(Expr):
 
     Wigner 3j-symbols are coefficients determined by the coupling of
     two angular momenta. When created, they are expressed as symbolic
-    quantities that can be evaluated using the doit() method.
+    quantities that, for numerical parameters, can be evaluated using the
+    ``.doit()`` method [1]_.
 
     Parameters
     ==========
@@ -43,19 +46,23 @@ class Wigner3j(Expr):
         >>> from sympy.physics.quantum.cg import Wigner3j
         >>> w3j = Wigner3j(6,0,4,0,2,0)
         >>> w3j
-        (6, 4, 2)
-        (0, 0, 0)
+        Wigner3j(6, 0, 4, 0, 2, 0)
         >>> w3j.doit()
         sqrt(715)/143
+
+    See Also
+    ========
+
+    CG: Clebsch-Gordan coefficients
 
     References
     ==========
 
-    [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
+    .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
     def __new__(cls, j1, m1, j2, m2, j3, m3):
-        j1,m1,j2,m2,j3,m3 = map(sympify, (j1,m1,j2,m2,j3,m3))
-        return Expr.__new__(cls, j1, m1, j2, m2, j3, m3)
+        args = map(sympify, (j1,m1,j2,m2,j3,m3))
+        return Expr.__new__(cls, *args)
 
     @property
     def j1(self):
@@ -83,21 +90,7 @@ class Wigner3j(Expr):
 
     @property
     def is_symbolic(self):
-        return not (self.j1.is_number and self.j2.is_number and self.j3.is_number and
-            self.m1.is_number and self.m2.is_number and self.m3.is_number)
-
-    # This is modified from the _print_Matrix method
-    def _sympystr(self, printer, *args):
-        res = [[printer._print(self.j1), printer._print(self.j2), printer._print(self.j3)], \
-            [printer._print(self.m1), printer._print(self.m2), printer._print(self.m3)]]
-        maxw = [-1] * 3
-        for j in range(3):
-            maxw[j] = max([ len(res[i][j]) for i in range(2) ])
-        for i, row in enumerate(res):
-            for j, elem in enumerate(row):
-                row[j] = elem.rjust(maxw[j])
-            res[i] = "(" + ", ".join(row) + ")"
-        return '\n'.join(res)
+        return not all([arg.is_number for arg in self.args])
 
     # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
@@ -136,9 +129,9 @@ class Wigner3j(Expr):
         return D
 
     def _latex(self, printer, *args):
+        label = map(printer._print, (self.j1, self.j2, self.j3, self.m1, self.m2, self.m3))
         return r'\left(\begin{array}{ccc} %s & %s & %s \\ %s & %s & %s \end{array}\right)' % \
-            (printer._print(self.j1), printer._print(self.j2), printer._print(self.j3), \
-            printer._print(self.m1), printer._print(self.m2), printer._print(self.m3))
+                tuple(label)
 
     def doit(self, **hints):
         if self.is_symbolic:
@@ -152,8 +145,10 @@ class CG(Wigner3j):
     Clebsch-Gordan coefficients describe the angular momentum coupling between
     two systems. The coefficients give the expansion of a coupled total angular
     momentum state and an uncoupled tensor product state. The Clebsch-Gordan
-    coefficients are defined as:
-    CG(j1,m1,j2,m2,j3,m3) = <j1,m1; j2,m2 | j3,m3>
+    coefficients are defined as [1]_:
+
+    .. math ::
+        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \langle j_1,m_1;j_2,m_2 | j_3,m_3\\rangle
 
     Parameters
     ==========
@@ -175,10 +170,15 @@ class CG(Wigner3j):
         >>> cg.doit()
         sqrt(3)/2
 
+    See Also
+    ========
+
+    Wigner3j: Wigner-3j symbols
+
     References
     ==========
 
-    [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
+    .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
 
     def doit(self, **hints):
@@ -186,27 +186,14 @@ class CG(Wigner3j):
             raise ValueError("Coefficients must be numerical")
         return clebsch_gordan(self.j1,self.j2, self.j3, self.m1, self.m2, self.m3)
 
-    def _sympystr(self, printer, *args):
-        return 'CG(%s, %s, %s, %s, %s, %s)' % \
-            (printer._print(self.j1), printer._print(self.m1), printer._print(self.j2), \
-            printer._print(self.m2), printer._print(self.j3), printer._print(self.m3))
-
     def _pretty(self, printer, *args):
-        bot = printer._print(self.j1)
-        bot = prettyForm(*bot.right(','))
-        bot = prettyForm(*bot.right(printer._print(self.m1)))
-        bot = prettyForm(*bot.right(','))
-        bot = prettyForm(*bot.right(printer._print(self.j2)))
-        bot = prettyForm(*bot.right(','))
-        bot = prettyForm(*bot.right(printer._print(self.m2)))
-        top = printer._print(self.j3)
-        top = prettyForm(*top.right(','))
-        top = prettyForm(*top.right(printer._print(self.m3)))
+        bot = printer._print_seq((self.j1, self.m1, self.j2, self.m2), delimiter=',')
+        top = printer._print_seq((self.j3, self.m3), delimiter=',')
 
         pad = max(top.width(), bot.width())
-
         bot = prettyForm(*bot.left(' '))
         top = prettyForm(*top.left(' '))
+
         if not pad == bot.width():
             bot = prettyForm(*bot.right(' ' * (pad-bot.width())))
         if not pad == top.width():
@@ -217,10 +204,197 @@ class CG(Wigner3j):
         return s
 
     def _latex(self, printer, *args):
-        return r'C^{%s,%s}_{%s,%s,%s,%s}' % \
-            (printer._print(self.j3), printer._print(self.m3),
-            printer._print(self.j1), printer._print(self.m1),
-            printer._print(self.j2), printer._print(self.m2))
+        label = map(printer._print, (self.j3, self.m3, self.j1, self.m1, self.j2, self.m2))
+        return r'C^{%s,%s}_{%s,%s,%s,%s}' % tuple(label)
+
+
+class Wigner6j(Expr):
+    """Class for the Wigner-6j symbols
+
+    See Also
+    ========
+
+    Wigner3j: Wigner-3j symbols
+
+    """
+    def __new__(cls, j1, j2, j12, j3, j, j23):
+        args = map(sympify, (j1,j2,j12,j3,j,j23))
+        return Expr.__new__(cls, *args)
+
+    @property
+    def j1(self):
+        return self.args[0]
+
+    @property
+    def j2(self):
+        return self.args[1]
+
+    @property
+    def j12(self):
+        return self.args[2]
+
+    @property
+    def j3(self):
+        return self.args[3]
+
+    @property
+    def j(self):
+        return self.args[4]
+
+    @property
+    def j23(self):
+        return self.args[5]
+
+    @property
+    def is_symbolic(self):
+        return not all([arg.is_number for arg in self.args])
+
+    # This is modified from the _print_Matrix method
+    def _pretty(self, printer, *args):
+        m = ((printer._print(self.j1), printer._print(self.j3)), \
+            (printer._print(self.j2), printer._print(self.j)), \
+            (printer._print(self.j12), printer._print(self.j23)))
+        hsep = 2
+        vsep = 1
+        maxw = [-1] * 3
+        for j in range(3):
+            maxw[j] = max([ m[j][i].width() for i in range(2) ])
+        D = None
+        for i in range(2):
+            D_row = None
+            for j in range(3):
+                s = m[j][i]
+                wdelta = maxw[j] - s.width()
+                wleft  = wdelta //2
+                wright = wdelta - wleft
+
+                s = prettyForm(*s.right(' '*wright))
+                s = prettyForm(*s.left(' '*wleft))
+
+                if D_row is None:
+                    D_row = s
+                    continue
+                D_row = prettyForm(*D_row.right(' '*hsep))
+                D_row = prettyForm(*D_row.right(s))
+            if D is None:
+                D = D_row
+                continue
+            for _ in range(vsep):
+                D = prettyForm(*D.below(' '))
+            D = prettyForm(*D.below(D_row))
+        D = prettyForm(*D.parens(left='{', right='}'))
+        return D
+
+    def _latex(self, printer, *args):
+        label = map(printer._print, (self.j1, self.j2, self.j12, self.j3, self.j, self.j23))
+        return r'\left\{\begin{array}{ccc} %s & %s & %s \\ %s & %s & %s \end{array}\right\}' % \
+                tuple(label)
+
+    def doit(self, **hints):
+        if self.is_symbolic:
+            raise ValueError("Coefficients must be numerical")
+        return wigner_6j(self.j1, self.j2, self.j12, self.j3, self.j, self.j3)
+
+
+class Wigner9j(Expr):
+    """Class for the Wigner-9j symbols
+
+    See Also
+    ========
+
+    Wigner3j: Wigner-3j symbols
+
+    """
+    def __new__(cls, j1, j2, j12, j3, j4, j34, j13, j24, j):
+        args = map(sympify, (j1,j2, j12, j3, j4, j34, j13, j24, j))
+        return Expr.__new__(cls, *args)
+
+    @property
+    def j1(self):
+        return self.args[0]
+
+    @property
+    def j2(self):
+        return self.args[1]
+
+    @property
+    def j12(self):
+        return self.args[2]
+
+    @property
+    def j3(self):
+        return self.args[3]
+
+    @property
+    def j4(self):
+        return self.args[4]
+
+    @property
+    def j34(self):
+        return self.args[5]
+
+    @property
+    def j13(self):
+        return self.args[6]
+
+    @property
+    def j24(self):
+        return self.args[7]
+
+    @property
+    def j(self):
+        return self.args[8]
+
+    @property
+    def is_symbolic(self):
+        return not all([arg.is_number for arg in self.args])
+
+    # This is modified from the _print_Matrix method
+    def _pretty(self, printer, *args):
+        m = ((printer._print(self.j1), printer._print(self.j3), printer._print(self.j13)), \
+            (printer._print(self.j2), printer._print(self.j4), printer._print(self.j24)), \
+            (printer._print(self.j12), printer._print(self.j34), printer._print(self.j)))
+        hsep = 2
+        vsep = 1
+        maxw = [-1] * 3
+        for j in range(3):
+            maxw[j] = max([ m[j][i].width() for i in range(3) ])
+        D = None
+        for i in range(3):
+            D_row = None
+            for j in range(3):
+                s = m[j][i]
+                wdelta = maxw[j] - s.width()
+                wleft  = wdelta //2
+                wright = wdelta - wleft
+
+                s = prettyForm(*s.right(' '*wright))
+                s = prettyForm(*s.left(' '*wleft))
+
+                if D_row is None:
+                    D_row = s
+                    continue
+                D_row = prettyForm(*D_row.right(' '*hsep))
+                D_row = prettyForm(*D_row.right(s))
+            if D is None:
+                D = D_row
+                continue
+            for _ in range(vsep):
+                D = prettyForm(*D.below(' '))
+            D = prettyForm(*D.below(D_row))
+        D = prettyForm(*D.parens(left='{', right='}'))
+        return D
+
+    def _latex(self, printer, *args):
+        label = map(printer._print, (self.j1, self.j2, self.j12, self.j3,
+                self.j4, self.j34, self.j13, self.j24, self.j))
+        return r'\left\{\begin{array}{ccc} %s & %s & %s \\ %s & %s & %s \\ %s & %s & %s \end{array}\right\}' % \
+                tuple(label)
+
+    def doit(self, **hints):
+        if self.is_symbolic:
+            raise ValueError("Coefficients must be numerical")
+        return wigner_9j(self.j1, self.j2, self.j12, self.j3, self.j4, self.j34, self.j13, self.j24, self.j)
 
 
 def cg_simp(e):
@@ -228,7 +402,7 @@ def cg_simp(e):
 
     This function uses various symmetry and properties of sums and
     products of Clebsch-Gordan coefficients to simplify statements
-    involving these terms
+    involving these terms [1]_.
 
     Examples
     ========
@@ -243,10 +417,15 @@ def cg_simp(e):
         >>> cg_simp(a+b+c)
         3
 
+    See Also
+    ========
+
+    CG: Clebsh-Gordan coefficients
+
     References
     ==========
 
-    [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
+    .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
     if isinstance(e, Add):
         return _cg_simp_add(e)
@@ -446,7 +625,7 @@ def _check_cg(cg_term, expr, length, sign=None):
     matches = cg_term.match(expr)
     if matches is None:
         return
-    if not sign is None:
+    if sign is not None:
         if not isinstance(sign, tuple):
             raise TypeError('sign must be a tuple')
         if not sign[0] == (sign[1]).subs(matches):
@@ -465,7 +644,7 @@ def _check_varsh_sum_871_1(e):
     alpha = symbols('alpha')
     b = Wild('b')
     match = e.match(Sum(CG(a,alpha,b,0,a,alpha),(alpha,-a,a)))
-    if not match is None and len(match) == 2:
+    if match is not None and len(match) == 2:
         return ((2*a+1)*KroneckerDelta(b,0)).subs(match)
     return e
 
@@ -474,7 +653,7 @@ def _check_varsh_sum_871_2(e):
     alpha = symbols('alpha')
     c = Wild('c')
     match = e.match(Sum((-1)**(a-alpha)*CG(a,alpha,a,-alpha,c,0),(alpha,-a,a)))
-    if not match is None and len(match) == 2:
+    if match is not None and len(match) == 2:
         return (sqrt(2*a+1)*KroneckerDelta(c,0)).subs(match)
     return e
 
@@ -488,10 +667,10 @@ def _check_varsh_sum_872_4(e):
     gamma = Wild('gamma')
     gammap = Wild('gammap')
     match1 = e.match(Sum(CG(a,alpha,b,beta,c,gamma)*CG(a,alpha,b,beta,cp,gammap),(alpha,-a,a),(beta,-b,b)))
-    if not match1 is None and len(match1) == 8:
+    if match1 is not None and len(match1) == 8:
         return (KroneckerDelta(c,cp)*KroneckerDelta(gamma,gammap)).subs(match1)
     match2 = e.match(Sum(CG(a,alpha,b,beta,c,gamma)**2,(alpha,-a,a),(beta,-b,b)))
-    if not match2 is None and len(match2) == 6:
+    if match2 is not None and len(match2) == 6:
         return 1
     return e
 

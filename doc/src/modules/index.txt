@@ -17,29 +17,35 @@ access any SymPy module, or use this contens:
    :maxdepth: 2
 
    core.txt
+   combinatorics/index.txt
+   ntheory.txt
    concrete.txt
    evalf.txt
-   functions.txt
+   functions/index.txt
    geometry.txt
+   galgebra/index.txt
    galgebra/GA/GAsympy.txt
    galgebra/latex_ex/latex_ex.txt
-   integrals.txt
+   integrals/integrals.txt
    logic.txt
    matrices.txt
    mpmath/index.txt
    polys/index.txt
    printing.txt
    plotting.txt
-   assumptions.txt
+   assumptions/index.txt
    rewriting.txt
    series.txt
+   sets.txt
    simplify/simplify.txt
    simplify/hyperexpand.txt
    statistics.txt
+   stats.txt
    solvers/ode.txt
    solvers/solvers.txt
-   tensor.txt
+   tensor/index.txt
    utilities/index.txt
+   parsing.txt
    physics/index.txt
 
 Contributions to docs

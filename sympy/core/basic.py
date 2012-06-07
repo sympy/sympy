@@ -1,7 +1,6 @@
 """Base class for all the objects in SymPy"""
 
-from decorators import _sympifyit
-from assumptions import WithAssumptions
+from assumptions import ManagedProperties
 from cache import cacheit
 from core import BasicType, C
 from sympify import _sympify, sympify, SympifyError
@@ -15,37 +14,34 @@ class Basic(object):
 
     Conventions:
 
-    1)
-    When you want to access parameters of some instance, always use .args:
-    Example:
+    1) Always use ``.args``, when accessing parameters of some instance:
 
-    >>> from sympy import symbols, cot
-    >>> from sympy.abc import x, y
+        >>> from sympy import symbols, cot
+        >>> from sympy.abc import x, y
 
-    >>> cot(x).args
-    (x,)
+        >>> cot(x).args
+        (x,)
 
-    >>> cot(x).args[0]
-    x
+        >>> cot(x).args[0]
+        x
 
-    >>> (x*y).args
-    (x, y)
+        >>> (x*y).args
+        (x, y)
 
-    >>> (x*y).args[1]
-    y
+        >>> (x*y).args[1]
+        y
 
 
-    2) Never use internal methods or variables (the ones prefixed with "_").
-    Example:
+    2) Never use internal methods or variables (the ones prefixed with ``_``):
 
-    >>> cot(x)._args    #don't use this, use cot(x).args instead
-    (x,)
-
+        >>> cot(x)._args    # do not use this, use cot(x).args instead
+        (x,)
 
     """
-    __metaclass__ = WithAssumptions
+    __metaclass__ = ManagedProperties
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
+                 '_assumptions'
                 ]
 
     # To be overridden with True in the appropriate subclasses
@@ -81,44 +77,37 @@ class Basic(object):
         # from test_pickling.py
         return self.is_Float
 
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args):
         obj = object.__new__(cls)
-        obj._init_assumptions(assumptions)
-
+        obj._assumptions  = cls.default_assumptions
         obj._mhash = None # will be set by __hash__ method.
+
         obj._args = args  # all items in args must be Basic objects
         return obj
 
 
+    def __reduce_ex__(self, proto):
+        """ Pickling support."""
+        return type(self), self.__getnewargs__(), self.__getstate__()
+
     def __getnewargs__(self):
-        """ Pickling support.
-        """
-        return tuple(self.args)
+        return self.args
+
+    def __getstate__(self):
+        return {}
+
+    def __setstate__(self, state):
+        for k, v in state.iteritems():
+            setattr(self, k, v)
 
     def __hash__(self):
         # hash cannot be cached using cache_it because infinite recurrence
         # occurs as hash is needed for setting cache dictionary keys
         h = self._mhash
         if h is None:
-            h = (type(self).__name__,) + self._hashable_content()
-
-            if self._assume_type_keys is not None:
-                a = []
-                kv= self._assumptions
-                for k in sorted(self._assume_type_keys):
-                    a.append( (k, kv[k]) )
-
-                h = hash( h + tuple(a) )
-
-            else:
-                h = hash( h )
-
-
+            h = hash((type(self).__name__,) + self._hashable_content())
             self._mhash = h
-            return h
-
-        else:
-            return h
+        return h
 
     def _hashable_content(self):
         # If class defines additional attributes, like name in Symbol,
@@ -126,40 +115,45 @@ class Basic(object):
         # relevant attributes as tuple.
         return self._args
 
-    def __getstate__(self, cls=None):
-        if cls is None:
-            # This is the case for the instance that gets pickled
-            cls = self.__class__
+    @property
+    def assumptions0(self):
+        """
+        Return object `type` assumptions.
 
-        d = {}
-        # Get all data that should be stored from super classes
-        for c in cls.__bases__:
-            if hasattr(c, "__getstate__"):
-                d.update(c.__getstate__(self, c))
+        For example:
 
-        # Get all information that should be stored from cls and return the dic
-        for name in cls.__slots__:
-            if hasattr(self, name):
-                d[name] = getattr(self, name)
-        return d
+          Symbol('x', real=True)
+          Symbol('x', integer=True)
 
-    def __setstate__(self, d):
-        # All values that were pickled are now assigned to a fresh instance
-        for name, value in d.iteritems():
-            try:
-                setattr(self, name, value)
-            except:
-                pass
+        are different objects. In other words, besides Python type (Symbol in
+        this case), the initial assumptions are also forming their typeinfo.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol
+        >>> from sympy.abc import x
+        >>> x.assumptions0
+        {'commutative': True}
+        >>> x = Symbol("x", positive=True)
+        >>> x.assumptions0
+        {'commutative': True, 'complex': True, 'imaginary': False,
+        'negative': False, 'nonnegative': True, 'nonpositive': False,
+        'nonzero': True, 'positive': True, 'real': True, 'zero': False}
+
+        """
+        return {}
 
     def compare(self, other):
         """
-        Return -1,0,1 if the object is smaller, equal, or greater than other.
+        Return -1, 0, 1 if the object is smaller, equal, or greater than other.
 
         Not in the mathematical sense. If the object is of a different type
         from the "other" then their classes are ordered according to
         the sorted_classes list.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x, y
         >>> x.compare(y)
@@ -172,20 +166,26 @@ class Basic(object):
         """
         # all redefinitions of __cmp__ method should start with the
         # following three lines:
-        if self is other: return 0
+        if self is other:
+            return 0
         c = cmp(self.__class__, other.__class__)
-        if c: return c
+        if c:
+            return c
         #
         st = self._hashable_content()
         ot = other._hashable_content()
-        c = cmp(len(st),len(ot))
-        if c: return c
-        for l,r in zip(st,ot):
+        c = cmp(len(st), len(ot))
+        if c:
+            return c
+        for l, r in zip(st, ot):
             if isinstance(l, Basic):
                 c = l.compare(r)
+            elif isinstance(l, frozenset):
+                c = 0
             else:
                 c = cmp(l, r)
-            if c: return c
+            if c:
+                return c
         return 0
 
     @staticmethod
@@ -228,12 +228,13 @@ class Basic(object):
         Strategy:
 
         It uses Basic.compare as a fallback, but improves it in many cases,
-        like x**3, x**4, O(x**3) etc. In those simple cases, it just parses the
+        like ``x**3``, ``x**4``, ``O(x**3)`` etc. In those simple cases, it just parses the
         expression and returns the "sane" ordering such as::
 
           1 < x < x**2 < x**3 < O(x**4) etc.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import Basic, Number
@@ -280,7 +281,8 @@ class Basic(object):
         This is a convenience function that allows one to create objects from
         any iterable, without having to convert to a list or tuple first.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Tuple
         >>> Tuple.fromiter(i for i in xrange(5))
@@ -299,7 +301,8 @@ class Basic(object):
         """
         Return a sort key.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy.core import Basic, S, I
         >>> from sympy.abc import x
@@ -335,6 +338,11 @@ class Basic(object):
         """
 
         if type(self) is not type(other):
+            # issue 3001 a**1.0 == a like a**2.0 == a**2
+            while isinstance(self, C.Pow) and self.exp == 1:
+                self = self.base
+            while isinstance(other, C.Pow) and other.exp == 1:
+                other = other.base
             try:
                 other = _sympify(other)
             except SympifyError:
@@ -343,11 +351,8 @@ class Basic(object):
             if type(self) is not type(other):
                 return False
 
-        # type(self) == type(other)
-        st = self._hashable_content()
-        ot = other._hashable_content()
+        return self._hashable_content() == other._hashable_content()
 
-        return st == ot and self._assume_type_keys == other._assume_type_keys
 
     def __ne__(self, other):
         """a != b  -> Compare two symbolic trees and see whether they are different
@@ -368,17 +373,14 @@ class Basic(object):
             if type(self) is not type(other):
                 return True
 
-        # type(self) == type(other)
-        st = self._hashable_content()
-        ot = other._hashable_content()
-
-        return (st != ot) or self._assume_type_keys != other._assume_type_keys
+        return self._hashable_content() != other._hashable_content()
 
     def dummy_eq(self, other, symbol=None):
         """
         Compare two expressions and handle dummy symbols.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy import Dummy
         >>> from sympy.abc import x, y
@@ -437,7 +439,8 @@ class Basic(object):
            and number symbols like I and pi. It is possible to request
            atoms of any type, however, as demonstrated below.
 
-           Examples:
+           Examples
+           ========
 
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
@@ -447,7 +450,8 @@ class Basic(object):
            If one or more types are given, the results will contain only
            those types of atoms.
 
-           Examples:
+           Examples
+           ========
 
            >>> from sympy import Number, NumberSymbol, Symbol
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
@@ -488,8 +492,12 @@ class Basic(object):
            expression recursively:
 
            >>> from sympy import Function, Mul
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(Function)
-           set([sin(y + I*pi)])
+           >>> from sympy.core.function import AppliedUndef
+           >>> f = Function('f')
+           >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(Function)
+           set([f(x), sin(y + I*pi)])
+           >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(AppliedUndef)
+           set([f(x)])
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Mul)
            set([I*pi, 2*sin(y + I*pi)])
@@ -573,6 +581,24 @@ class Basic(object):
         return False
 
     @property
+    def is_comparable(self):
+        is_real = self.is_real
+        if is_real is False:
+            return False
+        is_number = self.is_number
+        if is_number is False:
+            return False
+        if is_real and is_number:
+            return True
+        n, i = self.evalf(2).as_real_imag()
+        if not i.is_Number or not n.is_Number:
+            return False
+        if i:
+            if i._prec != 1:
+                return False
+        return n._prec != 1
+
+    @property
     def func(self):
         """
         The top-level function in an expression.
@@ -581,7 +607,8 @@ class Basic(object):
 
             >> x == x.func(*x.args)
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> a = 2*x
@@ -601,7 +628,8 @@ class Basic(object):
     def args(self):
         """Returns a tuple of arguments of 'self'.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import symbols, cot
         >>> from sympy.abc import x, y
@@ -618,11 +646,13 @@ class Basic(object):
         >>> (x*y).args[1]
         y
 
-        ** Developer Notes **
-            Never use self._args, always use self.args.
-            Only use _args in __new__ when creating a new function.
-            Don't override .args() from Basic (so that it's easy to
-            change the interface in the future if needed).
+        Notes
+        =====
+
+        Never use self._args, always use self.args.
+        Only use _args in __new__ when creating a new function.
+        Don't override .args() from Basic (so that it's easy to
+        change the interface in the future if needed).
         """
         return self._args
 
@@ -630,7 +660,8 @@ class Basic(object):
         """
         Iterates arguments of 'self'.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> a = 2*x
@@ -670,7 +701,7 @@ class Basic(object):
         except PolynomialError:
             return None
 
-    def as_content_primitive(self):
+    def as_content_primitive(self, radical=False):
         """A stub to allow Basic args (like Tuple) to be skipped when computing
         the content and primitive components of an expression.
 
@@ -678,122 +709,335 @@ class Basic(object):
         """
         return S.One, self
 
-    def subs(self, *args):
+    def subs(self, *args, **kwargs):
         """
-        Substitutes an expression.
+        Substitutes old for new in an expression after sympifying args.
 
-        Calls either _subs_old_new, _subs_dict or _subs_list depending
-        if you give it two arguments (old, new), a dictionary or a list.
+        `args` is either:
+          - two arguments, e.g. foo.subs(old, new)
+          - one iterable argument, e.g. foo.subs(iterable). The iterable may be
+             o an iterable container with (old, new) pairs. In this case the
+               replacements are processed in the order given with successive
+               patterns possibly affecting replacements already made.
+             o a dict or set whose key/value items correspond to old/new pairs.
+               In this case the old/new pairs will be sorted by op count and in
+               case of a tie, by number of args and the default_sort_key. The
+               resulting sorted list is then processed as an iterable container
+               (see previous).
 
-        Examples:
+        If the keyword ``simultaneous`` is True, the subexpressions will not be
+        evaluated until all the substitutions have been made.
 
-        >>> from sympy import pi
+        Examples
+        ========
+
+        >>> from sympy import pi, exp
         >>> from sympy.abc import x, y
         >>> (1 + x*y).subs(x, pi)
         pi*y + 1
         >>> (1 + x*y).subs({x:pi, y:2})
         1 + 2*pi
-        >>> (1 + x*y).subs([(x,pi), (y,2)])
+        >>> (1 + x*y).subs([(x, pi), (y, 2)])
         1 + 2*pi
-
-        >>> (x + y).subs([(y,x**2), (x,2)])
+        >>> reps = [(y, x**2), (x, 2)]
+        >>> (x + y).subs(reps)
         6
-        >>> (x + y).subs([(x,2), (y,x**2)])
+        >>> (x + y).subs(reversed(reps))
         x**2 + 2
+
+        >>> (x**2 + x**4).subs(x**2, y)
+        y**2 + y
+
+        To replace only the x**2 but not the x**4, use xreplace:
+
+        >>> (x**2 + x**4).xreplace({x**2: y})
+        x**4 + y
+
+        To delay evaluation until all substitutions have been made,
+        set the keyword ``simultaneous`` to True:
+
+        >>> (x/y).subs([(x, 0), (y, 0)])
+        0
+        >>> (x/y).subs([(x, 0), (y, 0)], simultaneous=True)
+        nan
+
+        This has the added feature of not allowing subsequent substitutions
+        to affect those already made:
+
+        >>> ((x + y)/y).subs({x + y: y, y: x + y})
+        1
+        >>> ((x + y)/y).subs({x + y: y, y: x + y}, simultaneous=True)
+        y/(x + y)
+
+        In order to obtain a canonical result, unordered iterables are
+        sorted by count_op length, number of arguments and by the
+        default_sort_key to break any ties. All other iterables are left
+        unsorted.
+
+        >>> from sympy import sqrt, sin, cos, exp
+        >>> from sympy.abc import a, b, c, d, e
+
+        >>> A = (sqrt(sin(2*x)), a)
+        >>> B = (sin(2*x), b)
+        >>> C = (cos(2*x), c)
+        >>> D = (x, d)
+        >>> E = (exp(x), e)
+
+        >>> expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
+
+        >>> expr.subs(dict([A,B,C,D,E]))
+        a*c*sin(d*e) + b
+
+        See Also
+        ========
+        replace: replacement capable of doing wildcard-like matching,
+                 parsing of match, and conditional replacements
+        xreplace: exact node replacement in expr tree; also capable of
+                  using matching rules
+
         """
+        from sympy.core.containers import Dict
+        from sympy.utilities import default_sort_key
+
+        unordered = False
         if len(args) == 1:
             sequence = args[0]
-            if isinstance(sequence, dict):
-                return self._subs_dict(sequence)
-            elif iterable(sequence):
-                return self._subs_list(sequence)
-            else:
-                raise TypeError("Not an iterable container")
+            if isinstance(sequence, set):
+                unordered = True
+            elif isinstance(sequence, (Dict, dict)):
+                unordered = True
+                sequence = sequence.items()
+            elif not iterable(sequence):
+                from sympy.utilities.misc import filldedent
+                raise ValueError(filldedent("""
+                   When a single argument is passed to subs
+                   it should be an iterable of (old, new) tuples."""))
         elif len(args) == 2:
-            old, new = args
-            return self._subs_old_new(old, new)
+            sequence = [args]
         else:
-            raise TypeError("subs accepts either 1 or 2 arguments")
+            raise ValueError("subs accepts either 1 or 2 arguments")
+
+        sequence = list(sequence)
+        for i in range(len(sequence)):
+            o, n = sequence[i]
+            so, sn = sympify(o), sympify(n)
+            if not isinstance(so, Basic):
+                if type(o) is str:
+                    so = C.Symbol(o)
+            sequence[i] = (so, sn)
+            if _aresame(so, sn):
+                sequence[i] = None
+                continue
+        sequence = filter(None, sequence)
+
+        if unordered:
+            sequence = dict(sequence)
+            if not all(k.is_Atom for k in sequence):
+                d = {}
+                for o, n in sequence.iteritems():
+                    try:
+                        ops = o.count_ops(), len(o.args)
+                    except TypeError:
+                        ops = (0, 0)
+                    d.setdefault(ops, []).append((o, n))
+                newseq = []
+                for k in sorted(d.keys(), reverse=True):
+                    newseq.extend(sorted([v[0] for v in d[k]], key=default_sort_key))
+                sequence = [(k, sequence[k]) for k in newseq]
+                del newseq, d
+            else:
+                sequence = sorted([(k, v) for (k, v) in sequence.iteritems()],
+                                  key=default_sort_key)
+
+        if kwargs.pop('simultaneous', False): # XXX should this be the default for dict subs?
+            reps = {}
+            rv = self
+            for old, new in sequence:
+                d = C.Dummy()
+                rv = rv._subs(old, d)
+                reps[d] = new
+                if not isinstance(rv, Basic):
+                    break
+            return rv.xreplace(reps)
+        else:
+            rv = self
+            for old, new in sequence:
+                rv = rv._subs(old, new)
+                if not isinstance(rv, Basic):
+                    break
+            return rv
 
     @cacheit
-    def _subs_old_new(self, old, new):
-        """Substitutes an expression old -> new."""
-        old = sympify(old)
-        new = sympify(new)
-        return self._eval_subs(old, new)
+    def _subs(self, old, new, **hints):
+        """Substitutes an expression old -> new.
+
+        If self is not equal to old then _eval_subs is called.
+        If _eval_subs doesn't want to make any special replacement
+        then a None is received which indicates that the fallback
+        should be applied wherein a search for replacements is made
+        amongst the arguments of self.
+
+        >>> from sympy import Basic, Add, Mul
+        >>> from sympy.abc import x, y, z
+
+        Examples
+        ========
+
+        Add's _eval_subs knows how to target x + y in the following
+        so it makes the change:
+
+            >>> (x + y + z).subs(x + y, 1)
+            z + 1
+
+        Add's _eval_subs doesn't need to know how to find x + y in
+        the following:
+
+            >>> Add._eval_subs(z*(x + y) + 3, x + y, 1) is None
+            True
+
+        The returned None will cause the fallback routine to traverse the args and
+        pass the z*(x + y) arg to Mul where the change will take place and the
+        substitution will succeed:
+
+            >>> (z*(x + y) + 3).subs(x + y, 1)
+            z + 3
+
+        ** Developers Notes **
+
+        An _eval_subs routine for a class should be written if:
+
+            1) any arguments are not instances of Basic (e.g. bool, tuple);
+
+            2) some arguments should not be targeted (as in integration
+               variables);
+
+            3) if there is something other than a literal replacement
+               that should be attempted (as in Piecewise where the condition
+               may be updated without doing a replacement).
+
+        If it is overridden, here are some special cases that might arise:
+
+            1) If it turns out that no special change was made and all
+               the original sub-arguments should be checked for
+               replacements then None should be returned.
+
+            2) If it is necessary to do substitutions on a portion of
+               the expression then _subs should be called. _subs will
+               handle the case of any sub-expression being equal to old
+               (which usually would not be the case) while its fallback
+               will handle the recursion into the sub-arguments. For
+               example, after Add's _eval_subs removes some matching terms
+               it must process the remaining terms so it calls _subs
+               on each of the un-matched terms and then adds them
+               onto the terms previously obtained.
+
+           3) If the initial expression should remain unchanged then
+              the original expression should be returned. (Whenever an
+              expression is returned, modified or not, no further
+              substitution of old -> new is attempted.) Sum's _eval_subs
+              routine uses this strategy when a substitution is attempted
+              on any of its summation variables.
+        """
+
+        def fallback(self, old, new):
+            """
+            Try to replace old with new in any of self's arguments.
+            """
+            hit = False
+            args = list(self.args)
+            for i, arg in enumerate(args):
+                if not hasattr(arg, '_eval_subs'):
+                    continue
+                arg = arg._subs(old, new, **hints)
+                if arg is not args[i]:
+                    hit = True
+                    args[i] = arg
+            if hit:
+                return self.func(*args)
+            return self
+
+        if _aresame(self, old):
+            return new
+
+        rv = self._eval_subs(old, new)
+        if rv is None:
+            rv = fallback(self, old, new)
+        return rv
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        else:
-            return self.func(*[arg._eval_subs(old, new) for arg in self.args])
+        """Override this stub if you want to do anything more than
+        attempt a replacement of old with new in the arguments of self.
 
-    def _subs_list(self, sequence):
+        See also: _subs
         """
-        Performs an order sensitive substitution from the
-        input sequence list.
+        return None
 
-        Examples:
+    def xreplace(self, rule):
+        """
+        Replace occurrences of objects within the expression.
 
-        >>> from sympy.abc import x, y
-        >>> (x+y)._subs_list( [(x, 3),     (y, x**2)] )
-        x**2 + 3
-        >>> (x+y)._subs_list( [(y, x**2),  (x, 3)   ] )
-        12
+        Parameters
+        ==========
+        rule : dict-like
+            Expresses a replacement rule
+
+        Returns
+        =======
+        xreplace : the result of the replacement
+
+        Examples
+        ========
+        >>> from sympy import symbols, pi, exp
+        >>> x, y, z = symbols('x y z')
+        >>> (1 + x*y).xreplace({x: pi})
+        pi*y + 1
+        >>> (1 + x*y).xreplace({x:pi, y:2})
+        1 + 2*pi
+
+        Replacements occur only if an entire node in the expression tree is
+        matched:
+
+        >>> (x*y + z).xreplace({x*y: pi})
+        z + pi
+        >>> (x*y*z).xreplace({x*y: pi})
+        x*y*z
+        >>> (2*x).xreplace({2*x: y, x: z})
+        y
+        >>> (2*2*x).xreplace({2*x: y, x: z})
+        4*z
+        >>> (x + y + 2).xreplace({x + y: 2})
+        x + y + 2
+        >>> (x + 2 + exp(x + 2)).xreplace({x + 2: y})
+        x + exp(y) + 2
+
+        xreplace doesn't differentiate between free and bound symbols. In the
+        following, subs(x, y) would not change x since it is a bound symbol,
+        but xreplace does:
+
+        >>> from sympy import Integral
+        >>> Integral(x, (x, 1, 2*x)).xreplace({x: y})
+        Integral(y, (y, 1, 2*y))
+
+        Trying to replace x with an expression raises an error:
+
+        >>> Integral(x, (x, 1, 2*x)).xreplace({x: 2*y}) #doctest: +SKIP
+        ValueError: Invalid limits given: ((2*y, 1, 4*y),)
+
+        See Also
+        ========
+        replace: replacement capable of doing wildcard-like matching,
+                 parsing of match, and conditional replacements
+        subs: substitution of subexpressions as defined by the objects
+              themselves.
 
         """
-        result = self
-        for old, new in sequence:
-            if hasattr(result, 'subs'):
-                result = result.subs(old, new)
-        return result
-
-    def _subs_dict(self, sequence):
-        """Performs sequential substitution.
-
-           Given a collection of key, value pairs, which correspond to
-           old and new expressions respectively,  substitute all given
-           pairs handling properly all overlapping keys  (according to
-           'in' relation).
-
-           We have to use naive O(n**2) sorting algorithm, as 'in'
-           gives only partial order and all asymptotically faster
-           fail (depending on the initial order).
-
-           >>> from sympy import sqrt, sin, cos, exp
-           >>> from sympy.abc import x, y
-
-           >>> from sympy.abc import a, b, c, d, e
-
-           >>> A = (sqrt(sin(2*x)), a)
-           >>> B = (sin(2*x), b)
-           >>> C = (cos(2*x), c)
-           >>> D = (x, d)
-           >>> E = (exp(x), e)
-
-           >>> expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
-
-           >>> expr._subs_dict([A,B,C,D,E])
-           a*c*sin(d*e) + b
-
-        """
-        sequence = sympify(sequence)
-
-        if isinstance(sequence, dict):
-            sequence = sequence.items()
-
-        subst = []
-
-        for pattern in sequence:
-            for i, (expr, _) in enumerate(subst):
-                if expr.has(pattern[0]):
-                    subst.insert(i, pattern)
-                    break
-            else:
-                subst.append(pattern)
-        subst.reverse()
-
-        return self._subs_list(subst)
+        if self in rule:
+            return rule[self]
+        elif rule:
+            args = tuple([arg.xreplace(rule) for arg in self.args])
+            if args != self.args:
+                return self.func(*args)
+        return self
 
     @deprecated
     def __contains__(self, obj):
@@ -813,7 +1057,8 @@ class Basic(object):
         """
         Test whether any subexpression matches any of the patterns.
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy import sin, S
         >>> from sympy.abc import x, y, z
@@ -908,45 +1153,54 @@ class Basic(object):
         possible combinations of queries and replacement values is listed
         below:
 
+        Examples
+        ========
+            >>> from sympy import log, sin, cos, tan, Wild
+            >>> from sympy.abc import x, y
+            >>> f = log(sin(x)) + tan(sin(x**2))
+
         1.1. type -> type
-             obj.replace(sin, tan)
+            obj.replace(sin, tan)
+
+            >>> f.replace(sin, cos)
+            log(cos(x)) + tan(cos(x**2))
+            >>> sin(x).replace(sin, cos, map=True)
+            (cos(x), {sin(x): cos(x)})
+
         1.2. type -> func
-             obj.replace(sin, lambda expr, arg: ...)
+            obj.replace(sin, lambda arg: ...)
+
+            >>> f.replace(sin, lambda arg: sin(2*arg))
+            log(sin(2*x)) + tan(sin(2*x**2))
 
         2.1. expr -> expr
-             obj.replace(sin(a), tan(a))
+            obj.replace(sin(a), tan(a))
+
+            >>> a = Wild('a')
+            >>> f.replace(sin(a), tan(a))
+            log(tan(x)) + tan(tan(x**2))
+
         2.2. expr -> func
-             obj.replace(sin(a), lambda a: ...)
+            obj.replace(sin(a), lambda a: ...)
+
+            >>> f.replace(sin(a), cos(a))
+            log(cos(x)) + tan(cos(x**2))
+            >>> f.replace(sin(a), lambda a: sin(2*a))
+            log(sin(2*x)) + tan(sin(2*x**2))
 
         3.1. func -> func
-             obj.replace(lambda expr: ..., lambda expr: ...)
+            obj.replace(lambda expr: ..., lambda expr: ...)
 
-        Examples:
+            >>> g = 2*sin(x**3)
+            >>> g.replace(lambda expr: expr.is_Number, lambda expr: expr**2)
+            4*sin(x**9)
 
-        >>> from sympy import log, sin, cos, tan, Wild
-        >>> from sympy.abc import x
-
-        >>> f = log(sin(x)) + tan(sin(x**2))
-
-        >>> f.replace(sin, cos)
-        log(cos(x)) + tan(cos(x**2))
-        >>> f.replace(sin, lambda arg: sin(2*arg))
-        log(sin(2*x)) + tan(sin(2*x**2))
-
-        >>> sin(x).replace(sin, cos, map=True)
-        (cos(x), {sin(x): cos(x)})
-
-        >>> a = Wild('a')
-
-        >>> f.replace(sin(a), cos(a))
-        log(cos(x)) + tan(cos(x**2))
-        >>> f.replace(sin(a), lambda a: sin(2*a))
-        log(sin(2*x)) + tan(sin(2*x**2))
-
-        >>> g = 2*sin(x**3)
-
-        >>> g.replace(lambda expr: expr.is_Number, lambda expr: expr**2)
-        4*sin(x**9)
+        See Also
+        ========
+        subs: substitution of subexpressions as defined by the objects
+              themselves.
+        xreplace: exact node replacement in expr tree; also capable of
+                  using matching rules
 
         """
         if isinstance(query, type):
@@ -1057,7 +1311,7 @@ class Basic(object):
         """Count the number of matching subexpressions. """
         return sum(self.find(query, group=True).values())
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}):
         """
         Helper method for match() - switches the pattern and expr.
 
@@ -1070,9 +1324,6 @@ class Basic(object):
         {x_: -a/b}
 
         """
-        if evaluate:
-            return self.subs(repl_dict).matches(expr, repl_dict)
-
         expr = sympify(expr)
         if not isinstance(expr, self.__class__):
             return None
@@ -1087,7 +1338,7 @@ class Basic(object):
         for arg, other_arg in zip(self.args, expr.args):
             if arg == other_arg:
                 continue
-            d = arg.subs(d).matches(other_arg, d)
+            d = arg.xreplace(d).matches(other_arg, d)
             if d is None:
                 return None
         return d
@@ -1101,9 +1352,10 @@ class Basic(object):
         Return ``None`` when expression (self) does not match
         with pattern. Otherwise return a dictionary such that::
 
-          pattern.subs(self.match(pattern)) == self
+          pattern.xreplace(self.match(pattern)) == self
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import symbols, Wild
         >>> from sympy.abc import x, y
@@ -1118,7 +1370,7 @@ class Basic(object):
         >>> e = (2*x)**2
         >>> e.match(p*q**r)
         {p_: 4, q_: x, r_: 2}
-        >>> (p*q**r).subs(e.match(p*q**r))
+        >>> (p*q**r).xreplace(e.match(p*q**r))
         4*x**2
 
         """
@@ -1212,7 +1464,10 @@ class Atom(Basic):
     """
     A parent class for atomic things. An atom is an expression with no subexpressions.
 
-    Examples: Symbol, Number, Rational, Integer, ...
+    Examples
+    ========
+
+    Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
 
@@ -1220,15 +1475,12 @@ class Atom(Basic):
 
     __slots__ = []
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}):
         if self == expr:
             return repl_dict
 
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        else:
-            return self
+    def xreplace(self, rule):
+        return rule.get(self, self)
 
     def doit(self, **hints):
         return self
@@ -1245,3 +1497,73 @@ class Atom(Basic):
     def sort_key(self, order=None):
         from sympy.core import S
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
+
+def _aresame(a, b):
+    """Return True if a and b are structurally the same, else False.
+
+    Examples
+    ========
+
+    To SymPy, 2.0 == 2:
+
+    >>> from sympy import S, Symbol, cos, sin
+    >>> 2.0 == S(2)
+    True
+
+    Since a simple 'same or not' result is sometimes useful, this routine was
+    written to provide that query:
+
+    >>> from sympy.core.basic import _aresame
+    >>> _aresame(S(2.0), S(2))
+    False
+
+    """
+    from sympy.utilities.iterables import preorder_traversal
+    from itertools import izip
+
+    for i, j in izip(preorder_traversal(a), preorder_traversal(b)):
+        if i != j or type(i) != type(j):
+            return False
+    else:
+        return True
+
+def _atomic(e):
+    """Return atom-like quantities as far as substitution is
+    concerned: Derivatives, Functions and Symbols. Don't
+    return any 'atoms' that are inside such quantities unless
+    they also appear outside, too.
+
+    Examples
+    ========
+    >>> from sympy import Derivative, Function, cos
+    >>> from sympy.abc import x, y
+    >>> from sympy.core.basic import _atomic
+    >>> f = Function('f')
+    >>> _atomic(x + y)
+    set([x, y])
+    >>> _atomic(x + f(y))
+    set([x, f(y)])
+    >>> _atomic(Derivative(f(x), x) + cos(x) + y)
+    set([y, cos(x), Derivative(f(x), x)])
+
+    """
+    from sympy import Derivative, Function, Symbol
+    from sympy.utilities.iterables import preorder_traversal
+    pot = preorder_traversal(e)
+    seen = set()
+    try:
+        free = e.free_symbols
+    except AttributeError:
+        return set([e])
+    atoms = set()
+    for p in pot:
+        if p in seen:
+            pot.skip()
+            continue
+        seen.add(p)
+        if isinstance(p, Symbol) and p in free:
+            atoms.add(p)
+        elif isinstance(p, (Derivative, Function)):
+            pot.skip()
+            atoms.add(p)
+    return atoms

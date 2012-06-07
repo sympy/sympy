@@ -14,6 +14,7 @@ from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.str import StrPrinter
 from sympy.utilities import group
+from sympy.core.compatibility import reduce
 
 class Dyadic(object):
     """A Dyadic object.
@@ -74,6 +75,7 @@ class Dyadic(object):
 
         Parameters
         ==========
+
         other : Dyadic or Vector
             The other Dyadic or Vector to take the inner product with
 
@@ -132,6 +134,7 @@ class Dyadic(object):
 
         Parameters
         ==========
+
         other : Sympafiable
             The scalar to multiply this Dyadic with
 
@@ -181,7 +184,7 @@ class Dyadic(object):
                 arg_str = mlp.doprint(ar[i][0])
                 if isinstance(ar[i][0], Add):
                     arg_str = '(%s)' % arg_str
-                if arg_str[0] == '-':
+                if arg_str.startswith('-'):
                     arg_str = arg_str[1:]
                     str_start = ' - '
                 else:
@@ -191,9 +194,9 @@ class Dyadic(object):
                           r"\otimes " +
                           mlp.doprint(ar[i][2]))
         outstr = ''.join(ol)
-        if outstr[0:3] == ' + ':
+        if outstr.startswith(' + '):
             outstr = outstr[3:]
-        elif outstr[0] == ' ':
+        elif outstr.startswith(' '):
             outstr = outstr[1:]
         return outstr
 
@@ -227,7 +230,7 @@ class Dyadic(object):
                         arg_str = mpp.doprint(ar[i][0])
                         if isinstance(ar[i][0], Add):
                             arg_str = u"(%s)" % arg_str
-                        if arg_str[0] == u"-":
+                        if arg_str.startswith(u"-"):
                             arg_str = arg_str[1:]
                             str_start = u" - "
                         else:
@@ -237,9 +240,9 @@ class Dyadic(object):
                                   u"\u2a02 " +
                                   mpp.doprint(ar[i][2]))
                 outstr = u"".join(ol)
-                if outstr[0:3] == u" + ":
+                if outstr.startswith(u" + "):
                     outstr = outstr[3:]
-                elif outstr[0] == " ":
+                elif outstr.startswith(" "):
                     outstr = outstr[1:]
                 return outstr
         return Fake()
@@ -251,6 +254,7 @@ class Dyadic(object):
 
         Parameters
         ==========
+
         other : Vector
             The vector we are dotting with
 
@@ -284,6 +288,7 @@ class Dyadic(object):
 
         Parameters
         ==========
+
         other : Vector
             The Vector that we are crossing this Dyadic with
 
@@ -334,9 +339,9 @@ class Dyadic(object):
                 ol.append(str_start + arg_str + '*(' + str(ar[i][1]) +
                           '|' + str(ar[i][2]) + ')')
         outstr = ''.join(ol)
-        if outstr[0:3] == ' + ':
+        if outstr.startswith(' + '):
             outstr = outstr[3:]
-        elif outstr[0] == ' ':
+        elif outstr.startswith(' '):
             outstr = outstr[1:]
         return outstr
 
@@ -349,6 +354,7 @@ class Dyadic(object):
 
         Parameters
         ==========
+
         other : Vector
             The Vector that we are crossing this Dyadic with
 
@@ -406,6 +412,7 @@ class Dyadic(object):
 
         Parameters
         ==========
+
         frame1 : ReferenceFrame
             The frame to express the left side of the Dyadic in
         frame2 : ReferenceFrame
@@ -438,6 +445,7 @@ class Dyadic(object):
 
         Parameters
         ==========
+
         frame : ReferenceFrame
             The frame to take the time derivative in
 
@@ -510,8 +518,29 @@ class ReferenceFrame(object):
         Parameters
         ==========
 
+        indices : list (of strings)
+            If custom indices are desired for console, pretty, and LaTeX
+            printing, supply three as a list. The basis vectors can then be
+            accessed with the get_item method.
+        latexs : list (of strings)
+            If custom names are desired for LaTeX printing of each basis
+            vector, supply the names here in a list.
+
         Examples
         ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, mlatex
+        >>> N = ReferenceFrame('N')
+        >>> N.x
+        N.x
+        >>> O = ReferenceFrame('O', ('1', '2', '3'))
+        >>> O.x
+        O['1']
+        >>> O['1']
+        O['1']
+        >>> P = ReferenceFrame('P', latexs=('A1', 'A2', 'A3'))
+        >>> mlatex(P.x)
+        'A1'
 
         """
 
@@ -583,35 +612,20 @@ class ReferenceFrame(object):
         if self.indices[0] == ind:
             return self.x
         if self.indices[1] == ind:
-            return self.x
+            return self.y
         if self.indices[2] == ind:
-            return self.x
+            return self.z
         else:
             raise ValueError('Not a defined index')
 
     def __iter__(self):
-        return self
+        return iter([self.x, self.y, self.z])
 
     def __str__(self):
         """Returns the name of the frame. """
         return self.name
 
     __repr__ = __str__
-
-    def next(self):
-        """Iterator for the basis vectors. """
-        if self._cur == 0:
-            self._cur += 1
-            return self._x
-        elif self._cur == 1:
-            self._cur += 1
-            return self._y
-        elif self._cur == 2:
-            self._cur += 1
-            return self._z
-        else:
-            self._cur = 0
-            raise StopIteration
 
     def _check_frame(self, other):
         if not isinstance(other, ReferenceFrame):
@@ -666,6 +680,7 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+
         otherframe : ReferenceFrame
             The ReferenceFrame which the angular acceleration is returned in.
 
@@ -698,6 +713,7 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+
         otherframe : ReferenceFrame
             The ReferenceFrame which the angular velocity is returned in.
 
@@ -730,6 +746,7 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+
         otherframe : ReferenceFrame
             The otherframe which the DCM is generated to.
 
@@ -763,6 +780,7 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+
         parent : ReferenceFrame
             The frame that this ReferenceFrame will have its orientation matrix
             defined in relation to.
@@ -818,6 +836,10 @@ class ReferenceFrame(object):
         """
 
         self._check_frame(parent)
+        amounts = list(amounts)
+        for i, v in enumerate(amounts):
+            if not isinstance(v, Vector):
+                amounts[i] = sympify(v)
         def _rot(axis, angle):
             """DCM for simple axis 1,2,or 3 rotations. """
             if axis == 1:
@@ -855,7 +877,7 @@ class ReferenceFrame(object):
             self._check_vector(axis)
             if not axis.dt(parent) == 0:
                 raise ValueError('Axis cannot be time-varying')
-            axis = axis.express(parent).unit
+            axis = axis.express(parent).normalize()
             axis = axis.args[0][0]
             parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
                     Matrix([[0, -axis[2], axis[1]],[axis[2], 0, -axis[0]],
@@ -904,9 +926,10 @@ class ReferenceFrame(object):
             wvec = Vector([(Matrix([w1, w2, w3]), self)])
         elif rot_type == 'AXIS':
             thetad = (amounts[0]).diff(dynamicsymbols._t)
-            wvec = thetad * amounts[1].express(parent).unit
+            wvec = thetad * amounts[1].express(parent).normalize()
         else:
             try:
+                from sympy.polys.polyerrors import CoercionFailed
                 from sympy.physics.mechanics.functions import kinematic_equations
                 q1, q2, q3 = amounts
                 u1, u2, u3 = dynamicsymbols('u1, u2, u3')
@@ -918,12 +941,13 @@ class ReferenceFrame(object):
                 u2 = expand(td[u2])
                 u3 = expand(td[u3])
                 wvec = u1 * self.x + u2 * self.y + u3 * self.z
-            except:
+            except (CoercionFailed, AssertionError):
                 wvec = self._w_diff_dcm(parent)
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
 
-    def orientnew(self, newname, rot_type, amounts, rot_order=''):
+    def orientnew(self, newname, rot_type, amounts, rot_order='', indices=None,
+            latexs=None):
         """Creates a new ReferenceFrame oriented with respect to this Frame.
 
         See ReferenceFrame.orient() for acceptable rotation types, amounts,
@@ -931,6 +955,7 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+
         newname : str
             The name for the new ReferenceFrame
         rot_type : str
@@ -939,6 +964,7 @@ class ReferenceFrame(object):
             The quantities that the orientation matrix will be defined by.
         rot_order : str
             If applicable, the order of a series of rotations.
+
 
         Examples
         ========
@@ -955,7 +981,7 @@ class ReferenceFrame(object):
 
         """
 
-        newframe = ReferenceFrame(newname)
+        newframe = ReferenceFrame(newname, indices, latexs)
         newframe.orient(self, rot_type, amounts, rot_order)
         return newframe
 
@@ -971,6 +997,7 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+
         otherframe : ReferenceFrame
             A ReferenceFrame to define the angular acceleration in
         value : Vector
@@ -1004,6 +1031,7 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+
         otherframe : ReferenceFrame
             A ReferenceFrame to define the angular velocity in
         value : Vector
@@ -1051,12 +1079,13 @@ class Vector(object):
 
     Attributes
     ==========
+
     simp : Boolean
         Let certain methods use trigsimp on their outputs
 
     """
 
-    simp = True
+    simp = False
 
     def __init__(self, inlist):
         """This is the constructor for the Vector class.  You shouldn't be
@@ -1106,6 +1135,7 @@ class Vector(object):
 
         Parameters
         ==========
+
         other : Vector
             The Vector which we are dotting with
 
@@ -1167,7 +1197,7 @@ class Vector(object):
                     return True
                 else:
                     return False
-        check = True
+
         frame = self.args[0][1]
         for v in frame:
             if expand((self - other) & v) != 0:
@@ -1179,6 +1209,7 @@ class Vector(object):
 
         Parameters
         ==========
+
         other : Sympifyable
             The scalar to multiply this Vector with
 
@@ -1213,6 +1244,7 @@ class Vector(object):
 
         Parameters
         ==========
+
         other : Vector
             The Vector to take the outer product with
 
@@ -1274,9 +1306,9 @@ class Vector(object):
                     ol.append(str_start + arg_str + '*' +
                               ar[i][1].latex_vecs[j])
         outstr = ''.join(ol)
-        if outstr[0:3] == ' + ':
+        if outstr.startswith(' + '):
             outstr = outstr[3:]
-        elif outstr[0] == ' ':
+        elif outstr.startswith(' '):
             outstr = outstr[1:]
         return outstr
 
@@ -1314,9 +1346,9 @@ class Vector(object):
                             ol.append(str_start + arg_str + '*' +
                                       ar[i][1].pretty_vecs[j])
                 outstr = u"".join(ol)
-                if outstr[0:3] == u" + ":
+                if outstr.startswith(u" + "):
                     outstr = outstr[3:]
-                elif outstr[0] == " ":
+                elif outstr.startswith(" "):
                     outstr = outstr[1:]
                 return outstr
         return Fake()
@@ -1328,6 +1360,7 @@ class Vector(object):
 
         Parameters
         ==========
+
         other : Vector
             The Vector to take the outer product with
 
@@ -1344,6 +1377,8 @@ class Vector(object):
         if isinstance(other, (int, type(Zero()))):
             if (other == 0):
                 return 0
+
+        ol = 0
         for i, v in enumerate(other.args):
             for i2, v2 in enumerate(self.args):
                 # it looks this way because if we are in the same frame and
@@ -1390,9 +1425,9 @@ class Vector(object):
                         str_start = ' + '
                     ol.append(str_start + arg_str + '*' + ar[i][1].str_vecs[j])
         outstr = ''.join(ol)
-        if outstr[0:3] == ' + ':
+        if outstr.startswith(' + '):
             outstr = outstr[3:]
-        elif outstr[0] == ' ':
+        elif outstr.startswith(' '):
             outstr = outstr[1:]
         return outstr
 
@@ -1407,6 +1442,7 @@ class Vector(object):
 
         Parameters
         ==========
+
         other : Vector
             The Vector which we are crossing with
 
@@ -1474,6 +1510,7 @@ class Vector(object):
     _sympyrepr = _sympystr
     __repr__ = __str__
     __radd__ = __add__
+    __rand__ = __and__
     __rmul__ = __mul__
 
     def dot(self, other):
@@ -1495,6 +1532,7 @@ class Vector(object):
 
         Parameters
         ==========
+
         wrt : Symbol
             What the partial derivative is taken with respect to.
         otherframe : ReferenceFrame
@@ -1505,6 +1543,7 @@ class Vector(object):
 
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dynamicsymbols
         >>> from sympy import Symbol
+        >>> Vector.simp = True
         >>> t = Symbol('t')
         >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
@@ -1537,6 +1576,7 @@ class Vector(object):
 
         Parameters
         ==========
+
         otherframe : ReferenceFrame
             The ReferenceFrame that the partial derivative is taken in.
 
@@ -1560,7 +1600,7 @@ class Vector(object):
 
         outvec = 0
         self._check_frame(otherframe)
-        for i,v in enumerate(self.args):
+        for i, v in enumerate(self.args):
             if v[1] == otherframe:
                 outvec += Vector([(v[0].diff(dynamicsymbols._t), otherframe)])
             else:
@@ -1576,6 +1616,7 @@ class Vector(object):
 
         Parameters
         ==========
+
         otherframe : ReferenceFrame
             The frame for this Vector to be described in
 
@@ -1626,15 +1667,13 @@ class Vector(object):
             ov += Vector([(v[0].subs(dictin), v[1])])
         return ov
 
-    @property
-    def mag(self):
-        """Returns the magnitude of this Vector, as a scalar. """
+    def magnitude(self):
+        """Returns the magnitude (Euclidean norm) of self."""
         return sqrt(self & self)
 
-    @property
-    def unit(self):
-        """Returns this Vector, with unit length. """
-        return Vector(self.args + []) / self.mag
+    def normalize(self):
+        """Returns a Vector of magnitude 1, codirectional with self."""
+        return Vector(self.args + []) / self.magnitude()
 
 
 class MechanicsStrPrinter(StrPrinter):
@@ -1896,6 +1935,7 @@ def dynamicsymbols(names, level=0):
 
     Parameters
     ==========
+
     names : str
         Names of the dynamic symbols you want to create; works the same way as
         inputs to symbols
@@ -1903,7 +1943,7 @@ def dynamicsymbols(names, level=0):
         Level of differentiation of the returned function; d/dt once of t,
         twice of t, etc.
 
-    Example
+    Examples
     =======
 
     >>> from sympy.physics.mechanics import dynamicsymbols
@@ -1917,20 +1957,12 @@ def dynamicsymbols(names, level=0):
     """
 
     esses = symbols(names, cls=Function)
-    try:
-        esses = [i.__call__(dynamicsymbols._t) for i in list(esses)]
-        ol = esses
-        for i in range(level):
-            ol = []
-            for j, v in enumerate(esses):
-                ol.append(diff(v, dynamicsymbols._t))
-            esses = ol
-        return list(ol)
-    except:
-        esses = esses.__call__(dynamicsymbols._t)
-        for i in range(level):
-            esses = diff(esses, dynamicsymbols._t)
+    t = dynamicsymbols._t
+    if hasattr(esses, '__iter__'):
+        esses = [reduce(diff, [t]*level, e(t)) for e in esses]
         return esses
+    else:
+        return reduce(diff, [t]*level, esses(t))
 
 dynamicsymbols._t = Symbol('t')
 dynamicsymbols._str = '\''

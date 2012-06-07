@@ -4,8 +4,7 @@ Plotting
 .. module:: sympy.plotting
 
 SymPy can do nice 2D and 3D plots that can be controlled by console commands as
-well as keyboard and mouse, with the only dependencies being ``ctypes`` (which is
-included in Python2.5 (you need to install it in Python2.4)) and ``pyglet``.
+well as keyboard and mouse, with the only dependencies being ``ctypes`` and ``pyglet``.
 
 Here is the simplest usage:
 

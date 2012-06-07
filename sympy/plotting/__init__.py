@@ -4,7 +4,9 @@ try:
     try:
         from ctypes import *
     except:
-        raise ImportError("ctypes is required for plotting.\n'easy_install ctypes' or visit http://sourceforge.net/projects/ctypes/")
+        raise ImportError("ctypes is required for plotting.\n"
+                          "'easy_install ctypes' or visit "
+                          "http://sourceforge.net/projects/ctypes/")
 
     def Plot(*args, **kwargs):
         """
@@ -125,6 +127,7 @@ try:
         Close Window:     ESCAPE
 
         =============================
+
         """
 
         import plot

@@ -1,5 +1,6 @@
-from sympy import I, symbols, sqrt, Add, Mul, Rational, Pow, Symbol, sympify, S
-from sympy import Integer, conjugate, pretty, latex, oo, sin, pi, diff
+from sympy import (Add, conjugate, diff, I, Integer, latex, Mul, oo, pi, Pow,
+                   pretty, Rational, sin, sqrt, Symbol, symbols, sympify)
+from sympy.utilities.pytest import raises
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr
@@ -8,9 +9,8 @@ from sympy.physics.quantum.state import (
     KetBase, BraBase, StateBase, Wavefunction
 )
 from sympy.physics.quantum.hilbert import HilbertSpace
-from sympy.utilities.pytest import raises
 
-x,y,t = symbols('x,y,t')
+x, y, t = symbols('x,y,t')
 
 class TestKet(Ket):
     @classmethod
@@ -167,16 +167,8 @@ def test_bra_ket_dagger():
     e = 2*I*k + x*k2
     assert Dagger(e) == conjugate(x)*Dagger(k2) - 2*I*Dagger(k)
 
-
-def test_printing():
-    psi = Ket('psi')
-    assert pretty(psi, use_unicode=True) == u'\u2758\u03c8\u27e9'
-    assert pretty(Dagger(psi), use_unicode=True) == u'\u27e8\u03c8\u2758'
-    assert latex(psi) == r"{\left|\psi\right\rangle }"
-    assert latex(Dagger(psi)) == r"{\left\langle \psi\right|}"
-
 def test_wavefunction():
-    x, L = symbols('x,L', real=True)
+    x, y, L = symbols('x,y,L', real=True)
     n = symbols('n', integer=True)
 
     f = Wavefunction(x**2, x)
@@ -189,7 +181,7 @@ def test_wavefunction():
     assert p(10) == 10000
     assert lims[x] == (-oo, oo)
     assert diff(f, x) == Wavefunction(2*x, x)
-    raises(NotImplementedError, 'f.normalize()')
+    raises(NotImplementedError, lambda: f.normalize())
     assert conjugate(f) == Wavefunction(conjugate(f.expr), x)
     assert conjugate(f) == Dagger(f)
 

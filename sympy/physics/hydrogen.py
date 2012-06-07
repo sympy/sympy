@@ -4,13 +4,17 @@ def R_nl(n, l, r, Z=1):
     """
     Returns the Hydrogen radial wavefunction R_{nl}.
 
-    n, l .... quantum numbers 'n' and 'l'
-    r    .... radial coordinate
-    Z    .... atomic number (1 for Hydrogen, 2 for Helium, ...)
+    n, l
+        quantum numbers 'n' and 'l'
+    r
+        radial coordinate
+    Z
+        atomic number (1 for Hydrogen, 2 for Helium, ...)
 
     Everything is in Hartree atomic units.
 
-    Examples::
+    Examples
+    ========
 
     >>> from sympy.physics.hydrogen import R_nl
     >>> from sympy import var
@@ -23,7 +27,7 @@ def R_nl(n, l, r, Z=1):
     >>> R_nl(2, 1, r, Z)
     sqrt(6)*Z*r*sqrt(Z**3)*exp(-Z*r/2)/12
 
-    For Hydrogen atom, you can just use the default value of Z=1::
+    For Hydrogen atom, you can just use the default value of Z=1:
 
     >>> R_nl(1, 0, r)
     2*exp(-r)
@@ -32,7 +36,7 @@ def R_nl(n, l, r, Z=1):
     >>> R_nl(3, 0, r)
     2*sqrt(3)*(2*r**2/9 - 2*r + 3)*exp(-r/3)/27
 
-    For Silver atom, you would use Z=47::
+    For Silver atom, you would use Z=47:
 
     >>> R_nl(1, 0, r, Z=47)
     94*sqrt(47)*exp(-47*r)
@@ -41,7 +45,7 @@ def R_nl(n, l, r, Z=1):
     >>> R_nl(3, 0, r, Z=47)
     94*sqrt(141)*(4418*r**2/9 - 94*r + 3)*exp(-47*r/3)/27
 
-    The normalization of the radial wavefunction is::
+    The normalization of the radial wavefunction is:
 
     >>> from sympy import integrate, oo
     >>> integrate(R_nl(1, 0, r)**2 * r**2, (r, 0, oo))
@@ -73,7 +77,7 @@ def R_nl(n, l, r, Z=1):
     # This is an equivalent normalization coefficient, that can be found in
     # some books. Both coefficients seem to be the same fast:
     # C =  S(2)/n**2 * sqrt(1/a**3 * factorial(n_r) / (factorial(n+l)))
-    return  C * r0**l * laguerre_l(n_r, 2*l+1, r0).expand() * exp(-r0/2)
+    return C * r0**l * laguerre_l(n_r, 2*l+1, r0).expand() * exp(-r0/2)
 
 def E_nl(n, Z=1):
     """
@@ -81,7 +85,8 @@ def E_nl(n, Z=1):
 
     The energy doesn't depend on "l".
 
-    Examples::
+    Examples
+    ========
 
     >>> from sympy import var
     >>> from sympy.physics.hydrogen import E_nl
@@ -112,13 +117,18 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     The energy is calculated from the Dirac equation. The rest mass energy is
     *not* included.
 
-    n, l ...... quantum numbers 'n' and 'l'
-    spin_up ... True if the electron spin is up (default), otherwise down
-    Z    ...... atomic number (1 for Hydrogen, 2 for Helium, ...)
-    c    ...... speed of light in atomic units. Default value is 137.035999037,
-                taken from: http://arxiv.org/abs/1012.3627
+    n, l
+        quantum numbers 'n' and 'l'
+    spin_up
+        True if the electron spin is up (default), otherwise down
+    Z
+        atomic number (1 for Hydrogen, 2 for Helium, ...)
+    c
+        speed of light in atomic units. Default value is 137.035999037,
+        taken from: http://arxiv.org/abs/1012.3627
 
-    Examples::
+    Examples
+    ========
 
     >>> from sympy.physics.hydrogen import E_nl_dirac
     >>> E_nl_dirac(1, 0)
@@ -127,7 +137,7 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     >>> E_nl_dirac(2, 0)
     -0.125002080189006
     >>> E_nl_dirac(2, 1)
-    -0.125000416024704
+    -0.125000416028342
     >>> E_nl_dirac(2, 1, False)
     -0.125002080189006
 
@@ -141,7 +151,6 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     -0.0555556377366884
     >>> E_nl_dirac(3, 2, False)
     -0.0555558020932949
-
 
     """
     if not (l >= 0):

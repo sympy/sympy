@@ -1,16 +1,13 @@
-from sympy import (
-    Symbol, Integer, Mul, Function, Derivative, diff, pi, symbols, sin
-)
-
+from sympy import (Derivative, diff, Function, Integer, Mul, pi, sin, Symbol,
+                   symbols)
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.hilbert import HilbertSpace
-from sympy.physics.quantum.operator import (
-    Operator, UnitaryOperator, HermitianOperator, OuterProduct, DifferentialOperator
-)
+from sympy.physics.quantum.operator import (Operator, UnitaryOperator,
+                                            HermitianOperator, OuterProduct,
+                                            DifferentialOperator)
 from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.qapply import qapply
-from sympy.physics.quantum.represent import enumerate_states
 
 class TestKet(Ket):
     @classmethod

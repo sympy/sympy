@@ -159,7 +159,7 @@ def test_dmp_sqf():
     assert dmp_sqf_list_include(f, 1, ZZ) == \
         [([[-1]], 1), ([[1], [-1]], 2)]
 
-    raises(DomainError, "dmp_sqf_list([[K(1), K(0), K(1)]], 1, K)")
+    raises(DomainError, lambda: dmp_sqf_list([[K(1), K(0), K(1)]], 1, K))
 
 def test_dup_gff_list():
     f = [1, 2, -1, -2, 0, 0]
@@ -170,4 +170,4 @@ def test_dup_gff_list():
 
     assert dup_gff_list(g, ZZ) == [([1, -5, 4], 1), ([1, -5, 4], 2), ([1, 0], 3)]
 
-    raises(ValueError, "dup_gff_list([], ZZ)")
+    raises(ValueError, lambda: dup_gff_list([], ZZ))

@@ -83,7 +83,7 @@ def test_DMP_arithmetics():
     assert f.mul_ground(2) == DMP([[4],[4,0]], ZZ)
     assert f.quo_ground(2) == DMP([[1],[1,0]], ZZ)
 
-    raises(ExactQuotientFailed, 'f.exquo_ground(3)')
+    raises(ExactQuotientFailed, lambda: f.exquo_ground(3))
 
     f = DMP([[-5]], ZZ)
     g = DMP([[5]], ZZ)
@@ -124,7 +124,7 @@ def test_DMP_arithmetics():
     assert f.pow(2) == h
     assert f**2 == h
 
-    raises(TypeError, "f.pow('x')")
+    raises(TypeError, lambda: f.pow('x'))
 
     f = DMP([[1],[],[1,0,0]], ZZ)
     g = DMP([[2],[-2,0]], ZZ)
@@ -136,7 +136,7 @@ def test_DMP_arithmetics():
     assert f.pquo(g) == q
     assert f.prem(g) == r
 
-    raises(ExactQuotientFailed, 'f.pexquo(g)')
+    raises(ExactQuotientFailed, lambda: f.pexquo(g))
 
     f = DMP([[1],[],[1,0,0]], ZZ)
     g = DMP([[1],[-1,0]], ZZ)
@@ -152,7 +152,7 @@ def test_DMP_arithmetics():
     assert f // g == q
     assert f % g == r
 
-    raises(ExactQuotientFailed, 'f.exquo(g)')
+    raises(ExactQuotientFailed, lambda: f.exquo(g))
 
 def test_DMP_functionality():
     f = DMP([[1],[2,0],[1,0,0]], ZZ)
@@ -167,7 +167,7 @@ def test_DMP_functionality():
     assert f.TC() == ZZ(0)
     assert f.nth(1, 1) == ZZ(2)
 
-    raises(TypeError, "f.nth(0, 'x')")
+    raises(TypeError, lambda: f.nth(0, 'x'))
 
     assert f.max_norm() == 2
     assert f.l1_norm() == 4
@@ -177,7 +177,7 @@ def test_DMP_functionality():
     assert f.diff(m=1, j=0) == u
     assert f.diff(m=1, j=1) == u
 
-    raises(TypeError, "f.diff(m='x', j=0)")
+    raises(TypeError, lambda: f.diff(m='x', j=0))
 
     u = DMP([1,2,1], ZZ)
     v = DMP([1,2,1], ZZ)
@@ -235,10 +235,10 @@ def test_DMP_functionality():
 
     f = DMP([[1],[2],[3]], QQ)
 
-    raises(ValueError, "f.half_gcdex(f)")
-    raises(ValueError, "f.gcdex(f)")
+    raises(ValueError, lambda: f.half_gcdex(f))
+    raises(ValueError, lambda: f.gcdex(f))
 
-    raises(ValueError, "f.invert(f)")
+    raises(ValueError, lambda: f.invert(f))
 
     f = DMP([1,0,20,0,150,0,500,0,625,-2,0,-10,9], ZZ)
     g = DMP([1,0,0,-2,9], ZZ)
@@ -249,8 +249,8 @@ def test_DMP_functionality():
 
     f = DMP([[1],[2],[3]], QQ)
 
-    raises(ValueError, "f.decompose()")
-    raises(ValueError, "f.sturm()")
+    raises(ValueError, lambda: f.decompose())
+    raises(ValueError, lambda: f.sturm())
 
 def test_DMP_exclude():
     f = [[[[[[[[[[[[[[[[[[[[[[[[[[1]], [[]]]]]]]]]]]]]]]]]]]]]]]]]]
@@ -344,8 +344,8 @@ def test_DMF__init__():
     assert f.lev == 1
     assert f.dom == QQ
 
-    raises(ValueError, "DMF(([1], [[1]]), ZZ)")
-    raises(ZeroDivisionError, "DMF(([1], []), ZZ)")
+    raises(ValueError, lambda: DMF(([1], [[1]]), ZZ))
+    raises(ZeroDivisionError, lambda: DMF(([1], []), ZZ))
 
 def test_DMF__eq__():
     pass

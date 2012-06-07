@@ -1,6 +1,6 @@
 import inspect
 from sympy.utilities.source import get_class
-from sympy.logic.boolalg import Boolean, Not
+from sympy.logic.boolalg import Boolean
 
 class AssumptionsContext(set):
     """Set representing assumptions.
@@ -9,7 +9,9 @@ class AssumptionsContext(set):
     class to create your own local assumptions contexts. It is basically a thin
     wrapper to Python's set, so see its documentation for advanced usage.
 
-    Examples:
+    Examples
+    ========
+
         >>> from sympy import global_assumptions, AppliedPredicate, Q
         >>> global_assumptions
         AssumptionsContext()
@@ -54,7 +56,9 @@ class AppliedPredicate(Boolean):
         """
         Return the expression used by this assumption.
 
-        Examples:
+        Examples
+        ========
+
             >>> from sympy import Q, Symbol
             >>> x = Symbol('x')
             >>> a = Q.integer(x + 1)
@@ -88,7 +92,7 @@ class Predicate(Boolean):
 
     Predicates merely wrap their argument and remain unevaluated:
 
-        >>> from sympy import Q, ask, Symbol
+        >>> from sympy import Q, ask, Symbol, S
         >>> x = Symbol('x')
         >>> Q.prime(7)
         Q.prime(7)
@@ -102,6 +106,8 @@ class Predicate(Boolean):
     The tautological predicate `Q.is_true` can be used to wrap other objects:
 
         >>> Q.is_true(x > 1)
+        Q.is_true(x > 1)
+        >>> Q.is_true(S(1) < x)
         Q.is_true(1 < x)
 
     """

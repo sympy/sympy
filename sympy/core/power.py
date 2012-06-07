@@ -3,6 +3,7 @@ from math import log as _log
 from sympify import _sympify
 from cache import cacheit
 from core import C
+from sympy.core.function import _coeff_isneg, expand_complex
 from singleton import S
 from expr import Expr
 
@@ -36,12 +37,12 @@ def integer_nthroot(y, n):
     try:
         guess = int(y**(1./n) + 0.5)
     except OverflowError:
-        expt = _log(y, 2)/n
-        if expt > 53:
-            shift = int(expt - 53)
-            guess = int(2.0**(expt-shift) + 1) << shift
+        exp = _log(y, 2)/n
+        if exp > 53:
+            shift = int(exp - 53)
+            guess = int(2.0**(exp - shift) + 1) << shift
         else:
-            guess = int(2.0**expt)
+            guess = int(2.0**exp)
     #print n
     if guess > 2**50:
         # Newton iteration
@@ -80,6 +81,10 @@ class Pow(Expr):
                 return S.One
             elif e is S.One:
                 return b
+            elif S.NaN in (e, b):
+                if b is S.One or e is S.Zero:
+                    return S.One
+                return S.NaN
             else:
                 obj = b._eval_power(e)
                 if obj is not None:
@@ -101,29 +106,26 @@ class Pow(Expr):
         return 3, 2, cls.__name__
 
     def _eval_power(self, other):
-        b, e = self.as_base_exp()
-        if other.is_integer:
-            return Pow(b, e * other)
-        if b.is_nonnegative and (e.is_real or other.is_real):
-            return Pow(b, e * other)
-        if e.is_even and b.is_real: # hence b is pos and e is real
-            return Pow(abs(b), e * other)
-        if abs(e) < S.One and other.is_real:
-            return Pow(b, e * other)
+        from sympy.functions.elementary.exponential import log
 
-    def _eval_is_comparable(self):
-        c1 = self.base.is_comparable
-        if c1 is None: return
-        c2 = self.exp.is_comparable
-        if c2 is None: return
-        return c1 and c2
+        b, e = self.as_base_exp()
+        b_nneg = b.is_nonnegative
+        if b.is_real and not b_nneg and e.is_even:
+            b = abs(b)
+            b_nneg = True
+        smallarg = (abs(e) <= abs(S.Pi/log(b)))
+        if (other.is_Rational and other.q == 2 and
+            e.is_real is False and smallarg is False):
+            return -Pow(b, e*other)
+        if (other.is_integer or
+            e.is_real and (b_nneg or abs(e) < 1) or
+            e.is_real is False and smallarg is True or
+            b.is_polar):
+            return Pow(b, e*other)
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
-            if self.base.is_even:
-                return True
-            if self.base.is_integer:
-                return False
+            return self.base.is_even
 
     def _eval_is_positive(self):
         if self.base.is_positive:
@@ -175,8 +177,6 @@ class Pow(Expr):
         if b.is_Number and e.is_Number:
             # int**nonneg or rat**?
             check = Pow(*self.args)
-            if self == check:
-                return False
             return check.is_Integer
 
     def _eval_is_real(self):
@@ -212,8 +212,11 @@ class Pow(Expr):
                     return ok
 
     def _eval_is_odd(self):
-        if not (self.base.is_integer and self.exp.is_nonnegative): return
-        return self.base.is_odd
+        if self.exp.is_integer:
+            if self.exp.is_positive:
+                return self.base.is_odd
+            elif self.exp.is_nonnegative and self.base.is_odd:
+                return True
 
     def _eval_is_bounded(self):
         if self.exp.is_negative:
@@ -229,24 +232,27 @@ class Pow(Expr):
             if self.exp.is_nonnegative or self.base.is_nonzero:
                 return True
 
+    def _eval_is_polar(self):
+        return self.base.is_polar
+
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
         if old.func is self.func and self.base == old.base:
-            coeff1, terms1 = self.exp.as_coeff_mul()
-            coeff2, terms2 = old.exp.as_coeff_mul()
+            coeff1, terms1 = self.exp.as_coeff_Mul()
+            coeff2, terms2 = old.exp.as_coeff_Mul()
             if terms1 == terms2:
                 pow = coeff1/coeff2
-                if pow.is_Integer or self.base.is_commutative:
-                    return Pow(new, pow) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
-        if old.func is C.exp:
-            coeff1, terms1 = old.args[0].as_coeff_mul()
-            coeff2, terms2 = (self.exp*C.log(self.base)).as_coeff_mul()
+                if pow == int(pow) or self.base.is_positive:
+                    # issue 2081
+                    return Pow(new, pow) # (x**(6*y)).subs(x**(3*y),z)->z**2
+        if old.func is C.exp and self.exp.is_real and self.base.is_positive:
+            coeff1, terms1 = old.args[0].as_coeff_Mul()
+            # we can only do this when the base is positive AND the exponent
+            # is real
+            coeff2, terms2 = (self.exp*C.log(self.base)).as_coeff_Mul()
             if terms1 == terms2:
                 pow = coeff1/coeff2
-                if pow.is_Integer or self.base.is_commutative:
-                    return Pow(new, pow) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
-        return Pow(self.base._eval_subs(old, new), self.exp._eval_subs(old, new))
+                if pow == int(pow) or self.base.is_positive:
+                    return Pow(new, pow) # (2**x).subs(exp(x*log(2)), z) -> z
 
     def as_base_exp(self):
         """Return base and exp of self unless base is 1/Integer, then return Integer, -exp.
@@ -256,13 +262,21 @@ class Pow(Expr):
         """
 
         b, e = self.args
-        if b.is_Rational and b.p == 1 and b is not S.Infinity:
+        if b.is_Rational and b.p == 1:
             return Integer(b.q), -e
         return b, e
 
     def _eval_conjugate(self):
         from sympy.functions.elementary.complexes import conjugate as c
-        return c(self.base)**self.exp
+        i, p = self.exp.is_integer, self.base.is_positive
+        if i:
+            return c(self.base)**self.exp
+        if p:
+            return self.base**c(self.exp)
+        if i is False and p is False:
+            expanded = expand_complex(self)
+            if expanded != self:
+                return c(expanded)
 
     def _eval_expand_basic(self, deep=True, **hints):
         sargs, terms = self.args, []
@@ -319,10 +333,14 @@ class Pow(Expr):
                 # this is just like what is happening automatically, except
                 # that now we are doing it for an arbitrary exponent for which
                 # no automatic expansion is done
-                sifted = sift(b.args, lambda x: x.is_nonnegative)
-                nonneg = sifted.get(True, [])
-                other = sifted.get(None, [])
-                neg = sifted.get(False, [])
+                def pred(x):
+                    if x.is_polar is None:
+                        return x.is_nonnegative
+                    return x.is_polar
+                sifted = sift(b.args, pred)
+                nonneg = sifted[True]
+                other = sifted[None]
+                neg = sifted[False]
 
                 # make sure the Number gets pulled out
                 if neg and neg[0].is_Number and neg[0] is not S.NegativeOne:
@@ -338,12 +356,23 @@ class Pow(Expr):
                 nonneg += [-n for n in neg]
 
             if nonneg: # then there's a new expression to return
-                other = [Pow(Mul(*other), e)]
+                d = sift(nonneg, lambda x: x.is_commutative is True)
+                c = d[True]
+                nc = d[False]
+                if not e.is_Integer:
+                    other.extend(nc)
+                    nc = []
+                elif len(nc) == 1:
+                    c.extend(nc)
+                    nc = []
+                else:
+                    nc = [Mul._from_args(nc)]*e
+                other = [Pow(Mul(*other), e)] + nc
                 if deep:
                     return Mul(*([Pow(b.expand(deep=deep, **hints), e)\
-                    for b in nonneg] + other))
+                    for b in c] + other))
                 else:
-                    return Mul(*([Pow(b, e) for b in nonneg] + other))
+                    return Mul(*([Pow(b, e) for b in c] + other))
         return Pow(b, e)
 
     def _eval_expand_mul(self, deep=True, **hints):
@@ -518,9 +547,12 @@ class Pow(Expr):
         from sympy.core.symbol import symbols
         from sympy.polys.polytools import poly
         from sympy.core.function import expand_multinomial
+
         if self.exp.is_Integer:
             exp = self.exp
             re, im = self.base.as_real_imag(deep=deep)
+            if re.func == C.re or im.func == C.im or not im:
+                return self, S.Zero
             a, b = symbols('a b', cls=Dummy)
             if exp >= 0:
                 if re.is_Number and im.is_Number:
@@ -556,7 +588,6 @@ class Pow(Expr):
             #       x being imaginary there are actually q roots, but
             #       only a single one is returned from here.
             re, im = self.base.as_real_imag(deep=deep)
-
             r = Pow(Pow(re, 2) + Pow(im, 2), S.Half)
             t = C.atan2(im, re)
 
@@ -567,8 +598,12 @@ class Pow(Expr):
 
             if deep:
                 hints['complex'] = False
-                return (C.re(self.expand(deep, complex=False)),
-                C.im(self. expand(deep, **hints)))
+
+                expanded = self.expand(deep, **hints)
+                if hints.get('ignore') == expanded:
+                    return None
+                else:
+                    return (C.re(expanded), C.im(expanded))
             else:
                 return (C.re(self), C.im(self))
 
@@ -602,10 +637,11 @@ class Pow(Expr):
         base = base._evalf(prec)
         if not exp.is_Integer:
             exp = exp._evalf(prec)
-        if exp < 0 and not base.is_real:
+        if exp < 0 and base.is_number and base.is_real is False:
             base = base.conjugate() / (base * base.conjugate())._evalf(prec)
             exp = -exp
-        return Pow(base, exp).expand()
+            return Pow(base, exp).expand()
+        return Pow(base, exp)
 
     def _eval_is_polynomial(self, syms):
         if self.exp.has(*syms):
@@ -617,6 +653,18 @@ class Pow(Expr):
                    self.exp >= 0
         else:
             return True
+
+    def _eval_is_rational(self):
+        p = self.func(*self.as_base_exp()) # in case it's unevaluated
+        if not p.is_Pow:
+            return p.is_rational
+        b, e = p.as_base_exp()
+        if e.is_Rational and b.is_Rational:
+            # we didn't check that e is not an Integer
+            # because Rational**Integer autosimplifies
+            return False
+        if e.is_integer:
+            return b.is_rational
 
     def _eval_is_rational_function(self, syms):
         if self.exp.has(*syms):
@@ -633,39 +681,32 @@ class Pow(Expr):
             return self, S.One
         base, exp = self.as_base_exp()
         n, d = base.as_numer_denom()
-        if d.is_negative and n.is_negative:
+        # this should be the same as ExpBase.as_numer_denom wrt
+        # exponent handling
+        neg_exp = exp.is_negative
+        int_exp = exp.is_integer
+        if not neg_exp and not exp.is_real:
+            neg_exp = _coeff_isneg(exp)
+        # the denominator cannot be separated from the numerator if
+        # its sign is unknown unless the exponent is an integer, e.g.
+        # sqrt(a/b) != sqrt(a)/sqrt(b) when a=1 and b=-1. But if the
+        # denominator is negative the numerator and denominator can
+        # be negated and the denominator (now positive) separated.
+        if not (d.is_real or int_exp):
+            n = base
+            d = S.One
+        dnonpos = d.is_nonpositive
+        if dnonpos:
             n, d = -n, -d
-        if exp.is_Integer:
-            if exp.is_negative:
-                n, d = d, n
-                exp = -exp
-            return Pow(n, exp), Pow(d, exp)
-        elif exp.is_Rational or d.is_positive:
-            if d.is_negative is None:
-                # we won't split up the base
-                if exp.is_negative:
-                    return S.One, Pow(base, -exp)
-                else:
-                    return self, S.One
-            if d.is_negative:
-                n = -n
-                d = -d
-            c, t = exp.as_coeff_mul()
-            if c.is_negative:
-                n, d = d, n
-                exp = -exp
-            return Pow(n, exp), Pow(d, exp)
-        else:
-            c, t = exp.as_coeff_mul()
-            if c.is_negative:
-                return 1, base**-exp
-        # unprocessed Float and NumberSymbol
-        return self, S.One
+        elif dnonpos is None and not int_exp:
+            n = base
+            d = S.One
+        if neg_exp:
+            n, d = d, n
+            exp = -exp
+        return Pow(n, exp), Pow(d, exp)
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
-        if evaluate:
-            return self.subs(repl_dict).matches(expr, repl_dict)
-
+    def matches(self, expr, repl_dict={}):
         expr = _sympify(expr)
         b, e = expr.as_base_exp()
 
@@ -681,9 +722,9 @@ class Pow(Expr):
         if d is None:
             return None
 
-        d = self.exp.subs(d).matches(e, d)
+        d = self.exp.xreplace(d).matches(e, d)
         if d is None:
-            return Expr.matches(self, expr, repl_dict, evaluate)
+            return Expr.matches(self, expr, repl_dict)
         return d
 
     def _eval_nseries(self, x, n, logx):
@@ -758,8 +799,12 @@ class Pow(Expr):
         if e.has(Symbol):
             return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
 
-        if b == x:
-            return powsimp(self, deep=True, combine='exp')
+        # see if the base is as simple as possible
+        bx = b
+        while bx.is_Pow and bx.exp.is_Rational:
+            bx = bx.base
+        if bx == x:
+            return self
 
         # work for b(x)**e where e is not an Integer and does not contain x
         # and hopefully has no other symbols
@@ -807,20 +852,22 @@ class Pow(Expr):
                 raise ValueError('expecting numerical exponent but got %s' % ei)
 
             nuse = n - ei
-            lt = b.compute_leading_term(x, logx=logx) # arg = sin(x); lt = x
-            #  XXX o is not used -- was this to be used as o and o2 below to compute a new e?
-            o = order*lt**(1 - e)
             bs = b._eval_nseries(x, n=nuse, logx=logx)
-            if bs.is_Add:
-                bs = bs.removeO()
-            if bs.is_Add:
+            terms = bs.removeO()
+            if terms.is_Add:
+                bs = terms
+                lt = terms.as_leading_term(x)
+
                 # bs -> lt + rest -> lt*(1 + (bs/lt - 1))
                 return ((Pow(lt, e)*
                          Pow((bs/lt).expand(), e).
                          nseries(x, n=nuse, logx=logx)).expand() +
                          order)
 
-            return bs**e + order
+            rv = bs**e
+            if terms != bs:
+                rv += order
+            return rv
 
         # either b0 is bounded but neither 1 nor 0 or e is unbounded
         # b -> b0 + (b-b0) -> b0 * (1 + (b/b0-1))
@@ -864,11 +911,12 @@ class Pow(Expr):
     def _sage_(self):
         return self.args[0]._sage_()**self.args[1]._sage_()
 
-    def as_content_primitive(self):
+    def as_content_primitive(self, radical=False):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy import sqrt
         >>> sqrt(4 + 4*sqrt(2)).as_content_primitive()
@@ -893,7 +941,7 @@ class Pow(Expr):
         >>> eq.as_content_primitive()
         (9, 3**(2*x))
         >>> powsimp(Mul(*_))
-        9*9**x
+        9**(x + 1)
 
         >>> eq = (2 + 2*x)**y
         >>> s = separate(eq); s.is_Mul, s
@@ -906,10 +954,9 @@ class Pow(Expr):
         See docstring of Expr.as_content_primitive for more examples.
         """
 
-        from sympy.polys.polytools import _keep_coeff
         b, e = self.as_base_exp()
-        b = _keep_coeff(*b.as_content_primitive())
-        ce, pe = e.as_content_primitive()
+        b = _keep_coeff(*b.as_content_primitive(radical=radical))
+        ce, pe = e.as_content_primitive(radical=radical)
         if b.is_Rational:
             #e
             #= ce*pe
@@ -933,17 +980,41 @@ class Pow(Expr):
         e = _keep_coeff(ce, pe)
         # b**e = (h*t)**e = h**e*t**e = c*m*t**e
         if e.is_Rational and b.is_Mul:
-            h, t = b.as_content_primitive() # h is positive
+            h, t = b.as_content_primitive(radical=radical) # h is positive
             c, m = Pow(h, e).as_coeff_Mul() # so c is positive
             m, me = m.as_base_exp()
             if m is S.One or me == e: # probably always true
                 # return the following, not return c, m*Pow(t, e)
                 # which would change Pow into Mul; we let sympy
-                # decide what to do by using the unevaluated Mul
+                # decide what to do by using the unevaluated Mul, e.g
+                # should it stay as sqrt(2 + 2*sqrt(5)) or become
+                # sqrt(2)*sqrt(1 + sqrt(5))
                 return c, Pow(_keep_coeff(m, t), e)
         return S.One, Pow(b, e)
 
+    def is_constant(self, *wrt, **flags):
+        if flags.get('simplify', True):
+            self = self.simplify()
+        b, e = self.as_base_exp()
+        bz = b.equals(0)
+        if bz: # recalculate with assumptions in case it's unevaluated
+            new = b**e
+            if new != self:
+                return new.is_constant()
+        econ = e.is_constant(*wrt)
+        bcon = b.is_constant(*wrt)
+        if bcon:
+            if econ:
+                return True
+            bz = b.equals(0)
+            if bz is False:
+                return False
+        elif bcon is None:
+            return None
+
+        return e.equals(0)
+
 from add import Add
 from numbers import Integer
-from mul import Mul
+from mul import Mul, _keep_coeff
 from symbol import Symbol, Dummy

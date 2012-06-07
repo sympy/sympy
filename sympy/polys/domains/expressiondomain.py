@@ -5,6 +5,7 @@ from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 
 from sympy.core import sympify
+from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import DomainError
 
 class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
@@ -12,7 +13,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     is_EX = True
 
-    class Expression(object):
+    class Expression(PicklableWithSlots):
         """An arbitrary expression. """
 
         __slots__ = ['ex']
@@ -36,10 +37,10 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
             return f.ex
 
         def numer(f):
-            return EX(f.ex.as_numer_denom()[0])
+            return f.__class__(f.ex.as_numer_denom()[0])
 
         def denom(f):
-            return EX(f.ex.as_numer_denom()[1])
+            return f.__class__(f.ex.as_numer_denom()[1])
 
         def simplify(f, ex):
             return f.__class__(ex.cancel())
@@ -151,7 +152,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K0.to_sympy(a))
 
-    def from_PolynomialRing(K1, a, K0):
+    def from_GlobalPolynomialRing(K1, a, K0):
         """Convert a `DMP` object to `dtype`. """
         return K1(K0.to_sympy(a))
 
