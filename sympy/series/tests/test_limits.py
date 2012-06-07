@@ -294,9 +294,12 @@ def test_extended_real_line():
     assert limit(oo - x, x, -oo) == oo
     assert limit(x**2/(x-5) - oo, x, oo) == -oo
     assert limit(1/(x+sin(x)) - oo, x, 0) == -oo
+    assert limit(oo/x, x, oo) == oo
+
+@XFAIL
+def test_extended_real_line_fail():
     assert limit(x - oo + 1/x, x, oo) == -oo
     assert limit(x - oo + 1/x, x, 0) == -oo
-    assert limit(oo/x, x, oo) == oo
 
 @XFAIL
 def test_order_oo():
@@ -316,3 +319,11 @@ def test_Limit_dir():
 def test_polynomial():
     assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, oo) == 1
     assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, -oo) == 1
+
+def test_issue_2641():
+    assert limit(log(x)/z - log(2*x)/z, x, 0) == -log(2)/z
+
+def test_issue_3267():
+    n = Symbol('n', integer=True, positive=True)
+    r = (n + 1)*x**(n + 1)/(x**(n + 1) - 1) - x/(x - 1)
+    assert limit(r, x, 1) == n/2

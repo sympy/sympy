@@ -1470,7 +1470,7 @@ class RegularPolygon(Polygon):
         r._rot += angle
         return GeometryEntity.rotate(r, angle, pt)
 
-    def scale(self, x=1, y=1):
+    def scale(self, x=1, y=1, pt=None):
         """Override GeometryEntity.scale since it is the radius that must be
         scaled (if x == y) or else a new Polygon must be returned.
 
@@ -1487,6 +1487,9 @@ class RegularPolygon(Polygon):
         Polygon(Point(2, 0), Point(0, 1), Point(-2, 0), Point(0, -1))
 
         """
+        if pt:
+            pt = Point(pt)
+            return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         if x != y:
             return Polygon(*self.vertices).scale(x, y)
         c, r, n, rot = self.args
@@ -1821,8 +1824,9 @@ class Triangle(Polygon):
     def altitudes(self):
         """The altitudes of the triangle.
 
-        An altitude of a triangle is a straight line through a vertex and
-        perpendicular to the opposite side.
+        An altitude of a triangle is a segment through a vertex,
+        perpendicular to the opposite side, with length being the
+        height of the vertex measured from the line containing the side.
 
         Returns
         =======
@@ -1881,7 +1885,7 @@ class Triangle(Polygon):
         """
         a = self.altitudes
         v = self.vertices
-        return a[v[0]].intersection(a[v[1]])[0]
+        return Line(a[v[0]]).intersection(Line(a[v[1]]))[0]
 
     @property
     def circumcenter(self):

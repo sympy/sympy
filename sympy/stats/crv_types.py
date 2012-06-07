@@ -1104,11 +1104,11 @@ def Normal(mean, std, symbol=None):
 
     >>> C = simplify(cdf(X))
     >>> pprint(C, use_unicode=False)
-          /                                      2      2              2\
-          |                              (z - mu)    - z  + 2*z*mu - mu |
-          |                              --------- + -------------------|
-          |   /   /  ___         \    \          2                2     |
-          |   |   |\/ 2 *(z - mu)|    |   2*sigma          2*sigma      |
+          /                                 2              2           2\
+          |                              - z  + 2*z*mu - mu  + (z - mu) |
+          |                              -------------------------------|
+          |   /   /  ___         \    \                     2           |
+          |   |   |\/ 2 *(z - mu)|    |              2*sigma            |
           |   |erf|--------------| + 1|*e                               |
           |   \   \   2*sigma    /    /                                 |
     Lambda|z, ----------------------------------------------------------|
@@ -1619,7 +1619,7 @@ def Weibull(alpha, beta, symbol=None):
     lambda*gamma(1 + 1/k)
 
     >>> simplify(variance(X))
-    -lambda**2*(gamma(1 + 1/k)**2 - gamma(1 + 2/k))
+    lambda**2*(-gamma(1 + 1/k)**2 + gamma(1 + 2/k))
 
     References
     ==========

@@ -511,6 +511,7 @@ class coth(HyperbolicFunction):
     def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
+                hints['complex'] = False
                 return (self.expand(deep, **hints), S.Zero)
             else:
                 return (self, S.Zero)

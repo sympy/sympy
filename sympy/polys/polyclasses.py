@@ -840,7 +840,7 @@ class DMP(PicklableWithSlots):
                 g = f.per(dmp_ground(f.dom.convert(g), f.lev))
             except TypeError:
                 return NotImplemented
-            except CoercionFailed as e:
+            except CoercionFailed, e:
                 if f.ring is not None:
                     g = f.ring.convert(g)
                 else:
@@ -857,7 +857,7 @@ class DMP(PicklableWithSlots):
                 g = f.per(dmp_ground(f.dom.convert(g), f.lev))
             except TypeError:
                 return NotImplemented
-            except CoercionFailed as e:
+            except CoercionFailed, e:
                 if f.ring is not None:
                     g = f.ring.convert(g)
                 else:
@@ -876,7 +876,7 @@ class DMP(PicklableWithSlots):
                 return f.mul_ground(g)
             except TypeError:
                 return NotImplemented
-            except CoercionFailed as e:
+            except CoercionFailed, e:
                 if f.ring is not None:
                     return f.mul(f.ring.convert(g))
                 else:
@@ -890,7 +890,7 @@ class DMP(PicklableWithSlots):
                 return f.mul_ground(g)
             except TypeError:
                 return NotImplemented
-            except CoercionFailed as e:
+            except CoercionFailed,  e:
                 if f.ring is not None:
                     return f.exquo(f.ring.convert(g))
                 else:
@@ -1287,7 +1287,7 @@ class DMF(PicklableWithSlots):
             return f.add(f.half_per(g))
         except TypeError:
             return NotImplemented
-        except CoercionFailed as e:
+        except CoercionFailed, e:
             if f.ring is not None:
                 return f.add(f.ring.convert(g))
             else:
@@ -1316,7 +1316,7 @@ class DMF(PicklableWithSlots):
             return f.mul(f.half_per(g))
         except TypeError:
             return NotImplemented
-        except CoercionFailed as e:
+        except CoercionFailed, e:
             if f.ring is not None:
                 return f.mul(f.ring.convert(g))
             else:
@@ -1336,7 +1336,7 @@ class DMF(PicklableWithSlots):
             return f.quo(f.half_per(g))
         except TypeError:
             return NotImplemented
-        except CoercionFailed as e:
+        except CoercionFailed, e:
             if f.ring is not None:
                 return f.quo(f.ring.convert(g))
             else:

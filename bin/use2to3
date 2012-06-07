@@ -125,17 +125,23 @@ from lib2to3.main import main as main2to3
 main2to3("lib2to3.fixes", args_2to3)
 main2to3("lib2to3.fixes", args_2to3_doctests)
 
-# remove trailing whitespace that was added by 2to3
+# remove trailing spaced added to lines by 2to3
 whitespace = re.compile(" +$", re.MULTILINE)
+# remove multiple newlines at eof that were added by 2to3;
+# \n\n is probably sufficient, but in case some spaces were
+# slipped in before extra newlines, \s\s is used
+eofnewlines = re.compile("\s\s+$")
 
 for filepath in modified_files + modified_txt_files:
     with open(filepath, 'r') as f:
-        text = f.read()
+        text = f.read() or '\n' # all must end with newline
 
-    text, n = whitespace.subn("", text)
+    n = len(text)
+    text = whitespace.sub('', text)
+    text = eofnewlines.sub('\n', text)
 
-    if n > 0:
-        sys.stdout.write("Removed trailing whitespace from %s\n" % filepath)
+    if len(text) != n:
+        sys.stdout.write("Fixed trailing whitespace in %s\n" % filepath)
 
         with open(filepath, 'w') as f:
             f.write(text)

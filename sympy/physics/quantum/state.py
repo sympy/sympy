@@ -3,7 +3,7 @@
 
 from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
                    Tuple)
-from sympy.printing.pretty.stringpict import prettyForm
+from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 
 __all__ = [
@@ -24,17 +24,20 @@ __all__ = [
 # States, bras and kets.
 #-----------------------------------------------------------------------------
 
-# LIGHT VERTICAL BAR
-_straight_bracket = u"\u2758"
+# ASCII brackets
+_lbracket = "<"
+_rbracket = ">"
+_straight_bracket = "|"
 
-# MATHEMATICAL LEFT ANGLE BRACKET
-_lbracket = u"\u27E8"
-_rbracket = u"\u27E9"
+
+# Unicode brackets
+# MATHEMATICAL ANGLE BRACKETS
+_lbracket_ucode = u"\u27E8"
+_rbracket_ucode = u"\u27E9"
+# LIGHT VERTICAL BAR
+_straight_bracket_ucode = u"\u2758"
 
 # Other options for unicode printing of <, > and | for Dirac notation.
-
-# VERTICAL LINE
-# _straight_bracket = u"\u007C"
 
 # LEFT-POINTING ANGLE BRACKET
 # _lbracket = u"\u2329"
@@ -43,6 +46,9 @@ _rbracket = u"\u27E9"
 # LEFT ANGLE BRACKET
 # _lbracket = u"\u3008"
 # _rbracket = u"\u3009"
+
+# VERTICAL LINE
+# _straight_bracket = u"\u007C"
 
 
 class StateBase(QExpr):
@@ -117,22 +123,61 @@ class StateBase(QExpr):
     # Printing
     #-------------------------------------------------------------------------
 
-    def _print_contents(self, printer, *args):
-        label = self._print_label(printer, *args)
-        return '%s%s%s' % (self.lbracket, label, self.rbracket)
+    def _pretty_brackets(self, height, use_unicode=True):
+        # Return pretty printed brackets for the state
+        # Ideally, this could be done by pform.parens but it does not support the angled < and >
 
-    def _print_contents_pretty(self, printer, *args):
+        # Setup for unicode vs ascii
+        if use_unicode:
+            lbracket, rbracket = self.lbracket_ucode, self.rbracket_ucode
+            slash, bslash, vert = u'\u2571', u'\u2572', u'\u2502'
+        else:
+            lbracket, rbracket = self.lbracket, self.rbracket
+            slash, bslash, vert = '/', '\\', '|'
+
+        # If height is 1, just return brackets
+        if height == 1:
+            return stringPict(lbracket), stringPict(rbracket)
+        # Make height even
+        height += (height % 2)
+
+        brackets = []
+        for bracket in lbracket, rbracket:
+            # Create left bracket
+            if bracket in set([_lbracket, _lbracket_ucode]):
+                bracket_args = [ ' ' * (height//2-i-1) + slash for i in range(height // 2)]
+                bracket_args.extend([ ' ' * i + bslash for i in range(height // 2)])
+            # Create right bracket
+            elif bracket in set([_rbracket, _rbracket_ucode]):
+                bracket_args = [ ' ' * i + bslash for i in range(height // 2)]
+                bracket_args.extend([ ' ' * (height//2-i-1) + slash for i in range(height // 2)])
+            # Create straight bracket
+            elif bracket in set([_straight_bracket, _straight_bracket_ucode]):
+                bracket_args = [vert for i in range(height)]
+            else:
+                raise ValueError(bracket)
+            brackets.append(stringPict('\n'.join(bracket_args), baseline=height//2))
+        return brackets
+
+    def _sympystr(self, printer, *args):
+        contents = self._print_contents(printer, *args)
+        return '%s%s%s' % (self.lbracket, contents, self.rbracket)
+
+    def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
-        pform = self._print_label_pretty(printer, *args)
-        pform = prettyForm(*pform.left((self.lbracket_pretty)))
-        pform = prettyForm(*pform.right((self.rbracket_pretty)))
+        # Get brackets
+        pform = self._print_contents_pretty(printer, *args)
+        lbracket, rbracket = self._pretty_brackets(pform.height(), printer._use_unicode)
+        # Put together state
+        pform = prettyForm(*pform.left(lbracket))
+        pform = prettyForm(*pform.right(rbracket))
         return pform
 
-    def _print_contents_latex(self, printer, *args):
-        label = self._print_label_latex(printer, *args)
+    def _latex(self, printer, *args):
+        contents = self._print_contents_latex(printer, *args)
         # The extra {} brackets are needed to get matplotlib's latex
         # rendered to render this properly.
-        return '{%s%s%s}' % (self.lbracket_latex, label, self.rbracket_latex)
+        return '{%s%s%s}' % (self.lbracket_latex, contents, self.rbracket_latex)
 
 
 class KetBase(StateBase):
@@ -143,10 +188,10 @@ class KetBase(StateBase):
     use Ket.
     """
 
-    lbracket = '|'
-    rbracket = '>'
-    lbracket_pretty = prettyForm(_straight_bracket)
-    rbracket_pretty = prettyForm(_rbracket)
+    lbracket = _straight_bracket
+    rbracket = _rbracket
+    lbracket_ucode = _straight_bracket_ucode
+    rbracket_ucode = _rbracket_ucode
     lbracket_latex = r'\left|'
     rbracket_latex = r'\right\rangle '
 
@@ -221,10 +266,10 @@ class BraBase(StateBase):
     instead use Bra.
     """
 
-    lbracket = '<'
-    rbracket = '|'
-    lbracket_pretty = prettyForm(_lbracket)
-    rbracket_pretty = prettyForm(_straight_bracket)
+    lbracket = _lbracket
+    rbracket = _straight_bracket
+    lbracket_ucode = _lbracket_ucode
+    rbracket_ucode = _straight_bracket_ucode
     lbracket_latex = r'\left\langle '
     rbracket_latex = r'\right|'
 
@@ -460,29 +505,22 @@ class TimeDepState(StateBase):
     def _print_contents(self, printer, *args):
         label = self._print_label(printer, *args)
         time = self._print_time(printer, *args)
-        return '%s%s;%s%s' % (self.lbracket, label, time, self.rbracket)
+        return '%s;%s' % (label, time)
 
-    def _print_contents_repr(self, printer, *args):
-        label = self._print_label_repr(printer, *args)
+    def _print_label_repr(self, printer, *args):
+        label = self._print_sequence(self.label, ',', printer, *args)
         time = self._print_time_repr(printer, *args)
         return '%s,%s' % (label, time)
 
     def _print_contents_pretty(self, printer, *args):
-        pform = self._print_label_pretty(printer, *args)
-        pform = prettyForm(*pform.left((self.lbracket_pretty)))
-        pform = prettyForm(*pform.right((';')))
-        nextpform = self._print_time_pretty(printer, *args)
-        pform = prettyForm(*pform.right((nextpform)))
-        pform = prettyForm(*pform.right((self.rbracket_pretty)))
-        return pform
+        label = self._print_label_pretty(printer, *args)
+        time = self._print_time_pretty(printer, *args)
+        return printer._print_seq((label, time), delimiter=';')
 
     def _print_contents_latex(self, printer, *args):
-        label = self._print_label_latex(printer, *args)
+        label = self._print_sequence(self.label, self._label_separator, printer, *args)
         time = self._print_time_latex(printer, *args)
-        # The extra {} brackets are needed to get matplotlib's latex
-        # rendered to render this properly.
-        return '{%s%s;%s%s}' %\
-            (self.lbracket_latex, label, time, self.rbracket_latex)
+        return '%s;%s' % (label, time)
 
 
 class TimeDepKet(TimeDepState, KetBase):
