@@ -27,18 +27,9 @@ def test_trace_new():
     print t.args[1].args[1]
     assert t.args[1].args[1] == (2,3)
 
-
-
 def test_trace_doit():
     a, b, c, d = symbols('a b c d')
     A, B, C, D = symbols('A B C D', commutative=False)
 
     M = Matrix([[1,1],[2,2]])
     assert Tr(M).doit() == 3
-
-
-
-
-
-
-

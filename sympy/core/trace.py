@@ -40,7 +40,7 @@ class Tr(Expr):
         if isinstance(expr, Matrix):
             return Expr.__new__(cls, expr,indices)
         elif isinstance(expr, Add):
-            result = Tr(expr.args[0],indices);
+            result = Tr(expr.args[0],indices)
             for arg in expr.args[1:]:
                 result = Add(result, Tr(arg,indices))
             return result
@@ -56,10 +56,8 @@ class Tr(Expr):
             inst = Expr.__new__(cls, expr,indices)
             return inst
 
-
     def doit(self):
         """ Perform the trace operation.
-
 
         #TODO: Current version ignore the indices set of partial trace.
 
@@ -73,5 +71,3 @@ class Tr(Expr):
             raise NotImplementedError("%s.%s is not found" % \
                                       self.args[0].__class__.__name__,
                                       '_eval_args()')
-
-

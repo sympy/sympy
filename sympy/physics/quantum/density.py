@@ -233,4 +233,3 @@ def entropy(density):
         return -np.sum(eigvals*np.log(eigvals))
     else:
         raise ValueError("numpy.ndarray, scipy.sparse or sympy matrix expected")
-
