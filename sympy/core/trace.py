@@ -38,35 +38,35 @@ class Tr(Expr):
         indices = args[2] if len(args) == 3 else -1 #-1 indicates full trace
 
         if isinstance(expr, Matrix):
-            return Expr.__new__(cls, expr,indices)
+            return Expr.__new__(cls, expr, indices)
         elif isinstance(expr, Add):
             result = Tr(expr.args[0],indices)
             for arg in expr.args[1:]:
-                result = Add(result, Tr(arg,indices))
+                result = Add(result, Tr(arg, indices))
             return result
         elif isinstance(expr, Mul):
             c_part, nc_part = expr.args_cnc()
             if len(nc_part) == 0:
                 return Mul(*c_part)
             else:
-                return Mul(*c_part)*Expr.__new__(cls,Mul(*nc_part),indices)
+                return Mul(*c_part)*Expr.__new__(cls, Mul(*nc_part), indices)
         elif isinstance(expr, Pow):
             return expr
         else:
-            inst = Expr.__new__(cls, expr,indices)
+            inst = Expr.__new__(cls, expr, indices)
             return inst
 
     def doit(self):
         """ Perform the trace operation.
 
-        #TODO: Current version ignore the indices set of partial trace.
+        #TODO: Current version ignores the indices set for partial trace.
 
         """
 
         if (isinstance(self.args[0], Matrix)):
             return self.args[0].trace()
         else: # call _eval_trace based on argument type
-            if hasattr(self.args[0],'_eval_trace'):
+            if hasattr(self.args[0], '_eval_trace'):
                 return self.args[0]._eval_trace()
             raise NotImplementedError("%s.%s is not found" % \
                                       self.args[0].__class__.__name__,

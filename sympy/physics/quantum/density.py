@@ -172,16 +172,16 @@ class Density(HermitianOperator):
     def _print_operator_name_pretty(self, printer, *args):
         return prettyForm(u"\u03C1")
 
-    def _eval_trace(self,**kwargs):
+    def _eval_trace(self, **kwargs):
         expr = self.doit(); # get sum of scalars*OuterProduct
         if isinstance(expr, Add):
-            result = 0;
+            result = 0
             for mul in expr.args:
-                result = result + mul.args[0]*mul.args[1]._eval_trace();
+                result = result + mul.args[0]*mul.args[1]._eval_trace()
             return result
         else: # only one mul expr
             if ( isinstance(expr.args[1], Operator)):
-                return expr.args[1]._eval_trace();
+                return expr.args[1]._eval_trace()
 
 
 def entropy(density):

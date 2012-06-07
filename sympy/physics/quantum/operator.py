@@ -370,10 +370,7 @@ class OuterProduct(Operator):
         # or
         # if operands are tensorproducts call tensortproducts _eval_trace
 
-        raise NotImplementedError('%s: This method is under construction' % \
-                                  self.__class__.__name__)
-
-
+        return self.ket._eval_trace(self.bra,**kwargs);
 
 class DifferentialOperator(Operator):
     """An operator for representing the differential operator, i.e. d/dx

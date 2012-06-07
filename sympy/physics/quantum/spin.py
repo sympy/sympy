@@ -966,16 +966,20 @@ class SpinState(State):
             result *= KroneckerDelta(self.j, bra.j) * KroneckerDelta(self.m, bra.m)
         return result
 
-    def _eval_trace(self, bra, basis, **hints):
+    def _eval_trace(self, bra, **hints):
 
         # One way to implement this method is to assume the basis set k is
         # passed.
         # Then we can apply the discrete form of Trace formula here
         # Tr(|i><j| ) = \Sum_k <k|i><j|k>
-
         #then we do qapply() on each each inner product and sum over them.
-        raise NotImplementedError("Method under development")
 
+        # OR
+
+        # Inner product of |i><j| = Trace(Outer Product).
+        # we could just use this unless there are cases when this is not true
+
+        return (bra*self).doit()
 
 class JxKet(SpinState, Ket):
     """Eigenket of Jx.
