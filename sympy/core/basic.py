@@ -1056,12 +1056,21 @@ class Basic(object):
 
     def _has(self, pattern):
         """Helper for .has()"""
+        from sympy.core.function import UndefinedFunction, Function
+        if isinstance(pattern, UndefinedFunction):
+            return any(f.func == pattern or f == pattern for f in self.atoms(Function, UndefinedFunction))
+
         pattern = sympify(pattern)
         if isinstance(pattern, BasicType):
-            return any(isinstance(arg, pattern) for arg in preorder_traversal(self))
-        else:
+            return any(isinstance(arg, pattern)
+            for arg in preorder_traversal(self))
+
+        try:
             match = pattern._has_matcher()
             return any(match(arg) for arg in preorder_traversal(self))
+        except AttributeError:
+            return any(arg == pattern for arg in preorder_traversal(self))
+
 
     def _has_matcher(self):
         """Helper for .has()"""
