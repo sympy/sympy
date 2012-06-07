@@ -123,6 +123,9 @@ class StrPrinter(Printer):
     def _print_Dummy(self, expr):
         return '_' + expr.name
 
+    def _print_IntConst(self, expr):
+        return expr.name
+
     def _print_EulerGamma(self, expr):
         return 'EulerGamma'
 

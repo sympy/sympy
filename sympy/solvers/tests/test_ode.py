@@ -1,14 +1,16 @@
 from __future__ import division
 
 
-from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve, Eq,
+from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, Eq,
                    erf, exp, Function, I, Integral, LambertW, log, O, pi,
                    Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin,
                    Piecewise, symbols)
 x, y, z = symbols('x:z', real=True)
+from sympy.core.symbol import IntConst
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
                                classify_ode, constant_renumber, constantsimp,
                                homogeneous_order, ode_order)
+from sympy.core.multidimensional import vectorize
 from sympy.utilities.pytest import XFAIL, skip, raises, slow
 
 C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C1:11')
@@ -24,6 +26,35 @@ g = Function('g')
 # constant_renumber because it will normalize it (constant_renumber causes
 # dsolve() to return different results on different machines)
 
+
+@vectorize(0)
+def IntConst_to_Symbol(expr):
+    """Transform IntConst instances into Symbol instances conseving the name.
+
+    This is necessary for having an equality between constants with the same
+    names.
+    """
+    symbols_starting_with_C = [c for c in expr.free_symbols
+                                  if c.name.startswith('C')
+                                  and not isinstance(c, IntConst)]
+    if symbols_starting_with_C:
+        raise ValueError('integrations constant is not IntConst instance')
+    old_constants = list(expr.atoms(IntConst))
+    new_constants = [Symbol(c.name) for c in old_constants]
+    return expr.subs(zip(old_constants, new_constants))
+
+import sympy
+def dsolve(*args, **kwargs):
+    ret = sympy.dsolve(*args, **kwargs)
+    if isinstance(ret, dict):
+        solutions = dict((k, IntConst_to_Symbol(v)) for k, v in ret.items()
+                                                     if not isinstance(v,basestring))
+        meta = dict((k, v) for k, v in ret.items()
+                            if isinstance(v,basestring))
+        solutions.update(meta)
+        return solutions
+    else:
+        return IntConst_to_Symbol(ret)
 
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.

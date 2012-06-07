@@ -184,6 +184,8 @@ class Dummy(Symbol):
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
 
+class IntConst(Dummy):
+    pass
 
 class Wild(Symbol):
     """

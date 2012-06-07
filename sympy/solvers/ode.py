@@ -211,7 +211,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative, AppliedUndef, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
-from sympy.core.symbol import Symbol, Wild, Dummy
+from sympy.core.symbol import Symbol, Wild, Dummy, IntConst
 from sympy.core.sympify import sympify
 
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign
@@ -485,11 +485,29 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     >>> # Note that even though separable is the default, 1st_exact produces
     >>> # a simpler result in this case.
 
+    Initial Conditions and Systems of ODEs:
+    =======================================
+
+    Experimental functionality:
+
+    `dsolve` can also solve systems of ODEs and treat initial
+    conditions. These options are still unreliable and documented only in the
+    internal-use-only function `ode_system`. To solve for systems the input
+    should be a list of all equations and a list of all the functions to solve
+    for. To treat initial conditions they should be entered as part of the
+    system. The flags to `dsolve` do not work yet when solving for systems or
+    with initial conditions.
     """
     prep = kwargs.pop('prep', True)
 
-    # TODO: Implement initial conditions
-    # See issue 1621.  We first need a way to represent things like f'(0).
+    #TODO The impedance matching between ode_system and dsolve could be better.
+    # For the moment ode_system is left as simple as possible (input as
+    # explicit as possible) and all the input massaging is done here.
+    if iterable(eq):
+        from ode_system import ode_system
+        func = func if iterable(func) else [func]
+        return ode_system(eq, func)
+
     if isinstance(eq, Equality):
         eq = eq.lhs - eq.rhs
 
@@ -589,7 +607,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
         r['simplify'] = False  # Some hints can take advantage of this option
         rv = _handle_Integral(solvefunc(eq, func, order=hints['order'],
             match=hints[hint]), func, hints['order'], hint)
-    return rv
+    return C_to_IntConst(rv)
 
 
 def classify_ode(eq, func=None, dict=False, prep=True):
@@ -1506,9 +1524,8 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     # simplifying up.  Otherwise, we can skip that part of the
     # expression.
 
-    constant_iter = numbered_symbols('C', start=startnumber)
-    constantsymbols = [constant_iter.next() for t in range(startnumber,
-                                          endnumber + 1)]
+    constant_iter = numbered_symbols('C', cls=Symbol, start=startnumber)
+    constantsymbols = [constant_iter.next() for t in range(startnumber, endnumber + 1)]
     constantsymbols_set = set(constantsymbols)
     x = independentsymbol
     if isinstance(expr, Equality):
@@ -3293,3 +3310,19 @@ def ode_separable(eq, func, order, match):
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
         (r['y'], None, f(x))), C.Integral(-r['m1']['coeff']*r['m1'][x]/
         r['m2'][x], x) + C1)
+
+
+@vectorize(0)
+def C_to_IntConst(expr):
+    """Transforms symbols starting with a `C` into IntConst instances.
+
+    IntConst instances are just a subclass of Dummy.
+
+    This is the first step in solving issue 1739. It is usefull for the ODE
+    system solver (no more hacks in order to find all constants). The real
+    solution is to make all solvers and const_simplification routines use
+    IntConst instances, however this is a very hard task."""
+    old_constants = [c for c in expr.free_symbols
+                        if c.name.startswith('C')]
+    new_constants = [IntConst(c.name) for c in old_constants]
+    return expr.subs(zip(old_constants, new_constants))

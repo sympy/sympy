@@ -851,6 +851,9 @@ def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
     assert _test_args(Dummy('t'))
 
+def test_sympy__core__symbol__IntConst():
+    from sympy.core.symbol import IntConst
+    assert _test_args(IntConst('t'))
 
 def test_sympy__core__symbol__Symbol():
     from sympy.core.symbol import Symbol
