@@ -2,7 +2,7 @@ from sympy import S, Symbol, symbols, Matrix
 from sympy.core.trace import Tr
 
 def test_trace_new():
-    a, b, c, d = symbols('a b c d')
+    a, b, c, d, Y = symbols('a b c d Y')
     A, B, C, D = symbols('A B C D', commutative=False)
 
     #Tr(A+B) = Tr(A) + Tr(B)
@@ -11,13 +11,15 @@ def test_trace_new():
     assert Tr((a*b) + ( c*d)) == (a*b) + (c*d)
     # Tr(scalar*A) = scalar*Tr(A)
     assert Tr( a*A ) == a*Tr(A)
-    assert Tr(a*b*A*B) == a*b*Tr(A*B)
+
+    #also check if Muls are permuted in canonical form
+    assert Tr(a*A*B*b) == a*b*Tr(A*B)
 
     #POW
-    assert Tr ( pow(a,b) ) == a**b
+    assert Tr ( pow(a,b) ) == Tr(a**b)
 
     M = Matrix([[1,1],[2,2]])
-    assert Tr(a*M) == Tr(Matrix ( [[a,a],[2*a,2*a]]))
+    assert Tr(M) == 3
 
     #trace indices test
     t = Tr((a+b), (2))
@@ -33,3 +35,5 @@ def test_trace_doit():
 
     M = Matrix([[1,1],[2,2]])
     assert Tr(M).doit() == 3
+
+    #Test for default return self
