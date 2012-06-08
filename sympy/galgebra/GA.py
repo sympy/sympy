@@ -241,37 +241,31 @@ def cp(A,B):
 
 def reduce_base(k,base):
     """
-    If base is a list of sorted integers [i_1,...,i_R] then reduce_base
-    sorts the list [k,i_1,...,i_R] and calculates whether an odd or even
-    number of permutations is required to sort the list. The sorted list
-    is returned and +1 for even permutations or -1 for odd permutations.
-    """
-    ind_k = bisect_left(base, k)
-    if ind_k%2 == 0:
-        perm = 1
-    else:
-        perm =-1
-    if ind_k == len(base):
-        return (perm,base+[k])   
-    if base[ind_k] == k:
-        return(0,base)
-    return(perm,base[:ind_k]+[k]+base[ind_k:])
+    If base is a list of sorted integers [i_1, ..., i_n] then reduce_base
+    inserts k, if it is not already present, to maintain the sorted order.
+    The tuple, (j, base) is returned where base is now (perhaps) longer and
+    j is one of the following:
 
-def sub_base(k,base):
+        0 - k was already in base
+        1 - k was inserted at an even index position
+       -1 - k was inserted at an odd index position
     """
-    If base is a list of sorted integers [i_1,...,i_R] then sub_base returns
-    a list with the k^th element removed. Note that k=0 removes the first
-    element.  There is no test to see if k is in the range of the list.
-    """
-    n = len(base)
-    if n == 1:
-        return([])
-    if n == 2:
-        if k == base[0]:
-            return([base[1]])
-        else:
-            return([base[0]])
-    return(base[:k]+base[k+1:])
+    
+    ind_k = bisect_left(base, k)
+    if base[ind_k] == k:
+        return(0, base)
+    perm = -1 if (ind_k % 2) else 1
+    base.insert(ind_k, k)
+    return perm, base
+
+def sub_base(k, base):
+    """Return a copy of base with the kth element removed. The original base is not modified."""
+    rv = list(base)
+    try:
+        rv.pop(k)
+    except IndexError:
+        pass
+    return rv
 
 def magnitude(vector):
     """
