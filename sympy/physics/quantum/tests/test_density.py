@@ -15,7 +15,7 @@ def test_eval_args():
     assert isinstance(Density([Ket(0), 0.5], [Ket(1), 0.5]), Density)
 
     # check for value error, when prob is not provided
-    raises(ValueError, 'Density([Ket(0)], [Ket(1)])')
+    raises(ValueError, lambda: Density([Ket(0)], [Ket(1)]))
 
 def test_doit():
     x,y = symbols('x y')
