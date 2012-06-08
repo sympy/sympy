@@ -150,6 +150,12 @@ def comb(N,P):
         comb.sort()
     return(combs)
 
+def arbitrary(p):
+    """
+    Return string equivalent metric tensor for arbitrary signature
+    """
+    return (', '.join(['# ' * p] * p))
+
 def diagpq(p, q=0):
     """
     Return string equivalent metric tensor for signature (p, q).
