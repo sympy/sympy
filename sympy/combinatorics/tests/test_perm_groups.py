@@ -17,7 +17,7 @@ def test_new():
         a = Permutation([2, 0, 1, 3, 4, 5])
         b = Permutation([0, 2, 1, 3, 4])
         g = PermutationGroup([a, b])
-    raises(ValueError, 'test1()')
+    raises(ValueError, lambda: test1())
 
 def test_generate():
     a = Permutation([1, 0])
