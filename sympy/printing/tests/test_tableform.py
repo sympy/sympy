@@ -50,12 +50,14 @@ def test_TableForm():
         'Group B | 4  2 \n'
         'Group C | 10 3 '
         )
-    raises(ValueError,
-            dedent('''
-            TableForm([[5, 7], [4, 2], [10, 3]],
+    raises(
+        ValueError,
+        lambda:
+            TableForm(
+            [[5, 7], [4, 2], [10, 3]],
             headings=[["Group A", "Group B", "Group C"], ["y1", "y2"]],
-            alignments="middle")''')
-            )
+            alignments="middle")
+        )
     s = str(TableForm([[5, 7], [4, 2], [10, 3]],
             headings=[["Group A", "Group B", "Group C"], ["y1", "y2"]],
             alignments="right"))
@@ -88,7 +90,7 @@ def test_TableForm():
     '  x | 100 1  '
     )
 
-    raises(ValueError, "TableForm(d, alignments='clr')")
+    raises(ValueError, lambda: TableForm(d, alignments='clr'))
 
     #pad
     s = str(TableForm([[None, "-", 2],[1]], pad='?'))
