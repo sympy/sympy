@@ -115,10 +115,7 @@ def make_null_array(n):
     """
     Return list of n empty lists.
     """
-    a = []
-    for i in range(n):
-        a.append([])
-    return(a)
+    return([[]]*n)
 
 def test_int_flgs(lst):
     """
