@@ -274,7 +274,7 @@ def test_imps():
     raises(ValueError, lambda: lambdify(x, f(f2(x))))
 
 def test_imps_wrong_args():
-    raises(ValueError, 'implemented_function(sin, lambda x:x)')
+    raises(ValueError, lambda: implemented_function(sin, lambda x:x))
 
 def test_lambdify_imps():
     # Test lambdify with implemented functions
