@@ -60,6 +60,9 @@ class Wigner3j(Expr):
 
     .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
+
+    is_commutative = True
+
     def __new__(cls, j1, m1, j2, m2, j3, m3):
         args = map(sympify, (j1,m1,j2,m2,j3,m3))
         return Expr.__new__(cls, *args)
