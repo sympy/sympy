@@ -32,6 +32,9 @@ def test_morphism():
     assert f.components == [f]
 
     assert f != None
+    assert f == f
+    assert f == Morphism(A, B, "f")
+    assert f != g
 
     assert f * g == None
     assert f * f == None
