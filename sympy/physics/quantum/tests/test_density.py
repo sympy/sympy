@@ -122,4 +122,3 @@ def test_eval_trace():
     assert t.doit() == 1
 
     #TODO: partial trace
-
