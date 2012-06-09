@@ -1,0 +1,27 @@
+Category Theory Module
+======================
+
+.. module:: sympy.categories
+
+Introduction
+------------
+
+The category theory module for SymPy will allow manipulating diagrams
+within a single category, including drawing them in TikZ and deciding
+whether they are commutative or not.
+
+The module is yet in its pre-embryonic stage.
+
+Base Class Reference
+--------------------
+.. autoclass:: Object
+   :members:
+
+.. autoclass:: Morphism
+   :members:
+
+.. autoclass:: Category
+   :members:
+
+.. autoclass:: Diagram
+   :members:
