@@ -33,7 +33,7 @@ def ode_system(exprs, funcs):
     corresponding to initial conditions.
 
     TODO
-    Initial conditions for derivatives using Subs objects are not yes
+    Initial conditions for derivatives using Subs objects are not yet
     supported.
 
     Scope and Nonlinear equations
@@ -119,77 +119,7 @@ def ode_system(exprs, funcs):
     Examples
     ========
     Due to the different possible solutions these are not doctested.
-
-    >> from sympy import ode_system, Symbol, Function
-    >> func = Function('f')
-    >> gunc = Function('g')
-    >> hunc = Function('h')
-    >> x = Symbol('x')
-    >> f = func(x)
-    >> f_ = f.diff(x)
-    >> f__ = f_.diff(x)
-    >> g = gunc(x)
-    >> g_ = g.diff(x)
-    >> g__ = g_.diff(x)
-    >> h = hunc(x)
-    >> h_ = h.diff(x)
-    >> h__ = h_.diff(x)
-
-    Simple equation:
-    >> sys = [f_+f]
-    >> sol = ode_system(sys, [f])
-    >> sol
-    [f(x) == C1*exp(-x)]
-
-    With initial conditions:
-    >> sys = [f_+f, func(0)-2]
-    >> sol = ode_system(sys, [f])
-    >> sol
-    [f(x) == 2*exp(-x)]
-
-    With "boundary" conditions:
-    >> sys = [f_+f, func(2)-3]
-    >> sol = ode_system(sys, [f])
-    >> sol
-    [f(x) == 3*exp(2)*exp(-x)]
-
-    Second order system:
-    >> sys = [f__+f]
-    >> sol = ode_system(sys, [f])
-    >> sol
-    [f(x) == C1*sin(x) + C2*cos(x)]
-
-    Due to deficiencies in `Derivative` you must jump through hoops to get
-    initials conditions working here (TODO use the Subs object):
-    >> sys = [g-f_, f+g_] # The same as [f__+f] just substitute g_ = f__
-    >> sol = ode_system(sys, [f, g])
-    >> sol
-    [g(x) == -I*C1*exp(-I*x) + I*C2*exp(I*x), f(x) == C1*exp(-I*x) + C2*exp(I*x)]
-
-    Adding the initial conditions:
-    >> sys = [g-f_, f+g_, func(0)-1, gunc(0)]
-    >> sol = ode_system(sys, [f, g])
-    >> sol
-    [g(x) == I*exp(I*x)/2 - I*exp(-I*x)/2, f(x) == exp(I*x)/2 + exp(-I*x)/2]
-
-    A separable nonlinear equation:
-    >> sys = [f_+f**2, g_+h, h_-g]
-    >> sol = ode_system(sys, [f,g,h])
-    >> sol
-    [g(x) == I*C1*exp(I*x) - I*C2*exp(-I*x), f(x) == 1/(C3 + x), h(x) == C1*exp(I*x) + C2*exp(-I*x)]
-
-    A nonlinear system that is iteratively separable (we can separate and solve
-    the first equation, substitute it in the second and solve it also, etc.):
-    >> sys = [f_+f**2, g_*f-1]
-    >> sol = ode_system(sys, [f,g])
-    >> sol # Due to bad constant simplification there are too many constants
-    [g(x) == C1 + C2*x + x**2/2, f(x) == 1/(C3 + x)]
-
-    >> sys = [f_+f**2, g_*f-1, h_*f-g]
-    >> sol = ode_system(sys, [f,g,h])
-    >> sol # Due to bad constant simplification there are too many constants
-    [g(x) == C4 + C5*x + x**2/2, f(x) == 1/(C1 + x), h(x) == C2*C3*x + C6 + x**4/8 + x**3*(C2/6 + C7/3) + x**2*(C2*C7/2 + C3/2)]
-
+    Check the test_ode_system.py file.
     """
     var = funcs[0].free_symbols.pop()
     init_conds   = [e for e in exprs if var not in e.free_symbols]
@@ -200,7 +130,9 @@ def ode_system(exprs, funcs):
 
     # Solve the separable equations. It is possible that after solving the
     # separable equations, some of the coupled equation become separable
-    # themselves.
+    # themselves. This even takes care for triangular inhomogeneous systems.
+    # However if the system is not already triangulized this leaves the work to
+    # the next code block.
     separable_sols = {}
     while True:
         if separable_eq:
@@ -214,7 +146,6 @@ def ode_system(exprs, funcs):
         else:
             separable_eq = [e for e in new_eq if len(e.atoms(*funcs))==1]
             coupled_eq   = [e for e in new_eq if len(e.atoms(*funcs))!=1]
-
 
     # Solve the coupled equations.
     if coupled_eq:
@@ -235,7 +166,7 @@ def ode_system(exprs, funcs):
         sub_init = solve(init_conds, constants)
         sols = dict((k, v.subs(sub_init)) for k, v in sols.items())
 
-    # Not necessary for coding, however for aesthetic reason renumerate the
+    # Not necessary for coding, however for aesthetic reasons renumerate the
     # constants.
     old_constants = list(set(c for e in sols.values()
                                for c in e.atoms(IntConst)))
