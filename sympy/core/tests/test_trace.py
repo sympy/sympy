@@ -14,11 +14,17 @@ def test_trace_new():
 
     #also check if Muls are permuted in canonical form
     assert Tr(a*A*B*b) == a*b*Tr(A*B)
+    assert Tr(a*C*D*A*B) == a*Tr(A*B*C*D)
+    assert Tr(a*C*A*D*B*2) == 2*a*Tr(A*D*B*C)
+    assert Tr(B*A*C*B*A) == Tr(A*C*B*A*B)
+    assert Tr(A) == Tr(A)
+    assert Tr(B*A*C*B*B*A) == Tr(A*C*B**2*A*B)
+
 
     #POW
     assert Tr ( pow(a,b) ) == Tr(a**b)
 
-    M = Matrix([[1,1],[2,2]])
+    M = Matrix([[1,1], [2,2]])
     assert Tr(M) == 3
 
     #trace indices test

@@ -31,20 +31,28 @@ class Tr(Expr):
         a) Trace(A+B) = Tr(A) + Tr(B)
         b) Trace(scalar*Operator) = scalar*Trace(Operator)
 
-
         """
         expr = args[0]
         indices = args[1] if len(args) == 2 else -1 #-1 indicates full trace
         if isinstance(expr, Matrix):
             return expr.trace()
+        elif hasattr(expr, 'trace') and callable(t.x):
+            #for any objects that have trace() defined e.g numpy
+            return expr.trace()
         elif isinstance(expr, Add):
-            return Add(*[Tr(arg,indices) for arg in expr.args])
+            return Add(*[Tr(arg, indices) for arg in expr.args])
         elif isinstance(expr, Mul):
             c_part, nc_part = expr.args_cnc()
             if len(nc_part) == 0:
                 return Mul(*c_part)
             else:
-                return Mul(*c_part)*Expr.__new__(cls, Mul(*nc_part), indices)
+                # cyclic permute nc_part for canonical ordering
+                idx = nc_part.index(min(nc_part))
+                nc_part_ordered = nc_part[idx:]
+                nc_part_ordered.extend(nc_part[:idx])
+
+                return Mul(*c_part) * Expr.__new__(cls, Mul(*nc_part_ordered),
+                                                   indices)
         else:
             inst = Expr.__new__(cls, expr, indices)
             return inst
