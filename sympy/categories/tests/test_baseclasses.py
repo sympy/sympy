@@ -1,6 +1,6 @@
 from sympy.categories import Object, Morphism, Diagram, Category
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import FiniteSet, EmptySet
+from sympy import FiniteSet, EmptySet, Dict
 
 def test_object():
     A = Object("A")
@@ -110,58 +110,52 @@ def test_diagram():
     empty = EmptySet()
 
     # Test the addition of identities.
-    d1 = Diagram()
-    d1.add_premise(f)
+    d1 = Diagram([f])
 
-    assert d1.list_objects() == FiniteSet(A, B)
+    assert d1.objects == FiniteSet(A, B)
     assert d1.hom(A, B) == (FiniteSet(f), empty)
     assert d1.hom(A, A) == (FiniteSet(Morphism(A, A, identity=True)), empty)
     assert d1.hom(B, B) == (FiniteSet(Morphism(B, B, identity=True)), empty)
 
     # Test the addition of composites.
-    d2 = Diagram()
-    d2.add_premise(f)
-    d2.add_premise(g)
+    d2 = Diagram([f, g])
     homAC = d2.hom(A, C)[0]
 
-    assert d2.list_objects() == FiniteSet(A, B, C)
+    assert d2.objects == FiniteSet(A, B, C)
     assert g * f in d2.premises.keys()
 
     # Test equality, inequality and hash.
-    d11 = Diagram()
-    d11.add_premise(f)
+    d11 = Diagram([f])
 
     assert d1 == d11
     assert d1 != d2
     assert hash(d1) == hash(d11)
 
-    d11 = Diagram()
-    d11.add_premise(f, "unique")
-
+    d11 = Diagram({f:"unique"})
     assert d1 != d11
 
     # Make sure that (re-)adding composites (with new properties)
     # works as expected.
-    d = Diagram()
-    d.add_premise(f)
-    d.add_premise(g)
-    d.add_conclusion(g * f, "unique")
-
+    d = Diagram([f, g], {g * f:"unique"})
     assert d.conclusions[g * f] == FiniteSet("unique")
 
     # Check how the properties of composite morphisms are computed.
-    d = Diagram()
-    d.add_premise(f, "unique", "isomorphism")
-    d.add_premise(g, "unique")
-
+    d = Diagram({f:["unique", "isomorphism"], g:"unique"})
     assert d.premises[g * f] == FiniteSet("unique")
 
     # Check that conclusion morphisms with new objects are not allowed.
-    d = Diagram()
-    d.add_premise(f)
-    d.add_conclusion(g)
+    d = Diagram([f], [g])
+    assert d.conclusions == Dict({})
 
-    assert d.conclusions == {}
+    # Test an empty diagram.
+    d = Diagram()
+    assert d.premises == Dict({})
+    assert d.conclusions == Dict({})
+    assert d.objects == empty
+
+    # Check a SymPy Dict object.
+    d = Diagram(Dict({f:FiniteSet("unique", "isomorphism"), g:"unique"}))
+    assert d.premises[g * f] == FiniteSet("unique")
 
 def test_category():
     A = Object("A")
@@ -171,16 +165,9 @@ def test_category():
     f = Morphism(A, B, "f")
     g = Morphism(B, C, "g")
 
-    d1 = Diagram()
-    d1.add_premise(f)
-    d1.add_premise(g)
+    d1 = Diagram([f, g])
+    d2 = Diagram([f])
 
-    d2 = Diagram()
-    d2.add_premise(f)
-
-    K = Category("K")
-
-    K.assert_commutative(d1)
-    K.assert_commutative(d2)
+    K = Category("K", commutative=[d1, d2])
 
     assert K.commutative == FiniteSet(d1, d2)
