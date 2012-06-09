@@ -18,8 +18,6 @@ if not USE_PYTEST:
         ``code`` may be a callable, such as a lambda expression or function
         name.
 
-        Alternatively, ``code`` may be a string, which is compiled.
-
         If ``code`` is not given or None, ``raises`` will return a context
         manager for use in ``with`` statements; the code to execute then
         comes from the scope of the ``with``. The calling module must have
@@ -33,11 +31,6 @@ if not USE_PYTEST:
         ========
 
         >>> from sympy.utilities.pytest import raises
-        >>> raises(ZeroDivisionError, "1/0")
-        >>> raises(ZeroDivisionError, "1/2")
-        Traceback (most recent call last):
-        ...
-        AssertionError: DID NOT RAISE
 
         >>> raises(ZeroDivisionError, lambda: 1/0)
         >>> raises(ZeroDivisionError, lambda: 1/2)
@@ -71,9 +64,9 @@ if not USE_PYTEST:
         To test multiple statements, you'll need a separate ``with``
         for each:
         >>> with raises(ZeroDivisionError): # doctest: +SKIP
-        ...     n = 1/0    # will execute and raise, aborting the ``with``
+        ...     n = 1/0    # will execute and raise
         ... with raises(ZeroDivisionError):
-        ...     n = 9999/0 # never executed
+        ...     n = 9999/0 # will also execute and raise
 
         """
         if code is None:
@@ -85,17 +78,15 @@ if not USE_PYTEST:
                 return
             raise AssertionError("DID NOT RAISE")
         elif isinstance(code, str):
-            frame = sys._getframe(1)
-            loc = frame.f_locals.copy()
-            try:
-                exec code in frame.f_globals, loc
-            except expectedException:
-                return
-            raise AssertionError("DID NOT RAISE")
+            raise TypeError(
+                '\'raises(xxx, "code")\' has been phased out; '
+                'change \'raises(xxx, "expression")\' '
+                'to \'raises(xxx, lambda: expression)\', '
+                '\'raises(xxx, "statement")\' '
+                'to \'with raises(xxx): statement\'')
         else:
             raise TypeError(
-                'raises() expects a callable or a code string '
-                'for the 2nd argument.')
+                'raises() expects a callable for the 2nd argument.')
 
     class RaisesContext(object):
         def __init__(self, expectedException):

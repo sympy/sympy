@@ -26,8 +26,8 @@ def test_fuzzy_and():
     assert fuzzy_and([F, U]) == F
     assert fuzzy_and([U, U]) == U
     assert [fuzzy_and(w) for w in [U, T, F]] == [U, T, F]
-    raises(ValueError, 'fuzzy_and([])')
-    raises(ValueError, 'fuzzy_and()')
+    raises(ValueError, lambda: fuzzy_and([]))
+    raises(ValueError, lambda: fuzzy_and())
 
 def test_logic_cmp():
     l1 = And('a', Not('b'))
