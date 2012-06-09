@@ -1,4 +1,4 @@
-from sympy.categories import Object, Morphism, Diagram
+from sympy.categories import Object, Morphism, Diagram, Category
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import FiniteSet, EmptySet
 
@@ -159,3 +159,25 @@ def test_diagram():
     d.add_conclusion(g)
 
     assert d.conclusions == {}
+
+def test_category():
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+
+    f = Morphism(A, B, "f")
+    g = Morphism(B, C, "g")
+
+    d1 = Diagram()
+    d1.add_premise(f)
+    d1.add_premise(g)
+
+    d2 = Diagram()
+    d2.add_premise(f)
+
+    K = Category("K")
+
+    K.assert_commutative(d1)
+    K.assert_commutative(d2)
+
+    assert K.commutative == FiniteSet(d1, d2)

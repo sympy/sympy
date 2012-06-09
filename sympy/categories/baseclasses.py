@@ -270,6 +270,36 @@ class Category(Basic):
     This class nothing about its objects and morphisms.  Concrete
     cases of (abstract) categories should be implemented as classes
     derived from this one.
+
+    Certain :class:`Diagram`s can be asserted to be commutative in a
+    :class:`Category`, using the method :method:`assert_commutative`.
+
+    Examples
+    ========
+
+    >>> from sympy.categories import Object, Morphism, Diagram, Category
+    >>> from sympy import FiniteSet
+
+    >>> A = Object("A")
+    >>> B = Object("B")
+    >>> C = Object("C")
+
+    >>> f = Morphism(A, B, "f")
+    >>> g = Morphism(B, C, "g")
+
+    >>> d = Diagram()
+    >>> d.add_premise(f)
+    >>> d.add_premise(g)
+
+    >>> K = Category("K")
+    >>> K.assert_commutative(d)
+
+    >>> K.commutative == FiniteSet(d)
+    True
+
+    See Also
+    ========
+    Diagram
     """
     objects = None
     name = ""
@@ -278,6 +308,8 @@ class Category(Basic):
         self.name = name
         self.objects = objects
 
+        self.commutative = EmptySet()
+
     def hom(self, A, B):
         raise NotImplementedError(
             "hom-sets are not implemented in Category.")
@@ -285,6 +317,36 @@ class Category(Basic):
     def all_morphisms(self):
         raise NotImplementedError(
             "Obtaining the class of morphisms is not implemented in Category.")
+
+    def assert_commutative(self, *diagrams):
+        """
+        Asserts that certain diagrams are commutative in this
+        category.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, Morphism, Diagram, Category
+        >>> from sympy import FiniteSet
+
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+
+        >>> f = Morphism(A, B, "f")
+        >>> g = Morphism(B, C, "g")
+
+        >>> d = Diagram()
+        >>> d.add_premise(f)
+        >>> d.add_premise(g)
+
+        >>> K = Category("K")
+        >>> K.assert_commutative(d)
+
+        >>> K.commutative == FiniteSet(d)
+        True
+        """
+        self.commutative |= FiniteSet(diagrams)
 
 class Diagram(Basic):
     r"""
