@@ -1,6 +1,7 @@
 from sympy import pprint, latex, symbols, S, log
 from sympy.matrices.matrices import Matrix
 from sympy.core.trace import Tr
+from sympy.external import import_module
 from sympy.physics.quantum.density import Density, entropy
 from sympy.physics.quantum.state import Ket, Bra
 from sympy.physics.quantum.qubit import Qubit
@@ -99,14 +100,18 @@ def test_entropy():
     ent = entropy(d)
     assert  ent.real == 0.69314718055994529 and ent.imag == 0
 
-    #test for matrix
-    mat = represent(d)
-    assert isinstance(mat, Matrix) and entropy(mat) == 0.5*log(2)
+    np = import_module('numpy', min_python_version=(2, 6))
+    if np:
+        #do this test only if 'numpy' is available on test machine
+        mat = represent(d)
+        assert isinstance(mat, Matrix) and entropy(mat) == 0.5*log(2)
 
-    #test for sparse matrix
-    mat = represent(d, format="scipy.sparse")
-    assert isinstance(mat, scipy_sparse_matrix) and ent.real == \
-           0.69314718055994529 and ent.imag == 0
+    scipy = import_module('scipy', __import__kwargs={'fromlist':['sparse']})
+    if scipy and np:
+        #do this test only if numpy and scipy are available
+        mat = represent(d, format="scipy.sparse")
+        assert isinstance(mat, scipy_sparse_matrix) and ent.real == \
+                      0.69314718055994529 and ent.imag == 0
 
 def test_eval_trace():
     up = JzKet(S(1)/2,S(1)/2)
