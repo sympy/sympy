@@ -1,5 +1,6 @@
 from sympy import pprint, latex, symbols, S, log
 from sympy.matrices.matrices import Matrix
+from sympy.core.trace import Tr
 from sympy.physics.quantum.density import Density, entropy
 from sympy.physics.quantum.state import Ket, Bra
 from sympy.physics.quantum.qubit import Qubit
@@ -106,3 +107,14 @@ def test_entropy():
     mat = represent(d, format="scipy.sparse")
     assert isinstance(mat, scipy_sparse_matrix) and ent.real == \
            0.69314718055994529 and ent.imag == 0
+
+def test_eval_trace():
+    up = JzKet(S(1)/2,S(1)/2)
+    down = JzKet(S(1)/2,-S(1)/2)
+    d = Density((up,0.5),(down,0.5))
+
+    t = Tr(d)
+    assert t.doit() == 1
+
+    #TODO: partial trace
+

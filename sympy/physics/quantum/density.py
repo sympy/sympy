@@ -1,4 +1,5 @@
 from sympy import Tuple, Add, Matrix, log, expand
+from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.operator import HermitianOperator, OuterProduct, Operator
@@ -7,7 +8,6 @@ from sympy.physics.quantum.state import KetBase
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.qapply import qapply
 from matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
-
 
 class Density(HermitianOperator):
     """Density operator for representing mixed states.
@@ -173,15 +173,7 @@ class Density(HermitianOperator):
         return prettyForm(u"\u03C1")
 
     def _eval_trace(self, **kwargs):
-        expr = self.doit(); # get sum of scalars*OuterProduct
-        if isinstance(expr, Add):
-            result = 0
-            for mul in expr.args:
-                result = result + mul.args[0]*mul.args[1]._eval_trace()
-            return result
-        else: # only one mul expr
-            if ( isinstance(expr.args[1], Operator)):
-                return expr.args[1]._eval_trace()
+        return Tr(self.doit()).doit()
 
 
 def entropy(density):

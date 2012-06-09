@@ -67,3 +67,10 @@ class Tr(Expr):
             return self.args[0]._eval_trace()
 
         return self
+
+    @property
+    def is_number(self):
+        #TODO : This functions to be reviewed
+        # and implementation improved.
+
+        return True
