@@ -32,7 +32,6 @@ class Object(Basic):
     >>> from sympy.categories import Object
     >>> Object("A") == Object("A")
     True
-
     >>> Object("A") == Object("")
     False
 
@@ -88,25 +87,23 @@ class Morphism(Basic):
     ========
 
     >>> from sympy.categories import Object, Morphism
-    >>> A = Object("A"); B = Object("B"); C = Object("C")
+    >>> A = Object("A")
+    >>> B = Object("B")
+    >>> C = Object("C")
     >>> f = Morphism(A, B, "f")
     >>> g = Morphism(B, C, "g")
-
     >>> f == Morphism(A, B, "f")
     True
     >>> f == Morphism(A, B, "")
     False
-
     >>> f * g is None
     True
     >>> g * f
     Morphism(Object("B"), Object("C"), "g") *
     Morphism(Object("A"), Object("B"), "f")
-
     >>> id_A = Morphism(A, A, identity=True)
     >>> id_A == Morphism(A, A, identity=True)
     True
-
     >>> f * id_A == f
     True
 
@@ -130,31 +127,32 @@ class Morphism(Basic):
 
     def compose(self, g, new_name=""):
         """
-        If ``self`` is a morphism from B to C and ``g`` is a morphism
-        from A to B, returns the morphism from A to C which results
-        from the composition of these morphisms.  Otherwise, returns
-        ``None``.
+        If ``self`` is a morphism from `B` to `C` and ``g`` is a
+        morphism from `A` to `B`, returns the morphism from `A` to `C`
+        which results from the composition of these morphisms.
+        Otherwise, returns ``None``.
 
         If either ``self`` or ``g`` are morphisms resulted from some
         previous composition, components in the resulting morphism
         will be the concatenation of ``g.components`` and
         ``self.components``, in this order.
 
+        Instead of ``f.compose(g)`` it is possible to write ``f * g``.
+
         Examples
         ========
 
         >>> from sympy.categories import Object, Morphism
-        >>> A = Object("A"); B = Object("B"); C = Object("C")
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
         >>> f = Morphism(A, B, "f")
         >>> g = Morphism(B, C, "g")
-
         >>> f.compose(g) is None
         True
-
         >>> g.compose(f)
         Morphism(Object("B"), Object("C"), "g") *
         Morphism(Object("A"), Object("B"), "f")
-
         >>> (g.compose(f, "h")).name
         'h'
 
@@ -199,10 +197,11 @@ class Morphism(Basic):
         ========
 
         >>> from sympy.categories import Object, Morphism
-        >>> A = Object("A"); B = Object("B"); C = Object("C")
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
         >>> f = Morphism(A, B, "f")
         >>> g = Morphism(B, C, "g")
-
         >>> (g * f).flatten("h")
         Morphism(Object("A"), Object("C"), "h")
 
@@ -246,60 +245,58 @@ class Morphism(Basic):
         return hash((self.name, self.domain, self.codomain))
 
 class Category(Basic):
-    """
+    r"""
     An (abstract) category.
 
-    A category [JoyOfCats] is a quadruple K = (O, hom, id, *)
-    consisting of
+    A category [JoyOfCats] is a quadruple `\mbox{K} = (O, \hom, id,
+    \circ)` consisting of
 
-    * a (set-theoretical) class O, whose members are called K-objects,
+    * a (set-theoretical) class `O`, whose members are called
+      `K`-objects,
 
-    * for each pair (A, B) of K-objects, a set hom(A, B) whose members
-      are called K-morphisms from A to B,
+    * for each pair `(A, B)` of `K`-objects, a set `\hom(A, B)` whose
+      members are called `K`-morphisms from `A` to `B`,
 
-    * for a each K-object A, a morphism id:A->A, called the K-identity
-      on A,
+    * for a each `K`-object `A`, a morphism `id:A\rightarrow A`,
+      called the `K`-identity of `A`,
 
-    * a composition law associating with every K-morphisms f:A->B and
-      g:B->C a K-morphism g*f:A->C, called the composite of f and g.
+    * a composition law `\circ` associating with every `K`-morphisms
+      `f:A\rightarrow B` and `g:B\rightarrow C` a `K`-morphism `g\circ
+      f:A\rightarrow C`, called the composite of `f` and `g`.
 
-    Composition is associative, K-identities are identities with
-    respect to composition, and the sets hom(A, B) are pairwise
+    Composition is associative, `K`-identities are identities with
+    respect to composition, and the sets `\hom(A, B)` are pairwise
     disjoint.
 
     This class nothing about its objects and morphisms.  Concrete
     cases of (abstract) categories should be implemented as classes
     derived from this one.
 
-    Certain :class:`Diagram`s can be asserted to be commutative in a
-    :class:`Category`, using the method :method:`assert_commutative`.
+    Certain instances of :class:`Diagram` can be asserted to be
+    commutative in a :class:`Category`, using the method
+    ``assert_commutative``.
 
     Examples
     ========
 
     >>> from sympy.categories import Object, Morphism, Diagram, Category
     >>> from sympy import FiniteSet
-
     >>> A = Object("A")
     >>> B = Object("B")
     >>> C = Object("C")
-
     >>> f = Morphism(A, B, "f")
     >>> g = Morphism(B, C, "g")
-
     >>> d = Diagram()
     >>> d.add_premise(f)
     >>> d.add_premise(g)
-
     >>> K = Category("K")
     >>> K.assert_commutative(d)
-
     >>> K.commutative == FiniteSet(d)
     True
 
     See Also
     ========
-    Diagram
+    Diagram, assert_commutative
     """
     objects = None
     name = ""
@@ -328,21 +325,16 @@ class Category(Basic):
 
         >>> from sympy.categories import Object, Morphism, Diagram, Category
         >>> from sympy import FiniteSet
-
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
-
         >>> f = Morphism(A, B, "f")
         >>> g = Morphism(B, C, "g")
-
         >>> d = Diagram()
         >>> d.add_premise(f)
         >>> d.add_premise(g)
-
         >>> K = Category("K")
         >>> K.assert_commutative(d)
-
         >>> K.commutative == FiniteSet(d)
         True
         """
@@ -381,19 +373,18 @@ class Diagram(Basic):
 
     >>> from sympy.categories import Object, Morphism, Diagram
     >>> from sympy import FiniteSet
-    >>> A = Object("A"); B = Object("B"); C = Object("C")
-    >>> f = Morphism(A, B, "f"); g = Morphism(B, C, "g")
+    >>> A = Object("A")
+    >>> B = Object("B")
+    >>> C = Object("C")
+    >>> f = Morphism(A, B, "f")
+    >>> g = Morphism(B, C, "g")
     >>> d = Diagram()
-
     >>> d.add_premise(f)
     >>> d.add_premise(g)
-
     >>> Morphism(A, A, identity=True) in d.premises.keys()
     True
-
     >>> g * f in d.premises.keys()
     True
-
     >>> d.add_conclusion(g * f, "unique")
     >>> d.conclusions[g * f] == FiniteSet("unique")
     True
@@ -450,14 +441,13 @@ class Diagram(Basic):
 
         >>> from sympy.categories import Object, Morphism, Diagram
         >>> from sympy import FiniteSet
-        >>> A = Object("A"); B = Object("B")
+        >>> A = Object("A")
+        >>> B = Object("B")
         >>> f = Morphism(A, B, "f")
         >>> d = Diagram()
         >>> d.add_premise(f)
-
         >>> f in d.premises.keys()
         True
-
         >>> Morphism(A, A, identity=True) in d.premises.keys()
         True
 
@@ -512,12 +502,14 @@ class Diagram(Basic):
 
         >>> from sympy.categories import Object, Morphism, Diagram
         >>> from sympy import FiniteSet
-        >>> A = Object("A"); B = Object("B"); C = Object("C")
-        >>> f = Morphism(A, B, "f"); g = Morphism(B, C, "g")
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = Morphism(A, B, "f")
+        >>> g = Morphism(B, C, "g")
         >>> d = Diagram()
         >>> d.add_premise(f)
         >>> d.add_premise(g)
-
         >>> d.add_conclusion(g * f, "unique")
         >>> d.conclusions[g * f] == FiniteSet("unique")
         True
@@ -565,13 +557,14 @@ class Diagram(Basic):
 
         >>> from sympy.categories import Object, Morphism, Diagram
         >>> from sympy import FiniteSet
-        >>> A = Object("A"); B = Object("B"); C = Object("C")
-        >>> f = Morphism(A, B, "f"); g = Morphism(B, C, "g")
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = Morphism(A, B, "f")
+        >>> g = Morphism(B, C, "g")
         >>> d = Diagram()
-
         >>> d.add_premise(f)
         >>> d.add_premise(g)
-
         >>> d.list_objects() == FiniteSet(A, B, C)
         True
 
@@ -599,13 +592,15 @@ class Diagram(Basic):
 
         >>> from sympy.categories import Object, Morphism, Diagram
         >>> from sympy import FiniteSet
-        >>> A = Object("A"); B = Object("B"); C = Object("C")
-        >>> f = Morphism(A, B, "f"); g = Morphism(B, C, "g")
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = Morphism(A, B, "f")
+        >>> g = Morphism(B, C, "g")
         >>> d = Diagram()
         >>> d.add_premise(f)
         >>> d.add_premise(g)
         >>> d.add_conclusion(g * f, "unique")
-
         >>> d.hom(A, C) == (FiniteSet(g * f), FiniteSet(g * f))
         True
 
