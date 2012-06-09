@@ -589,8 +589,6 @@ def test_categories():
 
     assert latex(K1) == "\mathbf{K_{1}}"
 
-    assert latex(Object("")) == "\\bullet"
-
     h = Morphism(A2, A3, "").compose(Morphism(A1, A2, ""), "h")
     assert latex(h) == "h:A_{1}\\rightarrow A_{3}"
 

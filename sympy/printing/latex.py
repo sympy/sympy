@@ -1182,10 +1182,7 @@ class LatexPrinter(Printer):
         return self._print_DMP(p)
 
     def _print_Object(self, object):
-        if object.name:
-            return self._print(Symbol(object.name))
-        else:
-            return "\\bullet"
+        return self._print(Symbol(object.name))
 
     def _print_Morphism(self, morphism):
         domain = self._print(morphism.domain)

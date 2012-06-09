@@ -3718,10 +3718,7 @@ def test_categories():
     assert pretty(K1) == "K1"
     assert upretty(K1) == u"K₁"
 
-    # Some further tests for anonymous objects and morphisms.
-    assert pretty(Object("")) == "."
-    assert upretty(Object("")) == u"•"
-
+    # Some further tests for anonymous morphisms.
     h = Morphism(A2, A3, "").compose(Morphism(A1, A2, ""), "h")
     assert pretty(h) == "h:A1->A3"
     assert upretty(h) == u"h:A₁→A₃"

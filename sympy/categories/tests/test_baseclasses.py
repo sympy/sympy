@@ -9,12 +9,12 @@ def test_object():
 
     assert A == Object("A")
     assert A != Object("A1")
-    assert Object("") != A
-    assert Object("") != Object("")
 
     assert hash(A) == hash(Object("A"))
 
     assert A != None
+
+    raises(ValueError, lambda: Object(""))
 
 def test_morphism():
     A = Object("A")

@@ -21,10 +21,9 @@ class Object(Basic):
 
     While concrete categories may have some concrete SymPy classes as
     object types, in abstract categories only the name of an object is
-    known.
+    known.  Anonymous objects are not allowed.
 
-    Two objects with the same name are the same object.  An unnamed
-    object is not equal to any other object.
+    Two objects with the same name are the same object.
 
     Examples
     ========
@@ -32,27 +31,22 @@ class Object(Basic):
     >>> from sympy.categories import Object
     >>> Object("A") == Object("A")
     True
-    >>> Object("A") == Object("")
-    False
 
     """
-    def __init__(self, name=""):
+    def __init__(self, name):
+        if not name:
+            raise ValueError("Anonymous Objects are not allowed.")
+
         self.name = name
 
     def __eq__(self, obj):
         if not isinstance(obj, Object):
             return False
 
-        if (not obj.name) or (not self.name):
-            return False
-
         return self.name == obj.name
 
     def __ne__(self, obj):
         if not isinstance(obj, Object):
-            return True
-
-        if (not obj.name) or (not self.name):
             return True
 
         return self.name != obj.name

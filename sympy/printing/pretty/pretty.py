@@ -1447,13 +1447,7 @@ class PrettyPrinter(Printer):
         return self._print_DMP(p)
 
     def _print_Object(self, object):
-        if object.name:
-            return self._print(pretty_symbol(object.name))
-        else:
-            if self._use_unicode:
-                return self._print(u"\u2022")
-            else:
-                return self._print(".")
+        return self._print(pretty_symbol(object.name))
 
     def _print_Morphism(self, morphism):
         arrow = "->"
