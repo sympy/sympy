@@ -221,7 +221,7 @@ def test_as_leading_term_stub():
         pass
     assert foo(1/x).as_leading_term(x) == foo(1/x)
     assert foo(1).as_leading_term(x) == foo(1)
-    raises(NotImplementedError, 'foo(x).as_leading_term(x)')
+    raises(NotImplementedError, lambda: foo(x).as_leading_term(x))
 
 def test_atoms():
     assert sorted(list(x.atoms())) == [x]

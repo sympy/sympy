@@ -267,7 +267,7 @@ def test_partitions():
     assert [p.copy() for p in partitions(S(3), 2)] == \
     [{3: 1}, {1: 1, 2: 1}]
 
-    raises(ValueError, 'list(partitions(3, 0))')
+    raises(ValueError, lambda: list(partitions(3, 0)))
 
 def test_binary_partitions():
     assert [i[:] for i in binary_partitions(10)] == [[8, 2], [8, 1, 1], \

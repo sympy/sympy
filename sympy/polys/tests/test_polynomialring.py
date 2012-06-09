@@ -26,9 +26,9 @@ def test_globalring():
     assert X * y == X * Y == R.convert(x * y) == x * Y
     assert X + y == X + Y == R.convert(x + y) == x + Y
     assert X + 1 == R.convert(x + 1)
-    raises(ExactQuotientFailed, 'X/Y')
-    raises(ExactQuotientFailed, 'x/Y')
-    raises(ExactQuotientFailed, 'X/y')
+    raises(ExactQuotientFailed, lambda: X/Y)
+    raises(ExactQuotientFailed, lambda: x/Y)
+    raises(ExactQuotientFailed, lambda: X/y)
     assert X**2 / X == X
 
     assert R.from_GlobalPolynomialRing(ZZ[x, y].convert(x), ZZ[x, y]) == X
@@ -48,16 +48,16 @@ def test_localring():
     assert X.ring == R
     assert X*(Y**2+1)/(1 + X) == R.convert(x*(y**2 + 1)/(1 + x))
     assert X*y == X*Y
-    raises(ExactQuotientFailed, 'X/Y')
-    raises(ExactQuotientFailed, 'x/Y')
-    raises(ExactQuotientFailed, 'X/y')
+    raises(ExactQuotientFailed, lambda: X/Y)
+    raises(ExactQuotientFailed, lambda: x/Y)
+    raises(ExactQuotientFailed, lambda: X/y)
     assert X + y == X + Y == R.convert(x + y) == x + Y
     assert X + 1 == R.convert(x + 1)
     assert X**2 / X == X
 
     assert R.from_GlobalPolynomialRing(ZZ[x, y].convert(x), ZZ[x, y]) == X
     assert R.from_FractionField(Qxy.convert(x), Qxy) == X
-    raises(CoercionFailed, 'R.from_FractionField(Qxy.convert(x)/y, Qxy)')
+    raises(CoercionFailed, lambda: R.from_FractionField(Qxy.convert(x)/y, Qxy))
 
 def test_conversion():
     L = QQ.poly_ring(x, y, order="ilex")
@@ -65,4 +65,4 @@ def test_conversion():
 
     assert L.convert(x) == L.convert(G.convert(x), G)
     assert G.convert(x) == G.convert(L.convert(x), L)
-    raises(CoercionFailed, 'G.convert(L.convert(1/(1+x)), L)')
+    raises(CoercionFailed, lambda: G.convert(L.convert(1/(1+x)), L))

@@ -41,9 +41,9 @@ def test_multiplicity():
     # Should exit quickly
     assert multiplicity(10**10, 10**10) == 1
     # Should raise errors for bad input
-    raises(ValueError, 'multiplicity(1, 1)')
-    raises(ValueError, 'multiplicity(1, 2)')
-    raises(ValueError, 'multiplicity(1.3, 2)')
+    raises(ValueError, lambda: multiplicity(1, 1))
+    raises(ValueError, lambda: multiplicity(1, 2))
+    raises(ValueError, lambda: multiplicity(1.3, 2))
 
 def test_perfect_power():
     assert perfect_power(0) is False
@@ -122,7 +122,7 @@ def test_prime():
     assert prime(4096) == 38873
     assert prime(9096) == 94321
     assert prime(25023) == 287341
-    raises(ValueError, 'prime(0)')
+    raises(ValueError, lambda: prime(0))
 
 def test_primepi():
     assert primepi(1) == 0
