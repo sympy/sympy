@@ -191,8 +191,6 @@ class Morphism(Basic):
         >>> C = Object("C")
         >>> f = Morphism(A, B, "f")
         >>> g = Morphism(B, C, "g")
-        >>> f.compose(g) is None
-        True
         >>> g.compose(f)
         Morphism(Object("B"), Object("C"), "g") *
         Morphism(Object("A"), Object("B"), "f")
@@ -615,10 +613,7 @@ class Diagram(Basic):
         >>> C = Object("C")
         >>> f = Morphism(A, B, "f")
         >>> g = Morphism(B, C, "g")
-        >>> d = Diagram()
-        >>> d.add_premise(f)
-        >>> d.add_premise(g)
-        >>> d.add_conclusion(g * f, "unique")
+        >>> d = Diagram([f, g], {g * f: "unique"})
         >>> d.hom(A, C) == (FiniteSet(g * f), FiniteSet(g * f))
         True
 
