@@ -1389,8 +1389,9 @@ def _sine_cosine_transform(f, x, k, a, b, K, name, simplify=True):
     return _simplify(F, simplify), cond
 
 class SineCosineTypeTransform(IntegralTransform):
-    """ Base class for sine and cosine transforms.
-        Specify cls._a and cls._b and cls._kern.
+    """
+    Base class for sine and cosine transforms.
+    Specify cls._a and cls._b and cls._kern.
     """
 
     def _compute_transform(self, f, x, k, **hints):
@@ -1622,7 +1623,8 @@ def _hankel_transform(f, r, k, nu, name, simplify=True):
     return _simplify(F, simplify), cond
 
 class HankelTypeTransform(IntegralTransform):
-    """ Base class for Hankel transforms.
+    """
+    Base class for Hankel transforms.
     """
 
     nargs = 4
