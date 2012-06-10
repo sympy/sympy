@@ -5,6 +5,9 @@ from sympy.core.compatibility import reduce
 # TODO order the imports and make them explicit
 # TODO issue 2070: all the stuff about .args and rebuilding
 # TODO maybe a common class Field makes sense
+# TODO you are a bit excessive in the use of Dummies
+# TODO dummy point
+# TODO dim property
 
 class Manifold(Basic):
     """Object representing a mathematical manifold.
@@ -112,6 +115,11 @@ class CoordSystem(Basic):
     >>> v_x(v_x(x))(p)
     0
 
+    Define a basis oneform field:
+    >>> dx = rect.base_oneform(0)
+    >>> dx(v_x)(p)
+    1
+
     """
     #  Contains a reference to the parent patch in order to be able to access
     # other coordinate system charts.
@@ -208,6 +216,30 @@ class CoordSystem(Basic):
         result[coord_index] = 1
         return VectorField(self, args, result)
 
+    def base_vectors(self):
+        """Returns a list of all base vectors.
+
+        For more details see the base_vector method of this class."""
+        return [self.base_vector(i) for i in range(self.patch.manifold.dim)]
+
+    def base_oneform(self, coord_index):
+        """Return a basis OneFormField.
+
+        The basis one-form field for this coordinate system. It is also an
+        operator on vector fields.
+
+        See the docstring of `CoordSystem` for examples."""
+        args = [Dummy() for i in range(self.patch.manifold.dim)]
+        result = [0,] * self.patch.manifold.dim
+        result[coord_index] = 1
+        return OneFormField(self, args, result)
+
+    def base_oneforms(self):
+        """Returns a list of all base oneforms.
+
+        For more details see the base_oneform method of this class."""
+        return [self.base_oneform(i) for i in range(self.patch.manifold.dim)]
+
     def point(self, coords):
         """Create a `Point` with coordinates given in this coord system.
 
@@ -238,7 +270,7 @@ class Point(Basic):
     >>> from sympy import symbols, sin, cos, pi
     >>> from sympy.diffgeom import (
     ...        Manifold, Patch, CoordSystem, Point)
-    >>> x, y, r, theta = symbols('x, y, r, theta')
+    >>> r, theta = symbols('r, theta')
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
     >>> rect = CoordSystem('rect', p)
@@ -354,7 +386,7 @@ class VectorField(Expr):
     >>> from sympy import symbols, sin, cos, pi, Function
     >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
     >>> from sympy.diffgeom import ScalarField, VectorField
-    >>> x, y, r, theta = symbols('x, y, r, theta')
+    >>> x, y = symbols('x, y')
     >>> x0, y0, r0, theta0 = symbols('x0, y0, r0, theta0')
 
     Points to be used as arguments for the field:
@@ -394,6 +426,78 @@ class VectorField(Expr):
         # TODO Document the nontrivial jump-through-hoops that is done wrt to
         # coordinate systems here
         return ScalarField(self._coord_sys, self._coords, projected)
+
+
+class OneFormField(Expr):
+    """One-Form Field over a Manifold.
+
+    A one-form field is an operator taking a vector field and returning a
+    scalar field.
+
+    To define a one-form field you need to choose a coordinate system and define
+    the one-form field in terms of that coordinate system.
+
+    The use of the one-form field after its definition is independent of the
+    coordinate system in which it was defined, however due to limitations in
+    the simplification routines you may arrive at more complicated
+    expression if you use unappropriate coordinate systems.
+
+    Examples:
+    =========
+
+    Use the predefined R2 manifold, setup some boilerplate.
+    >>> from sympy import symbols, sin, cos, pi, Function
+    >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
+    >>> from sympy.diffgeom import ScalarField, VectorField
+    >>> x0, y0 = symbols('x0, y0')
+
+    Define some vector fields and some one-form fields:
+    >>> e_x = R2.e_x
+    >>> e_theta = R2.e_theta
+    >>> dx, dy =  R2.dx, R2.dy
+    >>> p = R2_r.point([x0,y0])
+
+    Operate with the one-form field on the vector field:
+    >>> dx(e_x)(p)
+    1
+    >>> dy(e_x)(p)
+    0
+    >>> dx(e_theta)(p)
+    -sqrt(x0**2 + y0**2)*sin(atan2(y0, x0))
+
+    """
+    def __init__(self, coord_sys, coords, components):
+        super(OneFormField, self).__init__()
+        self._coord_sys = coord_sys
+        coords, components = dummyfy(coords, components)
+        self._coords = coords
+        self._components = components
+        self._args = self._coord_sys, self._coords, self._components
+
+    def __call__(self, vector_field):
+        coord_funcs = self._coord_sys.coord_functions()
+        p = Point(self._coord_sys, self._coords)
+        differentials = [vector_field(cf)(p) for cf in coord_funcs]
+        result = sum(t[0]*t[1] for t in zip(self._components, differentials))
+        # TODO This is the simplest to write, however is it the smartest?
+        # TODO Document the nontrivial jump-through-hoops that is done wrt to
+        # coordinate systems here
+        return ScalarField(self._coord_sys, self._coords, result)
+
+
+###############################################################################
+# Differential
+###############################################################################
+# TODO This here really shows the issue with all the implicit changes between
+# coordinate systems.             v-- This should not be necessary.
+def differential(scalar_field, coord_sys):
+    """Return the differential of a scalar field."""
+    # TODO Does it make sense to have a flag is_exact_differential for one-forms?
+    coords = [Dummy() for i in range(coord_sys.patch.manifold.dim)]
+    vects = coord_sys.base_vectors()
+    p = coord_sys.point(coords)
+    return OneFormField(coord_sys, coords,
+                        [v(scalar_field)(p) for v in vects])
 
 
 ###############################################################################

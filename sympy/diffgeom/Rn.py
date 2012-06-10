@@ -32,34 +32,15 @@ del x, y, r, theta
 
 # Defining the basis coordinate functions and adding shortcuts for them to the
 # manifold and the patch.
-## for rectangular chart
-R2_r.x = R2_r.coord_function(0)
-R2_origin.x = R2_r.x
-R2.x = R2_r.x
-R2_r.y = R2_r.coord_function(1)
-R2_origin.y = R2_r.y
-R2.y = R2_r.y
-## for polar chart
-R2_p.r = R2_p.coord_function(0)
-R2_origin.r = R2_p.r
-R2.r = R2_p.r
-R2_p.theta = R2_p.coord_function(1)
-R2_origin.theta = R2_p.theta
-R2.theta = R2_p.theta
+R2.x, R2.y = R2_origin.x, R2_origin.y = R2_r.x, R2_r.y = R2_r.coord_functions()
+R2.r, R2.theta = R2_origin.r, R2_origin.theta = R2_p.r, R2_p.theta = R2_p.coord_functions()
 
 # Defining the basis vector fields and adding shortcuts for them to the
 # manifold and the patch.
-## for rectangular chart
-R2_r.e_x = R2_r.base_vector(0)
-R2_origin.e_x = R2_r.e_x
-R2.e_x = R2_r.e_x
-R2_r.e_y = R2_r.base_vector(1)
-R2_origin.e_y = R2_r.e_y
-R2.e_y = R2_r.e_y
-## for polar chart
-R2_p.e_r = R2_p.base_vector(0)
-R2_origin.e_r = R2_p.e_r
-R2.e_r = R2_p.e_r
-R2_p.e_theta = R2_p.base_vector(1)
-R2_origin.e_theta = R2_p.e_theta
-R2.e_theta = R2_p.e_theta
+R2.e_x, R2.e_y = R2_origin.e_x, R2_origin.e_y = R2_r.e_x, R2_r.e_y = R2_r.base_vectors()
+R2.e_r, R2.e_theta = R2_origin.e_r, R2_origin.e_theta = R2_p.e_r, R2_p.e_theta = R2_p.base_vectors()
+
+# Defining the basis oneform fields and adding shortcuts for them to the
+# manifold and the patch.
+R2.dx, R2.dy = R2_origin.dx, R2_origin.dy = R2_r.dx, R2_r.dy = R2_r.base_oneforms()
+R2.dr, R2.dtheta = R2_origin.dr, R2_origin.dtheta = R2_p.dr, R2_p.dtheta = R2_p.base_oneforms()
