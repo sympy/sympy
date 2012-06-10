@@ -1,14 +1,6 @@
 from sympy import Expr, Add, Mul, Matrix, Pow, sympify, Matrix
 from expr import Expr
 
-def _is_scalar(e):
-    """Convert from a sympy scalar to a Python scalar."""
-    if isinstance(e, Expr):
-        if (e.is_Integer or  e.is_Float or e.is_Rational or e.is_Number or
-            e.is_NumberSymbol or e == I):
-            return true
-    return false
-
 class Tr(Expr):
     """ Generic Trace operation than can trace over:
 
