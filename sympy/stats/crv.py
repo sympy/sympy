@@ -191,7 +191,6 @@ class ContinuousPSpace(PSpace):
         return Lambda(z, cdf)
 
     def probability(self, condition, **kwargs):
-        evaluate = kwargs.get("evaluate", True)
         z = Dummy('z', real=True, bounded=True)
         # Univariate case can be handled by where
         try:
@@ -200,6 +199,7 @@ class ContinuousPSpace(PSpace):
             # Integrate out all other random variables
             pdf = self.compute_density(rv, **kwargs)
             # Integrate out the last variable over the special domain
+            evaluate = kwargs.pop("evaluate", True)
             if evaluate:
                 return integrate(pdf(z), (z, domain.set), **kwargs)
             else:
