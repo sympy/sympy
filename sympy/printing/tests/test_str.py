@@ -486,7 +486,7 @@ def test_categories():
 
     assert str(A) == 'Object("A")'
     assert str(f) == 'Morphism(Object("A"), Object("B"), "f")'
-    assert str(g * f) == 'Morphism(Object("B"), Object("C"), "g") * \
-Morphism(Object("A"), Object("B"), "f")'
+    assert str(g * f) == 'Morphism(Object("B"), Object("C"), "g") * ' \
+           'Morphism(Object("A"), Object("B"), "f")'
 
     assert str(K) == 'Category("K")'
