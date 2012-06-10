@@ -3,19 +3,23 @@ from sympy import Basic, sympify
 
 class FunctionMatrix(MatrixExpr):
     """
-    Represents a Matrix with a function
+    Represents a Matrix using a function (Lambda)
 
-    >>> from sympy import FunctionMatrix, symbols
+    This class is an alternative to SparseMatrix
+
+    >>> from sympy import FunctionMatrix, symbols, Lambda, MatMul, Matrix
     >>> i, j = symbols('i,j')
-    >>> X = FunctionMatrix(3, 3, Lambda((i, j), i+j))
+    >>> X = FunctionMatrix(3, 3, Lambda((i, j), i + j))
     >>> Matrix(X)
     [0, 1, 2]
     [1, 2, 3]
     [2, 3, 4]
 
-    >>> Y = FunctionMatrix(1000, 1000, Lambda((i, j), i+j))
-    >>> type(Y*Y) # this is an expression object
-    sympy.matrices.expresssions.matmul.MatMul
+    >>> Y = FunctionMatrix(1000, 1000, Lambda((i, j), i + j))
+
+    >>> isinstance(Y*Y, MatMul) # this is an expression object
+    True
+
     >>> (Y**2)[10,10] # So this is evaluated lazily
     342923500
     """
