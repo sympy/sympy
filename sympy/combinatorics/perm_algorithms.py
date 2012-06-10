@@ -109,7 +109,7 @@ def _dumx_remove(dumx, p0):
     dumx.remove(p0)
     dumx.remove(p0_paired)
 
-def double_coset_can_rep(sym, sgens, g):
+def double_coset_can_rep(sym, sgens, g, sgs=None):
     """
     Butler-Portugal algorithm for tensor canonicalization with dummy indices
 
@@ -120,6 +120,8 @@ def double_coset_can_rep(sym, sgens, g):
 
       sgens   generators of the group of slot symmetries
       g       permutation representing the tensor
+      sgs     if it is not None, sgens is a strong generating set of S
+              sgs is the tuple (S.coset_repr(), S.strong_base())
 
     A tensor with dummy indices can be represented in a number
     of equivalent ways which typically grows exponentially with
@@ -250,13 +252,18 @@ def double_coset_can_rep(sym, sgens, g):
     num_dummies = size - 2
     dumx = range(num_dummies)
     base = range(num_dummies)
-    S = PermutationGroup(sgens)
-    # strong generating set for S
-    sgens = [h.array_form for h in sgens]
     # strong base generators for Sx; start with Sx=S
-    sgensx = sgens + S.stabilizers_gens()
-    S_cosets = S.coset_repr()
-    b_S = S.strong_base()
+    if not sgs:
+        S = PermutationGroup(sgens)
+        # strong generating set for S
+        sgens = [h.array_form for h in sgens]
+        sgensx = sgens + S.stabilizers_gens()
+        b_S = S.strong_base()
+        S_cosets = S.coset_repr()
+    else:
+        # strong generating set for S
+        sgensx = [h.array_form for h in sgens]
+        S_cosets, b_S = sgs
     # strong generating set for D
     dsgsx = dummy_sgs(dumx, sym, num_dummies)
     ginv = perm_af_invert(g)
@@ -267,7 +274,8 @@ def double_coset_can_rep(sym, sgens, g):
     TAB = [(idn, idn, g)]
     for i in range(size - 2):
         b = base[i]
-        if b in b_S and sgensx:
+        testb = b in b_S and sgensx
+        if testb:
             deltab = orbit(sgensx, b)
         else:
             deltab = set([b])
@@ -278,7 +286,9 @@ def double_coset_can_rep(sym, sgens, g):
 
         deltap = dumx if p_i in dumx else [p_i]
         TAB1 = []
-        for s, d, h in TAB:
+        nTAB = len(TAB)
+        while TAB:
+            s, d, h = TAB.pop()
             if min([md[h[x]] for x in deltab]) != p_i:
                 continue
             deltab1 = [x for x in deltab if md[h[x]] == p_i]
@@ -298,7 +308,7 @@ def double_coset_can_rep(sym, sgens, g):
             # d1 = dx*d; s1 = s*sx
             # d1*g*s1*b = dx*d*g*s*sx*b = p_i
             for j in NEXT:
-                if b in b_S and sgensx:
+                if testb:
                     # solve s1*b = j with s1 = s*sx for some element sx
                     # of the stabilizer of ..., base[i-1]
                     # sx*b = s**-1*j; sx = trace_S(s**-1*j,...)
@@ -328,20 +338,19 @@ def double_coset_can_rep(sym, sgens, g):
                 #assert h1[b] == p_i  # invariant
                 TAB1.append((s1, d1, h1))
 
-        TAB = TAB1
         # if TAB contains equal permutations, keep only one of them;
         # if TAB contains equal permutations up to the sign, return 0
-        TAB.sort(key=lambda x: x[-1])
+        TAB1.sort(key=lambda x: x[-1])
+        nTAB1 = len(TAB1)
         prev = [0]*size
-        TAB1 = []
-        for s, d, h in TAB:
+        while TAB1:
+            s, d, h = TAB1.pop()
             if h[:-2] == prev[:-2]:
                 if h[-1] != prev[-1]:
                     return 0
             else:
-                TAB1.append((s, d, h))
+                TAB.append((s, d, h))
             prev = h
-        TAB = TAB1
 
         # stabilize the SGS
         sgensx = [h for h in sgensx if h[b] == b]
