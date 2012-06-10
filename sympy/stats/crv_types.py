@@ -29,7 +29,8 @@ WignerSemicircle
 """
 
 from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
-                   Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs, log)
+                   Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
+                   Symbol, log)
 from sympy import beta as beta_fn
 from crv import SingleContinuousPSpace
 from sympy.core.decorators import _sympifyit
@@ -92,7 +93,8 @@ def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
     >>> from sympy import Symbol, sqrt, exp, pi
     >>> from sympy.stats import ContinuousRV, P, E
 
-    >>> x = Symbol('x')
+    >>> x = Symbol("x")
+
     >>> pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)) # Normal distribution
     >>> X = ContinuousRV(x, pdf)
 
@@ -111,14 +113,14 @@ def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
 # Arcsin distribution ----------------------------------------------------------
 
 class ArcsinPSpace(SingleContinuousPSpace):
-    def __new__(cls, a, b, symbol=None):
+    def __new__(cls, name, a, b):
         a, b = sympify(a), sympify(b)
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = 1/(pi*sqrt((x-a)*(b-x)))
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(a, b))
         return obj
 
-def Arcsin(a=0, b=1, symbol=None):
+def Arcsin(name, a=0, b=1):
     r"""
     Create a Continuous Random Variable with an arcsin distribution.
 
@@ -148,9 +150,8 @@ def Arcsin(a=0, b=1, symbol=None):
 
     >>> a = Symbol("a", real=True)
     >>> b = Symbol("b", real=True)
-    >>> x = Symbol("x")
 
-    >>> X = Arcsin(a, b, symbol=x)
+    >>> X = Arcsin("x", a, b)
 
     >>> density(X)
     Lambda(_x, 1/(pi*sqrt((-_x + b)*(_x - a))))
@@ -161,22 +162,22 @@ def Arcsin(a=0, b=1, symbol=None):
     [1] http://en.wikipedia.org/wiki/Arcsine_distribution
     """
 
-    return ArcsinPSpace(a, b, symbol).value
+    return ArcsinPSpace(name, a, b).value
 
 #-------------------------------------------------------------------------------
 # Benini distribution ----------------------------------------------------------
 
 class BeniniPSpace(SingleContinuousPSpace):
-    def __new__(cls, alpha, beta, sigma, symbol = None):
+    def __new__(cls, name, alpha, beta, sigma):
         alpha, beta, sigma = sympify(alpha), sympify(beta), sympify(sigma)
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = (exp(-alpha*log(x/sigma)-beta*log(x/sigma)**2)
                *(alpha/x+2*beta*log(x/sigma)/x))
         obj = SingleContinuousPSpace.__new__(cls, x, pdf,
                                              set = Interval(sigma, oo))
         return obj
 
-def Benini(alpha, beta, sigma, symbol=None):
+def Benini(name, alpha, beta, sigma):
     r"""
     Create a Continuous Random Variable with a Benini distribution.
 
@@ -208,9 +209,8 @@ def Benini(alpha, beta, sigma, symbol=None):
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
     >>> sigma = Symbol("sigma", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = Benini(alpha, beta, sigma, symbol=x)
+    >>> X = Benini("x", alpha, beta, sigma)
 
     >>> D = density(X)
     >>> pprint(D, use_unicode=False)
@@ -227,19 +227,19 @@ def Benini(alpha, beta, sigma, symbol=None):
     [1] http://en.wikipedia.org/wiki/Benini_distribution
     """
 
-    return BeniniPSpace(alpha, beta, sigma, symbol).value
+    return BeniniPSpace(name, alpha, beta, sigma).value
 
 #-------------------------------------------------------------------------------
 # Beta distribution ------------------------------------------------------------
 
 class BetaPSpace(SingleContinuousPSpace):
-    def __new__(cls, alpha, beta, symbol=None):
+    def __new__(cls, name, alpha, beta):
         alpha, beta = sympify(alpha), sympify(beta)
 
         _value_check(alpha > 0, "Alpha must be positive")
         _value_check(beta > 0, "Beta must be positive")
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = x**(alpha-1) * (1-x)**(beta-1) / beta_fn(alpha, beta)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, 1))
@@ -250,7 +250,7 @@ class BetaPSpace(SingleContinuousPSpace):
     def sample(self):
         return {self.value: random.betavariate(self.alpha, self.beta)}
 
-def Beta(alpha, beta, symbol=None):
+def Beta(name, alpha, beta):
     r"""
     Create a Continuous Random Variable with a Beta distribution.
 
@@ -280,9 +280,8 @@ def Beta(alpha, beta, symbol=None):
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = Beta(alpha, beta, symbol=x)
+    >>> X = Beta("x", alpha, beta)
 
     >>> D = density(X)
     >>> pprint(D, use_unicode=False)
@@ -304,20 +303,20 @@ def Beta(alpha, beta, symbol=None):
     [2] http://mathworld.wolfram.com/BetaDistribution.html
     """
 
-    return BetaPSpace(alpha, beta, symbol).value
+    return BetaPSpace(name, alpha, beta).value
 
 #-------------------------------------------------------------------------------
 # Beta prime distribution ------------------------------------------------------
 
 class BetaPrimePSpace(SingleContinuousPSpace):
-    def __new__(cls, alpha, beta, symbol=None):
+    def __new__(cls, name, alpha, beta):
         alpha, beta = sympify(alpha), sympify(beta)
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = x**(alpha-1)*(1+x)**(-alpha-beta)/beta_fn(alpha, beta)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
         return obj
 
-def BetaPrime(alpha, beta, symbol=None):
+def BetaPrime(name, alpha, beta):
     r"""
     Create a continuous random variable with a Beta prime distribution.
 
@@ -347,9 +346,8 @@ def BetaPrime(alpha, beta, symbol=None):
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = BetaPrime(alpha, beta, symbol=x)
+    >>> X = BetaPrime("x", alpha, beta)
 
     >>> D = density(X)
     >>> pprint(D, use_unicode=False)
@@ -365,20 +363,20 @@ def BetaPrime(alpha, beta, symbol=None):
     [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
     """
 
-    return BetaPrimePSpace(alpha, beta, symbol).value
+    return BetaPrimePSpace(name, alpha, beta).value
 
 #-------------------------------------------------------------------------------
 # Cauchy distribution ----------------------------------------------------------
 
 class CauchyPSpace(SingleContinuousPSpace):
-    def __new__(cls, x0, gamma, symbol = None):
+    def __new__(cls, name, x0, gamma):
         x0, gamma = sympify(x0), sympify(gamma)
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = 1/(pi*gamma*(1+((x-x0)/gamma)**2))
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
 
-def Cauchy(x0, gamma, symbol=None):
+def Cauchy(name, x0, gamma):
     r"""
     Create a continuous random variable with a Cauchy distribution.
 
@@ -407,9 +405,8 @@ def Cauchy(x0, gamma, symbol=None):
 
     >>> x0 = Symbol("x0")
     >>> gamma = Symbol("gamma", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = Cauchy(x0, gamma, symbol=x)
+    >>> X = Cauchy("x", x0, gamma)
 
     >>> density(X)
     Lambda(_x, 1/(pi*gamma*(1 + (_x - x0)**2/gamma**2)))
@@ -421,20 +418,20 @@ def Cauchy(x0, gamma, symbol=None):
     [2] http://mathworld.wolfram.com/CauchyDistribution.html
     """
 
-    return CauchyPSpace(x0, gamma, symbol).value
+    return CauchyPSpace(name, x0, gamma).value
 
 #-------------------------------------------------------------------------------
 # Chi distribution -------------------------------------------------------------
 
 class ChiPSpace(SingleContinuousPSpace):
-    def __new__(cls, k, symbol = None):
+    def __new__(cls, name, k):
         k = sympify(k)
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = 2**(1-k/2)*x**(k-1)*exp(-x**2/2)/gamma(k/2)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
         return obj
 
-def Chi(k, symbol=None):
+def Chi(name, k):
     r"""
     Create a continuous random variable with a Chi distribution.
 
@@ -462,9 +459,8 @@ def Chi(k, symbol=None):
     >>> from sympy import Symbol, simplify
 
     >>> k = Symbol("k", integer=True)
-    >>> x = Symbol("x")
 
-    >>> X = Chi(k, symbol=x)
+    >>> X = Chi("x", k)
 
     >>> density(X)
     Lambda(_x, 2**(-k/2 + 1)*_x**(k - 1)*exp(-_x**2/2)/gamma(k/2))
@@ -476,20 +472,20 @@ def Chi(k, symbol=None):
     [2] http://mathworld.wolfram.com/ChiDistribution.html
     """
 
-    return ChiPSpace(k, symbol).value
+    return ChiPSpace(name, k).value
 
 #-------------------------------------------------------------------------------
 # Dagum distribution -----------------------------------------------------------
 
 class DagumPSpace(SingleContinuousPSpace):
-    def __new__(cls, p, a, b, symbol = None):
+    def __new__(cls, name, p, a, b):
         p, a, b = sympify(p), sympify(a), sympify(b)
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = a*p/x*((x/b)**(a*p)/(((x/b)**a+1)**(p+1)))
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
 
-def Dagum(p, a, b, symbol=None):
+def Dagum(name, p, a, b):
     r"""
     Create a continuous random variable with a Dagum distribution.
 
@@ -522,9 +518,8 @@ def Dagum(p, a, b, symbol=None):
     >>> p = Symbol("p", positive=True)
     >>> b = Symbol("b", positive=True)
     >>> a = Symbol("a", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = Dagum(p, a, b, symbol=x)
+    >>> X = Dagum("x", p, a, b)
 
     >>> density(X)
     Lambda(_x, a*p*(_x/b)**(a*p)*((_x/b)**a + 1)**(-p - 1)/_x)
@@ -535,18 +530,18 @@ def Dagum(p, a, b, symbol=None):
     [1] http://en.wikipedia.org/wiki/Dagum_distribution
     """
 
-    return DagumPSpace(p, a, b, symbol).value
+    return DagumPSpace(name, p, a, b).value
 
 #-------------------------------------------------------------------------------
 # Exponential distribution -----------------------------------------------------
 
 class ExponentialPSpace(SingleContinuousPSpace):
-    def __new__(cls, rate, symbol=None):
+    def __new__(cls, name, rate):
         rate = sympify(rate)
 
         _value_check(rate > 0, "Rate must be positive.")
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = rate * exp(-rate*x)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
@@ -556,7 +551,7 @@ class ExponentialPSpace(SingleContinuousPSpace):
     def sample(self):
         return {self.value: random.expovariate(self.rate)}
 
-def Exponential(rate, symbol=None):
+def Exponential(name, rate):
     r"""
     Create a continuous random variable with an Exponential distribution.
 
@@ -585,9 +580,8 @@ def Exponential(rate, symbol=None):
     >>> from sympy import Symbol
 
     >>> l = Symbol("lambda", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = Exponential(l, symbol=x)
+    >>> X = Exponential("x", l)
 
     >>> density(X)
     Lambda(_x, lambda*exp(-_x*lambda))
@@ -604,7 +598,7 @@ def Exponential(rate, symbol=None):
     >>> skewness(X)
     2
 
-    >>> X = Exponential(10, symbol=x)
+    >>> X = Exponential('x', 10)
 
     >>> density(X)
     Lambda(_x, 10*exp(-10*_x))
@@ -622,19 +616,19 @@ def Exponential(rate, symbol=None):
     [2] http://mathworld.wolfram.com/ExponentialDistribution.html
     """
 
-    return ExponentialPSpace(rate, symbol).value
+    return ExponentialPSpace(name, rate).value
 
 #-------------------------------------------------------------------------------
 # Gamma distribution -----------------------------------------------------------
 
 class GammaPSpace(SingleContinuousPSpace):
-    def __new__(cls, k, theta, symbol=None):
+    def __new__(cls, name, k, theta):
         k, theta = sympify(k), sympify(theta)
 
         _value_check(k > 0, "k must be positive")
         _value_check(theta > 0, "Theta must be positive")
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = x**(k-1) * exp(-x/theta) / (gamma(k)*theta**k)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
@@ -645,7 +639,7 @@ class GammaPSpace(SingleContinuousPSpace):
     def sample(self):
         return {self.value: random.gammavariate(self.k, self.theta)}
 
-def Gamma(k, theta, symbol=None):
+def Gamma(name, k, theta):
     r"""
     Create a continuous random variable with a Gamma distribution.
 
@@ -675,9 +669,8 @@ def Gamma(k, theta, symbol=None):
 
     >>> k = Symbol("k", positive=True)
     >>> theta = Symbol("theta", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = Gamma(k, theta, symbol=x)
+    >>> X = Gamma("x", k, theta)
 
     >>> D = density(X)
     >>> pprint(D, use_unicode=False)
@@ -716,20 +709,20 @@ def Gamma(k, theta, symbol=None):
     [2] http://mathworld.wolfram.com/GammaDistribution.html
     """
 
-    return GammaPSpace(k, theta, symbol).value
+    return GammaPSpace(name, k, theta).value
 
 #-------------------------------------------------------------------------------
 # Laplace distribution ---------------------------------------------------------
 
 class LaplacePSpace(SingleContinuousPSpace):
-    def __new__(cls, mu, b, symbol=None):
+    def __new__(cls, name, mu, b):
         mu, b = sympify(mu), sympify(b)
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = 1/(2*b)*exp(-Abs(x-mu)/b)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
 
-def Laplace(mu, b, symbol=None):
+def Laplace(name, mu, b):
     r"""
     Create a continuous random variable with a Laplace distribution.
 
@@ -757,9 +750,8 @@ def Laplace(mu, b, symbol=None):
 
     >>> mu = Symbol("mu")
     >>> b = Symbol("b", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = Laplace(mu, b, symbol=x)
+    >>> X = Laplace("x", mu, b)
 
     >>> density(X)
     Lambda(_x, exp(-Abs(_x - mu)/b)/(2*b))
@@ -771,22 +763,22 @@ def Laplace(mu, b, symbol=None):
     [2] http://mathworld.wolfram.com/LaplaceDistribution.html
     """
 
-    return LaplacePSpace(mu, b, symbol).value
+    return LaplacePSpace(name, mu, b).value
 
 #-------------------------------------------------------------------------------
 # Logistic distribution --------------------------------------------------------
 
 class LogisticPSpace(SingleContinuousPSpace):
-    def __new__(cls, mu, s, symbol=None):
+    def __new__(cls, name, mu, s):
         mu, s = sympify(mu), sympify(s)
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = exp(-(x-mu)/s)/(s*(1+exp(-(x-mu)/s))**2)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
 
-def Logistic(mu, s, symbol=None):
+def Logistic(name, mu, s):
     r"""
     Create a continuous random variable with a logistic distribution.
 
@@ -814,9 +806,8 @@ def Logistic(mu, s, symbol=None):
 
     >>> mu = Symbol("mu", real=True)
     >>> s = Symbol("s", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = Logistic(mu, s, symbol=x)
+    >>> X = Logistic("x", mu, s)
 
     >>> density(X)
     Lambda(_x, exp((-_x + mu)/s)/(s*(exp((-_x + mu)/s) + 1)**2))
@@ -828,16 +819,16 @@ def Logistic(mu, s, symbol=None):
     [2] http://mathworld.wolfram.com/LogisticDistribution.html
     """
 
-    return LogisticPSpace(mu, s, symbol).value
+    return LogisticPSpace(name, mu, s).value
 
 #-------------------------------------------------------------------------------
 # Log Normal distribution ------------------------------------------------------
 
 class LogNormalPSpace(SingleContinuousPSpace):
-    def __new__(cls, mean, std, symbol=None):
+    def __new__(cls, name, mean, std):
         mean, std = sympify(mean), sympify(std)
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = exp(-(log(x)-mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
@@ -848,7 +839,7 @@ class LogNormalPSpace(SingleContinuousPSpace):
     def sample(self):
         return {self.value: random.lognormvariate(self.mean, self.std)}
 
-def LogNormal(mean, std, symbol=None):
+def LogNormal(name, mean, std):
     r"""
     Create a continuous random variable with a log-normal distribution.
 
@@ -879,9 +870,8 @@ def LogNormal(mean, std, symbol=None):
 
     >>> mu = Symbol("mu", real=True)
     >>> sigma = Symbol("sigma", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = LogNormal(mu, sigma, symbol=x)
+    >>> X = LogNormal("x", mu, sigma)
 
     >>> D = density(X)
     >>> pprint(D, use_unicode=False)
@@ -895,7 +885,7 @@ def LogNormal(mean, std, symbol=None):
           |             ____         |
           \       2*x*\/ pi *sigma   /
 
-    >>> X = LogNormal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
+    >>> X = LogNormal('x', 0, 1) # Mean 0, standard deviation 1
 
     >>> density(X)
     Lambda(_x, sqrt(2)*exp(-log(_x)**2/2)/(2*_x*sqrt(pi)))
@@ -907,22 +897,22 @@ def LogNormal(mean, std, symbol=None):
     [2] http://mathworld.wolfram.com/LogNormalDistribution.html
     """
 
-    return LogNormalPSpace(mean, std, symbol).value
+    return LogNormalPSpace(name, mean, std).value
 
 #-------------------------------------------------------------------------------
 # Maxwell distribution ---------------------------------------------------------
 
 class MaxwellPSpace(SingleContinuousPSpace):
-    def __new__(cls, a, symbol = None):
+    def __new__(cls, name, a):
         a = sympify(a)
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
 
         pdf = sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
         return obj
 
-def Maxwell(a, symbol=None):
+def Maxwell(name, a):
     r"""
     Create a continuous random variable with a Maxwell distribution.
 
@@ -950,9 +940,8 @@ def Maxwell(a, symbol=None):
     >>> from sympy import Symbol, simplify
 
     >>> a = Symbol("a", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = Maxwell(a, symbol=x)
+    >>> X = Maxwell("x", a)
 
     >>> density(X)
     Lambda(_x, sqrt(2)*_x**2*exp(-_x**2/(2*a**2))/(sqrt(pi)*a**3))
@@ -970,20 +959,20 @@ def Maxwell(a, symbol=None):
     [2] http://mathworld.wolfram.com/MaxwellDistribution.html
     """
 
-    return MaxwellPSpace(a, symbol).value
+    return MaxwellPSpace(name, a).value
 
 #-------------------------------------------------------------------------------
 # Nakagami distribution --------------------------------------------------------
 
 class NakagamiPSpace(SingleContinuousPSpace):
-    def __new__(cls, mu, omega, symbol = None):
+    def __new__(cls, name, mu, omega):
         mu, omega = sympify(mu), sympify(omega)
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = 2*mu**mu/(gamma(mu)*omega**mu)*x**(2*mu-1)*exp(-mu/omega*x**2)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
         return obj
 
-def Nakagami(mu, omega, symbol=None):
+def Nakagami(name, mu, omega):
     r"""
     Create a continuous random variable with a Nakagami distribution.
 
@@ -1014,9 +1003,8 @@ def Nakagami(mu, omega, symbol=None):
 
     >>> mu = Symbol("mu", positive=True)
     >>> omega = Symbol("omega", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = Nakagami(mu, omega, symbol=x)
+    >>> X = Nakagami("x", mu, omega)
 
     >>> D = density(X)
     >>> pprint(D, use_unicode=False)
@@ -1044,18 +1032,18 @@ def Nakagami(mu, omega, symbol=None):
     [1] http://en.wikipedia.org/wiki/Nakagami_distribution
     """
 
-    return NakagamiPSpace(mu, omega, symbol).value
+    return NakagamiPSpace(name, mu, omega).value
 
 #-------------------------------------------------------------------------------
 # Normal distribution ----------------------------------------------------------
 
 class NormalPSpace(SingleContinuousPSpace):
-    def __new__(cls, mean, std, symbol=None):
+    def __new__(cls, name, mean, std):
         mean, std = sympify(mean), sympify(std)
 
         _value_check(std > 0, "Standard deviation must be positive")
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = exp(-(x-mean)**2 / (2*std**2)) / (sqrt(2*pi)*std)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
@@ -1067,7 +1055,7 @@ class NormalPSpace(SingleContinuousPSpace):
     def sample(self):
         return {self.value: random.normalvariate(self.mean, self.std)}
 
-def Normal(mean, std, symbol=None):
+def Normal(name, mean, std):
     r"""
     Create a continuous random variable with a Normal distribution.
 
@@ -1095,9 +1083,8 @@ def Normal(mean, std, symbol=None):
 
     >>> mu = Symbol("mu")
     >>> sigma = Symbol("sigma", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = Normal(mu, sigma, symbol=x)
+    >>> X = Normal("x", mu, sigma)
 
     >>> density(X)
     Lambda(_x, sqrt(2)*exp(-(_x - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma))
@@ -1117,7 +1104,7 @@ def Normal(mean, std, symbol=None):
     >>> simplify(skewness(X))
     0
 
-    >>> X = Normal(0, 1, symbol=x) # Mean 0, standard deviation 1
+    >>> X = Normal("x", 0, 1) # Mean 0, standard deviation 1
     >>> density(X)
     Lambda(_x, sqrt(2)*exp(-_x**2/2)/(2*sqrt(pi)))
 
@@ -1134,19 +1121,19 @@ def Normal(mean, std, symbol=None):
     [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
     """
 
-    return NormalPSpace(mean, std, symbol).value
+    return NormalPSpace(name, mean, std).value
 
 #-------------------------------------------------------------------------------
 # Pareto distribution ----------------------------------------------------------
 
 class ParetoPSpace(SingleContinuousPSpace):
-    def __new__(cls, xm, alpha, symbol=None):
+    def __new__(cls, name, xm, alpha):
         xm, alpha = sympify(xm), sympify(alpha)
 
         _value_check(xm > 0, "Xm must be positive")
         _value_check(alpha > 0, "Alpha must be positive")
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = alpha * xm**alpha / x**(alpha+1)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(xm, oo))
@@ -1157,7 +1144,7 @@ class ParetoPSpace(SingleContinuousPSpace):
     def sample(self):
         return {self.value: random.paretovariate(self.alpha)}
 
-def Pareto(xm, alpha, symbol=None):
+def Pareto(name, xm, alpha):
     r"""
     Create a continuous random variable with the Pareto distribution.
 
@@ -1187,9 +1174,8 @@ def Pareto(xm, alpha, symbol=None):
 
     >>> xm = Symbol("xm", positive=True)
     >>> beta = Symbol("beta", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = Pareto(xm, beta, symbol=x)
+    >>> X = Pareto("x", xm, beta)
 
     >>> density(X)
     Lambda(_x, _x**(-beta - 1)*beta*xm**beta)
@@ -1201,20 +1187,20 @@ def Pareto(xm, alpha, symbol=None):
     [2] http://mathworld.wolfram.com/ParetoDistribution.html
     """
 
-    return ParetoPSpace(xm, alpha, symbol).value
+    return ParetoPSpace(name, xm, alpha).value
 
 #-------------------------------------------------------------------------------
 # Rayleigh distribution --------------------------------------------------------
 
 class RayleighPSpace(SingleContinuousPSpace):
-    def __new__(cls, sigma, symbol = None):
+    def __new__(cls, name, sigma):
         sigma = sympify(sigma)
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = x/sigma**2*exp(-x**2/(2*sigma**2))
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
         return obj
 
-def Rayleigh(sigma, symbol=None):
+def Rayleigh(name, sigma):
     r"""
     Create a continuous random variable with a Rayleigh distribution.
 
@@ -1242,9 +1228,8 @@ def Rayleigh(sigma, symbol=None):
     >>> from sympy import Symbol, simplify
 
     >>> sigma = Symbol("sigma", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = Rayleigh(sigma, symbol=x)
+    >>> X = Rayleigh("x", sigma)
 
     >>> density(X)
     Lambda(_x, _x*exp(-_x**2/(2*sigma**2))/sigma**2)
@@ -1262,20 +1247,20 @@ def Rayleigh(sigma, symbol=None):
     [2] http://mathworld.wolfram.com/RayleighDistribution.html
     """
 
-    return RayleighPSpace(sigma, symbol).value
+    return RayleighPSpace(name, sigma).value
 
 #-------------------------------------------------------------------------------
 # StudentT distribution --------------------------------------------------------
 
 class StudentTPSpace(SingleContinuousPSpace):
-    def __new__(cls, nu, symbol = None):
+    def __new__(cls, name, nu):
         nu = sympify(nu)
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = 1/(sqrt(nu)*beta_fn(S(1)/2,nu/2))*(1+x**2/nu)**(-(nu+1)/2)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
 
-def StudentT(nu, symbol=None):
+def StudentT(name, nu):
     r"""
     Create a continuous random variable with a student's t distribution.
 
@@ -1303,9 +1288,8 @@ def StudentT(nu, symbol=None):
     >>> from sympy import Symbol, simplify, pprint
 
     >>> nu = Symbol("nu", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = StudentT(nu, symbol=x)
+    >>> X = StudentT("x", nu)
 
     >>> D = density(X)
     >>> pprint(D, use_unicode=False)
@@ -1328,16 +1312,16 @@ def StudentT(nu, symbol=None):
     [2] http://mathworld.wolfram.com/Studentst-Distribution.html
     """
 
-    return StudentTPSpace(nu, symbol).value
+    return StudentTPSpace(name, nu).value
 
 #-------------------------------------------------------------------------------
 # Triangular distribution ------------------------------------------------------
 
 class TriangularPSpace(SingleContinuousPSpace):
-    def __new__(cls, a, b, c, symbol=None):
+    def __new__(cls, name, a, b, c):
         a, b, c = sympify(a), sympify(b), sympify(c)
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = Piecewise(
                 (2*(x-a)/((b-a)*(c-a)), And(a<=x, x<c)),
                 (2/(b-a), Eq(x,c)),
@@ -1347,7 +1331,7 @@ class TriangularPSpace(SingleContinuousPSpace):
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
 
-def Triangular(a, b, c, symbol=None):
+def Triangular(name, a, b, c):
     r"""
     Create a continuous random variable with a triangular distribution.
 
@@ -1383,9 +1367,8 @@ def Triangular(a, b, c, symbol=None):
     >>> a = Symbol("a")
     >>> b = Symbol("b")
     >>> c = Symbol("c")
-    >>> x = Symbol("x")
 
-    >>> X = Triangular(a,b,c, symbol=x)
+    >>> X = Triangular("x", a,b,c)
 
     >>> density(X)
     Lambda(_x, Piecewise(((2*_x - 2*a)/((-a + b)*(-a + c)),
@@ -1401,16 +1384,16 @@ def Triangular(a, b, c, symbol=None):
     [2] http://mathworld.wolfram.com/TriangularDistribution.html
     """
 
-    return TriangularPSpace(a, b, c, symbol).value
+    return TriangularPSpace(name, a, b, c).value
 
 #-------------------------------------------------------------------------------
 # Uniform distribution ---------------------------------------------------------
 
 class UniformPSpace(SingleContinuousPSpace):
-    def __new__(cls, left, right, symbol=None):
+    def __new__(cls, name, left, right):
         left, right = sympify(left), sympify(right)
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = Piecewise(
                 (S.Zero, x<left),
                 (S.Zero, x>right),
@@ -1424,7 +1407,7 @@ class UniformPSpace(SingleContinuousPSpace):
     def sample(self):
         return {self.value: random.uniform(self.left, self.right)}
 
-def Uniform(left, right, symbol=None):
+def Uniform(name, left, right):
     r"""
     Create a continuous random variable with a uniform distribution.
 
@@ -1457,9 +1440,8 @@ def Uniform(left, right, symbol=None):
 
     >>> a = Symbol("a")
     >>> b = Symbol("b")
-    >>> x = Symbol("x")
 
-    >>> X = Uniform(a, b, symbol=x)
+    >>> X = Uniform("x", a, b)
 
     >>> density(X)
     Lambda(_x, Piecewise((0, _x < a), (0, _x > b), (1/(-a + b), True)))
@@ -1483,23 +1465,23 @@ def Uniform(left, right, symbol=None):
     [2] http://mathworld.wolfram.com/UniformDistribution.html
     """
 
-    return UniformPSpace(left, right, symbol).value
+    return UniformPSpace(name, left, right).value
 
 #-------------------------------------------------------------------------------
 # UniformSum distribution ------------------------------------------------------
 
 class UniformSumPSpace(SingleContinuousPSpace):
-    def __new__(cls, n, symbol=None):
+    def __new__(cls, name, n):
         n = sympify(n)
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         k = Dummy("k")
         pdf =1/factorial(n-1)*Sum((-1)**k*binomial(n,k)*(x-k)**(n-1), (k,0,floor(x)))
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0,n))
         return obj
 
-def UniformSum(n, symbol=None):
+def UniformSum(name, n):
     r"""
     Create a continuous random variable with an Irwin-Hall distribution.
 
@@ -1529,9 +1511,8 @@ def UniformSum(n, symbol=None):
     >>> from sympy import Symbol, pprint
 
     >>> n = Symbol("n", integer=True)
-    >>> x = Symbol("x")
 
-    >>> X = UniformSum(n, symbol=x)
+    >>> X = UniformSum("x", n)
 
     >>> D = density(X)
     >>> pprint(D, use_unicode=False)
@@ -1553,19 +1534,19 @@ def UniformSum(n, symbol=None):
     [2] http://mathworld.wolfram.com/UniformSumDistribution.html
     """
 
-    return UniformSumPSpace(n, symbol).value
+    return UniformSumPSpace(name, n).value
 
 #-------------------------------------------------------------------------------
 # Weibull distribution ---------------------------------------------------------
 
 class WeibullPSpace(SingleContinuousPSpace):
-    def __new__(cls, alpha, beta, symbol=None):
+    def __new__(cls, name, alpha, beta):
         alpha, beta = sympify(alpha), sympify(beta)
 
         _value_check(alpha > 0, "Alpha must be positive")
         _value_check(beta > 0, "Beta must be positive")
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = beta * (x/alpha)**(beta-1) * exp(-(x/alpha)**beta) / alpha
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
@@ -1576,7 +1557,7 @@ class WeibullPSpace(SingleContinuousPSpace):
     def sample(self):
         return {self.value: random.weibullvariate(self.alpha, self.beta)}
 
-def Weibull(alpha, beta, symbol=None):
+def Weibull(name, alpha, beta):
     r"""
     Create a continuous random variable with a Weibull distribution.
 
@@ -1608,9 +1589,8 @@ def Weibull(alpha, beta, symbol=None):
 
     >>> l = Symbol("lambda", positive=True)
     >>> k = Symbol("k", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = Weibull(l, k, symbol=x)
+    >>> X = Weibull("x", l, k)
 
     >>> density(X)
     Lambda(_x, k*(_x/lambda)**(k - 1)*exp(-(_x/lambda)**k)/lambda)
@@ -1629,22 +1609,22 @@ def Weibull(alpha, beta, symbol=None):
 
     """
 
-    return WeibullPSpace(alpha, beta, symbol).value
+    return WeibullPSpace(name, alpha, beta).value
 
 #-------------------------------------------------------------------------------
 # Wigner semicircle distribution -----------------------------------------------
 
 class WignerSemicirclePSpace(SingleContinuousPSpace):
-    def __new__(cls, R, symbol=None):
+    def __new__(cls, name, R):
         R = sympify(R)
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
+        x = Symbol(name)
         pdf = 2/(pi*R**2)*sqrt(R**2-x**2)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(-R, R))
         return obj
 
-def WignerSemicircle(R, symbol=None):
+def WignerSemicircle(name, R):
     r"""
     Create a continuous random variable with a Wigner semicircle distribution.
 
@@ -1672,9 +1652,8 @@ def WignerSemicircle(R, symbol=None):
     >>> from sympy import Symbol, simplify
 
     >>> R = Symbol("R", positive=True)
-    >>> x = Symbol("x")
 
-    >>> X = WignerSemicircle(R, symbol=x)
+    >>> X = WignerSemicircle("x", R)
 
     >>> density(X)
     Lambda(_x, 2*sqrt(-_x**2 + R**2)/(pi*R**2))
@@ -1689,4 +1668,4 @@ def WignerSemicircle(R, symbol=None):
     [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
     """
 
-    return WignerSemicirclePSpace(R, symbol).value
+    return WignerSemicirclePSpace(name, R).value
