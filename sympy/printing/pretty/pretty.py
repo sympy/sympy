@@ -629,6 +629,11 @@ class PrettyPrinter(Printer):
     def _print_MatAdd(self, expr):
         return self._print_seq(expr.args, None, None, ' + ')
 
+    def _print_FunctionMatrix(self, X):
+        D = self._print(X.lamda.expr)
+        D = prettyForm(*D.parens('[',']'))
+        return D
+
     def _print_Piecewise(self, pexpr):
 
         P = {}
