@@ -36,8 +36,8 @@ def test_morphism():
     assert f == Morphism(A, B, "f")
     assert f != g
 
-    assert f * g == None
-    assert f * f == None
+    raises(ValueError, lambda: f * g)
+    raises(ValueError, lambda: f * f)
 
     k = g.compose(f, "k")
 

@@ -97,8 +97,6 @@ class Morphism(Basic):
     True
     >>> f == Morphism(A, B, "")
     False
-    >>> f * g is None
-    True
     >>> g * f
     Morphism(Object("B"), Object("C"), "g") *
     Morphism(Object("A"), Object("B"), "f")
@@ -176,7 +174,6 @@ class Morphism(Basic):
         If ``self`` is a morphism from `B` to `C` and ``g`` is a
         morphism from `A` to `B`, returns the morphism from `A` to `C`
         which results from the composition of these morphisms.
-        Otherwise, returns ``None``.
 
         If either ``self`` or ``g`` are morphisms resulted from some
         previous composition, components in the resulting morphism
@@ -204,7 +201,7 @@ class Morphism(Basic):
 
         """
         if g.codomain != self.domain:
-            return None
+            raise ValueError("Uncomponsable morphisms.")
 
         if self.identity:
             return g
@@ -438,12 +435,7 @@ class Diagram(Basic):
 
         Returns ``True`` if the key already was in the dictionary and
         ``False`` otherwise.
-
-        If ``key`` is ``None``, returns True and does nothing.
         """
-        if not key:
-            return True
-
         if key in dictionary:
             dictionary[key] = dictionary[key] | value
             return True
@@ -474,13 +466,13 @@ class Diagram(Basic):
                 Diagram._set_dict_union(morphisms, id_cod, empty)
 
             for existing_morphism, existing_props in morphisms.items():
-                left = morphism * existing_morphism
-                right = existing_morphism * morphism
-
                 new_props = existing_props & props
-
-                Diagram._set_dict_union(morphisms, left, new_props)
-                Diagram._set_dict_union(morphisms, right, new_props)
+                if morphism.domain == existing_morphism.codomain:
+                    left = morphism * existing_morphism
+                    Diagram._set_dict_union(morphisms, left, new_props)
+                if morphism.codomain == existing_morphism.domain:
+                    right = existing_morphism * morphism
+                    Diagram._set_dict_union(morphisms, right, new_props)
 
     def __new__(cls, *args):
         premises = {}
