@@ -13,13 +13,13 @@ def BayesTest(A,B):
 def test_discreteuniform():
     # Symbolic
     a, b, c = symbols('a b c')
-    X = DiscreteUniform([a,b,c])
+    X = DiscreteUniform('X', [a,b,c])
 
     assert E(X) == (a+b+c)/3
     assert variance(X) == (a**2+b**2+c**2)/3 - (a/3+b/3+c/3)**2
     assert P(Eq(X, a)) == P(Eq(X, b)) == P(Eq(X, c)) == S('1/3')
 
-    Y = DiscreteUniform(range(-5, 5))
+    Y = DiscreteUniform('Y', range(-5, 5))
 
     # Numeric
     assert E(Y) == S('-1/2')
@@ -30,10 +30,11 @@ def test_discreteuniform():
         assert P(Y <= x) == S(x+6)/10
         assert P(Y >= x) == S(5-x)/10
 
-    assert density(Die(6)) == density(DiscreteUniform(range(1,7)))
+    assert density(Die('D', 6)) == density(DiscreteUniform('U', range(1,7)))
 
 def test_dice():
-    X, Y, Z= Die(6), Die(6), Die(6)
+    # TODO: Make iid method!
+    X, Y, Z= Die('X', 6), Die('Y', 6), Die('Z', 6)
     a,b = symbols('a b')
 
     assert E(X) == 3+S.Half
@@ -72,14 +73,14 @@ def test_dice():
     assert where(X>3).set == FiniteSet(4,5,6)
 
 def test_given():
-    X = Die(6)
+    X = Die('X', 6)
     density(X, X>5) == {S(6): S(1)}
     where(X>2, X>5).as_boolean() == Eq(X.symbol, 6)
     sample(X, X>5) == 6
 
 def test_domains():
-    x, y = symbols('x y')
-    X, Y= Die(6, symbol=x), Die(6, symbol=y)
+    X, Y= Die('x', 6), Die('y', 6)
+    x, y = X.symbol, Y.symbol
     # Domains
     d = where(X>Y)
     assert d.condition == (x > y)
@@ -90,7 +91,7 @@ def test_domains():
 
     assert len(pspace(X+Y).domain.elements) == 36
 
-    Z = Die(4, symbol=x)
+    Z = Die('x', 4)
 
     raises(ValueError, lambda: P(X>Z)) # Two domains with same internal symbol
 
@@ -104,7 +105,7 @@ def test_domains():
             for i in range(1,7) for j in range(1,7) if i>j)
 
 def test_dice_bayes():
-    X, Y, Z = Die(6), Die(6), Die(6)
+    X, Y, Z= Die('X', 6), Die('Y', 6), Die('Z', 6)
 
     BayesTest(X>3, X+Y<5)
     BayesTest(Eq(X-Y, Z), Z>Y)
@@ -112,13 +113,13 @@ def test_dice_bayes():
 
 def test_bernoulli():
     p, a, b = symbols('p a b')
-    X = Bernoulli(p, a, b, symbol='B')
+    X = Bernoulli('B', p, a, b)
 
     assert E(X) == a*p + b*(-p+1)
     assert density(X)[a] == p
     assert density(X)[b] == 1-p
 
-    X = Bernoulli(p, 1, 0, symbol='B')
+    X = Bernoulli('B', p, 1, 0)
 
     assert E(X) == p
     assert variance(X) == -p**2 + p
@@ -126,21 +127,21 @@ def test_bernoulli():
     variance(a*X+b) == a**2 * variance(X)
 
 def test_cdf():
-    D = Die(6)
+    D = Die('D', 6)
     o = S.One
 
     assert cdf(D) == sympify({1:o/6, 2:o/3, 3:o/2, 4:2*o/3, 5:5*o/6, 6:o})
 
 def test_coins():
-    C, D = Coin(), Coin()
+    C, D = Coin('C'), Coin('D')
     H, T = sorted(density(C).keys())
     assert P(Eq(C, D)) == S.Half
     assert density(Tuple(C, D)) == {(H, H): S.One/4, (H, T): S.One/4,
             (T, H): S.One/4, (T, T): S.One/4}
     assert density(C) == {H: S.Half, T: S.Half}
 
-    E = Coin(S.One/10)
-    assert P(Eq(E, H))==S(1)/10
+    F = Coin('F', S.One/10)
+    assert P(Eq(F, H)) == S(1)/10
 
     d = pspace(C).domain
 
@@ -154,7 +155,7 @@ def test_binomial_numeric():
 
     for n in nvals:
         for p in pvals:
-            X = Binomial(n, p)
+            X = Binomial('X', n, p)
             assert Eq(E(X), n*p)
             assert Eq(variance(X), n*p*(1-p))
             if n > 0 and 0 < p < 1:
@@ -165,7 +166,7 @@ def test_binomial_numeric():
 def test_binomial_symbolic():
     n = 10 # Because we're using for loops, can't do symbolic n
     p = symbols('p', positive=True)
-    X = Binomial(n, p)
+    X = Binomial('X', n, p)
     assert Eq(simplify(E(X)), n*p)
     assert Eq(simplify(variance(X)), n*p*(1-p))
 # Can't detect the equality
@@ -173,14 +174,14 @@ def test_binomial_symbolic():
 
     # Test ability to change success/failure winnings
     H, T = symbols('H T')
-    Y = Binomial(n, p, succ=H, fail=T)
+    Y = Binomial('Y', n, p, succ=H, fail=T)
     assert Eq(simplify(E(Y)), simplify(n*(H*p+T*(1-p))))
 
 def test_hypergeometric_numeric():
     for N in range(1, 5):
         for m in range(0, N+1):
             for n in range(1, N+1):
-                X = Hypergeometric(N, m, n)
+                X = Hypergeometric('X', N, m, n)
                 N, m, n = map(sympify, (N, m, n))
                 assert sum(density(X).values()) == 1
                 assert E(X) == n * m / N
@@ -193,10 +194,10 @@ def test_hypergeometric_numeric():
 
 
 def test_FiniteRV():
-    F = FiniteRV({1:S.Half, 2:S.One/4, 3:S.One/4})
+    F = FiniteRV('F', {1:S.Half, 2:S.One/4, 3:S.One/4})
 
-    assert density(F) =={S(1):S.Half, S(2):S.One/4, S(3):S.One/4}
-    assert P(F>=2)==S.Half
+    assert density(F) == {S(1):S.Half, S(2):S.One/4, S(3):S.One/4}
+    assert P(F>=2) == S.Half
 
     assert pspace(F).domain.as_boolean() == Or(
             *[Eq(F.symbol, i) for i in [1,2,3]])
