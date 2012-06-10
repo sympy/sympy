@@ -28,7 +28,7 @@ def test_where():
         XX = given(X, X+3)
 
 def test_random_symbols():
-    X, Y = Normal('X', 0,1), Normal('Y', 0,1)
+    X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
 
     assert set(random_symbols(2*X+1)) == set((X,))
     assert set(random_symbols(2*X+Y)) == set((X,Y))
@@ -36,7 +36,7 @@ def test_random_symbols():
     assert set(random_symbols(2)) == set()
 
 def test_pspace():
-    X, Y = Normal('X', 0,1), Normal('Y', 0,1)
+    X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
 
     assert not pspace(5+3)
     assert pspace(X) == X.pspace
@@ -112,7 +112,7 @@ def test_dependence():
     assert independent(X, 2*Y)
     assert not dependent(X, 2*Y)
 
-    X, Y = Normal('X', 0,1), Normal('Y', 0,1)
+    X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
     assert independent(X, Y)
     assert dependent(X, 2*X)
 
