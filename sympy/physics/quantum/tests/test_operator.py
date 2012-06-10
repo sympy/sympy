@@ -8,6 +8,9 @@ from sympy.physics.quantum.operator import (Operator, UnitaryOperator,
                                             DifferentialOperator)
 from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.qapply import qapply
+from sympy.core.trace import Tr
+from sympy.physics.quantum.spin  import JzKet, JzBra
+
 
 class TestKet(Ket):
     @classmethod
@@ -108,6 +111,8 @@ def test_outer_product():
     assert Dagger(k*b) == OuterProduct(Dagger(b),Dagger(k))
     assert Dagger(k*b).is_commutative == False
 
+    #test the _eval_trace
+    assert Tr(OuterProduct(JzKet(1,1), JzBra(1,1))).doit() == 1
 
 def test_operator_dagger():
     A = Operator('A')

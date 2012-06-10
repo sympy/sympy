@@ -19,17 +19,30 @@ class Tr(Expr):
     Parameters
     ==========
     o : operator, matrix, expr
+    i : indices (optional)
 
     Examples
     ========
+
+    #TODO: Need to handle printing
+
+    a) Trace(A+B) = Tr(A) + Tr(B)
+    b) Trace(scalar*Operator) = scalar*Trace(Operator)
+
+    >>> from sympy.core.trace import Tr
+    >>> from sympy import symbols, Matrix
+    >>> a, b = symbols('a b', commutative=True)
+    >>> A, B = symbols('A B', commutative=False)
+    >>> Tr(a*A,2)
+    a*Tr(A, 2)
+    >>> m = Matrix([[1,2],[1,1]])
+    >>> Tr(m)
+    2
 
     """
 
     def __new__(cls, *args):
         """ Construct a Trace object. Return the following expr.
-
-        a) Trace(A+B) = Tr(A) + Tr(B)
-        b) Trace(scalar*Operator) = scalar*Trace(Operator)
 
         """
         expr = args[0]
@@ -62,6 +75,13 @@ class Tr(Expr):
 
         #TODO: Current version ignores the indices set for partial trace.
 
+        >>> from sympy.core.trace import Tr
+        >>> from sympy.physics.quantum.operator import OuterProduct
+        >>> from sympy.physics.quantum.spin import JzKet, JzBra
+        >>> t = Tr(OuterProduct(JzKet(1,1), JzBra(1,1)))
+        >>> t.doit()
+        1
+
         """
         if hasattr(self.args[0], '_eval_trace'):
             return self.args[0]._eval_trace()
@@ -70,7 +90,7 @@ class Tr(Expr):
 
     @property
     def is_number(self):
-        #TODO : This functions to be reviewed
+        #TODO : This function to be reviewed
         # and implementation improved.
 
         return True
