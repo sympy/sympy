@@ -3,9 +3,9 @@
 Gaussian optics.
 
 The module implements:
-    Ray transfer matrices for geometrical and gaussian optics
+    Ray transfer matrices for geometrical and Gaussian optics
      See RayTransferMatrix, GeometricRay and BeamParameter
-    Conjugation relations for geometrical and gaussian optics
+    Conjugation relations for geometrical and Gaussian optics
      See geometric_conj*, gauss_conj and conjugate_gauss_beams
 
 The conventions for the distances are as follows:
@@ -15,7 +15,7 @@ The conventions for the distances are as follows:
 
 Module uses dual formalism to represent ray transfer matrix and geometric
 ray. One of formalisms uses unimodular matrices (det(M) = 1) in which
-geometric ray is represented by two paramaeters: distance to optical axis
+geometric ray is represented by two parameters: distance to optical axis
 and optical-direction cosine (which equals n*u, n - refractive index,
 u - angle to optical axis). The second formalism uses distance and angle
 to optical axis. The first formalism is set by default.
@@ -33,26 +33,20 @@ from sympy.utilities.misc import filldedent
 
 
 def isunimodular(function):
-    """Review kwargs argument in function and deside
-    wheather unimodular or non-unimodular formalism needed
+    """Review kwargs argument in function and decide
+    whether unimodular or non-unimodular formalism is needed
     """
     def _isunimodular(*args, **kwargs):
         if len(kwargs) > 1:
-            raise ValueError('''To many named aguments only one needed''')
-        elif len(kwargs) == 1:
-            if 'unimodular' in kwargs:
-                if kwargs['unimodular'] == True:
-                    pass
-                elif kwargs['unimodular'] == False:
-                    pass
-                else:
-                    raise ValueError('''Unimodular can be only True of False''')
-            else:
-                raise ValueError('''Only unimodular can be named agument''')
-        elif len(kwargs) == 0:
-            kwargs['unimodular'] = True
-        res = function(*args, **kwargs)
-        return res
+            raise ValueError(filldedent('''
+                Too many named arguments; only one needed'''))
+        else:
+            uni = kwargs.get('unimodular', True)
+            if uni not in (True, False):
+                raise ValueError(filldedent('''
+                    Unimodular can be only True of False'''))
+        kwargs['unimodular'] = bool(uni)
+        return function(*args, **kwargs)
     return _isunimodular
 
 ###
@@ -133,14 +127,16 @@ class RayTransferMatrix(Matrix):
     def __mul__(self, other):
         if isinstance(other, RayTransferMatrix):
             if self.unimodular != other.unimodular:
-                raise ValueError('''Only unimodular or non-unimodular formalism
-                can be applied''')
+                raise ValueError(filldedent('''
+                    Only unimodular or non-unimodular formalism
+                    can be applied'''))
             return RayTransferMatrix(Matrix.__mul__(self, other),
                                      unimodular=self.unimodular)
         elif isinstance(other, GeometricRay):
             if self.unimodular != other.unimodular:
-                raise ValueError('''Only unimodular or non-unimodular formalism
-                can be applied''')
+                raise ValueError(filldedent('''
+                    Only unimodular or non-unimodular formalism
+                    can be applied'''))
             return GeometricRay(Matrix.__mul__(self, other),
                                 unimodular=self.unimodular)
         elif isinstance(other, BeamParameter):
@@ -220,7 +216,7 @@ class FreeSpace(RayTransferMatrix):
     ==========
 
     distance
-    n index or refraction (oly for unimodular case)
+    n index or refraction (only for unimodular case)
     and
     unimodular (default = True)
 
@@ -234,7 +230,7 @@ class FreeSpace(RayTransferMatrix):
 
     >>> from sympy.physics.gaussopt import FreeSpace
     >>> from sympy import symbols
-    >>> d,n = symbols('d n')
+    >>> d, n = symbols('d n')
     >>> FreeSpace(d)
     [1, d]
     [0, 1]
@@ -498,7 +494,8 @@ class ThinPrism(Matrix):
             else:
                 return Matrix.__add__(self,other)
         else:
-            raise ValueError("Only 2x1 Matrix can be multiplied with ThinPrism")
+            raise ValueError(filldedent('''
+                Only 2x1 Matrix can be multiplied with ThinPrism'''))
 
 # TODO Add "Duct" (radially variad index and gain)
 # TODO Add class OpticalSystem which will contain optical elements
@@ -600,17 +597,17 @@ class GeometricRay(Matrix):
 
 
 ###
-# Representation for gauss beam
+# Representation for Gaussian beam
 ###
 
 class BeamParameter(Expr):
     """
-    Representation for a gaussian ray in the Ray Transfer Matrix formalism.
+    Representation for a Gaussian ray in the Ray Transfer Matrix formalism.
 
     Parameters
     ==========
 
-    wavelength, distance to waist, and w (waist) or z_r (rayleigh range)
+    wavelength, distance to waist, and w (waist) or z_r (Rayleigh range)
 
     Examples
     ========
@@ -666,13 +663,15 @@ class BeamParameter(Expr):
         inst.wavelen = wavelen
         inst.z = z
         if len(kwargs) !=1:
-            raise ValueError('Constructor expects exactly one named argument.')
+            raise ValueError(filldedent('''
+                Constructor expects exactly one named argument.'''))
         elif 'z_r' in kwargs:
             inst.z_r = sympify(kwargs['z_r'])
         elif 'w' in kwargs:
             inst.z_r = waist2rayleigh(sympify(kwargs['w']), wavelen)
         else:
-            raise ValueError('The constructor needs named argument w or z_r')
+            raise ValueError(filldedent('''
+                The constructor needs named argument w or z_r'''))
         return inst
 
     @property
@@ -779,9 +778,9 @@ class BeamParameter(Expr):
     @property
     def waist_approximation_limit(self):
         """
-        The minimal waist for which the gauss beam approximation is valid.
+        The minimal waist for which the Gaussian beam approximation is valid.
 
-        The gauss beam is a solution to the paraxial equation. For curvatures
+        The Gaussian beam is a solution to the paraxial equation. For curvatures
         that are too great it is not a valid approximation.
 
         Examples
@@ -801,7 +800,7 @@ class BeamParameter(Expr):
 
 def waist2rayleigh(w, wavelen):
     """
-    Calculate the rayleigh range from the waist of a gaussian beam.
+    Calculate the Rayleigh range from the waist of a Gaussian beam.
 
     See Also
     ========
@@ -821,7 +820,7 @@ def waist2rayleigh(w, wavelen):
     return w**2*pi/wavelen
 
 def rayleigh2waist(z_r, wavelen):
-    """Calculate the waist from the rayleigh range of a gaussian beam.
+    """Calculate the waist from the Rayleigh range of a Gaussian beam.
 
     See Also
     ========
@@ -899,13 +898,13 @@ geometric_conj_bf = geometric_conj_af
 
 def gaussian_conj(s_in, z_r_in, f):
     """
-    Conjugation relation for gaussian beams.
+    Conjugation relation for Gaussian beams.
 
     Parameters
     ==========
 
     s_in: distance to optical element from the waist
-    z_r_in: the rayleigh range of the incident beam
+    z_r_in: the Rayleigh range of the incident beam
     f: the focal length of the optical element
 
     Returns
@@ -913,7 +912,7 @@ def gaussian_conj(s_in, z_r_in, f):
 
     A tuple containing (s_out, z_r_out, m)
      - s_out - distance between the new waist and the optical element
-     - z_r_out - rayleigh range of the emergent beam
+     - z_r_out - Rayleigh range of the emergent beam
      - m - the ration between the new and the old waists
 
     Examples
