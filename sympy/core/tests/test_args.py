@@ -1261,6 +1261,12 @@ def test_sympy__matrices__expressions__transpose__Transpose():
     from sympy.matrices.expressions import MatrixSymbol
     assert _test_args(Transpose(MatrixSymbol('A', 3, 5)))
 
+def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
+    from sympy.matrices.expressions.funcmatrix import FunctionMatrix
+    from sympy import Lambda, symbols
+    i, j = symbols('i,j')
+    assert _test_args(FunctionMatrix(3,3, Lambda((i,j), i-j) ))
+
 def test_sympy__physics__gaussopt__BeamParameter():
     from sympy.physics.gaussopt import BeamParameter
     assert _test_args(BeamParameter(530e-9, 1, w=1e-3))
