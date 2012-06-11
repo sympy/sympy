@@ -1,4 +1,5 @@
-from sympy.core import Set, Basic, FiniteSet, EmptySet, Dict
+from sympy.core import (Set, Basic, FiniteSet, EmptySet, Dict, Symbol,
+                        Dummy, Tuple)
 
 class Class(Set):
     """
@@ -14,6 +15,16 @@ class Class(Set):
     eventual proper implementation of set theory.
     """
     is_proper = False
+
+def _make_symbol(name):
+    """
+    If ``name`` is not empty, creates a :class:`Symbol` with this
+    name.  Otherwise creates a :class:`Dummy`.
+    """
+    if name:
+        return Symbol(name)
+    else:
+        return Dummy("")
 
 class Object(Basic):
     """
@@ -37,29 +48,14 @@ class Object(Basic):
         if not name:
             raise ValueError("Anonymous Objects are not allowed.")
 
-        return Basic.__new__(cls, name)
+        return Basic.__new__(cls, Symbol(name))
 
     @property
     def name(self):
         """
         Returns the name of this object.
         """
-        return self._args[0]
-
-    def __eq__(self, obj):
-        if not isinstance(obj, Object):
-            return False
-
-        return self.name == obj.name
-
-    def __ne__(self, obj):
-        if not isinstance(obj, Object):
-            return True
-
-        return self.name != obj.name
-
-    def __hash__(self):
-        return hash(self.name)
+        return self._args[0].name
 
 class Morphism(Basic):
     """
@@ -108,6 +104,7 @@ class Morphism(Basic):
     True
 
     """
+
     def __new__(cls, domain, codomain, name="", identity=False):
         if identity and (domain != codomain):
             raise ValueError(
@@ -118,7 +115,8 @@ class Morphism(Basic):
         if identity:
             return IdentityMorphism(domain, name)
         else:
-            return Basic.__new__(cls, domain, codomain, name, [])
+            return Basic.__new__(cls, domain, codomain,
+                                 _make_symbol(name), Tuple())
 
     @property
     def domain(self):
@@ -139,7 +137,7 @@ class Morphism(Basic):
         """
         Returns the name of this morphism.
         """
-        return self.args[2]
+        return self.args[2].name
 
     @property
     def identity(self):
@@ -158,18 +156,19 @@ class Morphism(Basic):
         ========
 
         >>> from sympy.categories import Object, Morphism
+        >>> from sympy import Tuple
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
         >>> f = Morphism(A, B, "f")
         >>> g = Morphism(B, C, "g")
-        >>> (g * f).components == [f, g]
+        >>> (g * f).components == Tuple(f, g)
         True
 
         """
         components = self.args[3]
         if not components:
-            return [self]
+            return Tuple(self)
         else:
             return components
 
@@ -212,7 +211,8 @@ class Morphism(Basic):
         # (even if g.domain == self.codomain), so let's suppose it's
         # not an identity.
         return Basic.__new__(Morphism, g.domain, self.codomain,
-                             new_name, g.components + self.components)
+                             _make_symbol(new_name), g.components +
+                             self.components)
 
     def __mul__(self, g):
         """
@@ -253,6 +253,7 @@ class Morphism(Basic):
         ========
         compose
         """
+
         return Morphism(self.domain, self.codomain, new_name)
 
     def __eq__(self, g):
@@ -308,7 +309,7 @@ class IdentityMorphism(Morphism):
 
     """
     def __new__(cls, domain, name=""):
-        return Basic.__new__(cls, domain, name)
+        return Basic.__new__(cls, domain, _make_symbol(name))
 
     @property
     def domain(self):
@@ -329,7 +330,7 @@ class IdentityMorphism(Morphism):
         """
         Returns the name of this identity morphism.
         """
-        return self.args[1]
+        return self.args[1].name
 
     @property
     def identity(self):
@@ -347,7 +348,7 @@ class IdentityMorphism(Morphism):
         Since this is an identity morphisms, it always has itself as
         the only component.
         """
-        return [self]
+        return Tuple(self)
 
     def compose(self, g, new_name=""):
         """
@@ -428,7 +429,8 @@ class Category(Basic):
     Diagram
     """
     def __new__(cls, name, objects=EmptySet(), commutative=EmptySet()):
-        new_category = Basic.__new__(cls, name, objects, FiniteSet(commutative))
+        new_category = Basic.__new__(cls, Symbol(name), objects,
+                                     FiniteSet(commutative))
         return new_category
 
     @property
@@ -436,7 +438,7 @@ class Category(Basic):
         """
         Returns the name of this category.
         """
-        return self.args[0]
+        return self.args[0].name
 
     @property
     def objects(self):

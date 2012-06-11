@@ -1,6 +1,6 @@
 from sympy.categories import Object, Morphism, IdentityMorphism, Diagram, Category
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import FiniteSet, EmptySet, Dict
+from sympy import FiniteSet, EmptySet, Dict, Tuple
 
 def test_object():
     A = Object("A")
@@ -29,7 +29,7 @@ def test_morphism():
     assert f.name == "f"
     assert f.domain == A
     assert f.codomain == B
-    assert f.components == [f]
+    assert f.components == Tuple(f)
 
     assert f != None
     assert f == f
@@ -44,7 +44,7 @@ def test_morphism():
     assert k.domain == A
     assert k.codomain == C
     assert k.name == "k"
-    assert k.components == [f, g]
+    assert k.components == Tuple(f, g)
 
     k = g * f
     p = h * g
@@ -53,7 +53,7 @@ def test_morphism():
     assert k.domain == A
     assert k.codomain == C
     assert k.name == ""
-    assert k.components == [f, g]
+    assert k.components == Tuple(f, g)
 
     assert h * k == u
     assert p * f == u
@@ -61,21 +61,21 @@ def test_morphism():
     assert u.domain == A
     assert u.codomain == D
     assert u.name == ""
-    assert u.components == [f, g, h]
+    assert u.components == Tuple(f, g, h)
 
     u1 = u.flatten()
 
     assert u1.domain == A
     assert u1.codomain == D
     assert u1.name == ""
-    assert u1.components == [u1]
+    assert u1.components == Tuple(u1)
 
     u1 = u.flatten("u")
 
     assert u1.domain == A
     assert u1.codomain == D
     assert u1.name == "u"
-    assert u1.components == [u1]
+    assert u1.components == Tuple(u1)
 
     assert f == Morphism(A, B, "f")
     assert f != g
@@ -91,6 +91,7 @@ def test_morphism():
     assert id_A == IdentityMorphism(A, "id_A")
 
     assert id_A.identity == True
+    assert id_A.components == Tuple(id_A)
     assert id_A == Morphism(A, A, name="f", identity=True)
     assert hash(id_A) == hash(Morphism(A, A, name="f", identity=True))
     assert id_A != Morphism(A, A, name="f")

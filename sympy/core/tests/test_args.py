@@ -1937,3 +1937,40 @@ def test_sympy__differential_geometry__differential_geometry__VectorField():
     from sympy.differential_geometry import Manifold, Patch, CoordSystem, VectorField
     cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
     assert _test_args(VectorField(cs, [x, y], [x, y]))
+
+def test_sympy__categories__baseclasses__Class():
+    from sympy.categories.baseclasses import Class
+    assert _test_args(Class())
+
+def test_sympy__categories__baseclasses__Object():
+    from sympy.categories import Object
+    assert _test_args(Object("A"))
+
+def test_sympy__categories__baseclasses__Morphism():
+    from sympy.categories import Object, Morphism
+    assert _test_args(Morphism(Object("A"), Object("B"), "f"))
+
+def test_sympy__categories__baseclasses__IdentityMorphism():
+    from sympy.categories import Object, IdentityMorphism
+    assert _test_args(IdentityMorphism(Object("A"), "f"))
+
+def test_sympy__categories__baseclasses__Diagram():
+    from sympy.categories import Object, Morphism, Diagram, Category
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    f = Morphism(A, B, "f")
+    d = Diagram([f])
+    assert _test_args(d)
+
+def test_sympy__categories__baseclasses__Category():
+    from sympy.categories import Object, Morphism, Diagram, Category
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    f = Morphism(A, B, "f")
+    g = Morphism(B, C, "g")
+    d1 = Diagram([f, g])
+    d2 = Diagram([f])
+    K = Category("K", commutative=[d1, d2])
+    assert _test_args(K)
