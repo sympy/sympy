@@ -2,13 +2,13 @@ from sympy.core import (Set, Basic, FiniteSet, EmptySet, Dict, Symbol,
                         Dummy, Tuple)
 
 class Class(Set):
-    """
-    The base class for any kind of class in set-theoretic sense.
+    r"""
+    The base class for any kind of class in the set-theoretic sense.
 
     In axiomatic set theories, everything is a class.  A class which
-    can is a member of another class is a set.  A class which is not a
-    member of another class is a proper class.  The class {1, 2} is a
-    set; the class of all sets is a proper class.
+    can be a member of another class is a set.  A class which is not a
+    member of another class is a proper class.  The class `\{1, 2\}`
+    is a set; the class of all sets is a proper class.
 
     This class is essentially a synonym for :class:`sympy.core.Set`.
     The goal of this class is to assure easier migration to the
@@ -401,9 +401,9 @@ class Category(Basic):
     respect to composition, and the sets `\hom(A, B)` are pairwise
     disjoint.
 
-    This class nothing about its objects and morphisms.  Concrete
-    cases of (abstract) categories should be implemented as classes
-    derived from this one.
+    This class knows nothing about its objects and morphisms.
+    Concrete cases of (abstract) categories should be implemented as
+    classes derived from this one.
 
     Certain instances of :class:`Diagram` can be asserted to be
     commutative in a :class:`Category` by supplying the argument
