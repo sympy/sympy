@@ -1144,6 +1144,16 @@ def _solve(f, *symbols, **flags):
                     flags['simplify'] = flags.get('simplify', False)
 
                 soln = roots(poly, cubics=True, quartics=True).keys()
+                if not soln:
+                    from sympy.polys.polyerrors import CoercionFailed
+                    try:
+                        soln = roots(Poly(poly, domain="RR"))
+                        raise NotImplementedError(
+                        'A symbolic solution was not found; the numerical solutions '
+                        'can be found by setting the domain to RR: %s' %
+                        filldedent(soln))
+                    except CoercionFailed:
+                        raise NotImplementedError
 
                 # We now know what the values of p are equal to. Now find out
                 # how they are related to the original x, e.g. if p**2 = cos(x)
@@ -1185,6 +1195,16 @@ def _solve(f, *symbols, **flags):
                 if poly.degree() > 2:
                     flags['simplify'] = flags.get('simplify', False)
                 soln = roots(poly, cubics=True, quartics=True).keys()
+                if not soln:
+                    from sympy.polys.polyerrors import CoercionFailed
+                    try:
+                        soln = roots(Poly(poly, domain="RR"))
+                        raise NotImplementedError(
+                        'A symbolic solution was not found; the numerical solutions '
+                        'can be found by setting the domain to RR: %s' %
+                        filldedent(soln))
+                    except CoercionFailed:
+                        raise NotImplementedError
                 gen = poly.gen
                 if gen != symbol:
                     u = Dummy()
