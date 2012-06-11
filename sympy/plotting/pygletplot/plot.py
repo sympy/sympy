@@ -75,7 +75,7 @@ class PygletPlot(object):
     (function arguments) will interpret your arguments as a
     Cartesian plot if you provide one function and a parametric
     plot if you provide two or three functions. Similarly, the
-    arguments will be interpreted as a curve is one variable is
+    arguments will be interpreted as a curve if one variable is
     used, and a surface if two are used.
 
     Supported mode names by number of variables:
