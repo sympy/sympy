@@ -24,9 +24,10 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 
 from inspect import getargspec
 from itertools import repeat, izip
-from sympy import sympify, Expr, Tuple
+from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
 from sympy.core.compatibility import reduce
+from sympy.utilities import default_sort_key
 
 from experimental_lambdify import vectorized_lambdify
 
@@ -232,7 +233,7 @@ def plot(*args, **kwargs):
         surface, parametric surface
          - if the variable lists do not provide ranges a default range is used
          - if the variables are not provided, the free variables are
-           automatically detected
+           automatically supplied in the order they are sorted (e.g. x, y, z)
          - if neither variables nor ranges are provided, both are guessed
          - if multiple expressions are provided in a list all of them are
            plotted
@@ -311,23 +312,32 @@ def plot(*args, **kwargs):
         default_range = Tuple(-10, 10)
         #TODO when we drop 2.5 remove this ugly reduce and just call set.union
         #on the list
-        free_vars = reduce(set.union, [expr.free_symbols for expr in pl
+        free = reduce(set.union, [expr.free_symbols for expr in pl
                                                   if isinstance(expr, Expr)])
-        # remove from free_vars all variables that already have defined ranges
-        for item in the_args:
-            if isinstance(item, Tuple) and (len(item)==3 or len(item)==1):
-                free_vars.discard(item[0])
+        if free:
+            # remove from free variables all variables that already have defined ranges
+            for item in the_args:
+                if isinstance(item, Tuple) and (len(item)==3 or len(item)==1):
+                    free.discard(item[0])
+            free = list(free)
+        else:
+            free = [Dummy()] # in case there were only constants
+        free.sort(key=default_sort_key, reverse=True)
         # add the missing variables to all len=2 Tuples
         # add the missing ranges to all len=1 Tuples
         for index, item in enumerate(the_args):
             if not isinstance(item, Tuple):
                 pass
             elif len(item) == 2:
-                the_args[index] = Tuple(free_vars.pop(), item[0], item[1])
+                # assume tuples are listed in the order that the symbols are sorted;
+                # they were sorted in reverse order since pop pops from the end
+                if not free:
+                    raise ValueError('there were too many ranges given without a variable')
+                the_args[index] = Tuple(free.pop(), item[0], item[1])
             elif len(item) == 1:
                 the_args[index] = Tuple(item[0], default_range[0], default_range[1])
         # add the missing len=3 Tuples
-        the_args.extend([Tuple(v, default_range[0], default_range[1]) for v in free_vars])
+        the_args.extend([Tuple(v, default_range[0], default_range[1]) for v in free])
         return the_args
 
     list_of_plots = [Tuple(*add_variables_and_ranges(pl)) for pl in list_of_plots]
