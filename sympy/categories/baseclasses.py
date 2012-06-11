@@ -82,7 +82,8 @@ class Morphism(Basic):
     Morphisms with the same domain and codomain can be defined to be
     identity morphisms.  Identity morphisms with the same (co)domains
     are equal.  Identity morphisms are identities with respect to
-    composition.
+    composition.  Identity morphisms are instances of
+    :class:`IdentityMorphism`.
 
     Examples
     ========
@@ -114,7 +115,10 @@ class Morphism(Basic):
 
         # The last component of self.args represents the components of
         # this morphism.
-        return Basic.__new__(cls, domain, codomain, name, identity, [])
+        if identity:
+            return IdentityMorphism(domain, name)
+        else:
+            return Basic.__new__(cls, domain, codomain, name, [])
 
     @property
     def domain(self):
@@ -143,7 +147,7 @@ class Morphism(Basic):
         Is ``True`` if this morphism is known to be an identity
         morphism.
         """
-        return self.args[3]
+        return False
 
     @property
     def components(self):
@@ -163,7 +167,7 @@ class Morphism(Basic):
         True
 
         """
-        components = self.args[4]
+        components = self.args[3]
         if not components:
             return [self]
         else:
@@ -201,8 +205,6 @@ class Morphism(Basic):
         if g.codomain != self.domain:
             raise ValueError("Uncomponsable morphisms.")
 
-        if self.identity:
-            return g
         if g.identity:
             return self
 
@@ -210,8 +212,7 @@ class Morphism(Basic):
         # (even if g.domain == self.codomain), so let's suppose it's
         # not an identity.
         return Basic.__new__(Morphism, g.domain, self.codomain,
-                             new_name, False, g.components +
-                             self.components)
+                             new_name, g.components + self.components)
 
     def __mul__(self, g):
         """
@@ -286,6 +287,94 @@ class Morphism(Basic):
 
     def __hash__(self):
         return hash((self.name, self.domain, self.codomain))
+
+class IdentityMorphism(Morphism):
+    """
+    An identity morphism.
+
+    An identity morphism is a morphism with equal domain and codomain,
+    which acts as an identity with respect to composition.
+
+    Examples
+    ========
+
+    >>> from sympy.categories import Object, Morphism, IdentityMorphism
+    >>> A = Object("A")
+    >>> B = Object("B")
+    >>> f = Morphism(A, B, "f")
+    >>> id_A = IdentityMorphism(A)
+    >>> f * id_A == f
+    True
+
+    """
+    def __new__(cls, domain, name=""):
+        return Basic.__new__(cls, domain, name)
+
+    @property
+    def domain(self):
+        """
+        Returns the domain of this identity morphism.
+        """
+        return self.args[0]
+
+    @property
+    def codomain(self):
+        """
+        Returns the codomain of this identity morphism.
+        """
+        return self.args[0]
+
+    @property
+    def name(self):
+        """
+        Returns the name of this identity morphism.
+        """
+        return self.args[1]
+
+    @property
+    def identity(self):
+        """
+        Is ``True`` if this morphism is known to be an identity
+        morphism.
+        """
+        return True
+
+    @property
+    def components(self):
+        """
+        Returns the components of this morphisms.
+
+        Since this is an identity morphisms, it always has itself as
+        the only component.
+        """
+        return [self]
+
+    def compose(self, g, new_name=""):
+        """
+        If ``g`` is a morphism with codomain equal to the domain of
+        this identity morphisms, returns ``g``.
+
+        The argument ``new_name`` is not used.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, Morphism, IdentityMorphism
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> f = Morphism(A, B, "f")
+        >>> id_A = IdentityMorphism(A)
+        >>> f.compose(id_A) == f
+        True
+
+        """
+        if g.codomain != self.domain:
+            raise ValueError("Uncomponsable morphisms.")
+
+        return g
+
+    def __hash__(self):
+        return hash(self.domain)
 
 class Category(Basic):
     r"""

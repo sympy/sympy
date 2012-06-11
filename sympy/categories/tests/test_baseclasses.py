@@ -1,4 +1,4 @@
-from sympy.categories import Object, Morphism, Diagram, Category
+from sympy.categories import Object, Morphism, IdentityMorphism, Diagram, Category
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import FiniteSet, EmptySet, Dict
 
@@ -87,9 +87,14 @@ def test_morphism():
     id_A = Morphism(A, A, identity=True)
     id_B = Morphism(B, B, identity=True)
 
+    assert type(id_A) == IdentityMorphism
+    assert id_A == IdentityMorphism(A, "id_A")
+
     assert id_A.identity == True
     assert id_A == Morphism(A, A, name="f", identity=True)
+    assert hash(id_A) == hash(Morphism(A, A, name="f", identity=True))
     assert id_A != Morphism(A, A, name="f")
+    assert id_A != id_B
 
     assert id_A * id_A == id_A
     assert f * id_A == f

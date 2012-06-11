@@ -481,11 +481,13 @@ def test_categories():
 
     f = Morphism(A, B, "f")
     g = Morphism(B, C, "g")
+    id_A = Morphism(A, A, "id_A", identity=True)
 
     K = Category("K")
 
     assert str(A) == 'Object("A")'
     assert str(f) == 'Morphism(Object("A"), Object("B"), "f")'
+    assert str(id_A) == 'IdentityMorphism(Object("A"), "id_A")'
     assert str(g * f) == 'Morphism(Object("B"), Object("C"), "g") * ' \
            'Morphism(Object("A"), Object("B"), "f")'
 

@@ -536,6 +536,10 @@ class StrPrinter(Printer):
                       (component.domain, component.codomain, component.name)
         return result[:-3]
 
+    def _print_IdentityMorphism(self, morphism):
+        return 'IdentityMorphism(%s, "%s")' % \
+               (morphism.domain, morphism.name)
+
     def _print_Category(self, category):
         return 'Category("%s")' % category.name
 
