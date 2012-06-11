@@ -722,9 +722,9 @@ def test_nsimplify():
     assert nsimplify(0) == 0
     assert nsimplify(-1) == -1
     assert nsimplify(1) == 1
-    assert nsimplify(1+x) == 1+x
+    assert nsimplify(1 + x) == 1 + x
     assert nsimplify(2.7) == Rational(27, 10)
-    assert nsimplify(1-GoldenRatio) == (1-sqrt(5))/2
+    assert nsimplify(1 - GoldenRatio) == (1 - sqrt(5))/2
     assert nsimplify((1+sqrt(5))/4, [GoldenRatio]) == GoldenRatio/2
     assert nsimplify(2/GoldenRatio, [GoldenRatio]) == 2*GoldenRatio - 2
     assert nsimplify(exp(5*pi*I/3, evaluate=False)) == sympify('1/2 - sqrt(3)*I/2')
@@ -747,6 +747,7 @@ def test_nsimplify():
     assert nsimplify(pi/1e2) == pi/100
     assert nsimplify(pi/1e2, rational=False) == pi/100.0
     assert nsimplify(pi/1e-7) == 10000000*pi
+    assert not nsimplify(factor(-3.0*z**2*(z**2)**(-2.5) + 3*(z**2)**(-1.5))).atoms(Float)
 
 def test_extract_minus_sign():
     x = Symbol("x")

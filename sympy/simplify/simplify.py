@@ -3000,6 +3000,7 @@ def _real_to_rational(expr):
 
     """
     p = expr
+    reps = {}
     for r in p.atoms(C.Float):
         newr = nsimplify(r, rational=False)
         if not newr.is_Rational or \
@@ -3012,8 +3013,8 @@ def _real_to_rational(expr):
                 s = 1
             d = Pow(10, int((mpmath.log(newr)/mpmath.log(10))))
             newr = s*Rational(str(newr/d))*d
-        p = p.subs(r, newr)
-    return p
+        reps[r] = newr
+    return p.subs(reps, simultaneous=True)
 
 def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     """
