@@ -65,4 +65,37 @@ class Particle(object):
             raise TypeError("Particle point attribute must be a Point object.")
         self._point = p
 
+    def linmom(self, frame):
+        """Linear momentum of a particle.
+
+        The linear momentum, L, of a particle, P, of mass 'm' with an inertial
+        velocity, ^N v^P is given by:
+
+        L = m * ^N v^P
+
+        Parameters
+        ==========
+
+        frame : ReferenceFrame
+            Linear momentum is always determined in an inertial reference
+            frame; the user is responsible for entering the correct reference
+            frame.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Particle, Point, ReferencFrame
+        >>> from sympy.physics.mechanics import dynamicsymbols
+        >>> m, v = dynamicsymbols('m v')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> A = Particle('A', P, m)
+        >>> P.set_vel(N, v * N.x)
+        >>> print A.linmom(N)
+        m*v*N.x
+
+        """
+
+        return self.mass * self.point.vel(frame)
+
     point = property(get_point, set_point)

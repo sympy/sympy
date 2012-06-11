@@ -98,4 +98,39 @@ class RigidBody(object):
         self._inertia = I[0]
         self._inertia_point = I[1]
 
+    def linmom(self, frame):
+        """ Linear momentum of a rigid body.
+
+        The linear mometum, L, of a rigid body, B, of mass 'M' whose mass
+        center, B*, is translating with an inertial velocity, ^N v^B* is given
+        by:
+
+        L = M * ^N v^B*
+
+        Parameters
+        ==========
+
+        frame : ReferenceFrame
+            Linear momentum is defined in an inertial reference frame; the
+            user is responsible for entering the correct reference frame.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame, outer
+        >>> from sympy.physics.mechanics import RigidBody, dynamicsymbols
+        >>> M, v = dynamicsymbols('M v')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_vel(N, v * N.x)
+        >>> I = outer (N.x, N.x)
+        >>> Inertia_tuple = (I, P)
+        >>> B = RigidBody('B', P, N, M, Inertia_tuple)
+        >>> B.linmom(N)
+        M*v*N.x
+
+        """
+
+        return self.mass * self.masscenter.vel(frame)
+
     inertia = property(get_inertia, set_inertia)
