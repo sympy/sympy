@@ -311,35 +311,36 @@ class Morphism(Basic):
 
         return Morphism(self.domain, self.codomain, new_name)
 
-    def __eq__(self, g):
-        if not isinstance(g, Morphism):
+    def __eq__(self, other):
+        if not isinstance(other, Morphism):
             return False
 
-        if self.identity and g.identity:
+        if self.identity and other.identity:
             # All identities are equal.
-            return self.domain == g.domain
-        elif self.identity or g.identity:
+            return self.domain == other.domain
+        elif self.identity or other.identity:
             # One of the morphisms is an identity, but not both.
             return False
 
-        if (len(self.components) == 1) and (len(g.components) == 1):
+        if (len(self.components) == 1) and (len(other.components) == 1):
             # We are comparing two simple morphisms.
-            if (not self.name) or (not g.name):
+            if (not self.name) or (not other.name):
                 return False
 
-            return (self.name == g.name) and \
-                   (self.domain == g.domain) and \
-                   (self.codomain == g.codomain)
+            return (self.name == other.name) and \
+                   (self.domain == other.domain) and \
+                   (self.codomain == other.codomain)
         else:
             # One of the morphisms is composed.  Compare the
             # components.
-            for (self_component, g_component) in zip(self.components, g.components):
-                if self_component != g_component:
+            for (self_component, other_component) in \
+                    zip(self.components, other.components):
+                if self_component != other_component:
                     return False
             return True
 
-    def __ne__(self, g):
-        return not (self == g)
+    def __ne__(self, other):
+        return not (self == other)
 
     def __hash__(self):
         return hash((self.name, self.domain, self.codomain))
