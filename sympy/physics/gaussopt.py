@@ -111,7 +111,7 @@ class RayTransferMatrix(Matrix):
     [1] http://en.wikipedia.org/wiki/Ray_transfer_matrix_analysis
     """
 
-    _unimodular = True
+    unimodular = True
 
     def __new__(cls, *args, **kwargs):
         if len(args) == 4:
@@ -128,7 +128,7 @@ class RayTransferMatrix(Matrix):
 
     @isunimodular
     def __init__(self, *args, **kwargs):
-        self._unimodular = kwargs['unimodular']
+        self.unimodular = kwargs['unimodular']
 
     def __mul__(self, other):
         if isinstance(other, RayTransferMatrix):
@@ -151,10 +151,6 @@ class RayTransferMatrix(Matrix):
                                  z_r = together(im(q)))
         else:
             return Matrix.__mul__(self, other)
-
-    @property
-    def unimodular(self):
-        return self._unimodular
 
     @property
     def A(self):
@@ -481,7 +477,7 @@ class ThinPrism(Matrix):
     [-alpha*n1*(-n1 + n2) + angle*n]
     """
 
-    _unimodular = True
+    unimodular = True
 
     @isunimodular
     def __new__(cls, angle, n2, n1=1, **kwargs):
@@ -503,10 +499,6 @@ class ThinPrism(Matrix):
                 return Matrix.__add__(self,other)
         else:
             raise ValueError("Only 2x1 Matrix can be multiplied with ThinPrism")
-
-    @property
-    def unimodular(self):
-        return self._unimodular
 
 # TODO Add "Duct" (radially variad index and gain)
 # TODO Add class OpticalSystem which will contain optical elements
@@ -555,8 +547,6 @@ class GeometricRay(Matrix):
 
     """
 
-    _unimodular = True
-
     @isunimodular
     def __new__(cls, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], Matrix) \
@@ -572,7 +562,7 @@ class GeometricRay(Matrix):
 
     @isunimodular
     def __init__(self, *args, **kwargs):
-        self._unimodular = kwargs['unimodular']
+        self.unimodular = kwargs['unimodular']
 
     @property
     def height(self):
@@ -607,10 +597,6 @@ class GeometricRay(Matrix):
         angle
         """
         return self[1]
-
-    @property
-    def unimodular(self):
-        return self._unimodular
 
 
 ###
