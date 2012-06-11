@@ -103,6 +103,10 @@ def test_morphism():
 
     raises(ValueError, lambda: Morphism(A, B, identity=True))
 
+    f = Morphism(A, B)
+    assert f != Morphism(A, B)
+    assert f == f
+
 def test_diagram():
     A = Object("A")
     B = Object("B")

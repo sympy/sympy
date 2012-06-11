@@ -312,6 +312,9 @@ class Morphism(Basic):
         return Morphism(self.domain, self.codomain, new_name)
 
     def __eq__(self, other):
+        if other is self:
+            return True
+
         if not isinstance(other, Morphism):
             return False
 
