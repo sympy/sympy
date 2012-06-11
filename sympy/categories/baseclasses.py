@@ -54,6 +54,14 @@ class Object(Basic):
     def name(self):
         """
         Returns the name of this object.
+
+        Examples
+        ========
+        >>> from sympy.categories import Object
+        >>> A = Object("A")
+        >>> A.name
+        'A'
+
         """
         return self._args[0].name
 
@@ -122,6 +130,17 @@ class Morphism(Basic):
     def domain(self):
         """
         Returns the domain of this morphism.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, Morphism
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> f = Morphism(A, B)
+        >>> f.domain
+        Object("A")
+
         """
         return self.args[0]
 
@@ -129,6 +148,17 @@ class Morphism(Basic):
     def codomain(self):
         """
         Returns the codomain of this morphism.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, Morphism
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> f = Morphism(A, B)
+        >>> f.codomain
+        Object("B")
+
         """
         return self.args[1]
 
@@ -136,6 +166,17 @@ class Morphism(Basic):
     def name(self):
         """
         Returns the name of this morphism.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, Morphism
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> f = Morphism(A, B, "f")
+        >>> f.name
+        'f'
+
         """
         return self.args[2].name
 
@@ -144,6 +185,20 @@ class Morphism(Basic):
         """
         Is ``True`` if this morphism is known to be an identity
         morphism.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, Morphism
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> f = Morphism(A, B, "f")
+        >>> f.identity
+        False
+        >>> id_A = Morphism(A, A, identity=True)
+        >>> id_A.identity
+        True
+
         """
         return False
 
@@ -315,6 +370,16 @@ class IdentityMorphism(Morphism):
     def domain(self):
         """
         Returns the domain of this identity morphism.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, IdentityMorphism
+        >>> A = Object("A")
+        >>> id_A = IdentityMorphism(A)
+        >>> id_A.domain
+        Object("A")
+
         """
         return self.args[0]
 
@@ -322,6 +387,16 @@ class IdentityMorphism(Morphism):
     def codomain(self):
         """
         Returns the codomain of this identity morphism.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, Morphism
+        >>> A = Object("A")
+        >>> id_A = Morphism(A, A, identity=True)
+        >>> id_A.codomain
+        Object("A")
+
         """
         return self.args[0]
 
@@ -329,6 +404,16 @@ class IdentityMorphism(Morphism):
     def name(self):
         """
         Returns the name of this identity morphism.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, IdentityMorphism
+        >>> A = Object("A")
+        >>> id_A = IdentityMorphism(A, "id_A")
+        >>> id_A.name
+        'id_A'
+
         """
         return self.args[1].name
 
@@ -337,16 +422,36 @@ class IdentityMorphism(Morphism):
         """
         Is ``True`` if this morphism is known to be an identity
         morphism.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, IdentityMorphism
+        >>> A = Object("A")
+        >>> id_A = IdentityMorphism(A)
+        >>> id_A.identity
+        True
+
         """
         return True
 
     @property
     def components(self):
-        """
+        r"""
         Returns the components of this morphisms.
 
         Since this is an identity morphisms, it always has itself as
         the only component.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, IdentityMorphism
+        >>> A = Object("A")
+        >>> id_A = IdentityMorphism(A, 'id_A')
+        >>> id_A.components
+        (IdentityMorphism(Object("A"), "id_A"),)
+
         """
         return Tuple(self)
 
@@ -437,6 +542,15 @@ class Category(Basic):
     def name(self):
         """
         Returns the name of this category.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Category
+        >>> K = Category("K")
+        >>> K.name
+        'K'
+
         """
         return self.args[0].name
 
@@ -444,6 +558,18 @@ class Category(Basic):
     def objects(self):
         """
         Returns the class of objects of this category.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, Category
+        >>> from sympy import FiniteSet
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> K = Category("K", FiniteSet(A, B))
+        >>> K.objects
+        {Object("B"), Object("A")}
+
         """
         return self.args[1]
 
@@ -452,6 +578,19 @@ class Category(Basic):
         """
         Returns the :class:`FiniteSet` of diagrams which are known to
         be commutative in this category.
+
+        >>> from sympy.categories import Object, Morphism, Diagram, Category
+        >>> from sympy import FiniteSet
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = Morphism(A, B, "f")
+        >>> g = Morphism(B, C, "g")
+        >>> d = Diagram([f, g])
+        >>> K = Category("K", commutative=[d])
+        >>> K.commutative == FiniteSet(d)
+        True
+
         """
         return self.args[2]
 
