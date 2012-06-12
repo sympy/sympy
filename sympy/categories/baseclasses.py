@@ -547,6 +547,9 @@ class Category(Basic):
     Diagram
     """
     def __new__(cls, name, objects=EmptySet(), commutative=EmptySet()):
+        if not name:
+            raise ValueError("A Category cannot have an empty name.")
+
         new_category = Basic.__new__(cls, Symbol(name), objects,
                                      FiniteSet(commutative))
         return new_category
