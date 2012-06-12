@@ -142,7 +142,7 @@ def test_latex_functions():
     assert latex(Max(x, 2, x**3)) == r"\max\left(2, x, x^{3}\right)"
     assert latex(Abs(x)) == r"\lvert{x}\rvert"
     assert latex(re(x)) == r"\Re{x}"
-    assert latex(re(x + y)) == r"\Re {\left (x + y \right )}"
+    assert latex(re(x + y)) == r"\Re{x} + \Re{y}"
     assert latex(im(x)) == r"\Im{x}"
     assert latex(conjugate(x)) == r"\overline{x}"
     assert latex(gamma(x)) == r"\Gamma\left(x\right)"
@@ -524,15 +524,23 @@ def test_matMul():
 
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
-    X = Normal(0, 1, symbol=Symbol('x1'))
+    X = Normal('x1', 0, 1)
     assert latex(where(X>0)) == "Domain: 0 < x_{1}"
 
-    D = Die(6, symbol=Symbol('d1'))
+    D = Die('d1', 6)
     assert latex(where(D>4)) == r"Domain: d_{1} = 5 \vee d_{1} = 6"
 
-    A = Exponential(1, symbol=Symbol('a'))
-    B = Exponential(1, symbol=Symbol('b'))
+    A = Exponential('a', 1)
+    B = Exponential('b', 1)
     assert latex(pspace(Tuple(A,B)).domain) =="Domain: 0 \leq a \wedge 0 \leq b"
+
+def test_PrettyPoly():
+    from sympy.polys.domains import QQ
+    F = QQ.frac_field(x, y)
+    R = QQ[x, y]
+
+    assert latex(F.convert(x/(x + y))) == latex(x/(x + y))
+    assert latex(R.convert(x + y)) == latex(x + y)
 
 def test_integral_transforms():
     x = Symbol("x")
@@ -555,3 +563,9 @@ def test_integral_transforms():
 
     assert latex(SineTransform(f(x), x, k)) == r"\mathcal{SIN}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
     assert latex(InverseSineTransform(f(k), k, x)) == r"\mathcal{SIN}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+
+def test_PolynomialRing():
+    from sympy.polys.domains import QQ
+    assert latex(QQ[x, y]) == r"\mathbb{Q}\left[x, y\right]"
+    assert latex(QQ.poly_ring(x, y, order="ilex")) == \
+            r"S_<^{-1}\mathbb{Q}\left[x, y\right]"

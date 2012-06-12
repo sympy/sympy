@@ -428,10 +428,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
 
         solution = solve(equations.values(), *coeffs)
 
-        if solution is not None:
-            return (solution, candidate, coeffs)
-        else:
-            return None
+        return (solution, candidate, coeffs) if solution else None
 
     if not (F.atoms(Symbol) - set(V)):
         result = _integrate('Q')

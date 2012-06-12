@@ -70,6 +70,10 @@ class Curve(GeometryEntity):
             raise ValueError("Limit argument should be (t, tmin, tmax) but got %s" % str(limits))
         return GeometryEntity.__new__(cls, Tuple(*fun), Tuple(*limits))
 
+    def _eval_subs(self, old, new):
+        if old == self.parameter:
+            return Point(*[f.subs(old, new) for f in self.functions])
+
     @property
     def free_symbols(self):
         """
@@ -196,9 +200,8 @@ class Curve(GeometryEntity):
             return rv.translate(*pt.args)
         return rv
 
-    def scale(self, x=1, y=1):
-        """Return a new Curve with Curve's functions multiplied by x and y,
-        respectively.
+    def scale(self, x=1, y=1, pt=None):
+        """Override GeometryEntity.scale since Curve is not made up of Points.
 
         Examples
         ========
@@ -208,6 +211,9 @@ class Curve(GeometryEntity):
         >>> Curve((x, x), (x, 0, 1)).scale(2)
         Curve((2*x, x), (x, 0, 1))
         """
+        if pt:
+            pt = Point(pt)
+            return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         fx, fy = self.functions
         return self.func((fx*x, fy*y), self.limits)
 

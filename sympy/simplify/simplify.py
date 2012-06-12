@@ -2956,6 +2956,19 @@ def simplify(expr, ratio=1.7, measure=count_ops):
         expr = combsimp(expr)
 
     expr = powsimp(expr, combine='exp', deep=True)
+    short = shorter(expr, powsimp(factor_terms(expr)))
+    if short != expr:
+        # get rid of hollow 2-arg Mul factorization
+        from sympy.core.rules import Transform
+        hollow_mul = Transform(
+          lambda x: Mul(*x.args),
+          lambda x:
+              x.is_Mul and
+              len(x.args) == 2 and
+              x.args[0].is_Number and
+              x.args[1].is_Add and
+              x.is_commutative)
+        expr = shorter(short.xreplace(hollow_mul), expr)
     numer, denom = expr.as_numer_denom()
     if denom.is_Add:
         n, d = fraction(radsimp(1/denom, symbolic=False, max_terms=1))
@@ -2987,6 +3000,7 @@ def _real_to_rational(expr):
 
     """
     p = expr
+    reps = {}
     for r in p.atoms(C.Float):
         newr = nsimplify(r, rational=False)
         if not newr.is_Rational or \
@@ -2999,8 +3013,8 @@ def _real_to_rational(expr):
                 s = 1
             d = Pow(10, int((mpmath.log(newr)/mpmath.log(10))))
             newr = s*Rational(str(newr/d))*d
-        p = p.subs(r, newr)
-    return p
+        reps[r] = newr
+    return p.subs(reps, simultaneous=True)
 
 def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     """

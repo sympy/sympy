@@ -135,7 +135,7 @@ class Operator(QExpr):
         if len(self.label) == 1:
             return self._print_label_latex(printer, *args)
         else:
-            return '%s(%s)' % (
+            return r'%s\left(%s\right)' % (
                 self._print_operator_name_latex(printer, *args),
                 self._print_label_latex(printer, *args)
             )
@@ -495,13 +495,13 @@ class DifferentialOperator(Operator):
     # Printing
     #-------------------------------------------------------------------------
 
-    def _print_contents(self, printer, *args):
+    def _print(self, printer, *args):
         return '%s(%s)' % (
             self._print_operator_name(printer, *args),
             self._print_label(printer, *args)
           )
 
-    def _print_contents_pretty(self, printer, *args):
+    def _print_pretty(self, printer, *args):
         pform = self._print_operator_name_pretty(printer, *args)
         label_pform = self._print_label_pretty(printer, *args)
         label_pform = prettyForm(

@@ -2,7 +2,7 @@ from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Sy
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff, Matrix,
         sympify, sqrt, atan, asin, acos, asinh, acosh, DiracDelta, Heaviside,
         Lambda, sstr, Add, Tuple, Interval, Sum, factor, trigsimp, simplify, O,
-        terms_gcd)
+        terms_gcd, EulerGamma, Ci)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.physics.units import m, s
 
@@ -78,7 +78,6 @@ def test_basics():
 
     assert Integral(x).is_commutative
     n = Symbol('n', commutative=False)
-    assert Integral(x, (x, n)).is_commutative is False
     assert Integral(n + x, x).is_commutative is False
 
 def test_basics_multiple():
@@ -684,10 +683,9 @@ def test_atom_bug():
     assert heurisch(meijerg([], [], [1], [], x), x) is None
 
 def test_limit_bug():
-    # NOTE this used to raise NotImplementedError because of a limit problem.
-    #      actually gruntz() can do this limit, see issue 2079
     assert integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi)) == \
-           Integral(-cos(pi*y*z)/(y*z) + 1/(y*z), (y, 0, pi))
+           -((-log(pi*z) + log(pi**2*z**2)/2 + Ci(pi**2*z)
+           )/z) + log(z**2)/(2*z) + EulerGamma/z + 2*log(pi)/z
 
 # The following tests work using meijerint.
 def test_issue841():

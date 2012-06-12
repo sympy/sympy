@@ -75,6 +75,7 @@ modules = [
     'sympy.physics.mechanics',
     'sympy.physics.quantum',
     'sympy.plotting',
+    'sympy.plotting.pygletplot',
     'sympy.polys',
     'sympy.polys.domains',
     'sympy.printing',

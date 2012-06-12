@@ -498,7 +498,7 @@ class PDF(ContinuousProbability):
 
         from sympy import solve
         from sympy import S
-        inverse = solve(func-w, var)
+        inverse = solve(func - w, var)
         newPdf = S.Zero
         funcdiff = func.diff(var)
         #TODO check if x is in domain

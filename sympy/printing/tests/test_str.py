@@ -451,16 +451,23 @@ def test_settings():
 
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
-    X = Normal(0, 1, symbol=Symbol('x1'))
+    X = Normal('x1', 0, 1)
     assert str(where(X>0)) == "Domain: 0 < x1"
 
-    D = Die(6, symbol=Symbol('d1'))
+    D = Die('d1', 6)
     assert str(where(D>4)) == "Domain: Or(d1 == 5, d1 == 6)"
 
-    A = Exponential(1, symbol=Symbol('a'))
-    B = Exponential(1, symbol=Symbol('b'))
+    A = Exponential('a', 1)
+    B = Exponential('b', 1)
     assert str(pspace(Tuple(A,B)).domain) =="Domain: And(0 <= a, 0 <= b)"
 
 def test_FiniteSet():
     assert str(FiniteSet(range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
     assert str(FiniteSet(range(1, 6))) == '{1, 2, 3, 4, 5}'
+
+def test_PrettyPoly():
+    from sympy.polys.domains import QQ
+    F = QQ.frac_field(x, y)
+    R = QQ[x, y]
+    assert sstr(F.convert(x/(x + y))) == sstr(x/(x + y))
+    assert sstr(R.convert(x + y)) == sstr(x + y)

@@ -54,8 +54,8 @@ class re(Function):
         else:
 
             included, reverted, excluded = [], [], []
-            arg = Add.make_args(arg)
-            for term in arg:
+            args = Add.make_args(arg)
+            for term in args:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
                 if coeff is not None:
@@ -64,9 +64,16 @@ class re(Function):
                 elif not term.has(S.ImaginaryUnit) and term.is_real:
                     excluded.append(term)
                 else:
-                    included.append(term)
+                    # Try to do some advanced expansion.  If
+                    # impossible, don't try to do re(arg) again
+                    # (because this is what we are trying to do now).
+                    real_imag = term.as_real_imag(ignore=arg)
+                    if real_imag:
+                        excluded.append(real_imag[0])
+                    else:
+                        included.append(term)
 
-            if len(arg) != len(included):
+            if len(args) != len(included):
                 a, b, c = map(lambda xs: Add(*xs),
                     [included, reverted, excluded])
 
@@ -141,8 +148,8 @@ class im(Function):
             return -im(arg.args[0])
         else:
             included, reverted, excluded = [], [], []
-            arg = Add.make_args(arg)
-            for term in arg:
+            args = Add.make_args(arg)
+            for term in args:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
                 if coeff is not None:
@@ -151,9 +158,16 @@ class im(Function):
                     else:
                         excluded.append(coeff)
                 elif term.has(S.ImaginaryUnit) or not term.is_real:
-                    included.append(term)
+                    # Try to do some advanced expansion.  If
+                    # impossible, don't try to do im(arg) again
+                    # (because this is what we are trying to do now).
+                    real_imag = term.as_real_imag(ignore=arg)
+                    if real_imag:
+                        excluded.append(real_imag[1])
+                    else:
+                        included.append(term)
 
-            if len(arg) != len(included):
+            if len(args) != len(included):
                 a, b, c = map(lambda xs: Add(*xs),
                     [included, reverted, excluded])
 
@@ -551,7 +565,10 @@ class adjoint(Function):
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
-        pform = pform**prettyForm(u'\u2020')
+        if printer._use_unicode:
+            pform = pform**prettyForm(u'\u2020')
+        else:
+            pform = pform**prettyForm('+')
         return pform
 
 ###############################################################################

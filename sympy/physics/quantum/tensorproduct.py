@@ -148,7 +148,10 @@ class TensorProduct(Expr):
                 )
             pform = prettyForm(*pform.right(next_pform))
             if i != length-1:
-                pform = prettyForm(*pform.right(u'\u2a02' + u' '))
+                if printer._use_unicode:
+                    pform = prettyForm(*pform.right(u'\u2a02' + u' '))
+                else:
+                    pform = prettyForm(*pform.right('x' + ' '))
         return pform
 
     def _latex(self, printer, *args):

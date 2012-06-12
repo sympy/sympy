@@ -482,8 +482,11 @@ class Point(GeometryEntity):
             rv += pt
         return rv
 
-    def scale(self, x=1, y=1):
-        """Scale the coordinates of the Point by multiplying by x and y.
+    def scale(self, x=1, y=1, pt=None):
+        """Scale the coordinates of the Point by multiplying by
+        ``x`` and ``y`` after subtracting ``pt`` -- default is (0, 0) --
+        and then adding ``pt`` back again (i.e. ``pt`` is the point of
+        reference for the scaling).
 
         See Also
         ========
@@ -501,6 +504,9 @@ class Point(GeometryEntity):
         Point(2, 2)
 
         """
+        if pt:
+            pt = Point(pt)
+            return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         return Point(self.x*x, self.y*y)
 
     def translate(self, x=0, y=0):
@@ -520,14 +526,11 @@ class Point(GeometryEntity):
         Point(2, 1)
         >>> t.translate(2, 2)
         Point(2, 3)
+        >>> t + Point(2, 2)
+        Point(2, 3)
 
         """
-        from sympy import Point
-        if not isinstance(x, Point):
-            pt = Point(x, y)
-        else:
-            pt = x
-        return self + pt
+        return Point(self.x + x, self.y + y)
 
     def transform(self, matrix):
         """Return the point after applying the transformation described

@@ -304,7 +304,7 @@ def rsolve_poly(coeffs, f, n, **hints):
         if E != []:
             solutions = solve(E, *C)
 
-            if solutions is None:
+            if not solutions:
                 if homogeneous:
                     if hints.get('symbols', False):
                         return (S.Zero, [])
@@ -754,7 +754,7 @@ def rsolve(f, y, init=None):
 
         result = solve(equations, *symbols)
 
-        if result is None:
+        if not result:
             return None
         else:
             for k, v in result.iteritems():

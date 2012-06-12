@@ -17,7 +17,7 @@ def test_new():
         a = Permutation([2, 0, 1, 3, 4, 5])
         b = Permutation([0, 2, 1, 3, 4])
         g = PermutationGroup([a, b])
-    raises(ValueError, 'test1()')
+    raises(ValueError, lambda: test1())
 
 def test_generate():
     a = Permutation([1, 0])
@@ -93,14 +93,6 @@ def test_coset_rank():
     assert G.coset_unrank(48) == None
     assert G.coset_rank(gens[0]) == 6
     assert G.coset_unrank(6) == gens[0]
-
-def test_random():
-    random.seed(10)
-    gens_cube = [[1, 3, 5, 7, 0, 2, 4, 6], [1, 3, 0, 2, 5, 7, 4, 6]]
-    gens = [Permutation(p) for p in gens_cube]
-    G = PermutationGroup(gens)
-    h = G.random(af=True)
-    assert h == [4, 5, 6, 7, 0, 1, 2, 3]
 
 def test_coset_decomposition():
     a = Permutation([2,0,1,3,4,5])

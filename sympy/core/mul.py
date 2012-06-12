@@ -676,7 +676,7 @@ class Mul(AssocOp):
         else:
             return S.One, self
 
-    def as_real_imag(self, deep=True):
+    def as_real_imag(self, deep=True, **hints):
         other = []
         coeff = S(1)
         for a in self.args:
@@ -685,7 +685,10 @@ class Mul(AssocOp):
             else:
                 other.append(a)
         m = Mul(*other)
-        return (coeff*C.re(m), coeff*C.im(m))
+        if hints.get('ignore') == m:
+            return None
+        else:
+            return (coeff*C.re(m), coeff*C.im(m))
 
     @staticmethod
     def _expandsums(sums):

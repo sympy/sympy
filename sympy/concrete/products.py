@@ -8,6 +8,8 @@ class Product(Expr):
 
     """
 
+    __slots__ = ['is_commutative']
+
     def __new__(cls, function, *symbols, **assumptions):
         from sympy.integrals.integrals import _process_limits
 
@@ -33,6 +35,7 @@ class Product(Expr):
         arglist = [sign*function]
         arglist.extend(limits)
         obj._args = tuple(arglist)
+        obj.is_commutative = function.is_commutative # limits already checked
 
         return obj
 
@@ -55,6 +58,7 @@ class Product(Expr):
         [i]
         """
         return [l[0] for l in self.limits]
+
     @property
     def free_symbols(self):
         """

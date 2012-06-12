@@ -1,6 +1,7 @@
 from sympy.core import S, C, Basic, Interval
 from sympy.core.function import _coeff_isneg
 from sympy.utilities import group
+from sympy.core.sympify import SympifyError
 
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
@@ -1333,8 +1334,11 @@ class PrettyPrinter(Printer):
         else:
             return prettyForm('CC')
 
-    def _print_PolynomialRing(self, expr):
-        pform = self._print_seq(expr.gens, '[', ']')
+    def _print_PolynomialRingBase(self, expr):
+        g = expr.gens
+        if str(expr.order) != str(expr.default_order):
+            g = g + ("order=" + str(expr.order),)
+        pform = self._print_seq(g, '[', ']')
         pform = prettyForm(*pform.left(self._print(expr.dom)))
 
         return pform
@@ -1429,6 +1433,18 @@ class PrettyPrinter(Printer):
                 return pform
             except:
                 return self._print(None)
+
+    def _print_DMP(self, p):
+        try:
+            if p.ring is not None:
+                # TODO incorporate order
+                return self._print(p.ring.to_sympy(p))
+        except SympifyError:
+            pass
+        return self._print(repr(p))
+
+    def _print_DMF(self, p):
+        return self._print_DMP(p)
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

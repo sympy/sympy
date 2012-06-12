@@ -571,6 +571,7 @@ class Pow(Expr):
         from sympy.core.symbol import symbols
         from sympy.polys.polytools import poly
         from sympy.core.function import expand_multinomial
+
         if self.exp.is_Integer:
             exp = self.exp
             re, im = self.base.as_real_imag(deep=deep)
@@ -621,8 +622,12 @@ class Pow(Expr):
 
             if deep:
                 hints['complex'] = False
-                return (C.re(self.expand(deep, **hints)),
-                        C.im(self.expand(deep, **hints)))
+
+                expanded = self.expand(deep, **hints)
+                if hints.get('ignore') == expanded:
+                    return None
+                else:
+                    return (C.re(expanded), C.im(expanded))
             else:
                 return (C.re(self), C.im(self))
 

@@ -18,9 +18,9 @@ def variance(X, condition=None, **kwargs):
     >>> from sympy.stats import Die, E, Bernoulli, variance
     >>> from sympy import simplify, Symbol
 
-    >>> X = Die(6)
+    >>> X = Die('X', 6)
     >>> p = Symbol('p')
-    >>> B = Bernoulli(p, 1, 0)
+    >>> B = Bernoulli('B', p, 1, 0)
 
     >>> variance(2*X)
     35/3
@@ -44,7 +44,7 @@ def standard_deviation(X, condition=None, **kwargs):
     >>> from sympy import Symbol
 
     >>> p = Symbol('p')
-    >>> B = Bernoulli(p, 1, 0)
+    >>> B = Bernoulli('B', p, 1, 0)
 
     >>> std(B)
     sqrt(-p**2 + p)
@@ -67,8 +67,8 @@ def covariance(X, Y, condition=None, **kwargs):
     >>> from sympy import Symbol
 
     >>> rate = Symbol('lambda', positive=True, real=True, bounded = True)
-    >>> X = Exponential(rate)
-    >>> Y = Exponential(rate)
+    >>> X = Exponential('X', rate)
+    >>> Y = Exponential('Y', rate)
 
     >>> covariance(X, X)
     lambda**(-2)
