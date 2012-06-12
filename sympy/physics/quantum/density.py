@@ -201,17 +201,11 @@ def entropy(density):
     >>> down = JzKet(S(1)/2,-S(1)/2)
     >>> d = Density((up,0.5),(down,0.5))
     >>> entropy(d)
-    (0.69314718056-0j)
-    >>> entropy(represent(d,format="numpy"))
-    (0.69314718056-0j)
-    >>> entropy(represent(d))
     log(2)/2
-    >>> entropy(represent(d,format="scipy.sparse"))
-    (0.69314718056-0j)
 
     """
     if isinstance(density, Density):
-        density = represent(density, format='numpy')
+        density = represent(density) #represent in Matrix
 
     if isinstance(density, scipy_sparse_matrix):
         density = to_numpy(density)

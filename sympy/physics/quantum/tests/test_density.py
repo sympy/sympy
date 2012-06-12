@@ -98,13 +98,15 @@ def test_entropy():
 
     # test for density object
     ent = entropy(d)
-    assert  ent.real == 0.69314718055994529 and ent.imag == 0
+    assert entropy(d) == 0.5*log(2)
 
     np = import_module('numpy', min_python_version=(2, 6))
     if np:
         #do this test only if 'numpy' is available on test machine
-        mat = represent(d)
-        assert isinstance(mat, Matrix) and entropy(mat) == 0.5*log(2)
+        np_mat = represent(d, format='numpy')
+        ent = entropy(np_mat)
+        assert isinstance(np_mat, np.matrixlib.defmatrix.matrix) and \
+               ent.real == 0.69314718055994529 and ent.imag == 0
 
     scipy = import_module('scipy', __import__kwargs={'fromlist':['sparse']})
     if scipy and np:
