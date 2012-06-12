@@ -256,6 +256,9 @@ class Morphism(Basic):
         'h'
 
         """
+        if not isinstance(g, Morphism):
+            raise TypeError("Morphisms can only be composed with morphisms.")
+
         if g.codomain != self.domain:
             raise ValueError("Uncomponsable morphisms.")
 
@@ -281,7 +284,10 @@ class Morphism(Basic):
         =======
         compose
         """
-        return self.compose(g)
+        try:
+            return self.compose(g)
+        except TypeError:
+            return NotImplemented
 
     def flatten(self, new_name=""):
         """
@@ -478,6 +484,9 @@ class IdentityMorphism(Morphism):
         True
 
         """
+        if not isinstance(g, Morphism):
+            raise TypeError("Morphisms can only be composed with morphisms.")
+
         if g.codomain != self.domain:
             raise ValueError("Uncomponsable morphisms.")
 

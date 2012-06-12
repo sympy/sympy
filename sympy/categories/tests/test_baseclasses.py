@@ -107,6 +107,11 @@ def test_morphism():
     assert f != Morphism(A, B)
     assert f == f
 
+    raises(TypeError, lambda: f.compose(None))
+    raises(TypeError, lambda: id_A.compose(None))
+    raises(TypeError, lambda: f * None)
+    raises(TypeError, lambda: id_A * None)
+
 def test_diagram():
     A = Object("A")
     B = Object("B")
