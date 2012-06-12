@@ -181,7 +181,7 @@ class Morphism(Basic):
         return self.args[2].name
 
     @property
-    def identity(self):
+    def is_identity(self):
         """
         Is ``True`` if this morphism is known to be an identity
         morphism.
@@ -193,10 +193,10 @@ class Morphism(Basic):
         >>> A = Object("A")
         >>> B = Object("B")
         >>> f = Morphism(A, B, "f")
-        >>> f.identity
+        >>> f.is_identity
         False
         >>> id_A = Morphism(A, A, identity=True)
-        >>> id_A.identity
+        >>> id_A.is_identity
         True
 
         """
@@ -259,7 +259,7 @@ class Morphism(Basic):
         if g.codomain != self.domain:
             raise ValueError("Uncomponsable morphisms.")
 
-        if g.identity:
+        if g.is_identity:
             return self
 
         # We don't really know whether the new morphism is an identity
@@ -318,10 +318,10 @@ class Morphism(Basic):
         if not isinstance(other, Morphism):
             return False
 
-        if self.identity and other.identity:
+        if self.is_identity and other.is_identity:
             # All identities are equal.
             return self.domain == other.domain
-        elif self.identity or other.identity:
+        elif self.is_identity or other.is_identity:
             # One of the morphisms is an identity, but not both.
             return False
 
@@ -422,7 +422,7 @@ class IdentityMorphism(Morphism):
         return self.args[1].name
 
     @property
-    def identity(self):
+    def is_identity(self):
         """
         Is ``True`` if this morphism is known to be an identity
         morphism.
@@ -433,7 +433,7 @@ class IdentityMorphism(Morphism):
         >>> from sympy.categories import Object, IdentityMorphism
         >>> A = Object("A")
         >>> id_A = IdentityMorphism(A)
-        >>> id_A.identity
+        >>> id_A.is_identity
         True
 
         """
@@ -686,7 +686,7 @@ class Diagram(Basic):
         if Diagram._set_dict_union(morphisms, morphism, props) == False:
             # We have just added a new morphism.
 
-            if morphism.identity:
+            if morphism.is_identity:
                 return
 
             if add_identities:

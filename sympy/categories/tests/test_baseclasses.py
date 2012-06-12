@@ -90,7 +90,7 @@ def test_morphism():
     assert type(id_A) == IdentityMorphism
     assert id_A == IdentityMorphism(A, "id_A")
 
-    assert id_A.identity == True
+    assert id_A.is_identity == True
     assert id_A.components == Tuple(id_A)
     assert id_A == Morphism(A, A, name="f", identity=True)
     assert hash(id_A) == hash(Morphism(A, A, name="f", identity=True))
