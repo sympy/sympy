@@ -258,14 +258,14 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
         return self((num, den)).cancel()
 
 def PolynomialRing(dom, *gens, **opts):
-    """
+    r"""
     Create a generalized multivariate polynomial ring.
 
     A generalized polynomial ring is defined by a ground field `K`, a set
     of generators (typically `x_1, \dots, x_n`) and a monomial order `<`.
     The monomial order can be global, local or mixed. In any case it induces
     a total ordering on the monomials, and there exists for every (non-zero)
-    polynomial `f \n K[x_1, \dots, x_n]` a well-defined "leading monomial"
+    polynomial `f \in K[x_1, \dots, x_n]` a well-defined "leading monomial"
     `LM(f) = LM(f, >)`. One can then define a multiplicative subset
     `S = S_> = \{f \in K[x_1, \dots, x_n] | LM(f) = 1\}`. The generalized
     polynomial ring corresponding to the monomial order is
@@ -306,6 +306,7 @@ def PolynomialRing(dom, *gens, **opts):
     >>> test = lambda R: [f in R for f in L]
 
     The first ring is just `K[x, y]`:
+
     >>> test(R1)
     [True, False, False, False, False]
 

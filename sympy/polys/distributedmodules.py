@@ -91,29 +91,35 @@ def sdm_monomial_divides(A, B):
     expression.
 
     `A = f_1` divides `B = f_1`
+
     >>> from sympy.polys.distributedmodules import sdm_monomial_divides
     >>> sdm_monomial_divides((1, 0, 0), (1, 0, 0))
     True
 
     `A = f_1` divides `B = x^2 y f_1`
+
     >>> sdm_monomial_divides((1, 0, 0), (1, 2, 1))
     True
 
     `A = xy f_5` divides `B = x^2 y f_5`
+
     >>> sdm_monomial_divides((5, 1, 1), (5, 2, 1))
     True
 
     Negative examples:
 
     `A = f_1` does not divide `B = f_2`
+
     >>> sdm_monomial_divides((1, 0, 0), (2, 0, 0))
     False
 
     `A = x f_1` does not divide `B = f_1`
+
     >>> sdm_monomial_divides((1, 1, 0), (1, 0, 0))
     False
 
     `A = xy^2 f_5` does not divide `B = y f_5`
+
     >>> sdm_monomial_divides((5, 1, 2), (5, 0, 1))
     False
     """
@@ -153,20 +159,24 @@ def sdm_add(f, g, O, K):
     All examples use lexicographic order.
 
     `(xy f_1) + (f_2) = f_2 + xy f_1`
+
     >>> from sympy.polys.distributedmodules import sdm_add
     >>> from sympy.polys import lex, QQ
     >>> sdm_add([((1, 1, 1), QQ(1))], [((2, 0, 0), QQ(1))], lex, QQ)
     [((2, 0, 0), 1/1), ((1, 1, 1), 1/1)]
 
     `(xy f_1) + (-xy f_1)` = 0`
+
     >>> sdm_add([((1, 1, 1), QQ(1))], [((1, 1, 1), QQ(-1))], lex, QQ)
     []
 
     `(f_1) + (2f_1) = 3f_1`
+
     >>> sdm_add([((1, 0, 0), QQ(1))], [((1, 0, 0), QQ(2))], lex, QQ)
     [((1, 0, 0), 3/1)]
 
     `(yf_1) + (xf_1) = xf_1 + yf_1`
+
     >>> sdm_add([((1, 0, 1), QQ(1))], [((1, 1, 0), QQ(1))], lex, QQ)
     [((1, 1, 0), 1/1), ((1, 0, 1), 1/1)]
     """
@@ -218,20 +228,24 @@ def sdm_mul_term(f, term, O, K):
     ========
 
     `0 f_1 = 0`
+
     >>> from sympy.polys.distributedmodules import sdm_mul_term
     >>> from sympy.polys import lex, QQ
     >>> sdm_mul_term([((1, 0, 0), QQ(1))], ((0, 0), QQ(0)), lex, QQ)
     []
 
     `x 0 = 0`
+
     >>> sdm_mul_term([], ((1, 0), QQ(1)), lex, QQ)
     []
 
     `(x) (f_1) = xf_1`
+
     >>> sdm_mul_term([((1, 0, 0), QQ(1))], ((1, 0), QQ(1)), lex, QQ)
     [((1, 1, 0), 1/1)]
 
     `(2xy) (3x f_1 + 4y f_2) = 8xy^2 f_2 + 6x^2y f_1`
+
     >>> f = [((2, 0, 1), QQ(4)), ((1, 1, 0), QQ(3))]
     >>> sdm_mul_term(f, ((1, 1), QQ(2)), lex, QQ)
     [((2, 1, 2), 8/1), ((1, 2, 1), 6/1)]
