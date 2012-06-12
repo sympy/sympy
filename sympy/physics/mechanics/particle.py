@@ -68,7 +68,7 @@ class Particle(object):
     def linmom(self, frame):
         """Linear momentum of a particle.
 
-        The linear momentum, L, of a particle, P, of mass 'm' with an inertial
+        The linear momentum, L, of a particle, P, of mass, m, with an inertial
         velocity, ^N v^P is given by:
 
         L = m * ^N v^P
@@ -77,14 +77,13 @@ class Particle(object):
         ==========
 
         frame : ReferenceFrame
-            Linear momentum is always determined in an inertial reference
-            frame; the user is responsible for entering the correct reference
-            frame.
+            Linear momentum is defined in an inertial reference frame; the
+            user is responsible for entering the correct reference frame.
 
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Particle, Point, ReferencFrame
+        >>> from sympy.physics.mechanics import Particle, Point, ReferenceFrame
         >>> from sympy.physics.mechanics import dynamicsymbols
         >>> m, v = dynamicsymbols('m v')
         >>> N = ReferenceFrame('N')
@@ -97,5 +96,43 @@ class Particle(object):
         """
 
         return self.mass * self.point.vel(frame)
+
+    def angmom(self, point, frame):
+        """Angular momentum of a particle.
+
+        The angular momentum, H, about some point O of a particle, P, of mass,
+        m, with an inertial velocity, ^N v^P is given by:
+
+        H = r^OP x m * ^N v^P
+
+        Parameters
+        ==========
+
+        point : Point
+            The point about which angular momentum of the particle is being
+            determined.
+
+        frame : ReferenceFrame
+            Linear momentum is defined in an inertial reference frame; the
+            user is responsible for entering the correct reference frame.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Particle, Point, ReferenceFrame
+        >>> from sympy.physics.mechanics import dynamicsymbols
+        >>> m, v, r = dynamicsymbols('m v r')
+        >>> N = ReferenceFrame('N')
+        >>> O = Point('O')
+        >>> A = O.locatenew('A', r * N.x)
+        >>> P = Particle('P', A, m)
+        >>> P.set_vel(N, v * N.y)
+        >>> print P.angmom(O, N)
+        m*r*v*N.z
+
+        """
+
+        return self.point.pos_from(point) ^ self.mass * self.point.vel(frame)
+
 
     point = property(get_point, set_point)

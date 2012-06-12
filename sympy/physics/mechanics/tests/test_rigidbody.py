@@ -24,7 +24,7 @@ def test_rigidbody():
     assert B.masscenter == P2
     assert B.inertia == (I2, B.masscenter)
     assert B.masscenter == P2
-    assert B.inertia == (I2, B.masscenterc)
+    assert B.inertia == (I2, B.masscenter)
 
     # Testing linear momentum function assuming A2 is the inertial frame
     P2.set_vel(A2, v1 * A2.x + v2 * A2.y + v3 * A2.z)

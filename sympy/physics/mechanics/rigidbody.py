@@ -101,7 +101,7 @@ class RigidBody(object):
     def linmom(self, frame):
         """ Linear momentum of a rigid body.
 
-        The linear mometum, L, of a rigid body, B, of mass 'M' whose mass
+        The linear mometum, L, of a rigid body, B, of mass, M, whose mass
         center, B*, is translating with an inertial velocity, ^N v^B* is given
         by:
 
