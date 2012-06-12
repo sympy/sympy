@@ -217,8 +217,9 @@ class Morphism(Basic):
         >>> C = Object("C")
         >>> f = Morphism(A, B, "f")
         >>> g = Morphism(B, C, "g")
-        >>> (g * f).components == Tuple(f, g)
-        True
+        >>> (g * f).components
+        (Morphism(Object("A"), Object("B"), "f"),
+        Morphism(Object("B"), Object("C"), "g"))
 
         """
         components = self.args[3]
@@ -650,20 +651,21 @@ class Diagram(Basic):
     ========
 
     >>> from sympy.categories import Object, Morphism, Diagram
-    >>> from sympy import FiniteSet
+    >>> from sympy import FiniteSet, pretty
     >>> A = Object("A")
     >>> B = Object("B")
     >>> C = Object("C")
     >>> f = Morphism(A, B, "f")
     >>> g = Morphism(B, C, "g")
     >>> d = Diagram([f, g])
-    >>> Morphism(A, A, identity=True) in d.premises.keys()
-    True
-    >>> g * f in d.premises.keys()
-    True
+    >>> print pretty(d.premises.keys(), use_unicode=False)
+    [g:B->C, C->C, f:A->B, A->A, B->B, g*f:A->C]
+    >>> print pretty(d.premises, use_unicode=False)
+    {A->A: EmptySet(), B->B: EmptySet(), C->C: EmptySet(), f:A->B: EmptySet(), g*f
+    :A->C: EmptySet(), g:B->C: EmptySet()}
     >>> d = Diagram([f, g], {g * f:"unique"})
-    >>> d.conclusions[g * f] == FiniteSet("unique")
-    True
+    >>> print pretty(d.conclusions)
+    {g*f:A->C: {unique}}
 
     References
     ==========
@@ -782,15 +784,15 @@ class Diagram(Basic):
         Examples
         ========
         >>> from sympy.categories import Object, Morphism, Diagram
-        >>> from sympy import EmptySet, Dict
+        >>> from sympy import EmptySet, Dict, pretty
         >>> A = Object("A")
         >>> B = Object("B")
         >>> f = Morphism(A, B, "f")
         >>> id_A = Morphism(A, A, identity=True)
         >>> id_B = Morphism(B, B, identity=True)
         >>> d = Diagram([f])
-        >>> d.premises == Dict({f:EmptySet(), id_A:EmptySet(), id_B:EmptySet()})
-        True
+        >>> print pretty(d.premises, use_unicode=False)
+        {A->A: EmptySet(), B->B: EmptySet(), f:A->B: EmptySet()}
 
         """
         return self.args[0]
@@ -837,8 +839,8 @@ class Diagram(Basic):
         >>> f = Morphism(A, B, "f")
         >>> g = Morphism(B, C, "g")
         >>> d = Diagram([f, g])
-        >>> d.objects == FiniteSet(A, B, C)
-        True
+        >>> d.objects
+        {Object("B"), Object("C"), Object("A")}
 
         """
         return self.args[2]
@@ -853,15 +855,15 @@ class Diagram(Basic):
         ========
 
         >>> from sympy.categories import Object, Morphism, Diagram
-        >>> from sympy import FiniteSet
+        >>> from sympy import FiniteSet, pretty
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
         >>> f = Morphism(A, B, "f")
         >>> g = Morphism(B, C, "g")
         >>> d = Diagram([f, g], {g * f: "unique"})
-        >>> d.hom(A, C) == (FiniteSet(g * f), FiniteSet(g * f))
-        True
+        >>> print pretty(d.hom(A, C), use_unicode=False)
+        ({g*f:A->C}, {g*f:A->C})
 
         See Also
         ========
