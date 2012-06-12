@@ -550,7 +550,7 @@ class Category(Basic):
         if not name:
             raise ValueError("A Category cannot have an empty name.")
 
-        new_category = Basic.__new__(cls, Symbol(name), objects,
+        new_category = Basic.__new__(cls, Symbol(name), Class(objects),
                                      FiniteSet(commutative))
         return new_category
 
@@ -584,7 +584,7 @@ class Category(Basic):
         >>> B = Object("B")
         >>> K = Category("K", FiniteSet(A, B))
         >>> K.objects
-        {Object("B"), Object("A")}
+        Class({Object("B"), Object("A")})
 
         """
         return self.args[1]

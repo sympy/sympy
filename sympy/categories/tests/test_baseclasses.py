@@ -1,4 +1,5 @@
 from sympy.categories import Object, Morphism, IdentityMorphism, Diagram, Category
+from sympy.categories.baseclasses import Class
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import FiniteSet, EmptySet, Dict, Tuple
 
@@ -183,6 +184,9 @@ def test_category():
     d1 = Diagram([f, g])
     d2 = Diagram([f])
 
-    K = Category("K", commutative=[d1, d2])
+    objects = d1.objects | d2.objects
 
+    K = Category("K", objects, commutative=[d1, d2])
+
+    assert K.objects == Class(objects)
     assert K.commutative == FiniteSet(d1, d2)
