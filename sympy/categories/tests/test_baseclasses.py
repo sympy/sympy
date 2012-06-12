@@ -78,11 +78,6 @@ def test_morphism():
     assert u1.name == "u"
     assert u1.components == Tuple(u1)
 
-    assert f == Morphism(A, B, "f")
-    assert f != g
-    assert f != Morphism(A, B, "")
-    assert Morphism(A, B, "") != Morphism(A, B, "")
-
     assert hash(f) == hash(Morphism(A, B, "f"))
 
     id_A = Morphism(A, A, identity=True)
@@ -107,6 +102,7 @@ def test_morphism():
     f = Morphism(A, B)
     assert f != Morphism(A, B)
     assert f == f
+    assert Morphism(A, B, "") != Morphism(A, B, "")
 
     raises(TypeError, lambda: f.compose(None))
     raises(TypeError, lambda: id_A.compose(None))
