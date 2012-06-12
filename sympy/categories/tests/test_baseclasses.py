@@ -183,7 +183,7 @@ def test_category():
 
     objects = d1.objects | d2.objects
 
-    K = Category("K", objects, commutative=[d1, d2])
+    K = Category("K", objects, commutative_diagrams=[d1, d2])
 
     assert K.objects == Class(objects)
-    assert K.commutative == FiniteSet(d1, d2)
+    assert K.commutative_diagrams == FiniteSet(d1, d2)

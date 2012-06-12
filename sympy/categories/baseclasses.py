@@ -526,7 +526,7 @@ class Category(Basic):
 
     Certain instances of :class:`Diagram` can be asserted to be
     commutative in a :class:`Category` by supplying the argument
-    ``commutative`` in the constructor.
+    ``commutative_diagrams`` in the constructor.
 
     Examples
     ========
@@ -539,20 +539,20 @@ class Category(Basic):
     >>> f = Morphism(A, B, "f")
     >>> g = Morphism(B, C, "g")
     >>> d = Diagram([f, g])
-    >>> K = Category("K", commutative=[d])
-    >>> K.commutative == FiniteSet(d)
+    >>> K = Category("K", commutative_diagrams=[d])
+    >>> K.commutative_diagrams == FiniteSet(d)
     True
 
     See Also
     ========
     Diagram
     """
-    def __new__(cls, name, objects=EmptySet(), commutative=EmptySet()):
+    def __new__(cls, name, objects=EmptySet(), commutative_diagrams=EmptySet()):
         if not name:
             raise ValueError("A Category cannot have an empty name.")
 
         new_category = Basic.__new__(cls, Symbol(name), Class(objects),
-                                     FiniteSet(commutative))
+                                     FiniteSet(commutative_diagrams))
         return new_category
 
     @property
@@ -591,7 +591,7 @@ class Category(Basic):
         return self.args[1]
 
     @property
-    def commutative(self):
+    def commutative_diagrams(self):
         """
         Returns the :class:`FiniteSet` of diagrams which are known to
         be commutative in this category.
@@ -604,8 +604,8 @@ class Category(Basic):
         >>> f = Morphism(A, B, "f")
         >>> g = Morphism(B, C, "g")
         >>> d = Diagram([f, g])
-        >>> K = Category("K", commutative=[d])
-        >>> K.commutative == FiniteSet(d)
+        >>> K = Category("K", commutative_diagrams=[d])
+        >>> K.commutative_diagrams == FiniteSet(d)
         True
 
         """

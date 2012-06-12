@@ -1972,5 +1972,5 @@ def test_sympy__categories__baseclasses__Category():
     g = Morphism(B, C, "g")
     d1 = Diagram([f, g])
     d2 = Diagram([f])
-    K = Category("K", commutative=[d1, d2])
+    K = Category("K", commutative_diagrams=[d1, d2])
     assert _test_args(K)
