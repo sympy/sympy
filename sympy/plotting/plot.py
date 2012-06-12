@@ -299,46 +299,89 @@ def plot(*args, **kwargs):
     list_of_plots = [p for p in list_of_plots
                              if not any(isinstance(a, list) for a in p)]
 
-    def expand(the_args):
-        lists = [l for l in the_args if isinstance(l, list)]
-        not_lists = [l for l in the_args if not isinstance(l, list)]
-        return [list(l)+not_lists for l in zip(*lists)]
+    def expand(plot):
+        """
+        >> expand(([1,2,3],(1,2),(4,5)))
+        [[1, (1, 2), (4, 5)], [2, (1, 2), (4, 5)], [3, (1, 2), (4, 5)]]
+        """
+        lists = [i for i in plot if isinstance(i, list)]
+        not_lists = [i for i in plot if not isinstance(i, list)]
+        return [list(i) + not_lists for l in zip(*lists)]
 
     for a in list_arguments:
         list_of_plots.extend(expand(a))
 
-    # args = (x**2, ) --> args = (x**2, (x,-10,10)) and others
-    def add_variables_and_ranges(the_args):
-        default_range = Tuple(-10, 10)
+    def add_variables_and_ranges(plot):
+        """make sure all limits are in the form (symbol, a, b)"""
+
+        # find where the limits begin and expressions end
+        for i in range(len(plot)):
+            if isinstance(plot[i], Tuple):
+                break
+        else:
+            i = len(plot) + 1
+        exprs = list(plot[:i])
+        assert all(isinstance(e, Expr) for e in exprs)
+        assert all(isinstance(t, Tuple) for t in plot[i:])
+
+        # TODO: make a variables and free_symbols method for a pl instance
+        ranges = set([i for i in plot[i:] if isinstance(i, Tuple) and len(i) > 1])
+        range_variables = set([t[0] for t in ranges if len(t) == 3])
+
         #TODO when we drop 2.5 remove this ugly reduce and just call set.union
         #on the list
-        free = reduce(set.union, [expr.free_symbols for expr in pl
-                                                  if isinstance(expr, Expr)])
-        if free:
-            # remove from free variables all variables that already have defined ranges
-            for item in the_args:
-                if isinstance(item, Tuple) and (len(item)==3 or len(item)==1):
-                    free.discard(item[0])
-            free = list(free)
+        expr_free = reduce(set.union,
+            [e.free_symbols for e in exprs if isinstance(e, Expr)])
+
+
+        default_range = Tuple(-10, 10)
+
+        # unambiguous cases for limits
+        #   no ranges
+        if not ranges:
+            plot = exprs + [Tuple(e) + default_range for e in expr_free or [Dummy()]]
+
+        #   all limits of length 3
+        elif all(len(i) == 3 for i in ranges):
+            pass
+
+        #   all ranges the same
+        elif len(ranges) == 1:
+            range1 = ranges.pop()
+            if len(range1) == 2:
+                plot = exprs + [Tuple(x) + range1 for x in expr_free]
+
+        #   ranges cover free variables of expression
+        elif expr_free < range_variables:
+            plot = exprs + [i if len(i) == 3 else Tuple(Dummy()) + i for i in ranges]
+
+        #   ranges cover all but 1 free variable
+        elif len(expr_free - range_variables) == 1:
+            x = (expr_free - range_variables).pop()
+            ranges = list(ranges)
+            for i, ri in enumerate(ranges):
+                if len(ri) == 2:
+                    ranges[i] = Tuple(x) + ri
+                    break
+            else:
+                ranges.append(Tuple(x) + default_range)
+            for i, ri in enumerate(ranges):
+                if len(ri) == 2:
+                    ranges[i] = Tuple(Dummy()) + ri
+            plot = exprs + ranges
+
+        #   all implicit ranges
+        elif all(len(i) == 2 for i in ranges):
+            more = len(ranges) - len(expr_free)
+            all_free = list(expr_free) + [Dummy() for i in range(more)]
+            ranges = list(ranges)
+            ranges.extend(-more*[default_range])
+            plot = exprs + [Tuple(all_free[i]) + ri for i, ri in enumerate(ranges)]
+
         else:
-            free = [Dummy()] # in case there were only constants
-        free.sort(key=default_sort_key, reverse=True)
-        # add the missing variables to all len=2 Tuples
-        # add the missing ranges to all len=1 Tuples
-        for index, item in enumerate(the_args):
-            if not isinstance(item, Tuple):
-                pass
-            elif len(item) == 2:
-                # assume tuples are listed in the order that the symbols are sorted;
-                # they were sorted in reverse order since pop pops from the end
-                if not free:
-                    raise ValueError('there were too many ranges given without a variable')
-                the_args[index] = Tuple(free.pop(), item[0], item[1])
-            elif len(item) == 1:
-                the_args[index] = Tuple(item[0], default_range[0], default_range[1])
-        # add the missing len=3 Tuples
-        the_args.extend([Tuple(v, default_range[0], default_range[1]) for v in free])
-        return the_args
+            raise ValueError('erroneous or unanticipated range input')
+
+        return plot
 
     list_of_plots = [Tuple(*add_variables_and_ranges(pl)) for pl in list_of_plots]
 
