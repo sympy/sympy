@@ -697,7 +697,7 @@ class Diagram(Basic):
         identity morphisms for the domain and the codomain of
         ``morphism``.
         """
-        if Diagram._set_dict_union(morphisms, morphism, props) == False:
+        if not Diagram._set_dict_union(morphisms, morphism, props):
             # We have just added a new morphism.
 
             if morphism.is_identity:
