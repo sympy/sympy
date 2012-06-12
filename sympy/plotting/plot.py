@@ -490,8 +490,8 @@ class Line2DBaseSeries(BaseSeries):
             x = np.array((points[0],points[0])).T.flatten()[1:]
             y = np.array((points[1],points[1])).T.flatten()[:-1]
             points = (x, y)
-        points = np.array(points).T.reshape(-1, 1, self._dim)
-        return np.concatenate([points[:-1], points[1:]], axis=1)
+        points = np.ma.array(points).T.reshape(-1, 1, self._dim)
+        return np.ma.concatenate([points[:-1], points[1:]], axis=1)
 
     def get_color_array(self):
         c = self.line_color
@@ -932,6 +932,7 @@ class MatplotlibBackend(BaseBackend):
             self.ax.set_xlim(parent.xlim)
         if parent.ylim:
             self.ax.set_ylim(parent.ylim)
+<<<<<<< HEAD
         if not isinstance(self.ax, Axes3D) or matplotlib.__version__ >= '1.2.0': #XXX in the distant future remove this check
             self.ax.set_autoscale_on(parent.autoscale)
         if parent.axis_center:

@@ -132,6 +132,7 @@ def plot_and_save(name):
     ###
 
 
+<<<<<<< HEAD
     #with warnings.catch_warnings(record=True) as w:
     #    warnings.simplefilter("always")
     #    plot(sqrt(sqrt(-x)), show=False).save(tmp_file())
@@ -153,12 +154,12 @@ def plot_and_save(name):
     plot(LambertW(x), show=False).save(tmp_file())
     plot(sqrt(LambertW(x)), show=False).save(tmp_file())
 
-
     ###
     # Test all valid input args for plot()
     ###
 
     # 2D line with all possible inputs
+<<<<<<< HEAD
     plot(x              , show=False).save(tmp_file())
     plot(x, (x,        ), show=False).save(tmp_file())
     plot(x, (   -10, 10), show=False).save(tmp_file())
