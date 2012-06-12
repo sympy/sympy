@@ -135,6 +135,7 @@ def test_diagram():
 
     assert d2.objects == FiniteSet(A, B, C)
     assert g * f in d2.premises.keys()
+    assert homAC == FiniteSet(g * f)
 
     # Test equality, inequality and hash.
     d11 = Diagram([f])
