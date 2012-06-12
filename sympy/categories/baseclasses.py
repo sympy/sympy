@@ -721,6 +721,45 @@ class Diagram(Basic):
                     Diagram._set_dict_union(morphisms, right, new_props)
 
     def __new__(cls, *args):
+        """
+        Construct a new instance of Diagram.
+
+        If no arguments are supplied, an empty diagram is created.
+
+        If at least an argument is supplied, ``args[0]`` is
+        interpreted as the premises of the diagram.  If ``args[0]`` is
+        a list, it is interpreted as a list of :class:`Morphism`'s, in
+        which each :class:`Morphism` has an empty set of properties.
+        If ``args[0]`` is a Python dictionary or a :class:`Dict`, it
+        is interpreted as a dictionary associating to some
+        :class:`Morphism`'s some properties.
+
+        If at least two arguments are supplied ``args[1]`` is
+        interpreted as the conclusions of the diagram.  The type of
+        ``args[1]`` is interpreted in exactly the same way as the type
+        of ``args[0]``.  If only one argument is supplied, the diagram
+        has no conclusions.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, Morphism, Diagram
+        >>> from sympy import FiniteSet
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = Morphism(A, B, "f")
+        >>> g = Morphism(B, C, "g")
+        >>> d = Diagram([f, g])
+        >>> Morphism(A, A, identity=True) in d.premises.keys()
+        True
+        >>> g * f in d.premises.keys()
+        True
+        >>> d = Diagram([f, g], {g * f:"unique"})
+        >>> d.conclusions[g * f]
+        {unique}
+
+        """
         premises = {}
         conclusions = {}
 
