@@ -1,8 +1,9 @@
 from sympy import symbols
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
+from sympy.physics.mechanics import dynamicsymbols, outer
 
 def test_rigidbody():
-    m, m2, v1,v2, v3 = symbols('m m2 v1 v2 v3')
+    m, m2, v1,v2, v3, omega = symbols('m m2 v1 v2 v3 omega')
     A = ReferenceFrame('A')
     A2 = ReferenceFrame('A2')
     P = Point('P')
@@ -27,5 +28,21 @@ def test_rigidbody():
     assert B.inertia == (I2, B.masscenter)
 
     # Testing linear momentum function assuming A2 is the inertial frame
-    P2.set_vel(A2, v1 * A2.x + v2 * A2.y + v3 * A2.z)
-    assert B.linmom(A2) == m2 * (v1 * A2.x + v2 * A2.y + v3 * A2.z)
+    N =  ReferenceFrame('N')
+    P2.set_vel(N, v1 * N.x + v2 * N.y + v3 * N.z)
+    assert B.linmom(N) == m2 * (v1 * N.x + v2 * N.y + v3 * N.z)
+
+def test_rigidbody2():
+    M, v, r, omega = dynamicsymbols('M v r omega')
+    N = ReferenceFrame('N')
+    b = ReferenceFrame('b')
+    b.set_ang_vel(N, omega * b.x)
+    P = Point('P')
+    I = outer (b.x, b.x)
+    Inertia_tuple = (I, P)
+    B = RigidBody('B', P, b, M, Inertia_tuple)
+    assert B.angmom(P, N) == omega * b.x
+    O = Point('O')
+    O.set_vel(N, v * b.x)
+    P.set_pos(O, r * b.y)
+    assert B.angmom(O, N) == omega * b.x - M*v*r*b.z

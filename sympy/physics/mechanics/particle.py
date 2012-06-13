@@ -126,13 +126,13 @@ class Particle(object):
         >>> O = Point('O')
         >>> A = O.locatenew('A', r * N.x)
         >>> P = Particle('P', A, m)
-        >>> P.set_vel(N, v * N.y)
+        >>> P.point.set_vel(N, v * N.y)
         >>> print P.angmom(O, N)
         m*r*v*N.z
 
         """
 
-        return self.point.pos_from(point) ^ self.mass * self.point.vel(frame)
+        return self.point.pos_from(point) ^ (self.mass * self.point.vel(frame))
 
 
     point = property(get_point, set_point)

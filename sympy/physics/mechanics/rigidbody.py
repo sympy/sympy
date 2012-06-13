@@ -98,6 +98,52 @@ class RigidBody(object):
         self._inertia = I[0]
         self._inertia_point = I[1]
 
+    def angmom(self, point, frame):
+        """ Angular momentum of a rigid body.
+
+        The angular mometum, H, about some point, O, of a rigid body, B,
+        of mass, M, whose mass center, B*, is translating with an inertial
+        velocity, ^N v^B* is given by:
+
+        H = I* . ^N omega^B + r^OB* x (M * ^N v^O)
+
+        where I* is the central inertia dyadic, ^N omega^B is the angular
+        velocity of body B, r^OB* is the position vector from point O to the
+        mass center of B, and ^N v^O is the inertial velocity of point O.
+
+        Parameters
+        ==========
+
+        point : Point
+            This is the point about which angualr momentum is being determined.
+
+        frame : ReferenceFrame
+            Angular momentum is defined in an inertial reference frame; the
+            user is responsible for entering the correct reference frame.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame, outer
+        >>> from sympy.physics.mechanics import RigidBody, dynamicsymbols
+        >>> M, v, r, omega = dynamicsymbols('M v r omega')
+        >>> N = ReferenceFrame('N')
+        >>> b = ReferenceFrame('b')
+        >>> b.set_ang_vel(N, omega * b.x)
+        >>> P = Point('P')
+        >>> I = outer (b.x, b.x)
+        >>> Inertia_tuple = (I, P)
+        >>> B = RigidBody('B', P, b, M, Inertia_tuple)
+        >>> B.angmom(P, N)
+        omega*b.x
+
+        """
+
+        if point == self.masscenter:
+            return self.inertia[0] & self.frame.ang_vel_in(frame)
+        else:
+            return (self.inertia[0] & self.frame.ang_vel_in(frame)) + (self.masscenter.pos_from(point) ^ point.vel(frame)) * self.mass
+
     def linmom(self, frame):
         """ Linear momentum of a rigid body.
 
