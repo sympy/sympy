@@ -127,14 +127,30 @@ class Unit(AtomicExpr):
     #the base unit in it; should not be modified by hand
     _system = None
 
-    def __init__(self, abbrev, dimension, factor=1):
-        self.abbrev = abbrev
-        self._factor = factor
-        self.dimension = dimension
+    def __new__(cls, abbrev, dimension, factor=1, **assumptions):
+
+        obj = AtomicExpr.__new__(cls, **assumptions)
+        obj._abbrev = abbrev
+        obj._factor = factor
+        obj.dimension = dimension
+
+        return obj
 
     @property
     def factor(self):
         return self._factor
+
+    @property
+    def abbrev(self):
+        #TODO: improve this to combine with the prefix
+        return self._abbrev
+
+    def __str__(self):
+        if self.abbrev is not None:
+            return self._abbrev
+        else:
+            #TODO: use the base unit expression to get the name
+            return '%d %s' % (self.factor, self.dimension)
 
     @property
     def is_base_unit(self):
@@ -163,22 +179,21 @@ class Unit(AtomicExpr):
         system = _UNIT_SYSTEM or self._system
 
         if isinstance(other, Unit):
-            system = system or other.system
+            system = system or other._system
 
             factor = self.factor * other.factor
             dim = self.dimension * other.dimension
+            abbrev = None
             unit = Unit(abbrev, dim, factor)
 
             if system is None:
-                abbrev = '%s %s' % (self.abbrev, other.abbrev)
                 return unit
             else:
                 u = system.get_unit(unit)
-                if u != []:
+                if u is not None:
                     return u
                 else:
-                    system.can_dim_vector()
-
+                    return unit
         else:
             return Mul(self, other)
 
@@ -274,11 +289,13 @@ class UnitSystem():
         if isinstance(unit, str):
             for u in self._units:
                 if unit in (u.abbrev,):
-                    found_unit = copy(u)
+                    #use copy instead of direct assignment?
+                    found_unit = u
 
         if isinstance(unit, Unit):
             if unit in self._units:
-                found_unit = copy(unit)
+                #use copy instead of direct assignment?
+                found_unit = unit
 
         if found_unit is not None:
             found_unit._system = self
