@@ -919,13 +919,3 @@ class Diagram(Basic):
                 conclusions |= FiniteSet(morphism)
 
         return (premises, conclusions)
-
-    def __eq__(self, other):
-        if not isinstance(other, Diagram):
-            return False
-
-        return (self.premises == other.premises) and \
-               (self.conclusions == other.conclusions)
-
-    def __ne__(self, other):
-        return not (self == other)
