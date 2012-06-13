@@ -1480,6 +1480,22 @@ class PrettyPrinter(Printer):
     def _print_Category(self, category):
         return self._print(pretty_symbol(category.name))
 
+    def _print_Diagram(self, diagram):
+        if not diagram.premises:
+            # This is an empty diagram.
+            return self._print(S.EmptySet)
+
+        pretty_result = self._print(diagram.premises)
+        if diagram.conclusions:
+            results_arrow = " ==> "
+            if self._use_unicode:
+                results_arrow = u" \u27f9  "
+
+            pretty_conclusions = self._print(diagram.conclusions)[0]
+            pretty_result = pretty_result.right(results_arrow, pretty_conclusions)
+
+        return prettyForm(pretty_result[0])
+
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 

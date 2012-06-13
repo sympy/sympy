@@ -1208,6 +1208,18 @@ class LatexPrinter(Printer):
     def _print_Category(self, morphism):
         return "\\mathbf{%s}" % self._print(Symbol(morphism.name))
 
+    def _print_Diagram(self, diagram):
+        if not diagram.premises:
+            # This is an empty diagram.
+            return self._print(S.EmptySet)
+
+        latex_result = self._print(diagram.premises)
+        if diagram.conclusions:
+            latex_result += "\\Longrightarrow %s" % \
+                            self._print(diagram.conclusions)
+
+        return latex_result
+
 def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.

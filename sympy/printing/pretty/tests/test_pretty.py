@@ -3693,7 +3693,7 @@ def test_complicated_symbol_unchanged():
         assert pretty(Symbol(symb_name)) == symb_name
 
 def test_categories():
-    from sympy.categories import Object, Morphism, Category
+    from sympy.categories import Object, Morphism, Category, Diagram
     A1 = Object("A1")
     A2 = Object("A2")
     A3 = Object("A3")
@@ -3730,3 +3730,22 @@ def test_categories():
     h = Morphism(A2, A3, "f") * Morphism(A1, A2, "")
     assert pretty(h) == "A1->A3"
     assert upretty(h) == u"A₁→A₃"
+
+    # Test how diagrams are printed.
+    d = Diagram()
+    assert pretty(d) == "EmptySet()"
+    assert upretty(d) == u"∅"
+
+    d = Diagram({f1:"unique", f2:S.EmptySet})
+    assert pretty(d) == "{A1->A1: EmptySet(), A2->A2: EmptySet(), " \
+           "A3->A3: EmptySet(), f1:A1->A2: {unique}, f2*f1:A1->A3: " \
+           "EmptySet(), f2:A2->A3: EmptySet()}"
+    assert upretty(d) == u"{A₁→A₁: ∅, A₂→A₂: ∅, A₃→A₃: ∅, " \
+           u"f₁:A₁→A₂: {unique}, f₂∘f₁:A₁→A₃: ∅, f₂:A₂→A₃: ∅}"
+
+    d = Diagram({f1:"unique", f2:S.EmptySet}, {f2 * f1: "unique"})
+    assert pretty(d) == "{A1->A1: EmptySet(), A2->A2: EmptySet(), " \
+           "A3->A3: EmptySet(), f1:A1->A2: {unique}, f2*f1:A1->A3: " \
+           "EmptySet(), f2:A2->A3: EmptySet()} ==> {f2*f1:A1->A3: {unique}}"
+    assert upretty(d) == u"{A₁→A₁: ∅, A₂→A₂: ∅, A₃→A₃: ∅, f₁:A₁→A₂: {unique}," \
+           u" f₂∘f₁:A₁→A₃: ∅, f₂:A₂→A₃: ∅} ⟹  {f₂∘f₁:A₁→A₃: {unique}}"
