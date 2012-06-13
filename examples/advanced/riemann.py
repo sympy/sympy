@@ -442,6 +442,14 @@ def random_dummy(n):
     return res
 
 def get_sgens(sgens, n):
+    """
+    return (S.coset_repr(), S.strong_base())
+
+    sgens is a strong generating set for a permutation group of
+    signed permutations
+
+    n size of permutations without sign
+    """
     sgensx = [x.array_form for x in sgens]
     b_S = []
     S_cosets = []
@@ -451,7 +459,7 @@ def get_sgens(sgens, n):
             S_cosets.append([range(n+2)])
             continue
         Sxtrav = orbit_traversal(sgensx, ii, af=True)
-        if len(Sxtrav):
+        if len(Sxtrav) > 1:
             b_S.append(ii)
         S_cosets.append(Sxtrav)
         nSxtrav = len(Sxtrav)
@@ -469,7 +477,7 @@ def get_random_S_element(S_cosets, n):
 
 def riemann_products(nr, random_input, random_regular):
     """
-    construct a product of Riemann tensors, canonize it
+    construct a product of Riemann tensors, canonicalize it
 
     return the C code to be run with xperm.c to check the result
 
@@ -583,6 +591,6 @@ if __name__ == '__main__':
 )
         sys.exit()
     if random_regular and nr < 5:
-        print "to get a random regular graph use nr >= 5"
+        sys.stderr.write("to get a random regular graph use nr >= 5\n")
         sys.exit()
     riemann_products(nr, random_input, random_regular)
