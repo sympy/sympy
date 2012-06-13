@@ -63,7 +63,14 @@ class Ring(Domain):
         return self.one
 
     def free_module(self, rank):
-        """Generate a free module of rank ``rank`` over self."""
+        """
+        Generate a free module of rank ``rank`` over self.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> QQ[x].free_module(2)
+        QQ[x]**2
+        """
         raise NotImplementedError
 
     def ideal(self, *gens):
