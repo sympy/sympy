@@ -1,6 +1,6 @@
 from sympy import Matrix, eye
-from sympy.physics.units.units import PREFIXES, Unit, UnitSystem
-from sympy.physics.units.mks import mks, m, v, length, time, velocity
+from sympy.physics.units.units import PREFIXES, Unit, UnitSystem, set_system
+from sympy.physics.units.mks import mks, m, s, kg, J, v, length, time, velocity
 from sympy.utilities.pytest import raises
 
 def test_prefix_operations():
@@ -18,6 +18,18 @@ def test_unit_operations():
 
     assert m2.dimension == m.dimension**2
     assert m2.factor == m.factor**2
+
+    assert m**2 == m2
+
+    assert m/m == 1
+    assert m2/m == m
+    assert m**2/m == m
+
+    assert J == kg * m**2 * s**-2
+    assert J == kg * m**2 / s**2
+
+    set_system(mks)
+    assert m**2/m is m
 
 def test_unitsystem():
     raises(AttributeError, 'UnitSystem(base=(m, m))')

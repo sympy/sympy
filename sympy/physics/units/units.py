@@ -23,7 +23,8 @@ another one.
 from __future__ import division
 from copy import copy
 
-from sympy import Rational, Matrix, AtomicExpr, Mul
+from sympy import (sympify, Number, Integer, Rational, Matrix, AtomicExpr,
+                   Mul, Pow)
 
 # Is it a good idea to combine prefixes with between them, instead of just
 # keeping them to better print results when the user asks for it?
@@ -56,7 +57,7 @@ class Prefix(object):
         self.name = name
         self.abbrev = abbrev
 
-        self.factor = Rational(10)**exponent
+        self.factor = sympify(10)**exponent
 
     def __repr__(self):
 
@@ -131,7 +132,7 @@ class Unit(AtomicExpr):
 
         obj = AtomicExpr.__new__(cls, **assumptions)
         obj._abbrev = abbrev
-        obj._factor = factor
+        obj._factor = sympify(factor)
         obj.dimension = dimension
 
         return obj
@@ -175,6 +176,36 @@ class Unit(AtomicExpr):
         return (isinstance(other, Unit) and self.factor == other.factor
                 and self.dimension == other.dimension)
 
+    @staticmethod
+    def _comptute_unit(unit, system):
+        '''
+        Given an unit and a system, try to find the unit in the system.
+        '''
+        if system is None:
+            return unit
+        else:
+            u = system.get_unit(unit)
+            if u is not None:
+                return u
+            else:
+                return unit
+
+    def __pow__(self, other):
+        system = _UNIT_SYSTEM or self._system
+
+        other = sympify(other)
+        if isinstance(other, Integer):
+            factor = self.factor**other
+            dim = self.dimension**other
+            if self.abbrev is not None:
+                abbrev = '%s**%d' % (self.abbrev, other)
+            else:
+                abbrev = None
+            unit = Unit(abbrev, dim, factor)
+            return self._comptute_unit(unit, system)
+        else:
+            return Pow(self, other)
+
     def __mul__(self, other):
         system = _UNIT_SYSTEM or self._system
 
@@ -183,19 +214,27 @@ class Unit(AtomicExpr):
 
             factor = self.factor * other.factor
             dim = self.dimension * other.dimension
-            abbrev = None
-            unit = Unit(abbrev, dim, factor)
-
-            if system is None:
-                return unit
-            else:
-                u = system.get_unit(unit)
-                if u is not None:
-                    return u
-                else:
-                    return unit
+            unit = Unit(None, dim, factor)
+            return self._comptute_unit(unit, system)
         else:
             return Mul(self, other)
+
+    def __div__(self, other):
+        system = _UNIT_SYSTEM or self._system
+
+        if self == other:
+            return 1
+        elif isinstance(other, Unit):
+            system = system or other._system
+
+            factor = self.factor / other.factor
+            dim = self.dimension / other.dimension
+            unit = Unit(None, dim, factor)
+            return self._comptute_unit(unit, system)
+        else:
+            return Mul(self, other)
+
+    __truediv__ = __div__
 
 
 class UnitSystem():
@@ -287,16 +326,18 @@ class UnitSystem():
         found_unit = None
 
         if isinstance(unit, str):
+            print 1
             for u in self._units:
                 if unit in (u.abbrev,):
                     #use copy instead of direct assignment?
                     found_unit = u
-
-        if isinstance(unit, Unit):
-            if unit in self._units:
+        elif isinstance(unit, Unit):
+            try:
+                i = self._units.index(unit)
                 #use copy instead of direct assignment?
-                found_unit = unit
-
+                found_unit = self._units[i]
+            except ValueError:
+                pass
         if found_unit is not None:
             found_unit._system = self
 
