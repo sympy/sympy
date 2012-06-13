@@ -232,6 +232,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
     else:
         try:
             import IPython
+            from IPython.core.interactiveshell import InteractiveShell
         except ImportError:
             if ipython is not True:
                 if not quiet:
@@ -244,10 +245,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
             ipython = True
 
             if IPython.__version__ >= '0.11':
-                try:
-                    ip = get_ipython()
-                except NameError:
-                    ip = None
+                ip = InteractiveShell.instance()
             else:
                 ip = IPython.ipapi.get()
                 if ip:
