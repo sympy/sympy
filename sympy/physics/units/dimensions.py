@@ -8,7 +8,8 @@ from __future__ import division
 from copy import copy
 
 from sympy.core.containers import Dict
-from sympy import Rational, Number
+from sympy import Rational, Number, sympify
+from sympy.core.sympify import sympify
 
 # TODO: define the Dimension as a commutative Symbol, see paulialgebra module.
 # TODO: define a dimensionless fixed dimension, which is returned instead of 1
@@ -133,7 +134,9 @@ class Dimension(Dict):
 
     def __pow__(self, other):
 
-        if isinstance(other, Number) or int(other) == other:
+        other = sympify(other)
+        #TODO: check consistency when having rational, float...
+        if isinstance(other, Number):
             return Dimension([(x, y*other) for x, y in self.items()])
         """
         elif isinstance(other, float):
@@ -158,3 +161,13 @@ class Dimension(Dict):
                 return False
         else:
             return True
+
+    def dimension_is_integer(self):
+        """
+        Check if all the powers are integers.
+        """
+
+        for key in self:
+            if int(self[key]) != self[key]:
+                return False
+        return True

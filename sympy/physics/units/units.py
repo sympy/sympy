@@ -169,23 +169,25 @@ class Unit(AtomicExpr):
         '''
         Compute the abbreviation in terms of base units.
         '''
-        if self.has_system is False:
+        if self.has_system is False or _UNIT_SYSTEM is None:
             return ''
 
         string = ''
         syst = self._system
 
+        ratio = self.factor
         # sort by order of decreasing power
         l = zip(syst._base_units, syst.dim_vector(self.dimension))
         for u, d in sorted(l, key=lambda x: x[1], reverse=True):
             if d == 0:
                 continue
             elif d == 1:
+                ratio /= u.factor
                 string += '%s ' % u
             elif d != 0 and d != 1:
-                string += '%s**%d ' % (u, d)
+                string += '%s**%s ' % (u, d)
+                ratio /= u.factor**d
 
-        ratio = self.factor / syst.base_factor
         if ratio != 1:
             string = '%s * %s' % (ratio, string)
 
@@ -198,7 +200,7 @@ class Unit(AtomicExpr):
         elif self.abbrev_base != '':
             return self.abbrev_base
         else:
-            return '%d %s' % (self.factor, self.dimension)
+            return '%s %s' % (self.factor, self.dimension)
 
     __repr__ = __str__
 
@@ -243,18 +245,18 @@ class Unit(AtomicExpr):
         system = _UNIT_SYSTEM or self._system
 
         other = sympify(other)
-        if isinstance(other, Integer):
+        #TODO: check consistency when having rational, float...
+        if isinstance(other, Number):
             if other == 0:
                 return sympify(1)
             else:
                 factor = self.factor**other
                 dim = self.dimension**other
-                if self.abbrev is not None:
-                    abbrev = '%s**%d' % (self.abbrev, other)
+                if dim == 1:
+                    return factor
                 else:
-                    abbrev = None
-                unit = Unit(dim, abbrev, factor, system=system)
-                return self._comptute_unit(unit, system)
+                    unit = Unit(dim, factor=factor, system=system)
+                    return self._comptute_unit(unit, system)
         else:
             return Pow(self, other)
 
@@ -266,23 +268,27 @@ class Unit(AtomicExpr):
 
             factor = self.factor * other.factor
             dim = self.dimension * other.dimension
-            unit = Unit(dim, factor=factor, system=system)
-            return self._comptute_unit(unit, system)
+            if dim == 1:
+                return factor
+            else:
+                unit = Unit(dim, factor=factor, system=system)
+                return self._comptute_unit(unit, system)
         else:
             return Mul(self, other)
 
     def __div__(self, other):
         system = _UNIT_SYSTEM or self._system
 
-        if self == other:
-            return 1
-        elif isinstance(other, Unit):
+        if isinstance(other, Unit):
             system = system or other._system
 
             factor = self.factor / other.factor
             dim = self.dimension / other.dimension
-            unit = Unit(dim, factor=factor, system=system)
-            return self._comptute_unit(unit, system)
+            if dim == 1:
+                return factor
+            else:
+                unit = Unit(dim, factor=factor, system=system)
+                return self._comptute_unit(unit, system)
         else:
             return Mul(self, Pow(other, -1))
 
