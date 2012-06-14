@@ -7,7 +7,7 @@ MKS stands for "meter, kilogram, second".
 from __future__ import division
 
 from sympy.physics.units.dimensions import Dimension
-from sympy.physics.units.units import Unit, UnitSystem
+from sympy.physics.units.units import Unit, UnitSystem, PREFIXES
 
 length = Dimension(name='length', symbol='L', length=1)
 mass = Dimension(name='mass', symbol='M', mass=1)

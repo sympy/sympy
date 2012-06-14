@@ -25,11 +25,24 @@ def test_unit_operations():
     assert m2/m == m
     assert m**2/m == m
 
+    #assert m+m == m
+    #assert m-m == m
+    #raises(TypeError, 'm+1')
+
     assert J == kg * m**2 * s**-2
     assert J == kg * m**2 / s**2
 
     set_system(mks)
     assert m**2/m is m
+    assert kg * m**2 * s**-2 is J
+    assert kg * m**2 / s**2 is J
+    set_system(None)
+
+def test_unit_prop():
+    set_system(mks)
+    assert str(m/s*kg**2) == 'kg**2 m s**-1'
+    set_system(mks)
+
 
 def test_unitsystem():
     raises(AttributeError, 'UnitSystem(base=(m, m))')
@@ -38,3 +51,6 @@ def test_unitsystem():
     matrix = Matrix(((1,1),(0,-1)))
     us = UnitSystem(base=(m, v))
     assert us._transf_matrix == matrix
+
+def test_def_unitsystem():
+    raises(TypeError, 'set_system(1)')

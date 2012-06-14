@@ -44,8 +44,13 @@ def set_system(system):
     """
 
     global _UNIT_SYSTEM
-    _UNIT_SYSTEM = system
+    if system is None or isinstance(system, UnitSystem):
+        _UNIT_SYSTEM = system
+    else:
+        raise TypeError('The argument should be None or UnitSystem instance.')
 
+def get_system():
+    return _UNIT_SYSTEM
 
 class Prefix(object):
     """
@@ -124,16 +129,16 @@ PREFIXES = {
 
 class Unit(AtomicExpr):
 
-    #used to check if the unit is part of an unit system, and if it's one of
-    #the base unit in it; should not be modified by hand
-    _system = None
-
-    def __new__(cls, abbrev, dimension, factor=1, **assumptions):
+    def __new__(cls, abbrev, dimension, factor=1, system=None, **assumptions):
 
         obj = AtomicExpr.__new__(cls, **assumptions)
         obj._abbrev = abbrev
         obj._factor = sympify(factor)
         obj.dimension = dimension
+
+        #used to check if the unit is part of an unit system, and if it's one of
+        #the base unit in it; should not be modified by hand
+        obj._system = system
 
         return obj
 
@@ -146,12 +151,39 @@ class Unit(AtomicExpr):
         #TODO: improve this to combine with the prefix
         return self._abbrev
 
+    @property
+    def abbrev_base(self):
+        '''
+        Compute the abbreviation in terms of base units.
+        '''
+        if self.has_system is False:
+            return ''
+
+        string = ''
+        syst = self._system
+
+        # sort by order of decreasing power
+        l = zip(syst._base_units, syst.dim_vector(self.dimension))
+        for u, d in sorted(l, key=lambda x: x[1], reverse=True):
+            if d == 0:
+                continue
+            elif d == 1:
+                string += '%s ' % u
+            elif d != 0 and d != 1:
+                string += '%s**%d ' % (u, d)
+
+        return string.strip()
+        # cache result?
+
     def __str__(self):
         if self.abbrev is not None:
             return self._abbrev
+        elif self.abbrev_base != '':
+            return self.abbrev_base
         else:
-            #TODO: use the base unit expression to get the name
             return '%d %s' % (self.factor, self.dimension)
+
+    __repr__ = __str__
 
     @property
     def is_base_unit(self):
@@ -201,7 +233,7 @@ class Unit(AtomicExpr):
                 abbrev = '%s**%d' % (self.abbrev, other)
             else:
                 abbrev = None
-            unit = Unit(abbrev, dim, factor)
+            unit = Unit(abbrev, dim, factor, system=system)
             return self._comptute_unit(unit, system)
         else:
             return Pow(self, other)
@@ -214,7 +246,7 @@ class Unit(AtomicExpr):
 
             factor = self.factor * other.factor
             dim = self.dimension * other.dimension
-            unit = Unit(None, dim, factor)
+            unit = Unit(None, dim, factor, system=system)
             return self._comptute_unit(unit, system)
         else:
             return Mul(self, other)
@@ -229,12 +261,25 @@ class Unit(AtomicExpr):
 
             factor = self.factor / other.factor
             dim = self.dimension / other.dimension
-            unit = Unit(None, dim, factor)
+            unit = Unit(None, dim, factor, system=system)
             return self._comptute_unit(unit, system)
         else:
             return Mul(self, other)
 
     __truediv__ = __div__
+
+    #TODO: should m+m be interpreted as 1*m + 1*m?
+    #def __add__(self, other):
+    #    if self != other:
+    #        raise TypeError('Only identical units can be added.')
+    #    else:
+    #        return self
+
+    #def __sub__(self, other):
+    #    if self != other:
+    #        raise TypeError('Only identical units can be subtracted.')
+    #    else:
+    #        return self
 
 
 class UnitSystem():
@@ -300,6 +345,15 @@ class UnitSystem():
             vec.append(dimension.get(dim, 0))
         return Matrix(vec)
 
+    def __getitem__(self, key):
+        '''
+        Shortcut to the get_unit method, using key access.
+        '''
+        u = self.get_unit(key)
+        if u is None:
+            raise KeyError(key)
+        return u
+
     def dim_vector(self, dimension):
         """
         Vector representation in terms of the base dimensions.
@@ -308,7 +362,7 @@ class UnitSystem():
         return self._transf_matrix * self.can_dim_vector(dimension)
 
     def _system_is_well_defined(self):
-        # check redundancy between base units, i.e. if we can invert the
+        #TODO: check redundancy between base units, i.e. if we can invert the
         # matrices
         #if self._transf_matrix.det() == 0:
         if self._transf_matrix.is_square is False:
@@ -326,15 +380,14 @@ class UnitSystem():
         found_unit = None
 
         if isinstance(unit, str):
-            print 1
             for u in self._units:
                 if unit in (u.abbrev,):
-                    #use copy instead of direct assignment?
+                    #TODO: use copy instead of direct assignment?
                     found_unit = u
         elif isinstance(unit, Unit):
             try:
                 i = self._units.index(unit)
-                #use copy instead of direct assignment?
+                #TODO: use copy instead of direct assignment?
                 found_unit = self._units[i]
             except ValueError:
                 pass
