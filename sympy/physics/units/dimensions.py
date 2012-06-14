@@ -9,7 +9,6 @@ from copy import copy
 
 from sympy.core.containers import Dict
 from sympy import Rational, Number, sympify
-from sympy.core.sympify import sympify
 
 # TODO: define the Dimension as a commutative Symbol, see paulialgebra module.
 # TODO: define a dimensionless fixed dimension, which is returned instead of 1
@@ -65,8 +64,13 @@ class Dimension(Dict):
         #return dict.__str__(self)
         #s = ''.join()
 
-    def __repr__(self):
-        return "<Dimension: %s>" % self
+    def __str__(self):
+        if self.symbol is not None:
+            return self.symbol
+        elif self.name is not None:
+            return self.name
+        else:
+            return repr(self)
 
     def __add__(self, other):
         """

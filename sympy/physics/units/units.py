@@ -64,11 +64,10 @@ class Prefix(object):
 
         self.factor = sympify(10)**exponent
 
-    def __repr__(self):
-
+    def __str__(self):
         return self.name
 
-    __str__ = __repr__
+    __repr__ = __str__
 
     def __mul__(self, other):
         fact = self.factor * other.factor

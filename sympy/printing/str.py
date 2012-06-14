@@ -516,7 +516,12 @@ class StrPrinter(Printer):
         return ' U '.join(self._print(set) for set in expr.args)
 
     def _print_Unit(self, expr):
-        return expr.abbrev
+        if expr.abbrev != '':
+            return expr.abbrev
+        elif expr.abbrev_base != '':
+            return expr.abbrev_base
+        else:
+            return '%s %s' % (expr.factor, expr.dimension)
 
     def _print_Wild(self, expr):
         return expr.name + '_'
