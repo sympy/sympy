@@ -558,13 +558,13 @@ class Diagram(Basic):
     >>> g = NamedMorphism(B, C, "g")
     >>> d = Diagram([f, g])
     >>> print pretty(d.premises.keys(), use_unicode=False)
-    [f:A->B, id:B->B, g*f:A->C, g:B->C, id:C->C, id:A->A]
+    [f:A-->B, id:B-->B, g*f:A-->C, g:B-->C, id:C-->C, id:A-->A]
     >>> print pretty(d.premises, use_unicode=False)
-    {g*f:A->C: EmptySet(), id:A->A: EmptySet(), id:B->B: EmptySet(), id:C->C: Empt
-    ySet(), f:A->B: EmptySet(), g:B->C: EmptySet()}
+    {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
+    EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
     >>> d = Diagram([f, g], {g * f:"unique"})
     >>> print pretty(d.conclusions)
-    {g*f:A->C: {unique}}
+    {g*f:A-->C: {unique}}
 
     References
     ==========
@@ -733,7 +733,7 @@ class Diagram(Basic):
         >>> id_B = IdentityMorphism(B)
         >>> d = Diagram([f])
         >>> print pretty(d.premises, use_unicode=False)
-        {id:A->A: EmptySet(), id:B->B: EmptySet(), f:A->B: EmptySet()}
+        {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: EmptySet()}
 
         """
         return self.args[0]
@@ -805,7 +805,7 @@ class Diagram(Basic):
         >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram([f, g], {g * f: "unique"})
         >>> print pretty(d.hom(A, C), use_unicode=False)
-        ({g*f:A->C}, {g*f:A->C})
+        ({g*f:A-->C}, {g*f:A-->C})
 
         See Also
         ========

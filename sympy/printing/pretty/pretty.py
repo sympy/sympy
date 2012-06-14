@@ -1450,9 +1450,9 @@ class PrettyPrinter(Printer):
         return self._print(pretty_symbol(object.name))
 
     def _print_Morphism(self, morphism):
-        arrow = "->"
+        arrow = "-->"
         if self._use_unicode:
-            arrow = u"\u2192"
+            arrow = u"\u27f6  "
             circle = u"\u2218"
 
         domain = self._print(morphism.domain)
