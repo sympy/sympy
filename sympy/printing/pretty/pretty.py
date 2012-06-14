@@ -1451,7 +1451,6 @@ class PrettyPrinter(Printer):
 
     def _print_Morphism(self, morphism):
         arrow = "->"
-        circle = "*"
         if self._use_unicode:
             arrow = u"\u2192"
             circle = u"\u2218"
@@ -1460,22 +1459,38 @@ class PrettyPrinter(Printer):
         codomain = self._print(morphism.codomain)
         tail = domain.right(arrow, codomain)[0]
 
-        pretty_name = morphism.name
-        if pretty_name:
-            pretty_name = pretty_symbol(pretty_name)
-        else:
-            for component in reversed(morphism.components):
-                if not component.name:
-                    # Composition with an anonymous morphism is an
-                    # anonymous morphism.
-                    return prettyForm(tail)
+        return prettyForm(tail)
 
-                pretty_name += pretty_symbol(component.name) + circle
+    def _print_NamedMorphism(self, morphism):
+        pretty_name = self._print(pretty_symbol(morphism.name))
+        pretty_morphism = self._print_Morphism(morphism)
+        return prettyForm(pretty_name.right(":", pretty_morphism)[0])
 
-            pretty_name = pretty_name[:-1]
+    def _print_IdentityMorphism(self, morphism):
+        from sympy.categories import NamedMorphism
+        return self._print_NamedMorphism(
+            NamedMorphism(morphism.domain, morphism.codomain, "id"))
 
-        pretty_name_form = self._print(pretty_name)
-        return prettyForm(pretty_name_form.right(":", tail)[0])
+    def _print_CompositeMorphism(self, morphism):
+        from sympy.categories import NamedMorphism
+
+        circle = "*"
+        if self._use_unicode:
+            circle = u"\u2218"
+
+        component_names = ""
+        if all([isinstance(component, NamedMorphism) for component in \
+                morphism.components]):
+            # All components of the morphism have names and it is thus
+            # possible to build the name of the composite.
+            component_names_list = [pretty_symbol(component.name) for \
+                                    component in morphism.components]
+            component_names_list.reverse()
+            component_names = circle.join(component_names_list) + ":"
+
+        pretty_name = self._print(component_names)
+        pretty_morphism = self._print_Morphism(morphism)
+        return prettyForm(pretty_name.right(pretty_morphism)[0])
 
     def _print_Category(self, category):
         return self._print(pretty_symbol(category.name))

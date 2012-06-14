@@ -529,16 +529,12 @@ class StrPrinter(Printer):
     def _print_Object(self, object):
         return 'Object("%s")' % object.name
 
-    def _print_Morphism(self, morphism):
-        result = ""
-        for component in reversed(morphism.components):
-            result += 'Morphism(%s, %s, "%s") * ' % \
-                      (component.domain, component.codomain, component.name)
-        return result[:-3]
-
     def _print_IdentityMorphism(self, morphism):
-        return 'IdentityMorphism(%s, "%s")' % \
-               (morphism.domain, morphism.name)
+        return 'IdentityMorphism(%s)' % morphism.domain
+
+    def _print_NamedMorphism(self, morphism):
+        return 'NamedMorphism(%s, %s, "%s")' % \
+               (morphism.domain, morphism.codomain, morphism.name)
 
     def _print_Category(self, category):
         return 'Category("%s")' % category.name

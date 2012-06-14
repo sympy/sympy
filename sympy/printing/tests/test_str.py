@@ -473,22 +473,21 @@ def test_PrettyPoly():
     assert sstr(R.convert(x + y)) == sstr(x + y)
 
 def test_categories():
-    from sympy.categories import Object, Morphism, Category
+    from sympy.categories import (Object, Morphism, NamedMorphism,
+                                  IdentityMorphism, Category)
 
     A = Object("A")
     B = Object("B")
-    C = Object("C")
 
-    f = Morphism(A, B, "f")
-    g = Morphism(B, C, "g")
-    id_A = Morphism(A, A, "id_A", identity=True)
+    f = NamedMorphism(A, B, "f")
+    g = Morphism(A, B)
+    id_A = IdentityMorphism(A)
 
     K = Category("K")
 
     assert str(A) == 'Object("A")'
-    assert str(f) == 'Morphism(Object("A"), Object("B"), "f")'
-    assert str(id_A) == 'IdentityMorphism(Object("A"), "id_A")'
-    assert str(g * f) == 'Morphism(Object("B"), Object("C"), "g") * ' \
-           'Morphism(Object("A"), Object("B"), "f")'
+    assert str(f) == 'NamedMorphism(Object("A"), Object("B"), "f")'
+    assert str(g) == 'Morphism(Object("A"), Object("B"))'
+    assert str(id_A) == 'IdentityMorphism(Object("A"))'
 
     assert str(K) == 'Category("K")'
