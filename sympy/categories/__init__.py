@@ -17,4 +17,6 @@ from
 
 """
 
-from baseclasses import Object, Morphism, IdentityMorphism, Category, Diagram
+from baseclasses import (Object, Morphism, IdentityMorphism,
+                         NamedMorphism, CompositeMorphism, Category,
+                         Diagram)

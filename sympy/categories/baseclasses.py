@@ -1,5 +1,5 @@
 from sympy.core import (Set, Basic, FiniteSet, EmptySet, Dict, Symbol,
-                        Dummy, Tuple)
+                        Tuple)
 
 class Class(Set):
     r"""
@@ -15,16 +15,6 @@ class Class(Set):
     eventual proper implementation of set theory.
     """
     is_proper = False
-
-def _make_symbol(name):
-    """
-    If ``name`` is not empty, creates a :class:`Symbol` with this
-    name.  Otherwise creates a :class:`Dummy`.
-    """
-    if name:
-        return Symbol(name)
-    else:
-        return Dummy("")
 
 class Object(Basic):
     """
@@ -67,434 +57,261 @@ class Object(Basic):
 
 class Morphism(Basic):
     """
-    The base class for any kind of morphism in an abstract category.
+    The base class for any morphism in an abstract category.
 
     In abstract categories, a morphism is an arrow between two
     category objects.  The object where the arrow starts is called the
     domain, while the object where the arrow ends is called the
     codomain.
 
-    Two simple (not composed) morphisms with the same name, domain,
-    and codomain are the same morphisms.  A simple unnamed morphism is
-    not equal to any other morphism.
-
-    Two composed morphisms are equal if they have the same components,
-    in the same order (which guarantees the equality of domains and
-    codomains).  The names of such composed morphisms are not taken in
-    consideration at comparison.
-
-    Morphisms with the same domain and codomain can be defined to be
-    identity morphisms.  Identity morphisms with the same (co)domains
-    are equal.  Identity morphisms are identities with respect to
-    composition.  Identity morphisms are instances of
-    :class:`IdentityMorphism`.
+    Two morphisms between the same pair of objects are considered to
+    be the same morphisms.  To distinguish between morphisms between
+    the same objects use :class:`NamedMorphism`.
 
     Examples
     ========
+    TODO: Add examples.
 
-    >>> from sympy.categories import Object, Morphism
-    >>> A = Object("A")
-    >>> B = Object("B")
-    >>> C = Object("C")
-    >>> f = Morphism(A, B, "f")
-    >>> g = Morphism(B, C, "g")
-    >>> f == Morphism(A, B, "f")
-    True
-    >>> f == Morphism(A, B, "")
-    False
-    >>> g * f
-    Morphism(Object("B"), Object("C"), "g") *
-    Morphism(Object("A"), Object("B"), "f")
-    >>> id_A = Morphism(A, A, identity=True)
-    >>> id_A == Morphism(A, A, identity=True)
-    True
-    >>> f * id_A == f
-    True
-
+    See Also
+    =======
+    TODO: Add See Also.
     """
-
-    def __new__(cls, domain, codomain, name="", identity=False):
-        if identity and (domain != codomain):
-            raise ValueError(
-                "identity morphisms must have the same domain and codomain")
-
-        # The last component of self.args represents the components of
-        # this morphism.
-        if identity:
-            return IdentityMorphism(domain, name)
-        else:
-            return Basic.__new__(cls, domain, codomain,
-                                 _make_symbol(name), Tuple())
+    def __new__(cls, domain, codomain):
+        return Basic.__new__(cls, domain, codomain)
 
     @property
     def domain(self):
         """
-        Returns the domain of this morphism.
+        Returns the domain of the morphism.
 
         Examples
         ========
-
-        >>> from sympy.categories import Object, Morphism
-        >>> A = Object("A")
-        >>> B = Object("B")
-        >>> f = Morphism(A, B)
-        >>> f.domain
-        Object("A")
-
+        TODO: Add examples.
         """
         return self.args[0]
 
     @property
     def codomain(self):
         """
-        Returns the codomain of this morphism.
+        Returns the codomain of the morphism.
 
         Examples
         ========
-
-        >>> from sympy.categories import Object, Morphism
-        >>> A = Object("A")
-        >>> B = Object("B")
-        >>> f = Morphism(A, B)
-        >>> f.codomain
-        Object("B")
-
+        TODO: Add examples.
         """
         return self.args[1]
 
-    @property
-    def name(self):
-        """
-        Returns the name of this morphism.
+    def compose(self, other):
+        r"""
+        Composes self with the supplied morphism.
+
+        The order of elements in the composition is the usual order,
+        i.e., to construct `g\circ f` use ``g.compose(f)``.
 
         Examples
         ========
-
-        >>> from sympy.categories import Object, Morphism
-        >>> A = Object("A")
-        >>> B = Object("B")
-        >>> f = Morphism(A, B, "f")
-        >>> f.name
-        'f'
-
+        TODO: Add examples.
         """
-        return self.args[2].name
+        return CompositeMorphism(other, self)
 
-    @property
-    def is_identity(self):
-        """
-        Is ``True`` if this morphism is known to be an identity
-        morphism.
+    def __mul__(self, other):
+        r"""
+        Composes self with the supplied morphism.
+
+        The semantics of this operation is given by the following
+        equation: ``g * f == g.compose(f)`` for composable morphisms
+        ``g`` and ``f``.
 
         Examples
         ========
-
-        >>> from sympy.categories import Object, Morphism
-        >>> A = Object("A")
-        >>> B = Object("B")
-        >>> f = Morphism(A, B, "f")
-        >>> f.is_identity
-        False
-        >>> id_A = Morphism(A, A, identity=True)
-        >>> id_A.is_identity
-        True
-
+        TODO: Add examples.
         """
-        return False
-
-    @property
-    def components(self):
-        """
-        Returns the components of this morphisms.
-
-        Examples
-        ========
-
-        >>> from sympy.categories import Object, Morphism
-        >>> from sympy import Tuple
-        >>> A = Object("A")
-        >>> B = Object("B")
-        >>> C = Object("C")
-        >>> f = Morphism(A, B, "f")
-        >>> g = Morphism(B, C, "g")
-        >>> (g * f).components
-        (Morphism(Object("A"), Object("B"), "f"),
-        Morphism(Object("B"), Object("C"), "g"))
-
-        """
-        components = self.args[3]
-        if not components:
-            return Tuple(self)
-        else:
-            return components
-
-    def compose(self, g, new_name=""):
-        """
-        If ``self`` is a morphism from `B` to `C` and ``g`` is a
-        morphism from `A` to `B`, returns the morphism from `A` to `C`
-        which results from the composition of these morphisms.
-
-        If either ``self`` or ``g`` are morphisms resulted from some
-        previous composition, components in the resulting morphism
-        will be the concatenation of ``g.components`` and
-        ``self.components``, in this order.
-
-        Instead of ``f.compose(g)`` it is possible to write ``f * g``.
-
-        Examples
-        ========
-
-        >>> from sympy.categories import Object, Morphism
-        >>> A = Object("A")
-        >>> B = Object("B")
-        >>> C = Object("C")
-        >>> f = Morphism(A, B, "f")
-        >>> g = Morphism(B, C, "g")
-        >>> g.compose(f)
-        Morphism(Object("B"), Object("C"), "g") *
-        Morphism(Object("A"), Object("B"), "f")
-        >>> (g.compose(f, "h")).name
-        'h'
-
-        """
-        if not isinstance(g, Morphism):
-            raise TypeError("Morphisms can only be composed with morphisms.")
-
-        if g.codomain != self.domain:
-            raise ValueError("Uncomponsable morphisms.")
-
-        if g.is_identity:
-            return self
-
-        # We don't really know whether the new morphism is an identity
-        # (even if g.domain == self.codomain), so let's suppose it's
-        # not an identity.
-        return Basic.__new__(Morphism, g.domain, self.codomain,
-                             _make_symbol(new_name), g.components +
-                             self.components)
-
-    def __mul__(self, g):
-        """
-        Returns the result of the composition of ``self`` with the
-        argument, if this composition is defined.
-
-        The semantics of multiplication is as follows: ``f * g =
-        f.compose(g)``.
-
-        See Also
-        =======
-        compose
-        """
-        try:
-            return self.compose(g)
-        except TypeError:
-            return NotImplemented
-
-    def flatten(self, new_name=""):
-        """
-        If ``self`` resulted from composition of other morphisms,
-        returns a new morphism without any information about the
-        morphisms it resulted from.
-
-        Note that comparing ``self`` with the new morphism need NOT
-        return ``True``.
-
-        Examples
-        ========
-
-        >>> from sympy.categories import Object, Morphism
-        >>> A = Object("A")
-        >>> B = Object("B")
-        >>> C = Object("C")
-        >>> f = Morphism(A, B, "f")
-        >>> g = Morphism(B, C, "g")
-        >>> (g * f).flatten("h")
-        Morphism(Object("A"), Object("C"), "h")
-
-        See Also
-        ========
-        compose
-        """
-
-        return Morphism(self.domain, self.codomain, new_name)
-
-    def __eq__(self, other):
-        if other is self:
-            return True
-
-        if not isinstance(other, Morphism):
-            return False
-
-        if self.is_identity and other.is_identity:
-            # All identities are equal.
-            return self.domain == other.domain
-        elif self.is_identity or other.is_identity:
-            # One of the morphisms is an identity, but not both.
-            return False
-
-        if (len(self.components) == 1) and (len(other.components) == 1):
-            # We are comparing two simple morphisms.
-            if (not self.name) or (not other.name):
-                return False
-
-            return (self.name == other.name) and \
-                   (self.domain == other.domain) and \
-                   (self.codomain == other.codomain)
-        else:
-            # One of the morphisms is composed.  Compare the
-            # components.
-            for (self_component, other_component) in \
-                    zip(self.components, other.components):
-                if self_component != other_component:
-                    return False
-            return True
-
-    def __ne__(self, other):
-        return not (self == other)
-
-    def __hash__(self):
-        return hash((self.name, self.domain, self.codomain))
+        return self.compose(other)
 
 class IdentityMorphism(Morphism):
     """
-    An identity morphism.
+    Represents an identity morphism.
 
     An identity morphism is a morphism with equal domain and codomain,
     which acts as an identity with respect to composition.
 
     Examples
     ========
+    TODO: Add examples.
 
-    >>> from sympy.categories import Object, Morphism, IdentityMorphism
-    >>> A = Object("A")
-    >>> B = Object("B")
-    >>> f = Morphism(A, B, "f")
-    >>> id_A = IdentityMorphism(A)
-    >>> f * id_A == f
-    True
-
+    See Also
+    ========
+    Morphism
     """
-    def __new__(cls, domain, name=""):
-        return Basic.__new__(cls, domain, _make_symbol(name))
+    def __new__(cls, domain):
+        return Basic.__new__(cls, domain, domain)
 
-    @property
-    def domain(self):
-        """
-        Returns the domain of this identity morphism.
+class NamedMorphism(Morphism):
+    """
+    Represents a morphism which has a name.
 
-        Examples
-        ========
+    Names are used to distinguish between morphisms which have the
+    same domain and codomain: two named morphisms are equal if they
+    have the same domains, codomains, and names.
 
-        >>> from sympy.categories import Object, IdentityMorphism
-        >>> A = Object("A")
-        >>> id_A = IdentityMorphism(A)
-        >>> id_A.domain
-        Object("A")
+    Examples
+    ========
+    TODO: Add examples.
 
-        """
-        return self.args[0]
+    See Also
+    ========
+    Moprhism
+    """
+    def __new__(cls, domain, codomain, name):
+        if not name:
+            raise ValueError("Empty morphism names not allowed.")
 
-    @property
-    def codomain(self):
-        """
-        Returns the codomain of this identity morphism.
-
-        Examples
-        ========
-
-        >>> from sympy.categories import Object, Morphism
-        >>> A = Object("A")
-        >>> id_A = Morphism(A, A, identity=True)
-        >>> id_A.codomain
-        Object("A")
-
-        """
-        return self.args[0]
+        return Basic.__new__(cls, domain, codomain, Symbol(name))
 
     @property
     def name(self):
         """
-        Returns the name of this identity morphism.
+        Returns the name of the morphism.
 
         Examples
         ========
-
-        >>> from sympy.categories import Object, IdentityMorphism
-        >>> A = Object("A")
-        >>> id_A = IdentityMorphism(A, "id_A")
-        >>> id_A.name
-        'id_A'
-
+        TODO: Add examples.
         """
-        return self.args[1].name
+        return self.args[2].name
 
-    @property
-    def is_identity(self):
+class CompositeMorphism(Morphism):
+    r"""
+    Represents a morphism which is a composition of other morphisms.
+
+    Two composite morphisms are equal if the morphisms they were
+    obtained from (components) are the same and were listed in the
+    same order.
+
+    The arguments to the constructor for this class should be listed
+    in diagram order: to obtain the composition `g\circ f` from the
+    instances of :class:`Morphism` ``g`` and ``f`` use
+    ``CompositeMorphism(f, g)``.
+
+    Examples
+    ========
+    """
+    @staticmethod
+    def _add_morphism(t, morphism):
         """
-        Is ``True`` if this morphism is known to be an identity
-        morphism.
+        Intelligently adds ``morphism`` to tuple ``t``.
 
-        Examples
-        ========
+        If ``morphism`` is a composite morphism, its components are
+        added to the tuple.  If ``morphism`` is an identity, nothing
+        is added to the tuple.
 
-        >>> from sympy.categories import Object, IdentityMorphism
-        >>> A = Object("A")
-        >>> id_A = IdentityMorphism(A)
-        >>> id_A.is_identity
-        True
-
+        No composability checks are performed.
         """
-        return True
+        if isinstance(morphism, CompositeMorphism):
+            # ``morphism`` is a composite morphism; we have to
+            # denest its components.
+            return t + morphism.components
+        elif isinstance(morphism, IdentityMorphism):
+            # ``morphism`` is an identity.  Nothing happens.
+            return t
+        else:
+            return t + Tuple(morphism)
+
+    def __new__(cls, *components):
+        if components and not isinstance(components[0], Morphism):
+            # Maybe the user has explicitly supplied a list of
+            # morphisms.
+            return CompositeMorphism.__new__(cls, *components[0])
+
+        normalised_components = Tuple()
+
+        # TODO: Fix the unpythonicity.
+        for i in xrange(len(components) - 1):
+            current = components[i]
+            following = components[i + 1]
+
+            if not isinstance(current, Morphism) or \
+                   not isinstance(following, Morphism):
+                raise TypeError("All components must be morphisms.")
+
+            if current.codomain != following.domain:
+                raise ValueError("Uncomposable morphisms.")
+
+            normalised_components = CompositeMorphism._add_morphism(
+                normalised_components, current)
+
+        # We haven't added the last morphism to the list of normalised
+        # components.  Add it now.
+        normalised_components = CompositeMorphism._add_morphism(
+            normalised_components, components[-1])
+
+        if not normalised_components:
+            # If ``normalised_components`` is empty, only identities
+            # were supplied.  Since they all were composable, they are
+            # all the same identities.
+            return components[0]
+        elif len(normalised_components) == 1:
+            # No sense to construct a whole CompositeMorphism.
+            return normalised_components[0]
+
+        return Basic.__new__(cls, normalised_components)
 
     @property
     def components(self):
-        r"""
-        Returns the components of this morphisms.
-
-        Since this is an identity morphisms, it always has itself as
-        the only component.
+        """
+        Returns the components of this composite morphism.
 
         Examples
         ========
-
-        >>> from sympy.categories import Object, IdentityMorphism
-        >>> A = Object("A")
-        >>> id_A = IdentityMorphism(A, 'id_A')
-        >>> id_A.components
-        (IdentityMorphism(Object("A"), "id_A"),)
-
+        TODO: Add examples.
         """
-        return Tuple(self)
+        return self.args[0]
 
-    def compose(self, g, new_name=""):
+    @property
+    def domain(self):
         """
-        If ``g`` is a morphism with codomain equal to the domain of
-        this identity morphisms, returns ``g``.
+        Returns the domain of this composite morphism.
 
-        The argument ``new_name`` is not used.
+        The domain of the composite morphism is the domain of its
+        first component.
 
         Examples
         ========
-
-        >>> from sympy.categories import Object, Morphism, IdentityMorphism
-        >>> A = Object("A")
-        >>> B = Object("B")
-        >>> f = Morphism(A, B, "f")
-        >>> id_A = IdentityMorphism(A)
-        >>> f.compose(id_A) == f
-        True
-
+        TODO: Add examples.
         """
-        if not isinstance(g, Morphism):
-            raise TypeError("Morphisms can only be composed with morphisms.")
+        return self.components[0].domain
 
-        if g.codomain != self.domain:
-            raise ValueError("Uncomponsable morphisms.")
+    @property
+    def codomain(self):
+        """
+        Returns the codomain of this composite morphism.
 
-        return g
+        The domain of the composite morphism is the codomain of its
+        last component.
 
-    def __hash__(self):
-        return hash(self.domain)
+        Examples
+        ========
+        TODO: Add examples.
+        """
+        return self.components[-1].codomain
+
+    def flatten(self, new_name=None):
+        """
+        Forgets the composite structure of this morphism.
+
+        If ``new_name`` is not empty, returns a :class:`NamedMorphism`
+        with the supplied name, otherwise returns a :class:`Morphism`.
+        In both cases the domain of the new morphism is the domain of
+        this composite morphism and the codomain of the new morphism
+        is the codomain of this composite morphism.
+
+        Examples
+        ========
+        TODO: Add examples.
+        """
+        if new_name:
+            return NamedMorphism(self.domain, self.codomain, new_name)
+        else:
+            return Morphism(self.domain, self.codomain)
 
 class Category(Basic):
     r"""
@@ -700,14 +517,15 @@ class Diagram(Basic):
         if not Diagram._set_dict_union(morphisms, morphism, props):
             # We have just added a new morphism.
 
-            if morphism.is_identity:
+            if isinstance(morphism, IdentityMorphism):
                 return
 
             if add_identities:
                 empty = EmptySet()
 
-                id_dom = Morphism(morphism.domain, morphism.domain, identity=True)
-                id_cod = Morphism(morphism.codomain, morphism.codomain, identity=True)
+                id_dom = IdentityMorphism(morphism.domain)
+                id_cod = IdentityMorphism(morphism.codomain)
+
                 Diagram._set_dict_union(morphisms, id_dom, empty)
                 Diagram._set_dict_union(morphisms, id_cod, empty)
 

@@ -1,4 +1,6 @@
-from sympy.categories import Object, Morphism, IdentityMorphism, Diagram, Category
+from sympy.categories import (Object, Morphism, IdentityMorphism,
+                              NamedMorphism, CompositeMorphism,
+                              Diagram, Category)
 from sympy.categories.baseclasses import Class
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import FiniteSet, EmptySet, Dict, Tuple
@@ -17,107 +19,95 @@ def test_object():
 
     raises(ValueError, lambda: Object(""))
 
-def test_morphism():
+def test_morphisms():
     A = Object("A")
     B = Object("B")
     C = Object("C")
     D = Object("D")
 
-    f = Morphism(A, B, "f")
-    g = Morphism(B, C, "g")
-    h = Morphism(C, D, "h")
-
-    assert f.name == "f"
+    # Test the base morphism.
+    f = Morphism(A, B)
     assert f.domain == A
     assert f.codomain == B
-    assert f.components == Tuple(f)
+    assert f == Morphism(A, B)
 
-    assert f != None
-    assert f == f
-    assert f == Morphism(A, B, "f")
-    assert f != g
+    # Test identities.
+    id_A = IdentityMorphism(A)
+    id_B = IdentityMorphism(B)
+    assert id_A.domain == A
+    assert id_A.codomain == A
+    assert id_A == IdentityMorphism(A)
+    assert id_A != id_B
 
-    raises(ValueError, lambda: f * g)
-    raises(ValueError, lambda: f * f)
+    # Test named morphisms.
+    g = NamedMorphism(B, C, "g")
+    assert g.name == "g"
+    assert g != f
+    assert g != Morphism(B, C)
+    assert g == NamedMorphism(B, C, "g")
+    assert g != NamedMorphism(B, C, "f")
 
-    k = g.compose(f, "k")
+    # Test composite morphisms.
+    assert f == CompositeMorphism(f)
 
+    k = g.compose(f)
     assert k.domain == A
     assert k.codomain == C
-    assert k.name == "k"
     assert k.components == Tuple(f, g)
+    assert g * f == k
+    assert CompositeMorphism(f, g) == k
 
-    k = g * f
+    assert CompositeMorphism(g * f) == g * f
+
+    # Test the associativity of composition.
+    h = Morphism(C, D)
+
     p = h * g
     u = h * g * f
 
-    assert k.domain == A
-    assert k.codomain == C
-    assert k.name == ""
-    assert k.components == Tuple(f, g)
-
     assert h * k == u
     assert p * f == u
+    assert CompositeMorphism(f, g, h) == u
 
-    assert u.domain == A
-    assert u.codomain == D
-    assert u.name == ""
-    assert u.components == Tuple(f, g, h)
-
+    # Test flattening.
     u1 = u.flatten()
-
+    assert isinstance(u1, Morphism)
     assert u1.domain == A
     assert u1.codomain == D
-    assert u1.name == ""
-    assert u1.components == Tuple(u1)
 
-    u1 = u.flatten("u")
+    u2 = u.flatten("u")
+    assert isinstance(u2, NamedMorphism)
+    assert u2.name == "u"
+    assert u2.domain == A
+    assert u2.codomain == D
 
-    assert u1.domain == A
-    assert u1.codomain == D
-    assert u1.name == "u"
-    assert u1.components == Tuple(u1)
-
-    assert hash(f) == hash(Morphism(A, B, "f"))
-
-    id_A = Morphism(A, A, identity=True)
-    id_B = Morphism(B, B, identity=True)
-
-    assert type(id_A) == IdentityMorphism
-    assert id_A == IdentityMorphism(A, "id_A")
-
-    assert id_A.is_identity == True
-    assert id_A.components == Tuple(id_A)
-    assert id_A == Morphism(A, A, name="f", identity=True)
-    assert hash(id_A) == hash(Morphism(A, A, name="f", identity=True))
-    assert id_A != Morphism(A, A, name="f")
-    assert id_A != id_B
-
-    assert id_A * id_A == id_A
+    # Test identities.
     assert f * id_A == f
     assert id_B * f == f
+    assert id_A * id_A == id_A
+    assert CompositeMorphism(id_A) == id_A
 
-    raises(ValueError, lambda: Morphism(A, B, identity=True))
-
-    f = Morphism(A, B)
-    assert f != Morphism(A, B)
-    assert f == f
-    assert Morphism(A, B, "") != Morphism(A, B, "")
+    # Test bad compositions.
+    raises(ValueError, lambda: f * g)
 
     raises(TypeError, lambda: f.compose(None))
     raises(TypeError, lambda: id_A.compose(None))
     raises(TypeError, lambda: f * None)
     raises(TypeError, lambda: id_A * None)
 
+    raises(TypeError, lambda: CompositeMorphism(f, None, 1))
+
+    raises(ValueError, lambda: NamedMorphism(A, B, ""))
+
 def test_diagram():
     A = Object("A")
     B = Object("B")
     C = Object("C")
 
-    f = Morphism(A, B, "f")
-    g = Morphism(B, C, "g")
-    id_A = Morphism(A, A, "1_A")
-    id_B = Morphism(B, B, "1_B")
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    id_A = IdentityMorphism(A)
+    id_B = IdentityMorphism(B)
 
     empty = EmptySet()
 
@@ -126,8 +116,8 @@ def test_diagram():
 
     assert d1.objects == FiniteSet(A, B)
     assert d1.hom(A, B) == (FiniteSet(f), empty)
-    assert d1.hom(A, A) == (FiniteSet(Morphism(A, A, identity=True)), empty)
-    assert d1.hom(B, B) == (FiniteSet(Morphism(B, B, identity=True)), empty)
+    assert d1.hom(A, A) == (FiniteSet(id_A), empty)
+    assert d1.hom(B, B) == (FiniteSet(id_B), empty)
 
     # Test the addition of composites.
     d2 = Diagram([f, g])
@@ -175,8 +165,8 @@ def test_category():
     B = Object("B")
     C = Object("C")
 
-    f = Morphism(A, B, "f")
-    g = Morphism(B, C, "g")
+    f = Morphism(A, B)
+    g = Morphism(B, C)
 
     d1 = Diagram([f, g])
     d2 = Diagram([f])
