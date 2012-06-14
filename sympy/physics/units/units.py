@@ -129,12 +129,18 @@ PREFIXES = {
 
 class Unit(AtomicExpr):
 
-    def __new__(cls, abbrev, dimension, factor=1, system=None, **assumptions):
+    is_positive = True # make sqrt(m**2) --> m
+    is_commutative = True
+    is_number = False
+
+    def __new__(cls, dimension, abbrev='', factor=1, prefix=None, system=None,
+                **assumptions):
 
         obj = AtomicExpr.__new__(cls, **assumptions)
         obj._abbrev = abbrev
         obj._factor = sympify(factor)
         obj.dimension = dimension
+        obj.prefix = prefix
 
         #used to check if the unit is part of an unit system, and if it's one of
         #the base unit in it; should not be modified by hand
@@ -144,12 +150,19 @@ class Unit(AtomicExpr):
 
     @property
     def factor(self):
-        return self._factor
+        if self.prefix is not None:
+            return self.prefix.factor * self._factor
+        else:
+            return self._factor
 
     @property
     def abbrev(self):
-        #TODO: improve this to combine with the prefix
-        return self._abbrev
+        if self._abbrev == '':
+            return ''
+        if self.prefix is not None:
+            return self.prefix.abbrev + self._abbrev
+        else:
+            return self._abbrev
 
     @property
     def abbrev_base(self):
@@ -172,12 +185,16 @@ class Unit(AtomicExpr):
             elif d != 0 and d != 1:
                 string += '%s**%d ' % (u, d)
 
+        ratio = self.factor / syst.base_factor
+        if ratio != 1:
+            string = '%s * %s' % (ratio, string)
+
         return string.strip()
         # cache result?
 
     def __str__(self):
-        if self.abbrev is not None:
-            return self._abbrev
+        if self.abbrev != '':
+            return self.abbrev
         elif self.abbrev_base != '':
             return self.abbrev_base
         else:
@@ -227,14 +244,17 @@ class Unit(AtomicExpr):
 
         other = sympify(other)
         if isinstance(other, Integer):
-            factor = self.factor**other
-            dim = self.dimension**other
-            if self.abbrev is not None:
-                abbrev = '%s**%d' % (self.abbrev, other)
+            if other == 0:
+                return sympify(1)
             else:
-                abbrev = None
-            unit = Unit(abbrev, dim, factor, system=system)
-            return self._comptute_unit(unit, system)
+                factor = self.factor**other
+                dim = self.dimension**other
+                if self.abbrev is not None:
+                    abbrev = '%s**%d' % (self.abbrev, other)
+                else:
+                    abbrev = None
+                unit = Unit(dim, abbrev, factor, system=system)
+                return self._comptute_unit(unit, system)
         else:
             return Pow(self, other)
 
@@ -246,7 +266,7 @@ class Unit(AtomicExpr):
 
             factor = self.factor * other.factor
             dim = self.dimension * other.dimension
-            unit = Unit(None, dim, factor, system=system)
+            unit = Unit(dim, factor=factor, system=system)
             return self._comptute_unit(unit, system)
         else:
             return Mul(self, other)
@@ -261,10 +281,10 @@ class Unit(AtomicExpr):
 
             factor = self.factor / other.factor
             dim = self.dimension / other.dimension
-            unit = Unit(None, dim, factor, system=system)
+            unit = Unit(dim, factor=factor, system=system)
             return self._comptute_unit(unit, system)
         else:
-            return Mul(self, other)
+            return Mul(self, Pow(other, -1))
 
     __truediv__ = __div__
 
@@ -322,6 +342,11 @@ class UnitSystem():
         dims = [unit.dimension for unit in self._base_units]
         gen = reduce(lambda x,y: x*y, dims)
         self._list_dim = sorted(gen.keys())
+
+    @property
+    def base_factor(self):
+        factors = [unit.factor for unit in self._base_units]
+        return reduce(lambda x,y: x*y, factors)
 
     def _compute_can_transf_matrix(self):
         """
@@ -395,3 +420,134 @@ class UnitSystem():
             found_unit._system = self
 
         return found_unit
+
+class Quantity(AtomicExpr):
+
+    is_commutative = True
+
+    def __new__(cls, factor=1, unit=None, **assumptions):
+
+        factor = sympify(factor)
+
+        if (unit is None or unit == 1) and isinstance(factor, Number):
+            return factor
+
+        obj = AtomicExpr.__new__(cls, **assumptions)
+
+        #TODO: if factor is of the form "1 m", use the current defined system
+        #      to get the unit
+        if isinstance(factor, Number):
+            if isinstance(unit, Unit):
+                obj.unit = unit
+                obj.factor = factor
+            else:
+                raise TypeError('"unit" should be an Unit instance.')
+        else:
+            raise NotImplementedError
+
+        return obj
+
+    def __str__(self):
+        return '%s %s' % (self.factor, self.unit)
+
+    __repr__ = __str__
+
+    def __neg__(self):
+        return Quantity(-self.factor, self.unit)
+
+    def __add__(self, other):
+
+        if isinstance(other, Quantity):
+            if self.unit == other.unit:
+                factor = self.factor + other.factor
+                return Quantity(factor, self.unit)
+            else:
+                raise ValueError('Units should be the same to add quantities.')
+        elif isinstance(other, Unit):
+            if self.unit == other:
+                factor = self.factor + 1
+                return Quantity(factor, self.unit)
+            else:
+                raise ValueError('Units should be the same to add quantities.')
+        else:
+            raise TypeError('Only quantities and units can be added.')
+
+    def __radd__(self, other):
+        return self + other
+
+    def __sub__(self, other):
+
+        if isinstance(other, Quantity):
+            if self.unit == other.unit:
+                return Quantity(self.factor - other.factor, self.unit)
+            else:
+                raise ValueError('Units should be the same to subtract '
+                                 'quantities.')
+        elif isinstance(other, Unit):
+            if self.unit == other:
+                return Quantity(self.factor - 1, self.unit)
+            else:
+                raise ValueError('Units should be the same to subtract '
+                                 'quantities.')
+        else:
+            raise TypeError('Only quantities and units can be subtracted.')
+
+    def __rsub__(self, other):
+       return -self + other
+
+    def __mul__(self, other):
+
+        other = sympify(other)
+        if isinstance(other, Quantity):
+            return Quantity(self.factor*other.factor, self.unit*other.unit)
+        elif isinstance(other, Unit):
+            return Quantity(self.factor, self.unit*other)
+        elif isinstance(other, Number):
+            return Quantity(self.factor*other, self.unit)
+        else:
+            return Mul(self, other)
+
+    def __rmul__(self, other):
+
+        return self*other
+
+    def __div__(self, other):
+
+        other = sympify(other)
+        if isinstance(other, Quantity):
+            return Quantity(self.factor/other.factor, self.unit/other.unit)
+        elif isinstance(other, Unit):
+            return Quantity(self.factor, self.unit/other)
+        elif isinstance(other, Number):
+            return Quantity(self.factor/other, self.unit)
+        else:
+            return Mul(self, other)
+
+    __truediv__ = __div__
+
+    def __rdiv__(self, other):
+
+        other = sympify(other)
+        if isinstance(other, Quantity):
+            return Quantity(other.factor/self.factor, other.unit/self.unit)
+        elif isinstance(other, Unit):
+            return Quantity(1/self.factor, other/self.unit)
+        elif isinstance(other, Number):
+            return Quantity(other/self.factor, self.unit**-1)
+        else:
+            return Mul(self, other)
+
+    __rtruediv__ = __rdiv__
+
+    def __pow__(self, other):
+
+        other = sympify(other)
+        if isinstance(other, Number):
+            return Quantity(self.factor**other, self.unit**other)
+        else:
+            return Pow(self, other)
+
+    def __eq__(self, other):
+        #TODO: interpret an Unit as a quantity with factor 1
+        return (isinstance(other, Quantity) and self.factor == other.factor
+                and self.unit == other.unit)

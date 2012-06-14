@@ -21,6 +21,7 @@ class Dimension(Dict):
     Examples
     ========
 
+    >>> from sympy.physics.units.dimensions import length, time
     >>> velocity = length / time
     >>> velocity
     {length: 1, time: -1}
