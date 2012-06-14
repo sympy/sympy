@@ -263,9 +263,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 # take a symbol arg.  The second arg is `store_history`,
                 # and False means don't add the line to IPython's history.
                 ip.runsource = lambda src, symbol='exec': ip.run_cell(src, False)
+            if not in_ipython:
                 mainloop = ip.mainloop
-            else:
-                mainloop = ip.interact
 
     if auto and (not ipython or IPython.__version__ < '0.11'):
         raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")
