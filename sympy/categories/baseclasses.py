@@ -16,44 +16,14 @@ class Class(Set):
     """
     is_proper = False
 
-class Object(Basic):
+class Object(Symbol):
     """
     The base class for any kind of object in an abstract category.
 
-    While concrete categories may have some concrete SymPy classes as
-    object types, in abstract categories only the name of an object is
-    known.  Anonymous objects are not allowed.
-
-    Two objects with the same name are the same object.
-
-    Examples
-    ========
-
-    >>> from sympy.categories import Object
-    >>> Object("A") == Object("A")
-    True
-
+    While technically any instance of :class:`Basic` will do, this
+    class is the recommended way to create abstract objects in
+    abstract categories.
     """
-    def __new__(cls, name):
-        if not name:
-            raise ValueError("Anonymous Objects are not allowed.")
-
-        return Basic.__new__(cls, Symbol(name))
-
-    @property
-    def name(self):
-        """
-        Returns the name of this object.
-
-        Examples
-        ========
-        >>> from sympy.categories import Object
-        >>> A = Object("A")
-        >>> A.name
-        'A'
-
-        """
-        return self._args[0].name
 
 class Morphism(Basic):
     """
@@ -588,7 +558,7 @@ class Diagram(Basic):
     >>> g = NamedMorphism(B, C, "g")
     >>> d = Diagram([f, g])
     >>> print pretty(d.premises.keys(), use_unicode=False)
-    [id:B->B, id:A->A, id:C->C, f:A->B, g*f:A->C, g:B->C]
+    [f:A->B, id:B->B, g*f:A->C, g:B->C, id:C->C, id:A->A]
     >>> print pretty(d.premises, use_unicode=False)
     {g*f:A->C: EmptySet(), id:A->A: EmptySet(), id:B->B: EmptySet(), id:C->C: Empt
     ySet(), f:A->B: EmptySet(), g:B->C: EmptySet()}
@@ -812,7 +782,7 @@ class Diagram(Basic):
         >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram([f, g])
         >>> d.objects
-        {Object("B"), Object("C"), Object("A")}
+        {Object("C"), Object("B"), Object("A")}
 
         """
         return self.args[2]

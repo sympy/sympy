@@ -5,20 +5,6 @@ from sympy.categories.baseclasses import Class
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import FiniteSet, EmptySet, Dict, Tuple
 
-def test_object():
-    A = Object("A")
-
-    assert A.name == "A"
-
-    assert A == Object("A")
-    assert A != Object("A1")
-
-    assert hash(A) == hash(Object("A"))
-
-    assert A != None
-
-    raises(ValueError, lambda: Object(""))
-
 def test_morphisms():
     A = Object("A")
     B = Object("B")
