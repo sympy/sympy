@@ -2470,7 +2470,7 @@ class MatrixBase(object):
 
             det = sign * M[n-1, n-1]
 
-        return det.expand()
+        return expand(det)
 
     def det_LU_decomposition(self):
         """Compute matrix determinant using LU decomposition
@@ -2502,7 +2502,7 @@ class MatrixBase(object):
         for k in range(n):
             prod = prod*u[k,k]*l[k,k]
 
-        return prod.expand()
+        return expand(prod)
 
     def adjugate(self, method="berkowitz"):
         """
