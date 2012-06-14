@@ -855,27 +855,28 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
         return H
 
 @cythonized("u,mod,i,j,s_arg,negative")
-def dmp_zz_wang(f, u, K, mod=None):
+def dmp_zz_wang(f, u, K, mod=None, random_sequence=None):
     """
     Factor primitive square-free polynomials in `Z[X]`.
 
-    Given a multivariate polynomial `f` in `Z[x_1,...,x_n]`, which
-    is primitive and square-free in `x_1`, computes factorization
-    of `f` into irreducibles over integers.
+    Given a multivariate polynomial `f` in `Z[x_1,...,x_n]`, which is
+    primitive and square-free in `x_1`, computes factorization of `f` into
+    irreducibles over integers.
 
     The procedure is based on Wang's Enhanced Extended Zassenhaus
-    algorithm. The algorithm works by viewing `f` as a univariate
-    polynomial in `Z[x_2,...,x_n][x_1]`, for which an evaluation
-    mapping is computed::
+    algorithm. The algorithm works by viewing `f` as a univariate polynomial
+    in `Z[x_2,...,x_n][x_1]`, for which an evaluation mapping is computed::
 
                       x_2 -> a_2, ..., x_n -> a_n
 
-    where `a_i`, for `i = 2, ..., n`, are carefully chosen integers.
-    The mapping is used to transform `f` into a univariate polynomial
-    in `Z[x_1]`, which can be factored efficiently using Zassenhaus
-    algorithm. The last step is to lift univariate factors to obtain
-    true multivariate factors. For this purpose a parallel Hensel
-    lifting procedure is used.
+    where `a_i`, for `i = 2, ..., n`, are carefully chosen integers.  The
+    mapping is used to transform `f` into a univariate polynomial in `Z[x_1]`,
+    which can be factored efficiently using Zassenhaus algorithm. The last
+    step is to lift univariate factors to obtain true multivariate
+    factors. For this purpose a parallel Hensel lifting procedure is used.
+
+    The parameter ``random_sequence`` can be used to give a manual sequence of
+    random numbers to the algorithm, for testing purposes.
 
     References
     ==========
@@ -884,6 +885,15 @@ def dmp_zz_wang(f, u, K, mod=None):
     2. [Geddes92]_
 
     """
+    def _get_next_random_int(mod):
+        if random_sequence is not None:
+            ret = random_sequence.pop(0)
+            if not -mod <= ret <= mod:
+                raise ValueError("Random value must be between %d and %d, not %d." % (-mod, mod, ret))
+        else:
+            ret = randint(-mod, mod)
+        return ret
+
     ct, T = dmp_zz_factor(dmp_LC(f, K), u-1, K)
 
     b = dmp_zz_mignotte_bound(f, u, K)
@@ -917,7 +927,7 @@ def dmp_zz_wang(f, u, K, mod=None):
 
     while len(configs) < eez_num_configs:
         for _ in xrange(eez_num_tries):
-            A = [ K(randint(-mod, mod)) for _ in xrange(u) ]
+            A = [ K(_get_next_random_int(mod)) for _ in xrange(u) ]
 
             if tuple(A) not in history:
                 history.add(tuple(A))
