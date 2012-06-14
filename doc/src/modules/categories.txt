@@ -20,6 +20,15 @@ Base Class Reference
 .. autoclass:: Morphism
    :members:
 
+.. autoclass:: NamedMorphism
+   :members:
+
+.. autoclass:: CompositeMorphism
+   :members:
+
+.. autoclass:: IdentityMorphism
+   :members:
+
 .. autoclass:: Category
    :members:
 
