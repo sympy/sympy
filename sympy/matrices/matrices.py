@@ -2466,7 +2466,9 @@ class MatrixBase(object):
                         if D.is_Atom:
                             M[i, j] = D
                         else:
+                            was = M[i,j]
                             M[i, j] = cancel(D)
+                            if isinstance(M[i, j], int):print isinstance(was, int), was, type(D), type(cancel(D)),type(M[i,j])
 
             det = sign * M[n-1, n-1]
 
