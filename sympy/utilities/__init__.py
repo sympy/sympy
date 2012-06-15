@@ -3,7 +3,7 @@ SymPy.
 """
 from iterables import (flatten, group, take, subsets,
     variations, numbered_symbols, cartes, capture, dict_merge,
-    postorder_traversal, preorder_traversal, interactive_traversal,
+    postorder_traversal, interactive_traversal,
     prefixes, postfixes, sift, topological_sort, unflatten)
 
 from lambdify import lambdify
