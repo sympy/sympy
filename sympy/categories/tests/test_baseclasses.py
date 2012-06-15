@@ -100,6 +100,9 @@ def test_diagram():
     assert d1.hom(A, A) == (FiniteSet(id_A), empty)
     assert d1.hom(B, B) == (FiniteSet(id_B), empty)
 
+    assert d1 == Diagram([id_A, f])
+    assert d1 == Diagram([f, f])
+
     # Test the addition of composites.
     d2 = Diagram([f, g])
     homAC = d2.hom(A, C)[0]
@@ -122,6 +125,11 @@ def test_diagram():
     # works as expected.
     d = Diagram([f, g], {g * f:"unique"})
     assert d.conclusions[g * f] == FiniteSet("unique")
+
+    # Check the hom-sets when there are premises and conclusions.
+    assert d.hom(A, C) == (FiniteSet(g * f), FiniteSet(g * f))
+    d = Diagram([f, g], [g * f])
+    assert d.hom(A, C) == (FiniteSet(g * f), FiniteSet(g * f))
 
     # Check how the properties of composite morphisms are computed.
     d = Diagram({f:["unique", "isomorphism"], g:"unique"})
@@ -156,5 +164,8 @@ def test_category():
 
     K = Category("K", objects, commutative_diagrams=[d1, d2])
 
+    assert K.name == "K"
     assert K.objects == Class(objects)
     assert K.commutative_diagrams == FiniteSet(d1, d2)
+
+    raises(ValueError, lambda: Category(""))
