@@ -1202,15 +1202,12 @@ class LatexPrinter(Printer):
     def _print_CompositeMorphism(self, morphism):
         from sympy.categories import NamedMorphism
 
-        component_names = ""
-        if all([isinstance(component, NamedMorphism) for component in \
-                morphism.components]):
-            # All components of the morphism have names and it is thus
-            # possible to build the name of the composite.
-            component_names_list = [self._print(Symbol(component.name)) for \
-                                    component in morphism.components]
-            component_names_list.reverse()
-            component_names = "\\circ ".join(component_names_list) + ":"
+        # All components of the morphism have names and it is thus
+        # possible to build the name of the composite.
+        component_names_list = [self._print(Symbol(component.name)) for \
+                                component in morphism.components]
+        component_names_list.reverse()
+        component_names = "\\circ ".join(component_names_list) + ":"
 
         pretty_morphism = self._print_Morphism(morphism)
         return component_names + pretty_morphism

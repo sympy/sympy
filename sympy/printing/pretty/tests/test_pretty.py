@@ -3703,7 +3703,6 @@ def test_categories():
 
     f1 = NamedMorphism(A1, A2, "f1")
     f2 = NamedMorphism(A2, A3, "f2")
-    anonymous = Morphism(A1, A3)
     id_A1 = IdentityMorphism(A1)
 
     K1 = Category("K1")
@@ -3713,8 +3712,6 @@ def test_categories():
 
     assert pretty(f1) == "f1:A1-->A2"
     assert upretty(f1) == u"f₁:A₁⟶  A₂"
-    assert pretty(anonymous) == "A1-->A3"
-    assert upretty(anonymous) == u"A₁⟶  A₃"
     assert pretty(id_A1) == "id:A1-->A1"
     assert upretty(id_A1) == u"id:A₁⟶  A₁"
 
@@ -3723,15 +3720,6 @@ def test_categories():
 
     assert pretty(K1) == "K1"
     assert upretty(K1) == u"K₁"
-
-    # Some further tests for anonymous morphisms.
-    h = Morphism(A2, A3) * Morphism(A1, A2)
-    assert pretty(h) == "A1-->A3"
-    assert upretty(h) == u"A₁⟶  A₃"
-
-    h = NamedMorphism(A2, A3, "f") * Morphism(A1, A2)
-    assert pretty(h) == "A1-->A3"
-    assert upretty(h) == u"A₁⟶  A₃"
 
     # Test how diagrams are printed.
     d = Diagram()

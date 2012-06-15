@@ -12,10 +12,10 @@ def test_morphisms():
     D = Object("D")
 
     # Test the base morphism.
-    f = Morphism(A, B)
+    f = NamedMorphism(A, B, "f")
     assert f.domain == A
     assert f.codomain == B
-    assert f == Morphism(A, B)
+    assert f == NamedMorphism(A, B, "f")
 
     # Test identities.
     id_A = IdentityMorphism(A)
@@ -29,7 +29,6 @@ def test_morphisms():
     g = NamedMorphism(B, C, "g")
     assert g.name == "g"
     assert g != f
-    assert g != Morphism(B, C)
     assert g == NamedMorphism(B, C, "g")
     assert g != NamedMorphism(B, C, "f")
 
@@ -46,7 +45,7 @@ def test_morphisms():
     assert CompositeMorphism(g * f) == g * f
 
     # Test the associativity of composition.
-    h = Morphism(C, D)
+    h = NamedMorphism(C, D, "h")
 
     p = h * g
     u = h * g * f
@@ -56,11 +55,6 @@ def test_morphisms():
     assert CompositeMorphism(f, g, h) == u
 
     # Test flattening.
-    u1 = u.flatten()
-    assert isinstance(u1, Morphism)
-    assert u1.domain == A
-    assert u1.codomain == D
-
     u2 = u.flatten("u")
     assert isinstance(u2, NamedMorphism)
     assert u2.name == "u"
@@ -84,6 +78,7 @@ def test_morphisms():
     raises(TypeError, lambda: CompositeMorphism(f, None, 1))
 
     raises(ValueError, lambda: NamedMorphism(A, B, ""))
+    raises(NotImplementedError, lambda: Morphism(A, B))
 
 def test_diagram():
     A = Object("A")
@@ -151,8 +146,8 @@ def test_category():
     B = Object("B")
     C = Object("C")
 
-    f = Morphism(A, B)
-    g = Morphism(B, C)
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
 
     d1 = Diagram([f, g])
     d2 = Diagram([f])

@@ -38,14 +38,8 @@ class Morphism(Basic):
     be the same morphisms.  To distinguish between morphisms between
     the same objects use :class:`NamedMorphism`.
 
-    Examples
-    ========
-
-    >>> from sympy.categories import Object, Morphism
-    >>> A = Object("A")
-    >>> B = Object("B")
-    >>> Morphism(A, B)
-    Morphism(Object("A"), Object("B"))
+    It is prohibited to instantiate this class.  Use one of the
+    derived classes instead.
 
     See Also
     ========
@@ -53,7 +47,8 @@ class Morphism(Basic):
     IdentityMorphism, NamedMorphism, CompositeMorphism
     """
     def __new__(cls, domain, codomain):
-        return Basic.__new__(cls, domain, codomain)
+        raise(NotImplementedError(
+            "Cannot instantiate Morphism.  Use derived classes instead."))
 
     @property
     def domain(self):
@@ -63,10 +58,10 @@ class Morphism(Basic):
         Examples
         ========
 
-        >>> from sympy.categories import Object, Morphism
+        >>> from sympy.categories import Object, NamedMorphism
         >>> A = Object("A")
         >>> B = Object("B")
-        >>> f = Morphism(A, B)
+        >>> f = NamedMorphism(A, B, "f")
         >>> f.domain
         Object("A")
 
@@ -81,10 +76,10 @@ class Morphism(Basic):
         Examples
         ========
 
-        >>> from sympy.categories import Object, Morphism
+        >>> from sympy.categories import Object, NamedMorphism
         >>> A = Object("A")
         >>> B = Object("B")
-        >>> f = Morphism(A, B)
+        >>> f = NamedMorphism(A, B, "f")
         >>> f.codomain
         Object("B")
 
@@ -101,15 +96,15 @@ class Morphism(Basic):
         Examples
         ========
 
-        >>> from sympy.categories import Object, Morphism
+        >>> from sympy.categories import Object, NamedMorphism
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
-        >>> f = Morphism(A, B)
-        >>> g = Morphism(B, C)
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
         >>> g * f
-        CompositeMorphism((Morphism(Object("A"), Object("B")),
-        Morphism(Object("B"), Object("C"))))
+        CompositeMorphism((NamedMorphism(Object("A"), Object("B"), "f"),
+        NamedMorphism(Object("B"), Object("C"), "g")))
         >>> (g * f).domain
         Object("A")
         >>> (g * f).codomain
@@ -143,10 +138,10 @@ class IdentityMorphism(Morphism):
     Examples
     ========
 
-    >>> from sympy.categories import Object, Morphism, IdentityMorphism
+    >>> from sympy.categories import Object, NamedMorphism, IdentityMorphism
     >>> A = Object("A")
     >>> B = Object("B")
-    >>> f = Morphism(A, B)
+    >>> f = NamedMorphism(A, B, "f")
     >>> id_A = IdentityMorphism(A)
     >>> id_B = IdentityMorphism(B)
     >>> f * id_A == f
@@ -173,7 +168,7 @@ class NamedMorphism(Morphism):
     Examples
     ========
 
-    >>> from sympy.categories import Object, Morphism, NamedMorphism
+    >>> from sympy.categories import Object, NamedMorphism
     >>> A = Object("A")
     >>> B = Object("B")
     >>> f = NamedMorphism(A, B, "f")
@@ -200,7 +195,7 @@ class NamedMorphism(Morphism):
 
         Examples
         ========
-        >>> from sympy.categories import Object, Morphism, NamedMorphism
+        >>> from sympy.categories import Object, NamedMorphism
         >>> A = Object("A")
         >>> B = Object("B")
         >>> f = NamedMorphism(A, B, "f")
@@ -226,15 +221,15 @@ class CompositeMorphism(Morphism):
     Examples
     ========
 
-    >>> from sympy.categories import Object, Morphism, CompositeMorphism
+    >>> from sympy.categories import Object, NamedMorphism, CompositeMorphism
     >>> A = Object("A")
     >>> B = Object("B")
     >>> C = Object("C")
-    >>> f = Morphism(A, B)
-    >>> g = Morphism(B, C)
+    >>> f = NamedMorphism(A, B, "f")
+    >>> g = NamedMorphism(B, C, "g")
     >>> g * f
-    CompositeMorphism((Morphism(Object("A"), Object("B")),
-    Morphism(Object("B"), Object("C"))))
+    CompositeMorphism((NamedMorphism(Object("A"), Object("B"), "f"),
+    NamedMorphism(Object("B"), Object("C"), "g")))
     >>> CompositeMorphism(f, g) == g * f
     True
 
@@ -307,14 +302,15 @@ class CompositeMorphism(Morphism):
         Examples
         ========
 
-        >>> from sympy.categories import Object, Morphism, CompositeMorphism
+        >>> from sympy.categories import Object, NamedMorphism, CompositeMorphism
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
-        >>> f = Morphism(A, B)
-        >>> g = Morphism(B, C)
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
         >>> (g * f).components
-        (Morphism(Object("A"), Object("B")), Morphism(Object("B"), Object("C")))
+        (NamedMorphism(Object("A"), Object("B"), "f"),
+        NamedMorphism(Object("B"), Object("C"), "g"))
 
         """
         return self.args[0]
@@ -330,12 +326,12 @@ class CompositeMorphism(Morphism):
         Examples
         ========
 
-        >>> from sympy.categories import Object, Morphism, CompositeMorphism
+        >>> from sympy.categories import Object, NamedMorphism, CompositeMorphism
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
-        >>> f = Morphism(A, B)
-        >>> g = Morphism(B, C)
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
         >>> (g * f).domain
         Object("A")
 
@@ -353,19 +349,19 @@ class CompositeMorphism(Morphism):
         Examples
         ========
 
-        >>> from sympy.categories import Object, Morphism, CompositeMorphism
+        >>> from sympy.categories import Object, NamedMorphism, CompositeMorphism
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
-        >>> f = Morphism(A, B)
-        >>> g = Morphism(B, C)
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
         >>> (g * f).codomain
         Object("C")
 
         """
         return self.components[-1].codomain
 
-    def flatten(self, new_name=None):
+    def flatten(self, new_name):
         """
         Forgets the composite structure of this morphism.
 
@@ -378,22 +374,17 @@ class CompositeMorphism(Morphism):
         Examples
         ========
 
-        >>> from sympy.categories import Object, Morphism, CompositeMorphism
+        >>> from sympy.categories import Object, NamedMorphism, CompositeMorphism
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
-        >>> f = Morphism(A, B)
-        >>> g = Morphism(B, C)
-        >>> (g * f).flatten()
-        Morphism(Object("A"), Object("C"))
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
         >>> (g * f).flatten("h")
         NamedMorphism(Object("A"), Object("C"), "h")
 
         """
-        if new_name:
-            return NamedMorphism(self.domain, self.codomain, new_name)
-        else:
-            return Morphism(self.domain, self.codomain)
+        return NamedMorphism(self.domain, self.codomain, new_name)
 
 class Category(Basic):
     r"""
@@ -430,13 +421,13 @@ class Category(Basic):
     Examples
     ========
 
-    >>> from sympy.categories import Object, Morphism, Diagram, Category
+    >>> from sympy.categories import Object, NamedMorphism, Diagram, Category
     >>> from sympy import FiniteSet
     >>> A = Object("A")
     >>> B = Object("B")
     >>> C = Object("C")
-    >>> f = Morphism(A, B)
-    >>> g = Morphism(B, C)
+    >>> f = NamedMorphism(A, B, "f")
+    >>> g = NamedMorphism(B, C, "g")
     >>> d = Diagram([f, g])
     >>> K = Category("K", commutative_diagrams=[d])
     >>> K.commutative_diagrams == FiniteSet(d)
@@ -495,13 +486,13 @@ class Category(Basic):
         Returns the :class:`FiniteSet` of diagrams which are known to
         be commutative in this category.
 
-        >>> from sympy.categories import Object, Morphism, Diagram, Category
+        >>> from sympy.categories import Object, NamedMorphism, Diagram, Category
         >>> from sympy import FiniteSet
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
-        >>> f = Morphism(A, B)
-        >>> g = Morphism(B, C)
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram([f, g])
         >>> K = Category("K", commutative_diagrams=[d])
         >>> K.commutative_diagrams == FiniteSet(d)

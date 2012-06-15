@@ -581,24 +581,16 @@ def test_categories():
 
     f1 = NamedMorphism(A1, A2, "f1")
     f2 = NamedMorphism(A2, A3, "f2")
-    anonymous = Morphism(A1, A3)
     id_A1 = IdentityMorphism(A1)
 
     K1 = Category("K1")
 
     assert latex(A1) == "A_{1}"
     assert latex(f1) == "f_{1}:A_{1}\\rightarrow A_{2}"
-    assert latex(anonymous) == "A_{1}\\rightarrow A_{3}"
     assert latex(id_A1) == "id:A_{1}\\rightarrow A_{1}"
     assert latex(f2*f1) == "f_{2}\\circ f_{1}:A_{1}\\rightarrow A_{3}"
 
     assert latex(K1) == "\mathbf{K_{1}}"
-
-    h = Morphism(A2, A3) * Morphism(A1, A2)
-    assert latex(h) == "A_{1}\\rightarrow A_{3}"
-
-    h = NamedMorphism(A2, A3, "f") * Morphism(A1, A2)
-    assert latex(h) == "A_{1}\\rightarrow A_{3}"
 
     d = Diagram()
     assert latex(d) == "\emptyset"

@@ -1478,15 +1478,12 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             circle = u"\u2218"
 
-        component_names = ""
-        if all([isinstance(component, NamedMorphism) for component in \
-                morphism.components]):
-            # All components of the morphism have names and it is thus
-            # possible to build the name of the composite.
-            component_names_list = [pretty_symbol(component.name) for \
-                                    component in morphism.components]
-            component_names_list.reverse()
-            component_names = circle.join(component_names_list) + ":"
+        # All components of the morphism have names and it is thus
+        # possible to build the name of the composite.
+        component_names_list = [pretty_symbol(component.name) for \
+                                component in morphism.components]
+        component_names_list.reverse()
+        component_names = circle.join(component_names_list) + ":"
 
         pretty_name = self._print(component_names)
         pretty_morphism = self._print_Morphism(morphism)

@@ -480,14 +480,12 @@ def test_categories():
     B = Object("B")
 
     f = NamedMorphism(A, B, "f")
-    g = Morphism(A, B)
     id_A = IdentityMorphism(A)
 
     K = Category("K")
 
     assert str(A) == 'Object("A")'
     assert str(f) == 'NamedMorphism(Object("A"), Object("B"), "f")'
-    assert str(g) == 'Morphism(Object("A"), Object("B"))'
     assert str(id_A) == 'IdentityMorphism(Object("A"))'
 
     assert str(K) == 'Category("K")'

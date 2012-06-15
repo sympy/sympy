@@ -1946,6 +1946,7 @@ def test_sympy__categories__baseclasses__Object():
     from sympy.categories import Object
     assert _test_args(Object("A"))
 
+@XFAIL
 def test_sympy__categories__baseclasses__Morphism():
     from sympy.categories import Object, Morphism
     assert _test_args(Morphism(Object("A"), Object("B")))
@@ -1959,30 +1960,30 @@ def test_sympy__categories__baseclasses__NamedMorphism():
     assert _test_args(NamedMorphism(Object("A"), Object("B"), "f"))
 
 def test_sympy__categories__baseclasses__CompositeMorphism():
-    from sympy.categories import Object, Morphism, CompositeMorphism
+    from sympy.categories import Object, NamedMorphism, CompositeMorphism
     A = Object("A")
     B = Object("B")
     C = Object("C")
-    f = Morphism(A, B)
-    g = Morphism(B, C)
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
     assert _test_args(CompositeMorphism(f, g))
 
 def test_sympy__categories__baseclasses__Diagram():
-    from sympy.categories import Object, Morphism, Diagram, Category
+    from sympy.categories import Object, NamedMorphism, Diagram, Category
     A = Object("A")
     B = Object("B")
     C = Object("C")
-    f = Morphism(A, B)
+    f = NamedMorphism(A, B, "f")
     d = Diagram([f])
     assert _test_args(d)
 
 def test_sympy__categories__baseclasses__Category():
-    from sympy.categories import Object, Morphism, Diagram, Category
+    from sympy.categories import Object, NamedMorphism, Diagram, Category
     A = Object("A")
     B = Object("B")
     C = Object("C")
-    f = Morphism(A, B)
-    g = Morphism(B, C)
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
     d1 = Diagram([f, g])
     d2 = Diagram([f])
     K = Category("K", commutative_diagrams=[d1, d2])
