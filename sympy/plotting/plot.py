@@ -26,8 +26,7 @@ from inspect import getargspec
 from itertools import repeat, izip
 from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
-from sympy.core.compatibility import reduce
-from sympy.utilities import default_sort_key
+from sympy.core.compatibility import set_union
 
 from experimental_lambdify import vectorized_lambdify
 
@@ -306,7 +305,7 @@ def plot(*args, **kwargs):
         """
         lists = [i for i in plot if isinstance(i, list)]
         not_lists = [i for i in plot if not isinstance(i, list)]
-        return [list(i) + not_lists for l in zip(*lists)]
+        return [list(l) + not_lists for l in zip(*lists)]
 
     for a in list_arguments:
         list_of_plots.extend(expand(a))
@@ -324,15 +323,9 @@ def plot(*args, **kwargs):
         assert all(isinstance(e, Expr) for e in exprs)
         assert all(isinstance(t, Tuple) for t in plot[i:])
 
-        # TODO: make a variables and free_symbols method for a pl instance
         ranges = set([i for i in plot[i:] if isinstance(i, Tuple) and len(i) > 1])
         range_variables = set([t[0] for t in ranges if len(t) == 3])
-
-        #TODO when we drop 2.5 remove this ugly reduce and just call set.union
-        #on the list
-        expr_free = reduce(set.union,
-            [e.free_symbols for e in exprs if isinstance(e, Expr)])
-
+        expr_free = set_union(*[e.free_symbols for e in exprs if isinstance(e, Expr)])
 
         default_range = Tuple(-10, 10)
 
