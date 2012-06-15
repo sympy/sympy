@@ -1694,12 +1694,12 @@ def test_exp():
     assert m.exp() == Matrix([[E,0],[0,E]])
 
 def test_SparseMatrix_transpose():
-    assert SparseMatrix((1,2),(3,4)).transpose() == SparseMatrix((1,3),(2,4))
+    assert SparseMatrix(((1,2),(3,4))).transpose() == Matrix(((1,3),(2,4)))
 
 def test_SparseMatrix_CL_RL():
-    assert SparseMatrix((1,2),(3,4)).row_list() == \
+    assert SparseMatrix(((1,2),(3,4))).row_list() == \
         [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
-    assert SparseMatrix((1,2),(3,4)).col_list() == \
+    assert SparseMatrix(((1,2),(3,4))).col_list() == \
         [(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
 
 def test_SparseMatrix_add():
@@ -1770,7 +1770,7 @@ def test_errors():
     raises(ValueError, lambda: hessian(Matrix([[1, 2], [3, 4]]), []))
     raises(ValueError, lambda: hessian(Symbol('x')**2, 'a'))
     raises(TypeError, lambda: SparseMatrix(1.4, 2, lambda i, j: 0))
-    raises(ValueError, lambda: SparseMatrix([1, 2, 3], [1, 2]))
+    raises(TypeError, lambda: SparseMatrix([1, 2, 3], [1, 2]))
     raises(ValueError, lambda: SparseMatrix([[1, 2], [3, 4]])[(1, 2, 3)])
     raises(ValueError, lambda: SparseMatrix([[1, 2], [3, 4]]).rowdecomp(5))
     with raises(ValueError):
