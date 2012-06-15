@@ -2470,7 +2470,7 @@ class MatrixBase(object):
 
             det = sign * M[n-1, n-1]
 
-        return expand(det)
+        return det.expand()
 
     def det_LU_decomposition(self):
         """Compute matrix determinant using LU decomposition
@@ -2502,7 +2502,7 @@ class MatrixBase(object):
         for k in range(n):
             prod = prod*u[k,k]*l[k,k]
 
-        return expand(prod)
+        return prod.expand()
 
     def adjugate(self, method="berkowitz"):
         """
@@ -4326,7 +4326,7 @@ class SparseMatrix(MatrixBase):
             for i in range(self.rows):
                 for j in range(self.cols):
                     value = sympify(op(i,j))
-                    if value != 0 and value != None:
+                    if value:
                         self.mat[(i,j)] = value
         elif len(args)==3 and isinstance(args[0],int) and \
                 isinstance(args[1],int) and is_sequence(args[2]):
