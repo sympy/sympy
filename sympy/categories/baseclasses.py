@@ -180,7 +180,7 @@ class NamedMorphism(Morphism):
     See Also
     ========
 
-    Moprhism
+    Morphism
     """
     def __new__(cls, domain, codomain, name):
         if not name:
@@ -343,7 +343,7 @@ class CompositeMorphism(Morphism):
         """
         Returns the codomain of this composite morphism.
 
-        The domain of the composite morphism is the codomain of its
+        The codomain of the composite morphism is the codomain of its
         last component.
 
         Examples
@@ -541,20 +541,20 @@ class Diagram(Basic):
     ========
 
     >>> from sympy.categories import Object, NamedMorphism, Diagram
-    >>> from sympy import FiniteSet, pretty
+    >>> from sympy import FiniteSet, pprint
     >>> A = Object("A")
     >>> B = Object("B")
     >>> C = Object("C")
     >>> f = NamedMorphism(A, B, "f")
     >>> g = NamedMorphism(B, C, "g")
     >>> d = Diagram([f, g])
-    >>> print pretty(d.premises.keys(), use_unicode=False)
+    >>> pprint(d.premises.keys(), use_unicode=False)
     [f:A-->B, id:B-->B, g*f:A-->C, g:B-->C, id:C-->C, id:A-->A]
-    >>> print pretty(d.premises, use_unicode=False)
+    >>> pprint(d.premises, use_unicode=False)
     {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
     EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
     >>> d = Diagram([f, g], {g * f:"unique"})
-    >>> print pretty(d.conclusions)
+    >>> pprint(d.conclusions)
     {g*f:A-->C: {unique}}
 
     References

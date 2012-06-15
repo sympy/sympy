@@ -1453,7 +1453,6 @@ class PrettyPrinter(Printer):
         arrow = "-->"
         if self._use_unicode:
             arrow = u"\u27f6  "
-            circle = u"\u2218"
 
         domain = self._print(morphism.domain)
         codomain = self._print(morphism.codomain)
