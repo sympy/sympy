@@ -1,7 +1,7 @@
 """This tests sympy/core/basic.py with (ideally) no reference to subclasses
 of Basic or Atom."""
 
-from sympy.core.basic import Basic, Atom
+from sympy.core.basic import Basic, Atom, preorder_traversal
 from sympy.core.singleton import S, Singleton
 
 from sympy.utilities.pytest import raises
@@ -103,3 +103,17 @@ def test_Singleton():
     assert instanciated == 2
     assert MySingleton_sub() is not MySingleton()
     assert MySingleton_sub() is MySingleton_sub()
+
+def test_preorder_traversal():
+    expr = Basic(b21, b3)
+    assert list(preorder_traversal(expr)) == [expr, b21, b2, b1, b1, b3, b2, b1]
+    assert list(preorder_traversal(('abc', ('d', 'ef')))) == [
+        ('abc', ('d', 'ef')), 'abc', ('d', 'ef'), 'd', 'ef']
+
+    result = []
+    pt = preorder_traversal(expr)
+    for i in pt:
+        result.append(i)
+        if i == b2:
+            pt.skip()
+    assert result == [expr, b21, b2, b1, b3, b2]
