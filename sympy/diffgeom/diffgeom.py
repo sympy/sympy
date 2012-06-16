@@ -7,7 +7,6 @@ from sympy.core.compatibility import reduce
 # TODO maybe a common class Field makes sense
 # TODO you are a bit excessive in the use of Dummies
 # TODO dummy point
-# TODO dim property
 
 class Manifold(Basic):
     """Object representing a mathematical manifold.
@@ -60,6 +59,9 @@ class Patch(Basic):
         # The list of coordinate systems is necessary for an instance of
         # CoordSystem to enumerate other coord systems on the patch.
 
+    @property
+    def dim(self):
+        return self.manifold.dim
 
 class CoordSystem(Basic):
     """Contains all coordinate transformation logic.
@@ -194,7 +196,7 @@ class CoordSystem(Basic):
         Takes a point and returns its coordinate in this coordinate system.
 
         See the docstring of `CoordSystem` for examples."""
-        args = [Dummy() for i in range(self.patch.manifold.dim)]
+        args = [Dummy() for i in range(self.dim)]
         result = args[coord_index]
         return ScalarField(self, args, result)
 
@@ -202,7 +204,7 @@ class CoordSystem(Basic):
         """Returns a list of all coordinate functions.
 
         For more details see the coord_function method of this class."""
-        return [self.coord_function(i) for i in range(self.patch.manifold.dim)]
+        return [self.coord_function(i) for i in range(self.dim)]
 
     def base_vector(self, coord_index):
         """Return a basis VectorField.
@@ -211,8 +213,8 @@ class CoordSystem(Basic):
         operator on scalar fields.
 
         See the docstring of `CoordSystem` for examples."""
-        args = [Dummy() for i in range(self.patch.manifold.dim)]
-        result = [0,] * self.patch.manifold.dim
+        args = [Dummy() for i in range(self.dim)]
+        result = [0,] * self.dim
         result[coord_index] = 1
         return VectorField(self, args, result)
 
@@ -220,7 +222,7 @@ class CoordSystem(Basic):
         """Returns a list of all base vectors.
 
         For more details see the base_vector method of this class."""
-        return [self.base_vector(i) for i in range(self.patch.manifold.dim)]
+        return [self.base_vector(i) for i in range(self.dim)]
 
     def base_oneform(self, coord_index):
         """Return a basis OneFormField.
@@ -229,8 +231,8 @@ class CoordSystem(Basic):
         operator on vector fields.
 
         See the docstring of `CoordSystem` for examples."""
-        args = [Dummy() for i in range(self.patch.manifold.dim)]
-        result = [0,] * self.patch.manifold.dim
+        args = [Dummy() for i in range(self.dim)]
+        result = [0,] * self.dim
         result[coord_index] = 1
         return OneFormField(self, args, result)
 
@@ -238,7 +240,7 @@ class CoordSystem(Basic):
         """Returns a list of all base oneforms.
 
         For more details see the base_oneform method of this class."""
-        return [self.base_oneform(i) for i in range(self.patch.manifold.dim)]
+        return [self.base_oneform(i) for i in range(self.dim)]
 
     def point(self, coords):
         """Create a `Point` with coordinates given in this coord system.
@@ -252,6 +254,9 @@ class CoordSystem(Basic):
         See the docstring of `CoordSystem` for examples."""
         return point.coords(self)
 
+    @property
+    def dim(self):
+        return self.patch.dim
 
 class Point(Basic):
     """Point in a Manifold object.
@@ -493,7 +498,7 @@ class OneFormField(Expr):
 def differential(scalar_field, coord_sys):
     """Return the differential of a scalar field."""
     # TODO Does it make sense to have a flag is_exact_differential for one-forms?
-    coords = [Dummy() for i in range(coord_sys.patch.manifold.dim)]
+    coords = [Dummy() for i in range(coord_sys.dim)]
     vects = coord_sys.base_vectors()
     p = coord_sys.point(coords)
     return OneFormField(coord_sys, coords,
@@ -648,8 +653,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 
     """
     coord_sys = coord_sys if coord_sys else start_point._coord_sys
-    # TODO on the next line the argument in range is hilariously long.
-    gammas = [Function('f_%d'%i)(param) for i in range(start_point._coord_sys.patch.manifold.dim)]
+    gammas = [Function('f_%d'%i)(param) for i in range(start_point._coord_sys.dim)]
     arbitrary_p = Point(coord_sys, gammas)
     coord_functions = coord_sys.coord_functions()
     equations = [diff(cf(arbitrary_p), param) - vector_field(cf)(arbitrary_p)
