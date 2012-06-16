@@ -244,6 +244,10 @@ class sin(TrigonometricFunction):
             x = arg.args[0]
             return x / sqrt(1 + x**2)
 
+        if arg.func is atan2:
+            y, x = arg.args
+            return y / sqrt(x**2 + y**2)
+
         if arg.func is acos:
             x = arg.args[0]
             return sqrt(1 - x**2)
@@ -476,6 +480,10 @@ class cos(TrigonometricFunction):
             x = arg.args[0]
             return 1 / sqrt(1 + x**2)
 
+        if arg.func is atan2:
+            y, x = arg.args
+            return x / sqrt(x**2 + y**2)
+
         if arg.func is asin:
             x = arg.args[0]
             return sqrt(1 - x ** 2)
@@ -686,6 +694,10 @@ class tan(TrigonometricFunction):
         if arg.func is atan:
             return arg.args[0]
 
+        if arg.func is atan2:
+            y, x = arg.args
+            return y/x
+
         if arg.func is asin:
             x = arg.args[0]
             return x / sqrt(1 - x**2)
@@ -871,6 +883,10 @@ class cot(TrigonometricFunction):
         if arg.func is atan:
             x = arg.args[0]
             return 1 / x
+
+        if arg.func is atan2:
+            y, x = arg.args
+            return x/y
 
         if arg.func is asin:
             x = arg.args[0]
