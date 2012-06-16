@@ -463,7 +463,7 @@ class OneFormField(Expr):
     >>> dy(e_x)(p)
     0
     >>> dx(e_theta)(p)
-    -sqrt(x0**2 + y0**2)*sin(atan2(y0, x0))
+    -y0
 
     """
     def __init__(self, coord_sys, coords, components):
@@ -624,11 +624,12 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 
     Use the predefined R2 manifold:
     >>> from sympy.abc import t
+    >>> from sympy import simplify
     >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
     >>> from sympy.diffgeom import intcurve_diffequ
 
     Specify a starting point and a vector field:
-    >>> start_point = R2_r.point([1, 0])
+    >>> start_point = R2_r.point([0, 1])
     >>> vector_field = -R2.y*R2.e_x + R2.x*R2.e_y
 
     Get the equation:
@@ -636,13 +637,14 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     >>> equations
     [f_1(t) + Derivative(f_0(t), t), -f_0(t) + Derivative(f_1(t), t)]
     >>> init_cond
-    [f_0(0) - 1, f_1(0)]
+    [f_0(0), f_1(0) - 1]
 
-    The series in the polar coordinate system: #TODO check by hand for correctness
+    The series in the polar coordinate system:
     >>> equations, init_cond = intcurve_diffequ(vector_field, t, start_point, R2_p)
-    >>> #TODO correct but too complicated >>> equations
+    >>> [simplify(e) for e in equations]
+    [Derivative(f_0(t), t), Derivative(f_1(t), t) - 1]
     >>> init_cond
-    [f_0(0) - 1, f_1(0)]
+    [f_0(0) - 1, f_1(0) - pi/2]
 
     """
     coord_sys = coord_sys if coord_sys else start_point._coord_sys

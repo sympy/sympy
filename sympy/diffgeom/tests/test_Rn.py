@@ -28,9 +28,7 @@ def test_functional_diffgeom_ch2():
     p1_in_rect = R2_r.point([x0, y0])
     p1_in_polar = R2_p.point([sqrt(x0**2 + y0**2), atan2(y0,x0)])
     assert field(p1_in_rect) == f(x0, y0)
-    # TODO better simplification for the next one
-    #print simplify(field(p1_in_polar))
-    #assert simplify(field(p1_in_polar)) == f(x0, y0)
+    assert simplify(field(p1_in_polar)) == f(x0, y0)
 
     p_r = R2_r.point([x0, y0])
     p_p = R2_p.point([r0, theta0])
