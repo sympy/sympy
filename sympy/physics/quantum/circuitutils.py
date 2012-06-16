@@ -4,6 +4,7 @@ from random import Random
 from sympy import Symbol, Integer, Tuple, Mul, sympify
 from sympy.utilities import numbered_symbols
 from sympy.physics.quantum.gate import Gate
+from functools import reduce
 
 __all__ = [
     'kmp_table',
@@ -14,6 +15,14 @@ __all__ = [
     'random_reduce',
     'random_insert'
 ]
+
+def randint(i, j, gen=None):
+    """Return a random integer in [i, j]."""
+
+    if gen is None:
+        gen = Random()
+
+    return i + int(gen.random()*(j - i + 1))
 
 def kmp_table(word):
     """Build the 'partial match' table of the
@@ -242,14 +251,14 @@ def convert_to_symbolic_indices(seq, start=None, gen=None, qubit_map=None):
 
     # A numbered symbol generator
     index_gen = numbered_symbols(prefix='i', start=-1)
-    cur_ndx = index_gen.next()
+    cur_ndx = next(index_gen)
 
     # keys are symbolic indices; values are real indices
     ndx_map = {}
 
     def create_inverse_map(symb_to_real_map):
         rev_items = lambda item: tuple([item[1], item[0]])
-        return dict(map(rev_items, symb_to_real_map.items()))
+        return dict(list(map(rev_items, list(symb_to_real_map.items()))))
 
     if start is not None:
         if not isinstance(start, Symbol):
@@ -299,7 +308,7 @@ def convert_to_symbolic_indices(seq, start=None, gen=None, qubit_map=None):
             sym_item = inv_map[item]
 
         else:
-            cur_ndx = gen.next()
+            cur_ndx = next(gen)
             ndx_map[cur_ndx] = item
             inv_map[item] = cur_ndx
             sym_item = cur_ndx
@@ -391,8 +400,8 @@ def random_reduce(circuit, gate_ids, seed=None):
         circuit = circuit.args
 
     # Create the random integer generator with the seed
-    int_gen = Random()
-    int_gen.seed(seed)
+    gen = Random()
+    gen.seed(seed)
 
     # Flatten the GateIdentity objects (with gate rules)
     # into one single list
@@ -402,7 +411,7 @@ def random_reduce(circuit, gate_ids, seed=None):
 
     # Look for an identity in circuit
     while len(ids) > 0 and not found:
-        remove_index = int_gen.randint(0, len(ids) - 1)
+        remove_index = randint(0, len(ids) - 1, gen)
         remove_id = ids[remove_index]
         ids.remove(remove_id)
         found = find_subcircuit(circuit, remove_id) > -1
@@ -437,11 +446,11 @@ def random_insert(circuit, choices, seed=None):
         circuit = circuit.args
 
     # Create the random integer generator with the seed
-    int_gen = Random()
-    int_gen.seed(seed)
+    gen = Random()
+    gen.seed(seed)
 
-    insert_loc = int_gen.randint(0, len(circuit))
-    insert_circuit_loc = int_gen.randint(0, len(choices)-1)
+    insert_loc = randint(0, len(circuit), gen)
+    insert_circuit_loc = randint(0, len(choices)-1, gen)
     insert_circuit = choices[insert_circuit_loc]
 
     left = circuit[0:insert_loc]
