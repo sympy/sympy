@@ -185,7 +185,22 @@ def ode_system_wo_ic(exprs, funcs, var):
     Returns a dictionary of the solutions. It is not necessary to return Eq
     instance because for linear homogeneous systems it is always possible to
     solve. Moreover this is for internal use, thus simplicity is more important
-    than consistency with the public api."""
+    than consistency with the public api.
+
+    TODO: it fails on triangular systems
+    TODO: it does not support nonhomogeneous systems
+
+    >>> from sympy import Symbol, Function
+    >>> from sympy.solvers.ode_system import ode_system_wo_ic
+    >>> x = Symbol('x')
+    >>> f = Function('f')(x)
+    >>> g = Function('g')(x)
+    >>> f_ = f.diff(x)
+    >>> g_ = g.diff(x)
+    >>> d = ode_system_wo_ic([f_+g, g_+f], [f, g], x)
+    >>> d[g]-d[f]
+    2*C1*exp(x)
+    """
     exprs, funcs, subs = remove_higher_derivatives(exprs, funcs, var)
     matrix = construct_matrix(exprs, funcs, var)
     transf_matrix, diag_matrix = matrix.diagonalize()
@@ -196,7 +211,16 @@ def ode_system_wo_ic(exprs, funcs, var):
 def ode_diagonal_system(diag_matrix, var):
     """Given a diagonal matrix, solve the coresponding ODEs.
 
-    Returns the vector of solutions as expressions dependent on `var`."""
+    Returns the vector of solutions as expressions dependent on `var`.
+
+    >>> from sympy import Symbol, Matrix
+    >>> from sympy.solvers.ode_system import ode_diagonal_system
+    >>> x = Symbol('x')
+    >>> m = Matrix([[x, 0], [x**2, 0]])
+    >>> ode_diagonal_system(m, x)
+    [C1*exp(x**2/2)]
+    [C1*exp(x**3/3)]
+    """
     size = diag_matrix.shape[0]
     funcs = Matrix(size, 1, lambda a,b:dummy_func()(var))
     derivs = Matrix([f.diff(var) for f in funcs])
@@ -209,11 +233,26 @@ def construct_matrix(exprs, funcs, var):
     """For a system of first order ODEs, construct the coresponding matrix.
 
     The input `exprs` should not contain complicated derivative expressions.
+
+    >>> from sympy import Symbol, Function
+    >>> from sympy.solvers.ode_system import construct_matrix
+    >>> x = Symbol('x')
+    >>> f = Function('f')(x)
+    >>> g = Function('g')(x)
+    >>> f_ = f.diff(x)
+    >>> g_ = g.diff(x)
+    >>> construct_matrix([f_+g, g_+f], [f, g], x)
+    [ 0, -1]
+    [-1,  0]
     """
     derivs = [f.diff(var) for f in funcs]
-    sol_dict = solve(exprs, derivs)
-    matrix_content = [[sol_dict[d].coeff(f) for f in funcs]
-                                            for d in derivs]
+    sol_dict = solve(exprs, derivs, dict=True)
+    if sol_dict:
+        sol_dict=sol_dict[0]
+        matrix_content = [[sol_dict[d].coeff(f) for f in funcs]
+                                                for d in derivs]
+    else:
+        raise ValueError('Inconsistent system of equations.')
     return Matrix(matrix_content)
 
 
@@ -237,6 +276,21 @@ def remove_higher_derivatives(exprs, funcs, var, subs={}):
     - exprs - the higher derivatives were substituted and additional equation were added
     - funcs - the functions wrt which to solve with the new dummy function appended at the end
     - subs  - dictionarry of substitutions to remove the dummy functions
+
+    >>> from sympy import Symbol, Function
+    >>> from sympy.solvers.ode_system import remove_higher_derivatives
+    >>> x = Symbol('x')
+    >>> f = Function('f')(x)
+    >>> g = Function('g')(x)
+    >>> f__ = f.diff(x, 2)
+    >>> g_ = g.diff(x)
+    >>> exprs, funcs, subs = remove_higher_derivatives([f__+g, g_+f], [f, g], x)
+    >>> exprs
+    [g(x) + Derivative(rrn1(x), x), f(x) + Derivative(g(x), x), rrn1(x) - Derivative(f(x), x)]
+    >>> funcs
+    [f(x), g(x), rrn1(x)]
+    >>> subs
+    {rrn1(x): Derivative(f(x), x)}
     """
     higher_order = list(set(d for e in exprs for d in e.atoms(Derivative)
                               if order_wrt(d, var)>1))
