@@ -503,7 +503,7 @@ def differential(scalar_field, coord_sys):
 ###############################################################################
 # Integral curves on vector fields
 ###############################################################################
-def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None):
+def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeffs=False):
     """Return the series expansion for an integral curve of the field.
 
     Integral curve is a function `gamma` taking a parameter in R to a point
@@ -527,6 +527,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None):
     - start_point - the point which coresponds to `gamma(0)`
     - n - the order to which to expand
     - coord_sys - the coordinate system in which to expand
+    - coeffs (default False) - if True return a list of elements of the expansion
 
     See Also: intcurve_diffequ
 
@@ -543,7 +544,12 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None):
     >>> vector_field = R2_r.e_x
 
     Calculate the series:
-    >>> series = intcurve_series(vector_field, t, start_point, n=3)
+    >>> intcurve_series(vector_field, t, start_point, n=3)
+    [t + x]
+    [    y]
+
+    Or get the elements of the expansion in a list:
+    >>> series = intcurve_series(vector_field, t, start_point, n=3, coeffs=True)
     >>> series[0]
     [x]
     [y]
@@ -555,7 +561,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None):
     [0]
 
     The series in the polar coordinate system: #TODO check by hand for correctness
-    >>> series = intcurve_series(vector_field, t, start_point, 3, R2_p)
+    >>> series = intcurve_series(vector_field, t, start_point, n=3, coord_sys=R2_p, coeffs=True)
     >>> series[0]
     [sqrt(x**2 + y**2)]
     [      atan2(y, x)]
@@ -576,8 +582,11 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None):
                 for i in range(n)]
     coord_sys = coord_sys if coord_sys else start_point._coord_sys
     coord_functions = coord_sys.coord_functions()
-    taylor_terms = zip(*[taylor_terms_per_coord(f) for f in coord_functions])
-    return [Matrix(t) for t in taylor_terms]
+    taylor_terms = [taylor_terms_per_coord(f) for f in coord_functions]
+    if coeffs:
+        return [Matrix(t) for t in zip(*taylor_terms)]
+    else:
+        return Matrix([sum(c) for c in taylor_terms])
 
 
 def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):

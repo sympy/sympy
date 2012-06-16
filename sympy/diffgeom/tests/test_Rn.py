@@ -65,7 +65,7 @@ def test_functional_diffgeom_ch3():
     assert v(s)(p_r) == 2*x0 + 4*y0 + 3
 
     circ = -R2.y*R2.e_x + R2.x*R2.e_y
-    series = intcurve_series(circ, t, R2_r.point([1, 0]))
+    series = intcurve_series(circ, t, R2_r.point([1, 0]), coeffs=True)
     series_x, series_y = zip(*series)
     assert all([term == cos(t).taylor_term(i,t) for i, term in enumerate(series_x)])
     assert all([term == sin(t).taylor_term(i,t) for i, term in enumerate(series_y)])
