@@ -149,6 +149,11 @@ def test_diagram():
     d = Diagram(Dict({f:FiniteSet("unique", "isomorphism"), g:"unique"}))
     assert d.premises[g * f] == FiniteSet("unique")
 
+    # Check the addition of components of composite morphisms.
+    d = Diagram([g * f])
+    assert f in d.premises
+    assert g in d.premises
+
 def test_category():
     A = Object("A")
     B = Object("B")

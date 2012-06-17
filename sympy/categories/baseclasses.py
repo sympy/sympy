@@ -520,6 +520,9 @@ class Diagram(Basic):
     the diagram.  For a more formal approach to this notion see
     [Pare1970].
 
+    The components of composite morphisms are also added to the
+    diagram.  No properties are assigned to such morphisms by default.
+
     A commutative diagram is often accompanied by a statement of the
     following kind: "if such morphisms with such properties exist,
     then such morphisms which such properties exist and the diagram is
@@ -611,6 +614,13 @@ class Diagram(Basic):
                 if morphism.codomain == existing_morphism.domain:
                     right = existing_morphism * morphism
                     Diagram._set_dict_union(morphisms, right, new_props)
+
+            if isinstance(morphism, CompositeMorphism):
+                # This is a composite morphism, add its components as
+                # well.
+                empty = EmptySet()
+                for component in morphism.components:
+                    Diagram._add_morphism(morphisms, component, empty)
 
     def __new__(cls, *args):
         """
