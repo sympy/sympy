@@ -2,7 +2,7 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
-from sympy.core import S, C, Add
+from sympy.core import S, C, Add, Symbol
 from sympy.core.function import _coeff_isneg
 from printer import Printer
 from conventions import split_super_sub
@@ -1181,6 +1181,51 @@ class LatexPrinter(Printer):
     def _print_DMF(self, p):
         return self._print_DMP(p)
 
+    def _print_Object(self, object):
+        return self._print(Symbol(object.name))
+
+    def _print_Morphism(self, morphism):
+        domain = self._print(morphism.domain)
+        codomain = self._print(morphism.codomain)
+        return "%s\\rightarrow %s" % (domain, codomain)
+
+    def _print_NamedMorphism(self, morphism):
+        pretty_name = self._print(Symbol(morphism.name))
+        pretty_morphism = self._print_Morphism(morphism)
+        return "%s:%s" % (pretty_name, pretty_morphism)
+
+    def _print_IdentityMorphism(self, morphism):
+        from sympy.categories import NamedMorphism
+        return self._print_NamedMorphism(NamedMorphism(
+            morphism.domain, morphism.codomain, "id"))
+
+    def _print_CompositeMorphism(self, morphism):
+        from sympy.categories import NamedMorphism
+
+        # All components of the morphism have names and it is thus
+        # possible to build the name of the composite.
+        component_names_list = [self._print(Symbol(component.name)) for \
+                                component in morphism.components]
+        component_names_list.reverse()
+        component_names = "\\circ ".join(component_names_list) + ":"
+
+        pretty_morphism = self._print_Morphism(morphism)
+        return component_names + pretty_morphism
+
+    def _print_Category(self, morphism):
+        return "\\mathbf{%s}" % self._print(Symbol(morphism.name))
+
+    def _print_Diagram(self, diagram):
+        if not diagram.premises:
+            # This is an empty diagram.
+            return self._print(S.EmptySet)
+
+        latex_result = self._print(diagram.premises)
+        if diagram.conclusions:
+            latex_result += "\\Longrightarrow %s" % \
+                            self._print(diagram.conclusions)
+
+        return latex_result
 
 def latex(expr, **settings):
     r"""
