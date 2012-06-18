@@ -961,3 +961,8 @@ def test_exclude():
         Vminus: Vplus,
         Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
         R: Vplus/(C*s*(V1 - 2*Vplus))}]
+
+
+def test_high_order_roots():
+    s = x**5 + 4*x**3 + 3*x**2 + S(7)/4
+    assert solve(s) == Poly(s*4, domain='ZZ').all_roots()
