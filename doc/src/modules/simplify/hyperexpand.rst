@@ -428,10 +428,10 @@ we proceed by computing :math:`f(g(w))` (and simplifying naively)
 
 .. math ::
    f(g(w)) &= -\frac{\pi^2 g(w)^4}{16} \\
-   	   &= -\frac{\pi^2 g(\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}})^4}{16} \\
-	   &= -\frac{\pi^2 \frac{2^4}{\sqrt{\pi}^4} \exp\left(\frac{i \pi}{4}\right)^4 w^{\frac{1}{4}}^4}{16} \\
-	   &= -\exp\left(i \pi\right) w \\
-	   &= w
+           &= -\frac{\pi^2 g\left(\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}}\right)^4}{16} \\
+           &= -\frac{\pi^2 \frac{2^4}{\sqrt{\pi}^4} \exp\left(\frac{i \pi}{4}\right)^4 {w^{\frac{1}{4}}}^4}{16} \\
+           &= -\exp\left(i \pi\right) w \\
+           &= w
 
 and indeed get back :math:`w`. Hence we can write the formula as
 
