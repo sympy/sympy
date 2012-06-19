@@ -397,12 +397,12 @@ class VectorField(Expr):
 
 
 ###############################################################################
-# Itegral curves on vector fields
+# Integral curves on vector fields
 ###############################################################################
 def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None):
     """Return the series expansion for an integral curve of the field.
 
-    Itegral curve is a function `gamma` taking a parameter in R to a point
+    Integral curve is a function `gamma` taking a parameter in R to a point
     in the manifold. It verifies the equation:
 
     `vector_field(f)(gamma(param)) = diff(f(gamma(t)), t)`
@@ -479,7 +479,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None):
 def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     """Return the differential equation for an integral curve of the field.
 
-    Itegral curve is a function `gamma` taking a parameter in R to a point
+    Integral curve is a function `gamma` taking a parameter in R to a point
     in the manifold. It verifies the equation:
 
     `vector_field(f)(gamma(param)) = diff(f(gamma(t)), t)`
