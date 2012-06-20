@@ -1124,11 +1124,9 @@ class UniversalSet(Set):
 
 def element_sort_fn(x):
     try:
-        if x.is_comparable is True:
-            return x
+        return x.sort_key()
     except:
-        pass
-    return 1e9+abs(hash(x))
+        return 1e9+abs(hash(x))
 
 class FiniteSet(Set, EvalfMixin):
     """
@@ -1161,7 +1159,7 @@ class FiniteSet(Set, EvalfMixin):
             return EmptySet()
 
         args = frozenset(args) # remove duplicates
-        args = sorted(args, key = element_sort_fn)
+        args = sorted(args, key=element_sort_fn)
         obj = Basic.__new__(cls, *args)
         obj._elements = args
         return obj
