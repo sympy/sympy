@@ -177,11 +177,11 @@ def test_doit():
     assert p2.doit(deep = False) == p2
 
 def test_piecewise_interval():
-    p1 = Piecewise((x, Interval(0,1)), (0, True))
+    p1 = Piecewise((x, Interval(0,1).contains(x)), (0, True))
     assert p1.subs(x, -0.5) == 0
     assert p1.subs(x, 0.5) == 0.5
-    assert p1.diff(x) == Piecewise((1, Interval(0, 1)), (0, True))
-    assert integrate(p1, x) == Piecewise((x**2/2, Interval(0, 1)), (0, True))
+    assert p1.diff(x) == Piecewise((1, Interval(0, 1).contains(x)), (0, True))
+    assert integrate(p1, x) == Piecewise((x**2/2, Interval(0, 1).contains(x)), (0, True))
 
 def test_piecewise_collapse():
     p1 = Piecewise((x, x<0),(x**2,x>1))

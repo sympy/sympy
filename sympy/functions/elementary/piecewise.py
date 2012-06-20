@@ -1,6 +1,6 @@
 from sympy.core import Basic, S, Function, diff, Tuple
 from sympy.core.relational import Equality, Relational
-from sympy.logic.boolalg import Boolean
+from sympy.logic.boolalg import And, Boolean
 from sympy.core.sets import Set
 from sympy.core.symbol import Dummy
 
@@ -213,14 +213,22 @@ class Piecewise(Function):
                 break
             elif isinstance(cond, Equality):
                 continue
-
-            lower, upper = cond.lts, cond.gts # part 1: initialize with givens
-            if cond.lts.has(sym):     # part 1a: expand the side ...
-                lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
-            elif cond.gts.has(sym):   # part 1a: ... that can be expanded
-                upper = S.Infinity           # e.g. x >= 0 --->  oo >= 0
+            elif isinstance(cond, And):
+                lower = S.NegativeInfinity
+                upper = S.Infinity
+                for cond2 in cond.args:
+                    if cond2.lts.has(sym):
+                        upper = min(cond2.gts, upper)
+                    elif cond2.gts.has(sym):
+                        lower = max(cond2.lts, lower)
             else:
-                raise NotImplementedError(
+                lower, upper = cond.lts, cond.gts # part 1: initialize with givens
+                if cond.lts.has(sym):     # part 1a: expand the side ...
+                    lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
+                elif cond.gts.has(sym):   # part 1a: ... that can be expanded
+                    upper = S.Infinity           # e.g. x >= 0 --->  oo >= 0
+                else:
+                    raise NotImplementedError(
                         "Unable to handle interval evaluation of expression.")
 
             # part 1b: Reduce (-)infinity to what was passed in.
