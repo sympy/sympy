@@ -48,6 +48,7 @@ if matplotlib:
             __import__kwargs={'fromlist':['mplot3d']})
     Axes3D = mpl_toolkits.mplot3d.Axes3D
     art3d = mpl_toolkits.mplot3d.art3d
+    ListedColormap = matplotlib.colors.ListedColormap
 
 # Backend specific imports - textplot
 from sympy.plotting.textplot import textplot
@@ -1152,7 +1153,12 @@ class MatplotlibBackend(BaseBackend):
                 x, y, z = s.get_meshes()
                 collection = self.ax.plot_surface(x, y, z, cmap=cm.jet,
                                                   rstride=1, cstride=1,
-                                                  linewidth = 0.1)
+                                                  linewidth=0.1)
+            elif s.is_implicit:
+                x, y, z = s.get_meshes()
+                colormap = ListedColormap(['white', 'blue'])
+                self.ax.contourf(x, y, z, cmap=colormap)
+
             else:
                 raise ValueError('The matplotlib backend supports only '
                                  'is_2Dline, is_3Dline, is_3Dsurface and '
