@@ -27,8 +27,10 @@ from itertools import repeat, izip
 from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
 from sympy.core.compatibility import set_union
+from sympy.core.relational import Equality, GreaterThan, LessThan
 import warnings
-from experimental_lambdify import vectorized_lambdify, lambdify
+from experimental_lambdify import vectorized_lambdify, experimental_lambdify
+from intervalmath import interval
 
 #TODO probably all of the imports after this line can be put inside function to
 # speed up the `from sympy import *` command.
@@ -442,6 +444,14 @@ class BaseSeries(object):
     # Some of the backends expect:
     #   - get_meshes returning mesh_x, mesh_y, mesh_z (2D np.arrays)
     #   - get_points an alias for get_meshes
+
+    is_implicit = False
+    # Some of the backends expect:
+    #   - get_meshes returning mesh_x (1D array), mesh_y(1D array,
+    #     mesh_z (2D np.arrays)
+    #   - get_points an alias for get_meshes
+    #Different from is_contour as the colormap in backend will be
+    #different
 
     is_parametric = False
     # The cacollectionulation of aesthetics expects:
@@ -938,6 +948,106 @@ class ContourSeries(BaseSeries):
                                                  num=self.nb_of_points_y))
         f = vectorized_lambdify((self.var_x, self.var_y), self.expr)
         return (mesh_x, mesh_y, f(mesh_x, mesh_y))
+
+class ImplicitSeries(BaseSeries):
+    """ Representation for Implicit plot """
+    is_implicit = True
+    def __init__(self, expr, var_start_end_x, var_start_end_y):
+        self.expr = sympify(expr)
+        self.var_x = sympify(var_start_end_x[0])
+        self.start_x = float(var_start_end_x[1])
+        self.end_x = float(var_start_end_x[2])
+        self.var_y = sympify(var_start_end_y[0])
+        self.start_y = float(var_start_end_y[1])
+        self.end_y = float(var_start_end_y[2])
+        self.get_points = self.get_meshes
+
+    def __str__(self):
+        return ('Implicit equation: %s for '
+                '%s over %s and %s over %s') % (
+                str(self.expr),
+                str(self.var_x),
+                str((self.start_x, self.end_x)),
+                str(self.var_y),
+                str((self.start_y, self.end_y)))
+
+    def get_meshes(self):
+        WIDTH = 512
+        HEIGHT = 512
+        is_equality = isinstance(self.expr, Equality)
+        func = experimental_lambdify((self.var_x, self.var_y), self.expr, use_interval=True)
+        #contour array, acts like a bitmap
+        contour = np.zeros((WIDTH, HEIGHT))
+        k = 6
+        interval_list = []
+
+        xsample = [x for x in xrange(0, WIDTH + 1, 2 ** k)]
+        ysample = [y for y in xrange(0, HEIGHT + 1, 2 ** k)]
+        xinter = [interval(x1, x2) for x1, x2 in zip(xsample[:-1], xsample[1:])]
+        yinter = [interval(y1, y2) for y1, y2 in zip(ysample[:-1], ysample[1:])]
+        interval_list = [[x, y] for x in xinter for y in yinter]
+
+        #recursive call refinepixels which subdivides the intervals which are neither
+        # True nor False according to the expression.
+        def refine_pixels(interval_list):
+            temp_interval_list = []
+            for intervals in interval_list:
+                xindexa, xindexb = intervals[0].start, intervals[0].end
+                yindexa, yindexb = intervals[1].start, intervals[1].end
+
+                #Convert the array indices to x and y values
+                xa = self.start_x + xindexa * (self.end_x - self.start_x) / WIDTH
+                xb = self.start_x + xindexb * (self.end_x - self.start_x) / WIDTH
+                ya = self.start_y + yindexa * (self.end_y - self.start_y) / HEIGHT
+                yb = self.start_y + yindexb * (self.end_y - self.start_y) / HEIGHT
+                intervalx = interval(xa, xb)
+                intervaly = interval(ya, yb)
+                func_eval = func(intervalx, intervaly)
+                #The expression is valid in the interval. Change the contour array
+                #values to 1.
+                if func_eval[1] is False or func_eval[0] is False:
+                    pass
+                elif func_eval == (True, True) and not is_equality:
+                    contour[yindexa:yindexb, xindexa:xindexb] = 1
+                elif func_eval[1] is None or func_eval[0] is None \
+                        or is_equality:
+                    #Subdivide
+                    avgx_index = (xindexa + xindexb) // 2
+                    avgy_index = (yindexa + yindexb) // 2
+                    a = interval(xindexa, avgx_index)
+                    b = interval(avgx_index, xindexb)
+                    c = interval(yindexa, avgy_index)
+                    d = interval(avgy_index, yindexb)
+                    temp_interval_list.append([a, c])
+                    temp_interval_list.append([a, d])
+                    temp_interval_list.append([b, c])
+                    temp_interval_list.append([b, d])
+            return temp_interval_list
+        while k >= 0 and len(interval_list):
+            interval_list = refine_pixels(interval_list)
+            k = k - 1
+        #Check whether the expression represents an equality
+        #If it represents an equality, then none of the intervals
+        #would have satisfied the expression due to floating point
+        #differences. Add all the undecided values to the plot.
+        if isinstance(self.expr, (Equality, GreaterThan, LessThan)):
+            for intervals in interval_list:
+                xindexa, xindexb = intervals[0].start, intervals[0].end
+                yindexa, yindexb = intervals[1].start, intervals[1].end
+                xa = self.start_x + xindexa * (self.end_x - self.start_x) / WIDTH
+                xb = self.start_x + xindexb * (self.end_x - self.start_x) / WIDTH
+                ya = self.start_y + yindexa * (self.end_y - self.start_y) / HEIGHT
+                yb = self.start_y + yindexb * (self.end_y - self.start_y) / HEIGHT
+                intervalx = interval(xa, xb)
+                intervaly = interval(ya, yb)
+                func_eval = func(intervalx, intervaly)
+                #print intervalx, intervaly
+                if func_eval[1] and func_eval[0] is not False:
+                    contour[yindexa:yindexb, xindexa:xindexb] = 1
+        xvals = np.linspace(self.start_x, self.end_x, WIDTH)
+        yvals = np.linspace(self.start_y, self.end_y, WIDTH)
+
+        return xvals, yvals, contour
 
 
 ### Factory class
