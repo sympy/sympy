@@ -367,7 +367,10 @@ class ScalarField(Expr):
         if not isinstance(point, Point):
             return self
         coords = point.coords(self._coord_sys)
-        return self._expr.subs(zip(self._coords, coords))
+        # XXX Calling doit() below is a simple solution to the following
+        # problem: In : Subs(2*x, x, y).subs(y,z)
+        #          Out: Subs(2*_x, (_x,), (z,)) instead of 2*z
+        return self._expr.subs(zip(self._coords, coords)).doit()
 
 
 class VectorField(Expr):
@@ -410,7 +413,7 @@ class VectorField(Expr):
     >>> v = VectorField(R2_r, [x, y], [1, 1])
     >>> v(s_field)(point_r)
     Derivative(g(x0, y0), x0) + Derivative(g(x0, y0), y0)
-    >>> v(s_field)(point_p) # TODO this is correct but unusable
+    >>> v(s_field)(point_p)
     Subs(Derivative(g(_x, r0*sin(theta0)), _x), (_x,), (r0*cos(theta0),)) + Subs(Derivative(g(r0*cos(theta0), _y), _y), (_y,), (r0*sin(theta0),))
 
     """

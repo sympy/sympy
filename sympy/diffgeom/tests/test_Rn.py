@@ -7,7 +7,7 @@ from sympy import (symbols, simplify, sqrt, atan2, Matrix, sin, cos, Function,
 
 # Most of the functionality is covered in the
 # test_functional_diffgeom_ch* tests which are based on the
-# example from the paper of Sussman nad Wisdom.
+# example from the paper of Sussman and Wisdom.
 # If they do not cover something, additional tests are added in other test
 # functions.
 
@@ -104,8 +104,7 @@ def test_functional_diffgeom_ch4():
     assert R2.dr(circ)(p_r) == 0
     assert simplify(R2.dtheta(circ)(p_r)) == 1
 
-    # TODO the highest priority is making this work
-    #assert simplify((circ - R2.e_theta)(s_field_r)(p_r)) == 0
+    assert simplify((circ - R2.e_theta)(s_field_r)(p_r)) == 0
 
 
 def test_R2():
@@ -119,6 +118,7 @@ def test_R2():
 
     assert simplify( R2.e_r(R2.x**2+R2.y**2)(point_p) ) == 2*r0
 
+
 def test_intcurve_diffequ():
     t = symbols('t')
     start_point = R2_r.point([1, 0])
@@ -127,5 +127,5 @@ def test_intcurve_diffequ():
     assert str(equations) == '[f_1(t) + Derivative(f_0(t), t), -f_0(t) + Derivative(f_1(t), t)]'
     assert str(init_cond) == '[f_0(0) - 1, f_1(0)]'
     equations, init_cond = intcurve_diffequ(vector_field, t, start_point, R2_p)
-    #TODO correct but too complicated: equations
+    assert str([simplify(e) for e in equations]) == '[Derivative(f_0(t), t), Derivative(f_1(t), t) - 1]'
     assert str(init_cond) == '[f_0(0) - 1, f_1(0)]'
