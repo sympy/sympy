@@ -1,7 +1,6 @@
 from sympy.plotting.intervalmath import interval
 from sympy.external import import_module
-#Library for interval arithmetic. Contains all the implemented functions for
-#interval arithmetic
+""" The module contains all the implemented functions for interval arithmetic."""
 
 np = import_module('numpy')
 #Monotonic

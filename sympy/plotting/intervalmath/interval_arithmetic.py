@@ -477,14 +477,14 @@ class interval(object):
                     return interval(1, 1) / self.__pow__(-other)
                 else:
                     if other & 1:
-                        return interval(self.start ** other, self.end ** other)
+                        return interval(self.start**other, self.end**other)
                     else:
                         #both non - positive
                         if self.end <= 0:
-                            return interval(self.end ** other, self.start ** other)
+                            return interval(self.end**other, self.start**other)
                         elif self.start >= 0:
-                            return interval(self.start ** other, self.end ** other)
+                            return interval(self.start**other, self.end**other)
                         else:
-                            return interval(0, max(self.start ** other, self.end ** other))
+                            return interval(0, max(self.start**other, self.end**other))
             else:
                 return NotImplemented
