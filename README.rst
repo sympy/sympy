@@ -81,7 +81,13 @@ To execute all tests, run::
 in the current directory.
 
 For more fine-grained running of tests, use ``bin/test`` or respectively
-``bin/doctest``.
+``bin/doctest``. The master branch is automatically tested by Travis CI,
+the results can be seen here:
+
+.. image:: https://secure.travis-ci.org/sympy/sympy.png?branch=master
+    :target: http://travis-ci.org/sympy/sympy
+
+To test pull requests, use `sympy-bot <https://github.com/sympy/sympy-bot>`_.
 
 5. Usage in Python 3
 -------------------
