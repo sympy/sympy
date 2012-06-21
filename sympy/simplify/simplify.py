@@ -995,10 +995,7 @@ def trigsimp_recursive(expr, deep = False):
         (a + a*(1/sinh(b))**2 + c,   a*coth(b)**2 + c, sinh)
         )
 
-    if expr.is_Function:
-        if deep:
-            return expr.func(trigsimp_recursive(expr.args[0], deep))
-    elif expr.is_Mul:
+    if expr.is_Mul:
         # do some simplifications like sin/cos -> tan:
         for pattern, simp in matchers_division:
             res = expr.match(pattern)
@@ -1061,6 +1058,10 @@ def trigsimp_recursive(expr, deep = False):
                 m = expr.match(pattern)
 
         return expr
+
+    elif deep and expr.args:
+        return expr.func(*[trigsimp_recursive(a, deep) for a in expr.args])
+
     return expr
 
 
