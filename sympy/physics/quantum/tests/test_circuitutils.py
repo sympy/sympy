@@ -6,6 +6,7 @@ from sympy.physics.quantum.identitysearch import bfs_identity_search
 from sympy.physics.quantum.circuitutils import (kmp_table, find_subcircuit,
         replace_subcircuit, convert_to_symbolic_indices,
         convert_to_real_indices, random_reduce, random_insert)
+from functools import reduce
 
 def create_gate_sequence(qubit=0):
     gates = (X(qubit), Y(qubit), Z(qubit), H(qubit))
@@ -335,8 +336,8 @@ def test_random_reduce():
     assert random_reduce(circuit, ids) == circuit
 
     circuit = (x, y, z, x, y, h)
-    # seed = 1, indices to attempt removal: 2, 11, 9, 3
-    # removed id: y, z, x
+    # seed = 1, indices to attempt removal: 2, 11, 9, 3, 5
+    # removed id: x, y, z
     actual = random_reduce(circuit, ids, seed=seed)
     assert actual == (x, y, h)
 
