@@ -268,7 +268,10 @@ class Lambdifier(object):
             except ImportError:
                 raise ImportError('experimental_lambdify failed to import numpy.')
         if use_interval:
-            namespace.update({'imath': __import__('intervalmath')})
+            try:
+                namespace.update({'imath': __import__('sympy.plotting.intervalmath')})
+            except ImportError:
+                raise ImportError("imath not imported")
 
         # Construct the lambda
         if self.print_lambda:

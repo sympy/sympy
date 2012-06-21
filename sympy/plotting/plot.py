@@ -396,6 +396,42 @@ def plot(*args, **kwargs):
         p.show()
     return p
 
+def plot_implicit(expr, var_start_end_x, var_start_end_y, **kwargs):
+    """A plot function to plot implicit equations / inequations.
+
+    The input arguments are:
+    expr : The equation / inequation that is to be plotted.
+    var_start_end_x: A tuple of length 3, with the first element representing
+    the variable and the next two elements representing the range
+    var_start_end_y: A tuple of length 3, with the first element representing
+    the variable and the next two elements representing the range
+
+    Examples:
+    ---------
+
+    Plot expressions:
+    >>> from sympy import plot_implicit, cos, sin, symbols
+    >>> x, y = symbols('x y u v')
+    >>> p1 = plot_implicit(Eq(y, x ** 2), (x, -5, 5), (y, -5, 5), show=False)
+    >>> p2 = plot_implicit(Eq(x ** 2 + y ** 2, 3), (x, -3, 3), (y, -3, 3), show=False)
+    >>> p3 = plot_implicit(y ** 2 < x ** 3 - x, (x, -4, 4), (y, -4, 4), show=False)
+    >>> p4 = plot_implicit(y > sin(x), (x, -5, 5), (y, -2, 2), show=False)
+"""
+
+    assert isinstance(expr, Expr)
+    free_symbols = expr.free_symbols
+    range_symbols = set([var_start_end_x[0], var_start_end_y[0]])
+    symbols = set_union(free_symbols, range_symbols)
+    if len(symbols) > 2:
+        raise NotImplementedError("Implicit plotting is not implemented for \
+                                    more than 2 variables")
+    series_argument = ImplicitSeries(expr, var_start_end_x, var_start_end_y)
+    show = kwargs.pop('show', True)
+    p = Plot(series_argument, **kwargs)
+    if show:
+        p.show()
+    return p
+
 
 ##############################################################################
 # Data Series
