@@ -1013,6 +1013,13 @@ class ImplicitSeries(BaseSeries):
         HEIGHT = 512
         is_equality = isinstance(self.expr, Equality)
         func = experimental_lambdify((self.var_x, self.var_y), self.expr, use_interval=True)
+        xinterval = interval(self.start_x, self.end_x)
+        yinterval = interval(self.start_y, self.end_y)
+        try:
+            temp = func(xinterval, yinterval)
+        except AttributeError:
+            raise NotImplementedError("Some functions in the expression %s are \
+                                    not supported. Kindly report this as a bug" % str(self.expr))
         #contour array, acts like a bitmap
         contour = np.zeros((WIDTH, HEIGHT))
         k = 6
@@ -1078,7 +1085,6 @@ class ImplicitSeries(BaseSeries):
                 intervalx = interval(xa, xb)
                 intervaly = interval(ya, yb)
                 func_eval = func(intervalx, intervaly)
-                #print intervalx, intervaly
                 if func_eval[1] and func_eval[0] is not False:
                     contour[yindexa:yindexb, xindexa:xindexb] = 1
         xvals = np.linspace(self.start_x, self.end_x, WIDTH)
