@@ -1,8 +1,10 @@
-from sympy import (sympify, Dummy, Matrix, Basic, Expr, solve, diff, factorial,
-        Function)
+from sympy.matrices import Matrix
+from sympy.core import Basic, Expr, Dummy, Function, sympify, diff
+from sympy.solvers import solve
+from sympy.functions import factorial
+from sympy.simplify import trigsimp
 from sympy.core.compatibility import reduce
 
-# TODO order the imports and make them explicit
 # TODO issue 2070: all the stuff about .args and rebuilding
 # TODO maybe a common class Field makes sense
 # TODO you are a bit excessive in the use of Dummies
@@ -370,7 +372,8 @@ class ScalarField(Expr):
         # XXX Calling doit() below is a simple solution to the following
         # problem: In : Subs(2*x, x, y).subs(y,z)
         #          Out: Subs(2*_x, (_x,), (z,)) instead of 2*z
-        return self._expr.subs(zip(self._coords, coords)).doit()
+        # XXX Calling trigsimp is necessary with all the trig expressions
+        return trigsimp(self._expr.subs(zip(self._coords, coords)).doit())
 
 
 class VectorField(Expr):
@@ -632,7 +635,6 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 
     Use the predefined R2 manifold:
     >>> from sympy.abc import t
-    >>> from sympy import simplify
     >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
     >>> from sympy.diffgeom import intcurve_diffequ
 
@@ -649,7 +651,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 
     The series in the polar coordinate system:
     >>> equations, init_cond = intcurve_diffequ(vector_field, t, start_point, R2_p)
-    >>> [simplify(e) for e in equations]
+    >>> equations
     [Derivative(f_0(t), t), Derivative(f_1(t), t) - 1]
     >>> init_cond
     [f_0(0) - 1, f_1(0) - pi/2]
@@ -659,9 +661,9 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     gammas = [Function('f_%d'%i)(param) for i in range(start_point._coord_sys.dim)]
     arbitrary_p = Point(coord_sys, gammas)
     coord_functions = coord_sys.coord_functions()
-    equations = [diff(cf(arbitrary_p), param) - vector_field(cf)(arbitrary_p)
+    equations = [trigsimp(diff(cf(arbitrary_p), param) - vector_field(cf)(arbitrary_p))
                  for cf in coord_functions]
-    init_cond = [cf(arbitrary_p).subs(param,0) - cf(start_point)
+    init_cond = [trigsimp(cf(arbitrary_p).subs(param,0) - cf(start_point))
                  for cf in coord_functions]
     return equations, init_cond
 

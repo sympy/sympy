@@ -1,9 +1,10 @@
 from sympy.diffgeom.Rn import R2, R2_p, R2_r
 from sympy.diffgeom import (ScalarField, VectorField, OneFormField,
         intcurve_series, intcurve_diffequ, differential)
-from sympy import (symbols, simplify, sqrt, atan2, Matrix, sin, cos, Function,
-        Derivative)
-# TODO explicit and well ordered imports
+from sympy.core import symbols, Function, Derivative
+from sympy.functions import sqrt, atan2, sin, cos
+from sympy.simplify import simplify
+from sympy.matrices import Matrix
 
 # Most of the functionality is covered in the
 # test_functional_diffgeom_ch* tests which are based on the
@@ -28,7 +29,7 @@ def test_functional_diffgeom_ch2():
     p1_in_rect = R2_r.point([x0, y0])
     p1_in_polar = R2_p.point([sqrt(x0**2 + y0**2), atan2(y0,x0)])
     assert field(p1_in_rect) == f(x0, y0)
-    assert simplify(field(p1_in_polar)) == f(x0, y0)
+    assert field(p1_in_polar) == f(x0, y0)
 
     p_r = R2_r.point([x0, y0])
     p_p = R2_p.point([r0, theta0])
@@ -92,8 +93,8 @@ def test_functional_diffgeom_ch4():
 
     s_field_p = ScalarField(R2_p, [r, theta], f(r,theta))
     df = differential(s_field_p, R2_p)
-    assert simplify(df(R2.e_x)(p_p)) == cos(theta0)*Derivative(f(r0, theta0), r0) - sin(theta0)*Derivative(f(r0, theta0), theta0)/r0
-    assert simplify(df(R2.e_y)(p_p)) == sin(theta0)*Derivative(f(r0, theta0), r0) + cos(theta0)*Derivative(f(r0, theta0), theta0)/r0
+    assert df(R2.e_x)(p_p) == cos(theta0)*Derivative(f(r0, theta0), r0) - sin(theta0)*Derivative(f(r0, theta0), theta0)/r0
+    assert df(R2.e_y)(p_p) == sin(theta0)*Derivative(f(r0, theta0), r0) + cos(theta0)*Derivative(f(r0, theta0), theta0)/r0
 
     assert R2.dx(R2.e_x)(p_r) == 1
     assert R2.dx(R2.e_y)(p_r) == 0
@@ -104,7 +105,7 @@ def test_functional_diffgeom_ch4():
     assert R2.dr(circ)(p_r) == 0
     assert simplify(R2.dtheta(circ)(p_r)) == 1
 
-    assert simplify((circ - R2.e_theta)(s_field_r)(p_r)) == 0
+    assert (circ - R2.e_theta)(s_field_r)(p_r) == 0
 
 
 def test_R2():
@@ -116,7 +117,7 @@ def test_R2():
     assert (R2.r**2 - R2.x**2 - R2.y**2)(point_r) == 0
     assert simplify( (R2.r**2 - R2.x**2 - R2.y**2)(point_p) ) == 0
 
-    assert simplify( R2.e_r(R2.x**2+R2.y**2)(point_p) ) == 2*r0
+    assert R2.e_r(R2.x**2+R2.y**2)(point_p) == 2*r0
 
 
 def test_intcurve_diffequ():
@@ -127,5 +128,5 @@ def test_intcurve_diffequ():
     assert str(equations) == '[f_1(t) + Derivative(f_0(t), t), -f_0(t) + Derivative(f_1(t), t)]'
     assert str(init_cond) == '[f_0(0) - 1, f_1(0)]'
     equations, init_cond = intcurve_diffequ(vector_field, t, start_point, R2_p)
-    assert str([simplify(e) for e in equations]) == '[Derivative(f_0(t), t), Derivative(f_1(t), t) - 1]'
+    assert str(equations) == '[Derivative(f_0(t), t), Derivative(f_1(t), t) - 1]'
     assert str(init_cond) == '[f_0(0) - 1, f_1(0)]'
