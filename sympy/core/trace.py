@@ -17,42 +17,27 @@ def _is_scalar(e):
 def _cycle_permute(l):
     """ Cyclic permutations based on canonical ordering"""
 
-    print l
     min_item = min(l)
     indices = [i for i, x in enumerate(l) if x ==  min_item]
 
-    if (len(indices) ==  1):
-        # the min item is unique
-        idx = l.index(min_item)
-        ordered_l = l[idx:]
-        ordered_l.extend(l[:idx])
-        return ordered_l
-
-    l1 = list(l)
-    l1.extend(l) # just duplicate and extend string
-    print l1
+    le = list(l)
+    le.extend(l) # duplicate and extend string for easy processing
 
     # adding the first index back for easier looping
     indices.append(len(l) + indices[0])
-    print indices
 
-    #get first substr that starts with min_item
-    idx = indices[0]
-    s = l1[idx:indices[1]]
-    #get the min substr which starts with min_item
-    print idx, s
-    for i in xrange(1,len(indices)-1):
-        next_s = l1[indices[i]:indices[i+1]]
-        if min(s,next_s) == next_s:
-            idx = i
-            s = next_s
-            print idx, s
+    # create sublist of items with first item as min_item and last_item
+    # in each of the sublist is item just before the next occurence of
+    # minitem in the cycle formed.
+    sublist = [[le[indices[i]:indices[i+1]]] for i in
+               xrange(len(indices)-1)]
 
-    print idx, indices[idx], len(l)
-    ordered_l = l1[indices[idx]:indices[idx]+len(l)]
+    # we do comparison of strings by comparing elements
+    # in each sublist
+    idx = sublist.index(min(sublist))
+    ordered_l = le[indices[idx]:indices[idx]+len(l)]
 
     return ordered_l
-
 
 class Tr(Expr):
     """ Generic Trace operation than can trace over:
