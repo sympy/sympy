@@ -1,10 +1,12 @@
-from interval_arithmetic import interval
+from sympy.plotting.intervalmath import interval
 from sympy.external import import_module
 #Library for interval arithmetic. Contains all the implemented functions for
 #interval arithmetic
 
 np = import_module('numpy')
 #Monotonic
+
+
 def exp(x):
     """evaluates the exponential of an interval"""
     if isinstance(x, (int, float)):
@@ -136,10 +138,15 @@ def tan(x):
 def sqrt(x):
     """Evaluates the square root of an interval"""
     if isinstance(x, (int, float)):
-        return interval(np.sqrt(x))
+        if x > 0:
+            return interval(np.sqrt(x))
+        else:
+            return interval(-np.inf, np.inf, is_valid=False)
     elif isinstance(x, interval):
+        #Outside the domain
         if x.end < 0:
             return interval(-np.inf, np.inf, is_valid=False)
+        #Partially outside the domain
         elif x.start < 0:
             return interval(-np.inf, np.inf, is_valid=None)
         else:
@@ -233,13 +240,16 @@ def tanh(x):
 def asin(x):
     """Evaluates the inverse sine of an interval"""
     if isinstance(x, (int, float)):
+        #Outside the domain
         if abs(x) > 1:
             return interval(-np.inf, np.inf, is_valid=False)
         else:
             return interval(np.arcsin(x), np.arcsin(x))
     elif isinstance(x, interval):
+        #Outside the domain
         if  x.is_valid is False or x.start > 1 or x.end < -1:
             return interval(-np.inf, np.inf, is_valid=False)
+        #Partially outside the domain
         elif x.start < -1 or x.end > 1:
             return interval(-np.inf, np.inf, is_valid=None)
         else:
@@ -252,12 +262,15 @@ def acos(x):
     """Evaluates the inverse cos of an interval"""
     if isinstance(x, (int, float)):
         if abs(x) > 1:
+            #Outside the domain
             return interval(-np.inf, np.inf, is_valid=False)
         else:
             return interval(np.arccos(x), np.arccos(x))
     elif isinstance(x, interval):
+        #Outside the domain
         if  x.is_valid is False or x.start > 1 or x.end < -1:
             return interval(-np.inf, np.inf, is_valid=False)
+        #Partially outside the domain
         elif x.start < -1 or x.end > 1:
             return interval(-np.inf, np.inf, is_valid=None)
         else:
@@ -267,7 +280,7 @@ def acos(x):
 
 
 def ceil(x):
-    "Evaluates the ceil of an interval"""
+    """Evaluates the ceil of an interval"""
     if isinstance(x, (int, float)):
         return interval(np.ceil(x))
     elif isinstance(x, interval):
@@ -276,16 +289,18 @@ def ceil(x):
         else:
             start = np.ceil(x.start)
             end = np.ceil(x.end)
+            #Continuous over the interval
             if start == end:
                 return interval(start, end, is_valid=x.is_valid)
             else:
+                #Not contnuous over the interval
                 return interval(start, end, is_valid=None)
     else:
         return NotImplementedError
 
 
 def floor(x):
-    "Evaluates the ceil of an interval"""
+    """Evaluates the ceil of an interval"""
     if isinstance(x, (int, float)):
         return interval(np.floor(x))
     elif isinstance(x, interval):
@@ -294,9 +309,11 @@ def floor(x):
         else:
             start = np.floor(x.start)
             end = np.floor(x.end)
+            #coninuous over the argument
             if start == end:
                 return interval(start, end, is_valid=x.is_valid)
             else:
+                #not continuous over the interval
                 return interval(start, end, is_valid=None)
     else:
         return NotImplementedError
@@ -305,13 +322,16 @@ def floor(x):
 def acosh(x):
     """Evaluates the inverse hyperbolic cosine of an interval"""
     if isinstance(x, (int, float)):
+        #Outside the domain
         if x < 1:
             return interval(-np.inf, np.inf, is_valid=False)
         else:
             return interval(np.arccosh(x))
     elif isinstance(x, interval):
+        #Outside the domain
         if x.end < 1:
             return interval(-np.inf, np.inf, is_valid=False)
+        #Partly outside the domain
         elif x.start < 1:
             return interval(-np.inf, np.inf, is_valid=None)
         else:
@@ -321,8 +341,10 @@ def acosh(x):
     else:
         return NotImplementedError
 
+
 #Monotonic
 def asinh(x):
+    """Evaluates the inverse hyperbolic sine of an interval"""
     if isinstance(x, (int, float)):
         return interval(np.arcsinh(x))
     elif isinstance(x, interval):
@@ -332,15 +354,20 @@ def asinh(x):
     else:
         return NotImplementedError
 
+
 def atanh(x):
+    """Evaluates the inverse hyperbolic tangent of an interval"""
     if isinstance(x, (int, float)):
+        #Outside the domain
         if abs(x) >= 1:
             return interval(-np.inf, np.inf, is_valid=False)
         else:
             return interval(np.arctanh(x))
     elif isinstance(x, interval):
+        #outside the domain
         if  x.is_valid is False or x.start >= 1 or x.end <= -1:
             return interval(-np.inf, np.inf, is_valid=False)
+        #partly outside the domain
         elif x.start <= -1 or x.end >= 1:
             return interval(-np.inf, np.inf, is_valid=None)
         else:

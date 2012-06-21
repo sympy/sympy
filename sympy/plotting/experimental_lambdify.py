@@ -12,6 +12,7 @@ and so on).
 
 import re
 from sympy import Symbol, NumberSymbol, I, zoo, oo
+from sympy.plotting.intervalmath import interval
 
 #  We parse the expression string into a tree that identifies functions. Then
 # we translate the names of the functions and we translate also some strings
@@ -72,7 +73,6 @@ from sympy import Symbol, NumberSymbol, I, zoo, oo
 from sympy.external import import_module
 np = import_module('numpy')
 import warnings
-import intervalmath
 
 #TODO debuging output
 
@@ -235,6 +235,7 @@ class Lambdifier(object):
         self.use_python_math = use_python_math
         self.use_python_cmath = use_python_cmath
         self.use_interval = use_interval
+        print self.use_interval
 
         # Constructing the argument string
         if not all([isinstance(a, Symbol) for a in args]):
@@ -269,7 +270,7 @@ class Lambdifier(object):
                 raise ImportError('experimental_lambdify failed to import numpy.')
         if use_interval:
             try:
-                namespace.update({'imath': __import__('sympy.plotting.intervalmath')})
+                namespace.update({'imath': __import__('intervalmath')})
             except ImportError:
                 raise ImportError("imath not imported")
 
@@ -279,6 +280,7 @@ class Lambdifier(object):
         eval_str = 'lambda %s : ( %s )' %(argstr, newexpr)
         exec "from __future__ import division; MYNEWLAMBDA = %s" % eval_str in namespace
         self.lambda_func = namespace['MYNEWLAMBDA']
+        print self.lambda_func(interval(0, 1), interval(1, 2))
 
 
     ##############################################################################
