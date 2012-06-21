@@ -179,8 +179,59 @@ class Piecewise(Function):
         #     http://portal.acm.org/citation.cfm?id=281649
         #     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&rep=rep1&type=pdf
         mul = 1
-        if a > b:
+        if (a == b) is True:
+            return S.Zero
+        elif (a > b) is True:
             a, b, mul = b, a, -1
+        elif (a <= b) is not True:
+            newargs = []
+            for e, c in self.args:
+                intervals = self._sort_expr_cond(sym, S.NegativeInfinity, S.Infinity, c)
+                values = []
+                for lower, upper in intervals:
+                    if (a < lower) is True:
+                        mid = lower
+                        rep = b
+                        val = e.subs(sym, b) - e.subs(sym, mid)
+                        val += self._eval_interval(sym, a, mid)
+                    elif (a > upper) is True:
+                        mid = upper
+                        rep = b
+                        val = e.subs(sym, b) - e.subs(sym, mid)
+                        val += self._eval_interval(sym, a, mid)
+                    elif (a >= lower) is True and (a <= upper) is True:
+                        rep = b
+                        val = e.subs(sym, b) - e.subs(sym, a)
+                    elif (b < lower) is True:
+                        mid = lower
+                        rep = a
+                        val = e.subs(sym, mid) - e.subs(sym, a)
+                        val += self._eval_interval(sym, mid, b)
+                    elif (b > upper) is True:
+                        mid = upper
+                        rep = a
+                        val = e.subs(sym, mid) - e.subs(sym, a)
+                        val += self._eval_interval(sym, mid, b)
+                    elif ((b >= lower) is True) and ((b <= upper) is True):
+                        rep = a
+                        val = e.subs(sym, b) - e.subs(sym, a)
+                    else:
+                        raise NotImplementedError(
+                            """The evaluation of a Piecewise interval when both the lower
+                            and the upper limit are symbolic is not yet implemented.""")
+                    values.append(val)
+                if len(set(values)) == 1 :
+                    try:
+                        c = c.subs(sym, rep)
+                    except AttributeError:
+                        pass
+                    e = values[0]
+                    newargs.append((e, c))
+                else:
+                    for i in range(len(values)):
+                        newargs.append((values[i],
+                            intervals[i][0] <= rep and rep <= intervals[i][1]))
+            return Piecewise(*newargs)
 
         # Determine what intervals the expr,cond pairs affect.
         int_expr = self._sort_expr_cond(sym, a, b)
