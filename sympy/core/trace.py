@@ -1,5 +1,58 @@
 from sympy import Expr, Add, Mul, Matrix, Pow, sympify, Matrix
-from expr import Expr
+
+def _is_scalar(e):
+    """ Helper method used in Tr"""
+
+    # sympify to set proper attributes
+    e = sympify(e)
+    if isinstance(e, Expr):
+        if (e.is_Integer or e.is_Float or
+            e.is_Rational or e.is_Number or
+            (e.is_Symbol and e.is_commutative)
+            ):
+            return True
+
+    return False
+
+def _cycle_permute(l):
+    """ Cyclic permutations based on canonical ordering"""
+
+    print l
+    min_item = min(l)
+    indices = [i for i, x in enumerate(l) if x ==  min_item]
+
+    if (len(indices) ==  1):
+        # the min item is unique
+        idx = l.index(min_item)
+        ordered_l = l[idx:]
+        ordered_l.extend(l[:idx])
+        return ordered_l
+
+    l1 = list(l)
+    l1.extend(l) # just duplicate and extend string
+    print l1
+
+    # adding the first index back for easier looping
+    indices.append(len(l) + indices[0])
+    print indices
+
+    #get first substr that starts with min_item
+    idx = indices[0]
+    s = l1[idx:indices[1]]
+    #get the min substr which starts with min_item
+    print idx, s
+    for i in xrange(1,len(indices)-1):
+        next_s = l1[indices[i]:indices[i+1]]
+        if min(s,next_s) == next_s:
+            idx = i
+            s = next_s
+            print idx, s
+
+    print idx, indices[idx], len(l)
+    ordered_l = l1[indices[idx]:indices[idx]+len(l)]
+
+    return ordered_l
+
 
 class Tr(Expr):
     """ Generic Trace operation than can trace over:
@@ -52,15 +105,19 @@ class Tr(Expr):
                 return Mul(*c_part)
             else:
                 # cyclic permute nc_part for canonical ordering
-                idx = nc_part.index(min(nc_part))
-                nc_part_ordered = nc_part[idx:]
-                nc_part_ordered.extend(nc_part[:idx])
-
+                nc_part_ordered = _cycle_permute(nc_part)
                 return Mul(*c_part) * Expr.__new__(cls, Mul(*nc_part_ordered),
                                                    indices)
+        elif isinstance(expr, Pow):
+            if (_is_scalar(expr.args[0]) and
+                _is_scalar(expr.args[1])):
+                return expr
+            else:
+                return Expr.__new__(cls, expr, indices)
         else:
-            inst = Expr.__new__(cls, expr, indices)
-            return inst
+            if (_is_scalar(expr)):
+                return expr
+            return Expr.__new__(cls, expr, indices)
 
     def doit(self,**kwargs):
         """ Perform the trace operation.
