@@ -29,7 +29,8 @@ from sympy.external import import_module
 from sympy.core.compatibility import set_union
 from sympy.core.relational import Equality, GreaterThan, LessThan
 import warnings
-from experimental_lambdify import vectorized_lambdify, experimental_lambdify
+from experimental_lambdify import (vectorized_lambdify, experimental_lambdify,
+                                    lambdify)
 from intervalmath import interval
 
 #TODO probably all of the imports after this line can be put inside function to
