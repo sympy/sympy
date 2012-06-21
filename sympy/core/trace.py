@@ -23,7 +23,7 @@ def _cycle_permute(l):
     le = list(l)
     le.extend(l) # duplicate and extend string for easy processing
 
-    # adding the first index back for easier looping
+    # adding the first min_item index back for easier looping
     indices.append(len(l) + indices[0])
 
     # create sublist of items with first item as min_item and last_item
@@ -54,7 +54,7 @@ class Tr(Expr):
     Examples
     ========
 
-    #TODO: Need to handle printing
+    # TODO: Need to handle printing
 
     a) Trace(A+B) = Tr(A) + Tr(B)
     b) Trace(scalar*Operator) = scalar*Trace(Operator)
@@ -72,7 +72,7 @@ class Tr(Expr):
     """
 
     def __new__(cls, *args):
-        """ Construct a Trace object. Return the following expr.
+        """ Construct a Trace object.
 
         """
         expr = args[0]

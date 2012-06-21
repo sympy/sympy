@@ -23,9 +23,6 @@ def test_trace_new():
     # since A is symbol and not commutative
     assert isinstance(Tr(A), Tr)
 
-    # cyclic permutations
-    assert Tr(B*A*C*B*B*A) == Tr(A*C*B**2*A*B)
-
     #POW
     assert Tr(pow(a, b)) == a**b
     assert isinstance(Tr(pow(A, a)), Tr)
@@ -39,7 +36,6 @@ def test_trace_new():
     assert t.args[0].args[1] == (2) and t.args[1].args[1] == (2)
 
     t = Tr(a*A, (2,3))
-    print t.args[1].args[1]
     assert t.args[1].args[1] == (2,3)
 
 def test_trace_doit():
