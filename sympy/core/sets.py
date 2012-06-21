@@ -1125,9 +1125,7 @@ class UniversalSet(Set):
 def element_sort_fn(x):
     try:
         return x.sort_key()
-    except TypeError:
-        return Float(1e9+abs(hash(x))).sort_key()
-    except AttributeError:
+    except (TypeError, AttributeError):
         return Float(1e9+abs(hash(x))).sort_key()
 
 class FiniteSet(Set, EvalfMixin):
