@@ -2948,7 +2948,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
         expr = besselsimp(expr)
 
     if expr.has(C.TrigonometricFunction) or expr.has(C.HyperbolicFunction):
-        expr = trigsimp(expr)
+        expr = trigsimp(expr, deep=True)
 
     if expr.has(C.log):
         expr = shorter(expand_log(expr, deep=True), logcombine(expr))
