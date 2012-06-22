@@ -340,6 +340,7 @@ class PermutationGroup(Basic):
         obj._coset_repr = []
         obj._coset_repr_n = []
         obj._stabilizers_gens = []
+        obj._basic_orbits = []
 
         # these attributes are assigned after running _random_pr_init
         obj._random_gens = []
@@ -1990,6 +1991,224 @@ class PermutationGroup(Basic):
         beta = rand(alpha)
         h = self.orbit_rep(alpha, beta, schreier_vector)
         return (~h)*rand
+
+    def transitivity_degree(self):
+        """
+        Compute the degree of transitivity of the group.
+
+        """
+        n = self.degree
+        max_size = 1
+        for i in range(1, n + 1):
+            max_size *= n - i + 1
+            orb = self.orbit(range(i), 'tuples')
+            if len(orb) != max_size:
+                return i - 1
+        return n
+
+    def schreier_sims_random(self, base, gens, conf):
+        k = len(base)
+        n = self.degree
+        for gen in gens:
+            if [gen(x) for x in base] == [x for x in base]:
+                new = 0
+                while gen(new) == new:
+                    new += 1
+                base.append(new)
+                k += 1
+        num_gens = len(gens)
+        stab_index = [0]*num_gens
+        for i in xrange(num_gens):
+            j = 0
+            while j < k and gens[i](base[j]) == base[j]:
+                j += 1
+            stab_index[i] = j
+        S = []
+        for i in range(k):
+            S.append([])
+        for i in xrange(num_gens):
+            index = stab_index[i]
+            for j in xrange(index+1):
+                S[j].append(gens[i])
+        H = {}
+        orbs = {}
+        for i in xrange(k):
+            if S[i] == []:
+                H[i] = PermutationGroup([Permutation(range(n))])
+            else:
+                H[i] = PermutationGroup(S[i])
+            orbs[i] = (H[i]).orbit(base[i])
+        c = 0
+        while c < conf:
+            g = self.random_pr()
+            h, j = strip(g, base, orbs, H)
+            y = True
+            if j <= k:
+                y = False
+            elif not h.is_Identity:
+                y = False
+                moved = 0
+                while h(moved) == moved:
+                    moved += 1
+                base.append(moved)
+                k += 1
+                S.append([])
+            if y == False:
+                for l in range(1, j):
+                    S[l].append(h)
+                    if S[l] == []:
+                        H[l] = PermutationGroup([Permutation(range(n))])
+                    else:
+                        H[l] = PermutationGroup(S[l])
+                    orbs[l] = (H[l]).orbit(base[l])
+                c = 0
+            else:
+                c += 1
+        orders = []
+        for i in range(k):
+            orders.append(len(orbs[i]))
+        order = 1
+        for order_s in orders:
+            order *= order_s
+        return S, base, order
+
+    def base_ordering(self):
+        if self._base == []:
+            self.schreier_sims()
+        base = self._base
+        k = len(base)
+        n = self.degree
+        ordering = [0]*n
+        for i in xrange(k):
+            ordering[base[i]] = i
+        current = k
+        for i in xrange(n):
+            if i not in base:
+                ordering[i] = current
+                current += 1
+        return ordering
+
+    def lex_compare(self, g, h):
+        if self._base == []:
+            self.schreier_sims()
+        base = self._base
+        base_ordering = self.base_ordering()
+        g_image = self.base_image(g)
+        h_image = self.base_image(h)
+        g_lex = [base_ordering[x] for x in g_image]
+        h_lex = [base_ordering[x] for x in h_image]
+        return g_lex < h_lex
+
+    def base_image(self, g):
+        if self._base == []:
+            self.schreier_sims()
+        return [g(point) for point in self._base]
+
+    def partial_base_image(self, g, l):
+        if self._base == []:
+            self.schreier_sims()
+        return [g(point) for point in self._base[:l]]
+
+def strip(g, base, orbs, H):
+    h = g
+    k = len(base)
+    for i in range(k):
+        beta = h(base[i])
+        if beta not in orbs[i]:
+            return h, i+1
+        u = (H[i]).orbit_rep(base[i], beta)
+        h = ~u*h
+    return h, k+1
+
+def DirectProduct(*groups):
+    """
+    Returns the direct product of several groups as a permutation group.
+
+    This is implemented much like the __mul__ procedure for taking the direct
+    product of two permutation groups, but the idea of shifting the
+    generators is realized in the case of an arbitrary number of groups.
+    A call to DirectProduct(G1, G2, ..., Gn) is generally expected to be faster
+    than a call to G1*G2*...*Gn (and thus the need for this algorithm).
+
+
+    Examples
+    ========
+
+
+    >>> from sympy.combinatorics.perm_groups import DirectProduct, CyclicGroup
+    >>> C = CyclicGroup(4)
+    >>> G = DirectProduct(C,C,C)
+    >>> G.order()
+    64
+
+    See Also
+    ========
+    __mul__
+
+    """
+    degrees = []
+    gens_count = []
+    total_degree = 0
+    total_gens = 0
+    for group in groups:
+        current_deg = group.degree
+        current_num_gens = len(group.generators)
+        degrees.append(current_deg)
+        total_degree += current_deg
+        gens_count.append(current_num_gens)
+        total_gens += current_num_gens
+    array_gens = []
+    for i in range(total_gens):
+        array_gens.append(range(total_degree))
+    current_gen = 0
+    current_deg = 0
+    for i in xrange(len(gens_count)):
+        for j in xrange(current_gen, current_gen + gens_count[i]):
+            gen = ((groups[i].generators)[j - current_gen]).array_form
+            array_gens[j][current_deg:current_deg + degrees[i]] =\
+            [ x + current_deg for x in gen]
+        current_gen += gens_count[i]
+        current_deg += degrees[i]
+    perm_gens = [_new_from_array_form(array) for array in array_gens]
+    return PermutationGroup(perm_gens)
+
+def AbelianGroup(*cyclic_orders):
+    """
+    Returns the direct product of cyclic groups with the given orders.
+
+    According to the structure theorem for finite abelian groups ([1]),
+    every finite abelian group can be written as the direct product of finitely
+    many cyclic groups.
+    [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely
+    _generated_abelian_groups
+
+
+    Examples
+    ========
+
+
+    >>> from sympy.combinatorics.perm_groups import AbelianGroup
+    >>> AbelianGroup(3,4)
+    PermutationGroup([Permutation([1, 2, 0, 3, 4, 5, 6]),\
+    Permutation([0, 1, 2, 4, 5, 6, 3])])
+
+    See Also
+    ========
+    DirectProduct
+    """
+    groups = []
+    degree = 0
+    order = 1
+    for size in cyclic_orders:
+        degree += size
+        order *= size
+        groups.append(CyclicGroup(size))
+    G = DirectProduct(*groups)
+    G._is_abelian = True
+    G._degree = degree
+    G._order = order
+
+    return G
 
 def _check_cycles_alt_sym(perm):
     """
