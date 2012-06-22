@@ -142,7 +142,7 @@ def test_latex_functions():
     assert latex(Max(x, 2, x**3)) == r"\max\left(2, x, x^{3}\right)"
     assert latex(Abs(x)) == r"\lvert{x}\rvert"
     assert latex(re(x)) == r"\Re{x}"
-    assert latex(re(x + y)) == r"\Re {\left (x + y \right )}"
+    assert latex(re(x + y)) == r"\Re{x} + \Re{y}"
     assert latex(im(x)) == r"\Im{x}"
     assert latex(conjugate(x)) == r"\overline{x}"
     assert latex(gamma(x)) == r"\Gamma\left(x\right)"
@@ -524,14 +524,14 @@ def test_matMul():
 
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
-    X = Normal(0, 1, symbol=Symbol('x1'))
+    X = Normal('x1', 0, 1)
     assert latex(where(X>0)) == "Domain: 0 < x_{1}"
 
-    D = Die(6, symbol=Symbol('d1'))
+    D = Die('d1', 6)
     assert latex(where(D>4)) == r"Domain: d_{1} = 5 \vee d_{1} = 6"
 
-    A = Exponential(1, symbol=Symbol('a'))
-    B = Exponential(1, symbol=Symbol('b'))
+    A = Exponential('a', 1)
+    B = Exponential('b', 1)
     assert latex(pspace(Tuple(A,B)).domain) =="Domain: 0 \leq a \wedge 0 \leq b"
 
 def test_PrettyPoly():
@@ -569,3 +569,46 @@ def test_PolynomialRing():
     assert latex(QQ[x, y]) == r"\mathbb{Q}\left[x, y\right]"
     assert latex(QQ.poly_ring(x, y, order="ilex")) == \
             r"S_<^{-1}\mathbb{Q}\left[x, y\right]"
+
+def test_categories():
+    from sympy.categories import (Object, Morphism, IdentityMorphism,
+                                  NamedMorphism, CompositeMorphism,
+                                  Category, Diagram)
+
+    A1 = Object("A1")
+    A2 = Object("A2")
+    A3 = Object("A3")
+
+    f1 = NamedMorphism(A1, A2, "f1")
+    f2 = NamedMorphism(A2, A3, "f2")
+    id_A1 = IdentityMorphism(A1)
+
+    K1 = Category("K1")
+
+    assert latex(A1) == "A_{1}"
+    assert latex(f1) == "f_{1}:A_{1}\\rightarrow A_{2}"
+    assert latex(id_A1) == "id:A_{1}\\rightarrow A_{1}"
+    assert latex(f2*f1) == "f_{2}\\circ f_{1}:A_{1}\\rightarrow A_{3}"
+
+    assert latex(K1) == "\mathbf{K_{1}}"
+
+    d = Diagram()
+    assert latex(d) == "\emptyset"
+
+    d = Diagram({f1:"unique", f2:S.EmptySet})
+    assert latex(d) == "\\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
+           "\\rightarrow A_{3} : \\emptyset, & id:A_{1}\\rightarrow " \
+           "A_{1} : \\emptyset, & id:A_{2}\\rightarrow A_{2} : " \
+           "\\emptyset, & id:A_{3}\\rightarrow A_{3} : \\emptyset, " \
+           "& f_{1}:A_{1}\\rightarrow A_{2} : \\left\\{unique\\right\\}, " \
+           "& f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix}"
+
+    d = Diagram({f1:"unique", f2:S.EmptySet}, {f2 * f1: "unique"})
+    assert latex(d) == "\\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
+           "\\rightarrow A_{3} : \\emptyset, & id:A_{1}\\rightarrow " \
+           "A_{1} : \\emptyset, & id:A_{2}\\rightarrow A_{2} : " \
+           "\\emptyset, & id:A_{3}\\rightarrow A_{3} : \\emptyset, " \
+           "& f_{1}:A_{1}\\rightarrow A_{2} : \\left\\{unique\\right\\}," \
+           " & f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix}" \
+           "\\Longrightarrow \\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
+           "\\rightarrow A_{3} : \\left\\{unique\\right\\}\\end{Bmatrix}"

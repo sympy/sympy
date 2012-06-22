@@ -78,7 +78,6 @@ def test_basics():
 
     assert Integral(x).is_commutative
     n = Symbol('n', commutative=False)
-    assert Integral(x, (x, n)).is_commutative is False
     assert Integral(n + x, x).is_commutative is False
 
 def test_basics_multiple():

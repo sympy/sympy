@@ -21,6 +21,8 @@ def _free_symbols(function, limits):
 class Sum(Expr):
     """Represents unevaluated summation."""
 
+    __slots__ = ['is_commutative']
+
     def __new__(cls, function, *symbols, **assumptions):
         from sympy.integrals.integrals import _process_limits
 
@@ -46,6 +48,7 @@ class Sum(Expr):
         arglist = [sign*function]
         arglist.extend(limits)
         obj._args = tuple(arglist)
+        obj.is_commutative = function.is_commutative # limits already checked
 
         return obj
 

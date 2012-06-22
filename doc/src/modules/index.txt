@@ -47,6 +47,7 @@ access any SymPy module, or use this contens:
    utilities/index.txt
    parsing.txt
    physics/index.txt
+   categories.txt
 
 Contributions to docs
 ---------------------

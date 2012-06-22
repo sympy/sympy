@@ -45,7 +45,9 @@ class HBar(NumberSymbol):
         return 'hbar'
 
     def _pretty(self, printer, *args):
-        return prettyForm(u'\u210f')
+        if printer._use_unicode:
+            return prettyForm(u'\u210f')
+        return prettyForm('hbar')
 
     def _latex(self, printer, *args):
         return r'\hbar'

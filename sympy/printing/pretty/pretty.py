@@ -1446,6 +1446,67 @@ class PrettyPrinter(Printer):
     def _print_DMF(self, p):
         return self._print_DMP(p)
 
+    def _print_Object(self, object):
+        return self._print(pretty_symbol(object.name))
+
+    def _print_Morphism(self, morphism):
+        arrow = "-->"
+        if self._use_unicode:
+            arrow = u"\u27f6  "
+
+        domain = self._print(morphism.domain)
+        codomain = self._print(morphism.codomain)
+        tail = domain.right(arrow, codomain)[0]
+
+        return prettyForm(tail)
+
+    def _print_NamedMorphism(self, morphism):
+        pretty_name = self._print(pretty_symbol(morphism.name))
+        pretty_morphism = self._print_Morphism(morphism)
+        return prettyForm(pretty_name.right(":", pretty_morphism)[0])
+
+    def _print_IdentityMorphism(self, morphism):
+        from sympy.categories import NamedMorphism
+        return self._print_NamedMorphism(
+            NamedMorphism(morphism.domain, morphism.codomain, "id"))
+
+    def _print_CompositeMorphism(self, morphism):
+        from sympy.categories import NamedMorphism
+
+        circle = "*"
+        if self._use_unicode:
+            circle = u"\u2218"
+
+        # All components of the morphism have names and it is thus
+        # possible to build the name of the composite.
+        component_names_list = [pretty_symbol(component.name) for \
+                                component in morphism.components]
+        component_names_list.reverse()
+        component_names = circle.join(component_names_list) + ":"
+
+        pretty_name = self._print(component_names)
+        pretty_morphism = self._print_Morphism(morphism)
+        return prettyForm(pretty_name.right(pretty_morphism)[0])
+
+    def _print_Category(self, category):
+        return self._print(pretty_symbol(category.name))
+
+    def _print_Diagram(self, diagram):
+        if not diagram.premises:
+            # This is an empty diagram.
+            return self._print(S.EmptySet)
+
+        pretty_result = self._print(diagram.premises)
+        if diagram.conclusions:
+            results_arrow = " ==> "
+            if self._use_unicode:
+                results_arrow = u" \u27f9  "
+
+            pretty_conclusions = self._print(diagram.conclusions)[0]
+            pretty_result = pretty_result.right(results_arrow, pretty_conclusions)
+
+        return prettyForm(pretty_result[0])
+
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 

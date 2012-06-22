@@ -3,7 +3,7 @@ from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
     S, sympify, sstr, Wild, solve_linear, Integral,
     And, Or, Lt, Gt, Q, re, im, expand, tan, Poly, cosh, sinh, atanh,
     atan, Dummy, Float, tanh)
-from sympy.abc import a, b, c, d, x, y, z, t
+from sympy.abc import a, b, c, d, k, h, p, x, y, z, t
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,\
      solve_undetermined_coeffs
@@ -80,16 +80,25 @@ def test_solve_args():
     assert solve([x+y-3,x-y-5]) == {x: 4, y: -1}
     #no symbol to solve for
     assert solve(42) == []
-    assert solve([1, 2]) is None
+    assert solve([1, 2]) == []
+    #unordered symbols
+    #only 1
+    assert solve(y - 3, set([y])) == [3]
+    #more than 1
+    assert solve(y - 3, set([x, y])) == [{y: 3}]
     #multiple symbols: take the first linear solution
     assert solve(x + y - 3, [x, y]) == [{x: 3 - y}]
     # unless it is an undetermined coefficients system
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
+    assert solve(a*x**2 + b*x + c -
+                ((x-h)**2 + 4*p*k)/4/p,
+                [h, p, k], exclude=[a, b, c], dict=True) == \
+        [{k: (4*a*c - b**2)/(4*a), h: -b/(2*a), p: 1/(4*a)}]
     # failing undetermined system
     assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b) == \
         [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
     # failed single equation
-    assert solve(1/(1/x - y + exp(y))) ==  []
+    assert solve(1/(1/x - y + exp(y))) == []
     raises(NotImplementedError, lambda: solve(exp(x) + sin(x) + exp(y) + sin(y)))
     # failed system
     # --  when no symbols given, 1 fails
@@ -178,10 +187,10 @@ def test_solve_rational():
 def test_linear_system():
     x, y, z, t, n = symbols('x, y, z, t, n')
 
-    assert solve([x - 1, x - y, x - 2*y, y - 1], [x,y]) is None
+    assert solve([x - 1, x - y, x - 2*y, y - 1], [x,y]) == []
 
-    assert solve([x - 1, x - y, x - 2*y, x - 1], [x,y]) is None
-    assert solve([x - 1, x - 1, x - y, x - 2*y], [x,y]) is None
+    assert solve([x - 1, x - y, x - 2*y, x - 1], [x,y]) == []
+    assert solve([x - 1, x - 1, x - y, x - 2*y], [x,y]) == []
 
     assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == {x: -3, y: 1}
 
@@ -424,7 +433,7 @@ def test_issue_2098():
     assert solve((n - 1)*(n + 2)*(2*n - 1), n) == [1]
     x = Symbol('x', positive=True)
     y = Symbol('y')
-    assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == None # not {x: -3, y: 1} b/c x is positive
+    assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == [] # not {x: -3, y: 1} b/c x is positive
     # The solution following should not contain (-sqrt(2), sqrt(2))
     assert solve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
     y = Symbol('y', positive=True)
@@ -445,8 +454,8 @@ def test_checking():
     assert set(solve(x*(x - y/x),x, check=False)) == set([sqrt(y), S(0), -sqrt(y)])
     assert set(solve(x*(x - y/x),x, check=True)) == set([sqrt(y), -sqrt(y)])
     # {x: 0, y: 4} sets denominator to 0 in the following so system should return None
-    assert solve((1/(1/x + 2), 1/(y - 3) - 1)) is None
-    # 0 sets denominator of 1/x to zero so [] is returned
+    assert solve((1/(1/x + 2), 1/(y - 3) - 1)) == []
+    # 0 sets denominator of 1/x to zero so None is returned
     assert solve(1/(1/x + 2)) == []
 
 def test_issue_1572_1364_1368():
@@ -555,7 +564,7 @@ def test_issue_2668():
 def test_polysys():
     assert solve([x**2 + 2/y - 2 , x + y - 3], [x, y]) == \
         [(1, 2), (1 + sqrt(5), 2 - sqrt(5)), (1 - sqrt(5), 2 + sqrt(5))]
-    assert solve([x**2 + y - 2, x**2 + y]) is None
+    assert solve([x**2 + y - 2, x**2 + y]) == []
     # the ordering should be whatever the user requested
     assert solve([x**2 + y - 3, x - y - 4], (x, y)) != solve([x**2 + y - 3, x - y - 4], (y, x))
 
@@ -867,8 +876,7 @@ def test_issue_2802():
         [-sqrt(-x), sqrt(-x)]
     assert solve(x + exp(x), x, implicit=True) == \
         [-exp(x)]
-    assert solve(cos(x) - sin(x), x, implicit=True) == \
-        []
+    assert solve(cos(x) - sin(x), x, implicit=True) == []
     assert solve(x - sin(x), x, implicit=True) == \
         [sin(x)]
     assert solve(x**2 + x - 3, x, implicit=True) == \
@@ -908,7 +916,7 @@ def test_float_handling():
             x**4 + 2.0*x + 1.94495694631474)
     # don't call nfloat if there is no solution
     tot = 100 + c + z + t
-    assert solve(((.7 + c)/tot - .6, (.2 + z)/tot - .3, t/tot - .1)) is None
+    assert solve(((.7 + c)/tot - .6, (.2 + z)/tot - .3, t/tot - .1)) == []
 
 def test_check_assumptions():
     x = symbols('x', positive=1)
@@ -953,3 +961,8 @@ def test_exclude():
         Vminus: Vplus,
         Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
         R: Vplus/(C*s*(V1 - 2*Vplus))}]
+
+
+def test_high_order_roots():
+    s = x**5 + 4*x**3 + 3*x**2 + S(7)/4
+    assert solve(s) == Poly(s*4, domain='ZZ').all_roots()

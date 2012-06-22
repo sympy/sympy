@@ -391,14 +391,12 @@ class J2Op(SpinOpBase, HermitianOperator):
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
-    def _pretty(self, printer, *args):
-        a = stringPict('J')
-        b = stringPict('2')
-        top = stringPict(*b.left(' '*a.width()))
-        bot = stringPict(*a.right(' '*b.width()))
-        return prettyForm(binding=prettyForm.POW, *bot.above(top))
+    def _print_contents_pretty(self, printer, *args):
+        a = prettyForm(unicode(self.name))
+        b = prettyForm(u'2')
+        return a**b
 
-    def _latex(self, printer, *args):
+    def _print_contents_latex(self, printer, *args):
         return r'%s^2' % str(self.name)
 
     def _eval_rewrite_as_xyz(self, *args):
@@ -490,7 +488,13 @@ class Rotation(UnitaryOperator):
         return 'R'
 
     def _print_operator_name_pretty(self, printer, *args):
-        return prettyForm(u"\u211B" + u" ")
+        if printer._use_unicode:
+            return prettyForm(u"\u211B" + u" ")
+        else:
+            return prettyForm("R ")
+
+    def _print_operator_name_latex(self, printer, *args):
+        return r'\mathcal{R}'
 
     def _eval_inverse(self):
         return Rotation(-self.gamma, -self.beta, -self.alpha)

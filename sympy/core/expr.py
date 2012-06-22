@@ -1446,7 +1446,7 @@ class Expr(Basic, EvalfMixin):
                 indep.append(n)
             return Mul(*indep), Mul(*depend)
 
-    def as_real_imag(self, deep=True):
+    def as_real_imag(self, deep=True, **hints):
         """Performs complex expansion on 'self' and returns a tuple
            containing collected both real and imaginary parts. This
            method can't be confused with re() and im() functions,
@@ -1469,7 +1469,10 @@ class Expr(Basic, EvalfMixin):
            (re(z) - im(w), re(w) + im(z))
 
         """
-        return (C.re(self), C.im(self))
+        if hints.get('ignore') == self:
+            return None
+        else:
+            return (C.re(self), C.im(self))
 
     def as_powers_dict(self):
         """Return self as a dictionary of factors with each factor being

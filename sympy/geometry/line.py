@@ -399,7 +399,7 @@ class LinearEntity(GeometryEntity):
 
         """
         d1, d2 = (self.p1 - self.p2).args
-        if d2 == 0: # If an horizontal line
+        if d2 == 0: # If a horizontal line
             if p.y == self.p1.y: # if p is on this linear entity
                 return Line(p, p + Point(0, 1))
             else:
@@ -411,6 +411,10 @@ class LinearEntity(GeometryEntity):
 
     def perpendicular_segment(self, p):
         """Create a perpendicular line segment from `p` to this line.
+
+        The enpoints of the segment are ``p`` and the closest point in
+        the line containing self. (If self is not a line, the point might
+        not be in self.)
 
         Parameters
         ==========
@@ -443,12 +447,14 @@ class LinearEntity(GeometryEntity):
         True
         >>> p3 in s1
         True
+        >>> l1.perpendicular_segment(Point(4, 0))
+        Segment(Point(2, 2), Point(4, 0))
 
         """
         if p in self:
             return p
         pl = self.perpendicular_line(p)
-        p2 = self.intersection(pl)[0]
+        p2 = Line(self).intersection(pl)[0]
         return Segment(p, p2)
 
     @property

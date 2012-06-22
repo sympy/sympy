@@ -414,7 +414,10 @@ class TensorProductHilbertSpace(HilbertSpace):
                 )
             pform = prettyForm(*pform.right(next_pform))
             if i != length-1:
-                pform = prettyForm(*pform.right(u' ' + u'\u2a02' + u' '))
+                if printer._use_unicode:
+                    pform = prettyForm(*pform.right(u' ' + u'\u2a02' + u' '))
+                else:
+                    pform = prettyForm(*pform.right(' x '))
         return pform
 
     def _latex(self, printer, *args):
@@ -522,7 +525,10 @@ class DirectSumHilbertSpace(HilbertSpace):
                 )
             pform = prettyForm(*pform.right(next_pform))
             if i != length-1:
-                pform = prettyForm(*pform.right(u' ' + u'\u2295' + u' '))
+                if printer._use_unicode:
+                    pform = prettyForm(*pform.right(u' ' + u'\u2295' + u' '))
+                else:
+                    pform = prettyForm(*pform.right(' + '))
         return pform
 
     def _latex(self, printer, *args):
@@ -630,7 +636,10 @@ class TensorPowerHilbertSpace(HilbertSpace):
 
     def _pretty(self, printer, *args):
         pform_exp = printer._print(self.exp, *args)
-        pform_exp = prettyForm(*pform_exp.left(prettyForm(u'\u2a02')))
+        if printer._use_unicode:
+            pform_exp = prettyForm(*pform_exp.left(prettyForm(u'\u2a02')))
+        else:
+            pform_exp = prettyForm(*pform_exp.left(prettyForm('x')))
         pform_base = printer._print(self.base, *args)
         return pform_base**pform_exp
 

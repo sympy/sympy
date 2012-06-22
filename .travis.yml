@@ -1,0 +1,18 @@
+language: python
+python:
+  - 2.5
+  - 2.6
+  - 2.7
+  - 3.2
+install:
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.2' ]]; then python bin/use2to3; cd py3k-sympy; fi
+  - python setup.py install
+script:
+  # We change directories to make sure that python won't find the copy
+  # of sympy in the source directory.
+  - mkdir empty
+  - cd empty
+  - INSTALLDIR=$(python -c "import os; import sympy; print(os.path.dirname(sympy.__file__))")
+  - "echo -e \"import sympy\\nif not sympy.test(): raise Exception('Tests failed')\" | python"
+notifications:
+  email: false

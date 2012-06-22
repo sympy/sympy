@@ -1,10 +1,10 @@
 """Base class for all the objects in SymPy"""
-
-from assumptions import ManagedProperties
-from cache import cacheit
-from core import BasicType, C
-from sympify import _sympify, sympify, SympifyError
-from compatibility import callable, reduce, cmp, iterable
+from copy import copy
+from sympy.core.assumptions import ManagedProperties
+from sympy.core.cache import cacheit
+from sympy.core.core import BasicType, C
+from sympy.core.sympify import _sympify, sympify, SympifyError
+from sympy.core.compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
@@ -503,40 +503,15 @@ class Basic(object):
            set([I*pi, 2*sin(y + I*pi)])
 
         """
-
-        def _atoms(expr, typ):
-            """Helper function for recursively denesting atoms"""
-
-            result = set()
-            if isinstance(expr, Basic):
-                if expr.is_Atom and len(typ) == 0: # if we haven't specified types
-                    return set([expr])
-                else:
-                    try:
-                        if isinstance(expr, typ):
-                            result.add(expr)
-                    except TypeError:
-                        #one or more types is in implicit form
-                        for t in typ:
-                            if isinstance(t, type):
-                                if isinstance(expr, t):
-                                    result.add(expr)
-                            else:
-                                if isinstance(expr, type(t)):
-                                    result.add(expr)
-
-                iter = expr.iter_basic_args()
-            elif iterable(expr):
-                iter = expr.__iter__()
-            else:
-                iter = []
-
-            for obj in iter:
-                result.update(_atoms(obj, typ))
-
-            return result
-
-        return _atoms(self, typ=types)
+        if types:
+            types = tuple([t if isinstance(t, type) else type(t) for t in types])
+        else:
+            types = (Atom,)
+        result = set()
+        for expr in preorder_traversal(self):
+            if isinstance(expr, types):
+                result.add(expr)
+        return result
 
     @property
     def free_symbols(self):
@@ -1078,68 +1053,30 @@ class Basic(object):
         False
 
         """
-        def _ncsplit(expr):
-            if expr.is_Add or expr.is_Mul:
-                cpart, ncpart = [], []
+        return any(self._has(pattern) for pattern in patterns)
 
-                for arg in expr.args:
-                    if arg.is_commutative:
-                        cpart.append(arg)
-                    else:
-                        ncpart.append(arg)
-            elif expr.is_commutative:
-                cpart, ncpart = [expr], []
-            else:
-                cpart, ncpart = [], [expr]
+    def _has(self, pattern):
+        """Helper for .has()"""
+        from sympy.core.function import UndefinedFunction, Function
+        if isinstance(pattern, UndefinedFunction):
+            return any(f.func == pattern or f == pattern for f in self.atoms(Function, UndefinedFunction))
 
-            return set(cpart), ncpart
+        pattern = sympify(pattern)
+        if isinstance(pattern, BasicType):
+            return any(isinstance(arg, pattern)
+            for arg in preorder_traversal(self))
 
-        def _contains(expr, subexpr, iterative, c, nc):
-            if expr == subexpr:
-                return True
-            elif not isinstance(expr, Basic):
-                return False
-            elif iterative and (expr.is_Add or expr.is_Mul):
-                _c, _nc = _ncsplit(expr)
+        try:
+            match = pattern._has_matcher()
+            return any(match(arg) for arg in preorder_traversal(self))
+        except AttributeError:
+            return any(arg == pattern for arg in preorder_traversal(self))
 
-                if (c & _c) == c:
-                    if not nc:
-                        return True
-                    elif len(nc) <= len(_nc):
-                        for i in xrange(len(_nc) - len(nc)):
-                            if _nc[i:i+len(nc)] == nc:
-                                return True
 
-            return False
+    def _has_matcher(self):
+        """Helper for .has()"""
+        return self.__eq__
 
-        def _match(pattern):
-            pattern = sympify(pattern)
-
-            if isinstance(pattern, BasicType):
-                return lambda expr: (isinstance(expr, pattern) or
-                    (isinstance(expr, BasicType) and expr == pattern))
-            else:
-                if pattern.is_Add or pattern.is_Mul:
-                    iterative, (c, nc) = True, _ncsplit(pattern)
-                else:
-                    iterative, (c, nc) = False, (None, None)
-
-                return lambda expr: _contains(expr, pattern, iterative, c, nc)
-
-        def _search(expr, match):
-            if match(expr):
-                return True
-
-            if isinstance(expr, Basic):
-                args = expr.args
-            elif iterable(expr):
-                args = expr
-            else:
-                return False
-
-            return any(_search(arg, match) for arg in args)
-
-        return any(_search(self, _match(pattern)) for pattern in patterns)
 
     def replace(self, query, value, map=False):
         """
@@ -1274,26 +1211,8 @@ class Basic(object):
 
     def find(self, query, group=False):
         """Find all subexpressions matching a query. """
-        if not callable(query):
-            query = sympify(query)
-        if isinstance(query, type):
-            _query = lambda expr: isinstance(expr, query)
-        elif isinstance(query, Basic):
-            _query = lambda expr: expr.match(query)
-        else:
-            _query = query
-
-        results = []
-
-        def rec_find(expr):
-            q = _query(expr)
-            if q or q == {}:
-                results.append(expr)
-
-            for arg in expr.args:
-                rec_find(arg)
-
-        rec_find(self)
+        query = _make_find_query(query)
+        results = filter(query, preorder_traversal(self))
 
         if not group:
             return set(results)
@@ -1310,7 +1229,8 @@ class Basic(object):
 
     def count(self, query):
         """Count the number of matching subexpressions. """
-        return sum(self.find(query, group=True).values())
+        query = _make_find_query(query)
+        return sum(bool(query(sub)) for sub in preorder_traversal(self))
 
     def matches(self, expr, repl_dict={}):
         """
@@ -1519,7 +1439,6 @@ def _aresame(a, b):
     False
 
     """
-    from sympy.utilities.iterables import preorder_traversal
     from itertools import izip
 
     for i, j in izip(preorder_traversal(a), preorder_traversal(b)):
@@ -1549,7 +1468,6 @@ def _atomic(e):
 
     """
     from sympy import Derivative, Function, Symbol
-    from sympy.utilities.iterables import preorder_traversal
     pot = preorder_traversal(e)
     seen = set()
     try:
@@ -1568,3 +1486,86 @@ def _atomic(e):
             pot.skip()
             atoms.add(p)
     return atoms
+
+class preorder_traversal(object):
+    """
+    Do a pre-order traversal of a tree.
+
+    This iterator recursively yields nodes that it has visited in a pre-order
+    fashion. That is, it yields the current node then descends through the tree
+    breadth-first to yield all of a node's children's pre-order traversal.
+
+    Parameters
+    ----------
+    node : sympy expression
+        The expression to traverse.
+
+    Yields
+    ------
+    subtree : sympy expression
+        All of the subtrees in the tree.
+
+    Examples
+    --------
+    >>> from sympy import symbols
+    >>> from sympy.core.basic import preorder_traversal
+    >>> x, y, z = symbols('x y z')
+    >>> set(preorder_traversal((x+y)*z)) == set([z, x + y, z*(x + y), x, y])
+    True
+
+    """
+    def __init__(self, node):
+        self._skip_flag = False
+        self._pt = self._preorder_traversal(node)
+
+    def _preorder_traversal(self, node):
+        yield node
+        if self._skip_flag:
+            self._skip_flag = False
+            return
+        if isinstance(node, Basic):
+            for arg in node.args:
+                for subtree in self._preorder_traversal(arg):
+                    yield subtree
+        elif iterable(node):
+            for item in node:
+                for subtree in self._preorder_traversal(item):
+                    yield subtree
+
+    def skip(self):
+        """
+        Skip yielding current node's (last yielded node's) subtrees.
+
+        Examples
+        --------
+        >>> from sympy.core import symbols
+        >>> from sympy.core.basic import preorder_traversal
+        >>> x, y, z = symbols('x y z')
+        >>> pt = preorder_traversal((x+y*z)*z)
+        >>> for i in pt:
+        ...     print i
+        ...     if i == x+y*z:
+        ...             pt.skip()
+        z*(x + y*z)
+        z
+        x + y*z
+        """
+        self._skip_flag = True
+
+    def next(self):
+        return self._pt.next()
+
+    def __iter__(self):
+        return self
+
+def _make_find_query(query):
+    """Convert the argument of Basic.find() into a callable"""
+    try:
+        query = sympify(query)
+    except SympifyError:
+        pass
+    if isinstance(query, type):
+        return lambda expr: isinstance(expr, query)
+    elif isinstance(query, Basic):
+        return lambda expr: expr.match(query) is not None
+    return query

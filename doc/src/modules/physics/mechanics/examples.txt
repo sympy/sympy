@@ -46,7 +46,7 @@ rather than using a body-three orientation. ::
 
 This is the translational kinematics. We create a point with no velocity
 in N; this is the contact point between the disc and ground. Next we form
-the position vector from the contact point to the disc mass center.
+the position vector from the contact point to the disc's center of mass.
 Finally we form the velocity and acceleration of the disc. ::
 
   >>> C = Point('C')
@@ -70,8 +70,8 @@ derivatives relate to generalized speeds. Here these were computed by hand. ::
 
   >>> kd = [q1d - u3/cos(q3), q2d - u1, q3d - u2 + u3 * tan(q2)]
 
-Creation of the force list; it is the gravitational force at the mass center of
-the disc. Then we create the disc by assigning a Point to the mass center
+Creation of the force list; it is the gravitational force at the center of mass of
+the disc. Then we create the disc by assigning a Point to the center of mass
 attribute, a ReferenceFrame to the frame attribute, and mass and inertia. Then
 we form the body list. ::
 
@@ -245,8 +245,8 @@ WF - front wheel, again posses a ignorable coordinate ::
 
 Kinematics of the Bicycle:
 First block of code is forming the positions of the relevant points rear wheel
-contact -> rear wheel mass center -> frame mass center + frame/fork connection
--> fork mass center + front wheel mass center -> front wheel contact point. ::
+contact -> rear wheel's center of mass -> frame's center of mass + frame/fork connection
+-> fork's center of mass + front wheel's center of mass -> front wheel contact point. ::
 
   >>> WR_cont = Point('WR_cont')
   >>> WR_mc = WR_cont.locatenew('WR_mc', WRrad * R.z)
@@ -341,7 +341,7 @@ dynamic equations, but instead is necessary for the linearization process. ::
   >>> conlist_coord = [WF_cont.pos_from(WR_cont) & Y.z]
 
 The force list; each body has the appropriate gravitational force applied at
-its mass center. ::
+its center of mass. ::
 
   >>> FL = [(Frame_mc, -mframe * g * Y.z), (Fork_mc, -mfork * g * Y.z), (WF_mc, -mwf * g * Y.z), (WR_mc, -mwr * g * Y.z)]
   >>> BL = [BodyFrame, BodyFork, BodyWR, BodyWF]

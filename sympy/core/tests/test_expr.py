@@ -221,7 +221,7 @@ def test_as_leading_term_stub():
         pass
     assert foo(1/x).as_leading_term(x) == foo(1/x)
     assert foo(1).as_leading_term(x) == foo(1)
-    raises(NotImplementedError, 'foo(x).as_leading_term(x)')
+    raises(NotImplementedError, lambda: foo(x).as_leading_term(x))
 
 def test_atoms():
     assert sorted(list(x.atoms())) == [x]
@@ -636,7 +636,7 @@ def test_has_piecewise():
     f = (x*y + 3/y)**(3 + 2)
     g = Function('g')
     h = Function('h')
-    p = Piecewise((g, x < -1), (1, x <= 1), (f, True))
+    p = Piecewise((g(x), x < -1), (1, x <= 1), (f, True))
 
     assert p.has(x)
     assert p.has(y)
@@ -665,6 +665,10 @@ def test_has_iterative():
     assert not f.has(x*sin(x)*A*C*B)
     assert not f.has(x*sin(y)*A*B*C)
     assert f.has(x*gamma(x))
+    assert not f.has(x + sin(x))
+
+    assert (x & y & z).has(x & z)
+
 
 def test_has_integrals():
     f = Integral(x**2 + sin(x*y*z), (x, 0, x + y + z))
@@ -694,6 +698,7 @@ def test_has_tuple():
     assert not Tuple(f, g).has(x)
     assert Tuple(f, g).has(f)
     assert not Tuple(f, g).has(h)
+    assert Tuple(True).has(True) is True # .has(1) will also be True
 
 def test_has_units():
     from sympy.physics.units import m, s

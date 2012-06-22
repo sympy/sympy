@@ -4,7 +4,7 @@ from sympy.core.add import Add
 from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
-from sympy.core.basic import Basic
+from sympy.core.basic import Basic, preorder_traversal
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, Integer
@@ -14,7 +14,7 @@ from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-                                       preorder_traversal, variations)
+        variations)
 
 from collections import defaultdict
 
@@ -616,7 +616,7 @@ def _mask_nc(eq):
     Examples
     ========
     >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
-    >>> from sympy import Dummy, symbols, Sum
+    >>> from sympy import Dummy, symbols, Sum, Mul, Basic
     >>> from sympy.abc import x, y
     >>> from sympy.core.exprtools import _mask_nc
     >>> A, B, C = symbols('A,B,C', commutative=False)
@@ -639,22 +639,33 @@ def _mask_nc(eq):
     >>> _mask_nc(NO(Fd(x)*F(y)))
     (_2, {_2: NO(CreateFermion(x)*AnnihilateFermion(y))}, [])
 
-    An nc-object without nc-symbols:
-
-    >>> _mask_nc(x + x*Sum(x, (x, 1, 2)))
-    (_3*x + x, {_3: Sum(x, (x, 1, 2))}, [])
-
     Multiple nc-objects:
 
     >>> eq = x*Commutator(A, B) + x*Commutator(A, C)*Commutator(A, B)
     >>> _mask_nc(eq)
-    (x*_4*_5 + x*_5, {_4: Commutator(A, C), _5: Commutator(A, B)}, [_4, _5])
+    (x*_3*_4 + x*_4, {_3: Commutator(A, C), _4: Commutator(A, B)}, [_3, _4])
 
     Multiple nc-objects and nc-symbols:
 
     >>> eq = A*Commutator(A, B) + B*Commutator(A, C)
     >>> _mask_nc(eq)
-    (A*_7 + B*_6, {_6: Commutator(A, C), _7: Commutator(A, B)}, [_6, _7, A, B])
+    (A*_6 + B*_5, {_5: Commutator(A, C), _6: Commutator(A, B)}, [_5, _6, A, B])
+
+    If there is an object that:
+
+        - doesn't contain nc-symbols
+        - but has arguments which derive from Basic, not Expr
+        - and doesn't define an _eval_is_commutative routine
+
+    then it will give False (or None?) for the is_commutative test. Such
+    objects are also removed by this routine:
+
+    >>> from sympy import Basic, Mul
+    >>> eq = (1 + Mul(Basic(), Basic(), evaluate=False))
+    >>> eq.is_commutative
+    False
+    >>> _mask_nc(eq)
+    (_7**2 + 1, {_7: Basic()}, [])
 
     """
     expr = eq

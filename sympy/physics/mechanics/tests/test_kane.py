@@ -115,7 +115,7 @@ def test_rolling_disc():
 
     # This is the translational kinematics. We create a point with no velocity
     # in N; this is the contact point between the disc and ground. Next we form
-    # the position vector from the contact point to the disc mass center.
+    # the position vector from the contact point to the disc's center of mass.
     # Finally we form the velocity and acceleration of the disc.
     C = Point('C')
     C.set_vel(N, 0)
@@ -132,7 +132,7 @@ def test_rolling_disc():
 
     # Creation of the force list; it is the gravitational force at the mass
     # center of the disc. Then we create the disc by assigning a Point to the
-    # mass center attribute, a ReferenceFrame to the frame attribute, and mass
+    # center of mass attribute, a ReferenceFrame to the frame attribute, and mass
     # and inertia. Then we form the body list.
     ForceList = [(Dmc, - m * g * Y.z)]
     BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
@@ -213,7 +213,7 @@ def test_aux():
 def test_parallel_axis():
     # This is for a 2 dof inverted pendulum on a cart.
     # This tests the parallel axis code in Kane. The inertia of the pendulum is
-    # defined about the hinge, not about the mass center.
+    # defined about the hinge, not about the center of mass.
 
     # Defining the constants and knowns of the system
     gravity        = symbols('g')
@@ -238,7 +238,8 @@ def test_parallel_axis():
     # Origin of Newtonian reference frame
     O = Point('O')
 
-    # Creating and Locating the positions of the cart,C, and mass center of the pendulum, A
+    # Creating and Locating the positions of the cart, C, and the
+    # center of mass of the pendulum, A
     C  = O.locatenew('C',  q1 * N.x)
     Ao = C.locatenew('Ao', a * A.y)
 

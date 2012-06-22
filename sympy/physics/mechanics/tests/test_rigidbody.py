@@ -12,14 +12,14 @@ def test_rigidbody():
     B = RigidBody('B', P, A, m, (I, P))
     assert B.mass == m
     assert B.frame == A
-    assert B.mc == P
-    assert B.inertia == (I, B.mc)
+    assert B.masscenter == P
+    assert B.inertia == (I, B.masscenter)
 
     B.mass = m2
     B.frame = A2
-    B.mc = P2
-    B.inertia = (I2, B.mc)
+    B.masscenter = P2
+    B.inertia = (I2, B.masscenter)
     assert B.mass == m2
     assert B.frame == A2
-    assert B.mc == P2
-    assert B.inertia == (I2, B.mc)
+    assert B.masscenter == P2
+    assert B.inertia == (I2, B.masscenter)

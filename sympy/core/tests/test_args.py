@@ -464,27 +464,27 @@ def test_sympy__stats__rv__ProductDomain():
 
 def test_sympy__stats__frv_types__DiscreteUniformPSpace():
     from sympy.stats.frv_types import DiscreteUniformPSpace
-    assert _test_args(DiscreteUniformPSpace(range(6)))
+    assert _test_args(DiscreteUniformPSpace('X', range(6)))
 
 def test_sympy__stats__frv_types__DiePSpace():
     from sympy.stats.frv_types import DiePSpace
-    assert _test_args(DiePSpace(6))
+    assert _test_args(DiePSpace('X', 6))
 
 def test_sympy__stats__frv_types__BernoulliPSpace():
     from sympy.stats.frv_types import BernoulliPSpace
-    assert _test_args(BernoulliPSpace(S.Half, 0, 1))
+    assert _test_args(BernoulliPSpace('X', S.Half, 0, 1))
 
 def test_sympy__stats__frv_types__CoinPSpace():
     from sympy.stats.frv_types import CoinPSpace
-    assert _test_args(CoinPSpace(S.Half))
+    assert _test_args(CoinPSpace('X', S.Half))
 
 def test_sympy__stats__frv_types__BinomialPSpace():
     from sympy.stats.frv_types import BinomialPSpace
-    assert _test_args(BinomialPSpace(5, S.Half))
+    assert _test_args(BinomialPSpace('X', 5, S.Half, 1, 0))
 
 def test_sympy__stats__frv_types__HypergeometricPSpace():
     from sympy.stats.frv_types import HypergeometricPSpace
-    assert _test_args(HypergeometricPSpace(10, 5, 3))
+    assert _test_args(HypergeometricPSpace('X', 10, 5, 3))
 
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
@@ -526,95 +526,95 @@ def test_sympy__stats__frv__ProductFinitePSpace():
 
 def test_sympy__stats__crv_types__ArcsinPSpace():
     from sympy.stats.crv_types import ArcsinPSpace
-    assert _test_args(ArcsinPSpace(0,1))
+    assert _test_args(ArcsinPSpace('X', 0,1))
 
 def test_sympy__stats__crv_types__BeniniPSpace():
     from sympy.stats.crv_types import BeniniPSpace
-    assert _test_args(BeniniPSpace(1,1,1))
+    assert _test_args(BeniniPSpace('X', 1,1,1))
 
 def test_sympy__stats__crv_types__BetaPSpace():
     from sympy.stats.crv_types import BetaPSpace
-    assert _test_args(BetaPSpace(1,1))
+    assert _test_args(BetaPSpace('X', 1,1))
 
 def test_sympy__stats__crv_types__BetaPrimePSpace():
     from sympy.stats.crv_types import BetaPrimePSpace
-    assert _test_args(BetaPrimePSpace(1,1))
+    assert _test_args(BetaPrimePSpace('X', 1,1))
 
 def test_sympy__stats__crv_types__CauchyPSpace():
     from sympy.stats.crv_types import CauchyPSpace
-    assert _test_args(CauchyPSpace(0,1))
+    assert _test_args(CauchyPSpace('X', 0,1))
 
 def test_sympy__stats__crv_types__ChiPSpace():
     from sympy.stats.crv_types import ChiPSpace
-    assert _test_args(ChiPSpace(1))
+    assert _test_args(ChiPSpace('X', 1))
 
 def test_sympy__stats__crv_types__DagumPSpace():
     from sympy.stats.crv_types import DagumPSpace
-    assert _test_args(DagumPSpace(1,1,1))
+    assert _test_args(DagumPSpace('X', 1,1,1))
 
 def test_sympy__stats__crv_types__ExponentialPSpace():
     from sympy.stats.crv_types import ExponentialPSpace
-    assert _test_args(ExponentialPSpace(1))
+    assert _test_args(ExponentialPSpace('X', 1))
 
 def test_sympy__stats__crv_types__GammaPSpace():
     from sympy.stats.crv_types import GammaPSpace
-    assert _test_args(GammaPSpace(1,1))
+    assert _test_args(GammaPSpace('X', 1,1))
 
 def test_sympy__stats__crv_types__LaplacePSpace():
     from sympy.stats.crv_types import LaplacePSpace
-    assert _test_args(LaplacePSpace(0,1))
+    assert _test_args(LaplacePSpace('X', 0,1))
 
 def test_sympy__stats__crv_types__LogisticPSpace():
     from sympy.stats.crv_types import LogisticPSpace
-    assert _test_args(LogisticPSpace(0,1))
+    assert _test_args(LogisticPSpace('X', 0,1))
 
 def test_sympy__stats__crv_types__LogNormalPSpace():
     from sympy.stats.crv_types import LogNormalPSpace
-    assert _test_args(LogNormalPSpace(0,1))
+    assert _test_args(LogNormalPSpace('X', 0,1))
 
 def test_sympy__stats__crv_types__MaxwellPSpace():
     from sympy.stats.crv_types import MaxwellPSpace
-    assert _test_args(MaxwellPSpace(1))
+    assert _test_args(MaxwellPSpace('X', 1))
 
 def test_sympy__stats__crv_types__NakagamiPSpace():
     from sympy.stats.crv_types import NakagamiPSpace
-    assert _test_args(NakagamiPSpace(1,1))
+    assert _test_args(NakagamiPSpace('X', 1,1))
 
 def test_sympy__stats__crv_types__NormalPSpace():
     from sympy.stats.crv_types import NormalPSpace
-    assert _test_args(NormalPSpace(0,1))
+    assert _test_args(NormalPSpace('X', 0,1))
 
 def test_sympy__stats__crv_types__ParetoPSpace():
     from sympy.stats.crv_types import ParetoPSpace
-    assert _test_args(ParetoPSpace(1,1))
+    assert _test_args(ParetoPSpace('X', 1,1))
 
 def test_sympy__stats__crv_types__RayleighPSpace():
     from sympy.stats.crv_types import RayleighPSpace
-    assert _test_args(RayleighPSpace(1))
+    assert _test_args(RayleighPSpace('X', 1))
 
 def test_sympy__stats__crv_types__StudentTPSpace():
     from sympy.stats.crv_types import StudentTPSpace
-    assert _test_args(StudentTPSpace(1))
+    assert _test_args(StudentTPSpace('X', 1))
 
 def test_sympy__stats__crv_types__TriangularPSpace():
     from sympy.stats.crv_types import TriangularPSpace
-    assert _test_args(TriangularPSpace(-1,0,1))
+    assert _test_args(TriangularPSpace('X', -1,0,1))
 
 def test_sympy__stats__crv_types__UniformPSpace():
     from sympy.stats.crv_types import UniformPSpace
-    assert _test_args(UniformPSpace(0,1))
+    assert _test_args(UniformPSpace('X', 0,1))
 
 def test_sympy__stats__crv_types__UniformSumPSpace():
     from sympy.stats.crv_types import UniformSumPSpace
-    assert _test_args(UniformSumPSpace(1))
+    assert _test_args(UniformSumPSpace('X', 1))
 
 def test_sympy__stats__crv_types__WeibullPSpace():
     from sympy.stats.crv_types import WeibullPSpace
-    assert _test_args(WeibullPSpace(1,1))
+    assert _test_args(WeibullPSpace('X', 1,1))
 
 def test_sympy__stats__crv_types__WignerSemicirclePSpace():
     from sympy.stats.crv_types import WignerSemicirclePSpace
-    assert _test_args(WignerSemicirclePSpace(1))
+    assert _test_args(WignerSemicirclePSpace('X', 1))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
@@ -1536,6 +1536,11 @@ def test_sympy__physics__quantum__qubit__QubitState():
     from sympy.physics.quantum.qubit import QubitState
     assert _test_args(QubitState(0, 1))
 
+def test_sympy__physics__quantum__density__Density():
+    from sympy.physics.quantum.density import Density
+    from sympy.physics.quantum.state import Ket
+    assert _test_args(Density([Ket(0),0.5], [Ket(1),0.5]))
+
 @SKIP("TODO: sympy.physics.quantum.shor: Cmod Not Implemented")
 def test_sympy__physics__quantum__shor__CMod():
     from sympy.physics.quantum.shor import CMod
@@ -1684,6 +1689,11 @@ def test_sympy__physics__quantum__state__Wavefunction():
 def test_sympy__physics__quantum__tensorproduct__TensorProduct():
     from sympy.physics.quantum.tensorproduct import TensorProduct
     assert _test_args(TensorProduct(x, y))
+
+def test_sympy__physics__quantum__identitysearch__GateIdentity():
+    from sympy.physics.quantum.gate import X
+    from sympy.physics.quantum.identitysearch import GateIdentity
+    assert _test_args(GateIdentity(X(0), X(0)))
 
 def test_sympy__physics__secondquant__AnnihilateBoson():
     from sympy.physics.secondquant import AnnihilateBoson
@@ -1895,3 +1905,86 @@ def test_sympy__geometry__entity__GeometryEntity():
     from sympy.geometry.entity import GeometryEntity
     from sympy.geometry.point import Point
     assert _test_args(GeometryEntity(Point(1, 0), 1))
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__Manifold():
+    from sympy.differential_geometry import Manifold
+    assert _test_args(Manifold('name', 3))
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__Patch():
+    from sympy.differential_geometry import Manifold, Patch
+    assert _test_args(Patch('name', Manifold('name', 3)))
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__CoordSystem():
+    from sympy.differential_geometry import Manifold, Patch, CoordSystem
+    assert _test_args(CoordSystem('name', Patch('name', Manifold('name', 3))))
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__Point():
+    from sympy.differential_geometry import Manifold, Patch, CoordSystem, Point
+    assert _test_args(Point(CoordSystem('name', Patch('name', Manifold('name', 3)))), [x, y])
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__ScalarField():
+    from sympy.differential_geometry import Manifold, Patch, CoordSystem, ScalarField
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    assert _test_args(ScalarField(cs, [x, y], x))
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__VectorField():
+    from sympy.differential_geometry import Manifold, Patch, CoordSystem, VectorField
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    assert _test_args(VectorField(cs, [x, y], [x, y]))
+
+def test_sympy__categories__baseclasses__Class():
+    from sympy.categories.baseclasses import Class
+    assert _test_args(Class())
+
+def test_sympy__categories__baseclasses__Object():
+    from sympy.categories import Object
+    assert _test_args(Object("A"))
+
+@XFAIL
+def test_sympy__categories__baseclasses__Morphism():
+    from sympy.categories import Object, Morphism
+    assert _test_args(Morphism(Object("A"), Object("B")))
+
+def test_sympy__categories__baseclasses__IdentityMorphism():
+    from sympy.categories import Object, IdentityMorphism
+    assert _test_args(IdentityMorphism(Object("A")))
+
+def test_sympy__categories__baseclasses__NamedMorphism():
+    from sympy.categories import Object, NamedMorphism
+    assert _test_args(NamedMorphism(Object("A"), Object("B"), "f"))
+
+def test_sympy__categories__baseclasses__CompositeMorphism():
+    from sympy.categories import Object, NamedMorphism, CompositeMorphism
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    assert _test_args(CompositeMorphism(f, g))
+
+def test_sympy__categories__baseclasses__Diagram():
+    from sympy.categories import Object, NamedMorphism, Diagram, Category
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    f = NamedMorphism(A, B, "f")
+    d = Diagram([f])
+    assert _test_args(d)
+
+def test_sympy__categories__baseclasses__Category():
+    from sympy.categories import Object, NamedMorphism, Diagram, Category
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    d1 = Diagram([f, g])
+    d2 = Diagram([f])
+    K = Category("K", commutative_diagrams=[d1, d2])
+    assert _test_args(K)

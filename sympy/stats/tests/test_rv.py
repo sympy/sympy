@@ -7,8 +7,8 @@ from sympy.stats.rv import ProductPSpace, rs_swap
 from sympy.utilities.pytest import raises, XFAIL
 
 def test_where():
-    X, Y = Die(), Die()
-    Z = Normal(0, 1)
+    X, Y = Die('X'), Die('Y')
+    Z = Normal('Z', 0, 1)
 
     assert where(Z**2<=1).set == Interval(-1, 1)
     assert where(Z**2<=1).as_boolean() == Interval(-1,1).as_relational(Z.symbol)
@@ -18,7 +18,7 @@ def test_where():
     assert len(where(X<3).set) == 2
     assert 1 in where(X<3).set
 
-    X, Y = Normal(0, 1), Normal(0, 1)
+    X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
     assert where(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
     XX = given(X, And(X**2 <= 1, X >= 0))
     assert XX.pspace.domain.set == Interval(0, 1)
@@ -28,7 +28,7 @@ def test_where():
         XX = given(X, X+3)
 
 def test_random_symbols():
-    X, Y = Normal(0,1), Normal(0,1)
+    X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
 
     assert set(random_symbols(2*X+1)) == set((X,))
     assert set(random_symbols(2*X+Y)) == set((X,Y))
@@ -36,7 +36,7 @@ def test_random_symbols():
     assert set(random_symbols(2)) == set()
 
 def test_pspace():
-    X, Y = Normal(0,1), Normal(0,1)
+    X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
 
     assert not pspace(5+3)
     assert pspace(X) == X.pspace
@@ -44,34 +44,33 @@ def test_pspace():
     assert pspace(2*X+Y) == ProductPSpace(Y.pspace, X.pspace)
 
 def test_rs_swap():
-    x, y = symbols('x y')
-    X = Normal(0, 1, symbol=x)
-    Y = Exponential(1, symbol=y)
+    X = Normal('x', 0, 1)
+    Y = Exponential('y', 1)
 
-    XX = Normal(0, 2, symbol=x)
-    YY = Normal(0, 3, symbol=y)
+    XX = Normal('x', 0, 2)
+    YY = Normal('y', 0, 3)
 
     expr = 2*X+Y
     assert expr.subs(rs_swap((X,Y), (YY,XX))) == 2*XX+YY
 
 def test_RandomSymbol():
 
-    X = Normal(0, 1, symbol=Symbol('x'))
-    Y = Normal(0, 2, symbol=Symbol('x'))
+    X = Normal('x', 0, 1)
+    Y = Normal('x', 0, 2)
     assert X.symbol == Y.symbol
     assert X!=Y
 
     assert X.name == X.symbol.name
 
 def test_overlap():
-    X = Normal(0, 1, symbol=Symbol('x'))
-    Y = Normal(0, 2, symbol=Symbol('x'))
+    X = Normal('x', 0, 1)
+    Y = Normal('x', 0, 2)
 
     raises(ValueError, lambda: P(X>Y))
 
 def test_ProductPSpace():
-    X = Normal(0, 1)
-    Y = Normal(0, 1)
+    X = Normal('X', 0, 1)
+    Y = Normal('Y', 0, 1)
     px = X.pspace
     py = Y.pspace
     assert pspace(X+Y) == ProductPSpace(px, py)
@@ -81,8 +80,8 @@ def test_E():
     assert E(5) == 5
 
 def test_Sample():
-    X = Die(6)
-    Y = Normal(0,1)
+    X = Die('X', 6)
+    Y = Normal('Y', 0,1)
     z = Symbol('z')
 
     assert sample(X) in [1,2,3,4,5,6]
@@ -101,19 +100,19 @@ def test_Sample():
     E(Sum(1/z**Y, (z,1,oo)), Y>2, numsamples=3)
 
 def test_given():
-    X = Normal(0, 1)
-    Y = Normal(0, 1)
+    X = Normal('X', 0, 1)
+    Y = Normal('Y', 0, 1)
     A = given(X, True)
     B = given(X, Y>2)
 
     assert X == A == B
 
 def test_dependence():
-    X, Y = Die(), Die()
+    X, Y = Die('X'), Die('Y')
     assert independent(X, 2*Y)
     assert not dependent(X, 2*Y)
 
-    X, Y = Normal(0,1), Normal(0,1)
+    X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
     assert independent(X, Y)
     assert dependent(X, 2*X)
 
@@ -123,7 +122,7 @@ def test_dependence():
 
 @XFAIL
 def test_dependent_finite():
-    X, Y = Die(), Die()
+    X, Y = Die('X'), Die('Y')
     # Dependence testing requires symbolic conditions which currently break
     # finite random variables
     assert dependent(X, Y+X)
@@ -132,7 +131,7 @@ def test_dependent_finite():
     assert dependent(XX, YY)
 
 def test_normality():
-    X, Y = Normal(0,1), Normal(0,1)
+    X, Y = Normal('X', 0,1), Normal('Y', 0,1)
     x, z = symbols('x, z', real=True)
     dens = density(X-Y, Eq(X+Y, z))
 
