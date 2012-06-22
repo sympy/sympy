@@ -291,6 +291,40 @@ class DiagramGrid(Basic):
         return None
 
     @staticmethod
+    def _fix_degerate(edge, pt1, pt2, fringe, grid):
+        """
+        Checks if either of the points ``pt1`` or ``pt2`` forms a
+        perpendicular edge on ``edge``, which is in the fringe.  If
+        this is indeed so, replaces the two edges with the
+        corresponding diagonal and returns ``True``.  Otherwise
+        returns ``False``.
+        """
+        (a, b) = edge
+
+        if (a, pt1) in fringe:
+            fringe.remove((a, b))
+            fringe.remove((a, pt1))
+            fringe.append((pt1, b))
+            return True
+        elif (pt1, a) in fringe:
+            fringe.remove((a, b))
+            fringe.remove((pt1, a))
+            fringe.append((pt1, b))
+            return True
+        elif (b, pt2) in fringe:
+            fringe.remove((a, b))
+            fringe.remove((b, pt2))
+            fringe.append((a, pt2))
+            return True
+        elif (pt2, b) in fringe:
+            fringe.remove((a, b))
+            fringe.remove((pt2, b))
+            fringe.append((a, pt2))
+            return True
+
+        return False
+
+    @staticmethod
     def _weld_triangle(triangles, fringe, grid, skeleton):
         """
         Welds a triangle to the fringe and returns ``True``, if
