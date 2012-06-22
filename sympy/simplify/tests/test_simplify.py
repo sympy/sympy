@@ -6,7 +6,7 @@ from sympy import (
     fraction, gamma, hyper, hyper, hypersimp, integrate, log, logcombine,
     nsimplify, oo, pi, posify, powdenest, powsimp, radsimp, ratsimp,
     ratsimpmodprime, rcollect, separate, separatevars, signsimp, simplify,
-    sin, sinh, solve, sqrt, symbols, sympify, tan, tanh, trigsimp, Dummy)
+    sin, sinh, solve, sqrt, symbols, sympify, tan, tanh, trigsimp, Dummy, Subs)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
@@ -119,6 +119,12 @@ def test_trigsimp2():
             recursive=True) == 1
     assert trigsimp(sin(x)**2*sin(y)**2 + sin(x)**2*cos(y)**2 + cos(x)**2,
             recursive=True) == 1
+
+def test_trigsimp_deep():
+    x, y = symbols('x,y')
+    assert trigsimp(Subs(x, x, sin(y)**2+cos(y)**2), deep=True) == Subs(x, x, 1)
+    assert simplify(Subs(x, x, sin(y)**2+cos(y)**2)) == Subs(x, x, 1)
+
 
 def test_issue1274():
     x = Symbol("x")
