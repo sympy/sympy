@@ -274,6 +274,14 @@ class DiagramGrid(Basic):
         """
         return (DiagramGrid._triangle_objects(triangle) - FiniteSet(edge)).args[0]
 
+    @staticmethod
+    def _weld_triangle(triangles, fringe, grid, skeleton):
+        """
+        Welds a triangle to the fringe and returns ``True``, if
+        possible.  Otherwise returns ``False``.
+        """
+        pass
+
     def __new__(cls, diagram):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
         conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
@@ -286,3 +294,15 @@ class DiagramGrid(Basic):
         triangles = DiagramGrid._drop_redundant_triangles(triangles, skeleton)
         triangle_sizes = DiagramGrid._compute_triangle_min_sizes(
             triangles, skeleton)
+
+        triangles = sorted(triangles, key=lambda triangle: triangle_sizes[triangle])
+
+        grid = _GrowableGrid(2, 1)
+
+        # Place the first edge on the grid.
+        root_edge = [e for e in triangles[0] if skeleton[e]][0]
+        grid[0, 0], grid[0, 1] = root_edge
+        fringe = [((0,0), (0, 1))]
+
+        while DiagramGrid._weld_triangle(triangles, fringe, grid, skeleton):
+            pass
