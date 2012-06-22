@@ -935,11 +935,11 @@ def trigsimp(expr, deep=False, recursive=False):
 
     if recursive:
         w, g = cse(expr)
-        g = _trigsimp(g[0])
+        g = _trigsimp(g[0], deep)
 
         for sub in reversed(w):
             g = g.subs(sub[0], sub[1])
-            g = _trigsimp(g)
+            g = _trigsimp(g, deep)
         result = g
     else:
         result = _trigsimp(expr, deep)
@@ -1000,11 +1000,8 @@ def _trigsimp(expr, deep=False):
         # do some simplifications like sin/cos -> tan:
         for pattern, simp in matchers_division:
             res = expr.match(pattern)
-            if res is not None:
-                # if c is missing or zero, do nothing:
-                if not res.get(c, 0):
-                    continue
-                # if "a" contains any of sin("b"), cos("b"), tan("b"), cot("b),
+            if res and res.get(c, 0):
+                # if "a" contains any of sin("b"), cos("b"), tan("b"), cot("b"),
                 # sinh("b"), cosh("b"), tanh("b") or coth("b),
                 # skip the simplification:
                 if res[a].has(C.TrigonometricFunction, C.HyperbolicFunction):
