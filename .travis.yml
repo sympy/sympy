@@ -12,7 +12,7 @@ script:
   # of sympy in the source directory.
   - mkdir empty
   - cd empty
-  - INSTALLDIR=$(python -c "import os; import sympy; print(os.path.dirname(sympy.__file__))")
   - "echo -e \"import sympy\\nif not sympy.test(): raise Exception('Tests failed')\" | python"
+  - "echo -e \"import sympy\\nif not sympy.doctest(): raise Exception('Doctests failed')\" | python"
 notifications:
   email: false
