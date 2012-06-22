@@ -9,6 +9,7 @@ The currently supported back-ends are Xy-pic [Xypic]
 """
 
 from sympy.core import Basic
+from sympy.categories import CompositeMorphism, IdentityMorphism
 
 class _GrowableGrid:
     """
@@ -92,5 +93,41 @@ class DiagramGrid(Basic):
     coordinates and finding out which moprhisms connect the object
     with other objects in the grid.  TODO: Explain how to do that.
     """
+    @staticmethod
+    def _simplify_morphisms(morphisms):
+        """
+        Given a dictionary mapping morphisms to their properties,
+        returns a new dictionary in which there are no morphisms which
+        do not have properties, and which are compositions of other
+        morphisms included in the dictionary.  Identities are dropped
+        as well.
+        """
+        newmorphisms = {}
+        for morphism, props in morphisms.items():
+            if isinstance(morphism, CompositeMorphism) and not props:
+                continue
+            elif isinstance(morphism, IdentityMorphism):
+                continue
+            else:
+                newmorphisms[morphism] = props
+        return newmorphisms
+
+    @staticmethod
+    def _merge_premises_conclusions(premises, conclusions):
+        """
+        Given two dictionaries of morphisms and their properties,
+        produces a single dictionary which includes elements from both
+        dictionaries.  If a morphism has some properties in premises
+        and also in conclusions, the properties in conclusions take
+        priority.
+        """
+        merged = premises
+        for morphism, props in conclusions.items():
+            merged[morphism] = props
+        return merged
+
     def __new__(cls, diagram):
-        pass
+        premises = DiagramGrid._simplify_morphisms(diagram.premises)
+        conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
+        merged_morphisms = DiagramGrid._merge_premises_conclusions(
+            premises, conclusions)
