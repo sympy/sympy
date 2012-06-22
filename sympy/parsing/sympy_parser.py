@@ -159,6 +159,7 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
         hit = kern in s
 
     code = _transform(s.strip(), local_dict, global_dict, rationalize, convert_xor)
+    code = _parse_relationals(code)
     expr = eval(code, global_dict, local_dict) # take local objects in preference
 
     if not hit:
@@ -167,3 +168,12 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
         return expr.xreplace({C.Symbol(kern): 1})
     except (TypeError, AttributeError):
         return expr
+
+
+def _parse_relationals(expr_string):
+    """Transform strings containing relational operators into strings calling Rel"""
+    match = re.match(r'(?P<lhs>.*?)(?P<rel>==|<>|>=|<=|>|<|!=)(?P<rhs>.*)', expr_string)
+    if match:
+        return "relational.Rel(%(lhs)s, %(rhs)s, '%(rel)s')" % match.groupdict()
+    else:
+        return expr_string

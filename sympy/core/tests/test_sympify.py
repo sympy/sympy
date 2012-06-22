@@ -4,6 +4,7 @@ from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError
 from sympy.core.decorators import _sympifyit
+from sympy.core.relational import Rel
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
@@ -403,3 +404,13 @@ def test_no_autosimplify_into_Mul():
     s = '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'.replace('x', '_kern')
     ss = S(s)
     assert ss != 1 and ss.simplify() == -1
+
+def test_relational():
+    assert S('sin(x)*x/5*5! <= y') == Rel(24*sin(x)*x, y, '<=')
+    assert S('sin(x)*x/5*5! != y') == Rel(24*sin(x)*x, y, '!=')
+    assert S('sin(x)*x/5*5! <> y') == Rel(24*sin(x)*x, y, '<>')
+    assert S('sin(x)*x/5*5! == y') == Rel(24*sin(x)*x, y, '==')
+    assert S('sin(x)*x/5*5! >= y') == Rel(24*sin(x)*x, y, '>=')
+    assert S('sin(x)*x/5*5! > y') == Rel(24*sin(x)*x, y, '>')
+    assert S('sin(x)*x/5*5! < y') == Rel(24*sin(x)*x, y, '<')
+
