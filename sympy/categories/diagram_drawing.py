@@ -336,6 +336,33 @@ class DiagramGrid(Basic):
         return grid[pt] is None
 
     @staticmethod
+    def _put_object(coords, obj, grid, fringe):
+        """
+        Places an object at the coordinate ``cords`` in ``grid``,
+        growing the grid and updating ``fringe``, if necessary.
+        """
+        (i, j) = coords
+        if i == -1:
+            grid.prepend_row()
+            i = 0
+            for k in xrange(len(fringe)):
+                ((i1, j1), (i2, j2)) = fringe[k]
+                fringe[k] = ((i1 + 1, j1), (i2 + 1, j2))
+        elif i == grid.height:
+            grid.append_row()
+
+        if j == -1:
+            j = 0
+            grid.prepend_column()
+            for k in xrange(len(fringe)):
+                ((i1, j1), (i2, j2)) = fringe[k]
+                fringe[k] = ((i1, j1 + 1), (i2, j2 + 1))
+        elif j == grid.width:
+            grid.append_column()
+
+        grid[i, j] = obj
+
+    @staticmethod
     def _weld_triangle(triangles, fringe, grid, skeleton):
         """
         Welds a triangle to the fringe and returns ``True``, if
@@ -441,6 +468,18 @@ class DiagramGrid(Basic):
                         # and restart.
                         fringe.remove((a, b))
                         break
+
+            # We now know where to place the other vertex of the
+            # triangle.
+            DiagramGrid._put_object(target_cell, obj, grid, fringe)
+
+            fringe.extend([(a, target_cell), (b, target_cell)])
+
+            triangles.remove(tri)
+
+            return True
+
+        return False
 
     def __new__(cls, diagram):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
