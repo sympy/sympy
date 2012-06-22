@@ -325,6 +325,17 @@ class DiagramGrid(Basic):
         return False
 
     @staticmethod
+    def _empty_point(pt, grid):
+        """
+        Checks if the cell at coordinates ``pt`` is either empty or
+        out of the bounds of the grid.
+        """
+        if (pt[0] < 0) or (pt[1] < 0) or \
+           (pt[0] >= grid.height) or (pt[1] >= grid.width):
+            return True
+        return grid[pt] is None
+
+    @staticmethod
     def _weld_triangle(triangles, fringe, grid, skeleton):
         """
         Welds a triangle to the fringe and returns ``True``, if
@@ -345,6 +356,91 @@ class DiagramGrid(Basic):
             # welded to the fringe.  Decide where to place the
             # other vertex of the triangle and check for
             # degenerate situations en route.
+
+            if (abs(a[0] - b[0]) == 1) and (abs(a[1] - b[1]) == 1):
+                # A diagonal edge.
+                target_cell = (a[0], b[1])
+                if grid[target_cell]:
+                    # That cell is already occupied.
+                    target_cell = (b[0], a[1])
+
+                    if grid[target_cell]:
+                        # Degenerate situation, this edge is not
+                        # on the actual fringe.  Correct the
+                        # fringe and go on.
+                        fringe.remove((a, b))
+                        break
+            elif a[0] == b[0]:
+                # A horizontal edge.  Suppose a triangle can be
+                # built in the upward direction.
+
+                up_left = a[0] - 1, a[1]
+                up_right = a[0] - 1, b[1]
+
+                if DiagramGrid._fix_degerate(
+                    (a, b), up_left, up_right, fringe, grid):
+                    # The fringe has just been corrected.  Restart.
+                    break
+
+                if DiagramGrid._empty_point(up_left, grid):
+                    target_cell = up_left
+                elif DiagramGrid._empty_point(up_right, grid):
+                    target_cell = up_right
+                else:
+                    # No room above this edge.  Check below.
+                    down_left = a[0] + 1, a[1]
+                    down_right = a[0] + 1, b[1]
+
+                    if DiagramGrid._fix_degerate(
+                        (a, b), up_left, up_right, fringe, grid):
+                        # The fringe has just been corrected.
+                        # Restart.
+                        break
+
+                    if DiagramGrid._empty_point(up_left, grid):
+                        target_cell = down_left
+                    elif DiagramGrid._empty_point(up_right, grid):
+                        target_cell = down_right
+                    else:
+                        # This edge is not in the fringe, remove it
+                        # and restart.
+                        fringe.remove((a, b))
+                        break
+
+            elif a[1] == b[1]:
+                # A vertical edge.  Suppose a triangle can be built to
+                # the left.
+                left_up = a[0], a[1] - 1
+                left_down = b[0], a[1] - 1
+
+                if DiagramGrid._fix_degerate(
+                    (a, b), left_up, left_down, fringe, grid):
+                    # The fringe has just been corrected.  Restart.
+                    break
+
+                if DiagramGrid._empty_point(left_up, grid):
+                    target_cell = left_up
+                elif DiagramGrid._empty_point(left_down, grid):
+                    target_cell = left_down
+                else:
+                    # No room to the left.  See what's to the right.
+                    right_up = a[0], a[1] + 1
+                    right_down = b[0], a[1] + 1
+
+                    if DiagramGrid._fix_degerate(
+                        (a, b), right_up, right_down, fringe, grid):
+                        # The fringe has just been corrected.  Restart.
+                        break
+
+                    if DiagramGrid._empty_point(right_up, grid):
+                        target_cell = right_up
+                    elif DiagramGrid._empty_point(right_down, grid):
+                        target_cell = right_down
+                    else:
+                        # This edge is not in the fringe, remove it
+                        # and restart.
+                        fringe.remove((a, b))
+                        break
 
     def __new__(cls, diagram):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
