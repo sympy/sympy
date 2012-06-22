@@ -27,9 +27,12 @@ from sympy import sympify, Expr
 from sympy.core.compatibility import set_union
 
 np = import_module('numpy')
+
+
 class ImplicitSeries(BaseSeries):
     """ Representation for Implicit plot """
     is_implicit = True
+
     def __init__(self, expr, var_start_end_x, var_start_end_y):
         super(ImplicitSeries, self).__init__()
         self.expr = sympify(expr)
@@ -51,8 +54,8 @@ class ImplicitSeries(BaseSeries):
                 str((self.start_y, self.end_y)))
 
     def get_meshes(self):
-        WIDTH = 512  #TODO: Add as an attribute which can be changed
-        HEIGHT = 512 #TODO: Add as an attribute which can be changed
+        WIDTH = 512   #TODO: Add as an attribute which can be changed
+        HEIGHT = 512  #TODO: Add as an attribute which can be changed
         is_equality = isinstance(self.expr, Equality)
         func = experimental_lambdify((self.var_x, self.var_y), self.expr, use_interval=True)
         xinterval = interval(self.start_x, self.end_x)
@@ -134,6 +137,7 @@ class ImplicitSeries(BaseSeries):
         yvals = np.linspace(self.start_y, self.end_y, WIDTH)
 
         return xvals, yvals, contour
+
 
 def plot_implicit(expr, var_start_end_x, var_start_end_y, **kwargs):
     """A plot function to plot implicit equations / inequations.

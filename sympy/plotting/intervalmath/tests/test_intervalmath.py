@@ -1,8 +1,8 @@
 from sympy.plotting.intervalmath import interval
-import numpy as np
 
 
 def interval_test():
+    import numpy as np
     assert (interval(1, 1) == interval(1, 1, is_valid=True)) == (True, True)
     assert (interval(1, 1) == interval(1, 1, is_valid=False)) == (True, False)
     assert (interval(1, 1) == interval(1, 1, is_valid=None)) == (True, None)
@@ -29,6 +29,7 @@ def interval_test():
 
 
 def interval_add_test():
+    import numpy as np
     assert (interval(1, 2) + interval(2, 3) == interval(3, 5)) == (True, True)
     assert (1 + interval(1, 2) == interval(2, 3)) == (True, True)
     assert (interval(1, 2) + 1 == interval(2, 3)) == (True, True)
@@ -47,6 +48,7 @@ def interval_add_test():
 
 
 def interval_sub_test():
+    import numpy as np
     assert (interval(1, 2) - interval(1, 5) == interval(-4, 1)) == (True, True)
     assert (interval(1, 2) - 1 == interval(0, 1)) == (True, True)
     assert (1 - interval(1, 2) == interval(-1, 0)) == (True, True)
@@ -57,6 +59,7 @@ def interval_sub_test():
 
 
 def interval_inequality_test():
+    import numpy as np
     assert (interval(1, 2) < interval(3, 4)) == (True, True)
     assert (interval(1, 2) < interval(2, 4)) == (None, True)
     assert (interval(1, 2) < interval(-2, 0)) == (False, True)
@@ -88,6 +91,7 @@ def interval_inequality_test():
 
 
 def interval_mul_test():
+    import numpy as np
     assert (interval(1, 5) * interval(2, 10) == interval(2, 50)) == (True, True)
     a = interval(-1, 1) * interval(2, 10) == interval(-10, 10)
     assert a == (True, True)
@@ -109,6 +113,7 @@ def interval_mul_test():
 
 
 def interval_div_test():
+    import numpy as np
     div = interval(1, 2, is_valid=False) / 3
     assert div == interval(-np.inf, np.inf, is_valid=False)
 
