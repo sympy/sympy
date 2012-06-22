@@ -275,12 +275,42 @@ class DiagramGrid(Basic):
         return (DiagramGrid._triangle_objects(triangle) - FiniteSet(edge)).args[0]
 
     @staticmethod
+    def _find_triangle_welding(triangle, fringe, grid):
+        """
+        Finds if possible an edge in the fringe to which the supplied
+        triangle could be attached and returns the index of the
+        corresponding edge in the fringe.
+
+        This function relies on the fact that objects are unique in
+        the diagram.
+        """
+        for (a, b) in fringe:
+            if ((grid[a], grid[b]) in triangle) or \
+               ((grid[b], grid[a]) in triangle):
+                return (a, b)
+        return None
+
+    @staticmethod
     def _weld_triangle(triangles, fringe, grid, skeleton):
         """
         Welds a triangle to the fringe and returns ``True``, if
         possible.  Otherwise returns ``False``.
         """
-        pass
+        for tri in triangles:
+            welding_edge = DiagramGrid._find_triangle_welding(
+                tri, fringe, grid)
+            if not welding_edge:
+                continue
+
+            a, b = welding_edge
+            target_cell = None
+
+            obj = DiagramGrid._other_vertex(tri, (grid[a], grid[b]))
+
+            # We now have a triangle and an wedge where it can be
+            # welded to the fringe.  Decide where to place the
+            # other vertex of the triangle and check for
+            # degenerate situations en route.
 
     def __new__(cls, diagram):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
