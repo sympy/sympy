@@ -126,8 +126,79 @@ class DiagramGrid(Basic):
             merged[morphism] = props
         return merged
 
+    @staticmethod
+    def _juxtapose_edges(edge1, edge2):
+        """
+        If ``edge1`` and ``edge2`` have a common extremity, returns an
+        edge which would form a triangle with ``edge1`` and ``edge2``.
+
+        If ``edge1`` and ``edge2`` don't have a common extremity,
+        returns ``None``.
+
+        If ``edge1`` and ``edge`` are the same edge, returns ``None``.
+        """
+        if (edge1 == edge2) or ((edge1[0] == edge2[1]) and (edge1[1] == edge2[0])):
+            return None
+
+        for i in [0, 1]:
+            for j in [0, 1]:
+                if edge1[i] == edge2[j]:
+                    # Some extremities match, return the other two.
+                    return (edge1[i ^ 1], edge2[j ^ 1])
+
+        # No extremities match, return None.
+        return None
+
+    @staticmethod
+    def _add_edge_append(dictionary, edge, elem):
+        """
+        If ``edge`` is not ``dictionary``, adds ``edge`` to the
+        dictionary and sets its value to ``[elem]``.  Otherwise
+        appends ``elem`` to the value of existing entry.
+
+        Note that edges are undirected, thus `(A, B) = (B, A)`.
+        """
+        (A, B) = edge
+        if (A, B) in dictionary:
+            dictionary[(A, B)].append(elem)
+        elif (B, A) in dictionary:
+             dictionary[(B, A)].append(elem)
+        else:
+            dictionary[(A, B)] = [elem]
+
+    @staticmethod
+    def _build_skeleton(morphisms):
+        """
+        Creates a dictionary which maps edges to corresponding
+        morphisms.  Thus for a morphism `f:A\rightarrow B`, the edge
+        `(A, B)` will be associated with `f`.  This function also adds
+        to the list those edges which are formed by juxtaposition of
+        two edges already in the list.  These new edges are not
+        associated with any morphism and are only added to assure that
+        the diagram can be decomposed into triangles.
+        """
+        edges = {}
+        # Create edges for morphisms.
+        for morphism in morphisms:
+            DiagramGrid._add_edge_append(
+                edges, (morphism.domain,morphism.codomain), morphism)
+
+        # Create new edges by juxtaposing existing edges.
+        edges1 = dict(edges)
+        for w in edges1:
+            for v in edges1:
+                wv = DiagramGrid._juxtapose_edges(w, v)
+                if wv:
+                    (A, B) = wv
+                    if ((A, B) not in edges) and ((B, A) not in edges):
+                        edges[(A, B)] = []
+
+        return edges
+
     def __new__(cls, diagram):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
         conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
         merged_morphisms = DiagramGrid._merge_premises_conclusions(
             premises, conclusions)
+
+        skeleton = DiagramGrid._build_skeleton(merged_morphisms)
