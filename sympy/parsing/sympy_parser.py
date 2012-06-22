@@ -167,3 +167,17 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
         return expr.xreplace({C.Symbol(kern): 1})
     except (TypeError, AttributeError):
         return expr
+
+
+def parse_relationals(expr_string):
+    """Transform strings containing relational operators into strings calling Rel
+
+    >>> from sympy.parsing.sympy_parser import parse_relationals
+    >>> parse_relationals('x <= 5*sin(x)')
+    "Rel(x ,  5*sin(x), '<=')"
+    """
+    match = re.match(r'(?P<lhs>.*?)(?P<rel>==|<>|>=|<=|>|<|!=)(?P<rhs>.*)', expr_string)
+    if match:
+        return "Rel(%(lhs)s, %(rhs)s, '%(rel)s')" % match.groupdict()
+    else:
+        return expr_string

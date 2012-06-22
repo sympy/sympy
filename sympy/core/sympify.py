@@ -106,6 +106,16 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     [1]
     [2]
 
+
+    See Also
+    ========
+
+    sympy.parsing.sympy_parser.parse_relationals: permits the parsing of <,
+        <=, ==, => and > into SymPy relational objects for use with solvers and
+        other. In future versions similar capabilities that differ too much
+        from python's ``eval`` (after which ``sympify`` is modeled) will be
+        consolidated in a complete parsing module.
+
     """
     try:
         cls = a.__class__
