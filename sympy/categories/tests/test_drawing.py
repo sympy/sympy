@@ -1,4 +1,5 @@
 from sympy.categories.diagram_drawing import _GrowableGrid
+from sympy.categories import DiagramGrid, Object, NamedMorphism, Diagram
 
 def test_GrowableGrid():
     grid = _GrowableGrid(1, 2)
@@ -66,3 +67,16 @@ def test_GrowableGrid():
     assert grid[0, 1] == None
     assert grid[1, 1] == 1
     assert grid[2, 1] == "two"
+
+def test_DiagramGrid():
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    D = Object("D")
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    h = NamedMorphism(D, A, "h")
+    k = NamedMorphism(D, B, "k")
+    d = Diagram([f, g, h, k])
+
+    grid = DiagramGrid(d)
