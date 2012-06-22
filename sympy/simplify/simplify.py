@@ -909,12 +909,12 @@ def trigsimp(expr, deep=False, recursive=False):
     =====
 
     deep:
-    - Apply trigsimp inside functions
+    - Apply trigsimp inside all objects with arguments
 
     recursive:
     - Use common subexpression elimination (cse()) and apply
-    trigsimp recursively (recursively==True is quite expensive
-    operation if the expression is large)
+    trigsimp recursively (this is quite expensive if the
+    expression is large)
 
     Examples
     ========
@@ -930,24 +930,25 @@ def trigsimp(expr, deep=False, recursive=False):
     log(2)
 
     """
-    if not expr.has(C.TrigonometricFunction) and not expr.has(C.HyperbolicFunction):
+    if not expr.has(C.TrigonometricFunction, C.HyperbolicFunction):
         return expr
 
     if recursive:
         w, g = cse(expr)
-        g = trigsimp_recursive(g[0])
+        g = _trigsimp(g[0])
 
         for sub in reversed(w):
             g = g.subs(sub[0], sub[1])
-            g = trigsimp_recursive(g)
+            g = _trigsimp(g)
         result = g
     else:
-        result = trigsimp_recursive(expr, deep)
+        result = _trigsimp(expr, deep)
 
     return result
 
-def trigsimp_recursive(expr, deep = False):
-    a,b,c = map(Wild, 'abc')
+def _trigsimp(expr, deep=False):
+    """recursive helper for trigsimp"""
+    a, b, c = map(Wild, 'abc')
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
     sinh, cosh, tanh, coth = C.sinh, C.cosh, C.tanh, C.coth
     # for the simplifications like sinh/cosh -> tanh:
@@ -1001,54 +1002,43 @@ def trigsimp_recursive(expr, deep = False):
             res = expr.match(pattern)
             if res is not None:
                 # if c is missing or zero, do nothing:
-                if (not c in res) or res[c] == 0:
+                if not res.get(c, 0):
                     continue
                 # if "a" contains any of sin("b"), cos("b"), tan("b"), cot("b),
                 # sinh("b"), cosh("b"), tanh("b") or coth("b),
                 # skip the simplification:
-                if res[a].has(C.TrigonometricFunction) or res[a].has(C.HyperbolicFunction):
+                if res[a].has(C.TrigonometricFunction, C.HyperbolicFunction):
                     continue
                 # simplify and finish:
                 expr = simp.subs(res)
-                break
-        if not expr.is_Mul:
-            return trigsimp_recursive(expr, deep)
-        ret = S.One
-        for x in expr.args:
-            ret *= trigsimp_recursive(x, deep)
-        return ret
-    elif expr.is_Pow:
-        return Pow(trigsimp_recursive(expr.base, deep),
-                trigsimp_recursive(expr.exp, deep))
-    elif expr.is_Add:
-        # TODO this needs to be faster
+                break # process below
 
+    if expr.is_Add:
         # The types of hyper functions we are looking for
         # Scan for the terms we need
-        ret = S.Zero
+        args = []
         for term in expr.args:
-            term = trigsimp_recursive(term, deep)
-            res = None
+            term = _trigsimp(term, deep)
             for pattern, result in matchers_identity:
                 res = term.match(pattern)
                 if res is not None:
-                    ret += result.subs(res)
+                    term = result.subs(res)
                     break
-            if res is None:
-                ret += term
+            args.append(term)
+        if args != expr.args:
+            expr = Add(*args)
 
         # Reduce any lingering artifacts, such as sin(x)**2 changing
-        # to 1-cos(x)**2 when sin(x)**2 was "simpler"
-        expr = ret
+        # to 1 - cos(x)**2 when sin(x)**2 was "simpler"
         for pattern, result, ex in artifacts:
+            if expr.is_number:
+                break
             # Substitute a new wild that excludes some function(s)
             # to help influence a better match. This is because
             # sometimes, for example, 'a' would match sec(x)**2
             a_t = Wild('a', exclude=[ex])
             pattern = pattern.subs(a, a_t)
             result = result.subs(a, a_t)
-            if expr.is_number:
-                continue
 
             m = expr.match(pattern)
             while m is not None:
@@ -1059,8 +1049,8 @@ def trigsimp_recursive(expr, deep = False):
 
         return expr
 
-    elif deep and expr.args:
-        return expr.func(*[trigsimp_recursive(a, deep) for a in expr.args])
+    elif expr.is_Mul or expr.is_Pow or deep and expr.args:
+        return expr.func(*[_trigsimp(a, deep) for a in expr.args])
 
     return expr
 
