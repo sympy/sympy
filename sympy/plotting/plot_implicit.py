@@ -153,8 +153,8 @@ def plot_implicit(expr, var_start_end_x, var_start_end_y, **kwargs):
     ---------
 
     Plot expressions:
-    >>> from sympy import plot_implicit, cos, sin, symbols
-    >>> x, y = symbols('x y u v')
+    >>> from sympy import plot_implicit, cos, sin, symbols, Eq
+    >>> x, y = symbols('x y')
     >>> p1 = plot_implicit(Eq(y, x ** 2), (x, -5, 5), (y, -5, 5), show=False)
     >>> p2 = plot_implicit(Eq(x ** 2 + y ** 2, 3), (x, -3, 3), (y, -3, 3), show=False)
     >>> p3 = plot_implicit(y ** 2 < x ** 3 - x, (x, -4, 4), (y, -4, 4), show=False)
