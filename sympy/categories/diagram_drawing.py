@@ -259,6 +259,21 @@ class DiagramGrid(Basic):
             triangle_sizes[triangle] = size
         return triangle_sizes
 
+    @staticmethod
+    def _triangle_objects(triangle):
+        """
+        Given a triangle, returns the objects included in it.
+        """
+        return FiniteSet(sum(triangle, () ))
+
+    @staticmethod
+    def _other_vertex(triangle, edge):
+        """
+        Given a triangle and an edge of it, returns the vertex which
+        opposes the edge.
+        """
+        return (DiagramGrid._triangle_objects(triangle) - FiniteSet(edge)).args[0]
+
     def __new__(cls, diagram):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
         conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
