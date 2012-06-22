@@ -8,7 +8,7 @@ The currently supported back-ends are Xy-pic [Xypic]
 [Xypic] http://www.tug.org/applications/Xy-pic/
 """
 
-from sympy.core import Basic
+from sympy.core import Basic, FiniteSet
 from sympy.categories import CompositeMorphism, IdentityMorphism
 
 class _GrowableGrid:
@@ -195,6 +195,70 @@ class DiagramGrid(Basic):
 
         return edges
 
+    @staticmethod
+    def _list_triangles(edges):
+        """
+        Builds the set of triangles formed by the supplied edges.  The
+        triangles are arbitrary and need not be commutative.  A
+        triangle is a set contains all three sides.
+        """
+        triangles = []
+
+        for w in edges:
+            for v in edges:
+                wv = DiagramGrid._juxtapose_edges(w, v)
+                if wv:
+                    (A, B) = wv
+                    if (A, B) in edges:
+                        triangle = FiniteSet(w, v, (A, B))
+                        triangles.append(triangle)
+                    elif (B, A) in edges:
+                        triangle = FiniteSet(w, v, (B, A))
+                        triangles.append(triangle)
+
+        return FiniteSet(triangles)
+
+    @staticmethod
+    def _drop_redundant_triangles(triangles, skeleton):
+        """
+        Returns a list which contains only those triangles who have
+        morphisms associated with at least two edges.
+        """
+        return [tri for tri in triangles if \
+                len([e for e in tri if skeleton[e]]) >= 2]
+
+    @staticmethod
+    def _morphism_length(morphism):
+        """
+        Returns the length of a morphism.  The length of a morphism is
+        the number of components it consists of.  A non-composite
+        morphism is of length 1.
+        """
+        if isinstance(morphism, CompositeMorphism):
+            return len(morphism.components)
+        else:
+            return 1
+
+    @staticmethod
+    def _compute_triangle_min_sizes(triangles, edges):
+        """
+        Returns a dictionary mapping triangles to their minimal sizes.
+        The minimal size of a triangle is the sum of maximal lengths
+        of morphisms associated to the sides of the triangle.  The
+        length of a morphism is the number of components it consists
+        of.  A non-composite morphism is of length 1.
+        """
+        triangle_sizes = {}
+        for triangle in triangles:
+            size = 0
+            for e in triangle:
+                morphisms = edges[e]
+                if morphisms:
+                    size += max([DiagramGrid._morphism_length(m) \
+                                 for m in morphisms])
+            triangle_sizes[triangle] = size
+        return triangle_sizes
+
     def __new__(cls, diagram):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
         conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
@@ -202,3 +266,8 @@ class DiagramGrid(Basic):
             premises, conclusions)
 
         skeleton = DiagramGrid._build_skeleton(merged_morphisms)
+
+        triangles = DiagramGrid._list_triangles(skeleton)
+        triangles = DiagramGrid._drop_redundant_triangles(triangles, skeleton)
+        triangle_sizes = DiagramGrid._compute_triangle_min_sizes(
+            triangles, skeleton)
