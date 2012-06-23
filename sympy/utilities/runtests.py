@@ -637,7 +637,7 @@ def _doctest(*paths, **kwargs):
         print
         print("DO *NOT* COMMIT!")
 
-    return not failed
+    return int(failed)
 
 # The Python 2.5 doctest runner uses a tuple, but in 2.6+, it uses a namedtuple
 # (which doesn't exist in 2.5-)
