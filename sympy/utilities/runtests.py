@@ -135,22 +135,29 @@ def setup_pprint():
     init_printing(pretty_print=False)
 
 def run_in_subprocess_with_hash_randomization(function, function_args=(),
-    function_kwargs={}, command=sys.executable):
+    function_kwargs={}, command=sys.executable,
+    module='sympy.utilities.runtests', force=False):
     """
     Run a function in a Python subprocess with hash randomization enabled.
-
-    The environment variable PYTHONHASHSEED should be set before calling this
-    function to seed the hash randomization.
 
     If hash randomization is not supported by the version of Python given, it
     returns None.  Otherwise, it returns the exit value of the command.  The
     function is passed to sys.exit(), so the return value of the function will
-    be the return value.  Note that if a function returns True or False, that
-    means that this function will return 1 and 0, respectively, which is the
-    opposite of what the return value would normally be.
+    be the return value.
 
-    ``function`` should be a string name of a function that is importable
-    from sympy (like "test").  ``function_args`` and ``function_kwargs``
+    The environment variable PYTHONHASHSEED is used to seed Python's hash
+    randomization.  If it is set, this function will return False, because
+    starting a new subprocess is unnecessary in that case.  If it is not set,
+    one is set at random, and the tests are run.  Note that if this
+    environment variable is set when Python starts, hash randomization is
+    automatically enabled.  To force a subprocess to be created even if
+    PYTHONHASHSEED is set, pass ``force=True``.  This flag will not force a
+    subprocess in Python versions that do not support hash randomization (see
+    below), because those versions of Python do not support the ``-R`` flag.
+
+    ``function`` should be a string name of a function that is importable from
+    the module ``module``, like "_test".  The default for ``module`` is
+    "sympy.utilities.runtests".  ``function_args`` and ``function_kwargs``
     should be a repr-able tuple and dict, respectively.  The default Python
     command is sys.executable, which is the currently running Python command.
 
@@ -169,22 +176,20 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
     >>> from sympy.utilities.runtests import (
     ... run_in_subprocess_with_hash_randomization)
     >>> # run the core tests in verbose mode
-    >>> run_in_subprocess_with_hash_randomization("test",
+    >>> run_in_subprocess_with_hash_randomization("_test",
     ... function_args=("core",), function_kwargs={'verbose': True}) #doctest: +SKIP
-    # Will return 1 if sys.executable supports hash randomization and tests
-    # pass, 0 if they fail, and None if it does not support hash
+    # Will return 0 if sys.executable supports hash randomization and tests
+    # pass, 1 if they fail, and None if it does not support hash
     # randomization.
 
     """
     # First check if the Python version supports hash randomization
-    try:
-        p = subprocess.Popen(["python", "--version"], stdout=subprocess.PIPE,
-    stderr=subprocess.STDOUT)
-    except:
-        # If there are any errors at all with creating the subprocess, we bail
-        return None
+    p = subprocess.Popen([command, "--version"], stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
     pyversion, _ = p.communicate()
-    assert pyversion.startswith("Python ")
+    pyversion = pyversion.decode('utf-8') # Popen returns a bytes object in
+                                          # Python 3
+    assert str(pyversion).startswith("Python ")
     version = pyversion[7:]
     if int(version[0]) == 2:
         if int(version[2]) <= 5:
@@ -203,17 +208,17 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
     else:
         raise ValueError("Malformed Python version string: %s" % pyversion)
 
-    # Now run the command
-    commandstring = ("import sys; from sympy import %s; "
-        "sys.exit(%s(*%s, **%s))" % (function, function, repr(function_args),
-        repr(function_kwargs)))
-    try:
-        p = subprocess.call(["python", "-R", "-c", commandstring])
-    except:
-        # Once again, if there are any problems with the subprocess, we bail
-        return None
+    hash_seed = os.getenv("PYTHONHASHSEED")
+    if not hash_seed:
+        os.environ["PYTHONHASHSEED"] = str(random.randrange(100000000))
     else:
-        return p
+        if not force:
+            return None
+    # Now run the command
+    commandstring = ("import sys; from %s import %s;sys.exit(%s(*%s, **%s))" %
+                     (module, function, function, repr(function_args), repr(function_kwargs)))
+
+    return subprocess.call([command, "-R", "-c", commandstring])
 
 def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
     doctest_kwargs={}, examples_args=(), examples_kwargs={'quiet':True}):
@@ -361,11 +366,59 @@ def test(*paths, **kwargs):
     e.g., if you are piping to ``less -r`` and you still want colors)
 
     >>> sympy.test(force_colors=False    # doctest: +SKIP
+
     The traceback verboseness can be set to "short" or "no" (default is
     "short")
 
     >>> sympy.test(tb='no')    # doctest: +SKIP
 
+    You can disable running the tests in a separate subprocess using
+    ``subprocess=False``.  This is done to support seeding hash randomization,
+    which is enabled by default in the Python versions where it is supported.
+    If subprocess=False, hash randomization is enabled/disabled according to
+    whether it has been enabled or not in the calling Python process.
+    However, even if it is enabled, the seed cannot be printed unless it is
+    called from a new Python process.
+
+    Hash randomization was added in the minor Python versions 2.6.8, 2.7.3,
+    3.1.5, and 3.2.3, and is enabled by default in all Python versions after
+    and including 3.3.0.
+
+    If hash randomization is not supported ``subprocess=False`` is used
+    automatically.
+
+    >>> sympy.test(subprocess=False)     # doctest: +SKIP
+
+    To set the hash randomization seed, set the environment variable
+    ``PYTHONHASHSEED`` before running the tests.  This can be done from within
+    Python using
+
+    >>> import os
+    >>> os,environ['PYTHONHASHSEED'] = 42 # doctest: +SKIP
+
+    Or from the command line using
+
+    $ PYTHONHASHSEED=42 ./bin/test
+
+    If the seed is not set, a random seed will be chosen.
+    """
+    subprocess = kwargs.pop("subprocess", True)
+    if subprocess:
+        ret = run_in_subprocess_with_hash_randomization("_test",
+            function_args=paths, function_kwargs=kwargs)
+        if ret is not None:
+            return not bool(ret)
+    return not bool(_test(*paths, **kwargs))
+
+def _test(*paths, **kwargs):
+    """
+    Internal function that actually runs the tests.
+
+    All keyword arguments from ``test()`` are passed to this function except for
+    ``subprocess``.
+
+    Returns 0 if tests passed and 1 if they failed.  See the docstring of
+    ``test()`` for more information.
     """
     verbose = kwargs.get("verbose", False)
     tb = kwargs.get("tb", "short")
@@ -402,7 +455,7 @@ def test(*paths, **kwargs):
                     break
         t._testfiles.extend(matched)
 
-    return t.test(sort=sort, timeout=timeout, slow=slow)
+    return int(not t.test(sort=sort, timeout=timeout, slow=slow))
 
 def doctest(*paths, **kwargs):
     """
@@ -418,23 +471,43 @@ def doctest(*paths, **kwargs):
     Examples
     ========
 
-    >> import sympy
+    >>> import sympy
 
     Run all tests:
-    >> sympy.doctest()
+    >>> sympy.doctest() # doctest: +SKIP
 
     Run one file:
-    >> sympy.doctest("sympy/core/basic.py")
-    >> sympy.doctest("polynomial.txt")
+    >>> sympy.doctest("sympy/core/basic.py") # doctest: +SKIP
+    >>> sympy.doctest("polynomial.txt") # doctest: +SKIP
 
     Run all tests in sympy/functions/ and some particular file:
-    >> sympy.doctest("/functions", "basic.py")
+    >>> sympy.doctest("/functions", "basic.py") # doctest: +SKIP
 
     Run any file having polynomial in its name, doc/src/modules/polynomial.txt,
     sympy/functions/special/polynomials.py, and sympy/polys/polynomial.py:
 
-    >> sympy.doctest("polynomial")
+    >>> sympy.doctest("polynomial") # doctest: +SKIP
 
+    The ``subprocess`` and ``verbose`` options are the same as with the function
+    ``test()``.  See the docstring of that function for more information.
+    """
+    subprocess = kwargs.pop("subprocess", True)
+    if subprocess:
+        ret = run_in_subprocess_with_hash_randomization("_doctest",
+            function_args=paths, function_kwargs=kwargs)
+        if ret is not None:
+            return not bool(ret)
+    return not bool(_doctest(*paths, **kwargs))
+
+def _doctest(*paths, **kwargs):
+    """
+    Internal function that actually runs the doctests.
+
+    All keyword arguments from ``doctest()`` are passed to this function
+    except for ``subprocess``.
+
+    Returns 0 if tests passed and 1 if they failed.  See the docstrings of
+    ``doctest()`` and ``test()`` for more information.
     """
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
@@ -1418,15 +1491,26 @@ class PyTestReporter(Reporter):
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
-        self.write("executable:   %s  (%s)\n" % (executable, python_version))
+        self.write("executable:         %s  (%s)\n" % (executable, python_version))
         from .misc import ARCH
-        self.write("architecture: %s\n" % ARCH)
+        self.write("architecture:       %s\n" % ARCH)
         from sympy.core.cache import USE_CACHE
-        self.write("cache:        %s\n" % USE_CACHE)
+        self.write("cache:              %s\n" % USE_CACHE)
         from sympy.polys.domains import GROUND_TYPES
-        self.write("ground types: %s\n" % GROUND_TYPES)
+        self.write("ground types:       %s\n" % GROUND_TYPES)
         if seed is not None:
-            self.write("random seed:  %d\n" % seed)
+            self.write("random seed:        %d\n" % seed)
+        from .misc import HASH_RANDOMIZATION
+        self.write("hash randomization: ")
+        if HASH_RANDOMIZATION:
+            hash_seed = os.getenv("PYTHONHASHSEED")
+            if hash_seed:
+                self.write("on (PYTHONHASHSEED=%s)\n" % hash_seed)
+            else:
+                # This should not happen.
+                self.write("on (PYTHONHASHSEED not set)\n")
+        else:
+            self.write("off\n")
         self.write('\n')
         self._t_start = clock()
 
