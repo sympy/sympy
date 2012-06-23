@@ -363,15 +363,29 @@ class DiagramGrid(Basic):
         grid[i, j] = obj
 
     @staticmethod
-    def _choose_target_cell(pt1, pt2, grid):
+    def _choose_target_cell(pt1, pt2, edge, obj, skeleton, grid):
         """
-        Given two points, ``pt1`` and ``pt2``, chooses one of the two
-        points to place the opposing vertex of the triangle.  If
-        neither of this points fits, returns ``None``.
+        Given two points, ``pt1`` and ``pt2``, and the welding edge
+        ``edge``, chooses one of the two points to place the opposing
+        vertex ``obj`` of the triangle.  If neither of this points
+        fits, returns ``None``.
         """
         pt1_empty = DiagramGrid._empty_point(pt1, grid)
         pt2_empty = DiagramGrid._empty_point(pt2, grid)
 
+        if pt1_empty and pt2_empty:
+            # Both cells are empty.  Of them two, choose that cell
+            # which will assure that a visible edge of the triangle
+            # will be drawn perpendicularly to the current welding
+            # edge.
+
+            A = grid[edge[0]]
+            B = grid[edge[1]]
+
+            if skeleton.get((A, obj)) or skeleton.get((obj, A)):
+                return pt1
+            else:
+                return pt2
         if pt1_empty:
             return pt1
         elif pt2_empty:
@@ -427,7 +441,7 @@ class DiagramGrid(Basic):
                     break
 
                 target_cell = DiagramGrid._choose_target_cell(
-                    up_left, up_right, grid)
+                    up_left, up_right, (a, b), obj, skeleton, grid)
 
                 if not target_cell:
                     # No room above this edge.  Check below.
@@ -441,7 +455,7 @@ class DiagramGrid(Basic):
                         break
 
                     target_cell = DiagramGrid._choose_target_cell(
-                        down_left, down_right, grid)
+                        down_left, down_right, (a, b), obj, skeleton, grid)
 
                     if not target_cell:
                         # This edge is not in the fringe, remove it
@@ -461,7 +475,7 @@ class DiagramGrid(Basic):
                     break
 
                 target_cell = DiagramGrid._choose_target_cell(
-                    left_up, left_down, grid)
+                    left_down, left_up, (a, b), obj, skeleton, grid)
 
                 if not target_cell:
                     # No room to the left.  See what's to the right.
@@ -469,12 +483,12 @@ class DiagramGrid(Basic):
                     right_down = b[0], a[1] + 1
 
                     if DiagramGrid._fix_degerate(
-                        (a, b), right_up, right_down, fringe, grid):
+                        (a, b), right_up, right_down, fringe, skeleton, grid):
                         # The fringe has just been corrected.  Restart.
                         break
 
                     target_cell = DiagramGrid._choose_target_cell(
-                        right_up, right_down, grid)
+                        right_down, right_up, (a, b), obj, skeleton, grid)
 
                     if not target_cell:
                         # This edge is not in the fringe, remove it
