@@ -9,6 +9,8 @@ from sympy.mpmath import mpi, mpf
 from sympy.assumptions import ask
 from sympy.logic.boolalg import And, Or
 
+from sympy.utilities import default_sort_key
+
 class Set(Basic):
     """
     The base class for any kind of set.
@@ -1220,11 +1222,13 @@ class FiniteSet(Set, EvalfMixin):
             raise ValueError("%s: Complement not defined for symbolic inputs"
                     %self)
 
+        args = sorted(self.args, key=default_sort_key)
+
         intervals = [] # Build up a list of intervals between the elements
-        intervals += [Interval(S.NegativeInfinity, self.args[0], True, True)]
-        for a, b in zip(self.args[:-1], self.args[1:]):
+        intervals += [Interval(S.NegativeInfinity, args[0], True, True)]
+        for a, b in zip(args[:-1], args[1:]):
             intervals.append(Interval(a, b, True, True)) # open intervals
-        intervals.append(Interval(self.args[-1], S.Infinity, True, True))
+        intervals.append(Interval(args[-1], S.Infinity, True, True))
         return Union(intervals, evaluate=False)
 
     @property
