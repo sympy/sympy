@@ -141,7 +141,7 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
     Run a function in a Python subprocess with hash randomization enabled.
 
     If hash randomization is not supported by the version of Python given, it
-    returns None.  Otherwise, it returns the exit value of the command.  The
+    returns False.  Otherwise, it returns the exit value of the command.  The
     function is passed to sys.exit(), so the return value of the function will
     be the return value.
 
@@ -179,10 +179,13 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
     >>> run_in_subprocess_with_hash_randomization("_test",
     ... function_args=("core",), function_kwargs={'verbose': True}) #doctest: +SKIP
     # Will return 0 if sys.executable supports hash randomization and tests
-    # pass, 1 if they fail, and None if it does not support hash
+    # pass, 1 if they fail, and False if it does not support hash
     # randomization.
 
     """
+    # Note, we must return False everywhere, not None, as subprocess.call will
+    # sometimes return None.
+
     # First check if the Python version supports hash randomization
     p = subprocess.Popen([command, "--version"], stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
@@ -193,18 +196,18 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
     version = pyversion[7:]
     if int(version[0]) == 2:
         if int(version[2]) <= 5:
-            return None
+            return False
         if int(version[2]) == 6 and int(version[4]) < 8:
-            return None
+            return False
         if int(version[2]) == 7 and int(version[4]) < 3:
-            return None
+            return False
     elif int(version[0]) == 3:
         if int(version[2]) == 0:
-            return None
+            return False
         if int(version[2]) == 1 and int(version[4]) < 5:
-            return None
+            return False
         if int(version[2]) == 2 and int(version[4]) < 3:
-            return None
+            return False
     else:
         raise ValueError("Malformed Python version string: %s" % pyversion)
 
@@ -213,7 +216,7 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
         os.environ["PYTHONHASHSEED"] = str(random.randrange(100000000))
     else:
         if not force:
-            return None
+            return False
     # Now run the command
     commandstring = ("import sys; from %s import %s;sys.exit(%s(*%s, **%s))" %
                      (module, function, function, repr(function_args), repr(function_kwargs)))
@@ -406,7 +409,7 @@ def test(*paths, **kwargs):
     if subprocess:
         ret = run_in_subprocess_with_hash_randomization("_test",
             function_args=paths, function_kwargs=kwargs)
-        if ret is not None:
+        if ret is not False:
             return not bool(ret)
     return not bool(_test(*paths, **kwargs))
 
@@ -495,7 +498,7 @@ def doctest(*paths, **kwargs):
     if subprocess:
         ret = run_in_subprocess_with_hash_randomization("_doctest",
             function_args=paths, function_kwargs=kwargs)
-        if ret is not None:
+        if ret is not False:
             return not bool(ret)
     return not bool(_doctest(*paths, **kwargs))
 
