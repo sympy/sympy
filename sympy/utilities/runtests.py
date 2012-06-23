@@ -404,6 +404,10 @@ def test(*paths, **kwargs):
     $ PYTHONHASHSEED=42 ./bin/test
 
     If the seed is not set, a random seed will be chosen.
+
+    Note that to reproduce the same hash values, you must use both the same as
+    well as the same architecture (32-bit vs. 64-bit).
+
     """
     subprocess = kwargs.pop("subprocess", True)
     if subprocess:
