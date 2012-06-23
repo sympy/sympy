@@ -148,7 +148,7 @@ def plot_and_save(name):
     #    assert len(w) == 1
     #    assert "Complex values as arguments to python math functions encountered." == str(w[-1].message)
     #TODO these test do not work properly.
-    plot(sin(x)+I*cos(x)).save(tmp_file())
+    plot(sin(x)+I*cos(x), show=False).save(tmp_file())
     plot(sqrt(sqrt(-x)), show=False).save(tmp_file())
     plot(LambertW(x), show=False).save(tmp_file())
     plot(sqrt(LambertW(x)), show=False).save(tmp_file())
@@ -159,40 +159,38 @@ def plot_and_save(name):
     ###
 
     # 2D line with all possible inputs
-    plot(x              ).save(tmp_file())
-    plot(x, (x,        )).save(tmp_file())
-    plot(x, (   -10, 10)).save(tmp_file())
-    plot(x, (x, -10, 10)).save(tmp_file())
+    plot(x              , show=False).save(tmp_file())
+    plot(x, (x,        ), show=False).save(tmp_file())
+    plot(x, (   -10, 10), show=False).save(tmp_file())
+    plot(x, (x, -10, 10), show=False).save(tmp_file())
 
     # two 2D lines
-    plot((x,             ), (x+1, (x, -10, 10))).save(tmp_file())
-    plot((x, (x,        )), (x+1, (x, -10, 10))).save(tmp_file())
-    plot((x, (   -10, 10)), (x+1, (x, -10, 10))).save(tmp_file())
-    plot((x, (x, -10, 10)), (x+1, (x, -10, 10))).save(tmp_file())
-    plot([x, x+1],             ).save(tmp_file())
-    plot([x, x+1], (x,        )).save(tmp_file())
-    plot([x, x+1], (   -10, 10)).save(tmp_file())
-    plot([x, x+1], (x, -10, 10)).save(tmp_file())
+    plot((x,             ), (x+1, (x, -10, 10)), show=False).save(tmp_file())
+    plot((x, (x,        )), (x+1, (x, -10, 10)), show=False).save(tmp_file())
+    plot((x, (   -10, 10)), (x+1, (x, -10, 10)), show=False).save(tmp_file())
+    plot((x, (x, -10, 10)), (x+1, (x, -10, 10)), show=False).save(tmp_file())
+    plot([x, x+1],               show=False).save(tmp_file())
+    plot([x, x+1], (x,        ), show=False).save(tmp_file())
+    plot([x, x+1], (   -10, 10), show=False).save(tmp_file())
+    plot([x, x+1], (x, -10, 10), show=False).save(tmp_file())
 
     # 2D and 3D parametric lines
-    plot(x, 2*x).save(tmp_file())
-    plot(x, 2*x, sin(x)).save(tmp_file())
+    plot(x, 2*x, show=False).save(tmp_file())
+    plot(x, 2*x, sin(x), show=False).save(tmp_file())
 
     # surface and parametric surface
-    plot(x*y).save(tmp_file())
-    plot(x*y, 1/x, 1/y).save(tmp_file())
+    plot(x*y, show=False).save(tmp_file())
+    plot(x*y, 1/x, 1/y,show=False).save(tmp_file())
 
     # some bizarre combinatrions
     ## two 3d parametric lines and a surface
-    plot(([x, -x], x**2, sin(x)), (x*y,)).save(tmp_file())
+    plot(([x, -x], x**2, sin(x)), (x*y,), show=False).save(tmp_file())
 
 
 def test_matplotlib():
     try:
         import matplotlib
         import numpy
-        if matplotlib.__version__ < '1.2.0':
-            return
         plot_and_save('test')
     except ImportError:
         pass

@@ -94,7 +94,11 @@ def enable_automatic_symbols(app):
         stb = self.InteractiveTB.structured_traceback(etype, value, tb, tb_offset=tb_offset)
         self._showtraceback(etype, value, stb)
 
-    app.shell.set_custom_exc((NameError,), _handler)
+    if hasattr(app, 'shell'):
+        app.shell.set_custom_exc((NameError,), _handler)
+    else:
+        # This was restructured in IPython 0.13
+        app.set_custom_exc((NameError,), _handler)
 
 def init_ipython_session(argv=[], auto=False):
     """Construct new IPython session. """

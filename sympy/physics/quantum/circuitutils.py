@@ -365,14 +365,12 @@ def convert_to_real_indices(seq, qubit_map):
 
     return real_seq
 
-def random_reduce(circuit, gate_ids, seed=None):
+def random_reduce(circuit, gate_ids, seed=None, random_sequence=None):
     """Shorten the length of a quantum circuit.
 
-    random_reduce looks for circuit identities
-    in circuit, randomly chooses one to remove,
-    and returns a shorter yet equivalent circuit.
-    If no identities are found, the same circuit
-    is returned.
+    random_reduce looks for circuit identities in circuit, randomly chooses
+    one to remove, and returns a shorter yet equivalent circuit.  If no
+    identities are found, the same circuit is returned.
 
     Parameters
     ==========
@@ -382,6 +380,8 @@ def random_reduce(circuit, gate_ids, seed=None):
         List of gate identities to find in circuit
     seed : int
         Seed value for the random number generator
+    random_sequence : iterator
+        Sequence of random values to be used.  If given, seed is ignored.
     """
 
     if len(gate_ids) < 1:
@@ -402,7 +402,8 @@ def random_reduce(circuit, gate_ids, seed=None):
 
     # Look for an identity in circuit
     while len(ids) > 0 and not found:
-        remove_index = int_gen.randint(0, len(ids) - 1)
+        remove_index = _get_next_random_int(0, len(ids) - 1, int_gen=int_gen,
+            random_sequence=random_sequence)
         remove_id = ids[remove_index]
         ids.remove(remove_id)
         found = find_subcircuit(circuit, remove_id) > -1
@@ -413,12 +414,27 @@ def random_reduce(circuit, gate_ids, seed=None):
 
     return circuit
 
-def random_insert(circuit, choices, seed=None):
+def _get_next_random_int(min, max, int_gen=Random(), random_sequence=None):
+    """
+    Return a random number from min to max (inclusive).
+
+    It returns the next element from ``random_sequence``, or from the Random()
+    class int_gen if ``random_sequence`` is not given.
+    """
+    if random_sequence:
+        ret = random_sequence.next()
+        assert min <= ret <= max, ("ret should be between %d and %d "
+            "(inclusive), got %d instead." % (min, max, ret))
+        return ret
+    else:
+        # Create the random integer generator with the seed
+        return int_gen.randint(min, max)
+
+def random_insert(circuit, choices, seed=None, insert_loc=None, insert_circuit_loc=None):
     """Insert a circuit into another quantum circuit.
 
-    random_insert randomly selects a circuit from
-    choices and randomly chooses a location to insert
-    into circuit.
+    random_insert randomly selects a circuit from choices and randomly chooses
+    a location to insert into circuit.
 
     Parameters
     ==========
@@ -428,6 +444,12 @@ def random_insert(circuit, choices, seed=None):
         Set of circuit choices
     seed : int
         Seed value for the random number generator
+    insert_loc : int
+        Value used for the insert location.  If none is given, one is chosen
+    at random.
+    insert_circuit_loc : int
+        Value used for the circuit choice.  If none is given, one is chosen at random.
+
     """
 
     if len(choices) < 1:
@@ -440,8 +462,12 @@ def random_insert(circuit, choices, seed=None):
     int_gen = Random()
     int_gen.seed(seed)
 
-    insert_loc = int_gen.randint(0, len(circuit))
-    insert_circuit_loc = int_gen.randint(0, len(choices)-1)
+    random_sequence = iter([insert_loc]) if insert_loc is not None else None
+    insert_loc = _get_next_random_int(0, len(circuit), int_gen=int_gen,
+        random_sequence=random_sequence)
+    random_sequence = iter([insert_circuit_loc]) if insert_circuit_loc is not None else None
+    insert_circuit_loc = _get_next_random_int(0, len(choices) - 1,
+        int_gen=int_gen, random_sequence=random_sequence)
     insert_circuit = choices[insert_circuit_loc]
 
     left = circuit[0:insert_loc]
