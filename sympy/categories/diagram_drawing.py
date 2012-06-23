@@ -340,11 +340,16 @@ class DiagramGrid(Basic):
         """
         Places an object at the coordinate ``cords`` in ``grid``,
         growing the grid and updating ``fringe``, if necessary.
+        Returns (0, 0) if no row or column has been prepended, (1, 0)
+        if a row was prepended, (0, 1) if a column was prepended and
+        (1, 1) if both a column and a row were prepended.
         """
         (i, j) = coords
+        offset = (0, 0)
         if i == -1:
             grid.prepend_row()
             i = 0
+            offset = (1, offset[1])
             for k in xrange(len(fringe)):
                 ((i1, j1), (i2, j2)) = fringe[k]
                 fringe[k] = ((i1 + 1, j1), (i2 + 1, j2))
@@ -353,6 +358,7 @@ class DiagramGrid(Basic):
 
         if j == -1:
             j = 0
+            offset = (offset[0], 1)
             grid.prepend_column()
             for k in xrange(len(fringe)):
                 ((i1, j1), (i2, j2)) = fringe[k]
@@ -361,6 +367,7 @@ class DiagramGrid(Basic):
             grid.append_column()
 
         grid[i, j] = obj
+        return offset
 
     @staticmethod
     def _choose_target_cell(pt1, pt2, edge, obj, skeleton, grid):
@@ -498,7 +505,14 @@ class DiagramGrid(Basic):
 
             # We now know where to place the other vertex of the
             # triangle.
-            DiagramGrid._put_object(target_cell, obj, grid, fringe)
+            offset = DiagramGrid._put_object(target_cell, obj, grid, fringe)
+
+            # Take care of the displacement of coordinates if a row or
+            # a column was prepended.
+            target_cell = (target_cell[0] + offset[0],
+                           target_cell[1] + offset[1])
+            a = (a[0] + offset[0], a[1] + offset[1])
+            b = (b[0] + offset[0], b[1] + offset[1])
 
             fringe.extend([(a, target_cell), (b, target_cell)])
 
