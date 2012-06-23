@@ -1025,7 +1025,7 @@ class Derivative(Expr):
                 obj = None
             else:
                 if not is_symbol:
-                    new_v = C.Symbol('diff_wrt_%i' % i)
+                    new_v = C.Dummy('diff_wrt_%i' % i)
                     expr = expr.subs(v, new_v)
                     old_v = v
                     v = new_v
