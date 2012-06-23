@@ -1007,7 +1007,8 @@ class LatexPrinter(Printer):
                 return 'Domain on ' + self._print(d.symbols)
 
     def _print_FiniteSet(self, s):
-        return self._print_set(s.args)
+        items = sorted(s.args, key=default_sort_key)
+        return self._print_set(items)
 
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
