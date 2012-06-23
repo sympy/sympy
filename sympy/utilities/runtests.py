@@ -221,7 +221,15 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
     commandstring = ("import sys; from %s import %s;sys.exit(%s(*%s, **%s))" %
                      (module, function, function, repr(function_args), repr(function_kwargs)))
 
-    return subprocess.call([command, "-R", "-c", commandstring])
+    try:
+        return subprocess.call([command, "-R", "-c", commandstring])
+    finally:
+        # Put the environment variable back, so that it reads correctly for
+        # the current Python process.
+        if hash_seed is None:
+            del os.environ["PYTHONHASHSEED"]
+        else:
+            os.environ["PYTHONHASHSEED"] = hash_seed
 
 def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
     doctest_kwargs={}, examples_args=(), examples_kwargs={'quiet':True}):
@@ -255,6 +263,7 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             tests_successful = False
 
         # Doctests
+        print
         if not doctest(*doctest_args, **doctest_kwargs):
             tests_successful = False
 
