@@ -1940,9 +1940,15 @@ def test_sympy__diffgeom__diffgeom__VectorField():
 
 @XFAIL
 def test_sympy__diffgeom__diffgeom__OneFormField():
-    from sympy.differential_geometry import Manifold, Patch, CoordSystem, VectorField
+    from sympy.differential_geometry import Manifold, Patch, CoordSystem, OneFormField
     cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
     assert _test_args(OneFormField(cs, [x, y], [x, y]))
+
+@XFAIL
+def test_sympy__diffgeom__diffgeom__Differential():
+    from sympy.differential_geometry import Manifold, Patch, CoordSystem, VectorField, Differential
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    assert _test_args(Differential(VectorField(cs, [x, y], [x, y])))
 
 def test_sympy__categories__baseclasses__Class():
     from sympy.categories.baseclasses import Class

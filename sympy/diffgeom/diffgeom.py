@@ -2,11 +2,10 @@ from sympy.matrices import Matrix
 from sympy.core import Basic, Expr, Dummy, Function, sympify, diff
 from sympy.solvers import solve
 from sympy.functions import factorial
-from sympy.simplify import trigsimp
+from sympy.simplify import simplify
 from sympy.core.compatibility import reduce
 
 # TODO issue 2070: all the stuff about .args and rebuilding
-# TODO maybe a common class Field makes sense
 # TODO you are a bit excessive in the use of Dummies
 # TODO dummy point
 
@@ -372,8 +371,8 @@ class ScalarField(Expr):
         # XXX Calling doit() below is a simple solution to the following
         # problem: In : Subs(2*x, x, y).subs(y,z)
         #          Out: Subs(2*_x, (_x,), (z,)) instead of 2*z
-        # XXX Calling trigsimp is necessary with all the trig expressions
-        return trigsimp(self._expr.subs(zip(self._coords, coords)).doit())
+        # XXX Calling simplify is necessary with all the trig expressions
+        return simplify(self._expr.subs(zip(self._coords, coords))).doit()
 
 
 class VectorField(Expr):
@@ -499,16 +498,15 @@ class OneFormField(Expr):
 ###############################################################################
 # Differential
 ###############################################################################
-# TODO This here really shows the issue with all the implicit changes between
-# coordinate systems.             v-- This should not be necessary.
-def differential(scalar_field, coord_sys):
+class Differential(Expr):
     """Return the differential of a scalar field."""
-    # TODO Does it make sense to have a flag is_exact_differential for one-forms?
-    coords = [Dummy() for i in range(coord_sys.dim)]
-    vects = coord_sys.base_vectors()
-    p = coord_sys.point(coords)
-    return OneFormField(coord_sys, coords,
-                        [v(scalar_field)(p) for v in vects])
+    def __init__(self, scalar_field):
+        super(Differential, self).__init__()
+        self._scalar_field = scalar_field
+        self._args = scalar_field
+
+    def __call__(self, vector_field):
+        return vector_field(self._scalar_field)
 
 
 ###############################################################################
@@ -571,17 +569,17 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     [0]
     [0]
 
-    The series in the polar coordinate system: #TODO check by hand for correctness
+    The series in the polar coordinate system:
     >>> series = intcurve_series(vector_field, t, start_point, n=3, coord_sys=R2_p, coeffs=True)
     >>> series[0]
     [sqrt(x**2 + y**2)]
     [      atan2(y, x)]
     >>> series[1]
     [t*x/sqrt(x**2 + y**2)]
-    [   -t*y/(x**2 + y**2)]
+    [   t*y/(-x**2 - y**2)]
     >>> series[2]
-    [t**2*(-x**2/(x**2 + y**2)**(3/2) + 1/sqrt(x**2 + y**2))/2]
-    [                                t**2*x*y/(x**2 + y**2)**2]
+    [t**2*(-x**2/(x**2 + y**2) + 1)/(2*sqrt(x**2 + y**2))]
+    [                           t**2*x*y/(x**2 + y**2)**2]
 
     """
     def iter_vfield(scalar_field, i):
@@ -661,9 +659,9 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     gammas = [Function('f_%d'%i)(param) for i in range(start_point._coord_sys.dim)]
     arbitrary_p = Point(coord_sys, gammas)
     coord_functions = coord_sys.coord_functions()
-    equations = [trigsimp(diff(cf(arbitrary_p), param) - vector_field(cf)(arbitrary_p))
+    equations = [simplify(diff(cf(arbitrary_p), param) - vector_field(cf)(arbitrary_p))
                  for cf in coord_functions]
-    init_cond = [trigsimp(cf(arbitrary_p).subs(param,0) - cf(start_point))
+    init_cond = [simplify(cf(arbitrary_p).subs(param,0) - cf(start_point))
                  for cf in coord_functions]
     return equations, init_cond
 

@@ -1,9 +1,9 @@
 from sympy.diffgeom.Rn import R2, R2_p, R2_r
 from sympy.diffgeom import (ScalarField, VectorField, OneFormField,
-        intcurve_series, intcurve_diffequ, differential)
+        intcurve_series, intcurve_diffequ, Differential)
 from sympy.core import symbols, Function, Derivative
+from sympy.simplify import trigsimp
 from sympy.functions import sqrt, atan2, sin, cos
-from sympy.simplify import simplify
 from sympy.matrices import Matrix
 
 # Most of the functionality is covered in the
@@ -87,14 +87,15 @@ def test_functional_diffgeom_ch4():
     assert f_field(R2.e_y)(p_r) == b2(x0, y0)
 
     s_field_r = ScalarField(R2_r, [x, y], f(x,y))
-    df = differential(s_field_r, R2_r)
+    df = Differential(s_field_r)
     assert df(R2.e_x)(p_r) == Derivative(f(x0, y0), x0)
     assert df(R2.e_y)(p_r) == Derivative(f(x0, y0), y0)
 
     s_field_p = ScalarField(R2_p, [r, theta], f(r,theta))
-    df = differential(s_field_p, R2_p)
-    assert df(R2.e_x)(p_p) == cos(theta0)*Derivative(f(r0, theta0), r0) - sin(theta0)*Derivative(f(r0, theta0), theta0)/r0
-    assert df(R2.e_y)(p_p) == sin(theta0)*Derivative(f(r0, theta0), r0) + cos(theta0)*Derivative(f(r0, theta0), theta0)/r0
+    df = Differential(s_field_p)
+    #TODO More advanced simplification routines are necessary...
+    assert df(R2.e_x)(p_p) == cos(theta0)*Derivative(f(r0, atan2(r0*sin(theta0), r0*cos(theta0))), r0) - sin(theta0)*Derivative(f(r0, atan2(r0*sin(theta0), r0*cos(theta0))), atan2(r0*sin(theta0), r0*cos(theta0)))/r0
+    assert df(R2.e_y)(p_p) == sin(theta0)*Derivative(f(r0, atan2(r0*sin(theta0), r0*cos(theta0))), r0) + cos(theta0)*Derivative(f(r0, atan2(r0*sin(theta0), r0*cos(theta0))), atan2(r0*sin(theta0), r0*cos(theta0)))/r0
 
     assert R2.dx(R2.e_x)(p_r) == 1
     assert R2.dx(R2.e_y)(p_r) == 0
@@ -103,7 +104,7 @@ def test_functional_diffgeom_ch4():
     assert R2.dx(circ)(p_r) == -y0
     assert R2.dy(circ)(p_r) == x0
     assert R2.dr(circ)(p_r) == 0
-    assert simplify(R2.dtheta(circ)(p_r)) == 1
+    assert R2.dtheta(circ)(p_r) == 1
 
     assert (circ - R2.e_theta)(s_field_r)(p_r) == 0
 
@@ -115,7 +116,7 @@ def test_R2():
 
     # r**2 = x**2 + y**2
     assert (R2.r**2 - R2.x**2 - R2.y**2)(point_r) == 0
-    assert simplify( (R2.r**2 - R2.x**2 - R2.y**2)(point_p) ) == 0
+    assert trigsimp( (R2.r**2 - R2.x**2 - R2.y**2)(point_p) ) == 0
 
     assert R2.e_r(R2.x**2+R2.y**2)(point_p) == 2*r0
 
