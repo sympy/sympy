@@ -1143,8 +1143,7 @@ class PrettyPrinter(Printer):
                 parenthesize = lambda set:set.is_Union or set.is_Intersection)
 
     def _print_FiniteSet(self, s):
-        items = sorted(s.args, key=default_sort_key)
-        return self._print_seq(items, '{', '}', ', ' )
+        return self._print_seq(s.args, '{', '}', ', ' )
 
     def _print_Range(self, s):
 

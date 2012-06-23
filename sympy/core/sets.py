@@ -9,6 +9,8 @@ from sympy.mpmath import mpi, mpf
 from sympy.assumptions import ask
 from sympy.logic.boolalg import And, Or
 
+from sympy.utilities import default_sort_key
+
 class Set(Basic):
     """
     The base class for any kind of set.
@@ -1122,38 +1124,6 @@ class UniversalSet(Set):
     def _union(self, other):
         return self
 
-def element_sort_fn(x):
-    """
-    Provides sorting keys for the elements of a :class:`FiniteSet`.
-
-    Instances of :class:`Basic` are sorted in accordance with
-    ``Basic.sort_key``.  Other kinds of objects are sorted according
-    to an ad-hoc sorting key.
-
-    No particular ordering for non-:class:`Basic` objects is
-    guaranteed.
-
-    Examples
-    ========
-
-    >>> from sympy import FiniteSet, Float, Symbol, Interval
-    >>> x = Symbol('x')
-    >>> A = FiniteSet(1, 2 ,3)
-    >>> A
-    {1, 2, 3}
-    >>> FiniteSet((1,2), Float, A, -5, x, 'eggs', x**2, Interval)
-    {-5, <class 'sympy.core.numbers.Float'>, <class 'sympy.core.sets.Interval'>,
-    eggs, x, x**2, {1, 2, 3}, (1, 2)}
-
-    See Also
-    ========
-    FiniteSet
-    """
-    try:
-        return x.sort_key()
-    except (TypeError, AttributeError):
-        return Float(1e9+abs(hash(x))).sort_key()
-
 class FiniteSet(Set, EvalfMixin):
     """
     Represents a finite set of discrete numbers
@@ -1185,7 +1155,7 @@ class FiniteSet(Set, EvalfMixin):
             return EmptySet()
 
         args = frozenset(args) # remove duplicates
-        args = sorted(args, key=element_sort_fn)
+        args = sorted(args, key=default_sort_key)
         obj = Basic.__new__(cls, *args)
         obj._elements = args
         return obj
