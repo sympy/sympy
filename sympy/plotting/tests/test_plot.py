@@ -132,34 +132,17 @@ def plot_and_save(name):
     ###
 
 
-<<<<<<< HEAD
-    #with warnings.catch_warnings(record=True) as w:
-    #    warnings.simplefilter("always")
-    #    plot(sqrt(sqrt(-x)), show=False).save(tmp_file())
-    #    assert len(w) == 1
-    #    assert "Complex values as arguments to numpy functions encountered." == str(w[-1].message)
-    #with warnings.catch_warnings(record=True) as w:
-    #    warnings.simplefilter("always")
-    #    plot(LambertW(x), show=False).save(tmp_file())
-    #    assert len(w) > 10 #TODO trace where do the other warnings come from
-    #    assert "Complex values as arguments to python math functions encountered." == str(w[-1].message)
-    #with warnings.catch_warnings(record=True) as w:
-    #    warnings.simplefilter("always")
-    #    plot(sqrt(LambertW(x)), show=False).save(tmp_file())
-    #    assert len(w) == 1
-    #    assert "Complex values as arguments to python math functions encountered." == str(w[-1].message)
-    #TODO these test do not work properly.
     plot(sin(x)+I*cos(x), show=False).save(tmp_file())
     plot(sqrt(sqrt(-x)), show=False).save(tmp_file())
     plot(LambertW(x), show=False).save(tmp_file())
     plot(sqrt(LambertW(x)), show=False).save(tmp_file())
+
 
     ###
     # Test all valid input args for plot()
     ###
 
     # 2D line with all possible inputs
-<<<<<<< HEAD
     plot(x              , show=False).save(tmp_file())
     plot(x, (x,        ), show=False).save(tmp_file())
     plot(x, (   -10, 10), show=False).save(tmp_file())
