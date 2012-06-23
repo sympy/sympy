@@ -1261,3 +1261,6 @@ class FiniteSet(Set, EvalfMixin):
 
     def _eval_evalf(self, prec):
         return FiniteSet(elem.evalf(prec) for elem in self)
+
+    def _hashable_content(self):
+        return (self._elements,)
