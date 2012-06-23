@@ -134,6 +134,87 @@ def setup_pprint():
     # hook our nice, hash-stable strprinter
     init_printing(pretty_print=False)
 
+def run_in_subprocess_with_hash_randomization(function, function_args=(),
+    function_kwargs={}, command=sys.executable):
+    """
+    Run a function in a Python subprocess with hash randomization enabled.
+
+    The environment variable PYTHONHASHSEED should be set before calling this
+    function to seed the hash randomization.
+
+    If hash randomization is not supported by the version of Python given, it
+    returns None.  Otherwise, it returns the exit value of the command.  The
+    function is passed to sys.exit(), so the return value of the function will
+    be the return value.  Note that if a function returns True or False, that
+    means that this function will return 1 and 0, respectively, which is the
+    opposite of what the return value would normally be.
+
+    ``function`` should be a string name of a function that is importable
+    from sympy (like "test").  ``function_args`` and ``function_kwargs``
+    should be a repr-able tuple and dict, respectively.  The default Python
+    command is sys.executable, which is the currently running Python command.
+
+    This function is necessary because the seed for hash randomization must be
+    set by the environment variable before Python starts.  Hence, in order to
+    use a predetermined seed for tests, we must start Python in a separate
+    subprocess.
+
+    Hash randomization was added in the minor Python versions 2.6.8, 2.7.3,
+    3.1.5, and 3.2.3, and is enabled by default in all Python versions after
+    and including 3.3.0.
+
+    Example
+    =======
+
+    >>> from sympy.utilities.runtests import (
+    ... run_in_subprocess_with_hash_randomization)
+    >>> # run the core tests in verbose mode
+    >>> run_in_subprocess_with_hash_randomization("test",
+    ... function_args=("core",), function_kwargs={'verbose': True}) #doctest: +SKIP
+    # Will return 1 if sys.executable supports hash randomization and tests
+    # pass, 0 if they fail, and None if it does not support hash
+    # randomization.
+
+    """
+    # First check if the Python version supports hash randomization
+    try:
+        p = subprocess.Popen(["python", "--version"], stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT)
+    except:
+        # If there are any errors at all with creating the subprocess, we bail
+        return None
+    pyversion, _ = p.communicate()
+    assert pyversion.startswith("Python ")
+    version = pyversion[7:]
+    if int(version[0]) == 2:
+        if int(version[2]) <= 5:
+            return None
+        if int(version[2]) == 6 and int(version[4]) < 8:
+            return None
+        if int(version[2]) == 7 and int(version[4]) < 3:
+            return None
+    elif int(version[0]) == 3:
+        if int(version[2]) == 0:
+            return None
+        if int(version[2]) == 1 and int(version[4]) < 5:
+            return None
+        if int(version[2]) == 2 and int(version[4]) < 3:
+            return None
+    else:
+        raise ValueError("Malformed Python version string: %s" % pyversion)
+
+    # Now run the command
+    commandstring = ("import sys; from sympy import %s; "
+        "sys.exit(%s(*%s, **%s))" % (function, function, repr(function_args),
+        repr(function_kwargs)))
+    try:
+        p = subprocess.call(["python", "-R", "-c", commandstring])
+    except:
+        # Once again, if there are any problems with the subprocess, we bail
+        return None
+    else:
+        return p
+
 def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
     doctest_kwargs={}, examples_args=(), examples_kwargs={'quiet':True}):
     """
