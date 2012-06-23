@@ -650,7 +650,7 @@ class Function(Application, Expr):
                 nargs = self.nargs
             if not (1<=argindex<=nargs):
                 raise ArgumentIndexError(self, argindex)
-        if not self.args[argindex-1]._diff_wrt:
+        if not self.args[argindex-1].is_Symbol:
             # See issue 1525 and issue 1620 and issue 2501
             arg_dummy = C.Dummy('xi_%i' % argindex)
             return Subs(Derivative(
@@ -843,17 +843,8 @@ class Derivative(Expr):
         >>> f, g = symbols('f g', cls=Function)
         >>> f(2*g(x)).diff(x)
         2*Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (2*g(x),))
-
-    This says that the derivative of f(2*g(x)) with respect to x is
-    2*g(x).diff(x) times f(u).diff(u) at u = 2*g(x).  Note that this last part
-    is exactly the same as our definition of a derivative with respect to a
-    function given above, except the derivative is at a non-Function 2*g(x).
-    If we instead computed f(g(x)).diff(x), we would be able to express the
-    Subs as simply f(g(x)).diff(g(x)).  Therefore, SymPy does this when it's
-    possible::
-
         >>> f(g(x)).diff(x)
-        Derivative(f(g(x)), g(x))*Derivative(g(x), x)
+        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (g(x),))
 
     Finally, note that, to be consistent with variational calculus, and to
     ensure that the definition of substituting a Function for a Symbol in an
@@ -899,7 +890,7 @@ class Derivative(Expr):
         >>> Derivative(f(x)**2, f(x), evaluate=True)
         2*f(x)
         >>> Derivative(f(g(x)), x, evaluate=True)
-        Derivative(f(g(x)), g(x))*Derivative(g(x), x)
+        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (g(x),))
     """
 
     is_Derivative   = True
@@ -1195,10 +1186,7 @@ class Derivative(Expr):
         return self.expr.free_symbols
 
     def _eval_subs(self, old, new):
-        # Subs should only be used in situations where new is not a valid
-        # variable for differentiating wrt. Previously, Subs was used for
-        # anything that was not a Symbol, but that was too broad.
-        if old in self.variables and not new._diff_wrt:
+        if old in self.variables and not new.is_Symbol:
             # Issue 1620
             return Subs(self, old, new)
         return Derivative(*map(lambda x: x._subs(old, new), self.args))
