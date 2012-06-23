@@ -1139,9 +1139,10 @@ def element_sort_fn(x):
     >>> from sympy import FiniteSet, Float, Symbol, Interval
     >>> x = Symbol('x')
     >>> A = FiniteSet(1, 2 ,3)
-    >>> A
+    >>> A   #doctest: +SKIP
     {1, 2, 3}
-    >>> FiniteSet((1,2), Float, A, -5, x, 'eggs', x**2, Interval)
+    >>> A = FiniteSet((1,2), Float, A, -5, x, 'eggs', x**2, Interval)
+    >>> A   #doctest: +SKIP
     {-5, <class 'sympy.core.numbers.Float'>, <class 'sympy.core.sets.Interval'>,
     eggs, x, x**2, {1, 2, 3}, (1, 2)}
 
