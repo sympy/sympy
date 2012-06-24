@@ -403,21 +403,21 @@ class DiagramGrid(Basic):
                         break
             elif a[0] == b[0]:
                 # A horizontal edge.  Suppose a triangle can be
-                # built in the upward direction.
+                # built in the downward direction.
 
-                up_left = a[0] - 1, a[1]
-                up_right = a[0] - 1, b[1]
+                down_left = a[0] + 1, a[1]
+                down_right = a[0] + 1, b[1]
 
                 target_cell = DiagramGrid._choose_target_cell(
-                    up_left, up_right, (a, b), obj, skeleton, grid)
+                    down_left, down_right, (a, b), obj, skeleton, grid)
 
                 if not target_cell:
-                    # No room above this edge.  Check below.
-                    down_left = a[0] + 1, a[1]
-                    down_right = a[0] + 1, b[1]
+                    # No room below this edge.  Check above.
+                    up_left = a[0] - 1, a[1]
+                    up_right = a[0] - 1, b[1]
 
                     target_cell = DiagramGrid._choose_target_cell(
-                        down_left, down_right, (a, b), obj, skeleton, grid)
+                        up_left, up_right, (a, b), obj, skeleton, grid)
 
                     if not target_cell:
                         # This edge is not in the fringe, remove it
@@ -427,20 +427,20 @@ class DiagramGrid(Basic):
 
             elif a[1] == b[1]:
                 # A vertical edge.  Suppose a triangle can be built to
-                # the left.
-                left_up = a[0], a[1] - 1
-                left_down = b[0], a[1] - 1
+                # the right.
+                right_up = a[0], a[1] + 1
+                right_down = b[0], a[1] + 1
 
                 target_cell = DiagramGrid._choose_target_cell(
-                    left_down, left_up, (a, b), obj, skeleton, grid)
+                    right_down, right_up, (a, b), obj, skeleton, grid)
 
                 if not target_cell:
                     # No room to the left.  See what's to the right.
-                    right_up = a[0], a[1] + 1
-                    right_down = b[0], a[1] + 1
+                    left_up = a[0], a[1] - 1
+                    left_down = b[0], a[1] - 1
 
                     target_cell = DiagramGrid._choose_target_cell(
-                        right_down, right_up, (a, b), obj, skeleton, grid)
+                        left_down, left_up, (a, b), obj, skeleton, grid)
 
                     if not target_cell:
                         # This edge is not in the fringe, remove it
