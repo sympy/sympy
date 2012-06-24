@@ -33,6 +33,9 @@ parser.add_option('-t', '--types', dest='types', action='store',
         help='setup ground types: gmpy | python | sympy')
 parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
         default=True, help='disable caching mechanism')
+parser.add_option("--no-subprocess", action="store_false", dest="subprocess",
+                  default=True, help="Don't run the tests in a separate "
+                  "subprocess.  This may prevent hash randomization from being enabled.")
 parser.set_usage("test [options ...] [files ...]")
 parser.epilog = """\
 "options" are any of the options above. "files" are 0 or more glob strings of \
@@ -51,7 +54,7 @@ if options.types:
 import sympy
 
 ok = sympy.doctest(*args, **{"verbose": options.verbose,
-    "blacklist": blacklist, "normal": options.normal})
+    "blacklist": blacklist, "normal": options.normal, "subprocess": options.subprocess})
 
 if ok:
     sys.exit(0)
