@@ -19,6 +19,8 @@ def test_trace_new():
     assert Tr(a*C*A*D*B*2) == 2*a*Tr(A*D*B*C)
     assert Tr(B*A*C*B*A) == Tr(A*C*B*A*B)
     assert Tr(A*C*B*A*B) == Tr(A*B*A*C*B)
+    assert Tr(A*A*B*B) == Tr(A**2*B**2)
+    assert Tr(A*B*B*A) == Tr(A**2*B**2)
 
     # since A is symbol and not commutative
     assert isinstance(Tr(A), Tr)
@@ -43,3 +45,25 @@ def test_trace_doit():
     A, B, C, D = symbols('A B C D', commutative=False)
 
     #TODO: needed while testing reduced density operations, etc.
+
+#def test_permute():
+#    A, B, C, D, E, F, G = symbols('A B C D E F G', commutative=False)
+#    t = Tr(A*B*C*D*E*F*G, cycle=False)
+
+#    assert t.permute(0).args[0].args == (A, B, C, D, E, F, G)
+#    assert t.permute(2).args[0].args == (F, G, A, B, C, D, E)
+#    assert t.permute(4).args[0].args == (D, E, F, G, A, B, C)
+#    assert t.permute(6).args[0].args == (B, C, D, E, F, G, A)
+#    assert t.permute(8).args[0].args == t.permute(1).args[0].args
+
+#    assert t.permute(-1).args[0].args == (B, C, D, E, F, G, A)
+#    assert t.permute(-3).args[0].args == (D, E, F, G, A, B, C)
+#    assert t.permute(-5).args[0].args == (F, G, A, B, C, D, E)
+#    assert t.permute(-8).args[0].args == t.permute(-1).args[0].args
+
+#    t = Tr((A+B)*(B*B)*C*D,cycle=False)
+#    assert t.permute(2).args[0].args == (C, D, (A+B), (B**2))
+
+def test_equals():
+    #TODO: Need to test if permute allowed
+    pass
