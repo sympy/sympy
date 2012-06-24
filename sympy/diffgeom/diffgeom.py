@@ -1,5 +1,6 @@
 from sympy.matrices import Matrix
 from sympy.core import Basic, Expr, Dummy, Function, sympify, diff
+from sympy.core.numbers import Zero
 from sympy.solvers import solve
 from sympy.functions import factorial
 from sympy.simplify import simplify
@@ -64,6 +65,7 @@ class Patch(Basic):
     def dim(self):
         return self.manifold.dim
 
+
 class CoordSystem(Basic):
     """Contains all coordinate transformation logic.
 
@@ -94,6 +96,11 @@ class CoordSystem(Basic):
     >>> rect.coord_transform_to(polar, [1, 1])
     [sqrt(2)]
     [   pi/4]
+
+    Calculate the jacobian of the polar to cartesian transformation:
+    >>> polar.jacobian(rect, [r, theta])
+    [cos(theta), -r*sin(theta)]
+    [sin(theta),  r*cos(theta)]
 
     Define a point using coordinates in one of the coordinate systems:
     >>> p = polar.point([1, 3*pi/4])
@@ -191,15 +198,17 @@ class CoordSystem(Basic):
             coords = transf[1].subs(zip(transf[0], coords))
         return coords
 
+    def jacobian(self, to_sys, coords):
+        """Return the jacobian matrix of a transformation."""
+        return self.coord_transform_to(to_sys, coords).jacobian(coords)
+
     def coord_function(self, coord_index):
         """Return a `ScalarField` that takes a point and returns one of the coords.
 
         Takes a point and returns its coordinate in this coordinate system.
 
         See the docstring of `CoordSystem` for examples."""
-        args = [Dummy() for i in range(self.dim)]
-        result = args[coord_index]
-        return ScalarField(self, args, result)
+        return BaseScalarField(self, coord_index)
 
     def coord_functions(self):
         """Returns a list of all coordinate functions.
@@ -214,10 +223,7 @@ class CoordSystem(Basic):
         operator on scalar fields.
 
         See the docstring of `CoordSystem` for examples."""
-        args = [Dummy() for i in range(self.dim)]
-        result = [0,] * self.dim
-        result[coord_index] = 1
-        return VectorField(self, args, result)
+        return BaseVectorField(self, coord_index)
 
     def base_vectors(self):
         """Returns a list of all base vectors.
@@ -232,10 +238,7 @@ class CoordSystem(Basic):
         operator on vector fields.
 
         See the docstring of `CoordSystem` for examples."""
-        args = [Dummy() for i in range(self.dim)]
-        result = [0,] * self.dim
-        result[coord_index] = 1
-        return OneFormField(self, args, result)
+        return Differential(self.coord_function(coord_index))
 
     def base_oneforms(self):
         """Returns a list of all base oneforms.
@@ -258,6 +261,7 @@ class CoordSystem(Basic):
     @property
     def dim(self):
         return self.patch.dim
+
 
 class Point(Basic):
     """Point in a Manifold object.
@@ -309,73 +313,78 @@ class Point(Basic):
             return self._coords
 
 
-class ScalarField(Expr):
-    """Scalar Field over a Manifold.
+class BaseScalarField(Expr):
+    """Base Scalar Field over a Manifold for a given Coordinate System.
 
     A scalar field takes a point as an argument and returns a scalar.
 
-    To define a scalar field you need to choose a coordinate system and define
-    the scalar field in terms of that coordinate system.
+    A base scalar field of a coordinate system takes a point and returns one of
+    the coordinates of that point in the coordinate system in question.
+
+    To define a scalar field you need to choose the coordinate system and the
+    index of the coordinate.
 
     The use of the scalar field after its definition is independent of the
     coordinate system in which it was defined, however due to limitations in
     the simplification routines you may arrive at more complicated
     expression if you use unappropriate coordinate systems.
 
-    Examples:
-    =========
+    You can build complicated scalar fields by just building up SymPy
+    expressions containing ``BaseScalarField`` instances.
+
+    Examples
+    ========
 
     Define boilerplate Manifold, Patch and coordinate systems:
     >>> from sympy import symbols, sin, cos, pi, Function
     >>> from sympy.diffgeom import (
-    ...        Manifold, Patch, CoordSystem, Point, ScalarField)
-    >>> x, y, r, theta = symbols('x, y, r, theta')
+    ...        Manifold, Patch, CoordSystem, Point, BaseScalarField)
+    >>> r0, theta0 = symbols('r0, theta0')
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
     >>> rect = CoordSystem('rect', p)
     >>> polar = CoordSystem('polar', p)
-    >>> polar.connect_to(rect, [r, theta], [r*cos(theta), r*sin(theta)])
+    >>> polar.connect_to(rect, [r0, theta0], [r0*cos(theta0), r0*sin(theta0)])
 
-    Points to be used as arguments for the filed:
-    >>> pointA = polar.point([r, 0])
+    Point to be used as an argument for the filed:
+    >>> point = polar.point([r0, 0])
 
     Examples of fields:
-    >>> field1 = ScalarField(rect, [x, y], x**2+y**2)
-    >>> field1(pointA)
-    r**2
-    >>> (1+5*field1)(pointA)
-    5*r**2 + 1
+    >>> fx = BaseScalarField(rect, 0)
+    >>> fy = BaseScalarField(rect, 1)
+    >>> (fx**2+fy**2)(point)
+    r0**2
 
     >>> g = Function('g')
-    >>> field2 = ScalarField(polar, [r, theta], g(theta-pi))
-    >>> field2(pointA)
+    >>> ftheta = BaseScalarField(polar, 1)
+    >>> fg = g(ftheta-pi)
+    >>> fg(point)
     g(-pi)
 
     """
-    def __init__(self, coord_sys, coords, expr):
-        super(ScalarField, self).__init__()
+    def __init__(self, coord_sys, index):
+        super(BaseScalarField, self).__init__()
         self._coord_sys = coord_sys
-        coords, (expr, ) = dummyfy(coords, (expr, ))
-        self._coords = coords
-        self._expr = expr
-        self._args = self._coord_sys, self._coords, self._expr
+        self._index = index
+        self._args = self._coord_sys, self._index
 
     def __call__(self, point):
-        # XXX see the if statement
-        #this is necessary in order to construct vector fields from stuff
-        # like scalar field * vector field, however it need more justification
-        # It is the method used in Functional Differential Geometry
         if not isinstance(point, Point):
+            # We want the recursive calling mechanics for all fields hence
+            # we need to return ScalarField itself if the arg is not a Point.
             return self
         coords = point.coords(self._coord_sys)
-        # XXX Calling doit() below is a simple solution to the following
-        # problem: In : Subs(2*x, x, y).subs(y,z)
-        #          Out: Subs(2*_x, (_x,), (z,)) instead of 2*z
+        # XXX Calling doit  is necessary with all the Subs expressions
         # XXX Calling simplify is necessary with all the trig expressions
-        return simplify(self._expr.subs(zip(self._coords, coords))).doit()
+        return simplify(coords[self._index]).doit()
+
+    # Workaround for limitations on the content of args
+    free_symbols=set([])
+    def doit(self):
+        return self
 
 
-class VectorField(Expr):
+class BaseVectorField(Expr):
     """Vector Field over a Manifold.
 
     A vector field is an operator taking a scalar field and returning a
@@ -395,7 +404,7 @@ class VectorField(Expr):
     Use the predefined R2 manifold, setup some boilerplate.
     >>> from sympy import symbols, sin, cos, pi, Function
     >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
-    >>> from sympy.diffgeom import ScalarField, VectorField
+    >>> from sympy.diffgeom import BaseScalarField, BaseVectorField
     >>> x, y = symbols('x, y')
     >>> x0, y0, r0, theta0 = symbols('x0, y0, r0, theta0')
 
@@ -412,98 +421,50 @@ class VectorField(Expr):
     g(r0*cos(theta0), r0*sin(theta0))
 
     Vector field:
-    >>> v = VectorField(R2_r, [x, y], [1, 1])
-    >>> v(s_field)(point_r)
-    Derivative(g(x0, y0), x0) + Derivative(g(x0, y0), y0)
-    >>> v(s_field)(point_p)
-    Subs(Derivative(g(_x, r0*sin(theta0)), _x), (_x,), (r0*cos(theta0),)) + Subs(Derivative(g(r0*cos(theta0), _y), _y), (_y,), (r0*sin(theta0),))
+    >>> v = BaseVectorField(R2_r, 1)
+    >>> v(s_field)(point_r).doit()
+    Derivative(g(x0, y0), y0)
+    >>> v(s_field)(point_p).doit()
+    Subs(Derivative(g(r0*cos(theta0), _xi_2), _xi_2), (_xi_2,), (r0*sin(theta0),))
 
     """
-    def __init__(self, coord_sys, coords, components):
-        super(VectorField, self).__init__()
+    def __init__(self, coord_sys, index):
+        super(BaseVectorField, self).__init__()
         self._coord_sys = coord_sys
-        coords, components = dummyfy(coords, components)
-        self._coords = coords
-        self._components = components
-        self._args = self._coord_sys, self._coords, self._components
+        self._index = index
+        self._args = self._coord_sys, self._index
 
     def __call__(self, scalar_field):
-        scalar_expr = scalar_field(Point(self._coord_sys, self._coords))
-        diff_scalar_expr = (diff(scalar_expr, c) for c in self._coords)
-        projected = sum(e[0]*e[1] for e in zip(diff_scalar_expr, self._components))
-        # TODO This is the simplest to write, however is it the smartest
-        # routine for applying vector field on a scalar field?
-        # TODO Document the nontrivial jump-through-hoops that is done wrt to
-        # coordinate systems here
-        return ScalarField(self._coord_sys, self._coords, projected)
+        base_scalars = list(scalar_field.atoms(BaseScalarField))
+
+        # First step: e_x(x+r**2) -> e_x(x) + 2*r*e_x(r)
+        d_var = Dummy()
+        # TODO: you need a real dummy function for the next line
+        d_funcs = [Function('_#_%s' % i)(d_var) for i, b in enumerate(base_scalars)]
+        d_result = scalar_field.subs(zip(base_scalars, d_funcs))
+        d_result = d_result.diff(d_var)
+
+        # Second step: e_x(x) -> 1 and e_x(r) -> cos(atan2(x, y))
+        coords = [Dummy() for i in range(self._coord_sys.dim)]
+        d_funcs_deriv = [f.diff(d_var) for f in d_funcs]
+        d_funcs_deriv_sub = []
+        for b in base_scalars:
+            jac = self._coord_sys.jacobian(b._coord_sys, coords)
+            d_funcs_deriv_sub.append(jac[b._index, self._index])
+        d_result = d_result.subs(zip(d_funcs_deriv, d_funcs_deriv_sub))
+
+        # Remove the dummies
+        result = d_result.subs(zip(d_funcs, base_scalars))
+        result = result.subs(zip(coords, self._coord_sys.coord_functions()))
+        return result.doit() # XXX doit for the Subs instances
 
 
-class OneFormField(Expr):
-    """One-Form Field over a Manifold.
-
-    A one-form field is an operator taking a vector field and returning a
-    scalar field.
-
-    To define a one-form field you need to choose a coordinate system and define
-    the one-form field in terms of that coordinate system.
-
-    The use of the one-form field after its definition is independent of the
-    coordinate system in which it was defined, however due to limitations in
-    the simplification routines you may arrive at more complicated
-    expression if you use unappropriate coordinate systems.
-
-    Examples:
-    =========
-
-    Use the predefined R2 manifold, setup some boilerplate.
-    >>> from sympy import symbols, sin, cos, pi, Function
-    >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
-    >>> from sympy.diffgeom import ScalarField, VectorField
-    >>> x0, y0 = symbols('x0, y0')
-
-    Define some vector fields and some one-form fields:
-    >>> e_x = R2.e_x
-    >>> e_theta = R2.e_theta
-    >>> dx, dy =  R2.dx, R2.dy
-    >>> p = R2_r.point([x0,y0])
-
-    Operate with the one-form field on the vector field:
-    >>> dx(e_x)(p)
-    1
-    >>> dy(e_x)(p)
-    0
-    >>> dx(e_theta)(p)
-    -y0
-
-    """
-    def __init__(self, coord_sys, coords, components):
-        super(OneFormField, self).__init__()
-        self._coord_sys = coord_sys
-        coords, components = dummyfy(coords, components)
-        self._coords = coords
-        self._components = components
-        self._args = self._coord_sys, self._coords, self._components
-
-    def __call__(self, vector_field):
-        coord_funcs = self._coord_sys.coord_functions()
-        p = Point(self._coord_sys, self._coords)
-        differentials = [vector_field(cf)(p) for cf in coord_funcs]
-        result = sum(t[0]*t[1] for t in zip(self._components, differentials))
-        # TODO This is the simplest to write, however is it the smartest?
-        # TODO Document the nontrivial jump-through-hoops that is done wrt to
-        # coordinate systems here
-        return ScalarField(self._coord_sys, self._coords, result)
-
-
-###############################################################################
-# Differential
-###############################################################################
 class Differential(Expr):
     """Return the differential of a scalar field."""
     def __init__(self, scalar_field):
         super(Differential, self).__init__()
         self._scalar_field = scalar_field
-        self._args = scalar_field
+        self._args = (self._scalar_field, )
 
     def __call__(self, vector_field):
         return vector_field(self._scalar_field)
@@ -576,10 +537,10 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     [      atan2(y, x)]
     >>> series[1]
     [t*x/sqrt(x**2 + y**2)]
-    [   t*y/(-x**2 - y**2)]
+    [   -t*y/(x**2 + y**2)]
     >>> series[2]
-    [t**2*(-x**2/(x**2 + y**2) + 1)/(2*sqrt(x**2 + y**2))]
-    [                           t**2*x*y/(x**2 + y**2)**2]
+    [t**2*(-x**2/(x**2 + y**2)**(3/2) + 1/sqrt(x**2 + y**2))/2]
+    [                                t**2*x*y/(x**2 + y**2)**2]
 
     """
     def iter_vfield(scalar_field, i):
