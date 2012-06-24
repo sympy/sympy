@@ -432,7 +432,7 @@ class DiagramGrid(Basic):
                 right_down = b[0], a[1] + 1
 
                 target_cell = DiagramGrid._choose_target_cell(
-                    right_down, right_up, (a, b), obj, skeleton, grid)
+                    right_up, right_down, (a, b), obj, skeleton, grid)
 
                 if not target_cell:
                     # No room to the left.  See what's to the right.
@@ -440,7 +440,7 @@ class DiagramGrid(Basic):
                     left_down = b[0], a[1] - 1
 
                     target_cell = DiagramGrid._choose_target_cell(
-                        left_down, left_up, (a, b), obj, skeleton, grid)
+                        left_up, left_down, (a, b), obj, skeleton, grid)
 
                     if not target_cell:
                         # This edge is not in the fringe, remove it
