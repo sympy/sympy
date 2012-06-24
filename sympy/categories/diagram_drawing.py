@@ -291,40 +291,6 @@ class DiagramGrid(Basic):
         return None
 
     @staticmethod
-    def _fix_degerate(edge, pt1, pt2, fringe, grid):
-        """
-        Checks if either of the points ``pt1`` or ``pt2`` forms a
-        perpendicular edge on ``edge``, which is in the fringe.  If
-        this is indeed so, replaces the two edges with the
-        corresponding diagonal and returns ``True``.  Otherwise
-        returns ``False``.
-        """
-        (a, b) = edge
-
-        if (a, pt1) in fringe:
-            fringe.remove((a, b))
-            fringe.remove((a, pt1))
-            fringe.append((pt1, b))
-            return True
-        elif (pt1, a) in fringe:
-            fringe.remove((a, b))
-            fringe.remove((pt1, a))
-            fringe.append((pt1, b))
-            return True
-        elif (b, pt2) in fringe:
-            fringe.remove((a, b))
-            fringe.remove((b, pt2))
-            fringe.append((a, pt2))
-            return True
-        elif (pt2, b) in fringe:
-            fringe.remove((a, b))
-            fringe.remove((pt2, b))
-            fringe.append((a, pt2))
-            return True
-
-        return False
-
-    @staticmethod
     def _empty_point(pt, grid):
         """
         Checks if the cell at coordinates ``pt`` is either empty or
@@ -442,11 +408,6 @@ class DiagramGrid(Basic):
                 up_left = a[0] - 1, a[1]
                 up_right = a[0] - 1, b[1]
 
-                if DiagramGrid._fix_degerate(
-                    (a, b), up_left, up_right, fringe, grid):
-                    # The fringe has just been corrected.  Restart.
-                    break
-
                 target_cell = DiagramGrid._choose_target_cell(
                     up_left, up_right, (a, b), obj, skeleton, grid)
 
@@ -454,12 +415,6 @@ class DiagramGrid(Basic):
                     # No room above this edge.  Check below.
                     down_left = a[0] + 1, a[1]
                     down_right = a[0] + 1, b[1]
-
-                    if DiagramGrid._fix_degerate(
-                        (a, b), up_left, up_right, fringe, grid):
-                        # The fringe has just been corrected.
-                        # Restart.
-                        break
 
                     target_cell = DiagramGrid._choose_target_cell(
                         down_left, down_right, (a, b), obj, skeleton, grid)
@@ -476,11 +431,6 @@ class DiagramGrid(Basic):
                 left_up = a[0], a[1] - 1
                 left_down = b[0], a[1] - 1
 
-                if DiagramGrid._fix_degerate(
-                    (a, b), left_up, left_down, fringe, grid):
-                    # The fringe has just been corrected.  Restart.
-                    break
-
                 target_cell = DiagramGrid._choose_target_cell(
                     left_down, left_up, (a, b), obj, skeleton, grid)
 
@@ -488,11 +438,6 @@ class DiagramGrid(Basic):
                     # No room to the left.  See what's to the right.
                     right_up = a[0], a[1] + 1
                     right_down = b[0], a[1] + 1
-
-                    if DiagramGrid._fix_degerate(
-                        (a, b), right_up, right_down, fringe, skeleton, grid):
-                        # The fringe has just been corrected.  Restart.
-                        break
 
                     target_cell = DiagramGrid._choose_target_cell(
                         right_down, right_up, (a, b), obj, skeleton, grid)
