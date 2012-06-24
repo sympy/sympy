@@ -458,7 +458,7 @@ def test_sort_variable():
 def test_unhandled():
     class MyExpr(Expr):
         def _eval_derivative(self, s):
-            if not s.name.startswith('diff_wrt'):
+            if not s.name.startswith('xi'):
                 return self
             else:
                 return None
