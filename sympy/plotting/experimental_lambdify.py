@@ -78,24 +78,20 @@ import warnings
 class vectorized_lambdify(object):
     """ Return a sufficiently smart, vectorized and lambdified function.
 
-    Returns only reals. Truncates complex if necessary.
+    Returns only reals.
 
     This function uses experimental_lambdify to created a lambdified
     expression ready to be used with numpy. Many of the functions in sympy
-    are not implemented in numpy so in some cases we resort to python math or
+    are not implemented in numpy so in some cases we resort to python cmath or
     even to evalf.
 
     The following translations are tried:
-    only numpy
-      - on FloatingPointError (numpy tried to return a nan):
-          take the real part and use complex128 arguments
+      only numpy complex
       - on errors raised by sympy trying to work with ndarray:
-          only python math and then vectorize float64
-      - on ValueError (math trying to work with complex numbers):
           only python cmath and then vectorize complex128
 
-    When using python math/cmath there is no need for evalf or float/complex
-    because python math/cmath calls those.
+    When using python cmath there is no need for evalf or float/complex
+    because python cmath calls those.
 
     This function never tries to mix numpy directly with evalf because numpy
     does not understand sympy Float. If this is needed one can use the
@@ -112,14 +108,12 @@ class vectorized_lambdify(object):
         self.failure = False
 
     def __call__(self, *args):
-        # TODO: This can be simplified. Check the last failback.
         np_old_err = np.seterr(invalid='raise')
         try:
             temp_args = (np.array(a, dtype=np.complex) for a in args)
             results = self.vector_func(*temp_args)
             results = np.ma.masked_where(np.abs(results.imag) != 0, results.real, copy=False)
         except Exception, e:
-            np.seterr(**np_old_err)
             #DEBUG: print 'Error', type(e), e
             if ((isinstance(e, TypeError)
                    and 'unhashable type: \'numpy.ndarray\'' in str(e))
@@ -157,6 +151,9 @@ class vectorized_lambdify(object):
                     warnings.warn('The evaluation of the expression is'
                             ' problematic. We are trying a failback method'
                             ' that may still work. Please report this as a bug.')
+        finally:
+            np.seterr(**np_old_err)
+
         return results
 
 
