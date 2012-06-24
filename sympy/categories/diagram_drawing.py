@@ -369,8 +369,8 @@ class DiagramGrid(Basic):
     @staticmethod
     def _weld_triangle(triangles, fringe, grid, skeleton):
         """
-        Welds a triangle to the fringe and returns ``True``, if
-        possible.  Otherwise returns ``False``.
+        If possible, welds a triangle to the fringe and returns the
+        welded triangle.  Otherwise returns None.
         """
         for tri in triangles:
             welding_edge = DiagramGrid._find_triangle_welding(
@@ -463,9 +463,9 @@ class DiagramGrid(Basic):
 
             triangles.remove(tri)
 
-            return True
+            return tri
 
-        return False
+        return None
 
     def __new__(cls, diagram):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
@@ -481,6 +481,7 @@ class DiagramGrid(Basic):
             triangles, skeleton)
 
         triangles = sorted(triangles, key=lambda triangle: triangle_sizes[triangle])
+        all_objects = diagram.objects
 
         grid = _GrowableGrid(2, 1)
 
@@ -489,5 +490,11 @@ class DiagramGrid(Basic):
         grid[0, 0], grid[0, 1] = root_edge
         fringe = [((0,0), (0, 1))]
 
-        while DiagramGrid._weld_triangle(triangles, fringe, grid, skeleton):
-            pass
+        # Record which objects we now have on the grid.
+        placed_objects = FiniteSet(root_edge)
+
+        while placed_objects != all_objects:
+            triangle = DiagramGrid._weld_triangle(
+                triangles, fringe, grid, skeleton)
+            placed_objects = placed_objects | \
+                             DiagramGrid._triangle_objects(triangle)
