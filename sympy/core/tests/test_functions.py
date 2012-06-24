@@ -175,7 +175,7 @@ def test_Subs():
     assert e1 + e2 == 2*e1
     assert e1.__hash__() == e2.__hash__()
     assert Subs(z*f(x+1), x, 1) not in [ e1, e2 ]
-    assert Derivative(f(x),x).subs(x,g(x)) == Derivative(f(g(x)),g(x))
+    assert Derivative(f(x),x).subs(x,g(x)) == Subs(Derivative(f(x),x), (x,), (g(x),))
     assert Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).n(1) == \
         Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).evalf(1) == \
         z + Rational('1/2').n(1)*f(0)
@@ -396,13 +396,16 @@ def test_diff_wrt():
 
     # Chain rule cases
     assert f(g(x)).diff(x) ==\
-        Derivative(f(g(x)),g(x))*Derivative(g(x),x)
+        Subs(Derivative(f(x),x), (x,), (g(x),))*Derivative(g(x),x)
     assert diff(f(g(x),h(x)),x) ==\
-        Derivative(f(g(x), h(x)), g(x))*Derivative(g(x), x) +\
-        Derivative(f(g(x), h(x)), h(x))*Derivative(h(x), x)
-    assert f(sin(x)).diff(x) == Derivative(f(sin(x)),sin(x))*cos(x)
+        Subs(Derivative(f(y,h(x)),y), (y,), (g(x),))*Derivative(g(x), x) +\
+        Subs(Derivative(f(g(x),y),y), (y,), (h(x),))*Derivative(h(x), x)
+    assert f(sin(x)).diff(x) == Subs(Derivative(f(x),x), (x,), (sin(x),))*cos(x)
 
-    assert diff(f(g(x)),g(x)) == Derivative(f(g(x)),g(x))
+    assert diff(f(g(x)),g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
+
+def test_diff_wrt_func_subs():
+     f(g(x)).diff(x).subs(g, Lambda(x, 2*x)) == f(2*x).diff(x)
 
 def test_diff_wrt_not_allowed():
     raises(ValueError, lambda: diff(sin(x**2),x**2))
@@ -455,7 +458,7 @@ def test_sort_variable():
 def test_unhandled():
     class MyExpr(Expr):
         def _eval_derivative(self, s):
-            if not s.name.startswith('diff_wrt'):
+            if not s.name.startswith('xi'):
                 return self
             else:
                 return None
