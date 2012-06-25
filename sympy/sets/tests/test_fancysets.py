@@ -16,8 +16,8 @@ def test_naturals():
     assert (a,b,c,d) == (1,2,3,4)
     assert isinstance(a, Basic)
 
-    assert N.intersect(Interval(-5, 5)) == FiniteSet(1, 2, 3, 4, 5)
-    assert N.intersect(Interval(-5, 5, True, True)) == FiniteSet(1, 2, 3, 4)
+    assert N.intersect(Interval(-5, 5)) == Range(1, 6)
+    assert N.intersect(Interval(-5, 5, True, True)) == Range(1, 5)
 
     assert N.inf == 1
     assert N.sup == oo
@@ -32,8 +32,8 @@ def test_integers():
     assert (a,b,c,d) == (0, 1, -1, 2)
     assert isinstance(a, Basic)
 
-    assert Z.intersect(Interval(-5, 5)) == FiniteSet(range(-5, 6))
-    assert Z.intersect(Interval(-5, 5, True, True)) == FiniteSet(range(-4,5))
+    assert Z.intersect(Interval(-5, 5)) == Range(-5, 6)
+    assert Z.intersect(Interval(-5, 5, True, True)) == Range(-4,5)
 
     assert Z.inf == -oo
     assert Z.sup == oo

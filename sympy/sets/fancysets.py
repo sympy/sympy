@@ -89,7 +89,7 @@ class Integers(Set):
 
     def _intersect(self, other):
         if other.is_Interval:
-            s = FiniteSet(range(ceiling(other.left), floor(other.right) + 1))
+            s = Range(ceiling(other.left), floor(other.right) + 1)
             return s.intersect(other) # take out endpoints if open interval
         return None
 
