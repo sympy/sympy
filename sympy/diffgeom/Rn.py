@@ -17,8 +17,8 @@ from sympy import sqrt, atan2, sin, cos, Dummy
 R2 = Manifold('R^2', 2)
 # Patch and coordinate systems.
 R2_origin = Patch('R^2_o', R2)
-R2_r = CoordSystem('R^2_r', R2_origin)
-R2_p = CoordSystem('R^2_p', R2_origin)
+R2_r = CoordSystem('R^2_r', R2_origin, ['x', 'y'])
+R2_p = CoordSystem('R^2_p', R2_origin, ['r', 'theta'])
 
 # Connecting the coordinate charts.
 x, y, r, theta = [Dummy(s) for s in ['x', 'y', 'r', 'theta']]

@@ -78,10 +78,10 @@ class CoordSystem(Basic):
     >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
     >>> x, y, r, theta = symbols('x, y, r, theta')
     >>> m = Manifold('M', 2)
-    >>> p = Patch('P', m)
-    >>> rect = CoordSystem('rect', p)
-    >>> polar = CoordSystem('polar', p)
-    >>> rect in p.coord_systems
+    >>> patch = Patch('P', m)
+    >>> rect = CoordSystem('rect', patch)
+    >>> polar = CoordSystem('polar', patch)
+    >>> rect in patch.coord_systems
     True
 
     Connect the coordinate systems. An inverse transformation is automatically
@@ -130,14 +130,27 @@ class CoordSystem(Basic):
     >>> dx(v_x)(p)
     1
 
+    If you provide a list of names the fields will print nicely:
+    - without provided names:
+    >>> x, v_x, dx
+    (rect_0, e_rect_0, drect_0)
+
+    - with provided names
+    >>> rect = CoordSystem('rect', patch, ['x', 'y'])
+    >>> rect.coord_function(0), rect.base_vector(0), rect.base_oneform(0)
+    (x, e_x, dx)
+
     """
     #  Contains a reference to the parent patch in order to be able to access
     # other coordinate system charts.
-    def __init__(self, name, patch):
+    def __init__(self, name, patch, names=None):
         super(CoordSystem, self).__init__()
         self.name = name
-        # TODO What is the purpose of this name, besides printing?
+        if not names:
+            names = ['%s_%d'%(name, i) for i in range(patch.dim)]
+        self._names = tuple(names)
         self.patch = patch
+        self._args = self.name, self.patch, self._names
         self.patch.coord_systems.append(self)
         self.transforms = {}
         # All the coordinate transformation logic is in this dictionary in the
@@ -390,8 +403,11 @@ class BaseVectorField(Expr):
     A vector field is an operator taking a scalar field and returning a
     directional derivative (which is also a scalar field).
 
-    To define a vector field you need to choose a coordinate system and define
-    the vector field in terms of that coordinate system.
+    A base vector field is the same type of operator, however the derivation is
+    specifically done wrt a chosen coordinate.
+
+    To define a base vector field you need to choose the coordinate system and
+    the index of the coordinate.
 
     The use of the vector field after its definition is independent of the
     coordinate system in which it was defined, however due to limitations in

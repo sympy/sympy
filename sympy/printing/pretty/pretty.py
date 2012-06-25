@@ -1507,6 +1507,20 @@ class PrettyPrinter(Printer):
 
         return prettyForm(pretty_result[0])
 
+    def _print_BaseScalarField(self, field):
+        string = field._coord_sys._names[field._index]
+        return self._print(pretty_symbol(string))
+
+    def _print_BaseVectorField(self, field):
+        s = U('PARTIAL DIFFERENTIAL')+'_'+field._coord_sys._names[field._index]
+        return self._print(pretty_symbol(s))
+
+    def _print_Differential(self, diff):
+        field = diff._scalar_field
+        string = field._coord_sys._names[field._index]
+        return self._print(u'\u2146 '+pretty_symbol(string))
+
+
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 

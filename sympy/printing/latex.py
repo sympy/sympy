@@ -1227,6 +1227,19 @@ class LatexPrinter(Printer):
 
         return latex_result
 
+    def _print_BaseScalarField(self, field):
+        string = field._coord_sys._names[field._index]
+        return r'\boldsymbol{\mathrm{%s}}' % self._print(Symbol(string))
+
+    def _print_BaseVectorField(self, field):
+        string = field._coord_sys._names[field._index]
+        return r'\partial_{%s}' % self._print(Symbol(string))
+
+    def _print_Differential(self, diff):
+        field = diff._scalar_field
+        string = field._coord_sys._names[field._index]
+        return r'\mathbb{d}%s' % self._print(Symbol(string))
+
 def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.
