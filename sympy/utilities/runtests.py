@@ -187,29 +187,12 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
     # sometimes return None.
 
     # First check if the Python version supports hash randomization
-    p = subprocess.Popen([command, "--version"], stdout=subprocess.PIPE,
+    # If it doesn't have this support, it won't reconize the -R flag
+    p = subprocess.Popen([command, "-RV"], stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
-    pyversion, _ = p.communicate()
-    pyversion = pyversion.decode('utf-8') # Popen returns a bytes object in
-                                          # Python 3
-    assert str(pyversion).startswith("Python ")
-    version = pyversion[7:]
-    if int(version[0]) == 2:
-        if int(version[2]) <= 5:
-            return False
-        if int(version[2]) == 6 and int(version[4]) < 8:
-            return False
-        if int(version[2]) == 7 and int(version[4]) < 3:
-            return False
-    elif int(version[0]) == 3:
-        if int(version[2]) == 0:
-            return False
-        if int(version[2]) == 1 and int(version[4]) < 5:
-            return False
-        if int(version[2]) == 2 and int(version[4]) < 3:
-            return False
-    else:
-        raise ValueError("Malformed Python version string: %s" % pyversion)
+    p.communicate()
+    if p.returncode != 0:
+        return False
 
     hash_seed = os.getenv("PYTHONHASHSEED")
     if not hash_seed:
