@@ -135,3 +135,9 @@ def test_reals():
 @XFAIL # this is because contains is now very strict
 def test_reals_fail():
     assert sqrt(-1) not in S.Reals
+
+def test_intersections():
+    assert 5 in S.Integers.intersect(S.Reals)
+    assert 5 in S.Integers.intersect(S.Reals)
+    assert -5 not in S.Naturals.intersect(S.Reals)
+    assert 5.5 not in S.Integers.intersect(S.Reals)

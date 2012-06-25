@@ -558,7 +558,7 @@ class Interval(Set, EvalfMixin):
         if empty:
             return S.EmptySet
 
-        return self.__class__(start, end, left_open, right_open)
+        return Interval(start, end, left_open, right_open)
 
     def _union(self, other):
         """
