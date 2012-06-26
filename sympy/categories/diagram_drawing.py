@@ -83,7 +83,7 @@ class _GrowableGrid:
         for i in xrange(self._height):
             self._array[i].insert(0, None)
 
-class DiagramGrid(Basic):
+class DiagramGrid:
     """
     Constructs and holds the fitting of the diagram into a grid.
 
@@ -487,7 +487,7 @@ class DiagramGrid(Basic):
         sorted_candidates = sorted(candidates, key=default_sort_key)
         return sorted_candidates[0]
 
-    def __new__(cls, diagram):
+    def __init__(self, diagram):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
         conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
         merged_morphisms = DiagramGrid._merge_premises_conclusions(
