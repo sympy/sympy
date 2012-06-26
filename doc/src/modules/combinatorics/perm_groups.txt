@@ -7,11 +7,3 @@ Permutation Groups
 
 .. autoclass:: PermutationGroup
    :members:
-
-.. autofunction:: SymmetricGroup
-
-.. autofunction:: CyclicGroup
-
-.. autofunction:: DihedralGroup
-
-.. autofunction:: AlternatingGroup

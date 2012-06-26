@@ -1,9 +1,11 @@
-from sympy.combinatorics.perm_groups import PermutationGroup, SymmetricGroup,\
-CyclicGroup, DihedralGroup, AlternatingGroup
+from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
+DihedralGroup, AlternatingGroup
 from sympy.combinatorics.permutations import Permutation, perm_af_muln, cyclic
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 import random
+
 
 def test_new():
     a = Permutation([1, 0])
@@ -235,6 +237,7 @@ def test_direct_product():
     assert H.order() == 32
     assert H.is_abelian == False
 
+
 def test_SymmetricGroup():
     G = SymmetricGroup(5)
     elements = list(G.generate())
@@ -297,3 +300,86 @@ def test_schreier_vector():
     assert H.schreier_vector(2) == [0, 1, -1, 0, 0, 1, 0, 0]
     L = SymmetricGroup(4)
     assert L.schreier_vector(1) == [1, -1, 0, 0]
+
+def test_random_pr():
+    D = DihedralGroup(6)
+    r = 11
+    n = 3
+    _random_prec_n = {}
+    _random_prec_n[0] = {'s': 7, 't': 3, 'x': 2, 'e': -1}
+    _random_prec_n[1] = {'s': 5, 't': 5, 'x': 1, 'e': -1}
+    _random_prec_n[2] = {'s': 3, 't': 4, 'x': 2, 'e': 1}
+    D._random_pr_init(r, n, _random_prec_n = _random_prec_n)
+    assert D._random_gens[11] == Permutation([0, 1, 2, 3, 4, 5])
+    _random_prec = {'s': 2, 't': 9, 'x': 1, 'e': -1}
+    assert D.random_pr(_random_prec = _random_prec) == \
+    Permutation([0, 5, 4, 3, 2, 1])
+
+def test_is_alt_sym():
+    G = DihedralGroup(10)
+    assert G.is_alt_sym() == False
+    S = SymmetricGroup(10)
+    N_eps = 10
+    _random_prec = {'N_eps': N_eps,
+    0: Permutation([[2], [1, 4], [0, 6, 7, 8, 9, 3, 5]]),
+    1: Permutation([[1, 8, 7, 6, 3, 5, 2, 9], [0, 4]]),
+    2: Permutation([[5, 8], [4, 7], [0, 1, 2, 3, 6, 9]]),
+    3: Permutation([[3], [0, 8, 2, 7, 4, 1, 6, 9, 5]]),
+    4: Permutation([[8], [4, 7, 9], [3, 6], [0, 5, 1, 2]]),
+    5: Permutation([[6], [0, 2, 4, 5, 1, 8, 3, 9, 7]]),
+    6: Permutation([[6, 9, 8], [4, 5], [1, 3, 7], [0, 2]]),
+    7: Permutation([[4], [0, 2, 9, 1, 3, 8, 6, 5, 7]]),
+    8: Permutation([[1, 5, 6, 3], [0, 2, 7, 8, 4, 9]]),
+    9: Permutation([[8], [6, 7], [2, 3, 4, 5], [0, 1, 9]])}
+    assert S.is_alt_sym(_random_prec = _random_prec) == True
+    A = AlternatingGroup(10)
+    _random_prec = {'N_eps': N_eps,
+    0: Permutation([[1, 6, 4, 2, 7, 8, 5, 9, 3], [0]]),
+    1: Permutation([[1], [0, 5, 8, 4, 9, 2, 3, 6, 7]]),
+    2: Permutation([[1, 9, 8, 3, 2, 5], [0, 6, 7, 4]]),
+    3: Permutation([[6, 8, 9], [4, 5], [1, 3, 7, 2], [0]]),
+    4: Permutation([[8], [5], [4], [2, 6, 9, 3], [1], [0, 7]]),
+    5: Permutation([[3, 6], [0, 8, 1, 7, 5, 9, 4, 2]]),
+    6: Permutation([[5], [2, 9], [1, 8, 3], [0, 4, 7, 6]]),
+    7: Permutation([[1, 8, 4, 7, 2, 3], [0, 6, 9, 5]]),
+    8: Permutation([[5, 8, 7], [3], [1, 4, 2, 6], [0, 9]]),
+    9: Permutation([[4, 9, 6], [3, 8], [1, 2], [0, 5, 7]])}
+    assert A.is_alt_sym(_random_prec = _random_prec) == False
+
+def test_alt_or_sym():
+    S = SymmetricGroup(10)
+    A = AlternatingGroup(10)
+    D = DihedralGroup(10)
+    sym = S.alt_or_sym()
+    alt = A.alt_or_sym()
+    dih = D.alt_or_sym()
+    assert sym == 'S' or sym == False
+    assert alt == 'A' or alt == False
+    assert dih == False
+
+def test_minimal_block():
+    D = DihedralGroup(6)
+    block_system = D.minimal_block([0,3])
+    for i in range(3):
+        assert block_system[i] == block_system[i+3]
+    S = SymmetricGroup(6)
+    assert S.minimal_block([0, 1]) == [0, 0, 0, 0, 0, 0]
+
+def test_max_div():
+    S = SymmetricGroup(10)
+    assert S.max_div == 5
+
+def test_is_primitive():
+    S = SymmetricGroup(5)
+    assert S.is_primitive() == True
+    C = CyclicGroup(7)
+    assert C.is_primitive() == True
+
+def test_random_stab():
+    S = SymmetricGroup(5)
+    _random_el = Permutation([1, 3, 2, 0, 4])
+    _random_prec = {'rand': _random_el}
+    g = S.random_stab(2, _random_prec = _random_prec)
+    assert g == Permutation([1, 3, 2, 0, 4])
+    h = S.random_stab(1)
+    assert h(1) == 1

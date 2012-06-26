@@ -229,6 +229,8 @@ class Permutation(Basic):
 
     [7] http://en.wikipedia.org/wiki/Lehmer_code
 
+    (7) http://en.wikipedia.org/wiki/Lehmer_code
+
     """
 
     is_Permutation = True
@@ -319,6 +321,13 @@ class Permutation(Basic):
         return self.cyclic_form
 
     @property
+    def reduced_cyclic_form(self):
+        return [a for a in self.cyclic_form if len(a)>1]
+
+
+
+
+    @property
     def size(self):
         """
         Returns the number of numbers in the permutation
@@ -352,6 +361,7 @@ class Permutation(Basic):
             raise ValueError('Permutation argument must be a list of ints or a list of lists.')
 
         # 0, 1, ..., n-1 should all be present
+
         temp = [int(i) for i in flatten(args[0])]
         if set(range(len(temp))) != set(temp):
             raise ValueError("Integers 0 through %s must be present." % len(temp))
@@ -1770,3 +1780,5 @@ def _merge(arr, temp, left, mid, right):
     else:
         arr[left:right + 1] = temp[left:right + 1]
     return inv_count
+
+Perm = Permutation
