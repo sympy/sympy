@@ -340,7 +340,7 @@ class PermutationGroup(Basic):
         obj._coset_repr = []
         obj._coset_repr_n = []
         obj._stabilizers_gens = []
-        obj._basic_orbits = []
+        #obj._basic_orbits = []
 
         # these attributes are assigned after running _random_pr_init
         obj._random_gens = []
@@ -637,6 +637,8 @@ class PermutationGroup(Basic):
         JGr.gens = JGr.gens[:i+1]
         self._base = base.keys()
         self._coset_repr_n = base.values()
+        k = len(self._base)
+        #   self._basic_orbits = [[rep[self._base[i]] for rep in self._coset_repr[i]] for i in range(k)]
 
     def coset_decomposition(self, g):
         """
@@ -2006,9 +2008,13 @@ class PermutationGroup(Basic):
                 return i - 1
         return n
 
-    def schreier_sims_random(self, base, gens, conf):
+    def schreier_sims_random(self, base=[], gens=None, conf=10):
+        if gens is None:
+            gens = self.generators
         k = len(base)
         n = self.degree
+
+        # make sure no generator fixes all base points
         for gen in gens:
             if [gen(x) for x in base] == [x for x in base]:
                 new = 0
@@ -2016,6 +2022,10 @@ class PermutationGroup(Basic):
                     new += 1
                 base.append(new)
                 k += 1
+
+        # for each generator, find the index of the
+        # smallest (fixing the largest number of points)
+        # basic stabilizer it belongs to
         num_gens = len(gens)
         stab_index = [0]*num_gens
         for i in xrange(num_gens):
@@ -2023,6 +2033,8 @@ class PermutationGroup(Basic):
             while j < k and gens[i](base[j]) == base[j]:
                 j += 1
             stab_index[i] = j
+
+        # initialize generators for the basic stabilizers G^{(i)}
         S = []
         for i in range(k):
             S.append([])
@@ -2030,6 +2042,8 @@ class PermutationGroup(Basic):
             index = stab_index[i]
             for j in xrange(index+1):
                 S[j].append(gens[i])
+
+        # initialize the basic stabilizers and the basic orbits
         H = {}
         orbs = {}
         for i in xrange(k):
@@ -2038,11 +2052,18 @@ class PermutationGroup(Basic):
             else:
                 H[i] = PermutationGroup(S[i])
             orbs[i] = (H[i]).orbit(base[i])
+
+        # initialize the number of consecutive elements sifted
         c = 0
+
+        # start sifting random elements while the number of consecutive sifts
+        # is less than conf
         while c < conf:
             g = self.random_pr()
             h, j = strip(g, base, orbs, H)
             y = True
+
+            # determine whether a new base point is needed
             if j <= k:
                 y = False
             elif not h.is_Identity:
@@ -2053,29 +2074,33 @@ class PermutationGroup(Basic):
                 base.append(moved)
                 k += 1
                 S.append([])
+
+            # if the element doesn't sift, amend the strong generators and
+            # associated stabilizers and orbits
             if y == False:
                 for l in range(1, j):
                     S[l].append(h)
-                    if S[l] == []:
-                        H[l] = PermutationGroup([Permutation(range(n))])
-                    else:
-                        H[l] = PermutationGroup(S[l])
+                    H[l] = PermutationGroup(S[l])
                     orbs[l] = (H[l]).orbit(base[l])
                 c = 0
             else:
                 c += 1
-        orders = []
-        for i in range(k):
-            orders.append(len(orbs[i]))
-        order = 1
-        for order_s in orders:
-            order *= order_s
-        return S, base, order
+        # build the strong generating set
+        strong_gens = S[0][:]
+        for gen in S[1]:
+            if gen not in strong_gens:
+                strong_gens.append(gen)
 
-    def base_ordering(self):
-        if self._base == []:
-            self.schreier_sims()
-        base = self._base
+        return base, strong_gens
+
+
+    def base_ordering(self, known_base=None):
+        if known_base is None:
+            if self._base == []:
+                self.schreier_sims()
+            base = self._base
+        else:
+            base = known_base
         k = len(base)
         n = self.degree
         ordering = [0]*n
@@ -2087,6 +2112,74 @@ class PermutationGroup(Basic):
                 ordering[i] = current
                 current += 1
         return ordering
+
+    def print_elements(self, base, strong_gens):
+
+        res = []
+        # order the points in range(n) according to the base
+        base_ordering = self.base_ordering(known_base=base)
+
+        # distribute strong generators in basic stabilizers
+        strong_gens = _distribute_gens_by_base(base, strong_gens)
+
+        # initialize basic orbits and transversals
+        k = len(base)
+        transversals = [None]*k
+        basic_orbits = [None]*k
+        for i in range(k):
+            group = PermutationGroup(strong_gens[i])
+            transversals[i] = dict(group.orbit_transversal(base[i], pairs=True))
+            basic_orbits[i] = transversals[i].keys()
+
+        # initialize transversal elements and sorted orbits
+        n = self.degree
+        c = [0]*k
+        u = [None]*k
+        sorted_orbits = [0]*k
+        u[0] = _new_from_array_form(range(n))
+        sorted_orbits[0] = basic_orbits[0][:]
+        sorted_orbits[0].sort(key = lambda point: base_ordering[point])
+
+        # set the depth of the search
+        depth = 0
+
+        # depth-first search
+        while True:
+            # check if the total depth is reached
+            while depth < k - 1:
+                depth += 1
+                g = _new_from_array_form(range(n))
+                for i in range(depth):
+                    g = g*u[i]
+                orb_image = [g(point) for point in basic_orbits[depth]]
+                orb_image.sort(key = lambda point: base_ordering[point])
+                sorted_orbits[depth] = orb_image
+                c[depth] = 0
+                g_inverse = ~g
+                gamma = g_inverse(sorted_orbits[depth][c[depth]])
+                u[depth] = transversals[depth][gamma]
+            # we have a new element
+            output = _new_from_array_form(range(n))
+            for i in range(k):
+                output = output*u[i]
+            res.append(output.array_form)
+
+            # go up the tree
+            while depth >= 0 and c[depth] + 1 == len(basic_orbits[depth]):
+                depth -= 1
+            if depth == -1:
+                return res
+
+            # find the next element in the lexicographical ordering induced
+            # by the base
+            c[depth] += 1
+            g = _new_from_array_form(range(n))
+            for i in range(depth):
+                g = g*u[i]
+            g = ~g
+            gamma = g(sorted_orbits[depth][c[depth]])
+            u[depth] = transversals[depth][gamma]
+
 
     def lex_compare(self, g, h):
         if self._base == []:
@@ -2109,16 +2202,20 @@ class PermutationGroup(Basic):
             self.schreier_sims()
         return [g(point) for point in self._base[:l]]
 
+
+
 def strip(g, base, orbs, H):
     h = g
     k = len(base)
     for i in range(k):
         beta = h(base[i])
+        if beta == base[i]:
+            continue
         if beta not in orbs[i]:
-            return h, i+1
+            return h, i + 1
         u = (H[i]).orbit_rep(base[i], beta)
         h = ~u*h
-    return h, k+1
+    return h, k + 1
 
 def DirectProduct(*groups):
     """
@@ -2238,5 +2335,29 @@ def _check_cycles_alt_sym(perm):
             if current_len > n//2 and current_len < n-2 and isprime(current_len):
                 return True
     return False
+
+def _distribute_gens_by_base(base, gens):
+    k = len(base)
+    S = []
+    for i in xrange(k):
+        S.append([])
+    num_gens = len(gens)
+
+    # for each generator, find the index of the
+    # smallest (fixing the largest number of points)
+    # basic stabilizer it belongs to
+    stab_index = [0]*num_gens
+    for i in xrange(num_gens):
+        j = 0
+        while j < k and gens[i](base[j]) == base[j]:
+            j += 1
+        stab_index[i] = j
+
+    # distribute generators according to basic stabilizers
+    for i in xrange(num_gens):
+        index = stab_index[i]
+        for j in xrange(index+1):
+            S[j].append(gens[i])
+    return S
 
 PermGroup = PermutationGroup
