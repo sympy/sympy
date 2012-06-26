@@ -944,7 +944,7 @@ class PermutationGroup(Basic):
         else:
             raise ValueError('there is not this method')
 
-    def orbit(self, alpha, action = 'tuples'):
+    def orbit(self, alpha, action='tuples'):
         r"""
         Compute the orbit of alpha `\{g(\alpha) | g \in G\}` as a set.
 
@@ -988,10 +988,14 @@ class PermutationGroup(Basic):
         "Permutation group algorithms"
 
         """
-        if isinstance(alpha, int):
-            orb = [alpha]
+        if not hasattr(alpha, '__getitem__'):
+            alpha = [alpha]
+
+        if len(alpha) == 1 or action == 'union':
+            orb = alpha
             used = [False]*self.degree
-            used[alpha] = True
+            for el in alpha:
+                used[el] = True
             gens = self.generators
             for b in orb:
                 for gen in gens:
@@ -1000,45 +1004,30 @@ class PermutationGroup(Basic):
                         orb.append(temp)
                         used[temp] = True
             return set(orb)
-
-        if isinstance(alpha, list):
-            if action == 'union':
-                orb = alpha
-                used = [False]*self.degree
-                for el in alpha:
-                    used[el] = True
-                gens = self.generators
-                for b in orb:
-                    for gen in gens:
-                        temp = gen(b)
-                        if used[temp] == False:
-                            orb.append(temp)
-                            used[temp] = True
-                return set(orb)
-            if action == 'tuples':
-                alpha = tuple(alpha)
-                orb = [alpha]
-                used = set([alpha])
-                gens = self.generators
-                for b in orb:
-                    for gen in gens:
-                        temp = tuple([gen(x) for x in b])
-                        if temp not in used:
-                            orb.append(temp)
-                            used.add(temp)
-                return set(orb)
-            if action == 'sets':
-                alpha = frozenset(alpha)
-                orb = [alpha]
-                used = set([alpha])
-                gens = self.generators
-                for b in orb:
-                    for gen in gens:
-                        temp = frozenset([gen(x) for x in b])
-                        if temp not in used:
-                            orb.append(temp)
-                            used.add(temp)
-                return set([tuple(x) for x in orb])
+        if action == 'tuples':
+            alpha = tuple(alpha)
+            orb = [alpha]
+            used = set([alpha])
+            gens = self.generators
+            for b in orb:
+                for gen in gens:
+                    temp = tuple([gen(x) for x in b])
+                    if temp not in used:
+                        orb.append(temp)
+                        used.add(temp)
+            return set(orb)
+        if action == 'sets':
+            alpha = frozenset(alpha)
+            orb = [alpha]
+            used = set([alpha])
+            gens = self.generators
+            for b in orb:
+                for gen in gens:
+                    temp = frozenset([gen(x) for x in b])
+                    if temp not in used:
+                        orb.append(temp)
+                        used.add(temp)
+            return set([tuple(x) for x in orb])
 
     def orbit_transversal(self, alpha, pairs=False):
         r"""
@@ -1941,7 +1930,7 @@ class PermutationGroup(Basic):
             return 1
         for x in sieve:
             if n % x == 0:
-                d = n/x
+                d = n//x
                 self._max_div = d
                 return d
 
@@ -2050,8 +2039,8 @@ def _check_cycles_alt_sym(perm):
     current_len = 0
     total_len = 0
     used = set()
-    for i in xrange(n/2):
-        if not i in used and i < n/2 - total_len:
+    for i in xrange(n//2):
+        if not i in used and i < n//2 - total_len:
             current_len = 1
             used.add(i)
             j = i
@@ -2060,7 +2049,7 @@ def _check_cycles_alt_sym(perm):
                 j = af[j]
                 used.add(j)
             total_len += current_len
-            if current_len > n/2 and current_len < n-2 and isprime(current_len):
+            if current_len > n//2 and current_len < n-2 and isprime(current_len):
                 return True
     return False
 
