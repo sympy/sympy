@@ -519,3 +519,34 @@ class DiagramGrid:
                 triangles, fringe, grid, skeleton)
             placed_objects = placed_objects | \
                              DiagramGrid._triangle_objects(triangle)
+
+        self._grid = grid
+
+    @property
+    def width(self):
+        """
+        Returns the number of columns in this diagram layout.
+
+        Examples
+        ========
+        TODO: Add examples.
+        """
+        return self._grid.width
+
+    @property
+    def height(self):
+        """
+        Returns the number of rows in this diagram layout.
+
+        Examples
+        ========
+        TODO: Add examples.
+        """
+        return self._grid.height
+
+    def __getitem__(self, (i, j)):
+        """
+        Returns the object placed in the row ``i`` and column ``j``.
+        The indices are 0-based.
+        """
+        return self._grid[i, j]
