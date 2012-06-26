@@ -69,14 +69,73 @@ def test_GrowableGrid():
     assert grid[2, 1] == "two"
 
 def test_DiagramGrid():
+    # Set up some objects and morphisms.
     A = Object("A")
     B = Object("B")
     C = Object("C")
     D = Object("D")
+    E = Object("E")
+
     f = NamedMorphism(A, B, "f")
     g = NamedMorphism(B, C, "g")
     h = NamedMorphism(D, A, "h")
     k = NamedMorphism(D, B, "k")
-    d = Diagram([f, g, h, k])
 
+    # A triangle.
+    d = Diagram([f, g], {g * f:"unique"})
     grid = DiagramGrid(d)
+
+    assert grid.width == 2
+    assert grid.height == 2
+    assert grid[0, 0] == A
+    assert grid[0, 1] == B
+    assert grid[1, 0] == C
+    assert grid[1, 1] is None
+
+    # A simple diagram.
+    d = Diagram([f, g, h, k])
+    grid = DiagramGrid(d)
+
+    assert grid.width == 3
+    assert grid.height == 2
+    assert grid[0, 0] == A
+    assert grid[0, 1] == B
+    assert grid[0, 2] == D
+    assert grid[1, 0] is None
+    assert grid[1, 1] == C
+    assert grid[1, 2] is None
+
+    # A chain of morphisms.
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    h = NamedMorphism(C, D, "h")
+    k = NamedMorphism(D, E, "k")
+    d = Diagram([f, g, h, k])
+    grid = DiagramGrid(d)
+
+    assert grid.width == 3
+    assert grid.height == 3
+    assert grid[0, 0] == A
+    assert grid[0, 1] == B
+    assert grid[0, 2] is None
+    assert grid[1, 0] is None
+    assert grid[1, 1] == C
+    assert grid[1, 2] == D
+    assert grid[2, 0] is None
+    assert grid[2, 1] is None
+    assert grid[2, 2] == E
+
+    # A square.
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, D, "g")
+    h = NamedMorphism(A, C, "h")
+    k = NamedMorphism(C, D, "k")
+    d = Diagram([f, g, h, k])
+    grid = DiagramGrid(d)
+
+    assert grid.width == 2
+    assert grid.height == 2
+    assert grid[0, 0] == A
+    assert grid[0, 1] == B
+    assert grid[1, 0] == C
+    assert grid[1, 1] == D
