@@ -88,12 +88,9 @@ class Integers(Set):
     is_iterable = True
 
     def _intersect(self, other):
-        if other.is_Interval:
-            try:
-                s = Range(ceiling(other.left), floor(other.right) + 1)
-                return s.intersect(other) # take out endpoints if open interval
-            except:
-                return None
+        if other.is_Interval and other.measure < oo:
+            s = Range(ceiling(other.left), floor(other.right) + 1)
+            return s.intersect(other) # take out endpoints if open interval
         return None
 
     def _contains(self, other):
