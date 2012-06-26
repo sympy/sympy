@@ -10,6 +10,7 @@ The currently supported back-ends are Xy-pic [Xypic]
 
 from sympy.core import Basic, FiniteSet
 from sympy.categories import CompositeMorphism, IdentityMorphism
+from sympy.utilities import default_sort_key
 
 class _GrowableGrid:
     """
@@ -467,6 +468,25 @@ class DiagramGrid(Basic):
 
         return None
 
+    @staticmethod
+    def _triangle_key(tri, triangle_sizes):
+        """
+        Returns a key for the supplied triangle.  It should be the
+        same independently of the hash randomisation.
+        """
+        objects = sorted([x.name for x in DiagramGrid._triangle_objects(tri)])
+        return (triangle_sizes[tri], objects)
+
+    @staticmethod
+    def _pick_root_edge(tri, skeleton):
+        """
+        For a given triangle always picks the same root edge.  The
+        root edge is the edge that will be placed first on the grid.
+        """
+        candidates = [e for e in tri if skeleton[e]]
+        sorted_candidates = sorted(candidates, key=default_sort_key)
+        return sorted_candidates[0]
+
     def __new__(cls, diagram):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
         conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
@@ -480,13 +500,14 @@ class DiagramGrid(Basic):
         triangle_sizes = DiagramGrid._compute_triangle_min_sizes(
             triangles, skeleton)
 
-        triangles = sorted(triangles, key=lambda triangle: triangle_sizes[triangle])
+        triangles = sorted(triangles, key=lambda tri:
+                           DiagramGrid._triangle_key(tri, triangle_sizes))
         all_objects = diagram.objects
 
         grid = _GrowableGrid(2, 1)
 
         # Place the first edge on the grid.
-        root_edge = [e for e in triangles[0] if skeleton[e]][0]
+        root_edge = DiagramGrid._pick_root_edge(triangles[0], skeleton)
         grid[0, 0], grid[0, 1] = root_edge
         fringe = [((0,0), (0, 1))]
 
