@@ -487,6 +487,15 @@ class DiagramGrid:
         sorted_candidates = sorted(candidates, key=default_sort_key)
         return sorted_candidates[0]
 
+    @staticmethod
+    def _drop_irrelevant_triangles(triangles, placed_objects):
+        """
+        Returns only those triangles whose set of objects is not
+        completely included in ``placed_objects``.
+        """
+        return [tri for tri in triangles if not placed_objects.subset(
+            DiagramGrid._triangle_objects(tri))]
+
     def __init__(self, diagram):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
         conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
@@ -517,8 +526,12 @@ class DiagramGrid:
         while placed_objects != all_objects:
             triangle = DiagramGrid._weld_triangle(
                 triangles, fringe, grid, skeleton)
+
             placed_objects = placed_objects | \
                              DiagramGrid._triangle_objects(triangle)
+
+            triangles = DiagramGrid._drop_irrelevant_triangles(
+                triangles, placed_objects)
 
         self._grid = grid
 
