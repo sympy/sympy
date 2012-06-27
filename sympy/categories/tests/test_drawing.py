@@ -139,3 +139,52 @@ def test_DiagramGrid():
     assert grid[0, 1] == B
     assert grid[1, 0] == C
     assert grid[1, 1] == D
+
+    # A strange diagram which resulted from a typo when creating a
+    # test for five lemma, but which allowed to stop one extra problem
+    # in the algorithm.
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    D = Object("D")
+    E = Object("E")
+    A_ = Object("A'")
+    B_ = Object("B'")
+    C_ = Object("C'")
+    D_ = Object("D'")
+    E_ = Object("E'")
+
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    h = NamedMorphism(C, D, "h")
+    i = NamedMorphism(D, E, "i")
+
+    # These 4 morphisms should be between primed objects.
+    j = NamedMorphism(A, B, "j")
+    k = NamedMorphism(B, C, "k")
+    l = NamedMorphism(C, D, "l")
+    m = NamedMorphism(D, E, "m")
+
+    o = NamedMorphism(A, A_, "o")
+    p = NamedMorphism(B, B_, "p")
+    q = NamedMorphism(C, C_, "q")
+    r = NamedMorphism(D, D_, "r")
+    s = NamedMorphism(E, E_, "s")
+
+    d = Diagram([f, g, h, i, j, k, l, m, o, p, q, r, s])
+    grid = DiagramGrid(d)
+
+    assert grid.width == 3
+    assert grid.height == 4
+    assert grid[0, 0] is None
+    assert grid[0, 1] == A
+    assert grid[0, 2] == A_
+    assert grid[1, 0] == C
+    assert grid[1, 1] == B
+    assert grid[1, 2] == B_
+    assert grid[2, 0] == C_
+    assert grid[2, 1] == D
+    assert grid[2, 2] == E
+    assert grid[3, 0] is None
+    assert grid[3, 1] == D_
+    assert grid[3, 2] == E_
