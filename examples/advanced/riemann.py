@@ -81,7 +81,7 @@ import sys
 sys.path.insert(0, '../..')
 from time import time
 from sympy.combinatorics.permutations import Permutation, cyclic, perm_af_invert , perm_af_muln, perm_af_mul
-from sympy.combinatorics.perm_groups import PermutationGroup, orbit_traversal
+from sympy.combinatorics.perm_groups import PermutationGroup, orbit_transversal
 from sympy.combinatorics.perm_algorithms import double_coset_can_rep,dummy_sgs, PermutationGroup
 from random import randint, seed, shuffle
 
@@ -388,7 +388,7 @@ def str_code(gens, g, result):
     s = str_head(gens, size) + str_perm(len(gens), g, result)
     return s
 
-def run(sgens, g, ind, sgs):
+def gen_xperm_code(sgens, g, ind, sgs):
     """
     sgens slot symmetry generators
     `g` permutation corresponding to the tensor, with the last two
@@ -458,7 +458,7 @@ def get_sgens(sgens, n):
         if not sgensx:
             S_cosets.append([range(n+2)])
             continue
-        Sxtrav = orbit_traversal(sgensx, ii, af=True)
+        Sxtrav = orbit_transversal(sgensx, ii, af=True)
         if len(Sxtrav) > 1:
             b_S.append(ii)
         S_cosets.append(Sxtrav)
@@ -568,7 +568,7 @@ def riemann_products(nr, random_input, random_regular):
     # print the input Riemann invariant
     sys.stderr.write('input %s\n' % str_riemann(ind, g1))
     # canonize and print to stdout the C code for testing with xperm
-    result = run(sgens, g1, ind, sgs)
+    result = gen_xperm_code(sgens, g1, ind, sgs)
     print result
 
 if __name__ == '__main__':
