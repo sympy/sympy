@@ -86,8 +86,8 @@ class Tr(Expr):
     >>> from sympy import symbols, Matrix
     >>> a, b = symbols('a b', commutative=True)
     >>> A, B = symbols('A B', commutative=False)
-    >>> Tr(a*A,2)
-    a*Tr(A, 2)
+    >>> Tr(a*A,[2])
+    a*Tr(A)
     >>> m = Matrix([[1,2],[1,1]])
     >>> Tr(m)
     2
