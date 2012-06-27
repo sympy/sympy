@@ -42,7 +42,7 @@ def test_Identity_index():
     I = Identity(3)
     assert I[0,0] == I[1,1] == I[2,2] == 1
     assert I[1,0] == I[0,1] == I[2,1] == 0
-    raises(IndexError, "I[3,3]")
+    raises(IndexError, lambda: I[3,3])
 
 def test_block_index():
     I = Identity(3)
@@ -61,11 +61,9 @@ def test_block_index():
     assert BI.as_explicit().equals(eye(6))
 
 def test_slicing():
-    raises(IndexError, "W[3,:]")
+    raises(NotImplementedError, lambda: W[3,:])
     A.as_explicit()[0,:] # does not raise an error
 
 def test_errors():
-    raises(IndexError, "Identity(2)[1,2,3,4,5]")
-    raises(IndexError, "Identity(2)[[1,2,3,4,5]]")
-
-
+    raises(IndexError, lambda: Identity(2)[1,2,3,4,5])
+    raises(IndexError, lambda: Identity(2)[[1,2,3,4,5]])

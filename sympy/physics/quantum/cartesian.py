@@ -1,7 +1,8 @@
 """Operators and states for 1D cartesian position and momentum.
 
 TODO:
-1) Add 3D classes to mappings in operatorset.py
+
+* Add 3D classes to mappings in operatorset.py
 
 """
 

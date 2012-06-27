@@ -136,4 +136,4 @@ def test_piecewise():
         "(True) else None)))))))))))"
 
 def test_settings():
-    raises(TypeError, 'lambdarepr(sin(x),method="garbage")')
+    raises(TypeError, lambda: lambdarepr(sin(x),method="garbage"))

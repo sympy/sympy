@@ -161,4 +161,4 @@ def test_python_limits():
     assert python(limit(x**2, x, 0)) == 'e = 0'
 
 def test_settings():
-    raises(TypeError, 'python(x, method="garbage")')
+    raises(TypeError, lambda: python(x, method="garbage"))

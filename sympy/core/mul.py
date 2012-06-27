@@ -1,13 +1,13 @@
 from collections import defaultdict
+import operator
 
+from sympify import sympify
 from basic import Basic, C
 from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from logic import fuzzy_not
 from compatibility import cmp_to_key
-
-import operator
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -676,7 +676,7 @@ class Mul(AssocOp):
         else:
             return S.One, self
 
-    def as_real_imag(self, deep=True):
+    def as_real_imag(self, deep=True, **hints):
         other = []
         coeff = S(1)
         for a in self.args:
@@ -685,7 +685,10 @@ class Mul(AssocOp):
             else:
                 other.append(a)
         m = Mul(*other)
-        return (coeff*C.re(m), coeff*C.im(m))
+        if hints.get('ignore') == m:
+            return None
+        else:
+            return (coeff*C.re(m), coeff*C.im(m))
 
     @staticmethod
     def _expandsums(sums):
@@ -1241,9 +1244,13 @@ class Mul(AssocOp):
         # update the coefficients if we had an extraction
 
         if getattr(co_xmul, 'is_Rational', False):
-            c.pop(co_self)
+            c[co_self] -= 1
+            if not c[co_self]:
+                c.pop(co_self)
             c[co_xmul] = S.One
-            old_c.pop(co_old)
+            old_c[co_old] -= 1
+            if not old_c[co_old]:
+                old_c.pop(co_old)
 
         # do quick tests to see if we can't succeed
 
@@ -1521,6 +1528,4 @@ def _keep_coeff(coeff, factors, clear=True):
 
 from numbers import Rational, igcd
 from power import Pow
-from sympify import sympify
 from add import Add
-from sympy.core.function import _coeff_isneg

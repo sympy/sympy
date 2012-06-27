@@ -33,16 +33,19 @@ There are two types of functions:
 
 """
 from core import BasicMeta, C
-from assumptions import WithAssumptions
+from assumptions import ManagedProperties
 from basic import Basic
 from singleton import S
+from sympify import sympify
 from expr import Expr, AtomicExpr
 from decorators import _sympifyit, deprecated
 from compatibility import iterable,is_sequence
 from cache import cacheit
 from numbers import Rational, Float
+from add import Add
 
 from sympy.core.containers import Tuple, Dict
+from sympy.core.logic import fuzzy_and
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
 
@@ -80,7 +83,7 @@ class ArgumentIndexError(ValueError):
         return ("Invalid operation with argument number %s for Function %s" %
                         (self.args[1], self.args[0]))
 
-class FunctionClass(WithAssumptions):
+class FunctionClass(ManagedProperties):
     """
     Base class for function classes. FunctionClass is a subclass of type.
 
@@ -97,6 +100,7 @@ class FunctionClass(WithAssumptions):
     @deprecated
     def __contains__(self, obj):
         return (self == obj)
+
 
 class Application(Basic):
     """
@@ -115,18 +119,15 @@ class Application(Basic):
     @cacheit
     def __new__(cls, *args, **options):
         args = map(sympify, args)
+        evaluate = options.pop('evaluate', True)
+        if options:
+            raise ValueError("Unknown options: %s" % options)
 
-        # these lines should be refactored
-        for opt in ["nargs", "dummy", "comparable", "noncommutative",
-                    "commutative"]:
-            if opt in options:
-                del options[opt]
-
-        if options.pop('evaluate', True):
+        if evaluate:
             evaluated = cls.eval(*args)
             if evaluated is not None:
                 return evaluated
-        return super(Application, cls).__new__(cls, *args, **options)
+        return super(Application, cls).__new__(cls, *args)
 
     @classmethod
     def eval(cls, *args):
@@ -175,9 +176,67 @@ class Application(Basic):
 
 
 class Function(Application, Expr):
-    """
-    Base class for applied numeric functions.
-    Constructor of undefined function classes.
+    """Base class for applied mathematical functions.
+
+    It also serves as a constructor for undefined function classes.
+
+    Examples
+    ========
+
+    First example shows how to use Function as a constructor for undefined
+    function classes:
+
+    >>> from sympy import Function, Symbol
+    >>> x = Symbol('x')
+    >>> f = Function('f')
+    >>> g = Function('g')(x)
+    >>> f
+    f
+    >>> f(x)
+    f(x)
+    >>> g
+    g(x)
+    >>> f(x).diff(x)
+    Derivative(f(x), x)
+    >>> g.diff(x)
+    Derivative(g(x), x)
+
+    In the following example Function is used as a base class for
+    ``my_func`` that represents a mathematical function *my_func*. Suppose
+    that it is well known, that *my_func(0)* is *1* and *my_func* at infinity
+    goes to *0*, so we want those two simplifications to occur automatically.
+    Suppose also that *my_func(x)* is real exactly when *x* is real. Here is
+    an implementation that honours those requirements:
+
+    >>> from sympy import Function, S, oo, I, sin
+    >>> class my_func(Function):
+    ...
+    ...     nargs = 1
+    ...
+    ...     @classmethod
+    ...     def eval(cls, x):
+    ...         if x.is_Number:
+    ...             if x is S.Zero:
+    ...                 return S.One
+    ...             elif x is S.Infinity:
+    ...                 return S.Zero
+    ...
+    ...     def _eval_is_real(self):
+    ...         return self.args[0].is_real
+    ...
+    >>> x = S('x')
+    >>> my_func(0) + sin(0)
+    1
+    >>> my_func(oo)
+    0
+    >>> my_func(3.54).n() # Not yet implemented for my_func.
+    my_func(3.54)
+    >>> my_func(I).is_real
+    False
+
+    In order for ``my_func`` to become useful, several other methods would
+    need to be implemented. See source code of some of the already
+    implemented functions for more complete examples.
 
     """
 
@@ -188,11 +247,12 @@ class Function(Application, Expr):
         Examples
         ========
 
-            >>> from sympy import Function, Symbol
-            >>> f = Function('f')
-            >>> x = Symbol('x')
-            >>> f(x)._diff_wrt
-            True
+        >>> from sympy import Function, Symbol
+        >>> f = Function('f')
+        >>> x = Symbol('x')
+        >>> f(x)._diff_wrt
+        True
+
         """
         return True
 
@@ -224,16 +284,14 @@ class Function(Application, Expr):
                     'plural': 's'*(n != 1),
                     'given': n})
 
-        args = map(sympify, args)
-        evaluate = options.pop('evaluate', True)
-        if evaluate:
-            evaluated = cls.eval(*args)
-            if evaluated is not None:
-                return evaluated
-        result = super(Application, cls).__new__(cls, *args, **options)
-        pr = max(cls._should_evalf(a) for a in args)
-        pr2 = min(cls._should_evalf(a) for a in args)
-        if evaluate and pr2 > 0:
+        evaluate = options.get('evaluate', True)
+        result = super(Function, cls).__new__(cls, *args, **options)
+        if not evaluate or not isinstance(result, cls):
+            return result
+
+        pr = max(cls._should_evalf(a) for a in result.args)
+        pr2 = min(cls._should_evalf(a) for a in result.args)
+        if pr2 > 0:
             return result.evalf(mlib.libmpf.prec_to_dps(pr))
         return result
 
@@ -310,8 +368,12 @@ class Function(Application, Expr):
                 return
 
         # Convert all args to mpf or mpc
+        # Convert the arguments to *higher* precision than requested for the
+        # final result.
+        # XXX + 5 is a guess, it is similar to what is used in evalf.py. Should
+        #     we be more intelligent about it?
         try:
-            args = [arg._to_mpmath(prec) for arg in self.args]
+            args = [arg._to_mpmath(prec + 5) for arg in self.args]
         except ValueError:
             return
 
@@ -343,14 +405,7 @@ class Function(Application, Expr):
         return Add(*l)
 
     def _eval_is_commutative(self):
-        r = True
-        for a in self._args:
-            c = a.is_commutative
-            if c is None:
-                return None
-            if not c:
-                r = False
-        return r
+        return fuzzy_and(a.is_commutative for a in self.args)
 
     def as_base_exp(self):
         """
@@ -401,6 +456,8 @@ class Function(Application, Expr):
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_bounded == False for t in args0):
             from sympy import oo, zoo, nan
+            # XXX could use t.as_leading_term(x) here but it's a little
+            # slower
             a = [t.compute_leading_term(x, logx=logx) for t in args]
             a0 = [t.limit(x, 0) for t in a]
             if any ([t.has(oo, -oo, zoo, nan) for t in a0]):
@@ -593,7 +650,7 @@ class Function(Application, Expr):
                 nargs = self.nargs
             if not (1<=argindex<=nargs):
                 raise ArgumentIndexError(self, argindex)
-        if not self.args[argindex-1]._diff_wrt:
+        if not self.args[argindex-1].is_Symbol:
             # See issue 1525 and issue 1620 and issue 2501
             arg_dummy = C.Dummy('xi_%i' % argindex)
             return Subs(Derivative(
@@ -602,14 +659,31 @@ class Function(Application, Expr):
         return Derivative(self,self.args[argindex-1],evaluate=False)
 
     def _eval_as_leading_term(self, x):
-        """General method for the leading term"""
-        # XXX This seems broken to me!
-        arg = self.args[0].as_leading_term(x)
-
-        if C.Order(1,x).contains(arg):
-            return arg
+        """Stub that should be overridden by new Functions to return
+        the first non-zero term in a series if ever an x-dependent
+        argument whose leading term vanishes as x -> 0 might be encountered.
+        See, for example, cos._eval_as_leading_term.
+        """
+        args = [a.as_leading_term(x) for a in self.args]
+        o = C.Order(1, x)
+        if any(x in a.free_symbols and o.contains(a) for a in args):
+            # Whereas x and any finite number are contained in O(1, x),
+            # expressions like 1/x are not. If any arg simplified to a
+            # vanishing expression as x -> 0 (like x or x**2, but not
+            # 3, 1/x, etc...) then the _eval_as_leading_term is needed
+            # to supply the first non-zero term of the series,
+            #
+            # e.g. expression    leading term
+            #      ----------    ------------
+            #      cos(1/x)      cos(1/x)
+            #      cos(cos(x))   cos(1)
+            #      cos(x)        1        <- _eval_as_leading_term needed
+            #      sin(x)        x        <- _eval_as_leading_term needed
+            #
+            raise NotImplementedError(
+                '%s has no _eval_as_leading_term routine' % self.func)
         else:
-            return self.func(arg)
+            return self.func(*args)
 
     @classmethod
     def taylor_term(cls, n, x, *previous_terms):
@@ -629,7 +703,7 @@ class AppliedUndef(Function):
     """
     def __new__(cls, *args, **options):
         args = map(sympify, args)
-        result = Expr.__new__(cls, *args, **options)
+        result = super(AppliedUndef, cls).__new__(cls, *args, **options)
         result.nargs = len(args)
         return result
 
@@ -769,17 +843,8 @@ class Derivative(Expr):
         >>> f, g = symbols('f g', cls=Function)
         >>> f(2*g(x)).diff(x)
         2*Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (2*g(x),))
-
-    This says that the derivative of f(2*g(x)) with respect to x is
-    2*g(x).diff(x) times f(u).diff(u) at u = 2*g(x).  Note that this last part
-    is exactly the same as our definition of a derivative with respect to a
-    function given above, except the derivative is at a non-Function 2*g(x).
-    If we instead computed f(g(x)).diff(x), we would be able to express the
-    Subs as simply f(g(x)).diff(g(x)).  Therefore, SymPy does this when it's
-    possible::
-
         >>> f(g(x)).diff(x)
-        Derivative(f(g(x)), g(x))*Derivative(g(x), x)
+        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (g(x),))
 
     Finally, note that, to be consistent with variational calculus, and to
     ensure that the definition of substituting a Function for a Symbol in an
@@ -825,7 +890,7 @@ class Derivative(Expr):
         >>> Derivative(f(x)**2, f(x), evaluate=True)
         2*f(x)
         >>> Derivative(f(g(x)), x, evaluate=True)
-        Derivative(f(g(x)), g(x))*Derivative(g(x), x)
+        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (g(x),))
     """
 
     is_Derivative   = True
@@ -895,10 +960,11 @@ class Derivative(Expr):
                 raise ValueError(filldedent('''
                 Can\'t differentiate wrt the variable: %s, %s''' % (v, count)))
 
-            variable_count.append((v, count))
-
             if all_zero and not count == 0:
                 all_zero = False
+
+            if count:
+                variable_count.append((v, count))
 
         # We make a special case for 0th derivative, because there is no
         # good way to unambiguously print this.
@@ -922,9 +988,6 @@ class Derivative(Expr):
         # If a high order of derivative is requested and the expr becomes 0
         # after a few differentiations, then we won't need the other variables.
         variablegen = (v for v, count in variable_count for i in xrange(count))
-
-        if expr.is_commutative:
-            assumptions['commutative'] = True
 
         # If we can't compute the derivative of expr (but we wanted to) and
         # expr is itself not a Derivative, finish building an unevaluated
@@ -962,7 +1025,7 @@ class Derivative(Expr):
                 obj = None
             else:
                 if not is_symbol:
-                    new_v = C.Symbol('diff_wrt_%i' % i)
+                    new_v = C.Dummy('xi_%i' % i)
                     expr = expr.subs(v, new_v)
                     old_v = v
                     v = new_v
@@ -1058,6 +1121,9 @@ class Derivative(Expr):
                                       key=default_sort_key))
         return sorted_vars
 
+    def _eval_is_commutative(self):
+        return self.expr.is_commutative
+
     def _eval_derivative(self, v):
         # If the variable s we are diff wrt is not in self.variables, we
         # assume that we might be able to take the derivative.
@@ -1120,10 +1186,7 @@ class Derivative(Expr):
         return self.expr.free_symbols
 
     def _eval_subs(self, old, new):
-        # Subs should only be used in situations where new is not a valid
-        # variable for differentiating wrt. Previously, Subs was used for
-        # anything that was not a Symbol, but that was too broad.
-        if old in self.variables and not new._diff_wrt:
+        if old in self.variables and not new.is_Symbol:
             # Issue 1620
             return Subs(self, old, new)
         return Derivative(*map(lambda x: x._subs(old, new), self.args))
@@ -1314,11 +1377,11 @@ class Subs(Expr):
             C.Dummy(str(arg)) for arg in variables ])
         expr = sympify(expr).subs(tuple(zip(variables, new_variables)))
 
-        if expr.is_commutative:
-            assumptions['commutative'] = True
-
-        obj = Expr.__new__(cls, expr, new_variables, point, **assumptions)
+        obj = Expr.__new__(cls, expr, new_variables, point)
         return obj
+
+    def _eval_is_commutative(self):
+        return self.expr.is_commutative
 
     def doit(self):
         return self.expr.doit().subs(zip(self.variables, self.point))
@@ -1938,7 +2001,7 @@ def count_ops(expr, visual=False):
     return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
 
 def nfloat(expr, n=15, exponent=False):
-    """Make all Rationals in expr Floats except if they are exponents
+    """Make all Rationals in expr Floats except those in exponents
     (unless the exponents flag is set to True).
 
     Examples
@@ -1953,13 +2016,14 @@ def nfloat(expr, n=15, exponent=False):
     x**4.0 + y**0.5
 
     """
+    from sympy.core import Pow
     if iterable(expr, exclude=basestring):
         if isinstance(expr, (dict, Dict)):
             return type(expr)([(k, nfloat(v, n, exponent)) for k, v in
                                expr.iteritems()])
         return type(expr)([nfloat(a, n, exponent) for a in expr])
     elif not isinstance(expr, Expr):
-        return float(expr)
+        return Float(expr, '')
     elif expr.is_Float:
         return expr.n(n)
     elif expr.is_Integer:
@@ -1968,28 +2032,21 @@ def nfloat(expr, n=15, exponent=False):
         return Float(expr).n(n)
 
     if not exponent:
-        pows = [p for p in expr.atoms(Pow) if p.exp.is_Rational and
-                p.exp.q != 1]
-        pows.sort(key=count_ops)
-        pows.reverse()
-        rats = {}
-        for p in pows:
-            if p.exp not in rats:
-                e = Dummy()
-                rats[p.exp] = e
-        reps = [(p, Pow(p.base, rats[p.exp], evaluate=False)) for p in pows]
-        rv = expr.subs(reps).n(n).subs([(v, k) for k, v in rats.iteritems()])
+        bases = {}
+        expos = {}
+        reps = {}
+        for p in expr.atoms(Pow):
+            b, e = p.as_base_exp()
+            b = bases.setdefault(p.base, nfloat(p.base, n, exponent))
+            e = expos.setdefault(e, Dummy())
+            reps[p] = Pow(b, e, evaluate=False)
+        rv = expr.xreplace(dict(reps)).n(n).xreplace(
+            dict([(v, k) for k, v in expos.iteritems()]))
     else:
-        expr = expr.n(n)
-        pows = [p for p in expr.atoms(Pow) if p.exp.is_Integer]
-        pows.sort(key=count_ops)
-        pows.reverse()
-        ints = {}
-        for p in pows:
-            if p.exp not in ints:
-                ints[p.exp] = Float(float(p.exp))
-        reps = [(p, p.base**ints[p.exp]) for p in pows]
-        rv = expr.subs(reps)
+        intex = lambda x: x.is_Pow and x.exp.is_Integer
+        floex = lambda x: Pow(x.base, Float(x.exp, ''), evaluate=False)
+        rv = expr.n(n).replace(intex, floex)
+
 
     funcs = [f for f in rv.atoms(Function)]
     funcs.sort(key=count_ops)
@@ -1997,7 +2054,4 @@ def nfloat(expr, n=15, exponent=False):
     return rv.subs([(f, f.func(*[nfloat(a, n, exponent)
                      for a in f.args])) for f in funcs])
 
-from sympify import sympify
-from add import Add
-from power import Pow
 from sympy.core.symbol import Dummy

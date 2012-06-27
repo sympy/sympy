@@ -3,7 +3,8 @@ import random
 
 from sympy.core import Basic, C
 from sympy.core.compatibility import is_sequence, iterable #logically, these belong here
-from sympy.core.compatibility import product as cartes, combinations, combinations_with_replacement, SymPyDeprecationWarning
+from sympy.core.compatibility import product as cartes, combinations, combinations_with_replacement
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 def flatten(iterable, levels=None, cls=None):
     """
@@ -145,77 +146,6 @@ def postorder_traversal(node):
             for subtree in postorder_traversal(item):
                 yield subtree
     yield node
-
-class preorder_traversal(object):
-    """
-    Do a pre-order traversal of a tree.
-
-    This iterator recursively yields nodes that it has visited in a pre-order
-    fashion. That is, it yields the current node then descends through the tree
-    breadth-first to yield all of a node's children's pre-order traversal.
-
-    Parameters
-    ----------
-    node : sympy expression
-        The expression to traverse.
-
-    Returns
-    -------
-    subtree : sympy expression
-        All of the subtrees in the tree.
-
-    Examples
-    --------
-    >>> from sympy import symbols
-    >>> from sympy.utilities.iterables import preorder_traversal
-    >>> from sympy.abc import x, y, z
-    >>> set(preorder_traversal((x+y)*z)) == set([z, x + y, z*(x + y), x, y])
-    True
-
-    """
-    def __init__(self, node):
-        self._skip_flag = False
-        self._pt = self._preorder_traversal(node)
-
-    def _preorder_traversal(self, node):
-        yield node
-        if self._skip_flag:
-            self._skip_flag = False
-            return
-        if isinstance(node, Basic):
-            for arg in node.args:
-                for subtree in self._preorder_traversal(arg):
-                    yield subtree
-        elif iterable(node):
-            for item in node:
-                for subtree in self._preorder_traversal(item):
-                    yield subtree
-
-    def skip(self):
-        """
-        Skip yielding current node's (last yielded node's) subtrees.
-
-        Examples
-        --------
-        >>> from sympy import symbols
-        >>> from sympy.utilities.iterables import preorder_traversal
-        >>> from sympy.abc import x, y, z
-        >>> pt = preorder_traversal((x+y*z)*z)
-        >>> for i in pt:
-        ...     print i
-        ...     if i == x+y*z:
-        ...             pt.skip()
-        z*(x + y*z)
-        z
-        x + y*z
-        """
-        self._skip_flag = True
-
-    def next(self):
-        return self._pt.next()
-
-    def __iter__(self):
-        return self
 
 def interactive_traversal(expr):
     """Traverse a tree asking a user which branch to choose. """
@@ -428,9 +358,10 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     """
     if cls is None:
         if 'dummy' in assumptions and assumptions.pop('dummy'):
-            import warnings
-            warnings.warn("\nuse cls=Dummy to create dummy symbols",
-                          SymPyDeprecationWarning)
+            SymPyDeprecationWarning(
+                feature="'dummy' in assumptions",
+                useinstead="cls=Dummy to create dummy symbols"
+                ).warn()
             cls = C.Dummy
         else:
             cls = C.Symbol
@@ -443,23 +374,30 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
 def capture(func):
     """Return the printed output of func().
 
-    `func` should be an argumentless function that produces output with
+    `func` should be a function without arguments that produces output with
     print statements.
 
     >>> from sympy.utilities.iterables import capture
+    >>> from sympy import pprint
+    >>> from sympy.abc import x
     >>> def foo():
     ...     print 'hello world!'
     ...
     >>> 'hello' in capture(foo) # foo, not foo()
     True
+    >>> capture(lambda: pprint(2/x))
+    '2\\n-\\nx\\n'
+
     """
     import StringIO
     import sys
 
     stdout = sys.stdout
     sys.stdout = file = StringIO.StringIO()
-    func()
-    sys.stdout = stdout
+    try:
+        func()
+    finally:
+        sys.stdout = stdout
     return file.getvalue()
 
 def sift(expr, keyfunc):
@@ -911,9 +849,12 @@ def partitions(n, m=None, k=None):
         modified from Tim Peter's version to allow for k and m values:
         code.activestate.com/recipes/218332-generator-for-integer-partitions/
     """
+    from sympy.ntheory.residue_ntheory import int_tested
 
     if n < 0:
         raise ValueError("n must be >= 0")
+    if m == 0:
+        raise ValueError("m must be > 0")
     m = min(m or n, n)
     if m < 1:
         raise ValueError("maximum numbers in partition, m, must be > 0")
@@ -924,6 +865,7 @@ def partitions(n, m=None, k=None):
     if m*k < n:
         return
 
+    n, m, k = int_tested(n, m, k)
     q, r = divmod(n, k)
     ms = {k: q}
     keys = [k]  # ms.keys(), from largest to smallest

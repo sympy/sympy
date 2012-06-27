@@ -116,7 +116,7 @@ class Pow(Expr):
         smallarg = (abs(e) <= abs(S.Pi/log(b)))
         if (other.is_Rational and other.q == 2 and
             e.is_real is False and smallarg is False):
-                return -Pow(b, e*other)
+            return -Pow(b, e*other)
         if (other.is_integer or
             e.is_real and (b_nneg or abs(e) < 1) or
             e.is_real is False and smallarg is True or
@@ -125,10 +125,7 @@ class Pow(Expr):
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
-            if self.base.is_even:
-                return True
-            if self.base.is_integer:
-                return False
+            return self.base.is_even
 
     def _eval_is_positive(self):
         if self.base.is_positive:
@@ -215,8 +212,11 @@ class Pow(Expr):
                     return ok
 
     def _eval_is_odd(self):
-        if not (self.base.is_integer and self.exp.is_nonnegative): return
-        return self.base.is_odd
+        if self.exp.is_integer:
+            if self.exp.is_positive:
+                return self.base.is_odd
+            elif self.exp.is_nonnegative and self.base.is_odd:
+                return True
 
     def _eval_is_bounded(self):
         if self.exp.is_negative:
@@ -547,6 +547,7 @@ class Pow(Expr):
         from sympy.core.symbol import symbols
         from sympy.polys.polytools import poly
         from sympy.core.function import expand_multinomial
+
         if self.exp.is_Integer:
             exp = self.exp
             re, im = self.base.as_real_imag(deep=deep)
@@ -597,8 +598,12 @@ class Pow(Expr):
 
             if deep:
                 hints['complex'] = False
-                return (C.re(self.expand(deep, **hints)),
-                        C.im(self.expand(deep, **hints)))
+
+                expanded = self.expand(deep, **hints)
+                if hints.get('ignore') == expanded:
+                    return None
+                else:
+                    return (C.re(expanded), C.im(expanded))
             else:
                 return (C.re(self), C.im(self))
 
@@ -794,8 +799,12 @@ class Pow(Expr):
         if e.has(Symbol):
             return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
 
-        if b == x:
-            return powsimp(self, deep=True, combine='exp')
+        # see if the base is as simple as possible
+        bx = b
+        while bx.is_Pow and bx.exp.is_Rational:
+            bx = bx.base
+        if bx == x:
+            return self
 
         # work for b(x)**e where e is not an Integer and does not contain x
         # and hopefully has no other symbols
@@ -843,20 +852,22 @@ class Pow(Expr):
                 raise ValueError('expecting numerical exponent but got %s' % ei)
 
             nuse = n - ei
-            lt = b.compute_leading_term(x, logx=logx) # arg = sin(x); lt = x
-            #  XXX o is not used -- was this to be used as o and o2 below to compute a new e?
-            o = order*lt**(1 - e)
             bs = b._eval_nseries(x, n=nuse, logx=logx)
-            if bs.is_Add:
-                bs = bs.removeO()
-            if bs.is_Add:
+            terms = bs.removeO()
+            if terms.is_Add:
+                bs = terms
+                lt = terms.as_leading_term(x)
+
                 # bs -> lt + rest -> lt*(1 + (bs/lt - 1))
                 return ((Pow(lt, e)*
                          Pow((bs/lt).expand(), e).
                          nseries(x, n=nuse, logx=logx)).expand() +
                          order)
 
-            return bs**e + order
+            rv = bs**e
+            if terms != bs:
+                rv += order
+            return rv
 
         # either b0 is bounded but neither 1 nor 0 or e is unbounded
         # b -> b0 + (b-b0) -> b0 * (1 + (b/b0-1))
@@ -930,7 +941,7 @@ class Pow(Expr):
         >>> eq.as_content_primitive()
         (9, 3**(2*x))
         >>> powsimp(Mul(*_))
-        9*9**x
+        9**(x + 1)
 
         >>> eq = (2 + 2*x)**y
         >>> s = separate(eq); s.is_Mul, s

@@ -1,5 +1,4 @@
-from sympy.core import C, Expr, Mul, S, sympify, Tuple
-from sympy.core.compatibility import is_sequence
+from sympy.core import C, Expr, Mul, S, sympify
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
@@ -8,6 +7,8 @@ class Product(Expr):
     """Represents unevaluated product.
 
     """
+
+    __slots__ = ['is_commutative']
 
     def __new__(cls, function, *symbols, **assumptions):
         from sympy.integrals.integrals import _process_limits
@@ -34,6 +35,7 @@ class Product(Expr):
         arglist = [sign*function]
         arglist.extend(limits)
         obj._args = tuple(arglist)
+        obj.is_commutative = function.is_commutative # limits already checked
 
         return obj
 
@@ -56,6 +58,7 @@ class Product(Expr):
         [i]
         """
         return [l[0] for l in self.limits]
+
     @property
     def free_symbols(self):
         """
@@ -238,4 +241,3 @@ def product(*args, **kwargs):
         return prod.doit(deep=False)
     else:
         return prod
-

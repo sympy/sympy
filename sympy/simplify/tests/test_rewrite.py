@@ -21,4 +21,3 @@ def test_sin_exp_rewrite():
     assert cos(x+y).rewrite(cos, exp).rewrite(exp, cos) == cos(x+y)
     # This next test currently passes... not clear whether it should or not?
     assert cos(x).rewrite(cos, exp).rewrite(exp, sin) == cos(x)
-

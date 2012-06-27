@@ -358,6 +358,15 @@ def test_dmp_zz_wang():
 
     assert dmp_expand(factors, 2, ZZ) == w_1
 
+def test_issue_3256():
+    # This tests a bug in the Wang algorithm that occured only with a very
+    # specific set of random numbers.
+    random_sequence = [-1, -1, 0, 0, 0, 0, -1, -1, 0, -1, 3, -1, 3, 3, 3, 3, -1, 3]
+    f = [[[ZZ(2)]], [[]], [[ZZ(1), ZZ(-1)], [ZZ(-1), ZZ(1), ZZ(0)]]]
+    u = 2
+    K = ZZ
+    assert dmp_zz_wang(f, u, K, random_sequence=random_sequence) == [f]
+
 def test_dmp_zz_factor():
     assert dmp_zz_factor([], 0, ZZ) == (0, [])
     assert dmp_zz_factor([7], 0, ZZ) == (7, [])
@@ -627,7 +636,7 @@ def test_dup_factor_list():
         (ANP([QQ(1,1)], h, QQ), [([ANP([QQ(1,1)], h, QQ), ANP([], h, QQ)], 2),
                                  ([ANP([QQ(1,1)], h, QQ), ANP([], h, QQ), ANP([QQ(2,1)], h, QQ)], 1)])
 
-    raises(DomainError, "dup_factor_list([EX(sin(1))], EX)")
+    raises(DomainError, lambda: dup_factor_list([EX(sin(1))], EX))
 
 def test_dmp_factor_list():
     assert dmp_factor_list([[]], 1, ZZ) == (ZZ(0), [])
@@ -703,8 +712,8 @@ def test_dmp_factor_list():
 
     K = FF(2)
 
-    raises(DomainError, "dmp_factor_list([[K(1)],[],[K(1),K(0),K(0)]], 1, K)")
-    raises(DomainError, "dmp_factor_list([[EX(sin(1))]], 1, EX)")
+    raises(DomainError, lambda: dmp_factor_list([[K(1)],[],[K(1),K(0),K(0)]], 1, K))
+    raises(DomainError, lambda: dmp_factor_list([[EX(sin(1))]], 1, EX))
 
 def test_dup_irreducible_p():
     assert dup_irreducible_p([ZZ(1),ZZ(1),ZZ(1)], ZZ) == True

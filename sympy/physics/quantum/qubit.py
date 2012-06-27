@@ -217,10 +217,10 @@ class QubitBra(QubitState, Bra):
     values : list, str
         The qubit values as a list of ints ([0,0,0,1,1,]) or a string ('011').
 
-    Examples
+    See also
     ========
 
-    See ``Qubit`` for examples.
+    Qubit: Examples using qubits
 
     """
     @classmethod

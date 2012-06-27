@@ -1,6 +1,6 @@
-========================
-Physics/Mechanics Module
-========================
+===================
+Classical Mechanics
+===================
 
 :Authors: Gilbert Gede, Luke Peterson
 

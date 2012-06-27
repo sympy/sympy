@@ -6,7 +6,7 @@ This document will describe how to represent masses and inertias in
 :mod:`mechanics` and use of the ``RigidBody`` and ``Particle`` classes.
 
 It is assumed that the reader is familiar with the basics of these topics, such
-as finding the mass center for a system of particles, how to manipulate an
+as finding the center of mass for a system of particles, how to manipulate an
 inertia tensor, and the definition of a particle and rigid body. Any advanced
 dynamics text can provide a reference for these details.
 
@@ -58,7 +58,7 @@ Rigid Body
 ==========
 
 Rigid bodies are created in a similar fashion as particles. The ``RigidBody``
-class generates objects with four attributes: mass, the mass center, a reference
+class generates objects with four attributes: mass, center of mass, a reference
 frame, and an inertia tuple::
 
   >>> from sympy import Symbol
@@ -72,14 +72,14 @@ frame, and an inertia tuple::
   >>> B = RigidBody('B', P, A, m, (I, P))
 
 The mass is specified exactly as is in a particle. Similar to the
-``Particle``'s ``.point``, the ``RigidBody``'s mass center, ``.mc`` must be
-specified. The reference frame is stored in an analogous fashion and holds
-information about the body's orientation and angular velocity. Finally, the
-inertia for a rigid body needs to be specified about a point. In
+``Particle``'s ``.point``, the ``RigidBody``'s center of mass, ``.masscenter``
+must be specified. The reference frame is stored in an analogous fashion and
+holds information about the body's orientation and angular velocity. Finally,
+the inertia for a rigid body needs to be specified about a point. In
 :mod:`mechanics`, you are allowed to specify any point for this. The most
-common is the mass center, as shown in the above code. If a point is selected
-which is not the mass center, ensure that the position between the point and
-the mass center has been defined. The inertia is specified as a tuple of length
+common is the center of mass, as shown in the above code. If a point is selected
+which is not the center of mass, ensure that the position between the point and
+the center of mass has been defined. The inertia is specified as a tuple of length
 two with the first entry being a ``Dyadic`` and the second entry being a
 ``Point`` of which the inertia dyadic is defined about.
 

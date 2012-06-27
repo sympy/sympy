@@ -125,15 +125,11 @@ class StrPrinter(Printer):
         return "%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Pow"])
 
     def _print_FiniteSet(self, s):
+        s = sorted(s, key=default_sort_key)
         if len(s) > 10:
-            #take ten elements from the set at random
-            q = iter(s)
-            printset = [q.next() for i in xrange(10)]
+            printset = s[:3] + ['...'] + s[-3:]
         else:
             printset = s
-        try:
-            printset = sorted(printset)
-        except AttributeError:  pass
         return '{' + ', '.join(self._print(el) for el in printset) + '}'
 
     def _print_Function(self, expr):
@@ -423,21 +419,6 @@ class StrPrinter(Printer):
                            expr.rel_op,
                            self.parenthesize(expr.rhs, precedence(expr)))
 
-    def _print_DMP(self, expr):
-        cls = expr.__class__.__name__
-        rep = self._print(expr.rep)
-        dom = self._print(expr.dom)
-
-        return "%s(%s, %s)" % (cls, rep, dom)
-
-    def _print_DMF(self, expr):
-        cls = expr.__class__.__name__
-        num = self._print(expr.num)
-        den = self._print(expr.den)
-        dom = self._print(expr.dom)
-
-        return "%s((%s, %s), %s)" % (cls, num, den, dom)
-
     def _print_RootOf(self, expr):
         return "RootOf(%s, %d)" % (self._print_Add(expr.expr, order='lex'), expr.index)
 
@@ -531,6 +512,38 @@ class StrPrinter(Printer):
 
     def _print_Zero(self, expr):
         return "0"
+
+    def _print_DMP(self, p):
+        from sympy.core.sympify import SympifyError
+        try:
+            if p.ring is not None:
+                # TODO incorporate order
+                return self._print(p.ring.to_sympy(p))
+        except SympifyError:
+            pass
+
+        cls = p.__class__.__name__
+        rep = self._print(p.rep)
+        dom = self._print(p.dom)
+        ring = self._print(p.ring)
+
+        return "%s(%s, %s, %s)" % (cls, rep, dom, ring)
+
+    def _print_DMF(self, expr):
+        return self._print_DMP(expr)
+
+    def _print_Object(self, object):
+        return 'Object("%s")' % object.name
+
+    def _print_IdentityMorphism(self, morphism):
+        return 'IdentityMorphism(%s)' % morphism.domain
+
+    def _print_NamedMorphism(self, morphism):
+        return 'NamedMorphism(%s, %s, "%s")' % \
+               (morphism.domain, morphism.codomain, morphism.name)
+
+    def _print_Category(self, category):
+        return 'Category("%s")' % category.name
 
 
 def sstr(expr, **settings):

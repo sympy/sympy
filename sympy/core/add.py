@@ -1,5 +1,4 @@
 from core import C
-from basic import Basic
 from singleton import S
 from operations import AssocOp
 from cache import cacheit
@@ -127,7 +126,7 @@ class Add(AssocOp):
             elif o.is_Pow:
                 b, e = o.as_base_exp()
                 if b.is_Number and (e.is_Integer or (e.is_Rational and e.is_negative)):
-                    seq.append(Pow(b, e))
+                    seq.append(b**e)
                     continue
                 c, s = S.One, o
 
@@ -412,6 +411,7 @@ class Add(AssocOp):
     # assumption methods
     _eval_is_real = lambda self: self._eval_template_is_attr('is_real', when_multiple=None)
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded', when_multiple=None)
+    _eval_is_imaginary = lambda self: self._eval_template_is_attr('is_imaginary', when_multiple=None)
     _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
 
@@ -583,32 +583,32 @@ class Add(AssocOp):
         ========
 
         >>> from sympy.abc import x
-        >>> (x+1+1/x**5).extract_leading_order(x)
+        >>> (x + 1 + 1/x**5).extract_leading_order(x)
         ((x**(-5), O(x**(-5))),)
-        >>> (1+x).extract_leading_order(x)
+        >>> (1 + x).extract_leading_order(x)
         ((1, O(1)),)
-        >>> (x+x**2).extract_leading_order(x)
+        >>> (x + x**2).extract_leading_order(x)
         ((x, O(x)),)
 
         """
         lst = []
         seq = [(f, C.Order(f, *symbols)) for f in self.args]
-        for ef,of in seq:
-            for e,o in lst:
+        for ef, of in seq:
+            for e, o in lst:
                 if o.contains(of) and o != of:
                     of = None
                     break
             if of is None:
                 continue
-            new_lst = [(ef,of)]
-            for e,o in lst:
+            new_lst = [(ef, of)]
+            for e, o in lst:
                 if of.contains(o) and o != of:
                     continue
-                new_lst.append((e,o))
+                new_lst.append((e, o))
             lst = new_lst
         return tuple(lst)
 
-    def as_real_imag(self, deep=True):
+    def as_real_imag(self, deep=True, **hints):
         """
         returns a tuple represeting a complex numbers
 
@@ -628,24 +628,34 @@ class Add(AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x):
-        # TODO this does not need to call nseries!
-        coeff, terms = self.collect(x).as_coeff_add(x)
-        has_unbounded = bool([f for f in self.args if f.is_unbounded])
-        if has_unbounded:
-            if isinstance(terms, Basic):
-                terms = terms.args
-            terms = [f for f in terms if not f.is_bounded]
-        n = 1
-        s = self.nseries(x, n=n).collect(x) # could be 1/x + 1/(y*x)
-        while s.is_Order:
-            n +=1
-            s = self.nseries(x, n=n)
-        if s.is_Add:
-            s = s.removeO()
-        if s.is_Add:
-            lst = s.extract_leading_order(x)
-            return Add(*[e for (e,f) in lst])
-        return s.as_leading_term(x)
+        from sympy import expand_mul, factor_terms
+
+        old = self
+
+        self = expand_mul(self)
+        if not self.is_Add:
+            return self.as_leading_term(x)
+
+        unbounded = [t for t in self.args if t.is_unbounded]
+        if unbounded:
+            return Add._from_args(unbounded)
+
+        self = Add(*[t.as_leading_term(x) for t in self.args]).removeO()
+        if not self:
+            # simple leading term analysis gave us 0 but we have to send
+            # back a term, so compute the leading term (via series)
+            return old.compute_leading_term(x)
+        elif not self.is_Add:
+            return self
+        else:
+            plain = Add(*[s for s, _ in self.extract_leading_order(x)])
+            rv = factor_terms(plain, fraction=False)
+            rv_fraction = factor_terms(rv, fraction=True)
+            # if it simplifies to an x-free expression, return that;
+            # tests don't fail if we don't but it seems nicer to do this
+            if x not in rv_fraction.free_symbols:
+                return rv_fraction
+            return rv
 
     def _eval_conjugate(self):
         return Add(*[t.conjugate() for t in self.args])
@@ -896,7 +906,7 @@ class Add(AssocOp):
                 for q in common_q:
                     g = reduce(igcd, [r[q] for r in rads], 0)
                     if g != 1:
-                        G.append(Pow(g, Rational(1, q)))
+                        G.append(g**Rational(1, q))
                 if G:
                     G = Mul(*G)
                     args = [ai/G for ai in args]
@@ -904,7 +914,5 @@ class Add(AssocOp):
 
         return con, prim
 
-from function import FunctionClass, expand_mul
 from mul import Mul, _keep_coeff, prod
-from power import Pow
 from sympy.core.numbers import Rational

@@ -5,7 +5,8 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     Poly, Function, Derivative, Number, pi, NumberSymbol, zoo, Piecewise, Mul,
     Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
     separate, collect, factorial, apart, combsimp, factor, refine, cancel,
-    Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E)
+    Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E, exp_polar,
+    Lambda)
 from sympy.core.function import AppliedUndef
 from sympy.abc import a, b, c, d, e, n, t, u, x, y, z
 from sympy.physics.secondquant import FockState
@@ -168,12 +169,15 @@ def test_relational_noncommutative():
 
 def test_basic_nostr():
     for obj in basic_objs:
-        for op in ['+','-','*','/','**']:
-            if obj == 2 and op == '*':
-                if hasattr(int, '__index__'): # Python 2.5+ (PEP 357)
-                    assert obj * '1' == '11'
-            else:
-                raises(TypeError, "obj %s '1'" % op)
+        raises(TypeError, lambda: obj + '1')
+        raises(TypeError, lambda: obj - '1')
+        if obj == 2:
+            if hasattr(int, '__index__'): # Python 2.5+ (PEP 357)
+                assert obj * '1' == '11'
+        else:
+            raises(TypeError, lambda: obj * '1')
+        raises(TypeError, lambda: obj / '1')
+        raises(TypeError, lambda: obj ** '1')
 
 def test_leadterm():
     assert (3+2*x**(log(3)/log(2)-1)).leadterm(x) == (3,0)
@@ -195,6 +199,7 @@ def test_as_leading_term():
     assert (x+1).as_leading_term(x) == 1
     assert (x+x**2).as_leading_term(x) == x
     assert (x**2).as_leading_term(x) == x**2
+    assert (x + oo).as_leading_term(x) == oo
 
 def test_leadterm2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).leadterm(x) == \
@@ -210,6 +215,13 @@ def test_as_leading_term2():
 def test_as_leading_term3():
     assert (2+pi+x).as_leading_term(x) == 2 + pi
     assert (2*x+pi*x+x**2).as_leading_term(x) == (2+pi)*x
+
+def test_as_leading_term_stub():
+    class foo(Function):
+        pass
+    assert foo(1/x).as_leading_term(x) == foo(1/x)
+    assert foo(1).as_leading_term(x) == foo(1)
+    raises(NotImplementedError, lambda: foo(x).as_leading_term(x))
 
 def test_atoms():
     assert sorted(list(x.atoms())) == [x]
@@ -335,7 +347,7 @@ def test_SAGE1():
     e = Rational(2)*m
     assert e == 10
 
-    raises(TypeError, "Rational(2)*MyInt")
+    raises(TypeError, lambda: Rational(2)*MyInt)
 
 def test_SAGE2():
     class MyInt(object):
@@ -345,7 +357,7 @@ def test_SAGE2():
     e = Rational(2)*MyInt()
     assert e == 10
 
-    raises(TypeError, "Rational(2)*MyInt")
+    raises(TypeError, lambda: Rational(2)*MyInt)
 
 def test_SAGE3():
     class MySymbol:
@@ -374,9 +386,9 @@ def test_doit():
     assert (2*Integral(x, x)).doit() == x**2
 
 def test_attribute_error():
-    raises(AttributeError, "x.cos()")
-    raises(AttributeError, "x.sin()")
-    raises(AttributeError, "x.exp()")
+    raises(AttributeError, lambda: x.cos())
+    raises(AttributeError, lambda: x.sin())
+    raises(AttributeError, lambda: x.exp())
 
 def test_args():
     assert (x*y).args in ((x, y), (y, x))
@@ -493,11 +505,19 @@ def test_as_independent():
            (Integral(x, (x, 1, 2)), x)
 
 def test_call():
-    # Unlike what used to be the case, the following should NOT work.
-    # See issue 1927.
+    # See the long history of this in issues 1927 and 2006.
 
-    raises(TypeError, "sin(x)({ x : 1, sin(x) : 2})")
-    raises(TypeError, "sin(x)(1)")
+    # No effect as there are no callables
+    assert sin(x)(1) == sin(x)
+    assert (1+sin(x))(1) == 1+sin(x)
+
+    # Effect in the pressence of callables
+    l = Lambda(x, 2*x)
+    assert (l+x)(y) == 2*y+x
+    assert (x**l)(2) == x**4
+    # TODO UndefinedFunction does not subclass Expr
+    #f = Function('f')
+    #assert (2*f)(x) == 2*f(x)
 
 def test_replace():
     f = log(sin(x)) + tan(sin(x**2))
@@ -616,7 +636,7 @@ def test_has_piecewise():
     f = (x*y + 3/y)**(3 + 2)
     g = Function('g')
     h = Function('h')
-    p = Piecewise((g, x < -1), (1, x <= 1), (f, True))
+    p = Piecewise((g(x), x < -1), (1, x <= 1), (f, True))
 
     assert p.has(x)
     assert p.has(y)
@@ -645,6 +665,10 @@ def test_has_iterative():
     assert not f.has(x*sin(x)*A*C*B)
     assert not f.has(x*sin(y)*A*B*C)
     assert f.has(x*gamma(x))
+    assert not f.has(x + sin(x))
+
+    assert (x & y & z).has(x & z)
+
 
 def test_has_integrals():
     f = Integral(x**2 + sin(x*y*z), (x, 0, x + y + z))
@@ -674,6 +698,7 @@ def test_has_tuple():
     assert not Tuple(f, g).has(x)
     assert Tuple(f, g).has(f)
     assert not Tuple(f, g).has(h)
+    assert Tuple(True).has(True) is True # .has(1) will also be True
 
 def test_has_units():
     from sympy.physics.units import m, s
@@ -1010,7 +1035,7 @@ def test_args_cnc():
         [set([x]), []]
     assert Mul(x, x**2, evaluate=False).args_cnc(cset=True, warn=False) == \
         [set([x, x**2]), []]
-    raises(ValueError, 'Mul(x, x, evaluate=False).args_cnc(cset=True)')
+    raises(ValueError, lambda: Mul(x, x, evaluate=False).args_cnc(cset=True))
     assert Mul(x, y, x, evaluate=False).args_cnc() == \
         [[x, y, x], []]
 
@@ -1182,7 +1207,7 @@ def test_issue_1100():
     # difference gives S.NaN
     a = x - y
     assert a._eval_interval(x, 1, oo)._eval_interval(y, oo, 1) is S.NaN
-    raises(ValueError, 'x._eval_interval(x, None, None)')
+    raises(ValueError, lambda: x._eval_interval(x, None, None))
 
 def test_primitive():
     assert (3*(x + 1)**2).primitive() == (3, (x + 1)**2)
@@ -1258,16 +1283,18 @@ def test_equals():
     assert (3*meter**2).equals(0) is False
 
     # from integrate(x*sqrt(1+2*x), x);
-    # diff is zero, but differentiation does not show it
+    # diff is zero only when assumptions allow
     i = 2*sqrt(2)*x**(S(5)/2)*(1 + 1/(2*x))**(S(5)/2)/5 + \
         2*sqrt(2)*x**(S(3)/2)*(1 + 1/(2*x))**(S(5)/2)/(-6 - 3/x)
     ans = sqrt(2*x + 1)*(6*x**2 + x - 1)/15
     diff = i - ans
-    assert diff.equals(0) is not False # should be True, but now it's None
-    # XXX TODO add a force=True option to equals to posify both
-    # self and other before beginning comparisions
+    assert diff.equals(0) is False
+    assert diff.subs(x, -S.Half/2) == 7*sqrt(2)/120
+    # there are regions for x for which the expression is True, for
+    # example, when x < -1/2 or x > 0 the expression is zero
     p = Symbol('p', positive=True)
     assert diff.subs(x, p).equals(0) is True
+    assert diff.subs(x, -1).equals(0) is True
 
 def test_random():
     from sympy import posify
@@ -1307,7 +1334,7 @@ def test_round():
 
     assert (pi + sqrt(2)).round(2) == 4.56
     assert (10*(pi + sqrt(2))).round(-1) == 50
-    raises(TypeError, 'round(x + 2, 2)')
+    raises(TypeError, lambda: round(x + 2, 2))
     assert S(2.3).round(1) == 2.3
     e = S(12.345).round(2)
     assert e == round(12.345, 2)
@@ -1328,7 +1355,7 @@ def test_round():
     assert a.round(27) == Float('2.999999999999999999999999999','')
     assert a.round(30) == Float('2.999999999999999999999999999','')
 
-    raises(TypeError, 'x.round()')
+    raises(TypeError, lambda: x.round())
 
     # exact magnitude of 10
     assert str(S(1).round()) == '1.'
@@ -1346,3 +1373,9 @@ def test_round():
     assert str((pi/10 + E*I).round(2)) == '0.31 + 2.72*I'
     assert (pi/10 + E*I).round(2).as_real_imag() == (0.31, 2.72)
     assert (pi/10 + E*I).round(2) == Float(0.31, 2) +  I*Float(2.72, 3)
+
+    # issue 3815
+    assert (I**(I+3)).round(3) == Float('-0.208','')*I
+
+def test_extract_branch_factor():
+    assert exp_polar(2.0*I*pi).extract_branch_factor() == (1, 1)

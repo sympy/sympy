@@ -61,7 +61,7 @@ def test_hydrogen_energies():
     assert E_nl(4) == -S(1)/(2*4**2)
     assert E_nl(100) == -S(1)/(2*100**2)
 
-    raises(ValueError, "E_nl(0)")
+    raises(ValueError, lambda: E_nl(0))
 
 def test_hydrogen_energies_relat():
     # First test exact formulas for small "c" so that we get nice expressions:
@@ -104,6 +104,6 @@ def test_hydrogen_energies_relat():
 
 
     # Test the exceptions:
-    raises(ValueError, "E_nl_dirac(0, 0)")
-    raises(ValueError, "E_nl_dirac(1, -1)")
-    raises(ValueError, "E_nl_dirac(1, 0, False)")
+    raises(ValueError, lambda: E_nl_dirac(0, 0))
+    raises(ValueError, lambda: E_nl_dirac(1, -1))
+    raises(ValueError, lambda: E_nl_dirac(1, 0, False))

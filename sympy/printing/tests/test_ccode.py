@@ -108,7 +108,7 @@ else {
     assert p == s
 
 def test_ccode_settings():
-    raises(TypeError, 'ccode(sin(x),method="garbage")')
+    raises(TypeError, lambda: ccode(sin(x),method="garbage"))
 
 def test_ccode_Indexed():
     from sympy.tensor import IndexedBase, Idx

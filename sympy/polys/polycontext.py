@@ -1,7 +1,7 @@
 """Tools for managing evaluation contexts. """
 
 from sympy.utilities.iterables import dict_merge
-from sympy.core.basic import PicklableWithSlots
+from sympy.polys.polyutils import PicklableWithSlots
 
 __known_options__ = set(['frac', 'gens', 'wrt', 'sort', 'order', 'domain',
     'modulus', 'gaussian', 'extension', 'field', 'greedy', 'symmetric'])

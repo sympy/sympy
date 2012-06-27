@@ -1,4 +1,5 @@
-from sympy.core import Rational, Symbol, S, Float, Integer, Number, Pow, Basic
+from sympy.core import (Rational, Symbol, S, Float, Integer, Number, Pow,
+Basic, I, nan)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import exp
 from sympy.utilities.pytest import XFAIL
@@ -186,6 +187,9 @@ def test_zero():
     assert 0**(x - 2) != S.Infinity**(2 - x)
     assert 0**(2*x*y) == 0**(x*y)
     assert 0**(-2*x*y) == S.Infinity**(x*y)
+    assert 0**I == nan
+    i = Symbol('i', imaginary=True)
+    assert 0**i == nan
 
 def test_pow_as_base_exp():
     x = Symbol('x')

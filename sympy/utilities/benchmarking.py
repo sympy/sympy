@@ -225,6 +225,6 @@ def main(args=None):
 
     # hook BenchSession as py.test session
     config = py.test.config
-    config._getsessionclass = lambda : BenchSession
+    config._getsessionclass = lambda: BenchSession
 
     py.test.cmdline.main(args)

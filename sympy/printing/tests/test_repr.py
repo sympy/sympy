@@ -96,7 +96,7 @@ def test_WildFunction():
     sT(WildFunction('w'), "WildFunction('w')")
 
 def test_settins():
-    raises(TypeError, 'srepr(x, method="garbage")')
+    raises(TypeError, lambda: srepr(x, method="garbage"))
 
 def test_Mul():
     sT(3*x**3*y, "Mul(Integer(3), Pow(Symbol('x'), Integer(3)), Symbol('y'))")

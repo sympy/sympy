@@ -7,7 +7,7 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
     Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict,
     euler, groebner, catalan, Product, KroneckerDelta, Ei, expint, Shi, Chi, Si,
-    Ci, Segment, Ray)
+    Ci, Segment, Ray, FiniteSet)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -2392,8 +2392,8 @@ def test_any_object_in_sequence():
     assert upretty(expr) == u"[Basic(Basic()), Basic()]"
 
     expr = set([b2, b1])
-    assert pretty(expr) == "set(Basic(), Basic(Basic()))"
-    assert upretty(expr) == u"set(Basic(), Basic(Basic()))"
+    assert pretty(expr) == "set([Basic(), Basic(Basic())])"
+    assert upretty(expr) == u"set([Basic(), Basic(Basic())])"
 
     expr = {b2:b1, b1:b2}
     expr2 = Dict({b2:b1, b1:b2})
@@ -2401,6 +2401,25 @@ def test_any_object_in_sequence():
     assert pretty(expr2) == "{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
     assert upretty(expr) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
     assert upretty(expr2) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
+
+def test_pretty_sets():
+    s = FiniteSet
+    assert pretty(s([x*y, x**2])) == \
+"""\
+  2      \n\
+{x , x*y}\
+"""
+    assert pretty(s(range(1, 6))) == "{1, 2, 3, 4, 5}"
+    assert pretty(s(range(1, 13))) == "{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
+    for s in (frozenset, set):
+        assert pretty(s([x*y, x**2])) == \
+"""\
+%s   2       \n\
+%s([x , x*y])\
+""" % (" " * len(s.__name__), s.__name__)
+        assert pretty(s(range(1, 6))) == "%s([1, 2, 3, 4, 5])" % s.__name__
+        assert pretty(s(range(1, 13))) == \
+            "%s([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])" % s.__name__
 
 def test_pretty_limits():
     expr = Limit(x, x, oo)
@@ -2653,6 +2672,16 @@ def test_pretty_Domain():
     assert  pretty(expr) == "ZZ(x, y)"
     assert upretty(expr) == u"ℤ(x, y)"
 
+    expr = QQ.poly_ring(x, y, order="lex")
+
+    assert  pretty(expr) == "QQ[x, y, order=lex]"
+    assert upretty(expr) == u"ℚ[x, y, order=lex]"
+
+    expr = QQ.poly_ring(x, y, order="ilex")
+
+    assert  pretty(expr) == "QQ[x, y, order=ilex]"
+    assert upretty(expr) == u"ℚ[x, y, order=ilex]"
+
 def test_pretty_prec():
     assert xpretty(S("0.3"), full_prec=True) == "0.300000000000000"
     assert xpretty(S("0.3"), full_prec="auto") == "0.300000000000000"
@@ -2701,7 +2730,7 @@ def test_pretty_no_wrap_line():
 
 
 def test_settings():
-    raises(TypeError, 'pretty(S(4), method="garbage")')
+    raises(TypeError, lambda: pretty(S(4), method="garbage"))
 
 @XFAIL
 def test_pretty_sum():
@@ -3608,7 +3637,7 @@ def test_pretty_geometry():
     e = Segment((0, 1), (0, 2))
     assert pretty(e) == 'Segment(Point(0, 1), Point(0, 2))'
     e = Ray((1, 1), angle=4.2*pi)
-    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(0.2*pi) + 1))'
+    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(pi/5) + 1))'
 
 def test_expint():
     expr = Ei(x)
@@ -3632,13 +3661,84 @@ def test_expint():
     assert upretty(Chi(x)) == 'Chi(x)'
 
 def test_RandomDomain():
-    from sympy.stats import Normal, Die, Exponential, pspace, Where
-    X = Normal(0, 1, symbol=Symbol('x1'))
-    assert upretty(Where(X>0)) == u"Domain: 0 < x₁"
+    from sympy.stats import Normal, Die, Exponential, pspace, where
+    X = Normal('x1', 0, 1)
+    assert upretty(where(X>0)) == u"Domain: 0 < x₁"
 
-    D = Die(6, symbol=Symbol('d1'))
-    assert upretty(Where(D>4)) == u'Domain: d₁ = 5 ∨ d₁ = 6'
+    D = Die('d1', 6)
+    assert upretty(where(D>4)) == u'Domain: d₁ = 5 ∨ d₁ = 6'
 
-    A = Exponential(1, symbol=Symbol('a'))
-    B = Exponential(1, symbol=Symbol('b'))
+    A = Exponential('a', 1)
+    B = Exponential('b', 1)
     assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ a ∧ 0 ≤ b'
+
+def test_PrettyPoly():
+    F = QQ.frac_field(x, y)
+    R = QQ[x, y]
+
+    expr = F.convert(x/(x + y))
+    assert pretty(expr) == pretty(x/(x + y))
+    assert upretty(expr) == upretty(x/(x + y))
+
+    expr = R.convert(x + y)
+    assert pretty(expr) == pretty(x + y)
+    assert upretty(expr) == upretty(x + y)
+
+def test_issue_3186():
+    assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
+    assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
+
+def test_complicated_symbol_unchanged():
+    for symb_name in ["dexpr2_d1tau", "dexpr2^d1tau"]:
+        assert pretty(Symbol(symb_name)) == symb_name
+
+def test_categories():
+    from sympy.categories import (Object, Morphism, IdentityMorphism,
+                                  NamedMorphism, CompositeMorphism,
+                                  Category, Diagram)
+
+    A1 = Object("A1")
+    A2 = Object("A2")
+    A3 = Object("A3")
+
+    f1 = NamedMorphism(A1, A2, "f1")
+    f2 = NamedMorphism(A2, A3, "f2")
+    id_A1 = IdentityMorphism(A1)
+
+    K1 = Category("K1")
+
+    assert pretty(A1) == "A1"
+    assert upretty(A1) == u"A₁"
+
+    assert pretty(f1) == "f1:A1-->A2"
+    assert upretty(f1) == u"f₁:A₁⟶  A₂"
+    assert pretty(id_A1) == "id:A1-->A1"
+    assert upretty(id_A1) == u"id:A₁⟶  A₁"
+
+    assert pretty(f2*f1) == "f2*f1:A1-->A3"
+    assert upretty(f2*f1) == u"f₂∘f₁:A₁⟶  A₃"
+
+    assert pretty(K1) == "K1"
+    assert upretty(K1) == u"K₁"
+
+    # Test how diagrams are printed.
+    d = Diagram()
+    assert pretty(d) == "EmptySet()"
+    assert upretty(d) == u"∅"
+
+    d = Diagram({f1:"unique", f2:S.EmptySet})
+    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
+           "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
+           "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}"
+
+    assert upretty(d) == u"{f₂∘f₁:A₁⟶  A₃: ∅, id:A₁⟶  A₁: ∅, " \
+           u"id:A₂⟶  A₂: ∅, id:A₃⟶  A₃: ∅, f₁:A₁⟶  A₂: {unique}, f₂:A₂⟶  A₃: ∅}"
+
+    d = Diagram({f1:"unique", f2:S.EmptySet}, {f2 * f1: "unique"})
+    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
+           "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
+           "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}" \
+           " ==> {f2*f1:A1-->A3: {unique}}"
+    assert upretty(d) == u"{f₂∘f₁:A₁⟶  A₃: ∅, id:A₁⟶  A₁: ∅, id:A₂⟶  A₂: " \
+           u"∅, id:A₃⟶  A₃: ∅, f₁:A₁⟶  A₂: {unique}, f₂:A₂⟶  A₃: ∅}" \
+           u" ⟹  {f₂∘f₁:A₁⟶  A₃: {unique}}"

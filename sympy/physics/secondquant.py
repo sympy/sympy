@@ -305,8 +305,10 @@ class SqOperator(Expr):
 
     op_symbol = 'sq'
 
+    is_commutative = False
+
     def __new__(cls, k):
-        obj = Basic.__new__(cls, sympify(k), commutative=False)
+        obj = Basic.__new__(cls, sympify(k))
         return obj
 
     @property
@@ -883,6 +885,7 @@ class FockState(Expr):
 
     Base class to represent FockStates.
     """
+    is_commutative = False
 
     def __new__(cls, occupations):
         """
@@ -896,7 +899,7 @@ class FockState(Expr):
           is the i'th occupied state.
         """
         occupations = map(sympify, occupations)
-        obj = Basic.__new__(cls, Tuple(*occupations), commutative=False)
+        obj = Basic.__new__(cls, Tuple(*occupations))
         return obj
 
     def __getitem__(self, i):
@@ -1339,21 +1342,20 @@ class InnerProduct(Basic):
     ``<a|b>``.
 
     """
+    is_commutative = True
+
     def __new__(cls, bra, ket):
         assert isinstance(bra, FockStateBra), 'must be a bra'
         assert isinstance(ket, FockStateKet), 'must be a key'
-        r = cls.eval(bra, ket)
-        if isinstance(r, Basic):
-            return r
-        obj = Basic.__new__(cls, *(bra, ket), **dict(commutative=True))
-        return obj
+        return cls.eval(bra, ket)
 
     @classmethod
     def eval(cls, bra, ket):
         result = S.One
         for i,j in zip(bra.args[0], ket.args[0]):
             result *= KroneckerDelta(i,j)
-            if result == 0: break
+            if result == 0:
+                break
         return result
 
     @property
@@ -1642,7 +1644,7 @@ class Commutator(Function):
     >>> comm = Commutator(Fd(p)*Fd(q),F(i)); comm
     Commutator(CreateFermion(p)*CreateFermion(q), AnnihilateFermion(i))
     >>> comm.doit(wicks=True)
-    -KroneckerDelta(i, p)*CreateFermion(q) + KroneckerDelta(i, q)*CreateFermion(p)
+    -KroneckerDelta(p, i)*CreateFermion(q) + KroneckerDelta(q, i)*CreateFermion(p)
 
     """
 

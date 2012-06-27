@@ -228,8 +228,8 @@ def test_telescopic_sums():
 def test_sum_reconstruct():
     s = Sum(n**2, (n, -1, 1))
     assert s == Sum(*s.args)
-    raises(ValueError, 'Sum(x, x)')
-    raises(ValueError, 'Sum(x, (x, 1))')
+    raises(ValueError, lambda: Sum(x, x))
+    raises(ValueError, lambda: Sum(x, (x, 1)))
 
 def test_Sum_limit_subs():
     assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b, 2)
@@ -259,8 +259,8 @@ def test_Sum_interface():
     assert Sum(0, (n, 0, 2)).doit() == 0
     assert isinstance(Sum(0, (n, 0, oo)), Sum)
     assert Sum(0, (n, 0, oo)).doit() == 0
-    raises(ValueError, "Sum(1)")
-    raises(ValueError, "summation(1)")
+    raises(ValueError, lambda: Sum(1))
+    raises(ValueError, lambda: summation(1))
 
 def test_eval_diff():
     assert Sum(x, (x, 1, 2)).diff(x) == 0
@@ -289,6 +289,9 @@ def test_hypersum():
     assert s.args[0].args[0] == -1/(x*(1 - 1/x)**2)
     assert s.args[0].args[1] == (abs(1/x) < 1)
 
+    m = Symbol('n', integer=True, positive=True)
+    assert summation(binomial(m, k), (k, 0, m)) == 2**m
+
 def test_issue_1071():
     assert summation(1/factorial(k), (k, 0, oo)) == E
 
@@ -296,6 +299,16 @@ def test_is_zero():
     for func in [Sum, Product]:
         assert func(0, (x, 1, 1)).is_zero is True
         assert func(x, (x, 1, 1)).is_zero is None
+
+def test_is_commutative():
+    from sympy.physics.secondquant import NO, F, Fd
+    m = Symbol('m', commutative=False)
+    for f in (Sum, Product, Integral):
+        assert f(z, (z, 1, 1)).is_commutative is True
+        assert f(z*y, (z, 1, 6)).is_commutative is True
+        assert f(m*x, (x, 1, 2)).is_commutative is False
+
+        assert f(NO(Fd(x)*F(y))*z, (z, 1, 2)).is_commutative is False
 
 def test_is_number():
     assert Sum(1, (x, 1, 1)).is_number is True

@@ -2,24 +2,21 @@ from sympy.core.numbers import igcd
 from primetest import isprime
 from factor_ import factorint, trailing, totient
 
-def int_tested(*j, **hint):
+def int_tested(*j):
     """
-    Return all args as Python integers.
-
-    In some cases a routine needs to work with integers
-    but it is convenient to allow the user to pass a non-integer
-    value or expression. In this case, the flag ``strict`` can be set
-    to False. The default behavior is to raise an error if any argument
-    cannot pass an int(arg) == arg test.
+    Return all args as Python integers and confirm that the input
+    was equivalent to the integer, else raise a ValueError.
 
     Examples
     ========
 
     >>> from sympy.ntheory.residue_ntheory import int_tested
     >>> from sympy import sqrt
-    >>> n = sqrt(10)
-    >>> int_tested(n, strict=False)
+    >>> 3.0
+    3.0
+    >>> int_tested(_) # convert to int and test for equality
     3
+    >>> n = sqrt(10)
     >>> int_tested(n)
     Traceback (most recent call last):
     ...
@@ -27,9 +24,8 @@ def int_tested(*j, **hint):
 
     """
     i = tuple([int(i) for i in j])
-    if hint.get('strict', True):
-        if i != j:
-            raise ValueError('all arguments were not integers')
+    if i != j:
+        raise ValueError('all arguments were not integers')
     if len(i) == 1:
         return i[0]
     return i

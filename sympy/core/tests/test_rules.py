@@ -8,6 +8,6 @@ def test_Transform():
     assert (1 in add1) is True
     assert add1.get(1) == 2
 
-    raises(KeyError, 'add1[2]')
+    raises(KeyError, lambda: add1[2])
     assert (2 in add1) is False
     assert add1.get(2) is None

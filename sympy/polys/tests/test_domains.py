@@ -187,10 +187,10 @@ def test_Domain__unify():
 
     ext = QQ.algebraic_field(sqrt(7))
 
-    raises(NotImplementedError, "alg.unify(ext)")
+    raises(NotImplementedError, lambda: alg.unify(ext))
 
-    raises(UnificationFailed, "ZZ.poly_ring('x','y').unify(ZZ, gens=('y', 'z'))")
-    raises(UnificationFailed, "ZZ.unify(ZZ.poly_ring('x','y'), gens=('y', 'z'))")
+    raises(UnificationFailed, lambda: ZZ.poly_ring('x','y').unify(ZZ, gens=('y', 'z')))
+    raises(UnificationFailed, lambda: ZZ.unify(ZZ.poly_ring('x','y'), gens=('y', 'z')))
 
 def test_Domain__contains__():
     assert (0 in EX) == True
@@ -354,9 +354,9 @@ def test_Domain_get_ring():
     assert ZZ.frac_field(x,y).get_ring() == ZZ[x,y]
     assert QQ.frac_field(x,y).get_ring() == QQ[x,y]
 
-    raises(DomainError, "EX.get_ring()")
-    raises(DomainError, "RR.get_ring()")
-    raises(DomainError, "ALG.get_ring()")
+    raises(DomainError, lambda: EX.get_ring())
+    raises(DomainError, lambda: RR.get_ring())
+    raises(DomainError, lambda: ALG.get_ring())
 
 def test_Domain_get_field():
     assert EX.has_assoc_Field == True
@@ -372,7 +372,7 @@ def test_Domain_get_field():
     assert EX.get_field() == EX
     assert ZZ.get_field() == QQ
     assert QQ.get_field() == QQ
-    raises(DomainError, "RR.get_field()")
+    raises(DomainError, lambda: RR.get_field())
     assert ALG.get_field() == ALG
     assert ZZ[x].get_field() == ZZ.frac_field(x)
     assert QQ[x].get_field() == QQ.frac_field(x)
@@ -399,7 +399,7 @@ def test_Domain_convert():
     assert ZZ.convert(DMP([[ZZ(1)]], ZZ)) == ZZ(1)
 
 def test_PolynomialRing__init():
-    raises(GeneratorsNeeded, "ZZ.poly_ring()")
+    raises(GeneratorsNeeded, lambda: ZZ.poly_ring())
 
 def test_PolynomialRing_from_FractionField():
     x = DMF(([1, 0, 1], [1, 1]), ZZ)
@@ -409,13 +409,13 @@ def test_PolynomialRing_from_FractionField():
     assert ZZ['x'].from_FractionField(y, ZZ['x']) == DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ)
 
 def test_FractionField__init():
-    raises(GeneratorsNeeded, "ZZ.frac_field()")
+    raises(GeneratorsNeeded, lambda: ZZ.frac_field())
 
 def test_inject():
     assert ZZ.inject(x, y, z) == ZZ[x, y, z]
     assert ZZ[x].inject(y, z) == ZZ[x, y, z]
     assert ZZ.frac_field(x).inject(y, z) == ZZ.frac_field(x, y, z)
-    raises(GeneratorsError, "ZZ[x].inject(x)")
+    raises(GeneratorsError, lambda: ZZ[x].inject(x))
 
 def test_Domain_map():
     seq = ZZ.map([1, 2, 3, 4])
@@ -566,8 +566,8 @@ def test_PythonRationalType__div__():
     assert 2 / Q(1, 2) == Q(4)
     assert Q(1, 2) / 2 == Q(1, 4)
 
-    raises(ZeroDivisionError, "Q(1, 2) / Q(0)")
-    raises(ZeroDivisionError, "Q(1, 2) / 0")
+    raises(ZeroDivisionError, lambda: Q(1, 2) / Q(0))
+    raises(ZeroDivisionError, lambda: Q(1, 2) / 0)
 
 def test_PythonRationalType__pow__():
     assert Q(1)**10 == Q(1)
@@ -624,9 +624,9 @@ def test_RealDomain_from_sympy():
     assert RR.convert(S(1)) == RR.dtype(1)
     assert RR.convert(S(1.0)) == RR.dtype(1.0)
     assert RR.convert(sin(1)) == RR.dtype(sin(1).evalf())
-    raises(CoercionFailed, "RR.convert(x)")
-    raises(CoercionFailed, "RR.convert(oo)")
-    raises(CoercionFailed, "RR.convert(-oo)")
+    raises(CoercionFailed, lambda: RR.convert(x))
+    raises(CoercionFailed, lambda: RR.convert(oo))
+    raises(CoercionFailed, lambda: RR.convert(-oo))
 
     RR = RR_sympy()
 
@@ -636,9 +636,9 @@ def test_RealDomain_from_sympy():
     assert RR.convert(S(1.0)) == RR.dtype(1.0)
     assert RR.convert(sin(1)) == RR.dtype(sin(1).evalf())
     assert RR.n(3, 2) == RR.evalf(3, 2) == Rational(3).n(2)
-    raises(CoercionFailed, "RR.convert(x)")
-    raises(CoercionFailed, "RR.convert(oo)")
-    raises(CoercionFailed, "RR.convert(-oo)")
+    raises(CoercionFailed, lambda: RR.convert(x))
+    raises(CoercionFailed, lambda: RR.convert(oo))
+    raises(CoercionFailed, lambda: RR.convert(-oo))
 
 def test_ModularInteger():
     GF = ModularIntegerFactory(3)
@@ -776,9 +776,9 @@ def test_ModularInteger():
     assert (GF(3) >  7) == True
     assert (GF(3) >= 7) == True
 
-    raises(NotInvertible, "GF(0)**(-1)")
-    raises(NotInvertible, "GF(5)**(-1)")
+    raises(NotInvertible, lambda: GF(0)**(-1))
+    raises(NotInvertible, lambda: GF(5)**(-1))
 
-    raises(ValueError, "ModularIntegerFactory(0)")
-    raises(ValueError, "ModularIntegerFactory(2.1)")
-    raises(TypeError, "ModularIntegerFactory(3, QQ)")
+    raises(ValueError, lambda: ModularIntegerFactory(0))
+    raises(ValueError, lambda: ModularIntegerFactory(2.1))
+    raises(TypeError, lambda: ModularIntegerFactory(3, QQ))

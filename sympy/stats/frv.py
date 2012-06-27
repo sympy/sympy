@@ -11,8 +11,8 @@ sympy.stats.crv
 from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
         And, Or, Tuple)
 from sympy.core.sets import FiniteSet
-from rv import (RandomDomain, ProductDomain, ConditionalDomain, PSpace,
-        ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs)
+from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
+        PSpace, ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs)
 from sympy.core.compatibility import product
 from sympy.core.containers import Dict
 import random
@@ -200,14 +200,14 @@ class FinitePSpace(PSpace):
         return sum(expr.subs(dict(elem)) * self.prob_of(elem)
                 for elem in self.domain)
 
-    def P(self, condition):
+    def probability(self, condition):
         cond_symbols = frozenset(rs.symbol for rs in random_symbols(condition))
         assert cond_symbols.issubset(self.symbols)
         return sum(self.prob_of(elem) for elem in self.where(condition))
 
     def conditional_space(self, condition):
         domain = self.where(condition)
-        prob = self.P(condition)
+        prob = self.probability(condition)
         density = dict((key, val / prob)
                 for key, val in self._density.items() if key in domain)
         return FinitePSpace(domain, density)
@@ -241,12 +241,10 @@ class SingleFinitePSpace(FinitePSpace, SinglePSpace):
     This class is implemented by many of the standard FiniteRV types such as
     Die, Bernoulli, Coin, etc....
     """
-    _count = 0
-    _name = 'fx'
 
     @classmethod
-    def fromdict(cls, density, symbol=None):
-        symbol = symbol or cls.create_symbol()
+    def fromdict(cls, name, density):
+        symbol = Symbol(name);
         domain = SingleFiniteDomain(symbol, frozenset(density.keys()))
         density = dict((frozenset(((symbol, val),)) , prob)
                 for val, prob in density.items())

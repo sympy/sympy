@@ -70,6 +70,10 @@ class Curve(GeometryEntity):
             raise ValueError("Limit argument should be (t, tmin, tmax) but got %s" % str(limits))
         return GeometryEntity.__new__(cls, Tuple(*fun), Tuple(*limits))
 
+    def _eval_subs(self, old, new):
+        if old == self.parameter:
+            return Point(*[f.subs(old, new) for f in self.functions])
+
     @property
     def free_symbols(self):
         """
@@ -169,6 +173,63 @@ class Curve(GeometryEntity):
 
         """
         return self.args[1]
+
+    def rotate(self, angle=0, pt=None):
+        """Rotate ``angle`` radians counterclockwise about Point ``pt``.
+
+        The default pt is the origin, Point(0, 0).
+
+        Examples
+        ========
+        >>> from sympy.geometry.curve import Curve
+        >>> from sympy.abc import x
+        >>> from sympy import pi
+        >>> Curve((x, x), (x, 0, 1)).rotate(pi/2)
+        Curve((-x, x), (x, 0, 1))
+        """
+        from sympy.matrices.matrices import Matrix, rot_axis3
+        pt = -Point(pt or (0, 0))
+        rv = self.translate(*pt.args)
+        f = list(rv.functions)
+        f.append(0)
+        f = Matrix(1, 3, f)
+        f *= rot_axis3(angle)
+        rv = self.func(f[0, :2].tolist()[0], self.limits)
+        if pt is not None:
+            pt = -pt
+            return rv.translate(*pt.args)
+        return rv
+
+    def scale(self, x=1, y=1, pt=None):
+        """Override GeometryEntity.scale since Curve is not made up of Points.
+
+        Examples
+        ========
+        >>> from sympy.geometry.curve import Curve
+        >>> from sympy import pi
+        >>> from sympy.abc import x
+        >>> Curve((x, x), (x, 0, 1)).scale(2)
+        Curve((2*x, x), (x, 0, 1))
+        """
+        if pt:
+            pt = Point(pt)
+            return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
+        fx, fy = self.functions
+        return self.func((fx*x, fy*y), self.limits)
+
+    def translate(self, x=0, y=0):
+        """Translate the Curve by (x, y).
+
+        Examples
+        ========
+        >>> from sympy.geometry.curve import Curve
+        >>> from sympy import pi
+        >>> from sympy.abc import x
+        >>> Curve((x, x), (x, 0, 1)).translate(1, 2)
+        Curve((x + 1, x + 2), (x, 0, 1))
+        """
+        fx, fy = self.functions
+        return self.func((fx + x, fy + y), self.limits)
 
     def arbitrary_point(self, parameter='t'):
         """
