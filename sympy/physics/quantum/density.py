@@ -8,6 +8,8 @@ from sympy.physics.quantum.state import KetBase
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.qapply import qapply
 from matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
+from sympy.physics.quantum.tensorproduct import TensorProduct
+import itertools
 
 class Density(HermitianOperator):
     """Density operator for representing mixed states.
@@ -157,11 +159,25 @@ class Density(HermitianOperator):
         0.5*|0><0| + 0.5*|1><1|
 
         """
+
         terms = []
         for (state, prob) in self.args:
-            terms.append(prob*(state*Dagger(state)))
+            state = state.expand() # needed to break up (a+b)*c
+            if (isinstance(state, Add)):
+                for arg in itertools.product(state.args, repeat=2):
+                    terms.append(prob *
+                                 self._generate_outer_prod(arg[0], arg[1]))
+            else:
+                terms.append(prob *
+                             self._generate_outer_prod(state,state))
 
         return Add(*terms)
+
+    def _generate_outer_prod(self,arg1,arg2):
+        if (isinstance(arg1, TensorProduct)):
+            return arg1._generate_outer_prod(arg2)
+        else:
+            return (arg1*Dagger(arg2))
 
     def _represent(self, **options):
         return represent(self.doit(), **options)
@@ -173,7 +189,8 @@ class Density(HermitianOperator):
         return prettyForm(u"\u03C1")
 
     def _eval_trace(self, **kwargs):
-        return Tr(self.doit()).doit()
+        indices = kwargs.get('indices',[])
+        return Tr(self.doit(), indices).doit()
 
     def entropy(self):
         """ Compute the entropy of a density matrix.

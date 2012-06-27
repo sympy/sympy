@@ -14,6 +14,7 @@ from sympy.physics.quantum.spin import JzKet, Jz
 from sympy.functions import sqrt
 from sympy.utilities.pytest import raises
 from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
+from sympy.physics.quantum.tensorproduct import TensorProduct
 
 
 def test_eval_args():
@@ -31,7 +32,9 @@ def test_eval_args():
     raises(ValueError, lambda: Density([Ket(0)], [Ket(1)]))
 
 def test_doit():
+
     x,y = symbols('x y')
+    A, B, C, D, E, F= symbols('A B C D E F', commutative=False)
     d = Density([XKet(),0.5], [PxKet(),0.5])
     assert (0.5*(PxKet()*Dagger(PxKet())) +
             0.5*(XKet()*Dagger(XKet()))) == d.doit()
@@ -40,6 +43,36 @@ def test_doit():
     d_with_sym = Density([XKet(x*y),0.5], [PxKet(x*y),0.5])
     assert (0.5*(PxKet(x*y)*Dagger(PxKet(x*y))) +
             0.5*(XKet(x*y)*Dagger(XKet(x*y)))) == d_with_sym.doit()
+
+
+    d = Density([(A+B)*C, 1.0])
+    assert d.doit() == (1.0*A*C*Dagger(C)*Dagger(A) +
+                        1.0*A*C*Dagger(C)*Dagger(B) +
+                        1.0*B*C*Dagger(C)*Dagger(A) +
+                        1.0*B*C*Dagger(C)*Dagger(B))
+
+
+    #  With TensorProducts as args
+
+    # Density with simple tensor products as args
+    t = TensorProduct(A, B, C)
+    d = Density([t, 1.0])
+    assert d.doit() == 1.0 * TensorProduct(A*Dagger(A), B*Dagger(B),C*Dagger(C))
+
+    # Density with multiple Tensorproducts as states
+    t2 = TensorProduct(A,B)
+    t3 = TensorProduct(C,D)
+
+    d = Density([t2, 0.5], [t3, 0.5])
+    assert d.doit() == (0.5 * TensorProduct(A*Dagger(A), B*Dagger(B)) +
+                        0.5 * TensorProduct(C*Dagger(C), D*Dagger(D)))
+
+    #Density with mixed states
+    d = Density([t2+t3,1.0])
+    assert d.doit() == (1.0 * TensorProduct(A*Dagger(A), B*Dagger(B)) +
+                        1.0 * TensorProduct(A*Dagger(C), B*Dagger(D)) +
+                        1.0 * TensorProduct(C*Dagger(A), D*Dagger(B)) +
+                        1.0 * TensorProduct(C*Dagger(C), D*Dagger(D)))
 
 def test_apply_op():
     d = Density([Ket(0), 0.5], [Ket(1), 0.5])

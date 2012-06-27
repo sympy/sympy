@@ -12,6 +12,7 @@ from sympy.physics.quantum.matrixutils import (
     scipy_sparse_matrix,
     matrix_tensor_product
 )
+from sympy.core.trace import Tr
 
 __all__ = [
     'TensorProduct',
@@ -196,6 +197,18 @@ class TensorProduct(Expr):
         tp = TensorProduct(*[sympify(item).expand(**hints) for item in self.args])
         return Expr.expand(tp, **hints)
 
+    def _generate_outer_prod(self,arg):
+        return tensor_product_simp(self * Dagger(arg))
+
+    def _eval_trace(self, **kwargs):
+        indices = kwargs.get('indices', None)
+        exp = tensor_product_simp(self)
+
+        if indices is None or len(indices) == 0:
+            return Mul(*[Tr(arg) for arg in exp.args])
+        else:
+            return Mul(*[Tr(value) if idx in indices else value
+                        for idx, value in enumerate(exp.args)])
 
 def tensor_product_simp_Mul(e):
     """Simplify a Mul with TensorProducts.

@@ -103,7 +103,7 @@ class Tr(Expr):
         """
 
         expr = args[0]
-        indices = args[1] if len(args) == 2 else -1 #-1 indicates full trace
+        indices = args[1] if len(args) == 2 else []
         if isinstance(expr, Matrix):
             return expr.trace()
         elif hasattr(expr, 'trace') and callable(t.x):
@@ -143,7 +143,7 @@ class Tr(Expr):
 
         """
         if hasattr(self.args[0], '_eval_trace'):
-            return self.args[0]._eval_trace()
+            return self.args[0]._eval_trace(indices=self.args[1])
 
         return self
 
@@ -187,10 +187,6 @@ class Tr(Expr):
     #    return x
 
 
-    #def _hashable_content(self):
-
-    #    if self._hashable_args == None:
-    #        self._hashable_args =  _cycle_permute_all_pos(self.args[0].args)#
-    #
-    #   return tuple(self._hashable_args,) + (self.args[1],)
+    def _hashable_content(self):
+        return self.args[0]  + tuple(self.args[1])
 

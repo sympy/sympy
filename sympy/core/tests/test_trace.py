@@ -34,11 +34,11 @@ def test_trace_new():
     assert Tr(M) == 3
 
     #trace indices test
-    t = Tr((A+B), (2))
-    assert t.args[0].args[1] == (2) and t.args[1].args[1] == (2)
+    t = Tr((A+B), [2])
+    assert t.args[0].args[1] == [2] and t.args[1].args[1] == [2]
 
-    t = Tr(a*A, (2,3))
-    assert t.args[1].args[1] == (2,3)
+    t = Tr(a*A, [2,3])
+    assert t.args[1].args[1] == [2,3]
 
 def test_trace_doit():
     a, b, c, d = symbols('a b c d')
@@ -67,3 +67,5 @@ def test_trace_doit():
 def test_equals():
     #TODO: Need to test if permute allowed
     pass
+
+
