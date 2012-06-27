@@ -188,3 +188,49 @@ def test_DiagramGrid():
     assert grid[3, 0] is None
     assert grid[3, 1] == D_
     assert grid[3, 2] == E_
+
+    # A cube.
+    A1 = Object("A1")
+    A2 = Object("A2")
+    A3 = Object("A3")
+    A4 = Object("A4")
+    A5 = Object("A5")
+    A6 = Object("A6")
+    A7 = Object("A7")
+    A8 = Object("A8")
+
+    # The top face of the cube.
+    f1 = NamedMorphism(A1, A2, "f1")
+    f2 = NamedMorphism(A1, A3, "f2")
+    f3 = NamedMorphism(A2, A4, "f3")
+    f4 = NamedMorphism(A3, A4, "f3")
+
+    # The bottom face of the cube.
+    f5 = NamedMorphism(A5, A6, "f5")
+    f6 = NamedMorphism(A5, A7, "f6")
+    f7 = NamedMorphism(A6, A8, "f7")
+    f8 = NamedMorphism(A7, A8, "f8")
+
+    # The remaining morphisms.
+    f9 = NamedMorphism(A1, A5, "f9")
+    f10 = NamedMorphism(A2, A6, "f10")
+    f11 = NamedMorphism(A3, A7, "f11")
+    f12 = NamedMorphism(A4, A8, "f11")
+
+    d = Diagram([f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12])
+    grid = DiagramGrid(d)
+
+    assert grid.width == 4
+    assert grid.height == 3
+    assert grid[0, 0] is None
+    assert grid[0, 1] == A5
+    assert grid[0, 2] == A6
+    assert grid[0, 3] is None
+    assert grid[1, 0] is None
+    assert grid[1, 1] == A1
+    assert grid[1, 2] == A2
+    assert grid[1, 3] is None
+    assert grid[2, 0] == A7
+    assert grid[2, 1] == A3
+    assert grid[2, 2] == A4
+    assert grid[2, 3] == A8
