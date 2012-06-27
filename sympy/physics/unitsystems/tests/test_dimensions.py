@@ -1,10 +1,10 @@
 from sympy import sympify
-from sympy.physics.units.dimensions import Dimension
-from sympy.physics.units.mks import length, mass, time, velocity, energy
+from sympy.physics.unitsystems.dimensions import Dimension
+from sympy.physics.unitsystems.mks import length, mass, time, velocity, energy
 from sympy.utilities.pytest import raises
 
 def test_dimension_definition():
-    raises(TypeError, 'Dimension(["length", 1, 2])')
+    raises(TypeError, lambda: Dimension(["length", 1, 2]))
 
     assert dict(length) == {sympify('length'): 1}
     assert length.get('length') == 1
@@ -28,7 +28,7 @@ def test_dimension_operations():
     assert energy == mass * length**2 / time**2
     assert 1 / length == Dimension(length=-1)
 
-    raises(TypeError, 'length + 1')
-    raises(TypeError, 'length + time')
-    raises(TypeError, 'length - 1')
-    raises(TypeError, 'length - time')
+    raises(TypeError, lambda: length + 1)
+    raises(TypeError, lambda: length + time)
+    raises(TypeError, lambda: length - 1)
+    raises(TypeError, lambda: length - time)

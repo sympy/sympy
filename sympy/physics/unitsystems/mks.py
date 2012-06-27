@@ -6,8 +6,8 @@ MKS stands for "meter, kilogram, second".
 
 from __future__ import division
 
-from sympy.physics.units.dimensions import Dimension
-from sympy.physics.units.units import Unit, UnitSystem, PREFIXES
+from sympy.physics.unitsystems.dimensions import Dimension
+from sympy.physics.unitsystems.units import Unit, UnitSystem, PREFIXES
 
 # base dimensions
 length = Dimension(name='length', symbol='L', length=1)

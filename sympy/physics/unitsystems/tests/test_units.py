@@ -1,8 +1,8 @@
 from sympy import Matrix, eye, Symbol, solve, pi
-from sympy.physics.units.units import (PREFIXES, Unit, UnitSystem, set_system,
-                                       Quantity as Q)
-from sympy.physics.units.mks import (mks, m, s, kg, J, v, length, time, mass,
-                                     velocity)
+from sympy.physics.unitsystems.units import (PREFIXES, Unit, UnitSystem,
+                                       set_system, Quantity as Q)
+from sympy.physics.unitsystems.mks import (mks, m, s, kg, J, v, length, time,
+                                           mass, velocity)
 from sympy.utilities.pytest import raises
 
 def test_prefix_operations():
@@ -57,7 +57,7 @@ def test_unit_prop():
     set_system(None)
 
 def test_unitsystem():
-    raises(AttributeError, 'UnitSystem(base=(m, m))')
+    raises(AttributeError, lambda: UnitSystem(base=(m, m)))
     assert mks._transf_matrix == eye(3)
 
     matrix = Matrix(((1,1),(0,-1)))
@@ -67,7 +67,7 @@ def test_unitsystem():
     assert mks.base_factor == 10**3
 
 def test_def_unitsystem():
-    raises(TypeError, 'set_system(1)')
+    raises(TypeError, lambda: set_system(1))
 
 def test_quantity_operations():
 
@@ -92,11 +92,11 @@ def test_quantity_operations():
     assert q2**2 == Q(4, m**2)
     assert q1**-1 == 1/q1
 
-    raises(TypeError, 'q1+1')
-    raises(TypeError, 'q1-1')
-    raises(TypeError, '1+q1')
-    raises(TypeError, '1-q1')
-    raises(ValueError, 'q1+q3')
+    raises(TypeError, lambda: q1+1)
+    raises(TypeError, lambda: q1-1)
+    raises(TypeError, lambda: 1+q1)
+    raises(TypeError, lambda: 1-q1)
+    raises(ValueError, lambda: q1+q3)
 
     # compute the radius using Kepler's law
     set_system(mks)
