@@ -1,0 +1,81 @@
+============
+Unit systems
+============
+
+.. topic:: Abstract
+
+   Handles computations with dimensional quantities using unit systems.
+
+.. note:: This module is intended to replace the current units module, which
+	does not handle unit systems. But it is not finished yet and not all what
+	is written here is implemented.
+	For further ideas see https://github.com/sympy/sympy/wiki/Unit-systems
+
+Introduction
+============
+
+The main point of this module is to let the user use unit systems: instead of
+having all the dimensions, units and constants of all the physics fields
+defined, one can choose to work only with the one he is interested in. For
+example, in the study of the planet trajectory one does not care about electric
+current, Avogadro number or inch/feet, and so on.
+
+Also one can use constant as units, like one do in the natural system (where
+c is used as an unit for velocity), or when astronomers give masses in terms
+of solar or earth masses.
+
+In this way the module let the user to create his own systems, possibly by
+defining new dimensions, for example to compute with bytes. In the previous
+implementations, the dimensions were fixed and it was just a big unit
+collections with very few opportunities to be extended.
+
+Examples
+========
+
+This is an example of what users will be able to do later (for now all these
+features are not implemented).
+
+	>>> from sympy.physics.unitsystems.units import Quantity as Q
+	>>> from sympy.physics.unitsystems.mks import kg
+	>>> from sympy.physics.unitsystems.astronomy import astronomy
+	>>> m = Q(1.98892e30, kg)
+	>>> m
+	1 solar_mass
+	>>> earth_mass = astronomy['eath_mass']
+	>>> m.convert_to(earth_mass)
+	3.33e5 earth_mass
+
+One has not to set the system since the units keep track of the system. It
+allows doing computations in several systems at the same time, without changing
+it explicitly.
+
+Compute the Venus revolution period:
+
+	>>> from sympy import pi, solve, Symbol
+	>>> solar_mass = astronomy['solar_mass']
+	>>> venus_a = Q('0.723332 ua')
+	>>> venus_T = solve(T**2/venus_a**3 - 4*pi**2 / G / solar_mass, T)[0]
+	>>> type(venus_T)
+	sympy.physics.unitsystems.units.Quantity
+	>>> venus_T
+	0.61 year
+
+The results are given in year, solar/earth mass and ua because it's the only
+available units, but it's still possible to change the system from the
+astronomical one to the MKS one and to get results in kg/s/m:
+
+	>>> from sympy.physics.unitsystems.mks import mks
+	>>> set_system(mks)
+	>>> venus_a
+	108208930 km
+	>>> venus_T
+	19414166 s
+
+Here one has to explicitly change the system because it's not the "natural" one
+for the units which are currently used.
+
+API
+===
+
+.. automodule:: sympy.physics.unitsystems
+   :members:
