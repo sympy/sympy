@@ -18,7 +18,12 @@ We speak of canonical basis concerning the original dimensions/units/etc. used
 to define all objects before the existence of the unit system. Then we can
 use linear algebra (transformation matrices...) to go from one system to
 another one.
+
+See https://github.com/sympy/sympy/wiki/Unit-systems/ for improvements.
 """
+
+# TODO: main problem is that Mul(u1, u2) does not multiply the units
+#       using __mul__
 
 from __future__ import division
 from copy import copy
@@ -261,6 +266,7 @@ class Unit(AtomicExpr):
 
     def __mul__(self, other):
         system = _UNIT_SYSTEM or self._system
+        other = sympify(other)
 
         if isinstance(other, Unit):
             system = system or other._system
@@ -272,11 +278,18 @@ class Unit(AtomicExpr):
             else:
                 unit = Unit(dim, factor=factor, system=system)
                 return self._comptute_unit(unit, system)
+        # TODO: is it a good idea to return quantity when multiplied by number?
+        #elif isinstance(other, Number):
+        #    return Quantity(other, self)
         else:
             return Mul(self, other)
 
+    def __rmul__(self, other):
+        return self*other
+
     def __div__(self, other):
         system = _UNIT_SYSTEM or self._system
+        other = sympify(other)
 
         if isinstance(other, Unit):
             system = system or other._system
@@ -288,10 +301,16 @@ class Unit(AtomicExpr):
             else:
                 unit = Unit(dim, factor=factor, system=system)
                 return self._comptute_unit(unit, system)
+        #elif isinstance(other, Number):
+        #    return Quantity(1/other, unit)
         else:
             return Mul(self, Pow(other, -1))
 
     __truediv__ = __div__
+
+    def __rdiv__(self, other):
+
+        return other * self**-1
 
     #TODO: should m+m be interpreted as 1*m + 1*m?
     #def __add__(self, other):
@@ -556,3 +575,7 @@ class Quantity(AtomicExpr):
         #TODO: interpret an Unit as a quantity with factor 1
         return (isinstance(other, Quantity) and self.factor == other.factor
                 and self.unit == other.unit)
+
+class Constant(Unit):
+
+    pass

@@ -6,7 +6,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple)
 from sympy.core import Expr
-from sympy.physics.units import second, joule
+from sympy.physics.units.mks import s
 from sympy.polys import Poly, RootOf, RootSum, groebner
 from sympy.statistics.distributions import Normal, Sample, Uniform
 from sympy.geometry import Point, Circle
@@ -370,8 +370,7 @@ def test_Uniform():
     assert str(Uniform(x+y, y)) == "Uniform(x + y, y)"
 
 def test_Unit():
-    assert str(second) == "s"
-    assert str(joule) == "kg*m**2/s**2" # issue 2461
+    assert str(s) == "s"
 
 def test_wild_str():
     # Check expressions containing Wild not causing infinite recursion
