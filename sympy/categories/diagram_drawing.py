@@ -496,6 +496,75 @@ class DiagramGrid:
         return [tri for tri in triangles if not placed_objects.subset(
             DiagramGrid._triangle_objects(tri))]
 
+    @staticmethod
+    def _grow_pseudopod(triangles, fringe, grid, skeleton, placed_objects):
+        """
+        Starting from an object in the existing structure on the grid,
+        adds an edge to which a triangle from ``triangles`` could be
+        welded.  If this method has found a way to do so, it returns
+        the object it has just added.
+
+        This method should be applied when ``_weld_triangle`` cannot
+        find weldings any more.
+        """
+        for i in xrange(grid.height):
+            for j in xrange(grid.width):
+                obj = grid[i, j]
+                if not obj:
+                    continue
+
+                # Here we need to choose a triangle which has only
+                # ``obj`` in common with the existing structure.  The
+                # situations when this is not possible should be
+                # handled elsewhere.
+
+                def good_triangle(tri):
+                    objs = DiagramGrid._triangle_objects(tri)
+                    return objs.contains(obj) and \
+                           placed_objects & (objs - FiniteSet(obj)) == FiniteSet()
+
+                tris = [tri for tri in triangles if good_triangle(tri)]
+                if not tris:
+                    # This object is not interesting.
+                    continue
+
+                # We have found a triangle which could be attached to
+                # the existing structure by a vertex.
+
+                candidates = sorted([e for e in tri if skeleton[e]],
+                                    key=default_sort_key)
+                edges = [e for e in candidates if obj in e]
+                if not edges:
+                    # No meaningful edge could be drawn from this
+                    # object, so we are not interested.
+                    continue
+
+                # Get the object at the other end of the edge.
+                edge = edges[0]
+                other_obj = edge[0]
+                if other_obj == obj:
+                    other_obj = edge[1]
+
+                # Now check for free directions.  When checking for
+                # free directions, prefer the horizontal and vertical
+                # directions.
+                neighbours = [(i-1, j), (i, j+1), (i+1, j), (i, j-1)] + \
+                             [(i-1,j-1), (i-1, j+1), (i+1,j-1), (i+1, j+1)]
+
+                for pt in neighbours:
+                    if DiagramGrid._empty_point(pt, grid):
+                        # We have a found a place to grow the
+                        # pseudopod into.
+                        offset = DiagramGrid._put_object(
+                            pt, other_obj, grid, fringe)
+
+                        i += offset[0]
+                        j += offset[1]
+                        pt = (pt[0] + offset[0], pt[1] + offset[1])
+                        fringe.append(((i, j), pt))
+
+                        return other_obj
+
     def __init__(self, diagram):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
         conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
@@ -527,8 +596,18 @@ class DiagramGrid:
             triangle = DiagramGrid._weld_triangle(
                 triangles, fringe, grid, skeleton)
 
-            placed_objects = placed_objects | \
-                             DiagramGrid._triangle_objects(triangle)
+            if not triangle:
+                # No more weldings found.  Try to attach triangles by
+                # vertices.
+                new_obj = DiagramGrid._grow_pseudopod(
+                    triangles, fringe, grid, skeleton, placed_objects)
+
+                placed_objects = placed_objects | FiniteSet(new_obj)
+
+                # Now, hopefully, a new welding will be found.
+            else:
+                placed_objects = placed_objects | \
+                                 DiagramGrid._triangle_objects(triangle)
 
             triangles = DiagramGrid._drop_irrelevant_triangles(
                 triangles, placed_objects)
