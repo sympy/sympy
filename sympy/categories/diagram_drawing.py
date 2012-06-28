@@ -367,11 +367,18 @@ class DiagramGrid:
         else:
             return None
 
+    # The possible return values of ``_weld_triangle``.
+    _WELDING_FAILURE = 1
+    _RESTART = 2
+
     @staticmethod
     def _weld_triangle(triangles, fringe, grid, skeleton):
         """
         If possible, welds a triangle to the fringe and returns the
-        welded triangle.  Otherwise returns None.
+        welded triangle.  Otherwise returns ``_WELDING_FAILURE``.  If
+        this method encounters a degenerate situation and corrects the
+        fringe such that a restart of the search is required, it
+        returns ``_RESTART``.
         """
         for tri in triangles:
             welding_edge = DiagramGrid._find_triangle_welding(
@@ -401,7 +408,7 @@ class DiagramGrid:
                         # on the actual fringe.  Correct the
                         # fringe and go on.
                         fringe.remove((a, b))
-                        break
+                        return DiagramGrid._RESTART
             elif a[0] == b[0]:
                 # A horizontal edge.  Suppose a triangle can be
                 # built in the downward direction.
@@ -424,7 +431,7 @@ class DiagramGrid:
                         # This edge is not in the fringe, remove it
                         # and restart.
                         fringe.remove((a, b))
-                        break
+                        return DiagramGrid._RESTART
 
             elif a[1] == b[1]:
                 # A vertical edge.  Suppose a triangle can be built to
@@ -447,7 +454,7 @@ class DiagramGrid:
                         # This edge is not in the fringe, remove it
                         # and restart.
                         fringe.remove((a, b))
-                        break
+                        return DiagramGrid._RESTART
 
             # We now know where to place the other vertex of the
             # triangle.
@@ -466,7 +473,7 @@ class DiagramGrid:
 
             return tri
 
-        return None
+        return DiagramGrid._WELDING_FAILURE
 
     @staticmethod
     def _triangle_key(tri, triangle_sizes):
@@ -596,7 +603,12 @@ class DiagramGrid:
             triangle = DiagramGrid._weld_triangle(
                 triangles, fringe, grid, skeleton)
 
-            if not triangle:
+            if triangle == DiagramGrid._RESTART:
+                # ``_weld_triangle`` wants to have the search for
+                # welding restarted.
+                continue
+
+            if triangle == DiagramGrid._WELDING_FAILURE:
                 # No more weldings found.  Try to attach triangles by
                 # vertices.
                 new_obj = DiagramGrid._grow_pseudopod(
