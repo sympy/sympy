@@ -175,9 +175,15 @@ class Density(HermitianOperator):
     def _eval_trace(self, **kwargs):
         return Tr(self.doit()).doit()
 
+    def entropy(self):
+        """ Compute the entropy of a density matrix.
+
+        Refer to density.entropy() method  for examples.
+        """
+        return entropy(self)
 
 def entropy(density):
-    """Compute the entropy of a density matrix.
+    """Compute the entropy of a matrix/density object.
 
     This computes -Tr(density*ln(density)) using the eigenvalue decomposition
     of density, which is given as either a Density instance or a matrix

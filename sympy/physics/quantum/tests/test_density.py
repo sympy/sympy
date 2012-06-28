@@ -99,6 +99,7 @@ def test_entropy():
     # test for density object
     ent = entropy(d)
     assert entropy(d) == 0.5*log(2)
+    assert d.entropy() == 0.5*log(2)
 
     np = import_module('numpy', min_python_version=(2, 6))
     if np:
@@ -115,6 +116,9 @@ def test_entropy():
         assert isinstance(mat, scipy_sparse_matrix) and ent.real == \
                       0.69314718055994529 and ent.imag == 0
 
+
+
+
 def test_eval_trace():
     up = JzKet(S(1)/2,S(1)/2)
     down = JzKet(S(1)/2,-S(1)/2)
@@ -124,3 +128,5 @@ def test_eval_trace():
     assert t.doit() == 1
 
     #TODO: partial trace
+
+
