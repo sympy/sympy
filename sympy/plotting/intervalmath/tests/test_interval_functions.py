@@ -1,33 +1,6 @@
 from sympy.plotting.intervalmath import *
 
 
-def test_functions():
-    try:
-        import numpy as np
-    except ImportError:
-        return
-    else:
-        sin_test()
-        exp_test()
-        log_test()
-        atan_test()
-        cos_test()
-        tan_test()
-        sqrt_test()
-        imin_test()
-        imax_test()
-        cosh_test()
-        sinh_test()
-        tanh_test()
-        asin_test()
-        acos_test()
-        floor_test()
-        ceil_test()
-        acos_test()
-        asin_test()
-        atanh_test()
-
-
 def exp_test():
     import numpy as np
     a = exp(interval(-np.inf, 0))
@@ -288,3 +261,30 @@ def atanh_test():
 
     a = atanh(interval(-3, -2))
     assert a.is_valid is False
+
+
+def test_functions():
+    try:
+        import numpy as np
+    except ImportError:
+        return
+    else:
+        sin_test()
+        exp_test()
+        log_test()
+        atan_test()
+        cos_test()
+        tan_test()
+        sqrt_test()
+        imin_test()
+        imax_test()
+        cosh_test()
+        sinh_test()
+        tanh_test()
+        asin_test()
+        acos_test()
+        floor_test()
+        ceil_test()
+        acos_test()
+        asin_test()
+        atanh_test()
