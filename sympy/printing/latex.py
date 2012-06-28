@@ -1228,6 +1228,39 @@ class LatexPrinter(Printer):
 
         return latex_result
 
+    def _print_FreeModule(self, M):
+        return '{%s}^{%s}' % (self._print(M.ring), self._print(M.rank))
+
+    def _print_FreeModuleElement(self, m):
+        # Print as row vector for convenience, for now.
+        return r"\left[ %s \right]" % ",".join(
+                '{' + self._print(x) + '}' for x in m)
+
+    def _print_SubModule(self, m):
+        return r"\left< %s \right>" % ",".join(
+                '{' + self._print(x) + '}' for x in m.gens)
+
+    def _print_ModuleImplementedIdeal(self, m):
+        return r"\left< %s \right>" % ",".join(
+                '{' + self._print(x) + '}' for [x] in m._module.gens)
+
+    def _print_QuotientRing(self, R):
+        # TODO nicer fractions for few generators...
+        return r"\frac{%s}{%s}" % (self._print(R.ring), self._print(R.base_ideal))
+
+    def _print_QuotientRingElement(self, x):
+        return r"{%s} + {%s}" % (self._print(x.data), self._print(x.ring.base_ideal))
+
+    def _print_QuotientModuleElement(self, m):
+        return r"{%s} + {%s}" % (self._print(m.data),
+                                 self._print(m.module.killed_module))
+
+    def _print_QuotientModule(self, M):
+        # TODO nicer fractions for few generators...
+        return r"\frac{%s}{%s}" % (self._print(M.base),
+                                   self._print(M.killed_module))
+
+
 def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.

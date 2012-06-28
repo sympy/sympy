@@ -612,3 +612,28 @@ def test_categories():
            " & f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix}" \
            "\\Longrightarrow \\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
            "\\rightarrow A_{3} : \\left\\{unique\\right\\}\\end{Bmatrix}"
+
+def test_Modules():
+    from sympy.polys.domains import QQ
+    R = QQ[x, y]
+    F = R.free_module(2)
+    M = F.submodule([x, y], [1, x**2])
+
+    assert latex(F) == r"{\mathbb{Q}\left[x, y\right]}^{2}"
+    assert latex(M) == \
+        r"\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>"
+
+    I = R.ideal(x**2, y)
+    assert latex(I) == r"\left< {x^{2}},{y} \right>"
+
+    Q = F / M
+    assert latex(Q) == r"\frac{{\mathbb{Q}\left[x, y\right]}^{2}}{\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}"
+    assert latex(Q.submodule([1, x**3/2], [2, y])) == \
+        r"\left< {{\left[ {1},{\frac{1}{2} x^{3}} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}},{{\left[ {2},{y} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}} \right>"
+
+def test_QuotientRing():
+    from sympy.polys.domains import QQ
+    R = QQ[x]/[x**2 + 1]
+
+    assert latex(R) == r"\frac{\mathbb{Q}\left[x\right]}{\left< {x^{2} + 1} \right>}"
+    assert latex(R.one) == r"{1} + {\left< {x^{2} + 1} \right>}"
