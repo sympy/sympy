@@ -35,6 +35,8 @@ def test_globalring():
     assert R.from_FractionField(Qxy.convert(x), Qxy) == X
     assert R.from_FractionField(Qxy.convert(x)/y, Qxy) is None
 
+    assert R._sdm_to_vector(R._vector_to_sdm([X, Y], R.order), 2) == [X, Y]
+
 def test_localring():
     Qxy = QQ.frac_field(x, y)
     R   = QQ.poly_ring(x, y, order="ilex")
@@ -59,6 +61,10 @@ def test_localring():
     assert R.from_FractionField(Qxy.convert(x), Qxy) == X
     raises(CoercionFailed, lambda: R.from_FractionField(Qxy.convert(x)/y, Qxy))
 
+    assert R._sdm_to_vector(R._vector_to_sdm([X/(X + 1), Y/(1 + X*Y)], R.order),
+                                             2) == \
+        [X*(1 + X*Y), Y*(1 + X)]
+
 def test_conversion():
     L = QQ.poly_ring(x, y, order="ilex")
     G = QQ[x, y]
@@ -66,3 +72,22 @@ def test_conversion():
     assert L.convert(x) == L.convert(G.convert(x), G)
     assert G.convert(x) == G.convert(L.convert(x), L)
     raises(CoercionFailed, lambda: G.convert(L.convert(1/(1+x)), L))
+
+def test_units():
+    R = QQ[x]
+    assert R.is_unit(R.convert(1))
+    assert R.is_unit(R.convert(2))
+    assert not R.is_unit(R.convert(x))
+    assert not R.is_unit(R.convert(1 + x))
+
+    R = QQ.poly_ring(x, order='ilex')
+    assert R.is_unit(R.convert(1))
+    assert R.is_unit(R.convert(2))
+    assert not R.is_unit(R.convert(x))
+    assert R.is_unit(R.convert(1 + x))
+
+    R = ZZ[x]
+    assert R.is_unit(R.convert(1))
+    assert not R.is_unit(R.convert(2))
+    assert not R.is_unit(R.convert(x))
+    assert not R.is_unit(R.convert(1 + x))

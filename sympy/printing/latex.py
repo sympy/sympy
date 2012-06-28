@@ -1228,6 +1228,23 @@ class LatexPrinter(Printer):
 
         return latex_result
 
+    def _print_FreeModule(self, M):
+        return '{%s}^{%s}' % (self._print(M.ring), self._print(M.rank))
+
+    def _print_FreeModuleElement(self, m):
+        # Print as row vector for convenience, for now.
+        return r"\left[ %s \right]" % ",".join(
+                '{' + self._print(x) + '}' for x in m)
+
+    def _print_SubModule(self, m):
+        return r"\left< %s \right>" % ",".join(
+                '{' + self._print(x) + '}' for x in m.gens)
+
+    def _print_ModuleImplementedIdeal(self, m):
+        return r"\left< %s \right>" % ",".join(
+                '{' + self._print(x) + '}' for [x] in m._module.gens)
+
+
 def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.

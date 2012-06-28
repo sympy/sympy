@@ -47,6 +47,13 @@ class Ring(Domain):
         else:
             raise NotReversible('only unity is reversible in a ring')
 
+    def is_unit(self, a):
+        try:
+            self.revert(a)
+            return True
+        except NotReversible:
+            return False
+
     def numer(self, a):
         """Returns numerator of ``a``. """
         return a
@@ -54,3 +61,11 @@ class Ring(Domain):
     def denom(self, a):
         """Returns denominator of `a`. """
         return self.one
+
+    def free_module(self, rank):
+        """Generate a free module of rank ``rank`` over self."""
+        raise NotImplementedError
+
+    def ideal(self, *gens, **opts):
+        """Generate an ideal of self."""
+        raise NotImplementedError

@@ -1507,6 +1507,19 @@ class PrettyPrinter(Printer):
 
         return prettyForm(pretty_result[0])
 
+    def _print_FreeModuleElement(self, m):
+        # Print as row vector for convenience, for now.
+        return self._print_seq(m, '[', ']')
+
+    def _print_SubModule(self, M):
+        return self._print_seq(M.gens, '<', '>')
+
+    def _print_FreeModule(self, M):
+        return self._print(M.ring)**self._print(M.rank)
+
+    def _print_ModuleImplementedIdeal(self, M):
+        return self._print_seq([x for [x] in M._module.gens], '<', '>')
+
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 
