@@ -234,3 +234,15 @@ def test_DiagramGrid():
     assert grid[2, 1] == A3
     assert grid[2, 2] == A4
     assert grid[2, 3] == A8
+
+    # A pullback.
+    m1 = NamedMorphism(A, B, "m1")
+    m2 = NamedMorphism(A, C, "m2")
+    s1 = NamedMorphism(B, D, "s1")
+    s2 = NamedMorphism(C, D, "s2")
+    f1 = NamedMorphism(E, B, "f1")
+    f2 = NamedMorphism(E, C, "f2")
+    g = NamedMorphism(E, A, "g")
+
+    d = Diagram([m1, m2, s1, s2, f1, f2], {g: "unique"})
+    grid = DiagramGrid(d)
