@@ -102,14 +102,14 @@ def interval_mul_test():
     assert (interval(1, 3) * 2 == interval(2, 6)) == (True, True)
     assert (3 * interval(-1, 2) == interval(-3, 6)) == (True, True)
 
-    a = 3 * interval(1, 2, is_valid=False) == interval(3, 6)
-    assert a == (True, False)
+    a = 3 * interval(1, 2, is_valid=False)
+    assert a.is_valid is False
 
-    a = 3 * interval(1, 2, is_valid=None) == interval(3, 6)
-    assert a == (True, None)
+    a = 3 * interval(1, 2, is_valid=None)
+    assert a.is_valid is None
 
-    assert (interval(1, 5, is_valid=False) * interval(1, 2, is_valid=None)\
-            == interval(1, 10)) == (True, False)
+    a = interval(1, 5, is_valid=False) * interval(1, 2, is_valid=None)
+    assert a.is_valid is False
 
 
 def interval_div_test():

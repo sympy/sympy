@@ -1,3 +1,4 @@
+from __future__ import division
 """
 Interval Arithmetic for plotting.
 This does not implement interval arithmetic accurately and
@@ -283,115 +284,22 @@ class interval(object):
             return interval(-self.end, -self.start, is_valid=False)
 
     def __mul__(self, other):
-        if isinstance(other, (interval, int, float)):
-            other = interval(other)
-            valid = True
+        if isinstance(other, interval):
             if self.is_valid is False or other.is_valid is False:
-                valid = False
+                return interval(-np.inf, np.inf, is_valid=False)
             elif self.is_valid is None or other.is_valid is None:
-                valid = None
-
-            if self in interval(0):
-                #handle 0 * inf cases
-                if not np.isfinite(other.start) or not np.isfinite(other.end):
-                    return interval(-np.inf, np.inf, is_valid=valid)
-
-            if other in interval(0):
-                #handle 0 * inf cases
-                if not np.isfinite(self.start) or not np.isfinite(self.end):
-                    return interval(-np.inf, np.inf, is_valid=valid)
-
-            if self.start >= 0:
-                #positive * positive
-                if other.start >= 0:
-                    start = self.start * other.start
-                    end = self.end * other.end
-                    if np.isnan(start):
-                        start = 0
-                    if np.isnan(end):
-                        end = np.inf
-                    return interval(start, end, is_valid=valid)
-
-                #positive * negative
-                elif other.end <= 0:
-                    start = self.end * other.start
-                    end = self.start * other.end
-                    if np.isnan(start):
-                        start = -np.inf
-                    if np.isnan(end):
-                        end = 0
-                    return interval(start, end, is_valid=valid)
-
-                #positive * both signs
-                else:
-                    start = self.end * other.start
-                    end = self.end * other.end
-                    if np.isnan(start):
-                        start = -np.inf
-                    if np.isnan(end):
-                        end = np.inf
-                    return interval(start, end, is_valid=valid)
-            elif self.end <= 0:
-                # negative * positive
-                if other.start >= 0:
-                    start = self.start * other.end
-                    end = self.end * other.start
-                    if np.isnan(start):
-                        start = -np.inf
-                    if np.isnan(end):
-                        end = 0
-                    return interval(start, end, is_valid=valid)
-                #negative * negative
-                elif other.end <= 0:
-                    start = self.end * other.end
-                    end = self.start * other.start
-                    if np.isnan(start):
-                        start = 0
-                    if np.isnan(end):
-                        end = np.inf
-                    return interval(start, end, is_valid=valid)
-                #negative * both sign
-                else:
-                    start = self.start * other.end
-                    end = self.start * other.start
-                    if np.isnan(start):
-                        start = -np.inf
-                    if np.isnan(end):
-                        end = np.inf
-                    return interval(start, end, is_valid=valid)
+                return interval(-np.inf, np.inf, is_valid=None)
             else:
-                #both signs * positive
-                if other.start >= 0:
-                    start = self.start * other.end
-                    end = self.end * other.end
-                    if np.isnan(start):
-                        start = -np.inf
-                    if np.isnan(end):
-                        end = np.inf
-                    return interval(start, end, is_valid=valid)
-                #both signs * negative
-                elif other.end <= 0:
-                    start = self.end * other.start
-                    end = self.start * other.start
-                    if np.isnan(start):
-                        start = -np.inf
-                    if np.isnan(end):
-                        end = np.inf
-                    return interval(start, end, is_valid=valid)
-                #both signs * both signs
-                else:
-                    inters = []
-                    inters.append(self.start * other.start)
-                    inters.append(self.end * other.start)
-                    inters.append(self.start * other.end)
-                    inters.append(self.end * other.end)
-                    if any(np.isnan(inter) for inter in inters):
-                        start = -np.inf
-                        end = np.inf
-                    else:
-                        start = max(inters)
-                        end = min(inters)
-                    return interval(start, end, is_valid=valid)
+                inters = []
+                inters.append(self.start * other.start)
+                inters.append(self.end * other.start)
+                inters.append(self.start * other.end)
+                inters.append(self.end * other.end)
+                start = max(inters)
+                end = min(inters)
+                return interval(start, end)
+        elif isinstance(other, (int, float)):
+            return interval(self.start*other, self.end*other, is_valid=self.is_valid)
         else:
             return NotImplemented
 
@@ -467,24 +375,62 @@ class interval(object):
 
     def __pow__(self, other):
         #Implements only power to an integer.
+        from .lib_interval import exp, log
         if not self.is_valid:
             return self
         if isinstance(other, interval):
-            return NotImplemented
+            return exp(other * log(self))
         elif isinstance(other, (float, int)):
-            if other == int(other):
-                if other < 0:
-                    return interval(1, 1) / self.__pow__(-other)
-                else:
-                    if other & 1:
-                        return interval(self.start**other, self.end**other)
-                    else:
-                        #both non - positive
-                        if self.end <= 0:
-                            return interval(self.end**other, self.start**other)
-                        elif self.start >= 0:
-                            return interval(self.start**other, self.end**other)
-                        else:
-                            return interval(0, max(self.start**other, self.end**other))
+            if other < 0:
+                return 1 / self.__pow__(abs(other))
             else:
-                return NotImplemented
+                if int(other)==other:
+                    return _pow_int(self, other)
+                else:
+                    return _pow_float(self, other)
+        else:
+            return NotImplemented
+
+def _pow_float(inter, power):
+    from sympy.simplify.simplify import nsimplify
+    power_rational = nsimplify(power)
+    num, denom = power_rational.as_numer_denom()
+    if num % 2 == 0:
+        start = abs(inter.start)**power
+        end = abs(inter.end)**power
+        if start < 0:
+            ret = interval(0, max(start, end))
+        else:
+            ret = interval(start, end)
+        return ret
+    elif denom % 2 == 0:
+        if inter.end < 0:
+            return interval(-np.inf, np.inf, is_valid=False)
+        elif inter.start < 0:
+            return interval(0, inter.end**power, is_valid=None)
+        else:
+            return interval(inter.start**power, inter.end**power)
+    else:
+        if inter.start < 0:
+            start = -abs(inter.start)**power
+        else:
+            start = inter.start**power
+
+        if inter.end < 0:
+            end = -abs(inter.end)**power
+        else:
+            end = inter.end**power
+
+        return interval(start, end, is_valid=inter.is_valid)
+
+def _pow_int(inter, power):
+    power = int(power)
+    if power & 1:
+        return interval(inter.start**power, inter.end**power)
+    else:
+        if inter.start < 0 and inter.end > 0:
+            start = 0
+            end = max(inter.start**power, inter.end**power)
+            return interval(start, end)
+        else:
+            return interval(inter.start**power, inter.end**power)
