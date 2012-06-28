@@ -612,3 +612,13 @@ def test_categories():
            " & f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix}" \
            "\\Longrightarrow \\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
            "\\rightarrow A_{3} : \\left\\{unique\\right\\}\\end{Bmatrix}"
+
+def test_Modules():
+    from sympy.polys.domains import QQ
+    R = QQ[x, y]
+    F = R.free_module(2)
+    M = F.submodule([x, y], [1, x**2])
+
+    assert latex(F) == r"{\mathbb{Q}\left[x, y\right]}^{2}"
+    assert latex(M) == \
+        r"\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>"

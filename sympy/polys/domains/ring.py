@@ -54,3 +54,7 @@ class Ring(Domain):
     def denom(self, a):
         """Returns denominator of `a`. """
         return self.one
+
+    def free_module(self, rank):
+        """Generate a free module of rank ``rank`` over self."""
+        raise NotImplementedError
