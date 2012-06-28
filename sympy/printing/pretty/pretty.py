@@ -1507,6 +1507,38 @@ class PrettyPrinter(Printer):
 
         return prettyForm(pretty_result[0])
 
+    def _print_FreeModuleElement(self, m):
+        # Print as row vector for convenience, for now.
+        return self._print_seq(m, '[', ']')
+
+    def _print_SubModule(self, M):
+        return self._print_seq(M.gens, '<', '>')
+
+    def _print_FreeModule(self, M):
+        return self._print(M.ring)**self._print(M.rank)
+
+    def _print_ModuleImplementedIdeal(self, M):
+        return self._print_seq([x for [x] in M._module.gens], '<', '>')
+
+    def _print_QuotientRing(self, R):
+        return self._print(R.ring) / self._print(R.base_ideal)
+
+    def _print_QuotientRingElement(self, R):
+        return self._print(R.data) + self._print(R.ring.base_ideal)
+
+    def _print_QuotientModuleElement(self, m):
+        return self._print(m.data) + self._print(m.module.killed_module)
+
+    def _print_QuotientModule(self, M):
+        return self._print(M.base) / self._print(M.killed_module)
+
+    def _print_MatrixHomomorphism(self, h):
+        matrix = self._print(h._sympy_matrix())
+        matrix.baseline = matrix.height() // 2
+        pform = prettyForm(*matrix.right(' : ', self._print(h.domain),
+            ' %s> ' % hobj('-', 2), self._print(h.codomain)))
+        return pform
+
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 
