@@ -3672,6 +3672,10 @@ def test_RandomDomain():
     B = Exponential('b', 1)
     assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ a ∧ 0 ≤ b'
 
+def test_issue_3186():
+    assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
+    assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
+
 def test_PrettyPoly():
     F = QQ.frac_field(x, y)
     R = QQ[x, y]
@@ -3742,3 +3746,91 @@ def test_categories():
     assert upretty(d) == u"{f₂∘f₁:A₁⟶  A₃: ∅, id:A₁⟶  A₁: ∅, id:A₂⟶  A₂: " \
            u"∅, id:A₃⟶  A₃: ∅, f₁:A₁⟶  A₂: {unique}, f₂:A₂⟶  A₃: ∅}" \
            u" ⟹  {f₂∘f₁:A₁⟶  A₃: {unique}}"
+
+def test_PrettyModules():
+    R = QQ[x, y]
+    F = R.free_module(2)
+    M = F.submodule([x, y], [1, x**2])
+
+    ucode_str = \
+u"""\
+       2\n\
+ℚ[x, y] \
+"""
+    ascii_str = \
+"""\
+        2\n\
+QQ[x, y] \
+"""
+
+    assert upretty(F) == ucode_str
+    assert  pretty(F) == ascii_str
+
+    ucode_str = \
+u"""\
+╱        ⎡    2⎤╲\n\
+╲[x, y], ⎣1, x ⎦╱\
+"""
+    ascii_str = \
+"""\
+              2  \n\
+<[x, y], [1, x ]>\
+"""
+
+    assert upretty(M) == ucode_str
+    assert  pretty(M) == ascii_str
+
+    I = R.ideal(x**2, y)
+
+    ucode_str = \
+u"""\
+╱ 2   ╲\n\
+╲x , y╱\
+"""
+
+    ascii_str = \
+"""\
+  2    \n\
+<x , y>\
+"""
+
+
+    assert upretty(I) == ucode_str
+    assert  pretty(I) == ascii_str
+
+def test_QuotientRing():
+    R = QQ[x]/[x**2 + 1]
+
+    ucode_str = \
+u"""\
+  ℚ[x]  \n\
+────────\n\
+╱ 2    ╲\n\
+╲x  + 1╱\
+"""
+
+    ascii_str = \
+"""\
+ QQ[x]  \n\
+--------\n\
+  2     \n\
+<x  + 1>\
+"""
+
+    assert upretty(R) == ucode_str
+    assert  pretty(R) == ascii_str
+
+    ucode_str = \
+u"""\
+    ╱ 2    ╲\n\
+1 + ╲x  + 1╱\
+"""
+
+    ascii_str = \
+"""\
+      2     \n\
+1 + <x  + 1>\
+"""
+
+    assert upretty(R.one) == ucode_str
+    assert  pretty(R.one) == ascii_str
