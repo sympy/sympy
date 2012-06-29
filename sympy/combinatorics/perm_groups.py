@@ -2,7 +2,7 @@ from sympy.combinatorics import Permutation
 from sympy.core import Basic
 from sympy.combinatorics.permutations import perm_af_mul, \
  _new_from_array_form, perm_af_commutes_with, perm_af_invert, perm_af_muln
-from random import randint, randrange, choice
+from random import randrange, choice
 from sympy.functions.combinatorial.factorials import factorial
 from math import log
 from sympy.ntheory import isprime, sieve
@@ -780,7 +780,7 @@ class PermutationGroup(Basic):
         return a random group element
 
         """
-        rank = randrange(0, self.order())
+        rank = randrange(self.order())
         return self.coset_unrank(rank, af)
 
     def has_element(self, g):
