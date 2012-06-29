@@ -580,6 +580,20 @@ class DiagramGrid:
 
         skeleton = DiagramGrid._build_skeleton(merged_morphisms)
 
+        all_objects = diagram.objects
+        grid = _GrowableGrid(2, 1)
+
+        if len(skeleton) == 1:
+            # This diagram contains only one morphism.  Draw it
+            # horizontally.
+            objects = sorted(all_objects, key=default_sort_key)
+            grid[0, 0] = objects[0]
+            grid[0, 1] = objects[1]
+
+            self._grid = grid
+
+            return
+
         triangles = DiagramGrid._list_triangles(skeleton)
         triangles = DiagramGrid._drop_redundant_triangles(triangles, skeleton)
         triangle_sizes = DiagramGrid._compute_triangle_min_sizes(
@@ -587,9 +601,6 @@ class DiagramGrid:
 
         triangles = sorted(triangles, key=lambda tri:
                            DiagramGrid._triangle_key(tri, triangle_sizes))
-        all_objects = diagram.objects
-
-        grid = _GrowableGrid(2, 1)
 
         # Place the first edge on the grid.
         root_edge = DiagramGrid._pick_root_edge(triangles[0], skeleton)

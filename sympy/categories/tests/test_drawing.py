@@ -81,6 +81,15 @@ def test_DiagramGrid():
     h = NamedMorphism(D, A, "h")
     k = NamedMorphism(D, B, "k")
 
+    # A one-morphism diagram.
+    d = Diagram([f])
+    grid = DiagramGrid(d)
+
+    assert grid.width == 2
+    assert grid.height == 1
+    assert grid[0, 0] == A
+    assert grid[0, 1] == B
+
     # A triangle.
     d = Diagram([f, g], {g * f:"unique"})
     grid = DiagramGrid(d)
