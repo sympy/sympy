@@ -3299,108 +3299,113 @@ class PermutationGroup(Basic):
 
 PermGroup = PermutationGroup
 
+
 def orbit(genv, alpha):
-    """
-    compute the orbit {g[i] for g in G}
+    r"""
+    Compute the orbit of alpha `\{g(\alpha) | g \in G\}` as a set.
 
-    It returns the orbit as a set.
+    genv   generators of the Group G in array form
+    alpha  starting point of the orbit
+
+    The time complexity of the algorithm used here is `O(|Orb|*r)` where
+    `|Orb|` is the size of the orbit and `r` is the number of generators
+    of the group. For a proof of correctness, see [1], p.78.
 
     Examples
     ========
 
-    >>> from sympy.combinatorics.perm_groups import PermutationGroup
+    >>> from sympy.combinatorics.perm_groups import PermutationGroup, orbit
     >>> from sympy.combinatorics.permutations import Permutation
-    >>> a = Permutation([2, 0, 1])
-    >>> b = Permutation([2, 1, 0])
-    >>> g = PermutationGroup([a, b])
-    >>> g.orbit(0)
+    >>> genv = [[1,2,0,4,5,6,3]]
+    >>> orbit(genv, 0)
     set([0, 1, 2])
-    >>> g.orbits()
-    [set([0, 1, 2])]
-    >>> g.orbits(rep=True)
-    [0]
+    >>> orbit(genv, 4)
+    set([3, 4, 5, 6])
+
+    See Also
+    ========
+
+    orbit_transversal
+
+    References
+    ==========
+
+    [1] Holt, D., Eick, B., O'Brien, E.
+    "Handbook of computational group theory"
+
     """
     n = len(genv[0])
-    orb = set([alpha])
-    h = 0
-    r = len(genv)
-    stg = [range(n)]
-    sta = [alpha]
-    pos = [0]*n
-    while 1:
-        # backtrack when finished iterating over generators
-        if pos[h] >= r:
-            if h == 0:
-                return orb
-            pos[h] = 0
-            h -= 1
-            sta.pop()
-            stg.pop()
-            continue
-        g = genv[pos[h]]
-        pos[h] += 1
-        alpha = sta[-1]
-        ag = g[alpha]
+    orb = [alpha]
+    used = [False]*n
+    used[alpha] = True
+    for b in orb:
+        for gen in genv:
+            temp = gen[b]
+            if used[temp] == False:
+                orb.append(temp)
+                used[temp] = True
+    return set(orb)
 
-        if ag not in orb:
-            gen1 = perm_af_mul(g, stg[-1])
-            orb.add(ag)
-            sta.append(ag)
-            stg.append(gen1)
-            h += 1
+def orbit_transversal(genv, alpha, pairs=False, af=False):
+    r"""
+    Computes a transversal for the orbit of ``alpha`` as a set.
 
-def orbit_transversal(genv, alpha, af=False):
-    """
-    compute the orbit traversal
+    genv   generators of the Group G
+    alpha  starting point of the orbit
+    pairs  = True return the list of pairs
+           `(\beta, g_\beta)`. For a proof of correctness, see [1], p.79
+    af     = True genv and the transversal elements are in array form
 
-    Output: list of group elements; applying each to alpha
-    one gets the orbit of alpha
+    For a permutation group `G`, a transversal for the orbit
+    `Orb = \{g(\alpha) | g \in G\}` is a set
+    `\{g_\beta | g_\beta(\alpha) = \beta\}` for `\beta \in Orb`.
+    Note that there may be more than one possible transversal.
 
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import Permutation
-    >>> from sympy.combinatorics.perm_groups import PermutationGroup, orbit_transversal
-    >>> a = Permutation([0, 2, 1])
-    >>> b = Permutation([1, 0, 2])
-    >>> G = PermutationGroup([a, b])
-    >>> orbit_transversal([p.array_form for p in G.generators], 1, af=True)
-    [[1, 0, 2], [0, 1, 2], [0, 2, 1]]
-    """
-    #print 'DB0 traversal genv=%s alpha=%s' %(genv, alpha)
-    n = len(genv[0])
-    coset_repr = [None]*n
-    if af:
-        coset_repr[alpha] = range(n)
-    else:
-        coset_repr[alpha] = Permutation(range(n))
-    h = 0
-    r = len(genv)
-    stg = [range(n)]
-    sta = [alpha]
-    pos = [0]*n
-    while 1:
-        # backtrack when finished iterating over generators
-        if pos[h] >= r:
-            if h == 0:
-                #print 'DB10 traversal', [p for p in coset_repr if p]
-                return [p for p in coset_repr if p]
-            pos[h] = 0
-            h -= 1
-            sta.pop()
-            stg.pop()
-            continue
-        g = genv[pos[h]]
-        pos[h] += 1
-        alpha = sta[-1]
-        ag = g[alpha]
+    >>> from sympy.combinatorics.perm_groups import (PermutationGroup,
+    ... DihedralGroup, orbit_transversal)
+    >>> G = DihedralGroup(6)
+    >>> orbit_transversal(G.generators, 0)
+    [Permutation([0, 1, 2, 3, 4, 5]), Permutation([1, 2, 3, 4, 5, 0]),
+    Permutation([5, 4, 3, 2, 1, 0]), Permutation([2, 3, 4, 5, 0, 1]),
+    Permutation([4, 3, 2, 1, 0, 5]), Permutation([3, 4, 5, 0, 1, 2])]
 
-        if coset_repr[ag] == None:
-            gen1 = perm_af_mul(g, stg[-1])
-            if af:
-                coset_repr[ag] = gen1
-            else:
-                coset_repr[ag] = Permutation(gen1)
-            sta.append(ag)
-            stg.append(gen1)
-            h += 1
+    See Also
+    ========
+
+    orbit
+
+    References
+    ==========
+
+    [1] Holt, D., Eick, B., O'Brien, E.
+    "Handbook of computational group theory"
+
+    """
+    if af:
+        n = len(genv[0])
+    else:
+        n = genv[0].size
+    tr = [(alpha, range(n))]
+    used = [False]*n
+    used[alpha] = True
+    if not af:
+        genv = [h.array_form for h in genv]
+    for pair in tr:
+        for gen in genv:
+            temp = gen[pair[0]]
+            if used[temp] == False:
+                tr.append((temp, perm_af_mul(gen, pair[1])))
+                used[temp] = True
+    if pairs:
+        if af:
+            return tr
+        else:
+            tr = [(v, _new_from_array_form(h)) for v, h in tr]
+            return tr
+    if af:
+        return [pair[1] for pair in tr]
+    else:
+        return [_new_from_array_form(pair[1]) for pair in tr]

@@ -174,7 +174,7 @@ class RiemannMonomial(object):
     def canonic(self):
         g = self.indices[:]
         n = len(g)
-        g = g + [n, n+1]
+        g = g + [n+1, n] if self.sign else g + [n, n+1]
         size = n + 2
         sgens = self.sgens
         sgens = [Permutation(x) for x in sgens]
@@ -224,6 +224,11 @@ class RiemannMonomial(object):
         >>> r.canonic()
         R(d1,d2,d3,d4)*R(-d1,-d2,d5,d6)*R(-d3,-d4,-d5,-d6)
         """
+        if s[0] == '-':
+            sign = True
+            s = s[1:]
+        else:
+            sign = False
         s = s.replace('R','').replace(')','').replace('*','')[1:].replace('(',',')
         a = s.split(',')
         index_names = [x for x in a if x[0] != '-']
@@ -252,6 +257,7 @@ class RiemannMonomial(object):
         for i in range(4, len(indices), 4):
             r = r*RiemannMonomial(indices[i:i+4])
         r.set_index_names(index_names)
+        r.sign = sign
         return r
 
 
@@ -302,7 +308,10 @@ def str_perm(num_gens, p, result):
     s1 += '    int perm[%d]={' %(size)
     for x in p[:-2]:
         s1 += '%d, ' % x
-    s1 += '%d,%d};\n' %(size-1,size)
+    if p[-1] == size:
+        s1 += '%d,%d};\n' %(size-1,size)
+    else:
+        s1 += '%d,%d};\n' %(size,size-1)
     s1 +='''
     int free_indices[2];
     int cperm[%d];
@@ -395,9 +404,6 @@ def gen_xperm_code(sgens, g, ind, sgs):
     indices for the sign
     ind list of index names
     sgs = (S_cosets, b_S)
-
-    FIXME: it works only when the tensor appears with positive sign,
-    because the sign is not passed correctly to xperm
     """
     size = len(g)
     #assert g[size-1] == size-1
@@ -560,11 +566,6 @@ def riemann_products(nr, random_input, random_regular):
     sys.stderr.write('setup SGS: %.2f\n' %(t1-t0))
     d = random_dummy(n) + [n, n+1]
     g1 = perm_af_muln(d, g, s)
-    # if g1 has negative sign, change sign
-    size = len(g1)
-    if g1[-1] == size-2:
-        g1[-2] = size-2
-        g1[-1] = size-1
     # print the input Riemann invariant
     sys.stderr.write('input %s\n' % str_riemann(ind, g1))
     # canonize and print to stdout the C code for testing with xperm

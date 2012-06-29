@@ -23,10 +23,12 @@ def dummy_sgs(d, sym, n):
     """
     Return the strong generators for dummy indices
 
+    d   list of dummy indices
     sym symmetry under interchange of contracted dummies
     sym = None  n symmetry
     sym = 0 symmetric
           1 antisymmetric
+    n   number of indices
 
     in base form the dummy indices are always in consecutive positions
 
