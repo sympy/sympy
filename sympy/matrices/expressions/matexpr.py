@@ -21,11 +21,13 @@ class MatrixExpr(Expr):
 
     is_Matrix = True
     is_MatrixExpr = True
+    is_MatrixSymbol = False
     is_Identity = None
     is_Inverse = False
     is_Transpose = False
     is_ZeroMatrix = False
     is_BlockMatrix = False
+    is_Derivative = False
 
     is_commutative = False
 
@@ -197,6 +199,9 @@ class MatrixExpr(Expr):
         """
         return self.as_explicit().equals(other)
 
+    def diff(self, x):
+        return self._eval_derivative(x)
+
 class MatrixSymbol(MatrixExpr, Symbol):
     """Symbolic representation of a Matrix object
 
@@ -212,6 +217,7 @@ class MatrixSymbol(MatrixExpr, Symbol):
     I + 2*A*B
     """
     is_commutative = False
+    is_MatrixSymbol = True
 
     def __new__(cls, name, n, m):
         n, m = sympify(n), sympify(m)
@@ -246,6 +252,12 @@ class MatrixSymbol(MatrixExpr, Symbol):
         # They are simpler and look much nicer
         else:
             return Symbol('%s_%s%s'%(self.name, str(i), str(j)))
+
+    def _eval_derivative(self, x):
+        if x == self:
+            return MatrixDerivative(self, evaluate=False)
+        else:
+            return ZeroMatrix(*self.shape)
 
 class Identity(MatrixSymbol):
     """The Matrix Identity I - multiplicative identity
@@ -391,3 +403,4 @@ from matadd import MatAdd
 from matpow import MatPow
 from transpose import Transpose
 from inverse import Inverse
+from derivative import MatrixDerivative

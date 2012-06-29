@@ -84,5 +84,10 @@ class MatMul(MatrixExpr, Mul):
 
         return coeff, MatMul(*matrices)
 
+    def _eval_derivative(self, x):
+        head, tail = self.args[0], self.args[1:]
+        return (MatMul(head.diff(x), *tail) +
+                MatMul(head, MatMul(*tail).diff(x)))
+
 from matadd import MatAdd
 from inverse import Inverse
