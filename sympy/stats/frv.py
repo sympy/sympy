@@ -44,7 +44,8 @@ class FiniteDomain(RandomDomain):
         return self.elements.__iter__()
 
     def as_boolean(self):
-        return Or(*[And(*[Eq(sym, val) for sym, val in item]) for item in self])
+        sorted_self = sorted([[(sym, val) for sym, val in sorted(item)] for item in self])
+        return Or(*[And(*[Eq(sym, val) for sym, val in item]) for item in sorted_self])
 
 class SingleFiniteDomain(FiniteDomain):
     """

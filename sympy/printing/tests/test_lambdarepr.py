@@ -55,8 +55,8 @@ def test_piecewise():
     )
     l = lambdarepr(p)
     eval(h + l)
-    assert l == "((x) if (x < 1) else (((x**2) if (((x <= 4) "\
-        "and (x > 3))) else (((0) if (True) else None)))))"
+    assert l == "((x) if (x < 1) else (((x**2) if (((x > 3) "\
+        "and (x <= 4))) else (((0) if (True) else None)))))"
 
     p = Piecewise(
         (x**2, x < 0),

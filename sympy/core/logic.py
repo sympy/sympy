@@ -96,7 +96,7 @@ class Logic(object):
         if not isinstance(b, type(a)):
             return False
         else:
-            return a.args == b.args
+            return set(a.args) == set(b.args)
 
     def __ne__(a, b):
         if not isinstance(b, type(a)):
@@ -178,18 +178,20 @@ class AndOr_Base(Logic):
             bargs.append(a)
 
         args = cls.flatten(bargs)
-        args = set(args)
+        seen = set()
+        args = [x for x in args
+            if not any([x == y for y in seen]) and not seen.add(x)]
 
         for a in args:
             if Not(a) in args:
                 return cls.op_x_notx
 
         if len(args) == 1:
-            return args.pop()
+            return args[0]
         elif len(args) == 0:
             return not cls.op_x_notx
 
-        return Logic.__new__(cls, *sorted(args, key=hash))
+        return Logic.__new__(cls, *args)
 
 
     @classmethod
@@ -228,9 +230,10 @@ class And(AndOr_Base):
         for i in range(len(self.args)):
             arg = self.args[i]
             if isinstance(arg, Or):
-                arest = self.args[:i] + self.args[i+1:]
+                aleft = self.args[:i]
+                aright = self.args[i+1:]
 
-                orterms = [And( *(arest + (a,)) ) for a in arg.args]
+                orterms = [And( *(aleft + (a,) + aright) ) for a in arg.args]
                 for j in range(len(orterms)):
                     if isinstance(orterms[j], Logic):
                         orterms[j] = orterms[j].expand()

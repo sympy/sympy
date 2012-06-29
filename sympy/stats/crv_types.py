@@ -1375,7 +1375,7 @@ def Triangular(name, a, b, c):
                          And(a <= _x, _x < c)),
                          (2/(-a + b), _x == c),
                          ((-2*_x + 2*b)/((-a + b)*(b - c)),
-                         And(_x <= b, c < _x)), (0, True)))
+                         And(c < _x, _x <= b)), (0, True)))
 
     References
     ==========

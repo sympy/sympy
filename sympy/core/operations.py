@@ -318,19 +318,41 @@ class LatticeOp(AssocOp):
 
     is_commutative = True
 
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        else:
+            if self.args == other.args:
+                return True
+            self_args = set(self.args)
+            other_args = set(other.args)
+            if self_args == other_args:
+                return True
+            if len(self_args) == len(other_args):
+                for arg in self_args:
+                    for arg2 in other_args:
+                        if arg == arg2:
+                            other_args.remove(arg2)
+                            break
+                if len(other_args) == 0:
+                    return True
+            return False
+
     def __new__(cls, *args, **options):
-        args = (sympify(arg) for arg in args)
+        seen = set()
+        args = (sympify(x) for x in args
+            if not any([x == y for y in seen]) and not seen.add(x))
         try:
-            _args = frozenset(cls._new_args_filter(args))
+            _args = tuple(cls._new_args_filter(args))
         except ShortCircuit:
             return cls.zero
         if not _args:
             return cls.identity
         elif len(_args) == 1:
-            return set(_args).pop()
+            return _args[0]
         else:
-            obj = Expr.__new__(cls, _args)
-            obj._argset = _args
+            obj = Expr.__new__(cls, *_args)
+            obj._argset = frozenset(_args)
             return obj
 
     @classmethod
@@ -364,13 +386,13 @@ class LatticeOp(AssocOp):
 
         """
         if isinstance(expr, cls):
-            return expr._argset
+            return expr._args
         else:
-            return frozenset([expr])
+            return tuple([expr])
 
     @property
     def args(self):
-        return tuple(self._argset)
+        return self._args
 
     @staticmethod
     def _compare_pretty(a, b):
