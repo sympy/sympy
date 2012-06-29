@@ -154,6 +154,26 @@ def test_diagram():
     assert f in d.premises
     assert g in d.premises
 
+    # Check subdiagrams.
+    d = Diagram([f, g], {g * f:"unique"})
+
+    d1 = Diagram([f])
+    assert d.is_subdiagram(d1)
+    assert not d1.is_subdiagram(d)
+
+    d = Diagram([NamedMorphism(B, A, "f'")])
+    assert not d.is_subdiagram(d1)
+    assert not d1.is_subdiagram(d)
+
+    d1 = Diagram([f, g], {g * f:["unique", "something"]})
+    assert not d.is_subdiagram(d1)
+    assert not d1.is_subdiagram(d)
+
+    d = Diagram({f:"blooh"})
+    d1 = Diagram({f:"bleeh"})
+    assert not d.is_subdiagram(d1)
+    assert not d1.is_subdiagram(d)
+
 def test_category():
     A = Object("A")
     B = Object("B")
