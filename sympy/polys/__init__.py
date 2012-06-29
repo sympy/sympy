@@ -104,3 +104,7 @@ from partfrac import (
 
 from polyoptions import Options
 import polycontext as ctx
+
+from agca import (
+    homomorphism
+)
