@@ -8,7 +8,8 @@ __all__ = ['cross',
            'mpprint',
            'mlatex',
            'kinematic_equations',
-           'inertia_of_point_mass']
+           'inertia_of_point_mass',
+           'partial_velocity']
 
 from sympy.physics.mechanics.essential import (Vector, Dyadic, ReferenceFrame,
                                                MechanicsStrPrinter,
@@ -396,3 +397,49 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         return list(edots.T - 0.5 * w.T * E.T)
     else:
         raise ValueError('Not an approved rotation type for this function')
+
+def partial_velocity(vel_list, u_ind_list):
+    """Returns a list of partial velocities.
+
+    Parameters
+    ==========
+
+    vel_list : list
+        List of velocities of Point's and angular velocities of ReferenceFrame's
+
+    u_ind_list : list
+        List of independent generalized speeds.
+
+    Example
+    =======
+
+    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> from sympy.physics.mechanics import dynamicsymbols
+    >>> from sympy.physics.mechanics import partial_velocity
+    >>> u = dynamicsymbols('u')
+    >>> N = ReferenceFrame('N')
+    >>> P = Point('P')
+    >>> P.set_vel(N, u * N.x)
+    >>> vel_list = [P.vel(N)]
+    >>> u_list = [u]
+    >>> partial_velocity(vel_list, u_list)
+    [[N.x]]
+
+    """
+    if not isinstance(vel_list, list):
+        raise TypeError('Provide velocities in a list')
+    if not isinstance(u_ind_list, list):
+        raise TypeError('Provide speeds in a list')
+    else:
+        a = vel_list[0]
+        frame = a.args[0][1]
+        list_of_pvlists = []
+        i = 0
+        while i < len(u_ind_list):
+            pvlist = []
+            for e in vel_list:
+                vel = e.diff(u_ind_list[i], frame)
+                pvlist = pvlist + [vel]
+            list_of_pvlists = list_of_pvlists + [pvlist]
+            i = i + 1
+    return list_of_pvlists
