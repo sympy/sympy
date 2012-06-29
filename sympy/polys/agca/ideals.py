@@ -291,6 +291,18 @@ class ModuleImplementedIdeal(Ideal):
             raise NotImplementedError
         return self.__class__(self.ring, self._module.union(J._module))
 
+    @property
+    def gens(self):
+        """
+        Return generators for ``self``.
+
+        >>> from sympy import QQ
+        >>> from sympy.abc import x, y
+        >>> list(QQ[x, y].ideal(x, y, x**2 + y).gens)
+        [x, y, x**2 + y]
+        """
+        return (x[0] for x in self._module.gens)
+
     def is_zero(self):
         """
         Return True if ``self`` is the zero ideal.

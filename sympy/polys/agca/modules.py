@@ -990,8 +990,11 @@ _subs1 = lambda x: x[1:]
 class ModuleOrder(ProductOrder):
     """A product monomial order with a zeroth term as module index."""
 
-    def __init__(self, o1, o2):
-        ProductOrder.__init__(self, (o1, _subs0), (o2, _subs1))
+    def __init__(self, o1, o2, TOP):
+        if TOP:
+            ProductOrder.__init__(self, (o2, _subs1), (o1, _subs0))
+        else:
+            ProductOrder.__init__(self, (o1, _subs0), (o2, _subs1))
 
 class SubModulePolyRing(SubModule):
     """
@@ -1012,12 +1015,12 @@ class SubModulePolyRing(SubModule):
 
     #self._gb - cached groebner basis
 
-    def __init__(self, gens, container, order="lex"):
+    def __init__(self, gens, container, order="lex", TOP=False):
         SubModule.__init__(self, gens, container)
         if not isinstance(container, FreeModulePolyRing):
             raise NotImplementedError('This implementation is for submodules of '
                              + 'FreeModulePolyRing, got %s' % container)
-        self.order = ModuleOrder(monomial_key(order), self.ring.order)
+        self.order = ModuleOrder(monomial_key(order), self.ring.order, TOP)
         self._gb = None
 
     def __eq__(self, other):
