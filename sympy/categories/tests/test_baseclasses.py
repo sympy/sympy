@@ -174,6 +174,11 @@ def test_diagram():
     assert not d.is_subdiagram(d1)
     assert not d1.is_subdiagram(d)
 
+    d = Diagram([f, g], {f:"unique", g*f:"veryunique"})
+    d1 = d.subdiagram_from_objects(FiniteSet(A, B))
+    assert d1 == Diagram([f], {f:"unique"})
+    raises(ValueError, lambda: d.subdiagram_from_objects(FiniteSet(A, Object("D"))))
+
 def test_category():
     A = Object("A")
     B = Object("B")
