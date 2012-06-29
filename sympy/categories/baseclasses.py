@@ -584,7 +584,8 @@ class Diagram(Basic):
             return False
 
     @staticmethod
-    def _add_morphism(morphisms, morphism, props, add_identities=True):
+    def _add_morphism(morphisms, morphism, props, add_identities=True,
+                      recurse_composites=True):
         """
         Adds a morphism and its attributes to the supplied dictionary
         ``morphisms``.  If ``add_identities`` is True, also adds the
@@ -615,12 +616,13 @@ class Diagram(Basic):
                     right = existing_morphism * morphism
                     Diagram._set_dict_union(morphisms, right, new_props)
 
-            if isinstance(morphism, CompositeMorphism):
+            if isinstance(morphism, CompositeMorphism) and recurse_composites:
                 # This is a composite morphism, add its components as
                 # well.
                 empty = EmptySet()
                 for component in morphism.components:
-                    Diagram._add_morphism(morphisms, component, empty)
+                    Diagram._add_morphism(morphisms, component, empty,
+                                          add_identities)
 
     def __new__(cls, *args):
         """
@@ -702,8 +704,11 @@ class Diagram(Basic):
                     # Check that no new objects appear in conclusions.
                     if (morphism.domain in objects) and \
                        (morphism.codomain in objects):
-                        # No need to add identities this time.
-                        Diagram._add_morphism(conclusions, morphism, empty, False)
+                        # No need to add identities and recurse
+                        # composites this time.
+                        Diagram._add_morphism(conclusions, morphism,
+                                              empty, add_identities=False,
+                                              recurse_composites=False)
             elif isinstance(conclusions_arg, dict) or \
                      isinstance(conclusions_arg, Dict):
                 # The user has supplied a dictionary of morphisms and
@@ -712,9 +717,12 @@ class Diagram(Basic):
                     # Check that no new objects appear in conclusions.
                     if (morphism.domain in objects) and \
                        (morphism.codomain in objects):
-                        # No need to add identities this time.
+                        # No need to add identities and recurse
+                        # composites this time.
                         Diagram._add_morphism(conclusions, morphism,
-                                           FiniteSet(props), False)
+                                              FiniteSet(props),
+                                              add_identities=False,
+                                              recurse_composites=False)
 
         return Basic.__new__(cls, Dict(premises), Dict(conclusions), objects)
 

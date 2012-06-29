@@ -124,7 +124,7 @@ def test_diagram():
     # Make sure that (re-)adding composites (with new properties)
     # works as expected.
     d = Diagram([f, g], {g * f:"unique"})
-    assert d.conclusions[g * f] == FiniteSet("unique")
+    assert d.conclusions == Dict({g*f:FiniteSet("unique")})
 
     # Check the hom-sets when there are premises and conclusions.
     assert d.hom(A, C) == (FiniteSet(g * f), FiniteSet(g * f))
