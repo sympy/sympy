@@ -1,4 +1,4 @@
-from sympy import symbols, Integral, Tuple, Dummy, Basic
+from sympy import symbols, Integral, Tuple, Dummy, Basic, default_sort_key
 from sympy.utilities.iterables import (postorder_traversal, flatten, group,
         take, subsets, variations, cartes, numbered_symbols, dict_merge,
         prefixes, postfixes, sift, topological_sort, rotate_left, rotate_right,
@@ -12,26 +12,22 @@ from sympy.utilities.pytest import raises
 w,x,y,z= symbols('w,x,y,z')
 
 def test_postorder_traversal():
-    expr = z+w*(x+y)
-    expected1 = [z, w, y, x, x + y, w*(x + y), z + w*(x + y)]
-    expected2 = [z, w, x, y, x + y, w*(x + y), z + w*(x + y)]
-    expected3 = [w, y, x, x + y, w*(x + y), z, z + w*(x + y)]
-    expected4 = [w, x, y, x + y, w*(x + y), z, z + w*(x + y)]
-    expected5 = [x, y, x + y, w, w*(x + y), x, x + w*(x + y)]
-    expected6 = [y, x, x + y, w, w*(x + y), x, x + w*(x + y)]
-    assert list(postorder_traversal(expr)) in [expected1, expected2,
-                                               expected3, expected4,
-                                               expected5, expected6]
+    expr = z + w*(x+y)
+    expected = [z, w, x, y, x + y, w*(x + y), w*(x + y) + z]
+    assert list(postorder_traversal(expr, key=default_sort_key)) == expected
 
-    expr = Piecewise((x,x<1),(x**2,True))
-    assert list(postorder_traversal(expr)) == [
-        x, x, 1, x < 1, ExprCondPair(x, x < 1), x, 2, x**2,
-        ExprCondPair.true_sentinel,
+    expr = Piecewise((x, x < 1), (x**2, True))
+    expected = [
+        x, 1, x, x < 1, ExprCondPair(x, x < 1),
+        ExprCondPair.true_sentinel, 2, x, x**2,
         ExprCondPair(x**2, True), Piecewise((x, x < 1), (x**2, True))
-    ]
+     ]
+    assert list(postorder_traversal(expr, key=default_sort_key)) == expected
+    assert list(postorder_traversal([expr], key=default_sort_key)) == expected + [[expr]]
 
-    assert list(postorder_traversal(Integral(x**2, (x, 0, 1)))) == [
-        x, 2, x**2, x, 0, 1, Tuple(x, 0, 1),
+    assert list(postorder_traversal(Integral(x**2, (x, 0, 1)),
+        key=default_sort_key)) == [
+        2, x, x**2, 0, 1, x, Tuple(x, 0, 1),
         Integral(x**2, Tuple(x, 0, 1))
     ]
     assert list(postorder_traversal(('abc', ('d', 'ef')))) == [
