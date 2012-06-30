@@ -6,6 +6,9 @@ from random import randrange, choice
 from sympy.functions.combinatorial.factorials import factorial
 from math import log
 from sympy.ntheory import isprime, sieve
+from sympy.combinatorics.util import _check_cycles_alt_sym,\
+_distribute_gens_by_base, _orbits_transversals_from_bsgs,\
+_handle_precomputed_bsgs
 
 def _smallest_change(h, alpha):
     """
@@ -2082,7 +2085,6 @@ class PermutationGroup(Basic):
         for gen in S[1]:
             if gen not in strong_gens:
                 strong_gens.append(gen)
-
         return base, strong_gens
 
 
@@ -2093,34 +2095,26 @@ class PermutationGroup(Basic):
             base = self._base
         else:
             base = known_base
-        k = len(base)
+        base_len = len(base)
         n = self.degree
         ordering = [0]*n
-        for i in xrange(k):
+        for i in xrange(base_len):
             ordering[base[i]] = i
-        current = k
+        current = base_len
         for i in xrange(n):
             if i not in base:
                 ordering[i] = current
                 current += 1
         return ordering
 
-    def print_elements(self, base, strong_gens):
+    def list_lex_by_base(self, base, strong_gens, transversals=None, basic_orbits=None, distr_gens=None):
         res = []
         # order the points in range(n) according to the base
         base_ordering = self.base_ordering(known_base=base)
-        # distribute strong generators in basic stabilizers
-        # TODO: don't change the strong_gens, use a new variable
-        strong_gens = _distribute_gens_by_base(base, strong_gens)
-        # compute the basic orbits and transversals
+
+        transversals, basic_orbits, distr_gens = _handle_precomputed_bsgs(base, strong_gens, transversals, basic_orbits, distr_gens)
+        # initialize sorted orbits
         k = len(base)
-        transversals = [None]*k
-        basic_orbits = [None]*k
-        for i in xrange(k):
-            group = PermutationGroup(strong_gens[i])
-            transversals[i] = dict(group.orbit_transversal(base[i], pairs=True))
-            basic_orbits[i] = transversals[i].keys()
-        # initialize transversal elements and sorted orbits
         degree = self.degree
         c = [0]*k
         u = [None]*k
@@ -2174,24 +2168,16 @@ class PermutationGroup(Basic):
             else:
                 computed_words[depth] = computed_words[depth - 1] * u[depth]
 
-    def baseswap(self, base, strong_gens, pos, transversals=None):
-        # distribute strong generators in basic stabilizers
-        strong_gens = _distribute_gens_by_base(base, strong_gens)
-        if transversals is None:
-            k = len(base)
-            transversals = [None]*k
-            basic_orbits = [None]*k
-            for i in xrange(k):
-                group = PermutationGroup(strong_gens[i])
-                transversals[i] = dict(group.orbit_transversal(base[i], pairs=True))
-                basic_orbits[i] = transversals[i].keys()
-        stab_pos = PermutationGroup(strong_gens[pos])
+    def baseswap(self, base, strong_gens, pos, randomized=True, transversals=None, basic_orbits=None, distr_gens=None):
+        transversals, basic_orbits, distr_gens = _handle_precomputed_bsgs(base, strong_gens, transversals, basic_orbits, distr_gens)
+        k = len(base)
+        stab_pos = PermutationGroup(distr_gens[pos])
         size = len(basic_orbits[pos])*len(basic_orbits[pos + 1])//len(stab_pos.orbit(base[pos + 1]))
         degree = self.degree
         if pos + 2 > k - 1:
             T = []
         else:
-            T = strong_gens[pos + 2]
+            T = distr_gens[pos + 2][:]
         Gamma = set(basic_orbits[pos])
         Gamma.remove(base[pos])
         if base[pos + 1] in Gamma:
@@ -2200,49 +2186,32 @@ class PermutationGroup(Basic):
             current_group = PermGroup([_new_from_array_form(range(degree))])
         else:
             current_group = PermGroup(T)
-        while len(current_group.orbit(base[pos + 1])) != size:
-            print Gamma, len(current_group.orbit(base[pos + 1])), size, T
-            gamma = iter(Gamma).next()
-            x = transversals[pos][gamma]
-            temp = (~x)(base[pos + 1])
-            if temp not in basic_orbits[pos + 1]:
-                Gamma = Gamma - current_group.orbit(gamma)
-                #print current_group.orbit(gamma), Gamma, 1
-            else:
-                y = transversals[pos + 1][temp]
-                el = x*y
-                if el(base[pos]) not in current_group.orbit(base[pos]):
-                    T.append(el)
-                    current_group = PermutationGroup(T)
-                    Gamma = Gamma - current_group.orbit(base[pos])
-                    #print current_group.orbit(base[pos]), Gamma, 2
-
-
-
-
-
-    def lex_compare(self, g, h):
-        if self._base == []:
-            self.schreier_sims()
-        base = self._base
-        base_ordering = self.base_ordering()
-        g_image = self.base_image(g)
-        h_image = self.base_image(h)
-        g_lex = [base_ordering[x] for x in g_image]
-        h_lex = [base_ordering[x] for x in h_image]
-        return g_lex < h_lex
-
-    def base_image(self, g):
-        if self._base == []:
-            self.schreier_sims()
-        return [g(point) for point in self._base]
-
-    def partial_base_image(self, g, l):
-        if self._base == []:
-            self.schreier_sims()
-        return [g(point) for point in self._base[:l]]
-
-
+        if randomized is True:
+            schreier_vector = stab_pos.schreier_vector(base[pos + 1])
+            while len(current_group.orbit(base[pos])) != size:
+                new = stab_pos.random_stab(base[pos + 1], schreier_vector=schreier_vector)
+                T.append(new)
+                current_group = PermutationGroup(T)
+        else:
+            while len(current_group.orbit(base[pos])) != size:
+                gamma = iter(Gamma).next()
+                x = transversals[pos][gamma]
+                x_inverse = ~x
+                temp = x_inverse(base[pos + 1])
+                if temp not in basic_orbits[pos + 1]:
+                    Gamma = Gamma - current_group.orbit(gamma)
+                else:
+                    y = transversals[pos + 1][temp]
+                    el = x*y
+                    if el(base[pos]) not in current_group.orbit(base[pos]):
+                        T.append(el)
+                        current_group = PermutationGroup(T)
+                        Gamma = Gamma - current_group.orbit(base[pos])
+        strong_gens_new = distr_gens[:]
+        strong_gens_new[pos + 1] = T
+        base_new = base[:]
+        base_new[pos], base_new[pos + 1] = base_new[pos + 1], base_new[pos]
+        return base_new, strong_gens_new
 
 def strip(g, base, orbs, H):
     h = g
@@ -2272,7 +2241,8 @@ def DirectProduct(*groups):
     ========
 
 
-    >>> from sympy.combinatorics.perm_groups import DirectProduct, CyclicGroup
+    >>> from sympy.combinatorics.perm_groups import DirectProduct
+    >>> from sympy.combinatorics.named_groups import CyclicGroup
     >>> C = CyclicGroup(4)
     >>> G = DirectProduct(C,C,C)
     >>> G.order()
@@ -2308,94 +2278,5 @@ def DirectProduct(*groups):
         current_deg += degrees[i]
     perm_gens = [_new_from_array_form(array) for array in array_gens]
     return PermutationGroup(perm_gens)
-
-def AbelianGroup(*cyclic_orders):
-    """
-    Returns the direct product of cyclic groups with the given orders.
-
-    According to the structure theorem for finite abelian groups ([1]),
-    every finite abelian group can be written as the direct product of finitely
-    many cyclic groups.
-    [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely
-    _generated_abelian_groups
-
-
-    Examples
-    ========
-
-
-    >>> from sympy.combinatorics.perm_groups import AbelianGroup
-    >>> AbelianGroup(3,4)
-    PermutationGroup([Permutation([1, 2, 0, 3, 4, 5, 6]),\
-    Permutation([0, 1, 2, 4, 5, 6, 3])])
-
-    See Also
-    ========
-    DirectProduct
-    """
-    groups = []
-    degree = 0
-    order = 1
-    for size in cyclic_orders:
-        degree += size
-        order *= size
-        groups.append(CyclicGroup(size))
-    G = DirectProduct(*groups)
-    G._is_abelian = True
-    G._degree = degree
-    G._order = order
-
-    return G
-
-def _check_cycles_alt_sym(perm):
-    """
-    Checks for cycles of prime length p with n/2 < p < n-2.
-
-    Helper function for the function is_alt_sym.
-
-    See Also
-    ========
-    is_alt_sym
-    """
-    n = perm.size
-    af = perm.array_form
-    current_len = 0
-    total_len = 0
-    used = set()
-    for i in xrange(n//2):
-        if not i in used and i < n//2 - total_len:
-            current_len = 1
-            used.add(i)
-            j = i
-            while(af[j] != i):
-                current_len += 1
-                j = af[j]
-                used.add(j)
-            total_len += current_len
-            if current_len > n//2 and current_len < n-2 and isprime(current_len):
-                return True
-    return False
-
-def _distribute_gens_by_base(base, gens):
-    k = len(base)
-    S = []
-    for i in xrange(k):
-        S.append([])
-    num_gens = len(gens)
-    # for each generator, find the index of the
-    # smallest (fixing the largest number of points)
-    # basic stabilizer it belongs to
-    stab_index = [0]*num_gens
-    for i in xrange(num_gens):
-        j = 0
-        while j < k and gens[i](base[j]) == base[j]:
-            j += 1
-        stab_index[i] = j
-    # distribute generators according to basic stabilizers
-    for i in xrange(num_gens):
-        index = stab_index[i]
-        for j in xrange(index+1):
-            S[j].append(gens[i])
-    return S
 
 PermGroup = PermutationGroup

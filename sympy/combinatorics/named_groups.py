@@ -1,4 +1,4 @@
-from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.combinatorics.perm_groups import PermutationGroup, DirectProduct
 from sympy.combinatorics.permutations import Permutation, _new_from_array_form
 
 def SymmetricGroup(n):
@@ -205,4 +205,42 @@ def AlternatingGroup(n):
     G._degree = n
     G._is_transitive = True
     G._is_alt = True
+    return G
+
+def AbelianGroup(*cyclic_orders):
+    """
+    Returns the direct product of cyclic groups with the given orders.
+
+    According to the structure theorem for finite abelian groups ([1]),
+    every finite abelian group can be written as the direct product of finitely
+    many cyclic groups.
+    [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely
+    _generated_abelian_groups
+
+
+    Examples
+    ========
+
+
+    >>> from sympy.combinatorics.perm_groups import AbelianGroup
+    >>> AbelianGroup(3,4)
+    PermutationGroup([Permutation([1, 2, 0, 3, 4, 5, 6]),\
+    Permutation([0, 1, 2, 4, 5, 6, 3])])
+
+    See Also
+    ========
+    DirectProduct
+    """
+    groups = []
+    degree = 0
+    order = 1
+    for size in cyclic_orders:
+        degree += size
+        order *= size
+        groups.append(CyclicGroup(size))
+    G = DirectProduct(*groups)
+    G._is_abelian = True
+    G._degree = degree
+    G._order = order
+
     return G
