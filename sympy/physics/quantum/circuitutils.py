@@ -1,6 +1,6 @@
 """Primitive circuit operations on quantum circuits."""
 
-from sympy import Symbol, Integer, Tuple, Mul, sympify
+from sympy import Symbol, Integer, Tuple, Mul, sympify, default_sort_key
 from sympy.utilities import numbered_symbols
 from sympy.physics.quantum.gate import Gate
 
@@ -391,17 +391,15 @@ def random_reduce(circuit, gate_ids, seed=None):
     if isinstance(circuit, Mul):
         circuit = circuit.args
 
-    # Flatten the GateIdentity objects (with gate rules)
-    # into one single list
-    collapse_func = lambda acc, an_id: acc + list(an_id.equivalent_ids)
-    ids = reduce(collapse_func, gate_ids, [])
+    ids = flatten_ids(gate_ids)
 
     # Create the random integer generator with the seed
     randrange = _randrange(seed)
 
     # Look for an identity in the circuit
     while ids:
-        id = ids.pop(randrange(len(ids)))
+        i = randrange(len(ids))
+        id = ids.pop(i)
         if find_subcircuit(circuit, id) != -1:
             break
     else:
@@ -449,3 +447,11 @@ def random_insert(circuit, choices, seed=None):
     circuit = list(circuit)
     circuit[loc: loc] = choice
     return tuple(circuit)
+
+# Flatten the GateIdentity objects (with gate rules) into one single list
+def flatten_ids(ids):
+    collapse = lambda acc, an_id: acc + sorted(an_id.equivalent_ids,
+                                        key=default_sort_key)
+    ids = reduce(collapse, ids, [])
+    ids.sort(key=default_sort_key)
+    return ids
