@@ -2643,7 +2643,8 @@ class Expr(Basic, EvalfMixin):
         elif hints.pop('numer', False):
             n, d = fraction(self)
             return n.expand(deep=deep, modulus=modulus, **hints)/d
-        for hint, use_hint in hints.iteritems():
+        for hint in sorted(hints.keys()):
+            use_hint = hints[hint]
             if use_hint:
                 func = getattr(expr, '_eval_expand_'+hint, None)
                 if func is not None:
