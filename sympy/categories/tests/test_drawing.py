@@ -1,5 +1,6 @@
 from sympy.categories.diagram_drawing import _GrowableGrid
 from sympy.categories import DiagramGrid, Object, NamedMorphism, Diagram
+from sympy import FiniteSet
 
 def test_GrowableGrid():
     grid = _GrowableGrid(1, 2)
@@ -255,3 +256,15 @@ def test_DiagramGrid():
 
     d = Diagram([m1, m2, s1, s2, f1, f2], {g: "unique"})
     grid = DiagramGrid(d)
+
+    # Test a pullback with object grouping.
+    grid = DiagramGrid(d, groups=FiniteSet(E, FiniteSet(A, B, C, D)))
+
+    assert grid.width == 3
+    assert grid.height == 2
+    assert grid[0, 0] == E
+    assert grid[0, 1] == A
+    assert grid[0, 2] == B
+    assert grid[1, 0] is None
+    assert grid[1, 1] == C
+    assert grid[1, 2] == D

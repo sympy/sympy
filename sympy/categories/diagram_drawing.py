@@ -9,7 +9,8 @@ The currently supported back-ends are Xy-pic [Xypic]
 """
 
 from sympy.core import Basic, FiniteSet
-from sympy.categories import CompositeMorphism, IdentityMorphism
+from sympy.categories import (CompositeMorphism, IdentityMorphism,
+                              NamedMorphism, Diagram)
 from sympy.utilities import default_sort_key
 
 class _GrowableGrid:
@@ -93,6 +94,8 @@ class DiagramGrid:
     ``height``, as well as accessing the objects located at certain
     coordinates and finding out which moprhisms connect the object
     with other objects in the grid.  TODO: Explain how to do that.
+
+    TODO: Explain how to use the argument ``groups``.
     """
     @staticmethod
     def _simplify_morphisms(morphisms):
@@ -572,11 +575,102 @@ class DiagramGrid:
 
                         return other_obj
 
-    def __init__(self, diagram):
+    @staticmethod
+    def _handle_groups(diagram, groups, merged_morphisms):
+        """
+        Given the slightly preprocessed morphisms of the diagram,
+        produces a grid laid out according to ``groups``.
+        """
+        obj_groups = {}
+        groups_grids = {}
+        for group in groups:
+            if isinstance(group, FiniteSet):
+                # Set up the corresponding object-to-group mappings.
+                for obj in group:
+                    obj_groups[obj] = group
+
+                # Lay out the current group.
+                groups_grids[group] = DiagramGrid(
+                    diagram.subdiagram_from_objects(group))
+            else:
+                obj_groups[group] = group
+
+        new_morphisms = []
+        for morphism in merged_morphisms:
+            dom = obj_groups[morphism.domain]
+            cod = obj_groups[morphism.codomain]
+            # Note that we are not really interested in morphisms
+            # which do not employ two different groups, because
+            # these do not influence the layout.
+            if dom != cod:
+                # These are essentially unnamed morphisms; they are
+                # not going to mess in the final layout.  By giving
+                # them the same names, we avoid unnecessary
+                # duplicates.
+                new_morphisms.append(NamedMorphism(dom, cod, "dummy"))
+
+        # Lay out the new diagram.  Since these are dummy morphisms,
+        # properties and conclusions are irrelevant.
+        top_grid = DiagramGrid(Diagram(new_morphisms))
+
+        # We now have to substitute the groups with the corresponding
+        # grids, laid out at the beginning of this function.  Compute
+        # the size of each row and column in the grid, so that all
+        # nested grids fit.
+
+        def group_size(group):
+            """
+            For the supplied group (or object, eventually), returns
+            the size of the cell that will hold this group (object).
+            """
+            if group in groups_grids:
+                grid = groups_grids[group]
+                return (grid.height, grid.width)
+            else:
+                return (1, 1)
+
+        row_heights = [max([group_size(top_grid[i, j])[0]
+                            for j in xrange(top_grid.width)])
+                       for i in xrange(top_grid.height)]
+
+        column_widths = [max([group_size(top_grid[i, j])[1]
+                              for i in xrange(top_grid.height)])
+                         for j in xrange(top_grid.width)]
+
+        grid = _GrowableGrid(sum(column_widths), sum(row_heights))
+
+        real_row = 0
+        real_column = 0
+        for logical_row in xrange(top_grid.height):
+            for logical_column in xrange(top_grid.width):
+                obj = top_grid[logical_row, logical_column]
+
+                if obj in groups_grids:
+                    # This is a group.  Copy the corresponding grid in
+                    # place.
+                    local_grid = groups_grids[obj]
+                    for i in xrange(local_grid.height):
+                        for j in xrange(local_grid.width):
+                            grid[real_row + i, real_column + j] = local_grid[i, j]
+                else:
+                    # This is an object.  Just put it there.
+                    grid[real_row, real_column] = obj
+
+                real_column += column_widths[logical_column]
+            real_row += row_heights[logical_row]
+
+        return grid
+
+    def __init__(self, diagram, groups=None):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
         conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
         merged_morphisms = DiagramGrid._merge_premises_conclusions(
             premises, conclusions)
+
+        if groups and (groups != diagram.objects):
+            # Lay out the diagram according to the groups.
+            self._grid = DiagramGrid._handle_groups(diagram, groups, merged_morphisms)
+            return
 
         skeleton = DiagramGrid._build_skeleton(merged_morphisms)
 
