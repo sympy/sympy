@@ -20,7 +20,7 @@ class LambdaPrinter(StrPrinter):
         from sympy.core.sets import Interval
         result = []
         i = 0
-        for arg in sorted(expr.args, key=default_sort_key):
+        for arg in expr.args:
             e = arg.expr
             c = arg.cond
             result.append('((')
