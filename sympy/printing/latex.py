@@ -1264,6 +1264,11 @@ class LatexPrinter(Printer):
         return r"{%s} : {%s} \to {%s}" % (self._print(h._sympy_matrix()),
             self._print(h.domain), self._print(h.codomain))
 
+    def _print_Tr(self, p):
+        #Todo: Handle indices
+        contents = self._print(p.args[0])
+        return r'\mbox{Tr}\left(%s\right)' % (contents)
+
 
 def latex(expr, **settings):
     r"""
