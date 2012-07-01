@@ -18,7 +18,7 @@ class Naturals(Set):
     Examples
     ========
 
-        >>> from sympy import S, Interval
+        >>> from sympy import S, Interval, pprint
         >>> 5 in S.Naturals
         True
         >>> iterable = iter(S.Naturals)
@@ -28,8 +28,8 @@ class Naturals(Set):
         2
         >>> print iterable.next()
         3
-        >>> S.Naturals.intersect(Interval(0, 10))
-        {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+        >>> pprint(S.Naturals.intersect(Interval(0, 10)))
+        {1, 2, ..., 10}
     """
 
     __metaclass__ = Singleton
@@ -67,7 +67,7 @@ class Integers(Set):
     Examples
     ========
 
-        >>> from sympy import S, Interval
+        >>> from sympy import S, Interval, pprint
         >>> 5 in S.Naturals
         True
         >>> iterable = iter(S.Integers)
@@ -80,16 +80,16 @@ class Integers(Set):
         >>> print iterable.next()
         2
 
-        >>> S.Integers.intersect(Interval(-4, 4))
-        {-4, -3, -2, -1, 0, 1, 2, 3, 4}
+        >>> pprint(S.Integers.intersect(Interval(-4, 4)))
+        {-4, -3, ..., 4}
     """
 
     __metaclass__ = Singleton
     is_iterable = True
 
     def _intersect(self, other):
-        if other.is_Interval:
-            s = FiniteSet(range(ceiling(other.left), floor(other.right) + 1))
+        if other.is_Interval and other.measure < oo:
+            s = Range(ceiling(other.left), floor(other.right) + 1)
             return s.intersect(other) # take out endpoints if open interval
         return None
 
