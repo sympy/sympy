@@ -178,7 +178,7 @@ def test_intersection():
     # iterable
     i = Intersection(FiniteSet(1,2,3), Interval(2, 5), evaluate=False)
     assert i.is_iterable
-    assert list(i) == [2, 3]
+    assert set(i) == set([2, 3])
 
     # challenging intervals
     x = Symbol('x', real=True)
