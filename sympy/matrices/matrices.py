@@ -19,6 +19,7 @@ from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.core.compatibility import callable, reduce
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.decorators import call_highest_priority
+from sympy.utilities import default_sort_key
 
 import random
 from types import FunctionType
@@ -3228,7 +3229,8 @@ class MatrixBase(object):
                 self._eigenvects = self.eigenvects(simplify=True)
             diagvals = []
             P = MutableMatrix(self.rows, 0, [])
-            for eigenval, multiplicity, vects in self._eigenvects:
+            eigenvects = sorted(self._eigenvects, key=default_sort_key)
+            for eigenval, multiplicity, vects in eigenvects:
                 for k in range(multiplicity):
                     diagvals.append(eigenval)
                     vec = vects[k]
@@ -3390,7 +3392,7 @@ class MatrixBase(object):
         """
         if not self.is_square:
             raise NonSquareMatrixError()
-        _eigenvects = self.eigenvects()
+        _eigenvects = sorted(self.eigenvects(), key=default_sort_key)
         Jcells = []
         for eigenval, multiplicity, vects in _eigenvects:
             geometrical = len(vects)
