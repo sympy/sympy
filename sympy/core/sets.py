@@ -677,11 +677,11 @@ def set_sort_fn(s):
     try:
         val = s.inf
         if val.is_comparable:
-            return val
+            return default_sort_key(val)
         else:
-            return 1e9+abs(hash(s))
-    except NotImplementedError:
-        return 1e9+abs(hash(s))
+            return default_sort_key(s)
+    except (NotImplementedError, ValueError):
+        return default_sort_key(s)
 
 class Union(Set, EvalfMixin):
     """
