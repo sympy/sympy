@@ -2628,7 +2628,7 @@ def test_pretty_Boolean():
 
     expr = Equivalent(y, x, evaluate=False)
 
-    assert  pretty(expr) == "Equivalent(y, x)"
+    assert  pretty(expr) == "Equivalent(x, y)"
     assert upretty(expr) == u"x ≡ y"
 
 def test_pretty_Domain():
