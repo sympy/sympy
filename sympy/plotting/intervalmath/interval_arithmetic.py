@@ -2,69 +2,64 @@ from __future__ import division
 """
 Interval Arithmetic for plotting.
 This does not implement interval arithmetic accurately and
-hence cannot be used for other purposes. If you want to use interval
-arithmetic, use mpmath's interval arithmetic.
+hence cannot be used for purposes other than plotting. If you want
+to use interval arithmetic, use mpmath's interval arithmetic.
+
+This module implements interval arithmetic using numpy and
+python floating points. The rounding up and down is not handled
+and hence this is not an accurate implementation of interval
+arithmetic.
 """
 
+# Q: Why use numpy? Why not simply use mpmath's interval arithmetic?
+# A: mpmath's interval arithmetic simulates a floating point unit
+# and hence is slow, while numpy evaluations are orders of magnitude
+# faster.
 
+# Q: Why create a separate class for intervals? Why not use sympy's
+# Interval Sets?
+# A: The functionalities that will be required for plotting is quite
+# different from what Interval Sets implement.
+
+# Q: Why is rounding up and down according to IEEE754 not handled?
+# A: It is not possible to do it in both numpy and python. An external
+# library has to used, which defeats the whole purpose i.e., speed. Also
+# rounding is handled for very few functions in those libraries.
+
+# Q Will my plots be affected?
+# A It will not affect most of the plots. The interval arithmetic
+# module based suffers the same problems as that of floating point
+# arithmetic.
 from sympy.external import import_module
 np = import_module('numpy')
 
-# This module implements interval arithmetic using numpy and
-#python floating points. The rounding up and down is not handled
-#and hence this is not an accurate implementation of interval
-#arithmetic.
-
-
-#Q: Why use numpy? Why not simply use mpmath's interval arithmetic?
-#A: mpmath's interval arithmetic simulates a floating point unit
-#and hence is slow, while numpy evaluations are orders of magnitude
-#faster.
-
-#Q: Why create a seperate class for intervals? Why not use sympy's
-#Interval Sets?
-#A: The functionalities that will be required for plotting is quite
-#different from what Interval Sets implement.
-
-#Q: Why is rounding up and down according to IEEE754 not handled?
-#A: It is not possible to do it in both numpy and python. An external
-#library has to used, which defeats the whole purpose ie. speed. Also
-#rounding is handled for very few functions in those libraries.
-
-#Q Will my plots be affected?
-#A It will not affect most of the plots. The interval arithmetic
-#module based suffers the same problems as that of floating point
-#arithmetic. Plotting based on mpmath will also be implemented for
-#plots that would require high precision.
 
 class interval(object):
     """ Represents an interval containing floating points as start and
-    end of the interval."""
-    #The is_valid variable tracks whether the interval obtained as the result
-    #result of the function is in the domain and is continuous.
-    #
-    #True: Represents the interval result of a function is continuous and
-    #in the domain of the function.
-    #
-    #False: The interval argument of the function was not in the domain of
-    #the function, hence the is_valid of the result interval is False
-    #
-    #None: The function was not continuous over the interval or
-    #      The function's argument interval is partly in the domain of the
-    #        function
+    end of the interval
+    The is_valid variable tracks whether the interval obtained as the
+    result of the function is in the domain and is continuous.
+    - True: Represents the interval result of a function is continuous and
+    in the domain of the function.
+    - False: The interval argument of the function was not in the domain of
+    the function, hence the is_valid of the result interval is False
+    - None: The function was not continuous over the interval or
+           the function's argument interval is partly in the domain of the
+           function
 
-    #The comparision of two intervals returns a tuple of two 3-valued logic
-    #values.
+    The comparison of two intervals returns a tuple of two 3-valued logic
+    values.
 
-    #The first value determines the comparision as follows:
-    #True: If the comparision is True throughout the intervals.
-    #False: If the comparision is False throughout the intervals.
-    #None: If the comparision is True for some part of the intervals.
+    The first value determines the comparison as follows:
+    - True: If the comparison is True throughout the intervals.
+    - False: If the comparison is False throughout the intervals.
+    - None: If the comparison is True for some part of the intervals.
 
-    #The second value is determined as follows:
-    #True: If both the intervals in comparision are valid.
-    #False: If atleast one of the intervals is False, else
-    #None
+    The second value is determined as follows:
+    - True: If both the intervals in comparison are valid.
+    - False: If at least one of the intervals is False, else
+    - None
+    """
 
     def __init__(self, *args, **kwargs):
         self.is_valid = kwargs.pop('is_valid', True)
@@ -228,7 +223,7 @@ class interval(object):
             else:
                 return interval(start, end, is_valid=None)
         else:
-            raise NotImplemented
+            return NotImplemented
 
     def __radd__(self, other):
         return self.__add__(other)
@@ -251,7 +246,7 @@ class interval(object):
             else:
                 return interval(start, end, is_valid=None)
         else:
-            raise NotImplemented
+            return NotImplemented
 
     def __rsub__(self, other):
         if isinstance(other, (int, float)):
@@ -272,7 +267,7 @@ class interval(object):
                 return interval(start, end, is_valid=None)
 
         else:
-            raise NotImplemented
+            return NotImplemented
 
     def __rmul__(self, other):
         return self.__mul__(other)
@@ -314,26 +309,21 @@ class interval(object):
         elif isinstance(other, interval):
             return other.__div__(self)
         else:
-            NotImplemented
+            return NotImplemented
 
-    def __truediv__(self, other):
-        return self.__div__(other)
-
-    def __rtruediv__(self, other):
-        return self.__rdiv__(other)
 
     def __div__(self, other):
-        #Both None and False are handled
+        # Both None and False are handled
         if not self.is_valid:
-            #Don'other divide as the value is not valid
+            # Don't divide as the value is not valid
             return interval(-np.inf, np.inf, is_valid=self.is_valid)
         if isinstance(other, (int, float)):
             if not self.is_valid:
-                #Don'other divide as the value is not valid
+                # Don't divide as the value is not valid
                 return interval(-np.inf, np.inf, is_valid=self.is_valid)
             else:
                 if other == 0:
-                    #Divide by zero encountered. valid nowhere
+                    # Divide by zero encountered. valid nowhere
                     return interval(-np.inf, np.inf, is_valid=False)
                 else:
                     return interval(self.start / other, self.end / other)
@@ -348,17 +338,17 @@ class interval(object):
                     if interval(0) in other:
                         return interval(-np.inf, np.inf, is_valid=None)
                     return interval(0)
-               #denominator contains both signs, ie being divided by zero
-               #return the whole real line with is_valid = None
+               # denominator contains both signs, i.e. being divided by zero
+               # return the whole real line with is_valid = None
                 if other.start <= 0 and other.end >= 0:
                     return interval(-np.inf, np.inf, is_valid=None)
 
-                #denominator negative
+                # denominator negative
                 if other.end < 0:
                     self = -self
                     other = -other
 
-                #denominator positive
+                # denominator positive
                 if self.start >= 0:
                     start = self.start / other.end
                     end = self.end / other.start
@@ -368,13 +358,16 @@ class interval(object):
                     end = self.end / other.end
                     return interval(start, end)
                 else:
-                    #both signs
+                    # both signs
                     start = self.start / other. start
                     end = self.end / other.start
                     return interval(start, end)
 
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
     def __pow__(self, other):
-        #Implements only power to an integer.
+        # Implements only power to an integer.
         from .lib_interval import exp, log
         if not self.is_valid:
             return self
@@ -392,6 +385,7 @@ class interval(object):
             return NotImplemented
 
 def _pow_float(inter, power):
+    """Evaluates an interval raised to a floating point."""
     from sympy.simplify.simplify import nsimplify
     power_rational = nsimplify(power)
     num, denom = power_rational.as_numer_denom()
@@ -424,6 +418,7 @@ def _pow_float(inter, power):
         return interval(start, end, is_valid=inter.is_valid)
 
 def _pow_int(inter, power):
+    """Evaluates an interval raised to an integer power"""
     power = int(power)
     if power & 1:
         return interval(inter.start**power, inter.end**power)

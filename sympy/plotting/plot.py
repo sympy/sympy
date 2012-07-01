@@ -93,8 +93,8 @@ class Plot(object):
     If the arity does not permit calculation over parameters the calculation is
     done over coordinates.
 
-    Only cartesian coordinates are suported for the moment, but you can use
-    the paremetric plots to plot in polar, spherical and cylindrical
+    Only cartesian coordinates are supported for the moment, but you can use
+    the parametric plots to plot in polar, spherical and cylindrical
     coordinates.
 
     The arguments for the constructor Plot must be subclasses of BaseSeries.

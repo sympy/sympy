@@ -64,8 +64,8 @@ class ImplicitSeries(BaseSeries):
         try:
             temp = func(xinterval, yinterval)
         except AttributeError:
-            raise NotImplementedError("Some functions in the expression %s are \
-                                    not supported. Kindly report this as a bug" % str(self.expr))
+            raise NotImplementedError("Some functions in the expression %s are "
+                                    "not supported. Kindly report this as a bug" % str(self.expr))
         #contour array, acts like a bitmap
         contour = np.zeros((WIDTH, HEIGHT))
         k = 5 #Best case by trial and error
@@ -131,10 +131,10 @@ class ImplicitSeries(BaseSeries):
 
 
 def plot_implicit(expr, var_start_end_x, var_start_end_y, **kwargs):
-    """A plot function to plot implicit equations / inequations.
+    """A plot function to plot implicit equations / inequalities.
 
     The input arguments are:
-    expr : The equation / inequation that is to be plotted.
+    expr : The equation / inequality that is to be plotted.
     var_start_end_x: A tuple of length 3, with the first element representing
     the variable and the next two elements representing the range
     var_start_end_y: A tuple of length 3, with the first element representing
@@ -146,12 +146,12 @@ def plot_implicit(expr, var_start_end_x, var_start_end_y, **kwargs):
     Plot expressions:
     >>> from sympy import plot_implicit, cos, sin, symbols, Eq
     >>> x, y = symbols('x y')
-    >>> p1 = plot_implicit(Eq(y, x ** 2), (x, -5, 5), (y, -5, 5), show=False)
-    >>> p2 = plot_implicit(Eq(x ** 2 + y ** 2, 3), (x, -3, 3), (y, -3, 3), show=False)
-    >>> p3 = plot_implicit(y ** 2 < x ** 3 - x, (x, -4, 4), (y, -4, 4), show=False)
-    >>> p4 = plot_implicit(y > sin(x), (x, -5, 5), (y, -2, 2), show=False)
-"""
-
+    >>> p1 = plot_implicit(Eq(y, x ** 2), (x, -5, 5), (y, -5, 5)) #doctest: +SKIP
+    >>> p2 = plot_implicit(Eq(x ** 2 + y ** 2, 3), (x, -3, 3), (y, -3, 3)) #doctest: +SKIP
+    >>> p3 = plot_implicit(y ** 2 < x ** 3 - x, (x, -4, 4), (y, -4, 4)) #doctest: +SKIP
+    >>> p4 = plot_implicit(y > sin(x), (x, -5, 5), (y, -2, 2)) #doctest: +SKIP
+    """
+    #TODO: Add a global variable show = False for testrunners
     assert isinstance(expr, Expr)
     free_symbols = expr.free_symbols
     range_symbols = set([var_start_end_x[0], var_start_end_y[0]])

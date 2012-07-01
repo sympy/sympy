@@ -1,11 +1,10 @@
 from sympy.plotting.intervalmath import interval
 from sympy.external import import_module
-""" The module contains all the implemented functions for interval arithmetic."""
+""" The module contains implemented functions for interval arithmetic."""
 
 np = import_module('numpy')
+
 #Monotonic
-
-
 def exp(x):
     """evaluates the exponential of an interval"""
     if isinstance(x, (int, float)):
@@ -18,7 +17,7 @@ def exp(x):
 
 #Monotonic
 def log(x):
-    """evauates the natural logarithm of an interval"""
+    """evaluates the natural logarithm of an interval"""
     if isinstance(x, (int, float)):
         if x <= 0:
             return interval(-np.inf, np.inf, is_valid=False)
@@ -279,7 +278,7 @@ def acos(x):
 
 
 def ceil(x):
-    """Evaluates the ceil of an interval"""
+    """Evaluates the ceiling of an interval"""
     if isinstance(x, (int, float)):
         return interval(np.ceil(x))
     elif isinstance(x, interval):
@@ -292,14 +291,14 @@ def ceil(x):
             if start == end:
                 return interval(start, end, is_valid=x.is_valid)
             else:
-                #Not contnuous over the interval
+                #Not continuous over the interval
                 return interval(start, end, is_valid=None)
     else:
         return NotImplementedError
 
 
 def floor(x):
-    """Evaluates the ceil of an interval"""
+    """Evaluates the floor of an interval"""
     if isinstance(x, (int, float)):
         return interval(np.floor(x))
     elif isinstance(x, interval):
@@ -308,7 +307,7 @@ def floor(x):
         else:
             start = np.floor(x.start)
             end = np.floor(x.end)
-            #coninuous over the argument
+            #continuous over the argument
             if start == end:
                 return interval(start, end, is_valid=x.is_valid)
             else:
