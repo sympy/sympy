@@ -1053,9 +1053,8 @@ class MatplotlibBackend(BaseBackend):
                                                   rstride=1, cstride=1,
                                                   linewidth=0.1)
             elif s.is_implicit:
-                x, y, z = s.get_meshes()
-                colormap = ListedColormap(['white', 'blue'])
-                self.ax.contourf(x, y, z, cmap=colormap)
+                x, y = s.get_meshes()
+                self.ax.fill(x, y, facecolor='b', edgecolor='None' )
 
             else:
                 raise ValueError('The matplotlib backend supports only '
