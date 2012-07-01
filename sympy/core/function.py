@@ -1527,8 +1527,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     """
     Expand an expression using methods given as hints.
 
-    Hints are applied with arbitrary order so your code shouldn't
-    depend on the way hints are passed to this method.
+    Hints are applied in the lexicographic order of hint names.
 
     Hints evaluated unless explicitly set to False are:
       basic, log, multinomial, mul, power_base, and power_exp
