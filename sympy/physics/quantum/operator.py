@@ -215,6 +215,7 @@ class HermitianOperator(Operator):
         else:
             return Operator._eval_power(self, exp)
 
+
 class UnitaryOperator(Operator):
     """A unitary operator that satisfies U*Dagger(U) == 1.
 
@@ -352,6 +353,12 @@ class OuterProduct(Operator):
         k = self.ket._represent(**options)
         b = self.bra._represent(**options)
         return k*b
+
+    def _eval_trace(self,**kwargs):
+        # TODO if operands are tensorproducts this may be will be handled
+        # differently.
+
+        return self.ket._eval_trace(self.bra,**kwargs);
 
 class DifferentialOperator(Operator):
     """An operator for representing the differential operator, i.e. d/dx
