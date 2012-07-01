@@ -1,7 +1,12 @@
 from sympy.plotting.intervalmath import interval
+from sympy.external import import_module
+
+numpy = import_module('numpy')
+if not numpy:
+    disabled = True
 
 
-def interval_test():
+def test_interval():
     import numpy as np
     assert (interval(1, 1) == interval(1, 1, is_valid=True)) == (True, True)
     assert (interval(1, 1) == interval(1, 1, is_valid=False)) == (True, False)
@@ -28,7 +33,7 @@ def interval_test():
     assert interval(-1e50, 1e50) in interb
 
 
-def interval_add_test():
+def test_interval_add():
     import numpy as np
     assert (interval(1, 2) + interval(2, 3) == interval(3, 5)) == (True, True)
     assert (1 + interval(1, 2) == interval(2, 3)) == (True, True)
@@ -47,7 +52,7 @@ def interval_add_test():
     assert a.is_valid == False
 
 
-def interval_sub_test():
+def test_interval_sub():
     import numpy as np
     assert (interval(1, 2) - interval(1, 5) == interval(-4, 1)) == (True, True)
     assert (interval(1, 2) - 1 == interval(0, 1)) == (True, True)
@@ -58,7 +63,7 @@ def interval_sub_test():
     assert a.is_valid is None
 
 
-def interval_inequality_test():
+def test_interval_inequality():
     import numpy as np
     assert (interval(1, 2) < interval(3, 4)) == (True, True)
     assert (interval(1, 2) < interval(2, 4)) == (None, True)
@@ -90,7 +95,7 @@ def interval_inequality_test():
     assert a == (True, None)
 
 
-def interval_mul_test():
+def test_interval_mul():
     import numpy as np
     assert (interval(1, 5) * interval(2, 10) == interval(2, 50)) == (True, True)
     a = interval(-1, 1) * interval(2, 10) == interval(-10, 10)
@@ -112,7 +117,7 @@ def interval_mul_test():
     assert a.is_valid is False
 
 
-def interval_div_test():
+def test_interval_div():
     import numpy as np
     div = interval(1, 2, is_valid=False) / 3
     assert div == interval(-np.inf, np.inf, is_valid=False)
@@ -163,16 +168,3 @@ def interval_div_test():
     assert a == (True, True)
     a = interval(-4, -0.5) / interval(-2, -0.5) == interval(0.25, 8.0)
     assert a == (True, True)
-
-
-def test_interval_arithmetic():
-    try:
-        import numpy as np
-    except ImportError:
-        return
-    else:
-        interval_test()
-        interval_add_test()
-        interval_sub_test()
-        interval_mul_test()
-        interval_div_test()

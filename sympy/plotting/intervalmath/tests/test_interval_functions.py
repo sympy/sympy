@@ -1,7 +1,12 @@
 from sympy.plotting.intervalmath import *
+from sympy.external import import_module
+
+numpy = import_module('numpy')
+if not numpy:
+    disabled = True
 
 
-def exp_test():
+def test_exp():
     import numpy as np
     a = exp(interval(-np.inf, 0))
     assert a.start == np.exp(-np.inf)
@@ -11,7 +16,7 @@ def exp_test():
     assert a.end == np.exp(2)
 
 
-def log_test():
+def test_log():
     import numpy as np
     a = log(interval(1, 2))
     assert a.start == 0
@@ -22,7 +27,7 @@ def log_test():
     assert a.is_valid is False
 
 
-def atan_test():
+def test_atan():
     import numpy as np
     a = atan(interval(0, 1))
     assert a.start == np.arctan(0)
@@ -32,7 +37,7 @@ def atan_test():
     a.end == np.arctan(1)
 
 
-def sin_test():
+def test_sin():
     import numpy as np
     a = sin(interval(0, np.pi / 4))
     assert a.start == np.sin(0)
@@ -59,7 +64,7 @@ def sin_test():
     assert a.end == 1
 
 
-def cos_test():
+def test_cos():
     import numpy as np
     a = cos(interval(0, np.pi / 4))
     assert a.start == np.cos(np.pi / 4)
@@ -86,7 +91,7 @@ def cos_test():
     assert a.end == 1
 
 
-def tan_test():
+def test_tan():
     import numpy as np
     a = tan(interval(0, np.pi / 4))
     assert a.start == 0
@@ -97,7 +102,7 @@ def tan_test():
     assert a.is_valid is None
 
 
-def sqrt_test():
+def test_sqrt():
     import numpy as np
     a = sqrt(interval(1, 4))
     assert a.start == 1
@@ -114,7 +119,7 @@ def sqrt_test():
     assert a.is_valid is False
 
 
-def imin_test():
+def test_imin():
     a = imin(interval(1, 3), interval(2, 5), interval(-1, 3))
     assert a.start == -1
     assert a.end == 3
@@ -128,7 +133,7 @@ def imin_test():
     assert a.end == 4
 
 
-def imax_test():
+def test_imax():
     a = imax(interval(-2, 2), interval(2, 7), interval(-3, 9))
     assert a.start == 2
     assert a.end == 9
@@ -142,14 +147,14 @@ def imax_test():
     assert a.end == 4
 
 
-def sinh_test():
+def test_imin():
     import numpy as np
     a = sinh(interval(-1, 1))
     assert a.start == np.sinh(-1)
     assert a.end == np.sinh(1)
 
 
-def cosh_test():
+def test_cosh():
     import numpy as np
     a = cosh(interval(1, 2))
     assert a.start == np.cosh(1)
@@ -163,14 +168,14 @@ def cosh_test():
     assert a.end == np.cosh(-2)
 
 
-def tanh_test():
+def test_tanh():
     import numpy as np
     a = tanh(interval(-3, 3))
     assert a.start == np.tanh(-3)
     assert a.end == np.tanh(3)
 
 
-def asin_test():
+def test_asin():
     import numpy as np
     a = asin(interval(-0.5, 0.5))
     assert a.start == np.arcsin(-0.5)
@@ -188,7 +193,7 @@ def asin_test():
     assert a.is_valid is False
 
 
-def acos_test():
+def test_acos():
     import numpy as np
     a = acos(interval(-0.5, 0.5))
     assert a.start == np.arccos(0.5)
@@ -206,7 +211,7 @@ def acos_test():
     assert a.is_valid is False
 
 
-def ceil_test():
+def test_ceil():
     a = ceil(interval(0.2, 0.5))
     assert a.start == 1
     assert a.end == 1
@@ -220,7 +225,7 @@ def ceil_test():
     assert a.is_valid is None
 
 
-def floor_test():
+def test_floor():
     a = floor(interval(0.2, 0.5))
     assert a.start == 0
     assert a.end == 0
@@ -234,13 +239,13 @@ def floor_test():
     assert a.is_valid is None
 
 
-def asinh_test():
+def test_asinh():
     a = asinh(interval(1, 2))
     assert a.start == np.arcsinh(1)
     assert a.end == np.arcsinh(2)
 
 
-def acosh_test():
+def test_acosh():
     a = acosh(interval(3, 5))
     assert a.start == np.arccosh(3)
     assert a.end == np.arccosh(5)
@@ -251,7 +256,7 @@ def acosh_test():
     assert a.is_valid is False
 
 
-def atanh_test():
+def test_atanh():
     a = atanh(interval(-0.5, 0.5))
     assert a.start == np.arctanh(-0.5)
     assert a.end == np.arctanh(0.5)
@@ -261,30 +266,3 @@ def atanh_test():
 
     a = atanh(interval(-3, -2))
     assert a.is_valid is False
-
-
-def test_functions():
-    try:
-        import numpy as np
-    except ImportError:
-        return
-    else:
-        sin_test()
-        exp_test()
-        log_test()
-        atan_test()
-        cos_test()
-        tan_test()
-        sqrt_test()
-        imin_test()
-        imax_test()
-        cosh_test()
-        sinh_test()
-        tanh_test()
-        asin_test()
-        acos_test()
-        floor_test()
-        ceil_test()
-        acos_test()
-        asin_test()
-        atanh_test()
