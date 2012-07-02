@@ -75,25 +75,25 @@ def _min_dummies(dummies, sym, indices):
     else:
         raise NotImplementedError
 
-def _trace_S(j, b, S_cosets):
+def _trace_S(s, j, b, S_cosets):
     """
-    Return the representative h satisfying h[b] == j
+    Return the representative h satisfying s[h[b]] == j
 
     If there is not such a representative return None
     """
     for h in S_cosets[b]:
-        if h[b] == j:
+        if s[h[b]] == j:
             return h
     return None
 
 def _trace_D(gj, p_i, Dxtrav):
     """
-    Return the representative h satisfying h[p_i] == gj
+    Return the representative h satisfying h[gj] == p_i
 
     If there is not such a representative return None
     """
     for h in Dxtrav:
-        if h[p_i] == gj:
+        if h[gj] == p_i:
             return h
     return None
 
@@ -271,7 +271,6 @@ def double_coset_can_rep(sym, sgens, g, sgs=None):
     ginv = perm_af_invert(g)
     # md[j] = min(D_p.orbit(j)
     idn = range(size)
-    Dxtrav = orbit_transversal(dsgsx, dumx[0], af=True)
     # TAB = list of entries (s, d, h) where h = d*g*s
     TAB = [(idn, idn, g)]
     for i in range(size - 2):
@@ -285,7 +284,8 @@ def double_coset_can_rep(sym, sgens, g, sgs=None):
         md = _min_dummies(dumx, 0, dummies)
         p_i = min([min([md[h[x]] for x in deltab]) for s,d,h in TAB])
         Dxtrav = orbit_transversal(dsgsx, p_i, af=True) if dumx else None
-
+        if Dxtrav:
+            Dxtrav = [perm_af_invert(x) for x in Dxtrav]
         deltap = dumx if p_i in dumx else [p_i]
         TAB1 = []
         nTAB = len(TAB)
@@ -313,19 +313,22 @@ def double_coset_can_rep(sym, sgens, g, sgs=None):
                 if testb:
                     # solve s1*b = j with s1 = s*sx for some element sx
                     # of the stabilizer of ..., base[i-1]
-                    # sx*b = s**-1*j; sx = trace_S(s**-1*j,...)
+                    # sx*b = s**-1*j; sx = _trace_S(s, j,...)
                     # s1 = s*trace_S(s**-1*j,...)
-                    s1 = _trace_S(perm_af_invert(s)[j], b, S_cosets)
+                    s1 = _trace_S(s, j, b, S_cosets)
                     if not s1:
                         continue
+                    else:
+                        s1 = [s[ix] for ix in s1]
                 else:
-                    s1 = idn
-                s1 = perm_af_mul(s, s1)
+                    s1 = s
                 #assert s1[b] == j  # invariant
                 # solve d1*g*j = p_i with d1 = dx*d for some element dg
                 # of the stabilizer of ..., p_{i-1}
                 # dx**-1*p_i = d*g*j; dx**-1 = trace_D(d*g*j,...)
                 # d1 = trace_D(d*g*j,...)**-1*d
+                # to save an inversion in the inner loop; notice we did
+                # Dxtrav = [perm_af_invert(x) for x in Dxtrav] out of the loop
                 if dumx:
                     d1 = _trace_D(dg[j], p_i, Dxtrav)
                     if not d1:
@@ -335,8 +338,8 @@ def double_coset_can_rep(sym, sgens, g, sgs=None):
                         continue
                     d1 = idn
                 #assert d1[p_i] == dg[j]  # invariant
-                d1 = perm_af_mul(perm_af_invert(d1), d)
-                h1 = perm_af_muln(d1, g, s1)
+                d1 = [d1[ix] for ix in d]
+                h1 = [d1[g[ix]] for ix in s1]
                 #assert h1[b] == p_i  # invariant
                 TAB1.append((s1, d1, h1))
 
