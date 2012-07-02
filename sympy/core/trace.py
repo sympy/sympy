@@ -189,4 +189,3 @@ class Tr(Expr):
 
     def _hashable_content(self):
         return self.args[0]  + tuple(self.args[1])
-

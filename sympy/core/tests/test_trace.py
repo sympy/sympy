@@ -63,9 +63,3 @@ def test_trace_doit():
 
 #    t = Tr((A+B)*(B*B)*C*D,cycle=False)
 #    assert t.permute(2).args[0].args == (C, D, (A+B), (B**2))
-
-def test_equals():
-    #TODO: Need to test if permute allowed
-    pass
-
-
