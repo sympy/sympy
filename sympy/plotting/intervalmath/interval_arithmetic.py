@@ -1,14 +1,16 @@
 from __future__ import division
 """
 Interval Arithmetic for plotting.
-This does not implement interval arithmetic accurately and
+This module does not implement interval arithmetic accurately and
 hence cannot be used for purposes other than plotting. If you want
 to use interval arithmetic, use mpmath's interval arithmetic.
 
-This module implements interval arithmetic using numpy and
+The module implements interval arithmetic using numpy and
 python floating points. The rounding up and down is not handled
 and hence this is not an accurate implementation of interval
 arithmetic.
+
+The module uses numpy for speed which cannot be achieved with mpmath.
 """
 
 # Q: Why use numpy? Why not simply use mpmath's interval arithmetic?
@@ -40,12 +42,12 @@ class interval(object):
     The is_valid variable tracks whether the interval obtained as the
     result of the function is in the domain and is continuous.
     - True: Represents the interval result of a function is continuous and
-    in the domain of the function.
+            in the domain of the function.
     - False: The interval argument of the function was not in the domain of
-    the function, hence the is_valid of the result interval is False
+             the function, hence the is_valid of the result interval is False
     - None: The function was not continuous over the interval or
-           the function's argument interval is partly in the domain of the
-           function
+            the function's argument interval is partly in the domain of the
+            function
 
     The comparison of two intervals returns a tuple of two 3-valued logic
     values.
@@ -103,7 +105,7 @@ class interval(object):
             else:
                 return (None, self.is_valid)
 
-        if isinstance(other, interval):
+        elif isinstance(other, interval):
             if self.is_valid is False or other.is_valid is False:
                 valid = False
             elif self.is_valid is None or other.is_valid is None:
@@ -120,8 +122,12 @@ class interval(object):
 
     def __gt__(self, other):
         if isinstance(other, (int, float)):
-            other = interval(other)
-            return other.__lt__(self)
+            if self.start > other:
+                return (True, self.is_valid)
+            elif self.end < other:
+                return (False, self.is_valid)
+            else:
+                return (None, self.is_valid)
         elif isinstance(other, interval):
             return other.__lt__(self)
         else:
@@ -131,10 +137,11 @@ class interval(object):
         if isinstance(other, (int, float)):
             if self.start == other and self.end == other:
                 return (True, self.is_valid)
-            if self.__lt__(other)[0] is not None:
-                return (False, self.is_valid)
-            else:
+            if other in self:
                 return (None, self.is_valid)
+            else:
+                return (False, self.is_valid)
+
         if isinstance(other, interval):
             if self.is_valid is False or other.is_valid is False:
                 valid = False
@@ -144,9 +151,10 @@ class interval(object):
                 valid = True
             if self.start == other.start and self.end == other.end:
                 return (True, valid)
-            if self.__lt__(other)[0] is not None:
+            elif self.__lt__(other)[0] is not None:
                 return (False, valid)
-            return (None, valid)
+            else:
+                return (None, valid)
         else:
             return NotImplemented
 
@@ -154,10 +162,11 @@ class interval(object):
         if isinstance(other, (int, float)):
             if self.start == other and self.end == other:
                 return (False, self.is_valid)
-            if self.__lt__(other)[0] is not None:
-                return (True, self.is_valid)
-            else:
+            if other in self:
                 return (None, self.is_valid)
+            else:
+                return (True, self.is_valid)
+
         if isinstance(other, interval):
             if self.is_valid is False or other.is_valid is False:
                 valid = False
@@ -199,8 +208,12 @@ class interval(object):
 
     def __ge__(self, other):
         if isinstance(other, (int, float)):
-            other = interval(other)
-            return other.__le__(self)
+            if self.start >=other:
+                return (True, self.is_valid)
+            elif self.end < other:
+                return (False, self.is_valid)
+            else:
+                return (None, self.is_valid)
         elif isinstance(other, interval):
             return other.__le__(self)
 
@@ -225,17 +238,14 @@ class interval(object):
         else:
             return NotImplemented
 
-    def __radd__(self, other):
-        return self.__add__(other)
+    __radd__ = __add__
 
     def __sub__(self, other):
         if isinstance(other, (int, float)):
-            if self.is_valid:
-                return interval(self.start - other, self.end - other)
-            else:
-                start = self.start - other
-                end = self.end - other
-                return interval(start, end, is_valid=self.is_valid)
+            start = self.start - other
+            end = self.end - other
+            return interval(start, end, is_valid=self.is_valid)
+
         elif isinstance(other, interval):
             start = self.start - other.end
             end = self.end - other.start
@@ -250,12 +260,9 @@ class interval(object):
 
     def __rsub__(self, other):
         if isinstance(other, (int, float)):
-            if self.is_valid:
-                return interval(other - self.end, other - self.start)
-            else:
-                start = other - self.end
-                end = other - self.start
-                return interval(start, end, is_valid=False)
+            start = other - self.end
+            end = other - self.start
+            return interval(start, end, is_valid=False)
         elif isinstance(other, interval):
             start = other.start - self.end
             end = other.end - start
@@ -269,14 +276,11 @@ class interval(object):
         else:
             return NotImplemented
 
-    def __rmul__(self, other):
-        return self.__mul__(other)
-
     def __neg__(self):
         if self.is_valid:
             return interval(-self.end, -self.start)
         else:
-            return interval(-self.end, -self.start, is_valid=False)
+            return interval(-self.end, -self.start, is_valid=self.is_valid)
 
     def __mul__(self, other):
         if isinstance(other, interval):
@@ -290,17 +294,21 @@ class interval(object):
                 inters.append(self.end * other.start)
                 inters.append(self.start * other.end)
                 inters.append(self.end * other.end)
-                start = max(inters)
-                end = min(inters)
+                start = min(inters)
+                end = max(inters)
                 return interval(start, end)
         elif isinstance(other, (int, float)):
             return interval(self.start*other, self.end*other, is_valid=self.is_valid)
         else:
             return NotImplemented
 
+    __rmul__ = __mul__
+
     def __contains__(self, other):
-        other = interval(other)
-        return self.start <= other.start and other.end <= self.end
+        if isinstance(other, (int, float)):
+            return self.start <= other and self.end >= other
+        else:
+            return self.start <= other.start and other.end <= self.end
 
     def __rdiv__(self, other):
         if isinstance(other, (int, float)):
@@ -318,15 +326,11 @@ class interval(object):
             # Don't divide as the value is not valid
             return interval(-np.inf, np.inf, is_valid=self.is_valid)
         if isinstance(other, (int, float)):
-            if not self.is_valid:
-                # Don't divide as the value is not valid
-                return interval(-np.inf, np.inf, is_valid=self.is_valid)
+            if other == 0:
+                # Divide by zero encountered. valid nowhere
+                return interval(-np.inf, np.inf, is_valid=False)
             else:
-                if other == 0:
-                    # Divide by zero encountered. valid nowhere
-                    return interval(-np.inf, np.inf, is_valid=False)
-                else:
-                    return interval(self.start / other, self.end / other)
+                return interval(self.start / other, self.end / other)
 
         elif isinstance(other, interval):
             if other.is_valid is False or self.is_valid is False:
@@ -334,13 +338,9 @@ class interval(object):
             elif other.is_valid is None or self.is_valid is None:
                 return interval(-np.inf, np.inf, is_valid=None)
             else:
-                if self in interval(0):
-                    if interval(0) in other:
-                        return interval(-np.inf, np.inf, is_valid=None)
-                    return interval(0)
                # denominator contains both signs, i.e. being divided by zero
                # return the whole real line with is_valid = None
-                if other.start <= 0 and other.end >= 0:
+                if 0 in other:
                     return interval(-np.inf, np.inf, is_valid=None)
 
                 # denominator negative
@@ -349,19 +349,14 @@ class interval(object):
                     other = -other
 
                 # denominator positive
-                if self.start >= 0:
-                    start = self.start / other.end
-                    end = self.end / other.start
-                    return interval(start, end)
-                elif self.end <= 0:
-                    start = self.start / other.start
-                    end = self.end / other.end
-                    return interval(start, end)
-                else:
-                    # both signs
-                    start = self.start / other. start
-                    end = self.end / other.start
-                    return interval(start, end)
+                inters = []
+                inters.append(self.start / other.start)
+                inters.append(self.end / other.start)
+                inters.append(self.start / other.end)
+                inters.append(self.end / other.end)
+                start = max(inters)
+                end = min(inters)
+                return interval(start, end)
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
