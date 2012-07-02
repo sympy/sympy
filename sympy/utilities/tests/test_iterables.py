@@ -16,7 +16,12 @@ def test_postorder_traversal():
     expected1 = [z, w, y, x, x + y, w*(x + y), z + w*(x + y)]
     expected2 = [z, w, x, y, x + y, w*(x + y), z + w*(x + y)]
     expected3 = [w, y, x, x + y, w*(x + y), z, z + w*(x + y)]
-    assert list(postorder_traversal(expr)) in [expected1, expected2, expected3]
+    expected4 = [w, x, y, x + y, w*(x + y), z, z + w*(x + y)]
+    expected5 = [x, y, x + y, w, w*(x + y), x, x + w*(x + y)]
+    expected6 = [y, x, x + y, w, w*(x + y), x, x + w*(x + y)]
+    assert list(postorder_traversal(expr)) in [expected1, expected2,
+                                               expected3, expected4,
+                                               expected5, expected6]
 
     expr = Piecewise((x,x<1),(x**2,True))
     assert list(postorder_traversal(expr)) == [
