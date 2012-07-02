@@ -547,50 +547,63 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 str((self.start, self.end)))
 
     def get_segments(self):
-            f = lambdify([self.var], self.expr)
-            list_segments = []
-            def sample(p, q, depth):
-                #Randomly sample to avoid aliasing.
-                random = 0.45 + np.random.rand() * 0.1
-                xnew = p[0] + random * (q[0] - p[0])
-                ynew = f(xnew)
-                new_point = np.array([xnew, ynew])
+        """
+        Adaptively gets segments for plotting.
 
-                #Maximum depth
-                if depth > 12:
-                    list_segments.append([p, q])
+        The adaptive sampling is done by recursively checking if three
+        points are almost collinear. If they are not collinear, then more
+        points are added between those points.
 
-                #Sample irrespective of whether the line is flat till the
-                #depth of 6. We are not using linspace to avoid aliasing.
-                elif depth < 6:
-                    sample(p, new_point, depth + 1)
-                    sample(new_point, q, depth + 1)
+        References
+        ==========
+        [1] Adaptive polygonal approximation of parametric curves,
+            Luiz Henrique de Figueiredo.
 
-                #Sample ten points if complex values are encountered
-                #at both ends. If there is a real value in between then
-                #sample those points further.
-                elif p[1] is None and q[1] is None:
-                    xarray = np.linspace(p[0], q[0], 10)
-                    yarray = map(f, xarray)
-                    if any(y is not None for y in yarray):
-                        for i in len(yarray) - 1:
-                            if yarray[i] is None or yarray[i + 1] is None:
-                                sample([xarray[i], yarray[i]],
-                                    [xarray[i + 1], yarray[i + 1]], depth + 1)
+        """
 
-                #Sample further if one of the end points in None( ie a complex
-                #value) or the three points are not almost collinear.
-                elif p[1] is None or q[1] is None or not flat(p, new_point, q):
-                    sample(p, new_point, depth + 1)
-                    sample(new_point, q, depth + 1)
-                else:
-                    list_segments.append([p, q])
+        f = lambdify([self.var], self.expr)
+        list_segments = []
+        def sample(p, q, depth):
+            #Randomly sample to avoid aliasing.
+            random = 0.45 + np.random.rand() * 0.1
+            xnew = p[0] + random * (q[0] - p[0])
+            ynew = f(xnew)
+            new_point = np.array([xnew, ynew])
 
-            f_start = f(self.start)
-            f_end = f(self.end)
-            sample([self.start, f_start], [self.end, f_end], 0)
+            #Maximum depth
+            if depth > 12:
+                list_segments.append([p, q])
 
-            return list_segments
+            #Sample irrespective of whether the line is flat till the
+            #depth of 6. We are not using linspace to avoid aliasing.
+            elif depth < 6:
+                sample(p, new_point, depth + 1)
+                sample(new_point, q, depth + 1)
+
+            #Sample ten points if complex values are encountered
+            #at both ends. If there is a real value in between then
+            #sample those points further.
+            elif p[1] is None and q[1] is None:
+                xarray = np.linspace(p[0], q[0], 10)
+                yarray = map(f, xarray)
+                if any(y is not None for y in yarray):
+                    for i in len(yarray) - 1:
+                        if yarray[i] is None or yarray[i + 1] is None:
+                            sample([xarray[i], yarray[i]],
+                                [xarray[i + 1], yarray[i + 1]], depth + 1)
+
+            #Sample further if one of the end points in None( ie a complex
+            #value) or the three points are not almost collinear.
+            elif p[1] is None or q[1] is None or not flat(p, new_point, q):
+                sample(p, new_point, depth + 1)
+                sample(new_point, q, depth + 1)
+            else:
+                list_segments.append([p, q])
+
+        f_start = f(self.start)
+        f_end = f(self.end)
+        sample([self.start, f_start], [self.end, f_end], 0)
+        return list_segments
 
     def get_points(self):
         if self.only_integers == True:
@@ -1071,7 +1084,7 @@ def centers_of_faces(array):
                                  array[:-1, :-1],
                                  )), 2)
 
-def flat(x, y, z):
+def flat(x, y, z, eps=1e-3):
     """Checks whether three points are almost collinear"""
     vector_a = x - y
     vector_b = z - y
@@ -1079,7 +1092,4 @@ def flat(x, y, z):
     vector_a_norm = np.linalg.norm(vector_a)
     vector_b_norm = np.linalg.norm(vector_b)
     cos_theta = dot_product / (vector_a_norm * vector_b_norm)
-    if abs(cos_theta + 1) > 0.001:
-        return False
-    else:
-        return True
+    return abs(cos_theta + 1) < eps
