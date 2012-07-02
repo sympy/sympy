@@ -118,6 +118,9 @@ def postorder_traversal(node):
     fashion. That is, it descends through the tree depth-first to yield all of
     a node's children's postorder traversal before yielding the node itself.
 
+    For an expression, the order of the traversal depends on the order of
+    .args, which in many cases can be arbitrary.
+
     Parameters
     ----------
     node : sympy expression
@@ -133,8 +136,12 @@ def postorder_traversal(node):
     >>> from sympy import symbols
     >>> from sympy.utilities.iterables import postorder_traversal
     >>> from sympy.abc import x, y, z
-    >>> set(postorder_traversal((x+y)*z)) == set([z, y, x, x + y, z*(x + y)])
+    >>> list(postorder_traversal(z*(x+y))) in ( # any of these are possible
+    ... [z, y, x, x + y, z*(x + y)], [z, x, y, x + y, z*(x + y)],
+    ... [x, y, x + y, z, z*(x + y)], [y, x, x + y, z, z*(x + y)])
     True
+    >>> list(postorder_traversal((x, (y, z))))
+    [x, y, z, (y, z), (x, (y, z))]
 
     """
     if isinstance(node, Basic):
