@@ -81,8 +81,8 @@ import sys
 sys.path.insert(0, '../..')
 from time import time
 from sympy.combinatorics.permutations import Permutation, cyclic, perm_af_invert , perm_af_muln, perm_af_mul
-from sympy.combinatorics.perm_groups import PermutationGroup, orbit_transversal
-from sympy.combinatorics.perm_algorithms import double_coset_can_rep,dummy_sgs, PermutationGroup
+from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.combinatorics.perm_algorithms import double_coset_can_rep,dummy_sgs, PermutationGroup, orbit_transversal
 from random import randint, seed, shuffle
 
 seed(10)
