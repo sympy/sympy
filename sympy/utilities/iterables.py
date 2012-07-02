@@ -408,7 +408,8 @@ def capture(func):
     return file.getvalue()
 
 def sift(expr, keyfunc):
-    """Sift the arguments of expr into a dictionary according to keyfunc.
+    """
+    Sift the arguments of expr into a dictionary according to keyfunc.
 
     INPUT: expr may be an expression or iterable; if it is an expr then
     it is converted to a list of expr's args or [expr] if there are no args.
@@ -416,7 +417,11 @@ def sift(expr, keyfunc):
     OUTPUT: each element in expr is stored in a list keyed to the value
     of keyfunc for the element.
 
-    EXAMPLES:
+    Note that for a SymPy expression, the order of the elements in the lists
+    is dependent on the order in .args, which can be arbitrary.
+
+    Examples
+    ========
 
     >>> from sympy.utilities import sift
     >>> from sympy.abc import x, y
@@ -425,20 +430,23 @@ def sift(expr, keyfunc):
     >>> sift(range(5), lambda x: x%2)
     {0: [0, 2, 4], 1: [1, 3]}
 
-    It is possible that some keys are not present, in which case you should
-    used dict's .get() method:
+    sift() returns a defaultdict() object, so any key that has no matches will
+    give [].
 
-    >>> sift(x+y, lambda x: x.is_commutative)
-    {True: [y, x]}
-    >>> _.get(False, [])
+    >>> a = sift(x+y, lambda x: x.is_commutative)
+    >>> True in a
+    True
+    >>> False in a
+    False
+    >>> a[False]
     []
 
     Sometimes you won't know how many keys you will get:
-    >>> sift(sqrt(x) + x**2 + exp(x) + (y**x)**2,
+    >>> sift(sqrt(x) + exp(x) + (y**x)**2,
     ... lambda x: x.as_base_exp()[0])
-    {E: [exp(x)], x: [sqrt(x), x**2], y: [y**(2*x)]}
-    >>> _.keys()
-    [E, x, y]
+    {E: [exp(x)], x: [sqrt(x)], y: [y**(2*x)]}
+    >>> set(_.keys())
+    set([E, x, y])
 
     """
     d = defaultdict(list)
