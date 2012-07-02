@@ -1549,6 +1549,7 @@ class PrettyPrinter(Printer):
         pform = self._print(p.args[0])
         pform = prettyForm(*pform.left('%s(' % (p.__class__.__name__)))
         pform = prettyForm(*pform.right(')'))
+        return pform
 
 
 def pretty(expr, **settings):
