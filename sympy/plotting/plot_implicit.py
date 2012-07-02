@@ -21,7 +21,8 @@ Arithmetic. Master's thesis. University of Toronto, 1996
 from plot import BaseSeries, Plot
 from experimental_lambdify import experimental_lambdify
 from intervalmath import interval
-from sympy.core.relational import Equality, GreaterThan, LessThan
+from sympy.core.relational import Equality, GreaterThan, LessThan, Relational
+from sympy import Eq
 from sympy.external import import_module
 from sympy import sympify, Expr
 from sympy.core.compatibility import set_union
@@ -126,7 +127,7 @@ class ImplicitSeries(BaseSeries):
                 func_eval = func(intervalx, intervaly)
                 if func_eval[1] and func_eval[0] is not False:
                     plot_list.append([intervalx, intervaly])
-        xvals, yvals = matplot_lib_plotlist(plot_list)
+        xvals, yvals = _matplotlib_list(plot_list)
         return xvals, yvals
 
 
@@ -151,8 +152,10 @@ def plot_implicit(expr, var_start_end_x, var_start_end_y, **kwargs):
     >>> p3 = plot_implicit(y ** 2 < x ** 3 - x, (x, -4, 4), (y, -4, 4)) #doctest: +SKIP
     >>> p4 = plot_implicit(y > sin(x), (x, -5, 5), (y, -2, 2)) #doctest: +SKIP
     """
-    #TODO: Add a global variable show = False for testrunners
+    #TODO: Add a global variable show = False for test runner
     assert isinstance(expr, Expr)
+    if not isinstance(expr, Relational):
+        expr = Eq(expr, 0)
     free_symbols = expr.free_symbols
     range_symbols = set([var_start_end_x[0], var_start_end_y[0]])
     symbols = set_union(free_symbols, range_symbols)
