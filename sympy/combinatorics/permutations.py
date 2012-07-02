@@ -7,7 +7,7 @@ from sympy.mpmath.libmp.libintmath import ifac
 
 import random
 
-def cyclic(a, n, one_based=True):
+def cyclic(a, n):
     """convert cycles from standard 1-based to cycle form
     accepted by Partition
 
@@ -19,11 +19,10 @@ def cyclic(a, n, one_based=True):
     >>> cyclic(a, 5)
     [[0, 1, 2], [3, 4]]
     """
-    shift = 1 if one_based else 0
     a1 = []
     v = []
     for x in a:
-        x = [y-shift for y in x]
+        x = [y-1 for y in x]
         a1 += x
         v.append(x)
     #print 'DB1 v=', v
