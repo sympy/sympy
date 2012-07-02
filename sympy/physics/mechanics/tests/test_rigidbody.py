@@ -30,7 +30,7 @@ def test_rigidbody():
     # Testing linear momentum function assuming A2 is the inertial frame
     N =  ReferenceFrame('N')
     P2.set_vel(N, v1 * N.x + v2 * N.y + v3 * N.z)
-    assert B.linmom(N) == m2 * (v1 * N.x + v2 * N.y + v3 * N.z)
+    assert B.linearmomentum(N) == m2 * (v1 * N.x + v2 * N.y + v3 * N.z)
 
 def test_rigidbody2():
     M, v, r, omega = dynamicsymbols('M v r omega')
@@ -41,8 +41,9 @@ def test_rigidbody2():
     I = outer (b.x, b.x)
     Inertia_tuple = (I, P)
     B = RigidBody('B', P, b, M, Inertia_tuple)
-    assert B.angmom(P, N) == omega * b.x
+    P.set_vel(N, v * b.x)
+    assert B.angularmomentum(P, N) == omega * b.x
     O = Point('O')
     O.set_vel(N, v * b.x)
     P.set_pos(O, r * b.y)
-    assert B.angmom(O, N) == omega * b.x - M*v*r*b.z
+    assert B.angularmomentum(O, N) == omega * b.x - M*v*r*b.z

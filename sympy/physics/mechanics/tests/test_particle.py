@@ -19,14 +19,14 @@ def test_particle():
     O = Point('O')
     P2.set_pos(O, r * N.y)
     P2.set_vel(N, v1 * N.x)
-    assert p.linmom(N) == m2 * v1 * N.x
-    assert p.angmom(O, N) == -m2 * r *v1 * N.z
+    assert p.linearmomentum(N) == m2 * v1 * N.x
+    assert p.angularmomentum(O, N) == -m2 * r *v1 * N.z
     P2.set_vel(N, v2 * N.y)
-    assert p.linmom(N) == m2 * v2 * N.y
-    assert p.angmom(O, N) == 0
+    assert p.linearmomentum(N) == m2 * v2 * N.y
+    assert p.angularmomentum(O, N) == 0
     P2.set_vel(N, v3 * N.z)
-    assert p.linmom(N) == m2 * v3 * N.z
-    assert p.angmom(O, N) == m2 * r * v3 * N.x
+    assert p.linearmomentum(N) == m2 * v3 * N.z
+    assert p.angularmomentum(O, N) == m2 * r * v3 * N.x
     P2.set_vel(N, v1 * N.x + v2 * N.y + v3 * N.z)
-    assert p.linmom(N) == m2 * (v1 * N.x + v2 * N.y + v3 * N.z)
-    assert p.angmom(O, N) == m2 * r * (v3 * N.x - v1 * N.z)
+    assert p.linearmomentum(N) == m2 * (v1 * N.x + v2 * N.y + v3 * N.z)
+    assert p.angularmomentum(O, N) == m2 * r * (v3 * N.x - v1 * N.z)
