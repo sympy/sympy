@@ -9,7 +9,7 @@ from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.qapply import qapply
 from matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
 from sympy.physics.quantum.tensorproduct import TensorProduct
-import itertools
+from sympy.core.compatibility import product
 
 class Density(HermitianOperator):
     """Density operator for representing mixed states.
@@ -164,7 +164,7 @@ class Density(HermitianOperator):
         for (state, prob) in self.args:
             state = state.expand() # needed to break up (a+b)*c
             if (isinstance(state, Add)):
-                for arg in itertools.product(state.args, repeat=2):
+                for arg in product(state.args, repeat=2):
                     terms.append(prob *
                                  self._generate_outer_prod(arg[0], arg[1]))
             else:
