@@ -268,3 +268,52 @@ def test_DiagramGrid():
     assert grid[1, 0] is None
     assert grid[1, 1] == C
     assert grid[1, 2] == D
+
+    # Five lemma, actually.
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    D = Object("D")
+    E = Object("E")
+    A_ = Object("A'")
+    B_ = Object("B'")
+    C_ = Object("C'")
+    D_ = Object("D'")
+    E_ = Object("E'")
+
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    h = NamedMorphism(C, D, "h")
+    i = NamedMorphism(D, E, "i")
+
+    j = NamedMorphism(A_, B_, "j")
+    k = NamedMorphism(B_, C_, "k")
+    l = NamedMorphism(C_, D_, "l")
+    m = NamedMorphism(D_, E_, "m")
+
+    o = NamedMorphism(A, A_, "o")
+    p = NamedMorphism(B, B_, "p")
+    q = NamedMorphism(C, C_, "q")
+    r = NamedMorphism(D, D_, "r")
+    s = NamedMorphism(E, E_, "s")
+
+    d = Diagram([f, g, h, i, j, k, l, m, o, p, q, r, s])
+    grid = DiagramGrid(d)
+
+    assert grid.width == 5
+    assert grid.height == 3
+    assert grid[0, 0] is None
+    assert grid[0, 1] == A
+    assert grid[0, 2] == A_
+    assert grid[0, 3] is None
+    assert grid[0, 4] is None
+    assert grid[1, 0] == C
+    assert grid[1, 1] == B
+    assert grid[1, 2] == B_
+    assert grid[1, 3] == C_
+    assert grid[1, 4] is None
+    assert grid[2, 0] == D
+    assert grid[2, 1] == E
+    assert grid[2, 2] is None
+    assert grid[2, 3] == D_
+    assert grid[2, 4] == E_
