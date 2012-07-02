@@ -172,6 +172,18 @@ class RiemannMonomial(object):
         return r
 
     def canonic(self):
+        """
+        canonicalize the RiemannMonomial
+
+        Examples
+        ========
+
+        >>> from riemann import RiemannMonomial
+        >>> s = 'R(-d12,d2,-d1,d6)*R(-d5,-d7,-d11,-d4)*R(d3,d8,-d2,d12)*R(d7,d5,d1,-d6)*R(d10,d9,d11,d4)*R(-d3,-d8,-d9,-d10)'
+        >>> r = RiemannMonomial.from_string(s)
+        >>> r.canonic()
+        -R(d1,d2,d3,d4)*R(-d1,-d2,d5,d6)*R(-d3,-d4,d7,d8)*R(-d5,-d6,d9,d10)*R(-d7,-d8,d11,d12)*R(-d9,-d10,-d11,-d12)
+        """
         g = self.indices[:]
         n = len(g)
         g = g + [n+1, n] if self.sign else g + [n, n+1]
@@ -262,7 +274,7 @@ class RiemannMonomial(object):
 
 
 ########### code generation
-def str_head(gens, size):
+def _str_head(gens, size):
     num_gens = len(gens)
     size = len(gens[0])
     s = \
@@ -286,7 +298,7 @@ void test()
     s += '};\n'
     return s
 
-def str_perm(num_gens, p, result):
+def _str_perm(num_gens, p, result):
     size = len(p)
     s1 = """
     int dummysetlabels[%d]={""" %(size)
@@ -390,14 +402,17 @@ def str_riemann(ind, g):
     return s
 
 def str_code(gens, g, result):
+    """
+    produce the code for test_xperm.cc
+    """
     size = len(g)
     # convert
     gens = [[y+1 for y in x] for x in gens]
     g = [y+1 for y in perm_af_invert(g)]
-    s = str_head(gens, size) + str_perm(len(gens), g, result)
+    s = _str_head(gens, size) + _str_perm(len(gens), g, result)
     return s
 
-def gen_xperm_code(sgens, g, ind, sgs):
+def riemann_canon(sgens, g, ind, sgs):
     """
     sgens slot symmetry generators
     `g` permutation corresponding to the tensor, with the last two
@@ -419,7 +434,7 @@ def gen_xperm_code(sgens, g, ind, sgs):
         result = [0]*size
     sys.stderr.write('double_coset_can_rep: %f\n' %(t1-t0))
     gens = [h.array_form for h in sgens]
-    return str_code(gens, g, result)
+    return gens, g, result
 
 def random_dummy(n):
     """
@@ -566,11 +581,22 @@ def riemann_products(nr, random_input, random_regular):
     sys.stderr.write('setup SGS: %.2f\n' %(t1-t0))
     d = random_dummy(n) + [n, n+1]
     g1 = perm_af_muln(d, g, s)
-    # print the input Riemann invariant
+    return sgens, g1, ind, sgs
+
+def ri2_code(ind, g1):
+    """
+    write file ri2.py
+    """
     sys.stderr.write('input %s\n' % str_riemann(ind, g1))
-    # canonize and print to stdout the C code for testing with xperm
-    result = gen_xperm_code(sgens, g1, ind, sgs)
-    print result
+    s11 = '''from riemann import RiemannMonomial
+from time import time
+t0 = time()
+s = RiemannMonomial.from_string("%s").canonic()
+t1 = time()
+print (s)
+print ('%%.3f' %%(t1-t0))
+''' % str_riemann(ind, g1)
+    open('ri2.py','w').write(s11)
 
 if __name__ == '__main__':
     try:
@@ -594,4 +620,11 @@ if __name__ == '__main__':
     if random_regular and nr < 5:
         sys.stderr.write("to get a random regular graph use nr >= 5\n")
         sys.exit()
-    riemann_products(nr, random_input, random_regular)
+    # generate random riemann products
+    sgens, g1, ind, sgs = riemann_products(nr, random_input, random_regular)
+    # write file ri2.py
+    ri2_code(ind, g1)
+    # canonize riemann product and write it to stderr
+    sgens, g, result = riemann_canon(sgens, g1, ind, sgs)
+    #print test_xperm.cc code
+    print str_code(sgens, g, result)
