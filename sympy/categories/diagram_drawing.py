@@ -723,7 +723,72 @@ class DiagramGrid(object):
 
         return grid
 
-    def __init__(self, diagram, groups=None):
+    @staticmethod
+    def _sequential_layout(diagram, merged_morphisms):
+        r"""
+        Lays out the diagram in "sequential" layout.  This method
+        will attempt to produce a result as close to a line as
+        possible.  For linear diagrams, the result will actually be a
+        line.
+        """
+        objects = diagram.objects
+        sorted_objects = sorted(objects, key=default_sort_key)
+
+        # Set up the adjacency lists of the underlying undirected
+        # graph of ``merged_morphisms``.
+        adjlists = {}
+        for obj in objects:
+            adjlists[obj] = []
+
+        for morphism in merged_morphisms:
+            adjlists[morphism.domain].append(morphism.codomain)
+            adjlists[morphism.codomain].append(morphism.domain)
+
+        # Assure that the objects in the adjacency list are always in
+        # the same order.
+        for obj in adjlists.keys():
+            adjlists[obj].sort(key=default_sort_key)
+
+        # Find an object with the minimal degree.  This is going to be
+        # the root.
+        root = sorted_objects[0]
+        mindegree = len(adjlists[root])
+        for obj in sorted_objects:
+            current_degree = len(adjlists[obj])
+            if current_degree < mindegree:
+                root = obj
+                mindegree = current_degree
+
+        grid = _GrowableGrid(1, 1)
+        grid[0, 0] = root
+
+        placed_objects = FiniteSet(root)
+        def place_objects(pt, placed_objects):
+            """
+            Does depth-first search in the underlying graph of the
+            diagram and places the objects en route.
+            """
+            # We will start placing new objects from here.
+            new_pt = (pt[0], pt[1] + 1)
+
+            for adjacent_obj in adjlists[grid[pt]]:
+                if adjacent_obj in placed_objects:
+                    # This object has already been placed.
+                    continue
+
+                DiagramGrid._put_object(new_pt, adjacent_obj, grid, [])
+                placed_objects |= FiniteSet(adjacent_obj)
+                placed_objects |= place_objects(new_pt, placed_objects)
+
+                new_pt = (new_pt[0] + 1, new_pt[1])
+
+            return placed_objects
+
+        place_objects((0, 0), placed_objects)
+
+        return grid
+
+    def __init__(self, diagram, groups=None, **hints):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
         conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
         merged_morphisms = DiagramGrid._merge_premises_conclusions(
@@ -733,6 +798,11 @@ class DiagramGrid(object):
             # Lay out the diagram according to the groups.
             self._grid = DiagramGrid._handle_groups(diagram, groups, merged_morphisms)
             return
+
+        if "shape" in hints:
+            if hints["shape"] == "sequential":
+                self._grid = DiagramGrid._sequential_layout(diagram, merged_morphisms)
+                return
 
         self._grid = DiagramGrid._generic_layout(diagram, merged_morphisms)
 
