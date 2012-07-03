@@ -39,6 +39,8 @@ from fractionfield import FractionField
 
 from expressiondomain import ExpressionDomain
 
+from quotientring import QuotientRing
+
 FF_python = PythonFiniteField
 FF_sympy = SymPyFiniteField
 FF_gmpy = GMPYFiniteField

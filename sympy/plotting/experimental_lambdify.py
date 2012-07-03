@@ -78,24 +78,20 @@ import warnings
 class vectorized_lambdify(object):
     """ Return a sufficiently smart, vectorized and lambdified function.
 
-    Returns only reals. Truncates complex if necessary.
+    Returns only reals.
 
     This function uses experimental_lambdify to created a lambdified
     expression ready to be used with numpy. Many of the functions in sympy
-    are not implemented in numpy so in some cases we resort to python math or
+    are not implemented in numpy so in some cases we resort to python cmath or
     even to evalf.
 
     The following translations are tried:
-    only numpy
-      - on FloatingPointError (numpy tried to return a nan):
-          take the real part and use complex128 arguments
+      only numpy complex
       - on errors raised by sympy trying to work with ndarray:
-          only python math and then vectorize float64
-      - on ValueError (math trying to work with complex numbers):
           only python cmath and then vectorize complex128
 
-    When using python math/cmath there is no need for evalf or float/complex
-    because python math/cmath calls those.
+    When using python cmath there is no need for evalf or float/complex
+    because python cmath calls those.
 
     This function never tries to mix numpy directly with evalf because numpy
     does not understand sympy Float. If this is needed one can use the
@@ -112,22 +108,14 @@ class vectorized_lambdify(object):
         self.failure = False
 
     def __call__(self, *args):
-        # TODO: This can be simplified. Check the last failback.
         np_old_err = np.seterr(invalid='raise')
         try:
-            results = self.vector_func(*args)
+            temp_args = (np.array(a, dtype=np.complex) for a in args)
+            results = self.vector_func(*temp_args)
+            results = np.ma.masked_where(np.abs(results.imag) != 0, results.real, copy=False)
         except Exception, e:
-            np.seterr(**np_old_err)
             #DEBUG: print 'Error', type(e), e
-            if (isinstance(e, FloatingPointError)
-                and 'invalid value encountered in' in str(e)):
-                # All functions were translated to numpy but
-                # complex number were produced and returned as nan.
-                # Solution: demand the use of np.complex128.
-                args = (np.array(a, dtype=np.complex) for a in args)
-                results = np.real(self.vector_func(*args))
-                warnings.warn('Complex values as arguments to numpy functions encountered.')
-            elif ((isinstance(e, TypeError)
+            if ((isinstance(e, TypeError)
                    and 'unhashable type: \'numpy.ndarray\'' in str(e))
                   or
                   (isinstance(e, ValueError)
@@ -141,22 +129,11 @@ class vectorized_lambdify(object):
                 #   Integral(x, (x, 0, ndarray(...))) raises "Invalid limits"
                 #   other ugly exceptions that are not well understood (marked with XXX)
                 # TODO: Cleanup the ugly special cases marked with xxx above.
-                # Solution: use math and vectorize the final lambda.
-                self.lambda_func = experimental_lambdify(self.args, self.expr, use_python_math=True)
-                self.vector_func = np.vectorize(self.lambda_func, otypes=[np.float])
-                results = self.__call__(*args)
-            elif ((isinstance(e, TypeError) and 'can\'t convert complex to float' in str(e))
-                    or
-                  (isinstance(e, ValueError) and 'math domain error' in str(e))):
-                # Almost all functions were translated to python math, but some
-                # were left as sympy functions. They produced complex numbers.
-                #   float(a+I*b) raises TypeError "can't convert complex to float")
-                #   math.sqrt(-1) raises ValueError "math domain error"
                 # Solution: use cmath and vectorize the final lambda.
                 self.lambda_func = experimental_lambdify(self.args, self.expr, use_python_cmath=True)
                 self.vector_func = np.vectorize(self.lambda_func, otypes=[np.complex])
-                results = np.real(self.__call__(*args))
-                warnings.warn('Complex values as arguments to python math functions encountered.')
+                results = self.vector_func(*args)
+                results = np.ma.masked_where(np.abs(results.imag) != 0, results.real, copy=False)
             else:
                 # Complete failure. One last try with no translations, only
                 # wrapping in complex((...).evalf()) and returning the real
@@ -169,10 +146,14 @@ class vectorized_lambdify(object):
                                                         use_evalf=True,
                                                         complex_wrap_evalf=True)
                     self.vector_func = np.vectorize(self.lambda_func, otypes=[np.complex])
-                    results = np.real(self.__call__(*args))
+                    results = self.vector_func(*args)
+                    results = np.ma.masked_where(np.abs(results.imag) != 0, results.real, copy=False)
                     warnings.warn('The evaluation of the expression is'
                             ' problematic. We are trying a failback method'
                             ' that may still work. Please report this as a bug.')
+        finally:
+            np.seterr(**np_old_err)
+
         return results
 
 

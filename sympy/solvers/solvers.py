@@ -22,6 +22,7 @@ from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
+from sympy.core.basic import preorder_traversal
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
                              sinh, tanh, coth, acos, asin, atan, acot, acosh,
@@ -34,7 +35,7 @@ from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together, factor
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
-from sympy.utilities.iterables import preorder_traversal, sift
+from sympy.utilities.iterables import sift
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import default_sort_key, filldedent
 from sympy.mpmath import findroot
@@ -1144,6 +1145,9 @@ def _solve(f, *symbols, **flags):
                     flags['simplify'] = flags.get('simplify', False)
 
                 soln = roots(poly, cubics=True, quartics=True).keys()
+                if not soln:
+                    soln = poly.all_roots()
+                    check = False # RootOf instances can not be checked
 
                 # We now know what the values of p are equal to. Now find out
                 # how they are related to the original x, e.g. if p**2 = cos(x)
@@ -1185,6 +1189,9 @@ def _solve(f, *symbols, **flags):
                 if poly.degree() > 2:
                     flags['simplify'] = flags.get('simplify', False)
                 soln = roots(poly, cubics=True, quartics=True).keys()
+                if not soln:
+                    soln = poly.all_roots()
+                    check = False # RootOf instances can not be checked
                 gen = poly.gen
                 if gen != symbol:
                     u = Dummy()

@@ -1773,7 +1773,7 @@ class Poly(Expr):
 
     def TC(f):
         """
-        Returns the trailing coefficent of ``f``.
+        Returns the trailing coefficient of ``f``.
 
         Examples
         ========

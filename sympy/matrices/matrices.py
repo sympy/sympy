@@ -102,8 +102,8 @@ class MatrixBase(object):
         # Matrix(2, 2, lambda i,j: i+j)
         if len(args) == 3 and callable(args[2]):
             operation = args[2]
-            rows = int(args[0])
-            cols = int(args[1])
+            rows = args[0]
+            cols = args[1]
             mat = []
             for i in range(rows):
                 for j in range(cols):
@@ -4320,13 +4320,13 @@ class SparseMatrix(MatrixBase):
     """
 
     def __init__(self, *args):
+        self.mat = {}
         if len(args) == 3 and callable(args[2]):
             op = args[2]
             if not isinstance(args[0], (int, Integer)) or not isinstance(args[1], (int, Integer)):
                 raise TypeError("`args[0]` and `args[1]` must both be integers.")
             self.rows = args[0]
             self.cols = args[1]
-            self.mat = {}
             for i in range(self.rows):
                 for j in range(self.cols):
                     value = sympify(op(i,j))
@@ -4337,7 +4337,6 @@ class SparseMatrix(MatrixBase):
             self.rows = args[0]
             self.cols = args[1]
             mat = args[2]
-            self.mat = {}
             for i in range(self.rows):
                 for j in range(self.cols):
                     value = sympify(mat[i*self.cols+j])
@@ -4347,29 +4346,20 @@ class SparseMatrix(MatrixBase):
                 isinstance(args[1],int) and isinstance(args[2], dict):
             self.rows = args[0]
             self.cols = args[1]
-            self.mat = {}
             # manual copy, copy.deepcopy() doesn't work
             for key in args[2].keys():
                 self.mat[key] = args[2][key]
         else:
-            if len(args) == 1:
-                mat = args[0]
-            else:
-                mat = args
-            if not mat:
-                self.mat = {}
-                self.rows = self.cols = 0
-                return
-            if not is_sequence(mat[0]):
-                raise TypeError('Matrix rows must be given in an iterable.')
-            self.rows = len(mat)
-            self.cols = len(mat[0])
-            self.mat = {}
+            # TODO: _handle_creation_inputs creates a temporary dense array
+            # and calls sympify on each element. This is a waste of time.
+            # Just like above rewrite the rest of the handled cases with
+            # "sparse" logic.
+            r, c, mat = self._handle_creation_inputs(*args)
+            self.rows = r
+            self.cols = c
             for i in range(self.rows):
-                if len(mat[i]) != self.cols:
-                    raise ValueError("All arguments must have the same length.")
                 for j in range(self.cols):
-                    value = sympify(mat[i][j])
+                    value = mat[self.cols*i+j]
                     if value != 0:
                         self.mat[(i,j)] = value
 
@@ -4521,7 +4511,7 @@ class SparseMatrix(MatrixBase):
         Returns a Row-sorted list of non-zero elements of the matrix.
 
         >>> from sympy.matrices import SparseMatrix
-        >>> a=SparseMatrix((1,2),(3,4))
+        >>> a=SparseMatrix(((1,2),(3,4)))
         >>> a
         [1, 2]
         [3, 4]
@@ -4548,7 +4538,7 @@ class SparseMatrix(MatrixBase):
         """
         Returns a Column-sorted list of non-zero elements of the matrix.
         >>> from sympy.matrices import SparseMatrix
-        >>> a=SparseMatrix((1,2),(3,4))
+        >>> a=SparseMatrix(((1,2),(3,4)))
         >>> a
         [1, 2]
         [3, 4]
@@ -4574,7 +4564,7 @@ class SparseMatrix(MatrixBase):
         """
         Returns the transposed SparseMatrix of this SparseMatrix
         >>> from sympy.matrices import SparseMatrix
-        >>> a = SparseMatrix((1,2),(3,4))
+        >>> a = SparseMatrix(((1,2),(3,4)))
         >>> a
         [1, 2]
         [3, 4]

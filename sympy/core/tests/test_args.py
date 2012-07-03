@@ -344,6 +344,11 @@ def test_sympy__core__sets__Union():
     from sympy.core.sets import Union, Interval
     assert _test_args(Union(Interval(0, 1), Interval(2, 3)))
 
+def test_sympy__core__trace__Tr():
+    from sympy.core.trace import Tr
+    a,b = symbols('a b')
+    assert _test_args(Tr(a+b))
+
 def test_sympy__sets__fancysets__Naturals():
     from sympy.sets.fancysets import Naturals
     assert _test_args(Naturals())
@@ -1269,6 +1274,12 @@ def test_sympy__matrices__expressions__transpose__Transpose():
     from sympy.matrices.expressions import MatrixSymbol
     assert _test_args(Transpose(MatrixSymbol('A', 3, 5)))
 
+def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
+    from sympy.matrices.expressions.funcmatrix import FunctionMatrix
+    from sympy import Lambda, symbols
+    i, j = symbols('i,j')
+    assert _test_args(FunctionMatrix(3,3, Lambda((i,j), i-j) ))
+
 def test_sympy__physics__gaussopt__BeamParameter():
     from sympy.physics.gaussopt import BeamParameter
     assert _test_args(BeamParameter(530e-9, 1, w=1e-3))
@@ -1913,3 +1924,86 @@ def test_sympy__geometry__entity__GeometryEntity():
     from sympy.geometry.entity import GeometryEntity
     from sympy.geometry.point import Point
     assert _test_args(GeometryEntity(Point(1, 0), 1))
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__Manifold():
+    from sympy.differential_geometry import Manifold
+    assert _test_args(Manifold('name', 3))
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__Patch():
+    from sympy.differential_geometry import Manifold, Patch
+    assert _test_args(Patch('name', Manifold('name', 3)))
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__CoordSystem():
+    from sympy.differential_geometry import Manifold, Patch, CoordSystem
+    assert _test_args(CoordSystem('name', Patch('name', Manifold('name', 3))))
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__Point():
+    from sympy.differential_geometry import Manifold, Patch, CoordSystem, Point
+    assert _test_args(Point(CoordSystem('name', Patch('name', Manifold('name', 3)))), [x, y])
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__ScalarField():
+    from sympy.differential_geometry import Manifold, Patch, CoordSystem, ScalarField
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    assert _test_args(ScalarField(cs, [x, y], x))
+
+@XFAIL
+def test_sympy__differential_geometry__differential_geometry__VectorField():
+    from sympy.differential_geometry import Manifold, Patch, CoordSystem, VectorField
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    assert _test_args(VectorField(cs, [x, y], [x, y]))
+
+def test_sympy__categories__baseclasses__Class():
+    from sympy.categories.baseclasses import Class
+    assert _test_args(Class())
+
+def test_sympy__categories__baseclasses__Object():
+    from sympy.categories import Object
+    assert _test_args(Object("A"))
+
+@XFAIL
+def test_sympy__categories__baseclasses__Morphism():
+    from sympy.categories import Object, Morphism
+    assert _test_args(Morphism(Object("A"), Object("B")))
+
+def test_sympy__categories__baseclasses__IdentityMorphism():
+    from sympy.categories import Object, IdentityMorphism
+    assert _test_args(IdentityMorphism(Object("A")))
+
+def test_sympy__categories__baseclasses__NamedMorphism():
+    from sympy.categories import Object, NamedMorphism
+    assert _test_args(NamedMorphism(Object("A"), Object("B"), "f"))
+
+def test_sympy__categories__baseclasses__CompositeMorphism():
+    from sympy.categories import Object, NamedMorphism, CompositeMorphism
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    assert _test_args(CompositeMorphism(f, g))
+
+def test_sympy__categories__baseclasses__Diagram():
+    from sympy.categories import Object, NamedMorphism, Diagram, Category
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    f = NamedMorphism(A, B, "f")
+    d = Diagram([f])
+    assert _test_args(d)
+
+def test_sympy__categories__baseclasses__Category():
+    from sympy.categories import Object, NamedMorphism, Diagram, Category
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    d1 = Diagram([f, g])
+    d2 = Diagram([f])
+    K = Category("K", commutative_diagrams=[d1, d2])
+    assert _test_args(K)

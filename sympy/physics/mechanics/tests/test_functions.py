@@ -1,8 +1,11 @@
 from sympy import symbols, sin, cos
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols, express,
-                                     ReferenceFrame, inertia,
+                                     ReferenceFrame, inertia, Point,
                                      kinematic_equations, Vector,
-                                     inertia_of_point_mass)
+                                     inertia_of_point_mass, partial_velocity,
+                                     outer, Particle,
+                                     Point, RigidBody, angularmomentum,
+                                     linearmomentum)
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -278,3 +281,56 @@ def test_inertia_of_point_mass():
                  m * r * t * (N.z | N.x) -
                  m * s * t * (N.z | N.y) +
                  m * (r**2 + s**2) * (N.z | N.z))
+
+def test_partial_velocity():
+    q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')
+    u4, u5 = dynamicsymbols('u4, u5')
+    r = symbols('r')
+
+    N = ReferenceFrame('N')
+    Y = N.orientnew('Y', 'Axis', [q1, N.z])
+    L = Y.orientnew('L', 'Axis', [q2, Y.x])
+    R = L.orientnew('R', 'Axis', [q3, L.y])
+    R.set_ang_vel(N, u1 * L.x + u2 * L.y + u3 * L.z)
+
+    C = Point('C')
+    C.set_vel(N, u4 * L.x + u5 * (Y.z ^ L.x))
+    Dmc = C.locatenew('Dmc', r * L.z)
+    Dmc.v2pt_theory(C, N, R)
+
+    vel_list = [Dmc.vel(N), C.vel(N), R.ang_vel_in(N)]
+    u_list = [u1, u2, u3, u4, u5]
+    assert (partial_velocity(vel_list, u_list) == [[- r*L.y, 0, L.x],
+            [r*L.x, 0, L.y], [0, 0, L.z], [L.x, L.x, 0],
+                [cos(q2)*L.y - sin(q2)*L.z, cos(q2)*L.y - sin(q2)*L.z, 0]])
+
+def test_linearmomentum():
+    N = ReferenceFrame('N')
+    Ac = Point('Ac')
+    Ac.set_vel(N, 25 * N.y)
+    I = outer(N.x, N.x)
+    A = RigidBody('A', Ac, N, 20, (I, Ac))
+    P = Point('P')
+    Pa = Particle('Pa', P, 1)
+    Pa.point.set_vel(N, 10 * N.x)
+    BL = [A, Pa]
+    assert linearmomentum(BL, N) == 10 * N.x + 500 * N.y
+
+def test_angularmomentum_and_linearmomentum():
+    m, M, l1 = symbols('m M l1')
+    q1d = dynamicsymbols('q1d')
+    N = ReferenceFrame('N')
+    O = Point('O')
+    O.set_vel(N, 0 * N.x)
+    Ac = O.locatenew('Ac', l1 * N.x)
+    P = Ac.locatenew('P', l1 * N.x)
+    a = ReferenceFrame('a')
+    a.set_ang_vel(N, q1d * N.z)
+    Ac.v2pt_theory(O, N, a)
+    P.v2pt_theory(O, N, a)
+    Pa = Particle('Pa', P, m)
+    I = outer(N.z, N.z)
+    A = RigidBody('A', Ac, a, M, (I, Ac))
+    BL =[Pa, A]
+    assert linearmomentum(BL, N) == 2 * m * q1d* l1 * N.y + M * l1 * q1d * N.y
+    assert angularmomentum(BL, O, N) == 4 * m * q1d * l1**2 * N.z + q1d * N.z

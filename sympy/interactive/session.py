@@ -94,7 +94,11 @@ def enable_automatic_symbols(app):
         stb = self.InteractiveTB.structured_traceback(etype, value, tb, tb_offset=tb_offset)
         self._showtraceback(etype, value, stb)
 
-    app.shell.set_custom_exc((NameError,), _handler)
+    if hasattr(app, 'shell'):
+        app.shell.set_custom_exc((NameError,), _handler)
+    else:
+        # This was restructured in IPython 0.13
+        app.set_custom_exc((NameError,), _handler)
 
 def init_ipython_session(argv=[], auto=False):
     """Construct new IPython session. """
@@ -263,9 +267,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 # take a symbol arg.  The second arg is `store_history`,
                 # and False means don't add the line to IPython's history.
                 ip.runsource = lambda src, symbol='exec': ip.run_cell(src, False)
+            if not in_ipython:
                 mainloop = ip.mainloop
-            else:
-                mainloop = ip.interact
 
     if auto and (not ipython or IPython.__version__ < '0.11'):
         raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")

@@ -8,13 +8,18 @@ __all__ = ['cross',
            'mpprint',
            'mlatex',
            'kinematic_equations',
-           'inertia_of_point_mass']
+           'inertia_of_point_mass',
+           'partial_velocity',
+           'linearmomentum',
+           'angularmomentum']
 
 from sympy.physics.mechanics.essential import (Vector, Dyadic, ReferenceFrame,
                                                MechanicsStrPrinter,
                                                MechanicsPrettyPrinter,
                                                MechanicsLatexPrinter,
                                                dynamicsymbols)
+from sympy.physics.mechanics.particle import Particle
+from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy import sympify, diff, sin, cos, Matrix
 
 def cross(vec1, vec2):
@@ -396,3 +401,159 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         return list(edots.T - 0.5 * w.T * E.T)
     else:
         raise ValueError('Not an approved rotation type for this function')
+
+def partial_velocity(vel_list, u_ind_list):
+    """Returns a list of partial velocities.
+
+    Parameters
+    ==========
+
+    vel_list : list
+        List of velocities of Point's and angular velocities of ReferenceFrame's
+
+    u_ind_list : list
+        List of independent generalized speeds.
+
+    Example
+    =======
+
+    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> from sympy.physics.mechanics import dynamicsymbols
+    >>> from sympy.physics.mechanics import partial_velocity
+    >>> u = dynamicsymbols('u')
+    >>> N = ReferenceFrame('N')
+    >>> P = Point('P')
+    >>> P.set_vel(N, u * N.x)
+    >>> vel_list = [P.vel(N)]
+    >>> u_list = [u]
+    >>> partial_velocity(vel_list, u_list)
+    [[N.x]]
+
+    """
+    if not isinstance(vel_list, list):
+        raise TypeError('Provide velocities in a list')
+    if not isinstance(u_ind_list, list):
+        raise TypeError('Provide speeds in a list')
+    else:
+        a = vel_list[0]
+        frame = a.args[0][1]
+        list_of_pvlists = []
+        i = 0
+        while i < len(u_ind_list):
+            pvlist = []
+            for e in vel_list:
+                vel = e.diff(u_ind_list[i], frame)
+                pvlist = pvlist + [vel]
+            list_of_pvlists = list_of_pvlists + [pvlist]
+            i = i + 1
+    return list_of_pvlists
+
+def linearmomentum(bodylist, frame):
+    """Linear momentum of the system.
+
+    This function returns the linear momentum of a system of Particle's and/or
+    RigidBody's. The linear momentum of a system is equal to the vector sum of
+    the linear momentum of its constituents. Consider a system, S, comprised of
+    a rigid body, A, and a particle, P. The linear momentum of the system, L,
+    is equal to the vector sum of the linear momentum of the particle, L1, and
+    the linear momentum of the rigid body, L2, i.e-
+
+    L = L1 + L2
+
+    bodylist : list
+        A list of all RigidBody's and Particle's in the system.
+
+    frame : ReferenceFrame
+        The frame in which linear momentum is desired.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import Point, Particle, ReferenceFrame
+    >>> from sympy.physics.mechanics import RigidBody, outer, linearmomentum
+    >>> N = ReferenceFrame('N')
+    >>> P = Point('P')
+    >>> P.set_vel(N, 10 * N.x)
+    >>> Pa = Particle('Pa', P, 1)
+    >>> Ac = Point('Ac')
+    >>> Ac.set_vel(N, 25 * N.y)
+    >>> I = outer(N.x, N.x)
+    >>> A = RigidBody('A', Ac, N, 20, (I, Ac))
+    >>> BL = [Pa, A]
+    >>> print linearmomentum(BL, N)
+    10*N.x + 500*N.y
+
+    """
+
+    if not isinstance(bodylist, list):
+        raise TypeError('System elements must be supplied as a list')
+    else:
+        linearmomentum_sys = 0
+        for e in bodylist:
+            if isinstance(e, (RigidBody, Particle)):
+                lm_individual = e.linearmomentum(frame)
+                linearmomentum_sys = linearmomentum_sys + lm_individual
+            else:
+                raise TypeError('Body list must have only Particle'
+                        'or RigidBody')
+    return linearmomentum_sys
+
+def angularmomentum(bodylist, point, frame):
+    """Angular momentum of a system
+
+    This function returns the angular momentum of a system of Particle's and/or
+    RigidBody's. The angular momentum of such a system is equal to the vector
+    sum of the angular momentum of its constituents. Consider a system, S,
+    comprised of a rigid body, A, and a particle, P. The angular momentum of
+    the system, H, is equal to the vector sum of the linear momentum of the
+    particle, H1, and the linear momentum of the rigid body, H2, i.e-
+
+    H = H1 + H2
+
+    Parameters
+    ==========
+
+    bodylist : list
+        A list of all RigidBody's and Particle's in the system.
+
+    point : Point
+        The point about which angular momentum of the system is desired.
+
+    frame : ReferenceFrame
+        The frame in which angular momentum is desired.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import Point, Particle, ReferenceFrame
+    >>> from sympy.physics.mechanics import RigidBody, outer, angularmomentum
+    >>> N = ReferenceFrame('N')
+    >>> O = Point('O')
+    >>> O.set_vel(N, 0 * N.x)
+    >>> P = O.locatenew('P', 1 * N.x)
+    >>> P.set_vel(N, 10 * N.x)
+    >>> Pa = Particle('Pa', P, 1)
+    >>> Ac = O.locatenew('Ac', 2 * N.y)
+    >>> Ac.set_vel(N, 5 * N.y)
+    >>> a = ReferenceFrame('a')
+    >>> a.set_ang_vel(N, 10 * N.z)
+    >>> I = outer(N.z, N.z)
+    >>> A = RigidBody('A', Ac, a, 20, (I, Ac))
+    >>> BL = [Pa, A]
+    >>> print angularmomentum(BL, O, N)
+    10*N.z
+
+    """
+
+    if not isinstance(bodylist, list):
+        raise TypeError('System elements must be supplied as a list')
+    else:
+        angularmomentum_sys = 0
+        for e in bodylist:
+            if isinstance(e, (RigidBody, Particle)):
+                angmom_individual = e.angularmomentum(point, frame)
+                angularmomentum_sys = angularmomentum_sys + angmom_individual
+            else:
+                raise TypeError('Body list must have only Particle'
+                        'or RigidBody')
+    return angularmomentum_sys

@@ -118,6 +118,9 @@ def postorder_traversal(node):
     fashion. That is, it descends through the tree depth-first to yield all of
     a node's children's postorder traversal before yielding the node itself.
 
+    For an expression, the order of the traversal depends on the order of
+    .args, which in many cases can be arbitrary.
+
     Parameters
     ----------
     node : sympy expression
@@ -133,8 +136,12 @@ def postorder_traversal(node):
     >>> from sympy import symbols
     >>> from sympy.utilities.iterables import postorder_traversal
     >>> from sympy.abc import x, y, z
-    >>> set(postorder_traversal((x+y)*z)) == set([z, y, x, x + y, z*(x + y)])
+    >>> list(postorder_traversal(z*(x+y))) in ( # any of these are possible
+    ... [z, y, x, x + y, z*(x + y)], [z, x, y, x + y, z*(x + y)],
+    ... [x, y, x + y, z, z*(x + y)], [y, x, x + y, z, z*(x + y)])
     True
+    >>> list(postorder_traversal((x, (y, z))))
+    [x, y, z, (y, z), (x, (y, z))]
 
     """
     if isinstance(node, Basic):
@@ -146,77 +153,6 @@ def postorder_traversal(node):
             for subtree in postorder_traversal(item):
                 yield subtree
     yield node
-
-class preorder_traversal(object):
-    """
-    Do a pre-order traversal of a tree.
-
-    This iterator recursively yields nodes that it has visited in a pre-order
-    fashion. That is, it yields the current node then descends through the tree
-    breadth-first to yield all of a node's children's pre-order traversal.
-
-    Parameters
-    ----------
-    node : sympy expression
-        The expression to traverse.
-
-    Returns
-    -------
-    subtree : sympy expression
-        All of the subtrees in the tree.
-
-    Examples
-    --------
-    >>> from sympy import symbols
-    >>> from sympy.utilities.iterables import preorder_traversal
-    >>> from sympy.abc import x, y, z
-    >>> set(preorder_traversal((x+y)*z)) == set([z, x + y, z*(x + y), x, y])
-    True
-
-    """
-    def __init__(self, node):
-        self._skip_flag = False
-        self._pt = self._preorder_traversal(node)
-
-    def _preorder_traversal(self, node):
-        yield node
-        if self._skip_flag:
-            self._skip_flag = False
-            return
-        if isinstance(node, Basic):
-            for arg in node.args:
-                for subtree in self._preorder_traversal(arg):
-                    yield subtree
-        elif iterable(node):
-            for item in node:
-                for subtree in self._preorder_traversal(item):
-                    yield subtree
-
-    def skip(self):
-        """
-        Skip yielding current node's (last yielded node's) subtrees.
-
-        Examples
-        --------
-        >>> from sympy import symbols
-        >>> from sympy.utilities.iterables import preorder_traversal
-        >>> from sympy.abc import x, y, z
-        >>> pt = preorder_traversal((x+y*z)*z)
-        >>> for i in pt:
-        ...     print i
-        ...     if i == x+y*z:
-        ...             pt.skip()
-        z*(x + y*z)
-        z
-        x + y*z
-        """
-        self._skip_flag = True
-
-    def next(self):
-        return self._pt.next()
-
-    def __iter__(self):
-        return self
 
 def interactive_traversal(expr):
     """Traverse a tree asking a user which branch to choose. """
@@ -472,7 +408,8 @@ def capture(func):
     return file.getvalue()
 
 def sift(expr, keyfunc):
-    """Sift the arguments of expr into a dictionary according to keyfunc.
+    """
+    Sift the arguments of expr into a dictionary according to keyfunc.
 
     INPUT: expr may be an expression or iterable; if it is an expr then
     it is converted to a list of expr's args or [expr] if there are no args.
@@ -480,7 +417,11 @@ def sift(expr, keyfunc):
     OUTPUT: each element in expr is stored in a list keyed to the value
     of keyfunc for the element.
 
-    EXAMPLES:
+    Note that for a SymPy expression, the order of the elements in the lists
+    is dependent on the order in .args, which can be arbitrary.
+
+    Examples
+    ========
 
     >>> from sympy.utilities import sift
     >>> from sympy.abc import x, y
@@ -489,20 +430,23 @@ def sift(expr, keyfunc):
     >>> sift(range(5), lambda x: x%2)
     {0: [0, 2, 4], 1: [1, 3]}
 
-    It is possible that some keys are not present, in which case you should
-    used dict's .get() method:
+    sift() returns a defaultdict() object, so any key that has no matches will
+    give [].
 
-    >>> sift(x+y, lambda x: x.is_commutative)
-    {True: [y, x]}
-    >>> _.get(False, [])
+    >>> a = sift(x+y, lambda x: x.is_commutative)
+    >>> True in a
+    True
+    >>> False in a
+    False
+    >>> a[False]
     []
 
     Sometimes you won't know how many keys you will get:
-    >>> sift(sqrt(x) + x**2 + exp(x) + (y**x)**2,
+    >>> sift(sqrt(x) + exp(x) + (y**x)**2,
     ... lambda x: x.as_base_exp()[0])
-    {E: [exp(x)], x: [sqrt(x), x**2], y: [y**(2*x)]}
-    >>> _.keys()
-    [E, x, y]
+    {E: [exp(x)], x: [sqrt(x)], y: [y**(2*x)]}
+    >>> set(_.keys())
+    set([E, x, y])
 
     """
     d = defaultdict(list)

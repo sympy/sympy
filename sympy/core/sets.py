@@ -9,6 +9,8 @@ from sympy.mpmath import mpi, mpf
 from sympy.assumptions import ask
 from sympy.logic.boolalg import And, Or
 
+from sympy.utilities import default_sort_key
+
 class Set(Basic):
     """
     The base class for any kind of set.
@@ -556,7 +558,7 @@ class Interval(Set, EvalfMixin):
         if empty:
             return S.EmptySet
 
-        return self.__class__(start, end, left_open, right_open)
+        return Interval(start, end, left_open, right_open)
 
     def _union(self, other):
         """
@@ -675,11 +677,11 @@ def set_sort_fn(s):
     try:
         val = s.inf
         if val.is_comparable:
-            return val
+            return default_sort_key(val)
         else:
-            return 1e9+abs(hash(s))
-    except NotImplementedError:
-        return 1e9+abs(hash(s))
+            return default_sort_key(s)
+    except (NotImplementedError, ValueError):
+        return default_sort_key(s)
 
 class Union(Set, EvalfMixin):
     """
@@ -1122,14 +1124,6 @@ class UniversalSet(Set):
     def _union(self, other):
         return self
 
-def element_sort_fn(x):
-    try:
-        if x.is_comparable is True:
-            return x
-    except:
-        pass
-    return 1e9+abs(hash(x))
-
 class FiniteSet(Set, EvalfMixin):
     """
     Represents a finite set of discrete numbers
@@ -1161,7 +1155,6 @@ class FiniteSet(Set, EvalfMixin):
             return EmptySet()
 
         args = frozenset(args) # remove duplicates
-        args = sorted(args, key = element_sort_fn)
         obj = Basic.__new__(cls, *args)
         obj._elements = args
         return obj
@@ -1229,11 +1222,13 @@ class FiniteSet(Set, EvalfMixin):
             raise ValueError("%s: Complement not defined for symbolic inputs"
                     %self)
 
+        args = sorted(self.args, key=default_sort_key)
+
         intervals = [] # Build up a list of intervals between the elements
-        intervals += [Interval(S.NegativeInfinity, self.args[0], True, True)]
-        for a, b in zip(self.args[:-1], self.args[1:]):
+        intervals += [Interval(S.NegativeInfinity, args[0], True, True)]
+        for a, b in zip(args[:-1], args[1:]):
             intervals.append(Interval(a, b, True, True)) # open intervals
-        intervals.append(Interval(self.args[-1], S.Infinity, True, True))
+        intervals.append(Interval(args[-1], S.Infinity, True, True))
         return Union(intervals, evaluate=False)
 
     @property
@@ -1270,3 +1265,6 @@ class FiniteSet(Set, EvalfMixin):
 
     def _eval_evalf(self, prec):
         return FiniteSet(elem.evalf(prec) for elem in self)
+
+    def _hashable_content(self):
+        return (self._elements,)

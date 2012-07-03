@@ -2,7 +2,7 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
-from sympy.core import S, C, Add
+from sympy.core import S, C, Add, Symbol
 from sympy.core.function import _coeff_isneg
 from printer import Printer
 from conventions import split_super_sub
@@ -1007,7 +1007,8 @@ class LatexPrinter(Printer):
                 return 'Domain on ' + self._print(d.symbols)
 
     def _print_FiniteSet(self, s):
-        return self._print_set(s.args)
+        items = sorted(s.args, key=default_sort_key)
+        return self._print_set(items)
 
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
@@ -1180,6 +1181,88 @@ class LatexPrinter(Printer):
 
     def _print_DMF(self, p):
         return self._print_DMP(p)
+
+    def _print_Object(self, object):
+        return self._print(Symbol(object.name))
+
+    def _print_Morphism(self, morphism):
+        domain = self._print(morphism.domain)
+        codomain = self._print(morphism.codomain)
+        return "%s\\rightarrow %s" % (domain, codomain)
+
+    def _print_NamedMorphism(self, morphism):
+        pretty_name = self._print(Symbol(morphism.name))
+        pretty_morphism = self._print_Morphism(morphism)
+        return "%s:%s" % (pretty_name, pretty_morphism)
+
+    def _print_IdentityMorphism(self, morphism):
+        from sympy.categories import NamedMorphism
+        return self._print_NamedMorphism(NamedMorphism(
+            morphism.domain, morphism.codomain, "id"))
+
+    def _print_CompositeMorphism(self, morphism):
+        from sympy.categories import NamedMorphism
+
+        # All components of the morphism have names and it is thus
+        # possible to build the name of the composite.
+        component_names_list = [self._print(Symbol(component.name)) for \
+                                component in morphism.components]
+        component_names_list.reverse()
+        component_names = "\\circ ".join(component_names_list) + ":"
+
+        pretty_morphism = self._print_Morphism(morphism)
+        return component_names + pretty_morphism
+
+    def _print_Category(self, morphism):
+        return "\\mathbf{%s}" % self._print(Symbol(morphism.name))
+
+    def _print_Diagram(self, diagram):
+        if not diagram.premises:
+            # This is an empty diagram.
+            return self._print(S.EmptySet)
+
+        latex_result = self._print(diagram.premises)
+        if diagram.conclusions:
+            latex_result += "\\Longrightarrow %s" % \
+                            self._print(diagram.conclusions)
+
+        return latex_result
+
+    def _print_FreeModule(self, M):
+        return '{%s}^{%s}' % (self._print(M.ring), self._print(M.rank))
+
+    def _print_FreeModuleElement(self, m):
+        # Print as row vector for convenience, for now.
+        return r"\left[ %s \right]" % ",".join(
+                '{' + self._print(x) + '}' for x in m)
+
+    def _print_SubModule(self, m):
+        return r"\left< %s \right>" % ",".join(
+                '{' + self._print(x) + '}' for x in m.gens)
+
+    def _print_ModuleImplementedIdeal(self, m):
+        return r"\left< %s \right>" % ",".join(
+                '{' + self._print(x) + '}' for [x] in m._module.gens)
+
+    def _print_QuotientRing(self, R):
+        # TODO nicer fractions for few generators...
+        return r"\frac{%s}{%s}" % (self._print(R.ring), self._print(R.base_ideal))
+
+    def _print_QuotientRingElement(self, x):
+        return r"{%s} + {%s}" % (self._print(x.data), self._print(x.ring.base_ideal))
+
+    def _print_QuotientModuleElement(self, m):
+        return r"{%s} + {%s}" % (self._print(m.data),
+                                 self._print(m.module.killed_module))
+
+    def _print_QuotientModule(self, M):
+        # TODO nicer fractions for few generators...
+        return r"\frac{%s}{%s}" % (self._print(M.base),
+                                   self._print(M.killed_module))
+
+    def _print_MatrixHomomorphism(self, h):
+        return r"{%s} : {%s} \to {%s}" % (self._print(h._sympy_matrix()),
+            self._print(h.domain), self._print(h.codomain))
 
 
 def latex(expr, **settings):

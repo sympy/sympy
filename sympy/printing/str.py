@@ -125,10 +125,11 @@ class StrPrinter(Printer):
         return "%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Pow"])
 
     def _print_FiniteSet(self, s):
+        s = sorted(s, key=default_sort_key)
         if len(s) > 10:
-            printset = s.args[:3] + ('...',) + s.args[-3:]
+            printset = s[:3] + ['...'] + s[-3:]
         else:
-            printset = s.args
+            printset = s
         return '{' + ', '.join(self._print(el) for el in printset) + '}'
 
     def _print_Function(self, expr):
@@ -526,6 +527,18 @@ class StrPrinter(Printer):
     def _print_DMF(self, expr):
         return self._print_DMP(expr)
 
+    def _print_Object(self, object):
+        return 'Object("%s")' % object.name
+
+    def _print_IdentityMorphism(self, morphism):
+        return 'IdentityMorphism(%s)' % morphism.domain
+
+    def _print_NamedMorphism(self, morphism):
+        return 'NamedMorphism(%s, %s, "%s")' % \
+               (morphism.domain, morphism.codomain, morphism.name)
+
+    def _print_Category(self, category):
+        return 'Category("%s")' % category.name
 
 
 def sstr(expr, **settings):

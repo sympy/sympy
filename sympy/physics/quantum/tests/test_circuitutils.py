@@ -326,7 +326,7 @@ def test_random_reduce():
     cnot = CNOT(1,0)
     cgate_z = CGate((0,), Z(1))
 
-    seed = 1
+    seq = [2, 11, 9, 3, 5]
     gate_list = [x, y, z]
     ids = list(bfs_identity_search(gate_list, 1, max_depth=4))
 
@@ -337,30 +337,32 @@ def test_random_reduce():
     circuit = (x, y, z, x, y, h)
     # seed = 1, indices to attempt removal: 2, 11, 9, 3
     # removed id: y, z, x
-    actual = random_reduce(circuit, ids, seed=seed)
+    actual = random_reduce(circuit, ids, random_sequence=iter(seq))
     assert actual == (x, y, h)
 
     circuit = (x, x, y, y, z, z)
     # seed = 1, indices to attempt removal: 2, 11, 9
     # removed id: y, y
-    actual = random_reduce(circuit, ids, seed=seed)
+    actual = random_reduce(circuit, ids, random_sequence=iter(seq))
     assert actual == (x, x, z, z)
 
-    seed = 2
+    seq = [14, 13, 0]
     # seed = 2, indices: 14, 13, 0
     # removed id: z, z
-    actual = random_reduce(circuit, ids, seed=seed)
-    assert random_reduce(circuit, ids, seed=seed) == (x, x, y, y)
+    actual = random_reduce(circuit, ids, random_sequence=iter(seq))
+    assert random_reduce(circuit, ids, random_sequence=iter(seq)) == (x, x, y, y)
 
     gate_list = [x, y, z, h, cnot, cgate_z]
     ids = list(bfs_identity_search(gate_list, 2, max_depth=4))
 
+    seq = [30, 29, 1, 2, 23, 19, 17, 7, 14, 13, 12, 3, 8, 7, 13, 16, 15,
+           8, 6, 3]
     circuit = (x, y, z, y, h, y, h, cgate_z, h, cnot)
     expected = (x, y, z, y, h, y)
     # seed = 2, indices: 30, 29, 1, 2, 23, 19, 17, 7, 14, 13, 12, 3, 8
     #                    7, 13, 16, 15, 8, 6, 3
     # removed id: h, cgate_z, h, cnot
-    actual = random_reduce(circuit, ids, seed=seed)
+    actual = random_reduce(circuit, ids, random_sequence=iter(seq))
     assert actual == expected
 
     circuit = Mul(*(x, y, z, y, h, y, h, cgate_z, h, cnot))
@@ -368,7 +370,7 @@ def test_random_reduce():
     # seed = 2, indices: 30, 29, 1, 2, 23, 19, 17, 7, 14, 13, 12, 3, 8
     #                    7, 13, 16, 15, 8, 6, 3
     # removed id: h, cgate_z, h, cnot
-    actual = random_reduce(circuit, ids, seed=seed)
+    actual = random_reduce(circuit, ids, random_sequence=iter(seq))
     assert actual == expected
 
 def test_random_insert():
@@ -379,19 +381,18 @@ def test_random_insert():
     cnot = CNOT(1,0)
     cgate_z = CGate((0,), Z(1))
 
-    seed = 1
+
     choices = [(x, x)]
     circuit = (y, y)
-    # insert location: 0;
-    actual = random_insert(circuit, choices, seed=seed)
+    # insert location: 0; circuit choice: 1
+    actual = random_insert(circuit, choices, insert_loc=0, insert_circuit_loc=0)
     assert actual == (x, x, y, y)
 
-    seed = 8
     circuit = (x, y, z, h)
     choices = [(h, h), (x, y, z)]
     expected = (x, x, y, z, y, z, h)
     # insert location: 1; circuit choice: 1
-    actual = random_insert(circuit, choices, seed=seed)
+    actual = random_insert(circuit, choices, insert_loc=1, insert_circuit_loc=1)
     assert actual == expected
 
     gate_list = [x, y, z, h, cnot, cgate_z]
@@ -403,11 +404,11 @@ def test_random_insert():
     circuit = (x, y, h, cnot, cgate_z)
     expected = (x, y, z, y, z, y, h, cnot, cgate_z)
     # insert location: 1; circuit choice: 30
-    actual = random_insert(circuit, eq_ids, seed=seed)
+    actual = random_insert(circuit, eq_ids, insert_loc=1, insert_circuit_loc=30)
     assert actual == expected
 
     circuit = Mul(*(x, y, h, cnot, cgate_z))
     expected = (x, y, z, y, z, y, h, cnot, cgate_z)
     # insert location: 1; circuit choice: 30
-    actual = random_insert(circuit, eq_ids, seed=seed)
+    actual = random_insert(circuit, eq_ids, insert_loc=1, insert_circuit_loc=30)
     assert actual == expected

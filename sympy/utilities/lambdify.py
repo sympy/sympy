@@ -380,7 +380,7 @@ def _imp_namespace(expr, namespace=None):
 def implemented_function(symfunc, implementation):
     """ Add numerical ``implementation`` to function ``symfunc``.
 
-    ``symfunc`` can be an ``UndefinedFunction`` instance, or a name sting.
+    ``symfunc`` can be an ``UndefinedFunction`` instance, or a name string.
     In the latter case we create an ``UndefinedFunction`` instance with that
     name.
 

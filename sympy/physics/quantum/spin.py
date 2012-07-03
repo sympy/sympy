@@ -147,6 +147,15 @@ class SpinOpBase(object):
             raise NotImplementedError
         return Sum(new_func, *s.limits)
 
+    def _eval_trace(self, **options):
+        #TODO: use options to use different j values
+        #For now eval at default basis
+
+        # is it efficient to represent each time
+        # to do a trace?
+        return self._represent_default_basis().trace()
+
+
 
 class JplusOp(SpinOpBase, Operator):
     """The J+ operator."""
@@ -957,6 +966,20 @@ class SpinState(State):
             result *= KroneckerDelta(self.j, bra.j) * KroneckerDelta(self.m, bra.m)
         return result
 
+    def _eval_trace(self, bra, **hints):
+
+        # One way to implement this method is to assume the basis set k is
+        # passed.
+        # Then we can apply the discrete form of Trace formula here
+        # Tr(|i><j| ) = \Sum_k <k|i><j|k>
+        #then we do qapply() on each each inner product and sum over them.
+
+        # OR
+
+        # Inner product of |i><j| = Trace(Outer Product).
+        # we could just use this unless there are cases when this is not true
+
+        return (bra*self).doit()
 
 class JxKet(SpinState, Ket):
     """Eigenket of Jx.

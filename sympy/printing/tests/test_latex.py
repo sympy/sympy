@@ -569,3 +569,76 @@ def test_PolynomialRing():
     assert latex(QQ[x, y]) == r"\mathbb{Q}\left[x, y\right]"
     assert latex(QQ.poly_ring(x, y, order="ilex")) == \
             r"S_<^{-1}\mathbb{Q}\left[x, y\right]"
+
+def test_categories():
+    from sympy.categories import (Object, Morphism, IdentityMorphism,
+                                  NamedMorphism, CompositeMorphism,
+                                  Category, Diagram)
+
+    A1 = Object("A1")
+    A2 = Object("A2")
+    A3 = Object("A3")
+
+    f1 = NamedMorphism(A1, A2, "f1")
+    f2 = NamedMorphism(A2, A3, "f2")
+    id_A1 = IdentityMorphism(A1)
+
+    K1 = Category("K1")
+
+    assert latex(A1) == "A_{1}"
+    assert latex(f1) == "f_{1}:A_{1}\\rightarrow A_{2}"
+    assert latex(id_A1) == "id:A_{1}\\rightarrow A_{1}"
+    assert latex(f2*f1) == "f_{2}\\circ f_{1}:A_{1}\\rightarrow A_{3}"
+
+    assert latex(K1) == "\mathbf{K_{1}}"
+
+    d = Diagram()
+    assert latex(d) == "\emptyset"
+
+    d = Diagram({f1:"unique", f2:S.EmptySet})
+    assert latex(d) == "\\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
+           "\\rightarrow A_{3} : \\emptyset, & id:A_{1}\\rightarrow " \
+           "A_{1} : \\emptyset, & id:A_{2}\\rightarrow A_{2} : " \
+           "\\emptyset, & id:A_{3}\\rightarrow A_{3} : \\emptyset, " \
+           "& f_{1}:A_{1}\\rightarrow A_{2} : \\left\\{unique\\right\\}, " \
+           "& f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix}"
+
+    d = Diagram({f1:"unique", f2:S.EmptySet}, {f2 * f1: "unique"})
+    assert latex(d) == "\\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
+           "\\rightarrow A_{3} : \\emptyset, & id:A_{1}\\rightarrow " \
+           "A_{1} : \\emptyset, & id:A_{2}\\rightarrow A_{2} : " \
+           "\\emptyset, & id:A_{3}\\rightarrow A_{3} : \\emptyset, " \
+           "& f_{1}:A_{1}\\rightarrow A_{2} : \\left\\{unique\\right\\}," \
+           " & f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix}" \
+           "\\Longrightarrow \\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
+           "\\rightarrow A_{3} : \\left\\{unique\\right\\}\\end{Bmatrix}"
+
+def test_Modules():
+    from sympy.polys.domains import QQ
+    from sympy import homomorphism
+    R = QQ[x, y]
+    F = R.free_module(2)
+    M = F.submodule([x, y], [1, x**2])
+
+    assert latex(F) == r"{\mathbb{Q}\left[x, y\right]}^{2}"
+    assert latex(M) == \
+        r"\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>"
+
+    I = R.ideal(x**2, y)
+    assert latex(I) == r"\left< {x^{2}},{y} \right>"
+
+    Q = F / M
+    assert latex(Q) == r"\frac{{\mathbb{Q}\left[x, y\right]}^{2}}{\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}"
+    assert latex(Q.submodule([1, x**3/2], [2, y])) == \
+        r"\left< {{\left[ {1},{\frac{1}{2} x^{3}} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}},{{\left[ {2},{y} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}} \right>"
+
+    h = homomorphism(QQ[x].free_module(2), QQ[x].free_module(2), [0, 0])
+
+    assert latex(h) == r"{\left[\begin{smallmatrix}0 & 0\\0 & 0\end{smallmatrix}\right]} : {{\mathbb{Q}\left[x\right]}^{2}} \to {{\mathbb{Q}\left[x\right]}^{2}}"
+
+def test_QuotientRing():
+    from sympy.polys.domains import QQ
+    R = QQ[x]/[x**2 + 1]
+
+    assert latex(R) == r"\frac{\mathbb{Q}\left[x\right]}{\left< {x^{2} + 1} \right>}"
+    assert latex(R.one) == r"{1} + {\left< {x^{2} + 1} \right>}"

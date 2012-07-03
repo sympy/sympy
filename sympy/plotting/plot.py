@@ -24,11 +24,12 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 
 from inspect import getargspec
 from itertools import repeat, izip
-from sympy import sympify, Expr, Tuple
+from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import set_union
 
 from experimental_lambdify import vectorized_lambdify
+import warnings
 
 #TODO probably all of the imports after this line can be put inside function to
 # speed up the `from sympy import *` command.
@@ -232,7 +233,7 @@ def plot(*args, **kwargs):
         surface, parametric surface
          - if the variable lists do not provide ranges a default range is used
          - if the variables are not provided, the free variables are
-           automatically detected
+           automatically supplied in the order they are sorted (e.g. x, y, z)
          - if neither variables nor ranges are provided, both are guessed
          - if multiple expressions are provided in a list all of them are
            plotted
@@ -298,37 +299,83 @@ def plot(*args, **kwargs):
     list_of_plots = [p for p in list_of_plots
                              if not any(isinstance(a, list) for a in p)]
 
-    def expand(the_args):
-        lists = [l for l in the_args if isinstance(l, list)]
-        not_lists = [l for l in the_args if not isinstance(l, list)]
-        return [list(l)+not_lists for l in zip(*lists)]
+    def expand(plot):
+        """
+        >> expand(([1,2,3],(1,2),(4,5)))
+        [[1, (1, 2), (4, 5)], [2, (1, 2), (4, 5)], [3, (1, 2), (4, 5)]]
+        """
+        lists = [i for i in plot if isinstance(i, list)]
+        not_lists = [i for i in plot if not isinstance(i, list)]
+        return [list(l) + not_lists for l in zip(*lists)]
 
     for a in list_arguments:
         list_of_plots.extend(expand(a))
 
-    # args = (x**2, ) --> args = (x**2, (x,-10,10)) and others
-    def add_variables_and_ranges(the_args):
+    def add_variables_and_ranges(plot):
+        """make sure all limits are in the form (symbol, a, b)"""
+
+        # find where the limits begin and expressions end
+        for i in range(len(plot)):
+            if isinstance(plot[i], Tuple):
+                break
+        else:
+            i = len(plot) + 1
+        exprs = list(plot[:i])
+        assert all(isinstance(e, Expr) for e in exprs)
+        assert all(isinstance(t, Tuple) for t in plot[i:])
+
+        ranges = set([i for i in plot[i:] if isinstance(i, Tuple) and len(i) > 1])
+        range_variables = set([t[0] for t in ranges if len(t) == 3])
+        expr_free = set_union(*[e.free_symbols for e in exprs if isinstance(e, Expr)])
+
         default_range = Tuple(-10, 10)
-        #TODO when we drop 2.5 remove this ugly reduce and just call set.union
-        #on the list
-        free_vars = reduce(set.union, [expr.free_symbols for expr in pl
-                                                  if isinstance(expr, Expr)])
-        # remove from free_vars all variables that already have defined ranges
-        for item in the_args:
-            if isinstance(item, Tuple) and (len(item)==3 or len(item)==1):
-                free_vars.discard(item[0])
-        # add the missing variables to all len=2 Tuples
-        # add the missing ranges to all len=1 Tuples
-        for index, item in enumerate(the_args):
-            if not isinstance(item, Tuple):
-                pass
-            elif len(item) == 2:
-                the_args[index] = Tuple(free_vars.pop(), item[0], item[1])
-            elif len(item) == 1:
-                the_args[index] = Tuple(item[0], default_range[0], default_range[1])
-        # add the missing len=3 Tuples
-        the_args.extend([Tuple(v, default_range[0], default_range[1]) for v in free_vars])
-        return the_args
+
+        # unambiguous cases for limits
+        #   no ranges
+        if not ranges:
+            plot = exprs + [Tuple(e) + default_range for e in expr_free or [Dummy()]]
+
+        #   all limits of length 3
+        elif all(len(i) == 3 for i in ranges):
+            pass
+
+        #   all ranges the same
+        elif len(ranges) == 1:
+            range1 = ranges.pop()
+            if len(range1) == 2:
+                plot = exprs + [Tuple(x) + range1 for x in expr_free]
+
+        #   ranges cover free variables of expression
+        elif expr_free < range_variables:
+            plot = exprs + [i if len(i) == 3 else Tuple(Dummy()) + i for i in ranges]
+
+        #   ranges cover all but 1 free variable
+        elif len(expr_free - range_variables) == 1:
+            x = (expr_free - range_variables).pop()
+            ranges = list(ranges)
+            for i, ri in enumerate(ranges):
+                if len(ri) == 2:
+                    ranges[i] = Tuple(x) + ri
+                    break
+            else:
+                ranges.append(Tuple(x) + default_range)
+            for i, ri in enumerate(ranges):
+                if len(ri) == 2:
+                    ranges[i] = Tuple(Dummy()) + ri
+            plot = exprs + ranges
+
+        #   all implicit ranges
+        elif all(len(i) == 2 for i in ranges):
+            more = len(ranges) - len(expr_free)
+            all_free = list(expr_free) + [Dummy() for i in range(more)]
+            ranges = list(ranges)
+            ranges.extend(-more*[default_range])
+            plot = exprs + [Tuple(all_free[i]) + ri for i, ri in enumerate(ranges)]
+
+        else:
+            raise ValueError('erroneous or unanticipated range input')
+
+        return plot
 
     list_of_plots = [Tuple(*add_variables_and_ranges(pl)) for pl in list_of_plots]
 
@@ -443,8 +490,8 @@ class Line2DBaseSeries(BaseSeries):
             x = np.array((points[0],points[0])).T.flatten()[1:]
             y = np.array((points[1],points[1])).T.flatten()[:-1]
             points = (x, y)
-        points = np.array(points).T.reshape(-1, 1, self._dim)
-        return np.concatenate([points[:-1], points[1:]], axis=1)
+        points = np.ma.array(points).T.reshape(-1, 1, self._dim)
+        return np.ma.concatenate([points[:-1], points[1:]], axis=1)
 
     def get_color_array(self):
         c = self.line_color
@@ -866,7 +913,7 @@ class MatplotlibBackend(BaseBackend):
                     collection.set_color(s.line_color)
             if s.is_3Dsurface and s.surface_color:
                 if matplotlib.__version__ < "1.2.0": #TODO in the distant future remove this check
-                    warn.waring('The version of matplotlib is too old to use surface coloring.')
+                    warnings.warn('The version of matplotlib is too old to use surface coloring.')
                 elif isinstance(s.surface_color, (float,int)) or callable(s.surface_color):
                     color_array = s.get_color_array()
                     color_array = color_array.reshape(color_array.size)
@@ -885,7 +932,8 @@ class MatplotlibBackend(BaseBackend):
             self.ax.set_xlim(parent.xlim)
         if parent.ylim:
             self.ax.set_ylim(parent.ylim)
-        self.ax.set_autoscale_on(parent.autoscale)
+        if not isinstance(self.ax, Axes3D) or matplotlib.__version__ >= '1.2.0': #XXX in the distant future remove this check
+            self.ax.set_autoscale_on(parent.autoscale)
         if parent.axis_center:
             val = parent.axis_center
             if isinstance(self.ax, Axes3D):
