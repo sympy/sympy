@@ -259,7 +259,7 @@ def test_DiagramGrid():
 
     # Test the pullback with sequential layout, just for stress
     # testing.
-    grid = DiagramGrid(d, shape="sequential")
+    grid = DiagramGrid(d, layout="sequential")
 
     assert grid.width == 5
     assert grid.height == 1
@@ -367,7 +367,7 @@ def test_DiagramGrid():
     h = NamedMorphism(C, D, "h")
     i = NamedMorphism(D, E, "i")
     d = Diagram([f, g, h, i])
-    grid = DiagramGrid(d, shape="sequential")
+    grid = DiagramGrid(d, layout="sequential")
 
     assert grid.width == 5
     assert grid.height == 1
@@ -378,7 +378,7 @@ def test_DiagramGrid():
     assert grid[0, 4] == E
 
     # Test the transposed version.
-    grid = DiagramGrid(d, shape="sequential", transpose=True)
+    grid = DiagramGrid(d, layout="sequential", transpose=True)
 
     assert grid.width == 1
     assert grid.height == 5

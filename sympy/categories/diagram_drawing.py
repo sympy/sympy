@@ -798,8 +798,8 @@ class DiagramGrid(object):
             # Lay out the diagram according to the groups.
             self._grid = DiagramGrid._handle_groups(
                 diagram, groups, merged_morphisms)
-        elif "shape" in hints:
-            if hints["shape"] == "sequential":
+        elif "layout" in hints:
+            if hints["layout"] == "sequential":
                 self._grid = DiagramGrid._sequential_layout(
                     diagram, merged_morphisms)
         else:
