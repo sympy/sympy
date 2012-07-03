@@ -388,3 +388,23 @@ def test_DiagramGrid():
     assert grid[2, 4] is None
     assert grid[2, 5] == E
 
+    # Test the five lemma with object grouping and hints.
+    grid = DiagramGrid(d, {
+        FiniteSet(A, B, C, D, E): {"layout": "sequential",
+                                   "transpose": True},
+        FiniteSet(A_, B_, C_, D_, E_): {"layout": "sequential",
+                                        "transpose": True}},
+                       transpose=True)
+
+    assert grid.width == 5
+    assert grid.height == 2
+    assert grid[0, 0] == A_
+    assert grid[0, 1] == B_
+    assert grid[0, 2] == C_
+    assert grid[0, 3] == D_
+    assert grid[0, 4] == E_
+    assert grid[1, 0] == A
+    assert grid[1, 1] == B
+    assert grid[1, 2] == C
+    assert grid[1, 3] == D
+    assert grid[1, 4] == E

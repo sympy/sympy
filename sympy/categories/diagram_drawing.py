@@ -8,7 +8,7 @@ The currently supported back-ends are Xy-pic [Xypic]
 [Xypic] http://www.tug.org/applications/Xy-pic/
 """
 
-from sympy.core import Basic, FiniteSet
+from sympy.core import Basic, FiniteSet, Dict
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)
 from sympy.utilities import default_sort_key
@@ -576,24 +576,47 @@ class DiagramGrid(object):
                         return other_obj
 
     @staticmethod
-    def _handle_groups(diagram, groups, merged_morphisms):
+    def _handle_groups(diagram, groups, merged_morphisms, hints):
         """
         Given the slightly preprocessed morphisms of the diagram,
         produces a grid laid out according to ``groups``.
+
+        If a group has hints, it is laid out with those hints only,
+        without any influence from ``hints``.  Otherwise, it is laid
+        out with ``hints``.
         """
         obj_groups = {}
         groups_grids = {}
-        for group in groups:
-            if isinstance(group, FiniteSet):
-                # Set up the corresponding object-to-group mappings.
-                for obj in group:
-                    obj_groups[obj] = group
+        if isinstance(groups, dict) or isinstance(groups, Dict):
+            for group, local_hints in groups.items():
+                if isinstance(group, FiniteSet):
+                    # Set up the corresponding object-to-group
+                    # mappings.
+                    for obj in group:
+                        obj_groups[obj] = group
 
-                # Lay out the current group.
-                groups_grids[group] = DiagramGrid(
-                    diagram.subdiagram_from_objects(group))
-            else:
-                obj_groups[group] = group
+                    # Lay out the current group.
+                    if local_hints:
+                        groups_grids[group] = DiagramGrid(
+                            diagram.subdiagram_from_objects(group), **local_hints)
+                    else:
+                        groups_grids[group] = DiagramGrid(
+                            diagram.subdiagram_from_objects(group), **hints)
+                else:
+                    obj_groups[group] = group
+        else:
+            for group in groups:
+                if isinstance(group, FiniteSet):
+                    # Set up the corresponding object-to-group
+                    # mappings.
+                    for obj in group:
+                        obj_groups[obj] = group
+
+                    # Lay out the current group.
+                    groups_grids[group] = DiagramGrid(
+                        diagram.subdiagram_from_objects(group))
+                else:
+                    obj_groups[group] = group
 
         new_morphisms = []
         for morphism in merged_morphisms:
@@ -797,7 +820,7 @@ class DiagramGrid(object):
         if groups and (groups != diagram.objects):
             # Lay out the diagram according to the groups.
             self._grid = DiagramGrid._handle_groups(
-                diagram, groups, merged_morphisms)
+                diagram, groups, merged_morphisms, hints)
         elif "layout" in hints:
             if hints["layout"] == "sequential":
                 self._grid = DiagramGrid._sequential_layout(
