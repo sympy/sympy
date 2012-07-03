@@ -385,7 +385,7 @@ class Integral(Expr):
         return Integral(f, *limits)
 
     def transform(self, x, u, inverse=False):
-        """
+        r"""
         Performs a change of variables from `x` to `u` using the relationship
         given by `x` and `u` which will define the transformations `f` and `F`
         (which are inverses of each other) as follows:
@@ -404,18 +404,11 @@ class Integral(Expr):
         Once f and F have been identified, the transformation is made as
         follows:
 
-                       F(b)
-          b              /
-          /             |
-         |              |       d
-         |  x dx  -->   |  f(x)*--(f(x)) dx  where F(x) is the inverse of f(x)
-         |              |       dx
-        /               |
-        a              /
-                      F(a)
+        .. math:: \int_a^b x \mathrm{d}x \rightarrow \int_{F(a)}^{F(b)} f(x)
+                  \frac{\mathrm{d}}{\mathrm{d}x}
 
-        where the limits and integrand have been corrected so as to retain the
-        same value after integration.
+        where `F(x)` is the inverse of `f(x)` and the limits and integrand have
+        been corrected so as to retain the same value after integration.
 
         Notes
         =====

@@ -1741,13 +1741,13 @@ def powdenest(eq, force=False, polar=False):
     r"""
     Collect exponents on powers as assumptions allow.
 
-    Given (bb**be)**e, this can be simplified as follows:
-        o if bb is positive, or
-        o e is an integer, or
-        o |be| < 1 then this simplifies to bb**(be*e)
+    Given ``(bb**be)**e``, this can be simplified as follows:
+        * if ``bb`` is positive, or
+        * ``e`` is an integer, or
+        * ``|be| < 1`` then this simplifies to ``bb**(be*e)``
 
-    Given a product of powers raised to a power, (bb1**be1 * bb2**be2...)**e,
-    simplification can be done as follows:
+    Given a product of powers raised to a power, ``(bb1**be1 *
+    bb2**be2...)**e``, simplification can be done as follows:
 
     - if e is positive, the gcd of all bei can be joined with e;
     - all non-negative bb can be separated from those that are negative
@@ -1761,11 +1761,11 @@ def powdenest(eq, force=False, polar=False):
     negative behave as though they are positive, resulting in more
     denesting.
 
-    Setting `polar` to True will do simplifications on the riemann surface of
+    Setting ``polar`` to True will do simplifications on the riemann surface of
     the logarithm, also resulting in more denestings.
 
     When there are sums of logs in exp() then a product of powers may be
-    obtained e.g. exp(3*(log(a) + 2*log(b))) - > a**3*b**6.
+    obtained e.g. ``exp(3*(log(a) + 2*log(b)))`` - > ``a**3*b**6``.
 
     Examples
     ========

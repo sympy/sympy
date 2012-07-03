@@ -633,7 +633,7 @@ class Basic(object):
 
     def iter_basic_args(self):
         """
-        Iterates arguments of 'self'.
+        Iterates arguments of ``self``.
 
         Examples
         ========
@@ -1093,6 +1093,9 @@ class Basic(object):
 
         Examples
         ========
+
+        Initial setup
+
             >>> from sympy import log, sin, cos, tan, Wild
             >>> from sympy.abc import x, y
             >>> f = log(sin(x)) + tan(sin(x**2))

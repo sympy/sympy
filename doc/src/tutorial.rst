@@ -426,17 +426,14 @@ Summation
 Compute the summation of f with respect to the given summation variable over the given limits.
 
 summation(f, (i, a, b)) computes the sum of f with respect to i from a to b,
-i.e.,
+i.e., ::
 
-::
-
-
-                            b
-                          ____
-                          \   `
-summation(f, (i, a, b)) =  )    f
-                          /___,
-                          i = a
+                                b
+                              ____
+                              \   `
+    summation(f, (i, a, b)) =  )    f
+                              /___,
+                              i = a
 
 
 If it cannot compute the sum, it prints the corresponding summation formula.

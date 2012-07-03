@@ -170,8 +170,8 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
     3.1.5, and 3.2.3, and is enabled by default in all Python versions after
     and including 3.3.0.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.utilities.runtests import (
     ... run_in_subprocess_with_hash_randomization)

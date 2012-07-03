@@ -414,8 +414,8 @@ def partial_velocity(vel_list, u_ind_list):
     u_ind_list : list
         List of independent generalized speeds.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.physics.mechanics import Point, ReferenceFrame
     >>> from sympy.physics.mechanics import dynamicsymbols

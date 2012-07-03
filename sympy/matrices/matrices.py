@@ -3870,7 +3870,8 @@ def classof(A,B):
 
     Currently the strategy is that Mutability is contagious
 
-    Example
+    Examples
+    ========
 
     >>> from sympy import Matrix, ImmutableMatrix
     >>> from sympy.matrices.matrices import classof
