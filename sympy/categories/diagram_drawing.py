@@ -13,7 +13,7 @@ from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)
 from sympy.utilities import default_sort_key
 
-class _GrowableGrid:
+class _GrowableGrid(object):
     """
     Holds a growable grid of objects.
 
@@ -84,7 +84,7 @@ class _GrowableGrid:
         for i in xrange(self._height):
             self._array[i].insert(0, None)
 
-class DiagramGrid:
+class DiagramGrid(object):
     """
     Constructs and holds the fitting of the diagram into a grid.
 
