@@ -217,12 +217,10 @@ def AbelianGroup(*cyclic_orders):
     [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely
     _generated_abelian_groups
 
-
     Examples
     ========
 
-
-    >>> from sympy.combinatorics.perm_groups import AbelianGroup
+    >>> from sympy.combinatorics.named_groups import AbelianGroup
     >>> AbelianGroup(3,4)
     PermutationGroup([Permutation([1, 2, 0, 3, 4, 5, 6]),\
     Permutation([0, 1, 2, 4, 5, 6, 3])])

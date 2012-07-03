@@ -8,7 +8,7 @@ from math import log
 from sympy.ntheory import isprime, sieve
 from sympy.combinatorics.util import _check_cycles_alt_sym,\
 _distribute_gens_by_base, _orbits_transversals_from_bsgs,\
-_handle_precomputed_bsgs
+_handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr, _strip
 
 def _smallest_change(h, alpha):
     """
@@ -316,6 +316,31 @@ class PermutationGroup(Basic):
     >>> G = PermutationGroup([a, b])
     >>> G
     PermutationGroup([Permutation([0, 2, 1]), Permutation([1, 0, 2])])
+
+    References
+    ==========
+
+    [1] Holt, D., Eick, B., O'Brien, E.
+    "Handbook of computational group theory"
+
+    [2] Seress, A.
+    "Permutation group algorithms"
+
+    [3] http://en.wikipedia.org/wiki/Schreier_vector
+
+    [4] http://en.wikipedia.org/wiki/Nielsen_transformation
+    #Product_replacement_algorithm
+
+    [5] Frank Celler, Charles R.Leedham-Green, Scott H.Murray,
+    Alice C.Niemeyer, and E.A.O'Brien. "Generating random
+    elements of a finite group"
+
+    [6] http://en.wikipedia.org/wiki/Block_%28permutation_group_theory%29
+
+    [7] http://www.algorithmist.com/index.php/Union_Find
+
+    [8] http://en.wikipedia.org/wiki/Multiply_transitive_group#Multiply_transitive_groups
+
     """
 
     def __new__(cls, *args, **kw_args):
@@ -331,6 +356,7 @@ class PermutationGroup(Basic):
         obj._is_sym = None
         obj._is_alt = None
         obj._is_primitive = None
+        obj._transitivity_degree = None
         obj._max_div = None
         size = len(args[0][0].array_form)
         obj._r = len(obj._generators)
@@ -343,7 +369,9 @@ class PermutationGroup(Basic):
         obj._coset_repr = []
         obj._coset_repr_n = []
         obj._stabilizers_gens = []
-        #obj._basic_orbits = []
+        obj._strong_gens = []
+        obj._basic_orbits = []
+        obj._transversals = []
 
         # these attributes are assigned after running _random_pr_init
         obj._random_gens = []
@@ -423,6 +451,170 @@ class PermutationGroup(Basic):
 
         """
         return self._generators
+
+    @property
+    def strong_gens(self):
+        """
+        Return a strong generating set from the Schreier-Sims algorithm.
+
+        A generating set `S = \{g_1, g_2, ..., g_t\}` for a permutation group
+        `G` is a strong generating set relative to the sequence of points
+        (referred to as a "base") `(b_1, b_2, ..., b_k)` if, for
+        `1 \leq i \leq k` we have that the intersection of the pointwise
+        stabilizer `G^{(i+1)} := G_{b_1, b_2, ..., b_i}` with `S` generates
+        the pointwise stabilizer `G^{(i+1)}`. The concepts of a base and
+        strong generating set and their applications are discussed in depth
+        in [1],pp.87-89 and [2],pp.55-57.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import DihedralGroup
+        >>> D = DihedralGroup(4)
+        >>> D.strong_gens
+        [Permutation([1, 2, 3, 0]), Permutation([3, 2, 1, 0]),\
+        Permutation([0, 3, 2, 1])]
+        >>> D.base
+        [0, 1]
+
+        See Also
+        ========
+
+        base, basic_transversals, basic_orbits, basic_stabilizers
+
+        """
+        if self._strong_gens == []:
+            self.schreier_sims()
+        return self._strong_gens
+
+    @property
+    def base(self):
+        """
+        Return a base from the Schreier-Sims algorithm.
+
+        For a permutation group `G`, a base is a sequence of points
+        `B = (b_1, b_2, ..., b_k)` such that no element of `G` apart from the
+        identity fixes all the points in `B`. The concepts of a base and
+        strong generating set and their applications are discussed in depth
+        in [1],pp.87-89 and [2],pp.55-57.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> S = SymmetricGroup(4)
+        >>> S.base
+        [0, 1, 2]
+
+        See Also
+        ========
+
+        strong_gens, basic_transversals, basic_orbits, basic_stabilizers
+
+        """
+        if self._base == []:
+            self.schreier_sims()
+        return self._base
+
+    @property
+    def basic_transversals(self):
+        """
+        Return basic transversals relative to a base and strong generating set.
+
+        The basic transversals are transversals of the basic orbits. They
+        are provided as a list of dictionaries, each dictionary having
+        keys - the elements of one of the basic orbits, and values - the
+        corresponding transversal elements. See [1],pp.87-89 for more
+        information.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import AlternatingGroup
+        >>> A = AlternatingGroup(4)
+        >>> A.basic_transversals
+        [{0: Permutation([0, 1, 2, 3]), 1: Permutation([1, 2, 0, 3]),\
+        2: Permutation([2, 0, 1, 3]), 3: Permutation([3, 0, 2, 1])},\
+        {1: Permutation([0, 1, 2, 3]), 2: Permutation([0, 2, 3, 1]),\
+        3: Permutation([0, 3, 1, 2])}]
+
+        See Also
+        ========
+
+        strong_gens, base, basic_orbits, basic_stabilizers
+
+        """
+        if self._transversals == []:
+            self.schreier_sims()
+        return self._transversals
+
+    @property
+    def basic_orbits(self):
+        """
+        Return the basic orbits relative to a base and strong generating set.
+
+        If `(b_1, b_2, ..., b_k)` is a base for a group `G`, and
+        `G^{(i)} = G_{b_1, b_2, ..., b_{i-1}}` is the `i`-th basic stabilizer
+        (so that `G^{(1)} = G`), the `i`-th basic orbit relative to this base
+        is the orbit of `b_i` under `G^{(i)}`. See [1],pp.87-89 for more
+        information.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> S = SymmetricGroup(4)
+        >>> S.basic_orbits
+        [[0, 1, 2, 3], [1, 2, 3], [2, 3]]
+
+        See Also
+        ========
+
+        base, strong_gens, basic_transversals, basic_stabilizers
+
+        """
+        if self._basic_orbits == []:
+            self.schreier_sims()
+        return self._basic_orbits
+
+    @property
+    def basic_stabilizers(self):
+        """
+        Return a chain of stabilizers relative to a base and strong generating
+        set.
+
+        The `i`-th basic stabilizer `G^{(i)}` relative to a base
+        `(b_1, b_2, ..., b_k)` is `G_{b_1, b_2, ..., b_{i-1}}`. For more
+        information, see [1],pp.87-89.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import AlternatingGroup
+        >>> A = AlternatingGroup(4)
+        >>> A.schreier_sims()
+        >>> A.base
+        [0, 1]
+        >>> A.basic_stabilizers
+        [PermutationGroup([Permutation([1, 2, 0, 3]), Permutation([0, 2, 3, 1]), Permutation([0, 3, 1, 2])]), PermutationGroup([Permutation([0, 2, 3, 1]), Permutation([0, 3, 1, 2])])]
+
+        See Also
+        ========
+
+        base, strong_gens, basic_orbits, basic_transversals
+
+        """
+
+
+        if self._coset_repr == []:
+            self.schreier_sims()
+        strong_gens = self._strong_gens
+        base = self._base
+        distr_gens = _distribute_gens_by_base(base, strong_gens)
+        basic_stabilizers = []
+        for gens in distr_gens:
+            basic_stabilizers.append(PermutationGroup(gens))
+        return basic_stabilizers
 
     @property
     def is_abelian(self):
@@ -538,26 +730,6 @@ class PermutationGroup(Basic):
             self.schreier_sims()
         return self._stabilizers_gens
 
-    def strong_base(self):
-        """
-        strong base in Schreier-Sims representation
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([0, 2, 1])
-        >>> b = Permutation([1, 0, 2])
-        >>> G = PermutationGroup([a, b])
-        >>> G.strong_base()
-        [0, 1]
-
-        """
-        if not self._coset_repr:
-            self.schreier_sims()
-        return self._base
-
     def schreier_sims(self):
         """
         Schreier-Sims algorithm.
@@ -640,8 +812,28 @@ class PermutationGroup(Basic):
         JGr.gens = JGr.gens[:i+1]
         self._base = base.keys()
         self._coset_repr_n = base.values()
-        k = len(self._base)
-        #   self._basic_orbits = [[rep[self._base[i]] for rep in self._coset_repr[i]] for i in range(k)]
+        strong_gens = self.generators[:]
+        for gen in self._stabilizers_gens:
+            gen = Permutation(gen)
+            if gen not in strong_gens:
+                strong_gens.append(gen)
+        self._strong_gens = strong_gens
+        base_len = len(self._base)
+        transversals = [None]*base_len
+        basic_orbits = [None]*base_len
+        for index in xrange(base_len):
+            transversals[index] = {}
+            base_point = self._base[index]
+            trans = self._coset_repr[base_point][:]
+            for el in trans:
+                el = Permutation(el)
+                orbit_member = el(base_point)
+                transversals[index][orbit_member] = el
+            basic_orbits[index] =\
+            transversals[index].keys()
+        self._transversals = transversals
+        self._basic_orbits = basic_orbits
+
 
     def coset_decomposition(self, g):
         """
@@ -984,15 +1176,6 @@ class PermutationGroup(Basic):
 
         orbit_transversal
 
-        References
-        ==========
-
-        [1] Holt, D., Eick, B., O'Brien, E.
-        "Handbook of computational group theory"
-
-        [2] Seress, A.
-        "Permutation group algorithms"
-
         """
         if not hasattr(alpha, '__getitem__'):
             alpha = [alpha]
@@ -1061,12 +1244,6 @@ class PermutationGroup(Basic):
         ========
 
         orbit
-
-        References
-        ==========
-
-        [1] Holt, D., Eick, B., O'Brien, E.
-        "Handbook of computational group theory"
 
         """
         n = self.degree
@@ -1170,12 +1347,6 @@ class PermutationGroup(Basic):
 
         orbit
 
-        References
-        ==========
-
-        [1] Holt, D., Eick, B., O'Brien, E.
-        "Handbook of computational group theory"
-
         """
         n = self.degree
         orb = [alpha]
@@ -1206,7 +1377,7 @@ class PermutationGroup(Basic):
         about the orbit of ``alpha``. It can later be used to quickly obtain
         elements of the group that send ``alpha`` to a particular element
         in the orbit. Notice that the Schreier vector depends on the order
-        in which the group generators are listed. For a definition, see [1].
+        in which the group generators are listed. For a definition, see [3].
         Since list indices start from zero, we adopt the convention to use
         "None" instead of 0 to signify that an element doesn't belong
         to the orbit.
@@ -1227,14 +1398,6 @@ class PermutationGroup(Basic):
         ========
 
         orbit
-
-        References
-        ==========
-
-        [1] http://en.wikipedia.org/wiki/Schreier_vector
-
-        [2] Holt, D., Eick, B., O'Brien, E.
-        "Handbook of computational group theory"
 
         """
         n = self.degree
@@ -1275,12 +1438,6 @@ class PermutationGroup(Basic):
         ========
 
         schreier_vector
-
-        References
-        ==========
-
-        [1] Holt, D., Eick, B., O'Brien, E.
-        "Handbook of computational group theory"
 
         """
         if schreier_vector == None:
@@ -1509,7 +1666,7 @@ class PermutationGroup(Basic):
         The implementation uses a modification of the original product
         replacement algorithm due to Leedham-Green, as described in [1],
         pp.69-71; also, see [2], pp.27-29 for a detailed theoretical
-        analysis of the original product replacement algorithm, and [3].
+        analysis of the original product replacement algorithm, and [4].
 
         The product replacement algorithm is used for producing random,
         uniformly distributed elements of a group `G` with a set of generators
@@ -1527,7 +1684,7 @@ class PermutationGroup(Basic):
         then returned by ``random_pr()``.
 
         The elements returned will eventually (for ``n`` large enough) become
-        uniformly distributed across `G` ([4]). For practical purposes however,
+        uniformly distributed across `G` ([5]). For practical purposes however,
         the values ``n = 50, r = 11`` are suggested in [1].
 
         Notes
@@ -1540,21 +1697,6 @@ class PermutationGroup(Basic):
         ========
 
         random_pr
-
-        References
-        ==========
-
-        [1] Holt, D., Eick, B., O'Brien, E.
-        "Handbook of computational group theory"
-
-        [2] Seress, A. "Permutation group algorithms"
-
-        [3] http://en.wikipedia.org/wiki/Nielsen_transformation
-        #Product_replacement_algorithm
-
-        [4] Frank Celler, Charles R.Leedham-Green, Scott H.Murray,
-        Alice C.Niemeyer, and E.A.O'Brien. "Generating random
-        elements of a finite group"
 
         """
         deg = self.degree
@@ -1655,14 +1797,6 @@ class PermutationGroup(Basic):
 
         _check_cycles_alt_sym
 
-        References
-        ==========
-
-        [1] Holt, D., Eick, B., O'Brien, E.
-        "Handbook of computational group theory"
-
-        [2] Seress, A. "Permutation group algorithms"
-
         """
         if _random_prec == None:
             n = self.degree
@@ -1695,7 +1829,7 @@ class PermutationGroup(Basic):
         If a group `G` acts on a set `S`, a nonempty subset `B` of `S` is
         called a block under the action of `G` if for all `g` in `G` we have
         `gB = B` (`g` fixes `B`) or `gB` and `B` have no common points
-        (`g` moves `B` entirely). ([1], p.23; [2]).
+        (`g` moves `B` entirely). ([1], p.23; [6]).
         The distinct translates `gB` of a block `B` for `g` in `G` partition
         the set `S` and this set of translates is known as a block system.
         Moreover, we obviously have that all blocks in the partition have
@@ -1712,7 +1846,7 @@ class PermutationGroup(Basic):
         It is an implementation of Atkinson's algorithm, as suggested in [1],
         and manipulates an equivalence relation on the set `S` using a
         union-find data structure. The running time is just above
-        `O(|points||S|)`. ([1], pp.83-87; [3]).
+        `O(|points||S|)`. ([1], pp.83-87; [7]).
 
         Examples
         ========
@@ -1729,16 +1863,6 @@ class PermutationGroup(Basic):
         ========
 
         _union_find_rep, _union_find_merge, is_transitive, is_primitive
-
-        References
-        ==========
-
-        [1] Holt, D., Eick, B., O'Brien, E.
-        "Handbook of computational group theory"
-
-        [2] http://en.wikipedia.org/wiki/Block_%28permutation_group_theory%29
-
-        [3] http://www.algorithmist.com/index.php/Union_Find
 
         """
         if not self.is_transitive:
@@ -1786,7 +1910,7 @@ class PermutationGroup(Basic):
         Used in the implementation of Atkinson's algorithm as suggested in [1],
         pp.83-87. After the representative of the class to which ``num``
         belongs is found, path compression is performed as an optimization
-        ([2]).
+        ([7]).
 
         Notes
         =====
@@ -1805,7 +1929,7 @@ class PermutationGroup(Basic):
         [1] Holt, D., Eick, B., O'Brien, E.
         "Handbook of computational group theory"
 
-        [2] http://www.algorithmist.com/index.php/Union_Find
+        [7] http://www.algorithmist.com/index.php/Union_Find
 
         """
         rep, parent = num, parents[num]
@@ -1826,7 +1950,7 @@ class PermutationGroup(Basic):
 
         Used in the implementation of Atkinson's algorithm as suggested in [1],
         pp.83-87. The class merging process uses union by rank as an
-        optimization. ([2])
+        optimization. ([7])
 
         Notes
         =====
@@ -1847,7 +1971,7 @@ class PermutationGroup(Basic):
         [1] Holt, D., Eick, B., O'Brien, E.
         "Handbook of computational group theory"
 
-        [2] http://www.algorithmist.com/index.php/Union_Find
+        [7] http://www.algorithmist.com/index.php/Union_Find
 
         """
         rep_first = self._union_find_rep(first, parents)
@@ -1980,12 +2104,6 @@ class PermutationGroup(Basic):
 
         random_pr, orbit_rep
 
-        References
-        ==========
-
-        [1] Holt, D., Eick, B., O'Brien, E.
-        "Handbook of computational group theory"
-
         """
         if schreier_vector == None:
             schreier_vector = self.schreier_vector(alpha)
@@ -1997,24 +2115,90 @@ class PermutationGroup(Basic):
         h = self.orbit_rep(alpha, beta, schreier_vector)
         return (~h)*rand
 
+    @property
     def transitivity_degree(self):
         """
         Compute the degree of transitivity of the group.
 
-        """
-        n = self.degree
-        max_size = 1
-        for i in range(1, n + 1):
-            max_size *= n - i + 1
-            orb = self.orbit(range(i), 'tuples')
-            if len(orb) != max_size:
-                return i - 1
-        return n
+        A permutation group `G` acting on `\Omega = \{0, 2, ..., n-1\}` is
+        `k`-fold transitive, if, for any k points
+        `(a_1, a_2, ..., a_k)\in\Omega` and any k points
+        `(b_1, b_2, ..., b_k)\in\Omega` there exists `g\in G` such that
+        `g(a_1)=b_1, g(a_2)=b_2, ..., g(a_k)=b_k`
+        The degree of transitivity of `G` is the maximum `k` such that
+        `G` is `k`-fold transitive. ([8])
 
-    def schreier_sims_random(self, base=[], gens=None, conf=10):
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([1, 2, 0])
+        >>> b = Permutation([1, 0, 2])
+        >>> G = PermutationGroup([a,b])
+        >>> G.transitivity_degree
+        3
+
+        See Also
+        ========
+        is_transitive, orbit
+
+        """
+        if self._transitivity_degree is None:
+            n = self.degree
+            max_size = 1
+            for i in range(1, n + 1):
+                max_size *= n - i + 1
+                orb = self.orbit(range(i), 'tuples')
+                if len(orb) != max_size:
+                    return i - 1
+            self._transitivity_degree = n
+            return n
+        else:
+            return self._transitivity_degree
+
+    def schreier_sims_random(self, base=None, gens=None, consec_succ=10,\
+                             _random_prec=None):
+        r"""
+        Randomized Schreier-Sims algorithm.
+
+        The randomized Schreier-Sims algorithm takes the sequence ``base``
+        and the generating set ``gens``, and extends ``base`` to a base, and
+        ``gens`` to a strong generating set relative to that base with
+        probability of a wrong answer at most `1/\text{consec_succ}`.
+
+        Notes
+        =====
+
+        The algorithm is described in detail in [1],pp.97-98. It extends
+        the orbits ``orbs`` and the permutation groups ``stabs`` to
+        basic orbits and basic stabilizers for the base and strong generating
+        set produced in the end.
+        The idea of the extension process
+        is to "sift" random group elements through the stabilizer chain
+        and amend the stabilizers/orbits along the way when a sift
+        is not successful.
+        The helper function ``_strip`` is used to attempt
+        to decompose a random group element according to the current
+        state of the stabilizer chain and report whether the element was
+        fully decomposed (successful sift) or not (unsuccessful sift). In
+        the latter case, the level at which the sift failed is reported and
+        used to amend ``stabs``, ``base``, ``gens`` and ``orbs`` accordingly.
+        The halting condition is for ``consec_succ`` consecutive successful
+        sifts to pass. This makes sure that the current ``base`` and ``gens``
+        form a BSGS with probability at least `1 - 1/\text{consec_succ}`.
+
+        See Also
+        ========
+
+        schreier_sims
+
+        """
+        if base is None:
+            base = []
         if gens is None:
             gens = self.generators
-        k = len(base)
+        base_len = len(base)
         n = self.degree
         # make sure no generator fixes all base points
         for gen in gens:
@@ -2023,44 +2207,31 @@ class PermutationGroup(Basic):
                 while gen(new) == new:
                     new += 1
                 base.append(new)
-                k += 1
-        # for each generator, find the index of the
-        # smallest (fixing the largest number of points)
-        # basic stabilizer it belongs to
-        num_gens = len(gens)
-        stab_index = [0]*num_gens
-        for i in xrange(num_gens):
-            j = 0
-            while j < k and gens[i](base[j]) == base[j]:
-                j += 1
-            stab_index[i] = j
-        # initialize generators for the basic stabilizers G^{(i)}
-        S = []
-        for i in range(k):
-            S.append([])
-        for i in xrange(num_gens):
-            index = stab_index[i]
-            for j in xrange(index+1):
-                S[j].append(gens[i])
-        # initialize the basic stabilizers and the basic orbits
-        H = {}
+                base_len += 1
+        # distribute generators according to basic stabilizers
+        distr_gens = _distribute_gens_by_base(base, gens)
+        # initialize the basic stabilizers, basic transversals and basic orbits
+        stabs = {}
+        transversals = {}
         orbs = {}
-        for i in xrange(k):
-            if S[i] == []:
-                H[i] = PermutationGroup([Permutation(range(n))])
-            else:
-                H[i] = PermutationGroup(S[i])
-            orbs[i] = (H[i]).orbit(base[i])
+        for i in xrange(base_len):
+            stabs[i] = PermutationGroup(distr_gens[i])
+            transversals[i] = dict(stabs[i].orbit_transversal(base[i],\
+                                                              pairs=True))
+            orbs[i] = transversals[i].keys()
         # initialize the number of consecutive elements sifted
         c = 0
         # start sifting random elements while the number of consecutive sifts
-        # is less than conf
-        while c < conf:
-            g = self.random_pr()
-            h, j = strip(g, base, orbs, H)
+        # is less than consec_succ
+        while c < consec_succ:
+            if _random_prec is None:
+                g = self.random_pr()
+            else:
+                g = _random_prec['g'].pop()
+            h, j = _strip(g, base, orbs, transversals)
             y = True
             # determine whether a new base point is needed
-            if j <= k:
+            if j <= base_len:
                 y = False
             elif not h.is_Identity:
                 y = False
@@ -2068,69 +2239,111 @@ class PermutationGroup(Basic):
                 while h(moved) == moved:
                     moved += 1
                 base.append(moved)
-                k += 1
-                S.append([])
+                base_len += 1
+                distr_gens.append([])
             # if the element doesn't sift, amend the strong generators and
             # associated stabilizers and orbits
             if y == False:
                 for l in range(1, j):
-                    S[l].append(h)
-                    H[l] = PermutationGroup(S[l])
-                    orbs[l] = (H[l]).orbit(base[l])
+                    distr_gens[l].append(h)
+                    stabs[l] = PermutationGroup(distr_gens[l])
+                    transversals[l] = dict(stabs[l].orbit_transversal(base[l],\
+                                                                    pairs=True))
+                    orbs[l] = transversals[l].keys()
                 c = 0
             else:
                 c += 1
         # build the strong generating set
-        strong_gens = S[0][:]
-        for gen in S[1]:
+        strong_gens = distr_gens[0][:]
+        for gen in distr_gens[1]:
             if gen not in strong_gens:
                 strong_gens.append(gen)
         return base, strong_gens
 
+    def list_lex_by_base(self, base, strong_gens, transversals=None,\
+                         basic_orbits=None, distr_gens=None):
+        """
+        List all group elements in increasing order of base images.
 
-    def base_ordering(self, known_base=None):
-        if known_base is None:
-            if self._base == []:
-                self.schreier_sims()
-            base = self._base
-        else:
-            base = known_base
-        base_len = len(base)
-        n = self.degree
-        ordering = [0]*n
-        for i in xrange(base_len):
-            ordering[base[i]] = i
-        current = base_len
-        for i in xrange(n):
-            if i not in base:
-                ordering[i] = current
-                current += 1
-        return ordering
+        For a group `G` with a base `(b_1, b_2, ..., b_k)`, the element `g`
+        precedes the element `h` in the order of base images if
+        `(g(b_1), g(b_2), ..., g(b_k))` precedes
+        `(h(b_1), h(b_2), ..., h(b_k))` in the lexicographical ordering of
+        `\{0, 1, ..., n-1\}` induced by the base (i.e., base points come first
+        and in order, and non-base points come after that and in the usual
+        ordering).
 
-    def list_lex_by_base(self, base, strong_gens, transversals=None, basic_orbits=None, distr_gens=None):
-        res = []
-        # order the points in range(n) according to the base
-        base_ordering = self.base_ordering(known_base=base)
+        Parameters
+        ==========
 
-        transversals, basic_orbits, distr_gens = _handle_precomputed_bsgs(base, strong_gens, transversals, basic_orbits, distr_gens)
-        # initialize sorted orbits
-        k = len(base)
+        ``base``, ``strong_gens`` - the base and strong generating set
+        ``transversals`` - transversals for the basic orbits, if known
+        ``basic_orbits`` - basic orbits, if known
+        ``distr_gens`` - strong generators distributed by basic stabilizers,
+        if known
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> S = SymmetricGroup(3)
+        >>> S.schreier_sims()
+        >>> S.list_lex_by_base(S.base, S.strong_gens)
+        [Permutation([0, 1, 2]), Permutation([0, 2, 1]),\
+        Permutation([1, 0, 2]), Permutation([1, 2, 0]),\
+        Permutation([2, 0, 1]), Permutation([2, 1, 0])]
+
+        >>> S.base
+        [0, 1]
+
+        Notes
+        =====
+
+        This is a depth-first search visiting all group elements. Printing is
+        done once the current group elements is fully constructed from the
+        transversal elements found from the base and strong generating sets.
+        This basic way of traversing the group is used in backtracking
+        algorithms in order to "prune" the search tree by testing partial
+        base images for certain properties and thus avoid visiting large
+        numbers of group elements. The algorithm and possible implementations
+        are discussed in [1],pp.110-111. For a group `G` with a base
+        `(b_1, b_2, ..., b_k)`, the current solution for storing the
+        partial decomposition `u_1u_2...u_l` for `l < k` of a group element
+        `g = u_1u_2...u_k` is to keep an array the `l`-th entry of which
+        is `u_1u_2...u_l` and update it accordingly.
+
+        See Also
+        ========
+
+        _base_ordering from sympy.combinatorics.util
+
+        """
+        result = []
         degree = self.degree
-        c = [0]*k
-        u = [None]*k
-        sorted_orbits = [None]*k
+        # order the points in range(degree) according to the base
+        base_ordering = _base_ordering(base, degree)
+        # construct the basic orbits, generators for the stabilizer chain
+        # and transversal elements from whatever was provided
+        transversals, basic_orbits, distr_gens =\
+        _handle_precomputed_bsgs(base, strong_gens, transversals,\
+                                 basic_orbits, distr_gens)
+        # initialize sorted orbits
+        base_len = len(base)
+        c = [0]*base_len
+        u = [None]*base_len
+        sorted_orbits = [None]*base_len
         u[0] = _new_from_array_form(range(degree))
         # sort the first basic orbit according to the base ordering
         sorted_orbits[0] = basic_orbits[0][:]
         sorted_orbits[0].sort(key = lambda point: base_ordering[point])
         # set the depth of the search
         depth = 0
-        computed_words = [0]*k
+        computed_words = [0]*base_len
         computed_words[0] = u[0]
         # depth-first search
         while True:
             # in this loop, initialize the new branches of the search tree
-            while depth < k - 1:
+            while depth < base_len - 1:
                 depth += 1
                 g = computed_words[depth - 1]
                 orb_image = [g(point) for point in basic_orbits[depth]]
@@ -2138,61 +2351,125 @@ class PermutationGroup(Basic):
                 orb_image.sort(key = lambda point: base_ordering[point])
                 sorted_orbits[depth] = orb_image
                 # now set the transversal element so that the image of
-                # base[depth] under u[0] ... u[l] is smallest in the base
+                # base[depth] under u[0]*...*u[l] is smallest in the base
                 # ordering
                 c[depth] = 0
                 g_inverse = ~g
                 gamma = g_inverse(sorted_orbits[depth][c[depth]])
                 u[depth] = transversals[depth][gamma]
-                computed_words[depth] = computed_words[depth - 1] * u[depth]
-            # append whatever we have at depth = k-1 to the result
-            output = computed_words[k - 1]
-            res.append(output.array_form)
+                computed_words[depth] = computed_words[depth - 1]*u[depth]
+            # append whatever we have at depth = base_len-1 to the result
+            output = computed_words[base_len - 1]
+            result.append(output)
             # go up the tree to the first branch that is not searched entirely
             while depth >= 0 and c[depth] + 1 == len(basic_orbits[depth]):
                 depth -= 1
             if depth == -1:
-                return res
-            # find the next element in the lexicographical ordering induced
-            # by the base.
+                return result
+            # find the next element in the ordering
             c[depth] += 1
             if depth == 0:
                 g = _new_from_array_form(range(degree))
             else:
                 g = computed_words[depth - 1]
-            g = ~g
-            gamma = g(sorted_orbits[depth][c[depth]])
+            g_inverse = ~g
+            gamma = g_inverse(sorted_orbits[depth][c[depth]])
             u[depth] = transversals[depth][gamma]
             if depth == 0:
                 computed_words[depth] = u[depth]
             else:
-                computed_words[depth] = computed_words[depth - 1] * u[depth]
+                computed_words[depth] = computed_words[depth - 1]*u[depth]
 
-    def baseswap(self, base, strong_gens, pos, randomized=True, transversals=None, basic_orbits=None, distr_gens=None):
-        transversals, basic_orbits, distr_gens = _handle_precomputed_bsgs(base, strong_gens, transversals, basic_orbits, distr_gens)
-        k = len(base)
-        stab_pos = PermutationGroup(distr_gens[pos])
-        size = len(basic_orbits[pos])*len(basic_orbits[pos + 1])//len(stab_pos.orbit(base[pos + 1]))
+    def baseswap(self, base, strong_gens, pos, randomized=True,\
+                 transversals=None, basic_orbits=None, distr_gens=None):
+        r"""
+        Swap two consecutive base points in a base and strong generating set.
+
+        If a base for a group `G` is given by `(b_1, b_2, ..., b_k)`, this
+        function returns a base `(b_1, b_2, ..., b_{i+1}, b_i, ..., b_k)`,
+        where `i` is given by ``pos``, and a strong generating set relative
+        to that base. The original base and strong generating set are not
+        modified.
+        The randomized version (default) is of Las Vegas type.
+
+        Parameters
+        ==========
+
+        ``base``, ``strong_gens`` - the base and strong generating set
+        ``pos`` - position at which swapping is performed
+        ``randomized`` - switch between randomized and deterministic version
+        ``transversals`` - transversals for the basic orbits, if known
+        ``basic_orbits`` - basic orbits, if known
+        ``distr_gens`` - strong generators distributed by basic stabilizers,
+        if known
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> S = SymmetricGroup(4)
+        >>> S.schreier_sims()
+        >>> S.baseswap(S.base, S.strong_gens, 1, randomized=False)
+        ([0, 2, 1], [Permutation([1, 2, 3, 0]), Permutation([1, 0, 2, 3]), Permutation([0, 1, 3, 2]), Permutation([0, 3, 1, 2]), Permutation([0, 3, 2, 1])])
+        >>> S.base
+        [0, 1, 2]
+
+        See Also
+        ========
+
+        schreier_sims
+
+        Notes
+        =====
+
+        The deterministic version of the algorithm is discussed in
+        [1],pp.102-103; the randomized version is discussed in [1],p.103, and
+        [2],p.98. It is of Las Vegas type.
+        Notice that [1] contains a mistake in the pseudocode and
+        discussion of BASESWAP: on line 3 of the pseudocode,
+        `|\beta_{i+1}^\left\langle T\right\rangle|` should be replaced by
+        `|\beta_{i}^\left\langle T\right\rangle|`, and the same for the
+        discussion of the algorithm.
+
+        """
+        # construct the basic orbits, generators for the stabilizer chain
+        # and transversal elements from whatever was provided
+        transversals, basic_orbits, distr_gens =\
+        _handle_precomputed_bsgs(base, strong_gens, transversals,\
+                                 basic_orbits, distr_gens)
+        base_len = len(base)
         degree = self.degree
-        if pos + 2 > k - 1:
+        stab_pos = PermutationGroup(distr_gens[pos])
+        # size of orbit of base[pos] under the stabilizer we seek to insert
+        # in the stabilizer chain at position pos + 1
+        size = len(basic_orbits[pos])*len(basic_orbits[pos + 1])\
+               //len(stab_pos.orbit(base[pos + 1]))
+        # initialize the wanted stabilizer by a subgroup
+        if pos + 2 > base_len - 1:
             T = []
         else:
             T = distr_gens[pos + 2][:]
-        Gamma = set(basic_orbits[pos])
-        Gamma.remove(base[pos])
-        if base[pos + 1] in Gamma:
-            Gamma.remove(base[pos + 1])
         if T == []:
             current_group = PermGroup([_new_from_array_form(range(degree))])
         else:
             current_group = PermGroup(T)
+        # randomized version
         if randomized is True:
             schreier_vector = stab_pos.schreier_vector(base[pos + 1])
+            # add random elements of the stabilizer until they generate it
             while len(current_group.orbit(base[pos])) != size:
-                new = stab_pos.random_stab(base[pos + 1], schreier_vector=schreier_vector)
+                new = stab_pos.random_stab(base[pos + 1],\
+                                           schreier_vector=schreier_vector)
                 T.append(new)
                 current_group = PermutationGroup(T)
+        # deterministic version
         else:
+            Gamma = set(basic_orbits[pos])
+            Gamma.remove(base[pos])
+            if base[pos + 1] in Gamma:
+                Gamma.remove(base[pos + 1])
+            # add elements of the stabilizer until they generate it by
+            # ruling out member of the basic orbit of base[pos] along the way
             while len(current_group.orbit(base[pos])) != size:
                 gamma = iter(Gamma).next()
                 x = transversals[pos][gamma]
@@ -2207,24 +2484,16 @@ class PermutationGroup(Basic):
                         T.append(el)
                         current_group = PermutationGroup(T)
                         Gamma = Gamma - current_group.orbit(base[pos])
-        strong_gens_new = distr_gens[:]
-        strong_gens_new[pos + 1] = T
+        # build the new base and strong generating set
+        strong_gens_new_distr = distr_gens[:]
+        strong_gens_new_distr[pos + 1] = T
         base_new = base[:]
         base_new[pos], base_new[pos + 1] = base_new[pos + 1], base_new[pos]
+        strong_gens_new = _strong_gens_from_distr(strong_gens_new_distr)
+        for gen in T:
+            if gen not in strong_gens_new:
+                strong_gens_new.append(gen)
         return base_new, strong_gens_new
-
-def strip(g, base, orbs, H):
-    h = g
-    k = len(base)
-    for i in range(k):
-        beta = h(base[i])
-        if beta == base[i]:
-            continue
-        if beta not in orbs[i]:
-            return h, i + 1
-        u = (H[i]).orbit_rep(base[i], beta)
-        h = ~u*h
-    return h, k + 1
 
 def DirectProduct(*groups):
     """
@@ -2236,10 +2505,8 @@ def DirectProduct(*groups):
     A call to DirectProduct(G1, G2, ..., Gn) is generally expected to be faster
     than a call to G1*G2*...*Gn (and thus the need for this algorithm).
 
-
     Examples
     ========
-
 
     >>> from sympy.combinatorics.perm_groups import DirectProduct
     >>> from sympy.combinatorics.named_groups import CyclicGroup

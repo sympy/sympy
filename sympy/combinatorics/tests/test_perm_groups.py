@@ -1,10 +1,11 @@
-from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.combinatorics.perm_groups import PermutationGroup, DirectProduct
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
 DihedralGroup, AlternatingGroup
 from sympy.combinatorics.permutations import Permutation, perm_af_muln, cyclic
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 import random
+from sympy.combinatorics.util import _verify_bsgs
 
 
 def test_new():
@@ -237,53 +238,6 @@ def test_direct_product():
     assert H.order() == 32
     assert H.is_abelian == False
 
-
-def test_SymmetricGroup():
-    G = SymmetricGroup(5)
-    elements = list(G.generate())
-    assert (G.generators[0]).size == 5
-    assert len(elements) == 120
-    assert G.is_solvable() == False
-    assert G.is_abelian == False
-    assert G.is_transitive == True
-    H = SymmetricGroup(1)
-    assert H.order() == 1
-    L = SymmetricGroup(2)
-    assert L.order() == 2
-
-def test_CyclicGroup():
-    G = CyclicGroup(10)
-    elements = list(G.generate())
-    assert len(elements) == 10
-    assert (G.commutator()).order() == 1
-    assert G.is_abelian == True
-    H = CyclicGroup(1)
-    assert H.order() == 1
-    L = CyclicGroup(2)
-    assert L.order() == 2
-
-def test_DihedralGroup():
-    G = DihedralGroup(6)
-    elements = list(G.generate())
-    assert len(elements) == 12
-    assert G.is_transitive == True
-    assert G.is_abelian == False
-    H = DihedralGroup(1)
-    assert H.order() == 2
-    L = DihedralGroup(2)
-    assert L.order() == 4
-    assert L.is_abelian == True
-
-def test_AlternatingGroup():
-    G = AlternatingGroup(5)
-    elements = list(G.generate())
-    assert len(elements) == 60
-    assert [perm.is_even for perm in elements] == [True]*60
-    H = AlternatingGroup(1)
-    assert H.order() == 1
-    L = AlternatingGroup(2)
-    assert L.order() == 1
-
 def test_orbit_rep():
     G = DihedralGroup(6)
     assert G.orbit_rep(1,3) in [Permutation([2, 3, 4, 5, 0, 1]),\
@@ -372,3 +326,65 @@ def test_random_stab():
     assert g == Permutation([1, 3, 2, 0, 4])
     h = S.random_stab(1)
     assert h(1) == 1
+
+def test_transitivity_degree():
+    perm = Permutation([1, 2, 0])
+    C = PermutationGroup([perm])
+    assert C.transitivity_degree == 1
+    gen1 = Permutation([1, 2, 0, 3, 4])
+    gen2 = Permutation([1, 2, 3, 4, 0])
+    # alternating group of degree 5
+    Alt = PermutationGroup([gen1, gen2])
+    assert Alt.transitivity_degree == 3
+
+def test_list_lex_by_base():
+    D = DihedralGroup(6)
+    D.schreier_sims()
+    assert D.base == [0, 1]
+    assert D.list_lex_by_base(D.base, D.strong_gens) ==\
+    [Permutation([0, 1, 2, 3, 4, 5]), Permutation([0, 5, 4, 3, 2, 1]),\
+    Permutation([1, 0, 5, 4, 3, 2]), Permutation([1, 2, 3, 4, 5, 0]),\
+    Permutation([2, 1, 0, 5, 4, 3]), Permutation([2, 3, 4, 5, 0, 1]),\
+    Permutation([3, 2, 1, 0, 5, 4]), Permutation([3, 4, 5, 0, 1, 2]),\
+    Permutation([4, 3, 2, 1, 0, 5]), Permutation([4, 5, 0, 1, 2, 3]),\
+    Permutation([5, 0, 1, 2, 3, 4]), Permutation([5, 4, 3, 2, 1, 0])]
+
+def test_schreier_sims_random():
+    S = SymmetricGroup(3)
+    base = [0, 1]
+    strong_gens = [Permutation([1, 2, 0]), Permutation([1, 0, 2]),\
+                  Permutation([0, 2, 1])]
+    assert S.schreier_sims_random(base, strong_gens, 5) == (base, strong_gens)
+    D = DihedralGroup(3)
+    _random_prec = {'g': [Permutation([2, 0, 1]), Permutation([1, 2, 0]),\
+                         Permutation([1, 0, 2])]}
+    base = [0, 1]
+    strong_gens = [Permutation([1, 2, 0]), Permutation([2, 1, 0]),\
+                  Permutation([0, 2, 1])]
+    assert D.schreier_sims_random([], D.generators, 2,\
+           _random_prec=_random_prec) == (base, strong_gens)
+
+def test_baseswap():
+    S = SymmetricGroup(4)
+    S.schreier_sims()
+    base = S.base
+    strong_gens = S.strong_gens
+    assert base == [0, 1, 2]
+    deterministic = S.baseswap(base, strong_gens, 1, randomized=False)
+    randomized = S.baseswap(base, strong_gens, 1)
+    assert deterministic[0] == [0, 2, 1]
+    assert _verify_bsgs(S, deterministic[0], deterministic[1]) == True
+    assert randomized[0] == [0, 2, 1]
+    assert _verify_bsgs(S, randomized[0], randomized[1]) == True
+
+def test_direct_product_n():
+    C = CyclicGroup(4)
+    D = DihedralGroup(4)
+    G = DirectProduct(C, C, C)
+    assert G.order() == 64
+    assert G.degree == 12
+    assert len(G.orbits()) == 3
+    assert G.is_abelian == True
+    H = DirectProduct(D, C)
+    assert H.order() == 32
+    assert H.is_abelian == False
