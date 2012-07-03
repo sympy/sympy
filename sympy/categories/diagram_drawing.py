@@ -796,15 +796,14 @@ class DiagramGrid(object):
 
         if groups and (groups != diagram.objects):
             # Lay out the diagram according to the groups.
-            self._grid = DiagramGrid._handle_groups(diagram, groups, merged_morphisms)
-            return
-
-        if "shape" in hints:
+            self._grid = DiagramGrid._handle_groups(
+                diagram, groups, merged_morphisms)
+        elif "shape" in hints:
             if hints["shape"] == "sequential":
-                self._grid = DiagramGrid._sequential_layout(diagram, merged_morphisms)
-                return
-
-        self._grid = DiagramGrid._generic_layout(diagram, merged_morphisms)
+                self._grid = DiagramGrid._sequential_layout(
+                    diagram, merged_morphisms)
+        else:
+            self._grid = DiagramGrid._generic_layout(diagram, merged_morphisms)
 
     @property
     def width(self):
