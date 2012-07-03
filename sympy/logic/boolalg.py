@@ -256,6 +256,8 @@ class Equivalent(BooleanFunction, LatticeOp):
 
     Equivalent(A, B) is True if and only if A and B are both True or both False
     """
+    identity = None
+    zero = None
     @classmethod
     def eval(cls, *args):
         """
