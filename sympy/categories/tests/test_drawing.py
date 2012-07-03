@@ -317,3 +317,28 @@ def test_DiagramGrid():
     assert grid[2, 2] is None
     assert grid[2, 3] == D_
     assert grid[2, 4] == E_
+
+    # Test the five lemma with object grouping.
+    grid = DiagramGrid(d, FiniteSet(
+        FiniteSet(A, B, C, D, E), FiniteSet(A_, B_, C_, D_, E_)))
+
+    assert grid.width == 6
+    assert grid.height == 3
+    assert grid[0, 0] == A_
+    assert grid[0, 1] == B_
+    assert grid[0, 2] is None
+    assert grid[0, 3] == A
+    assert grid[0, 4] == B
+    assert grid[0, 5] is None
+    assert grid[1, 0] is None
+    assert grid[1, 1] == C_
+    assert grid[1, 2] == D_
+    assert grid[1, 3] is None
+    assert grid[1, 4] == C
+    assert grid[1, 5] == D
+    assert grid[2, 0] is None
+    assert grid[2, 1] is None
+    assert grid[2, 2] == E_
+    assert grid[2, 3] is None
+    assert grid[2, 4] is None
+    assert grid[2, 5] == E
