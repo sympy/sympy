@@ -1628,13 +1628,6 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     >>> exp(x + exp(x + y)).expand(deep=False)
     exp(x)*exp(exp(x + y))
 
-    Note: because hints are applied in arbitrary order, some hints may
-    prevent expansion by other hints if they are applied first.  In
-    particular, mul may distribute multiplications and prevent log and
-    power_base from expanding them.  Also, if mul is applied before multinomial,
-    the expression might not be fully distributed.  The solution is to expand
-    with mul=False first, then run expand_mul if you need further expansion.
-
     Examples
     ========
 
