@@ -257,6 +257,18 @@ def test_DiagramGrid():
     d = Diagram([m1, m2, s1, s2, f1, f2], {g: "unique"})
     grid = DiagramGrid(d)
 
+    # Test the pullback with sequential layout, just for stress
+    # testing.
+    grid = DiagramGrid(d, shape="sequential")
+
+    assert grid.width == 5
+    assert grid.height == 1
+    assert grid[0, 0] == D
+    assert grid[0, 1] == B
+    assert grid[0, 2] == A
+    assert grid[0, 3] == C
+    assert grid[0, 4] == E
+
     # Test a pullback with object grouping.
     grid = DiagramGrid(d, groups=FiniteSet(E, FiniteSet(A, B, C, D)))
 
