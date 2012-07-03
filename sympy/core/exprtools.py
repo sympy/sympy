@@ -1,21 +1,22 @@
 """Tools for manipulating of large commutative expressions. """
 
 from sympy.core.add import Add
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
-from sympy.core.basic import Basic
+from sympy.core.basic import Basic, preorder_traversal
 from sympy.core.expr import Expr
-from sympy.core.function import expand_mul
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.coreerrors import NonCommutativeExpression
-from sympy.core.containers import Tuple
+from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-                                       preorder_traversal, variations)
+        variations)
+
+from collections import defaultdict
 
 def decompose_power(expr):
     """
@@ -244,7 +245,7 @@ class Term(object):
                 raise NonCommutativeExpression('commutative expression expected')
 
             coeff, factors = term.as_coeff_mul()
-            numer, denom = {}, {}
+            numer, denom = defaultdict(int), defaultdict(int)
 
             for factor in factors:
                 base, exp = decompose_power(factor)
@@ -254,9 +255,9 @@ class Term(object):
                     coeff *= cont**exp
 
                 if exp > 0:
-                    numer[base] = exp
+                    numer[base] += exp
                 else:
-                    denom[base] = -exp
+                    denom[base] += -exp
 
             numer = Factors(numer)
             denom = Factors(denom)
@@ -406,6 +407,9 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
 def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     """Compute the GCD of ``terms`` and put them together.
 
+    ``terms`` can be an expression or a non-Basic sequence of expressions
+    which will be handled as though they are terms from a sum.
+
     If ``isprimitive`` is True the _gcd_terms will not run the primitive
     method on the terms.
 
@@ -464,30 +468,43 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
                 args[i] = c
         return args, dict(reps)
 
-    terms = sympify(terms)
-    isexpr = isinstance(terms, Expr)
-    if not isexpr or terms.is_Add:
-        if isexpr: # hence an Add
+    isadd = isinstance(terms, Add)
+    addlike = isadd or not isinstance(terms, Basic) and \
+              is_sequence(terms, include=set) and \
+              not isinstance(terms, Dict)
+
+    if addlike:
+        if isadd: # i.e. an Add
             terms = list(terms.args)
+        else:
+            terms = sympify(terms)
         terms, reps = mask(terms)
         cont, numer, denom = _gcd_terms(terms, isprimitive, fraction)
         numer = numer.xreplace(reps)
         coeff, factors = cont.as_coeff_Mul()
         return _keep_coeff(coeff, factors*numer/denom, clear=clear)
 
+    if not isinstance(terms, Basic):
+        return terms
+
     if terms.is_Atom:
         return terms
 
     if terms.is_Mul:
         c, args = terms.as_coeff_mul()
-        return _keep_coeff(c, Mul(*[gcd_terms(i, isprimitive, clear) for i in args]), clear=clear)
+        return _keep_coeff(c, Mul(*[gcd_terms(i, isprimitive, clear, fraction)
+            for i in args]), clear=clear)
 
     def handle(a):
-        if iterable(a):
+        # don't treat internal args like terms of an Add
+        if not isinstance(a, Expr):
             if isinstance(a, Basic):
-                return a.func(*[gcd_terms(i, isprimitive, clear) for i in a.args])
-            return type(a)([gcd_terms(i, isprimitive, clear) for i in a])
-        return gcd_terms(a, isprimitive, clear)
+                return a.func(*[handle(i) for i in a.args])
+            return type(a)([handle(i) for i in a])
+        return gcd_terms(a, isprimitive, clear, fraction)
+
+    if isinstance(terms, Dict):
+        return Dict(*[(k, handle(v)) for k, v in terms.args])
     return terms.func(*[handle(i) for i in terms.args])
 
 
@@ -562,11 +579,14 @@ def factor_terms(expr, radical=False, clear=False, fraction=False):
         return expr.func(*newargs)
 
     cont, p = expr.as_content_primitive(radical=radical)
-    list_args = [gcd_terms(a,
+    if p.is_Add:
+        list_args = [gcd_terms(a,
         isprimitive=True,
         clear=clear,
         fraction=fraction) for a in Add.make_args(p)]
-    p = Add._from_args(list_args) # gcd_terms will fix up ordering
+        p = Add._from_args(list_args) # gcd_terms will fix up ordering
+    elif p.args:
+        p = p.func(*[factor_terms(a, radical, clear, fraction) for a in p.args])
     p = gcd_terms(p,
         isprimitive=True,
         clear=clear,
@@ -578,66 +598,115 @@ def _mask_nc(eq):
     symbols. A dictionary that can be used to restore the original
     values is returned: if it is None, the expression is
     noncommutative and cannot be made commutative. The third value
-    returned is a list of any non-commutative symbols that appeared
-    in the equation.
+    returned is a list of any non-commutative symbols that appear
+    in the returned equation.
 
     Notes
     =====
-    All commutative objects (other than Symbol) will be replaced;
-    if the only non-commutative obects are Symbols, if there is only
-    1 Symbol, it will be replaced; if there are more than one then
-    they will not be replaced; the calling routine should handle
+    All non-commutative objects other than Symbols are replaced with
+    a non-commutative Symbol. Identical objects will be identified
+    by identical symbols.
+
+    If there is only 1 non-commutative object in an expression it will
+    be replaced with a commutative symbol. Otherwise, the non-commutative
+    entities are retained and the calling routine should handle
     replacements in this case since some care must be taken to keep
     track of the ordering of symbols when they occur within Muls.
 
     Examples
     ========
     >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
-    >>> from sympy import Dummy, symbols
+    >>> from sympy import Dummy, symbols, Sum, Mul, Basic
     >>> from sympy.abc import x, y
     >>> from sympy.core.exprtools import _mask_nc
     >>> A, B, C = symbols('A,B,C', commutative=False)
     >>> Dummy._count = 0 # reset for doctest purposes
+
+    One nc-symbol:
+
     >>> _mask_nc(A**2 - x**2)
     (_0**2 - x**2, {_0: A}, [])
+
+    Multiple nc-symbols:
+
     >>> _mask_nc(A**2 - B**2)
     (A**2 - B**2, None, [A, B])
+
+    An nc-object with nc-symbols but no others outside of it:
+
     >>> _mask_nc(1 + x*Commutator(A, B))
-    (_1*x + 1, {_1: Commutator(A, B)}, [A, B])
+    (_1*x + 1, {_1: Commutator(A, B)}, [])
     >>> _mask_nc(NO(Fd(x)*F(y)))
     (_2, {_2: NO(CreateFermion(x)*AnnihilateFermion(y))}, [])
+
+    Multiple nc-objects:
+
+    >>> eq = x*Commutator(A, B) + x*Commutator(A, C)*Commutator(A, B)
+    >>> _mask_nc(eq)
+    (x*_3*_4 + x*_4, {_3: Commutator(A, C), _4: Commutator(A, B)}, [_3, _4])
+
+    Multiple nc-objects and nc-symbols:
+
+    >>> eq = A*Commutator(A, B) + B*Commutator(A, C)
+    >>> _mask_nc(eq)
+    (A*_6 + B*_5, {_5: Commutator(A, C), _6: Commutator(A, B)}, [_5, _6, A, B])
+
+    If there is an object that:
+
+        - doesn't contain nc-symbols
+        - but has arguments which derive from Basic, not Expr
+        - and doesn't define an _eval_is_commutative routine
+
+    then it will give False (or None?) for the is_commutative test. Such
+    objects are also removed by this routine:
+
+    >>> from sympy import Basic, Mul
+    >>> eq = (1 + Mul(Basic(), Basic(), evaluate=False))
+    >>> eq.is_commutative
+    False
+    >>> _mask_nc(eq)
+    (_7**2 + 1, {_7: Basic()}, [])
 
     """
     expr = eq
     if expr.is_commutative:
         return eq, {}, []
-    # if there is only one nc symbol, it can be factored regularly but
-    # polys is going to complain, so replace it with a dummy
+
+    # identify nc-objects; symbols and other
     rep = []
-    nc_syms = [s for s in expr.free_symbols if not s.is_commutative]
-    if len(nc_syms) == 1:
-        nc = Dummy()
-        rep.append((nc_syms.pop(), nc))
-        expr = expr.subs(rep)
-    # even though the noncommutative symbol may be gone, the expression
-    # might still appear noncommutative; if it's a non-elementary object
-    # we will replace it, but if it is a Symbol, Add, Mul, Pow we leave
-    # it alone.
+    nc_obj = set()
+    nc_syms = set()
+    pot = preorder_traversal(expr)
+    for i, a in enumerate(pot):
+        if any(a == r[0] for r in rep):
+            pot.skip()
+        elif not a.is_commutative:
+            if a.is_Symbol:
+                nc_syms.add(a)
+            elif not (a.is_Add or a.is_Mul or a.is_Pow):
+                if all(s.is_commutative for s in a.free_symbols):
+                    rep.append((a, Dummy()))
+                else:
+                    nc_obj.add(a)
+                pot.skip()
+
+    # If there is only one nc symbol or object, it can be factored regularly
+    # but polys is going to complain, so replace it with a Dummy.
+    if len(nc_obj) == 1 and not nc_syms:
+        rep.append((nc_obj.pop(), Dummy()))
+    elif len(nc_syms) == 1 and not nc_obj:
+        rep.append((nc_syms.pop(), Dummy()))
+
+    # Any remaining nc-objects will be replaced with an nc-Dummy and
+    # identified as an nc-Symbol to watch out for
+    while nc_obj:
+        nc = Dummy(commutative=False)
+        rep.append((nc_obj.pop(), nc))
+        nc_syms.add(nc)
+    expr = expr.subs(rep)
+
+    nc_syms = list(nc_syms)
     nc_syms.sort(key=default_sort_key)
-    if nc_syms or not expr.is_commutative:
-        pot = preorder_traversal(expr)
-        for i, a in enumerate(pot):
-            if any(a == r[0] for r in rep):
-                pass
-            elif (
-                not a.is_commutative and
-                not (a.is_Symbol or a.is_Add or a.is_Mul or a.is_Pow)
-                ):
-                rep.append((a, Dummy()))
-            else:
-                continue # don't skip
-            pot.skip() # don't go any further
-        expr = expr.subs(rep)
     return expr, dict([(v, k) for k, v in rep]) or None, nc_syms
 
 def factor_nc(expr):

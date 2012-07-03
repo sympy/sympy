@@ -1,6 +1,6 @@
-from sympy.core import Basic, S, Function, diff, Number, sympify, Tuple
+from sympy.core import Basic, S, Function, diff, Tuple
 from sympy.core.relational import Equality, Relational
-from sympy.logic.boolalg import Boolean
+from sympy.logic.boolalg import And, Boolean
 from sympy.core.sets import Set
 from sympy.core.symbol import Dummy
 
@@ -178,33 +178,108 @@ class Piecewise(Function):
         # following papers;
         #     http://portal.acm.org/citation.cfm?id=281649
         #     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&rep=rep1&type=pdf
-        int_expr = []
         mul = 1
-        if a > b:
+        if (a == b) is True:
+            return S.Zero
+        elif (a > b) is True:
             a, b, mul = b, a, -1
-        default = None
+        elif (a <= b) is not True:
+            newargs = []
+            for e, c in self.args:
+                intervals = self._sort_expr_cond(sym, S.NegativeInfinity, S.Infinity, c)
+                values = []
+                for lower, upper in intervals:
+                    if (a < lower) is True:
+                        mid = lower
+                        rep = b
+                        val = e.subs(sym, b) - e.subs(sym, mid)
+                        val += self._eval_interval(sym, a, mid)
+                    elif (a > upper) is True:
+                        mid = upper
+                        rep = b
+                        val = e.subs(sym, b) - e.subs(sym, mid)
+                        val += self._eval_interval(sym, a, mid)
+                    elif (a >= lower) is True and (a <= upper) is True:
+                        rep = b
+                        val = e.subs(sym, b) - e.subs(sym, a)
+                    elif (b < lower) is True:
+                        mid = lower
+                        rep = a
+                        val = e.subs(sym, mid) - e.subs(sym, a)
+                        val += self._eval_interval(sym, mid, b)
+                    elif (b > upper) is True:
+                        mid = upper
+                        rep = a
+                        val = e.subs(sym, mid) - e.subs(sym, a)
+                        val += self._eval_interval(sym, mid, b)
+                    elif ((b >= lower) is True) and ((b <= upper) is True):
+                        rep = a
+                        val = e.subs(sym, b) - e.subs(sym, a)
+                    else:
+                        raise NotImplementedError(
+                            """The evaluation of a Piecewise interval when both the lower
+                            and the upper limit are symbolic is not yet implemented.""")
+                    values.append(val)
+                if len(set(values)) == 1 :
+                    try:
+                        c = c.subs(sym, rep)
+                    except AttributeError:
+                        pass
+                    e = values[0]
+                    newargs.append((e, c))
+                else:
+                    for i in range(len(values)):
+                        newargs.append((values[i],
+                            intervals[i][0] <= rep and rep <= intervals[i][1]))
+            return Piecewise(*newargs)
 
         # Determine what intervals the expr,cond pairs affect.
-        # 1) If cond is True, then log it as default
-        # 1.1) Currently if cond can't be evaluated, throw NotImplementedError.
-        # 2) For each inequality, if previous cond defines part of the interval
-        #    update the new conds interval.
-        #    -  eg x < 1, x < 3 -> [oo,1],[1,3] instead of [oo,1],[oo,3]
-        # 3) Sort the intervals to make it easier to find correct exprs
+        int_expr = self._sort_expr_cond(sym, a, b)
+
+        # Finally run through the intervals and sum the evaluation.
+        ret_fun = 0
+        for int_a, int_b, expr in int_expr:
+            ret_fun += expr._eval_interval(sym,  max(a, int_a), min(b, int_b))
+        return mul * ret_fun
+
+    def _sort_expr_cond(self, sym, a, b, targetcond = None):
+        """Determine what intervals the expr, cond pairs affect.
+
+        1) If cond is True, then log it as default
+        1.1) Currently if cond can't be evaluated, throw NotImplementedError.
+        2) For each inequality, if previous cond defines part of the interval
+           update the new conds interval.
+           -  eg x < 1, x < 3 -> [oo,1],[1,3] instead of [oo,1],[oo,3]
+        3) Sort the intervals to make it easier to find correct exprs
+
+        Under normal use, we return the expr,cond pairs in increasing order
+        along the real axis corresponding to the symbol sym.  If targetcond
+        is given, we return a list of (lowerbound, upperbound) pairs for
+        this condition."""
+        default = None
+        int_expr = []
         for expr, cond in self.args:
             if cond is True:
                 default = expr
                 break
             elif isinstance(cond, Equality):
                 continue
-
-            lower, upper = cond.lts, cond.gts # part 1: initialize with givens
-            if cond.lts.has(sym):     # part 1a: expand the side ...
-                lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
-            elif cond.gts.has(sym):   # part 1a: ... that can be expanded
-                upper = S.Infinity           # e.g. x >= 0 --->  oo >= 0
+            elif isinstance(cond, And):
+                lower = S.NegativeInfinity
+                upper = S.Infinity
+                for cond2 in cond.args:
+                    if cond2.lts.has(sym):
+                        upper = min(cond2.gts, upper)
+                    elif cond2.gts.has(sym):
+                        lower = max(cond2.lts, lower)
             else:
-                raise NotImplementedError(
+                lower, upper = cond.lts, cond.gts # part 1: initialize with givens
+                if cond.lts.has(sym):     # part 1a: expand the side ...
+                    lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
+                elif cond.gts.has(sym):   # part 1a: ... that can be expanded
+                    upper = S.Infinity           # e.g. x >= 0 --->  oo >= 0
+                else:
+                    raise NotImplementedError(
                         "Unable to handle interval evaluation of expression.")
 
             # part 1b: Reduce (-)infinity to what was passed in.
@@ -222,6 +297,8 @@ class Piecewise(Function):
                     upper = int_expr[n][0]
             if self.__eval_cond(lower < upper):  # Is it still an interval?
                 int_expr.append((lower, upper, expr))
+            if cond is targetcond:
+                return [(lower, upper)]
         int_expr.sort(key=lambda x:x[0])
 
         # Add holes to list of intervals if there is a default value,
@@ -239,16 +316,14 @@ class Piecewise(Function):
 
         if holes and default is not None:
             int_expr.extend(holes)
+            if targetcond is True:
+                return [(h[0], h[1]) for h in holes]
         elif holes and default == None:
             raise ValueError("Called interval evaluation over piecewise " \
                              "function on undefined intervals %s" % \
                              ", ".join([str((h[0], h[1])) for h in holes]))
 
-        # Finally run through the intervals and sum the evaluation.
-        ret_fun = 0
-        for int_a, int_b, expr in int_expr:
-            ret_fun += expr._eval_interval(sym,  max(a, int_a), min(b, int_b))
-        return mul * ret_fun
+        return int_expr
 
     def _eval_derivative(self, s):
         return Piecewise(*[(diff(e, s), c) for e, c in self.args])

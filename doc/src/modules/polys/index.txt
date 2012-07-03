@@ -23,5 +23,7 @@ Contents
     basics.txt
     wester.txt
     reference.txt
+    agca.txt
+    internals.txt
     literature.txt
 

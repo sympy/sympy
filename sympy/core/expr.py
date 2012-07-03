@@ -1,14 +1,16 @@
 from core import C
+from sympify import sympify
 from basic import Basic, Atom
 from singleton import S
 from evalf import EvalfMixin, pure_complex
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
-from compatibility import reduce, SymPyDeprecationWarning
+from compatibility import reduce
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
 from math import log10, ceil
+from inspect import getmro
 
 class Expr(Basic, EvalfMixin):
     __slots__ = []
@@ -73,6 +75,28 @@ class Expr(Basic, EvalfMixin):
         exp = exp.sort_key(order=order)
 
         return expr.class_key(), args, exp, coeff
+
+    def __call__(self, *args):
+        # (x+Lambda(y, 2*y))(z) -> x+2*z
+        return Expr._recursive_call(self, args)
+
+    @staticmethod
+    def _recursive_call(expr_to_call, on_args):
+        def the_call_method_is_overridden(expr):
+            for cls in getmro(type(expr)):
+                if '__call__' in cls.__dict__:
+                    return cls != Expr
+
+        if callable(expr_to_call) and the_call_method_is_overridden(expr_to_call):
+            if isinstance(expr_to_call, C.Symbol):# XXX When you call a Symbol it is
+                return expr_to_call               # transformed into an UndefFunction
+            else:
+                return expr_to_call(*on_args)
+        elif expr_to_call.args:
+            args = (Expr._recursive_call(sub, on_args) for sub in expr_to_call.args)
+            return type(expr_to_call)(*args)
+        else:
+            return expr_to_call
 
 
     # ***************
@@ -451,35 +475,30 @@ class Expr(Basic, EvalfMixin):
         if self.is_zero:
             return True
 
-        # try numerical evaluation in reals to see if we get two different
-        # values
+        # try numerical evaluation to see if we get two different values
         failing_number = None
         if wrt == free:
-            # try 0 and 1 via subsitution
+            # try 0 and 1
             a = self.subs(zip(free, [0]*len(free)))
-            if a.is_Rational:
+            if a is S.NaN:
+                a = self._random(None, 0, 0, 0, 0)
+            if a is not None and a is not S.NaN:
                 b = self.subs(zip(free, [1]*len(free)))
-                if b.is_Rational:
+                if b is S.NaN:
+                    b = self._random(None, 1, 0, 1, 0)
+                if b is not None and b is not S.NaN:
+                    if b.equals(a) is False:
+                        return False
+                # try random real
+                b = self._random(None, -1, 0, 1, 0)
+                if b is not None and b is not S.NaN and b.equals(a) is False:
+                    return False
+                # try random complex
+                b = self._random()
+                if b is not None and b is not S.NaN:
                     if a != b:
                         return False
-            # try 0 and 1 via evaluation
-            a = self._random(None, 0, 0, 0, 0)
-            if a is not None:
-                b = self._random(None, 1, 0, 1, 0)
-                if b is not None:
-                    if a != b:
-                        return False
-                    # try random real
-                    b = self._random(None, -1, 0, 1, 0)
-                    if b is not None:
-                        if a != b:
-                            return False
-                        # try random complex
-                        b = self._random()
-                        if b is not None:
-                            if a != b:
-                                return False
-                            failing_number = a if a.is_number else b
+                    failing_number = a if a.is_number else b
 
         # now we will test each wrt symbol (or all free symbols) to see if the
         # expression depends on them or not using differentiation. This is
@@ -523,10 +542,16 @@ class Expr(Basic, EvalfMixin):
         # simplification steps that are done will be very fast.
         diff = (self - other).as_content_primitive()[1]
         diff = factor_terms(diff.simplify(), radical=True)
+
         if not diff:
             return True
-        elif diff.is_Number or pure_complex(diff):
+
+        if all(f.is_Atom for m in Add.make_args(diff)
+                           for f in Mul.make_args(m)):
+            # if there is no expanding to be done after simplifying
+            # then this can't be a zero
             return False
+
         constant = diff.is_constant(simplify=False, failing_number=True)
         if constant is False or \
            not diff.free_symbols and not diff.is_number:
@@ -534,7 +559,7 @@ class Expr(Basic, EvalfMixin):
         elif constant is True:
             ndiff = diff._random()
             if ndiff:
-               return False
+                return False
 
         # diff has not simplified to zero; constant is either None, True
         # or the number with significance (prec != 1) that was randomly
@@ -632,6 +657,8 @@ class Expr(Basic, EvalfMixin):
     def _eval_conjugate(self):
         if self.is_real:
             return self
+        elif self.is_imaginary:
+            return -self
 
     def conjugate(self):
         from sympy.functions.elementary.complexes import conjugate as c
@@ -1419,7 +1446,7 @@ class Expr(Basic, EvalfMixin):
                 indep.append(n)
             return Mul(*indep), Mul(*depend)
 
-    def as_real_imag(self, deep=True):
+    def as_real_imag(self, deep=True, **hints):
         """Performs complex expansion on 'self' and returns a tuple
            containing collected both real and imaginary parts. This
            method can't be confused with re() and im() functions,
@@ -1442,7 +1469,10 @@ class Expr(Basic, EvalfMixin):
            (re(z) - im(w), re(w) + im(z))
 
         """
-        return (C.re(self), C.im(self))
+        if hints.get('ignore') == self:
+            return None
+        else:
+            return (C.re(self), C.im(self))
 
     def as_powers_dict(self):
         """Return self as a dictionary of factors with each factor being
@@ -1489,18 +1519,18 @@ class Expr(Basic, EvalfMixin):
         """
         This method is deprecated. Use .as_coeff_mul() instead.
         """
-        import warnings
-        warnings.warn("\nuse as_coeff_mul() instead of as_coeff_terms().",
-                      SymPyDeprecationWarning)
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(feature="as_coeff_terms()",
+                                useinstead="as_coeff_mul()").warn()
         return self.as_coeff_mul(*deps)
 
     def as_coeff_factors(self, *deps):
         """
         This method is deprecated.  Use .as_coeff_add() instead.
         """
-        import warnings
-        warnings.warn("\nuse as_coeff_add() instead of as_coeff_factors().",
-                      SymPyDeprecationWarning)
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(feature="as_coeff_factors()",
+                                useinstead="as_coeff_add()").warn()
         return self.as_coeff_add(*deps)
 
     def as_coeff_mul(self, *deps):
@@ -1650,10 +1680,15 @@ class Expr(Basic, EvalfMixin):
         return S.One, self
 
     def as_numer_denom(self):
-        """ a/b -> a,b
+        """ expression -> a/b -> a, b
 
         This is just a stub that should be defined by
-        an object's class methods to get anything else."""
+        an object's class methods to get anything else.
+
+        See Also
+        ========
+        normal: return a/b instead of a, b
+        """
 
         return self, S.One
 
@@ -1968,7 +2003,11 @@ class Expr(Basic, EvalfMixin):
                     piimult += coeff
                     continue
             extras += [exp]
-        coeff, tail = piimult.as_coeff_add()
+        if not piimult.free_symbols:
+            coeff = piimult
+            tail = ()
+        else:
+            coeff, tail = piimult.as_coeff_add(*piimult.free_symbols)
         # round down to nearest multiple of 2
         branchfact = ceiling(coeff/2 - S(1)/2)*2
         n += branchfact/2
@@ -2379,7 +2418,7 @@ class Expr(Basic, EvalfMixin):
             yield series - e
             e = series
 
-    def nseries(self, x=None, x0=0, n=6, dir='+',logx=None):
+    def nseries(self, x=None, x0=0, n=6, dir='+', logx=None):
         """
         Wrapper to _eval_nseries if assumptions allow, else to series.
 
@@ -2460,23 +2499,23 @@ class Expr(Basic, EvalfMixin):
     @cacheit
     def as_leading_term(self, *symbols):
         """
-        Returns the leading term.
+        Returns the leading (nonzero) term of the series expansion of self.
+
+        The _eval_as_leading_term routines are used to do this, and they must
+        always return a non-zero value.
 
         Examples
         ========
 
         >>> from sympy.abc import x
-        >>> (1+x+x**2).as_leading_term(x)
+        >>> (1 + x + x**2).as_leading_term(x)
         1
-        >>> (1/x**2+x+x**2).as_leading_term(x)
+        >>> (1/x**2 + x + x**2).as_leading_term(x)
         x**(-2)
 
-        Note:
-
-        self is assumed to be the result returned by Basic.series().
         """
         from sympy import powsimp
-        if len(symbols)>1:
+        if len(symbols) > 1:
             c = self
             for x in symbols:
                 c = c.as_leading_term(x)
@@ -2484,8 +2523,9 @@ class Expr(Basic, EvalfMixin):
         elif not symbols:
             return self
         x = sympify(symbols[0])
-        assert x.is_Symbol, repr(x)
-        if not self.has(x):
+        if not x.is_Symbol:
+            raise ValueError('expecting a Symbol but got %s' % x)
+        if x not in self.free_symbols:
             return self
         obj = self._eval_as_leading_term(x)
         if obj is not None:
@@ -2498,15 +2538,13 @@ class Expr(Basic, EvalfMixin):
     def as_coeff_exponent(self, x):
         """ ``c*x**e -> c,e`` where x can be any symbolic expression.
         """
-        x = sympify(x)
-        wc = Wild('wc')
-        we = Wild('we')
-        p  = wc*x**we
         from sympy import collect
         s = collect(self, x)
-        d = s.match(p)
-        if d is not None and we in d:
-            return d[wc], d[we]
+        c, p = s.as_coeff_mul(x)
+        if len(p) == 1:
+            b, e = p[0].as_base_exp()
+            if b == x:
+                return c, e
         return s, S.Zero
 
     def leadterm(self, x):
@@ -2522,17 +2560,14 @@ class Expr(Basic, EvalfMixin):
         >>> (1/x**2+x+x**2).leadterm(x)
         (1, -2)
 
-        Note:
-
-        self is assumed to be the result returned by Basic.series().
         """
-        from sympy import powsimp
-        x = sympify(x)
-        c, e = self.normal().as_leading_term(x).as_coeff_exponent(x)
-        c = powsimp(c, deep=True, combine='exp')
-        if not c.has(x):
-            return c, e
-        raise ValueError("cannot compute leadterm(%s, %s), got c=%s" % (self, x, c))
+        c, e = self.as_leading_term(x).as_coeff_exponent(x)
+        if x in c.free_symbols:
+            from sympy.utilities.misc import filldedent
+            raise ValueError(filldedent("""
+                cannot compute leadterm(%s, %s). The coefficient
+                should have been free of x but got %s""" % (self, x, c)))
+        return c, e
 
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product. """
@@ -2839,7 +2874,5 @@ from add import Add
 from power import Pow
 from function import Derivative, expand_mul
 from mod import Mod
-from sympify import sympify
-from symbol import Wild
 from exprtools import factor_terms
 from numbers import Integer, Rational

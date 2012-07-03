@@ -458,10 +458,12 @@ def test_leading_term():
     x = Symbol('x')
     for func in [sinh, cosh, tanh, coth]:
         assert func(x).as_leading_term(x) == 1
-        assert func(1/x).as_leading_term(x) == func(1/x)
     for func in [asinh, acosh, atanh, acoth]:
         assert func(x).as_leading_term(x) == x
-        assert func(1/x).as_leading_term(x) == func(1/x)
+    for func in [sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth]:
+        for arg in (1/x, S.Half):
+            eq = func(arg)
+            assert eq.as_leading_term(x) == eq
 
 def test_complex():
     a,b = symbols('a,b', real=True)
@@ -474,9 +476,7 @@ def test_complex():
         assert tanh(z).expand(complex=True,deep=deep) == sinh(a)*cosh(a)/(cos(b)**2+sinh(a)**2) + I*sin(b)*cos(b)/(cos(b)**2+sinh(a)**2)
         assert coth(z).expand(complex=True,deep=deep) == sinh(a)*cosh(a)/(sin(b)**2+sinh(a)**2) - I*sin(b)*cos(b)/(sin(b)**2+sinh(a)**2)
 
-@XFAIL
 def test_complex_2899():
-    # infinite recursion in coth, https://code.google.com/p/sympy/issues/detail?id=2899
     a,b = symbols('a,b', real=True)
     for deep in [True,False]:
         for func in [sinh, cosh, tanh, coth]:

@@ -197,12 +197,24 @@ want to be mentioned here, so see our repository history for a full list).
 #. Carsten Knoll: improvement to preview()
 #. M R Bharath: modified use of int_tested, improvement to Permutation
 #. Matthias Toews: File permissions
+#. Sergiu Ivanov: Fixes to zoo, SymPyDeprecationWarning
 #. Jorge E. Cardona: Cleanup in polys
 #. Sanket Agarwal: Rewrite coverage_doctest.py script
 #. Manoj Babu K.: Improve gamma function
 #. Sai Nikhil: Fix to Heavyside with complex arguments
 #. Aleksandar Makelov: Fixes regarding the dihedral group generator
-#. Sachin: changes to allow Dict sorting
+#. Raphael Michel: German translation of the tutorial
+#. Sachin Irukula: Changes to allow Dict sorting
+#. Ashwini Oruganti: Changes to Pow printing
+#. Andreas Kloeckner: Fix to cse()
+#. Prateek Papriwal: improve summation documentation
+#. Angadh Nanjangud: in physics.mechanics, added a function and tests for the parallel axis theorem
+#. Comer Duncan: added dual, is_antisymmetric, and det_lu_decomposition to matrices.py
+#. Jens H. Nielsen: added sets to modules listing
+#. Joseph Dougherty: modified whitespace cleaning to remove multiple newlines at eof
+#. marshall2389: Spelling correction
+#. Guru Devanla: Implemented quantum density operator
+#. George Waksman: Implemented JavaScript code printer and MathML printer
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

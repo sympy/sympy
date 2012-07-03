@@ -8,23 +8,24 @@ class RigidBody(object):
     """An idealized rigid body.
 
     This is essentially a container which holds the various components which
-    describe a rigid body: a name, mass, point, reference frame, and inertia.
+    describe a rigid body: a name, mass, center of mass, reference frame, and
+    inertia.
 
     All of these need to be supplied on creation, but can be changed
     afterwards.
 
     Attributes
     ==========
-    name : str
-        The body's name
-    mass : Sympifyable
-        The body's mass
-    inertia : (Dyadic, Point)
-        The body's inertia about a point; stored in a tuple as shown above
-    mc : Point
-        The point which represents the mass center of the rigid body
+    name : string
+        The body's name.
+    masscenter : Point
+        The point which represents the center of mass of the rigid body.
     frame : ReferenceFrame
-        The ReferenceFrame which the rigid body is fixed in
+        The ReferenceFrame which the rigid body is fixed in.
+    mass : Sympifyable
+        The body's mass.
+    inertia : (Dyadic, Point)
+        The body's inertia about a point; stored in a tuple as shown above.
 
     Examples
     ========
@@ -36,19 +37,19 @@ class RigidBody(object):
     >>> A = ReferenceFrame('A')
     >>> P = Point('P')
     >>> I = outer (A.x, A.x)
-    >>> Inertia_tuple = (I, P)
-    >>> B = RigidBody('B', P, A, m, Inertia_tuple)
+    >>> inertia_tuple = (I, P)
+    >>> B = RigidBody('B', P, A, m, inertia_tuple)
     >>> # Or you could change them afterwards
     >>> m2 = Symbol('m2')
     >>> B.mass = m2
 
     """
 
-    def __init__(self, name, mc, frame, mass, inertia):
+    def __init__(self, name, masscenter, frame, mass, inertia):
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
         self._name = name
-        self.set_mc(mc)
+        self.set_masscenter(masscenter)
         self.set_mass(mass)
         self.set_frame(frame)
         self.set_inertia(inertia)
@@ -57,7 +58,6 @@ class RigidBody(object):
         return self._name
 
     __repr__ = __str__
-
 
     def get_frame(self):
         return self._frame
@@ -69,15 +69,15 @@ class RigidBody(object):
 
     frame = property(get_frame, set_frame)
 
-    def get_mc(self):
-        return self._mc
+    def get_masscenter(self):
+        return self._masscenter
 
-    def set_mc(self, p):
+    def set_masscenter(self, p):
         if not isinstance(p, Point):
-            raise TypeError("RigidBody mass center must be a Point object.")
-        self._mc = p
+            raise TypeError("RigidBody center of mass must be a Point object.")
+        self._masscenter = p
 
-    mc = property(get_mc, set_mc)
+    masscenter = property(get_masscenter, set_masscenter)
 
     def get_mass(self):
         return self._mass
@@ -99,3 +99,84 @@ class RigidBody(object):
         self._inertia_point = I[1]
 
     inertia = property(get_inertia, set_inertia)
+
+    def linearmomentum(self, frame):
+        """ Linear momentum of the rigid body.
+
+        The linear momentum L, of a rigid body B, with respect to frame N is
+        given by
+
+        L = M * v*
+
+        where M is the mass of the rigid body and v* is the velocity of
+        the mass center of B in the frame, N.
+
+        Parameters
+        ==========
+
+        frame : ReferenceFrame
+            The frame in which linear momentum is desired.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame, outer
+        >>> from sympy.physics.mechanics import RigidBody, dynamicsymbols
+        >>> M, v = dynamicsymbols('M v')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_vel(N, v * N.x)
+        >>> I = outer (N.x, N.x)
+        >>> Inertia_tuple = (I, P)
+        >>> B = RigidBody('B', P, N, M, Inertia_tuple)
+        >>> B.linearmomentum(N)
+        M*v*N.x
+
+        """
+
+        return self.mass * self.masscenter.vel(frame)
+
+    def angularmomentum(self, point, frame):
+        """ Angular momentum of the rigid body.
+
+        The angular momentum H, about some point O, of a rigid body B, in a
+        frame N is given by
+
+        H = I* . omega + r* x (M * v)
+
+        where I* is the central inertia dyadic of B, omega is the angular
+        velocity of body B in the frame, N, r* is the position vector from
+        point O to the mass center of B, and v is the velocity of point O in
+        the frame, N.
+
+        Parameters
+        ==========
+
+        point : Point
+            The point about which angular momentum is desired.
+
+        frame : ReferenceFrame
+            The frame in which angular momentum is desired.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame, outer
+        >>> from sympy.physics.mechanics import RigidBody, dynamicsymbols
+        >>> M, v, r, omega = dynamicsymbols('M v r omega')
+        >>> N = ReferenceFrame('N')
+        >>> b = ReferenceFrame('b')
+        >>> b.set_ang_vel(N, omega * b.x)
+        >>> P = Point('P')
+        >>> P.set_vel(N, 1 * N.x)
+        >>> I = outer (b.x, b.x)
+        >>> Inertia_tuple = (I, P)
+        >>> B = RigidBody('B', P, b, M, Inertia_tuple)
+        >>> B.angularmomentum(P, N)
+        omega*b.x
+
+        """
+
+        return ((self.inertia[0] & self.frame.ang_vel_in(frame)) +
+                (point.vel(frame) ^ -self.masscenter.pos_from(point)) *
+                self.mass)

@@ -1,16 +1,16 @@
+from sympy.core.assumptions import StdFactKB
 from basic import Basic
 from core import C
-from power import Pow
 from sympify import sympify
 from singleton import S
 from expr import Expr, AtomicExpr
 from cache import cacheit
 from function import FunctionClass
+from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
-from sympy.core.compatibility import SymPyDeprecationWarning
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 import re
-import warnings
 
 class Symbol(AtomicExpr, Boolean):
     """
@@ -60,22 +60,26 @@ class Symbol(AtomicExpr, Boolean):
         """
 
         if 'dummy' in assumptions:
-            warnings.warn(
-                    "\nThe syntax Symbol('x', dummy=True) is deprecated and will"
-                    "\nbe dropped in a future version of SymPy. Please use Dummy()"
-                    "\nor symbols(..., cls=Dummy) to create dummy symbols.",
-                    SymPyDeprecationWarning)
+            SymPyDeprecationWarning(
+                feature="Symbol('x', dummy=True)",
+                useinstead="Dummy() or symbols(..., cls=Dummy)"
+                ).warn()
             if assumptions.pop('dummy'):
                 return Dummy(name, **assumptions)
         if assumptions.get('zero', False):
             return S.Zero
-        assumptions.setdefault('commutative', True)
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        if is_commutative is None:
+            raise ValueError(
+                '''Symbol commutativity must be True or False.''')
+        assumptions['commutative'] = is_commutative
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
         assert isinstance(name, str),repr(type(name))
-        obj = Expr.__new__(cls, **assumptions)
+        obj = Expr.__new__(cls)
         obj.name = name
+        obj._assumptions = StdFactKB(assumptions)
         return obj
 
     __xnew__       = staticmethod(__new_stage2__)            # never cached (e.g. dummy)
@@ -84,8 +88,17 @@ class Symbol(AtomicExpr, Boolean):
     def __getnewargs__(self):
         return (self.name,)
 
+    def __getstate__(self):
+        return {'_assumptions': self._assumptions}
+
+
     def _hashable_content(self):
-        return (self.name,)
+        return (self.name,) + tuple(sorted(self.assumptions0.iteritems()))
+
+    @property
+    def assumptions0(self):
+        return dict((key, value) for key, value
+                in self._assumptions.iteritems() if value is not None)
 
     @cacheit
     def sort_key(self, order=None):
@@ -96,10 +109,13 @@ class Symbol(AtomicExpr, Boolean):
 
     def __call__(self, *args):
         from function import Function
-        return Function(self.name, nargs=len(args))(*args, **self.assumptions0)
+        return Function(self.name)(*args)
 
-    def as_real_imag(self, deep=True):
-        return (C.re(self), C.im(self))
+    def as_real_imag(self, deep=True, **hints):
+        if hints.get('ignore') == self:
+            return None
+        else:
+            return (C.re(self), C.im(self))
 
     def _eval_expand_complex(self, deep=True, **hints):
         re, im = self.as_real_imag()
@@ -149,12 +165,19 @@ class Dummy(Symbol):
         if name is None:
             name = str(Dummy._count)
 
-        assumptions.setdefault('commutative', True)
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        if is_commutative is None:
+            raise ValueError(
+                '''Dummy's commutativity must be True or False.''')
+        assumptions['commutative'] = is_commutative
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
         Dummy._count += 1
         obj.dummy_index = Dummy._count
         return obj
+
+    def __getstate__(self):
+        return {'_assumptions': self._assumptions, 'dummy_index': self.dummy_index}
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
@@ -170,7 +193,11 @@ class Wild(Symbol):
     def __new__(cls, name, exclude=(), properties=(), **assumptions):
         exclude = tuple([sympify(x) for x in exclude])
         properties = tuple(properties)
-        assumptions.setdefault('commutative', True)
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        if is_commutative is None:
+            raise ValueError(
+                '''Wild's commutativity must be True or False.''')
+        assumptions['commutative'] = is_commutative
         return Wild.__xnew__(cls, name, exclude, properties, **assumptions)
 
     def __getnewargs__(self):
@@ -185,7 +212,7 @@ class Wild(Symbol):
         return obj
 
     def _hashable_content(self):
-        return (self.name, self.exclude, self.properties )
+        return super(Wild, self)._hashable_content() + (self.exclude, self.properties)
 
     # TODO add check against another Wild
     def matches(self, expr, repl_dict={}):
@@ -197,9 +224,8 @@ class Wild(Symbol):
         repl_dict[self] = expr
         return repl_dict
 
-    def __call__(self, *args, **assumptions):
-        from sympy.core.function import WildFunction
-        return WildFunction(self.name, nargs=len(args))(*args, **assumptions)
+    def __call__(self, *args, **kwargs):
+        raise TypeError("'%s' object is not callable" % type(self).__name__)
 
 _re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
 _re_var_scope = re.compile(r"^(.):(.)$")
@@ -287,9 +313,10 @@ def symbols(names, **args):
     """
     result = []
     if 'each_char' in args:
-        warnings.warn("The each_char option to symbols() and var() is "
-            "deprecated.  Separate symbol names by spaces or commas instead.",
-            SymPyDeprecationWarning)
+        SymPyDeprecationWarning(
+            feature="each_char in the options to symbols() and var()",
+            useinstead="spaces or commas between symbol names"
+            ).warn()
 
     if isinstance(names, basestring):
         names = names.strip()

@@ -176,7 +176,7 @@ def helper_test_sdp_groebner():
         sdp_from_dict({(0,8): QQ(1,1), (0,6): QQ(-2,1), (0,4): QQ(3,2), (0,2): QQ(-1,2), (0,0): QQ(1,16)}, lex),
     ]
 
-    raises(DomainError, "sdp_groebner([], 1, lex, ZZ)")
+    raises(DomainError, lambda: sdp_groebner([], 1, lex, ZZ))
 
 def test_sdp_groebner():
     config.setup('GB_METHOD', 'f5b')

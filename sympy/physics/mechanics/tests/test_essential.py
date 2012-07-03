@@ -13,7 +13,7 @@ def test_dyadic():
     assert d1 != 0
     assert d1 * 2 == 2 * A.x | A.x
     assert d1 / 2. == 0.5 * d1
-    assert d1 & 0 == 0
+    assert d1 & (0 * d1) == 0
     assert d1 & d2 == 0
     assert d1 & A.x == A.x
     assert d1 ^ A.x == 0
@@ -230,4 +230,3 @@ def test_Vector_diffs():
     assert v4.diff(q1d, B) == 0
     assert v4.diff(q2d, B) == A.x - q3 * cos(q3) * N.z
     assert v4.diff(q3d, B) == B.x + q3 * N.x + N.y
-

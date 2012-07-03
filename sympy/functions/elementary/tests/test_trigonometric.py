@@ -24,6 +24,7 @@ def test_sin():
     assert sin(atan(x)) == x / sqrt(1 + x**2)
     assert sin(acos(x)) == sqrt(1 - x**2)
     assert sin(acot(x)) == 1 / (sqrt(1 + 1 / x**2) * x)
+    assert sin(atan2(y, x)) == y / sqrt(x**2 + y**2)
 
     assert sin(pi*I) == sinh(pi)*I
     assert sin(-pi*I) == -sinh(pi)*I
@@ -165,6 +166,7 @@ def test_cos():
     assert cos(atan(x)) == 1 / sqrt(1 + x**2)
     assert cos(asin(x)) == sqrt(1 - x**2)
     assert cos(acot(x)) == 1 / sqrt(1 + 1 / x**2)
+    assert cos(atan2(y, x)) == x / sqrt(x**2 + y**2)
 
     assert cos(pi*I) == cosh(pi)
     assert cos(-pi*I) == cosh(pi)
@@ -270,6 +272,7 @@ def test_tan():
     assert tan(asin(x)) == x / sqrt(1 - x**2)
     assert tan(acos(x)) == sqrt(1 - x**2) / x
     assert tan(acot(x)) == 1 / x
+    assert tan(atan2(y, x)) == y/x
 
     assert tan(pi*I) == tanh(pi)*I
     assert tan(-pi*I) == -tanh(pi)*I
@@ -358,6 +361,7 @@ def test_cot():
     assert cot(atan(x)) == 1 / x
     assert cot(asin(x)) == sqrt(1 - x**2) / x
     assert cot(acos(x)) == x / sqrt(1 - x**2)
+    assert cot(atan2(y,x)) == x/y
 
     assert cot(pi*I) == -coth(pi)*I
     assert cot(-pi*I) == coth(pi)*I
@@ -631,7 +635,9 @@ def test_as_leading_term_issue2173():
 def test_leading_terms():
     x = Symbol('x')
     for func in [sin, cos, tan, cot, asin, acos, atan, acot]:
-        assert func(1/x).as_leading_term(x) == func(1/x)
+        for arg in (1/x, S.Half):
+            eq = func(arg)
+            assert eq.as_leading_term(x) == eq
 
 def test_atan2_expansion():
     x, y = symbols("x,y")

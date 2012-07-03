@@ -27,55 +27,6 @@ from sympy.mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.utilities import lambdify
 
-def dup_minpoly_add(f, g, K):
-    F = dmp_raise(f, 1, 0, K)
-    G = dmp_raise(g, 1, 0, K)
-
-    H = [[-K.one], [K.one, K.zero]]
-    F = dmp_compose(F, H, 1, K)
-
-    return dmp_resultant(F, G, 1, K)
-
-def dup_minpoly_sub(f, g, K):
-    F = dmp_raise(f, 1, 0, K)
-    G = dmp_raise(g, 1, 0, K)
-
-    H = [[K.one], [K.one, K.zero]]
-    F = dmp_compose(F, H, 1, K)
-
-    return dmp_resultant(F, G, 1, K)
-
-def dup_minpoly_mul(f, g, K):
-    f, F = reversed(f), []
-
-    for i, c in enumerate(f):
-        if not c:
-            F.append([])
-        else:
-            F.append(dup_lshift([c], i, K))
-
-    F = dmp_strip(F)
-    G = dmp_raise(g, 1, 0, K)
-
-    return dmp_resultant(F, G, 1, K)
-
-def dup_minpoly_div(f, g, K):
-    F = dmp_raise(f, 1, 0, K)
-    G = dmp_raise(g, 1, 0, K)
-
-    H = [[K.one, K.zero], []]
-    F = dmp_compose(F, H, 1, K)
-
-    return dmp_resultant(F, G, 1, K)
-
-def dup_minpoly_pow(f, p, q, K):
-    d = {(p, 0): -K.one, (0, q): K.one}
-
-    F = dmp_raise(f, 1, 0, K)
-    G = dmp_from_dict(d, 1, K)
-
-    return dmp_resultant(F, G, 1, K)
-
 _reals_cache = {}
 _complexes_cache = {}
 

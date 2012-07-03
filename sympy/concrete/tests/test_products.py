@@ -19,11 +19,11 @@ def test_simple_products():
 
     assert isinstance(product(k**k, (k, 1, n)), Product)
 
-    raises(ValueError, 'Product(n)')
-    raises(ValueError, 'Product(n, k)')
-    raises(ValueError, 'Product(n, k, 1)')
-    raises(ValueError, 'Product(n, k, 1, 10)')
-    raises(ValueError, 'Product(n, (k, 1))')
+    raises(ValueError, lambda: Product(n))
+    raises(ValueError, lambda: Product(n, k))
+    raises(ValueError, lambda: Product(n, k, 1))
+    raises(ValueError, lambda: Product(n, k, 1, 10))
+    raises(ValueError, lambda: Product(n, (k, 1)))
 
 def test_multiple_products():
     assert product(x, (n, 1, k), (k, 1, m)) == x**(m**2/2 + m/2)

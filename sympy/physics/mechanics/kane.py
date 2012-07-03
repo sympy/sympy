@@ -6,6 +6,7 @@ from sympy.physics.mechanics.essential import ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.point import Point
 from sympy.physics.mechanics.rigidbody import RigidBody
+from sympy.physics.mechanics.functions import inertia_of_point_mass
 
 class Kane(object):
     """Kane's method object.
@@ -458,24 +459,19 @@ class Kane(object):
                 om = v.frame.ang_vel_in(N).subs(uadz).subs(uaz) # ang velocity
                 omp = v.frame.ang_vel_in(N) # ang velocity, for partials
                 alp = v.frame.ang_acc_in(N).subs(uadz).subs(uaz) # ang acc
-                ve = v.mc.vel(N).subs(uadz).subs(uaz) # velocity
-                vep = v.mc.vel(N) # velocity, for partials
-                acc = v.mc.acc(N).subs(uadz).subs(uaz) # acceleration
+                ve = v.masscenter.vel(N).subs(uadz).subs(uaz) # velocity
+                vep = v.masscenter.vel(N) # velocity, for partials
+                acc = v.masscenter.acc(N).subs(uadz).subs(uaz) # acceleration
                 m = (v.mass).subs(uadz).subs(uaz)
                 I, P = v.inertia
                 I = I.subs(uadz).subs(uaz)
-                if P != v.mc:
-                    # redefine I about mass center
+                if P != v.masscenter:
+                    # redefine I about the center of mass
                     # have I S/O, want I S/S*
                     # I S/O = I S/S* + I S*/O; I S/S* = I S/O - I S*/O
-
-                    # This block of code needs to have a test written for it
-                    print('This functionality has not yet been tested yet, '
-                          'use at your own risk.')
                     f = v.frame
-                    d = v.mc.pos_from(P)
-                    I -= m * (((f.x | f.x) + (f.y | f.y) + (f.z | f.z)) *
-                              (d & d) - (d | d))
+                    d = v.masscenter.pos_from(P)
+                    I -= inertia_of_point_mass(m, d, f)
                 templist = []
                 # One could think of r star as a collection of coefficients of
                 # the udots plus another term. What we do here is get all of
@@ -869,4 +865,3 @@ class Kane(object):
             raise ValueError('Need to compute Fr, Fr* first.')
         f1 = self._k_ku * Matrix(self._u) + self._f_k
         return -Matrix([f1, self._f_d, self._f_dnh])
-

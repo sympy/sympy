@@ -130,7 +130,7 @@ def test_mathml_constants():
     mml = mp._print(pi)
     assert mml.nodeName == 'pi'
 
-    assert mathml(GoldenRatio) == u'<cn>\u03c6</cn>'
+    assert mathml(GoldenRatio) == '<cn>&#966;</cn>'
 
     mml = mathml(EulerGamma)
     assert mml == '<eulergamma/>'
@@ -311,6 +311,62 @@ def test_symbol():
     assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
     del mml
 
+def test_mathml_greek():
+    mml = mp._print(Symbol('alpha'))
+    assert mml.nodeName == 'ci'
+    assert mml.childNodes[0].nodeValue == u'\u03b1'
+
+    assert mp.doprint(Symbol('alpha')) == '<ci>&#945;</ci>'
+    assert mp.doprint(Symbol('beta')) == '<ci>&#946;</ci>'
+    assert mp.doprint(Symbol('gamma')) == '<ci>&#947;</ci>'
+    assert mp.doprint(Symbol('delta')) == '<ci>&#948;</ci>'
+    assert mp.doprint(Symbol('epsilon')) == '<ci>&#949;</ci>'
+    assert mp.doprint(Symbol('zeta')) == '<ci>&#950;</ci>'
+    assert mp.doprint(Symbol('eta')) == '<ci>&#951;</ci>'
+    assert mp.doprint(Symbol('theta')) == '<ci>&#952;</ci>'
+    assert mp.doprint(Symbol('iota')) == '<ci>&#953;</ci>'
+    assert mp.doprint(Symbol('kappa')) == '<ci>&#954;</ci>'
+    assert mp.doprint(Symbol('lambda')) == '<ci>&#955;</ci>'
+    assert mp.doprint(Symbol('mu')) == '<ci>&#956;</ci>'
+    assert mp.doprint(Symbol('nu')) == '<ci>&#957;</ci>'
+    assert mp.doprint(Symbol('xi')) == '<ci>&#958;</ci>'
+    assert mp.doprint(Symbol('omicron')) == '<ci>&#959;</ci>'
+    assert mp.doprint(Symbol('pi')) == '<ci>&#960;</ci>'
+    assert mp.doprint(Symbol('rho')) == '<ci>&#961;</ci>'
+    assert mp.doprint(Symbol('varsigma')) == '<ci>&#962;</ci>'
+    assert mp.doprint(Symbol('sigma')) == '<ci>&#963;</ci>'
+    assert mp.doprint(Symbol('tau')) == '<ci>&#964;</ci>'
+    assert mp.doprint(Symbol('upsilon')) == '<ci>&#965;</ci>'
+    assert mp.doprint(Symbol('phi')) == '<ci>&#966;</ci>'
+    assert mp.doprint(Symbol('chi')) == '<ci>&#967;</ci>'
+    assert mp.doprint(Symbol('psi')) == '<ci>&#968;</ci>'
+    assert mp.doprint(Symbol('omega')) == '<ci>&#969;</ci>'
+
+    assert mp.doprint(Symbol('Alpha')) == '<ci>&#913;</ci>'
+    assert mp.doprint(Symbol('Beta')) == '<ci>&#914;</ci>'
+    assert mp.doprint(Symbol('Gamma')) == '<ci>&#915;</ci>'
+    assert mp.doprint(Symbol('Delta')) == '<ci>&#916;</ci>'
+    assert mp.doprint(Symbol('Epsilon')) == '<ci>&#917;</ci>'
+    assert mp.doprint(Symbol('Zeta')) == '<ci>&#918;</ci>'
+    assert mp.doprint(Symbol('Eta')) == '<ci>&#919;</ci>'
+    assert mp.doprint(Symbol('Theta')) == '<ci>&#920;</ci>'
+    assert mp.doprint(Symbol('Iota')) == '<ci>&#921;</ci>'
+    assert mp.doprint(Symbol('Kappa')) == '<ci>&#922;</ci>'
+    assert mp.doprint(Symbol('Lambda')) == '<ci>&#923;</ci>'
+    assert mp.doprint(Symbol('Mu')) == '<ci>&#924;</ci>'
+    assert mp.doprint(Symbol('Nu')) == '<ci>&#925;</ci>'
+    assert mp.doprint(Symbol('Xi')) == '<ci>&#926;</ci>'
+    assert mp.doprint(Symbol('Omicron')) == '<ci>&#927;</ci>'
+    assert mp.doprint(Symbol('Pi')) == '<ci>&#928;</ci>'
+    assert mp.doprint(Symbol('Rho')) == '<ci>&#929;</ci>'
+    assert mp.doprint(Symbol('Sigma')) == '<ci>&#931;</ci>'
+    assert mp.doprint(Symbol('Tau')) == '<ci>&#932;</ci>'
+    assert mp.doprint(Symbol('Upsilon')) == '<ci>&#933;</ci>'
+    assert mp.doprint(Symbol('Phi')) == '<ci>&#934;</ci>'
+    assert mp.doprint(Symbol('Chi')) == '<ci>&#935;</ci>'
+    assert mp.doprint(Symbol('Psi')) == '<ci>&#936;</ci>'
+    assert mp.doprint(Symbol('Omega')) == '<ci>&#937;</ci>'
+
 def test_mathml_order():
     expr = x**3 + x**2*y + 3*x*y**3 + y**4
 
@@ -337,5 +393,15 @@ def test_mathml_order():
     assert mml.childNodes[4].childNodes[2].childNodes[0].data == '3'
 
 def test_settings():
-    raises(TypeError, 'mathml(Symbol("x"), method="garbage")')
+    raises(TypeError, lambda: mathml(Symbol("x"), method="garbage"))
 
+def test_toprettyxml_hooking():
+    # test that the patch doesn't influence the behavior of the standard library
+    import xml.dom.minidom
+    doc = xml.dom.minidom.parseString("<apply><plus/><ci>x</ci><cn>1</cn></apply>")
+    prettyxml_old = doc.toprettyxml()
+
+    mp.apply_patch()
+    mp.restore_patch()
+
+    assert prettyxml_old == doc.toprettyxml()

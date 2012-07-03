@@ -1,7 +1,7 @@
 """Rational number type based on Python integers. """
 
 from sympy.core.numbers import igcd
-from sympy.core.basic import PicklableWithSlots
+from sympy.polys.polyutils import PicklableWithSlots
 
 import operator
 

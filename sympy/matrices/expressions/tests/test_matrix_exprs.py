@@ -27,7 +27,7 @@ def test_inverse():
     D = MatrixSymbol('D', n, n)
     E = MatrixSymbol('E', m, n)
 
-    raises(ShapeError, "Inverse(A)")
+    raises(ShapeError, lambda: Inverse(A))
     assert Inverse(Inverse(C)) == C
 
     assert Inverse(C)*C == Identity(C.rows)
@@ -52,7 +52,7 @@ def test_shape():
     B = MatrixSymbol('B', m, l)
     assert A.shape == (n, m)
     assert (A*B).shape == (n, l)
-    raises(ShapeError, 'B*A')
+    raises(ShapeError, lambda: B*A)
 
 def test_matexpr():
     n, m, l = symbols('n m l', integer=True)
@@ -231,10 +231,10 @@ def test_MatAdd():
     assert (A+B).shape == A.shape
     assert MatAdd(A, -A, 2*B).is_Mul
 
-    raises(ShapeError, "A + B.T")
-    raises(ValueError, "A+1")
-    raises(ValueError, "5+A")
-    raises(ValueError, "5-A")
+    raises(ShapeError, lambda: A + B.T)
+    raises(ValueError, lambda: A+1)
+    raises(ValueError, lambda: 5+A)
+    raises(ValueError, lambda: 5-A)
 
     assert MatAdd(A, ZeroMatrix(n,m), -A) == ZeroMatrix(n,m)
     assert MatAdd(ZeroMatrix(n,m), S(0)) == ZeroMatrix(n,m)
@@ -250,7 +250,7 @@ def test_MatMul():
 
     assert (A*0*B) == ZeroMatrix(n,l)
 
-    raises(ShapeError, "B*A")
+    raises(ShapeError, lambda: B*A)
     assert (2*A).shape == A.shape
 
     assert MatMul(A, ZeroMatrix(m,m), B) == ZeroMatrix(n,l)
@@ -258,7 +258,7 @@ def test_MatMul():
     assert MatMul(C*Identity(n)*C.I) == Identity(n)
 
     assert B/2 == S.Half*B
-    raises(NotImplementedError, "2/B")
+    raises(NotImplementedError, lambda: 2/B)
 
     A = MatrixSymbol('A', n, n)
     B = MatrixSymbol('B', n, n)
@@ -278,7 +278,7 @@ def test_MatPow():
     assert A**0 == Identity(n)
     assert A**1 == A
     assert A**-1 == Inverse(A)
-    raises(ShapeError, "MatrixSymbol('B', 3,2)**2")
+    raises(ShapeError, lambda: MatrixSymbol('B', 3,2)**2)
 
 def test_linear_factors():
     from sympy.matrices import MatrixSymbol, linear_factors
@@ -296,11 +296,11 @@ def test_linear_factors():
     B = MatrixSymbol('B', n, n)
     C = MatrixSymbol('C', n, n)
     D = MatrixSymbol('C', m, m)
-    raises(ValueError, "linear_factors(2*A*A + B, A)")
-    raises(ValueError, "linear_factors(2*A*A, A)")
-    raises(ValueError, "linear_factors(2*A*B, A, B)")
-    raises(ShapeError, "linear_factors(2*A*B, D)")
-    raises(ShapeError, "linear_factors(2*A*B+C, D)")
+    raises(ValueError, lambda: linear_factors(2*A*A + B, A))
+    raises(ValueError, lambda: linear_factors(2*A*A, A))
+    raises(ValueError, lambda: linear_factors(2*A*B, A, B))
+    raises(ShapeError, lambda: linear_factors(2*A*B, D))
+    raises(ShapeError, lambda: linear_factors(2*A*B+C, D))
 
     assert linear_factors(A, A) == {A:Identity(n)}
 
@@ -308,7 +308,7 @@ def test_MatrixSymbol():
     n,m,t = symbols('n,m,t')
     X = MatrixSymbol('X', n, m)
     assert X.shape == (n,m)
-    raises(TypeError, "MatrixSymbol('X', n, m)(t)") # issue 2756
+    raises(TypeError, lambda: MatrixSymbol('X', n, m)(t)) # issue 2756
 
 def test_matrixify():
     n, m, l = symbols('n m l')

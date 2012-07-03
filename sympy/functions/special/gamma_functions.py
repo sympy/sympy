@@ -119,7 +119,7 @@ class lowergamma(Function):
     This can be shown to be the same as
 
     .. math ::
-        \gamma(s, x) = \frac{x^s}{s} {}_1F_1\left.\left({s \atop s+1} \right| -x\right),
+        \gamma(s, x) = \frac{x^s}{s} {}_1F_1\left({s \atop s+1} \middle| -x\right),
 
     where :math:`{}_1F_1` is the (confluent) hypergeometric function.
 
@@ -244,7 +244,7 @@ class uppergamma(Function):
 
     .. math ::
         \Gamma(s, x) = \Gamma(s)
-                - \frac{x^s}{s} {}_1F_1\left.\left({s \atop s+1} \right| -x\right),
+                - \frac{x^s}{s} {}_1F_1\left({s \atop s+1} \middle| -x\right),
 
     where :math:`{}_1F_1` is the (confluent) hypergeometric function.
 
@@ -595,4 +595,3 @@ def beta(x, y):
 
     """
     return gamma(x)*gamma(y) / gamma(x+y)
-

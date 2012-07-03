@@ -63,7 +63,7 @@ from numberfields import (
 
 from monomialtools import (
     Monomial, monomials, monomial_count,
-    lex, grlex, grevlex,
+    lex, grlex, grevlex, ilex, igrlex, igrevlex,
 )
 
 from rootoftools import (
@@ -105,3 +105,6 @@ from partfrac import (
 from polyoptions import Options
 import polycontext as ctx
 
+from agca import (
+    homomorphism
+)
