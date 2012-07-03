@@ -1908,47 +1908,40 @@ def test_sympy__geometry__entity__GeometryEntity():
 
 @XFAIL
 def test_sympy__diffgeom__diffgeom__Manifold():
-    from sympy.differential_geometry import Manifold
+    from sympy.diffgeom import Manifold
     assert _test_args(Manifold('name', 3))
 
 @XFAIL
 def test_sympy__diffgeom__diffgeom__Patch():
-    from sympy.differential_geometry import Manifold, Patch
+    from sympy.diffgeom import Manifold, Patch
     assert _test_args(Patch('name', Manifold('name', 3)))
 
 @XFAIL
 def test_sympy__diffgeom__diffgeom__CoordSystem():
-    from sympy.differential_geometry import Manifold, Patch, CoordSystem
+    from sympy.diffgeom import Manifold, Patch, CoordSystem
     assert _test_args(CoordSystem('name', Patch('name', Manifold('name', 3))))
 
 @XFAIL
 def test_sympy__diffgeom__diffgeom__Point():
-    from sympy.differential_geometry import Manifold, Patch, CoordSystem, Point
-    assert _test_args(Point(CoordSystem('name', Patch('name', Manifold('name', 3)))), [x, y])
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, Point
+    assert _test_args(Point(CoordSystem('name', Patch('name', Manifold('name', 3))), [x, y]))
 
 @XFAIL
-def test_sympy__diffgeom__diffgeom__ScalarField():
-    from sympy.differential_geometry import Manifold, Patch, CoordSystem, ScalarField
+def test_sympy__diffgeom__diffgeom__BaseScalarField():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
     cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
-    assert _test_args(ScalarField(cs, [x, y], x))
+    assert _test_args(BaseScalarField(cs, 0))
 
 @XFAIL
-def test_sympy__diffgeom__diffgeom__VectorField():
-    from sympy.differential_geometry import Manifold, Patch, CoordSystem, VectorField
+def test_sympy__diffgeom__diffgeom__BaseVectorField():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseVectorField
     cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
-    assert _test_args(VectorField(cs, [x, y], [x, y]))
+    assert _test_args(BaseVectorField(cs, 0))
 
-@XFAIL
-def test_sympy__diffgeom__diffgeom__OneFormField():
-    from sympy.differential_geometry import Manifold, Patch, CoordSystem, OneFormField
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
-    assert _test_args(OneFormField(cs, [x, y], [x, y]))
-
-@XFAIL
 def test_sympy__diffgeom__diffgeom__Differential():
-    from sympy.differential_geometry import Manifold, Patch, CoordSystem, VectorField, Differential
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential
     cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
-    assert _test_args(Differential(VectorField(cs, [x, y], [x, y])))
+    assert _test_args(Differential(BaseScalarField(cs, 0)))
 
 def test_sympy__categories__baseclasses__Class():
     from sympy.categories.baseclasses import Class

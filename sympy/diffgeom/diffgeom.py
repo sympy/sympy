@@ -314,6 +314,7 @@ class Point(Basic):
         super(Point, self).__init__()
         self._coord_sys = coord_sys
         self._coords = Matrix(coords)
+        self._args = self._coord_sys, self._coords
 
     def coords(self, to_sys=None):
         """Coordinates of the point in a given coordinate system.
@@ -324,6 +325,10 @@ class Point(Basic):
             return self._coord_sys.coord_transform_to(to_sys, self._coords)
         else:
             return self._coords
+
+    @property
+    def free_symbols(self):
+        return self._coords.free_symbols
 
 
 class BaseScalarField(Expr):
