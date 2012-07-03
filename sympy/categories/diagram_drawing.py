@@ -661,17 +661,11 @@ class DiagramGrid(object):
 
         return grid
 
-    def __init__(self, diagram, groups=None):
-        premises = DiagramGrid._simplify_morphisms(diagram.premises)
-        conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
-        merged_morphisms = DiagramGrid._merge_premises_conclusions(
-            premises, conclusions)
-
-        if groups and (groups != diagram.objects):
-            # Lay out the diagram according to the groups.
-            self._grid = DiagramGrid._handle_groups(diagram, groups, merged_morphisms)
-            return
-
+    @staticmethod
+    def _generic_layout(diagram, merged_morphisms):
+        """
+        Produces the generic layout for the supplied diagram.
+        """
         skeleton = DiagramGrid._build_skeleton(merged_morphisms)
 
         all_objects = diagram.objects
@@ -684,9 +678,7 @@ class DiagramGrid(object):
             grid[0, 0] = objects[0]
             grid[0, 1] = objects[1]
 
-            self._grid = grid
-
-            return
+            return grid
 
         triangles = DiagramGrid._list_triangles(skeleton)
         triangles = DiagramGrid._drop_redundant_triangles(triangles, skeleton)
@@ -729,7 +721,20 @@ class DiagramGrid(object):
             triangles = DiagramGrid._drop_irrelevant_triangles(
                 triangles, placed_objects)
 
-        self._grid = grid
+        return grid
+
+    def __init__(self, diagram, groups=None):
+        premises = DiagramGrid._simplify_morphisms(diagram.premises)
+        conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
+        merged_morphisms = DiagramGrid._merge_premises_conclusions(
+            premises, conclusions)
+
+        if groups and (groups != diagram.objects):
+            # Lay out the diagram according to the groups.
+            self._grid = DiagramGrid._handle_groups(diagram, groups, merged_morphisms)
+            return
+
+        self._grid = DiagramGrid._generic_layout(diagram, merged_morphisms)
 
     @property
     def width(self):
