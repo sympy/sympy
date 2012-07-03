@@ -364,3 +364,14 @@ def test_DiagramGrid():
     assert grid[0, 2] == C
     assert grid[0, 3] == D
     assert grid[0, 4] == E
+
+    # Test the transposed version.
+    grid = DiagramGrid(d, shape="sequential", transpose=True)
+
+    assert grid.width == 1
+    assert grid.height == 5
+    assert grid[0, 0] == A
+    assert grid[1, 0] == B
+    assert grid[2, 0] == C
+    assert grid[3, 0] == D
+    assert grid[4, 0] == E
