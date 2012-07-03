@@ -122,7 +122,7 @@ competitive by rewriting the core from scratch, that has made it from 10x to
 100x faster. Jurjen N.E. Bos has contributed pretty printing and other patches.
 Fredrik Johansson has wrote mpmath and contributed a lot of patches. Since
 then, a lot more people have joined the development and some people have also
-left. You can see the full list in doc/src/aboutus.txt, or online at:
+left. You can see the full list in doc/src/aboutus.rst, or online at:
 
 http://docs.sympy.org/aboutus.html#sympy-development-team
 

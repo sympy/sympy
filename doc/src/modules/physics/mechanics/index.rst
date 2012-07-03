@@ -28,16 +28,15 @@ Contents
 .. toctree::
     :maxdepth: 3
 
-    vectors.txt
-    kinematics.txt
-    masses.txt
-    kane.txt
-    particle.txt
-    point.txt
-    rigidbody.txt
-    essential.txt
-    examples.txt
-    advanced.txt
-    functions.txt
-    reference.txt
-
+    vectors.rst
+    kinematics.rst
+    masses.rst
+    kane.rst
+    particle.rst
+    point.rst
+    rigidbody.rst
+    essential.rst
+    examples.rst
+    advanced.rst
+    functions.rst
+    reference.rst

@@ -16,38 +16,38 @@ access any SymPy module, or use this contens:
 .. toctree::
    :maxdepth: 2
 
-   core.txt
-   combinatorics/index.txt
-   ntheory.txt
-   concrete.txt
-   evalf.txt
-   functions/index.txt
-   geometry.txt
-   galgebra/index.txt
-   galgebra/GA/GAsympy.txt
-   galgebra/latex_ex/latex_ex.txt
-   integrals/integrals.txt
-   logic.txt
-   matrices.txt
-   mpmath/index.txt
-   polys/index.txt
-   printing.txt
-   plotting.txt
-   assumptions/index.txt
-   rewriting.txt
-   series.txt
-   sets.txt
-   simplify/simplify.txt
-   simplify/hyperexpand.txt
-   statistics.txt
-   stats.txt
-   solvers/ode.txt
-   solvers/solvers.txt
-   tensor/index.txt
-   utilities/index.txt
-   parsing.txt
-   physics/index.txt
-   categories.txt
+   core.rst
+   combinatorics/index.rst
+   ntheory.rst
+   concrete.rst
+   evalf.rst
+   functions/index.rst
+   geometry.rst
+   galgebra/index.rst
+   galgebra/GA/GAsympy.rst
+   galgebra/latex_ex/latex_ex.rst
+   integrals/integrals.rst
+   logic.rst
+   matrices.rst
+   mpmath/index.rst
+   polys/index.rst
+   printing.rst
+   plotting.rst
+   assumptions/index.rst
+   rewriting.rst
+   series.rst
+   sets.rst
+   simplify/simplify.rst
+   simplify/hyperexpand.rst
+   statistics.rst
+   stats.rst
+   solvers/ode.rst
+   solvers/solvers.rst
+   tensor/index.rst
+   utilities/index.rst
+   parsing.rst
+   physics/index.rst
+   categories.rst
 
 Contributions to docs
 ---------------------
@@ -56,4 +56,3 @@ All contributions are welcome. If you'd like to improve something, look into
 the sources if they contain the information you need (if not, please fix them),
 otherwise the documentation generation needs to be improved (look in the
 ``doc/`` directory).
-

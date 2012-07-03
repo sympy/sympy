@@ -11,8 +11,8 @@ Einführung
 
 SymPy ist eine Python-Bibliothek für symbolische Mathematik. SymPy soll
 ein vollständiges Computer-Algebra-System (CAS) bereitstellen
-und dabei den Programmcode so einfach halten, dass er nachvollziehbar und 
-einfach erweiterbar bleibt. SymPy ist vollständig in Python geschrieben 
+und dabei den Programmcode so einfach halten, dass er nachvollziehbar und
+einfach erweiterbar bleibt. SymPy ist vollständig in Python geschrieben
 und benötigt keine weiteren Bibliotheken.
 
 Dieses Tutorial schafft einen Überblick und gibt eine Einführung in SymPy.
@@ -27,7 +27,7 @@ Erste Schritte mit SymPy
 ========================
 
 Am einfachsten kannst du SymPy mit der aktuellsten .tar-Datei aus den
-"Featured Downloads" von 
+"Featured Downloads" von
 http://code.google.com/p/sympy/ installieren:
 
 .. image:: figures/featured-downloads.png
@@ -54,7 +54,7 @@ und kannst sie mit einem Python-Interpreter ausprobieren.
 
 SymPy kann wie im Beispiel gezeigt benutzt werden, und dies ist auch
 der übliche Weg, es von einem anderen Programm aus zu verwenden.
-Du kannst es ebenfalls wie jedes andere Modul mithilfe von ``./setup.py install`` 
+Du kannst es ebenfalls wie jedes andere Modul mithilfe von ``./setup.py install``
 installieren. Auch ist es natürlich möglich, einfach ein Paket deiner
 Linux-Distribution zu verwenden, zum Beispiel:
 
@@ -64,16 +64,16 @@ Linux-Distribution zu verwenden, zum Beispiel:
 
     $ :input:`sudo apt-get install python-sympy`
     Paketlisten werden gelesen... Fertig
-    Abhängigkeitsbaum wird aufgebaut       
+    Abhängigkeitsbaum wird aufgebaut
     Status-Informationen einlesen... Fertig
     Die folgenden NEUEN Pakete werden installiert:
       python-sympy
     0 aktualisiert, 1 neu installiert, 0 zu entfernen und 0 nicht aktualisiert.
     Es müssen 991 kB an Archiven heruntergeladen werden.
     Nach dieser Operation werden 5976 kB Plattenplatz zusätzlich benutzt.
-    Möchten Sie fortfahren [J/n]? 
+    Möchten Sie fortfahren [J/n]?
     Hole:1 http://de.archive.ubuntu.com/ubuntu/ oneiric/universe python-sympy all 0.6.7-1.1 [1.694 kB]
-    Es wurden 991kB in 2s geholt (361 kB/s)                                                               
+    Es wurden 991kB in 2s geholt (361 kB/s)
     Vormals abgewähltes Paket python-sympy wird gewählt.
     Entpacken von python-sympy (aus .../python-sympy_0.6.7-1.1_all.deb) ...
     python-sympy (0.6.7-1.1) wird eingerichtet ...
@@ -164,7 +164,7 @@ hingegen eine abgerundete Ganzzahl::
 In beiden Fällen handelt es sich jedoch nicht um eine SymPy-Zahl, weil
 Python seine eigenen Zahl zurückgegeben hat. Meistens wirst du aber mit
 Zahlen des Typs Rational arbeiten wollen, also achte darauf, auch solche
-zu erhalten. Oft wird zur besseren Lesbarkeit ``R`` mit Rational 
+zu erhalten. Oft wird zur besseren Lesbarkeit ``R`` mit Rational
 gleichgesetzt::
 
     >>> R = Rational
@@ -423,7 +423,7 @@ Ein weiteres einfaches Beispiel::
 Integralrechnung
 ----------------
 
-SymPy unterstützt unendliche und endliche Integration transzendenter elementarer 
+SymPy unterstützt unendliche und endliche Integration transzendenter elementarer
 und spezieller Funktionen durch ``integrate()``, welches den
 starken Risch-Norman-Algorithmus nutzt, sowie einige Heuristiken und
 Mustererkennungen::
@@ -582,10 +582,10 @@ Funktionen
     n!
 
     >>> gamma(x + 1).series(x, 0, 3) # i.e. factorial(x)
-                          /          2     2\        
+                          /          2     2\
                         2 |EulerGamma    pi |    / 3\
     1 - EulerGamma*x + x *|----------- + ---| + O\x /
-                          \     2         12/        
+                          \     2         12/
 
 **Zeta-Funktion**::
 

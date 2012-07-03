@@ -430,7 +430,7 @@ i.e.,
 
 ::
 
-   
+
                             b
                           ____
                           \   `
@@ -634,10 +634,10 @@ Functions
     n!
 
     >>> gamma(x + 1).series(x, 0, 3) # i.e. factorial(x)
-                          /          2     2\        
+                          /          2     2\
                         2 |EulerGamma    pi |    / 3\
     1 - EulerGamma*x + x *|----------- + ---| + O\x /
-                          \     2         12/        
+                          \     2         12/
 
 **zeta function**::
 
@@ -975,5 +975,4 @@ This tutorial is also available in other languages:
 .. toctree::
    :maxdepth: 1
 
-   tutorial.ru.txt
-
+   tutorial.ru.rst

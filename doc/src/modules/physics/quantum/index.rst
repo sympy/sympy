@@ -12,13 +12,13 @@ Quantum Functions
 .. toctree::
     :maxdepth: 3
 
-    anticommutator.txt
-    cg.txt
-    commutator.txt
-    constants.txt
-    dagger.txt
-    innerproduct.txt
-    tensorproduct.txt
+    anticommutator.rst
+    cg.rst
+    commutator.rst
+    constants.rst
+    dagger.rst
+    innerproduct.rst
+    tensorproduct.rst
 
 States and Operators
 ====================
@@ -26,14 +26,14 @@ States and Operators
 .. toctree::
     :maxdepth: 3
 
-    cartesian.txt
-    hilbert.txt
-    operator.txt
-    operatorset.txt
-    qapply.txt
-    represent.txt
-    spin.txt
-    state.txt
+    cartesian.rst
+    hilbert.rst
+    operator.rst
+    operatorset.rst
+    qapply.rst
+    represent.rst
+    spin.rst
+    state.rst
 
 Quantum Computation
 ===================
@@ -41,12 +41,12 @@ Quantum Computation
 .. toctree::
     :maxdepth: 3
 
-    circuitplot.txt
-    gate.txt
-    grover.txt
-    qft.txt
-    qubit.txt
-    shor.txt
+    circuitplot.rst
+    gate.rst
+    grover.rst
+    qft.rst
+    qubit.rst
+    shor.rst
 
 Analytic Solutions
 ==================
@@ -55,4 +55,4 @@ Analytic Solutions
 .. toctree::
     :maxdepth: 3
 
-    piab.txt
+    piab.rst

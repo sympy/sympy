@@ -10,10 +10,10 @@ Contents
 .. toctree::
     :maxdepth: 3
 
-    ask.txt
-    assume.txt
-    refine.txt
-    handlers/index.txt
+    ask.rst
+    assume.rst
+    refine.rst
+    handlers/index.rst
 
 Queries are used to ask information about expressions. Main method for this
 is ask():
