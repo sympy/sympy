@@ -1492,8 +1492,13 @@ class preorder_traversal(object):
     Do a pre-order traversal of a tree.
 
     This iterator recursively yields nodes that it has visited in a pre-order
-    fashion. That is, it yields the current node then descends through the tree
-    breadth-first to yield all of a node's children's pre-order traversal.
+    fashion. That is, it yields the current node then descends through the
+    tree breadth-first to yield all of a node's children's pre-order
+    traversal.
+
+
+    For an expression, the order of the traversal depends on the order of
+    .args, which in many cases can be arbitrary.
 
     Parameters
     ----------
@@ -1510,8 +1515,12 @@ class preorder_traversal(object):
     >>> from sympy import symbols
     >>> from sympy.core.basic import preorder_traversal
     >>> x, y, z = symbols('x y z')
-    >>> set(preorder_traversal((x+y)*z)) == set([z, x + y, z*(x + y), x, y])
+    >>> list(preorder_traversal(z*(x+y))) in ( # any of these are possible
+    ... [z*(x + y), z, x + y, x, y], [z*(x + y), z, x + y, y, x],
+    ... [z*(x + y), x + y, x, y, z], [z*(x + y), x + y, y, x, z])
     True
+    >>> list(preorder_traversal((x, (y, z))))
+    [(x, (y, z)), x, (y, z), y, z]
 
     """
     def __init__(self, node):
