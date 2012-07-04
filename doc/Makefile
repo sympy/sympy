@@ -51,6 +51,9 @@ html: $(SPHINXBUILDpy)
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
 
+html-errors: SPHINXOPTS += -W
+html-errors: html
+
 htmlapi: $(SPHINXBUILDpy)
 	mkdir -p api/.static
 	mkdir -p api/modules
