@@ -1163,7 +1163,7 @@ class Mul(AssocOp):
             return None
 
         from sympy import sign
-        from sympy.simplify.simplify import powdenest
+        from sympy.simplify.simplify import powdenest, fraction
 
         def breakup(eq):
             """break up powers assuming (not checking) that eq is a Mul:
@@ -1212,7 +1212,7 @@ class Mul(AssocOp):
         # give Muls in the denominator a chance to be changed (see issue 2552)
         # rv will be the default return value
         rv = None
-        n, d = self.as_numer_denom()
+        n, d = fraction(self)
         if d is not S.One:
             self2 = n._subs(old, new)/d._subs(old, new)
             if not self2.is_Mul:
