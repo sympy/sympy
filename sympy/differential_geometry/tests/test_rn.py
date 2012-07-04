@@ -1,4 +1,4 @@
-from sympy.differential_geometry.Rn import R2, R2_p, R2_r
+from sympy.differential_geometry.rn import R2, R2_p, R2_r
 from sympy.differential_geometry import (ScalarField, VectorField,
         intcurve_series, intcurve_diffequ)
 from sympy import (symbols, simplify, sqrt, atan2, Matrix, sin, cos, Function,
