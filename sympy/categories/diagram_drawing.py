@@ -484,8 +484,10 @@ class DiagramGrid(object):
         Returns a key for the supplied triangle.  It should be the
         same independently of the hash randomisation.
         """
-        objects = sorted([x.name for x in DiagramGrid._triangle_objects(tri)])
-        return (triangle_sizes[tri], objects)
+        # TODO: Remove this sorting when the problem with the
+        # sort_keys of FiniteSet has been solved.
+        objects = sorted(DiagramGrid._triangle_objects(tri), key=default_sort_key)
+        return (triangle_sizes[tri], default_sort_key(objects))
 
     @staticmethod
     def _pick_root_edge(tri, skeleton):
