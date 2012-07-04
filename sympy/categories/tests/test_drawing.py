@@ -290,6 +290,15 @@ def test_DiagramGrid():
     d = Diagram([m1, m2, s1, s2, f1, f2], {g: "unique"})
     grid = DiagramGrid(d)
 
+    assert grid.width == 3
+    assert grid.height == 2
+    assert grid[0, 0] == A
+    assert grid[0, 1] == B
+    assert grid[0, 2] == E
+    assert grid[1, 0] == C
+    assert grid[1, 1] == D
+    assert grid[1, 2] is None
+
     # Test the pullback with sequential layout, just for stress
     # testing.
     grid = DiagramGrid(d, layout="sequential")
