@@ -682,6 +682,7 @@ class DiagramGrid(object):
                     grid[real_row, real_column] = obj
 
                 real_column += column_widths[logical_column]
+            real_column = 0
             real_row += row_heights[logical_row]
 
         return grid
