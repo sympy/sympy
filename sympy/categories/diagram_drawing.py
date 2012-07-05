@@ -952,7 +952,20 @@ class DiagramGrid(object):
 
         Examples
         ========
-        TODO: Add examples.
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy.categories import Diagram, DiagramGrid
+        >>> from sympy import FiniteSet
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> diagram = Diagram([f, g])
+        >>> grid = DiagramGrid(diagram)
+        >>> grid.width
+        2
+
         """
         return self._grid.width
 
@@ -963,7 +976,20 @@ class DiagramGrid(object):
 
         Examples
         ========
-        TODO: Add examples.
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy.categories import Diagram, DiagramGrid
+        >>> from sympy import FiniteSet
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> diagram = Diagram([f, g])
+        >>> grid = DiagramGrid(diagram)
+        >>> grid.height
+        2
+
         """
         return self._grid.height
 
@@ -971,5 +997,24 @@ class DiagramGrid(object):
         """
         Returns the object placed in the row ``i`` and column ``j``.
         The indices are 0-based.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy.categories import Diagram, DiagramGrid
+        >>> from sympy import FiniteSet
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> diagram = Diagram([f, g])
+        >>> grid = DiagramGrid(diagram)
+        >>> (grid[0, 0], grid[0, 1])
+        (Object("A"), Object("B"))
+        >>> (grid[1, 0], grid[1, 1])
+        (None, Object("C"))
+
         """
         return self._grid[i, j]
