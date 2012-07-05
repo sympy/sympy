@@ -4,6 +4,12 @@ from sympy.external import import_module
 
 np = import_module('numpy')
 
+def Abs(x):
+    if x.start < 0 and x.end > 0:
+        return interval(0, max(abs(x.start), abs(x.end)), is_valid=x.is_valid)
+    else:
+        return interval(abs(x.start), abs(x.end))
+
 #Monotonic
 def exp(x):
     """evaluates the exponential of an interval"""
