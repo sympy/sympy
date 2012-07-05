@@ -1347,6 +1347,57 @@ class XypicDiagramDrawer(object):
 
     TODO: Expand the docstring.
     """
+
+    @staticmethod
+    def _draw_morphism(diagram, grid, pt, morphism, object_coords):
+        """
+        Given the diagram ``diagram``, the grid ``grid``, the current
+        position ``pt`` in the grid, the morphism ``morphism`` to draw
+        and the mapping of objects to coordinates ``object_coords``,
+        produces the string representation of ``morphism``.
+        """
+        def repeat_string_cond(times, str_gt, str_lt):
+            """
+            If ``times > 0``, repeats ``str_gt`` ``times`` times.
+            Otherwise, repeats ``str_lt`` ``-times`` times.
+            """
+            if times > 0:
+                return str_gt * times
+            else:
+                return str_lt * (-times)
+
+        (i, j) = pt
+        (target_i, target_j) = object_coords[morphism.codomain]
+
+        # We now need to determine the direction of
+        # the arrow.
+        delta_i = target_i - i
+        delta_j = target_j - j
+        vertical_direction = repeat_string_cond(delta_i,
+                                                "d", "u")
+        horizontal_direction = repeat_string_cond(delta_j,
+                                                  "r", "l")
+
+        # Let's now get the name of the morphism.
+        morphism_name = ""
+        if isinstance(morphism, IdentityMorphism):
+            morphism_name = "id_{%s}" + latex(obj)
+        elif isinstance(morphism, CompositeMorphism):
+            component_names = [latex(component.name) for \
+                               component in morphism.components]
+            component_names.reverse()
+            morphism_name = "\\circ ".join(component_names)
+        elif isinstance(morphism, NamedMorphism):
+            morphism_name = morphism.name
+
+        # Set up the string representation of this
+        # arrow.
+        str_morphism = "\\ar[%s%s]^{%s} " % \
+                       (horizontal_direction, vertical_direction,
+                        morphism_name)
+
+        return str_morphism
+
     def draw(self, diagram, grid):
         """
         Returns the Xy-pic representation of ``diagram`` laid out in
@@ -1366,16 +1417,6 @@ class XypicDiagramDrawer(object):
             return sorted([m for m in morphisms.keys() if m.domain == obj],
                           key=default_sort_key)
 
-        def repeat_string_cond(times, str_gt, str_lt):
-            """
-            If ``times > 0``, repeats ``str_gt`` ``times`` times.
-            Otherwise, repeats ``str_lt`` ``-times`` times.
-            """
-            if times > 0:
-                return str_gt * times
-            else:
-                return str_lt * (-times)
-
         # Build the mapping between objects and their position in the
         # grid.
         object_coords = {}
@@ -1392,36 +1433,8 @@ class XypicDiagramDrawer(object):
 
                     morphisms_to_draw = morphisms_from_object(obj)
                     for morphism in morphisms_to_draw:
-                        (target_i, target_j) = object_coords[morphism.codomain]
-
-                        # We now need to determine the direction of
-                        # the arrow.
-                        delta_i = target_i - i
-                        delta_j = target_j - j
-                        vertical_direction = repeat_string_cond(delta_i,
-                                                                "d", "u")
-                        horizontal_direction = repeat_string_cond(delta_j,
-                                                                  "r", "l")
-
-                        # Let's now get the name of the morphism.
-                        morphism_name = ""
-                        if isinstance(morphism, IdentityMorphism):
-                            morphism_name = "id_{%s}" + latex(obj)
-                        elif isinstance(morphism, CompositeMorphism):
-                            component_names = [latex(component.name) for \
-                                               component in morphism.components]
-                            component_names.reverse()
-                            morphism_name = "\\circ ".join(component_names)
-                        elif isinstance(morphism, NamedMorphism):
-                            morphism_name = morphism.name
-
-                        # Set up the string representation of this
-                        # arrow.
-                        str_morphism = "\\ar[%s%s]^{%s} " % \
-                                       (horizontal_direction, vertical_direction,
-                                        morphism_name)
-
-                        result += str_morphism
+                        result += XypicDiagramDrawer._draw_morphism(
+                            diagram, grid, (i, j), morphism, object_coords)
 
                 # Don't put the & after the last column.
                 if j < grid.width - 1:
