@@ -88,6 +88,7 @@ from sympy.categories import (CompositeMorphism, IdentityMorphism,
 from sympy.utilities import default_sort_key
 from itertools import chain
 from sympy.core.compatibility import iterable
+from sympy.printing import latex
 
 class _GrowableGrid(object):
     """
@@ -1355,11 +1356,72 @@ class XypicDiagramDrawer(object):
         """
         result = "\\xymatrix{\n"
 
+        morphisms = grid.morphisms
+
+        def morphisms_from_object(obj):
+            """
+            Returns a list of those morphisms which have ``obj`` as
+            domain.
+            """
+            return sorted([m for m in morphisms.keys() if m.domain == obj],
+                          key=default_sort_key)
+
+        def repeat_string_cond(times, str_gt, str_lt):
+            """
+            If ``times > 0``, repeats ``str_gt`` ``times`` times.
+            Otherwise, repeats ``str_lt`` ``-times`` times.
+            """
+            if times > 0:
+                return str_gt * times
+            else:
+                return str_lt * (-times)
+
+        # Build the mapping between objects and their position in the
+        # grid.
+        object_coords = {}
+        for i in xrange(grid.height):
+            for j in xrange(grid.width):
+                if grid[i, j]:
+                    object_coords[grid[i, j]] = (i, j)
+
         for i in xrange(grid.height):
             for j in xrange(grid.width):
                 obj = grid[i, j]
                 if obj:
                     result += obj.name + " "
+
+                    morphisms_to_draw = morphisms_from_object(obj)
+                    for morphism in morphisms_to_draw:
+                        (target_i, target_j) = object_coords[morphism.codomain]
+
+                        # We now need to determine the direction of
+                        # the arrow.
+                        delta_i = target_i - i
+                        delta_j = target_j - j
+                        vertical_direction = repeat_string_cond(delta_i,
+                                                                "d", "u")
+                        horizontal_direction = repeat_string_cond(delta_j,
+                                                                  "r", "l")
+
+                        # Let's now get the name of the morphism.
+                        morphism_name = ""
+                        if isinstance(morphism, IdentityMorphism):
+                            morphism_name = "id_{%s}" + latex(obj)
+                        elif isinstance(morphism, CompositeMorphism):
+                            component_names = [latex(component.name) for \
+                                               component in morphism.components]
+                            component_names.reverse()
+                            morphism_name = "\\circ ".join(component_names)
+                        elif isinstance(morphism, NamedMorphism):
+                            morphism_name = morphism.name
+
+                        # Set up the string representation of this
+                        # arrow.
+                        str_morphism = "\\ar[%s%s]^{%s} " % \
+                                       (horizontal_direction, vertical_direction,
+                                        morphism_name)
+
+                        result += str_morphism
 
                 # Don't put the & after the last column.
                 if j < grid.width - 1:
