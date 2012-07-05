@@ -1337,3 +1337,39 @@ class DiagramGrid(object):
 
         """
         return repr(self._grid._array)
+
+class XypicDiagramDrawer(object):
+    """
+    Given a :class:`Diagram` and the corresponding
+    :class:`DiagramGrid`, produces the Xy-pic representation of the
+    diagram.
+
+    TODO: Expand the docstring.
+    """
+    def draw(self, diagram, grid):
+        """
+        Returns the Xy-pic representation of ``diagram`` laid out in
+        ``grid``.
+
+        TODO: Expand the docstring.
+        """
+        result = "\\xymatrix{\n"
+
+        for i in xrange(grid.height):
+            for j in xrange(grid.width):
+                obj = grid[i, j]
+                if obj:
+                    result += obj.name + " "
+
+                # Don't put the & after the last column.
+                if j < grid.width - 1:
+                    result += "& "
+
+            # Don't put the line break after the last row.
+            if i < grid.height - 1:
+                result += "\\\\"
+            result += "\n"
+
+        result += "}\n"
+
+        return result

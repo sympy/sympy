@@ -21,4 +21,4 @@ from baseclasses import (Object, Morphism, IdentityMorphism,
                          NamedMorphism, CompositeMorphism, Category,
                          Diagram)
 
-from diagram_drawing import DiagramGrid
+from diagram_drawing import DiagramGrid, XypicDiagramDrawer
