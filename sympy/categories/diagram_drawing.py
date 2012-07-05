@@ -1019,6 +1019,9 @@ class DiagramGrid(object):
                         grid[j, i] = self._grid[i, j]
                 self._grid = grid
 
+        # Store the merged morphisms for later use.
+        self._morphisms = merged_morphisms
+
     @property
     def width(self):
         """
@@ -1092,3 +1095,29 @@ class DiagramGrid(object):
 
         """
         return self._grid[i, j]
+
+    @property
+    def morphisms(self):
+        """
+        Returns those morphisms (and their properties) which are
+        sufficiently meaningful to be drawn.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy.categories import Diagram, DiagramGrid
+        >>> from sympy import FiniteSet
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> diagram = Diagram([f, g])
+        >>> grid = DiagramGrid(diagram)
+        >>> grid.morphisms
+        {NamedMorphism(Object("A"), Object("B"), "f"): EmptySet(),
+        NamedMorphism(Object("B"), Object("C"), "g"): EmptySet()}
+
+        """
+        return self._morphisms

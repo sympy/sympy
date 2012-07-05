@@ -90,6 +90,7 @@ def test_DiagramGrid():
     assert grid.height == 1
     assert grid[0, 0] == A
     assert grid[0, 1] == B
+    assert grid.morphisms == {f:FiniteSet()}
 
     # A triangle.
     d = Diagram([f, g], {g * f:"unique"})
@@ -101,6 +102,8 @@ def test_DiagramGrid():
     assert grid[0, 1] == B
     assert grid[1, 0] == C
     assert grid[1, 1] is None
+    assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(),
+                              g * f:FiniteSet("unique")}
 
     # A simple diagram.
     d = Diagram([f, g, h, k])
@@ -114,6 +117,8 @@ def test_DiagramGrid():
     assert grid[1, 0] is None
     assert grid[1, 1] == C
     assert grid[1, 2] is None
+    assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(), h:FiniteSet(),
+                              k:FiniteSet()}
 
     # A chain of morphisms.
     f = NamedMorphism(A, B, "f")
@@ -134,6 +139,8 @@ def test_DiagramGrid():
     assert grid[2, 0] is None
     assert grid[2, 1] is None
     assert grid[2, 2] == E
+    assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(), h:FiniteSet(),
+                              k:FiniteSet()}
 
     # A square.
     f = NamedMorphism(A, B, "f")
@@ -149,6 +156,8 @@ def test_DiagramGrid():
     assert grid[0, 1] == B
     assert grid[1, 0] == C
     assert grid[1, 1] == D
+    assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(), h:FiniteSet(),
+                              k:FiniteSet()}
 
     # A strange diagram which resulted from a typo when creating a
     # test for five lemma, but which allowed to stop one extra problem
@@ -199,6 +208,11 @@ def test_DiagramGrid():
     assert grid[3, 1] == D_
     assert grid[3, 2] == E_
 
+    morphisms = {}
+    for m in [f, g, h, i, j, k, l, m, o, p, q, r, s]:
+        morphisms[m] = FiniteSet()
+    assert grid.morphisms == morphisms
+
     # A cube.
     A1 = Object("A1")
     A2 = Object("A2")
@@ -245,6 +259,11 @@ def test_DiagramGrid():
     assert grid[2, 2] == A4
     assert grid[2, 3] == A8
 
+    morphisms = {}
+    for m in [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12]:
+        morphisms[m] = FiniteSet()
+    assert grid.morphisms == morphisms
+
     # A line diagram.
     A = Object("A")
     B = Object("B")
@@ -266,6 +285,8 @@ def test_DiagramGrid():
     assert grid[0, 2] == C
     assert grid[0, 3] == D
     assert grid[0, 4] == E
+    assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(), h:FiniteSet(),
+                              i:FiniteSet()}
 
     # Test the transposed version.
     grid = DiagramGrid(d, layout="sequential", transpose=True)
@@ -277,6 +298,8 @@ def test_DiagramGrid():
     assert grid[2, 0] == C
     assert grid[3, 0] == D
     assert grid[4, 0] == E
+    assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(), h:FiniteSet(),
+                              i:FiniteSet()}
 
     # A pullback.
     m1 = NamedMorphism(A, B, "m1")
@@ -299,6 +322,11 @@ def test_DiagramGrid():
     assert grid[1, 1] == D
     assert grid[1, 2] is None
 
+    morphisms = {g:FiniteSet("unique")}
+    for m in [m1, m2, s1, s2, f1, f2]:
+        morphisms[m] = FiniteSet()
+    assert grid.morphisms == morphisms
+
     # Test the pullback with sequential layout, just for stress
     # testing.
     grid = DiagramGrid(d, layout="sequential")
@@ -310,6 +338,7 @@ def test_DiagramGrid():
     assert grid[0, 2] == A
     assert grid[0, 3] == C
     assert grid[0, 4] == E
+    assert grid.morphisms == morphisms
 
     # Test a pullback with object grouping.
     grid = DiagramGrid(d, groups=FiniteSet(E, FiniteSet(A, B, C, D)))
@@ -322,6 +351,7 @@ def test_DiagramGrid():
     assert grid[1, 0] is None
     assert grid[1, 1] == C
     assert grid[1, 2] == D
+    assert grid.morphisms == morphisms
 
     # Five lemma, actually.
     A = Object("A")
@@ -372,6 +402,11 @@ def test_DiagramGrid():
     assert grid[2, 3] == D_
     assert grid[2, 4] == E_
 
+    morphisms = {}
+    for m in [f, g, h, i, j, k, l, m, o, p, q, r, s]:
+        morphisms[m] = FiniteSet()
+    assert grid.morphisms == morphisms
+
     # Test the five lemma with object grouping.
     grid = DiagramGrid(d, FiniteSet(
         FiniteSet(A, B, C, D, E), FiniteSet(A_, B_, C_, D_, E_)))
@@ -396,6 +431,7 @@ def test_DiagramGrid():
     assert grid[2, 3] is None
     assert grid[2, 4] is None
     assert grid[2, 5] == E
+    assert grid.morphisms == morphisms
 
     # Test the five lemma with object grouping and hints.
     grid = DiagramGrid(d, {
@@ -417,3 +453,4 @@ def test_DiagramGrid():
     assert grid[1, 2] == C
     assert grid[1, 3] == D
     assert grid[1, 4] == E
+    assert grid.morphisms == morphisms
