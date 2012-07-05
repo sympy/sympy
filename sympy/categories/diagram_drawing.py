@@ -85,17 +85,122 @@ class _GrowableGrid(object):
             self._array[i].insert(0, None)
 
 class DiagramGrid(object):
-    """
+    r"""
     Constructs and holds the fitting of the diagram into a grid.
 
-    The constructor of this class takes a :class:`Diagram` as an
-    argument and fits it into a grid.  It is then possible to find the
-    with and height of the grid using the properties ``width`` and
-    ``height``, as well as accessing the objects located at certain
-    coordinates and finding out which moprhisms connect the object
-    with other objects in the grid.  TODO: Explain how to do that.
+    The mission of this class is to analyse the structure of the
+    supplied diagram and to place its objects on a grid such that,
+    when the objects and the morphisms are actually drawn, the diagram
+    would be "readable", in the sense that there will not be many
+    intersections of moprhisms.  This class does not perform any
+    actual drawing.  It does strive nevertheless to offer sufficient
+    metadata to draw a diagram.
 
-    TODO: Explain how to use the argument ``groups``.
+    Consider the following simple diagram.
+
+    >>> from sympy.categories import Object, NamedMorphism
+    >>> from sympy.categories import Diagram, DiagramGrid
+    >>> from sympy import FiniteSet
+    >>> A = Object("A")
+    >>> B = Object("B")
+    >>> C = Object("C")
+    >>> f = NamedMorphism(A, B, "f")
+    >>> g = NamedMorphism(B, C, "g")
+    >>> diagram = Diagram([f, g])
+
+    The simplest way to have a diagram laid out is the following:
+
+    >>> grid = DiagramGrid(diagram)
+    >>> (grid.width, grid.height)
+    (2, 2)
+    >>> [grid[0, j] for j in xrange(grid.width)]
+    [Object("A"), Object("B")]
+    >>> [grid[1, j] for j in xrange(grid.width)]
+    [None, Object("C")]
+
+    Sometimes one sees the diagram as consisting of logical groups.
+    One can advise ``DiagramGrid`` as to such groups by employing the
+    ``groups`` keyword argument.
+
+    Consider the following diagram:
+
+    >>> D = Object("D")
+    >>> f = NamedMorphism(A, B, "f")
+    >>> g = NamedMorphism(B, C, "g")
+    >>> h = NamedMorphism(D, A, "h")
+    >>> k = NamedMorphism(D, B, "k")
+    >>> diagram = Diagram([f, g, h, k])
+
+    Lay it out with generic layout:
+
+    >>> grid = DiagramGrid(diagram)
+    >>> [grid[0, j] for j in xrange(grid.width)]
+    [Object("A"), Object("B"), Object("D")]
+    >>> [grid[1, j] for j in xrange(grid.width)]
+    [None, Object("C"), None]
+
+    Now, we can group the objects `A` and `D` to have them near one
+    another:
+
+    >>> grid = DiagramGrid(diagram, groups=FiniteSet(FiniteSet(A, D), B, C))
+    >>> [grid[0, j] for j in xrange(grid.width)]
+    [Object("B"), None, Object("C")]
+    >>> [grid[1, j] for j in xrange(grid.width)]
+    [Object("A"), Object("D"), None]
+
+    Note how the positioning of the other objects changes.
+
+    Further indications can be supplied to the constructor of
+    :class:`DiagramGrid` using keyword arguments.  The currently
+    supported hints are explained in the following paragraphs.
+
+    :class:`DiagramGrid` does not automatically guess which layout
+    would suit the supplied diagram better.  Consider, for example,
+    the following linear diagram:
+
+    >>> E = Object("E")
+    >>> f = NamedMorphism(A, B, "f")
+    >>> g = NamedMorphism(B, C, "g")
+    >>> h = NamedMorphism(C, D, "h")
+    >>> i = NamedMorphism(D, E, "i")
+    >>> diagram = Diagram([f, g, h, i])
+
+    When laid out with the generic layout, it does not get to look
+    linear:
+
+    >>> grid = DiagramGrid(diagram)
+    >>> [grid[0, j] for j in xrange(grid.width)]
+    [Object("A"), Object("B"), None]
+    >>> [grid[1, j] for j in xrange(grid.width)]
+    [None, Object("C"), Object("D")]
+    >>> [grid[2, j] for j in xrange(grid.width)]
+    [None, None, Object("E")]
+
+    To get it laid out in a line, use ``layout="sequential"``:
+
+    >>> grid = DiagramGrid(diagram, layout="sequential")
+    >>> [grid[0, j] for j in xrange(grid.width)]
+    [Object("A"), Object("B"), Object("C"), Object("D"), Object("E")]
+
+    One may sometimes need to transpose the resulting layout.  While
+    this can always be done by hand, :class:`DiagramGrid` provides a
+    hint for that purpose:
+
+    >>> grid = DiagramGrid(diagram, layout="sequential", transpose=True)
+    >>> [grid[i, 0] for i in xrange(grid.height)]
+    [Object("A"), Object("B"), Object("C"), Object("D"), Object("E")]
+
+    Separate hints can also be provided for each group.  For an
+    example, refer to ``tests/test_drawing.py``, and see the different
+    ways in which the five lemma [FiveLemma] can be laid out.
+
+    See Also
+    ========
+    Diagram
+
+    References
+    ==========
+    [FiveLemma] http://en.wikipedia.org/wiki/Five_lemma
     """
     @staticmethod
     def _simplify_morphisms(morphisms):
