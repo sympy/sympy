@@ -1,9 +1,83 @@
-"""
+r"""
 This module contains the functionality to arrange the nodes of a
 diagram on an abstract grid, and then to produce a graphical
 representation of the grid.
 
-The currently supported back-ends are Xy-pic [Xypic]
+The currently supported back-ends are Xy-pic [Xypic].
+
+Layout Algorithm
+================
+
+This section overviews the algorithms implemented in
+:class:`DiagramGrid` to lay out diagrams.
+
+The first step of the algorithm is the removal composite and identity
+morphisms which do not have properties in the supplied diagram.  The
+premises and conclusions of the diagram are then merged.
+
+The generic layout algorithm begins with the construction of the
+"skeleton" of the diagram.  The skeleton is an undirected graph which
+has the objects of the diagram as vertices and has an (undirected)
+edge between each pair of objects between which there exist morphisms.
+The direction of the morphisms does not matter at this stage.  The
+skeleton also includes an edge between each pair of vertices `A` and
+`C` such that there exists an object `B` which is connected with
+a morphism with `A`, and with a morphism with `C`.
+
+The skeleton constructed in this way has the property that every
+object is a vertex of a triangle formed by three edges of the
+skeleton.  This property lies at the base of the generic layout
+algorithm.
+
+After the skeleton has been constructed, the algorithm lists all
+triangles which can be formed.  Note that some triangles will not have
+all edges corresponding to morphisms which will actually be drawn.
+Triangles which have only one edge or less which will actually be
+drawn are immediately discarded.
+
+The list of triangles is sorted according to the number of edges which
+correspond to morphisms, then the triangle with the least number of such
+edges is selected.  One of such edges is picked and the corresponding
+objects are placed horizontally, on a grid.  This edge is recorded to
+be in the fringe.  The algorithm then finds a "welding" of a triangle
+to the fringe.  A welding is an edge in the fringe where a triangle
+could be attached.  If the algorithm succeeds in finding such a
+welding, it adds to the grid that vertex of the triangle which was not
+yet included in any edge in the fringe and records the two new edges in
+the fringe.  This process continues iteratively until all objects of
+the diagram has been placed or until no more weldings can be found.
+
+An edge is only removed from the fringe when a welding to this edge
+has been found, however, there is no room around this edge to place
+another vertex.
+
+When no more weldings can be found, but there are still triangles
+left, the algorithm searches for a possibility of attaching one of the
+remaining triangles to the existing structure by a vertex.  If such a
+possibility is found, the corresponding edge of the found triangle is
+placed in the found space and the iterative process of welding
+triangles restarts.
+
+When logical groups are supplied, each of this groups is laid out
+independently.  Then a diagram is constructed in which groups are
+objects and any two logical groups between which there exist morphisms
+are connected with a morphism.  This diagram is laid out.  Finally,
+the grid which includes all objects of the initial diagram is
+constructed by replacing the cells which contain logical groups with
+the corresponding laid out grids, and by correspondingly expanding the
+rows and columns.
+
+The sequential layout algorithm begins with constructing the
+underlying undirected graph defined by the morphisms obtained after
+simplifying premises and conclusions and merging them (see above).
+The vertex with the minimal degree is then picked up and depth-first
+search is started from it.  All objects which are located at distance
+`n` from the root in the depth-first search tree, are positioned in
+the `n`-th column of the resulting grid.  The sequential layout will
+therefore attempt to lay the objects out along a line.
+
+References
+==========
 
 [Xypic] http://www.tug.org/applications/Xy-pic/
 """
