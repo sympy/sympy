@@ -1409,14 +1409,6 @@ class XypicDiagramDrawer(object):
 
         morphisms = grid.morphisms
 
-        def morphisms_from_object(obj):
-            """
-            Returns a list of those morphisms which have ``obj`` as
-            domain.
-            """
-            return sorted([m for m in morphisms.keys() if m.domain == obj],
-                          key=default_sort_key)
-
         # Build the mapping between objects and their position in the
         # grid.
         object_coords = {}
@@ -1425,13 +1417,21 @@ class XypicDiagramDrawer(object):
                 if grid[i, j]:
                     object_coords[grid[i, j]] = (i, j)
 
+        # Build the mapping between objects and morphisms which have
+        # them as domains.
+        object_morphisms = {}
+        for obj in diagram.objects:
+            object_morphisms[obj] = []
+        for morphism in morphisms:
+            object_morphisms[morphism.domain].append(morphism)
+
         for i in xrange(grid.height):
             for j in xrange(grid.width):
                 obj = grid[i, j]
                 if obj:
                     result += obj.name + " "
 
-                    morphisms_to_draw = morphisms_from_object(obj)
+                    morphisms_to_draw = object_morphisms[obj]
                     for morphism in morphisms_to_draw:
                         result += XypicDiagramDrawer._draw_morphism(
                             diagram, grid, (i, j), morphism, object_coords)
