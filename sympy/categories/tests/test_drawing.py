@@ -627,3 +627,38 @@ def test_XypicDiagramDrawer():
     drawer = XypicDiagramDrawer()
     print
     print drawer.draw(d, grid)
+
+    # A cube.
+    A1 = Object("A1")
+    A2 = Object("A2")
+    A3 = Object("A3")
+    A4 = Object("A4")
+    A5 = Object("A5")
+    A6 = Object("A6")
+    A7 = Object("A7")
+    A8 = Object("A8")
+
+    # The top face of the cube.
+    f1 = NamedMorphism(A1, A2, "f1")
+    f2 = NamedMorphism(A1, A3, "f2")
+    f3 = NamedMorphism(A2, A4, "f3")
+    f4 = NamedMorphism(A3, A4, "f3")
+
+    # The bottom face of the cube.
+    f5 = NamedMorphism(A5, A6, "f5")
+    f6 = NamedMorphism(A5, A7, "f6")
+    f7 = NamedMorphism(A6, A8, "f7")
+    f8 = NamedMorphism(A7, A8, "f8")
+
+    # The remaining morphisms.
+    f9 = NamedMorphism(A1, A5, "f9")
+    f10 = NamedMorphism(A2, A6, "f10")
+    f11 = NamedMorphism(A3, A7, "f11")
+    f12 = NamedMorphism(A4, A8, "f11")
+
+    d = Diagram([f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12])
+    grid = DiagramGrid(d)
+
+    drawer = XypicDiagramDrawer()
+    print
+    print drawer.draw(d, grid)
