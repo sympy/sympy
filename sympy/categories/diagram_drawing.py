@@ -1399,18 +1399,18 @@ class XypicDiagramDrawer(object):
                 if not obj:
                     continue
 
-                for morphism in morphisms:
-                    if morphism.domain == obj:
-                        (end_i, end_j) = object_coords[morphism.codomain]
-                    elif morphism.codomain == obj:
-                        (end_i, end_j) = object_coords[morphism.domain]
+                for m in morphisms:
+                    if m.domain == obj:
+                        (end_i, end_j) = object_coords[m.codomain]
+                    elif m.codomain == obj:
+                        (end_i, end_j) = object_coords[m.domain]
                     else:
                         continue
 
                     if end_i > i:
-                        down.append(morphism)
+                        down.append(m)
                     elif end_i < i:
-                        up.append(morphism)
+                        up.append(m)
 
             if len(up) < len(down):
                 # More morphisms stick out downward than upward, let's
