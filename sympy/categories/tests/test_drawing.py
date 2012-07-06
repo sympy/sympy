@@ -1,5 +1,6 @@
 from sympy.categories.diagram_drawing import _GrowableGrid
-from sympy.categories import DiagramGrid, Object, NamedMorphism, Diagram
+from sympy.categories import (DiagramGrid, Object, NamedMorphism,
+                              Diagram, XypicDiagramDrawer)
 from sympy import FiniteSet
 
 def test_GrowableGrid():
@@ -590,3 +591,39 @@ def test_DiagramGrid():
     for f in [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10]:
         morphisms[f] = FiniteSet()
     assert grid.morphisms == morphisms
+
+def test_XypicDiagramDrawer():
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    D = Object("D")
+    E = Object("E")
+
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    h = NamedMorphism(C, D, "h")
+    i = NamedMorphism(D, E, "i")
+    d = Diagram([f, g, h, i])
+    grid = DiagramGrid(d, layout="sequential")
+
+    drawer = XypicDiagramDrawer()
+    print
+    print drawer.draw(d, grid)
+
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    h = NamedMorphism(D, A, "h")
+    k = NamedMorphism(D, B, "k")
+    d = Diagram([f, g, h, k])
+    grid = DiagramGrid(d)
+
+    drawer = XypicDiagramDrawer()
+    print
+    print drawer.draw(d, grid)
+
+    d = Diagram([f, g], {g * f:"unique"})
+    grid = DiagramGrid(d)
+
+    drawer = XypicDiagramDrawer()
+    print
+    print drawer.draw(d, grid)
