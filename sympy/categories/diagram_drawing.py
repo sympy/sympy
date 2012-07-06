@@ -1350,7 +1350,7 @@ class XypicDiagramDrawer(object):
 
     @staticmethod
     def _process_morphism(diagram, grid, morphism, object_coords,
-                          object_morphisms):
+                          morphisms):
         """
         Given the required information, produces the string
         representation of ``morphism``.
@@ -1395,12 +1395,16 @@ class XypicDiagramDrawer(object):
             up = []
             down = []
             for k in xrange(start + 1, end):
-                if not grid[i, k]:
+                obj = grid[i, k]
+                if not obj:
                     continue
 
-                morphisms = object_morphisms[grid[i, k]]
                 for morphism in morphisms:
-                    (end_i, end_j) = object_coords[morphism.codomain]
+                    if morphism.domain == obj:
+                        (end_i, end_j) = object_coords[morphism.codomain]
+                    elif morphism.codomain == obj:
+                        (end_i, end_j) = object_coords[morphism.domain]
+
                     if end_i > i:
                         down.append(morphism)
                     elif end_i < i:
@@ -1470,7 +1474,7 @@ class XypicDiagramDrawer(object):
         morphisms_str_info = {}
         for morphism in morphisms:
             morphisms_str_info[morphism] = XypicDiagramDrawer._process_morphism(
-                diagram, grid, morphism, object_coords, object_morphisms)
+                diagram, grid, morphism, object_coords, morphisms)
 
         for i in xrange(grid.height):
             for j in xrange(grid.width):
