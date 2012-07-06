@@ -82,7 +82,7 @@ References
 [Xypic] http://www.tug.org/applications/Xy-pic/
 """
 
-from sympy.core import Basic, FiniteSet, Dict
+from sympy.core import Basic, FiniteSet, Dict, Symbol
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)
 from sympy.utilities import default_sort_key
@@ -1467,12 +1467,12 @@ class XypicDiagramDrawer(object):
         if isinstance(morphism, IdentityMorphism):
             morphism_name = "id_{%s}" + latex(obj)
         elif isinstance(morphism, CompositeMorphism):
-            component_names = [latex(component.name) for \
+            component_names = [latex(Symbol(component.name)) for \
                                component in morphism.components]
             component_names.reverse()
             morphism_name = "\\circ ".join(component_names)
         elif isinstance(morphism, NamedMorphism):
-            morphism_name = morphism.name
+            morphism_name = latex(Symbol(morphism.name))
 
         return (curving, horizontal_direction, vertical_direction,
                 label_pos, morphism_name)
@@ -1537,7 +1537,7 @@ class XypicDiagramDrawer(object):
             for j in xrange(grid.width):
                 obj = grid[i, j]
                 if obj:
-                    result += obj.name + " "
+                    result += latex(obj) + " "
 
                     morphisms_to_draw = object_morphisms[obj]
                     for morphism in morphisms_to_draw:
