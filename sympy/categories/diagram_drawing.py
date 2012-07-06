@@ -1469,6 +1469,27 @@ class XypicDiagramDrawer(object):
         for morphism in morphisms:
             object_morphisms[morphism.domain].append(morphism)
 
+        def morphism_sort_key(morphism):
+            """
+            Provides a morphism sorting key such that horizontal or
+            vertical morphisms between neighbouring objects come
+            first, then horizontal or vertical morphisms between more
+            far away objects, and finally, all other morphisms.
+            """
+            (i, j) = object_coords[morphism.domain]
+            (target_i, target_j) = object_coords[morphism.codomain]
+
+            if target_i == i:
+                return (1, abs(target_j - j), default_sort_key(morphism))
+
+            if target_j == j:
+                return (1, abs(target_i - i), default_sort_key(morphism))
+
+            # Diagonal morphism.
+            return (2, 0, default_sort_key(morphism))
+
+        morphisms = sorted(morphisms, key=morphism_sort_key)
+
         # Build the tuples defining the string representations of
         # morphisms.
         morphisms_str_info = {}
