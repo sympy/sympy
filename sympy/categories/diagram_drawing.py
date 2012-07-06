@@ -1404,6 +1404,8 @@ class XypicDiagramDrawer(object):
                         (end_i, end_j) = object_coords[morphism.codomain]
                     elif morphism.codomain == obj:
                         (end_i, end_j) = object_coords[morphism.domain]
+                    else:
+                        continue
 
                     if end_i > i:
                         down.append(morphism)
