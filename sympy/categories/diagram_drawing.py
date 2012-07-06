@@ -1349,8 +1349,8 @@ class XypicDiagramDrawer(object):
     """
 
     @staticmethod
-    def _draw_morphism(diagram, grid, pt, morphism, object_coords,
-                       object_morphisms):
+    def _process_morphism(diagram, grid, morphism, object_coords,
+                          object_morphisms):
         """
         Given the required information, produces the string
         representation of ``morphism``.
@@ -1365,7 +1365,7 @@ class XypicDiagramDrawer(object):
             else:
                 return str_lt * (-times)
 
-        (i, j) = pt
+        (i, j) = object_coords[morphism.domain]
         (target_i, target_j) = object_coords[morphism.codomain]
 
         # We now need to determine the direction of
@@ -1435,13 +1435,8 @@ class XypicDiagramDrawer(object):
         elif isinstance(morphism, NamedMorphism):
             morphism_name = morphism.name
 
-        # Set up the string representation of this
-        # arrow.
-        str_morphism = "\\ar%s[%s%s]%s{%s} " % \
-                       (curving, horizontal_direction, vertical_direction,
-                        label_pos, morphism_name)
-
-        return str_morphism
+        return (curving, horizontal_direction, vertical_direction,
+                label_pos, morphism_name)
 
     def draw(self, diagram, grid):
         """
@@ -1470,6 +1465,13 @@ class XypicDiagramDrawer(object):
         for morphism in morphisms:
             object_morphisms[morphism.domain].append(morphism)
 
+        # Build the tuples defining the string representations of
+        # morphisms.
+        morphisms_str_info = {}
+        for morphism in morphisms:
+            morphisms_str_info[morphism] = XypicDiagramDrawer._process_morphism(
+                diagram, grid, morphism, object_coords, object_morphisms)
+
         for i in xrange(grid.height):
             for j in xrange(grid.width):
                 obj = grid[i, j]
@@ -1478,9 +1480,8 @@ class XypicDiagramDrawer(object):
 
                     morphisms_to_draw = object_morphisms[obj]
                     for morphism in morphisms_to_draw:
-                        result += XypicDiagramDrawer._draw_morphism(
-                            diagram, grid, (i, j), morphism, object_coords,
-                            object_morphisms)
+                        result += "\\ar%s[%s%s]%s{%s} " % \
+                                  morphisms_str_info[morphism]
 
                 # Don't put the & after the last column.
                 if j < grid.width - 1:
