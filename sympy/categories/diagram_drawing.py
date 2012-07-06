@@ -1349,12 +1349,11 @@ class XypicDiagramDrawer(object):
     """
 
     @staticmethod
-    def _draw_morphism(diagram, grid, pt, morphism, object_coords):
+    def _draw_morphism(diagram, grid, pt, morphism, object_coords,
+                       object_morphisms):
         """
-        Given the diagram ``diagram``, the grid ``grid``, the current
-        position ``pt`` in the grid, the morphism ``morphism`` to draw
-        and the mapping of objects to coordinates ``object_coords``,
-        produces the string representation of ``morphism``.
+        Given the required information, produces the string
+        representation of ``morphism``.
         """
         def repeat_string_cond(times, str_gt, str_lt):
             """
@@ -1378,6 +1377,52 @@ class XypicDiagramDrawer(object):
         horizontal_direction = repeat_string_cond(delta_j,
                                                   "r", "l")
 
+        curving = ""
+        label_pos = "^"
+        if (delta_i == 0) and (abs(j - target_j) > 1):
+            # Suppose we are going from left to right.
+            backwards = False
+            start = j
+            end = target_j
+
+            if end < start:
+                (start, end) = (end, start)
+                backwards = True
+
+            # Let's see which objects are there between ``start`` and
+            # ``end``, and then count how many morphisms stick out
+            # upwards, and how many stick downwards.
+            up = []
+            down = []
+            for k in xrange(start + 1, end):
+                if not grid[i, k]:
+                    continue
+
+                morphisms = object_morphisms[grid[i, k]]
+                for morphism in morphisms:
+                    (end_i, end_j) = object_coords[morphism.codomain]
+                    if end_i > i:
+                        down.append(morphism)
+                    elif end_i < i:
+                        up.append(morphism)
+
+            if len(up) < len(down):
+                # More morphisms stick out downward than upward, let's
+                # curve the morphism up.
+                curving = "@/^/"
+                label_pos = "^"
+                if backwards:
+                    curving = "@/_/"
+                    label_pos = "_"
+            else:
+                # More morphisms stick out downward than upward, let's
+                # curve the morphism up.
+                curving = "@/_/"
+                label_pos = "_"
+                if backwards:
+                    curving = "@/^/"
+                    label_pos = "^"
+
         # Let's now get the name of the morphism.
         morphism_name = ""
         if isinstance(morphism, IdentityMorphism):
@@ -1392,9 +1437,9 @@ class XypicDiagramDrawer(object):
 
         # Set up the string representation of this
         # arrow.
-        str_morphism = "\\ar[%s%s]^{%s} " % \
-                       (horizontal_direction, vertical_direction,
-                        morphism_name)
+        str_morphism = "\\ar%s[%s%s]%s{%s} " % \
+                       (curving, horizontal_direction, vertical_direction,
+                        label_pos, morphism_name)
 
         return str_morphism
 
@@ -1434,7 +1479,8 @@ class XypicDiagramDrawer(object):
                     morphisms_to_draw = object_morphisms[obj]
                     for morphism in morphisms_to_draw:
                         result += XypicDiagramDrawer._draw_morphism(
-                            diagram, grid, (i, j), morphism, object_coords)
+                            diagram, grid, (i, j), morphism, object_coords,
+                            object_morphisms)
 
                 # Don't put the & after the last column.
                 if j < grid.width - 1:
