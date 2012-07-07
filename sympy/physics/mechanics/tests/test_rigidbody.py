@@ -30,10 +30,10 @@ def test_rigidbody():
     # Testing linear momentum function assuming A2 is the inertial frame
     N =  ReferenceFrame('N')
     P2.set_vel(N, v1 * N.x + v2 * N.y + v3 * N.z)
-    assert B.linearmomentum(N) == m2 * (v1 * N.x + v2 * N.y + v3 * N.z)
+    assert B.linear_momentum(N) == m2 * (v1 * N.x + v2 * N.y + v3 * N.z)
 
 def test_rigidbody2():
-    M, v, r, omega = dynamicsymbols('M v r omega')
+    M, v, r, omega, g, h = dynamicsymbols('M v r omega g h')
     N = ReferenceFrame('N')
     b = ReferenceFrame('b')
     b.set_ang_vel(N, omega * b.x)
@@ -42,8 +42,11 @@ def test_rigidbody2():
     Inertia_tuple = (I, P)
     B = RigidBody('B', P, b, M, Inertia_tuple)
     P.set_vel(N, v * b.x)
-    assert B.angularmomentum(P, N) == omega * b.x
+    assert B.angular_momentum(P, N) == omega * b.x
     O = Point('O')
     O.set_vel(N, v * b.x)
     P.set_pos(O, r * b.y)
-    assert B.angularmomentum(O, N) == omega * b.x - M*v*r*b.z
+    assert B.angular_momentum(O, N) == omega * b.x - M*v*r*b.z
+    B.set_potential_energy(M * g * h)
+    assert B.potential_energy == M * g * h
+    assert B.kinetic_energy(N) == (omega**2 + M * v**2) / 2
