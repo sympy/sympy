@@ -2,7 +2,7 @@
 Classical Mechanics
 ===================
 
-:Authors: Gilbert Gede, Luke Peterson
+:Authors: Gilbert Gede, Luke Peterson, Angadh Nanjangud
 
 .. topic:: Abstract
 
@@ -22,22 +22,30 @@ to create equations of motion, for dynamics. It is also limited to rigid bodies
 and particles.
 
 
-Contents
-========
+Guide to Mechanics
+==================
 
 .. toctree::
-    :maxdepth: 3
+    :maxdepth: 2
 
     vectors.txt
     kinematics.txt
     masses.txt
     kane.txt
-    particle.txt
-    point.txt
-    rigidbody.txt
-    essential.txt
     examples.txt
     advanced.txt
-    functions.txt
     reference.txt
+
+Mechanics API
+=============
+
+.. toctree::
+    :maxdepth: 2
+
+    api/essential.txt
+    api/functions.txt
+    api/kinematics.txt
+    api/part_bod.txt
+    api/kane.txt
+    api/printing.txt
 
