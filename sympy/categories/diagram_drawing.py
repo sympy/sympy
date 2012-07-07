@@ -1462,6 +1462,89 @@ class XypicDiagramDrawer(object):
                         lab = "_"
                     morphisms_str_info[m] = (crv, hrz, vrt, lab, name)
 
+        elif (delta_j == 0) and (abs(i - target_i) > 1):
+            # Suppose the arrow goes downwards.
+            backwards = False
+            start = i
+            end = target_i
+
+            if end < start:
+                (start, end) = (end, start)
+                backwards = True
+
+            # Let's see which objects are there between ``start`` and
+            # ``end``, and then count how many morphisms stick out to
+            # the left, and how many stick out to the right.
+            left = []
+            right = []
+            straight_vertical = []
+            for k in xrange(start + 1, end):
+                obj = grid[k, j]
+                if not obj:
+                    continue
+
+                for m in morphisms:
+                    if m.domain == obj:
+                        (end_i, end_j) = object_coords[m.codomain]
+                    elif m.codomain == obj:
+                        (end_i, end_j) = object_coords[m.domain]
+                    else:
+                        continue
+
+                    if end_j > j:
+                        right.append(m)
+                    elif end_j < j:
+                        left.append(m)
+                    elif not morphisms_str_info[m][0]:
+                        # This is a straight vertical morphism,
+                        # because it has no curving.
+                        straight_vertical.append(m)
+
+            if len(left) < len(right):
+                # More morphisms stick out to the left than to the
+                # right, let's curve the morphism to the right.
+                if backwards:
+                    curving = "@/^/"
+                    label_pos = "^"
+                else:
+                    curving = "@/_/"
+                    label_pos = "_"
+
+                # Assure that the straight vertical morphisms have
+                # their labels on the left side of the arrow.
+                for m in straight_vertical:
+                    (i1, j1) = object_coords[m.domain]
+                    (i2, j2) = object_coords[m.codomain]
+
+                    (crv, hrz, vrt, lab, name) = morphisms_str_info[m]
+                    if i1 < i2:
+                        lab = "^"
+                    else:
+                        lab = "_"
+                    morphisms_str_info[m] = (crv, hrz, vrt, lab, name)
+            else:
+                # More morphisms stick out to the right than to the
+                # left, let's curve the morphism to the left.
+                if backwards:
+                    curving = "@/_/"
+                    label_pos = "_"
+                else:
+                    curving = "@/^/"
+                    label_pos = "^"
+
+                # Assure that the straight vertical morphisms have
+                # their labels on the right side of the arrow.
+                for m in straight_vertical:
+                    (i1, j1) = object_coords[m.domain]
+                    (i2, j2) = object_coords[m.codomain]
+
+                    (crv, hrz, vrt, lab, name) = morphisms_str_info[m]
+                    if i1 < i2:
+                        lab = "_"
+                    else:
+                        lab = "^"
+                    morphisms_str_info[m] = (crv, hrz, vrt, lab, name)
+
         # Let's now get the name of the morphism.
         morphism_name = ""
         if isinstance(morphism, IdentityMorphism):
