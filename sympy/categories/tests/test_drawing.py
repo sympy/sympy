@@ -610,6 +610,11 @@ def test_XypicDiagramDrawer():
     print
     print drawer.draw(d, grid)
 
+    grid = DiagramGrid(d, layout="sequential", transpose=True)
+    drawer = XypicDiagramDrawer()
+    print
+    print drawer.draw(d, grid)
+
     f = NamedMorphism(A, B, "f")
     g = NamedMorphism(B, C, "g")
     h = NamedMorphism(D, A, "h")
@@ -621,9 +626,19 @@ def test_XypicDiagramDrawer():
     print
     print drawer.draw(d, grid)
 
+    grid = DiagramGrid(d, transpose=True)
+    drawer = XypicDiagramDrawer()
+    print
+    print drawer.draw(d, grid)
+
     d = Diagram([f, g], {g * f:"unique"})
     grid = DiagramGrid(d)
 
+    drawer = XypicDiagramDrawer()
+    print
+    print drawer.draw(d, grid)
+
+    grid = DiagramGrid(d, transpose=True)
     drawer = XypicDiagramDrawer()
     print
     print drawer.draw(d, grid)
@@ -659,6 +674,11 @@ def test_XypicDiagramDrawer():
     d = Diagram([f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12])
     grid = DiagramGrid(d)
 
+    drawer = XypicDiagramDrawer()
+    print
+    print drawer.draw(d, grid)
+
+    grid = DiagramGrid(d, transpose=True)
     drawer = XypicDiagramDrawer()
     print
     print drawer.draw(d, grid)
