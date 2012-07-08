@@ -204,6 +204,65 @@ class Qubit(QubitState, Ket):
             from scipy import sparse
             return sparse.csr_matrix(result, dtype='complex').transpose()
 
+    def _eval_trace(self, bra, **kwargs):
+        indices = kwargs.get('indices', [])
+
+        #sort index list to begin trace from most-significant
+        #qubit
+        sorted_idx = list(indices)
+        if len(sorted_idx) == 0:
+            sorted_idx = range(0,self.nqubits)
+        sorted_idx.sort()
+
+        #trace out for each of index
+        new_mat = self*bra
+        for i in xrange(len(sorted_idx)-1, -1, -1):
+            # start from tracing out from leftmost qubit
+            new_mat = self._reduced_density(new_mat, int(sorted_idx[i]))
+
+        if ( len(sorted_idx) == self.nqubits ):
+            #in case full trace was requested
+            return new_mat[0]
+        else:
+            return self._matrix_to_density(new_mat)
+
+    def _reduced_density(self, matrix, qubit, **options):
+        """Compute the reduced density matrix by tracing out one qubit.
+           The qubit argument should be of type python int, since it is used
+           in bit operations
+        """
+
+        def find_index_that_is_projected(j, k, qubit):
+            bit_mask = 2**qubit - 1
+            return ((j >> qubit) << (1 + qubit)) + (j & bit_mask) + (k << qubit)
+
+        old_matrix = represent(matrix, **options)
+        old_size = old_matrix.cols
+        new_size = old_size/2
+        new_matrix = Matrix().zeros(new_size)
+
+        for i in xrange(new_size):
+            for j in xrange(new_size):
+                for k in xrange(2):
+                    col = find_index_that_is_projected(j, k, qubit)
+                    row = find_index_that_is_projected(i, k, qubit)
+                    new_matrix[i,j] += old_matrix[row,col]
+
+        return new_matrix
+
+    def _matrix_to_density(self, mat):
+        """
+        Works by finding the eigenvectors and eigenvalues of the matrix.
+        We know we can decompose rho by doing:
+        sum(EigenVal*|Eigenvect><Eigenvect|)
+        """
+        from sympy.physics.quantum.density import Density
+        eigen = mat.eigenvects()
+        args = [[matrix_to_qubit(Matrix([vector,])), x[0]] for x in eigen for vector in x[2] if x[0] != 0]
+        if ( len(args) == 0 ):
+            return 0
+        else:
+            return Density(*args)
 
 class QubitBra(QubitState, Bra):
     """A multi-qubit bra in the computational (z) basis.
