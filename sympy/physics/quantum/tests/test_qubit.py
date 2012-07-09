@@ -174,7 +174,3 @@ def test_eval_trace():
     t = Tr(d, [0])
     assert t.doit() == (0.5*Density([Qubit('0'), 1]) +
                         0.5*Density([Qubit('1'), 1]))
-
-
-
-
