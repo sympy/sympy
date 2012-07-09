@@ -405,7 +405,8 @@ class Lambdifier(object):
     interval_functions_same = [
        'sin' , 'cos', 'exp', 'tan', 'atan', 'log',
        'sqrt','cosh', 'sinh', 'tanh', 'floor',
-       'acos', 'asin', 'acosh', 'asinh', 'atanh'
+       'acos', 'asin', 'acosh', 'asinh', 'atanh',
+       'Abs', 'And', 'Or'
        ]
 
     interval_functions_different = {

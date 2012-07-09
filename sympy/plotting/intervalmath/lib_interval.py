@@ -380,3 +380,46 @@ def atanh(x):
             return interval(start, end, is_valid=x.is_valid)
     else:
         return NotImplementedError
+
+
+#Three valued logic for interval plotting.
+
+def And(*args):
+    """Defines the three valued ``And`` behaviour for a 2-tuple of
+     three valued logic values"""
+    def reduce_and(cmp_intervala, cmp_intervalb):
+        if cmp_intervala[0] is False or cmp_intervalb[0] is False:
+            first = False
+        elif cmp_intervala[0] is None or cmp_intervalb[0] is None:
+            first = None
+        else:
+            first = True
+        if cmp_intervala[1] is False or cmp_intervalb[1] is False:
+            second = False
+        elif cmp_intervala[1] is None or cmp_intervalb[1] is None:
+            second = None
+        else:
+            second = True
+        return (first, second)
+    return reduce(reduce_and, args)
+
+
+def Or(*args):
+    """Defines the three valued ``Or`` behaviour for a 2-tuple of
+     three valued logic values"""
+    def reduce_or(cmp_intervala, cmp_intervalb):
+        if cmp_intervala[0] is True or cmp_intervalb[0] is True:
+            first = True
+        elif cmp_intervala[0] is None or cmp_intervalb[0] is None:
+            first = None
+        else:
+            first = False
+
+        if cmp_intervala[1] is True or cmp_intervalb[1] is True:
+            second = True
+        elif cmp_intervala[1] is None or cmp_intervalb[1] is None:
+            second = None
+        else:
+            second = False
+        return (first, second)
+    return reduce(reduce_or, args)

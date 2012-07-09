@@ -19,13 +19,14 @@ Arithmetic. Master's thesis. University of Toronto, 1996
 """
 
 from plot import BaseSeries, Plot
-from experimental_lambdify import experimental_lambdify
+from experimental_lambdify import experimental_lambdify, vectorized_lambdify
 from intervalmath import interval
-from sympy.core.relational import Equality, GreaterThan, LessThan, Relational
-from sympy import Eq
+from sympy.core.relational import (Equality, GreaterThan, LessThan,
+                Relational, StrictLessThan, StrictGreaterThan)
+from sympy import Eq, Tuple, sympify, Expr
 from sympy.external import import_module
-from sympy import sympify, Expr
 from sympy.core.compatibility import set_union
+from sympy.logic.boolalg import BooleanFunction
 
 np = import_module('numpy')
 
@@ -154,7 +155,29 @@ def plot_implicit(expr, var_start_end_x, var_start_end_y, **kwargs):
     """
     #TODO: Add a global variable show = False for test runner
     assert isinstance(expr, Expr)
-    if not isinstance(expr, Relational):
+
+    is_equal = False #Represents whether the expression contains an equality,
+                     #GreaterThan or LessThan
+    arg_list = []
+    def arg_expand(bool_expr):
+        """
+        Recursively expands the arguments of an Boolean Function
+        """
+        for arg in bool_expr.args:
+            if isinstance(arg, BooleanFunction):
+                arg_expand(arg)
+            elif isinstance(arg, Relational):
+                arg_list.append(arg)
+
+    if isinstance(expr, BooleanFunction):
+        arg_expand(expr)
+
+    #Check whether there is an equality in the expression provided.
+        if any(isinstance(e, (Equality, GreaterThan, LessThan))
+                            for e in arg_list):
+            is_equal = True
+
+    elif not isinstance(expr, Relational):
         expr = Eq(expr, 0)
     free_symbols = expr.free_symbols
     range_symbols = set([var_start_end_x[0], var_start_end_y[0]])
