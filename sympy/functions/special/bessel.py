@@ -958,6 +958,16 @@ class airyaiprime(AiryBase):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_evalf(self, prec):
+        from sympy.mpmath import mp
+        from sympy import Expr
+        z = self.args[0]._to_mpmath(prec)
+        oprec = mp.prec
+        mp.prec = prec
+        res = mp.airyai(z, derivative=1)
+        mp.prec = oprec
+        return Expr._from_mpmath(res, prec)
+
     def _eval_rewrite_as_hyper(self, z):
         pf1 = z**2 / (2*3**(S(2)/3)*gamma(S(2)/3))
         pf2 = 1 / (root(3,3)*gamma(S(1)/3))
@@ -977,7 +987,7 @@ class airyaiprime(AiryBase):
             n = Wild("n", exclude=[z])
 
             # 03.07.16.0001.01
-            # No 'n' in that formula, is it really correct?
+            # TODO: No 'n' in that formula, is it really correct?
             M = arg.match(c*(d*z**n)**m)
 
             if M is not None:
@@ -1020,6 +1030,16 @@ class airybiprime(AiryBase):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_evalf(self, prec):
+        from sympy.mpmath import mp
+        from sympy import Expr
+        z = self.args[0]._to_mpmath(prec)
+        oprec = mp.prec
+        mp.prec = prec
+        res = mp.airybi(z, derivative=1)
+        mp.prec = oprec
+        return Expr._from_mpmath(res, prec)
+
     def _eval_rewrite_as_hyper(self, z):
         pf1 = z**2 / (2*root(3,6)*gamma(S(2)/3))
         pf2 = root(3,6) / gamma(S(1)/3)
@@ -1039,7 +1059,7 @@ class airybiprime(AiryBase):
             n = Wild("n", exclude=[z])
 
             # 03.08.16.0001.01
-            # No 'n' in that formula, is it really correct?
+            # TODO: No 'n' in that formula, is it really correct?
             M = arg.match(c*(d*z**n)**m)
 
             if M is not None:
