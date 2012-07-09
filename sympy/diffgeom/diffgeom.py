@@ -1,10 +1,13 @@
-from sympy import (sympify, Dummy, Matrix, Basic, Expr, solve, diff, factorial,
-        Function)
+from sympy.matrices import Matrix
+from sympy.core import Basic, Expr, Dummy, Function, sympify, diff
+from sympy.solvers import solve
+from sympy.functions import factorial
+from sympy.simplify import simplify
 from sympy.core.compatibility import reduce
 
-# TODO order the imports and make them explicit
 # TODO issue 2070: all the stuff about .args and rebuilding
-# TODO maybe a common class Field makes sense
+# TODO you are a bit excessive in the use of Dummies
+# TODO dummy point
 
 class Manifold(Basic):
     """Object representing a mathematical manifold.
@@ -38,7 +41,7 @@ class Patch(Basic):
     =========
 
     Define a Manifold and a Patch on that Manifold:
-    >>> from sympy.differential_geometry import Manifold, Patch
+    >>> from sympy.diffgeom import Manifold, Patch
     >>> m = Manifold('M', 3)
     >>> p = Patch('P', m)
     >>> p in m.patches
@@ -57,6 +60,9 @@ class Patch(Basic):
         # The list of coordinate systems is necessary for an instance of
         # CoordSystem to enumerate other coord systems on the patch.
 
+    @property
+    def dim(self):
+        return self.manifold.dim
 
 class CoordSystem(Basic):
     """Contains all coordinate transformation logic.
@@ -67,7 +73,7 @@ class CoordSystem(Basic):
     Define a Manifold and a Patch, and then define two coord systems on that
     patch:
     >>> from sympy import symbols, sin, cos, pi
-    >>> from sympy.differential_geometry import Manifold, Patch, CoordSystem
+    >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
     >>> x, y, r, theta = symbols('x, y, r, theta')
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
@@ -111,6 +117,11 @@ class CoordSystem(Basic):
     1
     >>> v_x(v_x(x))(p)
     0
+
+    Define a basis oneform field:
+    >>> dx = rect.base_oneform(0)
+    >>> dx(v_x)(p)
+    1
 
     """
     #  Contains a reference to the parent patch in order to be able to access
@@ -186,7 +197,7 @@ class CoordSystem(Basic):
         Takes a point and returns its coordinate in this coordinate system.
 
         See the docstring of `CoordSystem` for examples."""
-        args = [Dummy() for i in range(self.patch.manifold.dim)]
+        args = [Dummy() for i in range(self.dim)]
         result = args[coord_index]
         return ScalarField(self, args, result)
 
@@ -194,7 +205,7 @@ class CoordSystem(Basic):
         """Returns a list of all coordinate functions.
 
         For more details see the coord_function method of this class."""
-        return [self.coord_function(i) for i in range(self.patch.manifold.dim)]
+        return [self.coord_function(i) for i in range(self.dim)]
 
     def base_vector(self, coord_index):
         """Return a basis VectorField.
@@ -203,10 +214,34 @@ class CoordSystem(Basic):
         operator on scalar fields.
 
         See the docstring of `CoordSystem` for examples."""
-        args = [Dummy() for i in range(self.patch.manifold.dim)]
-        result = [0,] * self.patch.manifold.dim
+        args = [Dummy() for i in range(self.dim)]
+        result = [0,] * self.dim
         result[coord_index] = 1
         return VectorField(self, args, result)
+
+    def base_vectors(self):
+        """Returns a list of all base vectors.
+
+        For more details see the base_vector method of this class."""
+        return [self.base_vector(i) for i in range(self.dim)]
+
+    def base_oneform(self, coord_index):
+        """Return a basis OneFormField.
+
+        The basis one-form field for this coordinate system. It is also an
+        operator on vector fields.
+
+        See the docstring of `CoordSystem` for examples."""
+        args = [Dummy() for i in range(self.dim)]
+        result = [0,] * self.dim
+        result[coord_index] = 1
+        return OneFormField(self, args, result)
+
+    def base_oneforms(self):
+        """Returns a list of all base oneforms.
+
+        For more details see the base_oneform method of this class."""
+        return [self.base_oneform(i) for i in range(self.dim)]
 
     def point(self, coords):
         """Create a `Point` with coordinates given in this coord system.
@@ -220,6 +255,9 @@ class CoordSystem(Basic):
         See the docstring of `CoordSystem` for examples."""
         return point.coords(self)
 
+    @property
+    def dim(self):
+        return self.patch.dim
 
 class Point(Basic):
     """Point in a Manifold object.
@@ -236,9 +274,9 @@ class Point(Basic):
 
     Define the boilerplate Manifold, Patch and coordinate systems:
     >>> from sympy import symbols, sin, cos, pi
-    >>> from sympy.differential_geometry import (
+    >>> from sympy.diffgeom import (
     ...        Manifold, Patch, CoordSystem, Point)
-    >>> x, y, r, theta = symbols('x, y, r, theta')
+    >>> r, theta = symbols('r, theta')
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
     >>> rect = CoordSystem('rect', p)
@@ -289,7 +327,7 @@ class ScalarField(Expr):
 
     Define boilerplate Manifold, Patch and coordinate systems:
     >>> from sympy import symbols, sin, cos, pi, Function
-    >>> from sympy.differential_geometry import (
+    >>> from sympy.diffgeom import (
     ...        Manifold, Patch, CoordSystem, Point, ScalarField)
     >>> x, y, r, theta = symbols('x, y, r, theta')
     >>> m = Manifold('M', 2)
@@ -330,7 +368,11 @@ class ScalarField(Expr):
         if not isinstance(point, Point):
             return self
         coords = point.coords(self._coord_sys)
-        return self._expr.subs(zip(self._coords, coords))
+        # XXX Calling doit() below is a simple solution to the following
+        # problem: In : Subs(2*x, x, y).subs(y,z)
+        #          Out: Subs(2*_x, (_x,), (z,)) instead of 2*z
+        # XXX Calling simplify is necessary with all the trig expressions
+        return simplify(self._expr.subs(zip(self._coords, coords))).doit()
 
 
 class VectorField(Expr):
@@ -352,9 +394,9 @@ class VectorField(Expr):
 
     Use the predefined R2 manifold, setup some boilerplate.
     >>> from sympy import symbols, sin, cos, pi, Function
-    >>> from sympy.differential_geometry.Rn import R2, R2_p, R2_r
-    >>> from sympy.differential_geometry import ScalarField, VectorField
-    >>> x, y, r, theta = symbols('x, y, r, theta')
+    >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
+    >>> from sympy.diffgeom import ScalarField, VectorField
+    >>> x, y = symbols('x, y')
     >>> x0, y0, r0, theta0 = symbols('x0, y0, r0, theta0')
 
     Points to be used as arguments for the field:
@@ -373,7 +415,7 @@ class VectorField(Expr):
     >>> v = VectorField(R2_r, [x, y], [1, 1])
     >>> v(s_field)(point_r)
     Derivative(g(x0, y0), x0) + Derivative(g(x0, y0), y0)
-    >>> v(s_field)(point_p) # TODO this is correct but unusable
+    >>> v(s_field)(point_p)
     Subs(Derivative(g(_x, r0*sin(theta0)), _x), (_x,), (r0*cos(theta0),)) + Subs(Derivative(g(r0*cos(theta0), _y), _y), (_y,), (r0*sin(theta0),))
 
     """
@@ -396,10 +438,81 @@ class VectorField(Expr):
         return ScalarField(self._coord_sys, self._coords, projected)
 
 
+class OneFormField(Expr):
+    """One-Form Field over a Manifold.
+
+    A one-form field is an operator taking a vector field and returning a
+    scalar field.
+
+    To define a one-form field you need to choose a coordinate system and define
+    the one-form field in terms of that coordinate system.
+
+    The use of the one-form field after its definition is independent of the
+    coordinate system in which it was defined, however due to limitations in
+    the simplification routines you may arrive at more complicated
+    expression if you use unappropriate coordinate systems.
+
+    Examples:
+    =========
+
+    Use the predefined R2 manifold, setup some boilerplate.
+    >>> from sympy import symbols, sin, cos, pi, Function
+    >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
+    >>> from sympy.diffgeom import ScalarField, VectorField
+    >>> x0, y0 = symbols('x0, y0')
+
+    Define some vector fields and some one-form fields:
+    >>> e_x = R2.e_x
+    >>> e_theta = R2.e_theta
+    >>> dx, dy =  R2.dx, R2.dy
+    >>> p = R2_r.point([x0,y0])
+
+    Operate with the one-form field on the vector field:
+    >>> dx(e_x)(p)
+    1
+    >>> dy(e_x)(p)
+    0
+    >>> dx(e_theta)(p)
+    -y0
+
+    """
+    def __init__(self, coord_sys, coords, components):
+        super(OneFormField, self).__init__()
+        self._coord_sys = coord_sys
+        coords, components = dummyfy(coords, components)
+        self._coords = coords
+        self._components = components
+        self._args = self._coord_sys, self._coords, self._components
+
+    def __call__(self, vector_field):
+        coord_funcs = self._coord_sys.coord_functions()
+        p = Point(self._coord_sys, self._coords)
+        differentials = [vector_field(cf)(p) for cf in coord_funcs]
+        result = sum(t[0]*t[1] for t in zip(self._components, differentials))
+        # TODO This is the simplest to write, however is it the smartest?
+        # TODO Document the nontrivial jump-through-hoops that is done wrt to
+        # coordinate systems here
+        return ScalarField(self._coord_sys, self._coords, result)
+
+
+###############################################################################
+# Differential
+###############################################################################
+class Differential(Expr):
+    """Return the differential of a scalar field."""
+    def __init__(self, scalar_field):
+        super(Differential, self).__init__()
+        self._scalar_field = scalar_field
+        self._args = scalar_field
+
+    def __call__(self, vector_field):
+        return vector_field(self._scalar_field)
+
+
 ###############################################################################
 # Integral curves on vector fields
 ###############################################################################
-def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None):
+def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeffs=False):
     """Return the series expansion for an integral curve of the field.
 
     Integral curve is a function `gamma` taking a parameter in R to a point
@@ -423,6 +536,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None):
     - start_point - the point which coresponds to `gamma(0)`
     - n - the order to which to expand
     - coord_sys - the coordinate system in which to expand
+    - coeffs (default False) - if True return a list of elements of the expansion
 
     See Also: intcurve_diffequ
 
@@ -431,15 +545,20 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None):
 
     Use the predefined R2 manifold:
     >>> from sympy.abc import t, x, y
-    >>> from sympy.differential_geometry.Rn import R2, R2_p, R2_r
-    >>> from sympy.differential_geometry import intcurve_series
+    >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
+    >>> from sympy.diffgeom import intcurve_series
 
     Specify a starting point and a vector field:
     >>> start_point = R2_r.point([x, y])
-    >>> vector_field = R2_r.d_dx
+    >>> vector_field = R2_r.e_x
 
     Calculate the series:
-    >>> series = intcurve_series(vector_field, t, start_point, n=3)
+    >>> intcurve_series(vector_field, t, start_point, n=3)
+    [t + x]
+    [    y]
+
+    Or get the elements of the expansion in a list:
+    >>> series = intcurve_series(vector_field, t, start_point, n=3, coeffs=True)
     >>> series[0]
     [x]
     [y]
@@ -450,17 +569,17 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None):
     [0]
     [0]
 
-    The series in the polar coordinate system: #TODO check by hand for correctness
-    >>> series = intcurve_series(vector_field, t, start_point, 3, R2_p)
+    The series in the polar coordinate system:
+    >>> series = intcurve_series(vector_field, t, start_point, n=3, coord_sys=R2_p, coeffs=True)
     >>> series[0]
     [sqrt(x**2 + y**2)]
     [      atan2(y, x)]
     >>> series[1]
     [t*x/sqrt(x**2 + y**2)]
-    [   -t*y/(x**2 + y**2)]
+    [   t*y/(-x**2 - y**2)]
     >>> series[2]
-    [t**2*(-x**2/(x**2 + y**2)**(3/2) + 1/sqrt(x**2 + y**2))/2]
-    [                                t**2*x*y/(x**2 + y**2)**2]
+    [t**2*(-x**2/(x**2 + y**2) + 1)/(2*sqrt(x**2 + y**2))]
+    [                           t**2*x*y/(x**2 + y**2)**2]
 
     """
     def iter_vfield(scalar_field, i):
@@ -472,8 +591,11 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None):
                 for i in range(n)]
     coord_sys = coord_sys if coord_sys else start_point._coord_sys
     coord_functions = coord_sys.coord_functions()
-    taylor_terms = zip(*[taylor_terms_per_coord(f) for f in coord_functions])
-    return [Matrix(t) for t in taylor_terms]
+    taylor_terms = [taylor_terms_per_coord(f) for f in coord_functions]
+    if coeffs:
+        return [Matrix(t) for t in zip(*taylor_terms)]
+    else:
+        return Matrix([sum(c) for c in taylor_terms])
 
 
 def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
@@ -511,35 +633,35 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 
     Use the predefined R2 manifold:
     >>> from sympy.abc import t
-    >>> from sympy.differential_geometry.Rn import R2, R2_p, R2_r
-    >>> from sympy.differential_geometry import intcurve_diffequ
+    >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
+    >>> from sympy.diffgeom import intcurve_diffequ
 
     Specify a starting point and a vector field:
-    >>> start_point = R2_r.point([1, 0])
-    >>> vector_field = -R2.y*R2.d_dx + R2.x*R2.d_dy
+    >>> start_point = R2_r.point([0, 1])
+    >>> vector_field = -R2.y*R2.e_x + R2.x*R2.e_y
 
     Get the equation:
     >>> equations, init_cond = intcurve_diffequ(vector_field, t, start_point)
     >>> equations
     [f_1(t) + Derivative(f_0(t), t), -f_0(t) + Derivative(f_1(t), t)]
     >>> init_cond
-    [f_0(0) - 1, f_1(0)]
+    [f_0(0), f_1(0) - 1]
 
-    The series in the polar coordinate system: #TODO check by hand for correctness
+    The series in the polar coordinate system:
     >>> equations, init_cond = intcurve_diffequ(vector_field, t, start_point, R2_p)
-    >>> #TODO correct but too complicated >>> equations
+    >>> equations
+    [Derivative(f_0(t), t), Derivative(f_1(t), t) - 1]
     >>> init_cond
-    [f_0(0) - 1, f_1(0)]
+    [f_0(0) - 1, f_1(0) - pi/2]
 
     """
     coord_sys = coord_sys if coord_sys else start_point._coord_sys
-    # TODO on the next line the argument in range is hilariously long.
-    gammas = [Function('f_%d'%i)(param) for i in range(start_point._coord_sys.patch.manifold.dim)]
+    gammas = [Function('f_%d'%i)(param) for i in range(start_point._coord_sys.dim)]
     arbitrary_p = Point(coord_sys, gammas)
     coord_functions = coord_sys.coord_functions()
-    equations = [diff(cf(arbitrary_p), param) - vector_field(cf)(arbitrary_p)
+    equations = [simplify(diff(cf(arbitrary_p), param) - vector_field(cf)(arbitrary_p))
                  for cf in coord_functions]
-    init_cond = [cf(arbitrary_p).subs(param,0) - cf(start_point)
+    init_cond = [simplify(cf(arbitrary_p).subs(param,0) - cf(start_point))
                  for cf in coord_functions]
     return equations, init_cond
 
