@@ -1053,8 +1053,20 @@ class MatplotlibBackend(BaseBackend):
                                                   rstride=1, cstride=1,
                                                   linewidth=0.1)
             elif s.is_implicit:
-                x, y = s.get_meshes()
-                self.ax.fill(x, y, facecolor='b', edgecolor='None' )
+                points = s.get_meshes()
+                if len(points) == 3:
+                    x, y, plot_type = points
+                    self.ax.fill(x, y, facecolor='b', edgecolor='None' )
+                    self.ax.set_autoscale_on(False)
+                else:
+                    colormap = ListedColormap(["white", "blue"])
+                    xarray, yarray, zarray, plot_type = points
+                    if plot_type == 'contour':
+                        self.ax.contour(xarray, yarray, zarray,
+                                contours=(0, 0), fill=False, cmap=colormap)
+                    else:
+                        self.ax.contourf(xarray, yarray, zarray, cmap=colormap)
+
 
             else:
                 raise ValueError('The matplotlib backend supports only '
