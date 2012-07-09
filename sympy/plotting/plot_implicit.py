@@ -292,7 +292,9 @@ def plot_implicit(expr, *args, **kwargs):
     use_interval = kwargs.pop('adaptive', True)
     nb_of_points = kwargs.pop('points', 300)
     depth = kwargs.pop('depth', 0)
-
+    #Check whether the depth is greater than 4.
+    if depth > 4:
+        depth = 4
     series_argument = ImplicitSeries(expr, var_start_end_x, var_start_end_y,
                                     is_equal, use_interval, depth, nb_of_points)
     show = kwargs.pop('show', True)
