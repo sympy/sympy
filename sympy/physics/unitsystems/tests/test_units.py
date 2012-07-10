@@ -1,4 +1,6 @@
 from sympy import Matrix, eye, Symbol, solve, pi
+import sympy.physics.unitsystems
+
 from sympy.physics.unitsystems.units import (PREFIXES, Unit, UnitSystem,
                                        set_system, Quantity as Q)
 from sympy.physics.unitsystems.mks import (mks, m, s, kg, J, v, length, time,

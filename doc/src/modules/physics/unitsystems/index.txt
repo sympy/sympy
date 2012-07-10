@@ -21,7 +21,7 @@ example, in the study of the planet trajectory one does not care about electric
 current, Avogadro number or inch/feet, and so on.
 
 Also one can use constant as units, like one do in the natural system (where
-c is used as an unit for velocity), or when astronomers give masses in terms
+c is used as a unit for velocity), or when astronomers give masses in terms
 of solar or earth masses.
 
 In this way the module let the user to create his own systems, possibly by

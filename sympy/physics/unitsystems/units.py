@@ -5,7 +5,7 @@ Units for physical quantities.
 
 Also define prefixes.
 
-The philosophy of this module is the following. We can consider an unit system
+The philosophy of this module is the following. We can consider a unit system
 as a vector space on the integer, where the unit are the vector and
 multiplication is the composition law. For example, if you choose the meter m
 and the second s as the basic units, then you can express any unit as
@@ -42,7 +42,7 @@ def set_system(system):
     Define the default unit system used in computations.
 
     Results are expressed in units of this system. If it occurs that quantities
-    are expressed in an unit not defined in this system, it will be converted.
+    are expressed in a unit not defined in this system, it will be converted.
 
     In arithmetic operations, the unit system used is determined in this order:
     1. general system, 2. left unit system and 3. right unit system.
@@ -146,7 +146,7 @@ class Unit(AtomicExpr):
         obj.dimension = dimension
         obj.prefix = prefix
 
-        #used to check if the unit is part of an unit system, and if it's one of
+        #used to check if the unit is part of a unit system, and if it's one of
         #the base unit in it; should not be modified by hand
         obj._system = system
 
@@ -170,9 +170,9 @@ class Unit(AtomicExpr):
 
     @property
     def abbrev_base(self):
-        '''
+        """
         Compute the abbreviation in terms of base units.
-        '''
+        """
         if self.has_system is False or _UNIT_SYSTEM is None:
             return ''
 
@@ -232,10 +232,10 @@ class Unit(AtomicExpr):
                 and self.dimension == other.dimension)
 
     @staticmethod
-    def _comptute_unit(unit, system):
-        '''
-        Given an unit and a system, try to find the unit in the system.
-        '''
+    def _compute_unit(unit, system):
+        """
+        Given a unit and a system, try to find the unit in the system.
+        """
         if system is None:
             return unit
         else:
@@ -260,7 +260,7 @@ class Unit(AtomicExpr):
                     return factor
                 else:
                     unit = Unit(dim, factor=factor, system=system)
-                    return self._comptute_unit(unit, system)
+                    return self._compute_unit(unit, system)
         else:
             return Pow(self, other)
 
@@ -277,7 +277,7 @@ class Unit(AtomicExpr):
                 return factor
             else:
                 unit = Unit(dim, factor=factor, system=system)
-                return self._comptute_unit(unit, system)
+                return self._compute_unit(unit, system)
         # TODO: is it a good idea to return quantity when multiplied by number?
         #elif isinstance(other, Number):
         #    return Quantity(other, self)
@@ -300,7 +300,7 @@ class Unit(AtomicExpr):
                 return factor
             else:
                 unit = Unit(dim, factor=factor, system=system)
-                return self._comptute_unit(unit, system)
+                return self._compute_unit(unit, system)
         #elif isinstance(other, Number):
         #    return Quantity(1/other, unit)
         else:
@@ -328,7 +328,7 @@ class Unit(AtomicExpr):
 
 class UnitSystem():
     """
-    Representation of an unit system.
+    Representation of a unit system.
 
     _base_units is a tuple of the units which form the basis. _units is also
     a tuple.
@@ -348,7 +348,7 @@ class UnitSystem():
 
         if self._system_is_well_defined() is False:
             # TODO: check precisely which test failed
-            raise AttributeError('The base units can not well-defined an unit '
+            raise AttributeError('The base units can not well-defined a unit '
                                  'system.')
 
     def __str__(self):
@@ -395,9 +395,9 @@ class UnitSystem():
         return Matrix(vec)
 
     def __getitem__(self, key):
-        '''
+        """
         Shortcut to the get_unit method, using key access.
-        '''
+        """
         u = self.get_unit(key)
         if u is None:
             raise KeyError(key)
@@ -424,7 +424,7 @@ class UnitSystem():
         Find a specific unit which is part of the system. Modify its attribute
         to say in which system it is.
 
-        unit can be a string or an unit object.
+        unit can be a string or a unit object.
         """
         found_unit = None
 
@@ -465,7 +465,7 @@ class Quantity(AtomicExpr):
                 obj.unit = unit
                 obj.factor = factor
             else:
-                raise TypeError('"unit" should be an Unit instance.')
+                raise TypeError('"unit" should be a Unit instance.')
         else:
             raise NotImplementedError
 
@@ -572,7 +572,7 @@ class Quantity(AtomicExpr):
             return Pow(self, other)
 
     def __eq__(self, other):
-        #TODO: interpret an Unit as a quantity with factor 1
+        #TODO: interpret a Unit as a quantity with factor 1
         return (isinstance(other, Quantity) and self.factor == other.factor
                 and self.unit == other.unit)
 
