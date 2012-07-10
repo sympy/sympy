@@ -1339,6 +1339,30 @@ class DiagramGrid(object):
         """
         return repr(self._grid._array)
 
+class _StrArrow(object):
+    """
+    Stores the information necessary for producing an Xy-pic
+    description of an arrow.
+    """
+    def __init__(self, curving, horizontal_direction, vertical_direction,
+                 label_position, label):
+        self.curving = curving
+        self.horizontal_direction = horizontal_direction
+        self.vertical_direction = vertical_direction
+        self.label_position = label_position
+        self.label = label
+
+    def __str__(self):
+        if self.curving:
+            curving_str = "@/%s/" % (self.curving)
+        else:
+            curving_str = ""
+
+
+        return "\\ar%s[%s%s]%s{%s}" % \
+               (curving_str, self.horizontal_direction, self.vertical_direction,
+                self.label_position, self.label)
+
 class XypicDiagramDrawer(object):
     """
     Given a :class:`Diagram` and the corresponding
@@ -1412,7 +1436,7 @@ class XypicDiagramDrawer(object):
                         down.append(m)
                     elif end_i < i:
                         up.append(m)
-                    elif not morphisms_str_info[m][0]:
+                    elif not morphisms_str_info[m].curving:
                         # This is a straight horizontal morphism,
                         # because it has no curving.
                         straight_horizontal.append(m)
@@ -1421,10 +1445,10 @@ class XypicDiagramDrawer(object):
                 # More morphisms stick out downward than upward, let's
                 # curve the morphism up.
                 if backwards:
-                    curving = "@/_/"
+                    curving = "_"
                     label_pos = "_"
                 else:
-                    curving = "@/^/"
+                    curving = "^"
                     label_pos = "^"
 
                 # Assure that the straight horizontal morphisms have
@@ -1433,20 +1457,19 @@ class XypicDiagramDrawer(object):
                     (i1, j1) = object_coords[m.domain]
                     (i2, j2) = object_coords[m.codomain]
 
-                    (crv, hrz, vrt, lab, name) = morphisms_str_info[m]
+                    m_str_info = morphisms_str_info[m]
                     if j1 < j2:
-                        lab = "_"
+                        m_str_info.label_position = "_"
                     else:
-                        lab = "^"
-                    morphisms_str_info[m] = (crv, hrz, vrt, lab, name)
+                        m_str_info.label_position = "^"
             else:
                 # More morphisms stick out downward than upward, let's
                 # curve the morphism up.
                 if backwards:
-                    curving = "@/^/"
+                    curving = "^"
                     label_pos = "^"
                 else:
-                    curving = "@/_/"
+                    curving = "_"
                     label_pos = "_"
 
                 # Assure that the straight horizontal morphisms have
@@ -1455,12 +1478,11 @@ class XypicDiagramDrawer(object):
                     (i1, j1) = object_coords[m.domain]
                     (i2, j2) = object_coords[m.codomain]
 
-                    (crv, hrz, vrt, lab, name) = morphisms_str_info[m]
+                    m_str_info = morphisms_str_info[m]
                     if j1 < j2:
-                        lab = "^"
+                        m_str_info.label_position = "^"
                     else:
-                        lab = "_"
-                    morphisms_str_info[m] = (crv, hrz, vrt, lab, name)
+                        m_str_info.label_position = "_"
 
         elif (delta_j == 0) and (abs(i - target_i) > 1):
             # Suppose the arrow goes downwards.
@@ -1495,7 +1517,7 @@ class XypicDiagramDrawer(object):
                         right.append(m)
                     elif end_j < j:
                         left.append(m)
-                    elif not morphisms_str_info[m][0]:
+                    elif not morphisms_str_info[m].curving:
                         # This is a straight vertical morphism,
                         # because it has no curving.
                         straight_vertical.append(m)
@@ -1504,10 +1526,10 @@ class XypicDiagramDrawer(object):
                 # More morphisms stick out to the left than to the
                 # right, let's curve the morphism to the right.
                 if backwards:
-                    curving = "@/^/"
+                    curving = "^"
                     label_pos = "^"
                 else:
-                    curving = "@/_/"
+                    curving = "_"
                     label_pos = "_"
 
                 # Assure that the straight vertical morphisms have
@@ -1516,20 +1538,19 @@ class XypicDiagramDrawer(object):
                     (i1, j1) = object_coords[m.domain]
                     (i2, j2) = object_coords[m.codomain]
 
-                    (crv, hrz, vrt, lab, name) = morphisms_str_info[m]
+                    m_str_info = morphisms_str_info[m]
                     if i1 < i2:
-                        lab = "^"
+                        m_str_info.label_position = "^"
                     else:
-                        lab = "_"
-                    morphisms_str_info[m] = (crv, hrz, vrt, lab, name)
+                        m_str_info.label_position = "_"
             else:
                 # More morphisms stick out to the right than to the
                 # left, let's curve the morphism to the left.
                 if backwards:
-                    curving = "@/_/"
+                    curving = "_"
                     label_pos = "_"
                 else:
-                    curving = "@/^/"
+                    curving = "^"
                     label_pos = "^"
 
                 # Assure that the straight vertical morphisms have
@@ -1538,12 +1559,11 @@ class XypicDiagramDrawer(object):
                     (i1, j1) = object_coords[m.domain]
                     (i2, j2) = object_coords[m.codomain]
 
-                    (crv, hrz, vrt, lab, name) = morphisms_str_info[m]
+                    m_str_info = morphisms_str_info[m]
                     if i1 < i2:
-                        lab = "_"
+                        m_str_info.label_position = "_"
                     else:
-                        lab = "^"
-                    morphisms_str_info[m] = (crv, hrz, vrt, lab, name)
+                        m_str_info.label_position = "^"
 
         # Let's now get the name of the morphism.
         morphism_name = ""
@@ -1557,8 +1577,8 @@ class XypicDiagramDrawer(object):
         elif isinstance(morphism, NamedMorphism):
             morphism_name = latex(Symbol(morphism.name))
 
-        return (curving, horizontal_direction, vertical_direction,
-                label_pos, morphism_name)
+        return _StrArrow(curving, horizontal_direction, vertical_direction,
+                         label_pos, morphism_name)
 
     def draw(self, diagram, grid):
         """
@@ -1624,8 +1644,7 @@ class XypicDiagramDrawer(object):
 
                     morphisms_to_draw = object_morphisms[obj]
                     for morphism in morphisms_to_draw:
-                        result += "\\ar%s[%s%s]%s{%s} " % \
-                                  morphisms_str_info[morphism]
+                        result += str(morphisms_str_info[morphism]) + " "
 
                 # Don't put the & after the last column.
                 if j < grid.width - 1:
