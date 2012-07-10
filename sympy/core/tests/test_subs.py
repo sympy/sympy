@@ -496,6 +496,9 @@ def test_simultaneous_subs():
     assert (x/y).subs(reps) != (y/x).subs(reps)
     assert (x/y).subs(reps, simultaneous=True) == (y/x).subs(reps, simultaneous=True)
 
-def issue_3320():
+def issue_3320_3322():
     from sympy.abc import x, y
     assert (1/(1+x/y)).subs(x/y, x) == 1/(1+x)
+    assert (-2*I).subs(2*I, x) == -x
+    assert (-I*x).subs(I*x, x) == -x
+    assert (-3*I*y**4).subs(3*I*y**2,x) == -x*y**2
