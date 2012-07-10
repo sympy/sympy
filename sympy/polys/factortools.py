@@ -73,7 +73,6 @@ from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import subsets, cythonized
 
 from math import ceil as _ceil, log as _log
-from random import randint
 
 @cythonized("k")
 def dup_trial_division(f, factors, K):
@@ -855,7 +854,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
         return H
 
 @cythonized("u,mod,i,j,s_arg,negative")
-def dmp_zz_wang(f, u, K, mod=None, random_sequence=None):
+def dmp_zz_wang(f, u, K, mod=None, seed=None):
     """
     Factor primitive square-free polynomials in `Z[X]`.
 
@@ -875,8 +874,8 @@ def dmp_zz_wang(f, u, K, mod=None, random_sequence=None):
     step is to lift univariate factors to obtain true multivariate
     factors. For this purpose a parallel Hensel lifting procedure is used.
 
-    The parameter ``random_sequence`` can be used to give a manual sequence of
-    random numbers to the algorithm, for testing purposes.
+    The parameter ``seed`` is passed to _randint and can be used to seed randint
+    (when an integer) or (for testing purposes) can be a sequence of numbers.
 
     References
     ==========
@@ -885,14 +884,9 @@ def dmp_zz_wang(f, u, K, mod=None, random_sequence=None):
     2. [Geddes92]_
 
     """
-    def _get_next_random_int(mod):
-        if random_sequence is not None:
-            ret = random_sequence.pop(0)
-            if not -mod <= ret <= mod:
-                raise ValueError("Random value must be between %d and %d, not %d." % (-mod, mod, ret))
-        else:
-            ret = randint(-mod, mod)
-        return ret
+    from sympy.utilities.randtest import _randint
+
+    randint = _randint(seed)
 
     ct, T = dmp_zz_factor(dmp_LC(f, K), u-1, K)
 
@@ -927,7 +921,7 @@ def dmp_zz_wang(f, u, K, mod=None, random_sequence=None):
 
     while len(configs) < eez_num_configs:
         for _ in xrange(eez_num_tries):
-            A = [ K(_get_next_random_int(mod)) for _ in xrange(u) ]
+            A = [ K(randint(-mod, mod)) for _ in xrange(u) ]
 
             if tuple(A) not in history:
                 history.add(tuple(A))
