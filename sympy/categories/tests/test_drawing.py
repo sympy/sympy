@@ -687,9 +687,23 @@ def test_XypicDiagramDrawer():
     g = NamedMorphism(B, C, "g")
     h = NamedMorphism(D, A, "h")
     h1 = NamedMorphism(D, A, "h1")
+    h2 = NamedMorphism(A, D, "h2")
     k = NamedMorphism(D, B, "k")
-    d = Diagram([f, g, h, k, h1])
+    d = Diagram([f, g, h, k, h1, h2])
     grid = DiagramGrid(d)
+
+    drawer = XypicDiagramDrawer()
+    print
+    print drawer.draw(d, grid)
+
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    h = NamedMorphism(D, A, "h")
+    h1 = NamedMorphism(D, A, "h1")
+    h2 = NamedMorphism(A, D, "h2")
+    k = NamedMorphism(D, B, "k")
+    d = Diagram([f, g, h, k, h1, h2])
+    grid = DiagramGrid(d, transpose=True)
 
     drawer = XypicDiagramDrawer()
     print
