@@ -1378,6 +1378,7 @@ class XypicDiagramDrawer(object):
     def __init__(self):
         self.unit = "mm"
         self.default_curving_amount = 3
+        self.default_curving_step = 4
 
     def _process_morphism(self, diagram, grid, morphism, object_coords,
                           morphisms, morphisms_str_info):
@@ -1395,6 +1396,21 @@ class XypicDiagramDrawer(object):
             else:
                 return str_lt * (-times)
 
+        def count_curved_morphisms(A, B):
+            """
+            Counts how many curved morphisms there are between the two
+            supplied objects.
+            """
+            curved_count = 0
+            for m, m_str_info in morphisms_str_info.items():
+                if m_str_info.curving and \
+                   ((m.domain, m.codomain) == (A, B) or \
+                    (m.domain, m.codomain) == (B, A)):
+                    # This is a curved morphism between the same two
+                    # objects.
+                    curved_count += 1
+            return curved_count
+
         (i, j) = object_coords[morphism.domain]
         (target_i, target_j) = object_coords[morphism.codomain]
 
@@ -1408,6 +1424,7 @@ class XypicDiagramDrawer(object):
                                                   "r", "l")
 
         curving = ""
+        curving_amount = self.default_curving_amount
         label_pos = "^"
         if (delta_i == 0) and (abs(j - target_j) > 1):
             # Suppose we are going from left to right.
@@ -1490,6 +1507,13 @@ class XypicDiagramDrawer(object):
                     else:
                         m_str_info.label_position = "_"
 
+            # Count how many curved morphisms between these two
+            # objects are already there so that we can curve this one
+            # more.
+            curved_count = count_curved_morphisms(
+                morphism.domain, morphism.codomain)
+            curving_amount += curved_count * self.default_curving_step
+
         elif (delta_j == 0) and (abs(i - target_i) > 1):
             # Suppose the arrow goes downwards.
             backwards = False
@@ -1571,6 +1595,13 @@ class XypicDiagramDrawer(object):
                     else:
                         m_str_info.label_position = "^"
 
+            # Count how many curved morphisms between these two
+            # objects are already there so that we can curve this one
+            # more.
+            curved_count = count_curved_morphisms(
+                morphism.domain, morphism.codomain)
+            curving_amount += curved_count * self.default_curving_step
+
         # Let's now get the name of the morphism.
         morphism_name = ""
         if isinstance(morphism, IdentityMorphism):
@@ -1583,7 +1614,7 @@ class XypicDiagramDrawer(object):
         elif isinstance(morphism, NamedMorphism):
             morphism_name = latex(Symbol(morphism.name))
 
-        return _StrArrow(self.unit, curving, self.default_curving_amount,
+        return _StrArrow(self.unit, curving, curving_amount,
                          horizontal_direction, vertical_direction,
                          label_pos, morphism_name)
 
