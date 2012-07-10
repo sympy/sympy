@@ -593,6 +593,7 @@ def test_DiagramGrid():
     assert grid.morphisms == morphisms
 
 def test_XypicDiagramDrawer():
+    # A linear diagram.
     A = Object("A")
     B = Object("B")
     C = Object("C")
@@ -605,45 +606,60 @@ def test_XypicDiagramDrawer():
     i = NamedMorphism(D, E, "i")
     d = Diagram([f, g, h, i])
     grid = DiagramGrid(d, layout="sequential")
-
     drawer = XypicDiagramDrawer()
-    print
-    print drawer.draw(d, grid)
+    assert drawer.draw(d, grid) == "\\xymatrix{\n" \
+    "A \\ar[r]^{f} & B \\ar[r]^{g} & C \\ar[r]^{h} & D \\ar[r]^{i} & E \n" \
+    "}\n"
 
+    # The same diagram, transposed.
     grid = DiagramGrid(d, layout="sequential", transpose=True)
     drawer = XypicDiagramDrawer()
-    print
-    print drawer.draw(d, grid)
+    assert drawer.draw(d, grid) == "\\xymatrix{\n" \
+    "A \\ar[d]^{f} \\\\\n" \
+    "B \\ar[d]^{g} \\\\\n" \
+    "C \\ar[d]^{h} \\\\\n" \
+    "D \\ar[d]^{i} \\\\\n" \
+    "E \n" \
+    "}\n"
 
-    f = NamedMorphism(A, B, "f")
-    g = NamedMorphism(B, C, "g")
+    # A simple diagram, with a curved arrow.
     h = NamedMorphism(D, A, "h")
     k = NamedMorphism(D, B, "k")
     d = Diagram([f, g, h, k])
     grid = DiagramGrid(d)
-
     drawer = XypicDiagramDrawer()
-    print
-    print drawer.draw(d, grid)
+    assert drawer.draw(d, grid) == "\\xymatrix{\n" \
+    "A \\ar[r]_{f} & B \\ar[d]^{g} & D \\ar[l]^{k} \\ar@/_3mm/[ll]_{h} \\\\\n" \
+    "& C & \n" \
+    "}\n"
 
+    # The same diagram, transposed.
     grid = DiagramGrid(d, transpose=True)
     drawer = XypicDiagramDrawer()
-    print
-    print drawer.draw(d, grid)
+    assert drawer.draw(d, grid) == "\\xymatrix{\n" \
+    "A \\ar[d]^{f} & \\\\\n" \
+    "B \\ar[r]^{g} & C \\\\\n" \
+    "D \\ar[u]_{k} \\ar@/^3mm/[uu]^{h} & \n" \
+    "}\n"
 
+    # A triangle diagram.
     d = Diagram([f, g], {g * f:"unique"})
     grid = DiagramGrid(d)
-
     drawer = XypicDiagramDrawer()
-    print
-    print drawer.draw(d, grid)
+    assert drawer.draw(d, grid) == "\\xymatrix{\n" \
+    "A \\ar[d]^{g\\circ f} \\ar[r]^{f} & B \\ar[ld]^{g} \\\\\n" \
+    "C & \n" \
+    "}\n"
 
+    # The same diagram, transposed.
     grid = DiagramGrid(d, transpose=True)
     drawer = XypicDiagramDrawer()
-    print
-    print drawer.draw(d, grid)
+    assert drawer.draw(d, grid) == "\\xymatrix{\n" \
+    "A \\ar[r]^{g\\circ f} \\ar[d]^{f} & C \\\\\n" \
+    "B \\ar[ru]^{g} & \n" \
+    "}\n"
 
-    # A cube.
+    # A cube diagram.
     A1 = Object("A1")
     A2 = Object("A2")
     A3 = Object("A3")
@@ -673,38 +689,47 @@ def test_XypicDiagramDrawer():
 
     d = Diagram([f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12])
     grid = DiagramGrid(d)
-
     drawer = XypicDiagramDrawer()
-    print
-    print drawer.draw(d, grid)
+    assert drawer.draw(d, grid) == "\\xymatrix{\n" \
+    "& A_{5} \\ar[r]^{f_{5}} \\ar[ldd]^{f_{6}} & A_{6} \\ar[rdd]^{f_{7}} " \
+    "& \\\\\n" \
+    "& A_{1} \\ar[r]^{f_{1}} \\ar[d]^{f_{2}} \\ar[u]^{f_{9}} & A_{2} " \
+    "\\ar[d]^{f_{3}} \\ar[u]^{f_{10}} & \\\\\n" \
+    "A_{7} \\ar@/_3mm/[rrr]_{f_{8}} & A_{3} \\ar[r]^{f_{3}} \\ar[l]_{f_{11}} " \
+    "& A_{4} \\ar[r]^{f_{11}} & A_{8} \n" \
+    "}\n"
 
+    # The same diagram, transposed.
     grid = DiagramGrid(d, transpose=True)
     drawer = XypicDiagramDrawer()
-    print
-    print drawer.draw(d, grid)
+    assert drawer.draw(d, grid) == "\\xymatrix{\n" \
+    "& & A_{7} \\ar@/^3mm/[ddd]^{f_{8}} \\\\\n" \
+    "A_{5} \\ar[d]^{f_{5}} \\ar[rru]^{f_{6}} & A_{1} \\ar[d]^{f_{1}} " \
+    "\\ar[r]^{f_{2}} \\ar[l]^{f_{9}} & A_{3} \\ar[d]_{f_{3}} " \
+    "\\ar[u]^{f_{11}} \\\\\n" \
+    "A_{6} \\ar[rrd]^{f_{7}} & A_{2} \\ar[r]^{f_{3}} \\ar[l]^{f_{10}} " \
+    "& A_{4} \\ar[d]_{f_{11}} \\\\\n" \
+    "& & A_{8} \n" \
+    "}\n"
 
-    f = NamedMorphism(A, B, "f")
-    g = NamedMorphism(B, C, "g")
-    h = NamedMorphism(D, A, "h")
+    # A simple diagram with three curved arrows.
     h1 = NamedMorphism(D, A, "h1")
     h2 = NamedMorphism(A, D, "h2")
     k = NamedMorphism(D, B, "k")
     d = Diagram([f, g, h, k, h1, h2])
     grid = DiagramGrid(d)
-
     drawer = XypicDiagramDrawer()
-    print
-    print drawer.draw(d, grid)
+    assert drawer.draw(d, grid) == "\\xymatrix{\n" \
+    "A \\ar[r]_{f} \\ar@/^3mm/[rr]^{h_{2}} & B \\ar[d]^{g} & D \\ar[l]^{k} " \
+    "\\ar@/_7mm/[ll]_{h} \\ar@/_11mm/[ll]_{h_{1}} \\\\\n" \
+    "& C & \n" \
+    "}\n"
 
-    f = NamedMorphism(A, B, "f")
-    g = NamedMorphism(B, C, "g")
-    h = NamedMorphism(D, A, "h")
-    h1 = NamedMorphism(D, A, "h1")
-    h2 = NamedMorphism(A, D, "h2")
-    k = NamedMorphism(D, B, "k")
-    d = Diagram([f, g, h, k, h1, h2])
+    # The same diagram, transposed.
     grid = DiagramGrid(d, transpose=True)
-
     drawer = XypicDiagramDrawer()
-    print
-    print drawer.draw(d, grid)
+    assert drawer.draw(d, grid) == "\\xymatrix{\n" \
+    "A \\ar[d]^{f} \\ar@/_3mm/[dd]_{h_{2}} & \\\\\n" \
+    "B \\ar[r]^{g} & C \\\\\n" \
+    "D \\ar[u]_{k} \\ar@/^7mm/[uu]^{h} \\ar@/^11mm/[uu]^{h_{1}} & \n" \
+    "}\n"
