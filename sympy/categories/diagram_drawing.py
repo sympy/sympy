@@ -1356,7 +1356,7 @@ class _StrArrow(object):
 
     def __str__(self):
         if self.curving:
-            curving_str = "@/%s%s%s/" % (self.curving, self.curving_amount,
+            curving_str = "@/%s%d%s/" % (self.curving, self.curving_amount,
                                          self.unit)
         else:
             curving_str = ""
@@ -1377,7 +1377,7 @@ class XypicDiagramDrawer(object):
     """
     def __init__(self):
         self.unit = "mm"
-        self.default_curving_amount = "3"
+        self.default_curving_amount = 3
 
     def _process_morphism(self, diagram, grid, morphism, object_coords,
                           morphisms, morphisms_str_info):
