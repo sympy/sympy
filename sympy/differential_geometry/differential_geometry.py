@@ -352,7 +352,7 @@ class VectorField(Expr):
 
     Use the predefined R2 manifold, setup some boilerplate.
     >>> from sympy import symbols, sin, cos, pi, Function
-    >>> from sympy.differential_geometry.Rn import R2, R2_p, R2_r
+    >>> from sympy.differential_geometry.rn import R2, R2_p, R2_r
     >>> from sympy.differential_geometry import ScalarField, VectorField
     >>> x, y, r, theta = symbols('x, y, r, theta')
     >>> x0, y0, r0, theta0 = symbols('x0, y0, r0, theta0')
@@ -431,7 +431,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None):
 
     Use the predefined R2 manifold:
     >>> from sympy.abc import t, x, y
-    >>> from sympy.differential_geometry.Rn import R2, R2_p, R2_r
+    >>> from sympy.differential_geometry.rn import R2, R2_p, R2_r
     >>> from sympy.differential_geometry import intcurve_series
 
     Specify a starting point and a vector field:
@@ -511,7 +511,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 
     Use the predefined R2 manifold:
     >>> from sympy.abc import t
-    >>> from sympy.differential_geometry.Rn import R2, R2_p, R2_r
+    >>> from sympy.differential_geometry.rn import R2, R2_p, R2_r
     >>> from sympy.differential_geometry import intcurve_diffequ
 
     Specify a starting point and a vector field:
