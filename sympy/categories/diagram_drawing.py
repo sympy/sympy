@@ -1637,14 +1637,6 @@ class XypicDiagramDrawer(object):
                 if grid[i, j]:
                     object_coords[grid[i, j]] = (i, j)
 
-        # Build the mapping between objects and morphisms which have
-        # them as domains.
-        object_morphisms = {}
-        for obj in diagram.objects:
-            object_morphisms[obj] = []
-        for morphism in morphisms:
-            object_morphisms[morphism.domain].append(morphism)
-
         def morphism_sort_key(morphism):
             """
             Provides a morphism sorting key such that horizontal or
@@ -1665,6 +1657,14 @@ class XypicDiagramDrawer(object):
             return (2, 0, default_sort_key(morphism))
 
         morphisms = sorted(morphisms, key=morphism_sort_key)
+
+        # Build the mapping between objects and morphisms which have
+        # them as domains.
+        object_morphisms = {}
+        for obj in diagram.objects:
+            object_morphisms[obj] = []
+        for morphism in morphisms:
+            object_morphisms[morphism.domain].append(morphism)
 
         # Build the tuples defining the string representations of
         # morphisms.
