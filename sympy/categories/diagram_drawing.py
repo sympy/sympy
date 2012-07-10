@@ -1344,9 +1344,11 @@ class _StrArrow(object):
     Stores the information necessary for producing an Xy-pic
     description of an arrow.
     """
-    def __init__(self, curving, horizontal_direction, vertical_direction,
-                 label_position, label):
+    def __init__(self, unit, curving, curving_amount, horizontal_direction,
+                 vertical_direction, label_position, label):
+        self.unit = unit
         self.curving = curving
+        self.curving_amount = curving_amount
         self.horizontal_direction = horizontal_direction
         self.vertical_direction = vertical_direction
         self.label_position = label_position
@@ -1354,10 +1356,10 @@ class _StrArrow(object):
 
     def __str__(self):
         if self.curving:
-            curving_str = "@/%s/" % (self.curving)
+            curving_str = "@/%s%s%s/" % (self.curving, self.curving_amount,
+                                         self.unit)
         else:
             curving_str = ""
-
 
         return "\\ar%s[%s%s]%s{%s}" % \
                (curving_str, self.horizontal_direction, self.vertical_direction,
@@ -1370,10 +1372,14 @@ class XypicDiagramDrawer(object):
     diagram.
 
     TODO: Expand the docstring.
-    """
 
-    @staticmethod
-    def _process_morphism(diagram, grid, morphism, object_coords,
+    TODO: Explain the attributes as well.
+    """
+    def __init__(self):
+        self.unit = "mm"
+        self.default_curving_amount = "3"
+
+    def _process_morphism(self, diagram, grid, morphism, object_coords,
                           morphisms, morphisms_str_info):
         """
         Given the required information, produces the string
@@ -1577,7 +1583,8 @@ class XypicDiagramDrawer(object):
         elif isinstance(morphism, NamedMorphism):
             morphism_name = latex(Symbol(morphism.name))
 
-        return _StrArrow(curving, horizontal_direction, vertical_direction,
+        return _StrArrow(self.unit, curving, self.default_curving_amount,
+                         horizontal_direction, vertical_direction,
                          label_pos, morphism_name)
 
     def draw(self, diagram, grid):
@@ -1632,7 +1639,7 @@ class XypicDiagramDrawer(object):
         # morphisms.
         morphisms_str_info = {}
         for morphism in morphisms:
-            morphisms_str_info[morphism] = XypicDiagramDrawer._process_morphism(
+            morphisms_str_info[morphism] = self._process_morphism(
                 diagram, grid, morphism, object_coords, morphisms,
                 morphisms_str_info)
 
