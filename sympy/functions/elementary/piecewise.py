@@ -167,6 +167,11 @@ class Piecewise(Function):
             newargs.append((e, c))
         return Piecewise(*newargs)
 
+    def _eval_as_leading_term(self, x):
+        for e, c in self.args:
+            if c is True or c.subs(x, 0) is True:
+                return e.as_leading_term(x)
+
     def _eval_integral(self,x):
         from sympy.integrals import integrate
         return Piecewise(*[(integrate(e, x), c) for e, c in self.args])
@@ -353,10 +358,6 @@ class Piecewise(Function):
         args = map(lambda ec: (ec.expr._eval_nseries(x, n, logx), ec.cond), \
                    self.args)
         return self.func(*args)
-
-    def _eval_as_leading_term(self, x):
-        # This is completely wrong, cf. issue 3110
-        return self.args[0][0].as_leading_term(x)
 
     def _eval_template_is_attr(self, is_attr, when_multiple=None):
         b = None
