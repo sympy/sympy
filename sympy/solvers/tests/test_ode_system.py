@@ -116,9 +116,7 @@ def test_not_diagonal():
 
 @XFAIL
 def test_not_homogeneous():
-    # Testing for [ 3 1 ]
-    #             [-1 1 ]
-    sys = [3*f+g-f_+sin(x), -f+g-g_-cos(x)]
+    sys = [g-f_+sin(x), f+g_-cos(x)]
     raises(NotImplementedError, lambda : dsolve(sys, [f, g]))
 
 
