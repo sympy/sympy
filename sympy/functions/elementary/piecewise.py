@@ -172,7 +172,17 @@ class Piecewise(Function):
             if c is True or c.subs(x, 0) is True:
                 return e.as_leading_term(x)
 
-    def _eval_integral(self,x):
+    def _eval_conjugate(self):
+        from sympy.functions.elementary.complexes import conjugate
+        return Piecewise(*[(conjugate(e), c) for e, c in self.args])
+
+    def _eval_derivative(self, x):
+        return Piecewise(*[(diff(e, x), c) for e, c in self.args])
+
+    def _eval_evalf(self, prec):
+        return Piecewise(*[(e.evalf(prec), c) for e, c in self.args])
+
+    def _eval_integral(self, x):
         from sympy.integrals import integrate
         return Piecewise(*[(integrate(e, x), c) for e, c in self.args])
 
@@ -328,8 +338,8 @@ class Piecewise(Function):
 
         return int_expr
 
-    def _eval_derivative(self, s):
-        return Piecewise(*[(diff(e, s), c) for e, c in self.args])
+    def _eval_power(self, s):
+        return Piecewise(*[(e**s, c) for e, c in self.args])
 
     def _eval_subs(self, old, new):
         """
