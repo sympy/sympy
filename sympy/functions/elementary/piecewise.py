@@ -95,7 +95,7 @@ class Piecewise(Function):
                     "Cond %s is of type %s, but must be a bool," \
                     " Relational, Number or Set" % (cond, type(cond)))
             newargs.append(pair)
-            if cond is ExprCondPair.true_sentinel:
+            if cond is True:
                 break
 
         if options.pop('evaluate', True):
