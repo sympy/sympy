@@ -262,7 +262,7 @@ class interval(object):
         if isinstance(other, (int, float)):
             start = other - self.end
             end = other - self.start
-            return interval(start, end, is_valid=False)
+            return interval(start, end, is_valid=self.is_valid)
         elif isinstance(other, interval):
             start = other.start - self.end
             end = other.end - start
