@@ -1,5 +1,5 @@
 from sympy import (plot, pi, sin, cos, Symbol, Integral, summation, sqrt, log,
-                    oo, LambertW, I, plot_implicit, Eq, tan)
+                    oo, LambertW, I, plot_implicit, Eq, tan, And, exp, Or)
 from sympy.plotting.plot import matplotlib
 from sympy.utilities.pytest import skip
 from tempfile import NamedTemporaryFile
@@ -179,6 +179,30 @@ def plot_and_save(name):
     plot_implicit(y < 1 / tan(x), (x, -5, 5), (y, -2, 2), show=False)
     plot_implicit(y >= 2 * sin(x) * cos(x), (x, -5, 5), (y, -2, 2), show=False)
     plot_implicit(y <= x**2, (x, -3, 3), (y, -1, 5), show=False)
+
+    plot_implicit(Eq(y, cos(x)), (x, -5, 5),
+            (y, -2, 2), show=False).save(tmp_file())
+    plot_implicit(Eq(y**2, x**3 - x), (x, -5, 5),
+            (y, -4, 4), show=False).save(tmp_file())
+    plot_implicit(y > 1 / x, (x, -5, 5),
+            (y, -2, 2), show=False).save(tmp_file())
+    plot_implicit(y < 1 / tan(x), (x, -5, 5),
+            (y, -2, 2), show=False).save(tmp_file())
+    plot_implicit(y >= 2 * sin(x) * cos(x), (x, -5, 5),
+            (y, -2, 2), show=False).save(tmp_file())
+    plot_implicit(y <= x**2, (x, -3, 3),
+            (y, -1, 5), show=False).save(tmp_file())
+
+    #Test all input args for plot_implicit
+    plot_implicit(Eq(y**2, x**3 - x), show=False).save(tmp_file())
+    plot_implicit(Eq(y**2, x**3 - x), adaptive=False,
+            show=False).save(tmp_file())
+    plot_implicit(Eq(y**2, x**3 - x), adaptive=False, points = 500,
+            show=False).save(tmp_file())
+    plot_implicit(y > x, (x, -5, 5), show=False).save(tmp_file())
+    plot_implicit(And(y > exp(x), y > x + 2), show=False).save(tmp_file())
+    plot_implicit(Or(y > x, y > -x), show=False).save(tmp_file())
+
 def test_matplotlib():
     if matplotlib:
         plot_and_save('test')
