@@ -8,9 +8,6 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.compatibility import permutations
 
 
-# XXX solving issue 1739 will automatically fix many of the problems here.
-
-
 @vectorize(0)
 def IntConst_to_Symbol(expr):
     """Copied from test_ode."""
@@ -20,7 +17,7 @@ def IntConst_to_Symbol(expr):
     if symbols_starting_with_C:
         raise ValueError('integrations constant is not IntConst instance')
     old_constants = list(expr.atoms(IntConst))
-    new_constants = [Symbol(c.name) for c in old_constants]
+    new_constants = [Symbol('C'+c.name) for c in old_constants]
     return expr.subs(zip(old_constants, new_constants))
 
 import sympy
@@ -92,7 +89,6 @@ def test_initial_conditions_using_Subs():
     assert sol[0] == Eq(f, cos(x))
 
 
-@XFAIL
 def test_already_triangular():
     # Testing for [ 1 1 ]
     #             [ 0 1 ]
@@ -100,8 +96,12 @@ def test_already_triangular():
     # triagonal are never sent for diagonalization.
     # See also: test_nonlinear_iteratively_solvable
     sys = [f+g-f_, g-g_]
-    sol = dsolve(sys, [f,g])
-    assert False, 'The single ODE solver does not work when the equation contains IntConst instances'
+    sol = set(dsolve(sys, [f,g]))
+    possible_sols = [
+            set([Eq(g(x), C1*exp(x)), Eq(f(x), (C2 + C1*x)*exp(x))]),
+            set([Eq(g(x), C2*exp(x)), Eq(f(x), (C1 + C2*x)*exp(x))]),
+            ]
+    assert sol in possible_sols
 
 
 @XFAIL
@@ -120,8 +120,7 @@ def test_not_homogeneous():
     # Testing for [ 3 1 ]
     #             [-1 1 ]
     sys = [3*f+g-f_+sin(x), -f+g-g_-cos(x)]
-    sol = dsolve(sys, [f,g])
-    assert False, 'When you make it work, add the check for correctnes.'
+    raises(NotImplementedError, lambda : dsolve(sys, [f, g]))
 
 
 def test_nonlinear_separable():
@@ -148,16 +147,27 @@ def test_nonlinear_separable():
     assert sol in all_sols
 
 
-@XFAIL
 def test_nonlinear_iteratively_solvable():
     sys = [f_+f**2, g_*f-1]
-    sol = ode_system(sys, [f,g])
+    sol = set(dsolve(sys, [f,g]))
+    possible_sols = [
+            set([Eq(g(x), C1 + C2*x + x**2/2), Eq(f(x), 1/(C2 + x))]),
+            set([Eq(g(x), C2 + C1*x + x**2/2), Eq(f(x), 1/(C1 + x))]),
+            ]
+    assert sol in possible_sols
 
     sys = [f_+f**2, g_*f-1, h_*f-g]
-    sol = ode_system(sys, [f,g,h])
-
-    # The solutions wrongly contain too many IntConst instances.
-    assert False, 'The single ODE solver does not work when the equation contains IntConst instances'
+    sol = set(dsolve(sys, [f,g,h]))
+    sol_categories = [
+            set([Eq(g(x), C1 + C2*x + x**2/2),
+                 Eq(f(x), 1/(C2 + x)),
+                 Eq(h(x), C1*C2*x + C2*x**3/2 + C3 + x**4/8 + x**2*(C1/2 + C2**2/2))]),
+            ]
+    perms = list(permutations([C1, C2, C3]))
+    all_sols =  [set([eq.subs(zip(perms[0], p), simultaneous=True)
+                       for eq in s])
+                       for p in perms for s in sol_categories]
+    assert sol in all_sols
 
 
 @XFAIL

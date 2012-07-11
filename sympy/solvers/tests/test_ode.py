@@ -40,7 +40,7 @@ def IntConst_to_Symbol(expr):
     if symbols_starting_with_C:
         raise ValueError('integrations constant is not IntConst instance')
     old_constants = list(expr.atoms(IntConst))
-    new_constants = [Symbol(c.name) for c in old_constants]
+    new_constants = [Symbol('C'+c.name) for c in old_constants]
     return expr.subs(zip(old_constants, new_constants))
 
 import sympy

@@ -3324,5 +3324,5 @@ def C_to_IntConst(expr):
     IntConst instances, however this is a very hard task."""
     old_constants = [c for c in expr.free_symbols
                         if c.name.startswith('C')]
-    new_constants = [IntConst(c.name) for c in old_constants]
+    new_constants = [IntConst(c.name[1:]) for c in old_constants]
     return expr.subs(zip(old_constants, new_constants))

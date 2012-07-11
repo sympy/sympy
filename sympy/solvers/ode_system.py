@@ -170,7 +170,7 @@ def ode_system(exprs, funcs):
     # constants.
     old_constants = list(set(c for e in sols.values()
                                for c in e.atoms(IntConst)))
-    new_constants = [IntConst('C%d'%(i+1)) for i in range(len(old_constants))]
+    new_constants = [IntConst('%d'%(i+1)) for i in range(len(old_constants))]
     sub_const = zip(old_constants, new_constants)
     sols = dict((k, v.subs(sub_const)) for k, v in sols.items())
 

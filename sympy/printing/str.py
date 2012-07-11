@@ -124,7 +124,7 @@ class StrPrinter(Printer):
         return '_' + expr.name
 
     def _print_IntConst(self, expr):
-        return expr.name
+        return 'C' + expr.name
 
     def _print_EulerGamma(self, expr):
         return 'EulerGamma'
