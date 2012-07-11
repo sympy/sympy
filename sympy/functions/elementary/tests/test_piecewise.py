@@ -1,6 +1,6 @@
 from sympy import (diff, expand, Eq, Integral, integrate, Interval, lambdify,
                    log, oo, Piecewise, piecewise_fold, symbols, pi, solve,
-                   Rational, Basic, Function)
+                   Rational, Basic, Function, I, conjugate, re, im)
 from sympy.utilities.pytest import XFAIL, raises
 
 x,y = symbols('x,y')
@@ -59,6 +59,10 @@ def test_piecewise():
     assert p + dp == dp + p
     assert p - dp == -(dp - p)
 
+    # Test power
+    dp2 = Piecewise((0, x < -1), (4*x**2, x < 0), (1/x**2, x >= 0))
+    assert dp**2 == dp2
+
     # Test _eval_interval
     f1 = x*y + 2
     f2 = x*y**2 + 3
@@ -66,6 +70,11 @@ def test_piecewise():
     peval_interval = f1.subs(x,0) - f1.subs(x,-1) + f2.subs(x,1) - f2.subs(x,0)
     assert peval._eval_interval(x, 0, 0) == 0
     assert peval._eval_interval(x, -1, 1) == peval_interval
+    peval2 = Piecewise((f1, x<0), (f2, True))
+    assert peval2._eval_interval(x, 0, 0) == 0
+    assert peval2._eval_interval(x, 1, -1) == -peval_interval
+    assert peval2._eval_interval(x, -1, -2) == f1.subs(x, -2) - f1.subs(x, -1)
+    assert peval2._eval_interval(x, -1, 1) == peval_interval
 
     # Test integration
     p_int =  Piecewise((-x,x < -1), (x**3/3.0, x < 0), (-x + x*log(x), x >= 0))
@@ -246,6 +255,36 @@ def test_piecewise_series():
     p1 = Piecewise((sin(x), x<0),(cos(x),x>0))
     p2 = Piecewise((x+O(x**2), x<0),(1+O(x**2),x>0))
     assert p1.nseries(x,n=2) == p2
+
+def test_piecewise_as_leading_term():
+    p1 = Piecewise((1/x, x>1), (0, True))
+    p2 = Piecewise((x, x>1), (0, True))
+    p3 = Piecewise((1/x, x>1), (x, True))
+    p4 = Piecewise((x, x>1), (1/x, True))
+    assert p1.as_leading_term(x) == 0
+    assert p2.as_leading_term(x) == 0
+    assert p3.as_leading_term(x) == x
+    assert p4.as_leading_term(x) == 1/x
+
+def test_piecewise_complex():
+    p1 = Piecewise((2, x<0), (1, 0 <= x))
+    p2 = Piecewise((2*I, x<0), (I, 0 <= x))
+    p3 = Piecewise((I*x, x>1), (1+I, True))
+    p4 = Piecewise((-I*conjugate(x), x>1), (1-I, True))
+
+    assert conjugate(p1) == p1
+    assert conjugate(p2) == piecewise_fold(-p2)
+    assert conjugate(p3) == p4
+
+    assert p1.is_imaginary == False
+    assert p1.is_real == True
+    assert p2.is_imaginary == True
+    assert p2.is_real == False
+    assert p3.is_imaginary == None
+    assert p3.is_real == None
+
+    assert p1.as_real_imag() == (p1, 0)
+    assert p2.as_real_imag() == (0, -I*p2)
 
 def test_piecewise_evaluate():
     assert Piecewise((x, True)) == x
