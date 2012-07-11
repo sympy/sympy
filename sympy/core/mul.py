@@ -1165,26 +1165,31 @@ class Mul(AssocOp):
         from sympy import sign
         from sympy.simplify.simplify import powdenest, fraction
 
+        def base_exp(a):
+            # if I and -1 are in a Mul, they get both end up with
+            # a -1 base (see issue 3322); all we want here are the
+            # true Pow or exp separated into base and exponent
+            if a.is_Pow or a.func is C.exp:
+                return a.as_base_exp()
+            return a, S.One
+
         def breakup(eq):
-            """break up powers assuming (not checking) that eq is a Mul:
+            """break up powers of eq when treated as a Mul:
                    b**(Rational*e) -> b**e, Rational
                 commutatives come back as a dictionary {b**e: Rational}
                 noncommutatives come back as a list [(b**e, Rational)]
             """
 
-            (c, nc) = (dict(), list())
-            for (i, a) in enumerate(Mul.make_args(eq)):
+            (c, nc) = (defaultdict(int), list())
+            for a in Mul.make_args(eq):
                 a = powdenest(a)
-                (b, e) = a.as_base_exp()
+                (b, e) = base_exp(a)
                 if e is not S.One:
                     (co, _) = e.as_coeff_mul()
                     b = Pow(b, e/co)
                     e = co
                 if a.is_commutative:
-                    if b in c: # handle I and -1 like things where b, e for I is -1, 1/2
-                        c[b] += e
-                    else:
-                        c[b] = e
+                    c[b] += e
                 else:
                     nc.append([b, e])
             return (c, nc)
@@ -1196,7 +1201,7 @@ class Mul(AssocOp):
             it back.
             """
 
-            (b, e) = b.as_base_exp()
+            (b, e) = base_exp(b)
             return Pow(b, e*co)
 
         def ndiv(a, b):
@@ -1224,33 +1229,37 @@ class Mul(AssocOp):
 
         # handle the leading coefficient and use it to decide if anything
         # should even be started; we always know where to find the Rational
-        # so it's a quick test
+        # so it's a quick test; the result here is used after self and old
+        # are broken up into factors
 
         co_self = self.args[0]
         co_old = old.args[0]
         if co_old.is_Rational and co_self.is_Rational:
             co_xmul = co_self.extract_multiplicatively(co_old)
         elif co_old.is_Rational:
-            co_xmul = None
-        else:
-            co_xmul = True
-
-        if not co_xmul:
             return rv
+        else:
+            co_xmul = None
+
+        # break self and old into factors
 
         (c, nc) = breakup(self)
         (old_c, old_nc) = breakup(old)
 
         # update the coefficients if we had an extraction
 
-        if getattr(co_xmul, 'is_Rational', False):
+        if co_xmul and co_xmul.is_Rational:
             c[co_self] -= 1
             if not c[co_self]:
                 c.pop(co_self)
-            c[co_xmul] = S.One
             old_c[co_old] -= 1
             if not old_c[co_old]:
                 old_c.pop(co_old)
+            # co_xmul shouldn't be there already...unless there was
+            # an unevaluated Mul; so just to be safe, treat it like the others
+            c[co_xmul] += 1
+            if not c[co_xmul]:
+                c.pop(co_xmul)
 
         # do quick tests to see if we can't succeed
 
