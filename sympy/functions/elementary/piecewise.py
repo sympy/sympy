@@ -336,12 +336,7 @@ class Piecewise(Function):
         """
         args = list(self.args)
         for i, (e, c) in enumerate(args):
-            try:
-                e = e._subs(old, new)
-            except TypeError:
-                if e != old:
-                    continue
-                e = new
+            e = e._subs(old, new)
 
             if isinstance(c, bool):
                 pass

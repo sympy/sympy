@@ -1,6 +1,6 @@
 from sympy import (diff, expand, Eq, Integral, integrate, Interval, lambdify,
                    log, oo, Piecewise, piecewise_fold, symbols, pi, solve,
-                   Rational, Basic)
+                   Rational, Basic, Function)
 from sympy.utilities.pytest import XFAIL, raises
 
 x,y = symbols('x,y')
@@ -27,6 +27,11 @@ def test_piecewise():
     assert p2.subs(x, 2) == 1
     assert p2.subs(x,4) == -1
     assert p2.subs(x,10) == 0
+
+    f, g, h = symbols('f,g,h', cls=Function)
+    pf = Piecewise((f(x), x < -1), (f(x) + h(x) + 2, x <= 1))
+    pg = Piecewise((g(x), x < -1), (g(x) + h(x) + 2, x <= 1))
+    assert pg.subs(g, f) == pf
 
     # Test evalf
     assert p.evalf() == p
