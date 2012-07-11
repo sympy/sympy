@@ -193,14 +193,14 @@ def test_piecewise_fold():
     assert integrate(piecewise_fold(p),(x,-oo,oo)) == integrate(2*x + 2, (x, 0, 1))
 
 def test_piecewise_fold_expand():
-    p1 = Piecewise((1,Interval(0,1,False,True)),(0,True))
+    p1 = Piecewise((1, Interval(0, 1, False, True).contains(x)), (0, True))
 
     p2 = piecewise_fold(expand((1-x)*p1))
-    assert p2 == Piecewise((1 - x, Interval(0,1,False,True)), \
-        (Piecewise((-x, Interval(0,1,False,True)), (0, True)), True))
+    assert p2 == Piecewise((1 - x, Interval(0, 1, False, True).contains(x)), \
+        (Piecewise((-x, Interval(0, 1, False, True).contains(x)), (0, True)), True))
 
     p2 = expand(piecewise_fold((1-x)*p1))
-    assert p2 == Piecewise((1 - x, Interval(0,1,False,True)), (0, True))
+    assert p2 == Piecewise((1 - x, Interval(0, 1, False, True).contains(x)), (0, True))
 
 def test_piecewise_duplicate():
     p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
@@ -230,7 +230,7 @@ def test_piecewise_collapse():
 def test_piecewise_lambdify():
     p = Piecewise(
         (x**2, x < 0),
-        (x, Interval(0, 1, False, True)),
+        (x, Interval(0, 1, False, True).contains(x)),
         (2 - x, x >= 1),
         (0, True)
     )

@@ -1,7 +1,6 @@
 from sympy.core import Basic, S, Function, diff, Tuple
 from sympy.core.relational import Equality, Relational
 from sympy.logic.boolalg import And, Boolean
-from sympy.core.sets import Set
 from sympy.core.symbol import Dummy
 
 class ExprCondPair(Tuple):
@@ -94,10 +93,10 @@ class Piecewise(Function):
             cond = pair.cond
             if cond is False:
                 continue
-            if not isinstance(cond, (bool, Relational, Set, Boolean)):
+            if not isinstance(cond, (bool, Relational, Boolean)):
                 raise TypeError(
-                    "Cond %s is of type %s, but must be a bool," \
-                    " Relational, Number or Set" % (cond, type(cond)))
+                    "Cond %s is of type %s, but must be a Relational," \
+                    " Boolean, or a built-in bool." % (cond, type(cond)))
             newargs.append(pair)
             if cond is True:
                 break
@@ -343,9 +342,7 @@ class Piecewise(Function):
 
     def _eval_subs(self, old, new):
         """
-        Piecewise conditions may contain Sets whose modifications
-        requires the use of contains rather than substitution. They
-        may also contain bool which are not of Basic type.
+        Piecewise conditions may contain bool which are not of Basic type.
         """
         args = list(self.args)
         for i, (e, c) in enumerate(args):
@@ -353,10 +350,6 @@ class Piecewise(Function):
 
             if isinstance(c, bool):
                 pass
-            elif isinstance(c, Set):
-                # What do we do if there are more than one symbolic
-                # variable. Which do we put pass to Set.contains?
-                c = c.contains(new)
             elif isinstance(c, Basic):
                 c = c._subs(old, new)
 

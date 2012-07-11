@@ -50,7 +50,7 @@ def test_piecewise():
 
     p = Piecewise(
         (x, x < 1),
-        (x**2, Interval(3, 4, True, False)),
+        (x**2, Interval(3, 4, True, False).contains(x)),
         (0, True),
     )
     l = lambdarepr(p)
@@ -60,7 +60,7 @@ def test_piecewise():
 
     p = Piecewise(
         (x**2, x < 0),
-        (x, Interval(0, 1, False, True)),
+        (x, Interval(0, 1, False, True).contains(x)),
         (2 - x, x >= 1),
         (0, True)
     )
@@ -71,7 +71,7 @@ def test_piecewise():
 
     p = Piecewise(
         (x**2, x < 0),
-        (x, Interval(0, 1, False, True)),
+        (x, Interval(0, 1, False, True).contains(x)),
         (2 - x, x >= 1),
     )
     l = lambdarepr(p)
