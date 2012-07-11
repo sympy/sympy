@@ -647,7 +647,7 @@ def test_XypicDiagramDrawer():
     grid = DiagramGrid(d)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar[d]^{g\\circ f} \\ar[r]^{f} & B \\ar[ld]^{g} \\\\\n" \
+    "A \\ar[d]_{g\\circ f} \\ar[r]^{f} & B \\ar[ld]^{g} \\\\\n" \
     "C & \n" \
     "}\n"
 
@@ -655,8 +655,8 @@ def test_XypicDiagramDrawer():
     grid = DiagramGrid(d, transpose=True)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar[r]^{g\\circ f} \\ar[d]^{f} & C \\\\\n" \
-    "B \\ar[ru]^{g} & \n" \
+    "A \\ar[r]^{g\\circ f} \\ar[d]_{f} & C \\\\\n" \
+    "B \\ar[ru]_{g} & \n" \
     "}\n"
 
     # A cube diagram.
@@ -691,10 +691,10 @@ def test_XypicDiagramDrawer():
     grid = DiagramGrid(d)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "& A_{5} \\ar[r]^{f_{5}} \\ar[ldd]^{f_{6}} & A_{6} \\ar[rdd]^{f_{7}} " \
+    "& A_{5} \\ar[r]^{f_{5}} \\ar[ldd]_{f_{6}} & A_{6} \\ar[rdd]^{f_{7}} " \
     "& \\\\\n" \
     "& A_{1} \\ar[r]^{f_{1}} \\ar[d]^{f_{2}} \\ar[u]^{f_{9}} & A_{2} " \
-    "\\ar[d]^{f_{3}} \\ar[u]^{f_{10}} & \\\\\n" \
+    "\\ar[d]^{f_{3}} \\ar[u]_{f_{10}} & \\\\\n" \
     "A_{7} \\ar@/_3mm/[rrr]_{f_{8}} & A_{3} \\ar[r]^{f_{3}} \\ar[l]_{f_{11}} " \
     "& A_{4} \\ar[r]^{f_{11}} & A_{8} \n" \
     "}\n"
@@ -704,10 +704,10 @@ def test_XypicDiagramDrawer():
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
     "& & A_{7} \\ar@/^3mm/[ddd]^{f_{8}} \\\\\n" \
-    "A_{5} \\ar[d]^{f_{5}} \\ar[rru]^{f_{6}} & A_{1} \\ar[d]^{f_{1}} " \
+    "A_{5} \\ar[d]_{f_{5}} \\ar[rru]^{f_{6}} & A_{1} \\ar[d]^{f_{1}} " \
     "\\ar[r]^{f_{2}} \\ar[l]^{f_{9}} & A_{3} \\ar[d]_{f_{3}} " \
     "\\ar[u]^{f_{11}} \\\\\n" \
-    "A_{6} \\ar[rrd]^{f_{7}} & A_{2} \\ar[r]^{f_{3}} \\ar[l]^{f_{10}} " \
+    "A_{6} \\ar[rrd]_{f_{7}} & A_{2} \\ar[r]^{f_{3}} \\ar[l]^{f_{10}} " \
     "& A_{4} \\ar[d]_{f_{11}} \\\\\n" \
     "& & A_{8} \n" \
     "}\n"

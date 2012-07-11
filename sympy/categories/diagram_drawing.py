@@ -1354,6 +1354,11 @@ class _StrArrow(object):
         self.label_position = label_position
         self.label = label
 
+        # This flag shows that the position of the label of this
+        # morphism was set while typesetting a curved morphism and
+        # should not be modified later.
+        self.forced_label_position = False
+
     def __str__(self):
         if self.curving:
             curving_str = "@/%s%d%s/" % (self.curving, self.curving_amount,
@@ -1485,6 +1490,10 @@ class XypicDiagramDrawer(object):
                         m_str_info.label_position = "_"
                     else:
                         m_str_info.label_position = "^"
+
+                    # Don't allow any further modifications of the
+                    # position of this label.
+                    m_str_info.forced_label_position = True
             else:
                 # More morphisms stick out downward than upward, let's
                 # curve the morphism up.
@@ -1506,6 +1515,10 @@ class XypicDiagramDrawer(object):
                         m_str_info.label_position = "^"
                     else:
                         m_str_info.label_position = "_"
+
+                    # Don't allow any further modifications of the
+                    # position of this label.
+                    m_str_info.forced_label_position = True
 
             # Count how many curved morphisms between these two
             # objects are already there so that we can curve this one
@@ -1573,6 +1586,10 @@ class XypicDiagramDrawer(object):
                         m_str_info.label_position = "^"
                     else:
                         m_str_info.label_position = "_"
+
+                    # Don't allow any further modifications of the
+                    # position of this label.
+                    m_str_info.forced_label_position = True
             else:
                 # More morphisms stick out to the right than to the
                 # left, let's curve the morphism to the left.
@@ -1594,6 +1611,10 @@ class XypicDiagramDrawer(object):
                         m_str_info.label_position = "_"
                     else:
                         m_str_info.label_position = "^"
+
+                    # Don't allow any further modifications of the
+                    # position of this label.
+                    m_str_info.forced_label_position = True
 
             # Count how many curved morphisms between these two
             # objects are already there so that we can curve this one
@@ -1617,6 +1638,153 @@ class XypicDiagramDrawer(object):
         return _StrArrow(self.unit, curving, curving_amount,
                          horizontal_direction, vertical_direction,
                          label_pos, morphism_name)
+
+    def _push_labels_out(self, morphisms_str_info, grid, object_coords):
+        """
+        For all straight morphisms which form the visual boundary of
+        the laid out diagram, puts their labels on their outer sides.
+        """
+        def set_label_position(free1, free2, pos1, pos2, backwards, m_str_info):
+            """
+            If both ``free1`` and ``free2`` are ``True`` or ``False``,
+            does nothing.  If only ``free1`` is ``True``, sets the
+            label position to ``pos1``.  If only ``free2`` is
+            ``True``, sets the label position to ``pos2``.  This
+            behaviour is reversed, if ``backwards`` is ``True``.
+            """
+            if free1 and free2:
+                return
+            elif free1:
+                if not backwards:
+                    m_str_info.label_position = pos1
+                else:
+                    m_str_info.label_position = pos2
+            elif free2:
+                if not backwards:
+                    m_str_info.label_position = pos2
+                else:
+                    m_str_info.label_position = pos1
+
+        def abs_xrange(start, end):
+            if start < end:
+                return xrange(start, end + 1)
+            else:
+                return xrange(end, start + 1)
+
+        for m, m_str_info in morphisms_str_info.items():
+            if m_str_info.curving or m_str_info.forced_label_position:
+                # This is either a curved morphism, and curved
+                # morphisms have other magic, or the position of this
+                # label has already been fixed.
+                continue
+
+            (dom_i, dom_j) = object_coords[m.domain]
+            (cod_i, cod_j) = object_coords[m.codomain]
+
+            if dom_i == cod_i:
+                # Horizontal morphism.
+                if dom_j < cod_j:
+                    (start, end) = (dom_j, cod_j)
+                    backwards = False
+                else:
+                    (start, end) = (cod_j, dom_j)
+                    backwards = True
+
+                # Check for free space above.
+                if dom_i == 0:
+                    free_up = True
+                else:
+                    free_up = all([grid[dom_i - 1, j] for j in \
+                                   xrange(start, end + 1)])
+
+                # Check for free space below.
+                if dom_i == grid.height - 1:
+                    free_down = True
+                else:
+                    free_down = all([not grid[dom_i + 1, j] for j in \
+                                     xrange(start, end + 1)])
+
+                set_label_position(free_up, free_down, "^", "_",
+                                   backwards, m_str_info)
+            elif dom_j == cod_j:
+                # Vertical morphism.
+                if dom_i < cod_i:
+                    (start, end) = (dom_i, cod_i)
+                    backwards = False
+                else:
+                    (start, end) = (cod_i, dom_i)
+                    backwards = True
+
+                # Check if there's space to the left.
+                if dom_j == 0:
+                    free_left = True
+                else:
+                    free_left = all([not grid[i, dom_j - 1] for i in \
+                                     xrange(start, end + 1)])
+
+                if dom_j == grid.width - 1:
+                    free_right = True
+                else:
+                    free_right = all([not grid[i, dom_j + 1] for i in \
+                                      xrange(start, end + 1)])
+
+                set_label_position(free_left, free_right, "_", "^",
+                                   backwards, m_str_info)
+            else:
+                # A diagonal morphism.
+                if dom_i < cod_i and dom_j < cod_j:
+                    # This morphism goes from top-left to
+                    # bottom-right.
+                    (start_i, start_j) = (dom_i, dom_j)
+                    (end_i, end_j) = (cod_i, cod_j)
+                    backwards = False
+                elif dom_i > cod_i and dom_j > cod_j:
+                    # This morphism goes from bottom-right to
+                    # top-left.
+                    (start_i, start_j) = (cod_i, cod_j)
+                    (end_i, end_j) = (dom_i, dom_j)
+                    backwards = True
+                if dom_i < cod_i and dom_j > cod_j:
+                    # This morphism goes from top-right to
+                    # bottom-left.
+                    (start_i, start_j) = (dom_i, dom_j)
+                    (end_i, end_j) = (cod_i, cod_j)
+                    backwards = True
+                elif dom_i > cod_i and dom_j < cod_j:
+                    # This morphism goes from bottom-left to
+                    # top-right.
+                    (start_i, start_j) = (cod_i, cod_j)
+                    (end_i, end_j) = (dom_i, dom_j)
+                    backwards = False
+
+                # TODO: Describe this megamagic.
+                alpha = float(end_i - start_i)/(end_j - start_j)
+                free_up = True
+                free_down = True
+                for i in abs_xrange(start_i, end_i):
+                    if not free_up and not free_down:
+                        break
+
+                    for j in abs_xrange(start_j, end_j):
+                        if not free_up and not free_down:
+                            break
+
+                        if (i, j) == (start_i, start_j):
+                            continue
+
+                        if j == start_j:
+                            alpha1 = "inf"
+                        else:
+                            alpha1 = float(i - start_i)/(j - start_j)
+
+                        if grid[i, j]:
+                            if (alpha1 == "inf") or (abs(alpha1) > abs(alpha)):
+                                free_down = False
+                            elif abs(alpha1) < abs(alpha):
+                                free_up = False
+
+                set_label_position(free_up, free_down, "^", "_",
+                                   backwards, m_str_info)
 
     def draw(self, diagram, grid):
         """
@@ -1673,6 +1841,9 @@ class XypicDiagramDrawer(object):
             morphisms_str_info[morphism] = self._process_morphism(
                 diagram, grid, morphism, object_coords, morphisms,
                 morphisms_str_info)
+
+        # Reposition the labels a bit.
+        self._push_labels_out(morphisms_str_info, grid, object_coords)
 
         for i in xrange(grid.height):
             for j in xrange(grid.width):
