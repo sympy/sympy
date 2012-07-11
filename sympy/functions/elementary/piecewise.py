@@ -309,8 +309,6 @@ class Piecewise(Function):
             if curr_low < int_a:
                 holes.append([curr_low, min(b, int_a), default])
             curr_low = int_b
-            if curr_low > b:
-                break
         if curr_low < b:
             holes.append([curr_low, b, default])
 
