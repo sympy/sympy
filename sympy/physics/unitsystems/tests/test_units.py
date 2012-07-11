@@ -1,7 +1,7 @@
 from sympy import Matrix, eye, Symbol, solve, pi
 import sympy.physics.unitsystems
 
-from sympy.physics.unitsystems.units import (PREFIXES, Unit, UnitSystem,
+from sympy.physics.unitsystems.units import (PREFIXES, Unit, UnitSystem, unit_simplify,
                                        set_system, Quantity as Q)
 from sympy.physics.unitsystems.mks import (mks, m, s, kg, J, v, length, time,
                                            mass, velocity)
@@ -108,6 +108,7 @@ def test_quantity_operations():
     G = 6.67428 * 10**-11 * m**3 / kg / s**2
 
     aa = solve(T**2/a**3 - 4*pi**2 / G / M, a)[0]
-    assert str(aa.simplify()) == ('149598206033.591*kg**(1/3)*kg**-1**(1/3)'
-                                  '*m**3**(1/3)*s**-2**(1/3)*s**2**(1/3)')
+    assert str(aa.simplify()) == '149598206033.591*kg**(1/3)*kg**-1**(1/3)'\
+                                 '*m**3**(1/3)*s**-2**(1/3)*s**2**(1/3)'
+    assert str(unit_simplify(aa)) == '149598206033.591*m'
     set_system(None)

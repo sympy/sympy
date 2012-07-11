@@ -28,8 +28,8 @@ See https://github.com/sympy/sympy/wiki/Unit-systems/ for improvements.
 from __future__ import division
 from copy import copy
 
-from sympy import (sympify, Number, Integer, Rational, Matrix, AtomicExpr,
-                   Mul, Pow)
+from sympy import (sympify, Number, Integer, Rational, Matrix, AtomicExpr, 
+                   Mul, Pow, Add)
 
 # Is it a good idea to combine prefixes with between them, instead of just
 # keeping them to better print results when the user asks for it?
@@ -247,14 +247,13 @@ class Unit(AtomicExpr):
 
     def __pow__(self, other):
         system = _UNIT_SYSTEM or self._system
-
         other = sympify(other)
         #TODO: check consistency when having rational, float...
         if isinstance(other, Number):
             if other == 0:
                 return sympify(1)
             else:
-                factor = self.factor**other
+                factor = (self.factor**other).evalf()
                 dim = self.dimension**other
                 if dim == 1:
                     return factor
@@ -278,6 +277,7 @@ class Unit(AtomicExpr):
             else:
                 unit = Unit(dim, factor=factor, system=system)
                 return self._compute_unit(unit, system)
+            
         # TODO: is it a good idea to return quantity when multiplied by number?
         #elif isinstance(other, Number):
         #    return Quantity(other, self)
@@ -575,6 +575,32 @@ class Quantity(AtomicExpr):
         #TODO: interpret a Unit as a quantity with factor 1
         return (isinstance(other, Quantity) and self.factor == other.factor
                 and self.unit == other.unit)
+
+def unit_simplify(expr):
+    """
+    Simplify expression by recursively evaluating the unit arguments 
+    """
+    args = []
+    for arg in expr.args:
+        if isinstance(arg, (Mul, Pow, Add)):
+            arg = unit_simplify(arg)
+        args.append(arg)
+
+    if isinstance(expr, Pow):
+        return args[0]**args[1]
+
+    if isinstance(expr, Add):
+        units = reduce(lambda x, y: x+y, \
+                       (arg for arg in args if isinstance(arg, Unit)), 1)
+        return reduce(lambda x, y: x+y, \
+                      (arg for arg in args if not isinstance(arg, Unit)), units)
+
+    if isinstance(expr, Mul):
+        
+        units = reduce(lambda x, y: x*y, \
+                       (arg for arg in args if isinstance(arg, Unit)), 1)
+        return reduce(lambda x, y: x*y, \
+                      (arg for arg in args if not isinstance(arg, Unit)), units)
 
 class Constant(Unit):
 
