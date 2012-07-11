@@ -358,6 +358,34 @@ class Piecewise(Function):
         # This is completely wrong, cf. issue 3110
         return self.args[0][0].as_leading_term(x)
 
+    def _eval_template_is_attr(self, is_attr, when_multiple=None):
+        b = None
+        for expr, _ in self.args:
+            a = getattr(expr, is_attr)
+            if a is None:
+                return None
+            if b is None:
+                b = a
+            elif b is not a:
+                return when_multiple
+        return b
+
+    _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded', when_multiple=False)
+    _eval_is_complex = lambda self: self._eval_template_is_attr('is_complex')
+    _eval_is_even = lambda self: self._eval_template_is_attr('is_even')
+    _eval_is_imaginary = lambda self: self._eval_template_is_attr('is_imaginary')
+    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
+    _eval_is_irrational = lambda self: self._eval_template_is_attr('is_irrational')
+    _eval_is_negative = lambda self: self._eval_template_is_attr('is_negative')
+    _eval_is_nonnegative = lambda self: self._eval_template_is_attr('is_nonnegative')
+    _eval_is_nonpositive = lambda self: self._eval_template_is_attr('is_nonpositive')
+    _eval_is_nonzero = lambda self: self._eval_template_is_attr('is_nonzero', when_multiple=True)
+    _eval_is_odd = lambda self: self._eval_template_is_attr('is_odd')
+    _eval_is_polar = lambda self: self._eval_template_is_attr('is_polar')
+    _eval_is_positive = lambda self: self._eval_template_is_attr('is_positive')
+    _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
+    _eval_is_zero = lambda self: self._eval_template_is_attr('is_zero', when_multiple=False)
+
     @classmethod
     def __eval_cond(cls, cond):
         """Return the truth value of the condition."""
