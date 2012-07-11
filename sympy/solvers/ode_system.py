@@ -32,10 +32,6 @@ def ode_system(exprs, funcs):
     care to insure that there are no free variables in the equations
     corresponding to initial conditions.
 
-    TODO
-    Initial conditions for derivatives using Subs objects are not yet
-    supported.
-
     Scope and Nonlinear equations
     =============================
 
