@@ -82,9 +82,8 @@ def test_linear_with_init_cond():
                        Eq(f, exp(I*x)/2 + exp(-I*x)/2)])
 
 
-@XFAIL
 def test_initial_conditions_using_Subs():
-    sys = [f__+f, func(0)-1, f.subs(x,0)]
+    sys = [f__+f, func(0)-1, f_.subs(x,0)]
     sol = dsolve(sys, [f])
     assert sol[0] == Eq(f, cos(x))
 
@@ -104,15 +103,15 @@ def test_already_triangular():
     assert sol in possible_sols
 
 
-@XFAIL
 def test_not_diagonal():
     # Testing for [ 3 1 ]
     #             [-1 1 ]
     sys = [3*f+g-f_, -f+g-g_]
-    sol = set(dsolve(sys, [f,g]))
-    sol_f = (C1(1+sqrt(3)) + exp(sqrt(3)*x)*((-1+sqrt(3))*C1 - C2) + C2)/2/sqrt(3)/exp((-1+sqrt(3))*x/2)
-    sol_g = exp(x/2)*(sqrt(3)*C2*cosh(sqrt(3)*x/2) + (-2*C1+C2)*sinh(sqrt(3)*x/2))/sqrt(3)
-    assert sol == set([sol_f, sol_g])
+    #TODO sol = set(dsolve(sys, [f,g]))
+    #TODO sol_f = (C1(1+sqrt(3)) + exp(sqrt(3)*x)*((-1+sqrt(3))*C1 - C2) + C2)/2/sqrt(3)/exp((-1+sqrt(3))*x/2)
+    #TODO sol_g = exp(x/2)*(sqrt(3)*C2*cosh(sqrt(3)*x/2) + (-2*C1+C2)*sinh(sqrt(3)*x/2))/sqrt(3)
+    #TODO assert sol == set([sol_f, sol_g])
+    raises(NotImplementedError, lambda : dsolve(sys, [f, g]))
 
 
 @XFAIL
@@ -214,3 +213,8 @@ def test_multiple_solutions():
     sol_f = [Eq(f, -sqrt(2)*sqrt(C1 + x)),     Eq(f, sqrt(2)*sqrt(C1 + x))]
     sol_g = [Eq(g, -sqrt(2)/(2*sqrt(C1 + x))), Eq(g, sqrt(2)/(2*sqrt(C1 + x)))]
     assert sol == [set(sol_f[0], sol_g[0]), set(sol_f[1], sol_g[1])]
+
+
+def test_inconsistent_init_conds():
+    sys = [f__+f, func(0)-1, f.subs(x,0)]
+    raises(ValueError, lambda : dsolve(sys, [f]))

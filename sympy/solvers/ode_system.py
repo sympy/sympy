@@ -5,7 +5,7 @@ from sympy.core.containers import Tuple
 from sympy.core.function import AppliedUndef, Derivative, Function, Lambda
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol, IntConst
-from sympy.matrices import Matrix
+from sympy.matrices.matrices import Matrix, MatrixError
 from sympy.utilities import numbered_symbols
 
 
@@ -162,9 +162,11 @@ def ode_system(exprs, funcs):
         constants = list(set(c for e in sols.values()
                                for c in e.atoms(IntConst)))
         lambda_sols = dict((k.func, Lambda(var, v)) for k, v in sols.items())
-        init_conds = [ic.subs(lambda_sols) for ic in init_conds]
-        sub_init = solve(init_conds, constants)
-        sols = dict((k, v.subs(sub_init)) for k, v in sols.items())
+        init_conds = [ic.subs(lambda_sols).doit() for ic in init_conds]
+        sub_init = solve(init_conds, constants, dict=True)
+        if len(sub_init) != 1:
+            raise ValueError('The initial conditions are not consistent.')
+        sols = dict((k, v.subs(*sub_init)) for k, v in sols.items())
 
     # Not necessary for coding, however for aesthetic reasons renumerate the
     # constants.
@@ -203,20 +205,29 @@ def ode_system_wo_ic(exprs, funcs, var):
     """
     exprs, funcs, subs = remove_higher_derivatives(exprs, funcs, var)
     matrix = construct_matrix(exprs, funcs, var)
-    transf_matrix, diag_matrix = matrix.diagonalize()
-    solutions = transf_matrix*ode_diagonal_system(diag_matrix, var)
+    try:
+        transf_matrix, diag_matrix = matrix.diagonalize()
+        solutions = transf_matrix*ode_diagonal_system(diag_matrix, var)
+    except MatrixError:
+        # The matrix can not be diagonalized. However, ode_system is already
+        # capable of solving by iteration triangular systems, thus we
+        # triangulaze and send it to ode_system again.
+        raise NotImplementedError('This non-diagonal system requires schur '
+                                  'decomposition, which is not yet implemented.')
+        #TODO transf_matrix, triang_matrix = matrix.schur()
+        solutions = transf_matrix*ode_triangular_system(diag_matrix, var)
     return dict([Tuple(*t).subs(subs) for t in zip(funcs, solutions)])
 
 
 def ode_diagonal_system(diag_matrix, var):
-    """Given a diagonal matrix, solve the coresponding ODEs.
+    """Given a diagonal matrix, solve the corresponding ODEs.
 
     Returns the vector of solutions as expressions dependent on `var`.
 
     >>> from sympy import Symbol, Matrix
     >>> from sympy.solvers.ode_system import ode_diagonal_system
     >>> x = Symbol('x')
-    >>> m = Matrix([[x, 0], [x**2, 0]])
+    >>> m = Matrix([[x, 0], [0, x**2]])
     >>> ode_diagonal_system(m, x)
     [C1*exp(x**2/2)]
     [C1*exp(x**3/3)]
@@ -227,6 +238,27 @@ def ode_diagonal_system(diag_matrix, var):
     equations = derivs - diag_matrix*funcs
     solutions = [dsolve(equ).rhs for equ in equations]
     return Matrix(solutions)
+
+
+def ode_triangular_system(triang_matrix, var):
+    """Given a triangular matrix, solve the corresponding ODEs.
+
+    >>> from sympy import Symbol, Matrix
+    >>> from sympy.solvers.ode_system import ode_triangular_system
+    >>> x = Symbol('x')
+    >>> m = Matrix([[1, 1], [0, 1]])
+    >>> ode_triangular_system(m, x)
+    [(C1 + C2*x)*exp(x)]
+    [         C2*exp(x)]
+    """
+    size = triang_matrix.shape[0]
+    funcs = Matrix(size, 1, lambda a,b:dummy_func()(var))
+    derivs = Matrix([f.diff(var) for f in funcs])
+    equations = derivs - triang_matrix*funcs
+    solutions_eq = ode_system(equations, funcs)
+    solutions_dict = dict((e.lhs, e.rhs) for e in solutions_eq)
+    solutions_list = [solutions_dict[f] for f in funcs]
+    return Matrix(solutions_list)
 
 
 def construct_matrix(exprs, funcs, var):
@@ -262,8 +294,8 @@ def remove_higher_derivatives(exprs, funcs, var, subs={}):
     Used as preprocessor for ode_system. The input `exprs` should not contain
     complicated derivative expressions.
 
-    Argumets:
-    =========
+    Argumeints:
+    ===========
 
     - exprs - the equations in the form of expressions assumed equal to zero
     - funcs - the function wrt which to solve
@@ -322,9 +354,9 @@ def order_wrt(derivative, symbol):
     return sum(symbol==a for a in derivative.args)
 
 
-def dummy_func(counter=0):
+def dummy_func(counter=[0]):
     """Yeah, sure... This will blow up in my face."""
     # TODO Needs a real Dummy function.
     # XXX rrn stands for 'Really Random Name'. It is an ISO standard.
-    counter += 1
-    return Function('rrn%d' % counter)
+    counter[0] = counter[0]+1
+    return Function('rrn%d' % counter[0])
