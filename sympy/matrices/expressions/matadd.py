@@ -55,4 +55,8 @@ class MatAdd(MatrixExpr, Add):
     def _entry(self, i, j):
         return Add(*[arg._entry(i,j) for arg in self.args])
 
+    def _eval_transpose(self):
+        from transpose import Transpose
+        return MatAdd(*[Transpose(arg) for arg in self.args])
+
 from matmul import MatMul

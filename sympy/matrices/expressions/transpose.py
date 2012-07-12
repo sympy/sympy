@@ -24,17 +24,8 @@ class Transpose(MatrixExpr):
         if not mat.is_Matrix:
             return mat
 
-        if isinstance(mat, Transpose):
-            return mat.arg
-
-        if hasattr(mat, 'transpose'):
-            return mat.transpose()
-
-        if mat.is_Mul:
-            return MatMul(*[Transpose(arg) for arg in mat.args[::-1]])
-
-        if mat.is_Add:
-            return MatAdd(*[Transpose(arg) for arg in mat.args])
+        if hasattr(mat, '_eval_transpose'):
+            return mat._eval_transpose()
 
         return Basic.__new__(cls, mat)
 
@@ -48,6 +39,9 @@ class Transpose(MatrixExpr):
 
     def _entry(self, i, j):
         return self.arg._entry(j, i)
+
+    def _eval_transpose(self):
+        return self.arg
 
 from matmul import MatMul
 from matadd import MatAdd

@@ -84,5 +84,9 @@ class MatMul(MatrixExpr, Mul):
 
         return coeff, MatMul(*matrices)
 
+    def _eval_transpose(self):
+        from transpose import Transpose
+        return MatMul(*[Transpose(arg) for arg in self.args[::-1]])
+
 from matadd import MatAdd
 from inverse import Inverse

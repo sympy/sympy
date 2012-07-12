@@ -174,6 +174,9 @@ class MatrixBase(object):
 
         return rows, cols, mat
 
+    def _eval_transpose(self):
+        return self.transpose()
+
     def transpose(self):
         """
         Matrix transposition.
