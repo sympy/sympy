@@ -20,6 +20,7 @@ Maxwell
 Nakagami
 Normal
 Pareto
+QuadraticU
 RaisedCosine
 Rayleigh
 StudentT
@@ -59,6 +60,7 @@ __all__ = ['ContinuousRV',
 'Nakagami',
 'Normal',
 'Pareto',
+'QuadraticU',
 'RaisedCosine',
 'Rayleigh',
 'StudentT',
@@ -1292,6 +1294,78 @@ def Pareto(name, xm, alpha):
     """
 
     return ParetoPSpace(name, xm, alpha).value
+
+#-------------------------------------------------------------------------------
+# QuadraticU distribution ------------------------------------------------------
+
+class QuadraticUPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, a, b):
+        a, b = sympify(a), sympify(b)
+        alpha = 12 / (b-a)**3
+        beta = (a+b) / 2
+
+        x = Symbol(name)
+        pdf = Piecewise(
+                (alpha * (x-beta)**2, And(a<=x, x<=b)),
+                (S.Zero, True))
+
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(a, b))
+        obj.a = a
+        obj.b = b
+        return obj
+
+def QuadraticU(name, a, b):
+    r"""
+    Create a Continuous Random Variable with a U-quadratic distribution.
+
+    The density of the U-quadratic distribution is given by
+
+    .. math::
+        f(x) := \alpha (x-\beta)^2
+
+    with :math:`x \in [a,b]`.
+
+    Parameters
+    ==========
+
+    a : Real number
+    b : Real number, :math:`a < b`
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import QuadraticU, density, E, variance
+    >>> from sympy import Symbol, simplify, factor, pprint
+
+    >>> a = Symbol("a", real=True)
+    >>> b = Symbol("b", real=True)
+
+    >>> X = QuadraticU("x", a, b)
+
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
+          /   /              2                         \
+          |   |   /    a   b\                          |
+          |   |12*|x - - - -|                          |
+          |   |   \    2   2/                          |
+    Lambda|x, <---------------  for And(a <= x, x <= b)|
+          |   |           3                            |
+          |   |   (-a + b)                             |
+          |   |                                        |
+          \   \       0                otherwise       /
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/U-quadratic_distribution
+    """
+
+    return QuadraticUPSpace(name, a, b).value
 
 #-------------------------------------------------------------------------------
 # RaisedCosine distribution ----------------------------------------------------
