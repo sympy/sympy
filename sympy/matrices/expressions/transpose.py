@@ -42,6 +42,3 @@ class Transpose(MatrixExpr):
 
     def _eval_transpose(self):
         return self.arg
-
-from matmul import MatMul
-from matadd import MatAdd
