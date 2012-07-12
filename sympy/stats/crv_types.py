@@ -27,6 +27,7 @@ StudentT
 Triangular
 Uniform
 UniformSum
+VonMises
 Weibull
 WignerSemicircle
 """
@@ -35,7 +36,7 @@ from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Symbol, log)
 from sympy import beta as beta_fn
-from sympy import cos
+from sympy import cos, exp, besseli
 from crv import SingleContinuousPSpace
 from sympy.core.decorators import _sympifyit
 import random
@@ -67,6 +68,7 @@ __all__ = ['ContinuousRV',
 'Triangular',
 'Uniform',
 'UniformSum',
+'VonMises',
 'Weibull',
 'WignerSemicircle'
 ]
@@ -1809,6 +1811,72 @@ def UniformSum(name, n):
     """
 
     return UniformSumPSpace(name, n).value
+
+#-------------------------------------------------------------------------------
+# VonMises distribution --------------------------------------------------------
+
+class VonMisesPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, mu, k):
+        mu, k = sympify(mu), sympify(k)
+
+        _value_check(k > 0, "k must be positive")
+
+        x = Symbol(name)
+        pdf = exp(k*cos(x-mu)) / (2*pi*besseli(0, k))
+
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, 2*pi))
+        obj.mu = mu
+        obj.k = k
+        return obj
+
+def VonMises(name, mu, k):
+    r"""
+    Create a Continuous Random Variable with a von Mises distribution.
+
+    The density of the von Mises distribution is given by
+
+    .. math::
+        f(x) := \frac{e^{\kappa\cos(x-\mu)}}{2\pi I_0(\kappa)}
+
+    with :math:`x \in [0,2\pi]`.
+
+    Parameters
+    ==========
+
+    mu : Real number, measure of location
+    k : Real number, measure of concentration
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import VonMises, density, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> mu = Symbol("mu")
+    >>> k = Symbol("k", positive=True)
+
+    >>> X = VonMises("x", mu, k)
+
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
+          /      k*cos(x - mu)  \
+          |     e               |
+    Lambda|x, ------------------|
+          \   2*pi*besseli(0, k)/
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Von_Mises_distribution
+    [2] http://mathworld.wolfram.com/vonMisesDistribution.html
+    """
+
+    return VonMisesPSpace(name, mu, k).value
 
 #-------------------------------------------------------------------------------
 # Weibull distribution ---------------------------------------------------------
