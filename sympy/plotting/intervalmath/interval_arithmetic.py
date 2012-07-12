@@ -33,6 +33,7 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 # module based suffers the same problems as that of floating point
 # arithmetic.
 from sympy.external import import_module
+from sympy.simplify.simplify import nsimplify
 np = import_module('numpy')
 
 
@@ -357,6 +358,8 @@ class interval(object):
                 start = max(inters)
                 end = min(inters)
                 return interval(start, end)
+        else:
+            return NotImplemented
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
@@ -379,9 +382,33 @@ class interval(object):
         else:
             return NotImplemented
 
+    def __rpow__(self, other):
+        if isinstance(other, (float, int)):
+            if not self.is_valid:
+                #Don't do anything
+                return self
+            elif other < 0:
+                if self.width > 0:
+                    return interval(-np.inf, np.inf, is_valid=False)
+                else:
+                    power_rational = nsimplify(self.start)
+                    num, denom = power_rational.as_numer_denom()
+                    if denom % 2 == 0:
+                        return interval(-np.inf, np.inf, is_valid=False)
+                    else:
+                        start = -abs(other)**self.start
+                        end = start
+                        return interval(start, end)
+            else:
+                return interval(other**self.start, other**self.end)
+        elif isinstance(other, interval):
+            return other.__pow__(self)
+        else:
+            return NotImplemented
+
+
 def _pow_float(inter, power):
     """Evaluates an interval raised to a floating point."""
-    from sympy.simplify.simplify import nsimplify
     power_rational = nsimplify(power)
     num, denom = power_rational.as_numer_denom()
     if num % 2 == 0:
