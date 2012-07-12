@@ -711,6 +711,10 @@ def test_sympy__stats__crv_types__GammaPSpace():
     assert _test_args(GammaPSpace('X', 1, 1))
 
 
+def test_sympy__stats__crv_types__KumaraswamyPSpace():
+    from sympy.stats.crv_types import KumaraswamyPSpace
+    assert _test_args(KumaraswamyPSpace('X', 1, 1))
+
 def test_sympy__stats__crv_types__LaplacePSpace():
     from sympy.stats.crv_types import LaplacePSpace
     assert _test_args(LaplacePSpace('X', 0, 1))
@@ -746,6 +750,14 @@ def test_sympy__stats__crv_types__ParetoPSpace():
     assert _test_args(ParetoPSpace('X', 1, 1))
 
 
+def test_sympy__stats__crv_types__QuadraticUPSpace():
+    from sympy.stats.crv_types import QuadraticUPSpace
+    assert _test_args(QuadraticUPSpace('X', 1, 2))
+
+def test_sympy__stats__crv_types__RaisedCosinePSpace():
+    from sympy.stats.crv_types import RaisedCosinePSpace
+    assert _test_args(RaisedCosinePSpace('X', 1, 1))
+
 def test_sympy__stats__crv_types__RayleighPSpace():
     from sympy.stats.crv_types import RayleighPSpace
     assert _test_args(RayleighPSpace('X', 1))
@@ -769,6 +781,11 @@ def test_sympy__stats__crv_types__UniformPSpace():
 def test_sympy__stats__crv_types__UniformSumPSpace():
     from sympy.stats.crv_types import UniformSumPSpace
     assert _test_args(UniformSumPSpace('X', 1))
+
+
+def test_sympy__stats__crv_types__VonMisesPSpace():
+    from sympy.stats.crv_types import VonMisesPSpace
+    assert _test_args(VonMisesPSpace('X', 1, 1))
 
 
 def test_sympy__stats__crv_types__WeibullPSpace():
