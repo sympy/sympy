@@ -10,6 +10,7 @@ BetaPrime
 Cauchy
 Chi
 Dagum
+Erlang
 Exponential
 Gamma
 Kumaraswamy
@@ -51,6 +52,7 @@ __all__ = ['ContinuousRV',
 'Cauchy',
 'Chi',
 'Dagum',
+'Erlang',
 'Exponential',
 'Gamma',
 'Kumaraswamy',
@@ -555,6 +557,72 @@ def Dagum(name, p, a, b):
     """
 
     return DagumPSpace(name, p, a, b).value
+
+#-------------------------------------------------------------------------------
+# Erlang distribution ----------------------------------------------------------
+
+def Erlang(name, k, l):
+    r"""
+    Create a continuous random variable with an Erlang distribution.
+
+    The density of the Erlang distribution is given by
+
+    .. math::
+        f(x) := \frac{\lambda^k x^{k-1} e^{-\lambda x}}{(k-1)!}
+
+    with :math:`x \in [0,\infty]`.
+
+    Parameters
+    ==========
+
+    k : Integer
+    l : Real number, :math:`\lambda` > 0 the rate
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Erlang, density, cdf, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> k = Symbol("k", integer=True, positive=True)
+    >>> l = Symbol("l", positive=True)
+
+    >>> X = Erlang("x", k, l)
+
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
+          /    k - 1  k  -x*l\
+          |   x     *l *e    |
+    Lambda|x, ---------------|
+          \       gamma(k)   /
+
+    >>> C = cdf(X, meijerg=True)
+    >>> pprint(C, use_unicode=False)
+    Lambda/z, /                     0                       for z < 0\
+          |   |                                                      |
+          |   <  k*lowergamma(k, 0)   k*lowergamma(k, z*l)           |
+          |   |- ------------------ + --------------------  otherwise|
+          \   \     gamma(k + 1)          gamma(k + 1)               /
+
+    >>> simplify(E(X))
+    k/l
+
+    >>> simplify(variance(X))
+    (gamma(k)*gamma(k + 2) - gamma(k + 1)**2)/(l**2*gamma(k)**2)
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Erlang_distribution
+    [2] http://mathworld.wolfram.com/ErlangDistribution.html
+    """
+
+    return GammaPSpace(name, k, 1/l).value
 
 #-------------------------------------------------------------------------------
 # Exponential distribution -----------------------------------------------------
