@@ -1347,7 +1347,7 @@ class Subs(Expr):
 
     An example with several variables:
 
-    >>> Subs(f(x)*sin(y)+z, (x, y), (0, 1))
+    >>> Subs(f(x)*sin(y) + z, (x, y), (0, 1))
     Subs(z + f(_x)*sin(_y), (_x, _y), (0, 1))
     >>> _.doit()
     z + f(0)*sin(1)
@@ -1416,15 +1416,12 @@ class Subs(Expr):
         if not isinstance(other, Subs):
             return False
 
-        if (len(self.point) != len(other.point) or
-            self.free_symbols != other.free_symbols or
-            sorted(self.point) != sorted(other.point)):
+        if len(self.expr.free_symbols) != len(other.expr.free_symbols):
             return False
 
-        # replace points with dummies, each unique pt getting its own dummy;
-        # we already confirmed that both points contain the same values so
-        # we only build the set from one of them
-        d = dict([(p, Dummy()) for p in set(self.point.args)])
+        # replace points with dummies, each unique pt getting its own dummy
+        pts = set(self.point.args + other.point.args)
+        d = dict([(p, Dummy()) for p in pts])
         eq = lambda e: \
             e.expr.xreplace(dict(zip(e.variables, [d[p] for p in e.point])))
         return eq(self) == eq(other)
