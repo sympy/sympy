@@ -1057,7 +1057,6 @@ class MatplotlibBackend(BaseBackend):
                 if len(points) == 3:
                     x, y, plot_type = points
                     self.ax.fill(x, y, facecolor='b', edgecolor='None' )
-                    self.ax.set_autoscale_on(False)
                 else:
                     colormap = ListedColormap(["white", "blue"])
                     xarray, yarray, zarray, plot_type = points

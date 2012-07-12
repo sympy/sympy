@@ -34,6 +34,8 @@ from sympy.external import import_module
 from sympy.core.compatibility import set_union
 from sympy.logic.boolalg import BooleanFunction
 import warnings
+import random
+import string
 
 np = import_module('numpy')
 
@@ -55,8 +57,6 @@ class ImplicitSeries(BaseSeries):
         self.get_points = self.get_meshes
         self.has_equality = has_equality #If the expression has equality, i.e.
                                          #Eq, Greaterthan, LessThan.
-        self.xlim = var_start_end_x[1:]
-        self.ylim = var_start_end_y[1:]
         self.nb_of_points = nb_of_points
         self.use_interval_math = use_interval_math
         self.depth = 5 + depth
@@ -292,14 +292,26 @@ def plot_implicit(expr, *args, **kwargs):
         var_start_end_x = args[0]
         var_start_end_y = args[1]
     elif len(args) == 1:
-        var_start_end_x = args[0]
-        var_start_end_y, = (Tuple(e) + default_range
-                            for e in (free_symbols - range_symbols))
+        if len(free_symbols) == 2:
+            var_start_end_x = args[0]
+            var_start_end_y, = (Tuple(e) + default_range
+                                for e in (free_symbols - range_symbols))
+        else:
+            var_start_end_x, = (Tuple(e) + default_range for e in free_symbols)
+            #Create a random symbol
+            random_symbols = string.ascii_lowercase.replace(
+                                    str(var_start_end_x[0]), "")
+            ysymbol = random.choice(random_symbols)
+            var_start_end_y = Tuple(ysymbol, -5, 5)
+
     elif len(args) == 0:
         if len(free_symbols) == 1:
             var_start_end_x, = (Tuple(e) + default_range for e in free_symbols)
-            ysymbol = symbols('y') #XXX create a random symbol
-            var_start_end_y = tuple(ysymbol, -5, 5)
+            #create a random symbol
+            random_symbols = string.ascii_lowercase.replace(
+                                        str(var_start_end_x[0]), "")
+            ysymbol = random.choice(random_symbols)
+            var_start_end_y = Tuple(ysymbol, -5, 5)
         else:
             var_start_end_x, var_start_end_y = (Tuple(e) + default_range
                                                 for e in free_symbols)
@@ -317,6 +329,11 @@ def plot_implicit(expr, *args, **kwargs):
                                     has_equality, use_interval, depth,
                                     nb_of_points)
     show = kwargs.pop('show', True)
+    kwargs['autoscale'] = False
+
+    #set the x and y limits
+    kwargs['xlim'] = (float(x) for x in var_start_end_x[1:])
+    kwargs['ylim'] = (float(y) for y in var_start_end_y[1:])
     p = Plot(series_argument, **kwargs)
     if show:
         p.show()
