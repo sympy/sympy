@@ -100,7 +100,7 @@ class MatrixExpr(Expr):
     def is_square(self):
         return self.rows == self.cols
 
-    def eval_transpose(self):
+    def _eval_transpose(self):
         raise NotImplementedError()
 
     def eval_inverse(self):

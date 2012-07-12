@@ -24,10 +24,10 @@ class Transpose(MatrixExpr):
         if not mat.is_Matrix:
             return mat
 
-        if hasattr(mat, '_eval_transpose'):
+        try:
             return mat._eval_transpose()
-
-        return Basic.__new__(cls, mat)
+        except (AttributeError, NotImplementedError):
+            return Basic.__new__(cls, mat)
 
     @property
     def arg(self):
