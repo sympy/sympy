@@ -20,6 +20,7 @@ Maxwell
 Nakagami
 Normal
 Pareto
+RaisedCosine
 Rayleigh
 StudentT
 Triangular
@@ -33,6 +34,7 @@ from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Symbol, log)
 from sympy import beta as beta_fn
+from sympy import cos
 from crv import SingleContinuousPSpace
 from sympy.core.decorators import _sympifyit
 import random
@@ -57,6 +59,7 @@ __all__ = ['ContinuousRV',
 'Nakagami',
 'Normal',
 'Pareto',
+'RaisedCosine',
 'Rayleigh',
 'StudentT',
 'Triangular',
@@ -1289,6 +1292,76 @@ def Pareto(name, xm, alpha):
     """
 
     return ParetoPSpace(name, xm, alpha).value
+
+#-------------------------------------------------------------------------------
+# RaisedCosine distribution ----------------------------------------------------
+
+class RaisedCosinePSpace(SingleContinuousPSpace):
+    def __new__(cls, name, mu, s):
+        mu, s = sympify(mu), sympify(s)
+
+        _value_check(s > 0, "s must be positive")
+
+        x = Symbol(name)
+        pdf = Piecewise(
+                ((1+cos(pi*(x-mu)/s)) / (2*s), And(mu-s<=x, x<=mu+s)),
+                (S.Zero, True))
+
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(mu-s, mu+s))
+        obj.mu = mu
+        obj.s = s
+        return obj
+
+def RaisedCosine(name, mu, s):
+    r"""
+    Create a Continuous Random Variable with a raised cosine distribution.
+
+    The density of the raised cosine distribution is given by
+
+    .. math::
+        f(x) := \frac{1}{2s}\left(1+\cos\left(\frac{x-\mu}{s}\pi\right)\right)
+
+    with :math:`x \in [\mu-s,\mu+s]`.
+
+    Parameters
+    ==========
+
+    mu : Real number
+    s : Real number, `s` > 0
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import RaisedCosine, density, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> mu = Symbol("mu", real=True)
+    >>> s = Symbol("s", positive=True)
+
+    >>> X = RaisedCosine("x", mu, s)
+
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
+          /   /   /pi*(x - mu)\                                       \
+          |   |cos|-----------| + 1                                   |
+          |   |   \     s     /                                       |
+    Lambda|x, <--------------------  for And(mu - s <= x, x <= mu + s)|
+          |   |        2*s                                            |
+          |   |                                                       |
+          \   \         0                        otherwise            /
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Raised_cosine_distribution
+    """
+
+    return RaisedCosinePSpace(name, mu, s).value
 
 #-------------------------------------------------------------------------------
 # Rayleigh distribution --------------------------------------------------------
