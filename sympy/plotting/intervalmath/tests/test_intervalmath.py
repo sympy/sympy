@@ -1,13 +1,13 @@
+from __future__ import division
 from sympy.plotting.intervalmath import interval
 from sympy.external import import_module
 
-numpy = import_module('numpy')
-if not numpy:
+np = import_module('numpy')
+if not np:
     disabled = True
 
 
 def test_interval():
-    import numpy as np
     assert (interval(1, 1) == interval(1, 1, is_valid=True)) == (True, True)
     assert (interval(1, 1) == interval(1, 1, is_valid=False)) == (True, False)
     assert (interval(1, 1) == interval(1, 1, is_valid=None)) == (True, None)
@@ -34,7 +34,6 @@ def test_interval():
 
 
 def test_interval_add():
-    import numpy as np
     assert (interval(1, 2) + interval(2, 3) == interval(3, 5)) == (True, True)
     assert (1 + interval(1, 2) == interval(2, 3)) == (True, True)
     assert (interval(1, 2) + 1 == interval(2, 3)) == (True, True)
@@ -53,7 +52,6 @@ def test_interval_add():
 
 
 def test_interval_sub():
-    import numpy as np
     assert (interval(1, 2) - interval(1, 5) == interval(-4, 1)) == (True, True)
     assert (interval(1, 2) - 1 == interval(0, 1)) == (True, True)
     assert (1 - interval(1, 2) == interval(-1, 0)) == (True, True)
@@ -64,7 +62,6 @@ def test_interval_sub():
 
 
 def test_interval_inequality():
-    import numpy as np
     assert (interval(1, 2) < interval(3, 4)) == (True, True)
     assert (interval(1, 2) < interval(2, 4)) == (None, True)
     assert (interval(1, 2) < interval(-2, 0)) == (False, True)
@@ -96,7 +93,6 @@ def test_interval_inequality():
 
 
 def test_interval_mul():
-    import numpy as np
     assert (interval(1, 5) * interval(2, 10) == interval(2, 50)) == (True, True)
     a = interval(-1, 1) * interval(2, 10) == interval(-10, 10)
     assert a == (True, True)
@@ -118,7 +114,6 @@ def test_interval_mul():
 
 
 def test_interval_div():
-    import numpy as np
     div = interval(1, 2, is_valid=False) / 3
     assert div == interval(-np.inf, np.inf, is_valid=False)
 
@@ -167,4 +162,26 @@ def test_interval_div():
     a = interval(-1, -0.5) / interval(-2, -0.5) == interval(0.25, 2.0)
     assert a == (True, True)
     a = interval(-4, -0.5) / interval(-2, -0.5) == interval(0.25, 8.0)
+    assert a == (True, True)
+
+def test_interval_pow():
+    a = 2**interval(1, 2) == interval(2, 4)
+    assert a == (True, True)
+    a = interval(1, 2)**interval(1, 2) == interval(1, 4)
+    assert a == (True, True)
+    a = interval(-1, 1)**interval(0.5, 2)
+    assert a.is_valid == None
+    a = interval(-2, -1) ** interval(1, 2)
+    assert a.is_valid ==False
+    a = interval(-2, -1) ** (1 / 2)
+    assert a.is_valid == False
+    a = interval(-1, 1)**(1 / 2)
+    assert a.is_valid == None
+    a = interval(-1, 1)**(1 / 3) == interval(-1, 1)
+    assert a == (True, True)
+    a = interval(-1, 1)**2 == interval(0, 1)
+    assert a == (True, True)
+    a = interval(-1, 1) ** (1 / 29) == interval(-1, 1)
+    assert a == (True, True)
+    a = -2**interval(1, 1) == interval(-2, -2)
     assert a == (True, True)
