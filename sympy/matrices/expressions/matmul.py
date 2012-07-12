@@ -88,5 +88,12 @@ class MatMul(MatrixExpr, Mul):
         from transpose import Transpose
         return MatMul(*[Transpose(arg) for arg in self.args[::-1]])
 
+    def _eval_inverse(self):
+        try:
+            return MatMul(*[Inverse(arg) for arg in self.args[::-1]])
+        except ShapeError:
+            raise NotImplementedError("Can not decompose this Inverse")
+
+
 from matadd import MatAdd
 from inverse import Inverse

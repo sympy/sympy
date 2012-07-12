@@ -26,30 +26,13 @@ class Inverse(MatPow):
         if not mat.is_Matrix:
             return mat**(-1)
 
-        try:
-            return mat.eval_inverse(**kwargs)
-        except (AttributeError, NotImplementedError):
-            pass
-
-        if hasattr(mat, 'inv'):
-            return mat.inv()
-
-        if mat.is_Inverse:
-            return mat.arg
-
-        if mat.is_Identity:
-            return mat
-
         if not mat.is_square:
             raise ShapeError("Inverse of non-square matrix %s"%mat)
 
-        if mat.is_Mul:
-            try:
-                return MatMul(*[Inverse(arg) for arg in mat.args[::-1]])
-            except ShapeError:
-                pass
-
-        return MatPow.__new__(cls, mat, -1)
+        try:
+            return mat._eval_inverse(**kwargs)
+        except (AttributeError, NotImplementedError):
+            return MatPow.__new__(cls, mat, -1)
 
     @property
     def arg(self):
@@ -58,5 +41,8 @@ class Inverse(MatPow):
     @property
     def shape(self):
         return self.arg.shape
+
+    def _eval_inverse(self):
+        return self.arg
 
 from matmul import MatMul

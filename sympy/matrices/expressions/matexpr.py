@@ -103,7 +103,7 @@ class MatrixExpr(Expr):
     def _eval_transpose(self):
         raise NotImplementedError()
 
-    def eval_inverse(self):
+    def _eval_inverse(self):
         raise NotImplementedError()
 
     @property
@@ -261,6 +261,9 @@ class Identity(MatrixSymbol):
         return MatrixSymbol.__new__(cls, "I", n, n)
 
     def _eval_transpose(self):
+        return self
+
+    def _eval_inverse(self):
         return self
 
     def _entry(self, i, j):

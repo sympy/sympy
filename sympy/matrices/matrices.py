@@ -819,6 +819,8 @@ class MatrixBase(object):
             # if a new method is added.
             raise ValueError("Inversion method unrecognized")
 
+    def _eval_inverse(self):
+        return self.inv()
 
     def __mathml__(self):
         mml = ""
