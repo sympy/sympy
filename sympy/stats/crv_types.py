@@ -12,6 +12,7 @@ Chi
 Dagum
 Exponential
 Gamma
+Kumaraswamy
 Laplace
 Logistic
 LogNormal
@@ -48,6 +49,7 @@ __all__ = ['ContinuousRV',
 'Dagum',
 'Exponential',
 'Gamma',
+'Kumaraswamy',
 'Laplace',
 'Logistic',
 'LogNormal',
@@ -729,6 +731,74 @@ def Gamma(name, k, theta):
     """
 
     return GammaPSpace(name, k, theta).value
+
+#-------------------------------------------------------------------------------
+# Kumaraswamy distribution -----------------------------------------------------
+
+class KumaraswamyPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, a, b):
+        a, b = sympify(a), sympify(b)
+
+        _value_check(a > 0, "a must be positive")
+        _value_check(b > 0, "b must be positive")
+
+        x = Symbol(name)
+        pdf = a * b * x**(a-1) * (1-x**a)**(b-1)
+
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, 1))
+        obj.a = a
+        obj.b = b
+        return obj
+
+def Kumaraswamy(name, a, b):
+    r"""
+    Create a Continuous Random Variable with a Kumaraswamy distribution.
+
+    The density of the Kumaraswamy distribution is given by
+
+    .. math::
+        f(x) := a b x^{a-1} (1-x^a)^{b-1}
+
+    with :math:`x \in [0,1]`.
+
+    Parameters
+    ==========
+
+    a : Real number, `a` > 0 a shape
+    b : Real number, `b` > 0 a shape
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Kumaraswamy, density, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> a = Symbol("a", positive=True)
+    >>> b = Symbol("b", positive=True)
+
+    >>> X = Kumaraswamy("x", a, b)
+
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
+          /                        b - 1\
+          |    a - 1     /   a    \     |
+    Lambda\x, x     *a*b*\- x  + 1/     /
+
+    >>> simplify(E(X, meijerg=True))
+    gamma(1 + 1/a)*gamma(b + 1)/gamma(b + 1 + 1/a)
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Kumaraswamy_distribution
+    """
+
+    return KumaraswamyPSpace(name, a, b).value
 
 #-------------------------------------------------------------------------------
 # Laplace distribution ---------------------------------------------------------
