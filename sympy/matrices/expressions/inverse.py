@@ -44,5 +44,3 @@ class Inverse(MatPow):
 
     def _eval_inverse(self):
         return self.arg
-
-from matmul import MatMul

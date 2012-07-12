@@ -89,6 +89,7 @@ class MatMul(MatrixExpr, Mul):
         return MatMul(*[Transpose(arg) for arg in self.args[::-1]])
 
     def _eval_inverse(self):
+        from inverse import Inverse
         try:
             return MatMul(*[Inverse(arg) for arg in self.args[::-1]])
         except ShapeError:
@@ -96,4 +97,3 @@ class MatMul(MatrixExpr, Mul):
 
 
 from matadd import MatAdd
-from inverse import Inverse
