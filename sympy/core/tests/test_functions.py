@@ -136,6 +136,12 @@ def test_Lambda_equality():
 def test_Subs():
     assert Subs(f(x), x, 0).doit() == f(0)
     assert Subs(f(x**2), x**2, 0).doit() == f(0)
+    assert Subs(f(x, y, z), (x, y, z), (0, 1, 1)) != \
+           Subs(f(x, y, z), (x, y, z), (0, 0, 1))
+    assert Subs(f(x, y), (x, y, z), (0, 1, 1)) == \
+           Subs(f(x, y), (x, y, z), (0, 1, 2))
+    assert Subs(f(x, y), (x, y, z), (0, 1, 1)) != \
+           Subs(f(x, y) + z, (x, y, z), (0, 1, 0))
     assert Subs(f(x, y), (x, y), (0, 1)).doit() == f(0, 1)
     assert Subs(Subs(f(x, y), x, 0), y, 1).doit() == f(0, 1)
     raises(ValueError, lambda: Subs(f(x, y), (x, y), (0, 0, 1)))

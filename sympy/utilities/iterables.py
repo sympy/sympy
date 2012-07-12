@@ -4,6 +4,7 @@ import random
 from sympy.core import Basic, C
 from sympy.core.compatibility import is_sequence, iterable #logically, these belong here
 from sympy.core.compatibility import product as cartes, combinations, combinations_with_replacement
+from sympy.utilities.misc import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 def flatten(iterable, levels=None, cls=None):
@@ -110,7 +111,7 @@ def group(container, multiple=True):
 
     return groups
 
-def postorder_traversal(node):
+def postorder_traversal(node, key=None):
     """
     Do a postorder traversal of a tree.
 
@@ -118,39 +119,46 @@ def postorder_traversal(node):
     fashion. That is, it descends through the tree depth-first to yield all of
     a node's children's postorder traversal before yielding the node itself.
 
-    For an expression, the order of the traversal depends on the order of
-    .args, which in many cases can be arbitrary.
-
     Parameters
-    ----------
+    ==========
     node : sympy expression
         The expression to traverse.
+    key : (default None) sort key
+        The key used to sort args of Basic objects. When None, args of Basic
+        objects are processed in arbitrary order.
 
     Returns
-    -------
+    =======
     subtree : sympy expression
         All of the subtrees in the tree.
 
     Examples
-    --------
-    >>> from sympy import symbols
+    ========
+    >>> from sympy import symbols, default_sort_key
     >>> from sympy.utilities.iterables import postorder_traversal
-    >>> from sympy.abc import x, y, z
-    >>> list(postorder_traversal(z*(x+y))) in ( # any of these are possible
-    ... [z, y, x, x + y, z*(x + y)], [z, x, y, x + y, z*(x + y)],
-    ... [x, y, x + y, z, z*(x + y)], [y, x, x + y, z, z*(x + y)])
-    True
-    >>> list(postorder_traversal((x, (y, z))))
-    [x, y, z, (y, z), (x, (y, z))]
+    >>> from sympy.abc import w, x, y, z
+
+    The nodes are returned in the order that they are encountered unless key
+    is given.
+
+    >>> list(postorder_traversal(w + (x + y)*z)) # doctest: +SKIP
+    [z, y, x, x + y, z*(x + y), w, w + z*(x + y)]
+    >>> list(postorder_traversal(w + (x + y)*z, key=default_sort_key))
+    [w, z, x, y, x + y, z*(x + y), w + z*(x + y)]
+
 
     """
     if isinstance(node, Basic):
-        for arg in node.args:
-            for subtree in postorder_traversal(arg):
+        args = node.args
+        if key:
+            args = list(args)
+            args.sort(key=key)
+        for arg in args:
+            for subtree in postorder_traversal(arg, key):
                 yield subtree
     elif iterable(node):
         for item in node:
-            for subtree in postorder_traversal(item):
+            for subtree in postorder_traversal(item, key):
                 yield subtree
     yield node
 
