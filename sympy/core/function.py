@@ -1527,8 +1527,6 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     """
     Expand an expression using methods given as hints.
 
-    Hints are applied in the lexicographic order of hint names.
-
     Hints evaluated unless explicitly set to False are:
       basic, log, multinomial, mul, power_base, and power_exp
     The following hints are supported but not applied unless set to True:
@@ -1628,49 +1626,46 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     >>> exp(x + exp(x + y)).expand(deep=False)
     exp(x)*exp(exp(x + y))
 
-    Examples
-    ========
+    Note: hints are applied in a canonical order, but that order is
+    arbitrary.  Because of this, some hints may prevent expansion by other
+    hints if they are applied first.  For example, ``mul`` may distribute
+    multiplications and prevent ``log`` and ``power_base`` from expanding
+    them.  Also, if ``mul`` is applied before ``multinomial`, the expression
+    might not be fully distributed.  The solution is to use the various
+    ``expand_hint`` helper functions or to use ``hint=False`` to this function
+    to finely control which hints are applied.
 
-    >>> from sympy import expand_log, expand, expand_mul
+    >>> from sympy import expand_log, expand, expand_mul, expand_power_base
     >>> x, y, z = symbols('x,y,z', positive=True)
 
-    ::
-
-      expand(log(x*(y + z))) # could be either one below
-      log(x*y + x*z)
-      log(x) + log(y + z)
-
-    >>> expand_log(log(x*y + x*z))
+    >>> expand(log(x*(y + z)))
     log(x*y + x*z)
 
+    Here, we see that ``mul`` was applied before ``log``.  To get the log
+    expanded form, either of the following will work::
+
+    >>> expand_log(log(x*(y + z)))
+    log(x) + log(y + z)
     >>> expand(log(x*(y + z)), mul=False)
     log(x) + log(y + z)
 
-    ::
+    A similar thing can happen with the ``power_base`` hint.
 
-      expand((x*(y + z))**x) # could be either one below
-      (x*y + x*z)**x
-      x**x*(y + z)**x
+    >>> expand((x*(y + z))**x)
+    (x*y + x*z)**x
+
+    To get the ``power_base`` expanded form, either of the following will
+    work::
 
     >>> expand((x*(y + z))**x, mul=False)
     x**x*(y + z)**x
-
-    ::
-
-      expand(x*(y + z)**2) # could be either one below
-      2*x*y*z + x*y**2 + x*z**2
-      x*(y + z)**2
-
-    >>> expand(x*(y + z)**2, mul=False)
-    x*(y**2 + 2*y*z + z**2)
-
-    >>> expand_mul(_)
-    x*y**2 + 2*x*y*z + x*z**2
+    >>> expand_power_base((x*(y + z))**x)
+    x**x*(y + z)**x
 
     >>> expand((x + y)*y/x)
     y + y**2/x
 
-    The parts of a rational expression can be targeted, too:
+    The parts of a rational expression can be targeted.
 
     >>> expand((x + y)*y/x/(x + 1), frac=True)
     (x*y + y**2)/(x**2 + x)
