@@ -643,13 +643,13 @@ def _mask_nc(eq):
 
     >>> eq = x*Commutator(A, B) + x*Commutator(A, C)*Commutator(A, B)
     >>> _mask_nc(eq)
-    (x*_3*_4 + x*_4, {_3: Commutator(A, C), _4: Commutator(A, B)}, [_3, _4])
+    (x*_3 + x*_4*_3, {_3: Commutator(A, B), _4: Commutator(A, C)}, [_3, _4])
 
     Multiple nc-objects and nc-symbols:
 
     >>> eq = A*Commutator(A, B) + B*Commutator(A, C)
     >>> _mask_nc(eq)
-    (A*_6 + B*_5, {_5: Commutator(A, C), _6: Commutator(A, B)}, [_5, _6, A, B])
+    (A*_5 + B*_6, {_5: Commutator(A, B), _6: Commutator(A, C)}, [_5, _6, A, B])
 
     If there is an object that:
 
@@ -676,7 +676,7 @@ def _mask_nc(eq):
     rep = []
     nc_obj = set()
     nc_syms = set()
-    pot = preorder_traversal(expr)
+    pot = preorder_traversal(expr, key=default_sort_key)
     for i, a in enumerate(pot):
         if any(a == r[0] for r in rep):
             pot.skip()
@@ -699,9 +699,10 @@ def _mask_nc(eq):
 
     # Any remaining nc-objects will be replaced with an nc-Dummy and
     # identified as an nc-Symbol to watch out for
-    while nc_obj:
+    nc_obj = sorted(nc_obj, key=default_sort_key)
+    for n in nc_obj:
         nc = Dummy(commutative=False)
-        rep.append((nc_obj.pop(), nc))
+        rep.append((n, nc))
         nc_syms.add(nc)
     expr = expr.subs(rep)
 
