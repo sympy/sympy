@@ -8,7 +8,7 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Tuple, MellinTransform, InverseMellinTransform, LaplaceTransform,
     InverseLaplaceTransform, FourierTransform, InverseFourierTransform,
     SineTransform, InverseSineTransform, CosineTransform,
-    InverseCosineTransform, FiniteSet, TransformationSet, Range)
+    InverseCosineTransform, FiniteSet, TransformationSet, Range, Subs)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
@@ -228,6 +228,9 @@ def test_latex_derivatives():
     r"\frac{\partial}{\partial x} x^{3}"
     assert latex(diff(sin(x)+x**2, x, evaluate=False)) == \
     r"\frac{\partial}{\partial x}\left(x^{2} + \sin{\left (x \right )}\right)"
+
+def test_latex_subs():
+    assert latex(Subs(x*y, (x, y), (1, 2))) == r'\left. x y \right|_{\substack{ x=1\\ y=2 }}'
 
 def test_latex_integrals():
     assert latex(Integral(log(x), x)) == r"\int \log{\left (x \right )}\, dx"
