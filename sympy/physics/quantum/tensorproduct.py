@@ -197,9 +197,6 @@ class TensorProduct(Expr):
         tp = TensorProduct(*[sympify(item).expand(**hints) for item in self.args])
         return Expr.expand(tp, **hints)
 
-    def _generate_outer_prod(self,arg):
-        return tensor_product_simp(self * Dagger(arg))
-
     def _eval_trace(self, **kwargs):
         indices = kwargs.get('indices', None)
         exp = tensor_product_simp(self)

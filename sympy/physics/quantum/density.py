@@ -8,7 +8,7 @@ from sympy.physics.quantum.state import KetBase
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.qapply import qapply
 from matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
-from sympy.physics.quantum.tensorproduct import TensorProduct
+from sympy.physics.quantum.tensorproduct import TensorProduct, tensor_product_simp
 from sympy.core.compatibility import product
 
 class Density(HermitianOperator):
@@ -175,7 +175,7 @@ class Density(HermitianOperator):
 
     def _generate_outer_prod(self,arg1,arg2):
         if (isinstance(arg1, TensorProduct)):
-            return arg1._generate_outer_prod(arg2)
+            return tensor_product_simp(arg1 * Dagger(arg2))
         else:
             return (arg1*Dagger(arg2))
 
