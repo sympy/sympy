@@ -1145,6 +1145,18 @@ def test_sympy__integrals__transforms__CosineTransform():
     from sympy.integrals.transforms import CosineTransform
     assert _test_args(CosineTransform(2, x, y))
 
+@SKIP("abstract class")
+def test_sympy__integrals__transforms__HankelTypeTransform():
+    pass
+
+def test_sympy__integrals__transforms__InverseHankelTransform():
+    from sympy.integrals.transforms import InverseHankelTransform
+    assert _test_args(InverseHankelTransform(2, x, y, 0))
+
+def test_sympy__integrals__transforms__HankelTransform():
+    from sympy.integrals.transforms import HankelTransform
+    assert _test_args(HankelTransform(2, x, y, 0))
+
 def test_sympy__logic__boolalg__And():
     from sympy.logic.boolalg import And
     assert _test_args(And(x, y, 2))
