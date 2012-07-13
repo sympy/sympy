@@ -1242,10 +1242,11 @@ def split_surds(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.simplify import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
-    (5, 1/7 + sqrt(2) + sqrt(3), sqrt(6) + 3*sqrt(3))
+    (3, sqrt(2) + sqrt(5) + 3, sqrt(5)/7 + sqrt(10))
     """
     coeff_muls =  [x.as_coeff_Mul() for x in expr.args]
     surds = [x[1]**2 for x in coeff_muls if x[1].is_Pow]
+    surds.sort(key=default_sort_key)
     g, b1, b2 = _split_gcd(*surds)
     g2 = g
     if not b2 and len(b1) >= 2:
