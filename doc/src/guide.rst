@@ -438,14 +438,12 @@ Please use the same way as is shown below all across SymPy.
     >>> e.args[0]
     x**2
 
-    >>> (x+y*z).args
-    (y*z, x)
-
-    >>> (x+y*z).args[0]
-    y*z
-
-    >>> (x+y*z).args[1]
-    x
+    Number arguments (in Adds and Muls) will always be the first argument;
+    other arguments might be in arbitrary order:
+    >>> (1 + x + y*z).args[0]
+    1
+    >>> (1 + x + y*z).args[1] in (x, y*z)
+    True
 
     >>> (y*z).args
     (y, z)
