@@ -2900,9 +2900,11 @@ class MatrixBase(object):
             flags['rational'] = False # to tell eigenvals not to do this
 
         out, vlist = [], self.eigenvals(**flags)
+        vlist = vlist.items()
+        vlist.sort(key=default_sort_key)
         flags.pop('rational', None)
 
-        for r, k in vlist.iteritems():
+        for r, k in vlist:
             tmp = self - eye(self.rows)*r
             basis = tmp.nullspace()
             # whether tmp.is_symbolic() is True or False, it is possible that
@@ -3222,7 +3224,7 @@ class MatrixBase(object):
             self._diagonalize_clear_subproducts()
             raise MatrixError("Matrix is not diagonalizable")
         else:
-            if self._eigenvects == None:
+            if self._eigenvects is None:
                 self._eigenvects = self.eigenvects(simplify=True)
             diagvals = []
             P = MutableMatrix(self.rows, 0, [])
