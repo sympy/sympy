@@ -37,7 +37,6 @@ def test_gruntz_evaluation():
     assert gruntz(log(x)*(log(log(x)+log(log(x))) - log(log(x)))
                   / (log(log(x)+log(log(log(x))))), x, oo) == 1
     assert gruntz(x/log(x**(log(x**(log(2)/log(x))))), x, oo) == oo
-    assert gruntz(x/log(x**(log(x**(log(2)/log(x))))), x, oo) == oo
     assert gruntz(log(x)**2 * exp(sqrt(log(x))*(log(log(x)))**2
                   * exp(sqrt(log(log(x))) * (log(log(log(x))))**3)) / sqrt(x),
                   x, oo) == 0
@@ -54,7 +53,7 @@ def test_gruntz_evaluation():
                   x, oo) == -exp(2)
     assert gruntz(exp(exp(x)) / exp(exp(x-exp(-exp(exp(x))))), x, oo) == 1
     assert gruntz(exp(exp(exp(x+exp(-x)))) / exp(exp(exp(x))), x, oo) == oo
-    assert gruntz(exp(exp(exp(x+exp(-x)))) / exp(exp(exp(x))), x, oo) == oo
+    assert gruntz(exp(exp(exp(x+exp(-x)))) / exp(exp(x)), x, oo) == 1
     assert gruntz(exp(exp(exp(x))) / exp(exp(exp(x-exp(-exp(exp(x)))))),
                   x, oo) == 1
 
