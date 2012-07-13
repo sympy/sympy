@@ -1,4 +1,4 @@
-from sympy import S, Symbol, symbols, Matrix
+from sympy import S, Symbol, symbols, Matrix, Tuple
 from sympy.core.trace import Tr
 
 def test_trace_new():
@@ -35,10 +35,10 @@ def test_trace_new():
 
     #trace indices test
     t = Tr((A+B), [2])
-    assert t.args[0].args[1] == [2] and t.args[1].args[1] == [2]
+    assert t.args[0].args[1] == Tuple(2) and t.args[1].args[1] == Tuple(2)
 
     t = Tr(a*A, [2,3])
-    assert t.args[1].args[1] == [2,3]
+    assert t.args[1].args[1] == Tuple(2,3)
 
 def test_trace_doit():
     a, b, c, d = symbols('a b c d')

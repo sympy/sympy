@@ -1,4 +1,4 @@
-from sympy import Expr, Add, Mul, Matrix, Pow, sympify, Matrix
+from sympy import Expr, Add, Mul, Matrix, Pow, sympify, Matrix, Tuple
 
 def _is_scalar(e):
     """ Helper method used in Tr"""
@@ -103,7 +103,7 @@ class Tr(Expr):
         """
 
         expr = args[0]
-        indices = args[1] if len(args) == 2 else []
+        indices = Tuple(*args[1]) if len(args) == 2 else Tuple()
         if isinstance(expr, Matrix):
             return expr.trace()
         elif hasattr(expr, 'trace') and callable(t.x):
