@@ -1757,7 +1757,31 @@ class XypicDiagramDrawer(object):
                     (end_i, end_j) = (dom_i, dom_j)
                     backwards = False
 
-                # TODO: Describe this megamagic.
+                # This is an attempt at a fast and furious strategy to
+                # decide where there is free space on the two sides of
+                # a diagonal morphism.  For a diagonal morphism
+                # starting at ``(start_i, start_j)`` and ending at
+                # ``(end_i, end_j)`` the rectangle defined by these
+                # two points is considered.  The slope of the diagonal
+                # ``alpha`` is then computed.  Then, for every cell
+                # ``(i, j)`` within the rectangle, the slope
+                # ``alpha1`` of the line through ``(start_i,
+                # start_j)`` and ``(i, j)`` is considered.  If
+                # ``alpha1`` is between 0 and ``alpha``, the point
+                # ``(i, j)`` is above the diagonal, if ``alpha1`` is
+                # between ``alpha`` and infinity, the point is below
+                # the diagonal.  Also note that, with some beforehand
+                # precautions, this trick works for both the main and
+                # the secondary diagonals of the rectangle.
+
+                # I have considered the possibility to only follow the
+                # shorter diagonals immediately above and below the
+                # main (or secondary) diagonal.  This, however,
+                # wouldn't have resulted in much performance gain or
+                # better detection of outer edges, because of
+                # relatively small sizes of diagram grids, while the
+                # code would have become harder to understand.
+
                 alpha = float(end_i - start_i)/(end_j - start_j)
                 free_up = True
                 free_down = True
