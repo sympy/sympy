@@ -29,6 +29,7 @@ Guide to Mechanics
     :maxdepth: 2
 
     vectors.rst
+    kinematics.rst
     masses.rst
     kane.rst
     examples.rst
