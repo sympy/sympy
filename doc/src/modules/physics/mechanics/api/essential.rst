@@ -5,19 +5,16 @@ Essential Components (Docstrings)
 ReferenceFrame
 ==============
 
-.. automodule:: sympy.physics.mechanics.essential
-   :members: ReferenceFrame
+.. autoclass:: sympy.physics.mechanics.essential.ReferenceFrame
 
 
 Vector
 ======
 
-.. automodule:: sympy.physics.mechanics.essential
-   :members: Vector
+.. autoclass:: sympy.physics.mechanics.essential.Vector
 
 
 Dyadic
 ======
 
-.. automodule:: sympy.physics.mechanics.essential
-   :members: Dyadic
+.. autoclass:: sympy.physics.mechanics.essential.Dyadic

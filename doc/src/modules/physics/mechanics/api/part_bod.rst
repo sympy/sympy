@@ -19,26 +19,22 @@ RigidBody
 inertia
 =======
 
-.. automodule:: sympy.physics.mechanics.functions
-   :members: inertias
+.. autofunction:: sympy.physics.mechanics.functions.inertia
 
 
 inertia_of_point_mass
 =====================
 
-.. automodule:: sympy.physics.mechanics.functions
-   :members: inertia_of_point_mass
+.. autofunction:: sympy.physics.mechanics.functions.inertia_of_point_mass
 
 
 linearmomentum
 ==============
 
-.. automodule:: sympy.physics.mechanics.functions
-   :members: linearmomentum
+.. autofunction:: sympy.physics.mechanics.functions.linearmomentum
 
 
 angularmomentum
 ===============
 
-.. automodule:: sympy.physics.mechanics.functions
-   :members: angularmomentum
+.. autofunction:: sympy.physics.mechanics.functions.angularmomentum

@@ -5,33 +5,28 @@ Related Essential Functions (Docstrings)
 dynamicsymbols
 ==============
 
-.. automodule:: sympy.physics.mechanics.essential
-   :members: dynamicsymbols
+.. autofunction:: sympy.physics.mechanics.essential.dynamicsymbols
 
 
 dot
 ===
 
-.. automodule:: sympy.physics.mechanics.functions
-   :members: dot
+.. autofunction:: sympy.physics.mechanics.functions.dot
 
 
 cross
 =====
 
-.. automodule:: sympy.physics.mechanics.functions
-   :members: cross
+.. autofunction:: sympy.physics.mechanics.functions.cross
 
 
 outer
 =====
 
-.. automodule:: sympy.physics.mechanics.functions
-   :members: outer
+.. autofunction:: sympy.physics.mechanics.functions.outer
 
 
 express
 =======
 
-.. automodule:: sympy.physics.mechanics.functions
-   :members: express
+.. autofunction:: sympy.physics.mechanics.functions.express

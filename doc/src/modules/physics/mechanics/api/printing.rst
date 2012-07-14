@@ -5,26 +5,22 @@ Printing (Docstrings)
 mechanics_printing
 ==================
 
-.. automodule:: sympy.physics.mechanics.functions
-   :members: mechanics_printing
+.. autofunction:: sympy.physics.mechanics.functions.mechanics_printing
 
 
 mprint
 ======
 
-.. automodule:: sympy.physics.mechanics.functions
-   :members: mprint
+.. autofunction:: sympy.physics.mechanics.functions.mprint
 
 
 mpprint
 =======
 
-.. automodule:: sympy.physics.mechanics.functions
-   :members: mpprint
+.. autofunction:: sympy.physics.mechanics.functions.mpprint
 
 
 mlatex
 ======
 
-.. automodule:: sympy.physics.mechanics.functions
-   :members: mlatex
+.. autofunction:: sympy.physics.mechanics.functions.mlatex
