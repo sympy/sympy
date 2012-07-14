@@ -32,7 +32,7 @@ parser.add_option("--tb", dest="tb",
 parser.add_option("--random", action="store_false", dest="sort", default=True,
         help="Run tests in random order instead of sorting them")
 parser.add_option("--seed", dest="seed", type="int",
-        help="use this seed for randomised tests",
+        help="use this seed for randomized tests",
         metavar="SEED")
 parser.add_option('-t', '--types', dest='types', action='store',
         default=None, choices=['gmpy', 'python', 'sympy'],
