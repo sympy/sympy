@@ -202,9 +202,9 @@ class TensorProduct(Expr):
         exp = tensor_product_simp(self)
 
         if indices is None or len(indices) == 0:
-            return Mul(*[Tr(arg) for arg in exp.args])
+            return Mul(*[Tr(arg).doit() for arg in exp.args])
         else:
-            return Mul(*[Tr(value) if idx in indices else value
+            return Mul(*[Tr(value).doit() if idx in indices else value
                         for idx, value in enumerate(exp.args)])
 
 def tensor_product_simp_Mul(e):

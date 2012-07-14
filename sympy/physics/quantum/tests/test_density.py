@@ -74,6 +74,22 @@ def test_doit():
                         1.0 * TensorProduct(C*Dagger(A), D*Dagger(B)) +
                         1.0 * TensorProduct(C*Dagger(C), D*Dagger(D)))
 
+
+    #Density operators with spin states
+    tp1 = TensorProduct(JzKet(1,1), JzKet(1,-1))
+    tp2 = TensorProduct(JzKet(1,-1/2), JzKet(1,-1/2))
+
+    d = Density([tp1, 1])
+    t = Tr(d);
+    assert t.doit() == 1
+
+    #Partial trace on density operators with spin states
+    t = Tr(d, [0])
+    assert t.doit() == JzKet(1,-1) * Dagger(JzKet(1,-1))
+
+    t = Tr(d, [1])
+    assert t.doit() == JzKet(1,1) * Dagger(JzKet(1,1))
+
 def test_apply_op():
     d = Density([Ket(0), 0.5], [Ket(1), 0.5])
     assert d.apply_op(XOp()) == Density([XOp()*Ket(0), 0.5],
