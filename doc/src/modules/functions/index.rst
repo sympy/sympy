@@ -16,6 +16,6 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   elementary.txt
-   combinatorial.txt
-   special.txt
+   elementary.rst
+   combinatorial.rst
+   special.rst

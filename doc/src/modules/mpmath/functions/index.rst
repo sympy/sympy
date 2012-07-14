@@ -6,17 +6,16 @@ Mpmath implements the standard functions from Python's ``math`` and ``cmath`` mo
 .. toctree::
    :maxdepth: 2
 
-   constants.txt
-   powers.txt
-   trigonometric.txt
-   hyperbolic.txt
-   gamma.txt
-   expintegrals.txt
-   bessel.txt
-   orthogonal.txt
-   hypergeometric.txt
-   elliptic.txt
-   zeta.txt
-   numtheory.txt
-   qfunctions.txt
-
+   constants.rst
+   powers.rst
+   trigonometric.rst
+   hyperbolic.rst
+   gamma.rst
+   expintegrals.rst
+   bessel.rst
+   orthogonal.rst
+   hypergeometric.rst
+   elliptic.rst
+   zeta.rst
+   numtheory.rst
+   qfunctions.rst

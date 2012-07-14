@@ -86,7 +86,7 @@ Details are described here:
 .. toctree::
    :maxdepth: 1
 
-   g-functions.txt
+   g-functions.rst
 
 API reference
 -------------

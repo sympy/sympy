@@ -2197,12 +2197,15 @@ def gf_csolve(f, n):
     Examples
     ========
 
-    >>> from sympy.polys.galoistools import gf_csolve
+    Solve [1, 1, 7] congruent 0 mod(189):
 
+    >>> from sympy.polys.galoistools import gf_csolve
     >>> gf_csolve([1, 1, 7], 189)
     [13, 49, 76, 112, 139, 175]
 
-    **Reference**
+    References
+    ==========
+
     [1] 'An introduction to the Theory of Numbers' 5th Edition by Ivan Niven,
         Zuckerman and Montgomery.
 

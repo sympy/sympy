@@ -51,11 +51,14 @@ html: $(SPHINXBUILDpy)
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
 
+html-errors: SPHINXOPTS += -W
+html-errors: html
+
 htmlapi: $(SPHINXBUILDpy)
 	mkdir -p api/.static
 	mkdir -p api/modules
 	mkdir -p _build/api _build/doctreesapi
-	rm -f api/modules/sympy*.txt
+	rm -f api/modules/sympy*.rst
 	./generate_reference.py
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTSapi) _build/api
 	@echo
@@ -63,7 +66,7 @@ htmlapi: $(SPHINXBUILDpy)
 
 gettext:
 	mkdir -p _build/
-	$(SPHINXBUILD) -b gettext src _build/gettext src/tutorial.txt
+	$(SPHINXBUILD) -b gettext src _build/gettext src/tutorial.rst
 	cp _build/gettext/tutorial.pot src/
 
 htmli18n:
@@ -75,9 +78,9 @@ htmli18n:
 	msgfmt src/tutorial.cs.po -o src/i18n/cs/LC_MESSAGES/tutorial.mo
 	msgfmt src/tutorial.ru.po -o src/i18n/ru/LC_MESSAGES/tutorial.mo
 	msgfmt src/tutorial.bg.po -o src/i18n/bg/LC_MESSAGES/tutorial.mo
-	$(SPHINXBUILD) -b html -D language=cs $(ALLSPHINXOPTS) _build/i18n/cs src/tutorial.txt
-	$(SPHINXBUILD) -b html -D language=ru $(ALLSPHINXOPTS) _build/i18n/ru src/tutorial.txt
-	$(SPHINXBUILD) -b html -D language=bg $(ALLSPHINXOPTS) _build/i18n/bg src/tutorial.txt
+	$(SPHINXBUILD) -b html -D language=cs $(ALLSPHINXOPTS) _build/i18n/cs src/tutorial.rst
+	$(SPHINXBUILD) -b html -D language=ru $(ALLSPHINXOPTS) _build/i18n/ru src/tutorial.rst
+	$(SPHINXBUILD) -b html -D language=bg $(ALLSPHINXOPTS) _build/i18n/bg src/tutorial.rst
 	cp _build/i18n/cs/tutorial.html _build/html/tutorial.cs.html
 	cp _build/i18n/ru/tutorial.html _build/html/tutorial.ru.html
 	cp _build/i18n/bg/tutorial.html _build/html/tutorial.bg.html

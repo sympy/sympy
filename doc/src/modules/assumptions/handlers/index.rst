@@ -10,7 +10,7 @@ Contents
 .. toctree::
     :maxdepth: 3
 
-    calculus.txt
-    ntheory.txt 
-    order.txt
-    sets.txt
+    calculus.rst
+    ntheory.rst
+    order.rst
+    sets.rst

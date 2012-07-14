@@ -38,8 +38,6 @@ trigsimp
 --------
 .. autofunction:: trigsimp
 
-.. autofunction:: trigsimp_nonrecursive
-
 besselsimp
 ----------
 .. autofunction:: besselsimp

@@ -6,39 +6,38 @@ Tutorial
 
 .. role:: input(strong)
 
-Einführung
-==========
+Introduction
+============
 
-SymPy ist eine Python-Bibliothek für symbolische Mathematik. SymPy soll
-ein vollständiges Computer-Algebra-System (CAS) bereitstellen
-und dabei den Programmcode so einfach halten, dass er nachvollziehbar und 
-einfach erweiterbar bleibt. SymPy ist vollständig in Python geschrieben 
-und benötigt keine weiteren Bibliotheken.
+SymPy is a Python library for symbolic mathematics. It aims to become a
+full-featured computer algebra system (CAS) while keeping the code as simple as
+possible in order to be comprehensible and easily extensible.  SymPy is written
+entirely in Python and does not require any external libraries.
 
-Dieses Tutorial schafft einen Überblick und gibt eine Einführung in SymPy.
-Wenn du wissen möchtest, was SymPy tun kann (und wie), lies diese Seite, und wenn
-du mehr erfahren möchtest, lies den
-:ref:`SymPy User's Guide <guide>` und die
-:ref:`SymPy Modules Reference <module-docs>`
-oder den `Quellcode
-<https://github.com/sympy/sympy/>`_ selbst.
+This tutorial gives an overview and introduction to SymPy.
+Read this to have an idea what SymPy can do for you (and how) and if you want
+to know more, read the
+:ref:`SymPy User's Guide <guide>`,
+:ref:`SymPy Modules Reference <module-docs>`.
+or the `sources
+<https://github.com/sympy/sympy/>`_ directly.
 
-Erste Schritte mit SymPy
-========================
+First Steps with SymPy
+======================
 
-Am einfachsten kannst du SymPy mit der aktuellsten .tar-Datei aus den
-"Featured Downloads" von 
-http://code.google.com/p/sympy/ installieren:
+The easiest way to download it is to go to
+http://code.google.com/p/sympy/ and
+download the latest tarball from the Featured Downloads:
 
 .. image:: figures/featured-downloads.png
 
-Dann musst du die Datei auspacken:
+Unpack it:
 
 .. parsed-literal::
 
     $ :input:`tar xzf sympy-0.5.12.tar.gz`
 
-und kannst sie mit einem Python-Interpreter ausprobieren.
+and try it from a Python interpreter:
 
 .. parsed-literal::
 
@@ -52,47 +51,46 @@ und kannst sie mit einem Python-Interpreter ausprobieren.
     >>> (1/cos(x)).series(x, 0, 10)
     1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
-SymPy kann wie im Beispiel gezeigt benutzt werden, und dies ist auch
-der übliche Weg, es von einem anderen Programm aus zu verwenden.
-Du kannst es ebenfalls wie jedes andere Modul mithilfe von ``./setup.py install`` 
-installieren. Auch ist es natürlich möglich, einfach ein Paket deiner
-Linux-Distribution zu verwenden, zum Beispiel:
+You can use SymPy as shown above and this is indeed the recommended way if you
+use it in your program. You can also install it using ``./setup.py install`` as
+any other Python module, or just install a package in your favourite Linux
+distribution, e.g.:
 
-.. topic:: Installation von SymPy unter Debian
+.. topic:: Installing SymPy in Debian
 
   .. parsed-literal::
 
     $ :input:`sudo apt-get install python-sympy`
-    Paketlisten werden gelesen... Fertig
-    Abhängigkeitsbaum wird aufgebaut       
-    Status-Informationen einlesen... Fertig
-    Die folgenden NEUEN Pakete werden installiert:
+    Reading package lists... Done
+    Building dependency tree
+    Reading state information... Done
+    The following NEW packages will be installed:
       python-sympy
-    0 aktualisiert, 1 neu installiert, 0 zu entfernen und 0 nicht aktualisiert.
-    Es müssen 991 kB an Archiven heruntergeladen werden.
-    Nach dieser Operation werden 5976 kB Plattenplatz zusätzlich benutzt.
-    Möchten Sie fortfahren [J/n]? 
-    Hole:1 http://de.archive.ubuntu.com/ubuntu/ oneiric/universe python-sympy all 0.6.7-1.1 [1.694 kB]
-    Es wurden 991kB in 2s geholt (361 kB/s)                                                               
-    Vormals abgewähltes Paket python-sympy wird gewählt.
-    Entpacken von python-sympy (aus .../python-sympy_0.6.7-1.1_all.deb) ...
-    python-sympy (0.6.7-1.1) wird eingerichtet ...
+    0 upgraded, 1 newly installed, 0 to remove and 18 not upgraded.
+    Need to get 991kB of archives.
+    After this operation, 5976kB of additional disk space will be used.
+    Get:1 http://ftp.cz.debian.org unstable/main python-sympy 0.5.12-1 [991kB]
+    Fetched 991kB in 2s (361kB/s)
+    Selecting previously deselected package python-sympy.
+    (Reading database ... 232619 files and directories currently installed.)
+    Unpacking python-sympy (from .../python-sympy_0.5.12-1_all.deb) ...
+    Setting up python-sympy (0.5.12-1) ...
 
 
-Weitere Installationsmöglichkeiten findest du unter Downloads_ auf der
-SymPy-Website.
+For other means how to install SymPy, consult the  Downloads_ tab on the
+SymPy's webpage.
 
 .. _Downloads: http://code.google.com/p/sympy/wiki/DownloadInstallation?tm=2
 
 
-isympy-Konsole
+isympy Console
 --------------
 
-Für Experimente mit neuen Funktionen und zum Ausprobieren kann
-die um IPython aufgebaute Umgebung namens ``isympy`` (im Quellverzeichnis
-unter ``bin/isympy``) benutzt werden. Es handelt sich hierbei nur um eine
-Standard-Python-Konsole, die allerdings bereits die wichtigen sympy-Module
-importiert hat und unter anderem die Symbole x, y und z bereits definiert hat:
+For experimenting with new features, or when figuring out how to do things, you
+can use our special wrapper around IPython called ``isympy`` (located in
+``bin/isympy`` if you are running from the source directory) which is just a
+standard Python shell that has already imported the relevant SymPy modules and
+defined the symbols x, y, z and some other things:
 
 .. parsed-literal::
 
@@ -118,18 +116,18 @@ importiert hat und unter anderem die Symbole x, y und z bereits definiert hat:
 
 .. note::
 
-    Benutzereingaben sind fett dargestellt. Was in einem normalen Python-Interpreter
-    drei Zeilen gebraucht hätte, kann mit isympy in nur einer Zeile ausgedrückt werden.
+    Commands entered by you are bold. Thus what we did in 3 lines in a regular
+    Python interpreter can be done in 1 line in isympy.
 
 
-Mit SymPy rechnen
------------------
+Using SymPy as a calculator
+---------------------------
 
-SymPy hat drei eingebaute Zahlentypen: Float, Rational und Integer.
+SymPy has three built-in numeric types: Float, Rational and Integer.
 
-Die Klasse Rational stellt eine rationale Zahl als Paar von zwei Ganzzahlen
-dar: dem Zähler und dem Nenner.
-Rational(1,2) repräsentiert also 1/2, Rational(5,2) repräsentiert 5/2 und so weiter.
+The Rational class represents a rational number as a pair of two Integers:
+the numerator and the denominator. So Rational(1,2) represents 1/2,
+Rational(5,2) represents 5/2, and so on.
 
 ::
 
@@ -146,36 +144,37 @@ Rational(1,2) repräsentiert also 1/2, Rational(5,2) repräsentiert 5/2 und so w
     1/88817841970012523233890533447265625
 
 
-Beim Arbeiten mit Pythons Ganzzahlen und Fließkommazahlen ist Vorsicht
-geboten, besonders bei Division, da eine Python-Zahl statt einer SymPy-Zahl
-das Ergebnis sein kann. Eine Division von zwei Python-Ganzzahlen hat eine
-Fließkommazahl zum Ergebnis -- die "echte Divison" von Python 3 und das
-Standardverhalten von ``isympy``, welches division aus __future__ importiert::
+Proceed with caution while working with Python int's and floating
+point numbers, especially in division, since you may create a
+Python number, not a SymPy number. A ratio of two Python ints may
+create a float -- the "true division" standard of Python 3
+and the default behavior of ``isympy`` which imports division
+from __future__::
 
     >>> 1/2 #doctest: +SKIP
     0.5
 
-In älteren Python-Versionen ohne den Import von division ist das Ergebnis
-hingegen eine abgerundete Ganzzahl::
+But in earlier Python versions where division has not been imported, a
+truncated int will result::
 
     >>> 1/2 #doctest: +SKIP
     0
 
-In beiden Fällen handelt es sich jedoch nicht um eine SymPy-Zahl, weil
-Python seine eigenen Zahl zurückgegeben hat. Meistens wirst du aber mit
-Zahlen des Typs Rational arbeiten wollen, also achte darauf, auch solche
-zu erhalten. Oft wird zur besseren Lesbarkeit ``R`` mit Rational 
-gleichgesetzt::
+In both cases, however, you are not dealing with a SymPy Number because
+Python created its own number. Most of the time you will probably be
+working with Rational numbers, so make sure to use Rational to get
+the SymPy result. One might find it convenient to equate ``R`` and
+Rational::
 
     >>> R = Rational
     >>> R(1, 2)
     1/2
-    >>> R(1)/2 # R(1) ist ein SymPy-Integer und Integer/int ergibt Rational
+    >>> R(1)/2 # R(1) is a SymPy Integer and Integer/int gives a Rational
     1/2
 
-Es gibt auch einige spezielle Konstanten wie e oder pi, die als Symbole
-behandelt werden (1+pi wird nicht als Zahl ausgerechnet, sondern bleibt
-1+pi) und in beliebiger Präzision verfügbar sind::
+We also have some special constants, like e and pi, that are treated as symbols
+(1+pi won't evaluate to something numeric, rather it will remain as 1+pi), and
+have arbitrary precision::
 
     >>> from sympy import pi, E
     >>> pi**2
@@ -187,10 +186,9 @@ behandelt werden (1+pi wird nicht als Zahl ausgerechnet, sondern bleibt
     >>> (pi + E).evalf()
     5.85987448204884
 
-Wie man sieht, berechnet evalf aus dem Ausdruck eine Fließkommazahl.
+as you see, evalf evaluates the expression to a floating-point number
 
-Das Symnol ``oo`` wird für eine Klasse benutzt, die mathematische Unendlichkeit
-darstellt::
+The symbol ``oo`` is used for a class defining mathematical infinity::
 
     >>> from sympy import oo
     >>> oo > 99999
@@ -198,25 +196,25 @@ darstellt::
     >>> oo + 1
     oo
 
-Symbole
+Symbols
 -------
 
-Im Gegensatz zu anderen Computer-Algebra-Systemen müssen in SymPy symbolische
-Variablen ausdrücklich deklariert werden::
+In contrast to other Computer Algebra Systems, in SymPy you have to declare
+symbolic variables explicitly::
 
     >>> from sympy import Symbol
     >>> x = Symbol('x')
     >>> y = Symbol('y')
 
-Links steht eine normale Python-Variable, der ein SymPy-Symbol-Objekt
-zugewiesen wird.  Vordefiniert Symbole (inklusiv Symbole mit
-griechischen Namen) sind von Import von abc verfügbar:
+On the left is the normal Python variable which has been assigned to the
+SymPy Symbol class. Predefined symbols (including those for symbols with
+Greek names) are available for import from abc:
 
     >>> from sympy.abc import x, theta
 
-Symbole können auch mit den ``symbols`` oder ``var`` Funktionen
-erstellt werden.  Die letztere fügt automatisch die Symbole in den
-Namespace ein, und beide Funktionen akzeptieren eine Reihennotation::
+Symbols can also be created with the ``symbols`` or ``var`` functions, the
+latter automatically adding the created symbols to the namespace, and both
+accepting a range notation:
 
     >>> from sympy import symbols, var
     >>> a, b, c = symbols('a,b,c')
@@ -226,7 +224,8 @@ Namespace ein, und beide Funktionen akzeptieren eine Reihennotation::
     >>> var('g:2')
     (g0, g1)
 
-Aus Symbol-Objekten kann man bequem Ausdrücke zusammensetzen::
+Instances of the Symbol class "play well together" and are the building blocks
+of expresions::
 
     >>> x+y+x-y
     2*x
@@ -237,8 +236,7 @@ Aus Symbol-Objekten kann man bequem Ausdrücke zusammensetzen::
     >>> ((x+y)**2).expand()
     x**2 + 2*x*y + y**2
 
-Sie können mit ``subs(old, new)`` durch Zahlen, andere Symbole oder Ausdrücke
-ersetzt werden::
+They can be substituted with other numbers, symbols or expressions using ``subs(old, new)``::
 
     >>> ((x+y)**2).subs(x, 1)
     (y + 1)**2
@@ -249,20 +247,19 @@ ersetzt werden::
     >>> ((x+y)**2).subs(x, 1-y)
     1
 
-Für den Rest des Tutorials gehen wir davon aus, dass folgende Zeile ausgeführt
-wurde::
+For the remainder of the tutorial, we assume that we have run::
 
     >>> from sympy import init_printing
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
 
-Dies sorgt dafür, dass Ausdrücke bei der Ausgabe besser aussehen (siehe
-:ref:`printing-tutorial` weiter unten). Wenn eine Unicode-Schrift installiert
-ist, erreichst du mit use_unicode=True eine noch hübschere Ausgabe.
+This will make things look better when printed. See the :ref:`printing-tutorial`
+section below. If you have a unicode font installed, you can pass
+use_unicode=True for a slightly nicer output.
 
 Algebra
 =======
 
-Für die Partialbruchzerlegung kannst du ``apart(expr, x)`` benutzen::
+For partial fraction decomposition, use ``apart(expr, x)``::
 
     >>> from sympy import apart
     >>> from sympy.abc import x, y, z
@@ -287,7 +284,7 @@ Für die Partialbruchzerlegung kannst du ``apart(expr, x)`` benutzen::
     1 + -----
         x - 1
 
-Zum Kombinieren gibt es die Funktion ``together(expr, x)``::
+To combine things back together, use ``together(expr, x)``::
 
     >>> from sympy import together
     >>> together(1/x + 1/y + 1/z)
@@ -308,24 +305,24 @@ Zum Kombinieren gibt es die Funktion ``together(expr, x)``::
 
 .. index:: calculus
 
-Infinitesimalrechnung
-=====================
+Calculus
+========
 
 .. index:: limits
 
-Limes
------
+Limits
+------
 
-Grenzwerte sind in SymPy einfach zu benutzen, sie folgen der Syntax ``limit(function,
-variable, point)``, um also den Grenzwert von f(x) bei x -> 0 zu berechnen,
-kann ``limit(f, x, 0)`` benutzt werden::
+Limits are easy to use in SymPy, they follow the syntax ``limit(function,
+variable, point)``, so to compute the limit of f(x) as x -> 0, you would issue
+``limit(f, x, 0)``::
 
    >>> from sympy import limit, Symbol, sin, oo
    >>> x = Symbol("x")
    >>> limit(sin(x)/x, x, 0)
    1
 
-Analog kann der Limes für x gegen unendlich berechnet werden::
+you can also calculate the limit at infinity::
 
    >>> limit(x, x, oo)
    oo
@@ -336,17 +333,16 @@ Analog kann der Limes für x gegen unendlich berechnet werden::
    >>> limit(x**x, x, 0)
    1
 
-Einige nicht-triviale Beispiele zu Grenzwerten finden sich in der Datei
+for some non-trivial examples on limits, you can read the test file
 `test_demidovich.py
 <https://github.com/sympy/sympy/blob/master/sympy/series/tests/test_demidovich.py>`_
 
 .. index:: differentiation, diff
 
-Differentialrechnung
---------------------
+Differentiation
+---------------
 
-Mithilfe von ``diff(func, var)`` kann jeder SymPy-Ausdruck differenziert
-werden. Beispiele::
+You can differentiate any SymPy expression using ``diff(func, var)``. Examples::
 
     >>> from sympy import diff, Symbol, sin, tan
     >>> x = Symbol('x')
@@ -359,7 +355,7 @@ werden. Beispiele::
        2
     tan (x) + 1
 
-Folgendermaßen kann überprüft werden, ob dies korrekt ist::
+You can check, that it is correct by::
 
     >>> from sympy import limit
     >>> from sympy.abc import delta
@@ -367,7 +363,7 @@ Folgendermaßen kann überprüft werden, ob dies korrekt ist::
        2
     tan (x) + 1
 
-Höhere Ableitungen können mithilfe von ``diff(func, var, n)`` berechnet werden::
+Higher derivatives can be calculated using the ``diff(func, var, n)`` method::
 
     >>> diff(sin(2*x), x, 1)
     2*cos(2*x)
@@ -383,10 +379,10 @@ Höhere Ableitungen können mithilfe von ``diff(func, var, n)`` berechnet werden
     single: series expansion
     single: expansion; series
 
-Reihenentwicklung
------------------
+Series expansion
+----------------
 
-Benutze ``.series(var, point, order)``::
+Use ``.series(var, point, order)``::
 
     >>> from sympy import Symbol, cos
     >>> x = Symbol('x')
@@ -401,7 +397,7 @@ Benutze ``.series(var, point, order)``::
     1 + -- + ---- + ----- + ------ + O\x  /
         2     24     720     8064
 
-Ein weiteres einfaches Beispiel::
+Another simple example::
 
     >>> from sympy import Integral, pprint
 
@@ -418,20 +414,73 @@ Ein weiteres einfaches Beispiel::
     y    2    3    4    5
         y    y    y    y
 
+
+
+
+
+.. index:: summation
+
+Summation
+---------
+
+Compute the summation of f with respect to the given summation variable over the given limits.
+
+summation(f, (i, a, b)) computes the sum of f with respect to i from a to b,
+i.e., ::
+
+                                b
+                              ____
+                              \   `
+    summation(f, (i, a, b)) =  )    f
+                              /___,
+                              i = a
+
+
+If it cannot compute the sum, it prints the corresponding summation formula.
+Repeated sums can be computed by introducing additional limits::
+
+    >>> from sympy import summation, oo, symbols, log
+    >>> i, n, m = symbols('i n m', integer=True)
+
+    >>> summation(2*i - 1, (i, 1, n))
+     2
+    n
+    >>> summation(1/2**i, (i, 0, oo))
+    2
+    >>> summation(1/log(n)**n, (n, 2, oo))
+      oo
+     ___
+     \  `
+      \     -n
+      /   log (n)
+     /__,
+    n = 2
+    >>> summation(i, (i, 0, n), (n, 0, m))
+          3    2
+    m    m    m
+    -- + -- + -
+    6    2    3
+    >>> from sympy.abc import x
+    >>> from sympy import factorial
+    >>> summation(x**n/factorial(n), (n, 0, oo))
+     x
+    e
+
+
 .. index:: integration
 
-Integralrechnung
-----------------
+Integration
+-----------
 
-SymPy unterstützt unendliche und endliche Integration transzendenter elementarer 
-und spezieller Funktionen durch ``integrate()``, welches den
-starken Risch-Norman-Algorithmus nutzt, sowie einige Heuristiken und
-Mustererkennungen::
+SymPy has support for indefinite and definite integration of transcendental
+elementary and special functions via ``integrate()`` facility, which uses
+powerful extended Risch-Norman algorithm and some heuristics and pattern
+matching::
 
     >>> from sympy import integrate, erf, exp, sin, log, oo, pi, sinh, symbols
     >>> x, y = symbols('x,y')
 
-Es können elementare Funktionen integriert werden::
+You can integrate elementary functions::
 
     >>> integrate(6*x**5, x)
      6
@@ -444,7 +493,7 @@ Es können elementare Funktionen integriert werden::
      2
     x  + cosh(x)
 
-Aber auch mit speziellen Funktionen kann einfach umgegangen werden::
+Also special functions are handled easily::
 
     >>> integrate(exp(-x**2)*erf(x), x)
       ____    2
@@ -452,7 +501,7 @@ Aber auch mit speziellen Funktionen kann einfach umgegangen werden::
     --------------
           4
 
-Es ist möglich, ein endliches Integral zu berechnen::
+It is possible to compute definite integrals::
 
     >>> integrate(x**3, (x, -1, 1))
     0
@@ -461,7 +510,7 @@ Es ist möglich, ein endliches Integral zu berechnen::
     >>> integrate(cos(x), (x, -pi/2, pi/2))
     2
 
-Auch uneigentliche Integrale werden unterstützt::
+Also, improper integrals are supported as well::
 
     >>> integrate(exp(-x), (x, 0, oo))
     1
@@ -472,15 +521,15 @@ Auch uneigentliche Integrale werden unterstützt::
     single: complex numbers
     single: expansion; complex
 
-Komplexe Zahlen
+Complex numbers
 ---------------
 
-Mit Ausnahme der imaginären Einheit, I, die rein imaginär ist, können
-Symbole mit Attributen (z.B. reale, positive, komplex, usw.) erstellt
-werden, und dies hat Auswirkungen darauf, wie sie sich verhalten::
+Besides the imaginary unit, I, which is imaginary, symbols can be created with
+attributes (e.g. real, positive, complex, etc...) and this will affect how
+they behave::
 
     >>> from sympy import Symbol, exp, I
-    >>> x = Symbol("x") # einen einzigen x ohne Attribut
+    >>> x = Symbol("x") # a plain x with no attributes
     >>> exp(I*x).expand()
      I*x
     e
@@ -491,10 +540,10 @@ werden, und dies hat Auswirkungen darauf, wie sie sich verhalten::
     >>> exp(I*x).expand(complex=True)
     I*sin(x) + cos(x)
 
-Funktionen
-----------
+Functions
+---------
 
-**trigonometrische**::
+**trigonometric**::
 
     >>> from sympy import asin, asinh, cos, sin, sinh, symbols, I
     >>> x, y = symbols('x,y')
@@ -543,7 +592,7 @@ Funktionen
     x - -- + ---- - ---- + ----- + O\x  /
         6     40    112     1152
 
-**Kugelflächen**::
+**spherical harmonics**::
 
     >>> from sympy import Ylm
     >>> from sympy.abc import theta, phi
@@ -569,7 +618,7 @@ Funktionen
                       ____
                   4*\/ pi
 
-**Fakultät und Gamma-Funktion**::
+**factorials and gamma function**::
 
     >>> from sympy import factorial, gamma, Symbol
     >>> x = Symbol("x")
@@ -582,12 +631,12 @@ Funktionen
     n!
 
     >>> gamma(x + 1).series(x, 0, 3) # i.e. factorial(x)
-                          /          2     2\        
+                          /          2     2\
                         2 |EulerGamma    pi |    / 3\
     1 - EulerGamma*x + x *|----------- + ---| + O\x /
-                          \     2         12/        
+                          \     2         12/
 
-**Zeta-Funktion**::
+**zeta function**::
 
     >>> from sympy import zeta
     >>> zeta(4, x)
@@ -612,7 +661,7 @@ Funktionen
       16    90
 
 
-**Polynome**::
+**polynomials**::
 
     >>> from sympy import assoc_legendre, chebyshevt, legendre, hermite
     >>> chebyshevt(2, x)
@@ -650,8 +699,8 @@ Funktionen
 
 .. index:: equations; differential, diff, dsolve
 
-Differenzialgleichungen
------------------------
+Differential Equations
+----------------------
 
 In ``isympy``::
 
@@ -670,8 +719,8 @@ In ``isympy``::
 
 .. index:: equations; algebraic, solve
 
-Algebraische Gleichungen
-------------------------
+Algebraic equations
+-------------------
 
 In ``isympy``::
 
@@ -685,15 +734,15 @@ In ``isympy``::
 
 .. index:: linear algebra
 
-Lineare Algebra
-===============
+Linear Algebra
+==============
 
 .. index:: Matrix
 
-Matrizen
+Matrices
 --------
 
-Matrizen werden als Instanzen der Matrix-Klasse erzeugt::
+Matrices are created as instances from the Matrix class::
 
     >>> from sympy import Matrix, Symbol
     >>> Matrix([[1,0], [0,1]])
@@ -701,7 +750,7 @@ Matrizen werden als Instanzen der Matrix-Klasse erzeugt::
     [    ]
     [0  1]
 
-Sie können auch Symbole enthalten::
+They can also contain symbols::
 
     >>> x = Symbol('x')
     >>> y = Symbol('y')
@@ -716,16 +765,16 @@ Sie können auch Symbole enthalten::
     [                ]
     [  2*y    x*y + 1]
 
-Mehr Informationen und Beispiele zu Matrizen finden sich im LinearAlgebraTutorial.
+For more about Matrices, see the Linear Algebra tutorial.
 
 .. index:: pattern matching, match, Wild, WildFunction
 
-Musterabgleich
-==============
+Pattern matching
+================
 
-Die Methode ``.match()`` kann gemeinsam mit der Klasse ``Wild`` Ausdrücke auf
-Muster überprüfen. Die Methode gibt ein dictionary mit den nötigen
-Ersetzungen zurück, wie im folgenden Beispiel ersichtlich::
+Use the ``.match()`` method, along with the ``Wild`` class, to perform pattern
+matching on expressions. The method will return a dictionary with the required
+substitutions, as follows::
 
     >>> from sympy import Symbol, Wild
     >>> x = Symbol('x')
@@ -737,32 +786,32 @@ Ersetzungen zurück, wie im folgenden Beispiel ersichtlich::
     >>> (x**2).match(p*x**q)
     {p: 1, q: 2}
 
-Wenn der Musterabgleich fehlschlägt, wird ``None`` zurückgegeben::
+If the match is unsuccessful, it returns ``None``::
 
     >>> print (x+1).match(p**x)
     None
 
-Über den Parameter ``exclude`` kann man manches aus dem Ergebnis
-ausschließen:
+One can also use the exclude parameter of the ``Wild`` class to ensure that
+certain things do not show up in the result::
 
     >>> p = Wild('p', exclude=[1,x])
-    >>> print (x+1).match(x+p) # 1 ist ausgeschlossen
+    >>> print (x+1).match(x+p) # 1 is excluded
     None
-    >>> print (x+1).match(p+1) # x ist ausgeschlossen
+    >>> print (x+1).match(p+1) # x is excluded
     None
-    >>> print (x+1).match(x+2+p) # -1 ist nicht ausgeschlossen
+    >>> print (x+1).match(x+2+p) # -1 is not excluded
     {p_: -1}
 
 .. _printing-tutorial:
 
-Ausgabe
-=======
+Printing
+========
 
-Es existieren mehrere Wege, Ausdrücke auszugeben:
+There are many ways to print expressions.
 
 **Standard**
 
-Dies ist die Ausgabe von ``str(expression)`` und sieht so aus:
+This is what ``str(expression)`` returns and it looks like this:
 
     >>> from sympy import Integral
     >>> from sympy.abc import x
@@ -773,9 +822,9 @@ Dies ist die Ausgabe von ``str(expression)`` und sieht so aus:
     >>> print Integral(x**2, x)
     Integral(x**2, x)
 
-**ASCII-Art-Ausgabe**
+**Pretty printing**
 
-Eine ``pprint``-Funktion erzeugt diese hübschere ASCII-Art-Ausgabe.
+Nice ascii-art printing is produced by the ``pprint`` function:
 
     >>> from sympy import Integral, pprint
     >>> from sympy.abc import x
@@ -794,9 +843,8 @@ Eine ``pprint``-Funktion erzeugt diese hübschere ASCII-Art-Ausgabe.
      |
     /
 
-Wenn eine Unicode-Schriftart installiert ist, sollte die ASCII-Art-Ausgabe
-standardmäßig die Unicode-Fassung verwenden. Dies kann mit dem Parameter
-``use_unicode`` erzwungen oder abgeschaltet werden.
+If you have a unicode font installed, the ``pprint`` function will use it by
+default. You can override this using the ``use_unicode`` option.:
 
     >>> pprint(Integral(x**2, x), use_unicode=True)
     ⌠
@@ -805,11 +853,11 @@ standardmäßig die Unicode-Fassung verwenden. Dies kann mit dem Parameter
     ⌡
 
 
-Siehe auch die Wiki-Seite `Pretty Printing
-<https://github.com/sympy/sympy/wiki/Pretty-Printing>`_ für mehr Beispiele
-von hübschen Unicode-Ausgaben.
+See also the wiki `Pretty Printing
+<https://github.com/sympy/sympy/wiki/Pretty-Printing>`_ for more examples of a nice
+unicode printing.
 
-Tipp: Die ASCII-Art-Ausgabe kann auch als Standard-Methode gesetzt werden::
+Tip: To make pretty printing the default in the Python interpreter, use::
 
     $ python
     Python 2.5.2 (r252:60911, Jun 25 2008, 17:58:32)
@@ -832,7 +880,7 @@ Tipp: Die ASCII-Art-Ausgabe kann auch als Standard-Methode gesetzt werden::
      |
     /
 
-**Python-Ausgabe**
+**Python printing**
 
     >>> from sympy.printing.python import python
     >>> from sympy import Integral
@@ -848,7 +896,7 @@ Tipp: Die ASCII-Art-Ausgabe kann auch als Standard-Methode gesetzt werden::
     e = Integral(x**2, x)
 
 
-**LaTeX-Ausgabe**
+**LaTeX printing**
 
     >>> from sympy import Integral, latex
     >>> from sympy.abc import x
@@ -883,19 +931,19 @@ Tipp: Die ASCII-Art-Ausgabe kann auch als Standard-Methode gesetzt werden::
     >>> from sympy.abc import x
     >>> preview(Integral(x**2, x)) #doctest:+SKIP
 
-Dies öffnet ein pyglet-Fenster mit dem in LaTeX gerenderten Ausdruck,
-wenn pyglet installiert ist:
+If pyglet is installed, a pyglet window will open containing the LaTeX
+rendered expression:
 
 .. image:: pics/pngview1.png
 
-Hinweise
---------
+Notes
+-----
 
-``isympy`` ruft ``pprint`` automatisch auf -- deswegen sind die Ausgaben
-standardmäßig hübsch.
+``isympy`` calls ``pprint`` automatically, so that's why you see pretty
+printing by default.
 
-Es ist gibt auch ein Ausgabemodul ``sympy.printing``. Andere
-Ausgabemethoden, die durch dieses Modul erreichbar sind:
+Note that there is also a printing module available, ``sympy.printing``.  Other
+printing methods available through this module are:
 
 * ``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``: Return or print, respectively, a pretty representation of ``expr``. This is the same as the second level of representation described above.
 
@@ -905,13 +953,23 @@ Ausgabemethoden, die durch dieses Modul erreichbar sind:
 
 * ``print_gtk(expr)``: Print ``expr`` to `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_, a GTK widget that displays MathML code. The `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_ program is required.
 
-Weitere Dokumentation
+Further documentation
 =====================
 
-Nun ist Zeit, mehr über SymPy zu lernen.  Lies den
-:ref:`SymPy User's Guide <guide>` und die
+Now it's time to learn more about SymPy. Go through the
+:ref:`SymPy User's Guide <guide>` and
 :ref:`SymPy Modules Reference <module-docs>`.
 
-Unser öffentliches Wiki unter  `wiki.sympy.org <http://wiki.sympy.org/>`_,
-enthält einen Haufen nützlicher Beispiele und Anleitungen von uns und unseren
-Nutzern. (Fühle dich frei, dazu beizutragen und Dinge zu verändern!)
+Be sure to also browse our public `wiki.sympy.org <http://wiki.sympy.org/>`_,
+that contains a lot of useful examples, tutorials, cookbooks that we and our
+users contributed, and feel free to edit it.
+
+Translations
+============
+
+This tutorial is also available in other languages:
+
+.. toctree::
+   :maxdepth: 1
+
+   tutorial.ru.rst

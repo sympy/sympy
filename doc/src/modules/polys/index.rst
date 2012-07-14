@@ -20,10 +20,9 @@ Contents
 .. toctree::
     :maxdepth: 3
 
-    basics.txt
-    wester.txt
-    reference.txt
-    agca.txt
-    internals.txt
-    literature.txt
-
+    basics.rst
+    wester.rst
+    reference.rst
+    agca.rst
+    internals.rst
+    literature.rst

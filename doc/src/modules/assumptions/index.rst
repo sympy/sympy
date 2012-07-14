@@ -10,15 +10,15 @@ Contents
 .. toctree::
     :maxdepth: 3
 
-    ask.txt
-    assume.txt
-    refine.txt
-    handlers/index.txt
+    ask.rst
+    assume.rst
+    refine.rst
+    handlers/index.rst
 
 Queries are used to ask information about expressions. Main method for this
 is ask():
 
-.. automethod:: sympy.assumptions.ask
+.. autofunction:: sympy.assumptions.ask.ask
    :noindex:
 
 Querying
@@ -352,11 +352,13 @@ Extensibility
 You can define new queries or support new types by subclassing sympy.assumptions.AskHandler
  and registering that handler for a particular key by calling register_handler:
 
-.. automethod:: sympy.assumptions.register_handler
+.. autofunction:: sympy.assumptions.ask.register_handler
+                  :noindex:
 
 You can undo this operation by calling remove_handler.
 
-.. automethod:: sympy.assumptions.remove_handler
+.. autofunction:: sympy.assumptions.ask.remove_handler
+                  :noindex:
 
 You can support new types [1]_ by adding a handler to an existing key. In the
 following example, we will create a new type MyType and extend the key 'prime'
@@ -398,5 +400,3 @@ sympy/assumptions/tests/
 
 .. [1] New type must inherit from Basic, otherwise an exception will be raised.
    This is a bug and should be fixed.
-
- 

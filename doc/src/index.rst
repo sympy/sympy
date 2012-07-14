@@ -16,15 +16,15 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   install.txt
-   tutorial.txt
-   gotchas.txt
-   guide.txt
-   modules/index.txt
-   python-comparisons.txt
-   wiki.txt
-   outreach.txt
-   aboutus.txt
+   install.rst
+   tutorial.rst
+   gotchas.rst
+   guide.rst
+   modules/index.rst
+   python-comparisons.rst
+   wiki.rst
+   outreach.rst
+   aboutus.rst
 
 If something cannot be easily accessed from this page, it's a bug (`please
 report it`_).
