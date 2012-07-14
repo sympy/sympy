@@ -47,7 +47,7 @@ def test_function_return_types():
     assert type(X.QRsolve(Y)) == ImmutableMatrix
 
     X = ImmutableMatrix([[1,2],[2,1]])
-    assert X.T.equals(X)
+    assert X.T == X
     assert X.is_symmetric
     assert type(X.cholesky()) == ImmutableMatrix
     L, D = X.LDLdecomposition()
