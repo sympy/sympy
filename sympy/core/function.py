@@ -1416,6 +1416,14 @@ class Subs(Expr):
         if not isinstance(other, Subs):
             return False
 
+        # given
+        #   a = Subs(x + z, (x, z), (0, 0))
+        #   b = Subs(x, (x,) (0,))
+        #   c = Subs(x + y, (x, y, z), (0, 0, 0))
+        #   d = Subs(x + 2*z, (x, y, z), (0, 0, 0))
+        # the following only allows a == c since the expressions must have
+        # the same number of free symbols, and when dummies are substituted
+        # for the point args in the expr, they must yield the same expression
         if len(self.expr.free_symbols) != len(other.expr.free_symbols):
             return False
 
