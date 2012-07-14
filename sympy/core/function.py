@@ -1341,22 +1341,23 @@ class Subs(Expr):
     >>> f = Function('f')
     >>> e = Subs(f(x).diff(x), x, y)
     >>> e.subs(y, 0)
-    Subs(Derivative(f(_x), _x), (_x,), (0,))
+    Subs(Derivative(f(x), x), (x,), (0,))
     >>> e.subs(f, sin).doit()
     cos(y)
 
     An example with several variables:
 
     >>> Subs(f(x)*sin(y) + z, (x, y), (0, 1))
-    Subs(z + f(_x)*sin(_y), (_x, _y), (0, 1))
+    Subs(z + f(x)*sin(y), (x, y), (0, 1))
     >>> _.doit()
     z + f(0)*sin(1)
 
     """
     def __new__(cls, expr, variables, point, **assumptions):
+        from sympy import Symbol
         if not is_sequence(variables, Tuple):
             variables = [variables]
-        variables = Tuple(*sympify(variables))
+        variables = list(sympify(variables))
 
         if uniq(variables) != variables:
             repeated = [ v for v in set(variables)
@@ -1364,18 +1365,38 @@ class Subs(Expr):
             raise ValueError('cannot substitute expressions %s more than '
                              'once.' % repeated)
 
-        point = Tuple(*sympify(point if is_sequence(point, Tuple) else [point]))
+        point = Tuple(*(point if is_sequence(point, Tuple) else [point]))
 
         if len(point) != len(variables):
             raise ValueError('Number of point values must be the same as '
                              'the number of variables.')
 
-        # it's necessary to use dummy variables internally
-        new_variables = Tuple(*[ arg.as_dummy() if arg.is_Symbol else
-            C.Dummy(str(arg)) for arg in variables ])
-        expr = sympify(expr).subs(tuple(zip(variables, new_variables)))
+        expr = sympify(expr)
 
-        obj = Expr.__new__(cls, expr, new_variables, point)
+        # use symbols with names equal to the point value (with preppended _)
+        # to give a variable-independent expression
+        pre = "_"
+        pts = sorted(set(point), key=default_sort_key)
+        while 1:
+            s_pts = dict([(p, Symbol(pre + str(p))) for p in pts])
+            reps = [(v, s_pts[p])
+                for v, p in zip(variables, point)]
+            # if any underscore-preppended symbol is already a free symbol
+            # and is a variable with a different point value, then there
+            # is a clash, e.g. _0 clashes in Subs(_0 + _1, (_0, _1), (1, 0))
+            # because the new symbol that would be created is _1 but _1
+            # is already mapped to 0 so __0 and __1 are used for the new
+            # symbols
+            if any(r in expr.free_symbols and
+                   r in variables and
+                   Symbol(pre + str(point[variables.index(r)])) != r
+                   for _, r in reps):
+                pre += "_"
+                continue
+            break
+
+        obj = Expr.__new__(cls, expr, Tuple(*variables), point)
+        obj._expr = expr.subs(reps)
         return obj
 
     def _eval_is_commutative(self):
@@ -1415,24 +1436,7 @@ class Subs(Expr):
     def __eq__(self, other):
         if not isinstance(other, Subs):
             return False
-
-        # given
-        #   a = Subs(x + z, (x, z), (0, 0))
-        #   b = Subs(x, (x,) (0,))
-        #   c = Subs(x + y, (x, y, z), (0, 0, 0))
-        #   d = Subs(x + 2*z, (x, y, z), (0, 0, 0))
-        # the following only allows a == c since the expressions must have
-        # the same number of free symbols, and when dummies are substituted
-        # for the point args in the expr, they must yield the same expression
-        if len(self.expr.free_symbols) != len(other.expr.free_symbols):
-            return False
-
-        # replace points with dummies, each unique pt getting its own dummy
-        pts = set(self.point.args + other.point.args)
-        d = dict([(p, Dummy()) for p in pts])
-        eq = lambda e: \
-            e.expr.xreplace(dict(zip(e.variables, [d[p] for p in e.point])))
-        return eq(self) == eq(other)
+        return self._expr == other._expr
 
     def __ne__(self, other):
         return not(self == other)
@@ -1441,13 +1445,13 @@ class Subs(Expr):
         return super(Subs, self).__hash__()
 
     def _hashable_content(self):
-        return tuple(sorted(self.point)) + tuple(sorted(self.free_symbols))
+        return self._expr
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        return Subs(self.expr.subs(old, new), self.variables,
-                    self.point.subs(old, new))
+        if old in self.variables:
+            pts = list(self.point.args)
+            pts[list(self.variables).index(old)] = new
+            return Subs(self.expr, self.variables, pts)
 
     def _eval_derivative(self, s):
         if s not in self.free_symbols:
