@@ -541,15 +541,16 @@ class Diagram(Basic):
     ========
 
     >>> from sympy.categories import Object, NamedMorphism, Diagram
-    >>> from sympy import FiniteSet, pprint
+    >>> from sympy import FiniteSet, pprint, default_sort_key
     >>> A = Object("A")
     >>> B = Object("B")
     >>> C = Object("C")
     >>> f = NamedMorphism(A, B, "f")
     >>> g = NamedMorphism(B, C, "g")
     >>> d = Diagram([f, g])
-    >>> pprint(d.premises.keys(), use_unicode=False)
-    [f:A-->B, id:B-->B, g*f:A-->C, g:B-->C, id:C-->C, id:A-->A]
+    >>> premises_keys = sorted(d.premises.keys(), key=default_sort_key)
+    >>> pprint(premises_keys, use_unicode=False)
+    [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
     >>> pprint(d.premises, use_unicode=False)
     {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
     EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}

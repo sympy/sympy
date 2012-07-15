@@ -11,6 +11,5 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   GA.txt
-   latex_ex.txt
-
+   GA.rst
+   latex_ex.rst

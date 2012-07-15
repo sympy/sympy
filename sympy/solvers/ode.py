@@ -149,7 +149,7 @@ Like with anything else in SymPy, you will need to add a doctest to the
 docstring, in addition to real tests in test_ode.py.  Try to maintain
 consistency with the other hint functions' docstrings.  Add your method
 to the list at the top of this docstring.  Also, add your method to
-ode.txt in the docs/src directory, so that the Sphinx docs will pull its
+ode.rst in the docs/src directory, so that the Sphinx docs will pull its
 docstring into the main SymPy documentation.  Be sure to make the Sphinx
 documentation by running "make html" from within the doc directory to
 verify that the docstring formats correctly.

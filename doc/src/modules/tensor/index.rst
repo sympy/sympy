@@ -12,5 +12,5 @@ Contents
 .. toctree::
     :maxdepth: 3
 
-    indexed.txt
-    index_methods.txt
+    indexed.rst
+    index_methods.rst
