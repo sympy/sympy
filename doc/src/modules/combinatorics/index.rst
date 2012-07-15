@@ -10,9 +10,9 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   permutations.txt
-   perm_groups.txt
-   prufer.txt
-   subsets.txt
-   graycode.txt
-   named_groups.txt
+   permutations.rst
+   perm_groups.rst
+   prufer.rst
+   subsets.rst
+   graycode.rst
+   named_groups.rst

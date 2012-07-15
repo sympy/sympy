@@ -104,7 +104,7 @@ If you think there's a bug or you would like to request a feature, please open
 an `issue ticket`_.
 
 .. _downloads site: https://code.google.com/p/sympy/downloads/list
-.. _tutorial: tutorial.txt
+.. _tutorial: tutorial.rst
 .. _#sympy: irc://irc.freenode.net/sympy
 .. _issue ticket: http://code.google.com/p/sympy/issues/list
 .. _mailing list: http://groups.google.com/group/sympy
