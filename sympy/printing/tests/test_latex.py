@@ -15,6 +15,7 @@ from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta
 from sympy.logic import Implies
+from sympy.core.trace import Tr
 
 x, y, z, t = symbols('x y z t')
 k, n = symbols('k n', integer=True)
@@ -645,3 +646,9 @@ def test_QuotientRing():
 
     assert latex(R) == r"\frac{\mathbb{Q}\left[x\right]}{\left< {x^{2} + 1} \right>}"
     assert latex(R.one) == r"{1} + {\left< {x^{2} + 1} \right>}"
+
+def test_Tr():
+    #TODO: Handle indices
+    A, B = symbols('A B', commutative=False)
+    t = Tr(A*B)
+    assert latex(t) == r'\mbox{Tr}\left(A B\right)'
