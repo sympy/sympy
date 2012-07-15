@@ -62,6 +62,10 @@ class PrettyPrinter(Printer):
         return prettyForm(symb)
     _print_RandomSymbol = _print_Symbol
 
+    def _print_IntConst(self, e):
+        symb = pretty_symbol('C'+e.name)
+        return prettyForm(symb)
+
     def _print_Float(self, e):
         # we will use StrPrinter's Float printer, but we need to handle the
         # full_prec ourselves, according to the self._print_level
