@@ -33,11 +33,11 @@ destination = "py3k-sympy" # directory to copy to
 np = os.path.normpath
 
 modified_files = []
-modified_txt_files = []
+modified_rst_files = []
 
-# we need to run 2to3 on .txt files; however, not all .txt files are doctests,
+# we need to run 2to3 on .rst files; however, not all .rst files are doctests,
 # so we need a list of files we care about
-relevant_txt_files = []
+relevant_rst_files = []
 
 skip_files = (
     # this files produces doctest errors under py3k
@@ -46,24 +46,24 @@ skip_files = (
     'bin/use2to3',
     )
 
-# generate the relevant txt files
+# generate the relevant rst files
 # most of them should be in this directory:
 for root, dirs, files in os.walk('doc/src/modules'):
     # NOTE: this will consider mpmath-related files relevant, but it doesn't matter
-    for filename in fnmatch.filter(files, '*.txt'):
-        relevant_txt_files.append(os.path.join(root, filename))
+    for filename in fnmatch.filter(files, '*.rst'):
+        relevant_rst_files.append(os.path.join(root, filename))
 
 # some files aren't in /doc/src/modules, add them explicitly
-relevant_txt_files.append(np('./doc/src/install.txt'))
-relevant_txt_files.append(np('./doc/src/tutorial.txt'))
-relevant_txt_files.append(np('./doc/src/tutorial.bg.txt'))
-relevant_txt_files.append(np('./doc/src/tutorial.cs.txt'))
-relevant_txt_files.append(np('./doc/src/tutorial.de.txt'))
-relevant_txt_files.append(np('./doc/src/tutorial.fr.txt'))
-relevant_txt_files.append(np('./doc/src/tutorial.ru.txt'))
-relevant_txt_files.append(np('./doc/src/gotchas.txt'))
-relevant_txt_files.append(np('./doc/src/guide.txt'))
-relevant_txt_files.append(np('./doc/src/python-comparisons.txt'))
+relevant_rst_files.append(np('./doc/src/install.rst'))
+relevant_rst_files.append(np('./doc/src/tutorial.rst'))
+relevant_rst_files.append(np('./doc/src/tutorial.bg.rst'))
+relevant_rst_files.append(np('./doc/src/tutorial.cs.rst'))
+relevant_rst_files.append(np('./doc/src/tutorial.de.rst'))
+relevant_rst_files.append(np('./doc/src/tutorial.fr.rst'))
+relevant_rst_files.append(np('./doc/src/tutorial.ru.rst'))
+relevant_rst_files.append(np('./doc/src/gotchas.rst'))
+relevant_rst_files.append(np('./doc/src/guide.rst'))
+relevant_rst_files.append(np('./doc/src/python-comparisons.rst'))
 
 # some files need 2to3, but don't have the .py suffix
 relevant_no_extension = ('bin/doctest', 'bin/isympy', 'bin/test',
@@ -98,11 +98,11 @@ try:
         # add to the list of files to pass to 2to3 if needed
         if filename.endswith(".py"):
             modified_files.append(dst)
-        elif filename.endswith(".txt"):
+        elif filename.endswith(".rst"):
             # we need to check the exact path here, not just the filename
-            # as there are eg. multiple index.txt files and not all are relevant
-            if np(src) in relevant_txt_files:
-                modified_txt_files.append(dst)
+            # as there are eg. multiple index.rst files and not all are relevant
+            if np(src) in relevant_rst_files:
+                modified_rst_files.append(dst)
         elif filename in relevant_no_extension:
             modified_files.append(dst)
 except (CalledProcessError, WindowsError):
@@ -127,7 +127,7 @@ args_2to3_doctests = args_2to3 + ["-d"] # convert doctests too
 # extend the argument list with the list of files that need it
 args_2to3.extend(modified_files)
 args_2to3_doctests.extend(modified_files)
-args_2to3_doctests.extend(modified_txt_files)
+args_2to3_doctests.extend(modified_rst_files)
 
 # call 2to3, once for regular files and once for doctests
 from lib2to3.main import main as main2to3
@@ -141,7 +141,7 @@ whitespace = re.compile(" +$", re.MULTILINE)
 # slipped in before extra newlines, \s\s is used
 eofnewlines = re.compile("\s\s+$")
 
-for filepath in modified_files + modified_txt_files:
+for filepath in modified_files + modified_rst_files:
     with open(filepath, 'r') as f:
         text = f.read() or '\n' # all must end with newline
 

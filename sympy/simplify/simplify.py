@@ -1242,10 +1242,11 @@ def split_surds(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.simplify import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
-    (5, 1/7 + sqrt(2) + sqrt(3), sqrt(6) + 3*sqrt(3))
+    (3, sqrt(2) + sqrt(5) + 3, sqrt(5)/7 + sqrt(10))
     """
     coeff_muls =  [x.as_coeff_Mul() for x in expr.args]
     surds = [x[1]**2 for x in coeff_muls if x[1].is_Pow]
+    surds.sort(key=default_sort_key)
     g, b1, b2 = _split_gcd(*surds)
     g2 = g
     if not b2 and len(b1) >= 2:
@@ -1741,13 +1742,13 @@ def powdenest(eq, force=False, polar=False):
     r"""
     Collect exponents on powers as assumptions allow.
 
-    Given (bb**be)**e, this can be simplified as follows:
-        o if bb is positive, or
-        o e is an integer, or
-        o |be| < 1 then this simplifies to bb**(be*e)
+    Given ``(bb**be)**e``, this can be simplified as follows:
+        * if ``bb`` is positive, or
+        * ``e`` is an integer, or
+        * ``|be| < 1`` then this simplifies to ``bb**(be*e)``
 
-    Given a product of powers raised to a power, (bb1**be1 * bb2**be2...)**e,
-    simplification can be done as follows:
+    Given a product of powers raised to a power, ``(bb1**be1 *
+    bb2**be2...)**e``, simplification can be done as follows:
 
     - if e is positive, the gcd of all bei can be joined with e;
     - all non-negative bb can be separated from those that are negative
@@ -1761,11 +1762,11 @@ def powdenest(eq, force=False, polar=False):
     negative behave as though they are positive, resulting in more
     denesting.
 
-    Setting `polar` to True will do simplifications on the riemann surface of
+    Setting ``polar`` to True will do simplifications on the riemann surface of
     the logarithm, also resulting in more denestings.
 
     When there are sums of logs in exp() then a product of powers may be
-    obtained e.g. exp(3*(log(a) + 2*log(b))) - > a**3*b**6.
+    obtained e.g. ``exp(3*(log(a) + 2*log(b)))`` - > ``a**3*b**6``.
 
     Examples
     ========

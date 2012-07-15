@@ -82,8 +82,8 @@ def perm_af_mul(a, b):
     Permutation
     """
     if len(a) != len(b):
-        raise ValueError("The number of elements in the permutations \
-don\'t match.")
+        raise ValueError("The number of elements in the permutations "
+                         "do not match.")
 
     return [a[i] for i in b]
 
@@ -183,53 +183,57 @@ def perm_af_commutes_with(a, b):
 
 class Permutation(Basic):
     """
-    A permutation, alternatively known as an 'arrangement number'
-    or 'ordering' is an arrangement of the elements of an ordered list
-    into a one-to-one mapping with itself. The number of permutations
-    on a set of n elements is given by n!.
+    A permutation, alternatively known as an 'arrangement number' or 'ordering'
+    is an arrangement of the elements of an ordered list into a one-to-one
+    mapping with itself. The number of permutations on a set of n elements is
+    given by n!.
 
-    A representation of a permutation as a product of permutation cycles
-    is unique (up to the ordering of the cycles). An example of a cyclic
+    A representation of a permutation as a product of permutation cycles is
+    unique (up to the ordering of the cycles). An example of a cyclic
     decomposition is the permutation [3, 1, 0, 2] of the set [0, 1, 2, 3].
     This is denoted as [[1], [0, 3, 2]], corresponding to the disjoint
-    permutation cycles [1] and [0, 3, 2]. We can choose the cyclic form as
-    we want since the cycles are disjoint and can therefore be specified
-    in any order and a rotation of a given cycle specifies the same cycle [see 1.]
+    permutation cycles [1] and [0, 3, 2]. We can choose the cyclic form as we
+    want since the cycles are disjoint and can therefore be specified in any
+    order and a rotation of a given cycle specifies the same cycle [1]_.
     Therefore, (320)(1), (203)(1), (032)(1), (1)(320), (1)(203), and (1)(032)
     all describe the same permutation.
 
     Another notation that explicitly identifies the positions occupied by
     elements before and after application of a permutation on n elements uses a
     2xn matrix, where the first row is the identity permutation and the second
-    row is the new arrangement [see 2.].
+    row is the new arrangement [2]_.
 
     Any permutation is also a product of transpositions.
 
     Permutations are commonly denoted in lexicographic or transposition order.
 
     The product of two permutations a and q is defined as their composition as
-    functions, (p*q)(i) = p(q(i)) [see 6.].
+    functions, (p*q)(i) = p(q(i)) [6]_.
 
     References
     ==========
-    [1] Skiena, S. 'Permutations.' 1.1 in Implementing Discrete Mathematics
-        Combinatorics and Graph Theory with Mathematica.
-        Reading, MA: Addison-Wesley, pp. 3-16, 1990.
-    [2] Knuth, D. E. The Art of Computer Programming, Vol. 4: Combinatorial
-        Algorithms, 1st ed. Reading, MA: Addison-Wesley, 2011.
-    [3] Wendy Myrvold and Frank Ruskey. 2001. Ranking and unranking
-        permutations in linear time. Inf. Process. Lett. 79, 6 (September 2001),
-        281-284. DOI=10.1016/S0020-0190(01)00141-7
-    [4] D. L. Kreher, D. R. Stinson 'Combinatorial Algorithms'
-        CRC Press, 1999
-    [5] Graham, R. L.; Knuth, D. E.; and Patashnik, O.
-        Concrete Mathematics: A Foundation for Computer Science, 2nd ed.
-        Reading, MA: Addison-Wesley, 1994.
-    [6] http://en.wikipedia.org/wiki/Permutation#Product_and_inverse
 
-    [7] http://en.wikipedia.org/wiki/Lehmer_code
+    .. [1] Skiena, S. 'Permutations.' 1.1 in Implementing Discrete Mathematics
+           Combinatorics and Graph Theory with Mathematica.  Reading, MA:
+           Addison-Wesley, pp. 3-16, 1990.
 
-    (7) http://en.wikipedia.org/wiki/Lehmer_code
+    .. [2] Knuth, D. E. The Art of Computer Programming, Vol. 4: Combinatorial
+           Algorithms, 1st ed. Reading, MA: Addison-Wesley, 2011.
+
+    .. [3] Wendy Myrvold and Frank Ruskey. 2001. Ranking and unranking
+           permutations in linear time. Inf. Process. Lett. 79, 6 (September 2001),
+           281-284. DOI=10.1016/S0020-0190(01)00141-7
+
+    .. [4] D. L. Kreher, D. R. Stinson 'Combinatorial Algorithms'
+           CRC Press, 1999
+
+    .. [5] Graham, R. L.; Knuth, D. E.; and Patashnik, O.
+           Concrete Mathematics: A Foundation for Computer Science, 2nd ed.
+           Reading, MA: Addison-Wesley, 1994.
+
+    .. [6] http://en.wikipedia.org/wiki/Permutation#Product_and_inverse
+
+    .. [7] http://en.wikipedia.org/wiki/Lehmer_code
 
     """
 
@@ -358,13 +362,15 @@ class Permutation(Basic):
         """
         if not args or not is_sequence(args[0]) or len(args) > 1 or \
            len(set(is_sequence(a) for a in args[0])) > 1:
-            raise ValueError('Permutation argument must be a list of ints or a list of lists.')
+            raise ValueError("Permutation argument must be a list of ints "
+                             "or a list of lists.")
 
         # 0, 1, ..., n-1 should all be present
 
         temp = [int(i) for i in flatten(args[0])]
         if set(range(len(temp))) != set(temp):
-            raise ValueError("Integers 0 through %s must be present." % len(temp))
+            raise ValueError("Integers 0 through %s must be present." %
+                             len(temp))
 
         cform = aform = None
         if args[0] and is_sequence(args[0][0]):
@@ -472,8 +478,8 @@ class Permutation(Basic):
         a = self.array_form
         b = other.array_form
         if len(a) != len(b):
-            raise ValueError("The number of elements in the permutations \
-            don\'t match.")
+            raise ValueError("The number of elements in the permutations "
+                             "do not match.")
 
         perm = [a[i] for i in b]
         return _new_from_array_form(perm)
@@ -502,14 +508,26 @@ class Permutation(Basic):
         """
         Routine for finding powers of a permutation.
 
+        Power notation is also used for conjugation.
+
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([2,0,3,1])
+        >>> q = Permutation([1,0,3,2])
+        >>> r = Permutation([0,2,3,1])
         >>> p**4
         Permutation([0, 1, 2, 3])
+        >>> p**q == p.conjugate(q)
+        True
+        >>> q**p == q.conjugate(p)
+        True
+        >>> (p**q)**r == p**(q * r)
+        True
         """
+        if type(n) == Permutation:
+            return self.conjugate(n)
         n = int(n)
         if n == 0:
             return Permutation(range(self.size))
@@ -1105,12 +1123,42 @@ class Permutation(Basic):
         b = x.array_form
         n = len(a)
         if len(b) != n:
-            raise ValueError("The number of elements in the permutations \
-don\'t match.")
+            raise ValueError("The number of elements in the permutations "
+                             "do not match.")
         invb = [None]*n
         for i in xrange(n):
             invb[b[i]] = i
         return _new_from_array_form([invb[a[i]] for i in b])
+
+    def commutator(self, x):
+        """
+        Computes the commutator Permutation ``~p*~x*p*x``
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([0,2,1,3])
+        >>> b = Permutation([0,2,3,1])
+        >>> a.commutator(b)
+        Permutation([0, 3, 1, 2])
+        >>> ~a*~b*a*b
+        Permutation([0, 3, 1, 2])
+        """
+
+        a = self.array_form
+        b = x.array_form
+        n = len(a)
+        if len(b) != n:
+            raise ValueError("The number of elements in the permutations "
+                             "do not match.")
+        inva = [None]*n
+        for i in xrange(n):
+            inva[a[i]] = i
+        invb = [None]*n
+        for i in xrange(n):
+            invb[b[i]] = i
+        return _new_from_array_form([inva[invb[a[i]]] for i in b])
 
     def signature(self):
         """

@@ -3,6 +3,8 @@ of Basic or Atom."""
 
 from sympy.core.basic import Basic, Atom, preorder_traversal
 from sympy.core.singleton import S, Singleton
+from sympy.core.symbol import symbols
+from sympy.utilities.misc import default_sort_key
 
 from sympy.utilities.pytest import raises
 
@@ -117,3 +119,8 @@ def test_preorder_traversal():
         if i == b2:
             pt.skip()
     assert result == [expr, b21, b2, b1, b3, b2]
+
+    w, x, y, z = symbols('w:z')
+    expr = z + w*(x+y)
+    assert list(preorder_traversal([expr], key=default_sort_key)) == \
+        [[w*(x + y) + z], w*(x + y) + z, z, w*(x + y), w, x + y, x, y]

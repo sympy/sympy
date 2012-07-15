@@ -1347,7 +1347,7 @@ class Subs(Expr):
 
     An example with several variables:
 
-    >>> Subs(f(x)*sin(y)+z, (x, y), (0, 1))
+    >>> Subs(f(x)*sin(y) + z, (x, y), (0, 1))
     Subs(z + f(_x)*sin(_y), (_x, _y), (0, 1))
     >>> _.doit()
     z + f(0)*sin(1)
@@ -1359,14 +1359,12 @@ class Subs(Expr):
         variables = Tuple(*sympify(variables))
 
         if uniq(variables) != variables:
-            repeated = repeated = [ v for v in set(variables)
+            repeated = [ v for v in set(variables)
                                     if list(variables).count(v) > 1 ]
             raise ValueError('cannot substitute expressions %s more than '
                              'once.' % repeated)
 
-        if not is_sequence(point, Tuple):
-            point = [point]
-        point = Tuple(*sympify(point))
+        point = Tuple(*sympify(point if is_sequence(point, Tuple) else [point]))
 
         if len(point) != len(variables):
             raise ValueError('Number of point values must be the same as '
@@ -1417,32 +1415,24 @@ class Subs(Expr):
     def __eq__(self, other):
         if not isinstance(other, Subs):
             return False
-        if (len(self.point) != len(other.point) or
-            self.free_symbols != other.free_symbols or
-            sorted(self.point) != sorted(other.point)):
+
+        # given
+        #   a = Subs(x + z, (x, z), (0, 0))
+        #   b = Subs(x, (x,) (0,))
+        #   c = Subs(x + y, (x, y, z), (0, 0, 0))
+        #   d = Subs(x + 2*z, (x, y, z), (0, 0, 0))
+        # the following only allows a == c since the expressions must have
+        # the same number of free symbols, and when dummies are substituted
+        # for the point args in the expr, they must yield the same expression
+        if len(self.expr.free_symbols) != len(other.expr.free_symbols):
             return False
 
-        # non-repeated point args
-        selfargs = [ v[0] for v in sorted(zip(self.variables, self.point),
-            key = lambda v: v[1]) if list(self.point.args).count(v[1]) == 1 ]
-        otherargs = [ v[0] for v in sorted(zip(other.variables, other.point),
-            key = lambda v: v[1]) if list(other.point.args).count(v[1]) == 1 ]
-        # find repeated point values and subs each associated variable
-        # for a single symbol
-        selfrepargs = []
-        otherrepargs = []
-        if uniq(self.point) != self.point:
-            repeated = uniq([ v for v in self.point if
-                                list(self.point.args).count(v) > 1 ])
-            repswap = dict(zip(repeated, [ C.Dummy() for _ in
-                                            xrange(len(repeated)) ]))
-            selfrepargs = [ (self.variables[i], repswap[v]) for i, v in
-                            enumerate(self.point) if v in repeated ]
-            otherrepargs = [ (other.variables[i], repswap[v]) for i, v in
-                            enumerate(other.point) if v in repeated ]
-
-        return self.expr.subs(selfrepargs) == other.expr.subs(
-                tuple(zip(otherargs, selfargs))).subs(otherrepargs)
+        # replace points with dummies, each unique pt getting its own dummy
+        pts = set(self.point.args + other.point.args)
+        d = dict([(p, Dummy()) for p in pts])
+        eq = lambda e: \
+            e.expr.xreplace(dict(zip(e.variables, [d[p] for p in e.point])))
+        return eq(self) == eq(other)
 
     def __ne__(self, other):
         return not(self == other)

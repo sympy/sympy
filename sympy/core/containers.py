@@ -130,10 +130,11 @@ class Dict(Basic):
     >>> from sympy import S
     >>> from sympy.core.containers import Dict
 
-    >>> D = Dict({1:'one', 2:'two'})
-    >>> for key in D: print key, D[key]
+    >>> D = Dict({1: 'one', 2: 'two'})
+    >>> for key in D:
+    ...    if key == 1:
+    ...        print key, D[key]
     1 one
-    2 two
 
     The args are sympified so the 1 and 2 are Integers and the values
     are Symbols. Queries automatically sympify args so the following work:
