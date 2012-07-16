@@ -1463,6 +1463,22 @@ class XypicDiagramDrawer(object):
             obj = grid[i, j]
 
             for m, m_str_info in morphisms_str_info.items():
+                if (m.domain == obj) and (m.codomain == obj):
+                    # That's another loop morphism.  Check how it
+                    # loops and mark the corresponding quadrants as
+                    # busy.
+                    (l_s, l_e) = (m_str_info.looping_start, m_str_info.looping_end)
+
+                    if (l_s, l_e) == ("r", "u"):
+                        quadrant[0] += 1
+                    elif (l_s, l_e) == ("u", "l"):
+                        quadrant[1] += 1
+                    elif (l_s, l_e) == ("l", "d"):
+                        quadrant[2] += 1
+                    elif (l_s, l_e) == ("d", "r"):
+                        quadrant[3] += 1
+
+                    continue
                 if m.domain == obj:
                     (end_i, end_j) = object_coords[m.codomain]
                     goes_out = True
