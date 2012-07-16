@@ -1810,7 +1810,7 @@ class XypicDiagramDrawer(object):
                 set_label_position(free_up, free_down, "^", "_",
                                    backwards, m_str_info)
 
-    def draw(self, diagram, grid):
+    def draw(self, diagram, grid, masked=None):
         """
         Returns the Xy-pic representation of ``diagram`` laid out in
         ``grid``.
@@ -1819,7 +1819,14 @@ class XypicDiagramDrawer(object):
         """
         result = "\\xymatrix{\n"
 
-        morphisms = grid.morphisms
+        if not masked:
+            morphisms = grid.morphisms
+        else:
+            morphisms = {}
+            for m, props in grid.morphisms.items():
+                if m in masked:
+                    continue
+                morphisms[m] = props
 
         # Build the mapping between objects and their position in the
         # grid.

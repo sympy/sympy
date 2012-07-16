@@ -659,6 +659,12 @@ def test_XypicDiagramDrawer():
     "B \\ar[ru]_{g} & \n" \
     "}\n"
 
+    # The same diagram, with a masked morphism.
+    assert drawer.draw(d, grid, masked=[g]) == "\\xymatrix{\n" \
+    "A \\ar[r]^{g\\circ f} \\ar[d]_{f} & C \\\\\n" \
+    "B & \n" \
+    "}\n"
+
     # A cube diagram.
     A1 = Object("A1")
     A2 = Object("A2")
