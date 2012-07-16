@@ -740,6 +740,30 @@ def test_XypicDiagramDrawer():
     "D \\ar[u]_{k} \\ar@/^7mm/[uu]^{h} \\ar@/^11mm/[uu]^{h_{1}} & \n" \
     "}\n"
 
+    # The same diagram, with "loop" morphisms.
+    l_A = NamedMorphism(A, A, "l_A")
+    l_D = NamedMorphism(D, D, "l_D")
+    l_C = NamedMorphism(C, C, "l_C")
+    d = Diagram([f, g, h, k, h1, h2, l_A, l_D, l_C])
+    grid = DiagramGrid(d)
+    drawer = XypicDiagramDrawer()
+    assert drawer.draw(d, grid) == "\\xymatrix{\n" \
+    "A \\ar[r]_{f} \\ar@/^3mm/[rr]^{h_{2}} \\ar@(u,l)[]^{l_{A}} " \
+    "& B \\ar[d]^{g} & D \\ar[l]^{k} \\ar@/_7mm/[ll]_{h} " \
+    "\\ar@/_11mm/[ll]_{h_{1}} \\ar@(r,u)[]^{l_{D}} \\\\\n" \
+    "& C \\ar@(l,d)[]^{l_{C}} & \n" \
+    "}\n"
+
+    # The same diagram with "loop" morphisms, transposed.
+    grid = DiagramGrid(d, transpose=True)
+    drawer = XypicDiagramDrawer()
+    assert drawer.draw(d, grid) == "\\xymatrix{\n" \
+    "A \\ar[d]^{f} \\ar@/_3mm/[dd]_{h_{2}} \\ar@(r,u)[]_{l_{A}} & \\\\\n" \
+    "B \\ar[r]^{g} & C \\ar@(r,u)[]^{l_{C}} \\\\\n" \
+    "D \\ar[u]_{k} \\ar@/^7mm/[uu]^{h} \\ar@/^11mm/[uu]^{h_{1}} " \
+    "\\ar@(l,d)[]^{l_{D}} & \n" \
+    "}\n"
+
     # A triangle diagram with a lot of morphisms between the same
     # objects.
     f1 = NamedMorphism(B, A, "f1")

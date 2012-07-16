@@ -1344,11 +1344,13 @@ class _StrArrow(object):
     Stores the information necessary for producing an Xy-pic
     description of an arrow.
     """
-    def __init__(self, unit, curving, curving_amount, horizontal_direction,
-                 vertical_direction, label_position, label):
+    def __init__(self, unit, curving, curving_amount, looping,
+                 horizontal_direction, vertical_direction, label_position,
+                 label):
         self.unit = unit
         self.curving = curving
         self.curving_amount = curving_amount
+        self.looping = looping
         self.horizontal_direction = horizontal_direction
         self.vertical_direction = vertical_direction
         self.label_position = label_position
@@ -1366,9 +1368,9 @@ class _StrArrow(object):
         else:
             curving_str = ""
 
-        return "\\ar%s[%s%s]%s{%s}" % \
-               (curving_str, self.horizontal_direction, self.vertical_direction,
-                self.label_position, self.label)
+        return "\\ar%s%s[%s%s]%s{%s}" % \
+               (curving_str, self.looping, self.horizontal_direction,
+                self.vertical_direction, self.label_position, self.label)
 
 class XypicDiagramDrawer(object):
     """
@@ -1439,7 +1441,116 @@ class XypicDiagramDrawer(object):
 
         curving = ""
         label_pos = "^"
-        if (delta_i == 0) and (abs(j - target_j) > 1):
+        looping = ""
+        if (delta_i == 0) and (delta_j == 0):
+            # This is a loop morphism.  Count how many morphisms stick
+            # in each of the four quadrants.  Note that straight
+            # vertical and horizontal morphisms count in two quadrants
+            # at the same time (i.e., a morphism going up counts both
+            # in the first and the second quadrants).
+
+            # The usual numbering (counterclockwise) of quadrants
+            # applies.
+            quadrant = [0, 0, 0, 0]
+
+            obj = grid[i, j]
+
+            for m, m_str_info in morphisms_str_info.items():
+                if m.domain == obj:
+                    (end_i, end_j) = object_coords[m.codomain]
+                    goes_out = True
+                elif m.codomain == obj:
+                    (end_i, end_j) = object_coords[m.domain]
+                    goes_out = False
+                else:
+                    continue
+
+                d_i = end_i - i
+                d_j = end_j - j
+                m_curving = m_str_info.curving
+
+                if (d_i != 0) and (d_j != 0):
+                    # This is really a diagonal morphism.  Detect the
+                    # quadrant.
+                    if (d_i > 0) and (d_j > 0):
+                        quadrant[0] += 1
+                    elif (d_i > 0) and (d_j < 0):
+                        quadrant[1] += 1
+                    elif (d_i < 0) and (d_j < 0):
+                        quadrant[2] += 1
+                    elif (d_i < 0) and (d_j > 0):
+                        quadrant[3] += 1
+                elif d_i == 0:
+                    # Knowing where the other end of the morphism is
+                    # and which way it goes, we now have to decide
+                    # which quadrant is now the upper one and which is
+                    # the lower one.
+                    if d_j > 0:
+                        if goes_out:
+                            upper_quadrant = 0
+                            lower_quadrant = 3
+                        else:
+                            upper_quadrant = 3
+                            lower_quadrant = 0
+                    else:
+                        if goes_out:
+                            upper_quadrant = 2
+                            lower_quadrant = 1
+                        else:
+                            upper_quadrant = 1
+                            lower_quadrant = 2
+
+                    if m_curving:
+                        if m_curving == "^":
+                            quadrant[upper_quadrant] += 1
+                        elif m_curving == "_":
+                            quadrant[lower_quadrant] += 1
+                    else:
+                        # This morphism counts in both upper and lower
+                        # quadrants.
+                        quadrant[upper_quadrant] += 1
+                        quadrant[lower_quadrant] += 1
+                elif d_j == 0:
+                    # Knowing where the other end of the morphism is
+                    # and which way it goes, we now have to decide
+                    # which quadrant is now the left one and which is
+                    # the right one.
+                    if d_i < 0:
+                        if goes_out:
+                            left_quadrant = 1
+                            right_quadrant = 0
+                        else:
+                            left_quadrant = 0
+                            right_quadrant = 1
+                    else:
+                        if goes_out:
+                            left_quadrant = 3
+                            right_quadrant = 2
+                        else:
+                            left_quadrant = 2
+                            right_quadrant = 3
+
+                    if m_curving:
+                        if m_curving == "^":
+                            quadrant[left_quadrant] += 1
+                        elif m_curving == "_":
+                            quadrant[right_quadrant] += 1
+                    else:
+                        # This morphism counts in both upper and lower
+                        # quadrants.
+                        quadrant[left_quadrant] += 1
+                        quadrant[right_quadrant] += 1
+
+            # Pick the freest quadrant to curve our morphism into.
+            freest_quadrant = 0
+            for i in xrange(4):
+                if quadrant[i] < quadrant[freest_quadrant]:
+                    freest_quadrant = i
+
+            # Now set up proper looping.
+            looping = ["@(r,u)", "@(u,l)", "@(l,d)", "@(d,r)"][freest_quadrant]
+
+        elif (delta_i == 0) and (abs(j - target_j) > 1):
             # Suppose we are going from left to right.
             backwards = False
             start = j
@@ -1647,7 +1758,7 @@ class XypicDiagramDrawer(object):
         elif isinstance(morphism, NamedMorphism):
             morphism_name = latex(Symbol(morphism.name))
 
-        return _StrArrow(self.unit, curving, curving_amount,
+        return _StrArrow(self.unit, curving, curving_amount, looping,
                          horizontal_direction, vertical_direction,
                          label_pos, morphism_name)
 
@@ -1857,6 +1968,12 @@ class XypicDiagramDrawer(object):
             """
             (i, j) = object_coords[morphism.domain]
             (target_i, target_j) = object_coords[morphism.codomain]
+
+            if morphism.domain == morphism.codomain:
+                # Loop morphisms should get after diagonal morphisms
+                # so that the proper direction in which to curve the
+                # loop can be determined.
+                return (3, 0, default_sort_key(morphism))
 
             if target_i == i:
                 return (1, abs(target_j - j), default_sort_key(morphism))
