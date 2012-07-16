@@ -162,7 +162,7 @@ need to write special code in _handle_Integral().  Arbitrary constants
 should be symbols named C1, C2, and so on.  All solution methods should
 return an equality instance.  If you need an arbitrary number of
 arbitrary constants, you can use constants =
-numbered_symbols(prefix='C', cls=Symbol, start=1).  If it is
+numbered_symbols(prefix='C', cls=_TempIntConst, start=1).  If it is
 possible to solve for the dependent function in a general way, do so.
 Otherwise, do as best as you can, but do not call solve in your
 ode_hint() function.  odesimp() will attempt to solve the solution for
@@ -1026,7 +1026,7 @@ def odesimp(eq, func, order, hint):
     """
     x = func.args[0]
     f = func.func
-    C1 = Symbol('C1')
+    C1 = _TempIntConst('C1')
 
     # First, integrate if the hint allows it.
     eq = _handle_Integral(eq, func, order, hint)
@@ -1508,8 +1508,8 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     ========
 
     >>> from sympy import symbols
-    >>> from sympy.solvers.ode import constantsimp
-    >>> C1, C2, C3, x, y = symbols('C1,C2,C3,x,y')
+    >>> from sympy.solvers.ode import constantsimp, _TempIntConst
+    >>> C1, C2, C3, x, y = symbols('C1,C2,C3,x,y', cls=_TempIntConst)
     >>> constantsimp(2*C1*x, x, 3)
     C1*x
     >>> constantsimp(C1 + 2 + x + y, x, 3)
@@ -1524,7 +1524,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     # simplifying up.  Otherwise, we can skip that part of the
     # expression.
 
-    constant_iter = numbered_symbols('C', cls=Symbol, start=startnumber)
+    constant_iter = numbered_symbols('C', cls=_TempIntConst, start=startnumber)
     constantsymbols = [constant_iter.next() for t in range(startnumber, endnumber + 1)]
     constantsymbols_set = set(constantsymbols)
     x = independentsymbol
@@ -1553,7 +1553,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
         # ================ pre-processing ================
         # collect terms to get constants together
         def _take(i):
-            t = sorted([s for s in i.atoms(Symbol) if s in constantsymbols])
+            t = sorted([s for s in i.atoms(_TempIntConst) if s in constantsymbols])
             if not t:
                 return i
             return t[0]
@@ -1710,8 +1710,9 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
     ========
 
     >>> from sympy import symbols, Eq, pprint
-    >>> from sympy.solvers.ode import constant_renumber
-    >>> x, C0, C1, C2, C3, C4 = symbols('x,C:5')
+    >>> from sympy.solvers.ode import constant_renumber, _TempIntConst
+    >>> x  = symbols('x')
+    >>> C0, C1, C2, C3, C4 = symbols('C:5', cls=_TempIntConst)
 
     Only constants in the given range (inclusive) are renumbered;
     the renumbering always starts from 1:
@@ -1723,11 +1724,11 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
     >>> constant_renumber(C0 + 2*C1 + C2, 'C', 0, 1)
     C1 + 3*C2
     >>> pprint(C2 + C1*x + C3*x**2)
-                    2
-    C1*x + C2 + C3*x
+     2
+    x *C3 + x*C1 + C2
     >>> pprint(constant_renumber(C2 + C1*x + C3*x**2, 'C', 1, 3))
-                    2
-    C1 + C2*x + C3*x
+     2
+    x *C3 + x*C2 + C1
 
     """
     if type(expr) in (set, list, tuple):
@@ -1743,9 +1744,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
         newstartnumber maintains its values throughout recursive calls.
 
         """
-        constantsymbols = [Symbol(
-            symbolname + "%d" % t) for t in range(startnumber,
-        endnumber + 1)]
+        constantsymbols = [_TempIntConst(symbolname+"%d" % t) for t in range(startnumber, endnumber + 1)]
         global newstartnumber
 
         if isinstance(expr, Equality):
@@ -1761,7 +1760,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
             return expr
         elif expr in constantsymbols:
             # Renumbering happens here
-            newconst = Symbol(symbolname + str(newstartnumber))
+            newconst = _TempIntConst(symbolname + str(newstartnumber))
             newstartnumber += 1
             return newconst
         else:
@@ -1925,8 +1924,8 @@ def ode_1st_exact(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    r = match  # d+e*diff(f(x),x)
-    C1 = Symbol('C1')
+    r = match # d+e*diff(f(x),x)
+    C1 = _TempIntConst('C1')
     x0 = Dummy('x0')
     y0 = Dummy('y0')
     global exactvars  # This is the only way to pass these dummy variables to
@@ -2070,9 +2069,9 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    u1 = Dummy('u1')  # u1 == f(x)/x
-    r = match  # d+e*diff(f(x),x)
-    C1 = Symbol('C1')
+    u1 = Dummy('u1') # u1 == f(x)/x
+    r = match # d+e*diff(f(x),x)
+    C1 = _TempIntConst('C1')
     int = C.Integral(
         (-r[r['e']]/(r[r['d']] + u1*r[r['e']])).subs({x: 1, r['y']: u1}),
         (u1, None, f(x)/x))
@@ -2157,9 +2156,9 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    u2 = Dummy('u2')  # u2 == x/f(x)
-    r = match  # d+e*diff(f(x),x)
-    C1 = Symbol('C1')
+    u2 = Dummy('u2') # u2 == x/f(x)
+    r = match # d+e*diff(f(x),x)
+    C1 = _TempIntConst('C1')
     int = C.Integral(
         simplify(
             (-r[r['d']]/(r[r['e']] + u2*r[r['d']])).subs({x: u2, r['y']: 1})),
@@ -2307,8 +2306,8 @@ def ode_1st_linear(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    r = match  # a*diff(f(x),x) + b*f(x) + c
-    C1 = Symbol('C1')
+    r = match # a*diff(f(x),x) + b*f(x) + c
+    C1 = _TempIntConst('C1')
     t = exp(C.Integral(r[r['b']]/r[r['a']], x))
     tt = C.Integral(t*(-r[r['c']]/r[r['a']]), x)
     return Eq(f(x), (tt + C1)/t)
@@ -2389,12 +2388,11 @@ def ode_Bernoulli(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    r = match  # a*diff(f(x),x) + b*f(x) + c*f(x)**n, n != 1
-    C1 = Symbol('C1')
-    t = exp((1 - r[r['n']])*C.Integral(r[r['b']]/r[r['a']], x))
-    tt = (r[r['n']] - 1)*C.Integral(t*r[r['c']]/r[r['a']], x)
-    return Eq(f(x), ((tt + C1)/t)**(1/(1 - r[r['n']])))
-
+    r = match # a*diff(f(x),x) + b*f(x) + c*f(x)**n, n != 1
+    C1 = _TempIntConst('C1')
+    t = exp((1-r[r['n']])*C.Integral(r[r['b']]/r[r['a']],x))
+    tt = (r[r['n']]-1)*C.Integral(t*r[r['c']]/r[r['a']],x)
+    return Eq(f(x),((tt + C1)/t)**(1/(1-r[r['n']])))
 
 def ode_Riccati_special_minus2(eq, func, order, match):
     r"""
@@ -2436,7 +2434,7 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     f = func.func
     r = match  # a2*diff(f(x),x) + b2*f(x) + c2*f(x)/x + d2/x**2
     a2, b2, c2, d2 = [r[r[s]] for s in 'a2 b2 c2 d2'.split()]
-    C1 = Symbol('C1')
+    C1 = _TempIntConst('C1')
     mu = sqrt(4*d2*b2 - (a2 - c2)**2)
     return Eq(f(x), (a2 - c2 - mu*tan(mu/(2*a2)*log(x) + C1))/(2*b2*x))
 
@@ -2501,8 +2499,8 @@ def ode_Liouville(eq, func, order, match):
     f = func.func
     r = match  # f(x).diff(x, 2) + g*f(x).diff(x)**2 + h*f(x).diff(x)
     y = r['y']
-    C1 = Symbol('C1')
-    C2 = Symbol('C2')
+    C1 = _TempIntConst('C1')
+    C2 = _TempIntConst('C2')
     int = C.Integral(exp(C.Integral(r['g'], y)), (y, None, f(x)))
     sol = Eq(int + C1*C.Integral(exp(-C.Integral(r['h'], x)), x) + C2, 0)
     return sol
@@ -2767,7 +2765,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     r = match
 
     # A generator of constants
-    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
+    constants = numbered_symbols(prefix='C', cls=_TempIntConst, start=1)
 
     # First, set up characteristic equation.
     chareq, symbol = S.Zero, Dummy('x')
@@ -3305,8 +3303,8 @@ def ode_separable(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    C1 = Symbol('C1')
-    r = match  # {'m1':m1, 'm2':m2, 'y':y}
+    C1 = _TempIntConst('C1')
+    r = match # {'m1':m1, 'm2':m2, 'y':y}
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
         (r['y'], None, f(x))), C.Integral(-r['m1']['coeff']*r['m1'][x]/
         r['m2'][x], x) + C1)
@@ -3322,7 +3320,21 @@ def C_to_IntConst(expr):
     system solver (no more hacks in order to find all constants). The real
     solution is to make all solvers and const_simplification routines use
     IntConst instances, however this is a very hard task."""
-    old_constants = [c for c in expr.free_symbols
-                        if c.name.startswith('C')]
+    old_constants = [c for c in expr.atoms(_TempIntConst)]
     new_constants = [IntConst(c.name[1:]) for c in old_constants]
     return expr.subs(zip(old_constants, new_constants))
+
+
+class _TempIntConst(Symbol):
+    """Temporary representation for the integration constants.
+
+    Most of the internal routines in this module expect
+    IntegrationConstant('C1')==IntegrationConstant('C1'), thus we can not use
+    the IntConst class as it subclasses Dummy. All instances of this class are
+    changed to instances of IntConst at the end.
+
+    The need for this class arises because the output of dsolve may be used as
+    an input to another call to dsolve. Hence dsolve needs to be able to
+    distinguish newly generated constants from those that were already present
+    in the input."""
+    pass

@@ -9,7 +9,7 @@ x, y, z = symbols('x:z', real=True)
 from sympy.core.symbol import IntConst
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
                                classify_ode, constant_renumber, constantsimp,
-                               homogeneous_order, ode_order)
+                               homogeneous_order, ode_order, dsolve, _TempIntConst)
 from sympy.core.multidimensional import vectorize
 from sympy.utilities.pytest import XFAIL, skip, raises, slow
 
@@ -43,9 +43,9 @@ def IntConst_to_Symbol(expr):
     new_constants = [Symbol('C'+c.name) for c in old_constants]
     return expr.subs(zip(old_constants, new_constants))
 
-import sympy
+dsolve_orig = dsolve
 def dsolve(*args, **kwargs):
-    ret = sympy.dsolve(*args, **kwargs)
+    ret = dsolve_orig(*args, **kwargs)
     if isinstance(ret, dict):
         solutions = dict((k, IntConst_to_Symbol(v)) for k, v in ret.items()
                                                      if not isinstance(v,basestring))
@@ -55,6 +55,20 @@ def dsolve(*args, **kwargs):
         return solutions
     else:
         return IntConst_to_Symbol(ret)
+
+constant_renumber_orig = constant_renumber
+symbol_to_tempconst = zip(symbols('C1:11'), symbols('C1:11', cls=_TempIntConst))
+tempconst_to_symbol = zip(symbols('C1:11', cls=_TempIntConst), symbols('C1:11'))
+def constant_renumber(*args, **kwargs):
+    args = list(args)
+    if isinstance(args[0], set):
+        args[0] = set(e.subs(symbol_to_tempconst) for e in args[0])
+        ret = constant_renumber_orig(*args, **kwargs)
+        return set(e.subs(tempconst_to_symbol) for e in ret)
+    else:
+        args[0] = args[0].subs(symbol_to_tempconst)
+        ret = constant_renumber_orig(*args, **kwargs)
+        return ret.subs(tempconst_to_symbol)
 
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
@@ -1389,6 +1403,8 @@ def test_issue_2671():
     w = Function('w')
     sol = dsolve(w(t).diff(t, 6) - k**6*w(t), w(t))
     assert len([s for s in sol.atoms(Symbol) if s.name.startswith('C')]) == 6
+
+    C1, C2 = symbols('C1, C2', cls=_TempIntConst)
     assert constantsimp((C1*cos(x) + C2*cos(x))*exp(x), x, 2) == \
         C1*cos(x)*exp(x)
     assert constantsimp(C1*cos(x) + C2*cos(x) + C3*sin(x), x, 2) == \
@@ -1463,3 +1479,12 @@ def test_issue_1996():
     f = Function('f')
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'separable'))
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'fdsjf'))
+
+
+def test_issue_1739():
+    # The issue is concerned with the mangling of constants, hence we use
+    # dsolve_orig and not the overloaded version for testing
+    eq = f(x).diff(x)-C1
+    sol = dsolve_orig(eq)
+    actual_constant = sol.atoms(IntConst).pop()
+    assert sol.rhs == C1*x + actual_constant
