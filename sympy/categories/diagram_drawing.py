@@ -1801,6 +1801,11 @@ class XypicDiagramDrawer(object):
                 # label has already been fixed.
                 continue
 
+            if m.domain == m.codomain:
+                # This is a loop morphism, their labels, again have a
+                # different magic.
+                continue
+
             (dom_i, dom_j) = object_coords[m.domain]
             (cod_i, cod_j) = object_coords[m.codomain]
 

@@ -758,7 +758,7 @@ def test_XypicDiagramDrawer():
     grid = DiagramGrid(d, transpose=True)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar[d]^{f} \\ar@/_3mm/[dd]_{h_{2}} \\ar@(r,u)[]_{l_{A}} & \\\\\n" \
+    "A \\ar[d]^{f} \\ar@/_3mm/[dd]_{h_{2}} \\ar@(r,u)[]^{l_{A}} & \\\\\n" \
     "B \\ar[r]^{g} & C \\ar@(r,u)[]^{l_{C}} \\\\\n" \
     "D \\ar[u]_{k} \\ar@/^7mm/[uu]^{h} \\ar@/^11mm/[uu]^{h_{1}} " \
     "\\ar@(l,d)[]^{l_{D}} & \n" \
