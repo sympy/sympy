@@ -674,9 +674,12 @@ class DiagramGrid(object):
         For a given triangle always picks the same root edge.  The
         root edge is the edge that will be placed first on the grid.
         """
-        candidates = [e for e in tri if skeleton[e]]
+        candidates = [sorted(e, key=default_sort_key) \
+                      for e in tri if skeleton[e]]
         sorted_candidates = sorted(candidates, key=default_sort_key)
-        return sorted_candidates[0]
+        # Don't forget to assure the proper ordering of the vertices
+        # in this edge.
+        return tuple(sorted(sorted_candidates[0], key=default_sort_key))
 
     @staticmethod
     def _drop_irrelevant_triangles(triangles, placed_objects):
