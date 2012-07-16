@@ -1401,20 +1401,29 @@ class XypicDiagramDrawer(object):
             else:
                 return str_lt * (-times)
 
-        def count_curved_morphisms(A, B):
+        def count_morphisms_undirected(A, B):
             """
-            Counts how many curved morphisms there are between the two
-            supplied objects.
+            Counts how many processed morphisms there are between the
+            two supplied objects.
             """
-            curved_count = 0
-            for m, m_str_info in morphisms_str_info.items():
-                if m_str_info.curving and \
-                   ((m.domain, m.codomain) == (A, B) or \
+            count = 0
+            for m in morphisms_str_info:
+                if ((m.domain, m.codomain) == (A, B) or \
                     (m.domain, m.codomain) == (B, A)):
-                    # This is a curved morphism between the same two
-                    # objects.
-                    curved_count += 1
-            return curved_count
+                    count += 1
+            return count
+
+        def count_morphisms_filtered(dom, cod, curving):
+            """
+            Counts the processed morphisms which go out of ``dom``
+            into ``cod`` with curving ``curving``.
+            """
+            count = 0
+            for m, m_str_info in morphisms_str_info.items():
+                if ((m.domain, m.codomain) == (dom, cod)) and \
+                   (m_str_info.curving == curving):
+                    count += 1
+            return count
 
         (i, j) = object_coords[morphism.domain]
         (target_i, target_j) = object_coords[morphism.codomain]
@@ -1429,7 +1438,6 @@ class XypicDiagramDrawer(object):
                                                   "r", "l")
 
         curving = ""
-        curving_amount = self.default_curving_amount
         label_pos = "^"
         if (delta_i == 0) and (abs(j - target_j) > 1):
             # Suppose we are going from left to right.
@@ -1520,13 +1528,6 @@ class XypicDiagramDrawer(object):
                     # position of this label.
                     m_str_info.forced_label_position = True
 
-            # Count how many curved morphisms between these two
-            # objects are already there so that we can curve this one
-            # more.
-            curved_count = count_curved_morphisms(
-                morphism.domain, morphism.codomain)
-            curving_amount += curved_count * self.default_curving_step
-
         elif (delta_j == 0) and (abs(i - target_i) > 1):
             # Suppose the arrow goes downwards.
             backwards = False
@@ -1616,12 +1617,23 @@ class XypicDiagramDrawer(object):
                     # position of this label.
                     m_str_info.forced_label_position = True
 
-            # Count how many curved morphisms between these two
-            # objects are already there so that we can curve this one
-            # more.
-            curved_count = count_curved_morphisms(
-                morphism.domain, morphism.codomain)
-            curving_amount += curved_count * self.default_curving_step
+        count = count_morphisms_undirected(morphism.domain, morphism.codomain)
+        curving_amount = ""
+        if curving:
+            # This morphisms should be curved anyway.
+            curving_amount = self.default_curving_amount + count * \
+                             self.default_curving_step
+        elif count:
+            # There are no objects between the domain and codomain of
+            # the current morphism, but this is not there already are
+            # some morphisms with the same domain and codomain, so we
+            # have to curve this one.
+            curving = "^"
+            filtered_morphisms = count_morphisms_filtered(
+                morphism.domain, morphism.codomain, curving)
+            curving_amount = self.default_curving_amount + \
+                             filtered_morphisms * \
+                             self.default_curving_step
 
         # Let's now get the name of the morphism.
         morphism_name = ""

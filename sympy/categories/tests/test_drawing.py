@@ -739,3 +739,20 @@ def test_XypicDiagramDrawer():
     "B \\ar[r]^{g} & C \\\\\n" \
     "D \\ar[u]_{k} \\ar@/^7mm/[uu]^{h} \\ar@/^11mm/[uu]^{h_{1}} & \n" \
     "}\n"
+
+    # A triangle diagram with a lot of morphisms between the same
+    # objects.
+    f1 = NamedMorphism(B, A, "f1")
+    f2 = NamedMorphism(A, B, "f2")
+    g1 = NamedMorphism(C, B, "g1")
+    g2 = NamedMorphism(B, C, "g2")
+    d = Diagram([f, f1, f2, g, g1, g2], {f1 * g1: "unique", g2 * f2: "unique"})
+
+    grid = DiagramGrid(d, transpose=True)
+    drawer = XypicDiagramDrawer()
+    assert drawer.draw(d, grid, masked=[f1*g1*g2*f2, g2*f2*f1*g1]) == \
+    "\\xymatrix{\n" \
+    "A \\ar[r]^{g_{2}\\circ f_{2}} \\ar[d]_{f} \\ar@/^3mm/[d]^{f_{2}} " \
+    "& C \\ar@/^3mm/[l]^{f_{1}\\circ g_{1}} \\ar@/^3mm/[ld]^{g_{1}} \\\\\n" \
+    "B \\ar@/^3mm/[u]^{f_{1}} \\ar[ru]_{g} \\ar@/^3mm/[ru]^{g_{2}} & \n" \
+    "}\n"
