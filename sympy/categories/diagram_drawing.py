@@ -1344,13 +1344,14 @@ class _StrArrow(object):
     Stores the information necessary for producing an Xy-pic
     description of an arrow.
     """
-    def __init__(self, unit, curving, curving_amount, looping,
-                 horizontal_direction, vertical_direction, label_position,
-                 label):
+    def __init__(self, unit, curving, curving_amount, looping_start,
+                 looping_end, horizontal_direction, vertical_direction,
+                 label_position, label):
         self.unit = unit
         self.curving = curving
         self.curving_amount = curving_amount
-        self.looping = looping
+        self.looping_start = looping_start
+        self.looping_end = looping_end
         self.horizontal_direction = horizontal_direction
         self.vertical_direction = vertical_direction
         self.label_position = label_position
@@ -1368,8 +1369,13 @@ class _StrArrow(object):
         else:
             curving_str = ""
 
+        if self.looping_start and self.looping_end:
+            looping_str = "@(%s,%s)" % (self.looping_start, self.looping_end)
+        else:
+            looping_str = ""
+
         return "\\ar%s%s[%s%s]%s{%s}" % \
-               (curving_str, self.looping, self.horizontal_direction,
+               (curving_str, looping_str, self.horizontal_direction,
                 self.vertical_direction, self.label_position, self.label)
 
 class XypicDiagramDrawer(object):
@@ -1441,7 +1447,8 @@ class XypicDiagramDrawer(object):
 
         curving = ""
         label_pos = "^"
-        looping = ""
+        looping_start = ""
+        looping_end = ""
         if (delta_i == 0) and (delta_j == 0):
             # This is a loop morphism.  Count how many morphisms stick
             # in each of the four quadrants.  Note that straight
@@ -1548,7 +1555,8 @@ class XypicDiagramDrawer(object):
                     freest_quadrant = i
 
             # Now set up proper looping.
-            looping = ["@(r,u)", "@(u,l)", "@(l,d)", "@(d,r)"][freest_quadrant]
+            (looping_start, looping_end) = [("r","u"), ("u","l"), ("l","d"),
+                                            ("d","r")][freest_quadrant]
 
         elif (delta_i == 0) and (abs(j - target_j) > 1):
             # Suppose we are going from left to right.
@@ -1758,7 +1766,8 @@ class XypicDiagramDrawer(object):
         elif isinstance(morphism, NamedMorphism):
             morphism_name = latex(Symbol(morphism.name))
 
-        return _StrArrow(self.unit, curving, curving_amount, looping,
+        return _StrArrow(self.unit, curving, curving_amount,
+                         looping_start, looping_end,
                          horizontal_direction, vertical_direction,
                          label_pos, morphism_name)
 
