@@ -14,6 +14,7 @@ from sympy.geometry import Point, Circle
 from sympy.utilities.pytest import raises
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
+from sympy.core.trace import Tr
 
 x, y, z, w = symbols('x,y,z,w')
 d = Dummy('d')
@@ -489,3 +490,8 @@ def test_categories():
     assert str(id_A) == 'IdentityMorphism(Object("A"))'
 
     assert str(K) == 'Category("K")'
+
+def test_Tr():
+    A, B = symbols('A B', commutative=False)
+    t = Tr(A*B)
+    assert str(t) == 'Tr(A*B)'

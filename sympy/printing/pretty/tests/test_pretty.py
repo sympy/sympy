@@ -15,6 +15,7 @@ from sympy.printing.pretty import pprint
 from sympy.physics.units import joule
 
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.core.trace import Tr
 
 a, b, x, y, z, k = symbols('a,b,x,y,z,k')
 th = Symbol('theta')
@@ -3935,3 +3936,9 @@ u"""\
 
     assert upretty(expr) == ucode_str
     assert  pretty(expr) == ascii_str
+
+def test_Tr():
+    A, B = symbols('A B', commutative=False)
+    t = Tr(A*B)
+    assert pretty(t) == r'Tr(A*B)'
+    assert upretty(t) == u'Tr(A\u22c5B)'
