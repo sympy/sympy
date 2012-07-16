@@ -18,18 +18,18 @@ def msigma(i):
     [0, 1]
     [1, 0]
     """
-    if i==1:
-        mat=( (
+    if i == 1:
+        mat = ( (
             (0, 1),
             (1, 0)
             ) )
-    elif i==2:
-        mat=( (
+    elif i == 2:
+        mat = ( (
             (0, -I),
             (I, 0)
             ) )
-    elif i==3:
-        mat=( (
+    elif i == 3:
+        mat = ( (
             (1, 0),
             (0, -1)
             ) )

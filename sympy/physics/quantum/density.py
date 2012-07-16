@@ -1,13 +1,13 @@
 from sympy import Tuple, Add, Matrix, log, expand
+from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.operator import HermitianOperator, OuterProduct
+from sympy.physics.quantum.operator import HermitianOperator, OuterProduct, Operator
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.state import KetBase
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.qapply import qapply
 from matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
-
 
 class Density(HermitianOperator):
     """Density operator for representing mixed states.
@@ -171,3 +171,57 @@ class Density(HermitianOperator):
 
     def _print_operator_name_pretty(self, printer, *args):
         return prettyForm(u"\u03C1")
+
+    def _eval_trace(self, **kwargs):
+        return Tr(self.doit()).doit()
+
+    def entropy(self):
+        """ Compute the entropy of a density matrix.
+
+        Refer to density.entropy() method  for examples.
+        """
+        return entropy(self)
+
+def entropy(density):
+    """Compute the entropy of a matrix/density object.
+
+    This computes -Tr(density*ln(density)) using the eigenvalue decomposition
+    of density, which is given as either a Density instance or a matrix
+    (numpy.ndarray, sympy.Matrix or scipy.sparse).
+
+    Parameters
+    ==========
+
+    density : density matrix of type Density, sympy matrix,
+    scipy.sparse or numpy.ndarray
+
+    Examples:
+    ========
+
+    >>> from sympy.physics.quantum.density import Density, entropy
+    >>> from sympy.physics.quantum.represent import represent
+    >>> from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
+    >>> from sympy.physics.quantum.spin import JzKet, Jz
+    >>> from sympy import S, log
+    >>> up = JzKet(S(1)/2,S(1)/2)
+    >>> down = JzKet(S(1)/2,-S(1)/2)
+    >>> d = Density((up,0.5),(down,0.5))
+    >>> entropy(d)
+    log(2)/2
+
+    """
+    if isinstance(density, Density):
+        density = represent(density) #represent in Matrix
+
+    if isinstance(density, scipy_sparse_matrix):
+        density = to_numpy(density)
+
+    if isinstance(density, Matrix):
+        eigvals = density.eigenvals().keys()
+        return expand(-sum(e*log(e) for e in eigvals))
+    elif isinstance(density, numpy_ndarray):
+        import numpy as np
+        eigvals = np.linalg.eigvals(density)
+        return -np.sum(eigvals*np.log(eigvals))
+    else:
+        raise ValueError("numpy.ndarray, scipy.sparse or sympy matrix expected")

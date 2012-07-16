@@ -196,6 +196,14 @@ _xobj_unicode = {
     '}' :   (( EXT('{}'), HUP('}'), HLO('}'),  MID('}')  ),  '}'),
     '|' :   U('BOX DRAWINGS LIGHT VERTICAL'),
 
+    '<':   ((U('BOX DRAWINGS LIGHT VERTICAL'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT')), '<'),
+
+    '>':   ((U('BOX DRAWINGS LIGHT VERTICAL'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT')), '>'),
+
     'lfloor' : (( EXT('['), EXT('['), CLO('[') ), U('LEFT FLOOR')),
     'rfloor' : (( EXT(']'), EXT(']'), CLO(']') ), U('RIGHT FLOOR')),
     'lceil'  : (( EXT('['), CUP('['), EXT('[') ), U('LEFT CEILING')),
@@ -235,6 +243,9 @@ _xobj_ascii = {
     '{' :   (( '|', '/',  '\\', '<' ),      '{'),
     '}' :   (( '|', '\\', '/',  '>' ),      '}'),
     '|' :   '|',
+
+    '<' :   (( '|', '/',  '\\'  ),          '<'),
+    '>' :   (( '|', '\\', '/'   ),          '>'),
 
     'int':  ( ' | ', '  /', '/  ' ),
 

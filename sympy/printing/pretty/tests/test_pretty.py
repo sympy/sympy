@@ -7,7 +7,7 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
     Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict,
     euler, groebner, catalan, Product, KroneckerDelta, Ei, expint, Shi, Chi, Si,
-    Ci, Segment, Ray, FiniteSet)
+    Ci, Segment, Ray, FiniteSet, homomorphism)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -3672,6 +3672,10 @@ def test_RandomDomain():
     B = Exponential('b', 1)
     assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ a ∧ 0 ≤ b'
 
+def test_issue_3186():
+    assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
+    assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
+
 def test_PrettyPoly():
     F = QQ.frac_field(x, y)
     R = QQ[x, y]
@@ -3742,3 +3746,192 @@ def test_categories():
     assert upretty(d) == u"{f₂∘f₁:A₁⟶  A₃: ∅, id:A₁⟶  A₁: ∅, id:A₂⟶  A₂: " \
            u"∅, id:A₃⟶  A₃: ∅, f₁:A₁⟶  A₂: {unique}, f₂:A₂⟶  A₃: ∅}" \
            u" ⟹  {f₂∘f₁:A₁⟶  A₃: {unique}}"
+
+def test_PrettyModules():
+    R = QQ[x, y]
+    F = R.free_module(2)
+    M = F.submodule([x, y], [1, x**2])
+
+    ucode_str = \
+u"""\
+       2\n\
+ℚ[x, y] \
+"""
+    ascii_str = \
+"""\
+        2\n\
+QQ[x, y] \
+"""
+
+    assert upretty(F) == ucode_str
+    assert  pretty(F) == ascii_str
+
+    ucode_str = \
+u"""\
+╱        ⎡    2⎤╲\n\
+╲[x, y], ⎣1, x ⎦╱\
+"""
+    ascii_str = \
+"""\
+              2  \n\
+<[x, y], [1, x ]>\
+"""
+
+    assert upretty(M) == ucode_str
+    assert  pretty(M) == ascii_str
+
+    I = R.ideal(x**2, y)
+
+    ucode_str = \
+u"""\
+╱ 2   ╲\n\
+╲x , y╱\
+"""
+
+    ascii_str = \
+"""\
+  2    \n\
+<x , y>\
+"""
+
+    assert upretty(I) == ucode_str
+    assert  pretty(I) == ascii_str
+
+    Q = F / M
+
+    ucode_str = \
+u"""\
+            2    \n\
+     ℚ[x, y]     \n\
+─────────────────\n\
+╱        ⎡    2⎤╲\n\
+╲[x, y], ⎣1, x ⎦╱\
+"""
+
+    ascii_str = \
+"""\
+            2    \n\
+    QQ[x, y]     \n\
+-----------------\n\
+              2  \n\
+<[x, y], [1, x ]>\
+"""
+
+    assert upretty(Q) == ucode_str
+    assert  pretty(Q) == ascii_str
+
+    expr = Q.submodule([1, x**3/2], [2, y])
+
+    ucode_str = \
+u"""\
+╱⎡    3⎤                                                ╲\n\
+│⎢   x ⎥   ╱        ⎡    2⎤╲           ╱        ⎡    2⎤╲│\n\
+│⎢1, ──⎥ + ╲[x, y], ⎣1, x ⎦╱, [2, y] + ╲[x, y], ⎣1, x ⎦╱│\n\
+╲⎣   2 ⎦                                                ╱\
+"""
+
+    ascii_str = \
+"""\
+      3                                                  \n\
+     x                   2                           2   \n\
+<[1, --] + <[x, y], [1, x ]>, [2, y] + <[x, y], [1, x ]>>\n\
+     2                                                   \
+"""
+
+
+def test_QuotientRing():
+    R = QQ[x]/[x**2 + 1]
+
+    ucode_str = \
+u"""\
+  ℚ[x]  \n\
+────────\n\
+╱ 2    ╲\n\
+╲x  + 1╱\
+"""
+
+    ascii_str = \
+"""\
+ QQ[x]  \n\
+--------\n\
+  2     \n\
+<x  + 1>\
+"""
+
+    assert upretty(R) == ucode_str
+    assert  pretty(R) == ascii_str
+
+    ucode_str = \
+u"""\
+    ╱ 2    ╲\n\
+1 + ╲x  + 1╱\
+"""
+
+    ascii_str = \
+"""\
+      2     \n\
+1 + <x  + 1>\
+"""
+
+    assert upretty(R.one) == ucode_str
+    assert  pretty(R.one) == ascii_str
+
+def test_Homomorphism():
+    R = QQ[x]
+
+    expr = homomorphism(R.free_module(1), R.free_module(1), [0])
+
+    ucode_str = \
+u"""\
+          1         1\n\
+[0] : ℚ[x]  ──> ℚ[x] \
+"""
+
+    ascii_str = \
+"""\
+           1          1\n\
+[0] : QQ[x]  --> QQ[x] \
+"""
+
+    assert upretty(expr) == ucode_str
+    assert  pretty(expr) == ascii_str
+
+    expr = homomorphism(R.free_module(2), R.free_module(2), [0, 0])
+
+    ucode_str = \
+u"""\
+⎡0  0⎤       2         2\n\
+⎢    ⎥ : ℚ[x]  ──> ℚ[x] \n\
+⎣0  0⎦                  \
+"""
+
+    ascii_str = \
+"""\
+[0  0]        2          2\n\
+[    ] : QQ[x]  --> QQ[x] \n\
+[0  0]                    \
+"""
+
+    assert upretty(expr) == ucode_str
+    assert  pretty(expr) == ascii_str
+
+    expr = homomorphism(R.free_module(1), R.free_module(1) / [[x]], [0])
+
+    ucode_str = \
+u"""\
+                    1\n\
+          1     ℚ[x] \n\
+[0] : ℚ[x]  ──> ─────\n\
+                <[x]>\
+"""
+
+    ascii_str = \
+"""\
+                      1\n\
+           1     QQ[x] \n\
+[0] : QQ[x]  --> ------\n\
+                 <[x]> \
+"""
+
+    assert upretty(expr) == ucode_str
+    assert  pretty(expr) == ascii_str

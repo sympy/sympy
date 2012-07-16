@@ -786,7 +786,8 @@ class Basic(object):
                 from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent("""
                    When a single argument is passed to subs
-                   it should be an iterable of (old, new) tuples."""))
+                   it should be a dictionary of old: new pairs or an iterable
+                   of (old, new) tuples."""))
         elif len(args) == 2:
             sequence = [args]
         else:

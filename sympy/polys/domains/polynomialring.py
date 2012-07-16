@@ -6,10 +6,13 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.fractionfield import FractionField
 
 from sympy.polys.polyclasses import DMP, DMF
-from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError, CoercionFailed
+from sympy.polys.polyerrors import (GeneratorsNeeded, PolynomialError,
+        CoercionFailed, ExactQuotientFailed, NotReversible)
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 
 from sympy.polys.monomialtools import monomial_key, build_product_order
+
+from sympy.polys.agca.modules import FreeModulePolyRing
 
 from sympy.core.compatibility import iterable
 
@@ -131,6 +134,12 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         """Returns a fraction field, i.e. `K(X)`. """
         raise NotImplementedError('nested domains not allowed')
 
+    def revert(self, a):
+        try:
+            return 1/a
+        except (ExactQuotientFailed, ZeroDivisionError):
+            raise NotReversible('%s is not a unit' % a)
+
     def gcdex(self, a, b):
         """Extended GCD of `a` and `b`. """
         return a.gcdex(b)
@@ -146,6 +155,61 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
     def factorial(self, a):
         """Returns factorial of `a`. """
         return self.dtype(self.dom.factorial(a))
+
+    def _vector_to_sdm(self, v, order):
+        """
+        For internal use by the modules class.
+
+        Convert an iterable of elements of this ring into a sparse distributed
+        module element.
+        """
+        raise NotImplementedError
+
+    def _sdm_to_dics(self, s, n):
+        """Helper for _sdm_to_vector."""
+        from sympy.polys.distributedmodules import sdm_to_dict
+        dic = sdm_to_dict(s)
+        res = [{} for _ in range(n)]
+        for k, v in dic.iteritems():
+            res[k[0]][k[1:]] = v
+        return res
+
+    def _sdm_to_vector(self, s, n):
+        """
+        For internal use by the modules class.
+
+        Convert a sparse distributed module into a list of length ``n``.
+
+        >>> from sympy import QQ, ilex
+        >>> from sympy.abc import x, y
+        >>> R = QQ.poly_ring(x, y, order=ilex)
+        >>> L = [((1, 1, 1), QQ(1)), ((0, 1, 0), QQ(1)), ((0, 0, 1), QQ(2))]
+        >>> R._sdm_to_vector(L, 2)
+        [x + 2*y, x*y]
+        """
+        dics = self._sdm_to_dics(s, n)
+        # NOTE this works for global and local rings!
+        return [self(x) for x in dics]
+
+    def free_module(self, rank):
+        """
+        Generate a free module of rank ``rank`` over ``self``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> QQ[x].free_module(2)
+        QQ[x]**2
+        """
+        return FreeModulePolyRing(self, rank)
+
+def _vector_to_sdm_helper(v, order):
+    """Helper method for common code in Global and Local poly rings."""
+    from sympy.polys.distributedmodules import sdm_from_dict
+    d = {}
+    for i, e in enumerate(v):
+        for key, value in e.to_dict().iteritems():
+            d[(i,) + key] = value
+    return sdm_from_dict(d, order)
 
 class GlobalPolynomialRing(PolynomialRingBase):
     """A true polynomial ring, with objects DMP. """
@@ -210,6 +274,18 @@ class GlobalPolynomialRing(PolynomialRingBase):
         """Returns True if `LC(a)` is non-negative. """
         return self.dom.is_nonnegative(a.LC())
 
+    def _vector_to_sdm(self, v, order):
+        """
+        >>> from sympy import lex, QQ
+        >>> from sympy.abc import x, y
+        >>> R = QQ[x, y]
+        >>> f = R.convert(x + 2*y)
+        >>> g = R.convert(x * y)
+        >>> R._vector_to_sdm([f, g], lex)
+        [((1, 1, 1), 1/1), ((0, 1, 0), 1/1), ((0, 0, 1), 2/1)]
+        """
+        return _vector_to_sdm_helper(v, order)
+
 class GeneralizedPolynomialRing(PolynomialRingBase):
     """A generalized polynomial ring, with objects DMF. """
 
@@ -256,6 +332,27 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
             den[k] = self.dom.from_sympy(v)
 
         return self((num, den)).cancel()
+
+    def _vector_to_sdm(self, v, order):
+        """
+        Turn an iterable into a sparse distributed module.
+
+        Note that the vector is multiplied by a unit first to make all entries
+        polynomials.
+
+        >>> from sympy import ilex, QQ
+        >>> from sympy.abc import x, y
+        >>> R = QQ.poly_ring(x, y, order=ilex)
+        >>> f = R.convert((x + 2*y) / (1 + x))
+        >>> g = R.convert(x * y)
+        >>> R._vector_to_sdm([f, g], ilex)
+        [((0, 0, 1), 2/1), ((0, 1, 0), 1/1), ((1, 1, 1), 1/1), ((1, 2, 1), 1/1)]
+        """
+        # NOTE this is quite inefficient...
+        u = self.one.numer()
+        for x in v:
+            u *= x.denom()
+        return _vector_to_sdm_helper([x.numer()*u/x.denom() for x in v], order)
 
 def PolynomialRing(dom, *gens, **opts):
     r"""

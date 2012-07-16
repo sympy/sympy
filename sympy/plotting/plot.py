@@ -490,8 +490,8 @@ class Line2DBaseSeries(BaseSeries):
             x = np.array((points[0],points[0])).T.flatten()[1:]
             y = np.array((points[1],points[1])).T.flatten()[:-1]
             points = (x, y)
-        points = np.array(points).T.reshape(-1, 1, self._dim)
-        return np.concatenate([points[:-1], points[1:]], axis=1)
+        points = np.ma.array(points).T.reshape(-1, 1, self._dim)
+        return np.ma.concatenate([points[:-1], points[1:]], axis=1)
 
     def get_color_array(self):
         c = self.line_color

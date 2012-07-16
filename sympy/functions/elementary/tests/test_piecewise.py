@@ -58,6 +58,7 @@ def test_piecewise():
     f2 = x*y**2 + 3
     peval = Piecewise( (f1, x<0), (f2, x>0))
     peval_interval = f1.subs(x,0) - f1.subs(x,-1) + f2.subs(x,1) - f2.subs(x,0)
+    assert peval._eval_interval(x, 0, 0) == 0
     assert peval._eval_interval(x, -1, 1) == peval_interval
 
     # Test integration
@@ -109,6 +110,35 @@ def test_piecewise_integrate():
 
     g = Piecewise((1, x - y < 0), (0, True))
     assert integrate(g, (y, -oo, oo)) == oo
+
+    g = Piecewise((0, x < 0), (x, x <= 1), (1, True))
+    assert integrate(g, (x, -5, 1)) == Rational(1, 2)
+    assert integrate(g, (x, -5, y)).subs(y, 1) == Rational(1,2)
+    assert integrate(g, (x, y, 1)).subs(y, -5) == Rational(1,2)
+    assert integrate(g, (x, 1, -5)) == -Rational(1, 2)
+    assert integrate(g, (x, 1, y)).subs(y, -5) == -Rational(1,2)
+    assert integrate(g, (x, y, -5)).subs(y, 1) == -Rational(1,2)
+    assert integrate(g, (x, -5, y)) == Piecewise((0, y < 0),
+        (y**2/2, y <= 1), (y - 0.5, True))
+    assert integrate(g, (x, y, 1)) == Piecewise((0.5, y < 0),
+        (0.5 - y**2/2, y <= 1), (1 - y, True))
+
+    g = Piecewise((1 - x, Interval(0, 1).contains(x)),
+        (1 + x, Interval(-1, 0).contains(x)), (0, True))
+    assert integrate(g, (x, -5, 1)) == 1
+    assert integrate(g, (x, -5, y)).subs(y, 1) == 1
+    assert integrate(g, (x, y, 1)).subs(y, -5) == 1
+    assert integrate(g, (x, 1, -5)) == -1
+    assert integrate(g, (x, 1, y)).subs(y, -5) == -1
+    assert integrate(g, (x, y, -5)).subs(y, 1) == -1
+    assert integrate(g, (x, -5, y)) == Piecewise(
+        (-y**2/2 + y + 0.5, Interval(0, 1).contains(y)),
+        (y**2/2 + y + 0.5, Interval(-1, 0).contains(y)),
+        (0, y <= -1), (1, True))
+    assert integrate(g, (x, y, 1)) == Piecewise(
+        (y**2/2 - y + 0.5, Interval(0, 1).contains(y)),
+        (-y**2/2 - y + 0.5, Interval(-1, 0).contains(y)),
+        (1, y <= -1), (0, True))
 
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
@@ -177,11 +207,11 @@ def test_doit():
     assert p2.doit(deep = False) == p2
 
 def test_piecewise_interval():
-    p1 = Piecewise((x, Interval(0,1)), (0, True))
+    p1 = Piecewise((x, Interval(0,1).contains(x)), (0, True))
     assert p1.subs(x, -0.5) == 0
     assert p1.subs(x, 0.5) == 0.5
-    assert p1.diff(x) == Piecewise((1, Interval(0, 1)), (0, True))
-    assert integrate(p1, x) == Piecewise((x**2/2, Interval(0, 1)), (0, True))
+    assert p1.diff(x) == Piecewise((1, Interval(0, 1).contains(x)), (0, True))
+    assert integrate(p1, x) == Piecewise((x**2/2, Interval(0, 1).contains(x)), (0, True))
 
 def test_piecewise_collapse():
     p1 = Piecewise((x, x<0),(x**2,x>1))

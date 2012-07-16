@@ -125,10 +125,11 @@ class StrPrinter(Printer):
         return "%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Pow"])
 
     def _print_FiniteSet(self, s):
+        s = sorted(s, key=default_sort_key)
         if len(s) > 10:
-            printset = s.args[:3] + ('...',) + s.args[-3:]
+            printset = s[:3] + ['...'] + s[-3:]
         else:
-            printset = s.args
+            printset = s
         return '{' + ', '.join(self._print(el) for el in printset) + '}'
 
     def _print_Function(self, expr):

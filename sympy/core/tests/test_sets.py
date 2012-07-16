@@ -75,6 +75,12 @@ def test_union():
     assert FiniteSet(1,2,3) & FiniteSet(2,3,4) == FiniteSet(2,3)
     assert FiniteSet(1,2,3) | FiniteSet(2,3,4) == FiniteSet(1,2,3,4)
 
+    x = Symbol("x")
+    y = Symbol("y")
+    z = Symbol("z")
+    assert S.EmptySet | FiniteSet(x, FiniteSet(y, z)) == \
+           FiniteSet(x, FiniteSet(y, z))
+
     # Test that Intervals and FiniteSets play nicely
     assert Interval(1,3) + FiniteSet(2) == Interval(1,3)
     assert Interval(1,3, True,True) + FiniteSet(3) == Interval(1,3, True,False)
@@ -178,7 +184,7 @@ def test_intersection():
     # iterable
     i = Intersection(FiniteSet(1,2,3), Interval(2, 5), evaluate=False)
     assert i.is_iterable
-    assert list(i) == [2, 3]
+    assert set(i) == set([S(2), S(3)])
 
     # challenging intervals
     x = Symbol('x', real=True)
