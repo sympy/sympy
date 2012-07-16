@@ -1,4 +1,4 @@
-from sympy.categories.diagram_drawing import _GrowableGrid
+from sympy.categories.diagram_drawing import _GrowableGrid, ArrowStringDescription
 from sympy.categories import (DiagramGrid, Object, NamedMorphism,
                               Diagram, XypicDiagramDrawer)
 from sympy import FiniteSet
@@ -591,6 +591,33 @@ def test_DiagramGrid():
     for f in [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10]:
         morphisms[f] = FiniteSet()
     assert grid.morphisms == morphisms
+
+def test_ArrowStringDescription():
+    astr = ArrowStringDescription("cm", "", None, "", "", "d", "r", "_", "f")
+    assert str(astr) == "\\ar[dr]_{f}"
+
+    astr = ArrowStringDescription("cm", "", 12, "", "", "d", "r", "_", "f")
+    assert str(astr) == "\\ar[dr]_{f}"
+
+    astr = ArrowStringDescription("cm", "^", 12, "", "", "d", "r", "_", "f")
+    assert str(astr) == "\\ar@/^12cm/[dr]_{f}"
+
+    astr = ArrowStringDescription("cm", "", 12, "r", "", "d", "r", "_", "f")
+    assert str(astr) == "\\ar[dr]_{f}"
+
+    astr = ArrowStringDescription("cm", "", 12, "r", "u", "d", "r", "_", "f")
+    assert str(astr) == "\\ar@(r,u)[dr]_{f}"
+
+    astr = ArrowStringDescription("cm", "", 12, "r", "u", "d", "r", "_", "f")
+    assert str(astr) == "\\ar@(r,u)[dr]_{f}"
+
+    astr = ArrowStringDescription("cm", "", 12, "r", "u", "d", "r", "_", "f")
+    astr.arrow_style = "{-->}"
+    assert str(astr) == "\\ar@(r,u)@{-->}[dr]_{f}"
+
+    astr = ArrowStringDescription("cm", "_", 12, "", "", "d", "r", "_", "f")
+    astr.arrow_style = "{-->}"
+    assert str(astr) == "\\ar@/_12cm/@{-->}[dr]_{f}"
 
 def test_XypicDiagramDrawer():
     # A linear diagram.

@@ -1339,10 +1339,12 @@ class DiagramGrid(object):
         """
         return repr(self._grid._array)
 
-class _StrArrow(object):
+class ArrowStringDescription(object):
     """
     Stores the information necessary for producing an Xy-pic
     description of an arrow.
+
+    TODO: Expand the docstring.
     """
     def __init__(self, unit, curving, curving_amount, looping_start,
                  looping_end, horizontal_direction, vertical_direction,
@@ -1356,6 +1358,9 @@ class _StrArrow(object):
         self.vertical_direction = vertical_direction
         self.label_position = label_position
         self.label = label
+
+        self.label_displacement = ""
+        self.arrow_style = ""
 
         # This flag shows that the position of the label of this
         # morphism was set while typesetting a curved morphism and
@@ -1374,9 +1379,15 @@ class _StrArrow(object):
         else:
             looping_str = ""
 
-        return "\\ar%s%s[%s%s]%s{%s}" % \
-               (curving_str, looping_str, self.horizontal_direction,
-                self.vertical_direction, self.label_position, self.label)
+        if self.arrow_style:
+            style_str = "@" + self.arrow_style
+        else:
+            style_str = ""
+
+        return "\\ar%s%s%s[%s%s]%s%s{%s}" % \
+               (curving_str, looping_str, style_str, self.horizontal_direction,
+                self.vertical_direction, self.label_position,
+                self.label_displacement, self.label)
 
 class XypicDiagramDrawer(object):
     """
@@ -1782,10 +1793,10 @@ class XypicDiagramDrawer(object):
         elif isinstance(morphism, NamedMorphism):
             morphism_name = latex(Symbol(morphism.name))
 
-        return _StrArrow(self.unit, curving, curving_amount,
-                         looping_start, looping_end,
-                         horizontal_direction, vertical_direction,
-                         label_pos, morphism_name)
+        return ArrowStringDescription(
+            self.unit, curving, curving_amount, looping_start,
+            looping_end, horizontal_direction, vertical_direction,
+            label_pos, morphism_name)
 
     def _push_labels_out(self, morphisms_str_info, grid, object_coords):
         """
