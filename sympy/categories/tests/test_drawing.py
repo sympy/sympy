@@ -105,6 +105,19 @@ def test_DiagramGrid():
     assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(),
                               g * f:FiniteSet("unique")}
 
+    # A triangle with a "loop" morphism.
+    l_A = NamedMorphism(A, A, "l_A")
+    d = Diagram([f, g, l_A])
+    grid = DiagramGrid(d)
+
+    assert grid.width == 2
+    assert grid.height == 2
+    assert grid[0, 0] == A
+    assert grid[0, 1] == B
+    assert grid[1, 0] is None
+    assert grid[1, 1] == C
+    assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(), l_A:FiniteSet()}
+
     # A simple diagram.
     d = Diagram([f, g, h, k])
     grid = DiagramGrid(d)

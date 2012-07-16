@@ -996,11 +996,25 @@ class DiagramGrid(object):
 
         return grid
 
+    @staticmethod
+    def _drop_inessential_morphisms(merged_morphisms):
+        r"""
+        Removes those morphisms which should appear in the diagram,
+        but which have no relevance to object layout.
+
+        Currently this removes "loop" morphisms: the non-identity
+        morphisms with the same domains and codomains.
+        """
+        morphisms = [m for m in merged_morphisms if m.domain != m.codomain]
+        return morphisms
+
     def __init__(self, diagram, groups=None, **hints):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
         conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
-        merged_morphisms = DiagramGrid._merge_premises_conclusions(
+        all_merged_morphisms = DiagramGrid._merge_premises_conclusions(
             premises, conclusions)
+        merged_morphisms = DiagramGrid._drop_inessential_morphisms(
+            all_merged_morphisms)
 
         if groups and (groups != diagram.objects):
             # Lay out the diagram according to the groups.
@@ -1023,7 +1037,7 @@ class DiagramGrid(object):
                 self._grid = grid
 
         # Store the merged morphisms for later use.
-        self._morphisms = merged_morphisms
+        self._morphisms = all_merged_morphisms
 
     @property
     def width(self):
