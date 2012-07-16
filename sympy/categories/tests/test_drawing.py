@@ -642,6 +642,14 @@ def test_XypicDiagramDrawer():
     "D \\ar[u]_{k} \\ar@/^3mm/[uu]^{h} & \n" \
     "}\n"
 
+    # The same diagram, larger and rotated.
+    assert drawer.draw(d, grid, diagram_format="@+1cm@dr") == \
+    "\\xymatrix@+1cm@dr{\n" \
+    "A \\ar[d]^{f} & \\\\\n" \
+    "B \\ar[r]^{g} & C \\\\\n" \
+    "D \\ar[u]_{k} \\ar@/^3mm/[uu]^{h} & \n" \
+    "}\n"
+
     # A triangle diagram.
     d = Diagram([f, g], {g * f:"unique"})
     grid = DiagramGrid(d)

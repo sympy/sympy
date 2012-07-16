@@ -1963,14 +1963,14 @@ class XypicDiagramDrawer(object):
                 set_label_position(free_up, free_down, "^", "_",
                                    backwards, m_str_info)
 
-    def draw(self, diagram, grid, masked=None):
+    def draw(self, diagram, grid, masked=None, diagram_format=""):
         """
         Returns the Xy-pic representation of ``diagram`` laid out in
         ``grid``.
 
         TODO: Expand the docstring.
         """
-        result = "\\xymatrix{\n"
+        result = "\\xymatrix%s{\n" % diagram_format
 
         if not masked:
             morphisms = grid.morphisms
