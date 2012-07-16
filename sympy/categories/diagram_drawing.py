@@ -1404,6 +1404,10 @@ class XypicDiagramDrawer(object):
         self.default_curving_amount = 3
         self.default_curving_step = 4
 
+        # This dictionary maps properties to the corresponding arrow
+        # formatters.
+        self.arrow_formatters = {}
+
     def _process_morphism(self, diagram, grid, morphism, object_coords,
                           morphisms, morphisms_str_info):
         """
@@ -2039,9 +2043,17 @@ class XypicDiagramDrawer(object):
         # morphisms.
         morphisms_str_info = {}
         for morphism in morphisms:
-            morphisms_str_info[morphism] = self._process_morphism(
+            string_description = self._process_morphism(
                 diagram, grid, morphism, object_coords, morphisms,
                 morphisms_str_info)
+
+            for prop in morphisms_props[morphism]:
+                # prop is a Symbol.  TODO: Find out why.
+                if prop.name in self.arrow_formatters:
+                    formatter = self.arrow_formatters[prop.name]
+                    formatter(string_description)
+
+            morphisms_str_info[morphism] = string_description
 
         # Reposition the labels a bit.
         self._push_labels_out(morphisms_str_info, grid, object_coords)

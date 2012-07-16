@@ -700,6 +700,17 @@ def test_XypicDiagramDrawer():
     "B & \n" \
     "}\n"
 
+    # The same diagram with a formatter for "unique".
+    def formatter(astr):
+        astr.label = "\\exists !" + astr.label
+        astr.arrow_style = "{-->}"
+
+    drawer.arrow_formatters["unique"] = formatter
+    assert drawer.draw(d, grid) == "\\xymatrix{\n" \
+    "A \\ar@{-->}[r]^{\\exists !g\\circ f} \\ar[d]_{f} & C \\\\\n" \
+    "B \\ar[ru]_{g} & \n" \
+    "}\n"
+
     # A cube diagram.
     A1 = Object("A1")
     A2 = Object("A2")
