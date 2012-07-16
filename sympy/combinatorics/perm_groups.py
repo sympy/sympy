@@ -1687,9 +1687,12 @@ class PermutationGroup(Basic):
         If a group is known to be alternating or symmetric, determines which one
         it is.
 
-        This is to be applied if is_alt_sym returns True (which is guaranteed to
-        be correct). The algorithm simply tests if all the generators are even
-        permutations.
+        Generally, this is to be applied only if the group is known to be
+        symmetric or alternating. This is the case when, for example,
+        ``is_alt_sym`` returns True (which is guaranteed to be correct).
+        Otherwise, an answer 'A' means that the group is a subgroup of the
+        alternating group, and an answer 'S' means that it's not. The
+        algorithm simply tests if all the generators are even permutations.
 
         Examples
         ========
@@ -1705,15 +1708,11 @@ class PermutationGroup(Basic):
 
         is_alt_sym
         """
-        if self.is_alt_sym():
-            gens = self.generators
-            for perm in gens:
-                if perm.is_odd:
-                    self._is_sym = True
-                    return 'S'
-            self._is_alt = True
-            return 'A'
-        return False
+        gens = self.generators
+        for perm in gens:
+            if perm.is_odd:
+                return 'S'
+        return 'A'
 
     def minimal_block(self, points):
         r"""

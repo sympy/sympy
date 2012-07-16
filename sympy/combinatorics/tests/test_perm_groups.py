@@ -347,15 +347,12 @@ def test_is_alt_sym():
     assert A.is_alt_sym(_random_prec = _random_prec) == False
 
 def test_alt_or_sym():
-    S = SymmetricGroup(10)
-    A = AlternatingGroup(10)
-    D = DihedralGroup(10)
+    S = SymmetricGroup(5)
+    A = AlternatingGroup(5)
     sym = S.alt_or_sym()
     alt = A.alt_or_sym()
-    dih = D.alt_or_sym()
-    assert sym == 'S' or sym == False
-    assert alt == 'A' or alt == False
-    assert dih == False
+    assert sym == 'S'
+    assert alt == 'A'
 
 def test_minimal_block():
     D = DihedralGroup(6)
