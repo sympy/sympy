@@ -1984,13 +1984,13 @@ class XypicDiagramDrawer(object):
         result = "\\xymatrix%s{\n" % diagram_format
 
         if not masked:
-            morphisms = grid.morphisms
+            morphisms_props = grid.morphisms
         else:
-            morphisms = {}
+            morphisms_props = {}
             for m, props in grid.morphisms.items():
                 if m in masked:
                     continue
-                morphisms[m] = props
+                morphisms_props[m] = props
 
         # Build the mapping between objects and their position in the
         # grid.
@@ -2025,7 +2025,7 @@ class XypicDiagramDrawer(object):
             # Diagonal morphism.
             return (2, 0, default_sort_key(morphism))
 
-        morphisms = sorted(morphisms, key=morphism_sort_key)
+        morphisms = sorted(morphisms_props, key=morphism_sort_key)
 
         # Build the mapping between objects and morphisms which have
         # them as domains.
