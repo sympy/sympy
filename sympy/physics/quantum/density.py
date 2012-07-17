@@ -5,7 +5,6 @@ from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.operator import HermitianOperator, OuterProduct, Operator
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.state import KetBase
-from sympy.physics.quantum.qapply import qapply
 from matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
 from sympy.physics.quantum.tensorproduct import TensorProduct, tensor_product_simp
 from sympy.core.compatibility import product

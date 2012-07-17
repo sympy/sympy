@@ -515,10 +515,12 @@ class UGate(Gate):
     #-------------------------------------------------------------------------
     # Print methods
     #-------------------------------------------------------------------------
-
-    def _print_label(self, printer, *args):
-        targets = self._print_targets(printer, *args)
-        return '%s(%s)' % (self.gate_name, targets)
+    # This method is not used anywhere, and does not work since 
+    # _print_targets is not defined.
+    #def _print_label(self, printer, *args):
+    #    print type(self)
+    #    targets = self._print_targets(printer, *args)
+    #    return '%s(%s)' % (self.gate_name, targets)
 
     def _pretty(self, printer, *args):
         targets = self._print_sequence_pretty(self.targets, ',', printer, *args)

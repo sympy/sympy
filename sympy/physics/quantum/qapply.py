@@ -105,6 +105,7 @@ def qapply(e, **options):
 
 
 def qapply_Mul(e, **options):
+    from sympy.physics.quantum.density import Density
 
     ip_doit = options.get('ip_doit', True)
 
@@ -131,6 +132,9 @@ def qapply_Mul(e, **options):
     if isinstance(lhs, OuterProduct):
         args.append(lhs.ket)
         lhs = lhs.bra
+
+    if isinstance(rhs, Density):
+        return qapply(rhs.apply_op(lhs))
 
     # Call .doit() on Commutator/AntiCommutator.
     if isinstance(lhs, (Commutator, AntiCommutator)):
