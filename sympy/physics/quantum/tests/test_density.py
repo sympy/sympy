@@ -1,3 +1,4 @@
+from __future__ import division
 from sympy import pprint, latex, symbols, S, log
 from sympy.matrices.matrices import Matrix
 from sympy.core.trace import Tr
@@ -77,17 +78,31 @@ def test_doit():
 
     #Density operators with spin states
     tp1 = TensorProduct(JzKet(1,1), JzKet(1,-1))
-
     d = Density([tp1, 1])
+
+    # full trace
     t = Tr(d);
     assert t.doit() == 1
 
     #Partial trace on density operators with spin states
     t = Tr(d, [0])
     assert t.doit() == JzKet(1,-1) * Dagger(JzKet(1,-1))
-
     t = Tr(d, [1])
     assert t.doit() == JzKet(1,1) * Dagger(JzKet(1,1))
+
+    # with another spin state
+    tp2 = TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2))
+    d = Density([tp2, 1])
+
+    #full trace
+    t = Tr(d);
+    assert t.doit() == 1
+
+    #Partial trace on density operators with spin states
+    t = Tr(d, [0])
+    assert t.doit() == JzKet(S(1)/2, -S(1)/2) * Dagger(JzKet(S(1)/2, -S(1)/2))
+    t = Tr(d, [1])
+    assert t.doit() == JzKet(S(1)/2, S(1)/2) * Dagger(JzKet(S(1)/2, S(1)/2))
 
 def test_apply_op():
     d = Density([Ket(0), 0.5], [Ket(1), 0.5])
