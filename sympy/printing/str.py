@@ -553,6 +553,11 @@ class StrPrinter(Printer):
         else:
             return 'd(%s)'%self._print(field)
 
+    def _print_Tr(self, expr):
+        #TODO : Handle indices
+        return "%s(%s)" % ("Tr", self._print(expr.args[0]))
+
+
 def sstr(expr, **settings):
     """Returns the expression as a string.
 

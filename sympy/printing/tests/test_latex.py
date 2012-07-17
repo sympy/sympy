@@ -8,13 +8,14 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Tuple, MellinTransform, InverseMellinTransform, LaplaceTransform,
     InverseLaplaceTransform, FourierTransform, InverseFourierTransform,
     SineTransform, InverseSineTransform, CosineTransform,
-    InverseCosineTransform, FiniteSet, TransformationSet, Range)
+    InverseCosineTransform, FiniteSet, TransformationSet, Range, Subs)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta
 from sympy.logic import Implies
+from sympy.core.trace import Tr
 
 x, y, z, t = symbols('x y z t')
 k, n = symbols('k n', integer=True)
@@ -228,6 +229,9 @@ def test_latex_derivatives():
     r"\frac{\partial}{\partial x} x^{3}"
     assert latex(diff(sin(x)+x**2, x, evaluate=False)) == \
     r"\frac{\partial}{\partial x}\left(x^{2} + \sin{\left (x \right )}\right)"
+
+def test_latex_subs():
+    assert latex(Subs(x*y, (x, y), (1, 2))) == r'\left. x y \right|_{\substack{ x=1\\ y=2 }}'
 
 def test_latex_integrals():
     assert latex(Integral(log(x), x)) == r"\int \log{\left (x \right )}\, dx"
@@ -642,3 +646,9 @@ def test_QuotientRing():
 
     assert latex(R) == r"\frac{\mathbb{Q}\left[x\right]}{\left< {x^{2} + 1} \right>}"
     assert latex(R.one) == r"{1} + {\left< {x^{2} + 1} \right>}"
+
+def test_Tr():
+    #TODO: Handle indices
+    A, B = symbols('A B', commutative=False)
+    t = Tr(A*B)
+    assert latex(t) == r'\mbox{Tr}\left(A B\right)'

@@ -1,4 +1,4 @@
-from sympy import Expr, Add, Mul, Matrix, Pow, sympify, Matrix
+from sympy import Expr, Add, Mul, Matrix, Pow, sympify, Matrix, Tuple
 
 def _is_scalar(e):
     """ Helper method used in Tr"""
@@ -15,7 +15,17 @@ def _is_scalar(e):
     return False
 
 def _cycle_permute(l):
-    """ Cyclic permutations based on canonical ordering"""
+    """ Cyclic permutations based on canonical ordering
+
+    This method does the sort based ascii values while
+    a better approach would be to used lexicographic sort.
+    TODO: Handle condition such as symbols have subscripts/superscripts
+    in case of lexicographic sort
+
+    """
+
+    if len(l) == 1:
+        return l
 
     min_item = min(l)
     indices = [i for i, x in enumerate(l) if x ==  min_item]
@@ -38,6 +48,19 @@ def _cycle_permute(l):
     ordered_l = le[indices[idx]:indices[idx]+len(l)]
 
     return ordered_l
+
+
+def _rearrange_args(l):
+    """ this just moves the last arg to first position
+     to enable expansion of args
+     A,B,A ==> A**2,B
+    """
+    if len(l) == 1:
+        return l
+
+    x = list(l[-1:])
+    x.extend(l[0:-1])
+    return Mul(*x).args
 
 class Tr(Expr):
     """ Generic Trace operation than can trace over:
@@ -63,20 +86,24 @@ class Tr(Expr):
     >>> from sympy import symbols, Matrix
     >>> a, b = symbols('a b', commutative=True)
     >>> A, B = symbols('A B', commutative=False)
-    >>> Tr(a*A,2)
-    a*Tr(A, 2)
+    >>> Tr(a*A,[2])
+    a*Tr(A)
     >>> m = Matrix([[1,2],[1,1]])
     >>> Tr(m)
     2
 
     """
-
     def __new__(cls, *args):
         """ Construct a Trace object.
 
+        Parameters
+        ==========
+        args = sympy expression
+
         """
+
         expr = args[0]
-        indices = args[1] if len(args) == 2 else -1 #-1 indicates full trace
+        indices = Tuple(*args[1]) if len(args) == 2 else Tuple()
         if isinstance(expr, Matrix):
             return expr.trace()
         elif hasattr(expr, 'trace') and callable(t.x):
@@ -89,10 +116,8 @@ class Tr(Expr):
             if len(nc_part) == 0:
                 return Mul(*c_part)
             else:
-                # cyclic permute nc_part for canonical ordering
-                nc_part_ordered = _cycle_permute(nc_part)
-                return Mul(*c_part) * Expr.__new__(cls, Mul(*nc_part_ordered),
-                                                   indices)
+                nc_part_ordered = _cycle_permute(_rearrange_args(nc_part))
+                return Mul(*c_part) * Expr.__new__(cls, Mul(*nc_part_ordered), indices )
         elif isinstance(expr, Pow):
             if (_is_scalar(expr.args[0]) and
                 _is_scalar(expr.args[1])):
@@ -118,7 +143,7 @@ class Tr(Expr):
 
         """
         if hasattr(self.args[0], '_eval_trace'):
-            return self.args[0]._eval_trace()
+            return self.args[0]._eval_trace(indices=self.args[1])
 
         return self
 
@@ -126,5 +151,41 @@ class Tr(Expr):
     def is_number(self):
         #TODO : This function to be reviewed
         # and implementation improved.
-
         return True
+
+
+    #TODO: Review if the permute method is needed
+    # and if it needs to return a new instance
+    #def permute(self, pos):
+        """ Permute the arguments cyclically.
+
+    #    Parameters
+    #    ==========
+    #    pos : integer, if positive, shift-right, else shift-left
+
+    #    Examples
+        =========
+
+    #   >>> from sympy.core.trace import Tr
+    #    >>> t = Tr(A*B*C*D, 2, cycle=False)
+    #    >>> t.permute(2)
+    #    Tr(C*D*A*B,2)
+
+    #    """
+    #    if pos > 0:
+    #        pos = pos % len(self.args[0].args)
+    #    else:
+    #        pos = - (abs(pos) % len(self.args[0].args))
+    #        #print self.args[0].args[pos:] + self.args[0].args[0:pos]
+
+    #    args = list(self.args[0].args[-pos:] + self.args[0].args[0:-pos])
+    #    print 'args==' , args, Mul(*(args)), self.args[1], type(self.args[1])
+
+    #    x = Tr(Mul(*(args)), 2, cycle=False)
+
+    #    print id(x), x
+    #    return x
+
+
+    def _hashable_content(self):
+        return self.args[0]  + tuple(self.args[1])

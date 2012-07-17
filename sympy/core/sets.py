@@ -275,12 +275,9 @@ class ProductSet(Set):
         >>> Interval(0, 1) * Interval(0, 1) # The unit square
         [0, 1] x [0, 1]
 
-        >>> coin = FiniteSet('H','T')
-        >>> for pair in coin**2: print pair
-        (H, H)
-        (H, T)
-        (T, H)
-        (T, T)
+        >>> coin = FiniteSet('H', 'T')
+        >>> set(coin**2)
+        set([(H, H), (H, T), (T, H), (T, T)])
 
 
     Notes

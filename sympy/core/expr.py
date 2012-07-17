@@ -1591,9 +1591,9 @@ class Expr(Basic, EvalfMixin):
         >>> from sympy.abc import x, y
         >>> (S(3)).as_coeff_add()
         (3, ())
-        >>> (3 + x + y).as_coeff_add()
-        (3, (y, x))
-        >>> (3 + x +y).as_coeff_add(x)
+        >>> (3 + x).as_coeff_add()
+        (3, (x,))
+        >>> (3 + x + y).as_coeff_add(x)
         (y + 3, (x,))
         >>> (3 + y).as_coeff_add(x)
         (y + 3, ())

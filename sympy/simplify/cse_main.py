@@ -10,6 +10,7 @@ from sympy.core.function import _coeff_isneg
 from sympy.core.compatibility import iterable
 from sympy.utilities.iterables import numbered_symbols, \
     sift, topological_sort
+from sympy.utilities.misc import default_sort_key
 
 import cse_opts
 
@@ -134,15 +135,16 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
         The expressions to reduce.
     symbols : infinite iterator yielding unique Symbols
         The symbols used to label the common subexpressions which are pulled
-        out. The ``numbered_symbols`` generator is useful. The default is a stream
-        of symbols of the form "x0", "x1", etc. This must be an infinite
+        out. The ``numbered_symbols`` generator is useful. The default is a
+        stream of symbols of the form "x0", "x1", etc. This must be an infinite
         iterator.
     optimizations : list of (callable, callable) pairs, optional
         The (preprocessor, postprocessor) pairs. If not provided,
         ``sympy.simplify.cse.cse_optimizations`` is used.
-    postprocess : a function which accepts the two return values of cse and returns
-        the desired form of output from cse, e.g. if you want the replacements
-        reversed the function might be lambda r, e: return reversed(r), e
+    postprocess : a function which accepts the two return values of cse and
+        returns the desired form of output from cse, e.g. if you want the
+        replacements reversed the function might be the following lambda:
+        lambda r, e: return reversed(r), e
 
     Returns
     =======
@@ -199,7 +201,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     for expr in reduced_exprs:
         if not isinstance(expr, Basic):
             continue
-        pt = preorder_traversal(expr)
+        pt = preorder_traversal(expr, key=default_sort_key)
         for subtree in pt:
 
             inv = 1/subtree if subtree.is_Pow else None
@@ -322,7 +324,8 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     for i, (sym, subtree) in enumerate(replacements):
         subtree = postprocess_for_cse(subtree, optimizations)
         replacements[i] = (sym, subtree)
-    reduced_exprs = [postprocess_for_cse(e, optimizations) for e in reduced_exprs]
+    reduced_exprs = [postprocess_for_cse(e, optimizations)
+        for e in reduced_exprs]
 
     if isinstance(exprs, Matrix):
         reduced_exprs = [Matrix(exprs.rows, exprs.cols, reduced_exprs)]

@@ -4,6 +4,7 @@ import random
 from sympy.core import Basic, C
 from sympy.core.compatibility import is_sequence, iterable #logically, these belong here
 from sympy.core.compatibility import product as cartes, combinations, combinations_with_replacement
+from sympy.utilities.misc import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 def flatten(iterable, levels=None, cls=None):
@@ -110,7 +111,7 @@ def group(container, multiple=True):
 
     return groups
 
-def postorder_traversal(node):
+def postorder_traversal(node, key=None):
     """
     Do a postorder traversal of a tree.
 
@@ -119,31 +120,45 @@ def postorder_traversal(node):
     a node's children's postorder traversal before yielding the node itself.
 
     Parameters
-    ----------
+    ==========
     node : sympy expression
         The expression to traverse.
+    key : (default None) sort key
+        The key used to sort args of Basic objects. When None, args of Basic
+        objects are processed in arbitrary order.
 
     Returns
-    -------
+    =======
     subtree : sympy expression
         All of the subtrees in the tree.
 
     Examples
-    --------
-    >>> from sympy import symbols
+    ========
+    >>> from sympy import symbols, default_sort_key
     >>> from sympy.utilities.iterables import postorder_traversal
-    >>> from sympy.abc import x, y, z
-    >>> set(postorder_traversal((x+y)*z)) == set([z, y, x, x + y, z*(x + y)])
-    True
+    >>> from sympy.abc import w, x, y, z
+
+    The nodes are returned in the order that they are encountered unless key
+    is given.
+
+    >>> list(postorder_traversal(w + (x + y)*z)) # doctest: +SKIP
+    [z, y, x, x + y, z*(x + y), w, w + z*(x + y)]
+    >>> list(postorder_traversal(w + (x + y)*z, key=default_sort_key))
+    [w, z, x, y, x + y, z*(x + y), w + z*(x + y)]
+
 
     """
     if isinstance(node, Basic):
-        for arg in node.args:
-            for subtree in postorder_traversal(arg):
+        args = node.args
+        if key:
+            args = list(args)
+            args.sort(key=key)
+        for arg in args:
+            for subtree in postorder_traversal(arg, key):
                 yield subtree
     elif iterable(node):
         for item in node:
-            for subtree in postorder_traversal(item):
+            for subtree in postorder_traversal(item, key):
                 yield subtree
     yield node
 
@@ -401,7 +416,8 @@ def capture(func):
     return file.getvalue()
 
 def sift(expr, keyfunc):
-    """Sift the arguments of expr into a dictionary according to keyfunc.
+    """
+    Sift the arguments of expr into a dictionary according to keyfunc.
 
     INPUT: expr may be an expression or iterable; if it is an expr then
     it is converted to a list of expr's args or [expr] if there are no args.
@@ -409,7 +425,11 @@ def sift(expr, keyfunc):
     OUTPUT: each element in expr is stored in a list keyed to the value
     of keyfunc for the element.
 
-    EXAMPLES:
+    Note that for a SymPy expression, the order of the elements in the lists
+    is dependent on the order in .args, which can be arbitrary.
+
+    Examples
+    ========
 
     >>> from sympy.utilities import sift
     >>> from sympy.abc import x, y
@@ -418,20 +438,18 @@ def sift(expr, keyfunc):
     >>> sift(range(5), lambda x: x%2)
     {0: [0, 2, 4], 1: [1, 3]}
 
-    It is possible that some keys are not present, in which case you should
-    used dict's .get() method:
+    sift() returns a defaultdict() object, so any key that has no matches will
+    give [].
 
-    >>> sift(x+y, lambda x: x.is_commutative)
-    {True: [y, x]}
-    >>> _.get(False, [])
+    >>> sift(x, lambda x: x.is_commutative)
+    {True: [x]}
+    >>> _[False]
     []
 
     Sometimes you won't know how many keys you will get:
-    >>> sift(sqrt(x) + x**2 + exp(x) + (y**x)**2,
+    >>> sift(sqrt(x) + exp(x) + (y**x)**2,
     ... lambda x: x.as_base_exp()[0])
-    {E: [exp(x)], x: [sqrt(x), x**2], y: [y**(2*x)]}
-    >>> _.keys()
-    [E, x, y]
+    {E: [exp(x)], x: [sqrt(x)], y: [y**(2*x)]}
 
     """
     d = defaultdict(list)

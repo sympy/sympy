@@ -365,7 +365,7 @@ def test_issue_3256():
     f = [[[ZZ(2)]], [[]], [[ZZ(1), ZZ(-1)], [ZZ(-1), ZZ(1), ZZ(0)]]]
     u = 2
     K = ZZ
-    assert dmp_zz_wang(f, u, K, random_sequence=random_sequence) == [f]
+    assert dmp_zz_wang(f, u, K, seed=random_sequence) == [f]
 
 def test_dmp_zz_factor():
     assert dmp_zz_factor([], 0, ZZ) == (0, [])

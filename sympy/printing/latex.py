@@ -377,6 +377,14 @@ class LatexPrinter(Printer):
         else:
             return r"%s %s" % (tex, self._print(expr.expr))
 
+    def _print_Subs(self, subs):
+        expr, old, new = subs.args
+        latex_expr = self._print(expr)
+        latex_old = (self._print(e) for e in old)
+        latex_new = (self._print(e) for e in new)
+        latex_subs = r'\\ '.join(e[0] + '=' + e[1] for e in zip(latex_old, latex_new))
+        return r'\left. %s \right|_{\substack{ %s }}' % (latex_expr, latex_subs)
+
     def _print_Integral(self, expr):
         tex, symbols = "", []
 
@@ -1281,6 +1289,12 @@ class LatexPrinter(Printer):
             return 'd(%s)'%self._print(field)
             string = self._print(field)
             return r'\mathbb{d}\left(%s\right)' % string
+
+    def _print_Tr(self, p):
+        #Todo: Handle indices
+        contents = self._print(p.args[0])
+        return r'\mbox{Tr}\left(%s\right)' % (contents)
+
 
 def latex(expr, **settings):
     r"""

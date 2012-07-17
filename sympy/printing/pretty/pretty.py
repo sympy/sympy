@@ -1562,6 +1562,13 @@ class PrettyPrinter(Printer):
             pform = prettyForm(*pform.parens())
             return prettyForm(*pform.left(u"\u2146"))
 
+    def _print_Tr(self, p):
+        #TODO: Handle indices
+        pform = self._print(p.args[0])
+        pform = prettyForm(*pform.left('%s(' % (p.__class__.__name__)))
+        pform = prettyForm(*pform.right(')'))
+        return pform
+
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
