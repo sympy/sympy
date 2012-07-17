@@ -77,7 +77,6 @@ def test_doit():
 
     #Density operators with spin states
     tp1 = TensorProduct(JzKet(1,1), JzKet(1,-1))
-    tp2 = TensorProduct(JzKet(1,-1/2), JzKet(1,-1/2))
 
     d = Density([tp1, 1])
     t = Tr(d);
