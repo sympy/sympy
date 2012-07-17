@@ -1696,8 +1696,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     hints['basic'] = basic
     return sympify(e).expand(deep=deep, modulus=modulus, **hints)
 
-# These are simple wrappers around single hints.  Feel free to add ones for
-# power_exp, power_base, multinomial, or basic if you need them.
+# These are simple wrappers around single hints.
 def expand_mul(expr, deep=True):
     """
     Wrapper around expand that only uses the mul hint.  See the expand
@@ -1830,6 +1829,26 @@ def expand_power_base(expr, deep=True):
     if not hasattr(expr, "_eval_expand_power_base"):
         return expr
     return expr._eval_expand_power_base(deep=deep)
+
+
+def expand_power_exp(expr, deep=True):
+    """
+    Wrapper around expand that only uses the power_exp hint.
+
+    See the expand docstring for more information.
+
+    Examples
+    ========
+
+    >>> from sympy import expand_power_exp
+    >>> from sympy.abc import x, y
+    >>> expand_power_base(x**(y + 2))
+    x**2*x**y
+    """
+    expr = sympify(expr)
+    if not hasattr(expr, "_eval_expand_power_exp"):
+        return expr
+    return expr._eval_expand_power_exp(deep=deep)
 
 def count_ops(expr, visual=False):
     """
