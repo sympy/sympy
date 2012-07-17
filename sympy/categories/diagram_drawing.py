@@ -1380,6 +1380,7 @@ class ArrowStringDescription(object):
             looping_str = ""
 
         if self.arrow_style:
+
             style_str = "@" + self.arrow_style
         else:
             style_str = ""
@@ -1407,6 +1408,10 @@ class XypicDiagramDrawer(object):
         # This dictionary maps properties to the corresponding arrow
         # formatters.
         self.arrow_formatters = {}
+
+        # This is the default arrow formatter which will be applied to
+        # each arrow independently of its properties.
+        self.default_arrow_formatter = None
 
     def _process_morphism(self, diagram, grid, morphism, object_coords,
                           morphisms, morphisms_str_info):
@@ -2046,6 +2051,9 @@ class XypicDiagramDrawer(object):
             string_description = self._process_morphism(
                 diagram, grid, morphism, object_coords, morphisms,
                 morphisms_str_info)
+
+            if self.default_arrow_formatter:
+                self.default_arrow_formatter(string_description)
 
             for prop in morphisms_props[morphism]:
                 # prop is a Symbol.  TODO: Find out why.

@@ -711,6 +711,16 @@ def test_XypicDiagramDrawer():
     "B \\ar[ru]_{g} & \n" \
     "}\n"
 
+    # The same diagram with a default formatter.
+    def default_formatter(astr):
+        astr.label_displacement = "(0.45)"
+
+    drawer.default_arrow_formatter = default_formatter
+    assert drawer.draw(d, grid) == "\\xymatrix{\n" \
+    "A \\ar@{-->}[r]^(0.45){\\exists !g\\circ f} \\ar[d]_(0.45){f} & C \\\\\n" \
+    "B \\ar[ru]_(0.45){g} & \n" \
+    "}\n"
+
     # A cube diagram.
     A1 = Object("A1")
     A2 = Object("A2")
