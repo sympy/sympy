@@ -1273,9 +1273,14 @@ class LatexPrinter(Printer):
         return r'\partial_{%s}' % self._print(Symbol(string))
 
     def _print_Differential(self, diff):
-        field = diff._scalar_field
-        string = field._coord_sys._names[field._index]
-        return r'\mathbb{d}%s' % self._print(Symbol(string))
+        field = diff._form_field
+        if hasattr(field, '_coord_sys'):
+            string = field._coord_sys._names[field._index]
+            return r'\mathbb{d}%s' % self._print(Symbol(string))
+        else:
+            return 'd(%s)'%self._print(field)
+            string = self._print(field)
+            return r'\mathbb{d}\left(%s\right)' % string
 
 def latex(expr, **settings):
     r"""

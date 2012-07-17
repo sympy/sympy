@@ -1,14 +1,14 @@
 from sympy.matrices import Matrix
-from sympy.core import Basic, Expr, Dummy, Function, sympify, diff
+from sympy.core import Basic, Expr, Dummy, Function, sympify, diff, Mul, Add
 from sympy.core.numbers import Zero
 from sympy.solvers import solve
 from sympy.functions import factorial
 from sympy.simplify import simplify
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, permutations
+from sympy.combinatorics import Permutation
 
-# TODO issue 2070: all the stuff about .args and rebuilding
 # TODO you are a bit excessive in the use of Dummies
-# TODO dummy point
+# TODO dummy point, literal field
 
 class Manifold(Basic):
     """Object representing a mathematical manifold.
@@ -16,11 +16,11 @@ class Manifold(Basic):
     The only role that this object plays is to keep a list of all patches
     defined on the manifold. It does not provide any means to study the
     topological characteristics of the manifold that it represents.
+
     """
     def __init__(self, name, dim):
         super(Manifold, self).__init__()
         self.name = name
-        # TODO What is the purpose of this name, besides printing?
         self.dim = dim
         self.patches = []
         # The patches list is necessary if a Patch instance needs to enumerate
@@ -54,7 +54,6 @@ class Patch(Basic):
     def __init__(self, name, manifold):
         super(Patch, self).__init__()
         self.name = name
-        # TODO What is the purpose of this name, besides printing?
         self.manifold = manifold
         self.manifold.patches.append(self)
         self.coord_systems = []
@@ -76,7 +75,7 @@ class CoordSystem(Basic):
     patch:
     >>> from sympy import symbols, sin, cos, pi
     >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
-    >>> x, y, r, theta = symbols('x, y, r, theta')
+    >>> r, theta = symbols('r, theta')
     >>> m = Manifold('M', 2)
     >>> patch = Patch('P', m)
     >>> rect = CoordSystem('rect', patch)
@@ -109,7 +108,7 @@ class CoordSystem(Basic):
     [ sqrt(2)/2]
 
     Define a basis scalar field (i.e. a coordinate function), that takes a
-    point and returns its coordinates. It is an instance of `ScalarField`.
+    point and returns its coordinates. It is an instance of `BaseScalarField`.
     >>> rect.coord_function(0)(p)
     -sqrt(2)/2
     >>> rect.coord_function(1)(p)
@@ -117,7 +116,7 @@ class CoordSystem(Basic):
 
     Define a basis vector field (i.e. a unit vector field along the coordinate
     line). Vectors are also differential operators on scalar fields. It is an
-    instance of `VectorField`.
+    instance of `BaseVectorField`.
     >>> v_x = rect.base_vector(0)
     >>> x = rect.coord_function(0)
     >>> v_x(x)(p)
@@ -173,6 +172,7 @@ class CoordSystem(Basic):
         - fill_in_gaps - try to deduce other transformation that are made
         possible by composing the present transformation with other already
         registered transformation
+
         """
         from_coords, to_exprs = dummyfy(from_coords, to_exprs)
         self.transforms[to_sys] = Matrix(from_coords), Matrix(to_exprs)
@@ -403,7 +403,7 @@ class BaseScalarField(Expr):
 
 
 class BaseVectorField(Expr):
-    """Vector Field over a Manifold.
+    r"""Vector Field over a Manifold.
 
     A vector field is an operator taking a scalar field and returning a
     directional derivative (which is also a scalar field).
@@ -423,10 +423,10 @@ class BaseVectorField(Expr):
     =========
 
     Use the predefined R2 manifold, setup some boilerplate.
-    >>> from sympy import symbols, sin, cos, pi, Function
+    >>> from sympy import symbols, pi, Function
     >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
-    >>> from sympy.diffgeom import BaseScalarField, BaseVectorField
-    >>> x, y = symbols('x, y')
+    >>> from sympy.diffgeom import BaseVectorField
+    >>> from sympy import pprint
     >>> x0, y0, r0, theta0 = symbols('x0, y0, r0, theta0')
 
     Points to be used as arguments for the field:
@@ -443,10 +443,18 @@ class BaseVectorField(Expr):
 
     Vector field:
     >>> v = BaseVectorField(R2_r, 1)
-    >>> v(s_field)(point_r).doit()
-    Derivative(g(x0, y0), y0)
-    >>> v(s_field)(point_p).doit()
-    Subs(Derivative(g(r0*cos(theta0), _xi_2), _xi_2), (_xi_2,), (r0*sin(theta0),))
+    >>> pprint(v(s_field))
+    /  d              \|
+    |-----(g(x, xi_2))||
+    \dxi_2            /|xi_2=y
+    >>> pprint(v(s_field)(point_r).doit())
+     d
+    ---(g(x0, y0))
+    dy0
+    >>> pprint(v(s_field)(point_p).doit())
+    /  d                           \|
+    |-----(g(r0*cos(theta0), xi_2))||
+    \dxi_2                         /|xi_2=r0*sin(theta0)
 
     """
     def __init__(self, coord_sys, index):
@@ -480,15 +488,198 @@ class BaseVectorField(Expr):
         return result.doit() # XXX doit for the Subs instances
 
 
-class Differential(Expr):
-    """Return the differential of a scalar field."""
-    def __init__(self, scalar_field):
-        super(Differential, self).__init__()
-        self._scalar_field = scalar_field
-        self._args = (self._scalar_field, )
+class Commutator(Expr):
+    r"""Commutator of two vector fields.
 
-    def __call__(self, vector_field):
-        return vector_field(self._scalar_field)
+    The commutator of two vector fields `v_1` and `v_2` is defined as the
+    vector field `[v_1, v_2]` that evaluated on each scalar field `f` is equal
+    to `v_1(v_2(f)) - v_2(v_1(f))`.
+
+    Examples:
+    =========
+
+    Use the predefined R2 manifold, setup some boilerplate.
+    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom import Commutator
+    >>> from sympy import pprint
+    >>> from sympy.simplify import simplify
+
+    Vector fields:
+    >>> e_x, e_y, e_r = R2.e_x, R2.e_y, R2.e_r
+    >>> c_xy = Commutator(e_x, e_y)
+    >>> c_xr = Commutator(e_x, e_r)
+
+    >>> c_xy(R2.x + R2.y**2)
+    0
+
+    """
+    # TODO simplify fails with an error
+    #>>> pprint(simplify(c_xr(R2.y**2).doit()))
+    #              -1
+    #     / 2    2\
+    #-2*y*\x  + y /  *cos(theta)*y
+
+    #"""
+    def __init__(self, v1, v2):
+        super(Commutator, self).__init__()
+        self._args = (v1, v2)
+        self._v1 = v1
+        self._v2 = v2
+
+    def __call__(self, scalar_field):
+        return self._v1(self._v2(scalar_field)) - self._v2(self._v1(scalar_field))
+
+
+class Differential(Expr):
+    """Return the differential of a form field.
+
+    The differential of a form (i.e. the exterior derivative) has a complicated
+    definition in the general case.
+
+    The differential `df` of the 0-form `f` is defined for any vector field `v`
+    as `df(v) = v(f)`.
+
+    Examples:
+    =========
+
+    Use the predefined R2 manifold, setup some boilerplate.
+    >>> from sympy import Function
+    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom import Differential
+    >>> from sympy import pprint
+
+    Scalar field (0-forms):
+    >>> g = Function('g')
+    >>> s_field = g(R2.x, R2.y)
+
+    Vector fields:
+    >>> e_x, e_y, = R2.e_x, R2.e_y
+
+    Differentials:
+    >>> dg = Differential(s_field)
+    >>> dg
+    d(g(x, y))
+    >>> pprint(dg(e_x))
+    /  d              \|
+    |-----(g(xi_1, y))||
+    \dxi_1            /|xi_1=x
+    >>> pprint(dg(e_y))
+    /  d              \|
+    |-----(g(x, xi_2))||
+    \dxi_2            /|xi_2=y
+
+    Applying the exterior derivative operator twice always results in:
+    >>> Differential(dg)
+    0
+
+    """
+    def __new__(cls, form_field):
+        if isinstance(form_field, Differential):
+            return sympify(0)
+        else:
+            return super(Differential, cls).__new__(cls, form_field)
+
+    def __init__(self, form_field):
+        super(Differential, self).__init__()
+        self._form_field = form_field
+        self._args = (self._form_field, )
+
+    def __call__(self, *vector_fields):
+        k = len(vector_fields)
+        if k==1:
+            return vector_fields[0](self._form_field)
+        else:
+            f = self._form_field
+            v = vector_fields
+            ret = 0
+            for i in range(k):
+                t = v[i](f(*v[:i]+v[i+1:]))
+                ret += (-1)**i*t
+                for j in range(i+1,k):
+                    c = Commutator(v[i], v[j])
+                    t = f(*(c,)+v[:i]+v[i+1:j]+v[j+1:])
+                    ret += (-1)**(i+j)*t
+            return ret
+
+
+class TensorProduct(Expr):
+    """Tensor product of forms.
+
+    The tensor product permits the creation of multilinear functionals (i.e.
+    higher order forms) out of lower order forms (e.g. 1-forms). However, the
+    higher forms thus created lack the interesting features provided by the
+    other type of product, the wedge product.
+
+    Examples:
+    =========
+
+    Use the predefined R2 manifold, setup some boilerplate.
+    >>> from sympy import Function
+    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom import TensorProduct
+    >>> from sympy import pprint
+
+    >>> TensorProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y)
+    1
+    >>> TensorProduct(R2.dx, R2.dy)(R2.e_y, R2.e_x)
+    0
+    >>> TensorProduct(R2.dx, R2.x*R2.dy)(R2.x*R2.e_x, R2.e_y)
+    x**2
+
+    You can nest tensor products.
+    >>> tp1 = TensorProduct(R2.dx, R2.dy)
+    >>> TensorProduct(tp1, R2.dx)(R2.e_x, R2.e_y, R2.e_x)
+    1
+
+    """
+    def __init__(self, *args):
+        super(TensorProduct, self).__init__()
+        self._args = args
+
+    def __call__(self, *v_fields):
+        orders = [order_of_form(f) for f in self._args]
+        indices = [sum(orders[:i+1]) for i in range(len(orders)-1)]
+        v_fields = [v_fields[i:j] for i, j in zip([0]+indices, indices+[None])]
+        return Mul(*[t[0](*t[1]) for t in zip(self._args, v_fields)])
+
+
+class WedgeProduct(TensorProduct):
+    """Wedge product of forms.
+
+    In the context of integration only completely antisymetric forms make
+    sense. The wedge product permits the creation of such forms.
+
+    Examples:
+    =========
+
+    Use the predefined R2 manifold, setup some boilerplate.
+    >>> from sympy import Function
+    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom import WedgeProduct
+    >>> from sympy import pprint
+
+    >>> WedgeProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y)
+    1
+    >>> WedgeProduct(R2.dx, R2.dy)(R2.e_y, R2.e_x)
+    -1
+    >>> WedgeProduct(R2.dx, R2.x*R2.dy)(R2.x*R2.e_x, R2.e_y)
+    x**2
+
+    You can nest tensor products.
+    >>> wp1 = WedgeProduct(R2.dx, R2.dy)
+    >>> WedgeProduct(wp1, R2.dx)(R2.e_x, R2.e_y, R2.e_x)
+    0
+
+    """
+    # TODO the caclulation of signatures is slow
+    # TODO you do not need all these permutations (neither the prefactor)
+    def __call__(self, *vector_fields):
+        orders = (order_of_form(e) for e in self.args)
+        mul = 1/Mul(*(factorial(o) for o in orders))
+        perms = permutations(vector_fields)
+        perms_par = (Permutation(p).signature() for p in permutations(range(len(vector_fields))))
+        tensor_prod = TensorProduct(*self.args)
+        return mul*Add(*[tensor_prod(*p[0])*p[1] for p in zip(perms, perms_par)])
 
 
 ###############################################################################
@@ -656,3 +847,24 @@ def dummyfy(args, exprs):
     d_args = Matrix([s.as_dummy() for s in args])
     d_exprs = Matrix([sympify(expr).subs(zip(args, d_args)) for expr in exprs])
     return d_args, d_exprs
+
+
+def order_of_form(expr):
+    # TODO move some of this to class methods.
+    if isinstance(expr, Add):
+        orders = [order_of_form(e) for e in expr.args]
+        if len(set(orders)) != 1:
+            raise ValueError('Misformed expression containing form fields of varying order.')
+        return order[0]
+    elif isinstance(expr, Mul):
+        orders = [order_of_form(e) for e in expr.args]
+        not_zero = [o for o in orders if o != 0]
+        if len(not_zero) != 1:
+            raise ValueError('Misformed expression containing multiplication between forms.')
+        return 0 if not not_zero else not_zero[0]
+    elif isinstance(expr, Differential):
+        return order_of_form(*expr.args) + 1
+    elif isinstance(expr, TensorProduct):
+        return sum(order_of_form(a) for a in expr.args)
+    else:
+        return 0

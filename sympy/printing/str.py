@@ -547,8 +547,11 @@ class StrPrinter(Printer):
         return 'e_%s'%field._coord_sys._names[field._index]
 
     def _print_Differential(self, diff):
-        field = diff._scalar_field
-        return 'd%s'%field._coord_sys._names[field._index]
+        field = diff._form_field
+        if hasattr(field, '_coord_sys'):
+            return 'd%s'%field._coord_sys._names[field._index]
+        else:
+            return 'd(%s)'%self._print(field)
 
 def sstr(expr, **settings):
     """Returns the expression as a string.

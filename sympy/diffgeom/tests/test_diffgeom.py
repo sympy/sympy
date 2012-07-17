@@ -1,5 +1,6 @@
 from sympy.diffgeom.Rn import R2, R2_p, R2_r, R3, R3_r, R3_c, R3_s
-from sympy.diffgeom import intcurve_series, intcurve_diffequ, Differential
+from sympy.diffgeom import (intcurve_series, intcurve_diffequ, Differential,
+        TensorProduct, WedgeProduct)
 from sympy.core import symbols, Function, Derivative
 from sympy.simplify import trigsimp, simplify
 from sympy.functions import sqrt, atan2, sin, cos
@@ -44,3 +45,15 @@ def test_intcurve_diffequ():
     equations, init_cond = intcurve_diffequ(vector_field, t, start_point, R2_p)
     assert str(equations) == '[Derivative(f_0(t), t), Derivative(f_1(t), t) - 1]'
     assert str(init_cond) == '[f_0(0) - 1, f_1(0)]'
+
+
+def test_products():
+    assert TensorProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y) == R2.dx(R2.e_x)*R2.dy(R2.e_y) == 1
+    assert WedgeProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y) == 1
+
+
+def test_differential():
+    xdy = R2.x*R2.dy
+    dxdy = Differential(xdy)
+    assert dxdy(R2.e_x, R2.e_y) == 1
+

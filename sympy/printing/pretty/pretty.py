@@ -1553,9 +1553,14 @@ class PrettyPrinter(Printer):
         return self._print(pretty_symbol(s))
 
     def _print_Differential(self, diff):
-        field = diff._scalar_field
-        string = field._coord_sys._names[field._index]
-        return self._print(u'\u2146 '+pretty_symbol(string))
+        field = diff._form_field
+        if hasattr(field, '_coord_sys'):
+            string = field._coord_sys._names[field._index]
+            return self._print(u'\u2146 '+pretty_symbol(string))
+        else:
+            pform = self._print(field)
+            pform = prettyForm(*pform.parens())
+            return prettyForm(*pform.left(u"\u2146"))
 
 
 def pretty(expr, **settings):
