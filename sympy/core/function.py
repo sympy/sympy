@@ -1712,8 +1712,10 @@ def expand_mul(expr, deep=True):
     x*exp(x + y)*log(x*y**2) + y*exp(x + y)*log(x*y**2)
 
     """
-    return sympify(expr).expand(deep=deep, mul=True, power_exp=False,\
-    power_base=False, basic=False, multinomial=False, log=False)
+    expr = sympify(expr)
+    if not hasattr(expr, "_eval_expand_mul"):
+        return expr
+    return expr._eval_expand_mul(deep=deep)
 
 def expand_multinomial(expr, deep=True):
     """
@@ -1729,9 +1731,10 @@ def expand_multinomial(expr, deep=True):
     x**2 + 2*x*exp(x + 1) + exp(2*x + 2)
 
     """
-    return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
-    power_base=False, basic=False, multinomial=True, log=False)
-
+    expr = sympify(expr)
+    if not hasattr(expr, "_eval_expand_multinomial"):
+        return expr
+    return expr._eval_expand_multinomial(deep=deep)
 
 def expand_log(expr, deep=True):
     """
@@ -1747,8 +1750,10 @@ def expand_log(expr, deep=True):
     (x + y)*(log(x) + 2*log(y))*exp(x + y)
 
     """
-    return sympify(expr).expand(deep=deep, log=True, mul=False,\
-    power_exp=False, power_base=False, multinomial=False, basic=False)
+    expr = sympify(expr)
+    if not hasattr(expr, "_eval_expand_log"):
+        return expr
+    return expr._eval_expand_log(deep=deep)
 
 def expand_func(expr, deep=True):
     """
@@ -1764,8 +1769,10 @@ def expand_func(expr, deep=True):
     x*(x + 1)*gamma(x)
 
     """
-    return sympify(expr).expand(deep=deep, func=True, basic=False,\
-    log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
+    expr = sympify(expr)
+    if not hasattr(expr, "_eval_expand_func"):
+        return expr
+    return expr._eval_expand_func(deep=deep)
 
 def expand_trig(expr, deep=True):
     """
@@ -1781,8 +1788,10 @@ def expand_trig(expr, deep=True):
     (x + y)*(sin(x)*cos(y) + sin(y)*cos(x))
 
     """
-    return sympify(expr).expand(deep=deep, trig=True, basic=False,\
-    log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
+    expr = sympify(expr)
+    if not hasattr(expr, "_eval_expand_trig"):
+        return expr
+    return expr._eval_expand_trig(deep=deep)
 
 def expand_complex(expr, deep=True):
     """
@@ -1798,8 +1807,10 @@ def expand_complex(expr, deep=True):
     re(z**(2*I)) + I*im(z**(2*I))
 
     """
-    return sympify(expr).expand(deep=deep, complex=True, basic=False,\
-    log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
+    expr = sympify(expr)
+    if not hasattr(expr, "_eval_expand_complex"):
+        return expr
+    return expr._eval_expand_complex(deep=deep)
 
 def expand_power_base(expr, deep=True):
     """
@@ -1815,8 +1826,10 @@ def expand_power_base(expr, deep=True):
     >>> expand_power_base((3*x)**y)
     3**y*x**y
     """
-    return sympify(expr).expand(deep=deep, complex=False, basic=False,\
-    log=False, mul=False, power_exp=False, power_base=True, multinomial=False)
+    expr = sympify(expr)
+    if not hasattr(expr, "_eval_expand_power_base"):
+        return expr
+    return expr._eval_expand_power_base(deep=deep)
 
 def count_ops(expr, visual=False):
     """
