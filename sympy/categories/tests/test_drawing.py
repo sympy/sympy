@@ -1,6 +1,6 @@
 from sympy.categories.diagram_drawing import _GrowableGrid, ArrowStringDescription
 from sympy.categories import (DiagramGrid, Object, NamedMorphism,
-                              Diagram, XypicDiagramDrawer)
+                              Diagram, XypicDiagramDrawer, xypic_draw_diagram)
 from sympy import FiniteSet
 
 def test_GrowableGrid():
@@ -862,3 +862,21 @@ def test_XypicDiagramDrawer():
     "& C \\ar@/^3mm/[l]^{f_{1}\\circ g_{1}} \\ar@/^3mm/[ld]^{g_{1}} \\\\\n" \
     "B \\ar@/^3mm/[u]^{f_{1}} \\ar[ru]_{g} \\ar@/^3mm/[ru]^{g_{2}} & \n" \
     "}\n"
+
+def test_xypic_draw_diagram():
+    # A linear diagram.
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    D = Object("D")
+    E = Object("E")
+
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    h = NamedMorphism(C, D, "h")
+    i = NamedMorphism(D, E, "i")
+    d = Diagram([f, g, h, i])
+
+    grid = DiagramGrid(d, layout="sequential")
+    drawer = XypicDiagramDrawer()
+    assert drawer.draw(d, grid) == xypic_draw_diagram(d, layout="sequential")
