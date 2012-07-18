@@ -447,6 +447,12 @@ class DiagramGrid(object):
         """
         Given a triangle, returns the objects included in it.
         """
+        # A triangle is an iterable containing 3 edges, each of which
+        # is a two-element tuple.  Adding up all these three tuples
+        # will result in a 6-element tuple including each vertex of
+        # the triangle twice.  Setting () as the initial value allows
+        # using ``sum`` to do the summation.  Finally, applying
+        # FiniteSet removes the duplicates.
         return FiniteSet(sum(triangle, () ))
 
     @staticmethod
@@ -455,6 +461,9 @@ class DiagramGrid(object):
         Given a triangle and an edge of it, returns the vertex which
         opposes the edge.
         """
+        # This gets the set of objects of the triangle and then
+        # subtracts the set of objects employed in ``edge`` to get the
+        # vertex opposite to ``edge``.
         return (DiagramGrid._triangle_objects(triangle) - FiniteSet(edge)).args[0]
 
     @staticmethod
