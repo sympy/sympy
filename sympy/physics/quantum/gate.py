@@ -515,7 +515,7 @@ class UGate(Gate):
     #-------------------------------------------------------------------------
     # Print methods
     #-------------------------------------------------------------------------
-    # This method is not used anywhere, and does not work since 
+    # This method is not used anywhere, and does not work since
     # _print_targets is not defined.
     #def _print_label(self, printer, *args):
     #    print type(self)

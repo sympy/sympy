@@ -139,37 +139,34 @@ def test_eval_trace():
 
     q1 = Qubit('10110')
     q2 = Qubit('01010')
-    d = Density( [q1, 0.6], [q2, 0.4] )
+    d = Density([q1, 0.6], [q2, 0.4])
 
     t = Tr(d)
     assert t.doit() == 1
 
     # extreme bits
     t = Tr(d, [0] )
-    assert t.doit() == (0.4*Density([Qubit('0101'),1]) +
-                        0.6*Density([Qubit('1011'),1]))
-
+    assert t.doit() == (0.4*Density([Qubit('0101'), 1]) +
+                        0.6*Density([Qubit('1011'), 1]))
     t = Tr(d, [4] )
-    assert t.doit() == (0.4*Density([Qubit('1010'),1]) +
-                        0.6*Density([Qubit('0110'),1]))
-
+    assert t.doit() == (0.4*Density([Qubit('1010'), 1]) +
+                        0.6*Density([Qubit('0110'), 1]))
+    # index somewhere in between
     t = Tr(d, [2] )
-    assert t.doit() == (0.4*Density([Qubit('0110'),1]) +
-                        0.6*Density([Qubit('1010'),1]))
-
+    assert t.doit() == (0.4*Density([Qubit('0110'), 1]) +
+                        0.6*Density([Qubit('1010'), 1]))
     #trace all indices
     t = Tr(d, [0,1,2,3,4])
     assert t.doit() == 1
 
     # trace some indices, initialized in
-    # random order
+    # non-canonical order
     t = Tr(d, [2, 1, 3])
-    assert t.doit() == (0.4*Density([Qubit('00'),1]) +
-                        0.6*Density([Qubit('10'),1]))
+    assert t.doit() == (0.4*Density([Qubit('00'), 1]) +
+                        0.6*Density([Qubit('10'), 1]))
 
     # mixed states
     q = (1/sqrt(2)) * (Qubit('00') + Qubit('11'))
-
     d = Density ( [q, 1.0] )
     t = Tr(d, [0])
     assert t.doit() == (0.5*Density([Qubit('0'), 1]) +

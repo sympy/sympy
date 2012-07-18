@@ -211,7 +211,7 @@ class Qubit(QubitState, Ket):
         #qubit
         sorted_idx = list(indices)
         if len(sorted_idx) == 0:
-            sorted_idx = range(0,self.nqubits)
+            sorted_idx = range(0, self.nqubits)
         sorted_idx.sort()
 
         #trace out for each of index
@@ -220,7 +220,7 @@ class Qubit(QubitState, Ket):
             # start from tracing out from leftmost qubit
             new_mat = self._reduced_density(new_mat, int(sorted_idx[i]))
 
-        if ( len(sorted_idx) == self.nqubits ):
+        if (len(sorted_idx) == self.nqubits):
             #in case full trace was requested
             return new_mat[0]
         else:
@@ -231,7 +231,6 @@ class Qubit(QubitState, Ket):
            The qubit argument should be of type python int, since it is used
            in bit operations
         """
-
         def find_index_that_is_projected(j, k, qubit):
             bit_mask = 2**qubit - 1
             return ((j >> qubit) << (1 + qubit)) + (j & bit_mask) + (k << qubit)
@@ -259,7 +258,7 @@ class Qubit(QubitState, Ket):
         from sympy.physics.quantum.density import Density
         eigen = mat.eigenvects()
         args = [[matrix_to_qubit(Matrix([vector,])), x[0]] for x in eigen for vector in x[2] if x[0] != 0]
-        if ( len(args) == 0 ):
+        if (len(args) == 0):
             return 0
         else:
             return Density(*args)
