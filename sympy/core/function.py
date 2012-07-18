@@ -1842,7 +1842,7 @@ def expand_power_exp(expr, deep=True):
 
     >>> from sympy import expand_power_exp
     >>> from sympy.abc import x, y
-    >>> expand_power_base(x**(y + 2))
+    >>> expand_power_exp(x**(y + 2))
     x**2*x**y
     """
     expr = sympify(expr)
