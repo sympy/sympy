@@ -1,4 +1,3 @@
-from __future__ import division
 from sympy import pprint, latex, symbols, S, log
 from sympy.matrices.matrices import Matrix
 from sympy.core.trace import Tr
@@ -91,7 +90,7 @@ def test_doit():
     assert t.doit() == JzKet(1,1) * Dagger(JzKet(1,1))
 
     # with another spin state
-    tp2 = TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2))
+    tp2 = TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, -S(1)/2))
     d = Density([tp2, 1])
 
     #full trace
