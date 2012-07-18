@@ -412,16 +412,23 @@ class AlgebraicNumber(Expr):
         if coeffs is not None:
             if not isinstance(coeffs, ANP):
                 rep = DMP.from_sympy_list(sympify(coeffs), 0, dom)
+                scoeffs = Tuple(*coeffs)
             else:
                 rep = DMP.from_list(coeffs.to_list(), 0, dom)
+                scoeffs = Tuple(*coeffs.to_list())
 
             if rep.degree() >= minpoly.degree():
                 rep = rep.rem(minpoly.rep)
+
+            sargs = (root, scoeffs)
+
         else:
             rep = DMP.from_list([1, 0], 0, dom)
 
             if ask(Q.negative(root)):
                 rep = -rep
+
+            sargs = (root,)
 
         alias = args.get('alias')
 
@@ -429,7 +436,7 @@ class AlgebraicNumber(Expr):
             if not isinstance(alias, Symbol):
                 alias = Symbol(alias)
 
-        obj = Expr.__new__(cls)
+        obj = Expr.__new__(cls, *sargs)
 
         obj.rep = rep
         obj.root = root
@@ -438,18 +445,6 @@ class AlgebraicNumber(Expr):
 
         return obj
 
-    def __eq__(a, b):
-        if not getattr(b, 'is_AlgebraicNumber', False):
-            try:
-                b = to_number_field(b, a)
-            except (NotAlgebraic, IsomorphismFailed):
-                return False
-
-        return a.rep == b.rep and \
-            a.minpoly.all_coeffs() == b.minpoly.all_coeffs()
-
-    def __ne__(a, b):
-        return not a.__eq__(b)
 
     def __hash__(self):
         return super(AlgebraicNumber, self).__hash__()
