@@ -1536,17 +1536,17 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     The following hints are supported but not applied unless set to True:
       complex, func, trig, frac, numer, and denom.
 
-    basic is a generic keyword for methods that want to be expanded
-    automatically.  For example, Integral uses expand_basic to expand the
-    integrand.  If you want your class expand methods to run automatically and
-    they don't fit one of the already automatic methods, wrap it around
-    _eval_expand_basic.
+    The ``basic`` hint is used for any special rewriting of an object that
+    should be done automatically (along with the other hints like ``mul``)
+    when expand is called. This is a catch-all hint to handle any sort of
+    expansion that may not be described by the existing hint names. To use
+    this hint an object should override the ``_eval_expand_basic`` method.
 
-    If deep is set to True, things like arguments of functions are
-    recursively expanded.  Use deep=False to only expand on the top
+    If ``deep`` is set to True, things like arguments of functions are
+    recursively expanded.  Use ``deep=False`` to only expand on the top
     level.
 
-    If the 'force' hint is used, assumptions about variables will be ignored
+    If the ``force`` hint is used, assumptions about variables will be ignored
     in making the expansion.
 
     Also see expand_log, expand_mul, separate, expand_complex, expand_trig,
@@ -1575,7 +1575,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     2**x*2**y
 
     power_base - Split powers of multiplied bases if assumptions allow
-    or if the 'force' hint is used:
+    or if the ``force`` hint is used:
 
     >>> ((x*y)**z).expand(power_base=True)
     (x*y)**z
@@ -1587,14 +1587,14 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     log - Pull out power of an argument as a coefficient and split logs products
     into sums of logs.  Note that these only work if the arguments of the log
     function have the proper assumptions: the arguments must be positive and the
-    exponents must be real or else the force hint must be True:
+    exponents must be real or else the ``force`` hint must be True:
 
     >>> from sympy import log, symbols, oo
     >>> log(x**2*y).expand(log=True)
     log(x**2*y)
     >>> log(x**2*y).expand(log=True, force=True)
     2*log(x) + log(y)
-    >>> x, y = symbols('x,y', positive=True)
+    >>> x, y = symbols("x,y", positive=True)
     >>> log(x**2*y).expand(log=True)
     2*log(x) + log(y)
 
@@ -1614,7 +1614,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     >>> ((x + y + z)**2).expand(multinomial=True)
     x**2 + 2*x*y + 2*x*z + y**2 + 2*y*z + z**2
 
-    You can shut off methods that you don't want:
+    You can shut off unwanted methods:
 
     >>> (exp(x + y)*(x + y)).expand()
     x*exp(x)*exp(y) + y*exp(x)*exp(y)
@@ -1630,17 +1630,17 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     >>> exp(x + exp(x + y)).expand(deep=False)
     exp(x)*exp(exp(x + y))
 
-    Note: hints are applied in a canonical order, but that order is
-    arbitrary.  Because of this, some hints may prevent expansion by other
-    hints if they are applied first.  For example, ``mul`` may distribute
-    multiplications and prevent ``log`` and ``power_base`` from expanding
-    them.  Also, if ``mul`` is applied before ``multinomial`, the expression
-    might not be fully distributed.  The solution is to use the various
-    ``expand_hint`` helper functions or to use ``hint=False`` to this function
-    to finely control which hints are applied.
+    Hints are applied in an arbitrary (but consistent) order. Because of
+    this, some hints may prevent expansion by other hints if they are
+    applied first. For example, ``mul`` may distribute multiplications and
+    prevent ``log`` and ``power_base`` from expanding them. Also, if ``mul``
+    is applied before ``multinomial`, the expression might not be fully
+    distributed. The solution is to use the various ``expand_hint`` helper
+    functions or to use ``hint=False`` to this function to finely control
+    which hints are applied. Here are some examples:
 
     >>> from sympy import expand_log, expand, expand_mul, expand_power_base
-    >>> x, y, z = symbols('x,y,z', positive=True)
+    >>> x, y, z = symbols("x,y,z", positive=True)
 
     >>> expand(log(x*(y + z)))
     log(x*y + x*z)
