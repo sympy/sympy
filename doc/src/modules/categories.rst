@@ -1,8 +1,6 @@
 Category Theory Module
 ======================
 
-.. module:: sympy.categories
-
 Introduction
 ------------
 
@@ -24,6 +22,8 @@ The module is still in its pre-embryonic stage.
 
 Base Class Reference
 --------------------
+
+.. module:: sympy.categories
 
 This section lists the classes which implement some of the basic
 notions in category theory: objects, morphisms, categories, and
@@ -60,3 +60,12 @@ diagrams.
 
 .. autoclass:: DiagramGrid
    :members:
+
+.. autoclass:: ArrowStringDescription
+
+.. autoclass:: XypicDiagramDrawer
+   :members:
+
+.. autofunction:: xypic_draw_diagram
+
+.. autofunction:: preview_diagram
