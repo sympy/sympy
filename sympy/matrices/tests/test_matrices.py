@@ -10,7 +10,6 @@ from sympy.matrices import ImmutableMatrix
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.matrices import rot_axis1, rot_axis2, rot_axis3
-from sympy.utilities import default_sort_key
 
 def test_division():
     x, y, z = symbols('x y z')
@@ -640,7 +639,7 @@ def canonicalize(v):
     def c(x):
         a, b, c = x
         return (S(a), S(b), tuple(c[0]))
-    return sorted(set([c(x) for x in v]), key=default_sort_key)
+    return tuple(set([c(x) for x in v]))
 
 def test_eigen():
     x,y = symbols('x y')
@@ -715,15 +714,15 @@ def test_eigen():
     M._eigenvects = M.eigenvects(simplify=True)
     assert max(i.q for i in M._eigenvects[0][2][0]) == 1
     M = Matrix([[S(1)/4, 1], [1, 1]])
-    assert canonicalize(M.eigenvects(simplify=True)) == canonicalize([
+    assert M.eigenvects(simplify=True) == [
         (S(5)/8 + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))],   [1]])]),
-        (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[8/(-sqrt(73) + 3)], [1]])])])
-    assert canonicalize(M.eigenvects(simplify=False)) == canonicalize([
+        (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[8/(-sqrt(73) + 3)], [1]])])]
+    assert M.eigenvects(simplify=False) == [
     (Rational(5, 8) + sqrt(73)/8, 1,
         [Matrix([[-1/(-sqrt(73)/8 + Rational(-3, 8))], [1]])]),
     (-sqrt(73)/8 + Rational(5, 8), 1,
         [Matrix([[-1/(Rational(-3, 8) + sqrt(73)/8)], [1]])]),
-    ])
+    ]
 
     m = Matrix([[1, .6, .6], [.6, .9, .9], [.9, .6, .6]])
     evals = {-sqrt(385)/20 + S(5)/4: 1, sqrt(385)/20 + S(5)/4: 1, S.Zero: 1}
