@@ -1340,11 +1340,97 @@ class DiagramGrid(object):
         return repr(self._grid._array)
 
 class ArrowStringDescription(object):
-    """
+    r"""
     Stores the information necessary for producing an Xy-pic
     description of an arrow.
 
-    TODO: Expand the docstring.
+    The principal goal of this class is to abstract away the string
+    representation of an arrow and to also provide the functionality
+    to produce the actual Xy-pic string.
+
+    ``unit`` sets the unit which will be used to specify the amount of
+    curving and other distances.  ``horizontal_direction`` should be a
+    string of ``"r"`` or ``"l"`` specifying the horizontal offset of the
+    target cell of the arrow relatively to the current one.
+    ``vertical_direction`` should  specify the vertical offset using a
+    series of either ``"d"`` or ``"u"``.  ``label_position`` should be
+    either ``"^"``, ``"_"``,  or ``"|"`` to specify that the label should
+    be positioned above the arrow, below the arrow or just over the arrow,
+    in a break.  Note that the notions "above" and "below" are relative
+    to arrow direction.  ``label`` stores the morphism label.
+
+    This works as follows (disregard the yet unexplained arguments):
+
+    >>> from sympy.categories.diagram_drawing import ArrowStringDescription
+    >>> astr = ArrowStringDescription(unit="mm", curving=None, curving_amount=None,
+    ... looping_start=None, looping_end=None, horizontal_direction="d",
+    ... vertical_direction="r", label_position="_", label="f")
+    >>> print str(astr)
+    \ar[dr]_{f}
+
+    ``curving`` should be one of ``"^"``, ``"_"`` to specify in which
+    direction the arrow is going to curve. ``curving_amount`` is a number
+    describing how many ``unit``'s the morphism is going to curve:
+
+    >>> astr = ArrowStringDescription(unit="mm", curving="^", curving_amount=12,
+    ... looping_start=None, looping_end=None, horizontal_direction="d",
+    ... vertical_direction="r", label_position="_", label="f")
+    >>> print str(astr)
+    \ar@/^12mm/[dr]_{f}
+
+    ``looping_start`` and ``looping_end`` are currently only used for
+    loop morphisms, those which have the same domain and codomain.
+    These two attributes should store a valid Xy-pic direction and
+    specify, correspondingly, the direction the arrow gets out into
+    and the direction the arrow gets back from:
+
+    >>> astr = ArrowStringDescription(unit="mm", curving=None, curving_amount=None,
+    ... looping_start="u", looping_end="l", horizontal_direction="",
+    ... vertical_direction="", label_position="_", label="f")
+    >>> print str(astr)
+    \ar@(u,l)[]_{f}
+
+    ``label_displacement`` controls how far the arrow label is from
+    the ends of the arrow.  For example, to position the arrow label
+    near the arrow head, use ">":
+
+    >>> astr = ArrowStringDescription(unit="mm", curving="^", curving_amount=12,
+    ... looping_start=None, looping_end=None, horizontal_direction="d",
+    ... vertical_direction="r", label_position="_", label="f")
+    >>> astr.label_displacement = ">"
+    >>> print str(astr)
+    \ar@/^12mm/[dr]_>{f}
+
+    Finally, ``arrow_style`` is used to specify the arrow style.  To
+    get a dashed arrow, for example, use "{-->}" as arrow style:
+
+    >>> astr = ArrowStringDescription(unit="mm", curving="^", curving_amount=12,
+    ... looping_start=None, looping_end=None, horizontal_direction="d",
+    ... vertical_direction="r", label_position="_", label="f")
+    >>> astr.arrow_style = "{-->}"
+    >>> print str(astr)
+    \ar@/^12mm/@{-->}[dr]_{f}
+
+    Notes
+    =====
+
+    Instances of :class:`ArrowStringDescription` will be constructed
+    by :class:`XypicDiagramDrawer` and provided for further use in
+    formatters.  The user is not expected to construct instances of
+    :class:`ArrowStringDescription` themselves.
+
+    To be able to properly utilise this class, the reader is welcome
+    to checkout the Xy-pic user guide, available at [Xypic].
+
+    See Also
+    ========
+
+    XypicDiagramDrawer
+
+    References
+    ==========
+
+    [Xypic] http://www.tug.org/applications/Xy-pic/
     """
     def __init__(self, unit, curving, curving_amount, looping_start,
                  looping_end, horizontal_direction, vertical_direction,
@@ -1391,14 +1477,119 @@ class ArrowStringDescription(object):
                 self.label_displacement, self.label)
 
 class XypicDiagramDrawer(object):
-    """
+    r"""
     Given a :class:`Diagram` and the corresponding
     :class:`DiagramGrid`, produces the Xy-pic representation of the
     diagram.
 
-    TODO: Expand the docstring.
+    The most important method in this class is ``draw``.  Consider the
+    following triangle diagram:
 
-    TODO: Explain the attributes as well.
+    >>> from sympy.categories import Object, NamedMorphism, Diagram
+    >>> from sympy.categories import DiagramGrid, XypicDiagramDrawer
+    >>> A = Object("A")
+    >>> B = Object("B")
+    >>> C = Object("C")
+    >>> f = NamedMorphism(A, B, "f")
+    >>> g = NamedMorphism(B, C, "g")
+    >>> diagram = Diagram([f, g], {g * f: "unique"})
+
+    To draw this diagram, its objects need to be laid out with a
+    :class:`DiagramGrid`::
+
+    >>> grid = DiagramGrid(diagram)
+
+    Finally, the drawing:
+
+    >>> drawer = XypicDiagramDrawer()
+    >>> print drawer.draw(diagram, grid)
+    \xymatrix{
+    A \ar[d]_{g\circ f} \ar[r]^{f} & B \ar[ld]^{g} \\
+    C &
+    }
+
+    For further details see the docstring of this method.
+
+    To control the appearance of the arrows, formatters are used.  The
+    dictionary ``arrow_formatters`` maps morphisms to formatter
+    functions.  A formatter is accepts an
+    :class:`ArrowStringDescription` and is allowed to modify any of
+    the arrow properties exposed thereby.  For example, to have all
+    morphisms with the property ``unique`` appear as dashed arrows,
+    and to have their names prepended with `\exists !`, the following
+    should be done:
+
+    >>> def formatter(astr):
+    ...   astr.label = "\exists !" + astr.label
+    ...   astr.arrow_style = "{-->}"
+    >>> drawer.arrow_formatters["unique"] = formatter
+    >>> print drawer.draw(diagram, grid)
+    \xymatrix{
+    A \ar@{-->}[d]_{\exists !g\circ f} \ar[r]^{f} & B \ar[ld]^{g} \\
+    C &
+    }
+
+    To modify the appearance of all arrows in the diagram, set
+    ``default_arrow_formatter``.  For example, to place all morphism
+    labels a little bit farther from the arrow head so that they look
+    more centred, do as follows:
+
+    >>> def default_formatter(astr):
+    ...   astr.label_displacement = "(0.45)"
+    >>> drawer.default_arrow_formatter = default_formatter
+    >>> print drawer.draw(diagram, grid)
+    \xymatrix{
+    A \ar@{-->}[d]_(0.45){\exists !g\circ f} \ar[r]^(0.45){f} & B \ar[ld]^(0.45){g} \\
+    C &
+    }
+
+    In some diagrams some morphisms are drawn as curved arrows.
+    Consider the following diagram:
+
+    >>> D = Object("D")
+    >>> E = Object("E")
+    >>> h = NamedMorphism(D, A, "h")
+    >>> k = NamedMorphism(D, B, "k")
+    >>> diagram = Diagram([f, g, h, k])
+    >>> grid = DiagramGrid(diagram)
+    >>> drawer = XypicDiagramDrawer()
+    >>> print drawer.draw(diagram, grid)
+    \xymatrix{
+    A \ar[r]_{f} & B \ar[d]^{g} & D \ar[l]^{k} \ar@/_3mm/[ll]_{h} \\
+    & C &
+    }
+
+    To control how far the morphisms are curved by default, one can
+    use the ``unit`` and ``default_curving_amount`` attributes:
+
+    >>> drawer.unit = "cm"
+    >>> drawer.default_curving_amount = 1
+    >>> print drawer.draw(diagram, grid)
+    \xymatrix{
+    A \ar[r]_{f} & B \ar[d]^{g} & D \ar[l]^{k} \ar@/_1cm/[ll]_{h} \\
+    & C &
+    }
+
+    In some diagrams, there are multiple curved morphisms between the
+    same two objects.  To control by how much the curving changes
+    between two such successive morphisms, use
+    ``default_curving_step``:
+
+    >>> drawer.default_curving_step = 1
+    >>> h1 = NamedMorphism(A, D, "h1")
+    >>> diagram = Diagram([f, g, h, k, h1])
+    >>> grid = DiagramGrid(diagram)
+    >>> print drawer.draw(diagram, grid)
+    \xymatrix{
+    A \ar[r]_{f} \ar@/^1cm/[rr]^{h_{1}} & B \ar[d]^{g} & D \ar[l]^{k} \ar@/_2cm/[ll]_{h} \\
+    & C &
+    }
+
+    The default value of ``default_curving_step`` is 4 units.
+
+    See Also
+    ========
+    draw, ArrowStringDescription
     """
     def __init__(self):
         self.unit = "mm"
@@ -1984,11 +2175,54 @@ class XypicDiagramDrawer(object):
                                    backwards, m_str_info)
 
     def draw(self, diagram, grid, masked=None, diagram_format=""):
-        """
+        r"""
         Returns the Xy-pic representation of ``diagram`` laid out in
         ``grid``.
 
-        TODO: Expand the docstring.
+        Consider the following simple triangle diagram.
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy.categories import DiagramGrid, XypicDiagramDrawer
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> diagram = Diagram([f, g], {g * f: "unique"})
+
+        To draw this diagram, its objects need to be laid out with a
+        :class:`DiagramGrid`::
+
+        >>> grid = DiagramGrid(diagram)
+
+        Finally, the drawing:
+
+        >>> drawer = XypicDiagramDrawer()
+        >>> print drawer.draw(diagram, grid)
+        \xymatrix{
+        A \ar[d]_{g\circ f} \ar[r]^{f} & B \ar[ld]^{g} \\
+        C &
+        }
+
+        The argument ``masked`` can be used to skip morphisms in the
+        presentation of the diagram:
+
+        >>> print drawer.draw(diagram, grid, masked=[g * f])
+        \xymatrix{
+        A \ar[r]^{f} & B \ar[ld]^{g} \\
+        C &
+        }
+
+        Finally, the ``diagram_format`` argument can be used to
+        specify the format string of the diagram.  For example, to
+        increase the spacing by 1 cm, proceeding as follows:
+
+        >>> print drawer.draw(diagram, grid, diagram_format="@+1cm")
+        \xymatrix@+1cm{
+        A \ar[d]_{g\circ f} \ar[r]^{f} & B \ar[ld]^{g} \\
+        C &
+        }
+
         """
         result = "\\xymatrix%s{\n" % diagram_format
 
@@ -2105,7 +2339,20 @@ def xypic_draw_diagram(diagram, masked=None, diagram_format="", \
 
     Examples
     ========
-    TODO: Add examples.
+
+    >>> from sympy.categories import Object, NamedMorphism, Diagram
+    >>> from sympy.categories import xypic_draw_diagram
+    >>> A = Object("A")
+    >>> B = Object("B")
+    >>> C = Object("C")
+    >>> f = NamedMorphism(A, B, "f")
+    >>> g = NamedMorphism(B, C, "g")
+    >>> diagram = Diagram([f, g], {g * f: "unique"})
+    >>> print xypic_draw_diagram(diagram)
+    \xymatrix{
+    A \ar[d]_{g\circ f} \ar[r]^{f} & B \ar[ld]^{g} \\
+    C &
+    }
 
     See Also
     ========
