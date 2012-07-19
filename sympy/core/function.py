@@ -1684,7 +1684,7 @@ def expand_mul(expr, deep=True):
     """
     expr = sympify(expr)
     if not hasattr(expr, "_eval_expand_mul"):
-        return expr
+        raise ValueError("%s does not support mul expansion." % expr)
     return expr._eval_expand_mul(deep=deep)
 
 def expand_multinomial(expr, deep=True):
@@ -1703,7 +1703,7 @@ def expand_multinomial(expr, deep=True):
     """
     expr = sympify(expr)
     if not hasattr(expr, "_eval_expand_multinomial"):
-        return expr
+        raise ValueError("%s does not support multinomial expansion." % expr)
     return expr._eval_expand_multinomial(deep=deep)
 
 def expand_log(expr, deep=True):
@@ -1722,7 +1722,7 @@ def expand_log(expr, deep=True):
     """
     expr = sympify(expr)
     if not hasattr(expr, "_eval_expand_log"):
-        return expr
+        raise ValueError("%s does not support log expansion." % expr)
     return expr._eval_expand_log(deep=deep)
 
 def expand_func(expr, deep=True):
@@ -1741,7 +1741,7 @@ def expand_func(expr, deep=True):
     """
     expr = sympify(expr)
     if not hasattr(expr, "_eval_expand_func"):
-        return expr
+        raise ValueError("%s does not support func expansion." % expr)
     return expr._eval_expand_func(deep=deep)
 
 def expand_trig(expr, deep=True):
@@ -1760,7 +1760,7 @@ def expand_trig(expr, deep=True):
     """
     expr = sympify(expr)
     if not hasattr(expr, "_eval_expand_trig"):
-        return expr
+        raise ValueError("%s does not support trig expansion." % expr)
     return expr._eval_expand_trig(deep=deep)
 
 def expand_complex(expr, deep=True):
@@ -1779,7 +1779,7 @@ def expand_complex(expr, deep=True):
     """
     expr = sympify(expr)
     if not hasattr(expr, "_eval_expand_complex"):
-        return expr
+        raise ValueError("%s does not support complex expansion." % expr)
     return expr._eval_expand_complex(deep=deep)
 
 def expand_power_base(expr, deep=True):
@@ -1798,7 +1798,7 @@ def expand_power_base(expr, deep=True):
     """
     expr = sympify(expr)
     if not hasattr(expr, "_eval_expand_power_base"):
-        return expr
+        raise ValueError("%s does not support power_base expansion." % expr)
     return expr._eval_expand_power_base(deep=deep)
 
 
@@ -1818,7 +1818,7 @@ def expand_power_exp(expr, deep=True):
     """
     expr = sympify(expr)
     if not hasattr(expr, "_eval_expand_power_exp"):
-        return expr
+        raise ValueError("%s does not support power_exp expansion." % expr)
     return expr._eval_expand_power_exp(deep=deep)
 
 def count_ops(expr, visual=False):

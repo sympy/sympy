@@ -1,9 +1,11 @@
-from sympy import log, sqrt, Rational as R, Symbol, I, exp, pi, S, re, im
+from sympy import log, sqrt, Rational as R, Symbol, I, exp, pi, S, re, im, Tuple
 
 from sympy.simplify.simplify import expand_numer, expand
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y
-
+from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
+    expand_func, expand_trig, expand_complex, expand_power_base,
+    expand_power_exp)
 def test_expand_no_log():
     assert ((1+log(x**4))**2).expand(log=False) == 1 + 2*log(x**4) + log(x**4)**2
     assert ((1+log(x**4))*(1+log(x**3))).expand(log=False) == 1 + log(x**4) + log(x**3) + log(x**4)*log(x**3)
@@ -99,3 +101,13 @@ def test_issue_3022():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
     r, e = cse((eq).expand(complex=True))
     assert abs((eq - e[0].subs(reversed(r))).subs(x, 1 + 3*I)) < 1e-9
+
+def test_expand_function_errors():
+    raises(ValueError, lambda: expand_mul(Tuple()))
+    raises(ValueError, lambda: expand_multinomial(Tuple()))
+    raises(ValueError, lambda: expand_log(Tuple()))
+    raises(ValueError, lambda: expand_func(Tuple()))
+    raises(ValueError, lambda: expand_trig(Tuple()))
+    raises(ValueError, lambda: expand_complex(Tuple()))
+    raises(ValueError, lambda: expand_power_base(Tuple()))
+    raises(ValueError, lambda: expand_power_exp(Tuple()))
