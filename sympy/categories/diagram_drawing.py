@@ -406,8 +406,8 @@ class DiagramGrid(object):
         Returns a list which contains only those triangles who have
         morphisms associated with at least two edges.
         """
-        return [tri for tri in triangles if \
-                len([e for e in tri if skeleton[e]]) >= 2]
+        return [tri for tri in triangles
+                if len([e for e in tri if skeleton[e]]) >= 2]
 
     @staticmethod
     def _morphism_length(morphism):
@@ -436,7 +436,7 @@ class DiagramGrid(object):
             for e in triangle:
                 morphisms = edges[e]
                 if morphisms:
-                    size += max([DiagramGrid._morphism_length(m) \
+                    size += max([DiagramGrid._morphism_length(m)
                                  for m in morphisms])
             triangle_sizes[triangle] = size
         return triangle_sizes
@@ -682,7 +682,7 @@ class DiagramGrid(object):
         For a given triangle always picks the same root edge.  The
         root edge is the edge that will be placed first on the grid.
         """
-        candidates = [sorted(e, key=default_sort_key) \
+        candidates = [sorted(e, key=default_sort_key)
                       for e in tri if skeleton[e]]
         sorted_candidates = sorted(candidates, key=default_sort_key)
         # Don't forget to assure the proper ordering of the vertices
@@ -750,8 +750,8 @@ class DiagramGrid(object):
                 # Now check for free directions.  When checking for
                 # free directions, prefer the horizontal and vertical
                 # directions.
-                neighbours = [(i-1, j), (i, j+1), (i+1, j), (i, j-1)] + \
-                             [(i-1,j-1), (i-1, j+1), (i+1,j-1), (i+1, j+1)]
+                neighbours = [(i-1, j), (i, j+1), (i+1, j), (i, j-1),
+                              (i-1,j-1), (i-1, j+1), (i+1,j-1), (i+1, j+1)]
 
                 for pt in neighbours:
                     if DiagramGrid._empty_point(pt, grid):
