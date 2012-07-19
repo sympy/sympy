@@ -1600,31 +1600,36 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     API
     ===
 
-    Objects can define their own expand hints by defining _eval_expand_hint().
-    The function should take the form::
+    Objects can define their own expand hints by defining
+    ``_eval_expand_hint()``.  The function should take the form::
 
         def _eval_expand_hint(self, deep=True, **hints):
+            if deep:
+                # Apply _eval_expand_hint() to each element of .args
+            else:
+                # Only apply the method to the top-level expression
             ...
 
-    (the default value of deep does not matter, as it defaults to True in
-    expand()).  Objects should define _eval_expand_hint() methods only if hint
-    applies to that specific object.  The generic _eval_expand_hint() method
-    defined in Expr will handle the no-op case.
+    (the default value of deep does not matter, as it defaults to ``True`` in
+    ``expand()``).  See also the example below.  Objects should define
+    ``_eval_expand_hint()`` methods only if hint applies to that specific
+    object.  The generic ``_eval_expand_hint()`` method defined in Expr will
+    handle the no-op case.
 
     Each hint should be responsible for expanding that hint only.  In
-    particular, this means that any recursion done when deep is True should
-    only apply _eval_expand_hint -- not expand -- to the arguments of the
-    object.  The object should only call _eval_expand_hint() on its args if
-    deep=True.
+    particular, this means that any recursion done when deep is ``True``
+    should only apply ``_eval_expand_hint()``--not ``expand()``--to the
+    arguments of the object.  The object should only call
+    ``_eval_expand_hint()`` on its args if deep=True.
 
-    In order for the generic Expr._eval_expand_hint() method to work, objects
-    must be rebuildable by their args, i.e., obj.func(*obj.args) == obj must
-    hold.
+    In order for the generic ``Expr._eval_expand_hint()`` methods to work,
+    objects must be rebuildable by their args, i.e., ``obj.func(*obj.args) ==
+    obj`` must hold.
 
-    Expand methods are passed **hints so that expand hints may use
+    Expand methods are passed ``**hints`` so that expand hints may use
     'metahints'--hints that control how different expand methods are applied.
-    For example, the force=True hint above that causes expand(log=True) to
-    ignore assumptions is such a metahint.
+    For example, the ``force=True`` hint above that causes
+    ``expand(log=True)`` to ignore assumptions is such a metahint.
 
     Note that expansion hints should generally be methods that perform some
     kind of 'expansion'.  For hints that simply rewrite an expression, use the
