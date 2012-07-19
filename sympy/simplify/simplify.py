@@ -168,8 +168,8 @@ def separate(expr, deep=False, force=False):
        >>> separate((2*cos(x))**y)
        2**y*cos(x)**y
 
-       Notice that summations are left untouched. If this is not the
-       desired behavior, apply 'expand' to the expression:
+       Notice that sums are left untouched. If this is not the desired
+       behavior, apply 'expand' to the expression:
 
        >>> separate(((x+y)*z)**2)
        z**2*(x + y)**2
@@ -1495,7 +1495,7 @@ def posify(eq):
     return eq, dict([(r, s) for s, r in reps.iteritems()])
 
 def _polarify(eq, lift, pause=False):
-    from sympy import polar_lift
+    from sympy import polar_lift, Integral
     if eq.is_polar:
         return eq
     if eq.is_number and not pause:
@@ -1511,6 +1511,15 @@ def _polarify(eq, lift, pause=False):
         return r
     elif eq.is_Function:
         return eq.func(*[_polarify(arg, lift, pause=False) for arg in eq.args])
+    elif isinstance(eq, Integral):
+        # Don't lift the integration variable
+        func = _polarify(eq.function, lift, pause=pause)
+        limits = []
+        for limit in eq.args[1:]:
+            var = _polarify(limit[0], lift=False, pause=pause)
+            rest = _polarify(limit[1:], lift=lift, pause=pause)
+            limits.append((var,) + rest)
+        return Integral(*((func,) + tuple(limits)))
     else:
         return eq.func(*[_polarify(arg, lift, pause=pause) for arg in eq.args])
 

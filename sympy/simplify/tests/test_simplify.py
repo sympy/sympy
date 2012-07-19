@@ -6,7 +6,8 @@ from sympy import (
     fraction, gamma, hyper, hyper, hypersimp, integrate, log, logcombine,
     nsimplify, oo, pi, posify, powdenest, powsimp, radsimp, ratsimp,
     ratsimpmodprime, rcollect, separate, separatevars, signsimp, simplify,
-    sin, sinh, solve, sqrt, symbols, sympify, tan, tanh, trigsimp, Dummy, Subs)
+    sin, sinh, solve, sqrt, symbols, sympify, tan, tanh, trigsimp, Dummy,
+    Subs, polarify, exp_polar, polar_lift)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
@@ -1110,6 +1111,19 @@ def test_combsimp_gamma():
 
     assert simplify(combsimp(gamma(2*x)/gamma(x))) == \
            4**x*gamma(x + S(1)/2)/sqrt(pi)/2
+
+def test_polarify():
+    # TODO: More tests!
+
+    mu = Symbol("mu")
+    sigma = Symbol("sigma", positive=True)
+
+    # Make sure polarify(lift=True) doesn't try to lift the integration
+    # variable
+    assert polarify(Integral(sqrt(2)*x*exp(-(-mu + x)**2/(2*sigma**2))/(2*sqrt(pi)*sigma),
+        (x, -oo, oo)), lift=True) == Integral(sqrt(2)*(sigma*exp_polar(0))**exp_polar(I*pi)*
+        exp((sigma*exp_polar(0))**(2*exp_polar(I*pi))*exp_polar(I*pi)*polar_lift(-mu + x)**
+        (2*exp_polar(0))/2)*exp_polar(0)*polar_lift(x)/(2*sqrt(pi)), (x, -oo, oo))
 
 def test_unpolarify():
     from sympy import (exp_polar, polar_lift, exp, unpolarify, sin,
