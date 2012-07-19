@@ -8,7 +8,7 @@ The currently supported back-ends are Xy-pic [Xypic].
 Layout Algorithm
 ================
 
-This section overviews the algorithms implemented in
+This section provides an overview of the algorithms implemented in
 :class:`DiagramGrid` to lay out diagrams.
 
 The first step of the algorithm is the removal composite and identity
@@ -21,8 +21,8 @@ has the objects of the diagram as vertices and has an (undirected)
 edge between each pair of objects between which there exist morphisms.
 The direction of the morphisms does not matter at this stage.  The
 skeleton also includes an edge between each pair of vertices `A` and
-`C` such that there exists an object `B` which is connected with
-a morphism with `A`, and with a morphism with `C`.
+`C` such that there exists an object `B` which is connected via
+a morphism to `A`, and via a morphism to `C`.
 
 The skeleton constructed in this way has the property that every
 object is a vertex of a triangle formed by three edges of the
@@ -48,7 +48,7 @@ the fringe.  This process continues iteratively until all objects of
 the diagram has been placed or until no more weldings can be found.
 
 An edge is only removed from the fringe when a welding to this edge
-has been found, however, there is no room around this edge to place
+has been found, and there is no room around this edge to place
 another vertex.
 
 When no more weldings can be found, but there are still triangles
@@ -58,16 +58,16 @@ possibility is found, the corresponding edge of the found triangle is
 placed in the found space and the iterative process of welding
 triangles restarts.
 
-When logical groups are supplied, each of this groups is laid out
+When logical groups are supplied, each of these groups is laid out
 independently.  Then a diagram is constructed in which groups are
 objects and any two logical groups between which there exist morphisms
-are connected with a morphism.  This diagram is laid out.  Finally,
+are connected via a morphism.  This diagram is laid out.  Finally,
 the grid which includes all objects of the initial diagram is
 constructed by replacing the cells which contain logical groups with
 the corresponding laid out grids, and by correspondingly expanding the
 rows and columns.
 
-The sequential layout algorithm begins with constructing the
+The sequential layout algorithm begins by constructing the
 underlying undirected graph defined by the morphisms obtained after
 simplifying premises and conclusions and merging them (see above).
 The vertex with the minimal degree is then picked up and depth-first
@@ -310,10 +310,11 @@ class DiagramGrid(object):
     @staticmethod
     def _juxtapose_edges(edge1, edge2):
         """
-        If ``edge1`` and ``edge2`` have a common extremity, returns an
-        edge which would form a triangle with ``edge1`` and ``edge2``.
+        If ``edge1`` and ``edge2`` have precisely one common endpoint,
+        returns an edge which would form a triangle with ``edge1`` and
+        ``edge2``.
 
-        If ``edge1`` and ``edge2`` don't have a common extremity,
+        If ``edge1`` and ``edge2`` don't have a common endpoint,
         returns ``None``.
 
         If ``edge1`` and ``edge`` are the same edge, returns ``None``.
@@ -324,16 +325,16 @@ class DiagramGrid(object):
         for i in [0, 1]:
             for j in [0, 1]:
                 if edge1[i] == edge2[j]:
-                    # Some extremities match, return the other two.
+                    # Some endpoints match, return the other two.
                     return (edge1[i ^ 1], edge2[j ^ 1])
 
-        # No extremities match, return None.
+        # No endpoints match, return None.
         return None
 
     @staticmethod
     def _add_edge_append(dictionary, edge, elem):
         """
-        If ``edge`` is not ``dictionary``, adds ``edge`` to the
+        If ``edge`` is not in ``dictionary``, adds ``edge`` to the
         dictionary and sets its value to ``[elem]``.  Otherwise
         appends ``elem`` to the value of existing entry.
 
@@ -381,7 +382,7 @@ class DiagramGrid(object):
         """
         Builds the set of triangles formed by the supplied edges.  The
         triangles are arbitrary and need not be commutative.  A
-        triangle is a set contains all three sides.
+        triangle is a set that contains all three of its sides.
         """
         triangles = []
 
@@ -467,7 +468,7 @@ class DiagramGrid(object):
     @staticmethod
     def _find_triangle_welding(triangle, fringe, grid):
         """
-        Finds if possible an edge in the fringe to which the supplied
+        Finds, if possible, an edge in the fringe to which the supplied
         triangle could be attached and returns the index of the
         corresponding edge in the fringe.
 
@@ -537,7 +538,7 @@ class DiagramGrid(object):
         pt2_empty = DiagramGrid._empty_point(pt2, grid)
 
         if pt1_empty and pt2_empty:
-            # Both cells are empty.  Of them two, choose that cell
+            # Both cells are empty.  Of these two, choose that cell
             # which will assure that a visible edge of the triangle
             # will be drawn perpendicularly to the current welding
             # edge.
@@ -580,7 +581,7 @@ class DiagramGrid(object):
 
             obj = DiagramGrid._other_vertex(tri, (grid[a], grid[b]))
 
-            # We now have a triangle and an wedge where it can be
+            # We now have a triangle and an edge where it can be
             # welded to the fringe.  Decide where to place the
             # other vertex of the triangle and check for
             # degenerate situations en route.
@@ -599,8 +600,8 @@ class DiagramGrid(object):
                         fringe.remove((a, b))
                         return DiagramGrid._RESTART
             elif a[0] == b[0]:
-                # A horizontal edge.  Suppose a triangle can be
-                # built in the downward direction.
+                # A horizontal edge.  We first attempt to build the
+                # triangle in the downward direction.
 
                 down_left = a[0] + 1, a[1]
                 down_right = a[0] + 1, b[1]
@@ -623,8 +624,8 @@ class DiagramGrid(object):
                         return DiagramGrid._RESTART
 
             elif a[1] == b[1]:
-                # A vertical edge.  Suppose a triangle can be built to
-                # the right.
+                # A vertical edge.  We will attempt to place the other
+                # vertex of the triangle to the right of this edge.
                 right_up = a[0], a[1] + 1
                 right_down = b[0], a[1] + 1
 
@@ -906,7 +907,7 @@ class DiagramGrid(object):
         # Place the first edge on the grid.
         root_edge = DiagramGrid._pick_root_edge(triangles[0], skeleton)
         grid[0, 0], grid[0, 1] = root_edge
-        fringe = [((0,0), (0, 1))]
+        fringe = [((0, 0), (0, 1))]
 
         # Record which objects we now have on the grid.
         placed_objects = FiniteSet(root_edge)

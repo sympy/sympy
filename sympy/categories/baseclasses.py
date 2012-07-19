@@ -838,7 +838,7 @@ class Diagram(Basic):
         Checks whether ``diagram`` is a subdiagram of ``self``.
         Diagram `D'` is a subdiagram of `D` if all premises
         (conclusions) of `D'` are contained in the premises
-        (respectively, conclusions) of `D`.  The morphisms contained
+        (conclusions) of `D`.  The morphisms contained
         both in `D'` and `D` should have the same properties for `D'`
         to be a subdiagram of `D`.
 
