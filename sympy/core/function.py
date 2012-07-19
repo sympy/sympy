@@ -1612,9 +1612,10 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     defined in Expr will handle the no-op case.
 
     Each hint should be responsible for expanding that hint only.  In
-    particular, this means that hints should not call expand(), but rather
-    _eval_expand_hint() on its args.  The object should only call
-    _eval_expand_hint() on its args if deep=True.
+    particular, this means that any recursion done when deep is True should
+    only apply _eval_expand_hint -- not expand -- to the arguments of the
+    object.  The object should only call _eval_expand_hint() on its args if
+    deep=True.
 
     In order for the generic Expr._eval_expand_hint() method to work, objects
     must be rebuildable by their args, i.e., obj.func(*obj.args) == obj must
