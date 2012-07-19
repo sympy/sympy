@@ -237,7 +237,8 @@ class Qubit(QubitState, Ket):
 
         old_matrix = represent(matrix, **options)
         old_size = old_matrix.cols
-        new_size = old_size/2
+        #we expect the old_size to be even
+        new_size = old_size//2
         new_matrix = Matrix().zeros(new_size)
 
         for i in xrange(new_size):
