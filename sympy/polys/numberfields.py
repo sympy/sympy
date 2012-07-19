@@ -393,7 +393,7 @@ class AlgebraicNumber(Expr):
 
     is_AlgebraicNumber = True
 
-    def __new__(cls, expr, coeffs=None, **args):
+    def __new__(cls, expr, coeffs=Tuple(), alias=None, **args):
         """Construct a new algebraic number. """
         expr = sympify(expr)
 
@@ -409,7 +409,7 @@ class AlgebraicNumber(Expr):
 
         dom = minpoly.get_domain()
 
-        if coeffs is not None:
+        if coeffs != Tuple():
             if not isinstance(coeffs, ANP):
                 rep = DMP.from_sympy_list(sympify(coeffs), 0, dom)
                 scoeffs = Tuple(*coeffs)
@@ -428,13 +428,12 @@ class AlgebraicNumber(Expr):
             if ask(Q.negative(root)):
                 rep = -rep
 
-            sargs = (root,)
-
-        alias = args.get('alias')
+            sargs = (root, coeffs)
 
         if alias is not None:
             if not isinstance(alias, Symbol):
                 alias = Symbol(alias)
+            sargs = sargs + (alias,)
 
         obj = Expr.__new__(cls, *sargs)
 
