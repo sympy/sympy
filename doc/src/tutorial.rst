@@ -972,4 +972,4 @@ This tutorial is also available in other languages:
 .. toctree::
    :maxdepth: 1
 
-   tutorial.ru.rst
+   tutorial.de.rst
