@@ -11,8 +11,8 @@ def test_GrowableGrid():
     assert grid.height == 2
 
     # Check initialisation of elements.
-    assert grid[0, 0] == None
-    assert grid[1, 0] == None
+    assert grid[0, 0] is None
+    assert grid[1, 0] is None
 
     # Check assignment to elements.
     grid[0, 0] = 1
@@ -29,7 +29,7 @@ def test_GrowableGrid():
 
     assert grid[0, 0] == 1
     assert grid[1, 0] == "two"
-    assert grid[2, 0] == None
+    assert grid[2, 0] is None
 
     # Check appending a column.
     grid.append_column()
@@ -38,11 +38,11 @@ def test_GrowableGrid():
 
     assert grid[0, 0] == 1
     assert grid[1, 0] == "two"
-    assert grid[2, 0] == None
+    assert grid[2, 0] is None
 
-    assert grid[0, 1] == None
-    assert grid[1, 1] == None
-    assert grid[2, 1] == None
+    assert grid[0, 1] is None
+    assert grid[1, 1] is None
+    assert grid[2, 1] is None
 
     grid = _GrowableGrid(1, 2)
     grid[0, 0] = 1
@@ -53,7 +53,7 @@ def test_GrowableGrid():
     assert grid.width == 1
     assert grid.height == 3
 
-    assert grid[0, 0] == None
+    assert grid[0, 0] is None
     assert grid[1, 0] == 1
     assert grid[2, 0] == "two"
 
@@ -62,11 +62,11 @@ def test_GrowableGrid():
     assert grid.width == 2
     assert grid.height == 3
 
-    assert grid[0, 0] == None
-    assert grid[1, 0] == None
-    assert grid[2, 0] == None
+    assert grid[0, 0] is None
+    assert grid[1, 0] is None
+    assert grid[2, 0] is None
 
-    assert grid[0, 1] == None
+    assert grid[0, 1] is None
     assert grid[1, 1] == 1
     assert grid[2, 1] == "two"
 
