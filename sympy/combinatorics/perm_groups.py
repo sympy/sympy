@@ -1647,7 +1647,7 @@ class PermutationGroup(Basic):
         See Also
         ========
 
-        alt_or_sym, _check_cycles_alt_sym
+        _check_cycles_alt_sym
 
         References
         ==========
@@ -1681,38 +1681,6 @@ class PermutationGroup(Basic):
                 if _check_cycles_alt_sym(perm):
                     return True
             return False
-
-    def alt_or_sym(self):
-        """
-        If a group is known to be alternating or symmetric, determines which one
-        it is.
-
-        Generally, this is to be applied only if the group is known to be
-        symmetric or alternating. This is the case when, for example,
-        ``is_alt_sym`` returns True (which is guaranteed to be correct).
-        Otherwise, an answer 'A' means that the group is a subgroup of the
-        alternating group, and an answer 'S' means that it's not. The
-        algorithm simply tests if all the generators are even permutations.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> from sympy.combinatorics.named_groups import AlternatingGroup
-        >>> A = AlternatingGroup(20)
-        >>> A.alt_or_sym()
-        'A'
-
-        See Also
-        ========
-
-        is_alt_sym
-        """
-        gens = self.generators
-        for perm in gens:
-            if perm.is_odd:
-                return 'S'
-        return 'A'
 
     def minimal_block(self, points):
         r"""
