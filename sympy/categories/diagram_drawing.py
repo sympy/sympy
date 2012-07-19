@@ -86,6 +86,7 @@ from sympy.core import Basic, FiniteSet, Dict
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)
 from sympy.utilities import default_sort_key
+from itertools import chain
 
 class _GrowableGrid(object):
     """
@@ -304,10 +305,7 @@ class DiagramGrid(object):
         and also in conclusions, the properties in conclusions take
         priority.
         """
-        merged = premises
-        for morphism, props in conclusions.items():
-            merged[morphism] = props
-        return merged
+        return dict(chain(premises.items(), conclusions.items()))
 
     @staticmethod
     def _juxtapose_edges(edge1, edge2):
