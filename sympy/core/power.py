@@ -3,7 +3,8 @@ from math import log as _log
 from sympify import _sympify
 from cache import cacheit
 from core import C
-from sympy.core.function import _coeff_isneg, expand_complex
+from sympy.core.function import (_coeff_isneg, expand_complex,
+    expand_multinomial, expand_mul)
 from singleton import S
 from expr import Expr
 
@@ -278,21 +279,11 @@ class Pow(Expr):
             if expanded != self:
                 return c(expanded)
 
-    def _eval_expand_basic(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_basic'):
-                newterm = term._eval_expand_basic(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
     def _eval_expand_power_exp(self, deep=True, *args, **hints):
         """a**(n+m) -> a**n*a**m"""
         if deep:
-            b = self.base.expand(deep=deep, **hints)
-            e = self.exp.expand(deep=deep, **hints)
+            b = self.base._eval_expand_power_exp(deep=deep, **hints)
+            e = self.exp._eval_expand_power_exp(deep=deep, **hints)
         else:
             b = self.base
             e = self.exp
@@ -300,7 +291,7 @@ class Pow(Expr):
             expr = []
             for x in e.args:
                 if deep:
-                    x = x.expand(deep=deep, **hints)
+                    x = x._eval_expand_power_exp(deep=deep, **hints)
                 expr.append(Pow(self.base, x))
             return Mul(*expr)
         return Pow(b, e)
@@ -310,7 +301,7 @@ class Pow(Expr):
         force = hints.get('force', False)
         b, ewas = self.args
         if deep:
-            e = self.exp.expand(deep=deep, **hints)
+            e = self.exp._eval_expand_power_base(deep=deep, **hints)
         else:
             e = self.exp
         if b.is_Mul:
@@ -369,27 +360,17 @@ class Pow(Expr):
                     nc = [Mul._from_args(nc)]*e
                 other = [Pow(Mul(*other), e)] + nc
                 if deep:
-                    return Mul(*([Pow(b.expand(deep=deep, **hints), e)\
-                    for b in c] + other))
+                    return Mul(*([Pow(b._eval_expand_power_base(deep=deep,
+                        **hints), e) for b in c] + other))
                 else:
                     return Mul(*([Pow(b, e) for b in c] + other))
         return Pow(b, e)
 
-    def _eval_expand_mul(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_mul'):
-                newterm = term._eval_expand_mul(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
     def _eval_expand_multinomial(self, deep=True, **hints):
         """(a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is nonzero integer"""
         if deep:
-            b = self.base.expand(deep=deep, **hints)
-            e = self.exp.expand(deep=deep, **hints)
+            b = self.base._eval_expand_multinomial(deep=deep, **hints)
+            e = self.exp._eval_expand_multinomial(deep=deep, **hints)
         else:
             b = self.base
             e = self.exp
@@ -442,9 +423,12 @@ class Pow(Expr):
                 if order_terms:
                     # (f(x) + O(x^n))^m -> f(x)^m + m*f(x)^{m-1} *O(x^n)
                     f = Add(*other_terms)
-                    g = (f**(n-1)).expand()
 
-                    return (f*g).expand() + n*g*Add(*order_terms)
+                    if n == 2:
+                        return expand_multinomial(f**n, deep=False) + n*f*Add(*order_terms)
+                    else:
+                        g = expand_multinomial(f**(n - 1), deep=False)
+                        return expand_mul(f*g, deep=False) + n*g*Add(*order_terms)
 
                 if base.is_number:
                     # Efficiently expand expressions of the form (a + b*I)**n
@@ -529,16 +513,6 @@ class Pow(Expr):
         else:
             return result
 
-    def _eval_expand_log(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_log'):
-                newterm = term._eval_expand_log(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
     def _eval_expand_complex(self, deep=True, **hints):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)
         return re_part + im_part*S.ImaginaryUnit
@@ -546,7 +520,6 @@ class Pow(Expr):
     def as_real_imag(self, deep=True, **hints):
         from sympy.core.symbol import symbols
         from sympy.polys.polytools import poly
-        from sympy.core.function import expand_multinomial
 
         if self.exp.is_Integer:
             exp = self.exp
@@ -606,26 +579,6 @@ class Pow(Expr):
                     return (C.re(expanded), C.im(expanded))
             else:
                 return (C.re(self), C.im(self))
-
-    def _eval_expand_trig(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_trig'):
-                newterm = term._eval_expand_trig(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_func(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_func'):
-                newterm = term._eval_expand_func(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
 
     def _eval_derivative(self, s):
         dbase = self.base.diff(s)

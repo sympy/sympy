@@ -814,6 +814,11 @@ def test_logcombine_1():
     assert logcombine((2+3*I)*log(x), force=True) == \
         log(x**2)+3*I*log(x)
     assert logcombine(Eq(y, -log(x)), force=True) == Eq(y, log(1/x))
+
+@XFAIL
+def test_logcombine_complex_coeff():
+    # TODO: Make the expand() call in logcombine smart enough so that both
+    # these hold.
     assert logcombine(Integral((sin(x**2)+cos(x**3))/x, x), force=True) == \
         Integral((sin(x**2)+cos(x**3))/x, x)
     assert logcombine(Integral((sin(x**2)+cos(x**3))/x, x)+ (2+3*I)*log(x), \

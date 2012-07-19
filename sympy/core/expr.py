@@ -2590,34 +2590,29 @@ class Expr(Basic, EvalfMixin):
     ###################### EXPRESSION EXPANSION METHODS #######################
     ###########################################################################
 
-    # These should be overridden in subclasses
+    # These should be overridden in relevant subclasses
 
-    def _eval_expand_basic(self, deep=True, **hints):
-        return self
+    def __getattr__(self, attr):
+        """
+        Magic to allow expand(hint=True) to work for any hint.
+        """
+        if not attr.startswith("_eval_expand_"):
+            raise AttributeError("%r object has no attribute %r" %
+                (self.__class__.__name__, attr))
 
-    def _eval_expand_power_exp(self, deep=True, **hints):
-        return self
+        def _eval_expand_hint(deep=True, **hints):
+            if not deep or self.is_Atom:
+                return self
+            sargs, terms = self.args, []
+            for term in sargs:
+                if hasattr(term, attr):
+                    newterm = getattr(term, attr)(deep=deep, **hints)
+                else:
+                    newterm = term
+                terms.append(newterm)
+            return self.func(*terms)
 
-    def _eval_expand_power_base(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_mul(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_multinomial(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_log(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_trig(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_func(self, deep=True, **hints):
-        return self
+        return _eval_expand_hint
 
     @cacheit
     def expand(self, deep=True, modulus=None, power_base=True, power_exp=True, \
@@ -2625,7 +2620,9 @@ class Expr(Basic, EvalfMixin):
         """
         Expand an expression using hints.
 
-        See the docstring in function.expand for more information.
+        See the docstring of the expand() function in sympy.core.function for
+        more information.
+
         """
         from sympy.simplify.simplify import fraction
 

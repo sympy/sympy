@@ -148,7 +148,7 @@ class besselj(BesselBase):
 
     def _eval_expand_func(self, deep=False, **hints):
         if self.order.is_Rational and self.order.q == 2:
-            return self.rewrite(jn)._eval_expand_func(deep, **hints)
+            return self.rewrite(jn)._eval_expand_func(deep=deep, **hints)
         return self
 
     def _eval_rewrite_as_besseli(self, nu, z):
@@ -202,7 +202,7 @@ class bessely(BesselBase):
 
     def _eval_expand_func(self, deep=False, **hints):
         if self.order.is_Rational and self.order.q == 2:
-            return self.rewrite(yn)._eval_expand_func(deep, **hints)
+            return self.rewrite(yn)._eval_expand_func(deep=deep, **hints)
         return self
 
 class besseli(BesselBase):
@@ -376,7 +376,7 @@ class SphericalBesselBase(BesselBase):
     To use this class, define the _rewrite and _expand methods.
     """
 
-    def _expand(self):
+    def _expand(self, deep=False):
         """ Expand self into a polynomial. Nu is guaranteed to be Integer. """
         raise NotImplementedError('expansion')
 
@@ -386,7 +386,7 @@ class SphericalBesselBase(BesselBase):
 
     def _eval_expand_func(self, deep=False, **hints):
         if self.order.is_Integer:
-            return self._expand()
+            return self._expand(deep=deep)
         else:
             return self
 
@@ -450,9 +450,13 @@ class jn(SphericalBesselBase):
     def _eval_rewrite_as_besselj(self, nu, z):
         return sqrt(pi/(2*z)) * besselj(nu + S('1/2'), z)
 
-    def _expand(self):
-        n = self.order
-        z = self.argument
+    def _expand(self, deep=False):
+        if deep:
+            n = self.order._eval_expand_func(deep=deep)
+            z = self.argument._eval_expand_func(deep=deep)
+        else:
+            n = self.order
+            z = self.argument
         return fn(n, z) * sin(z) + (-1)**(n+1) * fn(-n-1, z) * cos(z)
 
 class yn(SphericalBesselBase):
@@ -494,9 +498,13 @@ class yn(SphericalBesselBase):
     def _eval_rewrite_as_bessely(self, nu, z):
         return sqrt(pi/(2*z)) * bessely(nu + S('1/2'), z)
 
-    def _expand(self):
-        n = self.order
-        z = self.argument
+    def _expand(self, deep=False):
+        if deep:
+            n = self.order._eval_expand_func(deep=deep)
+            z = self.argument._eval_expand_func(deep=deep)
+        else:
+            n = self.order
+            z = self.argument
         return (-1)**(n+1) * \
                (fn(-n-1, z) * sin(z) + (-1)**(-n) * fn(n, z) * cos(z))
 

@@ -525,104 +525,13 @@ class Function(Application, Expr):
             l.append(g)
         return Add(*l) + C.Order(x**n, x)
 
-    def _eval_expand_basic(self, deep=True, **hints):
-        if not deep:
-            return self
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_basic'):
-                newterm = term._eval_expand_basic(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_power_exp(self, deep=True, **hints):
-        if not deep:
-            return self
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_power_exp'):
-                newterm = term._eval_expand_power_exp(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_power_base(self, deep=True, **hints):
-        if not deep:
-            return self
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_power_base'):
-                newterm = term._eval_expand_power_base(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_mul(self, deep=True, **hints):
-        if not deep:
-            return self
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_mul'):
-                newterm = term._eval_expand_mul(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_multinomial(self, deep=True, **hints):
-        if not deep:
-            return self
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_multinomail'):
-                newterm = term._eval_expand_multinomial(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_log(self, deep=True, **hints):
-        if not deep:
-            return self
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_log'):
-                newterm = term._eval_expand_log(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
     def _eval_expand_complex(self, deep=True, **hints):
         if deep:
-            func = self.func(*[ a.expand(deep, **hints) for a in self.args ])
+            func = self.func(*[a._eval_expand_complex(deep, **hints) for a in
+                               self.args])
         else:
-            func = self.func(*self.args)
+            func = self
         return C.re(func) + S.ImaginaryUnit * C.im(func)
-
-    def _eval_expand_trig(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_trig'):
-                newterm = term._eval_expand_trig(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_func(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_func'):
-                newterm = term._eval_expand_func(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
 
     def _eval_rewrite(self, pattern, rule, **hints):
         if hints.get('deep', False):
@@ -1539,7 +1448,8 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     automatically.  For example, Integral uses expand_basic to expand the
     integrand.  If you want your class expand methods to run automatically and
     they don't fit one of the already automatic methods, wrap it around
-    _eval_expand_basic.
+    _eval_expand_basic.  Objects may also define their own expand methods,
+    which are not run by default.  See the API section below.
 
     If deep is set to True, things like arguments of functions are
     recursively expanded.  Use deep=False to only expand on the top
@@ -1686,6 +1596,66 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     (x*y + y**2)/(x*(x + 1))
     >>> expand((x + y)*y/x/(x + 1), denom=True)
     y*(x + y)/(x**2 + x)
+
+    API
+    ===
+
+    Objects can define their own expand hints by defining
+    _eval_expand_method().  The function should take the form
+
+        def _eval_expand_hint(self, deep=True, **hints):
+            ...
+
+    (the default value of deep does not matter, as it defaults to True in
+    expand()).  Objects should define _eval_expand_hint() methods only if hint
+    applies to that specific object.  The generic _eval_expand_hint() method
+    defined in Expr will handle the no-op case.
+
+    Each hint should be responsible for expanding that hint only.  In
+    particular, this means that hints should not call expand(), but rather
+    _eval_expand_hint() on its args.  The object should only call
+    _eval_expand_hint() on its args if deep=True.
+
+    In order for the generic Expr._eval_expand_hint() method to work, objects
+    must be rebuildable by their args, i.e., obj.func(*obj.args) == obj must
+    hold.
+
+    Expand methods are passed **hints so that expand hints may use
+    'metahints'--hints that control how different expand methods are applied.
+    For example, the force=True hint above that causes expand(log=True) to
+    ignore assumptions is such a metahint.
+
+    Note that expansion hints should generally be methods that perform some
+    kind of 'expansion'.  For hints that simply rewrite an expression, use the
+    .rewrite() API.
+
+    Example
+    -------
+
+    >>> from sympy import Expr, sympify
+    >>> class MyClass(Expr):
+    ...     def __new__(cls, *args):
+    ...         args = sympify(args)
+    ...         return Expr.__new__(cls, *args)
+    ...
+    ...     def _eval_expand_double(self, deep=True, **hints):
+    ...         '''Doubles the args of MyClass.'''
+    ...         if deep:
+    ...             args = [i._eval_expand_double(deep=deep, **hints) for i
+    ...                     in self.args]
+    ...         else:
+    ...             args = self.args
+    ...
+    ...         return self.func(*(args + args))
+    ...
+    >>> a = MyClass(1, 2, MyClass(3, 4))
+    >>> a
+    MyClass(1, 2, MyClass(3, 4))
+    >>> a.expand(double=True)
+    MyClass(1, 2, MyClass(3, 4, 3, 4), 1, 2, MyClass(3, 4, 3, 4))
+    >>> a.expand(double=True, deep=False)
+    MyClass(1, 2, MyClass(3, 4), 1, 2, MyClass(3, 4))
+
     """
     # don't modify this; modify the Expr.expand method
     hints['power_base'] = power_base

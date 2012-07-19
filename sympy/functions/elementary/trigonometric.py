@@ -315,7 +315,7 @@ class sin(TrigonometricFunction):
 
     def _eval_expand_trig(self, deep=True, **hints):
         if deep:
-            arg = self.args[0].expand(deep, **hints)
+            arg = self.args[0]._eval_expand_trig(deep=deep, **hints)
         else:
             arg = self.args[0]
         x = None
@@ -327,7 +327,8 @@ class sin(TrigonometricFunction):
                 x = terms
                 y = (coeff - 1)*x
         if x is not None:
-            return (sin(x)*cos(y) + sin(y)*cos(x)).expand(trig=True)
+            return (sin(x)*cos(y) +
+                sin(y)*cos(x))._eval_expand_trig(deep=deep, **hints)
         return sin(arg)
 
     def _eval_as_leading_term(self, x):
@@ -551,13 +552,14 @@ class cos(TrigonometricFunction):
 
     def _eval_expand_trig(self, deep=True, **hints):
         if deep:
-            arg = self.args[0].expand()
+            arg = self.args[0]._eval_expand_trig(deep=deep, **hints)
         else:
             arg = self.args[0]
         x = None
         if arg.is_Add: # TODO, implement more if deep stuff here
             x, y = arg.as_two_terms()
-            return (cos(x)*cos(y) - sin(y)*sin(x)).expand(trig=True)
+            return (cos(x)*cos(y) -
+                sin(y)*sin(x))._eval_expand_trig(deep=deep, **hints)
         else:
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff is not S.One and coeff.is_Integer and terms is not S.One:
@@ -758,8 +760,7 @@ class tan(TrigonometricFunction):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)
         return re_part + im_part*S.ImaginaryUnit
 
-    def _eval_expand_trig(self, deep=True, **hints):
-        return self
+    # TODO: Implement _eval_expand_trig
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit

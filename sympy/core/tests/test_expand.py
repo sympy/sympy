@@ -32,7 +32,8 @@ def test_expand_non_commutative():
                                      x**3 + y**3 + x*y*x + y*x*y)
     # 3120
     assert ((a*A*B*A**-1)**2).expand() == a**2*A*B**2*A**(-1)
-    assert ((a*A*B*A**-1)**2).expand(deep=False) == a**2*A*B**2*A**(-1)
+    # Note that (a*A*B*A**-1)**2 is automatically converted to a**2*(A*B*A**-1)**2
+    assert ((a*A*B*A**-1)**2).expand(deep=False) == a**2*(A*B*A**-1)**2
     assert ((a*A*B*A**-1)**2).expand(force=True) == a**2*A*B**2*A**(-1)
     assert ((a*A*B)**2).expand() == a**2*A*B*A*B
     assert ((a*A)**2).expand() == a**2*A**2

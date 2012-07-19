@@ -3158,7 +3158,7 @@ def logcombine(expr, force=False):
     """
     # Try to make (a+bi)*log(x) == a*log(x)+bi*log(x).  This needs to be a
     # separate function call to avoid infinite recursion.
-    expr = expand_mul(expr, deep=False)
+    expr = expand_mul(expr)
     return _logcombine(expr, force)
 
 def _logcombine(expr, force=False):

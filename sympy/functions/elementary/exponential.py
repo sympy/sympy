@@ -117,14 +117,14 @@ class ExpBase(Function):
 
     def _eval_expand_power_exp(self, deep=True, **hints):
         if deep:
-            arg = self.args[0].expand(deep=deep, **hints)
+            arg = self.args[0]._eval_expand_power_exp(deep=deep, **hints)
         else:
             arg = self.args[0]
         if arg.is_Add and arg.is_commutative:
             expr = 1
             for x in arg.args:
                 if deep:
-                    x = x.expand(deep=deep, **hints)
+                    x = x._eval_expand_power_exp(deep=deep, **hints)
                 expr *= self.func(x)
             return expr
         return self.func(arg)
@@ -573,7 +573,7 @@ class log(Function):
         from sympy import unpolarify
         force = hints.get('force', False)
         if deep:
-            arg = self.args[0].expand(deep=deep, **hints)
+            arg = self.args[0]._eval_expand_log(deep=deep, **hints)
         else:
             arg = self.args[0]
         if arg.is_Mul:
@@ -581,7 +581,7 @@ class log(Function):
             nonpos = []
             for x in arg.args:
                 if deep:
-                    x = x.expand(deep=deep, **hints)
+                    x = x._eval_expand_log(deep=deep, **hints)
                 if force or x.is_positive or x.is_polar:
                     expr.append(self.func(x)._eval_expand_log(deep=deep, **hints))
                 else:
