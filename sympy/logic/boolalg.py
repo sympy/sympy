@@ -250,12 +250,14 @@ class Implies(BooleanFunction):
         else:
             return Basic.__new__(cls, *args)
 
-class Equivalent(BooleanFunction):
+class Equivalent(BooleanFunction, LatticeOp):
     """
     Equivalence relation.
 
     Equivalent(A, B) is True if and only if A and B are both True or both False
     """
+    identity = None
+    zero = None
     @classmethod
     def eval(cls, *args):
         """
@@ -278,16 +280,17 @@ class Equivalent(BooleanFunction):
 
         """
 
-        argset = set(args)
+        from sympy.utilities.iterables import uniq
+        argset = uniq(args)
         if len(argset) <= 1:
             return True
         if True in argset:
-            argset.discard(True)
+            argset = [x for x in argset if x is not True]
             return And(*argset)
         if False in argset:
-            argset.discard(False)
+            argset = [x for x in argset if x is not False]
             return Nor(*argset)
-        return Basic.__new__(cls, *set(args))
+        return Basic.__new__(cls, *args)
 
 class ITE(BooleanFunction):
     """
@@ -355,7 +358,7 @@ def conjuncts(expr):
     frozenset([Or(A, B)])
 
     """
-    return And.make_args(expr)
+    return frozenset(And.make_args(expr))
 
 def disjuncts(expr):
     """Return a list of the disjuncts in the sentence s.
@@ -370,7 +373,7 @@ def disjuncts(expr):
     frozenset([And(A, B)])
 
     """
-    return Or.make_args(expr)
+    return frozenset(Or.make_args(expr))
 
 def distribute_and_over_or(expr):
     """
@@ -394,7 +397,7 @@ def distribute_and_over_or(expr):
             return expr
         rest = Or(*[a for a in expr.args if a is not conj])
         return And(*map(distribute_and_over_or,
-                   [Or(c, rest) for c in conj.args]))
+                   [Or(rest, c) for c in conj.args]))
     elif expr.func is And:
         return And(*map(distribute_and_over_or, expr.args))
     else:
@@ -500,10 +503,10 @@ def eliminate_implications(expr):
     args = map(eliminate_implications, expr.args)
     if expr.func is Implies:
         a, b = args[0], args[-1]
-        return (~a) | b
+        return b | (~a)
     elif expr.func is Equivalent:
         a, b = args[0], args[-1]
-        return (a | Not(b)) & (b | Not(a))
+        return (b | Not(a)) & (a | Not(b))
     else:
         return expr.func(*args)
 
@@ -522,7 +525,7 @@ def compile_rule(s):
     >>> compile_rule('A & B')
     And(A, B)
     >>> compile_rule('(~B & ~C)|A')
-    Or(A, And(Not(B), Not(C)))
+    Or(And(Not(B), Not(C)), A)
     """
     import re
     from sympy.core import Symbol

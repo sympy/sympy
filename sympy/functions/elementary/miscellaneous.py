@@ -255,7 +255,7 @@ class MinMaxBase(LatticeOp):
             return set(_args).pop()
         else:
             # base creation
-            obj = Expr.__new__(cls, _args, **assumptions)
+            obj = Expr.__new__(cls, *_args, **assumptions)
             obj._argset = _args
             return obj
 

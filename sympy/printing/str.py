@@ -183,7 +183,7 @@ class StrPrinter(Printer):
             return "Lambda((%s), %s" % (arg_string, expr)
 
     def _print_LatticeOp(self, expr):
-        args = sorted(expr.args, key=default_sort_key)
+        args = expr.args
         return expr.func.__name__ + "(%s)"%", ".join(self._print(arg) for arg in args)
 
     def _print_Limit(self, expr):
