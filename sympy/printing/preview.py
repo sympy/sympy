@@ -6,7 +6,7 @@ import tempfile
 
 from latex import latex
 
-def preview(expr, output='png', viewer=None, euler=True, packages=[], **latex_settings):
+def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_settings):
     r"""
     View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.
 
@@ -93,10 +93,10 @@ def preview(expr, output='png', viewer=None, euler=True, packages=[], **latex_se
         if viewer not in special and not pexpect.which(viewer):
             raise SystemError("Unrecognized viewer: %s" % viewer)
 
-    actual_packages = packages + ["amsmath", "amsfonts"]
+    actual_packages = packages + ("amsmath", "amsfonts")
     if euler:
-        actual_packages += ["euler"]
-    package_includes = "\n".join(["\\usepackage{%s}" % p \
+        actual_packages += ("euler",)
+    package_includes = "\n".join(["\\usepackage{%s}" % p
                                   for p in actual_packages])
 
     format = r"""\documentclass[12pt]{article}
