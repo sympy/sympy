@@ -384,7 +384,7 @@ class DiagramGrid(object):
         triangles are arbitrary and need not be commutative.  A
         triangle is a set that contains all three of its sides.
         """
-        triangles = []
+        triangles = set()
 
         for w in edges:
             for v in edges:
@@ -392,13 +392,13 @@ class DiagramGrid(object):
                 if wv:
                     (A, B) = wv
                     if (A, B) in edges:
-                        triangle = FiniteSet(w, v, (A, B))
-                        triangles.append(triangle)
+                        triangle = frozenset([w, v, (A, B)])
+                        triangles.add(triangle)
                     elif (B, A) in edges:
-                        triangle = FiniteSet(w, v, (B, A))
-                        triangles.append(triangle)
+                        triangle = frozenset([w, v, (B, A)])
+                        triangles.add(triangle)
 
-        return FiniteSet(triangles)
+        return triangles
 
     @staticmethod
     def _drop_redundant_triangles(triangles, skeleton):
@@ -452,7 +452,7 @@ class DiagramGrid(object):
         # the triangle twice.  Setting () as the initial value allows
         # using ``sum`` to do the summation.  Finally, applying
         # FiniteSet removes the duplicates.
-        return FiniteSet(sum(triangle, () ))
+        return set(sum(triangle, () ))
 
     @staticmethod
     def _other_vertex(triangle, edge):
@@ -463,7 +463,7 @@ class DiagramGrid(object):
         # This gets the set of objects of the triangle and then
         # subtracts the set of objects employed in ``edge`` to get the
         # vertex opposite to ``edge``.
-        return (DiagramGrid._triangle_objects(triangle) - FiniteSet(edge)).args[0]
+        return list(DiagramGrid._triangle_objects(triangle) - set(edge))[0]
 
     @staticmethod
     def _find_triangle_welding(triangle, fringe, grid):
@@ -695,7 +695,7 @@ class DiagramGrid(object):
         Returns only those triangles whose set of objects is not
         completely included in ``placed_objects``.
         """
-        return [tri for tri in triangles if not placed_objects.subset(
+        return [tri for tri in triangles if not placed_objects.issuperset(
             DiagramGrid._triangle_objects(tri))]
 
     @staticmethod
@@ -722,8 +722,8 @@ class DiagramGrid(object):
 
                 def good_triangle(tri):
                     objs = DiagramGrid._triangle_objects(tri)
-                    return objs.contains(obj) and \
-                           placed_objects & (objs - FiniteSet(obj)) == FiniteSet()
+                    return obj in objs and \
+                           placed_objects & (objs - set([obj])) == set()
 
                 tris = [tri for tri in triangles if good_triangle(tri)]
                 if not tris:
@@ -882,9 +882,10 @@ class DiagramGrid(object):
         """
         Produces the generic layout for the supplied diagram.
         """
+
         skeleton = DiagramGrid._build_skeleton(merged_morphisms)
 
-        all_objects = diagram.objects
+        all_objects = set(diagram.objects)
         grid = _GrowableGrid(2, 1)
 
         if len(skeleton) == 1:
@@ -910,7 +911,7 @@ class DiagramGrid(object):
         fringe = [((0, 0), (0, 1))]
 
         # Record which objects we now have on the grid.
-        placed_objects = FiniteSet(root_edge)
+        placed_objects = set(root_edge)
 
         while placed_objects != all_objects:
             triangle = DiagramGrid._weld_triangle(
@@ -927,12 +928,12 @@ class DiagramGrid(object):
                 new_obj = DiagramGrid._grow_pseudopod(
                     triangles, fringe, grid, skeleton, placed_objects)
 
-                placed_objects = placed_objects | FiniteSet(new_obj)
+                placed_objects.add(new_obj)
 
                 # Now, hopefully, a new welding will be found.
             else:
-                placed_objects = placed_objects | \
-                                 DiagramGrid._triangle_objects(triangle)
+                placed_objects.update(
+                    DiagramGrid._triangle_objects(triangle))
 
             triangles = DiagramGrid._drop_irrelevant_triangles(
                 triangles, placed_objects)
@@ -978,7 +979,7 @@ class DiagramGrid(object):
         grid = _GrowableGrid(1, 1)
         grid[0, 0] = root
 
-        placed_objects = FiniteSet(root)
+        placed_objects = set([root])
         def place_objects(pt, placed_objects):
             """
             Does depth-first search in the underlying graph of the
@@ -993,8 +994,8 @@ class DiagramGrid(object):
                     continue
 
                 DiagramGrid._put_object(new_pt, adjacent_obj, grid, [])
-                placed_objects |= FiniteSet(adjacent_obj)
-                placed_objects |= place_objects(new_pt, placed_objects)
+                placed_objects.add(adjacent_obj)
+                placed_objects.update(place_objects(new_pt, placed_objects))
 
                 new_pt = (new_pt[0] + 1, new_pt[1])
 
