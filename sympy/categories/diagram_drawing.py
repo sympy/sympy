@@ -516,7 +516,7 @@ class DiagramGrid(object):
         if i == -1:
             grid.prepend_row()
             i = 0
-            offset = (1, offset[1])
+            offset = (1, 0)
             for k in xrange(len(fringe)):
                 ((i1, j1), (i2, j2)) = fringe[k]
                 fringe[k] = ((i1 + 1, j1), (i2 + 1, j2))
