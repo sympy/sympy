@@ -76,14 +76,11 @@ def __cacheit(func):
         """
         Assemble the args and kw_args to compute the hash.
         """
+        k = [(x, type(x)) for x in args]
         if kw_args:
-            keys = kw_args.keys()
-            keys.sort()
-            items = [(k+'=', kw_args[k]) for k in keys]
-            k = args + tuple(items)
-        else:
-            k = args
-        k = k + tuple(map(lambda x: type(x), k))
+            keys = sorted(kw_args)
+            k.extend([(x, kw_args[x], type(kw_args[x])) for x in keys])
+        k = tuple(k)
         try:
             return func_cache_it_cache[k]
         except KeyError:
