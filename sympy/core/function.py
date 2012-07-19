@@ -1601,7 +1601,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     ===
 
     Objects can define their own expand hints by defining _eval_expand_hint().
-    The function should take the form
+    The function should take the form::
 
         def _eval_expand_hint(self, deep=True, **hints):
             ...
