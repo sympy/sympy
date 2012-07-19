@@ -7,7 +7,6 @@ import textwrap
 import re
 import pydoc
 from StringIO import StringIO
-from warnings import warn
 
 class Reader(object):
     """
@@ -106,6 +105,7 @@ class NumpyDocString(object):
             'Examples': '',
             'index': {}
             }
+        self._other_keys = []
 
         self._parse()
 
@@ -114,9 +114,9 @@ class NumpyDocString(object):
 
     def __setitem__(self,key,val):
         if not self._parsed_data.has_key(key):
-            warn("Unknown section %s" % key)
-        else:
-            self._parsed_data[key] = val
+            self._other_keys.append(key)
+
+        self._parsed_data[key] = val
 
     def _is_at_section(self):
         self._doc.seek_next_non_empty_line()
