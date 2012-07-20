@@ -188,24 +188,28 @@ class chebyshevu_root(Function):
 #
 
 class legendre(OrthogonalPolynomial):
-    """
-    legendre(n, x) gives the nth Legendre polynomial of x, P_n(x)
+    r"""
+    legendre(n, x) gives the nth Legendre polynomial of x, :math:`P_n(x)`
 
     The Legendre polynomials are orthogonal on [-1, 1] with respect to
-    the constant weight 1. They satisfy P_n(1) = 1 for all n; further,
-    P_n is odd for odd n and even for even n
+    the constant weight 1. They satisfy :math:`P_n(1) = 1` for all n; further,
+    :math:`P_n` is odd for odd n and even for even n.
 
     Examples
     ========
 
-    >>> from sympy import legendre
-    >>> from sympy.abc import x
+    >>> from sympy import legendre, diff
+    >>> from sympy.abc import x, n
     >>> legendre(0, x)
     1
     >>> legendre(1, x)
     x
     >>> legendre(2, x)
     3*x**2/2 - 1/2
+    >>> legendre(n, x)
+    legendre(n, x)
+    >>> diff(legendre(n,x), x)
+    n*(x*legendre(n, x) - legendre(n - 1, x))/(x**2 - 1)
 
     See Also
     ========
@@ -216,8 +220,7 @@ class legendre(OrthogonalPolynomial):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Legendre_polynomial
-
+    .. [1] http://en.wikipedia.org/wiki/Legendre_polynomial
     """
 
     _ortho_poly = staticmethod(legendre_poly)
@@ -261,12 +264,14 @@ class legendre(OrthogonalPolynomial):
         return C.Sum(kern, (k, 0, n))
 
 class assoc_legendre(Function):
-    """
-    assoc_legendre(n,m, x) gives P_nm(x), where n and m are the degree
-    and order or an expression which is related to the nth order
-    Legendre polynomial, P_n(x) in the following manner:
+    r"""
+    assoc_legendre(n,m, x) gives :math:`P_n^m(x)`, where n and m are
+    the degree and order or an expression which is related to the nth
+    order Legendre polynomial, :math:`P_n(x)` in the following manner:
 
-        P_nm(x) = (-1)**m * (1 - x**2)**(m/2) * diff(P_n(x), x, m)
+    .. math::
+        P_n^m(x) = (-1)^m (1 - x^2)^{\frac{m}{2}}
+                   \frac{\mathrm{d}^m P_n(x)}{\mathrm{d} x^m}
 
     Associated Legendre polynomial are orthogonal on [-1, 1] with:
 
@@ -277,13 +282,15 @@ class assoc_legendre(Function):
     ========
 
     >>> from sympy import assoc_legendre
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, m, n
     >>> assoc_legendre(0,0, x)
     1
     >>> assoc_legendre(1,0, x)
     x
     >>> assoc_legendre(1,1, x)
     -sqrt(-x**2 + 1)
+    >>> assoc_legendre(n,m,x)
+    assoc_legendre(n, m, x)
 
     See Also
     ========
@@ -294,8 +301,7 @@ class assoc_legendre(Function):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Associated_Legendre_polynomials
-
+    .. [1] http://en.wikipedia.org/wiki/Associated_Legendre_polynomials
     """
 
     nargs = 3
