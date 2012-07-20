@@ -63,3 +63,6 @@ def test_permute():
     t = Tr((A+B)*(B*B)*C*D)
     assert t.permute(2).args[0].args == (C, D, (A+B), (B**2))
 
+    t1 = Tr(A*B)
+    t2 = t1.permute(1)
+    assert id(t1) != id(t2) and t1 == t2
