@@ -1649,6 +1649,14 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
         >>> expand((x + y)*y/x/(x + 1), denom=True)
         y*(x + y)/(x**2 + x)
 
+    - The ``modulus`` meta-hint can be used to reduce the coefficients of an
+      expression post-expansion::
+
+        >>> expand((3*x + 1)**2)
+        9*x**2 + 6*x + 1
+        >>> expand((3*x + 1)**2, modulus=5)
+        4*x**2 + x + 1
+
     - Either ``expand()`` the function or ``.expand()`` the method can be
       used.  Both are equivalent::
 
