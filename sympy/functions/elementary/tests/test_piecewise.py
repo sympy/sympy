@@ -228,6 +228,7 @@ def test_piecewise_lambdify():
         (2 - x, x >= 1),
         (0, True)
     )
+
     f = lambdify(x, p)
     assert f(-2.0) == 4.0
     assert f(0.0) == 0.0

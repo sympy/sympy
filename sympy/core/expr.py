@@ -2643,7 +2643,15 @@ class Expr(Basic, EvalfMixin):
         elif hints.pop('numer', False):
             n, d = fraction(self)
             return n.expand(deep=deep, modulus=modulus, **hints)/d
-        for hint, use_hint in hints.iteritems():
+        # although the hints are sorted here, an earlier hint may get applied
+        # at a given node in the expression tree before another because of
+        # how the hints are applied.
+        # e.g. expand(log(x*(y + z))) -> log(x*y + x*z) because while applying
+        # log at the top level, log and mul are applied at the deeper level in
+        # the tree so that when the log at the upper level gets applied, the
+        # mul has already been applied at the lower level.
+        for hint in sorted(hints.keys()):
+            use_hint = hints[hint]
             if use_hint:
                 func = getattr(expr, '_eval_expand_'+hint, None)
                 if func is not None:
