@@ -2604,13 +2604,18 @@ class Expr(Basic, EvalfMixin):
             if not deep or self.is_Atom or not self.args:
                 return self
             sargs, terms = self.args, []
+            hit = False
             for term in sargs:
                 if hasattr(term, attr):
+                    hit = True
                     newterm = getattr(term, attr)(deep=deep, **hints)
                 else:
                     newterm = term
                 terms.append(newterm)
-            return self.func(*terms)
+            if hit:
+                return self.func(*terms)
+            else:
+                return self
 
         return _eval_expand_hint
 
