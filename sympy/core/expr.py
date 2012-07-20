@@ -2601,7 +2601,7 @@ class Expr(Basic, EvalfMixin):
                 (self.__class__.__name__, attr))
 
         def _eval_expand_hint(deep=True, **hints):
-            if not deep or self.is_Atom:
+            if not deep or self.is_Atom or not self.args:
                 return self
             sargs, terms = self.args, []
             for term in sargs:
