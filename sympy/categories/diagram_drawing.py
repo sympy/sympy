@@ -319,17 +319,14 @@ class DiagramGrid(object):
 
         If ``edge1`` and ``edge`` are the same edge, returns ``None``.
         """
-        if (edge1 == edge2) or ((edge1[0] == edge2[1]) and (edge1[1] == edge2[0])):
+        intersection = edge1 & edge2
+        if len(intersection) != 1:
+            # The edges either have no common points or are equal.
             return None
 
-        for i in [0, 1]:
-            for j in [0, 1]:
-                if edge1[i] == edge2[j]:
-                    # Some endpoints match, return the other two.
-                    return (edge1[i ^ 1], edge2[j ^ 1])
-
-        # No endpoints match, return None.
-        return None
+        # The edges have a common endpoint.  Extract the different
+        # endpoints and set up the new edge.
+        return (edge1 - intersection) | (edge2 - intersection)
 
     @staticmethod
     def _add_edge_append(dictionary, edge, elem):
@@ -340,13 +337,10 @@ class DiagramGrid(object):
 
         Note that edges are undirected, thus `(A, B) = (B, A)`.
         """
-        (A, B) = edge
-        if (A, B) in dictionary:
-            dictionary[(A, B)].append(elem)
-        elif (B, A) in dictionary:
-             dictionary[(B, A)].append(elem)
+        if edge in dictionary:
+            dictionary[edge].append(elem)
         else:
-            dictionary[(A, B)] = [elem]
+            dictionary[edge] = [elem]
 
     @staticmethod
     def _build_skeleton(morphisms):
@@ -363,17 +357,15 @@ class DiagramGrid(object):
         # Create edges for morphisms.
         for morphism in morphisms:
             DiagramGrid._add_edge_append(
-                edges, (morphism.domain,morphism.codomain), morphism)
+                edges, frozenset([morphism.domain,morphism.codomain]), morphism)
 
         # Create new edges by juxtaposing existing edges.
         edges1 = dict(edges)
         for w in edges1:
             for v in edges1:
                 wv = DiagramGrid._juxtapose_edges(w, v)
-                if wv:
-                    (A, B) = wv
-                    if ((A, B) not in edges) and ((B, A) not in edges):
-                        edges[(A, B)] = []
+                if wv and wv not in edges:
+                    edges[wv] = []
 
         return edges
 
@@ -389,14 +381,8 @@ class DiagramGrid(object):
         for w in edges:
             for v in edges:
                 wv = DiagramGrid._juxtapose_edges(w, v)
-                if wv:
-                    (A, B) = wv
-                    if (A, B) in edges:
-                        triangle = frozenset([w, v, (A, B)])
-                        triangles.add(triangle)
-                    elif (B, A) in edges:
-                        triangle = frozenset([w, v, (B, A)])
-                        triangles.add(triangle)
+                if wv and wv in edges:
+                    triangles.add(frozenset([w, v, wv]))
 
         return triangles
 
@@ -456,13 +442,11 @@ class DiagramGrid(object):
         """
         Given a triangle, returns the objects included in it.
         """
-        # A triangle is an iterable containing 3 edges, each of which
-        # is a two-element tuple.  Adding up all these three tuples
-        # will result in a 6-element tuple including each vertex of
-        # the triangle twice.  Setting () as the initial value allows
-        # using ``sum`` to do the summation.  Finally, applying
-        # FiniteSet removes the duplicates.
-        return set(sum(triangle, () ))
+        # A triangle is a frozenset of three two-element frozensets
+        # (the edges).  This chains the three edges together and
+        # creates a frozenset from the iterator, thus producing a
+        # frozenset of objects of the triangle.
+        return frozenset(chain(*tuple(triangle)))
 
     @staticmethod
     def _other_vertex(triangle, edge):
@@ -540,7 +524,7 @@ class DiagramGrid(object):
             A = grid[edge[0]]
             B = grid[edge[1]]
 
-            if skeleton.get((A, obj)) or skeleton.get((obj, A)):
+            if skeleton.get(frozenset([A, obj])):
                 return pt1
             else:
                 return pt2
@@ -564,8 +548,7 @@ class DiagramGrid(object):
         """
         for triangle in triangles:
             for (a, b) in fringe:
-                if ((grid[a], grid[b]) in triangle) or \
-                   ((grid[b], grid[a]) in triangle):
+                if frozenset([grid[a], grid[b]]) in triangle:
                     return (triangle, (a, b))
         return None
 
@@ -744,9 +727,7 @@ class DiagramGrid(object):
 
                 # Get the object at the other end of the edge.
                 edge = edges[0]
-                other_obj = edge[0]
-                if other_obj == obj:
-                    other_obj = edge[1]
+                other_obj = tuple(edge - frozenset([obj]))[0]
 
                 # Now check for free directions.  When checking for
                 # free directions, prefer the horizontal and vertical
