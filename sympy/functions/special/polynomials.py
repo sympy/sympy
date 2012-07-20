@@ -244,7 +244,10 @@ class legendre(OrthogonalPolynomial):
                 return S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
-            return cls._eval_at_order(n, x)
+            if n.is_negative:
+                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+            else:
+                return cls._eval_at_order(n, x)
 
     def fdiff(self, argindex=2):
         if argindex == 1:

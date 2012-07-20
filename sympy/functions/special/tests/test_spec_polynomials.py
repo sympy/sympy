@@ -1,6 +1,6 @@
-from sympy import (legendre, Symbol, hermite, chebyshevu, chebyshevt,
-        chebyshevt_root, chebyshevu_root, assoc_legendre, Rational,
-        roots, sympify, S, laguerre_l, laguerre_poly, sqrt)
+from sympy import (legendre, Symbol, diff, Derivative, Rational, roots, sympify, S, sqrt,
+                   hermite, chebyshevu, chebyshevt, chebyshevt_root, chebyshevu_root,
+                   assoc_legendre, laguerre_l, laguerre_poly, sqrt)
 
 from sympy.utilities.pytest import raises
 
@@ -29,6 +29,13 @@ def test_legendre():
          sqrt(Rational(3, 7) + Rational(2, 35)*sqrt(30)): 1,
         -sqrt(Rational(3, 7) + Rational(2, 35)*sqrt(30)): 1,
     }
+
+    n = Symbol("n")
+    assert legendre(n,x) == legendre(n, x)
+    assert legendre(-n,x) == legendre(n-1, x)
+    assert legendre(n,-x) == (-1)**n*legendre(n, x)
+    assert diff(legendre(n,x), x) == n*(x*legendre(n, x) - legendre(n - 1, x))/(x**2 - 1)
+    assert diff(legendre(n,x), n) == Derivative(legendre(n, x), n)
 
 def test_assoc_legendre():
     Plm=assoc_legendre
