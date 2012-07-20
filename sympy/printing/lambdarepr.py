@@ -1,4 +1,5 @@
 from str import StrPrinter
+from sympy.utilities import default_sort_key
 
 def _find_first_symbol(expr):
     for atom in expr.atoms():
@@ -38,7 +39,7 @@ class LambdaPrinter(StrPrinter):
 
     def _print_And(self, expr):
         result = ['(']
-        for arg in expr.args:
+        for arg in sorted(expr.args, key=default_sort_key):
             result.extend(['(', self._print(arg), ')'])
             result.append(' and ')
         result = result[:-1]
@@ -47,7 +48,7 @@ class LambdaPrinter(StrPrinter):
 
     def _print_Or(self, expr):
         result = ['(']
-        for arg in expr.args:
+        for arg in sorted(expr.args, key=default_sort_key):
             result.extend(['(', self._print(arg), ')'])
             result.append(' or ')
         result = result[:-1]
