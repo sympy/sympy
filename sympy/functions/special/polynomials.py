@@ -9,17 +9,33 @@ combinatorial polynomials.
 from sympy.core.basic import C
 from sympy.core.singleton import S
 from sympy.core import Rational
-from sympy.core.function import Function
+from sympy.core.function import Function, ArgumentIndexError
+from sympy.functions.elementary.miscellaneous import sqrt
 
 from sympy.polys.orthopolys import (
     chebyshevt_poly,
     chebyshevu_poly,
     laguerre_poly,
     hermite_poly,
-    legendre_poly,
+    legendre_poly
 )
 
 _x = C.Dummy('x')
+
+
+class OrthogonalPolynomial(Function):
+    """Base class for orthogonal polynomials.
+    """
+    nargs = 2
+
+    @classmethod
+    def _eval_at_order(cls, n, x):
+        if n.is_integer and n >= 0:
+            return cls._ortho_poly(int(n), _x).subs(_x, x)
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0], self.args[1].conjugate())
+
 
 class PolynomialSequence(Function):
     """Polynomial sequence with one index and n >= 0. """
@@ -171,7 +187,7 @@ class chebyshevu_root(Function):
 # Legendre polynomials and Associated Legendre polynomials
 #
 
-class legendre(PolynomialSequence):
+class legendre(OrthogonalPolynomial):
     """
     legendre(n, x) gives the nth Legendre polynomial of x, P_n(x)
 
@@ -205,6 +221,53 @@ class legendre(PolynomialSequence):
     """
 
     _ortho_poly = staticmethod(legendre_poly)
+
+    @classmethod
+    def eval(cls, n, x):
+        # We just return a generic L_n(x) placeholder object
+        pass
+
+    def _eval_expand_func(self, deep=False, **hints):
+        if deep:
+            n, x = [ arg.expand(deep, **hints) for arg in self.args ]
+        else:
+            n, x = self.args
+        if not n.is_Number:
+            # L_n(-x)  --->  (-1)**n * L_n(x)
+            if x.could_extract_minus_sign():
+                return S.NegativeOne**n * legendre(n,-x)
+            # L_{-n}(x)  --->  L_{n-1}(x)
+            if n.could_extract_minus_sign():
+                return legendre(-n - S.One,x)
+            # We can evaluate for some special values of x
+            if x == S.Zero:
+                return sqrt(S.Pi)/(C.gamma(S.Half - n/2)*C.gamma(S.One + n/2))
+            elif x == S.One:
+                return S.One
+            elif x == S.Infinity:
+                return S.Infinity
+        else:
+            # n is a given fixed integer, evaluate into polynomial
+            return self._eval_at_order(n, x)
+        # Nothing could be expanded
+        return self
+
+    def fdiff(self, argindex=2):
+        if argindex == 1:
+            # Diff wrt n
+            raise ArgumentIndexError(self, argindex)
+        elif argindex == 2:
+            # Diff wrt x
+            # Find better formula, this is unsuitable for x = 1
+            n, x = self.args
+            return n/(x**2 - 1)*(x*legendre(n, x) - legendre(n - 1, x))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_polynomial(self, n, x):
+        k = C.Dummy("k")
+        kern = (-1)**k*C.binomial(n, k)**2*((1 + x)/2)**(n - k)*((1 - x)/2)**k
+        return C.Sum(kern, (k, 0, n))
 
 class assoc_legendre(Function):
     """
@@ -247,25 +310,58 @@ class assoc_legendre(Function):
     nargs = 3
 
     @classmethod
-    def calc(cls, n, m):
+    def _eval_at_order(cls, n, m):
         P = legendre_poly(n, _x, polys=True).diff((_x, m))
         return (-1)**m * (1 - _x**2)**Rational(m, 2) * P.as_expr()
 
     @classmethod
     def eval(cls, n, m, x):
-        if n.is_integer and n >= 0 and m.is_integer and abs(m) <= n:
-            assoc = cls.calc(int(n), abs(int(m)))
+        # We just return a generic L_n,m(x) placeholder object
+        pass
 
-            if m < 0:
-                assoc *= (-1)**(-m) * (C.factorial(n + m)/C.factorial(n - m))
+    def _eval_expand_func(self, deep=False, **hints):
+        if deep:
+            n, m, x = [ arg.expand(deep, **hints) for arg in self.args ]
+        else:
+            n, m, x = self.args
 
-            return assoc.subs(_x, x)
+        if m.could_extract_minus_sign():
+            # P^{-m}_n  --->  F * P^m_n
+            return S.NegativeOne**(-m) * (C.factorial(m + n)/C.factorial(n - m)) * assoc_legendre(n, -m, x)
+        if m == 0:
+            # P^0_n  --->  L_n
+            return legendre(n, x)
+        if x == 0:
+            return 2**m*sqrt(S.Pi) / (C.gamma((1 - m - n)/2)*C.gamma(1 - (m - n)/2))
+        if n.is_Number and m.is_Number and n.is_integer and m.is_integer:
+            if n.is_negative:
+                raise ValueError("%s : 1st index must be nonnegative integer (got %r)" % (cls, n))
+            if abs(m) > n:
+                raise ValueError("%s : abs('2nd index') must be <= '1st index' (got %r, %r)" % (cls, n, m))
+            # n, m are given fixed integers, evaluate into polynomial
+            return cls._eval_at_order(int(n), abs(int(m))).subs(_x, x)
+        # Nothing could be expanded
+        return self
 
-        if n.is_negative:
-            raise ValueError("%s : 1st index must be nonnegative integer (got %r)" % (cls, n))
+    def fdiff(self, argindex=3):
+        if argindex == 1:
+            # Diff wrt n
+            raise ArgumentIndexError(self, argindex)
+        elif argindex == 2:
+            # Diff wrt m
+            raise ArgumentIndexError(self, argindex)
+        elif argindex == 3:
+            # Diff wrt x
+            # Find better formula, this is unsuitable for x = 1
+            n, m, x = self.args
+            return 1/(x**2 - 1)*(x*n*assoc_legendre(n,m,x) - (m + n)*assoc_legendre(n - 1,m,x))
+        else:
+            raise ArgumentIndexError(self, argindex)
 
-        if abs(m) > n:
-            raise ValueError("%s : abs('2nd index') must be <= '1st index' (got %r, %r)" % (cls, n, m))
+    def _eval_rewrite_as_polynomial(self, n, m, x):
+        k = C.Dummy("k")
+        kern = C.factorial(2*n - 2*k)/(2**n*C.factorial(n - k)*C.factorial(k)*C.factorial(n - 2*k - m))*(-1)**k*x**(n - m - 2*k)
+        return (1 - x**2)**(m/2) * C.Sum(kern, (k, 0, C.floor((n - m)*S.Half)))
 
 #----------------------------------------------------------------------------
 # Hermite polynomials
