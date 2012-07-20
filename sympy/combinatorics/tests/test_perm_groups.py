@@ -346,17 +346,6 @@ def test_is_alt_sym():
     9: Permutation([[4, 9, 6], [3, 8], [1, 2], [0, 5, 7]])}
     assert A.is_alt_sym(_random_prec = _random_prec) == False
 
-def test_alt_or_sym():
-    S = SymmetricGroup(10)
-    A = AlternatingGroup(10)
-    D = DihedralGroup(10)
-    sym = S.alt_or_sym()
-    alt = A.alt_or_sym()
-    dih = D.alt_or_sym()
-    assert sym == 'S' or sym == False
-    assert alt == 'A' or alt == False
-    assert dih == False
-
 def test_minimal_block():
     D = DihedralGroup(6)
     block_system = D.minimal_block([0,3])
