@@ -476,22 +476,6 @@ class DiagramGrid(object):
         return list(DiagramGrid._triangle_objects(triangle) - set(edge))[0]
 
     @staticmethod
-    def _find_triangle_welding(triangle, fringe, grid):
-        """
-        Finds, if possible, an edge in the fringe to which the supplied
-        triangle could be attached and returns the index of the
-        corresponding edge in the fringe.
-
-        This function relies on the fact that objects are unique in
-        the diagram.
-        """
-        for (a, b) in fringe:
-            if ((grid[a], grid[b]) in triangle) or \
-               ((grid[b], grid[a]) in triangle):
-                return (a, b)
-        return None
-
-    @staticmethod
     def _empty_point(pt, grid):
         """
         Checks if the cell at coordinates ``pt`` is either empty or
@@ -567,113 +551,120 @@ class DiagramGrid(object):
         else:
             return None
 
-    # The possible return values of ``_weld_triangle``.
-    _WELDING_FAILURE = 1
-    _RESTART = 2
+    @staticmethod
+    def _find_triangle_to_weld(triangles, fringe, grid):
+        """
+        Finds, if possible, a triangle and an edge in the fringe to
+        which the triangle could be attached.  Returns the tuple
+        containing the triangle and the index of the corresponding
+        edge in the fringe.
+
+        This function relies on the fact that objects are unique in
+        the diagram.
+        """
+        for triangle in triangles:
+            for (a, b) in fringe:
+                if ((grid[a], grid[b]) in triangle) or \
+                   ((grid[b], grid[a]) in triangle):
+                    return (triangle, (a, b))
+        return None
 
     @staticmethod
-    def _weld_triangle(triangles, fringe, grid, skeleton):
+    def _weld_triangle(tri, welding_edge, fringe, grid, skeleton):
         """
-        If possible, welds a triangle to the fringe and returns the
-        welded triangle.  Otherwise returns ``_WELDING_FAILURE``.  If
-        this method encounters a degenerate situation and corrects the
-        fringe such that a restart of the search is required, it
-        returns ``_RESTART``.
+        If possible, welds the triangle ``tri`` to ``fringe`` and
+        returns ``False``.  If this method encounters a degenerate
+        situation in the fringe and corrects it such that a restart of
+        the search is required, it returns ``True`` (which means that
+        a restart in finding triangle weldings is required).
+
+        A degenerate situation is a situation when an edge listed in
+        the fringe does not belong to the visual boundary of the
+        diagram.
         """
-        for tri in triangles:
-            welding_edge = DiagramGrid._find_triangle_welding(
-                tri, fringe, grid)
-            if not welding_edge:
-                continue
+        a, b = welding_edge
+        target_cell = None
 
-            a, b = welding_edge
-            target_cell = None
+        obj = DiagramGrid._other_vertex(tri, (grid[a], grid[b]))
 
-            obj = DiagramGrid._other_vertex(tri, (grid[a], grid[b]))
+        # We now have a triangle and an edge where it can be welded to
+        # the fringe.  Decide where to place the other vertex of the
+        # triangle and check for degenerate situations en route.
 
-            # We now have a triangle and an edge where it can be
-            # welded to the fringe.  Decide where to place the
-            # other vertex of the triangle and check for
-            # degenerate situations en route.
+        if (abs(a[0] - b[0]) == 1) and (abs(a[1] - b[1]) == 1):
+            # A diagonal edge.
+            target_cell = (a[0], b[1])
+            if grid[target_cell]:
+                # That cell is already occupied.
+                target_cell = (b[0], a[1])
 
-            if (abs(a[0] - b[0]) == 1) and (abs(a[1] - b[1]) == 1):
-                # A diagonal edge.
-                target_cell = (a[0], b[1])
                 if grid[target_cell]:
-                    # That cell is already occupied.
-                    target_cell = (b[0], a[1])
+                    # Degenerate situation, this edge is not
+                    # on the actual fringe.  Correct the
+                    # fringe and go on.
+                    fringe.remove((a, b))
+                    return True
+        elif a[0] == b[0]:
+            # A horizontal edge.  We first attempt to build the
+            # triangle in the downward direction.
 
-                    if grid[target_cell]:
-                        # Degenerate situation, this edge is not
-                        # on the actual fringe.  Correct the
-                        # fringe and go on.
-                        fringe.remove((a, b))
-                        return DiagramGrid._RESTART
-            elif a[0] == b[0]:
-                # A horizontal edge.  We first attempt to build the
-                # triangle in the downward direction.
+            down_left = a[0] + 1, a[1]
+            down_right = a[0] + 1, b[1]
 
-                down_left = a[0] + 1, a[1]
-                down_right = a[0] + 1, b[1]
+            target_cell = DiagramGrid._choose_target_cell(
+                down_left, down_right, (a, b), obj, skeleton, grid)
 
-                target_cell = DiagramGrid._choose_target_cell(
-                    down_left, down_right, (a, b), obj, skeleton, grid)
-
-                if not target_cell:
-                    # No room below this edge.  Check above.
-                    up_left = a[0] - 1, a[1]
-                    up_right = a[0] - 1, b[1]
-
-                    target_cell = DiagramGrid._choose_target_cell(
-                        up_left, up_right, (a, b), obj, skeleton, grid)
-
-                    if not target_cell:
-                        # This edge is not in the fringe, remove it
-                        # and restart.
-                        fringe.remove((a, b))
-                        return DiagramGrid._RESTART
-
-            elif a[1] == b[1]:
-                # A vertical edge.  We will attempt to place the other
-                # vertex of the triangle to the right of this edge.
-                right_up = a[0], a[1] + 1
-                right_down = b[0], a[1] + 1
+            if not target_cell:
+                # No room below this edge.  Check above.
+                up_left = a[0] - 1, a[1]
+                up_right = a[0] - 1, b[1]
 
                 target_cell = DiagramGrid._choose_target_cell(
-                    right_up, right_down, (a, b), obj, skeleton, grid)
+                    up_left, up_right, (a, b), obj, skeleton, grid)
 
                 if not target_cell:
-                    # No room to the left.  See what's to the right.
-                    left_up = a[0], a[1] - 1
-                    left_down = b[0], a[1] - 1
+                    # This edge is not in the fringe, remove it
+                    # and restart.
+                    fringe.remove((a, b))
+                    return True
+        elif a[1] == b[1]:
+            # A vertical edge.  We will attempt to place the other
+            # vertex of the triangle to the right of this edge.
+            right_up = a[0], a[1] + 1
+            right_down = b[0], a[1] + 1
 
-                    target_cell = DiagramGrid._choose_target_cell(
-                        left_up, left_down, (a, b), obj, skeleton, grid)
+            target_cell = DiagramGrid._choose_target_cell(
+                right_up, right_down, (a, b), obj, skeleton, grid)
 
-                    if not target_cell:
-                        # This edge is not in the fringe, remove it
-                        # and restart.
-                        fringe.remove((a, b))
-                        return DiagramGrid._RESTART
+            if not target_cell:
+                # No room to the left.  See what's to the right.
+                left_up = a[0], a[1] - 1
+                left_down = b[0], a[1] - 1
 
-            # We now know where to place the other vertex of the
-            # triangle.
-            offset = DiagramGrid._put_object(target_cell, obj, grid, fringe)
+                target_cell = DiagramGrid._choose_target_cell(
+                    left_up, left_down, (a, b), obj, skeleton, grid)
 
-            # Take care of the displacement of coordinates if a row or
-            # a column was prepended.
-            target_cell = (target_cell[0] + offset[0],
-                           target_cell[1] + offset[1])
-            a = (a[0] + offset[0], a[1] + offset[1])
-            b = (b[0] + offset[0], b[1] + offset[1])
+                if not target_cell:
+                    # This edge is not in the fringe, remove it
+                    # and restart.
+                    fringe.remove((a, b))
+                    return True
 
-            fringe.extend([(a, target_cell), (b, target_cell)])
+        # We now know where to place the other vertex of the
+        # triangle.
+        offset = DiagramGrid._put_object(target_cell, obj, grid, fringe)
 
-            triangles.remove(tri)
+        # Take care of the displacement of coordinates if a row or
+        # a column was prepended.
+        target_cell = (target_cell[0] + offset[0],
+                       target_cell[1] + offset[1])
+        a = (a[0] + offset[0], a[1] + offset[1])
+        b = (b[0] + offset[0], b[1] + offset[1])
 
-            return tri
+        fringe.extend([(a, target_cell), (b, target_cell)])
 
-        return DiagramGrid._WELDING_FAILURE
+        # No restart is required.
+        return False
 
     @staticmethod
     def _triangle_key(tri, triangle_sizes):
@@ -924,15 +915,19 @@ class DiagramGrid(object):
         placed_objects = set(root_edge)
 
         while placed_objects != all_objects:
-            triangle = DiagramGrid._weld_triangle(
-                triangles, fringe, grid, skeleton)
+            welding = DiagramGrid._find_triangle_to_weld(triangles, fringe, grid)
 
-            if triangle == DiagramGrid._RESTART:
-                # ``_weld_triangle`` wants to have the search for
-                # welding restarted.
-                continue
+            if welding:
+                (triangle, welding_edge) = welding
 
-            if triangle == DiagramGrid._WELDING_FAILURE:
+                restart_required = DiagramGrid._weld_triangle(
+                    triangle, welding_edge, fringe, grid, skeleton)
+                if restart_required:
+                    continue
+
+                placed_objects.update(
+                    DiagramGrid._triangle_objects(triangle))
+            else:
                 # No more weldings found.  Try to attach triangles by
                 # vertices.
                 new_obj = DiagramGrid._grow_pseudopod(
@@ -941,9 +936,6 @@ class DiagramGrid(object):
                 placed_objects.add(new_obj)
 
                 # Now, hopefully, a new welding will be found.
-            else:
-                placed_objects.update(
-                    DiagramGrid._triangle_objects(triangle))
 
             triangles = DiagramGrid._drop_irrelevant_triangles(
                 triangles, placed_objects)
