@@ -877,7 +877,7 @@ class Pow(Expr):
         >>> sqrt(3 + 3*sqrt(2)).as_content_primitive()
         (1, sqrt(3)*sqrt(1 + sqrt(2)))
 
-        >>> from sympy import expand_power_base powsimp, Mul
+        >>> from sympy import expand_power_base, powsimp, Mul
         >>> from sympy.abc import x, y
 
         >>> ((2*x + 2)**2).as_content_primitive()
