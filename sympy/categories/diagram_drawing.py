@@ -864,10 +864,16 @@ class DiagramGrid(object):
         """
         Produces the generic layout for the supplied diagram.
         """
+        all_objects = set(diagram.objects)
+        if len(all_objects) == 1:
+            # There only one object in the diagram, just put in on 1x1
+            # grid.
+            grid = _GrowableGrid(1, 1)
+            grid[0, 0] = tuple(all_objects)[0]
+            return grid
 
         skeleton = DiagramGrid._build_skeleton(merged_morphisms)
 
-        all_objects = set(diagram.objects)
         grid = _GrowableGrid(2, 1)
 
         if len(skeleton) == 1:

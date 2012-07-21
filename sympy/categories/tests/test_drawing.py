@@ -503,3 +503,22 @@ def test_DiagramGrid():
     assert grid[0, 2] == C
     assert grid[0, 3] == D
     assert grid.morphisms == {f: FiniteSet(), g: FiniteSet()}
+
+    # Test a one-object diagram.
+    f = NamedMorphism(A, A, "f")
+    d = Diagram([f])
+    grid = DiagramGrid(d)
+
+    assert grid.width == 1
+    assert grid.height == 1
+    assert grid[0, 0] == A
+
+    # Test a two-object disconnected diagram.
+    g = NamedMorphism(B, B, "g")
+    d = Diagram([f, g])
+    grid = DiagramGrid(d)
+
+    assert grid.width == 2
+    assert grid.height == 1
+    assert grid[0, 0] == A
+    assert grid[0, 1] == B
