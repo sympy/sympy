@@ -226,7 +226,7 @@ class AskRealHandler(CommonHandler):
         Real**(Integer/Even)  -> Real if base is nonnegative
         Real**(Integer/Odd)   -> Real
         Real**Imaginary       -> ?
-        Imagianty**Real       -> ?
+        Imaginary**Real       -> ?
         Real**Real            -> ?
         """
         if expr.is_number:
