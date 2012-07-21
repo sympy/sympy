@@ -1445,7 +1445,7 @@ class Subs(Expr):
         return super(Subs, self).__hash__()
 
     def _hashable_content(self):
-        return self._expr
+        return (self._expr, )
 
     def _eval_subs(self, old, new):
         if old in self.variables:
