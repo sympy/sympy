@@ -1111,6 +1111,29 @@ def test_combsimp_gamma():
     assert simplify(combsimp(gamma(2*x)/gamma(x))) == \
            4**x*gamma(x + S(1)/2)/sqrt(pi)/2
 
+def test_polarify():
+    from sympy import polar_lift, polarify
+    x = Symbol('x')
+    z = Symbol('z', polar=True)
+    f = Function('f')
+    ES = {}
+
+    assert polarify(-1) == (polar_lift(-1), ES)
+    assert polarify(1 + I) == (polar_lift(1 + I), ES)
+
+    assert polarify(exp(x), subs=False) == exp(x)
+    assert polarify(1 + x, subs=False) == 1 + x
+    assert polarify(f(I) + x, subs=False) == f(polar_lift(I)) + x
+
+    assert polarify(x, lift=True) == polar_lift(x)
+    assert polarify(z, lift=True) == z
+    assert polarify(f(x), lift=True) == f(polar_lift(x))
+    assert polarify(1 + x, lift=True) == polar_lift(1 + x)
+    assert polarify(1 + f(x), lift=True) == polar_lift(1 + f(polar_lift(x)))
+
+    newex, subs = polarify(f(x) + z)
+    assert newex.subs(subs) == f(x) + z
+
 def test_unpolarify():
     from sympy import (exp_polar, polar_lift, exp, unpolarify, sin,
                        principal_branch)

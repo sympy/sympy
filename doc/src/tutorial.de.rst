@@ -1,4 +1,4 @@
-.. _tutorial:
+.. _tutorial_de:
 
 ========
 Tutorial
@@ -256,7 +256,7 @@ wurde::
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
 
 Dies sorgt dafür, dass Ausdrücke bei der Ausgabe besser aussehen (siehe
-:ref:`printing-tutorial` weiter unten). Wenn eine Unicode-Schrift installiert
+:ref:`printing-tutorial_de` weiter unten). Wenn eine Unicode-Schrift installiert
 ist, erreichst du mit use_unicode=True eine noch hübschere Ausgabe.
 
 Algebra
@@ -753,7 +753,7 @@ ausschließen:
     >>> print (x+1).match(x+2+p) # -1 ist nicht ausgeschlossen
     {p_: -1}
 
-.. _printing-tutorial:
+.. _printing-tutorial_de:
 
 Ausgabe
 =======

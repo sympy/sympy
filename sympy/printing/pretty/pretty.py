@@ -161,31 +161,31 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u2227")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Or(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u2228")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Xor(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u22bb")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Nand(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u22bc")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Nor(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u22bd")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Implies(self, e):
         if self._use_unicode:
@@ -197,7 +197,7 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u2261")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_conjugate(self, e):
         pform = self._print(e.args[0])
@@ -850,10 +850,12 @@ class PrettyPrinter(Printer):
         base = prettyForm(pretty_atom('Exp1', 'e'))
         return base ** self._print(e.args[0])
 
-    def _print_Function(self, e):
+    def _print_Function(self, e, sort=False):
         # XXX works only for applied functions
         func = e.func
         args = e.args
+        if sort:
+            args = sorted(args, key=default_sort_key)
         n = len(args)
 
         func_name = func.__name__

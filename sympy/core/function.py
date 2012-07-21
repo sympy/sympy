@@ -1445,7 +1445,7 @@ class Subs(Expr):
         return super(Subs, self).__hash__()
 
     def _hashable_content(self):
-        return self._expr
+        return (self._expr, )
 
     def _eval_subs(self, old, new):
         if old in self.variables:
@@ -1531,25 +1531,22 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     """
     Expand an expression using methods given as hints.
 
-    Hints are applied with arbitrary order so your code shouldn't
-    depend on the way hints are passed to this method.
-
     Hints evaluated unless explicitly set to False are:
       basic, log, multinomial, mul, power_base, and power_exp
     The following hints are supported but not applied unless set to True:
       complex, func, trig, frac, numer, and denom.
 
-    basic is a generic keyword for methods that want to be expanded
-    automatically.  For example, Integral uses expand_basic to expand the
-    integrand.  If you want your class expand methods to run automatically and
-    they don't fit one of the already automatic methods, wrap it around
-    _eval_expand_basic.
+    The ``basic`` hint is used for any special rewriting of an object that
+    should be done automatically (along with the other hints like ``mul``)
+    when expand is called. This is a catch-all hint to handle any sort of
+    expansion that may not be described by the existing hint names. To use
+    this hint an object should override the ``_eval_expand_basic`` method.
 
-    If deep is set to True, things like arguments of functions are
-    recursively expanded.  Use deep=False to only expand on the top
+    If ``deep`` is set to True, things like arguments of functions are
+    recursively expanded.  Use ``deep=False`` to only expand on the top
     level.
 
-    If the 'force' hint is used, assumptions about variables will be ignored
+    If the ``force`` hint is used, assumptions about variables will be ignored
     in making the expansion.
 
     Also see expand_log, expand_mul, separate, expand_complex, expand_trig,
@@ -1578,7 +1575,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     2**x*2**y
 
     power_base - Split powers of multiplied bases if assumptions allow
-    or if the 'force' hint is used:
+    or if the ``force`` hint is used:
 
     >>> ((x*y)**z).expand(power_base=True)
     (x*y)**z
@@ -1590,14 +1587,14 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     log - Pull out power of an argument as a coefficient and split logs products
     into sums of logs.  Note that these only work if the arguments of the log
     function have the proper assumptions: the arguments must be positive and the
-    exponents must be real or else the force hint must be True:
+    exponents must be real or else the ``force`` hint must be True:
 
     >>> from sympy import log, symbols, oo
     >>> log(x**2*y).expand(log=True)
     log(x**2*y)
     >>> log(x**2*y).expand(log=True, force=True)
     2*log(x) + log(y)
-    >>> x, y = symbols('x,y', positive=True)
+    >>> x, y = symbols("x,y", positive=True)
     >>> log(x**2*y).expand(log=True)
     2*log(x) + log(y)
 
@@ -1617,7 +1614,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     >>> ((x + y + z)**2).expand(multinomial=True)
     x**2 + 2*x*y + 2*x*z + y**2 + 2*y*z + z**2
 
-    You can shut off methods that you don't want:
+    You can shut off unwanted methods:
 
     >>> (exp(x + y)*(x + y)).expand()
     x*exp(x)*exp(y) + y*exp(x)*exp(y)
@@ -1633,56 +1630,46 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     >>> exp(x + exp(x + y)).expand(deep=False)
     exp(x)*exp(exp(x + y))
 
-    Note: because hints are applied in arbitrary order, some hints may
-    prevent expansion by other hints if they are applied first.  In
-    particular, mul may distribute multiplications and prevent log and
-    power_base from expanding them.  Also, if mul is applied before multinomial,
-    the expression might not be fully distributed.  The solution is to expand
-    with mul=False first, then run expand_mul if you need further expansion.
+    Hints are applied in an arbitrary (but consistent) order. Because of
+    this, some hints may prevent expansion by other hints if they are
+    applied first. For example, ``mul`` may distribute multiplications and
+    prevent ``log`` and ``power_base`` from expanding them. Also, if ``mul``
+    is applied before ``multinomial`, the expression might not be fully
+    distributed. The solution is to use the various ``expand_hint`` helper
+    functions or to use ``hint=False`` to this function to finely control
+    which hints are applied. Here are some examples:
 
-    Examples
-    ========
+    >>> from sympy import expand_log, expand, expand_mul, expand_power_base
+    >>> x, y, z = symbols("x,y,z", positive=True)
 
-    >>> from sympy import expand_log, expand, expand_mul
-    >>> x, y, z = symbols('x,y,z', positive=True)
-
-    ::
-
-      expand(log(x*(y + z))) # could be either one below
-      log(x*y + x*z)
-      log(x) + log(y + z)
-
-    >>> expand_log(log(x*y + x*z))
+    >>> expand(log(x*(y + z)))
     log(x*y + x*z)
 
+    Here, we see that ``mul`` was applied before ``log``.  To get the log
+    expanded form, either of the following will work::
+
+    >>> expand_log(log(x*(y + z)))
+    log(x) + log(y + z)
     >>> expand(log(x*(y + z)), mul=False)
     log(x) + log(y + z)
 
-    ::
+    A similar thing can happen with the ``power_base`` hint.
 
-      expand((x*(y + z))**x) # could be either one below
-      (x*y + x*z)**x
-      x**x*(y + z)**x
+    >>> expand((x*(y + z))**x)
+    (x*y + x*z)**x
+
+    To get the ``power_base`` expanded form, either of the following will
+    work::
 
     >>> expand((x*(y + z))**x, mul=False)
     x**x*(y + z)**x
-
-    ::
-
-      expand(x*(y + z)**2) # could be either one below
-      2*x*y*z + x*y**2 + x*z**2
-      x*(y + z)**2
-
-    >>> expand(x*(y + z)**2, mul=False)
-    x*(y**2 + 2*y*z + z**2)
-
-    >>> expand_mul(_)
-    x*y**2 + 2*x*y*z + x*z**2
+    >>> expand_power_base((x*(y + z))**x)
+    x**x*(y + z)**x
 
     >>> expand((x + y)*y/x)
     y + y**2/x
 
-    The parts of a rational expression can be targeted, too:
+    The parts of a rational expression can be targeted.
 
     >>> expand((x + y)*y/x/(x + 1), frac=True)
     (x*y + y**2)/(x**2 + x)
