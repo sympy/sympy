@@ -1473,7 +1473,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
 
     Distributes multiplication over addition:
 
-    >>> from sympy import cos, exp
+    >>> from sympy import cos, exp, sin
     >>> from sympy.abc import x, y, z
     >>> (y*(x + z)).expand(mul=True)
     x*y + y*z
@@ -1549,6 +1549,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
 
     Split an expression into real and imaginary parts.
 
+    >>> x, y = symbols('x y')
     >>> (x + y).expand(complex=True)
     re(x) + re(y) + I*im(x) + I*im(y)
     >>> cos(x).expand(complex=True)
@@ -1614,9 +1615,9 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
         >>> x, y, z = symbols("x,y,z", positive=True)
 
         >>> expand(log(x*(y + z)))
-        log(x*y + x*z)
+        log(x) + log(y + z)
 
-      Here, we see that ``mul`` was applied before ``log``.  To get the log
+      Here, we see that ``log`` was applied before ``mul``.  To get the log
       expanded form, either of the following will work::
 
         >>> expand_log(log(x*(y + z)))
