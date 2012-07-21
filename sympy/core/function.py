@@ -1601,15 +1601,15 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
         exp(x)*exp(exp(x + y))
 
     - Hints are applied in an arbitrary, but consistent order (in the current
-      implementation, they are applied in alphabetical order, but this may
-      change).  Because of this, some hints may prevent expansion by other
-      hints if they are applied first. For example, ``mul`` may distribute
-      multiplications and prevent ``log`` and ``power_base`` from expanding
-      them. Also, if ``mul`` is applied before ``multinomial`, the expression
-      might not be fully distributed. The solution is to use the various
-      ``expand_hint`` helper functions or to use ``hint=False`` to this
-      function to finely control which hints are applied. Here are some
-      examples::
+      implementation, they are applied in alphabetical order, except
+      multinomial comes before mul, but this may change).  Because of this,
+      some hints may prevent expansion by other hints if they are applied
+      first. For example, ``mul`` may distribute multiplications and prevent
+      ``log`` and ``power_base`` from expanding them. Also, if ``mul`` is
+      applied before ``multinomial`, the expression might not be fully
+      distributed. The solution is to use the various ``expand_hint`` helper
+      functions or to use ``hint=False`` to this function to finely control
+      which hints are applied. Here are some examples::
 
         >>> from sympy import expand_log, expand, expand_mul, expand_power_base
         >>> x, y, z = symbols("x,y,z", positive=True)

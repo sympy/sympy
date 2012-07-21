@@ -2645,14 +2645,29 @@ class Expr(Basic, EvalfMixin):
         elif hints.pop('numer', False):
             n, d = fraction(self)
             return n.expand(deep=deep, modulus=modulus, **hints)/d
-        # although the hints are sorted here, an earlier hint may get applied
-        # at a given node in the expression tree before another because of
-        # how the hints are applied.
-        # e.g. expand(log(x*(y + z))) -> log(x*y + x*z) because while applying
-        # log at the top level, log and mul are applied at the deeper level in
-        # the tree so that when the log at the upper level gets applied, the
-        # mul has already been applied at the lower level.
-        for hint in sorted(hints.keys()):
+        # Although the hints are sorted here, an earlier hint may get applied
+        # at a given node in the expression tree before another because of how
+        # the hints are applied.  e.g. expand(log(x*(y + z))) -> log(x*y +
+        # x*z) because while applying log at the top level, log and mul are
+        # applied at the deeper level in the tree so that when the log at the
+        # upper level gets applied, the mul has already been applied at the
+        # lower level.
+
+        # Additionally, because hints are only applied once, the expression
+        # may not be expanded all the way.   For example, if mul is applied
+        # before multinomial, x*(x + 1)**2 won't be expanded all the way.  For
+        # now, we just use a special case to make multinomial run before mul,
+        # so that at least polynomials will be expanded all the way.  In the
+        # future, smarter heuristics should be applied.
+        # TODO: Smarter heuristics
+
+        def _expand_hint_key(hint):
+            """Make multinomial come before mul"""
+            if hint == 'mul':
+                return 'mulz'
+            return hint
+
+        for hint in sorted(hints.keys(), key=_expand_hint_key):
             use_hint = hints[hint]
             if use_hint:
                 func = getattr(expr, '_eval_expand_'+hint, None)
