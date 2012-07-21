@@ -1868,13 +1868,59 @@ def expand_power_base(expr, deep=True, force=False):
 
     See the expand docstring for more information.
 
-    Examples
-    ========
+    A wrapper to expand(power_base=True) which separates a power with a base
+    that is a Mul into a product of powers, without performing any other
+    expansions, provided that assumptions about the power's base and exponent
+    allow.
 
-    >>> from sympy import expand_power_base
-    >>> from sympy.abc import x, y
-    >>> expand_power_base((3*x)**y)
-    3**y*x**y
+    deep=False (default is True) will only apply to the top-level expression.
+
+    force=True (default is False) will cause the expansion to ignore
+    assumptions about the base and exponent. When False, the expansion will
+    only happen if the base is non-negative or the exponent is an integer.
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import expand_power_base, sin, cos, exp
+
+    >>> (x*y)**2
+    x**2*y**2
+
+    >>> (2*x)**y
+    (2*x)**y
+    >>> expand_power_base(_)
+    2**y*x**y
+
+    >>> expand_power_base((x*y)**z)
+    (x*y)**z
+    >>> expand_power_base((x*y)**z, force=True)
+    x**z*y**z
+    >>> expand_power_base(sin((x*y)**z), deep=False)
+    sin((x*y)**z)
+    >>> expand_power_base(sin((x*y)**z), force=True)
+    sin(x**z*y**z)
+
+    >>> expand_power_base((2*sin(x))**y + (2*cos(x))**y)
+    2**y*sin(x)**y + 2**y*cos(x)**y
+
+    >>> expand_power_base((2*exp(y))**x)
+    2**x*exp(y)**x
+
+    >>> expand_power_base((2*cos(x))**y)
+    2**y*cos(x)**y
+
+    Notice that sums are left untouched. If this is not the desired behavior,
+    apply full ``expand()`` to the expression:
+
+    >>> expand_power_base(((x+y)*z)**2)
+    z**2*(x + y)**2
+    >>> (((x+y)*z)**2).expand()
+    x**2*z**2 + 2*x*y*z**2 + y**2*z**2
+
+    >>> expand_power_base((2*y)**(1+z))
+    2**(z + 1)*y**(z + 1)
+    >>> ((2*y)**(1+z)).expand()
+    2*2**z*y*y**z
+
     """
     expr = sympify(expr)
     if not hasattr(expr, "_eval_expand_power_base"):

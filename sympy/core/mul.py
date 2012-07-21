@@ -575,14 +575,13 @@ class Mul(AssocOp):
                         return None
                     return Mul(*([Pow(coeff, e), Pow(Mul(*bc), e)] + done))
 
-                # otherwise return the new expression expanding out the
-                # known terms; those that are not known can be expanded
-                # out with separate() but this will introduce a lot of
-                # "garbage" that is needed to keep one on the same branch
-                # as the unexpanded expression. The negatives are brought
-                # out with a negative sign added and a negative left behind
-                # in the unexpanded terms if there were an odd number of
-                # negatives.
+                # otherwise return the new expression expanding out the known
+                # terms; those that are not known can be expanded out with
+                # expand_power_base() but this will introduce a lot of
+                # "garbage" that is needed to keep one on the same branch as
+                # the unexpanded expression. The negatives are brought out
+                # with a negative sign added and a negative left behind in the
+                # unexpanded terms if there were an odd number of negatives.
                 if coeff.is_negative:
                     coeff = -coeff
                     neg.append(S.NegativeOne)

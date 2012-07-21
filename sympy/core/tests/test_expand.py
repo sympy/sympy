@@ -1,11 +1,14 @@
-from sympy import log, sqrt, Rational as R, Symbol, I, exp, pi, S, re, im, Tuple
+from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S, re, im,
+    Tuple, sin)
 
 from sympy.simplify.simplify import expand_numer, expand
 from sympy.utilities.pytest import raises
-from sympy.abc import x, y
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
     expand_func, expand_trig, expand_complex, expand_power_base,
     expand_power_exp)
+
+from sympy.abc import x, y, z
+
 def test_expand_no_log():
     assert ((1+log(x**4))**2).expand(log=False) == 1 + 2*log(x**4) + log(x**4)**2
     assert ((1+log(x**4))*(1+log(x**3))).expand(log=False) == 1 + log(x**4) + log(x**3) + log(x**4)*log(x**3)
@@ -111,3 +114,24 @@ def test_expand_function_errors():
     raises(ValueError, lambda: expand_complex(Tuple()))
     raises(ValueError, lambda: expand_power_base(Tuple()))
     raises(ValueError, lambda: expand_power_exp(Tuple()))
+
+def test_expand_power_base():
+    # was test_separate()
+
+    assert expand_power_base((x*y*z)**4) == x**4*y**4*z**4
+    assert expand_power_base((x*y*z)**x).is_Pow
+    assert expand_power_base((x*y*z)**x, force=True) == x**x*y**x*z**x
+    assert expand_power_base((x*(y*z)**2)**3) == x**3*y**6*z**6
+
+    assert expand_power_base((sin((x*y)**2)*y)**z).is_Pow
+    assert expand_power_base((sin((x*y)**2)*y)**z, force=True) == sin((x*y)**2)**z*y**z
+    assert expand_power_base((sin((x*y)**2)*y)**z, deep=True) == (sin(x**2*y**2)*y)**z
+
+    assert expand_power_base(exp(x)**2) == exp(2*x)
+    assert expand_power_base((exp(x)*exp(y))**2) == exp(2*x)*exp(2*y)
+
+    assert expand_power_base((exp((x*y)**z)*exp(y))**2) == exp(2*(x*y)**z)*exp(2*y)
+    assert expand_power_base((exp((x*y)**z)*exp(y))**2, deep=True, force=True) == exp(2*x**z*y**z)*exp(2*y)
+
+    assert expand_power_base((exp(x)*exp(y))**z).is_Pow
+    assert expand_power_base((exp(x)*exp(y))**z, force=True) == exp(x)**z*exp(y)**z

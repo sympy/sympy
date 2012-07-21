@@ -5,7 +5,7 @@ from sympy import SYMPY_DEBUG
 from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
-    expand_multinomial)
+    expand_multinomial, expand_power_base)
 
 from sympy.core.compatibility import iterable, reduce
 from sympy.core.numbers import igcd, Float
@@ -128,62 +128,12 @@ expand_denom = denom_expand
 expand_fraction = fraction_expand
 
 def separate(expr, deep=False, force=False):
-    """A wrapper to expand(power_base=True) which separates a power
-       with a base that is a Mul into a product of powers, without performing
-       any other expansions, provided that assumptions about the power's base
-       and exponent allow.
-
-       deep=True (default is False) will do separations inside functions.
-
-       force=True (default is False) will cause the expansion to ignore
-       assumptions about the base and exponent. When False, the expansion will
-       only happen if the base is non-negative or the exponent is an integer.
-
-       >>> from sympy.abc import x, y, z
-       >>> from sympy import separate, sin, cos, exp
-
-       >>> (x*y)**2
-       x**2*y**2
-
-       >>> (2*x)**y
-       (2*x)**y
-       >>> separate(_)
-       2**y*x**y
-
-       >>> separate((x*y)**z)
-       (x*y)**z
-       >>> separate((x*y)**z, force=True)
-       x**z*y**z
-       >>> separate(sin((x*y)**z))
-       sin((x*y)**z)
-       >>> separate(sin((x*y)**z), deep=True, force=True)
-       sin(x**z*y**z)
-
-       >>> separate((2*sin(x))**y + (2*cos(x))**y)
-       2**y*sin(x)**y + 2**y*cos(x)**y
-
-       >>> separate((2*exp(y))**x)
-       2**x*exp(y)**x
-
-       >>> separate((2*cos(x))**y)
-       2**y*cos(x)**y
-
-       Notice that sums are left untouched. If this is not the desired
-       behavior, apply 'expand' to the expression:
-
-       >>> separate(((x+y)*z)**2)
-       z**2*(x + y)**2
-       >>> (((x+y)*z)**2).expand()
-       x**2*z**2 + 2*x*y*z**2 + y**2*z**2
-
-       >>> separate((2*y)**(1+z))
-       2**(z + 1)*y**(z + 1)
-       >>> ((2*y)**(1+z)).expand()
-       2*2**z*y*y**z
-
     """
-    return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
-    power_base=True, basic=False, multinomial=False, log=False, force=force)
+    Deprecated wrapper around ``expand_power_base()``.  Use that function instead.
+    """
+    from sympy.utilities.exceptions import SymPyDeprecationWarning
+    SymPyDeprecationWarning(feature="separate()", useinstead="expand_power_base()").warn()
+    return expand_power_base(sympify(expr), deep=deep, force=force)
 
 def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_term=True):
     """
@@ -197,9 +147,10 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
 
     The input expression is not expanded by :func:`collect`, so user is
     expected to provide an expression is an appropriate form. This makes
-    :func:`collect` more predictable as there is no magic happening behind
-    the scenes. However, it is important to note, that powers of products
-    are converted to products of powers using :func:`separate` function.
+    :func:`collect` more predictable as there is no magic happening behind the
+    scenes. However, it is important to note, that powers of products are
+    converted to products of powers using the :func:`expand_power_base`
+    function.
 
     There are two possible types of output. First, if ``evaluate`` flag is
     set, this function will return an expression with collected terms or
@@ -485,9 +436,9 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
             return Pow(b, expr.exp)
 
     if iterable(syms):
-        syms = map(separate, syms)
+        syms = [expand_power_base(i, deep=False) for i in syms]
     else:
-        syms = [ separate(syms) ]
+        syms = [ expand_power_base(syms, deep=False) ]
 
     expr = sympify(expr)
     order_term = None
@@ -501,7 +452,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
             else:
                 expr = expr.removeO()
 
-    summa = map(separate, Add.make_args(expr))
+    summa = [expand_power_base(i, deep=False) for i in Add.make_args(expr)]
 
     collected, disliked = defaultdict(list), S.Zero
     for product in summa:
@@ -530,8 +481,8 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
                         index *= Pow(elem[0], e)
                 else:
                     index = make_expression(elems)
-                terms = separate(make_expression(terms))
-                index = separate(index)
+                terms = expand_power_base(make_expression(terms), deep=False)
+                index = expand_power_base(index, deep=False)
                 collected[index].append(terms)
                 break
         else:
