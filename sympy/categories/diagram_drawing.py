@@ -749,6 +749,9 @@ class DiagramGrid(object):
 
                         return other_obj
 
+        # This diagram is actually cooler that I can handle.  Fail cowardly.
+        return None
+
     @staticmethod
     def _handle_groups(diagram, groups, merged_morphisms, hints):
         """
@@ -920,9 +923,35 @@ class DiagramGrid(object):
                 new_obj = DiagramGrid._grow_pseudopod(
                     triangles, fringe, grid, skeleton, placed_objects)
 
-                placed_objects.add(new_obj)
+                if not new_obj:
+                    # No more triangles can be attached, not even by
+                    # the edge.  We will set up a new diagram out of
+                    # what has been left, laid it out independently,
+                    # and then attach it to this one.
 
-                # Now, hopefully, a new welding will be found.
+                    remaining_objects = all_objects - placed_objects
+
+                    remaining_diagram = diagram.subdiagram_from_objects(
+                        FiniteSet(remaining_objects))
+                    remaining_grid = DiagramGrid(remaining_diagram)
+
+                    # Now, let's glue ``remaining_grid`` to ``grid``.
+                    final_width = grid.width + remaining_grid.width
+                    final_height = max(grid.height, remaining_grid.height)
+                    final_grid = _GrowableGrid(final_width, final_height)
+
+                    for i in xrange(grid.width):
+                        for j in xrange(grid.height):
+                            final_grid[i, j] = grid[i, j]
+
+                    start_j = grid.width
+                    for i in xrange(remaining_grid.height):
+                        for j in xrange(remaining_grid.width):
+                            final_grid[i, start_j + j] = remaining_grid[i, j]
+
+                    return final_grid
+
+                placed_objects.add(new_obj)
 
             triangles = DiagramGrid._drop_irrelevant_triangles(
                 triangles, placed_objects)
