@@ -924,18 +924,12 @@ class DiagramGrid(object):
         return grid
 
     @staticmethod
-    def _sequential_layout(diagram, merged_morphisms):
-        r"""
-        Lays out the diagram in "sequential" layout.  This method
-        will attempt to produce a result as close to a line as
-        possible.  For linear diagrams, the result will actually be a
-        line.
+    def _get_undirected_graph(objects, merged_morphisms):
         """
-        objects = diagram.objects
-        sorted_objects = sorted(objects, key=default_sort_key)
-
-        # Set up the adjacency lists of the underlying undirected
-        # graph of ``merged_morphisms``.
+        Given the objects and the relevant morphisms of a diagram,
+        returns the adjacency lists of the underlying undirected
+        graph.
+        """
         adjlists = {}
         for obj in objects:
             adjlists[obj] = []
@@ -948,6 +942,23 @@ class DiagramGrid(object):
         # the same order.
         for obj in adjlists.keys():
             adjlists[obj].sort(key=default_sort_key)
+
+        return adjlists
+
+    @staticmethod
+    def _sequential_layout(diagram, merged_morphisms):
+        r"""
+        Lays out the diagram in "sequential" layout.  This method
+        will attempt to produce a result as close to a line as
+        possible.  For linear diagrams, the result will actually be a
+        line.
+        """
+        objects = diagram.objects
+        sorted_objects = sorted(objects, key=default_sort_key)
+
+        # Set up the adjacency lists of the underlying undirected
+        # graph of ``merged_morphisms``.
+        adjlists = DiagramGrid._get_undirected_graph(objects, merged_morphisms)
 
         # Find an object with the minimal degree.  This is going to be
         # the root.
