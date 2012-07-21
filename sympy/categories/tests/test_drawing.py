@@ -467,3 +467,39 @@ def test_DiagramGrid():
     assert grid[1, 3] == D
     assert grid[1, 4] == E
     assert grid.morphisms == morphisms
+
+    # A two-triangle disconnected diagram.
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    f_ = NamedMorphism(A_, B_, "f")
+    g_ = NamedMorphism(B_, C_, "g")
+    d = Diagram([f, g, f_, g_], {g * f: "unique", g_ * f_: "unique"})
+    grid = DiagramGrid(d)
+
+    assert grid.width == 4
+    assert grid.height == 2
+    assert grid[0, 0] == A_
+    assert grid[0, 1] == B_
+    assert grid[0, 2] == A
+    assert grid[0, 3] == B
+    assert grid[1, 0] == C_
+    assert grid[1, 1] is None
+    assert grid[1, 2] == C
+    assert grid[1, 3] is None
+    assert grid.morphisms == {f: FiniteSet(), g: FiniteSet(), f_: FiniteSet(),
+                              g_: FiniteSet(), g * f: FiniteSet("unique"),
+                              g_ * f_: FiniteSet("unique")}
+
+    # A two-morphism disconnected diagram.
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(C, D, "g")
+    d = Diagram([f, g])
+    grid = DiagramGrid(d)
+
+    assert grid.width == 4
+    assert grid.height == 1
+    assert grid[0, 0] == A
+    assert grid[0, 1] == B
+    assert grid[0, 2] == C
+    assert grid[0, 3] == D
+    assert grid.morphisms == {f: FiniteSet(), g: FiniteSet()}

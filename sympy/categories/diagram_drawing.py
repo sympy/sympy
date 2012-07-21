@@ -1011,6 +1011,68 @@ class DiagramGrid(object):
         morphisms = [m for m in merged_morphisms if m.domain != m.codomain]
         return morphisms
 
+    @staticmethod
+    def _get_connected_components(objects, merged_morphisms):
+        """
+        Given a container of morphisms, returns a list of connected
+        components formed by these morphisms.  A connected component
+        is represented by a diagram consisting of the corresponding
+        morphisms.
+        """
+        component_index = {}
+        for o in objects:
+            component_index[o] = None
+
+        # Get the underlying undirected graph of the diagram.
+        adjlist = DiagramGrid._get_undirected_graph(objects, merged_morphisms)
+
+        def traverse_component(object, current_index):
+            """
+            Does a depth-first search traversal of the component
+            containing ``object``.
+            """
+            component_index[object] = current_index
+            for o in adjlist[object]:
+                if component_index[o] is None:
+                    traverse_component(o, current_index)
+
+        # Traverse all components.
+        current_index = 0
+        for o in adjlist:
+            if component_index[o] is None:
+                traverse_component(o, current_index)
+                current_index += 1
+
+        # List the objects of the components.
+        component_objects = [[] for i in xrange(current_index)]
+        for o, idx in component_index.items():
+            component_objects[idx].append(o)
+
+        # Finally, list the morphisms belonging to each component.
+        #
+        # Note: If some objects are isolated, they will not get any
+        # morphisms at this stage, and since the layout algorithm
+        # relies, we are essentially going to lose this object.
+        # Therefore, check if there are isolated objects and, for each
+        # of them, provide the trivial identity morphism.  It will get
+        # discarded later, but the object will be there.
+
+        component_morphisms = []
+        for component in component_objects:
+            current_morphisms = {}
+            for m in merged_morphisms:
+                if (m.domain in component) and (m.codomain in component):
+                    current_morphisms[m] = merged_morphisms[m]
+
+            if len(component) == 1:
+                # Let's add an identity morphism, for the sake of
+                # surely having morphisms in this component.
+                current_morphisms[IdentityMorphism(component[0])] = FiniteSet()
+
+            component_morphisms.append(Diagram(current_morphisms))
+
+        return component_morphisms
+
     def __init__(self, diagram, groups=None, **hints):
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
         conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
@@ -1019,10 +1081,47 @@ class DiagramGrid(object):
         merged_morphisms = DiagramGrid._drop_inessential_morphisms(
             all_merged_morphisms)
 
+        # Store the merged morphisms for later use.
+        self._morphisms = all_merged_morphisms
+
+        components = DiagramGrid._get_connected_components(
+            diagram.objects, all_merged_morphisms)
+
         if groups and (groups != diagram.objects):
             # Lay out the diagram according to the groups.
             self._grid = DiagramGrid._handle_groups(
                 diagram, groups, merged_morphisms, hints)
+        elif len(components) > 1:
+            # Note that we check for connectedness _before_ checking
+            # the layout hints because the layout strategies don't
+            # know how to deal with disconnected diagrams.
+
+            # The diagram is disconnected.  Lay out the components
+            # independently.
+            grids = []
+
+            # Sort the components to eventually get the grids arranged
+            # in a fixed, hash-independent order.
+            components = sorted(components, key=default_sort_key)
+
+            for component in components:
+                grid = DiagramGrid(component, **hints)
+                grids.append(grid)
+
+            # Throw the grids together, in a line.
+            total_width = sum([g.width for g in grids])
+            total_height = max([g.height for g in grids])
+
+            grid = _GrowableGrid(total_width, total_height)
+            start_j = 0
+            for g in grids:
+                for i in xrange(g.height):
+                    for j in xrange(g.width):
+                        grid[i, start_j + j] = g[i, j]
+
+                start_j += g.width
+
+            self._grid = grid
         elif "layout" in hints:
             if hints["layout"] == "sequential":
                 self._grid = DiagramGrid._sequential_layout(
@@ -1039,8 +1138,6 @@ class DiagramGrid(object):
                         grid[j, i] = self._grid[i, j]
                 self._grid = grid
 
-        # Store the merged morphisms for later use.
-        self._morphisms = all_merged_morphisms
 
     @property
     def width(self):
