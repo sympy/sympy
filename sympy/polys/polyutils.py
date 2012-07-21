@@ -5,7 +5,7 @@ from sympy.polys.polyoptions import build_options
 
 from sympy.core.exprtools import decompose_power
 
-from sympy.core import S, Add, Mul, Pow, expand_mul
+from sympy.core import S, Add, Mul, Pow, expand_mul, expand_multinomial
 from sympy.assumptions import ask, Q
 
 import re
@@ -295,9 +295,18 @@ def _dict_from_expr(expr, opt):
     if expr.is_commutative is False:
         raise PolynomialError('non-commutative expressions are not supported')
 
+    def _is_expandable_pow(expr):
+        return (expr.is_Pow and expr.exp.is_positive and expr.exp.is_Integer
+                and expr.base.is_Add)
+
     if opt.expand is not False:
         expr = expr.expand()
         # TODO: Integrate this into expand() itself
+        while any(_is_expandable_pow(i) or i.is_Mul and
+            any(_is_expandable_pow(j) for j in i.args) for i in
+            Add.make_args(expr)):
+
+            expr = expand_multinomial(expr)
         while any(i.is_Mul and any(j.is_Add for j in i.args) for i in Add.make_args(expr)):
             expr = expand_mul(expr)
 
