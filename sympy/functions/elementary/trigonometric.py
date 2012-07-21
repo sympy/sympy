@@ -314,18 +314,28 @@ class sin(TrigonometricFunction):
         return re_part + im_part*S.ImaginaryUnit
 
     def _eval_expand_trig(self, deep=True, **hints):
+        from sympy import expand_mul
         if deep:
             arg = self.args[0]._eval_expand_trig(deep=deep, **hints)
         else:
             arg = self.args[0]
         x = None
         if arg.is_Add: # TODO, implement more if deep stuff here
+            # TODO: Do this more efficiently for more than two terms
             x, y = arg.as_two_terms()
         else:
-            coeff, terms = arg.as_coeff_Mul(rational=True)
-            if coeff is not S.One and coeff.is_Integer and terms is not S.One:
-                x = terms
-                y = (coeff - 1)*x
+            n, x = arg.as_coeff_Mul(rational=True)
+            if n.is_Integer: # n will be positive because of .eval
+                # canonicalization
+
+                # See http://mathworld.wolfram.com/Multiple-AngleFormulas.html
+                if n.is_odd:
+                    return (-1)**((n - 1)/2)*C.chebyshevt(n, sin(x))
+                else:
+                    return expand_mul((-1)**(n/2 - 1)*cos(x)*C.chebyshevu(n -
+                        1, sin(x)), deep=False)
+            else:
+                x = None
         if x is not None:
             return (sin(x)*cos(y) +
                 sin(y)*cos(x))._eval_expand_trig(deep=deep, **hints)

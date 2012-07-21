@@ -103,10 +103,13 @@ def test_sin_rewrite():
     assert sin(log(x)).rewrite(Pow)  == I*x**-I / 2 - I*x**I /2
 
 def test_sin_expansion():
+    # Note: these forumlas are not unique.  The ones here come from the
+    # Chebyshev formulas.
     x,y = symbols('x,y')
     assert sin(x+y).expand(trig=True) == sin(x)*cos(y) + cos(x)*sin(y)
     assert sin(2*x).expand(trig=True) == 2*sin(x)*cos(x)
-    assert sin(3*x).expand(trig=True) == 4*sin(x)*cos(x)**2-sin(x)
+    assert sin(3*x).expand(trig=True) == -4*sin(x)**3 + 3*sin(x)
+    assert sin(4*x).expand(trig=True) == -8*sin(x)**3*cos(x) + 4*sin(x)*cos(x)
 
 def test_trig_symmetry():
     x = Symbol('x')

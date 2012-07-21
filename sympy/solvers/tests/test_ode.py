@@ -492,7 +492,8 @@ def test_1st_homogeneous_coeff_ode():
     eq6 = x*exp(f(x)/x) - f(x)*sin(f(x)/x) + x*sin(f(x)/x)*f(x).diff(x)
     eq7 = (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x)
     eq8 = x+f(x)-(x-f(x))*f(x).diff(x)
-    sol1 = Eq(f(x)*sin(f(x)/x), C1)
+    sol1a = Eq(f(x)*sin(f(x)/x), C1)
+    sol1b = Eq(sqrt(cos(f(x)/x)**2 - 1)*f(x), C1)
     sol2 = Eq(x*sqrt(1 + cos(f(x)/x))/sqrt(-1 + cos(f(x)/x)), C1)
     sol3 = Eq(f(x), x*exp(1 - LambertW(C1*x)))
     sol4 = Eq(log(C1*f(x)) + 2*exp(x/f(x)), 0)
@@ -502,7 +503,8 @@ def test_1st_homogeneous_coeff_ode():
             cos(f(x)/x)*exp(-f(x)/x)/2, 0)
     sol7 = Eq(log(C1*f(x)) + 2*sqrt(1 - x/f(x)), 0)
     sol8 = Eq(-atan(f(x)/x) + log(C1*x*sqrt(1 + f(x)**2/x**2)), 0)
-    assert dsolve(eq1, hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol1
+    assert dsolve(eq1, hint='1st_homogeneous_coeff_subs_dep_div_indep') in \
+        [sol1a, sol1b]
     # indep_div_dep actually has a simpler solution for eq2,
     # but it runs too slow
     assert dsolve(eq2, hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol2
