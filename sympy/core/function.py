@@ -1786,7 +1786,7 @@ def expand_multinomial(expr, deep=True):
         raise ValueError("%s does not support multinomial expansion." % expr)
     return expr._eval_expand_multinomial(deep=deep)
 
-def expand_log(expr, deep=True):
+def expand_log(expr, deep=True, force=False):
     """
     Wrapper around expand that only uses the log hint.  See the expand
     docstring for more information.
@@ -1803,7 +1803,7 @@ def expand_log(expr, deep=True):
     expr = sympify(expr)
     if not hasattr(expr, "_eval_expand_log"):
         raise ValueError("%s does not support log expansion." % expr)
-    return expr._eval_expand_log(deep=deep)
+    return expr._eval_expand_log(deep=deep, force=force)
 
 def expand_func(expr, deep=True):
     """
@@ -1862,7 +1862,7 @@ def expand_complex(expr, deep=True):
         raise ValueError("%s does not support complex expansion." % expr)
     return expr._eval_expand_complex(deep=deep)
 
-def expand_power_base(expr, deep=True):
+def expand_power_base(expr, deep=True, force=False):
     """
     Wrapper around expand that only uses the power_base hint.
 
@@ -1879,8 +1879,7 @@ def expand_power_base(expr, deep=True):
     expr = sympify(expr)
     if not hasattr(expr, "_eval_expand_power_base"):
         raise ValueError("%s does not support power_base expansion." % expr)
-    return expr._eval_expand_power_base(deep=deep)
-
+    return expr._eval_expand_power_base(deep=deep, force=force)
 
 def expand_power_exp(expr, deep=True):
     """
