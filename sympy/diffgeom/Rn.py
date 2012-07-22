@@ -16,9 +16,9 @@ from sympy import sqrt, atan2, acos, sin, cos, Dummy
 ###############################################################################
 R2 = Manifold('R^2', 2)
 # Patch and coordinate systems.
-R2_origin = Patch('R^2_o', R2)
-R2_r = CoordSystem('R^2_r', R2_origin, ['x', 'y'])
-R2_p = CoordSystem('R^2_p', R2_origin, ['r', 'theta'])
+R2_origin = Patch('origin', R2)
+R2_r = CoordSystem('rectangular', R2_origin, ['x', 'y'])
+R2_p = CoordSystem('polar', R2_origin, ['r', 'theta'])
 
 # Connecting the coordinate charts.
 x, y, r, theta = [Dummy(s) for s in ['x', 'y', 'r', 'theta']]
@@ -50,10 +50,10 @@ R2.dr, R2.dtheta = R2_origin.dr, R2_origin.dtheta = R2_p.dr, R2_p.dtheta = R2_p.
 ###############################################################################
 R3 = Manifold('R^3', 3)
 # Patch and coordinate systems.
-R3_origin = Patch('R^3_o', R3)
-R3_r = CoordSystem('R^3_r', R3_origin, ['x', 'y', 'z'])
-R3_c = CoordSystem('R^3_c', R3_origin, ['rho', 'psi', 'z'])
-R3_s = CoordSystem('R^3_s', R3_origin, ['r', 'theta', 'phi'])
+R3_origin = Patch('origin', R3)
+R3_r = CoordSystem('rectangular', R3_origin, ['x', 'y', 'z'])
+R3_c = CoordSystem('cylindrical', R3_origin, ['rho', 'psi', 'z'])
+R3_s = CoordSystem('spherical', R3_origin, ['r', 'theta', 'phi'])
 
 # Connecting the coordinate charts.
 x, y, z, rho, psi, r, theta, phi = [Dummy(s) for s in ['x', 'y', 'z', 'rho', 'psi', 'r', 'theta', 'phi']]
