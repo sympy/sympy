@@ -596,6 +596,14 @@ class Diagram(Basic):
             # We have just added a new morphism.
 
             if isinstance(morphism, IdentityMorphism):
+                if props:
+                    # Properties for identity morphisms don't really
+                    # make sense, because very much is known about
+                    # identity morphisms already, so much that they
+                    # are trivial.  Having properties for identity
+                    # morphisms would only be confusing.
+                    raise ValueError(
+                        "Instances of IdentityMorphism cannot have properties.")
                 return
 
             if add_identities:

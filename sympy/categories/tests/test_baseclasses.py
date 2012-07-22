@@ -179,6 +179,8 @@ def test_diagram():
     assert d1 == Diagram([f], {f:"unique"})
     raises(ValueError, lambda: d.subdiagram_from_objects(FiniteSet(A, Object("D"))))
 
+    raises(ValueError, lambda: Diagram({IdentityMorphism(A):"unique"}))
+
 def test_category():
     A = Object("A")
     B = Object("B")
