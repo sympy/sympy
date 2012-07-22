@@ -432,8 +432,8 @@ class DiagramGrid(object):
             for e in triangle:
                 morphisms = edges[e]
                 if morphisms:
-                    size += max([DiagramGrid._morphism_length(m)
-                                 for m in morphisms])
+                    size += max(DiagramGrid._morphism_length(m)
+                                for m in morphisms)
             triangle_sizes[triangle] = size
         return triangle_sizes
 
@@ -829,12 +829,12 @@ class DiagramGrid(object):
             else:
                 return (1, 1)
 
-        row_heights = [max([group_size(top_grid[i, j])[0]
-                            for j in xrange(top_grid.width)])
+        row_heights = [max(group_size(top_grid[i, j])[0]
+                           for j in xrange(top_grid.width))
                        for i in xrange(top_grid.height)]
 
-        column_widths = [max([group_size(top_grid[i, j])[1]
-                              for i in xrange(top_grid.height)])
+        column_widths = [max(group_size(top_grid[i, j])[1]
+                             for i in xrange(top_grid.height))
                          for j in xrange(top_grid.width)]
 
         grid = _GrowableGrid(sum(column_widths), sum(row_heights))
@@ -1144,8 +1144,8 @@ class DiagramGrid(object):
                 grids.append(grid)
 
             # Throw the grids together, in a line.
-            total_width = sum([g.width for g in grids])
-            total_height = max([g.height for g in grids])
+            total_width = sum(g.width for g in grids)
+            total_height = max(g.height for g in grids)
 
             grid = _GrowableGrid(total_width, total_height)
             start_j = 0
