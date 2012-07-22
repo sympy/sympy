@@ -762,38 +762,40 @@ class DiagramGrid(object):
         without any influence from ``hints``.  Otherwise, it is laid
         out with ``hints``.
         """
+        def lay_out_group(group, local_hints):
+            """
+            If ``group`` is a set of objects, uses a ``DiagramGrid``
+            to lay it out and returns the grid.  Otherwise returns the
+            object (i.e., ``group``).  If ``local_hints`` is not
+            empty, it is supplied to ``DiagramGrid`` as the dictionary
+            of hints.  Otherwise, the ``hints`` argument of
+            ``_handle_groups`` is used.
+            """
+            if isinstance(group, FiniteSet):
+                # Set up the corresponding object-to-group
+                # mappings.
+                for obj in group:
+                    obj_groups[obj] = group
+
+                # Lay out the current group.
+                if local_hints:
+                    groups_grids[group] = DiagramGrid(
+                        diagram.subdiagram_from_objects(group), **local_hints)
+                else:
+                    groups_grids[group] = DiagramGrid(
+                        diagram.subdiagram_from_objects(group), **hints)
+            else:
+                obj_groups[group] = group
+
         obj_groups = {}
         groups_grids = {}
+
         if isinstance(groups, dict) or isinstance(groups, Dict):
             for group, local_hints in groups.items():
-                if isinstance(group, FiniteSet):
-                    # Set up the corresponding object-to-group
-                    # mappings.
-                    for obj in group:
-                        obj_groups[obj] = group
-
-                    # Lay out the current group.
-                    if local_hints:
-                        groups_grids[group] = DiagramGrid(
-                            diagram.subdiagram_from_objects(group), **local_hints)
-                    else:
-                        groups_grids[group] = DiagramGrid(
-                            diagram.subdiagram_from_objects(group), **hints)
-                else:
-                    obj_groups[group] = group
+                lay_out_group(group, local_hints)
         else:
             for group in groups:
-                if isinstance(group, FiniteSet):
-                    # Set up the corresponding object-to-group
-                    # mappings.
-                    for obj in group:
-                        obj_groups[obj] = group
-
-                    # Lay out the current group.
-                    groups_grids[group] = DiagramGrid(
-                        diagram.subdiagram_from_objects(group))
-                else:
-                    obj_groups[group] = group
+                lay_out_group(group, None)
 
         new_morphisms = []
         for morphism in merged_morphisms:
