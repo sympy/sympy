@@ -1164,15 +1164,13 @@ class DiagramGrid(object):
         else:
             self._grid = DiagramGrid._generic_layout(diagram, merged_morphisms)
 
-        if "transpose" in hints:
-            if hints["transpose"]:
-                # Transpose the resulting grid.
-                grid = _GrowableGrid(self._grid.height, self._grid.width)
-                for i in xrange(self._grid.height):
-                    for j in xrange(self._grid.width):
-                        grid[j, i] = self._grid[i, j]
-                self._grid = grid
-
+        if hints.get("transpose"):
+            # Transpose the resulting grid.
+            grid = _GrowableGrid(self._grid.height, self._grid.width)
+            for i in xrange(self._grid.height):
+                for j in xrange(self._grid.width):
+                    grid[j, i] = self._grid[i, j]
+            self._grid = grid
 
     @property
     def width(self):
