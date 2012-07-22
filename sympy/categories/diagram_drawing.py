@@ -87,6 +87,7 @@ from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)
 from sympy.utilities import default_sort_key
 from itertools import chain
+from sympy.core.compatibility import iterable
 
 class _GrowableGrid(object):
     """
@@ -787,15 +788,38 @@ class DiagramGrid(object):
             else:
                 obj_groups[group] = group
 
+        def group_to_finiteset(group):
+            """
+            Converts ``group`` to a :class:``FiniteSet`` if it is an
+            iterable.
+            """
+            if iterable(group):
+                return FiniteSet(group)
+            else:
+                return group
+
         obj_groups = {}
         groups_grids = {}
 
+        # We would like to support various containers to represent
+        # groups.  To achieve that, before laying each group out, it
+        # should be converted to a FiniteSet, because that is what the
+        # following code expects.
+
         if isinstance(groups, dict) or isinstance(groups, Dict):
+            finiteset_groups = {}
             for group, local_hints in groups.items():
+                finiteset_group = group_to_finiteset(group)
+                finiteset_groups[finiteset_group] = local_hints
                 lay_out_group(group, local_hints)
+            groups = finiteset_groups
         else:
+            finiteset_groups = []
             for group in groups:
-                lay_out_group(group, None)
+                finiteset_group = group_to_finiteset(group)
+                finiteset_groups.append(finiteset_group)
+                lay_out_group(finiteset_group, None)
+            groups = finiteset_groups
 
         new_morphisms = []
         for morphism in merged_morphisms:
