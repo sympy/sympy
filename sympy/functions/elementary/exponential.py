@@ -297,10 +297,6 @@ class exp(ExpBase):
                 return p * x / n
         return x**n/C.factorial()(n)
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
     def as_real_imag(self, deep=True, **hints):
         """
         Returns this function as a 2-tuple representing a complex number.
@@ -621,10 +617,6 @@ class log(Function):
             return (log(abs).expand(deep, **hints), arg)
         else:
             return (log(abs), arg)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_is_rational(self):
         s = self.func(*self.args)

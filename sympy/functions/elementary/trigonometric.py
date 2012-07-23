@@ -309,10 +309,6 @@ class sin(TrigonometricFunction):
             re, im = self.args[0].as_real_imag()
         return (sin(re)*C.cosh(im), cos(re)*C.sinh(im))
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
     def _eval_expand_trig(self, **hints):
         from sympy import expand_mul
         arg = self.args[0]
@@ -553,10 +549,6 @@ class cos(TrigonometricFunction):
             re, im = self.args[0].as_real_imag()
         return (cos(re)*C.cosh(im), -sin(re)*C.sinh(im))
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
         x = None
@@ -763,10 +755,6 @@ class tan(TrigonometricFunction):
         denom = cos(re)**2 + C.sinh(im)**2
         return (sin(re)*cos(re)/denom, C.sinh(im)*C.cosh(im)/denom)
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
     # TODO: Implement _eval_expand_trig
 
     def _eval_rewrite_as_exp(self, arg):
@@ -942,10 +930,6 @@ class cot(TrigonometricFunction):
             re, im = self.args[0].as_real_imag()
         denom = sin(re)**2 + C.sinh(im)**2
         return (sin(re)*cos(re)/denom, -C.sinh(im)*C.cosh(im)/denom)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit

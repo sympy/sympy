@@ -2593,6 +2593,10 @@ class Expr(Basic, EvalfMixin):
     # Relevant subclasses should override _eval_expand_hint() methods.  See
     # the docstring of expand() for more info.
 
+    def _eval_expand_complex(self, **hints):
+        real, imag = self.as_real_imag(**hints)
+        return real + S.ImaginaryUnit*imag
+
     @staticmethod
     def _expand_hint(expr, hint, deep=True, **hints):
         """

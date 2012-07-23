@@ -525,9 +525,6 @@ class Function(Application, Expr):
             l.append(g)
         return Add(*l) + C.Order(x**n, x)
 
-    def _eval_expand_complex(self, **hints):
-        return C.re(self) + S.ImaginaryUnit * C.im(self)
-
     def _eval_rewrite(self, pattern, rule, **hints):
         if hints.get('deep', False):
             args = [a._eval_rewrite(pattern, rule, **hints) for a in self.args]
@@ -1550,6 +1547,10 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     re(x) + re(y) + I*im(x) + I*im(y)
     >>> cos(x).expand(complex=True)
     -I*sin(re(x))*sinh(im(x)) + cos(re(x))*cosh(im(x))
+
+    Note that this is just a wrapper around ``as_real_imag()``.  Most objects
+    that wish to redefine ``_eval_expand_complex()`` should consider
+    redefining ``as_real_imag()`` instead.
 
     func
     ----

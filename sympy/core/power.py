@@ -499,10 +499,6 @@ class Pow(Expr):
         else:
             return result
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
     def as_real_imag(self, deep=True, **hints):
         from sympy.core.symbol import symbols
         from sympy.polys.polytools import poly
