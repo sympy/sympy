@@ -110,6 +110,8 @@ def test_sin_expansion():
     assert sin(2*x).expand(trig=True) == 2*sin(x)*cos(x)
     assert sin(3*x).expand(trig=True) == -4*sin(x)**3 + 3*sin(x)
     assert sin(4*x).expand(trig=True) == -8*sin(x)**3*cos(x) + 4*sin(x)*cos(x)
+    assert sin(2).expand(trig=True) == 2*sin(1)*cos(1)
+    assert sin(3).expand(trig=True) == -4*sin(1)**3 + 3*sin(1)
 
 def test_trig_symmetry():
     x = Symbol('x')
@@ -256,6 +258,8 @@ def test_cos_expansion():
     assert cos(x+y).expand(trig=True) == cos(x)*cos(y) - sin(x)*sin(y)
     assert cos(2*x).expand(trig=True) == 2*cos(x)**2-1
     assert cos(3*x).expand(trig=True) == 4*cos(x)**3-3*cos(x)
+    assert cos(2).expand(trig=True) == 2*cos(1)**2 - 1
+    assert cos(3).expand(trig=True) == 4*cos(1)**3 - 3*cos(1)
 
 def test_tan():
     x, y = symbols('x,y')

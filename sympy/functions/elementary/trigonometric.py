@@ -323,6 +323,11 @@ class sin(TrigonometricFunction):
         if arg.is_Add: # TODO, implement more if deep stuff here
             # TODO: Do this more efficiently for more than two terms
             x, y = arg.as_two_terms()
+            sx = sin(x)._eval_expand_trig()
+            sy = sin(y)._eval_expand_trig()
+            cx = cos(x)._eval_expand_trig()
+            cy = cos(y)._eval_expand_trig()
+            return sx*cy + sy*cx
         else:
             n, x = arg.as_coeff_Mul(rational=True)
             if n.is_Integer: # n will be positive because of .eval
@@ -334,11 +339,6 @@ class sin(TrigonometricFunction):
                 else:
                     return expand_mul((-1)**(n/2 - 1)*cos(x)*C.chebyshevu(n -
                         1, sin(x)), deep=False)
-            else:
-                x = None
-        if x is not None:
-            return (sin(x)*cos(y) +
-                sin(y)*cos(x))._eval_expand_trig(deep=deep, **hints)
         return sin(arg)
 
     def _eval_as_leading_term(self, x):
@@ -566,13 +566,16 @@ class cos(TrigonometricFunction):
         else:
             arg = self.args[0]
         x = None
-        if arg.is_Add: # TODO, implement more if deep stuff here
+        if arg.is_Add: # TODO: Do this more efficiently for more than two terms
             x, y = arg.as_two_terms()
-            return (cos(x)*cos(y) -
-                sin(y)*sin(x))._eval_expand_trig(deep=deep, **hints)
+            sx = sin(x)._eval_expand_trig()
+            sy = sin(y)._eval_expand_trig()
+            cx = cos(x)._eval_expand_trig()
+            cy = cos(y)._eval_expand_trig()
+            return cx*cy - sx*sy
         else:
             coeff, terms = arg.as_coeff_Mul(rational=True)
-            if coeff is not S.One and coeff.is_Integer and terms is not S.One:
+            if coeff.is_Integer:
                 return C.chebyshevt(coeff, cos(terms))
         return cos(arg)
 
