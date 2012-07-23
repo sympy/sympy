@@ -181,21 +181,16 @@ class TensorProduct(Expr):
         for i in range(len(args)):
             if isinstance(args[i], Add):
                 for aa in args[i].args:
-                    add_args.append(
-                        TensorProduct(
-                            *args[:i]+(aa,)+args[i+1:]
-                        ).expand(**hints)
-                    )
-                stop = True
-            if stop: break
+                    tp = TensorProduct(*args[:i]+(aa,)+args[i+1:])
+                    if isinstance(tp, TensorProduct):
+                        tp = tp._eval_expand_tensorproduct()
+                    add_args.append(tp)
+                break
+
         if add_args:
-            return Add(*add_args).expand(**hints)
+            return Add(*add_args)
         else:
             return self
-
-    def expand(self, **hints):
-        tp = TensorProduct(*[sympify(item).expand(**hints) for item in self.args])
-        return Expr.expand(tp, **hints)
 
     def _eval_trace(self, **kwargs):
         indices = kwargs.get('indices', None)

@@ -108,12 +108,9 @@ class lerchphi(Function):
 
     nargs = 3
 
-    def _eval_expand_func(self, deep=False, **hints):
+    def _eval_expand_func(self, **hints):
         from sympy import exp, I, floor, Add, Poly, Dummy, exp_polar, unpolarify
-        if deep:
-            z, s, a = [i._eval_expand_func(deep=deep, **hints) for i in self.args]
-        else:
-            z, s, a = self.args
+        z, s, a = self.args
         if z == 1:
             return zeta(s, a)
         if s.is_Integer and s <= 0:
@@ -282,12 +279,9 @@ class polylog(Function):
     def _eval_rewrite_as_lerchphi(self, s, z):
         return z*lerchphi(z, s, 1)
 
-    def _eval_expand_func(self, deep=False, **hints):
+    def _eval_expand_func(self, **hints):
         from sympy import log, expand_mul, Dummy, exp_polar, I
-        if deep:
-            s, z = [i._eval_expand_func(deep=deep, **hints) for i in self.args]
-        else:
-            s, z = self.args
+        s, z = self.args
         if s == 1:
             return -log(1 + exp_polar(-I*pi)*z)
         if s.is_Integer and s <= 0:

@@ -181,19 +181,13 @@ class hyper(TupleParametersBase):
         fac = Mul(*self.ap)/Mul(*self.bq)
         return fac*hyper(nap, nbq, self.argument)
 
-    def _eval_expand_func(self, deep=True, **hints):
+    def _eval_expand_func(self, **hints):
         from sympy import gamma, hyperexpand
-        if deep:
-            ap = [i._eval_expand_func(deep=deep, **hints) for i in self.ap]
-            bq = [i._eval_expand_func(deep=deep, **hints) for i in self.bq]
-            argument = self.argument._eval_expand_func(deep=deep, **hints)
-        else:
-            ap, bq, argument = self.args
-        if len(ap) == 2 and len(bq) == 1 and argument == 1:
+        if len(self.ap) == 2 and len(self.bq) == 1 and self.argument == 1:
             a, b = self.ap
             c = self.bq[0]
             return gamma(c)*gamma(c - a - b)/gamma(c - a)/gamma(c - b)
-        return hyperexpand(self.func(*[ap, bq, argument]))
+        return hyperexpand(self)
 
     @property
     def argument(self):
@@ -565,17 +559,7 @@ class meijerg(TupleParametersBase):
         else:
             return 2*pi*alpha
 
-    def _eval_expand_func(self, deep=True, **hints):
-        from sympy import hyperexpand
-        if deep:
-            ap = [i._eval_expand_func(deep=deep, **hints) for i in self.ap]
-            bq = [i._eval_expand_func(deep=deep, **hints) for i in self.bq]
-            argument = self.argument._eval_expand_func(deep=deep, **hints)
-        else:
-            ap, bq, argument = self.args
-        return hyperexpand(self.func(*[ap, bq, argument]))
-
-    def _eval_expand_func(self, deep=True, **hints):
+    def _eval_expand_func(self, **hints):
         from sympy import hyperexpand
         return hyperexpand(self)
 

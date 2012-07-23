@@ -525,13 +525,8 @@ class Function(Application, Expr):
             l.append(g)
         return Add(*l) + C.Order(x**n, x)
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        if deep:
-            func = self.func(*[a._eval_expand_complex(deep, **hints) for a in
-                               self.args])
-        else:
-            func = self
-        return C.re(func) + S.ImaginaryUnit * C.im(func)
+    def _eval_expand_complex(self, **hints):
+        return C.re(self) + S.ImaginaryUnit * C.im(self)
 
     def _eval_rewrite(self, pattern, rule, **hints):
         if hints.get('deep', False):
@@ -1442,19 +1437,20 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
 
     Hints evaluated unless explicitly set to False are:  ``basic``, ``log``,
     ``multinomial``, ``mul``, ``power_base``, and ``power_exp`` The following
-    hints are supported but not applied unless set to True:  complex, func,
-    and trig.  In addition, the following meta-hints are supported by some or
-    all of the other hints:  ``frac``, ``numer``, ``denom``, ``modulus``, and
-    ``force``.  ``deep`` is supported by all hints.  Additionally, subclasses
-    of Expr may define their own hints or meta-hints.
+    hints are supported but not applied unless set to True:  ``complex``,
+    ``func``, and ``trig``.  In addition, the following meta-hints are
+    supported by some or all of the other hints:  ``frac``, ``numer``,
+    ``denom``, ``modulus``, and ``force``.  ``deep`` is supported by all
+    hints.  Additionally, subclasses of Expr may define their own hints or
+    meta-hints.
 
     ``basic`` is a generic keyword for methods that want to be expanded
-    automatically (along with the other hints like ``mul``).  For example,
-    ``Integral`` uses ``expand_basic()`` to expand the integrand.  If you want
-    your class expand methods to run automatically and they don't fit one of
-    the already automatic methods, wrap it around ``_eval_expand_basic``.
-    Objects may also define their own expand methods, which are not run by
-    default.  See the API section below.
+    automatically (along with the other hints like ``mul``).  If you want your
+    class expand methods to run automatically and they don't fit one of the
+    already automatic methods, wrap it around ``_eval_expand_basic()`` (or
+    create your own method and additionally call it from
+    ``_eval_expand_basic()``).  Objects may also define their own expand
+    methods, which are not run by default.  See the API section below.
 
     If ``deep`` is set to ``True`` (the default), things like arguments of
     functions are recursively expanded.  Use ``deep=False`` to only expand on
@@ -1672,33 +1668,37 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     Objects can define their own expand hints by defining
     ``_eval_expand_hint()``.  The function should take the form::
 
-        def _eval_expand_hint(self, deep=True, **hints):
-            if deep:
-                # Apply _eval_expand_hint() to each element of .args
-            else:
-                # Only apply the method to the top-level expression
+        def _eval_expand_hint(self, **hints):
+            # Only apply the method to the top-level expression
             ...
 
-    (the default value of deep does not matter, as it defaults to ``True`` in
-    ``expand()``).  See also the example below.  Objects should define
-    ``_eval_expand_hint()`` methods only if hint applies to that specific
-    object.  The generic ``_eval_expand_hint()`` method defined in Expr will
-    handle the no-op case.
+    See also the example below.  Objects should define ``_eval_expand_hint()``
+    methods only if ``hint`` applies to that specific object.  The generic
+    ``_eval_expand_hint()`` method defined in Expr will handle the no-op case.
 
-    Each hint should be responsible for expanding that hint only.  In
-    particular, this means that any recursion done when deep is ``True``
-    should only apply ``_eval_expand_hint()``--not ``expand()``--to the
-    arguments of the object.  The object should only call
-    ``_eval_expand_hint()`` on its args if deep=True.
+    Each hint should be responsible for expanding that hint only.
+    Furthermore, the expansion should be applied to the top-level expression
+    only.  ``expand()`` takes care of the recursion that happens when
+    ``deep=True``.
 
-    In order for the generic ``Expr._eval_expand_hint()`` methods to work,
-    objects must be rebuildable by their args, i.e., ``obj.func(*obj.args) ==
-    obj`` must hold.
+    You should only call ``_eval_expand_hint()`` methods directly if you are
+    100% sure that the object has the method, as otherwise you are liable to
+    get unexpected ``AttributeError``s.  Note again that you do not need to
+    handle recursively application of the hint to your object's .args.  This
+    happens automatically with ``expand()``.  ``_eval_expand_hint()`` should
+    generally not be used at all outside of an ``_eval_expand_hint()`` method.
+    If you want to apply a specific expansion from within another method, use
+    the public ``expand()`` function, method, or ``expand_hint()`` functions.
+
+    In order for expand to work, objects must be rebuildable by their args,
+    i.e., ``obj.func(*obj.args) == obj`` must hold.
 
     Expand methods are passed ``**hints`` so that expand hints may use
     'metahints'--hints that control how different expand methods are applied.
-    For example, the ``force=True`` hint above that causes
-    ``expand(log=True)`` to ignore assumptions is such a metahint.
+    For example, the ``force=True`` hint described above that causes
+    ``expand(log=True)`` to ignore assumptions is such a metahint.  The
+    ``deep`` meta-hint is handled exclusively by ``expand()`` and is not
+    passed to ``_eval_expand_hint()`` methods.
 
     Note that expansion hints should generally be methods that perform some
     kind of 'expansion'.  For hints that simply rewrite an expression, use the
@@ -1713,15 +1713,17 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     ...         args = sympify(args)
     ...         return Expr.__new__(cls, *args)
     ...
-    ...     def _eval_expand_double(self, deep=True, **hints):
-    ...         '''Doubles the args of MyClass.'''
-    ...         if deep:
-    ...             args = [i._eval_expand_double(deep=deep, **hints) for i
-    ...                     in self.args]
-    ...         else:
-    ...             args = self.args
+    ...     def _eval_expand_double(self, **hints):
+    ...         '''
+    ...         Doubles the args of MyClass.
     ...
-    ...         return self.func(*(args + args))
+    ...         If there more than four args, doubling is not performed,
+    ...         unless force=True is also used (False by default).
+    ...         '''
+    ...         force = hints.pop('force', False)
+    ...         if not force and len(self.args) > 4:
+    ...             return self
+    ...         return self.func(*(self.args + self.args))
     ...
     >>> a = MyClass(1, 2, MyClass(3, 4))
     >>> a
@@ -1730,6 +1732,12 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     MyClass(1, 2, MyClass(3, 4, 3, 4), 1, 2, MyClass(3, 4, 3, 4))
     >>> a.expand(double=True, deep=False)
     MyClass(1, 2, MyClass(3, 4), 1, 2, MyClass(3, 4))
+
+    >>> b = MyClass(1, 2, 3, 4, 5)
+    >>> b.expand(double=True)
+    MyClass(1, 2, 3, 4, 5)
+    >>> b.expand(double=True, force=True)
+    MyClass(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
 
     See Also
     ========
@@ -1762,10 +1770,8 @@ def expand_mul(expr, deep=True):
     x*exp(x + y)*log(x*y**2) + y*exp(x + y)*log(x*y**2)
 
     """
-    expr = sympify(expr)
-    if not hasattr(expr, "_eval_expand_mul"):
-        raise ValueError("%s does not support mul expansion." % expr)
-    return expr._eval_expand_mul(deep=deep)
+    return sympify(expr).expand(deep=deep, mul=True, power_exp=False,\
+    power_base=False, basic=False, multinomial=False, log=False)
 
 def expand_multinomial(expr, deep=True):
     """
@@ -1781,10 +1787,8 @@ def expand_multinomial(expr, deep=True):
     x**2 + 2*x*exp(x + 1) + exp(2*x + 2)
 
     """
-    expr = sympify(expr)
-    if not hasattr(expr, "_eval_expand_multinomial"):
-        raise ValueError("%s does not support multinomial expansion." % expr)
-    return expr._eval_expand_multinomial(deep=deep)
+    return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
+    power_base=False, basic=False, multinomial=True, log=False)
 
 def expand_log(expr, deep=True, force=False):
     """
@@ -1800,10 +1804,9 @@ def expand_log(expr, deep=True, force=False):
     (x + y)*(log(x) + 2*log(y))*exp(x + y)
 
     """
-    expr = sympify(expr)
-    if not hasattr(expr, "_eval_expand_log"):
-        raise ValueError("%s does not support log expansion." % expr)
-    return expr._eval_expand_log(deep=deep, force=force)
+    return sympify(expr).expand(deep=deep, log=True, mul=False,
+        power_exp=False, power_base=False, multinomial=False,
+        basic=False, force=force)
 
 def expand_func(expr, deep=True):
     """
@@ -1819,10 +1822,8 @@ def expand_func(expr, deep=True):
     x*(x + 1)*gamma(x)
 
     """
-    expr = sympify(expr)
-    if not hasattr(expr, "_eval_expand_func"):
-        raise ValueError("%s does not support func expansion." % expr)
-    return expr._eval_expand_func(deep=deep)
+    return sympify(expr).expand(deep=deep, func=True, basic=False,\
+    log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
 def expand_trig(expr, deep=True):
     """
@@ -1838,10 +1839,8 @@ def expand_trig(expr, deep=True):
     (x + y)*(sin(x)*cos(y) + sin(y)*cos(x))
 
     """
-    expr = sympify(expr)
-    if not hasattr(expr, "_eval_expand_trig"):
-        raise ValueError("%s does not support trig expansion." % expr)
-    return expr._eval_expand_trig(deep=deep)
+    return sympify(expr).expand(deep=deep, trig=True, basic=False,\
+    log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
 def expand_complex(expr, deep=True):
     """
@@ -1851,16 +1850,19 @@ def expand_complex(expr, deep=True):
     Examples
     ========
 
-    >>> from sympy import expand_complex, I, im, re
+    >>> from sympy import expand_complex, exp, sqrt, I
     >>> from sympy.abc import z
-    >>> expand_complex(z**(2*I))
-    re(z**(2*I)) + I*im(z**(2*I))
+    >>> expand_complex(exp(z))
+    I*exp(re(z))*sin(im(z)) + exp(re(z))*cos(im(z))
+    >>> expand_complex(sqrt(I))
+    sqrt(2)/2 + sqrt(2)*I/2
 
+    See Also
+    ========
+    Expr.as_real_imag
     """
-    expr = sympify(expr)
-    if not hasattr(expr, "_eval_expand_complex"):
-        raise ValueError("%s does not support complex expansion." % expr)
-    return expr._eval_expand_complex(deep=deep)
+    return sympify(expr).expand(deep=deep, complex=True, basic=False,\
+    log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
 def expand_power_base(expr, deep=True, force=False):
     """
@@ -1922,10 +1924,9 @@ def expand_power_base(expr, deep=True, force=False):
     2*2**z*y*y**z
 
     """
-    expr = sympify(expr)
-    if not hasattr(expr, "_eval_expand_power_base"):
-        raise ValueError("%s does not support power_base expansion." % expr)
-    return expr._eval_expand_power_base(deep=deep, force=force)
+    return sympify(expr).expand(deep=deep, log=False, mul=False,
+        power_exp=False, power_base=True, multinomial=False,
+        basic=False, force=force)
 
 def expand_power_exp(expr, deep=True):
     """
@@ -1941,10 +1942,8 @@ def expand_power_exp(expr, deep=True):
     >>> expand_power_exp(x**(y + 2))
     x**2*x**y
     """
-    expr = sympify(expr)
-    if not hasattr(expr, "_eval_expand_power_exp"):
-        raise ValueError("%s does not support power_exp expansion." % expr)
-    return expr._eval_expand_power_exp(deep=deep)
+    return sympify(expr).expand(deep=deep, complex=False, basic=False,\
+    log=False, mul=False, power_exp=True, power_base=False, multinomial=False)
 
 def count_ops(expr, visual=False):
     """

@@ -105,16 +105,6 @@ def test_issue_3022():
     r, e = cse((eq).expand(complex=True))
     assert abs((eq - e[0].subs(reversed(r))).subs(x, 1 + 3*I)) < 1e-9
 
-def test_expand_function_errors():
-    raises(ValueError, lambda: expand_mul(Tuple()))
-    raises(ValueError, lambda: expand_multinomial(Tuple()))
-    raises(ValueError, lambda: expand_log(Tuple()))
-    raises(ValueError, lambda: expand_func(Tuple()))
-    raises(ValueError, lambda: expand_trig(Tuple()))
-    raises(ValueError, lambda: expand_complex(Tuple()))
-    raises(ValueError, lambda: expand_power_base(Tuple()))
-    raises(ValueError, lambda: expand_power_exp(Tuple()))
-
 def test_expand_power_base():
     # was test_separate()
 

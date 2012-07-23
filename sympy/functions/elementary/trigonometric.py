@@ -313,12 +313,9 @@ class sin(TrigonometricFunction):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)
         return re_part + im_part*S.ImaginaryUnit
 
-    def _eval_expand_trig(self, deep=True, **hints):
+    def _eval_expand_trig(self, **hints):
         from sympy import expand_mul
-        if deep:
-            arg = self.args[0]._eval_expand_trig(deep=deep, **hints)
-        else:
-            arg = self.args[0]
+        arg = self.args[0]
         x = None
         if arg.is_Add: # TODO, implement more if deep stuff here
             # TODO: Do this more efficiently for more than two terms
@@ -560,11 +557,8 @@ class cos(TrigonometricFunction):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)
         return re_part + im_part*S.ImaginaryUnit
 
-    def _eval_expand_trig(self, deep=True, **hints):
-        if deep:
-            arg = self.args[0]._eval_expand_trig(deep=deep, **hints)
-        else:
-            arg = self.args[0]
+    def _eval_expand_trig(self, **hints):
+        arg = self.args[0]
         x = None
         if arg.is_Add: # TODO: Do this more efficiently for more than two terms
             x, y = arg.as_two_terms()

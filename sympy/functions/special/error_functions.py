@@ -437,13 +437,8 @@ class expint(Function):
         else:
             return self
 
-    def _eval_expand_func(self, deep=False, **hints):
-        if deep:
-            f = self.func(*(i._eval_expand_func(deep=deep, **hints) for i in
-                            self.args))
-        else:
-            f = self
-        return f.rewrite(Ei).rewrite(expint, **hints)
+    def _eval_expand_func(self, **hints):
+        return self.rewrite(Ei).rewrite(expint, **hints)
 
     def _eval_rewrite_as_Si(self, nu, z):
         if nu != 1:

@@ -85,10 +85,7 @@ class re(Function):
         """
         return (self, S.Zero)
 
-    def _eval_expand_complex(self, deep=True, **hints):
-#        if deep:
-#            return self.args[0].expand(deep, **hints).as_real_imag()[0]
-#        else:
+    def _eval_expand_complex(self, **hints):
         return self.args[0].as_real_imag()[0]
 
     def _eval_derivative(self, x):
@@ -187,9 +184,7 @@ class im(Function):
         """
         return (self, S.Zero)
 
-    def _eval_expand_complex(self, deep=True, **hints):
-#        if deep:
-#            return self.args[0].expand(deep, **hints).as_real_imag()[1]
+    def _eval_expand_complex(self, **hints):
         return self.args[0].as_real_imag()[1]
 
     def _eval_derivative(self, x):

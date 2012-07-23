@@ -708,23 +708,20 @@ class Mul(AssocOp):
         added = Add(*terms)
         return Add.make_args(added) #it may have collapsed down to one term
 
-    def _eval_expand_mul(self, deep=True, **hints):
-        from sympy import fraction
+    def _eval_expand_mul(self, **hints):
+        from sympy import fraction, expand_mul
+
+        # Handle things like 1/(x*(x + 1)), which are automatically converted
+        # to 1/x*1/(x + 1)
         expr = self
         n, d = fraction(expr)
-        if d is not S.One:
-            expr = n/d._eval_expand_mul(deep=deep, **hints)
+        if d.is_Mul:
+            expr = n/d._eval_expand_mul(**hints)
             if not expr.is_Mul:
-                return expr._eval_expand_mul(deep=deep, **hints)
+                return expand_mul(expr, deep=False)
 
         plain, sums, rewrite = [], [], False
         for factor in expr.args:
-            if deep:
-                term = factor._eval_expand_mul(deep=deep, **hints)
-                if term != factor:
-                    factor = term
-                    rewrite = True
-
             if factor.is_Add:
                 sums.append(factor)
                 rewrite = True
@@ -732,8 +729,7 @@ class Mul(AssocOp):
                 if factor.is_commutative:
                     plain.append(factor)
                 else:
-                    Wrapper = Basic
-                    sums.append(Wrapper(factor))
+                    sums.append(Basic(factor)) # Wrapper
 
         if not rewrite:
             return expr
@@ -745,7 +741,7 @@ class Mul(AssocOp):
                 for term in terms:
                     t = Mul(plain, term)
                     if t.is_Mul and any(a.is_Add for a in t.args):
-                        t = t._eval_expand_mul(deep=deep)
+                        t = t._eval_expand_mul()
                     args.append(t)
                 return Add(*args)
             else:

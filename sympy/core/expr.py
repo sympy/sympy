@@ -2590,34 +2590,37 @@ class Expr(Basic, EvalfMixin):
     ###################### EXPRESSION EXPANSION METHODS #######################
     ###########################################################################
 
-    # These should be overridden in relevant subclasses
+    # Relevant subclasses should override _eval_expand_hint() methods.  See
+    # the docstring of expand() for more info.
 
-    def __getattr__(self, attr):
+    @staticmethod
+    def _expand_hint(expr, hint, deep=True, **hints):
         """
-        Magic to allow expand(hint=True) to work for any hint.
-        """
-        if not attr.startswith("_eval_expand_"):
-            raise AttributeError("%r object has no attribute %r" %
-                (self.__class__.__name__, attr))
+        Helper for ``expand()``.  Recursively calls ``expr._eval_expand_hint()``.
 
-        def _eval_expand_hint(deep=True, **hints):
-            if not deep or self.is_Atom or not self.args:
-                return self
-            sargs, terms = self.args, []
-            hit = False
-            for term in sargs:
-                if hasattr(term, attr):
-                    hit = True
-                    newterm = getattr(term, attr)(deep=deep, **hints)
-                else:
-                    newterm = term
-                terms.append(newterm)
+        Returns ``(expr, hit)``, where expr is the (possibly) expanded
+        ``expr`` and ``hit`` is ``True`` if ``expr`` was truly expanded and
+        ``False`` otherwise.
+        """
+        hit = False
+        # XXX: Hack to support non-Basic args
+        #              |
+        #              V
+        if deep and getattr(expr, 'args', ()) and not expr.is_Atom:
+            sargs = []
+            for arg in expr.args:
+                arg, arghit = Expr._expand_hint(arg, hint, **hints)
+                hit |= arghit
+                sargs.append(arg)
+
             if hit:
-                return self.func(*terms)
-            else:
-                return self
+                expr = expr.func(*sargs)
 
-        return _eval_expand_hint
+        if hasattr(expr, '_eval_expand_' + hint):
+            newexpr = getattr(expr, '_eval_expand_' + hint)(**hints)
+            if newexpr != expr:
+                return (newexpr, True)
+        return (expr, hit)
 
     @cacheit
     def expand(self, deep=True, modulus=None, power_base=True, power_exp=True, \
@@ -2670,9 +2673,7 @@ class Expr(Basic, EvalfMixin):
         for hint in sorted(hints.keys(), key=_expand_hint_key):
             use_hint = hints[hint]
             if use_hint:
-                func = getattr(expr, '_eval_expand_'+hint, None)
-                if func is not None:
-                    expr = func(deep=deep, **hints)
+                expr, hit = Expr._expand_hint(expr, hint, deep=deep, **hints)
 
         if modulus is not None:
             modulus = sympify(modulus)

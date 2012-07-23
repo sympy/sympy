@@ -279,31 +279,22 @@ class Pow(Expr):
             if expanded != self:
                 return c(expanded)
 
-    def _eval_expand_power_exp(self, deep=True, *args, **hints):
+    def _eval_expand_power_exp(self, **hints):
         """a**(n+m) -> a**n*a**m"""
-        if deep:
-            b = self.base._eval_expand_power_exp(deep=deep, **hints)
-            e = self.exp._eval_expand_power_exp(deep=deep, **hints)
-        else:
-            b = self.base
-            e = self.exp
+        b = self.base
+        e = self.exp
         if e.is_Add and e.is_commutative:
             expr = []
             for x in e.args:
-                if deep:
-                    x = x._eval_expand_power_exp(deep=deep, **hints)
                 expr.append(Pow(self.base, x))
             return Mul(*expr)
         return Pow(b, e)
 
-    def _eval_expand_power_base(self, deep=True, **hints):
+    def _eval_expand_power_base(self, **hints):
         """(a*b)**n -> a**n * b**n"""
         force = hints.get('force', False)
         b, ewas = self.args
-        if deep:
-            e = self.exp._eval_expand_power_base(deep=deep, **hints)
-        else:
-            e = self.exp
+        e = self.exp
         if b.is_Mul:
             bargs = b.args
             if force or e.is_integer:
@@ -359,21 +350,13 @@ class Pow(Expr):
                 else:
                     nc = [Mul._from_args(nc)]*e
                 other = [Pow(Mul(*other), e)] + nc
-                if deep:
-                    return Mul(*([Pow(b._eval_expand_power_base(deep=deep,
-                        **hints), e) for b in c] + other))
-                else:
-                    return Mul(*([Pow(b, e) for b in c] + other))
+                return Mul(*([Pow(b, e) for b in c] + other))
         return Pow(b, e)
 
-    def _eval_expand_multinomial(self, deep=True, **hints):
+    def _eval_expand_multinomial(self, **hints):
         """(a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is nonzero integer"""
-        if deep:
-            b = self.base._eval_expand_multinomial(deep=deep, **hints)
-            e = self.exp._eval_expand_multinomial(deep=deep, **hints)
-        else:
-            b = self.base
-            e = self.exp
+        b = self.base
+        e = self.exp
 
         if b is None:
             base = self.base
@@ -404,7 +387,10 @@ class Pow(Expr):
                 else:
                     radical, result = Pow(base, exp - n), []
 
-                    for term in Add.make_args(Pow(base, n)._eval_expand_multinomial(deep=False)):
+                    expanded_base_n = Pow(base, n)
+                    if expanded_base_n.is_Pow:
+                        expanded_base_n = expanded_base_n._eval_expand_multinomial()
+                    for term in Add.make_args(expanded_base_n):
                         result.append(term*radical)
 
                     return Add(*result)
@@ -490,13 +476,13 @@ class Pow(Expr):
                 if n == 2:
                     return Add(*[f*g for f in base.args for g in base.args])
                 else:
-                    multi = (base**(n-1))._eval_expand_multinomial(deep=False)
+                    multi = (base**(n-1))._eval_expand_multinomial()
                     if multi.is_Add:
                         return Add(*[f*g for f in base.args for g in multi.args])
                     else:
                         return Add(*[f*multi for f in base.args])
         elif exp.is_Rational and exp.p < 0 and base.is_Add and abs(exp.p) > exp.q:
-            return 1 / Pow(base, -exp)._eval_expand_multinomial(deep=False)
+            return 1 / Pow(base, -exp)._eval_expand_multinomial()
         elif exp.is_Add and base.is_Number:
             #  a + b      a  b
             # n      --> n  n  , where n, a, b are Numbers
@@ -694,8 +680,8 @@ class Pow(Expr):
             if e > 0:
                 # positive integer powers are easy to expand, e.g.:
                 # sin(x)**4 = (x-x**3/3+...)**4 = ...
-                return Pow(b._eval_nseries(x, n=n, logx=logx), e
-                           )._eval_expand_multinomial(deep = False)
+                return expand_multinomial(Pow(b._eval_nseries(x, n=n,
+                    logx=logx), e), deep=False)
             elif e is S.NegativeOne:
                 # this is also easy to expand using the formula:
                 # 1/(1 + x) = 1 - x + x**2 - x**3 ...
@@ -704,7 +690,7 @@ class Pow(Expr):
                 b = b._eval_nseries(x, n=n, logx=logx)
                 prefactor = b.as_leading_term(x)
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
-                rest = ((b - prefactor)/prefactor)._eval_expand_mul()
+                rest = expand_mul((b - prefactor)/prefactor)
                 if rest == 0:
                     # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
                     # factor the w**4 out using collect:
@@ -730,9 +716,9 @@ class Pow(Expr):
                 for m in xrange(1, ceiling(n/l)):
                     new_term = terms[-1]*(-rest)
                     if new_term.is_Pow:
-                        new_term = new_term._eval_expand_multinomial(deep = False)
+                        new_term = new_term._eval_expand_multinomial(deep=False)
                     else:
-                        new_term = new_term._eval_expand_mul(deep = False)
+                        new_term = expand_mul(new_term, deep=False)
                     terms.append(new_term)
 
                 # Append O(...), we know the order.
