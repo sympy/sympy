@@ -189,10 +189,9 @@ class DiagramGrid(object):
     >>> grid = DiagramGrid(diagram)
     >>> (grid.width, grid.height)
     (2, 2)
-    >>> [grid[0, j] for j in xrange(grid.width)]
-    [Object("A"), Object("B")]
-    >>> [grid[1, j] for j in xrange(grid.width)]
-    [None, Object("C")]
+    >>> print grid
+    [[Object("A"), Object("B")],
+    [None, Object("C")]]
 
     Sometimes one sees the diagram as consisting of logical groups.
     One can advise ``DiagramGrid`` as to such groups by employing the
@@ -210,19 +209,17 @@ class DiagramGrid(object):
     Lay it out with generic layout:
 
     >>> grid = DiagramGrid(diagram)
-    >>> [grid[0, j] for j in xrange(grid.width)]
-    [Object("A"), Object("B"), Object("D")]
-    >>> [grid[1, j] for j in xrange(grid.width)]
-    [None, Object("C"), None]
+    >>> print grid
+    [[Object("A"), Object("B"), Object("D")],
+    [None, Object("C"), None]]
 
     Now, we can group the objects `A` and `D` to have them near one
     another:
 
     >>> grid = DiagramGrid(diagram, groups=FiniteSet(FiniteSet(A, D), B, C))
-    >>> [grid[0, j] for j in xrange(grid.width)]
-    [Object("B"), None, Object("C")]
-    >>> [grid[1, j] for j in xrange(grid.width)]
-    [Object("A"), Object("D"), None]
+    >>> print grid
+    [[Object("B"), None, Object("C")],
+    [Object("A"), Object("D"), None]]
 
     Note how the positioning of the other objects changes.
 
@@ -245,26 +242,28 @@ class DiagramGrid(object):
     linear:
 
     >>> grid = DiagramGrid(diagram)
-    >>> [grid[0, j] for j in xrange(grid.width)]
-    [Object("A"), Object("B"), None]
-    >>> [grid[1, j] for j in xrange(grid.width)]
-    [None, Object("C"), Object("D")]
-    >>> [grid[2, j] for j in xrange(grid.width)]
-    [None, None, Object("E")]
+    >>> print grid
+    [[Object("A"), Object("B"), None],
+    [None, Object("C"), Object("D")],
+    [None, None, Object("E")]]
 
     To get it laid out in a line, use ``layout="sequential"``:
 
     >>> grid = DiagramGrid(diagram, layout="sequential")
-    >>> [grid[0, j] for j in xrange(grid.width)]
-    [Object("A"), Object("B"), Object("C"), Object("D"), Object("E")]
+    >>> print grid
+    [[Object("A"), Object("B"), Object("C"), Object("D"), Object("E")]]
 
     One may sometimes need to transpose the resulting layout.  While
     this can always be done by hand, :class:`DiagramGrid` provides a
     hint for that purpose:
 
     >>> grid = DiagramGrid(diagram, layout="sequential", transpose=True)
-    >>> [grid[i, 0] for i in xrange(grid.height)]
-    [Object("A"), Object("B"), Object("C"), Object("D"), Object("E")]
+    >>> print grid
+    [[Object("A")],
+    [Object("B")],
+    [Object("C")],
+    [Object("D")],
+    [Object("E")]]
 
     Separate hints can also be provided for each group.  For an
     example, refer to ``tests/test_drawing.py``, and see the different
@@ -1302,8 +1301,11 @@ class DiagramGrid(object):
         """
         Produces a string representation of this class.
 
-        This returns a string representation of the underlying list of
-        lists of objects:
+        This method returns a string representation of the underlying
+        list of lists of objects.
+
+        Examples
+        ========
 
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import Diagram, DiagramGrid
@@ -1316,7 +1318,8 @@ class DiagramGrid(object):
         >>> diagram = Diagram([f, g])
         >>> grid = DiagramGrid(diagram)
         >>> print grid
-        [[Object("A"), Object("B")], [None, Object("C")]]
+        [[Object("A"), Object("B")],
+        [None, Object("C")]]
 
         """
         return repr(self._grid._array)
