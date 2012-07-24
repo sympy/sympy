@@ -204,3 +204,7 @@ class Dict(Basic):
 
     def __lt__(self, other):
         return self.args < other.args
+
+    def iteritems(self):
+        '''D.iteritems() -> generator of D's (key, value) pairs, as 2-tuples'''
+        return self._dict.iteritems()
