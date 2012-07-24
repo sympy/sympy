@@ -1515,6 +1515,14 @@ class PrettyPrinter(Printer):
 
         return prettyForm(pretty_result[0])
 
+    def _print_DiagramGrid(self, grid):
+        from sympy.matrices import Matrix
+        from sympy import Symbol
+        matrix = Matrix([[grid[i, j] if grid[i, j] else Symbol(" ")
+                          for j in xrange(grid.width)]
+                         for i in xrange(grid.height)])
+        return self._print_matrix_contents(matrix)
+
     def _print_FreeModuleElement(self, m):
         # Print as row vector for convenience, for now.
         return self._print_seq(m, '[', ']')
