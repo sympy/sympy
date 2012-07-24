@@ -31,6 +31,7 @@ __all__ = [
     'IntQubitBra',
     'qubit_to_matrix',
     'matrix_to_qubit',
+    'matrix_to_density',
     'measure_all',
     'measure_partial',
     'measure_partial_oneshot',
@@ -224,7 +225,7 @@ class Qubit(QubitState, Ket):
             #in case full trace was requested
             return new_mat[0]
         else:
-            return self._matrix_to_density(new_mat)
+            return matrix_to_density(new_mat)
 
     def _reduced_density(self, matrix, qubit, **options):
         """Compute the reduced density matrix by tracing out one qubit.
@@ -249,20 +250,6 @@ class Qubit(QubitState, Ket):
                     new_matrix[i,j] += old_matrix[row,col]
 
         return new_matrix
-
-    def _matrix_to_density(self, mat):
-        """
-        Works by finding the eigenvectors and eigenvalues of the matrix.
-        We know we can decompose rho by doing:
-        sum(EigenVal*|Eigenvect><Eigenvect|)
-        """
-        from sympy.physics.quantum.density import Density
-        eigen = mat.eigenvects()
-        args = [[matrix_to_qubit(Matrix([vector,])), x[0]] for x in eigen for vector in x[2] if x[0] != 0]
-        if (len(args) == 0):
-            return 0
-        else:
-            return Density(*args)
 
 class QubitBra(QubitState, Bra):
     """A multi-qubit bra in the computational (z) basis.
@@ -469,6 +456,19 @@ def matrix_to_qubit(matrix):
 
     return result
 
+def matrix_to_density(mat):
+    """
+    Works by finding the eigenvectors and eigenvalues of the matrix.
+    We know we can decompose rho by doing:
+    sum(EigenVal*|Eigenvect><Eigenvect|)
+    """
+    from sympy.physics.quantum.density import Density
+    eigen = mat.eigenvects()
+    args = [[matrix_to_qubit(Matrix([vector,])), x[0]] for x in eigen for vector in x[2] if x[0] != 0]
+    if (len(args) == 0):
+        return 0
+    else:
+        return Density(*args)
 
 def qubit_to_matrix(qubit, format='sympy'):
     """Coverts an Add/Mul of Qubit objects into it's matrix representation

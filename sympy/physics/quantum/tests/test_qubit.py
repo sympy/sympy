@@ -2,8 +2,9 @@ import random
 
 from sympy import Integer, Matrix, Rational, sqrt, symbols
 from sympy.physics.quantum.qubit import (measure_all, measure_partial,
-                                         matrix_to_qubit, qubit_to_matrix,
-                                         IntQubit, IntQubitBra, QubitBra)
+                                         matrix_to_qubit, matrix_to_density,
+                                         qubit_to_matrix, IntQubit,
+                                         IntQubitBra, QubitBra)
 from sympy.physics.quantum.gate import (HadamardGate, CNOT, XGate, YGate,
                                         ZGate, PhaseGate)
 from sympy.physics.quantum.qapply import qapply
@@ -171,3 +172,27 @@ def test_eval_trace():
     t = Tr(d, 0)
     assert t.doit() == (0.5*Density([Qubit('0'), 1]) +
                         0.5*Density([Qubit('1'), 1]))
+
+def test_matrix_to_density():
+    mat = Matrix([[0, 0], [0, 1]])
+    assert matrix_to_density(mat) == Density([Qubit('1'), 1])
+
+    mat = Matrix([[1, 0], [0, 0]])
+    assert matrix_to_density(mat) == Density([Qubit('0'), 1])
+
+    mat = Matrix([[0, 0], [0, 0]])
+    assert matrix_to_density(mat) == 0
+
+    mat = Matrix([[0, 0, 0, 0],
+                  [0, 0, 0, 0],
+                  [0, 0, 1, 0],
+                  [0, 0, 0, 0]])
+
+    assert matrix_to_density(mat) == Density([Qubit('10'), 1])
+
+    mat = Matrix([[1, 0, 0, 0],
+                  [0, 0, 0, 0],
+                  [0, 0, 0, 0],
+                  [0, 0, 0, 0]])
+
+    assert matrix_to_density(mat) == Density([Qubit('00'), 1])
