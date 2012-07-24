@@ -3716,12 +3716,12 @@ def test_categories():
     assert upretty(A1) == u"A₁"
 
     assert pretty(f1) == "f1:A1-->A2"
-    assert upretty(f1) == u"f₁:A₁⟶  A₂"
+    assert upretty(f1) == u"f₁:A₁——▶A₂"
     assert pretty(id_A1) == "id:A1-->A1"
-    assert upretty(id_A1) == u"id:A₁⟶  A₁"
+    assert upretty(id_A1) == u"id:A₁——▶A₁"
 
     assert pretty(f2*f1) == "f2*f1:A1-->A3"
-    assert upretty(f2*f1) == u"f₂∘f₁:A₁⟶  A₃"
+    assert upretty(f2*f1) == u"f₂∘f₁:A₁——▶A₃"
 
     assert pretty(K1) == "K1"
     assert upretty(K1) == u"K₁"
@@ -3736,17 +3736,17 @@ def test_categories():
            "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
            "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}"
 
-    assert upretty(d) == u"{f₂∘f₁:A₁⟶  A₃: ∅, id:A₁⟶  A₁: ∅, " \
-           u"id:A₂⟶  A₂: ∅, id:A₃⟶  A₃: ∅, f₁:A₁⟶  A₂: {unique}, f₂:A₂⟶  A₃: ∅}"
+    assert upretty(d) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, " \
+           u"id:A₂——▶A₂: ∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}"
 
     d = Diagram({f1:"unique", f2:S.EmptySet}, {f2 * f1: "unique"})
     assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
            "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
            "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}" \
            " ==> {f2*f1:A1-->A3: {unique}}"
-    assert upretty(d) == u"{f₂∘f₁:A₁⟶  A₃: ∅, id:A₁⟶  A₁: ∅, id:A₂⟶  A₂: " \
-           u"∅, id:A₃⟶  A₃: ∅, f₁:A₁⟶  A₂: {unique}, f₂:A₂⟶  A₃: ∅}" \
-           u" ⟹  {f₂∘f₁:A₁⟶  A₃: {unique}}"
+    assert upretty(d) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, id:A₂——▶A₂: " \
+           u"∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}" \
+           u" ══▶ {f₂∘f₁:A₁——▶A₃: {unique}}"
 
 def test_PrettyModules():
     R = QQ[x, y]

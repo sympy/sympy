@@ -1459,7 +1459,7 @@ class PrettyPrinter(Printer):
     def _print_Morphism(self, morphism):
         arrow = "-->"
         if self._use_unicode:
-            arrow = u"\u27f6  "
+            arrow = u"\u2014\u2014\u25b6"
 
         domain = self._print(morphism.domain)
         codomain = self._print(morphism.codomain)
@@ -1507,7 +1507,7 @@ class PrettyPrinter(Printer):
         if diagram.conclusions:
             results_arrow = " ==> "
             if self._use_unicode:
-                results_arrow = u" \u27f9  "
+                results_arrow = u" \u2550\u2550\u25b6 "
 
             pretty_conclusions = self._print(diagram.conclusions)[0]
             pretty_result = pretty_result.right(results_arrow, pretty_conclusions)
