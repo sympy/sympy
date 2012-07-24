@@ -560,50 +560,52 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
             Luiz Henrique de Figueiredo.
 
         """
+        if self.only_integers:
+            return super(LineOver1DRangeSeries, self).get_segments()
+        else:
+            f = lambdify([self.var], self.expr)
+            list_segments = []
+            def sample(p, q, depth):
+                #Randomly sample to avoid aliasing.
+                random = 0.45 + np.random.rand() * 0.1
+                xnew = p[0] + random * (q[0] - p[0])
+                ynew = f(xnew)
+                new_point = np.array([xnew, ynew])
 
-        f = lambdify([self.var], self.expr)
-        list_segments = []
-        def sample(p, q, depth):
-            #Randomly sample to avoid aliasing.
-            random = 0.45 + np.random.rand() * 0.1
-            xnew = p[0] + random * (q[0] - p[0])
-            ynew = f(xnew)
-            new_point = np.array([xnew, ynew])
+                #Maximum depth
+                if depth > 12:
+                    list_segments.append([p, q])
 
-            #Maximum depth
-            if depth > 12:
-                list_segments.append([p, q])
+                #Sample irrespective of whether the line is flat till the
+                #depth of 6. We are not using linspace to avoid aliasing.
+                elif depth < 6:
+                    sample(p, new_point, depth + 1)
+                    sample(new_point, q, depth + 1)
 
-            #Sample irrespective of whether the line is flat till the
-            #depth of 6. We are not using linspace to avoid aliasing.
-            elif depth < 6:
-                sample(p, new_point, depth + 1)
-                sample(new_point, q, depth + 1)
+                #Sample ten points if complex values are encountered
+                #at both ends. If there is a real value in between then
+                #sample those points further.
+                elif p[1] is None and q[1] is None:
+                    xarray = np.linspace(p[0], q[0], 10)
+                    yarray = map(f, xarray)
+                    if any(y is not None for y in yarray):
+                        for i in len(yarray) - 1:
+                            if yarray[i] is None or yarray[i + 1] is None:
+                                sample([xarray[i], yarray[i]],
+                                    [xarray[i + 1], yarray[i + 1]], depth + 1)
 
-            #Sample ten points if complex values are encountered
-            #at both ends. If there is a real value in between then
-            #sample those points further.
-            elif p[1] is None and q[1] is None:
-                xarray = np.linspace(p[0], q[0], 10)
-                yarray = map(f, xarray)
-                if any(y is not None for y in yarray):
-                    for i in len(yarray) - 1:
-                        if yarray[i] is None or yarray[i + 1] is None:
-                            sample([xarray[i], yarray[i]],
-                                [xarray[i + 1], yarray[i + 1]], depth + 1)
+                #Sample further if one of the end points in None( ie a complex
+                #value) or the three points are not almost collinear.
+                elif p[1] is None or q[1] is None or not flat(p, new_point, q):
+                    sample(p, new_point, depth + 1)
+                    sample(new_point, q, depth + 1)
+                else:
+                    list_segments.append([p, q])
 
-            #Sample further if one of the end points in None( ie a complex
-            #value) or the three points are not almost collinear.
-            elif p[1] is None or q[1] is None or not flat(p, new_point, q):
-                sample(p, new_point, depth + 1)
-                sample(new_point, q, depth + 1)
-            else:
-                list_segments.append([p, q])
-
-        f_start = f(self.start)
-        f_end = f(self.end)
-        sample([self.start, f_start], [self.end, f_end], 0)
-        return list_segments
+            f_start = f(self.start)
+            f_end = f(self.end)
+            sample([self.start, f_start], [self.end, f_end], 0)
+            return list_segments
 
     def get_points(self):
         if self.only_integers == True:
