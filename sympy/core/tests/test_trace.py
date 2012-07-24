@@ -8,6 +8,9 @@ def test_trace_new():
     assert Tr(a+b) == a + b
     assert Tr(A+B) == Tr(A) + Tr(B)
 
+    #check trace args not implicitly permuted
+    assert Tr(C*D*A*B).args[0].args == (C, D, A, B)
+
     # check for mul and adds
     assert Tr((a*b) + ( c*d)) == (a*b) + (c*d)
     # Tr(scalar*A) = scalar*Tr(A)
