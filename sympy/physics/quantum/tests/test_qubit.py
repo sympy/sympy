@@ -145,14 +145,14 @@ def test_eval_trace():
     assert t.doit() == 1
 
     # extreme bits
-    t = Tr(d, [0] )
+    t = Tr(d, 0)
     assert t.doit() == (0.4*Density([Qubit('0101'), 1]) +
                         0.6*Density([Qubit('1011'), 1]))
-    t = Tr(d, [4] )
+    t = Tr(d, 4)
     assert t.doit() == (0.4*Density([Qubit('1010'), 1]) +
                         0.6*Density([Qubit('0110'), 1]))
     # index somewhere in between
-    t = Tr(d, [2] )
+    t = Tr(d, 2)
     assert t.doit() == (0.4*Density([Qubit('0110'), 1]) +
                         0.6*Density([Qubit('1010'), 1]))
     #trace all indices
@@ -168,6 +168,6 @@ def test_eval_trace():
     # mixed states
     q = (1/sqrt(2)) * (Qubit('00') + Qubit('11'))
     d = Density ( [q, 1.0] )
-    t = Tr(d, [0])
+    t = Tr(d, 0)
     assert t.doit() == (0.5*Density([Qubit('0'), 1]) +
                         0.5*Density([Qubit('1'), 1]))

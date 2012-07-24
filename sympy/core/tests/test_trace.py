@@ -28,6 +28,29 @@ def test_trace_new():
     M = Matrix([[1,1], [2,2]])
     assert Tr(M) == 3
 
+    ##test indices in different forms
+    #no index
+    t = Tr(A)
+    assert t.args[1] == Tuple()
+
+    #single index
+    t = Tr(A, 0)
+    assert t.args[1] == Tuple(0)
+
+    #index in a list
+    t = Tr(A, [0])
+    assert t.args[1] == Tuple(0)
+
+    t = Tr(A, [0, 1, 2])
+    assert t.args[1] == Tuple(0, 1, 2)
+
+    #index is tuple
+    t = Tr(A, (0))
+    assert t.args[1] == Tuple(0)
+
+    t = Tr(A, (1, 2))
+    assert t.args[1] == Tuple(1, 2)
+
     #trace indices test
     t = Tr((A+B), [2])
     assert t.args[0].args[1] == Tuple(2) and t.args[1].args[1] == Tuple(2)

@@ -103,7 +103,16 @@ class Tr(Expr):
         """
 
         expr = args[0]
-        indices = Tuple(*args[1]) if len(args) == 2 else Tuple()
+
+        # expect no indices,int or a tuple/list/Tuple
+        if (len(args) == 2):
+            if not isinstance(args[1], (list, Tuple, tuple)):
+                indices = Tuple(args[1])
+            else:
+                indices = Tuple(*args[1])
+        else:
+            indices = Tuple()
+
         if isinstance(expr, Matrix):
             return expr.trace()
         elif hasattr(expr, 'trace') and callable(expr.trace):
