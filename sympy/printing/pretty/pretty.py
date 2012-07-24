@@ -527,7 +527,10 @@ class PrettyPrinter(Printer):
 
         return Lim
 
-    def _print_MatrixBase(self, e):
+    def _print_matrix_contents(self, e):
+        """
+        This method factors out what is essentially grid printing.
+        """
         M = e   # matrix
         Ms = {}  # i,j -> pretty(M[i,j])
         for i in range(M.rows):
@@ -592,6 +595,10 @@ class PrettyPrinter(Printer):
         if D is None:
             D = prettyForm('') # Empty Matrix
 
+        return D
+
+    def _print_MatrixBase(self, e):
+        D = self._print_matrix_contents(e)
         D = prettyForm(*D.parens('[',']'))
         return D
     _print_ImmutableMatrix = _print_MatrixBase
