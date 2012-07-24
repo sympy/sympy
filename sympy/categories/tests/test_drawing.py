@@ -133,6 +133,9 @@ def test_DiagramGrid():
     assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(), h:FiniteSet(),
                               k:FiniteSet()}
 
+    assert str(grid) == '[[Object("A"), Object("B"), Object("D")], ' \
+           '[None, Object("C"), None]]'
+
     # A chain of morphisms.
     f = NamedMorphism(A, B, "f")
     g = NamedMorphism(B, C, "g")

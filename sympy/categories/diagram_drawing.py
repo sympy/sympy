@@ -1297,3 +1297,26 @@ class DiagramGrid(object):
 
         """
         return self._morphisms
+
+    def __str__(self):
+        """
+        Produces a string representation of this class.
+
+        This returns a string representation of the underlying list of
+        lists of objects:
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy.categories import Diagram, DiagramGrid
+        >>> from sympy import FiniteSet
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> diagram = Diagram([f, g])
+        >>> grid = DiagramGrid(diagram)
+        >>> print grid
+        [[Object("A"), Object("B")], [None, Object("C")]]
+
+        """
+        return repr(self._grid._array)

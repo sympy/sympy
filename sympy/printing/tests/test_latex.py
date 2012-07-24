@@ -577,7 +577,7 @@ def test_PolynomialRing():
 def test_categories():
     from sympy.categories import (Object, Morphism, IdentityMorphism,
                                   NamedMorphism, CompositeMorphism,
-                                  Category, Diagram)
+                                  Category, Diagram, DiagramGrid)
 
     A1 = Object("A1")
     A2 = Object("A2")
@@ -616,6 +616,21 @@ def test_categories():
            " & f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix}" \
            "\\Longrightarrow \\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
            "\\rightarrow A_{3} : \\left\\{unique\\right\\}\\end{Bmatrix}"
+
+
+    # A linear diagram.
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    d = Diagram([f, g])
+    grid = DiagramGrid(d)
+
+    assert latex(grid) == "\\begin{array}{cc}\n" \
+    "A & B \\\\\n"\
+    " & C \n" \
+    "\\end{array}\n"
 
 def test_Modules():
     from sympy.polys.domains import QQ

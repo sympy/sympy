@@ -1238,6 +1238,24 @@ class LatexPrinter(Printer):
 
         return latex_result
 
+    def _print_DiagramGrid(self, grid):
+        latex_result = "\\begin{array}{%s}\n" % ("c" * grid.width)
+
+        for i in xrange(grid.height):
+            for j in xrange(grid.width):
+                if grid[i, j]:
+                    latex_result += latex(grid[i, j])
+                latex_result += " "
+                if j != grid.width - 1:
+                    latex_result += "& "
+
+            if i != grid.height - 1:
+                latex_result += "\\\\"
+            latex_result += "\n"
+
+        latex_result += "\\end{array}\n"
+        return latex_result
+
     def _print_FreeModule(self, M):
         return '{%s}^{%s}' % (self._print(M.ring), self._print(M.rank))
 
