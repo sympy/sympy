@@ -2034,10 +2034,10 @@ def nsolve(*args, **kwargs):
         if isinstance(f, Equality):
             f = f.lhs - f.rhs
         f = f.evalf()
-        atoms = f.atoms(Symbol)
+        syms = f.free_symbols
         if fargs is None:
-            fargs = atoms.copy().pop()
-        if not (len(atoms) == 1 and (fargs in atoms or fargs[0] in atoms)):
+            fargs = syms.copy().pop()
+        if not (len(syms) == 1 and (fargs in syms or fargs[0] in syms)):
             raise ValueError(filldedent('''
                 expected a one-dimensional and numerical function'''))
 
