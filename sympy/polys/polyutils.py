@@ -323,9 +323,9 @@ def expr_from_dict(rep, *gens):
 
     for monom, coeff in rep.iteritems():
         term = [coeff]
-
         for g, m in zip(gens, monom):
-            term.append(Pow(g, m))
+            if m:
+                term.append(Pow(g, m))
 
         result.append(Mul(*term))
 
