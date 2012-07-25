@@ -75,6 +75,8 @@ class Pow(Expr):
 
     @cacheit
     def __new__(cls, b, e, evaluate=True):
+        # don't optimize "if e==0; return 1" here; it's better to handle that
+        # in the calling routine so this doesn't get called
         b = _sympify(b)
         e = _sympify(e)
         if evaluate:
@@ -82,8 +84,8 @@ class Pow(Expr):
                 return S.One
             elif e is S.One:
                 return b
-            elif S.NaN in (e, b):
-                if b is S.One or e is S.Zero:
+            elif S.NaN in (b, e):
+                if b is S.One: # already handled e == 0 above
                     return S.One
                 return S.NaN
             else:
