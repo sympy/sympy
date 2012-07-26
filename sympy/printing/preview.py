@@ -6,7 +6,7 @@ import tempfile
 
 from latex import latex
 
-def preview(expr, output='png', viewer=None, euler=True, **latex_settings):
+def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_settings):
     r"""
     View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.
 
@@ -93,27 +93,20 @@ def preview(expr, output='png', viewer=None, euler=True, **latex_settings):
         if viewer not in special and not pexpect.which(viewer):
             raise SystemError("Unrecognized viewer: %s" % viewer)
 
-    if not euler:
-        format = r"""\documentclass[12pt]{article}
-                     \usepackage{amsmath}
-                     \usepackage{amsfonts}
-                     \begin{document}
-                     \pagestyle{empty}
-                     %s
-                     \vfill
-                     \end{document}
-                 """
-    else:
-        format = r"""\documentclass[12pt]{article}
-                     \usepackage{amsmath}
-                     \usepackage{amsfonts}
-                     \usepackage{eulervm}
-                     \begin{document}
-                     \pagestyle{empty}
-                     %s
-                     \vfill
-                     \end{document}
-                 """
+    actual_packages = packages + ("amsmath", "amsfonts")
+    if euler:
+        actual_packages += ("euler",)
+    package_includes = "\n".join(["\\usepackage{%s}" % p
+                                  for p in actual_packages])
+
+    format = r"""\documentclass[12pt]{article}
+                 %s
+                 \begin{document}
+                 \pagestyle{empty}
+                 %s
+                 \vfill
+                 \end{document}
+              """ % (package_includes, "%s")
 
     if isinstance(expr, str):
         latex_string = expr
