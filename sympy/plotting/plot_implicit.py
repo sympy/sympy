@@ -29,13 +29,11 @@ from experimental_lambdify import experimental_lambdify, vectorized_lambdify
 from intervalmath import interval
 from sympy.core.relational import (Equality, GreaterThan, LessThan,
                 Relational, StrictLessThan, StrictGreaterThan)
-from sympy import Eq, Tuple, sympify, Expr
+from sympy import Eq, Tuple, sympify, Expr, Dummy
 from sympy.external import import_module
 from sympy.core.compatibility import set_union
 from sympy.logic.boolalg import BooleanFunction
 import warnings
-import random
-import string
 
 np = import_module('numpy')
 
@@ -54,12 +52,12 @@ class ImplicitSeries(BaseSeries):
         self.var_y = sympify(var_start_end_y[0])
         self.start_y = float(var_start_end_y[1])
         self.end_y = float(var_start_end_y[2])
-        self.get_points = self.get_meshes
+        self.get_points = self.get_raster
         self.has_equality = has_equality #If the expression has equality, i.e.
                                          #Eq, Greaterthan, LessThan.
         self.nb_of_points = nb_of_points
         self.use_interval_math = use_interval_math
-        self.depth = 5 + depth
+        self.depth = 4 + depth
 
     def __str__(self):
         return ('Implicit equation: %s for '
@@ -70,7 +68,7 @@ class ImplicitSeries(BaseSeries):
                 str(self.var_y),
                 str((self.start_y, self.end_y)))
 
-    def get_meshes(self):
+    def get_raster(self):
         func = experimental_lambdify((self.var_x, self.var_y), self.expr,
                                     use_interval=True)
         xinterval = interval(self.start_x, self.end_x)
@@ -84,11 +82,11 @@ class ImplicitSeries(BaseSeries):
             self.use_interval_math = False
 
         if self.use_interval_math:
-            return self._get_meshes_interval(func)
+            return self._get_raster_interval(func)
         else:
             return self._get_meshes_grid()
 
-    def _get_meshes_interval(self, func):
+    def _get_raster_interval(self, func):
         """ Uses interval math to adaptively mesh and obtain the plot"""
         k = self.depth
         interval_list = []
@@ -157,8 +155,7 @@ class ImplicitSeries(BaseSeries):
                 func_eval = func(intervalx, intervaly)
                 if func_eval[1] and func_eval[0] is not False:
                     plot_list.append([intervalx, intervaly])
-        xvals, yvals = _matplotlib_list(plot_list)
-        return xvals, yvals, 'fill'
+        return plot_list, 'fill'
 
     def _get_meshes_grid(self):
         """Generates the mesh for generating a contour.
@@ -220,6 +217,12 @@ def plot_implicit(expr, *args, **kwargs):
 
     - ``ylabel``. string. The label for the y - axis
 
+    plot_implicit, by default, uses interval arithmetic to plot functions. If
+    the expression cannot be plotted using interval arithmetic, it defaults to
+    a generating a contour using a mesh grid of fixed number of points. By
+    setting adaptive to False, you can force plot_implicit to use the mesh
+    grid. The mesh grid method can be effective when adaptive plotting using
+    interval arithmetic, fails to plot with small line width.
     Examples:
     ---------
 
@@ -251,7 +254,7 @@ def plot_implicit(expr, *args, **kwargs):
     #TODO: Add a global variable show = False for test runner
     assert isinstance(expr, Expr)
 
-    has_equality = False #Represents whether the expression contains an equality,
+    has_equality = False #Represents whether the expression contains an Equality,
                      #GreaterThan or LessThan
 
     def arg_expand(bool_expr):
@@ -299,19 +302,13 @@ def plot_implicit(expr, *args, **kwargs):
         else:
             var_start_end_x, = (Tuple(e) + default_range for e in free_symbols)
             #Create a random symbol
-            random_symbols = string.ascii_lowercase.replace(
-                                    str(var_start_end_x[0]), "")
-            ysymbol = random.choice(random_symbols)
-            var_start_end_y = Tuple(ysymbol, -5, 5)
+            var_start_end_y = Tuple(Dummy()) + default_range
 
     elif len(args) == 0:
         if len(free_symbols) == 1:
             var_start_end_x, = (Tuple(e) + default_range for e in free_symbols)
             #create a random symbol
-            random_symbols = string.ascii_lowercase.replace(
-                                        str(var_start_end_x[0]), "")
-            ysymbol = random.choice(random_symbols)
-            var_start_end_y = Tuple(ysymbol, -5, 5)
+            var_start_end_y = Tuple(Dummy()) + default_range
         else:
             var_start_end_x, var_start_end_y = (Tuple(e) + default_range
                                                 for e in free_symbols)
@@ -329,7 +326,6 @@ def plot_implicit(expr, *args, **kwargs):
                                     has_equality, use_interval, depth,
                                     nb_of_points)
     show = kwargs.pop('show', True)
-    kwargs['autoscale'] = False
 
     #set the x and y limits
     kwargs['xlim'] = (float(x) for x in var_start_end_x[1:])
@@ -338,24 +334,3 @@ def plot_implicit(expr, *args, **kwargs):
     if show:
         p.show()
     return p
-
-def _matplotlib_list(interval_list):
-    """
-    Returns lists for matplotlib ``fill`` command from a list of bounding
-    rectangular intervals
-    """
-    xlist = []
-    ylist = []
-    if len(interval_list):
-        for intervals in interval_list:
-            intervalx = intervals[0]
-            intervaly = intervals[1]
-            xlist.extend([intervalx.start, intervalx.start,
-                            intervalx.end, intervalx.end, None])
-            ylist.extend([intervaly.start, intervaly.end,
-                            intervaly.end, intervaly.start, None])
-    else:
-        #XXX Ugly hack. Matplotlib does not accept empty lists for ``fill``
-        xlist.extend([None, None, None, None])
-        ylist.extend([None, None, None, None])
-    return xlist, ylist

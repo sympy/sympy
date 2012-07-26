@@ -1053,11 +1053,18 @@ class MatplotlibBackend(BaseBackend):
                                                   rstride=1, cstride=1,
                                                   linewidth=0.1)
             elif s.is_implicit:
-                points = s.get_meshes()
-                if len(points) == 3:
-                    x, y, plot_type = points
+                #Smart bounds have to be set to False for implicit plots.
+                self.ax.spines['left'].set_smart_bounds(False)
+                self.ax.spines['bottom'].set_smart_bounds(False)
+                points = s.get_raster()
+                if len(points) == 2:
+                    #interval math plotting
+                    x, y = _matplotlib_list(points[0])
                     self.ax.fill(x, y, facecolor='b', edgecolor='None' )
                 else:
+                    # use contourf or contour depending on whether it is
+                    # an inequality or equality.
+                    #XXX: ``contour`` plots multiple lines. Should be fixed.
                     colormap = ListedColormap(["white", "blue"])
                     xarray, yarray, zarray, plot_type = points
                     if plot_type == 'contour':
@@ -1065,8 +1072,6 @@ class MatplotlibBackend(BaseBackend):
                                 contours=(0, 0), fill=False, cmap=colormap)
                     else:
                         self.ax.contourf(xarray, yarray, zarray, cmap=colormap)
-
-
             else:
                 raise ValueError('The matplotlib backend supports only '
                                  'is_2Dline, is_3Dline, is_3Dsurface and '
@@ -1207,3 +1212,25 @@ def flat(x, y, z, eps=1e-3):
     vector_b_norm = np.linalg.norm(vector_b)
     cos_theta = dot_product / (vector_a_norm * vector_b_norm)
     return abs(cos_theta + 1) < eps
+
+
+def _matplotlib_list(interval_list):
+    """
+    Returns lists for matplotlib ``fill`` command from a list of bounding
+    rectangular intervals
+    """
+    xlist = []
+    ylist = []
+    if len(interval_list):
+        for intervals in interval_list:
+            intervalx = intervals[0]
+            intervaly = intervals[1]
+            xlist.extend([intervalx.start, intervalx.start,
+                            intervalx.end, intervalx.end, None])
+            ylist.extend([intervaly.start, intervaly.end,
+                            intervaly.end, intervaly.start, None])
+    else:
+        #XXX Ugly hack. Matplotlib does not accept empty lists for ``fill``
+        xlist.extend([None, None, None, None])
+        ylist.extend([None, None, None, None])
+    return xlist, ylist
