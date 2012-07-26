@@ -304,11 +304,6 @@ def _base_ordering(base, degree):
     and applied to backtracking algorithms in [1], pp.108-132. The points
     that are not in the base are taken in increasing order.
 
-    See Also
-    ========
-
-    sympy.combinatorics.perm_groups.PermutationGroup.list_lex_by_base
-
     References
     ==========
 

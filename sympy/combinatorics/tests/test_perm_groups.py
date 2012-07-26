@@ -337,18 +337,6 @@ def test_transitivity_degree():
     Alt = PermutationGroup([gen1, gen2])
     assert Alt.transitivity_degree == 3
 
-def test_list_lex_by_base():
-    D = DihedralGroup(6)
-    D.schreier_sims()
-    assert D.base == [0, 1]
-    assert D.list_lex_by_base(D.base, D.strong_gens) ==\
-    [Permutation([0, 1, 2, 3, 4, 5]), Permutation([0, 5, 4, 3, 2, 1]),\
-    Permutation([1, 0, 5, 4, 3, 2]), Permutation([1, 2, 3, 4, 5, 0]),\
-    Permutation([2, 1, 0, 5, 4, 3]), Permutation([2, 3, 4, 5, 0, 1]),\
-    Permutation([3, 2, 1, 0, 5, 4]), Permutation([3, 4, 5, 0, 1, 2]),\
-    Permutation([4, 3, 2, 1, 0, 5]), Permutation([4, 5, 0, 1, 2, 3]),\
-    Permutation([5, 0, 1, 2, 3, 4]), Permutation([5, 4, 3, 2, 1, 0])]
-
 def test_schreier_sims_random():
     S = SymmetricGroup(3)
     base = [0, 1]
