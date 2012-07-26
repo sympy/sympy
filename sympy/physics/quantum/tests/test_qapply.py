@@ -96,17 +96,3 @@ def test_issue2974():
 def test_density():
     d = Density([Jz*mo, 0.5], [Jz*po, 0.5])
     assert qapply(d) == Density([-hbar*mo, 0.5], [hbar*po, 0.5])
-
-    # test abstract unitary operator
-    psi = Ket('psi')
-    phi = Ket('phi')
-    u = UnitaryOperator()
-    d = Density([psi, 0.5], [phi, 0.5])
-    assert qapply(u*d) == Density([u*psi, 0.5],
-                                  [u*phi, 0.5] )
-
-    #test operator on density operator with qubits
-    d = Density([Qubit('0'), 0.5], [Qubit('1'), 0.5])
-    uMat = UGate((0,), Matrix([[0,1], [1,0]]))
-    assert qapply(uMat*d) == Density([Qubit('1'), 0.5],
-                                     [Qubit('0'), 0.5])
