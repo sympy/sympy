@@ -14,6 +14,23 @@ def _check_cycles_alt_sym(perm):
     Here `n` is the degree of the permutation. This is a helper function for
     the function is_alt_sym from sympy.combinatorics.perm_groups.
 
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.util import _check_cycles_alt_sym
+    >>> from sympy.combinatorics.permutations import Permutation
+    >>> a = Permutation([[0,1,2,3,4,5,6,7,8,9,10], [11, 12]])
+    >>> _check_cycles_alt_sym(a)
+    False
+    >>> b = Permutation([[0,1,2,3,4,5,6], [7,8,9,10]])
+    >>> _check_cycles_alt_sym(b)
+    True
+
+    See Also
+    ========
+
+    sympy.combinatorics.perm_groups.PermutationGroup.is_alt_sym
+
     """
     n = perm.size
     af = perm.array_form
@@ -36,18 +53,30 @@ def _check_cycles_alt_sym(perm):
 
 def _strip(g, base, orbs, transversals):
     """
-    Attempt to decompose a group element using a subgroup chain with orbits
-    ``orbs``.
+    Attempt to decompose a permutation using a (possibly partial) BSGS
+    structure.
 
-    This is done by treating the subgroup chain as a chain of
-    stabilizers with respect to the sequence ``base`` (even though the groups
-    might only be subgroups of the respective stabilizers),
-    and treat ``orbs`` as basic orbits.
+    This is done by treating the sequence ``base`` as an actual base, and
+    the orbits ``orbs`` and transversals ``transversals`` as basic orbits and
+    transversals relative to it.
     This process is called "sifting". A sift is unsuccessful when a certain
     orbit element is not found or when after the sift the decomposition
     doesn't end with the identity element.
     The argument ``transversals`` is a list of dictionaries that provides
     transversal elements for the orbits ``orbs``.
+
+    Parameters
+    ==========
+
+    ``g`` - permutation to be decomposed
+    ``base`` - sequence of points
+    ``orbs`` - a list in which the ``i``-th entry is an orbit of ``base[i]``
+    under some subgroup of the pointwise stabilizer of `
+    `base[0], base[1], ..., base[i - 1]``. The groups themselves are implicit
+    in this function since the only infromation we need is encoded in the orbits
+    and transversals
+    ``transversals`` - a list of orbit transversals associated with the orbits
+    ``orbs``.
 
     Examples
     ========
@@ -97,13 +126,22 @@ def _strip(g, base, orbs, transversals):
 
 def _distribute_gens_by_base(base, gens):
     """
-    Distribute the group elements ``gens`` in basic stabilizers.
+    Distribute the group elements ``gens`` by membership in basic stabilizers.
 
-    Here, ``base`` is a sequence of points in `\{0, 1, ..., n-1\}`, and
-    ``gens`` is a list of elements of a permutation group of degree `n`.
     Notice that for a base `(b_1, b_2, ..., b_k)`, the basic stabilizers
     are defined as `G^{(i)} = G_{b_1, ..., b_{i-1}}` for
-    `i \in\{1, 2, ..., k\}`. The result is a list of length `k`, where `k` is
+    `i \in\{1, 2, ..., k\}`.
+
+    Parameters
+    ==========
+
+    ``base`` - a sequence of points in `\{0, 1, ..., n-1\}`
+    ``gens`` - a list of elements of a permutation group of degree `n`.
+
+    Returns
+    =======
+
+    List of length `k`, where `k` is
     the length of ``base``. The `i`-th entry contains those elements in
     ``gens`` which fix the first `i` elements of ``base`` (so that the
     `0`-th entry is equal to ``gens`` itself). If no element fixes the first
@@ -158,6 +196,12 @@ def _strong_gens_from_distr(distr_gens):
     This is just the union of the generators of the first and second basic
     stabilizers.
 
+    Parameters
+    ==========
+
+    ``distr_gens`` - strong generators distributed by membership in basic
+    stabilizers
+
     Examples
     ========
 
@@ -195,6 +239,15 @@ def _orbits_transversals_from_bsgs(base, distr_gens,\
     The generators are provided as distributed across the basic stabilizers.
     If the optional argument ``transversals_only`` is set to True, only the
     transversals are returned.
+
+    Parameters
+    ==========
+
+    ``base`` - the base
+    ``distr_gens`` - strong generators distributed by membership in basic
+    stabilizers
+    ``transversals_only`` - a flag swithing between returning only the
+    transversals/ both orbits and transversals
 
     Examples
     ========
@@ -235,11 +288,29 @@ def _orbits_transversals_from_bsgs(base, distr_gens,\
 def _handle_precomputed_bsgs(base, strong_gens, transversals=None,\
                              basic_orbits=None, distr_gens=None):
     """
-    Calculate BSGS-related structures from whatever are present.
+    Calculate BSGS-related structures from those present.
 
     The base and strong generating set must be provided; if any of the
     transversals, basic orbits or distributed strong generators are not
     provided, they will be calculated from the base and strong generating set.
+
+    Parameters
+    ==========
+
+    ``base`` - the base
+    ``strong_gens`` - the strong generators
+    ``transversals`` - basic transversals
+    ``basic_orbits`` - basic orbits
+    ``distr_gens`` - strong generators distributed by membership in basic
+    stabilizers
+
+    Returns
+    =======
+
+    ``(transversals, basic_orbits, distr_gens)`` where ``transversals`` are the
+    basic transversals, ``basic_orbits`` are the basic orbits, and
+    ``distr_gens`` are the strong generators distributed by membership in basic
+    stabilizers.
 
     Examples
     ========
@@ -283,6 +354,17 @@ def _base_ordering(base, degree):
     r"""
     Order `\{0, 1, ..., n-1\}` so that base points come first and in order.
 
+    Parameters
+    ==========
+
+    ``base`` - the base
+    ``degree`` - the degree of the associated permutation group
+
+    Returns
+    =======
+
+    A list ``base_ordering`` such that ``base_ordering[point]`` is the
+    number of ``point`` in the ordering.
     Examples
     ========
 

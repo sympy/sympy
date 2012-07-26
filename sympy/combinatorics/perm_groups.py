@@ -2167,6 +2167,31 @@ class PermutationGroup(Basic):
         ``gens`` to a strong generating set relative to that base with
         probability of a wrong answer at most `1/\text{consec_succ}`.
 
+        Parameters
+        ==========
+
+        ``base`` - the sequence to be extended to a base
+        ``gens`` - the generating set to be extended to a strong generating set
+        ``consec_succ`` - parameter defining the probability of a wrong answer.
+        ``_random_prec`` - internal parameter used for testing purposes
+
+        Returns
+        =======
+
+        ``(base, strong_gens)``, where ``base`` is the base and ``strong_gens``
+        is the strong generating set relative to it.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.util import _verify_bsgs
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> S = SymmetricGroup(5)
+        >>> base, strong_gens = S.schreier_sims_random(consec_succ=5)
+        >>> _verify_bsgs(S, base, strong_gens) #doctest: +SKIP
+        True
+
         Notes
         =====
 
@@ -2283,16 +2308,25 @@ class PermutationGroup(Basic):
         ``distr_gens`` - strong generators distributed by basic stabilizers,
         if known
 
+        Returns
+        =======
+
+        ``(base, strong_gens)``, where ``base`` is the new base, and
+        ``strong_gens`` is a generating set relative to it
+
         Examples
         ========
 
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> from sympy.combinatorics.util import _verify_bsgs
         >>> S = SymmetricGroup(4)
         >>> S.schreier_sims()
         >>> S.baseswap(S.base, S.strong_gens, 1, randomized=False)
         ([0, 2, 1], [Permutation([1, 2, 3, 0]), Permutation([1, 0, 2, 3]), Permutation([0, 1, 3, 2]), Permutation([0, 3, 1, 2]), Permutation([0, 3, 2, 1])])
         >>> S.base
         [0, 1, 2]
+        >>> _verify_bsgs(S, S.base, S.strong_gens)
+        True
 
         See Also
         ========
