@@ -106,7 +106,7 @@ class Tr(Expr):
         indices = Tuple(*args[1]) if len(args) == 2 else Tuple()
         if isinstance(expr, Matrix):
             return expr.trace()
-        elif hasattr(expr, 'trace') and callable(t.x):
+        elif hasattr(expr, 'trace') and callable(expr.trace):
             #for any objects that have trace() defined e.g numpy
             return expr.trace()
         elif isinstance(expr, Add):
@@ -116,8 +116,10 @@ class Tr(Expr):
             if len(nc_part) == 0:
                 return Mul(*c_part)
             else:
-                nc_part_ordered = _cycle_permute(_rearrange_args(nc_part))
-                return Mul(*c_part) * Expr.__new__(cls, Mul(*nc_part_ordered), indices )
+                obj = Expr.__new__(cls, Mul(*nc_part), indices )
+                #this check is needed to prevent cached instances
+                #being returned even if len(c_part)==0
+                return Mul(*c_part)*obj if len(c_part)>0 else obj
         elif isinstance(expr, Pow):
             if (_is_scalar(expr.args[0]) and
                 _is_scalar(expr.args[1])):
@@ -127,6 +129,7 @@ class Tr(Expr):
         else:
             if (_is_scalar(expr)):
                 return expr
+
             return Expr.__new__(cls, expr, indices)
 
     def doit(self,**kwargs):
@@ -156,36 +159,39 @@ class Tr(Expr):
 
     #TODO: Review if the permute method is needed
     # and if it needs to return a new instance
-    #def permute(self, pos):
+    def permute(self, pos):
         """ Permute the arguments cyclically.
 
-    #    Parameters
-    #    ==========
-    #    pos : integer, if positive, shift-right, else shift-left
+        Parameters
+        ==========
+        pos : integer, if positive, shift-right, else shift-left
 
-    #    Examples
+        Examples
         =========
 
-    #   >>> from sympy.core.trace import Tr
-    #    >>> t = Tr(A*B*C*D, 2, cycle=False)
-    #    >>> t.permute(2)
-    #    Tr(C*D*A*B,2)
+        >>> from sympy.core.trace import Tr
+        >>> from sympy import symbols
+        >>> A, B, C, D = symbols('A B C D', commutative=False)
+        >>> t = Tr(A*B*C*D)
+        >>> t.permute(2)
+        Tr(C*D*A*B)
+        >>> t.permute(-2)
+        Tr(C*D*A*B)
 
-    #    """
-    #    if pos > 0:
-    #        pos = pos % len(self.args[0].args)
-    #    else:
-    #        pos = - (abs(pos) % len(self.args[0].args))
-    #        #print self.args[0].args[pos:] + self.args[0].args[0:pos]
+        """
+        if pos > 0:
+            pos = pos % len(self.args[0].args)
+        else:
+            pos = -(abs(pos) % len(self.args[0].args))
 
-    #    args = list(self.args[0].args[-pos:] + self.args[0].args[0:-pos])
-    #    print 'args==' , args, Mul(*(args)), self.args[1], type(self.args[1])
+        args = list(self.args[0].args[-pos:] + self.args[0].args[0:-pos])
 
-    #    x = Tr(Mul(*(args)), 2, cycle=False)
-
-    #    print id(x), x
-    #    return x
-
+        return Tr(Mul(*(args)))
 
     def _hashable_content(self):
-        return self.args[0]  + tuple(self.args[1])
+        if isinstance(self.args[0], Mul):
+            args = _cycle_permute(_rearrange_args(self.args[0].args))
+        else:
+            args = [self.args[0]]
+
+        return tuple(args)  + (self.args[1], )
