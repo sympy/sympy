@@ -1,5 +1,6 @@
 from sympy import S, Symbol, symbols, Matrix, Tuple
 from sympy.core.trace import Tr
+from sympy.utilities.pytest import raises
 
 def test_trace_new():
     a, b, c, d, Y = symbols('a b c d Y')
@@ -64,6 +65,11 @@ def test_trace_new():
         def trace(self):
             return 1
     assert Tr(Foo()) == 1
+
+    #argument test
+    # check for value error, when either/both arguments are not provided
+    raises(ValueError, lambda: Tr())
+    raises(ValueError, lambda: Tr(A, 1, 2))
 
 def test_trace_doit():
     a, b, c, d = symbols('a b c d')
