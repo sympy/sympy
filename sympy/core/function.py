@@ -1441,13 +1441,13 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     hints.  Additionally, subclasses of Expr may define their own hints or
     meta-hints.
 
-    ``basic`` is a generic keyword for methods that want to be expanded
-    automatically (along with the other hints like ``mul``).  If you want your
-    class expand methods to run automatically and they don't fit one of the
-    already automatic methods, wrap it around ``_eval_expand_basic()`` (or
-    create your own method and additionally call it from
-    ``_eval_expand_basic()``).  Objects may also define their own expand
-    methods, which are not run by default.  See the API section below.
+    The ``basic`` hint is used for any special rewriting of an object that
+    should be done automatically (along with the other hints like ``mul``)
+    when expand is called. This is a catch-all hint to handle any sort of
+    expansion that may not be described by the existing hint names. To use
+    this hint an object should override the ``_eval_expand_basic`` method.
+    Objects may also define their own expand methods, which are not run by
+    default.  See the API section below.
 
     If ``deep`` is set to ``True`` (the default), things like arguments of
     functions are recursively expanded.  Use ``deep=False`` to only expand on
