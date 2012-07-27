@@ -1,60 +1,98 @@
 from sympy.combinatorics.perm_groups import PermutationGroup, DirectProduct
 from sympy.combinatorics.permutations import Permutation, _new_from_array_form
 
-def SymmetricGroup(n):
+def AbelianGroup(*cyclic_orders):
     """
-    Generates the symmetric group on ``n`` elements as a permutation group.
+    Returns the direct product of cyclic groups with the given orders.
 
-    The generators taken are the ``n``-cycle
-    ``(0 1 2 ... n-1)`` and the transposition ``(0 1)`` (in cycle notation).
-    (See [1]). After the group is generated, some of its basic properties
-    are set.
+    According to the structure theorem for finite abelian groups ([1]),
+    every finite abelian group can be written as the direct product of finitely
+    many cyclic groups.
+    [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely
+    _generated_abelian_groups
 
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import SymmetricGroup
-    >>> G = SymmetricGroup(4)
-    >>> G.order()
-    24
-    >>> list(G.generate_schreier_sims(af=True))
-    [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 1, 3], [0, 2, 3, 1], [0, 3, 1, 2],
-    [0, 3, 2, 1], [1, 2, 3, 0], [1, 2, 0, 3], [1, 3, 2, 0],
-    [1, 3, 0, 2], [1, 0, 2, 3], [1, 0, 3, 2], [2, 3, 0, 1], [2, 3, 1, 0],
-    [2, 0, 3, 1], [2, 0, 1, 3], [2, 1, 3, 0], [2, 1, 0, 3], [3, 0, 1, 2],
-    [3, 0, 2, 1], [3, 1, 0, 2], [3, 1, 2, 0], [3, 2, 0, 1], [3, 2, 1, 0]]
+    >>> from sympy.combinatorics.named_groups import AbelianGroup
+    >>> AbelianGroup(3,4)
+    PermutationGroup([Permutation([1, 2, 0, 3, 4, 5, 6]),\
+    Permutation([0, 1, 2, 4, 5, 6, 3])])
+
+    See Also
+    ========
+    DirectProduct
+    """
+    groups = []
+    degree = 0
+    order = 1
+    for size in cyclic_orders:
+        degree += size
+        order *= size
+        groups.append(CyclicGroup(size))
+    G = DirectProduct(*groups)
+    G._is_abelian = True
+    G._degree = degree
+    G._order = order
+
+    return G
+
+def AlternatingGroup(n):
+    """
+    Generates the alternating group on ``n`` elements as a permutation group.
+
+    For ``n > 2``, the generators taken are ``(0 1 2), (0 1 2 ... n-1)`` for
+    ``n`` odd
+    and ``(0 1 2), (1 2 ... n-1)`` for ``n`` even (See [1], p.31, ex.6.9.).
+    After the group is generated, some of its basic properties are set.
+    The cases ``n = 1, 2`` are handled separately.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.named_groups import AlternatingGroup
+    >>> G = AlternatingGroup(4)
+    >>> a = list(G.generate_dimino())
+    >>> len(a)
+    12
+    >>> [perm.is_even for perm in a]
+    [True, True, True, True, True, True, True, True, True, True, True, True]
 
     See Also
     ========
 
-    CyclicGroup, DihedralGroup, AlternatingGroup
+    SymmetricGroup, CyclicGroup, DihedralGroup
 
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Symmetric_group#Generators_and_relations
+    [1] Armstrong, M. "Groups and Symmetry"
 
     """
-    if n == 1:
-        G = PermutationGroup([Permutation([0])])
-    elif n == 2:
-        G = PermutationGroup([Permutation([1, 0])])
-    else:
-        a = range(1,n)
-        a.append(0)
-        gen1 = _new_from_array_form(a)
-        a = range(n)
-        a[0], a[1] = a[1], a[0]
-        gen2 = _new_from_array_form(a)
-        G = PermutationGroup([gen1, gen2])
+    # small cases are special
+    if n == 1 or n == 2:
+        return PermutationGroup([Permutation([0])])
 
-    if n<3:
+    a = range(n)
+    a[0], a[1], a[2] = a[1], a[2], a[0]
+    gen1 = _new_from_array_form(a)
+    if n % 2 == 1:
+        a = range(1, n)
+        a.append(0)
+        gen2 = _new_from_array_form(a)
+    else:
+        a = range(2, n)
+        a.append(1)
+        gen2 = _new_from_array_form([0] + a)
+    G = PermutationGroup([gen1, gen2])
+
+    if n<4:
         G._is_abelian = True
     else:
         G._is_abelian = False
     G._degree = n
     G._is_transitive = True
-    G._is_sym = True
+    G._is_alt = True
     return G
 
 def CyclicGroup(n):
@@ -149,96 +187,58 @@ def DihedralGroup(n):
     G._order = 2*n
     return G
 
-def AlternatingGroup(n):
+def SymmetricGroup(n):
     """
-    Generates the alternating group on ``n`` elements as a permutation group.
+    Generates the symmetric group on ``n`` elements as a permutation group.
 
-    For ``n > 2``, the generators taken are ``(0 1 2), (0 1 2 ... n-1)`` for
-    ``n`` odd
-    and ``(0 1 2), (1 2 ... n-1)`` for ``n`` even (See [1], p.31, ex.6.9.).
-    After the group is generated, some of its basic properties are set.
-    The cases ``n = 1, 2`` are handled separately.
+    The generators taken are the ``n``-cycle
+    ``(0 1 2 ... n-1)`` and the transposition ``(0 1)`` (in cycle notation).
+    (See [1]). After the group is generated, some of its basic properties
+    are set.
 
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import AlternatingGroup
-    >>> G = AlternatingGroup(4)
-    >>> a = list(G.generate_dimino())
-    >>> len(a)
-    12
-    >>> [perm.is_even for perm in a]
-    [True, True, True, True, True, True, True, True, True, True, True, True]
+    >>> from sympy.combinatorics.named_groups import SymmetricGroup
+    >>> G = SymmetricGroup(4)
+    >>> G.order()
+    24
+    >>> list(G.generate_schreier_sims(af=True))
+    [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 1, 3], [0, 2, 3, 1], [0, 3, 1, 2],
+    [0, 3, 2, 1], [1, 2, 3, 0], [1, 2, 0, 3], [1, 3, 2, 0],
+    [1, 3, 0, 2], [1, 0, 2, 3], [1, 0, 3, 2], [2, 3, 0, 1], [2, 3, 1, 0],
+    [2, 0, 3, 1], [2, 0, 1, 3], [2, 1, 3, 0], [2, 1, 0, 3], [3, 0, 1, 2],
+    [3, 0, 2, 1], [3, 1, 0, 2], [3, 1, 2, 0], [3, 2, 0, 1], [3, 2, 1, 0]]
 
     See Also
     ========
 
-    SymmetricGroup, CyclicGroup, DihedralGroup
+    CyclicGroup, DihedralGroup, AlternatingGroup
 
     References
     ==========
 
-    [1] Armstrong, M. "Groups and Symmetry"
+    [1] http://en.wikipedia.org/wiki/Symmetric_group#Generators_and_relations
 
     """
-    # small cases are special
-    if n == 1 or n == 2:
-        return PermutationGroup([Permutation([0])])
-
-    a = range(n)
-    a[0], a[1], a[2] = a[1], a[2], a[0]
-    gen1 = _new_from_array_form(a)
-    if n % 2 == 1:
-        a = range(1, n)
-        a.append(0)
-        gen2 = _new_from_array_form(a)
+    if n == 1:
+        G = PermutationGroup([Permutation([0])])
+    elif n == 2:
+        G = PermutationGroup([Permutation([1, 0])])
     else:
-        a = range(2, n)
-        a.append(1)
-        gen2 = _new_from_array_form([0] + a)
-    G = PermutationGroup([gen1, gen2])
+        a = range(1,n)
+        a.append(0)
+        gen1 = _new_from_array_form(a)
+        a = range(n)
+        a[0], a[1] = a[1], a[0]
+        gen2 = _new_from_array_form(a)
+        G = PermutationGroup([gen1, gen2])
 
-    if n<4:
+    if n<3:
         G._is_abelian = True
     else:
         G._is_abelian = False
     G._degree = n
     G._is_transitive = True
-    G._is_alt = True
-    return G
-
-def AbelianGroup(*cyclic_orders):
-    """
-    Returns the direct product of cyclic groups with the given orders.
-
-    According to the structure theorem for finite abelian groups ([1]),
-    every finite abelian group can be written as the direct product of finitely
-    many cyclic groups.
-    [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely
-    _generated_abelian_groups
-
-    Examples
-    ========
-
-    >>> from sympy.combinatorics.named_groups import AbelianGroup
-    >>> AbelianGroup(3,4)
-    PermutationGroup([Permutation([1, 2, 0, 3, 4, 5, 6]),\
-    Permutation([0, 1, 2, 4, 5, 6, 3])])
-
-    See Also
-    ========
-    DirectProduct
-    """
-    groups = []
-    degree = 0
-    order = 1
-    for size in cyclic_orders:
-        degree += size
-        order *= size
-        groups.append(CyclicGroup(size))
-    G = DirectProduct(*groups)
-    G._is_abelian = True
-    G._degree = degree
-    G._order = order
-
+    G._is_sym = True
     return G
