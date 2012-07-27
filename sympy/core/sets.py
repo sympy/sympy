@@ -1219,7 +1219,7 @@ class FiniteSet(Set, EvalfMixin):
             raise ValueError("%s: Complement not defined for symbolic inputs"
                     %self)
 
-        args = sorted(self.args, key=default_sort_key)
+        args = sorted(self.args)
 
         intervals = [] # Build up a list of intervals between the elements
         intervals += [Interval(S.NegativeInfinity, args[0], True, True)]
