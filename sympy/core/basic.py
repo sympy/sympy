@@ -324,7 +324,8 @@ class Basic(object):
             else:
                 return arg
 
-        args = len(self.args), tuple([ inner_key(arg) for arg in self.args ])
+        args = self._sorted_args
+        args = len(args), tuple([ inner_key(arg) for arg in args ])
         return self.class_key(), args, S.One.sort_key(), S.One
 
     def __eq__(self, other):
@@ -630,6 +631,15 @@ class Basic(object):
         change the interface in the future if needed).
         """
         return self._args
+
+    @property
+    def _sorted_args(self):
+        """
+        The same as ``args``.  Derived classes which don't fix an
+        order on their arguments should override this method to
+        produce the sorted representation.
+        """
+        return self.args
 
     def iter_basic_args(self):
         """
