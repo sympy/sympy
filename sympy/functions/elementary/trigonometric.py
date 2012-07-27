@@ -16,6 +16,26 @@ class TrigonometricFunction(Function):
 
     unbranched = True
 
+    nargs = 1
+
+    def _eval_expand_complex(self, deep=True, **hints):
+        re_part, im_part = self.as_real_imag(deep=deep, **hints)
+        return re_part + im_part*S.ImaginaryUnit
+
+    def _as_real_imag(self, deep=True, **hints):
+        if self.args[0].is_real:
+            if deep:
+                hints['complex'] = False
+                return (self.expand(deep, **hints), S.Zero)
+            else:
+                return (self, S.Zero)
+        if deep:
+            re, im = self.args[0].expand(deep, **hints).as_real_imag()
+        else:
+            re, im = self.args[0].as_real_imag()
+        return (re, im)
+
+
 def _peeloff_pi(arg):
     """
     Split ARG into two parts, a "rest" and a multiple of pi/2.
@@ -142,28 +162,16 @@ class sin(TrigonometricFunction):
     See Also
     ========
 
-    cos, tan, asin
+    csc, cos, sec, tan, cot
+    asin, acsc, acos, asec, atan, acot, atan2
 
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Sin
 
     """
-
-    nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return cos(self.args[0])
-        else:
-            raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        """
-        Returns the inverse of this function.
-        """
-        return asin
 
     @classmethod
     def eval(cls, arg):
@@ -256,6 +264,18 @@ class sin(TrigonometricFunction):
             x = arg.args[0]
             return 1 / (sqrt(1 + 1 / x**2) * x)
 
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return cos(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return asin
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -263,12 +283,19 @@ class sin(TrigonometricFunction):
             return S.Zero
         else:
             x = sympify(x)
+            k = n // 2
+            return (-1)**k*x**(2*k+1)/C.factorial(2*k+1)
 
-            if len(previous_terms) > 2:
-                p = previous_terms[-2]
-                return -p * x**2 / (n*(n-1))
-            else:
-                return (-1)**(n//2) * x**(n)/C.factorial(n)
+    def _eval_aseries(self, n, args0, x, logx):
+        if C.im(args0[0]) > 0:
+            return S.ImaginaryUnit * C.exp(-S.ImaginaryUnit*x) / 2
+        elif C.im(args0[0]) < 0:
+            return -S.ImaginaryUnit * C.exp(S.ImaginaryUnit*x) / 2
+        elif C.im(args0[0]) == 0:
+            # No asymptotic series expansion along the real line
+            return sin(x)
+        else:
+            return super(sin, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
@@ -286,32 +313,25 @@ class sin(TrigonometricFunction):
         return -cos(arg + S.Pi/2)
 
     def _eval_rewrite_as_tan(self, arg):
-        tan_half = tan(S.Half*arg)
+        tan_half = tan(arg/2)
         return 2*tan_half/(1 + tan_half**2)
 
     def _eval_rewrite_as_cot(self, arg):
-        cot_half = cot(S.Half*arg)
+        cot_half = cot(arg/2)
         return 2*cot_half/(1 + cot_half**2)
+
+    def _eval_rewrite_as_sec(self, arg):
+        return -1 / sec(arg + S.Pi/2)
+
+    def _eval_rewrite_as_csc(self, arg):
+        return 1 / csc(arg)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_real:
-            if deep:
-                hints['complex'] = False
-                return (self.expand(deep, **hints), S.Zero)
-            else:
-                return (self, S.Zero)
-        if deep:
-            re, im = self.args[0].expand(deep, **hints).as_real_imag()
-        else:
-            re, im = self.args[0].as_real_imag()
+        re, im = self._as_real_imag(deep=deep, **hints)
         return (sin(re)*C.cosh(im), cos(re)*C.sinh(im))
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_expand_trig(self, deep=True, **hints):
         if deep:
@@ -381,25 +401,16 @@ class cos(TrigonometricFunction):
     See Also
     ========
 
-    sin, tan, acos
+    sin, csc, sec, tan, cot
+    asin, acsc, acos, asec, atan, acot, atan2
 
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Cos
 
     """
-
-    nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return -sin(self.args[0])
-        else:
-            raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        return acos
 
     @classmethod
     def eval(cls, arg):
@@ -492,6 +503,15 @@ class cos(TrigonometricFunction):
             x = arg.args[0]
             return 1 / sqrt(1 + 1 / x**2)
 
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -sin(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        return acos
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -499,12 +519,19 @@ class cos(TrigonometricFunction):
             return S.Zero
         else:
             x = sympify(x)
+            k = n // 2
+            return (-1)**k*x**(2*k)/C.factorial(2*k)
 
-            if len(previous_terms) > 2:
-                p = previous_terms[-2]
-                return -p * x**2 / (n*(n-1))
-            else:
-                return (-1)**(n//2)*x**(n)/C.factorial(n)
+    def _eval_aseries(self, n, args0, x, logx):
+        if C.im(args0[0]) > 0:
+            return C.exp(-S.ImaginaryUnit*x) / 2
+        elif C.im(args0[0]) < 0:
+            return C.exp(S.ImaginaryUnit*x) / 2
+        elif C.im(args0[0]) == 0:
+            # No asymptotic series expansion along the real line
+            return cos(x)
+        else:
+            return super(cos, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
@@ -522,32 +549,25 @@ class cos(TrigonometricFunction):
         return sin(arg + S.Pi/2)
 
     def _eval_rewrite_as_tan(self, arg):
-        tan_half = tan(S.Half*arg)**2
+        tan_half = tan(arg/2)**2
         return (1-tan_half)/(1+tan_half)
 
     def _eval_rewrite_as_cot(self, arg):
-        cot_half = cot(S.Half*arg)**2
+        cot_half = cot(arg/2)**2
         return (cot_half-1)/(cot_half+1)
+
+    def _eval_rewrite_as_sec(self, arg):
+        return 1 / sec(arg)
+
+    def _eval_rewrite_as_csc(self, arg):
+        return 1 / csc(arg + S.Pi/2)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_real:
-            if deep:
-                hints['complex'] = False
-                return (self.expand(deep, **hints), S.Zero)
-            else:
-                return (self, S.Zero)
-        if deep:
-            re, im = self.args[0].expand(deep, **hints).as_real_imag()
-        else:
-            re, im = self.args[0].as_real_imag()
+        re, im = self._as_real_imag(deep=deep, **hints)
         return (cos(re)*C.cosh(im), -sin(re)*C.sinh(im))
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_expand_trig(self, deep=True, **hints):
         if deep:
@@ -587,7 +607,9 @@ class cos(TrigonometricFunction):
 
 class tan(TrigonometricFunction):
     """
-    tan(x) -> Returns the tangent of x (measured in radians)
+    The tangent function.
+
+    * tan(x) -> Returns the tangent of x (measured in radians)
 
     Notes
     =====
@@ -608,28 +630,16 @@ class tan(TrigonometricFunction):
     See Also
     ========
 
-    sin, cos, atan
+    sin, csc, cos, sec, cot
+    asin, acsc, acos, asec, atan, acot, atan2
 
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Tan
 
     """
-
-    nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex==1:
-            return S.One + self**2
-        else:
-            raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        """
-        Returns the inverse of this function.
-        """
-        return atan
 
     @classmethod
     def eval(cls, arg):
@@ -710,6 +720,18 @@ class tan(TrigonometricFunction):
             x = arg.args[0]
             return 1 / x
 
+    def fdiff(self, argindex=1):
+        if argindex==1:
+            return sec(self.args[0])**2
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return atan
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -717,13 +739,19 @@ class tan(TrigonometricFunction):
             return S.Zero
         else:
             x = sympify(x)
+            k = n // 2 + 1
+            return (-1)**(k-1) * 2**(2*k) * (2**(2*k)-1) * C.bernoulli(2*k) / C.factorial(2*k) * x**(2*k-1)
 
-            a, b = ((n-1)//2), 2**(n+1)
-
-            B = C.bernoulli(n+1)
-            F = C.factorial(n+1)
-
-            return (-1)**a * b*(b-1) * B/F * x**n
+    def _eval_aseries(self, n, args0, x, logx):
+        if C.im(args0[0]) > 0:
+            return S.ImaginaryUnit - 2*S.ImaginaryUnit*C.exp(2*S.ImaginaryUnit*x)*C.hyper([1],[],-C.exp(2*S.ImaginaryUnit*x))
+        elif C.im(args0[0]) < 0:
+            return -S.ImaginaryUnit + 2*S.ImaginaryUnit*C.exp(-2*S.ImaginaryUnit*x)*C.hyper([1],[],-C.exp(-2*S.ImaginaryUnit*x))
+        elif C.im(args0[0]) == 0:
+            # No asymptotic series expansion along the real line
+            return tan(x)
+        else:
+            return super(tan, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_nseries(self, x, n, logx):
         i = self.args[0].limit(x, 0)*2/S.Pi
@@ -741,22 +769,9 @@ class tan(TrigonometricFunction):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_real:
-            if deep:
-                hints['complex'] = False
-                return (self.expand(deep, **hints), S.Zero)
-            else:
-                return (self, S.Zero)
-        if deep:
-            re, im = self.args[0].expand(deep, **hints).as_real_imag()
-        else:
-            re, im = self.args[0].as_real_imag()
-        denom = cos(re)**2 + C.sinh(im)**2
-        return (sin(re)*cos(re)/denom, C.sinh(im)*C.cosh(im)/denom)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
+        re, im = self._as_real_imag(deep=deep, **hints)
+        denom = cos(2*re) + C.cosh(2*im)
+        return (sin(2*re)/denom, C.sinh(2*im)/denom)
 
     def _eval_expand_trig(self, deep=True, **hints):
         return self
@@ -768,14 +783,20 @@ class tan(TrigonometricFunction):
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(neg_exp-pos_exp)/(neg_exp+pos_exp)
 
-    def _eval_rewrite_as_sin(self, x):
-        return 2*sin(x)**2/sin(2*x)
+    def _eval_rewrite_as_sin(self, arg):
+        return sin(arg) / sin(S.Pi/2 + arg)
 
-    def _eval_rewrite_as_cos(self, x):
-        return -cos(x + S.Pi/2)/cos(x)
+    def _eval_rewrite_as_cos(self, arg):
+        return -cos(arg + S.Pi/2)/cos(arg)
 
     def _eval_rewrite_as_cot(self, arg):
         return 1/cot(arg)
+
+    def _eval_rewrite_as_sec(self, arg):
+        return -sec(arg) / sec(S.Pi/2 + arg)
+
+    def _eval_rewrite_as_csc(self, arg):
+        return csc(S.Pi/2 + arg) / csc(arg)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
@@ -800,22 +821,39 @@ class tan(TrigonometricFunction):
 
 class cot(TrigonometricFunction):
     """
-    cot(x) -> Returns the cotangent of x (measured in radians)
+    The cotangent function.
+
+    * cot(x) -> Returns the cotangent of x (measured in radians)
+
+    Notes
+    =====
+
+    * cot(x) will evaluate automatically in the case x is a
+      multiple of pi.
+
+    Examples
+    ========
+
+    >>> from sympy import cot
+    >>> from sympy.abc import x
+    >>> cot(x**2).diff(x)
+    2*x*(-cot(x**2)**2 - 1)
+    >>> cot(1).diff(x)
+    0
+
+    See Also
+    ========
+
+    sin, csc, cos, sec, tan
+    asin, acsc, acos, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Cot
+
     """
-
-    nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return S.NegativeOne - self**2
-        else:
-            raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        """
-        Return the inverse of this function.
-        """
-        return acot
 
     @classmethod
     def eval(cls, arg):
@@ -896,6 +934,18 @@ class cot(TrigonometricFunction):
             x = arg.args[0]
             return x / sqrt(1 - x**2)
 
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -csc(self.args[0])**2
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Return the inverse of this function.
+        """
+        return acot
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -905,11 +955,19 @@ class cot(TrigonometricFunction):
             return S.Zero
         else:
             x = sympify(x)
+            k = n // 2 + 1
+            return (-1)**k * 2**(2*k) * C.bernoulli(2*k) / C.factorial(2*k) * x**(2*k-1)
 
-            B = C.bernoulli(n+1)
-            F = C.factorial(n+1)
-
-            return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
+    def _eval_aseries(self, n, args0, x, logx):
+        if C.im(args0[0]) > 0:
+            return -S.ImaginaryUnit - 2*S.ImaginaryUnit*C.exp(2*S.ImaginaryUnit*x)*C.hyper([1],[],C.exp(2*S.ImaginaryUnit*x))
+        elif C.im(args0[0]) < 0:
+            return S.ImaginaryUnit + 2*S.ImaginaryUnit*C.exp(-2*S.ImaginaryUnit*x)*C.hyper([1],[],C.exp(-2*S.ImaginaryUnit*x))
+        elif C.im(args0[0]) == 0:
+            # No asymptotic series expansion along the real line
+            return cot(x)
+        else:
+            return super(cot, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_nseries(self, x, n, logx):
         i = self.args[0].limit(x, 0)/S.Pi
@@ -918,26 +976,12 @@ class cot(TrigonometricFunction):
         return Function._eval_nseries(self, x, n=n, logx=logx)
 
     def _eval_conjugate(self):
-        assert len(self.args) == 1
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_real:
-            if deep:
-                hints['complex'] = False
-                return (self.expand(deep, **hints), S.Zero)
-            else:
-                return (self, S.Zero)
-        if deep:
-            re, im = self.args[0].expand(deep, **hints).as_real_imag()
-        else:
-            re, im = self.args[0].as_real_imag()
-        denom = sin(re)**2 + C.sinh(im)**2
-        return (sin(re)*cos(re)/denom, -C.sinh(im)*C.cosh(im)/denom)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
+        re, im = self._as_real_imag(deep=deep, **hints)
+        denom = cos(2*re) - C.cosh(2*im)
+        return (-sin(2*re)/denom, -C.sinh(2*im)/denom)
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
@@ -952,14 +996,20 @@ class cot(TrigonometricFunction):
             x = arg.args[0]
             return -I*(x**-I + x**I)/(x**-I - x**I)
 
-    def _eval_rewrite_as_sin(self, x):
-        return 2*sin(2*x)/sin(x)**2
+    def _eval_rewrite_as_sin(self, arg):
+        return sin(arg + S.Pi/2) / sin(arg)
 
-    def _eval_rewrite_as_cos(self, x):
-        return -cos(x)/cos(x + S.Pi/2)
+    def _eval_rewrite_as_cos(self, arg):
+        return -cos(arg) / cos(arg + S.Pi/2)
 
     def _eval_rewrite_as_tan(self, arg):
         return 1/tan(arg)
+
+    def _eval_rewrite_as_sec(self, arg):
+        return -sec(arg + S.Pi/2) / sec(arg)
+
+    def _eval_rewrite_as_csc(self, arg):
+        return csc(arg) / csc(arg + S.Pi/2)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
@@ -972,17 +1022,347 @@ class cot(TrigonometricFunction):
     def _eval_is_real(self):
         return self.args[0].is_real
 
+    def _eval_is_bounded(self):
+        arg = self.args[0]
+        if arg.is_imaginary:
+            return True
+
+    def _eval_subs(self, old, new):
+        if self == old:
+            return new
+        arg = self.args[0]
+        argnew = arg.subs(old, new)
+        if arg != argnew and (argnew/S.Pi).is_integer:
+            return S.NaN
+        return cot(argnew)
+
     def _sage_(self):
         import sage.all as sage
         return sage.cot(self.args[0]._sage_())
+
+class sec(TrigonometricFunction):
+    """
+    The secant function.
+
+    * sec(x) -> Returns the secant of x (measured in radians)
+
+    Notes
+    =====
+
+    * sec(x) will evaluate automatically in the case x is a
+      multiple of pi.
+
+    Examples
+    ========
+
+    >>> from sympy import sec
+    >>> from sympy.abc import x
+    >>> sec(x**2).diff(x)
+    2*x*tan(x**2)*sec(x**2)
+    >>> sec(1).diff(x)
+    0
+
+    See also
+    ========
+
+    sin, csc, cos, tan, cot
+    asin, acsc, acos, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Sec
+
+    """
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Zero:
+                return S.One
+
+        if arg.could_extract_minus_sign():
+            return cls(-arg)
+
+        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        if i_coeff is not None:
+            return C.sech(i_coeff)
+
+        if arg.func is asec:
+            return arg.args[0]
+
+        if arg.func is asin:
+            x = arg.args[0]
+            return 1 / sqrt(1 - x**2)
+
+        if arg.func is acos:
+            x = arg.args[0]
+            return 1 / x
+
+        if arg.func is acot:
+            x = arg.args[0]
+            return sqrt(1 + x**2) / x
+
+        # TODO
+        # Other inverses
+
+    def fdiff(self, argindex=1):
+        if argindex==1:
+            return self*tan(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+
+    def inverse(self, argindex=1):
+        return asec
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n < 0 or n % 2 == 1:
+            return S.Zero
+        else:
+            x = sympify(x)
+            k = n // 2
+            return (-1)**k * C.euler(2*k) / C.factorial(2*k) * x**(2*k)
+
+    def _eval_aseries(self, n, args0, x, logx):
+        if C.im(args0[0]) > 0:
+            return 2*C.exp(S.ImaginaryUnit*x)*C.hyper([1],[],-C.exp(2*S.ImaginaryUnit*x))
+        elif C.im(args0[0]) < 0:
+            return 2*C.exp(-S.ImaginaryUnit*x)*C.hyper([1],[],-C.exp(-2*S.ImaginaryUnit*x))
+        elif C.im(args0[0]) == 0:
+            # No asymptotic series expansion along the real line
+            return sec(x)
+        else:
+            return super(sec, self)._eval_aseries(n, args0, x, logx)
+
+    def _eval_rewrite_as_exp(self, arg):
+        exp, I = C.exp, S.ImaginaryUnit
+        return 2 / (exp(arg*I) + exp(-arg*I))
+
+    def _eval_rewrite_as_sin(self, arg):
+        return 1 / sin(arg + S.Pi/2)
+
+    def _eval_rewrite_as_cos(self, arg):
+        return 1 / cos(arg)
+
+    def _eval_rewrite_as_tan(self, arg):
+        tan_half_sq = tan(arg/2)**2
+        return (1+tan_half_sq) / (1-tan_half_sq)
+
+    def _eval_rewrite_as_cot(self, arg):
+        cot_half_sq = cot(arg/2)**2
+        return (cot_half_sq+1) / (cot_half_sq-1)
+
+    def _eval_rewrite_as_csc(self, arg):
+        return csc(arg + S.Pi/2)
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if C.Order(1,x).contains(arg):
+            return S.One
+        else:
+            return self.func(arg)
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def as_real_imag(self, deep=True, **hints):
+        re, im = self._as_real_imag(deep=deep, **hints)
+        denom = cos(2*re) + C.cosh(2*im)
+        return (2*cos(re)*C.cosh(im)/denom, 2*sin(re)*C.sinh(im)/denom)
+
+    def _eval_expand_trig(self, deep=True, **hints):
+        if deep:
+            arg = self.args[0].expand()
+        else:
+            arg = self.args[0]
+        return sec(arg)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _eval_is_bounded(self):
+        arg = self.args[0]
+        if arg.is_imaginary:
+            return True
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.sec(self.args[0]._sage_())
+
+class csc(TrigonometricFunction):
+    """
+    The cosecant function.
+
+    * csc(x) -> Returns the cosecant of x (measured in radians)
+
+    Notes
+    =====
+
+    * csc(x) will evaluate automatically in the case x is a
+      multiple of pi.
+
+    Examples
+    ========
+
+    >>> from sympy import csc
+    >>> from sympy.abc import x
+    >>> csc(x**2).diff(x)
+    -2*x*cot(x**2)*csc(x**2)
+    >>> csc(1).diff(x)
+    0
+
+    See also
+    ========
+
+    sin, cos, sec, tan, cot
+    asin, acsc, acos, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Csc
+
+    """
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+
+        if arg.could_extract_minus_sign():
+            return -cls(-arg)
+
+        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        if i_coeff is not None:
+            return -S.ImaginaryUnit*C.csch(i_coeff)
+
+        if arg.func is acsc:
+            return arg.args[0]
+
+        if arg.func is asin:
+            x = arg.args[0]
+            return 1 / x
+
+        if arg.func is acos:
+            x = arg.args[0]
+            return 1 / sqrt(1 - x**2)
+
+        if arg.func is acot:
+            x = arg.args[0]
+            return sqrt(1 + x**2)
+
+        # TODO
+        # Other inverses
+
+    def fdiff(self, argindex=1):
+        if argindex==1:
+            return -cot(self.args[0])*self
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        return acsc
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n == 0:
+            return 1 / sympify(x)
+        elif n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            k = n // 2 + 1
+            return (-1)**(k-1) * 2 * (2**(2*k-1)-1) * C.bernoulli(2*k) * x**(2*k-1) / C.factorial(2*k)
+
+    def _eval_aseries(self, n, args0, x, logx):
+        if C.im(args0[0]) > 0:
+            return -2*S.ImaginaryUnit*C.exp(S.ImaginaryUnit*x)*C.hyper([1],[],C.exp(2*S.ImaginaryUnit*x))
+        elif C.im(args0[0]) < 0:
+            return 2*S.ImaginaryUnit*C.exp(-S.ImaginaryUnit*x)*C.hyper([1],[],C.exp(-2*S.ImaginaryUnit*x))
+        elif C.im(args0[0]) == 0:
+            # No asymptotic series expansion along the real line
+            return csc(x)
+        else:
+            return super(csc, self)._eval_aseries(n, args0, x, logx)
+
+    def _eval_rewrite_as_exp(self, arg):
+        exp, I = C.exp, S.ImaginaryUnit
+        return (2*I) / (exp(arg*I) - exp(-arg*I))
+
+    def _eval_rewrite_as_sin(self, arg):
+        return 1/sin(arg)
+
+    def _eval_rewrite_as_cos(self, arg):
+        return -1 / cos(arg + S.Pi/2)
+
+    def _eval_rewrite_as_tan(self, arg):
+        tan_half = tan(arg/2)
+        return (1+tan_half**2) / (2*tan_half)
+
+    def _eval_rewrite_as_cot(self, arg):
+        cot_half = cot(arg/2)
+        return (1+cot_half**2) / (2*cot_half)
+
+    def _eval_rewrite_as_sec(self, arg):
+        return -sec(arg + S.Pi/2)
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+        if C.Order(1,x).contains(arg):
+            return 1/arg
+        else:
+            return self.func(arg)
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def as_real_imag(self, deep=True, **hints):
+        re, im = self._as_real_imag(deep=deep, **hints)
+        denom = cos(2*re) - C.cosh(2*im)
+        return (-2*sin(re)*C.cosh(im)/denom, 2*cos(re)*C.sinh(im)/denom)
+
+    def _eval_expand_trig(self, deep=True, **hints):
+        if deep:
+            arg = self.args[0].expand()
+        else:
+            arg = self.args[0]
+        return csc(arg)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _eval_is_bounded(self):
+        arg = self.args[0]
+        if arg.is_imaginary:
+            return True
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.csc(self.args[0]._sage_())
 
 ###############################################################################
 ########################### TRIGONOMETRIC INVERSES ############################
 ###############################################################################
 
-class asin(Function):
+class InverseTrigonometricFunction(Function):
+    """Base class for inverse trigonometric functions."""
+    nargs = 1
+
+class asin(InverseTrigonometricFunction):
     """
-    asin(x) -> Returns the arc sine of x (measured in radians)
+    The inverse sine function.
+
+    * asin(x) -> Returns the arc sine of x (measured in radians)
 
     Notes
     =====
@@ -999,19 +1379,18 @@ class asin(Function):
     >>> asin(-1)
     -pi/2
 
-    See Also
+    See also
     ========
 
-    acos, atan, sin
+    sin, csc, cos, sec, tan, cot
+    acsc, acos, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcSin
     """
-
-    nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return 1/sqrt(1 - self.args[0]**2)
-        else:
-            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def eval(cls, arg):
@@ -1061,6 +1440,12 @@ class asin(Function):
         if i_coeff is not None:
             return S.ImaginaryUnit * C.asinh(i_coeff)
 
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return 1/sqrt(1 - self.args[0]**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -1085,14 +1470,23 @@ class asin(Function):
         else:
             return self.func(arg)
 
-    def _eval_rewrite_as_acos(self, x):
-        return S.Pi/2 - acos(x)
+    def _eval_rewrite_as_log(self, arg):
+        return -S.ImaginaryUnit*C.log(S.ImaginaryUnit*arg + sqrt(1-arg**2))
 
-    def _eval_rewrite_as_atan(self, x):
-        return 2*atan(x/(1 + sqrt(1 - x**2)))
+    def _eval_rewrite_as_acos(self, arg):
+        return S.Pi/2 - acos(arg)
 
-    def _eval_rewrite_as_log(self, x):
-        return -S.ImaginaryUnit*C.log(S.ImaginaryUnit*x + sqrt(1-x**2))
+    def _eval_rewrite_as_atan(self, arg):
+        return 2*atan(arg/(1 + sqrt(1 - arg**2)))
+
+    def _eval_rewrite_as_acot(self, arg):
+        return 2*acot((1+sqrt(1-arg**2))/arg)
+
+    def _eval_rewrite_as_asec(self, arg):
+        return S.Pi/2 - asec(1/arg)
+
+    def _eval_rewrite_as_acsc(self, arg):
+        return acsc(1/arg)
 
     def _eval_is_real(self):
         return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
@@ -1101,9 +1495,11 @@ class asin(Function):
         import sage.all as sage
         return sage.asin(self.args[0]._sage_())
 
-class acos(Function):
+class acos(InverseTrigonometricFunction):
     """
-    acos(x) -> Returns the arc cosine of x (measured in radians)
+    The inverse cosine function.
+
+    * acos(x) -> Returns the arc cosine of x (measured in radians)
 
     Notes
     =====
@@ -1122,19 +1518,18 @@ class acos(Function):
     >>> acos(oo)
     oo*I
 
-    See Also
+    See also
     ========
 
-    asin, atan, cos
+    sin, csc, cos, sec, tan, cot
+    asin, acsc, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcCos
     """
-
-    nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return -1/sqrt(1 - self.args[0]**2)
-        else:
-            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def eval(cls, arg):
@@ -1167,6 +1562,11 @@ class acos(Function):
             if arg in cst_table:
                 return cst_table[arg]
 
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -1/sqrt(1 - self.args[0]**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     @staticmethod
     @cacheit
@@ -1197,25 +1597,36 @@ class acos(Function):
     def _eval_is_real(self):
         return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
 
-    def _eval_rewrite_as_log(self, x):
-        return S.Pi/2 + S.ImaginaryUnit * C.log(S.ImaginaryUnit * x + sqrt(1 - x**2))
+    def _eval_rewrite_as_log(self, arg):
+        return S.Pi/2 + S.ImaginaryUnit * C.log(S.ImaginaryUnit * arg + sqrt(1 - arg**2))
 
-    def _eval_rewrite_as_asin(self, x):
-        return S.Pi/2 - asin(x)
+    def _eval_rewrite_as_asin(self, arg):
+        return S.Pi/2 - asin(arg)
 
-    def _eval_rewrite_as_atan(self, x):
-        if x > -1 and x <= 1:
-            return 2 * atan(sqrt(1 - x**2)/(1 + x))
-        else:
-            raise ValueError("The argument must be bounded in the interval (-1,1]")
+    def _eval_rewrite_as_atan(self, arg):
+        return S.Pi/2 - 2*atan((1-sqrt(1 - arg**2))/arg)
+
+    def _eval_rewrite_as_acot(self, arg):
+        return S.Pi/2 - 2*acot((1+sqrt(1-arg**2))/arg)
+
+    def _eval_rewrite_as_asec(self, arg):
+        return asec(1/arg)
+
+    def _eval_rewrite_as_acsc(self, arg):
+        return S.Pi/2 - acsc(1/arg)
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
 
     def _sage_(self):
         import sage.all as sage
         return sage.acos(self.args[0]._sage_())
 
-class atan(Function):
+class atan(InverseTrigonometricFunction):
     """
-    atan(x) -> Returns the arc tangent of x (measured in radians)
+    The inverse tangent function.
+
+    * atan(x) -> Returns the arc tangent of x (measured in radians)
 
     Notes
     =====
@@ -1234,19 +1645,18 @@ class atan(Function):
     >>> atan(oo)
     pi/2
 
-    See Also
+    See also
     ========
 
-    acos, asin, tan
+    sin, csc, cos, sec, tan, cot
+    asin, acsc, acos, asec, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcTan
     """
-
-    nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return 1/(1+self.args[0]**2)
-        else:
-            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def eval(cls, arg):
@@ -1291,7 +1701,11 @@ class atan(Function):
         if i_coeff is not None:
             return S.ImaginaryUnit * C.atanh(i_coeff)
 
-
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return 1/(1+self.args[0]**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     @staticmethod
     @cacheit
@@ -1313,10 +1727,6 @@ class atan(Function):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_rewrite_as_log(self, x):
-        return S.ImaginaryUnit/2 * \
-               (C.log((S(1) - S.ImaginaryUnit * x)/(S(1) + S.ImaginaryUnit * x)))
-
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] == S.Infinity:
             return S.Pi/2 - atan(1/self.args[0])
@@ -1325,22 +1735,48 @@ class atan(Function):
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 
+    def _eval_rewrite_as_log(self, arg):
+        I = S.ImaginaryUnit
+        return I/2*(C.log(1-I*arg)-C.log(1+I*arg))
+
+    def _eval_rewrite_as_asin(self, arg):
+        return sqrt(arg**2)/arg * (S.Pi/2 - asin(1/sqrt(1+arg**2)))
+
+    def _eval_rewrite_as_acos(self, arg):
+        return sqrt(arg**2)/arg * acos(1/sqrt(1+arg**2))
+
+    def _eval_rewrite_as_acot(self, arg):
+        return acot(1/arg)
+
+    def _eval_rewrite_as_asec(self, arg):
+        return sqrt(arg**2)/arg * asec(sqrt(1+arg**2))
+
+    def _eval_rewrite_as_acsc(self, arg):
+        return sqrt(arg**2)/arg * (S.Pi/2 - acsc(sqrt(1+arg**2)))
+
     def _sage_(self):
         import sage.all as sage
         return sage.atan(self.args[0]._sage_())
 
-class acot(Function):
+class acot(InverseTrigonometricFunction):
     """
-    acot(x) -> Returns the arc cotangent of x (measured in radians)
+    The inverse cotangent function.
+
+    * acot(x) -> Returns the arc cotangent of x (measured in radians)
+
+    See also
+    ========
+
+    sin, csc, cos, sec, tan, cot
+    asin, acsc, acos, asec, atan, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcCot
+
     """
-
-    nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return -1 / (1+self.args[0]**2)
-        else:
-            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def eval(cls, arg):
@@ -1388,6 +1824,12 @@ class acot(Function):
         if i_coeff is not None:
             return -S.ImaginaryUnit * C.acoth(i_coeff)
 
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -1 / (1+self.args[0]**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -1418,19 +1860,204 @@ class acot(Function):
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 
+    def _eval_rewrite_as_log(self, arg):
+        I = S.ImaginaryUnit
+        return I/2 * (C.log(1-I/arg) - C.log(1+I/arg))
+
+    def _eval_rewrite_as_asin(self, arg):
+        return arg*sqrt(1/arg**2)*(S.Pi/2-asin(sqrt(-arg**2)/sqrt(-arg**2-1)))
+
+    def _eval_rewrite_as_acos(self, arg):
+        return arg*sqrt(1/arg**2)*acos(sqrt(-arg**2)/sqrt(-arg**2-1))
+
+    def _eval_rewrite_as_atan(self, arg):
+        return atan(1/arg)
+
+    def _eval_rewrite_as_asec(self, arg):
+        return arg*sqrt(1/arg**2)*asec(sqrt((1+arg**2)/arg**2))
+
+    def _eval_rewrite_as_acsc(self, arg):
+        return arg*sqrt(1/arg**2)*(S.Pi/2-acsc(sqrt((1+arg**2)/arg**2)))
+
     def _sage_(self):
         import sage.all as sage
         return sage.acot(self.args[0]._sage_())
 
-    def _eval_rewrite_as_log(self, x):
-        return S.ImaginaryUnit/2 * \
-               (C.log((x - S.ImaginaryUnit)/(x + S.ImaginaryUnit)))
-
-class atan2(Function):
+class asec(InverseTrigonometricFunction):
     """
-    atan2(y,x) -> Returns the atan(y/x) taking two arguments y and x.
-    Signs of both y and x are considered to determine the appropriate
-    quadrant of atan(y/x). The range is (-pi, pi].
+    The inverse secant function.
+
+    * asec(x) -> Returns the arc secant of x (measured in radians)
+
+    Notes
+    =====
+
+    * asec(x) will evaluate automatically in the cases
+      oo, -oo, 0, 1, -1
+
+    Examples
+    ========
+
+    >>> from sympy import asec, oo, pi
+    >>> asec(1)
+    0
+    >>> asec(-1)
+    pi
+
+    See also
+    ========
+
+    sin, csc, cos, sec, tan, cot
+    asin, acsc, acos, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcSec
+
+    """
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return 1 / (self.args[0]**2 * sqrt(1 - 1/self.args[0]**2))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+        if C.Order(1,x).contains(arg):
+            return C.log(arg)
+        else:
+            return self.func(arg)
+
+    def _eval_rewrite_as_log(self, arg):
+        return S.Pi/2 + S.ImaginaryUnit * C.log(S.ImaginaryUnit / arg + sqrt(1 - 1/arg**2))
+
+    def _eval_rewrite_as_asin(self, arg):
+        return S.Pi/2 - asin(1/arg)
+
+    def _eval_rewrite_as_acos(self, arg):
+        return acos(1/arg)
+
+    def _eval_rewrite_as_atan(self, arg):
+        return sqrt(arg**2)/arg*(-S.Pi/2 + 2*atan(arg+sqrt(arg**2-1)))
+
+    def _eval_rewrite_as_acot(self, arg):
+        return sqrt(arg**2)/arg*(-S.Pi/2 + 2*acot(arg-sqrt(arg**2-1)))
+
+    def _eval_rewrite_as_acsc(self, arg):
+        return S.Pi/2 - acsc(arg)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.arcsec(self.args[0]._sage_())
+
+class acsc(InverseTrigonometricFunction):
+    """
+    The inverse cosecant function.
+
+    * acsc(x) -> Returns the arc cosecant of x (measured in radians)
+
+    Notes
+    =====
+    * acsc(x) will evaluate automatically in the cases
+      oo, -oo, 0, 1, -1
+
+    Examples
+    ========
+    >>> from sympy import acsc, oo, pi
+    >>> acsc(1)
+    pi/2
+    >>> acsc(-1)
+    -pi/2
+
+    See also
+    ========
+
+    sin, csc, cos, sec, tan, cot
+    asin, acos, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcCsc
+
+    """
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -1 / (self.args[0]**2 * sqrt(1 - 1/self.args[0]**2))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+        if C.Order(1,x).contains(arg):
+            return C.log(arg)
+        else:
+            return self.func(arg)
+
+    def _eval_rewrite_as_log(self, arg):
+        return -S.ImaginaryUnit * C.log(S.ImaginaryUnit / arg + sqrt(1 - 1/arg**2))
+
+    def _eval_rewrite_as_asin(self, arg):
+        return asin(1/arg)
+
+    def _eval_rewrite_as_acos(self, arg):
+        return S.Pi/2 - acos(1/arg)
+
+    def _eval_rewrite_as_atan(self, arg):
+        return sqrt(arg**2)/arg*(S.Pi/2-atan(sqrt(arg**2-1)))
+
+    def _eval_rewrite_as_acot(self, arg):
+        return sqrt(arg**2)/arg*(S.Pi/2-acot(1/sqrt(arg**2-1)))
+
+    def _eval_rewrite_as_asec(self, arg):
+        return S.Pi/2 - asec(arg)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.arccsc(self.args[0]._sage_())
+
+class atan2(InverseTrigonometricFunction):
+    """
+    The two-argument inverse tangent function.
+
+    * atan2(y,x) -> Returns the atan(y/x) taking two arguments y and x.
+
+    Notes
+    =====
+
+    * Signs of both y and x are considered to determine the appropriate
+      quadrant of atan(y/x). The range is (-pi, pi].
+
+    See also
+    ========
+
+    sin, csc, cos, sec, tan, cot
+    asin, acsc, acos, asec, atan, acot
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] http://en.wikipedia.org/wiki/Atan2
+    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcTan2
+
     """
 
     nargs = 2
@@ -1462,13 +2089,18 @@ class atan2(Function):
         return self.args[0].is_real and self.args[1].is_real
 
     def fdiff(self, argindex):
-        x, y = self.args
+        y, x = self.args
         if argindex == 1:
-            return y/(x**2 + y**2)
+            # Diff wrt to y
+            return x/(x**2 + y**2)
         elif argindex == 2:
-            return -x/(x**2 + y**2)
+            # Diff wrt to x
+            return -y/(x**2 + y**2)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_log(self, y, x):
+        return -S.ImaginaryUnit*C.log((x + S.ImaginaryUnit*y)/sqrt(x**2+y**2))
 
     def _sage_(self):
         import sage.all as sage
