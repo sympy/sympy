@@ -97,8 +97,10 @@ class Commutator(Expr):
 
     @classmethod
     def eval(cls, a, b):
-        if not (a and b): return S.Zero
-        if a == b: return S.Zero
+        if not (a and b):
+            return S.Zero
+        if a == b:
+            return S.Zero
         if a.is_commutative or b.is_commutative:
             return S.Zero
 
@@ -111,16 +113,16 @@ class Commutator(Expr):
             return Mul(Mul(*c_part), cls(Mul._from_args(nca), Mul._from_args(ncb)))
 
         # Canonical ordering of arguments
-        # The Commutator [A,B] is on canonical form if A < B.
+        # The Commutator [A, B] is in canonical form if A < B.
         if a.compare(b) == 1:
-            return S.NegativeOne*cls(b,a)
+            return S.NegativeOne*cls(b, a)
 
     def _eval_expand_commutator(self, **hints):
         A = self.args[0]
         B = self.args[1]
 
         if isinstance(A, Add):
-            # [A+B,C]  ->  [A,C] + [B,C]
+            # [A + B, C]  ->  [A, C] + [B, C]
             sargs = []
             for term in A.args:
                 comm = Commutator(term, B)
@@ -129,7 +131,7 @@ class Commutator(Expr):
                 sargs.append(comm)
             return Add(*sargs)
         elif isinstance(B, Add):
-            # [A,B+C]  ->  [A,B] + [A,C]
+            # [A, B + C]  ->  [A, B] + [A, C]
             sargs = []
             for term in B.args:
                 comm = Commutator(A, term)
@@ -138,12 +140,12 @@ class Commutator(Expr):
                 sargs.append(comm)
             return Add(*sargs)
         elif isinstance(A, Mul):
-            # [A*B,C] -> A*[B,C] + [A,C]*B
+            # [A*B, C] -> A*[B, C] + [A, C]*B
             a = A.args[0]
             b = Mul(*A.args[1:])
             c = B
-            comm1 = Commutator(b,c)
-            comm2 = Commutator(a,c)
+            comm1 = Commutator(b, c)
+            comm2 = Commutator(a, c)
             if isinstance(comm1, Commutator):
                 comm1 = comm1._eval_expand_commutator()
             if isinstance(comm2, Commutator):
@@ -152,12 +154,12 @@ class Commutator(Expr):
             second = Mul(comm2, b)
             return Add(first, second)
         elif isinstance(B, Mul):
-            # [A,B*C] -> [A,B]*C + B*[A,C]
+            # [A, B*C] -> [A, B]*C + B*[A, C]
             a = A
             b = B.args[0]
             c = Mul(*B.args[1:])
-            comm1 = Commutator(a,b)
-            comm2 = Commutator(a,c)
+            comm1 = Commutator(a, b)
+            comm2 = Commutator(a, c)
             if isinstance(comm1, Commutator):
                 comm1 = comm1._eval_expand_commutator()
             if isinstance(comm2, Commutator):

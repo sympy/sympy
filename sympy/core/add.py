@@ -25,6 +25,8 @@ class Add(AssocOp):
         Applies associativity, all terms are commutable with respect to
         addition.
 
+        NB: the removal of 0 is already handled by AssocOp.__new__
+
         See also
         ========
 

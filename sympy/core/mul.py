@@ -37,7 +37,8 @@ class Mul(AssocOp):
         """Return commutative, noncommutative and order arguments by
         combining related terms.
 
-        ** Note **
+        Notes
+        =====
             * In an expression like ``a*b*c``, python process this through sympy
               as ``Mul(Mul(a, b), c)``. This can have undesirable consequences.
 
@@ -101,11 +102,13 @@ class Mul(AssocOp):
               This consideration is moot if the cache is turned off.
 
             NB
+            --
               The validity of the above notes depends on the implementation
               details of Mul and flatten which may change at any time. Therefore,
               you should only consider them when your code is highly performance
               sensitive.
 
+              Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
         rv = None
         if len(seq) == 2:
