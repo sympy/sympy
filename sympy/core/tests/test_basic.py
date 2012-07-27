@@ -124,3 +124,6 @@ def test_preorder_traversal():
     expr = z + w*(x+y)
     assert list(preorder_traversal([expr], key=default_sort_key)) == \
         [[w*(x + y) + z], w*(x + y) + z, z, w*(x + y), w, x + y, x, y]
+
+def test_sorted_args():
+    assert b21._sorted_args == b21.args
