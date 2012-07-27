@@ -605,7 +605,6 @@ class PermutationGroup(Basic):
 
         """
 
-
         if self._coset_repr == []:
             self.schreier_sims()
         strong_gens = self._strong_gens
@@ -833,7 +832,6 @@ class PermutationGroup(Basic):
             transversals[index].keys()
         self._transversals = transversals
         self._basic_orbits = basic_orbits
-
 
     def coset_decomposition(self, g):
         """
@@ -1581,7 +1579,6 @@ class PermutationGroup(Basic):
                 return False
         return True
 
-
     def __ne__(self, gr):
         return not self == gr
 
@@ -2031,7 +2028,6 @@ class PermutationGroup(Basic):
                 self._max_div = d
                 return d
 
-
     def is_primitive(self, randomized=True):
         """
         Test a group for primitivity.
@@ -2408,6 +2404,7 @@ class PermutationGroup(Basic):
             if gen not in strong_gens_new:
                 strong_gens_new.append(gen)
         return base_new, strong_gens_new
+
 
 def DirectProduct(*groups):
     """
