@@ -23,7 +23,8 @@ def test_commutator_identities():
     assert Comm(A, B) == -Comm(B, A)
     assert Comm(A, B).doit() == A*B - B*A
     assert Comm(A, B*C).expand(commutator=True) == Comm(A, B)*C + B*Comm(A, C)
-    assert Comm(A*B, C).expand(commutator=True) == A*Comm(B, C) + Comm(A, C)*B
+    assert Comm(A*B, C*D).expand(commutator=True) == \
+        A*C*Comm(B, D) + A*Comm(B, C)*D + C*Comm(A, D)*B + Comm(A, C)*D*B
     assert Comm(A + B, C + D).expand(commutator=True) == \
         Comm(A, C) + Comm(A, D) + Comm(B, C) + Comm(B, D)
     assert Comm(A, B + C).expand(commutator=True) == Comm(A, B) + Comm(A, C)
