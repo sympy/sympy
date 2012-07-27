@@ -1,0 +1,22 @@
+.. _combinatorics-util:
+
+Utilities
+============
+
+.. module:: sympy.combinatorics.util
+
+.. autofunction:: _check_cycles_alt_sym
+
+.. autofunction:: _strip
+
+.. autofunction:: _distribute_gens_by_base
+
+.. autofunction:: _strong_gens_from_distr
+
+.. autofunction:: _orbits_transversals_from_bsgs
+
+.. autofunction:: _handle_precomputed_bsgs
+
+.. autofunction:: _base_ordering
+
+.. autofunction:: _verify_bsgs

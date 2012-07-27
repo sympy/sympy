@@ -12,3 +12,5 @@ Named Groups
 .. autofunction:: DihedralGroup
 
 .. autofunction:: AlternatingGroup
+
+.. autofunction:: AbelianGroup
