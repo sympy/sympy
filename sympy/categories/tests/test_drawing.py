@@ -429,24 +429,24 @@ def test_DiagramGrid():
 
     assert grid.width == 6
     assert grid.height == 3
-    assert grid[0, 0] == A_
-    assert grid[0, 1] == B_
+    assert grid[0, 0] == A
+    assert grid[0, 1] == B
     assert grid[0, 2] is None
-    assert grid[0, 3] == A
-    assert grid[0, 4] == B
+    assert grid[0, 3] == A_
+    assert grid[0, 4] == B_
     assert grid[0, 5] is None
     assert grid[1, 0] is None
-    assert grid[1, 1] == C_
-    assert grid[1, 2] == D_
+    assert grid[1, 1] == C
+    assert grid[1, 2] == D
     assert grid[1, 3] is None
-    assert grid[1, 4] == C
-    assert grid[1, 5] == D
+    assert grid[1, 4] == C_
+    assert grid[1, 5] == D_
     assert grid[2, 0] is None
     assert grid[2, 1] is None
-    assert grid[2, 2] == E_
+    assert grid[2, 2] == E
     assert grid[2, 3] is None
     assert grid[2, 4] is None
-    assert grid[2, 5] == E
+    assert grid[2, 5] == E_
     assert grid.morphisms == morphisms
 
     # Test the five lemma with object grouping, but mixing containers
@@ -455,24 +455,24 @@ def test_DiagramGrid():
 
     assert grid.width == 6
     assert grid.height == 3
-    assert grid[0, 0] == A_
-    assert grid[0, 1] == B_
+    assert grid[0, 0] == A
+    assert grid[0, 1] == B
     assert grid[0, 2] is None
-    assert grid[0, 3] == A
-    assert grid[0, 4] == B
+    assert grid[0, 3] == A_
+    assert grid[0, 4] == B_
     assert grid[0, 5] is None
     assert grid[1, 0] is None
-    assert grid[1, 1] == C_
-    assert grid[1, 2] == D_
+    assert grid[1, 1] == C
+    assert grid[1, 2] == D
     assert grid[1, 3] is None
-    assert grid[1, 4] == C
-    assert grid[1, 5] == D
+    assert grid[1, 4] == C_
+    assert grid[1, 5] == D_
     assert grid[2, 0] is None
     assert grid[2, 1] is None
-    assert grid[2, 2] == E_
+    assert grid[2, 2] == E
     assert grid[2, 3] is None
     assert grid[2, 4] is None
-    assert grid[2, 5] == E
+    assert grid[2, 5] == E_
     assert grid.morphisms == morphisms
 
     # Test the five lemma with object grouping and hints.
@@ -485,16 +485,16 @@ def test_DiagramGrid():
 
     assert grid.width == 5
     assert grid.height == 2
-    assert grid[0, 0] == A_
-    assert grid[0, 1] == B_
-    assert grid[0, 2] == C_
-    assert grid[0, 3] == D_
-    assert grid[0, 4] == E_
-    assert grid[1, 0] == A
-    assert grid[1, 1] == B
-    assert grid[1, 2] == C
-    assert grid[1, 3] == D
-    assert grid[1, 4] == E
+    assert grid[0, 0] == A
+    assert grid[0, 1] == B
+    assert grid[0, 2] == C
+    assert grid[0, 3] == D
+    assert grid[0, 4] == E
+    assert grid[1, 0] == A_
+    assert grid[1, 1] == B_
+    assert grid[1, 2] == C_
+    assert grid[1, 3] == D_
+    assert grid[1, 4] == E_
     assert grid.morphisms == morphisms
 
     # A two-triangle disconnected diagram.
@@ -507,13 +507,13 @@ def test_DiagramGrid():
 
     assert grid.width == 4
     assert grid.height == 2
-    assert grid[0, 0] == A_
-    assert grid[0, 1] == B_
-    assert grid[0, 2] == A
-    assert grid[0, 3] == B
-    assert grid[1, 0] == C_
+    assert grid[0, 0] == A
+    assert grid[0, 1] == B
+    assert grid[0, 2] == A_
+    assert grid[0, 3] == B_
+    assert grid[1, 0] == C
     assert grid[1, 1] is None
-    assert grid[1, 2] == C
+    assert grid[1, 2] == C_
     assert grid[1, 3] is None
     assert grid.morphisms == {f: FiniteSet(), g: FiniteSet(), f_: FiniteSet(),
                               g_: FiniteSet(), g * f: FiniteSet("unique"),
