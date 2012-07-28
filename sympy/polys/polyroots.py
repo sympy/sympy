@@ -447,10 +447,10 @@ def roots(f, *gens, **flags):
     with its roots and their multiplicities.
 
     Only roots expressible via radicals will be returned.  To get
-    a complete set of roots use RootOf class or numerical methods
-    instead. By default cubic and quartic formulas are used in
-    the algorithm. To disable them because of unreadable output
-    set ``cubics=False`` or ``quartics=False`` respectively.
+    a complete set of roots use RootOf class (or all_roots method) or
+    numerical methods instead (eg nroots). By default cubic and quartic
+    formulas are used in the algorithm. To disable them because of unreadable
+    output set ``cubics=False`` or ``quartics=False`` respectively.
 
     To get roots from a specific domain set the ``filter`` flag with
     one of the following specifiers: Z, Q, R, I, C. By default all
@@ -593,10 +593,7 @@ def roots(f, *gens, **flags):
     result = {}
 
     if not f.is_ground:
-        if not f.get_domain().is_Exact:
-            for r in f.nroots():
-                _update_dict(result, r, 1)
-        elif f.degree() == 1:
+        if f.degree() == 1:
             result[roots_linear(f)[0]] = 1
         elif f.degree() == 2:
             for r in roots_quadratic(f):
