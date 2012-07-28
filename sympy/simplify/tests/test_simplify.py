@@ -5,8 +5,9 @@ from sympy import (
     cot, coth, count_ops, diff, erf, exp, expand, factor, factorial,
     fraction, gamma, hyper, hyper, hypersimp, integrate, log, logcombine,
     nsimplify, oo, pi, posify, powdenest, powsimp, radsimp, ratsimp,
-    ratsimpmodprime, rcollect, separate, separatevars, signsimp, simplify,
-    sin, sinh, solve, sqrt, symbols, sympify, tan, tanh, trigsimp, Dummy, Subs)
+    ratsimpmodprime, rcollect, separatevars, signsimp, simplify,
+    sin, sinh, solve, sqrt, symbols, sympify, tan, tanh, trigsimp, Dummy,
+    Subs, polarify, exp_polar, polar_lift)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
@@ -368,27 +369,6 @@ def test_fraction():
     n = symbols('n', negative=True)
     assert fraction(exp(n)) == (1, exp(-n))
     assert fraction(exp(-n)) == (exp(-n), 1)
-
-def test_separate():
-    x, y, z = symbols('x,y,z')
-
-    assert separate((x*y*z)**4) == x**4*y**4*z**4
-    assert separate((x*y*z)**x).is_Pow
-    assert separate((x*y*z)**x, force=True) == x**x*y**x*z**x
-    assert separate((x*(y*z)**2)**3) == x**3*y**6*z**6
-
-    assert separate((sin((x*y)**2)*y)**z).is_Pow
-    assert separate((sin((x*y)**2)*y)**z, force=True) == sin((x*y)**2)**z*y**z
-    assert separate((sin((x*y)**2)*y)**z, deep=True) == (sin(x**2*y**2)*y)**z
-
-    assert separate(exp(x)**2) == exp(2*x)
-    assert separate((exp(x)*exp(y))**2) == exp(2*x)*exp(2*y)
-
-    assert separate((exp((x*y)**z)*exp(y))**2) == exp(2*(x*y)**z)*exp(2*y)
-    assert separate((exp((x*y)**z)*exp(y))**2, deep=True, force=True) == exp(2*x**z*y**z)*exp(2*y)
-
-    assert separate((exp(x)*exp(y))**z).is_Pow
-    assert separate((exp(x)*exp(y))**z, force=True) == exp(x)**z*exp(y)**z
 
 def test_powsimp():
     x, y, z, n = symbols('x,y,z,n')
@@ -813,6 +793,11 @@ def test_logcombine_1():
     assert logcombine((2+3*I)*log(x), force=True) == \
         log(x**2)+3*I*log(x)
     assert logcombine(Eq(y, -log(x)), force=True) == Eq(y, log(1/x))
+
+@XFAIL
+def test_logcombine_complex_coeff():
+    # TODO: Make the expand() call in logcombine smart enough so that both
+    # these hold.
     assert logcombine(Integral((sin(x**2)+cos(x**3))/x, x), force=True) == \
         Integral((sin(x**2)+cos(x**3))/x, x)
     assert logcombine(Integral((sin(x**2)+cos(x**3))/x, x)+ (2+3*I)*log(x), \
@@ -1133,6 +1118,16 @@ def test_polarify():
 
     newex, subs = polarify(f(x) + z)
     assert newex.subs(subs) == f(x) + z
+
+    mu = Symbol("mu")
+    sigma = Symbol("sigma", positive=True)
+
+    # Make sure polarify(lift=True) doesn't try to lift the integration
+    # variable
+    assert polarify(Integral(sqrt(2)*x*exp(-(-mu + x)**2/(2*sigma**2))/(2*sqrt(pi)*sigma),
+        (x, -oo, oo)), lift=True) == Integral(sqrt(2)*(sigma*exp_polar(0))**exp_polar(I*pi)*
+        exp((sigma*exp_polar(0))**(2*exp_polar(I*pi))*exp_polar(I*pi)*polar_lift(-mu + x)**
+        (2*exp_polar(0))/2)*exp_polar(0)*polar_lift(x)/(2*sqrt(pi)), (x, -oo, oo))
 
 def test_unpolarify():
     from sympy import (exp_polar, polar_lift, exp, unpolarify, sin,

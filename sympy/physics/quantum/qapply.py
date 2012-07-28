@@ -137,19 +137,19 @@ def qapply_Mul(e, **options):
         comm = lhs.doit()
         if isinstance(comm, Add):
             return qapply(
-                e._new_rawargs(*(args + [comm.args[0], rhs])) +\
-                e._new_rawargs(*(args + [comm.args[1], rhs])),
+                e.func(*(args + [comm.args[0], rhs])) +\
+                e.func(*(args + [comm.args[1], rhs])),
                 **options
             )
         else:
-            return qapply(e._new_rawargs(*args)*comm*rhs, **options)
+            return qapply(e.func(*args)*comm*rhs, **options)
 
     # Apply tensor products of operators to states
     if isinstance(lhs, TensorProduct) and all([isinstance(arg,Operator) or arg == 1 for arg in lhs.args]) and \
             isinstance(rhs, TensorProduct) and all([isinstance(arg,State) or arg == 1 for arg in rhs.args]) and \
             len(lhs.args) == len(rhs.args):
         result = TensorProduct(*[qapply(lhs.args[n]*rhs.args[n], **options) for n in range(len(lhs.args))]).expand(tensorproduct=True)
-        return qapply_Mul(e._new_rawargs(*args), **options)*result
+        return qapply_Mul(e.func(*args), **options)*result
 
     # Now try to actually apply the operator and build an inner product.
     try:
@@ -173,8 +173,8 @@ def qapply_Mul(e, **options):
             # We had two args to begin with so args=[].
             return e
         else:
-            return qapply_Mul(e._new_rawargs(*(args+[lhs])), **options)*rhs
+            return qapply_Mul(e.func(*(args+[lhs])), **options)*rhs
     elif isinstance(result, InnerProduct):
-        return result*qapply_Mul(e._new_rawargs(*args), **options)
+        return result*qapply_Mul(e.func(*args), **options)
     else:  # result is a scalar times a Mul, Add or TensorProduct
-        return qapply(e._new_rawargs(*args)*result, **options)
+        return qapply(e.func(*args)*result, **options)

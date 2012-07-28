@@ -1,12 +1,12 @@
 from __future__ import division
 
 from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
-    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify, WildFunction,
-    Poly, Function, Derivative, Number, pi, NumberSymbol, zoo, Piecewise, Mul,
-    Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
-    separate, collect, factorial, apart, combsimp, factor, refine, cancel,
-    Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E, exp_polar,
-    Lambda)
+    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
+    WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
+    Piecewise, Mul,  Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
+    simplify, together,  collect, factorial, apart, combsimp, factor, refine,
+    cancel, Tuple,  default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
+    exp_polar, Lambda)
 from sympy.core.function import AppliedUndef
 from sympy.abc import a, b, c, d, e, n, t, u, x, y, z
 from sympy.physics.secondquant import FockState
@@ -1000,7 +1000,8 @@ def test_action_verbs():
     assert powsimp(x**y*x**z*y**z, combine='all') == (x**y*x**z*y**z).powsimp(combine='all')
     assert simplify(x**y*x**z*y**z) == (x**y*x**z*y**z).simplify()
     assert together(1/x + 1/y) == (1/x + 1/y).together()
-    assert separate((x*(y*z)**3)**2) == ((x*(y*z)**3)**2).separate()
+    # Note tested because it's deprecated
+    #assert separate((x*(y*z)**3)**2) == ((x*(y*z)**3)**2).separate()
     assert collect(a*x**2 + b*x**2 + a*x - b*x + c, x) == (a*x**2 + b*x**2 + a*x - b*x + c).collect(x)
     assert apart(y/(y+2)/(y+1), y) == (y/(y+2)/(y+1)).apart(y)
     assert combsimp(y/(x+2)/(x+1)) == (y/(x+2)/(x+1)).combsimp()

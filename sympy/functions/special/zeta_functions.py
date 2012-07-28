@@ -110,10 +110,7 @@ class lerchphi(Function):
 
     def _eval_expand_func(self, **hints):
         from sympy import exp, I, floor, Add, Poly, Dummy, exp_polar, unpolarify
-        if hints.get('deep', False):
-            z, s, a = map(lambda x: x._eval_expand_func(**hints), self.args)
-        else:
-            z, s, a = self.args
+        z, s, a = self.args
         if z == 1:
             return zeta(s, a)
         if s.is_Integer and s <= 0:
@@ -284,10 +281,7 @@ class polylog(Function):
 
     def _eval_expand_func(self, **hints):
         from sympy import log, expand_mul, Dummy, exp_polar, I
-        if hints.get('deep', False):
-            s, z = map(lambda x: x._eval_expand_func(**hints), self.args)
-        else:
-            s, z = self.args
+        s, z = self.args
         if s == 1:
             return -log(1 + exp_polar(-I*pi)*z)
         if s.is_Integer and s <= 0:

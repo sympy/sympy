@@ -118,10 +118,6 @@ class sinh(HyperbolicFunction):
             re, im = self.args[0].as_real_imag()
         return (sinh(re)*C.cos(im), cosh(re)*C.sin(im))
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
     def _eval_rewrite_as_exp(self, arg):
         return (C.exp(arg) - C.exp(-arg)) / 2
 
@@ -251,10 +247,6 @@ class cosh(HyperbolicFunction):
             re, im = self.args[0].as_real_imag()
 
         return (cosh(re)*C.cos(im), sinh(re)*C.sin(im))
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
         return (C.exp(arg) + C.exp(-arg)) / 2
@@ -390,10 +382,6 @@ class tanh(HyperbolicFunction):
         denom = sinh(re)**2 + C.cos(im)**2
         return (sinh(re)*cosh(re)/denom, C.sin(im)*C.cos(im)/denom)
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
         return (pos_exp-neg_exp)/(pos_exp+neg_exp)
@@ -521,10 +509,6 @@ class coth(HyperbolicFunction):
             re, im = self.args[0].as_real_imag()
         denom = sinh(re)**2 + C.sin(im)**2
         return (sinh(re)*cosh(re)/denom, -C.sin(im)*C.cos(im)/denom)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = C.exp(-arg), C.exp(arg)

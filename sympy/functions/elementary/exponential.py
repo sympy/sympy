@@ -115,16 +115,11 @@ class ExpBase(Function):
         elif besmall is False and e.is_Rational and e.q == 2:
             return -rv
 
-    def _eval_expand_power_exp(self, deep=True, **hints):
-        if deep:
-            arg = self.args[0].expand(deep=deep, **hints)
-        else:
-            arg = self.args[0]
+    def _eval_expand_power_exp(self, **hints):
+        arg = self.args[0]
         if arg.is_Add and arg.is_commutative:
             expr = 1
             for x in arg.args:
-                if deep:
-                    x = x.expand(deep=deep, **hints)
                 expr *= self.func(x)
             return expr
         return self.func(arg)
@@ -301,10 +296,6 @@ class exp(ExpBase):
             if p is not None:
                 return p * x / n
         return x**n/C.factorial()(n)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
 
     def as_real_imag(self, deep=True, **hints):
         """
@@ -572,32 +563,26 @@ class log(Function):
     def _eval_expand_log(self, deep=True, **hints):
         from sympy import unpolarify
         force = hints.get('force', False)
-        if deep:
-            arg = self.args[0].expand(deep=deep, **hints)
-        else:
-            arg = self.args[0]
+        arg = self.args[0]
         if arg.is_Mul:
             expr = []
             nonpos = []
             for x in arg.args:
-                if deep:
-                    x = x.expand(deep=deep, **hints)
                 if force or x.is_positive or x.is_polar:
-                    expr.append(self.func(x)._eval_expand_log(deep=deep, **hints))
+                    a = self.func(x)
+                    if isinstance(a, log):
+                        expr.append(self.func(x)._eval_expand_log(**hints))
+                    else:
+                        expr.append(a)
                 else:
                     nonpos.append(x)
             return Add(*expr) + log(Mul(*nonpos))
         elif arg.is_Pow:
             if force or (arg.exp.is_real and arg.base.is_positive) or \
                         arg.base.is_polar:
-                if deep:
-                    b = arg.base.expand(deep=deep, **hints)
-                    e = arg.exp.expand(deep=deep, **hints)
-                else:
-                    b = arg.base
-                    e = arg.exp
-                return unpolarify(e) * self.func(b)._eval_expand_log(deep=deep,\
-                **hints)
+                b = arg.base
+                e = arg.exp
+                return unpolarify(e) * self.func(b)._eval_expand_log(**hints)
 
         return self.func(arg)
 
@@ -632,10 +617,6 @@ class log(Function):
             return (log(abs).expand(deep, **hints), arg)
         else:
             return (log(abs), arg)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_is_rational(self):
         s = self.func(*self.args)

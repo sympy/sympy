@@ -525,105 +525,6 @@ class Function(Application, Expr):
             l.append(g)
         return Add(*l) + C.Order(x**n, x)
 
-    def _eval_expand_basic(self, deep=True, **hints):
-        if not deep:
-            return self
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_basic'):
-                newterm = term._eval_expand_basic(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_power_exp(self, deep=True, **hints):
-        if not deep:
-            return self
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_power_exp'):
-                newterm = term._eval_expand_power_exp(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_power_base(self, deep=True, **hints):
-        if not deep:
-            return self
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_power_base'):
-                newterm = term._eval_expand_power_base(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_mul(self, deep=True, **hints):
-        if not deep:
-            return self
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_mul'):
-                newterm = term._eval_expand_mul(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_multinomial(self, deep=True, **hints):
-        if not deep:
-            return self
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_multinomail'):
-                newterm = term._eval_expand_multinomial(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_log(self, deep=True, **hints):
-        if not deep:
-            return self
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_log'):
-                newterm = term._eval_expand_log(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        if deep:
-            func = self.func(*[ a.expand(deep, **hints) for a in self.args ])
-        else:
-            func = self.func(*self.args)
-        return C.re(func) + S.ImaginaryUnit * C.im(func)
-
-    def _eval_expand_trig(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_trig'):
-                newterm = term._eval_expand_trig(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_func(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_func'):
-                newterm = term._eval_expand_func(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
     def _eval_rewrite(self, pattern, rule, **hints):
         if hints.get('deep', False):
             args = [a._eval_rewrite(pattern, rule, **hints) for a in self.args]
@@ -1531,51 +1432,70 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     """
     Expand an expression using methods given as hints.
 
-    Hints evaluated unless explicitly set to False are:
-      basic, log, multinomial, mul, power_base, and power_exp
-    The following hints are supported but not applied unless set to True:
-      complex, func, trig, frac, numer, and denom.
+    Hints evaluated unless explicitly set to False are:  ``basic``, ``log``,
+    ``multinomial``, ``mul``, ``power_base``, and ``power_exp`` The following
+    hints are supported but not applied unless set to True:  ``complex``,
+    ``func``, and ``trig``.  In addition, the following meta-hints are
+    supported by some or all of the other hints:  ``frac``, ``numer``,
+    ``denom``, ``modulus``, and ``force``.  ``deep`` is supported by all
+    hints.  Additionally, subclasses of Expr may define their own hints or
+    meta-hints.
 
     The ``basic`` hint is used for any special rewriting of an object that
     should be done automatically (along with the other hints like ``mul``)
     when expand is called. This is a catch-all hint to handle any sort of
     expansion that may not be described by the existing hint names. To use
     this hint an object should override the ``_eval_expand_basic`` method.
+    Objects may also define their own expand methods, which are not run by
+    default.  See the API section below.
 
-    If ``deep`` is set to True, things like arguments of functions are
-    recursively expanded.  Use ``deep=False`` to only expand on the top
-    level.
+    If ``deep`` is set to ``True`` (the default), things like arguments of
+    functions are recursively expanded.  Use ``deep=False`` to only expand on
+    the top level.
 
     If the ``force`` hint is used, assumptions about variables will be ignored
     in making the expansion.
 
-    Also see expand_log, expand_mul, separate, expand_complex, expand_trig,
-    and expand_func, which are wrappers around those expansion methods.
+    Hints
+    =====
 
-    >>> from sympy import cos, exp
+    These hints are run by default
+
+    mul
+    ---
+
+    Distributes multiplication over addition:
+
+    >>> from sympy import cos, exp, sin
     >>> from sympy.abc import x, y, z
-
-    mul - Distributes multiplication over addition:
-
     >>> (y*(x + z)).expand(mul=True)
     x*y + y*z
 
-    complex - Split an expression into real and imaginary parts:
+    multinomial
+    -----------
 
-    >>> (x + y).expand(complex=True)
-    re(x) + re(y) + I*im(x) + I*im(y)
-    >>> cos(x).expand(complex=True)
-    -I*sin(re(x))*sinh(im(x)) + cos(re(x))*cosh(im(x))
+    Expand (x + y + ...)**n where n is a positive integer.
 
-    power_exp - Expand addition in exponents into multiplied bases:
+    >>> ((x + y + z)**2).expand(multinomial=True)
+    x**2 + 2*x*y + 2*x*z + y**2 + 2*y*z + z**2
+
+    power_exp
+    ---------
+
+    Expand addition in exponents into multiplied bases.
 
     >>> exp(x + y).expand(power_exp=True)
     exp(x)*exp(y)
     >>> (2**(x + y)).expand(power_exp=True)
     2**x*2**y
 
-    power_base - Split powers of multiplied bases if assumptions allow
-    or if the ``force`` hint is used:
+    power_base
+    ----------
+
+    Split powers of multiplied bases.
+
+    This only happens by default if assumptions allow, or if the
+    ``force`` meta-hint is used:
 
     >>> ((x*y)**z).expand(power_base=True)
     (x*y)**z
@@ -1584,10 +1504,21 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     >>> ((2*y)**z).expand(power_base=True)
     2**z*y**z
 
-    log - Pull out power of an argument as a coefficient and split logs products
-    into sums of logs.  Note that these only work if the arguments of the log
-    function have the proper assumptions: the arguments must be positive and the
-    exponents must be real or else the ``force`` hint must be True:
+    Note that in some cases where this expansion always holds, SymPy performs
+    it automatically:
+
+    >>> (x*y)**2
+    x**2*y**2
+
+    log
+    ---
+
+    Pull out power of an argument as a coefficient and split logs products
+    into sums of logs.
+
+    Note that these only work if the arguments of the log function have the
+    proper assumptions--the arguments must be positive and the exponents must
+    be real--or else the ``force`` hint must be True:
 
     >>> from sympy import log, symbols, oo
     >>> log(x**2*y).expand(log=True)
@@ -1598,85 +1529,223 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     >>> log(x**2*y).expand(log=True)
     2*log(x) + log(y)
 
-    trig - Do trigonometric expansions:
+    basic
+    -----
 
-    >>> cos(x + y).expand(trig=True)
-    -sin(x)*sin(y) + cos(x)*cos(y)
+    This hint is intended primarily as a way for custom subclasses to enable
+    expansion by default.
 
-    func - Expand other functions:
+    These hints are not run by default:
+
+    complex
+    -------
+
+    Split an expression into real and imaginary parts.
+
+    >>> x, y = symbols('x y')
+    >>> (x + y).expand(complex=True)
+    re(x) + re(y) + I*im(x) + I*im(y)
+    >>> cos(x).expand(complex=True)
+    -I*sin(re(x))*sinh(im(x)) + cos(re(x))*cosh(im(x))
+
+    Note that this is just a wrapper around ``as_real_imag()``.  Most objects
+    that wish to redefine ``_eval_expand_complex()`` should consider
+    redefining ``as_real_imag()`` instead.
+
+    func
+    ----
+
+    Expand other functions.
 
     >>> from sympy import gamma
     >>> gamma(x + 1).expand(func=True)
     x*gamma(x)
 
-    multinomial - Expand (x + y + ...)**n where n is a positive integer:
+    trig
+    ----
 
-    >>> ((x + y + z)**2).expand(multinomial=True)
-    x**2 + 2*x*y + 2*x*z + y**2 + 2*y*z + z**2
+    Do trigonometric expansions.
 
-    You can shut off unwanted methods:
+    >>> cos(x + y).expand(trig=True)
+    -sin(x)*sin(y) + cos(x)*cos(y)
+    >>> sin(2*x).expand(trig=True)
+    2*sin(x)*cos(x)
 
-    >>> (exp(x + y)*(x + y)).expand()
-    x*exp(x)*exp(y) + y*exp(x)*exp(y)
-    >>> (exp(x + y)*(x + y)).expand(power_exp=False)
-    x*exp(x + y) + y*exp(x + y)
-    >>> (exp(x + y)*(x + y)).expand(mul=False)
-    (x + y)*exp(x)*exp(y)
+    Note that the forms of ``sin(n*x)`` and ``cos(n*x)`` in terms of ``sin(x)``
+    and ``cos(x)`` are not unique, due to the identity `\sin^2(x) + \cos^2(x)
+    = 1`.  The current implementation uses the form obtained from Chebyshev
+    polynomials, but this may change.  See `this MathWorld article
+    <http://mathworld.wolfram.com/Multiple-AngleFormulas.html>`_ for more
+    information.
 
-    Use deep=False to only expand on the top level:
+    Notes
+    =====
 
-    >>> exp(x + exp(x + y)).expand()
-    exp(x)*exp(exp(x)*exp(y))
-    >>> exp(x + exp(x + y)).expand(deep=False)
-    exp(x)*exp(exp(x + y))
+    - You can shut off unwanted methods::
 
-    Hints are applied in an arbitrary (but consistent) order. Because of
-    this, some hints may prevent expansion by other hints if they are
-    applied first. For example, ``mul`` may distribute multiplications and
-    prevent ``log`` and ``power_base`` from expanding them. Also, if ``mul``
-    is applied before ``multinomial`, the expression might not be fully
-    distributed. The solution is to use the various ``expand_hint`` helper
-    functions or to use ``hint=False`` to this function to finely control
-    which hints are applied. Here are some examples:
+        >>> (exp(x + y)*(x + y)).expand()
+        x*exp(x)*exp(y) + y*exp(x)*exp(y)
+        >>> (exp(x + y)*(x + y)).expand(power_exp=False)
+        x*exp(x + y) + y*exp(x + y)
+        >>> (exp(x + y)*(x + y)).expand(mul=False)
+        (x + y)*exp(x)*exp(y)
 
-    >>> from sympy import expand_log, expand, expand_mul, expand_power_base
-    >>> x, y, z = symbols("x,y,z", positive=True)
+    - Use deep=False to only expand on the top level::
 
-    >>> expand(log(x*(y + z)))
-    log(x*y + x*z)
+        >>> exp(x + exp(x + y)).expand()
+        exp(x)*exp(exp(x)*exp(y))
+        >>> exp(x + exp(x + y)).expand(deep=False)
+        exp(x)*exp(exp(x + y))
 
-    Here, we see that ``mul`` was applied before ``log``.  To get the log
-    expanded form, either of the following will work::
+    - Hints are applied in an arbitrary, but consistent order (in the current
+      implementation, they are applied in alphabetical order, except
+      multinomial comes before mul, but this may change).  Because of this,
+      some hints may prevent expansion by other hints if they are applied
+      first. For example, ``mul`` may distribute multiplications and prevent
+      ``log`` and ``power_base`` from expanding them. Also, if ``mul`` is
+      applied before ``multinomial`, the expression might not be fully
+      distributed. The solution is to use the various ``expand_hint`` helper
+      functions or to use ``hint=False`` to this function to finely control
+      which hints are applied. Here are some examples::
 
-    >>> expand_log(log(x*(y + z)))
-    log(x) + log(y + z)
-    >>> expand(log(x*(y + z)), mul=False)
-    log(x) + log(y + z)
+        >>> from sympy import expand_log, expand, expand_mul, expand_power_base
+        >>> x, y, z = symbols("x,y,z", positive=True)
 
-    A similar thing can happen with the ``power_base`` hint.
+        >>> expand(log(x*(y + z)))
+        log(x) + log(y + z)
 
-    >>> expand((x*(y + z))**x)
-    (x*y + x*z)**x
+      Here, we see that ``log`` was applied before ``mul``.  To get the log
+      expanded form, either of the following will work::
 
-    To get the ``power_base`` expanded form, either of the following will
-    work::
+        >>> expand_log(log(x*(y + z)))
+        log(x) + log(y + z)
+        >>> expand(log(x*(y + z)), mul=False)
+        log(x) + log(y + z)
 
-    >>> expand((x*(y + z))**x, mul=False)
-    x**x*(y + z)**x
-    >>> expand_power_base((x*(y + z))**x)
-    x**x*(y + z)**x
+      A similar thing can happen with the ``power_base`` hint::
 
-    >>> expand((x + y)*y/x)
-    y + y**2/x
+        >>> expand((x*(y + z))**x)
+        (x*y + x*z)**x
 
-    The parts of a rational expression can be targeted.
+      To get the ``power_base`` expanded form, either of the following will
+      work::
 
-    >>> expand((x + y)*y/x/(x + 1), frac=True)
-    (x*y + y**2)/(x**2 + x)
-    >>> expand((x + y)*y/x/(x + 1), numer=True)
-    (x*y + y**2)/(x*(x + 1))
-    >>> expand((x + y)*y/x/(x + 1), denom=True)
-    y*(x + y)/(x**2 + x)
+        >>> expand((x*(y + z))**x, mul=False)
+        x**x*(y + z)**x
+        >>> expand_power_base((x*(y + z))**x)
+        x**x*(y + z)**x
+
+        >>> expand((x + y)*y/x)
+        y + y**2/x
+
+      The parts of a rational expression can be targeted::
+
+        >>> expand((x + y)*y/x/(x + 1), frac=True)
+        (x*y + y**2)/(x**2 + x)
+        >>> expand((x + y)*y/x/(x + 1), numer=True)
+        (x*y + y**2)/(x*(x + 1))
+        >>> expand((x + y)*y/x/(x + 1), denom=True)
+        y*(x + y)/(x**2 + x)
+
+    - The ``modulus`` meta-hint can be used to reduce the coefficients of an
+      expression post-expansion::
+
+        >>> expand((3*x + 1)**2)
+        9*x**2 + 6*x + 1
+        >>> expand((3*x + 1)**2, modulus=5)
+        4*x**2 + x + 1
+
+    - Either ``expand()`` the function or ``.expand()`` the method can be
+      used.  Both are equivalent::
+
+        >>> expand((x + 1)**2)
+        x**2 + 2*x + 1
+        >>> ((x + 1)**2).expand()
+        x**2 + 2*x + 1
+
+    API
+    ===
+
+    Objects can define their own expand hints by defining
+    ``_eval_expand_hint()``.  The function should take the form::
+
+        def _eval_expand_hint(self, **hints):
+            # Only apply the method to the top-level expression
+            ...
+
+    See also the example below.  Objects should define ``_eval_expand_hint()``
+    methods only if ``hint`` applies to that specific object.  The generic
+    ``_eval_expand_hint()`` method defined in Expr will handle the no-op case.
+
+    Each hint should be responsible for expanding that hint only.
+    Furthermore, the expansion should be applied to the top-level expression
+    only.  ``expand()`` takes care of the recursion that happens when
+    ``deep=True``.
+
+    You should only call ``_eval_expand_hint()`` methods directly if you are
+    100% sure that the object has the method, as otherwise you are liable to
+    get unexpected ``AttributeError``s.  Note again that you do not need to
+    handle recursively application of the hint to your object's .args.  This
+    happens automatically with ``expand()``.  ``_eval_expand_hint()`` should
+    generally not be used at all outside of an ``_eval_expand_hint()`` method.
+    If you want to apply a specific expansion from within another method, use
+    the public ``expand()`` function, method, or ``expand_hint()`` functions.
+
+    In order for expand to work, objects must be rebuildable by their args,
+    i.e., ``obj.func(*obj.args) == obj`` must hold.
+
+    Expand methods are passed ``**hints`` so that expand hints may use
+    'metahints'--hints that control how different expand methods are applied.
+    For example, the ``force=True`` hint described above that causes
+    ``expand(log=True)`` to ignore assumptions is such a metahint.  The
+    ``deep`` meta-hint is handled exclusively by ``expand()`` and is not
+    passed to ``_eval_expand_hint()`` methods.
+
+    Note that expansion hints should generally be methods that perform some
+    kind of 'expansion'.  For hints that simply rewrite an expression, use the
+    .rewrite() API.
+
+    Example
+    -------
+
+    >>> from sympy import Expr, sympify
+    >>> class MyClass(Expr):
+    ...     def __new__(cls, *args):
+    ...         args = sympify(args)
+    ...         return Expr.__new__(cls, *args)
+    ...
+    ...     def _eval_expand_double(self, **hints):
+    ...         '''
+    ...         Doubles the args of MyClass.
+    ...
+    ...         If there more than four args, doubling is not performed,
+    ...         unless force=True is also used (False by default).
+    ...         '''
+    ...         force = hints.pop('force', False)
+    ...         if not force and len(self.args) > 4:
+    ...             return self
+    ...         return self.func(*(self.args + self.args))
+    ...
+    >>> a = MyClass(1, 2, MyClass(3, 4))
+    >>> a
+    MyClass(1, 2, MyClass(3, 4))
+    >>> a.expand(double=True)
+    MyClass(1, 2, MyClass(3, 4, 3, 4), 1, 2, MyClass(3, 4, 3, 4))
+    >>> a.expand(double=True, deep=False)
+    MyClass(1, 2, MyClass(3, 4), 1, 2, MyClass(3, 4))
+
+    >>> b = MyClass(1, 2, 3, 4, 5)
+    >>> b.expand(double=True)
+    MyClass(1, 2, 3, 4, 5)
+    >>> b.expand(double=True, force=True)
+    MyClass(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
+
+    See Also
+    ========
+
+    expand_log, expand_mul, expand_multinomial, expand_complex, expand_trig,
+    expand_power_base, expand_power_exp, expand_func, hyperexpand
+
     """
     # don't modify this; modify the Expr.expand method
     hints['power_base'] = power_base
@@ -1687,8 +1756,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     hints['basic'] = basic
     return sympify(e).expand(deep=deep, modulus=modulus, **hints)
 
-# These are simple wrappers around single hints.  Feel free to add ones for
-# power_exp, power_base, multinomial, or basic if you need them.
+# These are simple wrappers around single hints.
 def expand_mul(expr, deep=True):
     """
     Wrapper around expand that only uses the mul hint.  See the expand
@@ -1723,8 +1791,7 @@ def expand_multinomial(expr, deep=True):
     return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
     power_base=False, basic=False, multinomial=True, log=False)
 
-
-def expand_log(expr, deep=True):
+def expand_log(expr, deep=True, force=False):
     """
     Wrapper around expand that only uses the log hint.  See the expand
     docstring for more information.
@@ -1738,8 +1805,9 @@ def expand_log(expr, deep=True):
     (x + y)*(log(x) + 2*log(y))*exp(x + y)
 
     """
-    return sympify(expr).expand(deep=deep, log=True, mul=False,\
-    power_exp=False, power_base=False, multinomial=False, basic=False)
+    return sympify(expr).expand(deep=deep, log=True, mul=False,
+        power_exp=False, power_base=False, multinomial=False,
+        basic=False, force=force)
 
 def expand_func(expr, deep=True):
     """
@@ -1783,31 +1851,100 @@ def expand_complex(expr, deep=True):
     Examples
     ========
 
-    >>> from sympy import expand_complex, I, im, re
+    >>> from sympy import expand_complex, exp, sqrt, I
     >>> from sympy.abc import z
-    >>> expand_complex(z**(2*I))
-    re(z**(2*I)) + I*im(z**(2*I))
+    >>> expand_complex(exp(z))
+    I*exp(re(z))*sin(im(z)) + exp(re(z))*cos(im(z))
+    >>> expand_complex(sqrt(I))
+    sqrt(2)/2 + sqrt(2)*I/2
 
+    See Also
+    ========
+    Expr.as_real_imag
     """
     return sympify(expr).expand(deep=deep, complex=True, basic=False,\
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
-def expand_power_base(expr, deep=True):
+def expand_power_base(expr, deep=True, force=False):
     """
     Wrapper around expand that only uses the power_base hint.
+
+    See the expand docstring for more information.
+
+    A wrapper to expand(power_base=True) which separates a power with a base
+    that is a Mul into a product of powers, without performing any other
+    expansions, provided that assumptions about the power's base and exponent
+    allow.
+
+    deep=False (default is True) will only apply to the top-level expression.
+
+    force=True (default is False) will cause the expansion to ignore
+    assumptions about the base and exponent. When False, the expansion will
+    only happen if the base is non-negative or the exponent is an integer.
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import expand_power_base, sin, cos, exp
+
+    >>> (x*y)**2
+    x**2*y**2
+
+    >>> (2*x)**y
+    (2*x)**y
+    >>> expand_power_base(_)
+    2**y*x**y
+
+    >>> expand_power_base((x*y)**z)
+    (x*y)**z
+    >>> expand_power_base((x*y)**z, force=True)
+    x**z*y**z
+    >>> expand_power_base(sin((x*y)**z), deep=False)
+    sin((x*y)**z)
+    >>> expand_power_base(sin((x*y)**z), force=True)
+    sin(x**z*y**z)
+
+    >>> expand_power_base((2*sin(x))**y + (2*cos(x))**y)
+    2**y*sin(x)**y + 2**y*cos(x)**y
+
+    >>> expand_power_base((2*exp(y))**x)
+    2**x*exp(y)**x
+
+    >>> expand_power_base((2*cos(x))**y)
+    2**y*cos(x)**y
+
+    Notice that sums are left untouched. If this is not the desired behavior,
+    apply full ``expand()`` to the expression:
+
+    >>> expand_power_base(((x+y)*z)**2)
+    z**2*(x + y)**2
+    >>> (((x+y)*z)**2).expand()
+    x**2*z**2 + 2*x*y*z**2 + y**2*z**2
+
+    >>> expand_power_base((2*y)**(1+z))
+    2**(z + 1)*y**(z + 1)
+    >>> ((2*y)**(1+z)).expand()
+    2*2**z*y*y**z
+
+    """
+    return sympify(expr).expand(deep=deep, log=False, mul=False,
+        power_exp=False, power_base=True, multinomial=False,
+        basic=False, force=force)
+
+def expand_power_exp(expr, deep=True):
+    """
+    Wrapper around expand that only uses the power_exp hint.
 
     See the expand docstring for more information.
 
     Examples
     ========
 
-    >>> from sympy import expand_power_base
+    >>> from sympy import expand_power_exp
     >>> from sympy.abc import x, y
-    >>> expand_power_base((3*x)**y)
-    3**y*x**y
+    >>> expand_power_exp(x**(y + 2))
+    x**2*x**y
     """
     return sympify(expr).expand(deep=deep, complex=False, basic=False,\
-    log=False, mul=False, power_exp=False, power_base=True, multinomial=False)
+    log=False, mul=False, power_exp=True, power_base=False, multinomial=False)
 
 def count_ops(expr, visual=False):
     """
