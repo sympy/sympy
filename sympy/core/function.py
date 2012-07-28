@@ -1705,8 +1705,8 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     kind of 'expansion'.  For hints that simply rewrite an expression, use the
     .rewrite() API.
 
-    Example
-    -------
+    Examples
+    ========
 
     >>> from sympy import Expr, sympify
     >>> class MyClass(Expr):
