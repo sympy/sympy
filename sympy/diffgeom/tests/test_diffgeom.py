@@ -1,10 +1,10 @@
 from sympy.diffgeom.Rn import R2, R2_p, R2_r, R3, R3_r, R3_c, R3_s
-from sympy.diffgeom import (intcurve_series, intcurve_diffequ, Differential,
-        TensorProduct, WedgeProduct)
+from sympy.diffgeom import *
 from sympy.core import symbols, Function, Derivative
 from sympy.simplify import trigsimp, simplify
 from sympy.functions import sqrt, atan2, sin, cos
 from sympy.matrices import Matrix, eye
+from sympy.utilities.pytest import raises
 
 
 def test_R2():
@@ -20,19 +20,19 @@ def test_R2():
     # polar->rect->polar == Id
     a, b = symbols('a b', positive=True)
     m = Matrix([[a], [b]])
-    #TODO assert m == R2_r.coord_transform_to(R2_p, R2_p.coord_transform_to(R2_r, [a, b])).applyfunc(simplify)
-    assert m == R2_p.coord_transform_to(R2_r, R2_r.coord_transform_to(R2_p, m)).applyfunc(simplify)
+    #TODO assert m == R2_r.coord_tuple_transform_to(R2_p, R2_p.coord_tuple_transform_to(R2_r, [a, b])).applyfunc(simplify)
+    assert m == R2_p.coord_tuple_transform_to(R2_r, R2_r.coord_tuple_transform_to(R2_p, m)).applyfunc(simplify)
 
 
 def test_R3():
     a, b, c = symbols('a b c', positive=True)
     m = Matrix([[a], [b], [c]])
-    assert m == R3_c.coord_transform_to(R3_r, R3_r.coord_transform_to(R3_c, m)).applyfunc(simplify)
-    #TODO assert m == R3_r.coord_transform_to(R3_c, R3_c.coord_transform_to(R3_r, m)).applyfunc(simplify)
-    assert m == R3_s.coord_transform_to(R3_r, R3_r.coord_transform_to(R3_s, m)).applyfunc(simplify)
-    #TODO assert m == R3_r.coord_transform_to(R3_s, R3_s.coord_transform_to(R3_r, m)).applyfunc(simplify)
-    assert m == R3_s.coord_transform_to(R3_c, R3_c.coord_transform_to(R3_s, m)).applyfunc(simplify)
-    #TODO assert m == R3_c.coord_transform_to(R3_s, R3_s.coord_transform_to(R3_c, m)).applyfunc(simplify)
+    assert m == R3_c.coord_tuple_transform_to(R3_r, R3_r.coord_tuple_transform_to(R3_c, m)).applyfunc(simplify)
+    #TODO assert m == R3_r.coord_tuple_transform_to(R3_c, R3_c.coord_tuple_transform_to(R3_r, m)).applyfunc(simplify)
+    assert m == R3_s.coord_tuple_transform_to(R3_r, R3_r.coord_tuple_transform_to(R3_s, m)).applyfunc(simplify)
+    #TODO assert m == R3_r.coord_tuple_transform_to(R3_s, R3_s.coord_tuple_transform_to(R3_r, m)).applyfunc(simplify)
+    assert m == R3_s.coord_tuple_transform_to(R3_c, R3_c.coord_tuple_transform_to(R3_s, m)).applyfunc(simplify)
+    #TODO assert m == R3_c.coord_tuple_transform_to(R3_s, R3_s.coord_tuple_transform_to(R3_c, m)).applyfunc(simplify)
 
 
 def test_intcurve_diffequ():
@@ -56,4 +56,42 @@ def test_differential():
     xdy = R2.x*R2.dy
     dxdy = Differential(xdy)
     assert dxdy(R2.e_x, R2.e_y) == 1
+    assert Differential(dxdy) == 0
 
+
+def test_helpers_and_coordinate_dependent():
+    one_form = R2.dr + R2.dx
+    two_form = Differential(R2.x*R2.dr + R2.r*R2.dx)
+    three_form = Differential(R2.y*two_form) + Differential(R2.x*Differential(R2.r*R2.dr))
+    metric = TensorProduct(R2.dx, R2.dx) + TensorProduct(R2.dy, R2.dy)
+    metric_ambig = TensorProduct(R2.dx, R2.dx) + TensorProduct(R2.dr, R2.dr)
+    misform_a = TensorProduct(R2.dr, R2.dr) + R2.dr
+    misform_b = R2.dr**4
+    misform_c = R2.dx*R2.dy
+    twoform_not_sym = TensorProduct(R2.dx, R2.dx) + TensorProduct(R2.dx, R2.dy)
+    twoform_not_TP = WedgeProduct(R2.dx, R2.dy)
+
+    assert order_of_form(one_form) == 1
+    assert order_of_form(two_form) == 2
+    assert order_of_form(three_form) == 3
+    assert order_of_form(two_form + metric) == 2
+    assert order_of_form(two_form + metric_ambig) == 2
+    assert order_of_form(two_form + twoform_not_sym) == 2
+    assert order_of_form(two_form + twoform_not_TP) == 2
+
+    raises(ValueError, lambda : order_of_form(misform_a))
+    raises(ValueError, lambda : order_of_form(misform_b))
+    raises(ValueError, lambda : order_of_form(misform_c))
+
+    assert twoform_to_matrix(metric) == Matrix([[1,0],[0,1]])
+    assert twoform_to_matrix(twoform_not_sym) == Matrix([[1,0],[1,0]])
+    assert twoform_to_matrix(twoform_not_TP) == Matrix([[0,-1],[1,0]])
+
+    raises(ValueError, lambda : twoform_to_matrix(one_form))
+    raises(ValueError, lambda : twoform_to_matrix(three_form))
+    raises(ValueError, lambda : twoform_to_matrix(metric_ambig))
+
+    raises(ValueError, lambda : metric_to_Christoffel_1st(twoform_not_sym))
+    raises(ValueError, lambda : metric_to_Christoffel_2nd(twoform_not_sym))
+    raises(ValueError, lambda : metric_to_Riemann_components(twoform_not_sym))
+    raises(ValueError, lambda : metric_to_Ricci_components(twoform_not_sym))

@@ -1,5 +1,5 @@
 from sympy.matrices import Matrix
-from sympy.core import Basic, Expr, Dummy, Function, sympify, diff, Mul, Add
+from sympy.core import Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add
 from sympy.core.numbers import Zero
 from sympy.solvers import solve
 from sympy.functions import factorial
@@ -92,13 +92,13 @@ class CoordSystem(Basic):
     Connect the coordinate systems. An inverse transformation is automatically
     found by `solve` when possible:
     >>> polar.connect_to(rect, [r, theta], [r*cos(theta), r*sin(theta)])
-    >>> polar.coord_transform_to(rect, [0, 2])
+    >>> polar.coord_tuple_transform_to(rect, [0, 2])
     [0]
     [0]
-    >>> polar.coord_transform_to(rect, [2, pi/2])
+    >>> polar.coord_tuple_transform_to(rect, [2, pi/2])
     [0]
     [2]
-    >>> rect.coord_transform_to(polar, [1, 1])
+    >>> rect.coord_tuple_transform_to(polar, [1, 1])
     [sqrt(2)]
     [   pi/4]
 
@@ -170,6 +170,14 @@ class CoordSystem(Basic):
         self._dummies = [Dummy(str(n)) for n in (names if names else range(self.patch.dim))]
         self._dummy = Dummy()
 
+    @property
+    def dim(self):
+        return self.patch.dim
+
+    ##########################################################################
+    # Coordinate transformations.
+    ##########################################################################
+
     def connect_to(self, to_sys, from_coords, to_exprs, inverse=True, fill_in_gaps=True):
         """Register the transformation used to switch to another coordinate system.
 
@@ -211,7 +219,7 @@ class CoordSystem(Basic):
         # TODO
         pass
 
-    def coord_transform_to(self, to_sys, coords):
+    def coord_tuple_transform_to(self, to_sys, coords):
         """Transform `coords` to coord system `to_sys`.
 
         See the docstring of `CoordSystem` for examples."""
@@ -223,7 +231,11 @@ class CoordSystem(Basic):
 
     def jacobian(self, to_sys, coords):
         """Return the jacobian matrix of a transformation."""
-        return self.coord_transform_to(to_sys, coords).jacobian(coords)
+        return self.coord_tuple_transform_to(to_sys, coords).jacobian(coords)
+
+    ##########################################################################
+    # Base fields.
+    ##########################################################################
 
     def coord_function(self, coord_index):
         """Return a `ScalarField` that takes a point and returns one of the coords.
@@ -269,6 +281,10 @@ class CoordSystem(Basic):
         For more details see the base_oneform method of this class."""
         return [self.base_oneform(i) for i in range(self.dim)]
 
+    ##########################################################################
+    # Points.
+    ##########################################################################
+
     def point(self, coords):
         """Create a `Point` with coordinates given in this coord system.
 
@@ -281,13 +297,14 @@ class CoordSystem(Basic):
         See the docstring of `CoordSystem` for examples."""
         return point.coords(self)
 
-    @property
-    def dim(self):
-        return self.patch.dim
+    ##########################################################################
+    # Printing.
+    ##########################################################################
 
     def _latex(self, printer, *args):
         return r'\mathrm{%s}^{\mathrm{%s}}_{%s}' % (
                 self.name, self.patch.name, self.patch.manifold._latex(printer, *args))
+
 
 class Point(Basic):
     """Point in a Manifold object.
@@ -335,7 +352,7 @@ class Point(Basic):
         If `to_sys` is None it returns the coordinates in the system in
         which the point was defined."""
         if to_sys:
-            return self._coord_sys.coord_transform_to(to_sys, self._coords)
+            return self._coord_sys.coord_tuple_transform_to(to_sys, self._coords)
         else:
             return self._coords
 
@@ -904,17 +921,22 @@ def dummyfy(args, exprs):
 
 def order_of_form(expr):
     # TODO move some of this to class methods.
+    # TODO rewrite using the .as_blah_blah methods
     if isinstance(expr, Add):
         orders = [order_of_form(e) for e in expr.args]
         if len(set(orders)) != 1:
             raise ValueError('Misformed expression containing form fields of varying order.')
-        return order[0]
+        return orders[0]
     elif isinstance(expr, Mul):
         orders = [order_of_form(e) for e in expr.args]
         not_zero = [o for o in orders if o != 0]
         if len(not_zero) != 1:
             raise ValueError('Misformed expression containing multiplication between forms.')
         return 0 if not not_zero else not_zero[0]
+    elif isinstance(expr, Pow):
+        if order_of_form(expr.base):
+            raise ValueError('Misformed expression containing a power of a form.')
+        return 0
     elif isinstance(expr, Differential):
         return order_of_form(*expr.args) + 1
     elif isinstance(expr, TensorProduct):
@@ -950,6 +972,8 @@ def twoform_to_matrix(expr):
     [-1/2, 1]
 
     """
+    if order_of_form(expr) != 2:
+        raise ValueError('The input expression is not a two-form.')
     coord_sys = expr.atoms(CoordSystem)
     if len(coord_sys) != 1:
         raise ValueError('The input expression concerns more than one '
@@ -966,7 +990,8 @@ def twoform_to_matrix(expr):
 def metric_to_Christoffel_1st(expr):
     """Return the nested list of Christoffel symbols for the given metric.
 
-    This returns the Christoffel symbol of first kind.
+    This returns the Christoffel symbol of first kind that represents the
+    Levi-Civita connection for the given metric.
 
     Examples:
     =========
@@ -981,6 +1006,8 @@ def metric_to_Christoffel_1st(expr):
 
     """
     matrix = twoform_to_matrix(expr)
+    if not matrix.is_symmetric():
+        raise ValueError('The two-form representing the metric is not symmetric.')
     coord_sys = expr.atoms(CoordSystem).pop()
     deriv_matrices = [matrix.applyfunc(lambda a: d(a)) for d in coord_sys.base_vectors()]
     indices = range(coord_sys.dim)
@@ -994,7 +1021,8 @@ def metric_to_Christoffel_1st(expr):
 def metric_to_Christoffel_2nd(expr):
     """Return the nested list of Christoffel symbols for the given metric.
 
-    This returns the Christoffel symbol of second kind.
+    This returns the Christoffel symbol of second kind that represents the
+    Levi-Civita connection for the given metric.
 
     Examples:
     =========
