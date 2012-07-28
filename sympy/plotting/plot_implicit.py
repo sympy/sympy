@@ -231,10 +231,10 @@ def plot_implicit(expr, *args, **kwargs):
     >>> x, y = symbols('x y')
 
     Without any ranges for the symbols in the expression
-    >>> p1 = plot_implicit(Eq(x ** 2 + y**2, 5)) #doctest: +SKIP
+    >>> p1 = plot_implicit(Eq(x**2 + y**2, 5)) #doctest: +SKIP
 
     With the range for the symbols
-    >>> p2 = plot_implicit(Eq(x ** 2 + y ** 2, 3), (x, -3, 3), (y, -3, 3)) #doctest: +SKIP
+    >>> p2 = plot_implicit(Eq(x**2 + y**2, 3), (x, -3, 3), (y, -3, 3)) #doctest: +SKIP
 
     With depth of recursion as argument.
     >>> p3 = plot_implicit(Eq(x**2 + y**2, 5), (x, -4, 4), (y, -4, 4), depth = 2) #doctest: +SKIP
@@ -252,8 +252,8 @@ def plot_implicit(expr, *args, **kwargs):
     >>> p7 = plot_implicit(And(y > x, y > -x)) #doctest: +SKIP
     """
     #TODO: Add a global variable show = False for test runner
-    assert isinstance(expr, Expr)
 
+    assert isinstance(expr, Expr)
     has_equality = False #Represents whether the expression contains an Equality,
                      #GreaterThan or LessThan
 
