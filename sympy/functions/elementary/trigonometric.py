@@ -309,25 +309,29 @@ class sin(TrigonometricFunction):
             re, im = self.args[0].as_real_imag()
         return (sin(re)*C.cosh(im), cos(re)*C.sinh(im))
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
-    def _eval_expand_trig(self, deep=True, **hints):
-        if deep:
-            arg = self.args[0].expand(deep, **hints)
-        else:
-            arg = self.args[0]
+    def _eval_expand_trig(self, **hints):
+        from sympy import expand_mul
+        arg = self.args[0]
         x = None
         if arg.is_Add: # TODO, implement more if deep stuff here
+            # TODO: Do this more efficiently for more than two terms
             x, y = arg.as_two_terms()
+            sx = sin(x)._eval_expand_trig()
+            sy = sin(y)._eval_expand_trig()
+            cx = cos(x)._eval_expand_trig()
+            cy = cos(y)._eval_expand_trig()
+            return sx*cy + sy*cx
         else:
-            coeff, terms = arg.as_coeff_Mul(rational=True)
-            if coeff is not S.One and coeff.is_Integer and terms is not S.One:
-                x = terms
-                y = (coeff - 1)*x
-        if x is not None:
-            return (sin(x)*cos(y) + sin(y)*cos(x)).expand(trig=True)
+            n, x = arg.as_coeff_Mul(rational=True)
+            if n.is_Integer: # n will be positive because of .eval
+                # canonicalization
+
+                # See http://mathworld.wolfram.com/Multiple-AngleFormulas.html
+                if n.is_odd:
+                    return (-1)**((n - 1)/2)*C.chebyshevt(n, sin(x))
+                else:
+                    return expand_mul((-1)**(n/2 - 1)*cos(x)*C.chebyshevu(n -
+                        1, sin(x)), deep=False)
         return sin(arg)
 
     def _eval_as_leading_term(self, x):
@@ -545,22 +549,19 @@ class cos(TrigonometricFunction):
             re, im = self.args[0].as_real_imag()
         return (cos(re)*C.cosh(im), -sin(re)*C.sinh(im))
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
-    def _eval_expand_trig(self, deep=True, **hints):
-        if deep:
-            arg = self.args[0].expand()
-        else:
-            arg = self.args[0]
+    def _eval_expand_trig(self, **hints):
+        arg = self.args[0]
         x = None
-        if arg.is_Add: # TODO, implement more if deep stuff here
+        if arg.is_Add: # TODO: Do this more efficiently for more than two terms
             x, y = arg.as_two_terms()
-            return (cos(x)*cos(y) - sin(y)*sin(x)).expand(trig=True)
+            sx = sin(x)._eval_expand_trig()
+            sy = sin(y)._eval_expand_trig()
+            cx = cos(x)._eval_expand_trig()
+            cy = cos(y)._eval_expand_trig()
+            return cx*cy - sx*sy
         else:
             coeff, terms = arg.as_coeff_Mul(rational=True)
-            if coeff is not S.One and coeff.is_Integer and terms is not S.One:
+            if coeff.is_Integer:
                 return C.chebyshevt(coeff, cos(terms))
         return cos(arg)
 
@@ -754,12 +755,7 @@ class tan(TrigonometricFunction):
         denom = cos(re)**2 + C.sinh(im)**2
         return (sin(re)*cos(re)/denom, C.sinh(im)*C.cosh(im)/denom)
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
-    def _eval_expand_trig(self, deep=True, **hints):
-        return self
+    # TODO: Implement _eval_expand_trig
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
@@ -934,10 +930,6 @@ class cot(TrigonometricFunction):
             re, im = self.args[0].as_real_imag()
         denom = sin(re)**2 + C.sinh(im)**2
         return (sin(re)*cos(re)/denom, -C.sinh(im)*C.cosh(im)/denom)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit

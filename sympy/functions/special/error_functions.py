@@ -911,10 +911,6 @@ class FresnelIntegral(Function):
         im = x/(2*y) * sqrt(sq) * (self.func(x-x*sqrt(sq)) - self.func(x+x*sqrt(sq)))
         return (re, im)
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
 
 class fresnels(FresnelIntegral):
     r"""

@@ -362,11 +362,15 @@ def test_inverse_mellin_transform():
         from sympy import expand, logcombine, powsimp
         return expand(powsimp(logcombine(expr, force=True), force=True, deep=True),
                       force=True).replace(exp_polar, exp)
-    assert mysimp(mysimp(IMT(pi/(s*tan(pi*s)), s, x, (-1, 0)))) == \
-           log(1-x)*Heaviside(1-x) + log(x-1)*Heaviside(x-1)
+    assert mysimp(mysimp(IMT(pi/(s*tan(pi*s)), s, x, (-1, 0)))) in [
+        log(1-x)*Heaviside(1-x) + log(x-1)*Heaviside(x-1),
+        log(x)*Heaviside(x - 1) + log(1 - 1/x)*Heaviside(x - 1) + log(-x +
+        1)*Heaviside(-x + 1)]
     # test passing cot
-    assert mysimp(IMT(pi*cot(pi*s)/s, s, x, (0, 1))) == \
-           log(1/x - 1)*Heaviside(1-x) + log(1 - 1/x)*Heaviside(x-1)
+    assert mysimp(IMT(pi*cot(pi*s)/s, s, x, (0, 1))) in [
+        log(1/x - 1)*Heaviside(1-x) + log(1 - 1/x)*Heaviside(x-1),
+        -log(x)*Heaviside(-x + 1) + log(1 - 1/x)*Heaviside(x - 1) + log(-x +
+        1)*Heaviside(-x + 1),]
 
     # 8.4.14
     assert IMT(-gamma(s + S(1)/2)/(sqrt(pi)*s), s, x, (-S(1)/2, 0)) == \

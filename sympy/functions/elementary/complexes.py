@@ -79,17 +79,11 @@ class re(Function):
 
                 return cls(a) - im(b) + c
 
-    def as_real_imag(self, deep=True):
+    def as_real_imag(self, deep=True, **hints):
         """
         Returns the real number with a zero complex part.
         """
         return (self, S.Zero)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-#        if deep:
-#            return self.args[0].expand(deep, **hints).as_real_imag()[0]
-#        else:
-        return self.args[0].as_real_imag()[0]
 
     def _eval_derivative(self, x):
         if x.is_real or self.args[0].is_real:
@@ -173,7 +167,7 @@ class im(Function):
 
                 return cls(a) + re(b) + c
 
-    def as_real_imag(self, deep=True):
+    def as_real_imag(self, deep=True, **hints):
         """
         Return the imaginary part with a zero real part.
 
@@ -186,11 +180,6 @@ class im(Function):
         (3, 0)
         """
         return (self, S.Zero)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-#        if deep:
-#            return self.args[0].expand(deep, **hints).as_real_imag()[1]
-        return self.args[0].as_real_imag()[1]
 
     def _eval_derivative(self, x):
         if x.is_real or self.args[0].is_real:

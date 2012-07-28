@@ -350,6 +350,7 @@ class Domain(object):
 
     def __getitem__(self, gens):
         """The mathematical way do make a polynomial ring. """
+        gens = sympify(gens)
         if hasattr(gens, '__iter__'):
             return self.poly_ring(*gens)
         else:

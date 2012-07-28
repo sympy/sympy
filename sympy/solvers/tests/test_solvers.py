@@ -224,10 +224,12 @@ def test_tsolve():
     assert solve(2*cos(x)-y,x)== [acos(y/2)]
     assert set(solve(Eq(cos(x), sin(x)), x)) == set([-3*pi/4, pi/4])
 
-    assert set(solve(exp(x) + exp(-x) - y, x)) == set([
+    assert set(solve(exp(x) + exp(-x) - y, x)) in [set([
                         log(y/2 - sqrt(y**2 - 4)/2),
                         log(y/2 + sqrt(y**2 - 4)/2),
-                        ])
+                        ]), set([
+                        log(y - sqrt(y**2 - 4)) - log(2),
+                        log(y + sqrt(y**2 - 4)) - log(2)])]
     assert solve(exp(x)-3, x) == [log(3)]
     assert solve(Eq(exp(x), 3), x) == [log(3)]
     assert solve(log(x)-3, x) == [exp(3)]

@@ -2533,7 +2533,7 @@ class GoldenRatio(NumberSymbol):
         rv = mlib.from_man_exp(phi_fixed(prec+10), -prec-10)
         return mpf_norm(rv, prec)
 
-    def _eval_expand_func(self, deep=True, **hints):
+    def _eval_expand_func(self, **hints):
         from sympy import sqrt
         return S.Half + S.Half*sqrt(5)
 
