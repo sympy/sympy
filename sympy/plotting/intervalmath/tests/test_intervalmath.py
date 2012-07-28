@@ -1,11 +1,5 @@
 from __future__ import division
 from sympy.plotting.intervalmath import interval
-from sympy.external import import_module
-
-np = import_module('numpy')
-if not np:
-    disabled = True
-
 
 def test_interval():
     assert (interval(1, 1) == interval(1, 1, is_valid=True)) == (True, True)
@@ -25,11 +19,11 @@ def test_interval():
     assert interval(-6, 2) not in inter
     assert -5.05 not in inter
     assert 5.3 not in inter
-    interb = interval(-np.inf, np.inf)
+    interb = interval(-float('inf'), float('inf'))
     assert 0 in inter
     assert inter in interb
-    assert interval(0, np.inf) in interb
-    assert interval(-np.inf, 5) in interb
+    assert interval(0, float('inf')) in interb
+    assert interval(-float('inf'), 5) in interb
     assert interval(-1e50, 1e50) in interb
 
 
@@ -37,8 +31,8 @@ def test_interval_add():
     assert (interval(1, 2) + interval(2, 3) == interval(3, 5)) == (True, True)
     assert (1 + interval(1, 2) == interval(2, 3)) == (True, True)
     assert (interval(1, 2) + 1 == interval(2, 3)) == (True, True)
-    assert (1 + interval(0, np.inf) == interval(1, np.inf)) == (True, True)
-    assert (1 + interval(-np.inf, np.inf) == interval(-np.inf, np.inf)) == (True, True)
+    compare = (1 + interval(0, float('inf')) == interval(1, float('inf')))
+    assert compare == (True, True)
     a = 1 + interval(2, 5, is_valid=False)
     assert a.is_valid == False
     a = 1 + interval(2, 5, is_valid=None)
@@ -115,13 +109,13 @@ def test_interval_mul():
 
 def test_interval_div():
     div = interval(1, 2, is_valid=False) / 3
-    assert div == interval(-np.inf, np.inf, is_valid=False)
+    assert div == interval(-float('inf'), float('inf'), is_valid=False)
 
     div = interval(1, 2, is_valid=None) / 3
-    assert div == interval(-np.inf, np.inf, is_valid=None)
+    assert div == interval(-float('inf'), float('inf'), is_valid=None)
 
     div = 3 / interval(1, 2, is_valid=None)
-    assert div == interval(-np.inf, np.inf, is_valid=None)
+    assert div == interval(-float('inf'), float('inf'), is_valid=None)
 
     a = interval(0.5, 1) / interval(-1, 0)
     assert a.is_valid == None
