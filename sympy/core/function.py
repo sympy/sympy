@@ -1525,7 +1525,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     log(x**2*y)
     >>> log(x**2*y).expand(log=True, force=True)
     2*log(x) + log(y)
-    >>> x, y = symbols("x,y", positive=True)
+    >>> x, y = symbols('x,y', positive=True)
     >>> log(x**2*y).expand(log=True)
     2*log(x) + log(y)
 
@@ -1542,7 +1542,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
 
     Split an expression into real and imaginary parts.
 
-    >>> x, y = symbols('x y')
+    >>> x, y = symbols('x,y')
     >>> (x + y).expand(complex=True)
     re(x) + re(y) + I*im(x) + I*im(y)
     >>> cos(x).expand(complex=True)
@@ -1609,7 +1609,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
       which hints are applied. Here are some examples::
 
         >>> from sympy import expand_log, expand, expand_mul, expand_power_base
-        >>> x, y, z = symbols("x,y,z", positive=True)
+        >>> x, y, z = symbols('x,y,z', positive=True)
 
         >>> expand(log(x*(y + z)))
         log(x) + log(y + z)
@@ -1684,9 +1684,9 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
 
     You should only call ``_eval_expand_hint()`` methods directly if you are
     100% sure that the object has the method, as otherwise you are liable to
-    get unexpected ``AttributeError``s.  Note again that you do not need to
-    handle recursively application of the hint to your object's .args.  This
-    happens automatically with ``expand()``.  ``_eval_expand_hint()`` should
+    get unexpected ``AttributeError``s.  Note, again, that you do not need to
+    recursively apply the hint to args of your object: this is handled
+    automatically by ``expand()``.  ``_eval_expand_hint()`` should
     generally not be used at all outside of an ``_eval_expand_hint()`` method.
     If you want to apply a specific expansion from within another method, use
     the public ``expand()`` function, method, or ``expand_hint()`` functions.
