@@ -1,4 +1,3 @@
-from __future__ import division
 """
 Interval Arithmetic for plotting.
 This module does not implement interval arithmetic accurately and
@@ -32,6 +31,7 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 # A It will not affect most of the plots. The interval arithmetic
 # module based suffers the same problems as that of floating point
 # arithmetic.
+from __future__ import division
 from sympy.external import import_module
 from sympy.simplify.simplify import nsimplify
 np = import_module('numpy')
