@@ -618,7 +618,9 @@ class Differential(Expr):
     def __call__(self, *vector_fields):
         k = len(vector_fields)
         if k==1:
-            return vector_fields[0](self._form_field)
+            if vector_fields[0]:
+                return vector_fields[0](self._form_field)
+            return self
         else:
             f = self._form_field
             v = vector_fields
@@ -662,16 +664,41 @@ class TensorProduct(Expr):
     >>> TensorProduct(tp1, R2.dx)(R2.e_x, R2.e_y, R2.e_x)
     1
 
+    You can make partial contaction for instance when 'raising an index'.
+    >>> TP = TensorProduct
+    >>> metric = TP(R2.dx, R2.dx) + 3*TP(R2.dy, R2.dy)
+    >>> metric(R2.e_y, None)
+    3*dy
+
+    Or automatically pad the args with ``None``s.
+    >>> metric(R2.e_y)
+    3*dy
+
     """
+    def __new__(cls, *args):
+        if len(args)==1:
+            return args[0]
+        else:
+            return super(TensorProduct, cls).__new__(cls, *args)
+
     def __init__(self, *args):
         super(TensorProduct, self).__init__()
         self._args = args
 
     def __call__(self, *v_fields):
+        tot_order = order_of_form(self)
+        tot_args = len(v_fields)
+        if tot_args != tot_order:
+            v_fields = list(v_fields) + [None]*(tot_order-tot_args)
         orders = [order_of_form(f) for f in self._args]
         indices = [sum(orders[:i+1]) for i in range(len(orders)-1)]
         v_fields = [v_fields[i:j] for i, j in zip([0]+indices, indices+[None])]
-        return Mul(*[t[0](*t[1]) for t in zip(self._args, v_fields)])
+        multipliers = [t[0](*t[1]) for t in zip(self._args, v_fields)]
+        scalar = Mul(*[m for m in multipliers if order_of_form(m)==0])
+        forms = [m for m in multipliers if order_of_form(m)]
+        if forms:
+            return scalar*TensorProduct(*forms)
+        return scalar
 
     def _latex(self, printer, *args):
         elements = [printer._print(a) for a in self.args]
