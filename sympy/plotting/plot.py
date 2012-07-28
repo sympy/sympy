@@ -968,10 +968,7 @@ class MatplotlibBackend(BaseBackend):
 
     def show(self):
         self.process_series()
-        #TODO after fixing https://github.com/ipython/ipython/issues/1255
-        # you can uncomment the next line and remove the pyplot.show() call
-        #self.fig.show()
-        plt.show()
+        self.fig.show()
 
     def save(self, path):
         self.process_series()
