@@ -655,8 +655,6 @@ class DiagramGrid(object):
         Returns a key for the supplied triangle.  It should be the
         same independently of the hash randomisation.
         """
-        # TODO: Remove this sorting when the problem with the
-        # sort_keys of FiniteSet has been solved.
         objects = sorted(DiagramGrid._triangle_objects(tri), key=default_sort_key)
         return (triangle_sizes[tri], default_sort_key(objects))
 
