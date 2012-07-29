@@ -266,15 +266,7 @@ class interval(object):
             end = other - self.start
             return interval(start, end, is_valid=self.is_valid)
         elif isinstance(other, interval):
-            start = other.start - self.end
-            end = other.end - start
-            if self.is_valid and other.is_valid:
-                return interval(start, end)
-            elif self.is_valid is False or other.is_valid is False:
-                return interval(start, end, is_valid=False)
-            else:
-                return interval(start, end, is_valid=None)
-
+            return other.__sub__(self)
         else:
             return NotImplemented
 

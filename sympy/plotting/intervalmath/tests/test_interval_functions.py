@@ -1,23 +1,24 @@
 from sympy.plotting.intervalmath import *
 from sympy.external import import_module
 
-numpy = import_module('numpy')
-if not numpy:
+np = import_module('numpy')
+if not np:
     disabled = True
 
 
 def test_exp():
-    import numpy as np
     a = exp(interval(-np.inf, 0))
     assert a.start == np.exp(-np.inf)
     assert a.end == np.exp(0)
     a = exp(interval(1, 2))
     assert a.start == np.exp(1)
     assert a.end == np.exp(2)
+    a = exp(1)
+    assert a.start == np.exp(1)
+    assert a.end == np.exp(1)
 
 
 def test_log():
-    import numpy as np
     a = log(interval(1, 2))
     assert a.start == 0
     assert a.end == np.log(2)
@@ -25,20 +26,38 @@ def test_log():
     assert a.is_valid is None
     a = log(interval(-3, -1))
     assert a.is_valid is False
+    a = log(-3)
+    assert a.is_valid is False
+    a = log(2)
+    assert a.start == np.log(2)
+    assert a.end == np.log(2)
+
+def test_log10():
+    a = log10(interval(1, 2))
+    assert a.start == 0
+    assert a.end == np.log10(2)
+    a = log10(interval(-1, 1))
+    assert a.is_valid is None
+    a = log10(interval(-3, -1))
+    assert a.is_valid is False
+    a = log10(-3)
+    assert a.is_valid is False
+    a = log10(2)
+    assert a.start == np.log10(2)
+    assert a.end == np.log10(2)
+
 
 
 def test_atan():
-    import numpy as np
     a = atan(interval(0, 1))
     assert a.start == np.arctan(0)
     assert a.end == np.arctan(1)
     a = atan(1)
-    a.start == np.arctan(1)
-    a.end == np.arctan(1)
+    assert a.start == np.arctan(1)
+    assert a.end == np.arctan(1)
 
 
 def test_sin():
-    import numpy as np
     a = sin(interval(0, np.pi / 4))
     assert a.start == np.sin(0)
     assert a.end == np.sin(np.pi / 4)
@@ -63,9 +82,15 @@ def test_sin():
     assert a.start == -1
     assert a.end == 1
 
+    a = sin(np.pi / 4)
+    assert a.start == np.sin(np.pi / 4)
+    assert a.end == np.sin(np.pi / 4)
+
+    a = sin(interval(1, 2, is_valid=False))
+    assert a.is_valid == False
+
 
 def test_cos():
-    import numpy as np
     a = cos(interval(0, np.pi / 4))
     assert a.start == np.cos(np.pi / 4)
     assert a.end == 1
@@ -90,9 +115,11 @@ def test_cos():
     assert a.start == -1
     assert a.end == 1
 
+    a = cos(interval(1, 2, is_valid=False))
+    assert a.is_valid == False
+
 
 def test_tan():
-    import numpy as np
     a = tan(interval(0, np.pi / 4))
     assert a.start == 0
     assert a.end == np.tan(np.pi / 4)
@@ -103,7 +130,6 @@ def test_tan():
 
 
 def test_sqrt():
-    import numpy as np
     a = sqrt(interval(1, 4))
     assert a.start == 1
     assert a.end == 2
@@ -116,6 +142,12 @@ def test_sqrt():
     assert a.is_valid is None
 
     a = sqrt(interval(-3, -1))
+    assert a.is_valid is False
+
+    a = sqrt(4)
+    assert (a == interval(2, 2)) == (True, True)
+
+    a = sqrt(-3)
     assert a.is_valid is False
 
 
@@ -147,15 +179,17 @@ def test_imax():
     assert a.end == 4
 
 
-def test_imin():
-    import numpy as np
+def test_sinh():
     a = sinh(interval(-1, 1))
     assert a.start == np.sinh(-1)
     assert a.end == np.sinh(1)
 
+    a = sinh(1)
+    assert a.start == np.sinh(1)
+    assert a.end == np.sinh(1)
+
 
 def test_cosh():
-    import numpy as np
     a = cosh(interval(1, 2))
     assert a.start == np.cosh(1)
     assert a.end == np.cosh(2)
@@ -167,16 +201,22 @@ def test_cosh():
     assert a.start == 1
     assert a.end == np.cosh(-2)
 
+    a = cosh(1)
+    assert a.start == np.cosh(1)
+    assert a.end == np.cosh(1)
+
 
 def test_tanh():
-    import numpy as np
     a = tanh(interval(-3, 3))
     assert a.start == np.tanh(-3)
     assert a.end == np.tanh(3)
 
+    a = tanh(3)
+    assert a.start == np.tanh(3)
+    assert a.end == np.tanh(3)
+
 
 def test_asin():
-    import numpy as np
     a = asin(interval(-0.5, 0.5))
     assert a.start == np.arcsin(-0.5)
     assert a.end == np.arcsin(0.5)
@@ -192,9 +232,16 @@ def test_asin():
     a = asin(interval(2, 5))
     assert a.is_valid is False
 
+    a = asin(0.5)
+    assert a.start == np.arcsin(0.5)
+    assert a.end == np.arcsin(0.5)
+
+    a = asin(1.5)
+    assert a.is_valid == False
+
+
 
 def test_acos():
-    import numpy as np
     a = acos(interval(-0.5, 0.5))
     assert a.start == np.arccos(0.5)
     assert a.end == np.arccos(-0.5)
@@ -210,6 +257,13 @@ def test_acos():
     a = acos(interval(2, 5))
     assert a.is_valid is False
 
+    a = acos(0.5)
+    assert a.start == np.arccos(0.5)
+    assert a.end == np.arccos(0.5)
+
+    a = acos(1.5)
+    assert a.is_valid == False
+
 
 def test_ceil():
     a = ceil(interval(0.2, 0.5))
@@ -223,6 +277,10 @@ def test_ceil():
 
     a = ceil(interval(-5, 5))
     assert a.is_valid is None
+
+    a = ceil(5.4)
+    assert a.start == 6
+    assert a.end == 6
 
 
 def test_floor():
@@ -238,11 +296,19 @@ def test_floor():
     a = floor(interval(-5, 5))
     assert a.is_valid is None
 
+    a = floor(5.4)
+    assert a.start == 5
+    assert a.end == 5
+
 
 def test_asinh():
     a = asinh(interval(1, 2))
     assert a.start == np.arcsinh(1)
     assert a.end == np.arcsinh(2)
+
+    a = asinh(0.5)
+    assert a.start == np.arcsinh(0.5)
+    assert a.end == np.arcsinh(0.5)
 
 
 def test_acosh():
@@ -255,6 +321,13 @@ def test_acosh():
     a = acosh(interval(-3, 0.5))
     assert a.is_valid is False
 
+    a = acosh(0.5)
+    assert a.is_valid == False
+
+    a = acosh(2)
+    assert a.start == np.arccosh(2)
+    assert a.end == np.arccosh(2)
+
 
 def test_atanh():
     a = atanh(interval(-0.5, 0.5))
@@ -266,3 +339,31 @@ def test_atanh():
 
     a = atanh(interval(-3, -2))
     assert a.is_valid is False
+
+    a = atanh(0.5)
+    assert a.start == np.arctanh(0.5)
+    assert a.end == np.arctanh(0.5)
+
+    a = atanh(1.5)
+    assert a.is_valid is False
+
+
+def test_Abs():
+    assert (Abs(interval(-0.5, 0.5)) == interval(0, 0.5)) == (True, True)
+    assert (Abs(interval(-3, -2)) == interval(2, 3)) == (True, True)
+    assert (Abs(-3) == interval(3, 3)) == (True, True)
+
+
+def test_And():
+    args = [(True, True), (True, False), (True, None)]
+    assert And(*args) == (True, False)
+
+    args = [(False, True), (None, None), (True, True)]
+    assert And(*args) == (False, None)
+
+
+def test_Or():
+    args = [(True, True), (True, False), (False, None)]
+    assert Or(*args) == (True, True)
+    args = [(None, None), (False, None), (False, False)]
+    assert Or(*args) == (None, None)

@@ -5,10 +5,15 @@ from sympy.external import import_module
 np = import_module('numpy')
 
 def Abs(x):
-    if x.start < 0 and x.end > 0:
-        return interval(0, max(abs(x.start), abs(x.end)), is_valid=x.is_valid)
+    if isinstance(x, (int, float)):
+        return interval(abs(x))
+    elif isinstance(x, interval):
+        if x.start < 0 and x.end > 0:
+            return interval(0, max(abs(x.start), abs(x.end)), is_valid=x.is_valid)
+        else:
+            return interval(abs(x.start), abs(x.end))
     else:
-        return interval(abs(x.start), abs(x.end))
+        raise NotImplementedError
 
 #Monotonic
 def exp(x):
@@ -49,7 +54,7 @@ def log10(x):
         if x <= 0:
             return interval(-np.inf, np.inf, is_valid=False)
         else:
-            return interval(np.log(x))
+            return interval(np.log10(x))
     elif isinstance(x, interval):
         if not x.is_valid:
             return interval(-np.inf, np.inf, is_valid=x.is_valid)
@@ -81,7 +86,7 @@ def sin(x):
     if isinstance(x, (int, float)):
         return interval(np.sin(x))
     elif isinstance(x, interval):
-        if not (np.isfinite(x.start) and np.isfinite(x.end)):
+        if not x.is_valid:
             return interval(-1, 1, is_valid=x.is_valid)
         na, __ = divmod(x.start, np.pi / 2.0)
         nb, __ = divmod(x.end, np.pi / 2.0)
@@ -98,7 +103,7 @@ def sin(x):
             if (na - 3) // 4 != (nb - 3) // 4:
                 #sin has min
                 start = -1
-            return interval(start, end, is_valid=x.is_valid)
+            return interval(start, end)
     else:
         raise NotImplementedError
 
