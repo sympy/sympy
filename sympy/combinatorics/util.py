@@ -236,6 +236,57 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,\
                 basic_orbits[i] = transversals[i].keys()
     return transversals, basic_orbits, distr_gens
 
+def _insert_point_in_base(group, base, strong_gens, pos, point, distr_gens=None, basic_orbits=None, transversals=None):
+    from sympy.combinatorics.perm_groups import PermutationGroup
+    # initialize basic group properties and BSGS structures
+    base_len = len(base)
+    degree = group.degree
+    identity = _new_from_array_form(range(degree))
+    transversals, basic_orbits, distr_gens = _handle_precomputed_bsgs(base, strong_gens, randomized=False, transversals=transversals, basic_orbits=basic_orbits, distr_gens=distr_gens)
+    # cut the base at position pos and append the new point
+    partial_base = base[: pos + 1]
+    partial_base.append(point)
+    # cut the generators for the stabilizer chain and amend them accordingly
+    if pos == base_len - 1:
+        partial_distr_gens = distr_gens[: pos + 1]
+        partial_distr_gens.append([identity])
+    else:
+        partial_distr_gens = distr_gens[: pos + 2]
+    # cut the basic orbits and transversals and amend them accordingly
+    partial_basic_orbits = basic_orbits[: pos + 1]
+    partial_transversals = transversals[: pos + 1]
+    last_stab = PermutationGroup(partial_distr_gens[pos + 1])
+    last_transversal = dict(last_stab.orbit_transversal(point, pairs=True))
+    last_orbit = last_transversal.keys()
+    partial_basic_orbits.append(last_orbit)
+    partial_transversals.append(last_transversal)
+    # baseswap with the partial BSGS structures. Notice that we need only
+    # the orbit and transversal of the new point under the last stabilizer
+    new_base, new_strong_gens = group.baseswap(partial_base, strong_gens, pos, randomized=False, transversals=partial_transversals, basic_orbits=partial_basic_orbits, distr_gens=partial_distr_gens)
+    # amend the basic orbits and transversals
+    stab_pos = PermutationGroup(distr_gens[pos])
+    new_transversal = dict(stab_pos.orbit_transversal(point, pairs=True))
+    transversals[pos] = new_transversal
+    basic_orbits[pos] = new_transversal.keys()
+    # amend the distributed generators if necessary
+    if pos != base_len - 1:
+        new_stab_gens = []
+        for gen in new_strong_gens:
+            if [gen(point) for point in new_base[: pos + 1]] == [point for point in new_base[: pos + 1]]:
+                new_stab_gens.append(gen)
+        distr_gens[pos + 1] = new_stab_gens
+    # return the new partial base and partial strong generating set
+    new_base.pop()
+    new_base = new_base + base[pos + 1 :]
+    while len(base) != 0:
+        base.pop()
+    for point in new_base:
+        base.append(point)
+    while len(strong_gens) != 0:
+        strong_gens.pop()
+    for gen in new_strong_gens:
+        strong_gens.append(gen)
+
 def _orbits_transversals_from_bsgs(base, distr_gens,\
                                    transversals_only=False):
     """
