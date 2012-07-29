@@ -279,9 +279,9 @@ class interval(object):
     def __mul__(self, other):
         if isinstance(other, interval):
             if self.is_valid is False or other.is_valid is False:
-                return interval(-np.inf, np.inf, is_valid=False)
+                return interval(-float('inf'), float('inf'), is_valid=False)
             elif self.is_valid is None or other.is_valid is None:
-                return interval(-np.inf, np.inf, is_valid=None)
+                return interval(-float('inf'), float('inf'), is_valid=None)
             else:
                 inters = []
                 inters.append(self.start * other.start)
@@ -318,24 +318,24 @@ class interval(object):
         # Both None and False are handled
         if not self.is_valid:
             # Don't divide as the value is not valid
-            return interval(-np.inf, np.inf, is_valid=self.is_valid)
+            return interval(-float('inf'), float('inf'), is_valid=self.is_valid)
         if isinstance(other, (int, float)):
             if other == 0:
                 # Divide by zero encountered. valid nowhere
-                return interval(-np.inf, np.inf, is_valid=False)
+                return interval(-float('inf'), float('inf'), is_valid=False)
             else:
                 return interval(self.start / other, self.end / other)
 
         elif isinstance(other, interval):
             if other.is_valid is False or self.is_valid is False:
-                return interval(-np.inf, np.inf, is_valid=False)
+                return interval(-float('inf'), float('inf'), is_valid=False)
             elif other.is_valid is None or self.is_valid is None:
-                return interval(-np.inf, np.inf, is_valid=None)
+                return interval(-float('inf'), float('inf'), is_valid=None)
             else:
                # denominator contains both signs, i.e. being divided by zero
                # return the whole real line with is_valid = None
                 if 0 in other:
-                    return interval(-np.inf, np.inf, is_valid=None)
+                    return interval(-float('inf'), float('inf'), is_valid=None)
 
                 # denominator negative
                 if other.end < 0:
@@ -382,12 +382,13 @@ class interval(object):
                 return self
             elif other < 0:
                 if self.width > 0:
-                    return interval(-np.inf, np.inf, is_valid=False)
+                    return interval(-float('inf'), float('inf'), is_valid=False)
                 else:
                     power_rational = nsimplify(self.start)
                     num, denom = power_rational.as_numer_denom()
                     if denom % 2 == 0:
-                        return interval(-np.inf, np.inf, is_valid=False)
+                        return interval(-float('inf'), float('inf'),
+                                        is_valid=False)
                     else:
                         start = -abs(other)**self.start
                         end = start
@@ -414,7 +415,7 @@ def _pow_float(inter, power):
         return ret
     elif denom % 2 == 0:
         if inter.end < 0:
-            return interval(-np.inf, np.inf, is_valid=False)
+            return interval(-float('inf'), float('inf'), is_valid=False)
         elif inter.start < 0:
             return interval(0, inter.end**power, is_valid=None)
         else:
