@@ -1457,9 +1457,7 @@ class PrettyPrinter(Printer):
         return self._print(pretty_symbol(object.name))
 
     def _print_Morphism(self, morphism):
-        arrow = "-->"
-        if self._use_unicode:
-            arrow = u"\u2014\u2014\u25b6"
+        arrow = xsym("-->")
 
         domain = self._print(morphism.domain)
         codomain = self._print(morphism.codomain)
@@ -1480,9 +1478,7 @@ class PrettyPrinter(Printer):
     def _print_CompositeMorphism(self, morphism):
         from sympy.categories import NamedMorphism
 
-        circle = "*"
-        if self._use_unicode:
-            circle = u"\u2218"
+        circle = xsym(".")
 
         # All components of the morphism have names and it is thus
         # possible to build the name of the composite.
@@ -1505,9 +1501,7 @@ class PrettyPrinter(Printer):
 
         pretty_result = self._print(diagram.premises)
         if diagram.conclusions:
-            results_arrow = " ==> "
-            if self._use_unicode:
-                results_arrow = u" \u2550\u2550\u25b6 "
+            results_arrow = " %s " % xsym("==>")
 
             pretty_conclusions = self._print(diagram.conclusions)[0]
             pretty_result = pretty_result.right(results_arrow, pretty_conclusions)
