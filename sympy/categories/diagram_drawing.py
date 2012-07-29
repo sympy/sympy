@@ -712,6 +712,16 @@ class DiagramGrid(object):
                     # This object is not interesting.
                     continue
 
+                # Pick the "simplest" of the triangles which could be
+                # attached.  Remember that the list of triangles is
+                # sorted according to their "simplicity" (see
+                # _compute_triangle_min_sizes for the metric).
+                #
+                # Note that ``tris`` are sequentially built from
+                # ``triangles``, so we don't have to worry about hash
+                # randomisation.
+                tri = tris[0]
+
                 # We have found a triangle which could be attached to
                 # the existing structure by a vertex.
 

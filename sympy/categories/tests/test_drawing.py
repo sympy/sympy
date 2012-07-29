@@ -219,9 +219,9 @@ def test_DiagramGrid():
     assert grid[1, 2] == B_
     assert grid[2, 0] == C_
     assert grid[2, 1] == D
-    assert grid[2, 2] == E
+    assert grid[2, 2] == D_
     assert grid[3, 0] is None
-    assert grid[3, 1] == D_
+    assert grid[3, 1] == E
     assert grid[3, 2] == E_
 
     morphisms = {}
