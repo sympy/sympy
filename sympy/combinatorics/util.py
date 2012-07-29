@@ -242,7 +242,7 @@ def _insert_point_in_base(group, base, strong_gens, pos, point, distr_gens=None,
     base_len = len(base)
     degree = group.degree
     identity = _new_from_array_form(range(degree))
-    transversals, basic_orbits, distr_gens = _handle_precomputed_bsgs(base, strong_gens, randomized=False, transversals=transversals, basic_orbits=basic_orbits, distr_gens=distr_gens)
+    transversals, basic_orbits, distr_gens = _handle_precomputed_bsgs(base, strong_gens, transversals=transversals, basic_orbits=basic_orbits, distr_gens=distr_gens)
     # cut the base at position pos and append the new point
     partial_base = base[: pos + 1]
     partial_base.append(point)

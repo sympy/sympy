@@ -8,7 +8,8 @@ from math import log
 from sympy.ntheory import isprime, sieve
 from sympy.combinatorics.util import _check_cycles_alt_sym,\
 _distribute_gens_by_base, _orbits_transversals_from_bsgs,\
-_handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr, _strip
+_handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr, _strip,\
+_insert_point_in_base
 
 def _smallest_change(h, alpha):
     """
@@ -619,7 +620,7 @@ class PermutationGroup(Basic):
             self.schreier_sims()
         return self._base
 
-    def baseswap(self, base, strong_gens, pos, randomized=True,\
+    def baseswap(self, base, strong_gens, pos, randomized=False,\
                  transversals=None, basic_orbits=None, distr_gens=None):
         r"""
         Swap two consecutive base points in a base and strong generating set.
