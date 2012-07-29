@@ -667,9 +667,8 @@ class Interval(Set, EvalfMixin):
 
 def set_sort_fn(s):
     """
-    Sort by infimum if possible
-
-    Otherwise sort by hash. Try to put these at the end.
+    Sort by infimum if possible.  Otherwise sort by
+    ``default_sort_key``.
     """
     try:
         val = s.inf
