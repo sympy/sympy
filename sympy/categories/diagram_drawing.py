@@ -720,10 +720,12 @@ class DiagramGrid(object):
                 candidates = sorted([e for e in tri if skeleton[e]],
                                     key=default_sort_key)
                 edges = [e for e in candidates if obj in e]
-                if not edges:
-                    # No meaningful edge could be drawn from this
-                    # object, so we are not interested.
-                    continue
+
+                # Note that a meaningful edge (i.e., and edge that is
+                # associated with a morphism) containing ``obj``
+                # always exists.  That's because all triangles are
+                # guaranteed to have at least two meaningful edges.
+                # See _drop_redundant_triangles.
 
                 # Get the object at the other end of the edge.
                 edge = edges[0]
