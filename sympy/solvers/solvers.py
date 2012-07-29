@@ -31,7 +31,7 @@ from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify)
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
-from sympy.matrices import Matrix, zeros
+from sympy.matrices.matrices import Matrix, zeros, augmented_matrix_to_row_echelon
 from sympy.polys import roots, cancel, Poly, together, factor
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
@@ -1599,95 +1599,16 @@ def solve_linear_system(system, *symbols, **flags):
     {x: -6, y: 2}
 
     """
-    matrix = system[:, :]
+    echelon_form = augmented_matrix_to_row_echelon(system)
+    if echelon_form is None:
+        return None
+    col_swaps, matrix = echelon_form
+    i = matrix.rows
+    m = matrix.cols - 1
+
     syms = list(symbols)
-
-    i, m = 0, matrix.cols - 1  # don't count augmentation
-
-    while i < matrix.rows:
-        if i == m:
-            # an overdetermined system
-            if any(matrix[i:, m]):
-                return None   # no solutions
-            else:
-                # remove trailing rows
-                matrix = matrix[:i, :]
-                break
-
-        if not matrix[i, i]:
-            # there is no pivot in current column
-            # so try to find one in other columns
-            for k in xrange(i + 1, m):
-                if matrix[i, k]:
-                    break
-            else:
-                if matrix[i, m]:
-                    # we need to know if this is always zero or not. We
-                    # assume that if there are free symbols that it is not
-                    # identically zero (or that there is more than one way
-                    # to make this zero. Otherwise, if there are none, this
-                    # is a constant and we assume that it does not simplify
-                    # to zero XXX are there better ways to test this?
-                    if not matrix[i, m].free_symbols:
-                        return None # no solution
-
-                    # zero row with non-zero rhs can only be accepted
-                    # if there is another equivalent row, so look for
-                    # them and delete them
-                    nrows = matrix.rows
-                    rowi = matrix.row(i)
-                    ip = None
-                    j = i + 1
-                    while j < matrix.rows:
-                        # do we need to see if the rhs of j
-                        # is a constant multiple of i's rhs?
-                        rowj = matrix.row(j)
-                        if rowj == rowi:
-                            matrix.row_del(j)
-                        elif rowj[:-1] == rowi[:-1]:
-                            if ip is None:
-                                _, ip = rowi[-1].as_content_primitive()
-                            _, jp = rowj[-1].as_content_primitive()
-                            if not (simplify(jp - ip) or simplify(jp + ip)):
-                                matrix.row_del(j)
-
-                        j += 1
-
-                    if nrows == matrix.rows:
-                        # no solution
-                        return None
-                # zero row or was a linear combination of
-                # other rows or was a row with a symbolic
-                # expression that matched other rows, e.g. [0, 0, x - y]
-                # so now we can safely skip it
-                matrix.row_del(i)
-                if not matrix:
-                    return None
-                continue
-
-            # we want to change the order of colums so
-            # the order of variables must also change
-            syms[i], syms[k] = syms[k], syms[i]
-            matrix.col_swap(i, k)
-
-        pivot_inv = S.One/matrix[i, i]
-
-        # divide all elements in the current row by the pivot
-        matrix.row(i, lambda x, _: x * pivot_inv)
-
-        for k in xrange(i + 1, matrix.rows):
-            if matrix[k, i]:
-                coeff = matrix[k, i]
-
-                # subtract from the current row the row containing
-                # pivot and multiplied by extracted coefficient
-                matrix.row(k, lambda x, j: simplify(x - matrix[i, j]*coeff))
-
-        i += 1
-
-    # if there weren't any problems, augmented matrix is now
-    # in row-echelon form so we can check how many solutions
-    # there are and extract them using back substitution
+    for sw in col_swaps:
+        syms[sw[0]], syms[sw[1]] = syms[sw[1]], syms[sw[0]]
 
     do_simplify = flags.get('simplify', True)
 

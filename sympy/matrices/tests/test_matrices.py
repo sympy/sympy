@@ -2264,3 +2264,10 @@ def test_anti_symmetric():
     assert m.is_anti_symmetric(simplify=False) is True
     m[0, 0] = 1
     assert m.is_anti_symmetric() is False
+
+def test_particular_solution():
+    m = Matrix([[4, 5, -2, -3], [-3, -3, 3, 3], [2, 1, -4, -3], [-1, 1, 5, 3]])
+    b = Matrix([[3], [-2], [1], [0]])
+    assert m*m.particular_solution(b) == b
+
+

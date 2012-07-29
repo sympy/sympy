@@ -10,6 +10,7 @@ from sympy.core.compatibility import is_sequence
 
 from sympy.polys import PurePoly, roots, cancel
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
+from sympy.simplify import simplify
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent, default_sort_key
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
@@ -3415,6 +3416,50 @@ class MatrixBase(object):
         assert sum(res) == algebraical
         return res
 
+    def particular_solution(self, b):
+        """Returns the particular solution to ``A*x=b``.
+
+        It uses row elimination. The matrix needs not be invertable.
+        If there is no solution ``None`` is returned.
+
+        Examples:
+        =========
+
+        >>> from sympy.matrices import Matrix
+        >>> m = Matrix([[4, 5, -2, -3], [-3, -3, 3, 3], [2, 1, -4, -3], [-1, 1, 5, 3]])
+        >>> m
+        [ 4,  5, -2, -3]
+        [-3, -3,  3,  3]
+        [ 2,  1, -4, -3]
+        [-1,  1,  5,  3]
+        >>> m.det()
+        0
+        >>> b = Matrix([[3], [-2], [1], [0]])
+        >>> m.particular_solution(b)
+        [1/3]
+        [1/3]
+        [  0]
+        [  0]
+        >>> m*_ == b
+        True
+
+        """
+        echelon_form = augmented_matrix_to_row_echelon(self.row_join(b))
+        if echelon_form is None:
+            return None
+        swaps, matrix = echelon_form
+        echelon_A = matrix[:, :-1]
+        echelon_b = matrix[:, -1]
+        cols = echelon_A.cols
+        rows = echelon_A.rows
+
+        vect = zeros(cols, 1)
+        for j in range(0, rows)[::-1]:
+            vect[j] = (echelon_b[j] - (echelon_A[j, :]*vect)[0])/echelon_A[j,j]
+        for sw in swaps[::-1]:
+            vect[sw[0]], vect[sw[1]] == vect[sw[1]], vect[sw[0]]
+        return vect
+
     def has(self, *patterns):
         """
         Test whether any subexpression matches any of the patterns.
@@ -4953,6 +4998,124 @@ def rot_axis1(theta):
            (0,ct,st),
            (0,-st,ct))
     return MutableMatrix(mat)
+
+
+def augmented_matrix_to_row_echelon(matrix):
+    """Return the row-echelon form of an augmented matrix.
+
+    For an augmented matrix return the row-echelon form of the augmented matrix
+    and a list of column swaps.
+
+    Returns a ``None`` for overdetermined systems.
+
+    Examples:
+    =========
+
+    In order to find a generalized eigenvector we need to solve a singular
+    system. Here are the first steps:
+
+    >>> from sympy.matrices import Matrix, eye
+    >>> from sympy.matrices.matrices import augmented_matrix_to_row_echelon
+    >>> n = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
+    >>> A = n - n.eigenvects()[0][0]*eye(4)
+    >>> ev = n.eigenvects()[0][2][0]
+    >>> swaps, matrix = augmented_matrix_to_row_echelon(A.row_join(ev))
+    >>> swaps
+    []
+    >>> matrix
+    [1, 5/4, -1/2, -3/4, 3/4]
+    [0,   1,    2,    1, 1/3]
+
+    """
+    i, m = 0, matrix.cols - 1  # don't count augmentation
+    col_swaps = []
+
+    while i < matrix.rows:
+        if i == m:
+            # an overdetermined system
+            if any(matrix[i:, m]):
+                return None   # no solutions
+            else:
+                # remove trailing rows
+                matrix = matrix[:i, :]
+                break
+
+        if not matrix[i, i]:
+            # there is no pivot in current column
+            # so try to find one in other columns
+            for k in xrange(i + 1, m):
+                if matrix[i, k]:
+                    break
+            else:
+                if matrix[i, m]:
+                    # we need to know if this is always zero or not. We
+                    # assume that if there are free symbols that it is not
+                    # identically zero (or that there is more than one way
+                    # to make this zero. Otherwise, if there are none, this
+                    # is a constant and we assume that it does not simplify
+                    # to zero XXX are there better ways to test this?
+                    if not matrix[i, m].free_symbols:
+                        return None # no solution
+
+                    # zero row with non-zero rhs can only be accepted
+                    # if there is another equivalent row, so look for
+                    # them and delete them
+                    nrows = matrix.rows
+                    rowi = matrix.row(i)
+                    ip = None
+                    j = i + 1
+                    while j < matrix.rows:
+                        # do we need to see if the rhs of j
+                        # is a constant multiple of i's rhs?
+                        rowj = matrix.row(j)
+                        if rowj == rowi:
+                            matrix.row_del(j)
+                        elif rowj[:-1] == rowi[:-1]:
+                            if ip is None:
+                                _, ip = rowi[-1].as_content_primitive()
+                            _, jp = rowj[-1].as_content_primitive()
+                            if not (simplify(jp - ip) or simplify(jp + ip)):
+                                matrix.row_del(j)
+
+                        j += 1
+
+                    if nrows == matrix.rows:
+                        # no solution
+                        return None
+                # zero row or was a linear combination of
+                # other rows or was a row with a symbolic
+                # expression that matched other rows, e.g. [0, 0, x - y]
+                # so now we can safely skip it
+                matrix.row_del(i)
+                if not matrix:
+                    return None
+                continue
+
+            # we want to change the order of colums so
+            # the order of variables must also change
+            col_swaps.append((i, k))
+            matrix.col_swap(i, k)
+
+        pivot_inv = S.One/matrix[i, i]
+
+        # divide all elements in the current row by the pivot
+        matrix.row(i, lambda x, _: x * pivot_inv)
+
+        for k in xrange(i + 1, matrix.rows):
+            if matrix[k, i]:
+                coeff = matrix[k, i]
+
+                # subtract from the current row the row containing
+                # pivot and multiplied by extracted coefficient
+                matrix.row(k, lambda x, j: simplify(x - matrix[i, j]*coeff))
+
+        i += 1
+
+    # if there weren't any problems, augmented matrix is now
+    # in row-echelon form so we can check how many solutions
+    # there are and extract them using back substitution
+    return col_swaps, matrix
+
 
 Matrix = MutableMatrix
 Matrix.__name__ = "Matrix"
