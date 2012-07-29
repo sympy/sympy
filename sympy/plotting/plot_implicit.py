@@ -193,7 +193,9 @@ class ImplicitSeries(BaseSeries):
 def plot_implicit(expr, *args, **kwargs):
     """A plot function to plot implicit equations / inequalities.
 
-    INPUT:
+    Arguments
+    =========
+
     - ``expr`` : The equation / inequality that is to be plotted.
     - ``(x, xmin, xmax)`` optional, 3-tuple denoting the range of symbol
       ``x``
@@ -223,8 +225,9 @@ def plot_implicit(expr, *args, **kwargs):
     setting adaptive to False, you can force plot_implicit to use the mesh
     grid. The mesh grid method can be effective when adaptive plotting using
     interval arithmetic, fails to plot with small line width.
+
     Examples:
-    ---------
+    =========
 
     Plot expressions:
     >>> from sympy import plot_implicit, cos, sin, symbols, Eq
