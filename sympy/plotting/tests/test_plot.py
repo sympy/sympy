@@ -1,9 +1,8 @@
 from sympy import (plot, pi, sin, cos, Symbol, Integral, summation, sqrt, log,
-                    oo, LambertW, I, plot_implicit, Eq, tan, And, exp, Or)
+                    oo, LambertW, I)
 from sympy.plotting.plot import matplotlib
 from sympy.utilities.pytest import skip
 from tempfile import NamedTemporaryFile
-
 def tmp_file(name=''):
     return NamedTemporaryFile(suffix='.png').name
 
