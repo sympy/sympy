@@ -716,7 +716,7 @@ class DiagramGrid(object):
                 # the existing structure by a vertex.
 
                 candidates = sorted([e for e in tri if skeleton[e]],
-                                    key=default_sort_key)
+                                    key=lambda e: FiniteSet(e).sort_key())
                 edges = [e for e in candidates if obj in e]
 
                 # Note that a meaningful edge (i.e., and edge that is
