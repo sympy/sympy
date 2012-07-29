@@ -3397,8 +3397,6 @@ class MatrixBase(object):
             if geometrical == multiplicity:
                 Jcell = diag( *([eigenval] * multiplicity))
                 Jcells.append(Jcell)
-            elif geometrical==0:
-                raise MatrixError("Matrix has the eigen vector with geometrical multiplicity equal zero.")
             else:
                 sizes = self._jordan_split(multiplicity, geometrical)
                 cells = []
