@@ -8,8 +8,7 @@ from math import log
 from sympy.ntheory import isprime, sieve
 from sympy.combinatorics.util import _check_cycles_alt_sym,\
 _distribute_gens_by_base, _orbits_transversals_from_bsgs,\
-_handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr, _strip,\
-_insert_point_in_base
+_handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr, _strip
 
 def _smallest_change(h, alpha):
     """
@@ -2086,12 +2085,15 @@ class PermutationGroup(Basic):
         if base is None:
             base = []
         if gens is None:
-            gens = self.generators
+            gens = self.generators[:]
         base_len = len(base)
         degree = self.degree
+        identity = _new_from_array_form(range(degree))
         # handle the trivial group
-        if gens == [_new_from_array_form(range(degree))]:
+        if gens == [identity]:
             return base, gens
+        # remove the identity as a generator
+        gens = [x for x in gens if x != identity]
         # make sure no generator fixes all base points
         for gen in gens:
             if [gen(x) for x in base] == [x for x in base]:
@@ -2506,6 +2508,8 @@ class PermutationGroup(Basic):
         # initialize computed words
         computed_words = [identity]*base_len
         # line 8: main loop
+        # stabilizers
+        stabilizers_res = [PermutationGroup(gens) for gens in res_distr_gens]
         while True:
             # apply all the tests
             while l < base_len - 1 and\
@@ -2515,10 +2519,9 @@ class PermutationGroup(Basic):
                   tests[l](computed_words[base_len - 1]):
                 # line 11: change the (partial) base of K
                 new_point = computed_words[l](base[l])
-                # this function maintains a partial BSGS structure up to position l
-                _insert_point_in_base(res, res_base, res_strong_gens, l, new_point, distr_gens=res_distr_gens, basic_orbits=res_basic_orbits, transversals=res_transversals)
-                # find the l+1-th basic stabilizer
-                new_stab = PermutationGroup(res_distr_gens[l + 1])
+                res_base[l] = new_point
+                stabilizers_res[l + 1] = stabilizers_res[l].stabilizer(new_point)
+                new_stab = stabilizers_res[l + 1]
                 # line 12: calculate minimal orbit representatives for the l+1-th basic stabilizer
                 orbits = new_stab.orbits()
                 reps = []
@@ -2573,7 +2576,8 @@ class PermutationGroup(Basic):
                 res_basic_orbits_init_base = res_basic_orbits[:]
                 res_strong_gens = res_strong_gens_init[:]
                 # line 21: recalculate orbit representatives
-                stab_f = PermutationGroup(res_distr_gens[f])
+                stabilizers_res = [PermutationGroup(gens) for gens in res_distr_gens]
+                stab_f = stabilizers_res[f]
                 temp_orbits = stab_f.orbits()
                 reps = []
                 for orbit in orbits:
@@ -2594,7 +2598,7 @@ class PermutationGroup(Basic):
                 f = l
                 c[l] = 0
                 # line 27
-                stab_f = PermutationGroup(res_distr_gens[f])
+                stab_f = stabilizers_res[f]
                 temp_orbits = stab_f.orbits()
                 reps = []
                 for orbit in orbits:

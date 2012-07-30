@@ -405,11 +405,29 @@ def test_schreier_sims_incremental():
 def test_subgroup_search():
     prop_true = lambda x: True
     prop_fix_points = lambda x: [x(point) for point in points] == points
-    prop_commutes_with_g = lambda x: x*g == g*x
+    prop_comm_g = lambda x: x*g == g*x
     prop_even = lambda x: x.is_even
-    S = SymmetricGroup(11)
-    A = AlternatingGroup(11)
-    C = CyclicGroup(11)
-    assert S.subgroup_search(prop_true) == S
-    assert S.subgroup_search(prop_true, init_subgroup = C) == S
-    assert S.subgroup_search(prop_even) == A
+    for i in range(10, 17, 2):
+        S = SymmetricGroup(i)
+        A = AlternatingGroup(i)
+        C = CyclicGroup(i)
+        Sym = S.subgroup_search(prop_true)
+        assert Sym == S
+        Alt = S.subgroup_search(prop_even)
+        assert Alt == A
+        Sym = S.subgroup_search(prop_true, init_subgroup=C)
+        assert Sym == S
+        points = [7]
+        assert S.stabilizer(7) == S.subgroup_search(prop_fix_points)
+        points = [3, 4]
+        assert S.stabilizer(3).stabilizer(4) == S.subgroup_search(prop_fix_points)
+        points = [3, 5]
+        fix35 = A.subgroup_search(prop_fix_points)
+        points = [5]
+        fix5 = A.subgroup_search(prop_fix_points)
+        assert A.subgroup_search(prop_fix_points, init_subgroup=fix35) == fix5
+        base, strong_gens = A.schreier_sims_incremental()
+        g = A.generators[0]
+        comm_g = A.subgroup_search(prop_comm_g, base=base, strong_gens=strong_gens)
+        assert _verify_bsgs(comm_g, base, comm_g.generators) == True
+        assert [prop_comm_g(gen) == True for gen in comm_g.generators]
