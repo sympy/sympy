@@ -2470,9 +2470,7 @@ class PermutationGroup(Basic):
         # line 3: compute BSGS and related structures for K
         res_base, res_strong_gens = res.schreier_sims_incremental(base=res_base)
         res_distr_gens = _distribute_gens_by_base(res_base, res_strong_gens)
-        res_basic_orbits, res_transversals = _orbits_transversals_from_bsgs(res_base, res_distr_gens)
-        res_basic_orbits_init_base = res_basic_orbits[:]
-        res_strong_gens_init = res_strong_gens[:]
+        res_basic_orbits_init_base = [PermutationGroup(res_distr_gens[i]).orbit(res_base[i]) for i in range(base_len)]
         # initialize orbit representatives
         orbit_reps = [None]*base_len
         # line 4: orbit representatives for f-th basic stabilizer of K
@@ -2499,7 +2497,7 @@ class PermutationGroup(Basic):
         nu = [None]*base_len
         # this corresponds to the element smaller than all points
         mu[l] = degree + 1
-        temp_index = len(basic_orbits[l])+1-len(res_basic_orbits[l])
+        temp_index = len(basic_orbits[l])+1-len(res_basic_orbits_init_base[l])
         if temp_index >= len(basic_orbits[l]):
             # this corresponds to the element larger than all points
             nu[l] = base_ordering[degree]
@@ -2508,8 +2506,6 @@ class PermutationGroup(Basic):
         # initialize computed words
         computed_words = [identity]*base_len
         # line 8: main loop
-        # stabilizers
-        stabilizers_res = [PermutationGroup(gens) for gens in res_distr_gens]
         while True:
             # apply all the tests
             while l < base_len - 1 and\
@@ -2520,8 +2516,9 @@ class PermutationGroup(Basic):
                 # line 11: change the (partial) base of K
                 new_point = computed_words[l](base[l])
                 res_base[l] = new_point
-                stabilizers_res[l + 1] = stabilizers_res[l].stabilizer(new_point)
-                new_stab = stabilizers_res[l + 1]
+                temp_group = PermutationGroup(res_distr_gens[l])
+                new_stab = temp_group.stabilizer(new_point)
+                res_distr_gens[l + 1] = new_stab.generators
                 # line 12: calculate minimal orbit representatives for the l+1-th basic stabilizer
                 orbits = new_stab.orbits()
                 reps = []
@@ -2570,14 +2567,11 @@ class PermutationGroup(Basic):
                 res = PermutationGroup(gens)
                 res_base = base[:]
                 # line 20: recalculate basic orbits (and transversals)
-                res_strong_gens_init.append(g)
-                res_distr_gens = _distribute_gens_by_base(res_base, res_strong_gens_init)
-                res_basic_orbits, res_transversals = _orbits_transversals_from_bsgs(res_base, res_distr_gens)
-                res_basic_orbits_init_base = res_basic_orbits[:]
-                res_strong_gens = res_strong_gens_init[:]
+                res_strong_gens.append(g)
+                res_distr_gens = _distribute_gens_by_base(res_base, res_strong_gens)
+                res_basic_orbits_init_base = [PermutationGroup(res_distr_gens[i]).orbit(res_base[i]) for i in range(base_len)]
                 # line 21: recalculate orbit representatives
-                stabilizers_res = [PermutationGroup(gens) for gens in res_distr_gens]
-                stab_f = stabilizers_res[f]
+                stab_f = PermutationGroup(res_distr_gens[f])
                 temp_orbits = stab_f.orbits()
                 reps = []
                 for orbit in orbits:
@@ -2598,7 +2592,7 @@ class PermutationGroup(Basic):
                 f = l
                 c[l] = 0
                 # line 27
-                stab_f = stabilizers_res[f]
+                stab_f = PermutationGroup(res_distr_gens[f])
                 temp_orbits = stab_f.orbits()
                 reps = []
                 for orbit in orbits:
