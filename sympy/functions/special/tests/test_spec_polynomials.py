@@ -94,7 +94,20 @@ def test_chebyshev():
         raises(ValueError, lambda: chebyshevu_root(n, n))
 
 def test_hermite():
+    assert hermite(0, x) == 1
+    assert hermite(1, x) == 2*x
+    assert hermite(2, x) == 4*x**2 - 2
+    assert hermite(3, x) == 8*x**3 - 12*x
+    assert hermite(4, x) == 16*x**4 - 48*x**2 + 12
     assert hermite(6, x) == 64*x**6 - 480*x**4 + 720*x**2 - 120
+
+    n = Symbol("n")
+    assert hermite(n, x) == hermite(n, x)
+    assert hermite(n, -x) == (-1)**n*hermite(n, x)
+    assert hermite(-n, x) == hermite(-n, x)
+
+    assert diff(hermite(n, x), x) == 2*n*hermite(n - 1, x)
+    assert diff(hermite(n, x), n) ==  Derivative(hermite(n, x), n)
 
 def test_laguerre():
     alpha = Symbol("alpha")
