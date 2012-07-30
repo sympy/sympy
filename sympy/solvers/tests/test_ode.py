@@ -352,7 +352,7 @@ def test_separable1():
     assert dsolve(eq2, hint='separable') == sol2
     assert dsolve(eq3, hint='separable') == sol3
     assert dsolve(eq4, hint='separable', simplify=False) == sol4
-    assert dsolve(eq5, hint='separable') == simplify(sol5)
+    assert dsolve(eq5, hint='separable') == simplify(sol5).expand()
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
     assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
@@ -426,13 +426,14 @@ def test_separable5():
     sol19e = Eq(f(x), (C1*(1 - x) - x*(-x*exp(x) + exp(x)) -
                             x*exp(x) + exp(x))/((1 - x)*(-exp(x) + x*exp(x))))
     sol19f = Eq(f(x), (C1 + (x - 1)*exp(x))*exp(-x)/(-x + 1))
+    sol19g = Eq(f(x), (C1*exp(-x) - x + 1)/(x - 1))
     sol20 = Eq(log(-1 + 3*f(x)**2)/6, C1 + x**2/2)
     sol21 = Eq(-exp(-f(x)), C1 + exp(x))
     assert dsolve(eq15, hint='separable') == sol15
     assert dsolve(eq16, hint='separable', simplify=False) == sol16
     assert dsolve(eq17, hint='separable') == sol17
     assert dsolve(eq18, hint='separable', simplify=False) == sol18
-    assert dsolve(eq19, hint='separable') in [sol19f, sol19a, sol19b, sol19c,
+    assert dsolve(eq19, hint='separable') in [sol19g, sol19f, sol19a, sol19b, sol19c,
                                               sol19d, sol19e]
     assert dsolve(eq20, hint='separable', simplify=False) == sol20
     assert dsolve(eq21, hint='separable', simplify=False) == sol21
@@ -891,9 +892,10 @@ def test_undetermined_coefficients_match():
         'test': True, 'trialset': set([x**2*cos(x)*exp(x), x, cos(x), S(1),
         exp(x)*sin(x), sin(x), x*exp(x)*sin(x), x*cos(x), x*cos(x)*exp(x),
         x*sin(x), cos(x)*exp(x), x**2*exp(x)*sin(x)])}
-    assert _undetermined_coefficients_match(4*x*sin(x - 2), x) == \
-        {'test': True, 'trialset': set([x*cos(x - 2), x*sin(x - 2), cos(x - 2),
-        sin(x - 2)])}
+    assert _undetermined_coefficients_match(4*x*sin(x - 2), x) == {
+        'trialset': set([x*cos(x - 2), x*sin(x - 2), cos(x - 2), sin(x - 2)]),
+        'test': True,
+        }
     assert _undetermined_coefficients_match(2**x*x, x) == \
         {'test': True, 'trialset': set([2**x, x*2**x])}
     assert _undetermined_coefficients_match(2**x*exp(2*x), x) == \

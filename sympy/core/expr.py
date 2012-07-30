@@ -7,6 +7,7 @@ from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
 from compatibility import reduce
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
+from sympy.utilities.misc import default_sort_key
 
 from collections import defaultdict
 from math import log10, ceil
@@ -49,8 +50,6 @@ class Expr(Basic, EvalfMixin):
     @cacheit
     def sort_key(self, order=None):
         # XXX: The order argument does not actually work
-
-        from sympy.utilities import default_sort_key
 
         coeff, expr = self.as_coeff_Mul()
 
@@ -761,7 +760,6 @@ class Expr(Basic, EvalfMixin):
         """Transform an expression to a list of terms. """
         from sympy.core import Add, Mul, S
         from sympy.core.exprtools import decompose_power
-        from sympy.utilities import default_sort_key
 
         gens, terms = set([]), []
 

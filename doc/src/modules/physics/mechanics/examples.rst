@@ -170,10 +170,11 @@ represent the constraint forces in those directions. ::
   [(4*g*sin(q2)/5 + 2*r*u2*u3 - r*u3**2*tan(q2))/r]
   [                                     -2*u1*u3/3]
   [                        (-2*u2 + u3*tan(q2))*u1]
-  >>> mprint(KM.auxiliary_eqs)
-  [                                                  -m*(r*u1*u3 + r*u2') + f1]
-  [       -m*r*((u1**2 + u2**2)*sin(q2) + (u2*u3 + u3*q3' - u1')*cos(q2)) + f2]
-  [-g*m - m*r*((-u1**2 - u2**2)*cos(q2) + (u2*u3 + u3*q3' - u1')*sin(q2)) + f3]
+  >>> from sympy import signsimp, factor_terms
+  >>> mprint(KM.auxiliary_eqs.applyfunc(lambda w: factor_terms(signsimp(w))))
+  [                                                   -m*r*(u1*u3 + u2') + f1]
+  [      -m*r*((u1**2 + u2**2)*sin(q2) + (u2*u3 + u3*q3' - u1')*cos(q2)) + f2]
+  [-g*m + m*r*((u1**2 + u2**2)*cos(q2) - (u2*u3 + u3*q3' - u1')*sin(q2)) + f3]
 
 The Bicycle
 ===========
