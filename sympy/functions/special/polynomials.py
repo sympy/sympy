@@ -355,38 +355,86 @@ class assoc_legendre(Function):
 # Hermite polynomials
 #
 
-class hermite(PolynomialSequence):
+class hermite(OrthogonalPolynomial):
     """
-    hermite(n, x) gives the nth Hermite polynomial in x, H_n(x)
+    hermite(n, x) gives the nth Hermite polynomial in x, :math:`H_n(x)`
 
-    The Hermite polynomials are orthogonal on (-oo, oo) with respect to
-    the weight `exp(-x**2/2)`.
+    The Hermite polynomials are orthogonal on :math:`(-\infty, \infty)`
+    with respect to the weight :math:`exp\left(-\frac{x^2}{2}\right)`.
 
     Examples
     ========
 
-    >>> from sympy import hermite
-    >>> from sympy.abc import x
+    >>> from sympy import hermite, diff
+    >>> from sympy.abc import x, n
     >>> hermite(0, x)
     1
     >>> hermite(1, x)
     2*x
     >>> hermite(2, x)
     4*x**2 - 2
+    >>> hermite(n, x)
+    hermite(n, x)
+    >>> diff(hermite(n,x), x)
+    2*n*hermite(n - 1, x)
+    >>> diff(hermite(n,x), x)
+    2*n*hermite(n - 1, x)
+    >>> hermite(n, -x)
+    (-1)**n*hermite(n, x)
 
     See Also
     ========
 
-    sympy.polys.orthopolys.hermite_poly
+    legendre, assoc_legendre,
+    chebyshevu, chebyshevt, chebyshevu_root, chebyshevt_root
 
     References
     ==========
 
-    * http://mathworld.wolfram.com/HermitePolynomial.html
-
+    .. [1] http://en.wikipedia.org/wiki/Hermite_polynomial
+    .. [2] http://mathworld.wolfram.com/HermitePolynomial.html
     """
 
     _ortho_poly = staticmethod(hermite_poly)
+
+    @classmethod
+    def eval(cls, n, x):
+        if not n.is_Number:
+            # Symbolic result H_n(x)
+            # H_n(-x)  --->  (-1)**n * H_n(x)
+            if x.could_extract_minus_sign():
+                return S.NegativeOne**n * hermite(n,-x)
+            # We can evaluate for some special values of x
+            if x == S.Zero:
+                return 2**n * sqrt(S.Pi) / C.gamma((S.One - n)/2)
+            elif x == S.Infinity:
+                return S.Infinity
+        else:
+            # n is a given fixed integer, evaluate into polynomial
+            if n.is_negative:
+                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+            else:
+                return cls._eval_at_order(n, x)
+
+    def fdiff(self, argindex=2):
+        if argindex == 1:
+            # Diff wrt n
+            raise ArgumentIndexError(self, argindex)
+        elif argindex == 2:
+            # Diff wrt x
+            n, x = self.args
+            return 2*n*hermite(n-1, x)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_polynomial(self, n, x):
+        k = C.Dummy("k")
+        kern = (-1)**k / (C.factorial(k)*C.factorial(n-2*k)) * (2*x)**(n-2*k)
+        return C.factorial(n)*C.Sum(kern, (k, 0, C.floor(n/2)))
+
+#----------------------------------------------------------------------------
+# Laguerre polynomials
+#
 
 def laguerre_l(n, alpha, x):
     """
