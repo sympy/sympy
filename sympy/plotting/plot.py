@@ -392,7 +392,7 @@ def plot(*args, **kwargs):
 ##############################################################################
 # Data Series
 ##############################################################################
-#TODO more general way to cacollectionulate aesthetics (see get_color_array)
+#TODO more general way to calculate aesthetics (see get_color_array)
 
 ### The base class for all series
 class BaseSeries(object):
