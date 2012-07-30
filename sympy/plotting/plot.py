@@ -486,8 +486,8 @@ class Line2DBaseSeries(BaseSeries):
     def get_segments(self):
         points = self.get_points()
         if self.steps == True:
-            x = np.array((points[0],points[0])).T.flatten()[1:]
-            y = np.array((points[1],points[1])).T.flatten()[:-1]
+            x = np.array((points[0], points[0])).T.flatten()[1:]
+            y = np.array((points[1], points[1])).T.flatten()[:-1]
             points = (x, y)
         points = np.ma.array(points).T.reshape(-1, 1, self._dim)
         return np.ma.concatenate([points[:-1], points[1:]], axis=1)
@@ -802,7 +802,7 @@ class SurfaceBaseSeries(BaseSeries):
             f = np.vectorize(c)
             arity = len(getargspec(c)[0])
             if self.is_parametric:
-                variables = map(centers_of_faces,self.get_parameter_meshes())
+                variables = map(centers_of_faces, self.get_parameter_meshes())
                 if arity == 1:
                     return f(variables[0])
                 elif arity == 2:
@@ -1048,7 +1048,7 @@ class MatplotlibBackend(BaseBackend):
             if hasattr(s, 'label'):
                 collection.set_label(s.label)
             if s.is_line and s.line_color:
-                if isinstance(s.line_color, (float,int)) or callable(s.line_color):
+                if isinstance(s.line_color, (float, int)) or callable(s.line_color):
                     color_array = s.get_color_array()
                     collection.set_array(color_array)
                 else:
@@ -1104,9 +1104,9 @@ class MatplotlibBackend(BaseBackend):
         if parent.title:
             self.ax.set_title(parent.title)
         if parent.xlabel:
-            self.ax.set_xlabel(parent.xlabel, position=(1,0))
+            self.ax.set_xlabel(parent.xlabel, position=(1, 0))
         if parent.ylabel:
-            self.ax.set_ylabel(parent.ylabel, position=(0,1))
+            self.ax.set_ylabel(parent.ylabel, position=(0, 1))
 
     def show(self):
         self.process_series()
