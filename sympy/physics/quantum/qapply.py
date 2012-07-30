@@ -105,7 +105,6 @@ def qapply(e, **options):
 
 
 def qapply_Mul(e, **options):
-    from sympy.physics.quantum.density import Density
 
     ip_doit = options.get('ip_doit', True)
 
