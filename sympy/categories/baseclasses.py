@@ -573,13 +573,10 @@ class Diagram(Basic):
             return False
 
     @staticmethod
-    def _add_morphism_closure(morphisms, morphism, props, add_identities=True,
-                              recurse_composites=True):
+    def _add_morphism_closure(morphisms, morphism, props):
         """
         Adds a morphism and its attributes to the supplied dictionary
-        ``morphisms``.  If ``add_identities`` is True, also adds the
-        identity morphisms for the domain and the codomain of
-        ``morphism``.
+        ``morphisms``.
         """
         if not Diagram._set_dict_union(morphisms, morphism, props):
             # We have just added a new morphism.
@@ -595,14 +592,13 @@ class Diagram(Basic):
                         "Instances of IdentityMorphism cannot have properties.")
                 return
 
-            if add_identities:
-                empty = EmptySet()
+            empty = EmptySet()
 
-                id_dom = IdentityMorphism(morphism.domain)
-                id_cod = IdentityMorphism(morphism.codomain)
+            id_dom = IdentityMorphism(morphism.domain)
+            id_cod = IdentityMorphism(morphism.codomain)
 
-                Diagram._set_dict_union(morphisms, id_dom, empty)
-                Diagram._set_dict_union(morphisms, id_cod, empty)
+            Diagram._set_dict_union(morphisms, id_dom, empty)
+            Diagram._set_dict_union(morphisms, id_cod, empty)
 
             for existing_morphism, existing_props in morphisms.items():
                 new_props = existing_props & props
@@ -613,13 +609,11 @@ class Diagram(Basic):
                     right = existing_morphism * morphism
                     Diagram._set_dict_union(morphisms, right, new_props)
 
-            if isinstance(morphism, CompositeMorphism) and recurse_composites:
+            if isinstance(morphism, CompositeMorphism):
                 # This is a composite morphism, add its components as
                 # well.
-                empty = EmptySet()
                 for component in morphism.components:
-                    Diagram._add_morphism_closure(morphisms, component, empty,
-                                                  add_identities)
+                    Diagram._add_morphism_closure(morphisms, component, empty)
 
     def __new__(cls, *args):
         """
