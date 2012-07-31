@@ -2082,6 +2082,58 @@ class PermutationGroup(Basic):
         self._basic_orbits = basic_orbits
 
     def schreier_sims_incremental(self, base=None, gens=None):
+        """
+        Extend a sequence of points and generating set to a base and strong
+        generating set.
+
+        Parameters
+        ==========
+
+        ``base`` - the sequence of points to be extended to a base. Optional
+        parameter with default value ``[]``
+        ``gens`` - generating set to be extended to a strong generating set
+        relative to the base obtained. Optional parameter with default value
+        ``self.generators``
+
+        Returns
+        =======
+
+        ``(base, strong_gens)`` where ``base`` is the base obtained, and
+        ``strong_gens`` is the strong generating set relative to it. The
+        original parameters ``base``, ``gens`` remain unchanged.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import AlternatingGroup
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.util import _verify_bsgs
+        >>> A = AlternatingGroup(7)
+        >>> base = [2, 3]
+        >>> seq = [2, 3]
+        >>> base, strong_gens = A.schreier_sims_incremental(base=seq)
+        >>> _verify_bsgs(A, base, strong_gens)
+        True
+        >>> base[:2]
+        [2, 3]
+
+        Notes
+        =====
+
+        This version of the Schreier-Sims algorithm runs in polynomial time.
+        There are certain assumptions in the implementation - if the trivial
+        group is provided, ``base`` and ``gens`` are returned immediately,
+        as any sequence of points is a base for the trivial group. If the
+        identity is present in the generators ``gens``, it is removed as
+        it is a redundant generator.
+        The implementation is described in [1],pp.90-93.
+
+        See Also
+        ========
+
+        schreier_sims, schreier_sims_random
+
+        """
         if base is None:
             base = []
         if gens is None:
@@ -2113,20 +2165,29 @@ class PermutationGroup(Basic):
             transversals[i] = dict(stabs[i].orbit_transversal(base[i],\
                                                               pairs=True))
             orbs[i] = transversals[i].keys()
+        # main loop: amend the stabilizer chain until we have generators
+        # for all stabilizers
         i = base_len - 1
         while i >= 0:
+            # this flag is used to continue with the main loop from inside
+            # a nested loop
             continue_i = False
+            # test the generators for being a strong generating set
             for beta in orbs[i]:
                 u_beta = transversals[i][beta]
                 for gen in distr_gens[i]:
                     u_beta_gen = transversals[i][gen(beta)]
                     if gen*u_beta != u_beta_gen:
+                        # test if the schreier generator is in the i+1-th
+                        # would-be basic stabilizer
                         y = True
                         schreier_gen = (~u_beta_gen)*gen*u_beta
                         h, j = _strip(schreier_gen, base, orbs, transversals)
                         if j <= base_len:
+                            # new strong generator h at level j
                             y = False
                         elif h != _new_from_array_form(range(degree)):
+                            # h fixes all base points
                             y = False
                             moved = 0
                             while h(moved) == moved:
@@ -2135,6 +2196,8 @@ class PermutationGroup(Basic):
                             base_len += 1
                             distr_gens.append([])
                         if y == False:
+                            # if a new strong generator is found, update the
+                            # data structures and start over
                             for l in range(i + 1, j):
                                 distr_gens[l].append(h)
                                 stabs[l] = PermutationGroup(distr_gens[l])
@@ -2143,6 +2206,7 @@ class PermutationGroup(Basic):
                                                                 pairs=True))
                                 orbs[l] = transversals[l].keys()
                             i = j - 1
+                            # continue main loop using the flag
                             continue_i = True
                     if continue_i == True:
                         break
@@ -2151,6 +2215,7 @@ class PermutationGroup(Basic):
             if continue_i == True:
                 continue
             i -= 1
+        # build the strong generating set
         strong_gens = []
         for gens in distr_gens:
             for gen in gens:
@@ -2439,6 +2504,70 @@ class PermutationGroup(Basic):
         return self._strong_gens
 
     def subgroup_search(self, prop, base=None, strong_gens=None, tests=None, init_subgroup=None):
+        """
+        Find the subgroup of all elements satisfying the property ``prop``.
+
+        This is done by a depth-first search with respect to base images that
+        uses several tests to prune the search tree.
+
+        Parameters
+        ==========
+
+        ``prop`` - the property to be used. Has to be callable on group
+        elements and always return ``True`` or ``False``. It is assumed that
+        all group elements satisfying ``prop`` indeed form a subgroup.
+        ``base`` - a base for the supergroup.
+        ``strong_gens`` - a strong generating set for the supergroup.
+        ``tests`` - list of callables of length equal to the length of ``base``.
+        These are used to rule out group elements by partial base images, so
+        that ``tests[l](g)`` returns False if the element ``g`` is known not
+        to satisfy prop base on where g sends the first ``l + 1`` base points.
+        ``init_subgroup`` - if a subgroup of the saught group is known in
+        advance, it can be passed to the function as this parameter.
+
+        Returns
+        =======
+
+        The subgroup of all elements satisfying ``prop``. The generating set
+        for this group is guaranteed to be a strong generating set relative to
+        the base ``base``.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import (SymmetricGroup,
+        ... AlternatingGroup)
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.util import _verify_bsgs
+        >>> S = SymmetricGroup(7)
+        >>> prop_even = lambda x: x.is_even
+        >>> base, strong_gens = S.schreier_sims_incremental()
+        >>> G = S.subgroup_search(prop_even, base=base, strong_gens=strong_gens)
+        >>> G == AlternatingGroup(7)
+        True
+        >>> _verify_bsgs(G, base, G.generators)
+        True
+
+        Notes
+        =====
+
+        This function is extremely lenghty and complicated and will require
+        some careful attention. The implementation is described in
+        [1],pp.114-117, and the comments for the code here follow the lines
+        of the pseudocode in the book for clarity.
+        The complexity is exponential in general, since the search process by
+        itself visits all members of the supergroup. However, there are a lot
+        of tests which are used to prune the search tree, and users can define
+        their own tests via the ``tests`` parameter, so in practice, and for
+        some computations, it's not terrible.
+        A crucial part in the procedure is the frequent base change performed
+        (this is line 11 in the pseudocode) in order to obtain a new basic
+        stabilizer. The book mentiones that this can be done by using
+        ``.baseswap(...)``, however the current imlementation uses a more
+        straightforward way to find the next basic stabilizer - calling the
+        function ``.stabilizer(...)`` on the previous basic stabilizer.
+
+        """
         # initialize BSGS and basic group properties
         if base is None:
             base, strong_gens = self.schreier_sims_incremental()
@@ -2586,7 +2715,7 @@ class PermutationGroup(Basic):
             # line 24: if the entire tree is traversed, return K
             if l == -1:
                 return res
-            # lines 25
+            # lines 25-27: update orbit representatives
             if l < f:
                 # line 26
                 f = l
@@ -2599,14 +2728,15 @@ class PermutationGroup(Basic):
                     rep = min(orbit, key = lambda point: base_ordering[point])
                     reps.append(rep)
                 orbit_reps[f] = reps
-                # line 28
+                # line 28: update variables used for minimality testing
                 mu[l] = degree + 1
                 temp_index = len(basic_orbits[l]) + 1 - len(res_basic_orbits_init_base[l])
                 if temp_index >= len(sorted_orbits[l]):
                     nu[l] = base_ordering[degree]
                 else:
                     nu[l] = sorted_orbits[l][temp_index]
-            # line 29
+            # line 29: set the next element from the current branch and update
+            # accorndingly
             c[l] += 1
             element = ~(computed_words[l - 1])
             gamma  = element(sorted_orbits[l][c[l]])

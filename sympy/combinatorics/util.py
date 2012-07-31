@@ -291,6 +291,52 @@ def _orbits_transversals_from_bsgs(base, distr_gens,\
         return basic_orbits, transversals
 
 def _remove_gens(base, strong_gens, basic_orbits=None, distr_gens=None):
+    """
+    Remove redundant generators from a strong generating set.
+
+    Parameters
+    ==========
+
+    ``base`` - a base
+    ``strong_gens`` - a strong generating set relative to ``base``
+    ``basic_orbits`` - basic orbits
+    ``distr_gens`` - strong generators distributed by membership in basic
+    stabilizers
+
+    Returns
+    =======
+
+    A strong generating set with respect to ``base`` which is a subset of
+    ``strong_gens``.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.named_groups import SymmetricGroup
+    >>> from sympy.combinatorics.perm_groups import PermutationGroup
+    >>> from sympy.combinatorics.util import _remove_gens, _verify_bsgs
+    >>> S = SymmetricGroup(15)
+    >>> base, strong_gens = S.schreier_sims_incremental()
+    >>> len(strong_gens)
+    26
+    >>> new_gens = _remove_gens(base, strong_gens)
+    >>> len(new_gens)
+    14
+    >>> _verify_bsgs(S, base, new_gens)
+    True
+
+    Notes
+    =====
+
+    This procedure is outlined in [1],p.95.
+
+    References
+    ==========
+
+    [1] Holt, D., Eick, B., O'Brien, E.
+    "Handbook of computational group theory"
+
+    """
     from sympy.combinatorics.perm_groups import PermutationGroup
     base_len = len(base)
     degree = strong_gens[0].size
