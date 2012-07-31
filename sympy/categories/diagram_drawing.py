@@ -183,7 +183,7 @@ class DiagramGrid(object):
     >>> C = Object("C")
     >>> f = NamedMorphism(A, B, "f")
     >>> g = NamedMorphism(B, C, "g")
-    >>> diagram = Diagram([f, g])
+    >>> diagram = Diagram(f, g)
 
     The simplest way to have a diagram laid out is the following:
 
@@ -206,7 +206,7 @@ class DiagramGrid(object):
     >>> g = NamedMorphism(B, C, "g")
     >>> h = NamedMorphism(D, A, "h")
     >>> k = NamedMorphism(D, B, "k")
-    >>> diagram = Diagram([f, g, h, k])
+    >>> diagram = Diagram(f, g, h, k)
 
     Lay it out with generic layout:
 
@@ -240,7 +240,7 @@ class DiagramGrid(object):
     >>> g = NamedMorphism(B, C, "g")
     >>> h = NamedMorphism(C, D, "h")
     >>> i = NamedMorphism(D, E, "i")
-    >>> diagram = Diagram([f, g, h, i])
+    >>> diagram = Diagram(f, g, h, i)
 
     When laid out with the generic layout, it does not get to look
     linear:
@@ -1225,7 +1225,7 @@ class DiagramGrid(object):
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
-        >>> diagram = Diagram([f, g])
+        >>> diagram = Diagram(f, g)
         >>> grid = DiagramGrid(diagram)
         >>> grid.width
         2
@@ -1248,7 +1248,7 @@ class DiagramGrid(object):
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
-        >>> diagram = Diagram([f, g])
+        >>> diagram = Diagram(f, g)
         >>> grid = DiagramGrid(diagram)
         >>> grid.height
         2
@@ -1271,7 +1271,7 @@ class DiagramGrid(object):
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
-        >>> diagram = Diagram([f, g])
+        >>> diagram = Diagram(f, g)
         >>> grid = DiagramGrid(diagram)
         >>> (grid[0, 0], grid[0, 1])
         (Object("A"), Object("B"))
@@ -1297,7 +1297,7 @@ class DiagramGrid(object):
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
-        >>> diagram = Diagram([f, g])
+        >>> diagram = Diagram(f, g)
         >>> grid = DiagramGrid(diagram)
         >>> grid.morphisms
         {NamedMorphism(Object("A"), Object("B"), "f"): EmptySet(),
@@ -1323,7 +1323,7 @@ class DiagramGrid(object):
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
-        >>> diagram = Diagram([f, g])
+        >>> diagram = Diagram(f, g)
         >>> grid = DiagramGrid(diagram)
         >>> print grid
         [[Object("A"), Object("B")],
@@ -1543,7 +1543,7 @@ class XypicDiagramDrawer(object):
     >>> E = Object("E")
     >>> h = NamedMorphism(D, A, "h")
     >>> k = NamedMorphism(D, B, "k")
-    >>> diagram = Diagram([f, g, h, k])
+    >>> diagram = Diagram(f, g, h, k)
     >>> grid = DiagramGrid(diagram)
     >>> drawer = XypicDiagramDrawer()
     >>> print drawer.draw(diagram, grid)
@@ -1570,7 +1570,7 @@ class XypicDiagramDrawer(object):
 
     >>> drawer.default_curving_step = 1
     >>> h1 = NamedMorphism(A, D, "h1")
-    >>> diagram = Diagram([f, g, h, k, h1])
+    >>> diagram = Diagram(f, g, h, k, h1)
     >>> grid = DiagramGrid(diagram)
     >>> print drawer.draw(diagram, grid)
     \xymatrix{

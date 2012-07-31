@@ -1,5 +1,6 @@
 from sympy.core import (Set, Basic, FiniteSet, EmptySet, Dict, Symbol,
                         Tuple)
+from sympy.core.compatibility import iterable
 
 class Class(Set):
     r"""
@@ -428,7 +429,7 @@ class Category(Basic):
     >>> C = Object("C")
     >>> f = NamedMorphism(A, B, "f")
     >>> g = NamedMorphism(B, C, "g")
-    >>> d = Diagram([f, g])
+    >>> d = Diagram(f, g)
     >>> K = Category("K", commutative_diagrams=[d])
     >>> K.commutative_diagrams == FiniteSet(d)
     True
@@ -493,7 +494,7 @@ class Category(Basic):
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
-        >>> d = Diagram([f, g])
+        >>> d = Diagram(f, g)
         >>> K = Category("K", commutative_diagrams=[d])
         >>> K.commutative_diagrams == FiniteSet(d)
         True
@@ -540,7 +541,7 @@ class Diagram(Basic):
     >>> C = Object("C")
     >>> f = NamedMorphism(A, B, "f")
     >>> g = NamedMorphism(B, C, "g")
-    >>> d = Diagram([f, g])
+    >>> d = Diagram(f, g)
     >>> morphisms_keys = sorted(d.morphisms.keys(), key=default_sort_key)
     >>> pprint(morphisms_keys, use_unicode=False)
     [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
@@ -628,9 +629,10 @@ class Diagram(Basic):
 
         If the first argument is a dictionary, it is interpreted as a
         mapping between the morphisms which form the diagram and their
-        properties.  If the first argument is a list, it is
-        interpreted as a list of morphisms, each of which has no
-        properties.
+        properties.  If the first argument is an iterable, but not a
+        dictionary, it is interpreted as a collection of morphisms,
+        each of which has no properties.  Otherwise, all arguments are
+        interpreted as morphisms.
 
         Examples
         ========
@@ -642,7 +644,7 @@ class Diagram(Basic):
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
-        >>> d = Diagram([f, g])
+        >>> d = Diagram(f, g)
         >>> IdentityMorphism(A) in d.morphisms.keys()
         True
         >>> g * f in d.morphisms
@@ -658,7 +660,14 @@ class Diagram(Basic):
         if args:
             first_arg = args[0]
 
-            if isinstance(first_arg, list):
+            if isinstance(first_arg, dict) or isinstance(first_arg, Dict):
+                # The user has supplied a dictionary of morphisms and
+                # their properties.
+                for morphism, props in first_arg.items():
+                    objects.update([morphism.domain, morphism.codomain])
+                    Diagram._add_morphism_closure(
+                        morphisms, morphism, FiniteSet(props))
+            elif iterable(first_arg):
                 # The user has supplied a list of morphisms, none of
                 # which have any properties.
                 empty = EmptySet()
@@ -666,13 +675,10 @@ class Diagram(Basic):
                 for morphism in first_arg:
                     objects.update([morphism.domain, morphism.codomain])
                     Diagram._add_morphism_closure(morphisms, morphism, empty)
-            elif isinstance(first_arg, dict) or isinstance(first_arg, Dict):
-                # The user has supplied a dictionary of morphisms and
-                # their properties.
-                for morphism, props in first_arg.items():
-                    objects.update([morphism.domain, morphism.codomain])
-                    Diagram._add_morphism_closure(
-                        morphisms, morphism, FiniteSet(props))
+            else:
+                # Attempt to interpret ``args`` as a list of
+                # morphisms.
+                return Diagram(args)
 
         return Basic.__new__(cls, Dict(morphisms), FiniteSet(objects))
 
@@ -692,7 +698,7 @@ class Diagram(Basic):
         >>> f = NamedMorphism(A, B, "f")
         >>> id_A = IdentityMorphism(A)
         >>> id_B = IdentityMorphism(B)
-        >>> d = Diagram([f])
+        >>> d = Diagram(f)
         >>> print pretty(d.morphisms, use_unicode=False)
         {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: EmptySet()}
 
@@ -713,7 +719,7 @@ class Diagram(Basic):
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
-        >>> d = Diagram([f, g])
+        >>> d = Diagram(f, g)
         >>> d.objects
         {Object("A"), Object("B"), Object("C")}
 
@@ -735,7 +741,7 @@ class Diagram(Basic):
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
-        >>> d = Diagram([f, g])
+        >>> d = Diagram(f, g)
         >>> print pretty(d.hom(A, C), use_unicode=False)
         {g*f:A-->C}
 
@@ -763,8 +769,8 @@ class Diagram(Basic):
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
-        >>> d = Diagram([f, g])
-        >>> d1 = Diagram([f])
+        >>> d = Diagram(f, g)
+        >>> d1 = Diagram(f)
         >>> d.is_subdiagram(d1)
         True
         >>> d1.is_subdiagram(d)

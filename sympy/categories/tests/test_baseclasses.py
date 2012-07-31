@@ -93,15 +93,16 @@ def test_diagram():
     empty = EmptySet()
 
     # Test the addition of identities.
-    d1 = Diagram([f])
+    d1 = Diagram(f)
 
     assert d1.objects == FiniteSet(A, B)
     assert d1.hom(A, B) == FiniteSet(f)
     assert d1.hom(A, A) == FiniteSet(id_A)
     assert d1.hom(B, B) == FiniteSet(id_B)
 
-    assert d1 == Diagram([id_A, f])
-    assert d1 == Diagram([f, f])
+    assert d1 == Diagram([f])
+    assert d1 == Diagram(id_A, f)
+    assert d1 == Diagram(f, f)
 
     # Test the addition of composites.
     d2 = Diagram([f, g])
@@ -110,6 +111,7 @@ def test_diagram():
     assert d2.objects == FiniteSet(A, B, C)
     assert g * f in d2.morphisms.keys()
     assert homAC == FiniteSet(g * f)
+    assert d2 == Diagram(f, g)
 
     # Test equality, inequality and hash.
     d11 = Diagram([f])
