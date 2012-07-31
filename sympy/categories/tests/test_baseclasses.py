@@ -96,19 +96,19 @@ def test_diagram():
     d1 = Diagram([f])
 
     assert d1.objects == FiniteSet(A, B)
-    assert d1.hom(A, B) == (FiniteSet(f), empty)
-    assert d1.hom(A, A) == (FiniteSet(id_A), empty)
-    assert d1.hom(B, B) == (FiniteSet(id_B), empty)
+    assert d1.hom(A, B) == FiniteSet(f)
+    assert d1.hom(A, A) == FiniteSet(id_A)
+    assert d1.hom(B, B) == FiniteSet(id_B)
 
     assert d1 == Diagram([id_A, f])
     assert d1 == Diagram([f, f])
 
     # Test the addition of composites.
     d2 = Diagram([f, g])
-    homAC = d2.hom(A, C)[0]
+    homAC = d2.hom(A, C)
 
     assert d2.objects == FiniteSet(A, B, C)
-    assert g * f in d2.premises.keys()
+    assert g * f in d2.morphisms.keys()
     assert homAC == FiniteSet(g * f)
 
     # Test equality, inequality and hash.
@@ -123,39 +123,29 @@ def test_diagram():
 
     # Make sure that (re-)adding composites (with new properties)
     # works as expected.
-    d = Diagram([f, g], {g * f: "unique"})
-    assert d.conclusions == Dict({g * f: FiniteSet("unique")})
-
-    # Check the hom-sets when there are premises and conclusions.
-    assert d.hom(A, C) == (FiniteSet(g * f), FiniteSet(g * f))
-    d = Diagram([f, g], [g * f])
-    assert d.hom(A, C) == (FiniteSet(g * f), FiniteSet(g * f))
+    d = Diagram({f: empty, g: empty, g * f: "unique"})
+    assert d.morphisms[g * f] == FiniteSet("unique")
 
     # Check how the properties of composite morphisms are computed.
-    d = Diagram({f: ["unique", "isomorphism"], g:"unique"})
-    assert d.premises[g * f] == FiniteSet("unique")
-
-    # Check that conclusion morphisms with new objects are not allowed.
-    d = Diagram([f], [g])
-    assert d.conclusions == Dict({})
+    d = Diagram({f: ["unique", "isomorphism"], g: "unique"})
+    assert d.morphisms[g * f] == FiniteSet("unique")
 
     # Test an empty diagram.
     d = Diagram()
-    assert d.premises == Dict({})
-    assert d.conclusions == Dict({})
+    assert d.morphisms == Dict({})
     assert d.objects == empty
 
     # Check a SymPy Dict object.
     d = Diagram(Dict({f: FiniteSet("unique", "isomorphism"), g: "unique"}))
-    assert d.premises[g * f] == FiniteSet("unique")
+    assert d.morphisms[g * f] == FiniteSet("unique")
 
     # Check the addition of components of composite morphisms.
     d = Diagram([g * f])
-    assert f in d.premises
-    assert g in d.premises
+    assert f in d.morphisms
+    assert g in d.morphisms
 
     # Check subdiagrams.
-    d = Diagram([f, g], {g * f: "unique"})
+    d = Diagram({f: empty, g: empty, g * f:"unique"})
 
     d1 = Diagram([f])
     assert d.is_subdiagram(d1)
@@ -165,7 +155,7 @@ def test_diagram():
     assert not d.is_subdiagram(d1)
     assert not d1.is_subdiagram(d)
 
-    d1 = Diagram([f, g], {g * f: ["unique", "something"]})
+    d1 = Diagram({f: empty, g: empty, g * f: ["unique", "something"]})
     assert not d.is_subdiagram(d1)
     assert not d1.is_subdiagram(d)
 
@@ -174,9 +164,9 @@ def test_diagram():
     assert not d.is_subdiagram(d1)
     assert not d1.is_subdiagram(d)
 
-    d = Diagram([f, g], {f: "unique", g * f: "veryunique"})
+    d = Diagram({f: "unique", g: empty, g * f: "veryunique"})
     d1 = d.subdiagram_from_objects(FiniteSet(A, B))
-    assert d1 == Diagram([f], {f: "unique"})
+    assert d1 == Diagram({f: "unique"})
     raises(ValueError, lambda: d.subdiagram_from_objects(FiniteSet(A, Object("D"))))
 
     raises(ValueError, lambda: Diagram({IdentityMorphism(A): "unique"}))

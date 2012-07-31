@@ -1502,17 +1502,11 @@ class PrettyPrinter(Printer):
         return self._print(pretty_symbol(category.name))
 
     def _print_Diagram(self, diagram):
-        if not diagram.premises:
+        if not diagram.morphisms:
             # This is an empty diagram.
             return self._print(S.EmptySet)
 
-        pretty_result = self._print(diagram.premises)
-        if diagram.conclusions:
-            results_arrow = " %s " % xsym("==>")
-
-            pretty_conclusions = self._print(diagram.conclusions)[0]
-            pretty_result = pretty_result.right(results_arrow, pretty_conclusions)
-
+        pretty_result = self._print(diagram.morphisms)
         return prettyForm(pretty_result[0])
 
     def _print_DiagramGrid(self, grid):

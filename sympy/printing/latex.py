@@ -1290,15 +1290,11 @@ class LatexPrinter(Printer):
         return "\\mathbf{%s}" % self._print(Symbol(morphism.name))
 
     def _print_Diagram(self, diagram):
-        if not diagram.premises:
+        if not diagram.morphisms:
             # This is an empty diagram.
             return self._print(S.EmptySet)
 
-        latex_result = self._print(diagram.premises)
-        if diagram.conclusions:
-            latex_result += "\\Longrightarrow %s" % \
-                            self._print(diagram.conclusions)
-
+        latex_result = self._print(diagram.morphisms)
         return latex_result
 
     def _print_DiagramGrid(self, grid):

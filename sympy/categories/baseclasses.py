@@ -510,34 +510,24 @@ class Category(Basic):
             "Obtaining the class of morphisms is not implemented in Category.")
 
 class Diagram(Basic):
-    r"""
+    """
     Represents a diagram in a certain category.
 
     Informally, a diagram is a collection of objects of a category and
-    certain morphisms between them.  A diagram is still a monoid with
-    respect to morphism composition; i.e., identity morphisms, as well
-    as all composites of morphisms included in the diagram belong to
-    the diagram.  For a more formal approach to this notion see
+    certain morphisms between them.  Identity morphisms, as well as
+    all composites of morphisms included in the diagram belong to the
+    diagram.  For a more formal approach to this notion see
     [Pare1970].
 
-    The components of composite morphisms are also added to the
-    diagram.  No properties are assigned to such morphisms by default.
+    A :class:`Diagram` stores a mapping between morphisms and the
+    :class:`FiniteSet`'s of their properties.  All possible morphism
+    compositions, as well as the components of composite morphisms are
+    also added to the diagram.  No properties are assigned to such
+    morphisms by default.  The set of properties of a composite
+    morphism is the intersection of the sets of properties of its
+    components.
 
-    A commutative diagram is often accompanied by a statement of the
-    following kind: "if such morphisms with such properties exist,
-    then such morphisms which such properties exist and the diagram is
-    commutative".  To represent this, an instance of :class:`Diagram`
-    includes a collection of morphisms which are the premises and
-    another collection of conclusions.  ``premises`` and
-    ``conclusions`` associate morphisms belonging to the corresponding
-    categories with the :class:`FiniteSet`'s of their properties.
-
-    The set of properties of a composite morphism is the intersection
-    of the sets of properties of its components.  The domain and
-    codomain of a conclusion morphism should be among the domains and
-    codomains of the morphisms listed as the premises of a diagram.
-
-    No checks are carried out of whether the supplied object and
+    No checks are carried out of whether the supplied objects and
     morphisms do belong to one and the same category.
 
     Examples
@@ -551,21 +541,19 @@ class Diagram(Basic):
     >>> f = NamedMorphism(A, B, "f")
     >>> g = NamedMorphism(B, C, "g")
     >>> d = Diagram([f, g])
-    >>> premises_keys = sorted(d.premises.keys(), key=default_sort_key)
-    >>> pprint(premises_keys, use_unicode=False)
+    >>> morphisms_keys = sorted(d.morphisms.keys(), key=default_sort_key)
+    >>> pprint(morphisms_keys, use_unicode=False)
     [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
-    >>> pprint(d.premises, use_unicode=False)
+    >>> pprint(d.morphisms, use_unicode=False)
     {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
     EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
-    >>> d = Diagram([f, g], {g * f: "unique"})
-    >>> pprint(d.conclusions)
-    {g*f:A-->C: {unique}}
 
     References
     ==========
     [Pare1970] B. Pareigis: Categories and functors.  Academic Press,
     1970.
     """
+
     @staticmethod
     def _set_dict_union(dictionary, key, value):
         """
@@ -634,23 +622,15 @@ class Diagram(Basic):
 
     def __new__(cls, *args):
         """
-        Construct a new instance of Diagram.
+        Construct a new instance of :class:`Diagram`.
 
         If no arguments are supplied, an empty diagram is created.
 
-        If at least an argument is supplied, ``args[0]`` is
-        interpreted as the premises of the diagram.  If ``args[0]`` is
-        a list, it is interpreted as a list of :class:`Morphism`'s, in
-        which each :class:`Morphism` has an empty set of properties.
-        If ``args[0]`` is a Python dictionary or a :class:`Dict`, it
-        is interpreted as a dictionary associating to some
-        :class:`Morphism`'s some properties.
-
-        If at least two arguments are supplied ``args[1]`` is
-        interpreted as the conclusions of the diagram.  The type of
-        ``args[1]`` is interpreted in exactly the same way as the type
-        of ``args[0]``.  If only one argument is supplied, the diagram
-        has no conclusions.
+        If the first argument is a dictionary, it is interpreted as a
+        mapping between the morphisms which form the diagram and their
+        properties.  If the first argument is a list, it is
+        interpreted as a list of morphisms, each of which has no
+        properties.
 
         Examples
         ========
@@ -663,80 +643,44 @@ class Diagram(Basic):
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram([f, g])
-        >>> IdentityMorphism(A) in d.premises.keys()
+        >>> IdentityMorphism(A) in d.morphisms.keys()
         True
-        >>> g * f in d.premises.keys()
+        >>> g * f in d.morphisms
         True
-        >>> d = Diagram([f, g], {g * f: "unique"})
-        >>> d.conclusions[g * f]
+        >>> d = Diagram({f: [], g: [], g * f: "unique"})
+        >>> d.morphisms[g * f]
         {unique}
 
         """
-        premises = {}
-        conclusions = {}
+        morphisms = {}
+        objects = set([])
 
-        # Here we will keep track of the objects which appear in the
-        # premises.
-        objects = EmptySet()
+        if args:
+            first_arg = args[0]
 
-        if len(args) >= 1:
-            # We've got some premises in the arguments.
-            premises_arg = args[0]
-
-            if isinstance(premises_arg, list):
+            if isinstance(first_arg, list):
                 # The user has supplied a list of morphisms, none of
-                # which have any attributes.
+                # which have any properties.
                 empty = EmptySet()
 
-                for morphism in premises_arg:
-                    objects |= FiniteSet(morphism.domain, morphism.codomain)
-                    Diagram._add_morphism_closure(premises, morphism, empty)
-            elif isinstance(premises_arg, dict) or isinstance(premises_arg, Dict):
+                for morphism in first_arg:
+                    objects.update([morphism.domain, morphism.codomain])
+                    Diagram._add_morphism_closure(morphisms, morphism, empty)
+            elif isinstance(first_arg, dict) or isinstance(first_arg, Dict):
                 # The user has supplied a dictionary of morphisms and
                 # their properties.
-                for morphism, props in premises_arg.items():
-                    objects |= FiniteSet(morphism.domain, morphism.codomain)
+                for morphism, props in first_arg.items():
+                    objects.update([morphism.domain, morphism.codomain])
                     Diagram._add_morphism_closure(
-                        premises, morphism, FiniteSet(props))
+                        morphisms, morphism, FiniteSet(props))
 
-        if len(args) >= 2:
-            # We also have some conclusions.
-            conclusions_arg = args[1]
-
-            if isinstance(conclusions_arg, list):
-                # The user has supplied a list of morphisms, none of
-                # which have any attributes.
-                empty = EmptySet()
-
-                for morphism in conclusions_arg:
-                    # Check that no new objects appear in conclusions.
-                    if (morphism.domain in objects) and \
-                       (morphism.codomain in objects):
-                        # No need to add identities and recurse
-                        # composites this time.
-                        Diagram._add_morphism_closure(
-                            conclusions, morphism, empty, add_identities=False,
-                            recurse_composites=False)
-            elif isinstance(conclusions_arg, dict) or \
-                     isinstance(conclusions_arg, Dict):
-                # The user has supplied a dictionary of morphisms and
-                # their properties.
-                for morphism, props in conclusions_arg.items():
-                    # Check that no new objects appear in conclusions.
-                    if (morphism.domain in objects) and \
-                       (morphism.codomain in objects):
-                        # No need to add identities and recurse
-                        # composites this time.
-                        Diagram._add_morphism_closure(
-                            conclusions, morphism, FiniteSet(props),
-                            add_identities=False, recurse_composites=False)
-
-        return Basic.__new__(cls, Dict(premises), Dict(conclusions), objects)
+        return Basic.__new__(cls, Dict(morphisms), FiniteSet(objects))
 
     @property
-    def premises(self):
+    def morphisms(self):
         """
-        Returns the premises of this diagram.
+        Returns the :class:`Dict` mapping the morphisms included in
+        this :class:`Diagram` to their properties.
 
         Examples
         ========
@@ -749,38 +693,11 @@ class Diagram(Basic):
         >>> id_A = IdentityMorphism(A)
         >>> id_B = IdentityMorphism(B)
         >>> d = Diagram([f])
-        >>> print pretty(d.premises, use_unicode=False)
+        >>> print pretty(d.morphisms, use_unicode=False)
         {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: EmptySet()}
 
         """
         return self.args[0]
-
-    @property
-    def conclusions(self):
-        """
-        Returns the conclusions of this diagram.
-
-        Examples
-        ========
-        >>> from sympy.categories import Object, NamedMorphism
-        >>> from sympy.categories import IdentityMorphism, Diagram
-        >>> from sympy import FiniteSet
-        >>> A = Object("A")
-        >>> B = Object("B")
-        >>> C = Object("C")
-        >>> f = NamedMorphism(A, B, "f")
-        >>> g = NamedMorphism(B, C, "g")
-        >>> d = Diagram([f, g])
-        >>> IdentityMorphism(A) in d.premises.keys()
-        True
-        >>> g * f in d.premises.keys()
-        True
-        >>> d = Diagram([f, g], {g * f: "unique"})
-        >>> d.conclusions[g * f] == FiniteSet("unique")
-        True
-
-        """
-        return self.args[1]
 
     @property
     def objects(self):
@@ -801,13 +718,12 @@ class Diagram(Basic):
         {Object("A"), Object("B"), Object("C")}
 
         """
-        return self.args[2]
+        return self.args[1]
 
     def hom(self, A, B):
         """
-        Returns a 2-tuple of sets of morphisms between objects A and
-        B: one set of morphisms listed as premises, and the other set
-        of morphisms listed as conclusions.
+        Returns the :class:`FiniteSet` of morphisms between the
+        objects ``A`` and ``B``.
 
         Examples
         ========
@@ -819,34 +735,25 @@ class Diagram(Basic):
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
-        >>> d = Diagram([f, g], {g * f: "unique"})
+        >>> d = Diagram([f, g])
         >>> print pretty(d.hom(A, C), use_unicode=False)
-        ({g*f:A-->C}, {g*f:A-->C})
+        {g*f:A-->C}
 
         See Also
         ========
         Object, Morphism
         """
-        premises = EmptySet()
-        conclusions = EmptySet()
 
-        for morphism in self.premises.keys():
-            if (morphism.domain == A) and (morphism.codomain == B):
-                premises |= FiniteSet(morphism)
-        for morphism in self.conclusions.keys():
-            if (morphism.domain == A) and (morphism.codomain == B):
-                conclusions |= FiniteSet(morphism)
-
-        return (premises, conclusions)
+        return FiniteSet([m for m in self.morphisms if (m.domain == A) and
+                          (m.codomain == B)])
 
     def is_subdiagram(self, diagram):
         """
         Checks whether ``diagram`` is a subdiagram of ``self``.
-        Diagram `D'` is a subdiagram of `D` if all premises
-        (conclusions) of `D'` are contained in the premises
-        (conclusions) of `D`.  The morphisms contained
-        both in `D'` and `D` should have the same properties for `D'`
-        to be a subdiagram of `D`.
+        Diagram `D'` is a subdiagram of `D` if all morphisms of `D'`
+        are contained in the morphisms of `D`.  The morphisms
+        contained both in `D'` and `D` should have the same properties
+        for `D'` to be a subdiagram of `D`.
 
         Examples
         ========
@@ -856,32 +763,23 @@ class Diagram(Basic):
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
-        >>> d = Diagram([f, g], {g * f: "unique"})
+        >>> d = Diagram([f, g])
         >>> d1 = Diagram([f])
         >>> d.is_subdiagram(d1)
         True
         >>> d1.is_subdiagram(d)
         False
         """
-        premises = all([(m in self.premises) and \
-                        (diagram.premises[m] == self.premises[m]) \
-                        for m in diagram.premises])
-        if not premises:
-            return False
-
-        conclusions = all([(m in self.conclusions) and \
-                           (diagram.conclusions[m] == self.conclusions[m]) \
-                        for m in diagram.conclusions])
-
-        # Premises is surely ``True`` here.
-        return conclusions
+        return all([(m in self.morphisms) and
+                    (diagram.morphisms[m] == self.morphisms[m])
+                    for m in diagram.morphisms])
 
     def subdiagram_from_objects(self, objects):
         """
         If ``objects`` is a subset of the objects of ``self``, returns
-        a diagram which has as premises all those premises of ``self``
-        which have a domains and codomains in ``objects``, likewise
-        for conclusions.  Properties are preserved.
+        a diagram which has as morphisms all those morphisms of
+        ``self`` which have a domains and codomains in ``objects``.
+        Properties are preserved.
 
         Examples
         ========
@@ -892,22 +790,17 @@ class Diagram(Basic):
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
-        >>> d = Diagram([f, g], {f: "unique", g*f: "veryunique"})
+        >>> d = Diagram({f: "unique", g * f: "veryunique"})
         >>> d1 = d.subdiagram_from_objects(FiniteSet(A, B))
-        >>> d1 == Diagram([f], {f: "unique"})
+        >>> d1 == Diagram({f: "unique"})
         True
         """
         if not self.objects.subset(objects):
             raise ValueError("Supplied objects should all belong to the diagram.")
 
-        new_premises = {}
-        for morphism, props in self.premises.items():
+        new_morphisms = {}
+        for morphism, props in self.morphisms.items():
             if (morphism.domain in objects) and (morphism.codomain in objects):
-                new_premises[morphism] = props
+                new_morphisms[morphism] = props
 
-        new_conclusions = {}
-        for morphism, props in self.conclusions.items():
-            if (morphism.domain in objects) and (morphism.codomain in objects):
-                new_conclusions[morphism] = props
-
-        return Diagram(new_premises, new_conclusions)
+        return Diagram(new_morphisms)

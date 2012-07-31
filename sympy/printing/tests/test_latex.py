@@ -628,17 +628,6 @@ def test_categories():
            "& f_{1}:A_{1}\\rightarrow A_{2} : \\left\\{unique\\right\\}, " \
            "& f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix}"
 
-    d = Diagram({f1:"unique", f2:S.EmptySet}, {f2 * f1: "unique"})
-    assert latex(d) == "\\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
-           "\\rightarrow A_{3} : \\emptyset, & id:A_{1}\\rightarrow " \
-           "A_{1} : \\emptyset, & id:A_{2}\\rightarrow A_{2} : " \
-           "\\emptyset, & id:A_{3}\\rightarrow A_{3} : \\emptyset, " \
-           "& f_{1}:A_{1}\\rightarrow A_{2} : \\left\\{unique\\right\\}," \
-           " & f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix}" \
-           "\\Longrightarrow \\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
-           "\\rightarrow A_{3} : \\left\\{unique\\right\\}\\end{Bmatrix}"
-
-
     # A linear diagram.
     A = Object("A")
     B = Object("B")

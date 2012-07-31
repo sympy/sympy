@@ -3739,18 +3739,10 @@ def test_categories():
     assert upretty(d) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, " \
            u"id:A₂——▶A₂: ∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}"
 
-    d = Diagram({f1:"unique", f2:S.EmptySet}, {f2 * f1: "unique"})
-    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
-           "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
-           "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}" \
-           " ==> {f2*f1:A1-->A3: {unique}}"
-    assert upretty(d) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, id:A₂——▶A₂: " \
-           u"∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}" \
-           u" ══▶ {f₂∘f₁:A₁——▶A₃: {unique}}"
-
+    d = Diagram({f1:"unique", f2:S.EmptySet})
     grid = DiagramGrid(d)
-    assert pretty(grid) == "A1  A2\n      \nA3    "
-    assert upretty(grid) == u"A\u2081  A\u2082\n      \nA\u2083    "
+    assert pretty(grid) == "A1  A2\n      \n    A3"
+    assert upretty(grid) == u"A\u2081  A\u2082\n      \n    A\u2083"
 
 def test_PrettyModules():
     R = QQ[x, y]
