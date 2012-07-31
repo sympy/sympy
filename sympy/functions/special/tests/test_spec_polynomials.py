@@ -60,6 +60,11 @@ def test_assoc_legendre():
     assert Plm(3,-2, x) ==  Plm(3, 2, x)/120
     assert Plm(3,-1, x) == -Plm(3, 1, x)/12
 
+    n = Symbol("n")
+    m = Symbol("m")
+    assert Plm(n,m, x) == assoc_legendre(n, m, x)
+    assert Plm(n,0, x) == legendre(n, x)
+
     raises(ValueError, lambda: Plm(-1, 0, x))
     raises(ValueError, lambda: Plm(0, 1, x))
 
