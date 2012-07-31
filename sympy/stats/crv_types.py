@@ -1369,10 +1369,11 @@ def Triangular(name, a, b, c):
 
     >>> density(X)
     Lambda(_x, Piecewise(((2*_x - 2*a)/((-a + b)*(-a + c)),
-                         And(a <= _x, _x < c)),
-                         (2/(-a + b), _x == c),
-                         ((-2*_x + 2*b)/((-a + b)*(b - c)),
-                         And(_x <= b, c < _x)), (0, True)))
+                        And(_x < c, a <= _x)),
+                        (2/(-a + b), _x == c),
+                        ((-2*_x + 2*b)/((-a + b)*(b - c)),
+                        And(_x <= b, c < _x)),
+                        (0, True)))
 
     References
     ==========

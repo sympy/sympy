@@ -2706,7 +2706,11 @@ def signsimp(expr, evaluate=True):
     if not isinstance(expr, Expr) or expr.is_Atom:
         return expr
     e = sub_post(sub_pre(expr))
-    if evaluate and isinstance(e, Expr):
+    if not isinstance(e, Expr) or e.is_Atom:
+        return e
+    if e.is_Add:
+        return Add(*[signsimp(a) for a in e.args])
+    if evaluate:
         e = e.xreplace(dict([(m, -(-m)) for m in e.atoms(Mul) if -(-m) != m]))
     return e
 

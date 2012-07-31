@@ -628,19 +628,6 @@ def test_wronskian():
         method='berkowitz').expand() == w2
     assert wronskian([], x) == 1
 
-def canonicalize(v):
-    """
-    Takes the output of eigenvects() and makes it canonical, so that we can
-    compare it across platforms.
-
-    It converts Matrices to lists, and uses set() to list the outer list in a
-    platform independent way.
-    """
-    def c(x):
-        a, b, c = x
-        return (S(a), S(b), tuple(c[0]))
-    return tuple(set([c(x) for x in v]))
-
 def test_eigen():
     x,y = symbols('x y')
 
@@ -655,7 +642,7 @@ def test_eigen():
 
     assert M.eigenvals(multiple=False) == {S.One: 3}
 
-    assert canonicalize(M.eigenvects()) == canonicalize(
+    assert M.eigenvects() == (
         [(1, 3, [Matrix([1,0,0]),
                  Matrix([0,1,0]),
                  Matrix([0,0,1])])])
@@ -666,7 +653,7 @@ def test_eigen():
 
     assert M.eigenvals() == {2*S.One: 1, -S.One: 1, S.Zero: 1}
 
-    assert canonicalize(M.eigenvects()) == canonicalize(
+    assert M.eigenvects() == (
         [
          (-1, 1, [Matrix([-1, 1, 0])]),
          ( 0, 1, [Matrix([0, -1, 1])]),
@@ -674,8 +661,8 @@ def test_eigen():
 
     M = Matrix([[1, -1],
                  [1,  3]])
-    assert canonicalize(M.eigenvects()) == canonicalize(
-        [[2, 2, [Matrix(1,2,[-1,1])]]])
+    assert M.eigenvects() == (
+        [(2, 2, [Matrix(2,1,[-1,1])])])
 
     M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     a=R(15,2)
@@ -704,9 +691,11 @@ def test_eigen():
     M = Matrix([[abs(eps), I*eps    ],
                [-I*eps,   abs(eps) ]])
 
-    assert canonicalize(M.eigenvects()) == canonicalize(
-        [( 2*abs(eps), 1, [ Matrix([[I*eps/abs(eps)],[1]]) ] ),
-         ( 0, 1, [Matrix([[-I*eps/abs(eps)],[1]])]) ])
+    assert M.eigenvects() == (
+        [
+        ( 0, 1, [Matrix([[-I*eps/abs(eps)],[1]])]),
+        ( 2*abs(eps), 1, [ Matrix([[I*eps/abs(eps)],[1]]) ] ),
+        ])
 
     M = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
     M._eigenvects = M.eigenvects(simplify=False)
