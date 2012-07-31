@@ -182,6 +182,14 @@ class lambdify(object):
             else:
                 return result.real
         except Exception, e:
+            # The exceptions raised by sympy, cmath are not consistent and
+            # hence it is not possible to specify all the exceptions that
+            # are to be caught. Presently there are no cases for which the code
+            # reaches this block other than ZeroDivisionError. Also the
+            # exception is caught only once. If the exception repeats itself,
+            # then it is not caught and the corresponding error is raised.
+            # XXX: Remove catching all exceptions once the plotting module
+            # is heavily tested.
             if isinstance(e, ZeroDivisionError):
                 return None
             else:

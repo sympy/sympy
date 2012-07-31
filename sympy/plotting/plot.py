@@ -573,7 +573,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
             def sample(p, q, depth):
                 """ Samples recursively if three points are almost collinear.
                 For depth < 6, points are added irrespective of whether they
-                satisfy the collinearity condition are not. The maximum depth
+                satisfy the collinearity condition or not. The maximum depth
                 allowed is 12.
                 """
                 #Randomly sample to avoid aliasing.
@@ -682,7 +682,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         def sample(param_p, param_q, p, q, depth):
             """ Samples recursively if three points are almost collinear.
             For depth < 6, points are added irrespective of whether they
-            satisfy the collinearity condition are not. The maximum depth
+            satisfy the collinearity condition or not. The maximum depth
             allowed is 12.
             """
             #Randomly sample to avoid aliasing.
