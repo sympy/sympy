@@ -44,9 +44,9 @@ def test_distribute_gens_by_base():
                                                    Permutation([0, 1, 3, 2])]]
 
 def test_strong_gens_from_distr():
-    distr_gens = [[Permutation([0, 2, 1]), Permutation([1, 2, 0]),\
+    strong_gens_distr = [[Permutation([0, 2, 1]), Permutation([1, 2, 0]),\
                   Permutation([1, 0, 2])], [Permutation([0, 2, 1])]]
-    assert _strong_gens_from_distr(distr_gens) ==\
+    assert _strong_gens_from_distr(strong_gens_distr) ==\
                                                      [Permutation([0, 2, 1]),\
                                                      Permutation([1, 2, 0]),\
                                                      Permutation([1, 0, 2])]
@@ -56,8 +56,8 @@ def test_orbits_transversals_from_bsgs():
     S.schreier_sims()
     base = S.base
     strong_gens = S.strong_gens
-    distr_gens = _distribute_gens_by_base(base, strong_gens)
-    result = _orbits_transversals_from_bsgs(base, distr_gens)
+    strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
+    result = _orbits_transversals_from_bsgs(base, strong_gens_distr)
     orbits = result[0]
     transversals = result[1]
     base_len = len(base)
@@ -77,8 +77,8 @@ def test_handle_precomputed_bsgs():
     base = A.base
     strong_gens = A.strong_gens
     result = _handle_precomputed_bsgs(base, strong_gens)
-    distr_gens = _distribute_gens_by_base(base, strong_gens)
-    assert distr_gens == result[2]
+    strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
+    assert strong_gens_distr == result[2]
     transversals = result[0]
     orbits = result[1]
     base_len = len(base)

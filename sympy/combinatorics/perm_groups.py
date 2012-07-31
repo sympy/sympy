@@ -620,7 +620,7 @@ class PermutationGroup(Basic):
         return self._base
 
     def baseswap(self, base, strong_gens, pos, randomized=False,\
-                 transversals=None, basic_orbits=None, distr_gens=None):
+                 transversals=None, basic_orbits=None, strong_gens_distr=None):
         r"""
         Swap two consecutive base points in a base and strong generating set.
 
@@ -639,7 +639,7 @@ class PermutationGroup(Basic):
         ``randomized`` - switch between randomized and deterministic version
         ``transversals`` - transversals for the basic orbits, if known
         ``basic_orbits`` - basic orbits, if known
-        ``distr_gens`` - strong generators distributed by basic stabilizers,
+        ``strong_gens_distr`` - strong generators distributed by basic stabilizers,
         if known
 
         Returns
@@ -682,12 +682,12 @@ class PermutationGroup(Basic):
         """
         # construct the basic orbits, generators for the stabilizer chain
         # and transversal elements from whatever was provided
-        transversals, basic_orbits, distr_gens =\
+        transversals, basic_orbits, strong_gens_distr =\
         _handle_precomputed_bsgs(base, strong_gens, transversals,\
-                                 basic_orbits, distr_gens)
+                                 basic_orbits, strong_gens_distr)
         base_len = len(base)
         degree = self.degree
-        stab_pos = PermutationGroup(distr_gens[pos])
+        stab_pos = PermutationGroup(strong_gens_distr[pos])
         # size of orbit of base[pos] under the stabilizer we seek to insert
         # in the stabilizer chain at position pos + 1
         size = len(basic_orbits[pos])*len(basic_orbits[pos + 1])\
@@ -696,7 +696,7 @@ class PermutationGroup(Basic):
         if pos + 2 > base_len - 1:
             T = []
         else:
-            T = distr_gens[pos + 2][:]
+            T = strong_gens_distr[pos + 2][:]
         if T == []:
             current_group = PermGroup([_new_from_array_form(range(degree))])
         else:
@@ -733,7 +733,7 @@ class PermutationGroup(Basic):
                         current_group = PermutationGroup(T)
                         Gamma = Gamma - current_group.orbit(base[pos])
         # build the new base and strong generating set
-        strong_gens_new_distr = distr_gens[:]
+        strong_gens_new_distr = strong_gens_distr[:]
         strong_gens_new_distr[pos + 1] = T
         base_new = base[:]
         base_new[pos], base_new[pos + 1] = base_new[pos + 1], base_new[pos]
@@ -803,9 +803,9 @@ class PermutationGroup(Basic):
             self.schreier_sims()
         strong_gens = self._strong_gens
         base = self._base
-        distr_gens = _distribute_gens_by_base(base, strong_gens)
+        strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
         basic_stabilizers = []
-        for gens in distr_gens:
+        for gens in strong_gens_distr:
             basic_stabilizers.append(PermutationGroup(gens))
         return basic_stabilizers
 
@@ -2155,13 +2155,13 @@ class PermutationGroup(Basic):
                 base.append(new)
                 base_len += 1
         # distribute generators according to basic stabilizers
-        distr_gens = _distribute_gens_by_base(base, gens)
+        strong_gens_distr = _distribute_gens_by_base(base, gens)
         # initialize the basic stabilizers, basic orbits and basic transversals
         stabs = {}
         orbs = {}
         transversals = {}
         for i in xrange(base_len):
-            stabs[i] = PermutationGroup(distr_gens[i])
+            stabs[i] = PermutationGroup(strong_gens_distr[i])
             transversals[i] = dict(stabs[i].orbit_transversal(base[i],\
                                                               pairs=True))
             orbs[i] = transversals[i].keys()
@@ -2175,7 +2175,7 @@ class PermutationGroup(Basic):
             # test the generators for being a strong generating set
             for beta in orbs[i]:
                 u_beta = transversals[i][beta]
-                for gen in distr_gens[i]:
+                for gen in strong_gens_distr[i]:
                     u_beta_gen = transversals[i][gen(beta)]
                     if gen*u_beta != u_beta_gen:
                         # test if the schreier generator is in the i+1-th
@@ -2194,13 +2194,13 @@ class PermutationGroup(Basic):
                                 moved += 1
                             base.append(moved)
                             base_len += 1
-                            distr_gens.append([])
+                            strong_gens_distr.append([])
                         if y == False:
                             # if a new strong generator is found, update the
                             # data structures and start over
                             for l in range(i + 1, j):
-                                distr_gens[l].append(h)
-                                stabs[l] = PermutationGroup(distr_gens[l])
+                                strong_gens_distr[l].append(h)
+                                stabs[l] = PermutationGroup(strong_gens_distr[l])
                                 transversals[l] =\
                                 dict(stabs[l].orbit_transversal(base[l],\
                                                                 pairs=True))
@@ -2217,7 +2217,7 @@ class PermutationGroup(Basic):
             i -= 1
         # build the strong generating set
         strong_gens = []
-        for gens in distr_gens:
+        for gens in strong_gens_distr:
             for gen in gens:
                 if gen not in strong_gens:
                     strong_gens.append(gen)
@@ -2300,13 +2300,13 @@ class PermutationGroup(Basic):
                 base.append(new)
                 base_len += 1
         # distribute generators according to basic stabilizers
-        distr_gens = _distribute_gens_by_base(base, gens)
+        strong_gens_distr = _distribute_gens_by_base(base, gens)
         # initialize the basic stabilizers, basic transversals and basic orbits
         stabs = {}
         transversals = {}
         orbs = {}
         for i in xrange(base_len):
-            stabs[i] = PermutationGroup(distr_gens[i])
+            stabs[i] = PermutationGroup(strong_gens_distr[i])
             transversals[i] = dict(stabs[i].orbit_transversal(base[i],\
                                                               pairs=True))
             orbs[i] = transversals[i].keys()
@@ -2331,13 +2331,13 @@ class PermutationGroup(Basic):
                     moved += 1
                 base.append(moved)
                 base_len += 1
-                distr_gens.append([])
+                strong_gens_distr.append([])
             # if the element doesn't sift, amend the strong generators and
             # associated stabilizers and orbits
             if y == False:
                 for l in range(1, j):
-                    distr_gens[l].append(h)
-                    stabs[l] = PermutationGroup(distr_gens[l])
+                    strong_gens_distr[l].append(h)
+                    stabs[l] = PermutationGroup(strong_gens_distr[l])
                     transversals[l] = dict(stabs[l].orbit_transversal(base[l],\
                                                                     pairs=True))
                     orbs[l] = transversals[l].keys()
@@ -2345,8 +2345,8 @@ class PermutationGroup(Basic):
             else:
                 c += 1
         # build the strong generating set
-        strong_gens = distr_gens[0][:]
-        for gen in distr_gens[1]:
+        strong_gens = strong_gens_distr[0][:]
+        for gen in strong_gens_distr[1]:
             if gen not in strong_gens:
                 strong_gens.append(gen)
         return base, strong_gens
@@ -2581,9 +2581,9 @@ class PermutationGroup(Basic):
         # add an element smaller than all points
         base_ordering.append(-1)
         # compute BSGS-related structures
-        distr_gens = _distribute_gens_by_base(base, strong_gens)
+        strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
         basic_orbits, transversals = _orbits_transversals_from_bsgs(base,\
-                                                                    distr_gens)
+                                                                    strong_gens_distr)
         # handle subgroup initialization and tests
         if init_subgroup is None:
             init_subgroup = PermutationGroup([identity])
@@ -2600,14 +2600,14 @@ class PermutationGroup(Basic):
         res_base = base[:]
         # line 3: compute BSGS and related structures for K
         res_base, res_strong_gens = res.schreier_sims_incremental(base=res_base)
-        res_distr_gens = _distribute_gens_by_base(res_base, res_strong_gens)
+        res_strong_gens_distr = _distribute_gens_by_base(res_base, res_strong_gens)
         res_basic_orbits_init_base =\
-        [PermutationGroup(res_distr_gens[i]).orbit(res_base[i])\
+        [PermutationGroup(res_strong_gens_distr[i]).orbit(res_base[i])\
          for i in range(base_len)]
         # initialize orbit representatives
         orbit_reps = [None]*base_len
         # line 4: orbit representatives for f-th basic stabilizer of K
-        stab_f = PermutationGroup(res_distr_gens[f])
+        stab_f = PermutationGroup(res_strong_gens_distr[f])
         orbits = stab_f.orbits()
         reps = []
         for orbit in orbits:
@@ -2651,9 +2651,9 @@ class PermutationGroup(Basic):
                 # line 11: change the (partial) base of K
                 new_point = computed_words[l](base[l])
                 res_base[l] = new_point
-                temp_group = PermutationGroup(res_distr_gens[l])
+                temp_group = PermutationGroup(res_strong_gens_distr[l])
                 new_stab = temp_group.stabilizer(new_point)
-                res_distr_gens[l + 1] = new_stab.generators
+                res_strong_gens_distr[l + 1] = new_stab.generators
                 # line 12: calculate minimal orbit representatives for the
                 # l+1-th basic stabilizer
                 orbits = new_stab.orbits()
@@ -2706,13 +2706,13 @@ class PermutationGroup(Basic):
                 res_base = base[:]
                 # line 20: recalculate basic orbits (and transversals)
                 res_strong_gens.append(g)
-                res_distr_gens = _distribute_gens_by_base(res_base,\
+                res_strong_gens_distr = _distribute_gens_by_base(res_base,\
                                                           res_strong_gens)
                 res_basic_orbits_init_base =\
-                [PermutationGroup(res_distr_gens[i]).orbit(res_base[i])\
+                [PermutationGroup(res_strong_gens_distr[i]).orbit(res_base[i])\
                  for i in range(base_len)]
                 # line 21: recalculate orbit representatives
-                stab_f = PermutationGroup(res_distr_gens[f])
+                stab_f = PermutationGroup(res_strong_gens_distr[f])
                 temp_orbits = stab_f.orbits()
                 reps = []
                 for orbit in orbits:
@@ -2734,7 +2734,7 @@ class PermutationGroup(Basic):
                 f = l
                 c[l] = 0
                 # line 27
-                stab_f = PermutationGroup(res_distr_gens[f])
+                stab_f = PermutationGroup(res_strong_gens_distr[f])
                 temp_orbits = stab_f.orbits()
                 reps = []
                 for orbit in orbits:
