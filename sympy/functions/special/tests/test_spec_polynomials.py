@@ -31,7 +31,10 @@ def test_legendre():
     }
 
     n = Symbol("n")
-    assert legendre(n,x) == legendre(n, x)
+
+    X = legendre(n,x)
+    assert isinstance(X, legendre)
+
     assert legendre(-n,x) == legendre(n-1, x)
     assert legendre(n,-x) == (-1)**n*legendre(n, x)
     assert diff(legendre(n,x), x) == n*(x*legendre(n, x) - legendre(n - 1, x))/(x**2 - 1)
@@ -62,7 +65,10 @@ def test_assoc_legendre():
 
     n = Symbol("n")
     m = Symbol("m")
-    assert Plm(n,m, x) == assoc_legendre(n, m, x)
+
+    X = Plm(n,m, x)
+    assert isinstance(X, assoc_legendre)
+
     assert Plm(n,0, x) == legendre(n, x)
 
     raises(ValueError, lambda: Plm(-1, 0, x))
