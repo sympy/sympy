@@ -1077,11 +1077,12 @@ class Mul(AssocOp):
             return False
 
     def _eval_subs(self, old, new):
+        from sympy import sign
+        from sympy.ntheory.factor_ import multiplicity
+        from sympy.simplify.simplify import powdenest, fraction
+
         if not old.is_Mul:
             return None
-
-        from sympy import sign
-        from sympy.simplify.simplify import powdenest, fraction
 
         def base_exp(a):
             # if I and -1 are in a Mul, they get both end up with
@@ -1147,17 +1148,17 @@ class Mul(AssocOp):
 
         # handle the leading coefficient and use it to decide if anything
         # should even be started; we always know where to find the Rational
-        # so it's a quick test; the result here is used after self and old
-        # are broken up into factors
+        # so it's a quick test
 
         co_self = self.args[0]
         co_old = old.args[0]
+        co_xmul = None
         if co_old.is_Rational and co_self.is_Rational:
-            co_xmul = co_self.extract_multiplicatively(co_old)
+            if co_old != co_self:
+                co_xmul = co_self.extract_multiplicatively(co_old)
+                # further processing done after breaking up args
         elif co_old.is_Rational:
             return rv
-        else:
-            co_xmul = None
 
         # break self and old into factors
 
@@ -1165,19 +1166,25 @@ class Mul(AssocOp):
         (old_c, old_nc) = breakup(old)
 
         # update the coefficients if we had an extraction
+        # e.g. if co_self were 2*(3/35*x)**2 and co_old = 3/5
+        # then co_self in c is replaced by (3/5)**2 and co_residual
+        # is 2*(1/7)**2
 
         if co_xmul and co_xmul.is_Rational:
-            c[co_self] -= 1
-            if not c[co_self]:
-                c.pop(co_self)
-            old_c[co_old] -= 1
-            if not old_c[co_old]:
-                old_c.pop(co_old)
-            # co_xmul shouldn't be there already...unless there was
-            # an unevaluated Mul; so just to be safe, treat it like the others
-            c[co_xmul] += 1
-            if not c[co_xmul]:
-                c.pop(co_xmul)
+            n_old, d_old = co_old.as_numer_denom()
+            n_self, d_self = co_self.as_numer_denom()
+            def _multiplicity(p, n):
+                p = abs(p)
+                if p is S.One:
+                    return S.Infinity
+                return multiplicity(p, abs(n))
+            mult = S(min(_multiplicity(n_old, n_self),
+                         _multiplicity(d_old, d_self)))
+            c.pop(co_self)
+            c[co_old] = mult
+            co_residual = co_self/co_old**mult
+        else:
+            co_residual = 1
 
         # do quick tests to see if we can't succeed
 
@@ -1331,7 +1338,7 @@ class Mul(AssocOp):
             # rest of this routine
 
             margs = [Pow(new, cdid)] + margs
-        return Mul(*margs)*Mul(*nc)
+        return co_residual*Mul(*margs)*Mul(*nc)
 
     def _eval_nseries(self, x, n, logx):
         from sympy import powsimp

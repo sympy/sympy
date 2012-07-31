@@ -206,6 +206,17 @@ def test_mul():
     assert (-8*I*a).subs(-2*a, 1) == 4*I
     assert (-I*a).subs(-a, 1) == I
 
+    # issue 3342
+    assert (4*x**2).subs(2*x, y) == y**2
+    assert (2*4*x**2).subs(2*x, y) == 2*y**2
+    assert (-x**3/9).subs(-x/3, z) == -z**2*x
+    assert (-x**3/9).subs(x/3, z) == -z**2*x
+    assert (-2*x**3/9).subs(x/3, z) == -2*x*z**2
+    assert (-2*x**3/9).subs(-x/3, z) == -2*x*z**2
+    assert (-2*x**3/9).subs(-2*x, z) == z*x**2/9
+    assert (-2*x**3/9).subs(2*x, z) == -z*x**2/9
+    assert (2*(3*x/5/7)**2).subs(3*x/5, z) == 2*(S(1)/7)**2*z**2
+
 def test_subs_simple():
     a = symbols('a', commutative=True)
     x = symbols('x', commutative=False)
