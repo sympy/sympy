@@ -70,13 +70,13 @@ def AlternatingGroup(n):
 
     """
     # small cases are special
-    if n == 1 or n == 2:
+    if n in (1, 2):
         return PermutationGroup([Permutation([0])])
 
     a = range(n)
     a[0], a[1], a[2] = a[1], a[2], a[0]
     gen1 = _new_from_array_form(a)
-    if n % 2 == 1:
+    if n % 2:
         a = range(1, n)
         a.append(0)
         gen2 = _new_from_array_form(a)

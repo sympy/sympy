@@ -475,7 +475,7 @@ class PermutationGroup(Basic):
         Notes
         =====
 
-        THIS FUNCTION HAS SIDE EFFECTS: it changes the attribute
+        XXX THIS FUNCTION HAS SIDE EFFECTS: it changes the attribute
         self._random_gens
 
         See Also
@@ -1732,7 +1732,7 @@ class PermutationGroup(Basic):
                         orb.append(temp)
                         used[temp] = True
             return set(orb)
-        if action == 'tuples':
+        elif action == 'tuples':
             alpha = tuple(alpha)
             orb = [alpha]
             used = set([alpha])
@@ -1744,7 +1744,7 @@ class PermutationGroup(Basic):
                         orb.append(temp)
                         used.add(temp)
             return set(orb)
-        if action == 'sets':
+        elif action == 'sets':
             alpha = frozenset(alpha)
             orb = [alpha]
             used = set([alpha])
