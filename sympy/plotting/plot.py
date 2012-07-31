@@ -241,6 +241,11 @@ def plot(*args, **kwargs):
       - tuples containing any of the above mentioned options, for plotting them
         together
 
+    In the case of 2D line and parametric plots, an adaptive sampling algorithm
+    is used. The adaptive sampling algorithm recursively selects a random point
+    in between two previously sampled points, which might lead to slightly
+    different plots being rendered each time.
+
     Examples:
     ---------
 
