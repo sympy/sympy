@@ -37,7 +37,7 @@ from sympy.functions.special.bessel import (besselj, bessely, besseli, besselk,
 from sympy.functions.special.hyper import hyper, meijerg
 from sympy.functions.special.polynomials import (legendre, assoc_legendre,
         hermite, chebyshevt, chebyshevu, chebyshevu_root, chebyshevt_root,
-        laguerre_l)
+        laguerre, assoc_laguerre)
 from sympy.functions.special.spherical_harmonics import Ylm, Zlm
 
 ln = log

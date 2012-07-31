@@ -436,9 +436,93 @@ class hermite(OrthogonalPolynomial):
 # Laguerre polynomials
 #
 
-def laguerre_l(n, alpha, x):
+class laguerre(OrthogonalPolynomial):
     """
-    Returns the generalized Laguerre polynomial.
+    Returns the nth Laguerre polynomial in x, :math:`L_n(x)`.
+
+    Parameters
+    ==========
+
+    n : int
+        Degree of Laguerre polynomial. Must be ``n >= 0``.
+
+    Examples
+    ========
+
+    >>> from sympy import laguerre, diff
+    >>> from sympy.abc import x, n
+    >>> laguerre(0, x)
+    1
+    >>> laguerre(1, x)
+    -x + 1
+    >>> laguerre(2, x)
+    x**2/2 - 2*x + 1
+    >>> laguerre(3, x)
+    -x**3/6 + 3*x**2/2 - 3*x + 1
+
+    >>> laguerre(n, x)
+    laguerre(n, x)
+
+    >>> diff(laguerre(n, x), x)
+    -assoc_laguerre(n - 1, 1, x)
+
+    See Also
+    ========
+
+    legendre, assoc_legendre, hermite, assoc_laguerre
+    chebyshevu, chebyshevt, chebyshevu_root, chebyshevt_root
+    sympy.polys.orthopolys.laguerre_poly
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Laguerre_polynomial
+    .. [2] http://mathworld.wolfram.com/LaguerrePolynomial.html
+    """
+
+    @classmethod
+    def eval(cls, n, x):
+        if not n.is_Number:
+            # Symbolic result L_n(x)
+            # L_{n}(-x)  --->  exp(-x) * L_{-n-1}(x)
+            # L_{-n}(x)  --->  exp(x) * L_{n-1}(-x)
+            if n.could_extract_minus_sign():
+                return C.exp(x) * laguerre(n-1, -x)
+            # We can evaluate for some special values of x
+            if x == S.Zero:
+                return S.One
+            elif x == S.NegativeInfinity:
+                return S.Infinity
+            elif x == S.Infinity:
+                return S.NegativeOne**n * S.Infinity
+        else:
+            # n is a given fixed integer, evaluate into polynomial
+            if n.is_negative:
+                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+            else:
+                return laguerre_poly(n, x, 0)
+
+    def fdiff(self, argindex=2):
+        if argindex == 1:
+            # Diff wrt n
+            raise ArgumentIndexError(self, argindex)
+        elif argindex == 2:
+            # Diff wrt x
+            n, x = self.args
+            return -assoc_laguerre(n-1, 1, x)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_polynomial(self, n, x):
+        # TODO: Should make sure n is in N_0
+        k = C.Dummy("k")
+        kern = C.RisingFactorial(-n,k) / C.factorial(k)**2 * x**k
+        return C.Sum(kern, (k, 0, n))
+
+
+class assoc_laguerre(OrthogonalPolynomial):
+    """
+    Returns the nth generalized Laguerre polynomial in x, :math:`L_n(x)`.
 
     Parameters
     ==========
@@ -453,34 +537,87 @@ def laguerre_l(n, alpha, x):
     Examples
     ========
 
-    To construct generalized Laguerre polynomials issue::
+    >>> from sympy import laguerre, assoc_laguerre, diff
+    >>> from sympy.abc import x, n, a
+    >>> assoc_laguerre(0, a, x)
+    1
+    >>> assoc_laguerre(1, a, x)
+    a - x + 1
+    >>> assoc_laguerre(2, a, x)
+    a**2/2 + 3*a/2 + x**2/2 + x*(-a - 2) + 1
+    >>> assoc_laguerre(3, a, x)
+    a**3/6 + a**2 + 11*a/6 - x**3/6 + x**2*(a/2 + 3/2) + x*(-a**2/2 - 5*a/2 - 3) + 1
 
-        >>> from sympy import laguerre_l, var
-        >>> var("alpha, x")
-        (alpha, x)
+    >>> assoc_laguerre(n, a, 0)
+    binomial(a + n, a)
 
-        >>> laguerre_l(0, alpha, x)
-        1
-        >>> laguerre_l(1, alpha, x)
-        alpha - x + 1
-        >>> laguerre_l(2, alpha, x)
-        alpha**2/2 + 3*alpha/2 + x**2/2 + x*(-alpha - 2) + 1
+    >>> assoc_laguerre(n, a, x)
+    assoc_laguerre(n, a, x)
 
-    If you set ``alpha=0``, you get regular Laguerre polynomials::
+    >>> assoc_laguerre(n, 0, x)
+    laguerre(n, x)
 
-        >>> laguerre_l(1, 0, x)
-        -x + 1
-        >>> laguerre_l(2, 0, x)
-        x**2/2 - 2*x + 1
-        >>> laguerre_l(3, 0, x)
-        -x**3/6 + 3*x**2/2 - 3*x + 1
-        >>> laguerre_l(4, 0, x)
-        x**4/24 - 2*x**3/3 + 3*x**2 - 4*x + 1
+    >>> diff(assoc_laguerre(n, a, x), x)
+    -assoc_laguerre(n - 1, a + 1, x)
+
+    >>> diff(assoc_laguerre(n, a, x), a)
+    Sum(assoc_laguerre(_k, a, x)/(-a + n), (_k, 0, n - 1))
 
     See Also
     ========
 
+    legendre, assoc_legendre, hermite, laguerre
+    chebyshevu, chebyshevt, chebyshevu_root, chebyshevt_root
     sympy.polys.orthopolys.laguerre_poly
 
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Laguerre_polynomial#Assoc_laguerre_polynomials
+    .. [2] http://mathworld.wolfram.com/AssociatedLaguerrePolynomial.html
     """
-    return laguerre_poly(n, x, alpha)
+
+    nargs = 3
+
+    @classmethod
+    def eval(cls, n, alpha, x):
+        # L_{n}^{0}(x)  --->  L_{n}(x)
+        if alpha == S.Zero:
+            return laguerre(n, x)
+
+        if not n.is_Number:
+            # We can evaluate for some special values of x
+            if x == S.Zero:
+                return C.binomial(n+alpha, alpha)
+            elif x == S.Infinity and n > S.Zero:
+                return S.NegativeOne**n * S.Infinity
+            elif x == S.NegativeInfinity and n > S.Zero:
+                return S.Infinity
+        else:
+            # n is a given fixed integer, evaluate into polynomial
+            if n.is_negative:
+                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+            else:
+                return laguerre_poly(n, x, alpha)
+
+    def fdiff(self, argindex=3):
+        if argindex == 1:
+            # Diff wrt n
+            raise ArgumentIndexError(self, argindex)
+        elif argindex == 2:
+            # Diff wrt alpha
+            n, alpha, x = self.args
+            k = C.Dummy("k")
+            return C.Sum(assoc_laguerre(k, alpha, x) / (n-alpha), (k, 0, n-1))
+        elif argindex == 3:
+            # Diff wrt x
+            n, alpha, x = self.args
+            return -assoc_laguerre(n-1, alpha+1, x)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_polynomial(self, n, x):
+        # TODO: Should make sure n is in N_0
+        k = C.Dummy("k")
+        kern = C.RisingFactorial(-n,k) / (C.gamma(k + alpha + 1) * C.factorial(k)) * x**k
+        return C.gamma(n + alpha + 1) / C.factorial(n) * C.Sum(kern, (k, 0, n))
