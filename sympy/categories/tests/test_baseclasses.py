@@ -173,6 +173,14 @@ def test_diagram():
 
     raises(ValueError, lambda: Diagram({IdentityMorphism(A): "unique"}))
 
+    # Test the dictionary-like interface of ``Diagram``.
+    d = Diagram({f: [], g: [], g * f: "unique"})
+    assert set(m for m in d) == set(m for m in d.morphisms)
+    assert len(d) == 6
+    assert f in d
+    assert d[g * f] == FiniteSet("unique")
+    assert d[g] == FiniteSet()
+
 def test_category():
     A = Object("A")
     B = Object("B")

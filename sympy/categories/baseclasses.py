@@ -431,7 +431,7 @@ class Category(Basic):
     >>> g = NamedMorphism(B, C, "g")
     >>> d = Diagram(f, g)
     >>> K = Category("K", commutative_diagrams=[d])
-    >>> K.commutative_diagrams == FiniteSet(d)
+    >>> K.commutative_diagrams == FiniteSet((d,))
     True
 
     See Also
@@ -496,7 +496,7 @@ class Category(Basic):
         >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram(f, g)
         >>> K = Category("K", commutative_diagrams=[d])
-        >>> K.commutative_diagrams == FiniteSet(d)
+        >>> K.commutative_diagrams == FiniteSet((d,))
         True
 
         """
@@ -542,8 +542,8 @@ class Diagram(Basic):
     >>> f = NamedMorphism(A, B, "f")
     >>> g = NamedMorphism(B, C, "g")
     >>> d = Diagram(f, g)
-    >>> morphisms_keys = sorted(d.morphisms.keys(), key=default_sort_key)
-    >>> pprint(morphisms_keys, use_unicode=False)
+    >>> morphisms = sorted(d, key=default_sort_key)
+    >>> pprint(morphisms, use_unicode=False)
     [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
     >>> pprint(d.morphisms, use_unicode=False)
     {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
@@ -639,12 +639,12 @@ class Diagram(Basic):
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram(f, g)
-        >>> IdentityMorphism(A) in d.morphisms.keys()
+        >>> IdentityMorphism(A) in d
         True
-        >>> g * f in d.morphisms
+        >>> g * f in d
         True
         >>> d = Diagram({f: [], g: [], g * f: "unique"})
-        >>> d.morphisms[g * f]
+        >>> d[g * f]
         {unique}
 
         """
@@ -804,3 +804,120 @@ class Diagram(Basic):
                 new_morphisms[morphism] = props
 
         return Diagram(new_morphisms)
+
+    def __iter__(self):
+        """
+        Produces an iterator over the underlying dictionary of
+        morphisms.
+
+        Example
+        =======
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import FiniteSet, pretty, default_sort_key
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram(f, g)
+        >>> sorted(d, key=default_sort_key)
+        [CompositeMorphism((NamedMorphism(Object("A"), Object("B"), "f"),
+        NamedMorphism(Object("B"), Object("C"), "g"))),
+        IdentityMorphism(Object("A")), IdentityMorphism(Object("B")),
+        IdentityMorphism(Object("C")), NamedMorphism(Object("A"),
+        Object("B"), "f"), NamedMorphism(Object("B"), Object("C"), "g")]
+
+        """
+        return iter(self.morphisms)
+
+    def __len__(self):
+        """
+        Returns the number of the morphisms included in this diagram
+        (including the morphisms added automatically).
+
+        Example
+        =======
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import FiniteSet, pretty
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram(f, g)
+        >>> len(d)
+        6
+
+        """
+        return len(self.morphisms)
+
+    def __contains__(self, morphism):
+        """
+        Checks whether ``morphism`` is contained in the diagram.
+
+        Example
+        =======
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import FiniteSet, pretty
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram(f, g)
+        >>> g * f in d
+        True
+
+        """
+        return morphism in self.morphisms
+
+    def __getitem__(self, morphism):
+        r"""
+        Retrieves the properties of the supplied ``morphism``, if it
+        belongs to the diagram.  Throws :class:`ValueError` if
+        ``morphism`` does not belong to this diagram.
+
+        Example
+        =======
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import FiniteSet, pretty
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram({f: "unique", g: []})
+        >>> d[f]
+        {unique}
+
+        """
+        return self.morphisms[morphism]
+
+    def get(self, morphism, default=None):
+        """
+        Retrieves the properties of the supplied ``morphism``, if it
+        belongs to the diagram.  Returns the value of ``default`` if
+        ``morphism`` does not belong to this diagram.
+
+        Example
+        =======
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import FiniteSet, pretty
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram({f: "unique", g: []})
+        >>> d.get(f)
+        {unique}
+        >>> d.get(NamedMorphism(B, A, "f'")) is None
+        True
+
+        """
+        return self.morphisms.get(morphism)
