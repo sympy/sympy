@@ -1077,8 +1077,8 @@ class Mul(AssocOp):
             return False
 
     def _eval_subs(self, old, new):
-        from sympy import sign
-        from sympy.ntheory.factor_ import multiplicity
+        from sympy import sign, Dummy, multiplicity
+        from sympy.core.function import _coeff_isneg
         from sympy.simplify.simplify import powdenest, fraction
 
         if not old.is_Mul:
@@ -1154,8 +1154,27 @@ class Mul(AssocOp):
         co_old = old.args[0]
         co_xmul = None
         if co_old.is_Rational and co_self.is_Rational:
+            # if coeffs are the same there will be no updating to do
+            # below after breakup() step; so skip (and keep co_xmul=None)
             if co_old != co_self:
                 co_xmul = co_self.extract_multiplicatively(co_old)
+                # if extraction failed see if the negated coefficient can
+                # be extracted
+                if not co_xmul and co_old < 0:
+                    if co_self.extract_multiplicatively(-co_old):
+                        # now see if the sign can be ignored
+                        d = Dummy()
+                        test = self._subs(-old, -d*new)
+                        if test.has(d):
+                            # it passed without the negative; see
+                            # if the sign matters
+                            test1 = test.xreplace({d: S.One})
+                            if test.xreplace({d: S.NegativeOne}) == test1:
+                                return test1
+                    # either both +/-co_self are unextractable or the sign matters
+                    # so the subs failed
+                    return rv
+
                 # further processing done after breaking up args
         elif co_old.is_Rational:
             return rv
