@@ -3876,7 +3876,7 @@ def classof(A,B):
     >>> M = Matrix([[1,2],[3,4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1,2],[3,4]])
     >>> classof(M, IM)
-    <class 'sympy.matrices.matrices.Matrix'>
+    <class 'sympy.matrices.matrices.MutableMatrix'>
     """
     from immutable_matrix import ImmutableMatrix
     try:
@@ -4955,4 +4955,3 @@ def rot_axis1(theta):
     return MutableMatrix(mat)
 
 Matrix = MutableMatrix
-Matrix.__name__ = "Matrix"
