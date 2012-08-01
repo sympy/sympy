@@ -1297,6 +1297,14 @@ class LatexPrinter(Printer):
         latex_result = self._print(diagram.morphisms)
         return latex_result
 
+    def _print_Implication(self, imp):
+        conclusion = {}
+        for m in imp.diff():
+            conclusion[m] = imp.conclusion[m]
+
+        return "%s \\Longrightarrow %s" % (self._print(imp.premise),
+                                           self._print(conclusion))
+
     def _print_DiagramGrid(self, grid):
         latex_result = "\\begin{array}{%s}\n" % ("c" * grid.width)
 

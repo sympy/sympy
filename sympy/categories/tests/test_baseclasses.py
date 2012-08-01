@@ -1,6 +1,6 @@
 from sympy.categories import (Object, Morphism, IdentityMorphism,
                               NamedMorphism, CompositeMorphism,
-                              Diagram, Category)
+                              Diagram, Category, Implication)
 from sympy.categories.baseclasses import Class
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import FiniteSet, EmptySet, Dict, Tuple
@@ -205,3 +205,36 @@ def test_category():
     assert K.commutative_diagrams == FiniteSet(d1, d2)
 
     raises(ValueError, lambda: Category(""))
+
+def test_implication():
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+
+    premise = Diagram(g, f)
+    conclusion = Diagram({g * f: "unique"})
+
+    imp = Implication(premise, conclusion)
+
+    # Generic tests.
+    assert imp.premise == premise
+    assert imp.conclusion == conclusion
+    assert imp.to_diagram() == conclusion
+
+    # Flattening and adding an attribute to conclusions.
+    flattened_implication = Diagram({g: "conclusion", f: "conclusion",
+                                     g * f: ["unique", "conclusion"]})
+    assert imp.to_diagram("conclusion") == flattened_implication
+
+    # Extra objects in conclusion.
+    raises(ValueError, lambda: Implication(Diagram(f), Diagram(g * f)))
+
+    # Test diff.
+    assert imp.diff() == FiniteSet(g * f)
+
+    h = NamedMorphism(C, A, "h")
+    imp = Implication(premise, Diagram(h))
+    assert imp.diff() == FiniteSet(h)

@@ -598,7 +598,7 @@ def test_PolynomialRing():
 def test_categories():
     from sympy.categories import (Object, Morphism, IdentityMorphism,
                                   NamedMorphism, CompositeMorphism,
-                                  Category, Diagram, DiagramGrid)
+                                  Category, Diagram, DiagramGrid, Implication)
 
     A1 = Object("A1")
     A2 = Object("A2")
@@ -627,6 +627,17 @@ def test_categories():
            "\\emptyset, & id:A_{3}\\rightarrow A_{3} : \\emptyset, " \
            "& f_{1}:A_{1}\\rightarrow A_{2} : \\left\\{unique\\right\\}, " \
            "& f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix}"
+
+    imp = Implication(Diagram({f1:"unique", f2:S.EmptySet}),
+                      Diagram({f2 * f1: "unique"}))
+    assert latex(imp) == "\\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
+           "\\rightarrow A_{3} : \\emptyset, & id:A_{1}\\rightarrow " \
+           "A_{1} : \\emptyset, & id:A_{2}\\rightarrow A_{2} : " \
+           "\\emptyset, & id:A_{3}\\rightarrow A_{3} : \\emptyset, " \
+           "& f_{1}:A_{1}\\rightarrow A_{2} : \\left\\{unique\\right\\}," \
+           " & f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix} " \
+           "\\Longrightarrow \\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
+           "\\rightarrow A_{3} : \\left\\{unique\\right\\}\\end{Bmatrix}"
 
     # A linear diagram.
     A = Object("A")

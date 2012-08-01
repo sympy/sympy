@@ -923,3 +923,224 @@ class Diagram(Basic):
 
         """
         return self.morphisms.get(morphism)
+
+class Implication(Basic):
+    r"""
+    Represents an category theoretic implication in terms of diagrams.
+
+    In category theoretic reasoning, a commutative diagram is often
+    accompanied by a statement of the following kind: "if such
+    morphisms with such properties exist, then such morphisms which
+    such properties exist and the diagram is commutative".  To
+    represent this, an :class:`Implication` includes two
+    :class:`Diagram`'s: one to represent the premise of the
+    implication, and the other to represent the conclusion.  The
+    objects of the conclusion :class:`Diagram` should be a subset of
+    the premise :class:`Diagram`.
+
+    For example, the trivial fact that for every two morphisms
+    `f:A\rightarrow B` and `g:B\rightarrow C` there exists the unique
+    composite `g\circ f:A\rightarrow C` can be expressed by
+    establishing the following implication:
+
+    >>> from sympy.categories import Object, NamedMorphism, Diagram, Implication
+    >>> from sympy import FiniteSet, pprint
+    >>> A = Object("A")
+    >>> B = Object("B")
+    >>> C = Object("C")
+    >>> f = NamedMorphism(A, B, "f")
+    >>> g = NamedMorphism(B, C, "g")
+    >>> premise = Diagram(f, g)
+    >>> conclusion = Diagram({g * f: "unique"})
+    >>> imp = Implication(premise, conclusion)
+    >>> pprint(imp)
+    {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
+    EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()} ==> {g*f:A-->C: {unique}
+    }
+
+    Thus, the diagrams included in an :class:`Implication` should be
+    interpreted in the following way: in the situation described by
+    the premise diagram, there exists the morphisms with the
+    properties described in the conclusion.  Notice however that a
+    :class:`Diagram` includes all possible compositions between the
+    morphisms supplied at creation:
+
+    >>> pprint(imp.conclusion)
+    {g*f:A-->C: {unique}, id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: Em
+    ptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
+
+    To get the morphisms that present some interest, use the method
+    ``diff``.  This method returns the set of those morphisms which
+    either appear only in the conclusion, or have non-empty properties
+    in the conclusion, different from their properties in the premise
+
+    >>> pprint(imp.diff())
+    {g*f:A-->C}
+
+    In some situations, it is useful to flatten the implication by
+    squashing the premises and the conclusions in a single
+    :class:`Diagram`.  This can be achieved via the method
+    ``to_diagram``:
+
+    >>> pprint(imp.to_diagram())
+    {g*f:A-->C: {unique}, id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: Em
+    ptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
+    >>> imp.to_diagram() == Diagram({g * f: "unique"})
+    True
+
+    See Also
+    ========
+    Diagram
+    """
+    def __new__(cls, premise, conclusion):
+        r"""
+        Constructs a new instance of :class:`Implication` from two
+        :class:`Diagram`'s which represent the premise and the conclusion
+        of the implication.
+
+        The objects of the conclusion :class:`Diagram` must be a subset of
+        the objects of the premise :class:`Diagram`.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram, Implication
+        >>> from sympy import FiniteSet, pprint
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> premise = Diagram(f, g)
+        >>> conclusion = Diagram({g * f: "unique"})
+        >>> imp = Implication(premise, conclusion)
+        >>> pprint(imp)
+        {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
+        EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()} ==> {g*f:A-->C: {unique}
+        }
+
+        """
+        if not premise.objects.subset(conclusion.objects):
+            raise ValueError(
+                "The conclusion must include the same objects as the premise.")
+
+        return Basic.__new__(cls, premise, conclusion)
+
+    @property
+    def premise(self):
+        """
+        Returns the premise of this :class:`Implication`.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram, Implication
+        >>> from sympy import FiniteSet, pprint
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> premise = Diagram(f, g)
+        >>> conclusion = Diagram({g * f: "unique"})
+        >>> imp = Implication(premise, conclusion)
+        >>> pprint(imp.premise)
+        {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
+        EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
+
+        """
+        return self.args[0]
+
+    @property
+    def conclusion(self):
+        """
+        Returns the conclusion of this :class:`Implication`.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram, Implication
+        >>> from sympy import FiniteSet, pprint
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> premise = Diagram(f, g)
+        >>> conclusion = Diagram({g * f: "unique"})
+        >>> imp = Implication(premise, conclusion)
+        >>> pprint(imp.conclusion)
+        {g*f:A-->C: {unique}, id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: Em
+        ptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
+
+        """
+        return self.args[1]
+
+    def to_diagram(self, conclusion_property=None):
+        """
+        Merges the premise and the conclusion of this implication into
+        a single :class:`Diagram`.  If ``conclusion_property`` is supplied,
+        every morphism from the conclusion will have ``conclusion_property``
+        appended to its properties.
+
+        If a morphism occurs both in the premise and in the conclusion, in
+        the resulting :class:`Diagram` it will have the properties it has
+        in the conclusion.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram, Implication
+        >>> from sympy import FiniteSet, pprint
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> premise = Diagram(f, g)
+        >>> conclusion = Diagram({g * f: "unique"})
+        >>> imp = Implication(premise, conclusion)
+        >>> pprint(imp.to_diagram())
+        {g*f:A-->C: {unique}, id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: Em
+        ptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
+
+        """
+        new_morphisms = dict(self.premise.morphisms)
+        for morphism, props in self.conclusion.morphisms.items():
+            new_props = props
+            if conclusion_property and not isinstance(morphism, IdentityMorphism):
+                new_props |= FiniteSet(conclusion_property)
+            new_morphisms[morphism] = new_props
+
+        return Diagram(new_morphisms)
+
+    def diff(self):
+        """
+        Returns the :class:`FiniteSet` of morphisms which appear in the
+        conclusion but do not appear in the premise, or which have non-empty
+        properties in conclusion, different from the properties in the premise.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram, Implication
+        >>> from sympy import FiniteSet, pprint
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> premise = Diagram(f, g)
+        >>> conclusion = Diagram({g * f: "unique"})
+        >>> imp = Implication(premise, conclusion)
+        >>> pprint(imp.diff())
+        {g*f:A-->C}
+
+        """
+        diff_morphisms = set([])
+        for morphism, props in self.conclusion.morphisms.items():
+            if morphism not in self.premise:
+                diff_morphisms.add(morphism)
+            elif props and (props != self.premise[morphism]):
+                diff_morphisms.add(morphism)
+        return FiniteSet(diff_morphisms)

@@ -2057,3 +2057,15 @@ def test_sympy__categories__baseclasses__Category():
     d2 = Diagram([f])
     K = Category("K", commutative_diagrams=[d1, d2])
     assert _test_args(K)
+
+def test_sympy__categories__baseclasses__Implication():
+    from sympy.categories import Object, NamedMorphism, Diagram, Implication
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    premise = Diagram(g, f)
+    conclusion = Diagram({g * f: "unique"})
+    imp = Implication(premise, conclusion)
+    assert _test_args(imp)

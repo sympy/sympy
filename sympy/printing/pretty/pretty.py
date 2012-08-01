@@ -1509,6 +1509,20 @@ class PrettyPrinter(Printer):
         pretty_result = self._print(diagram.morphisms)
         return prettyForm(pretty_result[0])
 
+    def _print_Implication(self, imp):
+        results_arrow = " %s " % xsym("==>")
+
+        pretty_premise = prettyForm(self._print(imp.premise)[0])
+
+        # Only print the interesting morphisms from the conclusion.
+        conclusion = {}
+        for m in imp.diff():
+            conclusion[m] = imp.conclusion[m]
+        pretty_conclusion = prettyForm(self._print(conclusion)[0])
+
+        return prettyForm(pretty_premise.right(
+            results_arrow, pretty_conclusion)[0])
+
     def _print_DiagramGrid(self, grid):
         from sympy.matrices import Matrix
         from sympy import Symbol
