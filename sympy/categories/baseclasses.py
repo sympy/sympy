@@ -573,13 +573,15 @@ class Diagram(Basic):
             return False
 
     @staticmethod
-    def _add_morphism_closure(morphisms, morphism, props):
+    def _add_morphism_closure(morphisms, objects, morphism, props):
         """
         Adds a morphism and its attributes to the supplied dictionary
         ``morphisms``.
         """
         if not Diagram._set_dict_union(morphisms, morphism, props):
             # We have just added a new morphism.
+
+            objects.update([morphism.domain, morphism.codomain])
 
             if isinstance(morphism, IdentityMorphism):
                 if props:
@@ -613,7 +615,8 @@ class Diagram(Basic):
                 # This is a composite morphism, add its components as
                 # well.
                 for component in morphism.components:
-                    Diagram._add_morphism_closure(morphisms, component, empty)
+                    Diagram._add_morphism_closure(
+                        morphisms, objects, component, empty)
 
     def __new__(cls, *args):
         """
@@ -658,17 +661,16 @@ class Diagram(Basic):
                 # The user has supplied a dictionary of morphisms and
                 # their properties.
                 for morphism, props in first_arg.items():
-                    objects.update([morphism.domain, morphism.codomain])
                     Diagram._add_morphism_closure(
-                        morphisms, morphism, FiniteSet(props))
+                        morphisms, objects, morphism, FiniteSet(props))
             elif iterable(first_arg):
                 # The user has supplied a list of morphisms, none of
                 # which have any properties.
                 empty = EmptySet()
 
                 for morphism in first_arg:
-                    objects.update([morphism.domain, morphism.codomain])
-                    Diagram._add_morphism_closure(morphisms, morphism, empty)
+                    Diagram._add_morphism_closure(
+                        morphisms, objects, morphism, empty)
             else:
                 # Attempt to interpret ``args`` as a list of
                 # morphisms.

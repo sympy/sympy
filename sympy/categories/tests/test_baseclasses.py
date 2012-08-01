@@ -181,6 +181,10 @@ def test_diagram():
     assert d[g * f] == FiniteSet("unique")
     assert d[g] == FiniteSet()
 
+    # Test the proper addition of the components of composite
+    # morphisms and their objects.
+    assert Diagram(g * f) == Diagram(g, f)
+
 def test_category():
     A = Object("A")
     B = Object("B")
