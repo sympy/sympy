@@ -320,7 +320,7 @@ class Basic(object):
         # XXX: remove this when issue #2070 is fixed
         def inner_key(arg):
             if isinstance(arg, Basic):
-                return arg.sort_key()
+                return arg.sort_key(order)
             else:
                 return arg
 
