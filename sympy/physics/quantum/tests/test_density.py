@@ -3,7 +3,7 @@ from sympy.matrices.matrices import Matrix
 from sympy.core.trace import Tr
 from sympy.external import import_module
 from sympy.physics.quantum.density import Density, entropy
-from sympy.physics.quantum.state import Ket, Bra
+from sympy.physics.quantum.state import Ket, Bra, TimeDepKet
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.gate import HadamardGate
@@ -11,6 +11,7 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.cartesian import XKet, PxKet, PxOp, XOp
 from sympy.physics.quantum.spin import JzKet, Jz
+from sympy.physics.quantum.operator import OuterProduct
 from sympy.functions import sqrt
 from sympy.utilities.pytest import raises
 from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
@@ -186,4 +187,17 @@ def test_eval_trace():
     t = Tr(d)
     assert t.doit() == 1
 
-    #TODO: partial trace
+    #test dummy time dependent states
+    class TestTimeDepKet(TimeDepKet):
+        def _eval_trace(self, bra, **options):
+            return 1
+
+    x, t = symbols('x t')
+    k1 = TestTimeDepKet(0, 0.5)
+    k2 = TestTimeDepKet(0, 1)
+    d = Density([k1, 0.5], [k2, 0.5])
+    assert d.doit() == (0.5 * OuterProduct(k1, k1.dual()) +
+                        0.5 * OuterProduct(k2, k2.dual()))
+
+    t = Tr(d)
+    assert t.doit() == 1

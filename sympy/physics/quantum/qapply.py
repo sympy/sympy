@@ -132,7 +132,7 @@ def qapply_Mul(e, **options):
         args.append(lhs.ket)
         lhs = lhs.bra
 
-    # Call .doit() on Commutator/AntiCommutator.
+   # Call .doit() on Commutator/AntiCommutator.
     if isinstance(lhs, (Commutator, AntiCommutator)):
         comm = lhs.doit()
         if isinstance(comm, Add):

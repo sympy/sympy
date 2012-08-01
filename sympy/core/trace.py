@@ -72,7 +72,7 @@ class Tr(Expr):
     Parameters
     ==========
     o : operator, matrix, expr
-    i : indices (optional)
+    i : tuple/list indices (optional)
 
     Examples
     ========
@@ -99,11 +99,26 @@ class Tr(Expr):
         Parameters
         ==========
         args = sympy expression
+        indices = tuple/list if indices, optional
 
         """
 
-        expr = args[0]
-        indices = Tuple(*args[1]) if len(args) == 2 else Tuple()
+        # expect no indices,int or a tuple/list/Tuple
+        if (len(args) == 2):
+            if not isinstance(args[1], (list, Tuple, tuple)):
+                indices = Tuple(args[1])
+            else:
+                indices = Tuple(*args[1])
+
+            expr = args[0]
+        elif (len(args) == 1):
+            indices = Tuple()
+            expr = args[0]
+        else:
+            raise ValueError("Arguments to Tr should be of form"
+                             "(expr[, [indices]])")
+
+
         if isinstance(expr, Matrix):
             return expr.trace()
         elif hasattr(expr, 'trace') and callable(expr.trace):
