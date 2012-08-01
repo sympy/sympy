@@ -2,7 +2,8 @@ from sympy.utilities.pytest import raises
 from sympy import S, symbols, Symbol, Tuple, Mul
 from sympy.matrices import (eye, MatrixSymbol, Transpose, Inverse, ShapeError,
         MatMul, Identity, BlockMatrix, BlockDiagMatrix, block_collapse, Matrix,
-        ZeroMatrix, MatAdd, MatPow, matrixify, ImmutableMatrix)
+        ZeroMatrix, MatAdd, MatPow, matrixify, ImmutableMatrix, Trace,
+        MatrixExpr)
 
 def test_transpose():
     n, m, l = symbols('n m l', integer=True)
@@ -45,6 +46,15 @@ def test_inverse():
 
     # We play nice with traditional explicit matrices
     assert Inverse(Matrix([[1,2],[3,4]])) == Matrix([[1,2],[3,4]]).inv()
+
+def test_trace():
+    n, m, l = symbols('n m l', integer=True)
+    A = MatrixSymbol('A', n, n)
+    assert isinstance(Trace(A), Trace)
+    assert not isinstance(Trace(A), MatrixExpr)
+    raises(ShapeError, lambda : Trace(MatrixSymbol('B', 3, 4)))
+    assert Trace(eye(3)) == 3
+    assert Trace(Matrix(3,3,[1,2,3,4,5,6,7,8,9])) == 15
 
 def test_shape():
     n, m, l = symbols('n m l', integer=True)
@@ -131,7 +141,10 @@ def test_BlockMatrix():
     # Make sure that MatrixSymbols will enter 1x1 BlockMatrix if it simplifies
     assert block_collapse(Ab+Z) == BlockMatrix([[A+Z]])
 
-
+def test_BlockMatrix_Trace():
+    A,B,C,D = map(lambda s: MatrixSymbol(s, 3,3), 'ABCD')
+    X = BlockMatrix([[A,B],[C,D]])
+    assert Trace(X) == Trace(A) + Trace(D)
 
 def test_squareBlockMatrix():
     n,m,l,k = symbols('n m l k', integer=True)

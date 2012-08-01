@@ -177,6 +177,9 @@ class MatrixBase(object):
     def _eval_transpose(self):
         return self.transpose()
 
+    def _eval_trace(self):
+        return self.trace()
+
     def transpose(self):
         """
         Matrix transposition.
