@@ -1053,10 +1053,6 @@ def test_sympy__functions__special__hyper__HyperRep_sinasin():
 def test_sympy__functions__special__polynomials__OrthogonalPolynomial():
     pass
 
-def test_sympy__functions__special__polynomials__assoc_legendre():
-    from sympy.functions.special.polynomials import assoc_legendre
-    assert _test_args(assoc_legendre(x, 0, y))
-
 def test_sympy__functions__special__polynomials__chebyshevt():
     from sympy.functions.special.polynomials import chebyshevt
     assert _test_args(chebyshevt(x, 2))
@@ -1080,6 +1076,18 @@ def test_sympy__functions__special__polynomials__hermite():
 def test_sympy__functions__special__polynomials__legendre():
     from sympy.functions.special.polynomials import legendre
     assert _test_args(legendre(x, 2))
+
+def test_sympy__functions__special__polynomials__assoc_legendre():
+    from sympy.functions.special.polynomials import assoc_legendre
+    assert _test_args(assoc_legendre(x, 0, y))
+
+def test_sympy__functions__special__polynomials__laguerre():
+    from sympy.functions.special.polynomials import laguerre
+    assert _test_args(laguerre(x, 2))
+
+def test_sympy__functions__special__polynomials__assoc_laguerre():
+    from sympy.functions.special.polynomials import assoc_laguerre
+    assert _test_args(assoc_laguerre(x, 0, y))
 
 def test_sympy__functions__special__tensor_functions__LeviCivita():
     from sympy.functions.special.tensor_functions import LeviCivita
