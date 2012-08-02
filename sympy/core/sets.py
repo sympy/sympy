@@ -36,7 +36,7 @@ class Set(Basic):
 
     def sort_key(self, order):
         """
-        Give sort key of infimum (if possible) else sort_key of the set.
+        Give sort_key of infimum (if possible) else sort_key of the set.
         """
         try:
             infimum = self.inf
@@ -1217,6 +1217,8 @@ class FiniteSet(Set, EvalfMixin):
             raise ValueError("%s: Complement not defined for symbolic inputs"
                     %self)
 
+        # as there are only numbers involved, a straight sort is sufficient;
+        # default_sort_key is not needed
         args = sorted(self.args)
 
         intervals = [] # Build up a list of intervals between the elements
