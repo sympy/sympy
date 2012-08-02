@@ -27,9 +27,8 @@ from itertools import repeat, izip
 from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
 from sympy.core.compatibility import set_union
-
-from experimental_lambdify import vectorized_lambdify
 import warnings
+from experimental_lambdify import vectorized_lambdify, lambdify
 
 #TODO probably all of the imports after this line can be put inside function to
 # speed up the `from sympy import *` command.
@@ -242,6 +241,11 @@ def plot(*args, **kwargs):
       - tuples containing any of the above mentioned options, for plotting them
         together
 
+    In the case of 2D line and parametric plots, an adaptive sampling algorithm
+    is used. The adaptive sampling algorithm recursively selects a random point
+    in between two previously sampled points, which might lead to slightly
+    different plots being rendered each time.
+
     Examples:
     ---------
 
@@ -393,7 +397,7 @@ def plot(*args, **kwargs):
 ##############################################################################
 # Data Series
 ##############################################################################
-#TODO more general way to cacollectionulate aesthetics (see get_color_array)
+#TODO more general way to calculate aesthetics (see get_color_array)
 
 ### The base class for all series
 class BaseSeries(object):
@@ -487,8 +491,8 @@ class Line2DBaseSeries(BaseSeries):
     def get_segments(self):
         points = self.get_points()
         if self.steps == True:
-            x = np.array((points[0],points[0])).T.flatten()[1:]
-            y = np.array((points[1],points[1])).T.flatten()[:-1]
+            x = np.array((points[0], points[0])).T.flatten()[1:]
+            y = np.array((points[1], points[1])).T.flatten()[:-1]
             points = (x, y)
         points = np.ma.array(points).T.reshape(-1, 1, self._dim)
         return np.ma.concatenate([points[:-1], points[1:]], axis=1)
@@ -547,6 +551,72 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 str(self.var),
                 str((self.start, self.end)))
 
+    def get_segments(self):
+        """
+        Adaptively gets segments for plotting.
+
+        The adaptive sampling is done by recursively checking if three
+        points are almost collinear. If they are not collinear, then more
+        points are added between those points.
+
+        References
+        ==========
+        [1] Adaptive polygonal approximation of parametric curves,
+            Luiz Henrique de Figueiredo.
+
+        """
+        if self.only_integers:
+            return super(LineOver1DRangeSeries, self).get_segments()
+        else:
+            f = lambdify([self.var], self.expr)
+            list_segments = []
+            def sample(p, q, depth):
+                """ Samples recursively if three points are almost collinear.
+                For depth < 6, points are added irrespective of whether they
+                satisfy the collinearity condition or not. The maximum depth
+                allowed is 12.
+                """
+                #Randomly sample to avoid aliasing.
+                random = 0.45 + np.random.rand() * 0.1
+                xnew = p[0] + random * (q[0] - p[0])
+                ynew = f(xnew)
+                new_point = np.array([xnew, ynew])
+
+                #Maximum depth
+                if depth > 12:
+                    list_segments.append([p, q])
+
+                #Sample irrespective of whether the line is flat till the
+                #depth of 6. We are not using linspace to avoid aliasing.
+                elif depth < 6:
+                    sample(p, new_point, depth + 1)
+                    sample(new_point, q, depth + 1)
+
+                #Sample ten points if complex values are encountered
+                #at both ends. If there is a real value in between, then
+                #sample those points further.
+                elif p[1] is None and q[1] is None:
+                    xarray = np.linspace(p[0], q[0], 10)
+                    yarray = map(f, xarray)
+                    if any(y is not None for y in yarray):
+                        for i in len(yarray) - 1:
+                            if yarray[i] is None or yarray[i + 1] is None:
+                                sample([xarray[i], yarray[i]],
+                                    [xarray[i + 1], yarray[i + 1]], depth + 1)
+
+                #Sample further if one of the end points in None( i.e. a complex
+                #value) or the three points are not almost collinear.
+                elif p[1] is None or q[1] is None or not flat(p, new_point, q):
+                    sample(p, new_point, depth + 1)
+                    sample(new_point, q, depth + 1)
+                else:
+                    list_segments.append([p, q])
+
+            f_start = f(self.start)
+            f_end = f(self.end)
+            sample([self.start, f_start], [self.end, f_end], 0)
+            return list_segments
+
     def get_points(self):
         if self.only_integers == True:
             list_x = np.linspace(int(self.start), int(self.end),
@@ -591,6 +661,83 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         list_x = fx(param)
         list_y = fy(param)
         return (list_x, list_y)
+
+    def get_segments(self):
+        """
+        Adaptively gets segments for plotting.
+
+        The adaptive sampling is done by recursively checking if three
+        points are almost collinear. If they are not collinear, then more
+        points are added between those points.
+
+        References
+        ==========
+        [1] Adaptive polygonal approximation of parametric curves,
+            Luiz Henrique de Figueiredo.
+
+        """
+        f_x = lambdify([self.var], self.expr_x)
+        f_y = lambdify([self.var], self.expr_y)
+        list_segments = []
+        def sample(param_p, param_q, p, q, depth):
+            """ Samples recursively if three points are almost collinear.
+            For depth < 6, points are added irrespective of whether they
+            satisfy the collinearity condition or not. The maximum depth
+            allowed is 12.
+            """
+            #Randomly sample to avoid aliasing.
+            random = 0.45 + np.random.rand() * 0.1
+            param_new = param_p + random * (param_q - param_p)
+            xnew = f_x(param_new)
+            ynew = f_y(param_new)
+            new_point = np.array([xnew, ynew])
+
+            #Maximum depth
+            if depth > 12:
+                list_segments.append([p, q])
+
+            #Sample irrespective of whether the line is flat till the
+            #depth of 6. We are not using linspace to avoid aliasing.
+            elif depth < 6:
+                sample(param_p, param_new, p, new_point, depth + 1)
+                sample(param_new, param_q, new_point, q, depth + 1)
+
+            #Sample ten points if complex values are encountered
+            #at both ends. If there is a real value in between, then
+            #sample those points further.
+            elif ((p[0] is None and q[1] is None) or
+                    (p[1] is None and q[1] is None)):
+                param_array = np.linspace(param_p, param_q, 10)
+                x_array = map(f_x, param_array)
+                y_array = map(f_y, param_array)
+                if any(x is not None and y is not None
+                        for x, y in zip(x_array, y_array)):
+                    for i in len(y_array) - 1:
+                        if ((x_array[i] is not None and y_array[i] is not None) or
+                                (x_array[i+1] is not None and y_array[i] is not None)):
+                            point_a = [x_array[i], y_array[i]]
+                            point_b = [x_array[i + 1], y_array[i + 1]]
+                            sample(param_array[i], param_array[i], point_a,
+                                    point_b, depth + 1)
+
+            #Sample further if one of the end points in None( ie a complex
+            #value) or the three points are not almost collinear.
+            elif (p[0] is None or p[1] is None
+                    or q[1] is None or q[0] is None
+                    or not flat(p, new_point, q)):
+                sample(param_p, param_new, p, new_point, depth + 1)
+                sample(param_new, param_q, new_point, q, depth + 1)
+            else:
+                list_segments.append([p, q])
+
+        f_start_x = f_x(self.start)
+        f_start_y = f_y(self.start)
+        start = [f_start_x, f_start_y]
+        f_end_x = f_x(self.end)
+        f_end_y = f_y(self.end)
+        end = [f_end_x, f_end_y]
+        sample(self.start, self.end, start, end, 0)
+        return list_segments
 
 
 ### 3D lines
@@ -660,7 +807,7 @@ class SurfaceBaseSeries(BaseSeries):
             f = np.vectorize(c)
             arity = len(getargspec(c)[0])
             if self.is_parametric:
-                variables = map(centers_of_faces,self.get_parameter_meshes())
+                variables = map(centers_of_faces, self.get_parameter_meshes())
                 if arity == 1:
                     return f(variables[0])
                 elif arity == 2:
@@ -906,7 +1053,7 @@ class MatplotlibBackend(BaseBackend):
             if hasattr(s, 'label'):
                 collection.set_label(s.label)
             if s.is_line and s.line_color:
-                if isinstance(s.line_color, (float,int)) or callable(s.line_color):
+                if isinstance(s.line_color, (float, int)) or callable(s.line_color):
                     color_array = s.get_color_array()
                     collection.set_array(color_array)
                 else:
@@ -962,9 +1109,9 @@ class MatplotlibBackend(BaseBackend):
         if parent.title:
             self.ax.set_title(parent.title)
         if parent.xlabel:
-            self.ax.set_xlabel(parent.xlabel, position=(1,0))
+            self.ax.set_xlabel(parent.xlabel, position=(1, 0))
         if parent.ylabel:
-            self.ax.set_ylabel(parent.ylabel, position=(0,1))
+            self.ax.set_ylabel(parent.ylabel, position=(0, 1))
 
     def show(self):
         self.process_series()
@@ -1025,3 +1172,13 @@ def centers_of_faces(array):
                                  array[:-1, 1: ],
                                  array[:-1, :-1],
                                  )), 2)
+
+def flat(x, y, z, eps=1e-3):
+    """Checks whether three points are almost collinear"""
+    vector_a = x - y
+    vector_b = z - y
+    dot_product = np.dot(vector_a, vector_b)
+    vector_a_norm = np.linalg.norm(vector_a)
+    vector_b_norm = np.linalg.norm(vector_b)
+    cos_theta = dot_product / (vector_a_norm * vector_b_norm)
+    return abs(cos_theta + 1) < eps
