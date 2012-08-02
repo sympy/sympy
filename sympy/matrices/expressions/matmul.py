@@ -84,5 +84,16 @@ class MatMul(MatrixExpr, Mul):
 
         return coeff, MatMul(*matrices)
 
+    def _eval_transpose(self):
+        from transpose import Transpose
+        return MatMul(*[Transpose(arg) for arg in self.args[::-1]])
+
+    def _eval_inverse(self):
+        from inverse import Inverse
+        try:
+            return MatMul(*[Inverse(arg) for arg in self.args[::-1]])
+        except ShapeError:
+            raise NotImplementedError("Can not decompose this Inverse")
+
+
 from matadd import MatAdd
-from inverse import Inverse

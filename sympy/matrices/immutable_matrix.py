@@ -38,3 +38,4 @@ class ImmutableMatrix(MatrixExpr, MatrixBase):
 
     equals = MatrixBase.equals
     is_Identity = MatrixBase.is_Identity
+    _eval_transpose = MatrixBase._eval_transpose
