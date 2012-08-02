@@ -100,10 +100,10 @@ class MatrixExpr(Expr):
     def is_square(self):
         return self.rows == self.cols
 
-    def eval_transpose(self):
+    def _eval_transpose(self):
         raise NotImplementedError()
 
-    def eval_inverse(self):
+    def _eval_inverse(self):
         raise NotImplementedError()
 
     @property
@@ -260,7 +260,10 @@ class Identity(MatrixSymbol):
     def __new__(cls, n):
         return MatrixSymbol.__new__(cls, "I", n, n)
 
-    def transpose(self):
+    def _eval_transpose(self):
+        return self
+
+    def _eval_inverse(self):
         return self
 
     def _entry(self, i, j):
@@ -282,7 +285,8 @@ class ZeroMatrix(MatrixSymbol):
     is_ZeroMatrix = True
     def __new__(cls, n, m):
         return MatrixSymbol.__new__(cls, "0", n, m)
-    def transpose(self):
+
+    def _eval_transpose(self):
         return ZeroMatrix(self.cols, self.rows)
 
     def _entry(self, i, j):

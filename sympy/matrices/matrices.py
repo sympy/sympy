@@ -174,6 +174,9 @@ class MatrixBase(object):
 
         return rows, cols, mat
 
+    def _eval_transpose(self):
+        return self.transpose()
+
     def transpose(self):
         """
         Matrix transposition.
@@ -816,6 +819,8 @@ class MatrixBase(object):
             # if a new method is added.
             raise ValueError("Inversion method unrecognized")
 
+    def _eval_inverse(self):
+        return self.inv()
 
     def __mathml__(self):
         mml = ""
