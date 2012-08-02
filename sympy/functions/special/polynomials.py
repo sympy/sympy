@@ -36,19 +36,6 @@ class OrthogonalPolynomial(Function):
     def _eval_conjugate(self):
         return self.func(self.args[0], self.args[1].conjugate())
 
-
-class PolynomialSequence(Function):
-    """Polynomial sequence with one index and n >= 0. """
-
-    nargs = 2
-
-    @classmethod
-    def eval(cls, n, x):
-        if n.is_integer and n >= 0:
-            return cls._ortho_poly(int(n), _x).subs(_x, x)
-        if n.is_negative:
-            raise ValueError("%s index must be nonnegative integer (got %r)" % (cls, n))
-
 #----------------------------------------------------------------------------
 # Chebyshev polynomials of first and second kind
 #
