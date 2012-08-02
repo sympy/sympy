@@ -95,7 +95,9 @@ class chebyshevt(OrthogonalPolynomial):
 
     .. [1] http://en.wikipedia.org/wiki/Chebyshev_polynomial
     .. [2] http://mathworld.wolfram.com/ChebyshevPolynomialoftheFirstKind.html
-    .. [3] http://functions.wolfram.com/Polynomials/ChebyshevT/
+    .. [3] http://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
+    .. [4] http://functions.wolfram.com/Polynomials/ChebyshevT/
+    .. [5] http://functions.wolfram.com/Polynomials/ChebyshevU/
     """
 
     _ortho_poly = staticmethod(chebyshevt_poly)
@@ -195,8 +197,10 @@ class chebyshevu(OrthogonalPolynomial):
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Chebyshev_polynomial
-    .. [2] http://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
-    .. [3] http://functions.wolfram.com/Polynomials/ChebyshevU/
+    .. [2] http://mathworld.wolfram.com/ChebyshevPolynomialoftheFirstKind.html
+    .. [3] http://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
+    .. [4] http://functions.wolfram.com/Polynomials/ChebyshevT/
+    .. [5] http://functions.wolfram.com/Polynomials/ChebyshevU/
     """
 
     _ortho_poly = staticmethod(chebyshevu_poly)
@@ -367,6 +371,9 @@ class legendre(OrthogonalPolynomial):
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Legendre_polynomial
+    .. [2] http://mathworld.wolfram.com/LegendrePolynomial.html
+    .. [3] http://functions.wolfram.com/Polynomials/LegendreP/
+    .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/
     """
 
     _ortho_poly = staticmethod(legendre_poly)
@@ -458,6 +465,9 @@ class assoc_legendre(Function):
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Associated_Legendre_polynomials
+    .. [2] http://mathworld.wolfram.com/LegendrePolynomial.html
+    .. [3] http://functions.wolfram.com/Polynomials/LegendreP/
+    .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/
     """
 
     nargs = 3
@@ -552,6 +562,7 @@ class hermite(OrthogonalPolynomial):
 
     .. [1] http://en.wikipedia.org/wiki/Hermite_polynomial
     .. [2] http://mathworld.wolfram.com/HermitePolynomial.html
+    .. [3] http://functions.wolfram.com/Polynomials/HermiteH/
     """
 
     _ortho_poly = staticmethod(hermite_poly)
@@ -644,6 +655,8 @@ class laguerre(OrthogonalPolynomial):
 
     .. [1] http://en.wikipedia.org/wiki/Laguerre_polynomial
     .. [2] http://mathworld.wolfram.com/LaguerrePolynomial.html
+    .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/
+    .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
     """
 
     @classmethod
@@ -747,6 +760,8 @@ class assoc_laguerre(OrthogonalPolynomial):
 
     .. [1] http://en.wikipedia.org/wiki/Laguerre_polynomial#Assoc_laguerre_polynomials
     .. [2] http://mathworld.wolfram.com/AssociatedLaguerrePolynomial.html
+    .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/
+    .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
     """
 
     nargs = 3
