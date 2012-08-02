@@ -2144,25 +2144,27 @@ class PermutationGroup(Basic):
         # handle the trivial group
         if gens == [identity]:
             return base, gens
+        # prevent side effects
+        _base, _gens = base[:], gens[:]
         # remove the identity as a generator
-        gens = [x for x in gens if x != identity]
+        _gens = [x for x in _gens if x != identity]
         # make sure no generator fixes all base points
-        for gen in gens:
-            if [gen(x) for x in base] == [x for x in base]:
+        for gen in _gens:
+            if [gen(x) for x in _base] == [x for x in _base]:
                 new = 0
                 while gen(new) == new:
                     new += 1
-                base.append(new)
+                _base.append(new)
                 base_len += 1
         # distribute generators according to basic stabilizers
-        strong_gens_distr = _distribute_gens_by_base(base, gens)
+        strong_gens_distr = _distribute_gens_by_base(_base, _gens)
         # initialize the basic stabilizers, basic orbits and basic transversals
         stabs = {}
         orbs = {}
         transversals = {}
         for i in xrange(base_len):
             stabs[i] = PermutationGroup(strong_gens_distr[i])
-            transversals[i] = dict(stabs[i].orbit_transversal(base[i],\
+            transversals[i] = dict(stabs[i].orbit_transversal(_base[i],\
                                                               pairs=True))
             orbs[i] = transversals[i].keys()
         # main loop: amend the stabilizer chain until we have generators
@@ -2182,7 +2184,7 @@ class PermutationGroup(Basic):
                         # would-be basic stabilizer
                         y = True
                         schreier_gen = (~u_beta_gen)*gen*u_beta
-                        h, j = _strip(schreier_gen, base, orbs, transversals)
+                        h, j = _strip(schreier_gen, _base, orbs, transversals)
                         if j <= base_len:
                             # new strong generator h at level j
                             y = False
@@ -2192,7 +2194,7 @@ class PermutationGroup(Basic):
                             moved = 0
                             while h(moved) == moved:
                                 moved += 1
-                            base.append(moved)
+                            _base.append(moved)
                             base_len += 1
                             strong_gens_distr.append([])
                         if y == False:
@@ -2202,7 +2204,7 @@ class PermutationGroup(Basic):
                                 strong_gens_distr[l].append(h)
                                 stabs[l] = PermutationGroup(strong_gens_distr[l])
                                 transversals[l] =\
-                                dict(stabs[l].orbit_transversal(base[l],\
+                                dict(stabs[l].orbit_transversal(_base[l],\
                                                                 pairs=True))
                                 orbs[l] = transversals[l].keys()
                             i = j - 1
@@ -2221,7 +2223,7 @@ class PermutationGroup(Basic):
             for gen in gens:
                 if gen not in strong_gens:
                     strong_gens.append(gen)
-        return base, strong_gens
+        return _base, strong_gens
 
     def schreier_sims_random(self, base=None, gens=None, consec_succ=10,\
                              _random_prec=None):
