@@ -667,9 +667,8 @@ class Interval(Set, EvalfMixin):
 
 def set_sort_fn(s):
     """
-    Sort by infimum if possible
-
-    Otherwise sort by hash. Try to put these at the end.
+    Sort by infimum if possible.  Otherwise sort by
+    ``default_sort_key``.
     """
     try:
         val = s.inf
@@ -1219,7 +1218,7 @@ class FiniteSet(Set, EvalfMixin):
             raise ValueError("%s: Complement not defined for symbolic inputs"
                     %self)
 
-        args = sorted(self.args, key=default_sort_key)
+        args = sorted(self.args)
 
         intervals = [] # Build up a list of intervals between the elements
         intervals += [Interval(S.NegativeInfinity, args[0], True, True)]
@@ -1265,3 +1264,8 @@ class FiniteSet(Set, EvalfMixin):
 
     def _hashable_content(self):
         return (self._elements,)
+
+    @property
+    def _sorted_args(self):
+        from sympy.utilities import default_sort_key
+        return sorted(self.args, key=default_sort_key)
