@@ -53,19 +53,21 @@ class PolynomialSequence(Function):
 # Chebyshev polynomials of first and second kind
 #
 
-class chebyshevt(PolynomialSequence):
+class chebyshevt(OrthogonalPolynomial):
     """
+    Chebyshev polynomial of the first kind, :math:`T_n(x)`
+
     chebyshevt(n, x) gives the nth Chebyshev polynomial (of the first
-    kind) of x, T_n(x)
+    kind) in x, :math:`T_n(x)`.
 
     The Chebyshev polynomials of the first kind are orthogonal on
-    [-1, 1] with respect to the weight 1/sqrt(1-x**2).
+    :math:`[-1, 1]` with respect to the weight :math:`\frac{1}{\sqrt{1-x^2}}`.
 
     Examples
     ========
 
-    >>> from sympy import chebyshevt
-    >>> from sympy.abc import x
+    >>> from sympy import chebyshevt, chebyshevu, diff
+    >>> from sympy.abc import n,x
     >>> chebyshevt(0, x)
     1
     >>> chebyshevt(1, x)
@@ -73,37 +75,93 @@ class chebyshevt(PolynomialSequence):
     >>> chebyshevt(2, x)
     2*x**2 - 1
 
+    >>> chebyshevt(n, x)
+    chebyshevt(n, x)
+    >>> chebyshevt(n, -x)
+    (-1)**n*chebyshevt(n, x)
+    >>> chebyshevt(-n, x)
+    chebyshevt(n, x)
+
+    >>> chebyshevt(n, 0)
+    cos(pi*n/2)
+    >>> chebyshevt(n, -1)
+    (-1)**n
+
+    >>> diff(chebyshevt(n, x), x)
+    n*chebyshevu(n - 1, x)
+
     See Also
     ========
 
     chebysevt_root, chebyshevu, chebyshevu_root
-    legendre, assoc_legendre
+    legendre, assoc_legendre,
 
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Chebyshev_polynomial
-    """
-
-    """
-    Chebyshev polynomial of the first kind, T_n(x)
+    .. [1] http://en.wikipedia.org/wiki/Chebyshev_polynomial
+    .. [2] http://mathworld.wolfram.com/ChebyshevPolynomialoftheFirstKind.html
+    .. [3] http://functions.wolfram.com/Polynomials/ChebyshevT/
     """
 
     _ortho_poly = staticmethod(chebyshevt_poly)
 
-class chebyshevu(PolynomialSequence):
+    @classmethod
+    def eval(cls, n, x):
+        if not n.is_Number:
+            # Symbolic result T_n(x)
+            # T_n(-x)  --->  (-1)**n * T_n(x)
+            if x.could_extract_minus_sign():
+                return S.NegativeOne**n * chebyshevt(n,-x)
+            # T_{-n}(x)  --->  T_n(x)
+            if n.could_extract_minus_sign():
+                return chebyshevt(-n,x)
+            # We can evaluate for some special values of x
+            if x == S.Zero:
+                return C.cos(S.Half * S.Pi * n)
+            if x == S.One:
+                return S.One
+            elif x == S.Infinity:
+                return S.Infinity
+        else:
+            # n is a given fixed integer, evaluate into polynomial
+            if n.is_negative:
+                # T_{-n}(x) == T_n(x)
+                return cls._eval_at_order(-n, x)
+            else:
+                return cls._eval_at_order(n, x)
+
+    def fdiff(self, argindex=2):
+        if argindex == 1:
+            # Diff wrt n
+            raise ArgumentIndexError(self, argindex)
+        elif argindex == 2:
+            # Diff wrt x
+            n, x = self.args
+            return n * chebyshevu(n-1, x)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_polynomial(self, n, x):
+        k = C.Dummy("k")
+        kern = C.binomial(n, 2*k) * (x**2 - 1)**k * x**(n-2*k)
+        return C.Sum(kern, (k, 0, C.floor(n/2)))
+
+class chebyshevu(OrthogonalPolynomial):
     """
+    Chebyshev polynomial of the second kind, :math:`U_n(x)`
+
     chebyshevu(n, x) gives the nth Chebyshev polynomial of the second
-    kind of x, U_n(x)
+    kind in x, :math:`U_n(x)`.
 
     The Chebyshev polynomials of the second kind are orthogonal on
-    [-1, 1] with respect to the weight sqrt(1-x**2).
+    :math:`[-1, 1]` with respect to the weight :math:`\sqrt{1-x^2}`.
 
     Examples
     ========
 
-    >>> from sympy import chebyshevu
-    >>> from sympy.abc import x
+    >>> from sympy import chebyshevt, chebyshevu, diff
+    >>> from sympy.abc import n,x
     >>> chebyshevu(0, x)
     1
     >>> chebyshevu(1, x)
@@ -111,15 +169,83 @@ class chebyshevu(PolynomialSequence):
     >>> chebyshevu(2, x)
     4*x**2 - 1
 
+    >>> chebyshevu(n, x)
+    chebyshevu(n, x)
+    >>> chebyshevu(n, -x)
+    (-1)**n*chebyshevu(n, x)
+    >>> chebyshevu(-n, x)
+    -chebyshevu(n - 2, x)
+
+    >>> chebyshevu(n, 0)
+    cos(pi*n/2)
+    >>> chebyshevu(n, 1)
+    n + 1
+
+    >>> diff(chebyshevu(n, x), x)
+    (-x*chebyshevu(n, x) + (n + 1)*chebyshevt(n + 1, x))/(x**2 - 1)
+
     See Also
     ========
 
     chebyshevu_root, chebyshevt, chebyshevt_root
     legendre, assoc_legendre
 
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Chebyshev_polynomial
+    .. [2] http://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
+    .. [3] http://functions.wolfram.com/Polynomials/ChebyshevU/
     """
 
     _ortho_poly = staticmethod(chebyshevu_poly)
+
+    @classmethod
+    def eval(cls, n, x):
+        if not n.is_Number:
+            # Symbolic result U_n(x)
+            # U_n(-x)  --->  (-1)**n * U_n(x)
+            if x.could_extract_minus_sign():
+                return S.NegativeOne**n * chebyshevu(n,-x)
+            # U_{-n}(x)  --->  -U_{n-2}(x)
+            if n.could_extract_minus_sign():
+                if n == S.NegativeOne:
+                    return S.Zero
+                else:
+                    return -chebyshevu(-n-2,x)
+            # We can evaluate for some special values of x
+            if x == S.Zero:
+                return C.cos(S.Half * S.Pi * n)
+            if x == S.One:
+                return S.One + n
+            elif x == S.Infinity:
+                return S.Infinity
+        else:
+            # n is a given fixed integer, evaluate into polynomial
+            if n.is_negative:
+                # U_{-n}(x)  --->  -U_{n-2}(x)
+                if n == S.NegativeOne:
+                    return S.Zero
+                else:
+                    return -cls._eval_at_order(-n-2, x)
+            else:
+                return cls._eval_at_order(n, x)
+
+    def fdiff(self, argindex=2):
+        if argindex == 1:
+            # Diff wrt n
+            raise ArgumentIndexError(self, argindex)
+        elif argindex == 2:
+            # Diff wrt x
+            n, x = self.args
+            return ((n+1) * chebyshevt(n+1, x) - x * chebyshevu(n,x)) / (x**2 - 1)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_polynomial(self, n, x):
+        k = C.Dummy("k")
+        kern = S.NegativeOne**k * C.factorial(n-k) * (2*x)**(n-2*k) / (C.factorial(k) * C.factorial(n-2*k))
+        return C.Sum(kern, (k, 0, C.floor(n/2)))
 
 class chebyshevt_root(Function):
     """
@@ -141,7 +267,6 @@ class chebyshevt_root(Function):
 
     chebyshevt, chebyshevu, chebyshevu_root
     legendre, assoc_legendre
-
     """
 
     nargs = 2
@@ -172,7 +297,6 @@ class chebyshevu_root(Function):
 
     chebyshevu, chebyshevt, chebyshevt_root
     legendre, assoc_legendre
-
     """
 
     nargs = 2
