@@ -34,6 +34,19 @@ class Set(Basic):
     is_EmptySet = None
     is_UniversalSet = None
 
+    def sort_key(self, order):
+        """
+        Give sort key of infimum (if possible) else sort_key of the set.
+        """
+        try:
+            infimum = self.inf
+            if infimum.is_comparable:
+                return default_sort_key(infimum)
+        except (NotImplementedError, ValueError):
+            pass
+        args = tuple([default_sort_key(a) for a in self.args])
+        return self.class_key(), (len(args), args), S.One.class_key(), S.One
+
     def union(self, other):
         """
         Returns the union of 'self' and 'other'.
@@ -665,20 +678,6 @@ class Interval(Set, EvalfMixin):
         else:
             return And(left, right)
 
-def set_sort_fn(s):
-    """
-    Sort by infimum if possible.  Otherwise sort by
-    ``default_sort_key``.
-    """
-    try:
-        val = s.inf
-        if val.is_comparable:
-            return default_sort_key(val)
-        else:
-            return default_sort_key(s)
-    except (NotImplementedError, ValueError):
-        return default_sort_key(s)
-
 class Union(Set, EvalfMixin):
     """
     Represents a union of sets as a Set.
@@ -727,7 +726,7 @@ class Union(Set, EvalfMixin):
         if len(args)==0:
             return S.EmptySet
 
-        args = sorted(args, key = set_sort_fn)
+        args = sorted(args, key=default_sort_key)
 
         # Reduce sets using known rules
         if evaluate:
@@ -921,7 +920,7 @@ class Intersection(Set):
         if len(args)==0:
             return S.UniversalSet
 
-        args = sorted(args, key = set_sort_fn)
+        args = sorted(args, key=default_sort_key)
 
         # Reduce sets using known rules
         if evaluate:
