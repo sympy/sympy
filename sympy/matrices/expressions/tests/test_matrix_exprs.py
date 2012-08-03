@@ -71,6 +71,8 @@ def test_trace():
 
     raises(TypeError, lambda : Trace(S.One))
 
+    assert Trace(A).arg is A
+
 def test_shape():
     n, m, l = symbols('n m l', integer=True)
     A = MatrixSymbol('A', n, m)
