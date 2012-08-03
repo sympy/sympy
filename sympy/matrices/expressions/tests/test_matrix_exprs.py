@@ -69,6 +69,8 @@ def test_trace():
     F = FunctionMatrix(3,3, Lambda((i,j), i+j))
     assert Trace(F).doit() == (0+0) + (1+1) + (2+2)
 
+    raises(TypeError, lambda : Trace(S.One))
+
 def test_shape():
     n, m, l = symbols('n m l', integer=True)
     A = MatrixSymbol('A', n, m)

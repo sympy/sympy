@@ -1,4 +1,4 @@
-from sympy import Basic, Expr
+from sympy import Basic, Expr, sympify
 from matexpr import ShapeError
 
 class Trace(Expr):
@@ -16,12 +16,11 @@ class Trace(Expr):
     """
     is_Trace = True
     def __new__(cls, mat):
+        if not mat.is_Matrix:
+            raise TypeError("input to Trace, %s, is not a matrix"%str(mat))
 
         if not mat.is_square:
             raise ShapeError("Trace of a non-square matrix")
-
-        if not mat.is_Matrix:
-            return mat
 
         try:
             return mat._eval_trace()
