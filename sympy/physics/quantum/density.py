@@ -257,7 +257,44 @@ def entropy(density):
 
 def fidelity(arg1, arg2):
     """ Computes the fidelity between two quantum states
-    http://en.wikipedia.org/wiki/Fidelity_of_quantum_states
+    (http://en.wikipedia.org/wiki/Fidelity_of_quantum_states)
+
+    The arguments provided to this function should be a square matrix or a
+    Density object. If it is a square matrix, it is assumed to be diagonalizable.
+
+    Parameters:
+    ==========
+
+    arg1, arg2 : a density matrix or Matrix
+
+
+    Examples:
+    =========
+
+    >>> from sympy import S, sqrt
+    >>> from sympy.physics.quantum import *
+    >>> from sympy.physics.quantum.spin import JzKet
+    >>> from sympy.physics.quantum.density import Density, fidelity
+    >>> from sympy.physics.quantum.represent import represent
+    >>>
+    >>> up = JzKet(S(1)/2,S(1)/2)
+    >>> down = JzKet(S(1)/2,-S(1)/2)
+    >>> amp = 1/sqrt(2)
+    >>> updown = (amp * up ) + (amp * down)
+    >>>
+    >>> # represent turns Kets into matrices
+    >>> up_dm = represent(up * Dagger(up))
+    >>> down_dm = represent(down * Dagger(down))
+    >>> updown_dm = represent(updown * Dagger(updown))
+    >>> updown2 = (sqrt(3)/2 )* up + (1/2)*down
+    >>>
+    >>> print fidelity(up_dm, up_dm)
+    1
+    >>> print fidelity(up_dm, down_dm) #orthogonal states
+    0
+    >>> print fidelity(up_dm, updown_dm).evalf().round(3)
+    0.707
+
 
     """
     def sqrtm(mat):
