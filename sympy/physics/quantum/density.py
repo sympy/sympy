@@ -272,7 +272,7 @@ def fidelity(arg1, arg2):
     =========
 
     >>> from sympy import S, sqrt
-    >>> from sympy.physics.quantum import *
+    >>> from sympy.physics.quantum.dagger import Dagger
     >>> from sympy.physics.quantum.spin import JzKet
     >>> from sympy.physics.quantum.density import Density, fidelity
     >>> from sympy.physics.quantum.represent import represent
