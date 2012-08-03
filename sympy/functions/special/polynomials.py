@@ -41,7 +41,7 @@ class OrthogonalPolynomial(Function):
 #
 
 class chebyshevt(OrthogonalPolynomial):
-    """
+    r"""
     Chebyshev polynomial of the first kind, :math:`T_n(x)`
 
     chebyshevt(n, x) gives the nth Chebyshev polynomial (of the first
@@ -80,7 +80,7 @@ class chebyshevt(OrthogonalPolynomial):
     See Also
     ========
 
-    chebysevt_root, chebyshevu, chebyshevu_root,
+    chebyshevt_root,, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
@@ -144,7 +144,7 @@ class chebyshevt(OrthogonalPolynomial):
         return C.Sum(kern, (k, 0, C.floor(n/2)))
 
 class chebyshevu(OrthogonalPolynomial):
-    """
+    r"""
     Chebyshev polynomial of the second kind, :math:`U_n(x)`
 
     chebyshevu(n, x) gives the nth Chebyshev polynomial of the second
@@ -183,7 +183,7 @@ class chebyshevu(OrthogonalPolynomial):
     See Also
     ========
 
-    chebyshevt, chebysevt_root, chebyshevu_root,
+    chebyshevt, chebyshevt_root,, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
@@ -253,7 +253,7 @@ class chebyshevu(OrthogonalPolynomial):
         return C.Sum(kern, (k, 0, C.floor(n/2)))
 
 class chebyshevt_root(Function):
-    """
+    r"""
     chebyshev_root(n, k) returns the kth root (indexed from zero) of
     the nth Chebyshev polynomial of the first kind; that is, if
     0 <= k < n, chebyshevt(n, chebyshevt_root(n, k)) == 0.
@@ -290,7 +290,7 @@ class chebyshevt_root(Function):
         return C.cos(S.Pi*(2*k+1)/(2*n))
 
 class chebyshevu_root(Function):
-    """
+    r"""
     chebyshevu_root(n, k) returns the kth root (indexed from zero) of the
     nth Chebyshev polynomial of the second kind; that is, if 0 <= k < n,
     chebyshevu(n, chebyshevu_root(n, k)) == 0.
@@ -307,7 +307,7 @@ class chebyshevu_root(Function):
     See Also
     ========
 
-    chebyshevt, chebysevt_root, chebyshevu,
+    chebyshevt, chebyshevt_root,, chebyshevu,
     legendre, assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
@@ -357,7 +357,7 @@ class legendre(OrthogonalPolynomial):
     See Also
     ========
 
-    chebyshevt, chebysevt_root, chebyshevu, chebyshevu_root,
+    chebyshevt, chebyshevt_root,, chebyshevu, chebyshevu_root,
     assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
@@ -451,7 +451,7 @@ class assoc_legendre(Function):
     See Also
     ========
 
-    chebyshevt, chebysevt_root, chebyshevu, chebyshevu_root,
+    chebyshevt, chebyshevt_root,, chebyshevu, chebyshevu_root,
     legendre,
     hermite,
     laguerre, assoc_laguerre,
@@ -519,11 +519,11 @@ class assoc_legendre(Function):
 #
 
 class hermite(OrthogonalPolynomial):
-    """
+    r"""
     hermite(n, x) gives the nth Hermite polynomial in x, :math:`H_n(x)`
 
     The Hermite polynomials are orthogonal on :math:`(-\infty, \infty)`
-    with respect to the weight :math:`exp\left(-\frac{x^2}{2}\right)`.
+    with respect to the weight :math:`\exp\left(-\frac{x^2}{2}\right)`.
 
     Examples
     ========
@@ -548,7 +548,7 @@ class hermite(OrthogonalPolynomial):
     See Also
     ========
 
-    chebyshevt, chebysevt_root, chebyshevu, chebyshevu_root,
+    chebyshevt, chebyshevt_root,, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     laguerre, assoc_laguerre,
     sympy.polys.orthopolys.chebyshevt_poly,
@@ -607,7 +607,7 @@ class hermite(OrthogonalPolynomial):
 #
 
 class laguerre(OrthogonalPolynomial):
-    """
+    r"""
     Returns the nth Laguerre polynomial in x, :math:`L_n(x)`.
 
     Parameters
@@ -640,7 +640,7 @@ class laguerre(OrthogonalPolynomial):
     ========
     sympy.polys.orthopolys.laguerre_poly
 
-    chebyshevt, chebysevt_root, chebyshevu, chebyshevu_root,
+    chebyshevt, chebyshevt_root,, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
     assoc_laguerre,
@@ -700,7 +700,7 @@ class laguerre(OrthogonalPolynomial):
 
 
 class assoc_laguerre(OrthogonalPolynomial):
-    """
+    r"""
     Returns the nth generalized Laguerre polynomial in x, :math:`L_n(x)`.
 
     Parameters
@@ -745,7 +745,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     See Also
     ========
 
-    chebyshevt, chebysevt_root, chebyshevu, chebyshevu_root,
+    chebyshevt, chebyshevt_root,, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
     laguerre,

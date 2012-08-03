@@ -128,7 +128,10 @@ Hermite Polynomials
 Laguerre Polynomials
 ++++++++++++++++++++
 
-.. autofunction:: sympy.functions.special.polynomials.laguerre_l
+.. autoclass:: sympy.functions.special.polynomials.laguerre
+   :members:
+.. autoclass:: sympy.functions.special.polynomials.assoc_laguerre
+   :members:
 
 Spherical Harmonics
 -------------------
