@@ -1,10 +1,9 @@
-from sympy import Tuple, Add, Mul, Matrix, log, expand
+from sympy import Tuple, Add, Mul, Matrix, log, expand, sqrt
 from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.operator import HermitianOperator, OuterProduct, Operator
 from sympy.physics.quantum.represent import represent
-from sympy.physics.quantum.state import KetBase
 from matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
 from sympy.physics.quantum.tensorproduct import TensorProduct, tensor_product_simp
 from sympy.core.compatibility import product
@@ -254,3 +253,36 @@ def entropy(density):
         return -np.sum(eigvals*np.log(eigvals))
     else:
         raise ValueError("numpy.ndarray, scipy.sparse or sympy matrix expected")
+
+
+def fidelity(arg1, arg2):
+    """ Computes the fidelity between two quantum states
+    http://en.wikipedia.org/wiki/Fidelity_of_quantum_states
+
+    """
+    def sqrtm(mat):
+        (P, D) = mat.diagonalize()
+
+        for x in range(D.shape[0]):
+          D[x, x] = sqrt(D[x, x])
+
+        return P*D*P.inv()
+
+    arg1 = represent(arg1) if isinstance(arg1, Density) else arg1
+    arg2 = represent(arg2) if isinstance(arg2, Density) else arg2
+
+    if (not isinstance(arg1, Matrix) or
+        not isinstance(arg2, Matrix)):
+        raise ValueError("arg1 and arg2 must be of type density or Matrix "
+                         "received type=%s for arg1 and type=%s for arg2" %
+                         (type(arg1), type(arg2)))
+
+    if ( arg1.shape != arg2.shape and arg1.rows == arg2.cols):
+        raise ValueError("The dimensions of both args should be equal and the"
+                         "matrix obtained should be a square matrix")
+
+
+    sqrt_arg1 = sqrtm(arg1)
+    result = sqrtm(sqrt_arg1*arg2*sqrt_arg1)
+
+    return Tr(result).doit()

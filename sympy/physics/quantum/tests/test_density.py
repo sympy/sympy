@@ -2,7 +2,7 @@ from sympy import pprint, latex, symbols, S, log
 from sympy.matrices.matrices import Matrix
 from sympy.core.trace import Tr
 from sympy.external import import_module
-from sympy.physics.quantum.density import Density, entropy
+from sympy.physics.quantum.density import Density, entropy, fidelity
 from sympy.physics.quantum.state import Ket, Bra, TimeDepKet
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.qapply import qapply
@@ -201,3 +201,82 @@ def test_eval_trace():
 
     t = Tr(d)
     assert t.doit() == 1
+
+
+def test_fidelity():
+    #test with kets
+    up = JzKet(S(1)/2, S(1)/2)
+    down = JzKet(S(1)/2, -S(1)/2)
+    updown = (1/sqrt(2)) * up + (1/sqrt(2)) * down
+
+    #check with matrices
+    up_dm = represent(up * Dagger(up))
+    down_dm = represent(down * Dagger(down))
+    updown_dm = represent(updown * Dagger(updown))
+
+    assert fidelity(up_dm, up_dm) == 1
+    assert fidelity(up_dm, down_dm) == 0
+    assert fidelity(up_dm, updown_dm).evalf() == (1/sqrt(2)).evalf()
+    assert fidelity(updown_dm, down_dm).evalf() == (1/sqrt(2)).evalf()
+
+    #check with density
+    up_dm = Density([up, 1.0])
+    down_dm = Density([down, 1.0])
+    updown_dm = Density([updown, 1.0])
+
+    assert fidelity(up_dm, up_dm) == 1
+    assert fidelity(up_dm, down_dm) == 0
+    assert fidelity(up_dm, updown_dm).evalf() == (1/sqrt(2)).evalf()
+    assert fidelity(updown_dm, down_dm).evalf() == (1/sqrt(2)).evalf()
+
+    #check mixed states with density
+    updown2 = (sqrt(3)/2 )* up + (1/2)*down
+    d1 = Density([updown, 0.25], [updown2, 0.75])
+    d2 = Density([updown, 0.75], [updown2, 0.25])
+    assert fidelity(d1, d2).round(3) == 0.817
+    assert fidelity(d2, d1).round(3) == fidelity(d1, d2).round(3)
+
+
+    #using qubits/density(pure states)
+    state1 = Qubit('0')
+    state2 = Qubit('1')
+    state3 = (1/sqrt(2))*state1 + (1/sqrt(2))*state2
+    state4 = (sqrt(S(2)/3))*state1 + (1/sqrt(3))*state2
+
+    state1_dm = Density([state1, 1])
+    state2_dm = Density([state2, 1])
+    state3_dm = Density([state3, 1])
+
+    assert fidelity(state1_dm, state1_dm) == 1
+    assert fidelity(state1_dm, state2_dm) == 0
+    assert fidelity(state1_dm, state3_dm) == 1/sqrt(2)
+    assert fidelity(state3_dm, state2_dm) == 1/sqrt(2)
+
+    #using qubits/density(mixed states)
+    d1 = Density([state3, 0.70], [state4, 0.30])
+    d2 = Density([state3, 0.20], [state4, 0.80])
+    assert fidelity(d1, d1).round(3) == 1
+    assert fidelity(d1, d2).round(3) == 0.996
+    assert fidelity(d1, d2).round(3) == fidelity(d2, d1).round(3)
+
+    #TODO: test for invalid arguments
+    # non-square matrix
+    mat1 = [[0, 0],
+            [0, 0],
+            [0, 0]]
+
+    mat2 = [[0, 0],
+            [0, 0]]
+    raises(ValueError, lambda: fidelity(mat1, mat2))
+
+    # unequal dimensions
+    mat1 = [[0, 0],
+            [0, 0]]
+    mat2 = [[0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]]
+    raises(ValueError, lambda: fidelity(mat1, mat2))
+
+    # unsupported data-type
+    x, y = 1, 2 #random values that is not a matrix
+    raises(ValueError, lambda: fidelity(x, y))
