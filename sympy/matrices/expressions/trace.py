@@ -31,3 +31,7 @@ class Trace(Expr):
     @property
     def arg(self):
         return self.args[0]
+
+    def doit(self):
+        from sympy import Add
+        return Add(*[self.arg[i,i] for i in xrange(self.arg.rows)])
