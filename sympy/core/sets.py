@@ -34,7 +34,7 @@ class Set(Basic):
     is_EmptySet = None
     is_UniversalSet = None
 
-    def sort_key(self, order):
+    def sort_key(self, order=None):
         """
         Give sort_key of infimum (if possible) else sort_key of the set.
         """
@@ -44,7 +44,7 @@ class Set(Basic):
                 return default_sort_key(infimum)
         except (NotImplementedError, ValueError):
             pass
-        args = tuple([default_sort_key(a) for a in self.args])
+        args = tuple([default_sort_key(a) for a in self._sorted_args])
         return self.class_key(), (len(args), args), S.One.class_key(), S.One
 
     def union(self, other):
