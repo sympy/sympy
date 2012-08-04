@@ -1444,8 +1444,10 @@ class PyTestReporter(Reporter):
             # the terminal control sequences would be printed verbatim, so
             # don't use any colors.
             color = ""
-        if sys.platform == "win32":
+        elif sys.platform == "win32":
             # Windows consoles don't support ANSI escape sequences
+            color = ""
+        elif not self._colors:
             color = ""
 
         if self._line_wrap:
@@ -1595,12 +1597,11 @@ class PyTestReporter(Reporter):
         self.write("[%d] " % n)
 
     def leaving_filename(self):
-        if self._colors:
-            self.write(" ")
-            if self._active_file_error:
-                self.write("[FAIL]", "Red", align="right")
-            else:
-                self.write("[OK]", "Green", align="right")
+        self.write(" ")
+        if self._active_file_error:
+            self.write("[FAIL]", "Red", align="right")
+        else:
+            self.write("[OK]", "Green", align="right")
         self.write("\n")
         if self._verbose:
             self.write("\n")
@@ -1666,9 +1667,8 @@ class PyTestReporter(Reporter):
         rel_name = filename[len(self._root_dir)+1:]
         self.write(rel_name)
         self.write("[?]   Failed to import", "Red")
-        if self._colors:
-            self.write(" ")
-            self.write("[FAIL]", "Red", align="right")
+        self.write(" ")
+        self.write("[FAIL]", "Red", align="right")
         self.write("\n")
 
 sympy_dir = get_sympy_dir()
