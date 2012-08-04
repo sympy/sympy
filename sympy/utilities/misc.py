@@ -21,25 +21,7 @@ def default_sort_key(item, order=None):
     This key is supplied by the sort_key routine of Basic objects when
     ``item`` is a Basic object or an object (other than a string) that
     sympifies to a Basic object. Otherwise, this function produces the
-    key (a tuple of values) as follows:
-
-    +--------------+-----------+-----------+-----------+----------+-----------+
-    |              |           |           |           |          | numerical |
-    |     item     | class_key | len(args) |    args   | exponent | coeff     |
-    +==============+===========+===========+===========+==========+===========+
-    | str or       |    0      |    1      | str(item) |    1     |      1    |
-    | non-iterable |           |           |           |          |           |
-    | that doesn't |           |           |           |          |           |
-    | sympify to   |           |           |           |          |           |
-    | Basic        |           |           |           |          |           |
-    +--------------+-----------+-----------+-----------+----------+-----------+
-    |  dict, set   |   10      | len(item) |  sorted   |    1     |      1    |
-    |              |           |           | sort_key  |          |           |
-    |              |           |           | of items  |          |           |
-    +--------------+-----------+-----------+-----------+----------+-----------+
-    |  iterable    |   10      | len(item) | sort_key  |    1     |      1    |
-    |              |           |           | of items  |          |           |
-    +--------------+-----------+-----------+-----------+----------+-----------+
+    key.
 
     The ``order`` argument is passed along to the sort_key routine and is
     used to determe how the terms *within* an expression are ordered.
