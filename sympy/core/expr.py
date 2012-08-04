@@ -49,7 +49,6 @@ class Expr(Basic, EvalfMixin):
 
     @cacheit
     def sort_key(self, order=None):
-        # XXX: The order argument does not actually work
 
         coeff, expr = self.as_coeff_Mul()
 
