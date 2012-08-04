@@ -31,7 +31,7 @@ from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify)
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
-from sympy.matrices.matrices import Matrix, zeros, augmented_matrix_to_row_echelon
+from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together, factor
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
@@ -1599,16 +1599,17 @@ def solve_linear_system(system, *symbols, **flags):
     {x: -6, y: 2}
 
     """
-    echelon_form = augmented_matrix_to_row_echelon(system)
+    echelon_form = system.ref()
     if echelon_form is None:
         return None
-    col_swaps, matrix = echelon_form
+    matrix, pivot_indices = echelon_form
     i = matrix.rows
     m = matrix.cols - 1
 
-    syms = list(symbols)
-    for sw in col_swaps:
-        syms[sw[0]], syms[sw[1]] = syms[sw[1]], syms[sw[0]]
+    syms_temp = list(symbols)
+    syms = syms_temp[:]
+    for i_new, i_orig in enumerate(pivot_indices):
+        syms[i_new] = syms_temp[i_orig]
 
     do_simplify = flags.get('simplify', True)
 
