@@ -1149,6 +1149,9 @@ def test_expr_sorting():
     exprs = [{x: -y}, {x: y}]
     assert sorted(exprs, key=default_sort_key) == exprs
 
+    exprs = [set([1]), set([1, 2])]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
 def test_as_ordered_factors():
     f, g = symbols('f,g', cls=Function)
 
