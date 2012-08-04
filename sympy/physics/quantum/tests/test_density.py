@@ -207,41 +207,41 @@ def test_fidelity():
     #test with kets
     up = JzKet(S(1)/2, S(1)/2)
     down = JzKet(S(1)/2, -S(1)/2)
-    updown = (1/sqrt(2)) * up + (1/sqrt(2)) * down
+    updown = (S(1)/sqrt(2))*up + (S(1)/sqrt(2))*down
 
     #check with matrices
     up_dm = represent(up * Dagger(up))
     down_dm = represent(down * Dagger(down))
     updown_dm = represent(updown * Dagger(updown))
 
-    assert fidelity(up_dm, up_dm) == 1
-    assert fidelity(up_dm, down_dm) == 0
-    assert fidelity(up_dm, updown_dm).evalf() == (1/sqrt(2)).evalf()
-    assert fidelity(updown_dm, down_dm).evalf() == (1/sqrt(2)).evalf()
+    assert abs(fidelity(up_dm, up_dm) - 1) < 1e-3
+    assert fidelity(up_dm, down_dm) < 1e-3
+    assert abs(fidelity(up_dm, updown_dm) - (S(1)/sqrt(2))) < 1e-3
+    assert abs(fidelity(updown_dm, down_dm) - (S(1)/sqrt(2))) < 1e-3
 
     #check with density
     up_dm = Density([up, 1.0])
     down_dm = Density([down, 1.0])
     updown_dm = Density([updown, 1.0])
 
-    assert fidelity(up_dm, up_dm) == 1
-    assert fidelity(up_dm, down_dm) == 0
-    assert fidelity(up_dm, updown_dm).evalf() == (1/sqrt(2)).evalf()
-    assert fidelity(updown_dm, down_dm).evalf() == (1/sqrt(2)).evalf()
+    assert abs(fidelity(up_dm, up_dm) - 1) < 1e-3
+    assert abs(fidelity(up_dm, down_dm)) < 1e-3
+    assert abs(fidelity(up_dm, updown_dm) - (S(1)/sqrt(2))) < 1e-3
+    assert abs(fidelity(updown_dm, down_dm) - (S(1)/sqrt(2))) < 1e-3
 
     #check mixed states with density
-    updown2 = (sqrt(3)/2 )* up + (1/2)*down
+    updown2 = (sqrt(3)/2 )*up + (S(1)/2)*down
     d1 = Density([updown, 0.25], [updown2, 0.75])
     d2 = Density([updown, 0.75], [updown2, 0.25])
-    assert fidelity(d1, d2).round(3) == 0.817
-    assert fidelity(d2, d1).round(3) == fidelity(d1, d2).round(3)
+    assert abs(fidelity(d1, d2) - 0.991) < 1e-3
+    assert abs(fidelity(d2, d1) - fidelity(d1, d2)) < 1e-3
 
 
     #using qubits/density(pure states)
     state1 = Qubit('0')
     state2 = Qubit('1')
-    state3 = (1/sqrt(2))*state1 + (1/sqrt(2))*state2
-    state4 = (sqrt(S(2)/3))*state1 + (1/sqrt(3))*state2
+    state3 = (S(1)/sqrt(2))*state1 + (S(1)/sqrt(2))*state2
+    state4 = (sqrt(S(2)/3))*state1 + (S(1)/sqrt(3))*state2
 
     state1_dm = Density([state1, 1])
     state2_dm = Density([state2, 1])
@@ -249,15 +249,15 @@ def test_fidelity():
 
     assert fidelity(state1_dm, state1_dm) == 1
     assert fidelity(state1_dm, state2_dm) == 0
-    assert fidelity(state1_dm, state3_dm) == 1/sqrt(2)
-    assert fidelity(state3_dm, state2_dm) == 1/sqrt(2)
+    assert abs(fidelity(state1_dm, state3_dm) - 1/sqrt(2)) < 1e-3
+    assert abs(fidelity(state3_dm, state2_dm) - 1/sqrt(2)) < 1e-3
 
     #using qubits/density(mixed states)
     d1 = Density([state3, 0.70], [state4, 0.30])
     d2 = Density([state3, 0.20], [state4, 0.80])
-    assert fidelity(d1, d1).round(3) == 1
-    assert fidelity(d1, d2).round(3) == 0.996
-    assert fidelity(d1, d2).round(3) == fidelity(d2, d1).round(3)
+    assert abs(fidelity(d1, d1) -  1) < 1e-3
+    assert abs(fidelity(d1, d2) - 0.996) < 1e-3
+    assert abs(fidelity(d1, d2) - fidelity(d2, d1)) < 1e-3
 
     #TODO: test for invalid arguments
     # non-square matrix
