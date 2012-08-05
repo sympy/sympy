@@ -10,7 +10,6 @@ from sympy.core.compatibility import is_sequence
 
 from sympy.polys import PurePoly, roots, cancel
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
-from sympy.simplify import simplify
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent, default_sort_key
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
@@ -2590,7 +2589,7 @@ class MatrixBase(object):
 
         return self.adjugate()/d
 
-    def ref(self):
+    def ref(self, simplify=True):
         """Return the row-echelon form of an augmented matrix.
 
         For an augmented matrix return the row-echelon form of the augmented matrix
@@ -2628,6 +2627,10 @@ class MatrixBase(object):
         matrix = self.as_mutable()
         i, m = 0, matrix.cols - 1  # don't count augmentation
         pivot_indices = range(m)
+
+        # accept custom simplification
+        simpfunc = simplify if isinstance(simplify, FunctionType) else \
+                   _simplify if simplify else lambda a : a
 
         while i < matrix.rows:
             if i == m:
@@ -2673,7 +2676,7 @@ class MatrixBase(object):
                                 if ip is None:
                                     _, ip = rowi[-1].as_content_primitive()
                                 _, jp = rowj[-1].as_content_primitive()
-                                if not (simplify(jp - ip) or simplify(jp + ip)):
+                                if not (simpfunc(jp - ip) or simpfunc(jp + ip)):
                                     matrix.row_del(j)
 
                             j += 1
@@ -2706,7 +2709,7 @@ class MatrixBase(object):
 
                     # subtract from the current row the row containing
                     # pivot and multiplied by extracted coefficient
-                    matrix.row(k, lambda x, j: simplify(x - matrix[i, j]*coeff))
+                    matrix.row(k, lambda x, j: simpfunc(x - matrix[i, j]*coeff))
 
             i += 1
 
