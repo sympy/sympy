@@ -15,6 +15,38 @@ from sympy.polys.densearith import (
 from sympy.polys.domains import ZZ, QQ
 
 @cythonized("n,i")
+def dup_gegenbauer(n, a, K):
+    """Low-level implementation of Gegenbauer polynomials. """
+    seq = [[K.one], [K(2)*a, K.zero]]
+
+    for i in xrange(2, n+1):
+        f1 = K(2) * (i + a - K.one) / i
+        f2 = (i + K(2)*a - K(2)) / i
+        p1 = dup_mul_ground(dup_lshift(seq[-1], 1, K), f1, K)
+        p2 = dup_mul_ground(seq[-2], f2, K)
+        seq.append(dup_sub(p1, p2, K))
+
+    return seq[n]
+
+def gegenbauer_poly(n, a, x=None, **args):
+    """Generates Gegenbauer polynomial of degree `n` in `x`. """
+    if n < 0:
+        raise ValueError("can't generate Gegenbauer polynomial of degree %s" % n)
+
+    K, a = construct_domain(a, field=True)
+    poly = DMP(dup_gegenbauer(int(n), a, K), K)
+
+    if x is not None:
+        poly = Poly.new(poly, x)
+    else:
+        poly = PurePoly.new(poly, Dummy('x'))
+
+    if not args.get('polys', False):
+        return poly.as_expr()
+    else:
+        return poly
+
+@cythonized("n,i")
 def dup_chebyshevt(n, K):
     """Low-level implementation of Chebyshev polynomials of the 1st kind. """
     seq = [[K.one], [K.one, K.zero]]
