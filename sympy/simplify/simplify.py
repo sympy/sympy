@@ -2349,7 +2349,7 @@ def combsimp(expr):
                         result *= a + i
 
                     return result
-                else:
+                elif n < 0:
                     for i in xrange(1, -n + 1):
                         result *= a - i
 
@@ -2439,12 +2439,12 @@ def combsimp(expr):
                     barg = b.args[0]
                     if e > 0:
                         numer_gammas.extend([barg]*n)
-                    else:
+                    elif e < 0:
                         denom_gammas.extend([barg]*n)
                 else:
                     if e > 0:
                         numer_others.extend([b]*n)
-                    else:
+                    elif e < 0:
                         denom_others.extend([b]*n)
             else:
                 numer_others.append(arg)
@@ -2470,7 +2470,7 @@ def combsimp(expr):
                     if n > 0:
                         for k in range(n):
                             numer.append(1 - g1 + k)
-                    else:
+                    elif n < 0:
                         for k in range(-n):
                             denom.append(-g1 - k)
                     break
@@ -2480,75 +2480,97 @@ def combsimp(expr):
             gammas[:] = new
 
         # Try to reduce the number of gamma factors by applying the
-        # multiplication theorem:
-        #   gamma(x)*gamma(x+1/n)*...*gamma(x+(n-1)/n) == C*gamma(n*x)
-        for gammas, numer, denom in [(numer_gammas, numer_others, denom_others),
-                                    (denom_gammas, denom_others, numer_others)]:
-            changed = True
-            while changed:
+        # multiplication theorem.
+
+        def _run(coeffs):
+            # find runs in coeffs such that the difference in terms (mod 1)
+            # of t1, t2, ..., tn is 1/n
+            from sympy.utilities.iterables import uniq
+            u = uniq(coeffs)
+            for i in range(len(u)):
+                dj = ([((u[j] - u[i]) % 1, j) for j in range(i + 1, len(u))])
+                for one, j in dj:
+                    if one.p == 1 and one.q != 1:
+                        n = one.q
+                        got = [i]
+                        get = range(1, n)
+                        for d, j in dj:
+                            m = n*d
+                            if m.is_Integer and m in get:
+                                get.remove(m)
+                                got.append(j)
+                                if not get:
+                                    break
+                        else:
+                            continue
+                        for i, j in enumerate(got):
+                            c = u[j]
+                            coeffs.remove(c)
+                            got[i] = c
+                        return one, got
+
+        def _mult_thm(gammas, numer, denom):
+            # pull off and analyze the leading coefficient from each gamma arg
+            # looking for runs in those Rationals
+
+            # expr -> coeff + resid -> rats[resid] = coeff
+            rats = {}
+            for g in gammas:
+                c, resid = g.as_coeff_Add()
+                rats.setdefault(resid, []).append(c)
+
+            # look for runs in Rationals for each resid
+            keys = sorted(rats, key=default_sort_key)
+            for resid in keys:
+                coeffs = list(sorted(rats[resid]))
                 new = []
-                changed = False
-                differences = {}
-                differences2 = {}
-                # differences maps pairs (i, j) of indices to their rational
-                # difference mod 1: (gammas[j] - gammas[i]) % 1
-                # (if difference is not rational, no entry)
-                # differences2 maps i to dicts rational -> j, so that
-                # differences2[i][r] is a list of j with (j - i) % 1 = r
-                # (we store indices instead of arguments in order to have unique
-                #  tokens)
-                for i, j in permutations(range(len(gammas)), 2):
-                    r = simplify(gammas[j] - gammas[i])
-                    if r.is_Rational:
-                        differences[(i, j)] = r % 1
-                        differences2.setdefault(i, {}
-                                   ).setdefault(r % 1, []).append(j)
-                erased_keys = set()
-                for (i, _), d in \
-                    sorted(differences.items(), key=itemgetter(1, 0)):
-                    if d.p != 1 or d <= 0 or i in erased_keys:
-                        continue
-                    others = []
-                    for u in range(1, d.q):
-                        x = S(u)/d.q
-                        if not x in differences2[i]:
-                            break
-                        for j in differences2[i][x]:
-                            if not j in erased_keys:
-                                others.append(j)
-                                break
-                    if len(others) != d.q - 1:
-                        continue
-                    erased_keys.add(i)
-                    erased_keys.update(others)
-                    changed = True
-                    # If we arrive here, we found something to apply the theorem
-                    # to: i, *others.
-                    # We need to
+                while True:
+                    run = _run(coeffs)
+                    if run is None:
+                        break
+                    d, seq = run
+
+                    # process the sequence that was found:
                     # 1) convert all the gamma functions to have the right
                     #    argument (could be off by an integer)
                     # 2) append the factors corresponding to the theorem
                     # 3) append the new gamma function
 
                     # (1)
-                    for u in others:
-                        n = simplify(gammas[u] - gammas[i] -
-                                     differences[(i, u)])
+                    ui = seq[0]
+                    other = seq[1:]
+                    offset = 0
+                    for i, u in enumerate(other):
+                        n = (u - ui - (u - ui) % 1)
+                        assert n.is_Integer
                         if n > 0:
+                            con = resid + u - 1
                             for k in range(n):
-                                numer.append(gammas[u] - k - 1)
-                        else:
+                                numer.append(con - k)
+                        elif n < 0: # if Rationals are sorted we never hit this
+                            con = resid + u
                             for k in range(-n):
-                                denom.append(gammas[u] - k)
+                                denom.append(con - k)
                     # (2)
+                    con = d.q*(resid + ui) # for (2) and (3)
                     numer.append((2*S.Pi)**(S(d.q - 1)/2)*
-                                 d.q**(S(1)/2 - d.q*gammas[i]))
+                                 d.q**(S(1)/2 - con))
                     # (3)
-                    new.append(gammas[i]*d.q)
+                    new.append(con)
 
-                # /!\ updating IN PLACE
-                gammas[:] = new + [gammas[i] for i in range(len(gammas))
-                                   if i not in erased_keys]
+                # restore resid to coeffs
+                rats[resid] = [resid + c for c in coeffs] + new
+
+            # rebuild the gamma arguments
+            g = []
+            for resid in keys:
+                g += rats[resid]
+            # /!\ updating IN PLACE
+            gammas[:] = g
+
+        for l, numer, denom in [(numer_gammas, numer_others, denom_others),
+                                (denom_gammas, denom_others, numer_others)]:
+            _mult_thm(l, numer, denom)
 
         # Try to reduce the number of gammas by using the duplication
         # theorem to cancel an upper and lower.
@@ -2565,7 +2587,7 @@ def combsimp(expr):
                 found = None
                 for x in ng:
                     for y in dg:
-                        if simplify(2*y-x).is_Integer:
+                        if simplify(2*y - x).is_Integer:
                             found = (x, y)
                             break
                     if found:
@@ -2579,7 +2601,7 @@ def combsimp(expr):
                 if n > 0:
                     for k in xrange(n):
                         no.append(2*y + k)
-                else:
+                elif n < 0:
                     for k in xrange(-n):
                         do.append(2*y - 1 - k)
                 ng.append(y + S(1)/2)
