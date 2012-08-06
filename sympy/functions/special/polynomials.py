@@ -37,6 +37,135 @@ class OrthogonalPolynomial(Function):
         return self.func(self.args[0], self.args[1].conjugate())
 
 #----------------------------------------------------------------------------
+# Gegenbauer polynomials
+#
+
+class gegenbauer(OrthogonalPolynomial):
+    r"""
+    Gegenbauer polynomial :math:`C_n^{\left(\alpha\right)}(x)`
+
+    gegenbauer(n, alpha, x) gives the nth Gegenbauer polynomial
+    in x, :math:`C_n^{\left(\alpha\right)}(x)`.
+
+    The Gegenbauer polynomials are orthogonal on :math:`[-1, 1]` with
+    respect to the weight :math:`\left(1-x^2\right)^{\alpha-\frac{1}{2}}`.
+
+    Examples
+    ========
+
+    >>> from sympy import gegenbauer, diff
+    >>> from sympy.abc import n,a,x
+    >>> gegenbauer(0, a, x)
+    gegenbauer(0, a, x)
+
+    >>> gegenbauer(n, a, x)
+    gegenbauer(n, a, x)
+    >>> gegenbauer(n, a, -x)
+    (-1)**n*gegenbauer(n, a, x)
+
+    >>> gegenbauer(n, a, 0)
+    2**n*sqrt(pi)*gamma(a + n/2)/(gamma(a)*gamma(-n/2 + 1/2)*gamma(n + 1))
+    >>> gegenbauer(n, a, 1)
+    gamma(2*a + n)/(gamma(2*a)*gamma(n + 1))
+
+    >>> diff(gegenbauer(n, a, x), x)
+    2*a*gegenbauer(n - 1, a + 1, x)
+
+    See Also
+    ========
+
+    chebyshevt_root,, chebyshevu, chebyshevu_root,
+    legendre, assoc_legendre,
+    hermite,
+    laguerre, assoc_laguerre,
+    sympy.polys.orthopolys.chebyshevt_poly,
+    sympy.polys.orthopolys.chebyshevu_poly,
+    sympy.polys.orthopolys.hermite_poly,
+    sympy.polys.orthopolys.legendre_poly,
+    sympy.polys.orthopolys.laguerre_poly
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Gegenbauer_polynomials
+    .. [2] http://mathworld.wolfram.com/GegenbauerPolynomial.html
+    .. [3] http://functions.wolfram.com/Polynomials/GegenbauerC3/
+    """
+
+    nargs = 3
+
+    #    _ortho_poly = staticmethod(chebyshevt_poly)
+
+    @classmethod
+    def eval(cls, n, a, x):
+        # For negative n the polynomials vanish
+        # See http://functions.wolfram.com/Polynomials/GegenbauerC3/03/01/03/0012/
+        if n.is_negative:
+            return S.Zero
+
+        # Some special values for fixed a
+        if a == S.Half:
+            return legendre(n, x)
+        elif a == S.One:
+            return chebyshevu(n, x)
+        elif a == S.NegativeOne:
+            return S.Zero
+
+        if not n.is_Number:
+            # Handle this before the general sign extraction rule
+            if x == S.NegativeOne:
+                if C.re(a) > S.Half:
+                    return S.ComplexInfinity
+                else:
+                    # No sec function available yet
+                    #return (C.cos(S.Pi*(a+n)) * C.sec(S.Pi*a) * C.gamma(2*a+n) /
+                    #            (C.gamma(2*a) * C.gamma(n+1)))
+                    return cls
+
+            # Symbolic result C^a_n(x)
+            # C^a_n(-x)  --->  (-1)**n * C^a_n(x)
+            if x.could_extract_minus_sign():
+                return S.NegativeOne**n * gegenbauer(n, a, -x)
+            # We can evaluate for some special values of x
+            if x == S.Zero:
+                return (2**n * sqrt(S.Pi) * C.gamma(a + S.Half*n) /
+                        (C.gamma((1-n)/2) * C.gamma(n+1) * C.gamma(a)) )
+            if x == S.One:
+                return C.gamma(2*a+n) / (C.gamma(2*a) * C.gamma(n+1))
+            elif x == S.Infinity:
+                if n.is_positive:
+                    return C.RisingFactorial(a,n) * S.Infinity
+        else:
+            # n is a given fixed integer, evaluate into polynomial
+            #return cls._eval_at_order(n, a, x)
+            pass
+
+    def fdiff(self, argindex=3):
+        if argindex == 1:
+            # Diff wrt n
+            raise ArgumentIndexError(self, argindex)
+        elif argindex == 2:
+            # Diff wrt a
+            n, a, x = self.args
+            k = C.Dummy("k")
+            factor1 = 2 * (1 + (-1)**(n-k)) * (k + a) / ((k + n + 2*a) * (n - k))
+            factor2 = 2*(k+1) / ((k + 2*a) * (2*k + 2*a + 1)) + 2 / (k + n + 2*a)
+            kern = factor1*gegenbauer(k, a, x) + factor2*gegenbauer(n, a, x)
+            return C.Sum(kern, (k, 0, n-1))
+        elif argindex == 3:
+            # Diff wrt x
+            n, a, x = self.args
+            return 2*a*gegenbauer(n-1, a+1, x)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_polynomial(self, n, a, x):
+        k = C.Dummy("k")
+        kern = ((-1)**k * C.RisingFactorial(a, n-k) * (2*x)**(n-2*k) /
+                (C.factorial(k) * C.factorial(n-2*k)))
+        return C.Sum(kern, (k, 0, C.floor(n/2)))
+
+#----------------------------------------------------------------------------
 # Chebyshev polynomials of first and second kind
 #
 
