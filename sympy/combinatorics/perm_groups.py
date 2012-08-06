@@ -841,6 +841,63 @@ class PermutationGroup(Basic):
             self.schreier_sims()
         return self._transversals
 
+    def centralizer(self, other):
+        degree = self.degree
+        identity = _new_from_array_form(range(degree))
+        orbits = other.orbits()
+        num_orbits = len(orbits)
+        orbits.sort(key = lambda x: -len(x))
+        long_base = []
+        orbit_reps = [None]*num_orbits
+        orbit_reps_indices = [None]*num_orbits
+        orbit_descr = [None]*degree
+        for i in range(num_orbits):
+            orbit = list(orbits[i])
+            orbit_reps[i] = orbit[0]
+            orbit_reps_indices[i] = len(long_base)
+            for point in orbit:
+                orbit_descr[point] = i
+            long_base = long_base + orbit
+        base, strong_gens = other.schreier_sims_incremental(base=long_base)
+        strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
+        i = 0
+        for i in range(len(base)):
+            if strong_gens_distr == [identity]:
+                break
+        base = base[:i]
+        base_len = i
+        for j in range(num_orbits):
+            if base[base_len - 1] in orbits[j]:
+                break
+        rel_orbits = orbits[: j + 1]
+        num_rel_orbits = len(rel_orbits)
+        transversals = [None]*num_rel_orbits
+        for j in range(num_rel_orbits):
+            rep = orbit_reps[j]
+            transversals[j] = dict(other.orbit_transversal(rep, pairs=True))
+        trivial_test = lambda x: True
+        tests = [None]*base_len
+        for l in range(base_len):
+            if base[l] in orbit_reps:
+                tests[l] = trivial_test
+            else:
+                def test(computed_words):
+                    g = computed_words[l]
+                    rep_orb_index = orbit_descr[base[l]]
+                    rep = orbit_reps[rep_orb_index]
+                    rep_orb = orbits[rep_orb_index]
+                    im = g(base[l])
+                    im_rep = g(rep)
+                    tr_el = transversals[rep_orb_index][base[l]]
+                    if im != tr_el(im_rep):
+                        return False
+                    else:
+                        return True
+                tests[l] = test
+        def prop(g):
+            return [g*gen for gen in other.generators] == [gen*g for gen in other.generators]
+        return self.subgroup_search(prop, base=base, strong_gens=strong_gens, tests=tests)
+
     def commutator(self):
         """
         commutator subgroup
@@ -1902,6 +1959,16 @@ class PermutationGroup(Basic):
             m *= x
         return m
 
+    def pointwise_stabilizer(self, points):
+        base, strong_gens = self.schreier_sims_incremental(base=points)
+        stab_gens = []
+        degree = self.degree
+        identity = _new_from_array_form(range(degree))
+        for gen in strong_gens:
+            if [gen(point) for point in points] == points:
+                stab_gens.append(gen)
+        return PermutationGroup(stab_gens)
+
     def random(self, af=False):
         """
         return a random group element
@@ -2649,7 +2716,7 @@ class PermutationGroup(Basic):
                   base_ordering[mu[l]] and\
                   base_ordering[computed_words[l](base[l])] <\
                   base_ordering[nu[l]] and\
-                  tests[l](computed_words[base_len - 1]):
+                  tests[l](computed_words):
                 # line 11: change the (partial) base of K
                 new_point = computed_words[l](base[l])
                 res_base[l] = new_point
@@ -2699,7 +2766,7 @@ class PermutationGroup(Basic):
                base_ordering[temp_point] > base_ordering[mu[l]] and\
                base_ordering[temp_point] < base_ordering[nu[l]] and\
                temp_point in orbit_reps[l] and\
-               tests[l](g) and\
+               tests[l](computed_words) and\
                prop(g):
                 # line 19: reset the base of K
                 gens = res.generators[:]
