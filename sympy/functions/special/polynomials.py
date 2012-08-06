@@ -13,6 +13,7 @@ from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 
 from sympy.polys.orthopolys import (
+    gegenbauer_poly,
     chebyshevt_poly,
     chebyshevu_poly,
     laguerre_poly,
@@ -56,7 +57,13 @@ class gegenbauer(OrthogonalPolynomial):
     >>> from sympy import gegenbauer, diff
     >>> from sympy.abc import n,a,x
     >>> gegenbauer(0, a, x)
-    gegenbauer(0, a, x)
+    1
+    >>> gegenbauer(1, a, x)
+    2*a*x
+    >>> gegenbauer(2, a, x)
+    -a + x**2*(2*a**2 + 2*a)
+    >>> gegenbauer(3, a, x)
+    x**3*(4*a**3/3 + 4*a**2 + 8*a/3) + x*(-2*a**2 - 2*a)
 
     >>> gegenbauer(n, a, x)
     gegenbauer(n, a, x)
@@ -93,8 +100,6 @@ class gegenbauer(OrthogonalPolynomial):
     """
 
     nargs = 3
-
-    #    _ortho_poly = staticmethod(chebyshevt_poly)
 
     @classmethod
     def eval(cls, n, a, x):
@@ -137,8 +142,7 @@ class gegenbauer(OrthogonalPolynomial):
                     return C.RisingFactorial(a,n) * S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
-            #return cls._eval_at_order(n, a, x)
-            pass
+            return gegenbauer_poly(n, a, x)
 
     def fdiff(self, argindex=3):
         if argindex == 1:
