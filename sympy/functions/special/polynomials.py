@@ -103,10 +103,12 @@ class jacobi(OrthogonalPolynomial):
     legendre, assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
-    sympy.polys.orthopolys.chebyshevt_poly,
-    sympy.polys.orthopolys.chebyshevu_poly,
-    sympy.polys.orthopolys.hermite_poly,
-    sympy.polys.orthopolys.legendre_poly,
+    sympy.polys.orthopolys.jacobi_poly,
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
     References
@@ -245,10 +247,12 @@ class gegenbauer(OrthogonalPolynomial):
     legendre, assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
-    sympy.polys.orthopolys.chebyshevt_poly,
-    sympy.polys.orthopolys.chebyshevu_poly,
-    sympy.polys.orthopolys.hermite_poly,
-    sympy.polys.orthopolys.legendre_poly,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
     References
@@ -382,10 +386,12 @@ class chebyshevt(OrthogonalPolynomial):
     legendre, assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
-    sympy.polys.orthopolys.chebyshevt_poly,
-    sympy.polys.orthopolys.chebyshevu_poly,
-    sympy.polys.orthopolys.hermite_poly,
-    sympy.polys.orthopolys.legendre_poly,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
     References
@@ -486,10 +492,12 @@ class chebyshevu(OrthogonalPolynomial):
     legendre, assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
-    sympy.polys.orthopolys.chebyshevt_poly,
-    sympy.polys.orthopolys.chebyshevu_poly,
-    sympy.polys.orthopolys.hermite_poly,
-    sympy.polys.orthopolys.legendre_poly,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
     References
@@ -574,6 +582,8 @@ class chebyshevt_root(Function):
     legendre, assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
     sympy.polys.orthopolys.chebyshevt_poly
     sympy.polys.orthopolys.chebyshevu_poly
     sympy.polys.orthopolys.hermite_poly
@@ -611,10 +621,12 @@ class chebyshevu_root(Function):
     legendre, assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
-    sympy.polys.orthopolys.chebyshevt_poly,
-    sympy.polys.orthopolys.chebyshevu_poly,
-    sympy.polys.orthopolys.hermite_poly,
-    sympy.polys.orthopolys.legendre_poly,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
     """
 
@@ -662,10 +674,12 @@ class legendre(OrthogonalPolynomial):
     assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
-    sympy.polys.orthopolys.chebyshevt_poly,
-    sympy.polys.orthopolys.chebyshevu_poly,
-    sympy.polys.orthopolys.hermite_poly,
-    sympy.polys.orthopolys.legendre_poly,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
     References
@@ -757,10 +771,12 @@ class assoc_legendre(Function):
     legendre,
     hermite,
     laguerre, assoc_laguerre,
-    sympy.polys.orthopolys.chebyshevt_poly,
-    sympy.polys.orthopolys.chebyshevu_poly,
-    sympy.polys.orthopolys.hermite_poly,
-    sympy.polys.orthopolys.legendre_poly,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
     References
@@ -854,10 +870,12 @@ class hermite(OrthogonalPolynomial):
     chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     laguerre, assoc_laguerre,
-    sympy.polys.orthopolys.chebyshevt_poly,
-    sympy.polys.orthopolys.chebyshevu_poly,
-    sympy.polys.orthopolys.hermite_poly,
-    sympy.polys.orthopolys.legendre_poly,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
     References
@@ -947,10 +965,12 @@ class laguerre(OrthogonalPolynomial):
     legendre, assoc_legendre,
     hermite,
     assoc_laguerre,
-    sympy.polys.orthopolys.chebyshevt_poly,
-    sympy.polys.orthopolys.chebyshevu_poly,
-    sympy.polys.orthopolys.hermite_poly,
-    sympy.polys.orthopolys.legendre_poly,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
     References
@@ -1053,10 +1073,12 @@ class assoc_laguerre(OrthogonalPolynomial):
     legendre, assoc_legendre,
     hermite,
     laguerre,
-    sympy.polys.orthopolys.chebyshevt_poly,
-    sympy.polys.orthopolys.chebyshevu_poly,
-    sympy.polys.orthopolys.hermite_poly,
-    sympy.polys.orthopolys.legendre_poly,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
     References
