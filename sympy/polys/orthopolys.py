@@ -9,10 +9,45 @@ from sympy.polys.polytools import Poly, PurePoly
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.densearith import (
-    dup_mul, dup_mul_ground, dup_lshift, dup_sub
+    dup_mul, dup_mul_ground, dup_lshift, dup_sub, dup_add
 )
 
 from sympy.polys.domains import ZZ, QQ
+
+@cythonized("n,i")
+def dup_jacobi(n, a, b, K):
+    """Low-level implementation of Jacobi polynomials. """
+    seq = [[K.one], [(a+b+K(2))/K(2), (a-b)/K(2)]]
+
+    for i in xrange(2, n+1):
+        den = K(i)*(a+b+i)*(a+b+K(2)*i-K(2))
+        f0 = (a+b+K(2)*i-K.one) * (a*a-b*b) / (K(2)*den)
+        f1 = (a+b+K(2)*i-K.one) * (a+b+K(2)*i-K(2)) * (a+b+K(2)*i) / (K(2)*den)
+        f2 = (a+i-K.one)*(b+i-K.one)*(a+b+K(2)*i) / den
+        p0 = dup_mul_ground(seq[-1], f0, K)
+        p1 = dup_mul_ground(dup_lshift(seq[-1], 1, K), f1, K)
+        p2 = dup_mul_ground(seq[-2], f2, K)
+        seq.append(dup_sub(dup_add(p0, p1, K), p2, K))
+
+    return seq[n]
+
+def jacobi_poly(n, a, b, x=None, **args):
+    """Generates Jacobi polynomial of degree `n` in `x`. """
+    if n < 0:
+        raise ValueError("can't generate Jacobi polynomial of degree %s" % n)
+
+    K, v = construct_domain([a, b], field=True)
+    poly = DMP(dup_jacobi(int(n), v[0], v[1], K), K)
+
+    if x is not None:
+        poly = Poly.new(poly, x)
+    else:
+        poly = PurePoly.new(poly, Dummy('x'))
+
+    if not args.get('polys', False):
+        return poly.as_expr()
+    else:
+        return poly
 
 @cythonized("n,i")
 def dup_gegenbauer(n, a, K):
