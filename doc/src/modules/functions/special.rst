@@ -95,6 +95,18 @@ Orthogonal Polynomials
 
 .. automodule:: sympy.functions.special.polynomials
 
+Jacobi Polynomials
+++++++++++++++++++
+
+.. autoclass:: sympy.functions.special.polynomials.jacobi
+   :members:
+
+Gegenbauer Polynomials
+++++++++++++++++++++++
+
+.. autoclass:: sympy.functions.special.polynomials.gegenbauer
+   :members:
+
 Chebyshev Polynomials
 +++++++++++++++++++++
 

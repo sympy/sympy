@@ -46,7 +46,7 @@ class jacobi(OrthogonalPolynomial):
     Jacobi polynomial :math:`P_n^{\left(\alpha, \beta\right)}(x)`
 
     jacobi(n, alpha, beta, x) gives the nth Jacobi polynomial
-    in x, :math:`C_n^{\left(\alpha, \beta\right)}(x)`.
+    in x, :math:`P_n^{\left(\alpha, \beta\right)}(x)`.
 
     The Jacobi polynomials are orthogonal on :math:`[-1, 1]` with respect
     to the weight :math:`\left(1-x\right)^\alpha \left(1+x\right)^\beta`.
@@ -78,6 +78,11 @@ class jacobi(OrthogonalPolynomial):
     >>> jacobi(n, a, b, -x)
     (-1)**n*jacobi(n, b, a, x)
 
+    >>> jacobi(n, a, b, 0)
+    2**(-n)*gamma(a + n + 1)*hyper((-b - n, -n), (a + 1,), -1)/(n!*gamma(a + 1))
+    >>> jacobi(n, a, b, 1)
+    RisingFactorial(a + 1, n)/n!
+
     >>> conjugate(jacobi(n, a, b, x))
     jacobi(n, conjugate(a), conjugate(b), conjugate(x))
 
@@ -87,6 +92,7 @@ class jacobi(OrthogonalPolynomial):
     See Also
     ========
 
+    gegenbauer,
     chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
@@ -228,6 +234,7 @@ class gegenbauer(OrthogonalPolynomial):
     See Also
     ========
 
+    jacobi,
     chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
@@ -364,6 +371,7 @@ class chebyshevt(OrthogonalPolynomial):
     See Also
     ========
 
+    jacobi, gegenbauer,
     chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
@@ -467,6 +475,7 @@ class chebyshevu(OrthogonalPolynomial):
     See Also
     ========
 
+    jacobi, gegenbauer,
     chebyshevt, chebyshevt_root, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
@@ -554,6 +563,7 @@ class chebyshevt_root(Function):
     See Also
     ========
 
+    jacobi, gegenbauer,
     chebyshevt, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
@@ -641,6 +651,7 @@ class legendre(OrthogonalPolynomial):
     See Also
     ========
 
+    jacobi, gegenbauer,
     chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     assoc_legendre,
     hermite,
@@ -735,6 +746,7 @@ class assoc_legendre(Function):
     See Also
     ========
 
+    jacobi, gegenbauer,
     chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre,
     hermite,
@@ -832,6 +844,7 @@ class hermite(OrthogonalPolynomial):
     See Also
     ========
 
+    jacobi, gegenbauer,
     chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     laguerre, assoc_laguerre,
@@ -922,8 +935,8 @@ class laguerre(OrthogonalPolynomial):
 
     See Also
     ========
-    sympy.polys.orthopolys.laguerre_poly
 
+    jacobi, gegenbauer,
     chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
@@ -1029,6 +1042,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     See Also
     ========
 
+    jacobi, gegenbauer,
     chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
