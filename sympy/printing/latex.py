@@ -812,6 +812,69 @@ class LatexPrinter(Printer):
             return r"\operatorname{Li}_{%s}%s" % (s, tex)
         return r"\operatorname{Li}_{%s}^{%s}%s" % (s, self._print(exp), tex)
 
+    def _print_jacobi(self, expr, exp=None):
+        n, a, b, x = map(self._print, expr.args)
+        tex = r"P_{%s}^{\left(%s,%s\right)}\left(%s\right)" % (n, a, b, x)
+        if exp is not None:
+            tex = r"\left(" + tex + r"\right)^{%s}" % (self._print(exp))
+        return tex
+
+    def _print_gegenbauer(self, expr, exp=None):
+        n, a, x = map(self._print, expr.args)
+        tex = r"C_{%s}^{\left(%s\right)}\left(%s\right)" % (n, a, x)
+        if exp is not None:
+            tex = r"\left(" + tex + r"\right)^{%s}" % (self._print(exp))
+        return tex
+
+    def _print_chebyshevt(self, expr, exp=None):
+        n, x = map(self._print, expr.args)
+        tex = r"T_{%s}\left(%s\right)" % (n, x)
+        if exp is not None:
+            tex = r"\left(" + tex + r"\right)^{%s}" % (self._print(exp))
+        return tex
+
+    def _print_chebyshevu(self, expr, exp=None):
+        n, x = map(self._print, expr.args)
+        tex = r"U_{%s}\left(%s\right)" % (n, x)
+        if exp is not None:
+            tex = r"\left(" + tex + r"\right)^{%s}" % (self._print(exp))
+        return tex
+
+    def _print_legendre(self, expr, exp=None):
+        n, x = map(self._print, expr.args)
+        tex = r"P_{%s}\left(%s\right)" % (n, x)
+        if exp is not None:
+            tex = r"\left(" + tex + r"\right)^{%s}" % (self._print(exp))
+        return tex
+
+    def _print_assoc_legendre(self, expr, exp=None):
+        n, a, x = map(self._print, expr.args)
+        tex = r"P_{%s}^{\left(%s\right)}\left(%s\right)" % (n, a, x)
+        if exp is not None:
+            tex = r"\left(" + tex + r"\right)^{%s}" % (self._print(exp))
+        return tex
+
+    def _print_hermite(self, expr, exp=None):
+        n, x = map(self._print, expr.args)
+        tex = r"H_{%s}\left(%s\right)" % (n, x)
+        if exp is not None:
+            tex = r"\left(" + tex + r"\right)^{%s}" % (self._print(exp))
+        return tex
+
+    def _print_laguerre(self, expr, exp=None):
+        n, x = map(self._print, expr.args)
+        tex = r"L_{%s}\left(%s\right)" % (n, x)
+        if exp is not None:
+            tex = r"\left(" + tex + r"\right)^{%s}" % (self._print(exp))
+        return tex
+
+    def _print_assoc_laguerre(self, expr, exp=None):
+        n, a, x = map(self._print, expr.args)
+        tex = r"L_{%s}^{\left(%s\right)}\left(%s\right)" % (n, a, x)
+        if exp is not None:
+            tex = r"\left(" + tex + r"\right)^{%s}" % (self._print(exp))
+        return tex
+
     def _print_Rational(self, expr):
         if expr.q != 1:
             sign = ""
