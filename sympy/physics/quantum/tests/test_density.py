@@ -230,7 +230,7 @@ def test_fidelity():
     assert abs(fidelity(updown_dm, down_dm) - (S(1)/sqrt(2))) < 1e-3
 
     #check mixed states with density
-    updown2 = (sqrt(3)/2 )*up + (S(1)/2)*down
+    updown2 = (sqrt(3)/2)*up + (S(1)/2)*down
     d1 = Density([updown, 0.25], [updown2, 0.75])
     d2 = Density([updown, 0.75], [updown2, 0.25])
     assert abs(fidelity(d1, d2) - 0.991) < 1e-3

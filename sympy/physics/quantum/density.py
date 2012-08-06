@@ -1,4 +1,4 @@
-from sympy import Tuple, Add, Mul, Matrix, log, expand, sqrt
+from sympy import Tuple, Add, Mul, Matrix, log, expand, sqrt, Rational
 from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
@@ -255,7 +255,7 @@ def entropy(density):
         raise ValueError("numpy.ndarray, scipy.sparse or sympy matrix expected")
 
 
-def fidelity(arg1, arg2):
+def fidelity(state1, state2):
     """ Computes the fidelity between two quantum states
     (http://en.wikipedia.org/wiki/Fidelity_of_quantum_states)
 
@@ -265,7 +265,7 @@ def fidelity(arg1, arg2):
     Parameters:
     ==========
 
-    arg1, arg2 : a density matrix or Matrix
+    state1, state2 : a density matrix or Matrix
 
 
     Examples:
@@ -280,7 +280,7 @@ def fidelity(arg1, arg2):
     >>> up = JzKet(S(1)/2,S(1)/2)
     >>> down = JzKet(S(1)/2,-S(1)/2)
     >>> amp = 1/sqrt(2)
-    >>> updown = (amp * up ) + (amp * down)
+    >>> updown = (amp * up) + (amp * down)
     >>>
     >>> # represent turns Kets into matrices
     >>> up_dm = represent(up * Dagger(up))
@@ -295,31 +295,19 @@ def fidelity(arg1, arg2):
     >>> print fidelity(up_dm, updown_dm).evalf().round(3)
     0.707
 
-
     """
-    def sqrtm(mat):
-        (P, D) = mat.diagonalize()
+    state1 = represent(state1) if isinstance(state1, Density) else state1
+    state2 = represent(state2) if isinstance(state2, Density) else state2
 
-        for x in range(D.shape[0]):
-          D[x, x] = sqrt(D[x, x])
+    if (not isinstance(state1, Matrix) or
+        not isinstance(state2, Matrix)):
+        raise ValueError("state1 and state2 must be of type density or Matrix "
+                         "received type=%s for state1 and type=%s for state2" %
+                         (type(state1), type(state2)))
 
-        return P*D*P.inv()
-
-    arg1 = represent(arg1) if isinstance(arg1, Density) else arg1
-    arg2 = represent(arg2) if isinstance(arg2, Density) else arg2
-
-    if (not isinstance(arg1, Matrix) or
-        not isinstance(arg2, Matrix)):
-        raise ValueError("arg1 and arg2 must be of type density or Matrix "
-                         "received type=%s for arg1 and type=%s for arg2" %
-                         (type(arg1), type(arg2)))
-
-    if ( arg1.shape != arg2.shape and arg1.rows == arg2.cols):
+    if ( state1.shape != state2.shape and state1.rows == state2.cols):
         raise ValueError("The dimensions of both args should be equal and the"
                          "matrix obtained should be a square matrix")
 
-
-    sqrt_arg1 = sqrtm(arg1)
-    result = sqrtm(sqrt_arg1*arg2*sqrt_arg1)
-
-    return Tr(result).doit()
+    sqrt_state1 =  state1**Rational(1,2)
+    return Tr((sqrt_state1 * state2 * sqrt_state1)**Rational(1, 2)).doit()
