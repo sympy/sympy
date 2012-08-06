@@ -51,7 +51,7 @@ class Kane(object):
     Examples
     ========
 
-    This is a simple example for a one defree of freedom translational
+    This is a simple example for a one degree of freedom translational
     spring-mass-damper.
 
     In this example, we first need to do the kinematics.
@@ -224,11 +224,11 @@ class Kane(object):
         self._qdot = [diff(i, dynamicsymbols._t) for i in self._q]
 
         if not isinstance(qdep, (list, tuple)):
-            raise TypeError('Dependent speeds and constraints must each be '
+            raise TypeError('Dependent coordinates and constraints must each be '
                             'provided in their own list.')
         if len(qdep) != len(coneqs):
             raise ValueError('There must be an equal number of dependent '
-                             'speeds and constraints.')
+                             'coordinates and constraints.')
         coneqs = Matrix(coneqs)
         self._qdep = qdep
         self._f_h = coneqs
