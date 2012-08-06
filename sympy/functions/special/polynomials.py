@@ -38,6 +38,153 @@ class OrthogonalPolynomial(Function):
         return self.func(self.args[0], self.args[1].conjugate())
 
 #----------------------------------------------------------------------------
+# Jacobi polynomials
+#
+
+class jacobi(OrthogonalPolynomial):
+    r"""
+    Jacobi polynomial :math:`P_n^{\left(\alpha, \beta\right)}(x)`
+
+    jacobi(n, alpha, beta, x) gives the nth Jacobi polynomial
+    in x, :math:`C_n^{\left(\alpha, \beta\right)}(x)`.
+
+    The Jacobi polynomials are orthogonal on :math:`[-1, 1]` with respect
+    to the weight :math:`\left(1-x\right)^\alpha \left(1+x\right)^\beta`.
+
+    Examples
+    ========
+
+    >>> from sympy import jacobi, S, conjugate, diff
+    >>> from sympy.abc import n,a,b,x
+
+    >>> jacobi(0, a, b, x)
+    jacobi(0, a, b, x)
+
+    >>> jacobi(n, a, b, x)
+    jacobi(n, a, b, x)
+
+    >>> jacobi(n, a, a, x)
+    RisingFactorial(a + 1, n)*gegenbauer(n, a + 1/2, x)/RisingFactorial(2*a + 1, n)
+
+    >>> jacobi(n, 0, 0, x)
+    legendre(n, x)
+
+    >>> jacobi(n, S(1)/2, S(1)/2, x)
+    RisingFactorial(3/2, n)*chebyshevu(n, x)/(n + 1)!
+
+    >>> jacobi(n, -S(1)/2, -S(1)/2, x)
+    RisingFactorial(1/2, n)*chebyshevt(n, x)/n!
+
+    >>> jacobi(n, a, b, -x)
+    (-1)**n*jacobi(n, b, a, x)
+
+    >>> conjugate(jacobi(n, a, b, x))
+    jacobi(n, conjugate(a), conjugate(b), conjugate(x))
+
+    >>> diff(jacobi(n,a,b,x), x)
+    (a/2 + b/2 + n/2 + 1/2)*jacobi(n - 1, a + 1, b + 1, x)
+
+    See Also
+    ========
+
+    chebyshevt_root, chebyshevu, chebyshevu_root,
+    legendre, assoc_legendre,
+    hermite,
+    laguerre, assoc_laguerre,
+    sympy.polys.orthopolys.chebyshevt_poly,
+    sympy.polys.orthopolys.chebyshevu_poly,
+    sympy.polys.orthopolys.hermite_poly,
+    sympy.polys.orthopolys.legendre_poly,
+    sympy.polys.orthopolys.laguerre_poly
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Jacobi_polynomials
+    .. [2] http://mathworld.wolfram.com/JacobiPolynomial.html
+    .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
+    """
+
+    nargs = 4
+
+    @classmethod
+    def eval(cls, n, a, b, x):
+        # Simplify to other polynomials
+        # P^{a, a}_n(x)
+        if a == b:
+            if a == -S.Half:
+                return C.RisingFactorial(S.Half, n) / C.factorial(n) * chebyshevt(n, x)
+            elif a == S.Zero:
+                return legendre(n, x)
+            elif a == S.Half:
+                return C.RisingFactorial(3*S.Half, n) / C.factorial(n+1) * chebyshevu(n, x)
+            else:
+                return C.RisingFactorial(a+1, n) / C.RisingFactorial(2*a+1, n) * gegenbauer(n, a+S.Half, x)
+        elif b == -a:
+            # P^{a, -a}_n(x)
+            return C.gamma(n+a+1) / C.gamma(n+1) * (1+x)**(a/2) / (1-x)**(a/2) * assoc_legendre(n, -a, x)
+        elif a == -b:
+            # P^{-b, b}_n(x)
+            return C.gamma(n-b+1) / C.gamma(n+1) * (1-x)**(b/2) / (1+x)**(b/2) * assoc_legendre(n, b, x)
+
+        if not n.is_Number:
+            # Symbolic result P^{a,b}_n(x)
+            # P^{a,b}_n(-x)  --->  (-1)**n * P^{b,a}_n(-x)
+            if x.could_extract_minus_sign():
+                return S.NegativeOne**n * jacobi(n, b, a, -x)
+            # We can evaluate for some special values of x
+            if x == S.Zero:
+                return (2**(-n) * C.gamma(a+n+1) / (C.gamma(a+1) * C.factorial(n)) *
+                        C.hyper([-b-n, -n], [a+1], -1))
+            if x == S.One:
+                return C.RisingFactorial(a+1, n) / C.factorial(n)
+            elif x == S.Infinity:
+                if n.is_positive:
+                    # TODO: Make sure a+b+2*n \notin Z
+                    return C.RisingFactorial(a+b+n+1, n) * S.Infinity
+        else:
+            # n is a given fixed integer, evaluate into polynomial
+            pass
+
+    def fdiff(self, argindex=4):
+        if argindex == 1:
+            # Diff wrt n
+            raise ArgumentIndexError(self, argindex)
+        elif argindex == 2:
+            # Diff wrt a
+            n, a, b, x = self.args
+            k = C.Dummy("k")
+            f1 = 1 / (a + b + n + k + 1)
+            f2 = ((a + b + 2*k + 1) * C.RisingFactorial(b + k + 1, n-k) /
+                  ((n - k) * C.RisingFactorial(a + b + k + 1, n-k)))
+            return C.Sum(f1 * (jacobi(n,a,b,x) + f2*jacobi(k,a,b,x)) , (k,0,n-1))
+        elif argindex == 3:
+            # Diff wrt b
+            n, a, b, x = self.args
+            k = C.Dummy("k")
+            f1 = 1 / (a + b + n + k + 1)
+            f2 = (-1)**(n-k) * ((a + b + 2*k + 1) * C.RisingFactorial(a + k + 1, n-k) /
+                  ((n - k) * C.RisingFactorial(a + b + k + 1, n-k)))
+            return C.Sum(f1 * (jacobi(n,a,b,x) + f2*jacobi(k,a,b,x)) , (k,0,n-1))
+        elif argindex == 4:
+            # Diff wrt x
+            n, a, b, x = self.args
+            return S.Half * (a + b + n + 1) * jacobi(n-1, a+1, b+1, x)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_polynomial(self, n, a, b, x):
+        # TODO: Make sure n \in N
+        k = C.Dummy("k")
+        kern = (C.RisingFactorial(-n, k) * C.RisingFactorial(a+b+n+1, k) * C.RisingFactorial(a+k+1, n-k) /
+                C.factorial(k) * ((1-x)/2)**k)
+        return 1 / C.factorial(n) * C.Sum(kern, (k, 0, n))
+
+    def _eval_conjugate(self):
+        n, a, b, x = self.args
+        return self.func(n, a.conjugate(), b.conjugate(), x.conjugate())
+
+#----------------------------------------------------------------------------
 # Gegenbauer polynomials
 #
 
