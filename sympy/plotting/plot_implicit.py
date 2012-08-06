@@ -207,17 +207,17 @@ def plot_implicit(expr, *args, **kwargs):
     - ``adaptive``. Boolean. The default value is set to True. It has to be
         set to False if you want to use a mesh grid.
 
-    - ``depth``. integer. The depth of recursion for adaptive mesh grid.
+    - ``depth`` integer. The depth of recursion for adaptive mesh grid.
         Default value is 0. Takes value in the range (0, 4).
 
     - ``points`` integer. The number of points if adaptive mesh grid is not
         used. Default value is 200.
 
-    - ``title``. string .The title for the plot.
+    - ``title`` string .The title for the plot.
 
     - ``xlabel`` string. The label for the x - axis
 
-    - ``ylabel``. string. The label for the y - axis
+    - ``ylabel`` string. The label for the y - axis
 
     plot_implicit, by default, uses interval arithmetic to plot functions. If
     the expression cannot be plotted using interval arithmetic, it defaults to
