@@ -1053,6 +1053,10 @@ def test_sympy__functions__special__hyper__HyperRep_sinasin():
 def test_sympy__functions__special__polynomials__OrthogonalPolynomial():
     pass
 
+def test_sympy__functions__special__polynomials__gegenbauer():
+    from sympy.functions.special.polynomials import gegenbauer
+    assert _test_args(gegenbauer(x, 2, 2))
+
 def test_sympy__functions__special__polynomials__chebyshevt():
     from sympy.functions.special.polynomials import chebyshevt
     assert _test_args(chebyshevt(x, 2))

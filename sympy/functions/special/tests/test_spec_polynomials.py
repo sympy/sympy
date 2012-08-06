@@ -1,10 +1,41 @@
 from sympy import (legendre, Symbol, Dummy, diff, Derivative, Rational, roots, sympify, S, sqrt,
-                   cos, pi, binomial, Sum, hermite, chebyshevu, chebyshevt, chebyshevt_root,
-                   chebyshevu_root, assoc_legendre, laguerre, assoc_laguerre, laguerre_poly, sqrt)
+                   cos, gamma, pi, oo, zoo, binomial, Sum, RisingFactorial,
+                   hermite, chebyshevu, chebyshevt, chebyshevt_root, chebyshevu_root, assoc_legendre,
+                   laguerre, assoc_laguerre, laguerre_poly, gegenbauer)
 
 from sympy.utilities.pytest import raises
 
 x = Symbol('x')
+
+def test_gegenbauer():
+    n = Symbol("n")
+    a = Symbol("a")
+
+    assert gegenbauer(0, a, x) == 1
+    assert gegenbauer(1, a, x) == 2*a*x
+    assert gegenbauer(2, a, x) == -a + x**2*(2*a**2 + 2*a)
+    assert gegenbauer(3, a, x) == x**3*(4*a**3/3 + 4*a**2 + 8*a/3) + x*(-2*a**2 - 2*a)
+
+
+    assert gegenbauer(-1, a, x) == 0
+    assert gegenbauer(n, S(1)/2, x) == legendre(n, x)
+    assert gegenbauer(n, 1, x) == chebyshevu(n, x)
+    assert gegenbauer(n, -1, x) == 0
+
+    X = gegenbauer(n, a, x)
+    assert isinstance(X, gegenbauer)
+
+    assert gegenbauer(n, a, -x) == (-1)**n*gegenbauer(n, a, x)
+    assert gegenbauer(n, a, 0) == 2**n*sqrt(pi)*gamma(a + n/2)/(gamma(a)*gamma(-n/2 + S(1)/2)*gamma(n + 1))
+    assert gegenbauer(n, a, 1) == gamma(2*a + n)/(gamma(2*a)*gamma(n + 1))
+
+    assert gegenbauer(n, a, -1) == zoo
+
+    m = Symbol("m", positive=True)
+    assert gegenbauer(m, a, oo) == oo*RisingFactorial(a, m)
+
+    assert diff(gegenbauer(n, a, x), n) == Derivative(gegenbauer(n, a, x), n)
+    assert diff(gegenbauer(n, a, x), x) == 2*a*gegenbauer(n - 1, a + 1, x)
 
 def test_legendre():
     raises(ValueError, lambda: legendre(-1, x))
