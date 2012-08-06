@@ -316,6 +316,10 @@ class gegenbauer(OrthogonalPolynomial):
                 (C.factorial(k) * C.factorial(n-2*k)))
         return C.Sum(kern, (k, 0, C.floor(n/2)))
 
+    def _eval_conjugate(self):
+        n, a, x = self.args
+        return self.func(n, a.conjugate(), x.conjugate())
+
 #----------------------------------------------------------------------------
 # Chebyshev polynomials of first and second kind
 #
