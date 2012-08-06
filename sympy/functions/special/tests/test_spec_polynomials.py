@@ -1,11 +1,43 @@
-from sympy import (legendre, Symbol, Dummy, diff, Derivative, Rational, roots, sympify, S, sqrt,
-                   cos, gamma, pi, oo, zoo, binomial, Sum, RisingFactorial,
-                   hermite, chebyshevu, chebyshevt, chebyshevt_root, chebyshevu_root, assoc_legendre,
-                   laguerre, assoc_laguerre, laguerre_poly, gegenbauer)
+from sympy import (Symbol, Dummy, diff, Derivative, Rational, roots, sympify, S, sqrt, hyper,
+                   cos, gamma, conjugate, factorial, pi, oo, zoo, binomial, Sum, RisingFactorial,
+                   legendre, assoc_legendre, chebyshevu, chebyshevt, chebyshevt_root, chebyshevu_root,
+                   laguerre, assoc_laguerre, laguerre_poly, hermite, gegenbauer, jacobi)
 
 from sympy.utilities.pytest import raises
 
 x = Symbol('x')
+
+def test_jacobi():
+    n = Symbol("n")
+    a = Symbol("a")
+    b = Symbol("b")
+
+    assert jacobi(0, a, b, x) == 1
+    assert jacobi(1, a, b, x) == a/2 - b/2 + x*(a/2 + b/2 + 1)
+
+    assert jacobi(n, a, a, x) == RisingFactorial(a + 1, n)*gegenbauer(n, a + S(1)/2, x)/RisingFactorial(2*a + 1, n)
+    assert jacobi(n, a, -a, x) == ((-1)**a*(-x + 1)**(-a/2)*(x + 1)**(a/2)*assoc_legendre(n, a, x)*
+                                   factorial(-a + n)*gamma(a + n + 1)/(factorial(a + n)*gamma(n + 1)))
+    assert jacobi(n, -b, b, x) == ((-x + 1)**(b/2)*(x + 1)**(-b/2)*assoc_legendre(n, b, x)*
+                                   gamma(-b + n + 1)/gamma(n + 1))
+    assert jacobi(n, 0, 0, x) == legendre(n, x)
+    assert jacobi(n, S.Half, S.Half, x) == RisingFactorial(S(3)/2, n)*chebyshevu(n, x)/factorial(n + 1)
+    assert jacobi(n, -S.Half, -S.Half, x) == RisingFactorial(S(1)/2, n)*chebyshevt(n, x)/factorial(n)
+
+    X = jacobi(n, a, b, x)
+    assert isinstance(X, jacobi)
+
+    assert jacobi(n, a, b, -x) == (-1)**n*jacobi(n, b, a, x)
+    assert jacobi(n, a, b, 0) == 2**(-n)*gamma(a + n + 1)*hyper((-b - n, -n), (a + 1,), -1)/(factorial(n)*gamma(a + 1))
+    assert jacobi(n, a, b, 1) == RisingFactorial(a + 1, n)/factorial(n)
+
+    m = Symbol("m", positive=True)
+    assert jacobi(m, a, b, oo) == oo*RisingFactorial(a + b + m + 1, m)
+
+    assert conjugate(jacobi(m, a, b, x)) == jacobi(m, conjugate(a), conjugate(b), conjugate(x))
+
+    assert diff(jacobi(n,a,b,x), n) == Derivative(jacobi(n, a, b, x), n)
+    assert diff(jacobi(n,a,b,x), x) == (a/2 + b/2 + n/2 + S(1)/2)*jacobi(n - 1, a + 1, b + 1, x)
 
 def test_gegenbauer():
     n = Symbol("n")
@@ -33,6 +65,8 @@ def test_gegenbauer():
 
     m = Symbol("m", positive=True)
     assert gegenbauer(m, a, oo) == oo*RisingFactorial(a, m)
+
+    assert conjugate(gegenbauer(n, a, x)) == gegenbauer(n, conjugate(a), conjugate(x))
 
     assert diff(gegenbauer(n, a, x), n) == Derivative(gegenbauer(n, a, x), n)
     assert diff(gegenbauer(n, a, x), x) == 2*a*gegenbauer(n - 1, a + 1, x)

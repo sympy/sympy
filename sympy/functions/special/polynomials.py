@@ -215,7 +215,7 @@ class gegenbauer(OrthogonalPolynomial):
     Examples
     ========
 
-    >>> from sympy import gegenbauer, diff
+    >>> from sympy import gegenbauer, conjugate, diff
     >>> from sympy.abc import n,a,x
     >>> gegenbauer(0, a, x)
     1
@@ -235,6 +235,9 @@ class gegenbauer(OrthogonalPolynomial):
     2**n*sqrt(pi)*gamma(a + n/2)/(gamma(a)*gamma(-n/2 + 1/2)*gamma(n + 1))
     >>> gegenbauer(n, a, 1)
     gamma(2*a + n)/(gamma(2*a)*gamma(n + 1))
+
+    >>> conjugate(gegenbauer(n, a, x))
+    gegenbauer(n, conjugate(a), conjugate(x))
 
     >>> diff(gegenbauer(n, a, x), x)
     2*a*gegenbauer(n - 1, a + 1, x)
