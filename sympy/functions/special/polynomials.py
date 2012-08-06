@@ -228,7 +228,7 @@ class gegenbauer(OrthogonalPolynomial):
     See Also
     ========
 
-    chebyshevt_root,, chebyshevu, chebyshevu_root,
+    chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
@@ -360,7 +360,7 @@ class chebyshevt(OrthogonalPolynomial):
     See Also
     ========
 
-    chebyshevt_root,, chebyshevu, chebyshevu_root,
+    chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
@@ -463,7 +463,7 @@ class chebyshevu(OrthogonalPolynomial):
     See Also
     ========
 
-    chebyshevt, chebyshevt_root,, chebyshevu_root,
+    chebyshevt, chebyshevt_root, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
@@ -587,7 +587,7 @@ class chebyshevu_root(Function):
     See Also
     ========
 
-    chebyshevt, chebyshevt_root,, chebyshevu,
+    chebyshevt, chebyshevt_root, chebyshevu,
     legendre, assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
@@ -637,7 +637,7 @@ class legendre(OrthogonalPolynomial):
     See Also
     ========
 
-    chebyshevt, chebyshevt_root,, chebyshevu, chebyshevu_root,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     assoc_legendre,
     hermite,
     laguerre, assoc_laguerre,
@@ -731,7 +731,7 @@ class assoc_legendre(Function):
     See Also
     ========
 
-    chebyshevt, chebyshevt_root,, chebyshevu, chebyshevu_root,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre,
     hermite,
     laguerre, assoc_laguerre,
@@ -828,7 +828,7 @@ class hermite(OrthogonalPolynomial):
     See Also
     ========
 
-    chebyshevt, chebyshevt_root,, chebyshevu, chebyshevu_root,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     laguerre, assoc_laguerre,
     sympy.polys.orthopolys.chebyshevt_poly,
@@ -920,7 +920,7 @@ class laguerre(OrthogonalPolynomial):
     ========
     sympy.polys.orthopolys.laguerre_poly
 
-    chebyshevt, chebyshevt_root,, chebyshevu, chebyshevu_root,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
     assoc_laguerre,
@@ -1025,7 +1025,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     See Also
     ========
 
-    chebyshevt, chebyshevt_root,, chebyshevu, chebyshevu_root,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
     hermite,
     laguerre,
