@@ -150,7 +150,9 @@ Orthogonal polynomials
 
 .. autofunction:: chebyshevt_poly
 .. autofunction:: chebyshevu_poly
+.. autofunction:: gegenbauer_poly
 .. autofunction:: hermite_poly
+.. autofunction:: jacobi_poly
 .. autofunction:: legendre_poly
 .. autofunction:: laguerre_poly
 
