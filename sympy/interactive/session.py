@@ -150,7 +150,7 @@ def enable_automatic_int_sympification(app):
     """
     Allow IPython to automatically convert integer literals to Integer.
     """
-    import compiler
+    import ast
     old_run_cell = app.shell.run_cell
     def my_run_cell(cell, *args, **kwargs):
         try:
@@ -159,9 +159,7 @@ def enable_automatic_int_sympification(app):
             # downside here is that IPython magic like %timeit will not work
             # with transformed input (but on the other hand, IPython magic
             # that doesn't expect transformed input will continue to work).
-
-            # XXX: Is this the best way to check for syntax errors?
-            compiler.parse(cell)
+            ast.parse(cell)
         except SyntaxError:
             pass
         else:
