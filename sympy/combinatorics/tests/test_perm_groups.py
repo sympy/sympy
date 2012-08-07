@@ -376,3 +376,58 @@ def test_direct_product_n():
     H = DirectProduct(D, C)
     assert H.order() == 32
     assert H.is_abelian == False
+
+def test_schreier_sims_incremental():
+    identity = Permutation([0, 1, 2, 3, 4])
+    TrivialGroup = PermutationGroup([identity])
+    base, strong_gens = TrivialGroup.schreier_sims_incremental(base=[0, 1, 2])
+    assert _verify_bsgs(TrivialGroup, base, strong_gens) == True
+    S = SymmetricGroup(5)
+    base, strong_gens = S.schreier_sims_incremental(base=[0,1,2])
+    assert _verify_bsgs(S, base, strong_gens) == True
+    D = DihedralGroup(2)
+    base, strong_gens = D.schreier_sims_incremental(base=[1])
+    assert _verify_bsgs(D, base, strong_gens) == True
+    A = AlternatingGroup(7)
+    gens = A.generators[:]
+    gen0 = gens[0]
+    gen1 = gens[1]
+    gen1 = gen1*(~gen0)
+    gen0 = gen0*gen1
+    gen1 = gen0*gen1
+    base, strong_gens = A.schreier_sims_incremental(base=[0,1], gens=gens)
+    assert _verify_bsgs(A, base, strong_gens) == True
+    C = CyclicGroup(11)
+    gen = C.generators[0]
+    base, strong_gens = C.schreier_sims_incremental(gens=[gen**3])
+    assert _verify_bsgs(C, base, strong_gens) == True
+
+def test_subgroup_search():
+    prop_true = lambda x: True
+    prop_fix_points = lambda x: [x(point) for point in points] == points
+    prop_comm_g = lambda x: x*g == g*x
+    prop_even = lambda x: x.is_even
+    for i in range(10, 17, 2):
+        S = SymmetricGroup(i)
+        A = AlternatingGroup(i)
+        C = CyclicGroup(i)
+        Sym = S.subgroup_search(prop_true)
+        assert Sym == S
+        Alt = S.subgroup_search(prop_even)
+        assert Alt == A
+        Sym = S.subgroup_search(prop_true, init_subgroup=C)
+        assert Sym == S
+        points = [7]
+        assert S.stabilizer(7) == S.subgroup_search(prop_fix_points)
+        points = [3, 4]
+        assert S.stabilizer(3).stabilizer(4) == S.subgroup_search(prop_fix_points)
+        points = [3, 5]
+        fix35 = A.subgroup_search(prop_fix_points)
+        points = [5]
+        fix5 = A.subgroup_search(prop_fix_points)
+        assert A.subgroup_search(prop_fix_points, init_subgroup=fix35) == fix5
+        base, strong_gens = A.schreier_sims_incremental()
+        g = A.generators[0]
+        comm_g = A.subgroup_search(prop_comm_g, base=base, strong_gens=strong_gens)
+        assert _verify_bsgs(comm_g, base, comm_g.generators) == True
+        assert [prop_comm_g(gen) == True for gen in comm_g.generators]
