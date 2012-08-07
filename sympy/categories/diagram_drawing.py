@@ -176,7 +176,6 @@ class DiagramGrid(object):
 
     >>> from sympy.categories import Object, NamedMorphism
     >>> from sympy.categories import Diagram, DiagramGrid
-    >>> from sympy import FiniteSet
     >>> A = Object("A")
     >>> B = Object("B")
     >>> C = Object("C")
@@ -216,7 +215,7 @@ class DiagramGrid(object):
     Now, we can group the objects `A` and `D` to have them near one
     another:
 
-    >>> grid = DiagramGrid(diagram, groups=FiniteSet(FiniteSet(A, D), B, C))
+    >>> grid = DiagramGrid(diagram, groups=[[A, D], B, C])
     >>> print grid
     [[Object("B"), None, Object("C")],
     [Object("A"), Object("D"), None]]
@@ -1217,7 +1216,6 @@ class DiagramGrid(object):
 
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import Diagram, DiagramGrid
-        >>> from sympy import FiniteSet
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -1241,7 +1239,6 @@ class DiagramGrid(object):
 
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import Diagram, DiagramGrid
-        >>> from sympy import FiniteSet
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -1265,7 +1262,6 @@ class DiagramGrid(object):
 
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import Diagram, DiagramGrid
-        >>> from sympy import FiniteSet
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -1292,7 +1288,6 @@ class DiagramGrid(object):
 
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import Diagram, DiagramGrid
-        >>> from sympy import FiniteSet
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -1319,7 +1314,6 @@ class DiagramGrid(object):
 
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import Diagram, DiagramGrid
-        >>> from sympy import FiniteSet
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")

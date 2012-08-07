@@ -302,7 +302,7 @@ class CompositeMorphism(Morphism):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism, CompositeMorphism
+        >>> from sympy.categories import Object, NamedMorphism
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -326,7 +326,7 @@ class CompositeMorphism(Morphism):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism, CompositeMorphism
+        >>> from sympy.categories import Object, NamedMorphism
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -349,7 +349,7 @@ class CompositeMorphism(Morphism):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism, CompositeMorphism
+        >>> from sympy.categories import Object, NamedMorphism
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -374,7 +374,7 @@ class CompositeMorphism(Morphism):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism, CompositeMorphism
+        >>> from sympy.categories import Object, NamedMorphism
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -657,7 +657,6 @@ class Diagram(Basic):
 
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import IdentityMorphism, Diagram
-        >>> from sympy import FiniteSet
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -743,7 +742,7 @@ class Diagram(Basic):
         ========
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import IdentityMorphism, Diagram
-        >>> from sympy import EmptySet, Dict, pretty
+        >>> from sympy import pretty
         >>> A = Object("A")
         >>> B = Object("B")
         >>> f = NamedMorphism(A, B, "f")
@@ -792,7 +791,6 @@ class Diagram(Basic):
         Examples
         ========
         >>> from sympy.categories import Object, NamedMorphism, Diagram
-        >>> from sympy import FiniteSet
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -815,7 +813,7 @@ class Diagram(Basic):
         ========
 
         >>> from sympy.categories import Object, NamedMorphism, Diagram
-        >>> from sympy import FiniteSet, pretty
+        >>> from sympy import pretty
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -853,7 +851,6 @@ class Diagram(Basic):
         Examples
         ========
         >>> from sympy.categories import Object, NamedMorphism, Diagram
-        >>> from sympy import FiniteSet, pretty
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -889,7 +886,7 @@ class Diagram(Basic):
         Examples
         ========
         >>> from sympy.categories import Object, NamedMorphism, Diagram
-        >>> from sympy import FiniteSet, pretty
+        >>> from sympy import FiniteSet
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
