@@ -65,6 +65,14 @@ class StrPrinter(Printer):
             sign = ""
         return sign + ' '.join(l)
 
+    def _print_And(self, expr):
+        return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
+            expr.args)))
+
+    def _print_Or(self, expr):
+        return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
+            expr.args)))
+
     def _print_AppliedPredicate(self, expr):
         return '%s(%s)' % (expr.func, expr.arg)
 
@@ -540,6 +548,9 @@ class StrPrinter(Printer):
     def _print_Category(self, category):
         return 'Category("%s")' % category.name
 
+    def _print_Tr(self, expr):
+        #TODO : Handle indices
+        return "%s(%s)" % ("Tr", self._print(expr.args[0]))
 
 def sstr(expr, **settings):
     """Returns the expression as a string.

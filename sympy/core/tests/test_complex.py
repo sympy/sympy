@@ -52,7 +52,9 @@ def test_evalc():
     y = Symbol("y", real=True)
     z = Symbol("z")
     assert ((x+I*y)**2).expand(complex=True) == x**2+2*I*x*y - y**2
-    assert expand_complex(z**(2*I)) == I*im(z**(2*I)) + re(z**(2*I))
+    assert expand_complex(z**(2*I)) == (re((re(z) + I*im(z))**(2*I)) +
+        I*im((re(z) + I*im(z))**(2*I)))
+    assert expand_complex(z**(2*I), deep=False) == I*im(z**(2*I)) + re(z**(2*I))
 
     assert exp(I*x) != cos(x)+I*sin(x)
     assert exp(I*x).expand(complex=True) == cos(x)+I*sin(x)

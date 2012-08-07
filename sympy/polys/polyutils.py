@@ -5,7 +5,7 @@ from sympy.polys.polyoptions import build_options
 
 from sympy.core.exprtools import decompose_power
 
-from sympy.core import S, Add, Mul, Pow
+from sympy.core import S, Add, Mul, Pow, expand_mul, expand_multinomial
 from sympy.assumptions import ask, Q
 
 import re
@@ -292,11 +292,23 @@ def dict_from_expr(expr, **args):
 
 def _dict_from_expr(expr, opt):
     """Transform an expression into a multinomial form. """
-    if opt.expand is not False:
-        expr = expr.expand()
-
     if expr.is_commutative is False:
         raise PolynomialError('non-commutative expressions are not supported')
+
+    def _is_expandable_pow(expr):
+        return (expr.is_Pow and expr.exp.is_positive and expr.exp.is_Integer
+                and expr.base.is_Add)
+
+    if opt.expand is not False:
+        expr = expr.expand()
+        # TODO: Integrate this into expand() itself
+        while any(_is_expandable_pow(i) or i.is_Mul and
+            any(_is_expandable_pow(j) for j in i.args) for i in
+            Add.make_args(expr)):
+
+            expr = expand_multinomial(expr)
+        while any(i.is_Mul and any(j.is_Add for j in i.args) for i in Add.make_args(expr)):
+            expr = expand_mul(expr)
 
     if opt.gens:
         rep, gens = _dict_from_expr_if_gens(expr, opt)
@@ -311,9 +323,9 @@ def expr_from_dict(rep, *gens):
 
     for monom, coeff in rep.iteritems():
         term = [coeff]
-
         for g, m in zip(gens, monom):
-            term.append(Pow(g, m))
+            if m:
+                term.append(Pow(g, m))
 
         result.append(Mul(*term))
 

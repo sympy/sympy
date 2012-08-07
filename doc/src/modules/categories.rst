@@ -24,6 +24,11 @@ The module is still in its pre-embryonic stage.
 
 Base Class Reference
 --------------------
+
+This section lists the classes which implement some of the basic
+notions in category theory: objects, morphisms, categories, and
+diagrams.
+
 .. autoclass:: Object
    :members:
 
@@ -43,4 +48,13 @@ Base Class Reference
    :members:
 
 .. autoclass:: Diagram
+   :members:
+
+Diagram Drawing
+---------------
+
+This section lists the classes which allow automatic drawing of
+diagrams.
+
+.. autoclass:: DiagramGrid
    :members:

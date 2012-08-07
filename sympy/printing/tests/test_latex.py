@@ -15,6 +15,7 @@ from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta
 from sympy.logic import Implies
+from sympy.core.trace import Tr
 
 x, y, z, t = symbols('x y z t')
 k, n = symbols('k n', integer=True)
@@ -576,7 +577,7 @@ def test_PolynomialRing():
 def test_categories():
     from sympy.categories import (Object, Morphism, IdentityMorphism,
                                   NamedMorphism, CompositeMorphism,
-                                  Category, Diagram)
+                                  Category, Diagram, DiagramGrid)
 
     A1 = Object("A1")
     A2 = Object("A2")
@@ -616,6 +617,21 @@ def test_categories():
            "\\Longrightarrow \\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
            "\\rightarrow A_{3} : \\left\\{unique\\right\\}\\end{Bmatrix}"
 
+
+    # A linear diagram.
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    d = Diagram([f, g])
+    grid = DiagramGrid(d)
+
+    assert latex(grid) == "\\begin{array}{cc}\n" \
+    "A & B \\\\\n"\
+    " & C \n" \
+    "\\end{array}\n"
+
 def test_Modules():
     from sympy.polys.domains import QQ
     from sympy import homomorphism
@@ -645,3 +661,9 @@ def test_QuotientRing():
 
     assert latex(R) == r"\frac{\mathbb{Q}\left[x\right]}{\left< {x^{2} + 1} \right>}"
     assert latex(R.one) == r"{1} + {\left< {x^{2} + 1} \right>}"
+
+def test_Tr():
+    #TODO: Handle indices
+    A, B = symbols('A B', commutative=False)
+    t = Tr(A*B)
+    assert latex(t) == r'\mbox{Tr}\left(A B\right)'

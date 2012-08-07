@@ -386,6 +386,14 @@ expand_multinomial
 ^^^^^^^^^^^^^^^^^^
 .. autofunction:: expand_multinomial
 
+expand_power_exp
+^^^^^^^^^^^^^^^^
+.. autofunction:: expand_power_exp
+
+expand_power_base
+^^^^^^^^^^^^^^^^^
+.. autofunction:: expand_power_base
+
 nfloat
 ^^^^^^
 .. autofunction:: nfloat

@@ -79,6 +79,17 @@ class ReprPrinter(Printer):
                 l[-1].append(expr[i,j])
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
 
+    def _print_MutableMatrix(self, expr):
+        """
+        Same as _print_MatrixBase except treat the name as Matrix
+        """
+        l = []
+        for i in range(expr.rows):
+            l.append([])
+            for j in range(expr.cols):
+                l[-1].append(expr[i,j])
+        return 'Matrix(%s)' % self._print(l)
+
     def _print_NaN(self, expr):
         return "nan"
 

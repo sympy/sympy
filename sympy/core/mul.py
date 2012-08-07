@@ -37,7 +37,8 @@ class Mul(AssocOp):
         """Return commutative, noncommutative and order arguments by
         combining related terms.
 
-        ** Note **
+        Notes
+        =====
             * In an expression like ``a*b*c``, python process this through sympy
               as ``Mul(Mul(a, b), c)``. This can have undesirable consequences.
 
@@ -101,11 +102,13 @@ class Mul(AssocOp):
               This consideration is moot if the cache is turned off.
 
             NB
+            --
               The validity of the above notes depends on the implementation
               details of Mul and flatten which may change at any time. Therefore,
               you should only consider them when your code is highly performance
               sensitive.
 
+              Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
         rv = None
         if len(seq) == 2:
@@ -575,14 +578,13 @@ class Mul(AssocOp):
                         return None
                     return Mul(*([Pow(coeff, e), Pow(Mul(*bc), e)] + done))
 
-                # otherwise return the new expression expanding out the
-                # known terms; those that are not known can be expanded
-                # out with separate() but this will introduce a lot of
-                # "garbage" that is needed to keep one on the same branch
-                # as the unexpanded expression. The negatives are brought
-                # out with a negative sign added and a negative left behind
-                # in the unexpanded terms if there were an odd number of
-                # negatives.
+                # otherwise return the new expression expanding out the known
+                # terms; those that are not known can be expanded out with
+                # expand_power_base() but this will introduce a lot of
+                # "garbage" that is needed to keep one on the same branch as
+                # the unexpanded expression. The negatives are brought out
+                # with a negative sign added and a negative left behind in the
+                # unexpanded terms if there were an odd number of negatives.
                 if coeff.is_negative:
                     coeff = -coeff
                     neg.append(S.NegativeOne)
@@ -709,53 +711,20 @@ class Mul(AssocOp):
         added = Add(*terms)
         return Add.make_args(added) #it may have collapsed down to one term
 
-    def _eval_expand_basic(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_basic'):
-                newterm = term._eval_expand_basic(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
+    def _eval_expand_mul(self, **hints):
+        from sympy import fraction, expand_mul
 
-    def _eval_expand_power_exp(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_power_exp'):
-                newterm = term._eval_expand_power_exp(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_power_base(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_power_base'):
-                newterm = term._eval_expand_power_base(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_mul(self, deep=True, **hints):
-        from sympy import fraction
+        # Handle things like 1/(x*(x + 1)), which are automatically converted
+        # to 1/x*1/(x + 1)
         expr = self
         n, d = fraction(expr)
-        if d is not S.One:
-            expr = n/d._eval_expand_mul(deep=deep, **hints)
+        if d.is_Mul:
+            expr = n/d._eval_expand_mul(**hints)
             if not expr.is_Mul:
-                return expr._eval_expand_mul(deep=deep, **hints)
+                return expand_mul(expr, deep=False)
 
         plain, sums, rewrite = [], [], False
         for factor in expr.args:
-            if deep:
-                term = factor.expand(deep=deep, **hints)
-                if term != factor:
-                    factor = term
-                    rewrite = True
-
             if factor.is_Add:
                 sums.append(factor)
                 rewrite = True
@@ -763,8 +732,7 @@ class Mul(AssocOp):
                 if factor.is_commutative:
                     plain.append(factor)
                 else:
-                    Wrapper = Basic
-                    sums.append(Wrapper(factor))
+                    sums.append(Basic(factor)) # Wrapper
 
         if not rewrite:
             return expr
@@ -776,61 +744,11 @@ class Mul(AssocOp):
                 for term in terms:
                     t = Mul(plain, term)
                     if t.is_Mul and any(a.is_Add for a in t.args):
-                        t = t._eval_expand_mul(deep=deep)
+                        t = t._eval_expand_mul()
                     args.append(t)
                 return Add(*args)
             else:
                 return plain
-
-    def _eval_expand_multinomial(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_multinomial'):
-                newterm = term._eval_expand_multinomial(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_log(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_log'):
-                newterm = term._eval_expand_log(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_complex'):
-                newterm = term._eval_expand_complex(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_trig(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_trig'):
-                newterm = term._eval_expand_trig(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_func(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_func'):
-                newterm = term._eval_expand_func(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
 
     def _eval_derivative(self, s):
         terms = list(self.args)
@@ -1159,11 +1077,11 @@ class Mul(AssocOp):
             return False
 
     def _eval_subs(self, old, new):
+        from sympy import sign, Dummy, multiplicity
+        from sympy.simplify.simplify import powdenest, fraction
+
         if not old.is_Mul:
             return None
-
-        from sympy import sign
-        from sympy.simplify.simplify import powdenest, fraction
 
         def base_exp(a):
             # if I and -1 are in a Mul, they get both end up with
@@ -1229,17 +1147,18 @@ class Mul(AssocOp):
 
         # handle the leading coefficient and use it to decide if anything
         # should even be started; we always know where to find the Rational
-        # so it's a quick test; the result here is used after self and old
-        # are broken up into factors
+        # so it's a quick test
 
         co_self = self.args[0]
         co_old = old.args[0]
+        co_xmul = None
         if co_old.is_Rational and co_self.is_Rational:
-            co_xmul = co_self.extract_multiplicatively(co_old)
+            # if coeffs are the same there will be no updating to do
+            # below after breakup() step; so skip (and keep co_xmul=None)
+            if co_old != co_self:
+                co_xmul = co_self.extract_multiplicatively(co_old)
         elif co_old.is_Rational:
             return rv
-        else:
-            co_xmul = None
 
         # break self and old into factors
 
@@ -1247,19 +1166,25 @@ class Mul(AssocOp):
         (old_c, old_nc) = breakup(old)
 
         # update the coefficients if we had an extraction
+        # e.g. if co_self were 2*(3/35*x)**2 and co_old = 3/5
+        # then co_self in c is replaced by (3/5)**2 and co_residual
+        # is 2*(1/7)**2
 
         if co_xmul and co_xmul.is_Rational:
-            c[co_self] -= 1
-            if not c[co_self]:
-                c.pop(co_self)
-            old_c[co_old] -= 1
-            if not old_c[co_old]:
-                old_c.pop(co_old)
-            # co_xmul shouldn't be there already...unless there was
-            # an unevaluated Mul; so just to be safe, treat it like the others
-            c[co_xmul] += 1
-            if not c[co_xmul]:
-                c.pop(co_xmul)
+            n_old, d_old = co_old.as_numer_denom()
+            n_self, d_self = co_self.as_numer_denom()
+            def _multiplicity(p, n):
+                p = abs(p)
+                if p is S.One:
+                    return S.Infinity
+                return multiplicity(p, abs(n))
+            mult = S(min(_multiplicity(n_old, n_self),
+                         _multiplicity(d_old, d_self)))
+            c.pop(co_self)
+            c[co_old] = mult
+            co_residual = co_self/co_old**mult
+        else:
+            co_residual = 1
 
         # do quick tests to see if we can't succeed
 
@@ -1413,7 +1338,7 @@ class Mul(AssocOp):
             # rest of this routine
 
             margs = [Pow(new, cdid)] + margs
-        return Mul(*margs)*Mul(*nc)
+        return co_residual*Mul(*margs)*Mul(*nc)
 
     def _eval_nseries(self, x, n, logx):
         from sympy import powsimp

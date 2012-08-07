@@ -181,7 +181,7 @@ class hyper(TupleParametersBase):
         fac = Mul(*self.ap)/Mul(*self.bq)
         return fac*hyper(nap, nbq, self.argument)
 
-    def _eval_expand_func(self, deep=True, **hints):
+    def _eval_expand_func(self, **hints):
         from sympy import gamma, hyperexpand
         if len(self.ap) == 2 and len(self.bq) == 1 and self.argument == 1:
             a, b = self.ap
@@ -559,7 +559,7 @@ class meijerg(TupleParametersBase):
         else:
             return 2*pi*alpha
 
-    def _eval_expand_func(self, deep=True, **hints):
+    def _eval_expand_func(self, **hints):
         from sympy import hyperexpand
         return hyperexpand(self)
 

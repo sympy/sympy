@@ -174,6 +174,9 @@ class MatrixBase(object):
 
         return rows, cols, mat
 
+    def _eval_transpose(self):
+        return self.transpose()
+
     def transpose(self):
         """
         Matrix transposition.
@@ -816,6 +819,8 @@ class MatrixBase(object):
             # if a new method is added.
             raise ValueError("Inversion method unrecognized")
 
+    def _eval_inverse(self):
+        return self.inv()
 
     def __mathml__(self):
         mml = ""
@@ -3397,8 +3402,6 @@ class MatrixBase(object):
             if geometrical == multiplicity:
                 Jcell = diag( *([eigenval] * multiplicity))
                 Jcells.append(Jcell)
-            elif geometrical==0:
-                raise MatrixError("Matrix has the eigen vector with geometrical multiplicity equal zero.")
             else:
                 sizes = self._jordan_split(multiplicity, geometrical)
                 cells = []
@@ -3878,7 +3881,7 @@ def classof(A,B):
     >>> M = Matrix([[1,2],[3,4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1,2],[3,4]])
     >>> classof(M, IM)
-    <class 'sympy.matrices.matrices.Matrix'>
+    <class 'sympy.matrices.matrices.MutableMatrix'>
     """
     from immutable_matrix import ImmutableMatrix
     try:
@@ -4957,4 +4960,3 @@ def rot_axis1(theta):
     return MutableMatrix(mat)
 
 Matrix = MutableMatrix
-Matrix.__name__ = "Matrix"

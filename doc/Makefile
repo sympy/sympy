@@ -21,14 +21,15 @@ ALLSPHINXOPTSapi = -d _build/doctreesapi -D latex_paper_size=$(PAPER) \
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
-	@echo "  html       to make standalone HTML files"
-	@echo "  web        to make files usable by Sphinx.web"
-	@echo "  htmlhelp   to make HTML files and a HTML help project"
-	@echo "  latex      to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
-	@echo "  changes    to make an overview over all changed/added/deprecated items"
-	@echo "  linkcheck  to check all external links for integrity"
-	@echo "  cheatsheet to make the Cheatsheet"
-	@echo "  htmli18n   to make the i18n versions"
+	@echo "  html        to make standalone HTML files"
+	@echo "  web         to make files usable by Sphinx.web"
+	@echo "  htmlhelp    to make HTML files and a HTML help project"
+	@echo "  latex       to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
+	@echo "  changes     to make an overview over all changed/added/deprecated items"
+	@echo "  linkcheck   to check all external links for integrity"
+	@echo "  cheatsheet  to make the Cheatsheet"
+	@echo "  htmli18n    to make the i18n versions"
+	@echo "  html-errors to make the standalone HTML files, stopping on any errors or warnings"
 
 clean:
 	-rm -rf _build

@@ -101,10 +101,6 @@ class AntiCommutator(Expr):
         if a.compare(b) == 1:
             return cls(b,a)
 
-    def _eval_expand_anticommutator(self, **hints):
-        # No changes, so return self
-        return self
-
     def doit(self, **hints):
         """ Evaluate anticommutator """
         A = self.args[0]

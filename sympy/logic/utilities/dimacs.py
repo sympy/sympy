@@ -23,7 +23,7 @@ def load(s):
     >>> load('1 \\n 2')
     And(cnf_1, cnf_2)
     >>> load('1 2 \\n 3')
-    And(cnf_3, Or(cnf_1, cnf_2))
+    And(Or(cnf_1, cnf_2), cnf_3)
     """
     clauses = []
 

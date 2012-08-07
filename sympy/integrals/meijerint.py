@@ -37,6 +37,7 @@ from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.hyper import meijerg
 from sympy.utilities.misc import debug as _debug
+from sympy.utilities import default_sort_key
 
 # keep this at top for easy reference
 z = Dummy('z')
@@ -522,7 +523,7 @@ def _condsimp(cond):
     >>> from sympy import Or, Eq, unbranched_argument as arg, And
     >>> from sympy.abc import x, y, z
     >>> simp(Or(x < y, z, Eq(x, y)))
-    Or(z, x <= y)
+    Or(x <= y, z)
     >>> simp(Or(x <= y, And(x < y, z)))
     x <= y
     """
@@ -1630,7 +1631,7 @@ def meijerint_definite(f, x, a, b):
         _debug('  Integrating -oo to +oo.')
         innermost = _find_splitting_points(f, x)
         _debug('  Sensible splitting points:', innermost)
-        for c in list(innermost) + [S(0)]:
+        for c in sorted(innermost, key=default_sort_key, reverse=True) + [S(0)]:
             _debug('  Trying to split at', c)
             if not c.is_real:
                 _debug('  Non-real splitting point.')

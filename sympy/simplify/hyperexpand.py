@@ -59,6 +59,7 @@ It is described in great(er) detail in the Sphinx documentation.
 from sympy.core import S, Dummy, symbols, sympify, Tuple, expand, I, Mul
 from sympy.core.mod import Mod
 from sympy.functions.special.hyper import hyper
+from sympy.utilities.misc import default_sort_key
 from sympy import SYMPY_DEBUG
 
 from sympy.utilities.timeutils import timethis
@@ -1575,9 +1576,9 @@ def devise_plan(ip, nip, z):
 
     >>> from sympy import S
     >>> devise_plan(IndexPair((1, S.Half), ()),
-    ...             IndexPair((2, S('3/2')), ()), z)
-    [<Decrement upper index #0 of [2, 1/2], [].>,
-    <Decrement upper index #0 of [3/2, 2], [].>]
+    ...             IndexPair((2, S('3/2')), ()), z) #doctest: +NORMALIZE_WHITESPACE
+    [<Decrement upper index #0 of [3/2, 1], [].>,
+    <Decrement upper index #0 of [2, 3/2], [].>]
 
     A slightly more complicated plan:
 
@@ -1627,7 +1628,7 @@ def devise_plan(ip, nip, z):
                          lambda p, i: UnShiftB(nal + aother, p + bother, i, z),
                          lambda p, i: ShiftB(p[i]))
 
-    for r in set(abuckets.keys() + bbuckets.keys()):
+    for r in sorted(abuckets.keys() + bbuckets.keys(), key=default_sort_key):
         al = ()
         nal = ()
         bk = ()
@@ -1642,7 +1643,8 @@ def devise_plan(ip, nip, z):
             raise ValueError('%s not reachable from %s' % (
                              (ip.ap, ip.bq), (nip.ap, nip.bq)))
 
-        al, nal, bk, nbk = [sorted(list(w)) for w in [al, nal, bk, nbk]]
+        al, nal, bk, nbk = [sorted(list(w), key=default_sort_key)
+            for w in [al, nal, bk, nbk]]
 
         def others(dic, key):
             l = []

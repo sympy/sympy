@@ -7,6 +7,7 @@ from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
 from compatibility import reduce
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
+from sympy.utilities.misc import default_sort_key
 
 from collections import defaultdict
 from math import log10, ceil
@@ -48,9 +49,6 @@ class Expr(Basic, EvalfMixin):
 
     @cacheit
     def sort_key(self, order=None):
-        # XXX: The order argument does not actually work
-
-        from sympy.utilities import default_sort_key
 
         coeff, expr = self.as_coeff_Mul()
 
@@ -761,7 +759,6 @@ class Expr(Basic, EvalfMixin):
         """Transform an expression to a list of terms. """
         from sympy.core import Add, Mul, S
         from sympy.core.exprtools import decompose_power
-        from sympy.utilities import default_sort_key
 
         gens, terms = set([]), []
 
@@ -2590,34 +2587,41 @@ class Expr(Basic, EvalfMixin):
     ###################### EXPRESSION EXPANSION METHODS #######################
     ###########################################################################
 
-    # These should be overridden in subclasses
+    # Relevant subclasses should override _eval_expand_hint() methods.  See
+    # the docstring of expand() for more info.
 
-    def _eval_expand_basic(self, deep=True, **hints):
-        return self
+    def _eval_expand_complex(self, **hints):
+        real, imag = self.as_real_imag(**hints)
+        return real + S.ImaginaryUnit*imag
 
-    def _eval_expand_power_exp(self, deep=True, **hints):
-        return self
+    @staticmethod
+    def _expand_hint(expr, hint, deep=True, **hints):
+        """
+        Helper for ``expand()``.  Recursively calls ``expr._eval_expand_hint()``.
 
-    def _eval_expand_power_base(self, deep=True, **hints):
-        return self
+        Returns ``(expr, hit)``, where expr is the (possibly) expanded
+        ``expr`` and ``hit`` is ``True`` if ``expr`` was truly expanded and
+        ``False`` otherwise.
+        """
+        hit = False
+        # XXX: Hack to support non-Basic args
+        #              |
+        #              V
+        if deep and getattr(expr, 'args', ()) and not expr.is_Atom:
+            sargs = []
+            for arg in expr.args:
+                arg, arghit = Expr._expand_hint(arg, hint, **hints)
+                hit |= arghit
+                sargs.append(arg)
 
-    def _eval_expand_mul(self, deep=True, **hints):
-        return self
+            if hit:
+                expr = expr.func(*sargs)
 
-    def _eval_expand_multinomial(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_log(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_trig(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_func(self, deep=True, **hints):
-        return self
+        if hasattr(expr, '_eval_expand_' + hint):
+            newexpr = getattr(expr, '_eval_expand_' + hint)(**hints)
+            if newexpr != expr:
+                return (newexpr, True)
+        return (expr, hit)
 
     @cacheit
     def expand(self, deep=True, modulus=None, power_base=True, power_exp=True, \
@@ -2625,7 +2629,9 @@ class Expr(Basic, EvalfMixin):
         """
         Expand an expression using hints.
 
-        See the docstring in function.expand for more information.
+        See the docstring of the expand() function in sympy.core.function for
+        more information.
+
         """
         from sympy.simplify.simplify import fraction
 
@@ -2643,11 +2649,32 @@ class Expr(Basic, EvalfMixin):
         elif hints.pop('numer', False):
             n, d = fraction(self)
             return n.expand(deep=deep, modulus=modulus, **hints)/d
-        for hint, use_hint in hints.iteritems():
+        # Although the hints are sorted here, an earlier hint may get applied
+        # at a given node in the expression tree before another because of how
+        # the hints are applied.  e.g. expand(log(x*(y + z))) -> log(x*y +
+        # x*z) because while applying log at the top level, log and mul are
+        # applied at the deeper level in the tree so that when the log at the
+        # upper level gets applied, the mul has already been applied at the
+        # lower level.
+
+        # Additionally, because hints are only applied once, the expression
+        # may not be expanded all the way.   For example, if mul is applied
+        # before multinomial, x*(x + 1)**2 won't be expanded all the way.  For
+        # now, we just use a special case to make multinomial run before mul,
+        # so that at least polynomials will be expanded all the way.  In the
+        # future, smarter heuristics should be applied.
+        # TODO: Smarter heuristics
+
+        def _expand_hint_key(hint):
+            """Make multinomial come before mul"""
+            if hint == 'mul':
+                return 'mulz'
+            return hint
+
+        for hint in sorted(hints.keys(), key=_expand_hint_key):
+            use_hint = hints[hint]
             if use_hint:
-                func = getattr(expr, '_eval_expand_'+hint, None)
-                if func is not None:
-                    expr = func(deep=deep, **hints)
+                expr, hit = Expr._expand_hint(expr, hint, deep=deep, **hints)
 
         if modulus is not None:
             modulus = sympify(modulus)

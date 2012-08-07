@@ -27,6 +27,7 @@ def test_sqrtdenest2():
     assert sqrtdenest(sqrt(1 + r)) == sqrt(1 + r)
     e = sqrt(((1 + sqrt(1 + 2*sqrt(3 + r2 + r5)))**2).expand())
     assert sqrtdenest(e) == 1 + sqrt(1 + 2*sqrt(r2 + r5 + 3))
+
     assert sqrtdenest(sqrt(5*r3 + 6*r2)) == \
         sqrt(2)*root(3, 4) + root(3, 4)**3
 

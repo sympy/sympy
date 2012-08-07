@@ -134,6 +134,8 @@ def test_Lambda_equality():
     assert (Lambda(x, 2*x) == 2*x) is False
 
 def test_Subs():
+    assert Subs(x, x, 0).subs(x, 1) == Subs(x, x, 1)
+    assert Subs(y, x, 0).subs(y, 1) == Subs(1, x, 0)
     assert Subs(f(x), x, 0).doit() == f(0)
     assert Subs(f(x**2), x**2, 0).doit() == f(0)
     assert Subs(f(x, y, z), (x, y, z), (0, 1, 1)) != \
@@ -148,8 +150,6 @@ def test_Subs():
     raises(ValueError, lambda: Subs(f(x, y), (x, x, y), (0, 0, 1)))
 
     assert len(Subs(f(x, y), (x, y), (0, 1)).variables) == 2
-    assert all(isinstance(v, Dummy) for v in Subs(f(x, y),
-        (x, y), (0, 1)).variables)
     assert Subs(f(x, y), (x, y), (0, 1)).point == Tuple(0, 1)
 
     assert Subs(f(x), x, 0) == Subs(f(y), y, 0)
@@ -157,8 +157,7 @@ def test_Subs():
     assert Subs(f(x)*y, (x, y), (0, 1)) == Subs(f(y)*x, (y, x), (0, 1))
     assert Subs(f(x)*y, (x, y), (1, 1)) == Subs(f(y)*x, (x, y), (1, 1))
 
-    assert Subs(f(x), x, 0).subs(x, 1) == Subs(f(x), x, 0)
-    assert Subs(f(x), x, 0).subs(x, 1).doit() == f(0)
+    assert Subs(f(x), x, 0).subs(x, 1).doit() == f(1)
     assert Subs(f(x), x, y).subs(y, 0) == Subs(f(x), x, 0)
     assert Subs(y*f(x), x, y).subs(y, 2) == Subs(2*f(x), x, 2)
     assert (2 * Subs(f(x), x, 0)).subs(Subs(f(x), x, 0), y) == 2*y
@@ -166,8 +165,8 @@ def test_Subs():
     assert Subs(f(x), x, 0).free_symbols == set([])
     assert Subs(f(x, y), x, z).free_symbols == set([y, z])
 
-    assert Subs(f(x).diff(x), x, 0).doit() == Subs(f(x).diff(x), x, 0)
-    assert Subs(1+f(x).diff(x), x, 0).doit() == 1 + Subs(f(x).diff(x), x, 0)
+    assert Subs(f(x).diff(x), x, 0).doit() , Subs(f(x).diff(x), x, 0)
+    assert Subs(1 + f(x).diff(x), x, 0).doit() , 1 + Subs(f(x).diff(x), x, 0)
     assert Subs(y*f(x, y).diff(x), (x, y), (0, 2)).doit() == \
             2*Subs(Derivative(f(x, 2), x), x, 0)
     assert Subs(y**2*f(x), x, 0).diff(y) == 2*y*f(0)

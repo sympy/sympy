@@ -1,8 +1,8 @@
-from sympy import Eq, Matrix, pi, sin, sqrt, Symbol
+from sympy import Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise, symbols
 from sympy.mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 def test_nsolve():
     # onedimensional
@@ -43,3 +43,12 @@ def test_nsolve():
     a = Symbol('a')
     assert nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3).ae(
         mpf('0.31883011387318591'))
+
+def test_issue_3309():
+    x = Symbol('x')
+    assert nsolve(Piecewise((x,x<1),(x**2,True)),x,2) == 0.0
+
+@XFAIL
+def test_issue_3309_fail():
+    x, y = symbols('x y')
+    assert nsolve(Integral(x*y,(x,0,5)),y,2) == 0.0

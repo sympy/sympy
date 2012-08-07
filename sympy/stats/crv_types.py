@@ -1091,15 +1091,12 @@ def Normal(name, mean, std):
 
     >>> C = simplify(cdf(X))
     >>> pprint(C, use_unicode=False)
-          /                                 2              2           2\
-          |                              - z  + 2*z*mu - mu  + (z - mu) |
-          |                              -------------------------------|
-          |   /   /  ___         \    \                     2           |
-          |   |   |\/ 2 *(z - mu)|    |              2*sigma            |
-          |   |erf|--------------| + 1|*e                               |
-          |   \   \   2*sigma    /    /                                 |
-    Lambda|z, ----------------------------------------------------------|
-          \                               2                             /
+              /      /  ___         \    \
+              |      |\/ 2 *(z - mu)|    |
+              |   erf|--------------|    |
+              |      \   2*sigma    /   1|
+        Lambda|z, ------------------- + -|
+              \            2            2/
 
     >>> simplify(skewness(X))
     0
@@ -1372,10 +1369,11 @@ def Triangular(name, a, b, c):
 
     >>> density(X)
     Lambda(_x, Piecewise(((2*_x - 2*a)/((-a + b)*(-a + c)),
-                         And(a <= _x, _x < c)),
-                         (2/(-a + b), _x == c),
-                         ((-2*_x + 2*b)/((-a + b)*(b - c)),
-                         And(_x <= b, c < _x)), (0, True)))
+                        And(_x < c, a <= _x)),
+                        (2/(-a + b), _x == c),
+                        ((-2*_x + 2*b)/((-a + b)*(b - c)),
+                        And(_x <= b, c < _x)),
+                        (0, True)))
 
     References
     ==========
