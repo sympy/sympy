@@ -124,7 +124,7 @@ def test_diagram():
     # Make sure that (re-)adding composites (with new properties)
     # works as expected.
     d = Diagram([f, g], {g * f: "unique"})
-    assert d.conclusions == Dict({g*f:FiniteSet("unique")})
+    assert d.conclusions == Dict({g * f: FiniteSet("unique")})
 
     # Check the hom-sets when there are premises and conclusions.
     assert d.hom(A, C) == (FiniteSet(g * f), FiniteSet(g * f))
@@ -146,7 +146,7 @@ def test_diagram():
     assert d.objects == empty
 
     # Check a SymPy Dict object.
-    d = Diagram(Dict({f: FiniteSet("unique", "isomorphism"), g:"unique"}))
+    d = Diagram(Dict({f: FiniteSet("unique", "isomorphism"), g: "unique"}))
     assert d.premises[g * f] == FiniteSet("unique")
 
     # Check the addition of components of composite morphisms.

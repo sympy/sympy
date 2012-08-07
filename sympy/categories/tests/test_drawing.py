@@ -91,10 +91,10 @@ def test_DiagramGrid():
     assert grid.height == 1
     assert grid[0, 0] == A
     assert grid[0, 1] == B
-    assert grid.morphisms == {f:FiniteSet()}
+    assert grid.morphisms == {f: FiniteSet()}
 
     # A triangle.
-    d = Diagram([f, g], {g * f:"unique"})
+    d = Diagram([f, g], {g * f: "unique"})
     grid = DiagramGrid(d)
 
     assert grid.width == 2
@@ -103,8 +103,8 @@ def test_DiagramGrid():
     assert grid[0, 1] == B
     assert grid[1, 0] == C
     assert grid[1, 1] is None
-    assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(),
-                              g * f:FiniteSet("unique")}
+    assert grid.morphisms == {f: FiniteSet(), g: FiniteSet(),
+                              g * f: FiniteSet("unique")}
 
     # A triangle with a "loop" morphism.
     l_A = NamedMorphism(A, A, "l_A")
@@ -117,7 +117,7 @@ def test_DiagramGrid():
     assert grid[0, 1] == B
     assert grid[1, 0] is None
     assert grid[1, 1] == C
-    assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(), l_A:FiniteSet()}
+    assert grid.morphisms == {f: FiniteSet(), g: FiniteSet(), l_A: FiniteSet()}
 
     # A simple diagram.
     d = Diagram([f, g, h, k])
@@ -131,8 +131,8 @@ def test_DiagramGrid():
     assert grid[1, 0] is None
     assert grid[1, 1] == C
     assert grid[1, 2] is None
-    assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(), h:FiniteSet(),
-                              k:FiniteSet()}
+    assert grid.morphisms == {f: FiniteSet(), g: FiniteSet(), h: FiniteSet(),
+                              k: FiniteSet()}
 
     assert str(grid) == '[[Object("A"), Object("B"), Object("D")], ' \
            '[None, Object("C"), None]]'
@@ -156,8 +156,8 @@ def test_DiagramGrid():
     assert grid[2, 0] is None
     assert grid[2, 1] is None
     assert grid[2, 2] == E
-    assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(), h:FiniteSet(),
-                              k:FiniteSet()}
+    assert grid.morphisms == {f: FiniteSet(), g: FiniteSet(), h: FiniteSet(),
+                              k: FiniteSet()}
 
     # A square.
     f = NamedMorphism(A, B, "f")
@@ -173,8 +173,8 @@ def test_DiagramGrid():
     assert grid[0, 1] == B
     assert grid[1, 0] == C
     assert grid[1, 1] == D
-    assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(), h:FiniteSet(),
-                              k:FiniteSet()}
+    assert grid.morphisms == {f: FiniteSet(), g: FiniteSet(), h: FiniteSet(),
+                              k: FiniteSet()}
 
     # A strange diagram which resulted from a typo when creating a
     # test for five lemma, but which allowed to stop one extra problem
@@ -302,8 +302,8 @@ def test_DiagramGrid():
     assert grid[0, 2] == C
     assert grid[0, 3] == D
     assert grid[0, 4] == E
-    assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(), h:FiniteSet(),
-                              i:FiniteSet()}
+    assert grid.morphisms == {f: FiniteSet(), g: FiniteSet(), h: FiniteSet(),
+                              i: FiniteSet()}
 
     # Test the transposed version.
     grid = DiagramGrid(d, layout="sequential", transpose=True)
@@ -315,8 +315,8 @@ def test_DiagramGrid():
     assert grid[2, 0] == C
     assert grid[3, 0] == D
     assert grid[4, 0] == E
-    assert grid.morphisms == {f:FiniteSet(), g:FiniteSet(), h:FiniteSet(),
-                              i:FiniteSet()}
+    assert grid.morphisms == {f: FiniteSet(), g: FiniteSet(), h: FiniteSet(),
+                              i: FiniteSet()}
 
     # A pullback.
     m1 = NamedMorphism(A, B, "m1")
@@ -339,7 +339,7 @@ def test_DiagramGrid():
     assert grid[1, 1] == D
     assert grid[1, 2] is None
 
-    morphisms = {g:FiniteSet("unique")}
+    morphisms = {g: FiniteSet("unique")}
     for m in [m1, m2, s1, s2, f1, f2]:
         morphisms[m] = FiniteSet()
     assert grid.morphisms == morphisms
