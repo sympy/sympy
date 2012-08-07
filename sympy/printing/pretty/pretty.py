@@ -161,31 +161,31 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u2227")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Or(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u2228")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Xor(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u22bb")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Nand(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u22bc")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Nor(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u22bd")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Implies(self, e):
         if self._use_unicode:
@@ -197,7 +197,7 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u2261")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_conjugate(self, e):
         pform = self._print(e.args[0])
@@ -527,7 +527,10 @@ class PrettyPrinter(Printer):
 
         return Lim
 
-    def _print_MatrixBase(self, e):
+    def _print_matrix_contents(self, e):
+        """
+        This method factors out what is essentially grid printing.
+        """
         M = e   # matrix
         Ms = {}  # i,j -> pretty(M[i,j])
         for i in range(M.rows):
@@ -592,6 +595,10 @@ class PrettyPrinter(Printer):
         if D is None:
             D = prettyForm('') # Empty Matrix
 
+        return D
+
+    def _print_MatrixBase(self, e):
+        D = self._print_matrix_contents(e)
         D = prettyForm(*D.parens('[',']'))
         return D
     _print_ImmutableMatrix = _print_MatrixBase
@@ -850,10 +857,12 @@ class PrettyPrinter(Printer):
         base = prettyForm(pretty_atom('Exp1', 'e'))
         return base ** self._print(e.args[0])
 
-    def _print_Function(self, e):
+    def _print_Function(self, e, sort=False):
         # XXX works only for applied functions
         func = e.func
         args = e.args
+        if sort:
+            args = sorted(args, key=default_sort_key)
         n = len(args)
 
         func_name = func.__name__
@@ -1455,9 +1464,7 @@ class PrettyPrinter(Printer):
         return self._print(pretty_symbol(object.name))
 
     def _print_Morphism(self, morphism):
-        arrow = "-->"
-        if self._use_unicode:
-            arrow = u"\u27f6  "
+        arrow = xsym("-->")
 
         domain = self._print(morphism.domain)
         codomain = self._print(morphism.codomain)
@@ -1478,9 +1485,7 @@ class PrettyPrinter(Printer):
     def _print_CompositeMorphism(self, morphism):
         from sympy.categories import NamedMorphism
 
-        circle = "*"
-        if self._use_unicode:
-            circle = u"\u2218"
+        circle = xsym(".")
 
         # All components of the morphism have names and it is thus
         # possible to build the name of the composite.
@@ -1503,14 +1508,20 @@ class PrettyPrinter(Printer):
 
         pretty_result = self._print(diagram.premises)
         if diagram.conclusions:
-            results_arrow = " ==> "
-            if self._use_unicode:
-                results_arrow = u" \u27f9  "
+            results_arrow = " %s " % xsym("==>")
 
             pretty_conclusions = self._print(diagram.conclusions)[0]
             pretty_result = pretty_result.right(results_arrow, pretty_conclusions)
 
         return prettyForm(pretty_result[0])
+
+    def _print_DiagramGrid(self, grid):
+        from sympy.matrices import Matrix
+        from sympy import Symbol
+        matrix = Matrix([[grid[i, j] if grid[i, j] else Symbol(" ")
+                          for j in xrange(grid.width)]
+                         for i in xrange(grid.height)])
+        return self._print_matrix_contents(matrix)
 
     def _print_FreeModuleElement(self, m):
         # Print as row vector for convenience, for now.
@@ -1543,6 +1554,14 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*matrix.right(' : ', self._print(h.domain),
             ' %s> ' % hobj('-', 2), self._print(h.codomain)))
         return pform
+
+    def _print_Tr(self, p):
+        #TODO: Handle indices
+        pform = self._print(p.args[0])
+        pform = prettyForm(*pform.left('%s(' % (p.__class__.__name__)))
+        pform = prettyForm(*pform.right(')'))
+        return pform
+
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

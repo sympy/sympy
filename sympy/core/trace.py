@@ -1,4 +1,4 @@
-from sympy import Expr, Add, Mul, Matrix, Pow, sympify, Matrix
+from sympy import Expr, Add, Mul, Matrix, Pow, sympify, Matrix, Tuple
 
 def _is_scalar(e):
     """ Helper method used in Tr"""
@@ -15,7 +15,17 @@ def _is_scalar(e):
     return False
 
 def _cycle_permute(l):
-    """ Cyclic permutations based on canonical ordering"""
+    """ Cyclic permutations based on canonical ordering
+
+    This method does the sort based ascii values while
+    a better approach would be to used lexicographic sort.
+    TODO: Handle condition such as symbols have subscripts/superscripts
+    in case of lexicographic sort
+
+    """
+
+    if len(l) == 1:
+        return l
 
     min_item = min(l)
     indices = [i for i, x in enumerate(l) if x ==  min_item]
@@ -39,6 +49,19 @@ def _cycle_permute(l):
 
     return ordered_l
 
+
+def _rearrange_args(l):
+    """ this just moves the last arg to first position
+     to enable expansion of args
+     A,B,A ==> A**2,B
+    """
+    if len(l) == 1:
+        return l
+
+    x = list(l[-1:])
+    x.extend(l[0:-1])
+    return Mul(*x).args
+
 class Tr(Expr):
     """ Generic Trace operation than can trace over:
 
@@ -49,7 +72,7 @@ class Tr(Expr):
     Parameters
     ==========
     o : operator, matrix, expr
-    i : indices (optional)
+    i : tuple/list indices (optional)
 
     Examples
     ========
@@ -63,23 +86,42 @@ class Tr(Expr):
     >>> from sympy import symbols, Matrix
     >>> a, b = symbols('a b', commutative=True)
     >>> A, B = symbols('A B', commutative=False)
-    >>> Tr(a*A,2)
-    a*Tr(A, 2)
+    >>> Tr(a*A,[2])
+    a*Tr(A)
     >>> m = Matrix([[1,2],[1,1]])
     >>> Tr(m)
     2
 
     """
-
     def __new__(cls, *args):
         """ Construct a Trace object.
 
+        Parameters
+        ==========
+        args = sympy expression
+        indices = tuple/list if indices, optional
+
         """
-        expr = args[0]
-        indices = args[1] if len(args) == 2 else -1 #-1 indicates full trace
+
+        # expect no indices,int or a tuple/list/Tuple
+        if (len(args) == 2):
+            if not isinstance(args[1], (list, Tuple, tuple)):
+                indices = Tuple(args[1])
+            else:
+                indices = Tuple(*args[1])
+
+            expr = args[0]
+        elif (len(args) == 1):
+            indices = Tuple()
+            expr = args[0]
+        else:
+            raise ValueError("Arguments to Tr should be of form"
+                             "(expr[, [indices]])")
+
+
         if isinstance(expr, Matrix):
             return expr.trace()
-        elif hasattr(expr, 'trace') and callable(t.x):
+        elif hasattr(expr, 'trace') and callable(expr.trace):
             #for any objects that have trace() defined e.g numpy
             return expr.trace()
         elif isinstance(expr, Add):
@@ -89,10 +131,10 @@ class Tr(Expr):
             if len(nc_part) == 0:
                 return Mul(*c_part)
             else:
-                # cyclic permute nc_part for canonical ordering
-                nc_part_ordered = _cycle_permute(nc_part)
-                return Mul(*c_part) * Expr.__new__(cls, Mul(*nc_part_ordered),
-                                                   indices)
+                obj = Expr.__new__(cls, Mul(*nc_part), indices )
+                #this check is needed to prevent cached instances
+                #being returned even if len(c_part)==0
+                return Mul(*c_part)*obj if len(c_part)>0 else obj
         elif isinstance(expr, Pow):
             if (_is_scalar(expr.args[0]) and
                 _is_scalar(expr.args[1])):
@@ -102,6 +144,7 @@ class Tr(Expr):
         else:
             if (_is_scalar(expr)):
                 return expr
+
             return Expr.__new__(cls, expr, indices)
 
     def doit(self,**kwargs):
@@ -118,7 +161,7 @@ class Tr(Expr):
 
         """
         if hasattr(self.args[0], '_eval_trace'):
-            return self.args[0]._eval_trace()
+            return self.args[0]._eval_trace(indices=self.args[1])
 
         return self
 
@@ -126,5 +169,44 @@ class Tr(Expr):
     def is_number(self):
         #TODO : This function to be reviewed
         # and implementation improved.
-
         return True
+
+
+    #TODO: Review if the permute method is needed
+    # and if it needs to return a new instance
+    def permute(self, pos):
+        """ Permute the arguments cyclically.
+
+        Parameters
+        ==========
+        pos : integer, if positive, shift-right, else shift-left
+
+        Examples
+        =========
+
+        >>> from sympy.core.trace import Tr
+        >>> from sympy import symbols
+        >>> A, B, C, D = symbols('A B C D', commutative=False)
+        >>> t = Tr(A*B*C*D)
+        >>> t.permute(2)
+        Tr(C*D*A*B)
+        >>> t.permute(-2)
+        Tr(C*D*A*B)
+
+        """
+        if pos > 0:
+            pos = pos % len(self.args[0].args)
+        else:
+            pos = -(abs(pos) % len(self.args[0].args))
+
+        args = list(self.args[0].args[-pos:] + self.args[0].args[0:-pos])
+
+        return Tr(Mul(*(args)))
+
+    def _hashable_content(self):
+        if isinstance(self.args[0], Mul):
+            args = _cycle_permute(_rearrange_args(self.args[0].args))
+        else:
+            args = [self.args[0]]
+
+        return tuple(args)  + (self.args[1], )

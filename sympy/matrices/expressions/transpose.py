@@ -20,11 +20,10 @@ class Transpose(MatrixExpr):
     """
     is_Transpose = True
     def __new__(cls, mat):
-
-        if hasattr(mat, 'transpose'):
+        try:
             return mat.transpose()
-
-        return Basic.__new__(cls, mat)
+        except (AttributeError, NotImplementedError):
+            return Basic.__new__(cls, mat)
 
     @property
     def arg(self):
@@ -37,5 +36,5 @@ class Transpose(MatrixExpr):
     def _entry(self, i, j):
         return self.arg._entry(j, i)
 
-from matmul import MatMul
-from matadd import MatAdd
+    def _eval_transpose(self):
+        return self.arg

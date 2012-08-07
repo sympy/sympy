@@ -5,7 +5,7 @@ from sympy import SYMPY_DEBUG
 from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
-    expand_multinomial)
+    expand_multinomial, expand_power_base)
 
 from sympy.core.compatibility import iterable, reduce
 from sympy.core.numbers import igcd, Float
@@ -128,62 +128,12 @@ expand_denom = denom_expand
 expand_fraction = fraction_expand
 
 def separate(expr, deep=False, force=False):
-    """A wrapper to expand(power_base=True) which separates a power
-       with a base that is a Mul into a product of powers, without performing
-       any other expansions, provided that assumptions about the power's base
-       and exponent allow.
-
-       deep=True (default is False) will do separations inside functions.
-
-       force=True (default is False) will cause the expansion to ignore
-       assumptions about the base and exponent. When False, the expansion will
-       only happen if the base is non-negative or the exponent is an integer.
-
-       >>> from sympy.abc import x, y, z
-       >>> from sympy import separate, sin, cos, exp
-
-       >>> (x*y)**2
-       x**2*y**2
-
-       >>> (2*x)**y
-       (2*x)**y
-       >>> separate(_)
-       2**y*x**y
-
-       >>> separate((x*y)**z)
-       (x*y)**z
-       >>> separate((x*y)**z, force=True)
-       x**z*y**z
-       >>> separate(sin((x*y)**z))
-       sin((x*y)**z)
-       >>> separate(sin((x*y)**z), deep=True, force=True)
-       sin(x**z*y**z)
-
-       >>> separate((2*sin(x))**y + (2*cos(x))**y)
-       2**y*sin(x)**y + 2**y*cos(x)**y
-
-       >>> separate((2*exp(y))**x)
-       2**x*exp(y)**x
-
-       >>> separate((2*cos(x))**y)
-       2**y*cos(x)**y
-
-       Notice that summations are left untouched. If this is not the
-       desired behavior, apply 'expand' to the expression:
-
-       >>> separate(((x+y)*z)**2)
-       z**2*(x + y)**2
-       >>> (((x+y)*z)**2).expand()
-       x**2*z**2 + 2*x*y*z**2 + y**2*z**2
-
-       >>> separate((2*y)**(1+z))
-       2**(z + 1)*y**(z + 1)
-       >>> ((2*y)**(1+z)).expand()
-       2*2**z*y*y**z
-
     """
-    return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
-    power_base=True, basic=False, multinomial=False, log=False, force=force)
+    Deprecated wrapper around ``expand_power_base()``.  Use that function instead.
+    """
+    from sympy.utilities.exceptions import SymPyDeprecationWarning
+    SymPyDeprecationWarning(feature="separate()", useinstead="expand_power_base()").warn()
+    return expand_power_base(sympify(expr), deep=deep, force=force)
 
 def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_term=True):
     """
@@ -197,9 +147,10 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
 
     The input expression is not expanded by :func:`collect`, so user is
     expected to provide an expression is an appropriate form. This makes
-    :func:`collect` more predictable as there is no magic happening behind
-    the scenes. However, it is important to note, that powers of products
-    are converted to products of powers using :func:`separate` function.
+    :func:`collect` more predictable as there is no magic happening behind the
+    scenes. However, it is important to note, that powers of products are
+    converted to products of powers using the :func:`expand_power_base`
+    function.
 
     There are two possible types of output. First, if ``evaluate`` flag is
     set, this function will return an expression with collected terms or
@@ -485,9 +436,9 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
             return Pow(b, expr.exp)
 
     if iterable(syms):
-        syms = map(separate, syms)
+        syms = [expand_power_base(i, deep=False) for i in syms]
     else:
-        syms = [ separate(syms) ]
+        syms = [ expand_power_base(syms, deep=False) ]
 
     expr = sympify(expr)
     order_term = None
@@ -501,7 +452,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
             else:
                 expr = expr.removeO()
 
-    summa = map(separate, Add.make_args(expr))
+    summa = [expand_power_base(i, deep=False) for i in Add.make_args(expr)]
 
     collected, disliked = defaultdict(list), S.Zero
     for product in summa:
@@ -530,8 +481,8 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
                         index *= Pow(elem[0], e)
                 else:
                     index = make_expression(elems)
-                terms = separate(make_expression(terms))
-                index = separate(index)
+                terms = expand_power_base(make_expression(terms), deep=False)
+                index = expand_power_base(index, deep=False)
                 collected[index].append(terms)
                 break
         else:
@@ -1242,10 +1193,12 @@ def split_surds(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.simplify import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
-    (5, 1/7 + sqrt(2) + sqrt(3), sqrt(6) + 3*sqrt(3))
+    (3, sqrt(2) + sqrt(5) + 3, sqrt(5)/7 + sqrt(10))
     """
-    coeff_muls =  [x.as_coeff_Mul() for x in expr.args]
+    args = sorted(expr.args, key=default_sort_key)
+    coeff_muls =  [x.as_coeff_Mul() for x in args]
     surds = [x[1]**2 for x in coeff_muls if x[1].is_Pow]
+    surds.sort(key=default_sort_key)
     g, b1, b2 = _split_gcd(*surds)
     g2 = g
     if not b2 and len(b1) >= 2:
@@ -1494,7 +1447,7 @@ def posify(eq):
     return eq, dict([(r, s) for s, r in reps.iteritems()])
 
 def _polarify(eq, lift, pause=False):
-    from sympy import polar_lift
+    from sympy import polar_lift, Integral
     if eq.is_polar:
         return eq
     if eq.is_number and not pause:
@@ -1510,6 +1463,15 @@ def _polarify(eq, lift, pause=False):
         return r
     elif eq.is_Function:
         return eq.func(*[_polarify(arg, lift, pause=False) for arg in eq.args])
+    elif isinstance(eq, Integral):
+        # Don't lift the integration variable
+        func = _polarify(eq.function, lift, pause=pause)
+        limits = []
+        for limit in eq.args[1:]:
+            var = _polarify(limit[0], lift=False, pause=pause)
+            rest = _polarify(limit[1:], lift=lift, pause=pause)
+            limits.append((var,) + rest)
+        return Integral(*((func,) + tuple(limits)))
     else:
         return eq.func(*[_polarify(arg, lift, pause=pause) for arg in eq.args])
 
@@ -1741,13 +1703,13 @@ def powdenest(eq, force=False, polar=False):
     r"""
     Collect exponents on powers as assumptions allow.
 
-    Given (bb**be)**e, this can be simplified as follows:
-        o if bb is positive, or
-        o e is an integer, or
-        o |be| < 1 then this simplifies to bb**(be*e)
+    Given ``(bb**be)**e``, this can be simplified as follows:
+        * if ``bb`` is positive, or
+        * ``e`` is an integer, or
+        * ``|be| < 1`` then this simplifies to ``bb**(be*e)``
 
-    Given a product of powers raised to a power, (bb1**be1 * bb2**be2...)**e,
-    simplification can be done as follows:
+    Given a product of powers raised to a power, ``(bb1**be1 *
+    bb2**be2...)**e``, simplification can be done as follows:
 
     - if e is positive, the gcd of all bei can be joined with e;
     - all non-negative bb can be separated from those that are negative
@@ -1761,11 +1723,11 @@ def powdenest(eq, force=False, polar=False):
     negative behave as though they are positive, resulting in more
     denesting.
 
-    Setting `polar` to True will do simplifications on the riemann surface of
+    Setting ``polar`` to True will do simplifications on the riemann surface of
     the logarithm, also resulting in more denestings.
 
     When there are sums of logs in exp() then a product of powers may be
-    obtained e.g. exp(3*(log(a) + 2*log(b))) - > a**3*b**6.
+    obtained e.g. ``exp(3*(log(a) + 2*log(b)))`` - > ``a**3*b**6``.
 
     Examples
     ========
@@ -2744,7 +2706,11 @@ def signsimp(expr, evaluate=True):
     if not isinstance(expr, Expr) or expr.is_Atom:
         return expr
     e = sub_post(sub_pre(expr))
-    if evaluate and isinstance(e, Expr):
+    if not isinstance(e, Expr) or e.is_Atom:
+        return e
+    if e.is_Add:
+        return Add(*[signsimp(a) for a in e.args])
+    if evaluate:
         e = e.xreplace(dict([(m, -(-m)) for m in e.atoms(Mul) if -(-m) != m]))
     return e
 
@@ -3148,7 +3114,7 @@ def logcombine(expr, force=False):
     """
     # Try to make (a+bi)*log(x) == a*log(x)+bi*log(x).  This needs to be a
     # separate function call to avoid infinite recursion.
-    expr = expand_mul(expr, deep=False)
+    expr = expand_mul(expr)
     return _logcombine(expr, force)
 
 def _logcombine(expr, force=False):

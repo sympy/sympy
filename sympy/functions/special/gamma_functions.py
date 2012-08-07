@@ -66,17 +66,14 @@ class gamma(Function):
                         return 2**n*sqrt(S.Pi) / coeff
 
 
-    def _eval_expand_func(self, deep=True, **hints):
-        if deep:
-            arg = self.args[0].expand(deep, **hints)
-        else:
-            arg = self.args[0]
+    def _eval_expand_func(self, **hints):
+        arg = self.args[0]
         if arg.is_Rational:
             if abs(arg.p) > arg.q:
                 x = Dummy('x')
                 n = arg.p // arg.q
                 p = arg.p - n*arg.q
-                return  gamma(x + n).expand(func=True).subs(x, Rational(p, arg.q))
+                return gamma(x + n)._eval_expand_func().subs(x, Rational(p, arg.q))
 
         if arg.is_Add:
             coeff, tail = arg.as_coeff_add()
@@ -484,13 +481,8 @@ class polygamma(Function):
         # TODO n == 1 also can do some rational z
 
 
-    def _eval_expand_func(self, deep=True, **hints):
-        if deep:
-            hints['func'] = False
-            n = self.args[0].expand(deep, **hints)
-            z = self.args[1].expand(deep, **hints)
-        else:
-            n, z = self.args[0], self.args[1].expand(deep, func=True)
+    def _eval_expand_func(self, **hints):
+        n, z = self.args
 
         if n.is_Integer and n.is_nonnegative:
             if z.is_Add:

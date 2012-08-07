@@ -77,7 +77,7 @@ def test_nested_substitution():
 def test_subtraction_opt():
     # Make sure subtraction is optimized.
     e = (x-y)*(z-y) + exp((x-y)*(z-y))
-    substs, reduced = cse([e], optimizations=[(cse_opts.sub_pre,cse_opts.sub_post)])
+    substs, reduced = cse([e], optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)])
     assert substs == [(x0, x - y), (x1, y - z), (x2, x0*x1)]
     assert reduced == [-x2 + exp(-x2)]
     assert cse(-(x - y)*(z - y) + exp(-(x - y)*(z - y))) == \
@@ -160,8 +160,8 @@ def test_dont_cse_tuples():
             + Subs(g(x, y), (x, y), (0, x + y)))
 
     assert name_val == [(x0, x + y)]
-    assert expr == (Subs(f(x, y), (x, y), (0, x0))
-            + Subs(g(x, y), (x, y), (0, x0)))
+    assert expr == Subs(f(x, y), (x, y), (0, x0)) + \
+          Subs(g(x, y), (x, y), (0, x0))
 
 def test_pow_invpow():
     assert cse(1/x**2 + x**2) == \

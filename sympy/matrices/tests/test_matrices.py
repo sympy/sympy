@@ -628,19 +628,6 @@ def test_wronskian():
         method='berkowitz').expand() == w2
     assert wronskian([], x) == 1
 
-def canonicalize(v):
-    """
-    Takes the output of eigenvects() and makes it canonical, so that we can
-    compare it across platforms.
-
-    It converts Matrices to lists, and uses set() to list the outer list in a
-    platform independent way.
-    """
-    def c(x):
-        a, b, c = x
-        return (S(a), S(b), tuple(c[0]))
-    return tuple(set([c(x) for x in v]))
-
 def test_eigen():
     x,y = symbols('x y')
 
@@ -655,7 +642,7 @@ def test_eigen():
 
     assert M.eigenvals(multiple=False) == {S.One: 3}
 
-    assert canonicalize(M.eigenvects()) == canonicalize(
+    assert M.eigenvects() == (
         [(1, 3, [Matrix([1,0,0]),
                  Matrix([0,1,0]),
                  Matrix([0,0,1])])])
@@ -666,15 +653,16 @@ def test_eigen():
 
     assert M.eigenvals() == {2*S.One: 1, -S.One: 1, S.Zero: 1}
 
-    assert canonicalize(M.eigenvects()) == canonicalize(
-        [( 2, 1, [Matrix([R(2,3), R(1,3), 1])]),
+    assert M.eigenvects() == (
+        [
          (-1, 1, [Matrix([-1, 1, 0])]),
-         ( 0, 1, [Matrix([ 0,-1, 1])])])
+         ( 0, 1, [Matrix([0, -1, 1])]),
+         ( 2, 1, [Matrix([R(2, 3), R(1, 3), 1])])])
 
     M = Matrix([[1, -1],
                  [1,  3]])
-    assert canonicalize(M.eigenvects()) == canonicalize(
-        [[2, 2, [Matrix(1,2,[-1,1])]]])
+    assert M.eigenvects() == (
+        [(2, 2, [Matrix(2,1,[-1,1])])])
 
     M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     a=R(15,2)
@@ -703,9 +691,11 @@ def test_eigen():
     M = Matrix([[abs(eps), I*eps    ],
                [-I*eps,   abs(eps) ]])
 
-    assert canonicalize(M.eigenvects()) == canonicalize(
-        [( 2*abs(eps), 1, [ Matrix([[I*eps/abs(eps)],[1]]) ] ),
-         ( 0, 1, [Matrix([[-I*eps/abs(eps)],[1]])]) ])
+    assert M.eigenvects() == (
+        [
+        ( 0, 1, [Matrix([[-I*eps/abs(eps)],[1]])]),
+        ( 2*abs(eps), 1, [ Matrix([[I*eps/abs(eps)],[1]]) ] ),
+        ])
 
     M = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
     M._eigenvects = M.eigenvects(simplify=False)
@@ -714,13 +704,14 @@ def test_eigen():
     assert max(i.q for i in M._eigenvects[0][2][0]) == 1
     M = Matrix([[S(1)/4, 1], [1, 1]])
     assert M.eigenvects(simplify=True) == [
-        (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[8/(-sqrt(73) + 3)], [1]])]),
-        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))],   [1]])])]
+        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))],   [1]])]),
+        (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[8/(-sqrt(73) + 3)], [1]])])]
     assert M.eigenvects(simplify=False) == [
+    (Rational(5, 8) + sqrt(73)/8, 1,
+        [Matrix([[-1/(-sqrt(73)/8 + Rational(-3, 8))], [1]])]),
     (-sqrt(73)/8 + Rational(5, 8), 1,
         [Matrix([[-1/(Rational(-3, 8) + sqrt(73)/8)], [1]])]),
-    (Rational(5, 8) + sqrt(73)/8, 1,
-        [Matrix([[-1/(-sqrt(73)/8 + Rational(-3, 8))], [1]])])]
+    ]
 
     m = Matrix([[1, .6, .6], [.6, .9, .9], [.9, .6, .6]])
     evals = {-sqrt(385)/20 + S(5)/4: 1, sqrt(385)/20 + S(5)/4: 1, S.Zero: 1}
@@ -1578,7 +1569,7 @@ def test_diagonalization():
     assert m.is_diagonalizable()
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
-    assert P == eye(2)
+    assert P == Matrix([[0, 1], [1, 0]])
 
     # diagonalizable, complex only
     m = Matrix(2,2,[0, 1, -1, 0])
@@ -1620,7 +1611,7 @@ def test_jordan_form():
 
     # diagonalizable
     m = Matrix(3, 3, [7, -12, 6, 10, -19, 10, 12, -24, 13])
-    Jmust = Matrix(3, 3, [1, 0, 0, 0, 1, 0, 0, 0, -1])
+    Jmust = Matrix(3, 3, [-1, 0, 0, 0, 1, 0, 0, 0, 1])
     (P, J) = m.jordan_form()
     assert Jmust == J
     assert Jmust == m.diagonalize()[1]
@@ -1648,7 +1639,7 @@ def test_jordan_form():
 
     #complexity: two of eigenvalues are zero
     m = Matrix(3, 3, [4, -5, 2, 5, -7, 3, 6, -9, 4])
-    Jmust = Matrix(3, 3, [1, 0, 0, 0, 0, 1, 0, 0, 0])
+    Jmust = Matrix(3, 3, [0, 1, 0, 0, 0, 0, 0, 0, 1])
     (P, J) = m.jordan_form()
     assert Jmust == J
 
@@ -1658,7 +1649,7 @@ def test_jordan_form():
     assert Jmust == J
 
     m = Matrix(4, 4, [6, 2, -8, -6, -3, 2, 9, 6, 2, -2, -8, -6, -1, 0, 3, 4])
-    Jmust = Matrix(4, 4, [2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 0, -2])
+    Jmust = Matrix(4, 4, [-2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2])
     (P, J) = m.jordan_form()
     assert Jmust == J
 

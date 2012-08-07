@@ -1,13 +1,13 @@
-from sympy import Tuple, Add, Matrix, log, expand
+from sympy import Tuple, Add, Mul, Matrix, log, expand
 from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.operator import HermitianOperator, OuterProduct, Operator
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.state import KetBase
-from sympy.physics.quantum.qubit import Qubit
-from sympy.physics.quantum.qapply import qapply
 from matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
+from sympy.physics.quantum.tensorproduct import TensorProduct, tensor_product_simp
+from sympy.core.compatibility import product
 
 class Density(HermitianOperator):
     """Density operator for representing mixed states.
@@ -157,11 +157,39 @@ class Density(HermitianOperator):
         0.5*|0><0| + 0.5*|1><1|
 
         """
+
         terms = []
         for (state, prob) in self.args:
-            terms.append(prob*(state*Dagger(state)))
+            state = state.expand() # needed to break up (a+b)*c
+            if (isinstance(state, Add)):
+                for arg in product(state.args, repeat=2):
+                    terms.append(prob *
+                                 self._generate_outer_prod(arg[0], arg[1]))
+            else:
+                terms.append(prob *
+                             self._generate_outer_prod(state,state))
 
         return Add(*terms)
+
+    def _generate_outer_prod(self,arg1,arg2):
+        c_part1, nc_part1 = arg1.args_cnc()
+        c_part2, nc_part2 = arg2.args_cnc()
+
+        if ( len(nc_part1) == 0  or
+             len(nc_part2) == 0 ):
+            raise ValueError('Atleast one-pair of'
+                             ' Non-commutative instance required'
+                             ' for outer product.')
+
+        # Muls of Tensor Products should be expanded
+        # before this function is called
+        if (isinstance(nc_part1[0], TensorProduct) and
+            len(nc_part1) == 1 and len(nc_part2) == 1):
+            op = tensor_product_simp(nc_part1[0] * Dagger(nc_part2[0]))
+        else:
+            op = Mul(*nc_part1) * Dagger(Mul(*nc_part2))
+
+        return Mul(*c_part1)*Mul(*c_part2)*op
 
     def _represent(self, **options):
         return represent(self.doit(), **options)
@@ -173,7 +201,8 @@ class Density(HermitianOperator):
         return prettyForm(u"\u03C1")
 
     def _eval_trace(self, **kwargs):
-        return Tr(self.doit()).doit()
+        indices = kwargs.get('indices',[])
+        return Tr(self.doit(), indices).doit()
 
     def entropy(self):
         """ Compute the entropy of a density matrix.

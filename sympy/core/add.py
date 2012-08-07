@@ -25,6 +25,8 @@ class Add(AssocOp):
         Applies associativity, all terms are commutable with respect to
         addition.
 
+        NB: the removal of 0 is already handled by AssocOp.__new__
+
         See also
         ========
 
@@ -659,115 +661,14 @@ class Add(AssocOp):
                 return rv_fraction
             return rv
 
+    def _eval_adjoint(self):
+        return Add(*[t.adjoint() for t in self.args])
+
     def _eval_conjugate(self):
         return Add(*[t.conjugate() for t in self.args])
 
     def _eval_transpose(self):
         return Add(*[t.transpose() for t in self.args])
-
-    def _eval_adjoint(self):
-        return Add(*[t.adjoint() for t in self.args])
-
-    def _eval_expand_basic(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_basic'):
-                newterm = term._eval_expand_basic(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_power_exp(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_power_exp'):
-                newterm = term._eval_expand_power_exp(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_power_base(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_power_base'):
-                newterm = term._eval_expand_power_base(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_mul(self, deep=True, **hints):
-        hit = False
-        sargs, terms = self.args, []
-        for term in sargs:
-            if term.is_Mul:
-                old = term
-                hints['mul'] = True
-                targs = [t._eval_expand_mul(deep=deep, **hints) for t in term.args]
-                hints['mul'] = False
-                term = Mul(*targs)
-                newterm = term._eval_expand_mul(deep=deep, **hints)
-                hit = hit or newterm != old
-            else:
-                hints['mul'] = True
-                newterm = term._eval_expand_mul(deep=deep, **hints)
-            terms.append(newterm)
-        hints['mul'] = True
-        if not hit:
-            return self
-        return self.func(*terms)
-
-    def _eval_expand_multinomial(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_multinomial'):
-                newterm = term._eval_expand_multinomial(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_log(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_log'):
-                newterm = term._eval_expand_log(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_complex'):
-                newterm = term._eval_expand_complex(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_trig(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_trig'):
-                newterm = term._eval_expand_trig(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_func(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_func'):
-                newterm = term._eval_expand_func(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
 
     def __neg__(self):
         return Add(*[-t for t in self.args])

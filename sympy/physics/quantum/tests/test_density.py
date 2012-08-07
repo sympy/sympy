@@ -3,7 +3,7 @@ from sympy.matrices.matrices import Matrix
 from sympy.core.trace import Tr
 from sympy.external import import_module
 from sympy.physics.quantum.density import Density, entropy
-from sympy.physics.quantum.state import Ket, Bra
+from sympy.physics.quantum.state import Ket, Bra, TimeDepKet
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.gate import HadamardGate
@@ -11,9 +11,11 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.cartesian import XKet, PxKet, PxOp, XOp
 from sympy.physics.quantum.spin import JzKet, Jz
+from sympy.physics.quantum.operator import OuterProduct
 from sympy.functions import sqrt
 from sympy.utilities.pytest import raises
 from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
+from sympy.physics.quantum.tensorproduct import TensorProduct
 
 
 def test_eval_args():
@@ -31,7 +33,9 @@ def test_eval_args():
     raises(ValueError, lambda: Density([Ket(0)], [Ket(1)]))
 
 def test_doit():
+
     x,y = symbols('x y')
+    A, B, C, D, E, F= symbols('A B C D E F', commutative=False)
     d = Density([XKet(),0.5], [PxKet(),0.5])
     assert (0.5*(PxKet()*Dagger(PxKet())) +
             0.5*(XKet()*Dagger(XKet()))) == d.doit()
@@ -40,6 +44,65 @@ def test_doit():
     d_with_sym = Density([XKet(x*y),0.5], [PxKet(x*y),0.5])
     assert (0.5*(PxKet(x*y)*Dagger(PxKet(x*y))) +
             0.5*(XKet(x*y)*Dagger(XKet(x*y)))) == d_with_sym.doit()
+
+
+    d = Density([(A+B)*C, 1.0])
+    assert d.doit() == (1.0*A*C*Dagger(C)*Dagger(A) +
+                        1.0*A*C*Dagger(C)*Dagger(B) +
+                        1.0*B*C*Dagger(C)*Dagger(A) +
+                        1.0*B*C*Dagger(C)*Dagger(B))
+
+
+    #  With TensorProducts as args
+
+    # Density with simple tensor products as args
+    t = TensorProduct(A, B, C)
+    d = Density([t, 1.0])
+    assert d.doit() == 1.0 * TensorProduct(A*Dagger(A), B*Dagger(B),C*Dagger(C))
+
+    # Density with multiple Tensorproducts as states
+    t2 = TensorProduct(A,B)
+    t3 = TensorProduct(C,D)
+
+    d = Density([t2, 0.5], [t3, 0.5])
+    assert d.doit() == (0.5 * TensorProduct(A*Dagger(A), B*Dagger(B)) +
+                        0.5 * TensorProduct(C*Dagger(C), D*Dagger(D)))
+
+    #Density with mixed states
+    d = Density([t2+t3,1.0])
+    assert d.doit() == (1.0 * TensorProduct(A*Dagger(A), B*Dagger(B)) +
+                        1.0 * TensorProduct(A*Dagger(C), B*Dagger(D)) +
+                        1.0 * TensorProduct(C*Dagger(A), D*Dagger(B)) +
+                        1.0 * TensorProduct(C*Dagger(C), D*Dagger(D)))
+
+
+    #Density operators with spin states
+    tp1 = TensorProduct(JzKet(1,1), JzKet(1,-1))
+    d = Density([tp1, 1])
+
+    # full trace
+    t = Tr(d);
+    assert t.doit() == 1
+
+    #Partial trace on density operators with spin states
+    t = Tr(d, [0])
+    assert t.doit() == JzKet(1,-1) * Dagger(JzKet(1,-1))
+    t = Tr(d, [1])
+    assert t.doit() == JzKet(1,1) * Dagger(JzKet(1,1))
+
+    # with another spin state
+    tp2 = TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, -S(1)/2))
+    d = Density([tp2, 1])
+
+    #full trace
+    t = Tr(d);
+    assert t.doit() == 1
+
+    #Partial trace on density operators with spin states
+    t = Tr(d, [0])
+    assert t.doit() == JzKet(S(1)/2, -S(1)/2) * Dagger(JzKet(S(1)/2, -S(1)/2))
+    t = Tr(d, [1])
+    assert t.doit() == JzKet(S(1)/2, S(1)/2) * Dagger(JzKet(S(1)/2, S(1)/2))
 
 def test_apply_op():
     d = Density([Ket(0), 0.5], [Ket(1), 0.5])
@@ -101,7 +164,7 @@ def test_entropy():
     assert entropy(d) == 0.5*log(2)
     assert d.entropy() == 0.5*log(2)
 
-    np = import_module('numpy', min_python_version=(2, 6))
+    np = import_module('numpy', min_python_version=(2, 6), min_module_version='1.4.0')
     if np:
         #do this test only if 'numpy' is available on test machine
         np_mat = represent(d, format='numpy')
@@ -124,4 +187,17 @@ def test_eval_trace():
     t = Tr(d)
     assert t.doit() == 1
 
-    #TODO: partial trace
+    #test dummy time dependent states
+    class TestTimeDepKet(TimeDepKet):
+        def _eval_trace(self, bra, **options):
+            return 1
+
+    x, t = symbols('x t')
+    k1 = TestTimeDepKet(0, 0.5)
+    k2 = TestTimeDepKet(0, 1)
+    d = Density([k1, 0.5], [k2, 0.5])
+    assert d.doit() == (0.5 * OuterProduct(k1, k1.dual()) +
+                        0.5 * OuterProduct(k2, k2.dual()))
+
+    t = Tr(d)
+    assert t.doit() == 1

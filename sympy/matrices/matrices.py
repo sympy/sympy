@@ -11,7 +11,7 @@ from sympy.core.compatibility import is_sequence
 from sympy.polys import PurePoly, roots, cancel
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten
-from sympy.utilities.misc import filldedent
+from sympy.utilities.misc import filldedent, default_sort_key
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.printing import sstr
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -173,6 +173,9 @@ class MatrixBase(object):
             raise TypeError("Data type not understood")
 
         return rows, cols, mat
+
+    def _eval_transpose(self):
+        return self.transpose()
 
     def transpose(self):
         """
@@ -820,6 +823,8 @@ class MatrixBase(object):
             # if a new method is added.
             raise ValueError("Inversion method unrecognized")
 
+    def _eval_inverse(self):
+        return self.inv()
 
     def __mathml__(self):
         mml = ""
@@ -2904,9 +2909,11 @@ class MatrixBase(object):
             flags['rational'] = False # to tell eigenvals not to do this
 
         out, vlist = [], self.eigenvals(**flags)
+        vlist = vlist.items()
+        vlist.sort(key=default_sort_key)
         flags.pop('rational', None)
 
-        for r, k in vlist.iteritems():
+        for r, k in vlist:
             tmp = self - eye(self.rows)*r
             basis = tmp.nullspace()
             # whether tmp.is_symbolic() is True or False, it is possible that
@@ -2945,7 +2952,7 @@ class MatrixBase(object):
         >>> x = Symbol('x', real=True)
         >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
         >>> A.singular_values()
-        [1, sqrt(x**2 + 1), 0]
+        [sqrt(x**2 + 1), 1, 0]
 
         See Also
         ========
@@ -2960,10 +2967,8 @@ class MatrixBase(object):
         vals = []
         for k,v in valmultpairs.items():
             vals += [sqrt(k)]*v # dangerous! same k in several spots!
-
-        # If sorting makes sense then sort
-        if all(val.is_number for val in vals):
-            vals.sort(reverse=True) # sort them in descending order
+        # sort them in descending order
+        vals.sort(reverse=True, key=default_sort_key)
 
         return vals
 
@@ -3228,7 +3233,7 @@ class MatrixBase(object):
             self._diagonalize_clear_subproducts()
             raise MatrixError("Matrix is not diagonalizable")
         else:
-            if self._eigenvects == None:
+            if self._eigenvects is None:
                 self._eigenvects = self.eigenvects(simplify=True)
             diagvals = []
             P = MutableMatrix(self.rows, 0, [])
@@ -3401,8 +3406,6 @@ class MatrixBase(object):
             if geometrical == multiplicity:
                 Jcell = diag( *([eigenval] * multiplicity))
                 Jcells.append(Jcell)
-            elif geometrical==0:
-                raise MatrixError("Matrix has the eigen vector with geometrical multiplicity equal zero.")
             else:
                 sizes = self._jordan_split(multiplicity, geometrical)
                 cells = []
@@ -3874,14 +3877,15 @@ def classof(A,B):
 
     Currently the strategy is that Mutability is contagious
 
-    Example
+    Examples
+    ========
 
     >>> from sympy import Matrix, ImmutableMatrix
     >>> from sympy.matrices.matrices import classof
     >>> M = Matrix([[1,2],[3,4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1,2],[3,4]])
     >>> classof(M, IM)
-    <class 'sympy.matrices.matrices.Matrix'>
+    <class 'sympy.matrices.matrices.MutableMatrix'>
     """
     from immutable_matrix import ImmutableMatrix
     try:
@@ -4960,4 +4964,3 @@ def rot_axis1(theta):
     return MutableMatrix(mat)
 
 Matrix = MutableMatrix
-Matrix.__name__ = "Matrix"

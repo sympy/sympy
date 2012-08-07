@@ -321,11 +321,12 @@ class Basic(object):
         # XXX: remove this when issue #2070 is fixed
         def inner_key(arg):
             if isinstance(arg, Basic):
-                return arg.sort_key()
+                return arg.sort_key(order)
             else:
                 return arg
 
-        args = len(self.args), tuple([ inner_key(arg) for arg in self.args ])
+        args = self._sorted_args
+        args = len(args), tuple([ inner_key(arg) for arg in args ])
         return self.class_key(), args, S.One.sort_key(), S.One
 
     def __eq__(self, other):
@@ -632,9 +633,18 @@ class Basic(object):
         """
         return self._args
 
+    @property
+    def _sorted_args(self):
+        """
+        The same as ``args``.  Derived classes which don't fix an
+        order on their arguments should override this method to
+        produce the sorted representation.
+        """
+        return self.args
+
     def iter_basic_args(self):
         """
-        Iterates arguments of 'self'.
+        Iterates arguments of ``self``.
 
         Examples
         ========
@@ -1094,6 +1104,9 @@ class Basic(object):
 
         Examples
         ========
+
+        Initial setup
+
             >>> from sympy import log, sin, cos, tan, Wild
             >>> from sympy.abc import x, y
             >>> f = log(sin(x)) + tan(sin(x**2))
@@ -1502,44 +1515,54 @@ class preorder_traversal(object):
     .args, which in many cases can be arbitrary.
 
     Parameters
-    ----------
+    ==========
     node : sympy expression
         The expression to traverse.
+    key : (default None) sort key
+        The key used to sort args of Basic objects. When None, args of Basic
+        objects are processed in arbitrary order.
 
     Yields
-    ------
+    ======
     subtree : sympy expression
         All of the subtrees in the tree.
 
     Examples
-    --------
+    ========
     >>> from sympy import symbols
+    >>> from sympy import symbols, default_sort_key
     >>> from sympy.core.basic import preorder_traversal
     >>> x, y, z = symbols('x y z')
-    >>> list(preorder_traversal(z*(x+y))) in ( # any of these are possible
-    ... [z*(x + y), z, x + y, x, y], [z*(x + y), z, x + y, y, x],
-    ... [z*(x + y), x + y, x, y, z], [z*(x + y), x + y, y, x, z])
-    True
-    >>> list(preorder_traversal((x, (y, z))))
-    [(x, (y, z)), x, (y, z), y, z]
+
+    The nodes are returned in the order that they are encountered unless key
+    is given.
+
+    >>> list(preorder_traversal((x + y)*z, key=None)) # doctest: +SKIP
+    [z*(x + y), z, x + y, y, x]
+    >>> list(preorder_traversal((x + y)*z, key=default_sort_key))
+    [z*(x + y), z, x + y, x, y]
 
     """
-    def __init__(self, node):
+    def __init__(self, node, key=None):
         self._skip_flag = False
-        self._pt = self._preorder_traversal(node)
+        self._pt = self._preorder_traversal(node, key)
 
-    def _preorder_traversal(self, node):
+    def _preorder_traversal(self, node, key):
         yield node
         if self._skip_flag:
             self._skip_flag = False
             return
         if isinstance(node, Basic):
-            for arg in node.args:
-                for subtree in self._preorder_traversal(arg):
+            args = node.args
+            if key:
+                args = list(args)
+                args.sort(key=key)
+            for arg in args:
+                for subtree in self._preorder_traversal(arg, key):
                     yield subtree
         elif iterable(node):
             for item in node:
-                for subtree in self._preorder_traversal(item):
+                for subtree in self._preorder_traversal(item, key):
                     yield subtree
 
     def skip(self):

@@ -21,14 +21,15 @@ ALLSPHINXOPTSapi = -d _build/doctreesapi -D latex_paper_size=$(PAPER) \
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
-	@echo "  html       to make standalone HTML files"
-	@echo "  web        to make files usable by Sphinx.web"
-	@echo "  htmlhelp   to make HTML files and a HTML help project"
-	@echo "  latex      to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
-	@echo "  changes    to make an overview over all changed/added/deprecated items"
-	@echo "  linkcheck  to check all external links for integrity"
-	@echo "  cheatsheet to make the Cheatsheet"
-	@echo "  htmli18n   to make the i18n versions"
+	@echo "  html        to make standalone HTML files"
+	@echo "  web         to make files usable by Sphinx.web"
+	@echo "  htmlhelp    to make HTML files and a HTML help project"
+	@echo "  latex       to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
+	@echo "  changes     to make an overview over all changed/added/deprecated items"
+	@echo "  linkcheck   to check all external links for integrity"
+	@echo "  cheatsheet  to make the Cheatsheet"
+	@echo "  htmli18n    to make the i18n versions"
+	@echo "  html-errors to make the standalone HTML files, stopping on any errors or warnings"
 
 clean:
 	-rm -rf _build
@@ -51,11 +52,14 @@ html: $(SPHINXBUILDpy)
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
 
+html-errors: SPHINXOPTS += -W
+html-errors: html
+
 htmlapi: $(SPHINXBUILDpy)
 	mkdir -p api/.static
 	mkdir -p api/modules
 	mkdir -p _build/api _build/doctreesapi
-	rm -f api/modules/sympy*.txt
+	rm -f api/modules/sympy*.rst
 	./generate_reference.py
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTSapi) _build/api
 	@echo
@@ -63,7 +67,7 @@ htmlapi: $(SPHINXBUILDpy)
 
 gettext:
 	mkdir -p _build/
-	$(SPHINXBUILD) -b gettext src _build/gettext src/tutorial.txt
+	$(SPHINXBUILD) -b gettext src _build/gettext src/tutorial.rst
 	cp _build/gettext/tutorial.pot src/
 
 htmli18n:
@@ -75,9 +79,9 @@ htmli18n:
 	msgfmt src/tutorial.cs.po -o src/i18n/cs/LC_MESSAGES/tutorial.mo
 	msgfmt src/tutorial.ru.po -o src/i18n/ru/LC_MESSAGES/tutorial.mo
 	msgfmt src/tutorial.bg.po -o src/i18n/bg/LC_MESSAGES/tutorial.mo
-	$(SPHINXBUILD) -b html -D language=cs $(ALLSPHINXOPTS) _build/i18n/cs src/tutorial.txt
-	$(SPHINXBUILD) -b html -D language=ru $(ALLSPHINXOPTS) _build/i18n/ru src/tutorial.txt
-	$(SPHINXBUILD) -b html -D language=bg $(ALLSPHINXOPTS) _build/i18n/bg src/tutorial.txt
+	$(SPHINXBUILD) -b html -D language=cs $(ALLSPHINXOPTS) _build/i18n/cs src/tutorial.rst
+	$(SPHINXBUILD) -b html -D language=ru $(ALLSPHINXOPTS) _build/i18n/ru src/tutorial.rst
+	$(SPHINXBUILD) -b html -D language=bg $(ALLSPHINXOPTS) _build/i18n/bg src/tutorial.rst
 	cp _build/i18n/cs/tutorial.html _build/html/tutorial.cs.html
 	cp _build/i18n/ru/tutorial.html _build/html/tutorial.ru.html
 	cp _build/i18n/bg/tutorial.html _build/html/tutorial.bg.html

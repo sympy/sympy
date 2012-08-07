@@ -377,6 +377,14 @@ class LatexPrinter(Printer):
         else:
             return r"%s %s" % (tex, self._print(expr.expr))
 
+    def _print_Subs(self, subs):
+        expr, old, new = subs.args
+        latex_expr = self._print(expr)
+        latex_old = (self._print(e) for e in old)
+        latex_new = (self._print(e) for e in new)
+        latex_subs = r'\\ '.join(e[0] + '=' + e[1] for e in zip(latex_old, latex_new))
+        return r'\left. %s \right|_{\substack{ %s }}' % (latex_expr, latex_subs)
+
     def _print_Integral(self, expr):
         tex, symbols = "", []
 
@@ -499,11 +507,13 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Min(self, expr, exp=None):
-        texargs = [r"%s" % self._print(symbol) for symbol in expr.args]
+        args = sorted(expr.args, key=default_sort_key)
+        texargs = [r"%s" % self._print(symbol) for symbol in args]
         return r"\min\left(%s\right)" % ", ".join(texargs)
 
     def _print_Max(self, expr, exp=None):
-        texargs = [r"%s" % self._print(symbol) for symbol in expr.args]
+        args = sorted(expr.args, key=default_sort_key)
+        texargs = [r"%s" % self._print(symbol) for symbol in args]
         return r"\max\left(%s\right)" % ", ".join(texargs)
 
     def _print_floor(self, expr, exp=None):
@@ -1228,6 +1238,24 @@ class LatexPrinter(Printer):
 
         return latex_result
 
+    def _print_DiagramGrid(self, grid):
+        latex_result = "\\begin{array}{%s}\n" % ("c" * grid.width)
+
+        for i in xrange(grid.height):
+            for j in xrange(grid.width):
+                if grid[i, j]:
+                    latex_result += latex(grid[i, j])
+                latex_result += " "
+                if j != grid.width - 1:
+                    latex_result += "& "
+
+            if i != grid.height - 1:
+                latex_result += "\\\\"
+            latex_result += "\n"
+
+        latex_result += "\\end{array}\n"
+        return latex_result
+
     def _print_FreeModule(self, M):
         return '{%s}^{%s}' % (self._print(M.ring), self._print(M.rank))
 
@@ -1263,6 +1291,11 @@ class LatexPrinter(Printer):
     def _print_MatrixHomomorphism(self, h):
         return r"{%s} : {%s} \to {%s}" % (self._print(h._sympy_matrix()),
             self._print(h.domain), self._print(h.codomain))
+
+    def _print_Tr(self, p):
+        #Todo: Handle indices
+        contents = self._print(p.args[0])
+        return r'\mbox{Tr}\left(%s\right)' % (contents)
 
 
 def latex(expr, **settings):

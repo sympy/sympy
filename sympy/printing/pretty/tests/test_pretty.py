@@ -15,6 +15,7 @@ from sympy.printing.pretty import pprint
 from sympy.physics.units import joule
 
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.core.trace import Tr
 
 a, b, x, y, z, k = symbols('a,b,x,y,z,k')
 th = Symbol('theta')
@@ -2628,7 +2629,7 @@ def test_pretty_Boolean():
 
     expr = Equivalent(y, x, evaluate=False)
 
-    assert  pretty(expr) == "Equivalent(y, x)"
+    assert  pretty(expr) == "Equivalent(x, y)"
     assert upretty(expr) == u"x ≡ y"
 
 def test_pretty_Domain():
@@ -3699,7 +3700,7 @@ def test_complicated_symbol_unchanged():
 def test_categories():
     from sympy.categories import (Object, Morphism, IdentityMorphism,
                                   NamedMorphism, CompositeMorphism,
-                                  Category, Diagram)
+                                  Category, Diagram, DiagramGrid)
 
     A1 = Object("A1")
     A2 = Object("A2")
@@ -3715,12 +3716,12 @@ def test_categories():
     assert upretty(A1) == u"A₁"
 
     assert pretty(f1) == "f1:A1-->A2"
-    assert upretty(f1) == u"f₁:A₁⟶  A₂"
+    assert upretty(f1) == u"f₁:A₁——▶A₂"
     assert pretty(id_A1) == "id:A1-->A1"
-    assert upretty(id_A1) == u"id:A₁⟶  A₁"
+    assert upretty(id_A1) == u"id:A₁——▶A₁"
 
     assert pretty(f2*f1) == "f2*f1:A1-->A3"
-    assert upretty(f2*f1) == u"f₂∘f₁:A₁⟶  A₃"
+    assert upretty(f2*f1) == u"f₂∘f₁:A₁——▶A₃"
 
     assert pretty(K1) == "K1"
     assert upretty(K1) == u"K₁"
@@ -3735,17 +3736,21 @@ def test_categories():
            "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
            "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}"
 
-    assert upretty(d) == u"{f₂∘f₁:A₁⟶  A₃: ∅, id:A₁⟶  A₁: ∅, " \
-           u"id:A₂⟶  A₂: ∅, id:A₃⟶  A₃: ∅, f₁:A₁⟶  A₂: {unique}, f₂:A₂⟶  A₃: ∅}"
+    assert upretty(d) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, " \
+           u"id:A₂——▶A₂: ∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}"
 
     d = Diagram({f1:"unique", f2:S.EmptySet}, {f2 * f1: "unique"})
     assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
            "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
            "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}" \
            " ==> {f2*f1:A1-->A3: {unique}}"
-    assert upretty(d) == u"{f₂∘f₁:A₁⟶  A₃: ∅, id:A₁⟶  A₁: ∅, id:A₂⟶  A₂: " \
-           u"∅, id:A₃⟶  A₃: ∅, f₁:A₁⟶  A₂: {unique}, f₂:A₂⟶  A₃: ∅}" \
-           u" ⟹  {f₂∘f₁:A₁⟶  A₃: {unique}}"
+    assert upretty(d) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, id:A₂——▶A₂: " \
+           u"∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}" \
+           u" ══▶ {f₂∘f₁:A₁——▶A₃: {unique}}"
+
+    grid = DiagramGrid(d)
+    assert pretty(grid) == "A1  A2\n      \nA3    "
+    assert upretty(grid) == u"A\u2081  A\u2082\n      \nA\u2083    "
 
 def test_PrettyModules():
     R = QQ[x, y]
@@ -3935,3 +3940,9 @@ u"""\
 
     assert upretty(expr) == ucode_str
     assert  pretty(expr) == ascii_str
+
+def test_Tr():
+    A, B = symbols('A B', commutative=False)
+    t = Tr(A*B)
+    assert pretty(t) == r'Tr(A*B)'
+    assert upretty(t) == u'Tr(A\u22c5B)'

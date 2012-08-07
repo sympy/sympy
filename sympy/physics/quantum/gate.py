@@ -515,11 +515,6 @@ class UGate(Gate):
     #-------------------------------------------------------------------------
     # Print methods
     #-------------------------------------------------------------------------
-
-    def _print_label(self, printer, *args):
-        targets = self._print_targets(printer, *args)
-        return '%s(%s)' % (self.gate_name, targets)
-
     def _pretty(self, printer, *args):
         targets = self._print_sequence_pretty(self.targets, ',', printer, *args)
         gate_name = stringPict(unicode(self.gate_name))

@@ -149,7 +149,7 @@ Like with anything else in SymPy, you will need to add a doctest to the
 docstring, in addition to real tests in test_ode.py.  Try to maintain
 consistency with the other hint functions' docstrings.  Add your method
 to the list at the top of this docstring.  Also, add your method to
-ode.txt in the docs/src directory, so that the Sphinx docs will pull its
+ode.rst in the docs/src directory, so that the Sphinx docs will pull its
 docstring into the main SymPy documentation.  Be sure to make the Sphinx
 documentation by running "make html" from within the doc directory to
 verify that the docstring formats correctly.
@@ -943,19 +943,17 @@ def odesimp(eq, func, order, hint):
     ... simplify=False)
     >>> pprint(eq)
                   x
-                 ----
-                 f(x)
-                   /
-                  |
-                  |   /      /1 \    \
-                  |  -|u2*sin|--| + 1|
-       /f(x)\     |   \      \u2/    /
-    log|----| -   |  ----------------- d(u2) = 0
-       \ C1 /     |       2    /1 \
-                  |     u2 *sin|--|
-                  |            \u2/
-                  |
-                 /
+                     ----
+                     f(x)
+                       /
+                      |
+           /f(x)\     |  /  1         1     \
+        log|----| -   |  |- -- - -----------| d(u2) = 0
+           \ C1 /     |  |  u2     2    /1 \|
+                      |  |       u2 *sin|--||
+                      |  \              \u2//
+                      |
+                     /
 
     >>> pprint(odesimp(eq, f(x), 1,
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
@@ -1969,13 +1967,13 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_subs_dep_div_indep', simplify=False))
-                 /          3   \
-                 |3*f(x)   f (x)|
-              log|------ + -----|
-                 |  x         3 |
-       /x \      \           x  /
-    log|--| + ------------------- = 0
-       \C1/            3
+                                 /     2   \
+                                 |    f (x)|
+                     /f(x)\   log|3 + -----|
+                  log|----|      |       2 |
+           /x \      \ x  /      \      x  /
+        log|--| + --------- + -------------- = 0
+           \C1/       3             3
 
     References
     ==========

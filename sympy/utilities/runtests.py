@@ -170,8 +170,8 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
     3.1.5, and 3.2.3, and is enabled by default in all Python versions after
     and including 3.3.0.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.utilities.runtests import (
     ... run_in_subprocess_with_hash_randomization)
@@ -196,7 +196,7 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
 
     hash_seed = os.getenv("PYTHONHASHSEED")
     if not hash_seed:
-        os.environ["PYTHONHASHSEED"] = str(random.randrange(100000000))
+        os.environ["PYTHONHASHSEED"] = str(random.randrange(2**32))
     else:
         if not force:
             return False
@@ -477,12 +477,12 @@ def doctest(*paths, **kwargs):
 
     Run one file:
     >>> sympy.doctest("sympy/core/basic.py") # doctest: +SKIP
-    >>> sympy.doctest("polynomial.txt") # doctest: +SKIP
+    >>> sympy.doctest("polynomial.rst") # doctest: +SKIP
 
     Run all tests in sympy/functions/ and some particular file:
     >>> sympy.doctest("/functions", "basic.py") # doctest: +SKIP
 
-    Run any file having polynomial in its name, doc/src/modules/polynomial.txt,
+    Run any file having polynomial in its name, doc/src/modules/polynomial.rst,
     sympy/functions/special/polynomials.py, and sympy/polys/polynomial.py:
 
     >>> sympy.doctest("polynomial") # doctest: +SKIP
@@ -514,7 +514,7 @@ def _doctest(*paths, **kwargs):
     blacklist.extend([
                     "doc/src/modules/mpmath", # needs to be fixed upstream
                     "sympy/mpmath", # needs to be fixed upstream
-                    "doc/src/modules/plotting.txt", # generates live plots
+                    "doc/src/modules/plotting.rst", # generates live plots
                     # "sympy/plotting", # generates live plots
                     "sympy/plotting/pygletplot", # generates live plots
                     "sympy/utilities/compilef.py", # needs tcc
@@ -567,13 +567,13 @@ def _doctest(*paths, **kwargs):
 
     # N.B.
     # --------------------------------------------------------------------
-    # Here we test *.txt files at or below doc/src. Code from these must
+    # Here we test *.rst files at or below doc/src. Code from these must
     # be self supporting in terms of imports since there is no importing
     # of necessary modules by doctest.testfile. If you try to pass *.py
     # files through this they might fail because they will lack the needed
     # imports and smarter parsing that can be done with source code.
     #
-    test_files = t.get_test_files('doc/src', '*.txt', init_only=False)
+    test_files = t.get_test_files('doc/src', '*.rst', init_only=False)
     test_files.sort()
 
     not_blacklisted = [f for f in test_files
@@ -585,7 +585,7 @@ def _doctest(*paths, **kwargs):
         # Take only what was requested as long as it's not on the blacklist.
         # Paths were already made native in *py tests so don't repeat here.
         # There's no chance of having a *py file slip through since we
-        # only have *txt files in test_files.
+        # only have *rst files in test_files.
         matched =  []
         for f in not_blacklisted:
             basename = os.path.basename(f)
@@ -596,14 +596,14 @@ def _doctest(*paths, **kwargs):
 
     setup_pprint()
     first_report = True
-    for txt_file in matched:
-        if not os.path.isfile(txt_file):
+    for rst_file in matched:
+        if not os.path.isfile(rst_file):
             continue
         old_displayhook = sys.displayhook
         try:
-            # out = pdoctest.testfile(txt_file, module_relative=False, encoding='utf-8',
+            # out = pdoctest.testfile(rst_file, module_relative=False, encoding='utf-8',
             #    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
-            out = sympytestfile(txt_file, module_relative=False, encoding='utf-8',
+            out = sympytestfile(rst_file, module_relative=False, encoding='utf-8',
                 optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE \
                             | pdoctest.IGNORE_EXCEPTION_DETAIL)
         finally:
@@ -611,27 +611,27 @@ def _doctest(*paths, **kwargs):
             # doctest has changed that
             sys.displayhook = old_displayhook
 
-        txtfailed, tested = out
+        rstfailed, tested = out
         if tested:
-            failed = txtfailed or failed
+            failed = rstfailed or failed
             if first_report:
                 first_report = False
-                msg = 'txt doctests start'
+                msg = 'rst doctests start'
                 lhead = '='*((r.terminal_width - len(msg))//2 - 1)
                 rhead = '='*(r.terminal_width - 1 - len(msg) - len(lhead) - 1)
                 print ' '.join([lhead, msg, rhead])
                 print
             # use as the id, everything past the first 'sympy'
-            file_id = txt_file[txt_file.find('sympy') + len('sympy') + 1:]
+            file_id = rst_file[rst_file.find('sympy') + len('sympy') + 1:]
             print file_id, # get at least the name out so it is know who is being tested
             wid = r.terminal_width - len(file_id) - 1 #update width
             test_file = '[%s]' % (tested)
-            report = '[%s]' % (txtfailed or 'OK')
+            report = '[%s]' % (rstfailed or 'OK')
             print ''.join([test_file,' '*(wid-len(test_file)-len(report)), report])
 
     # the doctests for *py will have printed this message already if there was
     # a failure, so now only print it if there was intervening reporting by
-    # testing the *txt as evidenced by first_report no longer being True.
+    # testing the *rst as evidenced by first_report no longer being True.
     if not first_report and failed:
         print
         print("DO *NOT* COMMIT!")
@@ -1444,8 +1444,10 @@ class PyTestReporter(Reporter):
             # the terminal control sequences would be printed verbatim, so
             # don't use any colors.
             color = ""
-        if sys.platform == "win32":
+        elif sys.platform == "win32":
             # Windows consoles don't support ANSI escape sequences
+            color = ""
+        elif not self._colors:
             color = ""
 
         if self._line_wrap:
@@ -1595,12 +1597,11 @@ class PyTestReporter(Reporter):
         self.write("[%d] " % n)
 
     def leaving_filename(self):
-        if self._colors:
-            self.write(" ")
-            if self._active_file_error:
-                self.write("[FAIL]", "Red", align="right")
-            else:
-                self.write("[OK]", "Green", align="right")
+        self.write(" ")
+        if self._active_file_error:
+            self.write("[FAIL]", "Red", align="right")
+        else:
+            self.write("[OK]", "Green", align="right")
         self.write("\n")
         if self._verbose:
             self.write("\n")
@@ -1666,9 +1667,8 @@ class PyTestReporter(Reporter):
         rel_name = filename[len(self._root_dir)+1:]
         self.write(rel_name)
         self.write("[?]   Failed to import", "Red")
-        if self._colors:
-            self.write(" ")
-            self.write("[FAIL]", "Red", align="right")
+        self.write(" ")
+        self.write("[FAIL]", "Red", align="right")
         self.write("\n")
 
 sympy_dir = get_sympy_dir()

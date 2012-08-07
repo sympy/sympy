@@ -34,6 +34,19 @@ class Set(Basic):
     is_EmptySet = None
     is_UniversalSet = None
 
+    def sort_key(self, order=None):
+        """
+        Give sort_key of infimum (if possible) else sort_key of the set.
+        """
+        try:
+            infimum = self.inf
+            if infimum.is_comparable:
+                return default_sort_key(infimum)
+        except (NotImplementedError, ValueError):
+            pass
+        args = tuple([default_sort_key(a) for a in self._sorted_args])
+        return self.class_key(), (len(args), args), S.One.class_key(), S.One
+
     def union(self, other):
         """
         Returns the union of 'self' and 'other'.
@@ -275,12 +288,9 @@ class ProductSet(Set):
         >>> Interval(0, 1) * Interval(0, 1) # The unit square
         [0, 1] x [0, 1]
 
-        >>> coin = FiniteSet('H','T')
-        >>> for pair in coin**2: print pair
-        (H, H)
-        (H, T)
-        (T, H)
-        (T, T)
+        >>> coin = FiniteSet('H', 'T')
+        >>> set(coin**2)
+        set([(H, H), (H, T), (T, H), (T, T)])
 
 
     Notes
@@ -668,21 +678,6 @@ class Interval(Set, EvalfMixin):
         else:
             return And(left, right)
 
-def set_sort_fn(s):
-    """
-    Sort by infimum if possible
-
-    Otherwise sort by hash. Try to put these at the end.
-    """
-    try:
-        val = s.inf
-        if val.is_comparable:
-            return default_sort_key(val)
-        else:
-            return default_sort_key(s)
-    except (NotImplementedError, ValueError):
-        return default_sort_key(s)
-
 class Union(Set, EvalfMixin):
     """
     Represents a union of sets as a Set.
@@ -731,7 +726,7 @@ class Union(Set, EvalfMixin):
         if len(args)==0:
             return S.EmptySet
 
-        args = sorted(args, key = set_sort_fn)
+        args = sorted(args, key=default_sort_key)
 
         # Reduce sets using known rules
         if evaluate:
@@ -925,7 +920,7 @@ class Intersection(Set):
         if len(args)==0:
             return S.UniversalSet
 
-        args = sorted(args, key = set_sort_fn)
+        args = sorted(args, key=default_sort_key)
 
         # Reduce sets using known rules
         if evaluate:
@@ -1222,7 +1217,9 @@ class FiniteSet(Set, EvalfMixin):
             raise ValueError("%s: Complement not defined for symbolic inputs"
                     %self)
 
-        args = sorted(self.args, key=default_sort_key)
+        # as there are only numbers involved, a straight sort is sufficient;
+        # default_sort_key is not needed
+        args = sorted(self.args)
 
         intervals = [] # Build up a list of intervals between the elements
         intervals += [Interval(S.NegativeInfinity, args[0], True, True)]
@@ -1268,3 +1265,8 @@ class FiniteSet(Set, EvalfMixin):
 
     def _hashable_content(self):
         return (self._elements,)
+
+    @property
+    def _sorted_args(self):
+        from sympy.utilities import default_sort_key
+        return sorted(self.args, key=default_sort_key)

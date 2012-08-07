@@ -3,8 +3,10 @@ from sympy.integrals.transforms import (mellin_transform,
     fourier_transform, inverse_fourier_transform,
     sine_transform, inverse_sine_transform,
     cosine_transform, inverse_cosine_transform,
+    hankel_transform, inverse_hankel_transform,
     LaplaceTransform, FourierTransform, SineTransform, CosineTransform,
-    InverseLaplaceTransform, InverseFourierTransform, InverseSineTransform, InverseCosineTransform)
+    InverseLaplaceTransform, InverseFourierTransform, InverseSineTransform, InverseCosineTransform,
+    HankelTransform, InverseHankelTransform)
 from sympy import (gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
                    cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
                    EulerGamma, erf, besselj, bessely, besseli, besselk,
@@ -360,11 +362,15 @@ def test_inverse_mellin_transform():
         from sympy import expand, logcombine, powsimp
         return expand(powsimp(logcombine(expr, force=True), force=True, deep=True),
                       force=True).replace(exp_polar, exp)
-    assert mysimp(mysimp(IMT(pi/(s*tan(pi*s)), s, x, (-1, 0)))) == \
-           log(1-x)*Heaviside(1-x) + log(x-1)*Heaviside(x-1)
+    assert mysimp(mysimp(IMT(pi/(s*tan(pi*s)), s, x, (-1, 0)))) in [
+        log(1-x)*Heaviside(1-x) + log(x-1)*Heaviside(x-1),
+        log(x)*Heaviside(x - 1) + log(1 - 1/x)*Heaviside(x - 1) + log(-x +
+        1)*Heaviside(-x + 1)]
     # test passing cot
-    assert mysimp(IMT(pi*cot(pi*s)/s, s, x, (0, 1))) == \
-           log(1/x - 1)*Heaviside(1-x) + log(1 - 1/x)*Heaviside(x-1)
+    assert mysimp(IMT(pi*cot(pi*s)/s, s, x, (0, 1))) in [
+        log(1/x - 1)*Heaviside(1-x) + log(1 - 1/x)*Heaviside(x-1),
+        -log(x)*Heaviside(-x + 1) + log(1 - 1/x)*Heaviside(x - 1) + log(-x +
+        1)*Heaviside(-x + 1),]
 
     # 8.4.14
     assert IMT(-gamma(s + S(1)/2)/(sqrt(pi)*s), s, x, (-S(1)/2, 0)) == \
@@ -625,3 +631,26 @@ def test_cosine_transform():
 
     assert cosine_transform(1/sqrt(a**2+t**2), t, w) == sqrt(2)*meijerg(((S(1)/2,), ()), ((0, 0), (S(1)/2,)), a**2*w**2/4)/(2*sqrt(pi))
     assert inverse_cosine_transform(sqrt(2)*meijerg(((S(1)/2,), ()), ((0, 0), (S(1)/2,)), a**2*w**2/4)/(2*sqrt(pi)), w, t) == 1/(t*sqrt(a**2/t**2 + 1))
+
+def test_hankel_transform():
+    from sympy import sinh, cosh, gamma, sqrt, exp
+
+    r = Symbol("r")
+    k = Symbol("k")
+    nu = Symbol("nu")
+    m = Symbol("m")
+    a = symbols("a")
+
+    assert hankel_transform(1/r, r, k, 0) == 1/k
+    assert inverse_hankel_transform(1/k, k, r, 0) == 1/r
+
+    assert hankel_transform(1/r**m, r, k, 0) == 2**(-m + 1)*k**(m - 2)*gamma(-m/2 + 1)/gamma(m/2)
+    assert inverse_hankel_transform(2**(-m + 1)*k**(m - 2)*gamma(-m/2 + 1)/gamma(m/2), k, r, 0) == r**(-m)
+
+    assert hankel_transform(1/r**m, r, k, nu) == 2**(-m + 1)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
+    assert inverse_hankel_transform(2**(-m + 1)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2), k, r, nu) == r**(-m)
+
+    assert hankel_transform(r**nu*exp(-a*r), r, k, nu) == \
+           2**(nu + 1)*a*k**(-nu - 3)*(a**2/k**2 + 1)**(-nu - S(3)/2)*gamma(nu + S(3)/2)/sqrt(pi)
+    assert inverse_hankel_transform(2**(nu + 1)*a*k**(-nu - 3)*(a**2/k**2 + 1)**(-nu - S(3)/2)*gamma(nu + S(3)/2)/sqrt(pi), k, r, nu) == \
+           r**nu*(-sinh(a*r) + cosh(a*r))

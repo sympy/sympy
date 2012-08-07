@@ -85,7 +85,7 @@ class BlockMatrix(MatrixExpr):
 
         return MatrixExpr.__add__(self, other)
 
-    def eval_transpose(self):
+    def _eval_transpose(self):
         # Flip all the individual matrices
         matrices = [Transpose(matrix) for matrix in self.mat.mat]
         # Make a copy
@@ -94,10 +94,7 @@ class BlockMatrix(MatrixExpr):
         mat = mat.transpose()
         return BlockMatrix(mat)
 
-    #def transpose(self):
-    #    return self.eval_transpose()
-
-    def eval_inverse(self, expand=False):
+    def _eval_inverse(self, expand=False):
         # Inverse of one by one block matrix is easy
         if self.blockshape==(1,1):
             mat = Matrix(1, 1, (Inverse(self.blocks[0]), ))
@@ -184,7 +181,7 @@ class BlockDiagMatrix(BlockMatrix):
     def diag(self):
         return self.args[2]
 
-    def eval_inverse(self):
+    def _eval_inverse(self):
         return BlockDiagMatrix(*[Inverse(mat) for mat in self.diag])
 
     def _blockmul(self, other):
@@ -240,7 +237,7 @@ def block_collapse(expr):
     if expr.is_Transpose:
         expr = Transpose(block_collapse(expr.arg))
         if expr.is_Transpose and expr.arg.is_BlockMatrix:
-            expr = expr.arg.eval_transpose()
+            expr = expr.arg._eval_transpose()
         return expr
 
     if expr.is_Inverse:

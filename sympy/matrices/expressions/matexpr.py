@@ -100,11 +100,14 @@ class MatrixExpr(Expr):
     def is_square(self):
         return self.rows == self.cols
 
-    def eval_transpose(self):
+    def _eval_transpose(self):
         raise NotImplementedError()
 
-    def eval_inverse(self):
+    def _eval_inverse(self):
         raise NotImplementedError()
+
+    def adjoint(self):
+        return MatMul(*[arg.adjoint() for arg in self.args[::-1]])
 
     def conjugate(self):
         return MatMul(*[arg.conjugate() for arg in self.args])
@@ -119,10 +122,10 @@ class MatrixExpr(Expr):
         if self.is_Add:
             return MatAdd(*[Transpose(arg) for arg in self.args])
 
-        return Basic.__new__(Transpose, self)
-
-    def adjoint(self):
-        return MatMul(*[arg.adjoint() for arg in self.args[::-1]])
+        try:
+            return self._eval_transpose()
+        except (AttributeError, NotImplementedError):
+            return Basic.__new__(Transpose, self)
 
     @property
     def T(self):
@@ -278,7 +281,10 @@ class Identity(MatrixSymbol):
     def __new__(cls, n):
         return MatrixSymbol.__new__(cls, "I", n, n)
 
-    def transpose(self):
+    def _eval_transpose(self):
+        return self
+
+    def _eval_inverse(self):
         return self
 
     def _entry(self, i, j):
@@ -300,7 +306,8 @@ class ZeroMatrix(MatrixSymbol):
     is_ZeroMatrix = True
     def __new__(cls, n, m):
         return MatrixSymbol.__new__(cls, "0", n, m)
-    def transpose(self):
+
+    def _eval_transpose(self):
         return ZeroMatrix(self.cols, self.rows)
 
     def _entry(self, i, j):

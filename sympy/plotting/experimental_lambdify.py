@@ -156,6 +156,60 @@ class vectorized_lambdify(object):
 
         return results
 
+class lambdify(object):
+    """Returns the lambdified function.
+
+    This function uses experimental_lambdify to create a lambdified
+    expression. It uses cmath to lambdify the expression. If the function
+    is not implemented in python cmath, python cmath calls evalf on those
+    functions.
+    """
+
+    def __init__(self, args, expr):
+        self.args = args
+        self.expr = expr
+        self.lambda_func = experimental_lambdify(args, expr, use_evalf=True,
+                                                    use_python_cmath=True)
+        self.failure = False
+
+    def __call__(self, args):
+        args = complex(args)
+        try:
+            #The result can be sympy.Float. Hence wrap it with complex type.
+            result = complex(self.lambda_func(args))
+            if abs(result.imag) > 0:
+                return None
+            else:
+                return result.real
+        except Exception, e:
+            # The exceptions raised by sympy, cmath are not consistent and
+            # hence it is not possible to specify all the exceptions that
+            # are to be caught. Presently there are no cases for which the code
+            # reaches this block other than ZeroDivisionError. Also the
+            # exception is caught only once. If the exception repeats itself,
+            # then it is not caught and the corresponding error is raised.
+            # XXX: Remove catching all exceptions once the plotting module
+            # is heavily tested.
+            if isinstance(e, ZeroDivisionError):
+                return None
+            else:
+                if self.failure:
+                    raise e
+                #Failure
+                #Try wrapping it with complex(..).evalf()
+                self.failure = True
+                self.lambda_func = experimental_lambdify(self.args, self.expr,
+                                                    use_evalf=True,
+                                                    complex_wrap_evalf=True)
+                result = self.lambda_func(args)
+                warnings.warn('The evaluation of the expression is'
+                        ' problematic. We are trying a failback method'
+                        ' that may still work. Please report this as a bug.')
+                if abs(result.imag) > 0:
+                    return None
+                else:
+                    return result.real
+
 
 def experimental_lambdify(*args, **kwargs):
     l = Lambdifier(*args, **kwargs)

@@ -118,8 +118,11 @@ class besselj(BesselBase):
     _a = S.One
     _b = S.One
 
-    def _eval_rewrite_as_jn(self, nu, z):
-        return sqrt(2*z/pi) * jn(nu - S('1/2'), self.argument)
+    def _eval_rewrite_as_jn(self, nu, z, expand=False):
+        jn_part = jn(nu - S('1/2'), self.argument)
+        if expand:
+            jn_part = jn_part._eval_expand_func()
+        return sqrt(2*z/pi) * jn_part
 
     @classmethod
     def eval(cls, nu, z):
@@ -146,9 +149,9 @@ class besselj(BesselBase):
         if nu != nnu:
             return besselj(nnu, z)
 
-    def _eval_expand_func(self, deep=False, **hints):
+    def _eval_expand_func(self, **hints):
         if self.order.is_Rational and self.order.q == 2:
-            return self.rewrite(jn)._eval_expand_func(deep, **hints)
+            return self._eval_rewrite_as_jn(*self.args, **{'expand':True})
         return self
 
     def _eval_rewrite_as_besseli(self, nu, z):
@@ -191,8 +194,11 @@ class bessely(BesselBase):
     _a = S.One
     _b = S.One
 
-    def _eval_rewrite_as_yn(self, nu, z):
-        return sqrt(2*z/pi) * yn(nu - S('1/2'), self.argument)
+    def _eval_rewrite_as_yn(self, nu, z, expand=False):
+        yn_part = yn(nu - S('1/2'), self.argument)
+        if expand:
+            yn_part = yn_part._eval_expand_func()
+        return sqrt(2*z/pi) * yn_part
 
     @classmethod
     def eval(cls, nu, z):
@@ -200,9 +206,9 @@ class bessely(BesselBase):
             if nu < 0:
                 return S(-1)**nu*bessely(-nu, z)
 
-    def _eval_expand_func(self, deep=False, **hints):
+    def _eval_expand_func(self, **hints):
         if self.order.is_Rational and self.order.q == 2:
-            return self.rewrite(yn)._eval_expand_func(deep, **hints)
+            return self._eval_rewrite_as_yn(*self.args, **{'expand':True})
         return self
 
 class besseli(BesselBase):
@@ -376,7 +382,7 @@ class SphericalBesselBase(BesselBase):
     To use this class, define the _rewrite and _expand methods.
     """
 
-    def _expand(self):
+    def _expand(self, **hints):
         """ Expand self into a polynomial. Nu is guaranteed to be Integer. """
         raise NotImplementedError('expansion')
 
@@ -384,9 +390,9 @@ class SphericalBesselBase(BesselBase):
         """ Rewrite self in terms of ordinary bessel functions. """
         raise NotImplementedError('rewriting')
 
-    def _eval_expand_func(self, deep=False, **hints):
+    def _eval_expand_func(self, **hints):
         if self.order.is_Integer:
-            return self._expand()
+            return self._expand(**hints)
         else:
             return self
 
@@ -450,7 +456,7 @@ class jn(SphericalBesselBase):
     def _eval_rewrite_as_besselj(self, nu, z):
         return sqrt(pi/(2*z)) * besselj(nu + S('1/2'), z)
 
-    def _expand(self):
+    def _expand(self, **hints):
         n = self.order
         z = self.argument
         return fn(n, z) * sin(z) + (-1)**(n+1) * fn(-n-1, z) * cos(z)
@@ -494,7 +500,7 @@ class yn(SphericalBesselBase):
     def _eval_rewrite_as_bessely(self, nu, z):
         return sqrt(pi/(2*z)) * bessely(nu + S('1/2'), z)
 
-    def _expand(self):
+    def _expand(self, **hints):
         n = self.order
         z = self.argument
         return (-1)**(n+1) * \
