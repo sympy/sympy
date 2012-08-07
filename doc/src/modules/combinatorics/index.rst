@@ -16,3 +16,4 @@ Contents
    subsets.rst
    graycode.rst
    named_groups.rst
+   util.rst
