@@ -68,8 +68,146 @@ def _make_message(ipython=True, quiet=False, source=None):
 
     return message
 
+def int_to_Integer(s):
+    """
+    Wrap integer literals with Integer.
+
+    This is based on the decistmt example from
+    http://docs.python.org/library/tokenize.html.
+
+    Only integer literals are converted.  Float literals are left alone.
+    Example
+    =======
+
+    >>> from sympy.interactive.session import int_to_Integer
+    >>> from sympy import Integer
+    >>> s = '1.2 + 1/2 - 0x12 + 0b101 + a1'
+    >>> int_to_Integer(s)
+    '1.2 +Integer (1 )/Integer (2 )-Integer (0x12 )+Integer (0b101 )+a1 '
+    >>> s = 'print (1/2)'
+    >>> int_to_Integer(s)
+    'print (Integer (1 )/Integer (2 ))'
+    >>> exec(s) #doctest: +SKIP
+    0.5
+    >>> exec(int_to_Integer(s))
+    1/2
+    """
+    from tokenize import generate_tokens, untokenize, NUMBER, NAME, OP
+    from StringIO import StringIO
+
+    result = []
+    g = generate_tokens(StringIO(s).readline)   # tokenize the string
+    for toknum, tokval, _, _, _  in g:
+        if toknum == NUMBER and '.' not in tokval:  # replace NUMBER tokens
+            result.extend([
+                (NAME, 'Integer'),
+                (OP, '('),
+                (NUMBER, tokval),
+                (OP, ')')
+            ])
+        else:
+            result.append((toknum, tokval))
+    return untokenize(result)
+
+# XXX: Something like this might be used, but it only works on single line
+# inputs.  See
+# http://mail.scipy.org/pipermail/ipython-user/2012-August/010846.html and
+# https://github.com/ipython/ipython/issues/1491.  So instead we are forced to
+# just monkey-patch run_cell until IPython builds a better API.
+#
+# class IntTransformer(object):
+#     """
+#     IPython command line transformer that recognizes and replaces int
+#     literals.
+#
+#     Based on
+#     https://bitbucket.org/birkenfeld/ipython-physics/src/71b2d850da00/physics.py.
+#
+#     """
+#     priority = 99
+#     enabled = True
+#     def transform(self, line, continue_prompt):
+#         import re
+#         from tokenize import TokenError
+#         leading_space = re.compile(' *')
+#         spaces = re.match(leading_space, line).span()[1]
+#         try:
+#             return ' '*spaces + int_to_Integer(line)
+#         except TokenError:
+#             return line
+#
+# int_transformer = IntTransformer()
+#
+# def enable_automatic_int_sympification(app):
+#     """
+#     Allow IPython to automatically convert integer literals to Integer.
+#
+#     This lets things like 1/2 be executed as (essentially) Rational(1, 2).
+#     """
+#     app.shell.prefilter_manager.register_transformer(int_transformer)
+
+def enable_automatic_int_sympification(app):
+    """
+    Allow IPython to automatically convert integer literals to Integer.
+    """
+    import compiler
+    old_run_cell = app.shell.run_cell
+    def my_run_cell(cell, *args, **kwargs):
+        try:
+            # Check the cell for syntax errors.  This way, the syntax error
+            # will show the original input, not the transformed input.  The
+            # downside here is that IPython magic like %timeit will not work
+            # with transformed input (but on the other hand, IPython magic
+            # that doesn't expect transformed input will continue to work).
+
+            # XXX: Is this the best way to check for syntax errors?
+            compiler.parse(cell)
+        except SyntaxError:
+            pass
+        else:
+            cell = int_to_Integer(cell)
+        old_run_cell(cell, *args, **kwargs)
+    app.shell.run_cell = my_run_cell
+
 def enable_automatic_symbols(app):
     """Allow IPython to automatially create symbols (``isympy -a``). """
+    # XXX: This should perhaps use tokenize, like int_to_Integer() above.
+    # This would avoid re-executing the code, which can lead to subtle
+    # issues.  For example:
+    #
+    # In [1]: a = 1
+    #
+    # In [2]: for i in range(10):
+    #    ...:     a += 1
+    #    ...:
+    #
+    # In [3]: a
+    # Out[3]: 11
+    #
+    # In [4]: a = 1
+    #
+    # In [5]: for i in range(10):
+    #    ...:     a += 1
+    #    ...:     print b
+    #    ...:
+    # b
+    # b
+    # b
+    # b
+    # b
+    # b
+    # b
+    # b
+    # b
+    # b
+    #
+    # In [6]: a
+    # Out[6]: 12
+    #
+    # Note how the for loop is executed again because `b` was not defined, but `a`
+    # was already incremented once, so the result is that it is incremented
+    # multiple times.
+
     import re
     re_nameerror = re.compile("name '(?P<symbol>[A-Za-z_][A-Za-z0-9_]*)' is not defined")
 
@@ -100,7 +238,7 @@ def enable_automatic_symbols(app):
         # This was restructured in IPython 0.13
         app.set_custom_exc((NameError,), _handler)
 
-def init_ipython_session(argv=[], auto=False):
+def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False):
     """Construct new IPython session. """
     import IPython
 
@@ -113,8 +251,10 @@ def init_ipython_session(argv=[], auto=False):
         app.display_banner = False
         app.initialize(argv)
 
-        if auto:
+        if auto_symbols:
             enable_automatic_symbols(app)
+        if auto_int_to_Integer:
+            enable_automatic_int_sympification(app)
 
         return app.shell
     else:
@@ -154,7 +294,7 @@ def init_python_session():
     return SymPyConsole()
 
 def init_session(ipython=None, pretty_print=True, order=None,
-        use_unicode=None, quiet=False, auto=False, argv=[]):
+        use_unicode=None, quiet=False, auto_symbols=False, auto_int_to_Integer=False, argv=[]):
     """
     Initialize an embedded IPython or Python session.
 
@@ -177,9 +317,15 @@ def init_session(ipython=None, pretty_print=True, order=None,
     quiet: boolean
         If True, init_session will not print messages regarding its status;
         if False, init_session will print messages regarding its status.
-    auto: boolean
-        If True, init_session will automatically create symbols for you;
-        if False, it will not.
+    auto_symbols: boolean
+        If True, IPython will automatically create symbols for you.
+        If False, it will not.
+        The default is False.
+    auto_int_to_Integer: boolean
+        If True, IPython will automatically wrap int literals with Integer, so
+        that things like 1/2 give Rational(1, 2).
+        If False, it will not.
+        The default is False.
     ipython: boolean or None
         If True, printing will initialize for an IPython console;
         if False, printing will initialize for a normal console;
@@ -260,7 +406,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
             if ip is not None:
                 in_ipython = True
             else:
-                ip = init_ipython_session(argv=argv, auto=auto)
+                ip = init_ipython_session(argv=argv,
+                    auto_symbols=auto_symbols, auto_int_to_Integer=auto_int_to_Integer)
 
             if IPython.__version__ >= '0.11':
                 # runsource is gone, use run_cell instead, which doesn't
@@ -270,8 +417,10 @@ def init_session(ipython=None, pretty_print=True, order=None,
             if not in_ipython:
                 mainloop = ip.mainloop
 
-    if auto and (not ipython or IPython.__version__ < '0.11'):
+    if auto_symbols and (not ipython or IPython.__version__ < '0.11'):
         raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")
+    if auto_int_to_Integer and (not ipython or IPython.__version__ < '0.11'):
+        raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
 
     _preexec_source = preexec_source
 
