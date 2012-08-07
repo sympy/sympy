@@ -176,6 +176,7 @@ class DiagramGrid(object):
 
     >>> from sympy.categories import Object, NamedMorphism
     >>> from sympy.categories import Diagram, DiagramGrid
+    >>> from sympy import pprint
     >>> A = Object("A")
     >>> B = Object("B")
     >>> C = Object("C")
@@ -188,9 +189,10 @@ class DiagramGrid(object):
     >>> grid = DiagramGrid(diagram)
     >>> (grid.width, grid.height)
     (2, 2)
-    >>> print grid
-    [[Object("A"), Object("B")],
-    [None, Object("C")]]
+    >>> pprint(grid)
+    A  B
+    <BLANKLINE>
+       C
 
     Sometimes one sees the diagram as consisting of logical groups.
     One can advise ``DiagramGrid`` as to such groups by employing the
@@ -208,17 +210,19 @@ class DiagramGrid(object):
     Lay it out with generic layout:
 
     >>> grid = DiagramGrid(diagram)
-    >>> print grid
-    [[Object("A"), Object("B"), Object("D")],
-    [None, Object("C"), None]]
+    >>> pprint(grid)
+    A  B  D
+    <BLANKLINE>
+       C
 
     Now, we can group the objects `A` and `D` to have them near one
     another:
 
     >>> grid = DiagramGrid(diagram, groups=[[A, D], B, C])
-    >>> print grid
-    [[Object("B"), None, Object("C")],
-    [Object("A"), Object("D"), None]]
+    >>> pprint(grid)
+    B     C
+    <BLANKLINE>
+    A  D
 
     Note how the positioning of the other objects changes.
 
@@ -241,28 +245,34 @@ class DiagramGrid(object):
     linear:
 
     >>> grid = DiagramGrid(diagram)
-    >>> print grid
-    [[Object("A"), Object("B"), None],
-    [None, Object("C"), Object("D")],
-    [None, None, Object("E")]]
+    >>> pprint(grid)
+    A  B
+    <BLANKLINE>
+       C  D
+    <BLANKLINE>
+          E
 
     To get it laid out in a line, use ``layout="sequential"``:
 
     >>> grid = DiagramGrid(diagram, layout="sequential")
-    >>> print grid
-    [[Object("A"), Object("B"), Object("C"), Object("D"), Object("E")]]
+    >>> pprint(grid)
+    A  B  C  D  E
 
     One may sometimes need to transpose the resulting layout.  While
     this can always be done by hand, :class:`DiagramGrid` provides a
     hint for that purpose:
 
     >>> grid = DiagramGrid(diagram, layout="sequential", transpose=True)
-    >>> print grid
-    [[Object("A")],
-    [Object("B")],
-    [Object("C")],
-    [Object("D")],
-    [Object("E")]]
+    >>> pprint(grid)
+    A
+    <BLANKLINE>
+    B
+    <BLANKLINE>
+    C
+    <BLANKLINE>
+    D
+    <BLANKLINE>
+    E
 
     Separate hints can also be provided for each group.  For an
     example, refer to ``tests/test_drawing.py``, and see the different
