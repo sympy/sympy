@@ -557,7 +557,7 @@ class Diagram(Basic):
     >>> pprint(d.premises, use_unicode=False)
     {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
     EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
-    >>> d = Diagram([f, g], {g * f:"unique"})
+    >>> d = Diagram([f, g], {g * f: "unique"})
     >>> pprint(d.conclusions)
     {g*f:A-->C: {unique}}
 
@@ -667,7 +667,7 @@ class Diagram(Basic):
         True
         >>> g * f in d.premises.keys()
         True
-        >>> d = Diagram([f, g], {g * f:"unique"})
+        >>> d = Diagram([f, g], {g * f: "unique"})
         >>> d.conclusions[g * f]
         {unique}
 
@@ -775,7 +775,7 @@ class Diagram(Basic):
         True
         >>> g * f in d.premises.keys()
         True
-        >>> d = Diagram([f, g], {g * f:"unique"})
+        >>> d = Diagram([f, g], {g * f: "unique"})
         >>> d.conclusions[g * f] == FiniteSet("unique")
         True
 
@@ -892,9 +892,9 @@ class Diagram(Basic):
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
-        >>> d = Diagram([f, g], {f:"unique", g*f:"veryunique"})
+        >>> d = Diagram([f, g], {f: "unique", g*f: "veryunique"})
         >>> d1 = d.subdiagram_from_objects(FiniteSet(A, B))
-        >>> d1 == Diagram([f], {f:"unique"})
+        >>> d1 == Diagram([f], {f: "unique"})
         True
         """
         if not self.objects.subset(objects):
