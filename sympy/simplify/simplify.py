@@ -2340,7 +2340,7 @@ def combsimp(expr):
         def eval(cls, a, b):
             if b.is_Integer:
                 if not b:
-                    return S.Zero
+                    return S.One
 
                 n, result = int(b), S.One
 
@@ -2391,17 +2391,21 @@ def combsimp(expr):
         coeff, rewrite = S.One, False
 
         cn, _n = n.as_coeff_Add()
-        ck, _k = k.as_coeff_Add()
 
         if _n and cn.is_Integer and cn:
             coeff *= rf(_n + 1, cn)/rf(_n - k + 1, cn)
             rewrite = True
             n = _n
 
-        if _k and ck.is_Integer and ck:
-            coeff *= rf(n - ck - _k + 1, ck)/rf(_k + 1, ck)
-            rewrite = True
-            k = _k
+        # this sort of binomial has already been removed by
+        # rising factorials but is left here in case the order
+        # of rule application is changed
+        if k.is_Add:
+            ck, _k = k.as_coeff_Add()
+            if _k and ck.is_Integer and ck:
+                coeff *= rf(n - ck - _k + 1, ck)/rf(_k + 1, ck)
+                rewrite = True
+                k = _k
 
         if rewrite:
             return coeff*binomial(n, k)
@@ -2542,15 +2546,12 @@ def combsimp(expr):
                     offset = 0
                     for i, u in enumerate(other):
                         n = (u - ui - (u - ui) % 1)
-                        assert n.is_Integer
-                        if n > 0:
+                        if n and n.is_Integer:
+                            # if u is sorted, this should be true
+                            assert n > 0
                             con = resid + u - 1
                             for k in range(n):
                                 numer.append(con - k)
-                        elif n < 0: # if Rationals are sorted we never hit this
-                            con = resid + u
-                            for k in range(-n):
-                                denom.append(con - k)
                     # (2)
                     con = d.q*(resid + ui) # for (2) and (3)
                     numer.append((2*S.Pi)**(S(d.q - 1)/2)*
@@ -2584,18 +2585,16 @@ def combsimp(expr):
                                 numer_others)]:
 
             while True:
-                found = None
                 for x in ng:
                     for y in dg:
-                        if simplify(2*y - x).is_Integer:
-                            found = (x, y)
+                        n = simplify(x - 2*y)
+                        if n.is_Integer:
                             break
-                    if found:
-                        break
-                if not found:
+                    else:
+                        continue
                     break
-                x, y = found
-                n = simplify(x - 2*y)
+                else:
+                    break
                 ng.remove(x)
                 dg.remove(y)
                 if n > 0:
@@ -2664,7 +2663,7 @@ def combsimp(expr):
                     y = find_fuzzy(numer, 1/(g - 1))
                     if y is not None:
                         numer.remove(y)
-                        if y != 1/(g-1):
+                        if y != 1/(g - 1):
                             numer.append((g - 1)*y)
                             update_ST((g - 1)*y)
                         g -= 1

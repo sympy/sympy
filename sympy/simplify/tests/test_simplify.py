@@ -915,6 +915,20 @@ def test_combsimp():
     assert combsimp(binomial(n + 2, k + 2.0)) == \
         -((1.0*n + 2.0)*binomial(n + 1.0, k + 2.0))/(k - n)
 
+    # coverage tests
+    assert combsimp(factorial(n*(1 + n) - n**2 - n)) == 1
+    assert combsimp(binomial(n + k - 2, n)) \
+        == k*(k - 1)*binomial(n + k, n)/((n + k)*(n + k - 1))
+    i = Symbol('i', integer=True)
+    e = gamma(i + 3)
+    assert combsimp(e) == e
+    e = gamma(exp(i))
+    assert combsimp(e) == e
+    e = gamma(n + S(1)/3)*gamma(n + S(2)/3)
+    assert combsimp(e) == e
+    assert combsimp(gamma(4*n + S(1)/2)/gamma(2*n - S(3)/4)) \
+        == 2**(4*n - S(5)/2)*(8*n - 3)*gamma(2*n + S(3)/4)/sqrt(pi)
+
 def test_issue_2516():
     aA, Re, a, b, D = symbols('aA Re a b D')
     e=((D**3*a + b*aA**3)/Re).expand()
