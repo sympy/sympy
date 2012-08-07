@@ -150,8 +150,13 @@ def enable_automatic_int_sympification(app):
     """
     Allow IPython to automatically convert integer literals to Integer.
     """
+    hasshell = hasattr(app, 'shell')
+
     import ast
-    old_run_cell = app.shell.run_cell
+    if hasshell:
+        old_run_cell = app.shell.run_cell
+    else:
+        old_run_cell = app.run_cell
     def my_run_cell(cell, *args, **kwargs):
         try:
             # Check the cell for syntax errors.  This way, the syntax error
@@ -165,7 +170,11 @@ def enable_automatic_int_sympification(app):
         else:
             cell = int_to_Integer(cell)
         old_run_cell(cell, *args, **kwargs)
-    app.shell.run_cell = my_run_cell
+
+    if hasshell:
+        app.shell.run_cell = my_run_cell
+    else:
+        app.run_cell = my_run_cell
 
 def enable_automatic_symbols(app):
     """Allow IPython to automatially create symbols (``isympy -a``). """
