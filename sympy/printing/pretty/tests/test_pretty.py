@@ -3700,7 +3700,7 @@ def test_complicated_symbol_unchanged():
 def test_categories():
     from sympy.categories import (Object, Morphism, IdentityMorphism,
                                   NamedMorphism, CompositeMorphism,
-                                  Category, Diagram)
+                                  Category, Diagram, DiagramGrid)
 
     A1 = Object("A1")
     A2 = Object("A2")
@@ -3747,6 +3747,10 @@ def test_categories():
     assert upretty(d) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, id:A₂——▶A₂: " \
            u"∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}" \
            u" ══▶ {f₂∘f₁:A₁——▶A₃: {unique}}"
+
+    grid = DiagramGrid(d)
+    assert pretty(grid) == "A1  A2\n      \nA3    "
+    assert upretty(grid) == u"A\u2081  A\u2082\n      \nA\u2083    "
 
 def test_PrettyModules():
     R = QQ[x, y]
