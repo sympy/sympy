@@ -81,9 +81,9 @@ def int_to_Integer(s):
 
     >>> from sympy.interactive.session import int_to_Integer
     >>> from sympy import Integer
-    >>> s = '1.2 + 1/2 - 0x12 + 0b101 + a1'
+    >>> s = '1.2 + 1/2 - 0x12 + a1'
     >>> int_to_Integer(s)
-    '1.2 +Integer (1 )/Integer (2 )-Integer (0x12 )+Integer (0b101 )+a1 '
+    '1.2 +Integer (1 )/Integer (2 )-Integer (0x12 )+a1 '
     >>> s = 'print (1/2)'
     >>> int_to_Integer(s)
     'print (Integer (1 )/Integer (2 ))'
