@@ -31,3 +31,13 @@ def test_automatic_symbols():
     app.run_cell(symbol, False)
     assert symbol in app.user_ns
     assert isinstance(app.user_ns[symbol], Symbol)
+
+    # Check that built-in names aren't overridden
+    app.run_cell("a = all == __builtin__.all", False)
+    assert "all" not in app.user_ns
+    assert app.user_ns['a'] == True
+
+    # Check that sympy names aren't overridden
+    app.run_cell("import sympy")
+    app.run_cell("a = factorial == sympy.factorial")
+    assert app.user_ns['a'] == True
