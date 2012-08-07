@@ -2464,7 +2464,7 @@ def combsimp(expr):
                     new.append(g1)
                     continue
                 for i, g2 in enumerate(gammas):
-                    n = simplify(g1 + g2 - 1)
+                    n = g1 + g2 - 1
                     if not n.is_Integer:
                         continue
                     append = False
@@ -2587,7 +2587,7 @@ def combsimp(expr):
             while True:
                 for x in ng:
                     for y in dg:
-                        n = simplify(x - 2*y)
+                        n = x - 2*y
                         if n.is_Integer:
                             break
                     else:
