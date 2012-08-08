@@ -33,9 +33,6 @@ class LagrangesMethod(object):
         The forcing vector for the qdot's, qdoubledot's and
         lagrange multipliers (lam)
 
-    rhs : Matrix
-        Solves for the states (i.e. q's, qdot's, and multipliers)
-
     Examples
     ========
 
@@ -132,6 +129,10 @@ class LagrangesMethod(object):
 
         self.lam_vec = Matrix([])
 
+        self._term1 = Matrix([])
+        self._term2 = Matrix([])
+        self._term3 = Matrix([])
+        self._term4 = Matrix([])
 
         # Creating the qs, qdots and qdoubledots
 
@@ -161,11 +162,11 @@ class LagrangesMethod(object):
         L = Matrix([self._L])
 
         #Determining the first term in Lagrange's EOM
-        term1 = L.jacobian(qd)
-        term1 = ((term1).diff(dynamicsymbols._t)).transpose()
+        self._term1 = L.jacobian(qd)
+        self._term1 = ((self._term1).diff(dynamicsymbols._t)).transpose()
 
         #Determining the second term in Lagrange's EOM
-        term2 = (L.jacobian(q)).transpose()
+        self._term2 = (L.jacobian(q)).transpose()
 
         #term1 and term2 will be there no matter what so leave them as they are
 
@@ -188,7 +189,7 @@ class LagrangesMethod(object):
 
             #Determining the third term in Lagrange's EOM
             #term3 = ((self.lam_vec).transpose() * self.lam_coeffs).transpose()
-            term3 = self.lam_coeffs.transpose() * self.lam_vec
+            self._term3 = self.lam_coeffs.transpose() * self.lam_vec
 
             #Taking the time derivative of the constraint equations
             diffconeqs = [diff(i, dynamicsymbols._t) for i in coneqs]
@@ -203,7 +204,7 @@ class LagrangesMethod(object):
             self._f_cd = -diffconeqs_mat.subs(qddzero)
 
         else:
-            term3 = zeros(n, 1)
+            self._term3 = zeros(n, 1)
 
         if self.forcelist != None:
             forcelist = self.forcelist
@@ -213,23 +214,23 @@ class LagrangesMethod(object):
             if not isinstance(forcelist, (list, tuple)):
                 raise TypeError('Forces must be supplied in a list of: lists'
                         ' or tuples')
-            term4 = zeros(len(qd), 1)
+            self._term4 = zeros(n, 1)
             for i,v in enumerate(qd):
                 for j,w in enumerate(forcelist):
                     if isinstance(w[0], ReferenceFrame):
                         speed = w[0].ang_vel_in(N)
-                        term4[i] += speed.diff(v, N) & w[1]
+                        self._term4[i] += speed.diff(v, N) & w[1]
                     if isinstance(w[0], Point):
                         speed = w[0].vel(N)
-                        term4[i] += speed.diff(v, N) & w[1]
+                        self._term4[i] += speed.diff(v, N) & w[1]
                     else:
                         raise TypeError('First entry in force pair is a point'
                                         ' or frame')
 
         else:
-            term4 = zeros(n, 1)
+            self._term4 = zeros(n, 1)
 
-        self.eom = term1 - term2 - term3 - term4
+        self.eom = self._term1 - self._term2 - self._term3 - self._term4
 
         return self.eom
 
@@ -261,9 +262,7 @@ class LagrangesMethod(object):
 
     @property
     def mass_matrix_full(self):
-        """ Augments the coefficients of qdots to the mass_matrix
-
-        """
+        """ Augments the coefficients of qdots to the mass_matrix. """
 
         n = len(self._q)
         if self.eom == None:
@@ -284,9 +283,7 @@ class LagrangesMethod(object):
 
     @property
     def forcing(self):
-        """ Returns the forcing vector from 'lagranges_equations' method
-
-        """
+        """ Returns the forcing vector from 'lagranges_equations' method. """
 
         if self.eom == None:
             raise ValueError('Need to compute the equations of motion first')
@@ -309,9 +306,7 @@ class LagrangesMethod(object):
 
     @property
     def forcing_full(self):
-        """ Augments qdots to the forcing vector above
-
-        """
+        """ Augments qdots to the forcing vector above. """
 
         if self.eom == None:
             raise ValueError('Need to compute the equations of motion first')
