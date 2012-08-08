@@ -701,23 +701,8 @@ class Expr(Basic, EvalfMixin):
         return key, reverse
 
     def as_ordered_factors(self, order=None):
-        """
-        Transform an expression to an ordered list of factors.
-
-        Examples
-        ========
-
-        >>> from sympy import sin, cos
-        >>> from sympy.abc import x, y
-
-        >>> (2*x*y*sin(x)*cos(x)).as_ordered_factors()
-        [2, x, y, sin(x), cos(x)]
-
-        """
-        if not self.is_Mul:
-            return [self]
-        cpart, ncpart = self.args_cnc()
-        return sorted(cpart, key=lambda expr: expr.sort_key(order=order)) + ncpart
+        """Return list of ordered factors (if Mul) else [self]."""
+        return [self]
 
     def as_ordered_terms(self, order=None, data=False):
         """

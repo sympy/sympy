@@ -141,7 +141,7 @@ def test_rolling_disc():
     # Finally we form the equations of motion, using the same steps we did
     # before. Specify inertial frame, supply generalized speeds, supply
     # kinematic differential equation dictionary, compute Fr from the force
-    # list and Fr* fromt the body list, compute the mass matrix and forcing
+    # list and Fr* from the body list, compute the mass matrix and forcing
     # terms, then solve for the u dots (time derivatives of the generalized
     # speeds).
     KM = Kane(N)
