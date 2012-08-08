@@ -915,6 +915,20 @@ def test_combsimp():
     assert combsimp(binomial(n + 2, k + 2.0)) == \
         -((1.0*n + 2.0)*binomial(n + 1.0, k + 2.0))/(k - n)
 
+    # coverage tests
+    assert combsimp(factorial(n*(1 + n) - n**2 - n)) == 1
+    assert combsimp(binomial(n + k - 2, n)) \
+        == k*(k - 1)*binomial(n + k, n)/((n + k)*(n + k - 1))
+    i = Symbol('i', integer=True)
+    e = gamma(i + 3)
+    assert combsimp(e) == e
+    e = gamma(exp(i))
+    assert combsimp(e) == e
+    e = gamma(n + S(1)/3)*gamma(n + S(2)/3)
+    assert combsimp(e) == e
+    assert combsimp(gamma(4*n + S(1)/2)/gamma(2*n - S(3)/4)) \
+        == 2**(4*n - S(5)/2)*(8*n - 3)*gamma(2*n + S(3)/4)/sqrt(pi)
+
 def test_issue_2516():
     aA, Re, a, b, D = symbols('aA Re a b D')
     e=((D**3*a + b*aA**3)/Re).expand()
@@ -1087,8 +1101,8 @@ def test_combsimp_gamma():
 
     assert simplify(combsimp(gamma(x)*gamma(x+S(1)/2)*gamma(y)/gamma(x+y))) \
            == 2*4**-x*sqrt(pi)*gamma(2*x)*gamma(y)/gamma(x + y)
-    assert combsimp(1/gamma(x)/gamma(x-S(1)/3)/gamma(x+S(1)/3)) == \
-           3**(3*x + S(1)/2)/(18*pi*gamma(3*x - 1))
+    assert combsimp(1/gamma(x)/gamma(x-S(1)/3)/gamma(x+S(1)/3)) \
+           == 3**(3*x - S(3)/2)/(2*pi*gamma(3*x - 1))
     assert simplify(gamma(S(1)/2 + x/2)*gamma(1 + x/2)/gamma(1+x)/sqrt(pi)*2**x) \
            == 1
     assert combsimp(gamma(S(-1)/4)*gamma(S(-3)/4)) == 16*sqrt(2)*pi/3

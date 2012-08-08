@@ -126,4 +126,6 @@ def test_preorder_traversal():
         [[w*(x + y) + z], w*(x + y) + z, z, w*(x + y), w, x + y, x, y]
 
 def test_sorted_args():
+    x = symbols('x')
     assert b21._sorted_args == b21.args
+    raises(AttributeError, lambda: x._sorted_args)

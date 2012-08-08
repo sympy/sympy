@@ -223,11 +223,11 @@ class Add(AssocOp):
         # order args canonically
         # Currently we sort things using hashes, as it is quite fast. A better
         # solution is not to sort things at all - but this needs some more
-        # fixing. NOTE: this is used in primitive, too, so if it changes
-        # here it should be changed there.
+        # fixing. NOTE: this is used in primitive and Mul.flattten, too, so if
+        # it changes here it should be changed there.
         newseq.sort(key=hash)
 
-        # current code expects coeff to be always in slot-0
+        # current code expects coeff to be first
         if coeff is not S.Zero:
             newseq.insert(0, coeff)
 
@@ -814,6 +814,11 @@ class Add(AssocOp):
                     prim = G*Add(*args)
 
         return con, prim
+
+    @property
+    def _sorted_args(self):
+        from sympy.utilities.misc import default_sort_key
+        return sorted(self.args, key=lambda w: default_sort_key(w))
 
 from mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational
