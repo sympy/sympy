@@ -95,10 +95,19 @@ def int_to_Integer(s):
     from tokenize import generate_tokens, untokenize, NUMBER, NAME, OP
     from StringIO import StringIO
 
+    def _is_int(num):
+        """
+        Returns true if string value num (with token NUMBER) represents an integer.
+        """
+        # XXX: Is there something in the standard library that will do this?
+        if '.' in num or 'j' in num.lower() or 'e' in num.lower():
+            return False
+        return True
+
     result = []
     g = generate_tokens(StringIO(s).readline)   # tokenize the string
     for toknum, tokval, _, _, _  in g:
-        if toknum == NUMBER and '.' not in tokval:  # replace NUMBER tokens
+        if toknum == NUMBER and _is_int(tokval):  # replace NUMBER tokens
             result.extend([
                 (NAME, 'Integer'),
                 (OP, '('),
