@@ -2741,9 +2741,17 @@ class MatrixBase(object):
                        "own custom simplification function"
             ).warn()
             simplify = simplify or True
-        simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
+        simpfunc = simplify if isinstance(simplify, FunctionType) else \
+                   _simplify if simplify else lambda a : a
         pivot, r = 0, self[:,:].as_mutable()        # pivot: index of next row to contain a pivot
         pivotlist = []                  # indices of pivot variables (non-free)
+
+        echelon_form = self.ref()
+        if echelon_form is None:
+            return None
+        matrix, pivot_indices = echelon_form
+        r = matrix.as_mutable()
+
         for i in range(r.cols):
             if pivot == r.rows:
                 break
@@ -2767,7 +2775,7 @@ class MatrixBase(object):
                 r.row(j, lambda x, k: x - scale*r[pivot,k])
             pivotlist.append(i)
             pivot += 1
-        return self._new(r), pivotlist
+        return self._new(r), pivot_indices
 
     def nullspace(self, simplified=False, simplify=False):
         """
