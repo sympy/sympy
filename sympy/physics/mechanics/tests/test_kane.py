@@ -128,7 +128,7 @@ def test_rolling_disc():
 
     # Kinematic differential equations; how the generalized coordinate time
     # derivatives relate to generalized speeds.
-    kd = [q1d - u3/cos(q3), q2d - u1, q3d - u2 + u3 * tan(q2)]
+    kd = [q1d - u3/cos(q2), q2d - u1, q3d - u2 + u3 * tan(q2)]
 
     # Creation of the force list; it is the gravitational force at the mass
     # center of the disc. Then we create the disc by assigning a Point to the
@@ -185,7 +185,7 @@ def test_aux():
 
     I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
 
-    kd = [q1d - u3/cos(q3), q2d - u1, q3d - u2 + u3 * tan(q2)]
+    kd = [q1d - u3/cos(q2), q2d - u1, q3d - u2 + u3 * tan(q2)]
 
     ForceList = [(Dmc, - m * g * Y.z), (C, f1 * L.x + f2 * (Y.z ^ L.x))]
     BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
