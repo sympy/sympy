@@ -842,61 +842,67 @@ class PermutationGroup(Basic):
         return self._transversals
 
     def centralizer(self, other):
-        degree = self.degree
-        identity = _new_from_array_form(range(degree))
-        orbits = other.orbits()
-        num_orbits = len(orbits)
-        orbits.sort(key = lambda x: -len(x))
-        long_base = []
-        orbit_reps = [None]*num_orbits
-        orbit_reps_indices = [None]*num_orbits
-        orbit_descr = [None]*degree
-        for i in range(num_orbits):
-            orbit = list(orbits[i])
-            orbit_reps[i] = orbit[0]
-            orbit_reps_indices[i] = len(long_base)
-            for point in orbit:
-                orbit_descr[point] = i
-            long_base = long_base + orbit
-        base, strong_gens = other.schreier_sims_incremental(base=long_base)
-        strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
-        i = 0
-        for i in range(len(base)):
-            if strong_gens_distr == [identity]:
-                break
-        base = base[:i]
-        base_len = i
-        for j in range(num_orbits):
-            if base[base_len - 1] in orbits[j]:
-                break
-        rel_orbits = orbits[: j + 1]
-        num_rel_orbits = len(rel_orbits)
-        transversals = [None]*num_rel_orbits
-        for j in range(num_rel_orbits):
-            rep = orbit_reps[j]
-            transversals[j] = dict(other.orbit_transversal(rep, pairs=True))
-        trivial_test = lambda x: True
-        tests = [None]*base_len
-        for l in range(base_len):
-            if base[l] in orbit_reps:
-                tests[l] = trivial_test
-            else:
-                def test(computed_words):
-                    g = computed_words[l]
-                    rep_orb_index = orbit_descr[base[l]]
-                    rep = orbit_reps[rep_orb_index]
-                    rep_orb = orbits[rep_orb_index]
-                    im = g(base[l])
-                    im_rep = g(rep)
-                    tr_el = transversals[rep_orb_index][base[l]]
-                    if im != tr_el(im_rep):
-                        return False
-                    else:
-                        return True
-                tests[l] = test
-        def prop(g):
-            return [g*gen for gen in other.generators] == [gen*g for gen in other.generators]
-        return self.subgroup_search(prop, base=base, strong_gens=strong_gens, tests=tests)
+        if hasattr(other, 'generators'):
+            degree = self.degree
+            identity = _new_from_array_form(range(degree))
+            orbits = other.orbits()
+            num_orbits = len(orbits)
+            orbits.sort(key = lambda x: -len(x))
+            long_base = []
+            orbit_reps = [None]*num_orbits
+            orbit_reps_indices = [None]*num_orbits
+            orbit_descr = [None]*degree
+            for i in range(num_orbits):
+                orbit = list(orbits[i])
+                orbit_reps[i] = orbit[0]
+                orbit_reps_indices[i] = len(long_base)
+                for point in orbit:
+                    orbit_descr[point] = i
+                long_base = long_base + orbit
+            base, strong_gens = other.schreier_sims_incremental(base=long_base)
+            strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
+            i = 0
+            for i in range(len(base)):
+                if strong_gens_distr == [identity]:
+                    break
+            base = base[:i]
+            base_len = i
+            for j in range(num_orbits):
+                if base[base_len - 1] in orbits[j]:
+                    break
+            rel_orbits = orbits[: j + 1]
+            num_rel_orbits = len(rel_orbits)
+            transversals = [None]*num_rel_orbits
+            for j in range(num_rel_orbits):
+                rep = orbit_reps[j]
+                transversals[j] = dict(other.orbit_transversal(rep, pairs=True))
+            trivial_test = lambda x: True
+            tests = [None]*base_len
+            for l in range(base_len):
+                if base[l] in orbit_reps:
+                    tests[l] = trivial_test
+                else:
+                    def test(computed_words):
+                        g = computed_words[l]
+                        rep_orb_index = orbit_descr[base[l]]
+                        rep = orbit_reps[rep_orb_index]
+                        rep_orb = orbits[rep_orb_index]
+                        im = g(base[l])
+                        im_rep = g(rep)
+                        tr_el = transversals[rep_orb_index][base[l]]
+                        if im != tr_el(im_rep):
+                            return False
+                        else:
+                            return True
+                    tests[l] = test
+            def prop(g):
+                return [g*gen for gen in other.generators] == [gen*g for gen in other.generators]
+            return self.subgroup_search(prop, base=base, strong_gens=strong_gens, tests=tests)
+        elif hasattr(other, '__getitem__'):
+            gens = list(other)
+            return self.centralizer(PermutationGroup(gens))
+        elif hasattr(other, 'array_form'):
+            return self.centralizer(PermutationGroup([other]))
 
     def commutator(self):
         """
@@ -1737,6 +1743,48 @@ class PermutationGroup(Basic):
                         break
 
         return G2
+
+    def normal_closure1(self, other, k=10):
+        degree = self.degree
+        identity = _new_from_array_form(range(degree))
+
+        Z = PermutationGroup(other.generators[:])
+        base, strong_gens = Z.schreier_sims_incremental()
+        strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
+        basic_orbits, basic_transversals = _orbits_transversals_from_bsgs(base,\
+        strong_gens_distr)
+        C = False
+        self._random_pr_init(r=10, n=20)
+
+        while C == False:
+            print Z.generators
+            Z._random_pr_init(r=10, n=10)
+            for i in range(k):
+                g = self.random_pr()
+                h = Z.random_pr()
+                conj = (~g)*h*g
+                res = _strip(conj, base, basic_orbits, basic_transversals)
+                if res[0] != identity or res[1] != len(base) + 1:
+                    gens = Z.generators
+                    gens.append(conj)
+                    Z = PermutationGroup(gens)
+                    temp_base, temp_strong_gens = Z.schreier_sims_incremental(base, strong_gens)
+                    base, strong_gens = temp_base, temp_strong_gens
+                    strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
+                    basic_orbits, basic_transversals = _orbits_transversals_from_bsgs(base, strong_gens_distr)
+            C = True
+            break_flag = False
+            for g in self.generators:
+                for h in Z.generators:
+                    conj = (~g)*h*g
+                    res = _strip(conj, base, basic_orbits, basic_transversals)
+                    if res[0] != identity or res[1] != len(base) + 1:
+                        C = False
+                        break_flag = True
+                        break
+                if break_flag == True:
+                    break
+        return Z
 
     def orbit(self, alpha, action='tuples'):
         r"""
