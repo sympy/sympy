@@ -288,11 +288,11 @@ def fidelity(state1, state2):
     >>> updown_dm = represent(updown * Dagger(updown))
     >>> updown2 = (sqrt(3)/2 )* up + (1/2)*down
     >>>
-    >>> print fidelity(up_dm, up_dm)
+    >>> fidelity(up_dm, up_dm)
     1
-    >>> print fidelity(up_dm, down_dm) #orthogonal states
+    >>> fidelity(up_dm, down_dm) #orthogonal states
     0
-    >>> print fidelity(up_dm, updown_dm).evalf().round(3)
+    >>> fidelity(up_dm, updown_dm).evalf().round(3)
     0.707
 
     """
@@ -301,11 +301,11 @@ def fidelity(state1, state2):
 
     if (not isinstance(state1, Matrix) or
         not isinstance(state2, Matrix)):
-        raise ValueError("state1 and state2 must be of type density or Matrix "
+        raise ValueError("state1 and state2 must be of type Density or Matrix "
                          "received type=%s for state1 and type=%s for state2" %
                          (type(state1), type(state2)))
 
-    if ( state1.shape != state2.shape and state1.rows == state2.cols):
+    if ( state1.shape != state2.shape and state1.is_square):
         raise ValueError("The dimensions of both args should be equal and the"
                          "matrix obtained should be a square matrix")
 
