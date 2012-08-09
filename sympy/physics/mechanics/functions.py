@@ -407,7 +407,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
     else:
         raise ValueError('Not an approved rotation type for this function')
 
-def partial_velocity(vel_list, u_ind_list):
+def partial_velocity(vel_list, u_list):
     """Returns a list of partial velocities.
 
     Parameters
@@ -416,7 +416,7 @@ def partial_velocity(vel_list, u_ind_list):
     vel_list : list
         List of velocities of Point's and angular velocities of ReferenceFrame's
 
-    u_ind_list : list
+    u_list : list
         List of independent generalized speeds.
 
     Examples
@@ -435,22 +435,19 @@ def partial_velocity(vel_list, u_ind_list):
     [[N.x]]
 
     """
-    if not isinstance(vel_list, list):
-        raise TypeError('Provide velocities in a list')
-    if not isinstance(u_ind_list, list):
-        raise TypeError('Provide speeds in a list')
-    else:
-        a = vel_list[0]
-        frame = a.args[0][1]
-        list_of_pvlists = []
-        i = 0
-        while i < len(u_ind_list):
-            pvlist = []
-            for e in vel_list:
-                vel = e.diff(u_ind_list[i], frame)
-                pvlist = pvlist + [vel]
-            list_of_pvlists = list_of_pvlists + [pvlist]
-            i = i + 1
+    if not hasattr(vel_list, '__iter__'):
+        raise TypeError('Provide velocities in an iterable')
+    if not hasattr(u_list, '__iter__'):
+        raise TypeError('Provide speeds in an iterable')
+    a = vel_list[0]
+    frame = a.args[0][1]
+    list_of_pvlists = []
+    for i in vel_list:
+        pvlist = []
+        for j in u_list:
+            vel = i.diff(j, frame)
+            pvlist += [vel]
+        list_of_pvlists += [pvlist]
     return list_of_pvlists
 
 def linear_momentum(frame, *body):
