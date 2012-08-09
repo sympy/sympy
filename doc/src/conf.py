@@ -97,6 +97,7 @@ html_last_updated_fmt = '%b %d, %Y'
 
 html_logo = '_static/sympylogo.png'
 html_favicon = '../logo/SymPy-Favicon.ico'
+html_theme_options = {'collapsiblesidebar': True}
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
