@@ -2511,7 +2511,7 @@ def combsimp(expr):
                             c = u[j]
                             coeffs.remove(c)
                             got[i] = c
-                        return one, got
+                        return one.q, got[0], got[1:]
 
         def _mult_thm(gammas, numer, denom):
             # pull off and analyze the leading coefficient from each gamma arg
@@ -2532,7 +2532,6 @@ def combsimp(expr):
                     run = _run(coeffs)
                     if run is None:
                         break
-                    d, seq = run
 
                     # process the sequence that was found:
                     # 1) convert all the gamma functions to have the right
@@ -2540,22 +2539,19 @@ def combsimp(expr):
                     # 2) append the factors corresponding to the theorem
                     # 3) append the new gamma function
 
+                    n, ui, other = run
+
                     # (1)
-                    ui = seq[0]
-                    other = seq[1:]
-                    offset = 0
-                    for i, u in enumerate(other):
-                        n = (u - ui - (u - ui) % 1)
-                        if n and n.is_Integer:
-                            # if u is sorted, this should be true
-                            assert n > 0
-                            con = resid + u - 1
-                            for k in range(n):
-                                numer.append(con - k)
+                    for u in other:
+                        con = resid + u - 1
+                        for k in range(int(u - ui)):
+                            numer.append(con - k)
+
+                    con = n*(resid + ui) # for (2) and (3)
+
                     # (2)
-                    con = d.q*(resid + ui) # for (2) and (3)
-                    numer.append((2*S.Pi)**(S(d.q - 1)/2)*
-                                 d.q**(S(1)/2 - con))
+                    numer.append((2*S.Pi)**(S(n - 1)/2)*
+                                 n**(S(1)/2 - con))
                     # (3)
                     new.append(con)
 
