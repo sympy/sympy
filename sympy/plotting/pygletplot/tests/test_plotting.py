@@ -1,10 +1,11 @@
+from sympy.external.importtools import import_module
+
 disabled = False
 
-try:
-    # if pyglet.gl fails to import, e.g. opengl is missing, we disable the tests
-    import pyglet.gl
-    import pyglet.window
-except ImportError:
+# if pyglet.gl fails to import, e.g. opengl is missing, we disable the tests
+pyglet_gl = import_module("pyglet.gl", catch=(OSError,))
+pyglet_window = import_module("pyglet.window", catch=(OSError,))
+if not pyglet_gl or not pyglet_window:
     disabled = True
 
 def setup_module(module):

@@ -1156,6 +1156,7 @@ class DefaultBackend(BaseBackend):
 plot_backends = {
         'matplotlib' : MatplotlibBackend,
         'text' : TextBackend,
+        'default': DefaultBackend
         }
 
 
