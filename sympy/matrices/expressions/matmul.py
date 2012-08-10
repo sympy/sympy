@@ -88,6 +88,15 @@ class MatMul(MatrixExpr, Mul):
         from transpose import Transpose
         return MatMul(*[Transpose(arg) for arg in self.args[::-1]])
 
+    def _eval_trace(self):
+        factor = Mul(*[arg for arg in self.args if not arg.is_Matrix])
+        matrix = MatMul(*[arg for arg in self.args if arg.is_Matrix])
+        if factor != 1:
+            from trace import Trace
+            return factor * Trace(matrix)
+        else:
+            raise NotImplementedError("Can't simplify any further")
+
     def _eval_inverse(self):
         from inverse import Inverse
         try:

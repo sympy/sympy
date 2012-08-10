@@ -42,3 +42,7 @@ class Transpose(MatrixExpr):
 
     def _eval_transpose(self):
         return self.arg
+
+    def _eval_trace(self):
+        from trace import Trace
+        return Trace(self.arg) # Trace(X.T) => Trace(X)

@@ -59,4 +59,8 @@ class MatAdd(MatrixExpr, Add):
         from transpose import Transpose
         return MatAdd(*[Transpose(arg) for arg in self.args])
 
+    def _eval_trace(self):
+        from trace import Trace
+        return MatAdd(*[Trace(arg) for arg in self.args])
+
 from matmul import MatMul
