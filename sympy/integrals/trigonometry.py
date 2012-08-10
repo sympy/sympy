@@ -3,10 +3,9 @@
 import sympy
 from sympy.core import Dummy, Wild, S
 from sympy.core.numbers import Rational
-from sympy.functions import sin, cos, binomial
+from sympy.functions import sin, cos, binomial, tan, sec, csc, cot
 from sympy.core.cache import cacheit
 
-# TODO add support for tan^m(x) * sec^n(x)
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
 
 # creating each time Wild's and sin/cos/Mul is expensive. Also, our match &
@@ -18,17 +17,30 @@ from sympy.core.cache import cacheit
 def _pat_sincos(x):
     a, n, m = [Wild(s, exclude=[x]) for s in 'anm']
     pat = sin(a*x)**n * cos(a*x)**m
-
     return pat, a,n,m
 
+def _pat_gen(x):
+    s = Wild('s')
+    t = Wild('t')
+    q = Wild('q')
+    r = Wild('r')
+    pat1 = (s**q) * (t**r)
+    return pat1, s, t, q, r
+
 _u = Dummy('u')
+
+def Trig_Check(s):
+  if sin(s.args[0])/s is S.One or cos(s.args[0])/s is S.One \
+     or csc(s.args[0])/s is S.One or sec(s.args[0])/s is S.One \
+         or tan(s.args[0])/s is S.One or cot(s.args[0])/s is S.One:
+      return True
 
 
 
 def trigintegrate(f, x):
     """Integrate f = Mul(trig) over x
 
-       >>> from sympy import Symbol, sin, cos
+       >>> from sympy import Symbol, sin, cos, tan, sec, csc, cot
        >>> from sympy.integrals.trigonometry import trigintegrate
        >>> from sympy.abc import x
 
@@ -37,6 +49,12 @@ def trigintegrate(f, x):
 
        >>> trigintegrate(sin(x)**2, x)
        x/2 - sin(x)*cos(x)/2
+
+       >>> trigintegrate(tan(x)*sec(x),x)
+       1/cos(x)
+
+       >>> trigintegrate(sin(x)*tan(x),x)
+       -log(sin(x) - 1)/2 + log(sin(x) + 1)/2 - sin(x)
 
        http://en.wikibooks.org/wiki/Calculus/Further_integration_techniques
 
@@ -48,15 +66,51 @@ def trigintegrate(f, x):
     """
 
     pat, a,n,m = _pat_sincos(x)
-    ##m - cos
-    ##n - sin
+    pat1, s,t,q,r = _pat_gen(x)
 
-    M = f.match(pat)
+
+    M_ = f.match(pat1)
+
+
+    if M_ is None:
+        return
+
+    q = M_[q]
+    r = M_[r]
+
+
+  ###
+  ###  f =  function1(written in terms of sincos) X function2(written in terms of sincos)
+  ###
+    if q is not S.Zero and r is not S.Zero:
+        s = M_[s]
+        t = M_[t]
+        if s.args is not () and t.args is not () \
+            and Trig_Check(s) and Trig_Check(t):
+
+            f = s._eval_rewrite_as_sincos(s.args[0])**q * t._eval_rewrite_as_sincos(t.args[0])**r
+
+    if q is S.Zero and r is S.Zero:
+        return x
+
+    if q is S.Zero and r is not S.Zero:
+        t = M_[t]
+        if t.args is not () and Trig_Check(t):
+            f = t._eval_rewrite_as_sincos(t.args[0])**r
+
+    if r is S.Zero and q is not S.Zero:
+        s = M_[s]
+        if s.args is not () and Trig_Check(s):
+            f = s._eval_rewrite_as_sincos(s.args[0])**q
+
+
+    M= f.match(pat)   # matching the rewritten function with the sincos pattern
+
 
     if M is None:
         return
 
-    n, m = M[n], M[m]   # should always be there
+    n, m  = M[n], M[m]
     if n is S.Zero and m is S.Zero:
         return x
 

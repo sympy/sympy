@@ -289,6 +289,9 @@ class sin(TrigonometricFunction):
         tan_half = tan(S.Half*arg)
         return 2*tan_half/(1 + tan_half**2)
 
+    def _eval_rewrite_as_sincos(self, arg):
+        return sin(arg)*cos(arg)/cos(arg)
+
     def _eval_rewrite_as_cot(self, arg):
         cot_half = cot(S.Half*arg)
         return 2*cot_half/(1 + cot_half**2)
@@ -353,6 +356,10 @@ class sin(TrigonometricFunction):
     def _sage_(self):
         import sage.all as sage
         return sage.sin(self.args[0]._sage_())
+
+    def _is_Trig(self):
+        if self/sin(self.args[0]) is S.One:
+            return True
 
 class cos(TrigonometricFunction):
     """
@@ -529,6 +536,9 @@ class cos(TrigonometricFunction):
         tan_half = tan(S.Half*arg)**2
         return (1-tan_half)/(1+tan_half)
 
+    def _eval_rewrite_as_sincos(self, arg):
+        return sin(arg)*cos(arg)/sin(arg)
+
     def _eval_rewrite_as_cot(self, arg):
         cot_half = cot(S.Half*arg)**2
         return (cot_half-1)/(cot_half+1)
@@ -585,6 +595,34 @@ class cos(TrigonometricFunction):
     def _sage_(self):
         import sage.all as sage
         return sage.cos(self.args[0]._sage_())
+
+    def _is_Trig(self):
+        if self/cos(self.args[0]) is S.One:
+            return True
+
+class sec(TrigonometricFunction):    #TODO implement rest all functions for sec. see cos, sin, tan.
+
+    def _eval_rewrite_as_cos(self,arg):
+        return (1/cos(arg))
+
+    def _eval_rewrite_as_sincos(self, arg):
+        return sin(arg)/(cos(arg)*sin(arg))
+
+    def _is_Trig(self):
+        if self/sec(self.args[0]) is S.One:
+            return True
+
+class csc(TrigonometricFunction):    #TODO implement rest all functions for csc. see cos, sin, tan.
+
+    def _eval_rewrite_as_sin(self,arg):
+        return (1/sin(arg))
+
+    def _eval_rewrite_as_sincos(self, arg):
+        return cos(arg)/(sin(arg)*cos(arg))
+
+    def _is_Trig(self):
+        if self/csc(self.args[0]) is S.One:
+            return True
 
 class tan(TrigonometricFunction):
     """
@@ -770,6 +808,9 @@ class tan(TrigonometricFunction):
     def _eval_rewrite_as_cos(self, x):
         return -cos(x + S.Pi/2)/cos(x)
 
+    def _eval_rewrite_as_sincos(self, arg):
+        return sin(arg)/cos(arg)
+
     def _eval_rewrite_as_cot(self, arg):
         return 1/cot(arg)
 
@@ -793,6 +834,10 @@ class tan(TrigonometricFunction):
     def _sage_(self):
         import sage.all as sage
         return sage.tan(self.args[0]._sage_())
+
+    def _is_Trig(self):
+        if self/tan(self.args[0]) is S.One:
+            return True
 
 class cot(TrigonometricFunction):
     """
@@ -950,6 +995,9 @@ class cot(TrigonometricFunction):
     def _eval_rewrite_as_cos(self, x):
         return -cos(x)/cos(x + S.Pi/2)
 
+    def _eval_rewrite_as_sincos(self, arg):
+        return cos(arg)/sin(arg)
+
     def _eval_rewrite_as_tan(self, arg):
         return 1/tan(arg)
 
@@ -967,6 +1015,10 @@ class cot(TrigonometricFunction):
     def _sage_(self):
         import sage.all as sage
         return sage.cot(self.args[0]._sage_())
+
+    def _is_Trig(self):
+        if self/cot(self.args[0]) is S.One:
+            return True
 
 ###############################################################################
 ########################### TRIGONOMETRIC INVERSES ############################
